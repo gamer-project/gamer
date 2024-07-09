@@ -52,37 +52,37 @@ void Microphysics_Init()
    MicroPhy.CondPresConv = MicroPhy.CondSpecificHeat;
    MicroPhy.CondSpecificHeat /= ( GAMMA - (real)1.0 );
 
-   if ( MicroPhy.CondSaturation ) 
+   if ( MicroPhy.CondSaturation )
    {
       // This calculates the prefactor for the electron MFP
       // Note that this assumes CGS units for the electron charge
       MicroPhy.CondMFPConst = (real)0.7329037678543799 * Const_kB * Const_kB / ( UNIT_E * UNIT_E );
       MicroPhy.CondMFPConst /= POW( Const_e / SQRT( UNIT_E*UNIT_L ), (real)4.0 ) * MicroPhy.CondCoulombLog;
       MicroPhy.CondMFPConst *= CONDUCTION_MUE * Const_amu / UNIT_M;
-   }      
+   }
 
-   if ( MicroPhy.CondType == CONSTANT_CONDUCTION ) 
+   if ( MicroPhy.CondType == CONSTANT_CONDUCTION )
    {
-      // This coefficient is in CGS (erg/s/cm/K), and we must convert it to code 
+      // This coefficient is in CGS (erg/s/cm/K), and we must convert it to code
       // units per K. To avoid precision errors, we do this one step at a time.
       MicroPhy.CondConstCoeff /= UNIT_E;
       MicroPhy.CondConstCoeff *= UNIT_L;
       MicroPhy.CondConstCoeff *= UNIT_T;
    }
-   else if ( MicroPhy.CondType == SPITZER_CONDUCTION ) 
+   else if ( MicroPhy.CondType == SPITZER_CONDUCTION )
    {
       // Compute the prefactor for the Spitzer conducitivity
       // This prefactor is in CGS (erg/s/cm/K), assuming input temperature in
-      // units of 10^7 K, and we must convert it to code units per K. To avoid precision 
-      // errors, we do this one step at a time. Still need to correct for differences 
+      // units of 10^7 K, and we must convert it to code units per K. To avoid precision
+      // errors, we do this one step at a time. Still need to correct for differences
       // in mean molecular weight
       MicroPhy.CondPrefactor = (real)5818590894709.818/MicroPhy.CondCoulombLog;
       MicroPhy.CondPrefactor /= UNIT_E;
       MicroPhy.CondPrefactor *= UNIT_L;
       MicroPhy.CondPrefactor *= UNIT_T;
       MicroPhy.CondPrefactor *= MicroPhy.CondSpitzerFraction;
-   } 
-   else 
+   }
+   else
    {
       Aux_Error( ERROR_INFO, "unsupported conduction type (%d) !!\n", MicroPhy.CondType );
    }
@@ -100,10 +100,10 @@ void Microphysics_Init()
    MicroPhy.ViscMaxDiffusivity = VISCOSITY_MAX_DIFFUSIVITY;
    MicroPhy.ViscBounds = VISCOSITY_BOUNDS;
 
-   if ( MicroPhy.CondType == CONSTANT_VISCOSITY ) 
+   if ( MicroPhy.CondType == CONSTANT_VISCOSITY )
    {
-      // We must convert the viscosity coefficient to code units. To avoid 
-      // precision errors, we do this one step at a time. 
+      // We must convert the viscosity coefficient to code units. To avoid
+      // precision errors, we do this one step at a time.
       if ( MicroPhy.ViscCoeffType == VISCOSITY_KINETIC_COEFF ) {
          // This coefficient is in units of cm^2/s
          MicroPhy.ViscConstCoeff /= UNIT_L;
@@ -115,13 +115,13 @@ void Microphysics_Init()
          MicroPhy.ViscConstCoeff *= UNIT_L;
          MicroPhy.ViscConstCoeff *= UNIT_T;
       }
-   } 
-   else if ( MicroPhy.ViscType == SPITZER_VISCOSITY ) 
+   }
+   else if ( MicroPhy.ViscType == SPITZER_VISCOSITY )
    {
       // Compute the prefactor for the Spitzer viscosity
-      // This prefactor is in CGS (g/cm/s), assuming input temperature in units 
-      // of 10^7 K, and we must convert it to code units. To avoid precision errors, 
-      // we do this one step at a time. Still need to correct for differences in mean 
+      // This prefactor is in CGS (g/cm/s), assuming input temperature in units
+      // of 10^7 K, and we must convert it to code units. To avoid precision errors,
+      // we do this one step at a time. Still need to correct for differences in mean
       // molecular weight
       MicroPhy.ViscPrefactor = (real)695.7010852370435/MicroPhy.ViscCoulombLog;
       MicroPhy.ViscPrefactor /= UNIT_M;
@@ -129,7 +129,7 @@ void Microphysics_Init()
       MicroPhy.ViscPrefactor *= UNIT_T;
       MicroPhy.ViscPrefactor *= MicroPhy.ViscSpitzerFraction;
    }
-   else 
+   else
    {
       Aux_Error( ERROR_INFO, "unsupported viscosity type (%d) !!\n", MicroPhy.ViscType );
    }

@@ -357,20 +357,24 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 
 #  if ( FLU_SCHEME == MHM )
-#           ifdef MHD
-            const int NSkip_N = 0;
-            const int NSkip_T = 0;
-#           else
-            const int NSkip_N = 0;
-            const int NSkip_T = 1;
-#           endif
-// compute extra flux for MHM. The last parameter is true only for the first extra flux which the flux array is not initalized yet.
+// index skip update of flux arrray
+#  ifdef MHD
+   const int NSkip_N = 0;
+   const int NSkip_T = 0;
+#  else
+   const int NSkip_N = 0;
+   const int NSkip_T = 1;
+#  endif
+
+// compute extra flux for MHM.
+// NOTE: The last parameter is true only for the first extra flux which the flux array is not initalized yet.
    AddExtraFlux_Template( g_ConVar, NULL, g_Flux, g_FC_B, FLU_NXT, NGhost, N_HF_FLUX, NSkip_N, NSkip_T, 1, dh, true );
+
 #  ifdef MHD
 // compute electric field for MHM
    MHD_ComputeElectric_Half( g_EC_Ele, g_ConVar, g_FC_B, N_HF_ELE, NIn, NGhost );
 #  endif
-#  endif
+#  endif // #if ( FLU_SCHEME == MHM )
 
 
 // data reconstruction
@@ -945,20 +949,24 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 
 #  if ( FLU_SCHEME == MHM )
-#           ifdef MHD
-            const int NSkip_N = 0;
-            const int NSkip_T = 0;
-#           else
-            const int NSkip_N = 0;
-            const int NSkip_T = 1;
-#           endif
-// compute extra flux for MHM. The last parameter is true only for the first extra flux which the flux array is not initalized yet.
+// index skip update of flux arrray
+#  ifdef MHD
+   const int NSkip_N = 0;
+   const int NSkip_T = 0;
+#  else
+   const int NSkip_N = 0;
+   const int NSkip_T = 1;
+#  endif
+
+// compute extra flux for MHM.
+// NOTE: The last parameter is true only for the first extra flux which the flux array is not initalized yet.
    AddExtraFlux_Template( g_ConVar, NULL, g_Flux, g_FC_B, FLU_NXT, NGhost, N_HF_FLUX, NSkip_N, NSkip_T, 1, dh, true );
+
 #  ifdef MHD
 // compute electric field for MHM
    MHD_ComputeElectric_Half( g_EC_Ele, g_ConVar, g_FC_B, N_HF_ELE, NIn, NGhost );
 #  endif
-#  endif
+#  endif // #if ( FLU_SCHEME == MHM )
 
 
 // data reconstruction
@@ -2105,6 +2113,7 @@ void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_
 //                                    --> It is just the input array Flu_Array_In[]
 //                cc_idx            : Index for accessing g_cc_array[]
 //                cc_{i,j,k}        : Index for accessing g_cc_array[] for MHD_UpdateMagnetic_Half()
+//                g_Flux            : Array storing the extra fluxes
 //                g_FC_B            : Array storing the face-centered magnetic field
 //                g_EC_Ele          : Array storing the input edge-centered electric field
 //                NGhost            : Ghost zone size of data reconstruction
@@ -2141,23 +2150,23 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
 // add extra flux
    if ( g_Flux != NULL )
    {
-     for (int f=0; f<6; f++)
-     {
-        const int d     = f / 2;
-        const int LorR  = f % 2;
-        const int TDir1 = (d+1) % 3;
-        const int TDir2 = (d+2) % 3;
+      for (int f=0; f<6; f++)
+      {
+         const int d      = f / 2;
+         const int LorR   = f % 2;
+         const int TDir1  = (d+1) % 3;
+         const int TDir2  = (d+2) % 3;
 
-        int flux_ijk[3] = { cc_i-NGhost, cc_j-NGhost, cc_k-NGhost };
-        flux_ijk[d] += LorR;
-#       ifdef MHD
-        flux_ijk[TDir1] += 1;
-        flux_ijk[TDir2] += 1;
-#       endif
-        const int idx_flux = IDX321( flux_ijk[0], flux_ijk[1], flux_ijk[2], N_HF_FLUX, N_HF_FLUX );
+         int flux_ijk[3]  = { cc_i-NGhost, cc_j-NGhost, cc_k-NGhost };
+         flux_ijk[d]     += LorR;
+#        ifdef MHD
+         flux_ijk[TDir1] += 1;
+         flux_ijk[TDir2] += 1;
+#        endif
+         const int idx_flux = IDX321( flux_ijk[0], flux_ijk[1], flux_ijk[2], N_HF_FLUX, N_HF_FLUX );
 
-        for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++) Flux[f][v] += g_Flux[f][v][idx_flux];
-     } // for (int f=0; f<6; f++)
+         for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   Flux[f][v] += g_Flux[f][v][idx_flux];
+      } // for (int f=0; f<6; f++)
    } // if ( g_Flux != NULL )
 
 // update the face-centered variables

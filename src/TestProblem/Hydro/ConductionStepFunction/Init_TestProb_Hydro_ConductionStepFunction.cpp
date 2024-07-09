@@ -34,7 +34,7 @@ void Validate()
 #  ifndef CONDUCTION
    Aux_Error( ERROR_INFO, "CONDUCTION must be enabled !!\n" );
 #  endif
-   
+
 #  ifdef GRAVITY
    Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
 #  endif
@@ -95,7 +95,7 @@ void SetParameter()
    ReadPara->Add( "CSF_U1",              &CSF_U1,                1000.0,        Eps_double,       NoMax_double      );
    ReadPara->Add( "CSF_U2",              &CSF_U2,                2000.0,        Eps_double,       NoMax_double      );
    ReadPara->Add( "CSF_Rho",             &CSF_Rho,               1.0,           Eps_double,       NoMax_double      );
-   
+
    ReadPara->Read( FileName );
 
    delete ReadPara;
@@ -128,7 +128,7 @@ void SetParameter()
       Aux_Message( stdout, "  CSF_Rho             = % 14.7e\n", CSF_Rho );
       Aux_Message( stdout, "=============================================================================\n" );
    }
-   
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
 
 } // FUNCTION : SetParameter
@@ -173,7 +173,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    MomX = 0.0;
    MomY = 0.0;
    MomZ = 0.0;
-   
+
 // compute the total gas energy
    Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );     // do NOT include magnetic energy here
 

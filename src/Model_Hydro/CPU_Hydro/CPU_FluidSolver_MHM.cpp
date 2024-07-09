@@ -445,18 +445,21 @@ void CPU_FluidSolver_MHM(
 #        endif
 #        endif // #if ( FLU_SCHEME == MHM )
 
-#           ifdef MHD
-            const int NSkip_N = 0;
-            const int NSkip_T = 0;
-#           else
-            const int NSkip_N = 0;
-            const int NSkip_T = 1;
-#           endif
-#           if ( FLU_SCHEME == MHM )
-            const int OffsetPri = 0;
-#           else
-            const int OffsetPri = LR_GHOST_SIZE;
-#           endif
+//       index skip update of flux arrray
+#        ifdef MHD
+         const int NSkip_N = 0;
+         const int NSkip_T = 0;
+#        else
+         const int NSkip_N = 0;
+         const int NSkip_T = 1;
+#        endif
+
+//       index offset of g_PriVar_Half_1PG
+#        if ( FLU_SCHEME == MHM )
+         const int OffsetPri = 0;
+#        else
+         const int OffsetPri = LR_GHOST_SIZE;
+#        endif
 
 
 
@@ -501,9 +504,9 @@ void CPU_FluidSolver_MHM(
 //          temperature
             real fluid[NCOMP_TOTAL];
             for (int v=0; v<NCOMP_TOTAL; v++)  fluid[v] = g_Flu_Array_In[P][v][idx];
-            Temp[idx] = Hydro_Con2Temp( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], 
-                                        fluid[ENGY], fluid+NCOMP_FLUID, CheckMinTemp_Yes, 
-                                        MinTemp, Emag, EoS.DensEint2Temp_FuncPtr, 
+            Temp[idx] = Hydro_Con2Temp( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ],
+                                        fluid[ENGY], fluid+NCOMP_FLUID, CheckMinTemp_Yes,
+                                        MinTemp, Emag, EoS.DensEint2Temp_FuncPtr,
                                         EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table );
 #           endif
 
@@ -517,7 +520,7 @@ void CPU_FluidSolver_MHM(
 
 //       1-a-2. evaluate the half-step first-order fluxes by Riemann solver
 //       hydrodynamic fluxes
-         if ( ! OPT__FREEZE_HYDRO ) 
+         if ( ! OPT__FREEZE_HYDRO )
             Hydro_RiemannPredict_Flux( g_Flu_Array_In[P], g_Flux_Half_1PG, g_Mag_Array_In[P], g_PriVar_1PG+MAG_OFFSET,
                                        MinDens, MinPres, &EoS );
 
@@ -526,17 +529,18 @@ void CPU_FluidSolver_MHM(
          CR_AddDiffuseFlux_HalfStep( g_Flu_Array_In[P], g_Flux_Half_1PG, g_Mag_Array_In[P], g_PriVar_1PG+MAG_OFFSET, dh, &MicroPhy );
 #        endif
 
-         AddExtraFlux_Template( g_Flu_Array_In[P], NULL, g_Flux_Half_1PG, g_Mag_Array_In[P], FLU_NXT, 0, N_HF_FLUX, NSkip_N, NSkip_T, 0, dh, false );
+         AddExtraFlux_Template( g_Flu_Array_In[P], NULL, g_Flux_Half_1PG, g_Mag_Array_In[P], FLU_NXT, 0,
+                                N_HF_FLUX, NSkip_N, NSkip_T, 0, dh, false );
 
 //       add conductive fluxes
 #        ifdef CONDUCTION
-         Hydro_AddConductiveFlux_HalfStep( g_Flu_Array_In[P], g_Flux_Half_1PG, g_Mag_Array_In[P], 
+         Hydro_AddConductiveFlux_HalfStep( g_Flu_Array_In[P], g_Flux_Half_1PG, g_Mag_Array_In[P],
                                            g_PriVar_1PG+MAG_OFFSET, dh, &MicroPhy );
 #        endif
 
 //       add viscous fluxes
 #        ifdef VISCOSITY
-         Hydro_AddViscousFlux_HalfStep( g_PriVar_1PG, g_Flux_Half_1PG, g_Mag_Array_In[P], 
+         Hydro_AddViscousFlux_HalfStep( g_PriVar_1PG, g_Flux_Half_1PG, g_Mag_Array_In[P],
                                         g_PriVar_1PG+MAG_OFFSET, dh, &MicroPhy );
 #        endif
 
@@ -629,9 +633,9 @@ void CPU_FluidSolver_MHM(
             {
                real fluid[NCOMP_TOTAL], Eint;
                for (int v=0; v<NCOMP_TOTAL; v++)  fluid[v] = g_PriVar_Half_1PG[v][idx];
-               Eint = EoS.DensPres2Eint_FuncPtr( fluid[DENS], fluid[ENGY], fluid+NCOMP_FLUID, EoS.AuxArrayDevPtr_Flt, 
+               Eint = EoS.DensPres2Eint_FuncPtr( fluid[DENS], fluid[ENGY], fluid+NCOMP_FLUID, EoS.AuxArrayDevPtr_Flt,
                                                  EoS.AuxArrayDevPtr_Int, EoS.Table );
-               Temp[idx] = EoS.DensEint2Temp_FuncPtr( fluid[DENS], Eint, fluid+NCOMP_FLUID, EoS.AuxArrayDevPtr_Flt, 
+               Temp[idx] = EoS.DensEint2Temp_FuncPtr( fluid[DENS], Eint, fluid+NCOMP_FLUID, EoS.AuxArrayDevPtr_Flt,
                                                       EoS.AuxArrayDevPtr_Int, EoS.Table );
                Temp[idx] = Hydro_CheckMinTemp( Temp[idx], MinTemp );
             }
@@ -646,16 +650,18 @@ void CPU_FluidSolver_MHM(
             CR_AddDiffuseFlux_FullStep( g_PriVar_Half_1PG, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_FL_FLUX, dh, &MicroPhy );
 #           endif
 
-            AddExtraFlux_Template( NULL, g_PriVar_Half_1PG, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_HF_VAR, OffsetPri, N_FL_FLUX, NSkip_N, NSkip_T, 0, dh, false );
+            AddExtraFlux_Template( NULL, g_PriVar_Half_1PG, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_HF_VAR,
+                                   OffsetPri, N_FL_FLUX, NSkip_N, NSkip_T, 0, dh, false );
+
 //          add conductive fluxes
 #           ifdef CONDUCTION
-            Hydro_AddConductiveFlux_FullStep( g_PriVar_Half_1PG, Temp, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, 
+            Hydro_AddConductiveFlux_FullStep( g_PriVar_Half_1PG, Temp, g_FC_Flux_1PG, g_FC_Mag_Half_1PG,
                                               N_FL_FLUX, dh, &MicroPhy );
 #           endif
 
 //          add viscous fluxes
 #           ifdef VISCOSITY
-            Hydro_AddViscousFlux_FullStep( g_PriVar_Half_1PG, Temp, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, 
+            Hydro_AddViscousFlux_FullStep( g_PriVar_Half_1PG, Temp, g_FC_Flux_1PG, g_FC_Mag_Half_1PG,
                                            N_FL_FLUX, dh, &MicroPhy );
 #           endif
 

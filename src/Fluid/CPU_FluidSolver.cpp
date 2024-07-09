@@ -218,9 +218,9 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
       CPU_FluidSolver_MHM ( h_Flu_Array_In, h_Flu_Array_Out, h_Mag_Array_In, h_Mag_Array_Out,
                             h_DE_Array_Out, h_Flux_Array, h_Ele_Array, h_Corner_Array, h_Pot_Array_USG,
                             h_PriVar, h_Slope_PPM, h_FC_Var, h_FC_Flux, h_FC_Mag_Half, h_EC_Ele,
-                            NPatchGroup, dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff, 
-                            MinMod_MaxIter, Time, UsePot, ExtAcc, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens, 
-                            MinPres, MinEint, MinTemp, DualEnergySwitch, NormPassive, NNorm, NormIdx, 
+                            NPatchGroup, dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff,
+                            MinMod_MaxIter, Time, UsePot, ExtAcc, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens,
+                            MinPres, MinEint, MinTemp, DualEnergySwitch, NormPassive, NNorm, NormIdx,
                             FracPassive, NFrac, FracIdx, JeansMinPres, JeansMinPres_Coeff, EoS, MicroPhy );
 
 #     elif ( FLU_SCHEME == CTU )

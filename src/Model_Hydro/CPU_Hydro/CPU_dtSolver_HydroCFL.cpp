@@ -62,12 +62,12 @@
 __global__
 void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
-                              const real dh, const real Safety, const real MinPres, 
+                              const real dh, const real Safety, const real MinPres,
                               const real MinTemp, const EoS_t EoS, const MicroPhy_t MicroPhy )
 #else
 void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG,
-                              const real dh, const real Safety, const real MinPres, 
+                              const real dh, const real Safety, const real MinPres,
                               const real MinTemp, const EoS_t EoS, const MicroPhy_t MicroPhy )
 #endif
 {
@@ -244,7 +244,7 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
 #     endif
 #     ifdef CONDUCTION
       MaxCondCFL = BlockReduction_Shuffle ( MaxCondCFL );
-#     endif      
+#     endif
 #     else
       MaxCFL = BlockReduction_WarpSync( MaxCFL );
 #     ifdef VISCOSITY
@@ -252,7 +252,7 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
 #     endif
 #     ifdef CONDUCTION
       MaxCondCFL = BlockReduction_WarpSync ( MaxCondCFL );
-#     endif      
+#     endif
 #     endif
       if ( threadIdx.x == 0 ) {
 #     endif // #ifdef __CUDACC__

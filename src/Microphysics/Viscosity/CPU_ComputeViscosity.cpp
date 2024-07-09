@@ -6,7 +6,7 @@
 #if ( ( MODEL == HYDRO ) && defined VISCOSITY )
 
 GPU_DEVICE
-void Hydro_ComputeViscosity( real &visc_mu, real &visc_nu, const MicroPhy_t *MicroPhy, 
+void Hydro_ComputeViscosity( real &visc_mu, real &visc_nu, const MicroPhy_t *MicroPhy,
                              const real Dens, const real Temp )
 {
 
@@ -19,20 +19,20 @@ void Hydro_ComputeViscosity( real &visc_mu, real &visc_nu, const MicroPhy_t *Mic
         if ( MicroPhy->ViscCoeffType == VISCOSITY_KINETIC_COEFF ) {
 
             // nu is constant
-    
+
             visc_mu = MicroPhy->ViscConstCoeff*Dens;
 
         } else if ( MicroPhy->ViscCoeffType == VISCOSITY_DYNAMIC_COEFF ) {
 
-            // mu is constant 
-    
+            // mu is constant
+
             visc_mu = MicroPhy->ViscConstCoeff;
         }
 
-    } else if ( VISCOSITY_TYPE == SPITZER_VISCOSITY ) { 
+    } else if ( VISCOSITY_TYPE == SPITZER_VISCOSITY ) {
 
         // Spitzer viscosity, dependent on T
-    
+
         visc_mu = MicroPhy->ViscPrefactor*POW( (real)1.0e-7*Temp, (real)2.5 );
 
     }

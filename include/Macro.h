@@ -446,7 +446,7 @@
 #  define SPITZER_CONDUCTION 2
 #  define ISOTROPIC_CONDUCTION 1
 #  define ANISOTROPIC_CONDUCTION 2
-#endif 
+#endif
 
 // symbolic constants for particles
 #ifdef PARTICLE
