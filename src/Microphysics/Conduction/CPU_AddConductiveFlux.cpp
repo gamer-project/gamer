@@ -483,9 +483,9 @@ void Hydro_AddConductiveFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT)
 
 
 //-----------------------------------------------------------------------------------------
-// Function    : Hydro_AddConductiveFlux_HalfStep
+// Function    : Hydro_AddConductiveFlux
 //
-// Description : Compute the half-step conductive fluxes
+// Description : Compute the conductive fluxes
 //
 // Note        : 1. Must enable CONDUCTION
 //               2. Must enable MHD for anisotropic thermal conduction
