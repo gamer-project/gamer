@@ -18,7 +18,7 @@
 #include "CUFLU_Shared_ConstrainedTransport.cu"
 #endif
 
-#include "../../Microphysics/GPU_Hydro_AddExtraFlux.cu"
+#include "../../Microphysics/CUFLU_Microphysics_AddExtraFlux.cu"
 
 #else
 

@@ -46,7 +46,7 @@
 # include "../../Microphysics/Conduction/CUFLU_AddThermalFlux.cu"
 #endif
 
-#include "../../Microphysics/GPU_Hydro_AddExtraFlux.cu"
+#include "../../Microphysics/CUFLU_Microphysics_AddExtraFlux.cu"
 
 #else // #ifdef __CUDACC__
 
