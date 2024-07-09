@@ -445,7 +445,7 @@ void CPU_FluidSolver_MHM(
 #        endif
 #        endif // #if ( FLU_SCHEME == MHM )
 
-//       index skip update of flux arrray
+//       skip the additional fluxes along the transverse directions for computing the CT electric field
 #        ifdef MHD
          const int NSkip_N = 0;
          const int NSkip_T = 0;
