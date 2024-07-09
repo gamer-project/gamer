@@ -290,7 +290,7 @@ void Par_EquilibriumIC::loadInputDensProfTable()
       if ( InputTable_DensProf_Density[i] < 0.0 )
          Aux_Error( ERROR_INFO, "Densities in density table \"%s\" have negative value !!\n", DensProf_Table_Name );
 
-      if ( InputTable_DensProf_Density[i] > InputTable_DensProf_Density[i-1] )
+      if ( !Mis_CompareRealValue( InputTable_DensProf_Density[i], InputTable_DensProf_Density[i], NULL, false )  &&  InputTable_DensProf_Density[i] > InputTable_DensProf_Density[i-1] )
          Aux_Error( ERROR_INFO, "Densities in density table \"%s\" are not monotonically decreasing !!\n", DensProf_Table_Name );
    }
 
@@ -363,7 +363,7 @@ void Par_EquilibriumIC::loadInputExtPotTable()
          Aux_Error( ERROR_INFO, "Potential in external potential table \"%s\" have postive value !!\n", ExtPot_Table_Name );
 
       // Assume there is no outward force
-      if ( InputTable_ExtPot_Potential[i] > InputTable_ExtPot_Potential[i-1] )
+      if ( !Mis_CompareRealValue( InputTable_ExtPot_Potential[i], InputTable_ExtPot_Potential[i-1], NULL, false )  &&  InputTable_ExtPot_Potential[i] > InputTable_ExtPot_Potential[i-1] )
          Aux_Error( ERROR_INFO, "Potential in external potential table \"%s\" are not monotonically increasing !!\n", ExtPot_Table_Name );
    }
 
