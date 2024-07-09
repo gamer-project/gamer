@@ -227,7 +227,7 @@ void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
          real N_slope, T1_slope, T2_slope; // normal, transverse 1, and transverse 2 direction
          real al, bl, ar, br; // temp slope variables, see the graph above
 
-         if ( g_ConVar == NULL )
+         if ( g_PriVar == NULL )
          {
             N_slope = ( g_ConVar[DENS][ idx_cvar + didx_cvar[d] ] - g_ConVar[DENS][ idx_cvar ] ) * _dh;
 
@@ -274,7 +274,7 @@ void AddExtraFlux_Template( const real g_ConVar[][ CUBE(FLU_NXT) ],
             br = g_PriVar[DENS][ idx_cvar + didx_cvar[d] + didx_cvar[TDir2] ] -
                  g_PriVar[DENS][ idx_cvar + didx_cvar[d]                    ];
             T2_slope = 0.25 * (al + bl + ar + br) * _dh;
-         } // if ( g_ConVar == NULL ) ... else ...
+         } // if ( g_PriVar == NULL ) ... else ...
 
 //       4. do your calculation of the extra flux here
          real Extra_Flux = (real)0.0;
