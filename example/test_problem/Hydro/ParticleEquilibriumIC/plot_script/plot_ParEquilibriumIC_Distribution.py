@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Model
-MODEL = 1 # 1=Plummer, 2=NFW, 3=Burkert, 4=Jaffe, 5=Hernquist, 6=Einasto
+MODEL = 1 # 0=Table, 1=Plummer, 2=NFW, 3=Burkert, 4=Jaffe, 5=Hernquist, 6=Einasto
 ID    = 1
 
 
