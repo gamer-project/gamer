@@ -382,7 +382,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #  endif
    bool need_initialize = true; // flux array need initialize or not
 
-// calculae temperature
+// calculate temperature
 #  if ( defined VISCOSITY ) || ( defined CONDUCTION )
    const bool CheckMinTemp_Yes = true;
    real Temp[ CUBE(FLU_NXT) ];
@@ -1016,7 +1016,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #  endif
    bool need_initialize = true; // flux array need initialize or not
 
-// calculae temperature
+// calculate temperature
 #  if ( defined VISCOSITY ) || ( defined CONDUCTION )
    const bool CheckMinTemp_Yes = true;
    real Temp[ CUBE(FLU_NXT) ];
