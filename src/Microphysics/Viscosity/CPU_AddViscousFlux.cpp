@@ -485,13 +485,13 @@ void Hydro_AddViscousFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 
 
 //-----------------------------------------------------------------------------------------
-// Function    : Hydro_AddViscousFlux_HalfStep
+// Function    : Hydro_AddViscousFlux
 //
-// Description : Compute the half-step conductive fluxes
+// Description : Compute the conductive fluxes
 //
 // Note        : 1. Must enable VISCOSITY
 //               2. Must enable MHD for anisotropic (Braginskii) viscosity
-//               3. Invoked by CPU/CUFLU_FluidSolver_MHM()
+//               3. Invoked by CPU/CUFLU_FluidSolver_MHM() and Hydro_DataReconstruction()
 //
 // Reference   :
 //
