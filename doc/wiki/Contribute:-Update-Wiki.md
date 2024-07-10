@@ -69,7 +69,7 @@ We provide three examples of editing the wiki pages: through `gollum` (recommend
      [[images/WikiGitLocation.png]]
 
    - Edit by `gollum`. 
-     * `gollum /path/to/wiki`
+     * `gollum --lenient-tag-lookup /path/to/wiki`
      * Open `http://localhost:4567` in your browser.
    - Push your changes to the forked Wiki git
    - **Copy wiki to doc**
