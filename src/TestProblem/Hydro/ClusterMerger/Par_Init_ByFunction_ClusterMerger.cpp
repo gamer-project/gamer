@@ -83,7 +83,7 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
 void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPar_AllRank,
                                         real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                         real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                        real_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                        long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
                                         long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 {
 
@@ -158,7 +158,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
 #     ifndef TRACER
       for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++) {
-         if ( ptype[p] == PTYPE_TRACER )
+         if ( (long_par)ptype[p] == PTYPE_TRACER )
             Aux_Error( ERROR_INFO,
 "Tracer particles were found in the input data for cluster %d, but TRACER is not defined!\n",
                        c );
@@ -192,7 +192,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
          const long pp = p + coffset;
 
          // set the particle type
-         ParType[pp] = real_par( ptype[p] );
+         ParType[pp] = long_par( ptype[p] );
 
          // --> convert to code unit before storing to the particle repository to avoid floating-point overflow
          // --> we have assumed that the loaded data are in cgs
@@ -201,7 +201,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
          ParPosY[pp] = real_par( ypos[p] / UNIT_L );
          ParPosZ[pp] = real_par( zpos[p] / UNIT_L );
 
-         if ( ptype[p] == PTYPE_TRACER ) {
+         if ( (long_par)ptype[p] == PTYPE_TRACER ) {
             // tracer particles have zero mass
             // and their velocities will be set by
             // the grid later
@@ -249,7 +249,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       = { Merger_Coll_PosX3, Merger_Coll_PosY3, amr->BoxCenter[2] };
 
    for (long p=0; p<NPar_ThisRank_EachCluster[0]; p++) {
-      if ( (int)ParType[p] != PTYPE_TRACER ) {
+      if ( ParType[p] != PTYPE_TRACER ) {
          ParVelX[p] += Merger_Coll_VelX1;
          ParVelY[p] += Merger_Coll_VelY1;
       }
@@ -258,7 +258,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
    }
 
    for (long p=NPar_ThisRank_EachCluster[0]; p<NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p++) {
-      if ( (int)ParType[p] != PTYPE_TRACER ) {
+      if ( ParType[p] != PTYPE_TRACER ) {
          ParVelX[p] += Merger_Coll_VelX2;
          ParVelY[p] += Merger_Coll_VelY2;
       }
@@ -267,7 +267,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
    }
 
    for (long p=NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p<NPar_ThisRank; p++) {
-      if ( (int)ParType[p] != PTYPE_TRACER ) {
+      if ( ParType[p] != PTYPE_TRACER ) {
          ParVelX[p] += Merger_Coll_VelX3;
          ParVelY[p] += Merger_Coll_VelY3;
       }

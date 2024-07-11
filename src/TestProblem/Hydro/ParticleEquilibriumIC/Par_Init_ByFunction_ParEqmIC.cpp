@@ -45,7 +45,7 @@ static RandomNumber_t *RNG = NULL;
 void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_AllRank,
                                    real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                    real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                   real_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                   long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
                                    long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 {
 

@@ -56,7 +56,7 @@ extern bool   ParTest_Use_Massive;
 void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar_AllRank,
                                        real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                        real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                       real_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                       long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
                                        long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 {
 
@@ -88,7 +88,8 @@ void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar
       ParFltData_AllRank[PAR_VELX] = new real_par [NPar_AllRank];
       ParFltData_AllRank[PAR_VELY] = new real_par [NPar_AllRank];
       ParFltData_AllRank[PAR_VELZ] = new real_par [NPar_AllRank];
-      ParFltData_AllRank[PAR_TYPE] = new real_par [NPar_AllRank];
+
+      ParIntData_AllRank[PAR_TYPE] = new long_par [NPar_AllRank];
 
       long p = 0;
 
@@ -112,7 +113,7 @@ void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar
             ParFltData_AllRank[PAR_VELZ][p] = (real_par)0.0;
 
 //          set the particle type to be generic massive
-            ParFltData_AllRank[PAR_TYPE][p] = PTYPE_GENERIC_MASSIVE;
+            ParIntData_AllRank[PAR_TYPE][p] = PTYPE_GENERIC_MASSIVE;
 
             p++;
          }
@@ -146,7 +147,7 @@ void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar
             ParFltData_AllRank[PAR_VELZ][p] = (real_par)0.0;
 
 //          set the particle type to be tracer
-            ParFltData_AllRank[PAR_TYPE][p] = PTYPE_TRACER;
+            ParIntData_AllRank[PAR_TYPE][p] = PTYPE_TRACER;
 
             p++;
          }
@@ -154,7 +155,7 @@ void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar
    } // if ( MPI_Rank == 0 )
 
 // send particle attributes from the master rank to all ranks
-   Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL|_PAR_TYPE, 0L,
+   Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, _PAR_TYPE,
                             ParFltData_AllRank, ParIntData_AllRank, AllAttributeFlt, AllAttributeInt );
 
 // synchronize all particles to the physical time on the base level
