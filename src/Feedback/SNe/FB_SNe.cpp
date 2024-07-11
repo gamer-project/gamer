@@ -79,6 +79,7 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
    {
       if ( ParSortID == NULL )   Aux_Error( ERROR_INFO, "ParSortID == NULL for NPar = %d !!\n", NPar );
       if ( ParAttFlt == NULL )   Aux_Error( ERROR_INFO, "ParAttFlt == NULL for NPar = %d !!\n", NPar );
+      if ( ParAttInt == NULL )   Aux_Error( ERROR_INFO, "ParIntFlt == NULL for NPar = %d !!\n", NPar );
    }
 #  endif // #ifdef GAMER_DEBUG
 
