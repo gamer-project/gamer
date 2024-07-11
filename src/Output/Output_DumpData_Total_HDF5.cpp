@@ -725,7 +725,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #     ifdef MASSIVE_PARTICLES
       if ( OPT__OUTPUT_PAR_DENS != PAR_OUTPUT_DENS_NONE )
       {
-         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, 0L, PredictParPos_No,
+         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, _PAR_TYPE, PredictParPos_No,
                                        NULL_REAL, SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
 
          Prepare_PatchData_InitParticleDensityArray( lv, Time[lv] );
