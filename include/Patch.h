@@ -879,11 +879,11 @@ struct patch_t
    //===================================================================================
 #  ifdef DEBUG_PARTICLE
    void AddParticle( const int NNew, const long *NewList, long *NPar_Lv,
-                     const real_par *ParType, const real_par **ParPos, const long NParTot,
+                     const long_par *ParType, const real_par **ParPos, const long NParTot,
                      const char *Comment )
 #  else
    void AddParticle( const int NNew, const long *NewList, long *NPar_Lv,
-                     const real_par *ParType )
+                     const long_par *ParType )
 #  endif
    {
 
@@ -993,7 +993,7 @@ struct patch_t
    //===================================================================================
    void RemoveParticle( const int NRemove, const int *RemoveList,
                         long *NPar_Lv, const bool RemoveAll,
-                        const real_par *ParType )
+                        const long_par *ParType )
    {
 
 //    removing all particles is easy
