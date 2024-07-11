@@ -23,7 +23,7 @@ In the following document, the Wiki stands for the Wiki page on the GitHub websi
 
    [[images/CreateWiki.png]]
 
-1. **Create a token for the action bot**
+1. **Create a token for the action**
    * Go to `Setting` of your account > `Developer setting` > `Personal access tokens` > `Generate new token`
       - NOTE: We use the `Tokens(classic)` in this example.
    * Please check the `repo` and the `workflow` options.
