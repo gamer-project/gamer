@@ -69,7 +69,7 @@ void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly, const l
    const long      NewParID0  = NOldPar;
    const long      NTarPar    = amr->Par->NPar_AcPlusInac - NOldPar;
    const real_par *Pos[3]     = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
-   const real_par *PType      = amr->Par->Type;
+   const long_par *PType      = amr->Par->Type;
    const int       NReal      = amr->NPatchComma[lv][1];
 
    real_par TParPos[3];
@@ -401,12 +401,13 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly, const long NNew
    amr->Par->VelY = amr->Par->AttributeFlt[PAR_VELY];
    amr->Par->VelZ = amr->Par->AttributeFlt[PAR_VELZ];
    amr->Par->Time = amr->Par->AttributeFlt[PAR_TIME];
-   amr->Par->Type = amr->Par->AttributeFlt[PAR_TYPE];
 #  ifdef STORE_PAR_ACC
    amr->Par->AccX = amr->Par->AttributeFlt[PAR_ACCX];
    amr->Par->AccY = amr->Par->AttributeFlt[PAR_ACCY];
    amr->Par->AccZ = amr->Par->AttributeFlt[PAR_ACCZ];
 #  endif
+
+   amr->Par->Type = amr->Par->AttributeInt[PAR_TYPE];
 
 
 // 6. check
