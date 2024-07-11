@@ -165,12 +165,12 @@ struct Particle_t
    real_par     *VelY;
    real_par     *VelZ;
    real_par     *Time;
-   real_par     *Type;
 #  ifdef STORE_PAR_ACC
    real_par     *AccX;
    real_par     *AccY;
    real_par     *AccZ;
 #  endif
+   long_par     *Type;
 
 
    //===================================================================================
@@ -386,12 +386,12 @@ struct Particle_t
       VelY = AttributeFlt[PAR_VELY];
       VelZ = AttributeFlt[PAR_VELZ];
       Time = AttributeFlt[PAR_TIME];
-      Type = AttributeFlt[PAR_TYPE];
 #     ifdef STORE_PAR_ACC
       AccX = AttributeFlt[PAR_ACCX];
       AccY = AttributeFlt[PAR_ACCY];
       AccZ = AttributeFlt[PAR_ACCZ];
 #     endif
+      Type = AttributeInt[PAR_TYPE];
 
    } // METHOD : InitRepo
 
@@ -435,8 +435,8 @@ struct Particle_t
          Aux_Error( ERROR_INFO, "Adding a particle with strange position (%21.14e, %21.14e, %21.14e) !!\n",
                     NewAttFlt[PAR_POSX], NewAttFlt[PAR_POSY], NewAttFlt[PAR_POSZ] );
 
-      if ( NewAttFlt[PAR_TYPE] < (real_par)0  ||  NewAttFlt[PAR_TYPE] >= (real_par)PAR_NTYPE )
-         Aux_Error( ERROR_INFO, "Incorrect particle type (%d) !!\n", (int)NewAttFlt[PAR_TYPE] );
+      if ( NewAttInt[PAR_TYPE] < (long_par)0  ||  NewAttInt[PAR_TYPE] >= (long_par)PAR_NTYPE )
+         Aux_Error( ERROR_INFO, "Incorrect particle type (%d) !!\n", (int)NewAttInt[PAR_TYPE] );
 #     endif
 
 
@@ -474,12 +474,12 @@ struct Particle_t
             VelY = AttributeFlt[PAR_VELY];
             VelZ = AttributeFlt[PAR_VELZ];
             Time = AttributeFlt[PAR_TIME];
-            Type = AttributeFlt[PAR_TYPE];
 #           ifdef STORE_PAR_ACC
             AccX = AttributeFlt[PAR_ACCX];
             AccY = AttributeFlt[PAR_ACCY];
             AccZ = AttributeFlt[PAR_ACCZ];
 #           endif
+            Type = AttributeInt[PAR_TYPE];
          }
 
          ParID = NPar_AcPlusInac;
