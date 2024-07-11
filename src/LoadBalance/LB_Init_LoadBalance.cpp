@@ -616,7 +616,7 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAttFlt_Old, long **Pa
 
 //    detach particles from patches to avoid warning messages when deleting
 //    patches with particles
-      const real_par *PType = amr->Par->Type;
+      const long_par *PType = amr->Par->Type;
       amr->patch[0][lv][PID]->RemoveParticle( NULL_INT, NULL, &amr->Par->NPar_Lv[lv], RemoveAllParticle, PType );
 #     endif
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -849,7 +849,7 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAttFlt_Old, long **Pa
          }
 
 //       6.3 associate particles with their home patches
-         const real_par *PType = amr->Par->Type;
+         const long_par *PType = amr->Par->Type;
 #        ifdef DEBUG_PARTICLE
 //       do not set ParPos too early since pointers to the particle repository (e.g., amr->Par->PosX)
 //       may change after calling amr->Par->AddOneParticle()
