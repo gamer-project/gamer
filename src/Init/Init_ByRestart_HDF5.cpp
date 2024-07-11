@@ -1413,7 +1413,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
       } // for (int p=0; p<NParThisPatch )
 
 //    link particles to this patch
-      const real_par *PType = amr->Par->Type;
+      const long_par *PType = amr->Par->Type;
 #     ifdef DEBUG_PARTICLE
       const real_par *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
       char Comment[MAX_STRING];
@@ -1571,7 +1571,12 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "Par_NAttFltUser",        &RS.Par_NAttFltUser,        SID, TID, NonFatal, &RT.Par_NAttFltUser,        1,    Fatal );
    else
    LoadField( "Par_NAttFltUser",        &RS.Par_NAttFltUser,        SID, TID, NonFatal, &RT.Par_NAttFltUser,        1, NonFatal );
+   if ( FormatVersion >= 2481 )
+   LoadField( "Par_NAttIntUser",        &RS.Par_NAttIntUser,        SID, TID, NonFatal, &RT.Par_NAttIntUser,        1,    Fatal );
+   else
+   LoadField( "Par_NAttIntUser",        &RS.Par_NAttIntUser,        SID, TID, NonFatal, &RT.Par_NAttIntUser,        1, NonFatal );
    LoadField( "Float8_Par",             &RS.Float8_Par,             SID, TID, NonFatal, &RT.Float8_Par,             1, NonFatal );
+   LoadField( "Int8_Par",               &RS.Int8_Par,               SID, TID, NonFatal, &RT.Int8_Par,               1, NonFatal );
 #  endif
 
 #  ifdef COSMIC_RAY
@@ -1689,6 +1694,10 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "Par_NAttFltStored",    &RS.Par_NAttFltStored,    SID, TID, NonFatal, &RT.Par_NAttFltStored,     1,    Fatal );
    else
    LoadField( "Par_NAttFltStored",    &RS.Par_NAttFltStored,    SID, TID, NonFatal, &RT.Par_NAttFltStored,     1, NonFatal );
+   if ( FormatVersion >= 2481 )
+   LoadField( "Par_NAttIntStored",    &RS.Par_NAttIntStored,    SID, TID, NonFatal, &RT.Par_NAttIntStored,     1,    Fatal );
+   else
+   LoadField( "Par_NAttIntStored",    &RS.Par_NAttIntStored,    SID, TID, NonFatal, &RT.Par_NAttIntStored,     1, NonFatal );
    LoadField( "Par_NType",            &RS.Par_NType,            SID, TID, NonFatal, &RT.Par_NType,             1, NonFatal );
 #  ifdef GRAVITY
    LoadField( "RhoExt_GhostSize",     &RS.RhoExt_GhostSize,     SID, TID, NonFatal, &RT.RhoExt_GhostSize,      1, NonFatal );

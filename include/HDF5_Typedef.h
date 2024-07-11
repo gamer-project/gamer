@@ -83,6 +83,7 @@ struct KeyInfo_t
    int    Par_NAttFltStored;        // PAR_NATT_FLT_STORED
    int    Par_NAttIntStored;        // PAR_NATT_INT_STORED
    int    Float8_Par;
+   int    Int8_Par;
 #  endif
 #  ifdef COSMIC_RAY
    int    CR_Diffusion;
@@ -186,6 +187,7 @@ struct Makefile_t
    int Par_NAttFltUser;
    int Par_NAttIntUser;
    int Float8_Par;
+   int Int8_Par;
 #  endif
 
 #  ifdef COSMIC_RAY

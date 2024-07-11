@@ -1581,6 +1581,11 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 #  else
    KeyInfo.Float8_Par           = 0;
 #  endif
+#  ifdef INT8_PAR
+   KeyInfo.Int8_Par             = 1;
+#  else
+   KeyInfo.Int8_Par             = 0;
+#  endif
 #  endif // #ifdef PARTICLE
 #  if ( MODEL == HYDRO )
 #  ifdef MHD
@@ -1918,6 +1923,12 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.Float8_Par             = 1;
 #  else
    Makefile.Float8_Par             = 0;
+#  endif
+
+#  ifdef FLOAT8_PAR
+   Makefile.Int8_Par               = 1;
+#  else
+   Makefile.Int8_Par               = 0;
 #  endif
 #  endif // #ifdef PARTICLE
 
@@ -2811,6 +2822,7 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Par_NAttFltStored",    HOFFSET(KeyInfo_t,Par_NAttFltStored   ), H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "Par_NAttIntStored",    HOFFSET(KeyInfo_t,Par_NAttIntStored   ), H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "Float8_Par",           HOFFSET(KeyInfo_t,Float8_Par          ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Int8_Par",             HOFFSET(KeyInfo_t,Int8_Par            ), H5T_NATIVE_INT          );
 #  endif
 
 #  ifdef COSMIC_RAY
@@ -2930,6 +2942,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Feedback",               HOFFSET(Makefile_t,Feedback               ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Par_NAttIntUser",        HOFFSET(Makefile_t,Par_NAttIntUser        ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Float8_Par",             HOFFSET(Makefile_t,Float8_Par             ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "Int8_Par",               HOFFSET(Makefile_t,Int8_Par               ), H5T_NATIVE_INT );
 #  endif
 
 #  ifdef COSMIC_RAY
