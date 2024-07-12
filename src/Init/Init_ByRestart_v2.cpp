@@ -671,7 +671,7 @@ void Init_ByRestart()
                } // for (int p=0; p<NParThisPatch )
 
 //             link particles to this patch
-               const real_par *PType = amr->Par->Type;
+               const long_par *PType = amr->Par->Type;
 #              ifdef DEBUG_PARTICLE
                char Comment[100];
                sprintf( Comment, "%s, PID %d, NPar %d", __FUNCTION__, PID, NParThisPatch );

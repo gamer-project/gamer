@@ -186,7 +186,7 @@ void Output_DumpData_Total( const char *FileName )
       FileOffset_Particle = ExpectFileSize;  // file offset at the beginning of particle data
 
       ExpectFileSize += (long)PAR_NATT_FLT_STORED*amr->Par->NPar_Active_AllRank*sizeof(real);
-      ExpectFileSize += (long)PAR_NATT_FLT_STORED*amr->Par->NPar_Active_AllRank*sizeof(long_par);
+      ExpectFileSize += (long)PAR_NATT_INT_STORED*amr->Par->NPar_Active_AllRank*sizeof(long_par);
 #     endif
 
 
