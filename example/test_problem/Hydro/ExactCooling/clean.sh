@@ -2,6 +2,5 @@ rm -f Record__Note Record__Timing Record__TimeStep Record__PatchCount Record__Du
       Record__Conservation Data* stderr stdout log XYslice* YZslice* XZslice* Xline* Yline* Zline* \
       Diag* BaseXYslice* BaseYZslice* BaseXZslice* BaseXline* BaseYline* BaseZline* BaseDiag* \
       PowerSpec_* Particle_* nohup.out Record__Performance Record__TimingMPI_* \
-      Record__ParticleCount Record__User Patch_* Record__NCorrUnphy FailedPatchGroup* *.pyc Record__LoadBalance
-
-rm -f Record__Center BH_variable.bin
+      Record__ParticleCount Record__User Patch_* Record__NCorrUnphy FailedPatchGroup* *.pyc Record__LoadBalance \
+      GRACKLE_INFO  Record__DivB Output__Error

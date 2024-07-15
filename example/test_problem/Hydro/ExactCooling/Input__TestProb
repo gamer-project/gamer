@@ -1,0 +1,3 @@
+# problem-specific runtime parameters
+EC_Temp        10000000.0    # the constant temperature (in K)
+EC_Dens        1.0           # the constant number density (in cm^-3)  

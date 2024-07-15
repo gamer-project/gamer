@@ -716,13 +716,15 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //       12-1. use the average data on fine grids to correct the coarse-grid data
          if ( OPT__FIXUP_RESTRICT )
          {
+            const long ResVar = _TOTAL - _TCOOL;
+
             TIMING_FUNC(   Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv],
-                                               NULL_INT, NULL_INT, FixUpVar_Restrict, _MAG ),
+                                               NULL_INT, NULL_INT, ResVar, _MAG ),
                            Timer_FixUp[lv],   TIMER_ON   );
 
 #           ifdef LOAD_BALANCE
             TIMING_FUNC(   LB_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT,
-                                             FixUpVar_Restrict, _MAG, NULL_INT ),
+                                             ResVar, _MAG, NULL_INT ),
                            Timer_GetBuf[lv][7],   TIMER_ON   );
 #           endif
          }
