@@ -30,7 +30,7 @@ static void SendParticle2HomeRank( const int lv, const bool OldParOnly, const lo
 //                               --> Format: real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL]
 //                               --> Must be deallocated manually after invoking this function
 //                NewParAttInt : Pointer array storing the data of new particle integer attributes (for OldParOnly==false only)
-//                               --> Format: real_par *NewParAttInt[PAR_NATT_INT_TOTAL]
+//                               --> Format: long_par *NewParAttInt[PAR_NATT_INT_TOTAL]
 //                               --> Must be deallocated manually after invoking this function
 //
 // Return      :  1. amr->Par
@@ -196,7 +196,7 @@ void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly, const l
 //                               --> Format: real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL]
 //                               --> Must be deallocated manually after invoking this function
 //                NewParAttInt : Pointer array storing the data of new particle integer attributes (for OldParOnly==false only)
-//                               --> Format: real_par *NewParAttInt[PAR_NATT_INT_TOTAL]
+//                               --> Format: long_par *NewParAttInt[PAR_NATT_INT_TOTAL]
 //                               --> Must be deallocated manually after invoking this function
 //
 // Return      :  1. amr->Par
@@ -365,7 +365,7 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly, const long NNew
 
 //    3-5. redistribute data
       MPI_Alltoallv_GAMER( SendBuf_Int, Send_Count, Send_Disp, MPI_GAMER_LONG_PAR, RecvBuf_Int, Recv_Count, Recv_Disp, MPI_GAMER_LONG_PAR, MPI_COMM_WORLD );
-   } // for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
+   } // for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
 
 
 // 4. reset particle parameters

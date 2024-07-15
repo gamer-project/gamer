@@ -261,7 +261,7 @@ FieldIdx_t GetParticleAttributeIntIndex( const char *InputLabel, const Check_t C
 
    return Idx_Out;
 
-} // FUNCTION : GetParticleAttributeFltIndex
+} // FUNCTION : GetParticleAttributeIntIndex
 
 
 
