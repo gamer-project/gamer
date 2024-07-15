@@ -23,12 +23,6 @@
          #CXXFLAG -fsanitize=undefined -fsanitize=address
          #LIBFLAG -fsanitize=undefined -fsanitize=address
          ```
-      1. Edit `src/Makefile_base`
-    
-         Add the `$(CXXFLAG)` at the makefile linking part, usually at the bottom of the makefile. The line should be like this:
-         ```
-         $(CXX) $(CXXFLAG) -o $@ $^ $(OBJ_GPU_LINK) $(LIB) $(OPENMPFLAG)
-         ```
       1. Generate `Makefile`
          ```
          python configure.py --machine=eureka_gnu [--your_other_arguments]
