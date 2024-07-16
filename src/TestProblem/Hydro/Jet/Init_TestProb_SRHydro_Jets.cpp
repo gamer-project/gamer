@@ -1438,13 +1438,13 @@ static bool Flag_Region( const int i, const int j, const int k, const int lv, co
    const double R         = sqrt( SQR(dr[0]) + SQR(dr[1]) );
 
 // TODO the last condition seems weird
-   bool Flag = R > gasDisk_highResRadius  ||  lv > gasDisk_lowRes_LEVEL  ||  fabs(dr[2]) < 2.0*interfaceHeight;
+   // bool Flag = R > gasDisk_highResRadius  ||  lv > gasDisk_lowRes_LEVEL  ||  fabs(dr[2]) < 2.0*interfaceHeight;
 
-   return Flag;
+   // return Flag;
 //   original flag. TODO: once the question up is solved, remove it
-//   bool Flag = R > gasDisk_highResRadius && lv > gasDisk_lowRes_LEVEL && fabs(dr[2]) < 2.0*interfaceHeight;
-//   if ( Flag ) return false;
-//   else        return true;
+   bool Flag = R > gasDisk_highResRadius && lv > gasDisk_lowRes_LEVEL && fabs(dr[2]) < 2.0*interfaceHeight;
+   if ( Flag ) return false;
+   else        return true;
 } // FUNCTION : Flag_Region
 
 
