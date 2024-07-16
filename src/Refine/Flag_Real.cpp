@@ -30,6 +30,12 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    if ( lv == NLEVEL-1 )
       Aux_Error( ERROR_INFO, "function <%s> should NOT be applied to the finest level\" !!\n", __FUNCTION__ );
 
+// user-specified operations before
+   if ( Flag_UserWorkBeforeFlag_Ptr != NULL )
+   {
+      Flag_UserWorkBeforeFlag_Ptr( lv );
+   }
+
 
 // initialize all flags as false
 #  pragma omp parallel for schedule( static )

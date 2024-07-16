@@ -37,6 +37,7 @@ extern void (*Output_User_Ptr)();
 extern void (*Output_UserWorkBeforeOutput_Ptr)();
 extern bool (*Flag_Region_Ptr)( const int i, const int j, const int k, const int lv, const int PID );
 extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
+extern void (*Flag_UserWorkBeforeFlag_Ptr)( const int lv );
 extern double (*Mis_GetTimeStep_User_Ptr)( const int lv, const double dTime_dt );
 extern void (*Mis_UserWorkBeforeNextLevel_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt );
 extern void (*Mis_UserWorkBeforeNextSubstep_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt );
