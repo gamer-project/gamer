@@ -436,7 +436,7 @@ def load_arguments():
                          default=False,
                          depend={"model":"HYDRO"},
                          constraint={ True:{"dual":[NONE_STR], "eos":"COSMIC_RAY", "comoving":False} },
-                         help="Enable cosmic ray. Must use <--eos=COSMIC_RAY>.\n"
+                         help="Enable cosmic rays. Must use <--eos=COSMIC_RAY>.\n"
                        )
 
     parser.add_argument( "--eos", type=str, metavar="TYPE", gamer_name="EOS",
@@ -447,7 +447,7 @@ def load_arguments():
                        )
 
     parser.add_argument( "--barotropic", type=str2bool, metavar="BOOLEAN", gamer_name="BAROTROPIC_EOS",
-                         default=False,
+                         default=None,
                          depend={"model":"HYDRO"},
                          constraint={ True:{"eos":["ISOTHERMAL", "TABULAR", "USER"]} },
                          help="Whether or not the equation of state set by <--eos> is barotropic. Mandatory for <--eos=ISOTHEMAL>. Optional for <--eos=TABULAR> and <--eos=USER>.\n"
@@ -744,6 +744,9 @@ def set_conditional_defaults( args ):
         if   args["cosmic_ray"]: args["eos"] = "COSMIC_RAY"
         elif args["srhd"]      : args["eos"] = "TAUBMATHEWS"
         else                   : args["eos"] = "GAMMA"
+
+    if args["barotropic"] is None:
+        args["barotropic"] = (args["eos"] == "ISOTHERMAL")
     return args
 
 def set_gpu( gpus, flags, args ):
