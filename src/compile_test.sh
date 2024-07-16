@@ -25,10 +25,24 @@ ${PYTHON} configure.py --machine=eureka_intel --hdf5=true --gpu=true --fftw=FFTW
 make clean
 make -j
 
+# particle int long_par
+${PYTHON} configure.py --machine=eureka_intel --hdf5=true --gpu=true --fftw=FFTW3 \
+                       --model=HYDRO --gravity=true --eos=ISOTHERMAL --barotropic=true \
+                       --flu_scheme=MHM --flux=HLLC --passive=1 --particle=true --long_par=false
+make clean
+make -j
+
 # particle mpi
 ${PYTHON} configure.py --machine=eureka_intel --hdf5=true --gpu=true --fftw=FFTW3 \
                        --model=HYDRO --gravity=true --eos=ISOTHERMAL --barotropic=true \
                        --flu_scheme=MHM --flux=HLLC --passive=1 --particle=true --mpi=true
+make clean
+make -j
+
+# particle mpi int long_par
+${PYTHON} configure.py --machine=eureka_intel --hdf5=true --gpu=true --fftw=FFTW3 \
+                       --model=HYDRO --gravity=true --eos=ISOTHERMAL --barotropic=true \
+                       --flu_scheme=MHM --flux=HLLC --passive=1 --particle=true --mpi=true --long_par=false
 make clean
 make -j
 
