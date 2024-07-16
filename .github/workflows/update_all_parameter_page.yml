@@ -3,8 +3,10 @@ name: Update all parameters wiki page
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
+    paths:
+      - 'example/input/Input__Parameter'
+      - '.github/workflows/update_all_parameter_page.yml'
+      - 'src/Init/Init_Load_Parameter.cpp'
 
 env:
   GIT_AUTHOR_NAME: ${{ github.actor }}
