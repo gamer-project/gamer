@@ -202,7 +202,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, c
    int      *SendBuf_NParEachPatch       = NULL;
    long     *SendBuf_LBIdxEachPatch      = NULL;
    real_par *SendBuf_ParFltDataEachPatch = NULL;
-   long     *SendBuf_ParIntDataEachPatch = NULL;
+   long_par *SendBuf_ParIntDataEachPatch = NULL;
 
 #  if ( LOAD_BALANCE != HILBERT )
    const int PatchScaleFaLv = PS1 * amr->scale[FaLv];
@@ -514,7 +514,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, c
             amr->patch[0][FaLv][FaPID]->ParAttFlt_Copy[ FltAttIntIdx[v] ] = new real_par [ amr->patch[0][FaLv][FaPID]->NPar_Copy ];
 
          for (int v=0; v<NAttInt; v++)
-            amr->patch[0][FaLv][FaPID]->ParAttInt_Copy[ IntAttIntIdx[v] ] = new long     [ amr->patch[0][FaLv][FaPID]->NPar_Copy ];
+            amr->patch[0][FaLv][FaPID]->ParAttInt_Copy[ IntAttIntIdx[v] ] = new long_par [ amr->patch[0][FaLv][FaPID]->NPar_Copy ];
 
 //       reset to zero (instead of NPar) since we will use NPar_Copy to record the number of particles that has been
 //       added to ParAttFlt_Copy[] and ParAttInt_Copy[]
