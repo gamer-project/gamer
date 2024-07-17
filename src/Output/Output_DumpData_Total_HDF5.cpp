@@ -254,7 +254,7 @@ Procedure for outputting new variables:
 //                2477 : 2024/04/05 --> output OPT__RECORD_CENTER, COM_CEN_X, COM_CEN_Y, COM_CEN_Z,
 //                                             COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R, COM_MAX_ITER
 //                2478 : 2024/04/09 --> output ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z
-//                2480 : 2024/07/17 --> output OPT__OUTPUT_PAR_MESH
+//                2480 : 2024/07/17 --> output OPT__OUTPUT_PAR_MESH and particle attributes mapped from mesh quantities
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1233,10 +1233,14 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //          --> solution: we can output a fixed number of particles at a time (see Output_DumpData_Total.cpp)
    long     (*NParLv_EachRank)[NLEVEL] = new long [MPI_NRank][NLEVEL];   // number of particles at each level in each rank
    real_par (*ParBuf1v1Lv)             = NULL;   // buffer storing the data of one particle attribute at one level
+   int       PAR_NATT_MESH             = amr->Par->Mesh_Attr_Num;
 
    long  GParID_Offset[NLEVEL];  // GParID = global particle index (==> unique for each particle)
    long  NParLv_AllRank[NLEVEL];
    long  MaxNPar1Lv, NParInBuf, ParID;
+
+// prepare particle attributes mapped from mesh quantities
+   if ( OPT__OUTPUT_PAR_MESH )   Par_Output_TracerParticle_Mesh();
 
 
 // 6-1. initialize variables
@@ -1279,11 +1283,13 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       if ( H5_GroupID_Particle < 0 )   Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "Particle" );
 
 //    create the datasets of all particle attributes
-      for (int v=0; v<PAR_NATT_STORED; v++)
+      for (int v=0; v<PAR_NATT_STORED+PAR_NATT_MESH; v++)
       {
-         H5_SetID_ParData = H5Dcreate( H5_GroupID_Particle, ParAttLabel[v], H5T_GAMER_REAL_PAR, H5_SpaceID_ParData,
+         char *ParLabel = ( v < PAR_NATT_STORED ) ? ParAttLabel[v] : amr->Par->Mesh_Attr_Label[v - PAR_NATT_STORED];
+
+         H5_SetID_ParData = H5Dcreate( H5_GroupID_Particle, ParLabel, H5T_GAMER_REAL_PAR, H5_SpaceID_ParData,
                                        H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
-         if ( H5_SetID_ParData < 0 )   Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", ParAttLabel[v] );
+         if ( H5_SetID_ParData < 0 )   Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", ParLabel );
          H5_Status = H5Dclose( H5_SetID_ParData );
       }
 
@@ -1327,7 +1333,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 //       output one particle attribute at one level in one rank at a time
 //       --> skip the last PAR_NATT_UNSTORED attributes since we do not want to store them on disk
-         for (int v=0; v<PAR_NATT_STORED; v++)
+         for (int v=0; v<PAR_NATT_STORED+PAR_NATT_MESH; v++)
          {
 //          6-3-3. collect particle data from all patches at the current target level
             NParInBuf = 0;
@@ -1342,12 +1348,16 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   Aux_Error( ERROR_INFO, "lv %d, NParInBuf (%ld) >= NPar_Lv (%ld) !!\n", lv, NParInBuf, amr->Par->NPar_Lv[lv] );
 #              endif
 
-               ParBuf1v1Lv[ NParInBuf ++ ] = amr->Par->Attribute[v][ParID];
+               ParBuf1v1Lv[ NParInBuf ++ ] = ( v < PAR_NATT_STORED )
+                                           ? amr->Par->Attribute[v]                  [ParID]
+                                           : amr->Par->Mesh_Attr[v - PAR_NATT_STORED][ParID];
             }
 
 
 //          6-3-4. write data to disk
-            H5_SetID_ParData = H5Dopen( H5_GroupID_Particle, ParAttLabel[v], H5P_DEFAULT );
+            char *ParLabel = ( v < PAR_NATT_STORED ) ? ParAttLabel[v] : amr->Par->Mesh_Attr_Label[v - PAR_NATT_STORED];
+
+            H5_SetID_ParData = H5Dopen( H5_GroupID_Particle, ParLabel, H5P_DEFAULT );
 
             H5_Status = H5Dwrite( H5_SetID_ParData, H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT, ParBuf1v1Lv );
             if ( H5_Status < 0 )
