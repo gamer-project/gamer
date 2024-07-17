@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2478)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2480)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -254,6 +254,7 @@ Procedure for outputting new variables:
 //                2477 : 2024/04/05 --> output OPT__RECORD_CENTER, COM_CEN_X, COM_CEN_Y, COM_CEN_Z,
 //                                             COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R, COM_MAX_ITER
 //                2478 : 2024/04/09 --> output ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z
+//                2480 : 2024/07/17 --> output OPT__OUTPUT_PAR_MESH
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1503,7 +1504,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2478;
+   KeyInfo.FormatVersion        = 2480;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2557,6 +2558,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Output_User            = OPT__OUTPUT_USER;
 #  ifdef PARTICLE
    InputPara.Opt__Output_Par_Mode        = OPT__OUTPUT_PAR_MODE;
+   InputPara.Opt__Output_Par_Mesh        = OPT__OUTPUT_PAR_MESH;
 #  endif
    InputPara.Opt__Output_BasePS          = OPT__OUTPUT_BASEPS;
    InputPara.Opt__Output_Base            = OPT__OUTPUT_BASE;
@@ -3505,6 +3507,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Output_User",            HOFFSET(InputPara_t,Opt__Output_User           ), H5T_NATIVE_INT              );
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Opt__Output_Par_Mode",        HOFFSET(InputPara_t,Opt__Output_Par_Mode       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Par_Mesh",        HOFFSET(InputPara_t,Opt__Output_Par_Mesh       ), H5T_NATIVE_INT              );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Output_BasePS",          HOFFSET(InputPara_t,Opt__Output_BasePS         ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Base",            HOFFSET(InputPara_t,Opt__Output_Base           ), H5T_NATIVE_INT              );
