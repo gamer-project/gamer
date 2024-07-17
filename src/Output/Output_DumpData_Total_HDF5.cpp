@@ -1233,7 +1233,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //          --> solution: we can output a fixed number of particles at a time (see Output_DumpData_Total.cpp)
    long     (*NParLv_EachRank)[NLEVEL] = new long [MPI_NRank][NLEVEL];   // number of particles at each level in each rank
    real_par (*ParBuf1v1Lv)             = NULL;   // buffer storing the data of one particle attribute at one level
-   int       PAR_NATT_MESH             = amr->Par->Mesh_Attr_Num;
+   int        PAR_NATT_MESH            = amr->Par->Mesh_Attr_Num;
 
    long  GParID_Offset[NLEVEL];  // GParID = global particle index (==> unique for each particle)
    long  NParLv_AllRank[NLEVEL];

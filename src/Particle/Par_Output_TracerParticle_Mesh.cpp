@@ -13,9 +13,9 @@ static long Par_Get_MeshIndex( const char *InputLabel );
 //
 // Note        :  1. Invoked by Par_Init_Attribute_Mesh()
 //                2. Similar to GetFieldIndex(), but supports derived fields
-//                2. Return Idx_Undefined if the target field cannot be found
+//                3. Return Idx_Undefined if the target field cannot be found
 //
-// Parameter   :  InputLabel : Field name
+// Parameter   :  InputLabel : Target field label
 //
 // Return      :  Success: bitwise index of the target field
 //                Failed : Idx_Undefined
@@ -104,7 +104,7 @@ void Par_Init_Attribute_Mesh()
 //    skip empty lines and lines starting with #
       if ( NItem > 0  &&  FirstItem[0] != '#' )
       {
-//       initialize the bitwise index and label of mesh quantities to be mapped from
+//       initialize the bitwise indices and labels of mesh quantities to be mapped from
          const long FieldIdx = Par_Get_MeshIndex( FirstItem );
 
          if ( FieldIdx == Idx_Undefined )
