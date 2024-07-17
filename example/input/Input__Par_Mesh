@@ -1,0 +1,9 @@
+# Supported labels in different models:
+#   HYDRO : Dens, Mom[X/Y/Z], Engy, Vel[X/Y/Z], Pres, Temp, Entr, Eint
+#           [, Pote] [, Mag[X/Y/Z/E]]
+#   ELBDM : Dens, Real, Imag [, Pote]
+#
+# Caution: The field label is case sensitive
+Dens
+Pres
+VelX
