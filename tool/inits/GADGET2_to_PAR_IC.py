@@ -89,6 +89,14 @@ with h5py.File(input_GADGET_file, "r") as f:
     GADGET_NumPart_Total = list(Header_list.attrs["NumPart_Total"])
 
     with open('PAR_IC', 'wb') as output:
+        mass = np.array([], dtype=output_float_precision)
+        posx = np.array([], dtype=output_float_precision)
+        posy = np.array([], dtype=output_float_precision)
+        posz = np.array([], dtype=output_float_precision)
+        velx = np.array([], dtype=output_float_precision)
+        vely = np.array([], dtype=output_float_precision)
+        velz = np.array([], dtype=output_float_precision)
+        partype = np.array([], dtype=output_float_precision)
 
         for i, NumPart_i in enumerate(GADGET_NumPart_Total):
             # if for "PartType(i)" the total particle number is greater than zero, we import the information to PAR_IC
@@ -97,32 +105,48 @@ with h5py.File(input_GADGET_file, "r") as f:
                 PartType_Coordinates = np.array(f[key_NOW]["Coordinates"], float)
                 Velocities_Coordinates = np.array(f[key_NOW]["Velocities"], float)
 
-                mass = np.full(NumPart_i, GADGET_MassTable[i])*mass_conversion
+                if (GADGET_MassTable[i] == 0.0):
+                    mass_i = np.array(f[key_NOW]["Masses"], float)*mass_conversion
+                else:
+                    mass_i = np.full(NumPart_i, GADGET_MassTable[i])*mass_conversion
 
                 # set the origin of Cartesian coordinates to the box left bottom corner
-                posx = PartType_Coordinates[:,0]*pos_conversion
-                posy = PartType_Coordinates[:,1]*pos_conversion
-                posz = PartType_Coordinates[:,2]*pos_conversion
+                posx_i = PartType_Coordinates[:,0]*pos_conversion
+                posy_i = PartType_Coordinates[:,1]*pos_conversion
+                posz_i = PartType_Coordinates[:,2]*pos_conversion
 
-                velx = Velocities_Coordinates[:,0]*vel_conversion*(input_a_scale_factor**1.5)
-                vely = Velocities_Coordinates[:,1]*vel_conversion*(input_a_scale_factor**1.5)
-                velz = Velocities_Coordinates[:,2]*vel_conversion*(input_a_scale_factor**1.5)
+                # For GADGET, v_peculiar = sqrt(a) * v_snapshot 
+                # --> See "3. Particle velocities" on p.32 of https://wwwmpa.mpa-garching.mpg.de/gadget/users-guide.pdf
+                # For GAMER, v_code = a * v_physical
+                # --> See Eq. (16) of Schive et al. (2010)
+                velx_i = Velocities_Coordinates[:,0]*vel_conversion*(input_a_scale_factor**1.5)
+                vely_i = Velocities_Coordinates[:,1]*vel_conversion*(input_a_scale_factor**1.5)
+                velz_i = Velocities_Coordinates[:,2]*vel_conversion*(input_a_scale_factor**1.5)
 
                 # For GADGET, see "Table 3" on p.31 of https://wwwmpa.mpa-garching.mpg.de/gadget/users-guide.pdf
                 # For GAMER, we fix the imported particle type to "1 (PTYPE_GENERIC_MASSIVE)."
                 # --> See https://github.com/gamer-project/gamer/wiki/Initial-Conditions#IC-File-Particles
-                partype = np.full(NumPart_i, 1)
+                partype_i = np.full(NumPart_i, 1)
 
-                output.write(mass.astype(dtype=output_float_precision).tobytes())
-                output.write(posx.astype(dtype=output_float_precision).tobytes())
-                output.write(posy.astype(dtype=output_float_precision).tobytes())
-                output.write(posz.astype(dtype=output_float_precision).tobytes())
-                output.write(velx.astype(dtype=output_float_precision).tobytes())
-                output.write(vely.astype(dtype=output_float_precision).tobytes())
-                output.write(velz.astype(dtype=output_float_precision).tobytes())
-                output.write(partype.astype(dtype=output_float_precision).tobytes())
+                mass = np.append(mass, mass_i)
+                posx = np.append(posx, posx_i)
+                posy = np.append(posy, posy_i)
+                posz = np.append(posz, posz_i)
+                velx = np.append(velx, velx_i)
+                vely = np.append(vely, vely_i)
+                velz = np.append(velz, velz_i)
+                partype = np.append(partype, partype_i)
 
                 print('Number of particles = %i'%NumPart_i)
+
+        output.write(mass.astype(dtype=output_float_precision).tobytes())
+        output.write(posx.astype(dtype=output_float_precision).tobytes())
+        output.write(posy.astype(dtype=output_float_precision).tobytes())
+        output.write(posz.astype(dtype=output_float_precision).tobytes())
+        output.write(velx.astype(dtype=output_float_precision).tobytes())
+        output.write(vely.astype(dtype=output_float_precision).tobytes())
+        output.write(velz.astype(dtype=output_float_precision).tobytes())
+        output.write(partype.astype(dtype=output_float_precision).tobytes())
 
         output.close()
 
