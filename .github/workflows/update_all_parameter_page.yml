@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'example/input/Input__Parameter'
+      - 'example/test_problem/Template/Input__Parameter'
       - '.github/workflows/update_all_parameter_page.yml'
       - 'src/Init/Init_Load_Parameter.cpp'
 
