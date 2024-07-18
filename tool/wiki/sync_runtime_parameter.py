@@ -88,13 +88,14 @@ with open( PARAM_CPP_FILE, 'r' ) as f:
 
 link_source_mds = {}
 for file_path in LINK_FILES:
-    file_name = file_path.split('/')[-1][:-3]
+    file_name = file_path.split('/')[-1][:-3] # get the file name without path and trailing `.md`
     with open( file_path, 'r' ) as f:
         link_source_mds[file_name] = f.read()
 
 params = {}
 
-# get all parameters from Input__Parameter
+# get all parameters from ALL_PARAM_FILE
+# NOTE: assuming the line starts with space should be the comment of the above line
 last_key = ""
 for i, line in enumerate(lines):
     if line[0] == '\n': continue
@@ -105,7 +106,7 @@ for i, line in enumerate(lines):
     last_key = line.split()[0]
     params[last_key] = parameter( line )
 
-# get all default, min, max, value from .cpp
+# get all default, min, max, value from PARAM_CPP_FILE
 for i, line in enumerate(lines_cpp):
     if "ReadPara->Add" not in line: continue
     words = list( filter( None, re.split( ',| ', line ) ) )
@@ -123,12 +124,11 @@ for i, line in enumerate(lines_cpp):
     except:
         print( key, "does not exist in %s"%ALL_PARAM_FILE )
 
-# get the detailed description link from *.md
+# get the detailed description link from LINK_FILES
 for p in params:
     status = params[p].get_link_name( link_source_mds )
 
-params_sorted_key = sorted( params.keys() )
-
+# output markdown file
 with open( OUT_MD, 'w' ) as f:
     param_str_format = '| %-100s | %15s | %15s | %15s | %s |\n'
 
@@ -142,6 +142,7 @@ with open( OUT_MD, 'w' ) as f:
     f.write( '\n' )
 
     start_char = ''
+    params_sorted_key = sorted( params.keys() )
     for key in params_sorted_key:
         # Add alphabet title
         if start_char != key[0]:
