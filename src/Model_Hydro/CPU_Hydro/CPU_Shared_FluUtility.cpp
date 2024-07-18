@@ -292,6 +292,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
    const real _Rho = (real)1.0/Out[0];
 #  endif
 
+
 // convert the mass density of target passive scalars to mass fraction
    if ( FracPassive )
       for (int v=0; v<NFrac; v++)   Out[ NCOMP_FLUID + FracIdx[v] ] *= _Rho;
