@@ -45,25 +45,23 @@ REPLACE_DICT   = { "NoMin_double":"None", "NoMax_double":"None", "NoDef_double":
 class parameter():
     def __init__( self, string ):
         name, description = self.get_name_description( string )
-        self.name        = name
-        self.link_name   = name
-        self.default     = []
-        self.minimum     = []
-        self.maximum     = []
-        self.description = description
-        self.NAdd        = 0
+        self.name         = name
+        self.link_name    = name
+        self.default      = []
+        self.minimum      = []
+        self.maximum      = []
+        self.description  = description
+        self.NAdd         = 0
 
     def get_name_description( self, string ):
-        # words = list( filter( None, string.split(' ') ) )
-        words = string.split()
-        name = words[0]
+        words       = string.split()
+        name        = words[0]
         description = ""
         for i in range(3, len(words)):
             description += words[i] + ' '
         return name, description[:-1]
 
     def append_description( self, string ):
-        # words = list( filter( None, string.split(' ') ) )
         words = string.split()
         for i in range(1, len(words)):
             self.description += ' ' + words[i]
@@ -110,11 +108,9 @@ for i, line in enumerate(lines):
 # get all default, min, max, value from .cpp
 for i, line in enumerate(lines_cpp):
     if "ReadPara->Add" not in line: continue
-    # words = line.split()
-    # words = list( filter( None, string.split(' ') ) )
     words = list( filter( None, re.split( ',| ', line ) ) )
     if "//" == words[0]:  continue
-    key = words[1][1:-1]
+    key     = words[1][1:-1]
     default = words[3]
     minimum = words[4]
     maximum = words[5]
