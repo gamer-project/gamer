@@ -9,35 +9,33 @@ from string import ascii_uppercase as auc
 #====================================================================================================
 ALL_PARAM_FILE = "../../example/input/Input__Parameter"
 PARAM_CPP_FILE = "../../src/Init/Init_Load_Parameter.cpp"
-LINK_FILES = ["../../doc/wiki/Runtime-Parameters:-General.md",
-              "../../doc/wiki/MPI-and-OpenMP.md",
-              "../../doc/wiki/GPU.md",
-              "../../doc/wiki/Runtime-Parameters:-Units.md",
-              "../../doc/wiki/Initial-Conditions.md",
-              "../../doc/wiki/Hydro.md",
-              "../../doc/wiki/Gravity.md",
-              "../../doc/wiki/Particles.md",
-              "../../doc/wiki/Runtime-Parameters:-Cosmology.md",
-              "../../doc/wiki/Chemistry-and-Radiation.md",
-              "../../doc/wiki/Star-Formation.md",
-              "../../doc/wiki/Feedback.md",
-              "../../doc/wiki/Runtime-Parameters:-Timestep.md",
-              "../../doc/wiki/Runtime-Parameters:-Refinement.md",
-              "../../doc/wiki/Runtime-Parameters:-Interpolation.md",
-              "../../doc/wiki/Outputs.md",
-              "../../doc/wiki/Runtime-Parameters:-Miscellaneous.md"
-              ]
-
-OUT_MD = "Runtime-Parameters:-All.md"
-FIRST_PARAM = "BOX_SIZE"
-
-REPLACE_DICT = { "NoMin_double":"None", "NoMax_double":"None", "NoDef_double":"None",
-                 "NoMin_int":"None", "NoMax_int":"None",
-                 "NoMin_long":"None", "NoMax_long":"None",
-                 "NoDef_str":"None", "Useless_str":"None",
-                 "Useless_bool":"None",
-                 "true":"1", "false":"0",
-                 "__DBL_MAX__":"1.79769313e+308", "Eps_double":"2.22507386e-308"}
+LINK_FILES     = ["../../doc/wiki/Runtime-Parameters:-General.md",
+                  "../../doc/wiki/MPI-and-OpenMP.md",
+                  "../../doc/wiki/GPU.md",
+                  "../../doc/wiki/Runtime-Parameters:-Units.md",
+                  "../../doc/wiki/Initial-Conditions.md",
+                  "../../doc/wiki/Hydro.md",
+                  "../../doc/wiki/Gravity.md",
+                  "../../doc/wiki/Particles.md",
+                  "../../doc/wiki/Runtime-Parameters:-Cosmology.md",
+                  "../../doc/wiki/Chemistry-and-Radiation.md",
+                  "../../doc/wiki/Star-Formation.md",
+                  "../../doc/wiki/Feedback.md",
+                  "../../doc/wiki/Runtime-Parameters:-Timestep.md",
+                  "../../doc/wiki/Runtime-Parameters:-Refinement.md",
+                  "../../doc/wiki/Runtime-Parameters:-Interpolation.md",
+                  "../../doc/wiki/Outputs.md",
+                  "../../doc/wiki/Runtime-Parameters:-Miscellaneous.md"
+                  ]
+OUT_MD         = "Runtime-Parameters:-All.md"
+REPLACE_DICT   = { "NoMin_double":"None", "NoMax_double":"None", "NoDef_double":"None",
+                   "NoMin_int":"None", "NoMax_int":"None",
+                   "NoMin_long":"None", "NoMax_long":"None",
+                   "NoDef_str":"None", "Useless_str":"None",
+                   "Useless_bool":"None",
+                   "true":"1", "false":"0",
+                   "__DBL_MAX__":"1.79769313e+308", "Eps_double":"2.22507386e-308"
+                 }
 
 
 
