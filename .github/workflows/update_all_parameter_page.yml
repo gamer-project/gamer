@@ -5,7 +5,7 @@ on:
   push:
     paths:
       - 'example/test_problem/Template/Input__Parameter'
-      - '.github/workflows/update_all_parameter_page.yml'
+      - 'tool/wiki/sync_runtime_parameter.py'
       - 'src/Init/Init_Load_Parameter.cpp'
 
 env:
