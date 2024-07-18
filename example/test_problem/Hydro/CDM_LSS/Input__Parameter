@@ -61,9 +61,9 @@ PAR_TR_VEL_CORR               0           # correct tracer particle velocities i
 
 
 # cosmology (COMOVING only)
-A_INIT                        0.00990099009900990099  # initial scale factor
-OMEGA_M0                      0.315823                # omega matter at the present time (consistent with GADGET-2 input hdf5 file)
-HUBBLE0                       0.6732117               # dimensionless Hubble parameter (currently only for converting ELBDM_MASS to code units)
+A_INIT                        0.04  # initial scale factor
+OMEGA_M0                      0.3111                # omega matter at the present time (consistent with GADGET-2 input hdf5 file)
+HUBBLE0                       0.6766               # dimensionless Hubble parameter (currently only for converting ELBDM_MASS to code units)
 
 
 # time-step
