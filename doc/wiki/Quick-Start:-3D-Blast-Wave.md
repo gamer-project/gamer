@@ -57,7 +57,7 @@ example files of the test problem.
 cd ../bin
 mkdir blastwave
 cd blastwave
-cp ../../example/test_problem/Hydro/BlastWave/* .
+cp -r ../../example/test_problem/Hydro/BlastWave/* .
 cp ../gamer .
 ls
 ```
