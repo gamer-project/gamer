@@ -1,6 +1,6 @@
 filename=spectral_tables.zip
-link=http://use.yt/upload/66f39405
+link=https://use.yt/upload/66f39405
 
 rm -r spectral_tables*
-curl ${link} -o ${filename}
+curl -L ${link} -o ${filename}
 unzip ${filename}
