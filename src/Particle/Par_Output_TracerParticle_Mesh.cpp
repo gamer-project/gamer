@@ -178,7 +178,10 @@ void Par_Output_TracerParticle_Mesh()
       amr->Par->Mesh_Attr[v][p] = (real_par) __FLT_MAX__;
 
 
-// map quantities from mesh onto the tracer particles
+// OpenMP parallel region
+#  pragma omp parallel
+   {
+
    for (int lv=0; lv<NLEVEL; lv++)
    {
 //    get the maximum number of particles in a single patch
@@ -205,6 +208,7 @@ void Par_Output_TracerParticle_Mesh()
 
 
 //    loop over all **real** patch groups
+#     pragma omp for schedule( PAR_OMP_SCHED, PAR_OMP_SCHED_CHUNK )
       for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
       {
 //       1. find the patch groups with target tracer particles
@@ -290,6 +294,8 @@ void Par_Output_TracerParticle_Mesh()
 
       Aux_DeallocateArray2D( InterpParPos );
    } // for (int lv=0; lv<NLEVEL; lv++)
+
+   } // end of OpenMP parallel region
 
 } // FUNCTION : Par_Output_TracerParticle_Mesh
 
