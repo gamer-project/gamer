@@ -159,7 +159,7 @@ make -j4
 ```
 
 > [!CAUTION]
-> Remember to remove the previous `gamer` by `make clean` before `make` and copy the new executable to the working directory.
+> Remember to copy the new executable to `bin/shocktube`.
 
 2\. Set the number of OpenMP threads by editing the runtime parameter
 [[OMP_NTHREAD | MPI-and-OpenMP#OMP_NTHREAD]]
@@ -236,25 +236,15 @@ To enable both GPU and OpenMP, repeat the steps in
 [CPU-only with OpenMP](#cpu-only-with-openmp) with the
 following modifications.
 
-0\. Set configuration file.
-* Make a copy from `gamer/configs/template.config` and name it as `YOUR_MACHINE.config` under `gamer/configs/`.
-* Please set `CUDA_PATH` and [[GPU_COMPUTE_CAPABILITY | Installation:-Simulation-Options#GPU_COMPUTE_CAPABILITY]] in `gamer/configs/YOUR_MACHINE.config` properly.
-
 1\. Re-generate `Makefile` by [configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Configure.py) and recompile `gamer`.
 ``` bash
 sh generate_make.sh --machine=YOUR_MACHINE --openmp=true --gpu=true
+make clean
+make -j4
 ```
-<details>
-<summary><u><i>Execution results</i></u></summary>
 
-<pre>
-   ...
-   ...
-========================================
-Makefile is created.
-========================================
-</pre>
-</details>
+> [!CAUTION]
+> Remember to copy the new executable to `bin/shocktube`.
 
 2\. Remove all old log and data files, if necessary.
 Run the code with the new executable.

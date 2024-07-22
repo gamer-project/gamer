@@ -7,13 +7,6 @@ It is recommended to first check [[Quick Start: 1D Shock Tube]].
 
 ***
 
-0\. Set configuration file.
-
-Please set `CUDA_PATH`, `MPI_PATH`, `HDF5_PATH`, and `GPU_COMPUTE_CAPABILITY` in your machine configuration file in `gamer/configs/YOUR_MACHINE.config`.
-See step 0 in
-[[Quick Start: 1D Shock Tube -- Hybrid OpenMP/GPU | Quick-Start:-1D-Shock-Tube#hybrid-openmpgpu]]
-about how to set your machine configuration file.
-
 1\. Install the external packages required for this demo.
 * [yt](http://yt-project.org)
 * [HDF5](https://support.hdfgroup.org/HDF5)
@@ -82,13 +75,18 @@ OMP_NTHREAD      10      # number of OpenMP threads (<=0=auto) [-1]
 for the recommended configuration of the number of MPI processes and OpenMP threads.
 
 6\. Run the code with MPI (e.g., `mpirun, mpiexec, aprun`).
-Please consult the documentation of your system, especially about
-how to compile and launch "hybrid MPI/OpenMP" jobs.
+> [!IMPORTANT]
+> Please consult the documentation of your system, especially about how to compile and launch "hybrid MPI/OpenMP" jobs.
+
 The following example uses OpenMPI 1.8.4 to launch 2 MPI processes
 and 10 threads per process, assuming that there are two 10-core CPUs.
 ```bash
 mpirun -np 2 -map-by ppr:1:socket:pe=10 ./gamer
 ```
+> [!TIP]
+> See more option details of MPI:
+>   * `-map-by`: [Mapping options and modifiers](https://www.ibm.com/docs/en/smpi/10.2?topic=affinity-mapping-options-modifiers)
+>   * `-np`: [mpirun command options](https://www.ibm.com/docs/da/smpi/10.2?topic=command-mpirun-options)
 <details>
 <summary><u><i>Execution results</i></u></summary>
 

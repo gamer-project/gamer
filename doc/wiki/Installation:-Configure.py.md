@@ -1,8 +1,8 @@
 This page shows how to use the Python script `configure.py` to tailor the `Makefile`
 for your simulation and machine. The script supports both Python2 and Python3.
 - [User Guide](#user-guide)
-  - [Simulation options](#simulation-options)
   - [Library paths and compilation flags](#library-paths-and-compilation-flags)
+  - [Simulation options](#simulation-options)
   - [Running the script](#running-the-script)
 - [Developer Guide](#developer-guide)
   - [Adding new source files](#adding-new-source-files)
@@ -11,6 +11,54 @@ for your simulation and machine. The script supports both Python2 and Python3.
   - [Rules of Makefile_base](#rules-of-makefile_base)
 
 ## User Guide
+### Setup machine configuration file
+> [!TIP]
+> To set up your machine configuration file, make a copy of `template.config` and modify it.
+
+The machine configuration file is under `gamer/configs`. The configuration file contains the library paths, the compiler types, the compilation flags, and the GPU compute capability.
+1. Library paths
+
+   For example, `MPI_PATH` can be set by:
+   ```
+   MPI_PATH /usr/local/mpich-3.2
+   ```
+
+2. Compilers
+
+   There are two compilers in this section C++ (`CXX`) and MPI (`CXX_MPI`).
+> [!NOTE]
+> `MPI_PATH/bin/` will be combined with `CXX_MPI` automatically
+
+3. Compilation flags
+
+   For example, `CXXFLAG` can be set by:
+   ```
+   CXXFLAG -g -O2
+   ```
+   or
+   ```
+   CXXFLAG -g
+   CXXFLAG -O2
+   ```
+   We have all the available flag variables table here:
+   | Flag name | Description |
+   |---|---|
+   | `CXXFLAG`      | Flags for compiler `CXX` and `CXX_MPI` |
+   | `OPENMPFLAG`   | Flags for OpenMP enable |
+   | `LIBFLAG`      | Flags for the libraries |
+   | `NVCCFLAG_COM` | Flags for `nvcc` compiler |
+   | `NVCCFLAG_FLU` | Flags for fluid solver files |
+   | `NVCCFLAG_POT` | Flags for Poisson/gravity solvers files |
+
+4. GPU compute capability
+
+   The GPU compute capability can be calculated by `GPU_COMPUTE_CAPABILITY = major_verison*100 + minor_version*10`. For example, `GeForce RTX 4090` has `GPU_COMPUTE_CAPABILITY` `890` (8\*100 + 9\*10).
+> [!TIP]
+> * You can also set it to `-1` to determine the value automatically using `get_gpu_compute_capability()` in `configure.py`.
+> * Check your GPU compute capability:
+>   1. https://developer.nvidia.com/cuda-gpus
+>   1. https://en.wikipedia.org/wiki/CUDA#GPUs_supported
+
 ### Simulation options
 The following commands list all available [[simulation options|Installation:-Simulation-Options]].
 ```bash
@@ -18,10 +66,6 @@ python configure.py -h    # show a short help message
 python configure.py -lh   # show a detailed help message
 
 ```
-
-### Library paths and compilation flags
-Edit the machine configuration file in `gamer/configs` to specify the library paths and compilation flags.
-To set up your own machine configuration file, make a copy of `template.config` and modify it.
 
 ### Running the script
 Run the following command to generate a new `Makefile`.
@@ -148,11 +192,15 @@ NEW_FLAG := @@@NEW_FLAG@@@
 2. Add `["NEW_FLAG":""]` in the dictionary variable `flags` of `load_config()` in `configure.py`.
 ```python
 def load_config( config ):
-    print("Using %s as the config."%(config))
-    paths, compilers, flags = {}, {"CXX":"", "CXX_MPI":""}, {"CXXFLAG":"", "OPENMPFLAG":"", "LIBFLAG":"", "CUDAFLAG":"", "NEW_FLAG":""}
+    LOGGER.info("Using %s as the config."%(config))
+    paths, compilers = {}, {"CXX":"", "CXX_MPI":""}
+    flags = {"CXXFLAG":"", "OPENMPFLAG":"", "LIBFLAG":"", "NVCCFLAG_COM":"", "NVCCFLAG_FLU":"", "NVCCFLAG_POT":""}
+    gpus  = {"GPU_COMPUTE_CAPABILITY":""}
     ...
     return paths, compilers, flags
 ```
+> [!IMPORTANT]
+> All flags must be set in `flags`, otherwise it will be considered as a path.
 
 3. Add `NEW_FLAG -new_flag` in your machine configuration file `configs/YOUR.config`.
 ```
@@ -163,4 +211,9 @@ NEW_FLAG    -new_flag
 ```
 
 ### Rules of `Makefile_base`
-The strings to be replaced by `configure.py` must be sandwiched by `@@@`.
+* The strings to be replaced by `configure.py` must be sandwiched by `@@@`.
+
+### Rules of `*.config`
+* The comment starts with `#`.
+* All variables should be uppercase.
+* Variables and values are separated by spaces.
