@@ -148,7 +148,7 @@ def validation( paths, depends, constraints, **kwargs ):
         success = False
     ...
 
-    if not success: raise BaseException(BCOLOR.FAIL+"The above validation failed."+BCOLOR.ENDC)
+    if not success: raise BaseException("The above validation failed.")
     return
 ```
 * `warning()`
