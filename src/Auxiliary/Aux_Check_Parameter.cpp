@@ -755,16 +755,19 @@ void Aux_Check_Parameter()
 #   endif
 
     if ( OPT__OUTPUT_ENTR )
-      Aux_Error( ERROR_INFO, "SRHD does not support OPT__OUTPUT_ENTR !!\n" );
+       Aux_Error( ERROR_INFO, "SRHD does not support OPT__OUTPUT_ENTR !!\n" );
 
     if ( OPT__FLAG_LOHNER_ENTR )
-      Aux_Error( ERROR_INFO, "SRHD does not support OPT__FLAG_LOHNER_ENTR !!\n" );
+       Aux_Error( ERROR_INFO, "SRHD does not support OPT__FLAG_LOHNER_ENTR !!\n" );
 
     if ( JEANS_MIN_PRES )
-      Aux_Error( ERROR_INFO, "SRHD does not support JEANS_MIN_PRES !!\n" );
+       Aux_Error( ERROR_INFO, "SRHD does not support JEANS_MIN_PRES !!\n" );
 
     if ( OPT__FLAG_JEANS )
-      Aux_Error( ERROR_INFO, "SRHD does not support OPT__FLAG_JEANS !!\n" );
+       Aux_Error( ERROR_INFO, "SRHD does not support OPT__FLAG_JEANS !!\n" );
+
+    if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE  &&  ( OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLC  ||  OPT__1ST_FLUX_CORR_SCHEME != RSOLVER_1ST_HLLE ) )
+       Aux_Error( ERROR_INFO, "SRHD only supports OPT__1ST_FLUX_CORR_SCHEME == RSOLVER_1ST_HLLC/HLLE !!\n" );
 #  endif // #ifdef SRHD
 
 #  ifdef MHD
