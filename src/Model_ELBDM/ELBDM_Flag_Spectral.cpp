@@ -134,7 +134,7 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
 
       // Step 1: Normalize the input data
       for (int l = 0; l < NField; ++l) {
-         flag_spectral_float mean = 0.0;
+         flag_spectral_float mean    = 0.0;
          flag_spectral_float std_dev = 0.0;
 
          for (size_t i = 0; i < Size1D; ++i) {
@@ -147,8 +147,19 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
          }
          std_dev = sqrt(std_dev / Size1D);
 
-         for (size_t i = 0; i < Size1D; ++i) {
-            Row[l][i] = (Row[l][i] - mean) / std_dev;
+         // Check if std_dev is close to zero
+         if (std_dev > 1e-6)
+         {
+            for (size_t i = 0; i < Size1D; ++i) {
+               Row[l][i] = (Row[l][i] - mean) / std_dev;
+            }
+         }
+         else // If std_dev is zero, skip normalization
+         {
+            for (size_t i = 0; i < Size1D; ++i)
+            {
+               Row[l][i] = Row[l][i] - mean;  // Mean-centering only
+            }
          }
       }
 
