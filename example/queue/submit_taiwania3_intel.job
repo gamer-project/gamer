@@ -19,14 +19,12 @@
 #SBATCH --mail-user=EMAIL_ACCOUNT                       # Where to send mail.  Set this to your email address
 #SBATCH --exclude=cpn[3001-3120,3241-3360]              # Exclude large-memory nodes
 
-LOG_FILE=log_taiwania_III_intel_2018
+LOG_FILE=log_taiwania_III_intel_2024
 
-module purge
-module load compiler/intel/2018u4 IntelMPI/2018u4
-module list >> LOG_FILE
-export LD_LIBRARY_PATH="FFTW_PATH/lib:$LD_LIBRARY_PATH"
-export UCX_TLS="ud,dc,shm,self"
+ml purge
+ml use /home/d07222009/module_CALAB
+ml load intel/2024 intel_2024/fftw/3.3.10 intel_2024/gsl/2.8.0 intel_2024/hdf5/1.12.1 intel_2024/openmpi/5.0.5 intel_2024/openucx/1.18.0
+ml list >> $LOG_FILE
 
-mpiexec.hydra -bootstrap slurm -n $SLURM_NTASKS ./gamer >> $LOG_FILE 2>&1
-#mpirun -map-by ppr:2:socket:pe=14 -print-rank-map ./gamer 1>>$LOG_FILE 2>&1
-echo "=============================================================" >> $LOG_FILE
+mpirun -map-by ppr:2:numa:pe=14  --report-bindings ./gamer 1>>$LOG_FILE 2>&1
+echo "=============================================================" 1>>$LOG_FILE 2>&1
