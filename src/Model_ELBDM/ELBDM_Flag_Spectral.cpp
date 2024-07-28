@@ -175,7 +175,7 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
       }
    } // XYZ, k,j
 
-   Cond = MAX(Cond, 1e-16)
+   Cond = log10(MAX(Cond, 1e-16));
 } // FUNCTION : Prepare_for_Spectral_Criterion
 
 
