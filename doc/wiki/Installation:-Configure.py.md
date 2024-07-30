@@ -22,6 +22,12 @@ The machine configuration file is under `gamer/configs`. The configuration file 
    ```
    MPI_PATH /usr/local/mpich-3.2
    ```
+   or
+   ```
+   MPI_PATH:=/usr/local/mpich-3.2
+   ```
+> [!CAUTION]
+> Only the path variables can be separated by `:=`.
 
 2. Compilers
 
