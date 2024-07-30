@@ -3,10 +3,10 @@
 
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-static void Flag_UserWorkBeforeFlag_Template( const int lv );
+static void Flag_UserWorkBeforeFlag_Template( const double Time, const int lv );
 
 // to enable this feature, set this function pointer by a test problem initializer
-void (*Flag_UserWorkBeforeFlag_Ptr)( const int lv ) = NULL;
+void (*Flag_UserWorkBeforeFlag_Ptr)( const double Time, const int lv ) = NULL;
 
 
 
@@ -20,6 +20,6 @@ void (*Flag_UserWorkBeforeFlag_Ptr)( const int lv ) = NULL;
 //
 // Return      :  none
 //-------------------------------------------------------------------------------------------------------
-void Flag_UserWorkBeforeFlag_Template( const int lv )
+void Flag_UserWorkBeforeFlag_Template( const double Time, const int lv )
 {
 } // FUNCTION : Flag_UserWorkBeforeFlag_Template

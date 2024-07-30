@@ -33,7 +33,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 // user-specified operations before
    if ( Flag_UserWorkBeforeFlag_Ptr != NULL )
    {
-      Flag_UserWorkBeforeFlag_Ptr( lv );
+      Flag_UserWorkBeforeFlag_Ptr( Time, lv );
    }
 
 
