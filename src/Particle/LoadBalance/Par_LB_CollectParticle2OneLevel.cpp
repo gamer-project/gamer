@@ -285,8 +285,8 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, c
    if ( !JustCountNPar )
    {
       const long ParAllAttSize = NSendParTotal * ( (long)NAttFlt*sizeof(real_par) + (long)NAttInt*sizeof(long_par) );
-      real_par *SendBuf_ParFltDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Send( ParAllAttSize );
-      long_par *SendBuf_ParIntDataEachPatch = (long_par *)( SendBuf_ParFltDataEachPatch + NSendParTotal*NAttFlt );
+      SendBuf_ParFltDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Send( ParAllAttSize );
+      SendBuf_ParIntDataEachPatch = (long_par *)( SendBuf_ParFltDataEachPatch + NSendParTotal*NAttFlt );
    }
 
 
