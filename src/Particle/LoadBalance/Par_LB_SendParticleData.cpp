@@ -209,8 +209,9 @@ void Par_LB_SendParticleData( const int NParAttFlt, const int NParAttInt, int *S
       }
 
 //    reuse the MPI recv buffer declared in LB_GetBufferData for better MPI performance
-      RecvBuf_ParFltDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Recv( NRecvParTotal*(long)NParAttFlt*sizeof(real_par) );
-      RecvBuf_ParIntDataEachPatch = (long_par *)LB_GetBufferData_MemAllocate_Recv( NRecvParTotal*(long)NParAttInt*sizeof(long_par) );
+      const long ParAllAttSize = NRecvParTotal * ( (long)NParAttFlt*sizeof(real_par) + (long)NParAttInt*sizeof(long_par) );
+      RecvBuf_ParFltDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Recv( ParAllAttSize );
+      RecvBuf_ParIntDataEachPatch = (long_par *)( RecvBuf_ParFltDataEachPatch + NRecvParTotal*NParAttFlt );
 
 
 //    exchange data

@@ -217,8 +217,9 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long FltAttBitIdx,
 
 // 2. prepare the particle data to be sent
 // reuse the MPI send buffer declared in LB_GetBufferData() for better MPI performance
-   real_par  *SendBuf_ParFltDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)NAttFlt*sizeof(real_par) );
-   long_par  *SendBuf_ParIntDataEachPatch = (long_par *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)NAttInt*sizeof(long_par) );
+   const long ParAllAttSize = NSendParTotal * ( (long)NAttFlt*sizeof(real_par) + (long)NAttInt*sizeof(long_par) );
+   real_par *SendBuf_ParFltDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Send( ParAllAttSize );
+   long_par *SendBuf_ParIntDataEachPatch = (long_par *)( SendBuf_ParFltDataEachPatch + NSendParTotal*NAttFlt );
 
    real_par  *SendPtr_Flt    = NULL;
    long_par  *SendPtr_Int    = NULL;

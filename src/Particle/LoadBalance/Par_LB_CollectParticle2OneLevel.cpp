@@ -160,7 +160,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, c
 #  endif // #ifdef DEBUG_PARTICLE
 
 
-// 0. jump to step 5 if FaLv+1 is guaranteed to have no particle
+// 0. jump to step 6 if FaLv+1 is guaranteed to have no particle
 //    --> just collect particles for buffer patches
 //    --> note that we don't have to set NPar_Copy here since leaf real patches always have NPar_Copy == -1
    if ( FaLv == TOP_LEVEL  ||  NPatchTotal[FaLv+1] == 0 )
@@ -284,8 +284,9 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, c
 // reuse the MPI send buffer declared in LB_GetBufferData() for better MPI performance
    if ( !JustCountNPar )
    {
-      SendBuf_ParFltDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)NAttFlt*sizeof(real_par) );
-      SendBuf_ParIntDataEachPatch = (long_par *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)NAttInt*sizeof(long_par) );
+      const long ParAllAttSize = NSendParTotal * ( (long)NAttFlt*sizeof(real_par) + (long)NAttInt*sizeof(long_par) );
+      real_par *SendBuf_ParFltDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Send( ParAllAttSize );
+      long_par *SendBuf_ParIntDataEachPatch = (long_par *)( SendBuf_ParFltDataEachPatch + NSendParTotal*NAttFlt );
    }
 
 

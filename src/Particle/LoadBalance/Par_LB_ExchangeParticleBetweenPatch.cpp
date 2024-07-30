@@ -145,8 +145,9 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
    const bool RemoveAllPar_Yes = true;
 
 // reuse the MPI send buffer declared in LB_GetBufferData for better MPI performance
-   real_par *SendBuf_ParFltDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)PAR_NATT_FLT_TOTAL*sizeof(real_par) );
-   long_par *SendBuf_ParIntDataEachPatch = (long_par *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)PAR_NATT_INT_TOTAL*sizeof(long_par) );
+   const long ParAllAttSize = NSendParTotal * ( (long)PAR_NATT_FLT_TOTAL*sizeof(real_par) + (long)PAR_NATT_INT_TOTAL*sizeof(long_par) );
+   real_par *SendBuf_ParFltDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Send( ParAllAttSize );
+   long_par *SendBuf_ParIntDataEachPatch = (long_par *)( SendBuf_ParFltDataEachPatch + NSendParTotal*PAR_NATT_FLT_TOTAL );
 
    real_par *SendPtr_Flt = SendBuf_ParFltDataEachPatch;
    long_par *SendPtr_Int = SendBuf_ParIntDataEachPatch;
