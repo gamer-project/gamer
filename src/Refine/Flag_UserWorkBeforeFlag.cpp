@@ -16,7 +16,8 @@ void (*Flag_UserWorkBeforeFlag_Ptr)( const double Time, const int lv ) = NULL;
 //
 // Note        :  1. Invoked by Flag_Real() using the function pointer "Flag_UserWorkBeforeFlag_Ptr"
 //
-// Parameter   :  lv : Target refinement level
+// Parameter   :  Time : Target physical time
+//                lv : Target refinement level
 //
 // Return      :  none
 //-------------------------------------------------------------------------------------------------------
