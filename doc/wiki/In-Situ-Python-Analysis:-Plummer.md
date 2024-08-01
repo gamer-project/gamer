@@ -151,7 +151,7 @@ Particle plot using particle position x and y as axes with particle mass mapped 
 
 10. Since we have run libyt in interactive mode, the program should now pause and wait for user input.
 
-```
+<pre>
 =====================================================================
   Inline Function                              Status         Run
 ---------------------------------------------------------------------
@@ -159,7 +159,7 @@ Particle plot using particle position x and y as axes with particle mass mapped 
   * yt_inline_inputArg                         success         V
 =====================================================================
 >>>
-```
+</pre>
 
 11. You can explore [interactive prompt](https://yt-project.github.io/libyt/InSituPythonAnalysis/InteractivePythonPrompt.html)
 or simply press `Ctrl + C` to shut down the process.
