@@ -21,7 +21,7 @@ one of the following commands.
 
 ```bash
 # for the development version
-git pull origin master
+git pull origin main
 
 # for the stable version
 git pull origin stable
