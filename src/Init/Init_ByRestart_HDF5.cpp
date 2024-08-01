@@ -18,7 +18,8 @@ static void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, co
                           const hid_t *H5_SetID_FCMag, const hid_t *H5_SpaceID_FCMag, const hid_t *H5_MemID_FCMag,
                           const int *NParList, real_par **ParFltBuf, long_par **ParIntBuf, long *NewParList,
                           const hid_t *H5_SetID_ParFltData, const hid_t *H5_SetID_ParIntData,
-                          const hid_t H5_SpaceID_ParData, const long *GParID_Offset, const long NParThisRank );
+                          const hid_t H5_SpaceID_ParData, const long *GParID_Offset, const long NParThisRank,
+                          const int FormatVersion );
 static void Check_Makefile ( const char *FileName, const int FormatVersion );
 static void Check_SymConst ( const char *FileName, const int FormatVersion );
 static void Check_InputPara( const char *FileName, const int FormatVersion );
@@ -809,7 +810,7 @@ void Init_ByRestart_HDF5( const char *FileName )
                                 H5_SetID_FCMag, H5_SpaceID_FCMag, H5_MemID_FCMag,
                                 NParList_AllLv, ParFltBuf, ParIntBuf, NewParList,
                                 H5_SetID_ParFltData, H5_SetID_ParIntData, H5_SpaceID_ParData,
-                                GParID_Offset, NParThisRank );
+                                GParID_Offset, NParThisRank, KeyInfo.FormatVersion );
             }
 
 //          check if LocalID matches corner
@@ -865,7 +866,7 @@ void Init_ByRestart_HDF5( const char *FileName )
                              H5_SetID_FCMag, H5_SpaceID_FCMag, H5_MemID_FCMag,
                              NParList_AllLv, ParFltBuf, ParIntBuf, NewParList,
                              H5_SetID_ParFltData, H5_SetID_ParIntData, H5_SpaceID_ParData,
-                             GParID_Offset, NParThisRank );
+                             GParID_Offset, NParThisRank, KeyInfo.FormatVersion );
          } // for (int GID=0; GID<NPatchTotal[0]; GID++)
 
 #        endif // #ifdef LOAD_BALANCE ... else ...
@@ -1271,6 +1272,7 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
 //                H5_SpaceID_ParData  : HDF5 dataset dataspace ID for particle data
 //                GParID_Offset       : Starting global particle indices for all patches
 //                NParThisRank        : Total number of particles in this rank (for check only)
+//                FormatVersion       : HDF5 format version
 //-------------------------------------------------------------------------------------------------------
 void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const bool Recursive,
                    const int *SonList, const int (*CrList)[3],
@@ -1278,7 +1280,8 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
                    const hid_t *H5_SetID_FCMag, const hid_t *H5_SpaceID_FCMag, const hid_t *H5_MemID_FCMag,
                    const int *NParList, real_par **ParFltBuf, long_par **ParIntBuf, long *NewParList,
                    const hid_t *H5_SetID_ParFltData, const hid_t *H5_SetID_ParIntData,
-                   const hid_t H5_SpaceID_ParData, const long *GParID_Offset, const long NParThisRank )
+                   const hid_t H5_SpaceID_ParData, const long *GParID_Offset, const long NParThisRank,
+                   const int FormatVersion )
 {
 
    const bool WithData_Yes = true;
@@ -1389,8 +1392,19 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
       for (int v=0; v<PAR_NATT_INT_STORED; v++)
       {
 //       using ParIntBuf[v] here is safe since it's NOT called when NParThisPatch == 0
-         H5_Status = H5Dread( H5_SetID_ParIntData[v], H5T_GAMER_LONG_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,
-                              ParIntBuf[v] );
+         if ( FormatVersion < 2480  &&  v == PAR_TYPE ) // ParType as a float
+         {
+            real_par *ParType_Buf = new real_par [NParThisPatch];
+            H5_Status = H5Dread( H5_SetID_ParIntData[v], H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,
+                                 ParType_Buf );
+            for (int p=0; p<NParThisPatch; p++)   ParIntBuf[v][p] = (long_par)ParType_Buf[p];
+            delete [] ParType_Buf; // ParType as a float
+         }
+         else
+         {
+            H5_Status = H5Dread( H5_SetID_ParIntData[v], H5T_GAMER_LONG_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,
+                                 ParIntBuf[v] );
+         }
          if ( H5_Status < 0 )
             Aux_Error( ERROR_INFO, "failed to load a particle integer attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
       }
@@ -1439,17 +1453,16 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
 
       SonGID0 = SonList[GID];
 
-      if ( SonGID0 != -1 )
-      {
-         for (int SonGID=SonGID0; SonGID<SonGID0+8; SonGID++)
-            LoadOnePatch( H5_FileID, lv+1, SonGID, Recursive, SonList, CrList,
-                          H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field,
-                          H5_SetID_FCMag, H5_SpaceID_FCMag, H5_MemID_FCMag,
-                          NParList, ParFltBuf, ParIntBuf, NewParList,
-                          H5_SetID_ParFltData, H5_SetID_ParIntData, H5_SpaceID_ParData,
-                          GParID_Offset, NParThisRank );
-      }
-   }
+      if ( SonGID0 == -1 )   return;
+
+      for (int SonGID=SonGID0; SonGID<SonGID0+8; SonGID++)
+         LoadOnePatch( H5_FileID, lv+1, SonGID, Recursive, SonList, CrList,
+                       H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field,
+                       H5_SetID_FCMag, H5_SpaceID_FCMag, H5_MemID_FCMag,
+                       NParList, ParFltBuf, ParIntBuf, NewParList,
+                       H5_SetID_ParFltData, H5_SetID_ParIntData, H5_SpaceID_ParData,
+                       GParID_Offset, NParThisRank, FormatVersion );
+   } // if ( Recursive )
 
 } // FUNCTION : LoadOnePatch
 

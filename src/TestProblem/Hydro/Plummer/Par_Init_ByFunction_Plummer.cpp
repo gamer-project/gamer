@@ -174,6 +174,10 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
          RanVec_FixRadius( RanV*Vmax, RanVec );
          for (int d=0; d<3; d++)    ParFltData_AllRank[PAR_VELX+d][p] = real_par(RanVec[d] + Plummer_BulkVel[d]);
 
+         printf("Rank 0 All Rank %04ld ", p);
+         for (int v=0; v<PAR_VELZ+1; v++) printf(" %+.16e", ParFltData_AllRank[v][p]);
+         printf("\n");
+
       } // for (long p=0; p<NPar_AllRank; p++)
 
       Aux_Message( stdout, "   Total enclosed mass within MaxR  = %13.7e\n",  TotM );
@@ -191,6 +195,17 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 // send particle attributes from the master rank to all ranks
    Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, 0L,
                             ParFltData_AllRank, ParIntData_AllRank, AllAttributeFlt, AllAttributeInt );
+   for (long p=0; p<NPar_ThisRank; p++) {
+      printf("All Attribute Rank: %d, p: %04ld, ", MPI_Rank, p);
+      printf(" %+.16e", AllAttributeFlt[PAR_MASS][p]);
+      printf(" %+.16e", AllAttributeFlt[PAR_POSX][p]);
+      printf(" %+.16e", AllAttributeFlt[PAR_POSY][p]);
+      printf(" %+.16e", AllAttributeFlt[PAR_POSZ][p]);
+      printf(" %+.16e", AllAttributeFlt[PAR_VELX][p]);
+      printf(" %+.16e", AllAttributeFlt[PAR_VELY][p]);
+      printf(" %+.16e", AllAttributeFlt[PAR_VELZ][p]);
+      printf("\n");
+   }
 
 // synchronize all particles to the physical time on the base level,
 // set generic particle type
