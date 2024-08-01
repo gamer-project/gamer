@@ -20,7 +20,7 @@ An isothermal EoS with a constant sound speed set by
 
 ## EOS_COSMIC_RAY
 A cosmic-ray EoS with an adiabatic index for fluid [[GAMMA | Hydro#gamma]]
-and an effective adiabatic index for cosmic rays [[GAMMA_CR | CosmicRay#gamma_cr]].
+and an effective adiabatic index for cosmic rays [[GAMMA_CR | Hydro#gamma_cr]].
 Must enable [[COSMIC_RAY | Installation: Simulation-Options#COSMIC_RAY]].
 
 
