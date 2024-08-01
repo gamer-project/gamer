@@ -18,9 +18,6 @@ extern double ELBDM_Vcm[3];
 // Note        :  1. This check only works with the models HYDRO, ELBDM, and PAR_ONLY
 //                2. The values measured during the first function call will be taken as the reference values
 //                   to estimate errors
-//                   --> Note that during RESTART the reference values will be recalculated since they are NOT
-//                       recorded in the output files currently
-//                       --> Error estimation will be incorrect ...
 //                3. For simulations with particles (i.e., when PARTICLE is on), the total conserved variables
 //                   (e.g., total energy of gas and particles) will also be recorded
 //
