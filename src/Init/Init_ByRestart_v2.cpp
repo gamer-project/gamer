@@ -332,8 +332,16 @@ void Init_ByRestart()
       ExpectSize   += ParInfoSize;
    }
 
-   ExpectSize += (long)PAR_NATT_FLT_STORED*amr->Par->NPar_Active_AllRank*sizeof(real_par);
-   ExpectSize += (long)PAR_NATT_INT_STORED*amr->Par->NPar_Active_AllRank*sizeof(long_par);
+   if ( FormatVersion >= 2230 )
+   {
+      ExpectSize += (long)PAR_NATT_FLT_STORED*amr->Par->NPar_Active_AllRank*sizeof(real_par);
+      ExpectSize += (long)PAR_NATT_INT_STORED*amr->Par->NPar_Active_AllRank*sizeof(long_par);
+   }
+   else
+   {
+      ExpectSize += (long)PAR_NATT_FLT_STORED*amr->Par->NPar_Active_AllRank*sizeof(real_par);
+      ExpectSize += (long)1*amr->Par->NPar_Active_AllRank*sizeof(real_par); // ParType
+   }
 #  endif
 
    fseek( File, 0, SEEK_END );
@@ -651,7 +659,17 @@ void Init_ByRestart()
                   fseek( File, FileOffset_Particle + PAR_NATT_FLT_STORED*ParFltDataSize1v + v*ParIntDataSize1v + GParID*sizeof(long_par), SEEK_SET );
 
 //                using ParIntBuf[v] here is safe since it's NOT called when NParThisPatch == 0
-                  fread( ParIntBuf[v], sizeof(long_par), NParThisPatch, File );
+                  if ( FormatVersion < 2230  &&  v == PAR_TYPE )
+                  {
+                     real_par *ParType_Buf = new real_par [NParThisPatch];
+                     fread( ParType_Buf, sizeof(real_par), NParThisPatch, File );
+                     for (int p=0; p<NParThisPatch; p++)   ParIntBuf[v][p] = (long_par)ParType_Buf[p];
+                     delete [] ParType_Buf;
+                  }
+                  else
+                  {
+                     fread( ParIntBuf[v], sizeof(long_par), NParThisPatch, File );
+                  }
                }
 
 //             store particles to the particle repository (one particle at a time)
