@@ -9,6 +9,7 @@ matplotlib.use("Agg")
 
 
 import re
+from glob import glob
 
 import h5py
 import numpy as np
@@ -73,7 +74,10 @@ with open("Input__TestProb", "r") as f:
 
 
 ### load data
-fn_in = "Data_000000"
+fn_list = glob("Data_" + "[0-9]" * 6)
+fn_in = sorted(fn_list)[-1]  # use the final snapshot
+print("Loading data in {}".format(fn_in))
+
 hdf_data = h5py.File(fn_in, "r")
 
 field_par  = ["ParPosX", "ParPosY", "ParType"]
@@ -83,6 +87,8 @@ field_mesh = ["Mesh{}".format(label)
 for key in field_par + field_mesh:
     cmd = "{} = hdf_data['Particle']['{}'][:]".format(key, key)
     exec(cmd)
+
+time_phys = hdf_data["Info"]["KeyInfo"]["Time"][0]
 
 hdf_data.close()
 
@@ -168,6 +174,7 @@ for reldiff, ax in zip(reldiff_list, axes_list_reldiff):
     ax.set_xlabel("Radius of Tracer Particles")
     ax.set_ylabel("Relative Difference")
 
+fig.suptitle("Time = {}".format(time_phys))
 fig.tight_layout()
 plt.savefig("check_mesh2tracer.png", bbox_inches = "tight")
 plt.close()

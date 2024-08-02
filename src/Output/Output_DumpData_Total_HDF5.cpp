@@ -1233,7 +1233,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //          --> solution: we can output a fixed number of particles at a time (see Output_DumpData_Total.cpp)
    long     (*NParLv_EachRank)[NLEVEL] = new long [MPI_NRank][NLEVEL];   // number of particles at each level in each rank
    real_par (*ParBuf1v1Lv)             = NULL;   // buffer storing the data of one particle attribute at one level
-   int        PAR_NATT_MESH            = amr->Par->Mesh_Attr_Num;
+   int        Par_NAtt_Mesh            = amr->Par->Mesh_Attr_Num;
 
    long  GParID_Offset[NLEVEL];  // GParID = global particle index (==> unique for each particle)
    long  NParLv_AllRank[NLEVEL];
@@ -1283,7 +1283,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       if ( H5_GroupID_Particle < 0 )   Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "Particle" );
 
 //    create the datasets of all particle attributes
-      for (int v=0; v<PAR_NATT_STORED+PAR_NATT_MESH; v++)
+      for (int v=0; v<PAR_NATT_STORED+Par_NAtt_Mesh; v++)
       {
          char *ParLabel = ( v < PAR_NATT_STORED ) ? ParAttLabel[v] : amr->Par->Mesh_Attr_Label[v - PAR_NATT_STORED];
 
@@ -1333,7 +1333,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 //       output one particle attribute at one level in one rank at a time
 //       --> skip the last PAR_NATT_UNSTORED attributes since we do not want to store them on disk
-         for (int v=0; v<PAR_NATT_STORED+PAR_NATT_MESH; v++)
+         for (int v=0; v<PAR_NATT_STORED+Par_NAtt_Mesh; v++)
          {
 //          6-3-3. collect particle data from all patches at the current target level
             NParInBuf = 0;

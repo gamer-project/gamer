@@ -97,9 +97,11 @@ void Par_Output_TracerParticle_Mesh()
 
          for (int PID=PID0; PID<PID0+8; PID++)
          {
-            if ( amr->patch[0][lv][PID]->NParType[(int)PTYPE_TRACER] > 0 )    GotYou = true;
-
-            if ( GotYou )  break;
+            if ( amr->patch[0][lv][PID]->NParType[(int)PTYPE_TRACER] > 0 )
+            {
+               GotYou = true;
+               break;
+            }
          }
 
 //       nothing to do if there are no target tracer particles in the target patch group
@@ -110,7 +112,7 @@ void Par_Output_TracerParticle_Mesh()
          {
             const long TVar = ParAttrIdx[v];
 
-//          2. prepare the mesh data for the patch group with particles (need NSIDE_26 for ParGhost>0 )
+//          2. prepare the mesh data for the patch group with particles (need NSIDE_26 for ParGhost>0)
             if ( TVar & AllVar_PreparePatch )
                Prepare_PatchData( lv, TimeNew, Var, NULL, ParGhost, 1, &PID0, TVar, _NONE,
                                   OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No,
@@ -141,8 +143,7 @@ void Par_Output_TracerParticle_Mesh()
                {
                   ParID = amr->patch[0][lv][PID]->ParList[p];
 
-                  if ( ParType[ParID] != PTYPE_TRACER )
-                     continue;
+                  if ( ParType[ParID] != PTYPE_TRACER )   continue;
 
                   for (int d=0; d<3; d++)   InterpParPos[d][p] = ParPos[d][ParID];
                }
@@ -157,8 +158,7 @@ void Par_Output_TracerParticle_Mesh()
                {
                   ParID = amr->patch[0][lv][PID]->ParList[p];
 
-                  if ( ParType[ParID] != PTYPE_TRACER )
-                     continue;
+                  if ( ParType[ParID] != PTYPE_TRACER )   continue;
 
                   amr->Par->Mesh_Attr[v][ParID] = Var_Temp[p];
                }
