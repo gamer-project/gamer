@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+#
+# Check the mesh attributes stored in the HDF5 snapshots
+# at the locations of the tracer particles
+#
+
 import matplotlib
 matplotlib.use("Agg")
 
@@ -13,15 +18,30 @@ plt.rcParams["font.size"] = 16
 
 
 ### helper function
-def comp_momx(ParX, ParY, Dens_Bg, Ang_Freq, BoxSize):
+def comp_dens(ParX, ParY, Center, Dens_Bg, BoxSize):
     # use the formulae in SetGridIC() from the ParticleTest test problem
-    # to compute the linear momentum in the x direction at these particles' locations
-    BoxSize_Half = 0.5 * BoxSize
-    Radius       = np.hypot(ParX - BoxSize_Half, ParY - BoxSize_Half)
-    Sin_Theta    = (ParY - BoxSize_Half) / Radius
-    Velocity     = Ang_Freq * Radius
+    # to compute the density at these particles' locations
+    Radius = np.hypot(ParX - Center[0], ParY - Center[1])
 
-    return -Dens_Bg * Velocity * Sin_Theta
+    return Dens_Bg * (1.0 + 5.0 * Radius / BoxSize)
+
+
+def comp_pres(ParX, ParY, Center, Pres_Bg, BoxSize):
+    # use the formulae in SetGridIC() from the ParticleTest test problem
+    # to compute the pressure at these particles' locations
+    Radius = np.hypot(ParX - Center[0], ParY - Center[1])
+
+    return Pres_Bg * (1.0 + 5.0 * Radius / BoxSize)
+
+
+def comp_velx(ParX, ParY, Center, Ang_Freq):
+    # use the formulae in SetGridIC() from the ParticleTest test problem
+    # to compute the velocity in the x direction at these particles' locations
+    Radius    = np.hypot(ParX - Center[0], ParY - Center[1])
+    Sin_Theta = (ParY - Center[1]) / Radius
+    Velocity  = Ang_Freq * Radius
+
+    return -1.0 * Velocity * Sin_Theta
 
 
 ### retrieve runtime parameters in Input__Parameter and Input__TestProb
@@ -67,7 +87,7 @@ for key in field_par + field_mesh:
 hdf_data.close()
 
 
-### postprocess
+### post-process
 cond_tracer = (ParType == 0.0)
 
 print("Number of tracer particles: {}/{}".format(cond_tracer.sum(), cond_tracer.size))
@@ -78,52 +98,75 @@ for field in field_mesh:
     exec(cmd)
 
     if len(set_nontracer) > 1:
-        print("mesh quantities on non-tracer particles have more than two values: ",
+        print("mesh quantities on non-tracer particles have more than one value: ",
               " ".join(str(i) for i in set_nontracer))
-
-    # the value for non-tracer particles should be __FLT_MAX__
-    print("{} on non-tracer particles: {}".format(field, set_nontracer))
+    else:
+        # the value for non-tracer particles should be __FLT_MAX__
+        print("{} on non-tracer particles: {}".format(field, set_nontracer))
 
 ## check tracer particles
 for key in field_par + field_mesh:
     cmd = "{}_tracer = {}[cond_tracer]".format(key, key)
     exec(cmd)
 
-for key in field_mesh:
+# compute the linear momentum in the x direction
+Center_Bg  = 0.25 * param["BOX_SIZE"], 0.25 * param["BOX_SIZE"]
+Center_Mom = 0.50 * param["BOX_SIZE"], 0.50 * param["BOX_SIZE"]
+
+Radius  = np.hypot(ParPosX_tracer - Center_Bg[0], ParPosY_tracer - Center_Bg[1])
+Dens_IC = comp_dens(ParPosX_tracer, ParPosY_tracer, Center_Bg,  param["ParTest_Dens_Bg"], param["BOX_SIZE"])
+Pres_IC = comp_pres(ParPosX_tracer, ParPosY_tracer, Center_Bg,  param["ParTest_Pres_Bg"], param["BOX_SIZE"])
+VelX_IC = comp_velx(ParPosX_tracer, ParPosY_tracer, Center_Mom, param["ParTest_Ang_Freq"])
+
+# create a data set and sort the data based on the x-coordinate position
+dataset = zip(Radius, MeshDens_tracer, Dens_IC, MeshPres_tracer, Pres_IC, MeshVelX_tracer, VelX_IC)
+dataset = sorted(dataset)
+dataset = [np.array(data) for data in zip(*dataset)]
+
+# compute the relative difference
+reldiff_list = [np.abs(data_interp / data_ref - 1.0)
+                for data_interp, data_ref in zip(dataset[1::2], dataset[2::2])]
+
+# print information
+for reldiff, key in zip(reldiff_list, field_mesh):
     obj_tracer = "{}_tracer".format(key)
     cmd = "minval = {}.min(); maxval = {}.max()".format(obj_tracer, obj_tracer)
     exec(cmd)
 
-    print("Min/Max of {} on tracer particles: {} / {}".format(key, minval, maxval))
+    print("Min/Max         of {} on tracer particles: {:14.7e} / {:14.7e}".format(key, minval, maxval))
+    print("Min/Max RelDiff of {} on tracer particles: {:14.7e} / {:14.7e}".format(key, reldiff.min(), reldiff.max()))
 
-# compute the linear momentum in the x direction
-MomX_Par = MeshDens_tracer * MeshVelX_tracer
-MomX_IC  = comp_momx(ParPosX_tracer, ParPosY_tracer,
-                     param["ParTest_Dens_Bg"], param["ParTest_Ang_Freq"], param["BOX_SIZE"])
-Radius   = np.hypot(ParPosX_tracer - 0.5 * param["BOX_SIZE"],
-                    ParPosY_tracer - 0.5 * param["BOX_SIZE"])
+## visualization
+fig = plt.figure(figsize = (14, 8))
+ax1 = plt.subplot2grid((5, 3), (0, 0), rowspan = 3)
+ax2 = plt.subplot2grid((5, 3), (3, 0), rowspan = 2)
+ax3 = plt.subplot2grid((5, 3), (0, 1), rowspan = 3)
+ax4 = plt.subplot2grid((5, 3), (3, 1), rowspan = 2)
+ax5 = plt.subplot2grid((5, 3), (0, 2), rowspan = 3)
+ax6 = plt.subplot2grid((5, 3), (3, 2), rowspan = 2)
 
-# create a dataset for sorting the data based on the x-coordinate position
-dataset = zip(Radius, MeshDens_tracer, MeshPres_tracer, MomX_Par, MomX_IC)
-dataset = sorted(dataset)
-dataset = [np.array(data) for data in zip(*dataset)]
+axes_list_data    = ax1, ax3, ax5
+axes_list_reldiff = ax2, ax4, ax6
 
-reldiff_dens = np.abs(dataset[1] - param  ["ParTest_Dens_Bg"]) / param  ["ParTest_Dens_Bg"]
-reldiff_pres = np.abs(dataset[2] - param  ["ParTest_Pres_Bg"]) / param  ["ParTest_Pres_Bg"]
-reldiff_momx = np.abs(dataset[3] - dataset[4]                ) / dataset[4]
+# field quantity
+label_list  = "Interpolation", "Reference"
+marker_list = "o", "x"
+ylabel_list = "Dens", "Pres", "VelX"
 
-# visualization
-fig, axes = plt.subplots(figsize = (8, 10), nrows = 3, sharex = True)
+for idx_1, (ax, ylabel) in enumerate(zip(axes_list_data, ylabel_list)):
+    for idx_2, (label, marker) in enumerate(zip(label_list, marker_list), 2 * idx_1 + 1):
+        ax.scatter(dataset[0], dataset[idx_2], label = label, marker = marker)
 
-axes[0].scatter(dataset[0], reldiff_dens)
-axes[1].scatter(dataset[0], reldiff_pres)
-axes[2].scatter(dataset[0], reldiff_momx)
+    ax.set_ylabel(ylabel)
+    ax.legend(framealpha = 0)
 
-axes[2].set_xlabel("Radius of Tracer Particles")
+# relative difference
+for reldiff, ax in zip(reldiff_list, axes_list_reldiff):
+    ax.scatter(dataset[0], reldiff)
 
-axes[0].set_ylabel("Relative Difference\nin Dens")
-axes[1].set_ylabel("Relative Difference\nin Pres")
-axes[2].set_ylabel("Relative Difference\nin MomX")
+    ax.set_yscale("log")
+    ax.set_xlabel("Radius of Tracer Particles")
+    ax.set_ylabel("Relative Difference")
 
 fig.tight_layout()
 plt.savefig("check_mesh2tracer.png", bbox_inches = "tight")
