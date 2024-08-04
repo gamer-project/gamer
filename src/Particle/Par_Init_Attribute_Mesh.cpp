@@ -102,20 +102,19 @@ void Par_Init_Attribute_Mesh()
       NItem = sscanf( Line, "%s", FirstItem );
 
 //    skip empty lines and lines starting with #
-      if ( NItem > 0  &&  FirstItem[0] != '#' )
-      {
-//       initialize the bitwise indices and labels of mesh quantities to be mapped from
-         const long FieldIdx = Par_Get_MeshIndex( FirstItem );
+      if ( NItem <= 0  ||  FirstItem[0] == '#' )   continue;
 
-         if ( FieldIdx == Idx_Undefined )
-            Aux_Error( ERROR_INFO, "unknown input field label (%s) in %s !!\n", FirstItem, FileName );
+//    initialize the bitwise indices and labels of mesh quantities to be mapped from
+      const long FieldIdx = Par_Get_MeshIndex( FirstItem );
 
-         amr->Par->Mesh_Attr_Idx[NRow] = FieldIdx;
+      if ( FieldIdx == Idx_Undefined )
+         Aux_Error( ERROR_INFO, "unknown input field label (%s) in %s !!\n", FirstItem, FileName );
 
-         sprintf( amr->Par->Mesh_Attr_Label[NRow], "Mesh%s", FirstItem );
+      amr->Par->Mesh_Attr_Idx[NRow] = FieldIdx;
 
-         NRow++;
-      }
+      sprintf( amr->Par->Mesh_Attr_Label[NRow], "Mesh%s", FirstItem );
+
+      NRow++;
    }
 
 

@@ -119,13 +119,13 @@ for key in field_par + field_mesh:
 Center_Bg  = 0.25 * param["BOX_SIZE"], 0.25 * param["BOX_SIZE"]
 Center_Mom = 0.50 * param["BOX_SIZE"], 0.50 * param["BOX_SIZE"]
 
-Radius  = np.hypot(ParPosX_tracer - Center_Bg[0], ParPosY_tracer - Center_Bg[1])
-Dens_IC = comp_dens(ParPosX_tracer, ParPosY_tracer, Center_Bg,  param["ParTest_Dens_Bg"], param["BOX_SIZE"])
-Pres_IC = comp_pres(ParPosX_tracer, ParPosY_tracer, Center_Bg,  param["ParTest_Pres_Bg"], param["BOX_SIZE"])
-VelX_IC = comp_velx(ParPosX_tracer, ParPosY_tracer, Center_Mom, param["ParTest_Ang_Freq"])
+Radius   = np.hypot(ParPosX_tracer - Center_Bg[0], ParPosY_tracer - Center_Bg[1])
+Dens_ref = comp_dens(ParPosX_tracer, ParPosY_tracer, Center_Bg,  param["ParTest_Dens_Bg"], param["BOX_SIZE"])
+Pres_ref = comp_pres(ParPosX_tracer, ParPosY_tracer, Center_Bg,  param["ParTest_Pres_Bg"], param["BOX_SIZE"])
+VelX_ref = comp_velx(ParPosX_tracer, ParPosY_tracer, Center_Mom, param["ParTest_Ang_Freq"])
 
 # create a data set and sort the data based on the x-coordinate position
-dataset = zip(Radius, MeshDens_tracer, Dens_IC, MeshPres_tracer, Pres_IC, MeshVelX_tracer, VelX_IC)
+dataset = zip(Radius, MeshDens_tracer, Dens_ref, MeshPres_tracer, Pres_ref, MeshVelX_tracer, VelX_ref)
 dataset = sorted(dataset)
 dataset = [np.array(data) for data in zip(*dataset)]
 

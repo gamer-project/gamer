@@ -133,7 +133,8 @@ void Par_Output_TracerParticle_Mesh()
 
                double EdgeL[3], EdgeR[3];
 
-               for (int d=0; d<3; d++) {
+               for (int d=0; d<3; d++)
+               {
                   EdgeL[d] = amr->patch[0][lv][PID]->EdgeL[d] - dh*ParGhost;
                   EdgeR[d] = amr->patch[0][lv][PID]->EdgeR[d] + dh*ParGhost;
                }

@@ -1364,7 +1364,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                Aux_Error( ERROR_INFO, "failed to write a particle attribute (lv %d, v %d) !!\n", lv, v );
 
             H5_Status = H5Dclose( H5_SetID_ParData );
-         } // for (int v=0; v<PAR_NATT_STORED; v++)
+         } // for (int v=0; v<PAR_NATT_STORED+Par_NAtt_Mesh; v++)
 
 //       free resource
          H5_Status = H5Sclose( H5_MemID_ParData );
