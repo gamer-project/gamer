@@ -54,6 +54,10 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                GhostSize               : Number of ghost zones required for interpolation scheme
 //                Attribute               : Pointer arrays to different particle attributes (Mass, Pos, Vel, ...)
 //                InactiveParList         : List of inactive particle IDs
+//                Mesh_Attr               : Pointer arrays to different mesh quantities mapped onto tracer particles
+//                Mesh_Attr_Num           : Number of mesh quantities mapped onto tracer particles
+//                Mesh_Attr_Idx           : Field indices of mesh quantities mapped onto tracer particles
+//                Mesh_Attr_Label         : Field labels of mesh quantities mapped onto tracer particles
 //                R2B_Real_NPatchTotal    : see R2B_Buff_NPatchTotal
 //                R2B_Real_NPatchEachRank : see R2B_Buff_NPatchEachRank
 //                R2B_Real_PIDList        : see R2B_Buff_PIDList
@@ -131,6 +135,10 @@ struct Particle_t
    int           GhostSizeTracer;
    real_par     *Attribute[PAR_NATT_TOTAL];
    long         *InactiveParList;
+   real_par    **Mesh_Attr;
+   int           Mesh_Attr_Num;
+   long         *Mesh_Attr_Idx;
+   char        **Mesh_Attr_Label;
 
 #  ifdef LOAD_BALANCE
    int           R2B_Real_NPatchTotal   [NLEVEL][2];
@@ -204,6 +212,10 @@ struct Particle_t
       for (int v=0; v<PAR_NATT_TOTAL; v++)   Attribute[v] = NULL;
 
       InactiveParList = NULL;
+      Mesh_Attr       = NULL;
+      Mesh_Attr_Num   = 0;
+      Mesh_Attr_Idx   = NULL;
+      Mesh_Attr_Label = NULL;
 
 #     ifdef LOAD_BALANCE
       for (int lv=0; lv<NLEVEL; lv++)
@@ -265,6 +277,16 @@ struct Particle_t
          if ( Attribute[v] != NULL )   free( Attribute[v] );
 
       if ( InactiveParList != NULL )   free( InactiveParList );
+
+      for (int v=0; v<Mesh_Attr_Num; v++)
+      {
+         if ( Mesh_Attr[v]       != NULL )   free( Mesh_Attr[v] );
+         if ( Mesh_Attr_Label[v] != NULL )   free( Mesh_Attr_Label[v] );
+      }
+
+      if ( Mesh_Attr       != NULL )   free( Mesh_Attr );
+      if ( Mesh_Attr_Idx   != NULL )   free( Mesh_Attr_Idx );
+      if ( Mesh_Attr_Label != NULL )   free( Mesh_Attr_Label );
 
 #     ifdef LOAD_BALANCE
       for (int lv=0; lv<NLEVEL; lv++)
