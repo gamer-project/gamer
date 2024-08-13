@@ -1,0 +1,32 @@
+# Packages
+eureka:
+export PATH=/software/hdf5/default/bin:$PATH
+export PATH=/software/gsl/default/bin:$PATH
+export PATH=/software/gcc/9.3.0/bin:$PATH
+export PATH=/software/openmpi/4.1.1-ucx_mt-gnu-9.3.0/bin:$PATH
+
+export LD_LIBRARY_PATH=/software/hdf5/default/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/projectW/tseng/opt/cfitsio/cfitsio-4.0.0/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/projectW/tseng/opt/CCfits/CCfits-2.6/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/projectW/tseng/opt/HEALPix/HEALPix-3.80/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/software/intel/oneapi/compiler/2021.1.1/linux/compiler/lib/intel64_lin:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/projectW/tseng/opt/openmpi-gcc-9.3.0/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/software/gsl/default/lib:$LD_LIBRARY_PATH
+
+
+Tw3:
+module load compiler/intel/2020u4 OpenMPI/4.0.5
+
+# Compile
+make clean
+make
+
+
+# Example
+sh compile.sh
+  # usage
+  ./Project_XRay FRB_Data_000035.h5
+
+  ./Project_Synchrotron FRB_Data_000035.h5 $OBSERVED_FREQ_HZ 1.1e6 $CRIndex >& log
+
+  ./Project FRB_Data_000035.h5 $OBSERVED_ENGY_EV 1.1e6 $CRIndex R12/robitaille_DL07_PAHISMMix.dat >& log
