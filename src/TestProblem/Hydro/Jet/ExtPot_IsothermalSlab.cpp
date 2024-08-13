@@ -113,27 +113,27 @@ static real ExtPot_IsothermalSlab( const double x, const double y, const double 
 
    if ( Jet_Ambient == 2 )
    {
-     if ( fabs(dz) > IsothermalSlab_Truncation )
-     {
-       stellarDiskPot = 2.0*IsothermalSlab_VelocityDispersion_Sqr*log(cosh(IsothermalSlab_Truncation*stellarDiskPot));
-       LogPot = SQR(v_halo) * log(SQR(IsothermalSlab_Truncation) + SQR(distance_h));
-     } else
-     {
-       stellarDiskPot = 2.0*IsothermalSlab_VelocityDispersion_Sqr*log(cosh(dz*stellarDiskPot));
-       LogPot = SQR(v_halo) * log(dz*dz + SQR(distance_h));
-     }
+      if ( fabs(dz) > IsothermalSlab_Truncation )
+      {
+         stellarDiskPot = 2.0*IsothermalSlab_VelocityDispersion_Sqr*log(cosh(IsothermalSlab_Truncation*stellarDiskPot));
+         LogPot = SQR(v_halo) * log(SQR(IsothermalSlab_Truncation) + SQR(distance_h));
+      } else
+      {
+         stellarDiskPot = 2.0*IsothermalSlab_VelocityDispersion_Sqr*log(cosh(dz*stellarDiskPot));
+         LogPot = SQR(v_halo) * log(dz*dz + SQR(distance_h));
+      }
    }
    else if ( Jet_Ambient == 3 )
    {
-     if ( fabs(dz) > interfaceHeight )
-     {
-       stellarDiskPot = 2.0*IsothermalSlab_VelocityDispersion_Sqr*log(cosh(interfaceHeight*stellarDiskPot));
-       LogPot = SQR(v_halo) * log(SQR(interfaceHeight) + SQR(distance_h));
-     } else
-     {
-       stellarDiskPot = 2.0*IsothermalSlab_VelocityDispersion_Sqr*log(cosh(dz*stellarDiskPot));
-       LogPot = SQR(v_halo) * log(dz*dz + SQR(distance_h));
-     }
+      if ( fabs(dz) > interfaceHeight )
+      {
+         stellarDiskPot = 2.0*IsothermalSlab_VelocityDispersion_Sqr*log(cosh(interfaceHeight*stellarDiskPot));
+         LogPot = SQR(v_halo) * log(SQR(interfaceHeight) + SQR(distance_h));
+      } else
+      {
+         stellarDiskPot = 2.0*IsothermalSlab_VelocityDispersion_Sqr*log(cosh(dz*stellarDiskPot));
+         LogPot = SQR(v_halo) * log(dz*dz + SQR(distance_h));
+      }
    }
 
    real TotPot = stellarDiskPot + LogPot;
