@@ -7,15 +7,15 @@
 void ***calloc_3d_array( size_t nt, size_t nr, size_t nc, size_t size );
 void free_3d_array( void ***array );
 void Mis_Cartesian2Spherical( const double Cartesian[], double Spherical[] );
-void CartesianRotate( double x[], const double theta, const double phi, const bool inverse );
+void CartesianRotate( double x[], double theta, double phi, bool inverse );
 void Interpolation_UM_IC( real x, real y, real z, real ****Pri_input, real **XYZ, real *Pri_output, bool disk );
 real TrilinearInterpolation( real *FieldAtVertices, real *xyz000, real *dxyz, real *xyz );
 static void SetArrayDisk();
 static void SetArrayHVC();
 static real *randXYZ;
-static int  N_CLOUDS = 0;
-static real R_CLOUD  = 1.0;
-void randCloud( real **randXYZ, const int numClouds );
+static int numClouds = 0;
+static real radiusCloud = 1.0;
+void randCloud( real **randXYZ, int numClouds );
 
 
 #if ( MODEL == HYDRO )
@@ -58,7 +58,7 @@ static double Amb_CR_Engy;
 static double   CharacteristicSpeed;     // the characteristic speed of the simulation problem
                                          // the default end-time (END_T) will be estimated from
                                          // `CharacteristicSpeed` and `BOX_SIZE`
-static real *BUFFER;
+static real *buffer;
 static real *Header_disk;
 static real ***Rhoo_disk;
 static real ***VelX_disk;
@@ -170,7 +170,6 @@ void Validate()
 #  endif
 
 #  ifndef GRAVITY
-// TODO: 3 and 4 should also be included
    if ( Jet_Ambient == 1 || Jet_Ambient == 2 )
         Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
 #  endif
@@ -289,7 +288,7 @@ void SetParameter()
 // Read header for the fermi bubbles
    SetArrayDisk();
 // SetArrayHVC();
-   randCloud( &randXYZ, N_CLOUDS );
+   randCloud( &randXYZ, numClouds );
 
 // replace useless parameters with NaN
    if ( Jet_Ambient != 0 )
@@ -440,8 +439,8 @@ void SetParameter()
    }
 
 // (2) set the problem-specific derived parameters
-   const double SecAngle = 1.0 / cos(0.5*Jet_HalfOpeningAngle);
-   const double TanAngle = sin(0.5*Jet_HalfOpeningAngle) * SecAngle;
+   double SecAngle = 1.0 / cos(0.5*Jet_HalfOpeningAngle);
+   double TanAngle = sin(0.5*Jet_HalfOpeningAngle) * SecAngle;
 
    Jet_MaxDis  = sqrt( SQR( Jet_Radius ) + SQR( Jet_HalfHeight * SecAngle ) + 2.0 * Jet_Radius * Jet_HalfHeight * TanAngle );
 
@@ -581,41 +580,36 @@ void ReadBinFile( char *FileName, real **buffer )
 
 
 
-void randCloud( real **randXYZ, const int numClouds )
+void randCloud( real **randXYZ, int numClouds )
 {
-   const real Lx = amr->BoxSize[0];
-   const real Ly = amr->BoxSize[1];
-   const real Lz = amr->BoxSize[2];
-
-   // TODO: should this be a const from input? how to decided this parameter?
-   const real z_max = Lz*0.5 + 3.0;
-
    *randXYZ = (real*)malloc( 3*numClouds*sizeof(real) );
 
    for (int i=0; i<3*numClouds; i+=3)
    {
-      (*randXYZ)[i+0] = (real)rand() / (real)RAND_MAX * Lx;
-      (*randXYZ)[i+1] = (real)rand() / (real)RAND_MAX * Ly;
-      (*randXYZ)[i+2] = (real)rand() / (real)RAND_MAX * Lz;
+      (*randXYZ)[i+0] = (real)rand() / (real)RAND_MAX * amr->BoxSize[0];
+      (*randXYZ)[i+1] = (real)rand() / (real)RAND_MAX * amr->BoxSize[1];
+      (*randXYZ)[i+2] = (real)rand() / (real)RAND_MAX * amr->BoxSize[2];
 
-      if ( (*randXYZ)[i+2] < z_max )   i-=3;
+      if ( (*randXYZ)[i+2] < amr->BoxSize[2]*0.5+3.0 )   i-=3;
    } // for (int i=0; i<3*numClouds; i+=3)
 } // FUNCTION : randCloud
 
 
 
-bool checkInsideClouds( const real *randXYZ, const int numClouds, const real x, const real y, const real z, real *cloudCenter )
+bool checkInsideClouds( real *randXYZ, int numClouds, real x, real y, real z, real *cloudCenter )
 {
    real distance;
-
    for (int i=0; i<3*numClouds; i+=3)
    {
       distance = SQRT( SQR( x-randXYZ[i+0] ) + SQR( y-randXYZ[i+1] ) + SQR( z-randXYZ[i+2] ) );
 
-      if ( distance >= R_CLOUD )   continue;
-
-      for (int d=0; d<3; d++)   cloudCenter[d] = randXYZ[i+d];
-      return true;
+      if ( distance < radiusCloud )
+      {
+         cloudCenter[0] = randXYZ[i+0];
+         cloudCenter[1] = randXYZ[i+1];
+         cloudCenter[2] = randXYZ[i+2];
+         return true;
+      } // if ( distance < radiusCloud )
    } // for (int i=0; i<3*numClouds; i+=3)
    return false;
 } // FUNCTION : checkInsideClouds
@@ -626,19 +620,16 @@ void SetArrayDisk()
 {
 // Reading table for interpolations in SetGridIC()
    char TableFileName[] = "UM_IC";
-   ReadBinFile( TableFileName, &BUFFER );
+   ReadBinFile( TableFileName, &buffer );
 
-   const int headerSize = (int)BUFFER[0];
+   int headerSize = (int)buffer[0];
 
    Header_disk = (real*)malloc( (size_t)headerSize * sizeof(real) );
 
-   memcpy( Header_disk, BUFFER, (size_t)headerSize * sizeof(real) );
+   memcpy( Header_disk, buffer, (size_t)headerSize * sizeof(real) );
+
 
    ParticleMass = Header_disk[8] * Header_disk[9];
-
-   real Lx = Header_disk[12];
-   real Ly = Header_disk[13];
-   real Lz = Header_disk[14];
 
    interfaceHeight  = Header_disk[17];
    interfaceHeight *= Const_kpc / UNIT_L;
@@ -647,18 +638,20 @@ void SetArrayDisk()
    int Ny = (int)Header_disk[23];
    int Nz = (int)Header_disk[24];
 
-   const int numGhost = (int)Header_disk[25];
+   if (5*Nx*Ny*Nz > INT_MAX) {printf("integer overflow!!\n"); exit(0);}
 
-   real dx = Lx / (real)Nx;
-   real dy = Lx / (real)Nx;
-   real dz = Lx / (real)Nx;
+   real Lx = Header_disk[12];
+   real Ly = Header_disk[13];
+   real Lz = Header_disk[14];
+   int numGhost = (int)Header_disk[25];
 
-   const int NX    = Nx + 2*numGhost;
-   const int NY    = Ny + 2*numGhost;
-   const int NZ    = Nz + 2*numGhost;
-   const int N_TOT = NX * NY * NZ;
+   real dx = Lx/(real)Nx;
+   real dy = Lx/(real)Nx;
+   real dz = Lx/(real)Nx;
 
-   if ( 5*N_TOT > INT_MAX )   Aux_Error( ERROR_INFO, "Integer overflow (5*N_TOT > INT_MAX), N_TOT=NX*NY*NZ, NX=%d, NY=%d, NZ=%d, INT_MAX=%d!! \n", NX, NY, NZ, INT_MAX );
+   int NX = Nx+2*numGhost;
+   int NY = Ny+2*numGhost;
+   int NZ = Nz+2*numGhost;
 
    if ( Step == 0 )
    {
@@ -672,28 +665,30 @@ void SetArrayDisk()
       Y_disk = (real*)calloc( (size_t)NY, sizeof(real) );
       Z_disk = (real*)calloc( (size_t)NZ, sizeof(real) );
 
-      if ( X_disk == NULL ) Aux_Error( ERROR_INFO, "X_disk is NULL at %d, %s !!\n", __LINE__, __FUNCTION__ );
-      if ( Y_disk == NULL ) Aux_Error( ERROR_INFO, "Y_disk is NULL at %d, %s !!\n", __LINE__, __FUNCTION__ );
-      if ( Z_disk == NULL ) Aux_Error( ERROR_INFO, "Z_disk is NULL at %d, %s !!\n", __LINE__, __FUNCTION__ );
+      if ( X_disk == NULL ) { printf("%d, %s: NULL!\n", __LINE__, __FUNCTION__); exit(0);}
+      if ( Y_disk == NULL ) { printf("%d, %s: NULL!\n", __LINE__, __FUNCTION__); exit(0);}
+      if ( Z_disk == NULL ) { printf("%d, %s: NULL!\n", __LINE__, __FUNCTION__); exit(0);}
 
       real *Ptr;
-      Ptr = BUFFER + headerSize;
+      Ptr = buffer + headerSize;
 
-      for (int c=0; c<5*N_TOT; c++)
+      for (int c=0; c<5*NX*NY*NZ; c++)
       {
-         const int cc = c%(N_TOT);
-         const int i  = (cc - cc%(NY*NZ)) / (NY*NZ);
-         const int j  = ((cc - cc%NZ) / NZ) % NY;
-         const int k  = cc%NZ;
+        int i, j, k, cc;
 
-         if ( 0       <= c && c <   N_TOT )   Rhoo_disk[i][j][k] = Ptr[c];
-         if (   N_TOT <= c && c < 2*N_TOT )   VelX_disk[i][j][k] = Ptr[c];
-         if ( 2*N_TOT <= c && c < 3*N_TOT )   VelY_disk[i][j][k] = Ptr[c];
-         if ( 3*N_TOT <= c && c < 4*N_TOT )   VelZ_disk[i][j][k] = Ptr[c];
-         if ( 4*N_TOT <= c && c < 5*N_TOT )   Pres_disk[i][j][k] = Ptr[c];
-      } // for (int c=0; c<5*N_TOT; c++)
+        cc = c%(NX*NY*NZ);
+        i = (cc - cc%(NY*NZ)) / (NY*NZ);
+        j = ((cc - cc%NZ) / NZ) % NY;
+        k = cc%NZ;
 
-      Ptr += 5*N_TOT;
+        if ( 0          <= c && c <   NX*NY*NZ ) Rhoo_disk[i][j][k] = Ptr[c];
+        if (   NX*NY*NZ <= c && c < 2*NX*NY*NZ ) VelX_disk[i][j][k] = Ptr[c];
+        if ( 2*NX*NY*NZ <= c && c < 3*NX*NY*NZ ) VelY_disk[i][j][k] = Ptr[c];
+        if ( 3*NX*NY*NZ <= c && c < 4*NX*NY*NZ ) VelZ_disk[i][j][k] = Ptr[c];
+        if ( 4*NX*NY*NZ <= c && c < 5*NX*NY*NZ ) Pres_disk[i][j][k] = Ptr[c];
+      } // for (int c=0; c<5*NX*NY*NZ; c++)
+
+      Ptr += 5*NX*NY*NZ;
       for (int c=0; c<NX; c++) X_disk[c] = Ptr[c];
 
       Ptr += NX;
@@ -703,7 +698,7 @@ void SetArrayDisk()
       for (int c=0; c<NZ; c++) Z_disk[c] = Ptr[c];
    } // if ( Step == 0 )
 
-   free(BUFFER);
+   free(buffer);
 
 } // FUNCTION : SetArrayDisk
 
@@ -713,19 +708,16 @@ void SetArrayHVC()
 {
 // Reading table for interpolations in SetGridIC()
    char TableFileName[] = "UM_IC_HVC";
-   ReadBinFile( TableFileName, &BUFFER );
+   ReadBinFile( TableFileName, &buffer );
 
-   const int headerSize = (int)BUFFER[0];
+   int headerSize = (int)buffer[0];
+   printf( "MY_DEBUG: %s has header size of %d\n", TableFileName, headerSize );
 
    Header_hvc = (real*)malloc( (size_t)headerSize*sizeof(real) );
 
-   memcpy( Header_hvc, BUFFER, (size_t)headerSize*sizeof(real) );
+   memcpy( Header_hvc, buffer, (size_t)headerSize*sizeof(real) );
 
    ParticleMass = Header_hvc[8]*Header_hvc[9];
-
-   real Lx = Header_hvc[12];
-   real Ly = Header_hvc[13];
-   real Lz = Header_hvc[14];
 
    interfaceHeight  = Header_hvc[17];
    interfaceHeight *= Const_kpc/UNIT_L;
@@ -734,18 +726,20 @@ void SetArrayHVC()
    int Ny = (int)Header_hvc[23];
    int Nz = (int)Header_hvc[24];
 
-   const int numGhost = (int)Header_hvc[25];
+   if (5*Nx*Ny*Nz > INT_MAX) {printf("integer overflow!!\n"); exit(0);}
+
+   real Lx = Header_hvc[12];
+   real Ly = Header_hvc[13];
+   real Lz = Header_hvc[14];
+   int numGhost = (int)Header_hvc[25];
 
    real dx = Lx / (real)Nx;
    real dy = Lx / (real)Nx;
    real dz = Lx / (real)Nx;
 
-   const int NX = Nx + 2*numGhost;
-   const int NY = Ny + 2*numGhost;
-   const int NZ = Nz + 2*numGhost;
-   const int N_TOT = NX * NY * NZ;
-
-   if ( 5*N_TOT > INT_MAX )   Aux_Error( ERROR_INFO, "Integer overflow (5*N_TOT > INT_MAX), N_TOT=NX*NY*NZ, NX=%d, NY=%d, NZ=%d, INT_MAX=%d!! \n", NX, NY, NZ, INT_MAX );
+   int NX = Nx+2*numGhost;
+   int NY = Ny+2*numGhost;
+   int NZ = Nz+2*numGhost;
 
    if ( Step == 0 )
    {
@@ -764,23 +758,23 @@ void SetArrayHVC()
       if ( Z_hvc == NULL ) Aux_Error( ERROR_INFO, "Z_hvc is NULL at %d, %s !!\n", __LINE__, __FUNCTION__ );
 
       real *Ptr;
-      Ptr = BUFFER + headerSize;
+      Ptr = buffer + headerSize;
 
-      for (int c=0; c<5*N_TOT; c++)
+      for (int c=0; c<5*NX*NY*NZ; c++)
       {
-         const int cc = c%(N_TOT);
-         const int i  = (cc - cc%(NY*NZ)) / (NY*NZ);
-         const int j  = ((cc - cc%NZ) / NZ) % NY;
-         const int k  = cc%NZ;
+        int cc = c%(NX*NY*NZ);
+        int i  = (cc - cc%(NY*NZ)) / (NY*NZ);
+        int j  = ((cc - cc%NZ) / NZ) % NY;
+        int k  = cc%NZ;
 
-         if ( 0       <= c  &&  c <   N_TOT )   Rhoo_hvc[i][j][k] = Ptr[c];
-         if (   N_TOT <= c  &&  c < 2*N_TOT )   VelX_hvc[i][j][k] = Ptr[c];
-         if ( 2*N_TOT <= c  &&  c < 3*N_TOT )   VelY_hvc[i][j][k] = Ptr[c];
-         if ( 3*N_TOT <= c  &&  c < 4*N_TOT )   VelZ_hvc[i][j][k] = Ptr[c];
-         if ( 4*N_TOT <= c  &&  c < 5*N_TOT )   Pres_hvc[i][j][k] = Ptr[c];
-      } // for ( int c=0; c<5*N_TOT; c++ )
+        if ( 0          <= c && c <   NX*NY*NZ ) Rhoo_hvc[i][j][k] = Ptr[c];
+        if (   NX*NY*NZ <= c && c < 2*NX*NY*NZ ) VelX_hvc[i][j][k] = Ptr[c];
+        if ( 2*NX*NY*NZ <= c && c < 3*NX*NY*NZ ) VelY_hvc[i][j][k] = Ptr[c];
+        if ( 3*NX*NY*NZ <= c && c < 4*NX*NY*NZ ) VelZ_hvc[i][j][k] = Ptr[c];
+        if ( 4*NX*NY*NZ <= c && c < 5*NX*NY*NZ ) Pres_hvc[i][j][k] = Ptr[c];
+      } // for (int c=0; c<5*NX*NY*NZ; c++)
 
-      Ptr += 5*N_TOT;
+      Ptr += 5*NX*NY*NZ;
       for (int c=0; c<NX; c++) X_hvc[c] = Ptr[c];
 
       Ptr += NX;
@@ -790,7 +784,7 @@ void SetArrayHVC()
       for (int c=0; c<NZ; c++) Z_hvc[c] = Ptr[c];
    } // if ( Step == 0 )
 
-   free(BUFFER);
+   free(buffer);
 } // FUNCTION : SetArrayHVC
 
 
@@ -800,81 +794,70 @@ void Interpolation_UM_IC( real x, real y, real z, real ****Pri_input, real **XYZ
    real *Header = (disk) ? Header_disk : Header_hvc;
 
    real xyz[3] = {x, y, z};
+   int Nx = (int)Header[22];
+   int Ny = (int)Header[23];
+   int Nz = (int)Header[24];
 
-   const int numGhost = (int)Header[25];
+   real dx = Header[26];
+   real dy = Header[27];
+   real dz = Header[28];
 
-// N{X,Y,Z} = N{x,y,z} + 2*N_ghost
-   const int NX = (int)Header[22] + 2*numGhost;
-   const int NY = (int)Header[23] + 2*numGhost;
-   const int NZ = (int)Header[24] + 2*numGhost;
+   real dxyz[3] = {dx, dy, dz};
 
-   real dxyz[3] = { Header[26], Header[27], Header[28] };  // {dx, dy, dz}
+   int numGhost = (int)Header[25];
 
-   const int Idx = Mis_BinarySearch_Real( XYZ[0], 0, NX-1, x );
-   const int Jdx = Mis_BinarySearch_Real( XYZ[1], 0, NY-1, y );
-   const int Kdx = Mis_BinarySearch_Real( XYZ[2], 0, NZ-1, z );
+   int NX = Nx+2*numGhost;
+   int NY = Ny+2*numGhost;
+   int NZ = Nz+2*numGhost;
+
+   int Idx = Mis_BinarySearch_Real( XYZ[0], 0, NX-1, x );
+   int Jdx = Mis_BinarySearch_Real( XYZ[1], 0, NY-1, y );
+   int Kdx = Mis_BinarySearch_Real( XYZ[2], 0, NZ-1, z );
 
    if ( Idx < 0  ||  Idx > NX-2 ) Aux_Error( ERROR_INFO, "x=%e is out of range! XYZ[0][0]=%e, XYZ[0][%d]=%e\n", x, XYZ[0][0], NX-1, XYZ[0][NX-1] );
    if ( Jdx < 0  ||  Jdx > NY-2 ) Aux_Error( ERROR_INFO, "y=%e is out of range! XYZ[1][1]=%e, XYZ[1][%d]=%e\n", y, XYZ[1][0], NY-1, XYZ[1][NY-1] );
    if ( Kdx < 0  ||  Kdx > NZ-2 ) Aux_Error( ERROR_INFO, "z=%e is out of range! XYZ[2][2]=%e, XYZ[2][%d]=%e\n", z, XYZ[2][0], NZ-1, XYZ[2][NZ-1] );
 
-   real Vertices[8][5];
+   // TODO: NCOMP_TOTAL to NCOMP_TOTAL_PLUS_MAG
+   real Vertex000[NCOMP_TOTAL]={0.0}, Vertex001[NCOMP_TOTAL]={0.0}, Vertex010[NCOMP_TOTAL]={0.0}, Vertex100[NCOMP_TOTAL]={0.0},
+        Vertex011[NCOMP_TOTAL]={0.0}, Vertex101[NCOMP_TOTAL]={0.0}, Vertex110[NCOMP_TOTAL]={0.0}, Vertex111[NCOMP_TOTAL]={0.0};
+
    for (int v=0; v<5; v++)
    {
-      Vertices[0][v] = Pri_input[v][Idx  ][Jdx  ][Kdx  ];
-      Vertices[1][v] = Pri_input[v][Idx  ][Jdx  ][Kdx+1];
-      Vertices[2][v] = Pri_input[v][Idx  ][Jdx+1][Kdx  ];
-      Vertices[3][v] = Pri_input[v][Idx+1][Jdx  ][Kdx  ];
-      Vertices[4][v] = Pri_input[v][Idx  ][Jdx+1][Kdx+1];
-      Vertices[5][v] = Pri_input[v][Idx+1][Jdx  ][Kdx+1];
-      Vertices[6][v] = Pri_input[v][Idx+1][Jdx+1][Kdx  ];
-      Vertices[7][v] = Pri_input[v][Idx+1][Jdx+1][Kdx+1];
+      Vertex000[v] = Pri_input[v][Idx  ][Jdx  ][Kdx  ];
+      Vertex001[v] = Pri_input[v][Idx  ][Jdx  ][Kdx+1];
+      Vertex010[v] = Pri_input[v][Idx  ][Jdx+1][Kdx  ];
+      Vertex100[v] = Pri_input[v][Idx+1][Jdx  ][Kdx  ];
+      Vertex011[v] = Pri_input[v][Idx  ][Jdx+1][Kdx+1];
+      Vertex101[v] = Pri_input[v][Idx+1][Jdx  ][Kdx+1];
+      Vertex110[v] = Pri_input[v][Idx+1][Jdx+1][Kdx  ];
+      Vertex111[v] = Pri_input[v][Idx+1][Jdx+1][Kdx+1];
    }
 
-// TODO: One the above is confirmed to be correct, remove the original code
-   // real Vertex000[5] = { Pri_input[0][Idx  ][Jdx  ][Kdx  ], Pri_input[1][Idx  ][Jdx  ][Kdx  ], Pri_input[2][Idx  ][Jdx  ][Kdx  ], Pri_input[3][Idx  ][Jdx  ][Kdx  ], Pri_input[4][Idx  ][Jdx  ][Kdx  ] };
-   // real Vertex001[5] = { Pri_input[0][Idx  ][Jdx  ][Kdx+1], Pri_input[1][Idx  ][Jdx  ][Kdx+1], Pri_input[2][Idx  ][Jdx  ][Kdx+1], Pri_input[3][Idx  ][Jdx  ][Kdx+1], Pri_input[4][Idx  ][Jdx  ][Kdx+1] };
-   // real Vertex010[5] = { Pri_input[0][Idx  ][Jdx+1][Kdx  ], Pri_input[1][Idx  ][Jdx+1][Kdx  ], Pri_input[2][Idx  ][Jdx+1][Kdx  ], Pri_input[3][Idx  ][Jdx+1][Kdx  ], Pri_input[4][Idx  ][Jdx+1][Kdx  ] };
-   // real Vertex100[5] = { Pri_input[0][Idx+1][Jdx  ][Kdx  ], Pri_input[1][Idx+1][Jdx  ][Kdx  ], Pri_input[2][Idx+1][Jdx  ][Kdx  ], Pri_input[3][Idx+1][Jdx  ][Kdx  ], Pri_input[4][Idx+1][Jdx  ][Kdx  ] };
-   // real Vertex011[5] = { Pri_input[0][Idx  ][Jdx+1][Kdx+1], Pri_input[1][Idx  ][Jdx+1][Kdx+1], Pri_input[2][Idx  ][Jdx+1][Kdx+1], Pri_input[3][Idx  ][Jdx+1][Kdx+1], Pri_input[4][Idx  ][Jdx+1][Kdx+1] };
-   // real Vertex101[5] = { Pri_input[0][Idx+1][Jdx  ][Kdx+1], Pri_input[1][Idx+1][Jdx  ][Kdx+1], Pri_input[2][Idx+1][Jdx  ][Kdx+1], Pri_input[3][Idx+1][Jdx  ][Kdx+1], Pri_input[4][Idx+1][Jdx  ][Kdx+1] };
-   // real Vertex110[5] = { Pri_input[0][Idx+1][Jdx+1][Kdx  ], Pri_input[1][Idx+1][Jdx+1][Kdx  ], Pri_input[2][Idx+1][Jdx+1][Kdx  ], Pri_input[3][Idx+1][Jdx+1][Kdx  ], Pri_input[4][Idx+1][Jdx+1][Kdx  ] };
-   // real Vertex111[5] = { Pri_input[0][Idx+1][Jdx+1][Kdx+1], Pri_input[1][Idx+1][Jdx+1][Kdx+1], Pri_input[2][Idx+1][Jdx+1][Kdx+1], Pri_input[3][Idx+1][Jdx+1][Kdx+1], Pri_input[4][Idx+1][Jdx+1][Kdx+1] };
-
    bool Unphy = false;
-   for (int i=0; i<8; i++)
+   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex000, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
+   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex001, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
+   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex010, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
+   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex100, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
+   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex011, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
+   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex110, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
+   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex101, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
+   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex111, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
+
+   if ( Unphy )
    {
-      for (int v=0; v<5; v++)   Unphy |= ( Vertices[i][v] != Vertices[i][v] );
-      Unphy |= ( (real) TINY_NUMBER >= Vertices[i][0] );
-      Unphy |= ( (real)-HUGE_NUMBER >= Vertices[i][1] );
-      Unphy |= ( (real)-HUGE_NUMBER >= Vertices[i][2] );
-      Unphy |= ( (real)-HUGE_NUMBER >= Vertices[i][3] );
-      Unphy |= ( (real) TINY_NUMBER >= Vertices[i][4] );
-      for (int v=0; v<5; v++)   Unphy |= ( Vertices[i][v] >= (real)HUGE_NUMBER );
+      printf("Idx=%d, Jdx=%d, Kdx=%d\n", Idx, Jdx, Kdx);
+      printf("x=%e, y=%e, z=%e\n", x, y, z);
+      exit(0);
+   }
 
-      // TODO : Can not use since the function also check for the passive scalar
-      // Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertices[i], NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
-   } // for (int i=0; i<8; i++)
+   real xyz000[3] = {XYZ[0][Idx], XYZ[1][Jdx], XYZ[2][Kdx]};
 
-   // Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex000, NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, true );
-   // Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex001, NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, true );
-   // Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex010, NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, true );
-   // Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex100, NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, true );
-   // Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex011, NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, true );
-   // Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex110, NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, true );
-   // Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex101, NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, true );
-   // Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex111, NULL, NULL, NULL, NULL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, true );
+   for (int v=0; v<5; v++)
+   {
+     real FieldAtVertices[8] = { Vertex000[v], Vertex001[v], Vertex010[v], Vertex100[v], Vertex011[v], Vertex101[v], Vertex110[v], Vertex111[v] };
 
-   // TODO: should we raise an error? Original exit(0)
-   if ( Unphy ) Aux_Error( ERROR_INFO, "Unphysical near : Idx=%d, Jdx=%d, Kdx=%d, x=%e, y=%e, z=%e !!\n", Idx, Jdx, Kdx, x, y, z );
-
-   real xyz000[3] = {XYZ[0][Idx], XYZ[1][Jdx], XYZ[2][Kdx] };
-   real FieldAtVertices[8];
-
-   for ( int v=0; v<5; v++ ) {
-      for (int i=0; i<8; i++)   FieldAtVertices[i] = Vertices[i][v];
-      // real FieldAtVertices[8] = { Vertex000[v], Vertex001[v], Vertex010[v], Vertex100[v], Vertex011[v], Vertex101[v], Vertex110[v], Vertex111[v] };
-      Pri_output[v] = TrilinearInterpolation( FieldAtVertices, xyz000, dxyz, xyz );
+     Pri_output[v] = TrilinearInterpolation( FieldAtVertices, xyz000, dxyz, xyz );
    }
 
    //free_3d_array((void***)Rhoo_disk);
@@ -885,13 +868,13 @@ void Interpolation_UM_IC( real x, real y, real z, real ****Pri_input, real **XYZ
    //free(X_disk);
    //free(Y_disk);
    //free(Z_disk);
-   //free(BUFFER);
+   //free(buffer);
 } // FUNCTION : Interpolation_UM_IC
 
 
 
 #ifdef GRAVITY
-real IsothermalSlab_Pot( const real z )
+real IsothermalSlab_Pot( real z )
 {
    real Pot, Log;
 
@@ -932,7 +915,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 // variables for jet
-     // TODO: should be NCOMP_TOTAL_PLUS_MAG
    real Pri[NCOMP_TOTAL] = {0.0};
    real xc = x - IsothermalSlab_Center[0];
    real yc = y - IsothermalSlab_Center[1];
@@ -941,7 +923,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    real ***Pri_disk_input[5] = { Rhoo_disk, VelX_disk, VelY_disk, VelZ_disk, Pres_disk };
    real *** Pri_hvc_input[5] = { Rhoo_hvc,   VelX_hvc,  VelY_hvc,  VelZ_hvc,  Pres_hvc };
 
-// TODO: Jet_Ambient == 1 is missing
    if ( Jet_Ambient == 0 ) // uniform ambient
    {
       Pri[0] = (real)Amb_UniformDens;
@@ -1028,7 +1009,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
          real cloudCenter[3];
 
-         if ( checkInsideClouds( randXYZ, N_CLOUDS, x, y, z, cloudCenter ) )
+         if ( checkInsideClouds( randXYZ, numClouds, x, y, z, cloudCenter ) )
          {
             real Pri_hvc_output[5];
 
@@ -1195,10 +1176,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #     endif
 
 #     endif // #ifdef GRAVITY
-   } else
-   {
-      // TODO : Add an error for wrong Jet_Ambient
-   } // if ( Jet_Ambient == 0 ) ... else if ... else ...
+   } // if ( Jet_Ambient == 0 ) ... else if
 } // FUNCTION : SetGridIC
 
 
@@ -1249,7 +1227,6 @@ int Flu_ResetByUser_Jets( real fluid[], const double Emag, const double x, const
 
   if ( !Jet_SphericalSrc ) {
      double xp[3], rp[3];
-     // TODO: should be NCOMP_TOTAL_PLUS_MAG
      double Prim[NCOMP_TOTAL] = {0.0}, Cons[NCOMP_TOTAL] = {0.0}, Vel[3];
      real PriReal[NCOMP_TOTAL] = {0.0};
      double PrecessionAxis_Spherical[3], Omega_t;
@@ -1299,7 +1276,6 @@ int Flu_ResetByUser_Jets( real fluid[], const double Emag, const double x, const
      } // if ( Jet_HalfOpeningAngle != 0.0 ) ... else ...
 
 //   set fluid variable inside source
-//   TODO: try to define Jet_upper/lower to avoid the ugly code
      if ( ( InsideUpperCone  &&  ( Jet_Fire == 1  ||  Jet_Fire == 3 ) )  ||
           ( InsideLowerCone  &&  ( Jet_Fire == 2  ||  Jet_Fire == 3 ) ) )
      {
@@ -1348,8 +1324,11 @@ int Flu_ResetByUser_Jets( real fluid[], const double Emag, const double x, const
            Prim[4] = Jet_SrcTemp*Jet_SrcDens;
         } // if ( Jet_HalfOpeningAngle == 0.0 ) ... else ...
 
-        // TODO: should be NCOMP_TOTAL
-        for (int v=0; v<5; v++)   PriReal[v] = (real)Prim[v];
+        PriReal[0] = (real)Prim[0];
+        PriReal[1] = (real)Prim[1];
+        PriReal[2] = (real)Prim[2];
+        PriReal[3] = (real)Prim[3];
+        PriReal[4] = (real)Prim[4];
 
         Hydro_Pri2Con( PriReal, fluid, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
                        EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
@@ -1371,7 +1350,6 @@ int Flu_ResetByUser_Jets( real fluid[], const double Emag, const double x, const
   } else // if ( !Jet_SphericalSrc )
   {
      double xp[3], rp[3];
-     // TODO: should be NCOMP_TOTAL_PLUS_MAG
      double Prim[NCOMP_TOTAL] = {0.0}, Cons[NCOMP_TOTAL] = {0.0}, Vel[3];
      real PriReal[NCOMP_TOTAL] = {0.0};
 
@@ -1384,7 +1362,6 @@ int Flu_ResetByUser_Jets( real fluid[], const double Emag, const double x, const
 
      double R = SQRT( SQR(xp[0]) + SQR(xp[1]) + SQR(xp[2]) );
 
-//   For quick test, we temporarily use Jet_HalfHeight to represent the radius of spherical source
      if ( R < Jet_HalfHeight )
      {
         Prim[0] = Jet_SrcDens;
@@ -1393,8 +1370,11 @@ int Flu_ResetByUser_Jets( real fluid[], const double Emag, const double x, const
         Prim[3] = Jet_SrcVel*xp[2]/R;
         Prim[4] = Jet_SrcTemp*Jet_SrcDens;
 
-        // TODO: should be NCOMP_TOTAL
-        for (int v=0; v<5; v++)   PriReal[v] = (real)Prim[v];
+        PriReal[0] = (real)Prim[0];
+        PriReal[1] = (real)Prim[1];
+        PriReal[2] = (real)Prim[2];
+        PriReal[3] = (real)Prim[3];
+        PriReal[4] = (real)Prim[4];
 
         Hydro_Pri2Con( PriReal, fluid, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
                        EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
@@ -1423,8 +1403,8 @@ int Flu_ResetByUser_Jets( real fluid[], const double Emag, const double x, const
 // (true/false): if the target cell (is/is not) within the region to be refined
 static bool Flag_Region( const int i, const int j, const int k, const int lv, const int PID )
 {
-   if ( Step == 0 )   return true; // TODO: figure why refine at first, or why the code is like this
-
+   if ( Step > 0 )
+   {
    const double dh        = amr->dh[lv]; // grid size
    const double Pos[3]    = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,  // x,y,z position
                               amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
@@ -1437,14 +1417,15 @@ static bool Flag_Region( const int i, const int j, const int k, const int lv, co
                               Pos[2]-Center[2]-Jet_CenOffset[2] };
    const double R         = sqrt( SQR(dr[0]) + SQR(dr[1]) );
 
-// TODO the last condition seems weird
-   // bool Flag = R > gasDisk_highResRadius  ||  lv > gasDisk_lowRes_LEVEL  ||  fabs(dr[2]) < 2.0*interfaceHeight;
+   //const double ShellThickness = 16*amr->dh[3];
+   bool Flag = false;
+   Flag = R > gasDisk_highResRadius  &&  lv > gasDisk_lowRes_LEVEL  &&  fabs(dr[2]) < 2.0*interfaceHeight;
 
-   // return Flag;
-//   original flag. TODO: once the question up is solved, remove it
-   bool Flag = R > gasDisk_highResRadius && lv > gasDisk_lowRes_LEVEL && fabs(dr[2]) < 2.0*interfaceHeight;
-   if ( Flag ) return false;
-   else        return true;
+
+   if (Flag) return false;
+   else      return true;
+   } // if (Step > 0)
+   else    return true;
 } // FUNCTION : Flag_Region
 
 
@@ -1461,23 +1442,26 @@ bool Flag_User( const int i, const int j, const int k, const int lv, const int P
    const double dR[3]     = { Pos[0]-Center[0], Pos[1]-Center[1], Pos[2]-Center[2] };
    const double R         = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
 
-   bool Flag, Src = R <= dh*1.8;
+   bool Flag, Src;
    if ( Jet_Ambient != 4 )
    {
-      bool Disk = fabs(dR[2]) <= dh*1.8;
+      bool Disk;
+      Disk     = fabs(dR[2]) <= dh*1.8;
       if (lv >= jetSrc_lowRes_LEVEL) Disk = false;
-      Flag = Src || Disk;
+      Src      = R <= dh*1.8;
+      Flag     = Src||Disk;
    }
    else
    {
-      Flag = Src;
+      Src      = R <= dh*1.8;
+      Flag     = Src;
    }
    return Flag;
 } // FUNCTION : Flag_User
 
 
 
-void CartesianRotate( double x[], const double theta, const double phi, const bool inverse )
+void CartesianRotate( double x[], double theta, double phi, bool inverse )
 {
    double xp[3];
 
@@ -1519,11 +1503,11 @@ void CartesianRotate( double x[], const double theta, const double phi, const bo
 //-------------------------------------------------------------------------------------------------------
 double Mis_GetTimeStep_User( const int lv, const double dTime_dt )
 {
-   const double Jet_SrcGamma = sqrt(1.0 + SQR(Jet_SrcVel));
-   const double Jet_Src3Vel  = Jet_SrcVel / Jet_SrcGamma;
-   const double dh           = amr->dh[MAX_LEVEL]; // TODO: why max level
-   const double Cs           = 0.182574; // 1.0/sqrt(3); // TODO: not enough digit for double
-   double dt_user            = DT__FLUID * dh / (Jet_Src3Vel+3.0*Cs);
+   double Jet_SrcGamma = sqrt(1.0 + SQR(Jet_SrcVel));
+   double Jet_Src3Vel  = Jet_SrcVel / Jet_SrcGamma;
+   double dh           = amr->dh[MAX_LEVEL];
+   double Cs           = 0.182574; // 1.0/sqrt(3);
+   double dt_user      = DT__FLUID * dh /(Jet_Src3Vel+3.0*Cs);
 
    return dt_user;
 } // FUNCTION : Mis_GetTimeStep_User_Template
