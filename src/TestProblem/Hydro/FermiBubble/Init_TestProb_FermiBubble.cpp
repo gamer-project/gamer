@@ -1182,7 +1182,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Flu_ResetByUser_Jets
+// Function    :  Flu_ResetByUser_FermiBubble
 // Description :  Function to reset the fluid field
 //
 // Note        :  1. Invoked by "Flu_ResetByUser_API()" and "Model_Init_ByFunction_AssignData()" using the
@@ -1218,7 +1218,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 /*          /_____|_____\                */
 /*                F                      */
 // =======================================================================================
-int Flu_ResetByUser_Jets( real fluid[], const double Emag, const double x, const double y, const double z,
+int Flu_ResetByUser_FermiBubble( real fluid[], const double Emag, const double x, const double y, const double z,
                            const double Time, const double dt, const int lv, double AuxArray[] )
 {
   if ( Jet_Fire == 0 ) return false;
@@ -1396,7 +1396,7 @@ int Flu_ResetByUser_Jets( real fluid[], const double Emag, const double x, const
 
   return false;
 
-} // FUNCTION : Flu_ResetByUser_Jets
+} // FUNCTION : Flu_ResetByUser_FermiBubble
 
 
 
@@ -1526,7 +1526,7 @@ void AddNewField_Jet()
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_TestProb_Hydro_Jet
+// Function    :  Init_TestProb_Hydro_FermiBubble
 // Description :  Test problem initializer
 //
 // Note        :  None
@@ -1535,7 +1535,7 @@ void AddNewField_Jet()
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_Hydro_Jet()
+void Init_TestProb_Hydro_FermiBubble()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -1566,7 +1566,7 @@ void Init_TestProb_Hydro_Jet()
    //}
 
    BC_User_Ptr              = NULL;
-   Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Jets;
+   Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_FermiBubble;
    Output_User_Ptr          = NULL;
    Aux_Record_User_Ptr      = NULL;
    End_User_Ptr             = NULL;
@@ -1581,6 +1581,6 @@ void Init_TestProb_Hydro_Jet()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_TestProb_Hydro_Jets
+} // FUNCTION : Init_TestProb_Hydro_FermiBubble
 
 #endif // #if ( MODEL == HYDRO )
