@@ -572,7 +572,7 @@ int Flu_ResetByUser_Jet( real fluid[], const double Emag, const double x, const 
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_Hydro_Jet_old()
+void Init_TestProb_Hydro_Jet()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
