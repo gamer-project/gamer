@@ -64,9 +64,10 @@ class parameter():
 
     def append_description( self, string ):
         # words = list( filter( None, string.split(' ') ) )
+        sep_char = "<br />" if self.name == "TESTPROB_ID" else ' '
         words = string.split()
         for i in range(1, len(words)):
-            self.description += ' ' + words[i]
+            self.description += sep_char + words[i]
         return
 
     def get_link_name( self, file_dict ):
