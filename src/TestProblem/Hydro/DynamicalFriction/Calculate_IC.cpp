@@ -227,6 +227,8 @@ tuple<vector<double>, vector<double>, vector<double>> Calculate_IC( const char* 
    double b = mass[index - 1] - m * r[index - 1];
    double interpolated_mass = m * GC_R + b;
 
+   if (MPI_Rank == 0 ) Aux_Message(stdout, "interpolated_mass at initial radius is %15.5e\n",interpolated_mass );
+
 // 3. calculate the speed of GC and Halo (considering realtive speed)
 
    double v_initial = sqrt(NEWTON_G * interpolated_mass / GC_R);
