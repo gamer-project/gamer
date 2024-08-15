@@ -98,19 +98,16 @@ int Mis_Cell2Scale( const int NCell, const int lv )
 void Mis_Cartesian2Spherical( const double Cartesian[], double Spherical[] )
 {
 
-  Spherical[0] = SQRT( SQR(Cartesian[0]) + SQR(Cartesian[1]) + SQR(Cartesian[2]) );
+   if ( SQR(Cartesian[0]) + SQR(Cartesian[1]) == 0.0  &&  Cartesian[2] == 0.0 )
+      Aux_Error( ERROR_INFO, "Both arguments in atan2 can not be zero !! (%s)\n", __FUNCTION__ );
+   if ( Cartesian[0] == 0.0  &&  Cartesian[1] == 0.0 )
+      Aux_Error( ERROR_INFO, "Both arguments in atan2 can not be zero !! (%s)\n", __FUNCTION__ );
 
-  if ( SQR(Cartesian[0]) + SQR(Cartesian[1]) == 0.0 && Cartesian[2] == 0.0 )
-    Aux_Error( ERROR_INFO, "Both arguments in atan2 can not be zero !! (%s)\n", __FUNCTION__ );
+   Spherical[0] = SQRT( SQR(Cartesian[0]) + SQR(Cartesian[1]) + SQR(Cartesian[2]) );
+   Spherical[1] = ATAN2( SQRT( SQR(Cartesian[0]) + SQR(Cartesian[1]) ), Cartesian[2] );
+   Spherical[2] = ATAN2( Cartesian[1], Cartesian[0] );
 
-  Spherical[1] = ATAN2( SQRT( SQR(Cartesian[0]) + SQR(Cartesian[1]) ), Cartesian[2] );
-
-  if ( Cartesian[0] == 0.0 && Cartesian[1] == 0.0 )
-    Aux_Error( ERROR_INFO, "Both arguments in atan2 can not be zero !! (%s)\n", __FUNCTION__ );
-
-  Spherical[2] = ATAN2( Cartesian[1], Cartesian[0] );
-
-}
+} // FUNCTION : Mis_Cartesian2Spherical
 
 
 
@@ -131,16 +128,14 @@ void Mis_Cartesian2Spherical( const double Cartesian[], double Spherical[] )
 void Mis_Cartesian2Cylindrical( const double Cartesian[], double Cylindrical[] )
 {
 
-  Cylindrical[0] = SQRT( SQR(Cartesian[0]) + SQR(Cartesian[1]) );
+   if ( Cartesian[1] == 0.0  &&  Cartesian[0] == 0.0 )
+      Aux_Error( ERROR_INFO, "Both arguments in atan2 can not be zero !! (%s)\n", __FUNCTION__ );
 
-  if ( Cartesian[1] == 0.0 && Cartesian[0] == 0.0 )
-    Aux_Error( ERROR_INFO, "Both arguments in atan2 can not be zero !! (%s)\n", __FUNCTION__ );
+   Cylindrical[0] = SQRT( SQR(Cartesian[0]) + SQR(Cartesian[1]) );
+   Cylindrical[1] = ATAN2( Cartesian[1], Cartesian[0] );
+   Cylindrical[2] = Cartesian[2];
 
-  Cylindrical[1] = ATAN2( Cartesian[1], Cartesian[0] );
-
-  Cylindrical[2] = Cartesian[2];
-
-}
+} // FUNCTION : Mis_Cartesian2Cylindrical
 
 
 
@@ -164,13 +159,11 @@ void Mis_Cartesian2Cylindrical( const double Cartesian[], double Cylindrical[] )
 void Mis_Spherical2Cartesian( const double Spherical[], double Cartesian[] )
 {
 
-  Cartesian[0] = Spherical[0]*SIN(Spherical[1])*COS(Spherical[2]);
+   Cartesian[0] = Spherical[0]*SIN(Spherical[1])*COS(Spherical[2]);
+   Cartesian[1] = Spherical[0]*SIN(Spherical[1])*SIN(Spherical[2]);
+   Cartesian[2] = Spherical[0]*COS(Spherical[1]);
 
-  Cartesian[1] = Spherical[0]*SIN(Spherical[1])*SIN(Spherical[2]);
-
-  Cartesian[2] = Spherical[0]*COS(Spherical[1]);
-
-}
+} // FUNCTION : Mis_Spherical2Cartesian
 
 
 
@@ -202,31 +195,29 @@ void Mis_Spherical2Cartesian( const double Spherical[], double Cartesian[] )
 void Mis_RotateRigidBody( double Cartesian[], const double EulerAngle[] )
 {
 
-  double CartesianRot[3], Phi, Theta, Psi;
+   double CartesianRot[3];
 
-  Phi   = EulerAngle[0];
-  Theta = EulerAngle[1];
-  Psi   = EulerAngle[2];
+   const double Phi   = EulerAngle[0];
+   const double Theta = EulerAngle[1];
+   const double Psi   = EulerAngle[2];
 
-  CartesianRot[0] =    ( COS(Phi)*COS(Psi) - COS(Theta)*SIN(Phi)*SIN(Psi) )*Cartesian[0]
-                     - ( COS(Phi)*SIN(Psi) + COS(Theta)*SIN(Phi)*COS(Psi) )*Cartesian[1]
-                     + (                     SIN(Theta)*SIN(Phi)          )*Cartesian[2];
+   CartesianRot[0] =    ( COS(Phi)*COS(Psi) - COS(Theta)*SIN(Phi)*SIN(Psi) )*Cartesian[0]
+                      - ( COS(Phi)*SIN(Psi) + COS(Theta)*SIN(Phi)*COS(Psi) )*Cartesian[1]
+                      + (                     SIN(Theta)*SIN(Phi)          )*Cartesian[2];
+   CartesianRot[1] =  - ( SIN(Phi)*COS(Psi) + COS(Theta)*COS(Phi)*SIN(Psi) )*Cartesian[0]
+                      - ( SIN(Phi)*SIN(Psi) - COS(Theta)*COS(Phi)*COS(Psi) )*Cartesian[1]
+                      - (                     SIN(Theta)*COS(Phi)          )*Cartesian[2];
+   CartesianRot[2] = SIN(Theta)*SIN(Psi)*Cartesian[0] + SIN(Theta)*COS(Psi)*Cartesian[1] + COS(Theta)*Cartesian[2];
 
-  CartesianRot[1] =  - ( SIN(Phi)*COS(Psi) + COS(Theta)*COS(Phi)*SIN(Psi) )*Cartesian[0]
-                     - ( SIN(Phi)*SIN(Psi) - COS(Theta)*COS(Phi)*COS(Psi) )*Cartesian[1]
-                     - (                     SIN(Theta)*COS(Phi)          )*Cartesian[2];
+   for (int idx=0; idx<3; idx++)   Cartesian[idx] = CartesianRot[idx];
 
-  CartesianRot[2] = SIN(Theta)*SIN(Psi)*Cartesian[0] + SIN(Theta)*COS(Psi)*Cartesian[1] + COS(Theta)*Cartesian[2];
-
-  for (int idx=0; idx<3; idx++) Cartesian[idx] = CartesianRot[idx];
-
-}
+} // FUNCTION : Mis_RotateRigidBody
 
 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Mis_GetEulerAngles
-// Description :  Get Euler angles by 
+// Description :  Get Euler angles
 // Note        :  See https://en.wikipedia.org/wiki/Euler_angles#Proper_Euler_angles_2
 //
 // Parameter   :  EulerAngle[0/1/2] : φ/θ/ψ, Euler angles, described in the function `RotateRigidBody`
@@ -236,25 +227,24 @@ void Mis_RotateRigidBody( double Cartesian[], const double EulerAngle[] )
 //
 // Return      :  EulerAngle[0/1/2] : φ/θ/ψ
 //-------------------------------------------------------------------------------------------------------
-
 void Mis_GetEulerAngles( double EulerAngle[], const double Unit[] )
 {
 
-  double Argument0 = -Unit[1] / SQRT( (double)1.0 - Unit[2]*Unit[2] );
-  double Argument1 = +Unit[2];
-  double Argument2 = +Unit[0] / SQRT( (double)1.0 - Unit[2]*Unit[2] );
+   const double Argument0 = -Unit[1] / SQRT( (double)1.0 - Unit[2]*Unit[2] );
+   const double Argument1 = +Unit[2];
+   const double Argument2 = +Unit[0] / SQRT( (double)1.0 - Unit[2]*Unit[2] );
 
-  bool Fail = false;
+   bool Fail = false;
 
-  Fail |= Argument0 < (double)-1.0 || Argument0 > (double)1.0;
-  Fail |= Argument1 < (double)-1.0 || Argument1 > (double)1.0;
-  Fail |= Argument2 < (double)-1.0 || Argument2 > (double)1.0;
+   Fail |= Argument0 < (double)-1.0  ||  Argument0 > (double)1.0;
+   Fail |= Argument1 < (double)-1.0  ||  Argument1 > (double)1.0;
+   Fail |= Argument2 < (double)-1.0  ||  Argument2 > (double)1.0;
 
-  if ( Fail )
-    Aux_Error( ERROR_INFO, "Argument should be lie between -1 and 1 !! (%s)\n", Argument2, __FUNCTION__ );
+   if ( Fail )
+      Aux_Error( ERROR_INFO, "Argument should be lie between -1 and 1 !! (%s)\n", Argument2, __FUNCTION__ );
 
-  EulerAngle[0] =  acos( Argument0 );
-  EulerAngle[1] =  acos( Argument1 );
-  EulerAngle[2] =  acos( Argument2 );
+   EulerAngle[0] = acos( Argument0 );
+   EulerAngle[1] = acos( Argument1 );
+   EulerAngle[2] = acos( Argument2 );
 
-}
+} // FUNCTION : Mis_GetEulerAngles
