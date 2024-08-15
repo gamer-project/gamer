@@ -55,7 +55,7 @@ void CR_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PLUS_MAG],
                                        const real dt_dh2, const EoS_t *EoS )
 {
 #  ifdef SRHD
-// Although SRHD does not support the magnetic field yet, we still declare the size as 
+// Although SRHD does not support the magnetic field yet, we still declare the size as
 // NCOMP_TOTAL_PLUS_MAG in case the magnetic field is supported someday.
    real Con_L[NCOMP_TOTAL_PLUS_MAG], Con_C[NCOMP_TOTAL_PLUS_MAG], Con_R[NCOMP_TOTAL_PLUS_MAG];
    real Pri_L[NCOMP_TOTAL_PLUS_MAG], Pri_C[NCOMP_TOTAL_PLUS_MAG], Pri_R[NCOMP_TOTAL_PLUS_MAG];
@@ -83,7 +83,6 @@ void CR_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PLUS_MAG],
       }
 
       const real minPres = TINY_NUMBER;
-      const real minJeansPres =  TINY_NUMBER;
       Hydro_Con2Pri( Con_L, Pri_L, minPres, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
                      EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr, EoS->GuessHTilde_FuncPtr,
                      EoS->HTilde2Temp_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
@@ -163,6 +162,8 @@ void CR_AdiabaticWork_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 
    real div_V[3];
 #  ifdef SRHD
+// Although SRHD does not support the magnetic field yet, we still declare the size as
+// NCOMP_TOTAL_PLUS_MAG in case the magnetic field is supported someday.
    real Con_LR[NCOMP_TOTAL_PLUS_MAG], Con_CL[NCOMP_TOTAL_PLUS_MAG], Con_CR[NCOMP_TOTAL_PLUS_MAG], Con_RL[NCOMP_TOTAL_PLUS_MAG];
    real Pri_LR[NCOMP_TOTAL_PLUS_MAG], Pri_CL[NCOMP_TOTAL_PLUS_MAG], Pri_CR[NCOMP_TOTAL_PLUS_MAG], Pri_RL[NCOMP_TOTAL_PLUS_MAG];
 #  endif
@@ -224,7 +225,6 @@ void CR_AdiabaticWork_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
          }
 
          const real minPres = TINY_NUMBER;
-         const real minJeansPres =  TINY_NUMBER;
          Hydro_Con2Pri( Con_LR, Pri_LR, minPres, NULL_BOOL, NULL_INT, NULL, NULL_BOOL, NULL_REAL,
                         EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr, EoS->GuessHTilde_FuncPtr,
                         EoS->HTilde2Temp_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
