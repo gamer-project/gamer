@@ -99,14 +99,14 @@ static real ExtPot_IsothermalSlab( const double x, const double y, const double 
    const real   distance_h                        = (real)UserArray_Flt[ 8];
    const real   v_halo                            = (real)UserArray_Flt[ 9];
    const real   interfaceHeight                   = (real)UserArray_Flt[10];
-   const  int   Jet_Ambient                       =       UserArray_Int[ 0];
+   const int    Jet_Ambient                       =       UserArray_Int[ 0];
 
    const double IsothermalSlab_VelocityDispersion_Sqr = SQR(IsothermalSlab_VelocityDispersion);
 
    real stellarDiskPot = sqrt( ( 2.0*M_PI*NewtonG*IsothermalSlab_PeakDens ) / IsothermalSlab_VelocityDispersion_Sqr );
 
 #  ifndef __CUDACC__
-   if ( cz != 0.5*BoxSize_Z ) Aux_Error( ERROR_INFO, "We expect the z-position of stellar disk is at box-center!\n" );
+   if ( cz != 0.5*BoxSize_Z )   Aux_Error( ERROR_INFO, "We expect the z-position of stellar disk is at box-center!\n" );
 #  endif
 
    real LogPot;
@@ -134,7 +134,7 @@ static real ExtPot_IsothermalSlab( const double x, const double y, const double 
          stellarDiskPot = 2.0*IsothermalSlab_VelocityDispersion_Sqr*log(cosh(dz*stellarDiskPot));
          LogPot = SQR(v_halo) * log(dz*dz + SQR(distance_h));
       }
-   }
+   } // if ( Jet_Ambient == 2 ) ... else if ... else ...
 
    real TotPot = stellarDiskPot + LogPot;
 
