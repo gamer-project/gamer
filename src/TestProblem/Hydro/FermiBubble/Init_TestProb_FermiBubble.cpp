@@ -4,6 +4,8 @@
 #include "GAMER.h"
 #include "TestProb.h"
 
+
+
 void ***calloc_3d_array( size_t nt, size_t nr, size_t nc, size_t size );
 void free_3d_array( void ***array );
 void Mis_Cartesian2Spherical( const double Cartesian[], double Spherical[] );
@@ -13,12 +15,10 @@ real TrilinearInterpolation( real *FieldAtVertices, real *xyz000, real *dxyz, re
 static void SetArrayDisk();
 static void SetArrayHVC();
 static real *randXYZ;
-static int numClouds = 0;
+static int  numClouds   = 0;
 static real radiusCloud = 1.0;
 void randCloud( real **randXYZ, int numClouds );
 
-
-#if ( MODEL == HYDRO )
 
 // problem-specific global variables
 // =======================================================================================
@@ -43,6 +43,7 @@ static double   Amb_UniformTemp;         // uniform ambient temperature
 
 // jet fluid parameters
 static double   Jet_SrcVel;              // jet 4-velocity
+static double   Jet_SrcGamma;            // jet lorentz factor
 static double   Jet_SrcDens;             // jet density
 static double   Jet_SrcTemp;             // jet temperature
 static bool     Jet_SmoothVel;           // smooth radial component of 4-velocity on cross section
@@ -50,8 +51,8 @@ static bool     Jet_SmoothVel;           // smooth radial component of 4-velocit
 static bool     Jet_SphericalSrc;
 
 #ifdef COSMIC_RAY
-static double Jet_Src_CR_Engy;
-static double Amb_CR_Engy;
+static double   Jet_Src_CR_Engy;
+static double   Amb_CR_Engy;
 #endif
 
 // sound speed
@@ -111,7 +112,6 @@ void Init_ExtPot_IsothermalSlab();
 /*          /_____|_____\                */
 /*                F                      */
 // =======================================================================================
-//
 // jet geometry parameters
 static double   Jet_Radius;              // length of OB
 static double   Jet_HalfHeight;          // length of OA
@@ -165,14 +165,23 @@ void Validate()
 
 
 // errors
+#  if ( MODEL != HYDRO )
+   Aux_Error( ERROR_INFO, "MODEL != HYDRO !!\n" );
+#  endif
+
+#  ifndef SRHD
+   Aux_Error( ERROR_INFO, "SRHD must be enabled !!\n" );
+#  endif
+
 #  ifdef PARTICLE
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
 
 #  ifndef GRAVITY
-   if ( Jet_Ambient == 1 || Jet_Ambient == 2 )
-        Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
+   if ( Jet_Ambient == 1  ||  Jet_Ambient == 2 )
+       Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
 #  endif
+
 
 // warnings
    if ( MPI_Rank == 0 )
@@ -190,6 +199,7 @@ void Validate()
 
 
 
+#if ( MODEL == HYDRO )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -219,73 +229,72 @@ void SetParameter()
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
 // --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
 // ************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",         &VARIABLE,             DEFAULT,                   MIN,            MAX    );
+// ReadPara->Add( "KEY_IN_THE_FILE",         &VARIABLE,                  DEFAULT,       MIN,           MAX            );
 // ************************************************************************************************************************
 
 // load options
-   ReadPara->Add( "Jet_Ambient",             &Jet_Ambient,              1,                       0,              9    );
-   ReadPara->Add( "Jet_Fire",                &Jet_Fire,                 3,                       0,              3    );
-   ReadPara->Add( "Jet_Precession",          &Jet_Precession,           false,        Useless_bool,   Useless_bool    );
-   ReadPara->Add( "Jet_SphericalSrc",        &Jet_SphericalSrc,         false,        Useless_bool,   Useless_bool    );
-   ReadPara->Add( "Jet_TimeDependentSrc",    &Jet_TimeDependentSrc,     false,        Useless_bool,   Useless_bool    );
-   ReadPara->Add( "Jet_Duration",            &Jet_Duration        ,     NoMax_double,          0.0,   NoMax_double    );
+   ReadPara->Add( "Jet_Ambient",             &Jet_Ambient,               1,             0,             9              );
+   ReadPara->Add( "Jet_Fire",                &Jet_Fire,                  3,             0,             3              );
+   ReadPara->Add( "Jet_Precession",          &Jet_Precession,            false,         Useless_bool,  Useless_bool   );
+   ReadPara->Add( "Jet_SphericalSrc",        &Jet_SphericalSrc,          false,         Useless_bool,  Useless_bool   );
+   ReadPara->Add( "Jet_TimeDependentSrc",    &Jet_TimeDependentSrc,      false,         Useless_bool,  Useless_bool   );
+   ReadPara->Add( "Jet_Duration",            &Jet_Duration,              NoMax_double,  0.0,           NoMax_double   );
 
 // load jet fluid parameters
-   ReadPara->Add( "Jet_SrcVel",              &Jet_SrcVel    ,          -1.0,          NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_SmoothVel",           &Jet_SmoothVel ,           false,        Useless_bool,   Useless_bool    );
-   ReadPara->Add( "Jet_SrcDens",             &Jet_SrcDens   ,          -1.0,          Eps_double,     NoMax_double    );
-   ReadPara->Add( "Jet_SrcTemp",             &Jet_SrcTemp   ,          -1.0,          Eps_double,     NoMax_double    );
-   ReadPara->Add( "gasDisk_highResRadius",   &gasDisk_highResRadius,   -1.0,          NoMin_double,   NoMax_double    );
-   ReadPara->Add( "gasDisk_lowRes_LEVEL",    &gasDisk_lowRes_LEVEL,    -1,                       0,      NoMax_int    );
-   ReadPara->Add( "jetSrc_highResRadius",    &jetSrc_highResRadius,    -1.0,          NoMin_double,   NoMax_double    );
-   ReadPara->Add( "jetSrc_lowRes_LEVEL",     &jetSrc_lowRes_LEVEL,     -1,                       0,      NoMax_int    );
+   ReadPara->Add( "Jet_SrcVel",              &Jet_SrcVel,               -1.0,           NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Jet_SmoothVel",           &Jet_SmoothVel,             false,         Useless_bool,  Useless_bool   );
+   ReadPara->Add( "Jet_SrcDens",             &Jet_SrcDens,              -1.0,           Eps_double,    NoMax_double   );
+   ReadPara->Add( "Jet_SrcTemp",             &Jet_SrcTemp,              -1.0,           Eps_double,    NoMax_double   );
+   ReadPara->Add( "gasDisk_highResRadius",   &gasDisk_highResRadius,    -1.0,           NoMin_double,  NoMax_double   );
+   ReadPara->Add( "gasDisk_lowRes_LEVEL",    &gasDisk_lowRes_LEVEL,     -1,             0,             NoMax_int      );
+   ReadPara->Add( "jetSrc_highResRadius",    &jetSrc_highResRadius,     -1.0,           NoMin_double,  NoMax_double   );
+   ReadPara->Add( "jetSrc_lowRes_LEVEL",     &jetSrc_lowRes_LEVEL,      -1,             0,             NoMax_int      );
 #  ifdef COSMIC_RAY
-   ReadPara->Add( "Jet_Src_CR_Engy",         &Jet_Src_CR_Engy   ,      -1.0,                   0.0,   NoMax_double    );
-   ReadPara->Add( "Amb_CR_Engy",             &Amb_CR_Engy   ,          -1.0,                   0.0,   NoMax_double    );
+   ReadPara->Add( "Jet_Src_CR_Engy",         &Jet_Src_CR_Engy,          -1.0,           0.0,           NoMax_double   );
+   ReadPara->Add( "Amb_CR_Engy",             &Amb_CR_Engy,              -1.0,           0.0,           NoMax_double   );
 #  endif
 
-
 // load source geometry parameters
-   ReadPara->Add( "Jet_Radius",              &Jet_Radius,              -1.0,          Eps_double,     NoMax_double    );
-   ReadPara->Add( "Jet_HalfHeight",          &Jet_HalfHeight,          -1.0,          Eps_double,     NoMax_double    );
-   ReadPara->Add( "Jet_HalfOpeningAngle",    &Jet_HalfOpeningAngle,    -1.0,                   0.0,           90.0    );
-   ReadPara->Add( "Jet_CenOffset_x",         &Jet_CenOffset [0],        NoDef_double, NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_CenOffset_y",         &Jet_CenOffset [1],        NoDef_double, NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_CenOffset_z",         &Jet_CenOffset [2],        NoDef_double, NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_Radius",              &Jet_Radius,               -1.0,           Eps_double,    NoMax_double   );
+   ReadPara->Add( "Jet_HalfHeight",          &Jet_HalfHeight,           -1.0,           Eps_double,    NoMax_double   );
+   ReadPara->Add( "Jet_HalfOpeningAngle",    &Jet_HalfOpeningAngle,     -1.0,           0.0,           90.0           );
+   ReadPara->Add( "Jet_CenOffset_x",         &Jet_CenOffset[0],          NoDef_double,  NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Jet_CenOffset_y",         &Jet_CenOffset[1],          NoDef_double,  NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Jet_CenOffset_z",         &Jet_CenOffset[2],          NoDef_double,  NoMin_double,  NoMax_double   );
 
 // load precission parameters
-   ReadPara->Add( "Jet_AngularVelocity",     &Jet_AngularVelocity,      NoDef_double,          0.0,   NoMax_double    );
-   ReadPara->Add( "Jet_PrecessionAngle",     &Jet_PrecessionAngle,      NoDef_double, NoMin_double,           90.0    );
-   ReadPara->Add( "Jet_PrecessionAxis_x",    &Jet_PrecessionAxis[0],    NoDef_double, NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_PrecessionAxis_y",    &Jet_PrecessionAxis[1],    NoDef_double, NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_PrecessionAxis_z",    &Jet_PrecessionAxis[2],    NoDef_double, NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_AngularVelocity",     &Jet_AngularVelocity,       NoDef_double,  0.0,           NoMax_double   );
+   ReadPara->Add( "Jet_PrecessionAngle",     &Jet_PrecessionAngle,       NoDef_double,  NoMin_double,  90.0           );
+   ReadPara->Add( "Jet_PrecessionAxis_x",    &Jet_PrecessionAxis[0],     NoDef_double,  NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Jet_PrecessionAxis_y",    &Jet_PrecessionAxis[1],     NoDef_double,  NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Jet_PrecessionAxis_z",    &Jet_PrecessionAxis[2],     NoDef_double,  NoMin_double,  NoMax_double   );
 
 // load uniform background parameters
-   ReadPara->Add( "Amb_UniformDens",         &Amb_UniformDens,         -1.0,          Eps_double,     NoMax_double    );
-   ReadPara->Add( "Amb_UniformVel_x",        &Amb_UniformVel[0],        0.0,          NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Amb_UniformVel_y",        &Amb_UniformVel[1],        0.0,          NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Amb_UniformVel_z",        &Amb_UniformVel[2],        0.0,          NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Amb_UniformTemp",         &Amb_UniformTemp,         -1.0,          Eps_double,     NoMax_double    );
+   ReadPara->Add( "Amb_UniformDens",         &Amb_UniformDens,          -1.0,           Eps_double,    NoMax_double   );
+   ReadPara->Add( "Amb_UniformVel_x",        &Amb_UniformVel[0],         0.0,           NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Amb_UniformVel_y",        &Amb_UniformVel[1],         0.0,           NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Amb_UniformVel_z",        &Amb_UniformVel[2],         0.0,           NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Amb_UniformTemp",         &Amb_UniformTemp,          -1.0,           Eps_double,    NoMax_double   );
 
 
-   ReadPara->Add( "Amb_FluSphereRadius",     &Amb_FluSphereRadius,     -1.0,          NoMin_double,   NoMax_double    );
-   ReadPara->Add( "CharacteristicSpeed",     &CharacteristicSpeed,     -1.0,          NoMin_double,   NoMax_double    );
-   ReadPara->Add( "criticalTemp",            &criticalTemp,            -1.0,          NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Amb_FluSphereRadius",     &Amb_FluSphereRadius,      -1.0,           NoMin_double,  NoMax_double   );
+   ReadPara->Add( "CharacteristicSpeed",     &CharacteristicSpeed,      -1.0,           NoMin_double,  NoMax_double   );
+   ReadPara->Add( "criticalTemp",            &criticalTemp,             -1.0,           NoMin_double,  NoMax_double   );
 
 // load Milky Way parameters
-   ReadPara->Add( "IsothermalSlab_Center_x", &IsothermalSlab_Center[0],          -1.0,          NoMin_double,   NoMax_double    );
-   ReadPara->Add( "IsothermalSlab_Center_y", &IsothermalSlab_Center[1],          -1.0,          NoMin_double,   NoMax_double    );
-   ReadPara->Add( "IsothermalSlab_Center_z", &IsothermalSlab_Center[2],          -1.0,          NoMin_double,   NoMax_double    );
+   ReadPara->Add( "IsothermalSlab_Center_x", &IsothermalSlab_Center[0], -1.0,           NoMin_double,  NoMax_double   );
+   ReadPara->Add( "IsothermalSlab_Center_y", &IsothermalSlab_Center[1], -1.0,           NoMin_double,  NoMax_double   );
+   ReadPara->Add( "IsothermalSlab_Center_z", &IsothermalSlab_Center[2], -1.0,           NoMin_double,  NoMax_double   );
 
 // load time-dependent source varibles
-   ReadPara->Add( "Jet_BurstStartTime",      &Jet_BurstStartTime,      -1.0,          NoMin_double,   NoMax_double    );
-   ReadPara->Add( "Jet_BurstEndTime",        &Jet_BurstEndTime,        -1.0,          NoMin_double,   NoMax_double    );
+   ReadPara->Add( "Jet_BurstStartTime",      &Jet_BurstStartTime,       -1.0,           NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Jet_BurstEndTime",        &Jet_BurstEndTime,         -1.0,           NoMin_double,  NoMax_double   );
 
    ReadPara->Read( FileName );
 
    delete ReadPara;
 
-// Read header for the fermi bubbles
+// Read header for the Fermi bubbles
    SetArrayDisk();
 // SetArrayHVC();
    randCloud( &randXYZ, numClouds );
@@ -293,10 +302,10 @@ void SetParameter()
 // replace useless parameters with NaN
    if ( Jet_Ambient != 0 )
    {
-     Amb_UniformDens      = NAN;
-     Amb_UniformVel[0]    = NAN;
-     Amb_UniformVel[1]    = NAN;
-     Amb_UniformVel[2]    = NAN;
+      Amb_UniformDens   = NAN;
+      Amb_UniformVel[0] = NAN;
+      Amb_UniformVel[1] = NAN;
+      Amb_UniformVel[2] = NAN;
    }
 
    if ( Amb_FluSphereRadius < 0.0 )
@@ -306,11 +315,11 @@ void SetParameter()
 
    if ( !Jet_TimeDependentSrc )
    {
-     Jet_BurstDensRatio  = NAN;
-     Jet_Burst4VelRatio  = NAN;
-     Jet_BurstTempRatio  = NAN;
-     Jet_BurstStartTime  = NAN;
-     Jet_BurstEndTime    = NAN;
+      Jet_BurstDensRatio = NAN;
+      Jet_Burst4VelRatio = NAN;
+      Jet_BurstTempRatio = NAN;
+      Jet_BurstStartTime = NAN;
+      Jet_BurstEndTime   = NAN;
    }
 
 // (1-2) check runtime parameters
@@ -318,7 +327,7 @@ void SetParameter()
 // check time-dependent source
    if ( Jet_TimeDependentSrc )
    {
-      if ( !Flag_Burst4Vel && !Flag_BurstDens && !Flag_BurstTemp )
+      if ( !Flag_Burst4Vel  &&  !Flag_BurstDens  &&  !Flag_BurstTemp )
          Aux_Error( ERROR_INFO, "One of Flag_Burst4Vel, Flag_BurstDens or Flag_BurstTemp must be enabled !!\n" );
 
       if ( Jet_BurstEndTime <= Jet_BurstStartTime )
@@ -327,15 +336,15 @@ void SetParameter()
       if ( Jet_BurstEndTime >= END_T )
          Aux_Error( ERROR_INFO, "Jet_BurstEndTime >= END_T !!\n" );
 
-      if ( Flag_Burst4Vel && Jet_Burst4VelRatio <= Eps_double )
+      if ( Flag_Burst4Vel  &&  Jet_Burst4VelRatio <= Eps_double )
          Aux_Error( ERROR_INFO, "Jet_Burst4VelRatio <= Eps_double !!\n" );
 
-      if ( Flag_BurstDens && Jet_BurstDensRatio <= Eps_double )
+      if ( Flag_BurstDens  &&  Jet_BurstDensRatio <= Eps_double )
          Aux_Error( ERROR_INFO, "Jet_BurstDensRatio <= Eps_double !!\n" );
 
-      if ( Flag_BurstTemp && Jet_BurstTempRatio <= Eps_double )
+      if ( Flag_BurstTemp  &&  Jet_BurstTempRatio <= Eps_double )
          Aux_Error( ERROR_INFO, "Jet_BurstTempRatio <= Eps_double !!\n" );
-   }
+   } // if ( Jet_TimeDependentSrc )
 
    if ( IsothermalSlab_Center[0] == -1.0 )
       IsothermalSlab_Center[0] = 0.5*amr->BoxSize[0];
@@ -346,10 +355,8 @@ void SetParameter()
    if ( IsothermalSlab_Center[2] == -1.0 )
       IsothermalSlab_Center[2] = 0.5*amr->BoxSize[2];
 
-   if ( Jet_Ambient == 9 && OPT__INIT != 3 )
-   {
+   if ( Jet_Ambient == 9  &&  OPT__INIT != 3 )
       Aux_Error( ERROR_INFO, "OPT__INIT must be 3 !!\n" );
-   }
 
 
 // check UNIT_L is in reasonable range
@@ -388,7 +395,8 @@ void SetParameter()
       Amb_UniformVel[0] *= Const_c / UNIT_V;
       Amb_UniformVel[1] *= Const_c / UNIT_V;
       Amb_UniformVel[2] *= Const_c / UNIT_V;
-   } else if ( Jet_Ambient == 2  ||  Jet_Ambient == 3  ||  Jet_Ambient == 4 )
+   }
+   else if ( Jet_Ambient == 2  ||  Jet_Ambient == 3  ||  Jet_Ambient == 4 )
    {
      IsothermalSlab_VelocityDispersion  = Header_disk[15];
      IsothermalSlab_PeakDens            = Header_disk[16];
@@ -412,7 +420,7 @@ void SetParameter()
      gasDiskPeakDens                   /= UNIT_D;
 
      ambientTemperature                 = Header_disk[20];
-     ambientTemperature                *= Const_kB/(ParticleMass*UNIT_V*UNIT_V);
+     ambientTemperature                *= Const_kB / (ParticleMass*UNIT_V*UNIT_V);
 
      gasDiskTemperature                 = Header_disk[18];
      gasDiskTemperature                *= Const_kB / (ParticleMass*UNIT_V*UNIT_V);
@@ -432,17 +440,18 @@ void SetParameter()
 
    if ( Jet_TimeDependentSrc )
    {
-     Jet_BurstStartTime *= 1e3*Const_yr / UNIT_T;
-     Jet_BurstEndTime   *= 1e3*Const_yr / UNIT_T;
-     Jet_Burst4VelRatio *=     Const_c  / UNIT_V;
-     Jet_BurstDensRatio *= 1.0          / UNIT_D;
+     Jet_BurstStartTime *= 1e3 * Const_yr / UNIT_T;
+     Jet_BurstEndTime   *= 1e3 * Const_yr / UNIT_T;
+     Jet_Burst4VelRatio *=       Const_c  / UNIT_V;
+     Jet_BurstDensRatio *= 1.0            / UNIT_D;
    }
 
 // (2) set the problem-specific derived parameters
-   double SecAngle = 1.0 / cos(0.5*Jet_HalfOpeningAngle);
-   double TanAngle = sin(0.5*Jet_HalfOpeningAngle) * SecAngle;
+   const double SecAngle = 1.0 / cos( 0.5*Jet_HalfOpeningAngle );
+   const double TanAngle = sin( 0.5*Jet_HalfOpeningAngle ) * SecAngle;
 
    Jet_MaxDis  = sqrt( SQR( Jet_Radius ) + SQR( Jet_HalfHeight * SecAngle ) + 2.0 * Jet_Radius * Jet_HalfHeight * TanAngle );
+   Jet_SrcGamma = sqrt(1.0 + SQR(Jet_SrcVel));
 
    for (int d=0; d<3; d++)    Jet_Center[d] = 0.5*amr->BoxSize[d] + Jet_CenOffset[d];
 
@@ -450,16 +459,18 @@ void SetParameter()
 // (4) reset other general-purpose parameters
 //     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
    const long   End_Step_Default = __INT_MAX__;
-   const double End_T_Default    = 0.5*BOX_SIZE * UNIT_L / (CharacteristicSpeed *UNIT_V) / UNIT_T;
+   const double End_T_Default    = 0.5 * BOX_SIZE * UNIT_L / CharacteristicSpeed / UNIT_V / UNIT_T;
 
-   if ( END_STEP < 0 ) {
+   if ( END_STEP < 0 )
+   {
       END_STEP = End_Step_Default;
       PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
    }
 
-   if ( END_T < 0.0 ) {
-      if ( CharacteristicSpeed == -1.0 ) Aux_Error( ERROR_INFO, "CharacteristicSpeed must be provided !!\n" );
-      else                               END_T = End_T_Default;
+   if ( END_T < 0.0 )
+   {
+      if ( CharacteristicSpeed == -1.0 )   Aux_Error( ERROR_INFO, "CharacteristicSpeed must be provided !!\n" );
+      else                                 END_T = End_T_Default;
 
       PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
    }
@@ -492,9 +503,9 @@ void SetParameter()
       Aux_Message( stdout, "  Amb_CR_Engy              = %14.7e \n",           Amb_CR_Engy*UNIT_P                              );
 #     endif
       Aux_Message( stdout, "  Jet_NumDensSrc           = %14.7e per cc\n",     Jet_SrcDens*UNIT_D/ParticleMass                 );
-      Aux_Message( stdout, "  Jet_CenOffset[x]         = %14.7e kpc\n",        Jet_CenOffset [0]*UNIT_L/Const_kpc              );
-      Aux_Message( stdout, "  Jet_CenOffset[y]         = %14.7e kpc\n",        Jet_CenOffset [1]*UNIT_L/Const_kpc              );
-      Aux_Message( stdout, "  Jet_CenOffset[z]         = %14.7e kpc\n",        Jet_CenOffset [2]*UNIT_L/Const_kpc              );
+      Aux_Message( stdout, "  Jet_CenOffset[x]         = %14.7e kpc\n",        Jet_CenOffset[0]*UNIT_L/Const_kpc               );
+      Aux_Message( stdout, "  Jet_CenOffset[y]         = %14.7e kpc\n",        Jet_CenOffset[1]*UNIT_L/Const_kpc               );
+      Aux_Message( stdout, "  Jet_CenOffset[z]         = %14.7e kpc\n",        Jet_CenOffset[2]*UNIT_L/Const_kpc               );
       Aux_Message( stdout, "  Jet_AngularVelocity      = %14.7e degree/kyr\n", Jet_AngularVelocity                             );
       Aux_Message( stdout, "  Jet_PrecessionAngle      = %14.7e degree\n",     Jet_PrecessionAngle*180.0/M_PI                  );
       Aux_Message( stdout, "  Jet_HalfOpeningAngle     = %14.7e degree\n",     Jet_HalfOpeningAngle*180.0/M_PI                 );
@@ -519,7 +530,7 @@ void SetParameter()
       Aux_Message( stdout, "  IsothermalSlab_Center[0] = %14.7e kpc\n",        IsothermalSlab_Center[0]*UNIT_L/Const_kpc       );
       Aux_Message( stdout, "  IsothermalSlab_Center[1] = %14.7e kpc\n",        IsothermalSlab_Center[1]*UNIT_L/Const_kpc       );
       Aux_Message( stdout, "  IsothermalSlab_Center[2] = %14.7e kpc\n",        IsothermalSlab_Center[2]*UNIT_L/Const_kpc       );
-      Aux_Message( stdout, "  criticalTemp             = %14.7e K\n",          criticalTemp / ( Const_kB /( ParticleMass * Const_c * Const_c ) ) );
+      Aux_Message( stdout, "  criticalTemp             = %14.7e K\n",          criticalTemp / ( Const_kB / (ParticleMass*Const_c*Const_c) ) );
       } // if ( Jet_Ambient == 0 ) ... else if ...
 
       Aux_Message( stdout, "  CharacteristicSpeed      = %14.7e c\n",          CharacteristicSpeed / UNIT_V                    );
@@ -547,7 +558,7 @@ void SetParameter()
       Aux_Message( stdout, "=============================================================================\n"                   );
    } // if ( MPI_Rank == 0 )
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n"                                     );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
 
 } // FUNCTION : SetParameter
 
@@ -555,12 +566,13 @@ void SetParameter()
 
 void ReadBinFile( char *FileName, real **buffer )
 {
-   FILE *pFile;
-   long lSize;
-   size_t result;
+
+   FILE   *pFile;
+   long    lSize;
+   size_t  result;
 
    pFile = fopen( FileName, "rb" );
-   if ( pFile == NULL ) Aux_Error( ERROR_INFO, "File error !!\n" );
+   if ( pFile == NULL )   Aux_Error( ERROR_INFO, "File error !!\n" );
 
    // obtain file size
    fseek( pFile, 0, SEEK_END );
@@ -568,20 +580,22 @@ void ReadBinFile( char *FileName, real **buffer )
    rewind( pFile );
 
    // allocate memory to contain the whole file
-   *buffer = (real*) calloc( lSize, sizeof(double) );
-   if ( *buffer == NULL ) Aux_Error( ERROR_INFO, "Memory error !!\n" );
+   *buffer = (real*)calloc( lSize, sizeof(double) );
+   if ( *buffer == NULL )   Aux_Error( ERROR_INFO, "Memory error !!\n" );
 
    // copy the file into the *buffer
    result = fread( *buffer, 1, lSize, pFile );
-   if ( result != lSize ) Aux_Error( ERROR_INFO, "Reading error !!\n" );
+   if ( result != lSize )   Aux_Error( ERROR_INFO, "Reading error !!\n" );
 
    fclose( pFile );
+
 } // FUNCTION : ReadBinFile
 
 
 
 void randCloud( real **randXYZ, int numClouds )
 {
+
    *randXYZ = (real*)malloc( 3*numClouds*sizeof(real) );
 
    for (int i=0; i<3*numClouds; i+=3)
@@ -592,16 +606,17 @@ void randCloud( real **randXYZ, int numClouds )
 
       if ( (*randXYZ)[i+2] < amr->BoxSize[2]*0.5+3.0 )   i-=3;
    } // for (int i=0; i<3*numClouds; i+=3)
+
 } // FUNCTION : randCloud
 
 
 
 bool checkInsideClouds( real *randXYZ, int numClouds, real x, real y, real z, real *cloudCenter )
 {
-   real distance;
+
    for (int i=0; i<3*numClouds; i+=3)
    {
-      distance = SQRT( SQR( x-randXYZ[i+0] ) + SQR( y-randXYZ[i+1] ) + SQR( z-randXYZ[i+2] ) );
+      const real distance = SQRT( SQR( x-randXYZ[i+0] ) + SQR( y-randXYZ[i+1] ) + SQR( z-randXYZ[i+2] ) );
 
       if ( distance < radiusCloud )
       {
@@ -611,15 +626,18 @@ bool checkInsideClouds( real *randXYZ, int numClouds, real x, real y, real z, re
          return true;
       } // if ( distance < radiusCloud )
    } // for (int i=0; i<3*numClouds; i+=3)
+
    return false;
+
 } // FUNCTION : checkInsideClouds
 
 
 
+// Reading table for interpolations in SetGridIC()
 void SetArrayDisk()
 {
-// Reading table for interpolations in SetGridIC()
-   char TableFileName[] = "UM_IC";
+
+   char TableFileName[] = "FermiBubble_IC";
    ReadBinFile( TableFileName, &buffer );
 
    int headerSize = (int)buffer[0];
@@ -628,30 +646,25 @@ void SetArrayDisk()
 
    memcpy( Header_disk, buffer, (size_t)headerSize * sizeof(real) );
 
-
    ParticleMass = Header_disk[8] * Header_disk[9];
 
    interfaceHeight  = Header_disk[17];
    interfaceHeight *= Const_kpc / UNIT_L;
 
-   int Nx = (int)Header_disk[22];
-   int Ny = (int)Header_disk[23];
-   int Nz = (int)Header_disk[24];
+   const int Nx = (int)Header_disk[22];
+   const int Ny = (int)Header_disk[23];
+   const int Nz = (int)Header_disk[24];
 
-   if (5*Nx*Ny*Nz > INT_MAX) {printf("integer overflow!!\n"); exit(0);}
+   if ( 5*Nx*Ny*Nz > INT_MAX )   Aux_Error( ERROR_INFO, "integer overflow !!\n" );
 
    real Lx = Header_disk[12];
    real Ly = Header_disk[13];
    real Lz = Header_disk[14];
-   int numGhost = (int)Header_disk[25];
+   const int numGhost = (int)Header_disk[25];
 
-   real dx = Lx/(real)Nx;
-   real dy = Lx/(real)Nx;
-   real dz = Lx/(real)Nx;
-
-   int NX = Nx+2*numGhost;
-   int NY = Ny+2*numGhost;
-   int NZ = Nz+2*numGhost;
+   const int NX = Nx + 2*numGhost;
+   const int NY = Ny + 2*numGhost;
+   const int NZ = Nz + 2*numGhost;
 
    if ( Step == 0 )
    {
@@ -665,37 +678,35 @@ void SetArrayDisk()
       Y_disk = (real*)calloc( (size_t)NY, sizeof(real) );
       Z_disk = (real*)calloc( (size_t)NZ, sizeof(real) );
 
-      if ( X_disk == NULL ) { printf("%d, %s: NULL!\n", __LINE__, __FUNCTION__); exit(0);}
-      if ( Y_disk == NULL ) { printf("%d, %s: NULL!\n", __LINE__, __FUNCTION__); exit(0);}
-      if ( Z_disk == NULL ) { printf("%d, %s: NULL!\n", __LINE__, __FUNCTION__); exit(0);}
+      if ( X_disk == NULL )   Aux_Error( ERROR_INFO, "X_disk is NULL at %d, %s !!\n", __LINE__, __FUNCTION__ );
+      if ( Y_disk == NULL )   Aux_Error( ERROR_INFO, "Y_disk is NULL at %d, %s !!\n", __LINE__, __FUNCTION__ );
+      if ( Z_disk == NULL )   Aux_Error( ERROR_INFO, "Z_disk is NULL at %d, %s !!\n", __LINE__, __FUNCTION__ );
 
       real *Ptr;
       Ptr = buffer + headerSize;
 
       for (int c=0; c<5*NX*NY*NZ; c++)
       {
-        int i, j, k, cc;
+        const int cc = c%(NX*NY*NZ);
+        const int i  = (cc - cc%(NY*NZ)) / (NY*NZ);
+        const int j  = ((cc - cc%NZ) / NZ) % NY;
+        const int k  = cc%NZ;
 
-        cc = c%(NX*NY*NZ);
-        i = (cc - cc%(NY*NZ)) / (NY*NZ);
-        j = ((cc - cc%NZ) / NZ) % NY;
-        k = cc%NZ;
-
-        if ( 0          <= c && c <   NX*NY*NZ ) Rhoo_disk[i][j][k] = Ptr[c];
-        if (   NX*NY*NZ <= c && c < 2*NX*NY*NZ ) VelX_disk[i][j][k] = Ptr[c];
-        if ( 2*NX*NY*NZ <= c && c < 3*NX*NY*NZ ) VelY_disk[i][j][k] = Ptr[c];
-        if ( 3*NX*NY*NZ <= c && c < 4*NX*NY*NZ ) VelZ_disk[i][j][k] = Ptr[c];
-        if ( 4*NX*NY*NZ <= c && c < 5*NX*NY*NZ ) Pres_disk[i][j][k] = Ptr[c];
+        if ( 0          <= c && c <   NX*NY*NZ )   Rhoo_disk[i][j][k] = Ptr[c];
+        if (   NX*NY*NZ <= c && c < 2*NX*NY*NZ )   VelX_disk[i][j][k] = Ptr[c];
+        if ( 2*NX*NY*NZ <= c && c < 3*NX*NY*NZ )   VelY_disk[i][j][k] = Ptr[c];
+        if ( 3*NX*NY*NZ <= c && c < 4*NX*NY*NZ )   VelZ_disk[i][j][k] = Ptr[c];
+        if ( 4*NX*NY*NZ <= c && c < 5*NX*NY*NZ )   Pres_disk[i][j][k] = Ptr[c];
       } // for (int c=0; c<5*NX*NY*NZ; c++)
 
       Ptr += 5*NX*NY*NZ;
-      for (int c=0; c<NX; c++) X_disk[c] = Ptr[c];
+      for (int c=0; c<NX; c++)   X_disk[c] = Ptr[c];
 
       Ptr += NX;
-      for (int c=0; c<NY; c++) Y_disk[c] = Ptr[c];
+      for (int c=0; c<NY; c++)   Y_disk[c] = Ptr[c];
 
       Ptr += NY;
-      for (int c=0; c<NZ; c++) Z_disk[c] = Ptr[c];
+      for (int c=0; c<NZ; c++)   Z_disk[c] = Ptr[c];
    } // if ( Step == 0 )
 
    free(buffer);
@@ -704,10 +715,11 @@ void SetArrayDisk()
 
 
 
+// Reading table for interpolations in SetGridIC()
 void SetArrayHVC()
 {
-// Reading table for interpolations in SetGridIC()
-   char TableFileName[] = "UM_IC_HVC";
+
+   char TableFileName[] = "FermiBubble_IC_HVC";
    ReadBinFile( TableFileName, &buffer );
 
    int headerSize = (int)buffer[0];
@@ -722,24 +734,20 @@ void SetArrayHVC()
    interfaceHeight  = Header_hvc[17];
    interfaceHeight *= Const_kpc/UNIT_L;
 
-   int Nx = (int)Header_hvc[22];
-   int Ny = (int)Header_hvc[23];
-   int Nz = (int)Header_hvc[24];
+   const int Nx = (int)Header_hvc[22];
+   const int Ny = (int)Header_hvc[23];
+   const int Nz = (int)Header_hvc[24];
 
-   if (5*Nx*Ny*Nz > INT_MAX) {printf("integer overflow!!\n"); exit(0);}
+   if ( 5*Nx*Ny*Nz > INT_MAX )   Aux_Error( ERROR_INFO, "integer overflow !!\n" );
 
    real Lx = Header_hvc[12];
    real Ly = Header_hvc[13];
    real Lz = Header_hvc[14];
    int numGhost = (int)Header_hvc[25];
 
-   real dx = Lx / (real)Nx;
-   real dy = Lx / (real)Nx;
-   real dz = Lx / (real)Nx;
-
-   int NX = Nx+2*numGhost;
-   int NY = Ny+2*numGhost;
-   int NZ = Nz+2*numGhost;
+   const int NX = Nx+2*numGhost;
+   const int NY = Ny+2*numGhost;
+   const int NZ = Nz+2*numGhost;
 
    if ( Step == 0 )
    {
@@ -753,50 +761,52 @@ void SetArrayHVC()
       Y_hvc = (real*)calloc( (size_t)NY, sizeof(real) );
       Z_hvc = (real*)calloc( (size_t)NZ, sizeof(real) );
 
-      if ( X_hvc == NULL ) Aux_Error( ERROR_INFO, "X_hvc is NULL at %d, %s !!\n", __LINE__, __FUNCTION__ );
-      if ( Y_hvc == NULL ) Aux_Error( ERROR_INFO, "Y_hvc is NULL at %d, %s !!\n", __LINE__, __FUNCTION__ );
-      if ( Z_hvc == NULL ) Aux_Error( ERROR_INFO, "Z_hvc is NULL at %d, %s !!\n", __LINE__, __FUNCTION__ );
+      if ( X_hvc == NULL )   Aux_Error( ERROR_INFO, "X_hvc is NULL at %d, %s !!\n", __LINE__, __FUNCTION__ );
+      if ( Y_hvc == NULL )   Aux_Error( ERROR_INFO, "Y_hvc is NULL at %d, %s !!\n", __LINE__, __FUNCTION__ );
+      if ( Z_hvc == NULL )   Aux_Error( ERROR_INFO, "Z_hvc is NULL at %d, %s !!\n", __LINE__, __FUNCTION__ );
 
       real *Ptr;
       Ptr = buffer + headerSize;
 
       for (int c=0; c<5*NX*NY*NZ; c++)
       {
-        int cc = c%(NX*NY*NZ);
-        int i  = (cc - cc%(NY*NZ)) / (NY*NZ);
-        int j  = ((cc - cc%NZ) / NZ) % NY;
-        int k  = cc%NZ;
+        const int cc = c%(NX*NY*NZ);
+        const int i  = (cc - cc%(NY*NZ)) / (NY*NZ);
+        const int j  = ((cc - cc%NZ) / NZ) % NY;
+        const int k  = cc%NZ;
 
-        if ( 0          <= c && c <   NX*NY*NZ ) Rhoo_hvc[i][j][k] = Ptr[c];
-        if (   NX*NY*NZ <= c && c < 2*NX*NY*NZ ) VelX_hvc[i][j][k] = Ptr[c];
-        if ( 2*NX*NY*NZ <= c && c < 3*NX*NY*NZ ) VelY_hvc[i][j][k] = Ptr[c];
-        if ( 3*NX*NY*NZ <= c && c < 4*NX*NY*NZ ) VelZ_hvc[i][j][k] = Ptr[c];
-        if ( 4*NX*NY*NZ <= c && c < 5*NX*NY*NZ ) Pres_hvc[i][j][k] = Ptr[c];
+        if ( 0          <= c && c <   NX*NY*NZ )   Rhoo_hvc[i][j][k] = Ptr[c];
+        if (   NX*NY*NZ <= c && c < 2*NX*NY*NZ )   VelX_hvc[i][j][k] = Ptr[c];
+        if ( 2*NX*NY*NZ <= c && c < 3*NX*NY*NZ )   VelY_hvc[i][j][k] = Ptr[c];
+        if ( 3*NX*NY*NZ <= c && c < 4*NX*NY*NZ )   VelZ_hvc[i][j][k] = Ptr[c];
+        if ( 4*NX*NY*NZ <= c && c < 5*NX*NY*NZ )   Pres_hvc[i][j][k] = Ptr[c];
       } // for (int c=0; c<5*NX*NY*NZ; c++)
 
       Ptr += 5*NX*NY*NZ;
-      for (int c=0; c<NX; c++) X_hvc[c] = Ptr[c];
+      for (int c=0; c<NX; c++)   X_hvc[c] = Ptr[c];
 
       Ptr += NX;
-      for (int c=0; c<NY; c++) Y_hvc[c] = Ptr[c];
+      for (int c=0; c<NY; c++)   Y_hvc[c] = Ptr[c];
 
       Ptr += NY;
-      for (int c=0; c<NZ; c++) Z_hvc[c] = Ptr[c];
+      for (int c=0; c<NZ; c++)   Z_hvc[c] = Ptr[c];
    } // if ( Step == 0 )
 
    free(buffer);
+
 } // FUNCTION : SetArrayHVC
 
 
 
 void Interpolation_UM_IC( real x, real y, real z, real ****Pri_input, real **XYZ, real *Pri_output, bool disk )
 {
+
    real *Header = (disk) ? Header_disk : Header_hvc;
 
    real xyz[3] = {x, y, z};
-   int Nx = (int)Header[22];
-   int Ny = (int)Header[23];
-   int Nz = (int)Header[24];
+   const int Nx = (int)Header[22];
+   const int Ny = (int)Header[23];
+   const int Nz = (int)Header[24];
 
    real dx = Header[26];
    real dy = Header[27];
@@ -804,19 +814,19 @@ void Interpolation_UM_IC( real x, real y, real z, real ****Pri_input, real **XYZ
 
    real dxyz[3] = {dx, dy, dz};
 
-   int numGhost = (int)Header[25];
+   const int numGhost = (int)Header[25];
 
-   int NX = Nx+2*numGhost;
-   int NY = Ny+2*numGhost;
-   int NZ = Nz+2*numGhost;
+   const int NX = Nx + 2*numGhost;
+   const int NY = Ny + 2*numGhost;
+   const int NZ = Nz + 2*numGhost;
 
-   int Idx = Mis_BinarySearch_Real( XYZ[0], 0, NX-1, x );
-   int Jdx = Mis_BinarySearch_Real( XYZ[1], 0, NY-1, y );
-   int Kdx = Mis_BinarySearch_Real( XYZ[2], 0, NZ-1, z );
+   const int Idx = Mis_BinarySearch_Real( XYZ[0], 0, NX-1, x );
+   const int Jdx = Mis_BinarySearch_Real( XYZ[1], 0, NY-1, y );
+   const int Kdx = Mis_BinarySearch_Real( XYZ[2], 0, NZ-1, z );
 
-   if ( Idx < 0  ||  Idx > NX-2 ) Aux_Error( ERROR_INFO, "x=%e is out of range! XYZ[0][0]=%e, XYZ[0][%d]=%e\n", x, XYZ[0][0], NX-1, XYZ[0][NX-1] );
-   if ( Jdx < 0  ||  Jdx > NY-2 ) Aux_Error( ERROR_INFO, "y=%e is out of range! XYZ[1][1]=%e, XYZ[1][%d]=%e\n", y, XYZ[1][0], NY-1, XYZ[1][NY-1] );
-   if ( Kdx < 0  ||  Kdx > NZ-2 ) Aux_Error( ERROR_INFO, "z=%e is out of range! XYZ[2][2]=%e, XYZ[2][%d]=%e\n", z, XYZ[2][0], NZ-1, XYZ[2][NZ-1] );
+   if ( Idx < 0  ||  Idx > NX-2 )   Aux_Error( ERROR_INFO, "x=%e is out of range! XYZ[0][0]=%e, XYZ[0][%d]=%e\n", x, XYZ[0][0], NX-1, XYZ[0][NX-1] );
+   if ( Jdx < 0  ||  Jdx > NY-2 )   Aux_Error( ERROR_INFO, "y=%e is out of range! XYZ[1][1]=%e, XYZ[1][%d]=%e\n", y, XYZ[1][0], NY-1, XYZ[1][NY-1] );
+   if ( Kdx < 0  ||  Kdx > NZ-2 )   Aux_Error( ERROR_INFO, "z=%e is out of range! XYZ[2][2]=%e, XYZ[2][%d]=%e\n", z, XYZ[2][0], NZ-1, XYZ[2][NZ-1] );
 
    // TODO: NCOMP_TOTAL to NCOMP_TOTAL_PLUS_MAG
    real Vertex000[NCOMP_TOTAL]={0.0}, Vertex001[NCOMP_TOTAL]={0.0}, Vertex010[NCOMP_TOTAL]={0.0}, Vertex100[NCOMP_TOTAL]={0.0},
@@ -844,14 +854,9 @@ void Interpolation_UM_IC( real x, real y, real z, real ****Pri_input, real **XYZ
    Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex101, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
    Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex111, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
 
-   if ( Unphy )
-   {
-      printf("Idx=%d, Jdx=%d, Kdx=%d\n", Idx, Jdx, Kdx);
-      printf("x=%e, y=%e, z=%e\n", x, y, z);
-      exit(0);
-   }
+   if ( Unphy )   Aux_Error( ERROR_INFO, "Idx=%d, Jdx=%d, Kdx=%d, x=%e, y=%e, z=%e is unphysical !!\n", Idx, Jdx, Kdx, x, y, z );
 
-   real xyz000[3] = {XYZ[0][Idx], XYZ[1][Jdx], XYZ[2][Kdx]};
+   real xyz000[3] = { XYZ[0][Idx], XYZ[1][Jdx], XYZ[2][Kdx] };
 
    for (int v=0; v<5; v++)
    {
@@ -860,21 +865,22 @@ void Interpolation_UM_IC( real x, real y, real z, real ****Pri_input, real **XYZ
      Pri_output[v] = TrilinearInterpolation( FieldAtVertices, xyz000, dxyz, xyz );
    }
 
-   //free_3d_array((void***)Rhoo_disk);
-   //free_3d_array((void***)VelX_disk);
-   //free_3d_array((void***)VelY_disk);
-   //free_3d_array((void***)VelZ_disk);
-   //free_3d_array((void***)Pres_disk);
-   //free(X_disk);
-   //free(Y_disk);
-   //free(Z_disk);
-   //free(buffer);
 } // FUNCTION : Interpolation_UM_IC
 
 
 
 #ifdef GRAVITY
-real IsothermalSlab_Pot( real z )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  IsothermalSlab_Pot
+// Description :
+//
+// Note        :
+//
+// Parameter   :
+//
+// Return      :
+//-------------------------------------------------------------------------------------------------------
+real IsothermalSlab_Pot( const real z )
 {
    real Pot, Log;
 
@@ -915,10 +921,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 // variables for jet
+   const real xc = x - IsothermalSlab_Center[0];
+   const real yc = y - IsothermalSlab_Center[1];
+   const real zc = z - IsothermalSlab_Center[2];
    real Pri[NCOMP_TOTAL] = {0.0};
-   real xc = x - IsothermalSlab_Center[0];
-   real yc = y - IsothermalSlab_Center[1];
-   real zc = z - IsothermalSlab_Center[2];
 
    real ***Pri_disk_input[5] = { Rhoo_disk, VelX_disk, VelY_disk, VelZ_disk, Pres_disk };
    real *** Pri_hvc_input[5] = { Rhoo_hvc,   VelX_hvc,  VelY_hvc,  VelZ_hvc,  Pres_hvc };
@@ -947,7 +953,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #     endif
 
 #     ifdef COSMIC_RAY
-      fluid[CRAY] = Amb_CR_Engy * SQRT((real)1.0+SQR(Jet_SrcVel));
+      fluid[CRAY] = Amb_CR_Engy * Jet_SrcGamma;
 #     endif
    }
    else if ( Jet_Ambient == 2 ) // cold disk in stratified ambient
@@ -962,9 +968,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
                                   EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
                                   EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE ) )
-            Aux_Error( ERROR_INFO, "Unphysical cell at (%e, %e %e)\n", x, y, z);
+            Aux_Error( ERROR_INFO, "Unphysical cell at (%e, %e %e)\n", x, y, z );
 
-         if ( Pri[4]/Pri[0] > criticalTemp ) Pri[0] = Pri[4] / ambientTemperature;
+         if ( Pri[4]/Pri[0] > criticalTemp )   Pri[0] = Pri[4] / ambientTemperature;
 
          Hydro_Pri2Con( Pri, fluid, false, PassiveNorm_NVar, PassiveNorm_VarIdx, EoS_DensPres2Eint_CPUPtr,
                         EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
@@ -977,9 +983,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #        endif
 
 #        ifdef COSMIC_RAY
-         fluid[CRAY] = Amb_CR_Engy * SQRT((real)1.0+SQR(Jet_SrcVel));
+         fluid[CRAY] = Amb_CR_Engy * Jet_SrcGamma;
 #        endif
-      } else // if ( fabs(zc) < interfaceHeight )
+      }
+      else // if ( fabs(zc) < interfaceHeight )
       {
          real Dens_gDisk_ambient, PotAtZ0, ambientDens;
 
@@ -1021,7 +1028,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
             if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri_hvc_output, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
                                      EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
                                      EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE ) )
-               Aux_Error( ERROR_INFO, "Unphysical cell at (%e, %e %e)\n", x, y, z);
+               Aux_Error( ERROR_INFO, "Unphysical cell at (%e, %e %e)\n", x, y, z );
 
             Pri[0] = Pri_hvc_output[0]*0.05*Const_mp/UNIT_D;
             Pri[1] = 0.0;
@@ -1037,7 +1044,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
                                   EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
                                   EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE ) )
-            Aux_Error( ERROR_INFO, "Unphysical cell at (%e, %e %e)\n", x, y, z);
+            Aux_Error( ERROR_INFO, "Unphysical cell at (%e, %e %e)\n", x, y, z );
 
 #        if ( NCOMP_PASSIVE_USER > 0 )
          fluid[Passive_0000] = 0.0;
@@ -1046,11 +1053,12 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #        endif
 
 #        ifdef COSMIC_RAY
-         fluid[CRAY] = Amb_CR_Engy * SQRT((real)1.0+SQR(Jet_SrcVel));
+         fluid[CRAY] = Amb_CR_Engy * Jet_SrcGamma;
 #        endif
       } // if ( fabs(zc) < interfaceHeight ) ... else ...
 #  endif
-   } else if ( Jet_Ambient == 3 ) // cold disk in uniform ambient
+   }
+   else if ( Jet_Ambient == 3 ) // cold disk in uniform ambient
    {
 #     ifdef GRAVITY
       if ( fabs(zc) < interfaceHeight )
@@ -1075,9 +1083,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #        endif
 
 #        ifdef COSMIC_RAY
-         fluid[CRAY] = Amb_CR_Engy * SQRT((real)1.0+SQR(Jet_SrcVel));
+         fluid[CRAY] = Amb_CR_Engy * Jet_SrcGamma;
 #        endif
-      } else // if ( fabs(zc) < interfaceHeight )
+      }
+      else // if ( fabs(zc) < interfaceHeight )
       {
          real Dens_gDisk_ambient, PotAtZ0, ambientDens;
 
@@ -1117,37 +1126,22 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #        endif
 
 #        ifdef COSMIC_RAY
-         fluid[CRAY] = Amb_CR_Engy * SQRT((real)1.0+SQR(Jet_SrcVel));
+         fluid[CRAY] = Amb_CR_Engy * Jet_SrcGamma;
 #        endif
 
       } // if ( fabs(zc) < interfaceHeight ) ... else ...
    } // else if ( Jet_Ambient == 3 )
    else if ( Jet_Ambient == 4 )
    {
+      real ambientPeakDens = (real)2.842783e-27 / UNIT_D;
       real ambientDens;
-
-//    PotAtZ0 = IsothermalSlab_Pot(interfaceHeight);
-//
-//    Dens_gDisk_ambient  = ambientTemperature / gasDiskTemperature;
-//    Dens_gDisk_ambient *= exp( PotAtZ0*(ambientTemperature-gasDiskTemperature)/(ambientTemperature*gasDiskTemperature) );
-//
-//    if ( Dens_gDisk_ambient > HUGE_NUMBER  ||  Dens_gDisk_ambient < -HUGE_NUMBER ) {
-//       printf( "Dens_gDisk_ambient=%e! %s: %d\n", Dens_gDisk_ambient, __FUNCTION__, __LINE__ );
-//       exit(0);
-//    }
-
-      real ambientPeakDens = (real)2.842783e-27/UNIT_D;
 
       if ( fabs(zc) > IsothermalSlab_Truncation )
          ambientDens = -IsothermalSlab_Pot(IsothermalSlab_Truncation)/ambientTemperature;
       else
          ambientDens = -IsothermalSlab_Pot(zc)/ambientTemperature;
 
-      //printf("IsothermalSlab_Pot(zc)=%e\n", IsothermalSlab_Pot(zc));
-      //printf("ambientTemperature=%e\n", ambientTemperature);
-
-      ambientDens  = exp(ambientDens);
-      ambientDens *= ambientPeakDens;
+      ambientDens = ambientPeakDens * exp(ambientDens);
 
       Pri[0] = ambientDens;
       Pri[1] = 0.0;
@@ -1158,7 +1152,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Hydro_Pri2Con( Pri, fluid, false, PassiveNorm_NVar, PassiveNorm_VarIdx, EoS_DensPres2Eint_CPUPtr,
                      EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                      h_EoS_Table, NULL );
-
 
       if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
                                EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
@@ -1172,7 +1165,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #     endif
 
 #     ifdef COSMIC_RAY
-      fluid[CRAY] = Amb_CR_Engy * SQRT((real)1.0+SQR(Jet_SrcVel));
+      fluid[CRAY] = Amb_CR_Engy * Jet_SrcGamma;
 #     endif
 
 #     endif // #ifdef GRAVITY
@@ -1219,192 +1212,209 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 /*                F                      */
 // =======================================================================================
 int Flu_ResetByUser_FermiBubble( real fluid[], const double Emag, const double x, const double y, const double z,
-                           const double Time, const double dt, const int lv, double AuxArray[] )
+                                 const double Time, const double dt, const int lv, double AuxArray[] )
 {
-  if ( Jet_Fire == 0 ) return false;
 
-  if ( Jet_Duration < Time ) return false;
+   if ( Jet_Fire == 0 )   return false;
 
-  if ( !Jet_SphericalSrc ) {
-     double xp[3], rp[3];
-     double Prim[NCOMP_TOTAL] = {0.0}, Cons[NCOMP_TOTAL] = {0.0}, Vel[3];
-     real PriReal[NCOMP_TOTAL] = {0.0};
-     double PrecessionAxis_Spherical[3], Omega_t;
-     bool InsideUpperCone, InsideLowerCone;
-     double Jet_SrcVelSmooth;
+   if ( Jet_Duration < Time )   return false;
 
-     Omega_t = Jet_AngularVelocity * Time * M_PI / 180.0;
+   if ( !Jet_SphericalSrc )
+   {
+      double xp[3], rp[3];
+      double Prim[NCOMP_TOTAL] = {0.0}, Cons[NCOMP_TOTAL] = {0.0}, Vel[3];
+      real PriReal[NCOMP_TOTAL] = {0.0};
+      double PrecessionAxis_Spherical[3], Omega_t;
+      bool InsideUpperCone, InsideLowerCone;
+      double Jet_SrcVelSmooth;
 
-//   shift the coordinate origin to the source center (the point O)
-     xp[0] = x - Jet_Center[0];
-     xp[1] = y - Jet_Center[1];
-     xp[2] = z - Jet_Center[2];
+      Omega_t = Jet_AngularVelocity * Time * M_PI / 180.0;
 
-     if ( Jet_PrecessionAxis[0] != 0.0  ||  Jet_PrecessionAxis[1] != 0.0  ||  Jet_PrecessionAxis[2] == 0.0 )
-     {
-//      get theta, phi for the first rotation
-        Mis_Cartesian2Spherical( Jet_PrecessionAxis, PrecessionAxis_Spherical );
-//      rotate coordinate to align z-axis with fixed precession axis
-        CartesianRotate( xp, PrecessionAxis_Spherical[1], PrecessionAxis_Spherical[2], false );
-     }
+//    shift the coordinate origin to the source center (the point O)
+      xp[0] = x - Jet_Center[0];
+      xp[1] = y - Jet_Center[1];
+      xp[2] = z - Jet_Center[2];
 
-//   rotate coordinate to align z-axis with rotating symmetric axis
-     CartesianRotate( xp, Jet_PrecessionAngle, Omega_t, false );
+      if ( Jet_PrecessionAxis[0] != 0.0  ||  Jet_PrecessionAxis[1] != 0.0  ||  Jet_PrecessionAxis[2] == 0.0 )
+      {
+//       get theta, phi for the first rotation
+         Mis_Cartesian2Spherical( Jet_PrecessionAxis, PrecessionAxis_Spherical );
+//       rotate coordinate to align z-axis with fixed precession axis
+         CartesianRotate( xp, PrecessionAxis_Spherical[1], PrecessionAxis_Spherical[2], false );
+      }
 
-//   determine whether or not the point is inside of source
-     InsideUpperCone  = SQR(xp[0]) + SQR(xp[1]) <= SQR( +tan(Jet_HalfOpeningAngle)*xp[2] + Jet_Radius );
-     InsideUpperCone &= 0.0 <= xp[2] && xp[2] <= Jet_HalfHeight;
+//    rotate coordinate to align z-axis with rotating symmetric axis
+      CartesianRotate( xp, Jet_PrecessionAngle, Omega_t, false );
 
-     InsideLowerCone  = SQR(xp[0]) + SQR(xp[1]) <= SQR( -tan(Jet_HalfOpeningAngle)*xp[2] + Jet_Radius );
-     InsideLowerCone &= -Jet_HalfHeight <= xp[2] && xp[2] <= 0.0;
+//    determine whether or not the point is inside of source
+      InsideUpperCone  = SQR(xp[0]) + SQR(xp[1]) <= SQR( +tan(Jet_HalfOpeningAngle)*xp[2] + Jet_Radius );
+      InsideUpperCone &= 0.0 <= xp[2] && xp[2] <= Jet_HalfHeight;
 
-     if ( Jet_HalfOpeningAngle != 0.0 )
-     {
-        InsideUpperCone &= SQR(xp[0]) + SQR(xp[1]) + SQR(xp[2] + Jet_Radius/tan(Jet_HalfOpeningAngle))
-                        <= SQR(Jet_HalfHeight+Jet_Radius/tan(Jet_HalfOpeningAngle));
+      InsideLowerCone  = SQR(xp[0]) + SQR(xp[1]) <= SQR( -tan(Jet_HalfOpeningAngle)*xp[2] + Jet_Radius );
+      InsideLowerCone &= -Jet_HalfHeight <= xp[2] && xp[2] <= 0.0;
 
-        InsideUpperCone &= 0.0 <= xp[2];
+      if ( Jet_HalfOpeningAngle != 0.0 )
+      {
+         InsideUpperCone &= SQR(xp[0]) + SQR(xp[1]) + SQR(xp[2] + Jet_Radius/tan(Jet_HalfOpeningAngle))
+                         <= SQR(Jet_HalfHeight+Jet_Radius/tan(Jet_HalfOpeningAngle));
 
-        InsideLowerCone &= SQR(xp[0]) + SQR(xp[1]) + SQR(xp[2] - Jet_Radius/tan(Jet_HalfOpeningAngle))
-                        <= SQR(Jet_HalfHeight+Jet_Radius/tan(Jet_HalfOpeningAngle));
+         InsideUpperCone &= 0.0 <= xp[2];
 
-        InsideLowerCone &= xp[2] <= 0.0;
-     } else
-     {
-        InsideUpperCone &= 0.0 <= xp[2] && xp[2] <= Jet_HalfHeight;
-        InsideLowerCone &= -Jet_HalfHeight <= xp[2] && xp[2] <= 0.0;
-     } // if ( Jet_HalfOpeningAngle != 0.0 ) ... else ...
+         InsideLowerCone &= SQR(xp[0]) + SQR(xp[1]) + SQR(xp[2] - Jet_Radius/tan(Jet_HalfOpeningAngle))
+                         <= SQR(Jet_HalfHeight+Jet_Radius/tan(Jet_HalfOpeningAngle));
 
-//   set fluid variable inside source
-     if ( ( InsideUpperCone  &&  ( Jet_Fire == 1  ||  Jet_Fire == 3 ) )  ||
-          ( InsideLowerCone  &&  ( Jet_Fire == 2  ||  Jet_Fire == 3 ) ) )
-     {
-        if ( Jet_HalfOpeningAngle == 0.0 )
-        {
-           Vel[0] = 0.0;
-           Vel[1] = 0.0;
-           if ( InsideUpperCone == true ) Vel[2] = +Jet_SrcVel;
-           else                           Vel[2] = -Jet_SrcVel;
+         InsideLowerCone &= xp[2] <= 0.0;
+      }
+      else
+      {
+         InsideUpperCone &= 0.0 <= xp[2]  &&  xp[2] <= Jet_HalfHeight;
+         InsideLowerCone &= -Jet_HalfHeight <= xp[2]  &&  xp[2] <= 0.0;
+      } // if ( Jet_HalfOpeningAngle != 0.0 ) ... else ...
 
-           CartesianRotate( Vel, Jet_PrecessionAngle, Omega_t, true );
+//    set fluid variable inside source
+      if ( ( InsideUpperCone  &&  ( Jet_Fire == 1  ||  Jet_Fire == 3 ) )  ||
+           ( InsideLowerCone  &&  ( Jet_Fire == 2  ||  Jet_Fire == 3 ) ) )
+      {
+         if ( Jet_HalfOpeningAngle == 0.0 )
+         {
+            Vel[0] = 0.0;
+            Vel[1] = 0.0;
+            if ( InsideUpperCone == true )   Vel[2] = +Jet_SrcVel;
+            else                             Vel[2] = -Jet_SrcVel;
 
-           if ( Jet_PrecessionAxis[0] != 0.0  ||  Jet_PrecessionAxis[1] != 0.0  ||  Jet_PrecessionAxis[2] == 0.0 )
-              CartesianRotate( Vel, PrecessionAxis_Spherical[1], PrecessionAxis_Spherical[2], true );
+            CartesianRotate( Vel, Jet_PrecessionAngle, Omega_t, true );
 
-           Prim[0] = Jet_SrcDens;
-           Prim[1] = Vel[0];
-           Prim[2] = Vel[1];
-           Prim[3] = Vel[2];
-           Prim[4] = Jet_SrcTemp*Jet_SrcDens;
-        } else // if ( Jet_HalfOpeningAngle == 0.0 )
-        {
-//         shift origin to the point D/E
-           if ( InsideUpperCone == true )   xp[2] += Jet_Radius/tan(Jet_HalfOpeningAngle);
-           else                             xp[2] -= Jet_Radius/tan(Jet_HalfOpeningAngle);
+            if ( Jet_PrecessionAxis[0] != 0.0  ||  Jet_PrecessionAxis[1] != 0.0  ||  Jet_PrecessionAxis[2] == 0.0 )
+               CartesianRotate( Vel, PrecessionAxis_Spherical[1], PrecessionAxis_Spherical[2], true );
 
-           CartesianRotate( xp, Jet_PrecessionAngle, Omega_t, true );
+            Prim[0] = Jet_SrcDens;
+            Prim[1] = Vel[0];
+            Prim[2] = Vel[1];
+            Prim[3] = Vel[2];
+            Prim[4] = Jet_SrcTemp*Jet_SrcDens;
+         }
+         else // if ( Jet_HalfOpeningAngle == 0.0 )
+         {
+//          shift origin to the point D/E
+            if ( InsideUpperCone == true )   xp[2] += Jet_Radius/tan(Jet_HalfOpeningAngle);
+            else                             xp[2] -= Jet_Radius/tan(Jet_HalfOpeningAngle);
 
-           Mis_Cartesian2Spherical( xp, rp );
+            CartesianRotate( xp, Jet_PrecessionAngle, Omega_t, true );
 
-           if ( InsideLowerCone == true ) rp[1] -= M_PI;
+            Mis_Cartesian2Spherical( xp, rp );
 
-//         smooth velocity on cross section
-           if ( Jet_SmoothVel ) Jet_SrcVelSmooth = Jet_SrcVel*SQR(cos( 0.5 * M_PI * rp[1] / Jet_HalfOpeningAngle ));
-           else                 Jet_SrcVelSmooth = Jet_SrcVel;
+            if ( InsideLowerCone == true )   rp[1] -= M_PI;
 
-           if ( Jet_PrecessionAxis[0] != 0.0  ||  Jet_PrecessionAxis[1] != 0.0  ||  Jet_PrecessionAxis[2] == 0.0 )
-              CartesianRotate( xp, PrecessionAxis_Spherical[1], PrecessionAxis_Spherical[2], true );
+//          smooth velocity on cross section
+            if ( Jet_SmoothVel )   Jet_SrcVelSmooth = Jet_SrcVel*SQR(cos( 0.5 * M_PI * rp[1] / Jet_HalfOpeningAngle ));
+            else                   Jet_SrcVelSmooth = Jet_SrcVel;
 
-           Mis_Cartesian2Spherical( xp, rp );
+            if ( Jet_PrecessionAxis[0] != 0.0  ||  Jet_PrecessionAxis[1] != 0.0  ||  Jet_PrecessionAxis[2] == 0.0 )
+               CartesianRotate( xp, PrecessionAxis_Spherical[1], PrecessionAxis_Spherical[2], true );
 
-           Prim[0] = Jet_SrcDens;
-           Prim[1] = Jet_SrcVelSmooth*sin(rp[1])*cos(rp[2]);
-           Prim[2] = Jet_SrcVelSmooth*sin(rp[1])*sin(rp[2]);
-           Prim[3] = Jet_SrcVelSmooth*cos(rp[1]);
-           Prim[4] = Jet_SrcTemp*Jet_SrcDens;
-        } // if ( Jet_HalfOpeningAngle == 0.0 ) ... else ...
+            Mis_Cartesian2Spherical( xp, rp );
 
-        PriReal[0] = (real)Prim[0];
-        PriReal[1] = (real)Prim[1];
-        PriReal[2] = (real)Prim[2];
-        PriReal[3] = (real)Prim[3];
-        PriReal[4] = (real)Prim[4];
+            Prim[0] = Jet_SrcDens;
+            Prim[1] = Jet_SrcVelSmooth*sin(rp[1])*cos(rp[2]);
+            Prim[2] = Jet_SrcVelSmooth*sin(rp[1])*sin(rp[2]);
+            Prim[3] = Jet_SrcVelSmooth*cos(rp[1]);
+            Prim[4] = Jet_SrcTemp*Jet_SrcDens;
+         } // if ( Jet_HalfOpeningAngle == 0.0 ) ... else ...
 
-        Hydro_Pri2Con( PriReal, fluid, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
-                       EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                       EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+         PriReal[0] = (real)Prim[0];
+         PriReal[1] = (real)Prim[1];
+         PriReal[2] = (real)Prim[2];
+         PriReal[3] = (real)Prim[3];
+         PriReal[4] = (real)Prim[4];
 
-#       if ( NCOMP_PASSIVE_USER > 0 )
-        fluid[Passive_0000] = 0.0;
-        fluid[Passive_0001] = fluid[DENS];
-        fluid[Passive_0002] = Jet_Src_CR_Engy * SQRT((real)1.0+SQR(Jet_SrcVel));
-#       endif
+         Hydro_Pri2Con( PriReal, fluid, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
+                        EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                        EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
-#       ifdef COSMIC_RAY
-        fluid[CRAY] = Jet_Src_CR_Engy * SQRT((real)1.0+SQR(Jet_SrcVel));
-#       endif
+#        if ( NCOMP_PASSIVE_USER > 0 )
+         fluid[Passive_0000] = 0.0;
+         fluid[Passive_0001] = fluid[DENS];
+         fluid[Passive_0002] = Jet_Src_CR_Engy * Jet_SrcGamma;
+#        endif
 
-        return true;
-     } // if ( ( InsideUpperCone  &&  ( Jet_Fire == 1  ||  Jet_Fire == 3 ) )  ||
-//             ( InsideLowerCone  &&  ( Jet_Fire == 2  ||  Jet_Fire == 3 ) ) )
-  } else // if ( !Jet_SphericalSrc )
-  {
-     double xp[3], rp[3];
-     double Prim[NCOMP_TOTAL] = {0.0}, Cons[NCOMP_TOTAL] = {0.0}, Vel[3];
-     real PriReal[NCOMP_TOTAL] = {0.0};
+#        ifdef COSMIC_RAY
+         fluid[CRAY] = Jet_Src_CR_Engy * Jet_SrcGamma;
+#        endif
 
-//   shift the coordinate origin to the source center (the point O)
-     xp[0] = x - Jet_Center[0];
-     xp[1] = y - Jet_Center[1];
-     xp[2] = z - Jet_Center[2];
+         return true;
+      } // if ( ( InsideUpperCone  &&  ( Jet_Fire == 1  ||  Jet_Fire == 3 ) )  ||
+//              ( InsideLowerCone  &&  ( Jet_Fire == 2  ||  Jet_Fire == 3 ) ) )
+   }
+   else // if ( !Jet_SphericalSrc )
+   {
+      double xp[3], rp[3];
+      double Prim[NCOMP_TOTAL] = {0.0}, Cons[NCOMP_TOTAL] = {0.0}, Vel[3];
+      real PriReal[NCOMP_TOTAL] = {0.0};
 
-     //Mis_Cartesian2Spherical(xp, rp);
+//    shift the coordinate origin to the source center (the point O)
+      xp[0] = x - Jet_Center[0];
+      xp[1] = y - Jet_Center[1];
+      xp[2] = z - Jet_Center[2];
 
-     double R = SQRT( SQR(xp[0]) + SQR(xp[1]) + SQR(xp[2]) );
+      //Mis_Cartesian2Spherical(xp, rp);
 
-     if ( R < Jet_HalfHeight )
-     {
-        Prim[0] = Jet_SrcDens;
-        Prim[1] = Jet_SrcVel*xp[0]/R;
-        Prim[2] = Jet_SrcVel*xp[1]/R;
-        Prim[3] = Jet_SrcVel*xp[2]/R;
-        Prim[4] = Jet_SrcTemp*Jet_SrcDens;
+      const double R = SQRT( SQR(xp[0]) + SQR(xp[1]) + SQR(xp[2]) );
 
-        PriReal[0] = (real)Prim[0];
-        PriReal[1] = (real)Prim[1];
-        PriReal[2] = (real)Prim[2];
-        PriReal[3] = (real)Prim[3];
-        PriReal[4] = (real)Prim[4];
+      if ( R < Jet_HalfHeight )
+      {
+         Prim[0] = Jet_SrcDens;
+         Prim[1] = Jet_SrcVel*xp[0]/R;
+         Prim[2] = Jet_SrcVel*xp[1]/R;
+         Prim[3] = Jet_SrcVel*xp[2]/R;
+         Prim[4] = Jet_SrcTemp*Jet_SrcDens;
 
-        Hydro_Pri2Con( PriReal, fluid, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
-                       EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
-                       EoS_AuxArray_Int, h_EoS_Table, NULL );
+         PriReal[0] = (real)Prim[0];
+         PriReal[1] = (real)Prim[1];
+         PriReal[2] = (real)Prim[2];
+         PriReal[3] = (real)Prim[3];
+         PriReal[4] = (real)Prim[4];
 
-#       if ( NCOMP_PASSIVE_USER > 0 )
-        fluid[Passive_0000] = 0.0;
-        fluid[Passive_0001] = fluid[DENS];
-        fluid[Passive_0002] = Jet_Src_CR_Engy * SQRT((real)1.0+SQR(Jet_SrcVel));
-#       endif
+         Hydro_Pri2Con( PriReal, fluid, NULL_BOOL, NULL_INT, NULL, EoS_DensPres2Eint_CPUPtr,
+                        EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
+                        EoS_AuxArray_Int, h_EoS_Table, NULL );
 
-#       ifdef COSMIC_RAY
-        fluid[CRAY] = Jet_Src_CR_Engy * SQRT((real)1.0+SQR(Jet_SrcVel));
-#       endif
+#        if ( NCOMP_PASSIVE_USER > 0 )
+         fluid[Passive_0000] = 0.0;
+         fluid[Passive_0001] = fluid[DENS];
+         fluid[Passive_0002] = Jet_Src_CR_Engy * Jet_SrcGamma;
+#        endif
 
-        return true;
-     } // if ( R < Jet_HalfHeight )
-  } // if ( !Jet_SphericalSrc ) ... else ...
+#        ifdef COSMIC_RAY
+         fluid[CRAY] = Jet_Src_CR_Engy * Jet_SrcGamma;
+#        endif
 
-  return false;
+         return true;
+      } // if ( R < Jet_HalfHeight )
+   } // if ( !Jet_SphericalSrc ) ... else ...
+
+   return false;
 
 } // FUNCTION : Flu_ResetByUser_FermiBubble
 
 
 
-// (true/false): if the target cell (is/is not) within the region to be refined
-static bool Flag_Region( const int i, const int j, const int k, const int lv, const int PID )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Flag_Region_FermiBubble
+// Description :
+//
+// Note        :  1. Invoked by Flag_Check() using the function pointer "Flag_Region_Ptr",
+//                   which must be set by a test problem initializer
+//                2. Enabled by the runtime option "OPT__FLAG_REGION"
+//
+// Parameter   :  i,j,k       : Indices of the target element in the patch ptr[0][lv][PID]
+//                lv          : Refinement level of the target patch
+//                PID         : ID of the target patch
+//
+// Return      :  "true/false"  if the input cell "is/is not" within the region allowed for refinement
+//-------------------------------------------------------------------------------------------------------
+static bool Flag_Region_FermiBubble( const int i, const int j, const int k, const int lv, const int PID )
 {
-   if ( Step > 0 )
-   {
+   if ( Step <= 0 )   return true;
    const double dh        = amr->dh[lv]; // grid size
    const double Pos[3]    = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,  // x,y,z position
                               amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
@@ -1417,20 +1427,33 @@ static bool Flag_Region( const int i, const int j, const int k, const int lv, co
                               Pos[2]-Center[2]-Jet_CenOffset[2] };
    const double R         = sqrt( SQR(dr[0]) + SQR(dr[1]) );
 
-   //const double ShellThickness = 16*amr->dh[3];
-   bool Flag = false;
-   Flag = R > gasDisk_highResRadius  &&  lv > gasDisk_lowRes_LEVEL  &&  fabs(dr[2]) < 2.0*interfaceHeight;
+   const bool   Flag      = R > gasDisk_highResRadius  &&  lv > gasDisk_lowRes_LEVEL  &&  fabs(dr[2]) < 2.0*interfaceHeight;
 
+   if ( Flag )   return false;
 
-   if (Flag) return false;
-   else      return true;
-   } // if (Step > 0)
-   else    return true;
-} // FUNCTION : Flag_Region
+   return true;
+} // FUNCTION : Flag_Region_FermiBubble
 
 
 
-bool Flag_User( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Flag_FermiBubble
+// Description :  Refine the area near the jet source or the disk
+//
+// Note        :  1. Invoked by Flag_Check() using the function pointer "Flag_User_Ptr",
+//                   which must be set by a test problem initializer
+//                2. Enabled by the runtime option "OPT__FLAG_USER"
+//
+// Parameter   :  i,j,k     : Indices of the target element in the patch ptr[ amr->FluSg[lv] ][lv][PID]
+//                lv        : Refinement level of the target patch
+//                PID       : ID of the target patch
+//                Threshold : User-provided threshold for the flag operation, which is loaded from the
+//                            file "Input__Flag_User"
+//
+// Return      :  "true"  if the flag criteria are satisfied
+//                "false" if the flag criteria are not satisfied
+//-------------------------------------------------------------------------------------------------------
+bool Flag_FermiBubble( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold )
 {
    const double dh        = amr->dh[lv];                                                  // grid size
    const double Pos[3]    = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,              // x,y,z position
@@ -1442,25 +1465,32 @@ bool Flag_User( const int i, const int j, const int k, const int lv, const int P
    const double dR[3]     = { Pos[0]-Center[0], Pos[1]-Center[1], Pos[2]-Center[2] };
    const double R         = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
 
-   bool Flag, Src;
+   bool Flag, Src = R <= dh*1.8;
    if ( Jet_Ambient != 4 )
    {
-      bool Disk;
-      Disk     = fabs(dR[2]) <= dh*1.8;
-      if (lv >= jetSrc_lowRes_LEVEL) Disk = false;
-      Src      = R <= dh*1.8;
-      Flag     = Src||Disk;
+      bool Disk = fabs(dR[2]) <= dh*1.8;
+      if ( lv >= jetSrc_lowRes_LEVEL )   Disk = false;
+      Flag = Src || Disk;
    }
    else
    {
-      Src      = R <= dh*1.8;
-      Flag     = Src;
+      Flag = Src;
    }
    return Flag;
-} // FUNCTION : Flag_User
+} // FUNCTION : Flag_FermiBubble
 
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CartesianRotate
+// Description :
+//
+// Note        :
+//
+// Parameter   :
+//
+// Return      :
+//-------------------------------------------------------------------------------------------------------
 void CartesianRotate( double x[], double theta, double phi, bool inverse )
 {
    double xp[3];
@@ -1483,45 +1513,28 @@ void CartesianRotate( double x[], double theta, double phi, bool inverse )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Mis_GetTimeStep_User_Template
-// Description :  Template of user-defined criteria to estimate the evolution time-step
+// Function    :  AddNewField_FermiBubble
+// Description :  Add the problem-specific fields
 //
-// Note        :  1. This function should be applied to both physical and comoving coordinates and always
-//                   return the evolution time-step (dt) actually used in various solvers
-//                   --> Physical coordinates : dt = physical time interval
-//                       Comoving coordinates : dt = delta(scale_factor) / ( Hubble_parameter*scale_factor^3 )
-//                   --> We convert dt back to the physical time interval, which equals "delta(scale_factor)"
-//                       in the comoving coordinates, in Mis_GetTimeStep()
-//                2. Invoked by Mis_GetTimeStep() using the function pointer "Mis_GetTimeStep_User_Ptr",
-//                   which must be set by a test problem initializer
-//                3. Enabled by the runtime option "OPT__DT_USER"
+// Note        :  1. Ref: https://github.com/gamer-project/gamer/wiki/Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes
+//                2. Invoke AddField() for each of the problem-specific field:
+//                   --> Field label sent to AddField() will be used as the output name of the field
+//                   --> Field index returned by AddField() can be used to access the field data
+//                3. Pre-declared field indices are put in Field.h
 //
-// Parameter   :  lv       : Target refinement level
-//                dTime_dt : dTime/dt (== 1.0 if COMOVING is off)
+// Parameter   :  None
 //
-// Return      :  dt
+// Return      :  None
 //-------------------------------------------------------------------------------------------------------
-double Mis_GetTimeStep_User( const int lv, const double dTime_dt )
-{
-   double Jet_SrcGamma = sqrt(1.0 + SQR(Jet_SrcVel));
-   double Jet_Src3Vel  = Jet_SrcVel / Jet_SrcGamma;
-   double dh           = amr->dh[MAX_LEVEL];
-   double Cs           = 0.182574; // 1.0/sqrt(3);
-   double dt_user      = DT__FLUID * dh /(Jet_Src3Vel+3.0*Cs);
-
-   return dt_user;
-} // FUNCTION : Mis_GetTimeStep_User_Template
-
-
-
-void AddNewField_Jet()
+void AddNewField_FermiBubble()
 {
 #  if ( NCOMP_PASSIVE_USER > 0 )
-   if ( Passive_0000 == 5 ) Passive_0000 = AddField( "Passive_0000", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
-   if ( Passive_0001 == 6 ) Passive_0001 = AddField( "Passive_0001", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
-   if ( Passive_0002 == 7 ) Passive_0002 = AddField( "Passive_0002", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
+   if ( Passive_0000 == 5 )   Passive_0000 = AddField( "Passive_0000", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
+   if ( Passive_0001 == 6 )   Passive_0001 = AddField( "Passive_0001", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
+   if ( Passive_0002 == 7 )   Passive_0002 = AddField( "Passive_0002", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
 #  endif
 } // FUNCTION : AddNewField_Jet
+#endif // #if ( MODEL == HYDRO )
 
 
 
@@ -1545,42 +1558,25 @@ void Init_TestProb_Hydro_FermiBubble()
    Validate();
 
 
+#  if ( MODEL == HYDRO )
 // set the problem-specific runtime parameters
    SetParameter();
 
 
-// get enclosed mass
    Init_Function_User_Ptr   = SetGridIC;
-   Flag_User_Ptr            = Flag_User;
-   Flag_Region_Ptr          = Flag_Region;
-
-   //if (Jet_Fire > 0)
-   //{
-   //  OPT__DT_USER             = 1;
-   //  Mis_GetTimeStep_User_Ptr = Mis_GetTimeStep_User;
-   //}
-   //else
-   //{
-   //  OPT__DT_USER             = 0;
-   //  Mis_GetTimeStep_User_Ptr = NULL;
-   //}
-
-   BC_User_Ptr              = NULL;
+   Flag_User_Ptr            = Flag_FermiBubble;
+   Flag_Region_Ptr          = Flag_Region_FermiBubble;
    Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_FermiBubble;
-   Output_User_Ptr          = NULL;
-   Aux_Record_User_Ptr      = NULL;
-   End_User_Ptr             = NULL;
 #  ifdef GRAVITY
    Init_ExtPot_Ptr          = Init_ExtPot_IsothermalSlab;
 #  endif
 
 #  if ( NCOMP_PASSIVE_USER > 0 )
-   Init_Field_User_Ptr      = AddNewField_Jet;
+   Init_Field_User_Ptr      = AddNewField_FermiBubble;
 #  endif
+#  endif // #if ( MODEL == HYDRO )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_TestProb_Hydro_FermiBubble
-
-#endif // #if ( MODEL == HYDRO )
