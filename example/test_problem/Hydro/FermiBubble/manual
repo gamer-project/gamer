@@ -1,0 +1,48 @@
+# 1. Generate makefile (double precision)
+python3 configure.py --flu_scheme=MHM_RP --gravity=true --pot_scheme=SOR --store_pot_ghost=true --unsplit_gravity=false --slope=PLM --flux=HLLC --srhd=true --cosmic_ray=true --double=true --hdf5=true --nlevel=14 --fftw=FFTW2 --passive=3 --mpi=true --gpu=true
+
+# 2. Compile GAMER
+make clean
+make -j
+mv ../bin/gamer ../bin/gamer_double
+
+# 3. Generate makefile (single precision)
+python3 configure.py --flu_scheme=MHM_RP --gravity=true --pot_scheme=SOR --store_pot_ghost=true --unsplit_gravity=false --slope=PLM --flux=HLLC --srhd=true --cosmic_ray=true --double=false --hdf5=true --nlevel=14 --fftw=FFTW2 --passive=3 --mpi=true --gpu=true
+
+# 4. Compile GAMER
+make clean
+make -j
+mv ../bin/gamer ../bin/gamer_single
+
+# 5. Copy simulation files
+cd ../bin
+cp -r ../example/test_problem/Hydro/FermiBubble ./
+cd FermiBubble
+cp ../gamer_* ./
+sh download_ic.sh => TODO
+
+
+# 6. Run the simulation (stage 1)
+1. Change the parameters to below as follows:
+   Input__Parameter:
+   END_T        3.14872516940871e+01
+   OUTPUT_DT    2
+   OPT__INIT    1
+
+   Input__TestProb:
+   Jet_Fire     3
+
+mpirun -map-by ppr:2:socket:pe=8 --report-bindings ./gamer_double 1>>log 2>&1
+
+# 7. Run the sumulation (stage 2)
+1. Change the parameters to below as follows:
+   Input__Parameter:
+   END_T     3.8e3
+   OUTPUT_DT 200
+   OPT__INIT 2
+
+   Input__TestProb:
+   Jet_Fire 0
+
+ln -fs Data_000016 RESTART
+mpirun -map-by ppr:2:socket:pe=8 --report-bindings ./gamer_single 1>>log 2>&1
