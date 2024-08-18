@@ -34,3 +34,30 @@ Note:
 3. Run the script "download_ic.sh" to download the low-resolution initial condition files for this test
    --> It's the same script used in the "AgoraGalaxy" test problem of Enzo
 4. Some handy yt analysis scripts are put at "yt_script"
+
+
+High-resolution setup and notes:
+========================================
+To reproduce the AGORA high-resolution run presented in the GAMER-2 paper (Schive et al. 2018), follow the above steps with the following modifications:
+1. Download the high-resolution initial conditions by executing "sh download_ic_high_res.sh"
+2. Adjust the following parameters in "Input__Parameter":
+	PAR_NPAR                      21250000    # from the default value of 212500      
+	MAX_LEVEL                     9           # from the default value of 7
+
+
+First-time GRACKLE installation guide (on NTU clusters as an example):
+========================================
+1. First download the source code by executing "git clone https://github.com/grackle-project/grackle"
+2. The required UVB interpolation tables can be downloaded vai "git submodule update --init"
+3. Next navigate to "cd grackle; ./configure; cd src/clib"
+4. Copy into the config files "Make.mach.eureka-intel" or "Make.mach.spock-intel" (e.g. from <your_dirctory>/grackle_install_test/grackle_spock) 
+	and change the prefix: "MACH_INSTALL_PREFIX = <your_dirctory>/grackle_install_test/grackle_spock" in "Make.mach.spock-intel" to the path you wish to install the package
+5. Next execute "make clean; make machine-spock-intel" or "make clean; make machine-eureka-intel"
+6. Next execute "make show-config" and "make precision-32" (switch to single precision more compatible with gaming GPUs on spock)
+	and "make omp-on" (GAMER does utilize OpenMP)
+7. Next execute "make save-config-gamer" (save this GAMER-spock specific config setting) and "make load-config-gamer" (load this GAMER-spock specific config setting)
+8. Lastly for code compilation, execute "make; make install"
+9. To compile the corresponding gamer executable:
+	(1) Add the path "GRACKLE_PATH    <your_grackle_directory>/grackle/grackle_spock_single_omp" to "<your_gamer_directory>/configs/spock_intel.config"
+	(2) Copy "generate_make.sh" from the AGORA test problem and change "--machine=spock_intel" in that file, and then execute "sh generate_make.sh"
+	(3) Generate a gamer executable via "make clean; make -j 4"
