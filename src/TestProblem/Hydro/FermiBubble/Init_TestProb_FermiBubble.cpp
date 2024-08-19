@@ -25,8 +25,6 @@ void randCloud( real **randXYZ, int numClouds );
 
 // options
        int      Jet_Ambient;             // [0/1/9]: uniform/Milky-Way/load-from-file
-static bool     Jet_Precession;          // flag: precessing jet source
-static bool     Jet_TimeDependentSrc;    // flag: time-dependent fluid variables in source
 static int      Jet_Fire;                // [0/1/2/3]: no jet/upper jet/lower jet/bipolar jet
 static double   Jet_Duration;            // a duration of jet injection from the start of simulation
 
@@ -89,7 +87,6 @@ static real   gasDiskPeakDens;
        real   interfaceHeight;
 static double criticalTemp;
 static double gasDisk_highResRadius;
-static double jetSrc_highResRadius;
 static int    gasDisk_lowRes_LEVEL;
 static int    jetSrc_lowRes_LEVEL;
 
@@ -125,19 +122,7 @@ static double   Jet_MaxDis;              // maximum distance between the jet sou
 static double   Jet_AngularVelocity;     // precession angular velocity (degree per code_time)
 static double   Jet_PrecessionAngle;     // precession angle in degree
 static double   Jet_PrecessionAxis[3];   // cone orientation vector (x,y,z). i.e. vector OA
-                                         // --> NOT necessary to be a unit vector
 
-// time-depent source
-static double   Jet_BurstStartTime;      // start burst time in jet source
-static double   Jet_BurstEndTime;        // end burst time in jet source
-static double   Jet_Burst4VelRatio;      // increase 4-velocity     by a factor of `Jet_Burst4VelRatio` during `Jet_BurstStartTime` and `Jet_BurstEndTime`
-static double   Jet_BurstDensRatio;      // increase proper density by a factor of `Jet_BurstDensRatio` during `Jet_BurstStartTime` and `Jet_BurstEndTime`
-static double   Jet_BurstTempRatio;      // increase temperature    by a factor of `Jet_BurstTempRatio` during `Jet_BurstStartTime` and `Jet_BurstEndTime`
-static bool     Flag_Burst4Vel;          // flag: burst 4-velocity
-static bool     Flag_BurstDens;          // flag: burst proper density
-static bool     Flag_BurstTemp;          // flag: burst temperature
-
-static double   Amb_FluSphereRadius;     //
 
 #if ( NCOMP_PASSIVE_USER > 0 )
 static FieldIdx_t Passive_0000 = 5;  // disk
@@ -235,9 +220,7 @@ void SetParameter()
 // load options
    ReadPara->Add( "Jet_Ambient",             &Jet_Ambient,               1,             0,             9              );
    ReadPara->Add( "Jet_Fire",                &Jet_Fire,                  3,             0,             3              );
-   ReadPara->Add( "Jet_Precession",          &Jet_Precession,            false,         Useless_bool,  Useless_bool   );
    ReadPara->Add( "Jet_SphericalSrc",        &Jet_SphericalSrc,          false,         Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Jet_TimeDependentSrc",    &Jet_TimeDependentSrc,      false,         Useless_bool,  Useless_bool   );
    ReadPara->Add( "Jet_Duration",            &Jet_Duration,              NoMax_double,  0.0,           NoMax_double   );
 
 // load jet fluid parameters
@@ -247,7 +230,6 @@ void SetParameter()
    ReadPara->Add( "Jet_SrcTemp",             &Jet_SrcTemp,              -1.0,           Eps_double,    NoMax_double   );
    ReadPara->Add( "gasDisk_highResRadius",   &gasDisk_highResRadius,    -1.0,           NoMin_double,  NoMax_double   );
    ReadPara->Add( "gasDisk_lowRes_LEVEL",    &gasDisk_lowRes_LEVEL,     -1,             0,             NoMax_int      );
-   ReadPara->Add( "jetSrc_highResRadius",    &jetSrc_highResRadius,     -1.0,           NoMin_double,  NoMax_double   );
    ReadPara->Add( "jetSrc_lowRes_LEVEL",     &jetSrc_lowRes_LEVEL,      -1,             0,             NoMax_int      );
 #  ifdef COSMIC_RAY
    ReadPara->Add( "Jet_Src_CR_Engy",         &Jet_Src_CR_Engy,          -1.0,           0.0,           NoMax_double   );
@@ -262,7 +244,7 @@ void SetParameter()
    ReadPara->Add( "Jet_CenOffset_y",         &Jet_CenOffset[1],          NoDef_double,  NoMin_double,  NoMax_double   );
    ReadPara->Add( "Jet_CenOffset_z",         &Jet_CenOffset[2],          NoDef_double,  NoMin_double,  NoMax_double   );
 
-// load precission parameters
+// load precession parameters
    ReadPara->Add( "Jet_AngularVelocity",     &Jet_AngularVelocity,       NoDef_double,  0.0,           NoMax_double   );
    ReadPara->Add( "Jet_PrecessionAngle",     &Jet_PrecessionAngle,       NoDef_double,  NoMin_double,  90.0           );
    ReadPara->Add( "Jet_PrecessionAxis_x",    &Jet_PrecessionAxis[0],     NoDef_double,  NoMin_double,  NoMax_double   );
@@ -277,7 +259,6 @@ void SetParameter()
    ReadPara->Add( "Amb_UniformTemp",         &Amb_UniformTemp,          -1.0,           Eps_double,    NoMax_double   );
 
 
-   ReadPara->Add( "Amb_FluSphereRadius",     &Amb_FluSphereRadius,      -1.0,           NoMin_double,  NoMax_double   );
    ReadPara->Add( "CharacteristicSpeed",     &CharacteristicSpeed,      -1.0,           NoMin_double,  NoMax_double   );
    ReadPara->Add( "criticalTemp",            &criticalTemp,             -1.0,           NoMin_double,  NoMax_double   );
 
@@ -285,10 +266,6 @@ void SetParameter()
    ReadPara->Add( "IsothermalSlab_Center_x", &IsothermalSlab_Center[0], -1.0,           NoMin_double,  NoMax_double   );
    ReadPara->Add( "IsothermalSlab_Center_y", &IsothermalSlab_Center[1], -1.0,           NoMin_double,  NoMax_double   );
    ReadPara->Add( "IsothermalSlab_Center_z", &IsothermalSlab_Center[2], -1.0,           NoMin_double,  NoMax_double   );
-
-// load time-dependent source varibles
-   ReadPara->Add( "Jet_BurstStartTime",      &Jet_BurstStartTime,       -1.0,           NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Jet_BurstEndTime",        &Jet_BurstEndTime,         -1.0,           NoMin_double,  NoMax_double   );
 
    ReadPara->Read( FileName );
 
@@ -308,44 +285,9 @@ void SetParameter()
       Amb_UniformVel[2] = NAN;
    }
 
-   if ( Amb_FluSphereRadius < 0.0 )
-   {
-      Amb_FluSphereRadius = NAN;
-   }
-
-   if ( !Jet_TimeDependentSrc )
-   {
-      Jet_BurstDensRatio = NAN;
-      Jet_Burst4VelRatio = NAN;
-      Jet_BurstTempRatio = NAN;
-      Jet_BurstStartTime = NAN;
-      Jet_BurstEndTime   = NAN;
-   }
-
 // (1-2) check runtime parameters
 
 // check time-dependent source
-   if ( Jet_TimeDependentSrc )
-   {
-      if ( !Flag_Burst4Vel  &&  !Flag_BurstDens  &&  !Flag_BurstTemp )
-         Aux_Error( ERROR_INFO, "One of Flag_Burst4Vel, Flag_BurstDens or Flag_BurstTemp must be enabled !!\n" );
-
-      if ( Jet_BurstEndTime <= Jet_BurstStartTime )
-         Aux_Error( ERROR_INFO, "Jet_BurstEndTime <= Jet_BurstStartTime !!\n" );
-
-      if ( Jet_BurstEndTime >= END_T )
-         Aux_Error( ERROR_INFO, "Jet_BurstEndTime >= END_T !!\n" );
-
-      if ( Flag_Burst4Vel  &&  Jet_Burst4VelRatio <= Eps_double )
-         Aux_Error( ERROR_INFO, "Jet_Burst4VelRatio <= Eps_double !!\n" );
-
-      if ( Flag_BurstDens  &&  Jet_BurstDensRatio <= Eps_double )
-         Aux_Error( ERROR_INFO, "Jet_BurstDensRatio <= Eps_double !!\n" );
-
-      if ( Flag_BurstTemp  &&  Jet_BurstTempRatio <= Eps_double )
-         Aux_Error( ERROR_INFO, "Jet_BurstTempRatio <= Eps_double !!\n" );
-   } // if ( Jet_TimeDependentSrc )
-
    if ( IsothermalSlab_Center[0] == -1.0 )
       IsothermalSlab_Center[0] = 0.5*amr->BoxSize[0];
 
@@ -387,7 +329,6 @@ void SetParameter()
    Jet_Duration          *= Const_Myr / UNIT_T;
 
    gasDisk_highResRadius *= Const_kpc / UNIT_L;
-   jetSrc_highResRadius  *= Const_kpc / UNIT_L;
 
    if ( Jet_Ambient == 0 )
    {
@@ -431,20 +372,6 @@ void SetParameter()
    Amb_UniformTemp     *= Const_kB / (ParticleMass*Const_c*Const_c);
    Jet_AngularVelocity *= 1.0;    // the unit of Jet_AngularVelocity is UNIT_T
 
-
-   if ( Amb_FluSphereRadius > 0.0 )
-   {
-      Amb_FluSphereRadius *= Const_kpc / UNIT_L;
-   }
-
-
-   if ( Jet_TimeDependentSrc )
-   {
-     Jet_BurstStartTime *= 1e3 * Const_yr / UNIT_T;
-     Jet_BurstEndTime   *= 1e3 * Const_yr / UNIT_T;
-     Jet_Burst4VelRatio *=       Const_c  / UNIT_V;
-     Jet_BurstDensRatio *= 1.0            / UNIT_D;
-   }
 
 // (2) set the problem-specific derived parameters
    const double SecAngle = 1.0 / cos( 0.5*Jet_HalfOpeningAngle );
@@ -490,9 +417,7 @@ void SetParameter()
       Aux_Message( stdout, "  Jet_Ambient              = %d\n",                Jet_Ambient                                     );
       Aux_Message( stdout, "  Jet_Fire                 = %d\n",                Jet_Fire                                        );
       Aux_Message( stdout, "  Jet_SmoothVel            = %d\n",                Jet_SmoothVel                                   );
-      Aux_Message( stdout, "  Jet_Precession           = %d\n",                Jet_Precession                                  );
       Aux_Message( stdout, "  Jet_SphericalSrc         = %d\n",                Jet_SphericalSrc                                );
-      Aux_Message( stdout, "  Jet_TimeDependentSrc     = %d\n",                Jet_TimeDependentSrc                            );
       Aux_Message( stdout, "  Jet_Duration             = %14.7e Myr \n",       Jet_Duration*UNIT_T/Const_Myr                   );
       Aux_Message( stdout, "  ParticleMass             = %14.7e g\n",          ParticleMass                                    );
       Aux_Message( stdout, "  Jet_SrcVel               = %14.7e c\n",          Jet_SrcVel                                      );
@@ -514,7 +439,6 @@ void SetParameter()
       Aux_Message( stdout, "  Jet_MaxDis               = %14.7e kpc\n",        Jet_MaxDis*UNIT_L/Const_kpc                     );
       Aux_Message( stdout, "  gasDisk_highResRadius    = %14.7e kpc\n",        gasDisk_highResRadius*UNIT_L/Const_kpc          );
       Aux_Message( stdout, "  gasDisk_lowRes_LEVEL     = %d\n",                gasDisk_lowRes_LEVEL                            );
-      Aux_Message( stdout, "  jetSrc_highResRadius     = %14.7e kpc\n",        jetSrc_highResRadius*UNIT_L/Const_kpc           );
       Aux_Message( stdout, "  jetSrc_lowRes_LEVEL      = %d\n",                jetSrc_lowRes_LEVEL                             );
 
       if ( Jet_Ambient == 0 )
@@ -537,23 +461,6 @@ void SetParameter()
       Aux_Message( stdout, "  Jet_PrecessionAxis[x]    = %14.7e\n",            Jet_PrecessionAxis[0]                           );
       Aux_Message( stdout, "  Jet_PrecessionAxis[y]    = %14.7e\n",            Jet_PrecessionAxis[1]                           );
       Aux_Message( stdout, "  Jet_PrecessionAxis[z]    = %14.7e\n",            Jet_PrecessionAxis[2]                           );
-
-      if ( Amb_FluSphereRadius > 0.0 )
-      {
-      Aux_Message( stdout, "  Amb_FluSphereRadius      = %14.7e kpc\n",        Amb_FluSphereRadius*UNIT_L/Const_kpc            );
-      } // if ( Amb_FluSphereRadius > 0.0 )
-
-      if ( Jet_TimeDependentSrc )
-      {
-      Aux_Message( stdout, "  Jet_BurstStartTime       = %14.7e kyr \n",       Jet_BurstStartTime*UNIT_T/(1e3*Const_yr)        );
-      Aux_Message( stdout, "  Jet_BurstEndTime         = %14.7e kyr \n",       Jet_BurstEndTime*UNIT_T/(1e3*Const_yr)          );
-      Aux_Message( stdout, "  Jet_Burst4VelRatio       = %14.7e c \n",         Jet_Burst4VelRatio                              );
-      Aux_Message( stdout, "  Jet_BurstDensRatio       = %14.7e g/cm^3\n",     Jet_BurstDensRatio*UNIT_D                       );
-      Aux_Message( stdout, "  Jet_BurstTempRatio       = %14.7e\n",            Jet_BurstTempRatio                              );
-      Aux_Message( stdout, "  Flag_Burst4Vel           = %d\n",                Flag_Burst4Vel                                  );
-      Aux_Message( stdout, "  Flag_BurstDens           = %d\n",                Flag_BurstDens                                  );
-      Aux_Message( stdout, "  Flag_BurstTemp           = %d\n",                Flag_BurstTemp                                  );
-      } // if ( Jet_TimeDependentSrc )
 
       Aux_Message( stdout, "=============================================================================\n"                   );
    } // if ( MPI_Rank == 0 )
@@ -687,16 +594,16 @@ void SetArrayDisk()
 
       for (int c=0; c<5*NX*NY*NZ; c++)
       {
-        const int cc = c%(NX*NY*NZ);
-        const int i  = (cc - cc%(NY*NZ)) / (NY*NZ);
-        const int j  = ((cc - cc%NZ) / NZ) % NY;
-        const int k  = cc%NZ;
+         const int cc = c%(NX*NY*NZ);
+         const int i  = (cc - cc%(NY*NZ)) / (NY*NZ);
+         const int j  = ((cc - cc%NZ) / NZ) % NY;
+         const int k  = cc%NZ;
 
-        if ( 0          <= c && c <   NX*NY*NZ )   Rhoo_disk[i][j][k] = Ptr[c];
-        if (   NX*NY*NZ <= c && c < 2*NX*NY*NZ )   VelX_disk[i][j][k] = Ptr[c];
-        if ( 2*NX*NY*NZ <= c && c < 3*NX*NY*NZ )   VelY_disk[i][j][k] = Ptr[c];
-        if ( 3*NX*NY*NZ <= c && c < 4*NX*NY*NZ )   VelZ_disk[i][j][k] = Ptr[c];
-        if ( 4*NX*NY*NZ <= c && c < 5*NX*NY*NZ )   Pres_disk[i][j][k] = Ptr[c];
+         if ( 0          <= c && c <   NX*NY*NZ )   Rhoo_disk[i][j][k] = Ptr[c];
+         if (   NX*NY*NZ <= c && c < 2*NX*NY*NZ )   VelX_disk[i][j][k] = Ptr[c];
+         if ( 2*NX*NY*NZ <= c && c < 3*NX*NY*NZ )   VelY_disk[i][j][k] = Ptr[c];
+         if ( 3*NX*NY*NZ <= c && c < 4*NX*NY*NZ )   VelZ_disk[i][j][k] = Ptr[c];
+         if ( 4*NX*NY*NZ <= c && c < 5*NX*NY*NZ )   Pres_disk[i][j][k] = Ptr[c];
       } // for (int c=0; c<5*NX*NY*NZ; c++)
 
       Ptr += 5*NX*NY*NZ;

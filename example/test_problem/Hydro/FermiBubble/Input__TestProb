@@ -2,18 +2,26 @@
 # electron mass = 9.109383560e-28 [g]
 
 # problem-specific runtime parameters
-Jet_Ambient                                       2         # [0/1]: uniform/Milky-Way/from-file
-Jet_Fire                                          0
-Jet_Precession                                    0         # [0/1]: precession
-Jet_TimeDependentSrc                              0         # [0/1]: time-dependent source
+Jet_Ambient                                       2         # [1]
+                                                            # 0 : uniform
+                                                            # 1 : Milky-Way
+                                                            # 2 : cold disk in stratifed ambient
+                                                            # 3 : cold disk in uniform ambient
+                                                            # 4 :
+                                                            # 9 : load from UM_IC
+Jet_Fire                                          0         # [3]
+                                                            # 0 : off
+                                                            # 1 : upper jet
+                                                            # 2 : lower jet
+                                                            # 3 : bipoler jet
 
 
 # jet fluid parameters
 Jet_SrcVel                                      0.6         # jet: jet 4-velocity ( in unit of speed of light )
-Jet_SmoothVel                                     0         # [0/1]: smooth velocity
+Jet_SmoothVel                                     0         # smooth radial componennt of 4-velocity on cross section (0/1) [0]
 Jet_SrcDens                                   1e-26         # jet: jet density (in cgs units)
 Jet_SrcTemp                                    2e10         # jet: jet temperature (in K)
-#Jet_Duration                                   0.6
+#Jet_Duration                                   0.6         # duration time of jet injection from the start of te simulation
 gasDisk_highResRadius                           0.5
 gasDisk_lowRes_LEVEL                              3
 jetSrc_lowRes_LEVEL                               6
@@ -23,6 +31,7 @@ criticalTemp                                   1e99         # K
 
 
 # source geometry parameters
+Jet_SphericalSrc                                  0         # (0/1) [0]
 Jet_Radius                                    0.002         # jet: radius of the cylinder-shape jet source (in kpc)
 Jet_HalfHeight                                0.002         # jet: half height of the cylinder-shape jet source (in kpc)
 Jet_HalfOpeningAngle                            0.0         # jet: half-opening angle
@@ -47,7 +56,6 @@ Amb_UniformVel_y                               +0.0         # ambient velocity y
 Amb_UniformVel_z                               +0.0         # ambient velocity z [0.0]
 
 # estimate default evolution time (i.e. END_T)
-Amb_FluSphereRadius                              -1         # radius of sphere
 CharacteristicSpeed                            5e-6         # the characteristic speed of the simulation problem
                                                             # the default end-time (END_T) will be estimated from
                                                             # `CharacteristicSpeed` and `BOX_SIZE`
@@ -55,18 +63,6 @@ CharacteristicSpeed                            5e-6         # the characteristic
 
 
 # Milky Way
-IsothermalSlab_Center_x                          -1      #
-IsothermalSlab_Center_y                          -1      #
-IsothermalSlab_Center_z                          -1      #
-
-# time-dependent source varibles
-Flag_BurstDens                                    0         # [0/1]: off/on
-Flag_Burst4Vel                                    0         # [0/1]: off/on
-Flag_BurstTemp                                    0         # [0/1]: off/on
-
-Jet_BurstDens                                     0         # magnitude of density pulse
-Jet_Burst4Vel                                     0         # magnitude of 4-velocity pulse
-Jet_BurstTemp                                     0         # magnitude of temperature pulse
-
-Jet_BurstStartTime                                0         # start time of pulse
-Jet_BurstEndTime                                  0         # end time of pulse
+IsothermalSlab_Center_x                          -1         # [box center]
+IsothermalSlab_Center_y                          -1         # [box center]
+IsothermalSlab_Center_z                          -1         # [box center]
