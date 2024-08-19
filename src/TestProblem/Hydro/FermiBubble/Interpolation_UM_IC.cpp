@@ -16,6 +16,7 @@
 //-------------------------------------------------------------------------------------------------------
 void ***calloc_3d_array( size_t nt, size_t nr, size_t nc, size_t size )
 {
+
    void ***array;
    size_t i, j;
 
@@ -61,6 +62,7 @@ void ***calloc_3d_array( size_t nt, size_t nr, size_t nc, size_t size )
    }
 
    return array;
+
 } // FUNCTION : ***calloc_3d_array
 
 
@@ -96,6 +98,7 @@ void free_3d_array( void ***array )
 //-------------------------------------------------------------------------------------------------------
 real TrilinearInterpolation( real *FieldAtVertices, real *xyz000, real *dxyz, real *xyz )
 {
+
    real c = 0.0, weight[8];
 
 // weight of the left / right
@@ -120,4 +123,5 @@ real TrilinearInterpolation( real *FieldAtVertices, real *xyz000, real *dxyz, re
    for (int i=0; i<8; i++)   c += FieldAtVertices[i] * weight[i];
 
    return c;
+
 } // FUNCTION : TrilinearInterpolation

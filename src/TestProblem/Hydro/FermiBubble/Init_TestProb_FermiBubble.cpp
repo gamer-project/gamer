@@ -789,6 +789,7 @@ void Interpolation_UM_IC( real x, real y, real z, real ****Pri_input, real **XYZ
 //-------------------------------------------------------------------------------------------------------
 real IsothermalSlab_Pot( const real z )
 {
+
    real Pot, Log;
 
 // 1. isothermal slab
@@ -802,6 +803,7 @@ real IsothermalSlab_Pot( const real z )
    Log -= SQR(v_halo) * log( SQR(distance_h) );
 
    return Pot + Log;
+
 } // FUNCTION : IsothermalSlab_Pot
 #endif
 
@@ -827,6 +829,7 @@ real IsothermalSlab_Pot( const real z )
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
+
 // variables for jet
    const real xc = x - IsothermalSlab_Center[0];
    const real yc = y - IsothermalSlab_Center[1];
@@ -1077,6 +1080,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 #     endif // #ifdef GRAVITY
    } // if ( Jet_Ambient == 0 ) ... else if
+
 } // FUNCTION : SetGridIC
 
 
@@ -1321,6 +1325,7 @@ int Flu_ResetByUser_FermiBubble( real fluid[], const double Emag, const double x
 //-------------------------------------------------------------------------------------------------------
 static bool Flag_Region_FermiBubble( const int i, const int j, const int k, const int lv, const int PID )
 {
+
    if ( Step <= 0 )   return true;
    const double dh        = amr->dh[lv]; // grid size
    const double Pos[3]    = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,  // x,y,z position
@@ -1339,6 +1344,7 @@ static bool Flag_Region_FermiBubble( const int i, const int j, const int k, cons
    if ( Flag )   return false;
 
    return true;
+
 } // FUNCTION : Flag_Region_FermiBubble
 
 
@@ -1362,6 +1368,7 @@ static bool Flag_Region_FermiBubble( const int i, const int j, const int k, cons
 //-------------------------------------------------------------------------------------------------------
 bool Flag_FermiBubble( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold )
 {
+
    const double dh        = amr->dh[lv];                                                  // grid size
    const double Pos[3]    = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,              // x,y,z position
                               amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
@@ -1384,6 +1391,7 @@ bool Flag_FermiBubble( const int i, const int j, const int k, const int lv, cons
       Flag = Src;
    }
    return Flag;
+
 } // FUNCTION : Flag_FermiBubble
 
 
@@ -1400,6 +1408,7 @@ bool Flag_FermiBubble( const int i, const int j, const int k, const int lv, cons
 //-------------------------------------------------------------------------------------------------------
 void CartesianRotate( double x[], double theta, double phi, bool inverse )
 {
+
    double xp[3];
 
    if ( inverse )
@@ -1415,6 +1424,7 @@ void CartesianRotate( double x[], double theta, double phi, bool inverse )
    }
 
    for (int i=0; i<3; i++)   x[i] = xp[i];
+
 } // FUNCTION : CartesianRotate
 
 
@@ -1435,11 +1445,13 @@ void CartesianRotate( double x[], double theta, double phi, bool inverse )
 //-------------------------------------------------------------------------------------------------------
 void AddNewField_FermiBubble()
 {
+
 #  if ( NCOMP_PASSIVE_USER > 0 )
    if ( Passive_0000 == 5 )   Passive_0000 = AddField( "Passive_0000", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
    if ( Passive_0001 == 6 )   Passive_0001 = AddField( "Passive_0001", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
    if ( Passive_0002 == 7 )   Passive_0002 = AddField( "Passive_0002", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
 #  endif
+
 } // FUNCTION : AddNewField_Jet
 #endif // #if ( MODEL == HYDRO )
 

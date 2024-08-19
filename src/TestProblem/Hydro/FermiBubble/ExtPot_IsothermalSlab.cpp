@@ -94,7 +94,6 @@ static real ExtPot_IsothermalSlab( const double x, const double y, const double 
    const real   IsothermalSlab_PeakDens           = (real)UserArray_Flt[ 4];   //
    const real   NewtonG                           =       UserArray_Flt[ 5];
    const real   BoxSize_Z                         =       UserArray_Flt[ 6];
-   const double dz                                = z - cz;
    const real   IsothermalSlab_Truncation         = (real)UserArray_Flt[ 7];   //
    const real   distance_h                        = (real)UserArray_Flt[ 8];
    const real   v_halo                            = (real)UserArray_Flt[ 9];
@@ -102,6 +101,7 @@ static real ExtPot_IsothermalSlab( const double x, const double y, const double 
    const int    Jet_Ambient                       =       UserArray_Int[ 0];
 
    const double IsothermalSlab_VelocityDispersion_Sqr = SQR(IsothermalSlab_VelocityDispersion);
+   const double dz = z - cz;
 
    real stellarDiskPot = sqrt( ( 2.0*M_PI*NewtonG*IsothermalSlab_PeakDens ) / IsothermalSlab_VelocityDispersion_Sqr );
 
