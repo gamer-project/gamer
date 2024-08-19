@@ -53,13 +53,10 @@ def pressure_cr( field, data ):
     p_cr *= unit_v**2
     return p_cr * NormalizedConst_CRPres
 
-def temperature_keV( field, data ):
+def temperature_erg( field, data ):
     from yt.units import boltzmann_constant_cgs
-    erg2eV = 6.242e+11
 
     temp  = data["Temp"] * boltzmann_constant_cgs * yt.YTQuantity(1.0, "K")
-    temp *= erg2eV
-    temp /= 1e3
     return temp
 
 
@@ -122,7 +119,7 @@ for i in range(idx_start, idx_end+1, didx):
     ds.add_field( name=("gamer", "Pres_SR"),  function=pressure_sr,     sampling_type="local", units="dyne/cm**2" )
     ds.add_field( name=("gamer", "P_CR"),     function=pressure_cr,     sampling_type="local", units="dyne/cm**2" )
     ds.add_field( name=("gamer", "num_dens"), function=number_density,  sampling_type="local", units="1/cm**3"    )
-    ds.add_field( name=("gamer", "Temp_keV"), function=temperature_keV, sampling_type="local", units="keV"        )
+    ds.add_field( name=("gamer", "Temp_erg"), function=temperature_erg, sampling_type="local", units="erg"        )
 
     slice_axis = "x"
     fig_width  = 28.0 * CM2INCH
@@ -134,7 +131,7 @@ for i in range(idx_start, idx_end+1, didx):
     ax_2_idx = (AX_IDX[slice_axis]+2) % 3
 
     plot_vars = [ { "field":("gamer", "Pres_SR"),  "cmap":"plasma",        "log_scale":True, "var_unit":"erg/cm**3", "title":"P"     , "var_min":None      },
-                  { "field":("gamer", "Temp_keV"), "cmap":"afmhot",        "log_scale":True, "var_unit":"keV",       "title":"k_BT"  , "var_min":None      },
+                  { "field":("gamer", "Temp_erg"), "cmap":"afmhot",        "log_scale":True, "var_unit":"keV",       "title":"k_BT"  , "var_min":None      },
                   { "field":("gamer", "num_dens"), "cmap":"gist_earth",    "log_scale":True, "var_unit":"1/cm**3",   "title":"n"     , "var_min":None      },
                   { "field":("gamer", "P_CR"),     "cmap":"nipy_spectral", "log_scale":True, "var_unit":"erg/cm**3", "title":"P_{CR}", "var_min":1.111e-18 } ]
     plot_savename  = "Fermi_Bubble_Slice_%06d.png"%(i)
