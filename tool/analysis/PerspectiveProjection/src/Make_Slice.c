@@ -28,8 +28,7 @@ real Slice( int Idx1, int Idx2, int numCellXYZ[], real ***TargetQuantity, char C
    }
    else
    {
-      printf("Something wrong!\n");
-      exit(0);
+      ERROR_EXIT( 0, "ERROR : Something wrong !!\n" );
       return 0.0;
    }
 } // FUNCTION : Slice

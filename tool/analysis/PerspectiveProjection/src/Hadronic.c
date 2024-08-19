@@ -196,7 +196,7 @@ double Integral( double lb, double ub, struct Parameters_t *parameters )
 
   } while( status  &&  key<=6 );
 
-  if ( status ) { printf( "Error! status: %d (%s: %d)\n", status, __FUNCTION__, __LINE__ ); exit(0); }
+  if ( status )   ERROR_EXIT( 0, "ERROR : status: %d (%s: %d) !!\n", status, __FUNCTION__, __LINE__ );
 
   gsl_integration_workspace_free( w );
 

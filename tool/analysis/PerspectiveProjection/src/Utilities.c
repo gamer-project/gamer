@@ -59,25 +59,20 @@ void checkInt32Overflow( int32_t a, int32_t b, int operation, int line )
 
    if ( operation == '+' )
    {
-      if ( ( b > 0 ) && ( a > INT32_MAX-b ) ) overflow = true;
-      if ( ( b < 0 ) && ( a < INT32_MIN-b ) ) overflow = true;
+      if ( ( b > 0 ) && ( a > INT32_MAX-b ) )   overflow = true;
+      if ( ( b < 0 ) && ( a < INT32_MIN-b ) )   overflow = true;
    }
    else if ( operation == '*' )
    {
-      if (  b != 0 && a > INT32_MAX / b  )    overflow = true;
-      if (  b != 0 && a < INT32_MIN / b  )    overflow = true;
+      if (  b != 0 && a > INT32_MAX / b  )      overflow = true;
+      if (  b != 0 && a < INT32_MIN / b  )      overflow = true;
    }
    else
    {
-      printf( "something wrong!\n" );
-      exit(0);
+      ERROR_EXIT( 0, "ERROR : something wrong !!\n" );
    }
 
-   if ( overflow )
-   {
-     printf( "Integer overflow!! a=%d, b=%d, line=%d\n", a, b, line );
-     exit(0);
-   }
+   if ( overflow )   ERROR_EXIT( 0, "ERROR : Integer overflow !! a=%d, b=%d, line=%d\n", a, b, line );
 } // FUNCTION : checkInt32Overflow
 
 
@@ -112,11 +107,11 @@ bool checkmemoryContiguous( real *Ptr, int sizeOf, int Length )
 //-------------------------------------------------------------------------------------------------------
 void OutputBinary( void *Ptr, int size, int count, char Name [] )
 {
-  FILE *pFile;
+   FILE *pFile;
 
-  pFile = fopen( Name, "wb" );
+   pFile = fopen( Name, "wb" );
 
-  fwrite( Ptr, size, count, pFile );
+   fwrite( Ptr, size, count, pFile );
 
-  fclose( pFile );
+   fclose( pFile );
 } // FUNCTION : OutputBinary

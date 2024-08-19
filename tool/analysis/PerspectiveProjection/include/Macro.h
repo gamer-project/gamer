@@ -125,4 +125,11 @@ typedef struct Keys
     }                                \
  }
 
-#endif
+#define ERROR_EXIT( code, fmt, ... )  \
+ {                                   \
+    printf( fmt, ##__VA_ARGS__ );    \
+    exit( code );                    \
+ }
+
+
+#endif // #ifndef __MACRO__

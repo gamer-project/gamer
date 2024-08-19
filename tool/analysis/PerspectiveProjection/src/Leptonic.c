@@ -78,32 +78,16 @@ static void initialize_gsl_arrays( const int energyBinsSize )
    for (int w=0; w<NUM_THREADS; w++)
    {
       workspaces_inner[w] = gsl_integration_workspace_alloc( 1000 );
-      if ( workspaces_inner[w] == NULL )
-      {
-         printf( "Failed to allocate workspace %d\n", w );
-         exit( -1 );
-      }
+      if ( workspaces_inner[w] == NULL )   ERROR_EXIT( -1, "ERROR : Failed to allocate workspace %d !!\n", w );
 
       workspaces_outer[w] = gsl_integration_workspace_alloc( 1000 );
-      if ( workspaces_outer[w] == NULL )
-      {
-         printf( "Failed to allocate workspace %d\n", w );
-         exit( -1 );
-      }
+      if ( workspaces_outer[w] == NULL )   ERROR_EXIT( -1, "ERROR : Failed to allocate workspace %d !!\n", w );
 
       accels[w] = gsl_interp_accel_alloc();
-      if ( accels[w] == NULL )
-      {
-         printf( "Failed to allocate accelerate space %d\n", w );
-         exit( -1 );
-      }
+      if ( accels[w] == NULL )   ERROR_EXIT( -1, "Failed to allocate accelerate space %d !!\n", w );
 
       splines[w] = gsl_spline_alloc( gsl_interp_cspline, energyBinsSize );
-      if ( splines[w] == NULL )
-      {
-         printf( "Failed to allocate spline space %d\n", w );
-         exit( -1 );
-      }
+      if ( splines[w] == NULL )   ERROR_EXIT( -1, "ERROR : Failed to allocate spline space %d !!\n", w );
    } // for (int w=0; w<NUM_THREADS; w++)
 } // FUNCTION : initialize_workspace
 
@@ -399,9 +383,8 @@ void ReadInModel( std::string name,
 
   if ( pos > line.size() )
   {
-    std::cerr << "Error reading 3D header from file" << '\n';
     rf.close();
-    exit(-1);
+    ERROR_EXIT( -1, "ERROR : Reading 3D header from file !!\n" );
   }
 
   line.clear();
@@ -691,14 +674,13 @@ double integralInner( double lb, double ub, void *params )
 
    if ( status )
    {
-      printf( "Error! status: %d (%s: %d)\n", status, __FUNCTION__, __LINE__ );
 #     ifdef DEBUG
       printf( "scatteredEnergy = %20.16e\n", ((struct Parameters_t*)params)->scatteredEnergy );
       printf( "gamma_max       = %20.16e\n", ((struct Parameters_t*)params)->gamma_max       );
       printf( "photonEnergy    = %20.16e\n", ((struct Parameters_t*)params)->photonEnergy    );
       printf( "lb=%20.16e, ub=%20.16e\n", lb, ub );
 #     endif
-      exit(0);
+      ERROR_EXIT( 0, "ERROR : status: %d (%s: %d) !!\n", status, __FUNCTION__, __LINE__ );
    } // if ( status )
    return result;
 } // FUNCTION : integralInner
@@ -773,14 +755,13 @@ double integralOuter( double lb, double ub, struct Parameters_t *parameters )
 
    if ( status )
    {
-     printf( "Error! status: %d (%s: %d)\n", status, __FUNCTION__, __LINE__ );
 #    ifdef DEBUG
      printf( "scatteredEnergy = %20.16e\n", ((struct Parameters_t*)parameters)->scatteredEnergy );
      printf( "gamma_max       = %20.16e\n", ((struct Parameters_t*)parameters)->gamma_max       );
      printf( "photonEnergy    = %20.16e\n", ((struct Parameters_t*)parameters)->photonEnergy    );
      printf( "lb=%20.16e, ub=%20.16e\n", lb, ub );
 #    endif
-     exit(0);
+     ERROR_EXIT( 0, "ERROR : status: %d (%s: %d) !!\n", status, __FUNCTION__, __LINE__ );
    } // if ( status )
    return result;
 } // FUNCTION : integralOuter

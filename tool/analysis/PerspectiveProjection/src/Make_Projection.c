@@ -12,28 +12,23 @@
 real PerspectiveProject( real b, real l, real dt, real *XYZ[], int numCellXYZ[], real dxyz[], real azimuthalAngle,
                          real BoxSize[], real ***TargetQuantity, int numRow, real *tempTable, real *lambdaTable )
 {
-   if ( FABS(COS(l)) < EPSILON )
-   {
-      printf("l=%e, COS(l)=%e\n", l, COS(l));
-      fflush(stdout);
-      exit(0);
-   }
+   if ( FABS(COS(l)) < EPSILON )   ERROR_EXIT( 0, "ERROR : FABS(COS(l)) < EPSILON !! l=%e, COS(l)=%e\n", l, COS(l) );
 
    real x, y, z, r2, xp, yp, zp;
-   real t                  = 0.0;
-   double ProjectedValue   = 0.0;
+   real t                = 0.0;
+   double ProjectedValue = 0.0;
 
    b *= M_PI/180.0;
    l *= M_PI/180.0;
 
    do
    {
-      if ( -0.5*M_PI < l  &&  l < +0.5*M_PI ) t += dt;
-      else                                    t -= dt;
+      if ( -0.5*M_PI < l  &&  l < +0.5*M_PI )   t += dt;
+      else                                      t -= dt;
 
       x = (real)R_SUN - t;
       y = TAN(l) * t;
-      z = TAN(b) / COS(l) *  t;
+      z = TAN(b) / COS(l) * t;
 
       r2 = x*x + y*y + z*z;
 
@@ -52,9 +47,9 @@ real PerspectiveProject( real b, real l, real dt, real *XYZ[], int numCellXYZ[],
       const int Jdx = BinarySearch( XYZ[1], 0, numCellXYZ[1]-1, yp );
       const int Kdx = BinarySearch( XYZ[2], 0, numCellXYZ[2]-1, zp );
 
-      if ( (Idx < 0 || Idx > numCellXYZ[0]-2)  ||
-           (Jdx < 0 || Jdx > numCellXYZ[1]-2)  ||
-           (Kdx < 0 || Kdx > numCellXYZ[2]-2) )
+      if ( ( Idx < 0  ||  Idx > numCellXYZ[0]-2 )  ||
+           ( Jdx < 0  ||  Jdx > numCellXYZ[1]-2 )  ||
+           ( Kdx < 0  ||  Kdx > numCellXYZ[2]-2 ) )
          continue;
 
       real xyz000[3]    = { XYZ[0][Idx], XYZ[1][Jdx], XYZ[2][Kdx] };

@@ -64,8 +64,8 @@ int main( int argc, char **argv )
 
    if ( MPI_Rank == RootRank )
    {
-      if ( table_15_keV == NULL ) { printf( "ERROR: Could not open file table_15_keV!\n" ); exit(-1); }
-      if ( table_08_keV == NULL ) { printf( "Error! Could not open file table_08_keV!\n" ); exit(-1); }
+      if ( table_15_keV == NULL )   ERROR_EXIT( -1, "ERROR : Could not open file table_15_keV !!\n" );
+      if ( table_08_keV == NULL )   ERROR_EXIT( -1, "ERROR : Could not open file table_08_keV !!\n" );
    } // if ( MPI_Rank == RootRank )
 #  endif // #if ( defined XRAY_ROSAT  ||  defined XRAY_EROSITA )
 
@@ -75,11 +75,7 @@ int main( int argc, char **argv )
    const int numAzimuthalAngle = 1;
    const int numCellB = 360, numCellL = 360;
 
-   if ( numCellB != numCellL )
-   {
-     MASTER_PRINT( "numCellB != numCellL\n" );
-     exit(0);
-   }
+   if ( numCellB != numCellL )   ERROR_EXIT( 0, "ERROR : numCellB != numCellL !!\n" );
 
    const real b_max = +90.0, b_min = -90.0;
    const real l_max = +180.0, l_min = -180.0;
@@ -125,11 +121,7 @@ int main( int argc, char **argv )
    MASTER_PRINT( "Unit_L=%e\nUnit_M=%e\nUnit_T=%e\nUnit_V=%e\nUnit_D=%e\nUnit_E=%e\nUnit_P=%e\n",
                  Unit_L, Unit_M, Unit_T, Unit_V, Unit_D, Unit_E, Unit_P );
 
-   if ( numCellX%NRank != 0 )
-   {
-      MASTER_PRINT( "numCellX(%d) %% NRank(%d) != 0\n", numCellX, NRank );
-      exit(0);
-   }
+   if ( numCellX%NRank != 0 )   ERROR_EXIT( 0, "numCellX(%d) %% NRank(%d) != 0 !!\n", numCellX, NRank );
 
 // 3D array to store the field to be projected
    real*** Density          = (real***)calloc_3d_array( (size_t)numCellX, (size_t)numCellY, (size_t)numCellZ, sizeof(real) );
@@ -194,7 +186,7 @@ int main( int argc, char **argv )
    H5_Status = checkH5Status( H5Dread( FRB_dset5G1, H5T_IEEE_F32LE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &Passive_0001[0][0][0] ), H5_Status );
    MASTER_PRINT( "Loading Passive_0001 ... done\n" );
 
-   if ( H5_Status < 0 ) { printf( "One of the H5Dread() fails!\n" ); exit(0); }
+   if ( H5_Status < 0 )   ERROR_EXIT( 0, "ERROR : One of the H5Dread() fails !!\n" );
 
 // 3-2. Load the table
 #  if ( defined XRAY_ROSAT  ||  defined XRAY_EROSITA )
@@ -439,17 +431,17 @@ int main( int argc, char **argv )
    H5_Status = checkH5Status( H5Dclose( FRB_dset4G1 ), H5_Status );
    H5_Status = checkH5Status( H5Dclose( FRB_dset5G1 ), H5_Status );
 
-   if ( H5_Status < 0 ) { printf( "One of the H5Dclose() fails!\n" ); exit(0); }
+   if ( H5_Status < 0 )   ERROR_EXIT( 0, "ERROR : One of the H5Dclose() fails !!\n" );
 
 // Close group
    H5_Status = H5Gclose( FRB_group1 );
    H5_Status = checkH5Status( H5Gclose( FRB_group2 ), H5_Status );
 
-   if ( H5_Status < 0 ) { printf( "One of the H5Gclose() fails!\n" ); exit(0); }
+   if ( H5_Status < 0 )   ERROR_EXIT( 0, "ERROR : One of the H5Gclose() fails !!\n" );
 
 // Close file
    H5_Status = H5Fclose( FRB_file );
-   if ( H5_Status < 0 ) { printf( "H5Fclose() fails!\n" ); exit(0); }
+   if ( H5_Status < 0 )   ERROR_EXIT( 0, "ERROR : H5Fclose() fails !!\n" );
 
 
 // 6. Storing perspective projection (pp) map on disk
@@ -567,7 +559,7 @@ int main( int argc, char **argv )
 
       H5_TypeID_VarStr = H5Tcopy( H5T_C_S1 );
       H5_Status        = H5Tset_size( H5_TypeID_VarStr, STRING_LENGTH );
-      if ( H5_Status < 0 ) { printf( "H5Tset_size() fails!: %d\n", __LINE__ ); exit(0); }
+      if ( H5_Status < 0 )   ERROR_EXIT( 0, "ERROR : H5Tset_size() fails: %d !!\n", __LINE__ );
 
       H5Tinsert( typeID, "AMRDataName",             HOFFSET(Keys_t,             AMRDataName ),  H5_TypeID_VarStr );
       H5Tinsert( typeID, "FRBDataName",             HOFFSET(Keys_t,             FRBDataName ),  H5_TypeID_VarStr );
@@ -613,7 +605,7 @@ int main( int argc, char **argv )
       H5_Status = checkH5Status( H5Dwrite( pp_DS10G1,  H5T_IEEE_F32LE, H5S_ALL,  pp_spaceDS10G1, H5P_DEFAULT, ProjectedSliceSynchrotron     [0][0] ), H5_Status );
       H5_Status = checkH5Status( H5Dwrite( pp_dsetKey, typeID,         H5S_ALL,  H5S_ALL,        H5P_DEFAULT, Keys                                 ), H5_Status );
 
-      if ( H5_Status < 0 ) { printf( "One of the H5Dwrite() fails!: %d\n", __LINE__ ); exit(0); }
+      if ( H5_Status < 0 )   ERROR_EXIT( 0, "ERROR : One of the H5Dwrite() fails: %d !!\n", __LINE__ );
 
 //    Close dataset
       H5_Status = H5Dclose( pp_dsetKey );
@@ -628,7 +620,7 @@ int main( int argc, char **argv )
       H5_Status = checkH5Status( H5Dclose( pp_DS9G1  ), H5_Status );
       H5_Status = checkH5Status( H5Dclose( pp_DS10G1 ), H5_Status );
 
-      if ( H5_Status < 0 ) { printf( "One of the H5Dclose() fails!: %d\n", __LINE__ ); exit(0); }
+      if ( H5_Status < 0 )   ERROR_EXIT( 0, "ERROR : One of the H5Dclose() fails: %d !!\n", __LINE__ );
 
 //    Close space
       H5_Status = H5Sclose( pp_spaceKey );
@@ -643,16 +635,16 @@ int main( int argc, char **argv )
       H5_Status = checkH5Status( H5Sclose( pp_spaceDS9G1  ), H5_Status );
       H5_Status = checkH5Status( H5Sclose( pp_spaceDS10G1 ), H5_Status );
 
-      if ( H5_Status < 0 ) { printf( "One of the H5Sclose() fails!: %d\n", __LINE__ ); exit(0); }
+      if ( H5_Status < 0 )   ERROR_EXIT( 0, "ERROR : One of the H5Sclose() fails: %d !!\n", __LINE__ );
 
 //    Close group
       H5_Status = H5Gclose( pp_group1 );
       H5_Status = checkH5Status( H5Gclose( pp_group2 ), H5_Status );
-      if ( H5_Status < 0 ) { printf( "One of the H5Gclose() fails!: %d\n", __LINE__ ); exit(0); }
+      if ( H5_Status < 0 )   ERROR_EXIT( 0, "ERROR : One of the H5Gclose() fails: %d !!\n", __LINE__ );
 
 //    Close file
       H5_Status = H5Fclose( pp_file );
-      if ( H5_Status < 0 ) { printf( "H5Fclose() fails!: %d\n", __LINE__ ); exit(0); }
+      if ( H5_Status < 0 )   ERROR_EXIT( 0, "ERROR : H5Fclose() fails: %d !!\n", __LINE__ );
 
       free(Keys);
    } // if ( MPI_Rank == RootRank )
