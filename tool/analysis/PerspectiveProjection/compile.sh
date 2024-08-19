@@ -1,4 +1,7 @@
+set -e
 NUM_THREADS=32 # number of threads of openMP
+MY_HOST=`hostname`
+MY_CLUSTER=${MY_HOST::(-2)}
 
 
 
@@ -6,6 +9,7 @@ NUM_THREADS=32 # number of threads of openMP
 # Paths
 #====================================================================================================
 # eureka
+if [[ ${MY_CLUSTER} != "eureka" ]]; then echo "ERROR : These paths are for eureka only!!"; exit 1; fi
 export PATH=/software/hdf5/default/bin:$PATH
 export PATH=/software/gsl/default/bin:$PATH
 export PATH=/software/gcc/9.3.0/bin:$PATH
