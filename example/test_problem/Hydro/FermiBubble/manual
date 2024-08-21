@@ -56,6 +56,11 @@ mpirun -map-by ppr:2:socket:pe=8 --report-bindings ./gamer_single 1>>log 2>&1
 
 # Analysis
 #----------------------------------------------------------------------------------------------------
+# Please execute the following commands before analysis
+cd plot_scripts
+mv ../robitaille_DL07_PAHISMMix.dat ./
+ln -s ../../../tool/analysis/PerspectiveProjection
+
 ## Slice plot
 python plot_slice.py -s 0 -e 35
 
@@ -73,7 +78,6 @@ python AMR2FRB.py
 python AMR2FRB.py
 
 # 2. Compile the projection tool
-ln -s ../../tool/analysis/PerspectiveProjection
 cd PerspectiveProjection
 make clean && make CFLAGS+=-DNUM_THREADS=32 CFLAGS+=-DXRAY_EROSITA
 cd ../
@@ -98,7 +102,6 @@ python plot_xray_profile.py
 python AMR2FRB.py
 
 # 2. Compile the projection tool
-ln -s ../../tool/analysis/PerspectiveProjection
 cd PerspectiveProjection
 make clean && make CFLAGS+=-DNUM_THREADS=32 CFLAGS+=-DLEPTONIC_GAMMARAY
 cd ../
@@ -122,14 +125,12 @@ python AMR2FRB.py
 
 # 2. Compile the projection tool
 # 2.1 synchrotron emissivities
-ln -s ../../tool/analysis/PerspectiveProjection
 cd PerspectiveProjection
 make clean && make CFLAGS+=-DNUM_THREADS=32 CFLAGS+=-DSYNCHROTRON
 cd ../
 cp PerspectiveProjection/bin/Project synchrotron_spectrum/
 
 # 2.2 gamma ray emissivities
-ln -s ../../tool/analysis/PerspectiveProjection
 cd PerspectiveProjection
 make clean && make CFLAGS+=-DNUM_THREADS=32 CFLAGS+=-DLEPTONIC_GAMMARAY
 cd ../

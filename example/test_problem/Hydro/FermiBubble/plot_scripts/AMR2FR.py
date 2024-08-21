@@ -35,7 +35,7 @@ def pressure_sr( field, data ):
 # Main
 #====================================================================================================
 Data  = 'Data_000035'
-Path  = './'+Data
+Path  = '../'+Data
 level = 4
 Field = [ "Dens", "Temp", "Pres", "CRay", "Passive_0001" ]
 

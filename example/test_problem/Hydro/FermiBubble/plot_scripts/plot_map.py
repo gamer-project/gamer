@@ -47,7 +47,7 @@ if plot_type == "x_ray":
     plot_args["scale_cr_engy"]          = 1
     plot_args["offset"]                 = 4.5
     plot_args["lower_limit"]            = 0.0
-    plot_args["filename"]               = "./my_figure/fig__x-ray-map-paper/Projected_FRB_Data_000035_XRay.h5"
+    plot_args["filename"]               = "./Projected_FRB_Data_000035_XRay.h5"
     plot_args["b_max_idx"]              = 3
     plot_args["b_min_idx"]              = 4
     plot_args["l_max_idx"]              = 5
@@ -68,7 +68,7 @@ elif plot_type == "gamma_ray":
     plot_args["scale_cr_engy"]          = 250
     plot_args["offset"]                 = 0.0
     plot_args["lower_limit"]            = 1.e-13
-    plot_args["filename"]               = "./my_figure/fig__gamma-ray-map-paper/Projected_FRB_Data_000035_100e9_1e6_2.4.h5"
+    plot_args["filename"]               = "./Projected_FRB_Data_000035_100e9_1e6_2.4.h5"
     plot_args["b_max_idx"]              = 7
     plot_args["b_min_idx"]              = 8
     plot_args["l_max_idx"]              = 9
