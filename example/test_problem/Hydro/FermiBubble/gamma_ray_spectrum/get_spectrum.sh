@@ -18,7 +18,7 @@ do
             echo "${FileName} exist !!"
         else
             echo "Running with (ObservedEngyEv=${ObservedEngyEv}, CRindex=${CRindex})"
-            ./Project FRB_Data_000035.h5 $ObservedEngyEv 1.1e6 $CRindex R12/robitaille_DL07_PAHISMMix.dat >& log-$CRindex-$ObservedEngyEv
+            ./Project FRB_Data_000035.h5 $ObservedEngyEv 1.1e6 $CRindex robitaille_DL07_PAHISMMix.dat >& log-$CRindex-$ObservedEngyEv
         fi
     done < "${temp_file}"
 done
