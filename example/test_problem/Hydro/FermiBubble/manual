@@ -36,7 +36,7 @@ sh download_ic.sh
 # 6-2. Execute gamer
 mpirun -map-by ppr:2:socket:pe=8 --report-bindings ./gamer_double 1>>log 2>&1
 
-# 7. Run the sumulation (stage 2)
+# 7. Run the simulation (stage 2)
 # 7-1. Change the parameters to below as follows:
    Input__Parameter:
       END_T     3.8e3
@@ -56,10 +56,11 @@ mpirun -map-by ppr:2:socket:pe=8 --report-bindings ./gamer_single 1>>log 2>&1
 
 # Analysis
 #----------------------------------------------------------------------------------------------------
-# Please execute the following commands before analysis
+# Please execute the following commands before the analysis
 cd plot_scripts
 mv ../robitaille_DL07_PAHISMMix.dat ./
 ln -s ../../../tool/analysis/PerspectiveProjection
+
 
 ## Slice plot
 python plot_slice.py -s 0 -e 35
@@ -70,12 +71,12 @@ python plot_profile.py -s 0 -e 35
 
 
 ## Generate the fixed resolution data (Data_000035)
-python AMR2FRB.py
+python AMR2FR.py
 
 
 ## Generate x-ray perspective projection map (Data_000035)
 # 1. If you do not have FRB_Data_000035.h5, please execute the following command
-python AMR2FRB.py
+python AMR2FR.py
 
 # 2. Compile the projection tool
 cd PerspectiveProjection
@@ -92,7 +93,7 @@ python plot_map.py -t x_ray
 
 ## Generate x-ray profile (Data_000035)
 # 1. If you do not have FRB_Data_000035.h5, please execute the following command
-python AMR2FRB.py
+python AMR2FR.py
 
 # 2. Plot the x-ray profile
 python plot_xray_profile.py
@@ -121,7 +122,7 @@ python plot_map.py -t gamma_ray
 
 ## Generate spectrum
 # 1. If you do not have FRB_Data_000035.h5, please execute the following command
-python AMR2FRB.py
+python AMR2FR.py
 
 # 2. Compile the projection tool
 # 2.1 synchrotron emissivities
@@ -130,7 +131,7 @@ make clean && make CFLAGS+=-DNUM_THREADS=32 CFLAGS+=-DSYNCHROTRON
 cd ../
 cp PerspectiveProjection/bin/Project synchrotron_spectrum/
 
-# 2.2 gamma ray emissivities
+# 2.2 gamma-ray emissivities
 cd PerspectiveProjection
 make clean && make CFLAGS+=-DNUM_THREADS=32 CFLAGS+=-DLEPTONIC_GAMMARAY
 cd ../
