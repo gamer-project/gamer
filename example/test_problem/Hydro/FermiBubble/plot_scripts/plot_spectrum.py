@@ -135,7 +135,7 @@ for i in range(len(CRIndices)):
 for i in range(3):
     ax[i][1].set_ylim( [2e-8, 2.5e-6] )
     ax[i][1].set_xlim( [0.1, 700.0] )
-    ax[i][1].set_ylabel( "$E^{2}dN/dE$\n(GeV cm$^{-2}$s$^{-1}$sr$^{-1}$)", fontsize=LabelSize )
+    ax[i][1].set_ylabel( r"$E^{2}dN/dE$\n(GeV cm$^{-2}$s$^{-1}$sr$^{-1}$)", fontsize=LabelSize )
 
 ax[2][1].set_xlabel( "Photon energy (GeV)", fontsize=LabelSize )
 

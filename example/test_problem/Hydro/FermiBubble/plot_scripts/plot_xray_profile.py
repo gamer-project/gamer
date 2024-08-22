@@ -33,13 +33,13 @@ b_min             = np.array(group2.get('Keys')).tolist()[4]
 l_max             = np.array(group2.get('Keys')).tolist()[5]
 l_min             = np.array(group2.get('Keys')).tolist()[6]
 
-print("UpperBound_bb     = %e" % UpperBound_bb    )
-print("UpperBound_ll     = %e" % UpperBound_ll    )
-print("numAzimuthalAngle = %e" % numAzimuthalAngle)
-print("b_max             = %e" % b_max            )
-print("b_min             = %e" % b_min            )
-print("l_max             = %e" % l_max            )
-print("l_min             = %e" % l_min            )
+print("UpperBound_bb     = % e" % UpperBound_bb    )
+print("UpperBound_ll     = % e" % UpperBound_ll    )
+print("numAzimuthalAngle = % e" % numAzimuthalAngle)
+print("b_max             = % e" % b_max            )
+print("b_min             = % e" % b_min            )
+print("l_max             = % e" % l_max            )
+print("l_min             = % e" % l_min            )
 
 observ_p60 = np.loadtxt( './observed_data/xray_profile/p60.dat' , usecols=(0,1), unpack=True )
 observ_p50 = np.loadtxt( './observed_data/xray_profile/p50.dat' , usecols=(0,1), unpack=True )
@@ -121,7 +121,7 @@ for angleIdx in range(numAzimuthalAngle):
             ax[i][j].tick_params( labelsize=fontSize )
             ax[i][j].tick_params( bottom=True, top=True, left=True, right=True )
 
-            ax[i][j].text( 0.78, 0.95, format(b[i*NumCol+j], '+d')+"$^{\circ}$",
+            ax[i][j].text( 0.78, 0.95, format(b[i*NumCol+j], '+d')+r"$^{\circ}$",
                            horizontalalignment='left', verticalalignment='top',
                            bbox=dict(facecolor='blue', alpha=0.2, boxstyle="round", edgecolor='none'),
                            transform=ax[i][j].transAxes, fontsize=fontSize )
@@ -136,5 +136,4 @@ for angleIdx in range(numAzimuthalAngle):
             if i == 1: ax[i][j].set_ylim( 3, 11 )
 
     plt.savefig( "XRay_profile_0.8keV_%03d.png"%angleIdx, bbox_inches='tight', format="png" )
-    plt.show()
     plt.close()

@@ -58,7 +58,7 @@ if plot_type == "x_ray":
     plot_args["cmap"]                   = ListedColormap( img )
     plot_args["log_scale"]              = True
     plot_args["savename"]               = "XRay_map_0.8keV.png"
-    plot_args["title"]                  = "Count rate (photons s$^{-1}$deg$^{-2}$)"
+    plot_args["title"]                  = r"Count rate (photons s$^{-1}$deg$^{-2}$)"
     plot_args["cbar_max"]               = None
     plot_args["cbar_min"]               = None
     plot_args["xtick_label_dark_range"] = [3, 11]
@@ -77,7 +77,7 @@ elif plot_type == "gamma_ray":
     plot_args["cmap"]                   = mpl.colormaps["nipy_spectral"]
     plot_args["log_scale"]              = True
     plot_args["savename"]               = "GammaRay_100e9_1e6.png"
-    plot_args["title"]                  = "Photon flux (GeV$^{-1}$cm$^{-2}$s$^{-1}$sr$^{-1}$)"
+    plot_args["title"]                  = r"Photon flux (GeV$^{-1}$cm$^{-2}$s$^{-1}$sr$^{-1}$)"
     plot_args["cbar_max"]               = 1.e-11
     plot_args["cbar_min"]               = 1.e-9
     plot_args["xtick_label_dark_range"] = [5, 9]
@@ -123,7 +123,7 @@ plot_norm         = norm_func( vmin=plot_args["cbar_min"], vmax=plot_args["cbar_
 plot_x_tick       = np.array( [ -150, -120, -90, -60, -45, -30, -15, 0, 15, 30, 45, 60, 90, 120, 150 ] )
 plot_x_tick_label = np.array( [ "10h", "8h", "6h", "4h", "3h", "2h", "1h", "0h", "23h", "22h", "21h", "20h", "18h", "16h", "14h" ] )
 plot_y_tick       = np.array( [ -70+10*i for i in range(15) ] )
-plot_y_tick_label = np.array( [ "%d$^{\circ}$"%i for i in plot_y_tick ] )
+plot_y_tick_label = np.array( [ r"%d$^{\circ}$"%i for i in plot_y_tick ] )
 
 fig = plt.figure( figsize=(fig_width, fig_height) )
 

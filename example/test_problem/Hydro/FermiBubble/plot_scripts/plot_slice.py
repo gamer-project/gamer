@@ -162,11 +162,11 @@ for i in range(idx_start, idx_end+1, didx):
         ax[v].tick_params( which="both", direction="in", color="w" )
         cbar.ax.tick_params( which="both", direction="in" )
 
-        ax[v].set( title="$%s$ (%s)"%(plot_title, plot_var_unit) )
-        ax[v].set( xlabel="$%s$ (%s)"%(AX_LABEL[ax_1_idx], plot_axis_unit) )
+        ax[v].set( title=r"$%s$ (%s)"%(plot_title, plot_var_unit) )
+        ax[v].set( xlabel=r"$%s$ (%s)"%(AX_LABEL[ax_1_idx], plot_axis_unit) )
 
-    ax[0].set( ylabel="$%s$ (%s)"%(AX_LABEL[ax_2_idx], plot_axis_unit) )
-    plt.suptitle( "%.2f (%s)"%(plot_time, plot_time_unit) )
+    ax[0].set( ylabel=r"$%s$ (%s)"%(AX_LABEL[ax_2_idx], plot_axis_unit) )
+    plt.suptitle( r"%.2f (%s)"%(plot_time, plot_time_unit) )
     plt.tight_layout()
     plt.savefig( plot_savename, dpi=fig_dpi )
     plt.close()

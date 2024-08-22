@@ -139,7 +139,7 @@ for i in range(idx_start, idx_end+1, didx):
 
         ax[v, 0].tick_params( which="both", direction="in", top=True, right=True )
 
-        ax[v, 0].set( ylabel="$%s$ (%s)"%(plot_title, plot_var_unit) )
+        ax[v, 0].set( ylabel=r"$%s$ (%s)"%(plot_title, plot_var_unit) )
         if plot_log_scale: ax[v, 0].set( yscale="log" )
 
     # zoom-in
@@ -156,8 +156,8 @@ for i in range(idx_start, idx_end+1, didx):
 
         if plot_log_scale: ax[v, 1].set( yscale="log" )
 
-    ax[N_vars-1, 0].set( xlabel="$%s$ (%s)"%("r", plot_axis_unit) )
-    ax[N_vars-1, 1].set( xlabel="$%s$ (%s)"%("r", plot_axis_unit) )
+    ax[N_vars-1, 0].set( xlabel=r"$%s$ (%s)"%("r", plot_axis_unit) )
+    ax[N_vars-1, 1].set( xlabel=r"$%s$ (%s)"%("r", plot_axis_unit) )
     plt.suptitle( "%.2f (%s)"%(plot_time, plot_time_unit) )
     plt.tight_layout()
     plt.savefig( plot_savename, dpi=fig_dpi )
