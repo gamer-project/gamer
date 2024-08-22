@@ -1381,33 +1381,50 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
       if ( H5_MemID_ParData < 0 )   Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemID_ParData" );
 
 //    load particle data from disk
-      for (int v=0; v<PAR_NATT_FLT_STORED; v++)
+      if ( FormatVersion < 2480 )
       {
-//       using ParFltBuf[v] here is safe since it's NOT called when NParThisPatch == 0
-         H5_Status = H5Dread( H5_SetID_ParFltData[v], H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,
-                              ParFltBuf[v] );
-         if ( H5_Status < 0 )
-            Aux_Error( ERROR_INFO, "failed to load a particle float attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
-      }
-      for (int v=0; v<PAR_NATT_INT_STORED; v++)
-      {
-//       using ParIntBuf[v] here is safe since it's NOT called when NParThisPatch == 0
-         if ( FormatVersion < 2480  &&  v == PAR_TYPE ) // ParType as a float
+         const int PAR_TYPE_IDX_OLD = 7;
+         int skip_type = 0;
+         for (int v=0; v<PAR_NATT_FLT_STORED+1; v++)
          {
-            real_par *ParType_Buf = new real_par [NParThisPatch];
-            H5_Status = H5Dread( H5_SetID_ParIntData[v], H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,
-                                 ParType_Buf );
-            for (int p=0; p<NParThisPatch; p++)   ParIntBuf[v][p] = (long_par)ParType_Buf[p];
-            delete [] ParType_Buf; // ParType as a float
+//          using ParFltBuf[v] here is safe since it's NOT called when NParThisPatch == 0
+            if ( v == PAR_TYPE_IDX_OLD )
+            {
+               real_par *ParType_Buf = new real_par [NParThisPatch];
+               H5_Status = H5Dread( H5_SetID_ParIntData[v], H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,
+                                    ParType_Buf );
+               for (int p=0; p<NParThisPatch; p++)   ParIntBuf[PAR_TYPE][p] = (long_par)ParType_Buf[p];
+               delete [] ParType_Buf;
+               skip_type = 1;
+            }
+            else
+            {
+               H5_Status = H5Dread( H5_SetID_ParFltData[v-skip_type], H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,
+                                    ParFltBuf[v-skip_type] );
+            }
+            if ( H5_Status < 0 )
+               Aux_Error( ERROR_INFO, "failed to load a particle float attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
          }
-         else
+      } // if ( FormatVersion < 2480 )
+      else
+      {
+         for (int v=0; v<PAR_NATT_FLT_STORED; v++)
          {
+//          using ParFltBuf[v] here is safe since it's NOT called when NParThisPatch == 0
+            H5_Status = H5Dread( H5_SetID_ParFltData[v], H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,
+                                 ParFltBuf[v] );
+            if ( H5_Status < 0 )
+               Aux_Error( ERROR_INFO, "failed to load a particle float attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
+         }
+         for (int v=0; v<PAR_NATT_INT_STORED; v++)
+         {
+//          using ParIntBuf[v] here is safe since it's NOT called when NParThisPatch == 0
             H5_Status = H5Dread( H5_SetID_ParIntData[v], H5T_GAMER_LONG_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,
                                  ParIntBuf[v] );
+            if ( H5_Status < 0 )
+               Aux_Error( ERROR_INFO, "failed to load a particle integer attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
          }
-         if ( H5_Status < 0 )
-            Aux_Error( ERROR_INFO, "failed to load a particle integer attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
-      }
+      } // if ( FormatVersion < 2480 ) ... else ...
 
 //    store particles to the particle repository (one particle at a time)
       NewParAttFlt[PAR_TIME] = Time[0];   // all particles are assumed to be synchronized with the base level
