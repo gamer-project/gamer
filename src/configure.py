@@ -897,7 +897,10 @@ def validation( paths, depends, constraints, **kwargs ):
             LOGGER.error("At least one of <--gravity> or <--tracer> must be enabled for <--particle>.")
             success = False
         if kwargs["par_attribute_flt"] < 0:
-            LOGGER.error("Number of particle attributes should not be negative. Current: %d"%kwargs["par_attribute_flt"])
+            LOGGER.error("Number of particle float attributes should not be negative. Current: %d"%kwargs["par_attribute_flt"])
+            success = False
+        if kwargs["par_attribute_int"] < 0:
+            LOGGER.error("Number of particle integer attributes should not be negative. Current: %d"%kwargs["par_attribute_int"])
             success = False
 
     # B. Miscellaneous options
