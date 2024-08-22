@@ -740,7 +740,7 @@ def set_conditional_defaults( args ):
     if args["flux"] is None:
         args["flux"] = "HLLD" if args["mhd"] else "HLLC"
 
-    if args["eos"] == None:
+    if args["eos"] is None:
         # The order does matter in this if
         if   args["srhd"]      : args["eos"] = "TAUBMATHEWS"
         elif args["cosmic_ray"]: args["eos"] = "COSMIC_RAY"
