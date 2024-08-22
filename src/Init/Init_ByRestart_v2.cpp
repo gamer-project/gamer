@@ -646,31 +646,47 @@ void Init_ByRestart()
                amr->patch[0][lv][PID]->NPar = 0;
 
 //             load one particle attribute at a time
-               for (int v=0; v<PAR_NATT_FLT_STORED; v++)
+               if ( FormatVersion < 2230 )
                {
-                  fseek( File, FileOffset_Particle + v*ParFltDataSize1v + GParID*sizeof(real_par), SEEK_SET );
-
-//                using ParFltBuf[v] here is safe since it's NOT called when NParThisPatch == 0
-                  fread( ParFltBuf[v], sizeof(real_par), NParThisPatch, File );
-               }
-
-               for (int v=0; v<PAR_NATT_INT_STORED; v++)
-               {
-                  fseek( File, FileOffset_Particle + PAR_NATT_FLT_STORED*ParFltDataSize1v + v*ParIntDataSize1v + GParID*sizeof(long_par), SEEK_SET );
-
-//                using ParIntBuf[v] here is safe since it's NOT called when NParThisPatch == 0
-                  if ( FormatVersion < 2230  &&  v == PAR_TYPE )
+                  const int PAR_TYPE_IDX_OLD = 7; // the particle type index after 2230 version
+                  int skip_type = 0;
+                  for (int v=0; v<PAR_NATT_FLT_STORED+1; v++)
                   {
-                     real_par *ParType_Buf = new real_par [NParThisPatch];
-                     fread( ParType_Buf, sizeof(real_par), NParThisPatch, File );
-                     for (int p=0; p<NParThisPatch; p++)   ParIntBuf[v][p] = (long_par)ParType_Buf[p];
-                     delete [] ParType_Buf;
+                     fseek( File, FileOffset_Particle + v*ParFltDataSize1v + GParID*sizeof(real_par), SEEK_SET );
+
+//                   using ParFltBuf[v] here is safe since it's NOT called when NParThisPatch == 0
+                     if ( v == PAR_TYPE_IDX_OLD )
+                     {
+                        real_par *ParType_Buf = new real_par [NParThisPatch];
+                        fread( ParType_Buf, sizeof(real_par), NParThisPatch, File );
+                        for (int p=0; p<NParThisPatch; p++)   ParIntBuf[PAR_TYPE][p] = (long_par)ParType_Buf[p];
+                        delete [] ParType_Buf;
+                        skip_type = 1;
+                     }
+                     else
+                     {
+                        fread( ParFltBuf[v-skip_type], sizeof(real_par), NParThisPatch, File );
+                     }
                   }
-                  else
+               } // if ( FormatVersion < 2230 )
+               else
+               {
+                  for (int v=0; v<PAR_NATT_FLT_STORED; v++)
                   {
+                     fseek( File, FileOffset_Particle + v*ParFltDataSize1v + GParID*sizeof(real_par), SEEK_SET );
+
+//                   using ParFltBuf[v] here is safe since it's NOT called when NParThisPatch == 0
+                     fread( ParFltBuf[v], sizeof(real_par), NParThisPatch, File );
+                  }
+
+                  for (int v=0; v<PAR_NATT_INT_STORED; v++)
+                  {
+                     fseek( File, FileOffset_Particle + PAR_NATT_FLT_STORED*ParFltDataSize1v + v*ParIntDataSize1v + GParID*sizeof(long_par), SEEK_SET );
+
+//                   using ParIntBuf[v] here is safe since it's NOT called when NParThisPatch == 0
                      fread( ParIntBuf[v], sizeof(long_par), NParThisPatch, File );
                   }
-               }
+               } // if ( FormatVersion < 2230 ) ... else ...
 
 //             store particles to the particle repository (one particle at a time)
                for (int p=0; p<NParThisPatch; p++ )
@@ -1386,8 +1402,10 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 //    check in PARTICLE
 //    ------------------
 #     ifdef PARTICLE
-      if ( FormatVersion >= 2200 )
+      if      ( FormatVersion >= 2230 )
       CompareVar( "PAR_NATT_FLT_STORED",     par_natt_flt_stored,          PAR_NATT_FLT_STORED,          Fatal );
+      else if ( FormatVersion >= 2200 )
+      CompareVar( "PAR_NATT_FLT_STORED",     par_natt_flt_stored,          PAR_NATT_FLT_STORED+1,        Fatal );
       else
       CompareVar( "PAR_NATT_FLT_STORED",     par_natt_flt_stored,          PAR_NATT_FLT_STORED,       NonFatal );
 
