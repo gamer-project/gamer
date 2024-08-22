@@ -58,7 +58,7 @@ mpirun -map-by ppr:2:socket:pe=8 --report-bindings ./gamer_single 1>>log 2>&1
 #----------------------------------------------------------------------------------------------------
 # Please execute the following commands before the analysis
 cd plot_scripts
-mv ../robitaille_DL07_PAHISMMix.dat ./
+ln -s ../R12
 ln -s ../../../tool/analysis/PerspectiveProjection
 
 
@@ -109,7 +109,7 @@ cd ../
 cp PerspectiveProjection/bin/Project ./
 
 # 3. Execute the projection tool
-./Project FRB_Data_000035.h5 100e9 1e6 2.4 robitaille_DL07_PAHISMMix.dat
+./Project FRB_Data_000035.h5 100e9 1e6 2.4 R12/robitaille_DL07_PAHISMMix.dat
 # NOTE : arg1: name of fixed resolution data in Step1
 #        arg2: observed photon energy (eV)
 #        arg3: the cut-off Lorentz factor of CR
@@ -141,14 +141,14 @@ cp PerspectiveProjection/bin/Project gamma_ray_spectrum/
 # 3-1. synchrotron emissivities
 cd synchrotron_spectrum
 ln -s ../FRB_Data_000035.h5
-ln -s ../robitaille_DL07_PAHISMMix.dat
+ln -s ../../R12
 sh get_spectrum.sh
 cd ../
 
 # 3-2. gamma ray emissivities
 cd gamma_ray_spectrum
 ln -s ../FRB_Data_000035.h5
-ln -s ../robitaille_DL07_PAHISMMix.dat
+ln -s ../../R12
 sh get_spectrum.sh
 cd ../
 
