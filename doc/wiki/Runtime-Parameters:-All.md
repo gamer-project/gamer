@@ -71,17 +71,17 @@ The workflow is triggered by push changes to any of  `src/Init/Init_Load_Paramet
 | ELBDM_TAYLOR3_COEFF                                                                                  |         1.0/6.0 |            None |            None | 3rd Taylor expansion coefficient [1.0/6.0] ##USELESS if ELBDM_TAYLOR3_AUTO is on## |
 | [[ END_STEP \| Runtime-Parameters:-General#END_STEP ]]                                               |             -1L |            None |            None | end step (<0=auto -> must be set by test problems or restart) [-1] |
 | [[ END_T \| Runtime-Parameters:-General#END_T ]]                                                     |            -1.0 |            None |            None | end physical time (<0=auto -> must be set by test problems or restart) [-1.0] |
-| EXT_POT_TABLE_DH_X                                                                                   |            -1.0 |            None |            None | ... : spatial interval between adjacent data points |
-| EXT_POT_TABLE_DH_Y                                                                                   |            -1.0 |            None |            None |  |
-| EXT_POT_TABLE_DH_Z                                                                                   |            -1.0 |            None |            None |  |
-| [[ EXT_POT_TABLE_EDGEL_X \| Gravity#EXT_POT_TABLE_EDGEL_X ]]                                         |            None |            None |            None | ... : starting x/y/z coordinates |
-| [[ EXT_POT_TABLE_EDGEL_Y \| Gravity#EXT_POT_TABLE_EDGEL_Y ]]                                         |            None |            None |            None |  |
-| [[ EXT_POT_TABLE_EDGEL_Z \| Gravity#EXT_POT_TABLE_EDGEL_Z ]]                                         |            None |            None |            None |  |
-| EXT_POT_TABLE_FLOAT8                                                                                 |              -1 |              -1 |              -1 | ... : double precision (<0=auto -> FLOAT8, 0=off, 1=on) [-1] --> not supported yet; use -1 for now |
+| EXT_POT_TABLE_DH_X                                                                                   |            -1.0 |            None |            None | external potential table: spatial interval between adjacent x data points |
+| EXT_POT_TABLE_DH_Y                                                                                   |            -1.0 |            None |            None | external potential table: spatial interval between adjacent y data points |
+| EXT_POT_TABLE_DH_Z                                                                                   |            -1.0 |            None |            None | external potential table: spatial interval between adjacent z data points |
+| [[ EXT_POT_TABLE_EDGEL_X \| Gravity#EXT_POT_TABLE_EDGEL_X ]]                                         |            None |            None |            None | external potential table: starting x coordinates |
+| [[ EXT_POT_TABLE_EDGEL_Y \| Gravity#EXT_POT_TABLE_EDGEL_Y ]]                                         |            None |            None |            None | external potential table: starting y coordinates |
+| [[ EXT_POT_TABLE_EDGEL_Z \| Gravity#EXT_POT_TABLE_EDGEL_Z ]]                                         |            None |            None |            None | external potential table: starting z coordinates |
+| EXT_POT_TABLE_FLOAT8                                                                                 |              -1 |              -1 |              -1 | external potential table: double precision (<0=auto -> FLOAT8, 0=off, 1=on) [-1] --> not supported yet; use -1 for now |
 | [[ EXT_POT_TABLE_NAME \| Gravity#EXT_POT_TABLE_NAME ]]                                               |            None |            None |            None | external potential table: filename |
-| [[ EXT_POT_TABLE_NPOINT_X \| Gravity#EXT_POT_TABLE_NPOINT_X ]]                                       |              -1 |            None |            None | ... : table size (i.e., number of data points) along x/y/z |
-| [[ EXT_POT_TABLE_NPOINT_Y \| Gravity#EXT_POT_TABLE_NPOINT_Y ]]                                       |              -1 |            None |            None |  |
-| [[ EXT_POT_TABLE_NPOINT_Z \| Gravity#EXT_POT_TABLE_NPOINT_Z ]]                                       |              -1 |            None |            None |  |
+| [[ EXT_POT_TABLE_NPOINT_X \| Gravity#EXT_POT_TABLE_NPOINT_X ]]                                       |              -1 |            None |            None | external potential table: table size (i.e., number of data points) along x |
+| [[ EXT_POT_TABLE_NPOINT_Y \| Gravity#EXT_POT_TABLE_NPOINT_Y ]]                                       |              -1 |            None |            None | external potential table: table size (i.e., number of data points) along y |
+| [[ EXT_POT_TABLE_NPOINT_Z \| Gravity#EXT_POT_TABLE_NPOINT_Z ]]                                       |              -1 |            None |            None | external potential table: table size (i.e., number of data points) along z |
 
 # F
 | Name                                                                                                 |         Default |             Min |             Max | Short description |
@@ -106,15 +106,15 @@ The workflow is triggered by push changes to any of  `src/Init/Init_Load_Paramet
 | [[ GRACKLE_ACTIVATE \| Chemistry-and-Radiation#GRACKLE_ACTIVATE ]]                                   |               1 |            None |            None | enable Grackle [1] |
 | GRACKLE_CIE_COOLING                                                                                  |               0 |            None |            None | 0: off; 1:on |
 | [[ GRACKLE_CLOUDY_TABLE \| Chemistry-and-Radiation#GRACKLE_CLOUDY_TABLE ]]                           |            None |            None |            None | "grackle_data_file" |
-| [[ GRACKLE_CMB_FLOOR \| Chemistry-and-Radiation#GRACKLE_CMB_FLOOR ]]                                 |               1 |            None |            None | ... "cmb_temperature_floor" [1] |
-| [[ GRACKLE_COOLING \| Chemistry-and-Radiation#GRACKLE_COOLING ]]                                     |               1 |            None |            None | ... "with_radiative_cooling" [1] |
+| [[ GRACKLE_CMB_FLOOR \| Chemistry-and-Radiation#GRACKLE_CMB_FLOOR ]]                                 |               1 |            None |            None | map to "cmb_temperature_floor" [1] |
+| [[ GRACKLE_COOLING \| Chemistry-and-Radiation#GRACKLE_COOLING ]]                                     |               1 |            None |            None | map to "with_radiative_cooling" [1] |
 | GRACKLE_H2_OPA_APPROX                                                                                |               0 |               0 |               1 | H2 opacity from Ripamonti+04; 0:off, 1:Ripomonti+04 |
-| [[ GRACKLE_METAL \| Chemistry-and-Radiation#GRACKLE_METAL ]]                                         |               0 |            None |            None | ... "metal_cooling" (must increase NCOMP_PASSIVE_USER by 1) [0] |
-| [[ GRACKLE_PE_HEATING \| Chemistry-and-Radiation#GRACKLE_PE_HEATING ]]                               |               0 |            None |            None | ... "photoelectric_heating" [0] |
-| [[ GRACKLE_PE_HEATING_RATE \| Chemistry-and-Radiation#GRACKLE_PE_HEATING_RATE ]]                     |         8.5e-26 |             0.0 |            None | ... "photoelectric_heating_rate (in erg/cm^3/s)" [8.5e-26] |
-| [[ GRACKLE_PRIMORDIAL \| Chemistry-and-Radiation#GRACKLE_PRIMORDIAL ]]                               |               0 |               0 |               3 | ... "primordial_chemistry" (0=Cloudy, 1/2/3=6-/9-/12-species) [0] (must increase NCOMP_PASSIVE_USER by 6/9/12, respectively) |
+| [[ GRACKLE_METAL \| Chemistry-and-Radiation#GRACKLE_METAL ]]                                         |               0 |            None |            None | map to "metal_cooling" (must increase NCOMP_PASSIVE_USER by 1) [0] |
+| [[ GRACKLE_PE_HEATING \| Chemistry-and-Radiation#GRACKLE_PE_HEATING ]]                               |               0 |            None |            None | map to "photoelectric_heating" [0] |
+| [[ GRACKLE_PE_HEATING_RATE \| Chemistry-and-Radiation#GRACKLE_PE_HEATING_RATE ]]                     |         8.5e-26 |             0.0 |            None | map to "photoelectric_heating_rate (in erg/cm^3/s)" [8.5e-26] |
+| [[ GRACKLE_PRIMORDIAL \| Chemistry-and-Radiation#GRACKLE_PRIMORDIAL ]]                               |               0 |               0 |               3 | map to "primordial_chemistry" (0=Cloudy, 1/2/3=6-/9-/12-species) [0] (must increase NCOMP_PASSIVE_USER by 6/9/12, respectively) |
 | GRACKLE_THREE_BODY_RATE                                                                              |               0 |               0 |               5 | used Glover+08 rate |
-| [[ GRACKLE_UV \| Chemistry-and-Radiation#GRACKLE_UV ]]                                               |               0 |            None |            None | ... "UVbackground" [0] |
+| [[ GRACKLE_UV \| Chemistry-and-Radiation#GRACKLE_UV ]]                                               |               0 |            None |            None | map to "UVbackground" [0] |
 | [[ GRACKLE_VERBOSE \| Chemistry-and-Radiation#GRACKLE_VERBOSE ]]                                     |               1 |            None |            None | map to "grackle_verbose" [1] |
 
 # H
