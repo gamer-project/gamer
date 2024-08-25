@@ -68,9 +68,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #  endif
 
 // spectral refinement criterion
-   const int  Spectral_NGhost           = 1;                          // number of ghost cells
-   const int  Spectral_NCell            = PS2 + 2 * Spectral_NGhost;  // prepare patch group
-   const IntScheme_t Spectral_IntScheme = INT_CQUAD;                  // interpolation scheme
+   const int  Spectral_NGhost           = FLU_GHOST_SIZE;        // number of ghost cells
+   const int  Spectral_NCell            = FLU_NXT;               // prepare patch group
+   const IntScheme_t Spectral_IntScheme = INT_CQUAD;             // interpolation scheme
 #  endif // # if ( MODEL == ELBDM )
 
 #  if ( MODEL == HYDRO  &&  defined GRAVITY )
@@ -258,7 +258,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                Spectral_IntScheme, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
                                MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
 
-//          evaluate the slope of the polynomial expansion
+//          evaluate the ratio of the GramFE extension masses and the physical wave function
             Prepare_for_Spectral_Criterion( Spectral_Var, Spectral_Cond );
          }
 #        endif

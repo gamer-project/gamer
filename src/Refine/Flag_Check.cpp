@@ -35,7 +35,8 @@ static bool Check_Curl( const int i, const int j, const int k,
 //                JeansCoeff    : Pi*GAMMA/(SafetyFactor^2*G), where SafetyFactor = FlagTable_Jeans[lv]
 //                                --> Flag if dh^2 > JeansCoeff*Pres/Dens^2
 //                Interf_Var    : Input array storing the density and phase for the interference condition
-//                Spectral_Cond : Input variable storing the spectral refinement condition
+//                Spectral_Cond : Input variable storing the normalised average density ratio between the
+//                                average extension density and the average physical density
 //
 // Return      :  "true"  if any  of the refinement criteria is satisfied
 //                "false" if none of the refinement criteria is satisfied
