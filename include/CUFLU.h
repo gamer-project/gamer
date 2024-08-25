@@ -37,29 +37,6 @@
 #  define  __mul24( a, b )   ( (a)*(b) )
 #endif
 
-// define GPU compute capabilities
-#ifdef GPU
-#  if   ( GPU_ARCH == FERMI )
-   #define GPU_COMPUTE_CAPABILITY 200
-#  elif ( GPU_ARCH == KEPLER )
-   #define GPU_COMPUTE_CAPABILITY 300
-#  elif ( GPU_ARCH == MAXWELL )
-   #define GPU_COMPUTE_CAPABILITY 500
-#  elif ( GPU_ARCH == PASCAL )
-   #define GPU_COMPUTE_CAPABILITY 600
-#  elif ( GPU_ARCH == VOLTA )
-   #define GPU_COMPUTE_CAPABILITY 700
-#  elif ( GPU_ARCH == TURING )
-   #define GPU_COMPUTE_CAPABILITY 750
-#  elif ( GPU_ARCH == AMPERE )
-// #define GPU_COMPUTE_CAPABILITY 800
-   #define GPU_COMPUTE_CAPABILITY 860
-// #define GPU_COMPUTE_CAPABILITY 870
-#  else
-#  error : ERROR : Please add GPU_COMPUTE_CAPABILITY for GPU_ARCH!
-#  endif // GPU_ARCH
-#endif // GPU
-
 
 // #################################
 // ## macros for different models ##
@@ -523,7 +500,7 @@
       &&  GPU_COMPUTE_CAPABILITY != 800 && GPU_COMPUTE_CAPABILITY != 860 && GPU_COMPUTE_CAPABILITY != 870 \
       &&  GPU_COMPUTE_CAPABILITY != 890 \
       &&  GPU_COMPUTE_CAPABILITY != 900 )
-#     error : ERROR : GPU_COMPUTE_CAPABILITY unsupported by cuFFTdx (please visit cuFFTdx website to check whether your GPU is supported and update CUFLU.h accordingly if it is) !
+#     error : ERROR : GPU_COMPUTE_CAPABILITY unsupported by cuFFTdx (please visit cuFFTdx website to check whether your GPU is supported and update CUFLU.h accordingly if it is) !!
 #  endif
 
 // number of blocks suggested by cufftdx disabled by default

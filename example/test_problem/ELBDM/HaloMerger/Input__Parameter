@@ -31,10 +31,10 @@ TESTPROB_ID                   1012        # test problem ID [0]
 
 # code units (in cgs)
 OPT__UNIT                     1           # specify code units -> must set exactly 3 basic units below [0] ##USELESS FOR COMOVING##
-UNIT_L    4.436632034507549e+24           # length unit        (<=0 -> set to UNIT_V*UNIT_T or (UNIT_M/UNIT_D)^(1/3)) [-1.0]
+UNIT_L   4.4366320345075490e+24           # length unit        (<=0 -> set to UNIT_V*UNIT_T or (UNIT_M/UNIT_D)^(1/3)) [-1.0]
 UNIT_M                       -1.0         # mass unit          (<=0 -> set to UNIT_D*UNIT_L^3)                        [-1.0]
 UNIT_T                       -1.0         # time unit          (<=0 -> set to UNIT_L/UNIT_V)                          [-1.0]
-UNIT_V     1.00000000000000e+07           # velocity unit      (<=0 -> set to UNIT_L/UNIT_T)                          [-1.0]
+UNIT_V   1.0000000000000000e+07           # velocity unit      (<=0 -> set to UNIT_L/UNIT_T)                          [-1.0]
 UNIT_D   2.5758579724476994e-30           # mass density unit  (<=0 -> set to UNIT_M/UNIT_L^3)                        [-1.0]
 
 
@@ -50,7 +50,7 @@ GFUNC_COEFF0                 -1.0         # Green's function coefficient at the 
 
 
 # particle (PARTICLE only)
-PAR_NPAR                      0           # total number of particles (must be set for PAR_INIT==1/3)
+PAR_NPAR                     -1           # total number of particles; [deprecated in this test problem] set in Input__TestProb_ParCloud instead
 PAR_INIT                      1           # initialization option for particles: (1=FUNCTION, 2=RESTART, 3=FILE->"PAR_IC")
 PAR_IC_FORMAT                 1           # data format of PAR_IC: (1=[attribute][id], 2=[id][attribute]; row-major) [1]
 PAR_IC_MASS                  -1.0         # mass of all particles for PAR_INIT==3 (<0=off) [-1.0]
@@ -94,7 +94,7 @@ OPT__FLAG_LOHNER_DENS         0           # flag: Lohner for mass density   (Inp
 OPT__FLAG_LOHNER_FORM         2           # form of Lohner: (1=FLASH-1, 2=FLASH-2, 3=form-invariant-1, 4=form-invariant-2) [2]
 OPT__FLAG_USER                0           # flag: user-defined (Input__Flag_User) -> edit "Flag_User.cpp" [0]
 OPT__FLAG_REGION              0           # flag: specify the regions **allowed** to be refined -> edit "Flag_Region.cpp" [0]
-OPT__FLAG_NPAR_PATCH          0           # flag: # of particles per patch (Input__Flag_NParPatch): (0=off, 1=itself, 2=itself+siblings) [0]
+OPT__FLAG_NPAR_PATCH          2           # flag: # of particles per patch (Input__Flag_NParPatch): (0=off, 1=itself, 2=itself+siblings) [0]
 OPT__FLAG_NPAR_CELL           0           # flag: # of particles per cell  (Input__Flag_NParCell) [0]
 OPT__FLAG_PAR_MASS_CELL       0           # flag: total particle mass per cell (Input__Flag_ParMassCell) [0]
 OPT__NO_FLAG_NEAR_BOUNDARY    0           # flag: disallow refinement near the boundaries [0]
@@ -106,7 +106,7 @@ OPT__MEMORY_POOL              0           # preallocate patches for OPT__REUSE_M
 
 # load balance (LOAD_BALANCE only)
 LB_INPUT__WLI_MAX             0.1         # weighted-load-imbalance (WLI) threshold for redistributing all patches [0.1]
-LB_INPUT__PAR_WEIGHT          2.0         # load-balance weighting of one particle over one cell [0.0]
+LB_INPUT__PAR_WEIGHT          0.0         # load-balance weighting of one particle over one cell [0.0]
 OPT__RECORD_LOAD_BALANCE      1           # record the load-balance info [1]
 OPT__MINIMIZE_MPI_BARRIER     0           # minimize MPI barriers to improve load balance, especially with particles [0]
                                           # (STORE_POT_GHOST, PAR_IMPROVE_ACC=1, OPT__TIMING_BARRIER=0 only; recommend AUTO_REDUCE_DT=0)
@@ -132,6 +132,7 @@ OPT__CORR_AFTER_ALL_SYNC     -1           # apply various corrections after all 
 OPT__NORMALIZE_PASSIVE        0           # ensure "sum(passive_scalar_density) == gas_density" [1]
 OPT__OVERLAP_MPI              0           # overlap MPI communication with CPU/GPU computations [0] ##NOT SUPPORTED YET##
 OPT__RESET_FLUID              0           # reset fluid variables after each update -> edit "Flu_ResetByUser.cpp" [0]
+OPT__FREEZE_FLUID             0           # do not evolve fluid at all [0]
 MIN_DENS                      0.0         # minimum mass density (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##
 
 
@@ -187,7 +188,7 @@ SPEC_INT_TABLE_PATH           ./          # path to tables for spectral interpol
 OPT__OUTPUT_TOTAL             1           # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
 OPT__OUTPUT_PART              4           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
-OPT__OUTPUT_PAR_MODE          0           # output the particle data: (0=off, 1=text-file, 2=C-binary) [0] ##PARTICLE ONLY##
+OPT__OUTPUT_PAR_MODE          1           # output the particle data: (0=off, 1=text-file, 2=C-binary) [0] ##PARTICLE ONLY##
 OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
 OPT__OUTPUT_POT               1           # output gravitational potential [1] ##OPT__OUTPUT_TOTAL ONLY##
@@ -225,7 +226,7 @@ OPT__CK_NORMALIZE_PASSIVE     0           # check the normalization of passive s
 OPT__CK_RESTRICT              0           # check the data restriction [0]
 OPT__CK_FINITE                0           # check if all variables are finite [0]
 OPT__CK_PATCH_ALLOCATE        0           # check if all patches are properly allocated [0]
-OPT__CK_FLUX_ALLOCATE         0           # check if all flux arrays are properly allocated ##HYDRO and ELBDM ONLY## [0]
+OPT__CK_FLUX_ALLOCATE         0           # check if all flux arrays are properly allocated [0] ##HYDRO and ELBDM ONLY##
 OPT__CK_NEGATIVE              0           # check the negative values: (0=off, 1=density, 2=pressure and entropy, 3=both) [0] ##HYDRO ONLY##
 OPT__CK_MEMFREE               1.0         # check the free memory in GB (0=off, >0=threshold) [1.0]
 OPT__CK_PARTICLE              0           # check the particle allocation [0]

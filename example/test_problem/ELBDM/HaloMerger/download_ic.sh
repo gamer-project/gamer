@@ -1,10 +1,8 @@
-filename=UM_IC_halo_m22_1_Mh_4e9
-link=http://use.yt/upload/7e5d8729
+filename=HALO_IC_m22_1_Mh_4e9
+link=https://girder.hub.yt/api/v1/item/65e5251f1613cd89a1dfe902/download
 
 
-curl ${link} -o ${filename}.tar.gz
-tar -zxvf ${filename}.tar.gz
-rm ${filename}.tar.gz
+curl ${link} -o ${filename}
 
-ln -s ${filename} UM_IC_Halo1
-ln -s ${filename} UM_IC_Halo2
+ln -s ${filename} HALO_IC_Halo1
+ln -s ${filename} HALO_IC_Halo2
