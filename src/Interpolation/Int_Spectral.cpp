@@ -81,7 +81,7 @@ void Int_Spectral( real CData[], const int CSize[3], const int CStart[3], const 
 // interpolation-scheme-dependent parameters
 // ===============================================================================
 // number of coarse-grid ghost zone
-   const int CGhost = 2;
+   const int CGhost = SPEC_INT_GHOST_BOUNDARY;
 // ===============================================================================
 
 
