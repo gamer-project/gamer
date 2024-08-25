@@ -1538,7 +1538,7 @@ void Aux_TakeNote()
       fprintf( Note, "SPEC_INT_TABLE_PATH             %s\n",      SPEC_INT_TABLE_PATH           );
 #     if ( MODEL == ELBDM )
       fprintf( Note, "SPEC_INT_XY_INSTEAD_DEPHA      % d\n",      SPEC_INT_XY_INSTEAD_DEPHA     );
-      fprintf( Note, "SPEC_INT_VORTEX_THRESHOLD      % 14.7e\n",  SPEC_INT_VORTEX_THRESHOLD     );
+      fprintf( Note, "SPEC_INT_WAVELENGTH_MAGNIFIER  % 14.7e\n",  SPEC_INT_WAVELENGTH_MAGNIFIER );
 #     endif
 #     endif // #ifdef SUPPORT_SPECTRAL_INT
       fprintf( Note, "***********************************************************************************\n" );

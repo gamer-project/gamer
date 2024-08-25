@@ -481,8 +481,8 @@ void Init_Load_Parameter()
 #  ifdef SUPPORT_SPECTRAL_INT
    ReadPara->Add( "SPEC_INT_TABLE_PATH",            SPEC_INT_TABLE_PATH,          NoDef_str,       Useless_str,   Useless_str    );
 #  if ( MODEL == ELBDM )
-   ReadPara->Add( "SPEC_INT_XY_INSTEAD_DEPHA",  &SPEC_INT_XY_INSTEAD_DEPHA,       true,            Useless_bool,  Useless_bool   );
-   ReadPara->Add( "SPEC_INT_VORTEX_THRESHOLD",  &SPEC_INT_VORTEX_THRESHOLD,       0.1,             0.0,           NoMax_double   );
+   ReadPara->Add( "SPEC_INT_XY_INSTEAD_DEPHA",     &SPEC_INT_XY_INSTEAD_DEPHA,    true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "SPEC_INT_WAVELENGTH_MAGNIFIER", &SPEC_INT_WAVELENGTH_MAGNIFIER,1.0e2,           1.0,           NoMax_double   );
 #  endif
 #  endif // #ifdef SUPPORT_SPECTRAL_INT
 

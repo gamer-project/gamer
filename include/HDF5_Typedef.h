@@ -763,7 +763,7 @@ struct InputPara_t
    char  *SpecInt_TablePath;
 #  if ( MODEL == ELBDM )
    int    SpecInt_XY_Instead_DePha;
-   double SpecInt_VortexThreshold;
+   double SpecInt_WavelengthMagnifier;
 #  endif
 #  endif
 
