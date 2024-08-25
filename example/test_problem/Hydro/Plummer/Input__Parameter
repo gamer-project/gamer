@@ -244,6 +244,9 @@ OPT__OPTIMIZE_AGGRESSIVE      0           # apply aggressive optimizations (expe
 OPT__CK_REFINE                0           # check the grid refinement [0]
 OPT__CK_PROPER_NESTING        0           # check the proper-nesting condition [0]
 OPT__CK_CONSERVATION          1           # check the conservation law [0]
+ANGMOM_ORIGIN_X              -1.0         # x coordinate of the origin for angular momentum (<0=auto -> BoxCenter) [-1.0]
+ANGMOM_ORIGIN_Y              -1.0         # y coordinate of the origin for angular momentum (<0=auto -> BoxCenter) [-1.0]
+ANGMOM_ORIGIN_Z              -1.0         # z coordinate of the origin for angular momentum (<0=auto -> BoxCenter) [-1.0]
 OPT__CK_NORMALIZE_PASSIVE     0           # check the normalization of passive scalars [0] ##OPT__NORMALIZE_PASSIVE ONLY##
 OPT__CK_RESTRICT              0           # check the data restriction [0]
 OPT__CK_FINITE                0           # check if all variables are finite [0]

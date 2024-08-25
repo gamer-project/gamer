@@ -20,7 +20,9 @@ set format y "10^{%T}"
 #set xrange [0.0:20.0]
 set yrange [1.0e-5:1.0e-1]
 
-plot "../Record__Conservation" u 1:(abs($26)) w l notit
+plot "../Record__Conservation" u 1:(abs($44))  w l lw 2 lc 2 tit 'Gas' \
+    ,"../Record__Conservation" u 1:(abs($83))  w l lw 2 lc 6 tit 'Particle' \
+    ,"../Record__Conservation" u 1:(abs($116)) w l lw 2 lc 7 tit 'Total'
 
 if ( GPVAL_TERM eq 'x11' ) { pause -1 };
 

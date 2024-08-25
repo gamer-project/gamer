@@ -26,8 +26,8 @@ Gyr    = 3.15569252e16
 
 
 # plot
-plot "../Record__Conservation" u ($1*UNIT_T/Gyr):50 w l lc 6 lw 1.5 tit 'Mass conservation' \
-    ,"../Record__Conservation" u ($1*UNIT_T/Gyr):62 w l lc 7 lw 1.5 tit 'Energy conservation'
+plot "../Record__Conservation" u ($1*UNIT_T/Gyr):104 w l lc 6 lw 1.5 tit 'Mass conservation' \
+    ,"../Record__Conservation" u ($1*UNIT_T/Gyr):122 w l lc 7 lw 1.5 tit 'Energy conservation'
 
 if ( GPVAL_TERM eq 'x11' ) { pause -1 };
 
