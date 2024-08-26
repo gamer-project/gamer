@@ -323,7 +323,7 @@ float and integer attribute data respectively (see the next step). One must also
 
 4. Assign initial values to the new particle attribute by using the
 corresponding attribute index to access the pointer array
-`*AllAttribute[PAR_NATT_TOTAL]` (see
+`*AllAttributeFlt[PAR_NATT_FLT_TOTAL]` and `*AllAttributeInt[PAR_NATT_INT_TOTAL]` (see
 [[Setting IC from Analytical Functions &#8212; Particles | Initial-Conditions#IC-Func-Particles]]).
 For example,
 
