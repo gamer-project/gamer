@@ -21,6 +21,9 @@ static FieldIdx_t PWave_Idx_WrappedPhase = Idx_Undefined;    // field index for 
 // =======================================================================================
 
 static void OutputError();
+static void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                const int GhostSize, const int idx[], const double pos[], const double Time,
+                const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
 
 
@@ -55,8 +58,8 @@ void Validate()
 #  endif
 
    for (int f=0; f<6; f++)
-   if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
-      Aux_Error( ERROR_INFO, "must adopt periodic BC for fluid --> reset OPT__BC_FLU* !!\n" );
+   if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC  &&  OPT__BC_FLU[f] != BC_FLU_USER )
+      Aux_Error( ERROR_INFO, "must adopt periodic or user BC for fluid --> reset OPT__BC_FLU* !!\n" );
 
    if ( NCOMP_PASSIVE_USER != 1 )
       Aux_Error( ERROR_INFO, "please set NCOMP_PASSIVE_USER to 1 !!\n" );
@@ -363,6 +366,38 @@ void OutputError()
    Output_L1Error( SetGridIC, NULL, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
 
 } // FUNCTION : OutputError
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  BC
+// Description :  Set the extenral boundary condition to the analytical solution
+//
+// Note        :  1. Linked to the function pointer "BC_User_Ptr"
+//
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
+//                ArraySize      : Size of Array including the ghost zones on each side
+//                fluid          : Fluid fields to be set
+//                NVar_Flu       : Number of fluid variables to be prepared
+//                GhostSize      : Number of ghost zones
+//                idx            : Array indices
+//                pos            : Physical coordinates
+//                Time           : Physical time
+//                lv             : Refinement level
+//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
+//                AuxArray       : Auxiliary array
+//
+// Return      :  fluid
+//-------------------------------------------------------------------------------------------------------
+void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+         const int GhostSize, const int idx[], const double pos[], const double Time,
+         const int lv, const int TFluVarIdxList[], double AuxArray[] )
+{
+
+// simply call the IC function
+   SetGridIC( fluid, pos[0], pos[1], pos[2], Time, lv, AuxArray );
+
+} // FUNCTION : BC
 #endif // #if ( MODEL == ELBDM )
 
 
@@ -396,6 +431,7 @@ void Init_TestProb_ELBDM_PlaneWave()
    Init_Field_User_Ptr             = AddNewField_PlaneWave;
    Output_User_Ptr                 = OutputError;
    Output_UserWorkBeforeOutput_Ptr = Output_UserWorkBeforeOutput_PlaneWave;
+   BC_User_Ptr                     = BC;
 #  endif // #if ( MODEL == ELBDM )
 
 
