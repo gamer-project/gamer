@@ -87,7 +87,7 @@ void Par_Init_ByFunction_Template( const long NPar_ThisRank, const long NPar_All
 
 // example : randomly initialize
    /*
-   const uint RSeed         = 2;                                             // random seed
+   const uint     RSeed     = 2;                                             // random seed
    const real_par MassMin   = 1.0e-2;                                        // minimum value of particle mass
    const real_par MassMax   = 1.0;                                           // maximum value of particle mass
    const real_par PosMin[3] = { 0.0, 0.0, 0.0 };                             // minimum value of particle position

@@ -113,11 +113,11 @@ For details see
 
             ```C++
             #ifdef PARTICLE
-            void Par_Init_ByFunction_NewProblem(
-                    const long NPar_ThisRank, const long NPar_AllRank,
-                    real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                    real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                    real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
+            void Par_Init_ByFunction_NewProblem( const long NPar_ThisRank, const long NPar_AllRank,
+                                                 real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                                 real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                                 long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                                 long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
             #endif
             ```
 
@@ -283,14 +283,16 @@ field index. For example,
 Adding a new particle attribute is very similar to adding a new grid field.
 So we only highlight the differences in each of the 4 steps above.
 
-1. Set [[ PAR_NATT_USER | Installation:-Simulation-Options#PAR_NATT_USER ]]
+1. Set [[ PAR_NATT_FLT_USER | Installation:-Simulation-Options#PAR_NATT_FLT_USER ]] and
+[[ PAR_NATT_INT_USER | Installation:-Simulation-Options#PAR_NATT_INT_USER ]]
 instead in the Makefile.
 
 2. Declare a global integer variable on the top of the problem source
 file to store the new field index. For example,
 
     ```C++
-    static int NewParAttIdx = Idx_Undefined;
+    static int NewParAttFltIdx = Idx_Undefined;
+    static int NewParAttIntIdx = Idx_Undefined;
     ```
 
 Note that some particle attribute index variables have been pre-declared in
@@ -304,13 +306,15 @@ and invoke `AddParticleAttribute()` for each of the new attribute. For example,
     ```C++
     void AddNewParticleAttribute_NewProblem()
     {
-       if ( NewParAttIdx == Idx_Undefined )
-          NewParAttIdx = AddParticleAttribute( "NewParAttLabel" );
+       if ( NewParAttFltIdx == Idx_Undefined )
+          NewParAttFltIdx = AddParticleAttributeFlt( "NewParFltAttLabel" );
+       if ( NewParAttIntIdx == Idx_Undefined )
+          NewParAttIntIdx = AddParticleAttributeInt( "NewParIntAttLabel" );
     }
     ```
 
-    The attribute index `NewParAttIdx` can be used to access the particle
-attribute data (see the next step). One must also set the function pointer
+    The attribute indices `NewParAttFltIdx` and `NewParAttIntIdx` can be used to access the particle
+float and integer attribute data respectively (see the next step). One must also set the function pointer
 `Par_Init_Attribute_User_Ptr` in the problem initialization function.
 
     ```C++
@@ -325,12 +329,14 @@ For example,
 
     ```C++
     void Par_Init_ByFunction_NewProblem( const long NPar_ThisRank, const long NPar_AllRank,
-                                          real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                          real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                          real *AllAttribute[PAR_NATT_TOTAL] )
+                                         real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                         real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                         long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                         long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
     {
        ...
-       for (long p=0; p<NPar_ThisRank; p++)   AllAttribute[NewParAttIdx][p] = 1.0;
+       for (long p=0; p<NPar_ThisRank; p++)   AllAttributeFlt[NewParAttFltIdx][p] = 1.0;
+       for (long p=0; p<NPar_ThisRank; p++)   AllAttributeInt[NewParAttIntIdx][p] = 2;
        ...
     }
     ```

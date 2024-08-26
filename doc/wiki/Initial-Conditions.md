@@ -174,12 +174,13 @@ The particle IC function has the following prototype:
 
 ```C++
 void Par_Init_ByFunction( const long NPar_ThisRank, const long NPar_AllRank,
-                          real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                          real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                          real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
+                          real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                          real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                          long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                          long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 ```
 It should set the particle IC in the arrays `ParMass`, `ParPosX/Y/Z`,
-`ParVelX/Y/Z`, `ParTime`, `ParType`, and, optionally, the pointer array `*AllAttribute[PAR_NATT_TOTAL]`,
+`ParVelX/Y/Z`, `ParTime`, `ParType`, and, optionally, the pointer array `*AllAttributeFlt[PAR_NATT_FLT_TOTAL]` and `*AllAttributeInt[PAR_NATT_INT_TOTAL]`,
 all of which have the size of `NPar_ThisRank` &#8212; the number of particles
 to be set by this MPI rank. Note that particles set by this function
 are only temporarily stored in this MPI rank and will later be
@@ -215,25 +216,29 @@ The following example shows `Par_Init_ByFunction()` in
 //                       and LB_Init_LoadBalance()
 //                   --> Therefore, there is no constraint on which particles should be set by this function
 //
-// Parameter   :  NPar_ThisRank : Number of particles to be set by this MPI rank
-//                NPar_AllRank  : Total Number of particles in all MPI ranks
-//                ParMass       : Particle mass     array with the size of NPar_ThisRank
-//                ParPosX/Y/Z   : Particle position array with the size of NPar_ThisRank
-//                ParVelX/Y/Z   : Particle velocity array with the size of NPar_ThisRank
-//                ParTime       : Particle time     array with the size of NPar_ThisRank
-//                ParType       : Particle type     array with the size of NPar_ThisRank
-//                AllAttribute  : Pointer array for all particle attributes
-//                                --> Dimension = [PAR_NATT_TOTAL][NPar_ThisRank]
-//                                --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
-//                                    to access the data
+// Parameter   :  NPar_ThisRank   : Number of particles to be set by this MPI rank
+//                NPar_AllRank    : Total Number of particles in all MPI ranks
+//                ParMass         : Particle mass     array with the size of NPar_ThisRank
+//                ParPosX/Y/Z     : Particle position array with the size of NPar_ThisRank
+//                ParVelX/Y/Z     : Particle velocity array with the size of NPar_ThisRank
+//                ParTime         : Particle time     array with the size of NPar_ThisRank
+//                ParType         : Particle type     array with the size of NPar_ThisRank
+//                AllAttributeFlt : Pointer array for all particle float attributes
+//                                  --> Dimension = [PAR_NATT_FLT_TOTAL][NPar_ThisRank]
+//                                  --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
+//                                      to access the data
+//                AllAttributeInt : Pointer array for all particle integer attributes
+//                                  --> Dimension = [PAR_NATT_INT_TOTAL][NPar_ThisRank]
+//                                  --> Use the attribute indices defined in Field.h to access the data
 
 //
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttribute
 //-------------------------------------------------------------------------------------------------------
 void Par_Init_ByFunction( const long NPar_ThisRank, const long NPar_AllRank,
-                          real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                          real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                          real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
+                          real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                          real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                          long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                          long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 {
 
 // synchronize all particles to the physical time on the base level
@@ -248,26 +253,26 @@ void Par_Init_ByFunction( const long NPar_ThisRank, const long NPar_AllRank,
    real *ParPos[3] = { ParPosX, ParPosY, ParPosZ };
    real *ParVel[3] = { ParVelX, ParVelY, ParVelZ };
 
-   const uint RSeed     = 2;                                         // random seed
-   const real MassMin   = 1.0e-2;                                    // minimum value of particle mass
-   const real MassMax   = 1.0;                                       // maximum value of particle mass
-   const real PosMin[3] = { 0.0, 0.0, 0.0 };                         // minimum value of particle position
-   const real PosMax[3] = { real( amr->BoxSize[0]*(1.0-1.0e-5) ),    // maximum value of particle position
-                            real( amr->BoxSize[1]*(1.0-1.0e-5) ),
-                            real( amr->BoxSize[2]*(1.0-1.0e-5) ) };
-   const real VelMin[3] = { -1.0, -1.0, -1.0 };                      // minimum value of particle velocity
-   const real VelMax[3] = { +1.0, +1.0, +1.0 };                      // maximum value of particle velocity
+   const uint     RSeed     = 2;                                         // random seed
+   const real_par MassMin   = 1.0e-2;                                    // minimum value of particle mass
+   const real_par MassMax   = 1.0;                                       // maximum value of particle mass
+   const real_par PosMin[3] = { 0.0, 0.0, 0.0 };                         // minimum value of particle position
+   const real_par PosMax[3] = { real( amr->BoxSize[0]*(1.0-1.0e-5) ),    // maximum value of particle position
+                                real( amr->BoxSize[1]*(1.0-1.0e-5) ),
+                                real( amr->BoxSize[2]*(1.0-1.0e-5) ) };
+   const real_par VelMin[3] = { -1.0, -1.0, -1.0 };                      // minimum value of particle velocity
+   const real_par VelMax[3] = { +1.0, +1.0, +1.0 };                      // maximum value of particle velocity
 
    srand( RSeed );
 
    for (long p=0; p<NPar_ThisRank; p++)
    {
-      ParMass[p] = ( (real)rand()/RAND_MAX )*( MassMax - MassMin ) + MassMin;
+      ParMass[p] = ( (real_par)rand()/RAND_MAX )*( MassMax - MassMin ) + MassMin;
 
       for (int d=0; d<3; d++)
       {
-         ParPos[d][p] = ( (real)rand()/RAND_MAX )*( PosMax[d] - PosMin[d] ) + PosMin[d];
-         ParVel[d][p] = ( (real)rand()/RAND_MAX )*( VelMax[d] - VelMin[d] ) + VelMin[d];
+         ParPos[d][p] = ( (real_par)rand()/RAND_MAX )*( PosMax[d] - PosMin[d] ) + PosMin[d];
+         ParVel[d][p] = ( (real_par)rand()/RAND_MAX )*( VelMax[d] - VelMin[d] ) + VelMin[d];
       }
    }
 
@@ -449,7 +454,8 @@ function and load the particle initial condition from a file (and vice versa).
 
 Related options:
 [[NCOMP_PASSIVE_USER | Installation: Simulation-Options#NCOMP_PASSIVE_USER]], &nbsp;
-[[PAR_NATT_USER | Installation: Simulation-Options#PAR_NATT_USER]] &nbsp;
+[[PAR_NATT_FLT_USER | Installation: Simulation-Options#PAR_NATT_FLT_USER]] &nbsp;
+[[PAR_NATT_INT_USER | Installation: Simulation-Options#PAR_NATT_INT_USER]] &nbsp;
 
 
 ## Runtime Parameters
