@@ -17,7 +17,7 @@ static double PWave_WaveW;         // plane wave angular frequency
 static double PWave_PhaseV;        // plane wave phase velocity
 static double PWave_GroupV;        // plane wave group velocity
 
-static FieldIdx_t PWave_Idx_Phase = Idx_Undefined;    // field index for unwrapped phase
+static FieldIdx_t PWave_Idx_WrappedPhase = Idx_Undefined;    // field index for the wrapped phase
 // =======================================================================================
 
 static void OutputError();
@@ -200,7 +200,7 @@ void SetParameter()
 //                   --> In this case, it should provide the analytical solution at the given "Time"
 //                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
 //                   --> Please ensure that everything here is thread-safe
-//                3. fluid[Idx_Phase] is used to store the unwrapped phase
+//                3. fluid[Idx_WrappedPhase] is used to store the wrapped phase
 //
 // Parameter   :  fluid    : Fluid field to be initialized
 //                x/y/z    : Physical coordinates
@@ -253,12 +253,14 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #  endif
    fluid[REAL] = Real;
    fluid[IMAG] = Imag;
-// set the unwrapped phase
-   fluid[PWave_Idx_Phase] = SATAN2( Imag, Real );
+// set the wrapped phase
+   fluid[PWave_Idx_WrappedPhase] = SATAN2( Imag, Real );
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    } else {
    fluid[PHAS] = Phase;
    fluid[STUB] = 0.0;
+// set the wrapped phase
+   fluid[PWave_Idx_WrappedPhase] = SATAN2( SIN(Phase), COS(Phase) );
    }
 #  endif
 
@@ -268,7 +270,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  AddNewField_PlaneWave
-// Description :  Add the unwrapped phase as a problem-specific field
+// Description :  Add the wrapped phase as a problem-specific field
 //
 // Note        :  1. Ref: https://github.com/gamer-project/gamer/wiki/Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes
 //                2. Invoke AddField() for each of the problem-specific field:
@@ -283,8 +285,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 void AddNewField_PlaneWave()
 {
 
-   if ( PWave_Idx_Phase == Idx_Undefined )
-      PWave_Idx_Phase = AddField( "Phase", FIXUP_FLUX_NO, FIXUP_REST_NO, NORMALIZE_NO, INTERP_FRAC_NO );
+   if ( PWave_Idx_WrappedPhase == Idx_Undefined )
+      PWave_Idx_WrappedPhase = AddField( "WrappedPhase", FIXUP_FLUX_NO, FIXUP_REST_NO, NORMALIZE_NO, INTERP_FRAC_NO );
 
 } // FUNCTION : AddNewField_PlaneWave
 
@@ -292,7 +294,7 @@ void AddNewField_PlaneWave()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_UserWorkBeforeOutput_PlaneWave
-// Description :  Calculate and update the unwrapped phase field before dumping data
+// Description :  Calculate and update the wrapped phase field before dumping data
 //
 // Note        :  1. Invoked by Output_DumpData() using the function pointer "Output_UserWorkBeforeOutput_Ptr"
 //
@@ -313,13 +315,25 @@ void Output_UserWorkBeforeOutput_PlaneWave()
          for (int j=0; j<PATCH_SIZE; j++)
          for (int i=0; i<PATCH_SIZE; i++)
          {
-//          record the unwrapped phase
+//          record the wrapped phase
             double Phase;
 
-            Phase = ATAN2( amr->patch[FluSg][lv][PID]->fluid[IMAG][k][j][i],
-                           amr->patch[FluSg][lv][PID]->fluid[REAL][k][j][i] );
+#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
+            if ( amr->use_wave_flag[lv] )
+            {
+#           endif
+               Phase = SATAN2( amr->patch[FluSg][lv][PID]->fluid[IMAG][k][j][i],
+                               amr->patch[FluSg][lv][PID]->fluid[REAL][k][j][i] );
+#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
+            } // if ( amr->use_wave_flag[lv] )
+            else
+            {
+               Phase = SATAN2( SIN(amr->patch[FluSg][lv][PID]->fluid[PHAS][k][j][i]),
+                               COS(amr->patch[FluSg][lv][PID]->fluid[PHAS][k][j][i]) );
+            } // if ( amr->use_wave_flag[lv] ) ... else
+#           endif
 
-            amr->patch[FluSg][lv][PID]->fluid[PWave_Idx_Phase][k][j][i] = Phase;
+            amr->patch[FluSg][lv][PID]->fluid[PWave_Idx_WrappedPhase][k][j][i] = Phase;
 
          } // i,j,k
       } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
