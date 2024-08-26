@@ -92,7 +92,7 @@ void Par_Output_BinaryFile( const char *FileName )
 
          MPI_Barrier( MPI_COMM_WORLD );
       } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
-   } // for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
+   } // for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
 
    free( attribute_int_buff );
 
