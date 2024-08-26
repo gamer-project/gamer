@@ -89,8 +89,8 @@ MACH_LIBS         = $(LOCAL_LIBS_HDF5) $(LOCAL_LIBS_MACH)
 # if $(HOME)/local does not exist, mkdir before `make install`
 
 ### Use this when make omp-on is set
-MACH_INSTALL_PREFIX = /work1/barrytzc/[2024]Gas_Stream_Disk/grackle/grackle_spock_single_omp
+MACH_INSTALL_PREFIX = <local_grackle_directory>/grackle/grackle_spock_single_omp
 ### Use this when make omp-off is set
-#MACH_INSTALL_PREFIX = /work1/koarakawaii/grackle/grackle_no_omp_single_precision
+#MACH_INSTALL_PREFIX = <local_grackle_directory>/grackle/grackle_no_omp_single_precision
 MACH_INSTALL_LIB_DIR =
 MACH_INSTALL_INCLUDE_DIR =
