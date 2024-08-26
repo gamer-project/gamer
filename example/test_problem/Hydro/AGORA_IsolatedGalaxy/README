@@ -34,3 +34,17 @@ Note:
 3. Run the script "download_ic.sh" to download the low-resolution initial condition files for this test
    --> It's the same script used in the "AgoraGalaxy" test problem of Enzo
 4. Some handy yt analysis scripts are put at "yt_script"
+
+
+High-resolution setup and notes:
+========================================
+To reproduce the AGORA high-resolution run presented in the GAMER-2 paper (Schive et al. 2018), follow the above steps with the following modifications:
+1. Download the high-resolution initial conditions by executing "sh download_ic_high_res.sh"
+2. Adjust the following parameters in "Input__Parameter":
+    PAR_NPAR                      21250000    # from the default value of 212500
+    MAX_LEVEL                     9           # from the default value of 7
+
+
+First-time GRACKLE installation guide (on NTU clusters as an example):
+========================================
+Please refer to the README file at "./example/grackle/"
