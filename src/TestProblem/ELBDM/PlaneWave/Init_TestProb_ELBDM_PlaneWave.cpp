@@ -242,7 +242,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    else {                      // standing wave (PWave_LSR == 0 )
       Real  = 0.5*(  PWave_Amp*cos( PhaseR ) + PWave_Amp*cos( PhaseL )  );
       Imag  = 0.5*(  PWave_Amp*sin( PhaseR ) + PWave_Amp*sin( PhaseL )  );
-      Phase = SATAN2 ( Imag, Real );
+      Phase = ( cos( PWave_WaveK*r ) > 0 ) ? 0.5*( PhaseR + PhaseL ) : M_PI+0.5*( PhaseR + PhaseL );
    }
 
 // set the density
