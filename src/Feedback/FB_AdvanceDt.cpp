@@ -98,8 +98,10 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
    ParAttFltBitIdx_Out &= ~( _PAR_ACCX | _PAR_ACCY | _PAR_ACCZ );
 #  endif
 
-   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++) {
-      if ( ParAttFltBitIdx_Out & BIDX(v) ) {
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
+   {
+      if ( ParAttFltBitIdx_Out & BIDX(v) )
+      {
          ParAttFlt_Updated[v] = new real_par [ amr->Par->ParListSize ];
          memcpy( ParAttFlt_Updated[v], amr->Par->AttributeFlt[v], amr->Par->ParListSize*sizeof(real_par) );
       }
@@ -107,8 +109,10 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
          ParAttFlt_Updated[v] = NULL;
    }
 
-   for (int v=0; v<PAR_NATT_INT_TOTAL; v++) {
-      if ( ParAttIntBitIdx_Out & BIDX(v) ) {
+   for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
+   {
+      if ( ParAttIntBitIdx_Out & BIDX(v) )
+      {
          ParAttInt_Updated[v] = new long_par [ amr->Par->ParListSize ];
          memcpy( ParAttInt_Updated[v], amr->Par->AttributeInt[v], amr->Par->ParListSize*sizeof(long_par) );
       }
@@ -319,9 +323,12 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //            --> to solve this problem, we will store the updated particle data in a temporary particle repository
 //                ParAttFlt_Updated[] and ParAttInt_Update[]
 #        ifdef LOAD_BALANCE
-         if ( UseParAttCopy ) {
-            for (int v=0; v<PAR_NATT_FLT_TOTAL; v++) {
-               if ( ParAttFltBitIdx_In & BIDX(v) ) {
+         if ( UseParAttCopy )
+         {
+            for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
+            {
+               if ( ParAttFltBitIdx_In & BIDX(v) )
+               {
 
 #                 ifdef DEBUG_PARTICLE
                   if ( NPar > 0  &&  amr->patch[0][lv][PID]->ParAttFlt_Copy[v] == NULL )
@@ -334,8 +341,10 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
                }
             }
 
-            for (int v=0; v<PAR_NATT_INT_TOTAL; v++) {
-               if ( ParAttIntBitIdx_In & BIDX(v) ) {
+            for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
+            {
+               if ( ParAttIntBitIdx_In & BIDX(v) )
+               {
 
 #                 ifdef DEBUG_PARTICLE
                   if ( NPar > 0  &&  amr->patch[0][lv][PID]->ParAttInt_Copy[v] == NULL )
@@ -358,13 +367,15 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
                           NPar, lv, PID );
 #           endif
 
-            for (int v=0; v<PAR_NATT_FLT_TOTAL; v++) {
+            for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
+            {
                if ( ParAttFltBitIdx_In & BIDX(v) )
                   for (int p=0; p<NPar; p++)
                      ParAttFlt_Local[v][p] = amr->Par->AttributeFlt[v][ ParList[p] ];
             }
 
-            for (int v=0; v<PAR_NATT_INT_TOTAL; v++) {
+            for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
+            {
                if ( ParAttIntBitIdx_In & BIDX(v) )
                   for (int p=0; p<NPar; p++)
                      ParAttInt_Local[v][p] = amr->Par->AttributeInt[v][ ParList[p] ];
@@ -389,9 +400,12 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
          const double HalfBox  [3] = { 0.5*amr->BoxSize[0], 0.5*amr->BoxSize[1], 0.5*amr->BoxSize[2] };
          const int    ParPosIdx[3] = { PAR_POSX, PAR_POSY, PAR_POSZ };
 
-         for (int d=0; d<3; d++) {
-            if ( Periodic[d] ) {
-               for (int p=0; p<NPar; p++) {
+         for (int d=0; d<3; d++)
+         {
+            if ( Periodic[d] )
+            {
+               for (int p=0; p<NPar; p++)
+               {
 
                   real_par *ParPos = ParAttFlt_Local[ ParPosIdx[d] ] + p;
                   const double dr  = (double)*ParPos - PGCenter[d];
@@ -489,11 +503,14 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 // 11. store the updated particle data
-   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++) {
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
+   {
       if ( ParAttFltBitIdx_Out & BIDX(v) )
          memcpy( amr->Par->AttributeFlt[v], ParAttFlt_Updated[v], amr->Par->ParListSize*sizeof(real_par) );
    }
-   for (int v=0; v<PAR_NATT_INT_TOTAL; v++) {
+
+   for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
+   {
       if ( ParAttIntBitIdx_Out & BIDX(v) )
          memcpy( amr->Par->AttributeInt[v], ParAttInt_Updated[v], amr->Par->ParListSize*sizeof(long_par) );
    }
