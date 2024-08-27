@@ -90,3 +90,4 @@ Map to the "grackle_data_file" runtime parameter in GRACKLE.
 
 ## Links
 * [[Main page of Runtime Parameters | Runtime Parameters]]
+* [[Main page of Chemistry and Radiation | Chemistry-and-Radiation]]

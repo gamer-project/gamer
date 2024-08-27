@@ -56,3 +56,4 @@ See the restrictions on [FLU_GPU_NPGROUP](#FLU_GPU_NPGROUP) and
 
 ## Links
 * [[Main page of Runtime Parameters | Runtime Parameters]]
+* [[Main page of GPU | GPU]]

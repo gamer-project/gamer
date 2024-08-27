@@ -89,3 +89,4 @@ must be disabled. In addition, it is currently recommended to disable
 
 ## Links
 * [[Main page of Runtime Parameters | Runtime Parameters]]
+* [[Main page of MPI and OpenMP | MPI-and-OpenMP]]
