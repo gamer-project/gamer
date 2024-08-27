@@ -124,7 +124,7 @@ See also [[Setting IC from Files &#8212; Grids | Initial-Conditions#IC-File-Grid
     * **Description:**
 For non-leaf patches, replace fluid data by the volume-weighted average
 of their child patch data. It is similar to the option
-[[OPT__FIXUP_RESTRICT | Hydro#OPT__FIXUP_RESTRICT]]
+[[OPT__FIXUP_RESTRICT | Runtime-Parameters:-Hydro#OPT__FIXUP_RESTRICT]]
 except that it only applies to the initial condition.
     * **Restriction:**
 

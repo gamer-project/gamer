@@ -57,7 +57,7 @@ when [[TESTPROB_ID | Runtime Parameters:-General#TESTPROB_ID]]&#8800;0.
 When adopting periodic conditions, they must be applied to both the -x and +x faces.
 Particles only support the periodic boundary conditions. When adopting any non-periodic
 boundary condition for fluid, particles will be removed when getting too close
-to the boundaries (see [[ PAR_REMOVE_CELL | Particles#PAR_REMOVE_CELL ]] ).
+to the boundaries (see [[ PAR_REMOVE_CELL | Runtime-Parameters:-Particles#PAR_REMOVE_CELL ]] ).
 
 <a name="OPT__BC_FLU_XP"></a>
 * #### `OPT__BC_FLU_XP` &ensp; (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode) &ensp; [none]

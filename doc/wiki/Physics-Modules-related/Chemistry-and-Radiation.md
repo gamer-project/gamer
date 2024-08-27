@@ -8,7 +8,7 @@ Related options:
 [[Runtime-Parameters:-Chemistry-and-Radiation]]
 
 Other related parameters:
-[[CHE_GPU_NPGROUP | GPU#CHE_GPU_NPGROUP]] &nbsp;
+[[CHE_GPU_NPGROUP | Runtime-Parameters:-GPU#CHE_GPU_NPGROUP]] &nbsp;
 
 
 ## Remarks

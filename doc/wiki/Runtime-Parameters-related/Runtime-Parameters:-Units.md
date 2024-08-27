@@ -15,7 +15,7 @@ Parameters described on this page:
 [UNIT_D](#UNIT_D) &nbsp;
 
 Other related parameters:
-[[NEWTON_G| Gravity#NEWTON_G]], &nbsp;
+[[NEWTON_G| Runtime-Parameters:-Gravity#NEWTON_G]], &nbsp;
 [[ELBDM_MASS | Wave-Dark-Matter#ELBDM_MASS]], &nbsp;
 [[ELBDM_PLANCK_CONST | Wave-Dark-Matter#ELBDM_PLANCK_CONST]] &nbsp;
 
@@ -91,7 +91,7 @@ When enabling units (i.e., [OPT__UNIT](#OPT__UNIT)=1), all input values
 (e.g., runtime parameters, refinement thresholds, and initial conditions)
 must be set consistently with the adopted unit system unless otherwise
 specified. All input physical constants (e.g.,
-[[NEWTON_G| Gravity#NEWTON_G]],
+[[NEWTON_G| Runtime-Parameters:-Gravity#NEWTON_G]],
 [[ELBDM_MASS | Wave-Dark-Matter#ELBDM_MASS]], and
 [[ELBDM_PLANCK_CONST | Wave-Dark-Matter#ELBDM_PLANCK_CONST]])
 will be reset automatically to conform to the adopted unit system.

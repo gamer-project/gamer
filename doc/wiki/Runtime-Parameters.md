@@ -206,7 +206,7 @@ data lines excluding the header line.
 ## Input__DumpTable
 
 Timetable for dumping data when adopting
-[[OPT__OUTPUT_MODE | Outputs#OPT__OUTPUT_MODE]]=3.
+[[OPT__OUTPUT_MODE | Runtime-Parameters:-Outputs#OPT__OUTPUT_MODE]]=3.
 The following example will dump data at t=1.0, 2.3, and 3.7.
 
 ```
