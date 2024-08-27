@@ -630,7 +630,6 @@ void SetArrayHVC()
    ReadBinFile( TableFileName, &buffer );
 
    int headerSize = (int)buffer[0];
-   printf( "MY_DEBUG: %s has header size of %d\n", TableFileName, headerSize );
 
    Header_hvc = (real*)malloc( (size_t)headerSize*sizeof(real) );
 
