@@ -1,11 +1,3 @@
-
-## Compilation Options
-
-Related options:
-[[SUPPORT_GRACKLE | Installation: Simulation-Options#SUPPORT_GRACKLE]] &nbsp;
-
-## Runtime Parameters
-
 Parameters described on this page:
 [GRACKLE_ACTIVATE](#GRACKLE_ACTIVATE), &nbsp;
 [GRACKLE_VERBOSE](#GRACKLE_VERBOSE), &nbsp;
@@ -18,8 +10,6 @@ Parameters described on this page:
 [GRACKLE_PE_HEATING_RATE](#GRACKLE_PE_HEATING_RATE), &nbsp;
 [GRACKLE_CLOUDY_TABLE](#GRACKLE_CLOUDY_TABLE) &nbsp;
 
-Other related parameters:
-[[CHE_GPU_NPGROUP | GPU#CHE_GPU_NPGROUP]] &nbsp;
 
 Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**
 
@@ -95,15 +85,8 @@ Map to the "grackle_data_file" runtime parameter in GRACKLE.
 
 ## Remarks
 
-### GRACKLE Configuration
-The floating-point accuracy and OpenMP support between GRACKLE and GAMER
-must be consistent with each other. See
-[[Library Configurations -- GRACKLE | Installation:-External-Libraries#grackle]]
-for details.
-
 
 <br>
 
 ## Links
-* [[How to install GRACKLE | Installation:-External-Libraries#grackle]]
 * [[Main page of Runtime Parameters | Runtime Parameters]]

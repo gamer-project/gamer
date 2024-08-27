@@ -1,16 +1,13 @@
-TBF.
-
-## Compilation Options
-
-Related options:
-
-
-## Runtime Parameters
-
 Parameters described on this page:
-[](#), &nbsp;
+[SF_CREATE_STAR_SCHEME](#SF_CREATE_STAR_SCHEME), &nbsp;
+[SF_CREATE_STAR_RSEED](#SF_CREATE_STAR_RSEED), &nbsp;
+[SF_CREATE_STAR_DET_RANDOM](#SF_CREATE_STAR_DET_RANDOM), &nbsp;
+[SF_CREATE_STAR_MIN_LEVEL](#SF_CREATE_STAR_MIN_LEVEL), &nbsp;
+[SF_CREATE_STAR_GAS_DENS](#SF_CREATE_STAR_GAS_DENS), &nbsp;
+[SF_CREATE_STAR_MASS_EFF](#SF_CREATE_STAR_MASS_EFF), &nbsp;
+[SF_CREATE_STAR_MIN_STAR_MASS](#SF_CREATE_STAR_MIN_STAR_MASS), &nbsp;
+[SF_CREATE_STAR_MAX_STAR_MFRAC](#SF_CREATE_STAR_MAX_STAR_MFRAC), &nbsp;
 
-Other related parameters:
 
 Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**
 
@@ -53,6 +50,7 @@ Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) 
 * #### `SF_CREATE_STAR_MAX_STAR_MFRAC` &ensp; () &ensp; []
     * **Description:**
     * **Restriction:**
+
 
 
 ## Remarks

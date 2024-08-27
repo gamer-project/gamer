@@ -1,16 +1,3 @@
-
-## Compilation Options
-
-Related options:
-[[PARTICLE | Installation: Simulation-Options#PARTICLE]], &nbsp;
-[[FLOAT8_PAR | Installation: Simulation-Options#FLOAT8_PAR]], &nbsp;
-[[STORE_PAR_ACC | Installation: Simulation-Options#STORE_PAR_ACC]], &nbsp;
-[[STAR_FORMATION | Installation: Simulation-Options#STAR_FORMATION]], &nbsp;
-[[PAR_NATT_USER | Installation: Simulation-Options#PAR_NATT_USER]] &nbsp;
-
-
-## Runtime Parameters
-
 Parameters described on this page:
 [PAR_INIT](#PAR_INIT), &nbsp;
 [PAR_NPAR](#PAR_NPAR), &nbsp;
@@ -27,16 +14,6 @@ Parameters described on this page:
 [PAR_REMOVE_CELL](#PAR_REMOVE_CELL), &nbsp;
 [OPT__FREEZE_PAR](#OPT__FREEZE_PAR) &nbsp;
 
-Other related parameters:
-[[DT__PARVEL | Runtime Parameters:-Timestep#DT__PARVEL]], &nbsp;
-[[DT__PARVEL_MAX | Runtime Parameters:-Timestep#DT__PARVEL_MAX ]], &nbsp;
-[[DT__PARACC | Runtime Parameters:-Timestep#DT__PARACC]], &nbsp;
-[[OPT__FLAG_NPAR_PATCH | Runtime Parameters:-Refinement#OPT__FLAG_NPAR_PATCH]], &nbsp;
-[[OPT__FLAG_NPAR_CELL | Runtime Parameters:-Refinement#OPT__FLAG_NPAR_CELL]], &nbsp;
-[[OPT__FLAG_PAR_MASS_CELL | Runtime Parameters:-Refinement#OPT__FLAG_PAR_MASS_CELL]], &nbsp;
-[[OPT__PARTICLE_COUNT | Runtime Parameters:-Refinement#OPT__PARTICLE_COUNT]], &nbsp;
-[[LB_INPUT__PAR_WEIGHT | MPI and OpenMP#LB_INPUT__PAR_WEIGHT]], &nbsp;
-[[OPT__CK_PARTICLE | Runtime Parameters:-Miscellaneous#OPT__CK_PARTICLE]] &nbsp;
 
 Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**
 
@@ -52,7 +29,7 @@ Initialization methods for particles.
 [[Setting IC from Files &#8212; Particles | Initial Conditions#IC-File-Particles]].
     * **Restriction:**
 It will be automatically reset to `PAR_INIT=2` when adopting
-[[OPT__INIT | Initial Conditions#OPT__INIT ]]=2.
+[[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT ]]=2.
 
 <a name="PAR_NPAR"></a>
 * #### `PAR_NPAR` &ensp; (&#8805;0) &ensp; [none]
@@ -157,7 +134,7 @@ box. The default value is 1.0 ~ 2.0 depending on the adopted particle
 interpolation scheme ([PAR_INTERP](#PAR_INTERP)).
     * **Restriction:**
 Only applicable when adopting the isolated gravity boundary condition
-(i.e., [[OPT__BC_POT | Gravity#OPT__BC_POT]]=2).
+(i.e., [[OPT__BC_POT | Runtime-Parameters:-Gravity#OPT__BC_POT]]=2).
 
 <a name="OPT__FREEZE_PAR"></a>
 * #### `OPT__FREEZE_PAR` &ensp; (0=off, 1=on) &ensp; [0]
