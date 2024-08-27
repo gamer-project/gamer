@@ -4,7 +4,7 @@
 
 // problem-specific global variables
 // =======================================================================================
-static int    PWave_NWavelength;   // number of plane wave wavelength (will be reset to 3 times input value if PWave_XYZ == 3)
+static double PWave_NWavelength;   // number of plane wave wavelength (will be reset to 3 times input value if PWave_XYZ == 3)
 static double PWave_Amp;           // plane wave amplitude
 static double PWave_Phase0;        // plane wave phase constant
 static int    PWave_XYZ;           // plane wave direction (0/1/2/3 --> x/y/z/diagonal)
@@ -115,7 +115,7 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "PWave_NWavelength", &PWave_NWavelength,     2,             1,                NoMax_int         );
+   ReadPara->Add( "PWave_NWavelength", &PWave_NWavelength,     2.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "PWave_Amp",         &PWave_Amp,             1.0,           Eps_double,       NoMax_double      );
    ReadPara->Add( "PWave_Phase0",      &PWave_Phase0,          0.0,           NoMin_double,     NoMax_double      );
    ReadPara->Add( "PWave_XYZ",         &PWave_XYZ,             0,             0,                3                 );
@@ -168,7 +168,7 @@ void SetParameter()
    {
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "  test problem ID                  = %d\n",     TESTPROB_ID                );
-      Aux_Message( stdout, "  number of plane wave wavelength  = %d\n",     PWave_NWavelength          );
+      Aux_Message( stdout, "  number of plane wave wavelength  = %13.7e\n", PWave_NWavelength          );
       Aux_Message( stdout, "  plane wave wavelength            = %13.7e\n", PWave_Lambda               );
       Aux_Message( stdout, "  plane wave amplitude             = %13.7e\n", PWave_Amp                  );
       Aux_Message( stdout, "  plane wave phase constant        = %13.7e\n", PWave_Phase0               );
