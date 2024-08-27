@@ -406,6 +406,7 @@ struct InputPara_t
    double Par_ICMass;
    int    Par_ICType;
    int    Par_ICFloat8;
+   int    Par_ICInt8;
    int    Par_Interp;
    int    Par_InterpTracer;
    int    Par_Integ;

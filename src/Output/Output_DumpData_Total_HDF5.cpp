@@ -2253,6 +2253,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Par_ICMass              = amr->Par->ParICMass;
    InputPara.Par_ICType              = amr->Par->ParICType;
    InputPara.Par_ICFloat8            = PAR_IC_FLOAT8;
+   InputPara.Par_ICInt8              = PAR_IC_INT8;
    InputPara.Par_Interp              = amr->Par->Interp;
    InputPara.Par_InterpTracer        = amr->Par->InterpTracer;
    InputPara.Par_Integ               = amr->Par->Integ;
@@ -2940,6 +2941,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "StoreParAcc",            HOFFSET(Makefile_t,StoreParAcc            ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "StarFormation",          HOFFSET(Makefile_t,StarFormation          ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Feedback",               HOFFSET(Makefile_t,Feedback               ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "Par_NAttFltUser",        HOFFSET(Makefile_t,Par_NAttFltUser        ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Par_NAttIntUser",        HOFFSET(Makefile_t,Par_NAttIntUser        ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Float8_Par",             HOFFSET(Makefile_t,Float8_Par             ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "Int8_Par",               HOFFSET(Makefile_t,Int8_Par               ), H5T_NATIVE_INT );
@@ -3205,6 +3207,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Par_ICMass",              HOFFSET(InputPara_t,Par_ICMass             ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Par_ICType",              HOFFSET(InputPara_t,Par_ICType             ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ICFloat8",            HOFFSET(InputPara_t,Par_ICFloat8           ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Par_ICInt8",              HOFFSET(InputPara_t,Par_ICInt8             ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_Interp",              HOFFSET(InputPara_t,Par_Interp             ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_InterpTracer",        HOFFSET(InputPara_t,Par_InterpTracer       ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_Integ",               HOFFSET(InputPara_t,Par_Integ              ), H5T_NATIVE_INT     );

@@ -219,6 +219,7 @@ extern int             OPT__OUTPUT_PAR_MODE, OPT__PARTICLE_COUNT, OPT__FLAG_NPAR
 extern double          FlagTable_ParMassCell[NLEVEL-1];
 extern ParOutputDens_t OPT__OUTPUT_PAR_DENS;
 extern int             PAR_IC_FLOAT8;
+extern int             PAR_IC_INT8;
 #endif
 
 

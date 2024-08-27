@@ -319,6 +319,12 @@ void Aux_TakeNote()
       fprintf( Note, "FLOAT8_PAR                      OFF\n" );
 #     endif
 
+#     ifdef INT8_PAR
+      fprintf( Note, "INT8_PAR                        ON\n" );
+#     else
+      fprintf( Note, "INT8_PAR                        OFF\n" );
+#     endif
+
 #     ifdef SERIAL
       fprintf( Note, "SERIAL                          ON\n" );
 #     else
@@ -821,6 +827,7 @@ void Aux_TakeNote()
       fprintf( Note, "Par->Init                      % d\n",      amr->Par->Init                );
       fprintf( Note, "Par->ParICFormat               % d\n",      amr->Par->ParICFormat         );
       fprintf( Note, "PAR_IC_FLOAT8                  % d\n",      PAR_IC_FLOAT8                 );
+      fprintf( Note, "PAR_IC_INT8                    % d\n",      PAR_IC_INT8                   );
       fprintf( Note, "Par->ParICMass                 % 14.7e\n",  amr->Par->ParICMass           );
       fprintf( Note, "Par->ParICType                 % d\n",      amr->Par->ParICType           );
       fprintf( Note, "Par->Interp                    % d\n",      amr->Par->Interp              );
