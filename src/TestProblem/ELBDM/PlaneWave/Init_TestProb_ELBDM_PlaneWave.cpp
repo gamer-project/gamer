@@ -133,8 +133,14 @@ void SetParameter()
 
    if ( PWave_XYZ == 3 ) {
       PWave_NWavelength *= 3;
-      PRINT_RESET_PARA( PWave_NWavelength, FORMAT_INT, "");
+      PRINT_RESET_PARA( PWave_NWavelength, FORMAT_REAL, "");
    }
+
+   if ( ! Mis_CompareRealValue( PWave_NWavelength, round(PWave_NWavelength), NULL, false ) )
+      for (int f=((PWave_XYZ < 3)?(2*PWave_XYZ):0); f<((PWave_XYZ < 3)?(2*PWave_XYZ+2):6); f++)
+         if ( OPT__BC_FLU[f] != BC_FLU_USER )
+            Aux_Error( ERROR_INFO, "OPT__BC_FLU[%d] must be %d for non-integer PWave_NWavelength (=%13.7e) !!\n",
+                                   f, BC_FLU_USER, PWave_NWavelength );
 
 
 // (2) set the problem-specific derived parameters
