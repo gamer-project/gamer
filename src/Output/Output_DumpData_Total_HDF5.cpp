@@ -284,17 +284,24 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    int  NFieldStored = 0;
 
    const int FluDumpIdx0 = NFieldStored;
-#  if (  ELBDM_SCHEME == ELBDM_HYBRID  &&  !defined( GAMER_DEBUG )  )
-   const int NCompStore  = NCOMP_TOTAL - 1;  // do not store STUB field unless we are in debug mode
-#  else
-   const int NCompStore  = NCOMP_TOTAL;
-#  endif
 
+   int NCompFluSkip = 0;
+   for (int v=0; v<NCOMP_TOTAL; v++)
+   {
+#     if (  ELBDM_SCHEME == ELBDM_HYBRID  &&  !defined( GAMER_DEBUG )  )
+      if ( v == STUB )  // do not store STUB field unless we are in debug mode
+      {
+         NCompFluSkip += 1;
+         continue;
+      }
+#     endif
+
+      sprintf( FieldLabelOut[ FluDumpIdx0 + v - NCompFluSkip ], "%s", FieldLabel[v] );
+   }
+   const int NCompStore  = NCOMP_TOTAL - NCompFluSkip;
    NFieldStored += NCompStore;
-
    if ( FluDumpIdx0+NCompStore-1 >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   for (int v=0; v<NCompStore; v++)    sprintf( FieldLabelOut[ FluDumpIdx0 + v ], "%s", FieldLabel[v] );
 
 #  ifdef GRAVITY
    const int PotDumpIdx = ( OPT__OUTPUT_POT ) ? NFieldStored++ : NoDump;
@@ -1125,7 +1132,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                } // if ( v >= UserDumpIdx0  &&  v < UserDumpIdx0 + UserDerField_Num )
 
 //             e. fluid variables
-               else if ( v >= FluDumpIdx0  &&  v < FluDumpIdx0+NCompStore )
+               else if ( v >= FluDumpIdx0  &&  v < FluDumpIdx0+NCOMP_FLUID-NCompFluSkip )
                {
 //                convert real/imag to density/phase in hybrid scheme
 //                bitwise reproducibility currently fails in hybrid scheme because of conversion from RE/IM to DENS/PHAS when storing fields in HDF5
@@ -1154,7 +1161,14 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #                 endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                      memcpy( FieldData[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
-               } // if ( v >= FluDumpIdx0  &&  v < FluDumpIdx0+NCompStore )
+               } // if ( v >= FluDumpIdx0  &&  v < FluDumpIdx0+NCOMP_FLUID-NCompFluSkip )
+
+//             f. passive fluid variables
+               else if ( v >= FluDumpIdx0+NCOMP_FLUID-NCompFluSkip  &&  v < FluDumpIdx0+NCompStore )
+               {
+                  for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                     memcpy( FieldData[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v+NCompFluSkip], FieldSizeOnePatch );
+               } // if ( v >= FluDumpIdx0+NCOMP_FLUID-NCompFluSkip  &&  v < FluDumpIdx0+NCompStore )
 
                else
                   Aux_Error( ERROR_INFO, "incorrect index (%d) !!\n", v );
