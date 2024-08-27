@@ -142,6 +142,31 @@ void SetParameter()
             Aux_Error( ERROR_INFO, "OPT__BC_FLU[%d] must be %d for non-integer PWave_NWavelength (=%13.7e) !!\n",
                                    f, BC_FLU_USER, PWave_NWavelength );
 
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( ELBDM_FIRST_WAVE_LEVEL > MAX_LEVEL )
+   {
+      if ( PWave_LSR == 0 )
+      {
+//       there are nodes in a standing wave
+         Aux_Error( ERROR_INFO, "Standing wave (PWave_LSR = %d) cannot work in the fluid scheme !!\n", PWave_LSR );
+      }
+      else // if ( PWave_LSR == 0 )
+      {
+//       the unwrapped phase of a travelling wave is not periodic
+         for (int f=((PWave_XYZ < 3)?(2*PWave_XYZ):0); f<((PWave_XYZ < 3)?(2*PWave_XYZ+2):6); f++)
+            if ( OPT__BC_FLU[f] != BC_FLU_USER )
+               Aux_Error( ERROR_INFO, "OPT__BC_FLU[%d] must be %d for travelling wave in fluid scheme !!\n",
+                                      f, BC_FLU_USER );
+      } // if ( PWave_LSR == 0 ) ... else
+   }
+   else // if ( ELBDM_FIRST_WAVE_LEVEL > MAX_LEVEL )
+   {
+//    the phase on the wave level is wrapped
+      if ( !ELBDM_MATCH_PHASE )
+         Aux_Error( ERROR_INFO, "ELBDM_MATCH_PHASE should be enabled to make the phase on fluid levels continuous !!\n" );
+   } // if ( ELBDM_FIRST_WAVE_LEVEL > MAX_LEVEL ) ... else
+#  endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
 
 // (2) set the problem-specific derived parameters
    PWave_Lambda = ( PWave_XYZ == 3 ) ? amr->BoxSize[0]*sqrt(3.0)/PWave_NWavelength : amr->BoxSize[PWave_XYZ]/PWave_NWavelength;
