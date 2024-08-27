@@ -432,7 +432,7 @@ typedef int  long_par;
 int main()
 {
 
-   const int  NUM_PARTICLE      = 20000;
+   const int  NUM_PARTICLE      = 1000;
    const int  NUM_ATTRIBUTE_FLT = 7;
    const int  NUM_ATTRIBUTE_INT = 1;
    const bool PAR_IC_ATT_ID     = true; // data format of PAR_IC: (true: [attribute][id], false: [id][attribute]; row-major)
