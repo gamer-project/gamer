@@ -26,7 +26,7 @@
 //
 //                      mass, position x/y/z, velocity x/y/z, type,
 //                      [, creation time (when enabling STAR_FORMATION)]
-//                      [, user-specified attributes (when PAR_NATT_FLT_USER>0)]
+//                      [, user-specified attributes (when PAR_NATT_FLT_USER>0 or PAR_NATT_INT_USER>0)]
 //
 //                   --> The mass of all particles can be set to PAR_IC_MASS instead (by having PAR_IC_MASS>=0.0),
 //                       in which case PAR_IC should exclude partice mass
@@ -38,7 +38,7 @@
 //
 // Parameter   :  None
 //
-// Return      :  amr->Par->AttributeFlt[]
+// Return      :  amr->Par->AttributeFlt[], amr->Par->AttributeInt[]
 //-------------------------------------------------------------------------------------------------------
 void Par_Init_ByFile()
 {
