@@ -410,37 +410,77 @@ and [[PAR_IC_FORMAT | Particles#par_ic_format]]=1.
 ```c++
 #include <cstdio>
 
+//#define FLOAT8_PAR
+#define INT8_PAR
+
+
+
+#ifdef FLOAT8_PAR
+typedef double real_par;
+#else
+typedef float  real_par;
+#endif
+
+#ifdef INT8_PAR
+typedef long long_par;
+#else
+typedef int  long_par;
+#endif
+
+
+
 int main()
 {
-   const int NUM_PARTICLE  = 1000;
-   const int NUM_ATTRIBUTE = 8;
 
-   float (*ParIC)[NUM_PARTICLE] = new float [NUM_ATTRIBUTE][NUM_PARTICLE];
+   const int  NUM_PARTICLE      = 20000;
+   const int  NUM_ATTRIBUTE_FLT = 7;
+   const int  NUM_ATTRIBUTE_INT = 1;
+   const bool PAR_IC_ATT_ID     = true; // data format of PAR_IC: (true: [attribute][id], false: [id][attribute]; row-major)
+
+   real_par (*ParIC_Flt)[NUM_PARTICLE] = new real_par [NUM_ATTRIBUTE_FLT][NUM_PARTICLE];
+   long_par (*ParIC_Int)[NUM_PARTICLE] = new long_par [NUM_ATTRIBUTE_INT][NUM_PARTICLE];
 
    for (int p=0; p<NUM_PARTICLE; p++)
    {
 //    replace the following lines by your particle initial condition
-      ParIC[0][p] = 1.1;   // mass
-      ParIC[1][p] = 2.2;   // position x
-      ParIC[2][p] = 3.3;   // position y
-      ParIC[3][p] = 4.4;   // position z
-      ParIC[4][p] = 5.5;   // velocity x
-      ParIC[5][p] = 6.6;   // velocity y
-      ParIC[6][p] = 7.7;   // velocity z
-      ParIC[7][p] = 1.0;   // type (generic massive)
+      ParIC_Flt[0][p] = 1.1;   // mass
+      ParIC_Flt[1][p] = 2.2;   // position x
+      ParIC_Flt[2][p] = 3.3;   // position y
+      ParIC_Flt[3][p] = 4.4;   // position z
+      ParIC_Flt[4][p] = 5.5;   // velocity x
+      ParIC_Flt[5][p] = 6.6;   // velocity y
+      ParIC_Flt[6][p] = 7.7;   // velocity z
+
+      ParIC_Int[0][p] = 1;     // type (generic massive)
    }
 
    FILE *File = fopen( "PAR_IC", "wb" );
-   fwrite( ParIC, sizeof(float), NUM_PARTICLE*NUM_ATTRIBUTE, File );
+
+   if ( PAR_IC_ATT_ID )
+   {
+      for (int p=0; p<NUM_PARTICLE; p++)
+      {
+         for (int v=0; v<NUM_ATTRIBUTE_FLT; v++) fwrite( &ParIC_Flt[v][p], sizeof(real_par), 1, File );
+         for (int v=0; v<NUM_ATTRIBUTE_INT; v++) fwrite( &ParIC_Int[v][p], sizeof(long_par), 1, File );
+      }
+   }
+   else
+   {
+      for (int v=0; v<NUM_ATTRIBUTE_FLT; v++) fwrite( ParIC_Flt[v], sizeof(real_par), NUM_PARTICLE, File );
+      for (int v=0; v<NUM_ATTRIBUTE_INT; v++) fwrite( ParIC_Int[v], sizeof(long_par), NUM_PARTICLE, File );
+   }
+
+
    fclose( File );
 
-   delete [] ParIC;
-}
+   delete [] ParIC_Flt;
+   delete [] ParIC_Int;
+
+} // FUNCTION : main
 ```
 
 The built-in particle types (defined in `include/Macro.h`) include
-`PTYPE_TRACER=0.0`, `PTYPE_GENERIC_MASSIVE=1.0`, `PTYPE_DARK_MATTER=2.0`, and `PTYPE_STAR=3.0`.
-They have the floating-point types for now but will be changed to integers in the future.
+`PTYPE_TRACER=0`, `PTYPE_GENERIC_MASSIVE=1`, `PTYPE_DARK_MATTER=2`, and `PTYPE_STAR=3`.
 For `PTYPE_TRACER`, one must also enable the compilation option
 [[TRACER | Installation: Simulation-Options#TRACER]].
 
