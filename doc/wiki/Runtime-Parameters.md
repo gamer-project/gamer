@@ -24,37 +24,37 @@ Input file templates are put in `example/input/`.
 * [[General | Runtime-Parameters:-General]]
 -- Parameters applicable to all simulations, such as simulation domain, root-level grid, simulation end time...
 
-* [[MPI and OpenMP | MPI-and-OpenMP#runtime-parameters]]
+* [[MPI and OpenMP | Runtime-Parameters:-MPI-and-OpenMP]]
 -- Number of MPI processes and OpenMP threads, load-balancing parameters
 
-* [[GPU | GPU#runtime-parameters]]
+* [[GPU | Runtime-Parameters:-GPU]]
 -- GPU IDs and optimization parameters
 
 * [[Units | Runtime-Parameters:-Units]]
 -- Unit system
 
-* [[Initial Conditions | Initial-Conditions]]
+* [[Initial Conditions | Runtime-Parameters:-Initial-Conditions]]
 -- Initialization methods, restarting simulations
 
-* [[Hydro | Hydro#runtime-parameters]]
+* [[Hydro | Runtime-Parameters:-Hydro]]
 -- Hydro solvers, physical constants, boundary conditions
 
-* [[Gravity | Gravity#runtime-parameters]]
+* [[Gravity | Runtime-Parameters:-Gravity]]
 -- Gravity solvers, physical constants, boundary conditions
 
-* [[Particles | Particles#runtime-parameters]]
+* [[Particles | Runtime-Parameters:-Particles]]
 -- Particle parameters
 
 * [[Cosmology | Runtime-Parameters:-Cosmology]]
 -- Cosmological parameters
 
-* [[Chemistry and Radiation | Chemistry-and-Radiation#runtime-parameters]]
+* [[Chemistry and Radiation | Runtime-Parameters:-Chemistry-and-Radiation]]
 -- GRACKLE parameters
 
-* [[Star Formation | Star-Formation#runtime-parameters]]
+* [[Star Formation | Runtime-Parameters:-Star-Formation]]
 -- Star formation parameters
 
-* [[Feedback | Feedback#runtime-parameters]]
+* [[Feedback | Runtime-Parameters:-Feedback]]
 -- Feedback parameters
 
 * [[Timestep | Runtime-Parameters:-Timestep]]
@@ -66,7 +66,7 @@ Input file templates are put in `example/input/`.
 * [[Interpolation | Runtime-Parameters:-Interpolation]]
 -- Interpolation schemes
 
-* [[Outputs | Outputs#runtime-parameters]]
+* [[Outputs | Runtime-Parameters:-Outputs]]
 -- Data output parameters
 
 * [[Miscellaneous | Runtime-Parameters:-Miscellaneous]]
