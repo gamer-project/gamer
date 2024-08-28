@@ -9,6 +9,6 @@ First-time GRACKLE installation guide (on calab-ntu gpu-clusters as an example):
 7. Next execute "make save-config-gamer" (save this GAMER-spock specific config setting) and "make load-config-gamer" (load this GAMER-spock specific config setting)
 8. Lastly for code compilation, execute "make; make install"
 9. To compile the corresponding gamer executable:
-    (1) Add the path "GRACKLE_PATH    <your_grackle_directory>/grackle/grackle_spock_single_omp" to "<your_gamer_directory>/configs/spock_intel.config"
+    (1) Add the path "GRACKLE_PATH    <your_grackle_directory>/grackle_spock_single_omp" to "<your_gamer_directory>/configs/spock_intel.config"
     (2) Copy "generate_make.sh" from the AGORA test problem and change "--machine=spock_intel" in that file, and then execute "sh generate_make.sh"
     (3) Generate a gamer executable via "make clean; make -j 4"
