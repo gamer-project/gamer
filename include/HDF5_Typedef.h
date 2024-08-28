@@ -891,45 +891,50 @@ inline void SyncHDF5File( const char *FileName )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Structure   :  HDF5_OutUser_t
+// Structure   :  HDF5_Output_t
 // Description :  Data structure for outputting the user run-time parameters
 //
-// Note        :  1. Run-time parameters are stored by HDF5_Output_User_Ptr function
+// Note        :  1. Run-time parameters are stored by HDF5_Output_User_Ptr or HDF5_Output_TestProb_Ptr function
 //-------------------------------------------------------------------------------------------------------
-struct HDF5_OutUser_t
+struct HDF5_Output_t
 {
 // data members
-   int NPara;
-   char (*Key)[MAX_STRING];
-   void **Ptr;
-   int   *Type;
+   int     NPara;
+   size_t  TotalSize;
+   char  (*Key)[MAX_STRING];
+   void  **Ptr;
+   int    *Type;
+   size_t *TypeSize;
 
 //===================================================================================
-// Constructor :  HDF5_OutUser_t
-// Description :  Constructor of the structure "HDF5_OutUser_t"
+// Constructor :  HDF5_Output_t
+// Description :  Constructor of the structure "HDF5_Output_t"
 //
 // Note        :  Initialize variables and allocate memory
 //===================================================================================
-   HDF5_OutUser_t()
+   HDF5_Output_t()
    {
-      NPara  = 0;
-      Key    = new char  [NPARA_MAX][MAX_STRING];
-      Ptr    = new void* [NPARA_MAX];
-      Type   = new int   [NPARA_MAX];
-   } // METHOD : ReadPara_t
+      NPara     = 0;
+      TotalSize = 0;
+      Key       = new char   [NPARA_MAX][MAX_STRING];
+      Ptr       = new void*  [NPARA_MAX];
+      Type      = new int    [NPARA_MAX];
+      TypeSize  = new size_t [NPARA_MAX];
+   } // METHOD : HDF5_Output_t
 
 //===================================================================================
-// Constructor :  ~HDF5_OutUser_t
-// Description :  Destructor of the structure "HDF5_OutUser_t"
+// Constructor :  ~HDF5_Output_t
+// Description :  Destructor of the structure "HDF5_Output_t"
 //
 // Note        :  Deallocate memory
 //===================================================================================
-   ~HDF5_OutUser_t()
+   ~HDF5_Output_t()
    {
       delete [] Key;
       delete [] Ptr;
       delete [] Type;
-   } // METHOD : ~HDF5_OutUser_t
+      delete [] TypeSize;
+   } // METHOD : ~HDF5_Output_t
 
 //===================================================================================
 // Constructor :  Add
@@ -950,18 +955,19 @@ struct HDF5_OutUser_t
 //    parameter address
       Ptr[NPara] = NewPtr;
 
-//    parameter data type
-      if      ( typeid(T) == typeid(int   ) )   Type[NPara] = TYPE_INT;
-      else if ( typeid(T) == typeid(long  ) )   Type[NPara] = TYPE_LONG;
-      else if ( typeid(T) == typeid(uint  ) )   Type[NPara] = TYPE_UINT;
-      else if ( typeid(T) == typeid(ulong ) )   Type[NPara] = TYPE_ULONG;
-      else if ( typeid(T) == typeid(bool  ) )   Type[NPara] = TYPE_BOOL;
-      else if ( typeid(T) == typeid(float ) )   Type[NPara] = TYPE_FLOAT;
-      else if ( typeid(T) == typeid(double) )   Type[NPara] = TYPE_DOUBLE;
+//    parameter data type and size
+      if      ( typeid(T) == typeid(int   ) )   { Type[NPara] = TYPE_INT;    TypeSize[NPara] = sizeof(int   ); }
+      else if ( typeid(T) == typeid(long  ) )   { Type[NPara] = TYPE_LONG;   TypeSize[NPara] = sizeof(long  ); }
+      else if ( typeid(T) == typeid(uint  ) )   { Type[NPara] = TYPE_UINT;   TypeSize[NPara] = sizeof(uint  ); }
+      else if ( typeid(T) == typeid(ulong ) )   { Type[NPara] = TYPE_ULONG;  TypeSize[NPara] = sizeof(ulong ); }
+      else if ( typeid(T) == typeid(bool  ) )   { Type[NPara] = TYPE_BOOL;   TypeSize[NPara] = sizeof(int   ); } // bool store as int
+      else if ( typeid(T) == typeid(float ) )   { Type[NPara] = TYPE_FLOAT;  TypeSize[NPara] = sizeof(float ); }
+      else if ( typeid(T) == typeid(double) )   { Type[NPara] = TYPE_DOUBLE; TypeSize[NPara] = sizeof(double); }
       else
          Aux_Error( ERROR_INFO, "unsupported data type for \"%s\" (float*, double*, int*, long*, unit*, ulong*, bool* only) !!\n",
                     NewKey );
 
+      TotalSize += TypeSize[NPara];
       NPara ++;
    } // METHOD : Add
 
@@ -987,11 +993,15 @@ struct HDF5_OutUser_t
 //    parameter data type
       Type[NPara] = TYPE_STRING;
 
+//    parameter data size
+      TypeSize[NPara] = (size_t)MAX_STRING;
+
+      TotalSize += TypeSize[NPara];
       NPara ++;
 
    } // METHOD : Add (string)
 
-}; // struct HDF5_OutUser_t
+}; // struct HDF5_Output_t
 
 
 

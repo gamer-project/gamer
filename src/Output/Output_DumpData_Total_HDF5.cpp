@@ -13,36 +13,41 @@ static void GetCompound_KeyInfo  ( hid_t &H5_TypeID );
 static void GetCompound_Makefile ( hid_t &H5_TypeID );
 static void GetCompound_SymConst ( hid_t &H5_TypeID );
 static void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored );
+static void GetCompound_OutUser  ( hid_t &H5_TypeID, const HDF5_Output_t *HDF5_OutUser );
 
-void (*HDF5_Output_User_Ptr)( HDF5_OutUser_t *HDF5_OutUser ) = NULL;
-static void H5_write_user( const hid_t H5_GroupID, const HDF5_OutUser_t *HDF5_OutUser );
+void (*HDF5_Output_TestProb_Ptr)( HDF5_Output_t *HDF5_Output_InputTest ) = NULL;
+void (*HDF5_Output_User_Ptr)( HDF5_Output_t *HDF5_OutUser ) = NULL;
+static void H5_write_user( const hid_t H5_GroupID, const HDF5_Output_t *HDF5_OutUser );
+static void H5_write_user2( const hid_t H5_GroupID, hid_t &H5_Type_ID, const HDF5_Output_t *HDF5_OutUser );
 
 
 
 /*======================================================================================================
 Data structure:
 / -> |
-     | -> Info group     -> | -> InputPara dset (compound)
-     |                      | -> KeyInfo   dset (compound)
-     |                      | -> Makefile  dset (compound)
-     |                      | -> SymConst  dset (compound)
-     |                      | -> Output_User group             -> | -> dset_1
-     |                                                            | -> ...
+     | -> Info group        -> | -> InputPara dset (compound)
+     |                         | -> InputTest dset (compound)
+     |                         | -> KeyInfo   dset (compound)
+     |                         | -> Makefile  dset (compound)
+     |                         | -> SymConst  dset (compound)
      |
-     | -> Tree group     -> | -> Corner  dset -> Cvt2Phy attrs
-     |                      | -> LBIdx   dset
-     |                      | -> Father  dset
-     |                      | -> Son     dset
-     |                      | -> Sibling dset
-     |                      | -> NPar    dset
+     | -> Output_User group -> | -> dset_1
+     |                         | -> ...
      |
-     | -> GridData group -> | -> Dens dset
-     |                      | -> ...
-     |                      | -> ...
+     | -> Tree group        -> | -> Corner  dset -> Cvt2Phy attrs
+     |                         | -> LBIdx   dset
+     |                         | -> Father  dset
+     |                         | -> Son     dset
+     |                         | -> Sibling dset
+     |                         | -> NPar    dset
      |
-     | -> Particle group -> | -> ParMass dset
-                            | -> ...
-                            | -> ...
+     | -> GridData group    -> | -> Dens dset
+     |                         | -> ...
+     |                         | -> ...
+     |
+     | -> Particle group    -> | -> ParMass dset
+                               | -> ...
+                               | -> ...
 ======================================================================================================*/
 
 
@@ -401,9 +406,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    hid_t   H5_MemID_Field;
    hid_t   H5_FileID, H5_GroupID_Info, H5_GroupID_Tree, H5_GroupID_GridData;
    hid_t   H5_SetID_LBIdx, H5_SetID_Cr, H5_SetID_Fa, H5_SetID_Son, H5_SetID_Sib, H5_SetID_Field;
-   hid_t   H5_SetID_KeyInfo, H5_SetID_Makefile, H5_SetID_SymConst, H5_SetID_InputPara, H5_SetID_HDF5OutUser;
+   hid_t   H5_SetID_KeyInfo, H5_SetID_Makefile, H5_SetID_SymConst, H5_SetID_InputPara, H5_SetID_InputTest, H5_SetID_HDF5OutUser;
    hid_t   H5_SpaceID_Scalar, H5_SpaceID_LBIdx, H5_SpaceID_Cr, H5_SpaceID_Fa, H5_SpaceID_Son, H5_SpaceID_Sib, H5_SpaceID_Field;
-   hid_t   H5_TypeID_Com_KeyInfo, H5_TypeID_Com_Makefile, H5_TypeID_Com_SymConst, H5_TypeID_Com_InputPara;
+   hid_t   H5_TypeID_Com_KeyInfo, H5_TypeID_Com_Makefile, H5_TypeID_Com_SymConst, H5_TypeID_Com_InputPara, H5_TypeID_Com_InputTest;
    hid_t   H5_DataCreatePropList;
    hid_t   H5_AttID_Cvt2Phy;
    herr_t  H5_Status;
@@ -420,13 +425,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    H5_DataCreatePropList = H5Pcreate( H5P_DATASET_CREATE );
    H5_Status             = H5Pset_fill_time( H5_DataCreatePropList, H5D_FILL_TIME_NEVER );
 
-// 2-2. create the "compound" datatype
-   GetCompound_KeyInfo  ( H5_TypeID_Com_KeyInfo   );
-   GetCompound_Makefile ( H5_TypeID_Com_Makefile  );
-   GetCompound_SymConst ( H5_TypeID_Com_SymConst  );
-   GetCompound_InputPara( H5_TypeID_Com_InputPara, NFieldStored );
-
-// 2-3. create the "scalar" dataspace
+// 2-2. create the "scalar" dataspace
    H5_SpaceID_Scalar = H5Screate( H5S_SCALAR );
 
 
@@ -435,58 +434,75 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    if ( MPI_Rank == 0 )
    {
 //    3-1. collect all information to be recorded
-      KeyInfo_t   KeyInfo;
-      Makefile_t  Makefile;
-      SymConst_t  SymConst;
-      InputPara_t InputPara;
-      HDF5_OutUser_t HDF5_OutUser;
+      KeyInfo_t      KeyInfo;
+      Makefile_t     Makefile;
+      SymConst_t     SymConst;
+      InputPara_t    InputPara;
+      HDF5_Output_t  HDF5_InputTest;
+      HDF5_Output_t  HDF5_OutUser;
 
       FillIn_KeyInfo  ( KeyInfo, NFieldStored );
       FillIn_Makefile ( Makefile );
       FillIn_SymConst ( SymConst );
       FillIn_InputPara( InputPara, NFieldStored, FieldLabelOut );
-      if ( HDF5_Output_User_Ptr != NULL )   HDF5_Output_User_Ptr( &HDF5_OutUser );
+      if ( HDF5_Output_TestProb_Ptr != NULL )   HDF5_Output_TestProb_Ptr( &HDF5_InputTest  );
+      if ( HDF5_Output_User_Ptr     != NULL )   HDF5_Output_User_Ptr( &HDF5_OutUser );
 
 
-//    3-2. create the HDF5 file (overwrite the existing file)
+//    3-2. create the "compound" datatype
+      GetCompound_KeyInfo  ( H5_TypeID_Com_KeyInfo  );
+      GetCompound_Makefile ( H5_TypeID_Com_Makefile );
+      GetCompound_SymConst ( H5_TypeID_Com_SymConst );
+      GetCompound_InputPara( H5_TypeID_Com_InputPara, NFieldStored    );
+      GetCompound_OutUser  ( H5_TypeID_Com_InputTest, &HDF5_InputTest );
+
+
+//    3-3. create the HDF5 file (overwrite the existing file)
       H5_FileID = H5Fcreate( FileName, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT );
 
       if ( H5_FileID < 0 )    Aux_Error( ERROR_INFO, "failed to create the HDF5 file \"%s\" !!\n", FileName );
 
 
-//    3-3. write the simulation info (note: dataset doesn't support VL datatype when the fill value is not defined)
+//    3-4. write the simulation info (note: dataset doesn't support VL datatype when the fill value is not defined)
       H5_GroupID_Info = H5Gcreate( H5_FileID, "Info", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
       if ( H5_GroupID_Info < 0 )    Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "Info" );
 
-//    3-3-1. KeyInfo
+//    3-4-1. KeyInfo
       H5_SetID_KeyInfo     = H5Dcreate( H5_GroupID_Info, "KeyInfo", H5_TypeID_Com_KeyInfo, H5_SpaceID_Scalar,
                                         H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
       if ( H5_SetID_KeyInfo < 0 )   Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", "KeyInfo" );
       H5_Status            = H5Dwrite( H5_SetID_KeyInfo, H5_TypeID_Com_KeyInfo, H5S_ALL, H5S_ALL, H5P_DEFAULT, &KeyInfo );
       H5_Status            = H5Dclose( H5_SetID_KeyInfo );
 
-//    3-3-2. Makefile
+//    3-4-2. Makefile
       H5_SetID_Makefile    = H5Dcreate( H5_GroupID_Info, "Makefile", H5_TypeID_Com_Makefile, H5_SpaceID_Scalar,
                                         H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
       if ( H5_SetID_Makefile < 0 )  Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", "Makefile" );
       H5_Status            = H5Dwrite( H5_SetID_Makefile, H5_TypeID_Com_Makefile, H5S_ALL, H5S_ALL, H5P_DEFAULT, &Makefile );
       H5_Status            = H5Dclose( H5_SetID_Makefile );
 
-//    3-3-3. SymConst
+//    3-4-3. SymConst
       H5_SetID_SymConst    = H5Dcreate( H5_GroupID_Info, "SymConst", H5_TypeID_Com_SymConst, H5_SpaceID_Scalar,
                                         H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
       if ( H5_SetID_SymConst < 0 )  Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", "SymConst" );
       H5_Status            = H5Dwrite( H5_SetID_SymConst, H5_TypeID_Com_SymConst, H5S_ALL, H5S_ALL, H5P_DEFAULT, &SymConst );
       H5_Status            = H5Dclose( H5_SetID_SymConst );
 
-//    3-3-4. InputPara
+//    3-4-4. InputPara
       H5_SetID_InputPara   = H5Dcreate( H5_GroupID_Info, "InputPara", H5_TypeID_Com_InputPara, H5_SpaceID_Scalar,
                                         H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
       if ( H5_SetID_InputPara < 0 ) Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", "InputPara" );
       H5_Status            = H5Dwrite( H5_SetID_InputPara, H5_TypeID_Com_InputPara, H5S_ALL, H5S_ALL, H5P_DEFAULT, &InputPara );
       H5_Status            = H5Dclose( H5_SetID_InputPara );
 
-//    3-3-5. Output_User
+//    3-4-5. InputTest
+      H5_SetID_InputTest   = H5Dcreate( H5_GroupID_Info, "InputTest", H5_TypeID_Com_InputTest, H5_SpaceID_Scalar,
+                                        H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+      if ( H5_SetID_InputTest < 0 ) Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", "InputTest" );
+      H5_write_user2( H5_SetID_InputTest, H5_TypeID_Com_InputTest, &HDF5_InputTest );
+      H5_Status            = H5Dclose( H5_SetID_InputTest );
+
+//    3-4-6. Output_User
       H5_SetID_HDF5OutUser = H5Gcreate( H5_GroupID_Info, "Output_User", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
       if ( H5_SetID_HDF5OutUser < 0 ) Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "Output_User" );
       H5_write_user( H5_SetID_HDF5OutUser, &HDF5_OutUser );
@@ -495,7 +511,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       H5_Status = H5Gclose( H5_GroupID_Info );
       H5_Status = H5Fclose( H5_FileID );
 
-//    3-4. free memory
+//    3-5. free memory
       for (int lv=0; lv<NLEVEL-1; lv++)   free( InputPara.FlagTable_User[lv].p );
    } // if ( MPI_Rank == 0 )
 
@@ -1489,10 +1505,14 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 
 // 8. close all HDF5 objects and free memory
-   H5_Status = H5Tclose( H5_TypeID_Com_KeyInfo );
-   H5_Status = H5Tclose( H5_TypeID_Com_Makefile );
-   H5_Status = H5Tclose( H5_TypeID_Com_SymConst );
-   H5_Status = H5Tclose( H5_TypeID_Com_InputPara );
+   if ( MPI_Rank == 0 )
+   {
+      H5_Status = H5Tclose( H5_TypeID_Com_KeyInfo   );
+      H5_Status = H5Tclose( H5_TypeID_Com_Makefile  );
+      H5_Status = H5Tclose( H5_TypeID_Com_SymConst  );
+      H5_Status = H5Tclose( H5_TypeID_Com_InputPara );
+      H5_Status = H5Tclose( H5_TypeID_Com_InputTest );
+   } // if ( MPI_Rank == 0 )
    H5_Status = H5Sclose( H5_SpaceID_Scalar );
    H5_Status = H5Pclose( H5_DataCreatePropList );
 
@@ -3704,7 +3724,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 // Parameter   :  H5_GroupID   : the group id of HDF5 to write the datasets
 //                HDF5_OutUser : the structure storing the parameters to be written in HDF5
 //-------------------------------------------------------------------------------------------------------
-void H5_write_user( const hid_t H5_GroupID, const HDF5_OutUser_t *HDF5_OutUser )
+void H5_write_user( const hid_t H5_GroupID, const HDF5_Output_t *HDF5_OutUser )
 {
    herr_t H5_Status;
    hid_t  H5_SpaceID_Scalar, H5_TypeID_VarStr;
@@ -3744,6 +3764,110 @@ void H5_write_user( const hid_t H5_GroupID, const HDF5_OutUser_t *HDF5_OutUser )
    H5_Status = H5Tclose( H5_TypeID_VarStr  );
    H5_Status = H5Sclose( H5_SpaceID_Scalar );
 } // FUNCTION : H5_write_user
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  GetCompound_OutUser
+// Description :  Write the data stored in HDF5_OutUser to HDF5
+//
+// Note        :  1. Data structure is defined in "HDF5_Typedef.h"
+//                2. Supported int, long, uint, ulong, int, float, double, and string data type
+//
+// Parameter   :  H5_GroupID   : the group id of HDF5 to write the datasets
+//                HDF5_OutUser : the structure storing the parameters to be written in HDF5
+//-------------------------------------------------------------------------------------------------------
+void GetCompound_OutUser( hid_t &H5_TypeID, const HDF5_Output_t *HDF5_OutUser )
+{
+   herr_t H5_Status;
+   hid_t  H5_Type;
+   hid_t  H5_TypeID_VarStr  = H5Tcopy( H5T_C_S1 );
+
+   H5_TypeID = H5Tcreate( H5T_COMPOUND, HDF5_OutUser->TotalSize );
+
+   size_t offset = 0;
+   for (int i=0; i<HDF5_OutUser->NPara; i++)
+   {
+      int type = HDF5_OutUser->Type[i];
+      switch ( type )
+      {
+         case 1: H5_Type = H5T_NATIVE_INT;    break;
+         case 2: H5_Type = H5T_NATIVE_LONG;   break;
+         case 3: H5_Type = H5T_NATIVE_UINT;   break;
+         case 4: H5_Type = H5T_NATIVE_ULONG;  break;
+         case 5: H5_Type = H5T_NATIVE_INT;    break; // bool is stored as int
+         case 6: H5_Type = H5T_NATIVE_FLOAT;  break;
+         case 7: H5_Type = H5T_NATIVE_DOUBLE; break;
+         case 8: H5_Type = H5_TypeID_VarStr;  break;
+         default: Aux_Error( ERROR_INFO, "Unrecognize type: %d", type ); break;
+      } // switch ( type )
+
+      H5Tinsert( H5_TypeID, HDF5_OutUser->Key[i], offset, H5_Type );
+      offset += HDF5_OutUser->TypeSize[i];
+
+   } // for (int i=0; i<HDF5_OutUser->NPara; i++)
+   H5_Status = H5Tclose( H5_TypeID_VarStr );
+} // FUNCTION : GetCompound_OutUser
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  H5_write_user2
+// Description :  Write the data stored in HDF5_OutUser to HDF5
+//
+// Note        :  1. Data structure is defined in "HDF5_Typedef.h"
+//                2. Supported int, long, uint, ulong, int, float, double, and string data type
+//
+// Parameter   :  H5_GroupID   : the group id of HDF5 to write the datasets
+//                HDF5_OutUser : the structure storing the parameters to be written in HDF5
+//-------------------------------------------------------------------------------------------------------
+void H5_write_user2( const hid_t H5_GroupID, hid_t &H5_TypeID, const HDF5_Output_t *HDF5_OutUser )
+{
+   herr_t H5_Status;
+   hid_t  H5_SpaceID_Scalar, H5_TypeID_VarStr;
+   hid_t  H5_SetID_Data, H5_Type;
+
+   H5_SpaceID_Scalar = H5Screate( H5S_SCALAR );
+   H5_TypeID_VarStr  = H5Tcopy( H5T_C_S1 );
+   H5_Status         = H5Tset_size( H5_TypeID_VarStr, H5T_VARIABLE );
+
+   char  data[HDF5_OutUser->TotalSize];
+   size_t offset = 0;
+
+   for (int i=0; i<HDF5_OutUser->NPara; i++)
+   {
+      int    type      = HDF5_OutUser->Type[i];
+      size_t type_size = HDF5_OutUser->TypeSize[i];
+      switch ( type )
+      {
+         case 1: H5_Type = H5T_NATIVE_INT;    break;
+         case 2: H5_Type = H5T_NATIVE_LONG;   break;
+         case 3: H5_Type = H5T_NATIVE_UINT;   break;
+         case 4: H5_Type = H5T_NATIVE_ULONG;  break;
+         case 5: H5_Type = H5T_NATIVE_INT;    break; // bool is stored as int
+         case 6: H5_Type = H5T_NATIVE_FLOAT;  break;
+         case 7: H5_Type = H5T_NATIVE_DOUBLE; break;
+         case 8: H5_Type = H5_TypeID_VarStr;  break;
+         default: Aux_Error( ERROR_INFO, "Unrecognize type: %d", type ); break;
+      } // switch ( type )
+
+      if ( type == 5 )
+      {
+         int *temp = (int *)(HDF5_OutUser->Ptr[i]);
+
+         memcpy( data + offset, temp, type_size );
+      }
+      else
+         memcpy( data + offset, HDF5_OutUser->Ptr[i], type_size );
+      offset += type_size;
+
+   } // for (int i=0; i<HDF5_OutUser->NPara; i++)
+
+   H5Dwrite( H5_GroupID, H5_TypeID, H5S_ALL, H5S_ALL, H5P_DEFAULT, data );
+
+   H5_Status = H5Tclose( H5_TypeID_VarStr  );
+   H5_Status = H5Sclose( H5_SpaceID_Scalar );
+} // FUNCTION : H5_write_user2
 
 
 

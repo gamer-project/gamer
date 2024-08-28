@@ -331,7 +331,40 @@ void SetParameter()
    }
 
 
-// (4) make a note
+// (4) record to HDF5
+// #  ifdef SUPPORT_HDF5
+//    HDF5_InputTest->Add( "Plummer_RSeed",        &Plummer_RSeed        );
+//    HDF5_InputTest->Add( "Plummer_Rho0",         &Plummer_Rho0         );
+//    HDF5_InputTest->Add( "Plummer_R0",           &Plummer_R0           );
+//    HDF5_InputTest->Add( "Plummer_MaxR",         &Plummer_MaxR         );
+//    HDF5_InputTest->Add( "Plummer_Collision",    &Plummer_Collision    );
+//    HDF5_InputTest->Add( "Plummer_Collision_D",  &Plummer_Collision_D  );
+//    HDF5_InputTest->Add( "Plummer_CenterX",      &Plummer_Center[0]    );
+//    HDF5_InputTest->Add( "Plummer_CenterY",      &Plummer_Center[1]    );
+//    HDF5_InputTest->Add( "Plummer_CenterZ",      &Plummer_Center[2]    );
+//    HDF5_InputTest->Add( "Plummer_BulkVelX",     &Plummer_BulkVel[0]   );
+//    HDF5_InputTest->Add( "Plummer_BulkVelY",     &Plummer_BulkVel[1]   );
+//    HDF5_InputTest->Add( "Plummer_BulkVelZ",     &Plummer_BulkVel[2]   );
+//    HDF5_InputTest->Add( "Plummer_GasMFrac",     &Plummer_GasMFrac     );
+//    HDF5_InputTest->Add( "Plummer_ExtAccMFrac",  &Plummer_ExtAccMFrac  );
+//    HDF5_InputTest->Add( "Plummer_ExtPotMFrac",  &Plummer_ExtPotMFrac  );
+//    HDF5_InputTest->Add( "Plummer_MassProfNBin", &Plummer_MassProfNBin );
+//    HDF5_InputTest->Add( "Plummer_AddColor",     &Plummer_AddColor     );
+// #  ifdef FEEDBACK
+//    HDF5_InputTest->Add( "Plummer_FB_Exp",       &Plummer_FB_Exp       );
+//    HDF5_InputTest->Add( "Plummer_FB_ExpEMin",   &Plummer_FB_ExpEMin   );
+//    HDF5_InputTest->Add( "Plummer_FB_ExpEMax",   &Plummer_FB_ExpEMax   );
+//    HDF5_InputTest->Add( "Plummer_FB_ExpMMin",   &Plummer_FB_ExpMMin   );
+//    HDF5_InputTest->Add( "Plummer_FB_ExpMMax",   &Plummer_FB_ExpMMax   );
+//    HDF5_InputTest->Add( "Plummer_FB_Acc",       &Plummer_FB_Acc       );
+//    HDF5_InputTest->Add( "Plummer_FB_AccMMin",   &Plummer_FB_AccMMin   );
+//    HDF5_InputTest->Add( "Plummer_FB_AccMMax",   &Plummer_FB_AccMMax   );
+//    HDF5_InputTest->Add( "Plummer_FB_Like",      &Plummer_FB_Like      );
+// #  endif
+// #  endif // #ifdef SUPPORT_HDF5
+
+
+// (5) make a note
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
@@ -501,7 +534,7 @@ void AddNewField_Plummer()
 
 #ifdef SUPPORT_HDF5
 //-------------------------------------------------------------------------------------------------------
-// Function    :  HDF5_Output_User_Plummer
+// Function    :  HDF5_Output_TestProb
 // Description :  Add the problem-specific fields
 //
 // Note         : 1. This function only works in MPI_RANK == 0
@@ -511,37 +544,37 @@ void AddNewField_Plummer()
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void HDF5_Output_User_Plummer( HDF5_OutUser_t *HDF5_OutUser )
+void HDF5_Output_TestProb( HDF5_Output_t *HDF5_Output_InputTest )
 {
-   HDF5_OutUser->Add( "Plummer_RSeed",        &Plummer_RSeed        );
-   HDF5_OutUser->Add( "Plummer_Rho0",         &Plummer_Rho0         );
-   HDF5_OutUser->Add( "Plummer_R0",           &Plummer_R0           );
-   HDF5_OutUser->Add( "Plummer_MaxR",         &Plummer_MaxR         );
-   HDF5_OutUser->Add( "Plummer_Collision",    &Plummer_Collision    );
-   HDF5_OutUser->Add( "Plummer_Collision_D",  &Plummer_Collision_D  );
-   HDF5_OutUser->Add( "Plummer_CenterX",      &Plummer_Center[0]    );
-   HDF5_OutUser->Add( "Plummer_CenterY",      &Plummer_Center[1]    );
-   HDF5_OutUser->Add( "Plummer_CenterZ",      &Plummer_Center[2]    );
-   HDF5_OutUser->Add( "Plummer_BulkVelX",     &Plummer_BulkVel[0]   );
-   HDF5_OutUser->Add( "Plummer_BulkVelY",     &Plummer_BulkVel[1]   );
-   HDF5_OutUser->Add( "Plummer_BulkVelZ",     &Plummer_BulkVel[2]   );
-   HDF5_OutUser->Add( "Plummer_GasMFrac",     &Plummer_GasMFrac     );
-   HDF5_OutUser->Add( "Plummer_ExtAccMFrac",  &Plummer_ExtAccMFrac  );
-   HDF5_OutUser->Add( "Plummer_ExtPotMFrac",  &Plummer_ExtPotMFrac  );
-   HDF5_OutUser->Add( "Plummer_MassProfNBin", &Plummer_MassProfNBin );
-   HDF5_OutUser->Add( "Plummer_AddColor",     &Plummer_AddColor     );
+   HDF5_Output_InputTest->Add( "Plummer_RSeed",        &Plummer_RSeed        );
+   HDF5_Output_InputTest->Add( "Plummer_Rho0",         &Plummer_Rho0         );
+   HDF5_Output_InputTest->Add( "Plummer_R0",           &Plummer_R0           );
+   HDF5_Output_InputTest->Add( "Plummer_MaxR",         &Plummer_MaxR         );
+   HDF5_Output_InputTest->Add( "Plummer_Collision",    &Plummer_Collision    );
+   HDF5_Output_InputTest->Add( "Plummer_Collision_D",  &Plummer_Collision_D  );
+   HDF5_Output_InputTest->Add( "Plummer_CenterX",      &Plummer_Center[0]    );
+   HDF5_Output_InputTest->Add( "Plummer_CenterY",      &Plummer_Center[1]    );
+   HDF5_Output_InputTest->Add( "Plummer_CenterZ",      &Plummer_Center[2]    );
+   HDF5_Output_InputTest->Add( "Plummer_BulkVelX",     &Plummer_BulkVel[0]   );
+   HDF5_Output_InputTest->Add( "Plummer_BulkVelY",     &Plummer_BulkVel[1]   );
+   HDF5_Output_InputTest->Add( "Plummer_BulkVelZ",     &Plummer_BulkVel[2]   );
+   HDF5_Output_InputTest->Add( "Plummer_GasMFrac",     &Plummer_GasMFrac     );
+   HDF5_Output_InputTest->Add( "Plummer_ExtAccMFrac",  &Plummer_ExtAccMFrac  );
+   HDF5_Output_InputTest->Add( "Plummer_ExtPotMFrac",  &Plummer_ExtPotMFrac  );
+   HDF5_Output_InputTest->Add( "Plummer_MassProfNBin", &Plummer_MassProfNBin );
+   HDF5_Output_InputTest->Add( "Plummer_AddColor",     &Plummer_AddColor     );
 #  ifdef FEEDBACK
-   HDF5_OutUser->Add( "Plummer_FB_Exp",       &Plummer_FB_Exp       );
-   HDF5_OutUser->Add( "Plummer_FB_ExpEMin",   &Plummer_FB_ExpEMin   );
-   HDF5_OutUser->Add( "Plummer_FB_ExpEMax",   &Plummer_FB_ExpEMax   );
-   HDF5_OutUser->Add( "Plummer_FB_ExpMMin",   &Plummer_FB_ExpMMin   );
-   HDF5_OutUser->Add( "Plummer_FB_ExpMMax",   &Plummer_FB_ExpMMax   );
-   HDF5_OutUser->Add( "Plummer_FB_Acc",       &Plummer_FB_Acc       );
-   HDF5_OutUser->Add( "Plummer_FB_AccMMin",   &Plummer_FB_AccMMin   );
-   HDF5_OutUser->Add( "Plummer_FB_AccMMax",   &Plummer_FB_AccMMax   );
-   HDF5_OutUser->Add( "Plummer_FB_Like",      &Plummer_FB_Like      );
+   HDF5_Output_InputTest->Add( "Plummer_FB_Exp",       &Plummer_FB_Exp       );
+   HDF5_Output_InputTest->Add( "Plummer_FB_ExpEMin",   &Plummer_FB_ExpEMin   );
+   HDF5_Output_InputTest->Add( "Plummer_FB_ExpEMax",   &Plummer_FB_ExpEMax   );
+   HDF5_Output_InputTest->Add( "Plummer_FB_ExpMMin",   &Plummer_FB_ExpMMin   );
+   HDF5_Output_InputTest->Add( "Plummer_FB_ExpMMax",   &Plummer_FB_ExpMMax   );
+   HDF5_Output_InputTest->Add( "Plummer_FB_Acc",       &Plummer_FB_Acc       );
+   HDF5_Output_InputTest->Add( "Plummer_FB_AccMMin",   &Plummer_FB_AccMMin   );
+   HDF5_Output_InputTest->Add( "Plummer_FB_AccMMax",   &Plummer_FB_AccMMax   );
+   HDF5_Output_InputTest->Add( "Plummer_FB_Like",      &Plummer_FB_Like      );
 #  endif
-} // FUNCTION : HDF5_OutputUser
+} // FUNCTION : HDF5_Output_TestProb
 #endif // #ifdef SUPPORT_HDF5
 
 
@@ -589,7 +622,7 @@ void Init_TestProb_Hydro_Plummer()
    FB_Init_User_Ptr        = FB_Init_Plummer;
 #  endif
 #  ifdef SUPPORT_HDF5
-   HDF5_Output_User_Ptr        = HDF5_Output_User_Plummer;
+   HDF5_Output_TestProb_Ptr = HDF5_Output_TestProb;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 
