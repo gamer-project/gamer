@@ -285,6 +285,34 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  HDF5_Output_TestProb
+// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype.
+//                3. There MUST be more than one parameter to be stored
+//
+// Parameter   :  HDF5_InputTest : the structure storing the parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
+{
+
+   HDF5_InputTest->Add( "BarredPot_V0",       &BarredPot_V0       );
+   HDF5_InputTest->Add( "BarredPot_q",        &BarredPot_q        );
+   HDF5_InputTest->Add( "BarredPot_Rc",       &BarredPot_Rc       );
+   HDF5_InputTest->Add( "BarredPot_Omegabar", &BarredPot_Omegabar );
+   HDF5_InputTest->Add( "BarredPot_fullBS",   &BarredPot_fullBS   );
+   HDF5_InputTest->Add( "BarredPot_initT",    &BarredPot_initT    );
+
+} // FUNCTION : HDF5_Output_TestProb
+#endif // #ifdef SUPPORT_HDF5
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  IsolatedBC
 // Description :  Isolated boundary condition for galaxies, only allow outflow velocities
@@ -360,7 +388,7 @@ void AddNewParticleAttribute_BarredPot()
 
 } // FUNCTION : AddNewParticleAttribute_BarredPot
 #endif
-#endif // #if ( MODEL == HYDRO)
+#endif // #if ( MODEL == HYDRO )
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -387,19 +415,22 @@ void Init_TestProb_Hydro_BarredPot()
 // set the problem-specific runtime parameters
    SetParameter();
 
-   Init_Function_User_Ptr  = SetGridIC;
-   Init_Field_User_Ptr     = AddNewField_BarredPot;
-   BC_User_Ptr             = IsolatedBC;
-   Flag_User_Ptr           = Flag_CMZ;
+   Init_Function_User_Ptr      = SetGridIC;
+   Init_Field_User_Ptr         = AddNewField_BarredPot;
+   BC_User_Ptr                 = IsolatedBC;
+   Flag_User_Ptr               = Flag_CMZ;
 #  ifdef PARTICLE
-   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_BarredPot;
+   Par_Init_ByFunction_Ptr     = Par_Init_ByFunction_BarredPot;
    Par_Init_Attribute_User_Ptr = AddNewParticleAttribute_BarredPot;
 #  endif
 #  ifdef GRAVITY
-//   Init_ExtAcc_Ptr         = Init_ExtAcc_BarredPot;
+//   Init_ExtAcc_Ptr              = Init_ExtAcc_BarredPot;
 //   if ( OPT__EXT_POT == EXT_POT_FUNC )
-   Init_ExtPot_Ptr         = Init_ExtPot_TabularP17;
+   Init_ExtPot_Ptr             = Init_ExtPot_TabularP17;
 #  endif // #ifdef GRAVITY
+#  ifdef SUPPORT_HDF5
+   HDF5_Output_TestProb_Ptr    = HDF5_Output_TestProb;
+#  endif
 #  endif // #if ( MODEL == HYDRO )
 
 

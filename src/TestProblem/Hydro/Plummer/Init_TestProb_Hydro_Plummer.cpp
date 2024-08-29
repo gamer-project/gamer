@@ -487,6 +487,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //-------------------------------------------------------------------------------------------------------
 void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
 {
+
    HDF5_InputTest->Add( "Plummer_RSeed",        &Plummer_RSeed        );
    HDF5_InputTest->Add( "Plummer_Rho0",         &Plummer_Rho0         );
    HDF5_InputTest->Add( "Plummer_R0",           &Plummer_R0           );
@@ -515,6 +516,7 @@ void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
    HDF5_InputTest->Add( "Plummer_FB_AccMMax",   &Plummer_FB_AccMMax   );
    HDF5_InputTest->Add( "Plummer_FB_Like",      &Plummer_FB_Like      );
 #  endif
+
 } // FUNCTION : HDF5_Output_TestProb
 #endif // #ifdef SUPPORT_HDF5
 

@@ -381,6 +381,43 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 } // FUNCTION : SetGridIC
 
 
+
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  HDF5_Output_TestProb
+// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype.
+//                3. There MUST be more than one parameter to be stored
+//
+// Parameter   :  HDF5_InputTest : the structure storing the parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
+{
+
+   HDF5_InputTest->Add( "AGORA_VcProf_Filename",    AGORA_VcProf_Filename   );
+   HDF5_InputTest->Add( "AGORA_HaloPar_Filename",   AGORA_HaloPar_Filename  );
+   HDF5_InputTest->Add( "AGORA_DiskPar_Filename",   AGORA_DiskPar_Filename  );
+   HDF5_InputTest->Add( "AGORA_BulgePar_Filename",  AGORA_BulgePar_Filename );
+   HDF5_InputTest->Add( "AGORA_DiskScaleLength",   &AGORA_DiskScaleLength   );
+   HDF5_InputTest->Add( "AGORA_DiskScaleHeight",   &AGORA_DiskScaleHeight   );
+   HDF5_InputTest->Add( "AGORA_DiskTotalMass",     &AGORA_DiskTotalMass     );
+   HDF5_InputTest->Add( "AGORA_DiskGasMassFrac",   &AGORA_DiskGasMassFrac   );
+   HDF5_InputTest->Add( "AGORA_DiskGasTemp",       &AGORA_DiskGasTemp       );
+   HDF5_InputTest->Add( "AGORA_HaloGasNumDensH",   &AGORA_HaloGasNumDensH   );
+   HDF5_InputTest->Add( "AGORA_HaloGasTemp",       &AGORA_HaloGasTemp       );
+   HDF5_InputTest->Add( "AGORA_UseMetal",          &AGORA_UseMetal          );
+   HDF5_InputTest->Add( "AGORA_DiskMetalMassFrac", &AGORA_DiskMetalMassFrac );
+   HDF5_InputTest->Add( "AGORA_HaloMetalMassFrac", &AGORA_HaloMetalMassFrac );
+
+} // FUNCTION : HDF5_Output_TestProb
+#endif // #ifdef SUPPORT_HDF5
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  GaussianQuadratureIntegrate
 // Description :  Use the 5-point Gaussian quadrature integration to calculate the average density of a given cell
@@ -530,6 +567,9 @@ void Init_TestProb_Hydro_AGORA_IsolatedGalaxy()
    End_User_Ptr                = End_AGORA;
    Par_Init_ByFunction_Ptr     = Par_Init_ByFunction_AGORA;
    Par_Init_Attribute_User_Ptr = AddNewParticleAttribute_AGORA;
+#  ifdef SUPPORT_HDF5
+   HDF5_Output_TestProb_Ptr    = HDF5_Output_TestProb;
+#  endif
 #  endif // if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 
 

@@ -19,6 +19,9 @@ static void SetGridIC( real fluid[], const double x, const double y, const doubl
 static void SetBFieldIC( real magnetic[], const double x, const double y, const double z, const double Time,
                          const int lv, double AuxArray[] );
 #endif
+#ifdef SUPPORT_HDF5
+static void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest );
+#endif
 
 
 // function pointers of various user-specified routines
