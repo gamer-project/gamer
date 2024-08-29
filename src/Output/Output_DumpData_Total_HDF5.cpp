@@ -19,34 +19,35 @@ void (*HDF5_Output_TestProb_Ptr)( HDF5_Output_t *HDF5_InputTest ) = NULL;
 void (*HDF5_Output_User_Ptr)( HDF5_Output_t *HDF5_OutUser ) = NULL;
 static herr_t H5_write_user( const hid_t H5_GroupID, const hid_t H5_Type_ID, const HDF5_Output_t *HDF5_OutUser );
 
+static void HDF5_Output_User_Example( HDF5_Output_t *HDF5_OutUser );
+
 
 
 /*======================================================================================================
 Data structure:
 / -> |
-     | -> Info group        -> | -> InputPara dset (compound)
-     |                         | -> InputTest dset (compound)
-     |                         | -> KeyInfo   dset (compound)
-     |                         | -> Makefile  dset (compound)
-     |                         | -> SymConst  dset (compound)
+     | -> Info group     -> | -> InputPara dset (compound)
+     |                      | -> InputTest dset (compound)
+     |                      | -> KeyInfo   dset (compound)
+     |                      | -> Makefile  dset (compound)
+     |                      | -> SymConst  dset (compound)
      |
-     | -> Output_User group -> | -> dset_1
-     |                         | -> ...
+     | -> User group     -> | -> OutputUser dset (compound) 
      |
-     | -> Tree group        -> | -> Corner  dset -> Cvt2Phy attrs
-     |                         | -> LBIdx   dset
-     |                         | -> Father  dset
-     |                         | -> Son     dset
-     |                         | -> Sibling dset
-     |                         | -> NPar    dset
+     | -> Tree group     -> | -> Corner  dset -> Cvt2Phy attrs
+     |                      | -> LBIdx   dset
+     |                      | -> Father  dset
+     |                      | -> Son     dset
+     |                      | -> Sibling dset
+     |                      | -> NPar    dset
      |
-     | -> GridData group    -> | -> Dens dset
-     |                         | -> ...
-     |                         | -> ...
+     | -> GridData group -> | -> Dens dset
+     |                      | -> ...
+     |                      | -> ...
      |
-     | -> Particle group    -> | -> ParMass dset
-                               | -> ...
-                               | -> ...
+     | -> Particle group -> | -> ParMass dset
+                            | -> ...
+                            | -> ...
 ======================================================================================================*/
 
 
@@ -3842,6 +3843,27 @@ herr_t H5_write_user( const hid_t H5_GroupID, const hid_t H5_TypeID, const HDF5_
 
 } // FUNCTION : H5_write_user
 
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  HDF5_Output_User_Example
+// Description :  Store the problem specific parameter in HDF5 outputs (Data_*) under User group
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype.
+//                3. There MUST be more than one parameter to be stored
+//
+// Parameter   :  HDF5_OutUser : the structure storing the parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void HDF5_Output_User_Example( HDF5_Output_t *HDF5_OutUser )
+{
+
+   int temp_int = 0;
+   HDF5_OutUser->Add( "temp_int",  &temp_int );
+
+} // FUNCTION : HDF5_Output_User_Example
 
 
 
