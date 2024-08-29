@@ -32,7 +32,7 @@ Data structure:
      |                      | -> Makefile  dset (compound)
      |                      | -> SymConst  dset (compound)
      |
-     | -> User group     -> | -> OutputUser dset (compound) 
+     | -> User group     -> | -> OutputUser dset (compound)
      |
      | -> Tree group     -> | -> Corner  dset -> Cvt2Phy attrs
      |                      | -> LBIdx   dset
@@ -264,7 +264,8 @@ Procedure for outputting new variables:
 //                2477 : 2024/04/05 --> output OPT__RECORD_CENTER, COM_CEN_X, COM_CEN_Y, COM_CEN_Z,
 //                                             COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R, COM_MAX_ITER
 //                2478 : 2024/04/09 --> output ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z
-//                2479 : 2024/05/06 --> output user defined parameters under "Output_User" group
+//                2479 : 2024/08/29 --> output user defined parameters under "User" group and
+//                                             Input__TestProb parameters under InputTest dataset
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {

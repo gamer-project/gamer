@@ -346,7 +346,7 @@ void Init_TestProb_Template()
 #  endif
 #  ifdef SUPPORT_HDF5
    HDF5_Output_TestProb_Ptr          = HDF5_Output_TestProb;
-   HDF5_Output_User_Ptr              = NULL; // example: TestProblem/Hydro/Plummer/Init_TestProb_Hydro_Plummer.cpp --> HDF5_Output_User_Plummer()
+   HDF5_Output_User_Ptr              = NULL; //                                       example: Output/Output_DumData_Total_HDF5.cpp --> HDF5_Output_User_Example()
 #  endif
 
 
