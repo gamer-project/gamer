@@ -37,7 +37,7 @@ extern void (*Init_Field_User_Ptr)();
 extern void (*Init_User_Ptr)();
 extern void (*Output_User_Ptr)();
 #ifdef SUPPORT_HDF5
-extern void (*HDF5_Output_TestProb_Ptr)( HDF5_Output_t *HDF5_OutUser );
+extern void (*HDF5_Output_TestProb_Ptr)( HDF5_Output_t *HDF5_InputTest );
 extern void (*HDF5_Output_User_Ptr)( HDF5_Output_t *HDF5_OutUser );
 #endif
 extern void (*Output_UserWorkBeforeOutput_Ptr)();
