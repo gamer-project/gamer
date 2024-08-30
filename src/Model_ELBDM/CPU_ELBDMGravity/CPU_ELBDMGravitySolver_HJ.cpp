@@ -13,7 +13,7 @@
 
 //-----------------------------------------------------------------------------------------
 // Function    :  CPU/CUPOT_ELBDMGravitySolver_HamiltonJacobi
-// Description :  CPU/GPU ELBDM gravity solver for advancing the phase S by S = S - i*Eta*(Phi + Lambda*Rho)*dt
+// Description :  CPU/GPU ELBDM gravity solver for advancing the phase S by S = S - Eta*(Phi + Lambda*Rho)*dt
 //
 // Note        :  1. ELBDM gravity solver requires NO potential and fluid ghost zone
 //                   --> Optimized performance can be achieved if GRA_GHOST_SIZE==0 (and thus GRA_NXT==PATCH_SIZE)
