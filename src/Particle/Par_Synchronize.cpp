@@ -70,7 +70,7 @@ int Par_Synchronize( const double SyncTime, const ParSync_t SyncOption )
 
 // synchronize all active particles
          real_par *ParTime   =   amr->Par->Time;
-         real_par *ParType   =   amr->Par->Type;
+         long_par *ParType   =   amr->Par->Type;
          real_par *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
          real_par *ParVel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
 #  ifdef STORE_PAR_ACC
