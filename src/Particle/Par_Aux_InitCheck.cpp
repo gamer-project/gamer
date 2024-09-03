@@ -14,6 +14,7 @@
 //                3. Remove particles outside the active region for non-periodic B.C.
 //                4. There should be no inactive particles before calling this function
 //                5. Check particle types
+//                6. Check particle ID
 //
 // Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
@@ -26,11 +27,15 @@ void Par_Aux_InitCheck()
    const real_par *Mass   =   amr->Par->Mass;
    const real_par *Pos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
    const long_par *Type   =   amr->Par->Type;
+   const long_par *PIdx   =   amr->Par->PIdx;
+
+   long NPar_AllRank;
+   MPI_Allreduce( &amr->Par->NPar_AcPlusInac, &NPar_AllRank, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD );
 
 
 // 1. all active particles should lie within the simulation domain
 //    --> periodicity should be taken care of in the initial condition, not here
-//    --> also check particle types here
+//    --> also check particle types and ID here
    for (long ParID=0; ParID<amr->Par->NPar_AcPlusInac; ParID++)
    {
 //    there should be no inactive particles initially
@@ -39,6 +44,10 @@ void Par_Aux_InitCheck()
 //    check particle types
       if ( Type[ParID] < (real_par)0  ||  Type[ParID] >= (real_par)PAR_NTYPE )
          Aux_Error( ERROR_INFO, "Type[%ld] = %d (accepted range: 0<=index<%d) !!\n", ParID, (int)Type[ParID], PAR_NTYPE );
+
+//    check particle ID
+      if ( amr->Par->PIdx[ParID] <= (long_par)0  ||  amr->Par->PIdx[ParID] > (long_par)NPar_AllRank )
+         Aux_Error( ERROR_INFO, "PIdx[%ld] = %ld (accepted range: 0<index<=%ld) !!\n", ParID, (long)PIdx[ParID], NPar_AllRank );
 
 //    only support tracer particles when disabling GRAVITY
 #     ifndef GRAVITY
@@ -73,7 +82,7 @@ void Par_Aux_InitCheck()
                         d, ParID, Pos[d][ParID], amr->BoxSize[d] );
          }
       }
-   }
+   } // for (long ParID=0; ParID<amr->Par->NPar_AcPlusInac; ParID++)
 
 
 // 2. remove particles outside the active region for non-periodic B.C.

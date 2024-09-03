@@ -18,6 +18,7 @@
 //                9.   NPar_Active = sum(NPar_Lv, all levels)
 //                10.  All patches have NPar_Copy == -1
 //                11.  Particle types are recognizable
+//                12.  Particle ID is valid
 //
 // Note        :  None
 //
@@ -26,14 +27,14 @@
 void Par_Aux_Check_Particle( const char *comment )
 {
 
-   const int       NCheck    = 11;
+   const int       NCheck    = 12;
    const real_par *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
 
    int     PassAll    = true;
    long    NParInLeaf = 0;
    bool   *ParHome    = new bool [amr->Par->NPar_AcPlusInac];  // true/false --> particle has home/is homeless
    int     NParThisPatch;
-   long    ParID, NPar_Active_AllRank_Expect;
+   long    ParID, NPar_Active_AllRank_Expect, NPar_AllRank;
    double *EdgeL, *EdgeR;
    int     PassCheck[NCheck];
 
@@ -46,6 +47,7 @@ void Par_Aux_Check_Particle( const char *comment )
 
 // get the total number of active particles
    MPI_Allreduce( &amr->Par->NPar_Active, &NPar_Active_AllRank_Expect, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD );
+   MPI_Allreduce( &amr->Par->NPar_AcPlusInac, &NPar_AllRank, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD );
 
 
 // start checking
@@ -334,6 +336,29 @@ void Par_Aux_Check_Particle( const char *comment )
                Aux_Message( stderr, "Check 9: NPar_Lv_Sum (%ld) != expect (%ld) !!\n",
                             NPar_Lv_Sum, amr->Par->NPar_Active );
                PassCheck[8] = false;
+            }
+         }
+
+
+//       Check 12: check if particle ID is valid
+         for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
+         {
+            if ( amr->Par->PIdx[p] <= (long_par)0  ||  amr->Par->PIdx[p] > (long_par)NPar_AllRank )
+            {
+               if ( PassAll )
+               {
+                  Aux_Message( stderr, "\"%s\" : <%s> FAILED at Time = %13.7e, Step = %ld !!\n",
+                               comment, __FUNCTION__, Time[0], Step );
+                  PassAll = false;
+               }
+
+               if ( PassCheck[11] )
+               {
+                  Aux_Message( stderr, "Check 12: %4s  %10s\n", "Rank", "ParID" );
+                  PassCheck[11] = false;
+               }
+
+               Aux_Message( stderr, "Check 12: %4d  %10ld\n", MPI_Rank, p );
             }
          }
       } // if ( MPI_Rank == TargetRank )
