@@ -34,7 +34,7 @@ void Par_Aux_Check_Particle( const char *comment )
    long    NParInLeaf = 0;
    bool   *ParHome    = new bool [amr->Par->NPar_AcPlusInac];  // true/false --> particle has home/is homeless
    int     NParThisPatch;
-   long    ParID, NPar_Active_AllRank_Expect, NPar_AllRank;
+   long    ParID, NPar_Active_AllRank_Expect;
    double *EdgeL, *EdgeR;
    int     PassCheck[NCheck];
 
@@ -47,7 +47,6 @@ void Par_Aux_Check_Particle( const char *comment )
 
 // get the total number of active particles
    MPI_Allreduce( &amr->Par->NPar_Active, &NPar_Active_AllRank_Expect, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD );
-   MPI_Allreduce( &amr->Par->NPar_AcPlusInac, &NPar_AllRank, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD );
 
 
 // start checking
@@ -343,7 +342,7 @@ void Par_Aux_Check_Particle( const char *comment )
 //       Check 12: check if particle ID is valid
          for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
          {
-            if ( amr->Par->PIdx[p] <= (long_par)0  ||  amr->Par->PIdx[p] > (long_par)NPar_AllRank )
+            if ( amr->Par->PIdx[p] <= (long_par)0  ||  amr->Par->PIdx[p] > amr->Par->NextUniqueIdx )
             {
                if ( PassAll )
                {
@@ -354,11 +353,11 @@ void Par_Aux_Check_Particle( const char *comment )
 
                if ( PassCheck[11] )
                {
-                  Aux_Message( stderr, "Check 12: %4s  %10s\n", "Rank", "ParID" );
+                  Aux_Message( stderr, "Check 12: %4s  %10s  %10s  %10s\n", "Rank", "ParID", "PIdx", "NextUniqueIdx" );
                   PassCheck[11] = false;
                }
 
-               Aux_Message( stderr, "Check 12: %4d  %10ld\n", MPI_Rank, p );
+               Aux_Message( stderr, "Check 12: %4d  %10ld  %10ld  %10ld\n", MPI_Rank, p, (long)amr->Par->PIdx[p], (long)amr->Par->NextUniqueIdx );
             }
          }
       } // if ( MPI_Rank == TargetRank )

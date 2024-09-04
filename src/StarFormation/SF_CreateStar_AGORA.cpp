@@ -171,6 +171,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
             if ( (real)Random < StarMass*_MinStarMass )  StarMFrac = MinStarMass / GasMass;
             else                                         continue;
+            // StarMFrac = MinStarMass / GasMass;
          }
 
 
@@ -205,6 +206,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          NewParAttFlt[NNewPar][PAR_VELZ] = fluid[MOMZ][k][j][i]*_GasDens;
          NewParAttFlt[NNewPar][PAR_TIME] = TimeNew;
          NewParAttInt[NNewPar][PAR_TYPE] = PTYPE_STAR;
+         NewParAttInt[NNewPar][PAR_PIDX] = (long_par)-1;
 
 //       particle acceleration
 #        ifdef STORE_PAR_ACC
@@ -299,6 +301,10 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    delete [] NewParID;
 
    } // end of OpenMP parallel region
+
+// set new IDs for the new particles
+   MPI_Barrier( MPI_COMM_WORLD );
+   Par_SetParID( false );
 
 
 // get the total number of active particles in all MPI ranks

@@ -52,6 +52,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                RemoveCell              : remove particles RemoveCell-base-level-cells away from the boundary
 //                                          (for non-periodic BC only)
 //                GhostSize               : Number of ghost zones required for interpolation scheme
+//                NextUniqueIdx           : Next new particle unique index over all MPI ranks
 //                AttributeFlt            : Pointer arrays to different particle float   attributes (Mass, Pos, Vel, ...)
 //                AttributeInt            : Pointer arrays to different particle integer attributes (Type)
 //                InactiveParList         : List of inactive particle IDs
@@ -131,6 +132,7 @@ struct Particle_t
    double        RemoveCell;
    int           GhostSize;
    int           GhostSizeTracer;
+   long_par      NextUniqueIdx;
    real_par     *AttributeFlt[PAR_NATT_FLT_TOTAL];
    long_par     *AttributeInt[PAR_NATT_INT_TOTAL];
    long         *InactiveParList;
@@ -202,6 +204,7 @@ struct Particle_t
       RemoveCell          = -999.9;
       GhostSize           = -1;
       GhostSizeTracer     = -1;
+      NextUniqueIdx       = 1;
 
       for (int lv=0; lv<NLEVEL; lv++)  NPar_Lv[lv] = 0;
 
