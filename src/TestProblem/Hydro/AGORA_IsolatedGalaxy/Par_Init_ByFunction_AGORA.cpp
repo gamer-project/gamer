@@ -147,6 +147,7 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
                                              // --> (ii) is necessary for OpenMPI version < 1.7
 
    MPI_Gather( &NPar_ThisRank_int, 1, MPI_INT, NSend_Flt, 1, MPI_INT, 0, MPI_COMM_WORLD );
+   MPI_Gather( &NPar_ThisRank_int, 1, MPI_INT, NSend_Int, 1, MPI_INT, 0, MPI_COMM_WORLD );
 
    if ( MPI_Rank == 0 )
    {

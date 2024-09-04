@@ -1391,7 +1391,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
             if ( v == PAR_TYPE_IDX_OLD )
             {
                real_par *ParType_Buf = new real_par [NParThisPatch];
-               H5_Status = H5Dread( H5_SetID_ParIntData[v], H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,
+               H5_Status = H5Dread( H5_SetID_ParIntData[PAR_TYPE], H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,
                                     ParType_Buf );
                for (int p=0; p<NParThisPatch; p++)   ParIntBuf[PAR_TYPE][p] = (long_par)ParType_Buf[p];
                delete [] ParType_Buf;
