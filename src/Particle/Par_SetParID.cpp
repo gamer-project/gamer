@@ -98,24 +98,18 @@ void Par_SetParID( const bool init )
          const int Sort_Order[3] = { 0, 1, 2 };
          Mis_SortByRows( NewParPos_AllRank, Sort_IdxTable, NNewPar_AllRank, Sort_Order, 3 );
          for (long p=0; p<NNewPar_AllRank; p++) NewParPIdx_AllRank[p] = (long_par)Sort_IdxTable[p] + amr->Par->NextUniqueIdx;
-         // for (long p=0; p<NNewPar_AllRank; p++) printf( "Rank: %d, p: %ld, pos: (%+.14e, %+.14e, %+.14e), ID: %ld\n", MPI_Rank, p, NewParPos_AllRank[0][p], NewParPos_AllRank[1][p], NewParPos_AllRank[2][p], (long)NewParPIdx_AllRank[p] );
          delete [] Sort_IdxTable;
       }
-
-      MPI_Barrier( MPI_COMM_WORLD );
 
       MPI_Scatterv( NewParPIdx_AllRank,  NSend, SendDisp,  MPI_GAMER_LONG_PAR,
                     NewParPIdx_ThisRank, NNewPar_ThisRank, MPI_GAMER_LONG_PAR,
                     0, MPI_COMM_WORLD );
-      MPI_Barrier( MPI_COMM_WORLD );
 
       pnew_idx = 0L;
       for (long p=0; p<NPar_ThisRank; p++)
       {
          if ( amr->Par->PIdx[p] != (long_par)-1 )   continue;
          amr->Par->PIdx[p] = NewParPIdx_ThisRank[pnew_idx];
-         // amr->Par->PIdx[p] = (long_par)10;
-         // printf( "Rank: %d, p: %ld, ID: %ld\n", MPI_Rank, pnew_idx, (long)NewParPIdx_ThisRank[pnew_idx] );
          pnew_idx += 1L;
       }
 

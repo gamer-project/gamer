@@ -303,7 +303,6 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    } // end of OpenMP parallel region
 
 // set new IDs for the new particles
-   MPI_Barrier( MPI_COMM_WORLD );
    Par_SetParID( false );
 
 
