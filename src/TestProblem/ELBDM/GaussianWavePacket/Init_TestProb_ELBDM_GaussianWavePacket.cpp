@@ -16,6 +16,7 @@ static void OutputError();
 static void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
                 const int GhostSize, const int idx[], const double pos[], const double Time,
                 const int lv, const int TFluVarIdxList[], double AuxArray[] );
+static void AmpPhaseAdder( const double A_1, const double S_1, const double A_2, const double S_2, double* A_sum, double* S_sum );
 
 
 
@@ -191,6 +192,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double Gau_Const1 = 1.0 + pow(  Time / ( ELBDM_ETA*SQR(Gau_Width) ), 2.0  );
    const double Gau_Theta1 = -0.5*acos(  pow( Gau_Const1, -0.5 )  );
    double Re=0.0, Im=0.0;
+   double Amp=0.0, Phase=0.0;
+   double Amp_Main=0.0, Phase_Main=0.0;
 
 // n=0, m=0: original wave packet
 // n>0, m=0/1: images for periodic BC on the plus(+)/minus(-) direction
@@ -206,7 +209,31 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
       Re += Gau_Const2*cos( Gau_Theta1 + Gau_Theta2 );
       Im += Gau_Const2*sin( Gau_Theta1 + Gau_Theta2 );
+
+      const double PhaseShift = 2*M_PI*round( Gau_v0*ELBDM_ETA*amr->BoxSize[Gau_XYZ]/(2*M_PI) )*n*(1-2*m);
+      const double Amp_this   = Gau_Const2;
+      const double Phase_this = Gau_Theta1 + Gau_Theta2 + PhaseShift;
+
+
+      const bool isRightMost = ( n == Gau_PeriodicN  &&  m == 0                        );
+      const bool isLeftMost  = ( n == Gau_PeriodicN  &&  m == ((Gau_PeriodicN==0)?0:1) );
+
+      if ( (                  round( (r-(Gau_Center+Gau_v0*Time))/amr->BoxSize[Gau_XYZ] ) == n*(1-2*m) ) ||
+           ( isRightMost  &&  round( (r-(Gau_Center+Gau_v0*Time))/amr->BoxSize[Gau_XYZ] ) >  n*(1-2*m) ) ||
+           ( isLeftMost   &&  round( (r-(Gau_Center+Gau_v0*Time))/amr->BoxSize[Gau_XYZ] ) <  n*(1-2*m) ) )
+      {
+          Amp_Main   = Amp_this;
+          Phase_Main = Phase_this;
+      }
+      else
+      {
+          AmpPhaseAdder( Amp_this, Phase_this, Amp, Phase, &Amp, &Phase );
+      }
+
    }}
+
+   if ( Amp >= Amp_Main )   AmpPhaseAdder( Amp,      Phase-2*M_PI*( floor((Phase-Phase_Main+M_PI)/(2*M_PI)) ), Amp_Main, Phase_Main, &Amp, &Phase );
+   else                     AmpPhaseAdder( Amp_Main, Phase_Main,                                               Amp,      Phase,      &Amp, &Phase );
 
    fluid[DENS] = SQR( Re ) + SQR( Im );
 
@@ -217,13 +244,47 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[IMAG] = Im;
 #  if  ( ELBDM_SCHEME == ELBDM_HYBRID )
    } else {
-   fluid[PHAS] = SATAN2( Im, Re );
+   fluid[PHAS] = Phase;
    fluid[STUB] = 0.0;
    }
 #  endif
 
 } // FUNCTION : SetGridIC
 
+
+void AmpPhaseAdder( const double A_1, const double S_1, const double A_2, const double S_2, double* A_sum, double* S_sum )
+{
+
+// the summed unwrapped phase follows the phase of the first one, S_a
+   const double A_a = A_1; //( A_2 >= A_1 ) ? A_1 : A_2;
+   const double A_b = A_2; //( A_2 >= A_1 ) ? A_2 : A_1;
+   const double S_a = S_1; //( A_2 >= A_1 ) ? S_1 : S_2;
+   const double S_b = S_2; //( A_2 >= A_1 ) ? S_2 : S_1;
+
+// find the phase difference
+// and subtract two pi to make the relative in the range from -pi to pi
+   const double S_difference = S_b - S_a;
+   const int    N_winding    = floor( (S_difference+M_PI)/(2*M_PI) );
+   const double S_relative   = S_difference - 2*M_PI*N_winding;
+
+// convert to real part and imaginary part
+   const double R_a = A_a*cos(        0.0 );
+   const double I_a = A_a*sin(        0.0 );
+   const double R_b = A_b*cos( S_relative );
+   const double I_b = A_b*sin( S_relative );
+
+// add the real parts and imaginary parts
+   const double R_c = R_a + R_b;
+   const double I_c = I_a + I_b;
+
+// convert back to phase (from -pi to pi )
+   const double S_c = atan2( I_c, R_c );
+
+// add the phase back to make it close to S_a
+   *A_sum = sqrt( R_c*R_c + I_c*I_c );
+   *S_sum = S_a + S_c;
+
+}
 
 
 //-------------------------------------------------------------------------------------------------------
