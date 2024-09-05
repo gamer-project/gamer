@@ -34,6 +34,7 @@ extern int CheIdx_Metal;
 //                   --> Che_NField and the corresponding array indices in h_Che_Array[] (e.g., CheIdx_Dens)
 //                       are declared and set by Init_MemAllocate_Grackle()
 //                2. This function always prepares the latest FluSg data
+//                3. If COMOVING is on, update grackle units
 //
 // Parameter   :  lv          : Target refinement level
 //                h_Che_Array : Host array to store the prepared data
@@ -91,6 +92,16 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
    }
 #  endif // #ifdef GAMER_DEBUG
 
+#  ifdef COMOVING
+// update grackle units
+   Che_Units.comoving_coordinates = 1;
+   Che_Units.density_units        = UNIT_D / CUBE(Time[lv]);
+   Che_Units.length_units         = UNIT_L * Time[lv];
+   Che_Units.time_units           = UNIT_T;
+   Che_Units.velocity_units       = UNIT_V;
+   Che_Units.a_units              = 1.0;
+   Che_Units.a_value              = Time[lv];
+#  endif
 
    const int  Size1pg          = CUBE(PS2);
    const int  Size1v           = NPG*Size1pg;
@@ -203,8 +214,13 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
 
 //          mandatory fields
             Ptr_Dens [idx_pg] = Dens;
-            Ptr_sEint[idx_pg] = Eint / Dens;
             Ptr_Ent  [idx_pg] = Etot - Eint; // non-thermal energy density
+
+#           ifdef COMOVING
+            Ptr_sEint[idx_pg] = Eint / Dens / SQR(Time[lv]);
+#           else
+            Ptr_sEint[idx_pg] = Eint / Dens;
+#           endif
 
 //          6-species network
             if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {

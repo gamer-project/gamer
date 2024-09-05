@@ -1,0 +1,14 @@
+Compilation flags:
+========================================
+Enable : MODEL=HYDRO, COMOVING, SUPPORT_GRACKLE
+Disable:
+
+
+Default setup:
+========================================
+1. Default resolution = 16^3
+2. Uniform density = 1.0 (cosmic mean density)
+
+Note:
+========================================
+1. Compute the thermal evolution on comoving coordinate with the Grackle library
