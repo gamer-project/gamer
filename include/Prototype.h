@@ -705,7 +705,7 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
                             const int NPar, real_par *InterpParPos[3],
                             const long_par ParType[], const long ParList[],
                             const bool UseTracers, real_par ParAttr[], const bool CorrectVelocity );
-void Par_SetParID( const bool init );
+void Par_SetParUID( const bool init );
 FieldIdx_t AddParticleAttributeFlt( const char *InputLabel );
 FieldIdx_t AddParticleAttributeInt( const char *InputLabel );
 FieldIdx_t GetParticleAttributeFltIndex( const char *InputLabel, const Check_t Check );

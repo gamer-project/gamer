@@ -7,16 +7,18 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_SetParID
+// Function    :  Par_SetParUID
 // Description :  Set the particle unique UID
 //
 // Note        :  1. This function should be done before initializaion
 //                2. Invoked by Init_GAMER() and SF_CreateStar()
 //                3. Assuming all the particles is active when initializing
+//                4. The new particle UID should be initialized as -1
+//                5. Currently, the new particles UID are given by the sorted position
 //
 // Paramter    :  init : Initialization stage or not
 //-------------------------------------------------------------------------------------------------------
-void Par_SetParID( const bool init )
+void Par_SetParUID( const bool init )
 {
 
    long NPar_ThisRank = amr->Par->NPar_AcPlusInac;
@@ -101,7 +103,7 @@ void Par_SetParID( const bool init )
                       0, MPI_COMM_WORLD );
       }
 
-//    get sorted position and assign ID
+//    get sorted position and assign UID
       if ( MPI_Rank == 0 )
       {
          long *Sort_IdxTable = new long [NNewPar_AllRank];
@@ -119,6 +121,7 @@ void Par_SetParID( const bool init )
       for (long p=0; p<NNewPar_ThisRank; p++)
          amr->Par->PUid[NewParIDList[p]] = NewParPUid_ThisRank[p];
 
+//    free memory
       delete [] NewParIDList;
       delete [] NewParPUid_AllRank;
       delete [] NewParPUid_ThisRank;
@@ -134,7 +137,7 @@ void Par_SetParID( const bool init )
 
    MPI_Barrier( MPI_COMM_WORLD );
 
-} // FUNCTION : Par_SetParID
+} // FUNCTION : Par_SetParUID
 
 
 

@@ -217,7 +217,7 @@ void Init_GAMER( int *argc, char ***argv )
 
    if ( amr->Par->Init != PAR_INIT_BY_RESTART )
    {
-      Par_SetParID( true );
+      Par_SetParUID( true );
       Par_Aux_InitCheck();
    }
 
