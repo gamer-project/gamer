@@ -117,7 +117,7 @@ void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar
 
 //          set the particle type to be generic massive
             ParIntData_AllRank[PAR_TYPE][p] = PTYPE_GENERIC_MASSIVE;
-            ParIntData_AllRank[PAR_PUID][p] = (long_par)p;
+            ParIntData_AllRank[PAR_PUID][p] = (long_par)-1;
 
             p++;
          }
