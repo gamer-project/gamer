@@ -58,7 +58,7 @@ void Par_Aux_Check_Particle( const char *comment )
    long    ParID, NPar_Active_AllRank_Expect;
    double *EdgeL, *EdgeR;
    int     PassCheck[NCheck];
-   int    *Par_UID = new int [amr->Par->NextUniqueIdx];
+   int    *Par_UID = new int [amr->Par->NextUID];
 
 
 // initialize the check list
@@ -66,7 +66,7 @@ void Par_Aux_Check_Particle( const char *comment )
 
    for (int t=0; t<NCheck; t++)  PassCheck[t] = true;
 
-   for (long uid=0; uid<amr->Par->NextUniqueIdx; uid++)   Par_UID[uid] = 0;
+   for (long uid=0; uid<amr->Par->NextUID; uid++)   Par_UID[uid] = 0;
 
 
 // get the total number of active particles
@@ -131,9 +131,9 @@ void Par_Aux_Check_Particle( const char *comment )
          Check_UniqueUID( PassAll, PassCheck[12], comment, Par_UID );
       } // if ( MPI_Rank == TargetRank )
 
-      MPI_Bcast(  Par_UID,   amr->Par->NextUniqueIdx, MPI_INT, TargetRank, MPI_COMM_WORLD );
-      MPI_Bcast( &PassAll,   1,                       MPI_INT, TargetRank, MPI_COMM_WORLD );
-      MPI_Bcast(  PassCheck, NCheck,                  MPI_INT, TargetRank, MPI_COMM_WORLD );
+      MPI_Bcast(  Par_UID,   amr->Par->NextUID, MPI_INT, TargetRank, MPI_COMM_WORLD );
+      MPI_Bcast( &PassAll,   1,                 MPI_INT, TargetRank, MPI_COMM_WORLD );
+      MPI_Bcast(  PassCheck, NCheck,            MPI_INT, TargetRank, MPI_COMM_WORLD );
 
       MPI_Barrier( MPI_COMM_WORLD );
 
@@ -579,16 +579,16 @@ void Check_ValidUID( int &PassAll, int &PassOne, const char *comment )
 
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
    {
-      if ( amr->Par->PIdx[p] > (long_par)0  &&  amr->Par->PIdx[p] < amr->Par->NextUniqueIdx )  continue;
+      if ( amr->Par->PIdx[p] > (long_par)0  &&  amr->Par->PIdx[p] < amr->Par->NextUID )  continue;
 
       if ( PassAll )
          Aux_Message( stderr, "\"%s\" : <%s> FAILED at Time = %13.7e, Step = %ld !!\n",
                       comment, __FUNCTION__, Time[0], Step );
 
       if ( PassOne )
-         Aux_Message( stderr, "Check 12: %4s  %10s  %10s  %10s\n", "Rank", "ParID", "PIdx", "NextUniqueIdx" );
+         Aux_Message( stderr, "Check 12: %4s  %10s  %10s  %10s\n", "Rank", "ParID", "PIdx", "NextUID" );
 
-      Aux_Message( stderr, "Check 12: %4d  %10ld  %10ld  %10ld\n", MPI_Rank, p, (long)amr->Par->PIdx[p], (long)amr->Par->NextUniqueIdx );
+      Aux_Message( stderr, "Check 12: %4d  %10ld  %10ld  %10ld\n", MPI_Rank, p, (long)amr->Par->PIdx[p], (long)amr->Par->NextUID );
 
       PassAll = false;
       PassOne = false;
@@ -626,9 +626,9 @@ void Check_UniqueUID( int &PassAll, int &PassOne, const char *comment, int *Par_
                       comment, __FUNCTION__, Time[0], Step );
 
       if ( PassOne )
-         Aux_Message( stderr, "Check 13: %4s  %10s  %10s  %15s\n", "Rank", "ParUID", "Number", "NextUniqueIdx" );
+         Aux_Message( stderr, "Check 13: %4s  %10s  %10s  %10s\n", "Rank", "ParUID", "Number", "NextUID" );
 
-      Aux_Message( stderr, "Check 13: %4d  %10ld  %10d  %15ld\n", MPI_Rank, uid, Par_UID[uid], (long)amr->Par->NextUniqueIdx );
+      Aux_Message( stderr, "Check 13: %4d  %10ld  %10d  %10ld\n", MPI_Rank, uid, Par_UID[uid], (long)amr->Par->NextUID );
 
       PassAll = false;
       PassOne = false;

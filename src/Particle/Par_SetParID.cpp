@@ -43,7 +43,7 @@ void Par_SetParID( const bool init )
                     0, MPI_COMM_WORLD );
 
       delete [] ParPIdx_AllRank;
-      amr->Par->NextUniqueIdx = (long_par)(NPar_AllRank+1);
+      amr->Par->NextUID = (long_par)(NPar_AllRank+1);
    }
    else // if ( init )
    {
@@ -97,7 +97,7 @@ void Par_SetParID( const bool init )
          long *Sort_IdxTable = new long [NNewPar_AllRank];
          const int Sort_Order[3] = { 0, 1, 2 };
          Mis_SortByRows( NewParPos_AllRank, Sort_IdxTable, NNewPar_AllRank, Sort_Order, 3 );
-         for (long p=0; p<NNewPar_AllRank; p++) NewParPIdx_AllRank[p] = (long_par)Sort_IdxTable[p] + amr->Par->NextUniqueIdx;
+         for (long p=0; p<NNewPar_AllRank; p++) NewParPIdx_AllRank[p] = (long_par)Sort_IdxTable[p] + amr->Par->NextUID;
          delete [] Sort_IdxTable;
       }
 
@@ -121,7 +121,7 @@ void Par_SetParID( const bool init )
          delete [] NewParPos_ThisRank[d];
       }
 
-      amr->Par->NextUniqueIdx += (long_par)NNewPar_AllRank;
+      amr->Par->NextUID += (long_par)NNewPar_AllRank;
       if ( MPI_Rank == 0 )   Aux_Message( stdout, "Par_SetParID ... done\n" );
    } // if ( init ) ... else ...
 
