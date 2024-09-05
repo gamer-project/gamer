@@ -302,10 +302,6 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
    } // end of OpenMP parallel region
 
-// set new IDs for the new particles
-   Par_SetParID( false );
-
-
 // get the total number of active particles in all MPI ranks
    MPI_Allreduce( &amr->Par->NPar_Active, &amr->Par->NPar_Active_AllRank, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD );
 

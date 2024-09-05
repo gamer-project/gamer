@@ -82,6 +82,9 @@ void SF_CreateStar( const int lv, const real TimeNew, const real dt )
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "SF_CREATE_STAR_SCHEME", SF_CREATE_STAR_SCHEME );
    } // switch ( SF_CREATE_STAR_SCHEME )
 
+// set new IDs for the new particles
+   Par_SetParID( false );
+
 } // FUNCTION : SF_CreateStar
 
 
