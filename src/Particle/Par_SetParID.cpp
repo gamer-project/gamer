@@ -7,64 +7,78 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    : Par_SetParID
-// Description :
+// Function    :  Par_SetParID
+// Description :  Set the particle unique UID
 //
-// Note        : 1. This function should be done before initializaion
-//               2. Invoked by Init_GAMER()
+// Note        :  1. This function should be done before initializaion
+//                2. Invoked by Init_GAMER() and SF_CreateStar()
+//                3. Assuming all the particles is active when initializing
+//
+// Paramter    :  init : Initialization stage or not
 //-------------------------------------------------------------------------------------------------------
 void Par_SetParID( const bool init )
 {
 
-   // if ( MPI_Rank == 0 )   Aux_Message( stdout, "Par_SetParID ...\n" );
-
-   long NPar_ThisRank, NPar_AllRank;
-   NPar_ThisRank = amr->Par->NPar_AcPlusInac;
-   int NPar_ThisRank_int = NPar_ThisRank;
-   MPI_Allreduce( &NPar_ThisRank, &NPar_AllRank, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD );
-
-   int NSend[MPI_NRank], SendDisp[MPI_NRank];
+   long NPar_ThisRank = amr->Par->NPar_AcPlusInac;
+   int  NSend[MPI_NRank], SendDisp[MPI_NRank];
 
    if ( init )
    {
-      MPI_Gather( &NPar_ThisRank_int, 1, MPI_INT, NSend, 1, MPI_INT, 0, MPI_COMM_WORLD );
+      if ( MPI_Rank == 0 )   Aux_Message( stdout, "Par_SetParID (init) ...\n" );
 
-      long_par *ParPUid_AllRank  = new long_par [NPar_AllRank];
+      long NPar_AllRank;
+      MPI_Allreduce( &NPar_ThisRank, &NPar_AllRank, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD );
+
+//    assign UID for all ranks
+      long_par *ParPUid_AllRank = new long_par [NPar_AllRank];
       for (long p=0; p<NPar_AllRank; p++)   ParPUid_AllRank[p] = (long_par)(p+1);
 
+//    calculate displacement
+      int NPar_ThisRank_int = NPar_ThisRank;
+      MPI_Gather( &NPar_ThisRank_int, 1, MPI_INT, NSend, 1, MPI_INT, 0, MPI_COMM_WORLD );
       if ( MPI_Rank == 0 )
       {
          SendDisp[0] = 0;
-         for (int r=1; r<MPI_NRank; r++)  SendDisp[r] = SendDisp[r-1] + NSend[r-1];
+         for (int r=1; r<MPI_NRank; r++)   SendDisp[r] = SendDisp[r-1] + NSend[r-1];
       } // if ( MPI_Rank == 0 )
 
-      MPI_Scatterv( ParPUid_AllRank,  NSend, SendDisp, MPI_GAMER_LONG_PAR,
-                    amr->Par->PUid, NPar_ThisRank,   MPI_GAMER_LONG_PAR,
+//    scatter particle UID to all ranks
+      MPI_Scatterv( ParPUid_AllRank, NSend, SendDisp, MPI_GAMER_LONG_PAR,
+                    amr->Par->PUid,  NPar_ThisRank,   MPI_GAMER_LONG_PAR,
                     0, MPI_COMM_WORLD );
 
-      delete [] ParPUid_AllRank;
+//    update the next UID to all ranks
       amr->Par->NextUID = (long_par)(NPar_AllRank+1);
+
+      delete [] ParPUid_AllRank;
+
+      if ( MPI_Rank == 0 )   Aux_Message( stdout, "Par_SetParID (init) ... done\n" );
    }
    else // if ( init )
    {
+      long NNewPar_ThisRank = 0L, NNewPar_AllRank;
 
-      long NNewPar_ThisRank = 0L, NNewPar_AllRank, pnew_idx;
-
-      for (long p=0; p<NPar_ThisRank; p++) if ( amr->Par->PUid[p] == (long_par)-1 ) NNewPar_ThisRank += 1L;
+//    calculate number of new particles
+      long *NewParIDList = new long [NPar_ThisRank];
+      for (long p=0; p<NPar_ThisRank; p++)
+      {
+         if ( amr->Par->PUid[p] != (long_par)-1 )   continue;
+         NewParIDList[NNewPar_ThisRank] = p;
+         NNewPar_ThisRank += 1L;
+      }
       int NNewPar_ThisRank_int = NNewPar_ThisRank;
       MPI_Allreduce( &NNewPar_ThisRank, &NNewPar_AllRank, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD );
 
-      if ( NNewPar_AllRank == 0L )   return;
-      if ( MPI_Rank == 0 )   Aux_Message( stdout, "Par_SetParID ... new\n" );
+      if ( NNewPar_AllRank == 0L ) { delete [] NewParIDList; return; }
 
+//    calculate displacement
       MPI_Allgather( &NNewPar_ThisRank_int, 1, MPI_INT, NSend, 1, MPI_INT, MPI_COMM_WORLD );
-
       SendDisp[0] = 0;
       for (int r=1; r<MPI_NRank; r++)  SendDisp[r] = SendDisp[r-1] + NSend[r-1];
 
-      long_par *NewParPUid_AllRank   = new long_par [NNewPar_AllRank];
-      long_par *NewParPUid_ThisRank  = new long_par [NNewPar_ThisRank];
-      real_par *NewParPos_AllRank[3];
+      long_par *NewParPUid_AllRank  = new long_par [NNewPar_AllRank];
+      long_par *NewParPUid_ThisRank = new long_par [NNewPar_ThisRank];
+      real_par *NewParPos_AllRank [3];
       real_par *NewParPos_ThisRank[3];
 
       for (int d=0; d<3; d++)
@@ -73,25 +87,21 @@ void Par_SetParID( const bool init )
          NewParPos_ThisRank[d] = new real_par [NNewPar_ThisRank];
       }
 
-      pnew_idx = 0L;
-      for (long p=0; p<NPar_ThisRank; p++)
+      for (long p=0; p<NNewPar_ThisRank; p++)
       {
-         if ( amr->Par->PUid[p] != (long_par)-1 )   continue;
-         NewParPos_ThisRank[0][pnew_idx] = amr->Par->PosX[p];
-         NewParPos_ThisRank[1][pnew_idx] = amr->Par->PosY[p];
-         NewParPos_ThisRank[2][pnew_idx] = amr->Par->PosZ[p];
-         pnew_idx += 1L;
+         NewParPos_ThisRank[0][p] = amr->Par->PosX[NewParIDList[p]];
+         NewParPos_ThisRank[1][p] = amr->Par->PosY[NewParIDList[p]];
+         NewParPos_ThisRank[2][p] = amr->Par->PosZ[NewParIDList[p]];
       }
 
       for (int d=0; d<3; d++)
       {
          MPI_Gatherv( NewParPos_ThisRank[d], NNewPar_ThisRank, MPI_GAMER_REAL_PAR,
-                      NewParPos_AllRank[d], NSend, SendDisp, MPI_GAMER_REAL_PAR,
+                      NewParPos_AllRank [d], NSend, SendDisp,  MPI_GAMER_REAL_PAR,
                       0, MPI_COMM_WORLD );
       }
 
-
-      // get sorted position and set ID
+//    get sorted position and assign ID
       if ( MPI_Rank == 0 )
       {
          long *Sort_IdxTable = new long [NNewPar_AllRank];
@@ -101,18 +111,15 @@ void Par_SetParID( const bool init )
          delete [] Sort_IdxTable;
       }
 
+//    scatter particle UID to all ranks
       MPI_Scatterv( NewParPUid_AllRank,  NSend, SendDisp,  MPI_GAMER_LONG_PAR,
                     NewParPUid_ThisRank, NNewPar_ThisRank, MPI_GAMER_LONG_PAR,
                     0, MPI_COMM_WORLD );
 
-      pnew_idx = 0L;
-      for (long p=0; p<NPar_ThisRank; p++)
-      {
-         if ( amr->Par->PUid[p] != (long_par)-1 )   continue;
-         amr->Par->PUid[p] = NewParPUid_ThisRank[pnew_idx];
-         pnew_idx += 1L;
-      }
+      for (long p=0; p<NNewPar_ThisRank; p++)
+         amr->Par->PUid[NewParIDList[p]] = NewParPUid_ThisRank[p];
 
+      delete [] NewParIDList;
       delete [] NewParPUid_AllRank;
       delete [] NewParPUid_ThisRank;
       for (int d=0; d<3; d++)
@@ -121,12 +128,14 @@ void Par_SetParID( const bool init )
          delete [] NewParPos_ThisRank[d];
       }
 
+//    update the next UID to all ranks
       amr->Par->NextUID += (long_par)NNewPar_AllRank;
-      if ( MPI_Rank == 0 )   Aux_Message( stdout, "Par_SetParID ... done\n" );
    } // if ( init ) ... else ...
-
 
    MPI_Barrier( MPI_COMM_WORLD );
 
 } // FUNCTION : Par_SetParID
+
+
+
 #endif // #ifdef PARTICLE
