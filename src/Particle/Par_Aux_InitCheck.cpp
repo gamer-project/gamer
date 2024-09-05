@@ -27,7 +27,7 @@ void Par_Aux_InitCheck()
    const real_par *Mass   =   amr->Par->Mass;
    const real_par *Pos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
    const long_par *Type   =   amr->Par->Type;
-   const long_par *PIdx   =   amr->Par->PIdx;
+   const long_par *PUid   =   amr->Par->PUid;
 
    long NPar_AllRank;
    MPI_Allreduce( &amr->Par->NPar_AcPlusInac, &NPar_AllRank, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD );
@@ -46,8 +46,8 @@ void Par_Aux_InitCheck()
          Aux_Error( ERROR_INFO, "Type[%ld] = %d (accepted range: 0<=index<%d) !!\n", ParID, (int)Type[ParID], PAR_NTYPE );
 
 //    check particle ID
-      if ( amr->Par->PIdx[ParID] <= (long_par)0  ||  amr->Par->PIdx[ParID] >= amr->Par->NextUID )
-         Aux_Error( ERROR_INFO, "PIdx[%ld] = %ld (accepted range: 0<index<=%ld) !!\n", ParID, (long)PIdx[ParID], amr->Par->NextUID );
+      if ( amr->Par->PUid[ParID] <= (long_par)0  ||  amr->Par->PUid[ParID] >= amr->Par->NextUID )
+         Aux_Error( ERROR_INFO, "PUid[%ld] = %ld (accepted range: 0<index<=%ld) !!\n", ParID, (long)PUid[ParID], amr->Par->NextUID );
 
 //    only support tracer particles when disabling GRAVITY
 #     ifndef GRAVITY

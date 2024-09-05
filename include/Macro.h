@@ -493,7 +493,7 @@
 // indices of built-in particle attributes in Par->AttributeInt[]
 // --> must NOT modify their values
 #  define  PAR_TYPE           0
-#  define  PAR_PIDX           1
+#  define  PAR_PUID           1
 
 // always put acceleration and time at the END of the particle attribute list
 // --> make it easier to discard them when storing data on disk (see Output_DumpData_Total(_HDF5).cpp)
@@ -528,7 +528,7 @@
 #  define _PAR_FLT_TOTAL      (  ( 1L << PAR_NATT_FLT_TOTAL ) - 1L )
 
 #  define _PAR_TYPE           ( 1L << PAR_TYPE )
-#  define _PAR_PIDX           ( 1L << PAR_PIDX )
+#  define _PAR_PUID           ( 1L << PAR_PUID )
 #  define _PAR_INT_TOTAL      (  ( 1L << PAR_NATT_INT_TOTAL ) - 1L )
 
 // grid fields related to particles

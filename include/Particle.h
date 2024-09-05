@@ -98,7 +98,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                Time                    : Particle physical time
 //                Acc                     : Particle acceleration (only when STORE_PAR_ACC is on)
 //                Type                    : Particle type (e.g., tracer, generic, dark matter, star)
-//                PIdx                    : Particle unique index
+//                PUid                    : Particle UID
 //
 // Method      :  Particle_t        : Constructor
 //               ~Particle_t        : Destructor
@@ -174,7 +174,7 @@ struct Particle_t
    real_par     *AccZ;
 #  endif
    long_par     *Type;
-   long_par     *PIdx;
+   long_par     *PUid;
 
 
    //===================================================================================
@@ -256,7 +256,7 @@ struct Particle_t
       AccZ = NULL;
 #     endif
       Type = NULL;
-      PIdx = NULL;
+      PUid = NULL;
 
    } // METHOD : Particle_t
 
@@ -398,7 +398,7 @@ struct Particle_t
       AccZ = AttributeFlt[PAR_ACCZ];
 #     endif
       Type = AttributeInt[PAR_TYPE];
-      PIdx = AttributeInt[PAR_PIDX];
+      PUid = AttributeInt[PAR_PUID];
 
    } // METHOD : InitRepo
 
@@ -487,7 +487,7 @@ struct Particle_t
             AccZ = AttributeFlt[PAR_ACCZ];
 #           endif
             Type = AttributeInt[PAR_TYPE];
-            PIdx = AttributeInt[PAR_PIDX];
+            PUid = AttributeInt[PAR_PUID];
          }
 
          ParID = NPar_AcPlusInac;

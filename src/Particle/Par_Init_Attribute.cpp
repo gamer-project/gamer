@@ -51,7 +51,7 @@ void Par_Init_Attribute()
    Idx_ParVelZ = AddParticleAttributeFlt( "ParVelZ" );
 
    Idx_ParType = AddParticleAttributeInt( "ParType" );
-   Idx_ParPIdx = AddParticleAttributeInt( "ParPIdx" );
+   Idx_ParPUid = AddParticleAttributeInt( "ParPUid" );
 
 
 // 2. add other built-in attributes

@@ -579,16 +579,16 @@ void Check_ValidUID( int &PassAll, int &PassOne, const char *comment )
 
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
    {
-      if ( amr->Par->PIdx[p] > (long_par)0  &&  amr->Par->PIdx[p] < amr->Par->NextUID )  continue;
+      if ( amr->Par->PUid[p] > (long_par)0  &&  amr->Par->PUid[p] < amr->Par->NextUID )  continue;
 
       if ( PassAll )
          Aux_Message( stderr, "\"%s\" : <%s> FAILED at Time = %13.7e, Step = %ld !!\n",
                       comment, __FUNCTION__, Time[0], Step );
 
       if ( PassOne )
-         Aux_Message( stderr, "Check 12: %4s  %10s  %10s  %10s\n", "Rank", "ParID", "PIdx", "NextUID" );
+         Aux_Message( stderr, "Check 12: %4s  %10s  %10s  %10s\n", "Rank", "ParID", "PUid", "NextUID" );
 
-      Aux_Message( stderr, "Check 12: %4d  %10ld  %10ld  %10ld\n", MPI_Rank, p, (long)amr->Par->PIdx[p], (long)amr->Par->NextUID );
+      Aux_Message( stderr, "Check 12: %4d  %10ld  %10ld  %10ld\n", MPI_Rank, p, (long)amr->Par->PUid[p], (long)amr->Par->NextUID );
 
       PassAll = false;
       PassOne = false;
@@ -616,7 +616,7 @@ void Check_UniqueUID( int &PassAll, int &PassOne, const char *comment, int *Par_
    {
       if ( amr->Par->Mass[p] < (long_par)0.0 )   continue;
 
-      const long uid = amr->Par->PIdx[p];
+      const long uid = amr->Par->PUid[p];
       Par_UID[uid]++;
 
       if ( Par_UID[uid] <= 1 )   continue;
