@@ -46,7 +46,7 @@ void Par_Aux_InitCheck()
          Aux_Error( ERROR_INFO, "Type[%ld] = %d (accepted range: 0<=index<%d) !!\n", ParID, (int)Type[ParID], PAR_NTYPE );
 
 //    check particle ID
-      if ( amr->Par->PIdx[ParID] <= (long_par)0  ||  amr->Par->PIdx[ParID] > amr->Par->NextUniqueIdx )
+      if ( amr->Par->PIdx[ParID] <= (long_par)0  ||  amr->Par->PIdx[ParID] >= amr->Par->NextUniqueIdx )
          Aux_Error( ERROR_INFO, "PIdx[%ld] = %ld (accepted range: 0<index<=%ld) !!\n", ParID, (long)PIdx[ParID], amr->Par->NextUniqueIdx );
 
 //    only support tracer particles when disabling GRAVITY
