@@ -217,6 +217,7 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
             Ptr_Ent  [idx_pg] = Etot - Eint; // non-thermal energy density
 
 #           ifdef COMOVING
+//          convert from the comoving specific internal energy to the proper frame
             Ptr_sEint[idx_pg] = Eint / Dens / SQR(Time[lv]);
 #           else
             Ptr_sEint[idx_pg] = Eint / Dens;

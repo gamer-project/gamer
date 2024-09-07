@@ -6,11 +6,10 @@
 // =======================================================================================
 static double GrackleComoving_InitialTemperature;
 static double GrackleComoving_InitialMetallicity;
-grackle_field_data my_fields; //, my_fields_copy;
+grackle_field_data my_fields;
 static gr_float *my_temperature;
 static gr_float *my_gamma;
 static gr_float *my_cooling_time;
-double tiny_number = 1.0e-20;
 // =======================================================================================
 
 

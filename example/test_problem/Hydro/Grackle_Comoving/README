@@ -8,7 +8,13 @@ Default setup:
 ========================================
 1. Default resolution = 16^3
 2. Uniform density = 1.0 (cosmic mean density)
+3. Use the cloudy cooling table for H and He (GRACKLE_PRIMORDIAL = 0)
+   --> Hydrogen's Lyman alpha cooling peak at 10^4 K disappears if non-equilibrium chemistry is used (GRACKLE_PRIMORDIAL > 0) due to the short cooling time compared to the equilibrium time scale.
+4. Use the user-defined timestep criterion (OPT__DT_USER = 1)
+   --> limit the timestep by the cooling time
 
 Note:
 ========================================
 1. Compute the thermal evolution on comoving coordinate with the Grackle library
+2. The C program plot/coolingrate_proper.c computes the cooling rate in the proper coordinate
+3. The python script plot/Compute_CoolingCurve.py computes the cooling rate from the simulation output and compares it with result of plot/coolingrate_proper.c
