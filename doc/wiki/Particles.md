@@ -170,6 +170,35 @@ It can be useful for evolving fluid in a static gravitational potential of parti
 
 ## Remarks
 
+### Particle UID
+The valid particle UID should be in `[1, number of particles]`. If there is
+a new particle created during the simulation, please assign the particle
+UID to `-1` then call `Par_SetUID(false)` to assign UID after all creations
+are done in a single routine.
+
+The particle UID is assigned by the following two situations:
+1. Initialization
+
+   The particle UID is assigned after `Par_Init_ByFunction_Ptr()` or `Par_Init_ByFile()`.
+   First, we collect the UID of particles from all ranks to a single array.
+   Second, we assign the particle UID by the array index plus one.
+   Finally, send the particle UIDs back to all ranks.
+2. During simulation
+
+   The particle UID should be assigned _after_ all the creations are done
+   in a single routine (e.g. star formation).
+   First, we collect the UID and position of new particles from all ranks
+   to a single array.
+   Second, we sort the particles by their position.
+   Third, assign the particle UID by the array index plus `NextUID`.
+   Finally, send the new particle UIDs back to all ranks.
+
+   Example: `src/StarFormation/SF_CreateStar.cpp` and `src/StarFormation/SF_CreateStar_AGORA.cpp`
+
+> [!CAUTION]
+> If the particle positions are exactly the same (which should unlikely happen), the UID is decremented by the following order:
+> 1. The rank number (`MPI_Rank`) from 0 to `MPI_NRank-1`.
+> 2. The index of particle array in each rank.
 
 <br>
 
