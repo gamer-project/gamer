@@ -26,3 +26,5 @@ Note:
    the gas.
 6. Use python script "make_tracer_pngs.py" with yt to make PNG images, use
    bash script "make_tracer_movie.sh" to combine PNGs into movies with ffmpeg.
+7. Use python script "track_particle.py" to track the position and velocity
+   of particles by UID or index.
