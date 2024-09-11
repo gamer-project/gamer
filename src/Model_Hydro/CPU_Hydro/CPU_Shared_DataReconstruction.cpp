@@ -1348,7 +1348,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          real* const EintPtr_faceR = fcPri[faceR] + NCOMP_TOTAL_PLUS_MAG;
 #        else
          real* const EintPtr_faceL = NULL;
-         real* const EintPtr_faceR= NULL;
+         real* const EintPtr_faceR = NULL;
 #        endif
 
          Hydro_Pri2Con( fcPri[faceL], fcCon[faceL], FracPassive, NFrac, FracIdx, EoS->DensPres2Eint_FuncPtr,
