@@ -31,10 +31,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       Aux_Error( ERROR_INFO, "function <%s> should NOT be applied to the finest level\" !!\n", __FUNCTION__ );
 
 // user-specified operations before
-   if ( Flag_UserWorkBeforeFlag_Ptr != NULL )
-   {
-      Flag_UserWorkBeforeFlag_Ptr( Time, lv );
-   }
+   if ( Flag_UserWorkBeforeFlag_Ptr != NULL )   Flag_UserWorkBeforeFlag_Ptr( Time[lv], lv );
 
 
 // initialize all flags as false

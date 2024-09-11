@@ -12,14 +12,14 @@ void (*Flag_UserWorkBeforeFlag_Ptr)( const double Time, const int lv ) = NULL;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flag_UserWorkBeforeFlag_Template
-// Description :  Template if user-specified work before flagging the real patches
+// Description :  Template of user-specified work before flagging the real patches
 //
 // Note        :  1. Invoked by Flag_Real() using the function pointer "Flag_UserWorkBeforeFlag_Ptr"
 //
 // Parameter   :  Time : Target physical time
-//                lv : Target refinement level
+//                lv   : Target refinement level
 //
-// Return      :  none
+// Return      :  None
 //-------------------------------------------------------------------------------------------------------
 void Flag_UserWorkBeforeFlag_Template( const double Time, const int lv )
 {
