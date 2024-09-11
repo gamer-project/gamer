@@ -223,7 +223,7 @@ file to store the new field index. For example,
 
     Note that some field index variables have been pre-declared in
 `include/Field.h` (e.g., `Idx_Metal` for the field `Metal` used by,
-for example, [[ GRACKLE_METAL | Chemistry-and-Radiation#GRACKLE_METAL ]]).
+for example, [[ GRACKLE_METAL | Runtime-Parameters:-Chemistry-and-Radiation#GRACKLE_METAL ]]).
 Whenever applicable, skip this step and use these pre-declared index variables
 directly.
 
@@ -247,12 +247,12 @@ is just to avoid redundant assignments to the same field index variable.
     The second parameter should be set to either `NORMALIZE_YES` or `NORMALIZE_NO`.
 It controls whether the new field will be renormalized by the total gas density
 after every update when enabling
-[[ OPT__NORMALIZE_PASSIVE | Hydro#OPT__NORMALIZE_PASSIVE ]].
+[[ OPT__NORMALIZE_PASSIVE | Runtime-Parameters:-Hydro#OPT__NORMALIZE_PASSIVE ]].
 
     The third parameter should be set to either `INTERP_FRAC_YES` or `INTERP_FRAC_NO`.
 It controls whether the new field will be converted to mass fraction during interpolation
 when enabling
-[[ OPT__INT_FRAC_PASSIVE_LR | Hydro#OPT__INT_FRAC_PASSIVE_LR ]].
+[[ OPT__INT_FRAC_PASSIVE_LR | Runtime-Parameters:-Hydro#OPT__INT_FRAC_PASSIVE_LR ]].
 
     One must also set the function pointer `Init_Field_User_Ptr` in the problem
 initialization function `Init_TestProb_Hydro_NewProblem()`.
@@ -262,7 +262,7 @@ initialization function `Init_TestProb_Hydro_NewProblem()`.
     ```
 
     **Caution: the built-in field `Metal` with the field index `Idx_Metal`
-will be added automatically when enabling [[ GRACKLE_METAL | Chemistry-and-Radiation#GRACKLE_METAL ]].**
+will be added automatically when enabling [[ GRACKLE_METAL | Runtime-Parameters:-Chemistry-and-Radiation#GRACKLE_METAL ]].**
 
 4. Assign initial values to the new field in `SetGridIC()` using the corresponding
 field index. For example,
@@ -365,7 +365,7 @@ The following example illustrates the procedure to add a problem-specific
     ```
 
 4. Turn on the corresponding runtime option
-[[OPT__OUTPUT_USER | Outputs#OPT__OUTPUT_USER]].
+[[OPT__OUTPUT_USER | Runtime-Parameters:-Outputs#OPT__OUTPUT_USER]].
 when running the code.
 
     ```
@@ -425,7 +425,7 @@ Add user-specified (i.e., inflow) boundary conditions.
 `BC_User_Ptr` for the cell-centered fluid variables and
 `BC_BField_User_Ptr` for the face-centered magnetic field
 * **Runtime Option:**
-[[OPT__BC_FLU_* | Hydro#OPT__BC_FLU_XM]] = 4
+[[OPT__BC_FLU_* | Runtime-Parameters:-Hydro#OPT__BC_FLU_XM]] = 4
 * **Example:**
 `src/TestProblem/ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp`
 &#8594; `BC()`
@@ -443,7 +443,7 @@ Using the vector potential is recommended since it reduces the divergence-free e
 Note that one still needs to define `MHD_ResetByUser_BField_Ptr` when using the vector potential
 (see the example below).
 * **Restriction:**
-  * [[INIT_SUBSAMPLING_NCELL | Initial-Conditions#INIT_SUBSAMPLING_NCELL]] has no effect on resetting the initial magnetic field.
+  * [[INIT_SUBSAMPLING_NCELL | Runtime-Parameters:-Initial-Conditions#INIT_SUBSAMPLING_NCELL]] has no effect on resetting the initial magnetic field.
   * To ensure that the reset magnetic field satisfies the divergence-free condition to the machine precision,
 one must (i) use the vector potential and (ii) ensure that the reset fields do not touch any coarse-fine
 AMR interfaces. Supporting resetting a divergence-free magnetic field across coarse-fine AMR interfaces
@@ -458,7 +458,7 @@ will be implemented in the future.
 * **Function Pointer:**
 `Flu_ResetByUser_Func_Ptr`, `MHD_ResetByUser_BField_Ptr`, `MHD_ResetByUser_VecPot_Ptr`
 * **Runtime Option:**
-[[OPT__RESET_FLUID | Hydro#OPT__RESET_FLUID]], [[OPT__RESET_FLUID_INIT | Hydro#OPT__RESET_FLUID_INIT]]
+[[OPT__RESET_FLUID | Runtime-Parameters:-Hydro#OPT__RESET_FLUID]], [[OPT__RESET_FLUID_INIT | Runtime-Parameters:-Hydro#OPT__RESET_FLUID_INIT]]
 * **Example:**
 `src/Fluid/Flu_ResetByUser.cpp`, `src/Model_Hydro/MHD_ResetByUser.cpp`, `src/TestProblem/Hydro/BlastWave/MHD_ResetByUser_BlastWave.cpp`
 
@@ -515,7 +515,7 @@ for details.
 * **Function Pointer:**
    * `Init_ExtAcc_Ptr`
 * **Runtime Option:**
-[[OPT__EXT_ACC | Gravity#OPT__EXT_ACC]]
+[[OPT__EXT_ACC | Runtime-Parameters:-Gravity#OPT__EXT_ACC]]
 * **Example:**
    * `src/TestProblem/Hydro/Plummer/Init_TestProb_Hydro_Plummer.cpp`
    * `src/TestProblem/Hydro/Plummer/ExtAcc_Plummer.cpp`
@@ -531,7 +531,7 @@ for details.
 * **Function Pointer:**
    * `Init_ExtPot_Ptr`
 * **Runtime Option:**
-[[OPT__EXT_POT | Gravity#OPT__EXT_POT]]
+[[OPT__EXT_POT | Runtime-Parameters:-Gravity#OPT__EXT_POT]]
 * **Example:**
    * `src/TestProblem/Hydro/Plummer/Init_TestProb_Hydro_Plummer.cpp`
    * `src/TestProblem/Hydro/Plummer/ExtPot_Plummer.cpp`
@@ -552,13 +552,13 @@ Add a user-specified equation of state. See [[here | equation-of-state]] for det
 
 ### Feedback
 * **Description:**
-Add a user-specified feedback. See [[FB_USER | Feedback#FB_USER]] for details.
+Add a user-specified feedback. See [[FB_USER | Runtime-Parameters:-Feedback#FB_USER]] for details.
 * **Function Pointer:**
    * `FB_Init_User_Ptr`
 * **Compilation Option:**
 [[FEEDBACK | Installation: Simulation-Options#FEEDBACK]]
 * **Runtime Option:**
-[[FB_USER | Feedback#FB_USER]]
+[[FB_USER | Runtime-Parameters:-Feedback#FB_USER]]
 * **Example:**
    * `src/TestProblem/Hydro/Plummer/FB_Plummer.cpp`
 

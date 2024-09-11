@@ -87,7 +87,7 @@ The following example will launch 10 threads per process.
 OMP_NTHREAD      10      # number of OpenMP threads (<=0=auto) [-1]
 ```
 
-**Caution: see [[Hybrid MPI/OpenMP/GPU | MPI-and-OpenMP#hybrid-mpiopenmpgpu]]
+**Caution: see [[Hybrid MPI/OpenMP/GPU | Runtime-Parameters:-MPI-and-OpenMP#hybrid-mpiopenmpgpu]]
 for the recommended configuration of the number of MPI processes and OpenMP threads.**
 
 6\. Run the code with MPI (e.g., `mpirun, mpiexec, aprun`).
