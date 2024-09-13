@@ -1,7 +1,7 @@
 Compilation flags:
 ========================================
 Enable : MODEL=HYDRO, COMOVING, SUPPORT_GRACKLE
-Disable:
+Disable: PARTICLE
 
 
 Default setup:
