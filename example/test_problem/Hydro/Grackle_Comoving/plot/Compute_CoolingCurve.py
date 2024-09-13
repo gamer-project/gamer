@@ -1,3 +1,5 @@
+#!/bin/python
+
 # compute cooling curve from the time evolution of the temperature
 # and compare with the cooling curve table
 import numpy as np
