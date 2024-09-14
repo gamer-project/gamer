@@ -63,7 +63,7 @@ disabled). See the "Restriction" of each option carefully.**
 | <a name="NCOMP_PASSIVE_USER"></a> NCOMP_PASSIVE_USER | &#8805; 0 | Number of user-defined passive scalars | See [[here\|Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes]] for details; not supported for FLU_SCHEME=RTVD |
 | <a name="MHD"></a> MHD | | Magnetohydrodynamics | |
 | <a name="SRHD"></a> SRHD | | Special relativistic hydrodynamics | Must adopt `EOS=EOS_TAUBMATHEWS` |
-| <a name="COSMIC_RAY"></a> COSMIC_RAY | | Cosmic rays | Must adopt `EOS=EOS_COSMIC_RAY` |
+| <a name="COSMIC_RAY"></a> COSMIC_RAY | | Cosmic rays | Must adopt `EOS=EOS_COSMIC_RAY` for `HYDRO` and `MHD`. Must adopt `EOS=EOS_TAUBMATHEWS` for `SRHD` |
 | <a name="CR_DIFFUSION"></a> CR_DIFFUSION | | Cosmic-ray diffusion | Must enable both `COSMIC_RAY` and `MHD` |
 | <a name="EOS"></a> EOS | EOS_GAMMA<br>EOS_ISOTHERMAL<br>EOS_COSMIC_RAY<br>EOS_TAUBMATHEWS<br>EOS_USER | [[Equation of state \|equation-of-state]] | The following options only support `EOS_GAMMA`: `FLU_SCHEME=RTVD/CTU`, `RSOLVER=EXACT/ROE`, `COMOVING`, `DUAL_ENERGY`; see also [BAROTROPIC_EOS](#BAROTROPIC_EOS) |
 | <a name="BAROTROPIC_EOS"></a> BAROTROPIC_EOS || Is [EOS](#EOS) barotropic? | Must be disabled for `EOS_GAMMA` and enabled for `EOS_ISOTHERMAL` |
