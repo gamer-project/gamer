@@ -22,3 +22,4 @@ Note:
    --> The python script `plot/Compute_CoolingCurve.py` computes the cooling rate from the simulation output and compares it with the reference table
 4. The floating point precision of Grackle must be same with GAMER to compile the code successfully
 5. Run the script `download_datatable.sh` to download the cooling rate table `CloudyData_noUVB.h5` from the Grackle GitHub repository
+6. It is recommended to use double-float precision for the Grackle library
