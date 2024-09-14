@@ -167,7 +167,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
    double Dens, MomX, MomY, MomZ, Eint, Etot;
-   
+
 #  ifdef SUPPORT_GRACKLE
    const double mu                = 4 / (8 - 5 * (1 - grackle_data->HydrogenFractionByMass)); // fully ionized gas
    const double temperature_units = get_temperature_units(&Che_Units); // set temperature units
@@ -184,7 +184,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[MOMY] = MomY;
    fluid[MOMZ] = MomZ;
    fluid[ENGY] = Etot;
-   
+
 // initialize all chemical species
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
    fluid[Idx_HI   ] = 0.0;
@@ -459,7 +459,7 @@ double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
 // calculate cooling time
    if ( calculate_cooling_time( &Che_Units, &my_fields, my_cooling_time ) == 0 )
      Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
-   
+
    dTime_user = FMIN(dTime_user, 0.01 * fabs(my_cooling_time[0]));
 
    my_fields.internal_energy[0] *= 0.9;
@@ -467,7 +467,7 @@ double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
 // recalculate cooling time
    if ( calculate_cooling_time( &Che_Units, &my_fields, my_cooling_time ) == 0 )
      Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
-   
+
    dTime_user = FMIN(dTime_user, 0.01 * fabs(my_cooling_time[0]));
 #  endif // #ifdef SUPPORT_GRACKLE
 
