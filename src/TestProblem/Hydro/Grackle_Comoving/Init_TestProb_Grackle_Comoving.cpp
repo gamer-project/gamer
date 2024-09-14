@@ -55,7 +55,7 @@ void Validate()
       Aux_Error( ERROR_INFO, "OPT__INIT != FUNCTION (1) or RESTART (2) for this test !!\n" );
 
 #  ifdef PARTICLE
-      Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
+   Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
 
 
@@ -274,7 +274,7 @@ void Aux_Record_GrackleComoving()
       const double MassRatio_pe = Const_mp / Const_me;
 
 #     ifdef SUPPORT_GRACKLE
-      my_fields.density[0] = Dens;
+      my_fields.density        [0] = Dens;
       my_fields.internal_energy[0] = Eint / Dens / SQR(Time[0]);
 
       if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
@@ -396,6 +396,9 @@ void End_GrackleComoving()
 double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
 {
 
+   double dTime_user = HUGE_NUMBER;
+
+#  ifdef SUPPORT_GRACKLE
    int    FluSg = amr->FluSg[0];
    double Dens  = amr->patch[FluSg][0][0]->fluid[DENS][0][0][0];
    double Eint  = amr->patch[FluSg][0][0]->fluid[ENGY][0][0][0]; // assume no magnetic and kinetic energy
@@ -407,7 +410,7 @@ double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
 #  if   ( DUAL_ENERGY == DE_ENPY )
    const bool CheckMinPres_No  = false;
    double     Pres             = Hydro_DensDual2Pres( Dens, Dual, EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
-//       EOS_GAMMA does not involve passive scalars
+// EOS_GAMMA does not involve passive scalars
    Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #  elif ( DUAL_ENERGY == DE_EINT )
 #  error : DE_EINT is NOT supported yet !!
@@ -417,8 +420,7 @@ double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
 
    const double MassRatio_pe = Const_mp / Const_me;
 
-#  ifdef SUPPORT_GRACKLE
-   my_fields.density[0] = Dens;
+   my_fields.density        [0] = Dens;
    my_fields.internal_energy[0] = Eint / Dens / SQR(Time[lv]);
 
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
@@ -453,12 +455,7 @@ double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
    Che_Units.velocity_units       = UNIT_V;
    Che_Units.a_units              = 1.0;
    Che_Units.a_value              = Time[lv];
-#  endif // #ifdef SUPPORT_GRACKLE
 
-// determine the time-step
-   double dTime_user = HUGE_NUMBER;
-
-#  ifdef SUPPORT_GRACKLE
 // calculate cooling time
    if ( calculate_cooling_time( &Che_Units, &my_fields, my_cooling_time ) == 0 )
      Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
