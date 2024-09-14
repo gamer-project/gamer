@@ -117,7 +117,12 @@ void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[], co
          {
 //          apply internal energy floor
             Dens = Ptr_Dens [idx_pg];
-            Eint = Ptr_sEint[idx_pg]*Dens;
+#           ifdef COMOVING
+//          convert from the proper frame to the comoving specific internal energy
+            Eint = Ptr_sEint[idx_pg] * Dens * SQR(Time[lv]);
+#           else
+            Eint = Ptr_sEint[idx_pg] * Dens;
+#           endif
             Eint = Hydro_CheckMinEint( Eint, MIN_EINT );
 
 //          update the total energy density
