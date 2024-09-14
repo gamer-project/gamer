@@ -26,14 +26,13 @@
 void Grackle_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
                         const bool OverlapMPI, const bool Overlap_Sync )
 {
-   double dt_grackle;
-#ifdef COMOVING
-   // convert dt from the comoving time interval to the physical time interval
-   // --> see Equation (15) of Schive, Tsai, & Chiueh (2010)
-   dt_grackle = dt * SQR(TimeOld);
-#else
-   dt_grackle = dt;
-#endif
+#  ifdef COMOVING
+// convert dt from the comoving time interval to the physical time interval
+// --> see Equation (15) of Schive, Tsai, & Chiueh (2010)
+   const double dt_grackle = dt * SQR(TimeOld);
+#  else
+   const double dt_grackle = dt;
+#  endif
 
    InvokeSolver( GRACKLE_SOLVER, lv, TimeNew, TimeOld, dt_grackle, NULL_REAL, SaveSg, NULL_INT, NULL_INT, OverlapMPI, Overlap_Sync );
 

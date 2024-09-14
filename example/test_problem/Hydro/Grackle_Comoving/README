@@ -18,3 +18,4 @@ Note:
 1. Compute the thermal evolution on comoving coordinate with the Grackle library
 2. The C program plot/coolingrate_proper.c computes the cooling rate in the proper coordinate
 3. The python script plot/Compute_CoolingCurve.py computes the cooling rate from the simulation output and compares it with result of plot/coolingrate_proper.c
+4. The floating point precision of Grackle must be same with GAMER to compile the code successfully

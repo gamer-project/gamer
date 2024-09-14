@@ -1,25 +1,26 @@
 GRACKLE_DIR = /usr
-CC = gcc
+CC          = gcc
+EXE         = coolingrate_proper
 
-all: coolingrate_proper
+all: $(EXE)
 
-coolingrate_proper: coolingrate_proper.c
-	$(CC) -I$(GRACKLE_DIR)/include -L$(GRACKLE_DIR)/lib -fopenmp -O2 -o coolingrate_proper coolingrate_proper.c -lgrackle -lm
+$(EXE): coolingrate_proper.c
+	$(CC) -I$(GRACKLE_DIR)/include -L$(GRACKLE_DIR)/lib -fopenmp -O2 -o $(EXE) coolingrate_proper.c -lgrackle -lm
 
-run: coolingrate_proper
-	./coolingrate_proper 	0  4  8  0.02
-	./coolingrate_proper 	1  4  8  0.02
-	./coolingrate_proper 	2  4  8  0.02
-	./coolingrate_proper 	3  4  8  0.02
-	./coolingrate_proper 	4  4  8  0.02
-	./coolingrate_proper 	5  4  8  0.02
-	./coolingrate_proper 	6  4  8  0.02
-	./coolingrate_proper 	7  4  8  0.02
-	./coolingrate_proper 	8  4  8  0.02
-	./coolingrate_proper 	9  4  8  0.02
+run: $(EXE)
+	./$(EXE) 	0  4  8  0.02
+	./$(EXE) 	1  4  8  0.02
+	./$(EXE) 	2  4  8  0.02
+	./$(EXE) 	3  4  8  0.02
+	./$(EXE) 	4  4  8  0.02
+	./$(EXE) 	5  4  8  0.02
+	./$(EXE) 	6  4  8  0.02
+	./$(EXE) 	7  4  8  0.02
+	./$(EXE) 	8  4  8  0.02
+	./$(EXE) 	9  4  8  0.02
 
 plot: 
 	python Compute_CoolingCurve.py
 
 clean:
-	rm -f coolingrate_proper coolingrate*.dat
+	rm -f $(EXE) coolingrate*.dat

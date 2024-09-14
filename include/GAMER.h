@@ -57,6 +57,7 @@
 #else
 #  define CONFIG_BFLOAT_4
 #endif
+
 #define OMIT_LEGACY_INTERNAL_GRACKLE_FUNC
 
 extern "C" {

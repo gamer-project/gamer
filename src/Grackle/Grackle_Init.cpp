@@ -47,11 +47,11 @@ void Grackle_Init()
 // units in cgs
 // --> Che_Units is declared as a global variable since all Grackle solvers require that as well
 #  ifdef COMOVING
-   // see https://grackle.readthedocs.io/en/latest/Interaction.html#comoving-coordinates and
-   // https://github.com/grackle-project/grackle/issues/192
-   // --> the density and length units are conversion factors from code values to cgs in proper coordinates,
-   //     while the time and velocity units should remain constant, i.e., velocity_units = length_units / (Time * time_units)
-   // --> the specific energy passed to Grackle is u = k_B * T / ((gamma - 1) mu m_p)
+// see https://grackle.readthedocs.io/en/latest/Interaction.html#comoving-coordinates and
+// https://github.com/grackle-project/grackle/issues/192
+// --> the density and length units are conversion factors from code values to cgs in proper coordinates,
+//     while the time and velocity units should remain constant, i.e., velocity_units = length_units / (Time * time_units)
+// --> the specific energy passed to Grackle is u = k_B * T / ((gamma - 1) * mu * m_p)
    Che_Units.comoving_coordinates = 1;
    Che_Units.density_units        = UNIT_D / CUBE(Time[0]);
    Che_Units.length_units         = UNIT_L * Time[0];
