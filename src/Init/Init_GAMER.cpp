@@ -188,6 +188,12 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
+// initialize variables for dumping particle attributes mapped from mesh quantities
+#  ifdef PARTICLE
+   if ( OPT__OUTPUT_PAR_MESH )   Par_Init_Attribute_Mesh();
+#  endif
+
+
 // initialize particles
 #  ifdef PARTICLE
    switch ( amr->Par->Init )

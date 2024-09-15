@@ -104,7 +104,7 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
       if ( !GotYou )    continue;
 
 
-//    2. prepare the velocity data for the patch group with particles (need NSIDE_26 for ParGhost>0 )
+//    2. prepare the velocity data for the patch group with particles (need NSIDE_26 for ParGhost>0)
       Prepare_PatchData( lv, TimeNew, VelX, NULL, ParGhost, 1, &PID0, _VELX, _NONE,
                          OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No,
                          OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
