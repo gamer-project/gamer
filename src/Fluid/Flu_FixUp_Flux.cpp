@@ -281,6 +281,10 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
                      Hydro_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
 #                 endif
 
+//                do not apply flux correction to the cooling time-step
+#                 ifdef TCOOL
+                  CorrVal[TCOOL] = *FluidPtr1D[TCOOL];
+#                 endif
 
 //                ensure the consistency between pressure, total energy density, and dual-energy variable
 //                --> assuming the variable "Eint" is correct

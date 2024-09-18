@@ -29,6 +29,7 @@ SET_GLOBAL( FieldIdx_t Idx_CRay,          Idx_Undefined );
 #ifdef DUAL_ENERGY
 SET_GLOBAL( FieldIdx_t Idx_Dual,          Idx_Undefined );
 #endif
+SET_GLOBAL( FieldIdx_t Idx_tcool,         Idx_Undefined );
 
 // Grackle fields
 SET_GLOBAL( FieldIdx_t Idx_e,             Idx_Undefined );
