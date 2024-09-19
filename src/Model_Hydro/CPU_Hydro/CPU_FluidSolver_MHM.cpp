@@ -11,6 +11,7 @@
 #include "CUFLU_Shared_DataReconstruction.cu"
 #include "CUFLU_Shared_ComputeFlux.cu"
 #include "CUFLU_Shared_FullStepUpdate.cu"
+#include "CUFLU_Shared_ScanAllCells.cu"
 #ifdef MHD
 #include "CUFLU_Shared_ConstrainedTransport.cu"
 #endif
@@ -69,6 +70,19 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
                            const real dt, const real dh, const real MinDens, const real MinEint,
                            const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
                            const EoS_t *EoS, int *s_FullStepFailure, const int Iteration, const int MinMod_MaxIter );
+#if ( FLU_SCHEME == MHM_RP )
+void Hydro_Scan_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
+                                 const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                       real OneCell[NCOMP_TOTAL_PLUS_MAG],
+                                 const int idx_in, const int didx_in[3],
+                                 const real dt_dh2, const EoS_t *EoS );
+#endif
+void Hydro_Scan_CCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
+                                      real g_Output[][ CUBE(PS2) ],
+                                const real dt, const real dh, const EoS_t *EoS );
+void Hydro_Scan_FCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
+                                      real g_FC_B_Out[][ PS2P1*SQR(PS2) ],
+                                const real dt, const real dh, const EoS_t *EoS );
 #if ( RSOLVER == EXACT  ||  RSOLVER_RESCUE == EXACT )
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                 const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
@@ -167,6 +181,7 @@ static void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                                        const EoS_t *EoS );
 GPU_DEVICE
 static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
+                                  const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                   const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                   const real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                         real g_PriVar_Half[][ CUBE(FLU_NXT) ],
@@ -456,9 +471,9 @@ void CPU_FluidSolver_MHM(
 
 
 //       1-a-4. evaluate the half-step solutions
-         Hydro_RiemannPredict( g_Flu_Array_In[P], g_FC_Mag_Half_1PG, g_Flux_Half_1PG, g_PriVar_Half_1PG,
-                               dt, dh, MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
-                               JeansMinPres, JeansMinPres_Coeff, &EoS );
+         Hydro_RiemannPredict( g_Flu_Array_In[P], g_Mag_Array_In[P], g_FC_Mag_Half_1PG, g_Flux_Half_1PG,
+                               g_PriVar_Half_1PG, dt, dh, MinDens, MinPres, MinEint, FracPassive, NFrac,
+                               c_FracIdx, JeansMinPres, JeansMinPres_Coeff, &EoS );
 
 
          do {
@@ -569,9 +584,13 @@ void CPU_FluidSolver_MHM(
 
 //          add the cosmic-ray source term of adiabatic work
 #           ifdef COSMIC_RAY
-            CR_AdiabaticWork_FullStep( g_PriVar_Half_1PG, g_Flu_Array_Out[P], g_FC_Flux_1PG, g_FC_Var_1PG,
-                                       dt, dh, &EoS );
+            // CR_AdiabaticWork_FullStep( g_PriVar_Half_1PG, g_Flu_Array_Out[P], g_FC_Flux_1PG, g_FC_Var_1PG,
+            //                            dt, dh, &EoS );
 #           endif
+
+            Hydro_Scan_CCVar_FullStep( g_PriVar_Half_1PG, g_Flu_Array_Out[P], dt, dh, &EoS );
+
+            Hydro_Scan_FCVar_FullStep( g_PriVar_Half_1PG, g_Mag_Array_Out[P], dt, dh, &EoS );
 
 
 //          5. counter increment
@@ -823,6 +842,7 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
+                           const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                            const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                            const real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                  real g_PriVar_Half[][ CUBE(FLU_NXT) ],
@@ -834,9 +854,7 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 {
 
    const int  didx_flux[3] = { 1, N_HF_FLUX, SQR(N_HF_FLUX) };
-#  ifdef COSMIC_RAY
-   const int  didx_in[3]   = { 1, FLU_NXT, SQR(FLU_NXT) };
-#  endif
+   const int  didx_in  [3] = { 1, FLU_NXT, SQR(FLU_NXT) };
    const real dt_dh2       = (real)0.5*dt/dh;
 
    const int N_HF_VAR2 = SQR(N_HF_VAR);
@@ -889,16 +907,17 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 
 //    add the cosmic-ray source term of adiabatic work
 #     ifdef COSMIC_RAY
-      CR_AdiabaticWork_HalfStep_MHM_RP( out_con, g_ConVar_In, g_Flux_Half, idx_in, didx_in,
-                                        idx_flux, didx_flux, dt_dh2, EoS );
+      // CR_AdiabaticWork_HalfStep_MHM_RP( out_con, g_ConVar_In, g_Flux_Half, idx_in, didx_in,
+      //                                   idx_flux, didx_flux, dt_dh2, EoS );
 #     endif
-
 
 //    compute the cell-centered half-step B field
 #     ifdef MHD
       MHD_GetCellCenteredBField( out_con+MAG_OFFSET, g_FC_B_Half[0], g_FC_B_Half[1], g_FC_B_Half[2],
                                  N_HF_VAR, N_HF_VAR, N_HF_VAR, i_out, j_out, k_out );
 #     endif
+
+      Hydro_Scan_HalfStep_MHM_RP( g_ConVar_In, g_FC_B_In, out_con, idx_in, didx_in, dt_dh2, EoS );
 
 //    apply density and internal energy floors
       out_con[0] = FMAX( out_con[0], MinDens );
