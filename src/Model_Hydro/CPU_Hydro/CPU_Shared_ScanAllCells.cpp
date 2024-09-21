@@ -62,6 +62,21 @@ void Hydro_Scan_HalfStep_MHM( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
    const int didx_Bz[3] = { 1, FLU_NXT,    FLU_NXT   *FLU_NXT    };
 #  endif
 
+// |    |                |    |
+// |    |       |        |    |
+// ------------B_yL------------
+// |    |       |        |    |
+// |    |       v        |    |
+// |    |                |    |
+// | -B_xL->  idx_in  -B_xR-> |
+// |    |                |    |
+// |    |       |        |    |
+// ------------B_yR------------
+// |    |       |        |    |
+// |    |       v        |    |
+// |    |                |    |
+
+
 // 1. calculate extra term
    real B_xL = g_FC_B_In[0][idx_B_xL];
    real B_xR = g_FC_B_In[0][idx_B_xR];
@@ -71,7 +86,6 @@ void Hydro_Scan_HalfStep_MHM( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
    real B_zR = g_FC_B_In[2][idx_B_zR];
 
    real ExtraTerm = 0.0;
-   ExtraTerm = g_ConVar_In[DENS][idx_in];
 
 // 2. update
    fcCon[0][DENS] += ExtraTerm;
@@ -131,6 +145,22 @@ void Hydro_Scan_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
    const int didx_By[3] = { 1, FLU_NXT,    FLU_NXT   *FLU_NXT_P1 };
    const int didx_Bz[3] = { 1, FLU_NXT,    FLU_NXT   *FLU_NXT    };
 #  endif
+
+// -----------------------------
+// |    |                |     |
+// |    |        |       |     |
+// -------------B_yL------------
+// |    |        |       |     |
+// |    |        v       |     |
+// |    |                |     |
+// | -B_xL->  OneCell  -B_xR-> |
+// |    |                |     |
+// |    |        |       |     |
+// -------------B_yR------------
+// |    |        |       |     |
+// |    |        v       |     |
+// |    |                |     |
+// -----------------------------
 
 #  ifdef COSMIC_RAY
 // 1. calculate the cosmic-ray pressure
@@ -263,21 +293,12 @@ void Hydro_Scan_FCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 
    for (int d=0; d<3; d++)
    {
-      const int TDir1 = (d+1)%3;    // transverse direction 1
-      const int TDir2 = (d+2)%3;    // transverse direction 2
-
-      int size_i, size_j, size_k;
-
+      int size_i, size_j;
       switch ( d )
       {
-         case 0 : size_i = PS2P1; size_j = PS2;   size_k = PS2;
-                  break;
-
-         case 1 : size_i = PS2;   size_j = PS2P1; size_k = PS2;
-                  break;
-
-         case 2 : size_i = PS2;   size_j = PS2;   size_k = PS2P1;
-                  break;
+         case 0 : size_i = PS2P1; size_j = PS2;   break;
+         case 1 : size_i = PS2;   size_j = PS2P1; break;
+         case 2 : size_i = PS2;   size_j = PS2;   break;
       }
 
       const int size_ij = size_i*size_j;
@@ -294,13 +315,19 @@ void Hydro_Scan_FCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
          const int k_hf     = k_out + (N_HF_VAR-PS2)/2;
          const int idx_hf   = IDX321( i_hf, j_hf, k_hf, N_HF_VAR, N_HF_VAR );
 
+//       ---------------------------------
+//       |                 |             |
+//       |   idx_hf        |             |
+//       |      -       idx_out  idx_hf  |
+//       |  didx_hf[d]     |             |
+//       |                 |             |
+//       ---------------------------------
+
 //       1. calculate extra term
          real ExtraTerm = 0.0;
-         ExtraTerm = g_PriVar_Half[DENS][idx_hf];
-
 
 //       2. update
-         // g_FC_B_Out[d][idx_out] += ExtraTerm;
+//       g_FC_B_Out[d][idx_out] += ExtraTerm;
       } // CGPU_LOOP( idx_out, PS2P1*SQR(PS2) )
    } // for (int d=0; d<3; d++)
 
