@@ -49,48 +49,58 @@ void Hydro_Scan_HalfStep_MHM( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
    const int idx_j = idx_in % SQR(FLU_NXT) / FLU_NXT;
    const int idx_k = idx_in / SQR(FLU_NXT);
 
-#  ifdef MHD
-// index of magnetic field
-   const int idx_B_xL   = IDX321( idx_i,   idx_j,   idx_k,   FLU_NXT_P1, FLU_NXT    );
-   const int idx_B_xR   = IDX321( idx_i+1, idx_j,   idx_k,   FLU_NXT_P1, FLU_NXT    );
-   const int idx_B_yL   = IDX321( idx_i,   idx_j,   idx_k,   FLU_NXT,    FLU_NXT_P1 );
-   const int idx_B_yR   = IDX321( idx_i,   idx_j+1, idx_k,   FLU_NXT,    FLU_NXT_P1 );
-   const int idx_B_zL   = IDX321( idx_i,   idx_j,   idx_k,   FLU_NXT,    FLU_NXT    );
-   const int idx_B_zR   = IDX321( idx_i,   idx_j,   idx_k+1, FLU_NXT,    FLU_NXT    );
+// |    |            |    |
+// ----------f=3-----------
+// |    |            |    |
+// |   f=0  idx_in  f=1   |
+// |    |            |    |
+// ----------f=2-----------
+// |    |            |    |
 
-// index increment of magnetic field
-   const int didx_Bx[3] = { 1, FLU_NXT_P1, FLU_NXT_P1*FLU_NXT    };
-   const int didx_By[3] = { 1, FLU_NXT,    FLU_NXT   *FLU_NXT_P1 };
-   const int didx_Bz[3] = { 1, FLU_NXT,    FLU_NXT   *FLU_NXT    };
-#  endif
+   for (int f=0; f<6; f++)
+   {
+      const int d     = f/3;
+      const int TDir1 = (d+1)%3;    // transverse direction 1
+      const int TDir2 = (d+2)%3;    // transverse direction 2
+      const int LR    = 2*(f%3) - 1;
 
-// |    |                |    |
-// |    |       ^        |    |
-// |    |       |        |    |
-// ------------B_yR------------
-// |    |       |        |    |
-// |    |                |    |
-// | -B_xL->  idx_in  -B_xR-> |
-// |    |                |    |
-// |    |       ^        |    |
-// |    |       |        |    |
-// ------------B_yL------------
-// |    |       |        |    |
-// |    |                |    |
+#     ifdef MHD
+      int size_B_i, size_B_j, size_B_k;
+      switch ( d )
+      {
+         case 0 : size_B_i = FLU_NXT_P1; size_B_j = FLU_NXT;    size_B_k = FLU_NXT;    break;
+         case 1 : size_B_i = FLU_NXT;    size_B_j = FLU_NXT_P1; size_B_k = FLU_NXT;    break;
+         case 2 : size_B_i = FLU_NXT;    size_B_j = FLU_NXT;    size_B_k = FLU_NXT_P1; break;
+      } // switch ( d )
 
+//    index of magnetic field
+      const int idx_B_N  = IDX321( idx_i, idx_j, idx_k, size_B_i, size_B_j );
+      const int idx_B_T1 = IDX321( idx_i, idx_j, idx_k, size_B_k, size_B_i );
+      const int idx_B_T2 = IDX321( idx_i, idx_j, idx_k, size_B_j, size_B_k );
 
-// 1. calculate extra term
-   real B_xL = g_FC_B_In[0][idx_B_xL];
-   real B_xR = g_FC_B_In[0][idx_B_xR];
-   real B_yL = g_FC_B_In[1][idx_B_yL];
-   real B_yR = g_FC_B_In[1][idx_B_yR];
-   real B_zL = g_FC_B_In[2][idx_B_zL];
-   real B_zR = g_FC_B_In[2][idx_B_zR];
+//    index increment of magnetic field
+      const int didx_B_N [3] = { 1, size_B_i, size_B_i*size_B_j };
+      const int didx_B_T1[3] = { 1, size_B_k, size_B_k*size_B_i };
+      const int didx_B_T2[3] = { 1, size_B_j, size_B_j*size_B_k };
 
-   real ExtraTerm = 0.0;
+      const real B_N  =                g_FC_B_In[d    ][ idx_B_N  + (f%3)*didx_B_N[d]                  ];
+      const real B_T1 = (real)0.25 * ( g_FC_B_In[TDir1][ idx_B_T1                                      ] +
+                                       g_FC_B_In[TDir1][ idx_B_T1 + LR*didx_B_T1[d]                    ] +
+                                       g_FC_B_In[TDir1][ idx_B_T1                   + didx_B_T1[TDir1] ] +
+                                       g_FC_B_In[TDir1][ idx_B_T1 + LR*didx_B_T1[d] + didx_B_T1[TDir1] ] );
+      const real B_T2 = (real)0.25 * ( g_FC_B_In[TDir2][ idx_B_T2                                      ] +
+                                       g_FC_B_In[TDir2][ idx_B_T2 + LR*didx_B_T2[d]                    ] +
+                                       g_FC_B_In[TDir2][ idx_B_T2                   + didx_B_T2[TDir2] ] +
+                                       g_FC_B_In[TDir2][ idx_B_T2 + LR*didx_B_T2[d] + didx_B_T2[TDir2] ] );
+#     endif // #ifdef MHD
 
-// 2. update
-   fcCon[0][DENS] += ExtraTerm;
+//    1. calculate extra term
+      real ExtraTerm = 0.0;
+
+//    2. update
+      // fcCon[f][DENS] += ExtraTerm;
+
+   } // for (int f=0; f<6; f++)
 
 } // FUNCTION : Hydro_Scan_HalfStep_MHM
 #endif // #if ( FLU_SCHEME == MHM )
@@ -284,12 +294,12 @@ void Hydro_Scan_FCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ]
 //       magnetic field at face-centered BIn_N
          const real BIn_N  =                g_FC_B_In[d    ][ idx_BIn_N                                        ];
          const real BIn_T1 = (real)0.25 * ( g_FC_B_In[TDir1][ idx_BIn_T1                                       ] +
-                                            g_FC_B_In[TDir1][ idx_BIn_T1 - didx_in_BT1[d]                      ] + 
-                                            g_FC_B_In[TDir1][ idx_BIn_T1                  + didx_in_BT1[TDir1] ] + 
+                                            g_FC_B_In[TDir1][ idx_BIn_T1 - didx_in_BT1[d]                      ] +
+                                            g_FC_B_In[TDir1][ idx_BIn_T1                  + didx_in_BT1[TDir1] ] +
                                             g_FC_B_In[TDir1][ idx_BIn_T1 - didx_in_BT1[d] + didx_in_BT1[TDir1] ] );
          const real BIn_T2 = (real)0.25 * ( g_FC_B_In[TDir2][ idx_BIn_T2                                       ] +
-                                            g_FC_B_In[TDir2][ idx_BIn_T2 - didx_in_BT2[d]                      ] + 
-                                            g_FC_B_In[TDir2][ idx_BIn_T2                  + didx_in_BT2[TDir2] ] + 
+                                            g_FC_B_In[TDir2][ idx_BIn_T2 - didx_in_BT2[d]                      ] +
+                                            g_FC_B_In[TDir2][ idx_BIn_T2                  + didx_in_BT2[TDir2] ] +
                                             g_FC_B_In[TDir2][ idx_BIn_T2 - didx_in_BT2[d] + didx_in_BT2[TDir2] ] );
 
 //       2. update
