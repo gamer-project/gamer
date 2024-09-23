@@ -15,7 +15,7 @@ and turn on
 for instance,
 
     ```bash
-    > mpirun -np 10 ./gamer
+    mpirun -np 10 ./gamer
     ```
 
 ### Hybrid MPI/OpenMP
@@ -175,7 +175,7 @@ One can also validate the MPI and OpenMP binding by searching for the
 keyword "OpenMP" in the log file `Record__Note`. The following example
 adopts 8 MPI processes and `OMP_NTHREAD=10` to run a job on 4 nodes
 named golub121-124, each of which is composed of 2 ten-core CPUs and 2 GPUs:
-```
+<pre>
 OpenMP Diagnosis
 ***********************************************************************************
 OMP__SCHEDULE                   DYNAMIC
@@ -194,7 +194,7 @@ CPU core IDs of all OpenMP threads (tid == thread ID):
     6    golub124       10       0       2       4       6       8      10      12      14      16      18
     7    golub124       10       1       3       5       7       9      11      13      15      17      19
 ***********************************************************************************
-```
+</pre>
 Check the following things:
 * **The number under `NThread` is the same as the runtime parameter
 [OMP_NTHREAD](#OMP_NTHREAD)**
@@ -208,7 +208,7 @@ to experiment with different configurations to fine-tune the performance.
 The Linux command `lscpu` can be used to display information about
 your CPU architecture. For example, on a node with 2 ten-core CPUs
 (as the example given above), it shows
-```
+<pre>
 ...
 CPU(s):                20
 On-line CPU(s) list:   0-19
@@ -219,7 +219,7 @@ NUMA node(s):          2
 ...
 NUMA node0 CPU(s):     0,2,4,6,8,10,12,14,16,18
 NUMA node1 CPU(s):     1,3,5,7,9,11,13,15,17,19
-```
+</pre>
 By comparing it with the thread binding information recorded in
 the log file `Record__Note` (as described above), it confirms that
 in this example different threads in the same MPI process do run
