@@ -21,9 +21,9 @@
 // Note        :  1. This function can only be used by MHM
 //                2. Invoked by Hydro_HancockPredict()
 //
-// Parameter   :  fcCon       : Face-centered conserved variables to be updated
-//                g_ConVar_In : Array storing the input conserved variables
+// Parameter   :  g_ConVar_In : Array storing the input conserved variables
 //                g_FC_B_In   : Array storing the input face-centered magnetic field (for MHD only)
+//                fcCon       : Face-centered conserved variables to be updated
 //                idx_in      : Index of accessing g_ConVar_In[]
 //                didx_in     : Index increment of g_ConVar_In[]
 //                dt_dh2      : 0.5 * dt / dh
@@ -57,23 +57,25 @@ void Hydro_Scan_HalfStep_MHM( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
    const int idx_B_yR   = IDX321( idx_i,   idx_j+1, idx_k,   FLU_NXT,    FLU_NXT_P1 );
    const int idx_B_zL   = IDX321( idx_i,   idx_j,   idx_k,   FLU_NXT,    FLU_NXT    );
    const int idx_B_zR   = IDX321( idx_i,   idx_j,   idx_k+1, FLU_NXT,    FLU_NXT    );
+
+// index increment of magnetic field
    const int didx_Bx[3] = { 1, FLU_NXT_P1, FLU_NXT_P1*FLU_NXT    };
    const int didx_By[3] = { 1, FLU_NXT,    FLU_NXT   *FLU_NXT_P1 };
    const int didx_Bz[3] = { 1, FLU_NXT,    FLU_NXT   *FLU_NXT    };
 #  endif
 
 // |    |                |    |
-// |    |       |        |    |
-// ------------B_yL------------
-// |    |       |        |    |
-// |    |       v        |    |
-// |    |                |    |
-// | -B_xL->  idx_in  -B_xR-> |
-// |    |                |    |
+// |    |       ^        |    |
 // |    |       |        |    |
 // ------------B_yR------------
 // |    |       |        |    |
-// |    |       v        |    |
+// |    |                |    |
+// | -B_xL->  idx_in  -B_xR-> |
+// |    |                |    |
+// |    |       ^        |    |
+// |    |       |        |    |
+// ------------B_yL------------
+// |    |       |        |    |
 // |    |                |    |
 
 
@@ -97,13 +99,13 @@ void Hydro_Scan_HalfStep_MHM( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 
 #if ( FLU_SCHEME == MHM_RP )
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_Scan_HalfStep_MHM_RP
+// Function    :  Hydro_Scan_CCVar_HalfStep_MHM_RP
 //
 // Description :  Scan through all cell-centered primitive varibles after half-step update
 //
 // Note        :  1. This function can only be used by MHM_RP
 //                2. Invoked by Hydro_RiemannPredict()
-//                3. Must Invoked after the cell-centered magnetic field calculation
+//                3. Do not update magnetic field here
 //
 // Parameter   :  g_ConVar_In : Array storing the input conserved variables
 //                g_FC_B_In   : Array storing the input face-centered magnetic field (for MHD only)
@@ -116,11 +118,11 @@ void Hydro_Scan_HalfStep_MHM( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 // Return      :  OneCell
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_Scan_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
-                                 const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
-                                       real OneCell[NCOMP_TOTAL_PLUS_MAG],
-                                 const int idx_in, const int didx_in[3],
-                                 const real dt_dh2, const EoS_t *EoS )
+void Hydro_Scan_CCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
+                                       const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                             real OneCell[NCOMP_TOTAL_PLUS_MAG],
+                                       const int idx_in, const int didx_in[3],
+                                       const real dt_dh2, const EoS_t *EoS )
 {
 
 #  ifdef GAMER_DEBUG
@@ -141,6 +143,8 @@ void Hydro_Scan_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
    const int idx_B_yR   = IDX321( idx_i,   idx_j+1, idx_k,   FLU_NXT,    FLU_NXT_P1 );
    const int idx_B_zL   = IDX321( idx_i,   idx_j,   idx_k,   FLU_NXT,    FLU_NXT    );
    const int idx_B_zR   = IDX321( idx_i,   idx_j,   idx_k+1, FLU_NXT,    FLU_NXT    );
+
+// index increment of magnetic field
    const int didx_Bx[3] = { 1, FLU_NXT_P1, FLU_NXT_P1*FLU_NXT    };
    const int didx_By[3] = { 1, FLU_NXT,    FLU_NXT   *FLU_NXT_P1 };
    const int didx_Bz[3] = { 1, FLU_NXT,    FLU_NXT   *FLU_NXT    };
@@ -148,17 +152,17 @@ void Hydro_Scan_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 
 // -----------------------------
 // |    |                |     |
-// |    |        |       |     |
-// -------------B_yL------------
-// |    |        |       |     |
-// |    |        v       |     |
-// |    |                |     |
-// | -B_xL->  OneCell  -B_xR-> |
-// |    |                |     |
+// |    |        ^       |     |
 // |    |        |       |     |
 // -------------B_yR------------
 // |    |        |       |     |
-// |    |        v       |     |
+// |    |                |     |
+// | -B_xL->  OneCell  -B_xR-> |
+// |    |                |     |
+// |    |        ^       |     |
+// |    |        |       |     |
+// -------------B_yL------------
+// |    |        |       |     |
 // |    |                |     |
 // -----------------------------
 
@@ -182,7 +186,122 @@ void Hydro_Scan_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
    OneCell[CRAY] -= pCR_old*dt_dh2*( div_V[0] + div_V[1] + div_V[2] );
 #  endif // #ifdef COSMIC_RAY
 
-} // FUMCTION : Hydro_Scan_HalfStep_MHM_RP
+} // FUMCTION : Hydro_Scan_CCVar_HalfStep_MHM_RP
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_Scan_FCVar_HalfStep_MHM_RP
+//
+// Description :  Scan through all face-centered primitive varibles after half-step update
+//
+// Note        :  1. This function can only be used by MHM_RP
+//                2. Invoked by CPU/CUFLU_FluidSolver_MHM()
+//                3. Must called after MHD_UpdateMagnetic()
+//
+// Parameter   :  g_ConVar_In : Array storing the input conserved variables
+//                g_FC_B_In   : Array storing the input     face-centered magnetic field (for MHD only)
+//                g_FC_B_Half : Array storing the half-step face-centered magnetic field (for MHD only)
+//                dt          : Time interval to advance solution
+//                dh          : Cell size
+//                EoS         : EoS object
+//
+// Return      :  g_FC_B_Half
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+void Hydro_Scan_FCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
+                                       const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                             real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                       const real dt, const real dh, const EoS_t *EoS )
+{
+
+#  ifdef GAMER_DEBUG
+   if ( FLU_NXT-N_HF_VAR != 2 )   printf( "FLU_NXT(%d) - N_HF_VAR(%d) != 2 !\n", FLU_NXT, N_HF_VAR );
+#  endif
+
+   const real dt_dh2      = (real)0.5 * dt / dh;
+   const int  N_HF_VAR_P1 = N_HF_VAR + 1;
+   const int  didx_in[3]  = { 1, FLU_NXT, SQR(FLU_NXT) };
+
+   for (int d=0; d<3; d++)
+   {
+      const int TDir1 = (d+1)%3;    // transverse direction 1
+      const int TDir2 = (d+2)%3;    // transverse direction 2
+
+      int size_BIn_i, size_BIn_j, size_BIn_k;
+      int size_i, size_j;
+      switch ( d )
+      {
+         case 0 : size_BIn_i = FLU_NXT_P1;  size_BIn_j = FLU_NXT;     size_BIn_k = FLU_NXT;
+                  size_i     = N_HF_VAR_P1; size_j     = N_HF_VAR;    break;
+         case 1 : size_BIn_i = FLU_NXT;     size_BIn_j = FLU_NXT_P1;  size_BIn_k = FLU_NXT;
+                  size_i     = N_HF_VAR;    size_j     = N_HF_VAR_P1; break;
+         case 2 : size_BIn_i = FLU_NXT;     size_BIn_j = FLU_NXT;     size_BIn_k = FLU_NXT_P1;
+                  size_i     = N_HF_VAR;    size_j     = N_HF_VAR;    break;
+      }
+      const int didx_in_BN [3] = { 1, size_BIn_i, size_BIn_i*size_BIn_j };
+      const int didx_in_BT1[3] = { 1, size_BIn_k, size_BIn_k*size_BIn_i };
+      const int didx_in_BT2[3] = { 1, size_BIn_j, size_BIn_j*size_BIn_k };
+
+      const int size_ij = size_i*size_j;
+      CGPU_LOOP( idx_half, N_HF_VAR_P1*SQR(N_HF_VAR) )
+      {
+//       index of the half-step array
+         const int i_half     = idx_half % size_i;
+         const int j_half     = idx_half % size_ij / size_i;
+         const int k_half     = idx_half / size_ij;
+
+//       index of the cell-centered input variables
+         const int i_in       = i_half + 1;
+         const int j_in       = j_half + 1;
+         const int k_in       = k_half + 1;
+         const int idx_in     = IDX321( i_in, j_in, k_in, FLU_NXT, FLU_NXT );
+
+//       index of the face-centered input variables
+         const int i_BIn      = i_half + 1;
+         const int j_BIn      = j_half + 1;
+         const int k_BIn      = k_half + 1;
+         const int idx_BIn_N  = IDX321( i_BIn, j_BIn, k_BIn, size_BIn_i, size_BIn_j );
+         const int idx_BIn_T1 = IDX321( i_BIn, j_BIn, k_BIn, size_BIn_k, size_BIn_i );
+         const int idx_BIn_T2 = IDX321( i_BIn, j_BIn, k_BIn, size_BIn_j, size_BIn_k );
+
+//       |                 |              |
+//       |      ^          |        ^     |
+//       -------4-------------------3------
+//       |      |          |        |     |
+//       |                 |              |
+//       |   idx_in        |              |
+//       |      -       -BIn_N->  idx_in  |
+//       |  didx_in[d]     |              |
+//       |                 |              |
+//       |      ^          |        ^     |
+//       -------2-------------------1------
+//       |      |          |        |     |
+//       |                 |              |
+
+//       1. calculate extra term
+         real ExtraTerm = 0.0;
+//       magnetic field at face-centered BIn_N
+         const real BIn_N  =                g_FC_B_In[d    ][ idx_BIn_N                                        ];
+         const real BIn_T1 = (real)0.25 * ( g_FC_B_In[TDir1][ idx_BIn_T1                                       ] +
+                                            g_FC_B_In[TDir1][ idx_BIn_T1 - didx_in_BT1[d]                      ] + 
+                                            g_FC_B_In[TDir1][ idx_BIn_T1                  + didx_in_BT1[TDir1] ] + 
+                                            g_FC_B_In[TDir1][ idx_BIn_T1 - didx_in_BT1[d] + didx_in_BT1[TDir1] ] );
+         const real BIn_T2 = (real)0.25 * ( g_FC_B_In[TDir2][ idx_BIn_T2                                       ] +
+                                            g_FC_B_In[TDir2][ idx_BIn_T2 - didx_in_BT2[d]                      ] + 
+                                            g_FC_B_In[TDir2][ idx_BIn_T2                  + didx_in_BT2[TDir2] ] + 
+                                            g_FC_B_In[TDir2][ idx_BIn_T2 - didx_in_BT2[d] + didx_in_BT2[TDir2] ] );
+
+//       2. update
+//       g_FC_B_Half[d][idx_half] += ExtraTerm;
+      } // CGPU_LOOP( idx_half, N_HF_VAR_P1*SQR(N_HF_VAR) )
+   } // for (int d=0; d<3; d++)
+
+#  ifdef __CUDACC__
+   __syncthreads();
+#  endif
+
+} // FUMCTION : Hydro_Scan_FCVar_HalfStep_MHM_RP
 #endif // #if ( FLU_SCHEME == MHM_RP )
 
 
@@ -275,7 +394,7 @@ void Hydro_Scan_CCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 //                g_Output      : Array to store the updated fluid data
 //                dt            : Time interval to advance solution
 //                dh            : Cell size
-//                EoS         : EoS object
+//                EoS           : EoS object
 //
 // Return      :  g_FC_B_Out
 //-------------------------------------------------------------------------------------------------------
@@ -315,13 +434,13 @@ void Hydro_Scan_FCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
          const int k_hf     = k_out + (N_HF_VAR-PS2)/2;
          const int idx_hf   = IDX321( i_hf, j_hf, k_hf, N_HF_VAR, N_HF_VAR );
 
-//       ---------------------------------
-//       |                 |             |
-//       |   idx_hf        |             |
-//       |      -       idx_out  idx_hf  |
-//       |  didx_hf[d]     |             |
-//       |                 |             |
-//       ---------------------------------
+//       ------------------------------------
+//       |                  |               |
+//       |   idx_hf         |               |
+//       |      -       -idx_out->  idx_hf  |
+//       |  didx_hf[d]      |               |
+//       |                  |               |
+//       ------------------------------------
 
 //       1. calculate extra term
          real ExtraTerm = 0.0;
