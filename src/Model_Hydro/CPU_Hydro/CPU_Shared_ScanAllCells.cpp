@@ -25,7 +25,6 @@
 //                g_FC_B_In   : Array storing the input face-centered magnetic field (for MHD only)
 //                fcCon       : Face-centered conserved variables to be updated
 //                idx_in      : Index of accessing g_ConVar_In[]
-//                didx_in     : Index increment of g_ConVar_In[]
 //                dt_dh2      : 0.5 * dt / dh
 //                EoS         : EoS object
 //
@@ -35,16 +34,13 @@ GPU_DEVICE
 void Hydro_Scan_HalfStep_MHM( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
                               const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                     real fcCon[][NCOMP_LR],
-                              const int idx_in, const int didx_in[3],
-                              const real dt_dh2, const EoS_t *EoS )
+                              const int idx_in, const real dt_dh2, const EoS_t *EoS )
 {
 
 #  ifdef GAMER_DEBUG
-   if ( didx_in[0] != 1  ||  didx_in[1] != FLU_NXT  ||  didx_in[2] != SQR(FLU_NXT) )
-      printf( "didx_in {%d, %d, %d} != {%d, %d, %d} !\n", didx_in[0], didx_in[1], didx_in[2],
-              1, FLU_NXT, SQR(FLU_NXT) );
 #  endif
 
+   const int didx_in[3] = { 1, FLU_NXT, SQR(FLU_NXT) };
    const int idx_i = idx_in % FLU_NXT;
    const int idx_j = idx_in % SQR(FLU_NXT) / FLU_NXT;
    const int idx_k = idx_in / SQR(FLU_NXT);

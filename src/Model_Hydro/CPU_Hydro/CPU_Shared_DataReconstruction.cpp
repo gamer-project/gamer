@@ -40,8 +40,7 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 void Hydro_Scan_HalfStep_MHM( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
                               const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                     real fcCon[][NCOMP_LR],
-                              const int idx_in, const int didx_in[3],
-                              const real dt_dh2, const EoS_t *EoS );
+                              const int idx_in, const real dt_dh2, const EoS_t *EoS );
 #ifdef MHD
 void MHD_ComputeElectric_Half(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                                const real g_ConVar[][ CUBE(FLU_NXT) ],
@@ -2116,7 +2115,7 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
    MHD_UpdateMagnetic_Half( fcCon, g_EC_Ele, dt, dh, cc_i-NGhost, cc_j-NGhost, cc_k-NGhost, NEle );
 #  endif
 
-   Hydro_Scan_HalfStep_MHM( g_cc_array, g_FC_B, fcCon, idx_in, didx_in, dt_dh2, EoS );
+   Hydro_Scan_HalfStep_MHM( g_cc_array, g_FC_B, fcCon, cc_idx, dt_dh2, EoS );
 
 // check negative, inf, and nan in density, energy, and pressure
 #  ifdef MHM_CHECK_PREDICT
