@@ -915,6 +915,7 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
                                         idx_flux, didx_flux, dt_dh2, EoS );
 #     endif
 
+
 //    compute the cell-centered half-step B field
 #     ifdef MHD
       MHD_GetCellCenteredBField( out_con+MAG_OFFSET, g_FC_B_Half[0], g_FC_B_Half[1], g_FC_B_Half[2],

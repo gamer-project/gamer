@@ -42,7 +42,7 @@ void Hydro_AddSourceTerm_CCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NX
 //                   return instantly unless Iteration==MinMod_MaxIter
 //
 // Parameter   :  g_Input           : Array storing the input fluid data
-//                g_Half_Pri        : Array storing the half-step fluid data
+//                g_Half_Pri        : Array storing the half-step primitive fluid data
 //                g_Output          : Array to store the updated fluid data
 //                g_DE_Status       : Array to store the dual-energy status
 //                g_FC_B            : Array storing the updated face-centered B field
