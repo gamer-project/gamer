@@ -35,6 +35,7 @@
 //                   return instantly unless Iteration==MinMod_MaxIter
 //
 // Parameter   :  g_Input           : Array storing the input fluid data
+//                g_Half_Pri        : Array storing the half-step fluid data
 //                g_Output          : Array to store the updated fluid data
 //                g_DE_Status       : Array to store the dual-energy status
 //                g_FC_B            : Array storing the updated face-centered B field
@@ -60,11 +61,12 @@
 //                MinMod_MaxIter    : Maximum number of iterations to reduce the min-mod coefficient (i.e., MINMOD_MAX_ITER)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
-                           const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                           const real dt, const real dh, const real MinDens, const real MinEint,
-                           const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                           const EoS_t *EoS, int *s_FullStepFailure, const int Iteration, const int MinMod_MaxIter )
+void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], const real g_Half_Pri[][ CUBE(FLU_NXT) ],
+                           real g_Output[][ CUBE(PS2) ], char g_DE_Status[], const real g_FC_B[][ PS2P1*SQR(PS2) ],
+                           const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ], const real dt,
+                           const real dh, const real MinDens, const real MinEint, const real DualEnergySwitch,
+                           const bool NormPassive, const int NNorm, const int NormIdx[], const EoS_t *EoS,
+                           int *s_FullStepFailure, const int Iteration, const int MinMod_MaxIter )
 {
 
    const int  didx_flux[3]    = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };

@@ -65,11 +65,12 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
 void Hydro_StoreIntFlux( const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
                          const int NFlux );
-void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
-                           const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                           const real dt, const real dh, const real MinDens, const real MinEint,
-                           const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
-                           const EoS_t *EoS, int *s_FullStepFailure, const int Iteration, const int MinMod_MaxIter );
+void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], const real g_Half_Pri[][ CUBE(FLU_NXT) ],
+                           real g_Output[][ CUBE(PS2) ], char g_DE_Status[], const real g_FC_B[][ PS2P1*SQR(PS2) ],
+                           const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ], const real dt,
+                           const real dh, const real MinDens, const real MinEint, const real DualEnergySwitch,
+                           const bool NormPassive, const int NNorm, const int NormIdx[], const EoS_t *EoS,
+                           int *s_FullStepFailure, const int Iteration, const int MinMod_MaxIter );
 #if ( FLU_SCHEME == MHM_RP )
 void Hydro_Scan_CCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
                                        const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
@@ -587,8 +588,8 @@ void CPU_FluidSolver_MHM(
 
 
 //          4. full-step evolution
-            Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P], g_Mag_Array_Out[P],
-                                  g_FC_Flux_1PG, dt, dh, MinDens, MinEint, DualEnergySwitch,
+            Hydro_FullStepUpdate( g_Flu_Array_In[P], g_PriVar_Half_1PG, g_Flu_Array_Out[P], g_DE_Array_Out[P],
+                                  g_Mag_Array_Out[P], g_FC_Flux_1PG, dt, dh, MinDens, MinEint, DualEnergySwitch,
                                   NormPassive, NNorm, c_NormIdx, &EoS, &s_FullStepFailure, Iteration, MinMod_MaxIter );
 
 //          add the cosmic-ray source term of adiabatic work
