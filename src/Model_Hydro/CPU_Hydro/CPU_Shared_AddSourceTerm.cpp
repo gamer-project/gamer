@@ -38,13 +38,10 @@ void Hydro_AddSourceTerm_HalfStep_MHM( const real g_ConVar_In[][ CUBE(FLU_NXT) ]
                                        const int idx_in, const real dt_dh2, const EoS_t *EoS )
 {
 
-#  ifdef GAMER_DEBUG
-#  endif
-
    const int didx_in[3] = { 1, FLU_NXT, SQR(FLU_NXT) };
-   const int idx_i = idx_in % FLU_NXT;
-   const int idx_j = idx_in % SQR(FLU_NXT) / FLU_NXT;
-   const int idx_k = idx_in / SQR(FLU_NXT);
+   const int i_in       = idx_in % FLU_NXT;
+   const int j_in       = idx_in % SQR(FLU_NXT) / FLU_NXT;
+   const int k_in       = idx_in / SQR(FLU_NXT);
 
 // |    |            |    |
 // ----------f=3-----------
@@ -53,7 +50,6 @@ void Hydro_AddSourceTerm_HalfStep_MHM( const real g_ConVar_In[][ CUBE(FLU_NXT) ]
 // |    |            |    |
 // ----------f=2-----------
 // |    |            |    |
-
    for (int f=0; f<6; f++)
    {
       const int d     = f/2;
@@ -71,15 +67,20 @@ void Hydro_AddSourceTerm_HalfStep_MHM( const real g_ConVar_In[][ CUBE(FLU_NXT) ]
       } // switch ( d )
 
 //    index of magnetic field
-      const int idx_B_N  = IDX321( idx_i, idx_j, idx_k, size_B_i, size_B_j );
-      const int idx_B_T1 = IDX321( idx_i, idx_j, idx_k, size_B_k, size_B_i );
-      const int idx_B_T2 = IDX321( idx_i, idx_j, idx_k, size_B_j, size_B_k );
+      const int idx_B_N  = IDX321( i_in, j_in, k_in, size_B_i, size_B_j );
+      const int idx_B_T1 = IDX321( i_in, j_in, k_in, size_B_k, size_B_i );
+      const int idx_B_T2 = IDX321( i_in, j_in, k_in, size_B_j, size_B_k );
 
 //    index increment of magnetic field
       const int didx_B_N [3] = { 1, size_B_i, size_B_i*size_B_j };
       const int didx_B_T1[3] = { 1, size_B_k, size_B_k*size_B_i };
       const int didx_B_T2[3] = { 1, size_B_j, size_B_j*size_B_k };
+#     endif
 
+//    1. calculate extra term
+      real ExtraTerm = 0.0;
+#     ifdef MHD
+//    magnetic field at face center
       const real B_N  =                g_FC_B_In[d    ][ idx_B_N  + (f%2)*didx_B_N[d]                  ];
       const real B_T1 = (real)0.25 * ( g_FC_B_In[TDir1][ idx_B_T1                                      ] +
                                        g_FC_B_In[TDir1][ idx_B_T1 + LR*didx_B_T1[d]                    ] +
@@ -91,8 +92,6 @@ void Hydro_AddSourceTerm_HalfStep_MHM( const real g_ConVar_In[][ CUBE(FLU_NXT) ]
                                        g_FC_B_In[TDir2][ idx_B_T2 + LR*didx_B_T2[d] + didx_B_T2[TDir2] ] );
 #     endif // #ifdef MHD
 
-//    1. calculate extra term
-      real ExtraTerm = 0.0;
 
 //    2. update
       // fcCon[f][DENS] += ExtraTerm;
@@ -138,18 +137,18 @@ void Hydro_AddSourceTerm_CCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(F
               1, FLU_NXT, SQR(FLU_NXT) );
 #  endif
 
-   const int idx_i = idx_in % FLU_NXT;
-   const int idx_j = idx_in % SQR(FLU_NXT) / FLU_NXT;
-   const int idx_k = idx_in / SQR(FLU_NXT);
+   const int i_in       = idx_in % FLU_NXT;
+   const int j_in       = idx_in % SQR(FLU_NXT) / FLU_NXT;
+   const int k_in       = idx_in / SQR(FLU_NXT);
 
 #  ifdef MHD
 // index of magnetic field
-   const int idx_B_xL   = IDX321( idx_i,   idx_j,   idx_k,   FLU_NXT_P1, FLU_NXT    );
-   const int idx_B_xR   = IDX321( idx_i+1, idx_j,   idx_k,   FLU_NXT_P1, FLU_NXT    );
-   const int idx_B_yL   = IDX321( idx_i,   idx_j,   idx_k,   FLU_NXT,    FLU_NXT_P1 );
-   const int idx_B_yR   = IDX321( idx_i,   idx_j+1, idx_k,   FLU_NXT,    FLU_NXT_P1 );
-   const int idx_B_zL   = IDX321( idx_i,   idx_j,   idx_k,   FLU_NXT,    FLU_NXT    );
-   const int idx_B_zR   = IDX321( idx_i,   idx_j,   idx_k+1, FLU_NXT,    FLU_NXT    );
+   const int idx_B_xL   = IDX321( i_in,   j_in,   k_in,   FLU_NXT_P1, FLU_NXT    );
+   const int idx_B_xR   = IDX321( i_in+1, j_in,   k_in,   FLU_NXT_P1, FLU_NXT    );
+   const int idx_B_yL   = IDX321( i_in,   j_in,   k_in,   FLU_NXT,    FLU_NXT_P1 );
+   const int idx_B_yR   = IDX321( i_in,   j_in+1, k_in,   FLU_NXT,    FLU_NXT_P1 );
+   const int idx_B_zL   = IDX321( i_in,   j_in,   k_in,   FLU_NXT,    FLU_NXT    );
+   const int idx_B_zR   = IDX321( i_in,   j_in,   k_in+1, FLU_NXT,    FLU_NXT    );
 
 // index increment of magnetic field
    const int didx_Bx[3] = { 1, FLU_NXT_P1, FLU_NXT_P1*FLU_NXT    };
@@ -173,30 +172,42 @@ void Hydro_AddSourceTerm_CCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(F
 // |    |                |     |
 // -----------------------------
 
-#  ifdef COSMIC_RAY
-// 1. calculate the cosmic-ray pressure
-   const real pCR_old = EoS->CREint2CRPres_FuncPtr( g_ConVar_In[CRAY][idx_in], EoS->AuxArrayDevPtr_Flt,
-                                                    EoS->AuxArrayDevPtr_Int, EoS->Table );
+#  ifdef MHD
+// magnetic field (see the figure)
+   const real B_xL = g_FC_B_In[0][idx_B_xL];
+   const real B_xR = g_FC_B_In[0][idx_B_xR];
+   const real B_yL = g_FC_B_In[1][idx_B_yL];
+   const real B_yR = g_FC_B_In[1][idx_B_yR];
+   const real B_zL = g_FC_B_In[2][idx_B_zL];
+   const real B_zR = g_FC_B_In[2][idx_B_zR];
+#  endif
 
-
-// 2. compute \div V using the upwind data; reference: [2]
-   real div_V[3];
-
-   for (int d=0; d<3; d++)
-   {
-      div_V[d] = (real)0.5 * ( g_ConVar_In[DENS+d][idx_in + didx_in[d]] / g_ConVar_In[DENS][idx_in + didx_in[d]] -
-                               g_ConVar_In[DENS+d][idx_in - didx_in[d]] / g_ConVar_In[DENS][idx_in - didx_in[d]] );
-   } // for (int d=0; d<3; d++)
-
-
-// 3. update the cosmic-ray energy
-   OneCell[CRAY] -= pCR_old*dt_dh2*( div_V[0] + div_V[1] + div_V[2] );
-#  endif // #ifdef COSMIC_RAY
+// Example: cosmic ray adiabatic work done term
+// #  ifdef COSMIC_RAY
+// // 1. calculate the cosmic-ray pressure
+//    const real pCR_old = EoS->CREint2CRPres_FuncPtr( g_ConVar_In[CRAY][idx_in], EoS->AuxArrayDevPtr_Flt,
+//                                                     EoS->AuxArrayDevPtr_Int, EoS->Table );
+//
+//
+// // 2. compute \div V using the upwind data; reference: [2]
+//    real div_V[3];
+//
+//    for (int d=0; d<3; d++)
+//    {
+//       div_V[d] = (real)0.5 * ( g_ConVar_In[DENS+d][idx_in + didx_in[d]] / g_ConVar_In[DENS][idx_in + didx_in[d]] -
+//                                g_ConVar_In[DENS+d][idx_in - didx_in[d]] / g_ConVar_In[DENS][idx_in - didx_in[d]] );
+//    } // for (int d=0; d<3; d++)
+//
+//
+// // 3. update the cosmic-ray energy
+//    OneCell[CRAY] -= pCR_old*dt_dh2*( div_V[0] + div_V[1] + div_V[2] );
+// #  endif // #ifdef COSMIC_RAY
 
 } // FUMCTION : Hydro_AddSourceTerm_CCVar_HalfStep_MHM_RP
 
 
 
+#ifdef MHD
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_AddSourceTerm_FCVar_HalfStep_MHM_RP
 //
@@ -309,8 +320,8 @@ void Hydro_AddSourceTerm_FCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(F
 #  endif
 
 } // FUMCTION : Hydro_AddSourceTerm_FCVar_HalfStep_MHM_RP
+#endif // #ifdef MHD
 #endif // #if ( FLU_SCHEME == MHM_RP )
-
 
 
 
@@ -337,32 +348,31 @@ void Hydro_AddSourceTerm_CCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NX
                                          const real dt_dh, const EoS_t *EoS )
 {
 
-#  ifdef GAMER_DEBUG
-#  endif
-
-#  ifdef COSMIC_RAY
-// 1. calculate the cosmic-ray pressure
-   const real pCR_half = EoS->CREint2CRPres_FuncPtr( g_PriVar_Half[CRAY][idx_hf], EoS->AuxArrayDevPtr_Flt,
-                                                     EoS->AuxArrayDevPtr_Int, EoS->Table );
-
-
-// 2. compute \div V using the upwind data; reference: [2]
-   real div_V[3];
-   for (int d=0; d<3; d++)
-   {
-      div_V[d] = (real)0.5 * ( g_PriVar_Half[DENS+d][idx_hf + didx_hf[d]] -
-                               g_PriVar_Half[DENS+d][idx_hf - didx_hf[d]] );
-   } // for (int d=0; d<3; d++)
-
-
-// 3. update the cosmic-ray energy
-   OutCell[CRAY] -= pCR_half*dt_dh*( div_V[0] + div_V[1] + div_V[2] );
-#  endif
+// Example: cosmic ray adiabatic work done term
+// #  ifdef COSMIC_RAY
+// // 1. calculate the cosmic-ray pressure
+//    const real pCR_half = EoS->CREint2CRPres_FuncPtr( g_PriVar_Half[CRAY][idx_hf], EoS->AuxArrayDevPtr_Flt,
+//                                                      EoS->AuxArrayDevPtr_Int, EoS->Table );
+//
+//
+// // 2. compute \div V using the upwind data; reference: [2]
+//    real div_V[3];
+//    for (int d=0; d<3; d++)
+//    {
+//       div_V[d] = (real)0.5 * ( g_PriVar_Half[DENS+d][idx_hf + didx_hf[d]] -
+//                                g_PriVar_Half[DENS+d][idx_hf - didx_hf[d]] );
+//    } // for (int d=0; d<3; d++)
+//
+//
+// // 3. update the cosmic-ray energy
+//    OutCell[CRAY] -= pCR_half*dt_dh*( div_V[0] + div_V[1] + div_V[2] );
+// #  endif
 
 } // FUNCTION : Hydro_AddSourceTerm_CCVar_FullStep
 
 
 
+#ifdef MHD
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_AddSourceTerm_FCVar_FullStep
 //
@@ -388,9 +398,6 @@ void Hydro_AddSourceTerm_FCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NX
                                          const real dt, const real dh, const EoS_t *EoS )
 {
 
-#  ifdef GAMER_DEBUG
-#  endif
-
    const real dt_dh      = dt/dh;
    const int  didx_hf[3] = { 1, N_HF_VAR, SQR(N_HF_VAR) };
 
@@ -408,15 +415,15 @@ void Hydro_AddSourceTerm_FCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NX
       CGPU_LOOP( idx_out, PS2P1*SQR(PS2) )
       {
 //       index of the output array
-         const int i_out    = idx_out % size_i;
-         const int j_out    = idx_out % size_ij / size_i;
-         const int k_out    = idx_out / size_ij;
+         const int i_out  = idx_out % size_i;
+         const int j_out  = idx_out % size_ij / size_i;
+         const int k_out  = idx_out / size_ij;
 
 //       index of the half-step variables
-         const int i_hf     = i_out + (N_HF_VAR-PS2)/2;
-         const int j_hf     = j_out + (N_HF_VAR-PS2)/2;
-         const int k_hf     = k_out + (N_HF_VAR-PS2)/2;
-         const int idx_hf   = IDX321( i_hf, j_hf, k_hf, N_HF_VAR, N_HF_VAR );
+         const int i_hf   = i_out + (N_HF_VAR-PS2)/2;
+         const int j_hf   = j_out + (N_HF_VAR-PS2)/2;
+         const int k_hf   = k_out + (N_HF_VAR-PS2)/2;
+         const int idx_hf = IDX321( i_hf, j_hf, k_hf, N_HF_VAR, N_HF_VAR );
 
 //       ------------------------------------
 //       |                  |               |
@@ -439,6 +446,7 @@ void Hydro_AddSourceTerm_FCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NX
 #  endif
 
 } // FUNCTION : Hydro_AddSourceTerm_FCVar_FullStep
+#endif // #ifdef MHD
 
 
 

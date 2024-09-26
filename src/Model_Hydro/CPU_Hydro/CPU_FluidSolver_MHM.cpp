@@ -71,22 +71,6 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], const real g_H
                            const real dh, const real MinDens, const real MinEint, const real DualEnergySwitch,
                            const bool NormPassive, const int NNorm, const int NormIdx[], const EoS_t *EoS,
                            int *s_FullStepFailure, const int Iteration, const int MinMod_MaxIter );
-#if ( FLU_SCHEME == MHM_RP )
-void Hydro_AddSourceTerm_CCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
-                                                const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
-                                                      real OneCell[NCOMP_TOTAL_PLUS_MAG],
-                                                const int idx_in, const int didx_in[3],
-                                                const real dt_dh2, const EoS_t *EoS );
-#ifdef MHD
-void Hydro_AddSourceTerm_FCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
-                                                const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
-                                                      real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
-                                                const real dt, const real dh, const EoS_t *EoS );
-#endif
-#endif
-void Hydro_AddSourceTerm_FCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
-                                               real g_FC_B_Out[][ PS2P1*SQR(PS2) ],
-                                         const real dt, const real dh, const EoS_t *EoS );
 #if ( RSOLVER == EXACT  ||  RSOLVER_RESCUE == EXACT )
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                 const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
@@ -129,6 +113,17 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                     const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                     const real *const EoS_Table[EOS_NTABLE_MAX], real* const EintOut, real* LorentzFactorPtr );
+void Hydro_AddSourceTerm_CCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
+                                                const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                                      real OneCell[NCOMP_TOTAL_PLUS_MAG],
+                                                const int idx_in, const int didx_in[3],
+                                                const real dt_dh2, const EoS_t *EoS );
+#ifdef MHD
+void Hydro_AddSourceTerm_FCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
+                                                const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                                      real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                                const real dt, const real dh, const EoS_t *EoS );
+#endif
 #endif // #if ( FLU_SCHEME == MHM_RP )
 #ifdef MHD
 void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
@@ -144,6 +139,9 @@ void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out
                          const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                          const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                          const real dt, const real dh, const int NOut, const int NEle, const int Offset_B_In );
+void Hydro_AddSourceTerm_FCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
+                                               real g_FC_B_Out[][ PS2P1*SQR(PS2) ],
+                                         const real dt, const real dh, const EoS_t *EoS );
 #endif // #ifdef MHD
 
 #ifdef COSMIC_RAY
