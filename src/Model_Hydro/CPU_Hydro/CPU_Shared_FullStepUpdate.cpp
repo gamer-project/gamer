@@ -11,6 +11,7 @@
 
 // external functions
 #ifdef __CUDACC__
+
 #include "CUFLU_Shared_AddSourceTerm.cu"
 
 #if ( NCOMP_PASSIVE > 0 )
@@ -22,11 +23,13 @@
 #endif
 
 #else // #ifdef __CUDACC__
+
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 void Hydro_AddSourceTerm_CCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
                                          real OutCell[], const int idx_hf, const int didx_hf[3],
                                          const real dt_dh, const EoS_t *EoS );
 #endif
+
 #endif // #ifdef __CUDACC__ ... else ...
 
 
