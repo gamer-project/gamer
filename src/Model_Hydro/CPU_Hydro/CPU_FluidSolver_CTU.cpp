@@ -255,6 +255,7 @@ void CPU_FluidSolver_CTU(
 #        else
          real (*const g_FC_Mag_Half_1PG)[ FLU_NXT_P1*SQR(FLU_NXT) ] = NULL;
          real (*const g_EC_Ele_1PG     )[ CUBE(N_EC_ELE)          ] = NULL;
+         real (*const g_PriVar_Half_1PG)[ CUBE(FLU_NXT) ]           = NULL;
 #        endif
 
 
