@@ -591,8 +591,8 @@ void CPU_FluidSolver_MHM(
 
 //          add the cosmic-ray source term of adiabatic work
 #           ifdef COSMIC_RAY
-            // CR_AdiabaticWork_FullStep( g_PriVar_Half_1PG, g_Flu_Array_Out[P], g_FC_Flux_1PG, g_FC_Var_1PG,
-            //                            dt, dh, &EoS );
+            CR_AdiabaticWork_FullStep( g_PriVar_Half_1PG, g_Flu_Array_Out[P], g_FC_Flux_1PG, g_FC_Var_1PG,
+                                       dt, dh, &EoS );
 #           endif
 
 
@@ -911,8 +911,8 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 
 //    add the cosmic-ray source term of adiabatic work
 #     ifdef COSMIC_RAY
-      // CR_AdiabaticWork_HalfStep_MHM_RP( out_con, g_ConVar_In, g_Flux_Half, idx_in, didx_in,
-      //                                   idx_flux, didx_flux, dt_dh2, EoS );
+      CR_AdiabaticWork_HalfStep_MHM_RP( out_con, g_ConVar_In, g_Flux_Half, idx_in, didx_in,
+                                        idx_flux, didx_flux, dt_dh2, EoS );
 #     endif
 
 //    compute the cell-centered half-step B field
