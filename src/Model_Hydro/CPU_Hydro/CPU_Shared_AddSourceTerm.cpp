@@ -211,7 +211,7 @@ void Hydro_AddSourceTerm_CCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(F
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_AddSourceTerm_FCVar_HalfStep_MHM_RP
 //
-// Description :  Add source term on the face-centered primitive varibles at half-step update
+// Description :  Add source term on the face-centered magnetic field at half-step update
 //
 // Note        :  1. This function can only be used by MHM_RP
 //                2. Invoked by CPU/CUFLU_FluidSolver_MHM()
