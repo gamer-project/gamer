@@ -55,10 +55,10 @@ void Hydro_AddSourceTerm_HalfStep_MHM( const real g_ConVar_In[][ CUBE(FLU_NXT) ]
 
    for (int f=0; f<6; f++)
    {
-      const int d     = f/3;
+      const int d     = f/2;
       const int TDir1 = (d+1)%3;    // transverse direction 1
       const int TDir2 = (d+2)%3;    // transverse direction 2
-      const int LR    = 2*(f%3) - 1;
+      const int LR    = 2*(f%2) - 1;
 
 #     ifdef MHD
       int size_B_i, size_B_j, size_B_k;
@@ -79,7 +79,7 @@ void Hydro_AddSourceTerm_HalfStep_MHM( const real g_ConVar_In[][ CUBE(FLU_NXT) ]
       const int didx_B_T1[3] = { 1, size_B_k, size_B_k*size_B_i };
       const int didx_B_T2[3] = { 1, size_B_j, size_B_j*size_B_k };
 
-      const real B_N  =                g_FC_B_In[d    ][ idx_B_N  + (f%3)*didx_B_N[d]                  ];
+      const real B_N  =                g_FC_B_In[d    ][ idx_B_N  + (f%2)*didx_B_N[d]                  ];
       const real B_T1 = (real)0.25 * ( g_FC_B_In[TDir1][ idx_B_T1                                      ] +
                                        g_FC_B_In[TDir1][ idx_B_T1 + LR*didx_B_T1[d]                    ] +
                                        g_FC_B_In[TDir1][ idx_B_T1                   + didx_B_T1[TDir1] ] +
