@@ -324,62 +324,38 @@ void Hydro_Scan_FCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ]
 // Parameter   :  g_PriVar_Half : Array storing the input cell-centered primitive variables
 //                                --> Accessed with the stride N_HF_VAR
 //                                --> Although its actually allocated size is FLU_NXT^3 since it points to g_PriVar_1PG[]
-//                g_Output      : Array to store the updated fluid data
-//                dt            : Time interval to advance solution
-//                dh            : Cell size
+//                OutCell       : Array to store the updated fluid data
+//                dt_dh         : Time interval to advance solution / cell size
 //                EoS           : EoS object
 //
 // Return      :  g_Output
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_Scan_CCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
-                                      real g_Output[][ CUBE(PS2) ],
-                                const real dt, const real dh, const EoS_t *EoS )
+                                real OutCell[], const int idx_hf, const int didx_hf[3],
+                                const real dt_dh, const EoS_t *EoS )
 {
 
 #  ifdef GAMER_DEBUG
 #  endif
 
-   const real dt_dh      = dt/dh;
-   const int  didx_hf[3] = { 1, N_HF_VAR, SQR(N_HF_VAR) };
-   const int  size_ij    = SQR(PS2);
+#  ifdef COSMIC_RAY
+// 1. calculate the cosmic-ray pressure
+   const real pCR_half = EoS->CREint2CRPres_FuncPtr( g_PriVar_Half[CRAY][idx_hf], EoS->AuxArrayDevPtr_Flt,
+                                                     EoS->AuxArrayDevPtr_Int, EoS->Table );
 
-   CGPU_LOOP( idx_out, CUBE(PS2) )
+
+// 2. compute \div V using the upwind data; reference: [2]
+   real div_V[3];
+   for (int d=0; d<3; d++)
    {
-//    index of the output array
-      const int i_out    = idx_out % PS2;
-      const int j_out    = idx_out % size_ij / PS2;
-      const int k_out    = idx_out / size_ij;
-
-//    index of the half-step variables
-      const int i_hf     = i_out + (N_HF_VAR-PS2)/2;
-      const int j_hf     = j_out + (N_HF_VAR-PS2)/2;
-      const int k_hf     = k_out + (N_HF_VAR-PS2)/2;
-      const int idx_hf   = IDX321( i_hf, j_hf, k_hf, N_HF_VAR, N_HF_VAR );
-
-#     ifdef COSMIC_RAY
-//    1. calculate the cosmic-ray pressure
-      const real pCR_half = EoS->CREint2CRPres_FuncPtr( g_PriVar_Half[CRAY][idx_hf], EoS->AuxArrayDevPtr_Flt,
-                                                        EoS->AuxArrayDevPtr_Int, EoS->Table );
+      div_V[d] = (real)0.5 * ( g_PriVar_Half[DENS+d][idx_hf + didx_hf[d]] -
+                               g_PriVar_Half[DENS+d][idx_hf - didx_hf[d]] );
+   } // for (int d=0; d<3; d++)
 
 
-//    2. compute \div V using the upwind data; reference: [2]
-      real div_V[3];
-      for (int d=0; d<3; d++)
-      {
-         div_V[d] = (real)0.5 * ( g_PriVar_Half[DENS+d][idx_hf + didx_hf[d]] -
-                                  g_PriVar_Half[DENS+d][idx_hf - didx_hf[d]] );
-      } // for (int d=0; d<3; d++)
-
-
-//    3. update the cosmic-ray energy
-      g_Output[CRAY][idx_out] -= pCR_half*dt_dh*( div_V[0] + div_V[1] + div_V[2] );
-#     endif
-
-   } // CGPU_LOOP( idx_out, CUBE(PS2) )
-
-#  ifdef __CUDACC__
-   __syncthreads();
+// 3. update the cosmic-ray energy
+   OutCell[CRAY] -= pCR_half*dt_dh*( div_V[0] + div_V[1] + div_V[2] );
 #  endif
 
 } // FUNCTION : Hydro_Scan_CCVar_FullStep

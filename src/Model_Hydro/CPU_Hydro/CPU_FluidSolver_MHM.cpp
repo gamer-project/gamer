@@ -84,9 +84,6 @@ void Hydro_Scan_FCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ]
                                        const real dt, const real dh, const EoS_t *EoS );
 #endif
 #endif
-void Hydro_Scan_CCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
-                                      real g_Output[][ CUBE(PS2) ],
-                                const real dt, const real dh, const EoS_t *EoS );
 void Hydro_Scan_FCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
                                       real g_FC_B_Out[][ PS2P1*SQR(PS2) ],
                                 const real dt, const real dh, const EoS_t *EoS );
@@ -584,6 +581,8 @@ void CPU_FluidSolver_MHM(
 
             MHD_UpdateMagnetic( g_Mag_Array_Out[P][0], g_Mag_Array_Out[P][1], g_Mag_Array_Out[P][2],
                                 g_Mag_Array_In[P], g_EC_Ele_1PG, dt, dh, PS2, N_FL_ELE, FLU_GHOST_SIZE );
+
+            Hydro_Scan_FCVar_FullStep( g_PriVar_Half_1PG, g_Mag_Array_Out[P], dt, dh, &EoS );
 #           endif // #ifdef MHD
 
 
@@ -597,10 +596,6 @@ void CPU_FluidSolver_MHM(
             // CR_AdiabaticWork_FullStep( g_PriVar_Half_1PG, g_Flu_Array_Out[P], g_FC_Flux_1PG, g_FC_Var_1PG,
             //                            dt, dh, &EoS );
 #           endif
-
-            Hydro_Scan_CCVar_FullStep( g_PriVar_Half_1PG, g_Flu_Array_Out[P], dt, dh, &EoS );
-
-            Hydro_Scan_FCVar_FullStep( g_PriVar_Half_1PG, g_Mag_Array_Out[P], dt, dh, &EoS );
 
 
 //          5. counter increment
