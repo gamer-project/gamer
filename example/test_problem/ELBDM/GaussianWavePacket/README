@@ -23,4 +23,6 @@ Note:
    b. The periodic BC (OPT__BC_FLU_* = 1) does not work for Gaussian wave packets that are
       - travelling
       - non-travelling but non-periodic
+   c. The default setup may lead to "time-step is too small" error
+      --> Try a larger Gau_Width to avoid it
 
