@@ -14,9 +14,9 @@
 
 #if ( FLU_SCHEME == MHM )
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_Scan_HalfStep_MHM
+// Function    :  Hydro_AddSourceTerm_HalfStep_MHM
 //
-// Description :  Scan through all face-centered conserved varibles after half-step update
+// Description :  Add source term on the face-centered conserved varibles at half-step update
 //
 // Note        :  1. This function can only be used by MHM
 //                2. Invoked by Hydro_HancockPredict()
@@ -31,10 +31,10 @@
 // Return      :  fcCon
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_Scan_HalfStep_MHM( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
-                              const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
-                                    real fcCon[][NCOMP_LR],
-                              const int idx_in, const real dt_dh2, const EoS_t *EoS )
+void Hydro_AddSourceTerm_HalfStep_MHM( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
+                                       const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                             real fcCon[][NCOMP_LR],
+                                       const int idx_in, const real dt_dh2, const EoS_t *EoS )
 {
 
 #  ifdef GAMER_DEBUG
@@ -98,16 +98,16 @@ void Hydro_Scan_HalfStep_MHM( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 
    } // for (int f=0; f<6; f++)
 
-} // FUNCTION : Hydro_Scan_HalfStep_MHM
+} // FUNCTION : Hydro_AddSourceTerm_HalfStep_MHM
 #endif // #if ( FLU_SCHEME == MHM )
 
 
 
 #if ( FLU_SCHEME == MHM_RP )
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_Scan_CCVar_HalfStep_MHM_RP
+// Function    :  Hydro_AddSourceTerm_CCVar_HalfStep_MHM_RP
 //
-// Description :  Scan through all cell-centered primitive varibles after half-step update
+// Description :  Add source term on the cell-centered primitive varibles at half-step update
 //
 // Note        :  1. This function can only be used by MHM_RP
 //                2. Invoked by Hydro_RiemannPredict()
@@ -124,11 +124,11 @@ void Hydro_Scan_HalfStep_MHM( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 // Return      :  OneCell
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_Scan_CCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
-                                       const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
-                                             real OneCell[NCOMP_TOTAL_PLUS_MAG],
-                                       const int idx_in, const int didx_in[3],
-                                       const real dt_dh2, const EoS_t *EoS )
+void Hydro_AddSourceTerm_CCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
+                                                const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                                      real OneCell[NCOMP_TOTAL_PLUS_MAG],
+                                                const int idx_in, const int didx_in[3],
+                                                const real dt_dh2, const EoS_t *EoS )
 {
 
 #  ifdef GAMER_DEBUG
@@ -192,14 +192,14 @@ void Hydro_Scan_CCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ]
    OneCell[CRAY] -= pCR_old*dt_dh2*( div_V[0] + div_V[1] + div_V[2] );
 #  endif // #ifdef COSMIC_RAY
 
-} // FUMCTION : Hydro_Scan_CCVar_HalfStep_MHM_RP
+} // FUMCTION : Hydro_AddSourceTerm_CCVar_HalfStep_MHM_RP
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_Scan_FCVar_HalfStep_MHM_RP
+// Function    :  Hydro_AddSourceTerm_FCVar_HalfStep_MHM_RP
 //
-// Description :  Scan through all face-centered primitive varibles after half-step update
+// Description :  Add source term on the face-centered primitive varibles at half-step update
 //
 // Note        :  1. This function can only be used by MHM_RP
 //                2. Invoked by CPU/CUFLU_FluidSolver_MHM()
@@ -215,10 +215,10 @@ void Hydro_Scan_CCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ]
 // Return      :  g_FC_B_Half
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_Scan_FCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
-                                       const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
-                                             real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
-                                       const real dt, const real dh, const EoS_t *EoS )
+void Hydro_AddSourceTerm_FCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
+                                                const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                                      real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                                const real dt, const real dh, const EoS_t *EoS )
 {
 
 #  ifdef GAMER_DEBUG
@@ -307,19 +307,19 @@ void Hydro_Scan_FCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ]
    __syncthreads();
 #  endif
 
-} // FUMCTION : Hydro_Scan_FCVar_HalfStep_MHM_RP
+} // FUMCTION : Hydro_AddSourceTerm_FCVar_HalfStep_MHM_RP
 #endif // #if ( FLU_SCHEME == MHM_RP )
 
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_Scan_CCVar_FullStep
+// Function    :  Hydro_AddSourceTerm_CCVar_FullStep
 //
-// Description :  Scan through all cell-centered conserved varibles after full-step update
+// Description :  Add source term on the cell-centered conserved varibles at full-step update
 //
 // Note        :  1. Shared by both MHM and MHM_RP
-//                2. Invoked by CPU/CUFLU_FluidSolver_MHM()
+//                2. Invoked by Hydro_FullStepUpdate()
 //
 // Parameter   :  g_PriVar_Half : Array storing the input cell-centered primitive variables
 //                                --> Accessed with the stride N_HF_VAR
@@ -331,9 +331,9 @@ void Hydro_Scan_FCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ]
 // Return      :  g_Output
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_Scan_CCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
-                                real OutCell[], const int idx_hf, const int didx_hf[3],
-                                const real dt_dh, const EoS_t *EoS )
+void Hydro_AddSourceTerm_CCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
+                                         real OutCell[], const int idx_hf, const int didx_hf[3],
+                                         const real dt_dh, const EoS_t *EoS )
 {
 
 #  ifdef GAMER_DEBUG
@@ -358,14 +358,14 @@ void Hydro_Scan_CCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
    OutCell[CRAY] -= pCR_half*dt_dh*( div_V[0] + div_V[1] + div_V[2] );
 #  endif
 
-} // FUNCTION : Hydro_Scan_CCVar_FullStep
+} // FUNCTION : Hydro_AddSourceTerm_CCVar_FullStep
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Hydro_Scan_FCVar_FullStep
+// Function    :  Hydro_AddSourceTerm_FCVar_FullStep
 //
-// Description :  Scan through all face-centered magnetic field after full-step update
+// Description :  Add source term on the face-centered magnetic field at full-step update
 //
 // Note        :  1. Shared by both MHM and MHM_RP
 //                2. Invoked by CPU/CUFLU_FluidSolver_MHM()
@@ -381,9 +381,9 @@ void Hydro_Scan_CCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 // Return      :  g_FC_B_Out
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_Scan_FCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
-                                      real g_FC_B_Out[][ PS2P1*SQR(PS2) ],
-                                const real dt, const real dh, const EoS_t *EoS )
+void Hydro_AddSourceTerm_FCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
+                                               real g_FC_B_Out[][ PS2P1*SQR(PS2) ],
+                                         const real dt, const real dh, const EoS_t *EoS )
 {
 
 #  ifdef GAMER_DEBUG
@@ -436,7 +436,7 @@ void Hydro_Scan_FCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
    __syncthreads();
 #  endif
 
-} // FUNCTION : Hydro_Scan_FCVar_FullStep
+} // FUNCTION : Hydro_AddSourceTerm_FCVar_FullStep
 
 
 

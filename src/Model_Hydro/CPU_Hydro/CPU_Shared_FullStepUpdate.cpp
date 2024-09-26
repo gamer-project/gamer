@@ -11,7 +11,7 @@
 
 // external functions
 #ifdef __CUDACC__
-#include "CUFLU_Shared_ScanAllCells.cu"
+#include "CUFLU_Shared_AddSourceTerm.cu"
 
 #if ( NCOMP_PASSIVE > 0 )
 # include "CUFLU_Shared_FluUtility.cu"
@@ -23,9 +23,9 @@
 
 #else // #ifdef __CUDACC__
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
-void Hydro_Scan_CCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
-                                real OutCell[], const int idx_hf, const int didx_hf[3],
-                                const real dt_dh, const EoS_t *EoS );
+void Hydro_AddSourceTerm_CCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
+                                         real OutCell[], const int idx_hf, const int didx_hf[3],
+                                         const real dt_dh, const EoS_t *EoS );
 #endif
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -135,7 +135,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], const real g_H
          Output_1Cell[v] = g_Input[v][idx_in] - dt_dh*( dFlux[0][v] + dFlux[1][v] + dFlux[2][v] );
 
 #     if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
-      Hydro_Scan_CCVar_FullStep( g_Half_Pri, Output_1Cell, idx_hf, didx_hf, dt_dh, EoS );
+      Hydro_AddSourceTerm_CCVar_FullStep( g_Half_Pri, Output_1Cell, idx_hf, didx_hf, dt_dh, EoS );
 #     endif
 
 
