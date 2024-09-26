@@ -20,6 +20,7 @@
 //
 // Note        :  1. This function can only be used by MHM
 //                2. Invoked by Hydro_HancockPredict()
+//                3. Must be used after MHD_UpdateMagnetic_Half()
 //
 // Parameter   :  g_ConVar_In : Array storing the input conserved variables
 //                g_FC_B_In   : Array storing the input face-centered magnetic field (for MHD only)
@@ -111,11 +112,11 @@ void Hydro_AddSourceTerm_HalfStep_MHM( const real g_ConVar_In[][ CUBE(FLU_NXT) ]
 //
 // Note        :  1. This function can only be used by MHM_RP
 //                2. Invoked by Hydro_RiemannPredict()
-//                3. Do not update magnetic field here
+//                3. Do not update magnetic field here, please update at Hydro_AddSourceTerm_FCVar_HalfStep_MHM_RP()
 //
 // Parameter   :  g_ConVar_In : Array storing the input conserved variables
 //                g_FC_B_In   : Array storing the input face-centered magnetic field (for MHD only)
-//                OneCell     : Single-cell fluid array to store the updated cell-centered primitive variables
+//                OneCell     : Single-cell fluid array to store the updated cell-centered conserved variables
 //                idx_in      : Index of accessing g_ConVar_In[]
 //                didx_in     : Index increment of g_ConVar_In[]
 //                dt_dh2      : 0.5 * dt / dh
@@ -203,7 +204,7 @@ void Hydro_AddSourceTerm_CCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(F
 //
 // Note        :  1. This function can only be used by MHM_RP
 //                2. Invoked by CPU/CUFLU_FluidSolver_MHM()
-//                3. Must called after MHD_UpdateMagnetic()
+//                3. Must be used after MHD_UpdateMagnetic()
 //
 // Parameter   :  g_ConVar_In : Array storing the input conserved variables
 //                g_FC_B_In   : Array storing the input     face-centered magnetic field (for MHD only)
@@ -324,7 +325,7 @@ void Hydro_AddSourceTerm_FCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(F
 // Parameter   :  g_PriVar_Half : Array storing the input cell-centered primitive variables
 //                                --> Accessed with the stride N_HF_VAR
 //                                --> Although its actually allocated size is FLU_NXT^3 since it points to g_PriVar_1PG[]
-//                OutCell       : Array to store the updated fluid data
+//                OutCell       : Array to store the updated conserved variables
 //                dt_dh         : Time interval to advance solution / cell size
 //                EoS           : EoS object
 //
@@ -369,6 +370,7 @@ void Hydro_AddSourceTerm_CCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NX
 //
 // Note        :  1. Shared by both MHM and MHM_RP
 //                2. Invoked by CPU/CUFLU_FluidSolver_MHM()
+//                3. Must be used after MHD_UpdateMagnetic()
 //
 // Parameter   :  g_PriVar_Half : Array storing the input cell-centered primitive variables
 //                                --> Accessed with the stride N_HF_VAR
