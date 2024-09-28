@@ -922,7 +922,7 @@
 #   define GRAMFE_FFT_FLOAT8
 #endif
 
-#if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+#if ( ( GRAMFE_SCHEME == GRAMFE_MATMUL ) && defined( FLOAT8 ) )
 #   define GRAMFE_MATMUL_FLOAT8
 #endif
 
