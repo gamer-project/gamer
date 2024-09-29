@@ -188,7 +188,7 @@ class ArgumentParser( argparse.ArgumentParser ):
                 option_indent = len(option["flags2"])
 
         template = "  %-" + str(option_indent) + "s  "
-        for option in self.options:
+        for option in sorted(self.options, key=lambda item: item["flags2"]):
             indent = template %(option["flags2"])
             output = indent
 
