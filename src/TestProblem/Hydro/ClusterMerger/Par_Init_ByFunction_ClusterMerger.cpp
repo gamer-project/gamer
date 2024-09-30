@@ -735,7 +735,9 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
             for (int c=0; c<Merger_Coll_NumHalos; c++)
                for (int d=0; d<3; d++)  Cen_new_pre[c][d] = min_pos[c][d];
 
-            int      N          = 10000;       // maximum particle numbers (to allocate the array size)
+            int N_max[Merger_Coll_NumHalos]; // maximum particle numbers (to allocate the array size)
+            for (int c=0; c<Merger_Coll_NumHalos; c++)   N_max[c] = 10000;
+
             int      num_par[3] = {0, 0, 0};   // (each rank) number of particles inside the target region of each cluster
             double **ParX       = new double* [Merger_Coll_NumHalos];
             double **ParY       = new double* [Merger_Coll_NumHalos];
@@ -746,13 +748,13 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
             double **VelZ       = new double* [Merger_Coll_NumHalos];
             for (int c=0; c<Merger_Coll_NumHalos; c++)
             {
-               ParX[c] = new double[N];
-               ParY[c] = new double[N];
-               ParZ[c] = new double[N];
-               ParM[c] = new double[N];
-               VelX[c] = new double[N];
-               VelY[c] = new double[N];
-               VelZ[c] = new double[N];
+               ParX[c] = new double [N_max[c]];
+               ParY[c] = new double [N_max[c]];
+               ParZ[c] = new double [N_max[c]];
+               ParM[c] = new double [N_max[c]];
+               VelX[c] = new double [N_max[c]];
+               VelY[c] = new double [N_max[c]];
+               VelZ[c] = new double [N_max[c]];
             }
 
 //          find the particles within the arrection radius
@@ -794,16 +796,16 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                            num_par[c] += 1;
                         }
 
-                        if ( num_par[c] >= N )
+                        if ( num_par[c] >= N_max[c] )
                         {
-                            N = num_par[c] + 1;  // increase the new maximum size if needed
-                            ParX[c] = (double*)realloc( ParX[c], N * sizeof(double) );
-                            ParY[c] = (double*)realloc( ParY[c], N * sizeof(double) );
-                            ParZ[c] = (double*)realloc( ParZ[c], N * sizeof(double) );
-                            ParM[c] = (double*)realloc( ParM[c], N * sizeof(double) );
-                            VelX[c] = (double*)realloc( VelX[c], N * sizeof(double) );
-                            VelY[c] = (double*)realloc( VelY[c], N * sizeof(double) );
-                            VelZ[c] = (double*)realloc( VelZ[c], N * sizeof(double) );
+                            N_max[c] = num_par[c] + 1;  // increase the new maximum size if needed
+                            ParX[c]  = (double*)realloc( ParX[c], N_max[c]*sizeof(double) );
+                            ParY[c]  = (double*)realloc( ParY[c], N_max[c]*sizeof(double) );
+                            ParZ[c]  = (double*)realloc( ParZ[c], N_max[c]*sizeof(double) );
+                            ParM[c]  = (double*)realloc( ParM[c], N_max[c]*sizeof(double) );
+                            VelX[c]  = (double*)realloc( VelX[c], N_max[c]*sizeof(double) );
+                            VelY[c]  = (double*)realloc( VelY[c], N_max[c]*sizeof(double) );
+                            VelZ[c]  = (double*)realloc( VelZ[c], N_max[c]*sizeof(double) );
                         }
                      } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                   } // if (SQR(patch_pos[0]-Cen_new_pre[c][0])+SQR(patch_pos[1]-Cen_new_pre[c][1])+SQR(patch_pos[2]-Cen_new_pre[c][2]) <= SQR(20*R_acc+patch_d))
