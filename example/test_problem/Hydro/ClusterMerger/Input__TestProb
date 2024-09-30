@@ -59,7 +59,7 @@ R_acc                   4.0 # accretion radius: compute the accretion rate (in k
 R_dep                   4.0 # radius to deplete the accreted gas (in kpc)
 JetDirection_case       1 # Methods for choosing the jet direction: 1. Fixed at x-axis; 2. Import from table (generate JetDirection.txt); 3. Align with angular momentum
 
-# other	parameters
+# other parameters
 Merger_Coll_UseMetals   0 # look for a metal field in the profile files [1]
 Merger_Coll_LabelCenter 1 # label the particle closest to the center of each cluster [1]
 AdjustBHPos             1 # (true/false) --> Adjust the BH position

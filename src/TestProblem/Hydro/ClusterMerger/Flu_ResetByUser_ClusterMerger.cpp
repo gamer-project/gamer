@@ -403,7 +403,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 #              else
                double Temp = (real) Hydro_Con2Temp( fluid_acc[0], fluid_acc[1], fluid_acc[2], fluid_acc[3], fluid_acc[4],
                                                     fluid_acc+NCOMP_FLUID, false, MIN_TEMP, Emag,
-						    EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                    EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #              endif
                if ( Temp <= 5e5 )   mass_cold[c] += fluid_acc[0]*dv;
