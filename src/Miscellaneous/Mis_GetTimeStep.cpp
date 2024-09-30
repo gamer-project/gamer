@@ -211,14 +211,14 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 // =============================================================================================================
 #  if   ( MODEL == HYDRO )
    double EC_dtCoef = SrcTerms.EC_dtCoef;
-   if ( SrcTerms.EC_subcycling ) { 
+   if ( SrcTerms.EC_subcycling ) {
       EC_dtCoef = HUGE_NUMBER;
 #     ifdef GAMER_DEBUG
       Aux_Message( stderr, "WARNING : Resetting EC_dtCoef to be HUGE_NUMBER when subcycling is enabled.\n" );
 #     endif
    }
    dTime[NdTime] = EC_dtCoef * dTime_dt * Mis_GetTimeStep_ExactCooling( lv, dTime_dt );
-   sprintf( dTime_Name[NdTime++], "%s", "ExactCooling" );               
+   sprintf( dTime_Name[NdTime++], "%s", "ExactCooling" );
 #  endif
 
 

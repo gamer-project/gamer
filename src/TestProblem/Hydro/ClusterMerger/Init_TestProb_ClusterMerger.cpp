@@ -9,7 +9,7 @@
 // problem-specific global variables
 // =======================================================================================
        int     Merger_Coll_NumHalos;      // number of clusters
-       bool    AGN_feedback;              // turn on/off (1/0) AGN feedback  
+       bool    AGN_feedback;              // turn on/off (1/0) AGN feedback
 static char    Merger_File_Prof1[1000];   // profile table of cluster 1
 static char    Merger_File_Prof2[1000];   // profile table of cluster 2
 static char    Merger_File_Prof3[1000];   // profile table of cluster 3
@@ -68,12 +68,12 @@ static FieldIdx_t ColorField1Idx = Idx_Undefined;
 static FieldIdx_t ColorField2Idx = Idx_Undefined;
 static FieldIdx_t ColorField3Idx = Idx_Undefined;
 
-       int    Accretion_Mode;       // 1: hot mode; 2: code mode; 3: combine (hot + cold)   
+       int    Accretion_Mode;       // 1: hot mode; 2: code mode; 3: combine (hot + cold)
        double eta;                  // mass loading factor in jet feedback
        double eps_f;                // the radiative efficiency in jet feedback
        double eps_m;                // the fraction of total energy that goes into the thermal energy in jet feedback
        double R_acc;                // accretion radius: compute the accretion rate
-       double R_dep;                // radius to deplete the accreted gas 
+       double R_dep;                // radius to deplete the accreted gas
 
        double CM_Bondi_SinkMass[3];       // total mass change            in the feedback region in one global time-step
        double CM_Bondi_SinkMomX[3];       // total x-momentum change      ...
@@ -93,8 +93,8 @@ static FieldIdx_t ColorField3Idx = Idx_Undefined;
        double Mdot_BH1;             // the accretion rate of BH 1
        double Mdot_BH2;             // the accretion rate of BH 2
        double Mdot_BH3;             // the accretion rate of BH 3
-       double Jet_HalfHeight1;      // half height of the cylinder-shape jet source of cluster 1    
-       double Jet_HalfHeight2;      // half height of the cylinder-shape jet source of cluster 2       
+       double Jet_HalfHeight1;      // half height of the cylinder-shape jet source of cluster 1
+       double Jet_HalfHeight2;      // half height of the cylinder-shape jet source of cluster 2
        double Jet_HalfHeight3;      // half height of the cylinder-shape jet source of cluster 3
        double Jet_Radius1;          // radius of the cylinder-shape jet source of cluster 1
        double Jet_Radius2;          // radius of the cylinder-shape jet source of cluster 2
@@ -102,7 +102,7 @@ static FieldIdx_t ColorField3Idx = Idx_Undefined;
        double Mdot[3];              // the feedback injeciton rate of mass
        double Pdot[3];              // the feedback injeciton rate of momentum
        double Edot[3];              // the feedback injeciton rate of total energy
-       double Jet_Vec[3][3];        // jet direction   
+       double Jet_Vec[3][3];        // jet direction
        double GasVel[3][3];         // average gas velocity inside the accretion radius
        double SoundSpeed[3];        // average sound speed inside the accreiton radius
        double GasDens[3];           // average gas density inside the accreiton radius
@@ -114,14 +114,14 @@ static FieldIdx_t ColorField3Idx = Idx_Undefined;
        double BH_Pos[3][3];         // BH position of each cluster
        double BH_Vel[3][3];         // BH velocity of each cluster
 
-       int     JetDirection_NBin;     // number of bins of the jet direction table 
+       int     JetDirection_NBin;     // number of bins of the jet direction table
 static double *JetDirection = NULL;   // jet direction[time/theta_1/phi_1/theta_2/phi_2/theta_3/phi_3]
-       double *Time_table;            // the time table of jet direction 
+       double *Time_table;            // the time table of jet direction
        double *Theta_table[3];        // the theta table of jet direction for 3 clusters
        double *Phi_table[3];          // the phi table of jet direction for 3 clusters
 
-       bool   AdjustBHPos;    // (true/false) --> Adjust the BH position 
-       bool   AdjustBHVel;    // (true/false) --> Adjust the BH velocity 
+       bool   AdjustBHPos;    // (true/false) --> Adjust the BH position
+       bool   AdjustBHVel;    // (true/false) --> Adjust the BH velocity
        double AdjustPeriod;   // the time interval of adjustment
        int    AdjustCount = 0;  // count the number of adjustments
        int    JetDirection_case;  // Methods for choosing the jet direction: 1. Fixed at x-axis; 2. Import from table (generate JetDirection.txt); 3. Align with angular momentum
@@ -481,7 +481,7 @@ void SetParameter()
                                     { Merger_Coll_PosX3, Merger_Coll_PosY3, amr->BoxCenter[2] }};
       double CenterVel[3][3]     = {{ Merger_Coll_VelX1, Merger_Coll_VelY1, 0.0 },
                                     { Merger_Coll_VelX2, Merger_Coll_VelY2, 0.0 },
-                                    { Merger_Coll_VelX3, Merger_Coll_VelY3, 0.0 }}; 
+                                    { Merger_Coll_VelX3, Merger_Coll_VelY3, 0.0 }};
 
       for (int c=0; c<Merger_Coll_NumHalos; c++) {
          for (int d=0; d<3; d++)   ClusterCen[c][d] = ClusterCenter[c][d];
@@ -542,18 +542,18 @@ void SetParameter()
 // (4) Load the jet direction table
    if ( AGN_feedback  &&  JetDirection_case == 2 ) {
       const bool RowMajor_No  = false;    // load data into the column-major order
-      const bool AllocMem_Yes = true;     // allocate memory for JetDirection 
+      const bool AllocMem_Yes = true;     // allocate memory for JetDirection
       const int  NCol         = 7;        // total number of columns to load
       const int  Col[NCol] = {0, 1, 2, 3, 4, 5, 6};  // target columns: (time, theta_1, phi_1, theta_2, phi_2, theta_3, phi_3)
- 
+
       JetDirection_NBin = Aux_LoadTable( JetDirection, "JetDirection.txt", NCol, Col, RowMajor_No, AllocMem_Yes );
       Time_table = JetDirection+0*JetDirection_NBin;
       for (int d=0; d<3; d++) {
          Theta_table[d] = JetDirection+(1+2*d)*JetDirection_NBin;
          Phi_table[d]   = JetDirection+(2+2*d)*JetDirection_NBin;
-      }       
+      }
       for (int b=0; b<JetDirection_NBin; b++)   Time_table[b] *= Const_Myr/UNIT_T;
-   }       
+   }
 
 
 // (5) reset other general-purpose parameters
@@ -978,7 +978,7 @@ void AddNewField_ClusterMerger()
 #endif
 
 
-// Restart only: initialize the BH variables (position, velocity, mass) from particles labelled with PTYPE_CEN 
+// Restart only: initialize the BH variables (position, velocity, mass) from particles labelled with PTYPE_CEN
 void Init_User_ClusterMerger()
 {
    if ( OPT__INIT == INIT_BY_RESTART ){
@@ -986,26 +986,26 @@ void Init_User_ClusterMerger()
       if ( OPT__RESTART_RESET ) {
          printf("Error! OPT__RESTART_RESET should be disabled.\n");
          return;
-      }    
+      }
 
       const char FileName[] = "BH_variable.bin";
       int TargetDumpID = DumpID-1;  //INIT_DUMPID;
 
       FILE* File_User = fopen(FileName, "rb");
       if ( File_User == NULL ) {
-         Aux_Error( ERROR_INFO, "Error opening the file \"%s\"\n", FileName ); 
+         Aux_Error( ERROR_INFO, "Error opening the file \"%s\"\n", FileName );
          return;
-      }    
+      }
 
       if ( MPI_Rank == 0 ) {
-   
+
          double BH_Mass[3] = {0.0, 0.0, 0.0};
-   
+
          double Time;
          int dumpID;
          while (fread(&Time, sizeof(double), 1, File_User) == 1) {
             fread(&dumpID, sizeof(int), 1, File_User);
-            printf("dumpID = %d, TargetDumpID = %d\n", dumpID, TargetDumpID);  
+            printf("dumpID = %d, TargetDumpID = %d\n", dumpID, TargetDumpID);
             if (dumpID == TargetDumpID) {
                fread(&Merger_Coll_NumHalos, sizeof(int), 1, File_User);
                for (int c=0; c<Merger_Coll_NumHalos; c++) {
@@ -1028,25 +1028,25 @@ void Init_User_ClusterMerger()
                fseek(File_User, sizeof(int), SEEK_CUR);
             }
          }
-   
+
          Bondi_MassBH1 = BH_Mass[0];
          Bondi_MassBH2 = BH_Mass[1];
          Bondi_MassBH3 = BH_Mass[2];
-   
+
          fclose(File_User);
 
-         printf("Restarting! BH_Pos[0][0] = %23.17e, BH_Pos[0][1] = %23.17e\n", BH_Pos[0][0], BH_Pos[0][1]);  
+         printf("Restarting! BH_Pos[0][0] = %23.17e, BH_Pos[0][1] = %23.17e\n", BH_Pos[0][0], BH_Pos[0][1]);
       }  // if ( MPI_Rank == 0 )
       MPI_Bcast( &Merger_Coll_NumHalos, 1, MPI_INT, 0, MPI_COMM_WORLD );
-      for (int c=0; c<Merger_Coll_NumHalos; c++){ 
-         MPI_Bcast( BH_Pos[c], 3, MPI_DOUBLE, 0, MPI_COMM_WORLD ); 
+      for (int c=0; c<Merger_Coll_NumHalos; c++){
+         MPI_Bcast( BH_Pos[c], 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
          MPI_Bcast( BH_Vel[c], 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
          MPI_Bcast( ClusterCen[c], 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
       }
-      MPI_Bcast( &Bondi_MassBH1, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD ); 
-      MPI_Bcast( &Bondi_MassBH2, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD ); 
-      MPI_Bcast( &Bondi_MassBH3, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD ); 
-      MPI_Bcast( &AdjustCount, 1, MPI_INT, 0, MPI_COMM_WORLD ); 
+      MPI_Bcast( &Bondi_MassBH1, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+      MPI_Bcast( &Bondi_MassBH2, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+      MPI_Bcast( &Bondi_MassBH3, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+      MPI_Bcast( &AdjustCount, 1, MPI_INT, 0, MPI_COMM_WORLD );
 
    } // if ( OPT__INIT == INIT_BY_RESTART )
 
@@ -1060,14 +1060,14 @@ void Init_User_ClusterMerger()
 // Description :  Output the BH variables (pos, vel, mass, AdjustCount) in the ClusterMerger problem
 //
 // Note        :  1. Enabled by the runtime option "OPT__OUTPUT_USER"
-//                2. Ensure restart runs can get identical values 
+//                2. Ensure restart runs can get identical values
 //
 // Parameter   :  None
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
 void Output_ClusterMerger()
-{ 
+{
    const char FileName[] = "BH_variable.bin";
    static bool FirstTime = true;
 
@@ -1076,23 +1076,23 @@ void Output_ClusterMerger()
          if ( Aux_CheckFileExist(FileName) )
             Aux_Message( stderr, "WARNING: file \"%s\" already exists !!\n", FileName );
       }
-      FirstTime = false;             
-   } // if ( FirstTime )     
+      FirstTime = false;
+   } // if ( FirstTime )
 
    double BH_Mass[3] = { Bondi_MassBH1, Bondi_MassBH2, Bondi_MassBH3 };
 
    if ( MPI_Rank == 0 ) {
       FILE* File_User = fopen(FileName, "ab");
-      
+
       double time = Time[0] * UNIT_T / Const_Myr;
       fwrite(&time, sizeof(double), 1, File_User);
       fwrite(&DumpID, sizeof(int), 1, File_User);
       fwrite(&Merger_Coll_NumHalos, sizeof(int), 1, File_User);
 
-      for (int c=0; c<Merger_Coll_NumHalos; c++) {      
+      for (int c=0; c<Merger_Coll_NumHalos; c++) {
          for (int d=0; d<3; d++)   fwrite(&BH_Pos[c][d], sizeof(double), 1, File_User);
          for (int d=0; d<3; d++)   fwrite(&ClusterCen[c][d], sizeof(double), 1, File_User);
-         for (int d=0; d<3; d++)   fwrite(&BH_Vel[c][d], sizeof(double), 1, File_User); 
+         for (int d=0; d<3; d++)   fwrite(&BH_Vel[c][d], sizeof(double), 1, File_User);
          fwrite(&BH_Mass[c], sizeof(double), 1, File_User);
       }
       fwrite(&AdjustCount, sizeof(int), 1, File_User);

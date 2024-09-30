@@ -147,7 +147,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 {
    const double cl_X         = 0.7;      // mass-fraction of hydrogen
    const double cl_Z         = 0.018;    // metallicity (in Zsun)
-   const double cl_mol       = 1.0/(2*cl_X+0.75*(1-cl_X-cl_Z)+cl_Z*0.5);   // mean (total) molecular weights 
+   const double cl_mol       = 1.0/(2*cl_X+0.75*(1-cl_X-cl_Z)+cl_Z*0.5);   // mean (total) molecular weights
 
    double Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
 // Convert the input number density into mass density rho
@@ -192,27 +192,27 @@ void Output_ExactCooling()
 
 // header
    if ( FirstTime ) {
-      if ( MPI_Rank == 0 ) {   
+      if ( MPI_Rank == 0 ) {
          if ( Aux_CheckFileExist(FileName) )
             Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
- 
+
          FILE *File_User = fopen( FileName, "a" );
          fprintf( File_User, "#%13s%10s ",  "Time", "DumpID" );
          fprintf( File_User, "%14s %14s %14s %14s %14s", "Temp_nume", "Temp_anal", "Err", "Tcool_nume", "Tcool_anal");
          fprintf( File_User, "\n" );
          fclose( File_User );
-      }      
+      }
       FirstTime = false;
    } // if ( FirstTime )
 
 
    const double cl_X         = 0.7;      // mass-fraction of hydrogen
    const double cl_Z         = 0.018;    // metallicity (in Zsun)
-   const double cl_mol       = 1.0/(2*cl_X+0.75*(1-cl_X-cl_Z)+cl_Z*0.5);   // mean (total) molecular weights 
+   const double cl_mol       = 1.0/(2*cl_X+0.75*(1-cl_X-cl_Z)+cl_Z*0.5);   // mean (total) molecular weights
    const double cl_mole      = 2.0/(1+cl_X);   // mean electron molecular weights
    const double cl_moli      = 1.0/cl_X;   // mean proton molecular weights
    const double cl_moli_mole = cl_moli*cl_mole;  // Assume the molecular weights are constant, mu_e*mu_i = 1.464
- 
+
 // Get the numerical result
    real fluid[NCOMP_TOTAL];
    double Temp_nume = 0.0;
@@ -225,9 +225,9 @@ void Output_ExactCooling()
    for (int j=1; j<PS1; j++){
    for (int i=1; i<PS1; i++){
       for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][0]->fluid[v][k][j][i];
-      Temp_nume_tmp = (real) Hydro_Con2Temp( fluid[0], fluid[1], fluid[2], fluid[3], fluid[4], fluid+NCOMP_FLUID, 
-                                             true, MIN_TEMP, 0.0, 
-					     EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, 
+      Temp_nume_tmp = (real) Hydro_Con2Temp( fluid[0], fluid[1], fluid[2], fluid[3], fluid[4], fluid+NCOMP_FLUID,
+                                             true, MIN_TEMP, 0.0,
+					     EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       Tcool_nume += 1.0/(GAMMA-1)*(Const_kB*cl_moli_mole*Temp_nume_tmp)/(fluid[0]*UNIT_D/MU_NORM*cl_mol*3.2217e-27*sqrt(Temp_nume_tmp))/Const_Myr;
       Temp_nume += Temp_nume_tmp;

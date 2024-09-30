@@ -41,7 +41,7 @@ void Src_Close( const int lv, const int SaveSg_Flu, const real h_Flu_Array_S_Out
          for (int k=0; k<PS1; k++)
          for (int j=0; j<PS1; j++)
          for (int i=0; i<PS1; i++)
-         {  
+         {
             const real TCool = amr->patch[SaveSg_Flu][lv][PID]->fluid[TCOOL][k][j][i];
 
             if ( !Aux_IsFinite(TCool)  ||  TCool <= (real)0.0 )

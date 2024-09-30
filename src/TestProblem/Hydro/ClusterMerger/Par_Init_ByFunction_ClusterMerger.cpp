@@ -58,7 +58,7 @@ extern double SoundSpeed[3];
 extern double GasDens[3];
 extern double RelativeVel[3];
 extern double ColdGasMass[3];
-extern double Jet_Vec[3][3]; // jet direction  
+extern double Jet_Vec[3][3]; // jet direction
 extern double Mdot[3]; // the feedback injection rate
 extern double Pdot[3];
 extern double Edot[3];
@@ -642,7 +642,7 @@ void Aux_Record_ClusterMerger()
    double Bondi_MassBH[3] = { Bondi_MassBH1, Bondi_MassBH2, Bondi_MassBH3 };
    double Mdot_BH[3] = { Mdot_BH1, Mdot_BH2, Mdot_BH3 };
 
-// sum over the variables and convert units 
+// sum over the variables and convert units
    int SinkNCell_Sum[3];
    double Mass_Sum[3], MomX_Sum[3], MomY_Sum[3], MomZ_Sum[3], MomXAbs_Sum[3], MomYAbs_Sum[3], MomZAbs_Sum[3], E_Sum[3], Ek_Sum[3], Et_Sum[3];
 
@@ -658,7 +658,7 @@ void Aux_Record_ClusterMerger()
       MPI_Reduce( &CM_Bondi_SinkE[c],       &E_Sum[c],       1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
       MPI_Reduce( &CM_Bondi_SinkEk[c],      &Ek_Sum[c],      1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
       MPI_Reduce( &CM_Bondi_SinkEt[c],      &Et_Sum[c],      1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-   
+
       Mass_Sum[c]    *= UNIT_M/Const_Msun;
       MomX_Sum[c]    *= UNIT_M*UNIT_V;
       MomY_Sum[c]    *= UNIT_M*UNIT_V;
@@ -669,13 +669,13 @@ void Aux_Record_ClusterMerger()
       E_Sum[c]       *= UNIT_E;
       Ek_Sum[c]      *= UNIT_E;
       Et_Sum[c]      *= UNIT_E;
-      E_inj_exp[c]   *= UNIT_E; 
+      E_inj_exp[c]   *= UNIT_E;
       M_inj_exp[c]   *= UNIT_M/Const_Msun;
    }
 
    for (int c=0; c<Merger_Coll_NumHalos; c++)   E_power_inj[c] = E_Sum[c]/(dt_base*UNIT_T);
 
-   // output the properties of the cluster centers 
+   // output the properties of the cluster centers
    if ( MPI_Rank == 0 )
    {
       FILE *File_User = fopen( FileName, "a" );
@@ -733,7 +733,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
 {
 
    if ( fixBH == false ){
-   double min_pos[3][3], DM_Vel[3][3];   // The updated BH position / velocity 
+   double min_pos[3][3], DM_Vel[3][3];   // The updated BH position / velocity
    const bool CurrentMaxLv = (  NPatchTotal[lv] > 0  &&  ( lv == MAX_LEVEL || NPatchTotal[lv+1] == 0 )  );
 
 // Initialize min_pos to be the old center
@@ -744,20 +744,20 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
    if ( (CurrentMaxLv  &&  AdjustPos == true) || (CurrentMaxLv  &&  AdjustVel == true) ){
 
 //    Do not support periodic BC
-      for (int f=0; f<6; f++)                               
-         if (OPT__BC_FLU[f] == BC_FLU_PERIODIC) Aux_Error( ERROR_INFO, "do not support periodic BC (OPT__BC_FLU* = 1)!\n" ); 
+      for (int f=0; f<6; f++)
+         if (OPT__BC_FLU[f] == BC_FLU_PERIODIC) Aux_Error( ERROR_INFO, "do not support periodic BC (OPT__BC_FLU* = 1)!\n" );
 
-#     ifdef GRAVITY                                            
+#     ifdef GRAVITY
       if ( OPT__BC_POT == BC_POT_PERIODIC )  Aux_Error( ERROR_INFO, "do not support periodic BC (OPT__BC_POT = 1)!\n" );
 #     endif
 
 
-      double dis_exp = 1e-6;   // To check if the output BH positions of each calculaiton are close enough 
+      double dis_exp = 1e-6;   // To check if the output BH positions of each calculaiton are close enough
       bool   IfConverge = false;   // If the BH positions are close enough, then complete the calculation
       int    count = 0;   // How many times the calculation is performed (minimum: 2, maximum: 10)
       double Cen_new_pre[3][3];
 
-      while ( IfConverge == false  &&  count <= 10 ){ 
+      while ( IfConverge == false  &&  count <= 10 ){
 
          for (int c=0; c<Merger_Coll_NumHalos; c++){
             for (int d=0; d<3; d++)  Cen_new_pre[c][d] = min_pos[c][d];
@@ -781,10 +781,10 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
             VelY[c] = new double[N];
             VelZ[c] = new double[N];
          }
-      
+
 //       Find the particles within the arrection radius
-         for (int c=0; c<Merger_Coll_NumHalos; c++) {   
-            num_par_sum[c] = 0; 
+         for (int c=0; c<Merger_Coll_NumHalos; c++) {
+            num_par_sum[c] = 0;
             for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++) {
                const double *EdgeL = amr->patch[0][lv][PID]->EdgeL;
                const double *EdgeR = amr->patch[0][lv][PID]->EdgeR;
@@ -813,7 +813,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                         VelX[c][num_par[c]] = VelX_tmp;
                         VelY[c][num_par[c]] = VelY_tmp;
                         VelZ[c][num_par[c]] = VelZ_tmp;
-                        num_par[c] += 1; 
+                        num_par[c] += 1;
                      }
                      if (num_par[c] >= N) {
                          N = num_par[c] + 1;  // Increase the new maximum size if needed
@@ -825,7 +825,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                          VelY[c] = (double*)realloc(VelY[c], N * sizeof(double));
                          VelZ[c] = (double*)realloc(VelZ[c], N * sizeof(double));
          }  }  }  }  }
-      
+
 //       Collect the number of target particles from each rank
          MPI_Allreduce( num_par, num_par_sum, 3, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
 
@@ -836,7 +836,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
             displs[c][0] = 0;
             for (int i=1; i<MPI_NRank; i++)  displs[c][i] = displs[c][i-1] + num_par_eachRank[c][i-1];
          }
-      
+
 //       Collect the mass, position and velocity of target particles to the root rank
          double **ParX_sum = new double*[Merger_Coll_NumHalos];
          double **ParY_sum = new double*[Merger_Coll_NumHalos];
@@ -876,13 +876,13 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                int start = MPI_Rank*par_per_rank + MIN(MPI_Rank, remainder);
                int end = start + par_per_rank + (MPI_Rank < remainder ? 1 : 0);
                double *pote_local = new double[end-start];
-    
+
 #              pragma omp parallel for schedule(static)
                for (int i=start; i<end; i++){
                   pote_local[i-start] = 0.0;
                   for (int j=0; j<num_par_sum[c]; j++){
                      double rel_pos = sqrt(SQR(ParX_sum[c][i]-ParX_sum[c][j])+SQR(ParY_sum[c][i]-ParY_sum[c][j])+SQR(ParZ_sum[c][i]-ParZ_sum[c][j]));
-                     if ( rel_pos > soften )   pote_local[i-start] += ParM_sum[c][j]/rel_pos; 
+                     if ( rel_pos > soften )   pote_local[i-start] += ParM_sum[c][j]/rel_pos;
                      else if  ( rel_pos <= soften && i != j )   pote_local[i-start] += ParM_sum[c][j]/soften;
                   }
                   pote_local[i-start] *= -NEWTON_G;
@@ -890,7 +890,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                int recvcounts[MPI_NRank], displs[MPI_NRank];
                for (int i=0; i<MPI_NRank; i++)  recvcounts[i] = (i < remainder ? par_per_rank+1 : par_per_rank);
                displs[0] = 0;
-               for (int i=1; i<MPI_NRank; i++)  displs[i] = displs[i-1] + recvcounts[i-1]; 
+               for (int i=1; i<MPI_NRank; i++)  displs[i] = displs[i-1] + recvcounts[i-1];
                MPI_Allgatherv( pote_local, end-start, MPI_DOUBLE, pote, recvcounts, displs, MPI_DOUBLE, MPI_COMM_WORLD );
 
                double Pote_min = 0.0;
@@ -912,9 +912,9 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
             for (int c=0; c<Merger_Coll_NumHalos; c++) {
                for (int d=0; d<3; d++)  DM_Vel[c][d] = 0.0;
                for (int i=0; i<num_par_sum[c]; i++){
-                  DM_Vel[c][0] += VelX_sum[c][i]; 
-                  DM_Vel[c][1] += VelY_sum[c][i]; 
-                  DM_Vel[c][2] += VelZ_sum[c][i]; 
+                  DM_Vel[c][0] += VelX_sum[c][i];
+                  DM_Vel[c][1] += VelY_sum[c][i];
+                  DM_Vel[c][2] += VelZ_sum[c][i];
                }
                for (int d=0; d<3; d++)  DM_Vel[c][d] /= num_par_sum[c];
             }
@@ -924,7 +924,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
          count += 1;
          double dis[3] = {0.0, 0.0, 0.0};
          for (int c=0; c<Merger_Coll_NumHalos; c++){
-            for (int d=0; d<3; d++)   dis[c] += SQR( min_pos[c][d] - Cen_new_pre[c][d] ); 
+            for (int d=0; d<3; d++)   dis[c] += SQR( min_pos[c][d] - Cen_new_pre[c][d] );
          }
          if ( count > 1  &&  sqrt(dis[0]) < dis_exp  &&  sqrt(dis[1]) < dis_exp )   IfConverge = true;
 
@@ -961,7 +961,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
          delete[] VelY;
          delete[] VelZ;
       } // while ( IfConverge == false )
-   } // if ( (CurrentMaxLv  &&  AdjustPos == true) || (CurrentMaxLv  &&  AdjustVel == true) ) 
+   } // if ( (CurrentMaxLv  &&  AdjustPos == true) || (CurrentMaxLv  &&  AdjustVel == true) )
 
 
 // Find the BH particles and adjust their position and velocity
@@ -973,13 +973,13 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
             if ( CurrentMaxLv  &&  AdjustPos == true ){
                amr->Par->PosX[p] = min_pos[c][0];
                amr->Par->PosY[p] = min_pos[c][1];
-               amr->Par->PosZ[p] = min_pos[c][2];    
+               amr->Par->PosZ[p] = min_pos[c][2];
             }
             if ( CurrentMaxLv  &&  AdjustVel == true ){
                amr->Par->VelX[p] = DM_Vel[c][0];
                amr->Par->VelY[p] = DM_Vel[c][1];
-               amr->Par->VelZ[p] = DM_Vel[c][2];        
-            }   
+               amr->Par->VelZ[p] = DM_Vel[c][2];
+            }
             Cen_Tmp[0] = amr->Par->PosX[p];
             Cen_Tmp[1] = amr->Par->PosY[p];
             Cen_Tmp[2] = amr->Par->PosZ[p];
@@ -1002,8 +1002,8 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
    }
    } // if ( fixBH == false )
    else {   // if ( fixBH == true )
-      for (int d=0; d<3; d++)   Cen_new[0][d] = 7.5; 
-      for (int d=0; d<3; d++)   Cen_Vel[0][d] = 0.0; 
+      for (int d=0; d<3; d++)   Cen_new[0][d] = 7.5;
+      for (int d=0; d<3; d++)   Cen_Vel[0][d] = 0.0;
    }
 
    for (int c=0; c<Merger_Coll_NumHalos; c++) {

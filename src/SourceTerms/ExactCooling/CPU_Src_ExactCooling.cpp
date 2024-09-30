@@ -98,7 +98,7 @@ void Src_SetAuxArray_ExactCooling( double AuxArray_Flt[], int AuxArray_Int[] )
    const bool   subcycling = SrcTerms.EC_subcycling;   // whether to use subcycling
    const int    TEF_int    = TEF_N-1;   // number of intervals
    const double TEF_TN     = 1.e14;   // == Tref, must be high enough, but affects sampling resolution (Kelvin)
-   const double TEF_Tmin   = MIN_TEMP;   // MIN temperature 
+   const double TEF_Tmin   = MIN_TEMP;   // MIN temperature
 #  ifdef GAMER_DEBUG
    if ( TEF_Tmin <= 0.0 ){
       Aux_Error( ERROR_INFO, "TEF_Tmin invalid (can not be smaller or equal to zero)!!\n" );
@@ -108,12 +108,12 @@ void Src_SetAuxArray_ExactCooling( double AuxArray_Flt[], int AuxArray_Int[] )
 
    const double cl_X         = 0.7;      // mass-fraction of hydrogen
    const double cl_Z         = 0.018;    // metallicity (in Zsun)
-   const double cl_mol       = 1.0/(2*cl_X+0.75*(1-cl_X-cl_Z)+cl_Z*0.5);   // mean (total) molecular weights 
+   const double cl_mol       = 1.0/(2*cl_X+0.75*(1-cl_X-cl_Z)+cl_Z*0.5);   // mean (total) molecular weights
    const double cl_mole      = 2.0/(1+cl_X);   // mean electron molecular weights
    const double cl_moli      = 1.0/cl_X;   // mean proton molecular weights
-   const double cl_moli_mole = cl_moli*cl_mole;  
+   const double cl_moli_mole = cl_moli*cl_mole;
 
-// Store them in the aux array 
+// Store them in the aux array
    AuxArray_Flt[0] = 1.0/(GAMMA-1.0);
    AuxArray_Flt[1] = TEF_TN;
    AuxArray_Flt[2] = TEF_Tmin;
@@ -121,12 +121,12 @@ void Src_SetAuxArray_ExactCooling( double AuxArray_Flt[], int AuxArray_Int[] )
    AuxArray_Flt[4] = cl_Z;
    AuxArray_Flt[5] = cl_moli_mole;
    AuxArray_Flt[6] = cl_mol;
-   AuxArray_Flt[7] = MU_NORM/UNIT_M;   //mp: proton mass 
+   AuxArray_Flt[7] = MU_NORM/UNIT_M;   //mp: proton mass
    AuxArray_Flt[8] = (Const_kB/UNIT_E) * (MU_NORM/UNIT_M);   //kB*mp
 
    AuxArray_Int[0] = TEF_N;
    AuxArray_Int[1] = subcycling;
-   
+
 
 } // FUNCTION : Src_SetAuxArray_ExactCooling
 #endif // #ifndef __CUDACC__
@@ -244,11 +244,11 @@ void Src_WorkBeforeMajorFunc_ExactCooling( const int lv, const double TimeNew, c
 // -------------------------------------------------------------------------------------------------------
 void Src_PassData2GPU_ExactCooling()
 {
-   const long EC_TEF_MemSize = sizeof(double)*SrcTerms.EC_TEF_N; 
+   const long EC_TEF_MemSize = sizeof(double)*SrcTerms.EC_TEF_N;
 
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_SrcEC_TEF_lambda, EC_TEF_MemSize )  ); 
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_SrcEC_TEF_alpha,  EC_TEF_MemSize )  );  
-   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_SrcEC_TEFc,       EC_TEF_MemSize )  );  
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_SrcEC_TEF_lambda, EC_TEF_MemSize )  );
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_SrcEC_TEF_alpha,  EC_TEF_MemSize )  );
+   CUDA_CHECK_ERROR(  cudaMalloc( (void**) &d_SrcEC_TEFc,       EC_TEF_MemSize )  );
 
 // store the device pointers in SrcTerms when using GPU
    SrcTerms.EC_TEF_lambda_DevPtr = d_SrcEC_TEF_lambda;
@@ -385,15 +385,15 @@ void Src_Init_ExactCooling()
 #  endif
 
    if ( OPT__INIT == INIT_BY_RESTART ){
-      for (int i=0; i<NLEVEL; i++)   IsInit_tcool[i] = true; 
+      for (int i=0; i<NLEVEL; i++)   IsInit_tcool[i] = true;
    }
 
 // Allocate h_SrcEC_* arrays
    h_SrcEC_TEF_lambda = new double [SrcTerms.EC_TEF_N];
    h_SrcEC_TEF_alpha  = new double [SrcTerms.EC_TEF_N];
    h_SrcEC_TEFc       = new double [SrcTerms.EC_TEF_N];
-                                       
-   SrcTerms.EC_TEF_lambda_DevPtr = h_SrcEC_TEF_lambda;         
+
+   SrcTerms.EC_TEF_lambda_DevPtr = h_SrcEC_TEF_lambda;
    SrcTerms.EC_TEF_alpha_DevPtr  = h_SrcEC_TEF_alpha;
    SrcTerms.EC_TEFc_DevPtr       = h_SrcEC_TEFc;
 
@@ -412,8 +412,8 @@ void Src_Init_ExactCooling()
 
 
 // Sutherland-Dopita cooling function, with optimal parmetrization over a wide range of T and Z
-void Cool_fct( double Dens, double Temp, double* Emis, double* Lambdat, double Z, double cl_moli_mole, double mp ){ 
- 
+void Cool_fct( double Dens, double Temp, double* Emis, double* Lambdat, double Z, double cl_moli_mole, double mp ){
+
 }
 
 
@@ -434,10 +434,10 @@ void Src_End_ExactCooling()
 {
 
 // free the memory of the h_SrcEC_* arrays
-   delete [] h_SrcEC_TEF_lambda;     h_SrcEC_TEF_lambda = NULL;        
+   delete [] h_SrcEC_TEF_lambda;     h_SrcEC_TEF_lambda = NULL;
    delete [] h_SrcEC_TEF_alpha;      h_SrcEC_TEF_alpha  = NULL;
    delete [] h_SrcEC_TEFc;           h_SrcEC_TEFc       = NULL;
-                 
+
    SrcTerms.EC_TEF_lambda_DevPtr = NULL;
    SrcTerms.EC_TEF_alpha_DevPtr  = NULL;
    SrcTerms.EC_TEFc_DevPtr       = NULL;
@@ -454,7 +454,7 @@ void Src_End_ExactCooling()
 #ifdef __CUDACC__
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CUAPI_MemFree_ExactCooling
-// Description :  Free the GPU memory of the ExactCooling arrays 
+// Description :  Free the GPU memory of the ExactCooling arrays
 //
 // Note        :  1. Invoked by Src_End_ExactCooling()
 //
@@ -465,10 +465,10 @@ void Src_End_ExactCooling()
 void CUAPI_MemFree_ExactCooling()
 {
 
-   if ( d_SrcEC_TEF_lambda != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_SrcEC_TEF_lambda )  );  d_SrcEC_TEF_lambda = NULL; } 
+   if ( d_SrcEC_TEF_lambda != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_SrcEC_TEF_lambda )  );  d_SrcEC_TEF_lambda = NULL; }
    if ( d_SrcEC_TEF_alpha  != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_SrcEC_TEF_alpha  )  );  d_SrcEC_TEF_alpha  = NULL; }
    if ( d_SrcEC_TEFc       != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_SrcEC_TEFc       )  );  d_SrcEC_TEFc       = NULL; }
-         
+
    SrcTerms.EC_TEF_lambda_DevPtr = NULL;
    SrcTerms.EC_TEF_alpha_DevPtr  = NULL;
    SrcTerms.EC_TEFc_DevPtr       = NULL;
@@ -477,4 +477,4 @@ void CUAPI_MemFree_ExactCooling()
 #endif // #ifdef __CUDACC__
 
 
-#endif // #if ( MODEL == HYDRO )  
+#endif // #if ( MODEL == HYDRO )

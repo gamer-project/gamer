@@ -4,8 +4,8 @@
 
 
 extern int    Merger_Coll_NumHalos;
-extern double R_acc;   // the radius to compute the accretoin rate 
-extern double Jet_Vec[3][3];   // jet direction  
+extern double R_acc;   // the radius to compute the accretoin rate
+extern double Jet_Vec[3][3];   // jet direction
 extern double ClusterCen[3][3];
 
 static bool FirstTime = true;
@@ -43,11 +43,11 @@ bool Flag_ClusterMerger( const int i, const int j, const int k, const int lv, co
       double R_SQR = SQR(Pos[0]-ClusterCen[c][0])+SQR(Pos[1]-ClusterCen[c][1])+SQR(Pos[2]-ClusterCen[c][2]);
       if (  R_SQR <= SQR(25*R_acc)  &&  R_acc/dh <= Threshold[0]  ){
          Flag = true;
-         return Flag;   
+         return Flag;
       }
    }
 
-   if ( FirstTime ){  
+   if ( FirstTime ){
       const double dh_max = amr->dh[MAX_LEVEL];
       if ( R_acc/dh_max <= Threshold[0] ){
          Aux_Message( stderr, "WARNING : MAX_LEVEL is less than the desired refinement level set in Input__Flag_User!! dh_max = %13.7e\n", dh_max);
