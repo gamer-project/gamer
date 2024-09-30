@@ -711,7 +711,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
 //    initialize min_pos to be the old center
       for (int c=0; c<Merger_Coll_NumHalos; c++)   for (int d=0; d<3; d++)   min_pos[c][d] = Cen_old[c][d];
 
-      if ( (CurrentMaxLv  &&  AdjustPos == true) || (CurrentMaxLv  &&  AdjustVel == true) )
+      if ( (CurrentMaxLv  &&  AdjustPos == true)  ||  (CurrentMaxLv  &&  AdjustVel == true) )
       {
 //       do not support periodic BC
          for (int f=0; f<6; f++)
@@ -736,22 +736,22 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
             for (int c=0; c<Merger_Coll_NumHalos; c++)   N_max[c] = 10000;
 
             int      num_par[3] = {0, 0, 0};   // (each rank) number of particles inside the target region of each cluster
-            double **ParX       = new double* [Merger_Coll_NumHalos];
-            double **ParY       = new double* [Merger_Coll_NumHalos];
-            double **ParZ       = new double* [Merger_Coll_NumHalos];
-            double **ParM       = new double* [Merger_Coll_NumHalos];
-            double **VelX       = new double* [Merger_Coll_NumHalos];
-            double **VelY       = new double* [Merger_Coll_NumHalos];
-            double **VelZ       = new double* [Merger_Coll_NumHalos];
+            double **ParX       = (double**)malloc( Merger_Coll_NumHalos*sizeof(double*) );
+            double **ParY       = (double**)malloc( Merger_Coll_NumHalos*sizeof(double*) );
+            double **ParZ       = (double**)malloc( Merger_Coll_NumHalos*sizeof(double*) );
+            double **ParM       = (double**)malloc( Merger_Coll_NumHalos*sizeof(double*) );
+            double **VelX       = (double**)malloc( Merger_Coll_NumHalos*sizeof(double*) );
+            double **VelY       = (double**)malloc( Merger_Coll_NumHalos*sizeof(double*) );
+            double **VelZ       = (double**)malloc( Merger_Coll_NumHalos*sizeof(double*) );
             for (int c=0; c<Merger_Coll_NumHalos; c++)
             {
-               ParX[c] = new double [N_max[c]];
-               ParY[c] = new double [N_max[c]];
-               ParZ[c] = new double [N_max[c]];
-               ParM[c] = new double [N_max[c]];
-               VelX[c] = new double [N_max[c]];
-               VelY[c] = new double [N_max[c]];
-               VelZ[c] = new double [N_max[c]];
+               ParX[c] = (double*)malloc( N_max[c]*sizeof(double) );
+               ParY[c] = (double*)malloc( N_max[c]*sizeof(double) );
+               ParZ[c] = (double*)malloc( N_max[c]*sizeof(double) );
+               ParM[c] = (double*)malloc( N_max[c]*sizeof(double) );
+               VelX[c] = (double*)malloc( N_max[c]*sizeof(double) );
+               VelY[c] = (double*)malloc( N_max[c]*sizeof(double) );
+               VelZ[c] = (double*)malloc( N_max[c]*sizeof(double) );
             }
 
 //          find the particles within the arrection radius
@@ -778,7 +778,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                         const real VelY_tmp = amr->Par->VelY[ParID];
                         const real VelZ_tmp = amr->Par->VelZ[ParID];
                         bool if_cluster = false;
-                        if ( amr->Par->Type[ParID] == real(PTYPE_CLUSTER+c) || amr->Par->Type[ParID] == real(PTYPE_CEN+c) )   if_cluster = true;
+                        if ( amr->Par->Type[ParID] == real(PTYPE_CLUSTER+c)  ||  amr->Par->Type[ParID] == real(PTYPE_CEN+c) )   if_cluster = true;
 
                         if ( if_cluster  &&  SQR(ParX_tmp-Cen_new_pre[c][0])+SQR(ParY_tmp-Cen_new_pre[c][1])+SQR(ParZ_tmp-Cen_new_pre[c][2]) <= SQR(10*R_acc) )
                         {
@@ -944,23 +944,23 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
 
             for (int c=0; c<Merger_Coll_NumHalos; c++)
             {
-               delete[] ParX[c];
-               delete[] ParY[c];
-               delete[] ParZ[c];
-               delete[] ParM[c];
-               delete[] VelX[c];
-               delete[] VelY[c];
-               delete[] VelZ[c];
+               free( ParX[c] );
+               free( ParY[c] );
+               free( ParZ[c] );
+               free( ParM[c] );
+               free( VelX[c] );
+               free( VelY[c] );
+               free( VelZ[c] );
             }
-            delete[] ParX;
-            delete[] ParY;
-            delete[] ParZ;
-            delete[] ParM;
-            delete[] VelX;
-            delete[] VelY;
-            delete[] VelZ;
+            free( ParX );
+            free( ParY );
+            free( ParZ );
+            free( ParM );
+            free( VelX );
+            free( VelY );
+            free( VelZ );
          } // while ( IfConverge == false )
-      } // if ( ( CurrentMaxLv  &&  AdjustPos == true ) || ( CurrentMaxLv  &&  AdjustVel == true ) )
+      } // if ( ( CurrentMaxLv  &&  AdjustPos == true )  ||  ( CurrentMaxLv  &&  AdjustVel == true ) )
 
 
 //    find the BH particles and adjust their position and velocity
