@@ -42,8 +42,8 @@ static char    Merger_File_Prof3[1000];   // profile table of cluster 3
        double  Merger_Coll_VelY2;         // y-velocity of the second cluster
        double  Merger_Coll_VelX3;         // x-velocity of the third  cluster
        double  Merger_Coll_VelY3;         // y-velocity of the third  cluster
-       long    NPar_EachCluster[3];       // Number of particles in each cluster
-       long    NPar_AllCluster;           // Number of particles in all  clusters
+       long    NPar_EachCluster[3];       // number of particles in each cluster
+       long    NPar_AllCluster;           // number of particles in all  clusters
 
 static double *Table_R1 = NULL;           // radius      of cluster 1
 static double *Table_D1 = NULL;           // density     of cluster 1
@@ -75,14 +75,14 @@ static FieldIdx_t ColorField3Idx = Idx_Undefined;
        double R_acc;                      // accretion radius: compute the accretion rate
        double R_dep;                      // radius to deplete the accreted gas
 
-       double CM_Bondi_SinkMass[3];       // total mass change            in the feedback region in one global time-step
-       double CM_Bondi_SinkMomX[3];       // total x-momentum change      ...
-       double CM_Bondi_SinkMomY[3];       // total y-momentum change      ...
-       double CM_Bondi_SinkMomZ[3];       // total z-momentum change      ...
-       double CM_Bondi_SinkMomXAbs[3];    // total |x-momentum| change    ...
-       double CM_Bondi_SinkMomYAbs[3];    // total |y-momentum| change    ...
-       double CM_Bondi_SinkMomZAbs[3];    // total |z-momentum| change    ...
-       double CM_Bondi_SinkE[3];          // total injected energy ...
+       double CM_Bondi_SinkMass[3];       // total mass change             in the feedback region in one global time-step
+       double CM_Bondi_SinkMomX[3];       // total x-momentum change       ...
+       double CM_Bondi_SinkMomY[3];       // total y-momentum change       ...
+       double CM_Bondi_SinkMomZ[3];       // total z-momentum change       ...
+       double CM_Bondi_SinkMomXAbs[3];    // total |x-momentum| change     ...
+       double CM_Bondi_SinkMomYAbs[3];    // total |y-momentum| change     ...
+       double CM_Bondi_SinkMomZAbs[3];    // total |z-momentum| change     ...
+       double CM_Bondi_SinkE[3];          // total injected energy         ...
        double CM_Bondi_SinkEk[3];         // total injected kinetic energy ...
        double CM_Bondi_SinkEt[3];         // total injected thermal energy ...
        int    CM_Bondi_SinkNCell[3];      // total number of finest cells within the feedback region
@@ -311,12 +311,12 @@ void SetParameter()
 
    delete ReadPara;
 
-// Validate that we have the correct number of passive scalars
+// validate that we have the correct number of passive scalars
    if ( Merger_Coll_NumHalos + (int)Merger_Coll_UseMetals != NCOMP_PASSIVE_USER )
       Aux_Error( ERROR_INFO, "please set NCOMP_PASSIVE_USER (currently %d) == Merger_Coll_NumHalos + Merger_Coll_UseMetals (currently %d) in the Makefile !!\n",
                  NCOMP_PASSIVE_USER, Merger_Coll_NumHalos + (int)Merger_Coll_UseMetals );
 
-// Set the correct parameters when fixing the BH
+// set the correct parameters when fixing the BH
    if ( Merger_Coll_NumHalos != 1  &&  fixBH == true )
    {
       fixBH = false;
@@ -488,7 +488,7 @@ void SetParameter()
 
       } // if ( Merger_Coll_NumHalos > 2 && Merger_Coll_IsGas3 )
 
-//    (2-2) Initialize the BH position and velocity
+//    (2-2) initialize the BH position and velocity
       double ClusterCenter[3][3] = {{ Merger_Coll_PosX1, Merger_Coll_PosY1, amr->BoxCenter[2] },
                                     { Merger_Coll_PosX2, Merger_Coll_PosY2, amr->BoxCenter[2] },
                                     { Merger_Coll_PosX3, Merger_Coll_PosY3, amr->BoxCenter[2] }};
@@ -503,8 +503,7 @@ void SetParameter()
          for (int d=0; d<3; d++)   BH_Vel[c][d] = CenterVel[c][d];
       }
 
-//    (3) Determine particle number
-
+//    (3) determine particle number
 //    check file existence
       if ( !Aux_CheckFileExist( Merger_File_Par1 ) )
          Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Par1 );
@@ -552,14 +551,14 @@ void SetParameter()
 
       NPar_AllCluster = NPar_EachCluster[0] + NPar_EachCluster[1] + NPar_EachCluster[2];
 
-      // overwrite the total number of particles
+//    overwrite the total number of particles
       amr->Par->NPar_Active_AllRank = NPar_AllCluster;
       PRINT_RESET_PARA( amr->Par->NPar_Active_AllRank, FORMAT_LONG, "(PAR_NPAR in Input__Parameter)" );
 
    } // if ( OPT__INIT != INIT_BY_RESTART )
 
 
-// (4) Load the jet direction table
+// (4) load the jet direction table
    if ( AGN_feedback  &&  JetDirection_case == 2 )
    {
       const bool RowMajor_No  = false;                   // load data into the column-major order
@@ -644,7 +643,7 @@ void SetParameter()
       Aux_Message( stdout, "  label cluster centers  = %s\n",          (Merger_Coll_LabelCenter)? "yes":"no" );
       Aux_Message( stdout, "=============================================================================\n" );
 
-//    Check if the accretion region is larger than the jet cylinder
+//    check if the accretion region is larger than the jet cylinder
       if ( R_acc < Jet_HalfHeight1 )  Aux_Message( stderr, "WARNING : R_acc is less than Jet_HalfHeight1!!\n" );
       if ( R_acc < Jet_Radius1 )      Aux_Message( stderr, "WARNING : R_acc is less than Jet_Radius1!!\n" );
       if ( Merger_Coll_NumHalos > 1 ) {
@@ -703,7 +702,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    rmax2 = Merger_Coll_NumHalos > 1 ? Table_R2[Merger_NBin2-1] : -1.0;
    rmax3 = Merger_Coll_NumHalos > 2 ? Table_R3[Merger_NBin3-1] : -1.0;
 
-   //    for each cell, we sum up the density and pressure from each halo and then calculate the weighted velocity
+// for each cell, we sum up the density and pressure from each halo and then calculate the weighted velocity
    if ( Merger_Coll_IsGas1 )
    {
       r1    = sqrt( SQR(x-ClusterCenter1[0]) + SQR(y-ClusterCenter1[1]) + SQR(z-ClusterCenter1[2]) );
@@ -788,11 +787,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    }
    MomZ = 0.0;
 
-   // compute the total gas energy
-   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
-                                    EoS_AuxArray_Int, h_EoS_Table );    // assuming EoS requires no passive scalars
-
-   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );      // do NOT include magnetic energy here
+// compute the total gas energy
+   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ); // assuming EoS requires no passive scalars
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 ); // do NOT include magnetic energy here
 
    fluid[DENS] = Dens;
    fluid[MOMX] = MomX;
@@ -1097,14 +1094,14 @@ void Init_User_ClusterMerger()
    {
       if ( OPT__RESTART_RESET )
       {
-         printf("Error! OPT__RESTART_RESET should be disabled.\n");
+         printf( "Error! OPT__RESTART_RESET should be disabled.\n" );
          return;
       }
 
       const char FileName[] = "BH_variable.bin";
       int TargetDumpID = DumpID-1;  //INIT_DUMPID;
 
-      FILE* File_User = fopen(FileName, "rb");
+      FILE* File_User = fopen( FileName, "rb" );
       if ( File_User == NULL )
       {
          Aux_Error( ERROR_INFO, "Error opening the file \"%s\"\n", FileName );
@@ -1123,7 +1120,7 @@ void Init_User_ClusterMerger()
             printf( "dumpID = %d, TargetDumpID = %d\n", dumpID, TargetDumpID );
             if ( dumpID == TargetDumpID )
             {
-               fread(&Merger_Coll_NumHalos, sizeof(int), 1, File_User);
+               fread( &Merger_Coll_NumHalos, sizeof(int), 1, File_User );
                for (int c=0; c<Merger_Coll_NumHalos; c++)
                {
                   for (int d=0; d<3; d++)   fread( &BH_Pos[c][d],     sizeof(double), 1, File_User );
@@ -1136,8 +1133,9 @@ void Init_User_ClusterMerger()
             }
             else
             {
-               fseek(File_User, sizeof(int), SEEK_CUR);
-               for (int c=0; c<Merger_Coll_NumHalos; c++) {
+               fseek( File_User, sizeof(int), SEEK_CUR );
+               for (int c=0; c<Merger_Coll_NumHalos; c++)
+               {
                   fseek( File_User, sizeof(double)*3, SEEK_CUR );
                   fseek( File_User, sizeof(double)*3, SEEK_CUR );
                   fseek( File_User, sizeof(double)*3, SEEK_CUR );
@@ -1195,7 +1193,7 @@ void Output_ClusterMerger()
    {
       if ( MPI_Rank == 0 )
       {
-         if ( Aux_CheckFileExist(FileName) )
+         if ( Aux_CheckFileExist( FileName ) )
             Aux_Message( stderr, "WARNING: file \"%s\" already exists !!\n", FileName );
       }
       FirstTime = false;
