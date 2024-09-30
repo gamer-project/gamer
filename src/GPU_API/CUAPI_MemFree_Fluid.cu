@@ -90,7 +90,6 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
 #  endif
 #  endif // FLU_SCHEME
 
-
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM )
 #    warning : DO YOU WANT TO ADD SOMETHING HERE FOR THE NEW MODEL ??
 #  endif
@@ -122,7 +121,6 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
       if ( h_Flu_Array_S_Out[t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Flu_Array_S_Out[t] )  );  h_Flu_Array_S_Out[t] = NULL; }
       if ( h_Corner_Array_S [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_Corner_Array_S [t] )  );  h_Corner_Array_S [t] = NULL; }
    } // for (int t=0; t<2; t++)
-
 
 
 // destroy streams

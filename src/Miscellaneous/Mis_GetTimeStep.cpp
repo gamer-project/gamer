@@ -209,9 +209,10 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 
 // 1.9 CRITERION NINE : ExactCooling source term ##HYDRO ONLY##
 // =============================================================================================================
-#  if   ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO )
    double EC_dtCoef = SrcTerms.EC_dtCoef;
-   if ( SrcTerms.EC_subcycling ) {
+   if ( SrcTerms.EC_subcycling )
+   {
       EC_dtCoef = HUGE_NUMBER;
 #     ifdef GAMER_DEBUG
       Aux_Message( stderr, "WARNING : Resetting EC_dtCoef to be HUGE_NUMBER when subcycling is enabled.\n" );

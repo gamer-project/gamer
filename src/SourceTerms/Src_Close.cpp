@@ -48,7 +48,7 @@ void Src_Close( const int lv, const int SaveSg_Flu, const real h_Flu_Array_S_Out
                Aux_Error( ERROR_INFO, "Unphysical cooling time %14.7e (lv=%d, PID=%d, (i,j,k)=(%d,%d,%d)) !!\n", TCool, lv, PID, i, j, k );
          }
 #        endif
-      }
+      } // for (int LocalID=0; LocalID<8; LocalID++)
    } // for (int TID=0; TID<NPG; TID++)
 
 } // FUNCTION : Src_Close

@@ -145,9 +145,9 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
-   const double cl_X         = 0.7;      // mass-fraction of hydrogen
-   const double cl_Z         = 0.018;    // metallicity (in Zsun)
-   const double cl_mol       = 1.0/(2*cl_X+0.75*(1-cl_X-cl_Z)+cl_Z*0.5);   // mean (total) molecular weights
+   const double cl_X   = 0.7;                                      // mass-fraction of hydrogen
+   const double cl_Z   = 0.018;                                    // metallicity (in Zsun)
+   const double cl_mol = 1.0/(2*cl_X+0.75*(1-cl_X-cl_Z)+cl_Z*0.5); // mean (total) molecular weights
 
    double Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
 // Convert the input number density into mass density rho
@@ -159,9 +159,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    MomY = 0.0;
    MomZ = 0.0;
    Pres = cl_pres;
-   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
-                                    EoS_AuxArray_Int, h_EoS_Table );   // assuming EoS requires no passive scalars
-   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );     // do NOT include magnetic energy here
+   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ); // assuming EoS requires no passive scalars
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 ); // do NOT include magnetic energy here
 
 // set the output array
    fluid[DENS] = Dens;
@@ -191,39 +190,40 @@ void Output_ExactCooling()
    static bool FirstTime = true;
 
 // header
-   if ( FirstTime ) {
-      if ( MPI_Rank == 0 ) {
+   if ( FirstTime )
+   {
+      if ( MPI_Rank == 0 )
+      {
          if ( Aux_CheckFileExist(FileName) )
             Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
 
          FILE *File_User = fopen( FileName, "a" );
          fprintf( File_User, "#%13s%10s ",  "Time", "DumpID" );
-         fprintf( File_User, "%14s %14s %14s %14s %14s", "Temp_nume", "Temp_anal", "Err", "Tcool_nume", "Tcool_anal");
+         fprintf( File_User, "%14s %14s %14s %14s %14s", "Temp_nume", "Temp_anal", "Err", "Tcool_nume", "Tcool_anal" );
          fprintf( File_User, "\n" );
          fclose( File_User );
       }
       FirstTime = false;
    } // if ( FirstTime )
 
+   const double cl_X         = 0.7;                                      // mass-fraction of hydrogen
+   const double cl_Z         = 0.018;                                    // metallicity (in Zsun)
+   const double cl_mol       = 1.0/(2*cl_X+0.75*(1-cl_X-cl_Z)+cl_Z*0.5); // mean (total) molecular weights
+   const double cl_mole      = 2.0/(1+cl_X);                             // mean electron molecular weights
+   const double cl_moli      = 1.0/cl_X;                                 // mean proton molecular weights
+   const double cl_moli_mole = cl_moli*cl_mole;                          // Assume the molecular weights are constant, mu_e*mu_i = 1.464
+   const int    lv           = 0;
 
-   const double cl_X         = 0.7;      // mass-fraction of hydrogen
-   const double cl_Z         = 0.018;    // metallicity (in Zsun)
-   const double cl_mol       = 1.0/(2*cl_X+0.75*(1-cl_X-cl_Z)+cl_Z*0.5);   // mean (total) molecular weights
-   const double cl_mole      = 2.0/(1+cl_X);   // mean electron molecular weights
-   const double cl_moli      = 1.0/cl_X;   // mean proton molecular weights
-   const double cl_moli_mole = cl_moli*cl_mole;  // Assume the molecular weights are constant, mu_e*mu_i = 1.464
-
-// Get the numerical result
+// get the numerical result
    real fluid[NCOMP_TOTAL];
-   double Temp_nume = 0.0;
+   double Temp_nume     = 0.0;
    double Temp_nume_tmp = 0.0;
-   double Tcool_nume = 0.0;
-   int    count = 0;
-   const int lv = 0;
+   double Tcool_nume    = 0.0;
+   int    count         = 0;
 
-   for (int k=1; k<PS1; k++){
-   for (int j=1; j<PS1; j++){
-   for (int i=1; i<PS1; i++){
+   for (int k=1; k<PS1; k++) {
+   for (int j=1; j<PS1; j++) {
+   for (int i=1; i<PS1; i++) {
       for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][0]->fluid[v][k][j][i];
       Temp_nume_tmp = (real) Hydro_Con2Temp( fluid[0], fluid[1], fluid[2], fluid[3], fluid[4], fluid+NCOMP_FLUID,
                                              true, MIN_TEMP, 0.0,
@@ -232,11 +232,11 @@ void Output_ExactCooling()
       Tcool_nume += 1.0/(GAMMA-1)*(Const_kB*cl_moli_mole*Temp_nume_tmp)/(fluid[0]*UNIT_D/MU_NORM*cl_mol*3.2217e-27*sqrt(Temp_nume_tmp))/Const_Myr;
       Temp_nume += Temp_nume_tmp;
       count += 1;
-   }}}
-   Temp_nume /= count;
+   }}} // i, j, k
+   Temp_nume  /= count;
    Tcool_nume /= count;
 
-// Compute the analytical solution for single branch cooling function
+// compute the analytical solution for single branch cooling function
    double Temp_anal, Tcool_anal;
    if (sqrt(EC_Temp) >= 3.2217e-27/2.0*(GAMMA-1)*EC_Dens*cl_mol*cl_mol/cl_mole/cl_moli/Const_kB*Time[0]*UNIT_T){
       Temp_anal = pow(sqrt(EC_Temp) - 3.2217e-27/2.0*(GAMMA-1)*EC_Dens*cl_mol*cl_mol/cl_mole/cl_moli/Const_kB*Time[0]*UNIT_T, 2.0);
@@ -246,15 +246,15 @@ void Output_ExactCooling()
 
    Tcool_anal = 1.0/(GAMMA-1)*EC_Dens*Const_kB*Temp_anal/((EC_Dens*cl_mol/cl_mole)*(EC_Dens*cl_mol/cl_moli)*3.2217e-27*sqrt(Temp_anal))/Const_Myr;
 
-// Record
-   if ( MPI_Rank == 0 ) {
+// record
+   if ( MPI_Rank == 0 )
+   {
       FILE *File_User = fopen( FileName, "a" );
       fprintf( File_User, "%14.7e%10d ", Time[0]*UNIT_T/Const_Myr, DumpID );
       fprintf( File_User, "%14.7e %14.7e %14.7e %14.7e %14.7e", Temp_nume, Temp_anal, (Temp_nume-Temp_anal)/Temp_anal, Tcool_nume, Tcool_anal );
       fprintf( File_User, "\n" );
       fclose( File_User );
    }
-
 
 } // FUNCTION : Output_ExactCooling
 #endif

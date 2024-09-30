@@ -92,7 +92,6 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGrou
 #  endif
 #  endif // FLU_SCHEME
 
-
 } // FUNCTION : Init_MemAllocate_Fluid
 
 

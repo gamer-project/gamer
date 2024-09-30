@@ -74,16 +74,16 @@ void Src_Init()
 #  endif
 
 #  if ( MODEL == HYDRO )
-   SrcTerms.EC_FuncPtr            = NULL;
-   SrcTerms.EC_CPUPtr             = NULL;
+   SrcTerms.EC_FuncPtr                = NULL;
+   SrcTerms.EC_CPUPtr                 = NULL;
 #  ifdef GPUEC
-   SrcTerms.EC_GPUPtr             = NULL;
+   SrcTerms.EC_GPUPtr                 = NULL;
 #  endif
-   SrcTerms.EC_AuxArrayDevPtr_Flt = NULL;
-   SrcTerms.EC_AuxArrayDevPtr_Int = NULL;
-   SrcTerms.EC_TEF_lambda_DevPtr  = NULL;
-   SrcTerms.EC_TEF_alpha_DevPtr   = NULL;
-   SrcTerms.EC_TEFc_DevPtr        = NULL;
+   SrcTerms.EC_AuxArrayDevPtr_Flt     = NULL;
+   SrcTerms.EC_AuxArrayDevPtr_Int     = NULL;
+   SrcTerms.EC_TEF_lambda_DevPtr      = NULL;
+   SrcTerms.EC_TEF_alpha_DevPtr       = NULL;
+   SrcTerms.EC_TEFc_DevPtr            = NULL;
 #  endif
 
    SrcTerms.User_FuncPtr              = NULL;
