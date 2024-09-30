@@ -12,6 +12,13 @@ static int    Gau_PeriodicN;// periodic boundary condition
                             // (0 = non-periodic, >0 = number of periodic images each side)
 // =======================================================================================
 
+// defined TargetVariable for AnalyticalSolution_GaussianWavePacket()
+// =======================================================================================
+const  int    GAUSSIAN_TARGET_VAR_REAL = 1;
+const  int    GAUSSIAN_TARGET_VAR_IMAG = 2;
+const  int    GAUSSIAN_TARGET_VAR_PHAS = 3;
+// =======================================================================================
+
 static double AnalyticalSolution_GaussianWavePacket( const double r, const double Time,
                                                      const int TargetVariable );
 static void   ComplexValuesAmpPhaseAdder( const double A_1, const double S_1,
@@ -223,8 +230,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       break;
    }
 
-   const double Re = AnalyticalSolution_GaussianWavePacket( r, Time, 1 );
-   const double Im = AnalyticalSolution_GaussianWavePacket( r, Time, 2 );
+   const double Re = AnalyticalSolution_GaussianWavePacket( r, Time, GAUSSIAN_TARGET_VAR_REAL );
+   const double Im = AnalyticalSolution_GaussianWavePacket( r, Time, GAUSSIAN_TARGET_VAR_IMAG );
 
    fluid[DENS] = SQR(Re) + SQR(Im);
 
@@ -235,7 +242,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[IMAG] = Im;
 #  if  ( ELBDM_SCHEME == ELBDM_HYBRID )
    } else {
-   fluid[PHAS] = AnalyticalSolution_GaussianWavePacket( r, Time, 3 );
+   fluid[PHAS] = AnalyticalSolution_GaussianWavePacket( r, Time, GAUSSIAN_TARGET_VAR_PHAS );
    fluid[STUB] = 0.0;
    }
 #  endif
@@ -248,9 +255,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // Function    :  AnalyticalSolution_GaussianWavePacket
 // Description :  Analytical solution of Gaussian wave packet as a function of position and time
 //
-// Note        :  1. TargetVariable = 1 --> the real part of the wave function
-//                   TargetVariable = 2 --> the imaginary part of the wave function
-//                   TargetVariable = 3 --> the unwrapped phase of the wave function
+// Note        :  1. TargetVariable = GAUSSIAN_TARGET_VAR_REAL --> the real part of the wave function
+//                   TargetVariable = GAUSSIAN_TARGET_VAR_IMAG --> the imaginary part of the wave function
+//                   TargetVariable = GAUSSIAN_TARGET_VAR_PHAS --> the unwrapped phase of the wave function
 //                2. After Time > ( 6.0*Gau_Width/BoxSize )*( BoxSize/(2*M_PI/(ELBDM_ETA*fabs(Gau_v0))) )*( BoxSize/fabs(Gau_v0) ),
 //                   the analytical solution of unwrapped phase would be wrong due to the complicated interference between images
 //                   -> Phase unwrapping with the previous time will be applied to avoid this effect, assuming the time evolution of phase is continuous,
@@ -281,9 +288,9 @@ double AnalyticalSolution_GaussianWavePacket( const double r, const double Time,
       const double Gau_Theta2 = 0.5*pow( dr1, 2.0 )*ELBDM_ETA*Time/(  pow( ELBDM_ETA*SQR(Gau_Width), 2.0) + SQR(Time)  )
                                 + Gau_v0*ELBDM_ETA*dr2;
 
-      if      ( TargetVariable == 1 )   Re += Gau_Const2*cos( Gau_Theta1 + Gau_Theta2 );
-      else if ( TargetVariable == 2 )   Im += Gau_Const2*sin( Gau_Theta1 + Gau_Theta2 );
-      else if ( TargetVariable == 3 )
+      if      ( TargetVariable == GAUSSIAN_TARGET_VAR_REAL )   Re += Gau_Const2*cos( Gau_Theta1 + Gau_Theta2 );
+      else if ( TargetVariable == GAUSSIAN_TARGET_VAR_IMAG )   Im += Gau_Const2*sin( Gau_Theta1 + Gau_Theta2 );
+      else if ( TargetVariable == GAUSSIAN_TARGET_VAR_PHAS )
       {
 //       shift the phase to make sure the phase is continuous at the transition of different Gaussians
          const double PhaseShift = 2*M_PI*round( Gau_v0*ELBDM_ETA*amr->BoxSize[Gau_XYZ]/(2*M_PI) )*n*(1-2*m);
@@ -311,7 +318,7 @@ double AnalyticalSolution_GaussianWavePacket( const double r, const double Time,
       }
    }}
 
-   if ( TargetVariable == 3 )
+   if ( TargetVariable == GAUSSIAN_TARGET_VAR_PHAS )
    {
 //    add the main phase lastly to make sure the final phase is close to it
       ComplexValuesAmpPhaseAdder( Am_main, Ph_main, Am, Ph,  &Am,  &Ph );
@@ -321,15 +328,15 @@ double AnalyticalSolution_GaussianWavePacket( const double r, const double Time,
       {
 //        the delta_t is chosen to make the phase changes less than pi each step in the phase equation
           const double delta_t     = MIN( 2.0*M_PI/( ELBDM_ETA*SQR(Gau_v0) ), 2.0*M_PI*ELBDM*SQR(Gau_Width)*SQR(2*Gau_Width/amr->BoxSize[Gau_XYZ]) );
-          const double Ph_previous = AnalyticalSolution_GaussianWavePacket( r, Time-delta_t, 3 );
+          const double Ph_previous = AnalyticalSolution_GaussianWavePacket( r, Time-delta_t, GAUSSIAN_TARGET_VAR_PHAS );
           Ph -= 2*M_PI*floor( ((Ph - Ph_previous)+M_PI)/(2*M_PI) );
       }
    }
 
 // return the result
-   if      ( TargetVariable == 1 )   return Re;
-   else if ( TargetVariable == 2 )   return Im;
-   else if ( TargetVariable == 3 )   return Ph;
+   if      ( TargetVariable == GAUSSIAN_TARGET_VAR_REAL )   return Re;
+   else if ( TargetVariable == GAUSSIAN_TARGET_VAR_IMAG )   return Im;
+   else if ( TargetVariable == GAUSSIAN_TARGET_VAR_PHAS )   return Ph;
 
    return 0.0;
 
