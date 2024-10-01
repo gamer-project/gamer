@@ -690,6 +690,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    if ( !( Merger_Coll_IsGas1  ||  Merger_Coll_IsGas2  ||  Merger_Coll_IsGas3 ) )
       return;
 
+   const double pos_in        [3] = { x,                 y,                 z                 };
    const double ClusterCenter1[3] = { Merger_Coll_PosX1, Merger_Coll_PosY1, amr->BoxCenter[2] };
    const double ClusterCenter2[3] = { Merger_Coll_PosX2, Merger_Coll_PosY2, amr->BoxCenter[2] };
    const double ClusterCenter3[3] = { Merger_Coll_PosX3, Merger_Coll_PosY3, amr->BoxCenter[2] };
@@ -705,7 +706,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // for each cell, we sum up the density and pressure from each halo and then calculate the weighted velocity
    if ( Merger_Coll_IsGas1 )
    {
-      r1    = sqrt( SQR(x-ClusterCenter1[0]) + SQR(y-ClusterCenter1[1]) + SQR(z-ClusterCenter1[2]) );
+      r1    = DIST_3D_DBL( pos_in, ClusterCenter1 );
       double rr1 = r1 < rmax1 ? r1 : rmax1;
       Dens1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_D1, rr1 );
       Pres1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_P1, rr1 );
@@ -721,7 +722,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    if ( Merger_Coll_NumHalos > 1  &&  Merger_Coll_IsGas2 )
    {
-      r2    = sqrt( SQR(x-ClusterCenter2[0]) + SQR(y-ClusterCenter2[1]) + SQR(z-ClusterCenter2[2]) );
+      r2    = DIST_3D_DBL( pos_in, ClusterCenter2 );
       double rr2 = r2 < rmax2 ? r2 : rmax2;
       Dens2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_D2, rr2 );
       Pres2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_P2, rr2 );
@@ -737,7 +738,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    if ( Merger_Coll_NumHalos > 2  &&  Merger_Coll_IsGas3 )
    {
-      r3    = sqrt( SQR(x-ClusterCenter3[0]) + SQR(y-ClusterCenter3[1]) + SQR(z-ClusterCenter3[2]) );
+      r3    = DIST_3D_DBL( pos_in, ClusterCenter3 );
       double rr3 = r3 < rmax3 ? r3 : rmax3;
       Dens3 = Mis_InterpolateFromTable( Merger_NBin3, Table_R3, Table_D3, rr3 );
       Pres3 = Mis_InterpolateFromTable( Merger_NBin3, Table_R3, Table_P3, rr3 );

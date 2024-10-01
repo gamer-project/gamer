@@ -763,26 +763,25 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                   const double *EdgeL        = amr->patch[0][lv][PID]->EdgeL;
                   const double *EdgeR        = amr->patch[0][lv][PID]->EdgeR;
                   const double  patch_pos[3] = { (EdgeL[0]+EdgeR[0])*0.5, (EdgeL[1]+EdgeR[1])*0.5, (EdgeL[2]+EdgeR[2])*0.5 };
-                  const double  patch_d      = sqrt( SQR(EdgeL[0]-EdgeR[0]) + SQR(EdgeL[1]-EdgeR[1]) + SQR(EdgeL[2]-EdgeR[2]) ) * 0.5;
+                  const double  patch_d      = DIST_3D_DBL( EdgeL, EdgeR ) * 0.5;
 
-                  if ( SQR(patch_pos[0]-Cen_new_pre[c][0]) + SQR(patch_pos[1]-Cen_new_pre[c][1]) +
-                       SQR(patch_pos[2]-Cen_new_pre[c][2]) <= SQR(20*R_acc+patch_d) )
+                  if ( DIST_SQR_3D( patch_pos, Cen_new_pre[c] ) <= SQR(20*R_acc+patch_d) )
                   {
                      for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                      {
-                        const long ParID = amr->patch[0][lv][PID]->ParList[p];
-                        const real ParX_tmp = amr->Par->PosX[ParID];
-                        const real ParY_tmp = amr->Par->PosY[ParID];
-                        const real ParZ_tmp = amr->Par->PosZ[ParID];
-                        const real ParM_tmp = amr->Par->Mass[ParID];
-                        const real VelX_tmp = amr->Par->VelX[ParID];
-                        const real VelY_tmp = amr->Par->VelY[ParID];
-                        const real VelZ_tmp = amr->Par->VelZ[ParID];
+                        const long ParID         = amr->patch[0][lv][PID]->ParList[p];
+                        const real ParX_tmp      = amr->Par->PosX[ParID];
+                        const real ParY_tmp      = amr->Par->PosY[ParID];
+                        const real ParZ_tmp      = amr->Par->PosZ[ParID];
+                        const real ParM_tmp      = amr->Par->Mass[ParID];
+                        const real VelX_tmp      = amr->Par->VelX[ParID];
+                        const real VelY_tmp      = amr->Par->VelY[ParID];
+                        const real VelZ_tmp      = amr->Par->VelZ[ParID];
+                        const real ParPos_tmp[3] = { ParX_tmp, ParY_tmp, ParZ_tmp };
                         bool if_cluster = false;
                         if ( amr->Par->Type[ParID] == real(PTYPE_CLUSTER+c)  ||  amr->Par->Type[ParID] == real(PTYPE_CEN+c) )   if_cluster = true;
 
-                        if ( if_cluster  &&  SQR(ParX_tmp-Cen_new_pre[c][0]) + SQR(ParY_tmp-Cen_new_pre[c][1]) +
-                                             SQR(ParZ_tmp-Cen_new_pre[c][2]) <= SQR(10*R_acc) )
+                        if ( if_cluster  &&  DIST_SQR_3D( ParPos_tmp, Cen_new_pre[c] ) <= SQR(10*R_acc) )
                         {
 //                         record the mass, position and velocity of this particle
                            ParX[c][num_par[c]] = ParX_tmp;
@@ -807,8 +806,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                             VelZ[c]  = (double*)realloc( VelZ[c], N_max[c]*sizeof(double) );
                         }
                      } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
-                  } // if ( SQR(patch_pos[0]-Cen_new_pre[c][0]) + SQR(patch_pos[1]-Cen_new_pre[c][1]) +
-//                          SQR(patch_pos[2]-Cen_new_pre[c][2]) <= SQR(20*R_acc+patch_d) )
+                  }  // if ( DIST_SQR_3D( patch_pos, Cen_new_pre[c] ) <= SQR(20*R_acc+patch_d) )
                } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
             } // for (int c=0; c<Merger_Coll_NumHalos; c++)
 
