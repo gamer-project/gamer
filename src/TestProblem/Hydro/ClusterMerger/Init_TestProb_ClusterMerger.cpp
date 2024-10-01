@@ -342,14 +342,14 @@ void SetParameter()
    Merger_Coll_VelY2 *= (Const_km/Const_s) / UNIT_V;
    Merger_Coll_VelX3 *= (Const_km/Const_s) / UNIT_V;
    Merger_Coll_VelY3 *= (Const_km/Const_s) / UNIT_V;
-   Bondi_MassBH1     *= Const_Msun/UNIT_M;
-   Bondi_MassBH2     *= Const_Msun/UNIT_M;
-   Bondi_MassBH3     *= Const_Msun/UNIT_M;
+   Bondi_MassBH1     *= Const_Msun / UNIT_M;
+   Bondi_MassBH2     *= Const_Msun / UNIT_M;
+   Bondi_MassBH3     *= Const_Msun / UNIT_M;
    R_acc             *= Const_kpc / UNIT_L;
    R_dep             *= Const_kpc / UNIT_L;
-   Mdot_BH1          *= (Const_Msun/Const_yr) / (UNIT_M / UNIT_T);
-   Mdot_BH2          *= (Const_Msun/Const_yr) / (UNIT_M / UNIT_T);
-   Mdot_BH3          *= (Const_Msun/Const_yr) / (UNIT_M / UNIT_T);
+   Mdot_BH1          *= (Const_Msun/Const_yr) / (UNIT_M/UNIT_T);
+   Mdot_BH2          *= (Const_Msun/Const_yr) / (UNIT_M/UNIT_T);
+   Mdot_BH3          *= (Const_Msun/Const_yr) / (UNIT_M/UNIT_T);
    Jet_HalfHeight1   *= Const_kpc / UNIT_L;
    Jet_HalfHeight2   *= Const_kpc / UNIT_L;
    Jet_HalfHeight3   *= Const_kpc / UNIT_L;
@@ -445,7 +445,7 @@ void SetParameter()
          MPI_Bcast( Table_P2, Merger_NBin2, MPI_DOUBLE, 0, MPI_COMM_WORLD );
          MPI_Bcast( Table_M2, Merger_NBin2, MPI_DOUBLE, 0, MPI_COMM_WORLD );
 
-      } // if ( Merger_Coll_NumHalos > 1 && Merger_Coll_IsGas2 )
+      } // if ( Merger_Coll_NumHalos > 1  &&  Merger_Coll_IsGas2 )
 
 //    cluster 3
       if ( Merger_Coll_NumHalos > 2  &&  Merger_Coll_IsGas3 )
@@ -486,7 +486,7 @@ void SetParameter()
          MPI_Bcast( Table_P3, Merger_NBin3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
          MPI_Bcast( Table_M3, Merger_NBin3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
 
-      } // if ( Merger_Coll_NumHalos > 2 && Merger_Coll_IsGas3 )
+      } // if ( Merger_Coll_NumHalos > 2  &&  Merger_Coll_IsGas3 )
 
 //    (2-2) initialize the BH position and velocity
       double ClusterCenter[3][3] = {{ Merger_Coll_PosX1, Merger_Coll_PosY1, amr->BoxCenter[2] },
@@ -1142,7 +1142,7 @@ void Init_User_ClusterMerger()
                   fseek( File_User, sizeof(double),   SEEK_CUR );
                }
                fseek( File_User, sizeof(int), SEEK_CUR );
-            } // if ( dumpID == TargetDumpID )
+            } // if ( dumpID == TargetDumpID ) ... else ...
          } // while ( fread( &Time, sizeof(double), 1, File_User ) == 1 )
 
          Bondi_MassBH1 = BH_Mass[0];

@@ -132,7 +132,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
-   // prepare to load data
+// prepare to load data
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Preparing to load data ... " );
 
    const int NCluster = Merger_Coll_NumHalos;
@@ -140,7 +140,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
    for (int c=0; c<NCluster; c++)
    {
-      // get the number of particles loaded by each rank for each cluster
+//    get the number of particles loaded by each rank for each cluster
       long NPar_ThisCluster_EachRank[MPI_NRank];
 
       switch (c)
@@ -161,14 +161,14 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
       MPI_Allgather( &NPar_ThisRank_EachCluster[c], 1, MPI_LONG, NPar_ThisCluster_EachRank, 1, MPI_LONG, MPI_COMM_WORLD );
 
-      // check if the total number of particles is correct
+//    check if the total number of particles is correct
       long NPar_Check = 0;
       for (int r=0; r<MPI_NRank; r++)   NPar_Check += NPar_ThisCluster_EachRank[r];
       if ( NPar_Check != NPar_EachCluster[c] )
          Aux_Error( ERROR_INFO, "total number of particles in cluster %d: found (%ld) != expect (%ld) !!\n",
                     c, NPar_Check, NPar_EachCluster[c] );
 
-      // set the file offset for this rank
+//    set the file offset for this rank
       Offset[c] = 0;
       for (int r=0; r<MPI_Rank; r++)
          Offset[c] = Offset[c] + NPar_ThisCluster_EachRank[r];
@@ -176,13 +176,13 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
-   // load data to the particle repository
+// load data to the particle repository
 
    const std::string filenames[3] = { Merger_File_Par1, Merger_File_Par2, Merger_File_Par3 };
 
    for ( int c=0; c<NCluster; c++ )
    {
-      // load data
+//    load data
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading cluster %d ... \n", c+1 );
 
       real_par_in *mass  = new real_par_in [NPar_ThisRank_EachCluster[c]];
@@ -205,10 +205,10 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       }
 #     endif
 
-//    Reset the particle type for different clusters
+//    reset the particle type for different clusters
       for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++)   ptype[p] = PTYPE_CLUSTER + c;
 
-      if ( MPI_Rank == 0 ) Aux_Message( stdout, "done\n" );
+      if ( MPI_Rank == 0 )   Aux_Message( stdout, "done\n" );
 
 //    store data to the particle repository
       if ( MPI_Rank == 0 )
@@ -705,8 +705,8 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
 
    if ( fixBH == false )
    {
-      double min_pos[3][3], DM_Vel[3][3];   // The updated BH position / velocity
-      const bool CurrentMaxLv = (  NPatchTotal[lv] > 0  &&  ( lv == MAX_LEVEL || NPatchTotal[lv+1] == 0 )  );
+      double min_pos[3][3], DM_Vel[3][3];   // the updated BH position and velocity
+      const bool CurrentMaxLv = (  NPatchTotal[lv] > 0  &&  ( lv == MAX_LEVEL  ||  NPatchTotal[lv+1] == 0 )  );
 
 //    initialize min_pos to be the old center
       for (int c=0; c<Merger_Coll_NumHalos; c++)   for (int d=0; d<3; d++)   min_pos[c][d] = Cen_old[c][d];
@@ -763,9 +763,10 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                   const double *EdgeL        = amr->patch[0][lv][PID]->EdgeL;
                   const double *EdgeR        = amr->patch[0][lv][PID]->EdgeR;
                   const double  patch_pos[3] = { (EdgeL[0]+EdgeR[0])*0.5, (EdgeL[1]+EdgeR[1])*0.5, (EdgeL[2]+EdgeR[2])*0.5 };
-                  const double  patch_d      = sqrt(SQR(EdgeL[0]-EdgeR[0])+SQR(EdgeL[1]-EdgeR[1])+SQR(EdgeL[2]-EdgeR[2]))*0.5;
+                  const double  patch_d      = sqrt( SQR(EdgeL[0]-EdgeR[0]) + SQR(EdgeL[1]-EdgeR[1]) + SQR(EdgeL[2]-EdgeR[2]) ) * 0.5;
 
-                  if (SQR(patch_pos[0]-Cen_new_pre[c][0])+SQR(patch_pos[1]-Cen_new_pre[c][1])+SQR(patch_pos[2]-Cen_new_pre[c][2]) <= SQR(20*R_acc+patch_d))
+                  if ( SQR(patch_pos[0]-Cen_new_pre[c][0]) + SQR(patch_pos[1]-Cen_new_pre[c][1]) +
+                       SQR(patch_pos[2]-Cen_new_pre[c][2]) <= SQR(20*R_acc+patch_d) )
                   {
                      for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                      {
@@ -780,7 +781,8 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                         bool if_cluster = false;
                         if ( amr->Par->Type[ParID] == real(PTYPE_CLUSTER+c)  ||  amr->Par->Type[ParID] == real(PTYPE_CEN+c) )   if_cluster = true;
 
-                        if ( if_cluster  &&  SQR(ParX_tmp-Cen_new_pre[c][0])+SQR(ParY_tmp-Cen_new_pre[c][1])+SQR(ParZ_tmp-Cen_new_pre[c][2]) <= SQR(10*R_acc) )
+                        if ( if_cluster  &&  SQR(ParX_tmp-Cen_new_pre[c][0]) + SQR(ParY_tmp-Cen_new_pre[c][1]) +
+                                             SQR(ParZ_tmp-Cen_new_pre[c][2]) <= SQR(10*R_acc) )
                         {
 //                         record the mass, position and velocity of this particle
                            ParX[c][num_par[c]] = ParX_tmp;
@@ -805,7 +807,8 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                             VelZ[c]  = (double*)realloc( VelZ[c], N_max[c]*sizeof(double) );
                         }
                      } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
-                  } // if (SQR(patch_pos[0]-Cen_new_pre[c][0])+SQR(patch_pos[1]-Cen_new_pre[c][1])+SQR(patch_pos[2]-Cen_new_pre[c][2]) <= SQR(20*R_acc+patch_d))
+                  } // if ( SQR(patch_pos[0]-Cen_new_pre[c][0]) + SQR(patch_pos[1]-Cen_new_pre[c][1]) +
+//                          SQR(patch_pos[2]-Cen_new_pre[c][2]) <= SQR(20*R_acc+patch_d) )
                } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
             } // for (int c=0; c<Merger_Coll_NumHalos; c++)
 
@@ -839,6 +842,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                VelY_sum[c] = new double [num_par_sum[c]];
                VelZ_sum[c] = new double [num_par_sum[c]];
             }
+
             for (int c=0; c<Merger_Coll_NumHalos; c++)
             {
                MPI_Allgatherv( ParX[c], num_par[c], MPI_DOUBLE, ParX_sum[c], num_par_eachRank[c], displs[c], MPI_DOUBLE, MPI_COMM_WORLD );
@@ -856,12 +860,12 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                double soften = amr->dh[MAX_LEVEL];
                for (int c=0; c<Merger_Coll_NumHalos; c++)
                {
-                  double *pote = new double[num_par_sum[c]];
+                  double *pote = new double [num_par_sum[c]];
 
 //                distribute MPI jobs
-                  int     par_per_rank = num_par_sum[c]/MPI_NRank;
-                  int     remainder    = num_par_sum[c]%MPI_NRank;
-                  int     start        = MPI_Rank*par_per_rank + MIN(MPI_Rank, remainder);
+                  int     par_per_rank = num_par_sum[c] / MPI_NRank;
+                  int     remainder    = num_par_sum[c] % MPI_NRank;
+                  int     start        = MPI_Rank*par_per_rank + MIN( MPI_Rank, remainder );
                   int     end          = start + par_per_rank + (MPI_Rank < remainder ? 1 : 0);
                   double *pote_local   = new double [end-start];
 
@@ -871,9 +875,10 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                      pote_local[i-start] = 0.0;
                      for (int j=0; j<num_par_sum[c]; j++)
                      {
-                        double rel_pos = sqrt(SQR(ParX_sum[c][i]-ParX_sum[c][j])+SQR(ParY_sum[c][i]-ParY_sum[c][j])+SQR(ParZ_sum[c][i]-ParZ_sum[c][j]));
-                        if       ( rel_pos > soften )                pote_local[i-start] += ParM_sum[c][j]/rel_pos;
-                        else if  ( rel_pos <= soften  &&  i != j )   pote_local[i-start] += ParM_sum[c][j]/soften;
+                        double rel_pos = sqrt( SQR(ParX_sum[c][i]-ParX_sum[c][j]) + SQR(ParY_sum[c][i]-ParY_sum[c][j]) +
+                                               SQR(ParZ_sum[c][i]-ParZ_sum[c][j]) );
+                        if       ( rel_pos > soften )                pote_local[i-start] += ParM_sum[c][j] / rel_pos;
+                        else if  ( rel_pos <= soften  &&  i != j )   pote_local[i-start] += ParM_sum[c][j] / soften;
                      }
                      pote_local[i-start] *= -NEWTON_G;
                   }
@@ -912,7 +917,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                      DM_Vel[c][1] += VelY_sum[c][i];
                      DM_Vel[c][2] += VelZ_sum[c][i];
                   }
-                  for (int d=0; d<3; d++)  DM_Vel[c][d] /= num_par_sum[c];
+                  for (int d=0; d<3; d++)   DM_Vel[c][d] /= num_par_sum[c];
                }
             } // if ( AdjustVel == true )
 
