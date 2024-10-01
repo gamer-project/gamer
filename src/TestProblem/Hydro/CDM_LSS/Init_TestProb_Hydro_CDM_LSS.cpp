@@ -181,6 +181,30 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  HDF5_Output_TestProb
+// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype.
+//                3. There MUST be more than one parameter to be stored
+//
+// Parameter   :  HDF5_InputTest : the structure storing the parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
+{
+
+   char Empty[MAX_STRING] = "Empty";
+   HDF5_InputTest->Add( "Empty",  Empty );
+
+} // FUNCTION : HDF5_Output_TestProb
+#endif // #ifdef SUPPORT_HDF5
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_TestProb_Hydro_CDM_LSS
 // Description :  Test problem initializer
@@ -204,7 +228,10 @@ void Init_TestProb_Hydro_CDM_LSS()
    SetParameter();
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr = SetGridIC;
+   Init_Function_User_Ptr   = SetGridIC;
+#  ifdef SUPPORT_HDF5
+   HDF5_Output_TestProb_Ptr = HDF5_Output_TestProb;
+#  endif
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

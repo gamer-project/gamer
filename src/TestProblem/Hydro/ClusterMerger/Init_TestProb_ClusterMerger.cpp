@@ -615,7 +615,52 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 } // FUNCTION : SetGridIC
 
+
+
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  HDF5_Output_TestProb
+// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype.
+//                3. There MUST be more than one parameter to be stored
+//
+// Parameter   :  HDF5_InputTest : the structure storing the parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
+{
+
+   HDF5_InputTest->Add( "Merger_Coll_NumHalos",  &Merger_Coll_NumHalos  );
+   HDF5_InputTest->Add( "Merger_Coll_IsGas1",    &Merger_Coll_IsGas1    );
+   HDF5_InputTest->Add( "Merger_Coll_IsGas2",    &Merger_Coll_IsGas2    );
+   HDF5_InputTest->Add( "Merger_Coll_IsGas3",    &Merger_Coll_IsGas3    );
+   HDF5_InputTest->Add( "Merger_File_Prof1",      Merger_File_Prof1     );
+   HDF5_InputTest->Add( "Merger_File_Par1",       Merger_File_Par1      );
+   HDF5_InputTest->Add( "Merger_File_Prof2",      Merger_File_Prof2     );
+   HDF5_InputTest->Add( "Merger_File_Par2",       Merger_File_Par2      );
+   HDF5_InputTest->Add( "Merger_File_Prof3",      Merger_File_Prof3     );
+   HDF5_InputTest->Add( "Merger_File_Par3",       Merger_File_Par3      );
+   HDF5_InputTest->Add( "Merger_Coll_PosX1",     &Merger_Coll_PosX1     );
+   HDF5_InputTest->Add( "Merger_Coll_PosY1",     &Merger_Coll_PosY1     );
+   HDF5_InputTest->Add( "Merger_Coll_PosX2",     &Merger_Coll_PosX2     );
+   HDF5_InputTest->Add( "Merger_Coll_PosY2",     &Merger_Coll_PosY2     );
+   HDF5_InputTest->Add( "Merger_Coll_PosX3",     &Merger_Coll_PosX3     );
+   HDF5_InputTest->Add( "Merger_Coll_PosY3",     &Merger_Coll_PosY3     );
+   HDF5_InputTest->Add( "Merger_Coll_VelX1",     &Merger_Coll_VelX1     );
+   HDF5_InputTest->Add( "Merger_Coll_VelY1",     &Merger_Coll_VelY1     );
+   HDF5_InputTest->Add( "Merger_Coll_VelX2",     &Merger_Coll_VelX2     );
+   HDF5_InputTest->Add( "Merger_Coll_VelY2",     &Merger_Coll_VelY2     );
+   HDF5_InputTest->Add( "Merger_Coll_VelX3",     &Merger_Coll_VelX3     );
+   HDF5_InputTest->Add( "Merger_Coll_VelY3",     &Merger_Coll_VelY3     );
+   HDF5_InputTest->Add( "Merger_Coll_UseMetals", &Merger_Coll_UseMetals );
+
+} // FUNCTION : HDF5_Output_TestProb
+#endif // #ifdef SUPPORT_HDF5
 #endif // #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -646,8 +691,9 @@ void End_ClusterMerger()
 
 } // FUNCTION : End_ClusterMerger
 
-#ifdef MHD
 
+
+#ifdef MHD
 void SetBFieldIC( real magnetic[], const double x, const double y, const double z, const double Time,
                   const int lv, double AuxArray[] )
 {
@@ -658,8 +704,8 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
    return;
 
 } // FUNCTION : SetBFieldIC
-
 #endif // #ifdef MHD
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -695,6 +741,9 @@ void Init_TestProb_Hydro_ClusterMerger()
    //Par_Init_Attribute_User_Ptr    = AddNewParticleAttribute_ClusterMerger;
 #  ifdef MHD
    Init_Function_BField_User_Ptr  = SetBFieldIC;
+#  endif
+#  ifdef SUPPORT_HDF5
+   HDF5_Output_TestProb_Ptr       = HDF5_Output_TestProb;
 #  endif
 #  endif // if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 

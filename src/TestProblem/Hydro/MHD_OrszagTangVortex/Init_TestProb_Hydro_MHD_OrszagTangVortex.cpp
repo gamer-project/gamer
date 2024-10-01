@@ -227,6 +227,33 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 
 } // FUNCTION : SetBFieldIC
 #endif // #ifdef MHD
+
+
+
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  HDF5_Output_TestProb
+// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype.
+//                3. There MUST be more than one parameter to be stored
+//
+// Parameter   :  HDF5_InputTest : the structure storing the parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
+{
+
+   HDF5_InputTest->Add( "OrszagTang_Rho0", &OrszagTang_Rho0 );
+   HDF5_InputTest->Add( "OrszagTang_P0",   &OrszagTang_P0   );
+   HDF5_InputTest->Add( "OrszagTang_Vx0",  &OrszagTang_Vx0  );
+   HDF5_InputTest->Add( "OrszagTang_Vy0",  &OrszagTang_Vy0  );
+   HDF5_InputTest->Add( "OrszagTang_B0",   &OrszagTang_B0   );
+
+} // FUNCTION : HDF5_Output_TestProb
+#endif // #ifdef SUPPORT_HDF5
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -259,6 +286,9 @@ void Init_TestProb_Hydro_MHD_OrszagTangVortex()
    Init_Function_User_Ptr        = SetGridIC;
 #  ifdef MHD
    Init_Function_BField_User_Ptr = SetBFieldIC;
+#  endif
+#  ifdef SUPPORT_HDF5
+   HDF5_Output_TestProb_Ptr      = HDF5_Output_TestProb;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

@@ -369,7 +369,7 @@ void SetParameter()
       Aux_Message( stdout, "  feedback likelihood                       = %13.7e\n", Plummer_FB_Like );
 #     endif
       Aux_Message( stdout, "=============================================================================\n" );
-   }
+   } // if ( MPI_Rank == 0 )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
@@ -472,6 +472,56 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  HDF5_Output_TestProb
+// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype.
+//                3. There MUST be more than one parameter to be stored
+//
+// Parameter   :  HDF5_InputTest : the structure storing the parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
+{
+
+   HDF5_InputTest->Add( "Plummer_RSeed",        &Plummer_RSeed        );
+   HDF5_InputTest->Add( "Plummer_Rho0",         &Plummer_Rho0         );
+   HDF5_InputTest->Add( "Plummer_R0",           &Plummer_R0           );
+   HDF5_InputTest->Add( "Plummer_MaxR",         &Plummer_MaxR         );
+   HDF5_InputTest->Add( "Plummer_Collision",    &Plummer_Collision    );
+   HDF5_InputTest->Add( "Plummer_Collision_D",  &Plummer_Collision_D  );
+   HDF5_InputTest->Add( "Plummer_CenterX",      &Plummer_Center[0]    );
+   HDF5_InputTest->Add( "Plummer_CenterY",      &Plummer_Center[1]    );
+   HDF5_InputTest->Add( "Plummer_CenterZ",      &Plummer_Center[2]    );
+   HDF5_InputTest->Add( "Plummer_BulkVelX",     &Plummer_BulkVel[0]   );
+   HDF5_InputTest->Add( "Plummer_BulkVelY",     &Plummer_BulkVel[1]   );
+   HDF5_InputTest->Add( "Plummer_BulkVelZ",     &Plummer_BulkVel[2]   );
+   HDF5_InputTest->Add( "Plummer_GasMFrac",     &Plummer_GasMFrac     );
+   HDF5_InputTest->Add( "Plummer_ExtAccMFrac",  &Plummer_ExtAccMFrac  );
+   HDF5_InputTest->Add( "Plummer_ExtPotMFrac",  &Plummer_ExtPotMFrac  );
+   HDF5_InputTest->Add( "Plummer_MassProfNBin", &Plummer_MassProfNBin );
+   HDF5_InputTest->Add( "Plummer_AddColor",     &Plummer_AddColor     );
+#  ifdef FEEDBACK
+   HDF5_InputTest->Add( "Plummer_FB_Exp",       &Plummer_FB_Exp       );
+   HDF5_InputTest->Add( "Plummer_FB_ExpEMin",   &Plummer_FB_ExpEMin   );
+   HDF5_InputTest->Add( "Plummer_FB_ExpEMax",   &Plummer_FB_ExpEMax   );
+   HDF5_InputTest->Add( "Plummer_FB_ExpMMin",   &Plummer_FB_ExpMMin   );
+   HDF5_InputTest->Add( "Plummer_FB_ExpMMax",   &Plummer_FB_ExpMMax   );
+   HDF5_InputTest->Add( "Plummer_FB_Acc",       &Plummer_FB_Acc       );
+   HDF5_InputTest->Add( "Plummer_FB_AccMMin",   &Plummer_FB_AccMMin   );
+   HDF5_InputTest->Add( "Plummer_FB_AccMMax",   &Plummer_FB_AccMMax   );
+   HDF5_InputTest->Add( "Plummer_FB_Like",      &Plummer_FB_Like      );
+#  endif
+
+} // FUNCTION : HDF5_Output_TestProb
+#endif // #ifdef SUPPORT_HDF5
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  AddNewField_Plummer
 // Description :  Add the problem-specific fields
@@ -496,6 +546,9 @@ void AddNewField_Plummer()
    }
 
 } // FUNCTION : AddNewField_Plummer
+
+
+
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -537,6 +590,9 @@ void Init_TestProb_Hydro_Plummer()
 #  endif
 #  ifdef FEEDBACK
    FB_Init_User_Ptr        = FB_Init_Plummer;
+#  endif
+#  ifdef SUPPORT_HDF5
+   HDF5_Output_TestProb_Ptr = HDF5_Output_TestProb;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

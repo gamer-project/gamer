@@ -289,6 +289,44 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  HDF5_Output_TestProb
+// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype.
+//                3. There MUST be more than one parameter to be stored
+//
+// Parameter   :  HDF5_InputTest : the structure storing the parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
+{
+
+   HDF5_InputTest->Add( "ICM_Density",       &ICM_Density       );
+   HDF5_InputTest->Add( "Jump_Position_x",   &Jump_Position_x   );
+   HDF5_InputTest->Add( "Jump_Position_y",   &Jump_Position_y   );
+   HDF5_InputTest->Add( "Jump_Angle",        &Jump_Angle        );
+   HDF5_InputTest->Add( "Amb_Pressure",      &Amb_Pressure      );
+   HDF5_InputTest->Add( "Lobe_ICM_Ratio",    &Lobe_ICM_Ratio    );
+   HDF5_InputTest->Add( "Jump_Width",        &Jump_Width        );
+   HDF5_InputTest->Add( "Jet_Fire",          &Jet_Fire          );
+   HDF5_InputTest->Add( "Jet_Lobe_Ratio",    &Jet_Lobe_Ratio    );
+   HDF5_InputTest->Add( "Jet_Radius",        &Jet_Radius        );
+   HDF5_InputTest->Add( "Jet_Position",      &Jet_Position      );
+   HDF5_InputTest->Add( "Jet_Velocity",      &Jet_Velocity      );
+   HDF5_InputTest->Add( "Jet_VelSlope",      &Jet_VelSlope      );
+   HDF5_InputTest->Add( "Jet_VelCenter",     &Jet_VelCenter     );
+   HDF5_InputTest->Add( "Jet_PrecessAngle",  &Jet_PrecessAngle  );
+   HDF5_InputTest->Add( "Jet_PrecessPeriod", &Jet_PrecessPeriod );
+
+} // FUNCTION : HDF5_Output_TestProb
+#endif // #ifdef SUPPORT_HDF5
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  JetBC
 // Description :  Set the external boundary condition for the JetICMWall problem. On the -y
@@ -449,6 +487,9 @@ void Init_TestProb_Hydro_JetICMWall()
    Output_User_Ptr          = NULL;
    Aux_Record_User_Ptr      = NULL;
    End_User_Ptr             = NULL;
+#  ifdef SUPPORT_HDF5
+   HDF5_Output_TestProb_Ptr = HDF5_Output_TestProb;
+#  endif
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

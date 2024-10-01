@@ -498,6 +498,51 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 
 } // FUNCTION : SetBFieldIC
 #endif // #ifdef MHD
+
+
+
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  HDF5_Output_TestProb
+// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype.
+//                3. There MUST be more than one parameter to be stored
+//
+// Parameter   :  HDF5_InputTest : the structure storing the parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
+{
+
+   HDF5_InputTest->Add( "Riemann_Prob",    &Riemann_Prob    );
+   HDF5_InputTest->Add( "Riemann_LR",      &Riemann_LR      );
+   HDF5_InputTest->Add( "Riemann_XYZ",     &Riemann_XYZ     );
+   HDF5_InputTest->Add( "Riemann_RhoL",    &Riemann_RhoL    );
+   HDF5_InputTest->Add( "Riemann_RhoR",    &Riemann_RhoR    );
+   HDF5_InputTest->Add( "Riemann_VelL",    &Riemann_VelL    );
+   HDF5_InputTest->Add( "Riemann_VelR",    &Riemann_VelR    );
+   HDF5_InputTest->Add( "Riemann_PreL",    &Riemann_PreL    );
+   HDF5_InputTest->Add( "Riemann_PreR",    &Riemann_PreR    );
+   HDF5_InputTest->Add( "Riemann_VelL_T1", &Riemann_VelL_T1 );
+   HDF5_InputTest->Add( "Riemann_VelL_T2", &Riemann_VelL_T2 );
+   HDF5_InputTest->Add( "Riemann_VelR_T1", &Riemann_VelR_T1 );
+   HDF5_InputTest->Add( "Riemann_VelR_T2", &Riemann_VelR_T2 );
+   HDF5_InputTest->Add( "Riemann_Pos",     &Riemann_Pos     );
+   HDF5_InputTest->Add( "Riemann_Width",   &Riemann_Width   );
+   HDF5_InputTest->Add( "Riemann_EndT",    &Riemann_EndT    );
+#  ifdef MHD
+   HDF5_InputTest->Add( "Riemann_Mag",     &Riemann_Mag     );
+   HDF5_InputTest->Add( "Riemann_MagL_T1", &Riemann_MagL_T1 );
+   HDF5_InputTest->Add( "Riemann_MagL_T2", &Riemann_MagL_T2 );
+   HDF5_InputTest->Add( "Riemann_MagR_T1", &Riemann_MagR_T1 );
+   HDF5_InputTest->Add( "Riemann_MagR_T2", &Riemann_MagR_T2 );
+#  endif
+
+} // FUNCTION : HDF5_Output_TestProb
+#endif // #ifdef SUPPORT_HDF5
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -531,6 +576,9 @@ void Init_TestProb_Hydro_Riemann()
    Init_Function_User_Ptr        = SetGridIC;
 #  ifdef MHD
    Init_Function_BField_User_Ptr = SetBFieldIC;
+#  endif
+#  ifdef SUPPORT_HDF5
+   HDF5_Output_TestProb_Ptr      = HDF5_Output_TestProb;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 
