@@ -637,18 +637,20 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 //          --> When LR_EINT is on, use the reconstructed internal energy instead of pressure in Hydro_Pri2Con()
 //              to skip expensive EoS conversion
 #        ifdef LR_EINT
-         real* const EintPtr = fcPri + NCOMP_TOTAL_PLUS_MAG;
+         real* const EintPtr_faceL = fcPri[faceL] + NCOMP_TOTAL_PLUS_MAG;
+         real* const EintPtr_faceR = fcPri[faceR] + NCOMP_TOTAL_PLUS_MAG;
 #        else
-         real* const EintPtr = NULL;
+         real* const EintPtr_faceL = NULL;
+         real* const EintPtr_faceR = NULL;
 #        endif
 
          Hydro_Pri2Con( fcPri[faceL], fcCon[faceL], FracPassive, NFrac, FracIdx, EoS->DensPres2Eint_FuncPtr,
                         EoS->Temp2HTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
-                        EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, EintPtr );
+                        EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, EintPtr_faceL );
 
          Hydro_Pri2Con( fcPri[faceR], fcCon[faceR], FracPassive, NFrac, FracIdx, EoS->DensPres2Eint_FuncPtr,
                         EoS->Temp2HTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
-                        EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, EintPtr );
+                        EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, EintPtr_faceR );
 
       } // for (int d=0; d<3; d++)
 
@@ -1342,18 +1344,20 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 //          --> When LR_EINT is on, use the reconstructed internal energy instead of pressure in Hydro_Pri2Con()
 //              to skip expensive EoS conversion
 #        ifdef LR_EINT
-         real* const EintPtr = fcPri + NCOMP_TOTAL_PLUS_MAG;
+         real* const EintPtr_faceL = fcPri[faceL] + NCOMP_TOTAL_PLUS_MAG;
+         real* const EintPtr_faceR = fcPri[faceR] + NCOMP_TOTAL_PLUS_MAG;
 #        else
-         real* const EintPtr = NULL;
+         real* const EintPtr_faceL = NULL;
+         real* const EintPtr_faceR = NULL;
 #        endif
 
          Hydro_Pri2Con( fcPri[faceL], fcCon[faceL], FracPassive, NFrac, FracIdx, EoS->DensPres2Eint_FuncPtr,
                         EoS->Temp2HTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
-                        EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, EintPtr );
+                        EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, EintPtr_faceL );
 
          Hydro_Pri2Con( fcPri[faceR], fcCon[faceR], FracPassive, NFrac, FracIdx, EoS->DensPres2Eint_FuncPtr,
                         EoS->Temp2HTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
-                        EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, EintPtr );
+                        EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, EintPtr_faceR );
 
       } // for (int d=0; d<3; d++)
 
