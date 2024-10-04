@@ -892,7 +892,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                   {
                      if ( pote[i] < Pote_min )
                      {
-                        Pote_min = pote[i];
+                        Pote_min      = pote[i];
                         min_pos[c][0] = ParX_sum[c][i];
                         min_pos[c][1] = ParY_sum[c][i];
                         min_pos[c][2] = ParZ_sum[c][i];
@@ -929,21 +929,21 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
 
             for (int c=0; c<Merger_Coll_NumHalos; c++)
             {
-               delete[] ParX_sum[c];
-               delete[] ParY_sum[c];
-               delete[] ParZ_sum[c];
-               delete[] ParM_sum[c];
-               delete[] VelX_sum[c];
-               delete[] VelY_sum[c];
-               delete[] VelZ_sum[c];
+               delete [] ParX_sum[c];
+               delete [] ParY_sum[c];
+               delete [] ParZ_sum[c];
+               delete [] ParM_sum[c];
+               delete [] VelX_sum[c];
+               delete [] VelY_sum[c];
+               delete [] VelZ_sum[c];
             }
-            delete[] ParX_sum;
-            delete[] ParY_sum;
-            delete[] ParZ_sum;
-            delete[] ParM_sum;
-            delete[] VelX_sum;
-            delete[] VelY_sum;
-            delete[] VelZ_sum;
+            delete [] ParX_sum;
+            delete [] ParY_sum;
+            delete [] ParZ_sum;
+            delete [] ParM_sum;
+            delete [] VelX_sum;
+            delete [] VelY_sum;
+            delete [] VelZ_sum;
 
             for (int c=0; c<Merger_Coll_NumHalos; c++)
             {
