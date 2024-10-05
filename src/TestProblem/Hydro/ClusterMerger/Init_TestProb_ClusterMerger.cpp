@@ -901,6 +901,40 @@ void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
    HDF5_InputTest->Add( "fixBH",                   &fixBH,                  );
 
 } // FUNCTION : HDF5_Output_TestProb
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  HDF5_Output_User_ClusterMerger
+// Description :  Store the problem specific parameter in HDF5 outputs (Data_*) under User group
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype.
+//                3. There MUST be more than one parameter to be stored
+//
+// Parameter   :  HDF5_OutUser : the structure storing the parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void HDF5_Output_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
+{
+
+   HDF5_OutUser->Add( "Merger_CollNumHalos",  &Merger_Coll_NumHalos );
+   for (int c=0; c<Merger_Coll_NumHalos; c++)
+   for (int d=0; d<3; d++)
+   {
+      char BH_Pos_name[50], ClusterCen_name[50], BH_Vel_name[50];
+      sprintf( BH_Pos_name, "BH_Pos_%d_%d", c, d );
+      sprintf( ClusterCen_name, "ClusterCen_%d_%d", c, d );
+      sprintf( BH_Vel_name, "BH_Vel_%d_%d", c, d );
+      HDF5_OutUser->Add( "BH_Pos",     &BH_Pos[c][d]     );
+      HDF5_OutUser->Add( "ClusterCen", &ClusterCen[c][d] );
+      HDF5_OutUser->Add( "BH_Vel",     &BH_Vel[c][d]     );
+   }
+   HDF5_OutUser->Add( "AdjustCount",          &AdjustCount          );
+
+
+} // FUNCTION : HDF5_Output_User_Example
 #endif // #ifdef SUPPORT_HDF5
 #endif // #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 
@@ -1009,6 +1043,7 @@ void Init_TestProb_Hydro_ClusterMerger()
 #  endif
 #  ifdef SUPPORT_HDF5
    HDF5_Output_TestProb_Ptr       = HDF5_Output_TestProb;
+   HDF5_Output_User_Ptr           = HDF5_Output_User_ClusterMerger;
 #  endif
 #  endif // if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 
