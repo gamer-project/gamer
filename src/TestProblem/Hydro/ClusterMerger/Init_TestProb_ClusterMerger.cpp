@@ -1091,85 +1091,82 @@ void AddNewField_ClusterMerger()
 void Init_User_ClusterMerger()
 {
 
-   if ( OPT__INIT == INIT_BY_RESTART )
+   if ( OPT__INIT != INIT_BY_RESTART )   return;
+
+   if ( OPT__RESTART_RESET )
    {
-      if ( OPT__RESTART_RESET )
+      printf( "Error! OPT__RESTART_RESET should be disabled.\n" );
+      return;
+   }
+
+   const char FileName[] = "BH_variable.bin";
+   int TargetDumpID = DumpID-1;  //INIT_DUMPID;
+
+   FILE* File_User = fopen( FileName, "rb" );
+   if ( File_User == NULL )
+   {
+      Aux_Error( ERROR_INFO, "Error opening the file \"%s\"\n", FileName );
+      return;
+   }
+
+   if ( MPI_Rank == 0 )
+   {
+      double BH_Mass[3] = {0.0, 0.0, 0.0};
+      double Time;
+      int    dumpID;
+
+      while ( fread( &Time, sizeof(double), 1, File_User ) == 1 )
       {
-         printf( "Error! OPT__RESTART_RESET should be disabled.\n" );
-         return;
-      }
-
-      const char FileName[] = "BH_variable.bin";
-      int TargetDumpID = DumpID-1;  //INIT_DUMPID;
-
-      FILE* File_User = fopen( FileName, "rb" );
-      if ( File_User == NULL )
-      {
-         Aux_Error( ERROR_INFO, "Error opening the file \"%s\"\n", FileName );
-         return;
-      }
-
-      if ( MPI_Rank == 0 )
-      {
-         double BH_Mass[3] = {0.0, 0.0, 0.0};
-         double Time;
-         int    dumpID;
-
-         while ( fread( &Time, sizeof(double), 1, File_User ) == 1 )
+         fread( &dumpID, sizeof(int), 1, File_User );
+         printf( "dumpID = %d, TargetDumpID = %d\n", dumpID, TargetDumpID );
+         if ( dumpID == TargetDumpID )
          {
-            fread( &dumpID, sizeof(int), 1, File_User );
-            printf( "dumpID = %d, TargetDumpID = %d\n", dumpID, TargetDumpID );
-            if ( dumpID == TargetDumpID )
+            fread( &Merger_Coll_NumHalos, sizeof(int), 1, File_User );
+            for (int c=0; c<Merger_Coll_NumHalos; c++)
             {
-               fread( &Merger_Coll_NumHalos, sizeof(int), 1, File_User );
-               for (int c=0; c<Merger_Coll_NumHalos; c++)
-               {
-                  for (int d=0; d<3; d++)   fread( &BH_Pos[c][d],     sizeof(double), 1, File_User );
-                  for (int d=0; d<3; d++)   fread( &ClusterCen[c][d], sizeof(double), 1, File_User );
-                  for (int d=0; d<3; d++)   fread( &BH_Vel[c][d],     sizeof(double), 1, File_User );
-                  fread( &BH_Mass[c], sizeof(double), 1, File_User );
-               }
-               fread( &AdjustCount, sizeof(int), 1, File_User );
-               break;
+               for (int d=0; d<3; d++)   fread( &BH_Pos[c][d],     sizeof(double), 1, File_User );
+               for (int d=0; d<3; d++)   fread( &ClusterCen[c][d], sizeof(double), 1, File_User );
+               for (int d=0; d<3; d++)   fread( &BH_Vel[c][d],     sizeof(double), 1, File_User );
+               fread( &BH_Mass[c], sizeof(double), 1, File_User );
             }
-            else
+            fread( &AdjustCount, sizeof(int), 1, File_User );
+            break;
+         }
+         else
+         {
+            fseek( File_User, sizeof(int), SEEK_CUR );
+            for (int c=0; c<Merger_Coll_NumHalos; c++)
             {
-               fseek( File_User, sizeof(int), SEEK_CUR );
-               for (int c=0; c<Merger_Coll_NumHalos; c++)
-               {
-                  fseek( File_User, sizeof(double)*3, SEEK_CUR );
-                  fseek( File_User, sizeof(double)*3, SEEK_CUR );
-                  fseek( File_User, sizeof(double)*3, SEEK_CUR );
-                  fseek( File_User, sizeof(double),   SEEK_CUR );
-               }
-               fseek( File_User, sizeof(int), SEEK_CUR );
-            } // if ( dumpID == TargetDumpID ) ... else ...
-         } // while ( fread( &Time, sizeof(double), 1, File_User ) == 1 )
+               fseek( File_User, sizeof(double)*3, SEEK_CUR );
+               fseek( File_User, sizeof(double)*3, SEEK_CUR );
+               fseek( File_User, sizeof(double)*3, SEEK_CUR );
+               fseek( File_User, sizeof(double),   SEEK_CUR );
+            }
+            fseek( File_User, sizeof(int), SEEK_CUR );
+         } // if ( dumpID == TargetDumpID ) ... else ...
+      } // while ( fread( &Time, sizeof(double), 1, File_User ) == 1 )
 
-         Bondi_MassBH1 = BH_Mass[0];
-         Bondi_MassBH2 = BH_Mass[1];
-         Bondi_MassBH3 = BH_Mass[2];
+      Bondi_MassBH1 = BH_Mass[0];
+      Bondi_MassBH2 = BH_Mass[1];
+      Bondi_MassBH3 = BH_Mass[2];
 
-         fclose( File_User );
+      fclose( File_User );
 
-         printf( "Restarting! BH_Pos[0][0] = %23.17e, BH_Pos[0][1] = %23.17e\n", BH_Pos[0][0], BH_Pos[0][1] );
-      }  // if ( MPI_Rank == 0 )
+      printf( "Restarting! BH_Pos[0][0] = %23.17e, BH_Pos[0][1] = %23.17e\n", BH_Pos[0][0], BH_Pos[0][1] );
+   }  // if ( MPI_Rank == 0 )
 
-      MPI_Bcast( &Merger_Coll_NumHalos, 1, MPI_INT, 0, MPI_COMM_WORLD );
-      for (int c=0; c<Merger_Coll_NumHalos; c++)
-      {
-         MPI_Bcast( BH_Pos[c],     3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-         MPI_Bcast( BH_Vel[c],     3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-         MPI_Bcast( ClusterCen[c], 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-      }
-      MPI_Bcast( &Bondi_MassBH1, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-      MPI_Bcast( &Bondi_MassBH2, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-      MPI_Bcast( &Bondi_MassBH3, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-      MPI_Bcast( &AdjustCount,   1, MPI_INT,    0, MPI_COMM_WORLD );
+   MPI_Bcast( &Merger_Coll_NumHalos, 1, MPI_INT, 0, MPI_COMM_WORLD );
+   for (int c=0; c<Merger_Coll_NumHalos; c++)
+   {
+      MPI_Bcast( BH_Pos[c],     3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+      MPI_Bcast( BH_Vel[c],     3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+      MPI_Bcast( ClusterCen[c], 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   }
+   MPI_Bcast( &Bondi_MassBH1, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   MPI_Bcast( &Bondi_MassBH2, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   MPI_Bcast( &Bondi_MassBH3, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   MPI_Bcast( &AdjustCount,   1, MPI_INT,    0, MPI_COMM_WORLD );
 
-   } // if ( OPT__INIT == INIT_BY_RESTART )
-
-   else   return;
 } // FUNCTION : Init_User_ClusterMerger
 
 
