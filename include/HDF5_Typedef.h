@@ -878,4 +878,143 @@ inline void SyncHDF5File( const char *FileName )
 
 
 
+#define NPARA_MAX    1000     // maximum number of parameters
+#define TYPE_INT        1     // various data types
+#define TYPE_LONG       2
+#define TYPE_UINT       3
+#define TYPE_ULONG      4
+#define TYPE_BOOL       5
+#define TYPE_FLOAT      6
+#define TYPE_DOUBLE     7
+#define TYPE_STRING     8
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Structure   :  HDF5_Output_t
+// Description :  Data structure for outputting the user run-time parameters
+//
+// Note        :  1. Run-time parameters are stored by HDF5_Output_User_Ptr or HDF5_Output_TestProb_Ptr function
+//-------------------------------------------------------------------------------------------------------
+struct HDF5_Output_t
+{
+// data members
+   int     NPara;
+   size_t  TotalSize;
+   char  (*Key)[MAX_STRING];
+   void  **Ptr;
+   int    *Type;
+   size_t *TypeSize;
+
+//===================================================================================
+// Constructor :  HDF5_Output_t
+// Description :  Constructor of the structure "HDF5_Output_t"
+//
+// Note        :  Initialize variables and allocate memory
+//===================================================================================
+   HDF5_Output_t()
+   {
+      NPara     = 0;
+      TotalSize = 0;
+      Key       = new char   [NPARA_MAX][MAX_STRING];
+      Ptr       = new void*  [NPARA_MAX];
+      Type      = new int    [NPARA_MAX];
+      TypeSize  = new size_t [NPARA_MAX];
+   } // METHOD : HDF5_Output_t
+
+//===================================================================================
+// Constructor :  ~HDF5_Output_t
+// Description :  Destructor of the structure "HDF5_Output_t"
+//
+// Note        :  Deallocate memory
+//===================================================================================
+   ~HDF5_Output_t()
+   {
+      delete [] Key;
+      delete [] Ptr;
+      delete [] Type;
+      delete [] TypeSize;
+   } // METHOD : ~HDF5_Output_t
+
+//===================================================================================
+// Constructor :  Add
+// Description :  Add a new parameter to be written latter
+//
+// Note        :  1. This function stores the name, address, and data type of the parameter
+//                2. Data type (e.g., integer, float, ...) is determined by the input pointer
+//                4. String parameters are handled by a separate overloaded function
+//===================================================================================
+   template <typename T>
+   void Add( const char NewKey[], T* NewPtr )
+   {
+      if ( NPara >= NPARA_MAX )  Aux_Error( ERROR_INFO, "exceed the maximum number of parameters (%d) !!\n", NPARA_MAX );
+
+//    parameter name
+      strncpy( Key[NPara], NewKey, MAX_STRING );
+
+//    parameter address
+      Ptr[NPara] = NewPtr;
+
+//    parameter data type and size
+      if      ( typeid(T) == typeid(int   ) )   { Type[NPara] = TYPE_INT;    TypeSize[NPara] = sizeof(int   ); }
+      else if ( typeid(T) == typeid(long  ) )   { Type[NPara] = TYPE_LONG;   TypeSize[NPara] = sizeof(long  ); }
+      else if ( typeid(T) == typeid(uint  ) )   { Type[NPara] = TYPE_UINT;   TypeSize[NPara] = sizeof(uint  ); }
+      else if ( typeid(T) == typeid(ulong ) )   { Type[NPara] = TYPE_ULONG;  TypeSize[NPara] = sizeof(ulong ); }
+      else if ( typeid(T) == typeid(bool  ) )   { Type[NPara] = TYPE_BOOL;   TypeSize[NPara] = sizeof(int   ); } // bool store as int
+      else if ( typeid(T) == typeid(float ) )   { Type[NPara] = TYPE_FLOAT;  TypeSize[NPara] = sizeof(float ); }
+      else if ( typeid(T) == typeid(double) )   { Type[NPara] = TYPE_DOUBLE; TypeSize[NPara] = sizeof(double); }
+      else
+         Aux_Error( ERROR_INFO, "unsupported data type for \"%s\" (float*, double*, int*, long*, unit*, ulong*, bool* only) !!\n",
+                    NewKey );
+
+      TotalSize += TypeSize[NPara];
+      NPara ++;
+   } // METHOD : Add
+
+//===================================================================================
+// Constructor :  Add (string)
+// Description :  Add a new string parameter to be written later
+//
+// Note        :  1. Overloaded function for strings
+//===================================================================================
+   void Add( const char NewKey[], char* NewPtr )
+   {
+      if ( NPara >= NPARA_MAX )  Aux_Error( ERROR_INFO, "exceed the maximum number of parameters (%d) !!\n", NPARA_MAX );
+
+//    parameter name
+      strncpy( Key[NPara], NewKey, MAX_STRING );
+
+//    make sure C-strings are null-terminated
+      NewPtr[MAX_STRING-1] = '\0';
+
+//    parameter address
+      Ptr[NPara] = NewPtr;
+
+//    parameter data type
+      Type[NPara] = TYPE_STRING;
+
+//    parameter data size
+      TypeSize[NPara] = (size_t)MAX_STRING;
+
+      TotalSize += TypeSize[NPara];
+      NPara ++;
+
+   } // METHOD : Add (string)
+
+}; // struct HDF5_Output_t
+
+
+
+#undef NPARA_MAX
+#undef TYPE_INT
+#undef TYPE_LONG
+#undef TYPE_UINT
+#undef TYPE_ULONG
+#undef TYPE_FLOAT
+#undef TYPE_DOUBLE
+#undef TYPE_BOOL
+#undef TYPE_STRING
+
+
+
 #endif // #ifndef __HDF5_TYPEDEF_H__

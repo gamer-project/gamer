@@ -349,9 +349,42 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
       Aux_Error( ERROR_INFO, "unsupported MHDLinear_Mode = %d !!\n", MHDLinear_Mode );
 
 } // FUNCTION : SetBFieldIC
+#endif // #ifdef MHD
 
 
 
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  HDF5_Output_TestProb
+// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype.
+//                3. There MUST be more than one parameter to be stored
+//
+// Parameter   :  HDF5_InputTest : the structure storing the parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
+{
+
+   HDF5_InputTest->Add( "MHDLinear_Mode",    &MHDLinear_Mode   );
+   HDF5_InputTest->Add( "MHDLinear_Rho0",    &MHDLinear_Rho0   );
+   HDF5_InputTest->Add( "MHDLinear_Rho1",    &MHDLinear_Rho1   );
+   HDF5_InputTest->Add( "MHDLinear_P0",      &MHDLinear_P0     );
+   HDF5_InputTest->Add( "MHDLinear_v0",      &MHDLinear_v0     );
+   HDF5_InputTest->Add( "MHDLinear_Dir",     &MHDLinear_Dir    );
+   HDF5_InputTest->Add( "MHDLinear_B0",      &MHDLinear_B0     );
+   HDF5_InputTest->Add( "MHDLinear_Sign",    &MHDLinear_Sign   );
+   HDF5_InputTest->Add( "MHDLinear_Phase0",  &MHDLinear_Phase0 );
+
+} // FUNCTION : HDF5_Output_TestProb
+#endif // #ifdef SUPPORT_HDF5
+
+
+
+#ifdef MHD
 //-------------------------------------------------------------------------------------------------------
 // Function    :  OutputError
 // Description :  Output the L1 error
@@ -407,6 +440,9 @@ void Init_TestProb_Hydro_MHD_LinearWave()
 #  ifdef MHD
    Init_Function_BField_User_Ptr = SetBFieldIC;
    Output_User_Ptr               = OutputError;
+#  endif
+#  ifdef SUPPORT_HDF5
+   HDF5_Output_TestProb_Ptr      = HDF5_Output_TestProb;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

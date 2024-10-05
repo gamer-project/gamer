@@ -304,6 +304,38 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  HDF5_Output_TestProb
+// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype.
+//                3. There MUST be more than one parameter to be stored
+//
+// Parameter   :  HDF5_InputTest : the structure storing the parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
+{
+
+   HDF5_InputTest->Add( "Acoustic_RhoAmp",  &Acoustic_RhoAmp  );
+   HDF5_InputTest->Add( "Acoustic_Dir",     &Acoustic_Dir     );
+   HDF5_InputTest->Add( "Acoustic_Sign",    &Acoustic_Sign    );
+   HDF5_InputTest->Add( "Acoustic_Phase0",  &Acoustic_Phase0  );
+#  ifdef SRHD
+   HDF5_InputTest->Add( "Acoustic_Temp_Bg", &Acoustic_Temp_Bg );
+#  else
+   HDF5_InputTest->Add( "Acoustic_v0",      &Acoustic_v0      );
+   HDF5_InputTest->Add( "Acoustic_Cs",      &Acoustic_Cs      );
+#  endif
+
+} // FUNCTION : HDF5_Output_TestProb
+#endif // #ifdef SUPPORT_HDF5
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  OutputError
 // Description :  Output the L1 error
@@ -354,8 +386,11 @@ void Init_TestProb_Hydro_AcousticWave()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr = SetGridIC;
-   Output_User_Ptr        = OutputError;
+   Init_Function_User_Ptr   = SetGridIC;
+   Output_User_Ptr          = OutputError;
+#  ifdef SUPPORT_HDF5
+   HDF5_Output_TestProb_Ptr = HDF5_Output_TestProb;
+#  endif
 #  endif // #if ( MODEL == HYDRO )
 
 

@@ -206,6 +206,32 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[ENGY] = Etot;
 
 } // FUNCTION : SetGridIC
+
+
+
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  HDF5_Output_TestProb
+// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype.
+//                3. There MUST be more than one parameter to be stored
+//
+// Parameter   :  HDF5_InputTest : the structure storing the parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
+{
+
+   HDF5_InputTest->Add( "Caustic_VelPeak", &Caustic_VelPeak );
+   HDF5_InputTest->Add( "Caustic_Dens",    &Caustic_Dens    );
+   HDF5_InputTest->Add( "Caustic_Pres",    &Caustic_Pres    );
+   HDF5_InputTest->Add( "Caustic_Dir",     &Caustic_Dir     );
+
+} // FUNCTION : HDF5_Output_TestProb
+#endif // #ifdef SUPPORT_HDF5
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -236,7 +262,10 @@ void Init_TestProb_Hydro_Caustic()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr = SetGridIC;
+   Init_Function_User_Ptr   = SetGridIC;
+#  ifdef SUPPORT_HDF5
+   HDF5_Output_TestProb_Ptr = HDF5_Output_TestProb;
+#  endif
 #  endif // #if ( MODEL == HYDRO )
 
 

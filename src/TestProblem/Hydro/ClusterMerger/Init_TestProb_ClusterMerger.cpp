@@ -823,6 +823,85 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    }
 
 } // FUNCTION : SetGridIC
+
+
+
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  HDF5_Output_TestProb
+// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype.
+//                3. There MUST be more than one parameter to be stored
+//
+// Parameter   :  HDF5_InputTest : the structure storing the parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
+{
+
+   HDF5_InputTest->Add( "Merger_Coll_NumHalos",    &Merger_Coll_NumHalos    );
+   HDF5_InputTest->Add( "AGN_feedback",            &AGN_feedback            );
+   HDF5_InputTest->Add( "Merger_Coll_IsGas1",      &Merger_Coll_IsGas1      );
+   HDF5_InputTest->Add( "Merger_Coll_IsGas2",      &Merger_Coll_IsGas2      );
+   HDF5_InputTest->Add( "Merger_Coll_IsGas3",      &Merger_Coll_IsGas3      );
+   HDF5_InputTest->Add( "Merger_File_Prof1",        Merger_File_Prof1       );
+   HDF5_InputTest->Add( "Merger_File_Par1",         Merger_File_Par1        );
+   HDF5_InputTest->Add( "Merger_File_Prof2",        Merger_File_Prof2       );
+   HDF5_InputTest->Add( "Merger_File_Par2",         Merger_File_Par2        );
+   HDF5_InputTest->Add( "Merger_File_Prof3",        Merger_File_Prof3       );
+   HDF5_InputTest->Add( "Merger_File_Par3",         Merger_File_Par3        );
+   HDF5_InputTest->Add( "Unit_R1",                 &Unit_R1                 );
+   HDF5_InputTest->Add( "Unit_D1",                 &Unit_D1                 );
+   HDF5_InputTest->Add( "Unit_P1",                 &Unit_P1                 );
+   HDF5_InputTest->Add( "Unit_R2",                 &Unit_R2                 );
+   HDF5_InputTest->Add( "Unit_D2",                 &Unit_D2                 );
+   HDF5_InputTest->Add( "Unit_P2",                 &Unit_P2                 );
+   HDF5_InputTest->Add( "Unit_R3",                 &Unit_R3                 );
+   HDF5_InputTest->Add( "Unit_D3",                 &Unit_D3                 );
+   HDF5_InputTest->Add( "Unit_P3",                 &Unit_P3                 );
+   HDF5_InputTest->Add( "Merger_Coll_PosX1",       &Merger_Coll_PosX1       );
+   HDF5_InputTest->Add( "Merger_Coll_PosY1",       &Merger_Coll_PosY1       );
+   HDF5_InputTest->Add( "Merger_Coll_PosX2",       &Merger_Coll_PosX2       );
+   HDF5_InputTest->Add( "Merger_Coll_PosY2",       &Merger_Coll_PosY2       );
+   HDF5_InputTest->Add( "Merger_Coll_PosX3",       &Merger_Coll_PosX3       );
+   HDF5_InputTest->Add( "Merger_Coll_PosY3",       &Merger_Coll_PosY3       );
+   HDF5_InputTest->Add( "Merger_Coll_VelX1",       &Merger_Coll_VelX1       );
+   HDF5_InputTest->Add( "Merger_Coll_VelY1",       &Merger_Coll_VelY1       );
+   HDF5_InputTest->Add( "Merger_Coll_VelX2",       &Merger_Coll_VelX2       );
+   HDF5_InputTest->Add( "Merger_Coll_VelY2",       &Merger_Coll_VelY2       );
+   HDF5_InputTest->Add( "Merger_Coll_VelX3",       &Merger_Coll_VelX3       );
+   HDF5_InputTest->Add( "Merger_Coll_VelY3",       &Merger_Coll_VelY3       );
+   HDF5_InputTest->Add( "Merger_Coll_UseMetals",   &Merger_Coll_UseMetals   );
+   HDF5_InputTest->Add( "Merger_Coll_LabelCenter", &Merger_Coll_LabelCenter );
+   HDF5_InputTest->Add( "Bondi_MassBH1",           &Bondi_MassBH1,          );
+   HDF5_InputTest->Add( "Bondi_MassBH2",           &Bondi_MassBH2,          );
+   HDF5_InputTest->Add( "Bondi_MassBH3",           &Bondi_MassBH3,          );
+   HDF5_InputTest->Add( "R_acc",                   &R_acc,                  );
+   HDF5_InputTest->Add( "R_dep",                   &R_dep,                  );
+   HDF5_InputTest->Add( "Mdot_BH1",                &Mdot_BH1,               );
+   HDF5_InputTest->Add( "Mdot_BH2",                &Mdot_BH2,               );
+   HDF5_InputTest->Add( "Mdot_BH3",                &Mdot_BH3,               );
+   HDF5_InputTest->Add( "Jet_HalfHeight1",         &Jet_HalfHeight1,        );
+   HDF5_InputTest->Add( "Jet_HalfHeight2",         &Jet_HalfHeight2,        );
+   HDF5_InputTest->Add( "Jet_HalfHeight3",         &Jet_HalfHeight3,        );
+   HDF5_InputTest->Add( "Jet_Radius1",             &Jet_Radius1,            );
+   HDF5_InputTest->Add( "Jet_Radius2",             &Jet_Radius2,            );
+   HDF5_InputTest->Add( "Jet_Radius3",             &Jet_Radius3,            );
+   HDF5_InputTest->Add( "Accretion_Mode",          &Accretion_Mode,         );
+   HDF5_InputTest->Add( "eta",                     &eta,                    );
+   HDF5_InputTest->Add( "eps_f",                   &eps_f,                  );
+   HDF5_InputTest->Add( "eps_m",                   &eps_m,                  );
+   HDF5_InputTest->Add( "AdjustBHPos",             &AdjustBHPos,            );
+   HDF5_InputTest->Add( "AdjustBHVel",             &AdjustBHVel,            );
+   HDF5_InputTest->Add( "AdjustPeriod",            &AdjustPeriod,           );
+   HDF5_InputTest->Add( "JetDirection_case",       &JetDirection_case,      );
+   HDF5_InputTest->Add( "fixBH",                   &fixBH,                  );
+
+} // FUNCTION : HDF5_Output_TestProb
+#endif // #ifdef SUPPORT_HDF5
 #endif // #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 
 
@@ -927,6 +1006,9 @@ void Init_TestProb_Hydro_ClusterMerger()
 
 #  ifdef MHD
    Init_Function_BField_User_Ptr  = SetBFieldIC;
+#  endif
+#  ifdef SUPPORT_HDF5
+   HDF5_Output_TestProb_Ptr       = HDF5_Output_TestProb;
 #  endif
 #  endif // if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 

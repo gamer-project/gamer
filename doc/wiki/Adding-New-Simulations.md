@@ -20,8 +20,10 @@ Mandatory steps are marked by &#x1F4CC;.
    *  [External Potential](#external-potential)
    *  [Equation of State](#equation-of-state)
    *  [Feedback](#feedback)
+   *  [HDF5 Output](#hdf5-output)
 7. [Add Problem-specific Validators](#vii-add-problem-specific-validators)
 8. [Store Problem-specific Input Files](#viii-store-problem-specific-input-files)
+9. [Store Problem-specific Variables](#ix-store-problem-specific-variables) &#x1F4CC;
 
 
 ## I. Register a New Problem
@@ -562,6 +564,20 @@ Add a user-specified feedback. See [[FB_USER | Feedback#FB_USER]] for details.
 * **Example:**
    * `src/TestProblem/Hydro/Plummer/FB_Plummer.cpp`
 
+### HDF5 Output
+* **Description:**
+Store user-specified variables. Similar usage of as [Store Problem-specific Variables](#ix-store-problem-specific-variables). 
+* **Prototype:**
+   * `void HDF5_Output_User_NewProblem( HDF5_Output_t *HDF5_OutUser );`
+* **Function Pointer:**
+   * `HDF5_Output_User_Ptr`
+* **Compilation Option:**
+None
+* **Runtime Option:**
+None
+* **Example:**
+   * `Output/Output_DumData_Total_HDF5.cpp` --> `HDF5_Output_User_Example()`
+
 
 ## VII. Add Problem-specific Validators
 
@@ -622,6 +638,36 @@ and other relevant files such as README and analysis scripts.
 
 4. Add analysis scripts (if any).
 
+
+## IX. Store Problem-specific Variables
+
+1. Edit the function `HDF5_Output_TestProb()` to store the variables in HDF5 files.
+   ```c++
+   void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
+   {
+
+      HDF5_InputTest->Add( "var_bool",   &var_bool   );
+      HDF5_InputTest->Add( "var_double", &var_double );
+      HDF5_InputTest->Add( "var_int",    &var_int    );
+      HDF5_InputTest->Add( "var_str",     var_str    );
+
+   } // FUNCTION : HDF5_Output_TestProb
+   ```
+> [!NOTE]
+> You should contain all the variables in step 2 of [Add Problem-specific Parameters](#iv-add-problem-specific-parameters)
+
+> [!CAUTION]
+> There should be at least one variable to store. Otherwise, it should be like
+> ```c++
+> void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
+> {
+>
+>    char Empty[MAX_STRING] = "Empty";
+>    HDF5_InputTest->Add( "Empty",  Empty );
+>
+> } // FUNCTION : HDF5_Output_TestProb
+> ```
+> See `src/TestProblem/Hydro/CDM_LSS/Init_TestProb_Hydro_CDM_LSS.cpp`.
 
 <br>
 
