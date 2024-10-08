@@ -920,6 +920,7 @@ void HDF5_Output_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
 {
 
    HDF5_OutUser->Add( "Merger_CollNumHalos",  &Merger_Coll_NumHalos );
+   HDF5_OutUser->Add( "AdjustCount",          &AdjustCount          );
    for (int c=0; c<Merger_Coll_NumHalos; c++)
    for (int d=0; d<3; d++)
    {
@@ -927,12 +928,10 @@ void HDF5_Output_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
       sprintf( BH_Pos_name, "BH_Pos_%d_%d", c, d );
       sprintf( ClusterCen_name, "ClusterCen_%d_%d", c, d );
       sprintf( BH_Vel_name, "BH_Vel_%d_%d", c, d );
-      HDF5_OutUser->Add( "BH_Pos",     &BH_Pos[c][d]     );
-      HDF5_OutUser->Add( "ClusterCen", &ClusterCen[c][d] );
-      HDF5_OutUser->Add( "BH_Vel",     &BH_Vel[c][d]     );
+      HDF5_OutUser->Add( BH_Pos_name,     &BH_Pos[c][d]     );
+      HDF5_OutUser->Add( ClusterCen_name, &ClusterCen[c][d] );
+      HDF5_OutUser->Add( BH_Vel_name,     &BH_Vel[c][d]     );
    }
-   HDF5_OutUser->Add( "AdjustCount",          &AdjustCount          );
-
 
 } // FUNCTION : HDF5_Output_User_Example
 #endif // #ifdef SUPPORT_HDF5
