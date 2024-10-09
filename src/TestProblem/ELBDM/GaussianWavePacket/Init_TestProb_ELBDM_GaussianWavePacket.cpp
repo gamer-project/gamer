@@ -122,22 +122,20 @@ void SetParameter()
    if ( Gau_Center == NoDef_double )   Gau_Center = amr->BoxCenter[Gau_XYZ];
 
 // (1-3) check the runtime parameters
+   if ( OPT__BC_FLU[2*Gau_XYZ] == BC_FLU_PERIODIC  &&  Gau_PeriodicN == 0 )
+      Aux_Error( ERROR_INFO, "Gau_PeriodicN should be >0 when adopting periodic BC for fluid !!\n" );
+
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( MPI_Rank == 0 )
    {
-      if ( OPT__BC_FLU[2*Gau_XYZ] == BC_FLU_PERIODIC  &&  Gau_PeriodicN == 0 )
-         Aux_Message( stderr, "WARNING : Gau_PeriodicN should be >0 when adopting periodic BC for fluid !!\n" );
-
-#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( Gau_PeriodicN > 0  &&  END_T > 6.0*Gau_Width*ELBDM_ETA*amr->BoxSize[Gau_XYZ]/(2*M_PI) )
          Aux_Message( stderr, "WARNING : END_T = %13.6e, but the analytical solution of unwrapped phase may be wrong after t > %13.6e !!\n",
                               END_T, 6.0*Gau_Width*ELBDM_ETA*amr->BoxSize[Gau_XYZ]/(2*M_PI) );
 
       if ( Gau_PeriodicN > 0  &&  Gau_PeriodicN < 3 )
          Aux_Message( stderr, "WARNING : Gau_PeriodicN = %d may be too few for a smooth analytical solution of phase in the hybrid scheme !!\n", Gau_PeriodicN );
-#     endif
    }
 
-#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( ELBDM_FIRST_WAVE_LEVEL > MAX_LEVEL )
    {
 //    the periodic boundary condition is incompatible with the fluid scheme in general
