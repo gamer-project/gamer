@@ -589,7 +589,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       else
          Aux_Error( ERROR_INFO, "unsupported Bondi_HSE_Mode (%d) !!\n", Bondi_HSE_Mode );
    } // if ( Bondi_HSE )
-   /*else if ( Bondi_Init )
+   else if ( Bondi_Init )
    {
       // Set Initial Condition
       const double r = sqrt( SQR(x-amr->BoxCenter[0]) + SQR(y-amr->BoxCenter[1]) + SQR(z-amr->BoxCenter[2]) );
@@ -606,7 +606,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       MomY = -Dens*vmag*dy/r;
       MomZ = -Dens*vmag*dz/r;
       //Aux_Message( stdout, "%13.7e %13.7e %13.7e\n", MomX, MomY, MomZ );
-   }*/
+   }
 
    else if ( Bondi_Init )
    {
