@@ -1,6 +1,7 @@
 Compilation flags:
 ========================================
 Enable : MODEL=HYDRO, GRAVITY, COMOVING, PARTICLE, SUPPORT_GSL, SUPPORT_FFTW, DUAL_ENERGY
+Configure.py: python configure.py --model=HYDRO --gravity=true --comoving=true --particle=true --gsl=true --fftw=FFTW2 --dual=DE_ENPY
 
 
 Default setup:
@@ -47,6 +48,7 @@ For "particle-only" setup:
    n_Pert_Wave_Len         1
    zc_Collapse             1.0
    NPar_X                  64
+
 
 Note:
 ========================================

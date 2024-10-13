@@ -18,7 +18,7 @@ BOX_SIZE                      15.0       # box size along the longest side (in M
 NX0_TOT_X                     128         # number of base-level cells along x
 NX0_TOT_Y                     128         # number of base-level cells along y
 NX0_TOT_Z                     128         # number of base-level cells along z
-OMP_NTHREAD                  -1           # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
+OMP_NTHREAD                  -1           # number of OpenMP threads (<=0=auto) [-1] ##OPENMP ONLY##
 END_T                        -1.0         # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
 END_STEP                     -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
 
@@ -79,7 +79,7 @@ OPT__DT_USER                  0           # dt criterion: user-defined -> edit "
 OPT__DT_LEVEL                 3           # dt at different AMR levels (1=shared, 2=differ by two, 3=flexible) [3]
 OPT__RECORD_DT                1           # record info of the dt determination [1]
 AUTO_REDUCE_DT                1           # reduce dt automatically when the program fails (for OPT__DT_LEVEL==3 only) [1]
-AUTO_REDUCE_DT_FACTOR         0.8         # reduce dt by a factor of AUTO_REDUCE_DT_FACTOR when the program fails [0.8]
+AUTO_REDUCE_DT_FACTOR         1.0         # reduce dt by a factor of AUTO_REDUCE_DT_FACTOR when the program fails [1.0]
 AUTO_REDUCE_DT_FACTOR_MIN     0.1         # minimum allowed AUTO_REDUCE_DT_FACTOR after consecutive failures [0.1]
 AUTO_REDUCE_MINMOD_FACTOR     0.8         # reduce MINMOD_COEFF by this factor together with AUTO_REDUCE_DT (1.0=off) [0.8] ##HYDRO ONLY##
 AUTO_REDUCE_MINMOD_MIN        1.0e-2      # minimum allowed MINMOD_COEFF after consecutive failures [1.0e-2] ##HYDRO ONLY##
@@ -130,7 +130,7 @@ MOLECULAR_WEIGHT              0.59242761692650336  # mean molecular weight -> cu
 MINMOD_COEFF                  2.0         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
 MINMOD_MAX_ITER               0           # maximum number of iterations to reduce MINMOD_COEFF when data reconstruction fails (0=off) [0]
 OPT__LR_LIMITER               1           # slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes:
-                                          # (-1=auto, 0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod, 6=central) [-1]
+                                          # (-1=auto, 0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod, 6=central, 7=Athena) [-1]
 OPT__1ST_FLUX_CORR           -1           # correct unphysical results (defined by MIN_DENS/PRES) by the 1st-order fluxes:
                                           # (<0=auto, 0=off, 1=3D, 2=3D+1D) [-1] ##MHM/MHM_RP/CTU ONLY##
 OPT__1ST_FLUX_CORR_SCHEME    -1           # Riemann solver for OPT__1ST_FLUX_CORR (<0=auto, 0=none, 1=Roe, 2=HLLC, 3=HLLE, 4=HLLD) [-1]
@@ -168,7 +168,8 @@ RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number
 OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]
 OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
 INIT_SUBSAMPLING_NCELL        3           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
-OPT__INIT_BFIELD_BYFILE       1
+OPT__INIT_BFIELD_BYVECPOT     1           # initialize the magnetic field from vector potential
+                                          # (0=off, 1=external disk file named "B_IC", see tool/inits/gen_vec_pot.py for example, 2=function) [0] ##MHD ONLY##
 
 
 # interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar)
@@ -196,7 +197,7 @@ OPT__OUTPUT_PAR_MODE          0           # output the particle data: (0=off, 1=
 OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
 OPT__OUTPUT_CC_MAG            1           # output **cell-centered** magnetic field (necessary for yt analysis) [1] ##MHD ONLY##
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
-OPT__OUTPUT_POT               1           # output gravitational potential [0] ##OPT__OUTPUT_TOTAL ONLY##
+OPT__OUTPUT_POT               1           # output gravitational potential [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_PAR_DENS          1           # output the particle or total mass density on grids:
                                           # (0=off, 1=particle mass density, 2=total mass density) [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_PRES              0           # output gas pressure [0] ##HYDRO ONLY##
@@ -206,6 +207,8 @@ OPT__OUTPUT_CS                0           # output sound speed [0] ##HYDRO ONLY#
 OPT__OUTPUT_DIVVEL            0           # output divergence(velocity) [0] ##HYDRO ONLY##
 OPT__OUTPUT_MACH              0           # output mach number [0] ##HYDRO ONLY##
 OPT__OUTPUT_DIVMAG            0           # output |divergence(B)*dh/|B|| [0] ##MHD ONLY##
+OPT__OUTPUT_LORENTZ           0           # output Lorentz factor [0] ##SRHD ONLY##
+OPT__OUTPUT_3VELOCITY         0           # output 3-velocities [0] ##SRHD ONLY##
 OPT__OUTPUT_USER_FIELD        0           # output user-defined derived fields [0] -> edit "Flu_DerivedField_User.cpp"
 OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
@@ -225,7 +228,7 @@ OPT__RECORD_MEMORY            1           # record the memory consumption [1]
 OPT__RECORD_PERFORMANCE       1           # record the code performance [1]
 OPT__MANUAL_CONTROL           1           # support manually dump data or stop run during the runtime
                                           # (by generating the file DUMP_GAMER_DUMP or STOP_GAMER_STOP) [1]
-OPT__RECORD_USER              0           # record the user-specified info -> edit "Aux_RecordUser.cpp" [0]
+OPT__RECORD_USER              0           # record the user-specified info -> edit "Aux_Record_User.cpp" [0]
 OPT__OPTIMIZE_AGGRESSIVE      0           # apply aggressive optimizations (experimental) [0]
 
 

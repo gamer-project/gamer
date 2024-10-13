@@ -240,9 +240,9 @@ struct patch_t
 
    int    NPar_Copy;
 #  ifdef LOAD_BALANCE
-   real  *ParAtt_Copy[PAR_NATT_TOTAL];
+   real_par  *ParAtt_Copy[PAR_NATT_TOTAL];
 #  else
-   long  *ParList_Copy;
+   long      *ParList_Copy;
 #  endif
 
    int    NPar_Escp[26];
@@ -873,11 +873,11 @@ struct patch_t
    //===================================================================================
 #  ifdef DEBUG_PARTICLE
    void AddParticle( const int NNew, const long *NewList, long *NPar_Lv,
-                     const real *ParType, const real **ParPos, const long NParTot,
+                     const real_par *ParType, const real_par **ParPos, const long NParTot,
                      const char *Comment )
 #  else
    void AddParticle( const int NNew, const long *NewList, long *NPar_Lv,
-                     const real *ParType )
+                     const real_par *ParType )
 #  endif
    {
 
@@ -987,7 +987,7 @@ struct patch_t
    //===================================================================================
    void RemoveParticle( const int NRemove, const int *RemoveList,
                         long *NPar_Lv, const bool RemoveAll,
-                        const real *ParType )
+                        const real_par *ParType )
    {
 
 //    removing all particles is easy

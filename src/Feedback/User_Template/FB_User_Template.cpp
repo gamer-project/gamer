@@ -4,15 +4,6 @@
 
 
 
-// function pointers to be set by FB_Init_User_Template()
-extern int (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                           const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-                           real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
-                           const int TID, RandomNumber_t *RNG );
-extern void (*FB_End_User_Ptr)();
-
-
-
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  FB_User_Template
@@ -76,7 +67,7 @@ extern void (*FB_End_User_Ptr)();
 // Return      :  Fluid, ParAtt
 //-------------------------------------------------------------------------------------------------------
 int FB_User_Template( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                      const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
+                      const int NPar, const long *ParSortID, real_par *ParAtt[PAR_NATT_TOTAL],
                       real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
                       const int TID, RandomNumber_t *RNG )
 {
@@ -98,7 +89,7 @@ int FB_User_Template( const int lv, const double TimeNew, const double TimeOld, 
 
    for (int t=0; t<NPar; t++)
    {
-      const int    p      = ParSortID[t];
+      const long   p      = ParSortID[t];
       const double xyz[3] = { ParAtt[PAR_POSX][p], ParAtt[PAR_POSY][p], ParAtt[PAR_POSZ][p] };
 
       int idx[3];

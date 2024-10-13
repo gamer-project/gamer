@@ -31,6 +31,26 @@
 #define TURING       6
 #define AMPERE       7
 
+#ifdef GPU
+#if   ( GPU_COMPUTE_CAPABILITY >= 200  &&  GPU_COMPUTE_CAPABILITY < 300 )
+# define GPU_ARCH FERMI
+#elif ( GPU_COMPUTE_CAPABILITY >= 300  &&  GPU_COMPUTE_CAPABILITY < 500 )
+# define GPU_ARCH KEPLER
+#elif ( GPU_COMPUTE_CAPABILITY >= 500  &&  GPU_COMPUTE_CAPABILITY < 600 )
+# define GPU_ARCH MAXWELL
+#elif ( GPU_COMPUTE_CAPABILITY >= 600  &&  GPU_COMPUTE_CAPABILITY < 700 )
+# define GPU_ARCH PASCAL
+#elif ( GPU_COMPUTE_CAPABILITY >= 700  &&  GPU_COMPUTE_CAPABILITY < 750 )
+# define GPU_ARCH VOLTA
+#elif ( GPU_COMPUTE_CAPABILITY >= 750  &&  GPU_COMPUTE_CAPABILITY < 800 )
+# define GPU_ARCH TURING
+#elif ( GPU_COMPUTE_CAPABILITY >= 800  &&  GPU_COMPUTE_CAPABILITY < 890 )
+# define GPU_ARCH AMPERE
+#else
+# error : ERROR : Unknown GPU_COMPUTE_CAPABILITY !!
+#endif // GPU_COMPUTE_CAPABILITY
+#endif // #ifdef GPU
+
 
 // models
 #define HYDRO        1
@@ -76,7 +96,9 @@
 #define EOS_ISOTHERMAL  2
 #define EOS_NUCLEAR     3
 #define EOS_TABULAR     4
-#define EOS_USER        5
+#define EOS_COSMIC_RAY  5
+#define EOS_TAUBMATHEWS 6
+#define EOS_USER        7
 
 
 // Poisson solvers
@@ -190,7 +212,7 @@
 
 // number of input fluid variables in the dt solver
 // --> EOS_GAMMA/EOS_ISOTHERMAL do not require passive scalars
-#if (  MODEL == HYDRO  &&  ( EOS == EOS_GAMMA || EOS == EOS_ISOTHERMAL )  )
+#if (  MODEL == HYDRO  &&  !defined SRHD  &&  ( EOS == EOS_GAMMA || EOS == EOS_ISOTHERMAL )  )
 #  define FLU_NIN_T           NCOMP_FLUID
 #else
 #  define FLU_NIN_T           NCOMP_TOTAL
@@ -509,10 +531,10 @@
 #  define  PAR_NTYPE                4
 
 // particle type indices (must be in the range 0<=index<PAR_NTYPE)
-#  define  PTYPE_TRACER          (real)0
-#  define  PTYPE_GENERIC_MASSIVE (real)1
-#  define  PTYPE_DARK_MATTER     (real)2
-#  define  PTYPE_STAR            (real)3
+#  define  PTYPE_TRACER          (real_par)0
+#  define  PTYPE_GENERIC_MASSIVE (real_par)1
+#  define  PTYPE_DARK_MATTER     (real_par)2
+#  define  PTYPE_STAR            (real_par)3
 
 # ifdef GRAVITY
 #  define MASSIVE_PARTICLES
@@ -787,6 +809,13 @@
 #  define __DBL_MIN__            2.22507386e-308
 #endif
 
+#ifndef __FLT_EPSILON__
+#  define __FLT_EPSILON__        1.19209290e-07F
+#endif
+
+#ifndef __DBL_EPSILON__
+#  define __DBL_EPSILON__        2.2204460492503131e-16
+#endif
 
 // extreme value used for various purposes (e.g., floor value for passive scalars)
 #ifdef FLOAT8
@@ -799,13 +828,15 @@
 
 
 // maximum allowed error for various purposes (e.g., exact Riemann solver, MHD routines, Mis_CompareRealValue())
-#define MAX_ERROR_DBL      1.0e-14
-#define MAX_ERROR_FLT      1.0e-06f
+#define MAX_ERROR_DBL            1.0e-14
+#define MAX_ERROR_FLT            1.0e-06f
 
 #ifdef FLOAT8
-#  define MAX_ERROR        MAX_ERROR_DBL
+#  define MACHINE_EPSILON        __DBL_EPSILON__
+#  define MAX_ERROR              MAX_ERROR_DBL
 #else
-#  define MAX_ERROR        MAX_ERROR_FLT
+#  define MACHINE_EPSILON        __FLT_EPSILON__
+#  define MAX_ERROR              MAX_ERROR_FLT
 #endif
 
 
@@ -899,6 +930,11 @@
 #  define MPI_GAMER_REAL MPI_FLOAT
 #endif
 
+#ifdef FLOAT8_PAR
+#  define MPI_GAMER_REAL_PAR MPI_DOUBLE
+#else
+#  define MPI_GAMER_REAL_PAR MPI_FLOAT
+#endif
 
 
 
@@ -998,6 +1034,21 @@
 
 // macro converting an array index (e.g., DENS) to bitwise index (e.g., _DENS=(1L<<DENS))
 #define BIDX( idx )     ( 1L << (idx) )
+
+
+// helper macro for printing warning messages when resetting parameters
+#  define FORMAT_INT       %- 21d
+#  define FORMAT_LONG      %- 21ld
+#  define FORMAT_UINT      %- 21u
+#  define FORMAT_ULONG     %- 21lu
+#  define FORMAT_BOOL      %- 21d
+#  define FORMAT_REAL      %- 21.14e
+#  define PRINT_RESET_PARA( name, format, reason )                                                       \
+   {                                                                                                     \
+      if ( MPI_Rank == 0 )                                                                               \
+         Aux_Message( stderr, "WARNING : parameter [%-30s] is reset to [" EXPAND_AND_QUOTE(format) "] "  \
+                              "%s\n", #name, name, reason );                                             \
+   }
 
 
 // ################################

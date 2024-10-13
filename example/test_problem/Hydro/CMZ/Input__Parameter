@@ -18,7 +18,7 @@ BOX_SIZE                      23.6        # box size along the longest side (in 
 NX0_TOT_X                     1024        # number of base-level cells along x
 NX0_TOT_Y                     1024        # number of base-level cells along y
 NX0_TOT_Z                     32          # number of base-level cells along z
-OMP_NTHREAD                  -1           # number of OpenMP threads (<=0=auto -> omp_get_max_threads) [-1] ##OPENMP ONLY##
+OMP_NTHREAD                  -1           # number of OpenMP threads (<=0=auto) [-1] ##OPENMP ONLY##
 END_T                        -1.0         # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
 END_STEP                     -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
 
@@ -81,7 +81,7 @@ OPT__DT_USER                  0           # dt criterion: user-defined -> edit "
 OPT__DT_LEVEL                 3           # dt at different AMR levels (1=shared, 2=differ by two, 3=flexible) [3]
 OPT__RECORD_DT                1           # record info of the dt determination [1]
 AUTO_REDUCE_DT                0           # reduce dt automatically when the program fails (for OPT__DT_LEVEL==3 only) [1]
-AUTO_REDUCE_DT_FACTOR         0.8         # reduce dt by a factor of AUTO_REDUCE_DT_FACTOR when the program fails [0.8]
+AUTO_REDUCE_DT_FACTOR         1.0         # reduce dt by a factor of AUTO_REDUCE_DT_FACTOR when the program fails [1.0]
 AUTO_REDUCE_DT_FACTOR_MIN     0.5         # minimum allowed AUTO_REDUCE_DT_FACTOR after consecutive failures [0.1]
 AUTO_REDUCE_MINMOD_FACTOR     0.8         # reduce MINMOD_COEFF by this factor together with AUTO_REDUCE_DT (1.0=off) [0.8] ##HYDRO ONLY##
 AUTO_REDUCE_MINMOD_MIN        1.0e-2      # minimum allowed MINMOD_COEFF after consecutive failures [1.0e-2] ##HYDRO ONLY##
@@ -163,7 +163,7 @@ ISO_TEMP                      1.5455e4    # isothermal temperature in kelvin ##E
 MINMOD_COEFF                  1.0         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
 MINMOD_MAX_ITER               0           # maximum number of iterations to reduce MINMOD_COEFF when data reconstruction fails (0=off) [0]
 OPT__LR_LIMITER              -1           # slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes:
-                                          # (-1=auto, 0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod, 6=central) [-1]
+                                          # (-1=auto, 0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod, 6=central, 7=Athena) [-1]
 OPT__1ST_FLUX_CORR           -1           # correct unphysical results (defined by MIN_DENS/PRES) by the 1st-order fluxes:
                                           # (<0=auto, 0=off, 1=3D, 2=3D+1D) [-1] ##MHM/MHM_RP/CTU ONLY##
 OPT__1ST_FLUX_CORR_SCHEME    -1           # Riemann solver for OPT__1ST_FLUX_CORR (-1=auto, 0=none, 1=Roe, 2=HLLC, 3=HLLE, 4=HLLD) [-1]
@@ -219,13 +219,14 @@ EXT_POT_TABLE_EDGEL_Z         -0.13125
 
 # initialization
 OPT__INIT                     1           # initialization option: (1=FUNCTION, 2=RESTART, 3=FILE->"UM_IC")
-OPT__INIT_BFIELD_BYFILE       0           # initialize the magnetic field from a vector potential disk file named "B_IC"
-                                          # (example python script: tool/inits/gen_vec_pot.py) [0] ##MHD ONLY##
+OPT__INIT_BFIELD_BYVECPOT     0           # initialize the magnetic field from vector potential
+                                          # (0=off, 1=external disk file named "B_IC", see tool/inits/gen_vec_pot.py for example, 2=function) [0] ##MHD ONLY##
 RESTART_LOAD_NRANK            256         # number of parallel I/O (i.e., number of MPI ranks) for restart [1]
 OPT__RESTART_RESET            0           # reset some simulation status parameters (e.g., current step and time) during restart [0]
 OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]
 OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
 INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
+OPT__FFTW_STARTUP            -1           # initialise fftw plans: (-1=auto, 0=ESTIMATE, 1=MEASURE, 2=PATIENT (only FFTW3)) [-1]
 
 
 # interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar)
@@ -246,7 +247,7 @@ OPT__OUTPUT_TOTAL             1           # output the simulation snapshot: (0=o
 OPT__OUTPUT_PART              0           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
 OPT__OUTPUT_PAR_MODE          0           # output the particle data: (0=off, 1=text-file, 2=C-binary) [0] ##PARTICLE ONLY##
-OPT__OUTPUT_POT               0           # output gravitational potential [0] ##OPT__OUTPUT_TOTAL ONLY##
+OPT__OUTPUT_POT               1           # output gravitational potential [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_PAR_DENS          1           # output the particle or total mass density on grids:
                                           # (0=off, 1=particle mass density, 2=total mass density) [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_CC_MAG            1           # output **cell-centered** magnetic field (necessary for yt analysis) [1] ##MHD ONLY##
@@ -257,6 +258,8 @@ OPT__OUTPUT_CS                0           # output sound speed [0] ##HYDRO ONLY#
 OPT__OUTPUT_DIVVEL            0           # output divergence(velocity) [0] ##HYDRO ONLY##
 OPT__OUTPUT_MACH              0           # output mach number [0] ##HYDRO ONLY##
 OPT__OUTPUT_DIVMAG            0           # output |divergence(B)*dh/|B|| [0] ##MHD ONLY##
+OPT__OUTPUT_LORENTZ           0           # output Lorentz factor [0] ##SRHD ONLY##
+OPT__OUTPUT_3VELOCITY         0           # output 3-velocities [0] ##SRHD ONLY##
 OPT__OUTPUT_USER_FIELD        0           # output user-defined derived fields [0] -> edit "Flu_DerivedField_User.cpp"
 OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##

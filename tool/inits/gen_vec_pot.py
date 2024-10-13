@@ -1,6 +1,6 @@
 """
 This file generates a toy vector potential for import into GAMER using the
-OPT__INIT_BFIELD_BYFILE parameter. It does the following:
+OPT__INIT_BFIELD_BYVECPOT=1 parameter. It does the following:
 
 1. Generates a uniform coordinate grid
 2. Defines a vector potential on the coordinate grid

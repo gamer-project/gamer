@@ -65,9 +65,6 @@ extern "C" {
 
 #ifdef SUPPORT_LIBYT
 #  include <libyt.h>
-# ifdef LIBYT_INTERACTIVE
-#  include <libyt_interactive_mode.h>
-# endif
 #endif
 
 #include "Macro.h"
@@ -79,12 +76,14 @@ extern "C" {
 #include "Extrema.h"
 #include "SrcTerms.h"
 #include "EoS.h"
+#include "Microphysics.h"
 #include "Global.h"
 #include "Field.h"
 #include "Prototype.h"
 #include "PhysicalConstant.h"
 #include "GatherTree.h"
 #include "FFTW.h"
+#include "TestProb.h"
 
 #ifdef SERIAL
 #  include "Serial.h"

@@ -1,9 +1,10 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
-static void BC( real fluid[], const double x, const double y, const double z, const double Time,
-                const int lv, double AuxArray[] );
+static void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                const int GhostSize, const int idx[], const double pos[], const double Time,
+                const int lv, const int TFluVarIdxList[], double AuxArray[] );
+
 static void Init_ExtPot();
 
 
@@ -118,18 +119,18 @@ void SetParameter()
 
 
 // (3) reset other general-purpose parameters
-//     --> a helper macro PRINT_WARNING is defined in TestProb.h
+//     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
    const long   End_Step_Default = __INT_MAX__;
    const double End_T_Default    = 1.0e-2;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
-      PRINT_WARNING( "END_STEP", END_STEP, FORMAT_LONG );
+      PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
    }
 
    if ( END_T < 0.0 ) {
       END_T = End_T_Default;
-      PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
+      PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
    }
 
 
@@ -200,11 +201,12 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void BC( real fluid[], const double x, const double y, const double z, const double Time,
-         const int lv, double AuxArray[] )
+void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+         const int GhostSize, const int idx[], const double pos[], const double Time,
+         const int lv, const int TFluVarIdxList[], double AuxArray[] )
 {
 
-   SetGridIC( fluid, x, y, z, Time, lv, AuxArray );
+   SetGridIC( fluid, pos[0], pos[1], pos[2], Time, lv, AuxArray );
 
 } // FUNCTION : BC
 

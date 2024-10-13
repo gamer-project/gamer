@@ -76,6 +76,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "PAR_NPAR",                   &amr->Par->NPar_Active_AllRank,  -1L,               NoMin_long,    NoMax_long     );
    ReadPara->Add( "PAR_INIT",                   &amr->Par->Init,                 -1,                1,             3              );
    ReadPara->Add( "PAR_IC_FORMAT",              &amr->Par->ParICFormat,      PAR_IC_FORMAT_ATT_ID,  1,             2              );
+   ReadPara->Add( "PAR_IC_FLOAT8",              &PAR_IC_FLOAT8,                  -1,                NoMin_int,     1              );
    ReadPara->Add( "PAR_IC_MASS",                &amr->Par->ParICMass,            -1.0,              NoMin_double,  NoMax_double   );
    ReadPara->Add( "PAR_IC_TYPE",                &amr->Par->ParICType,            -1,                NoMin_int,     PAR_NTYPE-1    );
    ReadPara->Add( "PAR_INTERP",                 &amr->Par->Interp,                PAR_INTERP_CIC,   1,             3              );
@@ -104,6 +105,9 @@ void Init_Load_Parameter()
 // do not check DT__FLUID/FLUID_INIT/GRAVITY/PARVEL_MAX since they may be reset by Init_ResetDefaultParameter()
    ReadPara->Add( "DT__FLUID",                  &DT__FLUID,                      -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "DT__FLUID_INIT",             &DT__FLUID_INIT,                 -1.0,             NoMin_double,  NoMax_double   );
+#  ifdef SRHD
+   ReadPara->Add( "DT__SPEED_OF_LIGHT",         &DT__SPEED_OF_LIGHT,              false,           Useless_bool,  Useless_bool   );
+#  endif
 #  ifdef GRAVITY
    ReadPara->Add( "DT__GRAVITY",                &DT__GRAVITY,                    -1.0,             NoMin_double,  NoMax_double   );
 #  endif
@@ -115,6 +119,9 @@ void Init_Load_Parameter()
    ReadPara->Add( "DT__PARVEL_MAX",             &DT__PARVEL_MAX,                 -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "DT__PARACC",                 &DT__PARACC,                      0.5,             0.0,           NoMax_double   );
 #  endif
+#  ifdef CR_DIFFUSION
+   ReadPara->Add( "DT__CR_DIFFUSION",           &DT__CR_DIFFUSION,                3.0e-1,          0.0,           NoMax_double   );
+#  endif
 #  ifdef COMOVING
    ReadPara->Add( "DT__MAX_DELTA_A",            &DT__MAX_DELTA_A,                 0.01,            0.0,           NoMax_double   );
 #  endif
@@ -124,7 +131,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__DT_LEVEL",              &OPT__DT_LEVEL,                   3,               1,             3              );
    ReadPara->Add( "OPT__RECORD_DT",             &OPT__RECORD_DT,                  true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "AUTO_REDUCE_DT",             &AUTO_REDUCE_DT,                  true,            Useless_bool,  Useless_bool   );
-   ReadPara->Add( "AUTO_REDUCE_DT_FACTOR",      &AUTO_REDUCE_DT_FACTOR,           0.8,             Eps_double,    1.0            );
+   ReadPara->Add( "AUTO_REDUCE_DT_FACTOR",      &AUTO_REDUCE_DT_FACTOR,           1.0,             Eps_double,    1.0            );
    ReadPara->Add( "AUTO_REDUCE_DT_FACTOR_MIN",  &AUTO_REDUCE_DT_FACTOR_MIN,       0.1,             0.0,           1.0            );
 #  if ( MODEL == HYDRO )
    ReadPara->Add( "AUTO_REDUCE_MINMOD_FACTOR",  &AUTO_REDUCE_MINMOD_FACTOR,       0.8,             Eps_double,    1.0            );
@@ -148,13 +155,22 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__FLAG_PRES_GRADIENT",    &OPT__FLAG_PRES_GRADIENT,         false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_VORTICITY",        &OPT__FLAG_VORTICITY,             false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_JEANS",            &OPT__FLAG_JEANS,                 false,           Useless_bool,  Useless_bool   );
+#  ifdef SRHD
+   ReadPara->Add( "OPT__FLAG_LRTZ_GRADIENT",    &OPT__FLAG_LRTZ_GRADIENT,         false,           Useless_bool,  Useless_bool   );
+#  endif
 #  ifdef MHD
    ReadPara->Add( "OPT__FLAG_CURRENT",          &OPT__FLAG_CURRENT,               false,           Useless_bool,  Useless_bool   );
+#  endif
+#  ifdef COSMIC_RAY
+   ReadPara->Add( "OPT__FLAG_CRAY",             &OPT__FLAG_CRAY,                  false,           Useless_bool,  Useless_bool   );
 #  endif
    ReadPara->Add( "OPT__FLAG_LOHNER_ENGY",      &OPT__FLAG_LOHNER_ENGY,           false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_LOHNER_PRES",      &OPT__FLAG_LOHNER_PRES,           false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_LOHNER_TEMP",      &OPT__FLAG_LOHNER_TEMP,           false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_LOHNER_ENTR",      &OPT__FLAG_LOHNER_ENTR,           false,           Useless_bool,  Useless_bool   );
+#  ifdef COSMIC_RAY
+   ReadPara->Add( "OPT__FLAG_LOHNER_CRAY",      &OPT__FLAG_LOHNER_CRAY,           false,           Useless_bool,  Useless_bool   );
+#  endif
 #  endif
 #  if ( MODEL == ELBDM )
    ReadPara->Add( "OPT__FLAG_ENGY_DENSITY",     &OPT__FLAG_ENGY_DENSITY,          false,           Useless_bool,  Useless_bool   );
@@ -237,6 +253,18 @@ void Init_Load_Parameter()
    ReadPara->Add( "FB_USER",                    &FB_USER,                         false,           Useless_bool,  Useless_bool   );
 #  endif
 
+// cosmic ray
+#  ifdef COSMIC_RAY
+   ReadPara->Add( "GAMMA_CR",                   &GAMMA_CR,                        4.0/3.0,         1.0,           NoMax_double   );
+#  endif
+
+// microphysics
+#  ifdef CR_DIFFUSION
+   ReadPara->Add( "CR_DIFF_PARA",               &CR_DIFF_PARA,                    0.0,             0.0,           NoMax_double   );
+   ReadPara->Add( "CR_DIFF_PERP",               &CR_DIFF_PERP,                    0.0,             0.0,           NoMax_double   );
+   ReadPara->Add( "CR_DIFF_MIN_B",              &CR_DIFF_MIN_B,                   0.0,             NoMin_double,  NoMax_double   );
+#  endif
+
 
 // fluid solvers in HYDRO
 #  if ( MODEL == HYDRO )
@@ -254,7 +282,7 @@ void Init_Load_Parameter()
 #  endif
    ReadPara->Add( "MINMOD_COEFF",               &MINMOD_COEFF,                    1.5,             1.0,           2.0            );
    ReadPara->Add( "MINMOD_MAX_ITER",            &MINMOD_MAX_ITER,                   0,               0,           NoMax_int      );
-   ReadPara->Add( "OPT__LR_LIMITER",            &OPT__LR_LIMITER,             LR_LIMITER_DEFAULT, -1,             6              );
+   ReadPara->Add( "OPT__LR_LIMITER",            &OPT__LR_LIMITER,             LR_LIMITER_DEFAULT, -1,             7              );
    ReadPara->Add( "OPT__1ST_FLUX_CORR",         &OPT__1ST_FLUX_CORR,               -1,             NoMin_int,     2              );
 #  ifdef MHD
    ReadPara->Add( "OPT__1ST_FLUX_CORR_SCHEME",  &OPT__1ST_FLUX_CORR_SCHEME,   RSOLVER_1ST_DEFAULT, NoMin_int,     4              );
@@ -368,6 +396,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__UM_IC_NVAR",            &OPT__UM_IC_NVAR,                -1,               NoMin_int,     NCOMP_TOTAL    );
 #  endif
    ReadPara->Add( "OPT__UM_IC_FORMAT",          &OPT__UM_IC_FORMAT,             UM_IC_FORMAT_VZYX, 1,             2              );
+   ReadPara->Add( "OPT__UM_IC_FLOAT8",          &OPT__UM_IC_FLOAT8,              -1,               NoMin_int,     1              );
    ReadPara->Add( "OPT__UM_IC_DOWNGRADE",       &OPT__UM_IC_DOWNGRADE,            true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__UM_IC_REFINE",          &OPT__UM_IC_REFINE,               true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__UM_IC_LOAD_NRANK",      &OPT__UM_IC_LOAD_NRANK,           1,               1,             NoMax_int      );
@@ -376,8 +405,17 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__GPUID_SELECT",          &OPT__GPUID_SELECT,              -1,              -3,             NoMax_int      );
    ReadPara->Add( "INIT_SUBSAMPLING_NCELL",     &INIT_SUBSAMPLING_NCELL,          0,               0,             NoMax_int      );
 #  ifdef MHD
-   ReadPara->Add( "OPT__INIT_BFIELD_BYFILE",    &OPT__INIT_BFIELD_BYFILE,         false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__INIT_BFIELD_BYVECPOT", &OPT__INIT_BFIELD_BYVECPOT, INIT_MAG_BYVECPOT_NONE, 0,             2              );
 #  endif
+#  ifdef SUPPORT_FFTW
+#  if ( SUPPORT_FFTW == FFTW2 )
+   ReadPara->Add( "OPT__FFTW_STARTUP",     &OPT__FFTW_STARTUP, FFTW_STARTUP_DEFAULT, FFTW_STARTUP_DEFAULT, FFTW_STARTUP_MEASURE );
+#  elif ( SUPPORT_FFTW == FFTW3 ) // #  if ( SUPPORT_FFTW == FFTW2 )
+   ReadPara->Add( "OPT__FFTW_STARTUP",     &OPT__FFTW_STARTUP, FFTW_STARTUP_DEFAULT, FFTW_STARTUP_DEFAULT, FFTW_STARTUP_PATIENT );
+#  else  // # if ( SUPPORT_FFTW == FFTW2 ) ... # else
+#  error : ERROR : Unsupported FFTW version for OPT__FFTW_STARTUP
+#  endif // #  if ( SUPPORT_FFTW == FFTW2 ) ... # else
+#  endif // # ifdef SUPPORT_FFTW
 
 // interpolation schemes
    ReadPara->Add( "OPT__INT_TIME",              &OPT__INT_TIME,                   true,            Useless_bool,  Useless_bool   );
@@ -418,6 +456,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__OUTPUT_TOTAL",          &OPT__OUTPUT_TOTAL,               1,               0,             2              );
    ReadPara->Add( "OPT__OUTPUT_PART",           &OPT__OUTPUT_PART,                0,               0,             7              );
    ReadPara->Add( "OPT__OUTPUT_USER",           &OPT__OUTPUT_USER,                false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__OUTPUT_TEXT_FORMAT_FLT", OPT__OUTPUT_TEXT_FORMAT_FLT,     "%24.16e",       Useless_str,   Useless_str    );
 #  ifdef PARTICLE
    ReadPara->Add( "OPT__OUTPUT_PAR_MODE",       &OPT__OUTPUT_PAR_MODE,            0,               0,             2              );
 #  endif
@@ -427,14 +466,15 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__OUTPUT_CC_MAG",         &OPT__OUTPUT_CC_MAG,              true,            Useless_bool,  Useless_bool   );
 #  endif
 #  ifdef GRAVITY
-   ReadPara->Add( "OPT__OUTPUT_POT",            &OPT__OUTPUT_POT,                 false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__OUTPUT_POT",            &OPT__OUTPUT_POT,                 true,           Useless_bool,  Useless_bool   );
 #  endif
 #  ifdef PARTICLE
    ReadPara->Add( "OPT__OUTPUT_PAR_DENS",       &OPT__OUTPUT_PAR_DENS,            PAR_OUTPUT_DENS_PAR_ONLY, 0,    2              );
 #  endif
 #  if ( MODEL == HYDRO )
    ReadPara->Add( "OPT__OUTPUT_PRES",           &OPT__OUTPUT_PRES,                false,           Useless_bool,  Useless_bool   );
-   ReadPara->Add( "OPT__OUTPUT_TEMP",           &OPT__OUTPUT_TEMP,                false,           Useless_bool,  Useless_bool   );
+   const bool OutTempDefault = ( EOS == EOS_TAUBMATHEWS ) ? true : false;
+   ReadPara->Add( "OPT__OUTPUT_TEMP",           &OPT__OUTPUT_TEMP,                OutTempDefault,  Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_ENTR",           &OPT__OUTPUT_ENTR,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_CS",             &OPT__OUTPUT_CS,                  false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_DIVVEL",         &OPT__OUTPUT_DIVVEL,              false,           Useless_bool,  Useless_bool   );
@@ -442,6 +482,11 @@ void Init_Load_Parameter()
 #  endif
 #  ifdef MHD
    ReadPara->Add( "OPT__OUTPUT_DIVMAG",         &OPT__OUTPUT_DIVMAG,              false,           Useless_bool,  Useless_bool   );
+#  endif
+#  ifdef SRHD
+   ReadPara->Add( "OPT__OUTPUT_LORENTZ",        &OPT__OUTPUT_LORENTZ,             false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__OUTPUT_3VELOCITY",      &OPT__OUTPUT_3VELOCITY,           false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__OUTPUT_ENTHALPY",       &OPT__OUTPUT_ENTHALPY,            true,            Useless_bool,  Useless_bool   );
 #  endif
    ReadPara->Add( "OPT__OUTPUT_USER_FIELD",     &OPT__OUTPUT_USER_FIELD,          false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_MODE",           &OPT__OUTPUT_MODE,               -1,               1,             3              );
@@ -460,9 +505,12 @@ void Init_Load_Parameter()
 
 // yt inline analysis
 #  ifdef SUPPORT_LIBYT
-   ReadPara->Add( "YT_SCRIPT",                   YT_SCRIPT,                       NoDef_str,       Useless_str,   Useless_str    );
-   ReadPara->Add( "YT_VERBOSE",           (int*)&YT_VERBOSE,                      1,               0,             3              );
-   ReadPara->Add( "YT_FIG_BASENAME",             YT_FIG_BASENAME,                 NoDef_str,       Useless_str,   Useless_str    );
+   ReadPara->Add( "YT_SCRIPT",                          YT_SCRIPT,                         NoDef_str,    Useless_str,   Useless_str    );
+   ReadPara->Add( "YT_VERBOSE",                  (int*)&YT_VERBOSE,                        1,            0,             3              );
+   ReadPara->Add( "YT_FIG_BASENAME",                    YT_FIG_BASENAME,                   NoDef_str,    Useless_str,   Useless_str    );
+#  ifdef LIBYT_JUPYTER
+   ReadPara->Add( "YT_JUPYTER_USE_CONNECTION_FILE",    &YT_JUPYTER_USE_CONNECTION_FILE,    false,        Useless_bool,  Useless_bool   );
+#  endif
 #  endif
 
 
@@ -477,14 +525,30 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__RECORD_MEMORY",         &OPT__RECORD_MEMORY,              true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RECORD_PERFORMANCE",    &OPT__RECORD_PERFORMANCE,         true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__MANUAL_CONTROL",        &OPT__MANUAL_CONTROL,             true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__RECORD_CENTER",         &OPT__RECORD_CENTER,              false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "COM_CEN_X",                  &COM_CEN_X,                      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "COM_CEN_Y",                  &COM_CEN_Y,                      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "COM_CEN_Z",                  &COM_CEN_Z,                      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "COM_MAX_R",                  &COM_MAX_R,                      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "COM_MIN_RHO",                &COM_MIN_RHO,                     0.0,             0.0,           NoMax_double   );
+   ReadPara->Add( "COM_TOLERR_R",               &COM_TOLERR_R,                   -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "COM_MAX_ITER",               &COM_MAX_ITER,                    10,              1,             NoMax_int      );
    ReadPara->Add( "OPT__RECORD_USER",           &OPT__RECORD_USER,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OPTIMIZE_AGGRESSIVE",   &OPT__OPTIMIZE_AGGRESSIVE,        false,           Useless_bool,  Useless_bool   );
+#  ifdef LOAD_BALANCE
+   ReadPara->Add( "OPT__SORT_PATCH_BY_LBIDX",   &OPT__SORT_PATCH_BY_LBIDX,        true,            Useless_bool,  Useless_bool   );
+#  else
+   ReadPara->Add( "OPT__SORT_PATCH_BY_LBIDX",   &OPT__SORT_PATCH_BY_LBIDX,        false,           Useless_bool,  Useless_bool   );
+#  endif
 
 
 // simulation checks
    ReadPara->Add( "OPT__CK_REFINE",             &OPT__CK_REFINE,                  false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_PROPER_NESTING",     &OPT__CK_PROPER_NESTING,          false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_CONSERVATION",       &OPT__CK_CONSERVATION,            false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "ANGMOM_ORIGIN_X",            &ANGMOM_ORIGIN_X,                -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "ANGMOM_ORIGIN_Y",            &ANGMOM_ORIGIN_Y,                -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "ANGMOM_ORIGIN_Z",            &ANGMOM_ORIGIN_Z,                -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "OPT__CK_NORMALIZE_PASSIVE",  &OPT__CK_NORMALIZE_PASSIVE,       false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_RESTRICT",           &OPT__CK_RESTRICT,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_FINITE",             &OPT__CK_FINITE,                  false,           Useless_bool,  Useless_bool   );

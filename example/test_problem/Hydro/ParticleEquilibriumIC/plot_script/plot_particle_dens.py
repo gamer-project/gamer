@@ -16,7 +16,11 @@ parser.add_argument( '-d', action='store', required=False, type=int, dest='didx'
 
 args=parser.parse_args()
 
-
+# take note
+print( '\nCommand-line arguments:' )
+print( '-------------------------------------------------------------------' )
+print( ' '.join(map(str, sys.argv)) )
+print( '-------------------------------------------------------------------\n' )
 
 idx_start   = args.idx_start
 idx_end     = args.idx_end
@@ -30,12 +34,10 @@ field       = 'ParDens'
 
 yt.enable_parallelism()
 
-ts = yt.load( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
-p = []
-for idx in range(idx_start,idx_end+1,1):
-   ds = yt.load('Data_%06d'%idx)
+ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
+for ds in ts.piter():
    p = yt.SlicePlot( ds, 'z', 'ParDens', center='c' )
-   field       = 'ParDens'
+   field = 'ParDens'
    p.set_background_color( field )
    p.set_unit('ParDens', 'code_mass/(code_length**3)')
    p.set_axes_unit( 'code_length' )

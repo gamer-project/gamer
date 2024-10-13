@@ -24,12 +24,15 @@ extern void (*Init_Function_User_Ptr)( real fluid[], const double x, const doubl
 #ifdef MHD
 extern void (*Init_Function_BField_User_Ptr)( real magnetic[], const double x, const double y, const double z, const double Time,
                                               const int lv, double AuxArray[] );
+extern double (*Init_BField_ByVecPot_User_Ptr)( const double x, const double y, const double z, const double Time,
+                                                const int lv, const char Component, double AuxArray[] );
 #endif
 extern void (*Init_ByFile_User_Ptr)( real fluid_out[], const real fluid_in[], const int nvar_in,
                                      const double x, const double y, const double z, const double Time,
                                      const int lv, double AuxArray[] );
 extern void (*Init_Field_User_Ptr)();
 extern void (*Init_User_Ptr)();
+extern void (*Init_User_AfterPoisson_Ptr)();
 extern void (*Output_User_Ptr)();
 extern void (*Output_UserWorkBeforeOutput_Ptr)();
 extern bool (*Flag_Region_Ptr)( const int i, const int j, const int k, const int lv, const int PID );
@@ -38,14 +41,24 @@ extern double (*Mis_GetTimeStep_User_Ptr)( const int lv, const double dTime_dt )
 extern void (*Mis_UserWorkBeforeNextLevel_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt );
 extern void (*Mis_UserWorkBeforeNextSubstep_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt );
 extern void (*Aux_Record_User_Ptr)();
-extern void (*BC_User_Ptr)( real fluid[], const double x, const double y, const double z, const double Time,
-                            const int lv, double AuxArray[] );
+extern void (*BC_User_Ptr)( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                            const int GhostSize, const int idx[], const double pos[], const double Time,
+                            const int lv, const int TFluVarIdxList[], double AuxArray[] );
 #ifdef MHD
 extern void (*BC_BField_User_Ptr)( real magnetic[], const double x, const double y, const double z, const double Time,
                                    const int lv, double AuxArray[] );
 #endif
-extern int (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
-                                        const double dt, const int lv, double AuxArray[] );
+extern int  (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
+                                         const double dt, const int lv, double AuxArray[] );
+extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );
+#ifdef MHD
+extern double (*MHD_ResetByUser_VecPot_Ptr)( const double x, const double y, const double z, const double Time,
+                                             const double dt, const int lv, const char Component, double AuxArray[] );
+extern double (*MHD_ResetByUser_BField_Ptr)( const double x, const double y, const double z, const double Time,
+                                             const double dt, const int lv, const char Component, double AuxArray[], const double B_in,
+                                             const bool UseVecPot, const real *Ax, const real *Ay, const real *Az,
+                                             const int i, const int j, const int k );
+#endif
 extern void (*End_User_Ptr)();
 #ifdef GRAVITY
 extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const double z, const double Time,
@@ -58,9 +71,9 @@ extern void (*End_ExtPot_Ptr)();
 #endif
 #ifdef PARTICLE
 extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRank,
-                                        real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                        real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                        real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
+                                        real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                        real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                        real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] );
 extern void (*Par_Init_Attribute_User_Ptr)();
 #endif
 #if ( MODEL == HYDRO )
@@ -68,25 +81,18 @@ extern void (*EoS_Init_Ptr)();
 extern void (*EoS_End_Ptr)();
 #endif
 extern void (*Src_Init_User_Ptr)();
+extern void (*Src_End_User_Ptr)();
+extern void (*Src_WorkBeforeMajorFunc_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                                                 double AuxArray_Flt[], int AuxArray_Int[] );
 extern void (*Init_DerivedField_User_Ptr)();
 #ifdef FEEDBACK
 extern void (*FB_Init_User_Ptr)();
+extern void (*FB_End_User_Ptr)();
+extern int  (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                            const int NPar, const long *ParSortID, real_par *ParAtt[PAR_NATT_TOTAL],
+                            real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
+                            const int TID, RandomNumber_t *RNG );
 #endif
-
-
-// helper macro for printing warning messages when resetting parameters
-#  define FORMAT_INT       %- 21d
-#  define FORMAT_LONG      %- 21ld
-#  define FORMAT_UINT      %- 21u
-#  define FORMAT_ULONG     %- 21lu
-#  define FORMAT_BOOL      %- 21d
-#  define FORMAT_REAL      %- 21.14e
-#  define PRINT_WARNING( name, var, format )                                                             \
-   {                                                                                                     \
-      if ( MPI_Rank == 0 )                                                                               \
-         Aux_Message( stderr, "WARNING : parameter [%-25s] is reset to [" EXPAND_AND_QUOTE(format) "] "  \
-                              "for the adopted test problem\n", name, var );                             \
-   }
 
 
 
