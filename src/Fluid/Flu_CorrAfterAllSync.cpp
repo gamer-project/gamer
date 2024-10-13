@@ -12,12 +12,15 @@
 //                        --> Since particles just crossing coarse-fine boundaries may not be synchronized
 //                            with the grid data
 //                        --> Must work with STORE_PAR_ACC
+//                        --> Also important for bitwise reproducibility when restarting simulations, for which
+//                            we have implicitly assumed that all particles have been synchronized (as snapshots
+//                            do not store the time of individual particles)
 //                   1-2. Restrict data
 //                        --> This is mainly for bitwise reproducibility when restarting simulations from
 //                            C binary outputs
 //                            --> Because C binary outputs do not store data in non-leaf patches, we must
 //                                apply the restrict operation to obtain these data during restart. But for
-//                                father patches with new sons, the round-off erros for these father patches
+//                                father patches with new sons, the round-off errors for these father patches
 //                                in the original simulations and in the restart process can be different.
 //                   1-3. Recalculate gravitational potential
 //                        --> This is for both improving accuracy and bitwise reproducibility during restart
@@ -76,13 +79,13 @@ void Flu_CorrAfterAllSync()
          Aux_Message( stdout, "      restrict data at Lv %2d                ... ", lv );
 
 //    we do not restrict potential since it will be recalculated anyway
-      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv], NULL_INT, NULL_INT, _TOTAL, _MAG );
+      Flu_FixUp_Restrict( lv, amr->FluSg[lv+1], amr->FluSg[lv], amr->MagSg[lv+1], amr->MagSg[lv], NULL_INT, NULL_INT, FixUpVar_Restrict, _MAG );
 
 #     ifdef LOAD_BALANCE
-      LB_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT, _TOTAL, _MAG, NULL_INT );
+      LB_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_RESTRICT, FixUpVar_Restrict, _MAG, NULL_INT );
 #     endif
 
-      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_AFTER_FIXUP, _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_AFTER_FIXUP, FixUpVar_Restrict, _MAG, Flu_ParaBuf, USELB_YES );
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
    }
@@ -113,14 +116,27 @@ void Flu_CorrAfterAllSync()
 
 
 // 4. recalculate particle acceleration
-#  if ( defined PARTICLE  &&  defined STORE_PAR_ACC )
+#  if ( defined MASSIVE_PARTICLES  &&  defined STORE_PAR_ACC )
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "      recalculate particle acceleration     ... " );
 
    const bool StoreAcc_Yes    = true;
    const bool UseStoredAcc_No = false;
 
    for (int lv=0; lv<NLEVEL; lv++)
-   Par_UpdateParticle( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ], NULL_REAL, PAR_UPSTEP_ACC_ONLY, StoreAcc_Yes, UseStoredAcc_No );
+      Par_UpdateParticle( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ], NULL_REAL, PAR_UPSTEP_ACC_ONLY, StoreAcc_Yes, UseStoredAcc_No );
+
+   if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+#  endif
+
+
+// 5. Update tracer particle attributes
+#  ifdef TRACER
+   if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "      update tracer particle attributes     ... " );
+
+   const bool MapOnly_Yes = true;
+
+   for (int lv=0; lv<NLEVEL; lv++)
+      Par_UpdateTracerParticle( lv, Time[lv], NULL_REAL, MapOnly_Yes );
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 #  endif

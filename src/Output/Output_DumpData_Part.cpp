@@ -38,7 +38,7 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
                            const double z, const char *FileName )
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d) ...\n", __FUNCTION__, DumpID );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d)           ...\n", __FUNCTION__, DumpID );
 
 
 // check the input parameters
@@ -78,7 +78,6 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
          fclose( Temp );
       }
    }
-
 
    const double dh_min = amr->dh[NLEVEL-1];
    const int    NLv    = ( BaseOnly ) ? 1 : NLEVEL;
@@ -133,32 +132,45 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
             fprintf( File, "#%10s %10s %10s %20s %20s %20s", "i", "j", "k", "x", "y", "z" );
 
             for (int v=0; v<NCOMP_TOTAL; v++)
-            fprintf( File, "%14s", FieldLabel[v] );
+            fprintf( File, " %*s", StrLen_Flt, FieldLabel[v] );
 
 #           ifdef MHD
             for (int v=0; v<NCOMP_MAG; v++)
-            fprintf( File, "%14s", MagLabel[v] );
+            fprintf( File, " %*s", StrLen_Flt, MagLabel[v] );
 
-            fprintf( File, "%14s", "MagEngy" );
+            fprintf( File, " %*s", StrLen_Flt, "MagEngy" );
 #           endif
 
 #           ifdef GRAVITY
-            if ( OPT__OUTPUT_POT )     fprintf( File, "%14s", PotLabel );
+            if ( OPT__OUTPUT_POT )     fprintf( File, " %*s", StrLen_Flt, PotLabel );
 #           endif
 
 //          derived fields
 #           if ( MODEL == HYDRO )
-            if ( OPT__OUTPUT_PRES )    fprintf( File, "%14s", "Pressure" );
-            if ( OPT__OUTPUT_TEMP )    fprintf( File, "%14s", "Temperature" );
-            if ( OPT__OUTPUT_CS )      fprintf( File, "%14s", "Sound speed" );
-            if ( OPT__OUTPUT_DIVVEL )  fprintf( File, "%14s", "Div(Vel)" );
-            if ( OPT__OUTPUT_MACH   )  fprintf( File, "%14s", "Mach" );
+            if ( OPT__OUTPUT_PRES )    fprintf( File, " %*s", StrLen_Flt, "Pressure" );
+            if ( OPT__OUTPUT_TEMP )    fprintf( File, " %*s", StrLen_Flt, "Temperature" );
+            if ( OPT__OUTPUT_ENTR )    fprintf( File, " %*s", StrLen_Flt, "Entropy" );
+            if ( OPT__OUTPUT_CS )      fprintf( File, " %*s", StrLen_Flt, "Sound speed" );
+            if ( OPT__OUTPUT_DIVVEL )  fprintf( File, " %*s", StrLen_Flt, "Div(Vel)" );
+            if ( OPT__OUTPUT_MACH   )  fprintf( File, " %*s", StrLen_Flt, "Mach" );
 #           endif
 #           ifdef MHD
-            if ( OPT__OUTPUT_DIVMAG )  fprintf( File, "%14s", "Div(Mag)" );
+            if ( OPT__OUTPUT_DIVMAG )  fprintf( File, " %*s", StrLen_Flt, "Div(Mag)" );
+#           endif
+#           ifdef SRHD
+            if ( OPT__OUTPUT_LORENTZ ) fprintf( File, " %*s", StrLen_Flt, "Lorentz" );
+            if ( OPT__OUTPUT_3VELOCITY )
+            {
+                                       fprintf( File, " %*s", StrLen_Flt, "Velocity X" );
+                                       fprintf( File, " %*s", StrLen_Flt, "Velocity Y" );
+                                       fprintf( File, " %*s", StrLen_Flt, "Velocity Z" );
+            }
+            if ( OPT__OUTPUT_ENTHALPY )
+                                       fprintf( File, " %*s", StrLen_Flt, "Reduced enthalpy" );
 #           endif
             if ( OPT__OUTPUT_USER_FIELD ) {
-               for (int v=0; v<UserDerField_Num; v++)    fprintf( File, "%14s", UserDerField_Label[v] );
+               for (int v=0; v<UserDerField_Num; v++)
+                                       fprintf( File, " %*s", StrLen_Flt, UserDerField_Label[v] );
             }
 
             fprintf( File, "\n" );
@@ -250,7 +262,7 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
    delete [] Der_MagCC;
 #  endif
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d) ... done\n", __FUNCTION__, DumpID );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d)           ... done\n", __FUNCTION__, DumpID );
 
 } // FUNCTION : Output_DumpData_Part
 
@@ -282,7 +294,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
             ii, jj, kk, (ii+scale_2)*dh_min, (jj+scale_2)*dh_min, (kk+scale_2)*dh_min );
 
 // output all variables in the fluid array
-   for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, " %13.6e", u[v] );
+   for (int v=0; v<NCOMP_TOTAL; v++)   fprintf( File, BlankPlusFormat_Flt, u[v] );
 
 // magnetic field
 #  if ( MODEL == HYDRO )
@@ -290,7 +302,10 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
    real B[3];
    MHD_GetCellCenteredBFieldInPatch( B, lv, PID, i, j, k, amr->MagSg[lv] );
-   fprintf( File, " %13.6e %13.6e %13.6e %13.6e", B[MAGX], B[MAGY], B[MAGZ], Emag );
+   fprintf( File, BlankPlusFormat_Flt, B[MAGX] );
+   fprintf( File, BlankPlusFormat_Flt, B[MAGY] );
+   fprintf( File, BlankPlusFormat_Flt, B[MAGZ] );
+   fprintf( File, BlankPlusFormat_Flt, Emag    );
 #  else
    const real Emag = NULL_REAL;
 #  endif
@@ -299,7 +314,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 // output potential
 #  ifdef GRAVITY
    if ( OPT__OUTPUT_POT )
-      fprintf( File, " %13.6e", amr->patch[ amr->PotSg[lv] ][lv][PID]->pot[k][j][i] );
+      fprintf( File, BlankPlusFormat_Flt, amr->patch[ amr->PotSg[lv] ][lv][PID]->pot[k][j][i] );
 #  endif
 
 // output derived fields
@@ -309,51 +324,96 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 #  if ( MODEL == HYDRO )
    const bool CheckMinPres_No = false;
    const bool CheckMinTemp_No = false;
-   real Pres=-1.0, Temp=-1.0, Cs=-1.0;    // initial values must be negative
+   const bool CheckMinEntr_No = false;
+   real Pres=-1.0, Temp=-1.0, Entr=-1.0, Cs=-1.0;  // initial values must be negative
 
 // no need to increase Der_FieldIdx for fields not using DerField[]
    if ( OPT__OUTPUT_PRES ) {
       Pres = Hydro_Con2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
                              CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres_CPUPtr,
+                             EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
-      fprintf( File, " %13.6e", Pres );
+      fprintf( File, BlankPlusFormat_Flt, Pres );
    }
 
    if ( OPT__OUTPUT_TEMP ) {
       Temp = Hydro_Con2Temp( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
                              CheckMinTemp_No, NULL_REAL, Emag, EoS_DensEint2Temp_CPUPtr,
+                             EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-      fprintf( File, " %13.6e", Temp );
+      fprintf( File, BlankPlusFormat_Flt, Temp );
    }
 
+#  ifndef SRHD
+   if ( OPT__OUTPUT_ENTR ) {
+      Entr = Hydro_Con2Entr( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
+                             CheckMinEntr_No, NULL_REAL, Emag, EoS_DensEint2Entr_CPUPtr,
+                             EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+      fprintf( File, BlankPlusFormat_Flt, Entr );
+   }
+#  endif
+
+#  ifdef SRHD
+   real Prim[NCOMP_TOTAL], LorentzFactor=-1.0, HTilde=-1.0;
+   if ( OPT__OUTPUT_CS || OPT__OUTPUT_LORENTZ || OPT__OUTPUT_3VELOCITY )
+      Hydro_Con2Pri( u, Prim, (real)-HUGE_NUMBER, NULL_BOOL, NULL_INT, NULL,
+                     NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
+                     EoS_DensPres2Eint_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, &LorentzFactor );
+#  endif
+
    if ( OPT__OUTPUT_CS ) {
+#     ifdef SRHD
+      Cs = SQRT(  EoS_DensPres2CSqr_CPUPtr( Prim[0], Prim[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table )  );
+#     else
 //    compute pressure if it is not done yet
       if ( Pres < 0.0 )
       Pres = Hydro_Con2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
                              CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres_CPUPtr,
+                             EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
       Cs   = SQRT(  EoS_DensPres2CSqr_CPUPtr( u[DENS], Pres, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                              h_EoS_Table, NULL )  );
-      fprintf( File, " %13.6e", Cs );
+                                              h_EoS_Table )  );
+#     endif
+      fprintf( File, BlankPlusFormat_Flt, Cs );
    }
 
    if ( OPT__OUTPUT_DIVVEL )
-      fprintf( File, " %13.6e", DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
+      fprintf( File, BlankPlusFormat_Flt, DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
 
    if ( OPT__OUTPUT_MACH )
-      fprintf( File, " %13.6e", DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
+      fprintf( File, BlankPlusFormat_Flt, DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
 #  endif // #if ( MODEL == HYDRO )
 
 #  ifdef MHD
    if ( OPT__OUTPUT_DIVMAG ) {
       const real DivB = MHD_GetCellCenteredDivBInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
-      fprintf( File, " %13.6e", DivB );
+      fprintf( File, BlankPlusFormat_Flt, DivB );
+   }
+#  endif
+
+#  ifdef SRHD
+   if ( OPT__OUTPUT_LORENTZ )
+      fprintf( File, BlankPlusFormat_Flt, LorentzFactor );
+
+   if ( OPT__OUTPUT_3VELOCITY )
+   {
+      fprintf( File, BlankPlusFormat_Flt, Prim[1] / LorentzFactor );
+      fprintf( File, BlankPlusFormat_Flt, Prim[2] / LorentzFactor );
+      fprintf( File, BlankPlusFormat_Flt, Prim[3] / LorentzFactor );
+   }
+
+   if ( OPT__OUTPUT_ENTHALPY )
+   {
+      HTilde = Hydro_Con2HTilde( u, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                 EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+      fprintf( File, BlankPlusFormat_Flt, HTilde );
    }
 #  endif
 
    if ( OPT__OUTPUT_USER_FIELD ) {
       for (int v=0; v<UserDerField_Num; v++)
-      fprintf( File, " %13.6e", DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
+      fprintf( File, BlankPlusFormat_Flt, DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
    }
 
    fprintf( File, "\n" );
@@ -400,6 +460,7 @@ void GetDerivedField( real (*FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
       const real MinDens_No          = -1.0;
       const real MinPres_No          = -1.0;
       const real MinTemp_No          = -1.0;
+      const real MinEntr_No          = -1.0;
       const bool DE_Consistency_No   = false;
 #     ifndef MHD
       const int  OPT__MAG_INT_SCHEME = INT_NONE;
@@ -408,7 +469,7 @@ void GetDerivedField( real (*FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
 //    always prepare all fields
       Prepare_PatchData( lv, Time[lv], FluIn[0][0], MagFC[0][0], DER_GHOST_SIZE, 1, &PID0,
                          _TOTAL, _MAG, OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCH, NSIDE_26,
-                         IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, DE_Consistency_No );
+                         IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
    } // if ( PrepFluIn )
 
 

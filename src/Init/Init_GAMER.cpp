@@ -1,14 +1,5 @@
 #include "GAMER.h"
 
-extern void (*Init_User_Ptr)();
-extern void (*Init_DerivedField_User_Ptr)();
-#ifdef PARTICLE
-extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRank,
-                                        real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                        real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                        real *AllAttribute[PAR_NATT_TOTAL] );
-#endif
-
 
 
 
@@ -16,7 +7,8 @@ extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPa
 // Function    :  Init
 // Description :  Initialize GAMER
 //
-// Note        :  1. Function pointer "Init_User_Ptr" may be set by a test problem initializer
+// Note        :  1. Function pointers "Init_User_Ptr" and "Init_User_AfterPoisson_Ptr" may be set by a
+//                   test problem initializer
 //
 // Parameter   :  argc, argv: Command line arguments
 //-------------------------------------------------------------------------------------------------------
@@ -55,6 +47,20 @@ void Init_GAMER( int *argc, char ***argv )
    Init_ResetParameter();
 
 
+// load the tables of the flag criteria from the input files "Input__Flag_XXX"
+   Init_Load_FlagCriteria();
+
+
+// load the dump table from the input file "Input__DumpTable"
+   if ( OPT__OUTPUT_MODE == OUTPUT_USE_TABLE )
+#  ifdef PARTICLE
+   if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PAR_MODE )
+#  else
+   if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS )
+#  endif
+   Init_Load_DumpTable();
+
+
 // initialize OpenMP settings
 #  ifdef OPENMP
    Init_OpenMP();
@@ -66,13 +72,7 @@ void Init_GAMER( int *argc, char ***argv )
 #  ifdef GPU
    CUAPI_SetDevice( OPT__GPUID_SELECT );
 
-#  ifndef GRAVITY
-   int POT_GPU_NPGROUP = NULL_INT;
-#  endif
-#  ifndef SUPPORT_GRACKLE
-   int CHE_GPU_NPGROUP = NULL_INT;
-#  endif
-   CUAPI_Set_Default_GPU_Parameter( GPU_NSTREAM, FLU_GPU_NPGROUP, POT_GPU_NPGROUP, CHE_GPU_NPGROUP, SRC_GPU_NPGROUP );
+   CUAPI_SetCache();
 #  endif // #ifdef GPU
 
 
@@ -88,11 +88,7 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
-// initialize parameters for the parallelization (rectangular domain decomposition)
-   Init_Parallelization();
-
-
-#  ifdef GRAVITY
+#  ifdef SUPPORT_FFTW
 // initialize FFTW
    Init_FFTW();
 #  endif
@@ -102,8 +98,13 @@ void Init_GAMER( int *argc, char ***argv )
    Init_TestProb();
 
 
+// initialize parameters for the parallelization
+// --> call it after Init_TestProb() since Init_TestProb() may overwrite the total number of particles
+   Init_Parallelization();
+
+
 // initialize all fields and particle attributes
-// --> Init_Field() must be called before CUAPI_Set_Default_GPU_Parameter()
+// --> Init_Field() must be called before CUAPI_SetConstMemory()
    Init_Field();
 #  ifdef PARTICLE
    Par_Init_Attribute();
@@ -126,6 +127,16 @@ void Init_GAMER( int *argc, char ***argv )
 // initialize the source-term routines
 // --> must be called before memory allocation
    Src_Init();
+
+
+// initialize the feedback routines
+#  ifdef FEEDBACK
+   FB_Init();
+#  endif
+
+
+// initialize the microphysics
+   Microphysics_Init();
 
 
 // initialize the user-defined derived fields
@@ -156,26 +167,15 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
-// load the tables of the flag criteria from the input files "Input__Flag_XXX"
-   Init_Load_FlagCriteria();
-
-
-// load the dump table from the input file "Input__DumpTable"
-//###NOTE: unit has not been converted into internal unit
-   if ( OPT__OUTPUT_MODE == OUTPUT_USE_TABLE )
-#  ifdef PARTICLE
-   if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PAR_TEXT )
-#  else
-   if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS )
-#  endif
-   Init_Load_DumpTable();
-
-
 // initialize memory pool
    if ( OPT__MEMORY_POOL )    Init_MemoryPool();
 
 
-// allocate memory for several global arrays
+// allocate memory for several CPU/GPU global arrays
+#  ifdef GPU
+   CUAPI_MemAllocate();
+#  endif
+
    Init_MemAllocate();
 
 
@@ -197,7 +197,7 @@ void Init_GAMER( int *argc, char ***argv )
             Par_Init_ByFunction_Ptr( amr->Par->NPar_Active, amr->Par->NPar_Active_AllRank,
                                      amr->Par->Mass, amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ,
                                      amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ, amr->Par->Time,
-                                     amr->Par->Attribute );
+                                     amr->Par->Type, amr->Par->Attribute );
          else
             Aux_Error( ERROR_INFO, "Par_Init_ByFunction_Ptr == NULL for PAR_INIT = 1 !!\n" );
          break;
@@ -231,7 +231,14 @@ void Init_GAMER( int *argc, char ***argv )
    }
 
 
-// user-defined initialization
+// ensure B field consistency on the shared interfaces between sibling patches
+#  if ( MODEL == HYDRO  &&  defined MHD )
+   if ( OPT__SAME_INTERFACE_B )
+   for (int lv=0; lv<NLEVEL; lv++)  MHD_SameInterfaceB( lv );
+#  endif
+
+
+// user-defined initialization (before the Poisson solver)
    if ( Init_User_Ptr != NULL )  Init_User_Ptr();
 
 
@@ -244,8 +251,10 @@ void Init_GAMER( int *argc, char ***argv )
 #  ifdef GRAVITY
    if ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT )
    {
+#     ifdef SUPPORT_FFTW
 //    initialize the k-space Green's function for the isolated BC.
       if ( OPT__SELF_GRAVITY  &&  OPT__BC_POT == BC_POT_ISOLATED )    Init_GreenFuncK();
+#     endif
 
 
 //    evaluate the initial average density if it is not set yet (may already be set in Init_ByRestart)
@@ -274,17 +283,67 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif // #ifdef GARVITY
 
 
+#  ifdef PARTICLE
+
 // initialize particle acceleration
-#  if ( defined PARTICLE  &&  defined STORE_PAR_ACC )
+#  if ( defined MASSIVE_PARTICLES  &&  defined STORE_PAR_ACC )
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Calculating particle acceleration" );
 
    const bool StoreAcc_Yes    = true;
    const bool UseStoredAcc_No = false;
 
    for (int lv=0; lv<NLEVEL; lv++)
-   Par_UpdateParticle( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ], NULL_REAL, PAR_UPSTEP_ACC_ONLY, StoreAcc_Yes, UseStoredAcc_No );
+      Par_UpdateParticle( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ], NULL_REAL, PAR_UPSTEP_ACC_ONLY, StoreAcc_Yes, UseStoredAcc_No );
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Calculating particle acceleration" );
-#  endif
+#  endif // #if ( defined MASSIVE_PARTICLES  &&  defined STORE_PAR_ACC )
+
+#  ifdef TRACER
+// initialize tracer particles
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Initializing tracer particles" );
+
+   const bool MapOnly_Yes = true;
+
+   for (int lv=0; lv<NLEVEL; lv++)
+      Par_UpdateTracerParticle( lv, Time[lv], NULL_REAL, MapOnly_Yes );
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Initializing tracer particles" );
+#  endif // #ifdef TRACER
+
+#  endif // #ifdef PARTICLE
+
+
+// user-defined initialization (after the Poisson solver)
+   if ( Init_User_AfterPoisson_Ptr != NULL )    Init_User_AfterPoisson_Ptr();
+
+
+// initialize source-term fields (e.g., cooling time)
+// --> necessary for, for example, estimating the source-term time-step at the first step
+// --> must ensure each source term does not modify any fluid field (e.g., gas internal energy) when dt=0.0
+//     --> source terms violating this criterion (e.g., deleptonization) must be temporarily disabled before calling Src_AdvanceDt()
+   if ( OPT__INIT != INIT_BY_RESTART )
+   {
+      const bool OverlapMPI_No   = false;
+      const bool Overlap_Sync_No = false;
+
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Initializing source-term fields" );
+
+      for (int lv=0; lv<NLEVEL; lv++)
+      {
+         if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d ... ", lv );
+
+//       adopt dt=0.0 to prevent any update of the fluid fields
+         Src_AdvanceDt( lv, Time[lv], Time[lv], 0.0, amr->FluSg[lv], amr->MagSg[lv], OverlapMPI_No, Overlap_Sync_No );
+
+//       must exchange all source-term fields since they are currently implemeted as passive scalars,
+//       which will be advected by the fluid solver (and then be overwritten by Src_AdvanceDt())
+//       --> here we exchange all _TOTAL and _MAG fields just for simplicity
+         Buf_GetBufferData( lv, amr->FluSg[lv], amr->MagSg[lv], NULL_INT, DATA_GENERAL, _TOTAL, _MAG, Flu_ParaBuf, USELB_YES );
+
+         if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      } // for (int lv=0; lv<NLEVEL; lv++)
+
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Initializing source-term fields" );
+   } // if ( OPT__INIT != INIT_BY_RESTART )
 
 } // FUNCTION : Init_GAMER

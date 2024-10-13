@@ -386,8 +386,9 @@ void Smoothing( real *Sol_1D, const real *RHS_1D, const real dh, const int NGrid
    int ip, jp, kp, im, jm, km;
 
 // typecasting to 3D arrays
-         real (*Sol)[NGrid][NGrid] = ( real(*)[NGrid][NGrid] )Sol_1D;
-   const real (*RHS)[NGrid][NGrid] = ( real(*)[NGrid][NGrid] )RHS_1D;
+   typedef real (*vla)[NGrid][NGrid];
+         vla Sol = ( vla )Sol_1D;
+   const vla RHS = ( vla )RHS_1D;
 
 
 // odd-even ordering
@@ -453,9 +454,10 @@ void ComputeDefect( const real *Sol_1D, const real *RHS_1D, real *Def_1D, const 
    int ip, jp, kp, im, jm, km;
 
 // typecasting to 3D arrays
-   const real (*Sol)[NGrid][NGrid] = ( real(*)[NGrid][NGrid] )Sol_1D;
-   const real (*RHS)[NGrid][NGrid] = ( real(*)[NGrid][NGrid] )RHS_1D;
-         real (*Def)[NGrid][NGrid] = ( real(*)[NGrid][NGrid] )Def_1D;
+   typedef real (*vla)[NGrid][NGrid];
+   const vla Sol = ( vla )Sol_1D;
+   const vla RHS = ( vla )RHS_1D;
+         vla Def = ( vla )Def_1D;
 
 
    for (int k=1; k<NGrid-1; k++)
@@ -523,8 +525,10 @@ void Restrict( const real *FData_1D, real *CData_1D, const int NGrid_F, const in
    const real Ratio = real(NGrid_F-1) / real(NGrid_C-1);
 
 // typecasting to 3D arrays
-   const real (*FData)[NGrid_F][NGrid_F] = ( real(*)[NGrid_F][NGrid_F] )FData_1D;
-         real (*CData)[NGrid_C][NGrid_C] = ( real(*)[NGrid_C][NGrid_C] )CData_1D;
+   typedef real (*vlaf)[NGrid_F][NGrid_F];
+   typedef real (*vlac)[NGrid_C][NGrid_C];
+   const vlaf FData = ( vlaf )FData_1D;
+         vlac CData = ( vlac )CData_1D;
 
    int  iim, ii, iip, jjm, jj, jjp, kkm, kk, kkp;
    real x, y, z, Coeff[3][3]; // Coeff[x/y/z][left/center/right]
@@ -625,8 +629,11 @@ void Prolongate_and_Correct( const real *CData_1D, real *FData_1D, const int NGr
    const real Ratio = real(NGrid_C-1) / real(NGrid_F-1);
 
 // typecasting to 3D arrays
-   const real (*CData)[NGrid_C][NGrid_C] = ( real(*)[NGrid_C][NGrid_C] )CData_1D;
-         real (*FData)[NGrid_F][NGrid_F] = ( real(*)[NGrid_F][NGrid_F] )FData_1D;
+
+   typedef real (*vlaf)[NGrid_F][NGrid_F];
+   typedef real (*vlac)[NGrid_C][NGrid_C];
+         vlaf FData = ( vlaf )FData_1D;
+   const vlac CData = ( vlac )CData_1D;
 
    int  ii, iip, jj, jjp, kk, kkp;
    real x, y, z, Coeff[3][2]; // Coeff[x/y/z][left/right]

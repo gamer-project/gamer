@@ -24,6 +24,14 @@ datatypes in the HDF5 format
 #  define DEBUG_HDF5
 #endif
 
+#ifdef PARTICLE
+# ifdef FLOAT8_PAR
+#  define H5T_GAMER_REAL_PAR H5T_NATIVE_DOUBLE
+# else
+#  define H5T_GAMER_REAL_PAR H5T_NATIVE_FLOAT
+# endif
+#endif // #ifdef PARTICLE
+
 
 
 
@@ -56,6 +64,7 @@ struct KeyInfo_t
    int    CellScale[NLEVEL];        // amr->scale[lv]
 #  if ( MODEL == HYDRO )
    int    Magnetohydrodynamics;
+   int    SRHydrodynamics;
    int    CosmicRay;
 #  endif
 
@@ -66,6 +75,10 @@ struct KeyInfo_t
 #  ifdef PARTICLE
    long   Par_NPar;                 // amr->Par->NPar_Active_AllRank
    int    Par_NAttStored;           // PAR_NATT_STORED
+   int    Float8_Par;
+#  endif
+#  ifdef COSMIC_RAY
+   int    CR_Diffusion;
 #  endif
 
    double BoxSize[3];
@@ -116,6 +129,14 @@ struct Makefile_t
    int Laohu;
    int SupportHDF5;
    int SupportGSL;
+   int SupportFFTW;
+   int SupportLibYT;
+#  ifdef SUPPORT_LIBYT
+   int LibYTUsePatchGroup;
+   int LibYTInteractive;
+   int LibYTReload;
+   int LibYTJupyter;
+#  endif
    int SupportGrackle;
    int RandomNumber;
 
@@ -135,6 +156,7 @@ struct Makefile_t
 #  endif
    int DualEnergy;
    int Magnetohydrodynamics;
+   int SRHydrodynamics;
    int CosmicRay;
    int EoS;
    int BarotropicEoS;
@@ -149,9 +171,17 @@ struct Makefile_t
 #  endif // MODEL
 
 #  ifdef PARTICLE
+   int MassiveParticles;
+   int Tracer;
    int StoreParAcc;
    int StarFormation;
+   int Feedback;
    int Par_NAttUser;
+   int Float8_Par;
+#  endif
+
+#  ifdef COSMIC_RAY
+   int CR_Diffusion;
 #  endif
 
 }; // struct Makefile_t
@@ -215,7 +245,6 @@ struct SymConst_t
 
 #  if   ( POT_SCHEME == SOR )
    int    Pot_BlockSize_z;
-   int    UsePSolver_10to14;
    int    SOR_RhoShared;
    int    SOR_CPotShared;
    int    SOR_UseShuffle;
@@ -230,8 +259,10 @@ struct SymConst_t
 
 #  ifdef PARTICLE
    int    Par_NAttStored;
+   int    Par_NType;
+#  ifdef GRAVITY
    int    RhoExt_GhostSize;
-
+#  endif
    int    Debug_Particle;
 
    double ParList_GrowthFactor;
@@ -244,14 +275,18 @@ struct SymConst_t
    int    BitRep_Electric;
 #  endif
 
+   int    InterpMask;
+   int    FB_SepFluOut;
+
 
 #  if   ( MODEL == HYDRO )
    int    Flu_BlockSize_x;
    int    Flu_BlockSize_y;
-   int    CheckNegativeInFluid;
+   int    CheckUnphyInFluid;
    int    CharReconstruction;
    int    LR_Eint;
    int    CheckIntermediate;
+   int    RSolverRescue;
    int    HLL_NoRefState;
    int    HLL_IncludeAllWaves;
    int    HLLC_WaveSpeed;
@@ -268,6 +303,7 @@ struct SymConst_t
 #  ifdef MHD
    int    EulerY;
 #  endif
+   int    MHM_CheckPredict;
    int    EoSNAuxMax;
    int    EoSNTableMax;
 
@@ -298,6 +334,11 @@ struct SymConst_t
    int    Der_GhostSize;
    int    Der_Nxt;
    int    Der_NOut_Max;
+
+#  ifdef FEEDBACK
+   int    FB_GhostSize;
+   int    FB_Nxt;
+#  endif
 
    int    NFieldStoredMax;
 
@@ -352,12 +393,19 @@ struct InputPara_t
    int    Par_Init;
    int    Par_ICFormat;
    double Par_ICMass;
+   int    Par_ICType;
+   int    Par_ICFloat8;
    int    Par_Interp;
+   int    Par_InterpTracer;
    int    Par_Integ;
+   int    Par_IntegTracer;
    int    Par_ImproveAcc;
    int    Par_PredictPos;
    double Par_RemoveCell;
+   int    Opt__FreezePar;
    int    Par_GhostSize;
+   int    Par_GhostSizeTracer;
+   int    Par_TracerVelCorr;
    char  *ParAttLabel[PAR_NATT_TOTAL];
 #  endif
 
@@ -383,8 +431,14 @@ struct InputPara_t
    double Dt__ParVelMax;
    double Dt__ParAcc;
 #  endif
+#  ifdef CR_DIFFUSION
+   double Dt__CR_Diffusion;
+#  endif
 #  ifdef COMOVING
    double Dt__MaxDeltaA;
+#  endif
+#  ifdef SRHD
+   int    Dt__SpeedOfLight;
 #  endif
    double Dt__SyncParentLv;
    double Dt__SyncChildrenLv;
@@ -394,9 +448,16 @@ struct InputPara_t
    int    AutoReduceDt;
    double AutoReduceDtFactor;
    double AutoReduceDtFactorMin;
+#  if ( MODEL == HYDRO )
+   double AutoReduceMinModFactor;
+   double AutoReduceMinModMin;
+#  endif
+   double AutoReduceIntMonoFactor;
+   double AutoReduceIntMonoMin;
 
 // domain refinement
    int    RegridCount;
+   int    RefineNLevel;
    int    FlagBufferSize;
    int    FlagBufferSizeMaxM1Lv;
    int    FlagBufferSizeMaxM2Lv;
@@ -410,6 +471,12 @@ struct InputPara_t
 #  ifdef MHD
    int    Opt__Flag_Current;
 #  endif
+#  ifdef SRHD
+   int    Opt__Flag_LrtzGradient;
+#  endif
+#  ifdef COSMIC_RAY
+   int    Opt__Flag_CRay;
+#  endif
 #  endif
 #  if ( MODEL == ELBDM )
    int    Opt__Flag_EngyDensity;
@@ -419,6 +486,10 @@ struct InputPara_t
    int    Opt__Flag_LohnerEngy;
    int    Opt__Flag_LohnerPres;
    int    Opt__Flag_LohnerTemp;
+   int    Opt__Flag_LohnerEntr;
+#  ifdef COSMIC_RAY
+   int    Opt__Flag_LohnerCRay;
+#  endif
 #  endif
    int    Opt__Flag_LohnerForm;
    int    Opt__Flag_User;
@@ -451,12 +522,20 @@ struct InputPara_t
 #  if ( MODEL == HYDRO )
    double Gamma;
    double MolecularWeight;
+   double MuNorm;
    double IsoTemp;
    double MinMod_Coeff;
+   int    MinMod_MaxIter;
    int    Opt__LR_Limiter;
    int    Opt__1stFluxCorr;
    int    Opt__1stFluxCorrScheme;
+#  ifdef DUAL_ENERGY
+   double DualEnergySwitch;
 #  endif
+#  ifdef MHD
+   int    Opt__SameInterfaceB;
+#  endif
+#  endif // HYDRO
 
 // ELBDM solvers
 #  if ( MODEL == ELBDM )
@@ -467,16 +546,18 @@ struct InputPara_t
 #  endif
    double ELBDM_Taylor3_Coeff;
    int    ELBDM_Taylor3_Auto;
-#  endif
+#  endif // ELBDM
 
 // fluid solvers in different models
    int    Flu_GPU_NPGroup;
    int    GPU_NStream;
    int    Opt__FixUp_Flux;
+   long   FixUpFlux_Var;
 #  ifdef MHD
    int    Opt__FixUp_Electric;
 #  endif
    int    Opt__FixUp_Restrict;
+   long   FixUpRestrict_Var;
    int    Opt__CorrAfterAllSync;
    int    Opt__NormalizePassive;
    int    NormalizePassive_NVar;
@@ -490,6 +571,8 @@ struct InputPara_t
 #  endif
    int    Opt__OverlapMPI;
    int    Opt__ResetFluid;
+   int    Opt__ResetFluidInit;
+   int    Opt__FreezeFluid;
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    double MinDens;
 #  endif
@@ -497,14 +580,12 @@ struct InputPara_t
    double MinPres;
    double MinEint;
    double MinTemp;
+   double MinEntr;
    int    Opt__CheckPresAfterFlu;
    int    Opt__LastResortFloor;
    int    JeansMinPres;
    int    JeansMinPres_Level;
    int    JeansMinPres_NCell;
-#  endif
-#  ifdef DUAL_ENERGY
-   double DualEnergySwitch;
 #  endif
 
 // gravity
@@ -568,6 +649,26 @@ struct InputPara_t
    double SF_CreateStar_MaxStarMFrac;
 #  endif
 
+// feedback
+#  ifdef FEEDBACK
+   int   FB_Level;
+   int   FB_RSeed;
+   int   FB_SNe;
+   int   FB_User;
+#  endif
+
+// cosmic ray
+#  ifdef COSMIC_RAY
+   double CR_Gamma;
+#  endif
+
+// microphysics
+#  ifdef CR_DIFFUSION
+   double CR_Diffusion_ParaCoeff;
+   double CR_Diffusion_PerpCoeff;
+   double CR_Diffusion_MinB;
+#  endif
+
 // initialization
    int    Opt__Init;
    int    RestartLoadNRank;
@@ -576,6 +677,7 @@ struct InputPara_t
    int    Opt__UM_IC_NLevel;
    int    Opt__UM_IC_NVar;
    int    Opt__UM_IC_Format;
+   int    Opt__UM_IC_Float8;
    int    Opt__UM_IC_Downgrade;
    int    Opt__UM_IC_Refine;
    int    Opt__UM_IC_LoadNRank;
@@ -585,11 +687,17 @@ struct InputPara_t
    int    Opt__GPUID_Select;
    int    Init_Subsampling_NCell;
 #  ifdef MHD
-   int    Opt__InitBFieldByFile;
+   int    Opt__InitBFieldByVecPot;
+#  endif
+#  ifdef SUPPORT_FFTW
+   int    Opt__FFTW_Startup;
 #  endif
 
 // interpolation schemes
    int    Opt__Int_Time;
+#  if ( MODEL == HYDRO )
+   int    Opt__Int_Prim;
+#  endif
 #  if ( MODEL == ELBDM )
    int    Opt__Int_Phase;
 #  endif
@@ -606,6 +714,10 @@ struct InputPara_t
    int    Opt__RefPot_IntScheme;
 #  endif
    double IntMonoCoeff;
+#  ifdef MHD
+   double IntMonoCoeffB;
+#  endif
+   int    Mono_MaxIter;
    int    IntOppSign0thOrder;
 
 // data dump
@@ -613,7 +725,7 @@ struct InputPara_t
    int    Opt__Output_Part;
    int    Opt__Output_User;
 #  ifdef PARTICLE
-   int    Opt__Output_ParText;
+   int    Opt__Output_Par_Mode;
 #  endif
    int    Opt__Output_BasePS;
    int    Opt__Output_Base;
@@ -629,21 +741,34 @@ struct InputPara_t
 #  if ( MODEL == HYDRO )
    int    Opt__Output_Pres;
    int    Opt__Output_Temp;
+   int    Opt__Output_Entr;
    int    Opt__Output_Cs;
    int    Opt__Output_DivVel;
    int    Opt__Output_Mach;
 #  ifdef MHD
    int    Opt__Output_DivMag;
 #  endif
+#  ifdef SRHD
+   int    Opt__Output_Lorentz;
+   int    Opt__Output_3Velocity;
+   int    Opt__Output_Enthalpy;
+#  endif
 #  endif // #if ( MODEL == HYDRO )
    int    Opt__Output_UserField;
    int    Opt__Output_Mode;
+   int    Opt__Output_Restart;
    int    Opt__Output_Step;
    double Opt__Output_Dt;
+   char  *Opt__Output_Text_Format_Flt;
    double Output_PartX;
    double Output_PartY;
    double Output_PartZ;
    int    InitDumpID;
+
+// libyt jupyter interface
+#  if ( defined(SUPPORT_LIBYT) && defined(LIBYT_JUPYTER) )
+   int    Yt_JupyterUseConnectionFile;
+#  endif
 
 // miscellaneous
    int    Opt__Verbose;
@@ -655,13 +780,25 @@ struct InputPara_t
    int    Opt__RecordMemory;
    int    Opt__RecordPerformance;
    int    Opt__ManualControl;
+   int    Opt__RecordCenter;
+   double COM_CenX;
+   double COM_CenY;
+   double COM_CenZ;
+   double COM_MaxR;
+   double COM_MinRho;
+   double COM_TolErrR;
+   int    COM_MaxIter;
    int    Opt__RecordUser;
    int    Opt__OptimizeAggressive;
+   int    Opt__SortPatchByLBIdx;
 
 // simulation checks
    int    Opt__Ck_Refine;
    int    Opt__Ck_ProperNesting;
    int    Opt__Ck_Conservation;
+   double AngMom_OriginX;
+   double AngMom_OriginY;
+   double AngMom_OriginZ;
    int    Opt__Ck_NormPassive;
    int    Opt__Ck_Restrict;
    int    Opt__Ck_Finite;
@@ -678,11 +815,12 @@ struct InputPara_t
    int    Opt__Ck_InterfaceB;
    int    Opt__Ck_DivergenceB;
 #  endif
+   int    Opt__Ck_InputFluid;
 
 // flag tables
    double FlagTable_Rho         [NLEVEL-1];
    double FlagTable_RhoGradient [NLEVEL-1];
-   double FlagTable_Lohner      [NLEVEL-1][4];
+   double FlagTable_Lohner      [NLEVEL-1][5];
    hvl_t  FlagTable_User        [NLEVEL-1];
 #  if   ( MODEL == HYDRO )
    double FlagTable_PresGradient[NLEVEL-1];
@@ -690,6 +828,12 @@ struct InputPara_t
    double FlagTable_Jeans       [NLEVEL-1];
 #  ifdef MHD
    double FlagTable_Current     [NLEVEL-1];
+#  endif
+#  ifdef SRHD
+   double FlagTable_LrtzGradient[NLEVEL-1];
+#  endif
+#  ifdef COSMIC_RAY
+   double FlagTable_CRay        [NLEVEL-1];
 #  endif
 #  elif ( MODEL == ELBDM )
    double FlagTable_EngyDensity [NLEVEL-1][2];

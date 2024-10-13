@@ -161,7 +161,8 @@ void BC_Extrapolation_xm( real *Array, const int NVar, const int GhostSize, cons
    const int i_ref = GhostSize;  // reference i index
 
 // 1D array -> 3D array
-   real (*Array3D)[ArraySizeZ][ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeZ][ArraySizeY][ArraySizeX] )Array;
+   typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
+   vla Array3D = ( vla )Array;
 
 // set the boundary values
    for (int v=0; v<NVar; v++)
@@ -199,7 +200,8 @@ void BC_Extrapolation_xp( real *Array, const int NVar, const int GhostSize, cons
    const int i_ref = ArraySizeX - GhostSize - 1;   // reference i index
 
 // 1D array -> 3D array
-   real (*Array3D)[ArraySizeZ][ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeZ][ArraySizeY][ArraySizeX] )Array;
+   typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
+   vla Array3D = ( vla )Array;
 
 // set the boundary values
    for (int v=0; v<NVar; v++)
@@ -237,7 +239,8 @@ void BC_Extrapolation_ym( real *Array, const int NVar, const int GhostSize, cons
    const int j_ref = GhostSize;  // reference j index
 
 // 1D array -> 3D array
-   real (*Array3D)[ArraySizeZ][ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeZ][ArraySizeY][ArraySizeX] )Array;
+   typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
+   vla Array3D = ( vla )Array;
 
 // set the boundary values
    for (int v=0; v<NVar; v++)
@@ -275,7 +278,8 @@ void BC_Extrapolation_yp( real *Array, const int NVar, const int GhostSize, cons
    const int j_ref = ArraySizeY - GhostSize - 1;   // reference j index
 
 // 1D array -> 3D array
-   real (*Array3D)[ArraySizeZ][ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeZ][ArraySizeY][ArraySizeX] )Array;
+   typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
+   vla Array3D = ( vla )Array;
 
 // set the boundary values
    for (int v=0; v<NVar; v++)
@@ -313,7 +317,8 @@ void BC_Extrapolation_zm( real *Array, const int NVar, const int GhostSize, cons
    const int k_ref = GhostSize;  // reference k index
 
 // 1D array -> 3D array
-   real (*Array3D)[ArraySizeZ][ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeZ][ArraySizeY][ArraySizeX] )Array;
+   typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
+   vla Array3D = ( vla )Array;
 
 // set the boundary values
    for (int v=0; v<NVar; v++)
@@ -351,7 +356,8 @@ void BC_Extrapolation_zp( real *Array, const int NVar, const int GhostSize, cons
    const int k_ref = ArraySizeZ - GhostSize - 1;   // reference k index
 
 // 1D array -> 3D array
-   real (*Array3D)[ArraySizeZ][ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeZ][ArraySizeY][ArraySizeX] )Array;
+   typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
+   vla Array3D = ( vla )Array;
 
 // set the boundary values
    for (int v=0; v<NVar; v++)

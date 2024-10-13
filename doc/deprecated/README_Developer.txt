@@ -2,7 +2,7 @@
 
                         =================================================================
                         ||                                                             ||
-                        ||    GAMER : GPU-accelerated Adaptive MEsh Refinement code    || 
+                        ||    GAMER : GPU-accelerated Adaptive MEsh Refinement code    ||
                         ||                                                             ||
                         =================================================================
 
@@ -45,7 +45,7 @@ Known issues         03/21/2012
    (4) The performance improvement by using the TargetP list seems not to be good enough
 2. WAF scheme does not work well in cosmological simulations
 3. EXACT Riemann solver does not work well in cosmological simulations
-4. Sometimes the program will become idle in Fermi GPUs 
+4. Sometimes the program will become idle in Fermi GPUs
    (when the option "FERMI" is turned on)
 5. OpenMP directive for grandson check is disabled in version beta5.0
    --> Please ensure that when multiple threads write to the same memory
@@ -56,7 +56,7 @@ Known issues         03/21/2012
    --> segmentation fault when using mvapich2
 7. High-resolution load-balance run (reload data N256_RefineRho4/Data_000025)
    using 8 nodes failed in Dirac (16- and 32-node run is ok).
-   --> Error message : 
+   --> Error message :
        [[40961,1],7][btl_openib_component.c:3224:handle_wc]
        from dirac17 to: dirac20-ib error polling LP CQ with status LOCAL LENGTH ERROR
        status number 1 for wr_id 52572936 opcode 1  vendor error 105 qp_idx 3
@@ -73,15 +73,15 @@ Known issues         03/21/2012
    --> It seems that the realloc function will fail in the file
        "LB_SFC_to_Slice.cpp"
        --> Setting "MemUnit" to a larger number to avoid calling the realloc
-           function seems to make the code much stable (DON"T KNOW WHY...) 
-11. The memory is not properly released on the Dirac system sometimes 
+           function seems to make the code much stable (DON"T KNOW WHY...)
+11. The memory is not properly released on the Dirac system sometimes
     (ok in Geisha and Laohu !!)
 
 
 
 Future work (easy)   11/28/2011
 -------------------------------
-1.  Add a boolean parameter "Loaded" in the structure "AMR_t" to indicate whether or not the data of a targeted 
+1.  Add a boolean parameter "Loaded" in the structure "AMR_t" to indicate whether or not the data of a targeted
     level has been loaded in the out-of-core computing.
 2.  For the options "OPT__GPU_DT_CFL" and "OPT__GPU_DT_ACC", one must calculate the time-step by CPU for the
     newly created patches.
@@ -98,7 +98,7 @@ Future work (easy)   11/28/2011
           #endif
           ...
           #ifdef __cplusplus
-          } 
+          }
           #endif
     (2) maybe add the option "COMPILER=XXX" in the Makefile
     (3) Add the following macros for all files requiring the function "getline"
@@ -123,7 +123,7 @@ Future work (easy)   11/28/2011
 28. Dynamically allocate all XXX[MPI_Rank] arrays and all other automatic
     arrays with undetermined array size during compilation
 31. Replace all "enum A" by "typedef int A" as suggested by Enzo
-33. Move operations for "Stage == 0" in the function "Output_DumpData" to 
+33. Move operations for "Stage == 0" in the function "Output_DumpData" to
     "Init_Output"
     --> Make "Output_DumpData" as simple as possible so that one can comment
         it out without causing any problem
@@ -158,7 +158,7 @@ Future work (easy)   11/28/2011
 49. Replace "MPI_DOUBLE" and "MPI_FLOAT" by "GAMER_MPI_REAL"
 50. Data output
     (1) output different "partial" data at the same time
-    (2) support projection 
+    (2) support projection
     (3) support file prefix and suffix
     (4)
 51. Output reference solution recorded in the function "Aux_Check_Conservation"
@@ -171,7 +171,7 @@ Future work (hard)   07/16/2011
 1.  The GPU/CPU fluid solver can save the output results in an arbitrary Sg.
 2.  Let each "half step" contain both the forward and backward sweepings for the fluid solver.
 3.  Use the fine-grid data for interpolation.
-4.  Remove the constraint that eight nearby patches must reside in the same MPI process. Also let the patch 
+4.  Remove the constraint that eight nearby patches must reside in the same MPI process. Also let the patch
     indices in one patch group be arbitrary.
 5.  Ensure the momentum and energy conservation even in a self-gravity system.
     --> Refer to Springel's AREPO paper, Ui-Li Pen's "A HIGH-RESOLUTION
@@ -224,12 +224,12 @@ Optimizations        07/16/2011
 5.  Construct new sending and receiving data list for updating the buffer data after the "fix-up" operation.
     --> We don't need to load and dump the NoSonNoCFB data in the OOC computing.
 6.  Optimize the data loading (restart procedure, HDF5 ?)
-7.  Perform the spatial interpolation in GPU for the hydro solver 
+7.  Perform the spatial interpolation in GPU for the hydro solver
     (refer to GAMER.1.0.beta4.0.t30.bk__Interpolation_in_GPU)
 8.  Reduce the MPI data transfer for the case "FLU_PARA_BUF < RHO_INT"
 9.  Perform the MPI data transfer sequentially in x, y, and z directions, so
     that the extra MPI calls can be avoided (the total amount of transferred
-    data is not changed). 
+    data is not changed).
     --> Particularly important for the out-of-core computation since that the
         amount of data stored and loaded at a time is increased.
 10. Use the "__restrict__" qualifier.
@@ -244,7 +244,7 @@ Optimizations        07/16/2011
 16. Support HeapSort with OpenMP
 17. Support "OVERLAP_MPI" for the rectangular domain decomposition
 18. Optimize the performance of "OVERLAP_MPI"
-19. Optimize the load-balance efficiency for the cases that the box sizes are 
+19. Optimize the load-balance efficiency for the cases that the box sizes are
     non-cubic and/or non-power-of-two.
 20. Try to further optimize the patch distribution for LOAD_BALACNE in order to
     minimize the MPI time
@@ -280,7 +280,7 @@ Serious issue        11/28/2011
        (1) kinematic solver      --> not solved yet
        (2) coarse-fine boundary  --> not solved yet
        (3) grid refinement       --> solved by using conservative
-           interpolation on density and (a) interpolation on phase or 
+           interpolation on density and (a) interpolation on phase or
            (b) rescaling real/imag parts by the refined density
 2. Allowed time-step is extremely small ...
 3. Is there any better solution than "interpolation on phase" to ensure the

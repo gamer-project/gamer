@@ -18,7 +18,6 @@
 void Aux_Check_NormalizePassive( const int lv, const char *comment )
 {
 
-
 // check
 #  ifndef DENS
    OPT__CK_NORMALIZE_PASSIVE = false;
@@ -39,6 +38,9 @@ void Aux_Check_NormalizePassive( const int lv, const char *comment )
       return;
    }
 
+
+
+#  if ( NCOMP_PASSIVE > 0 )
 
 #  ifdef FLOAT8
    const double TolErr = 1.0e-13;
@@ -107,8 +109,10 @@ void Aux_Check_NormalizePassive( const int lv, const char *comment )
    if ( Pass )
    {
       if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "\"%s\" : <%s> PASSED at level %2d, Time = %13.7e, Step = %ld \n",
+         Aux_Message( stdout, "\"%s\" : <%s> PASSED at level %2d, Time = %13.7e, Step = %ld\n",
                       comment, __FUNCTION__, lv, Time[lv], Step );
    }
+
+#  endif // #if ( NCOMP_PASSIVE > 0 )
 
 } // FUNCTION : Aux_Check_NormalizePassive

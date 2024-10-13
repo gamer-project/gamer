@@ -26,6 +26,7 @@ void End_MemFree()
       for (int PID=0; PID<amr->num[lv]; PID++)
       {
          amr->patch[0][lv][PID]->NPar = 0;
+         for (int i=0; i<PAR_NTYPE; i++) amr->patch[0][lv][PID]->NParType[i] = 0;
          free( amr->patch[0][lv][PID]->ParList );
          amr->patch[0][lv][PID]->ParList = NULL;
       }

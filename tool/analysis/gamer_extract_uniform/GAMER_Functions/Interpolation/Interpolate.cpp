@@ -13,13 +13,13 @@ void Int_CQuadratic(       real CData[], const int CSize[3], const int CStart[3]
                            real FData[], const int FSize[3], const int FStart[3], const int NComp,
                      const bool UnwrapPhase, const bool Monotonic, const real MonoCoeff );
 void Int_Quadratic (       real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
-		           real FData[], const int FSize[3], const int FStart[3], const int NComp,
+                           real FData[], const int FSize[3], const int FStart[3], const int NComp,
                      const bool UnwrapPhase, const bool Monotonic, const real MonoCoeff );
 void Int_CQuartic  (       real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
-	                   real FData[], const int FSize[3], const int FStart[3], const int NComp,
+                           real FData[], const int FSize[3], const int FStart[3], const int NComp,
                      const bool UnwrapPhase, const bool Monotonic, const real MonoCoeff );
 void Int_Quartic   (       real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
-	                   real FData[], const int FSize[3], const int FStart[3], const int NComp,
+                           real FData[], const int FSize[3], const int FStart[3], const int NComp,
                      const bool UnwrapPhase, const bool Monotonic, const real MonoCoeff );
 
 
@@ -27,11 +27,11 @@ void Int_Quartic   (       real CData[], const int CSize[3], const int CStart[3]
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Interpolate
-// Description :  Perform spatial interpolation using different schemes 
+// Description :  Perform spatial interpolation using different schemes
 //
 // Note        :  Use the input parameter "IntScheme" to determine the adopted interpolation scheme
 //
-// Parameter   :  CData       : Input coarse-grid array 
+// Parameter   :  CData       : Input coarse-grid array
 //                CSize       : Size of the CData array
 //                CStart      : (x,y,z) starting indices to perform interpolation on the CData array
 //                CRange      : Number of grids in each direction to perform interpolation
@@ -41,7 +41,7 @@ void Int_Quartic   (       real CData[], const int CSize[3], const int CStart[3]
 //                IntScheme   : Interpolation scheme
 //                              --> currently supported schemes include
 //                                  INT_MINMOD3D : MinMod-3D
-//                                  INT_MINMOD1D : MinMod-1D 
+//                                  INT_MINMOD1D : MinMod-1D
 //                                  INT_VANLEER  : vanLeer
 //                                  INT_CQUAD    : conservative quadratic
 //                                  INT_QUAD     : quadratic
@@ -53,7 +53,7 @@ void Int_Quartic   (       real CData[], const int CSize[3], const int CStart[3]
 //                MonoCoeff   : coefficient for ensuring the interpolation monotonicity
 //-------------------------------------------------------------------------------------------------------
 void Interpolate( real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
-                  real FData [], const int FSize[3], const int FStart[3], 
+                  real FData [], const int FSize[3], const int FStart[3],
                   const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase, const bool Monotonic,
                   const real MonoCoeff )
 {
@@ -68,13 +68,13 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
       if ( CSize[d] < 0 )     Aux_Error( ERROR_INFO, "CSize[%d] = %d < 0 !!\n", d, CSize[d] );
       if ( FSize[d] < 0 )     Aux_Error( ERROR_INFO, "FSize[%d] = %d < 0 !!\n", d, FSize[d] );
       if ( CStart[d] < NGhost  ||  CStart[d] >= CSize[d]-NGhost )
-         Aux_Error( ERROR_INFO, "incorrect CStart[%d] = %d (Min = %d, Max = %d) !!\n", 
+         Aux_Error( ERROR_INFO, "incorrect CStart[%d] = %d (Min = %d, Max = %d) !!\n",
                     d, CStart[d], NGhost, CSize[d]-NGhost-1 );
       if ( FStart[d] < 0  ||  FStart[d] >= FSize[d]-1 )
-         Aux_Error( ERROR_INFO, "incorrect FStart[%d] = %d (Min = %d, Max = %d) !!\n", 
+         Aux_Error( ERROR_INFO, "incorrect FStart[%d] = %d (Min = %d, Max = %d) !!\n",
                     d, FStart[d], 0, FSize[d]-2 );
       if ( CStart[d]+CRange[d] >= CSize[d]-NGhost+1 )
-         Aux_Error( ERROR_INFO, "incorrect CStart[%d] (%d) + CRange[%d] (%d) = %d (Max = %d) !!\n", 
+         Aux_Error( ERROR_INFO, "incorrect CStart[%d] (%d) + CRange[%d] (%d) = %d (Max = %d) !!\n",
                     d, CStart[d], d, CRange[d], CStart[d]+CRange[d], CSize[d]-NGhost );
    }
 
@@ -89,7 +89,7 @@ void Interpolate( real CData [], const int CSize[3], const int CStart[3], const 
    }
 
    if ( MonoCoeff < 1.0  ||  MonoCoeff > 4.0 )
-      Aux_Error( ERROR_INFO, "MonoCoeff (%14.7e) is not within the correct range (1<=MonoCoeff<=4) !!\n", 
+      Aux_Error( ERROR_INFO, "MonoCoeff (%14.7e) is not within the correct range (1<=MonoCoeff<=4) !!\n",
                  MonoCoeff );
 
 #  endif // #ifdef GAMER_DEBUG

@@ -65,7 +65,7 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
                                  int NDel_Home, int *DelPID_Home, int NDel_Away, ulong *DelCr1D_Away,
                                  int &RefineS2F_Send_NPatchTotal, int *&RefineS2F_Send_PIDList,
                                  const int (*CFB_SibRank_Home)[6], const int (*CFB_SibRank_Away)[6],
-                                 const real *CFB_BField, const int *CFB_NSibEachRank )
+                                 const real *CFB_BField, const long *CFB_NSibEachRank )
 {
 
    const int SonLv    = FaLv + 1;
@@ -73,7 +73,6 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
    const int SonNReal = amr->NPatchComma[SonLv][1];
    const int SonNBuff = amr->NPatchComma[SonLv][3] - SonNReal;
    const int FaNPatch = amr->num[FaLv];
-
 
 // 1. get the matching lists for the away patches
 // ==========================================================================================
@@ -168,7 +167,7 @@ void LB_Refine_AllocateNewPatch( const int FaLv, int NNew_Home, int *NewPID_Home
       }
 
 //    2-1-3. sort the PID list and remove duplicates
-      Mis_Heapsort( NBufBk_Dup, PID_BufBk, NULL );
+      Mis_Heapsort<int,int>( NBufBk_Dup, PID_BufBk, NULL );
 
       NBufBk = ( NBufBk_Dup > 0 ) ? 1 : 0;
 
@@ -718,7 +717,8 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
    const int SonLv   = FaLv + 1;
    const int SonPID0 = amr->num[SonLv];
-   bool FaIsHome = false;
+   bool FaIsHome     = false;
+
 
 // 0. check : target father patch has no son
 #  ifdef GAMER_DEBUG
@@ -825,7 +825,62 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    }
 
 // 3.2.2 interpolation
-// 3.2.2-1. fluid
+   real *CData_Next = CData;
+
+// 3.2.2-1. magnetic field
+//          --> do it first since we need the cell-centered B field for INT_REDUCE_MONO_COEFF
+#  ifdef MHD
+   const int FSize_Mag [3][3] = {  { PS2P1, PS2,   PS2   },
+                                   { PS2,   PS2P1, PS2   },
+                                   { PS2,   PS2,   PS2P1 }  };
+   const int FStart_Mag[3][3] = { {0, 0, 0}, {0, 0, 0}, {0, 0, 0} };
+   const int CSize_Mag [3][3] = {  { CSize_Mag_N, CSize_Mag_T, CSize_Mag_T },
+                                   { CSize_Mag_T, CSize_Mag_N, CSize_Mag_T },
+                                   { CSize_Mag_T, CSize_Mag_T, CSize_Mag_N }  };
+   const int CStart_Mag[3][3] = {  { 0,          CGhost_Mag, CGhost_Mag },
+                                   { CGhost_Mag, 0,          CGhost_Mag },
+                                   { CGhost_Mag, CGhost_Mag, 0          }  };
+   const int CRange_Mag[3]    = { PS1, PS1, PS1 };
+
+// be careful that the order of data in CData[] is fluid --> potential --> B field
+   CData_Next += NCOMP_TOTAL*CUBE( CSize_Flu );    // skip the fluid data
+#  ifdef GRAVITY
+   CData_Next += CUBE( CSize_Pot );                // skip the potential data
+#  endif
+   real *const CData_MagX = CData_Next + MAGX*CSize_Mag_N*SQR( CSize_Mag_T );
+   real *const CData_MagY = CData_Next + MAGY*CSize_Mag_N*SQR( CSize_Mag_T );
+   real *const CData_MagZ = CData_Next + MAGZ*CSize_Mag_N*SQR( CSize_Mag_T );
+   CData_Next = CData;  // reset CData_Next for the fluid data
+
+   real (*FData_Mag)[ PS2P1*SQR(PS2) ] = new real [NCOMP_MAG][ PS2P1*SQR(PS2) ];
+
+   const real *CData_Mag3v[NCOMP_MAG] = { CData_MagX, CData_MagY, CData_MagZ };
+         real *FData_Mag3v[NCOMP_MAG] = { FData_Mag[MAGX], FData_Mag[MAGY], FData_Mag[MAGZ] };
+
+// set the B field on the coarse-fine interfaces
+   const real *Mag_FInterface_Ptr[6] = { NULL, NULL, NULL, NULL, NULL, NULL };
+
+   for (int s=0; s<6; s++)
+   {
+      const int TRank = CFB_SibRank[s];
+
+//    we set TRank>=0 on the coarse-fine interfaces
+      if ( TRank >= 0 )
+      {
+         Mag_FInterface_Ptr[s] = CFB_BFieldEachRank[TRank] + CFB_OffsetEachRank[TRank];
+
+         CFB_OffsetEachRank[TRank] += SQR( PS2 );
+      }
+   }
+
+// perform divergence-free interpolation
+   MHD_InterpolateBField( CData_Mag3v, CSize_Mag, CStart_Mag, CRange_Mag,
+                          FData_Mag3v, FSize_Mag, FStart_Mag, Mag_FInterface_Ptr,
+                          OPT__REF_MAG_INT_SCHEME, Monotonicity_Yes );
+#  endif // #ifdef MHD
+
+
+// 3.2.2-2. fluid
    const int FSize_CC      = PS2;
    const int FSize_CC3 [3] = { FSize_CC, FSize_CC, FSize_CC };
    const int FStart_CC [3] = { 0, 0, 0 };
@@ -834,7 +889,6 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    const int CRange_CC [3] = { PS1, PS1, PS1 };
    const int CSize_Flu1v   = CUBE( CSize_Flu );
 
-   real *CData_Next       = CData;
    real *const CData_Flu  = CData_Next;
 #  if ( MODEL == ELBDM )
    real *const CData_Dens = CData_Flu + DENS*CSize_Flu1v;
@@ -849,25 +903,24 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
    if ( OPT__INT_PHASE )
    {
 //    get the wrapped phase (store in the REAL component)
-      for (int t=0; t<CSize_Flu1v; t++)   CData_Real[t] = ATAN2( CData_Imag[t], CData_Real[t] );
+      for (int t=0; t<CSize_Flu1v; t++)   CData_Real[t] = SATAN2( CData_Imag[t], CData_Real[t] );
 
 //    interpolate density
       Interpolate( CData_Dens, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[DENS][0][0][0],
                    FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_Yes,
-                   IntOppSign0thOrder_No );
+                   IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
 
 //    interpolate phase
       Interpolate( CData_Real, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[REAL][0][0][0],
                    FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes, &Monotonicity_No,
-                   IntOppSign0thOrder_No );
+                   IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
    }
 
    else // if ( OPT__INT_PHASE )
    {
-      for (int v=0; v<NCOMP_TOTAL; v++)
-      Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[v][0][0][0],
-                   FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity,
-                   IntOppSign0thOrder_No );
+      Interpolate( CData_Flu, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[0][0][0][0],
+                   FSize_CC3, FStart_CC, NCOMP_TOTAL, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity,
+                   IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
    }
 
    if ( OPT__INT_PHASE )
@@ -897,15 +950,34 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 #  else // #if ( MODEL == ELBDM )
 
-   for (int v=0; v<NCOMP_TOTAL; v++)
-   Interpolate( CData_Flu+v*CSize_Flu1v, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[v][0][0][0],
-                FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity,
-                INT_OPP_SIGN_0TH_ORDER );
+// prepare the fine-grid, cell-centered B field for INT_REDUCE_MONO_COEFF
+#  ifdef MHD
+   real (*FData_Mag_CC_IntIter)[NCOMP_MAG] = new real [ CUBE(FSize_CC) ][NCOMP_MAG];
+
+   for (int k=0; k<FSize_CC; k++)
+   for (int j=0; j<FSize_CC; j++)
+   for (int i=0; i<FSize_CC; i++)
+   {
+      const int t = IDX321( i, j, k, FSize_CC, FSize_CC );
+
+      MHD_GetCellCenteredBField( FData_Mag_CC_IntIter[t], FData_Mag[MAGX], FData_Mag[MAGY], FData_Mag[MAGZ],
+                                 FSize_CC, FSize_CC, FSize_CC, i, j, k );
+   }
+#  else
+   const real (*FData_Mag_CC_IntIter)[NCOMP_MAG] = NULL;
+#  endif // MHD
+
+// adopt INT_PRIM_NO to ensure conservation
+// --> no need to prepare the coarse-grid, cell-centered B field
+   Interpolate( CData_Flu, CSize_Flu3, CStart_Flu, CRange_CC, &FData_Flu[0][0][0][0],
+                FSize_CC3, FStart_CC, NCOMP_TOTAL, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, Monotonicity,
+                INT_OPP_SIGN_0TH_ORDER, ALL_CONS_YES, INT_PRIM_NO, INT_REDUCE_MONO_COEFF,
+                NULL, FData_Mag_CC_IntIter );
 
 #  endif // #if ( MODEL == ELBDM ) ... else
 
 
-// 3.2.2-2. potential
+// 3.2.2-3. potential
 #  ifdef GRAVITY
    const int CSize_Pot3[3] = { CSize_Pot, CSize_Pot, CSize_Pot };
    const int CStart_Pot[3] = { CGhost_Pot, CGhost_Pot, CGhost_Pot };
@@ -917,55 +989,12 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
    Interpolate( CData_Pot, CSize_Pot3, CStart_Pot, CRange_CC, &FData_Pot[0][0][0],
                 FSize_CC3, FStart_CC, 1, OPT__REF_POT_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_No,
-                IntOppSign0thOrder_No );
+                IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
 #  endif
 
-
-// 3.2.2-3. magnetic field
 #  ifdef MHD
-   const int FSize_Mag [3][3] = {  { PS2P1, PS2,   PS2   },
-                                   { PS2,   PS2P1, PS2   },
-                                   { PS2,   PS2,   PS2P1 }  };
-   const int FStart_Mag[3][3] = { {0, 0, 0}, {0, 0, 0}, {0, 0, 0} };
-   const int CSize_Mag [3][3] = {  { CSize_Mag_N, CSize_Mag_T, CSize_Mag_T },
-                                   { CSize_Mag_T, CSize_Mag_N, CSize_Mag_T },
-                                   { CSize_Mag_T, CSize_Mag_T, CSize_Mag_N }  };
-   const int CStart_Mag[3][3] = {  { 0,          CGhost_Mag, CGhost_Mag },
-                                   { CGhost_Mag, 0,          CGhost_Mag },
-                                   { CGhost_Mag, CGhost_Mag, 0          }  };
-   const int CRange_Mag[3]    = { PS1, PS1, PS1 };
-
-   real *const CData_MagX = CData_Next + MAGX*CSize_Mag_N*SQR( CSize_Mag_T );
-   real *const CData_MagY = CData_Next + MAGY*CSize_Mag_N*SQR( CSize_Mag_T );
-   real *const CData_MagZ = CData_Next + MAGZ*CSize_Mag_N*SQR( CSize_Mag_T );
-   CData_Next += NCOMP_MAG*CSize_Mag_N*SQR( CSize_Mag_T );
-
-   real (*FData_Mag)[ PS2P1*SQR(PS2) ] = new real [NCOMP_MAG][ PS2P1*SQR(PS2) ];
-
-   const real *CData_Mag3v[NCOMP_MAG] = { CData_MagX, CData_MagY, CData_MagZ };
-         real *FData_Mag3v[NCOMP_MAG] = { FData_Mag[MAGX], FData_Mag[MAGY], FData_Mag[MAGZ] };
-
-// set the B field on the coarse-fine interfaces
-   const real *Mag_FInterface_Ptr[6] = { NULL, NULL, NULL, NULL, NULL, NULL };
-
-   for (int s=0; s<6; s++)
-   {
-      const int TRank = CFB_SibRank[s];
-
-//    we set TRank>=0 on the coarse-fine interfaces
-      if ( TRank >= 0 )
-      {
-         Mag_FInterface_Ptr[s] = CFB_BFieldEachRank[TRank] + CFB_OffsetEachRank[TRank];
-
-         CFB_OffsetEachRank[TRank] += SQR( PS2 );
-      }
-   }
-
-// perform divergence-free interpolation
-   MHD_InterpolateBField( CData_Mag3v, CSize_Mag, CStart_Mag, CRange_Mag,
-                          FData_Mag3v, FSize_Mag, FStart_Mag, Mag_FInterface_Ptr,
-                          OPT__REF_MAG_INT_SCHEME, Monotonicity_Yes );
-#  endif // #ifdef MHD
+   CData_Next += NCOMP_MAG*CSize_Mag_N*SQR( CSize_Mag_T );  // skip the B field since it has been prepared already (3.2.2-1)
+#  endif
 
 
 // 3.2.3 check minimum density and pressure/internal energy
@@ -997,7 +1026,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       }
 
 
-#     if ( MODEL == HYDRO )
+#     if ( MODEL == HYDRO  &&  !defined SRHD )
 //    compute magnetic energy
 #     ifdef MHD
       const real Emag = MHD_GetCellCenteredBEnergy( FData_Mag[MAGX], FData_Mag[MAGY], FData_Mag[MAGZ],
@@ -1012,13 +1041,13 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 //        the runtime parameter DUAL_ENERGY_SWITCH here
 #     ifdef DUAL_ENERGY
       const bool CheckMinPres_Yes = true;
-      const real UseEnpy2FixEngy  = HUGE_NUMBER;
+      const real UseDual2FixEngy  = HUGE_NUMBER;
       char dummy;    // we do not record the dual-energy status here
 
       Hydro_DualEnergyFix( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
-                           FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i], FData_Flu[ENPY][k][j][i],
+                           FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i], FData_Flu[DUAL][k][j][i],
                            dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], CheckMinPres_Yes, MIN_PRES,
-                           UseEnpy2FixEngy, Emag );
+                           UseDual2FixEngy, Emag );
 
 #     else // #ifdef DUAL_ENERGY
 
@@ -1031,7 +1060,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
 
 //    normalize passive scalars
-#     if ( NCOMP_PASSIVE > 0 )
+#     if ( NCOMP_PASSIVE > 0  &&  MODEL == HYDRO )
       if ( OPT__NORMALIZE_PASSIVE )
       {
          real Passive[NCOMP_PASSIVE];
@@ -1142,6 +1171,7 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 #  endif
 #  ifdef MHD
    delete [] FData_Mag;
+   delete [] FData_Mag_CC_IntIter;
 #  endif
 
 

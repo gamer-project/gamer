@@ -58,6 +58,10 @@ void Init_ByRestart()
    if ( !Aux_CheckFileExist(FileName)  &&  MPI_Rank == 0 )
       Aux_Error( ERROR_INFO, "restart file \"%s\" does not exist !!\n", FileName );
 
+#  if ( ( defined PARTICLE ) && ( (defined FLOAT8 && !defined FLOAT8_PAR) || (!defined FLOAT8 && defined FLOAT8_PAR) ) )
+   Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for OPT__OUTPUT_TOTAL=2 (C-binary) !!\n" );
+#  endif
+
    MPI_Barrier( MPI_COMM_WORLD );
 
 
@@ -328,7 +332,7 @@ void Init_ByRestart()
       ExpectSize   += ParInfoSize;
    }
 
-   ExpectSize += (long)PAR_NATT_STORED*amr->Par->NPar_Active_AllRank*sizeof(real);
+   ExpectSize += (long)PAR_NATT_STORED*amr->Par->NPar_Active_AllRank*sizeof(real_par);
 #  endif
 
    fseek( File, 0, SEEK_END );
@@ -573,12 +577,12 @@ void Init_ByRestart()
 // e. load particles
 // =================================================================================================
 #  ifdef PARTICLE
-   const long ParDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(real);
+   const long ParDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(real_par);
 
-   long  *NewParList = new long [MaxNParInOnePatch];
-   real **ParBuf     = NULL;
+   long  *NewParList     = new long [MaxNParInOnePatch];
+   real_par **ParBuf     = NULL;
 
-   real NewParAtt[PAR_NATT_TOTAL];
+   real_par NewParAtt[PAR_NATT_TOTAL];
    long GParID;
    int  NParThisPatch;
 
@@ -603,7 +607,7 @@ void Init_ByRestart()
 
 // begin to load data
 #  ifdef DEBUG_PARTICLE
-   const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+   const real_par *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
 #  endif
 
    for (int TRanks=0; TRanks<MPI_NRank; TRanks+=RESTART_LOAD_NRANK)
@@ -631,10 +635,10 @@ void Init_ByRestart()
 //             load one particle attribute at a time
                for (int v=0; v<PAR_NATT_STORED; v++)
                {
-                  fseek( File, FileOffset_Particle + v*ParDataSize1v + GParID*sizeof(real), SEEK_SET );
+                  fseek( File, FileOffset_Particle + v*ParDataSize1v + GParID*sizeof(real_par), SEEK_SET );
 
 //                using ParBuf[v] here is safe since it's NOT called when NParThisPatch == 0
-                  fread( ParBuf[v], sizeof(real), NParThisPatch, File );
+                  fread( ParBuf[v], sizeof(real_par), NParThisPatch, File );
                }
 
 //             store particles to the particle repository (one particle at a time)
@@ -653,13 +657,15 @@ void Init_ByRestart()
                } // for (int p=0; p<NParThisPatch )
 
 //             link particles to this patch
+               const real_par *PType = amr->Par->Type;
 #              ifdef DEBUG_PARTICLE
                char Comment[100];
                sprintf( Comment, "%s, PID %d, NPar %d", __FUNCTION__, PID, NParThisPatch );
                amr->patch[0][lv][PID]->AddParticle( NParThisPatch, NewParList, &amr->Par->NPar_Lv[lv],
-                                                    ParPos, amr->Par->NPar_AcPlusInac, Comment );
+                                                    PType, ParPos, amr->Par->NPar_AcPlusInac, Comment );
 #              else
-               amr->patch[0][lv][PID]->AddParticle( NParThisPatch, NewParList, &amr->Par->NPar_Lv[lv] );
+               amr->patch[0][lv][PID]->AddParticle( NParThisPatch, NewParList, &amr->Par->NPar_Lv[lv],
+                                                    PType );
 #              endif
             } // if ( amr->patch[0][lv][PID]->NPar > 0 )
          } // for PID, lv
@@ -699,21 +705,21 @@ void Init_ByRestart()
 
 // must not reset load-balance variables (i.e., must adopt ResetLB_No) when calling LB_Init_LoadBalance() for the first time
 // since we MUST NOT overwrite IdxList_Real[] and IdxList_Real_IdxList[] already set above
-   const double ParWeight_Zero   = 0.0;
-   const bool   Redistribute_Yes = true;
-   const bool   Redistribute_No  = false;
-   const bool   SendGridData_Yes = true;
-   const bool   SendGridData_No  = false;
-   const bool   ResetLB_Yes      = true;
-   const bool   ResetLB_No       = false;
-   const int    AllLv            = -1;
+   const double ParWeight_Zero    = 0.0;
+   const bool   Redistribute_Yes  = true;
+   const bool   Redistribute_No   = false;
+   const bool   SendGridData_Yes  = true;
+   const bool   SendGridData_No   = false;
+   const bool   ResetLB_Yes       = true;
+   const bool   ResetLB_No        = false;
+   const int    AllLv             = -1;
 
-   LB_Init_LoadBalance( Redistribute_No, SendGridData_No, ParWeight_Zero, ResetLB_No, AllLv );
+   LB_Init_LoadBalance( Redistribute_No,  SendGridData_No,  ParWeight_Zero,      ResetLB_No,  OPT__SORT_PATCH_BY_LBIDX,  AllLv );
 
 // redistribute patches again if we want to take into account the load-balance weighting of particles
 #  ifdef PARTICLE
    if ( amr->LB->Par_Weight > 0.0 )
-   LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, amr->LB->Par_Weight, ResetLB_Yes, AllLv );
+   LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, amr->LB->Par_Weight, ResetLB_Yes, OPT__SORT_PATCH_BY_LBIDX,  AllLv );
 #  endif
 
 
@@ -1225,18 +1231,6 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       CompareVar( "GRA_BLOCK_SIZE",          gra_block_size,         GRA_BLOCK_SIZE,            NonFatal );
 #     endif
 
-#     if ( POT_SCHEME == SOR )
-#     ifdef USE_PSOLVER_10TO14
-      if ( !use_psolver_10to14 )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
-                      "USE_PSOLVER_10TO14", "OFF", "ON" );
-#     else
-      if (  use_psolver_10to14 )
-         Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
-                      "USE_PSOLVER_10TO14", "ON", "OFF" );
-#     endif
-#     endif // if ( POT_SCHEME == SOR )
-
 #     ifdef STORE_POT_GHOST
       if ( !store_pot_ghost )
          Aux_Message( stderr, "WARNING : %s : RESTART file (%s) != runtime (%s) !!\n",
@@ -1416,7 +1410,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       if ( OPT__OUTPUT_PART )
       CompareVar( "OPT__OUTPUT_BASE",        opt__output_base,             OPT__OUTPUT_BASE,          NonFatal );
 #     ifdef PARTICLE
-      if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PAR_TEXT ) {
+      if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PAR_MODE ) {
 #     else
       if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS ) {
 #     endif

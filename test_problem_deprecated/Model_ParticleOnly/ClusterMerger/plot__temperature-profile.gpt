@@ -105,7 +105,7 @@ do for [ID=START_ID:END_ID:DELTA_ID] {
 
    if ( GPVAL_TERM eq 'x11' ) { if ( PAUSE <= 0.0 ) { pause mouse }   else { pause PAUSE } };
 
-} #do for [ID=START_ID:END_ID:DELTA_ID] 
+} #do for [ID=START_ID:END_ID:DELTA_ID]
 
 
 print "Done";

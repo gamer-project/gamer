@@ -22,8 +22,8 @@
 //                FaPotSg  : Potential sandglass at level "FaLv"
 //                TVarCC   : Target cell-centered variables
 //                           --> Supported variables in different models:
-//                               HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY,[, _POTE]
-//                               ELBDM : _DENS, _REAL, _IMAG, [, _POTE]
+//                               HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY [, _POTE] [, BIDX(field_index)]
+//                               ELBDM : _DENS, _REAL, _IMAG [, _POTE] [, BIDX(field_index)]
 //                           --> _FLUID, _PASSIVE, and _TOTAL apply to all models
 //                TVarFC   : Target face-centered variables
 //                            --> Supported variables in different models:
@@ -297,13 +297,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
 //    check the minimum pressure/internal energy and, when the dual-energy formalism is adopted, ensure the consistency between
 //    pressure, total energy density, and the dual-energy variable
-#     if ( MODEL == HYDRO )
-//    apply this correction only when preparing all fluid variables or magnetic field
-#     ifdef MHD
-      if (  ( TVarCC & _TOTAL ) == _TOTAL  ||  ResMag  )
-#     else
-      if (  ( TVarCC & _TOTAL ) == _TOTAL  )
-#     endif
+#     if ( MODEL == HYDRO  &&  !defined SRHD )
       for (int k=0; k<PS1; k++)
       for (int j=0; j<PS1; j++)
       for (int i=0; i<PS1; i++)
@@ -320,7 +314,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 //       --> we achieve that by setting the dual-energy switch to an extremely larger number and ignore
 //           the runtime parameter DUAL_ENERGY_SWITCH here
          const bool CheckMinPres_Yes = true;
-         const real UseEnpy2FixEngy  = HUGE_NUMBER;
+         const real UseDual2FixEngy  = HUGE_NUMBER;
          char dummy;    // we do not record the dual-energy status here
 
          Hydro_DualEnergyFix( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
@@ -328,9 +322,9 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMY][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
-                              amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENPY][k][j][i],
+                              amr->patch[FaFluSg][FaLv][FaPID]->fluid[DUAL][k][j][i],
                               dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], CheckMinPres_Yes, MIN_PRES,
-                              UseEnpy2FixEngy, Emag );
+                              UseDual2FixEngy, Emag );
 
 #        else // #ifdef DUAL_ENERGY
 

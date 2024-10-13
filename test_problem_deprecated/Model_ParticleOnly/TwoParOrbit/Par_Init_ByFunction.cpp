@@ -11,7 +11,7 @@ extern real TwoParOrbit_R;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Init_ByFunction
-// Description :  Initialize the particle position and velocity 
+// Description :  Initialize the particle position and velocity
 //
 // Note        :  Invoked by "Init_GAMER"
 //

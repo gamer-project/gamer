@@ -33,7 +33,7 @@ static void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVar
 //
 // Parameter   :  Array          : Array to store the prepared data including ghost zones
 //                BC_Face        : Boundary face (0~5) --> (-x,+x,-y,+y,-z,+z)
-//                NVar_Flu       : Number of fluid variables to be prepared (derived variables is NOT included)
+//                NVar_Flu       : Number of fluid variables to be prepared (derived variables are NOT included)
 //                GhostSize      : Number of ghost zones
 //                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
 //                Idx_Start      : Minimum array indices
@@ -137,7 +137,8 @@ void BC_Reflecting_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList
    int TFluVarIdx, ii;
 
 // 1D array -> 3D array
-   real (*Array3D)[ArraySizeZ][ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeZ][ArraySizeY][ArraySizeX] )Array;
+   typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
+   vla Array3D = ( vla )Array;
 
 
 // set the boundary values
@@ -172,7 +173,7 @@ void BC_Reflecting_xm( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // derived variables
    for (int v2=0, v=NVar_Flu; v2<NVar_Der; v2++, v++)
    {
-      if ( TDerVarList[v2] == _VELX )
+      if ( TDerVarList[v2] == _VELX  ||  TDerVarList[v2] == _MAGX_CC )
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
@@ -219,7 +220,8 @@ void BC_Reflecting_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList
    int TFluVarIdx, ii;
 
 // 1D array -> 3D array
-   real (*Array3D)[ArraySizeZ][ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeZ][ArraySizeY][ArraySizeX] )Array;
+   typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
+   vla Array3D = ( vla )Array;
 
 
 // set the boundary values
@@ -254,7 +256,7 @@ void BC_Reflecting_xp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // derived variables
    for (int v2=0, v=NVar_Flu; v2<NVar_Der; v2++, v++)
    {
-      if ( TDerVarList[v2] == _VELX )
+      if ( TDerVarList[v2] == _VELX  ||  TDerVarList[v2] == _MAGX_CC )
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
@@ -301,7 +303,8 @@ void BC_Reflecting_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList
    int TFluVarIdx, jj;
 
 // 1D array -> 3D array
-   real (*Array3D)[ArraySizeZ][ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeZ][ArraySizeY][ArraySizeX] )Array;
+   typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
+   vla Array3D = ( vla )Array;
 
 
 // set the boundary values
@@ -336,7 +339,7 @@ void BC_Reflecting_ym( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // derived variables
    for (int v2=0, v=NVar_Flu; v2<NVar_Der; v2++, v++)
    {
-      if ( TDerVarList[v2] == _VELY )
+      if ( TDerVarList[v2] == _VELY  ||  TDerVarList[v2] == _MAGY_CC )
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {  jj = j_ref - j;
@@ -383,7 +386,8 @@ void BC_Reflecting_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList
    int TFluVarIdx, jj;
 
 // 1D array -> 3D array
-   real (*Array3D)[ArraySizeZ][ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeZ][ArraySizeY][ArraySizeX] )Array;
+   typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
+   vla Array3D = ( vla )Array;
 
 
 // set the boundary values
@@ -418,7 +422,7 @@ void BC_Reflecting_yp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // derived variables
    for (int v2=0, v=NVar_Flu; v2<NVar_Der; v2++, v++)
    {
-      if ( TDerVarList[v2] == _VELY )
+      if ( TDerVarList[v2] == _VELY  ||  TDerVarList[v2] == _MAGY_CC )
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {  jj = j_ref - j;
@@ -465,7 +469,8 @@ void BC_Reflecting_zm( real *Array, const int NVar_Flu, const int TFluVarIdxList
    int TFluVarIdx, kk;
 
 // 1D array -> 3D array
-   real (*Array3D)[ArraySizeZ][ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeZ][ArraySizeY][ArraySizeX] )Array;
+   typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
+   vla Array3D = ( vla )Array;
 
 
 // set the boundary values
@@ -500,7 +505,7 @@ void BC_Reflecting_zm( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // derived variables
    for (int v2=0, v=NVar_Flu; v2<NVar_Der; v2++, v++)
    {
-      if ( TDerVarList[v2] == _VELZ )
+      if ( TDerVarList[v2] == _VELZ  ||  TDerVarList[v2] == _MAGZ_CC )
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {  kk = k_ref - k;
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {
@@ -547,7 +552,8 @@ void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVarIdxList
    int TFluVarIdx, kk;
 
 // 1D array -> 3D array
-   real (*Array3D)[ArraySizeZ][ArraySizeY][ArraySizeX] = ( real (*)[ArraySizeZ][ArraySizeY][ArraySizeX] )Array;
+   typedef real (*vla)[ArraySizeZ][ArraySizeY][ArraySizeX];
+   vla Array3D = ( vla )Array;
 
 
 // set the boundary values
@@ -582,7 +588,7 @@ void BC_Reflecting_zp( real *Array, const int NVar_Flu, const int TFluVarIdxList
 // derived variables
    for (int v2=0, v=NVar_Flu; v2<NVar_Der; v2++, v++)
    {
-      if ( TDerVarList[v2] == _VELZ )
+      if ( TDerVarList[v2] == _VELZ  ||  TDerVarList[v2] == _MAGZ_CC )
       {
          for (int k=Idx_Start[2]; k<=Idx_End[2]; k++)    {  kk = k_ref - k;
          for (int j=Idx_Start[1]; j<=Idx_End[1]; j++)    {

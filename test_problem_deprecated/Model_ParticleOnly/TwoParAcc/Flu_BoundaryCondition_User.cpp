@@ -11,7 +11,7 @@ static void BC_User( const double Time, const double x, const double y, const do
 //
 // Note        :  1. Work for the function "Flu_BoundaryCondition_User"
 //                2. Always return NCOMP variables
-// 
+//
 // Parameter   :  Time  : Current physical time
 //                x,y,z : Physical coordinates
 //                BVal  : Array to store the boundary values
@@ -34,10 +34,10 @@ void BC_User( const double Time, const double x, const double y, const double z,
 // Description :  Fill up the ghost-zone values by the user-specified function "BC_User"
 //
 // Note        :  Work for the functions "Prepare_PatchData, InterpolateGhostZone, Refine, LB_Refine_AllocateNewPatch"
-// 
+//
 // Parameter   :  Array          : Array to store the prepared data of one patch group (including the ghost-zone data)
 //                NVar_Flu       : Number of fluid variables to be prepared (derived variables are NOT included)
-//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side 
+//                ArraySizeX/Y/Z : Size of Array including the ghost zones on each side
 //                Idx_Start      : Minimum array indices
 //                Idx_End        : Maximum array indices
 //                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP-1] )
@@ -48,8 +48,8 @@ void BC_User( const double Time, const double x, const double y, const double z,
 //
 // Return      :  Array
 //-------------------------------------------------------------------------------------------------------
-void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int ArraySizeX, const int ArraySizeY, 
-                                 const int ArraySizeZ, const int Idx_Start[], const int Idx_End[], 
+void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int ArraySizeX, const int ArraySizeY,
+                                 const int ArraySizeZ, const int Idx_Start[], const int Idx_End[],
                                  const int TFluVarIdxList[], const double Time, const double dh, const double *Corner,
                                  const int TVar )
 {

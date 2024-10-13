@@ -16,8 +16,8 @@ void SiblingSearch_Base()
 
 // initialize all siblings as -1
    for (int PID=0; PID<amr.num[0]; PID++)
-   for (int s=0; s<26; s++)         
-      amr.patch[0][PID]->sibling[s] = -1;  
+   for (int s=0; s<26; s++)
+      amr.patch[0][PID]->sibling[s] = -1;
 
 // construct the sibling relation for the real patches
    for (int PID=0; PID<amr.num[0]; PID++)  FindBaseSibling( PID );
@@ -28,7 +28,7 @@ void SiblingSearch_Base()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  FindBaseSibling
-// Description :  Construct the sibling relation for the input base-level patch 
+// Description :  Construct the sibling relation for the input base-level patch
 //
 // Note        :  For the base-level sibling relation, it uses the BaseP list to locate sibling patches
 //
@@ -38,7 +38,7 @@ void FindBaseSibling( const int PID )
 {
 
    const int NPatch1D[3]   = { NX0_TOT[0]/PATCH_SIZE+4, NX0_TOT[1]/PATCH_SIZE+4, NX0_TOT[2]/PATCH_SIZE+4 };
-   const int scale         = amr.scale[0]; 
+   const int scale         = amr.scale[0];
 
    int ip, jp, kp, Sib[26];     // (i,j,k)p : (i,j,k)th patch in (x,y,z) direction
 

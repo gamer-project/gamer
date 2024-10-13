@@ -45,7 +45,7 @@ void Src_WorkBeforeMajorFunc( const int lv, const double TimeNew, const double T
 #  endif
 
 // (2) user-specified source term
-// --> users may not define Src_WorkBeforeMajorFunc_User_Ptr 
+// --> users may not define Src_WorkBeforeMajorFunc_User_Ptr
    if ( SrcTerms.User  &&  Src_WorkBeforeMajorFunc_User_Ptr != NULL )
       Src_WorkBeforeMajorFunc_User_Ptr       ( lv, TimeNew, TimeOld, dt,
                                                Src_User_AuxArray_Flt, Src_User_AuxArray_Int );

@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -82,14 +81,13 @@ static double Bondi_HSE_Beta_P2;          // P1=G*MassBH*Rho0/Rcore, and P2 curr
 void Init_ExtAcc_Bondi();
 void Record_Bondi();
 bool Flag_Bondi( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
-bool Flu_ResetByUser_Func_Bondi( real fluid[], const double x, const double y, const double z, const double Time,
-                                 const int lv, double AuxArray[] );
-void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double TTime );
+int Flu_ResetByUser_Func_Bondi( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
+                                const double dt, const int lv, double AuxArray[] );
+void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );
 static void HSE_SetDensProfileTable();
-
-// this test problem needs to reset both Flu_ResetByUser_API_Ptr and Flu_ResetByUser_Func_Ptr, while
-// the former is not defined in TestProb.h (because it's rarely required)
-extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const double TTime );
+static void BondiBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                     const int GhostSize, const int idx[], const double pos[], const double Time,
+                     const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
 
 
@@ -125,6 +123,9 @@ void Validate()
 #  ifdef PARTICLE
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
+
+   if ( !OPT__RESET_FLUID || !OPT__RESET_FLUID_INIT )
+      Aux_Error( ERROR_INFO, "must enable both OPT__RESET_FLUID and OPT__RESET_FLUID_INIT !!\n" );
 
 #  ifdef GRAVITY
    if ( OPT__BC_POT != BC_POT_ISOLATED )
@@ -182,8 +183,8 @@ void SetParameter()
    ReadPara_t *ReadPara  = new ReadPara_t;
 
 // (1-1) add parameters in the following format:
-// add parameters in the following format (some handy constants are defined in TestProb.h):
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,                  DEFAULT,      MIN,              MAX               );
 // ********************************************************************************************************************************
@@ -251,14 +252,14 @@ void SetParameter()
 // the following assumes that EoS requires no passive scalars
    Bondi_InBC_R   = Bondi_InBC_NCell*amr->dh[MAX_LEVEL];
    Bondi_InBC_P   = EoS_DensTemp2Pres_CPUPtr( Bondi_InBC_Rho, Bondi_InBC_T*UNIT_E/Const_kB, NULL,
-                                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+                                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    Bondi_InBC_E   = EoS_DensPres2Eint_CPUPtr( Bondi_InBC_Rho, Bondi_InBC_P, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                              h_EoS_Table, NULL );
+                                              h_EoS_Table );
    Bondi_Soften_R = Bondi_Soften_NCell*amr->dh[MAX_LEVEL];
    Bondi_P0       = EoS_DensTemp2Pres_CPUPtr( Bondi_Rho0, Bondi_T0*UNIT_E/Const_kB, NULL,
-                                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+                                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    Bondi_Cs       = sqrt(  EoS_DensPres2CSqr_CPUPtr( Bondi_Rho0, Bondi_P0, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                                     h_EoS_Table, NULL )  );
+                                                     h_EoS_Table )  );
 #  ifdef GRAVITY
    Bondi_RS       = 2.0*NEWTON_G*Bondi_MassBH/SQR(Const_c/UNIT_V);
    Bondi_RB       =     NEWTON_G*Bondi_MassBH/SQR(Bondi_Cs);
@@ -329,18 +330,18 @@ void SetParameter()
 
 
 // (4) reset other general-purpose parameters
-//     --> a helper macro PRINT_WARNING is defined in TestProb.h
+//     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
    const long   End_Step_Default = __INT_MAX__;
    const double End_T_Default    = 1.0e1*Bondi_TimeB;    // 10 Bondi time
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
-      PRINT_WARNING( "END_STEP", END_STEP, FORMAT_LONG );
+      PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
    }
 
    if ( END_T < 0.0 ) {
       END_T = End_T_Default;
-      PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
+      PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
    }
 
 
@@ -441,7 +442,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
             Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e --> reset Bondi_HSE_Dens_MinR/MaxR !!\n", r );
 
          Pres = EoS_DensTemp2Pres_CPUPtr( Dens, Bondi_T0*UNIT_E/Const_kB, NULL,
-                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       }
 
       else if ( Bondi_HSE_Mode == 2 )
@@ -473,8 +474,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 // compute the total gas energy
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
-                                    EoS_AuxArray_Int, h_EoS_Table, NULL ); // assuming EoS requires no passive scalars
-   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );         // do NOT include magnetic energy here
+                                    EoS_AuxArray_Int, h_EoS_Table );   // assuming EoS requires no passive scalars
+   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );     // do NOT include magnetic energy here
 
 // set the output array
    fluid[DENS] = Dens;
@@ -602,6 +603,38 @@ void End_Bondi()
    }
 
 } // FUNCTION : End_Bondi
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  BondiBC
+// Description :  Set the external boundary condition to the IC condition
+//
+// Note        :  1. Linked to the function pointer "BC_User_Ptr"
+//
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
+//                ArraySize      : Size of Array including the ghost zones on each side
+//                fluid          : Fluid fields to be set
+//                NVar_Flu       : Number of fluid variables to be prepared
+//                GhostSize      : Number of ghost zones
+//                idx            : Array indices
+//                pos            : Physical coordinates
+//                Time           : Physical time
+//                lv             : Refinement level
+//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
+//                AuxArray       : Auxiliary array
+//
+// Return      :  fluid
+//-------------------------------------------------------------------------------------------------------
+void BondiBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+              const int GhostSize, const int idx[], const double pos[], const double Time,
+              const int lv, const int TFluVarIdxList[], double AuxArray[] )
+{
+
+// simply call the IC function
+   SetGridIC( fluid, pos[0], pos[1], pos[2], Time, lv, AuxArray );
+
+} // FUNCTION : BondiBC
 #endif // #if ( MODEL == HYDRO  &&  defined GRAVITY )
 
 
@@ -635,7 +668,7 @@ void Init_TestProb_Hydro_Bondi()
    Init_Function_User_Ptr   = SetGridIC;
    Flag_User_Ptr            = Flag_Bondi;
    Aux_Record_User_Ptr      = Record_Bondi;
-   BC_User_Ptr              = SetGridIC;
+   BC_User_Ptr              = BondiBC;
    Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Func_Bondi;
    Flu_ResetByUser_API_Ptr  = Flu_ResetByUser_API_Bondi;
    End_User_Ptr             = End_Bondi;

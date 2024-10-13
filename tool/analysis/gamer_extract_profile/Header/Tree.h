@@ -11,12 +11,12 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Structure   :  block_t 
+// Structure   :  block_t
 // Description :  Data structure of a single block
 //
 // Data Member :
 //
-// Method      :  block_t     : Constructor 
+// Method      :  block_t     : Constructor
 //                ~block_t    : Destructor
 //-------------------------------------------------------------------------------------------------------
 struct block_t
@@ -34,12 +34,12 @@ struct block_t
 
 
    //===================================================================================
-   // Constructor :  block_t 
+   // Constructor :  block_t
    // Description :  Constructor of the structure "block_t"
    //
    // Note        :  Initialize data members
    //
-   // Parameter   :  
+   // Parameter   :
    //===================================================================================
    block_t()
    {
@@ -50,7 +50,7 @@ struct block_t
 
 
    //===================================================================================
-   // Destructor  :  ~block_t 
+   // Destructor  :  ~block_t
    // Description :  Destructor of the structure "block_t"
    //
    // Note        :  Deallocate data members
@@ -69,11 +69,11 @@ struct block_t
    //
    // Note        :
    //
-   // Parameter   :  
+   // Parameter   :
    //===================================================================================
-   void mnew() 
+   void mnew()
    {
-      if ( dens != NULL )  
+      if ( dens != NULL )
       {
          fprintf( stderr, "WARNING : allocating an existing dens array !!\n" );
          mfree();
@@ -83,23 +83,23 @@ struct block_t
    }
 
 
-   
+
    //===================================================================================
    // Constructor :  mfree
    // Description :  Deallocate memory for the data array
    //
    // Note        :
    //
-   // Parameter   :  
+   // Parameter   :
    //===================================================================================
-   void mfree() 
+   void mfree()
    {
       if ( dens != NULL )  delete [] dens;
       dens = NULL;
    }
    */
 
-   
+
 }; // struct block_t
 
 
@@ -135,7 +135,7 @@ struct tree_t
    //
    // Note        :  Initialize data members
    //===================================================================================
-   tree_t( const int nlv_in, const int data_id_in, const double time_in, const long step_in, 
+   tree_t( const int nlv_in, const int data_id_in, const double time_in, const long step_in,
            const int nblock_in[], const double dh_in[], const double box_size_in[] )
    {
       nlv        = nlv_in;
@@ -186,7 +186,7 @@ struct tree_t
    void pnew()
    {
       int nblock_sum = 0;
-      
+
       for (int lv=0; lv<nlv; lv++)  nblock_sum += nblock[lv];
 
       if ( block != NULL )

@@ -7,15 +7,15 @@
 // Function    :  Int_MinMod1D
 // Description :  Perform spatial interpolation based on the MinMod limiter
 //
-// Note        :  a. The slope at each grid is determined by the minimum slope between the right slope 
-//                   (difference between the right grid and itself) and the left slope (difference between 
+// Note        :  a. The slope at each grid is determined by the minimum slope between the right slope
+//                   (difference between the right grid and itself) and the left slope (difference between
 //                   itself and the left slope)
 //                b. The slope is chosen to be zero if the right and left slopes have different signs
 //                c. The interpolation result is BOTH conservative and monotonic
-//                d. 3D interpolation is realized by computing the slopes at all three spatial directions 
+//                d. 3D interpolation is realized by computing the slopes at all three spatial directions
 //                   at the same time
 //
-// Parameter   :  CData    : Input coarse-grid array 
+// Parameter   :  CData    : Input coarse-grid array
 //                CSize    : Size of the CData array
 //                CStart   : (x,y,z) starting indices to perform interpolation on the CData array
 //                CRange   : Number of grids in each direction to perform interpolation
@@ -66,7 +66,7 @@ void Int_MinMod1D( const real CData[], const int CSize[3], const int CStart[3], 
          if ( RSlope*LSlope <= (real)0.0 )   Slope_z = (real)0.0;
          else                                Slope_z = (real)0.25*( FABS(RSlope) < FABS(LSlope) ? RSlope:LSlope );
 
-            
+
          FData[FID            ] = CData[CID] - Slope_z - Slope_y - Slope_x;
          FData[FID        +Fdx] = CData[CID] - Slope_z - Slope_y + Slope_x;
          FData[FID    +Fdy    ] = CData[CID] - Slope_z + Slope_y - Slope_x;

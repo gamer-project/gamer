@@ -14,6 +14,7 @@
 # include "Typedef.h"
 # include "SrcTerms.h"
 # include "EoS.h"
+# include "Microphysics.h"
 #else
 # include "GAMER.h"
 #endif
@@ -53,7 +54,7 @@
 //                            --> for example, in MHM_RP FC_Flux[] is also linked to Half_Flux[] used by
 //                                Hydro_RiemannPredict_Flux() and Hydro_RiemannPredict()
 //                            --> for the latter two routines, Half_Flux[] is accessed with N_HF_FLUX
-//                                that is smaller than N_FC_FLUX
+//                                that is equal to N_FC_FLUX and larger than N_FL_FLUX
 // N_HF_VAR             : for accessing PriVar_Half[], which is linked to PriVar[] with the size FLU_NXT^3
 //                        --> also for accessing FC_B_Half[] in MHD
 
@@ -76,8 +77,16 @@
 #  if   ( FLU_SCHEME == MHM )
 
 #     define N_FC_VAR            ( PS2 + 2 )
+#    ifdef MHD
+#     define N_HF_VAR            ( N_FC_VAR )
+#     define N_FL_FLUX           ( PS2 + 2 )
+//    MHM doesn't have the half-step flux actually; this is only for calculating the half-step electric field
+#     define N_HF_FLUX           ( N_FL_FLUX+2 )
+#    else
 #     define N_FL_FLUX           ( PS2 + 1 )
-#     define N_FC_FLUX           ( N_FL_FLUX )
+//    MHM doesn't have the half-step flux actually; this is only for defining N_FC_FLUX
+#     define N_HF_FLUX           ( N_FL_FLUX )
+#    endif
 
 #  elif ( FLU_SCHEME == MHM_RP )
 
@@ -90,7 +99,6 @@
 #     define N_FL_FLUX           ( PS2 + 1 )
 #     define N_HF_FLUX           ( FLU_NXT - 1 )
 #    endif
-#     define N_FC_FLUX           ( N_HF_FLUX )
 #     define N_HF_VAR            ( FLU_NXT - 2 )
 
 #  elif ( FLU_SCHEME == CTU )
@@ -104,31 +112,31 @@
 #     define N_FL_FLUX           ( N_FC_VAR )
 #    endif
 #     define N_HF_FLUX           ( N_FC_VAR )
-#     define N_FC_FLUX           ( N_HF_FLUX )
 
 #  endif // FLU_SCHEME
 
 #  define N_SLOPE_PPM            ( N_FC_VAR + 2 )
 
+#   define N_FC_FLUX             ( N_HF_FLUX )
 #  ifdef MHD
-#   define N_HF_ELE              ( N_FC_FLUX - 1 )
+#   define N_HF_ELE              ( N_HF_FLUX - 1 )
 #   define N_FL_ELE              ( N_FL_FLUX - 1 )
 #   define N_EC_ELE              ( N_FC_FLUX - 1 )
 #  else
 #   define N_EC_ELE              0
+#   define N_HF_ELE              0
 #  endif
 
 #endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 
 
-// check non-physical negative values (e.g., negative density) for the fluid solver
+// check non-physical values (e.g., negative density) for the fluid solver
 #if ( defined GAMER_DEBUG  &&  MODEL == HYDRO )
-#  define CHECK_NEGATIVE_IN_FLUID
+#  define CHECK_UNPHYSICAL_IN_FLUID
 #endif
 
-#ifdef CHECK_NEGATIVE_IN_FLUID
+#ifdef CHECK_UNPHYSICAL_IN_FLUID
 #  include "stdio.h"
-   bool Hydro_CheckNegative( const real Input );
 #endif
 
 
@@ -163,7 +171,7 @@
 
 // verify that the density and pressure in the intermediate states of Roe's Riemann solver are positive.
 // --> if either is negative, we switch to other Riemann solvers (EXACT/HLLE/HLLC/HLLD)
-#if (  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  &&  RSOLVER == ROE  )
+#if (  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  &&  ( RSOLVER == ROE || RSOLVER_RESCUE == ROE )  )
 #  ifdef MHD
 //#     define CHECK_INTERMEDIATE    HLLD
 #     define CHECK_INTERMEDIATE    HLLE
@@ -174,8 +182,32 @@
 #endif
 
 
-// use Eulerian with Y factor for Roe Solver in MHD
-#if (  defined MHD  &&  ( RSOLVER == ROE || RSOLVER == HLLE )  )
+// switch to a different Riemann solver if the default one fails
+// --> to disable it, either comment out this line or set RSOLVER_RESCUE to NONE
+// --> used by Hydro_ComputeFlux() and Hydro_RiemannPredict_Flux()
+// --> doesn't support either RSOLVER==ROE or RSOLVER_RESCUE==ROE/EXACT for now due to HLL_NO_REF_STATE/HLL_INCLUDE_ALL_WAVES
+#  define RSOLVER_RESCUE   HLLE
+
+#if ( RSOLVER_RESCUE == ROE  ||  RSOLVER_RESCUE == EXACT )
+#  error : ERROR : does not support RSOLVER_RESCUE == ROE/EXACT !!
+#endif
+
+#if ( defined MHD  &&  RSOLVER_RESCUE == HLLC )
+#  error : ERROR : RSOLVER_RESCUE == HLLC for MHD simulations !!
+#endif
+
+#if ( !defined MHD  &&  RSOLVER_RESCUE == HLLD )
+#  error : ERROR : RSOLVER_RESCUE == HLLD for non-MHD simulations !!
+#endif
+
+#if ( RSOLVER_RESCUE == RSOLVER  ||  RSOLVER == ROE  ||  !defined RSOLVER )
+#  undef  RSOLVER_RESCUE
+#  define RSOLVER_RESCUE   NONE
+#endif
+
+
+// use Eulerian with Y factor for the Roe Solver in MHD
+#ifdef MHD
 #  define EULERY
 #endif
 
@@ -220,6 +252,13 @@
 //#  define HLLE_WAVESPEED   HLL_WAVESPEED_PVRS
 #endif
 #  define HLLD_WAVESPEED   HLL_WAVESPEED_DAVIS
+
+
+// check unphysical results in the MHM half-step prediction
+#if ( FLU_SCHEME == MHM )
+#  define MHM_CHECK_PREDICT
+#endif
+
 
 
 // 2. ELBDM macro

@@ -21,7 +21,7 @@ typedef float  real;
 #endif
 
 
-// for variable initialization 
+// for variable initialization
 #define NULL_VALUE   -999999
 
 
@@ -71,14 +71,14 @@ typedef float  real;
 
 
 //-------------------------------------------------------------------------------------------------------
-// Structure   :  patch_t 
-// Description :  data structure of a single patch 
+// Structure   :  patch_t
+// Description :  data structure of a single patch
 //
-// Data Member :  fluid       : fluid variables (mass density, momentum density x, y ,z, energy density) 
+// Data Member :  fluid       : fluid variables (mass density, momentum density x, y ,z, energy density)
 //                pot         : potential
 //                corner[3]   : physical coordinates of the patch corner
 //
-// Method      :  patch_t     : constructor 
+// Method      :  patch_t     : constructor
 //                ~patch_t    : destructor
 //-------------------------------------------------------------------------------------------------------
 struct patch_t
@@ -94,7 +94,7 @@ struct patch_t
 
 
    //===================================================================================
-   // Constructor :  patch_t 
+   // Constructor :  patch_t
    // Description :  constructor of the structure "patch_t"
    //
    // Note        :  initialize data members
@@ -103,40 +103,40 @@ struct patch_t
    //===================================================================================
    patch_t( const int x, const int y, const int z )
    {
-      corner[0] = x; 
+      corner[0] = x;
       corner[1] = y;
       corner[2] = z;
-      
+
       fluid = new real [NCOMP][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
       pot   = new real [PATCH_SIZE][PATCH_SIZE][PATCH_SIZE];
 
-      fluid[0][0][0][0] = -1; 
+      fluid[0][0][0][0] = -1;
    }
 
 
 
    //===================================================================================
-   // Destructor  :  ~patch_t 
+   // Destructor  :  ~patch_t
    // Description :  destructor of the structure "patch_t"
    //
    // Note        :  deallocate flux and data arrays
    //===================================================================================
    ~patch_t()
    {
-      if ( fluid != NULL )    
+      if ( fluid != NULL )
       {
          delete [] fluid;
          fluid = NULL;
       }
 
-      if ( pot != NULL )    
+      if ( pot != NULL )
       {
          delete [] pot;
          pot   = NULL;
       }
    }
 
-   
+
 }; // struct patch_t
 
 
@@ -149,7 +149,7 @@ struct patch_t
 //
 // Data Member :  patch          : pointer of each patch
 //                num            : number of patches (real patch + buffer patch) at each level
-//                scale          : grid size at each level (normalize to the grid size at the finest level 
+//                scale          : grid size at each level (normalize to the grid size at the finest level
 //                evolve_counter : the number of times each level is evolved by the function "Flu_AdvanceDt"
 //
 // Method      :  pnew           : allocate one patch
@@ -162,13 +162,13 @@ struct AMR_t
 // ===================================================================================
    patch_t *patch[NLEVEL][MAX_PATCH];
 
-   int    num     [NLEVEL];          
-   int    scale   [NLEVEL];        
+   int    num     [NLEVEL];
+   int    scale   [NLEVEL];
    double dh      [NLEVEL];
    double BoxSize [3];
    int    BoxScale[3];
 
-   
+
 
 
    //===================================================================================
@@ -194,7 +194,7 @@ struct AMR_t
 
    //===================================================================================
    // Method      :  pnew
-   // Description :  allocate a single patch 
+   // Description :  allocate a single patch
    //
    // Parameter   :  lv    : the targeted refinement level
    //                x,y,z : physical coordinates of the patch corner
@@ -222,7 +222,7 @@ struct AMR_t
 
    //===================================================================================
    // Method      :  pdelete
-   // Description :  deallocate a single patch 
+   // Description :  deallocate a single patch
    //
    // Parameter   :  lv  : the targeted refinement level
    //                PID : the patch ID to be removed

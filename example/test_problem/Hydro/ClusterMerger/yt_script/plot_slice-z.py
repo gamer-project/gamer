@@ -20,9 +20,7 @@ args=parser.parse_args()
 # take note
 print( '\nCommand-line arguments:' )
 print( '-------------------------------------------------------------------' )
-for t in range( len(sys.argv) ):
-   print str(sys.argv[t]),
-print( '' )
+print( ' '.join(map(str, sys.argv)) )
 print( '-------------------------------------------------------------------\n' )
 
 
@@ -38,7 +36,7 @@ center_mode   = 'c'
 dpi           = 150
 
 yt.enable_parallelism()
-ts = yt.load( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
+ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
 
 for ds in ts.piter():
 
@@ -71,8 +69,8 @@ for ds in ts.piter():
                                center=center_mode, depth=(8.0*Mpc) )
 
    cdm_mass.set_background_color( field )
-   cdm_mass.set_zlim( field, 1.0e9, 1.0e12 )
    cdm_mass.set_unit( field, 'Msun' )
+   cdm_mass.set_zlim( field, 1.0e9, 1.0e12 )
    cdm_mass.set_cmap( field, colormap_cdm )
    cdm_mass.set_colorbar_label( field, 'Dark matter mass [$M_{\odot}$]' )
    cdm_mass.annotate_timestamp( time_unit='Myr', corner='upper_right' )

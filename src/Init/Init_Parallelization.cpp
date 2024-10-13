@@ -39,6 +39,11 @@ void Init_Parallelization()
    IntGhostSize_Flu = ( (FLU_GHOST_SIZE == 0) ? 0 : (FLU_GHOST_SIZE+1)/2 + NGhost_Flu );
    IntGhostSize_Flu = MAX( IntGhostSize_Flu, NGhost_RefFlu );
 
+#  ifdef TRACER
+   if ( amr->Par->GhostSizeTracer > 0 )
+   IntGhostSize_Flu = MAX( IntGhostSize_Flu, (amr->Par->GhostSizeTracer+1)/2 + NGhost_Flu );
+#  endif
+
 #  ifdef GRAVITY
    int NGhost_Pot, NGhost_Rho, NGhost_Gra, NGhost_RefPot;
    Int_Table( OPT__POT_INT_SCHEME,     NSide_Useless, NGhost_Pot );
@@ -71,6 +76,12 @@ void Init_Parallelization()
    IntGhostSize_Mag = MAX( IntGhostSize_Mag, ((FLU_GHOST_SIZE+1)/2)*2 );
 #  endif
 
+#  ifdef FEEDBACK
+// feedback currently shares the same interpolation scheme as the fluid solver (OPT__FLU_INT_SCHEME)
+   int IntGhostSize_FB;
+   IntGhostSize_FB = ( (FB_GHOST_SIZE == 0) ? 0 : (FB_GHOST_SIZE+1)/2 + NGhost_Flu );
+#  endif
+
 // 1.2 set the sizes of parallel buffers
    Flu_ParaBuf = MAX( FLU_GHOST_SIZE, IntGhostSize_Flu );
 #  ifdef GRAVITY
@@ -83,6 +94,17 @@ void Init_Parallelization()
 #  ifdef MHD
    Flu_ParaBuf = MAX( Flu_ParaBuf,    IntGhostSize_Mag );   // ensure that the fluid ghost zone is large enough for MHD
 #  endif
+
+#  ifdef FEEDBACK
+   FB_ParaBuf  = MAX( FB_GHOST_SIZE,  IntGhostSize_FB );
+   Flu_ParaBuf = MAX( Flu_ParaBuf,    IntGhostSize_FB );    // ensure that the fluid/potential ghost zone is large enough for filling in
+                                                            // the feedback ghost zone outside coarse-fine boundaries with
+                                                            // spatial and temporal interpolations
+#  ifdef GRAVITY
+   Pot_ParaBuf = MAX( Pot_ParaBuf,    FB_ParaBuf      );    // use FB_ParaBuf instead of IntGhostSize_FB since Pot_ParaBuf also needs to
+                                                            // cover FB_GHOST_SIZE
+#  endif
+#  endif // #ifdef FEEDBACK
 
 
 // 2. number of particles in each rank
@@ -223,10 +245,9 @@ void Init_Parallelization()
    double (*SubDomain_EdgeL)[3] = new double [MPI_NRank][3];
    double (*SubDomain_EdgeR)[3] = new double [MPI_NRank][3];
 
-   double (*SubDomain_EdgeL3D)[ MPI_NRank_X[1] ][ MPI_NRank_X[0] ][3]
-                = ( double (*)[ MPI_NRank_X[1] ][ MPI_NRank_X[0] ][3] )SubDomain_EdgeL;
-   double (*SubDomain_EdgeR3D)[ MPI_NRank_X[1] ][ MPI_NRank_X[0] ][3]
-                = ( double (*)[ MPI_NRank_X[1] ][ MPI_NRank_X[0] ][3] )SubDomain_EdgeR;
+   typedef double (*vla)[ MPI_NRank_X[1] ][ MPI_NRank_X[0] ][3];
+   vla SubDomain_EdgeL3D = ( vla )SubDomain_EdgeL;
+   vla SubDomain_EdgeR3D = ( vla )SubDomain_EdgeR;
 
 // calculate the left/right edges by rank 0 only to ensure that all ranks see EXACTLY the same values (no round-off errors)
    if ( MPI_Rank == 0 )

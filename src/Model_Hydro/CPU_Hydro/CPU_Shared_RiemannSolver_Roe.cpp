@@ -5,7 +5,7 @@
 
 #include "CUFLU.h"
 
-#if ( MODEL == HYDRO )
+#if ( MODEL == HYDRO  &&  !defined SRHD )
 
 
 
@@ -37,14 +37,18 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
                                 const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
 #elif ( CHECK_INTERMEDIATE == HLLE )
 void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real Dens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
-                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
-                               const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
+                               const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
+                               const EoS_H2TEM_t EoS_HTilde2Temp,
+                               const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                               const real* const EoS_Table[EOS_NTABLE_MAX] );
 #elif ( CHECK_INTERMEDIATE == HLLC )
 void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real Dens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
-                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
-                               const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
+                               const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
+                               const EoS_H2TEM_t EoS_HTilde2Temp,
+                               const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                               const real* const EoS_Table[EOS_NTABLE_MAX] );
 #elif ( CHECK_INTERMEDIATE == HLLD )
 void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                const real Dens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
@@ -73,9 +77,11 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 //                R_In              : Input right state (conserved variables)
 //                MinDens/Pres      : Density and pressure floors
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
-//                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
+//                EoS_DensPres2CSqr : EoS routine to compute the sound speed squared
 //                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
 //                EoS_Table         : EoS tables
+//
+// Return      :  Flux_Out[]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
@@ -135,6 +141,7 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    real alpha_f, alpha_s, beta_y, beta_z;       // Eqs. (A16) and (A17) in ref-b
    real Ca2_plus_a2, Ca2_min_a2, Cf2_min_Cs2;   // Ca^2+a^2, Ca^2-a^2, Cf^2-Cs^2
    real X, Y;                                   // Eqs. (B15) and (B16) in ref-b
+   real Gamma_m1_mY;                            // Gamma_m1 - Y
    real S;                                      // sign(Bx)
    real Bn_star;                                // Eq. (B20) in ref-b
    real beta_n_star2, beta_y_star, beta_z_star; // Eq. (B28) in ref-b
@@ -152,9 +159,11 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    EmagR = _TWO*( SQR(Bx) + SQR(ByR) + SQR(BzR) );
 #  endif
    PL    = Hydro_Con2Pres( L[0], L[1], L[2], L[3], L[4], L+NCOMP_FLUID, CheckMinPres_Yes, MinPres, EmagL,
-                           EoS_DensEint2Pres, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
+                           EoS_DensEint2Pres, NULL, NULL,
+                           EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
    PR    = Hydro_Con2Pres( R[0], R[1], R[2], R[3], R[4], R+NCOMP_FLUID, CheckMinPres_Yes, MinPres, EmagR,
-                           EoS_DensEint2Pres, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
+                           EoS_DensEint2Pres, NULL, NULL,
+                           EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
 #  ifdef MHD
    HL    = _RhoL*( L[4] + PL + EmagL );
    HR    = _RhoR*( R[4] + PR + EmagR );
@@ -163,14 +172,13 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    HR    = _RhoR*( R[4] + PR );
 #  endif
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( Hydro_CheckNegative(L[0]) )
-      printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              L[0], __FILE__, __LINE__, __FUNCTION__ );
-
-   if ( Hydro_CheckNegative(R[0]) )
-      printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              R[0], __FILE__, __LINE__, __FUNCTION__ );
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &L[0], "density",
+                       TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &R[0], "density",
+                       TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
    RhoL_sqrt       = SQRT( L[0] );
@@ -188,29 +196,30 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    H  = _RhoLR_sqrt_sum*(  RhoL_sqrt*HL   +  RhoR_sqrt*HR   );
 
 #  ifdef MHD
-   Rho_sqrt  = SQRT( Rho );
-   _Rho_sqrt = ONE/Rho_sqrt;
-   By        = _RhoLR_sqrt_sum*( RhoL_sqrt*ByR + RhoR_sqrt*ByL );
-   Bz        = _RhoLR_sqrt_sum*( RhoL_sqrt*BzR + RhoR_sqrt*BzL );
-   Bn2       = SQR( By ) + SQR( Bz );
-   Bn        = SQRT( Bn2 );
-   B2        = SQR( Bx ) + Bn2;
-   B2_Rho    = B2*_Rho;
-   S         = SIGN( Bx );
-   X         = _TWO*( SQR(ByR-ByL) + SQR(BzR-BzL) )*SQR( _RhoLR_sqrt_sum );
-   X        *= Gamma_m2;
+   Rho_sqrt     = SQRT( Rho );
+   _Rho_sqrt    = ONE/Rho_sqrt;
+   By           = _RhoLR_sqrt_sum*( RhoL_sqrt*ByR + RhoR_sqrt*ByL );
+   Bz           = _RhoLR_sqrt_sum*( RhoL_sqrt*BzR + RhoR_sqrt*BzL );
+   Bn2          = SQR( By ) + SQR( Bz );
+   Bn           = SQRT( Bn2 );
+   B2           = SQR( Bx ) + Bn2;
+   B2_Rho       = B2*_Rho;
+   S            = SIGN( Bx );
+   X            = _TWO*( SQR(ByR-ByL) + SQR(BzR-BzL) )*SQR( _RhoLR_sqrt_sum );
+   X           *= Gamma_m2;
 #  ifdef EULERY
-   Y         = _TWO*( L[0] + R[0] )*_Rho ;
+   Y            = _TWO*( L[0] + R[0] )*_Rho ;
 #  else
-   Y         = ONE;
+   Y            = ONE;
 #  endif
-   Y        *= Gamma_m2;
-   Bn_star   = SQRT( Gamma_m1 - Y )*Bn;
+   Y           *= Gamma_m2;
+   Gamma_m1_mY  = Gamma_m1-Y;
+   Bn_star      = SQRT( Gamma_m1_mY )*Bn;
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( Hydro_CheckNegative(Gamma_m1-Y) )
-      printf( "ERROR : invalid Gamma_m1-Y (%14.7e, Gamma_m1 %14.7e, Y %14.7e) at file <%s>, line <%d>, function <%s>\n",
-              Gamma_m1-Y, Gamma_m1, Y, __FILE__, __LINE__, __FUNCTION__ );
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &Gamma_m1_mY, "Gamma_m1-Y",
+                       (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
    if ( Bn == ZERO ) {
@@ -246,10 +255,10 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
 #  ifdef MHD
    a2 -= X;
 #  endif
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( Hydro_CheckNegative(a2) )
-      printf( "ERROR : invalid a2 (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              a2, __FILE__, __LINE__, __FUNCTION__ );
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &a2, "a2",
+                       (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
 #  endif
    a  = SQRT( a2 );
 
@@ -310,14 +319,13 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
       alpha_s = ZERO;
    }
    else {
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( Hydro_CheckNegative(a2_min_Cs2) )
-         printf( "ERROR : invalid a2_min_Cs2 (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 a2_min_Cs2, __FILE__, __LINE__, __FUNCTION__ );
-
-      if ( Hydro_CheckNegative(Cf2_min_a2) )
-         printf( "ERROR : invalid Cf2_min_a2 (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 Cf2_min_a2, __FILE__, __LINE__, __FUNCTION__ );
+#     ifdef CHECK_UNPHYSICAL_IN_FLUID
+      Hydro_IsUnphysical( UNPHY_MODE_SING, &a2_min_Cs2, "a2_min_Cs2",
+                          (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                          ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical( UNPHY_MODE_SING, &Cf2_min_a2, "Cf2_min_a2",
+                          (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                          ERROR_INFO, UNPHY_VERBOSE );
 #     endif
 
       const real _Cf2_min_Cs2 = ONE/Cf2_min_Cs2;
@@ -633,7 +641,7 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
          const real Emag = NULL_REAL;
 #        endif
          I_Pres = Hydro_Con2Pres( I_States[0], I_States[1], I_States[2], I_States[3], I_States[4], Passive,
-                                  CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres,
+                                  CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres, NULL, NULL,
                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
 
 //       if unphysical results occur, recalculate fluxes by a substitute Riemann solver
@@ -649,10 +657,10 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
                                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 #           elif ( CHECK_INTERMEDIATE == HLLE )
             Hydro_RiemannSolver_HLLE ( 0, Flux_Out, L, R, MinDens, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr,
-                                       EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+                                       NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 #           elif ( CHECK_INTERMEDIATE == HLLC  &&  !defined MHD )
             Hydro_RiemannSolver_HLLC ( 0, Flux_Out, L, R, MinDens, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr,
-                                       EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+                                       NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 #           elif ( CHECK_INTERMEDIATE == HLLD  &&  defined MHD )
             Hydro_RiemannSolver_HLLD ( 0, Flux_Out, L, R, MinDens, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr,
                                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );

@@ -6,11 +6,11 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_Message
-// Description :  Output the message and flush it 
+// Description :  Output the message and flush it
 //
-// Note        :  Use the variable argument lists provided in "cstdarg" 
-// 
-// Parameter   :  Type     : stdout/stderr/file stream 
+// Note        :  Use the variable argument lists provided in "cstdarg"
+//
+// Parameter   :  Type     : stdout/stderr/file stream
 //                Format   : Output format
 //                ...      : Arguments in vfprintf
 //                           --> It is equivalent to call "fprintf( Type, Format, ... );   fflush( Type );"

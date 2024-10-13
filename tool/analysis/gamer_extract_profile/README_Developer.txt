@@ -1,5 +1,5 @@
 
-GAMER_ExtractProfile : Mode A: evaluate the shell averages of fluid variables 
+GAMER_ExtractProfile : Mode A: evaluate the shell averages of fluid variables
                        Mode B: get the maximum density
 
 ==================================================================================================================
@@ -46,7 +46,7 @@ Version 1.4.2     12/14/2013
    Rho*vr^2 + Rho*wr^2 because of different finite difference schemes
    --> avoid large error in wr when rho ~ 0
 2. Record the sum of all surfaces terms in the virial condition, which should
-   be equal to the negative gravitational potential energy. Both the results 
+   be equal to the negative gravitational potential energy. Both the results
    with Ek-L and Ek-G are included (Sum-L & Sum-G).
 
 
@@ -151,7 +151,7 @@ Version 1.1.0     12/02/2011
    --> Olde data format (1100 <= format < 1200) is still supported
    --> format < 1100 is no longer supported, and the option "-O" is removed
 2. Support both HYDRO and ELBDM models
-3. Support using both "cell scale" and "physical coordinates" to specify the 
+3. Support using both "cell scale" and "physical coordinates" to specify the
    targeted range
    --> Using "physical coordinates" is the default setting
    --> To use "cell scale" instead, please turn on the option "-s"
@@ -161,7 +161,7 @@ Version 1.1.0     12/02/2011
 
 Version 1.0.3     08/23/2010
 ----------------------------
-1. Use different weightings (proportional to the cell volume) for cells in different refinement levels to 
+1. Use different weightings (proportional to the cell volume) for cells in different refinement levels to
    evaluate the RMS.
 2. A simple user manual "README_User.txt" is provided.
 
@@ -177,7 +177,7 @@ Version 1.0.2     08/05/2010
 
 Version 1.0.1     02/02/2010
 ----------------------------
-1. Use different weightings (proportional to the cell volume) for cells in different refinement levels to 
+1. Use different weightings (proportional to the cell volume) for cells in different refinement levels to
    evaluate the shell average.
 2. The average velocity is re-defined as "Ave(momentum)/Ave(density)"
 
@@ -187,37 +187,37 @@ Version 1.0       01/22/2010
 ----------------------------
 1. This new tool combines the two old tools "GAMMA_ShellAverage" and "GAMMA_GetMaxDensity".
 
-   --> Use the command-line option "-S,-M" to determine the usage: 
+   --> Use the command-line option "-S,-M" to determine the usage:
          -S : the "shell-average"  mode
          -M : the "maximum-densty" mode
 
-   --> Two modes can be turned on simultaneously 
+   --> Two modes can be turned on simultaneously
 
 2. Work with both the old (GAMER.1.0.beta1) and the new (GAMER.1.0.beta3.1 --> format version >= 1100) data format
    --> Use the command-line option "-O" to load the old-format data.
 
 
 
-Demo : 
+Demo :
 ------
 
-   (1) Mode A "shell average": 
+   (1) Mode A "shell average":
 
       (a) Specify the sphere center, radius, and number of shells:
 
           ./GAMER_ExtractProfile -i Input -S -r 128 -n 128 -x 1 -y 2 -z 3 -p
-      
-      (b) Give the first guess of the sphere center, and then determine the 
+
+      (b) Give the first guess of the sphere center, and then determine the
           sphere center by finding the maximum density:
 
           ./GAMER_ExtractProfile -i Input -S -r 128 -n 128 -x 1 -y 2 -z 3 -p -m
-      
+
       (c) Determine everything automatically:
 
           ./GAMER_ExtractProfile -i Input -S -p -m
 
 
-   (2) Mode B "maximum density": 
+   (2) Mode B "maximum density":
       (1-a) - (1-c) can also be applied for this mode. For example:
 
        ./GAMER_ExtractProfile -i Input -M -p -m -t 100
@@ -228,7 +228,7 @@ Unfinished work :
 -----------------
 1. Remove the C.M. velocity for evaluating the shell-average of velocity.
 2. Add the check for the size of the type "long int"
-3. Add the warning message when the format version is not supported 
+3. Add the warning message when the format version is not supported
    --> Either an old file or a unrecognizable file
 4. OpenMP
 

@@ -21,7 +21,7 @@ datatypes in the HDF5 format
 
 
 //-------------------------------------------------------------------------------------------------------
-// Structure   :  PatchInfo_t 
+// Structure   :  PatchInfo_t
 // Description :  Data structure for outputting the patch information
 //
 // Note        :  1. Father, Son and Sibling store the "global identification (GID)" instead of the "local
@@ -51,12 +51,12 @@ struct PatchInfo_t
 
 
 //-------------------------------------------------------------------------------------------------------
-// Structure   :  PatchData_t 
+// Structure   :  PatchData_t
 // Description :  Data structure for outputting the patch data
 //
 // Note        :  1. "Pote" array MUST be the LAST member
 //-------------------------------------------------------------------------------------------------------
-struct PatchData_t 
+struct PatchData_t
 {
 
 #  if   ( MODEL == HYDRO )

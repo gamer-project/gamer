@@ -9,7 +9,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SiblingSearch
-// Description :  Construct the sibling relation for level "lv" 
+// Description :  Construct the sibling relation for level "lv"
 //
 // Parameter   :  Targeted refinement level
 //-------------------------------------------------------------------------------------------------------
@@ -32,7 +32,7 @@ void SiblingSearch( const int lv )
       return;
    }
 
-   
+
 // lv > 0 :
 //#  pragma omp parallel for
    for (int PID=0; PID<amr.num[lv]; PID++)
@@ -169,7 +169,7 @@ void SiblingSearch( const int lv )
             amr.patch[lv][PID]->sibling[ 5] = PID+5;
             amr.patch[lv][PID]->sibling[13] = PID+6;
             amr.patch[lv][PID]->sibling[ 0] = PID-1;
- 
+
             if (  ( FaSib = fa->sibling[1] ) >= 0  )
             {
                if (  ( FaSibSon = amr.patch[lv-1][FaSib]->son ) != -1  )
@@ -285,7 +285,7 @@ void SiblingSearch( const int lv )
             amr.patch[lv][PID]->sibling[17] = PID+5;
             amr.patch[lv][PID]->sibling[ 7] = PID-1;
             amr.patch[lv][PID]->sibling[ 2] = PID-2;
- 
+
             if (  ( FaSib = fa->sibling[0] ) >= 0  )
             {
                if (  ( FaSibSon = amr.patch[lv-1][FaSib]->son ) != -1  )
@@ -389,9 +389,9 @@ void SiblingSearch( const int lv )
             }
             else if ( FaSib <= SIB_OFFSET_NONPERIODIC )
                   amr.patch[lv][PID]->sibling[20] = FaSib;
-            
+
            break;
-      
+
 
          case 3:
             amr.patch[lv][PID]->sibling[21] = PID+1;
@@ -401,7 +401,7 @@ void SiblingSearch( const int lv )
             amr.patch[lv][PID]->sibling[11] = PID-1;
             amr.patch[lv][PID]->sibling[16] = PID-2;
             amr.patch[lv][PID]->sibling[ 4] = PID-3;
- 
+
             if (  ( FaSib = fa->sibling[0] ) >= 0  )
             {
                if (  ( FaSibSon = amr.patch[lv-1][FaSib]->son ) != -1  )
@@ -507,7 +507,7 @@ void SiblingSearch( const int lv )
                   amr.patch[lv][PID]->sibling[22] = FaSib;
 
            break;
-      
+
 
          case 4:
             amr.patch[lv][PID]->sibling[15] = PID+1;
@@ -517,7 +517,7 @@ void SiblingSearch( const int lv )
             amr.patch[lv][PID]->sibling[ 0] = PID-2;
             amr.patch[lv][PID]->sibling[ 2] = PID-3;
             amr.patch[lv][PID]->sibling[ 6] = PID-4;
-  
+
             if (  ( FaSib = fa->sibling[1] ) >= 0  )
             {
                if (  ( FaSibSon = amr.patch[lv-1][FaSib]->son ) != -1  )
@@ -621,10 +621,10 @@ void SiblingSearch( const int lv )
             }
             else if ( FaSib <= SIB_OFFSET_NONPERIODIC )
                   amr.patch[lv][PID]->sibling[21] = FaSib;
-            
+
            break;
-      
-           
+
+
          case 5:
             amr.patch[lv][PID]->sibling[ 7] = PID+1;
             amr.patch[lv][PID]->sibling[ 1] = PID+2;
@@ -633,7 +633,7 @@ void SiblingSearch( const int lv )
             amr.patch[lv][PID]->sibling[ 4] = PID-3;
             amr.patch[lv][PID]->sibling[19] = PID-4;
             amr.patch[lv][PID]->sibling[10] = PID-5;
-  
+
             if (  ( FaSib = fa->sibling[0] ) >= 0  )
             {
                if (  ( FaSibSon = amr.patch[lv-1][FaSib]->son ) != -1  )
@@ -737,10 +737,10 @@ void SiblingSearch( const int lv )
             }
             else if ( FaSib <= SIB_OFFSET_NONPERIODIC )
                   amr.patch[lv][PID]->sibling[24] = FaSib;
-            
+
            break;
-            
-           
+
+
          case 6:
             amr.patch[lv][PID]->sibling[ 3] = PID+1;
             amr.patch[lv][PID]->sibling[ 8] = PID-1;
@@ -749,7 +749,7 @@ void SiblingSearch( const int lv )
             amr.patch[lv][PID]->sibling[20] = PID-4;
             amr.patch[lv][PID]->sibling[ 4] = PID-5;
             amr.patch[lv][PID]->sibling[14] = PID-6;
-  
+
             if (  ( FaSib = fa->sibling[1] ) >= 0  )
             {
                if (  ( FaSibSon = amr.patch[lv-1][FaSib]->son ) != -1  )
@@ -853,10 +853,10 @@ void SiblingSearch( const int lv )
             }
             else if ( FaSib <= SIB_OFFSET_NONPERIODIC )
                   amr.patch[lv][PID]->sibling[23] = FaSib;
-            
+
            break;
-            
-           
+
+
          case 7:
             amr.patch[lv][PID]->sibling[ 2] = PID-1;
             amr.patch[lv][PID]->sibling[ 0] = PID-2;
@@ -865,7 +865,7 @@ void SiblingSearch( const int lv )
             amr.patch[lv][PID]->sibling[14] = PID-5;
             amr.patch[lv][PID]->sibling[10] = PID-6;
             amr.patch[lv][PID]->sibling[18] = PID-7;
-   
+
             if (  ( FaSib = fa->sibling[1] ) >= 0  )
             {
                if (  ( FaSibSon = amr.patch[lv-1][FaSib]->son ) != -1  )

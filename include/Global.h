@@ -29,7 +29,7 @@ extern double     dTime_Base;                         // physical time interval 
 
 extern double     FlagTable_Rho        [NLEVEL-1];    // refinement criterion of density
 extern double     FlagTable_RhoGradient[NLEVEL-1];    // refinement criterion of density gradient
-extern double     FlagTable_Lohner     [NLEVEL-1][4]; // refinement criterion based on Lohner's error estimator
+extern double     FlagTable_Lohner     [NLEVEL-1][5]; // refinement criterion based on Lohner's error estimator
 extern double    *FlagTable_User       [NLEVEL-1];    // user-defined refinement criterion
 extern double    *DumpTable;                          // dump table recording the physical times to output data
 extern int        DumpTable_NDump;                    // number of data dumps in the dump table
@@ -46,31 +46,41 @@ extern int       *BaseP;                              // table recording the IDs
 extern int        Flu_ParaBuf;                        // number of parallel buffers to exchange all fluid
                                                       // variables for the fluid solver and fluid refinement
 
+extern long       FixUpVar_Flux, FixUpVar_Restrict;
 extern int        PassiveNorm_NVar, PassiveNorm_VarIdx[NCOMP_PASSIVE];
 extern int        PassiveIntFrac_NVar, PassiveIntFrac_VarIdx[NCOMP_PASSIVE];
 
-extern double     BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
+extern int        StrLen_Flt;
+extern char       BlankPlusFormat_Flt[MAX_STRING+1];
+
+extern double     BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, OUTPUT_WALLTIME, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
 extern long int   END_STEP;
-extern int        NX0_TOT[3], OUTPUT_STEP, REGRID_COUNT, FLU_GPU_NPGROUP, SRC_GPU_NPGROUP, OMP_NTHREAD;
+extern int        NX0_TOT[3], OUTPUT_STEP, OUTPUT_WALLTIME_UNIT, REGRID_COUNT, REFINE_NLEVEL, FLU_GPU_NPGROUP, SRC_GPU_NPGROUP, OMP_NTHREAD;
 extern int        MPI_NRank, MPI_NRank_X[3];
 extern int        GPU_NSTREAM, FLAG_BUFFER_SIZE, FLAG_BUFFER_SIZE_MAXM1_LV, FLAG_BUFFER_SIZE_MAXM2_LV, MAX_LEVEL;
 
 extern int        OPT__UM_IC_LEVEL, OPT__UM_IC_NLEVEL, OPT__UM_IC_NVAR, OPT__UM_IC_LOAD_NRANK, OPT__GPUID_SELECT, OPT__PATCH_COUNT;
 extern int        INIT_DUMPID, INIT_SUBSAMPLING_NCELL, OPT__TIMING_BARRIER, OPT__REUSE_MEMORY, RESTART_LOAD_NRANK;
 extern double     OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z, AUTO_REDUCE_DT_FACTOR, AUTO_REDUCE_DT_FACTOR_MIN;
+extern double     AUTO_REDUCE_INT_MONO_FACTOR, AUTO_REDUCE_INT_MONO_MIN;
 extern double     OPT__CK_MEMFREE, INT_MONO_COEFF, UNIT_L, UNIT_M, UNIT_T, UNIT_V, UNIT_D, UNIT_E, UNIT_P;
 extern bool       OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_USER, OPT__FLAG_LOHNER_DENS, OPT__FLAG_REGION;
-extern int        OPT__FLAG_USER_NUM;
+extern int        OPT__FLAG_USER_NUM, MONO_MAX_ITER, OPT__RESET_FLUID_INIT;
 extern bool       OPT__DT_USER, OPT__RECORD_DT, OPT__RECORD_MEMORY, OPT__MEMORY_POOL, OPT__RESTART_RESET;
 extern bool       OPT__FIXUP_RESTRICT, OPT__INIT_RESTRICT, OPT__VERBOSE, OPT__MANUAL_CONTROL, OPT__UNIT;
-extern bool       OPT__INT_TIME, OPT__OUTPUT_USER, OPT__OUTPUT_BASE, OPT__OVERLAP_MPI, OPT__TIMING_BALANCE;
+extern bool       OPT__INT_TIME, OPT__OUTPUT_USER, OPT__OUTPUT_BASE, OPT__OUTPUT_RESTART, OPT__OVERLAP_MPI, OPT__TIMING_BALANCE;
 extern bool       OPT__OUTPUT_BASEPS, OPT__CK_REFINE, OPT__CK_PROPER_NESTING, OPT__CK_FINITE, OPT__RECORD_PERFORMANCE;
 extern bool       OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT__CK_FLUX_ALLOCATE, OPT__CK_NORMALIZE_PASSIVE;
 extern bool       OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
-extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
+extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__FREEZE_FLUID, OPT__RECORD_CENTER, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
 extern bool       OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 extern bool       OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
-extern bool       OPT__INT_FRAC_PASSIVE_LR;
+extern bool       OPT__INT_FRAC_PASSIVE_LR, OPT__CK_INPUT_FLUID, OPT__SORT_PATCH_BY_LBIDX;
+extern char       OPT__OUTPUT_TEXT_FORMAT_FLT[MAX_STRING];
+extern int        OPT__UM_IC_FLOAT8;
+extern double     COM_CEN_X, COM_CEN_Y, COM_CEN_Z, COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R;
+extern int        COM_MAX_ITER;
+extern double     ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z;
 
 extern UM_IC_Format_t     OPT__UM_IC_FORMAT;
 extern TestProbID_t       TESTPROB_ID;
@@ -91,27 +101,39 @@ extern OptTimeStepLevel_t OPT__DT_LEVEL;
 // (2-1) fluid solver in different models
 #if   ( MODEL == HYDRO )
 extern double           FlagTable_PresGradient[NLEVEL-1], FlagTable_Vorticity[NLEVEL-1], FlagTable_Jeans[NLEVEL-1];
-extern double           GAMMA, MINMOD_COEFF, MOLECULAR_WEIGHT, ISO_TEMP;
+extern double           GAMMA, MINMOD_COEFF, AUTO_REDUCE_MINMOD_FACTOR, AUTO_REDUCE_MINMOD_MIN, MOLECULAR_WEIGHT, MU_NORM, ISO_TEMP;
 extern LR_Limiter_t     OPT__LR_LIMITER;
 extern Opt1stFluxCorr_t OPT__1ST_FLUX_CORR;
 extern OptRSolver1st_t  OPT__1ST_FLUX_CORR_SCHEME;
-extern bool             OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP;
+extern bool             OPT__FLAG_PRES_GRADIENT, OPT__FLAG_LOHNER_ENGY, OPT__FLAG_LOHNER_PRES, OPT__FLAG_LOHNER_TEMP, OPT__FLAG_LOHNER_ENTR;
 extern bool             OPT__FLAG_VORTICITY, OPT__FLAG_JEANS, JEANS_MIN_PRES, OPT__LAST_RESORT_FLOOR;
 extern bool             OPT__OUTPUT_DIVVEL, OPT__OUTPUT_MACH, OPT__OUTPUT_PRES, OPT__OUTPUT_CS;
-extern bool             OPT__OUTPUT_TEMP;
+extern bool             OPT__OUTPUT_TEMP, OPT__OUTPUT_ENTR, OPT__INT_PRIM;
 extern int              OPT__CK_NEGATIVE, JEANS_MIN_PRES_LEVEL, JEANS_MIN_PRES_NCELL, OPT__CHECK_PRES_AFTER_FLU;
-extern double           MIN_DENS, MIN_PRES, MIN_EINT, MIN_TEMP;
+extern int              MINMOD_MAX_ITER;
+extern double           MIN_DENS, MIN_PRES, MIN_EINT, MIN_TEMP, MIN_ENTR;
 #ifdef DUAL_ENERGY
 extern double           DUAL_ENERGY_SWITCH;
 #endif
 #ifdef MHD
-extern double           FlagTable_Current[NLEVEL-1];
+extern double           FlagTable_Current[NLEVEL-1], INT_MONO_COEFF_B;
 extern IntScheme_t      OPT__MAG_INT_SCHEME, OPT__REF_MAG_INT_SCHEME;
 extern bool             OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC_MAG, OPT__FLAG_CURRENT;
 extern bool             OPT__OUTPUT_DIVMAG;
 extern int              OPT__CK_DIVERGENCE_B;
 extern double           UNIT_B;
-extern bool             OPT__INIT_BFIELD_BYFILE;
+extern bool             OPT__SAME_INTERFACE_B;
+
+extern OptInitMagByVecPot_t OPT__INIT_BFIELD_BYVECPOT;
+#endif
+
+#ifdef SRHD
+extern double           FlagTable_LrtzGradient[NLEVEL-1];
+extern bool             DT__SPEED_OF_LIGHT;
+extern bool             OPT__FLAG_LRTZ_GRADIENT;
+extern bool             OPT__OUTPUT_LORENTZ;
+extern bool             OPT__OUTPUT_3VELOCITY;
+extern bool             OPT__OUTPUT_ENTHALPY;
 #endif
 
 #elif ( MODEL == ELBDM )
@@ -181,16 +203,22 @@ extern double     LB_INPUT__PAR_WEIGHT;               // LB->Par_Weight loaded f
 extern bool       OPT__RECORD_LOAD_BALANCE;
 #endif
 extern bool       OPT__MINIMIZE_MPI_BARRIER;
-
+#ifdef SUPPORT_FFTW
+extern int        OPT__FFTW_STARTUP;
+#if ( SUPPORT_FFTW == FFTW3 )
+extern bool       FFTW3_Double_OMP_Enabled, FFTW3_Single_OMP_Enabled;
+#endif // # if ( SUPPORT_FFTW == FFTW3 )
+#endif // # ifdef SUPPORT_FFTW
 
 // (2-5) particle
 // ============================================================================================================
 #ifdef PARTICLE
 extern double          DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
-extern bool            OPT__OUTPUT_PAR_TEXT, OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL;
-extern int             OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
+extern bool            OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL, OPT__FREEZE_PAR;
+extern int             OPT__OUTPUT_PAR_MODE, OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
 extern double          FlagTable_ParMassCell[NLEVEL-1];
 extern ParOutputDens_t OPT__OUTPUT_PAR_DENS;
+extern int             PAR_IC_FLOAT8;
 #endif
 
 
@@ -199,6 +227,11 @@ extern ParOutputDens_t OPT__OUTPUT_PAR_DENS;
 #ifdef SUPPORT_LIBYT
 extern char            YT_SCRIPT[MAX_STRING];
 extern yt_verbose      YT_VERBOSE;
+extern char            YT_FIG_BASENAME[MAX_STRING];
+extern int             YT_GID_Offset[NLEVEL];
+#ifdef LIBYT_JUPYTER
+extern bool            YT_JUPYTER_USE_CONNECTION_FILE;
+#endif
 #endif
 
 
@@ -241,19 +274,33 @@ extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 #if ( MODEL == HYDRO )
 extern double EoS_AuxArray_Flt[EOS_NAUX_MAX];
 extern int    EoS_AuxArray_Int[EOS_NAUX_MAX];
-extern EoS_DE2P_t EoS_DensEint2Pres_CPUPtr;
-extern EoS_DP2E_t EoS_DensPres2Eint_CPUPtr;
-extern EoS_DP2C_t EoS_DensPres2CSqr_CPUPtr;
-extern EoS_DE2T_t EoS_DensEint2Temp_CPUPtr;
-extern EoS_DT2P_t EoS_DensTemp2Pres_CPUPtr;
-extern EoS_GENE_t EoS_General_CPUPtr;
+extern EoS_GUESS_t   EoS_GuessHTilde_CPUPtr;
+extern EoS_H2TEM_t   EoS_HTilde2Temp_CPUPtr;
+extern EoS_TEM2H_t   EoS_Temp2HTilde_CPUPtr;
+extern EoS_DE2P_t    EoS_DensEint2Pres_CPUPtr;
+extern EoS_DP2E_t    EoS_DensPres2Eint_CPUPtr;
+extern EoS_DP2C_t    EoS_DensPres2CSqr_CPUPtr;
+extern EoS_DE2T_t    EoS_DensEint2Temp_CPUPtr;
+extern EoS_DT2P_t    EoS_DensTemp2Pres_CPUPtr;
+extern EoS_DE2S_t    EoS_DensEint2Entr_CPUPtr;
+extern EoS_GENE_t    EoS_General_CPUPtr;
+#ifdef COSMIC_RAY
+extern EoS_CRE2CRP_t EoS_CREint2CRPres_CPUPtr;
+#endif
 #ifdef GPU
-extern EoS_DE2P_t EoS_DensEint2Pres_GPUPtr;
-extern EoS_DP2E_t EoS_DensPres2Eint_GPUPtr;
-extern EoS_DP2C_t EoS_DensPres2CSqr_GPUPtr;
-extern EoS_DE2T_t EoS_DensEint2Temp_GPUPtr;
-extern EoS_DT2P_t EoS_DensTemp2Pres_GPUPtr;
-extern EoS_GENE_t EoS_General_GPUPtr;
+extern EoS_GUESS_t   EoS_GuessHTilde_GPUPtr;
+extern EoS_H2TEM_t   EoS_HTilde2Temp_GPUPtr;
+extern EoS_TEM2H_t   EoS_Temp2HTilde_GPUPtr;
+extern EoS_DE2P_t    EoS_DensEint2Pres_GPUPtr;
+extern EoS_DP2E_t    EoS_DensPres2Eint_GPUPtr;
+extern EoS_DP2C_t    EoS_DensPres2CSqr_GPUPtr;
+extern EoS_DE2T_t    EoS_DensEint2Temp_GPUPtr;
+extern EoS_DT2P_t    EoS_DensTemp2Pres_GPUPtr;
+extern EoS_DE2S_t    EoS_DensEint2Entr_GPUPtr;
+extern EoS_GENE_t    EoS_General_GPUPtr;
+#ifdef COSMIC_RAY
+extern EoS_CRE2CRP_t EoS_CREint2CRPres_GPUPtr;
+#endif
 #endif
 extern EoS_t EoS;
 #endif // HYDRO
@@ -280,6 +327,36 @@ extern char (*UserDerField_Unit )[MAX_STRING];
 extern void (*Flu_DerivedField_User_Ptr)( real Out[], const real FluIn[], const real MagIn[], const int NFieldOut,
                                           const int NCellInX, const int NCellInY, const int NCellInZ,
                                           const int NGhost, const double dh );
+
+
+// (2-12) feedback
+// =======================================================================================================
+#ifdef FEEDBACK
+extern int  FB_LEVEL, FB_RSEED;
+extern bool FB_SNE, FB_USER;
+extern bool FB_Any;
+extern int  FB_ParaBuf;
+#endif
+
+
+// (2-13) cosmic ray
+// =======================================================================================================
+#ifdef COSMIC_RAY
+extern double GAMMA_CR;
+extern bool OPT__FLAG_CRAY, OPT__FLAG_LOHNER_CRAY;
+extern double FlagTable_CRay[NLEVEL-1];
+#endif
+
+
+// (2-14) microphysics
+// =======================================================================================================
+extern MicroPhy_t MicroPhy;
+#ifdef CR_DIFFUSION
+extern double CR_DIFF_PARA;
+extern double CR_DIFF_PERP;
+extern double DT__CR_DIFFUSION;
+extern double CR_DIFF_MIN_B;
+#endif
 
 
 

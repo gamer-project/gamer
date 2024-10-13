@@ -8,7 +8,7 @@
 // Description :  Return the number of patches in each direction (different sibling indices) adjacent to
 //                a patch group
 //
-// Note        :  Work for the functions "Prepare_PatchData", "Buf_RecordExchangeDataPatchID", 
+// Note        :  Work for the functions "Prepare_PatchData", "Buf_RecordExchangeDataPatchID",
 //                "Buf_RecordBoundaryPatch", and "SiblingSearch_Base"
 //
 // Parameter   :  SibID : Sibling index (0~25)

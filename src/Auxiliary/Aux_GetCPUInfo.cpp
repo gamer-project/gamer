@@ -35,25 +35,25 @@ void Aux_GetCPUInfo( const char *FileName )
 
       if (  strcmp( String[0], "model" ) == 0  &&  strcmp( String[1], "name" ) == 0  )
       {
-         strncpy( line, "CPU Type  ", 10 );
+         memcpy( line, "CPU Type  ", 10 );
          fprintf( Note, "%s", line );
       }
 
       if (  strcmp( String[0], "cpu" ) == 0  &&  strcmp( String[1], "MHz" ) == 0  )
       {
-         strncpy( line, "CPU MHz", 7 );
+         memcpy( line, "CPU MHz", 7 );
          fprintf( Note, "%s", line );
       }
 
       if (  strcmp( String[0], "cache" ) == 0  &&  strcmp( String[1], "size" ) == 0  )
       {
-         strncpy( line, "Cache Size", 10 );
+         memcpy( line, "Cache Size", 10 );
          fprintf( Note, "%s", line );
       }
 
       if (  strcmp( String[0], "cpu" ) == 0  &&  strcmp( String[1], "cores" ) == 0  )
       {
-         strncpy( line, "CPU Cores", 9 );
+         memcpy( line, "CPU Cores", 9 );
          fprintf( Note, "%s", line );
          break;
       }

@@ -12,7 +12,7 @@ extern int  TwoParAcc_LogSample;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Init_ByFunction
-// Description :  Initialize the particle position and velocity 
+// Description :  Initialize the particle position and velocity
 //
 // Note        :  Invoked by "Init_GAMER"
 //
@@ -39,7 +39,7 @@ void Par_Init_ByFunction()
 
 // ============================================================================================================
 // set particle mass = 1.0 except for mode 3 (for which the mass of particle 1 is set to zero for the self-force test)
-   switch ( TwoParAcc_Mode ) 
+   switch ( TwoParAcc_Mode )
    {
       case 1:  Mass[0] = 1.0;   Mass[1] = 1.0;   break;
       case 2:  Mass[0] = 1.0;   Mass[1] = 1.0;   break;
@@ -56,7 +56,7 @@ void Par_Init_ByFunction()
 
 
 // set the particle position
-   switch ( TwoParAcc_Mode ) 
+   switch ( TwoParAcc_Mode )
    {
       case 1:
 //       put the first particle randomly in the eight base-level patches around the box center
@@ -64,7 +64,7 @@ void Par_Init_ByFunction()
          {
             PosMin = Cen[d] - PS1*amr->dh[0];
             PosMax = Cen[d] + PS1*amr->dh[0];
-            
+
             Pos[d][0] = ( (real)rand()/RAND_MAX )*( PosMax - PosMin ) + PosMin;
          }
 

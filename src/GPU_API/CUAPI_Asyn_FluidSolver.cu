@@ -36,14 +36,14 @@ void CUFLU_FluidSolver_MHM(
          real   g_EC_Ele       [][NCOMP_MAG][ CUBE(N_EC_ELE) ],
    const real dt, const real dh,
    const bool StoreFlux, const bool StoreElectric,
-   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const double Time,
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter, const double Time,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch,
    const bool NormPassive, const int NNorm,
    const bool FracPassive, const int NFrac,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_t EoS );
+   const EoS_t EoS, const MicroPhy_t MicroPhy );
 #elif ( FLU_SCHEME == CTU )
 __global__
 void CUFLU_FluidSolver_CTU(
@@ -181,6 +181,7 @@ extern cudaStream_t *Stream;
 //                                      (0/1/2/3/4) = (vanLeer/generalized MinMod/vanAlbada/
 //                                                     vanLeer + generalized MinMod/extrema-preserving) limiter
 //                MinMod_Coeff        : Coefficient of the generalized MinMod limiter
+//                MinMod_MaxIter      : Maximum number of iterations to reduce MinMod_Coeff
 //                ELBDM_Eta           : Particle mass / Planck constant
 //                ELBDM_Taylor3_Coeff : Coefficient in front of the third term in the Taylor expansion for ELBDM
 //                ELBDM_Taylor3_Auto  : true --> Determine ELBDM_Taylor3_Coeff automatically by invoking the
@@ -188,6 +189,7 @@ extern cudaStream_t *Stream;
 //                Time                : Current physical time                      (for UNSPLIT_GRAVITY only)
 //                UsePot              : Add self-gravity and/or external potential (for UNSPLIT_GRAVITY only)
 //                ExtAcc              : Add external acceleration                  (for UNSPLIT_GRAVITY only)
+//                MicroPhy            : Microphysics object
 //                MinDens/Pres/Eint   : Density, pressure, and internal energy floors
 //                DualEnergySwitch    : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
 //                NormPassive         : true --> normalize passive scalars so that the sum of their mass density
@@ -212,9 +214,9 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              real h_Pot_Array_USG[][ CUBE(USG_NXT_F) ],
                              const int NPatchGroup, const real dt, const real dh,
                              const bool StoreFlux, const bool StoreElectric,
-                             const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+                             const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter,
                              const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
-                             const double Time, const bool UsePot, const OptExtAcc_t ExtAcc,
+                             const double Time, const bool UsePot, const OptExtAcc_t ExtAcc, const MicroPhy_t MicroPhy,
                              const real MinDens, const real MinPres, const real MinEint,
                              const real DualEnergySwitch,
                              const bool NormPassive, const int NNorm,
@@ -403,10 +405,10 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_FC_Flux         + UsedPatch[s],
               d_FC_Mag_Half     + UsedPatch[s],
               d_EC_Ele          + UsedPatch[s],
-              dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff,
+              dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff, MinMod_MaxIter,
               Time, UsePot, ExtAcc, GPUExtAcc_Ptr, MinDens, MinPres, MinEint,
               DualEnergySwitch, NormPassive, NNorm, FracPassive, NFrac,
-              JeansMinPres, JeansMinPres_Coeff, EoS );
+              JeansMinPres, JeansMinPres_Coeff, EoS, MicroPhy );
 
 #        elif ( FLU_SCHEME == CTU )
 

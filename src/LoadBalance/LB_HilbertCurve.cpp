@@ -80,35 +80,35 @@ bitTranspose(unsigned nDims, unsigned nBits, bitmask_t inCoords)
     {
       unsigned const shiftAmt = nDims1 * utB;
       bitmask_t const utFieldEnds =
-	inFieldEnds | (inFieldEnds << (shiftAmt+utB));
+        inFieldEnds | (inFieldEnds << (shiftAmt+utB));
       bitmask_t const utMask =
-	(utFieldEnds << utB) - utFieldEnds;
+        (utFieldEnds << utB) - utFieldEnds;
       bitmask_t utCoords = 0;
       unsigned d;
       if (inB & 1)
-	{
-	  bitmask_t const inFieldStarts = inFieldEnds << (inB-1);
-	  unsigned oddShift = 2*shiftAmt;
-	  for (d = 0; d < nDims; ++d)
-	    {
-	      bitmask_t in = inCoords & inMask;
-	      inCoords >>= inB;
-	      coords |= (in & inFieldStarts) <<	oddShift++;
-	      in &= ~inFieldStarts;
-	      in = (in | (in << shiftAmt)) & utMask;
-	      utCoords |= in << (d*utB);
-	    }
-	}
+        {
+          bitmask_t const inFieldStarts = inFieldEnds << (inB-1);
+          unsigned oddShift = 2*shiftAmt;
+          for (d = 0; d < nDims; ++d)
+            {
+              bitmask_t in = inCoords & inMask;
+              inCoords >>= inB;
+              coords |= (in & inFieldStarts) << oddShift++;
+              in &= ~inFieldStarts;
+              in = (in | (in << shiftAmt)) & utMask;
+              utCoords |= in << (d*utB);
+            }
+        }
       else
-	{
-	  for (d = 0; d < nDims; ++d)
-	    {
-	      bitmask_t in = inCoords & inMask;
-	      inCoords >>= inB;
-	      in = (in | (in << shiftAmt)) & utMask;
-	      utCoords |= in << (d*utB);
-	    }
-	}
+        {
+          for (d = 0; d < nDims; ++d)
+            {
+              bitmask_t in = inCoords & inMask;
+              inCoords >>= inB;
+              in = (in | (in << shiftAmt)) & utMask;
+              utCoords |= in << (d*utB);
+            }
+        }
       inCoords = utCoords;
       inB = utB;
       inFieldEnds = utFieldEnds;
@@ -128,10 +128,10 @@ bitTranspose(unsigned nDims, unsigned nBits, bitmask_t inCoords)
       bitmask_t out = 0;
       inCoords >>= nBits;
       for (b = nBits; b--;)
-	{
-	  out <<= nDims;
-	  out |= rdbit(in, b);
-	}
+        {
+          out <<= nDims;
+          out |= rdbit(in, b);
+        }
       coords |= out << d;
     }
   return coords;
@@ -173,36 +173,36 @@ void LB_Hilbert_i2c( ulong index, ulong coord[], const uint nBits )
       unsigned d;
 
       if (nBits > 1)
-	{
-	  unsigned const nDimsBits = nDims*nBits;
-	  halfmask_t const ndOnes = ones(halfmask_t,nDims);
-	  halfmask_t const nd1Ones= ndOnes >> 1; /* for adjust_rotation */
-	  unsigned b = nDimsBits;
-	  unsigned rotation = 0;
-	  halfmask_t flipBit = 0;
-	  bitmask_t const nthbits = ones(bitmask_t,nDimsBits) / ndOnes;
-	  index ^= (index ^ nthbits) >> 1;
-	  coords = 0;
-	  do
-	    {
-	      halfmask_t bits = (index >> (b-=nDims)) & ndOnes;
-	      coords <<= nDims;
-	      coords |= rotateLeft(bits, rotation, nDims) ^ flipBit;
-	      flipBit = (halfmask_t)1 << rotation;
-	      adjust_rotation(rotation,nDims,bits);
-	    } while (b);
-	  for (b = nDims; b < nDimsBits; b *= 2)
-	    coords ^= coords >> b;
-	  coords = bitTranspose(nBits, nDims, coords);
-	}
+        {
+          unsigned const nDimsBits = nDims*nBits;
+          halfmask_t const ndOnes = ones(halfmask_t,nDims);
+          halfmask_t const nd1Ones= ndOnes >> 1; /* for adjust_rotation */
+          unsigned b = nDimsBits;
+          unsigned rotation = 0;
+          halfmask_t flipBit = 0;
+          bitmask_t const nthbits = ones(bitmask_t,nDimsBits) / ndOnes;
+          index ^= (index ^ nthbits) >> 1;
+          coords = 0;
+          do
+            {
+              halfmask_t bits = (index >> (b-=nDims)) & ndOnes;
+              coords <<= nDims;
+              coords |= rotateLeft(bits, rotation, nDims) ^ flipBit;
+              flipBit = (halfmask_t)1 << rotation;
+              adjust_rotation(rotation,nDims,bits);
+            } while (b);
+          for (b = nDims; b < nDimsBits; b *= 2)
+            coords ^= coords >> b;
+          coords = bitTranspose(nBits, nDims, coords);
+        }
       else
-	coords = index ^ (index >> 1);
+        coords = index ^ (index >> 1);
 
       for (d = 0; d < nDims; ++d)
-	{
-	  coord[d] = coords & nbOnes;
-	  coords >>= nBits;
-	}
+        {
+          coord[d] = coords & nbOnes;
+          coords >>= nBits;
+        }
     }
   else
     coord[0] = index;
@@ -254,37 +254,37 @@ ulong LB_Hilbert_c2i( ulong const coord[], const uint nBits )
       unsigned d;
       bitmask_t coords = 0;
       for (d = nDims; d--; )
-	{
-	  coords <<= nBits;
-	  coords |= coord[d];
-	}
+        {
+          coords <<= nBits;
+          coords |= coord[d];
+        }
 
       if (nBits > 1)
-	{
-	  halfmask_t const ndOnes = ones(halfmask_t,nDims);
-	  halfmask_t const nd1Ones= ndOnes >> 1; /* for adjust_rotation */
-	  unsigned b = nDimsBits;
-	  unsigned rotation = 0;
-	  halfmask_t flipBit = 0;
-	  bitmask_t const nthbits = ones(bitmask_t,nDimsBits) / ndOnes;
-	  coords = bitTranspose(nDims, nBits, coords);
-	  coords ^= coords >> nDims;
-	  index = 0;
-	  do
-	    {
-	      halfmask_t bits = (coords >> (b-=nDims)) & ndOnes;
-	      bits = rotateRight(flipBit ^ bits, rotation, nDims);
-	      index <<= nDims;
-	      index |= bits;
-	      flipBit = (halfmask_t)1 << rotation;
-	      adjust_rotation(rotation,nDims,bits);
-	    } while (b);
-	  index ^= nthbits >> 1;
-	}
+        {
+          halfmask_t const ndOnes = ones(halfmask_t,nDims);
+          halfmask_t const nd1Ones= ndOnes >> 1; /* for adjust_rotation */
+          unsigned b = nDimsBits;
+          unsigned rotation = 0;
+          halfmask_t flipBit = 0;
+          bitmask_t const nthbits = ones(bitmask_t,nDimsBits) / ndOnes;
+          coords = bitTranspose(nDims, nBits, coords);
+          coords ^= coords >> nDims;
+          index = 0;
+          do
+            {
+              halfmask_t bits = (coords >> (b-=nDims)) & ndOnes;
+              bits = rotateRight(flipBit ^ bits, rotation, nDims);
+              index <<= nDims;
+              index |= bits;
+              flipBit = (halfmask_t)1 << rotation;
+              adjust_rotation(rotation,nDims,bits);
+            } while (b);
+          index ^= nthbits >> 1;
+        }
       else
-	index = coords;
+        index = coords;
       for (d = 1; d < nDimsBits; d *= 2)
-	index ^= index >> d;
+        index ^= index >> d;
       return index;
     }
   else

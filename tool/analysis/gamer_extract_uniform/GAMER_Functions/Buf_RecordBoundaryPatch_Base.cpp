@@ -21,7 +21,7 @@ void Buf_RecordBoundaryPatch_Base()
    {
 
 //    set up the "Width and Disp"
-      for (int d=0; d<3; d++)   
+      for (int d=0; d<3; d++)
       {
          Width[d] = TABLE_01( s, 'x'+d, 1, NX0[d]/PATCH_SIZE+4, 1 );
          Disp [d] = TABLE_01( s, 'x'+d, 2, 0, BaseP_Len[d]-3 );
@@ -33,17 +33,17 @@ void Buf_RecordBoundaryPatch_Base()
 
 
 //    allocate memory (only necessary during the initialization)
-      if ( ParaVar.BounP_IDList [0][s] == NULL )        
+      if ( ParaVar.BounP_IDList [0][s] == NULL )
          ParaVar.BounP_IDList [0][s] = new int [ Width[0]*Width[1]*Width[2] ];
 
-      if ( ParaVar.BounP_PosList[0][s] == NULL )        
+      if ( ParaVar.BounP_PosList[0][s] == NULL )
          ParaVar.BounP_PosList[0][s] = new int [ Width[0]*Width[1]*Width[2] ];
 
 
 //    fill up the arrays "BounP_IDList[0][s] and BounP_PosList[0][s]"
-      for (int k=0; k<Width[2]; k++)   {  kk = k + Disp[2]; 
-      for (int j=0; j<Width[1]; j++)   {  jj = j + Disp[1]; 
-      for (int i=0; i<Width[0]; i++)   {  ii = i + Disp[0]; 
+      for (int k=0; k<Width[2]; k++)   {  kk = k + Disp[2];
+      for (int j=0; j<Width[1]; j++)   {  jj = j + Disp[1];
+      for (int i=0; i<Width[0]; i++)   {  ii = i + Disp[0];
 
          ID_BaseP = kk*BaseP_Len[1]*BaseP_Len[0] + jj*BaseP_Len[0] + ii;
          ID_BounP = k*Width[1]*Width[0] + j*Width[0] + i;
@@ -52,7 +52,7 @@ void Buf_RecordBoundaryPatch_Base()
          {
             ParaVar.BounP_IDList [0][s][ ParaVar.BounP_NList[0][s] ] = BaseP[ ID_BaseP ];
             ParaVar.BounP_PosList[0][s][ ParaVar.BounP_NList[0][s] ] = ID_BounP;
-            ParaVar.BounP_NList  [0][s] ++; 
+            ParaVar.BounP_NList  [0][s] ++;
          }
       }}}
 

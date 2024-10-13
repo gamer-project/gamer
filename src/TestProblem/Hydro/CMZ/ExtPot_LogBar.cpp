@@ -1,6 +1,6 @@
 #include "CUPOT.h"
 #ifdef __CUDACC__
-#include "CUAPI.h"
+#include "CUDA_CheckError.h"
 #endif
 
 #ifdef GRAVITY
@@ -22,19 +22,19 @@ extern double BarredPot_MeshCenter[3];
 // Function    :  SetExtPotAuxArray_BarredPot
 // Description :  Set the auxiliary array ExtPot_AuxArray_Flt/Int[] used by ExtPot_BarredPot()
 //
-// Note        :  1. Invoked by Init_ExtPot_BarredPot() 
+// Note        :  1. Invoked by Init_ExtPot_BarredPot()
 //                2. AuxArray_Flt/Int[] have the size of EXT_POT_NAUX_MAX defined in Macro.h (default = 20)
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  AuxArray_Flt/Int : Floating-point/Integer arrays to be filled up
+//                Time             : Target physical time
 //
 // Return      :  AuxArray_Flt/Int[]
 //-------------------------------------------------------------------------------------------------------
-
-void SetExtPotAuxArray_BarredPot(double AuxArray_Flt[], int AuxArray_Int[])
+void SetExtPotAuxArray_BarredPot(double AuxArray_Flt[], int AuxArray_Int[], const double Time )
 {
 
-   AuxArray_Flt[0] = SQR(BarredPot_V0);    // amplitude^2  
+   AuxArray_Flt[0] = SQR(BarredPot_V0);    // amplitude^2
    AuxArray_Flt[1] = SQR(BarredPot_q );    // axis ratio^2
    AuxArray_Flt[2] = SQR(BarredPot_Rc);    // core radius^2
    AuxArray_Flt[3] = BarredPot_Omegabar;   // bar pattern speed
@@ -107,10 +107,10 @@ static real ExtPot_BarredPot(const double x, const double y, const double z, con
    const real   B      = (real)(Rc2 + SQR(dxrot) +(SQR(dyrot) + SQR(dz)));
    const real   pconst = (real)2.*log((1+q)*(1-q)/(4*q));
 
-// const real   frac   = std::min(Time/fullBS,1.0); 
-   const real   frac   = FMIN(Time/fullBS,1.0); 
+// const real   frac   = std::min(Time/fullBS,1.0);
+   const real   frac   = FMIN(Time/fullBS,1.0);
    const real   pots   = (real)0.5*V02*(log(B)-pconst);
-   const real   potb   = (real)0.5*V02*(log(A)-pconst); 
+   const real   potb   = (real)0.5*V02*(log(A)-pconst);
 
    const real   pot    = potb*frac + pots*(1-frac);
 
@@ -131,7 +131,7 @@ static real ExtPot_BarredPot(const double x, const double y, const double z, con
 #endif
 
 FUNC_SPACE ExtPot_t ExtPot_Ptr = ExtPot_BarredPot;
- 
+
 
 //-----------------------------------------------------------------------------------------
 // Function    :  SetCPU/GPUExtPot_BarredPot
@@ -168,7 +168,7 @@ void SetCPUExtPot_BarredPot( ExtPot_t &CPUExtPot_Ptr )
 
 
 // local function prototypes
-void SetExtPotAuxArray_BarredPot( double [] );
+void SetExtPotAuxArray_BarredPot( double [], int [], const double );
 void SetCPUExtPot_BarredPot( ExtPot_t & );
 #ifdef GPU
 void SetGPUExtPot_BarredPot( ExtPot_t & );
@@ -189,11 +189,10 @@ void SetGPUExtPot_BarredPot( ExtPot_t & );
 //
 // Return      :  None
 //-----------------------------------------------------------------------------------------
-
 void Init_ExtPot_BarredPot()
 {
 
-   SetExtPotAuxArray_BarredPot( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int );
+   SetExtPotAuxArray_BarredPot( ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int, Time[0] );
 
    SetCPUExtPot_BarredPot( CPUExtPot_Ptr );
 #  ifdef GPU
@@ -203,6 +202,7 @@ void Init_ExtPot_BarredPot()
 } // FUNCTION : Init_ExtPot_BarredPot
 
 #endif // #ifndef __CUDACC__
+
 
 
 #endif // #ifdef GRAVITY

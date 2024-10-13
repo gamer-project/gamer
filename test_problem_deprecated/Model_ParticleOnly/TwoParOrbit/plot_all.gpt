@@ -5,7 +5,7 @@ set samples 1000
 
 ID0 = 0
 ID1 = 55
-R   = 0.15 
+R   = 0.15
 C   = 0.5
 
 plot [0.3:0.7] [0.3:0.7] for [t=ID0:ID1] 'Particle_00'.(t/1000).(t%1000/100).(t%100/10).(t%10) u 2:3 every ::0::0 w p pt 6 lc 6 notit \

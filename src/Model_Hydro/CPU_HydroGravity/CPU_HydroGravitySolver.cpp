@@ -326,7 +326,7 @@ void CPU_HydroGravitySolver(
                                              px_new*acc_new[0] + py_new*acc_new[1] + pz_new*acc_new[2] );
 
 //          check the minimum internal energy
-//###NOTE: assuming Etot = Eint + Ekin + Emag
+//###NOTE: assuming Etot = Eint + Ekin + Emag, where Eint includes the cosmic-ray energy when enabling COSMIC_RAY
 //          (a) if the updated internal energy is greater than the threshold, set the dual-energy status == DE_UPDATED_BY_ETOT_GRA
             if ( Etot_out - Ekin_out - Emag_in >= MinEint )
                g_DE_Array[P][idx_g0] = DE_UPDATED_BY_ETOT_GRA;
@@ -346,6 +346,7 @@ void CPU_HydroGravitySolver(
                                           px_new*acc_new[0] + py_new*acc_new[1] + pz_new*acc_new[2] );
 
 //       check the minimum internal energy
+//###NOTE: assuming Etot = Eint + Ekin + Emag, where Eint includes the cosmic-ray energy when enabling COSMIC_RAY
 //       --> restore the original internal energy if the updated value becomes smaller than the threshold
          if ( Etot_out - Ekin_out - Emag_in < MinEint )
             Etot_out = Enki_in + Ekin_out;

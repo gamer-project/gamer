@@ -215,7 +215,7 @@ void Par_LB_RecordExchangeParticlePatchID( const int MainLv )
 //    4-1. R2B list
       Buff_NPatchTotal_Dup = amr->Par->R2B_Buff_NPatchTotal[MainLv][t];
 
-      Mis_Heapsort( Buff_NPatchTotal_Dup, amr->Par->R2B_Buff_PIDList[MainLv][t], NULL );
+      Mis_Heapsort<int,int>( Buff_NPatchTotal_Dup, amr->Par->R2B_Buff_PIDList[MainLv][t], NULL );
 
       amr->Par->R2B_Buff_NPatchTotal[MainLv][t] = ( Buff_NPatchTotal_Dup > 0 ) ? 1 : 0;
 
@@ -235,7 +235,7 @@ void Par_LB_RecordExchangeParticlePatchID( const int MainLv )
 //    4-2. B2R list
       Buff_NPatchTotal_Dup = amr->Par->B2R_Buff_NPatchTotal[MainLv][t];
 
-      Mis_Heapsort( Buff_NPatchTotal_Dup, amr->Par->B2R_Buff_PIDList[MainLv][t], NULL );
+      Mis_Heapsort<int,int>( Buff_NPatchTotal_Dup, amr->Par->B2R_Buff_PIDList[MainLv][t], NULL );
 
       amr->Par->B2R_Buff_NPatchTotal[MainLv][t] = ( Buff_NPatchTotal_Dup > 0 ) ? 1 : 0;
 

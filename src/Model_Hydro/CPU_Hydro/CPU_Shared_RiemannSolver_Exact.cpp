@@ -5,8 +5,8 @@
 
 #include "CUFLU.h"
 
-#if (  MODEL == HYDRO  &&  \
-       ( RSOLVER == EXACT || CHECK_INTERMEDIATE == EXACT )  &&  \
+#if (  MODEL == HYDRO  &&  !defined SRHD  &&  \
+       ( RSOLVER == EXACT || RSOLVER_RESCUE == EXACT || CHECK_INTERMEDIATE == EXACT )  &&  \
        ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP || FLU_SCHEME == CTU )  )
 
 
@@ -22,8 +22,9 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
                     const bool FracPassive, const int NFrac, const int FracIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
+                    const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                     const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                    const real *const EoS_Table[EOS_NTABLE_MAX], real* const EintOut );
+                    const real *const EoS_Table[EOS_NTABLE_MAX], real* const EintOut, real* LorentzFactorPtr );
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
 
 #endif // #ifdef __CUDACC__ ... else ...
@@ -51,9 +52,11 @@ GPU_DEVICE static void Set_Flux( real flux[], const real val[], const real Gamma
 //                L/R_In            : Input left/right states (conserved variables)
 //                MinDens/Pres      : Density and pressure floors
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
-//                EoS_DensPres2CSqr : EoS routine to compute the sound speed square
+//                EoS_DensPres2CSqr : EoS routine to compute the sound speed squared
 //                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
 //                EoS_Table         : EoS tables
+//
+// Return      :  Flux_Out[]
 //------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
@@ -88,9 +91,9 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
 
 // convert conserved variables to primitive variables
    Hydro_Con2Pri( L_In, L, MinPres, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                  EoS_DensEint2Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
+                  EoS_DensEint2Pres, NULL, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
    Hydro_Con2Pri( R_In, R, MinPres, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
-                  EoS_DensEint2Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
+                  EoS_DensEint2Pres, NULL, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
 
 
 // reorder the input variables for different spatial directions
@@ -206,19 +209,19 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
    {
       L_star[0] = L[0]*POW( L_star[4]/L[4], (real)1.0/Gamma );    // solution of density
 
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( Hydro_CheckNegative(L[4]) )
-         printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 L[4],      __FILE__, __LINE__, __FUNCTION__ );
-      if ( Hydro_CheckNegative(L[0]) )
-         printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 L[0],      __FILE__, __LINE__, __FUNCTION__ );
-      if ( Hydro_CheckNegative(L_star[4]) )
-         printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 L_star[4], __FILE__, __LINE__, __FUNCTION__ );
-      if ( Hydro_CheckNegative(L_star[0]) )
-         printf( "ERROR : invalid density(%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 L_star[0], __FILE__, __LINE__, __FUNCTION__ );
+#     ifdef CHECK_UNPHYSICAL_IN_FLUID
+      Hydro_IsUnphysical( UNPHY_MODE_SING, &L[4],      "pressure",
+                          (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                          ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical( UNPHY_MODE_SING, &L[0],      "density",
+                          TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                          ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical( UNPHY_MODE_SING, &L_star[4], "pressure",
+                          (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                          ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical( UNPHY_MODE_SING, &L_star[0], "density",
+                          TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                          ERROR_INFO, UNPHY_VERBOSE );
 #     endif
 
       real a_L    = SQRT( Gamma * L[4] / L[0] );                  // sound speed of left region
@@ -243,19 +246,19 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
    {
       R_star[0] = R[0]*POW( R_star[4]/R[4], (real)1.0/Gamma ); // solution of density
 
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( Hydro_CheckNegative(R[4]) )
-         printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 R[4],      __FILE__, __LINE__, __FUNCTION__ );
-      if ( Hydro_CheckNegative(R[0]) )
-         printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 R[0],      __FILE__, __LINE__, __FUNCTION__ );
-      if ( Hydro_CheckNegative(R_star[4]) )
-         printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 R_star[4], __FILE__, __LINE__, __FUNCTION__ );
-      if ( Hydro_CheckNegative(R_star[0]) )
-         printf( "ERROR : invalid density(%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 R_star[0], __FILE__, __LINE__, __FUNCTION__ );
+#     ifdef CHECK_UNPHYSICAL_IN_FLUID
+      Hydro_IsUnphysical( UNPHY_MODE_SING, &R[4],      "pressure",
+                          (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                          ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical( UNPHY_MODE_SING, &R[0],      "density",
+                          TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                          ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical( UNPHY_MODE_SING, &R_star[4], "pressure",
+                          (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                          ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical( UNPHY_MODE_SING, &R_star[0], "density",
+                          TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                          ERROR_INFO, UNPHY_VERBOSE );
 #     endif
 
       real a_R    = SQRT( Gamma * R[4] / R[0] ); // sound speed of right region
@@ -274,29 +277,29 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
    eival[2] = L_star[1];
    eival[3] = L_star[1];
 
-#  ifdef CHECK_NEGATIVE_IN_FLUID
-   if ( Hydro_CheckNegative( R[4]) )
-      printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              R[4], __FILE__, __LINE__, __FUNCTION__ );
-   if ( Hydro_CheckNegative(R[0]) )
-      printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              R[0], __FILE__, __LINE__, __FUNCTION__ );
-   if ( Hydro_CheckNegative(L[4]) )
-      printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              L[4], __FILE__, __LINE__, __FUNCTION__ );
-   if ( Hydro_CheckNegative(L[0]) )
-      printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-              L[0], __FILE__, __LINE__, __FUNCTION__ );
+#  ifdef CHECK_UNPHYSICAL_IN_FLUID
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &R[4], "pressure",
+                       (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &R[0], "density",
+                       TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &L[4], "pressure",
+                       (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical( UNPHY_MODE_SING, &L[0], "density",
+                       TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                       ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
    if ( L[4] < L_star[4] ) // left shock
    {
       Temp = (real)0.5/Gamma*( Gamma_p1*L_star[4]/L[4] + Gamma_m1 );
 
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( Hydro_CheckNegative(Temp) )
-         printf( "ERROR : invalid value (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 Temp, __FILE__, __LINE__, __FUNCTION__ );
+#     ifdef CHECK_UNPHYSICAL_IN_FLUID
+      Hydro_IsUnphysical( UNPHY_MODE_SING, &Temp, "value",
+                          (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                          ERROR_INFO, UNPHY_VERBOSE );
 #     endif
 
       eival[0] = L[1] - SQRT( Gamma*L[4]/L[0] )*SQRT( Temp );
@@ -308,10 +311,10 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
    {
       Temp = (real)0.5/Gamma*( Gamma_p1*R_star[4]/R[4] + Gamma_m1 );
 
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( Hydro_CheckNegative(Temp) )
-         printf( "ERROR : invalid value (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 Temp, __FILE__, __LINE__, __FUNCTION__ );
+#     ifdef CHECK_UNPHYSICAL_IN_FLUID
+      Hydro_IsUnphysical( UNPHY_MODE_SING, &Temp, "value",
+                          (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                          ERROR_INFO, UNPHY_VERBOSE );
 #     endif
 
       eival[4] = R[1] + SQRT( Gamma*R[4]/R[0] )*SQRT( Temp );
@@ -396,10 +399,10 @@ real Solve_f( const real rho, const real p, const real p_star, const real Gamma 
       real B = p*Gamma_m1/Gamma_p1;
       Temp   = A/(p_star+B);
 
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( Hydro_CheckNegative(Temp) )
-         printf( "ERROR : invalid value (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 Temp, __FILE__, __LINE__, __FUNCTION__ );
+#     ifdef CHECK_UNPHYSICAL_IN_FLUID
+      Hydro_IsUnphysical( UNPHY_MODE_SING, &Temp, "value",
+                          (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                          ERROR_INFO, UNPHY_VERBOSE );
 #     endif
 
       f = (p_star-p)*SQRT( Temp );
@@ -407,14 +410,13 @@ real Solve_f( const real rho, const real p, const real p_star, const real Gamma 
 
    else
    {
-#     ifdef CHECK_NEGATIVE_IN_FLUID
-      if ( Hydro_CheckNegative(p) )
-         printf( "ERROR : invalid pressure (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 p, __FILE__, __LINE__, __FUNCTION__ );
-
-      if ( Hydro_CheckNegative(rho) )
-         printf( "ERROR : invalid density (%14.7e) at file <%s>, line <%d>, function <%s>\n",
-                 rho, __FILE__, __LINE__, __FUNCTION__ );
+#     ifdef CHECK_UNPHYSICAL_IN_FLUID
+      Hydro_IsUnphysical( UNPHY_MODE_SING, &p,   "pressure",
+                          (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                          ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical( UNPHY_MODE_SING, &rho, "density",
+                          TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
+                          ERROR_INFO, UNPHY_VERBOSE );
 #     endif
 
       real a = SQRT( Gamma*p/rho );
@@ -456,7 +458,7 @@ void Set_Flux( real flux[], const real val[], const real Gamma )
 
 
 
-#endif // #if ( MODEL == HYDRO  &&  ( RSOLVER == EXACT || CHECK_INTE == EXACT ) && ( SCHEME == MHM/MHM_RP/CTU ) )
+#endif // #if ( MODEL == HYDRO  &&  ( RSOLVER == EXACT || RSOLVER_RESCUE == EXACT || CHECK_INTERMEDIATE == EXACT )  &&  ( FLU_SCHEME == MHM/MHM_RP/CTU ) )
 
 
 

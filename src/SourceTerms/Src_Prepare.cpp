@@ -90,6 +90,7 @@ void Src_Prepare( const int lv, const double PrepTime,
    const real   MinDens_No          = -1.0;
    const real   MinPres_No          = -1.0;
    const real   MinTemp_No          = -1.0;
+   const real   MinEntr_No          = -1.0;
    const bool   DE_Consistency      = ( OPT__OPTIMIZE_AGGRESSIVE ) ? false : true;
    const real   MinDens             = ( OPT__OPTIMIZE_AGGRESSIVE ) ? MinDens_No : MIN_DENS;
 
@@ -97,7 +98,7 @@ void Src_Prepare( const int lv, const double PrepTime,
    Prepare_PatchData( lv, PrepTime, h_Flu_Array_S_In[0][0], h_Mag_Array_S_In[0][0],
                       SRC_GHOST_SIZE, NPG, PID0_List, _TOTAL, _MAG,
                       OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCH, NSIDE_26, IntPhase_No,
-                      OPT__BC_FLU, BC_POT_NONE, MinDens, MinPres_No, MinTemp_No, DE_Consistency );
+                      OPT__BC_FLU, BC_POT_NONE, MinDens, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency );
 #  endif // #if ( SRC_GHOST_SIZE > 0 )
 
 } // FUNCTION : Src_Prepare

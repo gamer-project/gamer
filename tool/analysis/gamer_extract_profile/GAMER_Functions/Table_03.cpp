@@ -4,7 +4,7 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  TABLE_03 
+// Function    :  TABLE_03
 // Description :  Return the information of patch ID for the fucntions "Prepare_PatchData",
 //                "SiblingSearch_Base", "Aux_Check_FluxAllocate", and "Flu_AllocateFluxArray_Buffer"
 //
@@ -25,7 +25,7 @@ int TABLE_03( const int SibID, const int Count )
             case 2:  return 4;
             case 3:  return 7;
             default:
-               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n", 
+               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n",
                           "SibID", SibID, "Count", Count );
          }
       }
@@ -39,7 +39,7 @@ int TABLE_03( const int SibID, const int Count )
             case 2:  return 2;
             case 3:  return 5;
             default:
-               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n", 
+               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n",
                           "SibID", SibID, "Count", Count );
          }
       }
@@ -53,7 +53,7 @@ int TABLE_03( const int SibID, const int Count )
             case 2:  return 5;
             case 3:  return 7;
             default:
-               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n", 
+               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n",
                           "SibID", SibID, "Count", Count );
          }
       }
@@ -67,7 +67,7 @@ int TABLE_03( const int SibID, const int Count )
             case 2:  return 3;
             case 3:  return 6;
             default:
-               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n", 
+               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n",
                           "SibID", SibID, "Count", Count );
          }
       }
@@ -81,7 +81,7 @@ int TABLE_03( const int SibID, const int Count )
             case 2:  return 6;
             case 3:  return 7;
             default:
-               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n", 
+               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n",
                           "SibID", SibID, "Count", Count );
          }
       }
@@ -95,7 +95,7 @@ int TABLE_03( const int SibID, const int Count )
             case 2:  return 1;
             case 3:  return 4;
             default:
-               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n", 
+               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n",
                           "SibID", SibID, "Count", Count );
          }
       }
@@ -107,7 +107,7 @@ int TABLE_03( const int SibID, const int Count )
             case 0:  return 4;
             case 1:  return 7;
             default:
-               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n", 
+               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n",
                           "SibID", SibID, "Count", Count );
          }
       }
@@ -119,7 +119,7 @@ int TABLE_03( const int SibID, const int Count )
             case 0:  return 2;
             case 1:  return 5;
             default:
-               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n", 
+               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n",
                           "SibID", SibID, "Count", Count );
          }
       }
@@ -131,19 +131,19 @@ int TABLE_03( const int SibID, const int Count )
             case 0:  return 1;
             case 1:  return 6;
             default:
-               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n", 
+               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n",
                           "SibID", SibID, "Count", Count );
          }
       }
 
       case 9:
       {
-         switch ( Count ) 
+         switch ( Count )
          {
             case 0:  return 0;
             case 1:  return 3;
             default:
-               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n", 
+               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n",
                           "SibID", SibID, "Count", Count );
          }
       }
@@ -155,7 +155,7 @@ int TABLE_03( const int SibID, const int Count )
             case 0:  return 5;
             case 1:  return 7;
             default:
-               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n", 
+               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n",
                           "SibID", SibID, "Count", Count );
          }
       }
@@ -167,11 +167,11 @@ int TABLE_03( const int SibID, const int Count )
             case 0:  return 3;
             case 1:  return 6;
             default:
-               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n", 
+               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n",
                           "SibID", SibID, "Count", Count );
          }
       }
-         
+
       case 12:
       {
          switch ( Count )
@@ -179,7 +179,7 @@ int TABLE_03( const int SibID, const int Count )
             case 0:  return 2;
             case 1:  return 4;
             default:
-               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n", 
+               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n",
                           "SibID", SibID, "Count", Count );
          }
       }
@@ -191,7 +191,7 @@ int TABLE_03( const int SibID, const int Count )
             case 0:  return 0;
             case 1:  return 1;
             default:
-               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n", 
+               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n",
                           "SibID", SibID, "Count", Count );
          }
       }
@@ -203,7 +203,7 @@ int TABLE_03( const int SibID, const int Count )
             case 0:  return 6;
             case 1:  return 7;
             default:
-               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n", 
+               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n",
                           "SibID", SibID, "Count", Count );
          }
       }
@@ -215,7 +215,7 @@ int TABLE_03( const int SibID, const int Count )
             case 0:  return 1;
             case 1:  return 4;
             default:
-               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n", 
+               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n",
                           "SibID", SibID, "Count", Count );
          }
       }
@@ -227,7 +227,7 @@ int TABLE_03( const int SibID, const int Count )
             case 0:  return 3;
             case 1:  return 5;
             default:
-               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n", 
+               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n",
                           "SibID", SibID, "Count", Count );
          }
       }
@@ -239,7 +239,7 @@ int TABLE_03( const int SibID, const int Count )
             case 0:  return 0;
             case 1:  return 2;
             default:
-               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n", 
+               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d\" !!\n",
                           "SibID", SibID, "Count", Count );
          }
       }

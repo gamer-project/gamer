@@ -24,7 +24,7 @@
 //
 // Return      :  ParPosX/Y/Z
 //-------------------------------------------------------------------------------------------------------
-void Par_PredictPos( const long NPar, const long *ParList, real *ParPosX, real *ParPosY, real *ParPosZ,
+void Par_PredictPos( const long NPar, const long *ParList, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                      const double TargetTime )
 {
 
@@ -40,8 +40,12 @@ void Par_PredictPos( const long NPar, const long *ParList, real *ParPosX, real *
 #  endif
 
 
-   long ParID;
-   real dt;
+   long     ParID;
+   real_par dt, ParTime;
+#  ifdef COMOVING
+   bool     dTime2dt, Initialized=false;
+   real_par ParTime_Prev=NULL_REAL, dt_Prev=NULL_REAL;
+#  endif
 
    for (long p=0; p<NPar; p++)
    {
@@ -52,14 +56,38 @@ void Par_PredictPos( const long NPar, const long *ParList, real *ParPosX, real *
          Aux_Error( ERROR_INFO, "ParID (%ld) lies outside the accepted range (0 <= ParID < %ld) !!\n",
                     ParID, amr->Par->NPar_AcPlusInac );
 
-      if ( amr->Par->Mass[ParID] < (real)0.0 )
+      if ( amr->Par->Mass[ParID] < (real_par)0.0 )
          Aux_Error( ERROR_INFO, "Found inactive particle (ParID %ld, Mass %14.7e) !!\n", ParID, amr->Par->Mass[ParID] );
 #     endif
 
 //    skip particles waiting for velocity correction (they should already be synchronized with TargetTime)
-      if ( amr->Par->Time[ParID] < (real)0.0 )  continue;
+      if ( amr->Par->Time[ParID] < (real_par)0.0 )  continue;
 
-      dt = (real)TargetTime - amr->Par->Time[ParID];
+      ParTime = amr->Par->Time[ParID];
+      dt      = (real_par)TargetTime - ParTime;
+
+//    convert time-step for comoving
+#     ifdef COMOVING
+      if ( Initialized )
+         dTime2dt    = ( ParTime != ParTime_Prev );
+
+      else
+      {
+         dTime2dt    = true;
+         Initialized = true;
+      }
+
+//    avoid redundant calculations
+      if ( dTime2dt )
+      {
+         dt           = (real_par)Mis_dTime2dt( (double)ParTime, (double)dt );
+         dt_Prev      = dt;
+         ParTime_Prev = ParTime;
+      }
+
+      else
+         dt = dt_Prev;
+#     endif // #ifdef COMOVING
 
 //    note that we do not consider periodicity here
 //    --> ParPos[] may lie outside the simulation box

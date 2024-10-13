@@ -65,11 +65,13 @@ void Flu_DerivedField_User_Template( real Out[], const real FluIn[], const real 
 
 
 // 1D arrays -> 3D arrays
-   real (*FluIn3D)[NCellInZ ][NCellInY ][NCellInX ] = ( real (*)[NCellInZ ][NCellInY ][NCellInX ] )FluIn;
+   typedef real (*vla_in)[NCellInZ ][NCellInY ][NCellInX ];
+   vla_in FluIn3D = ( vla_in )FluIn;
 #  ifdef MHD
-   real (*MagIn3D)[NCellInZ ][NCellInY ][NCellInX ] = ( real (*)[NCellInZ ][NCellInY ][NCellInX ] )MagIn;
+   vla_in MagIn3D = ( vla_in )MagIn;
 #  endif
-   real (*Out3D  )[NCellOutZ][NCellOutY][NCellOutX] = ( real (*)[NCellOutZ][NCellOutY][NCellOutX] )Out;
+   typedef real (*vla_out)[NCellOutZ][NCellOutY][NCellOutX];
+   vla_out Out3D = ( vla_out )Out;
 
 
 // fill in the output array
@@ -124,15 +126,15 @@ void Init_DerivedField_User_Template()
 // 2. set the field labels
    UserDerField_Label = new char [UserDerField_Num][MAX_STRING];
 
-   sprintf( UserDerField_Label[0], "UserDerField_Label0" );
-   sprintf( UserDerField_Label[1], "UserDerField_Label1" );
+   sprintf( UserDerField_Label[0], "%s", "UserDerField_Label0" );
+   sprintf( UserDerField_Label[1], "%s", "UserDerField_Label1" );
 
 
 // 3. set the field units
    UserDerField_Unit = new char [UserDerField_Num][MAX_STRING];
 
-   sprintf( UserDerField_Unit[0], "UserDerField_Unit0" );
-   sprintf( UserDerField_Unit[1], "UserDerField_Unit1" );
+   sprintf( UserDerField_Unit[0], "%s", "UserDerField_Unit0" );
+   sprintf( UserDerField_Unit[1], "%s", "UserDerField_Unit1" );
 
 
 // 4. set the major function pointer

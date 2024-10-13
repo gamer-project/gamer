@@ -8,8 +8,6 @@ extern Timer_t *Timer_GetBuf     [NLEVEL][8];
 extern Timer_t *Timer_Par_Collect[NLEVEL];
 #endif
 
-extern void (*Poi_UserWorkBeforePoisson_Ptr)( const double Time, const int lv );
-
 
 
 
@@ -94,18 +92,19 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 
    if ( UsePot )
    {
-      TIMING_FUNC(   Prepare_PatchData_InitParticleDensityArray( lv ),
+      TIMING_FUNC(   Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos,
+                                                   TimeNew, SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_Yes ),
                      Timer_Par_Collect[lv],   Timing   );
 
-      TIMING_FUNC(   Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, PredictPos, TimeNew,
-                                                   SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_Yes ),
+      TIMING_FUNC(   Prepare_PatchData_InitParticleDensityArray( lv, TimeNew ),
                      Timer_Par_Collect[lv],   Timing   );
    }
 #  endif // #ifdef PARTICLE
 
 
-// user-specified work before invoking the Poisson solver
-   if ( UsePot  &&  Poi_UserWorkBeforePoisson_Ptr != NULL )
+// user-specified work before invoking the Poisson/gravity solvers
+// --> call it even when UsePot==false in order to support external acceleration (OPT__EXT_ACC)
+   if ( Poi_UserWorkBeforePoisson_Ptr != NULL )
       TIMING_FUNC(   Poi_UserWorkBeforePoisson_Ptr( TimeNew, lv ),
                      Timer_Gra_Advance[lv],   ( Timing && lv == 0 )   );
 
@@ -116,9 +115,11 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 //    do not need to calculate the gravitational potential if self-gravity is disabled
       if ( UsePot )
       {
+#        ifdef SUPPORT_FFTW
          if ( OPT__SELF_GRAVITY )
          TIMING_FUNC(   CPU_PoissonSolver_FFT( Poi_Coeff, SaveSg_Pot, TimeNew ),
                         Timer_Gra_Advance[lv],   Timing   );
+#        endif
 
          if ( OPT__EXT_POT )
          TIMING_FUNC(   CPU_ExtPotSolver_BaseLevel( CPUExtPot_Ptr, ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int,

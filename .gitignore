@@ -4,7 +4,12 @@
 *.o
 
 bin/**
+src/generate_make.sh
 gamer
 GAMER_CompareData
 GAMER_ExtractUniform
 GAMER_ExtractProfile
+.vscode
+*~
+src/Makefile
+src/Makefile.log

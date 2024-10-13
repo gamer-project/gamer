@@ -1,0 +1,32 @@
+###############################################
+#       Intel MPI job script example          #
+###############################################
+
+#!/bin/bash
+
+#SBATCH --account=ACCOUNT                               # (-A) Account/project number
+#SBATCH --job-name=JOB_NAME                             # (-J) Job name
+#SBATCH --partition=ctest                               # (-p) Specific slurm partition
+#SBATCH --ntasks=8                                      # (-n) Number of total MPI tasks (i.e. processes)
+#SBATCH --nodes=2                                       # (-N) Maximum number of nodes to be allocated
+#SBATCH --ntasks-per-node=4                             # Maximum number of tasks on each node
+#SBATCH --cpus-per-task=14                              # (-c) Number of cores per MPI task
+#SBATCH --mem=162400M                                   # Memory limit per compute node for the job. Do not use with mem-per-cpu flag.
+#SBATCH --time=00:30:00                                 # (-t) Wall time limit (days-hrs:min:sec)
+##SBATCH -o log_taiwania_III
+##SBATCH -e job.%j.err
+#SBATCH --mail-type=BEGIN,END,FAIL                      # Mail events (NONE, BEGIN, END, FAIL, ALL)
+#SBATCH --mail-user=EMAIL_ACCOUNT                       # Where to send mail.  Set this to your email address
+#SBATCH --exclude=cpn[3001-3120,3241-3360]              # Exclude large-memory nodes
+
+LOG_FILE=log_taiwania_III_intel_2018
+
+module purge
+module load compiler/intel/2018u4 IntelMPI/2018u4
+module list >> LOG_FILE
+export LD_LIBRARY_PATH="FFTW_PATH/lib:$LD_LIBRARY_PATH"
+export UCX_TLS="ud,dc,shm,self"
+
+mpiexec.hydra -bootstrap slurm -n $SLURM_NTASKS ./gamer >> $LOG_FILE 2>&1
+#mpirun -map-by ppr:2:socket:pe=14 -print-rank-map ./gamer 1>>$LOG_FILE 2>&1
+echo "=============================================================" >> $LOG_FILE

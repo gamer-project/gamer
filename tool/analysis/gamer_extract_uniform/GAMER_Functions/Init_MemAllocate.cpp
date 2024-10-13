@@ -5,7 +5,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_MemAllocate
-// Description :  Allocate memory for several global arrays 
+// Description :  Allocate memory for several global arrays
 //-------------------------------------------------------------------------------------------------------
 void Init_MemAllocate()
 {

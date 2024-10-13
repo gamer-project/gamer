@@ -22,8 +22,8 @@ void MPI_ExchangeInfo( const int TargetRank[2], const int SendSize[2], const int
 
    for (int t=0; t<2; t++)
    {
-      SendTarget[t] = ( SendSize[t] == 0 ) ? MPI_PROC_NULL : TargetRank[t];  
-      RecvTarget[t] = ( RecvSize[t] == 0 ) ? MPI_PROC_NULL : TargetRank[t];  
+      SendTarget[t] = ( SendSize[t] == 0 ) ? MPI_PROC_NULL : TargetRank[t];
+      RecvTarget[t] = ( RecvSize[t] == 0 ) ? MPI_PROC_NULL : TargetRank[t];
    }
 
 

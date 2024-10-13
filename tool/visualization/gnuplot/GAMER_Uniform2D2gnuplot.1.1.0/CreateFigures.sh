@@ -53,7 +53,7 @@ do
    echo "***** Plotting the file \"$FILE_IN\" *****"
 
 
-#  transform the input 2D data to the gnuplot format 
+#  transform the input 2D data to the gnuplot format
    ./GAMER_Uniform2D2gnuplot -i $FILE_IN -o $FILE_TEMP -n 1
 
    ErrorCode=$?

@@ -19,7 +19,7 @@ static void CompareVar( const char *VarName, const double RestartVar, const doub
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LoadData
-// Description :  Load data from the input file 
+// Description :  Load data from the input file
 //-------------------------------------------------------------------------------------------------------
 void LoadData()
 {
@@ -128,35 +128,35 @@ void LoadData()
    fread( &size_real_restart,   sizeof(int), 1, File );
    fread( &size_double_restart, sizeof(int), 1, File );
 
-   if ( size_bool_restart != size_bool )  
+   if ( size_bool_restart != size_bool )
    {
       fprintf( stderr, "ERROR : sizeof(bool) is inconsistent : RESTART file = %d, runtime = %d !!\n",
                size_bool_restart, size_bool );
       exit( 1 );
    }
 
-   if ( size_int_restart != size_int )  
+   if ( size_int_restart != size_int )
    {
       fprintf( stderr, "ERROR : sizeof(int) is inconsistent : RESTART file = %d, runtime = %d !!\n",
                size_int_restart, size_int );
       exit( 1 );
    }
 
-   if ( size_long_restart != size_long )  
+   if ( size_long_restart != size_long )
    {
       fprintf( stderr, "ERROR : sizeof(long) is inconsistent : RESTART file = %d, runtime = %d !!\n",
                size_long_restart, size_long );
       exit( 1 );
    }
 
-   if ( size_real_restart != size_real )  
+   if ( size_real_restart != size_real )
    {
       fprintf( stderr, "ERROR : sizeof(real) is inconsistent : RESTART file = %d, runtime = %d !!\n",
                size_real_restart, size_real );
       exit( 1 );
    }
 
-   if ( size_double_restart != size_double )  
+   if ( size_double_restart != size_double )
    {
       fprintf( stderr, "ERROR : sizeof(double) is inconsistent : RESTART file = %d, runtime = %d !!\n",
                size_double_restart, size_double );
@@ -248,14 +248,14 @@ void LoadData()
    Aux_Message( stdout, "   Verifying the file size ... passed\n" );
 
 
-// set up the simulation box   
+// set up the simulation box
    int NX0_Max;
    NX0_Max = ( NX0_Tot[0] > NX0_Tot[1] ) ? NX0_Tot[0] : NX0_Tot[1];
    NX0_Max = ( NX0_Tot[2] > NX0_Max    ) ? NX0_Tot[2] : NX0_Max;
 
    for (int lv=0; lv<NLEVEL; lv++)     amr.dh[lv] = BoxSize / (double)( NX0_Max*(1<<lv) );
 
-   for (int d=0; d<3; d++)    
+   for (int d=0; d<3; d++)
    {
       amr.BoxSize [d] = NX0_Tot[d]*amr.dh   [0];
       amr.BoxScale[d] = NX0_Tot[d]*amr.scale[0];
@@ -284,7 +284,7 @@ void LoadData()
 // truncate the targeted region
    TruncateBox();
 
-// check parameters   
+// check parameters
    CheckParameter();
 
 // set up the candidate box, only patches with cells inside the candidate box will be allocated
@@ -352,7 +352,7 @@ void LoadData()
                   for (int v=0; v<NCOMP; v++)
                   for (int k=0; k<PATCH_SIZE; k++)
                   for (int j=0; j<PATCH_SIZE; j++)
-                  for (int i=0; i<PATCH_SIZE; i++)    
+                  for (int i=0; i<PATCH_SIZE; i++)
                      amr.patch[lv][PID]->fluid[v][k][j][i] = InvData_Flu[k][j][i][v];
                }
 
@@ -368,7 +368,7 @@ void LoadData()
                fseek( File, PatchDataSize, SEEK_CUR );
 
          } // if ( LoadSon == -1 )
-      } // for (int LoadPID=0; LoadPID<NPatchTotal[lv]; LoadPID++) 
+      } // for (int LoadPID=0; LoadPID<NPatchTotal[lv]; LoadPID++)
 
       cout << "done" << endl;
 
@@ -392,7 +392,7 @@ void LoadData()
 //
 // Note        :  "OPT__RESTART_HEADER == RESTART_HEADER_INHERIC" can be used in this function
 //
-// Parameter   :  File           : RESTART file pointer 
+// Parameter   :  File           : RESTART file pointer
 //                FormatVersion  : Format version of the RESTART file
 //                DataOrder_xyzv : Order of data stored in the RESTART file (true/false --> xyzv/vxyz)
 //                LoadPot        : Whether or not the RESTART file stores the potential data
@@ -450,7 +450,7 @@ void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, bool &Data
 // =================================================================================================
    bool enforce_positive, char_reconstruction, hll_no_ref_state, hll_include_all_waves, waf_dissipate;
    bool use_psolver_10to14;
-   int  ncomp, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate; 
+   int  ncomp, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
    int  flu_block_size_x, flu_block_size_y, pot_block_size_x, pot_block_size_z, gra_block_size_z;
    real min_value, max_error;
 
@@ -481,15 +481,15 @@ void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, bool &Data
 // =================================================================================================
    bool   opt__adaptive_dt, opt__dt_user, opt__flag_rho, opt__flag_rho_gradient, opt__flag_pres_gradient;
    bool   opt__flag_engy_density, opt__flag_user, opt__fixup_flux, opt__fixup_restrict, opt__overlap_mpi;
-   bool   opt__gra_p5_gradient, opt__int_time, opt__output_error, opt__output_base, opt__output_pot; 
+   bool   opt__gra_p5_gradient, opt__int_time, opt__output_error, opt__output_base, opt__output_pot;
    bool   opt__timing_barrier, opt__int_phase;
    int    nx0_tot[3], gamer_nrank, gamer_nrank_x[3], omp_nthread, ooc_nrank, ooc_nrank_x[3], regrid_count;
-   int    flag_buffer_size, max_level, opt__lr_limiter, opt__waf_limiter, flu_gpu_npgroup, gpu_nstream; 
+   int    flag_buffer_size, max_level, opt__lr_limiter, opt__waf_limiter, flu_gpu_npgroup, gpu_nstream;
    int    sor_max_iter, sor_min_iter, mg_max_iter, mg_npre_smooth, mg_npost_smooth, pot_gpu_npgroup;
    int    opt__flu_int_scheme, opt__pot_int_scheme, opt__rho_int_scheme;
    int    opt__gra_int_scheme, opt__ref_flu_int_scheme, opt__ref_pot_int_scheme;
    int    opt__output_total, opt__output_part, opt__output_mode, output_step;
-   long   end_step; 
+   long   end_step;
    real   lb_wli_max, gamma, minmod_coeff, ep_coeff, elbdm_mass, planck_const, newton_g, sor_omega;
    real   mg_tolerated_error, output_part_x, output_part_y, output_part_z;
    double box_size, end_t, omega_m0, dt__fluid, dt__gravity, dt__phase, dt__max_delta_a, output_dt;
@@ -607,7 +607,7 @@ void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, bool &Data
    BoxSize        = box_size;
    Gamma          = gamma;
    ELBDM_Eta      = elbdm_mass / planck_const;
-   for (int d=0; d<3; d++)    
+   for (int d=0; d<3; d++)
    NX0_Tot[d]     = nx0_tot[d];
 
 } // FUNCTION : Load_Parameter_Before_2000
@@ -618,9 +618,9 @@ void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, bool &Data
 // Function    :  Load_Parameter_After_2000
 // Description :  Load all simulation parameters from the RESTART file with format version >= 2000
 //
-// Note        :  All floating-point variables are declared as double after version 2000 
+// Note        :  All floating-point variables are declared as double after version 2000
 //
-// Parameter   :  File           : RESTART file pointer 
+// Parameter   :  File           : RESTART file pointer
 //                FormatVersion  : Format version of the RESTART file
 //                LoadPot        : Whether or not the RESTART file stores the potential data
 //                NX0_Tot        : Total number of base-level cells along each direction
@@ -686,7 +686,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
 // =================================================================================================
    bool   enforce_positive, char_reconstruction, hll_no_ref_state, hll_include_all_waves, waf_dissipate;
    bool   use_psolver_10to14;
-   int    ncomp, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate; 
+   int    ncomp, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
    int    flu_block_size_x, flu_block_size_y, pot_block_size_x, pot_block_size_z, gra_block_size_z;
    double min_value, max_error;
 
@@ -717,15 +717,15 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
 // =================================================================================================
    bool   opt__adaptive_dt, opt__dt_user, opt__flag_rho, opt__flag_rho_gradient, opt__flag_pres_gradient;
    bool   opt__flag_engy_density, opt__flag_user, opt__fixup_flux, opt__fixup_restrict, opt__overlap_mpi;
-   bool   opt__gra_p5_gradient, opt__int_time, opt__output_test_error, opt__output_base, opt__output_pot; 
+   bool   opt__gra_p5_gradient, opt__int_time, opt__output_test_error, opt__output_base, opt__output_pot;
    bool   opt__output_baseps, opt__timing_balance, opt__int_phase;
    int    nx0_tot[3], mpi_nrank, mpi_nrank_x[3], omp_nthread, regrid_count;
-   int    flag_buffer_size, max_level, opt__lr_limiter, opt__waf_limiter, flu_gpu_npgroup, gpu_nstream; 
+   int    flag_buffer_size, max_level, opt__lr_limiter, opt__waf_limiter, flu_gpu_npgroup, gpu_nstream;
    int    sor_max_iter, sor_min_iter, mg_max_iter, mg_npre_smooth, mg_npost_smooth, pot_gpu_npgroup;
    int    opt__flu_int_scheme, opt__pot_int_scheme, opt__rho_int_scheme;
    int    opt__gra_int_scheme, opt__ref_flu_int_scheme, opt__ref_pot_int_scheme;
    int    opt__output_total, opt__output_part, opt__output_mode, output_step;
-   long   end_step; 
+   long   end_step;
    double lb_wli_max, gamma, minmod_coeff, ep_coeff, elbdm_mass, elbdm_planck_const, newton_g, sor_omega;
    double mg_tolerated_error, output_part_x, output_part_y, output_part_z;
    double box_size, end_t, omega_m0, dt__fluid, dt__gravity, dt__phase, dt__max_delta_a, output_dt;
@@ -838,7 +838,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
    BoxSize    = box_size;
    Gamma      = gamma;
    ELBDM_Eta  = elbdm_mass / elbdm_planck_const;
-   for (int d=0; d<3; d++)    
+   for (int d=0; d<3; d++)
    NX0_Tot[d] = nx0_tot[d];
 
 } // FUNCTION : Load_Parameter_After_2000
@@ -846,12 +846,12 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  CompareVar 
-// Description :  Compare the input variables 
+// Function    :  CompareVar
+// Description :  Compare the input variables
 //
 // Note        :  This function is overloaded to work with different data types
 //
-// Parameter   :  VarName     : Name of the targeted variable 
+// Parameter   :  VarName     : Name of the targeted variable
 //                RestartVar  : Variable loaded from the RESTART file
 //                RuntimeVar  : Variable loaded from the Input__Parameter
 //                Fatal       : Whether or not the difference between RestartVar and RuntimeVar is fatal
@@ -865,12 +865,12 @@ void CompareVar( const char *VarName, const bool RestartVar, const bool RuntimeV
    {
       if ( Fatal )
       {
-         fprintf( stderr, "ERROR : %s : RESTART file (%d) != runtime (%d) !!\n", 
+         fprintf( stderr, "ERROR : %s : RESTART file (%d) != runtime (%d) !!\n",
                   VarName, RestartVar, RuntimeVar );
          exit( 1 );
       }
       else
-         fprintf( stderr, "WARNING : %s : RESTART file (%d) != runtime (%d) !!\n", 
+         fprintf( stderr, "WARNING : %s : RESTART file (%d) != runtime (%d) !!\n",
                   VarName, RestartVar, RuntimeVar );
    }
 
@@ -888,12 +888,12 @@ void CompareVar( const char *VarName, const int RestartVar, const int RuntimeVar
    {
       if ( Fatal )
       {
-         fprintf( stderr, "ERROR : %s : RESTART file (%d) != runtime (%d) !!\n", 
+         fprintf( stderr, "ERROR : %s : RESTART file (%d) != runtime (%d) !!\n",
                   VarName, RestartVar, RuntimeVar );
          exit( 1 );
       }
       else
-         fprintf( stderr, "WARNING : %s : RESTART file (%d) != runtime (%d) !!\n", 
+         fprintf( stderr, "WARNING : %s : RESTART file (%d) != runtime (%d) !!\n",
                   VarName, RestartVar, RuntimeVar );
    }
 
@@ -911,12 +911,12 @@ void CompareVar( const char *VarName, const long RestartVar, const long RuntimeV
    {
       if ( Fatal )
       {
-         fprintf( stderr, "ERROR : %s : RESTART file (%ld) != runtime (%ld) !!\n", 
+         fprintf( stderr, "ERROR : %s : RESTART file (%ld) != runtime (%ld) !!\n",
                   VarName, RestartVar, RuntimeVar );
          exit( 1 );
       }
       else
-         fprintf( stderr, "WARNING : %s : RESTART file (%ld) != runtime (%ld) !!\n", 
+         fprintf( stderr, "WARNING : %s : RESTART file (%ld) != runtime (%ld) !!\n",
                   VarName, RestartVar, RuntimeVar );
    }
 
@@ -934,12 +934,12 @@ void CompareVar( const char *VarName, const float RestartVar, const float Runtim
    {
       if ( Fatal )
       {
-         fprintf( stderr, "ERROR : %s : RESTART file (%20.14e) != runtime (%20.14e) !!\n", 
+         fprintf( stderr, "ERROR : %s : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                   VarName, RestartVar, RuntimeVar );
          exit( 1 );
       }
       else
-         fprintf( stderr, "WARNING : %s : RESTART file (%20.14e) != runtime (%20.14e) !!\n", 
+         fprintf( stderr, "WARNING : %s : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                   VarName, RestartVar, RuntimeVar );
    }
 
@@ -957,12 +957,12 @@ void CompareVar( const char *VarName, const double RestartVar, const double Runt
    {
       if ( Fatal )
       {
-         fprintf( stderr, "ERROR : %s : RESTART file (%20.14e) != runtime (%20.14e) !!\n", 
+         fprintf( stderr, "ERROR : %s : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                   VarName, RestartVar, RuntimeVar );
          exit( 1 );
       }
       else
-         fprintf( stderr, "WARNING : %s : RESTART file (%20.14e) != runtime (%20.14e) !!\n", 
+         fprintf( stderr, "WARNING : %s : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                   VarName, RestartVar, RuntimeVar );
    }
 

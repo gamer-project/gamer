@@ -29,7 +29,7 @@ set log zcb
 #set xtics 1000
 #set ytics 1000
 
-#set pm3d at s 
+#set pm3d at s
 #unset surface
 #unset hidden3d
 #unset grid

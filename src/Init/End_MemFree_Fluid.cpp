@@ -66,14 +66,6 @@ void End_MemFree_Fluid()
 #  endif
 #  endif // FLU_SCHEME
 
-#  if ( MODEL == HYDRO )
-   delete [] h_SrcDlepProf_Data;     h_SrcDlepProf_Data   = NULL;
-   delete [] h_SrcDlepProf_Radius;   h_SrcDlepProf_Radius = NULL;
-
-   SrcTerms.Dlep_Profile_DataDevPtr   = NULL;
-   SrcTerms.Dlep_Profile_RadiusDevPtr = NULL;
-#  endif
-
 } // FUNCTION : End_MemFree_Fluid
 
 

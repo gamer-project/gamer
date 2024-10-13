@@ -31,11 +31,11 @@ void Flu_Restrict( const int lv, const bool GetAvePot, const bool GetAveParDens 
 void Aux_Error( const char *File, const int Line, const char *Func, const char *Format, ... );
 void Aux_Message( FILE *Type, const char *Format, ... );
 bool Aux_CheckFileExist( const char *FileName );
-void Prepare_PatchData( const int lv, real *h_Input_Array, const int GhostSize, const int NPG, const int *PID0_List, 
+void Prepare_PatchData( const int lv, real *h_Input_Array, const int GhostSize, const int NPG, const int *PID0_List,
                         const long TVar, const IntScheme_t IntScheme, const NSide_t NSide, const bool IntPhase );
 void Int_Table( const IntScheme_t IntScheme, int &NSide, int &NGhost );
 void Interpolate( real CData [], const int CSize[3], const int CStart[3], const int CRange[3],
-                  real FData [], const int FSize[3], const int FStart[3], 
+                  real FData [], const int FSize[3], const int FStart[3],
                   const int NComp, const IntScheme_t IntScheme, const bool UnwrapPhase, const bool Monotonic );
 void Output_Patch( const int lv, const int PID, const char *comment );
 #if ( MODEL == ELBDM )

@@ -5,7 +5,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Int_Table
-// Description :  Return the number of sides (6 or 26) and ghost zones for the queried interpolation scheme 
+// Description :  Return the number of sides (6 or 26) and ghost zones for the queried interpolation scheme
 //
 // Parameter   :  IntScheme : Interpolation scheme
 //                            --> currently supported schemes include

@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 # copy files to the correct directories for the target test problem
 cp Init_* End_*                        ../../../src/Init/

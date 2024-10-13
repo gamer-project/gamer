@@ -35,6 +35,10 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
    if ( lv < 0  ||  lv >= NLEVEL )  Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "lv", lv );
    if ( Mode < 1  ||  Mode > 3 )    Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "Mode", Mode );
 
+#  if ( DUAL_ENERGY == DE_EINT )
+#  error : DE_EINT is NOT supported yet !!
+#  endif
+
 
    const bool CheckMinPres_No = false;
 
@@ -62,7 +66,7 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
             for (int v=0; v<NCOMP_TOTAL; v++)   Fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
 #           if ( DUAL_ENERGY == DE_ENPY )
-            Pres = Hydro_DensEntropy2Pres( Fluid[DENS], Fluid[ENPY], EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
+            Pres = Hydro_DensDual2Pres( Fluid[DENS], Fluid[DUAL], EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
 #           else
 #           ifdef MHD
             const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
@@ -71,7 +75,8 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
 #           endif // MHD
             Pres = Hydro_Con2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY], Fluid+NCOMP_FLUID,
                                    CheckMinPres_No, NULL_REAL, Emag,
-                                   EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+                                   EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 #           endif // DUAL_ENERGY
 
             if ( Mode == 1  ||  Mode == 3 )
@@ -102,7 +107,7 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
             if ( Mode == 2  ||  Mode == 3 )
             {
 #              if ( DUAL_ENERGY == DE_ENPY )
-               if ( Pres <= PresCheck  ||  Fluid[ENPY] < EnpyCheck )
+               if ( Pres <= PresCheck  ||  Fluid[DUAL] < EnpyCheck )
 #              else
                if ( Pres <= PresCheck )
 #              endif

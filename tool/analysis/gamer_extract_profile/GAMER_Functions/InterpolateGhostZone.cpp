@@ -8,17 +8,17 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  InterpolateGhostZone
-// Description :  Fill up the ghost-zone values by spatial and temporal interpolation 
+// Description :  Fill up the ghost-zone values by spatial and temporal interpolation
 //
 // Note        :  1. Work for the function "Prepare_PatchData"
 //                2. Use the input parameter "NVar_Flu" and "TFluVarIdxList" to control the target variables
 //                3. Use the input parameter "IntScheme" to control the interpolation scheme
 //                4. Invoke the function "Interpolate" for spatial interpolation
 //                5. Data preparation order: FLU -> POTE
-// 
-// Parameter   :  lv             : Targeted "coarse-grid" refinement level 
-//                PID            : Patch ID at level "lv" used for interpolation 
-//                IntData        : Array to store the interpolation result 
+//
+// Parameter   :  lv             : Targeted "coarse-grid" refinement level
+//                PID            : Patch ID at level "lv" used for interpolation
+//                IntData        : Array to store the interpolation result
 //                SibID          : Sibling index (0~25) used to determine the interpolation region
 //                GhostSize      : Number of ghost zones
 //                IntScheme      : Interpolation scheme
@@ -30,20 +30,20 @@ static int Table_01( const int SibID, const int Side, const char dim, const int 
 //                                     INT_QUAD     : quadratic
 //                                     INT_CQUAR    : conservative quartic
 //                                     INT_QUAR     : quartic
-//                NTSib          : Number of targeted sibling patches along different sibling directions 
+//                NTSib          : Number of targeted sibling patches along different sibling directions
 //                TSib           : Targeted sibling indices along different sibling directions
 //                TVar           : Targeted variables to be prepared
 //                                 --> Supported variables in different models:
 //                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _FLUID, _VELX, _VELY, _VELZ, _PRES,
 //                                             [, _POTE] [, _PAR_DENS] [, _PASSIVE]
-//                                     MHD   : 
+//                                     MHD   :
 //                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE] [, _PAR_DENS]
 //                NVar_Tot       : Total number of variables to be prepared
 //                NVar_Flu       : Number of fluid variables to be prepared
 //                TFluVarIdxList : List recording the target fluid and passive variable indices ( = [0 ... NCOMP_FLUID+NCOMP_PASSIVE-1] )
 //                IntPhase       : true --> Perform interpolation on rho/phase instead of real/imag parts in ELBDM
 //-------------------------------------------------------------------------------------------------------
-void InterpolateGhostZone( const int lv, const int PID, real IntData[], const int SibID, const int GhostSize, 
+void InterpolateGhostZone( const int lv, const int PID, real IntData[], const int SibID, const int GhostSize,
                            const IntScheme_t IntScheme, const int NTSib[], int *TSib[], const long TVar, const int NVar_Tot,
                            const int NVar_Flu, const int TFluVarIdxList[], const bool IntPhase )
 {
@@ -51,7 +51,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 // check
 #  ifdef GAMER_DEBUG
 // nothing to do if GhostSize == 0
-   if ( GhostSize == 0 )   
+   if ( GhostSize == 0 )
    {
       Aux_Message( stderr, "WARNING : GhostSize == 0 !!\n" );
       return;
@@ -71,7 +71,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    const int  CGrid            = (GhostSize+1)/2 + 2*CGhost;   // number of coarse grids required for interpolation
    const int  La               = CGrid - CGhost;               // number of coarse grids in the central region
 
-   for (int d=0; d<3; d++)    
+   for (int d=0; d<3; d++)
    {
       CSize[d] = TABLE_01( SibID, 'x'+d, CGrid, PATCH_SIZE+2*CGhost, CGrid );
       FSize[d] = TABLE_01( SibID, 'x'+d, GhostSize_Padded, 2*PATCH_SIZE, GhostSize_Padded );
@@ -106,16 +106,16 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
       Disp2[d] = TABLE_01( SibID, 'x'+d, 0, CGhost, CGhost );
    }
 
-   
+
    CData_Ptr = CData;
 
 // skip the useless patch
    if ( amr.patch[lv][PID]->fluid != NULL )
    {
-//    a1. fluid data            
-      for (int v=0; v<NVar_Flu; v++)         
-      {  
-         TFluVarIdx = TFluVarIdxList[v]; 
+//    a1. fluid data
+      for (int v=0; v<NVar_Flu; v++)
+      {
+         TFluVarIdx = TFluVarIdxList[v];
 
          for (int k=0; k<Loop1[2]; k++)   {  k1 = k + Disp1[2];   k2 = k + Disp2[2];
          for (int j=0; j<Loop1[1]; j++)   {  j1 = j + Disp1[1];   j2 = j + Disp2[1];
@@ -179,7 +179,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
       {
          Loop2[d] = Table_01( SibID, Side, 'x'+d, La, CGhost, CGhost, PATCH_SIZE, CGhost, CGhost, La );
          Disp3[d] = Table_01( SibID, Side, 'x'+d, 0, La, 0, CGhost, CGhost+PATCH_SIZE, 0, CGhost );
-         Disp4[d] = Table_01( SibID, Side, 'x'+d, PATCH_SIZE-La, 0, PATCH_SIZE-CGhost, 0, 0, 
+         Disp4[d] = Table_01( SibID, Side, 'x'+d, PATCH_SIZE-La, 0, PATCH_SIZE-CGhost, 0, 0,
                               PATCH_SIZE-CGhost, 0 );
       }
 
@@ -192,10 +192,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 //       skip the useless patch
          if ( amr.patch[lv][SibPID]->fluid != NULL )
          {
-//          b1-1. fluid data            
-            for (int v=0; v<NVar_Flu; v++)         
-            {  
-               TFluVarIdx = TFluVarIdxList[v]; 
+//          b1-1. fluid data
+            for (int v=0; v<NVar_Flu; v++)
+            {
+               TFluVarIdx = TFluVarIdxList[v];
 
                for (int k=0; k<Loop2[2]; k++)   {  k1 = k + Disp3[2];   k2 = k + Disp4[2];
                for (int j=0; j<Loop2[1]; j++)   {  j1 = j + Disp3[1];   j2 = j + Disp4[1];
@@ -279,7 +279,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
    for (int v=0; v<NVar_Flu; v++)
    {
-      TFluVarIdx = TFluVarIdxList[v]; 
+      TFluVarIdx = TFluVarIdxList[v];
 
 #     if ( MODEL == HYDRO )
 //    we now apply monotonic interpolation to ALL fluid variables (which helps alleviate the issue of negative density/pressure)
@@ -297,14 +297,14 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
       else                                               Monotonicity[v] = EnsureMonotonicity_No;
 
 #     else
-#     warning : WARNING : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION ??          
+#     warning : WARNING : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION ??
 #     endif // MODEL
    }
 
 
 // interpolation
 #  if ( MODEL == ELBDM )
-   real *CData_Dens = NULL; 
+   real *CData_Dens = NULL;
    real *CData_Real = NULL;
    real *CData_Imag = NULL;
    real *FData_Dens = NULL;
@@ -318,7 +318,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
       for (int v=0; v<NVar_Flu; v++)
       {
-         TFluVarIdx = TFluVarIdxList[v]; 
+         TFluVarIdx = TFluVarIdxList[v];
 
          if      ( TFluVarIdx == DENS )   DensIdx = v;
          else if ( TFluVarIdx == REAL )   RealIdx = v;
@@ -343,7 +343,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 //    get the wrapped phase (store in the REAL component) and density (store in the IMAG component)
       real Re, Im;
 
-      for (int t=0; t<CSize3D; t++)    
+      for (int t=0; t<CSize3D; t++)
       {
          Re = CData_Real[t];
          Im = CData_Imag[t];
@@ -353,12 +353,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
          CData_Dens[t] = Re*Re + Im*Im;
       }
 
-//    interpolate density 
-      Interpolate( CData_Dens, CSize, CStart, CRange, FData_Dens, FSize, FStart, 1, IntScheme, 
+//    interpolate density
+      Interpolate( CData_Dens, CSize, CStart, CRange, FData_Dens, FSize, FStart, 1, IntScheme,
                    PhaseUnwrapping_No, EnsureMonotonicity_Yes );
 
 //    interpolate phase
-      Interpolate( CData_Real, CSize, CStart, CRange, FData_Real, FSize, FStart, 1, IntScheme, 
+      Interpolate( CData_Real, CSize, CStart, CRange, FData_Real, FSize, FStart, 1, IntScheme,
                    PhaseUnwrapping_Yes, EnsureMonotonicity_No );
    } // if ( IntPhase )
 
@@ -366,7 +366,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
    else // if ( IntPhase )
    {
       for (int v=0; v<NVar_Flu; v++)
-      Interpolate( CData+CSize3D*v, CSize, CStart, CRange, IntData+FSize3D*v, FSize, FStart, 1, 
+      Interpolate( CData+CSize3D*v, CSize, CStart, CRange, IntData+FSize3D*v, FSize, FStart, 1,
                    IntScheme, PhaseUnwrapping_No, Monotonicity[v] );
    } // if ( IntPhase ) ... else ...
 
@@ -398,17 +398,17 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 // c3. interpolation on original variables
    for (int v=0; v<NVar_Flu; v++)
-      Interpolate( CData+CSize3D*v, CSize, CStart, CRange, IntData+FSize3D*v, FSize, FStart, 1, 
+      Interpolate( CData+CSize3D*v, CSize, CStart, CRange, IntData+FSize3D*v, FSize, FStart, 1,
                    IntScheme, PhaseUnwrapping_No, Monotonicity[v] );
 
-#  endif // #if ( MODEL == ELBDM ) ... else 
+#  endif // #if ( MODEL == ELBDM ) ... else
 
    NVar_SoFar = NVar_Flu;
 
 // c4. interpolation on potential
    if ( PrepPot )
    {
-      Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1, 
+      Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
                    IntScheme, PhaseUnwrapping_No, EnsureMonotonicity_No );
       NVar_SoFar ++;
    }
@@ -416,7 +416,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 // c5. interpolation on particle density
    if ( PrepParDens )
    {
-      Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1, 
+      Interpolate( CData+CSize3D*NVar_SoFar, CSize, CStart, CRange, IntData+FSize3D*NVar_SoFar, FSize, FStart, 1,
                    IntScheme, PhaseUnwrapping_No, EnsureMonotonicity_No );
       NVar_SoFar ++;
    }
@@ -428,17 +428,17 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData[], const in
 
 
 // ============
-// |  Tables  | 
+// |  Tables  |
 // ============
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Table_01
 // Description :  return the loop size and displacement required by the function "InterpolateGhostZone"
-// 
+//
 // Parameter   :  SibID       : Sibling index ONE (0~25)
 //                Side        : Sibling index TWO (0~25)
 //                dim         : Targeted spatial direction (x/y/z)
-//                w01 ... w21 : Returned values  
+//                w01 ... w21 : Returned values
 //-------------------------------------------------------------------------------------------------------
 int Table_01( const int SibID, const int Side, const char dim, const int w01, const int w02,
               const int w10, const int w11, const int w12, const int w20, const int w21 )
@@ -455,7 +455,7 @@ int Table_01( const int SibID, const int Side, const char dim, const int w01, co
                switch ( Side )
                {
                   case 0: case 6: case 8: case 14: case 15: case 18: case 20: case 22: case 24:
-                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n", 
+                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Side", Side );
 
                   case 2: case 3: case 4: case 5: case 10: case 11: case 12: case 13:
@@ -492,7 +492,7 @@ int Table_01( const int SibID, const int Side, const char dim, const int w01, co
                      return w21;
 
                   case 1: case 7: case 9: case 16: case 17: case 19: case 21: case 23: case 25:
-                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n", 
+                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Side", Side );
                }
             }
@@ -510,7 +510,7 @@ int Table_01( const int SibID, const int Side, const char dim, const int w01, co
                switch ( Side )
                {
                   case 2: case 6: case 7: case 10: case 12: case 18: case 19: case 22: case 23:
-                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n", 
+                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Side", Side );
 
                   case 0: case 1: case 4: case 5: case 14: case 15: case 16: case 17:
@@ -547,7 +547,7 @@ int Table_01( const int SibID, const int Side, const char dim, const int w01, co
                      return w21;
 
                   case 3: case 8: case 9: case 11: case 13: case 20: case 21: case 24: case 25:
-                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n", 
+                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Side", Side );
                }
             }
@@ -565,7 +565,7 @@ int Table_01( const int SibID, const int Side, const char dim, const int w01, co
                switch ( Side )
                {
                   case 4: case 10: case 11: case 14: case 16: case 18: case 19: case 20: case 21:
-                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n", 
+                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Side", Side );
 
                   case 0: case 1: case 2: case 3: case 6: case 7: case 8: case 9:
@@ -602,7 +602,7 @@ int Table_01( const int SibID, const int Side, const char dim, const int w01, co
                      return w21;
 
                   case 5: case 12: case 13: case 15: case 17: case 22: case 23: case 24: case 25:
-                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n", 
+                     Aux_Error( ERROR_INFO, "incorrect parameter %s = %d, %s = %d !!\n",
                                 "SibID", SibID, "Side", Side );
                }
             }
