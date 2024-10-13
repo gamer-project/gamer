@@ -30,7 +30,6 @@ COMPILE_VERBOSE := 0
 SIMU_OPTION  = @@@SIMU_OPTION@@@
 SIMU_OPTION += -DGPU_COMPUTE_CAPABILITY=@@@GPU_COMPUTE_CAPABILITY@@@
 
-<<<<<<< HEAD:src/Makefile
 # (a) physical modules
 # -------------------------------------------------------------------------------
 # physical model: HYDRO/ELBDM/PAR_ONLY (ELBDM: wave dark matter; PAR_ONLY: particle-only)
@@ -234,13 +233,10 @@ SIMU_OPTION += -DSUPPORT_FFTW=FFTW3
 # use patch group as the unit in libyt, this will speed up inline-analysis but increase memory consumption
 # --> must enable SUPPORT_LIBYT
 #SIMU_OPTION += -DLIBYT_USE_PATCH_GROUP
-=======
->>>>>>> master:src/Makefile_base
 
 
 # compilers and flags
 #######################################################################################################
-<<<<<<< HEAD:src/Makefile
 
 # intel
 # -------------------------------------------------------------------------------
@@ -303,19 +299,11 @@ endif
 #NVCC = nvcc -ccbin CC                                   # for the Cray environment
 
 
-=======
-CXX        = @@@CXX@@@
-CXXFLAG    = @@@CXXFLAG@@@
-LIB        = @@@LIBFLAG@@@
-OPENMPFLAG = @@@OPENMPFLAG@@@
-NVCC       = $(CUDA_PATH)/bin/nvcc
->>>>>>> master:src/Makefile_base
 
 
 
 # library paths
 #######################################################################################################
-<<<<<<< HEAD:src/Makefile
 
 # template
 #CUDA_PATH    :=
@@ -454,16 +442,6 @@ LIBYT_PATH   :=
 #GSL_PATH     := /usr
 #LIBYT_PATH   :=
 
-=======
-CUDA_PATH    := @@@CUDA_PATH@@@
-FFTW2_PATH   := @@@FFTW2_PATH@@@
-FFTW3_PATH   := @@@FFTW3_PATH@@@
-MPI_PATH     := @@@MPI_PATH@@@
-HDF5_PATH    := @@@HDF5_PATH@@@
-GRACKLE_PATH := @@@GRACKLE_PATH@@@
-GSL_PATH     := @@@GSL_PATH@@@
-LIBYT_PATH   := @@@LIBYT_PATH@@@
->>>>>>> master:src/Makefile_base
 
 
 

@@ -86,8 +86,8 @@ int Aux_LoadTable( T *&Data, const char *FileName, const int NCol_Target, const 
 
 //    check if we find all target columns
       if ( NCol_Match != NCol_Target )
-         Aux_Error( ERROR_INFO, "Number of matched columns (%d) != expect (%d) at row %d !!\n %s\n",
-                    NCol_Match, NCol_Target, NthRow-1 , FirstItem);
+         Aux_Error( ERROR_INFO, "Number of matched columns (%d) != expect (%d) at row %d !!\n",
+                    NCol_Match, NCol_Target, NthRow-1 );
 
       NRow_Match ++;
    } // while ( fgets(Line, MAX_STRING, File) != NULL )
