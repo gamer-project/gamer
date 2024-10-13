@@ -416,7 +416,7 @@ void SetParameter()
       Soliton_SetPresProfileTable();
    }
 
-   /*if ( Bondi_Init )
+   if ( Bondi_Init )
    {
             bool RowMajor_No  = false;
       const bool AllocMem_Yes = true;
@@ -437,7 +437,7 @@ void SetParameter()
          Bondi_Init_Prof_v[b] *= 1000*1e5;  // in cm/s
          Bondi_Init_Prof_p[b] = SQR(Bondi_Init_Prof_v[b]/Bondi_Init_Prof_p[b])*Bondi_Init_Prof_d[b]/GAMMA;
       }
-    }*/
+    }
 
 // (4) reset other general-purpose parameters
 //     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
