@@ -40,38 +40,38 @@ void CUAPI_SetMemSize( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGr
       {
 #        if   ( MODEL == HYDRO )
 #           if   ( GPU_ARCH == FERMI )
-            GPU_NStream = 8;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == KEPLER )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == MAXWELL )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == PASCAL )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == VOLTA )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == TURING )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == AMPERE )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
 #           else
 #           error : UNKNOWN GPU_ARCH !!
 #           endif
 
 #        elif ( MODEL == ELBDM )
 #           if   ( GPU_ARCH == FERMI )
-            GPU_NStream = 8;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == KEPLER )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == MAXWELL )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == PASCAL )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == VOLTA )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == TURING )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == AMPERE )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
 #           else
 #           error : ERROR : UNKNOWN GPU_ARCH !!
 #           endif
