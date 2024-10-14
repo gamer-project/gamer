@@ -650,7 +650,8 @@ void Aux_Record_ClusterMerger()
    {
       FILE *File_User = fopen( FileName, "a" );
       fprintf( File_User, "%14.7e%14ld", Time[0], Step );
-      for (int c=0; c<Merger_Coll_NumHalos; c++){
+      for (int c=0; c<Merger_Coll_NumHalos; c++)
+      {
          fprintf( File_User, " %14.7e %14.7e %14.7e", ClusterCen[c][0], ClusterCen[c][1], ClusterCen[c][2] );
          fprintf( File_User, " %14.7e %14.7e %14.7e", BH_Vel[c][0]*UNIT_V/(Const_km/Const_s), BH_Vel[c][1]*UNIT_V/(Const_km/Const_s), BH_Vel[c][2]*UNIT_V/(Const_km/Const_s) );
          fprintf( File_User, " %14.7e %14.7e %14.7e", GasVel[c][0]*UNIT_V/(Const_km/Const_s), GasVel[c][1]*UNIT_V/(Const_km/Const_s), GasVel[c][2]*UNIT_V/(Const_km/Const_s) );
