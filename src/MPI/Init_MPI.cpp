@@ -59,6 +59,8 @@ void Init_MPI( int *argc, char ***argv )
    if ( ( MPI_SizePerNode == 1 ) && ( MPI_Rank == 0 ) )
       Aux_Message( stderr, "WARNING : MPI rank per node is %d !! Using more MPI ranks per node may improve the performance!!\n", MPI_SizePerNode);
 
+   MPI_Comm_free(&shmcomm);
+
 } // FUNCTION : Init_MPI
 
 
