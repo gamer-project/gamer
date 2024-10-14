@@ -155,6 +155,8 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );
 void Output_ClusterMerger();
 void Init_User_ClusterMerger();
+static herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Target,
+                         const hid_t H5_TypeID_Target );
 
 
 
@@ -876,29 +878,29 @@ void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
    HDF5_InputTest->Add( "Merger_Coll_VelY3",       &Merger_Coll_VelY3       );
    HDF5_InputTest->Add( "Merger_Coll_UseMetals",   &Merger_Coll_UseMetals   );
    HDF5_InputTest->Add( "Merger_Coll_LabelCenter", &Merger_Coll_LabelCenter );
-   HDF5_InputTest->Add( "Bondi_MassBH1",           &Bondi_MassBH1,          );
-   HDF5_InputTest->Add( "Bondi_MassBH2",           &Bondi_MassBH2,          );
-   HDF5_InputTest->Add( "Bondi_MassBH3",           &Bondi_MassBH3,          );
-   HDF5_InputTest->Add( "R_acc",                   &R_acc,                  );
-   HDF5_InputTest->Add( "R_dep",                   &R_dep,                  );
-   HDF5_InputTest->Add( "Mdot_BH1",                &Mdot_BH1,               );
-   HDF5_InputTest->Add( "Mdot_BH2",                &Mdot_BH2,               );
-   HDF5_InputTest->Add( "Mdot_BH3",                &Mdot_BH3,               );
-   HDF5_InputTest->Add( "Jet_HalfHeight1",         &Jet_HalfHeight1,        );
-   HDF5_InputTest->Add( "Jet_HalfHeight2",         &Jet_HalfHeight2,        );
-   HDF5_InputTest->Add( "Jet_HalfHeight3",         &Jet_HalfHeight3,        );
-   HDF5_InputTest->Add( "Jet_Radius1",             &Jet_Radius1,            );
-   HDF5_InputTest->Add( "Jet_Radius2",             &Jet_Radius2,            );
-   HDF5_InputTest->Add( "Jet_Radius3",             &Jet_Radius3,            );
-   HDF5_InputTest->Add( "Accretion_Mode",          &Accretion_Mode,         );
-   HDF5_InputTest->Add( "eta",                     &eta,                    );
-   HDF5_InputTest->Add( "eps_f",                   &eps_f,                  );
-   HDF5_InputTest->Add( "eps_m",                   &eps_m,                  );
-   HDF5_InputTest->Add( "AdjustBHPos",             &AdjustBHPos,            );
-   HDF5_InputTest->Add( "AdjustBHVel",             &AdjustBHVel,            );
-   HDF5_InputTest->Add( "AdjustPeriod",            &AdjustPeriod,           );
-   HDF5_InputTest->Add( "JetDirection_case",       &JetDirection_case,      );
-   HDF5_InputTest->Add( "fixBH",                   &fixBH,                  );
+   HDF5_InputTest->Add( "Bondi_MassBH1",           &Bondi_MassBH1           );
+   HDF5_InputTest->Add( "Bondi_MassBH2",           &Bondi_MassBH2           );
+   HDF5_InputTest->Add( "Bondi_MassBH3",           &Bondi_MassBH3           );
+   HDF5_InputTest->Add( "R_acc",                   &R_acc                   );
+   HDF5_InputTest->Add( "R_dep",                   &R_dep                   );
+   HDF5_InputTest->Add( "Mdot_BH1",                &Mdot_BH1                );
+   HDF5_InputTest->Add( "Mdot_BH2",                &Mdot_BH2                );
+   HDF5_InputTest->Add( "Mdot_BH3",                &Mdot_BH3                );
+   HDF5_InputTest->Add( "Jet_HalfHeight1",         &Jet_HalfHeight1         );
+   HDF5_InputTest->Add( "Jet_HalfHeight2",         &Jet_HalfHeight2         );
+   HDF5_InputTest->Add( "Jet_HalfHeight3",         &Jet_HalfHeight3         );
+   HDF5_InputTest->Add( "Jet_Radius1",             &Jet_Radius1             );
+   HDF5_InputTest->Add( "Jet_Radius2",             &Jet_Radius2             );
+   HDF5_InputTest->Add( "Jet_Radius3",             &Jet_Radius3             );
+   HDF5_InputTest->Add( "Accretion_Mode",          &Accretion_Mode          );
+   HDF5_InputTest->Add( "eta",                     &eta                     );
+   HDF5_InputTest->Add( "eps_f",                   &eps_f                   );
+   HDF5_InputTest->Add( "eps_m",                   &eps_m                   );
+   HDF5_InputTest->Add( "AdjustBHPos",             &AdjustBHPos             );
+   HDF5_InputTest->Add( "AdjustBHVel",             &AdjustBHVel             );
+   HDF5_InputTest->Add( "AdjustPeriod",            &AdjustPeriod            );
+   HDF5_InputTest->Add( "JetDirection_case",       &JetDirection_case       );
+   HDF5_InputTest->Add( "fixBH",                   &fixBH                   );
 
 } // FUNCTION : HDF5_Output_TestProb
 
@@ -919,18 +921,25 @@ void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
 void HDF5_Output_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
 {
 
+   double BH_Mass[3] = { Bondi_MassBH1, Bondi_MassBH2, Bondi_MassBH3 };
+
    HDF5_OutUser->Add( "Merger_CollNumHalos",  &Merger_Coll_NumHalos );
    HDF5_OutUser->Add( "AdjustCount",          &AdjustCount          );
    for (int c=0; c<Merger_Coll_NumHalos; c++)
-   for (int d=0; d<3; d++)
    {
-      char BH_Pos_name[50], ClusterCen_name[50], BH_Vel_name[50];
-      sprintf( BH_Pos_name, "BH_Pos_%d_%d", c, d );
-      sprintf( ClusterCen_name, "ClusterCen_%d_%d", c, d );
-      sprintf( BH_Vel_name, "BH_Vel_%d_%d", c, d );
-      HDF5_OutUser->Add( BH_Pos_name,     &BH_Pos[c][d]     );
-      HDF5_OutUser->Add( ClusterCen_name, &ClusterCen[c][d] );
-      HDF5_OutUser->Add( BH_Vel_name,     &BH_Vel[c][d]     );
+      for (int d=0; d<3; d++)
+      {
+         char BH_Pos_name[50], ClusterCen_name[50], BH_Vel_name[50];
+         sprintf( BH_Pos_name, "BH_Pos_%d_%d", c, d );
+         sprintf( ClusterCen_name, "ClusterCen_%d_%d", c, d );
+         sprintf( BH_Vel_name, "BH_Vel_%d_%d", c, d );
+         HDF5_OutUser->Add( BH_Pos_name,     &BH_Pos[c][d]     );
+         HDF5_OutUser->Add( ClusterCen_name, &ClusterCen[c][d] );
+         HDF5_OutUser->Add( BH_Vel_name,     &BH_Vel[c][d]     );
+      }
+      char BH_Mass_name[50];
+      sprintf( BH_Mass_name, "BH_Mass_%d", c );
+      HDF5_OutUser->Add( BH_Mass_name, &BH_Mass[c] );
    }
 
 } // FUNCTION : HDF5_Output_User_Example
@@ -1215,6 +1224,51 @@ void Init_User_ClusterMerger()
       return;
    }
 
+// TODO: Still developing
+/*
+   double BH_Mass[3] = {0.0, 0.0, 0.0};
+
+#  ifdef SUPPORT_HDF5
+   const char FileName[] = "RESTART";
+   hid_t  H5_FileID, H5_SetID_OutputUser, H5_TypeID_OutputUser;
+
+   H5_FileID = H5Fopen( FileName, H5F_ACC_RDONLY, H5P_DEFAULT );
+   if ( H5_FileID < 0 )
+      Aux_Error( ERROR_INFO, "failed to open the restart HDF5 file \"%s\" !!\n", FileName );
+
+   H5_SetID_OutputUser  = H5Dopen( H5_FileID, "User/OutputUser", H5P_DEFAULT );
+   if ( H5_SetID_OutputUser < 0 )
+      Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", "User/OutputUser" );
+
+   H5_TypeID_OutputUser = H5Dget_type( H5_SetID_OutputUser );
+   if ( H5_TypeID_OutputUser < 0 )
+      Aux_Error( ERROR_INFO, "failed to open the datatype of \"%s\" !!\n", "User/OutputUser" );
+
+   LoadField( "Merger_Coll_NumHalos", &Merger_Coll_NumHalos, H5_SetID_OutputUser, H5_TypeID_OutputUser );
+   for (int c=0; c<Merger_Coll_NumHalos; c++)
+   {
+      for (int d=0; d<3; d++)
+      {
+         char BH_Pos_name[50], ClusterCen_name[50], BH_Vel_name[50];
+         sprintf( BH_Pos_name, "BH_Pos_%d_%d", c, d );
+         sprintf( ClusterCen_name, "ClusterCen_%d_%d", c, d );
+         sprintf( BH_Vel_name, "BH_Vel_%d_%d", c, d );
+         LoadField( BH_Pos_name,     &BH_Pos[c][d],     H5_SetID_OutputUser, H5_TypeID_OutputUser );
+         LoadField( ClusterCen_name, &ClusterCen[c][d], H5_SetID_OutputUser, H5_TypeID_OutputUser );
+         LoadField( BH_Vel_name,     &BH_Vel[c][d],     H5_SetID_OutputUser, H5_TypeID_OutputUser );
+      }
+      char BH_Mass_name[50];
+      sprintf( BH_Mass_name, "BH_Mass_%d", c );
+      LoadField( BH_Mass_name, &BH_Mass[c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
+   }
+   LoadField( "AdjustCount", &AdjustCount, H5_SetID_OutputUser, H5_TypeID_OutputUser );
+#  endif
+
+   Bondi_MassBH1 = BH_Mass[0];
+   Bondi_MassBH2 = BH_Mass[1];
+   Bondi_MassBH3 = BH_Mass[2];
+*/
+
    const char FileName[] = "BH_variable.bin";
    int TargetDumpID = DumpID-1;  //INIT_DUMPID;
 
@@ -1250,8 +1304,9 @@ void Init_User_ClusterMerger()
          }
          else
          {
-            fseek( File_User, sizeof(int), SEEK_CUR );
-            for (int c=0; c<Merger_Coll_NumHalos; c++)
+            int temp;
+            fread( &temp, sizeof(int), 1, File_User );
+            for (int c=0; c<temp; c++)
             {
                fseek( File_User, sizeof(double)*3, SEEK_CUR );
                fseek( File_User, sizeof(double)*3, SEEK_CUR );
@@ -1271,6 +1326,7 @@ void Init_User_ClusterMerger()
       printf( "Restarting! BH_Pos[0][0] = %23.17e, BH_Pos[0][1] = %23.17e\n", BH_Pos[0][0], BH_Pos[0][1] );
    }  // if ( MPI_Rank == 0 )
 
+
    MPI_Bcast( &Merger_Coll_NumHalos, 1, MPI_INT, 0, MPI_COMM_WORLD );
    for (int c=0; c<Merger_Coll_NumHalos; c++)
    {
@@ -1283,7 +1339,74 @@ void Init_User_ClusterMerger()
    MPI_Bcast( &Bondi_MassBH3, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
    MPI_Bcast( &AdjustCount,   1, MPI_INT,    0, MPI_COMM_WORLD );
 
+
 } // FUNCTION : Init_User_ClusterMerger
+
+
+
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  LoadField
+// Description :  Load a single field from the input compound dataset
+//
+// Note        :  1. This function works for arbitary datatype (int, float, char, 1D array ...)
+//                2. Memory must be allocated for FieldPtr in advance with sufficent size (except for "char *")
+//                3. For loading a string, which has (type(FieldPtr) = (char *)), the memory must be freed
+//                   manually by calling free()
+//                4. It can also compare the loaded variables (FieldPtr) with the reference values (ComprPtr)
+//                   (perform comparison only if "NCompr > 0")
+//                   --> Please make sure that "FieldPtr" and "ComprPtr" point to the same type since we
+//                       use the type of "ComprPtr" to typecast "FieldPtr"
+//
+// Parameter   :  FieldName        : Name of the target field
+//                FieldPtr         : Pointer to store the retrieved data
+//                H5_SetID_Target  : HDF5 dataset  ID of the target compound variable
+//                H5_TypeID_Target : HDF5 datatype ID of the target compound variable
+//
+// Return      :  Success/fail <-> 0/<0
+//-------------------------------------------------------------------------------------------------------
+herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Target,
+                  const hid_t H5_TypeID_Target )
+{
+
+   bool   Check_Pass = true;
+   int    H5_FieldIdx;
+   size_t H5_FieldSize;
+   hid_t  H5_TypeID_Field;    // datatype ID of the target field in the compound variable
+   hid_t  H5_TypeID_Load;     // datatype ID for loading the target field
+   herr_t H5_Status;
+
+
+// load
+   H5_FieldIdx = H5Tget_member_index( H5_TypeID_Target, FieldName );
+
+   if ( H5_FieldIdx >= 0 )
+   {
+      H5_TypeID_Field  = H5Tget_member_type( H5_TypeID_Target, H5_FieldIdx );
+      H5_FieldSize     = H5Tget_size( H5_TypeID_Field );
+
+      H5_TypeID_Load   = H5Tcreate( H5T_COMPOUND, H5_FieldSize );
+      H5_Status        = H5Tinsert( H5_TypeID_Load, FieldName, 0, H5_TypeID_Field );
+
+      H5_Status        = H5Dread( H5_SetID_Target, H5_TypeID_Load, H5S_ALL, H5S_ALL, H5P_DEFAULT, FieldPtr );
+      if ( H5_Status < 0 )    Aux_Error( ERROR_INFO, "failed to load the field \"%s\" !!\n", FieldName );
+
+      H5_Status        = H5Tclose( H5_TypeID_Field );
+      H5_Status        = H5Tclose( H5_TypeID_Load  );
+   } // if ( H5_FieldIdx >= 0 )
+
+   else
+   {
+      if ( MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : target field \"%s\" does not exist in the restart file !!\n", FieldName );
+
+      return -1;
+   } // if ( H5_FieldIdx >= 0 ) ... else ...
+
+   return (Check_Pass) ? 0 : -3;
+
+} // FUNCTION : LoadField
+#endif
 
 
 

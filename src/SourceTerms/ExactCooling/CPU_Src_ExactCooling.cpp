@@ -164,7 +164,7 @@ void Src_SetAuxArray_ExactCooling( double AuxArray_Flt[], int AuxArray_Int[] )
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
 static void Src_ExactCooling( real fluid[], const real B[], const SrcTerms_t *SrcTerms, const real dt,
-                              const real dh, const double x, const double y, const double z
+                              const real dh, const double x, const double y, const double z,
                               const double TimeNew, const double TimeOld, const real MinDens,
                               const real MinPres, const real MinEint, const EoS_t *EoS,
                               const double AuxArray_Flt[], const int AuxArray_Int[] )
