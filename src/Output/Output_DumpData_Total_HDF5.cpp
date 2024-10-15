@@ -3825,9 +3825,9 @@ herr_t H5_write_user( const hid_t H5_GroupID, const hid_t H5_TypeID, const HDF5_
 
       if ( type == 5 )
       {
-         int *temp = (int *)(HDF5_OutUser->Ptr[i]);
+         int temp = ( *(bool *)(HDF5_OutUser->Ptr[i]) ) ? 1 : 0;
 
-         memcpy( data + offset, temp, type_size );
+         memcpy( data + offset, &temp, type_size );
       }
       else
          memcpy( data + offset, HDF5_OutUser->Ptr[i], type_size );
