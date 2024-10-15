@@ -113,6 +113,7 @@ static FieldIdx_t ColorField3Idx = Idx_Undefined;
        double ClusterCen[3][3];           // the center of each cluster
        double BH_Pos[3][3];               // BH position of each cluster
        double BH_Vel[3][3];               // BH velocity of each cluster
+       double BH_Mass[3];                 // BH mass     of each cluster
 
        int     JetDirection_NBin;         // number of bins of the jet direction table
 static double *JetDirection = NULL;       // jet direction[time/theta_1/phi_1/theta_2/phi_2/theta_3/phi_3]
@@ -921,7 +922,9 @@ void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
 void HDF5_Output_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
 {
 
-   double BH_Mass[3] = { Bondi_MassBH1, Bondi_MassBH2, Bondi_MassBH3 };
+   BH_Mass[0] = Bondi_MassBH1;
+   BH_Mass[1] = Bondi_MassBH2;
+   BH_Mass[2] = Bondi_MassBH3;
 
    HDF5_OutUser->Add( "Merger_Coll_NumHalos", &Merger_Coll_NumHalos );
    for (int c=0; c<Merger_Coll_NumHalos; c++)
@@ -1219,8 +1222,6 @@ void Init_User_ClusterMerger()
 
    if ( OPT__RESTART_RESET )
       Aux_Error( ERROR_INFO, "OPT__RESTART_RESET should be disabled !!\n" );
-
-   double BH_Mass[3] = {0.0, 0.0, 0.0};
 
 #  ifdef SUPPORT_HDF5
    const char FileName[] = "RESTART";
