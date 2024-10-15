@@ -923,8 +923,7 @@ void HDF5_Output_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
 
    double BH_Mass[3] = { Bondi_MassBH1, Bondi_MassBH2, Bondi_MassBH3 };
 
-   HDF5_OutUser->Add( "Merger_CollNumHalos",  &Merger_Coll_NumHalos );
-   HDF5_OutUser->Add( "AdjustCount",          &AdjustCount          );
+   HDF5_OutUser->Add( "Merger_Coll_NumHalos", &Merger_Coll_NumHalos );
    for (int c=0; c<Merger_Coll_NumHalos; c++)
    {
       for (int d=0; d<3; d++)
@@ -941,6 +940,7 @@ void HDF5_Output_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
       sprintf( BH_Mass_name, "BH_Mass_%d", c );
       HDF5_OutUser->Add( BH_Mass_name, &BH_Mass[c] );
    }
+   HDF5_OutUser->Add( "AdjustCount", &AdjustCount );
 
 } // FUNCTION : HDF5_Output_User_Example
 #endif // #ifdef SUPPORT_HDF5
@@ -1043,7 +1043,6 @@ void Init_TestProb_Hydro_ClusterMerger()
 
    Flu_ResetByUser_Func_Ptr       = Flu_ResetByUser_Func_ClusterMerger;
    Flu_ResetByUser_API_Ptr        = Flu_ResetByUser_API_ClusterMerger;
-   Output_User_Ptr                = Output_ClusterMerger;
    Init_User_Ptr                  = Init_User_ClusterMerger;
 
 #  ifdef MHD
@@ -1219,18 +1218,15 @@ void Init_User_ClusterMerger()
    if ( OPT__INIT != INIT_BY_RESTART )   return;
 
    if ( OPT__RESTART_RESET )
-   {
-      printf( "Error! OPT__RESTART_RESET should be disabled.\n" );
-      return;
-   }
+      Aux_Error( ERROR_INFO, "OPT__RESTART_RESET should be disabled !!\n" );
 
-// TODO: Still developing
-/*
    double BH_Mass[3] = {0.0, 0.0, 0.0};
 
 #  ifdef SUPPORT_HDF5
    const char FileName[] = "RESTART";
+
    hid_t  H5_FileID, H5_SetID_OutputUser, H5_TypeID_OutputUser;
+   herr_t H5_Status;
 
    H5_FileID = H5Fopen( FileName, H5F_ACC_RDONLY, H5P_DEFAULT );
    if ( H5_FileID < 0 )
@@ -1250,9 +1246,9 @@ void Init_User_ClusterMerger()
       for (int d=0; d<3; d++)
       {
          char BH_Pos_name[50], ClusterCen_name[50], BH_Vel_name[50];
-         sprintf( BH_Pos_name, "BH_Pos_%d_%d", c, d );
+         sprintf( BH_Pos_name,     "BH_Pos_%d_%d",     c, d );
          sprintf( ClusterCen_name, "ClusterCen_%d_%d", c, d );
-         sprintf( BH_Vel_name, "BH_Vel_%d_%d", c, d );
+         sprintf( BH_Vel_name,     "BH_Vel_%d_%d",     c, d );
          LoadField( BH_Pos_name,     &BH_Pos[c][d],     H5_SetID_OutputUser, H5_TypeID_OutputUser );
          LoadField( ClusterCen_name, &ClusterCen[c][d], H5_SetID_OutputUser, H5_TypeID_OutputUser );
          LoadField( BH_Vel_name,     &BH_Vel[c][d],     H5_SetID_OutputUser, H5_TypeID_OutputUser );
@@ -1262,83 +1258,15 @@ void Init_User_ClusterMerger()
       LoadField( BH_Mass_name, &BH_Mass[c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
    }
    LoadField( "AdjustCount", &AdjustCount, H5_SetID_OutputUser, H5_TypeID_OutputUser );
-#  endif
+
+   H5_Status = H5Tclose( H5_TypeID_OutputUser );
+   H5_Status = H5Dclose( H5_SetID_OutputUser );
+   H5_Status = H5Fclose( H5_FileID );
 
    Bondi_MassBH1 = BH_Mass[0];
    Bondi_MassBH2 = BH_Mass[1];
    Bondi_MassBH3 = BH_Mass[2];
-*/
-
-   const char FileName[] = "BH_variable.bin";
-   int TargetDumpID = DumpID-1;  //INIT_DUMPID;
-
-   FILE* File_User = fopen( FileName, "rb" );
-   if ( File_User == NULL )
-   {
-      Aux_Error( ERROR_INFO, "Error opening the file \"%s\"\n", FileName );
-      return;
-   }
-
-   if ( MPI_Rank == 0 )
-   {
-      double BH_Mass[3] = {0.0, 0.0, 0.0};
-      double Time;
-      int    dumpID;
-
-      while ( fread( &Time, sizeof(double), 1, File_User ) == 1 )
-      {
-         fread( &dumpID, sizeof(int), 1, File_User );
-         printf( "dumpID = %d, TargetDumpID = %d\n", dumpID, TargetDumpID );
-         if ( dumpID == TargetDumpID )
-         {
-            fread( &Merger_Coll_NumHalos, sizeof(int), 1, File_User );
-            for (int c=0; c<Merger_Coll_NumHalos; c++)
-            {
-               for (int d=0; d<3; d++)   fread( &BH_Pos[c][d],     sizeof(double), 1, File_User );
-               for (int d=0; d<3; d++)   fread( &ClusterCen[c][d], sizeof(double), 1, File_User );
-               for (int d=0; d<3; d++)   fread( &BH_Vel[c][d],     sizeof(double), 1, File_User );
-               fread( &BH_Mass[c], sizeof(double), 1, File_User );
-            }
-            fread( &AdjustCount, sizeof(int), 1, File_User );
-            break;
-         }
-         else
-         {
-            int temp;
-            fread( &temp, sizeof(int), 1, File_User );
-            for (int c=0; c<temp; c++)
-            {
-               fseek( File_User, sizeof(double)*3, SEEK_CUR );
-               fseek( File_User, sizeof(double)*3, SEEK_CUR );
-               fseek( File_User, sizeof(double)*3, SEEK_CUR );
-               fseek( File_User, sizeof(double),   SEEK_CUR );
-            }
-            fseek( File_User, sizeof(int), SEEK_CUR );
-         } // if ( dumpID == TargetDumpID ) ... else ...
-      } // while ( fread( &Time, sizeof(double), 1, File_User ) == 1 )
-
-      Bondi_MassBH1 = BH_Mass[0];
-      Bondi_MassBH2 = BH_Mass[1];
-      Bondi_MassBH3 = BH_Mass[2];
-
-      fclose( File_User );
-
-      printf( "Restarting! BH_Pos[0][0] = %23.17e, BH_Pos[0][1] = %23.17e\n", BH_Pos[0][0], BH_Pos[0][1] );
-   }  // if ( MPI_Rank == 0 )
-
-
-   MPI_Bcast( &Merger_Coll_NumHalos, 1, MPI_INT, 0, MPI_COMM_WORLD );
-   for (int c=0; c<Merger_Coll_NumHalos; c++)
-   {
-      MPI_Bcast( BH_Pos[c],     3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-      MPI_Bcast( BH_Vel[c],     3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-      MPI_Bcast( ClusterCen[c], 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-   }
-   MPI_Bcast( &Bondi_MassBH1, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-   MPI_Bcast( &Bondi_MassBH2, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-   MPI_Bcast( &Bondi_MassBH3, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-   MPI_Bcast( &AdjustCount,   1, MPI_INT,    0, MPI_COMM_WORLD );
-
+#  endif // #ifdef SUPPORT_HDF5
 
 } // FUNCTION : Init_User_ClusterMerger
 
@@ -1353,10 +1281,6 @@ void Init_User_ClusterMerger()
 //                2. Memory must be allocated for FieldPtr in advance with sufficent size (except for "char *")
 //                3. For loading a string, which has (type(FieldPtr) = (char *)), the memory must be freed
 //                   manually by calling free()
-//                4. It can also compare the loaded variables (FieldPtr) with the reference values (ComprPtr)
-//                   (perform comparison only if "NCompr > 0")
-//                   --> Please make sure that "FieldPtr" and "ComprPtr" point to the same type since we
-//                       use the type of "ComprPtr" to typecast "FieldPtr"
 //
 // Parameter   :  FieldName        : Name of the target field
 //                FieldPtr         : Pointer to store the retrieved data
@@ -1369,7 +1293,6 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
                   const hid_t H5_TypeID_Target )
 {
 
-   bool   Check_Pass = true;
    int    H5_FieldIdx;
    size_t H5_FieldSize;
    hid_t  H5_TypeID_Field;    // datatype ID of the target field in the compound variable
@@ -1394,70 +1317,13 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
       H5_Status        = H5Tclose( H5_TypeID_Field );
       H5_Status        = H5Tclose( H5_TypeID_Load  );
    } // if ( H5_FieldIdx >= 0 )
-
    else
    {
-      if ( MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : target field \"%s\" does not exist in the restart file !!\n", FieldName );
-
+      Aux_Error( ERROR_INFO, "target field \"%s\" does not exist in the restart file !!\n", FieldName );
       return -1;
    } // if ( H5_FieldIdx >= 0 ) ... else ...
 
-   return (Check_Pass) ? 0 : -3;
+   return 0;
 
 } // FUNCTION : LoadField
-#endif
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  OutputClusterMerger
-// Description :  Output the BH variables (pos, vel, mass, AdjustCount) in the ClusterMerger problem
-//
-// Note        :  1. Enabled by the runtime option "OPT__OUTPUT_USER"
-//                2. Ensure restart runs can get identical values
-//
-// Parameter   :  None
-//
-// Return      :  None
-//-------------------------------------------------------------------------------------------------------
-void Output_ClusterMerger()
-{
-   const char FileName[] = "BH_variable.bin";
-   static bool FirstTime = true;
-
-   if ( FirstTime )
-   {
-      if ( MPI_Rank == 0 )
-      {
-         if ( Aux_CheckFileExist( FileName ) )
-            Aux_Message( stderr, "WARNING: file \"%s\" already exists !!\n", FileName );
-      }
-      FirstTime = false;
-   } // if ( FirstTime )
-
-   double BH_Mass[3] = { Bondi_MassBH1, Bondi_MassBH2, Bondi_MassBH3 };
-
-   if ( MPI_Rank == 0 )
-   {
-      FILE* File_User = fopen( FileName, "ab" );
-
-      double time = Time[0] * UNIT_T / Const_Myr;
-      fwrite( &time,                 sizeof(double), 1, File_User );
-      fwrite( &DumpID,               sizeof(int),    1, File_User );
-      fwrite( &Merger_Coll_NumHalos, sizeof(int),    1, File_User );
-
-      for (int c=0; c<Merger_Coll_NumHalos; c++)
-      {
-         for (int d=0; d<3; d++)   fwrite( &BH_Pos[c][d],     sizeof(double), 1, File_User );
-         for (int d=0; d<3; d++)   fwrite( &ClusterCen[c][d], sizeof(double), 1, File_User );
-         for (int d=0; d<3; d++)   fwrite( &BH_Vel[c][d],     sizeof(double), 1, File_User );
-         fwrite( &BH_Mass[c], sizeof(double), 1, File_User );
-      }
-      fwrite( &AdjustCount, sizeof(int), 1, File_User );
-      fclose( File_User );
-
-      printf( "Saving BH_variables! DumpID = %d, BH_Pos[0][0] = %23.17e, BH_Pos[0][1] = %23.17e\n", DumpID, BH_Pos[0][0], BH_Pos[0][1] );
-   } // if ( MPI_Rank == 0 )
-
-} // FUNCTION : Output_ClusterMerger
+#endif // #ifdef SUPPORT_HDF5
