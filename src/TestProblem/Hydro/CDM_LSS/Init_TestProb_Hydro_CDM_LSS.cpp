@@ -198,8 +198,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
 {
 
-   char Empty[MAX_STRING] = "Empty";
-   HDF5_InputTest->Add( "Empty",  Empty );
+// nothing to store here
+   HDF5_InputTest->Add( "Empty", &TESTPROB_ID  );
 
 } // FUNCTION : Output_HDF5_TestProb
 #endif // #ifdef SUPPORT_HDF5
