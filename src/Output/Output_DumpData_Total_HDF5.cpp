@@ -3733,12 +3733,12 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  GetCompound_HDF5_Output
-// Description :  Write the data stored in HDF5_OutUser to HDF5
+// Description :  Create the HDF5 compound datatype for HDF5_Output_t
 //
-// Note        :  1. Data structure is defined in "HDF5_Typedef.h"
+// Note        :  1. Data structure HDF5_Output_t is defined in "HDF5_Typedef.h"
 //                2. Supported int, long, uint, ulong, int, float, double, and string data type
 //
-// Parameter   :  H5_GroupID   : the group id of HDF5 to write the datasets
+// Parameter   :  H5_TypeID    : the type id of HDF5 to write the datasets
 //                HDF5_OutUser : the structure storing the parameters to be written in HDF5
 //-------------------------------------------------------------------------------------------------------
 void GetCompound_HDF5_Output( hid_t &H5_TypeID, const HDF5_Output_t *HDF5_OutUser )
