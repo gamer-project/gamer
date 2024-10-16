@@ -19,7 +19,7 @@ void (*Output_HDF5_TestProb_Ptr)( HDF5_Output_t *HDF5_InputTest ) = NULL;
 void (*Output_HDF5_User_Ptr)( HDF5_Output_t *HDF5_OutUser ) = NULL;
 static herr_t H5_write_user( const hid_t H5_GroupID, const hid_t H5_Type_ID, const HDF5_Output_t *HDF5_OutUser );
 
-static void HDF5_Output_User_Template( HDF5_Output_t *HDF5_OutUser );
+static void Output_HDF5_User_Template( HDF5_Output_t *HDF5_OutUser );
 
 
 
@@ -3847,24 +3847,24 @@ herr_t H5_write_user( const hid_t H5_GroupID, const hid_t H5_TypeID, const HDF5_
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  HDF5_Output_User_Template
+// Function    :  Output_HDF5_User_Template
 // Description :  Store the problem specific parameter in HDF5 outputs (Data_*) under User group
 //
 // Note         : 1. This function only works in MPI_RANK == 0
-//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype.
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype
 //                3. There MUST be more than one parameter to be stored
-//                4. The pointer of the data MUST still exist outside the function, e.g. global variables.
+//                4. The pointer of the data MUST still exist outside the function, e.g. global variables
 //
 // Parameter   :  HDF5_OutUser : the structure storing the parameters
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void HDF5_Output_User_Template( HDF5_Output_t *HDF5_OutUser )
+void Output_HDF5_User_Template( HDF5_Output_t *HDF5_OutUser )
 {
 
    HDF5_OutUser->Add( "dTime_Base",  &dTime_Base );
 
-} // FUNCTION : HDF5_Output_User_Template
+} // FUNCTION : Output_HDF5_User_Template
 
 
 

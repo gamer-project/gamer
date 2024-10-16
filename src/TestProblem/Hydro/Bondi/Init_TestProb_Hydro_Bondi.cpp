@@ -490,18 +490,19 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 #ifdef SUPPORT_HDF5
 //-------------------------------------------------------------------------------------------------------
-// Function    :  HDF5_Output_TestProb
+// Function    :  Output_HDF5_TestProb
 // Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
 //
 // Note         : 1. This function only works in MPI_RANK == 0
-//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype.
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype
 //                3. There MUST be more than one parameter to be stored
+//                4. The pointer of the data MUST still exist outside the function, e.g. global variables
 //
 // Parameter   :  HDF5_InputTest : the structure storing the parameters
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
+void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
 {
 
    HDF5_InputTest->Add( "Bondi_MassBH",          &Bondi_MassBH          );
@@ -528,7 +529,7 @@ void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
    HDF5_InputTest->Add( "Bondi_HSE_Pres_NormT",  &Bondi_HSE_Pres_NormT  );
    HDF5_InputTest->Add( "Bondi_HSE_Beta_Rcore",  &Bondi_HSE_Beta_Rcore  );
 
-} // FUNCTION : HDF5_Output_TestProb
+} // FUNCTION : Output_HDF5_TestProb
 #endif // #ifdef SUPPORT_HDF5
 
 
@@ -722,7 +723,7 @@ void Init_TestProb_Hydro_Bondi()
    Init_ExtAcc_Ptr          = Init_ExtAcc_Bondi;
 #  endif
 #  ifdef SUPPORT_HDF5
-   Output_HDF5_TestProb_Ptr = HDF5_Output_TestProb;
+   Output_HDF5_TestProb_Ptr = Output_HDF5_TestProb;
 #  endif
 #  endif // #if ( MODEL == HYDRO  &&  defined GRAVITY )
 

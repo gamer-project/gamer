@@ -20,7 +20,7 @@ static void SetBFieldIC( real magnetic[], const double x, const double y, const 
                          const int lv, double AuxArray[] );
 #endif
 #ifdef SUPPORT_HDF5
-static void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest );
+static void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest );
 #endif
 
 
