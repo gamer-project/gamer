@@ -315,9 +315,6 @@ void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
 
 } // FUNCTION : HDF5_Output_TestProb
 #endif // #ifdef SUPPORT_HDF5
-
-
-
 #endif // #if ( MODEL == HYDRO )
 
 

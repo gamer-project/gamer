@@ -546,9 +546,6 @@ void AddNewField_Plummer()
    }
 
 } // FUNCTION : AddNewField_Plummer
-
-
-
 #endif // #if ( MODEL == HYDRO )
 
 

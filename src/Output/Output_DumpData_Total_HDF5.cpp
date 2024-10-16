@@ -495,7 +495,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 //    3-4-4. InputPara
       H5_SetID_InputPara = H5Dcreate( H5_GroupID_Info, "InputPara", H5_TypeID_Com_InputPara, H5_SpaceID_Scalar,
-                                        H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
+                                      H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
       if ( H5_SetID_InputPara < 0 ) Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", "InputPara" );
       H5_Status          = H5Dwrite( H5_SetID_InputPara, H5_TypeID_Com_InputPara, H5S_ALL, H5S_ALL, H5P_DEFAULT, &InputPara );
       H5_Status          = H5Dclose( H5_SetID_InputPara );
