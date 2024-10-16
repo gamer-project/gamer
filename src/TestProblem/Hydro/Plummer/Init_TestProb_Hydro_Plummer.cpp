@@ -589,7 +589,7 @@ void Init_TestProb_Hydro_Plummer()
    FB_Init_User_Ptr        = FB_Init_Plummer;
 #  endif
 #  ifdef SUPPORT_HDF5
-   HDF5_Output_TestProb_Ptr = HDF5_Output_TestProb;
+   Output_HDF5_TestProb_Ptr = HDF5_Output_TestProb;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

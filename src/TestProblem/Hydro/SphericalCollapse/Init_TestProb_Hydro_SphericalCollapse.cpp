@@ -268,7 +268,7 @@ void Init_TestProb_Hydro_SphericalCollapse()
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr   = SetGridIC;
 #  ifdef SUPPORT_HDF5
-   HDF5_Output_TestProb_Ptr = HDF5_Output_TestProb;
+   Output_HDF5_TestProb_Ptr = HDF5_Output_TestProb;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

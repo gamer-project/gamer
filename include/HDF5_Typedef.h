@@ -894,7 +894,7 @@ inline void SyncHDF5File( const char *FileName )
 // Structure   :  HDF5_Output_t
 // Description :  Data structure for outputting the user run-time parameters
 //
-// Note        :  1. Run-time parameters are stored by HDF5_Output_User_Ptr or HDF5_Output_TestProb_Ptr function
+// Note        :  1. Run-time parameters are stored by Output_HDF5_User_Ptr or Output_HDF5_TestProb_Ptr function
 //-------------------------------------------------------------------------------------------------------
 struct HDF5_Output_t
 {

@@ -389,7 +389,7 @@ void Init_TestProb_Hydro_AcousticWave()
    Init_Function_User_Ptr   = SetGridIC;
    Output_User_Ptr          = OutputError;
 #  ifdef SUPPORT_HDF5
-   HDF5_Output_TestProb_Ptr = HDF5_Output_TestProb;
+   Output_HDF5_TestProb_Ptr = HDF5_Output_TestProb;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

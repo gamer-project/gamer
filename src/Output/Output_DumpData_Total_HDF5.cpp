@@ -15,8 +15,8 @@ static void GetCompound_SymConst   ( hid_t &H5_TypeID );
 static void GetCompound_InputPara  ( hid_t &H5_TypeID, const int NFieldStored );
 static void GetCompound_HDF5_Output( hid_t &H5_TypeID, const HDF5_Output_t *HDF5_OutUser );
 
-void (*HDF5_Output_TestProb_Ptr)( HDF5_Output_t *HDF5_InputTest ) = NULL;
-void (*HDF5_Output_User_Ptr)( HDF5_Output_t *HDF5_OutUser ) = NULL;
+void (*Output_HDF5_TestProb_Ptr)( HDF5_Output_t *HDF5_InputTest ) = NULL;
+void (*Output_HDF5_User_Ptr)( HDF5_Output_t *HDF5_OutUser ) = NULL;
 static herr_t H5_write_user( const hid_t H5_GroupID, const hid_t H5_Type_ID, const HDF5_Output_t *HDF5_OutUser );
 
 static void HDF5_Output_User_Template( HDF5_Output_t *HDF5_OutUser );
@@ -283,7 +283,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       Aux_Message( stderr, "WARNING : file \"%s\" already exists and will be overwritten !!\n", FileName );
 
 // check the output test problem
-   if ( HDF5_Output_TestProb_Ptr == NULL )   Aux_Error( ERROR_INFO, "HDF5_Output_TestProb_Ptr == NULL !!\n" );
+   if ( Output_HDF5_TestProb_Ptr == NULL )   Aux_Error( ERROR_INFO, "Output_HDF5_TestProb_Ptr == NULL !!\n" );
 
 
 
@@ -449,8 +449,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       FillIn_Makefile ( Makefile );
       FillIn_SymConst ( SymConst );
       FillIn_InputPara( InputPara, NFieldStored, FieldLabelOut );
-      HDF5_Output_TestProb_Ptr( &HDF5_InputTest );
-      if ( HDF5_Output_User_Ptr     != NULL )   HDF5_Output_User_Ptr( &HDF5_OutputUser );
+      Output_HDF5_TestProb_Ptr( &HDF5_InputTest );
+      if ( Output_HDF5_User_Ptr != NULL )   Output_HDF5_User_Ptr( &HDF5_OutputUser );
 
 
 //    3-2. create the "compound" datatype
@@ -459,7 +459,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       GetCompound_SymConst   ( H5_TypeID_Com_SymConst );
       GetCompound_InputPara  ( H5_TypeID_Com_InputPara, NFieldStored );
       GetCompound_HDF5_Output( H5_TypeID_Com_InputTest, &HDF5_InputTest );
-      if ( HDF5_Output_User_Ptr     != NULL )   GetCompound_HDF5_Output( H5_TypeID_Com_OutputUser, &HDF5_OutputUser );
+      if ( Output_HDF5_User_Ptr != NULL )   GetCompound_HDF5_Output( H5_TypeID_Com_OutputUser, &HDF5_OutputUser );
 
 
 //    3-3. create the HDF5 file (overwrite the existing file)
@@ -515,14 +515,14 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       if ( H5_GroupID_User < 0 )     Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "User" );
 
 //    3-5-1. OutputUser
-      if ( HDF5_Output_User_Ptr != NULL )
+      if ( Output_HDF5_User_Ptr != NULL )
       {
          H5_SetID_OutputUser = H5Dcreate( H5_GroupID_User, "OutputUser", H5_TypeID_Com_OutputUser, H5_SpaceID_Scalar,
                                           H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
          if ( H5_SetID_OutputUser < 0 ) Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", "OutputUser" );
          H5_Status           = H5_write_user( H5_SetID_OutputUser, H5_TypeID_Com_OutputUser, &HDF5_OutputUser );
          H5_Status           = H5Dclose( H5_SetID_OutputUser );
-      } // if ( HDF5_Output_User_Ptr != NULL )
+      } // if ( Output_HDF5_User_Ptr != NULL )
 
       H5_Status = H5Gclose( H5_GroupID_User );
       H5_Status = H5Fclose( H5_FileID );
@@ -1527,8 +1527,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       H5_Status = H5Tclose( H5_TypeID_Com_Makefile  );
       H5_Status = H5Tclose( H5_TypeID_Com_SymConst  );
       H5_Status = H5Tclose( H5_TypeID_Com_InputPara );
-      if ( HDF5_Output_TestProb_Ptr != NULL )   H5_Status = H5Tclose( H5_TypeID_Com_InputTest );
-      if ( HDF5_Output_User_Ptr     != NULL )   H5_Status = H5Tclose( H5_TypeID_Com_OutputUser );
+      if ( Output_HDF5_TestProb_Ptr != NULL )   H5_Status = H5Tclose( H5_TypeID_Com_InputTest );
+      if ( Output_HDF5_User_Ptr     != NULL )   H5_Status = H5Tclose( H5_TypeID_Com_OutputUser );
    } // if ( MPI_Rank == 0 )
    H5_Status = H5Sclose( H5_SpaceID_Scalar );
    H5_Status = H5Pclose( H5_DataCreatePropList );

@@ -568,7 +568,7 @@ void Init_TestProb_Hydro_AGORA_IsolatedGalaxy()
    Par_Init_ByFunction_Ptr     = Par_Init_ByFunction_AGORA;
    Par_Init_Attribute_User_Ptr = AddNewParticleAttribute_AGORA;
 #  ifdef SUPPORT_HDF5
-   HDF5_Output_TestProb_Ptr    = HDF5_Output_TestProb;
+   Output_HDF5_TestProb_Ptr    = HDF5_Output_TestProb;
 #  endif
 #  endif // if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 

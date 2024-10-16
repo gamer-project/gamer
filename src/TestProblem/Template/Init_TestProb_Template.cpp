@@ -343,8 +343,8 @@ void Init_TestProb_Template()
    FB_Init_User_Ptr                  = NULL; // option: FB_USER;                      example: TestProblem/Hydro/Plummer/FB_Plummer.cpp
 #  endif
 #  ifdef SUPPORT_HDF5
-   HDF5_Output_TestProb_Ptr          = HDF5_Output_TestProb;
-   HDF5_Output_User_Ptr              = NULL; //                                       example: Output/Output_DumData_Total_HDF5.cpp --> HDF5_Output_User_Template()
+   Output_HDF5_TestProb_Ptr          = HDF5_Output_TestProb;
+   Output_HDF5_User_Ptr              = NULL; //                                       example: Output/Output_DumData_Total_HDF5.cpp --> HDF5_Output_User_Template()
 #  endif
 
 

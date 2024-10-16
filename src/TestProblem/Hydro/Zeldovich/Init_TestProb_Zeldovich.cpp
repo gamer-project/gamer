@@ -598,7 +598,7 @@ void Init_TestProb_Hydro_Zeldovich()
 #  endif // #ifdef PARTICLE
    Output_User_Ptr          = ( Gas_Par_Setup == 1 ) ? OutputError : NULL; // output gas numerical and analytical profiles
 #  ifdef SUPPORT_HDF5
-   HDF5_Output_TestProb_Ptr = HDF5_Output_TestProb;
+   Output_HDF5_TestProb_Ptr = HDF5_Output_TestProb;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

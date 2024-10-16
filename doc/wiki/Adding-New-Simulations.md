@@ -566,17 +566,17 @@ Add a user-specified feedback. See [[FB_USER | Feedback#FB_USER]] for details.
 
 ### HDF5 Output
 * **Description:**
-Store user-specified variables. Similar usage of as [Store Problem-specific Variables](#ix-store-problem-specific-variables). 
+Store user-specified variables. Similar usage of as [Store Problem-specific Variables](#ix-store-problem-specific-variables).
 * **Prototype:**
    * `void HDF5_Output_User_NewProblem( HDF5_Output_t *HDF5_OutUser );`
 * **Function Pointer:**
-   * `HDF5_Output_User_Ptr`
+   * `Output_HDF5_User_Ptr`
 * **Compilation Option:**
 None
 * **Runtime Option:**
 None
 * **Example:**
-   * `Output/Output_DumData_Total_HDF5.cpp` --> `HDF5_Output_User_Example()`
+   * `Output/Output_DumData_Total_HDF5.cpp` --> `HDF5_Output_User_Template()`
 
 
 ## VII. Add Problem-specific Validators

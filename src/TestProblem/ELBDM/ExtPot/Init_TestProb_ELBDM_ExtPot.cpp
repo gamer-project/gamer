@@ -298,7 +298,7 @@ void Init_TestProb_ELBDM_ExtPot()
    SetGPUExtPot_Ptr         = SetGPUExtPot_PointMass;
 #  endif
 #  ifdef SUPPORT_HDF5
-   HDF5_Output_TestProb_Ptr = HDF5_Output_TestProb;
+   Output_HDF5_TestProb_Ptr = HDF5_Output_TestProb;
 #  endif
 #  endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
