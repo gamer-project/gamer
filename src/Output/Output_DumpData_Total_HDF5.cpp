@@ -454,12 +454,12 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 
 //    3-2. create the "compound" datatype
-      GetCompound_KeyInfo    ( H5_TypeID_Com_KeyInfo  );
-      GetCompound_Makefile   ( H5_TypeID_Com_Makefile );
-      GetCompound_SymConst   ( H5_TypeID_Com_SymConst );
-      GetCompound_InputPara  ( H5_TypeID_Com_InputPara, NFieldStored );
-      GetCompound_HDF5_Output( H5_TypeID_Com_InputTest, &HDF5_InputTest );
-      if ( Output_HDF5_User_Ptr != NULL )   GetCompound_HDF5_Output( H5_TypeID_Com_OutputUser, &HDF5_OutputUser );
+      GetCompound_KeyInfo  ( H5_TypeID_Com_KeyInfo  );
+      GetCompound_Makefile ( H5_TypeID_Com_Makefile );
+      GetCompound_SymConst ( H5_TypeID_Com_SymConst );
+      GetCompound_InputPara( H5_TypeID_Com_InputPara, NFieldStored );
+      GetCompound_Output   ( H5_TypeID_Com_InputTest, &HDF5_InputTest );
+      if ( Output_HDF5_User_Ptr != NULL )   GetCompound_Output( H5_TypeID_Com_OutputUser, &HDF5_OutputUser );
 
 
 //    3-3. create the HDF5 file (overwrite the existing file)
@@ -3741,7 +3741,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 // Parameter   :  H5_TypeID    : the type id of HDF5 to write the datasets
 //                HDF5_OutUser : the structure storing the parameters to be written in HDF5
 //-------------------------------------------------------------------------------------------------------
-void GetCompound_HDF5_General( hid_t &H5_TypeID, const HDF5_Output_t *HDF5_OutUser )
+void GetCompound_General( hid_t &H5_TypeID, const HDF5_Output_t *HDF5_OutUser )
 {
 
    if ( HDF5_OutUser->TotalSize == 0 )   Aux_Error( ERROR_INFO, "HDF5_Output_t structure can not be empty !!\n" );
