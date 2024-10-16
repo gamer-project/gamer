@@ -9,11 +9,11 @@ void FillIn_Makefile (  Makefile_t &Makefile  );
 void FillIn_SymConst (  SymConst_t &SymConst  );
 void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char FieldLabelOut[][MAX_STRING] );
 
-static void GetCompound_KeyInfo    ( hid_t &H5_TypeID );
-static void GetCompound_Makefile   ( hid_t &H5_TypeID );
-static void GetCompound_SymConst   ( hid_t &H5_TypeID );
-static void GetCompound_InputPara  ( hid_t &H5_TypeID, const int NFieldStored );
-static void GetCompound_HDF5_Output( hid_t &H5_TypeID, const HDF5_Output_t *HDF5_OutUser );
+static void GetCompound_KeyInfo  ( hid_t &H5_TypeID );
+static void GetCompound_Makefile ( hid_t &H5_TypeID );
+static void GetCompound_SymConst ( hid_t &H5_TypeID );
+static void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored );
+static void GetCompound_General  ( hid_t &H5_TypeID, const HDF5_Output_t *HDF5_OutUser );
 
 void (*Output_HDF5_TestProb_Ptr)( HDF5_Output_t *HDF5_InputTest ) = NULL;
 void (*Output_HDF5_User_Ptr)( HDF5_Output_t *HDF5_OutUser ) = NULL;
@@ -3732,7 +3732,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  GetCompound_HDF5_Output
+// Function    :  GetCompound_General
 // Description :  Create the HDF5 compound datatype for HDF5_Output_t
 //
 // Note        :  1. Data structure HDF5_Output_t is defined in "HDF5_Typedef.h"
@@ -3741,7 +3741,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 // Parameter   :  H5_TypeID    : the type id of HDF5 to write the datasets
 //                HDF5_OutUser : the structure storing the parameters to be written in HDF5
 //-------------------------------------------------------------------------------------------------------
-void GetCompound_HDF5_Output( hid_t &H5_TypeID, const HDF5_Output_t *HDF5_OutUser )
+void GetCompound_HDF5_General( hid_t &H5_TypeID, const HDF5_Output_t *HDF5_OutUser )
 {
 
    if ( HDF5_OutUser->TotalSize == 0 )   Aux_Error( ERROR_INFO, "HDF5_Output_t structure can not be empty !!\n" );
@@ -3775,7 +3775,7 @@ void GetCompound_HDF5_Output( hid_t &H5_TypeID, const HDF5_Output_t *HDF5_OutUse
    } // for (int i=0; i<HDF5_OutUser->NPara; i++)
    H5_Status = H5Tclose( H5_TypeID_VarStr );
 
-} // FUNCTION : GetCompound_HDF5_Output
+} // FUNCTION : GetCompound_General
 
 
 
