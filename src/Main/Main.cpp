@@ -384,7 +384,7 @@ real (*h_Flu_Array_USG_G[2])[GRA_NIN-1][PS1][PS1][PS1]             = { NULL, NUL
 
 // (3-4) Grackle chemistry
 #ifdef SUPPORT_GRACKLE
-real (*h_Che_Array[2])                                             = { NULL, NULL };
+real_che (*h_Che_Array[2])                                         = { NULL, NULL };
 grackle_field_data *Che_FieldData                                  = NULL;
 code_units Che_Units;
 #endif

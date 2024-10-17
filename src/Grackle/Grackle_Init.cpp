@@ -28,12 +28,12 @@ void Grackle_Init()
 
 
 // check
-// floating-point type (don't know how to validate it yet...)
-   /*
-   if ( typeid(real) != typeid(gr_float) )
-      Aux_Error( ERROR_INFO, "inconsistent floating-point type (GAMER: %d, Grackle: %d) !!\n",
-                 sizeof(real), sizeof(gr_float) );
-                 */
+// floating-point type (You can not compile with different type)
+/*
+   if ( typeid(real_che) != typeid(gr_float) )
+      Aux_Error( ERROR_INFO, "inconsistent floating-point type (GAMER(real_che): %d, Grackle: %d) !!\n",
+                 sizeof(real_che), sizeof(gr_float) );
+*/
 
 // comoving frame is not supported yet
 #  ifdef COMOVING
