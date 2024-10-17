@@ -23,7 +23,6 @@ Mandatory steps are marked by &#x1F4CC;.
    *  [HDF5 Output](#hdf5-output)
 7. [Add Problem-specific Validators](#vii-add-problem-specific-validators)
 8. [Store Problem-specific Input Files](#viii-store-problem-specific-input-files)
-9. [Store Problem-specific Variables](#ix-store-problem-specific-variables) &#x1F4CC;
 
 
 ## I. Register a New Problem
@@ -192,7 +191,34 @@ during the runtime.
     }
     ```
 
-4. Add these parameters to the input file `Input__TestProb`
+4. Edit the function `Output_HDF5_TestProb()` to store the variables in HDF5 files.
+   ```c++
+   void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
+   {
+
+      HDF5_InputTest->Add( "var_bool",   &var_bool   );
+      HDF5_InputTest->Add( "var_double", &var_double );
+      HDF5_InputTest->Add( "var_int",    &var_int    );
+      HDF5_InputTest->Add( "var_str",     var_str    );
+
+   } // FUNCTION : Output_HDF5_TestProb
+   ```
+> [!NOTE]
+> You should contain all the variables in step 2 of [Add Problem-specific Parameters](#iv-add-problem-specific-parameters)
+
+> [!CAUTION]
+> There should be at least one variable to store. Otherwise, it should be like
+> ```c++
+> void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
+> {
+>
+>    HDF5_InputTest->Add( "Empty",  &TESTPROB_ID );
+>
+> } // FUNCTION : Output_HDF5_TestProb
+> ```
+> See `src/TestProblem/Hydro/CDM_LSS/Init_TestProb_Hydro_CDM_LSS.cpp`.
+
+5. Add these parameters to the input file `Input__TestProb`
 (see [[Input__TestProb | Runtime-Parameters#input__testprob]]
 for the file format).
 This file must be put in the same directory as the executable `gamer`
@@ -638,37 +664,6 @@ and other relevant files such as README and analysis scripts.
 3. Edit `README` to help conduct this test problem.
 
 4. Add analysis scripts (if any).
-
-
-## IX. Store Problem-specific Variables
-
-1. Edit the function `Output_HDF5_TestProb()` to store the variables in HDF5 files.
-   ```c++
-   void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
-   {
-
-      HDF5_InputTest->Add( "var_bool",   &var_bool   );
-      HDF5_InputTest->Add( "var_double", &var_double );
-      HDF5_InputTest->Add( "var_int",    &var_int    );
-      HDF5_InputTest->Add( "var_str",     var_str    );
-
-   } // FUNCTION : Output_HDF5_TestProb
-   ```
-> [!NOTE]
-> You should contain all the variables in step 2 of [Add Problem-specific Parameters](#iv-add-problem-specific-parameters)
-
-> [!CAUTION]
-> There should be at least one variable to store. Otherwise, it should be like
-> ```c++
-> void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
-> {
->
->    char Empty[MAX_STRING] = "Empty";
->    HDF5_InputTest->Add( "Empty",  Empty );
->
-> } // FUNCTION : Output_HDF5_TestProb
-> ```
-> See `src/TestProblem/Hydro/CDM_LSS/Init_TestProb_Hydro_CDM_LSS.cpp`.
 
 <br>
 
