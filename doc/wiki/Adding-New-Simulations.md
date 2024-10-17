@@ -20,6 +20,7 @@ Mandatory steps are marked by &#x1F4CC;.
    *  [External Potential](#external-potential)
    *  [Equation of State](#equation-of-state)
    *  [Feedback](#feedback)
+   *  [HDF5 Output](#hdf5-output)
 7. [Add Problem-specific Validators](#vii-add-problem-specific-validators)
 8. [Store Problem-specific Input Files](#viii-store-problem-specific-input-files)
 
@@ -190,7 +191,34 @@ during the runtime.
     }
     ```
 
-4. Add these parameters to the input file `Input__TestProb`
+4. Edit the function `Output_HDF5_TestProb()` to store the variables in HDF5 files.
+   ```c++
+   void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
+   {
+
+      HDF5_InputTest->Add( "var_bool",   &var_bool   );
+      HDF5_InputTest->Add( "var_double", &var_double );
+      HDF5_InputTest->Add( "var_int",    &var_int    );
+      HDF5_InputTest->Add( "var_str",     var_str    );
+
+   } // FUNCTION : Output_HDF5_TestProb
+   ```
+> [!NOTE]
+> You should contain all the variables in step 2.
+
+> [!CAUTION]
+> There should be at least one variable to store. Otherwise, it should be like
+> ```c++
+> void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
+> {
+>
+>    HDF5_InputTest->Add( "CDM_LSS_TestProb_ID",  &TESTPROB_ID );
+>
+> } // FUNCTION : Output_HDF5_TestProb
+> ```
+> See `src/TestProblem/Hydro/CDM_LSS/Init_TestProb_Hydro_CDM_LSS.cpp`.
+
+5. Add these parameters to the input file `Input__TestProb`
 (see [[Input__TestProb | Runtime-Parameters#input__testprob]]
 for the file format).
 This file must be put in the same directory as the executable `gamer`
@@ -562,6 +590,20 @@ Add a user-specified feedback. See [[FB_USER | Feedback#FB_USER]] for details.
 * **Example:**
    * `src/TestProblem/Hydro/Plummer/FB_Plummer.cpp`
 
+### HDF5 Output
+* **Description:**
+Store user-specified variables. Similar usage of as [Store Problem-specific Variables](#iv-store-problem-specific-variables).
+* **Prototype:**
+   * `void Output_HDF5_User_NewProblem( HDF5_Output_t *HDF5_OutUser );`
+* **Function Pointer:**
+   * `Output_HDF5_User_Ptr`
+* **Compilation Option:**
+[[SUPPORT_HDF5 | Installation: Simulation-Options#SUPPORT_HDF5]]
+* **Runtime Option:**
+None
+* **Example:**
+   * `Output/Output_DumData_Total_HDF5.cpp` --> `Output_HDF5_User_Template()`
+
 
 ## VII. Add Problem-specific Validators
 
@@ -621,7 +663,6 @@ and other relevant files such as README and analysis scripts.
 3. Edit `README` to help conduct this test problem.
 
 4. Add analysis scripts (if any).
-
 
 <br>
 
