@@ -894,7 +894,7 @@ inline void SyncHDF5File( const char *FileName )
 // Structure   :  HDF5_Output_t
 // Description :  Data structure for outputting the user run-time parameters
 //
-// Note        :  1. Run-time parameters are stored by HDF5_Output_User_Ptr or HDF5_Output_TestProb_Ptr function
+// Note        :  1. Run-time parameters are stored by Output_HDF5_User_Ptr or Output_HDF5_TestProb_Ptr function
 //-------------------------------------------------------------------------------------------------------
 struct HDF5_Output_t
 {
@@ -942,7 +942,7 @@ struct HDF5_Output_t
 //
 // Note        :  1. This function stores the name, address, and data type of the parameter
 //                2. Data type (e.g., integer, float, ...) is determined by the input pointer
-//                4. String parameters are handled by a separate overloaded function
+//                3. String parameters are handled by a separate overloaded function
 //===================================================================================
    template <typename T>
    void Add( const char NewKey[], T* NewPtr )

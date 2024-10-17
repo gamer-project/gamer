@@ -239,18 +239,19 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 
 #ifdef SUPPORT_HDF5
 //-------------------------------------------------------------------------------------------------------
-// Function    :  HDF5_Output_TestProb
+// Function    :  Output_HDF5_TestProb
 // Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
 //
 // Note         : 1. This function only works in MPI_RANK == 0
-//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype.
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype
 //                3. There MUST be more than one parameter to be stored
+//                4. The pointer of the data MUST still exist outside the function, e.g. global variables
 //
 // Parameter   :  HDF5_InputTest : the structure storing the parameters
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
+void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
 {
 
    HDF5_InputTest->Add( "var_bool",   &var_bool   );
@@ -258,11 +259,8 @@ void HDF5_Output_TestProb( HDF5_Output_t *HDF5_InputTest )
    HDF5_InputTest->Add( "var_int",    &var_int    );
    HDF5_InputTest->Add( "var_str",     var_str    );
 
-} // FUNCTION : HDF5_Output_TestProb
+} // FUNCTION : Output_HDF5_TestProb
 #endif // #ifdef SUPPORT_HDF5
-
-
-
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -346,8 +344,8 @@ void Init_TestProb_Template()
    FB_Init_User_Ptr                  = NULL; // option: FB_USER;                      example: TestProblem/Hydro/Plummer/FB_Plummer.cpp
 #  endif
 #  ifdef SUPPORT_HDF5
-   HDF5_Output_TestProb_Ptr          = HDF5_Output_TestProb;
-   HDF5_Output_User_Ptr              = NULL; //                                       example: Output/Output_DumData_Total_HDF5.cpp --> HDF5_Output_User_Example()
+   Output_HDF5_TestProb_Ptr          = Output_HDF5_TestProb;
+   Output_HDF5_User_Ptr              = NULL; //                                       example: Output/Output_DumData_Total_HDF5.cpp --> Output_HDF5_User_Template()
 #  endif
 
 
