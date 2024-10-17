@@ -3750,6 +3750,7 @@ void GetCompound_General( hid_t &H5_TypeID, const HDF5_Output_t *HDF5_OutUser )
    hid_t  H5_Type;
    hid_t  H5_TypeID_VarStr = H5Tcopy( H5T_C_S1 );
 
+   H5_Status = H5Tset_size( H5_TypeID_VarStr, MAX_STRING ); // H5T_VARIABLE will cause segmentation fault
    H5_TypeID = H5Tcreate( H5T_COMPOUND, HDF5_OutUser->TotalSize );
 
    size_t offset = 0;
@@ -3766,7 +3767,7 @@ void GetCompound_General( hid_t &H5_TypeID, const HDF5_Output_t *HDF5_OutUser )
          case 6: H5_Type = H5T_NATIVE_FLOAT;  break;
          case 7: H5_Type = H5T_NATIVE_DOUBLE; break;
          case 8: H5_Type = H5_TypeID_VarStr;  break;
-         default: Aux_Error( ERROR_INFO, "Unrecognize type: %d !!\n", type ); break;
+         default: Aux_Error( ERROR_INFO, "Unrecognized type: %d !!\n", type ); break;
       } // switch ( type )
 
       H5Tinsert( H5_TypeID, HDF5_OutUser->Key[i], offset, H5_Type );
@@ -3801,9 +3802,9 @@ herr_t H5_write_user( const hid_t H5_GroupID, const hid_t H5_TypeID, const HDF5_
 
    H5_SpaceID_Scalar = H5Screate( H5S_SCALAR );
    H5_TypeID_VarStr  = H5Tcopy( H5T_C_S1 );
-   H5_Status         = H5Tset_size( H5_TypeID_VarStr, H5T_VARIABLE );
+   H5_Status         = H5Tset_size( H5_TypeID_VarStr, MAX_STRING ); // H5T_VARIABLE will cause segmentation fault
 
-   char  data[HDF5_OutUser->TotalSize];
+   char   data[HDF5_OutUser->TotalSize];
    size_t offset = 0;
 
    for (int i=0; i<HDF5_OutUser->NPara; i++)
@@ -3820,7 +3821,7 @@ herr_t H5_write_user( const hid_t H5_GroupID, const hid_t H5_TypeID, const HDF5_
          case 6: H5_Type = H5T_NATIVE_FLOAT;  break;
          case 7: H5_Type = H5T_NATIVE_DOUBLE; break;
          case 8: H5_Type = H5_TypeID_VarStr;  break;
-         default: Aux_Error( ERROR_INFO, "Unrecognize type: %d !!\n", type ); break;
+         default: Aux_Error( ERROR_INFO, "Unrecognized type: %d !!\n", type ); break;
       } // switch ( type )
 
       if ( type == 5 )
