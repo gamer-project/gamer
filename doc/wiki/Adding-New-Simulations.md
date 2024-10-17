@@ -204,7 +204,7 @@ during the runtime.
    } // FUNCTION : Output_HDF5_TestProb
    ```
 > [!NOTE]
-> You should contain all the variables in step 2 of [Add Problem-specific Parameters](#iv-add-problem-specific-parameters)
+> You should contain all the variables in step 2.
 
 > [!CAUTION]
 > There should be at least one variable to store. Otherwise, it should be like

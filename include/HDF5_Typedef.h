@@ -914,12 +914,14 @@ struct HDF5_Output_t
 //===================================================================================
    HDF5_Output_t()
    {
+
       NPara     = 0;
       TotalSize = 0;
       Key       = new char   [NPARA_MAX][MAX_STRING];
       Ptr       = new void*  [NPARA_MAX];
       Type      = new int    [NPARA_MAX];
       TypeSize  = new size_t [NPARA_MAX];
+
    } // METHOD : HDF5_Output_t
 
 //===================================================================================
@@ -930,10 +932,12 @@ struct HDF5_Output_t
 //===================================================================================
    ~HDF5_Output_t()
    {
+
       delete [] Key;
       delete [] Ptr;
       delete [] Type;
       delete [] TypeSize;
+
    } // METHOD : ~HDF5_Output_t
 
 //===================================================================================
@@ -947,6 +951,7 @@ struct HDF5_Output_t
    template <typename T>
    void Add( const char NewKey[], T* NewPtr )
    {
+
       if ( NPara >= NPARA_MAX )  Aux_Error( ERROR_INFO, "exceed the maximum number of parameters (%d) !!\n", NPARA_MAX );
 
 //    parameter name
@@ -968,7 +973,8 @@ struct HDF5_Output_t
                     NewKey );
 
       TotalSize += TypeSize[NPara];
-      NPara ++;
+      NPara++;
+
    } // METHOD : Add
 
 //===================================================================================
@@ -979,6 +985,7 @@ struct HDF5_Output_t
 //===================================================================================
    void Add( const char NewKey[], char* NewPtr )
    {
+
       if ( NPara >= NPARA_MAX )  Aux_Error( ERROR_INFO, "exceed the maximum number of parameters (%d) !!\n", NPARA_MAX );
 
 //    parameter name
@@ -997,7 +1004,7 @@ struct HDF5_Output_t
       TypeSize[NPara] = (size_t)MAX_STRING;
 
       TotalSize += TypeSize[NPara];
-      NPara ++;
+      NPara++;
 
    } // METHOD : Add (string)
 

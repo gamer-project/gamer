@@ -199,7 +199,7 @@ void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
 {
 
 // nothing have to store here
-   HDF5_InputTest->Add( "CDM_LSS_TestProb_ID", &TESTPROB_ID  );
+   HDF5_InputTest->Add( "CDM_LSS_TestProb_ID", &TESTPROB_ID );
 
 } // FUNCTION : Output_HDF5_TestProb
 #endif // #ifdef SUPPORT_HDF5
