@@ -87,7 +87,8 @@ disabled). See the "Restriction" of each option carefully.**
 | <a name="STORE_PAR_ACC"></a> STORE_PAR_ACC | | Store particle acceleration (recommended) | |
 | <a name="STAR_FORMATION"></a> STAR_FORMATION | | Enable star formation | Must enable STORE_POT_GHOST when using STORE_PAR_ACC |
 | <a name="FEEDBACK"></a> FEEDBACK | | Enable feedback from particles to grids (and vice versa) | see [[here\|Feedback]] for details |
-| <a name="PAR_NATT_USER"></a> PAR_NATT_USER | &#8805; 0 | Number of user-defined particle attributes | See [[here\|Adding-New-Simulations#particle-attributes]] for details |
+| <a name="PAR_NATT_FLT_USER"></a> PAR_NATT_FLT_USER | &#8805; 0 | Number of user-defined particle float attributes | See [[here\|Adding-New-Simulations#particle-attributes]] for details |
+| <a name="PAR_NATT_INT_USER"></a> PAR_NATT_INT_USER | &#8805; 0 | Number of user-defined particle integer attributes | See [[here\|Adding-New-Simulations#particle-attributes]] for details |
 
 ### In Situ Python Analysis Options
 -- see [[In Situ Python Analysis | In-Situ-Python-Analysis]] for the related runtime parameters and other settings

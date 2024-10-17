@@ -6,7 +6,8 @@ Related options:
 [[FLOAT8_PAR | Installation: Simulation-Options#FLOAT8_PAR]], &nbsp;
 [[STORE_PAR_ACC | Installation: Simulation-Options#STORE_PAR_ACC]], &nbsp;
 [[STAR_FORMATION | Installation: Simulation-Options#STAR_FORMATION]], &nbsp;
-[[PAR_NATT_USER | Installation: Simulation-Options#PAR_NATT_USER]] &nbsp;
+[[PAR_NATT_FLT_USER | Installation: Simulation-Options#PAR_NATT_FLT_USER]] &nbsp;
+[[PAR_NATT_INT_USER | Installation: Simulation-Options#PAR_NATT_INT_USER]] &nbsp;
 
 
 ## Runtime Parameters
