@@ -79,7 +79,7 @@ void Init_MemAllocate_Grackle( const int Che_NPG )
 
 // allocate the input/output array for the Grackle solver
    for (int t=0; t<2; t++)
-      h_Che_Array[t] = new real [ (long)Che_NField*(long)Che_NPG*(long)CUBE(PS2) ];
+      h_Che_Array[t] = new real_che [ (long)Che_NField*(long)Che_NPG*(long)CUBE(PS2) ];
 
 } // FUNCTION : Init_MemAllocate_Grackle
 
