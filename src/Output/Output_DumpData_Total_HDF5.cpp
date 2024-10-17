@@ -458,8 +458,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       GetCompound_Makefile ( H5_TypeID_Com_Makefile );
       GetCompound_SymConst ( H5_TypeID_Com_SymConst );
       GetCompound_InputPara( H5_TypeID_Com_InputPara, NFieldStored );
-      GetCompound_Output   ( H5_TypeID_Com_InputTest, &HDF5_InputTest );
-      if ( Output_HDF5_User_Ptr != NULL )   GetCompound_Output( H5_TypeID_Com_OutputUser, &HDF5_OutputUser );
+      GetCompound_General  ( H5_TypeID_Com_InputTest, &HDF5_InputTest );
+      if ( Output_HDF5_User_Ptr != NULL )   GetCompound_General( H5_TypeID_Com_OutputUser, &HDF5_OutputUser );
 
 
 //    3-3. create the HDF5 file (overwrite the existing file)
