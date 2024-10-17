@@ -593,13 +593,12 @@ Add a user-specified feedback. See [[FB_USER | Feedback#FB_USER]] for details.
 ### HDF5 Output
 * **Description:**
 Store user-specified variables. Similar usage of as [Store Problem-specific Variables](#iv-store-problem-specific-variables).
-Only works when [[SUPPORT_HDF5 | Installation: Simulation-Options#SUPPORT_HDF5]] is enabled.
 * **Prototype:**
    * `void Output_HDF5_User_NewProblem( HDF5_Output_t *HDF5_OutUser );`
 * **Function Pointer:**
    * `Output_HDF5_User_Ptr`
 * **Compilation Option:**
-None
+[[SUPPORT_HDF5 | Installation: Simulation-Options#SUPPORT_HDF5]]
 * **Runtime Option:**
 None
 * **Example:**
