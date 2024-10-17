@@ -942,7 +942,7 @@ struct HDF5_Output_t
 //
 // Note        :  1. This function stores the name, address, and data type of the parameter
 //                2. Data type (e.g., integer, float, ...) is determined by the input pointer
-//                4. String parameters are handled by a separate overloaded function
+//                3. String parameters are handled by a separate overloaded function
 //===================================================================================
    template <typename T>
    void Add( const char NewKey[], T* NewPtr )
