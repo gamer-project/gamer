@@ -212,7 +212,7 @@ during the runtime.
 > void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
 > {
 >
->    HDF5_InputTest->Add( "Empty",  &TESTPROB_ID );
+>    HDF5_InputTest->Add( "CDM_LSS_TestProb_ID",  &TESTPROB_ID );
 >
 > } // FUNCTION : Output_HDF5_TestProb
 > ```
