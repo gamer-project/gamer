@@ -124,9 +124,6 @@ void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_
       ParVelY[p] = ParData1[5];
       ParVelZ[p] = ParData1[6];
       ParType[p] = ParData1[7]; // 1=CDM halo, 2=disk
-#     if ( PAR_NATT_USER == 1 ) // add particle label, not very reliable due to floating point error
-      AllAttribute[ParLabel_Idx][p] = NumOffset + p;
-#     endif
 
 //    synchronize all particles to the physical time at the base level
       amr->Par->Time[p] = Time[0];

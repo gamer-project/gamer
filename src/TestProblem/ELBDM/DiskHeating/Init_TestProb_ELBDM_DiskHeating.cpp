@@ -15,7 +15,6 @@ static void BC( real Array[], const int ArraySize[], real fluid[], const int NVa
                 const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
 static void End_DiskHeating();
-static void AddNewParticleAttribute();
 static double Get_Dispersion( double r );
 static double Halo_Density( double r );
 
@@ -35,16 +34,16 @@ static double  Alpha;                     // dimensionless, used for alpha-beta-
 static double  Beta;                      // dimensionless, used for alpha-beta-gamma density profile of the fixed halo
 static double  Gamma;                     // dimensionless, used for alpha-beta-gamma density profile of the fixed halo
 static char    DensTableFile[MAX_STRING]; // fixed halo density profile filename
-static double *DensTable = NULL;          // density table
+static double *DensTable = NULL;          // density table, radius should be in kpc and density should be in g/cm^3
 static int     DensTable_Nbin;            // number of bins of density table
 static bool    AddParWhenRestart;         // add a new disk to an existing snapshot, must enable OPT__RESTART_RESET
 static bool    AddParWhenRestartByFile;   // add a new disk via PAR_IC
 static long    AddParWhenRestartNPar;     // particle number of the new disk
 static int     NewDisk_RSeed;             // random seed for setting new disk particle position and velocity
-static double  Disk_Mass;                 // total mass of the new disk
-static double  Disk_R;                    // scale radius of the new disk
-static char    DispTableFile[MAX_STRING]; // velocity dispersion filename
-static double *DispTable = NULL;          // radius of velocity dispersion table
+static double  Disk_Mass;                 // thin disk total mass (code unit)
+static double  Disk_R;                    // thin disk scale radius (code unit)
+static char    DispTableFile[MAX_STRING]; // velocity dispersion table filename used for thin disk
+static double *DispTable = NULL;          // velocity dispersion table, radius should be in kpc and dispersion should be in km/s
 static int     DispTable_Nbin;            // number of bins of velocity dispersion table
 // =======================================================================================
 #ifdef PARTICLE
@@ -99,6 +98,10 @@ void Validate()
    {
       if ( FLAG_BUFFER_SIZE < 5 )
          Aux_Message( stderr, "WARNING : it's recommended to set FLAG_BUFFER_SIZE >= 5 for this test !!\n" );
+
+      if ( !OPT__RECORD_CENTER )
+         Aux_Message( stderr, "WARNING : it's recommended to set OPT__RECORD_CENTER = 1 for this test !!\n" );
+
    } // if ( MPI_Rank == 0 )
 
 
@@ -341,28 +344,7 @@ void End_DiskHeating()
 } // FUNCTION : End_DiskHeating
 
 
-# ifdef PARTICLE
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  AddNewParticleAttribute
-// Description :  Add the problem-specific particle attributes
-//
-// Note        :  1. Ref: https://github.com/gamer-project/gamer/wiki/Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes
-//                2. Invoke AddParticleField() for each of the problem-specific particle attribute:
-//                   --> Attribute label sent to AddParticleField() will be used as the output name of the attribute
-//                   --> Attribute index returned by AddParticleField() can be used to access the particle attribute data
-//                3. Pre-declared attribute indices are put in Field.h
-//
-// Parameter   :  None
-//
-// Return      :  None
-//-------------------------------------------------------------------------------------------------------
-void AddNewParticleAttribute()
-{
-
-   if ( ParLabel_Idx == Idx_Undefined )  ParLabel_Idx = AddParticleAttribute( "ParLabel" );
-
-} // FUNCTION : AddNewParticleAttribute
+#ifdef PARTICLE
 #ifdef GRAVITY
 
 //-------------------------------------------------------------------------------------------------------
@@ -372,6 +354,8 @@ void AddNewParticleAttribute()
 //-------------------------------------------------------------------------------------------------------
 void Init_NewDiskRestart()
 {
+   if ( AddParWhenRestart && !OPT__RESTART_RESET )
+      Aux_Error( ERROR_INFO, "OPT__RESTART_RESET should be turned on to enable AddParWhenRestart !!\n" );
 
    if ( amr->Par->Init != PAR_INIT_BY_RESTART  || !OPT__RESTART_RESET || !AddParWhenRestart )   return;
 
@@ -389,10 +373,6 @@ void Init_NewDiskRestart()
    real *Pos_AllRank[3] = { NewParAtt[PAR_POSX], NewParAtt[PAR_POSY], NewParAtt[PAR_POSZ] };
    real *Vel_AllRank[3] = { NewParAtt[PAR_VELX], NewParAtt[PAR_VELY], NewParAtt[PAR_VELZ] };
    real *Type_AllRank   =   NewParAtt[PAR_TYPE];
-#  if ( PAR_NATT_USER == 1 )
-   const long ParLabelStart = amr->Par->NPar_Active_AllRank;
-   real *Label_AllRank  = NewParAtt[ParLabel_Idx];
-#  endif
 
    if ( AddParWhenRestartByFile ) // add new disk via PAR_IC
    {
@@ -447,9 +427,6 @@ void Init_NewDiskRestart()
             Mass_AllRank[p] = ParData1[0];
 //          label
             Type_AllRank[p] = ParData1[7]; // 1=CDM halo, 2=disk
-#           if ( PAR_NATT_USER == 1 )      // add particle label, not very reliable due to floating point error
-            Label_AllRank[p] = ParLabelStart + p;
-#           endif
 
 //          position
             Pos_AllRank[0][p] = ParData1[1];
@@ -512,9 +489,6 @@ void Init_NewDiskRestart()
             Mass_AllRank[p] = ParM;
 //          label
             Type_AllRank[p] = 3;      // use 3 to represent thin disk particles
-#           if ( PAR_NATT_USER == 1 ) // add particle label, not very reliable due to floating point error
-            Label_AllRank[p] = ParLabelStart + p;
-#           endif
 
 //          position: statisfying surface density Sigma=Disk_Mass/(2*pi*Disk_R**2)*exp(-R/Disk_R)
             Ran  = RNG->GetValue( 0, 0.0, 1.0);
@@ -699,9 +673,6 @@ void Init_TestProb_ELBDM_DiskHeating()
 #  endif
 #  ifdef PARTICLE
    Par_Init_ByFunction_Ptr        = Par_Init_ByFunction_DiskHeating;
-#  if ( PAR_NATT_USER == 1 )
-   Par_Init_Attribute_User_Ptr    = AddNewParticleAttribute;
-#  endif
    Init_User_Ptr                  = Init_NewDiskRestart;
    Init_User_AfterPoisson_Ptr     = Init_NewDiskVelocity;
 #  endif
