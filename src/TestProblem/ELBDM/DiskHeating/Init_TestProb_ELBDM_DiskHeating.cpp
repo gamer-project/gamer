@@ -190,10 +190,10 @@ void SetParameter()
       double *DensTable_r = DensTable + 0*DensTable_Nbin;
       double *DensTable_d = DensTable + 1*DensTable_Nbin;
 
-//    convert to log-log scale
+//    convert to code unit and log-log scale (input units of radius and density should be fixed to kpc and g/cm^3 respectively)
       for (int b=0; b<DensTable_Nbin; b++)
       {
-         DensTable_r[b] = log(DensTable_r[b]);
+         DensTable_r[b] = log(DensTable_r[b]*Const_kpc/UNIT_L);
          DensTable_d[b] = log(DensTable_d[b]*CUBE(UNIT_L)/UNIT_M);
       }
    }
@@ -301,21 +301,22 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       const double dy     = (y - Cen[1]);
       const double dz     = (z - Cen[2]);
       const double r      = SQRT( dx*dx + dy*dy + dz*dz );
-      const double Unit_L_GALIC = Const_kpc;          //  1.0 kpc
-      const double Unit_M_GALIC = 1.0e10*Const_Msun;  //  1.0e10 solar masses
-      const double Unit_D_GALIC = Unit_M_GALIC/CUBE(Unit_L_GALIC);
-      const double r_in_kpc = r*UNIT_L/Unit_L_GALIC;
-
-      const double *DensTable_r = DensTable + 0*DensTable_Nbin;
-      const double *DensTable_d = DensTable + 1*DensTable_Nbin;
 
       if (HaloUseTable)
       {
-         if ( r_in_kpc < exp(DensTable_r[0] )) dens = exp(DensTable_d[0]);
-         else if ( r_in_kpc > exp(DensTable_r[DensTable_Nbin-1]) ) dens = 0;
-         else dens = exp( Mis_InterpolateFromTable( DensTable_Nbin, DensTable_r, DensTable_d, log(r_in_kpc) ) );
+         const double *DensTable_r = DensTable + 0*DensTable_Nbin;
+         const double *DensTable_d = DensTable + 1*DensTable_Nbin;
+
+         if ( r < exp(DensTable_r[0] )) dens = exp(DensTable_d[0]);
+         else if ( r > exp(DensTable_r[DensTable_Nbin-1]) ) dens = 0;
+         else dens = exp( Mis_InterpolateFromTable( DensTable_Nbin, DensTable_r, DensTable_d, log(r) ) );
       }
-      else dens = Halo_Density(r_in_kpc)*Unit_D_GALIC/UNIT_D;
+      else
+      {
+          const double Unit_D_GALIC = 1.0e10*Const_Msun/CUBE(Const_kpc);
+          const double r_in_kpc = r*UNIT_L/Const_kpc;
+          dens = Halo_Density(r_in_kpc)*Unit_D_GALIC/UNIT_D;
+      }
    }
 
 // ELBDM example
@@ -463,7 +464,7 @@ void Init_NewDiskRestart()
       double *DispTable_r = DispTable + 0*DispTable_Nbin;
       double *DispTable_d = DispTable + 1*DispTable_Nbin;
 
-//    convert to code unit
+//    convert to code unit (input units of radius and velocity dispersion should be fixed to kpc and km/s respectively)
       for ( int b = 0; b < DispTable_Nbin; b++ )
       {
          DispTable_r[b] = DispTable_r[b]*Const_kpc/UNIT_L;
