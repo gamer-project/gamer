@@ -112,7 +112,7 @@ for idx in range(idx_start, idx_end+1, didx):
           for myax in axes:
                      fig = plt.figure(dpi = dpi, figsize=(24, 12))
 
-                     # See http://matplotlib.org/mpl_toolkits/axes_grid/api/axes_grid_api.html
+                     # See https://matplotlib.org/mpl_toolkits/axes_grid/api/axes_grid_api.html
                      # These choices of keyword arguments produce a four panel plot that includes
                      # four narrow colorbars, one for each plot.  Axes labels are only drawn on the
                      # bottom left hand plot to avoid repeating information and make the plot less
