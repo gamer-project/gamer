@@ -21,7 +21,6 @@ static double Halo_Density( double r );
 void Init_ExtPot_Soliton();
 // problem-specific global variables
 // =======================================================================================
-FieldIdx_t ParLabel_Idx = Idx_Undefined;
 static RandomNumber_t *RNG = NULL;
        double  Cen[3];                    // center
 static bool    AddFixedHalo;              // add a fixed halo, must enable OPT__FREEZE_FLUID

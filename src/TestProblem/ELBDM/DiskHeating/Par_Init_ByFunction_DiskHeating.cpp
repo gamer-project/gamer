@@ -1,5 +1,4 @@
 #include "GAMER.h"
-extern FieldIdx_t ParLabel_Idx;
 #ifdef PARTICLE
 
 
@@ -68,7 +67,7 @@ void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_
 
 
 // set the file offset for this rank
-   long NPar_EachRank[MPI_NRank], NPar_Check=0, FileOffset=0, NumOffset=0;
+   long NPar_EachRank[MPI_NRank], NPar_Check=0, FileOffset=0;
 
    MPI_Allgather( &NParThisRank, 1, MPI_LONG, NPar_EachRank, 1, MPI_LONG, MPI_COMM_WORLD );
 
@@ -80,7 +79,6 @@ void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_
    for (int r=0; r<MPI_Rank; r++)
    {
       FileOffset = FileOffset + NPar_EachRank[r]*sizeof(real);
-      NumOffset  = NumOffset  + NPar_EachRank[r];
    }
 
 // load data
