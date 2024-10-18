@@ -85,8 +85,8 @@ void Par_Init_Attribute_Mesh()
 
    for (int v=0; v<Mesh_NAttr; v++)
    {
-      amr->Par->Mesh_Attr      [v] = (real_par*) malloc( amr->Par->ParListSize*sizeof(real_par) );
-      amr->Par->Mesh_Attr_Label[v] = (char    *) malloc(            MAX_STRING*sizeof(char    ) );
+      amr->Par->Mesh_Attr      [v] = NULL;
+      amr->Par->Mesh_Attr_Label[v] = (char*) malloc( MAX_STRING*sizeof(char) );
    }
 
 
