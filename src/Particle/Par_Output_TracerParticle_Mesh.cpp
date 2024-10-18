@@ -52,8 +52,8 @@ void Par_Output_TracerParticle_Mesh()
 
 
 // initialize the value to __FLT_MAX__ for all types of particles
-   for (int v=0; v<ParAttrNum;  v++)
-   for (int p=0; p<ParListSize; p++)
+   for (int  v=0; v<ParAttrNum;  v++)
+   for (long p=0; p<ParListSize; p++)
       amr->Par->Mesh_Attr[v][p] = (real_par) __FLT_MAX__;
 
 
@@ -65,7 +65,7 @@ void Par_Output_TracerParticle_Mesh()
    {
 //    get the maximum number of particles in a single patch
 //    --> must use "NPar" instead of "NParType[(int)PTYPE_TRACER]" since currently
-//        both Vel_Temp[] and InterpParPos[] still allocate memory for non-tracer particles
+//        both Var_Temp[] and InterpParPos[] still allocate memory for non-tracer particles
       int NParMax = 0;
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)   NParMax = MAX( NParMax, amr->patch[0][lv][PID]->NPar );
 
@@ -116,7 +116,7 @@ void Par_Output_TracerParticle_Mesh()
             if ( TVar & AllVar_PreparePatch )
                Prepare_PatchData( lv, TimeNew, Var, NULL, ParGhost, 1, &PID0, TVar, _NONE,
                                   OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No,
-                                  OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+                                  OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
             else
             {
@@ -126,7 +126,7 @@ void Par_Output_TracerParticle_Mesh()
 
 
 //          3. map quantities from mesh onto the tracer particles
-            for (int PID=PID0, P=0; PID<PID0+8; PID++, P++)
+            for (int PID=PID0, t=0; PID<PID0+8; PID++, t++)
             {
 //             skip patches with no tracer particles
                if ( amr->patch[0][lv][PID]->NParType[(int)PTYPE_TRACER] == 0 )   continue;
@@ -149,7 +149,7 @@ void Par_Output_TracerParticle_Mesh()
                   for (int d=0; d<3; d++)   InterpParPos[d][p] = ParPos[d][ParID];
                }
 
-               Par_MapMesh2Particles( EdgeL, EdgeR, _dh, VarSize, Var+P*CUBE(VarSize),
+               Par_MapMesh2Particles( EdgeL, EdgeR, _dh, VarSize, Var+t*CUBE(VarSize),
                                       amr->patch[0][lv][PID]->NPar, InterpParPos, ParType,
                                       amr->patch[0][lv][PID]->ParList, UseTracers_Yes, Var_Temp,
                                       TracerVelCorr_No );
@@ -163,7 +163,7 @@ void Par_Output_TracerParticle_Mesh()
 
                   amr->Par->Mesh_Attr[v][ParID] = Var_Temp[p];
                }
-            } // for (int PID=PID0, P=0; PID<PID0+8; PID++, P++)
+            } // for (int PID=PID0, t=0; PID<PID0+8; PID++, t++)
          } // for (int v=0; v<ParAttrNum; v++)
       } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
 
