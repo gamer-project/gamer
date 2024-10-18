@@ -107,6 +107,8 @@ static real ExtPot_Soliton( const double x, const double y, const double z, cons
    const real  unit_l  = (real)UserArray_Flt[7];
    const real    r     = SQRT( dx*dx + dy*dy + dz*dz )*unit_l;
    const real    pi    = M_PI;
+   // soliton potential, consistent with Eq. [6] in Chiang et al. 2021
+   // this form may suffer from huge numerical errors when r->0 as both the numerator and denominator approaching 0.
    real soliton_potential = -pi*POW(r_sol,3.)*A*G/(real)53760./POW(B,1.5)*(r_sol*POW(B,0.5)/POW((POW(r_sol,2.)+B*POW(r,2.)),6.)
                             *((real)11895.*POW(r_sol,10.)+(real)36685.*POW(r_sol,8.)*B*POW(r,2.)+(real)55638.*POW(r_sol,6.)*POW(B,2.)*POW(r,4.)
                             +(real)45738.*POW(r_sol,4.)*POW(B,3)*POW(r,6.)+(real)19635.*POW(r_sol,2.)*POW(B,4.)*POW(r,8.)+(real)3465.*POW(B,5.)
