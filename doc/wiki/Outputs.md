@@ -107,12 +107,12 @@ particle data.
     * **Restriction:**
 
 <a name="OPT__OUTPUT_PAR_MESH"></a>
-* #### `OPT__OUTPUT_PAR_MESH` &ensp; (0=off, 1=on) &ensp; [0]
+* #### `OPT__OUTPUT_PAR_MESH` &ensp; (0=off, 1=on) &ensp; [1]
     * **Description:**
 Map mesh attributes to tracer particles and output them in the HDF5 snapshots.
 Edit `Input__Par_Mesh` to specify the desired mesh attributes. An example file can be found at `example/input/Input__Par_Mesh`.
     * **Restriction:**
-Only applicable when enabling [TRACER](./Installation:-Simulation-Options.md#TRACER) and setting [OPT__OUTPUT_TOTAL](#OPT__OUTPUT_TOTAL) to 1.
+Only applicable when enabling [[TRACER | Installation:-Simulation-Options#TRACER]] and setting [OPT__OUTPUT_TOTAL](#OPT__OUTPUT_TOTAL) to 1.
 
 <a name="OPT__OUTPUT_BASEPS"></a>
 * #### `OPT__OUTPUT_BASEPS` &ensp; (0=off, 1=on) &ensp; [0]
