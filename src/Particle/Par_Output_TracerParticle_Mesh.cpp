@@ -46,6 +46,10 @@ void Par_Output_TracerParticle_Mesh()
 #  endif
 
 
+// nothing to do if no fields have been specified
+   if ( !ParAttrNum )   return;
+
+
 // allocate enough memory for Mesh_Attr
    for (int v=0; v<ParAttrNum; v++)
       amr->Par->Mesh_Attr[v] = (real_par*) realloc( amr->Par->Mesh_Attr[v], ParListSize*sizeof(real_par) );
