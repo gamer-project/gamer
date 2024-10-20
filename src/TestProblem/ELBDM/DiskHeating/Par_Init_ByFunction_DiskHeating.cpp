@@ -41,10 +41,10 @@ void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-   const char FileName[]     = "PAR_IC";
-   const long NParAllRank    = amr->Par->NPar_Active_AllRank;
-         long NParThisRank   = amr->Par->NPar_AcPlusInac;            // cannot be "const" due to MPI_Allgather()
-   const int  NParAtt        = 8;                                    // mass, pos*3, vel*3, type
+   const char FileName[]   = "PAR_IC";
+   const long NParAllRank  = amr->Par->NPar_Active_AllRank;
+         long NParThisRank = amr->Par->NPar_AcPlusInac;        // cannot be "const" due to MPI_Allgather()
+   const int  NParAtt      = 8;                                // mass, pos*3, vel*3, type
 
 
 // check
@@ -81,6 +81,7 @@ void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_
       FileOffset = FileOffset + NPar_EachRank[r]*sizeof(real);
    }
 
+
 // load data
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading data ... " );
 
@@ -111,7 +112,6 @@ void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_
 //    [att][id]
       for (int v=0; v<NParAtt; v++)
          ParData1[v] = ParData_ThisRank[ v*NParThisRank + p ];
-
 
 //    assuming that the orders of the particle attributes stored on the disk and in Par->Attribute[] are the same
       ParMass[p] = ParData1[0];

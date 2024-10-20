@@ -31,13 +31,13 @@ extern double Cen[3];
 void SetExtPotAuxArray_Soliton( double AuxArray_Flt[], int AuxArray_Int[], const double Time )
 {
 
-// example parameters
    const double A = 0.0019/m_22/m_22/POW(CoreRadius,4)*1.0e10*Const_Msun/Const_kpc; // soliton central density in g/cm^3
    const double B = 9.1*0.01;
-   const double G = Const_NewtonG/UNIT_V/UNIT_V; // convert output potential to code unit
-   AuxArray_Flt[0] = Cen[0];    // x coordinate of the external potential center
-   AuxArray_Flt[1] = Cen[1];    // y ...
-   AuxArray_Flt[2] = Cen[2];    // z ...
+   const double G = Const_NewtonG/UNIT_V/UNIT_V;   // convert output potential to code unit
+
+   AuxArray_Flt[0] = Cen[0];  // x coordinate of the external potential center
+   AuxArray_Flt[1] = Cen[1];  // y ...
+   AuxArray_Flt[2] = Cen[2];  // z ...
    AuxArray_Flt[3] = CoreRadius*Const_kpc;
    AuxArray_Flt[4] = A;
    AuxArray_Flt[5] = B;
@@ -48,15 +48,16 @@ void SetExtPotAuxArray_Soliton( double AuxArray_Flt[], int AuxArray_Int[], const
    {
       Aux_Message( stdout, "EXT_POT_AUX_ARRAY:\n" );
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  CenX                      = %13.7e\n",     Cen[0]                );
-      Aux_Message( stdout, "  CenY                      = %13.7e\n",     Cen[1]                );
-      Aux_Message( stdout, "  Cenz                      = %13.7e\n",     Cen[2]                );
-      Aux_Message( stdout, "  CoreRadius                = %13.7e\n",     CoreRadius            );
-      Aux_Message( stdout, "  UNIT_L                    = %13.7e\n",     UNIT_L                );
-      Aux_Message( stdout, "  UNIT_V                    = %13.7e\n",     UNIT_V                );
-      Aux_Message( stdout, "  m_22                      = %13.7e\n",     m_22                  );
+      Aux_Message( stdout, "  CenX       = %13.7e\n", Cen[0]     );
+      Aux_Message( stdout, "  CenY       = %13.7e\n", Cen[1]     );
+      Aux_Message( stdout, "  Cenz       = %13.7e\n", Cen[2]     );
+      Aux_Message( stdout, "  CoreRadius = %13.7e\n", CoreRadius );
+      Aux_Message( stdout, "  UNIT_L     = %13.7e\n", UNIT_L     );
+      Aux_Message( stdout, "  UNIT_V     = %13.7e\n", UNIT_V     );
+      Aux_Message( stdout, "  m_22       = %13.7e\n", m_22       );
       Aux_Message( stdout, "=============================================================================\n" );
    }
+
 } // FUNCTION : SetExtPotAuxArray_Soliton
 #endif // #ifndef __CUDACC__
 
@@ -97,28 +98,30 @@ static real ExtPot_Soliton( const double x, const double y, const double z, cons
                             const double UserArray_Flt[], const int UserArray_Int[],
                             const ExtPotUsage_t Usage, const real PotTable[], void **GenePtr )
 {
-   const double Center[3] = { UserArray_Flt[0], UserArray_Flt[1], UserArray_Flt[2] };
-   const double r_sol  = UserArray_Flt[3];
-   const double dx     = (x - Center[0]);
-   const double dy     = (y - Center[1]);
-   const double dz     = (z - Center[2]);
-   const double  A     = UserArray_Flt[4];
-   const double  B     = UserArray_Flt[5];
-   const double  G     = UserArray_Flt[6];
-   const double UNIT_L = UserArray_Flt[7];
-   const double  r     = SQRT( dx*dx + dy*dy + dz*dz )*UNIT_L;
-   const double  Y     = r/r_sol;
 
-   // soliton potential, consistent with Eq. [6] in Chiang et al. 2021
-   // this form may suffer from huge numerical errors when r->0 as both the numerator and denominator approaching 0.
-   double soliton_potential = -M_PI*POW(Y,2.)*A*G/53760./POW(B,1.5)
-                               *( POW(B,0.5)/POW((1.+B*POW(Y,2.)),6.)
-                                 *( 11895. + 36685.*B*POW(Y,2.)
-                                  + 55638.*POW(B,2.)*POW(Y,4.) + 45738.*POW(B,3.)*POW(Y,6.)
-                                  + 19635.*POW(B,4.)*POW(Y,8.) +  3465.*POW(B,5.)*POW(Y,10.) )
-                                + 3465.*ATAN(POW(B,0.5)*Y)/Y );
+   const double Center[3] = { UserArray_Flt[0], UserArray_Flt[1], UserArray_Flt[2] };
+   const double r_sol     = UserArray_Flt[3];
+   const double dx        = (x - Center[0]);
+   const double dy        = (y - Center[1]);
+   const double dz        = (z - Center[2]);
+   const double A         = UserArray_Flt[4];
+   const double B         = UserArray_Flt[5];
+   const double G         = UserArray_Flt[6];
+   const double unit_l    = UserArray_Flt[7];
+   const double r         = SQRT( dx*dx + dy*dy + dz*dz )*unit_l;
+   const double Y         = r/r_sol;
+
+// soliton potential, consistent with Eq. [6] in Chiang et al., PRD 103, 103019 (2021)
+// --> this form may suffer from large numerical errors at r->0 as both the numerator and denominator approach 0
+   double soliton_potential = -M_PI*pow(Y,2.)*A*G/53760./pow(B,1.5)
+                               *( pow(B,0.5)/pow((1.+B*pow(Y,2.)),6.)
+                                 *( 11895. + 36685.*B*pow(Y,2.)
+                                  + 55638.*pow(B,2.)*pow(Y,4.) + 45738.*pow(B,3.)*pow(Y,6.)
+                                  + 19635.*pow(B,4.)*pow(Y,8.) +  3465.*pow(B,5.)*pow(Y,10.) )
+                                + 3465.*atan(pow(B,0.5)*Y)/Y );
 
    return (real)soliton_potential;
+
 } // FUNCTION : ExtPot_Soliton
 
 
