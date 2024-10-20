@@ -92,8 +92,8 @@ const TestProbID_t
    TESTPROB_ELBDM_LSS                          = 1009,
    TESTPROB_ELBDM_PLANE_WAVE                   = 1010,
    TESTPROB_ELBDM_PERTURBATION                 = 1011,
-   TESTPROB_ELBDM_HALO_MERGER                  = 1012;
-
+   TESTPROB_ELBDM_HALO_MERGER                  = 1012,
+   TESTPROB_ELBDM_DISK_HEATING                 = 1013;
 
 // program initialization options
 typedef int OptInit_t;
