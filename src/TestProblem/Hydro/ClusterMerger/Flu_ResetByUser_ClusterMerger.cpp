@@ -622,7 +622,8 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
 //    (6) perform injection
       int Reset;
-#     pragma omp parallel for private( Reset, fluid, fluid_bk, x, y, z, x0, y0, z0 ) schedule( runtime ) \
+//    use the "static" schedule for reproducibility
+#     pragma omp parallel for private( Reset, fluid, fluid_bk, x, y, z, x0, y0, z0 ) schedule( static ) \
       reduction( +:CM_Bondi_SinkMass, CM_Bondi_SinkMomX, CM_Bondi_SinkMomY, CM_Bondi_SinkMomZ, \
                    CM_Bondi_SinkMomXAbs, CM_Bondi_SinkMomYAbs, CM_Bondi_SinkMomZAbs, \
                    CM_Bondi_SinkE, CM_Bondi_SinkEk, CM_Bondi_SinkEt, CM_Bondi_SinkNCell )
