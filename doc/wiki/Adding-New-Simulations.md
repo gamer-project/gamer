@@ -204,7 +204,7 @@ during the runtime.
    } // FUNCTION : Output_HDF5_TestProb
    ```
 > [!NOTE]
-> You should contain all the variables in step 2 of [Add Problem-specific Parameters](#iv-add-problem-specific-parameters)
+> You should contain all the variables in step 2.
 
 > [!CAUTION]
 > There should be at least one variable to store. Otherwise, it should be like
@@ -212,7 +212,7 @@ during the runtime.
 > void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
 > {
 >
->    HDF5_InputTest->Add( "Empty",  &TESTPROB_ID );
+>    HDF5_InputTest->Add( "CDM_LSS_TestProb_ID",  &TESTPROB_ID );
 >
 > } // FUNCTION : Output_HDF5_TestProb
 > ```
@@ -593,13 +593,12 @@ Add a user-specified feedback. See [[FB_USER | Feedback#FB_USER]] for details.
 ### HDF5 Output
 * **Description:**
 Store user-specified variables. Similar usage of as [Store Problem-specific Variables](#iv-store-problem-specific-variables).
-Only works when [[SUPPORT_HDF5 | Installation: Simulation-Options#SUPPORT_HDF5]] is enabled.
 * **Prototype:**
    * `void Output_HDF5_User_NewProblem( HDF5_Output_t *HDF5_OutUser );`
 * **Function Pointer:**
    * `Output_HDF5_User_Ptr`
 * **Compilation Option:**
-None
+[[SUPPORT_HDF5 | Installation: Simulation-Options#SUPPORT_HDF5]]
 * **Runtime Option:**
 None
 * **Example:**
