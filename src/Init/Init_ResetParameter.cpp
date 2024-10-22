@@ -424,15 +424,6 @@ void Init_ResetParameter()
       PRINT_RESET_PARA( amr->Par->GhostSizeTracer, FORMAT_INT, "for the adopted PAR_TR_INTERP scheme" );
    }
 
-#  ifndef TRACER
-   if ( OPT__OUTPUT_PAR_MESH )
-   {
-      OPT__OUTPUT_PAR_MESH = 0;
-
-      PRINT_RESET_PARA( OPT__OUTPUT_PAR_MESH, FORMAT_INT, "since TRACER is disabled" );
-   }
-#  endif
-
 #  endif // #ifdef PARTICLE
 
 

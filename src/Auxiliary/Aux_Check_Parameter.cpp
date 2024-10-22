@@ -1549,9 +1549,6 @@ void Aux_Check_Parameter()
 
    if ( OPT__FLAG_NPAR_CELL )
       Aux_Message( stderr, "WARNING : OPT__FLAG_NPAR_CELL excludes tracers !!\n" );
-#  else
-   if ( OPT__OUTPUT_PAR_MESH )
-      Aux_Message( stderr, "WARNING : OPT__OUTPUT_PAR_MESH is useless when TRACER is disabled !!\n" );
 #  endif
 
    if ( OPT__FREEZE_PAR )
