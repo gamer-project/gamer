@@ -20,21 +20,26 @@
 void Par_Output_TracerParticle_Mesh()
 {
 
-   const bool      IntPhase_No       = false;
-   const bool      DE_Consistency_No = false;
-   const real      MinDens_No        = -1.0;
-   const real      MinPres_No        = -1.0;
-   const real      MinTemp_No        = -1.0;
-   const real      MinEntr_No        = -1.0;
-   const bool      UseTracers_Yes    = true;
-   const bool      TracerVelCorr_No  = false;
-   const int       ParGhost          = amr->Par->GhostSizeTracer;
-   const int       VarSize           = PS1 + 2*ParGhost;
-   const real_par *ParPos[3]         = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
-   const real_par *ParType           = amr->Par->Type;
-   const long      ParListSize       = amr->Par->ParListSize;
-   const int       ParAttrNum        = amr->Par->Mesh_Attr_Num;
-   const long     *ParAttrIdx        = amr->Par->Mesh_Attr_Idx;
+   const bool       IntPhase_No       = false;
+   const bool       DE_Consistency_No = false;
+   const real       MinDens_No        = -1.0;
+   const real       MinPres_No        = -1.0;
+   const real       MinTemp_No        = -1.0;
+   const real       MinEntr_No        = -1.0;
+   const bool       UseTracers_Yes    = true;
+   const bool       TracerVelCorr_No  = false;
+#  ifdef GRAVITY
+   const OptPotBC_t BC_Pot            = OPT__BC_POT;
+#  else
+   const OptPotBC_t BC_Pot            = BC_POT_NONE;
+#  endif
+   const int        ParGhost          = amr->Par->GhostSizeTracer;
+   const int        VarSize           = PS1 + 2*ParGhost;
+   const real_par  *ParPos[3]         = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+   const real_par  *ParType           = amr->Par->Type;
+   const long       ParListSize       = amr->Par->ParListSize;
+   const int        ParAttrNum        = amr->Par->Mesh_Attr_Num;
+   const long      *ParAttrIdx        = amr->Par->Mesh_Attr_Idx;
 
    long AllVar_PreparePatch = ( _TOTAL | _DERIVED );
 
@@ -120,7 +125,7 @@ void Par_Output_TracerParticle_Mesh()
             if ( TVar & AllVar_PreparePatch )
                Prepare_PatchData( lv, TimeNew, Var, NULL, ParGhost, 1, &PID0, TVar, _NONE,
                                   OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No,
-                                  OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+                                  OPT__BC_FLU, BC_Pot, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
             else
             {
