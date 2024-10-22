@@ -460,6 +460,11 @@ void Init_Load_Parameter()
 #  ifdef PARTICLE
    ReadPara->Add( "OPT__OUTPUT_PAR_MODE",       &OPT__OUTPUT_PAR_MODE,            0,               0,             2              );
 #  endif
+#  ifdef TRACER
+   ReadPara->Add( "OPT__OUTPUT_PAR_MESH",       &OPT__OUTPUT_PAR_MESH,            true,            Useless_bool,  Useless_bool   );
+#  else
+   ReadPara->Add( "OPT__OUTPUT_PAR_MESH",       &OPT__OUTPUT_PAR_MESH,            false,           false,         false          );
+#  endif
    ReadPara->Add( "OPT__OUTPUT_BASEPS",         &OPT__OUTPUT_BASEPS,              false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_BASE",           &OPT__OUTPUT_BASE,                false,           Useless_bool,  Useless_bool   );
 #  ifdef MHD
