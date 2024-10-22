@@ -1,6 +1,15 @@
 #include "GAMER.h"
 
+extern void (*Init_User_Ptr)();
+extern void (*Init_DerivedField_User_Ptr)();
+#ifdef PARTICLE
+extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRank,
+                                        real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
+                                        real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
+                                        real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
+#endif
 
+extern bool   IsInit_tcool[NLEVEL];
 
 
 //-------------------------------------------------------------------------------------------------------

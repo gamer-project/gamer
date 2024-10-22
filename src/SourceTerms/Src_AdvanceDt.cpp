@@ -2,6 +2,9 @@
 
 
 
+// flag for checking whether the tcool field is initialized
+bool IsInit_tcool[NLEVEL] = { false };
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Src_AdvanceDt
@@ -39,5 +42,7 @@ void Src_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 // major source-term function
    InvokeSolver( SRC_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg_Flu, SaveSg_Mag, NULL_INT,
                  OverlapMPI, Overlap_Sync );
+
+   if ( SrcTerms.ExactCooling )   IsInit_tcool[lv] = true;
 
 } // FUNCTION : Src_AdvanceDt
