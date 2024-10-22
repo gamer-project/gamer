@@ -73,18 +73,22 @@ void Par_Init_Attribute_Mesh()
    char FileName[] = "Input__Par_Mesh";
 
 // retrieve the number of mesh quantities specified in Input__Par_Mesh
-   const int Mesh_NAttr = ( Aux_CheckFileExist(FileName) ) ? Aux_CountRow( FileName ) : 0;
-
-   if ( !Mesh_NAttr )
-      Aux_Message( stderr, "WARNING : file \"Input__Par_Mesh\" does not exist or no fields have been specified !!\n" );
+   const int Mesh_NAttr = Aux_CountRow( FileName );
 
    amr->Par->Mesh_Attr_Num = Mesh_NAttr;
 
+   if ( !Mesh_NAttr )
+   {
+      Aux_Message( stderr, "WARNING : no fields have been specified in \"Input__Par_Mesh\" !!\n" );
+
+      return;
+   }
+
 
 // allocate the memory
-   amr->Par->Mesh_Attr       = (Mesh_NAttr) ? (real_par**) malloc( Mesh_NAttr*sizeof(real_par*) ) : NULL;
-   amr->Par->Mesh_Attr_Label = (Mesh_NAttr) ? (char    **) malloc( Mesh_NAttr*sizeof(char    *) ) : NULL;
-   amr->Par->Mesh_Attr_Idx   = (Mesh_NAttr) ? (long    * ) malloc( Mesh_NAttr*sizeof(long     ) ) : NULL;
+   amr->Par->Mesh_Attr       = (real_par**) malloc( Mesh_NAttr*sizeof(real_par*) );
+   amr->Par->Mesh_Attr_Label = (char    **) malloc( Mesh_NAttr*sizeof(char    *) );
+   amr->Par->Mesh_Attr_Idx   = (long    * ) malloc( Mesh_NAttr*sizeof(long     ) );
 
    for (int v=0; v<Mesh_NAttr; v++)
    {
@@ -94,38 +98,35 @@ void Par_Init_Attribute_Mesh()
 
 
 // load data in Input__Par_Mesh and convert the field name to field index
-   if ( Mesh_NAttr )
+   char FirstItem[MAX_STRING];
+   int  NRow=0, NItem;
+
+   char *Line = new char [MAX_STRING];
+   FILE *File = fopen( FileName, "r" );
+
+   while ( fgets(Line, MAX_STRING, File) != NULL )
    {
-      char FirstItem[MAX_STRING];
-      int  NRow=0, NItem;
+      NItem = sscanf( Line, "%s", FirstItem );
 
-      char *Line = new char [MAX_STRING];
-      FILE *File = fopen( FileName, "r" );
+//    skip empty lines and lines starting with #
+      if ( NItem <= 0  ||  FirstItem[0] == '#' )   continue;
 
-      while ( fgets(Line, MAX_STRING, File) != NULL )
-      {
-         NItem = sscanf( Line, "%s", FirstItem );
+//    initialize the bitwise indices and labels of mesh quantities to be mapped from
+      const long FieldIdx = Par_Get_MeshIndex( FirstItem );
 
-//       skip empty lines and lines starting with #
-         if ( NItem <= 0  ||  FirstItem[0] == '#' )   continue;
+      if ( FieldIdx == Idx_Undefined )
+         Aux_Error( ERROR_INFO, "unknown input field label (%s) in %s !!\n", FirstItem, FileName );
 
-//       initialize the bitwise indices and labels of mesh quantities to be mapped from
-         const long FieldIdx = Par_Get_MeshIndex( FirstItem );
+      amr->Par->Mesh_Attr_Idx[NRow] = FieldIdx;
 
-         if ( FieldIdx == Idx_Undefined )
-            Aux_Error( ERROR_INFO, "unknown input field label (%s) in %s !!\n", FirstItem, FileName );
+      sprintf( amr->Par->Mesh_Attr_Label[NRow], "Mesh%s", FirstItem );
 
-         amr->Par->Mesh_Attr_Idx[NRow] = FieldIdx;
-
-         sprintf( amr->Par->Mesh_Attr_Label[NRow], "Mesh%s", FirstItem );
-
-         NRow++;
-      }
+      NRow++;
+   }
 
 
-      fclose( File );
-      delete [] Line;
-   } // if ( Mesh_NAttr )
+   fclose( File );
+   delete [] Line;
 
 } // FUNCTION : Par_Init_Attribute_Mesh
 
