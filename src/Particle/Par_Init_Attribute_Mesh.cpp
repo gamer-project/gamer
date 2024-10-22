@@ -79,7 +79,7 @@ void Par_Init_Attribute_Mesh()
 
    if ( !Mesh_NAttr )
    {
-      Aux_Message( stderr, "WARNING : no fields have been specified in \"Input__Par_Mesh\" !!\n" );
+      Aux_Message( stderr, "WARNING : no fields have been specified in \"%s\" !!\n", FileName );
 
       return;
    }
