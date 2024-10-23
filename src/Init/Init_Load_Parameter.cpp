@@ -462,7 +462,7 @@ void Init_Load_Parameter()
 #  ifdef TRACER
    ReadPara->Add( "OPT__OUTPUT_PAR_MESH",       &OPT__OUTPUT_PAR_MESH,            true,            Useless_bool,  Useless_bool   );
 #  else
-   ReadPara->Add( "OPT__OUTPUT_PAR_MESH",       &OPT__OUTPUT_PAR_MESH,            false,           false,         false          );
+   ReadPara->Add( "OPT__OUTPUT_PAR_MESH",       &OPT__OUTPUT_PAR_MESH,            false,           Useless_bool,  Useless_bool   );
 #  endif
 #  endif
    ReadPara->Add( "OPT__OUTPUT_BASEPS",         &OPT__OUTPUT_BASEPS,              false,           Useless_bool,  Useless_bool   );
