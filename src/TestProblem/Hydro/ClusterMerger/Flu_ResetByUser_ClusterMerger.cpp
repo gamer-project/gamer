@@ -556,8 +556,15 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
          if ( Accretion_Mode == 1 ) // hot mode
          {
-            Mdot_BH[c] = 4.0 * M_PI * SQR(NEWTON_G) * SQR(Bondi_MassBH[c]) * GasDens[c] /
-                         pow( SQR(SoundSpeed[c]) + SQR(RelativeVel[c]), 1.5 );
+            if ( num_sum[c] == 0 )
+            {
+               Mdot_BH[c] = 0.0;
+            }
+            else
+            {
+               Mdot_BH[c] = 4.0 * M_PI * SQR(NEWTON_G) * SQR(Bondi_MassBH[c]) * GasDens[c] /
+                            pow( SQR(SoundSpeed[c]) + SQR(RelativeVel[c]), 1.5 );
+            }
          }
          else if ( Accretion_Mode == 2 ) // cold mode
          {
@@ -567,8 +574,15 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
          else if ( Accretion_Mode == 3 ) // combine (hot + cold)
          {
             double Mdot_hot, t_ff, Mdot_cold;
-            Mdot_hot   = 4.0 * M_PI * SQR(NEWTON_G) * SQR(Bondi_MassBH[c]) * GasDens[c] /
-                         pow( SQR(SoundSpeed[c]) + SQR(RelativeVel[c]), 1.5 );
+            if ( num_sum[c] == 0 )
+            {
+               Mdot_hot = 0.0;
+            }
+            else
+            {
+               Mdot_hot = 4.0 * M_PI * SQR(NEWTON_G) * SQR(Bondi_MassBH[c]) * GasDens[c] /
+                          pow( SQR(SoundSpeed[c]) + SQR(RelativeVel[c]), 1.5 );
+            }
             t_ff       = sqrt( 2*pow(R_acc, 3) / NEWTON_G / (GasMass[c]+ParMass[c]) );
             Mdot_cold  = ColdGasMass[c] / t_ff;
             Mdot_BH[c] = Mdot_hot + Mdot_cold;
