@@ -13,7 +13,7 @@ parallel scalability and supports a rich set of physics modules.
 * Particles
 * Chemistry and radiative processes with [GRACKLE](http://grackle.readthedocs.io/en/latest/index.html)
 * General equation of state
-* Cosmic rays with anisotropic diffusion
+* [Cosmic rays with anisotropic diffusion](https://arxiv.org/abs/2405.20816)
 
 ### Other Features
 * Adaptive mesh refinement

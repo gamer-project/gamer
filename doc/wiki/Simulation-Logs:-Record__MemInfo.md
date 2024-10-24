@@ -20,8 +20,9 @@ Table format:
 * `Resident_Sum`: total resident memory consumption in all MPI processes
 
 
-**Caution: CUDA may consume very large virtual memory. However, it doesn't seem to be
-a serious problem in most cases.**
+> [!CAUTION]
+> CUDA may consume very large virtual memory. However, it doesn't seem to be
+a serious problem in most cases.
 
 <br>
 

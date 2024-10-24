@@ -33,7 +33,8 @@ and the corresponding load imbalance (`Y`), estimated by <var>(maximum-average)/
 * `Weighted load-imbalance factor`: overall load imbalance, where different levels are weighted
 by their number of updates (i.e., time-steps)
 
-**Caution: buffer patches (i.e., patches for filling the ghost zones) are not included here.**
+> [!CAUTION]
+> Buffer patches (i.e., patches for filling the ghost zones) are not included here.
 
 <br>
 

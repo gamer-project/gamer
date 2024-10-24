@@ -24,8 +24,9 @@ Table format:
 * `ParPerf_PerRank`: average performance per MPI process in particle updates per second
 * `NUpdate_Lv*`: number of time-steps on this level in this step
 
-**On Tesla K20 or K40 GPUs, the typical performance per GPU is 1e7 ~ 2e7
-cell updates per second. Tesla P100 can be a factor of 2 faster.**
+> [!NOTE]
+> On Tesla K20 or K40 GPUs, the typical performance per GPU is 1e7 ~ 2e7
+cell updates per second. Tesla P100 can be a factor of 2 faster.
 
 <br>
 

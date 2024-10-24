@@ -7,8 +7,8 @@ on:
       - closed
 
 env:
-  GIT_AUTHOR_NAME: Actionbot
-  GIT_AUTHOR_EMAIL: actions@github.com
+  GIT_AUTHOR_NAME: ${{ github.actor }}
+  GIT_AUTHOR_EMAIL: ${{ secrets.MY_EMAIL }}
 
 jobs:
   job-copy-doc-to-wiki:

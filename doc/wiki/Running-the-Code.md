@@ -31,7 +31,7 @@ directory as the executable `gamer`
 3. Launch the code
 
     ```bash
-    > ./gamer
+    ./gamer
     ```
 
 4. Check the outputs
@@ -53,7 +53,8 @@ do the following steps:
 `ln -s Data_000123 RESTART`
 3. Run the code as usual
 
-Note that many runtime parameters can be changed during restart
+> [!NOTE]
+> Many runtime parameters can be changed during restart
 (e.g., number of MPI processes and OpenMP threads, maximum refinement level,
 refinement criteria, time-step criteria). The next data dump ID will be
 automatically set to the ID of the restart file plus one (unless specified by
@@ -85,22 +86,34 @@ To resume it, simply delete this file.
 
 One can put simulation notes in a text file named `Input__Note`. The content
 of this file will be automatically copied to the top of the log file
-[[Record__Note | Outputs:-Record__Note]] during code initialization. For example,
+[[Record__Note | Simulation Logs:-Record__Note]] during code initialization. For example,
 ```bash
-> cat Input__Note
+cat Input__Note
+```
+<details>
+<summary><u><i>Execution results</i></u></summary>
 
+<pre>
 ~ PUT YOUR SIMULATION NOTES HERE ~
+</pre>
+</details>
 
-> ./gamer
-> head Record__Note
+```bash
+./gamer
+head Record__Note
+```
+<details>
+<summary><u><i>Execution results</i></u></summary>
 
+<pre>
 Simulation Note
 ***********************************************************************************
 
 ~ PUT YOUR SIMULATION NOTES HERE ~
 
 ***********************************************************************************
-```
+</pre>
+</details>
 
 <br>
 

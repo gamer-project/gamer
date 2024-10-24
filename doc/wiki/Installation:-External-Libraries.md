@@ -73,9 +73,9 @@ Follow the installation instructions in the
 [GRACKLE website](http://grackle.readthedocs.io/en/latest/index.html).
 Note that it must be configured with a
 consistent floating-point accuracy as GAMER using
-
-    > make precision-{32,64}
-
+```
+make precision-{32,64}
+```
 Specifically, configure GRACKLE with `make precision-64/32` when
 compiling GAMER with/without the option
 [[FLOAT8 | Installation: Simulation-Options#FLOAT8]], respectively.
@@ -84,9 +84,9 @@ In addition, when enabling OpenMP in GAMER (i.e., with the
 compile-time option [[OPENMP | Installation: Simulation-Options#OPENMP]]),
 GRACKLE must be configured with OpenMP
 support as well using
-
-    > make omp-on
-
+```
+make omp-on
+```
 ### HDF5
 GAMER uses [HDF5](https://support.hdfgroup.org/HDF5/) for storing snapshots.
 It is not necessary to enable either `--enable-cxx` or `--enable-parallel` when
