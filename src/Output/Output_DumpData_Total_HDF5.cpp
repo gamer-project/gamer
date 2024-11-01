@@ -2637,6 +2637,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.IntOppSign0thOrder          = INT_OPP_SIGN_0TH_ORDER;
 #  ifdef SUPPORT_SPECTRAL_INT
    InputPara.SpecInt_TablePath           = SPEC_INT_TABLE_PATH;
+   InputPara.SpecInt_GhostBoundary       = SPEC_INT_GHOST_BOUNDARY;
 #  if ( MODEL == ELBDM )
    InputPara.SpecInt_XY_Instead_DePha    = SPEC_INT_XY_INSTEAD_DEPHA;
    InputPara.SpecInt_WavelengthMagnifier = SPEC_INT_WAVELENGTH_MAGNIFIER;
@@ -3647,6 +3648,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "IntOppSign0thOrder",      HOFFSET(InputPara_t,IntOppSign0thOrder     ), H5T_NATIVE_INT              );
 #  ifdef SUPPORT_SPECTRAL_INT
    H5Tinsert( H5_TypeID, "SpecInt_TablePath",           HOFFSET(InputPara_t,SpecInt_TablePath           ), H5_TypeID_VarStr   );
+   H5Tinsert( H5_TypeID, "SpecInt_GhostBoundary",       HOFFSET(InputPara_t,SpecInt_GhostBoundary       ), H5T_NATIVE_INT     );
 #  if ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "SpecInt_XY_Instead_DePha",    HOFFSET(InputPara_t,SpecInt_XY_Instead_DePha    ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "SpecInt_WavelengthMagnifier", HOFFSET(InputPara_t,SpecInt_WavelengthMagnifier ), H5T_NATIVE_DOUBLE  );

@@ -479,7 +479,8 @@ void Init_Load_Parameter()
 #  error : unsupported MODEL !!
 #  endif
 #  ifdef SUPPORT_SPECTRAL_INT
-   ReadPara->Add( "SPEC_INT_TABLE_PATH",            SPEC_INT_TABLE_PATH,          NoDef_str,       Useless_str,   Useless_str    );
+   ReadPara->Add( "SPEC_INT_TABLE_PATH",         SPEC_INT_TABLE_PATH,             NoDef_str,       Useless_str,   Useless_str    );
+   ReadPara->Add( "SPEC_INT_GHOST_BOUNDARY",    &SPEC_INT_GHOST_BOUNDARY,         4,               1,             NoMax_int      );
 #  if ( MODEL == ELBDM )
    ReadPara->Add( "SPEC_INT_XY_INSTEAD_DEPHA",     &SPEC_INT_XY_INSTEAD_DEPHA,    true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "SPEC_INT_WAVELENGTH_MAGNIFIER", &SPEC_INT_WAVELENGTH_MAGNIFIER,1.0e2,           1.0,           NoMax_double   );

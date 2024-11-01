@@ -2224,6 +2224,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "IntOppSign0thOrder",      &RS.IntOppSign0thOrder,      SID, TID, NonFatal, &RT.IntOppSign0thOrder,       1, NonFatal );
 #  ifdef SUPPORT_SPECTRAL_INT
    LoadField( "SpecInt_TablePath",           &RS.SpecInt_TablePath,           SID, TID, NonFatal,  RT.SpecInt_TablePath,           1, NonFatal );
+   LoadField( "SpecInt_GhostBoundary",       &RS.SpecInt_GhostBoundary,       SID, TID, NonFatal, &RT.SpecInt_GhostBoundary,       1, NonFatal );
 #  if ( MODEL == ELBDM )
    LoadField( "SpecInt_XY_Instead_DePha",    &RS.SpecInt_XY_Instead_DePha,    SID, TID, NonFatal, &RT.SpecInt_XY_Instead_DePha,    1, NonFatal );
    LoadField( "SpecInt_WavelengthMagnifier", &RS.SpecInt_WavelengthMagnifier, SID, TID, NonFatal, &RT.SpecInt_WavelengthMagnifier, 1, NonFatal );

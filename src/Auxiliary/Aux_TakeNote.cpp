@@ -1535,7 +1535,8 @@ void Aux_TakeNote()
       fprintf( Note, "MONO_MAX_ITER                  % d\n",      MONO_MAX_ITER                 );
       fprintf( Note, "INT_OPP_SIGN_0TH_ORDER         % d\n",      INT_OPP_SIGN_0TH_ORDER        );
 #     ifdef SUPPORT_SPECTRAL_INT
-      fprintf( Note, "SPEC_INT_TABLE_PATH             %s\n",      SPEC_INT_TABLE_PATH           );
+      fprintf( Note, "SPEC_INT_TABLE_PATH            %s\n",       SPEC_INT_TABLE_PATH           );
+      fprintf( Note, "SPEC_INT_GHOST_BOUNDARY        % d\n",      SPEC_INT_GHOST_BOUNDARY       );
 #     if ( MODEL == ELBDM )
       fprintf( Note, "SPEC_INT_XY_INSTEAD_DEPHA      % d\n",      SPEC_INT_XY_INSTEAD_DEPHA     );
       fprintf( Note, "SPEC_INT_WAVELENGTH_MAGNIFIER  % 14.7e\n",  SPEC_INT_WAVELENGTH_MAGNIFIER );

@@ -51,11 +51,6 @@
 #include <memory>
 #include "GramFE_Interpolation.h"
 
-#define SLOPE_RATIO( l, c, r ) (( (r) - (c) ) / ((c) - (l) ))
-
-
-
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Int_Spectral
 // Description :  Perform spatial interpolation based on the Gram-Fourier extension method
@@ -86,7 +81,7 @@ void Int_Spectral( real CData[], const int CSize[3], const int CStart[3], const 
 // interpolation-scheme-dependent parameters
 // ===============================================================================
 // number of coarse-grid ghost zone
-   const int CGhost = 2;
+   const int CGhost = SPEC_INT_GHOST_BOUNDARY;
 // ===============================================================================
 
 
@@ -221,6 +216,9 @@ void Int_Spectral( real CData[], const int CSize[3], const int CStart[3], const 
 
 
 #        if ( MODEL == ELBDM )
+
+         bool InterpolateReIm = false;
+
          if ( UnwrapPhase )
          {
             real* Real = Input + 0*InputDisp;
@@ -232,14 +230,40 @@ void Int_Spectral( real CData[], const int CSize[3], const int CStart[3], const 
                Imag[k] = ELBDM_UnwrapPhase( Imag[k-1], Imag[k] );
             }
 
-//          convert density and phase to real and imaginary part
+
+//          convert density and phase to real and imaginary part if vortex is detected
+//          NOTE:
+//          Two other strategies that were thought to improve the interpolation around vortices have been thoroughly tested
+//          Strategy 1: Interpolate rho and rho * cos(S/N)
+//          This strategy performs poorly because rho's derivatives have a kink at the vortex.
+//          Taking powers of rho to shift the kink to higher derivatives helps, but increases the error when taking a high root to obtain rho again
+//
+//          Strategy 2:
+//          Perform a singular gauge transformation rho -> -rho and S -> S +- pi at the vortex
+//          This leads to smooth fields at the vortex, but fails around the vortex where S might jump by less then pi and the density is non-zero
+//
+//          The safest strategy is to simply interpolate the real and imaginary part around the vortex with a generous vortex detection threshold
+//
+
             if ( SPEC_INT_XY_INSTEAD_DEPHA )
             {
-               for (int k=0; k<InSize[XYZ]; k++)
-               {
-                  const real SqrtDens = SQRT( Real[k] );
-                  Real[k] = SqrtDens*COS( Imag[k] / SPEC_INT_WAVELENGTH_MAGNIFIER );
-                  Imag[k] = SqrtDens*SIN( Imag[k] / SPEC_INT_WAVELENGTH_MAGNIFIER );
+//             detect phase discontinuities
+               for ( int k = 1; k < InSize[XYZ] - 1; k++ ) {
+//                assuming Lap(S) * dx**2 > threshold implies a significant phase jump
+                  if ( fabs( Imag[k+1] - 2 * Imag[k] + Imag[k-1] ) > SPEC_INT_VORTEX_THRESHOLD ) {
+                     InterpolateReIm = true;
+                     break;
+                  }
+               }
+
+//             convert back to real & imaginary part
+               if ( InterpolateReIm ) {
+                  for ( int k = 0; k < InSize[XYZ]; k++ ) {
+                     const real Re = SQRT( Real[k] ) * COS( Imag[k] );
+                     const real Im = SQRT( Real[k] ) * SIN( Imag[k] );
+                     Real[k] = Re;
+                     Imag[k] = Im;
+                  }
                }
             }
          } // if ( UnwrapPhase )
@@ -254,24 +278,34 @@ void Int_Spectral( real CData[], const int CSize[3], const int CStart[3], const 
          }
 
 #        if ( MODEL == ELBDM )
-         if ( UnwrapPhase && SPEC_INT_XY_INSTEAD_DEPHA )
+         if ( UnwrapPhase )
          {
-            real* Re = Output + 0*OutputDisp;
-            real* Im = Output + 1*OutputDisp;
 
-            for (int k=0; k<OutSize[XYZ]; k++)
-            {
-               Re[k] = SQR( Im[k] ) + SQR( Re[k] );
-               Im[k] = SATAN2( Im[k], Re[k] )*SPEC_INT_WAVELENGTH_MAGNIFIER;
+            real* Real = Output  + 0 * OutputDisp;
+            real* Imag = Output  + 1 * OutputDisp;
+
+            if ( SPEC_INT_XY_INSTEAD_DEPHA ) {
+
+//             convert back to density and phase from real/imag
+               if ( InterpolateReIm ) {
+                  for (int k = 0; k < OutSize[XYZ]; k++) {
+                     const real De  = SQR( Real[k] ) + SQR( Imag[k] );
+                     const real Pha = SATAN2( Imag[k], Real[k] );
+                     Real[k] = De;
+                     Imag[k] = Pha;
+                  }
+
+//                unwrap phase to be restore phase field
+                  for (int k = 1;  k < OutSize[XYZ];  k++)
+                  {
+                     Imag[k] = ELBDM_UnwrapPhase( Imag[k-1], Imag[k] );
+                  }
+               }
             }
 
-//          unwrap phase to be consistent with UnwrapPhase in other interpolation modes
-            if ( XYZ == 2 )
-            {
-               for (int k=1; k<OutSize[XYZ]; k++)
-               {
-                  Im[k] = ELBDM_UnwrapPhase( Im[k-1], Im[k] );
-               }
+//          density floor
+            for (int k = 0; k < OutSize[XYZ]; k++) {
+               Real[k] = MAX( TINY_NUMBER, Real[k] );
             }
          } // if ( UnwrapPhase && SPEC_INT_XY_INSTEAD_DEPHA )
 #        endif // #if ( MODEL == ELBDM )
@@ -712,13 +746,17 @@ PrecomputedInterpolationContext::~PrecomputedInterpolationContext()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  PrecomputedInterpolationContext::GetWorkspaceSize
-// Description :  Return 0 since PrecomputedInterpolationContext does not require a workspace
+// Description :  Return size of input and output arrays in pi_gsl::gsl_real precision for matrix multiplication
 //
-// Return      :  Returns the unsigned integer 0
+// Return      :  Returns the workspace size in bytes
 //-------------------------------------------------------------------------------------------------------
 size_t PrecomputedInterpolationContext::GetWorkspaceSize() const {
 
-   return 0;
+   size_t total_size = 0;
+   total_size += nInput;        // input
+   total_size += nInterpolated; // output
+
+   return total_size*sizeof( pi_gsl::gsl_real );
 
 } // FUNCTION : GetWorkspaceSize
 
@@ -730,17 +768,29 @@ size_t PrecomputedInterpolationContext::GetWorkspaceSize() const {
 //
 // Parameter   :  input          : Real input  array of size nInput
 //                output         : Real output array of size 2 * (nInput - nGhostBoundary)
-//                workspace      : Useless for PrecomputedInterpolationContext
-//
+//                workspace      : Workspace containing input and output in double precision pi_gsl::gsl_real
 //-------------------------------------------------------------------------------------------------------
 void PrecomputedInterpolationContext::InterpolateReal( const real *input, real *output, char* workspace ) const
 {
 
-   pi_gsl::vector_const_view in = pi_gsl::vector_const_view_array( input, nInput );
-   pi_gsl::vector_view out      = pi_gsl::vector_view_array      ( output, nInterpolated );
+// define arrays in workspace
+   pi_gsl::gsl_real* pi_gsl_input         = (pi_gsl::gsl_real*) workspace;
+   pi_gsl::gsl_real* pi_gsl_output        = pi_gsl_input + nInput;
+
+// convert input to matrix multiplication precision
+   for (size_t i=0; i<nInput; ++i) {
+      pi_gsl_input[i] = (pi_gsl::gsl_real) input[i];
+   }
+
+   pi_gsl::vector_const_view in = pi_gsl::vector_const_view_array( pi_gsl_input, nInput );
+   pi_gsl::vector_view out      = pi_gsl::vector_view_array      ( pi_gsl_output, nInterpolated );
 
    pi_gsl::blas_sgemv( CblasNoTrans, 1.0, interpolationMatrix, &in.vector, 0.0, &out.vector );
 
+
+   for (size_t i=0; i<nInterpolated; ++i) {
+      output[i] = (real) pi_gsl_output[i];
+   }
 } // FUNCTION : InterpolateReal
 
 
