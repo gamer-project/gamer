@@ -360,7 +360,7 @@ extern char   SPEC_INT_TABLE_PATH[MAX_STRING];
 extern int    SPEC_INT_GHOST_BOUNDARY;
 #if ( MODEL == ELBDM )
 extern bool   SPEC_INT_XY_INSTEAD_DEPHA;
-extern double SPEC_INT_WAVELENGTH_MAGNIFIER;
+extern double SPEC_INT_VORTEX_THRESHOLD;
 #endif
 class InterpolationHandler;
 extern InterpolationHandler Int_InterpolationHandler;

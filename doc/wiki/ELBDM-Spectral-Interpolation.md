@@ -5,7 +5,7 @@ This section provides an overview of the spectral interpolation method in GAMER 
 
 ### Compilation and Runtime Settings
 - **Compile-Time Flag**: Ensure GAMER is compiled with `SUPPORT_SPECTRAL_INT` (or configured with `--spectral_interpolation`).
-- **Runtime Parameters**: Set `OPT__FLU_INT_SCHEME` and `OPT__REF_FLU_INT_SCHEME` to `8` for enabling spectral interpolation. Set `SPEC_INT_TABLE_PATH` to the directory containing `interpolation_tables` and `boundary2extension_tables`. Enable `SPEC_INT_XY_INSTEAD_DEPHA` to interpolate x = density^0.5\*cos( phase/SPEC_INT_WAVELENGTH_MAGNIFIER ), y = density^0.5\*sin( phase/SPEC_INT_WAVELENGTH_MAGNIFIER ) instead of density and phase, which has the advantage of being well-defined across vortices. `SPEC_INT_WAVELENGTH_MAGNIFIER` is the stretching factor of wavelength; setting it to unity gives x=real part and y=imaginary part.
+- **Runtime Parameters**: Set `OPT__FLU_INT_SCHEME` and `OPT__REF_FLU_INT_SCHEME` to `8` for enabling spectral interpolation. Set `SPEC_INT_TABLE_PATH` to the directory containing `interpolation_tables` and `boundary2extension_tables`. Enable `SPEC_INT_XY_INSTEAD_DEPHA` to interpolate x = density, y = phase instead of the real and imaginary parts away from vortices. `SPEC_INT_VORTEX_THRESHOLD is the threshold for the laplacian of the phase field; setting it to 0 means that the density and phase are never used.
 
 ### Obtaining Interpolation Tables
 

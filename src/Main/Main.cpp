@@ -334,7 +334,7 @@ char   SPEC_INT_TABLE_PATH[MAX_STRING];
 int    SPEC_INT_GHOST_BOUNDARY;
 #if ( MODEL == ELBDM )
 bool   SPEC_INT_XY_INSTEAD_DEPHA;
-double SPEC_INT_WAVELENGTH_MAGNIFIER;
+double SPEC_INT_VORTEX_THRESHOLD;
 #endif
 InterpolationHandler Int_InterpolationHandler;
 #endif // #ifdef SUPPORT_SPECTRAL_INT

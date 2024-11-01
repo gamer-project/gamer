@@ -2640,7 +2640,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.SpecInt_GhostBoundary       = SPEC_INT_GHOST_BOUNDARY;
 #  if ( MODEL == ELBDM )
    InputPara.SpecInt_XY_Instead_DePha    = SPEC_INT_XY_INSTEAD_DEPHA;
-   InputPara.SpecInt_WavelengthMagnifier = SPEC_INT_WAVELENGTH_MAGNIFIER;
+   InputPara.SpecInt_VortexThreshold     = SPEC_INT_VORTEX_THRESHOLD;
 #  endif
 #  endif // #ifdef SUPPORT_SPECTRAL_INT
 
@@ -3651,7 +3651,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "SpecInt_GhostBoundary",       HOFFSET(InputPara_t,SpecInt_GhostBoundary       ), H5T_NATIVE_INT     );
 #  if ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "SpecInt_XY_Instead_DePha",    HOFFSET(InputPara_t,SpecInt_XY_Instead_DePha    ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "SpecInt_WavelengthMagnifier", HOFFSET(InputPara_t,SpecInt_WavelengthMagnifier ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "SpecInt_VortexThreshold",     HOFFSET(InputPara_t,SpecInt_VortexThreshold ), H5T_NATIVE_DOUBLE  );
 #  endif
 #  endif // #ifdef SUPPORT_SPECTRAL_INT
 
