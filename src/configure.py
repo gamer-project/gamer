@@ -413,6 +413,12 @@ def load_arguments():
                          help="Select the MACHINE.config file under ../configs directory. \nChoice: [eureka_intel, YOUR_MACHINE_NAME] => "
                        )
 
+    # verbose compilation mode
+    parser.add_argument( "--verbose_make", type=str2bool, metavar="BOOLEAN",
+                         default=False,
+                         help="Output detailed compilation commands.\n"
+                       )
+
     # A. options of diffierent physical models
     parser.add_argument( "--model", type=str, metavar="TYPE", gamer_name="MODEL",
                          default="HYDRO", choices=["HYDRO", "ELBDM", "PAR_ONLY"],
@@ -1039,6 +1045,10 @@ if __name__ == "__main__":
         makefile, num = re.subn(r"@@@%s@@@"%(key), val, makefile)
         if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
 
+    verbose_mode = "1" if args["verbose_make"] else "0"
+    makefile, num = re.subn(r"@@@COMPILE_VERBOSE@@@", verbose_mode, makefile)
+    if num == 0: raise BaseException("The string @@@COMPILE_VERBOSE@@@ is not replaced correctly.")
+
     LOGGER.info("----------------------------------------")
     for key in re.findall(r"@@@(.+?)@@@", makefile):
         makefile, num = re.subn(r"@@@%s@@@"%key, "", makefile)
@@ -1051,4 +1061,5 @@ if __name__ == "__main__":
 
     LOGGER.info("========================================")
     LOGGER.info("%s is created."%GAMER_MAKE_OUT)
+    if args["verbose_make"]: LOGGER.info("%s is in verbose mode!"%GAMER_MAKE_OUT)
     LOGGER.info("========================================")
