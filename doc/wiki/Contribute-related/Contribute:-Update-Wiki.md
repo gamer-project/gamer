@@ -112,7 +112,8 @@ We provide three examples of editing the wiki pages: through `gollum` (recommend
 
      [[images/WikiGitLocation.png]]
 
-   - Edit by `gollum`. 
+   - Edit by `gollum`.
+     * NOTE: To use `gollum` for a branch different from `master` (say `new_branch`), one needs to do `gollum --ref new_branch`.
      * `gollum --lenient-tag-lookup /path/to/wiki`
      * Open `http://localhost:4567` in your browser.
    - Push your changes to the forked Wiki git
