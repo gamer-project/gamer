@@ -363,6 +363,11 @@ void Aux_Check_Parameter()
 #  endif
       Aux_Message( stderr, "WARNING : all output options are turned off --> no data will be output !!\n" );
 
+#  ifdef PARTICLE
+   if ( OPT__OUTPUT_PAR_MESH  &&  OPT__OUTPUT_TOTAL != OUTPUT_FORMAT_HDF5 )
+      Aux_Message( stderr, "WARNING : OPT__OUTPUT_PAR_MESH currently only supports OPT__OUTPUT_TOTAL=%d !!\n", OUTPUT_FORMAT_HDF5 );
+#  endif
+
    if ( StrLen_Flt <= 0 )
       Aux_Message( stderr, "WARNING : StrLen_Flt (%d) <= 0 (OPT__OUTPUT_TEXT_FORMAT_FLT=%s) --> text output might be misaligned !!\n",
                    StrLen_Flt, OPT__OUTPUT_TEXT_FORMAT_FLT );
