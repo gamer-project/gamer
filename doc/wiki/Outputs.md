@@ -17,6 +17,7 @@ Parameters described on this page:
 [OPT__OUTPUT_TEXT_FORMAT_FLT](#OPT__OUTPUT_TEXT_FORMAT_FLT), &nbsp;
 [OPT__OUTPUT_USER](#OPT__OUTPUT_USER), &nbsp;
 [OPT__OUTPUT_PAR_MODE](#OPT__OUTPUT_PAR_MODE), &nbsp;
+[OPT__OUTPUT_PAR_MESH](#OPT__OUTPUT_PAR_MESH), &nbsp;
 [OPT__OUTPUT_BASEPS](#OPT__OUTPUT_BASEPS), &nbsp;
 [OPT__OUTPUT_BASE](#OPT__OUTPUT_BASE), &nbsp;
 [OPT__OUTPUT_POT](#OPT__OUTPUT_POT), &nbsp;
@@ -104,6 +105,14 @@ This option is mainly for debugging purposes since the simulation snapshots
 (with the option [OPT__OUTPUT_TOTAL](#OPT__OUTPUT_TOTAL)) already store
 particle data.
     * **Restriction:**
+
+<a name="OPT__OUTPUT_PAR_MESH"></a>
+* #### `OPT__OUTPUT_PAR_MESH` &ensp; (0=off, 1=on) &ensp; [1]
+    * **Description:**
+Map mesh attributes to tracer particles and output them in the HDF5 snapshots.
+Edit `Input__Par_Mesh` to specify the desired mesh attributes. An example file can be found at `example/input/Input__Par_Mesh`.
+    * **Restriction:**
+Only applicable when enabling [[TRACER | Installation:-Simulation-Options#TRACER]] and setting [OPT__OUTPUT_TOTAL](#OPT__OUTPUT_TOTAL) to 1.
 
 <a name="OPT__OUTPUT_BASEPS"></a>
 * #### `OPT__OUTPUT_BASEPS` &ensp; (0=off, 1=on) &ensp; [0]
