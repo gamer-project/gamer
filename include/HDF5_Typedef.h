@@ -726,6 +726,7 @@ struct InputPara_t
    int    Opt__Output_User;
 #  ifdef PARTICLE
    int    Opt__Output_Par_Mode;
+   int    Opt__Output_Par_Mesh;
 #  endif
    int    Opt__Output_BasePS;
    int    Opt__Output_Base;
