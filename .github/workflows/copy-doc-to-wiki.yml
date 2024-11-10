@@ -2,6 +2,9 @@ name: Copy doc to wiki
 
 on:
   workflow_dispatch:
+  pull_request_target:
+    types:
+      - closed
 
 env:
   GIT_AUTHOR_NAME: Actionbot
@@ -9,6 +12,7 @@ env:
 
 jobs:
   job-copy-doc-to-wiki:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
