@@ -40,13 +40,13 @@ for i in range(0,2):
 
 
 # load data
-ds_gamer = yt.load( "../Data_000008" )
+ds_gamer = yt.load( "../Data_000000" )
 #ds_gamer = yt.load( "gamer/Data_000100" )
 #ds_flash = yt.load( "flash/fiducial_1to1_b0_hdf5_plt_cnt_0100" )
 
 
 # create a sphere on the max density location
-sp_gamer = ds_gamer.sphere( "max", (2.5e3, "kpc") )
+sp_gamer = ds_gamer.sphere( "max", (1.0e4, "kpc") )
 #sp_flash = ds_flash.sphere( "max", (2.5e3, "kpc") )
 
 
@@ -144,4 +144,4 @@ ax[0][0].legend( loc='lower left', numpoints=1, labelspacing=0.2, fontsize=13, h
 
 # show/save figure
 plt.savefig( FileOut, bbox_inches='tight', pad_inches=0.05 )
-plt.show()
+#plt.show()
