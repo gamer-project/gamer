@@ -254,6 +254,7 @@ Procedure for outputting new variables:
 //                2477 : 2024/04/05 --> output OPT__RECORD_CENTER, COM_CEN_X, COM_CEN_Y, COM_CEN_Z,
 //                                             COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R, COM_MAX_ITER
 //                2478 : 2024/04/09 --> output ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z
+//                2479 : 2024/07/17 --> output OPT__OUTPUT_PAR_MESH and particle attributes mapped from mesh quantities
 //                2481 : 2024/07/01 --> output particle integer attribute
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
@@ -1234,10 +1235,14 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    long     (*NParLv_EachRank)[NLEVEL] = new long [MPI_NRank][NLEVEL];   // number of particles at each level in each rank
    real_par (*ParFltBuf1v1Lv)          = NULL;   // buffer storing the data of one particle float   attribute at one level
    long_par (*ParIntBuf1v1Lv)          = NULL;   // buffer storing the data of one particle integer attribute at one level
+   int        Par_NAtt_Mesh            = amr->Par->Mesh_Attr_Num;
 
    long  GParID_Offset[NLEVEL];  // GParID = global particle index (==> unique for each particle)
    long  NParLv_AllRank[NLEVEL];
    long  MaxNPar1Lv, NParInBuf, ParID;
+
+// prepare particle attributes mapped from mesh quantities
+   if ( OPT__OUTPUT_PAR_MESH )   Par_Output_TracerParticle_Mesh();
 
 
 // 6-1. initialize variables
@@ -1281,11 +1286,13 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       if ( H5_GroupID_Particle < 0 )   Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "Particle" );
 
 //    create the datasets of all particle attributes
-      for (int v=0; v<PAR_NATT_FLT_STORED; v++)
+      for (int v=0; v<PAR_NATT_FLT_STORED+Par_NAtt_Mesh; v++)
       {
-         H5_SetID_ParFltData = H5Dcreate( H5_GroupID_Particle, ParAttFltLabel[v], H5T_GAMER_REAL_PAR, H5_SpaceID_ParData,
+         char *ParLabel = ( v < PAR_NATT_FLT_STORED ) ? ParAttFltLabel[v] : amr->Par->Mesh_Attr_Label[v - PAR_NATT_FLT_STORED];
+
+         H5_SetID_ParFltData = H5Dcreate( H5_GroupID_Particle, ParLabel, H5T_GAMER_REAL_PAR, H5_SpaceID_ParData,
                                           H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
-         if ( H5_SetID_ParFltData < 0 )   Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", ParAttFltLabel[v] );
+         if ( H5_SetID_ParFltData < 0 )   Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", ParLabel );
          H5_Status = H5Dclose( H5_SetID_ParFltData );
       }
 
@@ -1337,7 +1344,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 //       output one particle attribute at one level in one rank at a time
 //       --> skip the last PAR_NATT_FLT_UNSTORED attributes since we do not want to store them on disk
-         for (int v=0; v<PAR_NATT_FLT_STORED; v++)
+         for (int v=0; v<PAR_NATT_FLT_STORED+Par_NAtt_Mesh; v++)
          {
 //          6-3-3. collect particle data from all patches at the current target level
             NParInBuf = 0;
@@ -1352,19 +1359,23 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   Aux_Error( ERROR_INFO, "lv %d, NParInBuf (%ld) >= NPar_Lv (%ld) !!\n", lv, NParInBuf, amr->Par->NPar_Lv[lv] );
 #              endif
 
-               ParFltBuf1v1Lv[ NParInBuf ++ ] = amr->Par->AttributeFlt[v][ParID];
+               ParFltBuf1v1Lv[ NParInBuf ++ ] = ( v < PAR_NATT_FLT_STORED )
+                                              ? amr->Par->AttributeFlt[v]                      [ParID]
+                                              : amr->Par->Mesh_Attr   [v - PAR_NATT_FLT_STORED][ParID];
             }
 
 
 //          6-3-4. write data to disk
-            H5_SetID_ParFltData = H5Dopen( H5_GroupID_Particle, ParAttFltLabel[v], H5P_DEFAULT );
+            char *ParLabel = ( v < PAR_NATT_FLT_STORED ) ? ParAttFltLabel[v] : amr->Par->Mesh_Attr_Label[v - PAR_NATT_FLT_STORED];
+
+            H5_SetID_ParFltData = H5Dopen( H5_GroupID_Particle, ParLabel, H5P_DEFAULT );
 
             H5_Status = H5Dwrite( H5_SetID_ParFltData, H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT, ParFltBuf1v1Lv );
             if ( H5_Status < 0 )
                Aux_Error( ERROR_INFO, "failed to write a particle float attribute (lv %d, v %d) !!\n", lv, v );
 
             H5_Status = H5Dclose( H5_SetID_ParFltData );
-         } // for (int v=0; v<PAR_NATT_FLT_STORED; v++)
+         } // for (int v=0; v<PAR_NATT_FLT_STORED+Par_NAtt_Mesh; v++)
 
 //       output one particle attribute at one level in one rank at a time
 //       --> skip the last PAR_NATT_INT_UNSTORED attributes since we do not want to store them on disk
@@ -2617,6 +2628,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Output_User            = OPT__OUTPUT_USER;
 #  ifdef PARTICLE
    InputPara.Opt__Output_Par_Mode        = OPT__OUTPUT_PAR_MODE;
+   InputPara.Opt__Output_Par_Mesh        = OPT__OUTPUT_PAR_MESH;
 #  endif
    InputPara.Opt__Output_BasePS          = OPT__OUTPUT_BASEPS;
    InputPara.Opt__Output_Base            = OPT__OUTPUT_BASE;
@@ -3580,6 +3592,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Output_User",            HOFFSET(InputPara_t,Opt__Output_User           ), H5T_NATIVE_INT              );
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Opt__Output_Par_Mode",        HOFFSET(InputPara_t,Opt__Output_Par_Mode       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Par_Mesh",        HOFFSET(InputPara_t,Opt__Output_Par_Mesh       ), H5T_NATIVE_INT              );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Output_BasePS",          HOFFSET(InputPara_t,Opt__Output_BasePS         ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Base",            HOFFSET(InputPara_t,Opt__Output_Base           ), H5T_NATIVE_INT              );
