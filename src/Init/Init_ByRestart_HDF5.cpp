@@ -1381,7 +1381,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
       if ( H5_MemID_ParData < 0 )   Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemID_ParData" );
 
 //    load particle data from disk
-      if ( FormatVersion < 2480 )
+      if ( FormatVersion < 2481 )
       {
          const int PAR_TYPE_IDX_OLD = 7;
          int skip_type = 0;
@@ -1405,7 +1405,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
             if ( H5_Status < 0 )
                Aux_Error( ERROR_INFO, "failed to load a particle float attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
          }
-      } // if ( FormatVersion < 2480 )
+      } // if ( FormatVersion < 2481 )
       else
       {
          for (int v=0; v<PAR_NATT_FLT_STORED; v++)
@@ -1424,7 +1424,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
             if ( H5_Status < 0 )
                Aux_Error( ERROR_INFO, "failed to load a particle integer attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
          }
-      } // if ( FormatVersion < 2480 ) ... else ...
+      } // if ( FormatVersion < 2481 ) ... else ...
 
 //    store particles to the particle repository (one particle at a time)
       NewParAttFlt[PAR_TIME] = Time[0];   // all particles are assumed to be synchronized with the base level
@@ -2222,6 +2222,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Output_User",            &RS.Opt__Output_User,            SID, TID, NonFatal, &RT.Opt__Output_User,            1, NonFatal );
 #  ifdef PARTICLE
    LoadField( "Opt__Output_Par_Mode",        &RS.Opt__Output_Par_Mode,        SID, TID, NonFatal, &RT.Opt__Output_Par_Mode,        1, NonFatal );
+   LoadField( "Opt__Output_Par_Mesh",        &RS.Opt__Output_Par_Mesh,        SID, TID, NonFatal, &RT.Opt__Output_Par_Mesh,        1, NonFatal );
 #  endif
    LoadField( "Opt__Output_BasePS",          &RS.Opt__Output_BasePS,          SID, TID, NonFatal, &RT.Opt__Output_BasePS,          1, NonFatal );
    if ( OPT__OUTPUT_PART )
