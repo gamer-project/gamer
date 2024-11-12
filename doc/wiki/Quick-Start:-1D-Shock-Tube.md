@@ -101,7 +101,7 @@ End_GAMER ... done
 </pre>
 </details>
 
-7\. The code should have generated several [[log files|Outputs#log-files]] `Record__*`
+7\. The code will generate several [[log files|Outputs#log-files]] `Record__*`
 and a series of 1D text data files `Xline_y0.000_z0.000_*`.
 
 ``` bash
@@ -244,7 +244,8 @@ make -j4
 ```
 
 > [!CAUTION]
-> Remember to copy the new executable to `bin/shocktube`.
+> * Please make sure that the `GPU_COMPUTE_CAPABILITY` is set properly in your machine configuration files
+> * Remember to copy the new executable to `bin/shocktube`.
 
 2\. Remove all old log and data files, if necessary.
 Run the code with the new executable.

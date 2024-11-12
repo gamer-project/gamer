@@ -1,7 +1,7 @@
 This page shows how to use the Python script `configure.py` to tailor the `Makefile`
 for your simulation and machine. The script supports both Python2 and Python3.
 - [User Guide](#user-guide)
-  - [Library paths and compilation flags](#library-paths-and-compilation-flags)
+  - [Setup machine configuration file](#setup-machine-configuration-file)
   - [Simulation options](#simulation-options)
   - [Running the script](#running-the-script)
 - [Developer Guide](#developer-guide)
@@ -22,16 +22,10 @@ The machine configuration file is under `gamer/configs`. The configuration file 
    ```
    MPI_PATH /usr/local/mpich-3.2
    ```
-   or
-   ```
-   MPI_PATH:=/usr/local/mpich-3.2
-   ```
-> [!CAUTION]
-> Only the path variables can be separated by `:=`.
 
 2. Compilers
 
-   There are two compilers in this section C++ (`CXX`) and MPI (`CXX_MPI`).
+   There are two compilers in this section: C++ (`CXX`) and MPI (`CXX_MPI`).
 > [!NOTE]
 > `MPI_PATH/bin/` will be combined with `CXX_MPI` automatically
 
@@ -46,21 +40,21 @@ The machine configuration file is under `gamer/configs`. The configuration file 
    CXXFLAG -g
    CXXFLAG -O2
    ```
-   We have all the available flag variables table here:
+   Here is a table of all the available flag variables:
    | Flag name | Description |
    |---|---|
    | `CXXFLAG`      | Flags for compiler `CXX` and `CXX_MPI` |
-   | `OPENMPFLAG`   | Flags for OpenMP enable |
-   | `LIBFLAG`      | Flags for the libraries |
+   | `OPENMPFLAG`   | Flags for OpenMP |
+   | `LIBFLAG`      | Flags for all libraries |
    | `NVCCFLAG_COM` | Flags for `nvcc` compiler |
    | `NVCCFLAG_FLU` | Flags for fluid solver files |
    | `NVCCFLAG_POT` | Flags for Poisson/gravity solvers files |
 
 4. GPU compute capability
 
-   The GPU compute capability can be calculated by `GPU_COMPUTE_CAPABILITY = major_verison*100 + minor_version*10`. For example, `GeForce RTX 4090` has `GPU_COMPUTE_CAPABILITY` `890` (8\*100 + 9\*10).
+   The GPU compute capability can be calculated by `major_verison*100 + minor_version*10`. For example, for `GeForce RTX 4090`, set `GPU_COMPUTE_CAPABILITY 890` (8*100 + 9*10).
 > [!TIP]
-> * You can also set it to `-1` to determine the value automatically using `get_gpu_compute_capability()` in `configure.py`.
+> * You can also set `GPU_COMPUTE_CAPABILITY` to `-1` to determine the value automatically using `get_gpu_compute_capability()` in `configure.py`.
 > * Check your GPU compute capability:
 >   1. https://developer.nvidia.com/cuda-gpus
 >   1. https://en.wikipedia.org/wiki/CUDA#GPUs_supported
@@ -205,7 +199,7 @@ Edit `Makefile_base` to add new source files.
        return paths, compilers, flags
    ```
 > [!IMPORTANT]
-> All flags must be set in `flags`, otherwise it will be considered as a path.
+> All flags must be set in `flags`; otherwise, they will be interpreted as library paths.
 
 3. Add `NEW_FLAG -new_flag` in your machine configuration file `configs/YOUR.config`.
    ```
@@ -219,6 +213,6 @@ Edit `Makefile_base` to add new source files.
 * The strings to be replaced by `configure.py` must be sandwiched by `@@@`.
 
 ### Rules of `*.config`
-* The comment starts with `#`.
+* Comments must start with `#`.
 * All variables should be uppercase.
-* Variables and values are separated by spaces.
+* Variables and values should be separated by spaces.

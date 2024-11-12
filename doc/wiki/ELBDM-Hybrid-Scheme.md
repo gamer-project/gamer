@@ -26,7 +26,7 @@ sh download_light_halo.sh
    ``` bash
    sh download_spectral_interpolation_tables.sh
    ```
-   * Set `OPT__FLU_INT_SCHEME` and `OPT__REF_FLU_INT_SCHEME` to `8`
+   * Set `OPT__FLU_INT_SCHEME` and `OPT__REF_FLU_INT_SCHEME` to `8` in `Input__Parameter`
 6. Run GAMER
 ``` bash
 mpirun -map-by ppr:2:socket:pe=8 --report-bindings ./gamer 1>>log 2>&1

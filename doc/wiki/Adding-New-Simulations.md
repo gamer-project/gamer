@@ -262,7 +262,7 @@ initialization function `Init_TestProb_Hydro_NewProblem()`.
     Init_Field_User_Ptr = AddNewField_NewProblem;
     ```
 
-> [!CAUTION]
+> [!NOTE]
 > The built-in field `Metal` with the field index `Idx_Metal`
 will be added automatically when enabling [[ GRACKLE_METAL | Chemistry-and-Radiation#GRACKLE_METAL ]].
 

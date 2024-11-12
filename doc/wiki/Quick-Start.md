@@ -2,7 +2,7 @@
 
 Follow the instructions in [[Download]] to get the latest version of GAMER.
 
-### Setup your machine configuration file
+### Setup Your Machine Configuration File
 
 Follow the instructions in [[Setup machine configuration file | Installation:-Configure.py#setup-machine-configuration-file]] to set the configuration file of your machine.
 

@@ -70,7 +70,7 @@ The following example will launch 10 threads per process.
 OMP_NTHREAD      10      # number of OpenMP threads (<=0=auto) [-1]
 ```
 
-> [!CAUTION]
+> [!IMPORTANT]
 > See [[Hybrid MPI/OpenMP/GPU | MPI-and-OpenMP#hybrid-mpiopenmpgpu]]
 for the recommended configuration of the number of MPI processes and OpenMP threads.
 
@@ -84,7 +84,7 @@ and 10 threads per process, assuming that there are two 10-core CPUs.
 mpirun -np 2 -map-by ppr:1:socket:pe=10 ./gamer
 ```
 > [!TIP]
-> See more option details of MPI:
+> See more options of MPI:
 >   * `-map-by`: [Mapping options and modifiers](https://www.ibm.com/docs/en/smpi/10.2?topic=affinity-mapping-options-modifiers)
 >   * `-np`: [mpirun command options](https://www.ibm.com/docs/da/smpi/10.2?topic=command-mpirun-options)
 <details>

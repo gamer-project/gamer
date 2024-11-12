@@ -4,16 +4,16 @@ cd src
 ```
 Generate/edit `Makefile`:
 * We recommend using the Python script
-[[configure.py|Installation:-Configure.py]]
+[[configure.py | Installation:-Configure.py]]
 to tailor the `Makefile` for your simulation and machine setup by the following command.
    ``` bash
    python configure.py
    ```
-* Alternatively, you can
+* [Deprecated] Alternatively, you can
 edit `Makefile` and set the following configurations directly:
-   1. [[Simulation Options|Installation:-Simulation-Options]]
-   2. [[Compiler and Flags|Installation:-Compiler-and-Flags]]
-   3. [[External Libraries|Installation:-External-Libraries]]
+   1. [[Simulation Options | Installation:-Simulation-Options]]
+   2. [[Compiler and Flags | Installation:-Compiler-and-Flags]]
+   3. [[External Libraries | Installation:-External-Libraries]]
 
 > [!CAUTION]
 > On macOS, we recommend using the GNU compiler and set
@@ -42,7 +42,3 @@ Compiling GAMER --> Successful!
 </pre>
 and get an executable `gamer`, which will be automatically copied
 to `../bin/gamer`.
-
-> [!CAUTION]
-> The Makefile structure will likely be changed in the
-near future to become more extensible and maintainable.

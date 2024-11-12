@@ -21,7 +21,7 @@ to disable gravity, use
 > [!CAUTION]
 > * Option values (if any) must be set explicitly since there are no default values.
 > For example, `SIMU_OPTION += -DFLU_SCHEME` without assigning any value to the option `FLU_SCHEME` is invalid.
->   * In addition, do not insert any space before and after the equal sign `=`.
+> * Do not insert any space before and after the equal sign `=`.
 > For example, use `-DFLU_SCHEME=CTU` instead of `-DFLU_SCHEME = CTU`.
 
 ## Option List
