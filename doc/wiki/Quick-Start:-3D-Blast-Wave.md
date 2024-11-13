@@ -27,7 +27,6 @@ Makefile is created.
 ========================================
 </pre>
 </details>
-See [[Installation]] for details.
 
 3\. Compile the code.
 ``` bash
