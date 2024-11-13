@@ -7,7 +7,7 @@
 # To compile GAMER, please set the following configurations properly:
 #
 # (1) simulation options
-# (2) compiler and flags
+# (2) compilers and flags
 # (3) library paths
 # ===========================================================================
 
