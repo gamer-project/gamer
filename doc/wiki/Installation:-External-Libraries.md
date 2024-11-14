@@ -1,23 +1,3 @@
-## Library Paths
-
-Set the following library paths in the `Makefile` to help
-compiler locate them (if necessary):
-
-``` Makefile
-CUDA_PATH    :=
-FFTW2_PATH   :=
-FFTW3_PATH   :=
-MPI_PATH     :=
-HDF5_PATH    :=
-GRACKLE_PATH :=
-GSL_PATH     :=
-LIBYT_PATH   :=
-```
-Only the paths of libraries being used need to be set. In addition,
-it is usually unnecessary to set the paths that have been embedded
-into the compiling command (e.g., when using `CC` and `module load`
-in a Cray computer system).
-
 ## Library Configurations
 
 ### FFTW

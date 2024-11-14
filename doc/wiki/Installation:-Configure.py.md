@@ -209,10 +209,99 @@ Edit `Makefile_base` to add new source files.
    ...
    ```
 
-### Rules of `Makefile_base`
-* The strings to be replaced by `configure.py` must be sandwiched by `@@@`.
-
 ### Rules of `*.config`
 * Comments must start with `#`.
 * All variables should be uppercase.
 * Variables and values should be separated by spaces.
+
+### Rules of `Makefile_base`
+* The strings to be replaced by `configure.py` must be sandwiched by `@@@`.
+
+## Format
+
+All compile-time simulation options in the `Makefile` are in
+the following two formats:
+
+    SIMU_OPTION += -DOPTION1
+    SIMU_OPTION += -DOPTION2=OPTION2_ADOPTED
+
+which will enable `OPTION1` and assign `OPTION2_ADOPTED` to
+`OPTION2`. For example, to (i) enable gravity and (ii) adopt the
+CTU fluid scheme, set
+
+    SIMU_OPTION += -DGRAVITY
+    SIMU_OPTION += -DFLU_SCHEME=CTU
+
+To disable an option, just comment it out with `#`. For example,
+to disable gravity, use
+
+    #SIMU_OPTION += -DGRAVITY
+
+> [!CAUTION]
+> * Option values (if any) must be set explicitly since there are no default values.
+> For example, `SIMU_OPTION += -DFLU_SCHEME` without assigning any value to the option `FLU_SCHEME` is invalid.
+> * Do not insert any space before and after the equal sign `=`.
+> For example, use `-DFLU_SCHEME=CTU` instead of `-DFLU_SCHEME = CTU`.
+
+
+## Compilers and flags
+To choose a compiler and compilation flags, set the following
+variables in the `Makefile`:
+```Makefile
+CXX        =    # C++ compiler
+CXXFLAG    =    # compilation flags
+OPENMPFLAG =    # openmp flag
+LIB        =    # libraries and linker flags
+NVCC       =    # CUDA compiler
+```
+
+Example: Intel compiler
+```Makefile
+CXX        = $(MPI_PATH)/bin/mpicxx   # replace by "icpc" in the serial mode
+CXXFLAG    = -g -O3 -w1
+OPENMPFLAG = -fopenmp
+LIB        = -limf
+NVCC       = $(CUDA_PATH)/bin/nvcc
+```
+
+Example: GNU compiler
+```Makefile
+CXX        = $(MPI_PATH)/bin/mpicxx   # replace by "g++" in the serial mode
+CXXFLAG    = -g -O3 -Wall -Wextra
+CXXFLAG   += -Wno-unused-variable -Wno-unused-parameter \
+             -Wno-maybe-uninitialized -Wno-unused-but-set-variable \
+             -Wno-unused-result -Wno-unused-function
+OPENMPFLAG = -fopenmp
+LIB        =
+NVCC       = $(CUDA_PATH)/bin/nvcc
+```
+
+On a Cray system (even when adopting the Intel or GNU compiler), set `CXX` and `NVCC` as
+```Makefile
+CXX        = CC
+NVCC       = nvcc -ccbin CC
+```
+
+The prefixes `$(MPI_PATH)/bin/` and `$(CUDA_PATH)/bin/` in the
+above examples are optional to force the Makefile to use the
+correct compiler, where `MPI_PATH` and `CUDA_PATH` are the library
+paths described in [[External Libraries|Installation: External Libraries]].
+
+## Library Paths
+Set the following library paths in the `Makefile` to help
+compiler locate them (if necessary):
+
+``` Makefile
+CUDA_PATH    :=
+FFTW2_PATH   :=
+FFTW3_PATH   :=
+MPI_PATH     :=
+HDF5_PATH    :=
+GRACKLE_PATH :=
+GSL_PATH     :=
+LIBYT_PATH   :=
+```
+Only the paths of libraries being used need to be set. In addition,
+it is usually unnecessary to set the paths that have been embedded
+into the compiling command (e.g., when using `CC` and `module load`
+in a Cray computer system).

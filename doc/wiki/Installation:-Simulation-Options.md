@@ -1,29 +1,3 @@
-## Format
-
-All compile-time simulation options in the `Makefile` are in
-the following two formats:
-
-    SIMU_OPTION += -DOPTION1
-    SIMU_OPTION += -DOPTION2=OPTION2_ADOPTED
-
-which will enable `OPTION1` and assign `OPTION2_ADOPTED` to
-`OPTION2`. For example, to (i) enable gravity and (ii) adopt the
-CTU fluid scheme, set
-
-    SIMU_OPTION += -DGRAVITY
-    SIMU_OPTION += -DFLU_SCHEME=CTU
-
-To disable an option, just comment it out with `#`. For example,
-to disable gravity, use
-
-    #SIMU_OPTION += -DGRAVITY
-
-> [!CAUTION]
-> * Option values (if any) must be set explicitly since there are no default values.
-> For example, `SIMU_OPTION += -DFLU_SCHEME` without assigning any value to the option `FLU_SCHEME` is invalid.
-> * Do not insert any space before and after the equal sign `=`.
-> For example, use `-DFLU_SCHEME=CTU` instead of `-DFLU_SCHEME = CTU`.
-
 ## Option List
 
 All compile-time simulation options are listed below. They are
@@ -40,6 +14,27 @@ classified into the following categories:
 `FLU_SCHEME=CTU`), while some combinations are prohibited
 (e.g., `PARTICLE` is not supported when both `GRAVITY` and `TRACER` are
 disabled). See the "Restriction" of each option carefully.
+
+<table>
+   <tr>
+      <td align=center><b>Option</b></td>
+      <td align=center rowspan=2><b>Value</b></td>
+      <td align=center rowspan=2><b>Description</b></td>
+      <td align=center rowspan=2><b>Restriction</b></td>
+   </tr>
+   <tr>
+      <td align=center><b>GAMER Name</b></td>
+   </tr>
+   <tr>
+      <td align=center><code>--model</code></td>
+      <td align=center rowspan=2><code>HYDRO</code><br><code>ELBDM</code></td>
+      <td rowspan=2>Physical models, where <code>ELBDM</code> is for &psi;DM</td>
+      <td rowspan=2>Must be set in any cases; <code>ELBDM</code> is not released yet</td>
+   </tr>
+   <tr>
+      <td align=center><a name="MODEL"></a><code>MODEL</code></td>
+   </tr>
+</table>
 
 ### Physical Modules
 | Option | Value | Description | Restriction |
