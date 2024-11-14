@@ -488,6 +488,52 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Output_HDF5_TestProb
+// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype
+//                3. There MUST be more than one parameter to be stored
+//                4. The pointer of the data MUST still exist outside the function, e.g. global variables
+//
+// Parameter   :  HDF5_InputTest : the structure storing the parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
+{
+
+   HDF5_InputTest->Add( "Bondi_MassBH",          &Bondi_MassBH          );
+   HDF5_InputTest->Add( "Bondi_Rho0",            &Bondi_Rho0            );
+   HDF5_InputTest->Add( "Bondi_T0",              &Bondi_T0              );
+   HDF5_InputTest->Add( "Bondi_RefineRadius0",   &Bondi_RefineRadius0   );
+   HDF5_InputTest->Add( "Bondi_HalfMaxLvRefR",   &Bondi_HalfMaxLvRefR   );
+   HDF5_InputTest->Add( "Bondi_InBC_Rho",        &Bondi_InBC_Rho        );
+   HDF5_InputTest->Add( "Bondi_InBC_T",          &Bondi_InBC_T          );
+   HDF5_InputTest->Add( "Bondi_InBC_NCell",      &Bondi_InBC_NCell      );
+   HDF5_InputTest->Add( "Bondi_Soften_NCell",    &Bondi_Soften_NCell    );
+
+   HDF5_InputTest->Add( "Bondi_HSE",             &Bondi_HSE             );
+   HDF5_InputTest->Add( "Bondi_HSE_Mode",        &Bondi_HSE_Mode        );
+   HDF5_InputTest->Add( "Bondi_HSE_Dens_NBin",   &Bondi_HSE_Dens_NBin   );
+   HDF5_InputTest->Add( "Bondi_HSE_Dens_MinR",   &Bondi_HSE_Dens_MinR   );
+   HDF5_InputTest->Add( "Bondi_HSE_Dens_MaxR",   &Bondi_HSE_Dens_MaxR   );
+   HDF5_InputTest->Add( "Bondi_HSE_Dens_NormR",  &Bondi_HSE_Dens_NormR  );
+   HDF5_InputTest->Add( "Bondi_HSE_Dens_NormD",  &Bondi_HSE_Dens_NormD  );
+   HDF5_InputTest->Add( "Bondi_HSE_Truncate",    &Bondi_HSE_Truncate    );
+   HDF5_InputTest->Add( "Bondi_HSE_TrunR",       &Bondi_HSE_TrunR       );
+   HDF5_InputTest->Add( "Bondi_HSE_TrunD",       &Bondi_HSE_TrunD       );
+   HDF5_InputTest->Add( "Bondi_HSE_TrunSmoothR", &Bondi_HSE_TrunSmoothR );
+   HDF5_InputTest->Add( "Bondi_HSE_Pres_NormT",  &Bondi_HSE_Pres_NormT  );
+   HDF5_InputTest->Add( "Bondi_HSE_Beta_Rcore",  &Bondi_HSE_Beta_Rcore  );
+
+} // FUNCTION : Output_HDF5_TestProb
+#endif // #ifdef SUPPORT_HDF5
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  HSE_SetDensProfileTable
 // Description :  Set up the density profile table for HSE
@@ -585,6 +631,7 @@ void HSE_SetDensProfileTable()
 } // FUNCTION : HSE_SetDensProfileTable
 
 
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  End_Bondi
 // Description :  Free memory before terminating the program
@@ -673,7 +720,10 @@ void Init_TestProb_Hydro_Bondi()
    Flu_ResetByUser_API_Ptr  = Flu_ResetByUser_API_Bondi;
    End_User_Ptr             = End_Bondi;
 #  ifdef GRAVITY
-   Init_ExtAcc_Ptr         = Init_ExtAcc_Bondi;
+   Init_ExtAcc_Ptr          = Init_ExtAcc_Bondi;
+#  endif
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_TestProb_Ptr = Output_HDF5_TestProb;
 #  endif
 #  endif // #if ( MODEL == HYDRO  &&  defined GRAVITY )
 

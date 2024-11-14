@@ -43,4 +43,3 @@ double Mis_GetTimeStep_ExactCooling( const int lv, const double dTime_dt )
    return dt_EC;
 
 } // FUNCTION : Mis_GetTimeStep_ExactCooling
-

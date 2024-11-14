@@ -753,7 +753,7 @@
 #  define SRC_NAUX_DLEP          5     // SrcTerms.Dlep_AuxArray_Flt/Int[]
 #  define SRC_DLEP_PROF_NVAR     6     // SrcTerms.Dlep_Profile_DataDevPtr[]/RadiusDevPtr[]
 #  define SRC_DLEP_PROF_NBINMAX  4000
-#  define SRC_NAUX_EC            10     // SrcTerms.EC_AuxArray_Flt/Int[]
+#  define SRC_NAUX_EC            10    // SrcTerms.EC_AuxArray_Flt/Int[]
 #else
 #  define SRC_NAUX_DLEP          0
 #  define SRC_NAUX_EC            0
@@ -1049,6 +1049,14 @@
 
 // macro converting an array index (e.g., DENS) to bitwise index (e.g., _DENS=(1L<<DENS))
 #define BIDX( idx )     ( 1L << (idx) )
+
+
+// distance in 3D space
+#define DIST_SQR_3D( pos1, pos2 )   ( SQR(pos1[0] - pos2[0]) + \
+                                      SQR(pos1[1] - pos2[1]) + \
+                                      SQR(pos1[2] - pos2[2]) )
+#define DIST_3D_FLT( pos1, pos2 )   sqrtf( DIST_SQR_3D( pos1, pos2 ) )
+#define DIST_3D_DBL( pos1, pos2 )   sqrt( DIST_SQR_3D( pos1, pos2 ) )
 
 
 // helper macro for printing warning messages when resetting parameters

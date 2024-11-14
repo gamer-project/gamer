@@ -21,4 +21,3 @@ plt.xlabel('time ($t_{cool}$)')
 plt.ylabel('temperature (K)')
 plt.legend()
 plt.savefig('evolution_ExactCooling.png', dpi=300)
-

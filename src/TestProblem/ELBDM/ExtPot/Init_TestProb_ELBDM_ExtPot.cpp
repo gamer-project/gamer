@@ -187,6 +187,34 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Output_HDF5_TestProb
+// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype
+//                3. There MUST be more than one parameter to be stored
+//                4. The pointer of the data MUST still exist outside the function, e.g. global variables
+//
+// Parameter   :  HDF5_InputTest : the structure storing the parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
+{
+
+   HDF5_InputTest->Add( "ExtPot_Amp",   &ExtPot_Amp    );
+   HDF5_InputTest->Add( "ExtPot_M",     &ExtPot_M      );
+   HDF5_InputTest->Add( "ExtPot_Cen_X", &ExtPot_Cen[0] );
+   HDF5_InputTest->Add( "ExtPot_Cen_Y", &ExtPot_Cen[1] );
+   HDF5_InputTest->Add( "ExtPot_Cen_Z", &ExtPot_Cen[2] );
+
+} // FUNCTION : Output_HDF5_TestProb
+#endif // #ifdef SUPPORT_HDF5
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  BC
 // Description :  Set the extenral boundary condition to the analytical solution
@@ -263,12 +291,15 @@ void Init_TestProb_ELBDM_ExtPot()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr  = SetGridIC;
-   BC_User_Ptr             = BC;
-   Init_ExtPotAuxArray_Ptr = Init_ExtPotAuxArray_ExtPotTest;
-   SetCPUExtPot_Ptr        = SetCPUExtPot_PointMass;
+   Init_Function_User_Ptr   = SetGridIC;
+   BC_User_Ptr              = BC;
+   Init_ExtPotAuxArray_Ptr  = Init_ExtPotAuxArray_ExtPotTest;
+   SetCPUExtPot_Ptr         = SetCPUExtPot_PointMass;
 #  ifdef GPU
-   SetGPUExtPot_Ptr        = SetGPUExtPot_PointMass;
+   SetGPUExtPot_Ptr         = SetGPUExtPot_PointMass;
+#  endif
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_TestProb_Ptr = Output_HDF5_TestProb;
 #  endif
 #  endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 

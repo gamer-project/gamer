@@ -405,6 +405,67 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Output_HDF5_TestProb
+// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype
+//                3. There MUST be more than one parameter to be stored
+//                4. The pointer of the data MUST still exist outside the function, e.g. global variables
+//
+// Parameter   :  HDF5_InputTest : the structure storing the parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
+{
+
+   HDF5_InputTest->Add( "Jet_BgDens",           &Jet_BgDens           );
+   HDF5_InputTest->Add( "Jet_BgTemp",           &Jet_BgTemp           );
+   HDF5_InputTest->Add( "Jet_BgVel_x",          &Jet_BgVel[0]         );
+   HDF5_InputTest->Add( "Jet_BgVel_y",          &Jet_BgVel[1]         );
+   HDF5_InputTest->Add( "Jet_BgVel_z",          &Jet_BgVel[2]         );
+
+   HDF5_InputTest->Add( "Jet_HSE",              &Jet_HSE              );
+   HDF5_InputTest->Add( "Jet_HSE_D",            &Jet_HSE_D            );
+   HDF5_InputTest->Add( "Jet_HSE_M200",         &Jet_HSE_M200         );
+   HDF5_InputTest->Add( "Jet_HSE_R200",         &Jet_HSE_R200         );
+   HDF5_InputTest->Add( "Jet_HSE_C200",         &Jet_HSE_C200         );
+   HDF5_InputTest->Add( "Jet_HSE_BgTable_File",  Jet_HSE_BgTable_File );
+
+   HDF5_InputTest->Add( "Jet0_Radius",          &Jet_Radius    [0]    );
+   HDF5_InputTest->Add( "Jet0_HalfHeight",      &Jet_HalfHeight[0]    );
+   HDF5_InputTest->Add( "Jet0_SrcVel",          &Jet_SrcVel    [0]    );
+   HDF5_InputTest->Add( "Jet0_SrcDens",         &Jet_SrcDens   [0]    );
+   HDF5_InputTest->Add( "Jet0_SrcTemp",         &Jet_SrcTemp   [0]    );
+   HDF5_InputTest->Add( "Jet0_Vec_x",           &Jet_Vec       [0][0] );
+   HDF5_InputTest->Add( "Jet0_Vec_y",           &Jet_Vec       [0][1] );
+   HDF5_InputTest->Add( "Jet0_Vec_z",           &Jet_Vec       [0][2] );
+   HDF5_InputTest->Add( "Jet0_CenOffset_x",     &Jet_CenOffset [0][0] );
+   HDF5_InputTest->Add( "Jet0_CenOffset_y",     &Jet_CenOffset [0][1] );
+   HDF5_InputTest->Add( "Jet0_CenOffset_z",     &Jet_CenOffset [0][2] );
+
+   if ( Jet_NJet == 2 ) {
+   HDF5_InputTest->Add( "Jet1_Radius",          &Jet_Radius    [1]    );
+   HDF5_InputTest->Add( "Jet1_HalfHeight",      &Jet_HalfHeight[1]    );
+   HDF5_InputTest->Add( "Jet1_SrcVel",          &Jet_SrcVel    [1]    );
+   HDF5_InputTest->Add( "Jet1_SrcDens",         &Jet_SrcDens   [1]    );
+   HDF5_InputTest->Add( "Jet1_SrcTemp",         &Jet_SrcTemp   [1]    );
+   HDF5_InputTest->Add( "Jet1_Vec_x",           &Jet_Vec       [1][0] );
+   HDF5_InputTest->Add( "Jet1_Vec_y",           &Jet_Vec       [1][1] );
+   HDF5_InputTest->Add( "Jet1_Vec_z",           &Jet_Vec       [1][2] );
+   HDF5_InputTest->Add( "Jet1_CenOffset_x",     &Jet_CenOffset [1][0] );
+   HDF5_InputTest->Add( "Jet1_CenOffset_y",     &Jet_CenOffset [1][1] );
+   HDF5_InputTest->Add( "Jet1_CenOffset_z",     &Jet_CenOffset [1][2] );
+   }
+
+} // FUNCTION : Output_HDF5_TestProb
+#endif // #ifdef SUPPORT_HDF5
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  End_Jet
 // Description :  Free memory before terminating the program
@@ -597,7 +658,10 @@ void Init_TestProb_Hydro_Jet()
    End_User_Ptr             = End_Jet;
 #  ifdef GRAVITY
    if ( OPT__EXT_ACC == EXT_ACC_FUNC )
-   Init_ExtAcc_Ptr         = Init_ExtAcc_Jet;
+   Init_ExtAcc_Ptr          = Init_ExtAcc_Jet;
+#  endif
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_TestProb_Ptr = Output_HDF5_TestProb;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

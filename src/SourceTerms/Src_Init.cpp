@@ -74,16 +74,16 @@ void Src_Init()
 #  endif
 
 #  if ( MODEL == HYDRO )
-   SrcTerms.EC_FuncPtr            = NULL;
-   SrcTerms.EC_CPUPtr             = NULL;
+   SrcTerms.EC_FuncPtr                = NULL;
+   SrcTerms.EC_CPUPtr                 = NULL;
 #  ifdef GPUEC
-   SrcTerms.EC_GPUPtr             = NULL;
+   SrcTerms.EC_GPUPtr                 = NULL;
 #  endif
-   SrcTerms.EC_AuxArrayDevPtr_Flt = NULL;
-   SrcTerms.EC_AuxArrayDevPtr_Int = NULL;
-   SrcTerms.EC_TEF_lambda_DevPtr  = NULL;
-   SrcTerms.EC_TEF_alpha_DevPtr   = NULL;
-   SrcTerms.EC_TEFc_DevPtr        = NULL;
+   SrcTerms.EC_AuxArrayDevPtr_Flt     = NULL;
+   SrcTerms.EC_AuxArrayDevPtr_Int     = NULL;
+   SrcTerms.EC_TEF_lambda_DevPtr      = NULL;
+   SrcTerms.EC_TEF_alpha_DevPtr       = NULL;
+   SrcTerms.EC_TEFc_DevPtr            = NULL;
 #  endif
 
    SrcTerms.User_FuncPtr              = NULL;
@@ -114,7 +114,7 @@ void Src_Init()
 // (2) exact cooling
 #  if ( MODEL == HYDRO )
    if ( SrcTerms.ExactCooling )
-   { 
+   {
       Src_Init_ExactCooling();
 
 //    check if the source-term function is set properly
@@ -122,9 +122,9 @@ void Src_Init()
       if ( SrcTerms.EC_CPUPtr  == NULL )   Aux_Error( ERROR_INFO, "SrcTerms.EC_CPUPtr  == NULL !!\n" );
 #     ifdef GPU
       if ( SrcTerms.EC_GPUPtr  == NULL )   Aux_Error( ERROR_INFO, "SrcTerms.EC_GPUPtr  == NULL !!\n" );
-#     endif         
-   } 
-#  endif    
+#     endif
+   }
+#  endif
 
 // (3) user-specified source term
    if ( SrcTerms.User )
