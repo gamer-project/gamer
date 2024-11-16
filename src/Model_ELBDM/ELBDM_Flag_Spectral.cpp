@@ -92,12 +92,8 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
    const size_t MaxOrder  = 14;
    const size_t NField    = 2;
    const size_t NCoeff    = NField * 2;
-// Convergence threshold for polynomial expansion
-// Polynomial coefficients < 10^Threshold replaced by linear function with slope LinearSlope
-// Should be slightly larger than typical rounding errors in single precision
-// Same for double precision to obtain similar refinement regardless of precision
-   const float ConvergenceThreshold = -6.0;
-   const float LinearSlope          = -5.0;
+// Number of coefficients to consider for checking whether expansion has converged
+   const size_t NCutoff   = 3;
 
    const real* Re1D = Var1D;
    const real* Im1D = Var1D + CUBE(Size1D);
@@ -136,41 +132,61 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
          Row[1][i] = Im1D[index];
       }
 
+      // Step 1: Normalize the input data
+      for (int l = 0; l < NField; ++l) {
+         flag_spectral_float mean    = 0.0;
+         flag_spectral_float std_dev = 0.0;
+
+         for (size_t i = 0; i < Size1D; ++i) {
+            mean += Row[l][i];
+         }
+         mean /= Size1D;
+
+         for (size_t i = 0; i < Size1D; ++i) {
+            std_dev += (Row[l][i] - mean) * (Row[l][i] - mean);
+         }
+         std_dev = sqrt(std_dev / Size1D);
+
+         // Check if std_dev is close to zero
+         if (std_dev > 1e-6)
+         {
+            for (size_t i = 0; i < Size1D; ++i) {
+               Row[l][i] = (Row[l][i] - mean) / std_dev;
+            }
+         }
+         else // If std_dev is zero, skip normalization
+         {
+            for (size_t i = 0; i < Size1D; ++i)
+            {
+               Row[l][i] = Row[l][i] - mean;  // Mean-centering only
+            }
+         }
+      }
+
+
+//    Compute polynomial expansions of real and imaginary parts
       for (int i = 0; i < MaxOrder; ++i)
       {
          for (int j = 0; j < NCoeff; ++j) {
             Coeff[j][i] = 0;
          }
-
-//       Compute polynomial expansions of real and imaginary parts
          for (int t = 0; t < MaxOrder; t++) {
             for (int l = 0; l < NField; l++) {
                Coeff[l][i] += Flag_Spectral_Polynomials[i][t] * Row[l][t];                     // left boundary
                Coeff[l+NField][i] += Flag_Spectral_Polynomials[i][t] * Row[l][Size1D - MaxOrder + t]; // right boundary
             }
          } // t
+      }
 
-//       Prepare linear fit to logarithm of polynomial coefficients
-         Order[i] = log10(i + 1);
-
-         for (int j = 0; j < NCoeff; ++j) {
-//          Double precision floor so that logarithm does not fail
-            Coeff[j][i] = log10(abs(Coeff[j][i]) + 1e-16);
-//          Smoothly replace coefficients below ConvergenceThreshold with linear function using sigmoid
-            Coeff[j][i] += 1/(1+exp(Coeff[j][i]-ConvergenceThreshold)) * LinearSlope * i;
+      // Find maximum of the last 4 coefficients to determine whether refinement is necessary
+      for (int j = 0; j < NField; ++j) {
+         for (int i = MaxOrder-NCutoff; i < MaxOrder; ++i) {
+            Cond = MAX(Cond, abs(Coeff[j][i]));
          }
       }
-
-//    Find maximum slope to determine whether refinement is necessary
-//    Large negative slopes indicate that wavefunction is well-resolved
-      for (int j = 0; j < NCoeff; ++j) {
-
-//       Compute slope for first 10 elements, MaxOrder can converge too fast and make distinction below 10 and 20 points per wavelength difficult
-         Least_Squares_Regression(Order, Coeff[j], 0, MaxOrder, &Slope, &Intercept);
-         Cond = MAX(Cond, Slope);
-      }
-
    } // XYZ, k,j
+
+   Cond = log10(MAX(Cond, 1e-16));
 } // FUNCTION : Prepare_for_Spectral_Criterion
 
 
