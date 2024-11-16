@@ -1,9 +1,6 @@
 #include "GAMER.h"
 
 #if ( MODEL == ELBDM )
-#include <iostream>
-#include <fstream>
-
 
 #include <complex.h>
 
@@ -35,40 +32,6 @@ const static flag_spectral_float  Flag_Spectral_Polynomials[FLAG_SPECTRAL_ORDER]
 };
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Least_Squares_Regression
-// Description :  Compute the least squares linear regression for a set of data points (x, y).
-//                The function calculates the slope (m) and intercept (b) of the linear regression model
-//                using the least squares method.
-//
-// Parameter   :  x        : Array of x-coordinates of the data points
-//                y        : Array of y-coordinates of the data points
-//                n_start  : Starting index for linear regression
-//                n_end    : End index for linear regression (set to size of x and y to include last point)
-//                slope    : Pointer to the variable where the computed slope (m) will be stored
-//                intercept: Pointer to the variable where the computed intercept (b) will be stored
-//
-// Return      :  None
-//-------------------------------------------------------------------------------------------------------
-void Least_Squares_Regression(flag_spectral_float x[], flag_spectral_float y[], int n_start, int n_end, flag_spectral_float *slope, flag_spectral_float *intercept) {
-   flag_spectral_float sum_x = 0.0, sum_y = 0.0, sum_x_squared = 0.0, sum_xy = 0.0;
-
-   const int n = n_end - n_start;
-
-   for (int i = n_start; i < n_end; i++) {
-      sum_x += x[i];
-      sum_y += y[i];
-      sum_x_squared += x[i] * x[i];
-      sum_xy += x[i] * y[i];
-   }
-
-   *slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x_squared - sum_x * sum_x);
-   *intercept = (sum_y - (*slope) * sum_x) / n;
-}
-
-
-
-
-//-------------------------------------------------------------------------------------------------------
 // Function    :  Prepare_for_Spectral_Criterion
 // Description :  Evaluate decay of the coefficients of a polynomial expansion of the wave function.
 //                The coefficients of the polynomials can be shown to decay exponentially for a well-resolved function.
@@ -93,30 +56,16 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
    const size_t Size1D    = PS2 + 2 * GhostSize;
    const size_t MaxOrder  = 14;
    const size_t NField    = 2;
-   const size_t NCoeff    = NField * 2;
 // Number of coefficients to consider for checking whether expansion has converged
    const size_t NCutoff   = 4;
 
    const real* Re1D = Var1D;
    const real* Im1D = Var1D + CUBE(Size1D);
 
-   flag_spectral_float Order[MaxOrder];
-   flag_spectral_float Coeff[NCoeff][MaxOrder]; // left and right coefficients for every field
-   real Row[NField][Size1D];
-   flag_spectral_float Slope, Intercept;
+   real Row[NField][Size1D];                    // array for reading input data
 
 // initialise with large negative number
    Cond = -__FLT_MAX__;
-
-   std::ostream &debug_file = std::cout;
-    debug_file << "import numpy as np\n\n";
-
-    debug_file << "# Input wavefunction data\n";
-    debug_file << "re_wavefunction = []\n";
-    debug_file << "im_wavefunction = []\n";
-    debug_file << "coefficients = {}\n\n";
-
-
 
 // iterate over 3 dimensions and sample the physical 2D arrays with a stride
    for ( size_t XYZ = 0; XYZ < 3; ++XYZ )
@@ -142,97 +91,25 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
 
          Row[0][i] = Re1D[index];
          Row[1][i] = Im1D[index];
-      }
-
-      // Step 1: Normalize the input data
-      for (int l = 0; l < NField; ++l) {
-         flag_spectral_float mean    = 0.0;
-         flag_spectral_float std_dev = 0.0;
-
-         for (size_t i = 0; i < Size1D; ++i) {
-            mean += Row[l][i];
-         }
-         mean /= Size1D;
-
-         for (size_t i = 0; i < Size1D; ++i) {
-            std_dev += (Row[l][i] - mean) * (Row[l][i] - mean);
-         }
-         std_dev = sqrt(std_dev / Size1D);
-
-         // Check if std_dev is close to zero
-         if (std_dev > 1e-6)
-         {
-            for (size_t i = 0; i < Size1D; ++i) {
-               Row[l][i] = (Row[l][i] - mean);
-            }
-         }
-         else // If std_dev is zero, skip normalization
-         {
-            for (size_t i = 0; i < Size1D; ++i)
-            {
-               Row[l][i] = Row[l][i] - mean;  // Mean-centering only
-            }
-         }
-      }
-
-
-      // Output the wavefunction for Python
-      debug_file << "re_wavefunction.append(";
-      debug_file << "np.array(" << "[" << Row[0][0];
-      for (size_t i = 1; i < Size1D; ++i) {
-         debug_file << ", " << Row[0][i];
-      }
-      debug_file << "]))\n";
-
-      debug_file << "im_wavefunction.append(";
-      debug_file << "np.array(" << "[" << Row[1][0];
-      for (size_t i = 1; i < Size1D; ++i) {
-         debug_file << ", " << Row[1][i];
-      }
-      debug_file << "]))\n";
-
-
+      } // i
 
 //    Compute polynomial expansions of real and imaginary parts
-      for (int i = 0; i < MaxOrder; ++i)
+      for (int i = 0; i < NCutoff; ++i)
       {
-         for (int l = 0; l < NCoeff; ++l) {
-            Coeff[l][i] = 0;
-         }
-         for (int t = 0; t < MaxOrder; t++) {
-            for (int l = 0; l < NField; l++) {
-               Coeff[l][i]        += Flag_Spectral_Polynomials[i][t] * Row[l][t];                     // left boundary
-               Coeff[l+NField][i] += Flag_Spectral_Polynomials[i][t] * Row[l][Size1D - MaxOrder + t]; // right boundary
-            }
-         } // t
-      }
-
-
-      // Output coefficients for Python
-      debug_file << "coefficients[(" << k << ", " << j << ", " << XYZ << ")] = {\n";
-      for (int l = 0; l < NCoeff; ++l) {
-         debug_file << "    {l}: np.array(" << "[" << Coeff[l][0];
-         for (int i = 1; i < MaxOrder; ++i) {
-            debug_file << ", " << Coeff[l][i];
-         }
-         debug_file << "]),\n";
-      }
-      debug_file << "}\n";
-
-      // Find maximum of the last 4 coefficients to determine whether refinement is necessary
-      for (int l = 0; l < NField; ++l) {
-         for (int i = MaxOrder-NCutoff; i < MaxOrder; ++i) {
-            Cond = MAX(Cond, abs(Coeff[l][i]));
-         }
-      }
+         for (int l = 0; l < NField; l++) {
+            flag_spectral_float LCoeff = 0;
+            flag_spectral_float RCoeff = 0;
+            for (int t = 0; t < MaxOrder; t++) {
+               LCoeff += Flag_Spectral_Polynomials[MaxOrder - NCutoff + i][t] * Row[l][t];                     // left boundary
+               RCoeff += Flag_Spectral_Polynomials[MaxOrder - NCutoff + i][t] * Row[l][Size1D - MaxOrder + t]; // right boundary
+            } // t
+            Cond = MAX(Cond, abs(LCoeff));
+            Cond = MAX(Cond, abs(RCoeff));
+         } // l
+      } // i
    } // XYZ, k,j
 
    Cond = log10(MAX(Cond, 1e-16));
-
-
-   // Output Cond for Python
-   debug_file << "\n# Final condition value\n";
-   debug_file << "Cond = " << Cond << "\n";
 } // FUNCTION : Prepare_for_Spectral_Criterion
 
 
