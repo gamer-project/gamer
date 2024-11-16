@@ -483,7 +483,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "SPEC_INT_GHOST_BOUNDARY",    &SPEC_INT_GHOST_BOUNDARY,         4,               1,             NoMax_int      );
 #  if ( MODEL == ELBDM )
    ReadPara->Add( "SPEC_INT_XY_INSTEAD_DEPHA",  &SPEC_INT_XY_INSTEAD_DEPHA,       true,            Useless_bool,  Useless_bool   );
-   ReadPara->Add( "SPEC_INT_VORTEX_THRESHOLD",  &SPEC_INT_VORTEX_THRESHOLD,       1.0e2,           1.0,           NoMax_double   );
+   ReadPara->Add( "SPEC_INT_VORTEX_THRESHOLD",  &SPEC_INT_VORTEX_THRESHOLD,       0.1,             0.0,           NoMax_double   );
 #  endif
 #  endif // #ifdef SUPPORT_SPECTRAL_INT
 
