@@ -163,7 +163,7 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
          if (std_dev > 1e-6)
          {
             for (size_t i = 0; i < Size1D; ++i) {
-               Row[l][i] = (Row[l][i] - mean) / std_dev;
+               Row[l][i] = (Row[l][i] - mean);
             }
          }
          else // If std_dev is zero, skip normalization
@@ -196,8 +196,8 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
 //    Compute polynomial expansions of real and imaginary parts
       for (int i = 0; i < MaxOrder; ++i)
       {
-         for (int j = 0; j < NCoeff; ++j) {
-            Coeff[j][i] = 0;
+         for (int l = 0; l < NCoeff; ++l) {
+            Coeff[l][i] = 0;
          }
          for (int t = 0; t < MaxOrder; t++) {
             for (int l = 0; l < NField; l++) {
@@ -220,9 +220,9 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
       debug_file << "}\n";
 
       // Find maximum of the last 4 coefficients to determine whether refinement is necessary
-      for (int j = 0; j < NField; ++j) {
+      for (int l = 0; l < NField; ++l) {
          for (int i = MaxOrder-NCutoff; i < MaxOrder; ++i) {
-            Cond = MAX(Cond, abs(Coeff[j][i]));
+            Cond = MAX(Cond, abs(Coeff[l][i]));
          }
       }
    } // XYZ, k,j
