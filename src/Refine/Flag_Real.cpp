@@ -1,5 +1,8 @@
 #include "GAMER.h"
 
+#include <iostream>
+#include <iomanip>
+
 void Flag_Grandson( const int lv, const int PID, const int LocalID );
 void Prepare_for_Lohner( const OptLohnerForm_t Form, const real *Var1D, real *Ave1D, real *Slope1D, const int NVar );
 
@@ -257,6 +260,30 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
             Prepare_PatchData( lv, Time[lv], Spectral_Var, NULL, Spectral_NGhost, NPG, &PID0, _REAL|_IMAG, _NONE,
                                Spectral_IntScheme, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
                                MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
+
+            // Debugging code to output the contents of Spectral_Var
+std::cout << "Spectral_Var = np.array([" << std::endl;
+for (size_t var = 0; var < Spectral_NVar; ++var)
+{
+    std::cout << "    [";
+    for (size_t k = 0; k < Spectral_NCell; ++k)
+    {
+        for (size_t j = 0; j < Spectral_NCell; ++j)
+        {
+            for (size_t i = 0; i < Spectral_NCell; ++i)
+            {
+                size_t idx = (var * CUBE(Spectral_NCell)) + (k * SQR(Spectral_NCell)) + (j * Spectral_NCell) + i;
+                std::cout << std::setprecision(6) << Spectral_Var[idx];
+                if (i < Spectral_NCell - 1) std::cout << ", ";
+            }
+            if (j < Spectral_NCell - 1) std::cout << std::endl << "     ";
+        }
+        if (k < Spectral_NCell - 1) std::cout << std::endl << "     ";
+    }
+    std::cout << "]," << std::endl;
+}
+std::cout << "])" << std::endl;
+
 
 //          evaluate the slope of the polynomial expansion
             Prepare_for_Spectral_Criterion( Spectral_Var, Spectral_Cond );
