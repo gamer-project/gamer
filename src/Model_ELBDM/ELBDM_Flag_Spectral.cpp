@@ -211,7 +211,7 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
       // Output coefficients for Python
       debug_file << "coefficients[(" << k << ", " << j << ", " << XYZ << ")] = {\n";
       for (int l = 0; l < NCoeff; ++l) {
-         debug_file << f"    {l}: np.array(" << "[" << Coeff[l][0];
+         debug_file << "    {l}: np.array(" << "[" << Coeff[l][0];
          for (int i = 1; i < MaxOrder; ++i) {
             debug_file << ", " << Coeff[l][i];
          }
@@ -221,9 +221,6 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
 
       // Find maximum of the last 4 coefficients to determine whether refinement is necessary
       for (int j = 0; j < NField; ++j) {
-            printf("Coeff for field %d: ", j);
-         for (int i = 0; i < MaxOrder; ++i) {
-            printf("Coeff for field %d: "log10(abs(Coeff[j][i]))
          for (int i = MaxOrder-NCutoff; i < MaxOrder; ++i) {
             Cond = MAX(Cond, abs(Coeff[j][i]));
          }
