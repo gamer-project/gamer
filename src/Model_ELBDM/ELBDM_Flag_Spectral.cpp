@@ -1,6 +1,8 @@
 #include "GAMER.h"
 
 #if ( MODEL == ELBDM )
+#include <iostream>
+#include <fstream>
 
 
 #include <complex.h>
@@ -106,6 +108,16 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
 // initialise with large negative number
    Cond = -__FLT_MAX__;
 
+   std::ostream &debug_file = std::cout;
+    debug_file << "import numpy as np\n\n";
+
+    debug_file << "# Input wavefunction data\n";
+    debug_file << "re_wavefunction = []\n";
+    debug_file << "im_wavefunction = []\n";
+    debug_file << "coefficients = {}\n\n";
+
+
+
 // iterate over 3 dimensions and sample the physical 2D arrays with a stride
    for ( size_t XYZ = 0; XYZ < 3; ++XYZ )
    for ( size_t k=GhostSize; k<Size1D-GhostSize; k+=Stride )
@@ -164,6 +176,23 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
       }
 
 
+      // Output the wavefunction for Python
+      debug_file << "re_wavefunction.append(";
+      debug_file << "np.array(" << "[" << Row[0][0];
+      for (size_t i = 1; i < Size1D; ++i) {
+         debug_file << ", " << Row[0][i];
+      }
+      debug_file << "]))\n";
+
+      debug_file << "im_wavefunction.append(";
+      debug_file << "np.array(" << "[" << Row[1][0];
+      for (size_t i = 1; i < Size1D; ++i) {
+         debug_file << ", " << Row[1][i];
+      }
+      debug_file << "]))\n";
+
+
+
 //    Compute polynomial expansions of real and imaginary parts
       for (int i = 0; i < MaxOrder; ++i)
       {
@@ -172,14 +201,29 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
          }
          for (int t = 0; t < MaxOrder; t++) {
             for (int l = 0; l < NField; l++) {
-               Coeff[l][i] += Flag_Spectral_Polynomials[i][t] * Row[l][t];                     // left boundary
+               Coeff[l][i]        += Flag_Spectral_Polynomials[i][t] * Row[l][t];                     // left boundary
                Coeff[l+NField][i] += Flag_Spectral_Polynomials[i][t] * Row[l][Size1D - MaxOrder + t]; // right boundary
             }
          } // t
       }
 
+
+      // Output coefficients for Python
+      debug_file << "coefficients[(" << k << ", " << j << ", " << XYZ << ")] = {\n";
+      for (int l = 0; l < NCoeff; ++l) {
+         debug_file << f"    {l}: np.array(" << "[" << Coeff[l][0];
+         for (int i = 1; i < MaxOrder; ++i) {
+            debug_file << ", " << Coeff[l][i];
+         }
+         debug_file << "]),\n";
+      }
+      debug_file << "}\n";
+
       // Find maximum of the last 4 coefficients to determine whether refinement is necessary
       for (int j = 0; j < NField; ++j) {
+            printf("Coeff for field %d: ", j);
+         for (int i = 0; i < MaxOrder; ++i) {
+            printf("Coeff for field %d: "log10(abs(Coeff[j][i]))
          for (int i = MaxOrder-NCutoff; i < MaxOrder; ++i) {
             Cond = MAX(Cond, abs(Coeff[j][i]));
          }
@@ -187,6 +231,12 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
    } // XYZ, k,j
 
    Cond = log10(MAX(Cond, 1e-16));
+
+
+   // Output Cond for Python
+   debug_file << "\n# Final condition value\n";
+   debug_file << "Cond = " << Cond << "\n";
+   debug_file.close();
 } // FUNCTION : Prepare_for_Spectral_Criterion
 
 
