@@ -93,7 +93,7 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
    const size_t NField    = 2;
    const size_t NCoeff    = NField * 2;
 // Number of coefficients to consider for checking whether expansion has converged
-   const size_t NCutoff   = 3;
+   const size_t NCutoff   = 4;
 
    const real* Re1D = Var1D;
    const real* Im1D = Var1D + CUBE(Size1D);
