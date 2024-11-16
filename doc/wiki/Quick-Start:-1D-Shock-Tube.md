@@ -10,7 +10,7 @@ This page includes three demos:
 cd src
 ```
 
-2\. Generate `Makefile` by [configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Configure.py).
+2\. Generate `Makefile` by [configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Generate-Makefile).
 ``` bash
 cp ../example/test_problem/Hydro/Riemann/generate_make.sh ./
 sh generate_make.sh --openmp=false
@@ -28,16 +28,14 @@ Makefile is created.
 </details>
 
 > [!NOTE]
-> We have enabled
-[[SERIAL | Installation:-Simulation-Options#SERIAL]]
-and disabled
-[[GPU | Installation:-Simulation-Options#GPU]],
-[[LOAD_BALANCE | Installation:-Simulation-Options#LOAD_BALANCE]], and
-[[OPENMP | Installation:-Simulation-Options#OPENMP]]
+> We have set
+[[--mpi | Installation:-Generate-Makefile#--mpi]]=false, 
+[[--gpu | Installation:-Generate-Makefile#--gpu]]=false, and
+[[--openmp | Installation:-Generate-Makefile#--openmp]]=false
 to run in a CPU-only mode
 without OpenMP and MPI.
-See [[Installation: Simulation Options|Installation:-Simulation-Options]]
-for a complete list of all compile-time simulation options.
+See [[Option List | Installation:-Generate-Makefile#Option-List]]
+for a complete list of all available options of `configure.py`.
 
 3\. Compile the code.
 ``` bash
@@ -151,7 +149,7 @@ Total Processing Time : 75.954923 s
 Next, we enable OpenMP for the same test problem.
 Repeat the steps above with the following modifications.
 
-1\. Re-generate `Makefile` by [configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Configure.py) and recompile `gamer`.
+1\. Re-generate `Makefile` by [configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Generate-Makefile) and recompile `gamer`.
 ``` bash
 sh generate_make.sh --openmp=true
 make clean
@@ -236,7 +234,7 @@ To enable both GPU and OpenMP, repeat the steps in
 [CPU-only with OpenMP](#cpu-only-with-openmp) with the
 following modifications.
 
-1\. Re-generate `Makefile` by [configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Configure.py) and recompile `gamer`.
+1\. Re-generate `Makefile` by [configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Generate-Makefile) and recompile `gamer`.
 ``` bash
 sh generate_make.sh --machine=YOUR_MACHINE --openmp=true --gpu=true
 make clean

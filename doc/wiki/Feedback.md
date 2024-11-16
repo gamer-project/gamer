@@ -1,12 +1,12 @@
 This page describes feedback from particles to grids and vice versa.
-Please enable the compilation option [[FEEDBACK | Installation: Simulation-Options#FEEDBACK]].
+Please enable the compilation option [[--feedback | Installation:-Generate-Makefile#--feedback]].
 
 
 ## Compilation Options
 
 Related options:
-[[PARTICLE | Installation: Simulation-Options#PARTICLE]], &nbsp;
-[[FEEDBACK | Installation: Simulation-Options#FEEDBACK]] &nbsp;
+[[--particle | Installation:-Generate-Makefile#--particle]], &nbsp;
+[[--feedback | Installation:-Generate-Makefile#--feedback]] &nbsp;
 
 
 ## Runtime Parameters
@@ -22,7 +22,7 @@ Other related parameters:
 Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**
 
 <a name="FB_LEVEL"></a>
-* #### `FB_LEVEL` &ensp; (0 &#8804; input < [[NLEVEL | Installation: Simulation-Options#NLEVEL]]; <0 &#8594; set to [[MAX_LEVEL | Runtime Parameters:-Refinement#MAX_LEVEL ]]) &ensp; [-1]
+* #### `FB_LEVEL` &ensp; (0 &#8804; input < [[--nlevel | Installation:-Generate-Makefile#--nlevel]]; <0 &#8594; set to [[MAX_LEVEL | Runtime Parameters:-Refinement#MAX_LEVEL ]]) &ensp; [-1]
     * **Description:**
 AMR level to apply feedback.
     * **Restriction:**

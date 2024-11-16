@@ -11,9 +11,11 @@ It enables us to explore these ongoing simulation data through accessing memory 
 ### Compilation Options
 
 libyt has the following compilation options in `Makefile`:
-- [[SUPPORT_LIBYT | Installation: Simulation-Options#SUPPORT_LIBYT]] (or `--libyt` when using `configure.py`)
-- [[LIBYT_USE_PATCH_GROUP | Installation: Simulation-Options#LIBYT_USE_PATCH_GROUP]] (or `--libyt_patchgroup` when using `configure.py`)
-- [[LIBYT_INTERACTIVE | Installation: Simulation-Options#LIBYT_INTERACTIVE]] (or `--libyt_interactive` when using `configure.py`)
+- [[--libyt | Installation:-Generate-Makefile#--libyt]]
+- [[--libyt_patchgroup | Installation:-Generate-Makefile#--libyt_patchgroup]]
+- [[--libyt_interactive | Installation:-Generate-Makefile#--libyt_interactive]]
+- [[--libyt_reload | Installation:-Generate-Makefile#--libyt_reload]]
+- [[--libyt_jupyter | Installation:-Generate-Makefile#--libyt_jupyter]]
 
 Must set `LIBYT_PATH` in either `Makefile` or the machine configuration file
 to the path containing the folders `include` and `lib` of libyt.
@@ -49,4 +51,3 @@ OMPI_MCA_osc=sm,pt2pt mpirun ...
 ```
 
 This is something libyt will fix in the near future.
-

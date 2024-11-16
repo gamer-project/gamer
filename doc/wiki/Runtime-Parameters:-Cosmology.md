@@ -2,7 +2,7 @@
 ## Compilation Options
 
 Related options:
-[[COMOVING | Installation: Simulation-Options#COMOVING]] &nbsp;
+[[--comoving | Installation:-Generate-Makefile#--comoving]] &nbsp;
 
 ## Runtime Parameters
 

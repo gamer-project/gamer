@@ -55,6 +55,6 @@ The GPU compute capability can be calculated by `major_verison*100 + minor_versi
 <br>
 
 ## Links
-* [[Makefile configuration -- Simulation Options | Installation: Simulation Options ]]
-* [[Makefile configuration -- External Libraries | Installation: External Libraries ]]
+* [[Generate Makefile | Installation:-Generate-Maefile ]]
+* [[External Libraries | Installation:-External-Libraries ]]
 * [[Back to the main page of Installation | Installation]]
