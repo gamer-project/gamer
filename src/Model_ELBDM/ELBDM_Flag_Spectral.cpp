@@ -233,7 +233,6 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
    // Output Cond for Python
    debug_file << "\n# Final condition value\n";
    debug_file << "Cond = " << Cond << "\n";
-   debug_file.close();
 } // FUNCTION : Prepare_for_Spectral_Criterion
 
 
