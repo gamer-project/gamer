@@ -1794,7 +1794,7 @@ void Aux_TakeNote()
 
       if ( OPT__FLAG_SPECTRAL )
       {
-         fprintf( Note, "Flag Criterion (Spectral with N = %f coefficients)\n", OPT__FLAG_SPECTRAL_N );
+         fprintf( Note, "Flag Criterion (Spectral with N = %d coefficients)\n", OPT__FLAG_SPECTRAL_N );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "  Level     Refinement     Derefinement\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)
