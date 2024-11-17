@@ -1975,6 +1975,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  if ( MODEL == ELBDM )
    LoadField( "Opt__Flag_EngyDensity",   &RS.Opt__Flag_EngyDensity,   SID, TID, NonFatal, &RT.Opt__Flag_EngyDensity,    1, NonFatal );
    LoadField( "Opt__Flag_Spectral",      &RS.Opt__Flag_Spectral,      SID, TID, NonFatal, &RT.Opt__Flag_Spectral,       1, NonFatal );
+   LoadField( "Opt__Flag_Spectral_N",    &RS.Opt__Flag_Spectral_N,    SID, TID, NonFatal, &RT.Opt__Flag_Spectral_N,     1, NonFatal );
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    LoadField( "Opt__Flag_Interference",  &RS.Opt__Flag_Interference,  SID, TID, NonFatal, &RT.Opt__Flag_Interference,   1, NonFatal );
 #  endif

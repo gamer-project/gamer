@@ -1009,6 +1009,7 @@ void Aux_TakeNote()
 #     if ( MODEL == ELBDM )
       fprintf( Note, "OPT__FLAG_ENGY_DENSITY         % d\n",      OPT__FLAG_ENGY_DENSITY    );
       fprintf( Note, "OPT__FLAG_SPECTRAL             % d\n",      OPT__FLAG_SPECTRAL        );
+      fprintf( Note, "OPT__FLAG_SPECTRAL_N           % d\n",      OPT__FLAG_SPECTRAL_N      );
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       fprintf( Note, "OPT__FLAG_INTERFERENCE         % d\n",      OPT__FLAG_INTERFERENCE    );
 #     endif
@@ -1793,7 +1794,7 @@ void Aux_TakeNote()
 
       if ( OPT__FLAG_SPECTRAL )
       {
-         fprintf( Note, "Flag Criterion (Spectral)\n" );
+         fprintf( Note, "Flag Criterion (Spectral with N = %f coefficients)\n", OPT__FLAG_SPECTRAL_N );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "  Level     Refinement     Derefinement\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)

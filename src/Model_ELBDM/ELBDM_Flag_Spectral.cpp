@@ -56,8 +56,15 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
    const size_t Size1D    = PS2 + 2 * GhostSize;
    const size_t MaxOrder  = 14;
    const size_t NField    = 2;
-// Number of coefficients to consider for checking whether expansion has converged
-   const size_t NCutoff   = 4;
+// number of coefficients to consider for checking whether expansion has converged
+   const size_t NCutoff   = OPT__FLAG_SPECTRAL_N;
+
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( NCutoff < 1 || NCutoff > MaxOrder )
+      Aux_Error( ERROR_INFO, "OPT__FLAG_SPECTRAL_N = %d outside of valid range [1, %d] !!\n", OPT__FLAG_SPECTRAL_N, MaxOrder );
+#  endif
 
    const real* Re1D = Var1D;
    const real* Im1D = Var1D + CUBE(Size1D);

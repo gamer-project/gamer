@@ -181,6 +181,7 @@ void Init_Load_Parameter()
 #  if ( MODEL == ELBDM )
    ReadPara->Add( "OPT__FLAG_ENGY_DENSITY",     &OPT__FLAG_ENGY_DENSITY,          false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_SPECTRAL",         &OPT__FLAG_SPECTRAL,              false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__FLAG_SPECTRAL_N",       &OPT__FLAG_SPECTRAL_N,            2,               1,             14             );
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    ReadPara->Add( "OPT__FLAG_INTERFERENCE",     &OPT__FLAG_INTERFERENCE,          false,           Useless_bool,  Useless_bool   );
 #  endif
