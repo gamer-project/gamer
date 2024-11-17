@@ -29,9 +29,9 @@ Makefile is created.
 
 > [!NOTE]
 > We have set
-[[--mpi | Installation:-Generate-Makefile#--mpi]]=false, 
-[[--gpu | Installation:-Generate-Makefile#--gpu]]=false, and
-[[--openmp | Installation:-Generate-Makefile#--openmp]]=false
+[[--mpi=false | Installation:-Generate-Makefile#--mpi]], 
+[[--gpu=false | Installation:-Generate-Makefile#--gpu]], and
+[[--openmp=false | Installation:-Generate-Makefile#--openmp]]
 to run in a CPU-only mode
 without OpenMP and MPI.
 See [[Option List | Installation:-Generate-Makefile#Option-List]]
@@ -149,7 +149,7 @@ Total Processing Time : 75.954923 s
 Next, we enable OpenMP for the same test problem.
 Repeat the steps above with the following modifications.
 
-1\. Re-generate `Makefile` by [configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Generate-Makefile) and recompile `gamer`.
+1\. Re-generate `Makefile` by [[configure.py | Installation:-Generate-Makefile]] and recompile `gamer`.
 ``` bash
 sh generate_make.sh --openmp=true
 make clean
@@ -234,7 +234,7 @@ To enable both GPU and OpenMP, repeat the steps in
 [CPU-only with OpenMP](#cpu-only-with-openmp) with the
 following modifications.
 
-1\. Re-generate `Makefile` by [configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Generate-Makefile) and recompile `gamer`.
+1\. Re-generate `Makefile` by [[configure.py | Installation:-Generate-Makefile]] and recompile `gamer`.
 ``` bash
 sh generate_make.sh --machine=YOUR_MACHINE --openmp=true --gpu=true
 make clean
@@ -242,7 +242,7 @@ make -j4
 ```
 
 > [!CAUTION]
-> * Please make sure that the `GPU_COMPUTE_CAPABILITY` is set properly in your machine configuration files
+> * Please make sure that the `GPU_COMPUTE_CAPABILITY` is set properly in your [[machine configuration file | Installation:-Machine-Configuration-File]]
 > * Remember to copy the new executable to `bin/shocktube`.
 
 2\. Remove all old log and data files, if necessary.

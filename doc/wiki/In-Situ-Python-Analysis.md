@@ -10,15 +10,15 @@ It enables us to explore these ongoing simulation data through accessing memory 
 
 ### Compilation Options
 
-libyt has the following compilation options in `Makefile`:
+libyt has the following compilation options:
 - [[--libyt | Installation:-Generate-Makefile#--libyt]]
 - [[--libyt_patchgroup | Installation:-Generate-Makefile#--libyt_patchgroup]]
 - [[--libyt_interactive | Installation:-Generate-Makefile#--libyt_interactive]]
 - [[--libyt_reload | Installation:-Generate-Makefile#--libyt_reload]]
 - [[--libyt_jupyter | Installation:-Generate-Makefile#--libyt_jupyter]]
 
-Must set `LIBYT_PATH` in either `Makefile` or the machine configuration file
-to the path containing the folders `include` and `lib` of libyt.
+Must set `LIBYT_PATH` in the [[machine configuration file | Installation:-Machine-Configuration-File#1-library-paths]]
+to the path containing the folders `include` and `lib` of `libyt`.
 
 ### Runtime Parameters
 

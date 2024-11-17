@@ -86,7 +86,7 @@ Follow the steps below to define your feedback when
     #  endif
     ```
 
-4. Make sure to enable `FEEDBACK` in `Makefile` and `FB_USER` in `Input__Parameter`.
+4. Make sure to enable [[--feedback | Installation:-Generate-Makefile#--feedback]] when generating `Makefile` and `FB_USER` in `Input__Parameter`.
 
 
 <br>
