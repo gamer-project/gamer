@@ -3,6 +3,10 @@
 
 The machine configuration file is under `configs`. The configuration file contains the library paths, the compiler types, the compilation flags, and the GPU compute capability.
 
+### 0. Rules of the configuration file
+* Comments must start with `#`.
+* The variable name and the value should be separated by spaces.
+
 ### 1. Library paths
 
 For example, `MPI_PATH` can be set by:

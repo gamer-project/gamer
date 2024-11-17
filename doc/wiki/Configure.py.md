@@ -1,13 +1,11 @@
-- [Developer Guide](#developer-guide)
+This page includes:
   - [Adding new source files](#adding-new-source-files)
   - [Adding new library paths](#adding-new-library-paths)
   - [Adding new compiler flag types](#adding-new-compiler-flag-types)
   - [Rules of Makefile_base](#rules-of-makefile_base)
-# Developer Guide
-This script consists of five parts: `Packages`, `Global variables`, `Classes`, `Functions`, and `Main execution`.
 
 ## Adding new source files
-Edit `Makefile_base` to add new source files.
+Edit the section "source files" in the `Makefile_base` to add new source files.
 
 ## Adding new simulation options
 1. Add a Python argument reader for the new simulation option under `load_arguments()`. Here is a simple example of the argument reader:
@@ -88,7 +86,7 @@ Edit `Makefile_base` to add new source files.
    ```
 
 ## Adding new library paths
-1. Add `NEW_PATH := @@@NEW_PATH@@@` in `Makefile_base` under `# library paths`.
+1. Add `NEW_PATH := @@@NEW_PATH@@@` at `library paths` section in `Makefile_base`.
 
    ```makefile
    # library paths
@@ -108,7 +106,7 @@ Edit `Makefile_base` to add new source files.
    ```
 
 ## Adding new compiler flag types
-1. Add `NEW_FLAG := @@@NEW_FLAG@@@` in `Makefile_base` under `# compilers and flags`.
+1. Add `NEW_FLAG := @@@NEW_FLAG@@@` at `compilers and flags` section in `Makefile_base`.
 
    ```makefile
    # compilers and flags
@@ -133,7 +131,7 @@ Edit `Makefile_base` to add new source files.
 > [!IMPORTANT]
 > All flags must be set in `flags`; otherwise, they will be interpreted as library paths.
 
-3. Add `NEW_FLAG -new_flag` in your machine configuration file `configs/YOUR.config`.
+3. Add `NEW_FLAG -new_flag` in your [[machine configuration file | Installation:-Machine-Configuration-File]] `configs/YOUR.config`.
 
    ```
    # 2. Compiler flags
@@ -142,67 +140,5 @@ Edit `Makefile_base` to add new source files.
    ...
    ```
 
-## Rules of `*.config`
-* Comments must start with `#`.
-* All variables should be uppercase.
-* Variables and values should be separated by spaces.
-
 ## Rules of `Makefile_base`
 * The strings to be replaced by `configure.py` must be sandwiched by `@@@`.
-
-### Format
-All compile-time simulation options in the `Makefile` are in the following two formats:
-
-```Makefile
-SIMU_OPTION += -DOPTION1
-SIMU_OPTION += -DOPTION2=OPTION2_ADOPTED
-```
-which will enable `OPTION1` and assign `OPTION2_ADOPTED` to `OPTION2`.
-For example, to (i) enable gravity and (ii) adopt the CTU fluid scheme, set
-
-```Makefile
-SIMU_OPTION += -DGRAVITY
-SIMU_OPTION += -DFLU_SCHEME=CTU
-```
-
-> [!CAUTION]
-> * Option values (if any) must be set explicitly since there are no default values.
-> For example, `SIMU_OPTION += -DFLU_SCHEME` without assigning any value to the option `FLU_SCHEME` is invalid.
-> * Do not insert any space before and after the equal sign `=`.
-> For example, use `-DFLU_SCHEME=CTU` instead of `-DFLU_SCHEME = CTU`.
-
-
-### Compilers and flags
-To choose a compiler and compilation flags, set the following variables in the `Makefile`:
-
-```Makefile
-CXX        = @@@CXX@@@              # C++ compiler
-CXXFLAG    = @@@CXXFLAG@@@          # compilation flags
-LIB        = @@@LIBFLAG@@@          # openmp flag
-OPENMPFLAG = @@@OPENMPFLAG@@@       # libraries and linker flags
-NVCC       = $(CUDA_PATH)/bin/nvcc  # CUDA compiler
-```
-
-The prefixes `$(MPI_PATH)/bin/` and `$(CUDA_PATH)/bin/` in the
-above examples are optional to force the Makefile to use the
-correct compiler, where `MPI_PATH` and `CUDA_PATH` are the library
-paths described in [[External Libraries | Installation: External Libraries]].
-
-### Library Paths
-Set the following library paths in the `Makefile` to help the compiler locate them (if necessary):
-
-``` Makefile
-CUDA_PATH    := @@@CUDA_PATH@@@
-FFTW2_PATH   := @@@FFTW2_PATH@@@
-FFTW3_PATH   := @@@FFTW3_PATH@@@
-MPI_PATH     := @@@MPI_PATH@@@
-HDF5_PATH    := @@@HDF5_PATH@@@
-GRACKLE_PATH := @@@GRACKLE_PATH@@@
-GSL_PATH     := @@@GSL_PATH@@@
-LIBYT_PATH   := @@@LIBYT_PATH@@@
-```
-
-Only the paths of libraries being used need to be set. In addition,
-it is usually unnecessary to set the paths that have been embedded
-into the compiling command (e.g., when using `CC` and `module load`
-in a Cray computer system).
