@@ -2228,7 +2228,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "SpecInt_GhostBoundary",       &RS.SpecInt_GhostBoundary,       SID, TID, NonFatal, &RT.SpecInt_GhostBoundary,       1, NonFatal );
 #  if ( MODEL == ELBDM )
    LoadField( "SpecInt_XY_Instead_DePha",    &RS.SpecInt_XY_Instead_DePha,    SID, TID, NonFatal, &RT.SpecInt_XY_Instead_DePha,    1, NonFatal );
-   LoadField( "SpecInt_VortexThreshold",     &RS.SpecInt_VortexThreshold, SID, TID, NonFatal, &RT.SpecInt_VortexThreshold, 1, NonFatal );
+   LoadField( "SpecInt_VortexThreshold",     &RS.SpecInt_VortexThreshold,     SID, TID, NonFatal, &RT.SpecInt_VortexThreshold,     1, NonFatal );
 #  endif
 #  endif // #ifdef SUPPORT_SPECTRAL_INT
 

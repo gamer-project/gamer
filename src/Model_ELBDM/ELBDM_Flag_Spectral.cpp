@@ -72,8 +72,8 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
 
    real Row[NField][Size1D];                    // array for reading input data
 
-// initialise with large negative number
-   Cond = -__FLT_MAX__;
+// initialise with 0
+   Cond = 0;
 
 // iterate over 3 dimensions and sample the physical 2D arrays with a stride
    for ( size_t XYZ = 0; XYZ < 3; ++XYZ )
@@ -116,8 +116,6 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
          } // l
       } // i
    } // XYZ, k,j
-
-   Cond = MAX(Cond, 1e-16));
 } // FUNCTION : Prepare_for_Spectral_Criterion
 
 
