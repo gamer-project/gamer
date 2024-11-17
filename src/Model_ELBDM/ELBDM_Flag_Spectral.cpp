@@ -33,17 +33,18 @@ const static flag_spectral_float  Flag_Spectral_Polynomials[FLAG_SPECTRAL_ORDER]
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Prepare_for_Spectral_Criterion
-// Description :  Evaluate decay of the coefficients of a polynomial expansion of the wave function.
+// Description :  Evaluate the magnitude the coefficients of a polynomial expansion of the wave function.
 //                The coefficients of the polynomials can be shown to decay exponentially for a well-resolved function.
-//                Therefore, one can check the slope via a linear least-squares fit to (polynomial order, log(abs(polynomial coefficient)).
-//                If the function is not well-resolved the polynomials decay more slowly and the slope is smaller.
+//                Therefore, one can check whether the coefficients of the higher-order polynomials are sufficiently small.
+//                This function checks the polynomial coefficients of order (13 - OPT__FLAG_SPECTRAL_N + 1) to order 13.
+//                If the function is not well-resolved, they will be large.
 //
 // Note        :  1. This function is called once per patch group
 //                2. The size of the array Var1D must be PS2 + 2
 //                3. Assume a ghost size of 1
 //
 // Parameter   :  Var1D : Array storing the input re & im
-//                Cond  : Reference to floating point variable where density ratio is stored
+//                Cond  : Reference to floating point variable where the magnitude of the largest coefficient will be stored.
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
@@ -116,7 +117,7 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
       } // i
    } // XYZ, k,j
 
-   Cond = log10(MAX(Cond, 1e-16));
+   Cond = MAX(Cond, 1e-16));
 } // FUNCTION : Prepare_for_Spectral_Criterion
 
 
