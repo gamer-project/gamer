@@ -10,7 +10,7 @@ This page includes three demos:
 cd src
 ```
 
-2\. Generate `Makefile` by [configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Generate-Makefile).
+2\. Generate `Makefile` by [[configure.py | Installation:-Generate-Makefile]].
 ``` bash
 cp ../example/test_problem/Hydro/Riemann/generate_make.sh ./
 sh generate_make.sh --openmp=false
@@ -29,9 +29,9 @@ Makefile is created.
 
 > [!NOTE]
 > We have set
-[[--mpi=false | Installation:-Generate-Makefile#--mpi]], 
-[[--gpu=false | Installation:-Generate-Makefile#--gpu]], and
-[[--openmp=false | Installation:-Generate-Makefile#--openmp]]
+[[--mpi | Installation:-Generate-Makefile#--mpi]]=false,
+[[--gpu | Installation:-Generate-Makefile#--gpu]]=false, and
+[[--openmp | Installation:-Generate-Makefile#--openmp]]=false
 to run in a CPU-only mode
 without OpenMP and MPI.
 See [[Option List | Installation:-Generate-Makefile#Option-List]]
