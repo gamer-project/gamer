@@ -258,7 +258,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                Spectral_IntScheme, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
                                MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
 
-//          evaluate the slope of the polynomial expansion
+//          evaluate the spectral refinement criterion
             Prepare_for_Spectral_Criterion( Spectral_Var, Spectral_Cond );
          }
 #        endif
