@@ -1,23 +1,3 @@
-# Generate Makefile
-To get the `Makefile`, please execute the following command:
-
-```bash
-python configure.py --machine=your_configuration_file [--your_arguments]
-```
-
-`your_configuration_file` is the configuration file you got from [[Machine Configuration File | Installation:-Machine-Configuration-File]], and `[--your_arguments]` should match your simulation requirements. Please check out [Option List](#option-list) for all the available options.
-
-For example, the following command uses `configs/pleiades.config` machine configuration, sets the FFTW method to `FFTW2`, and enables gravity and GPU.
-
-``` bash
-python configure.py --machine=pleiades --fftw=FFTW2 --gravity=true --gpu=true
-```
-
-> [!TIP]
-> An example script `generate_make.sh` to generate Makefile can be found in each test problem folder,
-e.g., `example/test_problem/Hydro/AcousticWave/generate_make.sh`.
-
-# Option List
 All available options in `configure.py` including compile-time simulation options and `configure.py` only options are listed below.
 * [Configure.py Only](#configurepy-only)
 
@@ -50,47 +30,77 @@ disabled). See the "Restriction" of each option carefully.
 
 <table>
    <tr>
-      <td align=center rowspan=4 width=130px><b>Option</b></td>
-      <td><b>GAMER Name</b></td>
+      <td align=center><b>
+&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;
+         <br>Option<br>
+&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;
+      </b></td>
+      <td align=center><b>
+&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;
+         <br>Value<br>
+&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;
+      </b></td>
+      <td align=center><b>
+&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;
+      <br>Default<be>
+&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;
+      </b></td>
+      <td align=center><b>
+&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;
+         <br>Description<br>
+&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;
+      </b></td>
+      <td align=center><b>
+&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;
+         <br>Restriction<br>
+&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;
+      </b></td>
+      <td align=center><b>
+&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;
+            <br>Corresponding symbolic constant<br>
+&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;
+      </b></td>
    </tr>
-   <tr><td><b>Value</b></td></tr>
-   <tr><td><b>Description</b></td></tr>
-   <tr><td><b>Restriction</b></td></tr>
    <tr>
-      <td align=center rowspan=4><code>--model</code></td>
+      <td align=center><code>--model‎</code></td>
+      <td><code>HYDRO</code>, <code>ELBDM</code></td>
+      <td><code>HYDRO</code></td>
+      <td>Physical models, where <code>ELBDM</code> is for &psi;DM</td>
+      <td>Must be set in any cases; <code>ELBDM</code> is not released yet</td>
       <td><a name="--model"></a> <code>MODEL</code></td>
    </tr>
-   <tr><td><code>HYDRO</code>, <code>ELBDM</code></td></tr>
-   <tr><td>Physical models, where <code>ELBDM</code> is for &psi;DM</td></tr>
-   <tr><td>Must be set in any cases; <code>ELBDM</code> is not released yet</td></tr>
    <tr>
-      <td align=center rowspan=4><code>--gravity</code></td>
+      <td align=center><code>--gravity</code></td>
+      <td><code>true</code>, <code>false</code></td>
+      <td><code>false</code></td>
+      <td>Enable [[gravity | Gravity]]</td>
+      <td>Must enable <code>--fftw</code>; may need to set <code>FFTW2/3_PATH</code> in [[configuration file | Installation:-Machine-Configuration-File#1-Library-paths]]</td>
       <td><a name="--gravity"></a> <code>GRAVITY</code></td>
    </tr>
-   <tr><td><code>true</code>, <code>false</code></td></tr>
-   <tr><td>Enable [[gravity | Gravity]]</td></tr>
-   <tr><td>Must enable <code>--fftw</code>; may need to set <code>FFTW2/3_PATH</code> in [[configuration file | Installation:-Machine-Configuration-File#1-Library-paths]]</td></tr>
    <tr>
-      <td align=center rowspan=4><code>--particle</code></td>
+      <td align=center><code>--particle</code></td>
+      <td><code>true</code>, <code>false</code></td>
+      <td><code>false</code></td>
+      <td>Enable [[particles | Particles]]</td>
+      <td>Must enable <code>--gravity</code> or <code>--tracer</code></td>
       <td><a name="--particle"></a> <code>PARTICLE</code></td>
    </tr>
-   <tr><td><code>true</code>, <code>false</code></td></tr>
-   <tr><td>Enable [[particles | Particles]]</td></tr>
-   <tr><td>Must enable <code>--gravity</code> or <code>--tracer</code></td></tr>
    <tr>
-      <td align=center rowspan=4><code>--grackle</code></td>
+      <td align=center><code>--grackle</code></td>
+      <td><code>true</code>, <code>false</code></td>
+      <td><code>false</code></td>
+      <td>Enable [[GRACKLE | Chemistry and Radiation]]</td>
+      <td>May need to set <code>GRACKLE_PATH</code> in [[configuration file | Installation:-Machine-Configuration-File#1-Library-paths]]; only support <code>--eos=GAMMA/COSMIC_RAY</code>; does not support <code>--comoving</code></td>
       <td><a name="--grackle"></a> <code>SUPPORT_GRACKLE</code></td>
    </tr>
-   <tr><td><code>true</code>, <code>false</code></td></tr>
-   <tr><td>Enable [[GRACKLE | Chemistry and Radiation]]</td></tr>
-   <tr><td>May need to set <code>GRACKLE_PATH</code> in [[configuration file | Installation:-Machine-Configuration-File#1-Library-paths]]; only support <code>--eos=GAMMA/COSMIC_RAY</code>; does not support <code>--comoving</code></td></tr>
    <tr>
-      <td align=center rowspan=4><code>--passive</code></td>
+      <td align=center><code>--passive</code></td>
+      <td>&#8805; 0</td>
+      <td>0</td>
+      <td>Number of user-defined passive scalars</td>
+      <td>See [[here | Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes]] for details; not supported for <code>--flu_scheme=RTVD</code></td>
       <td><a name="--passive"></a> <code>NCOMP_PASSIVE_USER</code></td>
    </tr>
-   <tr><td>&#8805; 0</td></tr>
-   <tr><td>Number of user-defined passive scalars</td></tr>
-   <tr><td>See [[here | Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes]] for details; not supported for <code>--flu_scheme=RTVD</code></td></tr>
 </table>
 
 ## Hydro Options

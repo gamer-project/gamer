@@ -1,4 +1,3 @@
-## Compile GAMER
 1. Setup machine configuration file
    
    Please see [[Machine Configuration File | Installation:-Machine-Configuration-File]].
@@ -11,7 +10,23 @@
 
 3. Generate `Makefile` using the Python script `configure.py`
 
-   Please check out [[Generate Makefile | Installation:-Generate-Makefile]].
+   To get the `Makefile`, please execute the following command:
+
+   ```bash
+   python configure.py --machine=your_configuration_file [--your_arguments]
+   ```
+
+   `your_configuration_file` is the configuration filename you got from step 1., and `[--your_arguments]` should match your simulation requirements. Please check out [[Option List | Installation:-Option-List]] for all the available options.
+
+   For example, the following command uses `configs/pleiades.config` machine configuration, sets the FFTW method to `FFTW2`, and enables gravity and GPU.
+
+   ``` bash
+   python configure.py --machine=pleiades --fftw=FFTW2 --gravity=true --gpu=true
+   ```
+
+> [!TIP]
+> An example script `generate_make.sh` to generate Makefile can be found in each test problem folder,
+e.g., `example/test_problem/Hydro/AcousticWave/generate_make.sh`.
 
 4. Compile the code
 
