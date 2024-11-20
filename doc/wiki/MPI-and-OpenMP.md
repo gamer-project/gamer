@@ -6,7 +6,7 @@ To enable MPI support, follow the steps below:
     1. Set `CXX` to an MPI compiler (e.g., `mpicxx`) in the [[configuration file | Installation:-Machine-Configuration-File]]
     2. Set `MPI_PATH` to you MPI installation path in the [[configuration file | Installation:-Machine-Configuration-File]]
     3. Generate Makefile with the following options:
-       * [[--mpi | Installation:-Generate-Makefile#--mpi]]=true
+       * [[--mpi | Installation:-Option-List#--mpi]]=true
     4. Recompile the code by `make clean; make`
 
 2. Launch the code with MPI (consult your system documentation),
@@ -20,7 +20,7 @@ for instance,
 To enable hybrid MPI/OpenMP, follow the MPI-only prescriptions
 given above with the following additional steps:
 1. Also turn on the compilation option
-[[--openmp | Installation:-Generate-Makefile#--openmp]]
+[[--openmp | Installation:-Option-List#--openmp]]
 and set the OpenMP flag `OPENMPFLAG` properly in the `Makefile`
 
 2. Set the number of threads through the runtime parameter
@@ -34,8 +34,8 @@ out the [Remarks](#remarks) below.
 ## Compilation Options
 
 Related options:
-[[--mpi | Installation:-Generate-Makefile#--mpi]] &nbsp;
-[[--openmp | Installation:-Generate-Makefile#--openmp]] &nbsp;
+[[--mpi | Installation:-Option-List#--mpi]] &nbsp;
+[[--openmp | Installation:-Option-List#--openmp]] &nbsp;
 
 
 ## Runtime Parameters
@@ -65,7 +65,7 @@ See also [Hybrid MPI/OpenMP/GPU](#hybrid-mpiopenmpgpu) and
 [MPI Binding and Thread Affinity](#mpi-binding-and-thread-affinity).
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--openmp | Installation:-Generate-Makefile#--openmp]].
+[[--openmp | Installation:-Option-List#--openmp]].
 
 <a name="OPT__INIT_GRID_WITH_OMP"></a>
 * #### `OPT__INIT_GRID_WITH_OMP` &ensp; (0=off, 1=on) &ensp; [1]
@@ -75,7 +75,7 @@ of different grid patches. In can be enabled in most cases unless,
 for example, the initial condition setup involves random numbers.
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--openmp | Installation:-Generate-Makefile#--openmp]].
+[[--openmp | Installation:-Option-List#--openmp]].
 
 <a name="LB_INPUT__WLI_MAX"></a>
 * #### `LB_INPUT__WLI_MAX` &ensp; (&#8805;0.0) &ensp; [0.1]
@@ -87,7 +87,7 @@ estimated to be higher than a given threshold. See
 for details.
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--mpi | Installation:-Generate-Makefile#--mpi]].
+[[--mpi | Installation:-Option-List#--mpi]].
 
 <a name="LB_INPUT__PAR_WEIGHT"></a>
 * #### `LB_INPUT__PAR_WEIGHT` &ensp; (&#8805;0.0) &ensp; [0.0]
@@ -98,8 +98,8 @@ to improve load balancing for the simulations with particles. See
 for details. The typical values are 1.0 ~ 2.0.
     * **Restriction:**
 Only applicable when enabling the compilation options
-[[--mpi | Installation:-Generate-Makefile#--mpi]] and
-[[--particle | Installation:-Generate-Makefile#--particle]].
+[[--mpi | Installation:-Option-List#--mpi]] and
+[[--particle | Installation:-Option-List#--particle]].
 
 <a name="OPT__RECORD_LOAD_BALANCE"></a>
 * #### `OPT__RECORD_LOAD_BALANCE` &ensp; (0=off, 1=on) &ensp; [1]
@@ -108,7 +108,7 @@ Record the load balancing information in the log file
 [[Record__LoadBalance | Simulation-Logs:-Record__LoadBalance]].
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--mpi | Installation:-Generate-Makefile#--mpi]].
+[[--mpi | Installation:-Option-List#--mpi]].
 
 <a name="OPT__MINIMIZE_MPI_BARRIER"></a>
 * #### `OPT__MINIMIZE_MPI_BARRIER` &ensp; (0=off, 1=on) &ensp; [0]
@@ -118,7 +118,7 @@ to improve load balancing. It can improve the performance notably,
 especially for simulations with particles.
     * **Restriction:**
 For simulations with particles, one must enable the compilation option
-[[--store_pot_ghost | Installation:-Generate-Makefile#--store_pot_ghost]] and
+[[--store_pot_ghost | Installation:-Option-List#--store_pot_ghost]] and
 set [[PAR_IMPROVE_ACC | Particles#PAR_IMPROVE_ACC]]=1.
 [[OPT__TIMING_BALANCE | Runtime Parameters:-Miscellaneous#OPT__TIMING_BALANCE]]
 must be disabled. In addition, it is currently recommended to disable

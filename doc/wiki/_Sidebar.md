@@ -6,6 +6,7 @@
 
 **User Guide**
 * [[ Installation | Installation ]]
+* [[ Option List | Installation:-Option-List ]]
 * [[ Running the Code | Running-the-Code ]]
 * [[ Adding New Simulations | Adding-New-Simulations ]]
 * [[ Runtime Parameters | Runtime-Parameters ]]

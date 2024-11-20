@@ -2,11 +2,11 @@
 ## Compilation Options
 
 Related options:
-[[--particle | Installation:-Generate-Makefile#--particle]], &nbsp;
-[[--double_par | Installation:-Generate-Makefile#--double_par]], &nbsp;
-[[--store_par_acc | Installation:-Generate-Makefile#--store_par_acc]], &nbsp;
-[[--star_formation | Installation:-Generate-Makefile#--star_formation]], &nbsp;
-[[--par_attribute | Installation:-Generate-Makefile#--par_attribute]] &nbsp;
+[[--particle | Installation:-Option-List#--particle]], &nbsp;
+[[--double_par | Installation:-Option-List#--double_par]], &nbsp;
+[[--store_par_acc | Installation:-Option-List#--store_par_acc]], &nbsp;
+[[--star_formation | Installation:-Option-List#--star_formation]], &nbsp;
+[[--par_attribute | Installation:-Option-List#--par_attribute]] &nbsp;
 
 
 ## Runtime Parameters
@@ -76,7 +76,7 @@ for details.
     * **Restriction:**
 
 <a name="PAR_IC_FLOAT8"></a>
-* #### `PAR_IC_FLOAT8` &ensp; (<0: same as [[--double_par | Installation:-Generate-Makefile#--double_par]], 0=single precision, 1=double precision) &ensp; [-1]
+* #### `PAR_IC_FLOAT8` &ensp; (<0: same as [[--double_par | Installation:-Option-List#--double_par]], 0=single precision, 1=double precision) &ensp; [-1]
     * **Description:**
 Floating-point precision of the particle initial condition file `PAR_IC`.
     * **Restriction:**
@@ -136,7 +136,7 @@ and is generally not recommended.
 Improve the force accuracy for particles close to the patch boundaries.
     * **Restriction:**
 Only applicable when adopting [PAR_INTERP](#PAR_INTERP)=2/3 and
-enabling the compilation option [[--store_pot_ghost | Installation:-Generate-Makefile#--store_pot_ghost]].
+enabling the compilation option [[--store_pot_ghost | Installation:-Option-List#--store_pot_ghost]].
 
 <a name="PAR_PREDICT_POS"></a>
 * #### `PAR_PREDICT_POS` &ensp; (0=off, 1=on) &ensp; [1]

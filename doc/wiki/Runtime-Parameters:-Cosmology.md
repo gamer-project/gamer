@@ -2,7 +2,7 @@
 ## Compilation Options
 
 Related options:
-[[--comoving | Installation:-Generate-Makefile#--comoving]] &nbsp;
+[[--comoving | Installation:-Option-List#--comoving]] &nbsp;
 
 ## Runtime Parameters
 

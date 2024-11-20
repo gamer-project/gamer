@@ -33,10 +33,10 @@ disabled). See the "Restriction" of each option carefully.
 | &#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;<br>Option<br>&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192; | &#8192;&#8192;&#8192;&#8192;&#8192;<br>Value<br>&#8192;&#8192;&#8192;&#8192;&#8192; | &#8192;&#8192;&#8192;&#8192;&#8192;<br>Default<br>&#8192;&#8192;&#8192;&#8192;&#8192; | &#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;<br>Description<br>&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192; | &#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;<br>Restriction<br>&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192; | Corresponding symbolic constant |
 |:---:|:---:|:---:|---|---|---|
 | `--model`    | `HYDRO`, `ELBDM` | `HYDRO` | Physical models, where `ELBDM` is for &psi;DM | Must be set in any cases; ELBDM is not released yet | <a name="--model"></a> `MODEL` |
-| `--gravity`  | `true`, `false`  | `false` | Enable [[gravity | Gravity]] | Must enable --fftw`; may need to set `FFTW2/3_PATH` in [[configuration file | Installation:-Machine-Configuration-File#1-Library-paths]] | <a name="--gravity"></a> `GRAVITY` |
-| `--particle` | `true`, `false`  | `false` | Enable [[particles | Particles]] | Must enable `--gravity` or `--tracer` | <a name="--particle"></a> `PARTICLE` |
-| `--grackle`  | `true`, `false`  | `false` | Enable [[GRACKLE | Chemistry and Radiation]] | May need to set `GRACKLE_PATH` in [[configuration file | Installation:-Machine-Configuration-File#1-Library-paths]]; only support `--eos=GAMMA/COSMIC_RAY`; does not support `--comoving` | <a name="--grackle"></a> `SUPPORT_GRACKLE` |
-| `--passive`  | &#8805; 0        | `0`     | Number of user-defined passive scalars | See [[here | Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes]] for details; not supported for `--flu_scheme=RTVD` | <a name="--passive"></a> `NCOMP_PASSIVE_USER` |
+| `--gravity`  | `true`, `false`  | `false` | Enable [[gravity \| Gravity]] | Must enable --fftw`; may need to set `FFTW2/3_PATH` in [[configuration file \| Installation:-Machine-Configuration-File#1-Library-paths]] | <a name="--gravity"></a> `GRAVITY` |
+| `--particle` | `true`, `false`  | `false` | Enable [[particles \| Particles]] | Must enable `--gravity` or `--tracer` | <a name="--particle"></a> `PARTICLE` |
+| `--grackle`  | `true`, `false`  | `false` | Enable [[GRACKLE \| Chemistry and Radiation]] | May need to set `GRACKLE_PATH` in [[configuration file \| Installation:-Machine-Configuration-File#1-Library-paths]]; only support `--eos=GAMMA/COSMIC_RAY`; does not support `--comoving` | <a name="--grackle"></a> `SUPPORT_GRACKLE` |
+| `--passive`  | &#8805; 0        | `0`     | Number of user-defined passive scalars | See [[here \| Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes]] for details; not supported for `--flu_scheme=RTVD` | <a name="--passive"></a> `NCOMP_PASSIVE_USER` |
 
 ## Hydro Options
 -- see [[Hydro]] for the related runtime parameters and other settings
@@ -50,8 +50,8 @@ disabled). See the "Restriction" of each option carefully.
 | `--mhd`        | `true`, `false`                                            | `false` | Magnetohydrodynamics | - | <a name="--mhd"></a> `MHD` |
 | `--srhd`       | `true`, `false`                                            | `false` | Special relativistic hydrodynamics | Must adopt `--eos=TAUBMATHEWS` | <a name="--srhd"></a> `SRHD` |
 | `--cosmic_ray` | `true`, `false`                                            | `false` | Cosmic rays | Must adopt `--eos=COSMIC_RAY` | <a name="--cosmic_ray"></a> `COSMIC_RAY` |
-| `--eos`        | `GAMMA`, `ISOTHERMAL`, `COSMIC_RAY`, `TAUBMATHEWS`, `USER` | Depend  | [[Equation of state | equation-of-state]] | The following options only support `GAMMA`: `--flu_scheme=RTVD/CTU`, `--flux=EXACT/ROE`, `--comoving`, `--dual`; see also [[--barotropic | Installation:-Generate-Makefile#--barotropic]] | <a name="--eos"></a> `EOS` |
-| `--barotropic` | `true`, `false`                                            | Depend  | Is [[--eos | Installation:-Generate-Makefile#--eos]] barotropic? | Must be disabled for `--eos=GAMMA` and enabled for `--eos=ISOTHERMAL` | <a name="--barotropic"></a> `BAROTROPIC_EOS` |
+| `--eos`        | `GAMMA`, `ISOTHERMAL`, `COSMIC_RAY`, `TAUBMATHEWS`, `USER` | Depend  | [[Equation of state \| equation-of-state]] | The following options only support `GAMMA`: `--flu_scheme=RTVD/CTU`, `--flux=EXACT/ROE`, `--comoving`, `--dual`; see also [[--barotropic \| Installation:-Option-List#--barotropic]] | <a name="--eos"></a> `EOS` |
+| `--barotropic` | `true`, `false`                                            | Depend  | Is [[--eos \| Installation:-Option-List#--eos]] barotropic? | Must be disabled for `--eos=GAMMA` and enabled for `--eos=ISOTHERMAL` | <a name="--barotropic"></a> `BAROTROPIC_EOS` |
 
 ## ELBDM Options
 -- ELBDM is not supported yet!
@@ -132,7 +132,7 @@ disabled). See the "Restriction" of each option carefully.
 
 > [!CAUTION]
 > On macOS, we recommend using the GNU compiler and set
-[[--rng | Installation:-Generate-Makefile#--rng]] to `RNG_CPP11`.
+[[--rng | Installation:-Option-List#--rng]] to `RNG_CPP11`.
 
 <br>
 

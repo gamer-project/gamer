@@ -1,11 +1,11 @@
 ## Compilation Options
 
 Related options:
-[[--gravity | Installation:-Generate-Makefile#--gravity]], &nbsp;
-[[--pot_scheme | Installation:-Generate-Makefile#--pot_scheme]], &nbsp;
-[[--store_pot_ghost | Installation:-Generate-Makefile#--store_pot_ghost]], &nbsp;
-[[--unsplit_gravity | Installation:-Generate-Makefile#--unsplit_gravity]], &nbsp;
-[[--comoving | Installation:-Generate-Makefile#--comoving]] &nbsp;
+[[--gravity | Installation:-Option-List#--gravity]], &nbsp;
+[[--pot_scheme | Installation:-Option-List#--pot_scheme]], &nbsp;
+[[--store_pot_ghost | Installation:-Option-List#--store_pot_ghost]], &nbsp;
+[[--unsplit_gravity | Installation:-Option-List#--unsplit_gravity]], &nbsp;
+[[--comoving | Installation:-Option-List#--comoving]] &nbsp;
 
 
 ## Runtime Parameters
@@ -133,7 +133,7 @@ gravitational acceleration from potential.
     * **Restriction:**
 Must manually set `#define GRA_GHOST_SIZE 2` (and `#define USG_GHOST_SIZE 2`
 as well when adopting the compilation option
-[[--unsplit_gravity | Installation:-Generate-Makefile#--unsplit_gravity]])
+[[--unsplit_gravity | Installation:-Option-List#--unsplit_gravity]])
 in the header file `Macro.h`. Unsupported for particle update.
 
 <a name="OPT__SELF_GRAVITY"></a>
@@ -150,7 +150,7 @@ Add external acceleration. See
 for how to specify external acceleration.
     * **Restriction:**
 Not applicable to the wave dark matter simulations
-([[--model | Installation:-Generate-Makefile#--model]]=ELBDM).
+([[--model | Installation:-Option-List#--model]]=ELBDM).
 
 <a name="OPT__EXT_POT"></a>
 * #### `OPT__EXT_POT` &ensp; (0=off, 1=function, 2=table) &ensp; [0]
@@ -264,7 +264,7 @@ above and replace `Acc` by `Pot`. A point-mass example can be found
 at `src/SelfGravity/CPU_Poisson/CPU_ExtPot_PointMass.cpp`.
 
 **Caution: wave dark matter simulations
-(i.e., [[--model | Installation:-Generate-Makefile#--model]]=ELBDM)
+(i.e., [[--model | Installation:-Option-List#--model]]=ELBDM)
 does not support external acceleration. Just use external potential.**
 
 #### Using Table:

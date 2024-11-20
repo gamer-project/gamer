@@ -15,8 +15,8 @@ given on this page for details.
 ## Compilation Options
 
 Related options:
-[[--nlevel | Installation:-Generate-Makefile#--nlevel]], &nbsp;
-[[--max_patch | Installation:-Generate-Makefile#--max_patch]] &nbsp;
+[[--nlevel | Installation:-Option-List#--nlevel]], &nbsp;
+[[--max_patch | Installation:-Option-List#--max_patch]] &nbsp;
 
 
 ## Runtime Parameters
@@ -81,7 +81,7 @@ Number of new AMR levels to be created at once during refinement.
     * **Restriction:**
 
 <a name="FLAG_BUFFER_SIZE"></a>
-* #### `FLAG_BUFFER_SIZE` &ensp; (0 &#8804; input &#8804; [[--patch_size | Installation:Generate-Makefile#--patch_size]]) &ensp; [ [[--patch_size | Installation:-Generate-Makefile#--patch_size]] ]
+* #### `FLAG_BUFFER_SIZE` &ensp; (0 &#8804; input &#8804; [[--patch_size | Installation:Option-List#--patch_size]]) &ensp; [ [[--patch_size | Installation:-Option-List#--patch_size]] ]
     * **Description:**
 Number of flag buffers (denoted as <var>N</var><sub>buf</sub>).
 When checking refinement, a patch is flagged for refinement if any of
@@ -106,7 +106,7 @@ which can be safely set to smaller values.
     * **Restriction:**
 
 <a name="FLAG_BUFFER_SIZE_MAXM1_LV"></a>
-* #### `FLAG_BUFFER_SIZE_MAXM1_LV` &ensp; (0 &#8804; input &#8804; [[--patch_size | Installation:-Generate-Makefile#--patch_size]]; <0 &#8594; set to default) &ensp; [ [REGRID_COUNT](#REGRID_COUNT) ]
+* #### `FLAG_BUFFER_SIZE_MAXM1_LV` &ensp; (0 &#8804; input &#8804; [[--patch_size | Installation:-Option-List#--patch_size]]; <0 &#8594; set to default) &ensp; [ [REGRID_COUNT](#REGRID_COUNT) ]
     * **Description:**
 <var>N</var><sub>buf</sub> on level [MAX_LEVEL](#MAX_LEVEL)-1. See
 [FLAG_BUFFER_SIZE](#FLAG_BUFFER_SIZE) for details.
@@ -115,19 +115,19 @@ for better performance.
     * **Restriction:**
 
 <a name="FLAG_BUFFER_SIZE_MAXM2_LV"></a>
-* #### `FLAG_BUFFER_SIZE_MAXM2_LV` &ensp; (0 &#8804; input &#8804; [[--patch_size | Installation:-Generate-Makefile#--patch_size]]; <0 &#8594; set to default) &ensp; [depend]
+* #### `FLAG_BUFFER_SIZE_MAXM2_LV` &ensp; (0 &#8804; input &#8804; [[--patch_size | Installation:-Option-List#--patch_size]]; <0 &#8594; set to default) &ensp; [depend]
     * **Description:**
 <var>N</var><sub>buf</sub> on level [MAX_LEVEL](#MAX_LEVEL)-2. See
 [FLAG_BUFFER_SIZE](#FLAG_BUFFER_SIZE) for details. The default value
-depends on both [[--patch_size | Installation:-Generate-Makefile#--patch_size]] and
+depends on both [[--patch_size | Installation:-Option-List#--patch_size]] and
 [FLAG_BUFFER_SIZE_MAXM1_LV](#FLAG_BUFFER_SIZE_MAXM1_LV).
     * **Restriction:**
 
 <a name="MAX_LEVEL"></a>
-* #### `MAX_LEVEL` &ensp; (0 &#8804; input < [[--nlevel | Installation:-Generate-Makefile#--nlevel]]) &ensp; [ [[--nlevel | Installation:-Generate-Makefile#--nlevel]]-1 ]
+* #### `MAX_LEVEL` &ensp; (0 &#8804; input < [[--nlevel | Installation:-Option-List#--nlevel]]) &ensp; [ [[--nlevel | Installation:-Option-List#--nlevel]]-1 ]
     * **Description:**
 Maximum allowed AMR level. Do not confuse with the compilation option
-[[--nlevel | Installation:-Generate-Makefile#--nlevel]]. One can regard
+[[--nlevel | Installation:-Option-List#--nlevel]]. One can regard
 `MAX_LEVEL` as a runtime refinement criterion that simply forbids
 creating any patch above that level, and `NLEVEL-1` is the upper
 bound of `MAX_LEVEL`.
@@ -184,7 +184,7 @@ levels in the input file `Input__Flag_LrtzGradient` with the
 [[specific format | Runtime Parameters#input__flag_]].
 An example file can be found at `example/input/Input__Flag_LrtzGradient`.
     * **Restriction:**
-Must compile with [[--srhd | Installation:-Generate-Makefile#--srhd]].
+Must compile with [[--srhd | Installation:-Option-List#--srhd]].
 
 <a name="OPT__FLAG_VORTICITY"></a>
 * #### `OPT__FLAG_VORTICITY` &ensp; (0=off, 1=on) &ensp; [0]
@@ -231,7 +231,7 @@ thresholds on different levels in the input file `Input__Flag_Current`
 with the [[specific format | Runtime Parameters#input__flag_]].
 An example file can be found at `example/input/Input__Flag_Current`.
     * **Restriction:**
-Must compile with [[--mhd | Installation:-Generate-Makefile#--mhd]].
+Must compile with [[--mhd | Installation:-Option-List#--mhd]].
 
 <a name="OPT__FLAG_CRAY"></a>
 * #### `OPT__FLAG_CRAY` &ensp; (0=off, 1=on) &ensp; [0]
@@ -241,7 +241,7 @@ thresholds on different levels in the input file `Input__Flag_CRay`
 with the [[specific format | Runtime Parameters#input__flag_]].
 An example file can be found at `example/input/Input__Flag_CRay`.
     * **Restriction:**
-Must compile with [[--cosmic_ray | Installation:-Generate-Makefile#--cosmic_ray]].
+Must compile with [[--cosmic_ray | Installation:-Option-List#--cosmic_ray]].
 
 <a name="OPT__FLAG_LOHNER_DENS"></a>
 * #### `OPT__FLAG_LOHNER_DENS` &ensp; (0=off, 1=on) &ensp; [0]
@@ -285,7 +285,7 @@ See [OPT__FLAG_LOHNER_FORM](#OPT__FLAG_LOHNER_FORM) for details.
 Refinement criterion: Loehner's error estimator on cosmic-ray energy density.
 See [OPT__FLAG_LOHNER_FORM](#OPT__FLAG_LOHNER_FORM) for details.
     * **Restriction:**
-Must compile with [[--cosmic_ray | Installation:-Generate-Makefile#--cosmic_ray]].
+Must compile with [[--cosmic_ray | Installation:-Option-List#--cosmic_ray]].
 
 <a name="OPT__FLAG_LOHNER_FORM"></a>
 * #### `OPT__FLAG_LOHNER_FORM` &ensp; (1=FLASH-ghost1, 2=FLASH-ghost2, 3=form-invariant-ghost1, 4=form-invariant-ghost2) &ensp; [2]

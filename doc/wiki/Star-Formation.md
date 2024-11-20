@@ -3,8 +3,8 @@ TBF.
 ## Compilation Options
 
 Related options:
-[[--particle | Installation:-Generate-Makefile#--particle]] &nbsp;
-[[--star_formation | Installation:-Generate-Makefile#--star_formation]] &nbsp;
+[[--particle | Installation:-Option-List#--particle]] &nbsp;
+[[--star_formation | Installation:-Option-List#--star_formation]] &nbsp;
 
 
 ## Runtime Parameters

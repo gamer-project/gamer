@@ -2,7 +2,7 @@
 ## Compilation Options
 
 Related options:
-[[--grackle | Installation:-Generate-Makefile#--grackle]] &nbsp;
+[[--grackle | Installation:-Option-List#--grackle]] &nbsp;
 
 ## Runtime Parameters
 
@@ -29,7 +29,7 @@ Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) 
 Enable the [GRACKLE chemistry and cooling library](http://grackle.readthedocs.io/en/latest/index.html).
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--grackle | Installation:-Generate-Makefile#--grackle]].
+[[--grackle | Installation:-Option-List#--grackle]].
 
 <a name="GRACKLE_VERBOSE"></a>
 * #### `GRACKLE_VERBOSE` &ensp; (0=off, 1=on) &ensp; [1]
@@ -48,7 +48,7 @@ Map to the "with_radiative_cooling" runtime parameter in GRACKLE.
     * **Description:**
 Map to the "primordial_chemistry" runtime parameter in GRACKLE.
 One must increase
-[[--passive | Installation:-Generate-Makefile#--passive]]
+[[--passive | Installation:-Option-List#--passive]]
 by 3, 6, or 9 for GRACKLE_PRIMORDIAL=1, 2, or 3, respectively.
     * **Restriction:**
 
@@ -56,7 +56,7 @@ by 3, 6, or 9 for GRACKLE_PRIMORDIAL=1, 2, or 3, respectively.
 * #### `GRACKLE_METAL` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
 Map to the "metal_cooling" runtime parameter in GRACKLE. One must increase
-[[--passive | Installation:-Generate-Makefile#--passive]]
+[[--passive | Installation:-Option-List#--passive]]
 by 1 and initialize the field `Metal` using the field index `Idx_Metal` properly.
     * **Restriction:**
 

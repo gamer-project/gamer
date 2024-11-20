@@ -61,10 +61,10 @@ make precision-{32,64}
 ```
 Specifically, configure GRACKLE with `make precision-64/32` when
 compiling GAMER with/without the option
-[[--double | Installation:-Generate-Makefile#--double]], respectively.
+[[--double | Installation:-Option-List#--double]], respectively.
 
 In addition, when enabling OpenMP in GAMER (i.e., with the
-compile-time option [[--openmp | Installation:-Generate-Makefile#--openmp]]),
+compile-time option [[--openmp | Installation:-Option-List#--openmp]]),
 GRACKLE must be configured with OpenMP
 support as well using
 ```
@@ -97,5 +97,5 @@ Set `LIBYT_PATH` to the folder that contains subfolders `include` and `lib`.
 
 ## Links
 * [[Machine Configuration File | Installation:-Machine-Configuration-File]]
-* [[Generate Makefile | Installation:-Generate-Makefile]]
+* [[Option List | Installation:-Option-List]]
 * [[Back to the main page of Installation | Installation]]

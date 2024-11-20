@@ -88,7 +88,7 @@ For details see
 
 2. Magnetic field IC &#8212; choose one of the following two methods
 (only necessary when enabling
-[[--mhd | Installation:-Generate-Makefile#--mhd]]):
+[[--mhd | Installation:-Option-List#--mhd]]):
 
     * Specify the magnetic field IC by editing the function `SetBFieldIC()`
 or specify the vector potential IC by editing a function linking to the function pointer
@@ -101,7 +101,7 @@ uniform-mesh binary file. For details see
 
 3. Particles IC &#8212; choose one of the following two methods
 (only necessary when enabling
-[[--particle | Installation:-Generate-Makefile#--particle]]):
+[[--particle | Installation:-Option-List#--particle]]):
 
     * Specify a particle initialization function.
         1. Define the function `Par_Init_ByFunction_NewProblem()`.
@@ -212,7 +212,7 @@ when running the code.
 
 It takes 4 small steps to add a new grid field:
 
-1. Set [[ --passive | Installation:-Generate-Makefile#--passive]]
+1. Set [[ --passive | Installation:-Option-List#--passive]]
 to `N` (for `N` new fields) when generating the Makefile.
 
 2. Declare a global integer variable on the top of the problem source
@@ -286,7 +286,7 @@ field index. For example,
 Adding a new particle attribute is very similar to adding a new grid field.
 So we only highlight the differences in each of the 4 steps above.
 
-1. Set [[ --par_attribute | Installation:-Generate-Makefile#par_attribute ]]
+1. Set [[ --par_attribute | Installation:-Option-List#par_attribute ]]
 instead when generating the Makefile.
 
 2. Declare a global integer variable on the top of the problem source
@@ -548,7 +548,7 @@ Add a user-specified equation of state. See [[here | equation-of-state]] for det
    * `EoS_Init_Ptr`
    * `Eos_End_Ptr`
 * **Compilation Option:**
-[[--eos | Installation:-Generate-Makefile#--eos]]
+[[--eos | Installation:-Option-List#--eos]]
 * **Example:**
    * `src/EoS/User_Template`
    * `src/EoS/Gamma`
@@ -559,7 +559,7 @@ Add a user-specified feedback. See [[FB_USER | Feedback#FB_USER]] for details.
 * **Function Pointer:**
    * `FB_Init_User_Ptr`
 * **Compilation Option:**
-[[--feedback | Installation:-Generate-Makefile#--feedback]]
+[[--feedback | Installation:-Option-List#--feedback]]
 * **Runtime Option:**
 [[FB_USER | Feedback#FB_USER]]
 * **Example:**
