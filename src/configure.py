@@ -761,7 +761,10 @@ def set_gpu( gpus, flags, args ):
     compute_capability = int(compute_capability)
 
     if   compute_capability < 0:
-        compute_capability = get_gpu_compute_capability()
+        try:
+            compute_capability = get_gpu_compute_capability()
+        except:
+            raise ValueError("Fail to find GPU_COMPUTE_CAPABILITY automatically, please set it manually!")
     elif compute_capability < 200:
         raise ValueError("Incorrect GPU_COMPUTE_CAPABILITY range (>=200)")
     gpu_opts["GPU_COMPUTE_CAPABILITY"] = str(compute_capability)
