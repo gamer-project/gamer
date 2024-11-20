@@ -753,10 +753,11 @@ def set_gpu( gpus, flags, args ):
     gpu_opts = {}
     compute_capability = gpus["GPU_COMPUTE_CAPABILITY"]
 
+    if args["gpu"]: return gpu_opts
+
     # 1. Check the compute capability
     if compute_capability == "":
-        if args["gpu"]: raise ValueError("GPU_COMPUTE_CAPABILITY is not set in `../configs/%s.config`. See `../configs/template.config` for illustration."%args["machine"])
-        return gpu_opts
+        raise ValueError("GPU_COMPUTE_CAPABILITY is not set in `../configs/%s.config`. See `../configs/template.config` for illustration."%args["machine"])
     compute_capability = int(compute_capability)
 
     if   compute_capability < 0:
@@ -999,7 +1000,7 @@ if __name__ == "__main__":
     for key in re.findall(r"@@@(.+?)@@@", makefile):
         makefile, num = re.subn(r"@@@%s@@@"%key, "", makefile)
         if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
-        LOGGER.warning("@@@%s@@@ is replaced to '' since there is no given value."%key)
+        LOGGER.warning("@@@%s@@@ is replaced to '' since the value is not given or the related option is disabled."%key)
 
     # 4.3 Write
     with open( GAMER_MAKE_OUT, "w") as make_out:
