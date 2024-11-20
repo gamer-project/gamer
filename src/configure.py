@@ -753,7 +753,7 @@ def set_gpu( gpus, flags, args ):
     gpu_opts = {}
     compute_capability = gpus["GPU_COMPUTE_CAPABILITY"]
 
-    if args["gpu"]: return gpu_opts
+    if not args["gpu"]: return gpu_opts
 
     # 1. Check the compute capability
     if compute_capability == "":
