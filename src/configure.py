@@ -764,7 +764,7 @@ def set_gpu( gpus, flags, args ):
         try:
             compute_capability = get_gpu_compute_capability()
         except:
-            raise ValueError("Fail to find GPU_COMPUTE_CAPABILITY automatically, please set it manually!")
+            raise ValueError("Fail to set GPU_COMPUTE_CAPABILITY automatically! Please set it manually in `../configs/%s.config`."%args["machine"])
     elif compute_capability < 200:
         raise ValueError("Incorrect GPU_COMPUTE_CAPABILITY range (>=200)")
     gpu_opts["GPU_COMPUTE_CAPABILITY"] = str(compute_capability)
