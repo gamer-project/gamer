@@ -81,10 +81,10 @@ See the restrictions on [FLU_GPU_NPGROUP](#FLU_GPU_NPGROUP) and
 
 To query all GPUs on a node, use the command
 ``` bash
-> nvidia-smi
+nvidia-smi
 ```
 Here is an example on a node with 2 Tesla K40m GPUs:
-```
+<pre>
 +-----------------------------------------------------------------------------+
 | NVIDIA-SMI 375.66                 Driver Version: 375.66                    |
 |-------------------------------+----------------------+----------------------+
@@ -105,7 +105,7 @@ Here is an example on a node with 2 Tesla K40m GPUs:
 |    0     35286    C   ./gamer                                       1067MiB |
 |    1     35287    C   ./gamer                                       1067MiB |
 +-----------------------------------------------------------------------------+
-```
+</pre>
 
 It shows that the
 [CUDA device compute mode](http://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html#group__CUDART__TYPES_1g7eb25f5413a962faad0956d92bae10d0)
@@ -152,7 +152,7 @@ To validate the ID and configuration of the GPU adopted by each
 MPI process, search for the keyword "Device Diagnosis" in the log file
 `Record__Note` generated during the initialization of GAMER. You should
 see something like
-```
+<pre>
 Device Diagnosis
 ***********************************************************************************
 MPI_Rank =   0, hostname =   golub123, PID = 47842
@@ -189,9 +189,9 @@ Concurrent Up/Downstream Copies   : Yes
 Concurrent Kernel Execution       : Yes
 GPU has ECC Support Enabled       : Yes
 ***********************************************************************************
-```
+</pre>
 This example shows that the MPI rank 0 is using GPU 0
-on the node "golub123", which has 2 GPUs in total.
+on the node `golub123`, which has 2 GPUs in total.
 
 
 <br>

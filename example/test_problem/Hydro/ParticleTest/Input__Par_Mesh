@@ -1,0 +1,14 @@
+# List of supported labels in different models:
+#   HYDRO : Dens, MomX, MomY, MomZ, Engy, VelX, VelY, VelZ, Pres, Temp, Entr, Eint
+#           [, Pote] [, MagX, MagY, MagZ, MagE]
+#   ELBDM : Dens, Real, Imag [, Pote]
+#
+# Note:
+# --> Built-in passive fields are supported as well
+#     (check Init_Field() in src/Init/Init_Field.cpp for the labels of passive fields)
+# --> The input field label is case sensitive
+# --> The output field label in the HDF5 snapshots is prefixed with "Mesh"
+#
+Dens
+Pres
+VelX
