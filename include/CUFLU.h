@@ -531,7 +531,7 @@
 //     for information on warp size
 #ifdef __CUDACC__
 #if ( GPU_ARCH == FERMI   ||  GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL       ||  GPU_ARCH == PASCAL  ||  GPU_ARCH == VOLTA  ||  \
-      GPU_ARCH == TURING  ||  GPU_ARCH == AMPERE  ||  GPU_ARCH == ADA_LOVELACE  ||  GPU_ARCH == HOPPER)
+      GPU_ARCH == TURING  ||  GPU_ARCH == AMPERE  ||  GPU_ARCH == ADA_LOVELACE  ||  GPU_ARCH == HOPPER )
 // CUPOT.h will define WARP_SIZE as well
 #  ifndef WARP_SIZE
 #  define WARP_SIZE 32
