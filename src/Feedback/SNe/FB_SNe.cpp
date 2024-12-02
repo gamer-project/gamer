@@ -116,7 +116,6 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
    }
 #  endif // #ifdef GAMER_DEBUG
 
-<<<<<<< HEAD
   const int par_idx = *ParSortID;
   double m = ParAtt[PAR_MASS][par_idx];
   s49Lookup(m);
@@ -485,12 +484,6 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
   return totalSNenumber;
 
 }// FUNCTION : FB_SNe
-=======
-
-   return GAMER_SUCCESS;
-
-} // FUNCTION : FB_SNe
->>>>>>> 93d96fe94e5c2e6252d5424c6cff863fc2d419bb
 
 
 
