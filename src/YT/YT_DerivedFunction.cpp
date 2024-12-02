@@ -26,7 +26,7 @@ void YT_GetPID(const long gid, int *level, int *PID);
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void DerivedFuncWithName_PatchGroup(int list_len, long *list_gid, char *field, yt_array *data_array){
+void DerivedFuncWithName_PatchGroup(const int list_len, const long *list_gid, const char *field, yt_array *data_array){
     // get gamer field index through field name.
     int gamer_fieldIdx = GetFieldIndex( field, CHECK_OFF );
     long gamer_fieldBIdx = -100;
@@ -37,7 +37,7 @@ void DerivedFuncWithName_PatchGroup(int list_len, long *list_gid, char *field, y
         if ( strcmp(PotLabel, field) == 0 )    gamer_fieldBIdx = _POTE;
 #endif
 #ifdef  MHD
-        char *CCMagLabel[] = {"CCMagX", "CCMagY", "CCMagZ"};
+        const char *CCMagLabel[] = {"CCMagX", "CCMagY", "CCMagZ"};
         for(int v=0; v<NCOMP_MAG; v++){
             if ( strcmp(CCMagLabel[v], field) == 0 ) {
                 if      ( v == 0 ) gamer_fieldBIdx = _MAGX_CC;
@@ -61,10 +61,6 @@ void DerivedFuncWithName_PatchGroup(int list_len, long *list_gid, char *field, y
     if ( gamer_fieldBIdx == -100 )
         Aux_Error( ERROR_INFO, "cannot find the matching gamer field bitwise index for libyt field \"%s\" !!\n", field );
 
-    // look for Prepare_PatchData desired variable.
-    OptFluBC_t FluBC[6];
-    for(int d=0; d<6; d++){ FluBC[d] = BC_FLU_NONE; }
-
     // loop through list_gid and fill in data.
     for(int lid=0; lid<list_len; lid++){
         // parse level and PID0
@@ -73,7 +69,7 @@ void DerivedFuncWithName_PatchGroup(int list_len, long *list_gid, char *field, y
 
         // generate data in patch.
         Prepare_PatchData(level, Time[0], (real*) data_array[lid].data_ptr, NULL, 0, 1, &PID0, gamer_fieldBIdx, _NONE, INT_NONE, INT_NONE,
-                          UNIT_PATCHGROUP, NSIDE_00, false, FluBC, BC_POT_NONE, -1.0, -1.0, -1.0, -1.0, false);
+                          UNIT_PATCHGROUP, NSIDE_00, false, OPT__BC_FLU, BC_POT_NONE, -1.0, -1.0, -1.0, -1.0, false);
     }
 }
 
@@ -93,7 +89,7 @@ void DerivedFuncWithName_PatchGroup(int list_len, long *list_gid, char *field, y
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void MagX_DerivedFunc(int list_len, long *list_gid, yt_array *data_array){
+void MagX_DerivedFunc(const int list_len, const long *list_gid, const char *field_name, yt_array *data_array){
     for(int lid=0; lid<list_len; lid++){
         // Get the dimension of the grid, and the data array pointer of the grid
         int Dimensions[3];
@@ -117,7 +113,7 @@ void MagX_DerivedFunc(int list_len, long *list_gid, yt_array *data_array){
     }
 }
 
-void MagY_DerivedFunc(int list_len, long *list_gid, yt_array *data_array){
+void MagY_DerivedFunc(const int list_len, const long *list_gid, const char *field_name, yt_array *data_array){
     for(int lid=0; lid<list_len; lid++){
         // Get the dimension of the grid, and the data array pointer of the grid
         int Dimensions[3];
@@ -141,7 +137,7 @@ void MagY_DerivedFunc(int list_len, long *list_gid, yt_array *data_array){
     }
 }
 
-void MagZ_DerivedFunc(int list_len, long *list_gid, yt_array *data_array){
+void MagZ_DerivedFunc(const int list_len, const long *list_gid, const char *field_name, yt_array *data_array){
     for(int lid=0; lid<list_len; lid++){
         // Get the dimension of the grid, and the data array pointer of the grid
         int Dimensions[3];
@@ -181,7 +177,7 @@ void MagZ_DerivedFunc(int list_len, long *list_gid, yt_array *data_array){
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Temperature_DerivedFunc(int list_len, long *list_gid, yt_array *data_array){
+void Temperature_DerivedFunc(const int list_len, const long *list_gid, const char *field_name, yt_array *data_array){
     // universal
     char     *CCMagLabel[] = {"CCMagX", "CCMagY", "CCMagZ"};
 

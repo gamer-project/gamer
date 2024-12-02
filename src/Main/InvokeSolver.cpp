@@ -481,9 +481,9 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
    const double MIN_EINT = NULL_REAL;
 #  endif
 
-   #ifndef DUAL_ENERGY
+#  ifndef DUAL_ENERGY
    const double DUAL_ENERGY_SWITCH = NULL_REAL;
-   #endif
+#  endif
 
 #  ifndef QUARTIC_SELF_INTERACTION
    const double ELBDM_LAMBDA = NULL_REAL;
@@ -541,7 +541,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  NPG, dt, dh, OPT__FIXUP_FLUX, OPT__FIXUP_ELECTRIC, Flu_XYZ,
                                  OPT__LR_LIMITER, MINMOD_COEFF, MINMOD_MAX_ITER,
                                  ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
-                                 TimeOld, (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC,
+                                 TimeOld, (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, MicroPhy,
                                  MIN_DENS, MIN_PRES, MIN_EINT, DUAL_ENERGY_SWITCH,
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar,
                                  OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar,
@@ -555,7 +555,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  NPG, dt, dh, OPT__FIXUP_FLUX, OPT__FIXUP_ELECTRIC, Flu_XYZ,
                                  OPT__LR_LIMITER, MINMOD_COEFF, MINMOD_MAX_ITER,
                                  ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
-                                 TimeOld, (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC,
+                                 TimeOld, (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, MicroPhy,
                                  MIN_DENS, MIN_PRES, MIN_EINT, DUAL_ENERGY_SWITCH,
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, PassiveNorm_VarIdx,
                                  OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
@@ -664,13 +664,15 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #        ifdef GPU
          CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID],
                               h_Mag_Array_T[ArrayID], NULL, NULL,
-                              NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID, MIN_PRES, NULL_BOOL,
+                              NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID,
+                              MicroPhy, MIN_PRES, NULL_BOOL,
                               EXT_POT_NONE, EXT_ACC_NONE, NULL_REAL,
                               GPU_NSTREAM );
 #        else
          CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID],
                               h_Mag_Array_T[ArrayID], NULL, NULL,
-                              NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID, MIN_PRES, NULL_BOOL,
+                              NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID,
+                              MicroPhy, MIN_PRES, NULL_BOOL,
                               EXT_POT_NONE, EXT_ACC_NONE, NULL_REAL );
 #        endif
       break;
@@ -680,13 +682,15 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #        ifdef GPU
          CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], NULL,
                               NULL, h_Pot_Array_T[ArrayID], h_Corner_Array_PGT[ArrayID],
-                              NPG, dh, DT__GRAVITY, NULL_REAL, OPT__GRA_P5_GRADIENT,
+                              NPG, dh, DT__GRAVITY,
+                              MicroPhy, NULL_REAL, OPT__GRA_P5_GRADIENT,
                               (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, TimeNew,
                               GPU_NSTREAM );
 #        else
          CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], NULL,
                               NULL, h_Pot_Array_T[ArrayID], h_Corner_Array_PGT[ArrayID],
-                              NPG, dh, DT__GRAVITY, NULL_REAL, OPT__GRA_P5_GRADIENT,
+                              NPG, dh, DT__GRAVITY,
+                              MicroPhy, NULL_REAL, OPT__GRA_P5_GRADIENT,
                               (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, TimeNew );
 #        endif
       break;

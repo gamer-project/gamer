@@ -46,7 +46,11 @@ void FB_distSNeFeedback( double (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int expl
 //
 // Note        :  1. Input and output fluid and particle data are stored in Fluid[] and ParAtt[], respectively
 //                   --> This function is responsible for updating gas and particles within
+<<<<<<< HEAD
 //                       ** FB_GHOST_SIZE <= cell indices i,j,k < FB_GHOST_SIZE+PS2 ** 
+=======
+//                       ** FB_GHOST_SIZE <= cell indices i,j,k < FB_GHOST_SIZE+PS2 **
+>>>>>>> 93d96fe94e5c2e6252d5424c6cff863fc2d419bb
 //                   --> Updating gas and particles outside this range is fine but will have no effect at all
 //                2. Must use ParSortID[] to access ParAtt[]
 //                   --> ParAtt[PAR_MASS/PAR_POSX/etc][ ParSortID[...] ]
@@ -101,9 +105,15 @@ void FB_distSNeFeedback( double (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int expl
 // Return      :  Fluid, ParAtt
 //-------------------------------------------------------------------------------------------------------
 int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
+<<<<<<< HEAD
             const int NPar, const int *ParSortID, double *ParAtt[PAR_NATT_TOTAL],
             double (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], 
 	    const double dh, bool CoarseFine[], const int TID, RandomNumber_t *RNG )
+=======
+            const int NPar, const long *ParSortID, real_par *ParAtt[PAR_NATT_TOTAL],
+            real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
+            const int TID, RandomNumber_t *RNG )
+>>>>>>> 93d96fe94e5c2e6252d5424c6cff863fc2d419bb
 {
 
 // check
@@ -116,6 +126,7 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
    }
 #  endif // #ifdef GAMER_DEBUG
 
+<<<<<<< HEAD
   const int par_idx = *ParSortID;
   double m = ParAtt[PAR_MASS][par_idx];
   s49Lookup(m);
@@ -480,6 +491,12 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
   return totalSNenumber;
 
 }// FUNCTION : FB_SNe
+=======
+
+   return GAMER_SUCCESS;
+
+} // FUNCTION : FB_SNe
+>>>>>>> 93d96fe94e5c2e6252d5424c6cff863fc2d419bb
 
 
 

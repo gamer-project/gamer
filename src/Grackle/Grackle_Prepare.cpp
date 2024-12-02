@@ -170,31 +170,36 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
          for (int j=0; j<PS1; j++)
          for (int i=0; i<PS1; i++)
          {
-            Dens = *( fluid[DENS][0][0] + idx_p );
-            Etot = *( fluid[ENGY][0][0] + idx_p );
+            Dens  = *( fluid[DENS][0][0] + idx_p );
+            Etot  = *( fluid[ENGY][0][0] + idx_p );
 
 //          use the dual-energy variable to calculate the internal energy if applicable
 #           ifdef DUAL_ENERGY
 
 #           if   ( DUAL_ENERGY == DE_ENPY )
-            Pres = Hydro_DensDual2Pres( Dens, *(fluid[DUAL][0][0]+idx_p), EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
+            Pres  = Hydro_DensDual2Pres( Dens, *(fluid[DUAL][0][0]+idx_p), EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
 //          EOS_GAMMA does not involve passive scalars
-            Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+            Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #           elif ( DUAL_ENERGY == DE_EINT )
 #           error : DE_EINT is NOT supported yet !!
 #           endif
 
 #           else // #ifdef DUAL_ENERGY
 
-            Px   = *( fluid[MOMX][0][0] + idx_p );
-            Py   = *( fluid[MOMY][0][0] + idx_p );
-            Pz   = *( fluid[MOMZ][0][0] + idx_p );
+            Px    = *( fluid[MOMX][0][0] + idx_p );
+            Py    = *( fluid[MOMY][0][0] + idx_p );
+            Pz    = *( fluid[MOMZ][0][0] + idx_p );
 #           ifdef MHD
-            Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+            Emag  = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
 #           endif
-            Eint = Hydro_Con2Eint( Dens, Px, Py, Pz, Etot, CheckMinEint_Yes, MIN_EINT, Emag );
-
+            Eint  = Hydro_Con2Eint( Dens, Px, Py, Pz, Etot, CheckMinEint_Yes, MIN_EINT, Emag,
+                                    NULL, NULL, NULL, NULL, NULL );
 #           endif // #ifdef DUAL_ENERGY ... else
+
+//          Grackle doesn't know cosmic rays so we must exclude the cosmic-ray energy from the input gas internal energy
+#           ifdef COSMIC_RAY
+            Eint -= *( fluid[CRAY][0][0] + idx_p );
+#           endif
 
 //          mandatory fields
             Ptr_Dens [idx_pg] = Dens;

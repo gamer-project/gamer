@@ -1,5 +1,5 @@
 #include "GAMER.h"
-#include "TestProb.h"
+
 
 
 // problem-specific global variables
@@ -18,9 +18,9 @@ static double ParTest_Ang_Freq;       // gas angular frequency
 // problem-specific function prototypes
 #ifdef PARTICLE
 void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar_AllRank,
-                                       real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                       real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                       real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
+                                       real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                       real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                       real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] );
 #endif
 
 bool Flag_ParticleTest( const int i, const int j, const int k, const int lv,
@@ -130,18 +130,18 @@ void SetParameter()
 
 
 // (3) reset other general-purpose parameters
-//     --> a helper macro PRINT_WARNING is defined in TestProb.h
+//     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
    const double End_T_Default    = 2*M_PI/ParTest_Ang_Freq;
    const long   End_Step_Default = __INT_MAX__;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
-      PRINT_WARNING( "END_STEP", END_STEP, FORMAT_LONG );
+      PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
    }
 
    if ( END_T < 0.0 ) {
       END_T = End_T_Default;
-      PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
+      PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
    }
 
 // overwrite the total number of particles
@@ -149,7 +149,7 @@ void SetParameter()
    amr->Par->NPar_Active_AllRank = 0;
    if ( ParTest_Use_Massive )    amr->Par->NPar_Active_AllRank += 2;
    if ( ParTest_Use_Tracers )    amr->Par->NPar_Active_AllRank += ParTest_NPar[0]*ParTest_NPar[1]*ParTest_NPar[2];
-   PRINT_WARNING( "PAR_NPAR", amr->Par->NPar_Active_AllRank, FORMAT_LONG );
+   PRINT_RESET_PARA( amr->Par->NPar_Active_AllRank, FORMAT_LONG, "(PAR_NPAR in Input__Parameter)" );
 #  endif
 
 
@@ -202,20 +202,22 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 {
 
 
-   const double dr[2]     = { x - 0.5*amr->BoxSize[0], y - 0.5*amr->BoxSize[1] };
-   const double Radius    = sqrt( dr[0]*dr[0] + dr[1]*dr[1] );
+   const double dr_Bg [2]  = { x - 0.25*amr->BoxSize[0], y - 0.25*amr->BoxSize[1] };
+   const double dr_Mom[2]  = { x - 0.50*amr->BoxSize[0], y - 0.50*amr->BoxSize[1] };
+   const double Radius_Bg  = sqrt( dr_Bg [0]*dr_Bg [0] + dr_Bg [1]*dr_Bg [1] );
+   const double Radius_Mom = sqrt( dr_Mom[0]*dr_Mom[0] + dr_Mom[1]*dr_Mom[1] );
 
-   const double Velocity = ParTest_Ang_Freq*Radius;
+   const double Velocity = ParTest_Ang_Freq*Radius_Mom;
 
-   const double Cos_theta = dr[0]/Radius;
-   const double Sin_theta = dr[1]/Radius;
+   const double Cos_theta = dr_Mom[0]/Radius_Mom;
+   const double Sin_theta = dr_Mom[1]/Radius_Mom;
 
    double Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
 
-   Dens = ParTest_Dens_Bg;
-   Pres = ParTest_Pres_Bg;
-   MomX = -ParTest_Dens_Bg*Velocity*Sin_theta;
-   MomY = ParTest_Dens_Bg*Velocity*Cos_theta;
+   Dens = ParTest_Dens_Bg * ( 1.0 + 5.0 * Radius_Bg / amr->BoxSize[0] );
+   Pres = ParTest_Pres_Bg * ( 1.0 + 5.0 * Radius_Bg / amr->BoxSize[0] );
+   MomX = -Dens*Velocity*Sin_theta;
+   MomY = Dens*Velocity*Cos_theta;
    MomZ = 0.0;
 
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,

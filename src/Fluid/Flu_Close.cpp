@@ -15,6 +15,7 @@ static void CorrectFlux( const int SonLv, const real Flux_Array[][9][NFLUX_TOTAL
                          const int NPG, const int *PID0_List, const real dt );
 #if ( MODEL == HYDRO )
 static bool Unphysical( const real Fluid[], const int CheckMode, const real Emag );
+#ifndef SRHD
 static void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                const real h_Flu_Array_F_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                                real h_Flu_Array_F_Out[][FLU_NOUT][ CUBE(PS2) ],
@@ -23,6 +24,7 @@ static void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List
                                const real h_Mag_Array_F_In[][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                const real h_Mag_Array_F_Out[][NCOMP_MAG][ PS2P1*SQR(PS2) ],
                                const real dt );
+#endif
 #ifdef MHD
 void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*PS2 ],
                     const int NPG, const int *PID0_List, const real dt );
@@ -30,25 +32,29 @@ void CorrectElectric( const int SonLv, const real h_Ele_Array[][9][NCOMP_ELE][ P
                       const int NPG, const int *PID0_List, const real dt );
 void ResetLongB( real L[], real R[], const real FC_B, const int d );
 #endif
-#endif // #if ( MODEL == HYDRO )
 extern void Hydro_RiemannSolver_Roe ( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                       const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
                                       const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
                                       const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
 extern void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                       const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
-                                      const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
-                                      const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
+                                      const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
+                                      const EoS_H2TEM_t EoS_HTilde2Temp,
+                                      const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                                      const real* const EoS_Table[EOS_NTABLE_MAX] );
 extern void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                       const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
-                                      const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
-                                      const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
+                                      const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
+                                      const EoS_H2TEM_t EoS_HTilde2Temp,
+                                      const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                                      const real* const EoS_Table[EOS_NTABLE_MAX] );
 #ifdef MHD
 extern void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                       const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
                                       const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
                                       const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
 #endif
+#endif // #if ( MODEL == HYDRO )
 
 
 
@@ -88,7 +94,7 @@ void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
 
 // try to correct the unphysical results in h_Flu_Array_F_Out (e.g., negative density)
 // --> must be done BEFORE invoking both StoreFlux() and CorrectFlux() since CorrectUnphysical() might modify the flux array
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO  &&  !defined SRHD )
    CorrectUnphysical( lv, NPG, PID0_List, h_Flu_Array_F_In, h_Flu_Array_F_Out, h_DE_Array_F_Out, h_Flux_Array,
                       h_Mag_Array_F_In, h_Mag_Array_F_Out, dt );
 #  endif
@@ -367,6 +373,9 @@ void CorrectFlux( const int SonLv, const real h_Flux_Array[][9][NFLUX_TOTAL][ SQ
 //                   --> It also checks if any variable is -inf, +inf, or nan
 //                   --> It does NOT check if passive scalars are negative
 //                       --> We already apply a floor value in Hydro_Shared_FullStepUpdate()
+//                   --> It provides a stricter check than Hydro_IsUnphysical(), which is found to be necessary in some
+//                       extreme cases. For example, Hydro_IsUnphysical() allows the internal energy to be slightly negative
+//                       if it's within machine precision.
 //                3. When enabling the dual-energy formalism (with DE_ENPY), CheckMode=1 checks pressure
 //                   instead of internal energy
 //
@@ -420,7 +429,8 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
 
 #     else // without DUAL_ENERGY
       const real Eint = Hydro_Con2Eint( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                        NoFloor, NULL_REAL, Emag );
+                                        NoFloor, NULL_REAL, Emag, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                        EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       if ( Eint < (real)MIN_EINT  ||  !Aux_IsFinite(Eint) )
          return true;
 #     endif // DUAL_ENERGY
@@ -431,10 +441,12 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
       const real Pres = Hydro_Con2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ],
                                         Fluid[ENGY], Fluid+NCOMP_FLUID,
                                         CheckMinPres_No, NULL_REAL, Emag,
-                                        EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt,
+                                        EoS_DensEint2Pres_CPUPtr,
+                                        EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                        EoS_AuxArray_Flt,
                                         EoS_AuxArray_Int, h_EoS_Table, NULL );
 
-      if ( !Aux_IsFinite(Pres)  ||  Pres < (real)MIN_PRES )
+      if ( Pres < (real)MIN_PRES  ||  !Aux_IsFinite(Pres) )
          return true;
    }
 #  endif // #ifndef BAROTROPIC_EOS
@@ -448,6 +460,7 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
 
 
 
+#ifndef SRHD
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CorrectUnphysical
 // Description :  Check if any cell in the output array of Fluid solver contains unphysical results
@@ -662,9 +675,11 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                      case RSOLVER_1ST_HLLC:
                         Hydro_RiemannSolver_HLLC( d, FluxL[d], VarL[d], VarC,    MIN_DENS, MIN_PRES,
                                                   EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr,
+                                                  EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                         Hydro_RiemannSolver_HLLC( d, FluxR[d], VarC,    VarR[d], MIN_DENS, MIN_PRES,
                                                   EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr,
+                                                  EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                      break;
 #                    endif
@@ -675,6 +690,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                       endif
                         Hydro_RiemannSolver_HLLE( d, FluxL[d], VarL[d], VarC,    MIN_DENS, MIN_PRES,
                                                   EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr,
+                                                  EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
 #                       ifdef MHD
@@ -682,6 +698,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                       endif
                         Hydro_RiemannSolver_HLLE( d, FluxR[d], VarC,    VarR[d], MIN_DENS, MIN_PRES,
                                                   EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr,
+                                                  EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
 //                      restore the cell-centered B field and energy of the central cell
@@ -794,9 +811,11 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                            case RSOLVER_1ST_HLLC:
                               Hydro_RiemannSolver_HLLC( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, MIN_DENS, MIN_PRES,
                                                         EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr,
+                                                        EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                         EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                               Hydro_RiemannSolver_HLLC( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, MIN_DENS, MIN_PRES,
                                                         EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr,
+                                                        EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                         EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                            break;
 #                          endif
@@ -804,9 +823,11 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                            case RSOLVER_1ST_HLLE:
                               Hydro_RiemannSolver_HLLE( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, MIN_DENS, MIN_PRES,
                                                         EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr,
+                                                        EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                         EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                               Hydro_RiemannSolver_HLLE( d, FluxR_1D, Corr1D_InOut_PtrC, Corr1D_InOut_PtrR, MIN_DENS, MIN_PRES,
                                                         EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr,
+                                                        EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                         EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                            break;
 
@@ -972,8 +993,10 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
                   fprintf( File, "input        = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                            In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
-                           Hydro_Con2Eint(In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
-                                          CheckMinEint_No, NULL_REAL, Emag_In) );
+                           Hydro_Con2Eint( In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
+                                           CheckMinEint_No, NULL_REAL, Emag_In,
+                                           EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", In[DUAL] );
 #                 endif
@@ -984,8 +1007,10 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
                   fprintf( File, "output (old) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                            Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
-                           Hydro_Con2Eint(Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
-                                          CheckMinEint_No, NULL_REAL, Emag_Out) );
+                           Hydro_Con2Eint( Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
+                                           CheckMinEint_No, NULL_REAL, Emag_Out, EoS_GuessHTilde_CPUPtr,
+                                           EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                           h_EoS_Table ) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", Out[DUAL] );
 #                 endif
@@ -1003,7 +1028,8 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   fprintf( File, "output (new) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
                            Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
                            Hydro_Con2Eint(Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
-                                          CheckMinEint_No, NULL_REAL, Emag_Update) );
+                                          CheckMinEint_No, NULL_REAL, Emag_Update, EoS_GuessHTilde_CPUPtr,
+                                          EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", Update[DUAL] );
 #                 endif
@@ -1045,7 +1071,9 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                    endif
 
                      fprintf( File, " %14.7e", Hydro_Con2Eint(tmp[0], tmp[1], tmp[2], tmp[3], tmp[4],
-                                                              CheckMinEint_No, NULL_REAL, Emag_tmp) );
+                                                              CheckMinEint_No, NULL_REAL, Emag_tmp,
+                                                              EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table) );
 #                    ifdef MHD
                      fprintf( File, " %14.7e", Emag_tmp );
 #                    endif
@@ -1175,6 +1203,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
    }
 
 } // FUNCTION : CorrectUnphysical
+#endif // #ifndef SRHD
 
 
 

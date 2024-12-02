@@ -52,9 +52,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    const int  Lohner_NSlope           = Lohner_NAve;           // size of the slope array for Lohner
    const IntScheme_t Lohner_IntScheme = INT_MINMOD1D;          // interpolation scheme for Lohner
 #  if ( MODEL == HYDRO  &&  defined GRAVITY )
-   const real JeansCoeff              = M_PI*GAMMA/( SQR(FlagTable_Jeans[lv])*NEWTON_G ); // flag if dh^2 > JeansCoeff*Pres/Dens^2
-#  else
-   const real JeansCoeff              = NULL_REAL;
+   const real JeansCoeff_Factor       = M_PI/( SQR(FlagTable_Jeans[lv])*NEWTON_G ); // flag if dh^2 > JeansCoeff_Factor*Gamma*Pres/Dens^2
 #  endif
 #  ifndef GRAVITY
    const OptPotBC_t OPT__BC_POT       = BC_POT_NONE;
@@ -89,6 +87,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    if ( OPT__FLAG_LOHNER_PRES )  {  Lohner_NVar++;   Lohner_TVar |= _PRES;   MinPres = MIN_PRES;  }
    if ( OPT__FLAG_LOHNER_TEMP )  {  Lohner_NVar++;   Lohner_TVar |= _TEMP;   MinTemp = MIN_TEMP;  }
    if ( OPT__FLAG_LOHNER_ENTR )  {  Lohner_NVar++;   Lohner_TVar |= _ENTR;   MinEntr = MIN_ENTR;  }
+#  ifdef COSMIC_RAY
+   if ( OPT__FLAG_LOHNER_CRAY )  {  Lohner_NVar++;   Lohner_TVar |= _CRAY;                        }
+#  endif
 
 #  elif ( MODEL == ELBDM )
    if ( OPT__FLAG_LOHNER_DENS )
@@ -128,6 +129,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       real (*MagCC)[PS1][PS1][PS1]       = NULL;
       real (*Vel)[PS1][PS1][PS1]         = NULL;
       real (*Pres)[PS1][PS1]             = NULL;
+      real (*Cs2)[PS1][PS1]              = NULL;
+      real (*Lrtz)[PS1][PS1]             = NULL;
       real (*ParCount)[PS1][PS1]         = NULL;   // declare as **real** to be consistent with Par_MassAssignment()
       real (*ParDens )[PS1][PS1]         = NULL;
       real (*Lohner_Var)                 = NULL;   // array storing the variables for Lohner
@@ -139,16 +142,22 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 #     if ( MODEL == HYDRO )
       bool NeedPres = false;
+      bool NeedCs2  = false;
       if ( OPT__FLAG_PRES_GRADIENT )   NeedPres = true;
 #     ifdef GRAVITY
       if ( OPT__FLAG_JEANS )           NeedPres = true;
+      if ( OPT__FLAG_JEANS )           NeedCs2  = true;
 #     endif
 
 #     ifdef MHD
       if ( OPT__FLAG_CURRENT || NeedPres )   MagCC    = new real [3][PS1][PS1][PS1];
 #     endif
+#     ifdef SRHD
+      if ( OPT__FLAG_LRTZ_GRADIENT )         Lrtz     = new real    [PS1][PS1][PS1];
+#     endif
       if ( OPT__FLAG_VORTICITY )             Vel      = new real [3][PS1][PS1][PS1];
       if ( NeedPres )                        Pres     = new real    [PS1][PS1][PS1];
+      if ( NeedCs2 )                         Cs2      = new real    [PS1][PS1][PS1];
 #     endif // HYDRO
 
 #     ifdef PARTICLE
@@ -296,11 +305,63 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                      Pres[k][j][i] = Hydro_Con2Pres( Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
                                                      Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i], Passive,
                                                      CheckMinPres_Yes, MIN_PRES, Emag,
-                                                     EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                                     EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
                                                      NULL );
 #                    endif // #ifdef DUAL_ENERGY ... else ...
                   } // k,j,i
                } // if ( NeedPres )
+
+//             evaluate sound speed squared
+               if ( NeedCs2 )
+               {
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
+#                    if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  NCOMP_PASSIVE > 0 )
+                     real Passive[NCOMP_PASSIVE];
+                     for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Fluid[ NCOMP_FLUID + v ][k][j][i];
+#                    else
+                     const real *Passive = NULL;
+#                    endif
+
+                     Cs2[k][j][i] = EoS_DensPres2CSqr_CPUPtr( Fluid[DENS][k][j][i], Pres[k][j][i], Passive,
+                                                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                  } // k,j,i
+               } // if ( NeedCs2 )
+
+#              ifdef SRHD
+//             evaluate Lorentz factor
+               if ( OPT__FLAG_LRTZ_GRADIENT )
+               {
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
+                     real HTilde, Factor, U1, U2, U3;
+                     real Cons[NCOMP_FLUID] = { Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
+                                                Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i] };
+
+#                    ifdef CHECK_UNPHYSICAL_IN_FLUID
+                     Hydro_IsUnphysical( UNPHY_MODE_CONS, Cons, NULL,
+                                         NULL_REAL, NULL_REAL, NULL_REAL,
+                                         EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                         EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                         ERROR_INFO, UNPHY_VERBOSE );
+#                    endif
+
+                     HTilde = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                     Factor = Cons[0]*((real)1.0 + HTilde);
+                     U1     = Cons[1]/Factor;
+                     U2     = Cons[2]/Factor;
+                     U3     = Cons[3]/Factor;
+
+                     Lrtz[k][j][i] = SQRT( (real)1.0 + SQR(U1) + SQR(U2) + SQR(U3) );
+                  } // i,j,k
+               } // if ( OPT__FLAG_LRTZ_GRADIENT )
+#              endif // #ifdef SRHD
 #              endif // #if ( MODEL == HYDRO )
 
 
@@ -314,10 +375,10 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #              ifdef PARTICLE
                if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_PAR_MASS_CELL )
                {
-                  long  *ParList = NULL;
-                  int    NParThisPatch;
-                  bool   UseInputMassPos;
-                  real **InputMassPos = NULL;
+                  long      *ParList = NULL;
+                  int        NParThisPatch;
+                  bool       UseInputMassPos;
+                  real_par **InputMassPos = NULL;
 
 //                determine the number of particles and the particle list
                   if ( amr->patch[0][lv][PID]->son == -1 )
@@ -409,8 +470,17 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                              i_start = ( i - FlagBuf < 0    ) ? 0 : 1;
                                              i_end   = ( i + FlagBuf >= PS1 ) ? 2 : 1;
 
+//                retrieve the adiabatic index for Jeans length refinement criterion
+#                 if ( MODEL == HYDRO  &&  defined GRAVITY )
+                  const real JeansCoeff = ( OPT__FLAG_JEANS )
+                                        ? JeansCoeff_Factor * Cs2[k][j][i] * Fluid[DENS][k][j][i] / Pres[k][j][i]
+                                        : NULL_REAL;
+#                 else
+                  const real JeansCoeff = NULL_REAL;
+#                 endif
+
 //                check if the target cell satisfies the refinement criteria (useless pointers are always == NULL)
-                  if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, MagCC, Vel, Pres,
+                  if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, MagCC, Vel, Pres, Lrtz,
                                                         Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope, Lohner_NVar,
                                                         ParCount, ParDens, JeansCoeff )  )
                   {
@@ -534,6 +604,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       delete [] MagCC;
       delete [] Vel;
       delete [] Pres;
+      delete [] Cs2;
+      delete [] Lrtz;
       delete [] ParCount;
       delete [] ParDens;
       delete [] Lohner_Var;

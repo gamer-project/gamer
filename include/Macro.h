@@ -31,6 +31,26 @@
 #define TURING       6
 #define AMPERE       7
 
+#ifdef GPU
+#if   ( GPU_COMPUTE_CAPABILITY >= 200  &&  GPU_COMPUTE_CAPABILITY < 300 )
+# define GPU_ARCH FERMI
+#elif ( GPU_COMPUTE_CAPABILITY >= 300  &&  GPU_COMPUTE_CAPABILITY < 500 )
+# define GPU_ARCH KEPLER
+#elif ( GPU_COMPUTE_CAPABILITY >= 500  &&  GPU_COMPUTE_CAPABILITY < 600 )
+# define GPU_ARCH MAXWELL
+#elif ( GPU_COMPUTE_CAPABILITY >= 600  &&  GPU_COMPUTE_CAPABILITY < 700 )
+# define GPU_ARCH PASCAL
+#elif ( GPU_COMPUTE_CAPABILITY >= 700  &&  GPU_COMPUTE_CAPABILITY < 750 )
+# define GPU_ARCH VOLTA
+#elif ( GPU_COMPUTE_CAPABILITY >= 750  &&  GPU_COMPUTE_CAPABILITY < 800 )
+# define GPU_ARCH TURING
+#elif ( GPU_COMPUTE_CAPABILITY >= 800  &&  GPU_COMPUTE_CAPABILITY < 890 )
+# define GPU_ARCH AMPERE
+#else
+# error : ERROR : Unknown GPU_COMPUTE_CAPABILITY !!
+#endif // GPU_COMPUTE_CAPABILITY
+#endif // #ifdef GPU
+
 
 // models
 #define HYDRO        1
@@ -76,7 +96,9 @@
 #define EOS_ISOTHERMAL  2
 #define EOS_NUCLEAR     3
 #define EOS_TABULAR     4
-#define EOS_USER        5
+#define EOS_COSMIC_RAY  5
+#define EOS_TAUBMATHEWS 6
+#define EOS_USER        7
 
 
 // Poisson solvers
@@ -86,7 +108,6 @@
 
 // load-balance parallelization
 #define HILBERT      1
-
 
 // random number implementation
 #define RNG_GNU_EXT  1
@@ -191,7 +212,7 @@
 
 // number of input fluid variables in the dt solver
 // --> EOS_GAMMA/EOS_ISOTHERMAL do not require passive scalars
-#if (  MODEL == HYDRO  &&  ( EOS == EOS_GAMMA || EOS == EOS_ISOTHERMAL )  )
+#if (  MODEL == HYDRO  &&  !defined SRHD  &&  ( EOS == EOS_GAMMA || EOS == EOS_ISOTHERMAL )  )
 #  define FLU_NIN_T           NCOMP_FLUID
 #else
 #  define FLU_NIN_T           NCOMP_TOTAL
@@ -510,10 +531,10 @@
 #  define  PAR_NTYPE                4
 
 // particle type indices (must be in the range 0<=index<PAR_NTYPE)
-#  define  PTYPE_TRACER          (real)0
-#  define  PTYPE_GENERIC_MASSIVE (real)1
-#  define  PTYPE_DARK_MATTER     (real)2
-#  define  PTYPE_STAR            (real)3
+#  define  PTYPE_TRACER          (real_par)0
+#  define  PTYPE_GENERIC_MASSIVE (real_par)1
+#  define  PTYPE_DARK_MATTER     (real_par)2
+#  define  PTYPE_STAR            (real_par)3
 
 # ifdef GRAVITY
 #  define MASSIVE_PARTICLES
@@ -657,9 +678,18 @@
 
 
 // number of ghost zones for feedback
+<<<<<<< HEAD
 #  ifdef FEEDBACK
 #	 define FB_GHOST_SIZE	    1
 #  endif
+=======
+// --> can be changed manually
+// --> set to 0 if applicable to improve performance
+#ifdef FEEDBACK
+#        define FB_GHOST_SIZE       3
+#endif
+
+>>>>>>> 93d96fe94e5c2e6252d5424c6cff863fc2d419bb
 
 
 // patch size (number of cells of a single patch in the x/y/z directions)
@@ -696,7 +726,11 @@
 #  define SRC_NXT_P1    ( SRC_NXT + 1 )
 #  define DER_NXT       ( PS1 + 2*DER_GHOST_SIZE )                // use patch as the unit
 #ifdef FEEDBACK
+<<<<<<< HEAD
 #  define FB_NXT        ( PS2 + 2*FB_GHOST_SIZE )
+=======
+#  define FB_NXT        ( PS2 + 2*FB_GHOST_SIZE )                 // use patch group as the unit
+>>>>>>> 93d96fe94e5c2e6252d5424c6cff863fc2d419bb
 #endif
 
 
@@ -746,6 +780,12 @@
 #define UNMASKED                 false
 
 
+// in FB_AdvanceDt(), store the updated fluid data in a separate array to avoid data racing among different patch groups
+#if ( defined FEEDBACK  &&  FB_GHOST_SIZE > 0 )
+#  define FB_SEP_FLUOUT
+#endif
+
+
 // extreme values
 #ifndef __INT_MAX__
 #  define __INT_MAX__            2147483647
@@ -779,6 +819,13 @@
 #  define __DBL_MIN__            2.22507386e-308
 #endif
 
+#ifndef __FLT_EPSILON__
+#  define __FLT_EPSILON__        1.19209290e-07F
+#endif
+
+#ifndef __DBL_EPSILON__
+#  define __DBL_EPSILON__        2.2204460492503131e-16
+#endif
 
 // extreme value used for various purposes (e.g., floor value for passive scalars)
 #ifdef FLOAT8
@@ -791,13 +838,15 @@
 
 
 // maximum allowed error for various purposes (e.g., exact Riemann solver, MHD routines, Mis_CompareRealValue())
-#define MAX_ERROR_DBL      1.0e-14
-#define MAX_ERROR_FLT      1.0e-06f
+#define MAX_ERROR_DBL            1.0e-14
+#define MAX_ERROR_FLT            1.0e-06f
 
 #ifdef FLOAT8
-#  define MAX_ERROR        MAX_ERROR_DBL
+#  define MACHINE_EPSILON        __DBL_EPSILON__
+#  define MAX_ERROR              MAX_ERROR_DBL
 #else
-#  define MAX_ERROR        MAX_ERROR_FLT
+#  define MACHINE_EPSILON        __FLT_EPSILON__
+#  define MAX_ERROR              MAX_ERROR_FLT
 #endif
 
 
@@ -862,6 +911,7 @@
 
 
 // GAMER status
+// --> if we ever want to swap the following values, must check all MPI functions using MPI_BAND or MPI_BOR
 #define GAMER_SUCCESS      1
 #define GAMER_FAILED       0
 
@@ -890,6 +940,11 @@
 #  define MPI_GAMER_REAL MPI_FLOAT
 #endif
 
+#ifdef FLOAT8_PAR
+#  define MPI_GAMER_REAL_PAR MPI_DOUBLE
+#else
+#  define MPI_GAMER_REAL_PAR MPI_FLOAT
+#endif
 
 
 
@@ -936,6 +991,10 @@
 // max/min functions
 #define MAX( a, b )     (  ( (a) > (b) ) ? (a) : (b)  )
 #define MIN( a, b )     (  ( (a) < (b) ) ? (a) : (b)  )
+
+
+// safe ATAN2 that does not return nan when a = b = 0
+#define SATAN2( a, b )   (  ( (a) == (real)0.0  &&  (b) == (real)0.0 ) ? (real)0.0 : ATAN2( (a), (b) )  )
 
 
 // square/cube function
@@ -987,6 +1046,21 @@
 #define BIDX( idx )     ( 1L << (idx) )
 
 
+// helper macro for printing warning messages when resetting parameters
+#  define FORMAT_INT       %- 21d
+#  define FORMAT_LONG      %- 21ld
+#  define FORMAT_UINT      %- 21u
+#  define FORMAT_ULONG     %- 21lu
+#  define FORMAT_BOOL      %- 21d
+#  define FORMAT_REAL      %- 21.14e
+#  define PRINT_RESET_PARA( name, format, reason )                                                       \
+   {                                                                                                     \
+      if ( MPI_Rank == 0 )                                                                               \
+         Aux_Message( stderr, "WARNING : parameter [%-30s] is reset to [" EXPAND_AND_QUOTE(format) "] "  \
+                              "%s\n", #name, name, reason );                                             \
+   }
+
+
 // ################################
 // ## Remove useless definitions ##
 // ################################
@@ -1015,7 +1089,6 @@
 #ifndef GRAVITY
 #  undef STORE_PAR_ACC
 #endif
-
 
 
 #endif  // #ifndef __MACRO_H__

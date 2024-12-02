@@ -54,6 +54,10 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                GhostSize               : Number of ghost zones required for interpolation scheme
 //                Attribute               : Pointer arrays to different particle attributes (Mass, Pos, Vel, ...)
 //                InactiveParList         : List of inactive particle IDs
+//                Mesh_Attr               : Pointer arrays to different mesh quantities mapped onto tracer particles
+//                Mesh_Attr_Num           : Number of mesh quantities mapped onto tracer particles
+//                Mesh_Attr_Idx           : Field indices of mesh quantities mapped onto tracer particles
+//                Mesh_Attr_Label         : Field labels of mesh quantities mapped onto tracer particles
 //                R2B_Real_NPatchTotal    : see R2B_Buff_NPatchTotal
 //                R2B_Real_NPatchEachRank : see R2B_Buff_NPatchEachRank
 //                R2B_Real_PIDList        : see R2B_Buff_PIDList
@@ -61,7 +65,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                                          --> R2B : Real to Buffer
 //                                          --> Mainly for the Poisson solver
 //                                          --> For LOAD_BALANCE only
-//                R2B_Buff_NPatchEachRank :  Number of buffer patches to receive data from different MPI ranks
+//                R2B_Buff_NPatchEachRank : Number of buffer patches to receive data from different MPI ranks
 //                R2B_Buff_PIDList        : Buffer patch IDs list to receive particles from other ranks
 //                                          --> Mainly for the Poisson solver
 //                                          --> For LOAD_BALANCE only
@@ -129,8 +133,12 @@ struct Particle_t
    double        RemoveCell;
    int           GhostSize;
    int           GhostSizeTracer;
-   real         *Attribute[PAR_NATT_TOTAL];
+   real_par     *Attribute[PAR_NATT_TOTAL];
    long         *InactiveParList;
+   real_par    **Mesh_Attr;
+   int           Mesh_Attr_Num;
+   long         *Mesh_Attr_Idx;
+   char        **Mesh_Attr_Label;
 
 #  ifdef LOAD_BALANCE
    int           R2B_Real_NPatchTotal   [NLEVEL][2];
@@ -155,19 +163,19 @@ struct Particle_t
    int          *F2S_Recv_PIDList       [NLEVEL];
 #  endif // #ifdef LOAD_BALANCE
 
-   real         *Mass;
-   real         *PosX;
-   real         *PosY;
-   real         *PosZ;
-   real         *VelX;
-   real         *VelY;
-   real         *VelZ;
-   real         *Time;
-   real         *Type;
+   real_par     *Mass;
+   real_par     *PosX;
+   real_par     *PosY;
+   real_par     *PosZ;
+   real_par     *VelX;
+   real_par     *VelY;
+   real_par     *VelZ;
+   real_par     *Time;
+   real_par     *Type;
 #  ifdef STORE_PAR_ACC
-   real         *AccX;
-   real         *AccY;
-   real         *AccZ;
+   real_par     *AccX;
+   real_par     *AccY;
+   real_par     *AccZ;
 #  endif
 
 
@@ -204,6 +212,10 @@ struct Particle_t
       for (int v=0; v<PAR_NATT_TOTAL; v++)   Attribute[v] = NULL;
 
       InactiveParList = NULL;
+      Mesh_Attr       = NULL;
+      Mesh_Attr_Num   = 0;
+      Mesh_Attr_Idx   = NULL;
+      Mesh_Attr_Label = NULL;
 
 #     ifdef LOAD_BALANCE
       for (int lv=0; lv<NLEVEL; lv++)
@@ -266,6 +278,16 @@ struct Particle_t
 
       if ( InactiveParList != NULL )   free( InactiveParList );
 
+      for (int v=0; v<Mesh_Attr_Num; v++)
+      {
+         if ( Mesh_Attr[v]       != NULL )   free( Mesh_Attr[v] );
+         if ( Mesh_Attr_Label[v] != NULL )   free( Mesh_Attr_Label[v] );
+      }
+
+      if ( Mesh_Attr       != NULL )   free( Mesh_Attr );
+      if ( Mesh_Attr_Idx   != NULL )   free( Mesh_Attr_Idx );
+      if ( Mesh_Attr_Label != NULL )   free( Mesh_Attr_Label );
+
 #     ifdef LOAD_BALANCE
       for (int lv=0; lv<NLEVEL; lv++)
       {
@@ -323,7 +345,7 @@ struct Particle_t
       for (int v=0; v<PAR_NATT_TOTAL; v++)
       {
          if ( Attribute[v] != NULL )   free( Attribute[v] );
-         Attribute[v] = (real*)malloc( ParListSize*sizeof(real) );
+         Attribute[v] = (real_par*)malloc( ParListSize*sizeof(real_par) );
       }
 
       if ( InactiveParList != NULL )   free( InactiveParList );
@@ -402,7 +424,7 @@ struct Particle_t
    //
    // Return      :  Index of the new particle (ParID)
    //===================================================================================
-   long AddOneParticle( const real *NewAtt )
+   long AddOneParticle( const real_par *NewAtt )
    {
 
 //    check
@@ -411,7 +433,7 @@ struct Particle_t
 
       if ( NewAtt == NULL )   Aux_Error( ERROR_INFO, "NewAtt == NULL !!\n" );
 
-      if ( NewAtt[PAR_MASS] < (real)0.0 )
+      if ( NewAtt[PAR_MASS] < (real_par)0.0 )
          Aux_Error( ERROR_INFO, "Adding an inactive particle (mass = %21.14e) !!\n", NewAtt[PAR_MASS] );
 
       if ( NewAtt[PAR_POSX] != NewAtt[PAR_POSX] ||
@@ -420,7 +442,7 @@ struct Particle_t
          Aux_Error( ERROR_INFO, "Adding a particle with strange position (%21.14e, %21.14e, %21.14e) !!\n",
                     NewAtt[PAR_POSX], NewAtt[PAR_POSY], NewAtt[PAR_POSZ] );
 
-      if ( NewAtt[PAR_TYPE] < (real)0  ||  NewAtt[PAR_TYPE] >= (real)PAR_NTYPE )
+      if ( NewAtt[PAR_TYPE] < (real_par)0  ||  NewAtt[PAR_TYPE] >= (real_par)PAR_NTYPE )
          Aux_Error( ERROR_INFO, "Incorrect particle type (%d) !!\n", (int)NewAtt[PAR_TYPE] );
 #     endif
 
@@ -448,7 +470,7 @@ struct Particle_t
          {
             ParListSize = (int)ceil( PARLIST_GROWTH_FACTOR*(ParListSize+1) );
 
-            for (int v=0; v<PAR_NATT_TOTAL; v++)   Attribute[v] = (real*)realloc( Attribute[v], ParListSize*sizeof(real) );
+            for (int v=0; v<PAR_NATT_TOTAL; v++)   Attribute[v] = (real_par*)realloc( Attribute[v], ParListSize*sizeof(real_par) );
 
             Mass = Attribute[PAR_MASS];
             PosX = Attribute[PAR_POSX];
@@ -509,7 +531,7 @@ struct Particle_t
    //
    // Return      :  None
    //===================================================================================
-   void RemoveOneParticle( const long ParID, const real Marker )
+   void RemoveOneParticle( const long ParID, const real_par Marker )
    {
 
 //    check

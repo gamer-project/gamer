@@ -94,9 +94,9 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    real   (*pot_ext)[GRA_NXT][GRA_NXT] = NULL;
 #  endif
 
-   const int MaxNewParPerPatch = CUBE(PS1);
-   real   (*NewParAtt)[PAR_NATT_TOTAL] = new real [MaxNewParPerPatch][PAR_NATT_TOTAL];
-   long    *NewParID                   = new long [MaxNewParPerPatch];
+   const int    MaxNewParPerPatch = CUBE(PS1);
+   real_par   (*NewParAtt)[PAR_NATT_TOTAL] = new real_par [MaxNewParPerPatch][PAR_NATT_TOTAL];
+   long        *NewParID                   = new long     [MaxNewParPerPatch];
 
    int NNewPar;
 
@@ -263,7 +263,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 //    ===========================================================================================================
 //    use OpenMP critical construct since both amr->Par->AddOneParticle() and amr->patch[0][lv][PID]->AddParticle()
 //    will modify some global variables
-//    --> note that the order of which thread calls amr->Par->AddOneParticle() is nondeterministic and may change from run to run
+//    --> note that the order of which thread calls amr->Par->AddOneParticle() is non-deterministic and may change from run to run
 //        --> order of particles stored in the particle repository (i.e., their particle ID) may change from run to run
 //        --> particle text file may change from run to run since it's dumped according to the order of particle ID
 //    --> but it's not an issue since the actual data of each particle will not be affected
@@ -275,11 +275,11 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
 
 //       4-2. add particles to the patch
-         const real *PType = amr->Par->Type;
+         const real_par *PType = amr->Par->Type;
 #        ifdef DEBUG_PARTICLE
 //       do not set ParPos too early since pointers to the particle repository (e.g., amr->Par->PosX)
 //       may change after calling amr->Par->AddOneParticle()
-         const real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+         const real_par *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
          char Comment[100];
          sprintf( Comment, "%s", __FUNCTION__ );
 

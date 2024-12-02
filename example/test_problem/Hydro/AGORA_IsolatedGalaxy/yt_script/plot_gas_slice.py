@@ -17,9 +17,7 @@ args=parser.parse_args()
 # take note
 print( '\nCommand-line arguments:' )
 print( '-------------------------------------------------------------------' )
-for t in range( len(sys.argv) ):
-   print str(sys.argv[t]),
-print( '' )
+print( ' '.join(map(str, sys.argv)) )
 print( '-------------------------------------------------------------------\n' )
 
 
@@ -36,7 +34,7 @@ dpi         = 150
 
 yt.enable_parallelism()
 
-ts = yt.load( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
+ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
 #ts = yt.load( 'Data_??????' )
 
 for ds in ts.piter():
@@ -124,7 +122,7 @@ for ds in ts.piter():
    sz_vabs.set_log ( 'velocity_magnitude', False )
    sz_vabs.set_zlim( 'velocity_magnitude', 5.0e1, 2.3e2 )
    sz_vabs.set_cmap( 'velocity_magnitude', colormap )
-   sz_vabs.annotate_quiver('velocity_x', 'velocity_y', 16)
+   sz_vabs.annotate_quiver('velocity_x', 'velocity_y', factor=16)
    sz_vabs.annotate_timestamp( time_unit='Myr', corner='upper_right' )
    sz_vabs.save( mpl_kwargs={"dpi":dpi} )
 

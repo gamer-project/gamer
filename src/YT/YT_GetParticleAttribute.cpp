@@ -21,7 +21,7 @@ void YT_GetPID(const long gid, int *level, int *PID);
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Get_ParticleAttribute(int list_len, long *list_gid, char *attr, yt_array *data_array){
+void Get_ParticleAttribute(const int list_len, const long *list_gid, const char *ptype, const char *attr, yt_array *data_array){
     // Get attribute index in GAMER
     FieldIdx_t ParAttr_Idx = GetParticleAttributeIndex( attr, CHECK_ON );
 
@@ -38,7 +38,7 @@ void Get_ParticleAttribute(int list_len, long *list_gid, char *attr, yt_array *d
         for (int i=0; i<8; i++){ // run through 8 patches
             for (int p=0; p<amr->patch[0][level][PID0 + i]->NPar; p++){ // run through particle data in one PID
                 ParID = amr->patch[0][level][PID0 + i]->ParList[p];
-                ((real *) data_array[lid].data_ptr)[data_idx] = amr->Par->Attribute[ParAttr_Idx][ParID];
+                ((real_par *) data_array[lid].data_ptr)[data_idx] = amr->Par->Attribute[ParAttr_Idx][ParID];
                 data_idx += 1;
             }
         }
@@ -46,7 +46,7 @@ void Get_ParticleAttribute(int list_len, long *list_gid, char *attr, yt_array *d
         long ParID;
         for(int p=0; p<amr->patch[0][level][PID0]->NPar; p++){
             ParID = amr->patch[0][level][PID0]->ParList[p];
-            ((real *) data_array[lid].data_ptr)[p] = amr->Par->Attribute[ParAttr_Idx][ParID];
+            ((real_par *) data_array[lid].data_ptr)[p] = amr->Par->Attribute[ParAttr_Idx][ParID];
         }
 #endif // #ifdef LIBYT_USE_PATCH_GROUP
     }

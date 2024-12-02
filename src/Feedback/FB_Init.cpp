@@ -11,11 +11,6 @@ void FB_Init_SNe();
 // user-specified feedback to be set by a test problem initializer
 void (*FB_Init_User_Ptr)() = FB_Init_SNe;
 
-extern void (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                            const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-                            real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[],
-                            const int TID, RandomNumber_t *RNG );
-
 
 // random number generators
 RandomNumber_t *FB_RNG = NULL;
@@ -50,7 +45,7 @@ void FB_Init()
 
 
 // call the initialization routines of different feedbacks
-   if ( FB_SNE)   FB_Init_SNe();
+   if ( FB_SNE )  FB_Init_SNe();
 
    if ( FB_USER )
    {

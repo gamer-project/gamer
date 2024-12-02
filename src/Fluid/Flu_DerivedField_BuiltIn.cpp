@@ -55,6 +55,9 @@ void Flu_DerivedField_DivVel( real Out[], const real FluIn[], const real MagIn[]
    if ( NGhost < 1 )                Aux_Error( ERROR_INFO, "NGhost (%d) < 1 !!\n", NGhost );
    if ( NFieldOut != 1 )            Aux_Error( ERROR_INFO, "NFieldOut (%d) != 1 !!\n", NFieldOut );
 #  endif // #ifdef GAMER_DEBUG
+#  ifdef SRHD
+   Aux_Error( ERROR_INFO, "SRHD does not support div(V) evaluation !!\n" );
+#  endif
 
 
 // 1D arrays -> 3D arrays
@@ -163,12 +166,6 @@ void Flu_DerivedField_Mach( real Out[], const real FluIn[], const real MagIn[], 
 
       for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] = FluIn3D[v][ki][ji][ii];
 
-      _Dens = (real)1.0 / fluid[DENS];
-      Vx    = fluid[MOMX] * _Dens;
-      Vy    = fluid[MOMY] * _Dens;
-      Vz    = fluid[MOMZ] * _Dens;
-      V2    = SQR( Vx ) + SQR( Vy ) + SQR( Vz );
-
 #     ifdef MHD
       for (int v=0; v<NCOMP_MAG; v++)  B[v] = MagIn3D[v][ki][ji][ii];
       Emag  = (real)0.5*(  SQR( B[MAGX] ) + SQR( B[MAGY] ) + SQR( B[MAGZ] )  );
@@ -176,12 +173,34 @@ void Flu_DerivedField_Mach( real Out[], const real FluIn[], const real MagIn[], 
       Emag  = NULL_REAL;
 #     endif
 
+#     ifdef SRHD
+      real Prim[NCOMP_TOTAL], FourCs2, U2;
+      Hydro_Con2Pri( fluid, Prim, MIN_PRES, NULL_BOOL, NULL_INT, NULL,
+                     NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
+                     EoS_DensPres2Eint_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, NULL );
+
+      Cs2     = EoS_DensPres2CSqr_CPUPtr( Prim[0], Prim[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+      FourCs2 = Cs2 / ( (real)1.0 - Cs2 );
+      U2      = SQR(Prim[1]) + SQR(Prim[2]) + SQR(Prim[3]);
+      Mach    = SQRT( U2 / FourCs2 );
+
+#     else // #ifdef SRHD
+
+      _Dens = (real)1.0 / fluid[DENS];
+      Vx    = fluid[MOMX] * _Dens;
+      Vy    = fluid[MOMY] * _Dens;
+      Vz    = fluid[MOMZ] * _Dens;
+      V2    = SQR( Vx ) + SQR( Vy ) + SQR( Vz );
+
       Pres  = Hydro_Con2Pres( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], fluid+NCOMP_FLUID,
                               CheckMinPres_Yes, MIN_PRES, Emag,
-                              EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+                              EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
       Cs2   = EoS_DensPres2CSqr_CPUPtr( fluid[DENS], Pres, fluid+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                         h_EoS_Table );
       Mach  = SQRT( V2 / Cs2 );
+#     endif // #ifdef SRHD ... else ...
 
       Out3D[0][ko][jo][io] = Mach;
 
