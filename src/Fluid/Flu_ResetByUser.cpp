@@ -3,7 +3,11 @@
 // declare as static so that other functions cannot invoke them directly and must use the function pointers
 static int Flu_ResetByUser_Func_Template( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
                                           const double dt, const int lv, double AuxArray[] );
+<<<<<<< HEAD
 static void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );
+=======
+static void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const double TimeNew, const double dt );
+>>>>>>> master
 
 // this function pointer **must** be set by a test problem initializer
 int (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
@@ -188,9 +192,15 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
             AyTID[idx] = (real)0.0;
             AzTID[idx] = (real)0.0;
 
+<<<<<<< HEAD
             if ( i != PS1 )   AxTID[idx] = MHD_ResetByUser_VecPot_Ptr( x+dh_2, y,      z,      TimeNew, dt, lv, 'x', NULL );
             if ( j != PS1 )   AyTID[idx] = MHD_ResetByUser_VecPot_Ptr( x,      y+dh_2, z,      TimeNew, dt, lv, 'y', NULL );
             if ( k != PS1 )   AzTID[idx] = MHD_ResetByUser_VecPot_Ptr( x,      y,      z+dh_2, TimeNew, dt, lv, 'z', NULL );
+=======
+   int    Reset;
+   real   fluid[NCOMP_TOTAL];
+   double x, y, z, x0, y0, z0;
+>>>>>>> master
 
             idx ++;
          }}} // i,j,k
@@ -271,13 +281,22 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
          for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
 #        ifdef MHD
+<<<<<<< HEAD
          const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, MagSg );
+=======
+         const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+>>>>>>> master
 #        else
          const real Emag = (real)0.0;
 #        endif
 
+<<<<<<< HEAD
 //       2-1. reset this cell
          const bool Reset = Flu_ResetByUser_Func_Ptr( fluid, Emag, x, y, z, TimeNew, dt, lv, NULL );
+=======
+//       reset this cell
+         Reset = Flu_ResetByUser_Func_Ptr( fluid, Emag, x, y, z, TimeNew, dt, lv, NULL );
+>>>>>>> master
 
 //       2-2. operations necessary only when this cell has been reset
          if ( Reset )

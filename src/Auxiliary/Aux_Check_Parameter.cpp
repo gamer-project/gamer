@@ -649,10 +649,15 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : DT__FLUID_INIT (%14.7e) is not within the normal range [0...1] !!\n",
                    DT__FLUID_INIT );
 
+<<<<<<< HEAD
 #  ifdef MHD
    if ( OPT__RESET_FLUID_INIT  &&  MHD_ResetByUser_BField_Ptr != NULL  &&  INIT_SUBSAMPLING_NCELL > 1 )
       Aux_Message( stderr, "WARNING : \"%s\" will NOT be applied to resetting initial magnetic field !!\n", "INIT_SUBSAMPLING_NCELL" );
 #  endif
+=======
+   if ( OPT__RESET_FLUID_INIT  &&   OPT__INIT == INIT_BY_FILE )
+      Aux_Message( stderr, "WARNING : \"%s\" will NOT be applied to the input uniform data !!\n", "OPT__RESET_FLUID_INIT" );
+>>>>>>> master
 
    if ( OPT__FREEZE_FLUID )
       Aux_Message( stderr, "REMINDER : \"%s\" will prevent fluid variables from being updated\n", "OPT__FREEZE_FLUID" );
@@ -1312,10 +1317,13 @@ void Aux_Check_Parameter()
 #     error : ERROR : SUPPORT_FFTW must be enabled in the makefile when GRAVITY is on !!
 #  endif
 
+<<<<<<< HEAD
 #  if (  defined SUPPORT_FFTW  &&  ( SUPPORT_FFTW != FFTW2 && SUPPORT_FFTW != FFTW3 )  )
 #     error : ERROR : SUPPORT_FFTW != FFTW2/FFTW3 !!
 #  endif
 
+=======
+>>>>>>> master
 #  if ( POT_SCHEME != SOR  &&  POT_SCHEME != MG )
 #     error : ERROR : unsupported Poisson solver in the makefile (SOR/MG) !!
 #  endif
@@ -1581,8 +1589,13 @@ void Aux_Check_Parameter()
 
 // errors
 // ------------------------------
+<<<<<<< HEAD
 #  if ( EOS != EOS_GAMMA  &&  EOS != EOS_COSMIC_RAY )
 #     error : ERROR : SUPPORT_GRACKLE must work with EOS_GAMMA/EOS_COSMIC_RAY !!
+=======
+#  if ( EOS != EOS_GAMMA )
+#     error : ERROR : SUPPORT_GRACKLE must work with EOS_GAMMA !!
+>>>>>>> master
 #  endif
 
 // warning

@@ -7,6 +7,17 @@
 
 
 static void GetBasePowerSpectrum( real *VarK, const int j_start, const int dj, double *PS_total, double *NormDC );
+<<<<<<< HEAD
+=======
+
+#ifdef SERIAL
+extern rfftwnd_plan     FFTW_Plan_PS;
+#else
+extern rfftwnd_mpi_plan FFTW_Plan_PS;
+#endif
+
+
+>>>>>>> master
 
 extern root_fftw::real_plan_nd     FFTW_Plan_PS;
 
@@ -89,6 +100,7 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
    const int NRecvSlice = MIN( List_z_start[MPI_Rank]+local_nz, NX0_TOT[2] ) - MIN( List_z_start[MPI_Rank], NX0_TOT[2] );
 
    double *PS_total     = NULL;
+<<<<<<< HEAD
    real   *VarK         = (real*) root_fftw::fft_malloc(sizeof(real) * total_local_size); // array storing data
    real   *SendBuf      = new real [ (long)amr->NPatchComma[0][1]*CUBE(PS1) ];            // MPI send buffer for data
    real   *RecvBuf      = new real [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];            // MPI recv buffer for data
@@ -99,6 +111,18 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
    int  *List_k      [MPI_NRank];   // local z coordinate of each patch slice sent to each rank
    long  List_NSend  [MPI_NRank];   // size of data sent to each rank
    long  List_NRecv  [MPI_NRank];   // size of data received from each rank
+=======
+   real   *VarK         = new real [ total_local_size ];                         // array storing data
+   real   *SendBuf      = new real [ amr->NPatchComma[0][1]*CUBE(PS1) ];         // MPI send buffer for data
+   real   *RecvBuf      = new real [ NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];         // MPI recv buffer for data
+   long   *SendBuf_SIdx = new long [ amr->NPatchComma[0][1]*PS1 ];               // MPI send buffer for 1D coordinate in slab
+   long   *RecvBuf_SIdx = new long [ NX0_TOT[0]*NX0_TOT[1]*NRecvSlice/SQR(PS1) ];// MPI recv buffer for 1D coordinate in slab
+
+   int  *List_PID    [MPI_NRank];   // PID of each patch slice sent to each rank
+   int  *List_k      [MPI_NRank];   // local z coordinate of each patch slice sent to each rank
+   int   List_NSend  [MPI_NRank];   // size of data sent to each rank
+   int   List_NRecv  [MPI_NRank];   // size of data received from each rank
+>>>>>>> master
    const bool ForPoisson  = false;  // preparing the density field for the Poisson solver
    const bool InPlacePad  = true;   // pad the array for in-place real-to-complex FFT
 
@@ -120,10 +144,17 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
 #  endif
 
    if ( TVar == _TOTAL_DENS ) {
+<<<<<<< HEAD
       Par_CollectParticle2OneLevel( 0, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos, Time[0],
                                     SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
 
       Prepare_PatchData_InitParticleDensityArray( 0, Time[0] );
+=======
+      Prepare_PatchData_InitParticleDensityArray( 0 );
+
+      Par_CollectParticle2OneLevel( 0, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos, Time[0],
+                                    SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
+>>>>>>> master
    } // if ( TVar == _TOTAL_DENS )
 #  endif // #ifdef MASSIVE_PARTICLES
 
@@ -149,9 +180,15 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
       const double WaveK0 = 2.0*M_PI/amr->BoxSize[0];
       FILE *File = fopen( FileName, "w" );
 
+<<<<<<< HEAD
       fprintf( File, "# average value (DC) used for normalization = %20.14e\n", NormDC );
       fprintf( File, "\n" );
       fprintf( File, "#%*s %*s\n", StrLen_Flt, "k", StrLen_Flt, "Power" );
+=======
+      fprintf( File, "# average value (DC) used for normalization = %13.7e\n", NormDC );
+      fprintf( File, "\n" );
+      fprintf( File, "#%12s%4s%13s\n", "k", "", "Power" );
+>>>>>>> master
 
 //    DC mode is not output
       for (int b=1; b<Nx_Padded; b++) {
@@ -165,7 +202,11 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
 
 
 // 7. free memory
+<<<<<<< HEAD
    root_fftw::fft_free(VarK);
+=======
+   delete [] VarK;
+>>>>>>> master
    delete [] SendBuf;
    delete [] RecvBuf;
    delete [] SendBuf_SIdx;
@@ -226,10 +267,24 @@ void GetBasePowerSpectrum( real *VarK, const int j_start, const int dj, double *
    long   Count_local[Nx_Padded], Count_total[Nx_Padded];
    int    bin, bin_i[Nx_Padded], bin_j[Ny], bin_k[Nz];
 
+<<<<<<< HEAD
    root_fftw_r2c( FFTW_Plan_PS, VarK );
 
 // the data are now complex, so typecast a pointer
    cdata = (gamer_fftw::fft_complex*) VarK;
+=======
+
+// forward FFT
+#  ifdef SERIAL
+   rfftwnd_one_real_to_complex( FFTW_Plan_PS, VarK, NULL );
+#  else
+   rfftwnd_mpi( FFTW_Plan_PS, 1, VarK, NULL, FFTW_TRANSPOSED_ORDER );
+#  endif
+
+
+// the data are now complex, so typecast a pointer
+   cdata = (fftw_complex*) VarK;
+>>>>>>> master
 
 
 // set up the dimensionless wave number coefficients according to the FFTW data format

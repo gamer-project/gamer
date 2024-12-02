@@ -38,11 +38,17 @@ int  Aux_CountRow( const char *FileName );
 void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double r_max_input, const double dr_min,
                          const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const long TVarBitIdx[],
                          const int NProf, const int MinLv, const int MaxLv, const PatchType_t PatchType,
+<<<<<<< HEAD
                          const double PrepTimeIn );
 void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int MinLv, const int MaxLv,
                       const PatchType_t PatchType );
 void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double Center_ref[], const double MaxR, const double MinWD,
                                     const long WeightingDensityField, const double TolErrR, const int MaxIter, double *FinaldR, int *FinalNIter );
+=======
+                         const double PrepTime );
+void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int MinLv, const int MaxLv,
+                      const PatchType_t PatchType );
+>>>>>>> master
 #ifndef SERIAL
 void Aux_Record_BoundaryPatch( const int lv, int *NList, int **IDList, int **PosList );
 #endif
@@ -239,6 +245,7 @@ void Init_ByRestart_HDF5( const char *FileName );
 void End_FFTW();
 void Init_FFTW();
 void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf_SIdx, long *RecvBuf_SIdx,
+<<<<<<< HEAD
                  int **List_PID, int **List_k, long *List_NSend_Var, long *List_NRecv_Var,
                  const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
                  const double PrepTime, const long TVar, const bool InPlacePad, const bool ForPoisson, const bool AddExtraMass );
@@ -248,6 +255,15 @@ void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveS
 #endif // #ifdef SUPPORT_FFTW
 void Microphysics_Init();
 void Microphysics_End();
+=======
+                 int **List_PID, int **List_k, int *List_NSend_Var, int *List_NRecv_Var,
+                 const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
+                 const double PrepTime, const long TVar, const bool InPlacePad, const bool ForPoisson, const bool AddExtraMass );
+void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx,
+                 int **List_PID, int **List_k, int *List_NSend, int *List_NRecv, const int local_nz, const int FFT_Size[],
+                 const int NSendSlice, const long TVar, const bool InPlacePad );
+#endif // #ifdef SUPPORT_FFTW
+>>>>>>> master
 
 
 // Interpolation
@@ -444,10 +460,17 @@ void TABLE_GetSibPID_Based( const int lv, const int PID0, int SibPID_Based[] );
 long LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 
 // Declare classes defined in GatherTree.h
+<<<<<<< HEAD
 struct LB_PatchCount;
 struct LB_LocalPatchExchangeList;
 struct LB_GlobalPatchExchangeList;
 struct LB_GlobalPatch;
+=======
+class LB_PatchCount;
+class LB_LocalPatchExchangeList;
+class LB_GlobalPatchExchangeList;
+class LB_GlobalPatch;
+>>>>>>> master
 
 void LB_GetPID( const int GID, int& level, int& PID, int* GID_Offset );
 void LB_AllgatherPatchCount( LB_PatchCount& pc );

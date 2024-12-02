@@ -83,7 +83,13 @@ void CUAPI_SetMemSize( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGr
       else
          GPU_NStream = 1;
 
+<<<<<<< HEAD
       PRINT_RESET_PARA( GPU_NStream, FORMAT_INT, "--> might be further fine-tuned (GPU_NSTREAM in Input__Parameter)" );
+=======
+      if ( MPI_Rank == 0 )
+         Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d"
+                              " --> might be further fine-tuned\n", "GPU_NSTREAM", GPU_NSTREAM );
+>>>>>>> master
    } // if ( GPU_NStream <= 0 )
 
 
@@ -132,7 +138,13 @@ void CUAPI_SetMemSize( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGr
 #        error : ERROR : UNKNOWN MODEL !!
 #     endif // MODEL
 
+<<<<<<< HEAD
       PRINT_RESET_PARA( Flu_GPU_NPGroup, FORMAT_INT, "--> might be further fine-tuned (FLU_GPU_NPGROUP in Input__Parameter)" );
+=======
+      if ( MPI_Rank == 0 )
+         Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d"
+                              " --> might be further fine-tuned\n", "FLU_GPU_NPGROUP", Flu_GPU_NPGroup );
+>>>>>>> master
    } // if ( Flu_GPU_NPGroup <= 0 )
 
 // (2-2) POT_GPU_NPGROUP
@@ -157,7 +169,13 @@ void CUAPI_SetMemSize( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGr
 #     error : UNKNOWN GPU_ARCH !!
 #     endif
 
+<<<<<<< HEAD
       PRINT_RESET_PARA( Pot_GPU_NPGroup, FORMAT_INT, "--> might be further fine-tuned (POT_GPU_NPGROUP in Input__Parameter)" );
+=======
+      if ( MPI_Rank == 0 )
+         Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d"
+                              " --> might be further fine-tuned\n", "POT_GPU_NPGROUP", Pot_GPU_NPGroup );
+>>>>>>> master
    } // if ( Pot_GPU_NPGroup <= 0 )
 #  endif
 
@@ -183,7 +201,13 @@ void CUAPI_SetMemSize( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGr
 #     error : UNKNOWN GPU_ARCH !!
 #     endif
 
+<<<<<<< HEAD
       PRINT_RESET_PARA( Che_GPU_NPGroup, FORMAT_INT, "--> might be further fine-tuned (CHE_GPU_NPGROUP in Input__Parameter)" );
+=======
+      if ( MPI_Rank == 0 )
+         Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d"
+                              " --> might be further fine-tuned\n", "CHE_GPU_NPGROUP", Che_GPU_NPGroup );
+>>>>>>> master
    } // if ( Che_GPU_NPGroup <= 0 )
 #  endif
 
@@ -208,7 +232,13 @@ void CUAPI_SetMemSize( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGr
 #     error : UNKNOWN GPU_ARCH !!
 #     endif
 
+<<<<<<< HEAD
       PRINT_RESET_PARA( Src_GPU_NPGroup, FORMAT_INT, "--> might be further fine-tuned (SRC_GPU_NPGROUP in Input__Parameter)" );
+=======
+      if ( MPI_Rank == 0 )
+         Aux_Message( stdout, "NOTE : parameter \"%s\" is set to the default value = %d"
+                              " --> might be further fine-tuned\n", "SRC_GPU_NPGROUP", Src_GPU_NPGroup );
+>>>>>>> master
    } // if ( Src_GPU_NPGroup <= 0 )
 
 

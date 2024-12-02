@@ -3,7 +3,11 @@
 #ifdef LOAD_BALANCE
 
 
+<<<<<<< HEAD
 const real BufSizeFactor = 1.05;    // Send/RecvBufSize = (long)(SendSize/RecvSize*BufSizeFactor) --> must be >= 1.0
+=======
+const real BufSizeFactor = 1.05;    // Send/RecvBufSize = int(NSend/NRecv*BufSizeFactor) --> must be >= 1.0
+>>>>>>> master
 
 // MPI buffers are shared by some particle routines
 static void *MPI_SendBuf_Shared = NULL;
@@ -1816,6 +1820,7 @@ void *LB_GetBufferData_MemAllocate_Send( const long SendSize )
       if ( MPI_SendBuf_Shared != NULL )   ::operator delete (MPI_SendBuf_Shared);
 
 //    allocate BufSizeFactor more memory to sustain longer
+<<<<<<< HEAD
       SendBufSize = (long)(SendSize*BufSizeFactor);
 
 //    check integer overflow
@@ -1824,6 +1829,16 @@ void *LB_GetBufferData_MemAllocate_Send( const long SendSize )
                     SendSize, BufSizeFactor, SendBufSize );
 
       MPI_SendBuf_Shared = ::operator new (SendBufSize);
+=======
+      SendBufSize = int(NSend*BufSizeFactor);
+
+//    check integer overflow
+      if ( SendBufSize < 0 )
+         Aux_Error( ERROR_INFO, "NSend %d, BufSizeFactor %13.7e, SendBufSize %d < 0 !!\n",
+                    NSend, BufSizeFactor, SendBufSize );
+
+      MPI_SendBuf_Shared = new real [SendBufSize];
+>>>>>>> master
    }
 
    return MPI_SendBuf_Shared;
@@ -1858,6 +1873,7 @@ void *LB_GetBufferData_MemAllocate_Recv( const long RecvSize )
       if ( MPI_RecvBuf_Shared != NULL )   ::operator delete (MPI_RecvBuf_Shared);
 
 //    allocate BufSizeFactor more memory to sustain longer
+<<<<<<< HEAD
       RecvBufSize = (long)(RecvSize*BufSizeFactor);
 
 //    check integer overflow
@@ -1866,6 +1882,16 @@ void *LB_GetBufferData_MemAllocate_Recv( const long RecvSize )
                     RecvSize, BufSizeFactor, RecvBufSize );
 
       MPI_RecvBuf_Shared = ::operator new (RecvBufSize);
+=======
+      RecvBufSize = int(NRecv*BufSizeFactor);
+
+//    check integer overflow
+      if ( RecvBufSize < 0 )
+         Aux_Error( ERROR_INFO, "NRecv %d, BufSizeFactor %13.7e, RecvBufSize %d < 0 !!\n",
+                    NRecv, BufSizeFactor, RecvBufSize );
+
+      MPI_RecvBuf_Shared = new real [RecvBufSize];
+>>>>>>> master
    }
 
    return MPI_RecvBuf_Shared;

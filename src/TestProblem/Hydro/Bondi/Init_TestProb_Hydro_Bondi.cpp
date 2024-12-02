@@ -83,7 +83,11 @@ void Record_Bondi();
 bool Flag_Bondi( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 int Flu_ResetByUser_Func_Bondi( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
                                 const double dt, const int lv, double AuxArray[] );
+<<<<<<< HEAD
 void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );
+=======
+void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const double TimeNew, const double dt );
+>>>>>>> master
 static void HSE_SetDensProfileTable();
 static void BondiBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
                      const int GhostSize, const int idx[], const double pos[], const double Time,

@@ -44,9 +44,12 @@ TESTPROB_ID                   0           # test problem ID [0]
                                           #   16: HYDRO Jeans instability (+GRAVITY) [+MHD]
                                           #   17: HYDRO particle in equilibrium (+GRAVITY & PARTICLE)
                                           #   19: HYDRO energy power spectrum
+<<<<<<< HEAD
                                           #   20: HYDRO MHD Cosmic Ray Soundwave
                                           #   21: HYDRO MHD Cosmic Ray Shocktube
                                           #   23: HYDRO MHD Cosmic Ray Diffusion
+=======
+>>>>>>> master
                                           #  100: HYDRO CDM cosmological simulation (+GRAVITY & COMOVING & PARTICLE)
                                           #  101: HYDRO Zeldovich pancake collapse (+GRAVITY & COMOVING & PARTICLE)
                                           # 1000: ELBDM external potential (+GRAVITY)

@@ -162,7 +162,6 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
 
    int n = 0;
 
-
    for ( n = 0; n < NPar; n++ )
    {
       // constants 
@@ -228,6 +227,7 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
       // 5: Momentum feedback
 
 
+      // printf("feedback set.\n");
 
       // ============================================================
       // Check the particle and the patch 
@@ -294,6 +294,10 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
 
          delayTime *= Const_yr/UNIT_T; // convert years -> seconds -> code units.
          const double relativeTime = TimeOld - ParAtt[Idx_ParCreTime][par_idx]; // in simulation units.
+
+	 // delayTime = 3.51;
+
+         // printf("age of star %d is %lf.\n", kk, relativeTime);
 
          if ( delayTime > relativeTime && delayTime < (relativeTime + dt) ) {
             if ( explosionFlag[n] == -1 )

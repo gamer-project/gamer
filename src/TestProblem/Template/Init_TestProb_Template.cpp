@@ -276,6 +276,7 @@ void Init_TestProb_Template()
    Init_BField_ByVecPot_User_Ptr     = NULL; // option: OPT__INIT_BFIELD_BYVECPOT=2;  example: Model_Hydro/MHD_Init_BField_ByVecPot_Function.cpp
 #  endif
 // comment out Init_ByFile_User_Ptr to use the default
+<<<<<<< HEAD
 // Init_ByFile_User_Ptr              = NULL; // option: OPT__INIT=3;                  example: Init/Init_ByFile.cpp -> Init_ByFile_Default()
    Init_Field_User_Ptr               = NULL; // set NCOMP_PASSIVE_USER;               example: TestProblem/Hydro/Plummer/Init_TestProb_Hydro_Plummer.cpp --> AddNewField()
    Flag_Region_Ptr                   = NULL; // option: OPT__FLAG_REGION;             example: Refing/Flag_Region.cpp
@@ -295,6 +296,26 @@ void Init_TestProb_Template()
    Init_User_Ptr                     = NULL; // option: none;                         example: none
    Init_User_AfterPoisson_Ptr        = NULL; // option: none;                         example: none
    End_User_Ptr                      = NULL; // option: none;                         example: TestProblem/Hydro/ClusterMerger_vs_Flash/Init_TestProb_ClusterMerger_vs_Flash.cpp --> End_ClusterMerger()
+=======
+// Init_ByFile_User_Ptr              = NULL; // option: OPT__INIT=3;             example: Init/Init_ByFile.cpp -> Init_ByFile_Default()
+   Init_Field_User_Ptr               = NULL; // set NCOMP_PASSIVE_USER;          example: TestProblem/Hydro/Plummer/Init_TestProb_Hydro_Plummer.cpp --> AddNewField()
+   Flag_Region_Ptr                   = NULL; // option: OPT__FLAG_REGION;        example: Refing/Flag_Region.cpp
+   Flag_User_Ptr                     = NULL; // option: OPT__FLAG_USER;          example: Refine/Flag_User.cpp
+   Mis_GetTimeStep_User_Ptr          = NULL; // option: OPT__DT_USER;            example: Miscellaneous/Mis_GetTimeStep_User.cpp
+   Mis_UserWorkBeforeNextLevel_Ptr   = NULL; //                                  example: Miscellaneous/Mis_UserWorkBeforeNextLevel.cpp
+   Mis_UserWorkBeforeNextSubstep_Ptr = NULL; //                                  example: Miscellaneous/Mis_UserWorkBeforeNextSubstep.cpp
+   BC_User_Ptr                       = NULL; // option: OPT__BC_FLU_*=4;         example: TestProblem/ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp --> BC()
+#  ifdef MHD
+   BC_BField_User_Ptr                = NULL; // option: OPT__BC_FLU_*=4;
+#  endif
+   Flu_ResetByUser_Func_Ptr          = NULL; // option: OPT__RESET_FLUID;        example: Fluid/Flu_ResetByUser.cpp
+   Init_DerivedField_User_Ptr        = NULL; // option: OPT__OUTPUT_USER_FIELD;  example: Fluid/Flu_DerivedField_User.cpp
+   Output_User_Ptr                   = NULL; // option: OPT__OUTPUT_USER;        example: TestProblem/Hydro/AcousticWave/Init_TestProb_Hydro_AcousticWave.cpp --> OutputError()
+   Output_UserWorkBeforeOutput_Ptr   = NULL; // option: none;                    example: Output/Output_UserWorkBeforeOutput.cpp
+   Aux_Record_User_Ptr               = NULL; // option: OPT__RECORD_USER;        example: Auxiliary/Aux_Record_User.cpp
+   Init_User_Ptr                     = NULL; // option: none;                    example: none
+   End_User_Ptr                      = NULL; // option: none;                    example: TestProblem/Hydro/ClusterMerger_vs_Flash/Init_TestProb_ClusterMerger_vs_Flash.cpp --> End_ClusterMerger()
+>>>>>>> master
 #  ifdef GRAVITY
    Init_ExtAcc_Ptr                   = NULL; // option: OPT__EXT_ACC;                 example: SelfGravity/CPU_Gravity/CPU_ExtAcc_PointMass.cpp
    End_ExtAcc_Ptr                    = NULL;
@@ -312,9 +333,15 @@ void Init_TestProb_Template()
    EoS_End_Ptr                       = NULL;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
+<<<<<<< HEAD
    Src_Init_User_Ptr                 = NULL; // option: SRC_USER;                     example: SourceTerms/User_Template/CPU_Src_User_Template.cpp
 #  ifdef FEEDBACK
    FB_Init_User_Ptr                  = NULL; // option: FB_USER;                      example: TestProblem/Hydro/Plummer/FB_Plummer.cpp
+=======
+   Src_Init_User_Ptr                 = NULL; // option: SRC_USER;                example: SourceTerms/User_Template/CPU_Src_User_Template.cpp
+#  ifdef FEEDBACK
+   FB_Init_User_Ptr                  = NULL; // option: FB_USER;                 example: TestProblem/Hydro/Plummer/FB_Plummer.cpp
+>>>>>>> master
 #  endif
 
 

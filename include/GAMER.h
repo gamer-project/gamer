@@ -25,6 +25,7 @@
 #  include <omp.h>
 #endif
 
+<<<<<<< HEAD
 // fftw version
 #define FFTW2        2
 #define FFTW3        3
@@ -36,6 +37,9 @@
 #     include <fftw3-mpi.h>
 #  endif
 #elif ( SUPPORT_FFTW == FFTW2 )
+=======
+#ifdef SUPPORT_FFTW
+>>>>>>> master
 #  ifdef FLOAT8
 #     ifdef SERIAL
 #        include <drfftw.h>
@@ -82,8 +86,11 @@ extern "C" {
 #include "Prototype.h"
 #include "PhysicalConstant.h"
 #include "GatherTree.h"
+<<<<<<< HEAD
 #include "FFTW.h"
 #include "TestProb.h"
+=======
+>>>>>>> master
 
 #ifdef SERIAL
 #  include "Serial.h"

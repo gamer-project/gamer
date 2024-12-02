@@ -2,6 +2,7 @@
 
 #ifdef SUPPORT_FFTW
 
+<<<<<<< HEAD
 static int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Guess );
 
 root_fftw::real_plan_nd FFTW_Plan_PS;                       // PS  : plan for calculating the power spectrum
@@ -37,6 +38,33 @@ int ComputePaddedTotalSize(int* size) {
 int ComputeTotalSize(int* size) {
    return size[0]*size[1]*size[2];
 } // FUNCTION : ComputeTotalSize
+=======
+
+
+static int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Guess );
+
+#ifdef SERIAL
+rfftwnd_plan     FFTW_Plan_PS;                        // PS  : plan for calculating the power spectrum
+
+#ifdef GRAVITY
+rfftwnd_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;    // Poi : plan for the self-gravity Poisson solver
+#endif
+
+#else
+rfftwnd_mpi_plan FFTW_Plan_PS;
+
+#ifdef GRAVITY
+rfftwnd_mpi_plan FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
+#endif
+
+#endif
+
+#ifdef GRAVITY
+extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const double z, const double Time,
+                                               const int lv, double AuxArray[] );
+#endif
+
+>>>>>>> master
 
 
 
@@ -49,6 +77,7 @@ void Init_FFTW()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
+<<<<<<< HEAD
 #  if ( SUPPORT_FFTW == FFTW3 )
    FFTW3_Double_OMP_Enabled = false;
    FFTW3_Single_OMP_Enabled = false;
@@ -107,11 +136,31 @@ void Init_FFTW()
 // the zero-padding method is adopted for the isolated BC.
    if ( OPT__BC_POT == BC_POT_ISOLATED )
       for (int d=0; d<3; d++)    Gravity_FFT_Size[d] *= 2;
+=======
+// create plans for calculating the power spectrum
+#  ifdef SERIAL
+   FFTW_Plan_PS = rfftw3d_create_plan( NX0_TOT[2], NX0_TOT[1], NX0_TOT[0], FFTW_REAL_TO_COMPLEX,
+                                       FFTW_ESTIMATE | FFTW_IN_PLACE );
+#  else
+   FFTW_Plan_PS = rfftw3d_mpi_create_plan( MPI_COMM_WORLD, NX0_TOT[2], NX0_TOT[1], NX0_TOT[0],
+                                           FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE );
+#  endif
+
+
+#  ifdef GRAVITY
+// determine the FFT size for the self-gravity solver
+   int FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
+
+// the zero-padding method is adopted for the isolated BC.
+   if ( OPT__BC_POT == BC_POT_ISOLATED )
+      for (int d=0; d<3; d++)    FFT_Size[d] *= 2;
+>>>>>>> master
 
 // check
    if ( MPI_Rank == 0 )
    for (int d=0; d<3; d++)
    {
+<<<<<<< HEAD
       if ( Gravity_FFT_Size[d] <= 0 )    Aux_Error( ERROR_INFO, "Gravity_FFT_Size[%d] = %d < 0 !!\n", d, Gravity_FFT_Size[d] );
    }
 #  endif // #  ifdef GRAVITY
@@ -155,6 +204,29 @@ void Init_FFTW()
    root_fftw::fft_free(RhoK);
 #  endif // # ifdef GRAVITY
 #  endif // # if ( SUPPORT_FFTW == FFTW3 )
+=======
+      if ( FFT_Size[d] <= 0 )    Aux_Error( ERROR_INFO, "FFT_Size[%d] = %d < 0 !!\n", d, FFT_Size[d] );
+   }
+
+
+// create plans for the self-gravity solver
+#  ifdef SERIAL
+   FFTW_Plan_Poi     = rfftw3d_create_plan( FFT_Size[2], FFT_Size[1], FFT_Size[0], FFTW_REAL_TO_COMPLEX,
+                                            FFTW_ESTIMATE | FFTW_IN_PLACE );
+
+   FFTW_Plan_Poi_Inv = rfftw3d_create_plan( FFT_Size[2], FFT_Size[1], FFT_Size[0], FFTW_COMPLEX_TO_REAL,
+                                            FFTW_ESTIMATE | FFTW_IN_PLACE );
+
+#  else
+
+   FFTW_Plan_Poi     = rfftw3d_mpi_create_plan( MPI_COMM_WORLD, FFT_Size[2], FFT_Size[1], FFT_Size[0],
+                                                FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE );
+
+   FFTW_Plan_Poi_Inv = rfftw3d_mpi_create_plan( MPI_COMM_WORLD, FFT_Size[2], FFT_Size[1], FFT_Size[0],
+                                                FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE );
+#  endif
+#  endif // #ifdef GRAVITY
+>>>>>>> master
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
@@ -172,6 +244,7 @@ void End_FFTW()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
+<<<<<<< HEAD
    root_fftw::destroy_real_plan_nd  ( FFTW_Plan_PS      );
 
 #  ifdef GRAVITY
@@ -192,6 +265,25 @@ void End_FFTW()
    fftwf_mpi_cleanup();
 #  endif
 #  endif // # if ( SUPPORT_FFTW == FFTW3 )
+=======
+#  ifdef SERIAL
+   rfftwnd_destroy_plan    ( FFTW_Plan_PS      );
+
+#  ifdef GRAVITY
+   rfftwnd_destroy_plan    ( FFTW_Plan_Poi     );
+   rfftwnd_destroy_plan    ( FFTW_Plan_Poi_Inv );
+#  endif
+
+#  else // #ifdef SERIAL
+   rfftwnd_mpi_destroy_plan( FFTW_Plan_PS      );
+
+#  ifdef GRAVITY
+   rfftwnd_mpi_destroy_plan( FFTW_Plan_Poi     );
+   rfftwnd_mpi_destroy_plan( FFTW_Plan_Poi_Inv );
+#  endif
+
+#  endif // #ifdef SERIAL ... else ...
+>>>>>>> master
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
@@ -226,7 +318,11 @@ void End_FFTW()
 //                AddExtraMass   : Adding an extra density field for computing gravitational potential (only works with ForPoisson)
 //-------------------------------------------------------------------------------------------------------
 void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf_SIdx, long *RecvBuf_SIdx,
+<<<<<<< HEAD
                  int **List_PID, int **List_k, long *List_NSend_Var, long *List_NRecv_Var,
+=======
+                 int **List_PID, int **List_k, int *List_NSend_Var, int *List_NRecv_Var,
+>>>>>>> master
                  const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
                  const double PrepTime, const long TVar, const bool InPlacePad, const bool ForPoisson, const bool AddExtraMass )
 {
@@ -394,8 +490,12 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 
 
 // 3. prepare the send buffer
+<<<<<<< HEAD
    int   Send_Disp_SIdx[MPI_NRank], Recv_Disp_SIdx[MPI_NRank];
    long  Send_Disp_Var[MPI_NRank], Recv_Disp_Var[MPI_NRank];
+=======
+   int   Send_Disp_Var[MPI_NRank], Recv_Disp_Var[MPI_NRank], Send_Disp_SIdx[MPI_NRank], Recv_Disp_SIdx[MPI_NRank];
+>>>>>>> master
    long *SendPtr_SIdx = NULL;
    real *SendPtr_Var  = NULL;
 
@@ -404,15 +504,25 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 
    for (int r=0; r<MPI_NRank; r++)
    {
+<<<<<<< HEAD
       List_NSend_Var[r] = (long)List_NSend_SIdx[r]*(long)PSSize;
       List_NRecv_Var[r] = (long)List_NRecv_SIdx[r]*(long)PSSize;
+=======
+      List_NSend_Var[r] = List_NSend_SIdx[r]*PSSize;
+      List_NRecv_Var[r] = List_NRecv_SIdx[r]*PSSize;
+>>>>>>> master
    }
 
 // 3.2 calculate the displacement
    Send_Disp_SIdx[0] = 0;
    Recv_Disp_SIdx[0] = 0;
+<<<<<<< HEAD
    Send_Disp_Var [0] = 0L;
    Recv_Disp_Var [0] = 0L;
+=======
+   Send_Disp_Var [0] = 0;
+   Recv_Disp_Var [0] = 0;
+>>>>>>> master
    for (int r=1; r<MPI_NRank; r++)
    {
       Send_Disp_SIdx[r] = Send_Disp_SIdx[r-1] + List_NSend_SIdx[r-1];
@@ -423,6 +533,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 
 // check
 #  ifdef GAMER_DEBUG
+<<<<<<< HEAD
    const long NSend_Total  = Send_Disp_Var[MPI_NRank-1] + List_NSend_Var[MPI_NRank-1];
    const long NRecv_Total  = Recv_Disp_Var[MPI_NRank-1] + List_NRecv_Var[MPI_NRank-1];
    const long NSend_Expect = (long)amr->NPatchComma[0][1]*(long)CUBE(PS1);
@@ -432,6 +543,17 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
                                                   NSend_Total, NSend_Expect );
 
    if ( NRecv_Total != NRecv_Expect )  Aux_Error( ERROR_INFO, "NRecv_Total = %ld != expected value = %ld !!\n",
+=======
+   const int NSend_Total  = Send_Disp_Var[MPI_NRank-1] + List_NSend_Var[MPI_NRank-1];
+   const int NRecv_Total  = Recv_Disp_Var[MPI_NRank-1] + List_NRecv_Var[MPI_NRank-1];
+   const int NSend_Expect = amr->NPatchComma[0][1]*CUBE(PS1);
+   const int NRecv_Expect = NX0_TOT[0]*NX0_TOT[1]*NRecvSlice;
+
+   if ( NSend_Total != NSend_Expect )  Aux_Error( ERROR_INFO, "NSend_Total = %d != expected value = %d !!\n",
+                                                  NSend_Total, NSend_Expect );
+
+   if ( NRecv_Total != NRecv_Expect )  Aux_Error( ERROR_INFO, "NRecv_Total = %d != expected value = %d !!\n",
+>>>>>>> master
                                                   NRecv_Total, NRecv_Expect );
 #  endif
 
@@ -453,11 +575,24 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 
 
 // 4. exchange data by MPI
+<<<<<<< HEAD
    MPI_Alltoallv      ( SendBuf_SIdx, List_NSend_SIdx, Send_Disp_SIdx, MPI_LONG,
                         RecvBuf_SIdx, List_NRecv_SIdx, Recv_Disp_SIdx, MPI_LONG,       MPI_COMM_WORLD );
 
    MPI_Alltoallv_GAMER( SendBuf_Var,  List_NSend_Var,  Send_Disp_Var,  MPI_GAMER_REAL,
                         RecvBuf_Var,  List_NRecv_Var,  Recv_Disp_Var,  MPI_GAMER_REAL, MPI_COMM_WORLD );
+=======
+   MPI_Alltoallv( SendBuf_SIdx, List_NSend_SIdx, Send_Disp_SIdx, MPI_LONG,
+                  RecvBuf_SIdx, List_NRecv_SIdx, Recv_Disp_SIdx, MPI_LONG,   MPI_COMM_WORLD );
+
+#  ifdef FLOAT8
+   MPI_Alltoallv( SendBuf_Var,  List_NSend_Var,  Send_Disp_Var,  MPI_DOUBLE,
+                  RecvBuf_Var,  List_NRecv_Var,  Recv_Disp_Var,  MPI_DOUBLE, MPI_COMM_WORLD );
+#  else
+   MPI_Alltoallv( SendBuf_Var,  List_NSend_Var,  Send_Disp_Var,  MPI_FLOAT,
+                  RecvBuf_Var,  List_NRecv_Var,  Recv_Disp_Var,  MPI_FLOAT,  MPI_COMM_WORLD );
+#  endif
+>>>>>>> master
 
 
 // 5. store the received data to the padded array "VarS" for FFTW
@@ -506,6 +641,28 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Guess )
 {
 
+<<<<<<< HEAD
+=======
+// check
+#  ifdef GAMER_DEBUG
+#  ifdef GRAVITY
+   const int FFT_SizeZ = ( OPT__BC_POT == BC_POT_ISOLATED ) ? 2*NX0_TOT[2] : NX0_TOT[2];
+#  else
+   const int FFT_SizeZ = NX0_TOT[2];
+#  endif // #ifdef GRAVITY
+
+   if ( List_z_start[MPI_NRank] < FFT_SizeZ )
+      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "List_z_start[MPI_NRank]", List_z_start[MPI_NRank] );
+
+   if ( IndexZ < 0  ||  IndexZ >= NX0_TOT[2] )
+      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "IndexZ", IndexZ );
+
+   if ( TRank_Guess < 0  ||  TRank_Guess >= MPI_NRank )
+      Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TRank_Guess", TRank_Guess );
+#  endif
+
+
+>>>>>>> master
    int TRank = TRank_Guess;   // have a first guess to improve the performance
 
    while ( true )
@@ -546,7 +703,11 @@ int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Gues
 //                InPlacePad : Whether or not to pad the array size for in-place real-to-complex FFT
 //-------------------------------------------------------------------------------------------------------
 void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx,
+<<<<<<< HEAD
                  int **List_PID, int **List_k, long *List_NSend, long *List_NRecv, const int local_nz, const int FFT_Size[],
+=======
+                 int **List_PID, int **List_k, int *List_NSend, int *List_NRecv, const int local_nz, const int FFT_Size[],
+>>>>>>> master
                  const int NSendSlice, const long TVar, const bool InPlacePad )
 {
 
@@ -600,18 +761,35 @@ void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveS
 
 
 // 2. calculate the displacement and exchange data by MPI
+<<<<<<< HEAD
    long Send_Disp[MPI_NRank], Recv_Disp[MPI_NRank];
 
    Send_Disp[0] = 0L;
    Recv_Disp[0] = 0L;
+=======
+   int Send_Disp[MPI_NRank], Recv_Disp[MPI_NRank];
+
+   Send_Disp[0] = 0;
+   Recv_Disp[0] = 0;
+>>>>>>> master
    for (int r=1; r<MPI_NRank; r++)
    {
       Send_Disp[r] = Send_Disp[r-1] + List_NSend[r-1];
       Recv_Disp[r] = Recv_Disp[r-1] + List_NRecv[r-1];
    }
 
+<<<<<<< HEAD
    MPI_Alltoallv_GAMER( SendBuf, List_NSend, Send_Disp, MPI_GAMER_REAL,
                         RecvBuf, List_NRecv, Recv_Disp, MPI_GAMER_REAL, MPI_COMM_WORLD );
+=======
+#  ifdef FLOAT8
+   MPI_Alltoallv( SendBuf, List_NSend, Send_Disp, MPI_DOUBLE,
+                  RecvBuf, List_NRecv, Recv_Disp, MPI_DOUBLE, MPI_COMM_WORLD );
+#  else
+   MPI_Alltoallv( SendBuf, List_NSend, Send_Disp, MPI_FLOAT,
+                  RecvBuf, List_NRecv, Recv_Disp, MPI_FLOAT,  MPI_COMM_WORLD );
+#  endif
+>>>>>>> master
 
 
 // 3. store the received data to different patch objects
@@ -620,7 +798,11 @@ void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveS
 
    for (int r=0; r<MPI_NRank; r++)
    {
+<<<<<<< HEAD
       NRecvSlice = int(List_NRecv[r]/(long)PSSize);
+=======
+      NRecvSlice = List_NRecv[r]/PSSize;
+>>>>>>> master
 
       for (int t=0; t<NRecvSlice; t++)
       {

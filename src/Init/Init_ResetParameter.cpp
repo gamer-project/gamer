@@ -821,7 +821,11 @@ void Init_ResetParameter()
    {
       OPT__OUTPUT_BASEPS = false;
 
+<<<<<<< HEAD
       PRINT_RESET_PARA( OPT__OUTPUT_BASEPS, FORMAT_INT, "since SUPPORT_FFTW is disabled" );
+=======
+      PRINT_WARNING( OPT__OUTPUT_BASEPS, FORMAT_INT, "since SUPPORT_FFTW is disabled" );
+>>>>>>> master
    }
 #  endif
 
@@ -1154,6 +1158,7 @@ void Init_ResetParameter()
    {
       OPT__RESET_FLUID_INIT = OPT__RESET_FLUID;
 
+<<<<<<< HEAD
       PRINT_RESET_PARA( OPT__RESET_FLUID_INIT, FORMAT_INT, "to match OPT__RESET_FLUID" );
    }
 
@@ -1186,6 +1191,16 @@ void Init_ResetParameter()
 #     endif
    }
 #  endif
+=======
+      PRINT_WARNING( OPT__RESET_FLUID_INIT, FORMAT_INT, "to match OPT__RESET_FLUID" );
+   }
+
+
+// remove symbolic constants and macros only used in this structure
+#  undef FORMAT_INT
+#  undef FORMAT_FLT
+#  undef QUOTE
+>>>>>>> master
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

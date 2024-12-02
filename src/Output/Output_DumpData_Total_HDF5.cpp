@@ -69,7 +69,11 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
+<<<<<<< HEAD
 // Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2480)
+=======
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2463)
+>>>>>>> master
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -236,6 +240,7 @@ Procedure for outputting new variables:
 //                2461 : 2023/01/28 --> output OPT__RESET_FLUID_INIT
 //                2462 : 2023/03/19 --> output FB_GHOST_SIZE, FB_NXT
 //                2463 : 2023/03/20 --> output FB_SEP_FLUOUT
+<<<<<<< HEAD
 //                2464 : 2023/04/27 --> output LIBYT_INTERACTIVE
 //                2465 : 2023/04/29 --> output MU_NORM
 //                2466 : 2023/05/08 --> output OPT__FFTW_STARTUP
@@ -255,6 +260,8 @@ Procedure for outputting new variables:
 //                                             COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R, COM_MAX_ITER
 //                2478 : 2024/04/09 --> output ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z
 //                2480 : 2024/07/17 --> output OPT__OUTPUT_PAR_MESH and particle attributes mapped from mesh quantities
+=======
+>>>>>>> master
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1514,7 +1521,11 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
+<<<<<<< HEAD
    KeyInfo.FormatVersion        = 2480;
+=======
+   KeyInfo.FormatVersion        = 2463;
+>>>>>>> master
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1721,7 +1732,17 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  endif
 
 #  ifdef SUPPORT_FFTW
+<<<<<<< HEAD
    Makefile.SupportFFTW            = SUPPORT_FFTW;
+=======
+   Makefile.SupportFFTW            = 1;
+#  else
+   Makefile.SupportFFTW            = 0;
+#  endif
+
+#  ifdef SUPPORT_LIBYT
+   Makefile.SupportLibYT           = 1;
+>>>>>>> master
 #  else
    Makefile.SupportFFTW            = 0;
 #  endif

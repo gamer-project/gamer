@@ -39,6 +39,7 @@ SIMU_OPTION += -DGPU_COMPUTE_CAPABILITY=@@@GPU_COMPUTE_CAPABILITY@@@
 SIMU_OPTION += -DMODEL=HYDRO
 
 # enable gravity
+# --> must enable SUPPORT_FFTW
 SIMU_OPTION += -DGRAVITY
 
 # enable particles
@@ -108,8 +109,8 @@ SIMU_OPTION += -DLAPLACIAN_4TH
 #SIMU_OPTION += -DQUARTIC_SELF_INTERACTION
 
 # number of passively advected scalars
-# --> not supported yet and must be set to 0 (or comment it out)
-SIMU_OPTION += -DNCOMP_PASSIVE_USER=2
+# --> not supported yet and thus can only be used as auxiliary fields
+SIMU_OPTION += -DNCOMP_PASSIVE_USER=1
 
 endif # MODEL
 
@@ -218,6 +219,10 @@ SIMU_OPTION += -DSUPPORT_HDF5
 # support GNU scientific library
 #SIMU_OPTION += -DSUPPORT_GSL
 
+# support FFTW library
+# --> must be enabled when GRAVITY is enabled
+SIMU_OPTION += -DSUPPORT_FFTW
+
 # support yt inline analysis
 #SIMU_OPTION += -DSUPPORT_LIBYT
 
@@ -306,6 +311,8 @@ endif
 # for debug only
 ifeq "$(filter -DGAMER_DEBUG, $(SIMU_OPTION))" "-DGAMER_DEBUG"
 #CXXFLAG    += -fstack-protector-all
+#CXXFLAG    += -fsanitize=undefined -fsanitize=address
+#LIB        += -fsanitize=undefined -fsanitize=address
 endif
 
 # suppress warning when OpenMP is disabled
@@ -344,7 +351,7 @@ CUDA_PATH    :=
 FFTW_PATH    :=
 MPI_PATH     :=
 HDF5_PATH    := 
-GRACKLE_PATH :=
+GRACKLE_PATH := 
 GSL_PATH     :=
 LIBYT_PATH   :=
 
@@ -394,7 +401,7 @@ CUDA_PATH    := /software/cuda/default
 FFTW_PATH    := /software/fftw/default
 MPI_PATH     := /software/openmpi/default
 HDF5_PATH    := /software/hdf5/default
-GRACKLE_PATH := /work1/yglee/Software/grackle/
+GRACKLE_PATH := /work1/yglee/Software/grackle
 GSL_PATH     := /software/gsl/default
 #LIBYT_PATH   :=
 
@@ -496,8 +503,13 @@ CPU_FILE    += Aux_Check_Parameter.cpp  Aux_Check_Conservation.cpp  Aux_Check.cp
                Aux_Check_Refinement.cpp  Aux_Check_Restrict.cpp  Aux_Error.cpp  Aux_GetCPUInfo.cpp \
                Aux_GetMemInfo.cpp  Aux_Message.cpp  Aux_Record_PatchCount.cpp  Aux_TakeNote.cpp  Aux_Timing.cpp \
                Aux_Check_MemFree.cpp  Aux_Record_Performance.cpp  Aux_CheckFileExist.cpp  Aux_Array.cpp \
+<<<<<<< HEAD:src/Makefile_base
                Aux_Record_User.cpp  Aux_Record_CorrUnphy.cpp  Aux_Record_Center.cpp  Aux_SwapPointer.cpp  Aux_Check_NormalizePassive.cpp \
                Aux_LoadTable.cpp  Aux_IsFinite.cpp  Aux_ComputeProfile.cpp  Aux_FindExtrema.cpp  Aux_FindWeightedAverageCenter.cpp  Aux_PauseManually.cpp
+=======
+               Aux_Record_User.cpp  Aux_Record_CorrUnphy.cpp  Aux_SwapPointer.cpp  Aux_Check_NormalizePassive.cpp \
+               Aux_LoadTable.cpp  Aux_IsFinite.cpp  Aux_ComputeProfile.cpp  Aux_FindExtrema.cpp
+>>>>>>> master:src/Makefile
 
 CPU_FILE    += CPU_FluidSolver.cpp  Flu_AdvanceDt.cpp  Flu_Prepare.cpp  Flu_Close.cpp  Flu_FixUp_Flux.cpp \
                Flu_FixUp_Restrict.cpp  Flu_AllocateFluxArray.cpp  Flu_BoundaryCondition_User.cpp  Flu_ResetByUser.cpp \
@@ -830,6 +842,7 @@ ifeq "$(filter -DLAOHU, $(SIMU_OPTION))" "-DLAOHU"
 LIB += -L$(GPUID_PATH) -lgpudevmgr
 endif
 
+<<<<<<< HEAD:src/Makefile_base
 ifeq "$(filter -DSUPPORT_FFTW=FFTW3, $(SIMU_OPTION))" "-DSUPPORT_FFTW=FFTW3"
    LIB += -L$(FFTW3_PATH)/lib
    LIB += -Wl,-rpath=$(FFTW3_PATH)/lib
@@ -847,6 +860,10 @@ endif
 ifeq "$(filter -DSUPPORT_FFTW=FFTW2, $(SIMU_OPTION))" "-DSUPPORT_FFTW=FFTW2"
    LIB += -L$(FFTW2_PATH)/lib
    LIB += -Wl,-rpath=$(FFTW2_PATH)/lib
+=======
+ifeq "$(filter -DSUPPORT_FFTW, $(SIMU_OPTION))" "-DSUPPORT_FFTW"
+   LIB += -L$(FFTW_PATH)/lib
+>>>>>>> master:src/Makefile
    ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
       ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" "-DSERIAL"
          LIB += -ldrfftw -ldfftw
@@ -895,12 +912,17 @@ ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" ""
 INCLUDE += -I$(MPI_PATH)/include
 endif
 
+<<<<<<< HEAD:src/Makefile_base
 ifeq "$(filter -DSUPPORT_FFTW=FFTW3, $(SIMU_OPTION))" "-DSUPPORT_FFTW=FFTW3"
 INCLUDE += -I$(FFTW3_PATH)/include
 endif
 
 ifeq "$(filter -DSUPPORT_FFTW=FFTW2, $(SIMU_OPTION))" "-DSUPPORT_FFTW=FFTW2"
 INCLUDE += -I$(FFTW2_PATH)/include
+=======
+ifeq "$(filter -DSUPPORT_FFTW, $(SIMU_OPTION))" "-DSUPPORT_FFTW"
+INCLUDE += -I$(FFTW_PATH)/include
+>>>>>>> master:src/Makefile
 endif
 
 ifeq "$(filter -DSUPPORT_GRACKLE, $(SIMU_OPTION))" "-DSUPPORT_GRACKLE"

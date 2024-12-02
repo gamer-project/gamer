@@ -767,6 +767,7 @@ LB_GlobalPatch* LB_GatherTree( LB_PatchCount& pc, int root ) {
    return LB_ConstructGlobalTree( pc, gel, root );
 
 } // FUNCTION : LB_GatherTree
+<<<<<<< HEAD
 
 
 
@@ -1038,3 +1039,5 @@ long LB_GlobalTree::PID2GID(const int PID, const int lv) const
       return -1;
    }
 } // FUNCTION : LB_GlobalTree::PID2GID
+=======
+>>>>>>> master

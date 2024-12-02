@@ -310,6 +310,10 @@ int  FB_LEVEL, FB_RSEED;
 bool FB_SNE, FB_USER;
 bool FB_Any;
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+int  FB_ParaBuf;
+>>>>>>> master
 int FB_snnumber = 0;
 FILE *fout;
 FILE *Fout;
@@ -541,6 +545,13 @@ Timer_t *Timer_Poi_PrePot_F[NLEVEL];
 #endif
 
 Timer_t  Timer_OutputWalltime;
+<<<<<<< HEAD
+=======
+
+
+// function pointer for recording the user-specified info
+extern void (*Aux_Record_User_Ptr)();
+>>>>>>> master
 
 
 
@@ -683,7 +694,7 @@ int main( int argc, char *argv[] )
   if( MPI_Rank == 0 ) {
       fout = fopen("SNnumber.txt","a");
       if(fout==NULL) {printf("Fail To Open File SNnumber.txt!!");}
-      fprintf(fout, "%f 	%d\n", Time[0], FB_snnumber);
+      fprintf(fout, "%f         %d\n", Time[0], FB_snnumber);
       fclose(fout);
       FB_snnumber = 0;
   } // if( MPI_Rank == 0 )

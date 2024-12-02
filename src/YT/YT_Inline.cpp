@@ -243,6 +243,7 @@ void YT_Inline()
 
 // 4. prepare local patches for libyt
    YT_AddLocalGrid( NField, FieldList, pc);
+<<<<<<< HEAD
 
 // 5-1. perform yt inline analysis
    if ( yt_run_FunctionArguments( "yt_inline_inputArg", 1, "\'Dens\'" ) != YT_SUCCESS )
@@ -270,6 +271,15 @@ void YT_Inline()
 
 // 6. free resource
    if ( yt_free() != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_free() failed !!\n" );
+=======
+
+// 5. perform yt inline analysis
+   if ( yt_inline_argument( "yt_inline_argument", 1, "\'Dens\'" ) != YT_SUCCESS )   Aux_Error( ERROR_INFO, "yt_inline_argument() failed !!\n" );
+   if ( yt_inline( "yt_inline" ) != YT_SUCCESS )   Aux_Error( ERROR_INFO, "yt_inline() failed !!\n" );
+
+// 6. free resource
+   if ( yt_free_gridsPtr() != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_free_gridsPtr() failed !!\n" );
+>>>>>>> master
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 

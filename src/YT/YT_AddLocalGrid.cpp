@@ -154,7 +154,11 @@ void YT_AddLocalGrid( int NField, yt_field *FieldList, LB_PatchCount& pc)
       }
    }
 
+<<<<<<< HEAD
    if ( yt_commit( ) != YT_SUCCESS )  Aux_Error( ERROR_INFO, "yt_commit() failed !!\n" );
+=======
+   if ( yt_commit_grids( ) != YT_SUCCESS )  Aux_Error( ERROR_INFO, "yt_commit_grids() failed !!\n" );
+>>>>>>> master
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )   Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 

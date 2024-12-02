@@ -4,6 +4,11 @@ static bool Check_Gradient( const int i, const int j, const int k, const real In
 static bool Check_Curl( const int i, const int j, const int k,
                         const real vx[][PS1][PS1], const real vy[][PS1][PS1], const real vz[][PS1][PS1],
                         const double Threshold );
+<<<<<<< HEAD
+=======
+extern bool (*Flag_Region_Ptr)( const int i, const int j, const int k, const int lv, const int PID );
+extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
+>>>>>>> master
 
 
 

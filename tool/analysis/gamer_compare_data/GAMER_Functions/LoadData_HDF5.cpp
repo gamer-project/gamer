@@ -363,7 +363,11 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
    if ( NPar > 0 )
    {
 //    4-2. allocate the particle data array
+<<<<<<< HEAD
       Aux_AllocateArray2D<real_par>( ParData, NParAtt, NPar );
+=======
+      Aux_AllocateArray2D( ParData, NParAtt, NPar );
+>>>>>>> master
 
 
 //    4-3. initialize HDF5 objects

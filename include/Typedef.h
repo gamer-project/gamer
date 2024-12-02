@@ -56,6 +56,7 @@ const TestProbID_t
    TESTPROB_HYDRO_MHD_LINEAR_WAVE              =   15,
    TESTPROB_HYDRO_JEANS_INSTABILITY            =   16,
 <<<<<<< HEAD
+<<<<<<< HEAD
    TESTPROB_HYDRO_FEEDBACK		       =   17,
    TESTPROB_HYDRO_PARTICLE_EQUILIBRIUM_IC      =   18,
 =======
@@ -66,6 +67,12 @@ const TestProbID_t
    TESTPROB_HYDRO_CR_SHOCKTUBE                 =   21,
    TESTPROB_HYDRO_CR_DIFFUSION                 =   23,
 >>>>>>> 93d96fe94e5c2e6252d5424c6cff863fc2d419bb
+=======
+   TESTPROB_HYDRO_PARTICLE_EQUILIBRIUM_IC      =   17,
+   TESTPROB_HYDRO_PARTICLE_TEST                =   18,
+   TESTPROB_HYDRO_ENERGY_POWER_SPECTRUM        =   19,
+   TESTPROB_HYDRO_FEEDBACK		       =   20,
+>>>>>>> master
    TESTPROB_HYDRO_BARRED_POT                   =   51,
    TESTPROB_HYDRO_JET_ICM_WALL                 =   52,
    TESTPROB_HYDRO_CDM_LSS                      =  100,

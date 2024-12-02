@@ -97,6 +97,7 @@ void Init_Parallelization()
 
 #  ifdef FEEDBACK
    FB_ParaBuf  = MAX( FB_GHOST_SIZE,  IntGhostSize_FB );
+<<<<<<< HEAD
    Flu_ParaBuf = MAX( Flu_ParaBuf,    IntGhostSize_FB );    // ensure that the fluid/potential ghost zone is large enough for filling in
                                                             // the feedback ghost zone outside coarse-fine boundaries with
                                                             // spatial and temporal interpolations
@@ -105,6 +106,9 @@ void Init_Parallelization()
                                                             // cover FB_GHOST_SIZE
 #  endif
 #  endif // #ifdef FEEDBACK
+=======
+#  endif
+>>>>>>> master
 
 
 // 2. number of particles in each rank

@@ -1,6 +1,17 @@
 #include "GAMER.h"
 
 #if ( defined GRAVITY  &&  defined SUPPORT_FFTW )
+<<<<<<< HEAD
+=======
+
+#ifdef SERIAL
+extern rfftwnd_plan     FFTW_Plan_Poi;
+#else
+extern rfftwnd_mpi_plan FFTW_Plan_Poi;
+#endif
+
+
+>>>>>>> master
 
 extern root_fftw::real_plan_nd     FFTW_Plan_Poi;
 
@@ -39,11 +50,15 @@ void Init_GreenFuncK()
    local_ny_after_transpose      = NULL_INT;
    local_y_start_after_transpose = NULL_INT;
    total_local_size              = local_nx*local_ny*local_nz;
+<<<<<<< HEAD
 #  else // # ifdef SERIAL
 #  if ( SUPPORT_FFTW == FFTW3 )
    total_local_size = fftw_mpi_local_size_3d_transposed( FFT_Size[2], local_ny, local_nx, MPI_COMM_WORLD,
                            &local_nz, &local_z_start, &local_ny_after_transpose, &local_y_start_after_transpose );
 #  else // # if ( SUPPORT_FFTW == FFTW3 )
+=======
+#  else
+>>>>>>> master
    rfftwnd_mpi_local_sizes( FFTW_Plan_Poi, &local_nz, &local_z_start, &local_ny_after_transpose,
                             &local_y_start_after_transpose, &total_local_size );
 #  endif // #  if ( SUPPORT_FFTW == FFTW3 ) ... # else
@@ -89,7 +104,16 @@ void Init_GreenFuncK()
    if ( MPI_Rank == 0 )    GreenFuncK[0] = GFUNC_COEFF0*Coeff/dh0;
 
 // 4. convert the Green's function to the k space
+<<<<<<< HEAD
    root_fftw_r2c( FFTW_Plan_Poi, GreenFuncK );
+=======
+#  ifdef SERIAL
+   rfftwnd_one_real_to_complex( FFTW_Plan_Poi, GreenFuncK, NULL );
+#  else
+   rfftwnd_mpi( FFTW_Plan_Poi, 1, GreenFuncK, NULL, FFTW_TRANSPOSED_ORDER );
+#  endif
+
+>>>>>>> master
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 

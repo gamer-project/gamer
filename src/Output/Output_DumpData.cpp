@@ -3,6 +3,11 @@
 extern Timer_t Timer_OutputWalltime;
 
 static void Write_DumpRecord();
+<<<<<<< HEAD
+=======
+extern void (*Output_User_Ptr)();
+extern void (*Output_UserWorkBeforeOutput_Ptr)();
+>>>>>>> master
 
 
 

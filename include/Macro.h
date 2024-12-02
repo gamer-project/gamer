@@ -679,17 +679,23 @@
 
 // number of ghost zones for feedback
 <<<<<<< HEAD
+<<<<<<< HEAD
 #  ifdef FEEDBACK
 #	 define FB_GHOST_SIZE	    1
 #  endif
 =======
+=======
+>>>>>>> master
 // --> can be changed manually
 // --> set to 0 if applicable to improve performance
 #ifdef FEEDBACK
 #        define FB_GHOST_SIZE       3
 #endif
+<<<<<<< HEAD
 
 >>>>>>> 93d96fe94e5c2e6252d5424c6cff863fc2d419bb
+=======
+>>>>>>> master
 
 
 // patch size (number of cells of a single patch in the x/y/z directions)
@@ -727,10 +733,14 @@
 #  define DER_NXT       ( PS1 + 2*DER_GHOST_SIZE )                // use patch as the unit
 #ifdef FEEDBACK
 <<<<<<< HEAD
+<<<<<<< HEAD
 #  define FB_NXT        ( PS2 + 2*FB_GHOST_SIZE )
 =======
 #  define FB_NXT        ( PS2 + 2*FB_GHOST_SIZE )                 // use patch group as the unit
 >>>>>>> 93d96fe94e5c2e6252d5424c6cff863fc2d419bb
+=======
+#  define FB_NXT        ( PS2 + 2*FB_GHOST_SIZE )                 // use patch group as the unit
+>>>>>>> master
 #endif
 
 

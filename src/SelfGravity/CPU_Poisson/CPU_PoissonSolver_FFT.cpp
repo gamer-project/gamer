@@ -4,8 +4,21 @@
 
 
 
+<<<<<<< HEAD
 static void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const int dj, const long RhoK_Size );
 static void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const long RhoK_Size );
+=======
+static void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const int dj, const int RhoK_Size );
+static void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const int RhoK_Size );
+
+#ifdef SERIAL
+extern rfftwnd_plan     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
+#else
+extern rfftwnd_mpi_plan FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
+#endif
+
+
+>>>>>>> master
 
 extern root_fftw::real_plan_nd     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
 
@@ -35,7 +48,16 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 
 
 // forward FFT
+<<<<<<< HEAD
    root_fftw_r2c( FFTW_Plan_Poi, RhoK );
+=======
+#  ifdef SERIAL
+   rfftwnd_one_real_to_complex( FFTW_Plan_Poi, RhoK, NULL );
+#  else
+   rfftwnd_mpi( FFTW_Plan_Poi, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
+#  endif
+
+>>>>>>> master
 
 // the data are now complex, so typecast a pointer
    cdata = (gamer_fftw::fft_complex*) RhoK;
@@ -101,7 +123,16 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 
 
 // backward FFT
+<<<<<<< HEAD
    root_fftw_c2r( FFTW_Plan_Poi_Inv, RhoK );
+=======
+#  ifdef SERIAL
+   rfftwnd_one_complex_to_real( FFTW_Plan_Poi_Inv, cdata, NULL );
+#  else
+   rfftwnd_mpi( FFTW_Plan_Poi_Inv, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
+#  endif
+
+>>>>>>> master
 
 // normalization
    const real norm = dh*dh / ( (real)Nx*Ny*Nz );
@@ -132,7 +163,15 @@ void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const l
 
 
 // forward FFT
+<<<<<<< HEAD
    root_fftw_r2c( FFTW_Plan_Poi, RhoK );
+=======
+#  ifdef SERIAL
+   rfftwnd_one_real_to_complex( FFTW_Plan_Poi, RhoK, NULL );
+#  else
+   rfftwnd_mpi( FFTW_Plan_Poi, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
+#  endif
+>>>>>>> master
 
 
 // multiply density and Green's function in the k space
@@ -149,7 +188,16 @@ void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const l
 
 
 // backward FFT
+<<<<<<< HEAD
    root_fftw_c2r( FFTW_Plan_Poi_Inv, RhoK );
+=======
+#  ifdef SERIAL
+   rfftwnd_one_complex_to_real( FFTW_Plan_Poi_Inv, RhoK_cplx, NULL );
+#  else
+   rfftwnd_mpi( FFTW_Plan_Poi_Inv, 1, RhoK, NULL, FFTW_TRANSPOSED_ORDER );
+#  endif
+
+>>>>>>> master
 
 // effect of "4*PI*NEWTON_G" has been included in gFuncK, but the scale factor in the comoving frame hasn't
 #  ifdef COMOVING
@@ -194,12 +242,17 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
    local_z_start                 = 0;
    local_ny_after_transpose      = NULL_INT;
    local_y_start_after_transpose = NULL_INT;
+<<<<<<< HEAD
    total_local_size              = local_nx*local_ny*local_nz;
 #  else // # ifdef SERIAL
 #  if ( SUPPORT_FFTW == FFTW3 )
    total_local_size = fftw_mpi_local_size_3d_transposed( FFT_Size[2], local_ny, local_nx, MPI_COMM_WORLD,
                            &local_nz, &local_z_start, &local_ny_after_transpose, &local_y_start_after_transpose );
 #  else // # if ( SUPPORT_FFTW == FFTW3 )
+=======
+   total_local_size              = 2*(FFT_Size[0]/2+1)*FFT_Size[1]*FFT_Size[2];
+#  else
+>>>>>>> master
    rfftwnd_mpi_local_sizes( FFTW_Plan_Poi, &local_nz, &local_z_start, &local_ny_after_transpose,
                             &local_y_start_after_transpose, &total_local_size );
 #  endif // #  if ( SUPPORT_FFTW == FFTW3 ) ... # else
@@ -244,8 +297,13 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
 
    int  *List_PID    [MPI_NRank];   // PID of each patch slice sent to each rank
    int  *List_k      [MPI_NRank];   // local z coordinate of each patch slice sent to each rank
+<<<<<<< HEAD
    long  List_NSend  [MPI_NRank];   // size of data (density/potential) sent to each rank
    long  List_NRecv  [MPI_NRank];   // size of data (density/potential) received from each rank
+=======
+   int   List_NSend  [MPI_NRank];   // size of data (density/potential) sent to each rank
+   int   List_NRecv  [MPI_NRank];   // size of data (density/potential) received from each rank
+>>>>>>> master
    const bool ForPoisson  = true;   // preparing the density field for the Poisson solver
    const bool InPlacePad  = true;   // pad the array for in-place real-to-complex FFT
 

@@ -76,7 +76,7 @@ void Par_Init_ByFunction_Feedback( const long NPar_ThisRank, const long NPar_All
 
    for (long p=0; p<NPar_AllRank; p++)
    {
-      ParData_AllRank[PAR_MASS][p] = MassMax * Const_Msun / UNIT_M;
+      ParData_AllRank[PAR_MASS][p] = 100.0 * Const_Msun / UNIT_M;
    }
 
    srand( RSeed );
