@@ -20,12 +20,8 @@
 //                       Extrema->Level  : AMR level of the extrema
 //                       Extrema->PID    : Local Patch index of the extrema
 //                       Extrema->Cell   : Cell indices within a patch of the extrema
-<<<<<<< HEAD
-//                3. Support fields that are supported by Prepare_PatchData()
-=======
 //                3. Only support intrinsic fluid fields and gravitational potential for now
 //                   --> Does not support magnetic field, derived fields, and deposited particle fields
->>>>>>> master
 //                4. Does not support computing multiple fields at once
 //                5. Support periodic BC
 //                6. Support finding either the maximum or minimum value
@@ -34,11 +30,6 @@
 //                   --> All ranks will share the same results after invoking this function
 //                8. The parameters Min/MaxLv and PatchType are mainly for performance optimization
 //                   --> Simply set MinLv=0, MaxLv=TOP_LEVEL, PatchType=PATCH_LEAF should be OK for most cases
-<<<<<<< HEAD
-//                9. In case different AMR levels are not synchronized, this function currently only checks
-//                   the most recent data on each level (i.e., data associated with FluSg[lv]/PotSg[lv]) without temporal interpolation
-=======
->>>>>>> master
 //
 // Parameter   :  Extrema   : Extrema_t object storing the input and output information of the extrema
 //                Mode      : EXTREMA_MIN/MAX --> find the minimum/maximum value
@@ -50,11 +41,7 @@
 //
 // Example     :  Extrema_t Extrema;
 //                Extrema.Field     = _DENS;
-<<<<<<< HEAD
-//                Extrema.Radius    = __FLT_MAX__; // entire domain
-=======
 //                Extrema.Radius    = HUGE_NUMBER; // entire domain
->>>>>>> master
 //                Extrema.Center[0] = amr->BoxCenter[0];
 //                Extrema.Center[1] = amr->BoxCenter[1];
 //                Extrema.Center[2] = amr->BoxCenter[2];
@@ -88,13 +75,6 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
    if ( Extrema == NULL )
       Aux_Error( ERROR_INFO, "Extrema == NULL !!\n" );
 
-<<<<<<< HEAD
-   if ( Extrema->Field == _NONE )
-      Aux_Error( ERROR_INFO, "Field == _NONE !!\n" );
-
-   if ( Extrema->Field & (Extrema->Field-1) )
-      Aux_Error( ERROR_INFO, "not support computing multiple fields at once (Extrema->Field = %ld) !!\n", Extrema->Field );
-=======
    long SupportedField = _TOTAL;
 #  ifdef GRAVITY
    SupportedField |= _POTE;
@@ -104,17 +84,10 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
 
    if ( Extrema->Field & ~SupportedField )
       Aux_Error( ERROR_INFO, "unsupported field (%ld) !!\n", Extrema->Field );
->>>>>>> master
 
    if ( Extrema->Radius <= 0.0 )
       Aux_Error( ERROR_INFO, "Radius (%14.7e) <= 0.0 !!\n", Extrema->Radius );
 
-<<<<<<< HEAD
-   if ( !Aux_IsFinite( SQR(Extrema->Radius) ) )
-      Aux_Error( ERROR_INFO, "SQR(Extrema->Radius) (%14.7e) overflow !!\n", SQR(Extrema->Radius) );
-
-=======
->>>>>>> master
    for (int d=0; d<3; d++) {
       if ( Extrema->Center[d] < amr->BoxEdgeL[d]  ||  Extrema->Center[d] > amr->BoxEdgeR[d] )
          Aux_Error( ERROR_INFO, "Center[%d] (%14.7e) lies outside the simulation box !!\n", d, Extrema->Center[d] );
@@ -141,29 +114,14 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
 // get the integer index of the target intrinsic fluid field
    const int FluIdxUndef = -1;
    int TFluIntIdx = FluIdxUndef;
-<<<<<<< HEAD
-   bool UsePrepare = true;
-=======
->>>>>>> master
 
    for (int v=0; v<NCOMP_TOTAL; v++) {
       if ( Extrema->Field & BIDX(v) ) {
          TFluIntIdx = v;
-<<<<<<< HEAD
-         UsePrepare = false;
-=======
->>>>>>> master
          break;
       }
    }
 
-<<<<<<< HEAD
-#  ifdef GRAVITY
-   if ( Extrema->Field & _POTE ) UsePrepare = false;
-#  endif
-
-=======
->>>>>>> master
 
    const long   Field       = Extrema->Field;
    const double MaxR        = Extrema->Radius;
@@ -198,7 +156,6 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
       RegMin_Img[d] = Center_Img[d] - MaxR;
    }
 
-<<<<<<< HEAD
    const int    NPG_Max           = FLU_GPU_NPGROUP;
    const bool   IntPhase_No       = false;
    const real   MinDens_No        = -1.0;
@@ -380,7 +337,6 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
    {
       delete [] FieldPtr;
    }
-=======
 
 #  pragma omp parallel
    {
@@ -487,7 +443,6 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
       } // for (int lv=MinLv; lv<=MaxLv; lv++)
    } // OpenMP parallel region
 
->>>>>>> master
 
 // find the extrema over all OpenMP threads
    Extrema->Value = ( Mode == EXTREMA_MIN ) ? HUGE_NUMBER : -HUGE_NUMBER;

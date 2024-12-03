@@ -1,10 +1,6 @@
 #ifndef __GATHER_TREE_H__
 #define __GATHER_TREE_H__
 
-<<<<<<< HEAD
-#include "Macro.h"
-
-=======
 
 
 #include <stdio.h>
@@ -12,7 +8,6 @@
 
 
 
->>>>>>> master
 class NonCopyable
 {
   protected:
@@ -112,11 +107,10 @@ struct LB_GlobalPatchExchangeList : private NonCopyable
    bool isInitialised;
 }; // struct LB_GlobalPatchExchangeList
 
-<<<<<<< HEAD
 // class to manage LB_PatchCount and global tree consisting of LB_GlobalPatch
 // constructor calls LB_GatherTree
 // global tree information can be accessed after construction via helper functions
-struct LB_GlobalTree : private NonCopyable
+/* struct LB_GlobalTree : private NonCopyable
 {
    LB_GlobalTree(const int root = -1);
    ~LB_GlobalTree();
@@ -134,9 +128,8 @@ private:
    LB_PatchCount   PatchCount;
    LB_GlobalPatch* Patches;
    long            NPatch;
-}; // struct LB_GlobalTree
-=======
->>>>>>> master
+}; // struct LB_GlobalTree 
+*/
 
 
 #endif // #ifndef __GATHER_TREE_H__

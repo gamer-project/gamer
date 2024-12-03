@@ -50,12 +50,6 @@ extern long       FixUpVar_Flux, FixUpVar_Restrict;
 extern int        PassiveNorm_NVar, PassiveNorm_VarIdx[NCOMP_PASSIVE];
 extern int        PassiveIntFrac_NVar, PassiveIntFrac_VarIdx[NCOMP_PASSIVE];
 
-<<<<<<< HEAD
-extern int        StrLen_Flt;
-extern char       BlankPlusFormat_Flt[MAX_STRING+1];
-
-=======
->>>>>>> master
 extern double     BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, OUTPUT_WALLTIME, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
 extern long int   END_STEP;
 extern int        NX0_TOT[3], OUTPUT_STEP, OUTPUT_WALLTIME_UNIT, REGRID_COUNT, REFINE_NLEVEL, FLU_GPU_NPGROUP, SRC_GPU_NPGROUP, OMP_NTHREAD;
@@ -338,13 +332,8 @@ extern void (*Flu_DerivedField_User_Ptr)( real Out[], const real FluIn[], const 
 extern int  FB_LEVEL, FB_RSEED;
 extern bool FB_SNE, FB_USER;
 extern bool FB_Any;
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
 extern int  FB_ParaBuf;
->>>>>>> master
 extern int FB_snnumber;
-=======
 extern int  FB_ParaBuf;
 #endif
 

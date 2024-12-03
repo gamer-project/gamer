@@ -48,22 +48,8 @@ extern void (*BC_User_Ptr)( real Array[], const int ArraySize[], real fluid[], c
 extern void (*BC_BField_User_Ptr)( real magnetic[], const double x, const double y, const double z, const double Time,
                                    const int lv, double AuxArray[] );
 #endif
-<<<<<<< HEAD
-extern int  (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
-                                         const double dt, const int lv, double AuxArray[] );
-extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );
-#ifdef MHD
-extern double (*MHD_ResetByUser_VecPot_Ptr)( const double x, const double y, const double z, const double Time,
-                                             const double dt, const int lv, const char Component, double AuxArray[] );
-extern double (*MHD_ResetByUser_BField_Ptr)( const double x, const double y, const double z, const double Time,
-                                             const double dt, const int lv, const char Component, double AuxArray[], const double B_in,
-                                             const bool UseVecPot, const real *Ax, const real *Ay, const real *Az,
-                                             const int i, const int j, const int k );
-#endif
-=======
 extern int (*Flu_ResetByUser_Func_Ptr)( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
                                         const double dt, const int lv, double AuxArray[] );
->>>>>>> master
 extern void (*End_User_Ptr)();
 #ifdef GRAVITY
 extern real (*Poi_AddExtraMassForGravity_Ptr)( const double x, const double y, const double z, const double Time,

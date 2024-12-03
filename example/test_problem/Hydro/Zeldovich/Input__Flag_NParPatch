@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-# Level   Number_of_particles_per_patch
-=======
 # Level   Number of particles per patch
->>>>>>> master
       0                            4096
       1                            4096
       2                            4096

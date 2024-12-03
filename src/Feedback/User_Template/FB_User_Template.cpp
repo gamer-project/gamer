@@ -60,11 +60,7 @@ void FB_SNeMomentumFeedback( real (*Fluid)[PS2][PS2][PS2], const int particleExp
 //
 // Note        :  1. Input and output fluid and particle data are stored in Fluid[] and ParAtt[], respectively
 //                   --> This function is responsible for updating gas and particles within
-<<<<<<< HEAD
-//                       ** FB_GHOST_SIZE <= cell indices i,j,k < FB_GHOST_SIZE+PS2 **
-=======
 //                       ** FB_GHOST_SIZE <= cell indices i,j,k < FB_GHOST_SIZE+PS2 ** 
->>>>>>> master
 //                   --> Updating gas and particles outside this range is fine but will have no effect at all
 //                2. Must use ParSortID[] to access ParAtt[]
 //                   --> ParAtt[PAR_MASS/PAR_POSX/etc][ ParSortID[...] ]
@@ -119,26 +115,10 @@ void FB_SNeMomentumFeedback( real (*Fluid)[PS2][PS2][PS2], const int particleExp
 //
 // Return      :  Fluid, ParAtt
 //-------------------------------------------------------------------------------------------------------
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-
-void FB_User_Template( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                       const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-                       real (*Fluid)[PS2][PS2][PS2], const double EdgeL[], const double dh, bool CoarseFine[],
-                       const int TID, RandomNumber_t *RNG )
-=======
-int FB_User_Template( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                      const int NPar, const long *ParSortID, real_par *ParAtt[PAR_NATT_TOTAL],
-                      real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
-                      const int TID, RandomNumber_t *RNG )
->>>>>>> 93d96fe94e5c2e6252d5424c6cff863fc2d419bb
-=======
 int FB_User_Template( const int lv, const double TimeNew, const double TimeOld, const double dt,
                       const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
                       real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
                       const int TID, RandomNumber_t *RNG )
->>>>>>> master
 {
 
 // check
@@ -192,19 +172,9 @@ int FB_User_Template( const int lv, const double TimeNew, const double TimeOld, 
    }; // const double p_mass[10] 
 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-   int n = 0;
-=======
 // for a complete example, see src/TestProblem/Hydro/Plummer/FB_Plummer.cpp
    /*
    const double _dh  = 1.0 / dh;
->>>>>>> 93d96fe94e5c2e6252d5424c6cff863fc2d419bb
-=======
-// for a complete example, see src/TestProblem/Hydro/Plummer/FB_Plummer.cpp
-   /*
-   const double _dh  = 1.0 / dh;
->>>>>>> master
 
    for ( n = 0; n < NPar; n++ )
    {
@@ -505,10 +475,6 @@ int FB_User_Template( const int lv, const double TimeNew, const double TimeOld, 
 
    } // for (int t=0; t<NPar; t++)
    */
-<<<<<<< HEAD
->>>>>>> 93d96fe94e5c2e6252d5424c6cff863fc2d419bb
-=======
->>>>>>> master
 
 
    return GAMER_SUCCESS;

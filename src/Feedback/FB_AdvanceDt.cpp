@@ -6,40 +6,16 @@
 
 // prototypes of built-in feedbacks
 int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
-<<<<<<< HEAD
-<<<<<<< HEAD
              const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
              real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh,
 	     bool CoarseFine[], const int TID, RandomNumber_t *RNG );
-=======
-            const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-            real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
-            const int TID, RandomNumber_t *RNG );
->>>>>>> master
 
 
 // user-specified feedback to be set by a test problem initializer
 void (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
                      const int NPar, const int *ParSortID, real *ParAtt[PAR_NATT_TOTAL],
-<<<<<<< HEAD
                      real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh,
 		     bool CoarseFine[], const int TID, RandomNumber_t *RNG ) = NULL;
-=======
-            const int NPar, const long *ParSortID, real_par *ParAtt[PAR_NATT_TOTAL],
-            real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
-            const int TID, RandomNumber_t *RNG );
-
-
-// user-specified feedback to be set by a test problem initializer
-int (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                    const int NPar, const long *ParSortID, real_par *ParAtt[PAR_NATT_TOTAL],
-                    real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
-                    const int TID, RandomNumber_t *RNG ) = NULL;
->>>>>>> 93d96fe94e5c2e6252d5424c6cff863fc2d419bb
-=======
-                     real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
-                     const int TID, RandomNumber_t *RNG ) = NULL;
->>>>>>> master
 
 
 // random number generators
@@ -159,18 +135,10 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 // array to store the input and output fluid data
-<<<<<<< HEAD
-<<<<<<< HEAD
    const int NGhost  = FB_GHOST_SIZE;
    const int NCellIn = PS2 + 2*NGhost;
    real (*fluid_PG)[FB_NXT][FB_NXT][FB_NXT] = new real [NCOMP_TOTAL][FB_NXT][FB_NXT][FB_NXT];
    //real (*fluid_PG)[PS2][PS2][PS2] = new real [NCOMP_TOTAL][PS2][PS2][PS2];
-=======
-   real (*fluid_PG)[FB_NXT][FB_NXT][FB_NXT] = new real [NCOMP_TOTAL][FB_NXT][FB_NXT][FB_NXT];
->>>>>>> 93d96fe94e5c2e6252d5424c6cff863fc2d419bb
-=======
-   real (*fluid_PG)[FB_NXT][FB_NXT][FB_NXT] = new real [NCOMP_TOTAL][FB_NXT][FB_NXT][FB_NXT];
->>>>>>> master
 
 
 // iterate over all real patches
@@ -198,36 +166,15 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //###OPTIMIZATION: only prepare the necessary fluid fields
       const long FluidBitIdx         = _TOTAL;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-      Prepare_PatchData( lv, TimeNew, fluid_PG[0][0][0], NULL, NGhost, NPG, &PID0, FluidBitIdx, _NONE,
-=======
       Prepare_PatchData( lv, TimeNew, fluid_PG[0][0][0], NULL, FB_GHOST_SIZE, NPG, &PID0, FluidBitIdx, _NONE,
->>>>>>> 93d96fe94e5c2e6252d5424c6cff863fc2d419bb
-=======
-      Prepare_PatchData( lv, TimeNew, fluid_PG[0][0][0], NULL, FB_GHOST_SIZE, NPG, &PID0, FluidBitIdx, _NONE,
->>>>>>> master
                          OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
                          OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-//    4. collect patch information
+//    5. collect patch information
       const int NNearbyPatchMax = 64;  // maximum number of neaby patches of a patch group (including 8 local patches)
       int Nearby_PID_List[NNearbyPatchMax], NNearbyPatch, SibPID0_List[26];
-=======
 
-//    5. collect patch information
-      const int NNearbyPatchMax = 64;  // maximum number of nearby patches of a patch group (including 8 local patches)
-      int NearbyPIDList[NNearbyPatchMax], NNearbyPatch, SibPID0List[26];
->>>>>>> 93d96fe94e5c2e6252d5424c6cff863fc2d419bb
-=======
-
-//    5. collect patch information
-      const int NNearbyPatchMax = 64;  // maximum number of neaby patches of a patch group (including 8 local patches)
-      int NearbyPIDList[NNearbyPatchMax], NNearbyPatch, SibPID0List[26];
->>>>>>> master
 
 //    5-1. get nearby patches
       NNearbyPatch = 0;
@@ -255,15 +202,9 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 //    5.2. sort PID by position
 //         --> necessary for fixing the order of particles in different patches
-<<<<<<< HEAD
-      long  *NearbyPIDList_IdxTable = new long [NNearbyPatch];
-      int   *NearbyPIDList_Old      = new int  [NNearbyPatch];
-      int  **PCr = NULL;
-=======
       int *NearbyPIDList_IdxTable = new int [NNearbyPatch];
       int *NearbyPIDList_Old      = new int [NNearbyPatch];
       real **PCr = NULL;
->>>>>>> master
       Aux_AllocateArray2D( PCr, 3, NNearbyPatch );
 
       for (int t=0; t<NNearbyPatch; t++)
@@ -272,12 +213,8 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
          for (int d=0; d<3; d++)    PCr[d][t] = amr->patch[0][lv][PID]->corner[d];
       }
 
-<<<<<<< HEAD
       const int SortOrder_PID[3] = { 0, 1, 2 };
       Mis_SortByRows( PCr, NearbyPIDList_IdxTable, (long)NNearbyPatch, SortOrder_PID, 3 );
-=======
-      Par_SortByPos( NNearbyPatch, PCr[0], PCr[1], PCr[2], NearbyPIDList_IdxTable );
->>>>>>> master
 
       memcpy( NearbyPIDList_Old, NearbyPIDList, NNearbyPatch*sizeof(int) );
 
@@ -445,25 +382,9 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
          FB_RNG->SetSeed( TID, RSeed );
 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 //       7-2. invoke all feedback routines
          if ( FB_SNE  )    NSNe+=FB_SNe( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Local, fluid_PG,
                                    amr->patch[0][lv][PID0]->EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
-=======
-//       8-2. invoke all feedback routines
-         const double EdgeL[3] = { amr->patch[0][lv][PID0]->EdgeL[0] - FB_GHOST_SIZE*amr->dh[lv],
-                                   amr->patch[0][lv][PID0]->EdgeL[1] - FB_GHOST_SIZE*amr->dh[lv],
-                                   amr->patch[0][lv][PID0]->EdgeL[2] - FB_GHOST_SIZE*amr->dh[lv] };
-         int Status;
->>>>>>> 93d96fe94e5c2e6252d5424c6cff863fc2d419bb
-
-         if ( FB_SNE  )    Status = FB_SNe     ( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Local, fluid_PG,
-                                                 EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
-
-         if ( FB_USER )    Status = FB_User_Ptr( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Local, fluid_PG,
-                                                 EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
-=======
 //       8-2. invoke all feedback routines
          const double EdgeL[3] = { amr->patch[0][lv][PID0]->EdgeL[0] - FB_GHOST_SIZE*amr->dh[lv],
                                    amr->patch[0][lv][PID0]->EdgeL[1] - FB_GHOST_SIZE*amr->dh[lv],
@@ -475,7 +396,6 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
          if ( FB_USER )    FB_User_Ptr( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Local, fluid_PG,
                                         EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
->>>>>>> master
 
 
 
@@ -499,21 +419,9 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
       for (int LocalID=0; LocalID<8; LocalID++)
       {
          const int PID    = PID0 + LocalID;
-<<<<<<< HEAD
-<<<<<<< HEAD
-         const int Disp_i = TABLE_02( LocalID, 'x', NGhost, NCellIn/2 );
-         const int Disp_j = TABLE_02( LocalID, 'y', NGhost, NCellIn/2 );
-         const int Disp_k = TABLE_02( LocalID, 'z', NGhost, NCellIn/2 );
-=======
          const int Disp_i = TABLE_02( LocalID, 'x', FB_GHOST_SIZE, FB_GHOST_SIZE+PS1 );
          const int Disp_j = TABLE_02( LocalID, 'y', FB_GHOST_SIZE, FB_GHOST_SIZE+PS1 );
          const int Disp_k = TABLE_02( LocalID, 'z', FB_GHOST_SIZE, FB_GHOST_SIZE+PS1 );
->>>>>>> 93d96fe94e5c2e6252d5424c6cff863fc2d419bb
-=======
-         const int Disp_i = TABLE_02( LocalID, 'x', FB_GHOST_SIZE, FB_GHOST_SIZE+PS1 );
-         const int Disp_j = TABLE_02( LocalID, 'y', FB_GHOST_SIZE, FB_GHOST_SIZE+PS1 );
-         const int Disp_k = TABLE_02( LocalID, 'z', FB_GHOST_SIZE, FB_GHOST_SIZE+PS1 );
->>>>>>> master
 
          for (int v=0; v<NCOMP_TOTAL; v++)   {
 
@@ -551,10 +459,6 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
   FB_snnumber += NSNe_total;
   }
 
-<<<<<<< HEAD
-
-=======
->>>>>>> master
 // 11. store the updated particle data
    for (int v=0; v<PAR_NATT_TOTAL; v++) {
       if ( ParAttBitIdx_Out & BIDX(v) )

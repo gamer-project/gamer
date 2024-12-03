@@ -124,14 +124,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
    if ( MinLv > MaxLv )
       Aux_Error( ERROR_INFO, "MinLv (%d) > MaxLv (%d) !!\n", MinLv, MaxLv );
-<<<<<<< HEAD
-=======
-
-   if ( PatchType != PATCH_LEAF  &&  PatchType != PATCH_NONLEAF  &&
-        PatchType != PATCH_BOTH  &&  PatchType != PATCH_LEAF_PLUS_MAXNONLEAF )
-      Aux_Error( ERROR_INFO, "incorrect PatchType (%d) !!\n", PatchType );
 #  endif
->>>>>>> master
 
    if ( PatchType != PATCH_LEAF  &&  PatchType != PATCH_NONLEAF  &&
         PatchType != PATCH_BOTH  &&  PatchType != PATCH_LEAF_PLUS_MAXNONLEAF )
@@ -538,8 +531,6 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                            exit( 1 );
                      }
 
-<<<<<<< HEAD
-=======
 //                   other fields
                      else
                      {
@@ -716,7 +707,6 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
       delete [] Passive;         Passive      = NULL;
       delete [] Passive_IntT;    Passive_IntT = NULL;
 #     endif
->>>>>>> master
 
 //                   update the profile
                      const int bin = Patch_Bin[TID][LocalID][k][j][i];

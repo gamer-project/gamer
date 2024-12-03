@@ -1,10 +1,6 @@
 Compilation flags:
 ========================================
 Enable : MODEL=HYDRO, GRAVITY, COMOVING, PARTICLE, SUPPORT_GSL, SUPPORT_FFTW, DUAL_ENERGY
-<<<<<<< HEAD
-Configure.py: python configure.py --model=HYDRO --gravity=true --comoving=true --particle=true --gsl=true --fftw=FFTW2 --dual=DE_ENPY
-=======
->>>>>>> master
 
 
 Default setup:
@@ -52,10 +48,6 @@ For "particle-only" setup:
    zc_Collapse             1.0
    NPar_X                  64
 
-<<<<<<< HEAD
-
-=======
->>>>>>> master
 Note:
 ========================================
 1. Zeldovich pancake collapse cosmological simulations
