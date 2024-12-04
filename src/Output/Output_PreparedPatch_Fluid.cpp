@@ -140,7 +140,7 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
 #        if ( ELBDM_SCHEME == ELBDM_HYBRID )
          } else { // if ( amr->use_wave_flag[lv] )
 
-         real (*smaller_h_Flu_Array)[FLU_NIN ][CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) h_Flu_Array;
+         real (*smaller_h_Flu_Array)[FLU_NIN][CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) h_Flu_Array;
          Idx = K*HYB_NXT*HYB_NXT + J*HYB_NXT + I;
 
          for (int v=0; v<FLU_NIN; v++)    u[v] = smaller_h_Flu_Array[TID][v][Idx];

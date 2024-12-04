@@ -867,7 +867,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 #        endif // #ifdef LOAD_BALANCE ... else ...
 
 //       free resource
-         for (int v=0; v<NCompStore; v++)      H5_Status = H5Dclose( H5_SetID_Field[v] );
+         for (int v=0; v<NCompStore; v++)       H5_Status = H5Dclose( H5_SetID_Field[v] );
 #        ifdef MHD
          for (int v=0; v<NCOMP_MAG;   v++)      H5_Status = H5Dclose( H5_SetID_FCMag[v] );
 #        endif
