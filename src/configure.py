@@ -233,7 +233,8 @@ def str2bool( v ):
     return
 
 def add_option( opt_str, name, val ):
-    # NOTE: Every -Doption must have a trailing space.
+    # NOTE: 1. Every -Doption must have a trailing space.
+    #       2. Do not insert any space before and after the equal sign `=`.
     if type(val) == type(True):
         if val: opt_str += "-D%s "%(name)
         LOGGER.info("%-25s : %r"%(name, val))

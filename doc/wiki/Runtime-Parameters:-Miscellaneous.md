@@ -50,7 +50,7 @@ Synchronize all MPI processes (by invoking `MPI_Barrier()`) before timing. It wi
 more accurate timing results but may also deteriorate the performance.
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[TIMING | Installation: Simulation-Options#TIMING]].
+[[--timing | Installation:-Option-List#--timing]].
 
 <a name="OPT__TIMING_BALANCE"></a>
 * #### `OPT__TIMING_BALANCE` &ensp; (0=off, 1=on) &ensp; [0]
@@ -60,7 +60,7 @@ all MPI processes to check load balancing. The results will be recorded in the f
 [[Record__Timing | Simulation-Logs:-Record__Timing]].
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[TIMING | Installation: Simulation-Options#TIMING]].
+[[--timing | Installation:-Option-List#--timing]].
 
 <a name="OPT__TIMING_MPI"></a>
 * #### `OPT__TIMING_MPI` &ensp; (0=off, 1=on) &ensp; [0]
@@ -69,9 +69,9 @@ Record the MPI bandwidth achieved by various MPI calls in the file
 [[Record__TimingMPI_Rank* | Simulation-Logs:-Record__TimingMPI_Rank*]].
     * **Restriction:**
 Only applicable when enabling both the compilation options
-[[TIMING | Installation: Simulation-Options#TIMING]]
+[[--timing | Installation:-Option-List#--timing]]
 and
-[[LOAD_BALANCE | Installation: Simulation-Options#LOAD_BALANCE]].
+[[--mpi | Installation:-Option-List#--mpi]].
 
 <a name="OPT__RECORD_NOTE"></a>
 * #### `OPT__RECORD_NOTE` &ensp; (0=off, 1=on) &ensp; [1]
@@ -102,7 +102,7 @@ Record the code performance in the file
 [[Record__Performance | Simulation-Logs:-Record__Performance]].
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[TIMING | Installation: Simulation-Options#TIMING]].
+[[--timing | Installation:-Option-List#--timing]].
 
 <a name="OPT__MANUAL_CONTROL"></a>
 * #### `OPT__MANUAL_CONTROL` &ensp; (0=off, 1=on) &ensp; [1]
@@ -184,7 +184,7 @@ Sort patches by their load-balance indices before dumping data and during restar
 to improve bitwise reproducibility, especially when restarting with the same number
 of MPI processes.
     * **Restriction:**
-Not supported by [[SERIAL | Installation: Simulation-Options#SERIAL]].
+Not supported by [[--mpi | Installation:-Option-List#--mpi]]=false.
 
 <a name="OPT__CK_REFINE"></a>
 * #### `OPT__CK_REFINE` &ensp; (0=off, 1=on) &ensp; [0]
@@ -268,7 +268,7 @@ Check the particle allocation. This is used mainly for debugging purposes.
 Check the consistency of the magnetic field on the patch interfaces.
 This is used mainly for debugging purposes.
     * **Restriction:**
-For [[MHD | Installation: Simulation-Options#MHD]] only.
+For [[--mhd | Installation:-Option-List#--mhd]] only.
 
 <a name="OPT__CK_DIVERGENCE_B"></a>
 * #### `OPT__CK_DIVERGENCE_B` &ensp; (0=off, 1=on) &ensp; [0]
@@ -276,7 +276,7 @@ For [[MHD | Installation: Simulation-Options#MHD]] only.
 Check the divergence-free constraint on the magnetic field.
 This is used mainly for debugging purposes.
     * **Restriction:**
-For [[MHD | Installation: Simulation-Options#MHD]] only.
+For [[--mhd | Installation:-Option-List#--mhd]] only.
 
 <a name="OPT__CK_INPUT_FLUID"></a>
 * #### `OPT__CK_INPUT_FLUID` &ensp; (0=off, 1=on) &ensp; [0]
