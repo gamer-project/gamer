@@ -59,7 +59,7 @@
                 "isDefault": false
             },
             "options": {
-                "cwd": "${workspaceFolder}/bin/CR_Diffusion/"
+                "cwd": "${workspaceFolder}/bin/Gamer_Working_SubDir/"
             },
             "problemMatcher": []
         }
