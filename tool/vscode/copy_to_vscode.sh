@@ -8,7 +8,7 @@ SOURCE_DIR="."
 TARGET_DIR="../../.vscode"
 
 # Specify files to exclude (space-separated list, e.g., "file1 file2")
-EXCLUDE_FILES="copy_to_vscode.sh"
+EXCLUDE_FILES="copy_to_vscode.sh README.md"
 
 if [ ! -d "$(realpath "$TARGET_DIR")" ]; then
   echo "Target directory $(realpath "$TARGET_DIR") does not exist."
