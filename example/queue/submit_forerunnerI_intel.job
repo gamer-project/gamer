@@ -19,7 +19,7 @@
 ##SBATCH --mail-user=EMAIL_ADDRESS                       # Where to send mail.  Set this to your email address
 ##SBATCH --exclude=icpnp[101-102,255-256]                # Example for excluding specified nodes
 
-LOG_FILE=log_forerunner_I_oneapi_2024
+LOG_FILE=log
 
 module purge
 module use /home/d07222009/module_CALAB
