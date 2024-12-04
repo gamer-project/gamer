@@ -1,0 +1,68 @@
+{
+    "tasks": [
+        {
+            "label": "make-clean",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "clean"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/src"
+            }
+        },
+        {
+            "label": "extract-macros",
+            "type": "shell",
+            "command": "python3",
+            "args": [
+                "extract_macros.py"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/.vscode"
+            }
+        },
+        {
+            "label": "build-gamer",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "-j",
+                "8"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/src"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "dependsOn": [
+                "make-clean",
+                "extract-macros"
+            ],
+            "dependsOrder": "sequence",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "After you configure the Makefile, run this task to build the project."
+        },
+        {
+            "label": "clean-work-dir",
+            "type": "shell",
+            "command": "sh",
+            "args": [
+                "clean.sh"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/bin/CR_Diffusion/"
+            },
+            "problemMatcher": []
+        }
+    ],
+    "version": "2.0.0"
+}
