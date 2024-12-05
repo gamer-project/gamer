@@ -761,9 +761,10 @@ struct InputPara_t
    int    IntOppSign0thOrder;
 #  ifdef SUPPORT_SPECTRAL_INT
    char  *SpecInt_TablePath;
+   int    SpecInt_GhostBoundary;
 #  if ( MODEL == ELBDM )
    int    SpecInt_XY_Instead_DePha;
-   double SpecInt_WavelengthMagnifier;
+   double SpecInt_VortexThreshold;
 #  endif
 #  endif
 
