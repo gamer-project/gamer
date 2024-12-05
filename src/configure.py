@@ -29,6 +29,8 @@ PRINT_WIDTH = 100
 GAMER_CONFIG_DIR  = os.path.join("..", "configs")
 GAMER_MAKE_BASE   = "Makefile_base"
 GAMER_MAKE_OUT    = "Makefile"
+GAMER_LOCAL_SETTING  = ".local_settings"
+GAMER_GLOBAL_SETTING = "~/.config/gamer/global_settings"
 GAMER_DESCRIPTION = "Prepare a customized Makefile for GAMER.\nDefault values are marked by '*'.\nUse -lh to show a detailed help message.\n"
 GAMER_EPILOG      = "2023 Computational Astrophysics Lab, NTU. All rights reserved.\n"
 
@@ -371,8 +373,8 @@ def load_arguments():
 
     # machine config setup
     parser.add_argument( "--machine", type=str, metavar="MACHINE",
-                         default="eureka_intel",
-                         help="Select the MACHINE.config file under ../configs directory.\nChoice: [eureka_intel, YOUR_MACHINE_NAME] => "
+                         default=None,
+                         help="Select the MACHINE.config file under ../configs directory.\nChoice: [eureka_intel, spock_intel, YOUR_MACHINE_NAME, ...] => "
                        )
 
     # A. options of diffierent physical models
@@ -729,8 +731,11 @@ def load_config( config ):
     paths, compilers = {}, {"CXX":"", "CXX_MPI":""}
     flags = {"CXXFLAG":"", "OPENMPFLAG":"", "LIBFLAG":"", "NVCCFLAG_COM":"", "NVCCFLAG_FLU":"", "NVCCFLAG_POT":""}
     gpus  = {"GPU_COMPUTE_CAPABILITY":""}
-    with open( config, 'r') as f:
-        lines = f.readlines()
+    if os.path.isfile( config ):
+        with open( config, 'r') as f:
+            lines = f.readlines()
+    else:
+        raise FileNotFoundError("The config file <%s> does not exist."%(config))
 
     for line in lines:
         temp = list( filter( None, re.split(" |:=|\n", line) ) ) # separate by " " and ":="
@@ -760,6 +765,9 @@ def load_config( config ):
     return paths, compilers, flags, gpus
 
 def set_conditional_defaults( args ):
+    if args['machine'] is None:
+        args['machine'] = get_machine()
+
     if args["unsplit_gravity"] is None:
         args["unsplit_gravity"] = (args["model"] == "HYDRO")
 
@@ -783,6 +791,33 @@ def set_conditional_defaults( args ):
     if args["barotropic"] is None:
         args["barotropic"] = (args["eos"] == "ISOTHERMAL")
     return args
+
+def get_machine():
+    '''
+    When the `--machine` flag is not given, this function will be called
+    and return the default machine in the following order:
+        1. Read the local setting located at `GAMER_LOCAL_SETTING`.
+        2. Read the global setting located at `GAMER_GLOBAL_SETTING`.
+        3. Fall back to `eureka_intel` for backward compatibility.
+    '''
+    # Check if GAMER_LOCAL_SETTING exists
+    local_setting = GAMER_LOCAL_SETTING
+    if os.path.isfile(local_setting):
+        with open(local_setting, 'r') as f:
+            for line in f:
+                tokens = line.strip().split()
+                if len(tokens) >= 2 and tokens[0] == 'machine_name':
+                    return tokens[1]
+    # Check if GAMER_GLOBAL_SETTING exists
+    global_setting = os.path.expanduser(GAMER_GLOBAL_SETTING)
+    if os.path.isfile(global_setting):
+        with open(global_setting, 'r') as f:
+            for line in f:
+                tokens = line.strip().split()
+                if len(tokens) >= 2 and tokens[0] == 'machine_name':
+                    return tokens[1]
+    # Fall back to `eureka_intel` for backward compatibility
+    return 'eureka_intel'
 
 def set_gpu( gpus, flags, args ):
     gpu_opts = {}
