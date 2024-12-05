@@ -3,4 +3,4 @@
 PYTHON=python3
 
 ${PYTHON} configure.py --machine=eureka_intel --gpu=true --fftw=FFTW3 --double=true \
-                       --model=HYDRO --gravity=true --eos=GAMMA
+                       --model=HYDRO --gravity=true --eos=GAMMA "$@"

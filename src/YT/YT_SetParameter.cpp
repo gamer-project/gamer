@@ -35,6 +35,7 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
    param_yt.length_unit             = UNIT_L;            // units are in cgs
    param_yt.mass_unit               = UNIT_M;
    param_yt.time_unit               = UNIT_T;
+   param_yt.velocity_unit           = UNIT_V;
 
 #  ifdef MHD
    param_yt.magnetic_unit           = UNIT_B;
