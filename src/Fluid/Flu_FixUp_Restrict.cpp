@@ -329,6 +329,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 #        else // #ifdef DUAL_ENERGY
 
 //       actually it might not be necessary to check the minimum internal energy here
+#        ifndef SRHD
          amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i]
             = Hydro_CheckMinEintInEngy( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
                                         amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMX][k][j][i],
@@ -336,6 +337,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                                         amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
                                         amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
                                         MIN_EINT, Emag );
+#        endif
 #        endif // #ifdef DUAL_ENERGY ... else ...
       } // i,j,k
 #     endif // #if ( MODEL == HYDRO )
