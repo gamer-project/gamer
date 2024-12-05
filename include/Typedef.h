@@ -28,6 +28,21 @@ typedef double real_par;
 typedef float  real_par;
 #endif
 
+#if ( GRAMFE_SCHEME == GRAMFE_FFT )
+#ifdef GRAMFE_FFT_FLOAT8
+typedef double gramfe_fft_float;
+#else
+typedef float  gramfe_fft_float;
+#endif
+#endif // #if ( GRAMFE_SCHEME == GRAMFE_FFT )
+
+#ifdef GRAMFE_MATMUL_FLOAT8
+typedef double gramfe_matmul_float;
+#else
+typedef float  gramfe_matmul_float;
+#endif
+
+
 // short names for unsigned type
 typedef unsigned short     ushort;
 typedef unsigned int       uint;
@@ -65,8 +80,20 @@ const TestProbID_t
    TESTPROB_HYDRO_JET_ICM_WALL                 =   52,
    TESTPROB_HYDRO_CDM_LSS                      =  100,
    TESTPROB_HYDRO_ZELDOVICH                    =  101,
-   TESTPROB_ELBDM_EXTPOT                       = 1000;
-
+   TESTPROB_ELBDM_EXTPOT                       = 1000,
+   TESTPROB_ELBDM_JEANS_INSTABILITY_COMOVING   = 1001,
+   TESTPROB_ELBDM_JEANS_INSTABILITY_PHYSICAL   = 1002,
+   TESTPROB_ELBDM_SOLITON                      = 1003,
+   TESTPROB_ELBDM_SELF_SIMILAR_HALO            = 1004,
+   TESTPROB_ELBDM_VORTEX_PAIR_ROTATING         = 1005,
+   TESTPROB_ELBDM_VORTEX_PAIR_LINEAR           = 1006,
+   TESTPROB_ELBDM_ISOLATED_HALO                = 1007,
+   TESTPROB_ELBDM_GAUSSIAN_WAVE_PACKET         = 1008,
+   TESTPROB_ELBDM_LSS                          = 1009,
+   TESTPROB_ELBDM_PLANE_WAVE                   = 1010,
+   TESTPROB_ELBDM_PERTURBATION                 = 1011,
+   TESTPROB_ELBDM_HALO_MERGER                  = 1012,
+   TESTPROB_ELBDM_DISK_HEATING                 = 1013;
 
 // program initialization options
 typedef int OptInit_t;
@@ -127,7 +154,8 @@ const IntScheme_t
    INT_CQUAD    = 4,
    INT_QUAD     = 5,
    INT_CQUAR    = 6,
-   INT_QUAR     = 7;
+   INT_QUAR     = 7,
+   INT_SPECTRAL = 8;
 
 
 // data reconstruction TVD limiters
@@ -298,7 +326,7 @@ const OptFluBC_t
    BC_FLU_DIODE      = 5;
 
 
-// the gravity boundary conditions
+// gravity boundary conditions
 typedef int OptPotBC_t;
 const OptPotBC_t
 #ifdef GRAVITY
@@ -480,6 +508,16 @@ typedef int SF_CreateStarScheme_t;
 const SF_CreateStarScheme_t
    SF_CREATE_STAR_SCHEME_NONE  = 0,
    SF_CREATE_STAR_SCHEME_AGORA = 1;
+#endif
+
+
+// ELBDM_REMOVE_MOTION_CM options
+#if ( MODEL == ELBDM )
+typedef int ELBDMRemoveMotionCM_t;
+const ELBDMRemoveMotionCM_t
+   ELBDM_REMOVE_MOTION_CM_NONE       = 0,
+   ELBDM_REMOVE_MOTION_CM_INIT       = 1,
+   ELBDM_REMOVE_MOTION_CM_EVERY_STEP = 2;
 #endif
 
 

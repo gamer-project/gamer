@@ -2,7 +2,10 @@
 
 #if ( defined GRAVITY  &&  defined SUPPORT_FFTW )
 
-extern root_fftw::real_plan_nd     FFTW_Plan_Poi;
+extern root_fftw::real_plan_nd FFTW_Plan_Poi;
+
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_GreenFuncK
@@ -39,26 +42,27 @@ void Init_GreenFuncK()
    local_ny_after_transpose      = NULL_INT;
    local_y_start_after_transpose = NULL_INT;
    total_local_size              = local_nx*local_ny*local_nz;
-#  else // # ifdef SERIAL
+#  else // #ifdef SERIAL
 #  if ( SUPPORT_FFTW == FFTW3 )
    total_local_size = fftw_mpi_local_size_3d_transposed( FFT_Size[2], local_ny, local_nx, MPI_COMM_WORLD,
-                           &local_nz, &local_z_start, &local_ny_after_transpose, &local_y_start_after_transpose );
-#  else // # if ( SUPPORT_FFTW == FFTW3 )
+                                                         &local_nz, &local_z_start, &local_ny_after_transpose,
+                                                         &local_y_start_after_transpose );
+#  else
    rfftwnd_mpi_local_sizes( FFTW_Plan_Poi, &local_nz, &local_z_start, &local_ny_after_transpose,
                             &local_y_start_after_transpose, &total_local_size );
-#  endif // #  if ( SUPPORT_FFTW == FFTW3 ) ... # else
-#  endif // # ifdef SERIAL
+#  endif
+#  endif // #ifdef SERIAL ... else ...
 
 // check integer overflow (assuming local_nx*local_ny*local_nz ~ total_local_size)
    const long local_nxyz = (long)local_nx*(long)local_ny*(long)local_nz;
 
-   if ( local_nx < 0 || local_ny < 0 || local_nz < 0 )
-      Aux_Error( ERROR_INFO, "local_nx/y/z (%ld, %ld, %ld) < 0 for FFT !!", local_nx, local_ny, local_nz );
+   if ( local_nx < 0  ||  local_ny < 0  ||  local_nz < 0 )
+      Aux_Error( ERROR_INFO, "local_nx/y/z (%ld, %ld, %ld) < 0 for FFT !!\n", local_nx, local_ny, local_nz );
 
    if (  ( sizeof(mpi_index_int) == sizeof(int) && local_nxyz > __INT_MAX__ )  ||  total_local_size < 0  )
       Aux_Error( ERROR_INFO, "local_nx*local_ny*local_nz = %d*%d*%d = %ld > __INT_MAX__ (%d)\n"
                      "        and/or total_local_size (%ld) < 0 for FFT, suggesting integer overflow !!\n"
-                     "        --> Try using more MPI processes\n",
+                     "        --> Try using more MPI processes or switching to FFTW3\n",
                  local_nx, local_ny, local_nz, local_nxyz, __INT_MAX__, total_local_size );
 
 
@@ -88,8 +92,10 @@ void Init_GreenFuncK()
 // ***by setting it equal to zero, we ignore the contribution from the mass within the same cell***
    if ( MPI_Rank == 0 )    GreenFuncK[0] = GFUNC_COEFF0*Coeff/dh0;
 
+
 // 4. convert the Green's function to the k space
    root_fftw_r2c( FFTW_Plan_Poi, GreenFuncK );
+
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 

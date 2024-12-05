@@ -58,6 +58,7 @@ double    Unit_L, Unit_M, Unit_T, Unit_V, Unit_D, Unit_E, Unit_P;
 
 #if ( MODEL == ELBDM )
 double    ELBDM_ETA;
+double    ELBDM_MASS;
 bool      ELBDM_IntPhase = true;
 #endif
 
@@ -571,6 +572,7 @@ void TakeNote( int argc, char *argv[] )
    printf( "MU                = %13.7e\n", MU                         );
 #  elif ( MODEL == ELBDM )
    printf( "ELBDM_ETA         = %13.7e\n", ELBDM_ETA );
+   printf( "ELBDM_MASS        = %13.7e\n", ELBDM_MASS );
    printf( "ELBDM_IntPhase    = %s\n",    (ELBDM_IntPhase)?"YES":"NO" );
 #  endif
    printf( "WithUnit          = %d\n",             WithUnit           );
@@ -1072,6 +1074,9 @@ void SetHDF5Info( hid_t &H5_FileID )
    H5Tinsert( H5_ComID_Info, "Unit_D",             HOFFSET(Info_t,Unit_D           ),  H5T_NATIVE_DOUBLE );
    H5Tinsert( H5_ComID_Info, "Unit_E",             HOFFSET(Info_t,Unit_E           ),  H5T_NATIVE_DOUBLE );
    H5Tinsert( H5_ComID_Info, "Unit_P",             HOFFSET(Info_t,Unit_P           ),  H5T_NATIVE_DOUBLE );
+#  if ( MODEL == ELBDM )
+   H5Tinsert( H5_ComID_Info, "ELBDM_Mass",         HOFFSET(Info_t,ELBDM_Mass       ),  H5T_NATIVE_DOUBLE );
+#  endif
 
 // free memory
    H5_Status = H5Tclose( H5_ArrID_3Int    );
@@ -1094,6 +1099,11 @@ void SetHDF5Info( hid_t &H5_FileID )
    Info.Unit_D     = (WithUnit) ? Unit_D : 1.0;
    Info.Unit_E     = (WithUnit) ? Unit_E : 1.0;
    Info.Unit_P     = (WithUnit) ? Unit_P : 1.0;
+#  if ( MODEL == ELBDM )
+   const double Const_eV = 1.6021766208e-12;
+   const double Const_c  = 2.99792458e10;
+   Info.ELBDM_Mass = (WithUnit) ? ELBDM_MASS*Unit_M/( Const_eV/(Const_c*Const_c) ) : ELBDM_MASS;
+#  endif
 
    for (int d=0; d<3; d++)
    {

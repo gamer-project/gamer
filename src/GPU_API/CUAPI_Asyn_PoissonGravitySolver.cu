@@ -48,10 +48,16 @@ void CUPOT_HydroGravitySolver(
 
 #elif ( MODEL == ELBDM )
 __global__
-void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ PS1*PS1*PS1 ],
-                               const real g_Pot_Array[][ GRA_NXT*GRA_NXT*GRA_NXT ],
+void CUPOT_ELBDMGravitySolver(       real g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
+                               const real g_Pot_Array[][ CUBE(GRA_NXT) ],
                                const real EtaDt, const real dh, const real Lambda );
 
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
+__global__
+void CUPOT_ELBDMGravitySolver_HamiltonJacobi(       real g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
+                                              const real g_Pot_Array[][ CUBE(GRA_NXT) ],
+                                              const real EtaDt, const real dh, const real Lambda );
+#endif
 #else
 #error : ERROR : unsupported MODEL !!
 #endif // MODEL
@@ -144,6 +150,7 @@ extern cudaStream_t *Stream;
 //                TimeOld            : Physical time at the previous step (for external gravity in UNSPLIT_GRAVITY)
 //                MinEint            : Internal energy floor
 //                GPU_NStream        : Number of CUDA streams for the asynchronous memory copy
+//                UseWaveFlag        : Determine whether to use wave or phase scheme
 //
 // Useless parameters in HYDRO : ELBDM_Eta, ELBDM_Lambda
 // Useless parameters in ELBDM : P5_Gradient
@@ -165,7 +172,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                       const real ELBDM_Lambda, const bool Poisson, const bool GraAcc,
                                       const bool SelfGravity, const OptExtPot_t ExtPot, const OptExtAcc_t ExtAcc,
                                       const double TimeNew, const double TimeOld, const real MinEint,
-                                      const int GPU_NStream )
+                                      const int GPU_NStream, const bool UseWaveFlag )
 {
 
 // model-independent constants
@@ -443,11 +450,20 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                     TimeNew, TimeOld, MinEint );
 
 #        elif ( MODEL == ELBDM )
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         if ( UseWaveFlag )
+#        endif
          CUPOT_ELBDMGravitySolver <<< NPatch_per_Stream[s], Gra_Block_Dim, 0, Stream[s] >>>
                                   ( d_Flu_Array_G      + UsedPatch[s],
                                     d_Pot_Array_P_Out  + UsedPatch[s],
-                                    d_Corner_Array_PGT + UsedPatch[s],
                                     ELBDM_EtaDt, dh, ELBDM_Lambda );
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         else
+         CUPOT_ELBDMGravitySolver_HamiltonJacobi <<< NPatch_per_Stream[s], Gra_Block_Dim, 0, Stream[s] >>>
+                                  ( d_Flu_Array_G      + UsedPatch[s],
+                                    d_Pot_Array_P_Out  + UsedPatch[s],
+                                    ELBDM_EtaDt, dh, ELBDM_Lambda );
+#        endif
 
 #        else
 #        error : ERROR : unsupported MODEL !!

@@ -36,11 +36,13 @@ extern real (*d_Flu_Array_T)[FLU_NIN_T][ CUBE(PS1) ];
 extern real (*d_Pot_Array_T)[ CUBE(GRA_NXT) ];
 extern double (*d_Corner_Array_PGT)[3];
 #endif
+#if ( MODEL == HYDRO )
 #ifdef MHD
 extern real (*d_Mag_Array_T)[NCOMP_MAG][ PS1P1*SQR(PS1) ];
 #else
 static real (*d_Mag_Array_T)[NCOMP_MAG][ PS1P1*SQR(PS1) ] = NULL;
 #endif
+#endif // HYDRO
 
 extern cudaStream_t *Stream;
 
@@ -126,6 +128,8 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
 
 // set the block size
    const int NPatch = NPatchGroup*8;
+
+#  if ( MODEL == HYDRO )
    dim3 BlockDim_dtSolver( 1, 1, 1 );
 
    switch ( TSolver )
@@ -143,6 +147,7 @@ void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real 
       default :
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "TSolver", TSolver );
    }
+#  endif
 
 
 // set the number of patches and the corresponding data size to be transferred into GPU in each stream

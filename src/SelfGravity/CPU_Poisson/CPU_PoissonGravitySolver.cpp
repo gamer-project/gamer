@@ -49,10 +49,16 @@ void CPU_HydroGravitySolver(
    const double TimeNew, const double TimeOld, const real MinEint );
 
 #elif ( MODEL == ELBDM )
-void CPU_ELBDMGravitySolver(       real Flu_Array[][GRA_NIN][PATCH_SIZE][PATCH_SIZE][PATCH_SIZE],
-                             const real Pot_Array[][GRA_NXT][GRA_NXT][GRA_NXT],
-                             const double Corner_Array[][3],
-                             const int NPatchGroup, const real EtaDt, const real dh, const real Lambda );
+void CPU_ELBDMGravitySolver(       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
+                             const real   g_Pot_Array[][ CUBE(GRA_NXT) ],
+                             const int NPatchGroup,
+                             const real EtaDt, const real dh, const real Lambda );
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
+void CPU_ELBDMGravitySolver_HamiltonJacobi(       real   g_Flu_Array[][GRA_NIN][ CUBE(PS1) ],
+                                            const real   g_Pot_Array[][ CUBE(GRA_NXT) ],
+                                            const int NPatchGroup,
+                                            const real EtaDt, const real dh, const real Lambda );
+#endif
 
 #else
 #error : ERROR : unsupported MODEL !!
@@ -103,8 +109,9 @@ void CPU_ELBDMGravitySolver(       real Flu_Array[][GRA_NIN][PATCH_SIZE][PATCH_S
 //                TimeNew            : Physical time at the current  step (for external gravity)
 //                TimeOld            : Physical time at the previous step (for external gravity in UNSPLIT_GRAVITY)
 //                MinEint            : Internal energy floor
+//                UseWaveFlag        : Determine whether to advance wave function or phase in ELBDM
 //
-// Useless parameters in HYDRO : ELBDM_Eta, ELBDM_Lambda
+// Useless parameters in HYDRO : ELBDM_Eta, ELBDM_Lambda, UseWaveFlag
 // Useless parameters in ELBDM : P5_Gradient
 //
 // Return      :  h_Pot_Array_Out, h_Flu_Array
@@ -124,7 +131,8 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
                                const real Poi_Coeff, const IntScheme_t IntScheme, const bool P5_Gradient,
                                const real ELBDM_Eta, const real ELBDM_Lambda, const bool Poisson, const bool GraAcc,
                                const bool SelfGravity, const OptExtPot_t ExtPot, const OptExtAcc_t ExtAcc,
-                               const double TimeNew, const double TimeOld, const real MinEint )
+                               const double TimeNew, const double TimeOld, const real MinEint,
+                               const bool UseWaveFlag )
 {
 
 // check
@@ -213,7 +221,19 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
                               TimeNew, TimeOld, MinEint );
 
 #     elif ( MODEL == ELBDM )
-      CPU_ELBDMGravitySolver( h_Flu_Array, h_Pot_Array_Out, h_Corner_Array, NPatchGroup, ELBDM_Eta*dt, dh, ELBDM_Lambda );
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      if ( UseWaveFlag ) {
+#     endif
+      CPU_ELBDMGravitySolver( (real(*)[GRA_NIN][ CUBE(PS1) ]) h_Flu_Array,
+                              (real(*)[ CUBE(GRA_NXT) ])      h_Pot_Array_Out,
+                              NPatchGroup, ELBDM_Eta*dt, dh, ELBDM_Lambda );
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      } else {
+      CPU_ELBDMGravitySolver_HamiltonJacobi( (real(*)[GRA_NIN][ CUBE(PS1) ]) h_Flu_Array,
+                                             (real(*)[ CUBE(GRA_NXT) ])      h_Pot_Array_Out,
+                                             NPatchGroup, ELBDM_Eta*dt, dh, ELBDM_Lambda );
+      }
+#     endif
 
 #     else
 #     error : ERROR : unsupported MODEL !!

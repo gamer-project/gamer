@@ -179,7 +179,8 @@ void LoadData_HDF5( const char *FileName )
    LoadField( "ELBDM_Mass",          &ELBDM_Mass,        H5_SetID_InputPara, H5_TypeID_InputPara,    Fatal,  NullPtr,        -1, NonFatal );
    LoadField( "ELBDM_PlanckConst",   &ELBDM_PlanckConst, H5_SetID_InputPara, H5_TypeID_InputPara,    Fatal,  NullPtr,        -1, NonFatal );
 
-   ELBDM_ETA = ELBDM_Mass / ELBDM_PlanckConst;
+   ELBDM_ETA  = ELBDM_Mass / ELBDM_PlanckConst;
+   ELBDM_MASS = ELBDM_Mass;
 #  endif
 
 // check if B field is included

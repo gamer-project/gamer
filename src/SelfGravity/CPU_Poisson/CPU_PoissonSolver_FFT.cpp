@@ -2,12 +2,13 @@
 
 #if ( defined GRAVITY  &&  defined SUPPORT_FFTW )
 
-
-
 static void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const int dj, const long RhoK_Size );
 static void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const long RhoK_Size );
 
-extern root_fftw::real_plan_nd     FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
+extern root_fftw::real_plan_nd FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
+
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  FFT_Periodic
@@ -126,6 +127,7 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 //-------------------------------------------------------------------------------------------------------
 void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const long RhoK_Size )
 {
+
    gamer_fftw::fft_complex *RhoK_cplx   = (gamer_fftw::fft_complex *)RhoK;
    gamer_fftw::fft_complex *gFuncK_cplx = (gamer_fftw::fft_complex *)gFuncK;
    gamer_fftw::fft_complex  Temp_cplx;
@@ -157,7 +159,6 @@ void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const l
 
    for (long t=0; t<RhoK_Size; t++)  RhoK[t] *= Coeff;
 #  endif
-
 
 } // FUNCTION : FFT_Isolated
 
@@ -195,26 +196,27 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
    local_ny_after_transpose      = NULL_INT;
    local_y_start_after_transpose = NULL_INT;
    total_local_size              = local_nx*local_ny*local_nz;
-#  else // # ifdef SERIAL
+#  else // #ifdef SERIAL
 #  if ( SUPPORT_FFTW == FFTW3 )
    total_local_size = fftw_mpi_local_size_3d_transposed( FFT_Size[2], local_ny, local_nx, MPI_COMM_WORLD,
-                           &local_nz, &local_z_start, &local_ny_after_transpose, &local_y_start_after_transpose );
-#  else // # if ( SUPPORT_FFTW == FFTW3 )
+                                                         &local_nz, &local_z_start, &local_ny_after_transpose,
+                                                         &local_y_start_after_transpose );
+#  else
    rfftwnd_mpi_local_sizes( FFTW_Plan_Poi, &local_nz, &local_z_start, &local_ny_after_transpose,
                             &local_y_start_after_transpose, &total_local_size );
-#  endif // #  if ( SUPPORT_FFTW == FFTW3 ) ... # else
 #  endif
+#  endif // #ifdef SERIAL ... else ...
 
 // check integer overflow (assuming local_nx*local_ny*local_nz ~ total_local_size)
    const long local_nxyz = (long)local_nx*(long)local_ny*(long)local_nz;
 
-   if ( local_nx < 0 || local_ny < 0 || local_nz < 0 )
-      Aux_Error( ERROR_INFO, "local_nx/y/z (%ld, %ld, %ld) < 0 for FFT !!", local_nx, local_ny, local_nz );
+   if ( local_nx < 0  ||  local_ny < 0  ||  local_nz < 0 )
+      Aux_Error( ERROR_INFO, "local_nx/y/z (%ld, %ld, %ld) < 0 for FFT !!\n", local_nx, local_ny, local_nz );
 
    if (  ( sizeof(mpi_index_int) == sizeof(int) && local_nxyz > __INT_MAX__ )  ||  total_local_size < 0  )
       Aux_Error( ERROR_INFO, "local_nx*local_ny*local_nz = %d*%d*%d = %ld > __INT_MAX__ (%d)\n"
                      "        and/or total_local_size (%ld) < 0 for FFT, suggesting integer overflow !!\n"
-                     "        --> Try using more MPI processes\n",
+                     "        --> Try using more MPI processes or switching to FFTW3\n",
                  local_nx, local_ny, local_nz, local_nxyz, __INT_MAX__, total_local_size );
 
 
@@ -236,11 +238,11 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
 // allocate memory (properly taking into account the zero-padding regions, where no data need to be exchanged)
    const int NRecvSlice = MIN( List_z_start[MPI_Rank]+local_nz, NX0_TOT[2] ) - MIN( List_z_start[MPI_Rank], NX0_TOT[2] );
 
-   real *RhoK         = (real* ) root_fftw::fft_malloc(sizeof(real) * total_local_size);   // array storing both density and potential
-   real *SendBuf      = new real [ (long)amr->NPatchComma[0][1]*CUBE(PS1) ];          // MPI send buffer for density and potential
-   real *RecvBuf      = new real [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];          // MPI recv buffer for density and potentia
-   long *SendBuf_SIdx = new long [ (long)amr->NPatchComma[0][1]*PS1 ];                // MPI send buffer for 1D coordinate in slab
-   long *RecvBuf_SIdx = new long [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice/SQR(PS1) ]; // MPI recv buffer for 1D coordinate in slab
+   real *RhoK         = (real*)root_fftw::fft_malloc( sizeof(real)*total_local_size ); // array storing both density and potential
+   real *SendBuf      = new real [ (long)amr->NPatchComma[0][1]*CUBE(PS1) ];           // MPI send buffer for density and potential
+   real *RecvBuf      = new real [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];           // MPI recv buffer for density and potentia
+   long *SendBuf_SIdx = new long [ (long)amr->NPatchComma[0][1]*PS1 ];                 // MPI send buffer for 1D coordinate in slab
+   long *RecvBuf_SIdx = new long [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice/SQR(PS1) ];  // MPI recv buffer for 1D coordinate in slab
 
    int  *List_PID    [MPI_NRank];   // PID of each patch slice sent to each rank
    int  *List_k      [MPI_NRank];   // local z coordinate of each patch slice sent to each rank
@@ -276,7 +278,7 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
                local_nz, FFT_Size, NRecvSlice, _POTE, InPlacePad );
 
 
-   root_fftw::fft_free(RhoK);
+   root_fftw::fft_free( RhoK );
    delete [] SendBuf;
    delete [] RecvBuf;
    delete [] SendBuf_SIdx;

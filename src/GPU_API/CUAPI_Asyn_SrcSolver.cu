@@ -81,6 +81,12 @@ void CUAPI_Asyn_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NX
 #  endif
 
 
+// EoS is not defined when MODEL != HYDRO
+#  if ( MODEL != HYDRO )
+   EoS_t EoS;
+#  endif
+
+
 // set the block size
    dim3 BlockDim_SrcSolver( SRC_BLOCK_SIZE, 1, 1 );
 

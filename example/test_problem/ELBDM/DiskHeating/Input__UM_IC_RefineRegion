@@ -1,0 +1,9 @@
+# For loading an AMR initial condition from a file --> OPT__INIT=3 && OPT__UM_IC_NLEVEL>1
+#
+# dLv       : target AMR level = OPT__UM_IC_LEVEL + dLv
+# NP_Skip_xL: number of patches on the parent level to be skipped in the x direction
+#             from the left edge of the parent refinement region
+# ==================================================================================
+#   dLv  NP_Skip_xL  NP_Skip_xR  NP_Skip_yL  NP_Skip_yR  NP_Skip_zL  NP_Skip_zR
+      1           7           7           7           7           7           7
+      2           25           25           25           25           25           25

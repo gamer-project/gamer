@@ -1,0 +1,5 @@
+# problem-specific runtime parameters
+VorPairRot_BgAmp     2.0      # psi(R,phi) = BgAmp - J1Amp*J1( sqrt(2*Eta*Omega)*R )*exp( i*(phi-Omega*t+Phase0) )
+VorPairRot_J1Amp     5.0      #
+VorPairRot_Omega     9.0e1    #
+VorPairRot_Phase0    0.0      # [0.0]

@@ -5,7 +5,7 @@ This section provides an overview of the spectral interpolation method in GAMER 
 
 ### Compilation and Runtime Settings
 - **Compile-Time Flag**: Ensure GAMER is compiled with `SUPPORT_SPECTRAL_INT` (or configured with `--spectral_interpolation`).
-- **Runtime Parameters**: Set `OPT__FLU_INT_SCHEME` and `OPT__REF_FLU_INT_SCHEME` to `8` for enabling spectral interpolation. Set `SPEC_INT_TABLE_PATH` to the directory containing `interpolation_tables` and `boundary2extension_tables`. Enable `SPEC_INT_XY_INSTEAD_DEPHA` to interpolate x = density^0.5\*cos( phase/SPEC_INT_WAVELENGTH_MAGNIFIER ), y = density^0.5\*sin( phase/SPEC_INT_WAVELENGTH_MAGNIFIER ) instead of density and phase, which has the advantage of being well-defined across vortices. `SPEC_INT_WAVELENGTH_MAGNIFIER` is the stretching factor of wavelength; setting it to unity gives x=real part and y=imaginary part.
+- **Runtime Parameters**: Set `OPT__FLU_INT_SCHEME` and `OPT__REF_FLU_INT_SCHEME` to `8` for enabling spectral interpolation. Set `SPEC_INT_TABLE_PATH` to the directory containing `interpolation_tables` and `boundary2extension_tables`. Enable `SPEC_INT_XY_INSTEAD_DEPHA` to interpolate real and imaginary parts instead of density and phase around vortices, which has the advantage of being well-defined across vortices. `SPEC_INT_VORTEX_THRESHOLD` sets the vortex detection threshold for `SPEC_INT_XY_INSTEAD_DEPHA`. If the laplacian of the phase field exceeds this threshold, we interpolate the real and imaginary parts. `SPEC_INT_GHOST_BOUNDARY` sets the ghost boundary size for spectral interpolation. A large ghost boundary increases interpolation accuracy but can negatively affect performance.
 
 ### Obtaining Interpolation Tables
 

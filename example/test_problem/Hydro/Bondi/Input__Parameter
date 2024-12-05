@@ -215,8 +215,9 @@ INIT_DUMPID                  -1           # set the first dump ID (<0=auto) [-1]
 
 # yt inline analysis (SUPPORT_LIBYT only)
 YT_SCRIPT                     yt_inline   # yt inline analysis script (do not include the ".py" file extension)
-YT_VERBOSE                    1           # verbose level of yt: (0=off, 1=info, 2=warning, 3=debug) [1]
-YT_FIG_BASENAME               Fig         # figure basename, use libyt default if not set: (default=Fig%9d)
+YT_VERBOSE                    1           # verbose level of yt (0=off, 1=info, 2=warning, 3=debug) [1]
+YT_FIG_BASENAME               Fig         # figure basename [Fig]
+YT_JUPYTER_USE_CONNECTION_FILE 0          # use user-provided connection file when using libyt Jupyter UI [0]
 
 
 # miscellaneous

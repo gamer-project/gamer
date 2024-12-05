@@ -1,11 +1,6 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
-#if ( MODEL == HYDRO )
 
-static void JetBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
-                   const int GhostSize, const int idx[], const double pos[], const double Time,
-                   const int lv, const int TFluVarIdxList[], double AuxArray[] );
 
 static FieldIdx_t JetFieldIdx  = Idx_Undefined;
 static FieldIdx_t ICMFieldIdx  = Idx_Undefined;
@@ -14,7 +9,6 @@ static FieldIdx_t IntFieldIdx  = Idx_Undefined;
 
 // problem-specific global variables
 // =======================================================================================
-
 // background parameters
 static double   ICM_Density;             // ICM density
 static double   Jump_Position_x;         // position of interface
@@ -44,8 +38,12 @@ static double   Jet_Cosine;              // jet relativistic gamma
 static double   Jet_Sine;                // jet relativistic gamma
 static double   Jump_Sine;
 static double   Jump_Cosine;
-
 // =======================================================================================
+
+static void JetBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                   const int GhostSize, const int idx[], const double pos[], const double Time,
+                   const int lv, const int TFluVarIdxList[], double AuxArray[] );
+
 
 
 
@@ -97,6 +95,7 @@ void Validate()
 
 
 
+#if ( MODEL == HYDRO )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -166,8 +165,8 @@ void SetParameter()
    Jump_Width        *= Const_kpc / UNIT_L;
    Jet_PrecessPeriod *= 1000.0*Const_yr / UNIT_T;
 
-// (2) set the problem-specific derived parameters
 
+// (2) set the problem-specific derived parameters
    Jump_Tangent     = tan( Jump_Angle*M_PI/180.0 );
    Jump_Sine        = sin( Jump_Angle*M_PI/180.0 );
    Jump_Cosine      = cos( Jump_Angle*M_PI/180.0 );
@@ -179,20 +178,21 @@ void SetParameter()
    Jet_Cosine       = cos( Jet_PrecessAngle*M_PI/180.0 );
    Jet_Sine         = sin( Jet_PrecessAngle*M_PI/180.0 );
 
+
 // (3) reset other general-purpose parameters
-//     --> a helper macro PRINT_RESET_PARA is defined in TestProb.h
    const long   End_Step_Default = __INT_MAX__;
    const double End_T_Default    = 100.0*Const_kyr / UNIT_T;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
-      PRINT_RESET_PARA(END_STEP, FORMAT_LONG, "" );
+      PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
    }
 
    if ( END_T < 0.0 ) {
       END_T = End_T_Default;
-      PRINT_RESET_PARA(END_T, FORMAT_REAL, "" );
+      PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
    }
+
 
 // (4) make a note
    if ( MPI_Rank == 0 )
@@ -223,6 +223,7 @@ void SetParameter()
    {
      Aux_Message( stdout, "=============================================================================\n" );
    }
+
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
 
@@ -410,7 +411,9 @@ void AddNewField_JetICMWall()
   if ( IntFieldIdx == Idx_Undefined )
     IntFieldIdx = AddField( "IntField", FIXUP_FLUX_YES, FIXUP_REST_YES,
                             NORMALIZE_YES, INTERP_FRAC_NO );
-}
+
+} // FUNCTION : AddNewField_JetICMWall
+#endif // #if ( MODEL == HYDRO )
 
 
 
@@ -434,11 +437,12 @@ void Init_TestProb_Hydro_JetICMWall()
    Validate();
 
 
+#  if ( MODEL == HYDRO )
 // set the problem-specific runtime parameters
    SetParameter();
 
 
-// get enclosed mass
+// set the function pointers of various problem-specific routines
    Init_Function_User_Ptr   = SetGridIC;
    Init_Field_User_Ptr      = AddNewField_JetICMWall;
    Flag_User_Ptr            = NULL;
@@ -449,9 +453,9 @@ void Init_TestProb_Hydro_JetICMWall()
    Output_User_Ptr          = NULL;
    Aux_Record_User_Ptr      = NULL;
    End_User_Ptr             = NULL;
+#  endif // #if ( MODEL == HYDRO )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_TestProb_SRHydro_JetICMWall
-#endif // #if ( MODEL == HYDRO )

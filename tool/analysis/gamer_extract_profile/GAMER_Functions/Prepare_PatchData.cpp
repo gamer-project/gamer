@@ -408,7 +408,7 @@ void Prepare_PatchData( const int lv, real *h_Input_Array, const int GhostSize, 
    } // OpenMP parallel region
 
 
-// free memroy
+// free memory
    for (int s=0; s<26; s++)   delete [] TSib[s];
 
 } // FUNCTION : Prepare_PatchData

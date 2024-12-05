@@ -1016,7 +1016,9 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 
    if ( FormatVersion < 2210 )   opt__output_cc_mag = false;
 
+#  if ( MODEL == HYDRO )
    if ( FormatVersion < 2220 )   eos                = EOS_GAMMA;
+#  endif
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading simulation parameters ... done\n" );
@@ -1194,7 +1196,9 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 
       CompareVar( "MAX_PATCH", max_patch, MAX_PATCH, NonFatal );
 
+#     if ( MODEL == HYDRO )
       CompareVar( "EOS",       eos,       EOS,       NonFatal );
+#     endif
 
 
 

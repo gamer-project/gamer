@@ -1,0 +1,6 @@
+# problem-specific runtime parameters
+Gau_v0        3.0                    # mean velocity [1.0]
+Gau_Width     1.0e-1                 # Gaussian width [0.1]
+Gau_Center    0.125                  # Gaussian center [box center]
+Gau_XYZ       0                      # wave propagation direction (0/1/2 --> x/y/z) [0]
+Gau_PeriodicN 0                      # periodic boundary condition (0 = non-periodic, >0 = number of periodic images each side) [0]

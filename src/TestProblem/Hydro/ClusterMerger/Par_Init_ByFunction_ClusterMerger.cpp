@@ -138,7 +138,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
    for ( int c=0; c<NCluster; c++ )
    {
       // load data
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading cluster %d ... \n", c+1 );
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading cluster %d ...\n", c+1 );
 
       real_par_in *mass  = new real_par_in [NPar_ThisRank_EachCluster[c]];
       real_par_in *xpos  = new real_par_in [NPar_ThisRank_EachCluster[c]];
@@ -165,7 +165,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
       // store data to the particle repository
       if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "   Storing cluster %d to the particle repository ... \n", c+1 );
+         Aux_Message( stdout, "   Storing cluster %d to the particle repository ...\n", c+1 );
 
       // Compute offsets for assigning particles
 
