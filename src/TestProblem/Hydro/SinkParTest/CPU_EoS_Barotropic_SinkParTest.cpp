@@ -6,7 +6,7 @@
 
 #if ( MODEL == HYDRO )
 
-extern double rho_AD_SinkParTest_SinkParTest;
+extern double rho_AD_SinkParTest;
 
 
 /********************************************************
