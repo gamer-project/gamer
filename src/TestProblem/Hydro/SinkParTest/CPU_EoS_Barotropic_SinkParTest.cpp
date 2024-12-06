@@ -9,15 +9,15 @@
 static double     rho_AD;
 
 // Load the problem-specific runtime parameters
-   const char FileName[] = "Input__TestProb";
-   ReadPara_t *ReadPara  = new ReadPara_t;
+const char FileName[] = "Input__TestProb";
+ReadPara_t *ReadPara  = new ReadPara_t;
 
-   ReadPara->Add( "rho_AD",         &rho_AD,             0.0,           0.0,              NoMax_double      );
+ReadPara->Add( "rho_AD",         &rho_AD,             0.0,           0.0,              NoMax_double      );
 
-   ReadPara->Read( FileName );
-   delete ReadPara;
+ReadPara->Read( FileName );
+delete ReadPara;
 
-   rho_AD /= UNIT_D;
+rho_AD /= UNIT_D;
 
 /********************************************************
 1. Template of a user-defined EoS (EOS_USER)
