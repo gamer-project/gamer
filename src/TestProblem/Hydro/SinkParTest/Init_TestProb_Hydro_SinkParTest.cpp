@@ -466,10 +466,10 @@ void Init_TestProb_Hydro_SinkParTest()
 // #  ifdef FEEDBACK
 //    FB_Init_User_Ptr                  = FB_Init_SinkAccretion;
 // #  endif
-// #  if ( EOS == EOS_USER )
-//    EoS_Init_Ptr                      = EoS_Init_Barotropic_BBTest; // option: EOS in the Makefile;     example: EoS/User_Template/CPU_EoS_User_Template.cpp
-//    EoS_End_Ptr                       = NULL;
-// #  endif
+#  if ( EOS == EOS_USER )
+   EoS_Init_Ptr                      = EoS_Init_Barotropic_SinkParTest; // option: EOS in the Makefile;     example: EoS/User_Template/CPU_EoS_User_Template.cpp
+   EoS_End_Ptr                       = NULL;
+#  endif
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
