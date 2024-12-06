@@ -50,7 +50,7 @@ static char       Tur_Table[MAX_STRING];
 // void FB_Init_SinkAccretion();
 // #endif
 #  if ( EOS == EOS_USER )
-void EoS_Init_Barotropic_BBTest();
+void EoS_Init_Barotropic_SinkParTest();
 #  endif
 
 
