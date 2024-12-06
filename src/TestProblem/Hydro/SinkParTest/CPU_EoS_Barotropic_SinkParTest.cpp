@@ -1,5 +1,5 @@
 #include "CUFLU.h"
-#include "ReadPara.h"
+#include "TestProb.h"
 #ifdef __CUDACC__
 #include "CUDA_CheckError.h"
 #include "CUFLU_Shared_FluUtility.cu"
