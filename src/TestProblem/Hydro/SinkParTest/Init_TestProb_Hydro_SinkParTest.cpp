@@ -245,7 +245,7 @@ void SetParameter()
 } // FUNCTION : SetParameter
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Load_Turbulence_BB
+// Function    :  Load_Turbulence_SinkParTest
 // Description : load turbulence and calculate Vrms_Scale
 // Note        :
 // Parameter   :
@@ -284,7 +284,7 @@ void Load_Turbulence_SinkParTest()
    Vrms = SQRT( (Total_VelX_SQR + Total_VelY_SQR + Total_VelZ_SQR) / Total_Vrms_Count - 
                 SQR( (Total_VelX + Total_VelY + Total_VelZ) / Total_Vrms_Count ) );
    Vrms_Scale = Mach_num * Cs / Vrms;
-} // Function : Load_Turbulence_BB
+} // Function : Load_Turbulence_SinkParTest
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetGridIC
@@ -474,4 +474,4 @@ void Init_TestProb_Hydro_SinkParTest()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_TestProb_Hydro_BBTest
+} // FUNCTION : Init_TestProb_Hydro_SinkParTest
