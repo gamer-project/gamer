@@ -42,7 +42,7 @@ static double     Dens_Contrast;
 static double     B0;
 static double     theta_B;
 static double     Mach_num;
-// double            rho_AD_BB;                      // adiabatic density thresheld
+double            rho_AD_SinkParTest;                      // adiabatic density thresheld
 static char       Tur_Table[MAX_STRING];
 // =======================================================================================
 
@@ -163,7 +163,7 @@ void SetParameter()
    ReadPara->Add( "B0"     ,           &B0,                    0.0,           0.0,              NoMax_double      );
    ReadPara->Add( "theta_B",           &theta_B,               0.0,           0.0,              NoMax_double      );
    ReadPara->Add( "Mach_num",          &Mach_num,              0.0,           0.0,              NoMax_double      );
-//    ReadPara->Add( "rho_AD_BB",         &rho_AD_BB,             0.0,           0.0,              NoMax_double      );
+   ReadPara->Add( "rho_AD_SinkParTest",&rho_AD_SinkParTest,    0.0,           0.0,              NoMax_double      );
    ReadPara->Add( "Tur_Table",         Tur_Table,              NoDef_str,     Useless_str,      Useless_str       );
 
    ReadPara->Read( FileName );
@@ -202,7 +202,7 @@ void SetParameter()
    R0 /= UNIT_L;
    Rho0 = 3.0 * Core_Mass / (4.0 * M_PI * CUBE(R0));
    Omega0 /= 1/UNIT_T;
-//    rho_AD_BB /= UNIT_D;
+   rho_AD_SinkParTest /= UNIT_D;
    theta_B = theta_B*M_PI/180; // degree to radian
 
 // (3) reset other general-purpose parameters
@@ -235,7 +235,7 @@ void SetParameter()
       Aux_Message( stdout, "  B angle               = %13.7e radian\n", theta_B                              );
       Aux_Message( stdout, "  Mach number           = %13.7e \n",       Mach_num                             );
       Aux_Message( stdout, "  Turbulence table      = %s\n",            Tur_Table                            );
-    //   Aux_Message( stdout, "  rho_AD_BB             = %13.7e g/cm3\n",  rho_AD_BB                            );
+      Aux_Message( stdout, "  rho_AD_SinkParTest    = %13.7e g/cm3\n",  rho_AD_SinkParTest                   );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 

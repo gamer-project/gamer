@@ -8,5 +8,5 @@ Dens_Contrast                100            # density contrast outside R0
 B0                           5e-6           # B field strenght [G]
 theta_B                      0.0            # angle between B and z-axis [degree]
 Mach_num                     0.0            # Mach number for turbulence
-# rho_AD_SC                    1e-14          # transition density for Barotropic EOS [g/cm^-3]
+rho_AD_SinkParTest           1e-14          # transition density for Barotropic EOS [g/cm^-3]
 Tur_Table                    Tur_Table      # the turbulence table
