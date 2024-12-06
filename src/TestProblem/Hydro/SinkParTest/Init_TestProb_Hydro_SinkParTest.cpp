@@ -49,9 +49,9 @@ static char       Tur_Table[MAX_STRING];
 // #ifdef FEEDBACK
 // void FB_Init_SinkAccretion();
 // #endif
-// #  if ( EOS == EOS_USER )
-// void EoS_Init_Barotropic_BBTest();
-// #  endif
+#  if ( EOS == EOS_USER )
+void EoS_Init_Barotropic_BBTest();
+#  endif
 
 
 //-------------------------------------------------------------------------------------------------------

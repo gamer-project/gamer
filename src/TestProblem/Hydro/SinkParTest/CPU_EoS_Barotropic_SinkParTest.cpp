@@ -1,4 +1,5 @@
 #include "CUFLU.h"
+#include "TestProb.h"
 #ifdef __CUDACC__
 #include "CUDA_CheckError.h"
 #include "CUFLU_Shared_FluUtility.cu"
@@ -6,7 +7,18 @@
 
 #if ( MODEL == HYDRO )
 
-extern double rho_AD_SinkParTest;
+static double     rho_AD;
+
+// Load the problem-specific runtime parameters
+const char FileName[] = "Input__TestProb";
+ReadPara_t *ReadPara  = new ReadPara_t;
+
+ReadPara->Add( "rho_AD",         &rho_AD,             0.0,           0.0,              NoMax_double      );
+
+ReadPara->Read( FileName );
+delete ReadPara;
+
+rho_AD /= UNIT_D;
 
 /********************************************************
 1. Template of a user-defined EoS (EOS_USER)
@@ -60,12 +72,12 @@ void EoS_SetAuxArray_Barotropic_SinkParTest( double AuxArray_Flt[], int AuxArray
                                    : MOLECULAR_WEIGHT;
    AuxArray_Flt[5] = 1.0 / AuxArray_Flt[4];
    AuxArray_Flt[6] = ISO_TEMP;
-   AuxArray_Flt[7] = rho_AD_SinkParTest;
+   AuxArray_Flt[7] = rho_AD;
 
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "   Background temperature       = %13.7e K\n"    ,    ISO_TEMP      );
-      Aux_Message( stdout, "   Adiabatic density            = %13.7e g/cm3\n",    rho_AD_SinkParTest*UNIT_D );
+      Aux_Message( stdout, "   Adiabatic density            = %13.7e g/cm3\n",    rho_AD*UNIT_D );
    }
 
 } // FUNCTION : EoS_SetAuxArray_Barotropic_SinkParTest
@@ -122,10 +134,10 @@ static real EoS_DensEint2Pres_Barotropic_SinkParTest( const real Dens, const rea
    const real Gamma_m1  = (real)AuxArray_Flt[1];
    const real _m_kB     = (real)AuxArray_Flt[5];
    const real T0        = (real)AuxArray_Flt[6];
-   const real rho_AD_SinkParTest    = (real)AuxArray_Flt[7];
+   const real rho_AD    = (real)AuxArray_Flt[7];
    real Temp, Cs2, Pres;
 
-   Temp = T0*( 1+ POW( Dens / rho_AD_SinkParTest, Gamma_m1 ) );
+   Temp = T0*( 1+ POW( Dens / rho_AD, Gamma_m1 ) );
    Cs2  = Temp*_m_kB;
    Pres = Cs2*Dens;
 
@@ -245,10 +257,10 @@ static real EoS_DensPres2CSqr_Barotropic_SinkParTest( const real Dens, const rea
    const real Gamma_m1  = (real)AuxArray_Flt[1];
    const real _m_kB     = (real)AuxArray_Flt[5];
    const real T0        = (real)AuxArray_Flt[6];
-   const real rho_AD_SinkParTest    = (real)AuxArray_Flt[7];
+   const real rho_AD    = (real)AuxArray_Flt[7];
    real Temp, Cs2;
 
-   Temp = T0*( 1+ POW( Dens / rho_AD_SinkParTest, Gamma_m1 ) );
+   Temp = T0*( 1+ POW( Dens / rho_AD, Gamma_m1 ) );
    Cs2  = Temp*_m_kB;
 
 // check
@@ -303,10 +315,10 @@ static real EoS_DensEint2Temp_Barotropic_SinkParTest( const real Dens, const rea
 
    const real Gamma_m1  = (real)AuxArray_Flt[1];
    const real T0        = (real)AuxArray_Flt[6];
-   const real rho_AD_SinkParTest    = (real)AuxArray_Flt[7];
+   const real rho_AD    = (real)AuxArray_Flt[7];
    real Temp;
 
-   Temp = T0*( 1+ POW( Dens / rho_AD_SinkParTest, Gamma_m1 ) );
+   Temp = T0*( 1+ POW( Dens / rho_AD, Gamma_m1 ) );
 
 
 // check
