@@ -298,7 +298,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
 
 //    check the minimum pressure/internal energy and, when the dual-energy formalism is adopted, ensure the consistency between
 //    pressure, total energy density, and the dual-energy variable
-#     if ( MODEL == HYDRO )
+#     if ( MODEL == HYDRO  && !defined SRHD )
 //    apply this correction only when preparing all fluid variables or magnetic field
 #     ifdef MHD
       if (  ( TVarCC & EoSVar ) == EoSVar ||  ResMag  )
@@ -345,7 +345,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                                         MIN_EINT, Emag );
 #        endif // #ifdef DUAL_ENERGY ... else ...
       } // i,j,k
-#     endif // #if ( MODEL == HYDRO )
+#     endif // #if ( MODEL == HYDRO  && !defined SRHD )
 
 
 //    rescale real and imaginary parts to get the correct density in ELBDM
