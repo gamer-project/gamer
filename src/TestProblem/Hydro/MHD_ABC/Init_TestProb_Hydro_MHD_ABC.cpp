@@ -232,6 +232,36 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 
 } // FUNCTION : SetBFieldIC
 #endif // #ifdef MHD
+
+
+
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Output_HDF5_TestProb
+// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype
+//                3. There MUST be more than one parameter to be stored
+//                4. The pointer of the data MUST still exist outside the function, e.g. global variables
+//
+// Parameter   :  HDF5_InputTest : the structure storing the parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
+{
+
+   HDF5_InputTest->Add( "ABC_Rho0",    &ABC_Rho0    );
+   HDF5_InputTest->Add( "ABC_P0",      &ABC_P0      );
+   HDF5_InputTest->Add( "ABC_V0",      &ABC_V0      );
+   HDF5_InputTest->Add( "ABC_CoeffA",  &ABC_CoeffA  );
+   HDF5_InputTest->Add( "ABC_CoeffB",  &ABC_CoeffB  );
+   HDF5_InputTest->Add( "ABC_CoeffC",  &ABC_CoeffC  );
+   HDF5_InputTest->Add( "ABC_NPeriod", &ABC_NPeriod );
+
+} // FUNCTION : Output_HDF5_TestProb
+#endif // #ifdef SUPPORT_HDF5
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -264,6 +294,9 @@ void Init_TestProb_Hydro_MHD_ABC()
    Init_Function_User_Ptr        = SetGridIC;
 #  ifdef MHD
    Init_Function_BField_User_Ptr = SetBFieldIC;
+#  endif
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_TestProb_Ptr      = Output_HDF5_TestProb;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

@@ -234,6 +234,34 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Output_HDF5_TestProb
+// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype
+//                3. There MUST be more than one parameter to be stored
+//                4. The pointer of the data MUST still exist outside the function, e.g. global variables
+//
+// Parameter   :  HDF5_InputTest : the structure storing the parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
+{
+
+   HDF5_InputTest->Add( "Gra_DensProf",    &Gra_DensProf    );
+   HDF5_InputTest->Add( "Gra_Radius0",     &Gra_Radius0     );
+   HDF5_InputTest->Add( "Gra_Dens0",       &Gra_Dens0       );
+   HDF5_InputTest->Add( "Gra_NIterPerf",   &Gra_NIterPerf   );
+   HDF5_InputTest->Add( "Gra_PerfExcRoot", &Gra_PerfExcRoot );
+
+} // FUNCTION : Output_HDF5_TestProb
+#endif // #ifdef SUPPORT_HDF5
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  OutputError
 // Description :  Output the gravitational potential errors
@@ -421,9 +449,12 @@ void Init_TestProb_Hydro_Gravity()
    SetParameter();
 
 
-   Init_Function_User_Ptr = SetGridIC;
-   Output_User_Ptr        = OutputError;
-   Aux_Record_User_Ptr    = Aux_Record_Gravity;
+   Init_Function_User_Ptr   = SetGridIC;
+   Output_User_Ptr          = OutputError;
+   Aux_Record_User_Ptr      = Aux_Record_Gravity;
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_TestProb_Ptr = Output_HDF5_TestProb;
+#  endif
 #  endif
 
 
