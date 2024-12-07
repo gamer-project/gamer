@@ -276,23 +276,21 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
    double RelativeBHVel[3] = { BH_Vel[0][0]-BH_Vel[1][0], BH_Vel[0][1]-BH_Vel[1][1], BH_Vel[0][2]-BH_Vel[1][2] };
    double AbsRelPos        = sqrt( SQR(RelativeBHPos[0]) + SQR(RelativeBHPos[1]) + SQR(RelativeBHPos[2]) );
    double AbsRelVel        = sqrt( SQR(RelativeBHVel[0]) + SQR(RelativeBHVel[1]) + SQR(RelativeBHVel[2]) );
-   double escape_vel[2];
+   double escape_vel;
    double soften           = amr->dh[MAX_LEVEL];
    if ( AbsRelPos > soften )
    {
-      escape_vel[0] = sqrt( 2 * NEWTON_G * Bondi_MassBH2 / AbsRelPos );
-      escape_vel[1] = sqrt( 2 * NEWTON_G * Bondi_MassBH1 / AbsRelPos );
+      escape_vel = sqrt( 2 * NEWTON_G * (Bondi_MassBH1+Bondi_MassBH2) / AbsRelPos );
    }
    else
    {
-      escape_vel[0] = sqrt( 2 * NEWTON_G * Bondi_MassBH2 / soften );
-      escape_vel[1] = sqrt( 2 * NEWTON_G * Bondi_MassBH1 / soften );
+      escape_vel = sqrt( 2 * NEWTON_G * (Bondi_MassBH1+Bondi_MassBH2) / soften );
    } // if ( AbsRelPos > soften ) ... else ...
 
 // merge the two BHs if they are located within R_acc, and the relative velocity is small enough
    if ( Merger_Coll_NumHalos == 2 )
    {
-      if ( AbsRelPos < R_acc  &&  ( AbsRelVel < 3*escape_vel[1]  ||  AbsRelVel < 3*escape_vel[0] ) )
+      if ( AbsRelPos < R_acc  &&  AbsRelVel < 3*escape_vel )
       {
          Merger_Coll_NumHalos -= 1;
          if ( Bondi_MassBH1 >= Bondi_MassBH2 )   merge_index = 1;   // record BH 1 merge BH 2 / BH 2 merge BH 1
@@ -312,12 +310,12 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
          Aux_Message( stdout, "BHs Merge! In rank %d, TimeNew = %14.8e; merge_index = %d, "
                               "BHPos1 = %14.8e, %14.8e, %14.8e; BHPos2 = %14.8e, %14.8e, %14.8e; "
                               "BHVel1 = %14.8e, %14.8e, %14.8e; BHVel2 = %14.8e, %14.8e, %14.8e; "
-                              "AbsRelPos = %14.8e, AbsRelVel = %14.8e, escape_vel[0] = %14.8e, escape_vel[1] = %14.8e.\n",
+                              "AbsRelPos = %14.8e, AbsRelVel = %14.8e, escape_vel = %14.8e.\n",
                       MPI_Rank, TimeNew, merge_index,
                       BH_Pos[0][0], BH_Pos[0][1], BH_Pos[0][2], BH_Pos[1][0], BH_Pos[1][1], BH_Pos[1][2],
                       BH_Vel[0][0], BH_Vel[0][1], BH_Vel[0][2], BH_Vel[1][0], BH_Vel[1][1], BH_Vel[1][2],
-                      AbsRelPos, AbsRelVel, escape_vel[0], escape_vel[1] );
-      } // if ( AbsRelPos < R_acc  &&  ( AbsRelVel < 3*escape_vel[1]  ||  AbsRelVel < 3*escape_vel[0] ) )
+                      AbsRelPos, AbsRelVel, escape_vel );
+      } // if ( AbsRelPos < R_acc  &&  AbsRelVel < 3*escape_vel )
    } // if ( Merger_Coll_NumHalos == 2 )
 
 
