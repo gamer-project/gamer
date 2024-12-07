@@ -38,6 +38,8 @@ void Src_Close( const int lv, const int SaveSg_Flu, const real h_Flu_Array_S_Out
                  FLU_NOUT_S*CUBE(PS1)*sizeof(real) );
 
 #        if ( defined GAMER_DEBUG  &&  defined TCOOL )
+         if ( ! SrcTerms.ExactCooling )   continue;
+
          for (int k=0; k<PS1; k++)
          for (int j=0; j<PS1; j++)
          for (int i=0; i<PS1; i++)
