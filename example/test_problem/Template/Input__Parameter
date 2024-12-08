@@ -360,8 +360,10 @@ INT_MONO_COEFF_B              2.0         # coefficient for ensuring the interpo
 MONO_MAX_ITER                 10          # maximum number of iterations to reduce INT_MONO_COEFF when interpolation fails (0=off) [10]
 INT_OPP_SIGN_0TH_ORDER        1           # switch to 0th-order interpolation if adjacent values change signs [HYDRO:1; ELBDM:0]
 SPEC_INT_TABLE_PATH           ./          # path to tables for spectral interpolation ##ELBDM & SUPPORT_SPECTRAL_INT ONLY##
-SPEC_INT_XY_INSTEAD_DEPHA     1           # interpolate x and y (real and imaginary part in current implementation) around vortices instead of density for the spectral interpolation, which has the advantage of being well-defined across vortices [1]  ##ELBDM & SUPPORT_SPECTRAL_INT ONLY##
-SPEC_INT_VORTEX_THRESHOLD     0.1         # vortex detection threshold for SPEC_INT_XY_INSTEAD_DEPHA --> for SPEC_INT_VORTEX_THRESHOLD=0, x=real part and y=imaginary part [0.1] ##ELBDM & SUPPORT_SPECTRAL_INT ONLY##
+SPEC_INT_XY_INSTEAD_DEPHA     1           # interpolate x and y (real and imaginary parts in current implementation)
+                                          # around vortices instead of density and phase for the spectral interpolation,
+                                          # which has the advantage of being well-defined across vortices [1] ##ELBDM & SUPPORT_SPECTRAL_INT ONLY##
+SPEC_INT_VORTEX_THRESHOLD     0.1         # vortex detection threshold for SPEC_INT_XY_INSTEAD_DEPHA [0.1] ##ELBDM & SUPPORT_SPECTRAL_INT ONLY##
 SPEC_INT_GHOST_BOUNDARY       4           # ghost boundary size for spectral interpolation [4] ##ELBDM & SUPPORT_SPECTRAL_INT ONLY##
 
 
@@ -371,6 +373,7 @@ OPT__OUTPUT_PART              0           # output a single line or slice: (0=of
 OPT__OUTPUT_TEXT_FORMAT_FLT   %24.16e     # string format of output text files [%24.16e]
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
 OPT__OUTPUT_PAR_MODE          0           # output the particle data: (0=off, 1=text-file, 2=C-binary) [0] ##PARTICLE ONLY##
+OPT__OUTPUT_PAR_MESH          1           # output the attributes of tracer particles mapped from mesh quantities -> edit "Input__Par_Mesh" [1] ##PARTICLE ONLY##
 OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
 OPT__OUTPUT_POT               1           # output gravitational potential [1] ##OPT__OUTPUT_TOTAL ONLY##

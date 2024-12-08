@@ -51,6 +51,9 @@
 #include <memory>
 #include "GramFE_Interpolation.h"
 
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Int_Spectral
 // Description :  Perform spatial interpolation based on the Gram-Fourier extension method
@@ -106,20 +109,20 @@ void Int_Spectral( real CData[], const int CSize[3], const int CStart[3], const 
 
 
 // index stride of the coarse-grid input array
-   const size_t Cdx    = 1;
-   const size_t Cdy    = Cdx*CSize[0];
-   const size_t Cdz    = Cdy*CSize[1];
+   const size_t Cdx     = 1;
+   const size_t Cdy     = Cdx*CSize[0];
+   const size_t Cdz     = Cdy*CSize[1];
 
 // index stride of the temporary arrays storing the data after x and y interpolations
-   const size_t Tdx    = 1;
-   const size_t Tdy    = Tdx* CRange[0]*2;
-   const size_t TdzX   = Tdy*(CRange[1]+2*CGhost);    // array after x interpolation
-   const size_t TdzY   = Tdy* CRange[1]*2;            // array after y interpolation
+   const size_t Tdx     = 1;
+   const size_t Tdy     = Tdx* CRange[0]*2;
+   const size_t TdzX    = Tdy*(CRange[1]+2*CGhost);   // array after x interpolation
+   const size_t TdzY    = Tdy* CRange[1]*2;           // array after y interpolation
 
 // index stride of the fine-grid output array
-   const size_t Fdx    = 1;
-   const size_t Fdy    = Fdx*FSize[0];
-   const size_t Fdz    = Fdy*FSize[1];
+   const size_t Fdx     = 1;
+   const size_t Fdy     = Fdx*FSize[0];
+   const size_t Fdz     = Fdy*FSize[1];
 
 // index stride of different components
    const int CDisp      = CSize[0]*CSize[1]*CSize[2];
@@ -129,24 +132,24 @@ void Int_Spectral( real CData[], const int CSize[3], const int CStart[3], const 
 
 // x = 0, y = 1, z = 2
 // first interpolate x, then y, then z
-   const size_t P[3][3] = {{2, 1, 0},  // z, y, x
-                           {2, 0, 1},  // z, x, y
-                           {1, 0, 2}}; // x, y, z
+   const size_t P[3][3] = { {2, 1, 0},    // z, y, x
+                            {2, 0, 1},    // z, x, y
+                            {1, 0, 2} };  // x, y, z
 
 // starting indices for 3D loops [x, y, z][1st iteration, 2nd iteration, 3rd iteration]
-   const int StartIndex[3][3] = { { CStart[0] - CGhost, 0, 0},
-                                  { CStart[1] - CGhost, 0, 0},
-                                  { CStart[2] - CGhost, 0, 0} };
+   const int StartIndex[3][3] = { {CStart[0]-CGhost, 0, 0},
+                                  {CStart[1]-CGhost, 0, 0},
+                                  {CStart[2]-CGhost, 0, 0} };
 
 // end indices for 3D loops [x, y, z][1st iteration, 2nd iteration, 3rd iteration]
-   const int EndIndex[3][3] = { { CStart[0] + CRange[0] + CGhost, CRange[0] + CRange[0], CRange[0] + CRange[0]  },
-                                { CStart[1] + CRange[1] + CGhost, CRange[1] + 2*CGhost,  CRange[1] + CRange[1]  },
-                                { CStart[2] + CRange[2] + CGhost, CRange[2] + 2*CGhost,  CRange[2] + 2*CGhost } };
+   const int EndIndex[3][3] = { {CStart[0]+CRange[0]+CGhost, CRange[0]+CRange[0], CRange[0]+CRange[0]},
+                                {CStart[1]+CRange[1]+CGhost, CRange[1]+2*CGhost,  CRange[1]+CRange[1]},
+                                {CStart[2]+CRange[2]+CGhost, CRange[2]+2*CGhost,  CRange[2]+2*CGhost } };
 
 // index strides for input arrays [x, y, z][1st iteration, 2nd iteration, 3rd iteration]
-   const size_t InStride[3][3] = { {Cdx, Tdx,  Tdx  },
-                                   {Cdy, Tdy,  Tdy  },
-                                   {Cdz, TdzX, TdzY } };
+   const size_t InStride[3][3] = { {Cdx, Tdx,  Tdx },
+                                   {Cdy, Tdy,  Tdy },
+                                   {Cdz, TdzX, TdzY} };
 
 // index strides for output arrays [x, y, z][1st iteration, 2nd iteration, 3rd iteration]
    const size_t OutStride[3][3] = { {Tdx,  Tdx,  Fdx},
@@ -154,16 +157,16 @@ void Int_Spectral( real CData[], const int CSize[3], const int CStart[3], const 
                                     {TdzX, TdzY, Fdz} };
 
 // input sizes [x, y, z] (coarse array + ghost zone)
-   const int InSize[3] = { CRange[0] + 2*CGhost, CRange[1] + 2*CGhost, CRange[2] + 2*CGhost };
+   const int InSize[3] = { CRange[0]+2*CGhost, CRange[1]+2*CGhost, CRange[2]+2*CGhost };
 
 // output sizes [x, y, z] (2*coarse array)
-   const int OutSize[3] = { CRange[0] + CRange[0], CRange[1] + CRange[1], CRange[2] + CRange[2] };
+   const int OutSize[3] = { CRange[0]+CRange[0], CRange[1]+CRange[1], CRange[2]+CRange[2] };
 
 
-   real *Input    = new real [ NComp * InputDisp  ];  // hold one column of input data
-   real *Output   = new real [ NComp*OutputDisp ];    // hold one column of output data
-   real *TDataX   = new real [ NComp*TDataXDisp ];    // temporary array after x interpolation
-   real *TDataY   = new real [ NComp*TDataYDisp ];    // temporary array after y interpolation
+   real *Input    = new real [ NComp*InputDisp  ]; // hold one column of input data
+   real *Output   = new real [ NComp*OutputDisp ]; // hold one column of output data
+   real *TDataX   = new real [ NComp*TDataXDisp ]; // temporary array after x interpolation
+   real *TDataY   = new real [ NComp*TDataYDisp ]; // temporary array after y interpolation
    real *CPtr     = CData;
    real *FPtr     = FData;
    real *InPtr3D  = NULL;
@@ -172,10 +175,8 @@ void Int_Spectral( real CData[], const int CSize[3], const int CStart[3], const 
    real *OutPtr1D = NULL;
 
 #  if ( MODEL == ELBDM )
-
 #  ifdef GAMER_DEBUG
-   if ( UnwrapPhase && NComp != 2 )
-   {
+   if ( UnwrapPhase  &&  NComp != 2 ) {
       Aux_Error( ERROR_INFO, "NComp = %d != 2 for OPT__INT_PHASE and INT_SPECTRAL !!\n", NComp );
    }
 #  endif
@@ -216,7 +217,6 @@ void Int_Spectral( real CData[], const int CSize[3], const int CStart[3], const 
 
 
 #        if ( MODEL == ELBDM )
-
          bool InterpolateReIm = false;
 
          if ( UnwrapPhase )
@@ -230,7 +230,6 @@ void Int_Spectral( real CData[], const int CSize[3], const int CStart[3], const 
                Imag[k] = ELBDM_UnwrapPhase( Imag[k-1], Imag[k] );
             }
 
-
 //          convert density and phase to real and imaginary part if vortex is detected
 //          NOTE:
 //          Two other strategies that were thought to improve the interpolation around vortices have been thoroughly tested
@@ -243,14 +242,12 @@ void Int_Spectral( real CData[], const int CSize[3], const int CStart[3], const 
 //          This leads to smooth fields at the vortex, but fails around the vortex where S might jump by less then pi and the density is non-zero
 //
 //          The safest strategy is to simply interpolate the real and imaginary part around the vortex with a generous vortex detection threshold
-//
-
             if ( SPEC_INT_XY_INSTEAD_DEPHA )
             {
 //             detect phase discontinuities
-               for ( int k = 1; k < InSize[XYZ] - 1; k++ ) {
+               for (int k=1; k<InSize[XYZ]-1; k++) {
 //                assuming Lap(S) * dx**2 > threshold implies a significant phase jump
-                  if ( fabs( Imag[k+1] - 2 * Imag[k] + Imag[k-1] ) > SPEC_INT_VORTEX_THRESHOLD ) {
+                  if (  FABS( Imag[k+1] - (real)2.0*Imag[k] + Imag[k-1] ) > SPEC_INT_VORTEX_THRESHOLD  ) {
                      InterpolateReIm = true;
                      break;
                   }
@@ -258,14 +255,15 @@ void Int_Spectral( real CData[], const int CSize[3], const int CStart[3], const 
 
 //             convert back to real & imaginary part
                if ( InterpolateReIm ) {
-                  for ( int k = 0; k < InSize[XYZ]; k++ ) {
-                     const real Re = SQRT( Real[k] ) * COS( Imag[k] );
-                     const real Im = SQRT( Real[k] ) * SIN( Imag[k] );
+                  for (int k=0; k<InSize[XYZ]; k++) {
+                     const real f  = SQRT( Real[k] );
+                     const real Re = f*COS( Imag[k] );
+                     const real Im = f*SIN( Imag[k] );
                      Real[k] = Re;
                      Imag[k] = Im;
                   }
                }
-            }
+            } // if ( SPEC_INT_XY_INSTEAD_DEPHA )
          } // if ( UnwrapPhase )
 #        endif // #if ( MODEL == ELBDM )
 
@@ -280,34 +278,31 @@ void Int_Spectral( real CData[], const int CSize[3], const int CStart[3], const 
 #        if ( MODEL == ELBDM )
          if ( UnwrapPhase )
          {
-
-            real* Real = Output  + 0 * OutputDisp;
-            real* Imag = Output  + 1 * OutputDisp;
+            real* Real = Output + 0*OutputDisp;
+            real* Imag = Output + 1*OutputDisp;
 
             if ( SPEC_INT_XY_INSTEAD_DEPHA ) {
-
 //             convert back to density and phase from real/imag
                if ( InterpolateReIm ) {
-                  for (int k = 0; k < OutSize[XYZ]; k++) {
+                  for (int k=0; k<OutSize[XYZ]; k++) {
                      const real De  = SQR( Real[k] ) + SQR( Imag[k] );
                      const real Pha = SATAN2( Imag[k], Real[k] );
                      Real[k] = De;
                      Imag[k] = Pha;
                   }
 
-//                unwrap phase to be restore phase field
-                  for (int k = 1;  k < OutSize[XYZ];  k++)
-                  {
+//                unwrap phase to be consistent with the results of interpolating density and phase
+                  for (int k=1; k<OutSize[XYZ]; k++) {
                      Imag[k] = ELBDM_UnwrapPhase( Imag[k-1], Imag[k] );
                   }
                }
             }
 
 //          density floor
-            for (int k = 0; k < OutSize[XYZ]; k++) {
+            for (int k=0; k<OutSize[XYZ]; k++) {
                Real[k] = MAX( TINY_NUMBER, Real[k] );
-            }
-         } // if ( UnwrapPhase && SPEC_INT_XY_INSTEAD_DEPHA )
+            } // if ( SPEC_INT_XY_INSTEAD_DEPHA )
+         } // if ( UnwrapPhase )
 #        endif // #if ( MODEL == ELBDM )
 
 //       write result of interpolation (excluding ghost zones) to temporary array
@@ -323,9 +318,9 @@ void Int_Spectral( real CData[], const int CSize[3], const int CStart[3], const 
 
             OutPtr1D = Output + v*OutputDisp;
 
-            for (int ki=0, ko=0; ki<CRange[XYZ]; ki++, ko += 2)
+            for (int ki=0, ko=0; ki<CRange[XYZ]; ki++, ko+=2)
             {
-               const size_t Idx_Out                     = io*OutStride[Pi][XYZ] + jo*OutStride[Pj][XYZ] + ko*OutStride[Pk][XYZ];
+               const size_t Idx_Out = io*OutStride[Pi][XYZ] + jo*OutStride[Pj][XYZ] + ko*OutStride[Pk][XYZ];
                OutPtr3D[ Idx_Out                      ] = OutPtr1D[ 2*ki     ];
                OutPtr3D[ Idx_Out + OutStride[Pk][XYZ] ] = OutPtr1D[ 2*ki + 1 ];
             } // ki
@@ -420,7 +415,8 @@ void InterpolationContext::ReadBinaryFile( const char* filename, double* array, 
 // Parameter   :  input       : Input array
 //                UnwrapPhase : Unwrap phase when OPT__INT_PHASE is on (for ELBDM only)
 //-------------------------------------------------------------------------------------------------------
-void InterpolationContext::Preprocess(real* input, const bool UnwrapPhase) const {
+void InterpolationContext::Preprocess( real* input, const bool UnwrapPhase ) const
+{
 
 } // FUNCTION : Preprocess
 
@@ -437,7 +433,8 @@ void InterpolationContext::Preprocess(real* input, const bool UnwrapPhase) const
 //                OppSign0thOrder : See Int_MinMod1D()
 //-------------------------------------------------------------------------------------------------------
 void InterpolationContext::Postprocess( const real* input, real* output, const bool Monotonic, const real MonoCoeff,
-                                        const bool OppSign0thOrder) const {
+                                        const bool OppSign0thOrder) const
+{
 
 // ensure monotonicity
    if ( Monotonic )
@@ -502,7 +499,8 @@ void InterpolationContext::Postprocess( const real* input, real* output, const b
          output[ Idx_Out       ] = input[Idx_InC];
          output[ Idx_Out + Tdy ] = input[Idx_InC];
       }
-   }
+   } // if ( Monotonic )
+
 } // FUNCTION : Postprocess
 
 
@@ -528,10 +526,8 @@ GramFEInterpolationContext::GramFEInterpolationContext( size_t nInput, size_t nG
 // sanity checks
 #  ifdef GAMER_DEBUG
    if ( nInput < nDelta )
-   {
       Aux_Error( ERROR_INFO, "Input array of size %ld smaller than Gram polynomial boundary of size %ld !!\n", nInput, nDelta );
-   }
-#  endif // # ifdef GAMER_DEBUG
+#  endif
 
 // load Gram-Fourier extension tables from file
    char filename[2*MAX_STRING];
@@ -612,7 +608,8 @@ GramFEInterpolationContext::~GramFEInterpolationContext()
 //
 // Return      :  Workspace size in bytes as unsigned integer
 //-------------------------------------------------------------------------------------------------------
-size_t GramFEInterpolationContext::GetWorkspaceSize() const {
+size_t GramFEInterpolationContext::GetWorkspaceSize() const
+{
 
    size_t total_size = 0;
    total_size += 2*nDelta;          // left and right boundary for Gram polynomials
@@ -750,7 +747,8 @@ PrecomputedInterpolationContext::~PrecomputedInterpolationContext()
 //
 // Return      :  Returns the workspace size in bytes
 //-------------------------------------------------------------------------------------------------------
-size_t PrecomputedInterpolationContext::GetWorkspaceSize() const {
+size_t PrecomputedInterpolationContext::GetWorkspaceSize() const
+{
 
    size_t total_size = 0;
    total_size += nInput;        // input
@@ -766,16 +764,16 @@ size_t PrecomputedInterpolationContext::GetWorkspaceSize() const {
 // Function    :  PrecomputedInterpolationContext::InterpolateReal
 // Description :  Interpolate input array of size nInput and store interpolation results of size 2 * (nInput - nGhostBoundary) in output array
 //
-// Parameter   :  input          : Real input  array of size nInput
-//                output         : Real output array of size 2 * (nInput - nGhostBoundary)
-//                workspace      : Workspace containing input and output in double precision pi_gsl::gsl_real
+// Parameter   :  input     : Real input  array of size nInput
+//                output    : Real output array of size 2 * (nInput - nGhostBoundary)
+//                workspace : Workspace containing input and output in double precision pi_gsl::gsl_real
 //-------------------------------------------------------------------------------------------------------
 void PrecomputedInterpolationContext::InterpolateReal( const real *input, real *output, char* workspace ) const
 {
 
 // define arrays in workspace
-   pi_gsl::gsl_real* pi_gsl_input         = (pi_gsl::gsl_real*) workspace;
-   pi_gsl::gsl_real* pi_gsl_output        = pi_gsl_input + nInput;
+   pi_gsl::gsl_real* pi_gsl_input  = (pi_gsl::gsl_real*) workspace;
+   pi_gsl::gsl_real* pi_gsl_output = pi_gsl_input + nInput;
 
 // convert input to matrix multiplication precision
    for (size_t i=0; i<nInput; ++i) {
@@ -791,8 +789,8 @@ void PrecomputedInterpolationContext::InterpolateReal( const real *input, real *
    for (size_t i=0; i<nInterpolated; ++i) {
       output[i] = (real) pi_gsl_output[i];
    }
-} // FUNCTION : InterpolateReal
 
+} // FUNCTION : InterpolateReal
 
 
 
@@ -805,14 +803,12 @@ const real QuarticInterpolationContext::QuarticL[5] = { -45.0/2048.0, +420.0/204
 // Description :  Constructor of QuarticInterpolationContext
 //-------------------------------------------------------------------------------------------------------
 QuarticInterpolationContext::QuarticInterpolationContext( size_t nInput, size_t nGhostBoundary )
-   :  InterpolationContext( nInput, nGhostBoundary )
+   : InterpolationContext( nInput, nGhostBoundary )
 {
 
 #  ifdef GAMER_DEBUG
    if ( nGhostBoundary != 2 )
-   {
       Aux_Error( ERROR_INFO, "QuarticInterpolationContext requires nGhostBoundary = 2 !!\n" );
-   }
 #  endif
 
 } // CONSTRUCTOR : QuarticInterpolationContext
@@ -866,14 +862,12 @@ const real CQuarticInterpolationContext::CQuartic[5] = { +3.0/128.0, -22.0/128.0
 // Description :  Constructor of CQuarticInterpolationContext
 //-------------------------------------------------------------------------------------------------------
 CQuarticInterpolationContext::CQuarticInterpolationContext( size_t nInput, size_t nGhostBoundary )
-   :  InterpolationContext( nInput, nGhostBoundary )
+   : InterpolationContext( nInput, nGhostBoundary )
 {
 
 #  ifdef GAMER_DEBUG
    if ( nGhostBoundary != 2 )
-   {
       Aux_Error( ERROR_INFO, "CQuarticInterpolationContext requires nGhostBoundary = 2 !!\n" );
-   }
 #  endif
 
 } // CONSTRUCTOR : CQuarticInterpolationContext
@@ -899,9 +893,9 @@ size_t CQuarticInterpolationContext::GetWorkspaceSize() const
 // Function    :  QuadraticInterpolationContext::InterpolateReal
 // Description :  Interpolate input array of size nInput and store interpolation results of size 2*(nInput - nGhostBoundary) in output array
 //
-// Parameter   :  input          : Real input  array of size nInput
-//                output         : Real output array of size 2*(nInput - nGhostBoundary)
-//                workspace      : Useless for QuadraticInterpolationContext
+// Parameter   :  input     : Real input  array of size nInput
+//                output    : Real output array of size 2*(nInput - nGhostBoundary)
+//                workspace : Useless for QuadraticInterpolationContext
 //-------------------------------------------------------------------------------------------------------
 void CQuarticInterpolationContext::InterpolateReal( const real *input, real *output, char* workspace ) const
 {

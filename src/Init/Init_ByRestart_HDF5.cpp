@@ -867,7 +867,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 #        endif // #ifdef LOAD_BALANCE ... else ...
 
 //       free resource
-         for (int v=0; v<NCompStore; v++)      H5_Status = H5Dclose( H5_SetID_Field[v] );
+         for (int v=0; v<NCompStore; v++)       H5_Status = H5Dclose( H5_SetID_Field[v] );
 #        ifdef MHD
          for (int v=0; v<NCOMP_MAG;   v++)      H5_Status = H5Dclose( H5_SetID_FCMag[v] );
 #        endif
@@ -2224,11 +2224,11 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Mono_MaxIter",            &RS.Mono_MaxIter,            SID, TID, NonFatal, &RT.Mono_MaxIter,             1, NonFatal );
    LoadField( "IntOppSign0thOrder",      &RS.IntOppSign0thOrder,      SID, TID, NonFatal, &RT.IntOppSign0thOrder,       1, NonFatal );
 #  ifdef SUPPORT_SPECTRAL_INT
-   LoadField( "SpecInt_TablePath",           &RS.SpecInt_TablePath,           SID, TID, NonFatal,  RT.SpecInt_TablePath,           1, NonFatal );
-   LoadField( "SpecInt_GhostBoundary",       &RS.SpecInt_GhostBoundary,       SID, TID, NonFatal, &RT.SpecInt_GhostBoundary,       1, NonFatal );
+   LoadField( "SpecInt_TablePath",       &RS.SpecInt_TablePath,       SID, TID, NonFatal,  RT.SpecInt_TablePath,        1, NonFatal );
+   LoadField( "SpecInt_GhostBoundary",   &RS.SpecInt_GhostBoundary,   SID, TID, NonFatal, &RT.SpecInt_GhostBoundary,    1, NonFatal );
 #  if ( MODEL == ELBDM )
-   LoadField( "SpecInt_XY_Instead_DePha",    &RS.SpecInt_XY_Instead_DePha,    SID, TID, NonFatal, &RT.SpecInt_XY_Instead_DePha,    1, NonFatal );
-   LoadField( "SpecInt_VortexThreshold",     &RS.SpecInt_VortexThreshold,     SID, TID, NonFatal, &RT.SpecInt_VortexThreshold,     1, NonFatal );
+   LoadField( "SpecInt_XY_Instead_DePha",&RS.SpecInt_XY_Instead_DePha,SID, TID, NonFatal, &RT.SpecInt_XY_Instead_DePha, 1, NonFatal );
+   LoadField( "SpecInt_VortexThreshold", &RS.SpecInt_VortexThreshold, SID, TID, NonFatal, &RT.SpecInt_VortexThreshold,  1, NonFatal );
 #  endif
 #  endif // #ifdef SUPPORT_SPECTRAL_INT
 
@@ -2238,6 +2238,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Output_User",            &RS.Opt__Output_User,            SID, TID, NonFatal, &RT.Opt__Output_User,            1, NonFatal );
 #  ifdef PARTICLE
    LoadField( "Opt__Output_Par_Mode",        &RS.Opt__Output_Par_Mode,        SID, TID, NonFatal, &RT.Opt__Output_Par_Mode,        1, NonFatal );
+   LoadField( "Opt__Output_Par_Mesh",        &RS.Opt__Output_Par_Mesh,        SID, TID, NonFatal, &RT.Opt__Output_Par_Mesh,        1, NonFatal );
 #  endif
    LoadField( "Opt__Output_BasePS",          &RS.Opt__Output_BasePS,          SID, TID, NonFatal, &RT.Opt__Output_BasePS,          1, NonFatal );
    if ( OPT__OUTPUT_PART )

@@ -895,7 +895,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
             if ( DensOld < MIN_DENS )
             {
-//             rescale wave function (unnecessary if OPT__INT_PHASE if off, in which case we will rescale all wave functions later)
+//             rescale wave function (unnecessary if OPT__INT_PHASE is off, in which case we will rescale all wave functions later)
 #              if ( MODEL == ELBDM )
 #              if ( ELBDM_SCHEME == ELBDM_HYBRID )
                if ( amr->use_wave_flag[lv+1] ) {

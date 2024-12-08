@@ -912,7 +912,7 @@
 
 
 // precision for FFT in GRAMFE_FFT and matrix multiplication in GRAMFE_MATMUL
-// --> enable double precision for GRAMFE_FFT and GRAMFE_MATMUL schemes by default
+// --> enable double precision for GRAMFE_FFT by default since it is less stable compared to GRAMFE_MATMUL
 #if ( GRAMFE_SCHEME == GRAMFE_FFT )
 #   define GRAMFE_FFT_FLOAT8
 #endif
