@@ -567,7 +567,7 @@ void Restrict( const real *FData_1D, real *CData_1D, const int NGrid_F, const in
             Coeff[0][1] = (real)0.5;
 //          Coeff[0][1] = (real)1.0 - Coeff[0][0] - Coeff[0][2];
 
-//###OPTIMIZATION : follow the same strategy adopted in "Int_Quadratic"
+//###OPTIMIZATION: follow the same strategy adopted in "Int_Quadratic"
             CData[k][j][i] =    Coeff[2][0] * Coeff[1][0] * Coeff[0][0] * FData[kkm][jjm][iim]
                              +  Coeff[2][0] * Coeff[1][0] * Coeff[0][1] * FData[kkm][jjm][ii ]
                              +  Coeff[2][0] * Coeff[1][0] * Coeff[0][2] * FData[kkm][jjm][iip]

@@ -26,12 +26,16 @@
 #endif
 
 
+// include CUDA FFT library if GPU kinetic ELBDM Gram-Fourier extension solver is enabled
+#if ( defined(__CUDACC__) && GRAMFE_SCHEME == GRAMFE_FFT )
+#  include <cufftdx.hpp>
+#endif
+
 // faster integer multiplication in Fermi
 #if ( defined __CUDACC__  &&  __CUDA_ARCH__ >= 200 )
 #  define __umul24( a, b )   ( (a)*(b) )
 #  define  __mul24( a, b )   ( (a)*(b) )
 #endif
-
 
 
 // #################################
@@ -265,7 +269,6 @@
 //=========================================================================================
 #elif ( MODEL == ELBDM )
 
-
 #else
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL
@@ -468,6 +471,65 @@
 #        endif
 #  endif
 
+
+// to get rid of the "uses too much shared data" error message in the ELBDM HJ solver
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#     if ( PATCH_SIZE == 8  &&  NCOMP_PASSIVE == 0 )
+#        define FLU_HJ_BLOCK_SIZE_Y    ( FLU_BLOCK_SIZE_Y   )  // not optimized yet
+#     else
+#        define FLU_HJ_BLOCK_SIZE_Y    ( FLU_BLOCK_SIZE_Y/2 )  // not optimized yet
+#     endif
+#  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+
+// set number of threads and blocks used in GRAMFE_FFT GPU scheme
+#  if ( defined(__CUDACC__)  &&  WAVE_SCHEME == WAVE_GRAMFE  &&  GRAMFE_SCHEME == GRAMFE_FFT )
+
+// cuFFTdx supports the following GPU architectures at the time of writing (23.05.23)
+//
+//    Volta: 700 and 720 (sm_70, sm_72),
+//
+//    Turing: 750 (sm_75), and
+//
+//    Ampere: 800, 860 and 870 (sm_80, sm_86, sm_87).
+//
+//    Ada: 890 (sm_89).
+//
+//    Hopper: 900 (sm_90).
+#  if   ( GPU_COMPUTE_CAPABILITY != 700 && GPU_COMPUTE_CAPABILITY != 720 && GPU_COMPUTE_CAPABILITY != 750 \
+      &&  GPU_COMPUTE_CAPABILITY != 800 && GPU_COMPUTE_CAPABILITY != 860 && GPU_COMPUTE_CAPABILITY != 870 \
+      &&  GPU_COMPUTE_CAPABILITY != 890 \
+      &&  GPU_COMPUTE_CAPABILITY != 900 )
+#     error : ERROR : GPU_COMPUTE_CAPABILITY unsupported by cuFFTdx (please visit cuFFTdx website to check whether your GPU is supported and update CUFLU.h accordingly if it is) !!
+#  endif
+
+// number of blocks suggested by cufftdx disabled by default
+// profiling the code showed that a different number of blocks provides better performance
+// this is because the code does not only compute the FFT, but also the Fourier extension
+#  define GRAMFE_USE_SUGGESTED_BLOCKS        0
+#  define GRAMFE_CUSTOM_ELEMENTS_PER_THREAD  4
+#  define GRAMFE_CUSTOM_FFTS_PER_BLOCK       12
+
+
+using CUFFTDX_ARCH = decltype(cufftdx::SM<GPU_COMPUTE_CAPABILITY>());
+
+using fft_base     = decltype(cufftdx::Block() + cufftdx::Size<GRAMFE_FLU_NXT>() + cufftdx::Type<cufftdx::fft_type::c2c>() + cufftdx::Precision<gramfe_fft_float>() + CUFFTDX_ARCH() );
+using forward_fft  = decltype(fft_base() + cufftdx::Direction<cufftdx::fft_direction::forward>());
+using inverse_fft  = decltype(fft_base() + cufftdx::Direction<cufftdx::fft_direction::inverse>());
+
+// complete FFT description
+static constexpr unsigned int elements_per_thread = GRAMFE_USE_SUGGESTED_BLOCKS ? forward_fft::elements_per_thread      : GRAMFE_CUSTOM_ELEMENTS_PER_THREAD;
+static constexpr unsigned int ffts_per_block      = GRAMFE_USE_SUGGESTED_BLOCKS ? inverse_fft::suggested_ffts_per_block : GRAMFE_CUSTOM_FFTS_PER_BLOCK;
+
+using FFT          = decltype( forward_fft() + cufftdx::ElementsPerThread<elements_per_thread>() + cufftdx::FFTsPerBlock<ffts_per_block>());
+using IFFT         = decltype( inverse_fft() + cufftdx::ElementsPerThread<elements_per_thread>() + cufftdx::FFTsPerBlock<ffts_per_block>());
+
+using complex_type = typename FFT::value_type;
+
+#  endif // # if ( defined(__CUDACC__)  &&  WAVE_SCHEME == WAVE_GRAMFE  &&  GRAMFE_SCHEME == GRAMFE_FFT )
+
+#else
+#  error : ERROR : Unsupported model in CUFLU.h
 #endif // MODEL
 
 
@@ -513,9 +575,11 @@
 #ifdef __CUDACC__
 # define GPU_DEVICE          __forceinline__ __device__
 # define GPU_DEVICE_NOINLINE    __noinline__ __device__
+# define GPU_DEVICE_VARIABLE                 __device__
 #else
 # define GPU_DEVICE
 # define GPU_DEVICE_NOINLINE
+# define GPU_DEVICE_VARIABLE
 #endif
 
 // unified CPU/GPU loop
@@ -524,6 +588,7 @@
 #else
 # define CGPU_LOOP( var, niter )    for (int (var)=0;           (var)<(niter); (var)++          )
 #endif
+
 
 
 

@@ -59,6 +59,12 @@ void CPU_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)     
 #  endif
 
 
+// EoS is not defined when MODEL != HYDRO
+#  if ( MODEL != HYDRO )
+   EoS_t EoS;
+#  endif
+
+
    CPU_SrcSolver_IterateAllCells( h_Flu_Array_In, h_Flu_Array_Out, h_Mag_Array_In, h_Corner_Array,
                                   SrcTerms, NPatchGroup, dt, dh, TimeNew, TimeOld,
                                   MinDens, MinPres, MinEint, EoS );

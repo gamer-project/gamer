@@ -1,0 +1,19 @@
+# problem-specific runtime parameters
+HaloMerger_Halo_Num                     2               # total number of halos [2]
+HaloMerger_Halo_InitMode                1               # halo initialization mode (1=single-level HALO_IC of real and imaginary parts) [1]
+                                                        # -> edit Input_TestProb_Halo to specify the parameters for the halos
+HaloMerger_Soliton_Num                  0               # total number of solitons [0]
+HaloMerger_Soliton_InitMode             1               # soliton initialization mode (1=table of the density profile, 2=analytical function of the density profile) [1]
+                                                        # -> edit Input_TestProb_Soliton to specify the parameters for the solitons
+HaloMerger_ParCloud_Num                 0               # total number of particle clouds [0]
+HaloMerger_ParCloud_InitMode            1               # particle cloud initialization mode (1=table of the density profile) [1]
+                                                        # -> edit Input_TestProb_ParCloud to specify the parameters for the particle clouds
+# external potential
+HaloMerger_ExtPot_UniDenSph_M           0.0             # mass of the uniform-density sphere for the external potential (must >= 0.0) [0.0]
+HaloMerger_ExtPot_UniDenSph_R           1.0             # radius of the uniform-density sphere for the external potential (must > 0.0) [1.0]
+HaloMerger_ExtPot_UniDenSph_CenCoordX  -1.0             # x/y/z-coordinate of the center of the uniform-density sphere for the external potential (<0.0=auto -> box center) [-1.0]
+HaloMerger_ExtPot_UniDenSph_CenCoordY  -1.0
+HaloMerger_ExtPot_UniDenSph_CenCoordZ  -1.0
+HaloMerger_ExtPot_UniDenSph_VelocityX   0.0             # x/y/z-component of the velocity of the uniform-density sphere for the external potential [0.0]
+HaloMerger_ExtPot_UniDenSph_VelocityY   0.0
+HaloMerger_ExtPot_UniDenSph_VelocityZ   0.0

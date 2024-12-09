@@ -706,7 +706,7 @@ LB_GlobalPatch* LB_ConstructGlobalTree( LB_PatchCount& pc, LB_GlobalPatchExchang
 //                   LB_GlobalPatch* gt = LB_GatherTree(pc, 0);
 //
 //                   if ( MPI_Rank == 0 ) {
-//                      printf("Information about patches: \n");
+//                      printf("Information about patches:\n");
 //                      for (int i = 0; i < pc.NPatchAllLv; ++i) {
 //                         printf("GID %d on level %d residing on MPI rank %d\n", i, gt[i].level, gt[i].MPI_Rank);
 //                         printf("Father GID   = %d\n", gt[i].father);
@@ -723,7 +723,7 @@ LB_GlobalPatch* LB_ConstructGlobalTree( LB_PatchCount& pc, LB_GlobalPatchExchang
 //                         }
 //                         printf("\n");
 //                         printf("PaddedCr1D   = %ld\n", gt[i].PaddedCr1D);
-//                         printf("Edges: \n");
+//                         printf("Edges:\n");
 //                         printf("[x_L, x_R]   = [%9.6f, %9.6f]\n", gt[i].EdgeL[0], gt[i].EdgeR[0]);
 //                         printf("[y_L, y_R]   = [%9.6f, %9.6f]\n", gt[i].EdgeL[1], gt[i].EdgeR[1]);
 //                         printf("[z_L, z_R]   = [%9.6f, %9.6f]\n", gt[i].EdgeL[2], gt[i].EdgeR[2]);

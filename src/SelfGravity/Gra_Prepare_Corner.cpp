@@ -7,7 +7,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Gra_Prepare_Corner
-// Description :  Prepare the input array h_Corner_Array_PGT[] for the Poisson, Gravity, and dt solvers
+// Description :  Prepare h_Corner_Array_PGT[] for the Poisson, Gravity, and dt solvers
 //                --> NOT just gravity solver (so the function name is a bit misleading)
 //
 // Note        :  1. For calculating the external acceleration and/or potential

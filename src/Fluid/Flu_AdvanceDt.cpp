@@ -58,7 +58,13 @@ int Flu_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 // invoke the fluid solver
    FluStatus_ThisRank = GAMER_SUCCESS;
-
+#  if ( MODEL == ELBDM  &&  defined SUPPORT_FFTW )
+   if ( lv == 0  &&  ELBDM_BASE_SPECTRAL )
+   {
+      CPU_ELBDMSolver_FFT( dt, TimeOld, SaveSg_Flu );
+   }
+   else
+#  endif
    InvokeSolver( FLUID_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg_Flu, SaveSg_Mag, NULL_INT, OverlapMPI, Overlap_Sync );
 
 

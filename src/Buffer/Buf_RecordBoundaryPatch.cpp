@@ -5,7 +5,7 @@
 
 
 
-//###OPTIMIZATION : use heap sort or quick sort
+//###OPTIMIZATION: use heap sort or quick sort
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Buf_RecordBoundaryPatch
 // Description :  Record the patches near the sub-domain boundaries in amr->ParaVar->BounP_IDList[]

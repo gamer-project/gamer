@@ -1,0 +1,5 @@
+# problem-specific runtime parameters
+Perturbation_BgAmp   1.0   # psi_perturbation(x,y,z) = BgAmp + sum_l,j,k Amp* exp(i k_x * l) exp (i k_y * j) exp(i k_z * k)
+Perturbation_Amp     1e-2  # amplitude of perturbation
+Perturbation_N       4     # number of Fourier modes in perturbation (Min: 1, Max: 4) [-1]
+Perturbation_NDim    2     # switch between 1D, 2D and 3D problem; set amplitude of plane waves in other dimensions to zero (1=x-line, 2=x-y-plane, 3=x-y-z) [3]

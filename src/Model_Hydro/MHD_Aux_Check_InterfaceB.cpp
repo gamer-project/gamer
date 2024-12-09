@@ -106,7 +106,7 @@ void MHD_Aux_Check_InterfaceB( const char *comment )
 
 
    if ( Pass  &&  MPI_Rank == 0 )
-      Aux_Message( stdout, "\"%s\" : <%s> PASSED, Time = %13.7e, Step = %ld \n",
+      Aux_Message( stdout, "\"%s\" : <%s> PASSED, Time = %13.7e, Step = %ld\n",
                    comment, __FUNCTION__, Time[0], Step );
 
 } // FUNCTION : MHD_Aux_Check_InterfaceB

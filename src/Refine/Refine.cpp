@@ -143,6 +143,24 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #  endif // #ifdef MHD
 
 
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+// for hybrid scheme, consider the following cases:
+//
+// A: lv & lv+1 both use wave scheme or lv & lv+1 both use phase scheme and switch_to_wave_flag = false
+//    1. no modification
+//
+// B: lv & lv+1 both use phase scheme & switch_to_wave_flag on lv:
+//    1. switch to wave scheme on level lv+1
+//    2. no modification for interpolation
+//    3. convert DENS/PHAS to IM/RE after refinement for all patches on levels greater than lv
+//
+// C: lv uses phase scheme & lv+1 uses wave scheme
+//    1. convert refined patch to IM/RE after interpolation
+
+   bool SwitchFinerLevelsToWaveScheme = false;
+#  endif
+
+
 // determine the priority of different boundary faces (z>y>x) to set the corner cells properly for the non-periodic B.C.
    const int   NDer       = 0;
    const long *DerVarList = NULL;
@@ -250,6 +268,10 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 //       record the newly refined father patches
 #        ifdef MHD
          JustRefined[PID] = true;
+#        endif
+
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         SwitchFinerLevelsToWaveScheme = ( !amr->use_wave_flag[lv+1]  &&  Pedigree->switch_to_wave_flag );
 #        endif
 
 
@@ -687,8 +709,16 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                                              Monotonicity[v] = Monotonicity_Yes;
 
 #           elif ( MODEL == ELBDM )
+#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
+            if ( amr->use_wave_flag[lv] ) {
+#           endif
             if ( v != REAL  &&  v != IMAG )  Monotonicity[v] = Monotonicity_Yes;
             else                             Monotonicity[v] = Monotonicity_No;
+#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
+            } else { // if ( amr->use_wave_flag[lv] )
+            if ( v != PHAS )                 Monotonicity[v] = Monotonicity_Yes;
+            } // if ( amr->use_wave_flag[lv] ) ... else ...
+#           endif
 
 #           else
 #           error : DO YOU WANT TO ENSURE THE POSITIVITY OF INTERPOLATION IN THIS NEW MODEL ??
@@ -710,6 +740,10 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 //       (c1.3.4.2-2) fluid
 #        if ( MODEL == ELBDM )
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         if ( amr->use_wave_flag[lv] ) {
+#        endif
+
          if ( OPT__INT_PHASE )
          {
 //          get the wrapped phase (store in the REAL component)
@@ -722,6 +756,16 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                Flu_CData[REAL][k][j][i] = SATAN2( Flu_CData[IMAG][k][j][i], Flu_CData[REAL][k][j][i] );
 #           endif
 
+            if ( OPT__REF_FLU_INT_SCHEME == INT_SPECTRAL ) {
+//          spectral interpolation currently does not respect monotonicity
+            const bool Monotonicity_Spec[2] = { true, false };
+
+//          interpolate density & phase
+//          INT_SPECTRAL with PhaseUnwrapping_Yes assumes that the density and phase fields are stored consecutively in memory
+            Interpolate( &Flu_CData[DENS][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[DENS][0][0][0],
+                         FSize_CC3, FStart_CC, 2, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes, Monotonicity_Spec,
+                         IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
+            } else {
 //          interpolate density
             Interpolate( &Flu_CData[DENS][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[DENS][0][0][0],
                          FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_Yes,
@@ -731,6 +775,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             Interpolate( &Flu_CData[REAL][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[REAL][0][0][0],
                          FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_Yes, &Monotonicity_No,
                          IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
+            }
          }
 
          else // if ( OPT__INT_PHASE )
@@ -763,7 +808,21 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                Flu_FData[REAL][k][j][i] = Amp*COS( Phase );
                Flu_FData[IMAG][k][j][i] = Amp*SIN( Phase );
             }
-         }
+         } // if ( OPT__INT_PHASE )
+
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         } else { // if ( amr->use_wave_flag[lv] )
+
+//          interpolate density
+            Interpolate( &Flu_CData[DENS][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[DENS][0][0][0],
+                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_Yes,
+                         IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
+//          interpolate phase
+            Interpolate( &Flu_CData[PHAS][0][0][0], CSize_Flu3, CStart_Flu, CRange_CC, &Flu_FData[PHAS][0][0][0],
+                         FSize_CC3, FStart_CC, 1, OPT__REF_FLU_INT_SCHEME, PhaseUnwrapping_No, &Monotonicity_No,
+                         IntOppSign0thOrder_No, ALL_CONS_NO, INT_PRIM_NO, INT_FIX_MONO_COEFF, NULL, NULL );
+         } // if ( amr->use_wave_flag[lv] ) ... else ...
+#        endif
 
 #        else // #if ( MODEL == ELBDM )
 
@@ -804,7 +863,26 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        endif
 
 
-//       (c1.3.4.3) check minimum density and pressure/internal energy
+//       (c1.3.4.3) convert density/phase to real and imaginary parts if patches were refined from phase to wave level
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         if ( Pedigree->flag  &&  !amr->use_wave_flag[lv]  &&  amr->use_wave_flag[lv+1] )
+         {
+            real Amp, Phase, Re, Im;
+
+            for (int k=0; k<FSize_CC; k++) {
+            for (int j=0; j<FSize_CC; j++) {
+            for (int i=0; i<FSize_CC; i++) {
+//###REVISE: at this point, we should check whether dB wavelength is resolved after conversion to wave representation
+                  Amp   = SQRT( Flu_FData[DENS][k][j][i] );
+                  Phase =       Flu_FData[PHAS][k][j][i] ;
+                  Flu_FData[REAL][k][j][i] = Amp*COS( Phase );
+                  Flu_FData[IMAG][k][j][i] = Amp*SIN( Phase );
+            }}}
+         }
+#        endif
+
+
+//       (c1.3.4.4) check minimum density and pressure/internal energy
 //       --> note that it's unnecessary to check negative passive scalars thanks to the monotonic interpolation
 //       --> but we do renormalize passive scalars here
 #        if ( MODEL == HYDRO  ||  MODEL == ELBDM )
@@ -817,8 +895,11 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
             if ( DensOld < MIN_DENS )
             {
-//             rescale wave function (unnecessary if OPT__INT_PHASE if off, in which case we will rescale all wave functions later)
+//             rescale wave function (unnecessary if OPT__INT_PHASE is off, in which case we will rescale all wave functions later)
 #              if ( MODEL == ELBDM )
+#              if ( ELBDM_SCHEME == ELBDM_HYBRID )
+               if ( amr->use_wave_flag[lv+1] ) {
+#              endif
                if ( OPT__INT_PHASE )
                {
                   const real Rescale = SQRT( (real)MIN_DENS / DensOld );
@@ -826,7 +907,10 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                   Flu_FData[REAL][k][j][i] *= Rescale;
                   Flu_FData[IMAG][k][j][i] *= Rescale;
                }
+#              if ( ELBDM_SCHEME == ELBDM_HYBRID )
+               } // if ( amr->use_wave_flag[lv+1] )
 #              endif
+#              endif // #if ( MODEL == ELBDM )
 
 //             apply minimum density
                Flu_FData[DENS][k][j][i] = MIN_DENS;
@@ -932,31 +1016,39 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 //          rescale real and imaginary parts to get the correct density in ELBDM if OPT__INT_PHASE is off
 #           if ( MODEL == ELBDM )
+#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
+            if ( amr->use_wave_flag[lv+1] ) {
+#           endif
             real Real, Imag, Rho_Wrong, Rho_Corr, Rescale;
 
             if ( !OPT__INT_PHASE )
-            for (int k=0; k<PS1; k++)
-            for (int j=0; j<PS1; j++)
-            for (int i=0; i<PS1; i++)
             {
-               Real      = amr->patch[FFluSg][lv+1][SonPID]->fluid[REAL][k][j][i];
-               Imag      = amr->patch[FFluSg][lv+1][SonPID]->fluid[IMAG][k][j][i];
-               Rho_Wrong = Real*Real + Imag*Imag;
-               Rho_Corr  = amr->patch[FFluSg][lv+1][SonPID]->fluid[DENS][k][j][i];
-
-//             be careful about the negative density introduced from the round-off errors
-               if ( Rho_Wrong <= (real)0.0  ||  Rho_Corr <= (real)0.0 )
+               for (int k=0; k<PS1; k++)
+               for (int j=0; j<PS1; j++)
+               for (int i=0; i<PS1; i++)
                {
-                  amr->patch[FFluSg][lv+1][SonPID]->fluid[DENS][k][j][i] = (real)0.0;
-                  Rescale = (real)0.0;
-               }
-               else
-                  Rescale = SQRT( Rho_Corr/Rho_Wrong );
+                  Real      = amr->patch[FFluSg][lv+1][SonPID]->fluid[REAL][k][j][i];
+                  Imag      = amr->patch[FFluSg][lv+1][SonPID]->fluid[IMAG][k][j][i];
+                  Rho_Wrong = Real*Real + Imag*Imag;
+                  Rho_Corr  = amr->patch[FFluSg][lv+1][SonPID]->fluid[DENS][k][j][i];
 
-               amr->patch[FFluSg][lv+1][SonPID]->fluid[REAL][k][j][i] *= Rescale;
-               amr->patch[FFluSg][lv+1][SonPID]->fluid[IMAG][k][j][i] *= Rescale;
-            }
+//                be careful about the negative density introduced from the round-off errors
+                  if ( Rho_Wrong <= (real)0.0  ||  Rho_Corr <= (real)0.0 )
+                  {
+                     amr->patch[FFluSg][lv+1][SonPID]->fluid[DENS][k][j][i] = (real)0.0;
+                     Rescale = (real)0.0;
+                  }
+                  else
+                     Rescale = SQRT( Rho_Corr/Rho_Wrong );
+
+                  amr->patch[FFluSg][lv+1][SonPID]->fluid[REAL][k][j][i] *= Rescale;
+                  amr->patch[FFluSg][lv+1][SonPID]->fluid[IMAG][k][j][i] *= Rescale;
+               }
+            } // if ( !OPT__INT_PHASE )
+#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
+            } // if ( amr->use_wave_flag[lv+1] )
 #           endif
+#           endif // #if ( MODEL == ELBDM )
          } // for (int LocalID=0; LocalID<8; LocalID++)
 
 
@@ -1048,6 +1140,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
    for (int m=1; m<28; m++)   amr->NPatchComma[lv+1][m] = amr->num[lv+1];
 
 
+
 // d. refine buffer patches
 // ------------------------------------------------------------------------------------------------
    Refine_Buffer( lv, BufSonTable, BufGrandTable );
@@ -1058,6 +1151,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
       delete [] BufGrandTable;
       delete [] BufSonTable;
    }
+
 
 
 // e. re-construct tables and sibling relations
@@ -1099,6 +1193,63 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 // get the total number of patches at lv+1
    Mis_GetTotalPatchNumber( lv+1 );
+
+
+
+// f. convert density/phase to density/real part/imaginary part in hybrid scheme when we switch the level from fluid to wave
+// ------------------------------------------------------------------------------------------------
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( SwitchFinerLevelsToWaveScheme ) {
+      for (int ChildLv=lv+1; ChildLv<=TOP_LEVEL; ++ChildLv) {
+//       set use_wave_flag
+         amr->use_wave_flag[ChildLv] = true;
+
+//       iterate over real and buffer patches
+         for (int PID=0; PID<amr->NPatchComma[ChildLv][27]; PID++)
+         {
+//          convert both sandglasses
+            for (int FluSg=0; FluSg<2; ++FluSg)
+            {
+               for (int k=0; k<PS1; k++)  {
+               for (int j=0; j<PS1; j++)  {
+               for (int i=0; i<PS1; i++)  {
+//                check fluid != NULL for buffer patches
+                  if ( amr->patch[FluSg][ChildLv][PID]->fluid != NULL  &&  amr->FluSgTime[ChildLv][FluSg] >= 0.0 )
+                  {
+//###REVISE: at this point, we should check whether dB wavelength is resolved after conversion to wave representation
+                     const real Amp   = SQRT( amr->patch[FluSg][ChildLv][PID]->fluid[DENS][k][j][i] );
+                     const real Phase = amr->patch[FluSg][ChildLv][PID]->fluid[PHAS][k][j][i];
+                     amr->patch[FluSg][ChildLv][PID]->fluid[REAL][k][j][i] = Amp*COS(Phase);
+                     amr->patch[FluSg][ChildLv][PID]->fluid[IMAG][k][j][i] = Amp*SIN(Phase);
+                  }
+               }}} // k,j,i
+            } // FluSg
+         } // for (int PID=0; PID<amr->NPatchComma[ChildLv][27]; PID++)
+      } // for (int ChildLv=lv+1; ChildLv<=TOP_LEVEL; ++ChildLv)
+   } // if ( SwitchFinerToWaveScheme )
+#  endif // #if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+
+
+// g. construct the global AMR structure if required
+// ------------------------------------------------------------------------------------------------
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+//###NOTE: the following criterion must be adjusted if another part of GAMER wants to use the global tree
+// update the global tree only after updating the first wave level
+// --> the fluid scheme currently only uses the global tree in two places:
+//     (a) velocity time-step calculation
+//     (b) fluid solver itself
+// --> in both cases, we only need information about which fluid cells have refined wave counterparts
+// --> only need to update the global tree if the patches on the first wave level have changed and
+//     don't care what happens on higher refinement levels
+// --> having said that, it is actually necessary to do it after updating all fluid levels to
+//     ensure that all fluid patches have been registered in the global tree
+   if ( lv+1 <= ELBDM_FIRST_WAVE_LEVEL )
+   {
+      delete GlobalTree;   // in case it has been allocated already
+      GlobalTree = new LB_GlobalTree;
+   }
+#  endif
 
 } // FUNCTION : Refine
 

@@ -15,8 +15,9 @@
 // Parameter   :  lv   : Target coarse level
 //                TVar : Target variables
 //                       --> Supported variables in different models:
-//                           HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY [, BIDX(field_index)]
-//                           ELBDM : _DENS
+//                           HYDRO        : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY [, BIDX(field_index)]
+//                           ELBDM_WAVE   : _DENS
+//                           ELBDM_HYBRID : _DENS
 //                       --> _FLUID, _PASSIVE, and _TOTAL apply to all models
 //-------------------------------------------------------------------------------------------------------
 void Flu_FixUp_Flux( const int lv, const long TVar )
@@ -73,6 +74,10 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
    Aux_Error( ERROR_INFO, "FLUX_DENS (%d) != 0 for the option OPT__FIXUP_FLUX !!\n", FLUX_DENS );
 #  endif
 
+#  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   if ( lv != TOP_LEVEL  &&  amr->use_wave_flag[lv+1] )
+      Aux_Error( ERROR_INFO, "WAVE_GRAMFE does not support the option OPT__FIXUP_FLUX !!\n" );
+#  endif
 
 // if "NCOMP_TOTAL != NFLUX_TOTAL", one must specify how to correct cell data from the flux arrays
 // --> specifically, how to map different flux variables to fluid active/passive variables
@@ -257,8 +262,17 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
                   )
 
 #              endif
+
 #              elif ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
+//             throw error if corrected density is unphysical
+               if ( ! Aux_IsFinite(CorrVal[DENS]) )
+                  Aux_Error( ERROR_INFO, "Flux-corrected density is unphysical (dens %14.7e, flux %14.7e, const %14.7e, PID %d, lv %d) !!\n",
+                             CorrVal[DENS], FluxPtr[DENS][m][n], Const[s], PID, lv );
+
                if ( CorrVal[DENS] <= MIN_DENS )
+
+#              else
+               if ( false )
 #              endif
                {
                   ApplyFix = false;
@@ -317,6 +331,9 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
 //                rescale the real and imaginary parts to be consistent with the corrected amplitude
 //                --> must NOT use CorrVal[REAL] and CorrVal[IMAG] below since NFLUX_TOTAL == 1 for ELBDM
 #                 if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
+#                 if ( ELBDM_SCHEME == ELBDM_HYBRID )
+                  if ( amr->use_wave_flag[lv] ) {
+#                 endif
                   real Re, Im, Rho_Corr, Rho_Wrong, Rescale;
 
                   Re        = *FluidPtr1D[REAL];
@@ -335,7 +352,10 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
 
                   *FluidPtr1D[REAL] *= Rescale;
                   *FluidPtr1D[IMAG] *= Rescale;
+#                 if ( ELBDM_SCHEME == ELBDM_HYBRID )
+                  } // if ( amr->use_wave_flag[lv] )
 #                 endif
+#                 endif // # if ( MODEL == ELBDM  &&  defined CONSERVE_MASS )
                } // if ( ApplyFix )
 
 

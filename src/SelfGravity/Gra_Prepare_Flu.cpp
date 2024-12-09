@@ -62,13 +62,26 @@ void Gra_Prepare_Flu( const int lv, real h_Flu_Array_G[][GRA_NIN][PS1][PS1][PS1]
 
 
 #        elif ( MODEL == ELBDM )
-//       density field is useless in the ELBDM gravity solver
          for (int v=0; v<GRA_NIN; v++)
          for (int k=0; k<PS1; k++)
          for (int j=0; j<PS1; j++)
-         for (int i=0; i<PS1; i++)
-            h_Flu_Array_G[N][v][k][j][i] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v+1][k][j][i];
+         for (int i=0; i<PS1; i++) {
 
+#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
+            if ( amr->use_wave_flag[lv] ) {
+#           endif
+//          density field is useless in the ELBDM gravity wave solver
+//          because we can always calculate it via real and imaginary part
+//          we therefore only transfer the components 1 and 2 via v+1
+            h_Flu_Array_G[N][v][k][j][i] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v+1][k][j][i];
+#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
+            } else {
+//          in the phase scheme, there are only density and phase field
+//          transfer the components "0" and "1" via v
+            h_Flu_Array_G[N][v][k][j][i] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
+            }
+#           endif
+         }
 
 #        else
 #        error : unsupported MODEL !!

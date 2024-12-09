@@ -34,6 +34,11 @@ void Int_CQuartic  ( real CData[], const int CSize[3], const int CStart[3], cons
 void Int_Quartic   ( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
                      real FData[], const int FSize[3], const int FStart[3], const int NComp,
                      const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
+#ifdef SUPPORT_SPECTRAL_INT
+void Int_Spectral  ( real CData[], const int CSize[3], const int CStart[3], const int CRange[3],
+                     real FData[], const int FSize[3], const int FStart[3], const int NComp,
+                     const bool UnwrapPhase, const bool Monotonic[], const real MonoCoeff, const bool OppSign0thOrder );
+#endif
 
 
 
@@ -561,6 +566,14 @@ static IntSchemeFunc_t Int_SelectScheme( const IntScheme_t IntScheme )
       case INT_QUAD     :  return Int_Quadratic;   break;
       case INT_CQUAR    :  return Int_CQuartic;    break;
       case INT_QUAR     :  return Int_Quartic;     break;
+      case INT_SPECTRAL :
+#                          ifdef SUPPORT_SPECTRAL_INT
+                           return Int_Spectral;    break;
+#                          else
+                           Aux_Error( ERROR_INFO, "must enable \"SUPPORT_SPECTRAL_INT\" to use spectral interpolation (%d) !!\n",
+                                      INT_SPECTRAL );
+                           return NULL;            break;
+#                          endif // # ifdef SUPPORT_SPECTRAL_INT
       default           :  Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "IntScheme", IntScheme );
    }
 
