@@ -2362,6 +2362,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  if ( MODEL == ELBDM )
    InputPara.Opt__Flag_EngyDensity   = OPT__FLAG_ENGY_DENSITY;
    InputPara.Opt__Flag_Spectral      = OPT__FLAG_SPECTRAL;
+   InputPara.Opt__Flag_Spectral_N    = OPT__FLAG_SPECTRAL_N;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    InputPara.Opt__Flag_Interference  = OPT__FLAG_INTERFERENCE;
 #  endif
@@ -3383,6 +3384,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  if ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "Opt__Flag_EngyDensity",   HOFFSET(InputPara_t,Opt__Flag_EngyDensity  ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_Spectral",      HOFFSET(InputPara_t,Opt__Flag_Spectral     ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__Flag_Spectral_N",    HOFFSET(InputPara_t,Opt__Flag_Spectral_N   ), H5T_NATIVE_INT     );
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    H5Tinsert( H5_TypeID, "Opt__Flag_Interference",  HOFFSET(InputPara_t,Opt__Flag_Interference ), H5T_NATIVE_INT     );
 #  endif

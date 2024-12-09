@@ -135,6 +135,7 @@ double               ELBDM_TAYLOR3_COEFF;
 double               ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
 
 bool                 OPT__FLAG_SPECTRAL;
+int                  OPT__FLAG_SPECTRAL_N;
 double               FlagTable_Spectral[NLEVEL-1][2];
 
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )

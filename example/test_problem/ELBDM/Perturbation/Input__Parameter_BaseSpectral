@@ -86,6 +86,7 @@ OPT__FLAG_LOHNER_FORM         1           # form of Lohner: (1=FLASH-1, 2=FLASH-
 OPT__FLAG_ENGY_DENSITY        0           # flag: energy density (Input_Flag_EngyDensity) [0] ##ELBDM ONLY##
 OPT__FLAG_INTERFERENCE        1           # flag: interference level (Input__Flag_Interference) [0] ##ELBDM ONLY##
 OPT__FLAG_SPECTRAL            1           # flag: spectral refinement (Input__Flag_Spectral) [0] ##ELBDM ONLY##
+OPT__FLAG_SPECTRAL_N          2           # number of pol. coefficients to use for spectral refinement [2] ##ELBDM ONLY##
 OPT__FLAG_USER                0           # flag: user-defined (Input__Flag_User) -> edit "Flag_User.cpp" [0]
 OPT__FLAG_REGION              0           # flag: specify the regions **allowed** to be refined -> edit "Flag_Region.cpp" [0]
 OPT__FLAG_NPAR_PATCH          0           # flag: # of particles per patch (Input__Flag_NParPatch): (0=off, 1=itself, 2=itself+siblings) [0]

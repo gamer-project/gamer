@@ -154,6 +154,7 @@ extern int              ELBDM_FIRST_WAVE_LEVEL;
 #endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 extern bool             OPT__FLAG_SPECTRAL;
+extern int              OPT__FLAG_SPECTRAL_N;
 extern double           FlagTable_Spectral[NLEVEL-1][2];
 
 extern ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;

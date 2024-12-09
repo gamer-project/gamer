@@ -507,6 +507,7 @@ struct InputPara_t
 #  if ( MODEL == ELBDM )
    int    Opt__Flag_EngyDensity;
    int    Opt__Flag_Spectral;
+   int    Opt__Flag_Spectral_N;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    int    Opt__Flag_Interference;
 #  endif
