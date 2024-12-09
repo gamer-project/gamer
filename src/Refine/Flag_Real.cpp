@@ -4,7 +4,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID );
 void Prepare_for_Lohner( const OptLohnerForm_t Form, const real *Var1D, real *Ave1D, real *Slope1D, const int NVar );
 
 #if ( MODEL == ELBDM )
-void Prepare_for_Spectral_Criterion(const real *Var1D, real& Cond1D);
+void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond1D );
 #endif
 
 
@@ -40,37 +40,36 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    for (int PID=0; PID<amr->num[lv]; PID++)  amr->patch[0][lv][PID]->flag = false;
 
 
-   const int SibID_Array[3][3][3]     = {  { {18, 10, 19}, {14,   4, 16}, {20, 11, 21} },
-                                           { { 6,  2,  7}, { 0, 999,  1}, { 8,  3,  9} },
-                                           { {22, 12, 23}, {15,   5, 17}, {24, 13, 25} }  };    // sibling indices
-   const int  FlagBuf                 = ( lv == MAX_LEVEL-1 ) ? FLAG_BUFFER_SIZE_MAXM1_LV :
-                                        ( lv == MAX_LEVEL-2 ) ? FLAG_BUFFER_SIZE_MAXM2_LV :
-                                                                FLAG_BUFFER_SIZE;
-   const real dv                      = CUBE( amr->dh[lv] );
-   const bool IntPhase_No             = false;                 // for invoking Prepare_PatchData()
-   const bool DE_Consistency_No       = false;                 // for invoking Prepare_PatchData()
-   const int  NPG                     = 1;                     // for invoking Prepare_PatchData()
+   const int SibID_Array[3][3][3]       = {  { {18, 10, 19}, {14,   4, 16}, {20, 11, 21} },
+                                             { { 6,  2,  7}, { 0, 999,  1}, { 8,  3,  9} },
+                                             { {22, 12, 23}, {15,   5, 17}, {24, 13, 25} }  };    // sibling indices
+   const int  FlagBuf                   = ( lv == MAX_LEVEL-1 ) ? FLAG_BUFFER_SIZE_MAXM1_LV :
+                                          ( lv == MAX_LEVEL-2 ) ? FLAG_BUFFER_SIZE_MAXM2_LV :
+                                                                  FLAG_BUFFER_SIZE;
+   const real dv                        = CUBE( amr->dh[lv] );
+   const bool IntPhase_No               = false;                     // for invoking Prepare_PatchData()
+   const bool DE_Consistency_No         = false;                     // for invoking Prepare_PatchData()
+   const int  NPG                       = 1;                         // for invoking Prepare_PatchData()
 
 // Lohner criterion
-   const int  Lohner_NGhost           = 2;                     // number of ghost cells for the Lohner error estimator
-   const int  Lohner_NCell            = PS1 + 2*Lohner_NGhost; // size of the variable array for Lohner
-   const int  Lohner_NAve             = Lohner_NCell - 2;      // size of the average array for Lohner
-   const int  Lohner_NSlope           = Lohner_NAve;           // size of the slope array for Lohner
-   const IntScheme_t Lohner_IntScheme = INT_MINMOD1D;          // interpolation scheme for Lohner
+   const int  Lohner_NGhost             = 2;                         // number of ghost cells for the Lohner error estimator
+   const int  Lohner_NCell              = PS1 + 2*Lohner_NGhost;     // size of the variable array for Lohner
+   const int  Lohner_NAve               = Lohner_NCell - 2;          // size of the average array for Lohner
+   const int  Lohner_NSlope             = Lohner_NAve;               // size of the slope array for Lohner
+   const IntScheme_t Lohner_IntScheme   = INT_MINMOD1D;              // interpolation scheme for Lohner
 
 #  if ( MODEL == ELBDM )
 // interference criterion
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   const int  Interf_NGhost             = 1;                     // number of ghost cells for the interference criterion
-   const int  Interf_NCell              = PS1 + 2*Interf_NGhost; // size of the variable array for interference criterion
-   const int  Interf_NCond              = PS1;                   // size of the array for interference criterion
-   const IntScheme_t Interf_IntScheme   = INT_CQUAD;             // interpolation scheme for interference criterion
+   const int  Interf_NGhost             = 1;                         // number of ghost cells for the interference criterion
+   const int  Interf_NCell              = PS1 + 2*Interf_NGhost;     // size of the input array
+   const IntScheme_t Interf_IntScheme   = INT_CQUAD;                 // interpolation scheme
 #  endif
 
 // spectral refinement criterion
-   const int  Spectral_NGhost           = 1;                          // number of ghost cells
-   const int  Spectral_NCell            = PS2 + 2 * Spectral_NGhost;  // prepare patch group
-   const IntScheme_t Spectral_IntScheme = INT_CQUAD;                  // interpolation scheme
+   const int  Spectral_NGhost           = 1;                         // number of ghost cells for the spectral refinement criterion
+   const int  Spectral_NCell            = PS2 + 2*Spectral_NGhost;   // size of the input array
+   const IntScheme_t Spectral_IntScheme = INT_CQUAD;                 // interpolation scheme
 #  endif // # if ( MODEL == ELBDM )
 
 #  if ( MODEL == HYDRO  &&  defined GRAVITY )
@@ -192,8 +191,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       real *Lohner_Ave                   = NULL;   // array storing the averages of Lohner_Var for Lohner
       real *Lohner_Slope                 = NULL;   // array storing the slopes of Lohner_Var for Lohner
       real *Interf_Var                   = NULL;   // array storing the density and phase for the interference criterion
-      real *Spectral_Var                 = NULL;   // array storing a patch group of real and density part for spectral criterion
-      real  Spectral_Cond                = 0.0;    // variable storing the ratio of physical and extension masses
+      real *Spectral_Var                 = NULL;   // array storing a patch group of real and imaginary parts for the spectral criterion
+      real  Spectral_Cond                = 0.0;    // variable storing the magnitude of the largest coefficient for the spectral criterion
 
       int  i_start, i_end, j_start, j_end, k_start, k_end, SibID, SibPID, PID;
       bool ProperNesting, NextPatch;

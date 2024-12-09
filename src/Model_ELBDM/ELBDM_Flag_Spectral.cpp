@@ -31,22 +31,26 @@ const static flag_spectral_float  Flag_Spectral_Polynomials[FLAG_SPECTRAL_ORDER]
 {-0.0003100778920474471056327459006496383153717033565044403076171875, 0.0040310125966168128611166743269222934031859040260314941406250000, -0.0241860755797008754319765699847266660071909427642822265625000000, 0.0886822771255698777403964072618691716343164443969726562500000000, -0.2217056928139246874120971142474445514380931854248046875000000000, 0.3990702470650644428928899287711828947067260742187500000000000000, -0.5320936627534192941979540592001285403966903686523437500000000000, 0.5320936627534192941979540592001285403966903686523437500000000000, -0.3990702470650644428928899287711828947067260742187500000000000000, 0.2217056928139246874120971142474445514380931854248046875000000000, -0.0886822771255698777403964072618691716343164443969726562500000000, 0.0241860755797008754319765699847266660071909427642822265625000000, -0.0040310125966168128611166743269222934031859040260314941406250000, 0.0003100778920474471056327459006496383153717033565044403076171875},
 };
 
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Prepare_for_Spectral_Criterion
-// Description :  Evaluate the magnitude the coefficients of a polynomial expansion of the wave function.
+// Description :  Evaluate the magnitude of the coefficients of a polynomial expansion of the wave function.
 //                The coefficients of the polynomials can be shown to decay exponentially for a well-resolved function.
 //                Therefore, one can check whether the coefficients of the higher-order polynomials are sufficiently small.
 //                This function checks the polynomial coefficients of order (13 - OPT__FLAG_SPECTRAL_N + 1) to order 13.
 //                If the function is not well-resolved, they will be large.
 //
-// Note        :  1. This function is called once per patch group
+// Note        :  1. This function is called once per patch group by Flag_Real()
 //                2. The size of the array Var1D must be PS2 + 2
-//                3. Assume a ghost size of 1
+//                   --> Assume a ghost size of 1
 //
-// Parameter   :  Var1D : Array storing the input re & im
-//                Cond  : Reference to floating point variable where the magnitude of the largest coefficient will be stored.
+// Parameter   :  Var1D : Array storing the input real and imaginary parts
+//                Cond  : Reference to a floating-point variable storing the magnitude
+//                        of the largest coefficient
 //
-// Return      :  None
+// Return      :  Cond 
 //-------------------------------------------------------------------------------------------------------
 void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
 {
@@ -54,7 +58,7 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
 // set the stride to a small value to sample the wave function evenly
    const size_t Stride    = 1;
    const size_t GhostSize = 1;
-   const size_t Size1D    = PS2 + 2 * GhostSize;
+   const size_t Size1D    = PS2 + 2*GhostSize;
    const size_t MaxOrder  = 14;
    const size_t NField    = 2;
 // number of coefficients to consider for checking whether expansion has converged
@@ -63,25 +67,26 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
 
 // check
 #  ifdef GAMER_DEBUG
-   if ( NCutoff < 1 || NCutoff > MaxOrder )
-      Aux_Error( ERROR_INFO, "OPT__FLAG_SPECTRAL_N = %d outside of valid range [1, %d] !!\n", OPT__FLAG_SPECTRAL_N, MaxOrder );
+   if ( NCutoff < 1  ||  NCutoff > MaxOrder )
+      Aux_Error( ERROR_INFO, "OPT__FLAG_SPECTRAL_N = %d outside of valid range [1, %d] !!\n",
+                 OPT__FLAG_SPECTRAL_N, MaxOrder );
 #  endif
 
    const real* Re1D = Var1D;
    const real* Im1D = Var1D + CUBE(Size1D);
 
-   real Row[NField][Size1D];                    // array for reading input data
+   real Row[NField][Size1D];  // array for reading input data
 
 // initialise with 0
    Cond = 0;
 
 // iterate over 3 dimensions and sample the physical 2D arrays with a stride
-   for ( size_t XYZ = 0; XYZ < 3; ++XYZ )
-   for ( size_t k=GhostSize; k<Size1D-GhostSize; k+=Stride )
-   for ( size_t j=GhostSize; j<Size1D-GhostSize; j+=Stride )
+   for (size_t XYZ=0; XYZ<3; ++XYZ)
+   for (size_t k=GhostSize; k<Size1D-GhostSize; k+=Stride)
+   for (size_t j=GhostSize; j<Size1D-GhostSize; j+=Stride)
    {
 //    read one column of data from 3D block
-      for (size_t i = 0; i < Size1D; ++i) {
+      for (size_t i=0; i<Size1D; ++i) {
          size_t index;
 
          switch ( XYZ )
@@ -101,22 +106,24 @@ void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
          Row[1][i] = Im1D[index];
       } // i
 
-//    Compute polynomial expansions of real and imaginary parts
-      for (int i = 0; i < NCutoff; ++i)
+//    compute polynomial expansions of real and imaginary parts
+      for (int i=0; i<NCutoff; ++i)
       {
-         for (int l = 0; l < NField; l++) {
+         for (int l=0; l<NField; l++) {
             flag_spectral_float LCoeff = 0;
             flag_spectral_float RCoeff = 0;
-            for (int t = 0; t < MaxOrder; t++) {
-               LCoeff += Flag_Spectral_Polynomials[MaxOrder - NCutoff + i][t] * Row[l][t];                     // left boundary
-               RCoeff += Flag_Spectral_Polynomials[MaxOrder - NCutoff + i][t] * Row[l][Size1D - MaxOrder + t]; // right boundary
+            for (int t=0; t<MaxOrder; t++) {
+               LCoeff += Flag_Spectral_Polynomials[ MaxOrder - NCutoff + i ][t] * Row[l][                     t ];   // left boundary
+               RCoeff += Flag_Spectral_Polynomials[ MaxOrder - NCutoff + i ][t] * Row[l][ Size1D - MaxOrder + t ];   // right boundary
             } // t
-            Cond = MAX(Cond, abs(LCoeff));
-            Cond = MAX(Cond, abs(RCoeff));
+            Cond = MAX( Cond, abs(LCoeff) );
+            Cond = MAX( Cond, abs(RCoeff) );
          } // l
       } // i
    } // XYZ, k,j
+
 } // FUNCTION : Prepare_for_Spectral_Criterion
+
 
 
 #endif // #if ( MODEL == ELBDM )
