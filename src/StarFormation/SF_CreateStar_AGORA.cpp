@@ -99,7 +99,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    int      NNewPar = 0;
    real   (*RemovalFlu)[5]                   = new real [MaxNewPar][5];
    long   (*RemovalPos)[4]                   = new long [MaxNewPar][4];
-   real   (*NewParAtt)[PAR_NATT_TOTAL]       = new real [MaxNewPar][PAR_NATT_TOTAL];
+   real_par   (*NewParAtt)[PAR_NATT_TOTAL]       = new real [MaxNewPar][PAR_NATT_TOTAL];
    long    *NewParID                         = new long [MaxNewPar];
    long    *NewParPID                        = new long [MaxNewPar];
 
@@ -727,7 +727,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
       }
    } // for (int i=0; i<SelNNewPar; i++)
 
-   const real *PType = amr->Par->Type;
+   const real_par *PType = amr->Par->Type;
    int ParInPatch; // particle number in this patch
 
    for (int i=0; i<UniqueCount; i++)
