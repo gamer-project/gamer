@@ -44,8 +44,6 @@ static double     theta_B;
 static double     Mach_num;
 double            rho_AD_SinkParTest;                      // adiabatic density thresheld
 static char       Tur_Table[MAX_STRING];
-
-static int Idx_ParID = Idx_Undefined;
 // =======================================================================================
 
 // #ifdef FEEDBACK
