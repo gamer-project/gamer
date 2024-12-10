@@ -78,18 +78,18 @@ void Validate()
    Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
 #  endif
 
-// #  ifndef STAR_FORMATION
-//    Aux_Error( ERROR_INFO, "STAR_FORMATION must be enabled !!\n" );
-// #  endif
+#  ifndef STAR_FORMATION
+   Aux_Error( ERROR_INFO, "STAR_FORMATION must be enabled !!\n" );
+#  endif
 
 // #  ifndef FEEDBACK
 //    Aux_Error( ERROR_INFO, "FEEDBACK must be enabled !!\n" );
 // #  endif
 
-// #  ifdef PARTICLE
-//    if ( OPT__INIT == INIT_BY_FUNCTION  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
-//       Aux_Error( ERROR_INFO, "please set PAR_INIT = 1 (by FUNCTION) !!\n" );
-// #  endif
+#  ifdef PARTICLE
+   if ( OPT__INIT == INIT_BY_FUNCTION  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
+      Aux_Error( ERROR_INFO, "please set PAR_INIT = 1 (by FUNCTION) !!\n" );
+#  endif
 
 #  ifdef GRAVITY
    if ( !OPT__SELF_GRAVITY )
@@ -392,39 +392,39 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 #endif // #ifdef MHD
 #endif // #if ( MODEL == HYDRO )
 
-// #  ifdef PARTICLE
-// //-------------------------------------------------------------------------------------------------------
-// // Function    :  AddNewParticleAttribute_CF
-// // Description :  Add the problem-specific particle attributes
-// //
-// // Note        :  1. Ref: https://github.com/gamer-project/gamer/wiki/Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes
-// //                2. Invoke AddParticleField() for each of the problem-specific particle attribute:
-// //                   --> Attribute label sent to AddParticleField() will be used as the output name of the attribute
-// //                   --> Attribute index returned by AddParticleField() can be used to access the particle attribute data
-// //                3. Pre-declared attribute indices are put in Field.h
-// //
-// // Parameter   :  None
-// //
-// // Return      :  None
-// //-------------------------------------------------------------------------------------------------------
-// void AddNewParticleAttribute_BBTest()
-// {
+#  ifdef PARTICLE
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AddNewParticleAttribute_SinkParTest
+// Description :  Add the problem-specific particle attributes
+//
+// Note        :  1. Ref: https://github.com/gamer-project/gamer/wiki/Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes
+//                2. Invoke AddParticleField() for each of the problem-specific particle attribute:
+//                   --> Attribute label sent to AddParticleField() will be used as the output name of the attribute
+//                   --> Attribute index returned by AddParticleField() can be used to access the particle attribute data
+//                3. Pre-declared attribute indices are put in Field.h
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void AddNewParticleAttribute_SinkParTest()
+{
 
-// // "Idx_ParMetalFrac" has been predefined in Field.h
-//    if ( Idx_ParID == Idx_Undefined )
-//       Idx_ParID = AddParticleAttribute( "PAR_ID" );
+// "Idx_ParMetalFrac" has been predefined in Field.h
+   if ( Idx_ParID == Idx_Undefined )
+      Idx_ParID = AddParticleAttribute( "PAR_ID" );
 
-// } // FUNCTION : AddNewParticleAttribute_BBTest
+} // FUNCTION : AddNewParticleAttribute_SinkParTest
 
 
-// void Par_Init_ByFunction_BBTest( const long NPar_ThisRank, const long NPar_AllRank,
-//                           real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-//                           real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-//                           real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
-// {
-//    // we only use star particles, so keep here empty.
-// }  // FUNCTION : Par_Init_ByFunction
-// #  endif
+void Par_Init_ByFunction_SinkParTest( const long NPar_ThisRank, const long NPar_AllRank,
+                          real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
+                          real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
+                          real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
+{
+   // we only use star particles, so keep here empty.
+}  // FUNCTION : Par_Init_ByFunction
+#  endif
 
 
 
@@ -459,10 +459,10 @@ void Init_TestProb_Hydro_SinkParTest()
 #  ifdef MHD
    Init_Function_BField_User_Ptr     = SetBFieldIC;
 #  endif
-// #  ifdef PARTICLE
-//    Par_Init_ByFunction_Ptr           = Par_Init_ByFunction_BBTest; // option: PAR_INIT=1;              example: Particle/Par_Init_ByFunction.cpp
-//    Par_Init_Attribute_User_Ptr       = AddNewParticleAttribute_BBTest; // set PAR_NATT_USER;               example: TestProblem/Hydro/AGORA_IsolatedGalaxy/Init_TestProb_Hydro_AGORA_IsolatedGalaxy.cpp --> AddNewParticleAttribute()
-// #  endif
+#  ifdef PARTICLE
+   Par_Init_ByFunction_Ptr           = Par_Init_ByFunction_SinkParTest; // option: PAR_INIT=1;              example: Particle/Par_Init_ByFunction.cpp
+   Par_Init_Attribute_User_Ptr       = AddNewParticleAttribute_SinkParTest; // set PAR_NATT_USER;               example: TestProblem/Hydro/AGORA_IsolatedGalaxy/Init_TestProb_Hydro_AGORA_IsolatedGalaxy.cpp --> AddNewParticleAttribute()
+#  endif
 // #  ifdef FEEDBACK
 //    FB_Init_User_Ptr                  = FB_Init_SinkAccretion;
 // #  endif
