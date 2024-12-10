@@ -99,7 +99,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    int      NNewPar = 0;
    real   (*RemovalFlu)[5]                   = new real [MaxNewPar][5];
    long   (*RemovalPos)[4]                   = new long [MaxNewPar][4];
-   real_par   (*NewParAtt)[PAR_NATT_TOTAL]       = new real [MaxNewPar][PAR_NATT_TOTAL];
+   real_par   (*NewParAtt)[PAR_NATT_TOTAL]       = new real_par [MaxNewPar][PAR_NATT_TOTAL];
    long    *NewParID                         = new long [MaxNewPar];
    long    *NewParPID                        = new long [MaxNewPar];
 
