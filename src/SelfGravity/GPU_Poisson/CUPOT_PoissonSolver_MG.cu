@@ -748,7 +748,7 @@ __device__ void Restrict( const real *FData, real *CData, const uint NGrid_F, co
 //    Coeff_zc = (real)1.0 - Coeff_zm - Coeff_zp;
 
 
-//###OPTIMIZATION : follow the same strategy adopted in "Int_Quadratic"
+//###OPTIMIZATION: follow the same strategy adopted in "Int_Quadratic"
       CData[Cijk] =       Coeff_zm * Coeff_ym * Coeff_xm * FData[ Fijk - Fdk - Fdj - Fdi ]
                        +  Coeff_zm * Coeff_ym * Coeff_xc * FData[ Fijk - Fdk - Fdj       ]
                        +  Coeff_zm * Coeff_ym * Coeff_xp * FData[ Fijk - Fdk - Fdj + Fdi ]
@@ -880,7 +880,7 @@ __device__ void Prolongate_and_Correct( const real *CData, real *FData, const ui
 //                RHS      : 1D array storing the RHS of the Poisson equation
 //                dh       : Grid size
 //                s_Error  : Shared-memory array to store the L1 error
-//                s_SolSum : Shared-memroy array to store the sum of solution
+//                s_SolSum : Shared-memory array to store the sum of solution
 //                tid      : Thread index
 //-------------------------------------------------------------------------------------------------------
 __device__ void EstimateError( const real *Sol, const real *RHS, const real dh, real *s_Error, real *s_SolSum,
