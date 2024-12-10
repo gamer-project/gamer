@@ -11,7 +11,7 @@ It is recommended to first check [[Quick Start: 1D Shock Tube]].
 * [yt](http://yt-project.org)
 * [HDF5](https://support.hdfgroup.org/HDF5)
 
-2\. Generate `Makefile` by [configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Configure.py).
+2\. Generate `Makefile` by [[configure.py | Installation]].
 ``` bash
 cp ../example/test_problem/Hydro/BlastWave/generate_make.sh ./
 sh generate_make.sh --openmp=true --gpu=true --mpi=true --hdf5=true

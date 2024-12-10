@@ -6,6 +6,7 @@
 
 **User Guide**
 * [[ Installation | Installation ]]
+   * [[ Option List | Installation:-Option-List ]]
 * [[ Running the Code | Running-the-Code ]]
 * [[ Adding New Simulations | Adding-New-Simulations ]]
 * [[ Runtime Parameters | Runtime-Parameters ]]
@@ -28,6 +29,7 @@
 **Developer Guide**
    * [[ Adding Parameters | Adding-Parameters ]]
    * [[ AMR Structure | AMR-Structure ]]
+   * [[ Configure.py | Configure.py ]]
    * [[ ELBDM Hybrid Scheme | ELBDM-Hybrid-Scheme ]]
    * [[ ELBDM Spectral Solver | ELBDM-Spectral-Solver ]]
    * [[ ELBDM Spectral Interpolation | ELBDM-Spectral-Interpolation ]]
