@@ -464,7 +464,7 @@ def load_arguments():
     parser.add_argument( "--wave_scheme", type=str, metavar="TYPE", gamer_name="WAVE_SCHEME",
                          default="WAVE_FD", choices=["WAVE_FD", "WAVE_GRAMFE"],
                          depend={"model":"ELBDM"},
-                         help="Wave scheme for <--model=ELBDM> (WAVE_FD:finite difference, WAVE_GRAMFE: local spectral method).\n"
+                         help="Wave scheme for <--model=ELBDM> (WAVE_FD: finite difference, WAVE_GRAMFE: local spectral method).\n"
                        )
 
     parser.add_argument( "--conserve_mass", type=str2bool, metavar="BOOLEAN", gamer_name="CONSERVE_MASS",
