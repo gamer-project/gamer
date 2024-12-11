@@ -210,11 +210,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
 {
 
-   HDF5_InputTest->Add( "ExtPot_Amp",   &ExtPot_Amp    );
-   HDF5_InputTest->Add( "ExtPot_M",     &ExtPot_M      );
-   HDF5_InputTest->Add( "ExtPot_Cen_X", &ExtPot_Cen[0] );
-   HDF5_InputTest->Add( "ExtPot_Cen_Y", &ExtPot_Cen[1] );
-   HDF5_InputTest->Add( "ExtPot_Cen_Z", &ExtPot_Cen[2] );
+   HDF5_InputTest->Add( "ELBDM_ExtPot_Amp",   &ELBDM_ExtPot_Amp    );
+   HDF5_InputTest->Add( "ELBDM_ExtPot_M",     &ELBDM_ExtPot_M      );
+   HDF5_InputTest->Add( "ELBDM_ExtPot_Cen_X", &ELBDM_ExtPot_Cen[0] );
+   HDF5_InputTest->Add( "ELBDM_ExtPot_Cen_Y", &ELBDM_ExtPot_Cen[1] );
+   HDF5_InputTest->Add( "ELBDM_ExtPot_Cen_Z", &ELBDM_ExtPot_Cen[2] );
 
 } // FUNCTION : Output_HDF5_TestProb
 #endif // #ifdef SUPPORT_HDF5

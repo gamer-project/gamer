@@ -1363,14 +1363,14 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
 {
 
-   HDF5_InputTest->Add( "HaloMerger_Halo_Num",                   &HaloMerger_Halo_Num,                  );
-   HDF5_InputTest->Add( "HaloMerger_Halo_InitMode",              &HaloMerger_Halo_InitMode,             );
-   HDF5_InputTest->Add( "HaloMerger_Soliton_Num",                &HaloMerger_Soliton_Num,               );
-   HDF5_InputTest->Add( "HaloMerger_Soliton_InitMode",           &HaloMerger_Soliton_InitMode,          );
-   HDF5_InputTest->Add( "HaloMerger_ParCloud_Num",               &HaloMerger_ParCloud_Num,              );
-   HDF5_InputTest->Add( "HaloMerger_ParCloud_InitMode",          &HaloMerger_ParCloud_InitMode,         );
-   HDF5_InputTest->Add( "HaloMerger_ExtPot_UniDenSph_M",         &HaloMerger_ExtPot_UniDenSph_M,        );
-   HDF5_InputTest->Add( "HaloMerger_ExtPot_UniDenSph_R",         &HaloMerger_ExtPot_UniDenSph_R,        );
+   HDF5_InputTest->Add( "HaloMerger_Halo_Num",                   &HaloMerger_Halo_Num                   );
+   HDF5_InputTest->Add( "HaloMerger_Halo_InitMode",              &HaloMerger_Halo_InitMode              );
+   HDF5_InputTest->Add( "HaloMerger_Soliton_Num",                &HaloMerger_Soliton_Num                );
+   HDF5_InputTest->Add( "HaloMerger_Soliton_InitMode",           &HaloMerger_Soliton_InitMode           );
+   HDF5_InputTest->Add( "HaloMerger_ParCloud_Num",               &HaloMerger_ParCloud_Num               );
+   HDF5_InputTest->Add( "HaloMerger_ParCloud_InitMode",          &HaloMerger_ParCloud_InitMode          );
+   HDF5_InputTest->Add( "HaloMerger_ExtPot_UniDenSph_M",         &HaloMerger_ExtPot_UniDenSph_M         );
+   HDF5_InputTest->Add( "HaloMerger_ExtPot_UniDenSph_R",         &HaloMerger_ExtPot_UniDenSph_R         );
    HDF5_InputTest->Add( "HaloMerger_ExtPot_UniDenSph_CenCoordX", &HaloMerger_ExtPot_UniDenSph_CenCoordX );
    HDF5_InputTest->Add( "HaloMerger_ExtPot_UniDenSph_CenCoordY", &HaloMerger_ExtPot_UniDenSph_CenCoordY );
    HDF5_InputTest->Add( "HaloMerger_ExtPot_UniDenSph_CenCoordZ", &HaloMerger_ExtPot_UniDenSph_CenCoordZ );
