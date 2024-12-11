@@ -28,6 +28,19 @@ typedef double real_par;
 typedef float  real_par;
 #endif
 
+#ifdef SUPPORT_GRACKLE
+#include <grackle_float.h>
+#ifdef GRACKLE_FLOAT_8
+typedef double real_che;
+#else
+#ifdef GRACKLE_FLOAT_4
+typedef float  real_che;
+#else
+#error : GRACKLE_FLOAT_8 or GRACKLE_FLOAT_4 is not defined in grackle library!
+#endif
+#endif
+#endif // #ifdef SUPPORT_GRACKLE
+
 #if ( GRAMFE_SCHEME == GRAMFE_FFT )
 #ifdef GRAMFE_FFT_FLOAT8
 typedef double gramfe_fft_float;

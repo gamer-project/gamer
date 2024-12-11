@@ -40,7 +40,7 @@ extern int CheIdx_Metal;
 //                NPG         : Number of patch groups prepared at a time
 //                PID0_List   : List recording the patch indices with LocalID==0 to be udpated
 //-------------------------------------------------------------------------------------------------------
-void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int *PID0_List )
+void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const int *PID0_List )
 {
 
 // check
@@ -101,22 +101,22 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
    const bool CheckMinEint_Yes = true;
 #  endif
 
-   real *Ptr_Dens0  = h_Che_Array + CheIdx_Dens *Size1v;
-   real *Ptr_sEint0 = h_Che_Array + CheIdx_sEint*Size1v;
-   real *Ptr_Ent0   = h_Che_Array + CheIdx_Ent  *Size1v;
-   real *Ptr_e0     = h_Che_Array + CheIdx_e    *Size1v;
-   real *Ptr_HI0    = h_Che_Array + CheIdx_HI   *Size1v;
-   real *Ptr_HII0   = h_Che_Array + CheIdx_HII  *Size1v;
-   real *Ptr_HeI0   = h_Che_Array + CheIdx_HeI  *Size1v;
-   real *Ptr_HeII0  = h_Che_Array + CheIdx_HeII *Size1v;
-   real *Ptr_HeIII0 = h_Che_Array + CheIdx_HeIII*Size1v;
-   real *Ptr_HM0    = h_Che_Array + CheIdx_HM   *Size1v;
-   real *Ptr_H2I0   = h_Che_Array + CheIdx_H2I  *Size1v;
-   real *Ptr_H2II0  = h_Che_Array + CheIdx_H2II *Size1v;
-   real *Ptr_DI0    = h_Che_Array + CheIdx_DI   *Size1v;
-   real *Ptr_DII0   = h_Che_Array + CheIdx_DII  *Size1v;
-   real *Ptr_HDI0   = h_Che_Array + CheIdx_HDI  *Size1v;
-   real *Ptr_Metal0 = h_Che_Array + CheIdx_Metal*Size1v;
+   real_che *Ptr_Dens0  = h_Che_Array + CheIdx_Dens *Size1v;
+   real_che *Ptr_sEint0 = h_Che_Array + CheIdx_sEint*Size1v;
+   real_che *Ptr_Ent0   = h_Che_Array + CheIdx_Ent  *Size1v;
+   real_che *Ptr_e0     = h_Che_Array + CheIdx_e    *Size1v;
+   real_che *Ptr_HI0    = h_Che_Array + CheIdx_HI   *Size1v;
+   real_che *Ptr_HII0   = h_Che_Array + CheIdx_HII  *Size1v;
+   real_che *Ptr_HeI0   = h_Che_Array + CheIdx_HeI  *Size1v;
+   real_che *Ptr_HeII0  = h_Che_Array + CheIdx_HeII *Size1v;
+   real_che *Ptr_HeIII0 = h_Che_Array + CheIdx_HeIII*Size1v;
+   real_che *Ptr_HM0    = h_Che_Array + CheIdx_HM   *Size1v;
+   real_che *Ptr_H2I0   = h_Che_Array + CheIdx_H2I  *Size1v;
+   real_che *Ptr_H2II0  = h_Che_Array + CheIdx_H2II *Size1v;
+   real_che *Ptr_DI0    = h_Che_Array + CheIdx_DI   *Size1v;
+   real_che *Ptr_DII0   = h_Che_Array + CheIdx_DII  *Size1v;
+   real_che *Ptr_HDI0   = h_Che_Array + CheIdx_HDI  *Size1v;
+   real_che *Ptr_Metal0 = h_Che_Array + CheIdx_Metal*Size1v;
 
 
 #  pragma omp parallel
@@ -132,9 +132,9 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
 #  endif // #ifdef DUAL_ENERGY ... else ...
    real (*fluid)[PS1][PS1][PS1]=NULL;
 
-   real *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ent=NULL, *Ptr_e=NULL, *Ptr_HI=NULL, *Ptr_HII=NULL;
-   real *Ptr_HeI=NULL, *Ptr_HeII=NULL, *Ptr_HeIII=NULL, *Ptr_HM=NULL, *Ptr_H2I=NULL, *Ptr_H2II=NULL;
-   real *Ptr_DI=NULL, *Ptr_DII=NULL, *Ptr_HDI=NULL, *Ptr_Metal=NULL;
+   real_che *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ent=NULL, *Ptr_e=NULL, *Ptr_HI=NULL, *Ptr_HII=NULL;
+   real_che *Ptr_HeI=NULL, *Ptr_HeII=NULL, *Ptr_HeIII=NULL, *Ptr_HM=NULL, *Ptr_H2I=NULL, *Ptr_H2II=NULL;
+   real_che *Ptr_DI=NULL, *Ptr_DII=NULL, *Ptr_HDI=NULL, *Ptr_Metal=NULL;
 
 #  pragma omp for schedule( static )
    for (int TID=0; TID<NPG; TID++)
