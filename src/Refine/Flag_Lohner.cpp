@@ -31,13 +31,17 @@ bool Flag_Lohner( const int i, const int j, const int k, const OptLohnerForm_t F
                   const real *Slope1D, const int NVar, const double Threshold, const double Filter, const double Soften )
 {
 
+// return if there is no target variable (e.g., for fluid levels in ELBDM hybrid scheme)
+   if ( NVar == 0 )  return false;
+
+
 // check
 #  ifdef GAMER_DEBUG
    if (  i < 0  ||  i >= PS1  ||  j < 0  ||  j >= PS1  ||  k < 0  ||  k >= PS1  )
       Aux_Error( ERROR_INFO, "incorrect index (i,j,k) = (%d,%d,%d) !!\n", i, j, k );
 
-#  if ( MODEL == ELBDM )
-   if ( NVar != 2 )  Aux_Error( ERROR_INFO, "NVar (%d) != 2 in ELBDM !!\n", NVar );
+#  if ( ELBDM_SCHEME == ELBDM_WAVE )
+   if ( NVar != 2 )  Aux_Error( ERROR_INFO, "NVar (%d) != 2 when ELBDM_SCHEME == ELBDM_WAVE !!\n", NVar );
 #  endif
 #  endif // #ifdef GAMER_DEBUG
 
