@@ -92,9 +92,12 @@ for example.
 See also
 [[ Add Problem-specific Grid Fields and Particle Attributes | Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes ]] for adding user-defined fluid fields.
 
-**Caution: when enabling [[OPENMP | Installation:-Simulation Options#OPENMP]],
-the grid IC function must be thread-safe** since it will be invoked by
-multiple threads in parallel. One can disable OpenMP parallelization
+> [!CAUTION]
+> When enabling [[OPENMP | Installation:-Simulation Options#OPENMP]],
+the grid IC function must be **thread-safe** since it will be invoked by
+multiple threads in parallel.
+>
+> One can disable OpenMP parallelization
 for the grid IC function by adopting
 [[OPT__INIT_GRID_WITH_OMP| MPI-and-OpenMP#OPT__INIT_GRID_WITH_OMP]]=0.
 
@@ -147,9 +150,12 @@ It should return the vector potential at a given location `x/y/z` and time `Time
 
 **Example: `Init_BField_ByVecPot_User_Template()` in `src/Model_Hydro/MHD_Init_BField_ByVecPot_Function.cpp`.**
 
-**Caution: when enabling [[OPENMP | Installation:-Simulation Options#OPENMP]],
-the magnetic field or the vector potential IC function must be thread-safe** since it will be invoked by
-multiple threads in parallel. One can disable OpenMP parallelization
+> [!CAUTION]
+> When enabling [[OPENMP | Installation:-Simulation Options#OPENMP]],
+the magnetic field or the vector potential IC function must be **thread-safe** since it will be invoked by
+multiple threads in parallel.
+>
+> One can disable OpenMP parallelization
 for the magnetic field IC function by adopting
 [[OPT__INIT_GRID_WITH_OMP| MPI-and-OpenMP#OPT__INIT_GRID_WITH_OMP]]=0.
 
@@ -362,10 +368,11 @@ To support AMR data in `UM_IC`, set [OPT__UM_IC_NLEVEL](#OPT__UM_IC_NLEVEL)>1 an
 edit the input table `Input__UM_IC_RefineRegion`. See `example/input/Input__UM_IC_RefineRegion`
 and the example code `tool/inits/create_UM_IC.cpp` for details.
 
-**Caution: [OPT__INIT](#OPT__INIT)=3 does not fully support
+> [!CAUTION]
+> [OPT__INIT](#OPT__INIT)=3 does not fully support
 user-defined passively advected scalars (i.e.,
 [[NCOMP_PASSIVE_USER | Installation: Simulation-Options#NCOMP_PASSIVE_USER]]>0) yet.
-[[Ask developers for help | Home#need-helps]] if needed.**
+[[Ask developers for help | Home#need-helps]] if needed.
 
 
 <a name="IC-File-BField"></a>
