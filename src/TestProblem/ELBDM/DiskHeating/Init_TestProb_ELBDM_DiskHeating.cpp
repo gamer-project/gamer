@@ -338,6 +338,49 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Output_HDF5_TestProb
+// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype
+//                3. There MUST be more than one parameter to be stored
+//                4. The pointer of the data MUST still exist outside the function, e.g. global variables
+//
+// Parameter   :  HDF5_InputTest : the structure storing the parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
+{
+
+   HDF5_InputTest->Add( "CenX",                    &Cen[0]                  );
+   HDF5_InputTest->Add( "CenY",                    &Cen[1]                  );
+   HDF5_InputTest->Add( "CenZ",                    &Cen[2]                  );
+   HDF5_InputTest->Add( "AddFixedHalo",            &AddFixedHalo            );
+   HDF5_InputTest->Add( "HaloUseTable",            &HaloUseTable            );
+   HDF5_InputTest->Add( "m_22",                    &m_22                    );
+   HDF5_InputTest->Add( "CoreRadius",              &CoreRadius              );
+   HDF5_InputTest->Add( "Rho_0",                   &Rho_0                   );
+   HDF5_InputTest->Add( "Rs",                      &Rs                      );
+   HDF5_InputTest->Add( "Alpha",                   &Alpha                   );
+   HDF5_InputTest->Add( "Beta",                    &Beta                    );
+   HDF5_InputTest->Add( "Gamma",                   &Gamma                   );
+   HDF5_InputTest->Add( "DensTableFile",            DensTableFile           );
+   HDF5_InputTest->Add( "AddParWhenRestart",       &AddParWhenRestart       );
+   HDF5_InputTest->Add( "AddParWhenRestartByFile", &AddParWhenRestartByFile );
+   HDF5_InputTest->Add( "AddParWhenRestartNPar",   &AddParWhenRestartNPar   );
+   HDF5_InputTest->Add( "NewDisk_RSeed",           &NewDisk_RSeed           );
+   HDF5_InputTest->Add( "Disk_Mass",               &Disk_Mass               );
+   HDF5_InputTest->Add( "Disk_R",                  &Disk_R                  );
+   HDF5_InputTest->Add( "DispTableFile",            DispTableFile           );
+
+} // FUNCTION : Output_HDF5_TestProb
+#endif // #ifdef SUPPORT_HDF5
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  BC
 // Description :  Boundary conditions
@@ -724,6 +767,9 @@ void Init_TestProb_ELBDM_DiskHeating()
    Par_Init_ByFunction_Ptr    = Par_Init_ByFunction_DiskHeating;
    Init_User_Ptr              = Init_NewDiskRestart;
    Init_User_AfterPoisson_Ptr = Init_NewDiskVelocity;
+#  endif
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_TestProb_Ptr   = Output_HDF5_TestProb;
 #  endif
 #  endif // #if ( MODEL == ELBDM )
 
