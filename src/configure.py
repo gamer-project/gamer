@@ -73,6 +73,8 @@ class ArgumentParser( argparse.ArgumentParser ):
         self.depends     = {}
         self.constraints = {}
         self.gamer_names = {}
+        self.prefix      = {}
+        self.suffix      = {}
         super(ArgumentParser, self).__init__(*args, **kwargs)
 
     def add_argument( self, *args, **kwargs ):
@@ -85,6 +87,12 @@ class ArgumentParser( argparse.ArgumentParser ):
         if "gamer_name" in kwargs:
             key = args[0].replace("-", "")
             self.gamer_names[key] = kwargs.pop("gamer_name")
+        if "prefix" in kwargs:
+            key = args[0].replace("-", "")
+            self.prefix[key] = kwargs.pop("prefix")
+        if "suffix" in kwargs:
+            key = args[0].replace("-", "")
+            self.suffix[key] = kwargs.pop("suffix")
 
         super(ArgumentParser, self).add_argument(*args, **kwargs)
         option = kwargs.copy()
@@ -112,7 +120,7 @@ class ArgumentParser( argparse.ArgumentParser ):
             if arg == '--gpu_arch': msg += "ERROR: <--gpu_arch> is deprecated. Please set <GPU_COMPUTE_CAPABILITY> in your machine *.config file (see ../configs/template.config).\n"
 
         if len(argv) != 0: self.error( msg )
-        return args, self.gamer_names, self.depends, self.constraints
+        return args, self.gamer_names, self.depends, self.constraints, self.prefix, self.suffix
 
     def _get_option_tuples(self, option_string):
         # This function is directly from the source code of `argparse`.
@@ -264,15 +272,15 @@ def str2bool( v ):
     else: raise TypeError("Can not convert <%s> to boolean."%(v))
     return
 
-def add_option( opt_str, name, val ):
+def add_option( opt_str, name, val, prefix="", suffix="" ):
     # NOTE: Every -Doption must have a trailing space.
     if type(val) == type(True):
         if val: opt_str += "-D%s "%(name)
         LOGGER.info("%-25s : %r"%(name, val))
     elif type(val) == type("str"):
         if val != NONE_STR:
-            opt_str += "-D%s=%s "%(name, val)
-            LOGGER.info("%-25s : %s"%(name, val))
+            opt_str += "-D%s=%s "%(name, prefix+val+suffix)
+            LOGGER.info("%-25s : %s"%(name, prefix+val+suffix))
     elif type(val) == type(0):
         opt_str += "-D%s=%d "%(name, val)
         LOGGER.info("%-25s : %d"%(name, val))
@@ -447,18 +455,18 @@ def load_arguments():
                        )
 
     parser.add_argument( "--flux", type=str, metavar="TYPE", gamer_name="RSOLVER",
-                         default=None, choices=["EXACT", "ROE", "HLLE", "HLLC", "HLLD"],
+                         default=None, choices=["EXACT", "ROE", "HLLE", "HLLC", "HLLD", NONE_STR],
                          depend={"model":"HYDRO"},
                          constraint={ "ROE":{"eos":"GAMMA"},
                                       "EXACT":{"eos":"GAMMA"} },
                          help="The Riemann solver. Pure hydro: EXACT/ROE/HLLE/HLLC^, MHD: ROE/HLLE/HLLD^, SRHD: HLLE/HLLC^, (^ indicates the recommended and default solvers). Useless for RTVD.\n"
                        )
 
-    parser.add_argument( "--dual", type=str, metavar="TYPE", gamer_name="DUAL_ENERGY",
-                         default=NONE_STR, choices=[NONE_STR, "DE_ENPY", "DE_EINT"],
+    parser.add_argument( "--dual", type=str, metavar="TYPE", gamer_name="DUAL_ENERGY", prefix="DE_",
+                         default=NONE_STR, choices=[NONE_STR, "ENPY", "EINT"],
                          depend={"model":"HYDRO"},
-                         constraint={ "DE_ENPY":{"eos":"GAMMA"} },
-                         help="The dual-energy formalism (DE_ENPY: entropy, DE_EINT: internal energy). DE_EINT is not supported yet. Useless for RTVD.\n"
+                         constraint={ "ENPY":{"eos":"GAMMA"} },
+                         help="The dual-energy formalism (ENPY: entropy, EINT: internal energy). EINT is not supported yet. Useless for RTVD.\n"
                        )
 
     parser.add_argument( "--mhd", type=str2bool, metavar="BOOLEAN", gamer_name="MHD",
@@ -483,7 +491,7 @@ def load_arguments():
                          help="Enable cosmic rays. Must use <--eos=COSMIC_RAY>.\n"
                        )
 
-    parser.add_argument( "--eos", type=str, metavar="TYPE", gamer_name="EOS",
+    parser.add_argument( "--eos", type=str, metavar="TYPE", gamer_name="EOS", prefix="EOS_",
                          default=None, choices=["GAMMA", "ISOTHERMAL", "NUCLEAR", "TABULAR", "COSMIC_RAY", "TAUBMATHEWS", "USER"],
                          depend={"model":"HYDRO"},
                          constraint={ "ISOTHERMAL":{"barotropic":True}, "COSMIC_RAY":{"cosmic_ray":True}, "TAUBMATHEWS":{"srhd":True} },
@@ -498,16 +506,16 @@ def load_arguments():
                        )
 
     # A.2 ELBDM scheme
-    parser.add_argument( "--elbdm_scheme", type=str, metavar="TYPE", gamer_name="ELBDM_SCHEME",
-                         default="ELBDM_WAVE", choices=["ELBDM_WAVE", "ELBDM_HYBRID"],
+    parser.add_argument( "--elbdm_scheme", type=str, metavar="TYPE", gamer_name="ELBDM_SCHEME", prefix="ELBDM_",
+                         default="WAVE", choices=["WAVE", "HYBRID"],
                          depend={"model":"ELBDM"},
-                         help="Scheme type for <--model=ELBDM> (ELBDM_WAVE: wave-only, ELBDM_HYBRID: fluid-wave-hybrid-scheme).\n"
+                         help="Scheme type for <--model=ELBDM> (WAVE: wave-only, HYBRID: fluid-wave-hybrid-scheme).\n"
                        )
 
-    parser.add_argument( "--wave_scheme", type=str, metavar="TYPE", gamer_name="WAVE_SCHEME",
-                         default="WAVE_FD", choices=["WAVE_FD", "WAVE_GRAMFE"],
+    parser.add_argument( "--wave_scheme", type=str, metavar="TYPE", gamer_name="WAVE_SCHEME", prefix="WAVE_",
+                         default="FD", choices=["FD", "GRAMFE"],
                          depend={"model":"ELBDM"},
-                         help="Wave scheme for <--model=ELBDM> (WAVE_FD:finite difference, WAVE_GRAMFE: local spectral method).\n"
+                         help="Wave scheme for <--model=ELBDM> (FD: finite difference, GRAMFE: local spectral method).\n"
                        )
 
     parser.add_argument( "--conserve_mass", type=str2bool, metavar="BOOLEAN", gamer_name="CONSERVE_MASS",
@@ -519,21 +527,21 @@ def load_arguments():
     parser.add_argument( "--laplacian_four", type=str2bool, metavar="BOOLEAN", gamer_name="LAPLACIAN_4TH",
                          default=None,
                          depend={"model":"ELBDM"},
-                         constraint={ True:{"wave_scheme":"WAVE_FD"} },
-                         help="Enable the fourth-order Laplacian for <--model=ELBDM> (for <--wave_scheme=WAVE_FD> only).\n"
+                         constraint={ True:{"wave_scheme":"FD"} },
+                         help="Enable the fourth-order Laplacian for <--model=ELBDM> (for <--wave_scheme=FD> only).\n"
                        )
 
-    parser.add_argument( "--gramfe_scheme", type=str, metavar="TYPE", gamer_name="GRAMFE_SCHEME",
-                         default="GRAMFE_MATMUL", choices=["GRAMFE_MATMUL", "GRAMFE_FFT"],
-                         depend={"model":"ELBDM", "wave_scheme":"WAVE_GRAMFE"},
-                         constraint={ "GRAMFE_MATMUL":{"gsl":True} },
-                         help="GramFE scheme for <--wave_scheme=WAVE_GRAMFE> (GRAMFE_MATMUL: faster for PATCH_SIZE=8, GRAMFE_FFT: faster for larger patch sizes).\n"
+    parser.add_argument( "--gramfe_scheme", type=str, metavar="TYPE", gamer_name="GRAMFE_SCHEME", prefix="GRAMFE_",
+                         default="MATMUL", choices=["MATMUL", "FFT"],
+                         depend={"model":"ELBDM", "wave_scheme":"GRAMFE"},
+                         constraint={ "MATMUL":{"gsl":True} },
+                         help="GramFE scheme for <--wave_scheme=GRAMFE> (MATMUL: faster for PATCH_SIZE=8, FFT: faster for larger patch sizes).\n"
                        )
 
-    parser.add_argument( "--hybrid_scheme", type=str, metavar="TYPE", gamer_name="HYBRID_SCHEME",
-                         default="HYBRID_MUSCL", choices=["HYBRID_UPWIND", "HYBRID_FROMM", "HYBRID_MUSCL"],
-                         depend={"model":"ELBDM", "elbdm_scheme":"ELBDM_HYBRID"},
-                         help="Fluid scheme for <--elbdm_scheme=ELBDM_HYBRID> (HYBRID_UPWIND: first-order, diffusive, HYBRID_FROMM: second-order, no limiter, unstable for fluid-only simulations, HYBRID_MUSCL: second-order, with limiter, useful for zoom-in and fluid-only simulations).\n"
+    parser.add_argument( "--hybrid_scheme", type=str, metavar="TYPE", gamer_name="HYBRID_SCHEME", prefix="HYBRID_",
+                         default="MUSCL", choices=["UPWIND", "FROMM", "MUSCL"],
+                         depend={"model":"ELBDM", "elbdm_scheme":"HYBRID"},
+                         help="Fluid scheme for <--elbdm_scheme=HYBRID> (UPWIND: first-order, diffusive, FROMM: second-order, no limiter, unstable for fluid-only simulations, MUSCL: second-order, with limiter, useful for zoom-in and fluid-only simulations).\n"
                        )
 
     parser.add_argument( "--self_interaction", type=str2bool, metavar="BOOLEAN", gamer_name="QUARTIC_SELF_INTERACTION",
@@ -756,7 +764,7 @@ def load_arguments():
                          help="Enable GPU. Must set <GPU_COMPUTE_CAPABILITY> in your machine *.config file as well.\n"
                        )
 
-    args, name_table, depends, constraints = parser.parse_args()
+    args, name_table, depends, constraints, prefix_table, suffix_table = parser.parse_args()
     args = vars( args )
 
     # 1. Print out a detailed help message then exit.
@@ -771,7 +779,7 @@ def load_arguments():
 
     # 2. Conditional default arguments.
     args = set_conditional_defaults( args )
-    return args, name_table, depends, constraints
+    return args, name_table, depends, constraints, prefix_table, suffix_table
 
 def load_config( config ):
     LOGGER.info("Using %s as the config."%(config))
@@ -816,7 +824,7 @@ def set_conditional_defaults( args ):
         args["bitwise_reproducibility"] = args["debug"]
 
     if args["laplacian_four"] is None:
-        args["laplacian_four"] = True if args["wave_scheme"] == "WAVE_FD" else False
+        args["laplacian_four"] = True if args["wave_scheme"] == "FD" else False
 
     if args["double_par"] is None:
         args["double_par"] = args["double"]
@@ -870,7 +878,7 @@ def set_gpu( gpus, flags, args ):
             gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=128"
     return gpu_opts
 
-def set_sims( name_table, depends, **kwargs ):
+def set_sims( name_table, prefix_table, suffix_table, depends, **kwargs ):
     opt_str = ""
     # loop all the simulation options in GAMER.
     for opt, gamer_name in name_table.items():
@@ -882,10 +890,11 @@ def set_sims( name_table, depends, **kwargs ):
                 if kwargs[depend] not in val: store = False
 
         if not store: continue
-        if opt == "eos":        # special string prefix of EOS
-            opt_str = add_option( opt_str, name=gamer_name, val="EOS_"+kwargs[opt] )
-        else:
-            opt_str = add_option( opt_str, name=gamer_name, val=kwargs[opt] )
+
+        prefix = prefix_table[opt] if opt in prefix_table else ""
+        suffix = suffix_table[opt] if opt in suffix_table else ""
+
+        opt_str = add_option( opt_str, name=gamer_name, val=kwargs[opt], prefix=prefix, suffix=suffix )
 
     # hard-code the option of serial.
     if not kwargs["mpi"]: opt_str = add_option( opt_str, name="SERIAL", val=True )
@@ -905,7 +914,7 @@ def set_compile( paths, compilers, flags, kwargs ):
     # NOTE: `-G` may cause the GPU Poisson solver to fail
     if kwargs["debug"]: flags["NVCCFLAG_COM"] += "-g -Xptxas -v"
     # enable C++ 17 support for ELBDM GPU Gram-Fourier extension scheme
-    if kwargs["model"] == "ELBDM" and kwargs["wave_scheme"] == "WAVE_GRAMFE" and kwargs["gramfe_scheme"] == "GRAMFE_FFT":
+    if kwargs["model"] == "ELBDM" and kwargs["wave_scheme"] == "GRAMFE" and kwargs["gramfe_scheme"] == "FFT":
         flags["NVCCFLAG_COM"] += "-std=c++17"
 
     # 4. Write flags to compile option dictionary.
@@ -949,7 +958,7 @@ def validation( paths, depends, constraints, **kwargs ):
         if kwargs["passive"] < 0:
             LOGGER.error("Passive scalar should not be negative. Current: %d"%kwargs["passive"])
             success = False
-        if kwargs["dual"] not in [NONE_STR, "DE_ENPY"]:
+        if kwargs["dual"] not in [NONE_STR, "ENPY"]:
             LOGGER.error("This dual energy form is not supported yet. Current: %s"%kwargs["dual"])
             success = False
 
@@ -957,8 +966,8 @@ def validation( paths, depends, constraints, **kwargs ):
         if kwargs["passive"] < 0:
             LOGGER.error("Passive scalar should not be negative. Current: %d"%kwargs["passive"])
             success = False
-        if kwargs["gramfe_scheme"] == "GRAMFE_FFT" and not kwargs["gpu"] and kwargs["fftw"] not in ["FFTW2", "FFTW3"]:
-            LOGGER.error("Must set <--fftw> when adopting <--gramfe_scheme=GRAMFE_FFT> and <--gpu=false>")
+        if kwargs["gramfe_scheme"] == "FFT" and not kwargs["gpu"] and kwargs["fftw"] not in ["FFTW2", "FFTW3"]:
+            LOGGER.error("Must set <--fftw> when adopting <--gramfe_scheme=FFT> and <--gpu=false>")
             success = False
         if kwargs["spectral_interpolation"] and kwargs["fftw"] == "FFTW2" and not kwargs["double"]:
             LOGGER.error("Must enable <--double> when adopting <--spectral_interpolation> and <--fftw=FFTW2>")
@@ -1024,9 +1033,9 @@ def warning( paths, **kwargs ):
             if paths.setdefault(p_name, "") != "": continue
             LOGGER.warning("%-15s is not given in %s.config when setting <--%s=%s>"%(p_name, kwargs["machine"], arg, str(val)))
 
-    if kwargs["model"] == "ELBDM" and kwargs["gpu"] and kwargs["wave_scheme"] == "WAVE_GRAMFE" and kwargs["gramfe_scheme"] == "GRAMFE_FFT":
+    if kwargs["model"] == "ELBDM" and kwargs["gpu"] and kwargs["wave_scheme"] == "GRAMFE" and kwargs["gramfe_scheme"] == "FFT":
         if paths.setdefault("CUFFTDX_PATH", "") == "":
-            LOGGER.warning("CUFFTDX_PATH is not given in %s.config when enabling <--gramfe_scheme=GRAMFE_FFT>."%(kwargs["machine"]))
+            LOGGER.warning("CUFFTDX_PATH is not given in %s.config when enabling <--gramfe_scheme=FFT>."%(kwargs["machine"]))
 
     return
 
@@ -1040,7 +1049,7 @@ if __name__ == "__main__":
     command = " ".join( ["# This makefile is generated by the following command:", "\n#", sys.executable] + sys.argv + ["\n"] )
 
     # 2. Load the input arguments
-    args, name_table, depends, constraints = load_arguments()
+    args, name_table, depends, constraints, prefix_table, suffix_table = load_arguments()
 
     # 3. Set the logger
     logging.basicConfig( filename=GAMER_MAKE_OUT+'.log', filemode='w', level=logging.INFO, format=LOG_FORMAT )
@@ -1062,7 +1071,7 @@ if __name__ == "__main__":
     LOGGER.info("========================================")
     LOGGER.info("GAMER has the following setting.")
     LOGGER.info("----------------------------------------")
-    sims = set_sims( name_table, depends, **args )
+    sims = set_sims( name_table, prefix_table, suffix_table, depends, **args )
 
     # 4.4 Set the compiler
     compiles = set_compile( paths, compilers, flags, args )
