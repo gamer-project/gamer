@@ -38,10 +38,10 @@ void Grackle_Init()
        Aux_Message( stderr, "WARNING : Grackle suggests floating-point number to be 8 bytes (GRACKLE_FLOAT_8) !!\n" );
 
    if ( MPI_Rank == 0  &&  sizeof(gr_float) != sizeof(real) )
-       Aux_Message( stderr, "WARNING : inconsistent floating-point type (GAMER(real): %d, Grackle: %d) !!\n",
+       Aux_Message( stderr, "WARNING : inconsistent floating-point type (GAMER(real): %d, Grackle(gr_float): %d) !!\n",
                     sizeof(real), sizeof(gr_float) );
 
-   if ( MPI_Rank == 0 )   Aux_Message( stdout, "Grackle floating-point number uses %d bytes\n", sizeof(gr_float) );
+   if ( MPI_Rank == 0 )   Aux_Message( stdout, "Grackle floating-point number (gr_float) uses %d bytes\n", sizeof(gr_float) );
 
 // comoving frame is not supported yet
 #  ifdef COMOVING
