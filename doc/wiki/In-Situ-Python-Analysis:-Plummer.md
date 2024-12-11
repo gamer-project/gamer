@@ -4,7 +4,8 @@ This test problem Plummer demonstrates the in situ Python analysis feature in GA
 
 1. Install the required packages for this demo.
   * [libyt and yt_libyt](https://yt-project.github.io/libyt/HowToInstall.html#how-to-install): the in situ analysis library and its yt frontend.
-    * This example assumes it is using libyt interactive mode. Please compile libyt in interactive mode.
+> [!IMPORTANT]
+> This example assumes it is using libyt interactive mode. Please compile libyt in interactive mode.
   * [yt](https://yt-project.org/): the core analysis tool.
   * [[FFTW | Installation: External Libraries#fftw]]: needed in this test problem.
   * [[HDF5 | Installation: External Libraries#hdf5]]: this is optional since we are not going to output any data.
@@ -60,12 +61,18 @@ LIBYT_PATH   := ${YOUR_LIBYT_PATH}
 3. Compile the code in the `src` folder.
 
 ```bash
-> make clean
-> make -j 4
+make clean
+make -j 4
+```
+<details>
+<summary><u><i>Execution results</i></u></summary>
+
+<pre>
    ...
    ...
 Compiling GAMER --> Successful!
-```
+</pre>
+</details>
 
 4. Create a working directory in the `bin` folder and copy the GAMER executable and Plummer test problem files.
 
@@ -144,7 +151,7 @@ Particle plot using particle position x and y as axes with particle mass mapped 
 
 10. Since we have run libyt in interactive mode, the program should now pause and wait for user input.
 
-```
+<pre>
 =====================================================================
   Inline Function                              Status         Run
 ---------------------------------------------------------------------
@@ -152,7 +159,7 @@ Particle plot using particle position x and y as axes with particle mass mapped 
   * yt_inline_inputArg                         success         V
 =====================================================================
 >>>
-```
+</pre>
 
 11. You can explore [interactive prompt](https://yt-project.github.io/libyt/InSituPythonAnalysis/InteractivePythonPrompt.html)
-or simply press `Crtl + C` to shut down the process.
+or simply press `Ctrl + C` to shut down the process.

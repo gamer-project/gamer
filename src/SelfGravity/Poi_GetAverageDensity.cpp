@@ -54,9 +54,9 @@ void Poi_GetAverageDensity()
    const int NP[3]  = { NX0_TOT[0]/PATCH_SIZE, NX0_TOT[1]/PATCH_SIZE, NX0_TOT[2]/PATCH_SIZE };
    const int PScale = PATCH_SIZE * amr->scale[0];
 
-//###NOTE : actually "int" is enoughly for Cr1D_Local and Cr1D_All. If they do need "long" or "ulong", then
-//          at least Cr1D_IdxTable and other looping indices will need "long or ulong" as well since base-level
-//          patches fill the entire box
+//###NOTE: actually "int" is enoughly for Cr1D_Local and Cr1D_All. If they do need "long" or "ulong", then
+//         at least Cr1D_IdxTable and other looping indices will need "long or ulong" as well since base-level
+//         patches fill the entire box
    int     Cr3D[3], NPatch_All[MPI_NRank], Disp[MPI_NRank];
    int     NPatch_Sum    = 0;
    double *Rho_All       = NULL;

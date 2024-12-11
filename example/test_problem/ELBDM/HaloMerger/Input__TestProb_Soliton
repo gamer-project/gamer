@@ -1,0 +1,25 @@
+# problem-specific runtime parameters (HaloMerger_Soliton_Num > 0 only)
+# 1st soliton
+HaloMerger_Soliton_1_CoreRadius         0.001                              # core radius of the 1st soliton (<=0.0=set by HaloMerger_Soliton_1_CoreRho) (will be overwritten if HaloMerger_Soliton_1_DensProf_Rescale == 0) [-1.0]
+HaloMerger_Soliton_1_CoreRho           -1.0                                # peak density of the 1st soliton (will be overwritten if HaloMerger_Soliton_1_CoreRadius > 0.0) (will be overwritten if HaloMerger_Soliton_1_DensProf_Rescale == 0) [-1.0]
+HaloMerger_Soliton_1_CenCoordX          0.12938422                         # x/y/z-coordinate of the center of the 1st soliton (<0.0=auto -> box center) [-1.0]
+HaloMerger_Soliton_1_CenCoordY          0.06469211
+HaloMerger_Soliton_1_CenCoordZ          0.12938422
+HaloMerger_Soliton_1_VelocityX          0.0                                # x/y/z-component of the bulk velocity of the 1st soliton [0.0]
+HaloMerger_Soliton_1_VelocityY          0.5
+HaloMerger_Soliton_1_VelocityZ          0.0
+HaloMerger_Soliton_1_DensProf_Filename  SolitonDensityProfile_Lambda0.0    # filename of the density profile table for the 1st soliton (HaloMerger_Soliton_InitMode == 1 only)
+HaloMerger_Soliton_1_DensProf_Rescale   1                                  # whether to scale the density profile table for the 1st soliton (HaloMerger_Soliton_InitMode == 1 only) [1]
+HaloMerger_Soliton_1_OuterSlope        -8.0                                # outer slope of the analytical density profile of the 1st soliton (HaloMerger_Soliton_InitMode == 2 only) [-8.0]
+# 2nd soliton
+HaloMerger_Soliton_2_CoreRadius        -1.0
+HaloMerger_Soliton_2_CoreRho           -1.0
+HaloMerger_Soliton_2_CenCoordX          0.12938422
+HaloMerger_Soliton_2_CenCoordY          0.19407633
+HaloMerger_Soliton_2_CenCoordZ          0.12938422
+HaloMerger_Soliton_2_VelocityX          0.0
+HaloMerger_Soliton_2_VelocityY         -0.5
+HaloMerger_Soliton_2_VelocityZ          0.0
+HaloMerger_Soliton_2_DensProf_Filename  SolitonDensityProfile
+HaloMerger_Soliton_2_DensProf_Rescale   0
+HaloMerger_Soliton_2_OuterSlope        -8.0
