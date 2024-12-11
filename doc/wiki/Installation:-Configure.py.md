@@ -83,6 +83,43 @@ python configure.py --machine=pleiades --fftw=FFTW2 --gravity=true --gpu=true
 An example script `generate_make.sh` can be found in each test problem folder
 (e.g., `example/test_problem/Hydro/AcousticWave/generate_make.sh`).
 
+> [!TIP]
+> Since there are too many options in GAMER, we introduce the autocomplete feature of `configure.py`. You can set the feature by the following steps:
+> 1. Update the [shebang](https://en.wikipedia.org/wiki/Shebang_(Unix)) of `configure.py` if needed
+>
+>    For example, replace `#!/usr/bin/python3` with your `python` path.
+>    <details>
+>    <summary><u><i>top of configure.py</i></u></summary>
+>    <pre>
+>    #!/usr/bin/python3
+>    """
+>    User and developer guides of this script are provided in the following link.
+>
+>    https://github.com/gamer-project/gamer/wiki/Installation%3A-Configure.py
+>
+>    """
+>    </pre>
+>    </details>
+>
+> 1. Copy the autocomplete shell script to your `/home/usr` (`~`)
+>    ```bash
+>    cp tool/bash/config_autocomplete.sh ~/
+>    ```
+>
+> 1. Update the `~/.bashrc` to load the autocomplete script
+>
+>    Please add the following line to `~/.bashrc`:
+>    ```bash
+>    source ~/config_autocomplete.sh
+>    ```
+>
+> 1. Reload `~/.bashrc` to enable the feature
+>    ```bash
+>    source ~/.bashrc
+>    ```
+>
+> Now, try to type `./configure.py` then press `<tab>` twice!
+
 ***
 
 ## Developer Guide
@@ -136,7 +173,16 @@ Edit `Makefile_base` to add new source files.
                       )
    ```
 
-4. [Optional] Add additional checks in `validation()` and warning messages in `warning()` under `Functions`.
+4. [Optional] Add the common prefix/suffix of the simulation options. (Only works for string type)
+   ```python
+   parser.add_argument( "--new_argument", type=str, metavar="STRING", gamer_name="NEW_SIMUALTION_OPTION", prefix="YOUR_PREFIX_", suffix="_YOUR_SUFFIX",
+                        default="STR1", choice=["STR1", "STR2", "STR3"],
+                        help="Your help message.\n"
+                      )
+   ```
+   The simulation option would be concatenated as `YOUR_PREFIX_STR1_YOUR_SUFFIX`.
+
+5. [Optional] Add additional checks in `validation()` and warning messages in `warning()` under `Functions`.
    * `validation()`
    ```python
    def validation( paths, depends, constraints, **kwargs ):
