@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2480)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2481)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -260,6 +260,8 @@ Procedure for outputting new variables:
 //                                      output DENS and PHAS for the hybrid scheme (discard STUB)
 //                                      output use_wave_flag[lv] for the hybrid scheme
 //                2480 : 2024/07/17 --> output OPT__OUTPUT_PAR_MESH and particle attributes mapped from mesh quantities
+//                2481 : 2024/12/11 --> output OPT__FLAG_ANGULAR, FlagTable_Angular, ANGULAR_CEN_X, ANGULAR_CEN_Y, ANGULAR_CEN_Z
+//                                             OPT__FLAG_RADIAL,  FlagTable_Radial,   RADIAL_CEN_X,  RADIAL_CEN_Y,  RADIAL_CEN_Z
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1553,7 +1555,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2480;
+   KeyInfo.FormatVersion        = 2481;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2344,6 +2346,14 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.MaxLevel                = MAX_LEVEL;
    InputPara.Opt__Flag_Rho           = OPT__FLAG_RHO;
    InputPara.Opt__Flag_RhoGradient   = OPT__FLAG_RHO_GRADIENT;
+   InputPara.Opt__Flag_Angular       = OPT__FLAG_ANGULAR;
+   InputPara.Angular_CenX            = ANGULAR_CEN_X;
+   InputPara.Angular_CenY            = ANGULAR_CEN_Y;
+   InputPara.Angular_CenZ            = ANGULAR_CEN_Z;
+   InputPara.Opt__Flag_Radial        = OPT__FLAG_RADIAL;
+   InputPara.Radial_CenX             = RADIAL_CEN_X;
+   InputPara.Radial_CenY             = RADIAL_CEN_Y;
+   InputPara.Radial_CenZ             = RADIAL_CEN_Z;
 #  if ( MODEL == HYDRO )
    InputPara.Opt__Flag_PresGradient  = OPT__FLAG_PRES_GRADIENT;
    InputPara.Opt__Flag_Vorticity     = OPT__FLAG_VORTICITY;
@@ -2762,6 +2772,11 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 
       for (int t=0; t<5; t++)
       InputPara.FlagTable_Lohner      [lv][t] = FlagTable_Lohner      [lv][t];
+
+      for (int t=0; t<3; t++)
+      InputPara.FlagTable_Angular     [lv][t] = FlagTable_Angular     [lv][t];
+
+      InputPara.FlagTable_Radial      [lv]    = FlagTable_Radial      [lv];
 
       InputPara.FlagTable_User        [lv].p   = malloc( OPT__FLAG_USER_NUM*sizeof(double) );
       InputPara.FlagTable_User        [lv].len = OPT__FLAG_USER_NUM;
@@ -3201,7 +3216,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  if ( NLEVEL > 1 )
    const hsize_t H5_ArrDims_NLvM1             = NLEVEL-1;             // array size of [NLEVEL-1]
    const hsize_t H5_ArrDims_NLvM1_2[2]        = { NLEVEL-1, 2 };      // array size of [NLEVEL-1][2]
-   const hsize_t H5_ArrDims_NLvM1_3[2]        = { NLEVEL-1, 3 };      // array size of [NLEVEL-1][3]
+   const hsize_t H5_ArrDims_NLvM1_3[3]        = { NLEVEL-1, 3 };      // array size of [NLEVEL-1][3]
    const hsize_t H5_ArrDims_NLvM1_4[2]        = { NLEVEL-1, 4 };      // array size of [NLEVEL-1][4]
    const hsize_t H5_ArrDims_NLvM1_5[2]        = { NLEVEL-1, 5 };      // array size of [NLEVEL-1][5]
    const hsize_t H5_ArrDims_NLvM1_6[2]        = { NLEVEL-1, 6 };      // array size of [NLEVEL-1][6]
@@ -3772,6 +3787,8 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "FlagTable_Rho",          HOFFSET(InputPara_t,FlagTable_Rho           ), H5_TypeID_Arr_NLvM1Double   );
    H5Tinsert( H5_TypeID, "FlagTable_RhoGradient",  HOFFSET(InputPara_t,FlagTable_RhoGradient   ), H5_TypeID_Arr_NLvM1Double   );
    H5Tinsert( H5_TypeID, "FlagTable_Lohner",       HOFFSET(InputPara_t,FlagTable_Lohner        ), H5_TypeID_Arr_NLvM1_5Double );
+   H5Tinsert( H5_TypeID, "FlagTable_Angular",      HOFFSET(InputPara_t,FlagTable_Angular       ), H5_TypeID_Arr_NLvM1_3Double );
+   H5Tinsert( H5_TypeID, "FlagTable_Radial",       HOFFSET(InputPara_t,FlagTable_Radial        ), H5_TypeID_Arr_NLvM1Double   );
 
 // store the user-defined thresholds at all levels
    for (int lv=0; lv<MAX_LEVEL; lv++)
