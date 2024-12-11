@@ -1346,6 +1346,102 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Output_HDF5_TestProb
+// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype
+//                3. There MUST be more than one parameter to be stored
+//                4. The pointer of the data MUST still exist outside the function, e.g. global variables
+//
+// Parameter   :  HDF5_InputTest : the structure storing the parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
+{
+
+   HDF5_InputTest->Add( "HaloMerger_Halo_Num",                   &HaloMerger_Halo_Num,                  );
+   HDF5_InputTest->Add( "HaloMerger_Halo_InitMode",              &HaloMerger_Halo_InitMode,             );
+   HDF5_InputTest->Add( "HaloMerger_Soliton_Num",                &HaloMerger_Soliton_Num,               );
+   HDF5_InputTest->Add( "HaloMerger_Soliton_InitMode",           &HaloMerger_Soliton_InitMode,          );
+   HDF5_InputTest->Add( "HaloMerger_ParCloud_Num",               &HaloMerger_ParCloud_Num,              );
+   HDF5_InputTest->Add( "HaloMerger_ParCloud_InitMode",          &HaloMerger_ParCloud_InitMode,         );
+   HDF5_InputTest->Add( "HaloMerger_ExtPot_UniDenSph_M",         &HaloMerger_ExtPot_UniDenSph_M,        );
+   HDF5_InputTest->Add( "HaloMerger_ExtPot_UniDenSph_R",         &HaloMerger_ExtPot_UniDenSph_R,        );
+   HDF5_InputTest->Add( "HaloMerger_ExtPot_UniDenSph_CenCoordX", &HaloMerger_ExtPot_UniDenSph_CenCoordX );
+   HDF5_InputTest->Add( "HaloMerger_ExtPot_UniDenSph_CenCoordY", &HaloMerger_ExtPot_UniDenSph_CenCoordY );
+   HDF5_InputTest->Add( "HaloMerger_ExtPot_UniDenSph_CenCoordZ", &HaloMerger_ExtPot_UniDenSph_CenCoordZ );
+   HDF5_InputTest->Add( "HaloMerger_ExtPot_UniDenSph_VelocityX", &HaloMerger_ExtPot_UniDenSph_VelocityX );
+   HDF5_InputTest->Add( "HaloMerger_ExtPot_UniDenSph_VelocityY", &HaloMerger_ExtPot_UniDenSph_VelocityY );
+   HDF5_InputTest->Add( "HaloMerger_ExtPot_UniDenSph_VelocityZ", &HaloMerger_ExtPot_UniDenSph_VelocityZ );
+
+   char HaloMerger_Halo_i_CenCoordX[MAX_STRING];        // x/y/z-coordinate of the center of the i-th halo (<0.0=auto -> box center)
+   char HaloMerger_Halo_i_CenCoordY[MAX_STRING];        // (Note that CenCoordX/Y/Z denotes the HALO_IC box center, not the exact halo center, when HaloMerger_Halo_InitMode == 1)
+   char HaloMerger_Halo_i_CenCoordZ[MAX_STRING];
+   char HaloMerger_Halo_i_VelocityX[MAX_STRING];        // x/y/z-component of the bulk velocity of the i-th halo
+   char HaloMerger_Halo_i_VelocityY[MAX_STRING];
+   char HaloMerger_Halo_i_VelocityZ[MAX_STRING];
+
+   char HaloMerger_Halo_i_HALO_IC_Filename[MAX_STRING]; // filename of HALO_IC (binary file in vzyx format; row-major and v=field) (single AMR level) for the i-th halo (HaloMerger_Halo_InitMode == 1 only)
+   char HaloMerger_Halo_i_HALO_IC_BoxLenX [MAX_STRING]; // physical length in the x/y/z-direction of HALO_IC box for the i-th halo (must > 0.0) (HaloMerger_Halo_InitMode == 1 only)
+   char HaloMerger_Halo_i_HALO_IC_BoxLenY [MAX_STRING];
+   char HaloMerger_Halo_i_HALO_IC_BoxLenZ [MAX_STRING];
+   char HaloMerger_Halo_i_HALO_IC_NCellsX [MAX_STRING]; // number of cells in the x/y/z-direction of HALO_IC box for the i-th halo (must > 0) (HaloMerger_Halo_InitMode == 1 only)
+   char HaloMerger_Halo_i_HALO_IC_NCellsY [MAX_STRING];
+   char HaloMerger_Halo_i_HALO_IC_NCellsZ [MAX_STRING];
+   char HaloMerger_Halo_i_HALO_IC_Float8  [MAX_STRING]; // data precision of HALO_IC for the i-th halo (0=float, 1=double) (HaloMerger_Halo_InitMode == 1 only)
+   for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
+   {
+      const int index_halo_input = index_halo+1; // index of halo in the input file
+
+      sprintf( HaloMerger_Halo_i_CenCoordX, "HaloMerger_Halo_%d_CenCoordX", index_halo_input );
+      sprintf( HaloMerger_Halo_i_CenCoordY, "HaloMerger_Halo_%d_CenCoordY", index_halo_input );
+      sprintf( HaloMerger_Halo_i_CenCoordZ, "HaloMerger_Halo_%d_CenCoordZ", index_halo_input );
+      sprintf( HaloMerger_Halo_i_VelocityX, "HaloMerger_Halo_%d_VelocityX", index_halo_input );
+      sprintf( HaloMerger_Halo_i_VelocityY, "HaloMerger_Halo_%d_VelocityY", index_halo_input );
+      sprintf( HaloMerger_Halo_i_VelocityZ, "HaloMerger_Halo_%d_VelocityZ", index_halo_input );
+
+      HDF5_InputTest->Add( HaloMerger_Halo_i_CenCoordX, &HaloMerger_Halo_CenCoord[index_halo][0] );
+      HDF5_InputTest->Add( HaloMerger_Halo_i_CenCoordY, &HaloMerger_Halo_CenCoord[index_halo][1] );
+      HDF5_InputTest->Add( HaloMerger_Halo_i_CenCoordZ, &HaloMerger_Halo_CenCoord[index_halo][2] );
+      HDF5_InputTest->Add( HaloMerger_Halo_i_VelocityX, &HaloMerger_Halo_Velocity[index_halo][0] );
+      HDF5_InputTest->Add( HaloMerger_Halo_i_VelocityY, &HaloMerger_Halo_Velocity[index_halo][1] );
+      HDF5_InputTest->Add( HaloMerger_Halo_i_VelocityZ, &HaloMerger_Halo_Velocity[index_halo][2] );
+
+      if ( HaloMerger_Halo_InitMode == 1 )
+      {
+      sprintf( HaloMerger_Halo_i_HALO_IC_Filename, "HaloMerger_Halo_%d_HALO_IC_Filename", index_halo_input );
+      sprintf( HaloMerger_Halo_i_HALO_IC_BoxLenX,  "HaloMerger_Halo_%d_HALO_IC_BoxLenX",  index_halo_input );
+      sprintf( HaloMerger_Halo_i_HALO_IC_BoxLenY,  "HaloMerger_Halo_%d_HALO_IC_BoxLenY",  index_halo_input );
+      sprintf( HaloMerger_Halo_i_HALO_IC_BoxLenZ,  "HaloMerger_Halo_%d_HALO_IC_BoxLenZ",  index_halo_input );
+      sprintf( HaloMerger_Halo_i_HALO_IC_NCellsX,  "HaloMerger_Halo_%d_HALO_IC_NCellsX",  index_halo_input );
+      sprintf( HaloMerger_Halo_i_HALO_IC_NCellsY,  "HaloMerger_Halo_%d_HALO_IC_NCellsY",  index_halo_input );
+      sprintf( HaloMerger_Halo_i_HALO_IC_NCellsZ,  "HaloMerger_Halo_%d_HALO_IC_NCellsZ",  index_halo_input );
+      sprintf( HaloMerger_Halo_i_HALO_IC_Float8,   "HaloMerger_Halo_%d_HALO_IC_Float8",   index_halo_input );
+
+      HDF5_InputTest->Add( HaloMerger_Halo_i_HALO_IC_Filename,  HaloMerger_Halo_HALO_IC_Filename[index_halo]  );
+      HDF5_InputTest->Add( HaloMerger_Halo_i_HALO_IC_BoxLenX,  &HaloMerger_Halo_HALO_IC_BoxLen[index_halo][0] );
+      HDF5_InputTest->Add( HaloMerger_Halo_i_HALO_IC_BoxLenY,  &HaloMerger_Halo_HALO_IC_BoxLen[index_halo][1] );
+      HDF5_InputTest->Add( HaloMerger_Halo_i_HALO_IC_BoxLenZ,  &HaloMerger_Halo_HALO_IC_BoxLen[index_halo][2] );
+      HDF5_InputTest->Add( HaloMerger_Halo_i_HALO_IC_NCellsX,  &HaloMerger_Halo_HALO_IC_NCells[index_halo][0] );
+      HDF5_InputTest->Add( HaloMerger_Halo_i_HALO_IC_NCellsY,  &HaloMerger_Halo_HALO_IC_NCells[index_halo][1] );
+      HDF5_InputTest->Add( HaloMerger_Halo_i_HALO_IC_NCellsZ,  &HaloMerger_Halo_HALO_IC_NCells[index_halo][2] );
+      HDF5_InputTest->Add( HaloMerger_Halo_i_HALO_IC_Float8,   &HaloMerger_Halo_HALO_IC_Float8[index_halo]    );
+      } // if ( HaloMerger_Halo_InitMode == 1 )
+      else
+         Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
+                    "HaloMerger_Halo_InitMode", HaloMerger_Halo_InitMode );
+
+   } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
+
+} // FUNCTION : Output_HDF5_TestProb
+#endif // #ifdef SUPPORT_HDF5
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  End_HaloMerger
 // Description :  Free memory before terminating the program
@@ -1625,12 +1721,15 @@ void Init_TestProb_ELBDM_HaloMerger()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr  = SetGridIC;
-   End_User_Ptr            = End_HaloMerger;
-   Init_ExtPot_Ptr         = Init_ExtPot_ELBDM_HaloMerger;
+   Init_Function_User_Ptr   = SetGridIC;
+   End_User_Ptr             = End_HaloMerger;
+   Init_ExtPot_Ptr          = Init_ExtPot_ELBDM_HaloMerger;
 #  ifdef MASSIVE_PARTICLES
-   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_HaloMerger;
+   Par_Init_ByFunction_Ptr  = Par_Init_ByFunction_HaloMerger;
 #  endif // ifdef MASSIVE_PARTICLES
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_TestProb_Ptr = Output_HDF5_TestProb;
+#  endif
 
 #  endif // if ( MODEL == ELBDM  &&  defined GRAVITY )
 

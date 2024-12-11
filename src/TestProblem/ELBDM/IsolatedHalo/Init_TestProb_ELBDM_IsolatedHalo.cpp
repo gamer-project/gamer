@@ -144,6 +144,31 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Output_HDF5_TestProb
+// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype
+//                3. There MUST be more than one parameter to be stored
+//                4. The pointer of the data MUST still exist outside the function, e.g. global variables
+//
+// Parameter   :  HDF5_InputTest : the structure storing the parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
+{
+
+// nothing have to store here
+   HDF5_InputTest->Add( "IsolatedHalo_TestProb_ID", &TESTPROB_ID );
+
+} // FUNCTION : Output_HDF5_TestProb
+#endif // #ifdef SUPPORT_HDF5
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_TestProb_ELBDM_IsolatedHalo
 // Description :  Test problem initializer
@@ -169,7 +194,10 @@ void Init_TestProb_ELBDM_IsolatedHalo()
    SetParameter();
 
 
-   Init_Function_User_Ptr = SetGridIC;
+   Init_Function_User_Ptr   = SetGridIC;
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_TestProb_Ptr = Output_HDF5_TestProb;
+#  endif
 #  endif // if ( MODEL == ELBDM  &&  defined GRAVITY )
 
 
