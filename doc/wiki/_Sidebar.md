@@ -11,6 +11,7 @@
 * [[ Runtime Parameters | Runtime-Parameters ]]
 * [[ MPI and OpenMP | MPI-and-OpenMP ]]
 * [[ GPU | GPU ]]
+* [[ Initial Conditions | Initial-Conditions ]]
 * [[ Physics Modules | Physics-Modules ]]
 * [[ Outputs | Outputs ]]
 * [[ Simulation Logs | Simulation-Logs ]]
