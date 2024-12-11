@@ -173,7 +173,16 @@ Edit `Makefile_base` to add new source files.
                       )
    ```
 
-4. [Optional] Add additional checks in `validation()` and warning messages in `warning()` under `Functions`.
+4. [Optional] Add the common prefix/suffix of the simulation options. (Only works for string type)
+   ```python
+   parser.add_argument( "--new_argument", type=str, metavar="STRING", gamer_name="NEW_SIMUALTION_OPTION", prefix="YOUR_PREFIX_", suffix="_YOUR_SUFFIX",
+                        default="STR1", choice=["STR1", "STR2", "STR3"],
+                        help="Your help message.\n"
+                      )
+   ```
+   The simulation option would be concatenated as `YOUR_PREFIX_STR1_YOUR_SUFFIX`.
+
+5. [Optional] Add additional checks in `validation()` and warning messages in `warning()` under `Functions`.
    * `validation()`
    ```python
    def validation( paths, depends, constraints, **kwargs ):
