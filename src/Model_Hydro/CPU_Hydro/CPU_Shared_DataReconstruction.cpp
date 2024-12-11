@@ -199,7 +199,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const EoS_t *EoS )
 {
 
-//### NOTE: temporary solution to the bug in cuda 10.1 and 10.2 that incorrectly overwrites didx_cc[]
+//###NOTE: temporary solution to the bug in cuda 10.1 and 10.2 that incorrectly overwrites didx_cc[]
 #  if   ( FLU_SCHEME == MHM )
    const int NIn    = FLU_NXT;
 #  elif ( FLU_SCHEME == MHM_RP )
@@ -713,7 +713,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const EoS_t *EoS )
 {
 
-//### NOTE: temporary solution to the bug in cuda 10.1 and 10.2 that incorrectly overwrites didx_cc[]
+//###NOTE: temporary solution to the bug in cuda 10.1 and 10.2 that incorrectly overwrites didx_cc[]
 #  if   ( FLU_SCHEME == MHM )
    const int NIn    = FLU_NXT;
 #  elif ( FLU_SCHEME == MHM_RP )
