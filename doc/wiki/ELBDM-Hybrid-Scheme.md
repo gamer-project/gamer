@@ -1,21 +1,69 @@
 The hybrid scheme in GAMER is designed to efficiently simulate the behavior of Extremely Light Bosonic Dark Matter (ELBDM; also referred to as Fuzzy Dark Matter or Wave Dark Matter) in cosmological simulations.
 
 # Quick Start
-- Switch to `psidm` branch
-- Copy test problem `examples/test_problem/LSS_Hybrid` to `bin` folder
-- Compile GAMER using Makefile created by executing `bin/LSS_Hybrid/generate_make.sh`
-- Switch to `bin/LSS_Hybrid/`, execute `download_light_halo.sh`
-- **To use spectral interpolation**: Execute `download_spectral_interpolation_tables.sh` and set `OPT__FLU_INT_SCHEME` and `OPT__REF_FLU_INT_SCHEME` to `8`
-- Run GAMER
-- Plot results at $z=0$ with `python plot_script/plot_slice.py -s 69 -e 69`, `python plot_script/plot_projection.py -s 69 -e 69` and `python plot_script/plot_power_spectrum.py -s 0 -e 69`.
+1. Switch to `psidm` branch
+``` bash
+git checkout psidm
+```
+2. Copy test problem
+``` bash
+cp -r example/test_problem/LSS_Hybrid bin/
+```
+3. Compile GAMER
+``` bash
+cd src
+cp ../bin/LSS_Hybrid/generate_make.sh ./
+sh generate_make.sh
+```
+4. Download initial condition
+``` bash
+cd ../bin/LSS_Hybrid/
+sh download_light_halo.sh
+```
+5. **To use spectral interpolation**
+   * Download table
 
- The slice (z-axis), projection (x-axis) and power spectrum plots should look as follows:
-![Data_000069_Proj_x_density](https://github.com/gamer-project/gamer/assets/6187378/b412cf7e-8de5-4817-a039-58fecec72d13)
-![Data_000069_Proj_x_density_grid](https://github.com/gamer-project/gamer/assets/6187378/4f416be0-0be2-4468-9182-9a77879545be)
-![Data_000069_Lv_10_Slice_z_density_x1](https://github.com/gamer-project/gamer/assets/6187378/d51ed4b8-af8f-4df2-a89a-f4aef66793e9)
-![Data_000069_Lv_10_Slice_z_density_x3](https://github.com/gamer-project/gamer/assets/6187378/14ad6aff-c4f1-4f55-88c5-d623e6265dac)
-![Data_000069_Lv_10_Slice_z_density_x10](https://github.com/gamer-project/gamer/assets/6187378/a891a4b8-3814-4131-a42c-14ba297392af)
-![Data_000069_PS](https://github.com/gamer-project/gamer/assets/6187378/260649c1-69e7-4a44-8dc9-06ccf6fe798d)
+   ``` bash
+   sh download_spectral_interpolation_tables.sh
+   ```
+   * Set `OPT__FLU_INT_SCHEME` and `OPT__REF_FLU_INT_SCHEME` to `8` in `Input__Parameter`
+6. Run GAMER
+``` bash
+mpirun -map-by ppr:2:socket:pe=8 --report-bindings ./gamer 1>>log 2>&1
+```
+7. Plot results at $z=0$:
+   * Slice plots
+   ``` bash
+   python plot_script/plot_slice.py -s 69 -e 69
+   ```
+   <details>
+   <summary><u><i>Execution results</i></u></summary>
+
+   ![Data_000069_Lv_10_Slice_z_density_x1](https://github.com/gamer-project/gamer/assets/6187378/d51ed4b8-af8f-4df2-a89a-f4aef66793e9)
+   ![Data_000069_Lv_10_Slice_z_density_x3](https://github.com/gamer-project/gamer/assets/6187378/14ad6aff-c4f1-4f55-88c5-d623e6265dac)
+   ![Data_000069_Lv_10_Slice_z_density_x10](https://github.com/gamer-project/gamer/assets/6187378/a891a4b8-3814-4131-a42c-14ba297392af)
+   </details>
+
+   * Projection plots
+   ``` bash
+   python plot_script/plot_projection.py -s 69 -e 69
+   ```
+   <details>
+   <summary><u><i>Execution results</i></u></summary>
+
+   ![Data_000069_Proj_x_density](https://github.com/gamer-project/gamer/assets/6187378/b412cf7e-8de5-4817-a039-58fecec72d13)
+   ![Data_000069_Proj_x_density_grid](https://github.com/gamer-project/gamer/assets/6187378/4f416be0-0be2-4468-9182-9a77879545be)
+   </details>
+
+   * Power spectrum
+   ``` bash
+   python plot_script/plot_power_spectrum.py -s 0 -e 69
+   ```
+   <details>
+   <summary><u><i>Execution results</i></u></summary>
+
+   ![Data_000069_PS](https://github.com/gamer-project/gamer/assets/6187378/260649c1-69e7-4a44-8dc9-06ccf6fe798d)
+   </details>
 
 The wave scheme (`GRAMFE_MATMUL`) is used for the dark grey and black grids.
 The relative mass conservation error at $z=0$ with spectral interpolation on is $6.72e-04$.
@@ -43,8 +91,8 @@ The hybrid scheme is particularly suited for cosmological simulations where a si
 The configure.py script is the starting point for setting up a simulation. For the hybrid scheme, ensure the following flags are set:
 
 - `--elbdm_scheme = ELBDM_HYBRID`: Determines the scheme type for ELBDM simulations. There are two options:
-    - ELBDM_WAVE: Wave-only scheme.
-    - ELBDM_HYBRID: Fluid-wave hybrid scheme.
+    - `ELBDM_WAVE`: Wave-only scheme.
+    - `ELBDM_HYBRID`: Fluid-wave hybrid scheme.
 - `--hybrid_scheme`: This option is specific to the hybrid scheme, defining the fluid dynamics treatment:
     - `HYBRID_UPWIND`: First-order upwind scheme. It is diffusive but stable.
     - `HYBRID_FROMM`: Second-order Fromm scheme. It has no limiter but can be unstable.
