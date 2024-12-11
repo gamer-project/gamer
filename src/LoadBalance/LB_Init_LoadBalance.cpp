@@ -293,6 +293,13 @@ void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, cons
    }
 
 
+// 8. construct the global AMR structure if required
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   delete GlobalTree;   // in case it has been allocated already
+   GlobalTree = new LB_GlobalTree;
+#  endif
+
+
    if ( MPI_Rank == 0 )
    {
       char lv_str[MAX_STRING];
