@@ -1,0 +1,6 @@
+# problem-specific runtime parameters
+PWave_NWavelength   2          # number of plane wave wavelength (will be reset to 3 times input value if PWave_XYZ == 3) [2]
+PWave_Amp         1.0          # plane wave amplitude [1.0]
+PWave_Phase0      0.0          # plane wave phase constant [0.0]
+PWave_XYZ           0          # plane wave direction (0/1/2/3 --> x/y/z/diagonal) [0]
+PWave_LSR           1          # plane wave direction (<0/0/>0 --> Left-moving/Standing/Right-moving) [1]

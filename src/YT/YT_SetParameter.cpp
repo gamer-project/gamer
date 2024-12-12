@@ -98,20 +98,27 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
 #  endif
    if (yt_set_UserParameterInt("mhd", 1, &mhd) != YT_SUCCESS)  Aux_Error( ERROR_INFO, "yt_set_UserParameterInt() set mhd failed !!\n" );
 
-#  if ( MODEL == HYDRO )
+#  if   ( MODEL == HYDRO )
    const double gamma = (double) GAMMA;
-   const double mu = (double) MOLECULAR_WEIGHT;
+   const double mu    = (double) MOLECULAR_WEIGHT;
 #  ifdef SRHD
-   const int srhd = 1;
+   const int    srhd  = 1;
 #  else
-   const int srhd = 0;
+   const int    srhd  = 0;
 #  endif
+
+#  elif ( MODEL == ELBDM )
+   const double gamma = NULL_REAL;
+   const double mu    = NULL_REAL;
+   const int    srhd  = 0;
+#  endif // MODEL
    if ( yt_set_UserParameterDouble("gamma",    1, &gamma   ) != YT_SUCCESS )   Aux_Error( ERROR_INFO, "yt_set_UserParameterDouble() set %s failed !!\n", "GAMMA" );
    if ( yt_set_UserParameterDouble("mu",       1, &mu      ) != YT_SUCCESS )   Aux_Error( ERROR_INFO, "yt_set_UserParameterDouble() set %s failed !!\n", "MOLECULAR_WEIGHT" );
    if ( yt_set_UserParameterInt   ("srhd",     1, &srhd    ) != YT_SUCCESS )   Aux_Error( ERROR_INFO, "yt_set_UserParameterInt() set %s failed !!\n", "SRHD" );
-#  endif
+
    const int opt_unit = OPT__UNIT;
    if ( yt_set_UserParameterInt   ("opt_unit", 1, &opt_unit) != YT_SUCCESS )   Aux_Error( ERROR_INFO, "yt_set_UserParameterInt() set %s failed !!\n", "OPT__UNIT" );
+
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
