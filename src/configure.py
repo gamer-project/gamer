@@ -26,17 +26,17 @@ NONE_STR = "OFF"
 CLOSE_DIST  = 2
 PRINT_WIDTH = 100
 
-GAMER_CONFIG_DIR  = os.path.join("..", "configs")
-GAMER_MAKE_BASE   = "Makefile_base"
-GAMER_MAKE_OUT    = "Makefile"
+GAMER_CONFIG_DIR     = os.path.join("..", "configs")
+GAMER_MAKE_BASE      = "Makefile_base"
+GAMER_MAKE_OUT       = "Makefile"
 GAMER_LOCAL_SETTING  = ".local_settings"
-GAMER_GLOBAL_SETTING = "~/.config/gamer/global_settings"
-GAMER_DESCRIPTION = "Prepare a customized Makefile for GAMER.\nDefault values are marked by '*'.\nUse -lh to show a detailed help message.\n"
-GAMER_EPILOG      = "2023 Computational Astrophysics Lab, NTU. All rights reserved.\n"
+GAMER_GLOBAL_SETTING = os.path.expanduser("~/.config/gamer/global_settings")
+GAMER_DESCRIPTION    = "Prepare a customized Makefile for GAMER.\nDefault values are marked by '*'.\nUse -lh to show a detailed help message.\n"
+GAMER_EPILOG         = "2023 Computational Astrophysics Lab, NTU. All rights reserved.\n"
 
 LOGGER     = logging.getLogger()
-LOG_FORMAT = '%(asctime)s %(levelname)-8s: %(message)s'
-logging.basicConfig( filename=GAMER_MAKE_OUT+'.log', filemode='w', level=logging.INFO, format=LOG_FORMAT )
+LOG_FORMAT = "%(asctime)s %(levelname)-8s: %(message)s"
+logging.basicConfig( filename=GAMER_MAKE_OUT+".log", filemode="w", level=logging.INFO, format=LOG_FORMAT )
 
 
 
@@ -47,17 +47,17 @@ class CustomFormatter( logging.Formatter ):
     """
     See: https://stackoverflow.com/questions/384076/how-can-i-color-python-logging-output
     """
-    HEADER    = '\033[95m'
-    OKBLUE    = '\033[94m'
-    OKCYAN    = '\033[96m'
-    OKGREEN   = '\033[92m'
-    WARNING   = '\033[93m'
-    FAIL      = '\033[91m'
-    ENDC      = '\033[0m'
-    BOLD      = '\033[1m'
-    UNDERLINE = '\033[4m'
+    HEADER    = "\033[95m"
+    OKBLUE    = "\033[94m"
+    OKCYAN    = "\033[96m"
+    OKGREEN   = "\033[92m"
+    WARNING   = "\033[93m"
+    FAIL      = "\033[91m"
+    ENDC      = "\033[0m"
+    BOLD      = "\033[1m"
+    UNDERLINE = "\033[4m"
 
-    CONSOLE_FORMAT = '%(levelname)-8s: %(message)s'
+    CONSOLE_FORMAT = "%(levelname)-8s: %(message)s"
     FORMATS = { logging.DEBUG   : HEADER  + CONSOLE_FORMAT + ENDC,
                 logging.INFO    : ENDC    + "%(message)s"  + ENDC,
                 logging.WARNING : WARNING + CONSOLE_FORMAT + ENDC,
@@ -99,7 +99,7 @@ class ArgumentParser( argparse.ArgumentParser ):
         msg = "\n"
         for arg in argv:
             if arg[0] != "-":
-                msg += 'Unrecognized positional argument: %s\n'%(arg)
+                msg += "Unrecognized positional argument: %s\n"%(arg)
                 continue
             arg = arg.split("=")[0]     # separate the assigned value.
             min_dist = 100000
@@ -109,10 +109,10 @@ class ArgumentParser( argparse.ArgumentParser ):
                 if dist >= min_dist: continue
                 min_dist = dist
                 pos_key = "--"+key
-            msg += 'Unrecognized argument: %s'%(arg)
-            if min_dist <= CLOSE_DIST: msg += ', do you mean: %s ?\n'%(pos_key)
-            msg += '\n'
-            if arg == '--gpu_arch': msg += "ERROR: <--gpu_arch> is deprecated. Please set <GPU_COMPUTE_CAPABILITY> in your machine *.config file (see ../configs/template.config).\n"
+            msg += "Unrecognized argument: %s"%(arg)
+            if min_dist <= CLOSE_DIST: msg += ", do you mean: %s ?\n"%(pos_key)
+            msg += "\n"
+            if arg == "--gpu_arch": msg += "ERROR: <--gpu_arch> is deprecated. Please set <GPU_COMPUTE_CAPABILITY> in your machine *.config file (see ../configs/template.config).\n"
 
         if len(argv) != 0: self.error( msg )
         return args, self.gamer_names, self.depends, self.constraints
@@ -123,7 +123,7 @@ class ArgumentParser( argparse.ArgumentParser ):
         # See: https://github.com/python/cpython/blob/main/Lib/argparse.py
         result = []
 
-        # option strings starting with two prefix characters are only split at the '='
+        # option strings starting with two prefix characters are only split at the "="
         chars = self.prefix_chars
         if option_string[0] in chars and option_string[1] in chars:
             pass # we always use `allow_abbrev=False`
@@ -138,7 +138,7 @@ class ArgumentParser( argparse.ArgumentParser ):
             for option_string in self._option_string_actions:
                 if option_string == short_option_prefix:
                     action = self._option_string_actions[option_string]
-                    tup = action, option_string, '', short_explicit_arg
+                    tup = action, option_string, "", short_explicit_arg
                     result.append(tup)
                 elif option_string.startswith(option_prefix):
                     action = self._option_string_actions[option_string]
@@ -147,7 +147,7 @@ class ArgumentParser( argparse.ArgumentParser ):
 
         # shouldn't ever get here
         else:
-            self.error(_('unexpected option string: %s') % option_string)
+            self.error(_("unexpected option string: %s") % option_string)
 
         return result # return the collected option tuples
 
@@ -221,6 +221,14 @@ class ArgumentParser( argparse.ArgumentParser ):
         if "print_detail" in kwargs: self.print_option()
         if "epilog"       in self.program: print(self.program["epilog"])
 
+class SystemSetting( dict ):
+    def __init__( self, *args, **kwargs ):
+        super().__init__( *args, **kwargs )
+
+    def get_default( self, key, default_val ):
+        return self.__dict__[key] if key in self.__dict__ else default_val
+
+
 
 
 ####################################################################################################
@@ -291,7 +299,7 @@ def get_gpu_compute_capability():
     Others: https://en.wikipedia.org/wiki/CUDA#GPUs_supported
     """
     CUDA_SUCCESS = 0
-    libnames = ('libcuda.so', 'libcuda.dylib', 'cuda.dll')
+    libnames = ("libcuda.so", "libcuda.dylib", "cuda.dll")
     for libname in libnames:
         try:
             cuda = ctypes.CDLL(libname)
@@ -300,7 +308,7 @@ def get_gpu_compute_capability():
         else:
             break
     else:
-        raise OSError("could not load any of: " + ' '.join(libnames))
+        raise OSError("could not load any of: " + " ".join(libnames))
 
     nGpus, cc_major, cc_minor, device = ctypes.c_int(), ctypes.c_int(), ctypes.c_int(), ctypes.c_int()
 
@@ -353,7 +361,7 @@ def string_align( string, indent_str, width, end_char ):
             if string[i] == end_char: new_line = True
     return new_str
 
-def load_arguments():
+def load_arguments( sys_setting ):
     parser = ArgumentParser( description = GAMER_DESCRIPTION,
                              formatter_class = argparse.RawTextHelpFormatter,
                              epilog = GAMER_EPILOG,
@@ -373,7 +381,7 @@ def load_arguments():
 
     # machine config setup
     parser.add_argument( "--machine", type=str, metavar="MACHINE",
-                         default=None,
+                         default=sys_setting.get_default( "machine_name", "eureka_intel" ),
                          help="Select the MACHINE.config file under ../configs directory.\nChoice: [eureka_intel, spock_intel, YOUR_MACHINE_NAME, ...] => "
                        )
 
@@ -731,8 +739,9 @@ def load_config( config ):
     paths, compilers = {}, {"CXX":"", "CXX_MPI":""}
     flags = {"CXXFLAG":"", "OPENMPFLAG":"", "LIBFLAG":"", "NVCCFLAG_COM":"", "NVCCFLAG_FLU":"", "NVCCFLAG_POT":""}
     gpus  = {"GPU_COMPUTE_CAPABILITY":""}
+
     if os.path.isfile( config ):
-        with open( config, 'r') as f:
+        with open( config, "r" ) as f:
             lines = f.readlines()
     else:
         raise FileNotFoundError("The config file <%s> does not exist."%(config))
@@ -760,14 +769,50 @@ def load_config( config ):
             try:
                paths[temp[0]] = temp[1]
             except:
-               paths[temp[0]] = ''
+               paths[temp[0]] = ""
 
     return paths, compilers, flags, gpus
 
-def set_conditional_defaults( args ):
-    if args['machine'] is None:
-        args['machine'] = get_machine()
+def load_setting():
+    """
+    Return the default machine setting in the following order:
+    1. Read the local  setting located at `GAMER_LOCAL_SETTING`.
+    2. Read the global setting located at `GAMER_GLOBAL_SETTING`.
+    3. Fall back to `eureka_intel` for backward compatibility.
 
+    Format of the setting file:
+    1. Comment starts with `#`.
+    2. Separate the variable name and value with space. The line starts with the variable name.
+    3. Only the fisrt value of the line will be loaded.
+    4. Only the last variable of duplicated variables will be loaded.
+    """
+    sys_setting  = SystemSetting()
+    setting_file = None
+
+    if os.path.isfile( GAMER_GLOBAL_SETTING ): setting_file = GAMER_GLOBAL_SETTING
+    if os.path.isfile( GAMER_LOCAL_SETTING  ): setting_file = GAMER_LOCAL_SETTING
+
+    if setting_file is None:
+        LOGGER.info("System setting file not detected.")
+        return sys_setting
+    else:
+        LOGGER.info("Using %s as setting file."%(setting_file))
+
+    with open( setting_file, "r" ) as f:
+        lines = f.readlines()
+
+    for line in lines:
+        tokens = line.strip().split()
+        if len(tokens) == 0: continue      # empty line
+        if tokens[0][0] == "#": continue   # skip comment line
+        try:
+           sys_setting[tokens[0]] = tokens[1]
+        except:
+           sys_setting[tokens[0]] = None
+
+    return sys_setting
+
+def set_conditional_defaults( args ):
     if args["unsplit_gravity"] is None:
         args["unsplit_gravity"] = (args["model"] == "HYDRO")
 
@@ -791,33 +836,6 @@ def set_conditional_defaults( args ):
     if args["barotropic"] is None:
         args["barotropic"] = (args["eos"] == "ISOTHERMAL")
     return args
-
-def get_machine():
-    '''
-    When the `--machine` flag is not given, this function will be called
-    and return the default machine in the following order:
-        1. Read the local setting located at `GAMER_LOCAL_SETTING`.
-        2. Read the global setting located at `GAMER_GLOBAL_SETTING`.
-        3. Fall back to `eureka_intel` for backward compatibility.
-    '''
-    # Check if GAMER_LOCAL_SETTING exists
-    local_setting = GAMER_LOCAL_SETTING
-    if os.path.isfile(local_setting):
-        with open(local_setting, 'r') as f:
-            for line in f:
-                tokens = line.strip().split()
-                if len(tokens) >= 2 and tokens[0] == 'machine_name':
-                    return tokens[1]
-    # Check if GAMER_GLOBAL_SETTING exists
-    global_setting = os.path.expanduser(GAMER_GLOBAL_SETTING)
-    if os.path.isfile(global_setting):
-        with open(global_setting, 'r') as f:
-            for line in f:
-                tokens = line.strip().split()
-                if len(tokens) >= 2 and tokens[0] == 'machine_name':
-                    return tokens[1]
-    # Fall back to `eureka_intel` for backward compatibility
-    return 'eureka_intel'
 
 def set_gpu( gpus, flags, args ):
     gpu_opts = {}
@@ -924,7 +942,7 @@ def validation( paths, depends, constraints, **kwargs ):
                 if type(check_val) != type([]): check_val = [check_val]   # transform to list
                 if kwargs[check_opt] in check_val: continue     # satisify the validation
 
-                val_str = ', '.join(str(x) for x in check_val)
+                val_str = ", ".join(str(x) for x in check_val)
                 LOGGER.error("The option <--%s=%s> requires <--%s> to be set to [%s]. Current: <--%s=%s>."%(opt, str(kwargs[opt]), check_opt, val_str, check_opt, kwargs[check_opt]))
                 success = False
 
@@ -1031,36 +1049,39 @@ if __name__ == "__main__":
     command = " ".join(["# This makefile is generated by the following command:", "\n#", sys.executable] + sys.argv + ["\n"])
     LOGGER.info( " ".join( [sys.executable] + sys.argv ) )
 
-    # 2. Load the input arguments
-    args, name_table, depends, constraints = load_arguments()
+    # 2. Load system settings
+    sys_setting = load_setting()
 
-    # 3. Prepare the makefile args
-    # 3.1 Load the machine setup
+    # 3. Load the input arguments
+    args, name_table, depends, constraints = load_arguments( sys_setting )
+
+    # 4. Prepare the makefile args
+    # 4.1 Load the machine setup
     paths, compilers, flags, gpus = load_config( os.path.join(GAMER_CONFIG_DIR, args["machine"]+".config") )
 
-    # 3.2 Validate arguments
+    # 4.2 Validate arguments
     validation( paths, depends, constraints, **args )
 
     warning( paths, **args )
 
-    # 3.3 Add the SIMU_OPTION
+    # 4.3 Add the SIMU_OPTION
     LOGGER.info("========================================")
     LOGGER.info("GAMER has the following setting.")
     LOGGER.info("----------------------------------------")
     sims = set_sims( name_table, depends, **args )
 
-    # 3.4 Set the compiler
+    # 4.4 Set the compiler
     compiles = set_compile( paths, compilers, flags, args )
 
-    # 3.5 Set the GPU
+    # 4.5 Set the GPU
     gpu_setup = set_gpu( gpus, flags, args )
 
-    # 4. Create Makefile
-    # 4.1 Read
+    # 5. Create Makefile
+    # 5.1 Read
     with open( GAMER_MAKE_BASE, "r" ) as make_base:
         makefile = make_base.read()
 
-    # 4.2 Replace
+    # 5.2 Replace
     LOGGER.info("----------------------------------------")
     for key, val in paths.items():
         LOGGER.info("%-25s : %s"%(key, val))
@@ -1089,7 +1110,7 @@ if __name__ == "__main__":
         if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
         LOGGER.warning("@@@%s@@@ is replaced to '' since the value is not given or the related option is disabled."%key)
 
-    # 4.3 Write
+    # 5.3 Write
     with open( GAMER_MAKE_OUT, "w") as make_out:
         make_out.write( command + makefile )
 
