@@ -147,7 +147,7 @@ class ArgumentParser( argparse.ArgumentParser ):
 
         # shouldn't ever get here
         else:
-            self.error(_("unexpected option string: %s") % option_string)
+            self.error(("unexpected option string: %s") % option_string)
 
         return result # return the collected option tuples
 
@@ -226,8 +226,7 @@ class SystemSetting( dict ):
         super().__init__( *args, **kwargs )
 
     def get_default( self, key, default_val ):
-        return self.__dict__[key] if key in self.__dict__ else default_val
-
+        return self.get(key, default_val)
 
 
 
@@ -361,7 +360,7 @@ def string_align( string, indent_str, width, end_char ):
             if string[i] == end_char: new_line = True
     return new_str
 
-def load_arguments( sys_setting ):
+def load_arguments( sys_setting : SystemSetting ):
     parser = ArgumentParser( description = GAMER_DESCRIPTION,
                              formatter_class = argparse.RawTextHelpFormatter,
                              epilog = GAMER_EPILOG,
@@ -766,9 +765,9 @@ def load_config( config ):
             if gpus[temp[0]] != "": LOGGER.warning("The original value will be overwritten. <%s>: %s --> %s"%(temp[0], gpus[temp[0]], temp[1]))
             gpus[temp[0]] = temp[1]
         else:
-            try:
+            if len(temp) >= 2:
                paths[temp[0]] = temp[1]
-            except:
+            else:                               # key without value
                paths[temp[0]] = ""
 
     return paths, compilers, flags, gpus
@@ -787,16 +786,14 @@ def load_setting():
     4. Only the last variable of duplicated variables will be loaded.
     """
     sys_setting  = SystemSetting()
-    setting_file = None
 
-    if os.path.isfile( GAMER_GLOBAL_SETTING ): setting_file = GAMER_GLOBAL_SETTING
-    if os.path.isfile( GAMER_LOCAL_SETTING  ): setting_file = GAMER_LOCAL_SETTING
-
-    if setting_file is None:
+    if   os.path.isfile( GAMER_LOCAL_SETTING  ): setting_file = GAMER_LOCAL_SETTING
+    elif os.path.isfile( GAMER_GLOBAL_SETTING ): setting_file = GAMER_GLOBAL_SETTING
+    else:
         LOGGER.info("System setting file not detected.")
         return sys_setting
-    else:
-        LOGGER.info("Using %s as setting file."%(setting_file))
+
+    LOGGER.info("Using %s as setting file."%(setting_file))
 
     with open( setting_file, "r" ) as f:
         lines = f.readlines()
@@ -805,9 +802,9 @@ def load_setting():
         tokens = line.strip().split()
         if len(tokens) == 0: continue      # empty line
         if tokens[0][0] == "#": continue   # skip comment line
-        try:
+        if len(tokens) >= 2:
            sys_setting[tokens[0]] = tokens[1]
-        except:
+        else:                              # key without value
            sys_setting[tokens[0]] = None
 
     return sys_setting
