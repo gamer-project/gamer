@@ -4029,8 +4029,8 @@ herr_t H5_write_user( const hid_t H5_GroupID, const hid_t H5_TypeID, const HDF5_
 // Description :  Store the problem specific parameter in HDF5 outputs (Data_*) under User group
 //
 // Note         : 1. This function only works in MPI_RANK == 0
-//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype
-//                3. There MUST be more than one parameter to be stored
+//                2. We support int, uint, long, ulong, bool, float, double, and string datatypes
+//                3. There MUST be at least one parameter to be stored
 //                4. The pointer of the data MUST still exist outside the function, e.g. global variables
 //
 // Parameter   :  HDF5_OutUser : the structure storing the parameters
