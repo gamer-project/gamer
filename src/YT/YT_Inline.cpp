@@ -221,7 +221,7 @@ void YT_Inline()
    // Set attributes
    for (int v=0; v<ParticleList[0].num_attr; v++){
        // set attribute name
-       ParticleList[0].attr_list[v].attr_name  = ParAttLabel[v];
+       ParticleList[0].attr_list[v].attr_name  = ParAttFltLabel[v];
        // set attribute data type
 #      ifdef FLOAT8_PAR
        ParticleList[0].attr_list[v].attr_dtype = YT_DOUBLE;
