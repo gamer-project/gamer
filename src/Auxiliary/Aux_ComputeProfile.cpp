@@ -47,10 +47,11 @@ extern void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, 
 //                                        Data[empty_bin]=Weight[empty_bin]=NCell[empty_bin]=0
 //                TVarBitIdx  : Bitwise indices of target variables for computing the profiles
 //                              --> Supported indices (defined in Macro.h):
-//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _VELR,
-//                                             _PRES, _TEMP, _ENTR, _EINT
-//                                             [, _DUAL, _CRAY, _POTE, __MAGX_CC, _MAGY_CC, _MAGZ_CC, _MAGE_CC]
-//                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE]
+//                                     HYDRO        : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _VELR,
+//                                                    _PRES, _TEMP, _ENTR, _EINT
+//                                                    [, _DUAL, _CRAY, _POTE, __MAGX_CC, _MAGY_CC, _MAGZ_CC, _MAGE_CC]
+//                                     ELBDM_WAVE   : _DENS, _REAL, _IMAG [, _POTE]
+//                                     ELBDM_HYBRID : _DENS, _PHAS [, _POTE]
 //                              --> All fields supported by Prepare_PatchData() are also supported here
 //                              --> For a passive scalar with an integer field index FieldIdx returned by AddField(),
 //                                  one can convert it to a bitwise field index by BIDX(FieldIdx)
