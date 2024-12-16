@@ -28,6 +28,12 @@ typedef double real_par;
 typedef float  real_par;
 #endif
 
+#ifdef INT8_PAR
+typedef long long_par;
+#else
+typedef int  long_par;
+#endif
+
 #if ( GRAMFE_SCHEME == GRAMFE_FFT )
 #ifdef GRAMFE_FFT_FLOAT8
 typedef double gramfe_fft_float;

@@ -1986,6 +1986,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   int        NPar;
                   bool       UseInputMassPos;
                   real_par **InputMassPos = NULL;
+                  long_par **InputType    = NULL;
 
 #                 ifdef DEBUG_PARTICLE
                   if ( FaSibPID < 0 )  Aux_Error( ERROR_INFO, "FaSibPID = %d < 0 (lv %d, PID0 %d, FaPID %d, sib %d) !!\n",
@@ -2003,6 +2004,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      ParList         = amr->patch[0][lv-1][FaSibPID]->ParList;
                      UseInputMassPos = false;
                      InputMassPos    = NULL;
+                     InputType       = NULL;
                   }
 
                   else
@@ -2011,7 +2013,8 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      NPar            = amr->patch[0][lv-1][FaSibPID]->NPar_Copy;
                      ParList         = NULL;
                      UseInputMassPos = true;
-                     InputMassPos    = amr->patch[0][lv-1][FaSibPID]->ParAtt_Copy;
+                     InputMassPos    = amr->patch[0][lv-1][FaSibPID]->ParAttFlt_Copy;
+                     InputType       = amr->patch[0][lv-1][FaSibPID]->ParAttInt_Copy;
 #                    else
                      Aux_Error( ERROR_INFO, "FaSibPID (%d) is not a real patch (NReal %d) !!\n",
                                 FaSibPID, amr->NPatchComma[lv-1][1] );
@@ -2028,9 +2031,11 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                      if ( UseInputMassPos )
                      {
                         if ( InputMassPos[PAR_MASS] == NULL  ||  InputMassPos[PAR_POSX] == NULL  ||
-                             InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL  ||
-                             InputMassPos[PAR_TYPE] == NULL )
-                           Aux_Error( ERROR_INFO, "InputMassPos[0/1/2/3/4] == NULL for NPar (%d) > 0 (lv %d, FaSibPID %d) !!\n",
+                             InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL )
+                           Aux_Error( ERROR_INFO, "InputMassPos[0/1/2/3] == NULL for NPar (%d) > 0 (lv %d, FaSibPID %d) !!\n",
+                                      NPar, lv-1, FaSibPID );
+                        if ( InputType[PAR_TYPE] == NULL )
+                           Aux_Error( ERROR_INFO, "InputType[0] == NULL for NPar (%d) > 0 (lv %d, FaSibPID %d) !!\n",
                                       NPar, lv-1, FaSibPID );
                      }
 
@@ -2048,7 +2053,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   Par_MassAssignment( ParList, NPar, amr->Par->Interp, ArrayDens, PGSize1D_CC, EdgeL, dh,
                                       (amr->Par->PredictPos && !UseInputMassPos), PrepTime, InitZero_No,
                                       Periodic_Check, PeriodicNCell, UnitDens_No, CheckFarAway_Yes,
-                                      UseInputMassPos, InputMassPos );
+                                      UseInputMassPos, InputMassPos, InputType );
                } // else if ( SibPID0 == -1 )
             } // for (int Side=0; Side<26; Side++) if ( amr->Par->GhostSize > 0  ||  GhostSize > 0 )
          } // if ( PrepParOnlyDens || PrepTotalDens )
@@ -3204,6 +3209,7 @@ void Prepare_PatchData_InitParticleDensityArray( const int lv, const double Prep
       double     EdgeL[3];
       bool       UseInputMassPos;
       real_par **InputMassPos = NULL;
+      long_par **InputType    = NULL;
 
 //    loop over all patches including buffer patches
 #     pragma omp for schedule( runtime )
@@ -3216,6 +3222,7 @@ void Prepare_PatchData_InitParticleDensityArray( const int lv, const double Prep
             ParList         = amr->patch[0][lv][PID]->ParList;
             UseInputMassPos = false;
             InputMassPos    = NULL;
+            InputType       = NULL;
 
 #           ifdef DEBUG_PARTICLE
             if ( amr->patch[0][lv][PID]->NPar_Copy != -1 )
@@ -3231,11 +3238,13 @@ void Prepare_PatchData_InitParticleDensityArray( const int lv, const double Prep
 #           ifdef LOAD_BALANCE
             ParList         = NULL;
             UseInputMassPos = true;
-            InputMassPos    = amr->patch[0][lv][PID]->ParAtt_Copy;
+            InputMassPos    = amr->patch[0][lv][PID]->ParAttFlt_Copy;
+            InputType       = amr->patch[0][lv][PID]->ParAttInt_Copy;
 #           else
             ParList         = amr->patch[0][lv][PID]->ParList_Copy;
             UseInputMassPos = false;
             InputMassPos    = NULL;
+            InputType       = NULL;
 #           endif
          }
 
@@ -3267,9 +3276,11 @@ void Prepare_PatchData_InitParticleDensityArray( const int lv, const double Prep
             if ( UseInputMassPos )
             {
                if ( InputMassPos[PAR_MASS] == NULL  ||  InputMassPos[PAR_POSX] == NULL  ||
-                    InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL  ||
-                    InputMassPos[PAR_TYPE] == NULL )
-                  Aux_Error( ERROR_INFO, "InputMassPos[0/1/2/3/4] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
+                    InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL )
+                  Aux_Error( ERROR_INFO, "InputMassPos[0/1/2/3] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
+                             NPar, lv, PID );
+               if ( InputType[PAR_TYPE] == NULL )
+                  Aux_Error( ERROR_INFO, "InputType[0] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
                              NPar, lv, PID );
             }
 
@@ -3293,7 +3304,7 @@ void Prepare_PatchData_InitParticleDensityArray( const int lv, const double Prep
 //          --> must initialize rho_ext[] as zero by InitZero_Yes
             Par_MassAssignment( ParList, NPar, amr->Par->Interp, amr->patch[0][lv][PID]->rho_ext[0][0], RHOEXT_NXT,
                                 EdgeL, dh, (amr->Par->PredictPos && !UseInputMassPos), PrepTime, InitZero_Yes,
-                                Periodic_No, NULL, UnitDens_No, CheckFarAway_No, UseInputMassPos, InputMassPos );
+                                Periodic_No, NULL, UnitDens_No, CheckFarAway_No, UseInputMassPos, InputMassPos, InputType );
          } // if ( NPar > 0 )
 
          else
