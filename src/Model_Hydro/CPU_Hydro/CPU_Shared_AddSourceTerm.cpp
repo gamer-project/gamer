@@ -1,5 +1,5 @@
-#ifndef __CUFLU_HYDRO_SCANALLCELLS__
-#define __CUFLU_HYDRO_SCANALLCELLS__
+#ifndef __CUFLU_HYDRO_ADDSOURCETERM__
+#define __CUFLU_HYDRO_ADDSOURCETERM__
 
 
 
@@ -455,4 +455,4 @@ void Hydro_AddSourceTerm_FCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NX
 
 
 
-#endif // #ifdef __CUFLU_HYDRO_SCANALLCELLS__
+#endif // #ifdef __CUFLU_HYDRO_ADDSOURCETERM__
