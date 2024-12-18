@@ -5,7 +5,6 @@
 declare -A KEY_DESCRIPTIONS
 KEY_DESCRIPTIONS=(
     ["machine"]="Specify the machine name"
-    ["user"]="Specify the user name"
 )
 ###################################################
 
