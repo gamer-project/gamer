@@ -154,9 +154,9 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
    int LocalPID, delta_t, PGi, PGj, PGk;
 
-// Debug
-   const char FileName[] = "Record__Debug";
-// Debug
+// // Debug
+//    const char FileName[] = "Record__Debug";
+// // Debug
 
 // get the sibling index differences along different directions
    int NSibPID_Delta[26], *SibPID_Delta[26];
@@ -267,11 +267,11 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          GasDens = fluid[DENS];
          if ( GasDens <= GasDensThres )    continue;
 
-         // Debug
-         FILE *File = fopen( FileName, "w" );
-         fprintf( File, "Dens threshold passes, Dens = %20.14e", GasDens);
-         fclose( File );
-         // Degub
+         // // Debug
+         // FILE *File = fopen( FileName, "w" );
+         // fprintf( File, "Dens threshold passes, Dens = %20.14e", GasDens);
+         // fclose( File );
+         // // Degub
 
 // //       Proximity check + second density threshold
 // //       ===========================================================================================================
@@ -627,11 +627,11 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
             NNewPar ++;
          } // # pragma omp critical
       } // pi, pj, pk
-      // Debug
-      FILE *File = fopen( FileName, "w" );
-      fprintf( File, "NNewPar = %s", NNewPar);
-      fclose( File );
-      // Degub
+      // // Debug
+      // FILE *File = fopen( FileName, "w" );
+      // fprintf( File, "NNewPar = %s", NNewPar);
+      // fclose( File );
+      // // Degub
    } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8) #  pragma omp for schedule( static )
 
    delete [] Flu_Array_F_In;
