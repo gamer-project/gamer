@@ -728,9 +728,10 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
       // {
       const char FileName[] = "Record__Debug";
       FILE *File = fopen( FileName, "a" );
-      fprintf( File, "%d/%d %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e", p, SelNNewPar, 
+      fprintf( File, "%d/%d %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e", p, SelNNewPar, 
       NewParAtt[pi][PAR_POSX], NewParAtt[pi][PAR_POSY], NewParAtt[pi][PAR_POSZ],
-      NewParAtt[pi][PAR_VELX], NewParAtt[pi][PAR_VELY], NewParAtt[pi][PAR_VELZ]);
+      NewParAtt[pi][PAR_VELX], NewParAtt[pi][PAR_VELY], NewParAtt[pi][PAR_VELZ], 
+      NewParAtt[pi][PAR_ACCX], NewParAtt[pi][PAR_ACCY], NewParAtt[pi][PAR_ACCZ]);
       fclose( File );
       // }
       // Debug
