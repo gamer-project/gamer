@@ -433,29 +433,29 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
          if ( NotMiniPot )                                   continue;
          
-// //       Converging flow Check
-// //       ===========================================================================================================
-//          for (int NeighborID=0; NeighborID<6; NeighborID++)
-//          {  
-//             if      (NeighborID == 0) delta_t = IDX321(  1,  0,  0, Size_Flu, Size_Flu );
-//             else if (NeighborID == 1) delta_t = IDX321( -1,  0,  0, Size_Flu, Size_Flu );
-//             else if (NeighborID == 2) delta_t = IDX321(  0,  1,  0, Size_Flu, Size_Flu );
-//             else if (NeighborID == 3) delta_t = IDX321(  0, -1,  0, Size_Flu, Size_Flu );
-//             else if (NeighborID == 4) delta_t = IDX321(  0,  0,  1, Size_Flu, Size_Flu );
-//             else if (NeighborID == 5) delta_t = IDX321(  0,  0, -1, Size_Flu, Size_Flu );
+//       Converging flow Check
+//       ===========================================================================================================
+         for (int NeighborID=0; NeighborID<6; NeighborID++)
+         {  
+            if      (NeighborID == 0) delta_t = IDX321(  1,  0,  0, Size_Flu, Size_Flu );
+            else if (NeighborID == 1) delta_t = IDX321( -1,  0,  0, Size_Flu, Size_Flu );
+            else if (NeighborID == 2) delta_t = IDX321(  0,  1,  0, Size_Flu, Size_Flu );
+            else if (NeighborID == 3) delta_t = IDX321(  0, -1,  0, Size_Flu, Size_Flu );
+            else if (NeighborID == 4) delta_t = IDX321(  0,  0,  1, Size_Flu, Size_Flu );
+            else if (NeighborID == 5) delta_t = IDX321(  0,  0, -1, Size_Flu, Size_Flu );
 
-//             const int Neighbort = t + delta_t;
-//             for (int v=0; v<FLU_NIN; v++)    NeighborFluid[v] = Flu_Array_F_In[v][Neighbort];
+            const int Neighbort = t + delta_t;
+            for (int v=0; v<FLU_NIN; v++)    NeighborFluid[v] = Flu_Array_F_In[v][Neighbort];
 
-//             if      ((NeighborID == 0) || (NeighborID == 1)) VelNeighbor[NeighborID] = NeighborFluid[MOMX]/NeighborFluid[DENS];
-//             else if ((NeighborID == 2) || (NeighborID == 3)) VelNeighbor[NeighborID] = NeighborFluid[MOMY]/NeighborFluid[DENS];
-//             else if ((NeighborID == 4) || (NeighborID == 5)) VelNeighbor[NeighborID] = NeighborFluid[MOMZ]/NeighborFluid[DENS];
-//          } // for (int NeighborID=0; NeighborID<6; NeighborID++)
+            if      ((NeighborID == 0) || (NeighborID == 1)) VelNeighbor[NeighborID] = NeighborFluid[MOMX]/NeighborFluid[DENS];
+            else if ((NeighborID == 2) || (NeighborID == 3)) VelNeighbor[NeighborID] = NeighborFluid[MOMY]/NeighborFluid[DENS];
+            else if ((NeighborID == 4) || (NeighborID == 5)) VelNeighbor[NeighborID] = NeighborFluid[MOMZ]/NeighborFluid[DENS];
+         } // for (int NeighborID=0; NeighborID<6; NeighborID++)
 
-//          if ( (VelNeighbor[0] - VelNeighbor[1]) >= 0 || 
-//               (VelNeighbor[2] - VelNeighbor[3]) >= 0 || 
-//               (VelNeighbor[4] - VelNeighbor[5]) >= 0 )                      
-//               continue;
+         if ( (VelNeighbor[0] - VelNeighbor[1]) >= 0 || 
+              (VelNeighbor[2] - VelNeighbor[3]) >= 0 || 
+              (VelNeighbor[4] - VelNeighbor[5]) >= 0 )                      
+              continue;
 
 // //       Jeans instability check + check for bound state
 // //       ===========================================================================================================
