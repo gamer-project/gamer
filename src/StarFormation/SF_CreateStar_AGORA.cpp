@@ -267,7 +267,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          const char FileName[] = "Record__Debug";
          FILE *File = fopen( FileName, "w" );
          fprintf( File, "Dens threshold passes, Dens = %20.14e", GasDens);
-         fclose( File );
+         // fclose( File );
          // Degub
 
 // //       Proximity check + second density threshold
@@ -625,7 +625,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          } // # pragma omp critical
          // Debug
          // const char FileName[] = "Record__Debug";
-         FILE *File = fopen( FileName, "w" );
+         // FILE *File = fopen( FileName, "w" );
          fprintf( File, "NNewPar = %s", NNewPar);
          fclose( File );
          // Degub
