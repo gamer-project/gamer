@@ -258,6 +258,13 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          GasDens = fluid[DENS];
          if ( GasDens <= GasDensThres )    continue;
 
+         // Debug
+         const char FileName[] = "Record__Debug";
+         FILE *File = fopen( FileName, "w" );
+         fprintf( File, "Dens threshold passes");
+         fclose( File );
+         // Degub
+
 //       Proximity check + second density threshold
 //       ===========================================================================================================
          bool InsideAccRadius = false;
