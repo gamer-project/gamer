@@ -263,13 +263,6 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          GasDens = fluid[DENS];
          if ( GasDens <= GasDensThres )    continue;
 
-         // Debug
-         const char FileName[] = "Record__Debug";
-         FILE *File = fopen( FileName, "w" );
-         fprintf( File, "Dens threshold passes, Dens = %20.14e", GasDens);
-         fclose( File );
-         // Degub
-
 // //       Proximity check + second density threshold
 // //       ===========================================================================================================
 //          bool InsideAccRadius = false;
@@ -630,6 +623,13 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    delete [] Mag_Array_F_In;
    delete [] Pot_Array_USG_F;
    } // end of OpenMP parallel region
+
+   // Debug
+   const char FileName[] = "Record__Debug";
+   FILE *File = fopen( FileName, "w" );
+   fprintf( File, "NNewPar = %s", NNewPar);
+   fclose( File );
+   // Debug
 
 // Excluding the nearby particles + remove the gas from the cell
 // ===========================================================================================================
