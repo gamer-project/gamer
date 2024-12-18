@@ -727,7 +727,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
       // if ( MPI_Rank == 0 )
       // {
       const char FileName[] = "Record__Debug";
-      FILE *File = fopen( FileName, "w" );
+      FILE *File = fopen( FileName, "a" );
       fprintf( File, "%13.7e %13.7e %13.7e", NewParAtt[pi][PAR_VELX], NewParAtt[pi][PAR_VELY], NewParAtt[pi][PAR_VELZ]);
       fclose( File );
       // }
