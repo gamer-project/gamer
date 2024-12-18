@@ -103,6 +103,10 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    long        *NewParRepo                       = new long     [MaxNewPar]; // particle respository that will be added
    long        *NewParPID                        = new long     [MaxNewPar]; // PID where the particle is formed
 
+// Debug
+   const char FileName[] = "Record__Debug";
+// Debug
+
 // Some check
    if (AccCellNum > 0.5*PS1)
       Aux_Error( ERROR_INFO, "AccCellNum should be smaller than half of PATCH_SIZE !!" );
@@ -133,12 +137,14 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    real PosX, PosY, PosZ, VelX, VelY, VelZ; // position and velocity of the current test cell
    real GasDens; // gas density of the current test cell
    real GasMFracLeft; // the fraction of gas mass of the cell that will be took out by particle
+   real Corner_Array_F[3]; // the corner of the ghost zone
+   real fluid[FLU_NIN]; // fluid in the current test cell
 
 
    // real ControlX, ControlY, ControlZ; // position of the cells inside the control volume
    // real GasDens, GasDensFreeFall, GasMFracLeft;
    // real fluid[FLU_NIN], NeighborFluid[FLU_NIN], ControlFluid[FLU_NIN], ControlFluidj[FLU_NIN]; // fluid in the current cells, neighbor cells, control volume, control volume (j)
-   // real Corner_Array_F[3]; // the corner of the ghost zone
+   
    // real Par2Cell[3], Par2CellDist, Par2CellVel[3]; // particle-cell relative position, distance, relative velocity
    // real Cell2Cell; // distance to the center cell
    // real NorPar2Cell[3]; // normalized particle-cell relative position
@@ -156,10 +162,6 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    int NSibPID_Delta[26], *SibPID_Delta[26];
 
    TABLE_GetSibPID_Delta( NSibPID_Delta, SibPID_Delta );
-
-// Debug
-   const char FileName[] = "Record__Debug";
-// Debug
 
 // loop over all real patch groups
 // use static schedule to ensure bitwise reproducibility when running with the same numbers of OpenMP threads and MPI ranks
@@ -580,7 +582,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
             real GasAcc[3] = { (real)0.0, (real)0.0, (real)0.0 };
 
    //       external acceleration
-            if ( OPT__EXT_ACC )  CPUExtAcc_Ptr( GasAcc, x, y, z, TimeNew, ExtAcc_AuxArray );
+            if ( OPT__EXT_ACC )  CPUExtAcc_Ptr( GasAcc, PosX, PosY, PosZ, TimeNew, ExtAcc_AuxArray );
 
    //       self-gravity and external potential
             if ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT )
