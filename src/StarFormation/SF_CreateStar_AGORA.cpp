@@ -103,10 +103,6 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    long        *NewParRepo                       = new long     [MaxNewPar]; // particle respository that will be added
    long        *NewParPID                        = new long     [MaxNewPar]; // PID where the particle is formed
 
-// Debug
-   const char FileName[] = "Record__Debug";
-// Debug
-
 // Some check
    if (AccCellNum > 0.5*PS1)
       Aux_Error( ERROR_INFO, "AccCellNum should be smaller than half of PATCH_SIZE !!" );
@@ -157,6 +153,10 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    real   (*Pot_Array_USG_F)                               = new real [CUBE(Size_Pot)];
 
    int LocalPID, delta_t, PGi, PGj, PGk;
+
+// Debug
+   const char FileName[] = "Record__Debug";
+// Debug
 
 // get the sibling index differences along different directions
    int NSibPID_Delta[26], *SibPID_Delta[26];
