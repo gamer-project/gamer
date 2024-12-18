@@ -135,9 +135,10 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    real GasMFracLeft; // the fraction of gas mass of the cell that will be took out by particle
    real Corner_Array_F[3]; // the corner of the ghost zone
    real fluid[FLU_NIN]; // fluid in the current test cell
+   real ControlPosX, ControlPosY, ControlPosZ; // position of the cells inside the control volume
 
 
-   // real ControlX, ControlY, ControlZ; // position of the cells inside the control volume
+   
    // real GasDens, GasDensFreeFall, GasMFracLeft;
    // real fluid[FLU_NIN], NeighborFluid[FLU_NIN], ControlFluid[FLU_NIN], ControlFluidj[FLU_NIN]; // fluid in the current cells, neighbor cells, control volume, control volume (j)
    
@@ -402,33 +403,33 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 //          if ( InsideAccRadius )               continue;
 //          if ( NotPassDen )                    continue;
 
-// //       Gravitational minimum check inside the control volume
-// //       ===========================================================================================================
-         real phi000 = Pot_Array_USG_F[t]; // the potential of the current cell
-//          real phiijk = (real)0.0;
-//          bool NotMiniPot          = false;
-//          for (int vk=pk-AccCellNum; vk<=pk+AccCellNum; vk++)
-//          for (int vj=pj-AccCellNum; vj<=pj+AccCellNum; vj++)
-//          for (int vi=pi-AccCellNum; vi<=pi+AccCellNum; vi++) // loop the nearby cells, to find the cells inside the control volumne (v)
-//          {
-//             ControlX = Corner_Array_F[0] + vi*dh;
-//             ControlY = Corner_Array_F[1] + vj*dh;
-//             ControlZ = Corner_Array_F[2] + vk*dh;
+//       Gravitational minimum check inside the control volume
+//       ===========================================================================================================
+         real Phi000 = Pot_Array_USG_F[t]; // the potential of the current cell
+         real Phiijk = (real)0.0;
+         bool NotMiniPot          = false;
+         for (int vk=pk-AccCellNum; vk<=pk+AccCellNum; vk++)
+         for (int vj=pj-AccCellNum; vj<=pj+AccCellNum; vj++)
+         for (int vi=pi-AccCellNum; vi<=pi+AccCellNum; vi++) // loop the nearby cells, to find the cells inside the control volumne (v)
+         {
+            ControlPosX = Corner_Array_F[0] + vi*dh;
+            ControlPosY = Corner_Array_F[1] + vj*dh;
+            ControlPosZ = Corner_Array_F[2] + vk*dh;
 
-//             Cell2Cell = SQRT(SQR(ControlX - x)+SQR(ControlY - y)+SQR(ControlZ - z)); // distance to the center cell
-//             if ( Cell2Cell > AccRadius )                 continue; // check whether it is inside the control volume
+            Cell2Cell = SQRT(SQR(ControlPosX - PosX)+SQR(ControlPosY - PosY)+SQR(ControlPosZ - PosZ)); // distance to the center cell
+            if ( Cell2Cell > AccRadius )                 continue; // check whether it is inside the control volume
 
-//             const int vt = IDX321( vi, vj, vk, Size_Flu, Size_Flu );
-//             phiijk = Pot_Array_USG_F[vt];
+            const int vt = IDX321( vi, vj, vk, Size_Flu, Size_Flu );
+            Phiijk = Pot_Array_USG_F[vt];
 
-//             if ( phiijk < phi000 )
-//             {
-//                NotMiniPot = true;
-//                break;
-//             }
-//          } // vi, vj, vk
+            if ( Phiijk < Phi000 )
+            {
+               NotMiniPot = true;
+               break;
+            }
+         } // vi, vj, vk
 
-//          if ( NotMiniPot )                                   continue;
+         if ( NotMiniPot )                                   continue;
          
 // //       Converging flow Check
 // //       ===========================================================================================================
@@ -462,11 +463,11 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 //          for (int vj=pj-AccCellNum; vj<=pj+AccCellNum; vj++)
 //          for (int vi=pi-AccCellNum; vi<=pi+AccCellNum; vi++) // loop the nearby cells, to find the cells inside the control volumne (v)
 //          {
-//             ControlX = Corner_Array_F[0] + vi*dh;
-//             ControlY = Corner_Array_F[1] + vj*dh;
-//             ControlZ = Corner_Array_F[2] + vk*dh;
+//             ControlPosX = Corner_Array_F[0] + vi*dh;
+//             ControlPosY = Corner_Array_F[1] + vj*dh;
+//             ControlPosZ = Corner_Array_F[2] + vk*dh;
 
-//             Cell2Cell = SQRT(SQR(ControlX - x)+SQR(ControlY - y)+SQR(ControlZ - z)); // distance to the center cell
+//             Cell2Cell = SQRT(SQR(ControlPosX - x)+SQR(ControlPosY - y)+SQR(ControlPosZ - z)); // distance to the center cell
 //             if ( Cell2Cell > AccRadius )                 continue; // check whether it is inside the control volume
 
 //             const int vt = IDX321( vi, vj, vk, Size_Flu, Size_Flu );
@@ -486,31 +487,31 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 //          for (int vj=pj-AccCellNum; vj<=pj+AccCellNum; vj++)
 //          for (int vi=pi-AccCellNum; vi<=pi+AccCellNum; vi++) // loop the nearby cells, to find the cells inside the control volumne (v)
 //          {
-//             ControlX = Corner_Array_F[0] + vi*dh;
-//             ControlY = Corner_Array_F[1] + vj*dh;
-//             ControlZ = Corner_Array_F[2] + vk*dh;
+//             ControlPosX = Corner_Array_F[0] + vi*dh;
+//             ControlPosY = Corner_Array_F[1] + vj*dh;
+//             ControlPosZ = Corner_Array_F[2] + vk*dh;
 
-//             Cell2Cell = SQRT(SQR(ControlX - x)+SQR(ControlY - y)+SQR(ControlZ - z)); // distance to the center cell
+//             Cell2Cell = SQRT(SQR(ControlPosX - x)+SQR(ControlPosY - y)+SQR(ControlPosZ - z)); // distance to the center cell
 //             if ( Cell2Cell > AccRadius )                 continue; // check whether it is inside the control volume
 
 //             const int vt = IDX321( vi, vj, vk, Size_Flu, Size_Flu );
 //             for (int v=0; v<FLU_NIN; v++)    ControlFluid[v] = Flu_Array_F_In[v][vt];
 
 // //          Storing Egtot
-//             real ControlXj, ControlYj, ControlZj;
+//             real ControlPosXj, ControlPosYj, ControlPosZj;
 //             real SelfPhiijk = (real)0.0; // self-potential
 //             for (int vkj=pk-AccCellNum; vkj<=pk+AccCellNum; vkj++)
 //             for (int vjj=pj-AccCellNum; vjj<=pj+AccCellNum; vjj++)
 //             for (int vij=pi-AccCellNum; vij<=pi+AccCellNum; vij++) // loop the nearby cells, to find the cells inside the control volumne (v)
 //             {
-//                ControlXj = Corner_Array_F[0] + vij*dh;
-//                ControlYj = Corner_Array_F[1] + vjj*dh;
-//                ControlZj = Corner_Array_F[2] + vkj*dh;
+//                ControlPosXj = Corner_Array_F[0] + vij*dh;
+//                ControlPosYj = Corner_Array_F[1] + vjj*dh;
+//                ControlPosZj = Corner_Array_F[2] + vkj*dh;
 
-//                real rij = SQRT(SQR(ControlX - ControlXj)+SQR(ControlY - ControlYj)+SQR(ControlZ - ControlZj));
+//                real rij = SQRT(SQR(ControlPosX - ControlPosXj)+SQR(ControlPosY - ControlPosYj)+SQR(ControlPosZ - ControlPosZj));
 //                if ( rij == 0.0 )                        continue;
 
-//                real Cell2Cellj = SQRT(SQR(ControlXj - x)+SQR(ControlYj - y)+SQR(ControlZj - z)); // distance to the center cell
+//                real Cell2Cellj = SQRT(SQR(ControlPosXj - x)+SQR(ControlPosYj - y)+SQR(ControlPosZj - z)); // distance to the center cell
 //                if ( Cell2Cellj > AccRadius )                 continue; // check whether it is inside the control volume
 //                const int vtj = IDX321( vij, vjj, vkj, Size_Flu, Size_Flu );
 //                for (int v=0; v<FLU_NIN; v++)    ControlFluidj[v] = Flu_Array_F_In[v][vtj];
@@ -609,7 +610,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
             RemovalPos[NNewPar][3] = PGi - Disp_i;
 
             RemovalFlu[NNewPar][0] = GasMFracLeft;
-            RemovalFlu[NNewPar][1] = phi000;
+            RemovalFlu[NNewPar][1] = Phi000;
             RemovalFlu[NNewPar][2] = PosX;
             RemovalFlu[NNewPar][3] = PosY;
             RemovalFlu[NNewPar][4] = PosZ;
