@@ -264,7 +264,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          if ( GasDens <= GasDensThres )    continue;
 
          // Debug
-         const char FileName[] = "Record__Debug";
+         // const char FileName[] = "Record__Debug";
          FILE *File = fopen( FileName, "w" );
          fprintf( File, "Dens threshold passes, Dens = %20.14e", GasDens);
          fclose( File );
