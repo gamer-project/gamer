@@ -627,18 +627,17 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
             NNewPar ++;
          } // # pragma omp critical
       } // pi, pj, pk
+      // Debug
+      FILE *File = fopen( FileName, "w" );
+      fprintf( File, "NNewPar = %s", NNewPar);
+      fclose( File );
+      // Degub
    } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8) #  pragma omp for schedule( static )
 
    delete [] Flu_Array_F_In;
    delete [] Mag_Array_F_In;
    delete [] Pot_Array_USG_F;
    } // end of OpenMP parallel region
-
-   // Debug
-   FILE *File = fopen( FileName, "w" );
-   fprintf( File, "NNewPar = %s", NNewPar);
-   fclose( File );
-   // Degub
 
 // Excluding the nearby particles + remove the gas from the cell
 // ===========================================================================================================
