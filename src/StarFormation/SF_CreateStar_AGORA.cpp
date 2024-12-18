@@ -630,15 +630,15 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    delete [] Pot_Array_USG_F;
    } // end of OpenMP parallel region
 
-   // Debug
-   if ( MPI_Rank == 0 )
-   {
-      const char FileName[] = "Record__Debug";
-      FILE *File = fopen( FileName, "w" );
-      fprintf( File, "NNewPar = %d", NNewPar);
-      fclose( File );
-   }
-   // Debug
+   // // Debug
+   // if ( MPI_Rank == 0 )
+   // {
+   //    const char FileName[] = "Record__Debug";
+   //    FILE *File = fopen( FileName, "w" );
+   //    fprintf( File, "NNewPar = %d", NNewPar);
+   //    fclose( File );
+   // }
+   // // Debug
 
 // Excluding the nearby particles + remove the gas from the cell
 // ===========================================================================================================
@@ -722,6 +722,17 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    {
       int pi = SelNewParID[p];
       NewParAtt[pi][Idx_ParID] = NParAllRank + NParPreRank + p; // reassign the ID
+
+      // Debug
+      if ( MPI_Rank == 0 )
+      {
+         const char FileName[] = "Record__Debug";
+         FILE *File = fopen( FileName, "w" );
+         fprintf( File, "%13.7e %13.7e %13.7e", NewParAtt[pi][PAR_VELX], NewParAtt[pi][PAR_VELY], NewParAtt[pi][PAR_VELZ]);
+         fclose( File );
+      }
+      // Debug
+
 
       // add particles to the particle repository
       NewParRepo[p] = amr->Par->AddOneParticle( NewParAtt[pi] );
