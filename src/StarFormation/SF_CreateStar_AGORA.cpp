@@ -135,7 +135,9 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    real GasMFracLeft; // the fraction of gas mass of the cell that will be took out by particle
    real Corner_Array_F[3]; // the corner of the ghost zone
    real fluid[FLU_NIN]; // fluid in the current test cell
+
    real ControlPosX, ControlPosY, ControlPosZ; // position of the cells inside the control volume
+   real Cell2Cell; // distance to the center cell in the control volume
 
 
    
@@ -143,7 +145,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    // real fluid[FLU_NIN], NeighborFluid[FLU_NIN], ControlFluid[FLU_NIN], ControlFluidj[FLU_NIN]; // fluid in the current cells, neighbor cells, control volume, control volume (j)
    
    // real Par2Cell[3], Par2CellDist, Par2CellVel[3]; // particle-cell relative position, distance, relative velocity
-   // real Cell2Cell; // distance to the center cell
+   
    // real NorPar2Cell[3]; // normalized particle-cell relative position
    // real VelNeighbor[6]; // record the neighboring cell velocity [x+, x-, y+, y+, z+, z-]
    // real Pres, Cs2, vEmag=NULL_REAL;
