@@ -775,7 +775,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 #     ifdef DEBUG_PARTICLE
 //    do not set ParPos too early since pointers to the particle repository (e.g., amr->Par->PosX)
 //    may change after calling amr->Par->AddOneParticle()
-      const real *NewParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+      const real_par *NewParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
       char Comment[100];
       sprintf( Comment, "%s", __FUNCTION__ );
       
