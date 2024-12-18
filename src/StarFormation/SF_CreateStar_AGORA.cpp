@@ -625,10 +625,13 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    } // end of OpenMP parallel region
 
    // Debug
-   const char FileName[] = "Record__Debug";
-   FILE *File = fopen( FileName, "w" );
-   fprintf( File, "NNewPar = %s", NNewPar);
-   fclose( File );
+   if ( MPI_Rank == 0 )
+   {
+      const char FileName[] = "Record__Debug";
+      FILE *File = fopen( FileName, "w" );
+      fprintf( File, "NNewPar = %d", NNewPar);
+      fclose( File );
+   }
    // Debug
 
 // Excluding the nearby particles + remove the gas from the cell
