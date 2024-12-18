@@ -622,13 +622,13 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
             RemovalFlu[NNewPar][4] = PosZ;
 
             NNewPar ++;
-
-            // Debug
-            FILE *File = fopen( FileName, "w" );
-            fprintf( File, "NNewPar = %s", NNewPar);
-            fclose( File );
-            // Degub
          } // # pragma omp critical
+         // Debug
+         const char FileName[] = "Record__Debug";
+         FILE *File = fopen( FileName, "w" );
+         fprintf( File, "NNewPar = %s", NNewPar);
+         fclose( File );
+         // Degub
       } // pi, pj, pk
    } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8) #  pragma omp for schedule( static )
 
