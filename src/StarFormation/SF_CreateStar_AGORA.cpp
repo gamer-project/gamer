@@ -139,6 +139,9 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    real ControlPosX, ControlPosY, ControlPosZ; // position of the cells inside the control volume
    real Cell2Cell; // distance to the center cell in the control volume
 
+   real NeighborFluid[FLU_NIN]; // used in Converging flow Check
+   real VelNeighbor[6]; // record the neighboring cell velocity [x+, x-, y+, y+, z+, z-]
+
 
    
    // real GasDens, GasDensFreeFall, GasMFracLeft;
