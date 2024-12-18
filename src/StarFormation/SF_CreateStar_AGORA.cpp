@@ -96,12 +96,12 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 // const real   GraConst       = ( OPT__GRA_P5_GRADIENT ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh);
    const real   GraConst       = ( false                ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // P5 is NOT supported yet
 
-   int      NNewPar = 0;
-   real   (*RemovalFlu)[5]                   = new real [MaxNewPar][5];
-   long   (*RemovalPos)[4]                   = new long [MaxNewPar][4];
-   real_par   (*NewParAtt)[PAR_NATT_TOTAL]       = new real_par [MaxNewPar][PAR_NATT_TOTAL];
-   long    *NewParID                         = new long [MaxNewPar];
-   long    *NewParPID                        = new long [MaxNewPar];
+   int          NNewPar = 0; // number of new particle
+   real       (*RemovalFlu)[5]                   = new real     [MaxNewPar][5]; // information used to remove gas from the cell
+   long       (*RemovalPos)[4]                   = new long     [MaxNewPar][4]; // some IDs used to remove gas from the cell
+   real_par   (*NewParAtt)[PAR_NATT_TOTAL]       = new real_par [MaxNewPar][PAR_NATT_TOTAL]; // attribute of the new particles
+   long        *NewParRepo                       = new long     [MaxNewPar]; // particle respository that will be added
+   long        *NewParPID                        = new long     [MaxNewPar]; // PID where the particle is formed
 
 // Some check
    if (AccCellNum > 0.5*PS1)
@@ -130,28 +130,36 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    const int TID = 0;
 #  endif
 
-   real x, y, z, VelX, VelY, VelZ; // position and velocity of the current cell
-   real ControlX, ControlY, ControlZ; // position of the cells inside the control volume
-   real GasDens, GasDensFreeFall, GasMFracLeft;
-   real fluid[FLU_NIN], NeighborFluid[FLU_NIN], ControlFluid[FLU_NIN], ControlFluidj[FLU_NIN]; // fluid in the current cells, neighbor cells, control volume, control volume (j)
-   real Corner_Array_F[3]; // the corner of the ghost zone
-   real Par2Cell[3], Par2CellDist, Par2CellVel[3]; // particle-cell relative position, distance, relative velocity
-   real Cell2Cell; // distance to the center cell
-   real NorPar2Cell[3]; // normalized particle-cell relative position
-   real VelNeighbor[6]; // record the neighboring cell velocity [x+, x-, y+, y+, z+, z-]
-   real Pres, Cs2, vEmag=NULL_REAL;
+   real PosX, PosY, PosZ, VelX, VelY, VelZ; // position and velocity of the current test cell
+   real GasDens; // gas density of the current test cell
+   real GasMFracLeft; // the fraction of gas mass of the cell that will be took out by particle
+
+
+   // real ControlX, ControlY, ControlZ; // position of the cells inside the control volume
+   // real GasDens, GasDensFreeFall, GasMFracLeft;
+   // real fluid[FLU_NIN], NeighborFluid[FLU_NIN], ControlFluid[FLU_NIN], ControlFluidj[FLU_NIN]; // fluid in the current cells, neighbor cells, control volume, control volume (j)
+   // real Corner_Array_F[3]; // the corner of the ghost zone
+   // real Par2Cell[3], Par2CellDist, Par2CellVel[3]; // particle-cell relative position, distance, relative velocity
+   // real Cell2Cell; // distance to the center cell
+   // real NorPar2Cell[3]; // normalized particle-cell relative position
+   // real VelNeighbor[6]; // record the neighboring cell velocity [x+, x-, y+, y+, z+, z-]
+   // real Pres, Cs2, vEmag=NULL_REAL;
    real PotNeighbor[6]; // record the neighboring cell potential [x+, x-, y+, y+, z+, z-]
 
    real   (*Flu_Array_F_In)[CUBE(Size_Flu)]                = new real [FLU_NIN][CUBE(Size_Flu)];
    real   (*Mag_Array_F_In)[Size_Flu_P1*SQR(Size_Flu)]     = new real [NCOMP_MAG][Size_Flu_P1*SQR(Size_Flu)];
    real   (*Pot_Array_USG_F)                               = new real [CUBE(Size_Pot)];
 
-   int LocalID, delta_t, PGi, PGj, PGk;
+   int LocalPID, delta_t, PGi, PGj, PGk;
 
 // get the sibling index differences along different directions
    int NSibPID_Delta[26], *SibPID_Delta[26];
 
    TABLE_GetSibPID_Delta( NSibPID_Delta, SibPID_Delta );
+
+// Debug
+   const char FileName[] = "Record__Debug";
+// Debug
 
 // loop over all real patch groups
 // use static schedule to ensure bitwise reproducibility when running with the same numbers of OpenMP threads and MPI ranks
@@ -228,24 +236,23 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          }
       }
 
-
       for (int pk=NGhost; pk<PS2 + NGhost; pk++)
       for (int pj=NGhost; pj<PS2 + NGhost; pj++)
-      for (int pi=NGhost; pi<PS2 + NGhost; pi++) // loop inside the patch group
+      for (int pi=NGhost; pi<PS2 + NGhost; pi++) // loop inside the patch group + ghost zone
       {  
-         LocalID = FindLocalPID(pi, pj, pk, PGi, PGj, PGk, NGhost);
+         LocalPID = FindLocalPID(pi, pj, pk, PGi, PGj, PGk, NGhost);
 
-         const int Disp_i = TABLE_02( LocalID, 'x', 0, PS1 ); // the cell index within PID
-         const int Disp_j = TABLE_02( LocalID, 'y', 0, PS1 );
-         const int Disp_k = TABLE_02( LocalID, 'z', 0, PS1 );
-         const int PID = PID0 + LocalID; // record the current PID
+         const int Disp_i = TABLE_02( LocalPID, 'x', 0, PS1 ); // the cell index within PID
+         const int Disp_j = TABLE_02( LocalPID, 'y', 0, PS1 );
+         const int Disp_k = TABLE_02( LocalPID, 'z', 0, PS1 );
+         const int PID = PID0 + LocalPID; // record the current PID
 
 //       skip non-leaf patches
          if ( amr->patch[0][lv][PID]->son != -1 )  continue;
 
-         x = Corner_Array_F[0] + pi*dh;
-         y = Corner_Array_F[1] + pj*dh;
-         z = Corner_Array_F[2] + pk*dh;
+         PosX = Corner_Array_F[0] + pi*dh;
+         PosY = Corner_Array_F[1] + pj*dh;
+         PosZ = Corner_Array_F[2] + pk*dh;
 
          const int t = IDX321( pi, pj, pk, Size_Flu, Size_Flu );
          for (int v=0; v<FLU_NIN; v++)    fluid[v] = Flu_Array_F_In[v][t];
@@ -259,9 +266,8 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          if ( GasDens <= GasDensThres )    continue;
 
          // Debug
-         const char FileName[] = "Record__Debug";
          FILE *File = fopen( FileName, "w" );
-         fprintf( File, "Dens threshold passes");
+         fprintf( File, "Dens threshold passes, Dens = %20.14e", GasDens);
          fclose( File );
          // Degub
 
@@ -558,16 +564,16 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 #        endif
 #        pragma omp critical
          {
-            NewParAtt[NNewPar][PAR_MASS] = (GasDens - GasDensThres)*dv;
-            NewParAtt[NNewPar][PAR_POSX] = x;
-            NewParAtt[NNewPar][PAR_POSY] = y;
-            NewParAtt[NNewPar][PAR_POSZ] = z;
-            NewParAtt[NNewPar][PAR_VELX] = VelX;
-            NewParAtt[NNewPar][PAR_VELY] = VelY;
-            NewParAtt[NNewPar][PAR_VELZ] = VelZ;
-            NewParAtt[NNewPar][PAR_TIME] = TimeNew;
-            NewParAtt[NNewPar][PAR_TYPE] = PTYPE_STAR;
-            NewParAtt[NNewPar][Idx_ParID]   = -1; // initialize the value to be -1
+            NewParAtt[NNewPar][PAR_MASS]  = (GasDens - GasDensThres)*dv;
+            NewParAtt[NNewPar][PAR_POSX]  = PosX;
+            NewParAtt[NNewPar][PAR_POSY]  = PosY;
+            NewParAtt[NNewPar][PAR_POSZ]  = PosZ;
+            NewParAtt[NNewPar][PAR_VELX]  = VelX;
+            NewParAtt[NNewPar][PAR_VELY]  = VelY;
+            NewParAtt[NNewPar][PAR_VELZ]  = VelZ;
+            NewParAtt[NNewPar][PAR_TIME]  = TimeNew;
+            NewParAtt[NNewPar][PAR_TYPE]  = PTYPE_STAR;
+            NewParAtt[NNewPar][Idx_ParID] = -1; // initialize the value to be -1
 
    //       particle acceleration
    #        ifdef STORE_PAR_ACC
@@ -609,11 +615,12 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
             RemovalPos[NNewPar][1] = PGk - Disp_k;
             RemovalPos[NNewPar][2] = PGj - Disp_j;
             RemovalPos[NNewPar][3] = PGi - Disp_i;
+
             RemovalFlu[NNewPar][0] = GasMFracLeft;
             RemovalFlu[NNewPar][1] = phi000;
-            RemovalFlu[NNewPar][2] = x;
-            RemovalFlu[NNewPar][3] = y;
-            RemovalFlu[NNewPar][4] = z;
+            RemovalFlu[NNewPar][2] = PosX;
+            RemovalFlu[NNewPar][3] = PosY;
+            RemovalFlu[NNewPar][4] = PosZ;
 
             NNewPar ++;
          } // # pragma omp critical
@@ -624,6 +631,12 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    delete [] Mag_Array_F_In;
    delete [] Pot_Array_USG_F;
    } // end of OpenMP parallel region
+
+   // Debug
+   FILE *File = fopen( FileName, "w" );
+   fprintf( File, "NNewPar = %s", NNewPar);
+   fclose( File );
+   // Degub
 
 // Excluding the nearby particles + remove the gas from the cell
 // ===========================================================================================================
@@ -652,22 +665,23 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
    long     *SelNewParPID          = new long [TotalNNewPar]; // PID of the selected paritcles
    long     *SelNewParID           = new long [TotalNNewPar]; // ID (in the current rank) of the selected paritcles
-   real dxpp, dypp, dzpp, D2C;   // calculate the distance between the two cells
+   real DeltaXPar2Par, DeltaYPar2Par, DeltaZPar2Par, DistPar2Par;   // calculate the distance between the two candidated particles
    int SelNNewPar = 0; // the number of selected particles after the following check
    for (int pi=0; pi<NNewPar; pi++)
    {  
       bool CreateHere = true;
       for (int pj=0; pj<TotalNNewPar; pj++)
       {
-         dxpp = RemovalFlu[pi][2] - GatherRemovalFlu[pj][2];
-         dypp = RemovalFlu[pi][3] - GatherRemovalFlu[pj][3];
-         dzpp = RemovalFlu[pi][4] - GatherRemovalFlu[pj][4];
-         D2C = SQRT(SQR(dxpp)+SQR(dypp)+SQR(dzpp));
-         if ( D2C > 2*AccRadius )                       continue;
+         DeltaXPar2Par = RemovalFlu[pi][2] - GatherRemovalFlu[pj][2];
+         DeltaYPar2Par = RemovalFlu[pi][3] - GatherRemovalFlu[pj][3];
+         DeltaZPar2Par = RemovalFlu[pi][4] - GatherRemovalFlu[pj][4];
+         DistPar2Par   = SQRT(SQR(DeltaXPar2Par)+SQR(DeltaYPar2Par)+SQR(DeltaZPar2Par));
+
+         if ( DistPar2Par > 2*AccRadius )                       continue;
 
          // assuming the potential minimum check is fine, the two particles meet the above conditions should have the same potential
          // if (RemovalFlu[pi][1] != GatherRemovalFlu[pj][1])  continue;   // check whether there are other cells with the same potential
-         if ((dxpp<0) or (dypp<0) or (dzpp<0))
+         if ((DeltaXPar2Par<0) or (DeltaYPar2Par<0) or (DeltaZPar2Par<0))
          {
             CreateHere = false;
             break;
@@ -680,7 +694,6 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          amr->patch[FluSg][lv][RemovalPos[pi][0]]->fluid[v][RemovalPos[pi][1]][RemovalPos[pi][2]][RemovalPos[pi][3]] *= RemovalFlu[pi][0];
 
       // add particles to the particle repository
-         // NewParID[SelNNewPar] = amr->Par->AddOneParticle( NewParAtt[pi] );
          SelNewParID[SelNNewPar]  = pi;
          SelNewParPID[SelNNewPar] = NewParPID[pi];
          SelNNewPar++;
@@ -706,10 +719,10 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    for (int p=0; p<SelNNewPar; p++)
    {
       int pi = SelNewParID[p];
-      NewParAtt[pi][Idx_ParID] = NParAllRank + NParPreRank + p; // assign the ID
+      NewParAtt[pi][Idx_ParID] = NParAllRank + NParPreRank + p; // reassign the ID
 
       // add particles to the particle repository
-      NewParID[p] = amr->Par->AddOneParticle( NewParAtt[pi] );
+      NewParRepo[p] = amr->Par->AddOneParticle( NewParAtt[pi] );
    }
 
    delete [] SelNewParID;
@@ -735,25 +748,25 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    } // for (int i=0; i<SelNNewPar; i++)
 
    const real_par *PType = amr->Par->Type;
-   int ParInPatch; // particle number in this patch
+   int NParInPatch; // particle number in this patch
 
    for (int i=0; i<UniqueCount; i++)
    {
       const int SPID = UniqueParPID[i];
-      long    *ParIDInPatch      = new long [MaxNewPar]; // ParID in the current patch
-      ParInPatch = 0;
+      long    *ParRepoInPatch      = new long [MaxNewPar]; // ParRepo in the current patch
+      NParInPatch = 0;
       for (int p=0; p<SelNNewPar; p++)
       {
          if (SelNewParPID[p] == SPID) 
          {
-            ParIDInPatch[ParInPatch] = NewParID[p];
-            ParInPatch ++;
+            ParRepoInPatch[NParInPatch] = NewParRepo[p];
+            NParInPatch ++;
          } // if (SelNewParPID[p] == SPID) 
       } // for (int p=0; p<SelNNewPar; p++)
 
-      if ( ParInPatch == 0 )          
+      if ( NParInPatch == 0 )          
       {
-         delete [] ParIDInPatch;
+         delete [] ParRepoInPatch;
          continue;
       }              
 
@@ -764,14 +777,14 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
       char Comment[100];
       sprintf( Comment, "%s", __FUNCTION__ );
       
-      amr->patch[0][lv][SPID]->AddParticle( ParInPatch, ParIDInPatch, &amr->Par->NPar_Lv[lv],
+      amr->patch[0][lv][SPID]->AddParticle( NParInPatch, ParRepoInPatch, &amr->Par->NPar_Lv[lv],
                                                          PType, NewParPos, amr->Par->NPar_AcPlusInac, Comment );
 
 #    else
-      amr->patch[0][lv][SPID]->AddParticle( ParInPatch, ParIDInPatch, &amr->Par->NPar_Lv[lv], PType );
+      amr->patch[0][lv][SPID]->AddParticle( NParInPatch, ParRepoInPatch, &amr->Par->NPar_Lv[lv], PType );
 #    endif
 
-      delete [] ParIDInPatch;
+      delete [] ParRepoInPatch;
    } // for (int i=0; i<UniqueCount; i++)
    
    delete [] SelNewParPID;
@@ -780,7 +793,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    delete [] RemovalPos;
    delete [] RemovalFlu;
    delete [] NewParAtt;
-   delete [] NewParID;
+   delete [] NewParRepo;
    delete [] NewParPID;
 
 // free memory
