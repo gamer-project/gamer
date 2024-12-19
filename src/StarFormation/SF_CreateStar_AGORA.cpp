@@ -266,6 +266,16 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          GasDens = fluid[DENS];
          if ( GasDens <= GasDensThres )    continue;
 
+         // Debug
+         // if ( MPI_Rank == 0 )
+         // {
+         const char FileName[] = "Record__Debug";
+         FILE *File = fopen( FileName, "a" );
+         fprintf( File, "Pass Dens threshold\n");
+         fclose( File );
+         // }
+         // Debug
+
 //       Proximity check + second density threshold
 //       ===========================================================================================================
          bool InsideAccRadius = false;
@@ -721,18 +731,18 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
       int pi = SelNewParID[p];
       NewParAtt[pi][Idx_ParID] = NParAllRank + NParPreRank + p; // reassign the ID
 
-      // Debug
-      // if ( MPI_Rank == 0 )
-      // {
-      const char FileName[] = "Record__Debug";
-      FILE *File = fopen( FileName, "a" );
-      fprintf( File, "%d/%d %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e\n", p, SelNNewPar, 
-      NewParAtt[pi][PAR_POSX], NewParAtt[pi][PAR_POSY], NewParAtt[pi][PAR_POSZ],
-      NewParAtt[pi][PAR_VELX], NewParAtt[pi][PAR_VELY], NewParAtt[pi][PAR_VELZ], 
-      NewParAtt[pi][PAR_ACCX], NewParAtt[pi][PAR_ACCY], NewParAtt[pi][PAR_ACCZ]);
-      fclose( File );
-      // }
-      // Debug
+      // // Debug
+      // // if ( MPI_Rank == 0 )
+      // // {
+      // const char FileName[] = "Record__Debug";
+      // FILE *File = fopen( FileName, "a" );
+      // fprintf( File, "%d/%d %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e\n", p, SelNNewPar, 
+      // NewParAtt[pi][PAR_POSX], NewParAtt[pi][PAR_POSY], NewParAtt[pi][PAR_POSZ],
+      // NewParAtt[pi][PAR_VELX], NewParAtt[pi][PAR_VELY], NewParAtt[pi][PAR_VELZ], 
+      // NewParAtt[pi][PAR_ACCX], NewParAtt[pi][PAR_ACCY], NewParAtt[pi][PAR_ACCZ]);
+      // fclose( File );
+      // // }
+      // // Debug
 
 
       // add particles to the particle repository
