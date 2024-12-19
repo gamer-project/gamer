@@ -81,9 +81,9 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    const double dv             = CUBE( dh );
 
 // User-defined parapeters
-   const int    AccCellNum     = 4;
+   const int    AccCellNum     = 4; // this should be user-defined parameter
    const int    MaxNewPar      = 1000;
-//
+
    const int    NGhost         = AccCellNum; // the number of ghost cell at each side
    const int    Size_Flu       = PS2 + 2*NGhost; // final cube size
    const int    Size_Flu_P1    = Size_Flu + 1; // for face-centered B field
@@ -261,12 +261,16 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          VelY = fluid[MOMY]/fluid[DENS];
          VelZ = fluid[MOMZ]/fluid[DENS];
 
-//       First density threshold
+//       First density threshold:
+//       Check whether the gas density is larger than the threshold
 //       ===========================================================================================================
          GasDens = fluid[DENS];
          if ( GasDens <= GasDensThres )    continue;
 
-//       Proximity check + second density threshold
+//       Proximity check + second density threshold:
+//       The gas cell should not near any existing particle
+//       We can use the distance between the gas cell and nearby particle and the relative velocity to define a 
+//       a density threshold (Clarke et al. 2017, eqn (5))
 //       ===========================================================================================================
          bool InsideAccRadius = false;
          bool NotPassDen      = false;
@@ -378,9 +382,9 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
                   break;
                }
 
-               if ( Par2CellVel[0] >= 0 )                       continue; // the gas is moving away from the existing particle
+               if ( Par2CellVel[0] >= 0 )                       continue; 
                if ( Par2CellVel[1] >= 0 )                       continue;
-               if ( Par2CellVel[2] >= 0 )                       continue;
+               if ( Par2CellVel[2] >= 0 )                       continue; // the gas is moving away from the existing particle
 
                GasDensFreeFall = SQR((1/Coeff_FreeFall)*(NorPar2Cell[0]*Par2CellVel[0] + NorPar2Cell[1]*Par2CellVel[1] + NorPar2Cell[2]*Par2CellVel[2])/Par2CellDist); // Clarke et al. 2017, eqn (5)
                if ( GasDens < GasDensFreeFall )
@@ -405,7 +409,8 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          if ( InsideAccRadius )               continue;
          if ( NotPassDen )                    continue;
 
-//       Gravitational minimum check inside the control volume
+//       Gravitational minimum check inside the control volume:
+//       The gas cell should have the minimum gravitational potential inside the control volume
 //       ===========================================================================================================
          real Phi000 = Pot_Array_USG_F[t]; // the potential of the current cell
          real Phiijk = (real)0.0;
@@ -433,7 +438,8 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
          if ( NotMiniPot )                                   continue;
          
-//       Converging flow check
+//       Converging flow check:
+//       The gas in the nearby six cells should converge toward the central one
 //       ===========================================================================================================
          for (int NeighborID=0; NeighborID<6; NeighborID++)
          {  
@@ -458,6 +464,8 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
               continue;
 
 //       Jeans instability check + check for bound state
+//       The control volume is Jeans unstable if | Egtot | >= 2*Ethtot
+//       The control volume is bound if ( Ethtot + Ekintot + Emagtot ) >= | Egtot |
 //       ===========================================================================================================
          // calculate bulk velocity
          real TotalMass = (real)0.0, MassVel[3] = { (real)0.0, (real)0.0, (real)0.0}, BulkVel[3]; // sum(mass_i), sum(mass_i*velocity_i), mass-weighted velocity
