@@ -91,22 +91,21 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
    // const real   dv             = CUBE( dh );
    const real   dv             = dh*dh*dh;
+   const real   AccRadius      = AccCellNum*dh;
+   const int    FluSg          = amr->FluSg[lv];
+   const real   Coeff_FreeFall = SQRT( (32.0*NEWTON_G)/(3.0*M_PI) );
+// const real   GraConst       = ( OPT__GRA_P5_GRADIENT ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh);
+   const real   GraConst       = ( false                ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // P5 is NOT supported yet
 
    // Debug
    // if ( MPI_Rank == 0 )
    // {
    const char FileName[] = "Record__Debug";
    FILE *File = fopen( FileName, "a" );
-   fprintf( File, "%13.7e %13.7e %13.7e %13.7e\n", dv, dh, CUBE(dh), dh*dh*dh);
+   fprintf( File, "%13.7e %13.7e %13.7e %13.7e %13.7e\n", AccRadius, dv, dh, CUBE(dh), dh*dh*dh);
    fclose( File );
    // }
    // Debug
-
-   const real   AccRadius      = AccCellNum*dh;
-   const int    FluSg          = amr->FluSg[lv];
-   const real   Coeff_FreeFall = SQRT( (32.0*NEWTON_G)/(3.0*M_PI) );
-// const real   GraConst       = ( OPT__GRA_P5_GRADIENT ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh);
-   const real   GraConst       = ( false                ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // P5 is NOT supported yet
 
    int          NNewPar = 0; // number of new particle
    real       (*RemovalFlu)[5]                   = new real     [MaxNewPar][5]; // information used to remove gas from the cell
