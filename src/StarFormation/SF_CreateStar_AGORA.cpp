@@ -457,16 +457,6 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
               (VelNeighbor[4] - VelNeighbor[5]) >= 0 )                      
               continue;
 
-         // Debug
-         // if ( MPI_Rank == 0 )
-         // {
-         const char FileName[] = "Record__Debug";
-         FILE *File = fopen( FileName, "a" );
-         fprintf( File, "Pass Converging flow Check\n");
-         fclose( File );
-         // }
-         // Debug
-
 //       Jeans instability check + check for bound state
 //       ===========================================================================================================
          // calculate bulk velocity
@@ -561,6 +551,16 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
          if ( FABS(Egtot) <= 2*Ethtot )                      continue;
          if (( Egtot + Ethtot + Ekintot + Emagtot ) >= 0)    continue;
+
+         // Debug
+         // if ( MPI_Rank == 0 )
+         // {
+         const char FileName[] = "Record__Debug";
+         FILE *File = fopen( FileName, "a" );
+         fprintf( File, "Pass Jeans instability and bound state check\n");
+         fclose( File );
+         // }
+         // Debug
 
 //       Store the information of new star particles
 //       ===========================================================================================================
