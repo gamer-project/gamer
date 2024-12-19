@@ -489,7 +489,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          // {
          const char FileName[] = "Record__Debug";
          FILE *File = fopen( FileName, "a" );
-         fprintf( File, "%13.7e %13.7e %13.7e\n", BulkVel[0], BulkVel[1], BulkVel[2]);
+         fprintf( File, "%13.7e %13.7e %13.7e %13.7e\n", BulkVel[0], BulkVel[1], BulkVel[2], dv);
          fclose( File );
          // }
          // Debug
