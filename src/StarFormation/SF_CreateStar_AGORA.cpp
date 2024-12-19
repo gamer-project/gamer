@@ -78,6 +78,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
 // constant parameters
    const double dh             = amr->dh[lv];
+   const double dv             = CUBE( dh );
 
 // User-defined parapeters
    const int    AccCellNum     = 4;
@@ -88,24 +89,12 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    const int    Size_Flu_P1    = Size_Flu + 1; // for face-centered B field
    const int    Size_Pot       = Size_Flu; // for potential
    const int    NPG            = 1;
-
-   // const real   dv             = CUBE( dh );
-   const double   dv           = CUBE( dh );
+   
    const real   AccRadius      = AccCellNum*dh;
    const int    FluSg          = amr->FluSg[lv];
    const real   Coeff_FreeFall = SQRT( (32.0*NEWTON_G)/(3.0*M_PI) );
 // const real   GraConst       = ( OPT__GRA_P5_GRADIENT ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh);
    const real   GraConst       = ( false                ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // P5 is NOT supported yet
-
-   // Debug
-   // if ( MPI_Rank == 0 )
-   // {
-   const char FileName[] = "Record__Debug";
-   FILE *File = fopen( FileName, "a" );
-   fprintf( File, "%13.7e %13.7e %13.7e %13.7e %13.7e\n", AccRadius, dv, dh, CUBE(dh), dh*dh*dh);
-   fclose( File );
-   // }
-   // Debug
 
    int          NNewPar = 0; // number of new particle
    real       (*RemovalFlu)[5]                   = new real     [MaxNewPar][5]; // information used to remove gas from the cell
@@ -572,6 +561,16 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
          if ( FABS(Egtot) <= 2*Ethtot )                      continue;
          if (( Egtot + Ethtot + Ekintot + Emagtot ) >= 0)    continue;
+
+         // Debug
+         // if ( MPI_Rank == 0 )
+         // {
+         const char FileName[] = "Record__Debug";
+         FILE *File = fopen( FileName, "a" );
+         fprintf( File, "Pass Jeans test\n");
+         fclose( File );
+         // }
+         // Debug
 
 //       Store the information of new star particles
 //       ===========================================================================================================
