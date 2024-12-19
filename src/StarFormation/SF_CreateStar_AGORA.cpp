@@ -91,6 +91,17 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
    // const real   dv             = CUBE( dh );
    const real   dv             = dh*dh*dh;
+
+   // Debug
+   // if ( MPI_Rank == 0 )
+   // {
+   const char FileName[] = "Record__Debug";
+   FILE *File = fopen( FileName, "a" );
+   fprintf( File, "%13.7e %13.7e %13.7e %13.7e\n", dv, dh, CUBE(dh), dh*dh*dh);
+   fclose( File );
+   // }
+   // Debug
+
    const real   AccRadius      = AccCellNum*dh;
    const int    FluSg          = amr->FluSg[lv];
    const real   Coeff_FreeFall = SQRT( (32.0*NEWTON_G)/(3.0*M_PI) );
@@ -485,15 +496,15 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          BulkVel[1] = MassVel[1]/TotalMass;
          BulkVel[2] = MassVel[2]/TotalMass; // COM velocity
 
-         // Debug
-         // if ( MPI_Rank == 0 )
-         // {
-         const char FileName[] = "Record__Debug";
-         FILE *File = fopen( FileName, "a" );
-         fprintf( File, "%13.7e %13.7e %13.7e %13.7e\n", BulkVel[0], BulkVel[1], BulkVel[2], dv);
-         fclose( File );
-         // }
-         // Debug
+         // // Debug
+         // // if ( MPI_Rank == 0 )
+         // // {
+         // const char FileName[] = "Record__Debug";
+         // FILE *File = fopen( FileName, "a" );
+         // fprintf( File, "%13.7e %13.7e %13.7e %13.7e\n", BulkVel[0], BulkVel[1], BulkVel[2], dv);
+         // fclose( File );
+         // // }
+         // // Debug
 
          // get the energy
          real Egtot = (real)0.0, Ethtot = (real)0.0, Emagtot = (real)0.0, Ekintot = (real)0.0;
