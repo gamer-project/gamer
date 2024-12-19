@@ -432,18 +432,8 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          } // vi, vj, vk
 
          if ( NotMiniPot )                                   continue;
-   
-         // Debug
-         // if ( MPI_Rank == 0 )
-         // {
-         const char FileName[] = "Record__Debug";
-         FILE *File = fopen( FileName, "a" );
-         fprintf( File, "Pass Gravitational minimum check\n");
-         fclose( File );
-         // }
-         // Debug
          
-//       Converging flow Check
+//       Converging flow check
 //       ===========================================================================================================
          for (int NeighborID=0; NeighborID<6; NeighborID++)
          {  
@@ -466,6 +456,16 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
               (VelNeighbor[2] - VelNeighbor[3]) >= 0 || 
               (VelNeighbor[4] - VelNeighbor[5]) >= 0 )                      
               continue;
+
+         // Debug
+         // if ( MPI_Rank == 0 )
+         // {
+         const char FileName[] = "Record__Debug";
+         FILE *File = fopen( FileName, "a" );
+         fprintf( File, "Pass Converging flow Check\n");
+         fclose( File );
+         // }
+         // Debug
 
 //       Jeans instability check + check for bound state
 //       ===========================================================================================================
