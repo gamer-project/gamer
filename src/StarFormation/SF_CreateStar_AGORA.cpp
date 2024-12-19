@@ -484,16 +484,6 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          BulkVel[1] = MassVel[1]/TotalMass;
          BulkVel[2] = MassVel[2]/TotalMass; // COM velocity
 
-         // Debug
-         // if ( MPI_Rank == 0 )
-         // {
-         const char FileName[] = "Record__Debug";
-         FILE *File = fopen( FileName, "a" );
-         fprintf( File, "%13.7e %13.7e %13.7e %13.7e\n", BulkVel[0], BulkVel[1], BulkVel[2], dv);
-         fclose( File );
-         // }
-         // Debug
-
          // get the energy
          real Egtot = (real)0.0, Ethtot = (real)0.0, Emagtot = (real)0.0, Ekintot = (real)0.0;
          for (int vk=pk-AccCellNum; vk<=pk+AccCellNum; vk++)
@@ -561,16 +551,6 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
          if ( FABS(Egtot) <= 2*Ethtot )                      continue;
          if (( Egtot + Ethtot + Ekintot + Emagtot ) >= 0)    continue;
-
-         // // Debug
-         // // if ( MPI_Rank == 0 )
-         // // {
-         // const char FileName[] = "Record__Debug";
-         // FILE *File = fopen( FileName, "a" );
-         // fprintf( File, "Pass Jeans test\n");
-         // fclose( File );
-         // // }
-         // // Debug
 
 //       Store the information of new star particles
 //       ===========================================================================================================
@@ -647,16 +627,6 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    delete [] Mag_Array_F_In;
    delete [] Pot_Array_USG_F;
    } // end of OpenMP parallel region
-
-   // // Debug
-   // if ( MPI_Rank == 0 )
-   // {
-   //    const char FileName[] = "Record__Debug";
-   //    FILE *File = fopen( FileName, "w" );
-   //    fprintf( File, "NNewPar = %d", NNewPar);
-   //    fclose( File );
-   // }
-   // // Debug
 
 // Excluding the nearby particles + remove the gas from the cell
 // ===========================================================================================================
@@ -740,20 +710,6 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    {
       int pi = SelNewParID[p];
       NewParAtt[pi][Idx_ParID] = NParAllRank + NParPreRank + p; // reassign the ID
-
-      // // Debug
-      // // if ( MPI_Rank == 0 )
-      // // {
-      // const char FileName[] = "Record__Debug";
-      // FILE *File = fopen( FileName, "a" );
-      // fprintf( File, "%d/%d %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e\n", p, SelNNewPar, 
-      // NewParAtt[pi][PAR_POSX], NewParAtt[pi][PAR_POSY], NewParAtt[pi][PAR_POSZ],
-      // NewParAtt[pi][PAR_VELX], NewParAtt[pi][PAR_VELY], NewParAtt[pi][PAR_VELZ], 
-      // NewParAtt[pi][PAR_ACCX], NewParAtt[pi][PAR_ACCY], NewParAtt[pi][PAR_ACCZ]);
-      // fclose( File );
-      // // }
-      // // Debug
-
 
       // add particles to the particle repository
       NewParRepo[p] = amr->Par->AddOneParticle( NewParAtt[pi] );
