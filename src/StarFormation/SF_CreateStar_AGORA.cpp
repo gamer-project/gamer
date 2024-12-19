@@ -266,16 +266,6 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          GasDens = fluid[DENS];
          if ( GasDens <= GasDensThres )    continue;
 
-         // Debug
-         // if ( MPI_Rank == 0 )
-         // {
-         const char FileName[] = "Record__Debug";
-         FILE *File = fopen( FileName, "a" );
-         fprintf( File, "Pass Dens threshold\n");
-         fclose( File );
-         // }
-         // Debug
-
 //       Proximity check + second density threshold
 //       ===========================================================================================================
          bool InsideAccRadius = false;
@@ -414,6 +404,16 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
          if ( InsideAccRadius )               continue;
          if ( NotPassDen )                    continue;
+
+         // Debug
+         // if ( MPI_Rank == 0 )
+         // {
+         const char FileName[] = "Record__Debug";
+         FILE *File = fopen( FileName, "a" );
+         fprintf( File, "Pass Proximity check and 2nd Dens threshold\n");
+         fclose( File );
+         // }
+         // Debug
 
 //       Gravitational minimum check inside the control volume
 //       ===========================================================================================================
