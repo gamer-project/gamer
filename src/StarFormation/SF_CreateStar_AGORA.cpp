@@ -138,7 +138,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
    real Par2Cell[3], Par2CellDist, Par2CellVel[3]; // particle-cell relative position, distance, relative velocity for proximity check
    real NorPar2Cell[3]; // normalized particle-cell relative position
-   real GasMFracLeft; // gas density for a given free-fall time 
+   real GasDensFreeFall; // gas density for a given free-fall time 
 
    real ControlPosX, ControlPosY, ControlPosZ; // position of the cells inside the control volume
    real Cell2Cell; // distance to the center cell in the control volume
