@@ -89,18 +89,8 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    const int    Size_Pot       = Size_Flu; // for potential
    const int    NPG            = 1;
 
-   const real   dv             = CUBE( dh );
-
-   // Debug
-   // if ( MPI_Rank == 0 )
-   // {
-   const char FileName[] = "Record__Debug";
-   FILE *File = fopen( FileName, "a" );
-   fprintf( File, "%13.7e %13.7e %13.7e\n", dv, dh, dh*dh*dh);
-   fclose( File );
-   // }
-   // Debug
-
+   // const real   dv             = CUBE( dh );
+   const real   dv             = dh*dh*dh;
    const real   AccRadius      = AccCellNum*dh;
    const int    FluSg          = amr->FluSg[lv];
    const real   Coeff_FreeFall = SQRT( (32.0*NEWTON_G)/(3.0*M_PI) );
@@ -562,6 +552,16 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
          if ( FABS(Egtot) <= 2*Ethtot )                      continue;
          if (( Egtot + Ethtot + Ekintot + Emagtot ) >= 0)    continue;
+
+         // Debug
+         // if ( MPI_Rank == 0 )
+         // {
+         const char FileName[] = "Record__Debug";
+         FILE *File = fopen( FileName, "a" );
+         fprintf( File, "Pass Jeans test\n");
+         fclose( File );
+         // }
+         // Debug
 
 //       Store the information of new star particles
 //       ===========================================================================================================
