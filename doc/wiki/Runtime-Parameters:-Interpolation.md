@@ -78,14 +78,14 @@ Interpolation scheme for computing the fluid variables on the newly refined patc
     * **Description:**
 Interpolation scheme for preparing the ghost-zone magnetic field of the fluid solver.
     * **Restriction:**
-For [[MHD | Installation: Simulation-Options#MHD]] only.
+For [[--mhd | Installation:-Option-List#--mhd]] only.
 
 <a name="OPT__REF_MAG_INT_SCHEME"></a>
 * #### `OPT__REF_MAG_INT_SCHEME` &ensp; (only 2, 3, 4, 6 in ["Supported interpolation schemes"](#INT_TABLE)) &ensp; [4]
     * **Description:**
 Interpolation scheme for computing the magnetic field on the newly refined patches.
     * **Restriction:**
-For [[MHD | Installation: Simulation-Options#MHD]] only.
+For [[--mhd | Installation:-Option-List#--mhd]] only.
 
 <a name="OPT__POT_INT_SCHEME"></a>
 * #### `OPT__POT_INT_SCHEME` &ensp; (only 4 & 5 in ["Supported interpolation schemes"](#INT_TABLE)) &ensp; [4]
