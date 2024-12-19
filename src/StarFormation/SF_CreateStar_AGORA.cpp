@@ -136,22 +136,19 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    real Corner_Array_F[3]; // the corner of the ghost zone
    real fluid[FLU_NIN]; // fluid in the current test cell
 
+   real Par2Cell[3], Par2CellDist, Par2CellVel[3]; // particle-cell relative position, distance, relative velocity for proximity check
+   real NorPar2Cell[3]; // normalized particle-cell relative position
+   real GasMFracLeft; // gas density for a given free-fall time 
+
    real ControlPosX, ControlPosY, ControlPosZ; // position of the cells inside the control volume
    real Cell2Cell; // distance to the center cell in the control volume
 
    real NeighborFluid[FLU_NIN]; // used in Converging flow Check
    real VelNeighbor[6]; // record the neighboring cell velocity [x+, x-, y+, y+, z+, z-]
 
+   real ControlFluid[FLU_NIN], ControlFluidj[FLU_NIN]; // used in Jeans instability check
+   real Pres, Cs2, vEmag=NULL_REAL;
 
-   
-   // real GasDens, GasDensFreeFall, GasMFracLeft;
-   // real fluid[FLU_NIN], NeighborFluid[FLU_NIN], ControlFluid[FLU_NIN], ControlFluidj[FLU_NIN]; // fluid in the current cells, neighbor cells, control volume, control volume (j)
-   
-   // real Par2Cell[3], Par2CellDist, Par2CellVel[3]; // particle-cell relative position, distance, relative velocity
-   
-   // real NorPar2Cell[3]; // normalized particle-cell relative position
-   // real VelNeighbor[6]; // record the neighboring cell velocity [x+, x-, y+, y+, z+, z-]
-   // real Pres, Cs2, vEmag=NULL_REAL;
    real PotNeighbor[6]; // record the neighboring cell potential [x+, x-, y+, y+, z+, z-]
 
    real   (*Flu_Array_F_In)[CUBE(Size_Flu)]                = new real [FLU_NIN][CUBE(Size_Flu)];
@@ -269,144 +266,144 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          GasDens = fluid[DENS];
          if ( GasDens <= GasDensThres )    continue;
 
-// //       Proximity check + second density threshold
-// //       ===========================================================================================================
-//          bool InsideAccRadius = false;
-//          bool NotPassDen      = false;
+//       Proximity check + second density threshold
+//       ===========================================================================================================
+         bool InsideAccRadius = false;
+         bool NotPassDen      = false;
 
-//          real  *ParAtt_Local[PAR_NATT_TOTAL];
-//          int    NParMax   = -1;
+         real  *ParAtt_Local[PAR_NATT_TOTAL];
+         int    NParMax   = -1;
 
-//          for (int v=0; v<PAR_NATT_TOTAL; v++)   ParAtt_Local[v] = NULL;
+         for (int v=0; v<PAR_NATT_TOTAL; v++)   ParAtt_Local[v] = NULL; // array to store nearby particle
 
-//          for (int t=0; t<NNearbyPatch; t++)
-//          {
-//             const int PPID = Nearby_PID_List[t]; // check the particle number for this patch (PPID)
+         for (int t=0; t<NNearbyPatch; t++)
+         {
+            const int PPID = Nearby_PID_List[t]; // check the particle number for this patch (PPID)
 
-//          // check both NPar and NPar_Copy (NPar_Copy may be -1, which is fine)
-//             NParMax = MAX( NParMax, amr->patch[0][lv][PPID]->NPar      );
-//             NParMax = MAX( NParMax, amr->patch[0][lv][PPID]->NPar_Copy );
-//          }
+         // check both NPar and NPar_Copy (NPar_Copy may be -1, which is fine)
+            NParMax = MAX( NParMax, amr->patch[0][lv][PPID]->NPar      );
+            NParMax = MAX( NParMax, amr->patch[0][lv][PPID]->NPar_Copy );
+         }
 
-//          if ( NParMax > 0 )
-//          {
-//             for (int v=0; v<PAR_NATT_TOTAL; v++)
-//                if ( ParAttBitIdx_In & BIDX(v) )    ParAtt_Local[v] = new real [NParMax];
-//          }
+         if ( NParMax > 0 )
+         {
+            for (int v=0; v<PAR_NATT_TOTAL; v++)
+               if ( ParAttBitIdx_In & BIDX(v) )    ParAtt_Local[v] = new real [NParMax];
+         }
 
-//          // iterate over all nearby patches of the target patch group
-//          for (int t=0; t<NNearbyPatch; t++)
-//          {
-//             const int PPID = Nearby_PID_List[t];
-//             long  *ParList = NULL;
-//             int    NPar;
-//             bool   UseParAttCopy;
+         // iterate over all nearby patches of the target patch group
+         for (int t=0; t<NNearbyPatch; t++)
+         {
+            const int PPID = Nearby_PID_List[t];
+            long  *ParList = NULL;
+            int    NPar;
+            bool   UseParAttCopy;
 
-// //          the check "son == -1" is actually useless for now since we fix LEVEL == MAX_LEVEL
-//             if ( amr->patch[0][lv][PPID]->son == -1  &&  PPID < amr->NPatchComma[lv][1] )
-//             {
-//                NPar          = amr->patch[0][lv][PPID]->NPar;
-//                ParList       = amr->patch[0][lv][PPID]->ParList;
-//                UseParAttCopy = false;
+//          the check "son == -1" is actually useless for now since we fix LEVEL == MAX_LEVEL
+            if ( amr->patch[0][lv][PPID]->son == -1  &&  PPID < amr->NPatchComma[lv][1] )
+            {
+               NPar          = amr->patch[0][lv][PPID]->NPar;
+               ParList       = amr->patch[0][lv][PPID]->ParList;
+               UseParAttCopy = false;
 
-// #              ifdef DEBUG_PARTICLE
-//                if ( amr->patch[0][lv][PPID]->NPar_Copy != -1 )
-//                   Aux_Error( ERROR_INFO, "lv %d, PPID %d, NPar_Copy = %d != -1 !!\n",
-//                            lv, PPID, amr->patch[0][lv][PPID]->NPar_Copy );
-// #              endif
-//             }
+#              ifdef DEBUG_PARTICLE
+               if ( amr->patch[0][lv][PPID]->NPar_Copy != -1 )
+                  Aux_Error( ERROR_INFO, "lv %d, PPID %d, NPar_Copy = %d != -1 !!\n",
+                           lv, PPID, amr->patch[0][lv][PPID]->NPar_Copy );
+#              endif
+            }
 
-//             else
-//             {
-// //             note that amr->patch[0][lv][PPID]->NPar>0 is still possible
-//                NPar          = amr->patch[0][lv][PPID]->NPar_Copy;
-// #              ifdef LOAD_BALANCE
-//                ParList       = NULL;
-//                UseParAttCopy = true;
-// #              else
-//                ParList       = amr->patch[0][lv][PPID]->ParList_Copy;
-//                UseParAttCopy = false;
-// #              endif
-//             } // if ( amr->patch[0][lv][PPID]->son == -1  &&  PPID < amr->NPatchComma[lv][1] ) ... else ...
+            else
+            {
+//             note that amr->patch[0][lv][PPID]->NPar>0 is still possible
+               NPar          = amr->patch[0][lv][PPID]->NPar_Copy;
+#              ifdef LOAD_BALANCE
+               ParList       = NULL;
+               UseParAttCopy = true;
+#              else
+               ParList       = amr->patch[0][lv][PPID]->ParList_Copy;
+               UseParAttCopy = false;
+#              endif
+            } // if ( amr->patch[0][lv][PPID]->son == -1  &&  PPID < amr->NPatchComma[lv][1] ) ... else ...
 
-// #           ifdef LOAD_BALANCE
-//             if ( UseParAttCopy ) {
-//                for (int v=0; v<PAR_NATT_TOTAL; v++) {
-//                   if ( ParAttBitIdx_In & BIDX(v) ) {
+#           ifdef LOAD_BALANCE
+            if ( UseParAttCopy ) {
+               for (int v=0; v<PAR_NATT_TOTAL; v++) {
+                  if ( ParAttBitIdx_In & BIDX(v) ) {
 
-// #                 ifdef DEBUG_PARTICLE
-//                   if ( NPar > 0  &&  amr->patch[0][lv][PPID]->ParAtt_Copy[v] == NULL )
-//                      Aux_Error( ERROR_INFO, "ParAtt_Copy == NULL for NPar (%d) > 0 (lv %d, PPID %d, v %d) !!\n",
-//                                  NPar, lv, PPID, v );
-// #                 endif
+#                 ifdef DEBUG_PARTICLE
+                  if ( NPar > 0  &&  amr->patch[0][lv][PPID]->ParAtt_Copy[v] == NULL )
+                     Aux_Error( ERROR_INFO, "ParAtt_Copy == NULL for NPar (%d) > 0 (lv %d, PPID %d, v %d) !!\n",
+                                 NPar, lv, PPID, v );
+#                 endif
 
-//                   for (int p=0; p<NPar; p++)
-//                      ParAtt_Local[v][p] = amr->patch[0][lv][PPID]->ParAtt_Copy[v][p];
-//             }}}
+                  for (int p=0; p<NPar; p++)
+                     ParAtt_Local[v][p] = amr->patch[0][lv][PPID]->ParAtt_Copy[v][p];
+            }}}
 
-//             else
-// #           endif // #ifdef LOAD_BALANCE
-//             {
-// #              ifdef DEBUG_PARTICLE
-//                if ( NPar > 0  &&  ParList == NULL )
-//                   Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, PPID %d) !!\n",
-//                               NPar, lv, PPID );
-// #              endif
+            else
+#           endif // #ifdef LOAD_BALANCE
+            {
+#              ifdef DEBUG_PARTICLE
+               if ( NPar > 0  &&  ParList == NULL )
+                  Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, PPID %d) !!\n",
+                              NPar, lv, PPID );
+#              endif
 
-//                for (int v=0; v<PAR_NATT_TOTAL; v++) {
-//                   if ( ParAttBitIdx_In & BIDX(v) )
-//                      for (int p=0; p<NPar; p++)
-//                         ParAtt_Local[v][p] = amr->Par->Attribute[v][ ParList[p] ];
-//                }
-//             } // if ( UseParAttCopy ) ... else ...
+               for (int v=0; v<PAR_NATT_TOTAL; v++) {
+                  if ( ParAttBitIdx_In & BIDX(v) )
+                     for (int p=0; p<NPar; p++)
+                        ParAtt_Local[v][p] = amr->Par->Attribute[v][ ParList[p] ];
+               }
+            } // if ( UseParAttCopy ) ... else ...
 
-//             for (int p=0; p<NPar; p++) // loop over all nearby particles
-//             {
-//                Par2Cell[0] = x - ParAtt_Local[PAR_POSX][p];
-//                Par2Cell[1] = y - ParAtt_Local[PAR_POSY][p];
-//                Par2Cell[2] = z - ParAtt_Local[PAR_POSZ][p];
-//                Par2CellDist = SQRT(SQR(Par2Cell[0])+SQR(Par2Cell[1])+SQR(Par2Cell[2]));
+            for (int p=0; p<NPar; p++) // loop over all nearby particles
+            {
+               Par2Cell[0] = PosX - ParAtt_Local[PAR_POSX][p];
+               Par2Cell[1] = PosY - ParAtt_Local[PAR_POSY][p];
+               Par2Cell[2] = PosZ - ParAtt_Local[PAR_POSZ][p];
+               Par2CellDist = SQRT(SQR(Par2Cell[0])+SQR(Par2Cell[1])+SQR(Par2Cell[2]));
 
-//                Par2CellVel[0] = VelX - ParAtt_Local[PAR_VELX][p];
-//                Par2CellVel[1] = VelY - ParAtt_Local[PAR_VELY][p];
-//                Par2CellVel[2] = VelZ - ParAtt_Local[PAR_VELZ][p];
+               Par2CellVel[0] = VelX - ParAtt_Local[PAR_VELX][p];
+               Par2CellVel[1] = VelY - ParAtt_Local[PAR_VELY][p];
+               Par2CellVel[2] = VelZ - ParAtt_Local[PAR_VELZ][p];
 
-//                NorPar2Cell[0] = Par2Cell[0]/Par2CellDist;
-//                NorPar2Cell[1] = Par2Cell[1]/Par2CellDist;
-//                NorPar2Cell[2] = Par2Cell[2]/Par2CellDist;
+               NorPar2Cell[0] = Par2Cell[0]/Par2CellDist;
+               NorPar2Cell[1] = Par2Cell[1]/Par2CellDist;
+               NorPar2Cell[2] = Par2Cell[2]/Par2CellDist;
 
-//                if ( Par2CellDist <= 2*AccRadius )
-//                {
-//                   InsideAccRadius = true;
-//                   break;
-//                }
+               if ( Par2CellDist <= 2*AccRadius )
+               {
+                  InsideAccRadius = true;
+                  break;
+               }
 
-//                if ( Par2CellVel[0] >= 0 )                       continue;
-//                if ( Par2CellVel[1] >= 0 )                       continue;
-//                if ( Par2CellVel[2] >= 0 )                       continue;
+               if ( Par2CellVel[0] >= 0 )                       continue; // the gas is moving away from the existing particle
+               if ( Par2CellVel[1] >= 0 )                       continue;
+               if ( Par2CellVel[2] >= 0 )                       continue;
 
-//                GasDensFreeFall = SQR((1/Coeff_FreeFall)*(NorPar2Cell[0]*Par2CellVel[0] + NorPar2Cell[1]*Par2CellVel[1] + NorPar2Cell[2]*Par2CellVel[2])/Par2CellDist); // Clarke et al. 2017, eqn (5)
-//                if ( GasDens < GasDensFreeFall )
-//                {
-//                   NotPassDen = true;
-//                   break;
-//                }
-//             } // for (int p=0; p<NPar; p++) 
+               GasDensFreeFall = SQR((1/Coeff_FreeFall)*(NorPar2Cell[0]*Par2CellVel[0] + NorPar2Cell[1]*Par2CellVel[1] + NorPar2Cell[2]*Par2CellVel[2])/Par2CellDist); // Clarke et al. 2017, eqn (5)
+               if ( GasDens < GasDensFreeFall )
+               {
+                  NotPassDen = true;
+                  break;
+               }
+            } // for (int p=0; p<NPar; p++) 
 
-//             if ( InsideAccRadius )           break;
-//             if ( NotPassDen )                break;
-//          } // for (int t=0; t<NNearbyPatch; t++)
+            if ( InsideAccRadius )           break;
+            if ( NotPassDen )                break;
+         } // for (int t=0; t<NNearbyPatch; t++)
 
-//          if ( NParMax > 0 )
-//          {
-//             for (int v=0; v<PAR_NATT_TOTAL; v++)      
-//             {
-//                delete [] ParAtt_Local[v]; ParAtt_Local[v] = NULL;
-//             }
-//          }
+         if ( NParMax > 0 )
+         {
+            for (int v=0; v<PAR_NATT_TOTAL; v++)      
+            {
+               delete [] ParAtt_Local[v]; ParAtt_Local[v] = NULL;
+            }
+         }
 
-//          if ( InsideAccRadius )               continue;
-//          if ( NotPassDen )                    continue;
+         if ( InsideAccRadius )               continue;
+         if ( NotPassDen )                    continue;
 
 //       Gravitational minimum check inside the control volume
 //       ===========================================================================================================
@@ -460,99 +457,100 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
               (VelNeighbor[4] - VelNeighbor[5]) >= 0 )                      
               continue;
 
-// //       Jeans instability check + check for bound state
-// //       ===========================================================================================================
-//          // calculate COM velocity
-//          real TotalMass = (real)0.0, MassVel[3] = { (real)0.0, (real)0.0, (real)0.0}, COMVel[3]; // sum(mass_i), sum(mass_i*velocity_i), mass-weighted velocity
-//          for (int vk=pk-AccCellNum; vk<=pk+AccCellNum; vk++)
-//          for (int vj=pj-AccCellNum; vj<=pj+AccCellNum; vj++)
-//          for (int vi=pi-AccCellNum; vi<=pi+AccCellNum; vi++) // loop the nearby cells, to find the cells inside the control volumne (v)
-//          {
-//             ControlPosX = Corner_Array_F[0] + vi*dh;
-//             ControlPosY = Corner_Array_F[1] + vj*dh;
-//             ControlPosZ = Corner_Array_F[2] + vk*dh;
+//       Jeans instability check + check for bound state
+//       ===========================================================================================================
+         // calculate bulk velocity
+         real TotalMass = (real)0.0, MassVel[3] = { (real)0.0, (real)0.0, (real)0.0}, BulkVel[3]; // sum(mass_i), sum(mass_i*velocity_i), mass-weighted velocity
+         for (int vk=pk-AccCellNum; vk<=pk+AccCellNum; vk++)
+         for (int vj=pj-AccCellNum; vj<=pj+AccCellNum; vj++)
+         for (int vi=pi-AccCellNum; vi<=pi+AccCellNum; vi++) // loop the nearby cells, to find the cells inside the control volumne (v)
+         {
+            ControlPosX = Corner_Array_F[0] + vi*dh;
+            ControlPosY = Corner_Array_F[1] + vj*dh;
+            ControlPosZ = Corner_Array_F[2] + vk*dh;
 
-//             Cell2Cell = SQRT(SQR(ControlPosX - x)+SQR(ControlPosY - y)+SQR(ControlPosZ - z)); // distance to the center cell
-//             if ( Cell2Cell > AccRadius )                 continue; // check whether it is inside the control volume
+            Cell2Cell = SQRT(SQR(ControlPosX - PosX)+SQR(ControlPosY - PosY)+SQR(ControlPosZ - PosZ)); // distance to the center cell
+            if ( Cell2Cell > AccRadius )                 continue; // check whether it is inside the control volume
 
-//             const int vt = IDX321( vi, vj, vk, Size_Flu, Size_Flu );
-//             for (int v=0; v<FLU_NIN; v++)    ControlFluid[v] = Flu_Array_F_In[v][vt];
-//             MassVel[0] += ControlFluid[MOMX]*dv;
-//             MassVel[1] += ControlFluid[MOMY]*dv;
-//             MassVel[2] += ControlFluid[MOMZ]*dv;
-//             TotalMass += ControlFluid[DENS]*dv;
-//          } // vi, vj, vk
+            const int vt = IDX321( vi, vj, vk, Size_Flu, Size_Flu );
+            for (int v=0; v<FLU_NIN; v++)    ControlFluid[v] = Flu_Array_F_In[v][vt];
+            MassVel[0] += ControlFluid[MOMX]*dv;
+            MassVel[1] += ControlFluid[MOMY]*dv;
+            MassVel[2] += ControlFluid[MOMZ]*dv;
+            TotalMass  += ControlFluid[DENS]*dv;
+         } // vi, vj, vk
 
-//          COMVel[0] = MassVel[0]/TotalMass;
-//          COMVel[1] = MassVel[1]/TotalMass;
-//          COMVel[2] = MassVel[2]/TotalMass; // COM velocity
+         BulkVel[0] = MassVel[0]/TotalMass;
+         BulkVel[1] = MassVel[1]/TotalMass;
+         BulkVel[2] = MassVel[2]/TotalMass; // COM velocity
 
-//          real Egtot = (real)0.0, Ethtot = (real)0.0, Emagtot = (real)0.0, Ekintot = (real)0.0;
-//          for (int vk=pk-AccCellNum; vk<=pk+AccCellNum; vk++)
-//          for (int vj=pj-AccCellNum; vj<=pj+AccCellNum; vj++)
-//          for (int vi=pi-AccCellNum; vi<=pi+AccCellNum; vi++) // loop the nearby cells, to find the cells inside the control volumne (v)
-//          {
-//             ControlPosX = Corner_Array_F[0] + vi*dh;
-//             ControlPosY = Corner_Array_F[1] + vj*dh;
-//             ControlPosZ = Corner_Array_F[2] + vk*dh;
+         // get the energy
+         real Egtot = (real)0.0, Ethtot = (real)0.0, Emagtot = (real)0.0, Ekintot = (real)0.0;
+         for (int vk=pk-AccCellNum; vk<=pk+AccCellNum; vk++)
+         for (int vj=pj-AccCellNum; vj<=pj+AccCellNum; vj++)
+         for (int vi=pi-AccCellNum; vi<=pi+AccCellNum; vi++) // loop the nearby cells, to find the cells inside the control volumne (v)
+         {
+            ControlPosX = Corner_Array_F[0] + vi*dh;
+            ControlPosY = Corner_Array_F[1] + vj*dh;
+            ControlPosZ = Corner_Array_F[2] + vk*dh;
 
-//             Cell2Cell = SQRT(SQR(ControlPosX - x)+SQR(ControlPosY - y)+SQR(ControlPosZ - z)); // distance to the center cell
-//             if ( Cell2Cell > AccRadius )                 continue; // check whether it is inside the control volume
+            Cell2Cell = SQRT(SQR(ControlPosX - PosX)+SQR(ControlPosY - PosY)+SQR(ControlPosZ - PosZ)); // distance to the center cell
+            if ( Cell2Cell > AccRadius )                 continue; // check whether it is inside the control volume
 
-//             const int vt = IDX321( vi, vj, vk, Size_Flu, Size_Flu );
-//             for (int v=0; v<FLU_NIN; v++)    ControlFluid[v] = Flu_Array_F_In[v][vt];
+            const int vt = IDX321( vi, vj, vk, Size_Flu, Size_Flu );
+            for (int v=0; v<FLU_NIN; v++)    ControlFluid[v] = Flu_Array_F_In[v][vt];
 
-// //          Storing Egtot
-//             real ControlPosXj, ControlPosYj, ControlPosZj;
-//             real SelfPhiijk = (real)0.0; // self-potential
-//             for (int vkj=pk-AccCellNum; vkj<=pk+AccCellNum; vkj++)
-//             for (int vjj=pj-AccCellNum; vjj<=pj+AccCellNum; vjj++)
-//             for (int vij=pi-AccCellNum; vij<=pi+AccCellNum; vij++) // loop the nearby cells, to find the cells inside the control volumne (v)
-//             {
-//                ControlPosXj = Corner_Array_F[0] + vij*dh;
-//                ControlPosYj = Corner_Array_F[1] + vjj*dh;
-//                ControlPosZj = Corner_Array_F[2] + vkj*dh;
+//          Storing Egtot
+            real ControlPosXj, ControlPosYj, ControlPosZj;
+            real SelfPhiijk = (real)0.0; // self-potential
+            for (int vkj=pk-AccCellNum; vkj<=pk+AccCellNum; vkj++)
+            for (int vjj=pj-AccCellNum; vjj<=pj+AccCellNum; vjj++)
+            for (int vij=pi-AccCellNum; vij<=pi+AccCellNum; vij++) // loop the nearby cells, to find the cells inside the control volumne (v)
+            {
+               ControlPosXj = Corner_Array_F[0] + vij*dh;
+               ControlPosYj = Corner_Array_F[1] + vjj*dh;
+               ControlPosZj = Corner_Array_F[2] + vkj*dh;
 
-//                real rij = SQRT(SQR(ControlPosX - ControlPosXj)+SQR(ControlPosY - ControlPosYj)+SQR(ControlPosZ - ControlPosZj));
-//                if ( rij == 0.0 )                        continue;
+               real rij = SQRT(SQR(ControlPosX - ControlPosXj)+SQR(ControlPosY - ControlPosYj)+SQR(ControlPosZ - ControlPosZj));
+               if ( rij == 0.0 )                        continue;
 
-//                real Cell2Cellj = SQRT(SQR(ControlPosXj - x)+SQR(ControlPosYj - y)+SQR(ControlPosZj - z)); // distance to the center cell
-//                if ( Cell2Cellj > AccRadius )                 continue; // check whether it is inside the control volume
-//                const int vtj = IDX321( vij, vjj, vkj, Size_Flu, Size_Flu );
-//                for (int v=0; v<FLU_NIN; v++)    ControlFluidj[v] = Flu_Array_F_In[v][vtj];
+               real Cell2Cellj = SQRT(SQR(ControlPosXj - PosX)+SQR(ControlPosYj - PosY)+SQR(ControlPosZj - PosZ)); // distance to the center cell
+               if ( Cell2Cellj > AccRadius )                 continue; // check whether it is inside the control volume
+               const int vtj = IDX321( vij, vjj, vkj, Size_Flu, Size_Flu );
+               for (int v=0; v<FLU_NIN; v++)    ControlFluidj[v] = Flu_Array_F_In[v][vtj];
 
-//                SelfPhiijk += -NEWTON_G*ControlFluidj[DENS]*dv/rij; // potential
-//             } // vij, vjj, vkj
+               SelfPhiijk += -NEWTON_G*ControlFluidj[DENS]*dv/rij; // potential
+            } // vij, vjj, vkj
 
-//             Egtot += 0.5*ControlFluid[DENS]*dv*SelfPhiijk;
+            Egtot += 0.5*ControlFluid[DENS]*dv*SelfPhiijk;
 
-// //          Storing Emagtot
-//             const bool CheckMinPres_No = false;
+//          Storing Emagtot
+            const bool CheckMinPres_No = false;
 
-// #           ifdef MHD
-//             vEmag = MHD_GetCellCenteredBEnergy( Mag_Array_F_In[MAGX],
-//                                                 Mag_Array_F_In[MAGY],
-//                                                 Mag_Array_F_In[MAGZ],
-//                                                 Size_Flu, Size_Flu, Size_Flu, vi, vj, vk );
-//             Emagtot += vEmag*dv;
-// #           endif
+#           ifdef MHD
+            vEmag = MHD_GetCellCenteredBEnergy( Mag_Array_F_In[MAGX],
+                                                Mag_Array_F_In[MAGY],
+                                                Mag_Array_F_In[MAGZ],
+                                                Size_Flu, Size_Flu, Size_Flu, vi, vj, vk );
+            Emagtot += vEmag*dv;
+#           endif
 
-// //          Storing Ethtot and Ekintot
-//             Pres = Hydro_Con2Pres( ControlFluid[DENS], ControlFluid[MOMX], ControlFluid[MOMY], ControlFluid[MOMZ], ControlFluid[ENGY],
-//                                    ControlFluid+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, vEmag,
-//                                    EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-//                                    EoS_AuxArray_Flt,
-//                                    EoS_AuxArray_Int, h_EoS_Table, NULL );
-//             Cs2  = EoS_DensPres2CSqr_CPUPtr( ControlFluid[DENS], Pres, ControlFluid+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+//          Storing Ethtot and Ekintot
+            Pres = Hydro_Con2Pres( ControlFluid[DENS], ControlFluid[MOMX], ControlFluid[MOMY], ControlFluid[MOMZ], ControlFluid[ENGY],
+                                   ControlFluid+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, vEmag,
+                                   EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                   EoS_AuxArray_Flt,
+                                   EoS_AuxArray_Int, h_EoS_Table, NULL );
+            Cs2  = EoS_DensPres2CSqr_CPUPtr( ControlFluid[DENS], Pres, ControlFluid+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
             
-//             // Cs2 = ( Const_kB*ISO_TEMP/UNIT_E ) / ( MOLECULAR_WEIGHT*Const_amu/UNIT_M );
-//             Ethtot += 0.5*ControlFluid[DENS]*dv*Cs2;
+            // Cs2 = ( Const_kB*ISO_TEMP/UNIT_E ) / ( MOLECULAR_WEIGHT*Const_amu/UNIT_M );
+            Ethtot += 0.5*ControlFluid[DENS]*dv*Cs2;
 
-//             Ekintot += 0.5*ControlFluid[DENS]*dv*( SQR(ControlFluid[MOMX]/ControlFluid[DENS] - COMVel[0]) + SQR(ControlFluid[MOMY]/ControlFluid[DENS] - COMVel[1]) + SQR(ControlFluid[MOMZ]/ControlFluid[DENS] - COMVel[2]));
-//          } // vi, vj, vk
+            Ekintot += 0.5*ControlFluid[DENS]*dv*( SQR(ControlFluid[MOMX]/ControlFluid[DENS] - BulkVel[0]) + SQR(ControlFluid[MOMY]/ControlFluid[DENS] - BulkVel[1]) + SQR(ControlFluid[MOMZ]/ControlFluid[DENS] - BulkVel[2]));
+         } // vi, vj, vk
 
-//          if ( FABS(Egtot) <= 2*Ethtot )                      continue;
-//          if (( Egtot + Ethtot + Ekintot + Emagtot ) >= 0)    continue;
+         if ( FABS(Egtot) <= 2*Ethtot )                      continue;
+         if (( Egtot + Ethtot + Ekintot + Emagtot ) >= 0)    continue;
 
 //       Store the information of new star particles
 //       ===========================================================================================================
@@ -728,7 +726,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
       // {
       const char FileName[] = "Record__Debug";
       FILE *File = fopen( FileName, "a" );
-      fprintf( File, "%d/%d %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e", p, SelNNewPar, 
+      fprintf( File, "%d/%d %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e %13.7e\n", p, SelNNewPar, 
       NewParAtt[pi][PAR_POSX], NewParAtt[pi][PAR_POSY], NewParAtt[pi][PAR_POSZ],
       NewParAtt[pi][PAR_VELX], NewParAtt[pi][PAR_VELY], NewParAtt[pi][PAR_VELZ], 
       NewParAtt[pi][PAR_ACCX], NewParAtt[pi][PAR_ACCY], NewParAtt[pi][PAR_ACCZ]);
