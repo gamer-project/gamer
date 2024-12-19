@@ -484,15 +484,15 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          BulkVel[1] = MassVel[1]/TotalMass;
          BulkVel[2] = MassVel[2]/TotalMass; // COM velocity
 
-         // // Debug
-         // // if ( MPI_Rank == 0 )
-         // // {
-         // const char FileName[] = "Record__Debug";
-         // FILE *File = fopen( FileName, "a" );
-         // fprintf( File, "%13.7e %13.7e %13.7e %13.7e\n", BulkVel[0], BulkVel[1], BulkVel[2], dv);
-         // fclose( File );
-         // // }
-         // // Debug
+         // Debug
+         // if ( MPI_Rank == 0 )
+         // {
+         const char FileName[] = "Record__Debug";
+         FILE *File = fopen( FileName, "a" );
+         fprintf( File, "%13.7e %13.7e %13.7e %13.7e\n", BulkVel[0], BulkVel[1], BulkVel[2], dv);
+         fclose( File );
+         // }
+         // Debug
 
          // get the energy
          real Egtot = (real)0.0, Ethtot = (real)0.0, Emagtot = (real)0.0, Ekintot = (real)0.0;
@@ -562,15 +562,15 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          if ( FABS(Egtot) <= 2*Ethtot )                      continue;
          if (( Egtot + Ethtot + Ekintot + Emagtot ) >= 0)    continue;
 
-         // Debug
-         // if ( MPI_Rank == 0 )
-         // {
-         const char FileName[] = "Record__Debug";
-         FILE *File = fopen( FileName, "a" );
-         fprintf( File, "Pass Jeans test\n");
-         fclose( File );
-         // }
-         // Debug
+         // // Debug
+         // // if ( MPI_Rank == 0 )
+         // // {
+         // const char FileName[] = "Record__Debug";
+         // FILE *File = fopen( FileName, "a" );
+         // fprintf( File, "Pass Jeans test\n");
+         // fclose( File );
+         // // }
+         // // Debug
 
 //       Store the information of new star particles
 //       ===========================================================================================================
