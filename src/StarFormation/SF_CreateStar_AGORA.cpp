@@ -549,18 +549,18 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
             Ekintot += 0.5*ControlFluid[DENS]*dv*( SQR(ControlFluid[MOMX]/ControlFluid[DENS] - BulkVel[0]) + SQR(ControlFluid[MOMY]/ControlFluid[DENS] - BulkVel[1]) + SQR(ControlFluid[MOMZ]/ControlFluid[DENS] - BulkVel[2]));
          } // vi, vj, vk
 
-         if ( FABS(Egtot) <= 2*Ethtot )                      continue;
-         if (( Egtot + Ethtot + Ekintot + Emagtot ) >= 0)    continue;
-
-         // Debug
+        // Debug
          // if ( MPI_Rank == 0 )
          // {
          const char FileName[] = "Record__Debug";
          FILE *File = fopen( FileName, "a" );
-         fprintf( File, "Pass Jeans instability and bound state check\n");
+         fprintf( File, "%13.7e %13.7e %13.7e %13.7e\n", Egtot, Ethtot, Ekintot, Emagtot);
          fclose( File );
          // }
          // Debug
+
+         if ( FABS(Egtot) <= 2*Ethtot )                      continue;
+         if (( Egtot + Ethtot + Ekintot + Emagtot ) >= 0)    continue;
 
 //       Store the information of new star particles
 //       ===========================================================================================================
