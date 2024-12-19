@@ -90,7 +90,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    const int    NPG            = 1;
 
    // const real   dv             = CUBE( dh );
-   const real   dv             = dh*dh*dh;
+   const double   dv           = CUBE( dh );
    const real   AccRadius      = AccCellNum*dh;
    const int    FluSg          = amr->FluSg[lv];
    const real   Coeff_FreeFall = SQRT( (32.0*NEWTON_G)/(3.0*M_PI) );
