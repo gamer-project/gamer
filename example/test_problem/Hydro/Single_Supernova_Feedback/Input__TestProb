@@ -1,0 +1,11 @@
+# problem-specific runtime parameters
+Feedback_Dens_Bg       1.0            # background mass density
+Feedback_Temp_Bg       1.0e2          # background energy density
+Feedback_Test_Eg       6.55410093e-06 # background energy (by code unit)
+# Blast_Radius         1.0e-2         # explosion radius
+# Blast_Center_X      -1.0            # explosion center x (<0=default) [box center]
+# Blast_Center_Y      -1.0            # explosion center y (<0=default) [box center]
+# Blast_Center_Z      -1.0            # explosion center z (<0=default) [box center]
+# Blast_BField         5.0e-2         # magnetic field strength along the diagonal direction (MHD only) [1.0]
+#NPar		       1	      # number of particles
+
