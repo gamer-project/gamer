@@ -56,8 +56,8 @@ Parameters described on this page:
 [OPT__MEMORY_POOL](#OPT__MEMORY_POOL) &nbsp;
 
 Other related parameters:
-[[OPT__UM_IC_DOWNGRADE | Initial Conditions#OPT__UM_IC_DOWNGRADE]], &nbsp;
-[[OPT__UM_IC_REFINE | Initial Conditions#OPT__UM_IC_REFINE]], &nbsp;
+[[OPT__UM_IC_DOWNGRADE | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_DOWNGRADE]], &nbsp;
+[[OPT__UM_IC_REFINE | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_REFINE]], &nbsp;
 [[OPT__CK_REFINE | Runtime Parameters:-Miscellaneous#OPT__CK_REFINE]], &nbsp;
 [[Interpolation Schemes | Runtime Parameters:-Interpolation]] &nbsp;
 
@@ -209,7 +209,7 @@ is resolved by at least <var>N</var> cells. Specifically, a cell
 on level <var>l</var> will be flagged for refinement if its estimated
 Jeans length &lambda;<sub>J</sub> satisfies
 &lambda;<sub>J</sub>&#8287;&#8801;&#8287;(&pi;&gamma;<var>P</var>/<var>G</var>&rho;<sup>2</sup>)<sup>1/2</sup>&#8287;<&#8287;<var>N</var><sub>l</sub>&Delta;&xi;<sub>l</sub>,
-where &gamma; is adiabatic index ([[GAMMA | Hydro#GAMMA]]), <var>P</var> is gas pressure, &rho; is gas mass density, <var>G</var> is gravitational constant, &Delta;&xi;<sub>l</sub> is the cell width along &xi; on level <var>l</var>, and <var>N</var><sub>l</sub> is the refinement threshold on level <var>l</var>.
+where &gamma; is adiabatic index ([[GAMMA | Runtime-Parameters:-Hydro#GAMMA]]), <var>P</var> is gas pressure, &rho; is gas mass density, <var>G</var> is gravitational constant, &Delta;&xi;<sub>l</sub> is the cell width along &xi; on level <var>l</var>, and <var>N</var><sub>l</sub> is the refinement threshold on level <var>l</var>.
 Specify the refinement
 thresholds on different levels in the input file `Input__Flag_Jeans`
 with the [[specific format | Runtime Parameters#input__flag_]].
@@ -427,7 +427,7 @@ Record the number of particles on each level in the log file
 Reuse allocated patch memory to reduce memory fragmentation.
 For `OPT__REUSE_MEMORY=1`, the code will still deallocate patch memory
 when redistributing all patches for load balancing
-(see [[LB_INPUT__WLI_MAX | MPI and OpenMP#LB_INPUT__WLI_MAX]]).
+(see [[LB_INPUT__WLI_MAX | Runtime-Parameters:-MPI-and-OpenMP#LB_INPUT__WLI_MAX]]).
 In comparison, for `OPT__REUSE_MEMORY=2`, the code will not deallocate
 patch memory during the entire simulation. Note that this option will
 not preallocate any patches unless [OPT__MEMORY_POOL](#OPT__MEMORY_POOL)
@@ -449,7 +449,7 @@ Only applicable when adopting [OPT__REUSE_MEMORY](#OPT__REUSE_MEMORY)=1/2.
 
 ### Potential outside the isolated boundaries
 When adopting the isolated boundary conditions for gravity (i.e.,
-[[OPT__BC_POT | Gravity#OPT__BC_POT]]=2), the ghost zones of
+[[OPT__BC_POT | Runtime-Parameters:-Gravity#OPT__BC_POT]]=2), the ghost zones of
 gravitational potential outside the simulation domain are currently
 filled out by extrapolation.
 
