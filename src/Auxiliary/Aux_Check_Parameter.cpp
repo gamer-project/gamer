@@ -135,6 +135,15 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "currently the check \"%s\" must work with \"%s\" !!\n",
                  "OPT__CK_REFINE", "OPT__FLAG_RHO" );
 
+   if ( OPT__CK_CONSERVATION  &&  ANGMOM_ORIGIN_X > amr->BoxEdgeR[0] )
+      Aux_Error( ERROR_INFO, "incorrect ANGMOM_ORIGIN_X = %lf (out of range [X<=%lf]) !!\n", ANGMOM_ORIGIN_X, amr->BoxEdgeR[0] );
+
+   if ( OPT__CK_CONSERVATION  &&  ANGMOM_ORIGIN_Y > amr->BoxEdgeR[1] )
+      Aux_Error( ERROR_INFO, "incorrect ANGMOM_ORIGIN_Y = %lf (out of range [Y<=%lf]) !!\n", ANGMOM_ORIGIN_Y, amr->BoxEdgeR[1] );
+
+   if ( OPT__CK_CONSERVATION  &&  ANGMOM_ORIGIN_Z > amr->BoxEdgeR[2] )
+      Aux_Error( ERROR_INFO, "incorrect ANGMOM_ORIGIN_Z = %lf (out of range [Z<=%lf]) !!\n", ANGMOM_ORIGIN_Z, amr->BoxEdgeR[2] );
+
    if ( OPT__RECORD_CENTER  &&  COM_CEN_X > amr->BoxSize[0] )
       Aux_Error( ERROR_INFO, "incorrect COM_CEN_X = %lf (out of range [X<=%lf]) !!\n", COM_CEN_X, amr->BoxSize[0] );
 
@@ -367,6 +376,11 @@ void Aux_Check_Parameter()
    if ( !OPT__OUTPUT_PAR_MODE )
 #  endif
       Aux_Message( stderr, "WARNING : all output options are turned off --> no data will be output !!\n" );
+
+#  ifdef PARTICLE
+   if ( OPT__OUTPUT_PAR_MESH  &&  OPT__OUTPUT_TOTAL != OUTPUT_FORMAT_HDF5 )
+      Aux_Message( stderr, "WARNING : OPT__OUTPUT_PAR_MESH currently only supports OPT__OUTPUT_TOTAL=%d !!\n", OUTPUT_FORMAT_HDF5 );
+#  endif
 
    if ( StrLen_Flt <= 0 )
       Aux_Message( stderr, "WARNING : StrLen_Flt (%d) <= 0 (OPT__OUTPUT_TEXT_FORMAT_FLT=%s) --> text output might be misaligned !!\n",

@@ -299,9 +299,12 @@ void Init_ByRestart_HDF5( const char *FileName )
 // --> assuming dTime_AllLv[] has been initialized as 0.0 properly
    for (int lv=KeyInfo.NLevel; lv<NLEVEL; lv++)
    {
-      Time          [lv] = 0.0;
-      NPatchTotal   [lv] = 0;
-      AdvanceCounter[lv] = 0;
+      Time              [lv] = 0.0;
+      NPatchTotal       [lv] = 0;
+      AdvanceCounter    [lv] = 0;
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      amr->use_wave_flag[lv] = KeyInfo.UseWaveScheme[ KeyInfo.NLevel - 1 ];
+#     endif
    }
 
 
@@ -864,7 +867,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 #        endif // #ifdef LOAD_BALANCE ... else ...
 
 //       free resource
-         for (int v=0; v<NCompStore; v++)      H5_Status = H5Dclose( H5_SetID_Field[v] );
+         for (int v=0; v<NCompStore; v++)       H5_Status = H5Dclose( H5_SetID_Field[v] );
 #        ifdef MHD
          for (int v=0; v<NCOMP_MAG;   v++)      H5_Status = H5Dclose( H5_SetID_FCMag[v] );
 #        endif
@@ -1972,6 +1975,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  if ( MODEL == ELBDM )
    LoadField( "Opt__Flag_EngyDensity",   &RS.Opt__Flag_EngyDensity,   SID, TID, NonFatal, &RT.Opt__Flag_EngyDensity,    1, NonFatal );
    LoadField( "Opt__Flag_Spectral",      &RS.Opt__Flag_Spectral,      SID, TID, NonFatal, &RT.Opt__Flag_Spectral,       1, NonFatal );
+   LoadField( "Opt__Flag_Spectral_N",    &RS.Opt__Flag_Spectral_N,    SID, TID, NonFatal, &RT.Opt__Flag_Spectral_N,     1, NonFatal );
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    LoadField( "Opt__Flag_Interference",  &RS.Opt__Flag_Interference,  SID, TID, NonFatal, &RT.Opt__Flag_Interference,   1, NonFatal );
 #  endif
@@ -2220,10 +2224,11 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Mono_MaxIter",            &RS.Mono_MaxIter,            SID, TID, NonFatal, &RT.Mono_MaxIter,             1, NonFatal );
    LoadField( "IntOppSign0thOrder",      &RS.IntOppSign0thOrder,      SID, TID, NonFatal, &RT.IntOppSign0thOrder,       1, NonFatal );
 #  ifdef SUPPORT_SPECTRAL_INT
-   LoadField( "SpecInt_TablePath",           &RS.SpecInt_TablePath,           SID, TID, NonFatal,  RT.SpecInt_TablePath,           1, NonFatal );
+   LoadField( "SpecInt_TablePath",       &RS.SpecInt_TablePath,       SID, TID, NonFatal,  RT.SpecInt_TablePath,        1, NonFatal );
+   LoadField( "SpecInt_GhostBoundary",   &RS.SpecInt_GhostBoundary,   SID, TID, NonFatal, &RT.SpecInt_GhostBoundary,    1, NonFatal );
 #  if ( MODEL == ELBDM )
-   LoadField( "SpecInt_XY_Instead_DePha",    &RS.SpecInt_XY_Instead_DePha,    SID, TID, NonFatal, &RT.SpecInt_XY_Instead_DePha,    1, NonFatal );
-   LoadField( "SpecInt_WavelengthMagnifier", &RS.SpecInt_WavelengthMagnifier, SID, TID, NonFatal, &RT.SpecInt_WavelengthMagnifier, 1, NonFatal );
+   LoadField( "SpecInt_XY_Instead_DePha",&RS.SpecInt_XY_Instead_DePha,SID, TID, NonFatal, &RT.SpecInt_XY_Instead_DePha, 1, NonFatal );
+   LoadField( "SpecInt_VortexThreshold", &RS.SpecInt_VortexThreshold, SID, TID, NonFatal, &RT.SpecInt_VortexThreshold,  1, NonFatal );
 #  endif
 #  endif // #ifdef SUPPORT_SPECTRAL_INT
 
@@ -2233,6 +2238,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Output_User",            &RS.Opt__Output_User,            SID, TID, NonFatal, &RT.Opt__Output_User,            1, NonFatal );
 #  ifdef PARTICLE
    LoadField( "Opt__Output_Par_Mode",        &RS.Opt__Output_Par_Mode,        SID, TID, NonFatal, &RT.Opt__Output_Par_Mode,        1, NonFatal );
+   LoadField( "Opt__Output_Par_Mesh",        &RS.Opt__Output_Par_Mesh,        SID, TID, NonFatal, &RT.Opt__Output_Par_Mesh,        1, NonFatal );
 #  endif
    LoadField( "Opt__Output_BasePS",          &RS.Opt__Output_BasePS,          SID, TID, NonFatal, &RT.Opt__Output_BasePS,          1, NonFatal );
    if ( OPT__OUTPUT_PART )
@@ -2312,6 +2318,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Ck_Refine",          &RS.Opt__Ck_Refine,          SID, TID, NonFatal, &RT.Opt__Ck_Refine,           1, NonFatal );
    LoadField( "Opt__Ck_ProperNesting",   &RS.Opt__Ck_ProperNesting,   SID, TID, NonFatal, &RT.Opt__Ck_ProperNesting,    1, NonFatal );
    LoadField( "Opt__Ck_Conservation",    &RS.Opt__Ck_Conservation,    SID, TID, NonFatal, &RT.Opt__Ck_Conservation,     1, NonFatal );
+   LoadField( "AngMom_OriginX",          &RS.AngMom_OriginX,          SID, TID, NonFatal, &RT.AngMom_OriginX,           1, NonFatal );
+   LoadField( "AngMom_OriginY",          &RS.AngMom_OriginY,          SID, TID, NonFatal, &RT.AngMom_OriginY,           1, NonFatal );
+   LoadField( "AngMom_OriginZ",          &RS.AngMom_OriginZ,          SID, TID, NonFatal, &RT.AngMom_OriginZ,           1, NonFatal );
    LoadField( "Opt__Ck_NormPassive",     &RS.Opt__Ck_NormPassive,     SID, TID, NonFatal, &RT.Opt__Ck_NormPassive,      1, NonFatal );
    LoadField( "Opt__Ck_Restrict",        &RS.Opt__Ck_Restrict,        SID, TID, NonFatal, &RT.Opt__Ck_Restrict,         1, NonFatal );
    LoadField( "Opt__Ck_Finite",          &RS.Opt__Ck_Finite,          SID, TID, NonFatal, &RT.Opt__Ck_Finite,           1, NonFatal );

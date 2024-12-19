@@ -1,4 +1,5 @@
 #include "GAMER.h"
+#include <string.h>
 
 
 
@@ -328,6 +329,10 @@ void Init_ResetParameter()
 //     For example, the format %20.16e will give a length of 20. However, if only checking the string after %,
 //     the format %+-20.16e (align to the left and also add a + sign for a positive value) will give a zero string length
 //     since +- is not an integer. This is why checking OPT__OUTPUT_DATA_FORMAT+2 is necessary.
+   if ( strlen(OPT__OUTPUT_TEXT_FORMAT_FLT) > MAX_STRING-1 )
+      Aux_Error( ERROR_INFO, "Length of OPT__OUTPUT_TEXT_FORMAT_FLT (%d) should be smaller than MAX_STRING-1 (%d) !!\n",
+                 strlen(OPT__OUTPUT_TEXT_FORMAT_FLT), MAX_STRING-1 );
+
    StrLen_Flt = MAX( abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+1)), abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+2)) );
    sprintf( BlankPlusFormat_Flt, " %s", OPT__OUTPUT_TEXT_FORMAT_FLT );
 
@@ -480,6 +485,15 @@ void Init_ResetParameter()
 
       PRINT_RESET_PARA( amr->Par->GhostSizeTracer, FORMAT_INT, "for the adopted PAR_TR_INTERP scheme" );
    }
+
+#  ifndef TRACER
+   if ( OPT__OUTPUT_PAR_MESH )
+   {
+      OPT__OUTPUT_PAR_MESH = false;
+
+      PRINT_RESET_PARA( OPT__OUTPUT_PAR_MESH, FORMAT_INT, "since TRACER is disabled" );
+   }
+#  endif
 
 #  endif // #ifdef PARTICLE
 
@@ -744,6 +758,31 @@ void Init_ResetParameter()
 #  endif
 
 
+// set default value for the origin of angular momentum
+   if ( OPT__CK_CONSERVATION )
+   {
+      if ( ANGMOM_ORIGIN_X < 0.0 )
+      {
+         ANGMOM_ORIGIN_X = amr->BoxCenter[0];
+
+         PRINT_RESET_PARA( ANGMOM_ORIGIN_X, FORMAT_REAL, "" );
+      }
+
+      if ( ANGMOM_ORIGIN_Y < 0.0 )
+      {
+         ANGMOM_ORIGIN_Y = amr->BoxCenter[1];
+
+         PRINT_RESET_PARA( ANGMOM_ORIGIN_Y, FORMAT_REAL, "" );
+      }
+
+      if ( ANGMOM_ORIGIN_Z < 0.0 )
+      {
+         ANGMOM_ORIGIN_Z = amr->BoxCenter[2];
+
+         PRINT_RESET_PARA( ANGMOM_ORIGIN_Z, FORMAT_REAL, "" );
+      }
+   }
+
 // set default value for OPT__RECORD_CENTER
    if ( OPT__RECORD_CENTER )
    {
@@ -752,6 +791,7 @@ void Init_ResetParameter()
          COM_CEN_X = -1.0;
          COM_CEN_Y = -1.0;
          COM_CEN_Z = -1.0;
+
          PRINT_RESET_PARA( COM_CEN_X, FORMAT_REAL, "and it will be reset to the coordinate of the peak total density" );
          PRINT_RESET_PARA( COM_CEN_Y, FORMAT_REAL, "and it will be reset to the coordinate of the peak total density" );
          PRINT_RESET_PARA( COM_CEN_Z, FORMAT_REAL, "and it will be reset to the coordinate of the peak total density" );
@@ -760,12 +800,14 @@ void Init_ResetParameter()
       if ( COM_MAX_R < 0.0 )
       {
          COM_MAX_R = __FLT_MAX__;
+
          PRINT_RESET_PARA( COM_MAX_R, FORMAT_REAL, "" );
       }
 
       if ( COM_TOLERR_R < 0.0 )
       {
          COM_TOLERR_R = amr->dh[MAX_LEVEL];
+
          PRINT_RESET_PARA( COM_TOLERR_R, FORMAT_REAL, "" );
       }
    }

@@ -1,0 +1,23 @@
+# problem-specific runtime parameters (HaloMerger_ParCloud_Num > 0 only)
+# 1st particle cloud
+HaloMerger_ParCloud_1_CenCoordX              0.06469211            # x/y/z-coordinate of the center of the 1st particle cloud (<0.0=auto -> box center) [-1.0]
+HaloMerger_ParCloud_1_CenCoordY              0.12938422
+HaloMerger_ParCloud_1_CenCoordZ              0.12938422
+HaloMerger_ParCloud_1_VelocityX              0.5                   # x/y/z-component of the bulk velocity of the 1st particle cloud [0.0]
+HaloMerger_ParCloud_1_VelocityY              0.0
+HaloMerger_ParCloud_1_VelocityZ              0.0
+HaloMerger_ParCloud_1_DensProf_Filename      HaloDensityProfile    # filename of the density profile table for the 1st particle cloud (HaloMerger_ParCloud_InitMode == 1 only)
+HaloMerger_ParCloud_1_DensProf_MaxR          0.03234605475         # maximum radius for particles for the 1st particle cloud (must > 0.0) (HaloMerger_ParCloud_InitMode == 1 only) [0.5*amr->BoxSize[0]]
+HaloMerger_ParCloud_1_RSeed                  123                   # random seed for setting particle position and velocity for the 1st particle cloud (must >= 0) (HaloMerger_ParCloud_InitMode == 1 only) [123]
+HaloMerger_ParCloud_1_NPar                   5000000               # number of particles for the 1st particle cloud (must >= 0) (HaloMerger_ParCloud_InitMode == 1 only) [0]
+# 2nd particle cloud
+HaloMerger_ParCloud_2_CenCoordX              0.19407633
+HaloMerger_ParCloud_2_CenCoordY              0.12938422
+HaloMerger_ParCloud_2_CenCoordZ              0.12938422
+HaloMerger_ParCloud_2_VelocityX             -0.5
+HaloMerger_ParCloud_2_VelocityY              0.0
+HaloMerger_ParCloud_2_VelocityZ              0.0
+HaloMerger_ParCloud_2_DensProf_Filename      HaloDensityProfile
+HaloMerger_ParCloud_2_DensProf_MaxR          0.03234605475
+HaloMerger_ParCloud_2_RSeed                  123
+HaloMerger_ParCloud_2_NPar                   5000000

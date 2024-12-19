@@ -31,6 +31,26 @@
 #define TURING       6
 #define AMPERE       7
 
+#ifdef GPU
+#if   ( GPU_COMPUTE_CAPABILITY >= 200  &&  GPU_COMPUTE_CAPABILITY < 300 )
+# define GPU_ARCH FERMI
+#elif ( GPU_COMPUTE_CAPABILITY >= 300  &&  GPU_COMPUTE_CAPABILITY < 500 )
+# define GPU_ARCH KEPLER
+#elif ( GPU_COMPUTE_CAPABILITY >= 500  &&  GPU_COMPUTE_CAPABILITY < 600 )
+# define GPU_ARCH MAXWELL
+#elif ( GPU_COMPUTE_CAPABILITY >= 600  &&  GPU_COMPUTE_CAPABILITY < 700 )
+# define GPU_ARCH PASCAL
+#elif ( GPU_COMPUTE_CAPABILITY >= 700  &&  GPU_COMPUTE_CAPABILITY < 750 )
+# define GPU_ARCH VOLTA
+#elif ( GPU_COMPUTE_CAPABILITY >= 750  &&  GPU_COMPUTE_CAPABILITY < 800 )
+# define GPU_ARCH TURING
+#elif ( GPU_COMPUTE_CAPABILITY >= 800  &&  GPU_COMPUTE_CAPABILITY < 890 )
+# define GPU_ARCH AMPERE
+#else
+# error : ERROR : Unknown GPU_COMPUTE_CAPABILITY !!
+#endif // GPU_COMPUTE_CAPABILITY
+#endif // #ifdef GPU
+
 
 // models
 #define HYDRO        1
@@ -892,12 +912,12 @@
 
 
 // precision for FFT in GRAMFE_FFT and matrix multiplication in GRAMFE_MATMUL
-// --> enable double precision for GRAMFE_FFT and GRAMFE_MATMUL schemes by default
+// --> enable double precision for GRAMFE_FFT by default since it is less stable compared to GRAMFE_MATMUL
 #if ( GRAMFE_SCHEME == GRAMFE_FFT )
 #   define GRAMFE_FFT_FLOAT8
 #endif
 
-#if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+#if ( ( GRAMFE_SCHEME == GRAMFE_MATMUL ) && defined( FLOAT8 ) )
 #   define GRAMFE_MATMUL_FLOAT8
 #endif
 

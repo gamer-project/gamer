@@ -40,7 +40,7 @@ long                 FixUpVar_Flux, FixUpVar_Restrict;
 int                  PassiveNorm_NVar, PassiveNorm_VarIdx[NCOMP_PASSIVE];
 int                  PassiveIntFrac_NVar, PassiveIntFrac_VarIdx[NCOMP_PASSIVE];
 int                  StrLen_Flt;
-char                 BlankPlusFormat_Flt[MAX_STRING];
+char                 BlankPlusFormat_Flt[MAX_STRING+1];
 
 int                  MPI_Rank, MPI_Rank_X[3], MPI_SibRank[26], NX0[3], NPatchTotal[NLEVEL];
 int                 *BaseP = NULL;
@@ -70,10 +70,11 @@ bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__FREEZE_FLUID, 
 bool                 OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 bool                 OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
 bool                 OPT__INT_FRAC_PASSIVE_LR, OPT__CK_INPUT_FLUID, OPT__SORT_PATCH_BY_LBIDX;
-char                 OPT__OUTPUT_TEXT_FORMAT_FLT[MAX_STRING-1];
+char                 OPT__OUTPUT_TEXT_FORMAT_FLT[MAX_STRING];
 int                  OPT__UM_IC_FLOAT8;
 double               COM_CEN_X, COM_CEN_Y, COM_CEN_Z, COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R;
 int                  COM_MAX_ITER;
+double               ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z;
 
 UM_IC_Format_t       OPT__UM_IC_FORMAT;
 TestProbID_t         TESTPROB_ID;
@@ -134,6 +135,7 @@ double               ELBDM_TAYLOR3_COEFF;
 double               ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
 
 bool                 OPT__FLAG_SPECTRAL;
+int                  OPT__FLAG_SPECTRAL_N;
 double               FlagTable_Spectral[NLEVEL-1][2];
 
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
@@ -217,7 +219,7 @@ bool                 FFTW3_Double_OMP_Enabled, FFTW3_Single_OMP_Enabled;
 // (2-5) particle
 #ifdef PARTICLE
 double               DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
-bool                 OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL, OPT__FREEZE_PAR;
+bool                 OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL, OPT__FREEZE_PAR, OPT__OUTPUT_PAR_MESH;
 int                  OPT__OUTPUT_PAR_MODE, OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, PAR_IC_FLOAT8, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
 double               FlagTable_ParMassCell[NLEVEL-1];
 ParOutputDens_t      OPT__OUTPUT_PAR_DENS;
@@ -330,9 +332,10 @@ int  FB_ParaBuf;
 // (2-13) spectral interpolation
 #ifdef SUPPORT_SPECTRAL_INT
 char   SPEC_INT_TABLE_PATH[MAX_STRING];
+int    SPEC_INT_GHOST_BOUNDARY;
 #if ( MODEL == ELBDM )
 bool   SPEC_INT_XY_INSTEAD_DEPHA;
-double SPEC_INT_WAVELENGTH_MAGNIFIER;
+double SPEC_INT_VORTEX_THRESHOLD;
 #endif
 InterpolationHandler Int_InterpolationHandler;
 #endif // #ifdef SUPPORT_SPECTRAL_INT

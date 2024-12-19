@@ -181,6 +181,7 @@ void Init_Load_Parameter()
 #  if ( MODEL == ELBDM )
    ReadPara->Add( "OPT__FLAG_ENGY_DENSITY",     &OPT__FLAG_ENGY_DENSITY,          false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_SPECTRAL",         &OPT__FLAG_SPECTRAL,              false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__FLAG_SPECTRAL_N",       &OPT__FLAG_SPECTRAL_N,            2,               1,             14             );
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    ReadPara->Add( "OPT__FLAG_INTERFERENCE",     &OPT__FLAG_INTERFERENCE,          false,           Useless_bool,  Useless_bool   );
 #  endif
@@ -479,10 +480,11 @@ void Init_Load_Parameter()
 #  error : unsupported MODEL !!
 #  endif
 #  ifdef SUPPORT_SPECTRAL_INT
-   ReadPara->Add( "SPEC_INT_TABLE_PATH",            SPEC_INT_TABLE_PATH,          NoDef_str,       Useless_str,   Useless_str    );
+   ReadPara->Add( "SPEC_INT_TABLE_PATH",         SPEC_INT_TABLE_PATH,             NoDef_str,       Useless_str,   Useless_str    );
+   ReadPara->Add( "SPEC_INT_GHOST_BOUNDARY",    &SPEC_INT_GHOST_BOUNDARY,         4,               1,             NoMax_int      );
 #  if ( MODEL == ELBDM )
-   ReadPara->Add( "SPEC_INT_XY_INSTEAD_DEPHA",     &SPEC_INT_XY_INSTEAD_DEPHA,    true,            Useless_bool,  Useless_bool   );
-   ReadPara->Add( "SPEC_INT_WAVELENGTH_MAGNIFIER", &SPEC_INT_WAVELENGTH_MAGNIFIER,1.0e2,           1.0,           NoMax_double   );
+   ReadPara->Add( "SPEC_INT_XY_INSTEAD_DEPHA",  &SPEC_INT_XY_INSTEAD_DEPHA,       true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "SPEC_INT_VORTEX_THRESHOLD",  &SPEC_INT_VORTEX_THRESHOLD,       0.1,             0.0,           NoMax_double   );
 #  endif
 #  endif // #ifdef SUPPORT_SPECTRAL_INT
 
@@ -494,6 +496,11 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__OUTPUT_TEXT_FORMAT_FLT", OPT__OUTPUT_TEXT_FORMAT_FLT,     "%24.16e",       Useless_str,   Useless_str    );
 #  ifdef PARTICLE
    ReadPara->Add( "OPT__OUTPUT_PAR_MODE",       &OPT__OUTPUT_PAR_MODE,            0,               0,             2              );
+#  ifdef TRACER
+   ReadPara->Add( "OPT__OUTPUT_PAR_MESH",       &OPT__OUTPUT_PAR_MESH,            true,            Useless_bool,  Useless_bool   );
+#  else
+   ReadPara->Add( "OPT__OUTPUT_PAR_MESH",       &OPT__OUTPUT_PAR_MESH,            false,           Useless_bool,  Useless_bool   );
+#  endif
 #  endif
    ReadPara->Add( "OPT__OUTPUT_BASEPS",         &OPT__OUTPUT_BASEPS,              false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_BASE",           &OPT__OUTPUT_BASE,                false,           Useless_bool,  Useless_bool   );
@@ -580,6 +587,9 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__CK_REFINE",             &OPT__CK_REFINE,                  false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_PROPER_NESTING",     &OPT__CK_PROPER_NESTING,          false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_CONSERVATION",       &OPT__CK_CONSERVATION,            false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "ANGMOM_ORIGIN_X",            &ANGMOM_ORIGIN_X,                -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "ANGMOM_ORIGIN_Y",            &ANGMOM_ORIGIN_Y,                -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "ANGMOM_ORIGIN_Z",            &ANGMOM_ORIGIN_Z,                -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "OPT__CK_NORMALIZE_PASSIVE",  &OPT__CK_NORMALIZE_PASSIVE,       false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_RESTRICT",           &OPT__CK_RESTRICT,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__CK_FINITE",             &OPT__CK_FINITE,                  false,           Useless_bool,  Useless_bool   );

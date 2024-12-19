@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2478)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2480)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -254,10 +254,12 @@ Procedure for outputting new variables:
 //                                      record value of FLOAT8_PAR as Makefile.Float8_Par and KeyInfo.Float8_Par
 //                2477 : 2024/04/05 --> output OPT__RECORD_CENTER, COM_CEN_X, COM_CEN_Y, COM_CEN_Z,
 //                                             COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R, COM_MAX_ITER
-//                2478 : 2024/04/23 --> output OPT__RES_PHASE, ELBDM_BASE_SPECTRAL, OPT__FLAG_INTERFERENCE, ELBDM_MATCH_PHASE,
+//                2478 : 2024/04/09 --> output ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z
+//                2479 : 2024/04/23 --> output OPT__RES_PHASE, ELBDM_BASE_SPECTRAL, OPT__FLAG_INTERFERENCE, ELBDM_MATCH_PHASE,
 //                                             ELBDM_FIRST_WAVE_LEVEL, OPT__LB_EXCHANGE_FATHER, FlagTable_Interference
-//                                             DENS and PHAS for hybrid scheme,
-//                                             use_wave_flag[lv] for AMR structure
+//                                      output DENS and PHAS for the hybrid scheme (discard STUB)
+//                                      output use_wave_flag[lv] for the hybrid scheme
+//                2480 : 2024/07/17 --> output OPT__OUTPUT_PAR_MESH and particle attributes mapped from mesh quantities
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1270,10 +1272,14 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //          --> solution: we can output a fixed number of particles at a time (see Output_DumpData_Total.cpp)
    long     (*NParLv_EachRank)[NLEVEL] = new long [MPI_NRank][NLEVEL];   // number of particles at each level in each rank
    real_par (*ParBuf1v1Lv)             = NULL;   // buffer storing the data of one particle attribute at one level
+   int        Par_NAtt_Mesh            = amr->Par->Mesh_Attr_Num;
 
    long  GParID_Offset[NLEVEL];  // GParID = global particle index (==> unique for each particle)
    long  NParLv_AllRank[NLEVEL];
    long  MaxNPar1Lv, NParInBuf, ParID;
+
+// prepare particle attributes mapped from mesh quantities
+   if ( OPT__OUTPUT_PAR_MESH )   Par_Output_TracerParticle_Mesh();
 
 
 // 6-1. initialize variables
@@ -1316,11 +1322,13 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       if ( H5_GroupID_Particle < 0 )   Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "Particle" );
 
 //    create the datasets of all particle attributes
-      for (int v=0; v<PAR_NATT_STORED; v++)
+      for (int v=0; v<PAR_NATT_STORED+Par_NAtt_Mesh; v++)
       {
-         H5_SetID_ParData = H5Dcreate( H5_GroupID_Particle, ParAttLabel[v], H5T_GAMER_REAL_PAR, H5_SpaceID_ParData,
+         char *ParLabel = ( v < PAR_NATT_STORED ) ? ParAttLabel[v] : amr->Par->Mesh_Attr_Label[v - PAR_NATT_STORED];
+
+         H5_SetID_ParData = H5Dcreate( H5_GroupID_Particle, ParLabel, H5T_GAMER_REAL_PAR, H5_SpaceID_ParData,
                                        H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
-         if ( H5_SetID_ParData < 0 )   Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", ParAttLabel[v] );
+         if ( H5_SetID_ParData < 0 )   Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", ParLabel );
          H5_Status = H5Dclose( H5_SetID_ParData );
       }
 
@@ -1364,7 +1372,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 //       output one particle attribute at one level in one rank at a time
 //       --> skip the last PAR_NATT_UNSTORED attributes since we do not want to store them on disk
-         for (int v=0; v<PAR_NATT_STORED; v++)
+         for (int v=0; v<PAR_NATT_STORED+Par_NAtt_Mesh; v++)
          {
 //          6-3-3. collect particle data from all patches at the current target level
             NParInBuf = 0;
@@ -1379,19 +1387,23 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   Aux_Error( ERROR_INFO, "lv %d, NParInBuf (%ld) >= NPar_Lv (%ld) !!\n", lv, NParInBuf, amr->Par->NPar_Lv[lv] );
 #              endif
 
-               ParBuf1v1Lv[ NParInBuf ++ ] = amr->Par->Attribute[v][ParID];
+               ParBuf1v1Lv[ NParInBuf ++ ] = ( v < PAR_NATT_STORED )
+                                           ? amr->Par->Attribute[v]                  [ParID]
+                                           : amr->Par->Mesh_Attr[v - PAR_NATT_STORED][ParID];
             }
 
 
 //          6-3-4. write data to disk
-            H5_SetID_ParData = H5Dopen( H5_GroupID_Particle, ParAttLabel[v], H5P_DEFAULT );
+            char *ParLabel = ( v < PAR_NATT_STORED ) ? ParAttLabel[v] : amr->Par->Mesh_Attr_Label[v - PAR_NATT_STORED];
+
+            H5_SetID_ParData = H5Dopen( H5_GroupID_Particle, ParLabel, H5P_DEFAULT );
 
             H5_Status = H5Dwrite( H5_SetID_ParData, H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT, ParBuf1v1Lv );
             if ( H5_Status < 0 )
                Aux_Error( ERROR_INFO, "failed to write a particle attribute (lv %d, v %d) !!\n", lv, v );
 
             H5_Status = H5Dclose( H5_SetID_ParData );
-         } // for (int v=0; v<PAR_NATT_STORED; v++)
+         } // for (int v=0; v<PAR_NATT_STORED+Par_NAtt_Mesh; v++)
 
 //       free resource
          H5_Status = H5Sclose( H5_MemID_ParData );
@@ -1541,7 +1553,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2478;
+   KeyInfo.FormatVersion        = 2480;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1614,7 +1626,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
       KeyInfo.NPatch        [lv] = NPatchTotal       [lv];
       KeyInfo.AdvanceCounter[lv] = AdvanceCounter    [lv];
       KeyInfo.dTime_AllLv   [lv] = dTime_AllLv       [lv];
-#     if ( MODEL == ELBDM  &&  ELBDM_SCHEME == ELBDM_HYBRID)
+#     if ( MODEL == ELBDM  &&  ELBDM_SCHEME == ELBDM_HYBRID )
       KeyInfo.UseWaveScheme [lv] = amr->use_wave_flag[lv];
 #     endif
    }
@@ -2350,6 +2362,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  if ( MODEL == ELBDM )
    InputPara.Opt__Flag_EngyDensity   = OPT__FLAG_ENGY_DENSITY;
    InputPara.Opt__Flag_Spectral      = OPT__FLAG_SPECTRAL;
+   InputPara.Opt__Flag_Spectral_N    = OPT__FLAG_SPECTRAL_N;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    InputPara.Opt__Flag_Interference  = OPT__FLAG_INTERFERENCE;
 #  endif
@@ -2636,9 +2649,10 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.IntOppSign0thOrder          = INT_OPP_SIGN_0TH_ORDER;
 #  ifdef SUPPORT_SPECTRAL_INT
    InputPara.SpecInt_TablePath           = SPEC_INT_TABLE_PATH;
+   InputPara.SpecInt_GhostBoundary       = SPEC_INT_GHOST_BOUNDARY;
 #  if ( MODEL == ELBDM )
    InputPara.SpecInt_XY_Instead_DePha    = SPEC_INT_XY_INSTEAD_DEPHA;
-   InputPara.SpecInt_WavelengthMagnifier = SPEC_INT_WAVELENGTH_MAGNIFIER;
+   InputPara.SpecInt_VortexThreshold     = SPEC_INT_VORTEX_THRESHOLD;
 #  endif
 #  endif // #ifdef SUPPORT_SPECTRAL_INT
 
@@ -2648,6 +2662,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Output_User            = OPT__OUTPUT_USER;
 #  ifdef PARTICLE
    InputPara.Opt__Output_Par_Mode        = OPT__OUTPUT_PAR_MODE;
+   InputPara.Opt__Output_Par_Mesh        = OPT__OUTPUT_PAR_MESH;
 #  endif
    InputPara.Opt__Output_BasePS          = OPT__OUTPUT_BASEPS;
    InputPara.Opt__Output_Base            = OPT__OUTPUT_BASE;
@@ -2718,6 +2733,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Ck_Refine          = OPT__CK_REFINE;
    InputPara.Opt__Ck_ProperNesting   = OPT__CK_PROPER_NESTING;
    InputPara.Opt__Ck_Conservation    = OPT__CK_CONSERVATION;
+   InputPara.AngMom_OriginX          = ANGMOM_ORIGIN_X;
+   InputPara.AngMom_OriginY          = ANGMOM_ORIGIN_Y;
+   InputPara.AngMom_OriginZ          = ANGMOM_ORIGIN_Z;
    InputPara.Opt__Ck_NormPassive     = OPT__CK_NORMALIZE_PASSIVE;
    InputPara.Opt__Ck_Restrict        = OPT__CK_RESTRICT;
    InputPara.Opt__Ck_Finite          = OPT__CK_FINITE;
@@ -3366,6 +3384,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  if ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "Opt__Flag_EngyDensity",   HOFFSET(InputPara_t,Opt__Flag_EngyDensity  ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_Spectral",      HOFFSET(InputPara_t,Opt__Flag_Spectral     ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__Flag_Spectral_N",    HOFFSET(InputPara_t,Opt__Flag_Spectral_N   ), H5T_NATIVE_INT     );
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    H5Tinsert( H5_TypeID, "Opt__Flag_Interference",  HOFFSET(InputPara_t,Opt__Flag_Interference ), H5T_NATIVE_INT     );
 #  endif
@@ -3642,10 +3661,11 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Mono_MaxIter",            HOFFSET(InputPara_t,Mono_MaxIter           ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "IntOppSign0thOrder",      HOFFSET(InputPara_t,IntOppSign0thOrder     ), H5T_NATIVE_INT              );
 #  ifdef SUPPORT_SPECTRAL_INT
-   H5Tinsert( H5_TypeID, "SpecInt_TablePath",           HOFFSET(InputPara_t,SpecInt_TablePath           ), H5_TypeID_VarStr   );
+   H5Tinsert( H5_TypeID, "SpecInt_TablePath",       HOFFSET(InputPara_t,SpecInt_TablePath      ), H5_TypeID_VarStr            );
+   H5Tinsert( H5_TypeID, "SpecInt_GhostBoundary",   HOFFSET(InputPara_t,SpecInt_GhostBoundary  ), H5T_NATIVE_INT              );
 #  if ( MODEL == ELBDM )
-   H5Tinsert( H5_TypeID, "SpecInt_XY_Instead_DePha",    HOFFSET(InputPara_t,SpecInt_XY_Instead_DePha    ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "SpecInt_WavelengthMagnifier", HOFFSET(InputPara_t,SpecInt_WavelengthMagnifier ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "SpecInt_XY_Instead_DePha",HOFFSET(InputPara_t,SpecInt_XY_Instead_DePha),H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "SpecInt_VortexThreshold", HOFFSET(InputPara_t,SpecInt_VortexThreshold), H5T_NATIVE_DOUBLE           );
 #  endif
 #  endif // #ifdef SUPPORT_SPECTRAL_INT
 
@@ -3655,6 +3675,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Output_User",            HOFFSET(InputPara_t,Opt__Output_User           ), H5T_NATIVE_INT              );
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Opt__Output_Par_Mode",        HOFFSET(InputPara_t,Opt__Output_Par_Mode       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Par_Mesh",        HOFFSET(InputPara_t,Opt__Output_Par_Mesh       ), H5T_NATIVE_INT              );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Output_BasePS",          HOFFSET(InputPara_t,Opt__Output_BasePS         ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Base",            HOFFSET(InputPara_t,Opt__Output_Base           ), H5T_NATIVE_INT              );
@@ -3725,6 +3746,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Ck_Refine",          HOFFSET(InputPara_t,Opt__Ck_Refine         ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Ck_ProperNesting",   HOFFSET(InputPara_t,Opt__Ck_ProperNesting  ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Ck_Conservation",    HOFFSET(InputPara_t,Opt__Ck_Conservation   ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "AngMom_OriginX",          HOFFSET(InputPara_t,AngMom_OriginX         ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "AngMom_OriginY",          HOFFSET(InputPara_t,AngMom_OriginY         ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "AngMom_OriginZ",          HOFFSET(InputPara_t,AngMom_OriginZ         ), H5T_NATIVE_DOUBLE           );
    H5Tinsert( H5_TypeID, "Opt__Ck_NormPassive",     HOFFSET(InputPara_t,Opt__Ck_NormPassive    ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Ck_Restrict",        HOFFSET(InputPara_t,Opt__Ck_Restrict       ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Ck_Finite",          HOFFSET(InputPara_t,Opt__Ck_Finite         ), H5T_NATIVE_INT              );

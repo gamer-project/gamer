@@ -290,6 +290,7 @@ template <typename U, typename T> void  Mis_Heapsort( const U N, T Array[], U Id
 template <typename T> int   Mis_Matching_char( const int N, const T Array[], const int M, const T Key[], char Match[] );
 template <typename U, typename T> U Mis_Matching_int( const U N, const T Array[], const U M, const T Key[], U Match[] );
 template <typename T> bool  Mis_CompareRealValue( const T Input1, const T Input2, const char *comment, const bool Verbose );
+template <typename T> void Mis_SortByRows( T const* const* Array, long *IdxTable, const long NSort, const int *SortOrder, const int NOrder );
 ulong  Mis_Idx3D2Idx1D( const int Size[], const int Idx3D[] );
 double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double AutoReduceDtCoeff );
 double Mis_dTime2dt( const double Time_In, const double dTime_In );
@@ -707,7 +708,6 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
                          const int RhoSize, const double *EdgeL, const double dh, const bool PredictPos,
                          const double TargetTime, const bool InitZero, const bool Periodic[], const int PeriodicSize[3],
                          const bool UnitDens, const bool CheckFarAway, const bool UseInputMassPos, real_par **InputMassPos );
-void Par_SortByPos( const long NPar, const real_par *PosX, const real_par *PosY, const real_par *PosZ, long *IdxTable );
 void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOld, const ParUpStep_t UpdateStep,
                          const bool StoreAcc, const bool UseStoredAcc );
 void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double TimeOld,
@@ -716,7 +716,9 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv );
 void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar );
 bool Par_WithinActiveRegion( const real_par x, const real_par y, const real_par z );
 int  Par_CountParticleInDescendant( const int FaLv, const int FaPID );
-void Par_Aux_GetConservedQuantity( double &Mass, double &MomX, double &MomY, double &MomZ, double &Ek, double &Ep );
+void Par_Aux_GetConservedQuantity( double &Mass, double &CoMX, double &CoMY, double &CoMZ,
+                                   double &MomX, double &MomY, double &MomZ,
+                                   double &AngMomX, double &AngMomY, double &AngMomZ, double &Ek, double &Ep );
 void Par_Aux_InitCheck();
 void Par_Aux_Record_ParticleCount();
 void Par_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, const bool PredictPos, const double TargetTime,
@@ -738,6 +740,8 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
                             const int NPar, real_par *InterpParPos[3],
                             const real_par ParType[], const long ParList[],
                             const bool UseTracers, real_par ParAttr[], const bool CorrectVelocity );
+void Par_Init_Attribute_Mesh();
+void Par_Output_TracerParticle_Mesh();
 FieldIdx_t AddParticleAttribute( const char *InputLabel );
 FieldIdx_t GetParticleAttributeIndex( const char *InputLabel, const Check_t Check );
 #ifdef LOAD_BALANCE

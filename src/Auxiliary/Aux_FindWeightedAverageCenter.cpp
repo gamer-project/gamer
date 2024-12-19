@@ -30,8 +30,8 @@
 //                const double CoM_MaxR      = __FLT_MAX__; // entire domain
 //                const double CoM_MinRho    = 0.0;
 //                const long   CoM_Field     = _TOTAL_DENS;
-//                const double CoM_TolErrR   = amr->dh[MAX_LEVEL];
-//                const int    CoM_MaxIter   = 10;
+//                const double CoM_TolErrR   = __FLT_MAX__; // disable it since CoM_MaxR includes the entire domain
+//                const int    CoM_MaxIter   = 1;           // no iteration is required since CoM_MaxR includes the entire domain
 //
 //                Aux_FindWeightedAverageCenter( CoM_Coord, CoM_ref, CoM_MaxR, CoM_MinRho,
 //                                               CoM_Field, CoM_TolErrR, CoM_MaxIter, &CoM_FinaldR, &CoM_FinalNIter );
@@ -115,7 +115,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
    const real   MinTemp_No        = -1.0;
    const real   MinEntr_No        = -1.0;
    const bool   DE_Consistency_No = false;
-#  ifdef PARTICLE
+#  ifdef MASSIVE_PARTICLES
    const bool   TimingSendPar_No  = false;
    const bool   JustCountNPar_No  = false;
 #  ifdef LOAD_BALANCE
@@ -127,7 +127,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
    const bool   SibBufPatch       = NULL_BOOL;
    const bool   FaSibBufPatch     = NULL_BOOL;
 #  endif
-#  endif // #ifdef PARTICLE
+#  endif // #ifdef MASSIVE_PARTICLES
 
 // initialize the referenced center in the first iteration as the input Center_ref
    const double MaxR2             = SQR( MaxR );
@@ -183,7 +183,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
          for (int t=0; t<NTotal; t++)  PID0_List[t] = 8*t;
 
 //       initialize the particle density array (rho_ext) and collect particles to the target level
-#        ifdef PARTICLE
+#        ifdef MASSIVE_PARTICLES
          if ( WeightingDensityField & _PAR_DENS  ||  WeightingDensityField & _TOTAL_DENS )
          {
             Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos, Time[lv],
@@ -209,7 +209,8 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
                                   MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
             }
 
-#           pragma omp parallel for reduction ( +:W_ThisRank, WX_ThisRank, WY_ThisRank, WZ_ThisRank ) schedule( runtime )
+//          use the "static" schedule for reproducibility
+#           pragma omp parallel for reduction ( +:W_ThisRank, WX_ThisRank, WY_ThisRank, WZ_ThisRank ) schedule( static )
             for (int t=0; t<8*NPG; t++)
             {
                const int PID = 8*Disp + t;
@@ -282,7 +283,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
          } // for (int Disp=0; Disp<NTotal; Disp+=NPG_Max)
 
 //       free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
-#        ifdef PARTICLE
+#        ifdef MASSIVE_PARTICLES
          if ( WeightingDensityField & _PAR_DENS  ||  WeightingDensityField & _TOTAL_DENS )
          {
             Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );

@@ -53,7 +53,7 @@ extern int        PassiveNorm_NVar, PassiveNorm_VarIdx[NCOMP_PASSIVE];
 extern int        PassiveIntFrac_NVar, PassiveIntFrac_VarIdx[NCOMP_PASSIVE];
 
 extern int        StrLen_Flt;
-extern char       BlankPlusFormat_Flt[MAX_STRING];
+extern char       BlankPlusFormat_Flt[MAX_STRING+1];
 
 extern double     BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, OUTPUT_WALLTIME, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
 extern long int   END_STEP;
@@ -78,10 +78,11 @@ extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__FREEZE_FLUID, OPT
 extern bool       OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 extern bool       OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
 extern bool       OPT__INT_FRAC_PASSIVE_LR, OPT__CK_INPUT_FLUID, OPT__SORT_PATCH_BY_LBIDX;
-extern char       OPT__OUTPUT_TEXT_FORMAT_FLT[MAX_STRING-1];
+extern char       OPT__OUTPUT_TEXT_FORMAT_FLT[MAX_STRING];
 extern int        OPT__UM_IC_FLOAT8;
 extern double     COM_CEN_X, COM_CEN_Y, COM_CEN_Z, COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R;
 extern int        COM_MAX_ITER;
+extern double     ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z;
 
 extern UM_IC_Format_t     OPT__UM_IC_FORMAT;
 extern TestProbID_t       TESTPROB_ID;
@@ -153,6 +154,7 @@ extern int              ELBDM_FIRST_WAVE_LEVEL;
 #endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 extern bool             OPT__FLAG_SPECTRAL;
+extern int              OPT__FLAG_SPECTRAL_N;
 extern double           FlagTable_Spectral[NLEVEL-1][2];
 
 extern ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
@@ -229,7 +231,7 @@ extern bool       FFTW3_Double_OMP_Enabled, FFTW3_Single_OMP_Enabled;
 // ============================================================================================================
 #ifdef PARTICLE
 extern double          DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
-extern bool            OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL, OPT__FREEZE_PAR;
+extern bool            OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL, OPT__FREEZE_PAR, OPT__OUTPUT_PAR_MESH;
 extern int             OPT__OUTPUT_PAR_MODE, OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
 extern double          FlagTable_ParMassCell[NLEVEL-1];
 extern ParOutputDens_t OPT__OUTPUT_PAR_DENS;
@@ -356,9 +358,10 @@ extern int  FB_ParaBuf;
 // (2-13) spectral interpolation
 #ifdef SUPPORT_SPECTRAL_INT
 extern char   SPEC_INT_TABLE_PATH[MAX_STRING];
+extern int    SPEC_INT_GHOST_BOUNDARY;
 #if ( MODEL == ELBDM )
 extern bool   SPEC_INT_XY_INSTEAD_DEPHA;
-extern double SPEC_INT_WAVELENGTH_MAGNIFIER;
+extern double SPEC_INT_VORTEX_THRESHOLD;
 #endif
 class InterpolationHandler;
 extern InterpolationHandler Int_InterpolationHandler;

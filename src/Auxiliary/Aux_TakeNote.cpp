@@ -409,7 +409,8 @@ void Aux_TakeNote()
 #     else
       fprintf( Note, "GPU_ARCH                        UNKNOWN\n" );
 #     endif
-#     endif
+      fprintf( Note, "GPU_COMPUTE_CAPABILITY          %d\n", GPU_COMPUTE_CAPABILITY );
+#     endif // #ifdef GPU
 
 #     ifdef LAOHU
       fprintf( Note, "LAOHU                           ON\n" );
@@ -1008,6 +1009,7 @@ void Aux_TakeNote()
 #     if ( MODEL == ELBDM )
       fprintf( Note, "OPT__FLAG_ENGY_DENSITY         % d\n",      OPT__FLAG_ENGY_DENSITY    );
       fprintf( Note, "OPT__FLAG_SPECTRAL             % d\n",      OPT__FLAG_SPECTRAL        );
+      fprintf( Note, "OPT__FLAG_SPECTRAL_N           % d\n",      OPT__FLAG_SPECTRAL_N      );
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       fprintf( Note, "OPT__FLAG_INTERFERENCE         % d\n",      OPT__FLAG_INTERFERENCE    );
 #     endif
@@ -1534,10 +1536,11 @@ void Aux_TakeNote()
       fprintf( Note, "MONO_MAX_ITER                  % d\n",      MONO_MAX_ITER                 );
       fprintf( Note, "INT_OPP_SIGN_0TH_ORDER         % d\n",      INT_OPP_SIGN_0TH_ORDER        );
 #     ifdef SUPPORT_SPECTRAL_INT
-      fprintf( Note, "SPEC_INT_TABLE_PATH             %s\n",      SPEC_INT_TABLE_PATH           );
+      fprintf( Note, "SPEC_INT_TABLE_PATH            %s\n",       SPEC_INT_TABLE_PATH           );
+      fprintf( Note, "SPEC_INT_GHOST_BOUNDARY        % d\n",      SPEC_INT_GHOST_BOUNDARY       );
 #     if ( MODEL == ELBDM )
       fprintf( Note, "SPEC_INT_XY_INSTEAD_DEPHA      % d\n",      SPEC_INT_XY_INSTEAD_DEPHA     );
-      fprintf( Note, "SPEC_INT_WAVELENGTH_MAGNIFIER  % 14.7e\n",  SPEC_INT_WAVELENGTH_MAGNIFIER );
+      fprintf( Note, "SPEC_INT_VORTEX_THRESHOLD      % 14.7e\n",  SPEC_INT_VORTEX_THRESHOLD     );
 #     endif
 #     endif // #ifdef SUPPORT_SPECTRAL_INT
       fprintf( Note, "***********************************************************************************\n" );
@@ -1553,6 +1556,9 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_TEXT_FORMAT_FLT     %s\n",      OPT__OUTPUT_TEXT_FORMAT_FLT );
 #     ifdef PARTICLE
       fprintf( Note, "OPT__OUTPUT_PAR_MODE           % d\n",      OPT__OUTPUT_PAR_MODE        );
+#     ifdef TRACER
+      fprintf( Note, "OPT__OUTPUT_PAR_MESH           % d\n",      OPT__OUTPUT_PAR_MESH        );
+#     endif
 #     endif
       fprintf( Note, "OPT__OUTPUT_BASEPS             % d\n",      OPT__OUTPUT_BASEPS          );
       fprintf( Note, "OPT__OUTPUT_BASE               % d\n",      OPT__OUTPUT_BASE            );
@@ -1661,6 +1667,12 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__CK_REFINE                 % d\n",      OPT__CK_REFINE            );
       fprintf( Note, "OPT__CK_PROPER_NESTING         % d\n",      OPT__CK_PROPER_NESTING    );
       fprintf( Note, "OPT__CK_CONSERVATION           % d\n",      OPT__CK_CONSERVATION      );
+      if ( OPT__CK_CONSERVATION )
+      {
+      fprintf( Note, "   ANGMOM_ORIGIN_X             % 14.7e\n",  ANGMOM_ORIGIN_X           );
+      fprintf( Note, "   ANGMOM_ORIGIN_Y             % 14.7e\n",  ANGMOM_ORIGIN_Y           );
+      fprintf( Note, "   ANGMOM_ORIGIN_Z             % 14.7e\n",  ANGMOM_ORIGIN_Z           );
+      }
       fprintf( Note, "OPT__CK_NORMALIZE_PASSIVE      % d\n",      OPT__CK_NORMALIZE_PASSIVE );
       fprintf( Note, "OPT__CK_RESTRICT               % d\n",      OPT__CK_RESTRICT          );
       fprintf( Note, "OPT__CK_FINITE                 % d\n",      OPT__CK_FINITE            );
@@ -1785,7 +1797,7 @@ void Aux_TakeNote()
 
       if ( OPT__FLAG_SPECTRAL )
       {
-         fprintf( Note, "Flag Criterion (Spectral)\n" );
+         fprintf( Note, "Flag Criterion (Spectral with N = %d coefficients)\n", OPT__FLAG_SPECTRAL_N );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "  Level     Refinement     Derefinement\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)
