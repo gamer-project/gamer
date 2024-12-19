@@ -405,16 +405,6 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          if ( InsideAccRadius )               continue;
          if ( NotPassDen )                    continue;
 
-         // Debug
-         // if ( MPI_Rank == 0 )
-         // {
-         const char FileName[] = "Record__Debug";
-         FILE *File = fopen( FileName, "a" );
-         fprintf( File, "Pass Proximity check and 2nd Dens threshold\n");
-         fclose( File );
-         // }
-         // Debug
-
 //       Gravitational minimum check inside the control volume
 //       ===========================================================================================================
          real Phi000 = Pot_Array_USG_F[t]; // the potential of the current cell
@@ -442,6 +432,16 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          } // vi, vj, vk
 
          if ( NotMiniPot )                                   continue;
+   
+         // Debug
+         // if ( MPI_Rank == 0 )
+         // {
+         const char FileName[] = "Record__Debug";
+         FILE *File = fopen( FileName, "a" );
+         fprintf( File, "Pass Gravitational minimum check\n");
+         fclose( File );
+         // }
+         // Debug
          
 //       Converging flow Check
 //       ===========================================================================================================
