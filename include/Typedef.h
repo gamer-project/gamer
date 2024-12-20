@@ -60,6 +60,7 @@ const TestProbID_t
    TESTPROB_HYDRO_ENERGY_POWER_SPECTRUM        =   19,
    TESTPROB_HYDRO_CR_SOUNDWAVE                 =   20,
    TESTPROB_HYDRO_CR_SHOCKTUBE                 =   21,
+   TESTPROB_HYDRO_FEEDBACK		       =   22,
    TESTPROB_HYDRO_CR_DIFFUSION                 =   23,
    TESTPROB_HYDRO_BARRED_POT                   =   51,
    TESTPROB_HYDRO_JET_ICM_WALL                 =   52,

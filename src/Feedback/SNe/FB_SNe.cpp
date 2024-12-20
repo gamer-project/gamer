@@ -8,8 +8,8 @@
 
 // function pointers to be set by FB_Init_User_Template()
 extern int (*FB_SNe_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                          const int NPar, const int *ParSortID, double *ParAtt[PAR_NATT_TOTAL],
-                          double (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[],
+                          const int NPar, const long *ParSortID, real_par *ParAtt[PAR_NATT_TOTAL],
+                          real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[],
 		 	  const double dh, bool CoarseFine[], const int TID, RandomNumber_t *RNG );
 extern void (*FB_End_SNe_Ptr)();
 
@@ -35,7 +35,7 @@ void FB_WindFeedback( const double particleAge, double &windEjectMass, double &w
                       const double particleSoonestExplosion, double &coldWind,
 		      const double minimumStarMass, const double dt );
 
-void FB_distSNeFeedback( double (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int explosionFlag,
+void FB_distSNeFeedback( real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int explosionFlag,
 			 const int idx[], double sn_energy,  const double Msun,  const double dh,
 			 const int distcells, const int distrad, const int diststep );
 
@@ -101,8 +101,8 @@ void FB_distSNeFeedback( double (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int expl
 // Return      :  Fluid, ParAtt
 //-------------------------------------------------------------------------------------------------------
 int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
-            const int NPar, const int *ParSortID, double *ParAtt[PAR_NATT_TOTAL],
-            double (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], 
+            const int NPar, const long *ParSortID, real_par *ParAtt[PAR_NATT_TOTAL],
+            real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], 
 	    const double dh, bool CoarseFine[], const int TID, RandomNumber_t *RNG )
 {
 
@@ -116,10 +116,6 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
    }
 #  endif // #ifdef GAMER_DEBUG
 
-  const int par_idx = *ParSortID;
-  double m = ParAtt[PAR_MASS][par_idx];
-  s49Lookup(m);
-
 // Needed for determine SNe number in a particle
    int *explosionFlag        = new int[NPar];
    int *explosionFlagIa      = new int[NPar];
@@ -127,10 +123,6 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
    double *soonestExplosion  = new double[NPar];
    double *ionizeLuminosity  = new double[NPar];
    int rand_int              = 0;
-
-// recording
-   int totalSNenumber 	     = 0;
-
 
 // Polynomial coefficients for the fit to the delay time distribution
    const double p_delay[6] =
@@ -175,14 +167,14 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
       const int diststep      = 3;  //control of how much within distrad is occupied 
 
       // Particle variables
-      const int par_idx        = ParSortID[n];
+      const long par_idx        = ParSortID[n];
       const double par_pos[3]  = { ParAtt[PAR_POSX][par_idx],
                                    ParAtt[PAR_POSY][par_idx],
                                    ParAtt[PAR_POSZ][par_idx] };
       const double par_vel[3]  = { ParAtt[PAR_VELX][par_idx],
                                    ParAtt[PAR_VELY][par_idx],
                                    ParAtt[PAR_VELZ][par_idx] };
-      const double par_creTime = ParAtt[Idx_ParCreTime][par_idx];          // creation time of particle
+      const double par_creTime = ParAtt[Idx_ParCreTime][par_idx];  // creation time of particle
       const double par_age     = ( TimeOld-par_creTime );   // age of a particle
       double par_mass          = ParAtt[PAR_MASS][par_idx];
 
@@ -292,11 +284,10 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
 	 progenitor_mass = POW( 10, progenitor_mass ); // in solar masses
 
          delayTime *= Const_yr/UNIT_T; // convert years -> seconds -> code units.
+
+         // delayTime = 3.51; //fix delay time for test purpose
+
          const double relativeTime = TimeOld - ParAtt[Idx_ParCreTime][par_idx]; // in simulation units.
-
-	 // delayTime = 3.51;
-
-         // printf("age of star %d is %lf.\n", kk, relativeTime);
 
          if ( delayTime > relativeTime && delayTime < (relativeTime + dt) ) {
             if ( explosionFlag[n] == -1 )
@@ -337,16 +328,9 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
       // if all above isn't used, it means no SNe
       if ( explosionFlag[n] == -1 )  explosionFlag[n] = 0; 
 
-      // record total SNe number of this patch
-      if ( idx[0] >= FB_GHOST_SIZE && idx[0] <= (PS2 + FB_GHOST_SIZE) && idx[1] >= FB_GHOST_SIZE && idx[1] <= (PS2 + FB_GHOST_SIZE) && idx[2] >= FB_GHOST_SIZE && idx[2] <= (PS2 + FB_GHOST_SIZE) ) {
-        if ( explosionFlag[n] > 0 ) 
-	  {
-	  //explosionFlag[n] *= 2;
-	  totalSNenumber += explosionFlag[n];
-	  }
-	  }
-
-
+      // if ( explosionFlag[n] > 0 ) {
+      //   printf("exploded\n");
+      //   explosionFlag[n] = 1;} // fixed explosion flag to 1 for SSN test purpose.
 
       // ============================================================
       // Feedback part
@@ -398,6 +382,7 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
     // output energy and momentum into fluid within range
     if ( idx[0] >= FB_GHOST_SIZE && idx[0] <= (PS2 + FB_GHOST_SIZE) && idx[1] >= FB_GHOST_SIZE && idx[1] <= (PS2 + FB_GHOST_SIZE) && idx[2] >= FB_GHOST_SIZE && idx[2] <= (PS2 + FB_GHOST_SIZE) ) {
 
+      // calculate mass ejected from star by SNe. Particle mass can't be less than zero
       if ( ((SNe_dens + wind_dens) * CUBE(dh)) > par_mass )
       {
          printf("WARNING: losing too much mass\n");
@@ -422,7 +407,8 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
                              Fluid[MOMY][idx[2]][idx[1]][idx[0]],
                              Fluid[MOMZ][idx[2]][idx[1]][idx[0]],
                              Fluid[ENGY][idx[2]][idx[1]][idx[0]], 
-			     NoFloor, NULL_REAL, 0 );
+			     true, MIN_EINT, Emag,
+                             NULL, NULL, NULL, NULL, NULL );
 
       // separate internal energy from total energy by dual energy
 #     ifdef DUAL_ENERGY
@@ -466,8 +452,8 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
       // if ( fb_energy > 0 ) printf("feedback done.\n");
 
       // 5: SN Momentum feedback to nearby cells
-      //FB_distSNeFeedback( Fluid, explosionFlag[n], idx, sn_energy, Msun, dh,
-	//		  distcells, distrad, diststep );
+      FB_distSNeFeedback( Fluid, explosionFlag[n], idx, sn_energy, Msun, dh,
+			  distcells, distrad, diststep );
 
       } // if particle inside patch
    } // for (n = 0; n < NPar; n++ )
@@ -480,8 +466,7 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
   delete[] willExplode;
   delete[] soonestExplosion;
 
-  // return record result
-  return totalSNenumber;
+  return GAMER_SUCCESS;
 
 }// FUNCTION : FB_SNe
 
@@ -957,7 +942,7 @@ void FB_WindFeedback( const double particleAge, double &windEjectMass, double &w
 ////
 //// Reference   : 
 ////-------------------------------------------------------------------------------------------------------
-void FB_distSNeFeedback( double (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int explosionFlag,
+void FB_distSNeFeedback( real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int explosionFlag,
                          const int idx[], const double sn_energy, const double Msun,
 			 const double dh, const int distcells, 
 			 const int distrad, const int diststep )
@@ -974,6 +959,7 @@ void FB_distSNeFeedback( double (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int expl
   double mc	= 0;  //mass of distributed cell
   double pcell	= 0;  //momentum share of each cell
   double Eint   = 0;
+  double Emag   = 0.0;
   const bool NoFloor      = false;
 
   // Limit velocity after feedback to 1000 km/s to avoid accelerating
@@ -1039,7 +1025,9 @@ void FB_distSNeFeedback( double (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int expl
                                    Fluid[MOMX][k][j][i],
                                    Fluid[MOMY][k][j][i],
                                    Fluid[MOMZ][k][j][i],
-                                   Fluid[ENGY][k][j][i], NoFloor, NULL_REAL, 0 );
+                                   Fluid[ENGY][k][j][i],
+                                   true, MIN_EINT, Emag,
+                                   NULL, NULL, NULL, NULL, NULL);
 
 	    // Add momentum feedback
 	    Fluid[MOMX][k][j][i] += rx * pcell / CUBE(dh);
