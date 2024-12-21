@@ -1,12 +1,12 @@
 ## Enabling GPU
 
 To enable GPU:
-1. Edit the `Makefile` and recompile the code (see [[Installation]] for details)
-    1. Turn on
-[[GPU | Installation: Simulation-Options#GPU]]
-    2. Set
-[[GPU_COMPUTE_CAPABILITY | Installation: Simulation-Options#GPU_COMPUTE_CAPABILITY]]
-according to the GPU architecture on your system
+1. Generate the `Makefile` and recompile the code (see [[Installation]] for details)
+    1. Set
+[[GPU_COMPUTE_CAPABILITY | Installation:-Machine-Configuration-File#4-GPU-compute-capability]]
+according to the GPU architecture on your system in the [[configuration file | Installation:-Machine-Configuration-File]]
+    2. Generate `Makefile` with
+[[--gpu | Installation:-Option-List#--gpu]]=`true`
     3. Recompile the code with `make clean; make`
 
 2. [Query the GPUs on your system](#query-gpus) [optional]
@@ -17,8 +17,7 @@ according to the GPU architecture on your system
 ## Compilation Options
 
 Related options:
-[[GPU | Installation: Simulation-Options#GPU]], &nbsp;
-[[GPU_COMPUTE_CAPABILITY | Installation: Simulation-Options#GPU_COMPUTE_CAPABILITY]] &nbsp;
+[[--gpu | Installation:-Option-List#--gpu]], &nbsp;
 
 
 ## Runtime Parameters
