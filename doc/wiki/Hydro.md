@@ -198,8 +198,8 @@ The number of cells corrected by this option will be recorded in the file
     * **Restriction:**
 Only applicable when adopting the compilation option
 [[--flu_scheme | Installation:-Option-List#--flu_scheme]]=`MHM/MHM_RP/CTU`.
-[[--mhd | Installation:-Option-List]] currently does not support `3D+1D`.
-Be aware that this option may cause conservation errors. 
+[[--mhd | Installation:-Option-List#--mhd]] currently does not support `3D+1D`.
+Be aware that this option may cause conservation errors.
 
 <a name="OPT__1ST_FLUX_CORR_SCHEME"></a>
 * #### `OPT__1ST_FLUX_CORR_SCHEME` &ensp; (<0 &#8594; set to default, 0=none, 1=Roe, 2=HLLC, 3=HLLE, 4=HLLD) &ensp; [1]
@@ -384,7 +384,7 @@ Only applicable when enabling the compilation option
 Cosmic-ray diffusion coefficient perpendicular to the magnetic field.
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--cr_diffusion | Installation:Option-List#--cr_diffusion]].
+[[--cr_diffusion | Installation:-Option-List#--cr_diffusion]].
 
 <a name="CR_DIFF_MIN_B"></a>
 * #### `CR_DIFF_MIN_B` &ensp; (none) &ensp; [0.0]
@@ -393,7 +393,7 @@ Disable cosmic-ray diffusion locally when the magnetic field amplitude is smalle
 than this threshold.
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--cr_diffusion | Installation:Option-List#--cr_diffusion]].
+[[--cr_diffusion | Installation:-Option-List#--cr_diffusion]].
 
 
 ## Remarks

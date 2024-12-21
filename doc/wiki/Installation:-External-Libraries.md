@@ -11,7 +11,7 @@ floating-point type prefix `--enable-type-prefix` for FFTW2
 and MPI support `--enable-mpi` for both FFTW2 and FFTW3.
 Here are example installation scripts using the GNU compiler for FFTW2 and FFTW3, respectively:
 
-### FFTW2
+### FFTW2 (`FFTW2_PATH`)
 ``` bash
 export FFTW_PATH=PATH_TO_INSTALL_YOUR_FFTW
 export CC=gcc
@@ -30,7 +30,7 @@ make
 make install
 ```
 
-### FFTW3
+### FFTW3 (`FFTW3_PATH`)
 ``` bash
 export FFTW_PATH=PATH_TO_INSTALL_YOUR_FFTW
 export CC=gcc
@@ -50,7 +50,7 @@ make install
 
 ```
 
-## GRACKLE
+## GRACKLE (`GRACKLE_PATH`)
 GAMER uses GRACKLE for the chemistry and radiative processes.
 Follow the installation instructions in the
 [GRACKLE website](http://grackle.readthedocs.io/en/latest/index.html).

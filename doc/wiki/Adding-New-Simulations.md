@@ -286,7 +286,7 @@ field index. For example,
 Adding a new particle attribute is very similar to adding a new grid field.
 So we only highlight the differences in each of the 4 steps above.
 
-1. Set [[ --par_attribute | Installation:-Option-List#par_attribute ]]
+1. Set [[ --par_attribute | Installation:-Option-List#--par_attribute ]]
 instead when generating the Makefile.
 
 2. Declare a global integer variable on the top of the problem source

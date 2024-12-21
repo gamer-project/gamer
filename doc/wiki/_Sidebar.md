@@ -6,6 +6,8 @@
 
 **User Guide**
 * [[ Installation | Installation ]]
+   * [[ Machine Configuration File | Installation:-Machine-Configuration-File ]]
+   * [[ External Libraries | Installation:-External-Libraries ]]
    * [[ Option List | Installation:-Option-List ]]
 * [[ Running the Code | Running-the-Code ]]
 * [[ Adding New Simulations | Adding-New-Simulations ]]

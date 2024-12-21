@@ -1,5 +1,5 @@
-1. Setup machine configuration file
-   
+1. Set up the machine configuration file
+
    Please see [[Machine Configuration File | Installation:-Machine-Configuration-File]].
 
 2. Go to the source directory
@@ -16,9 +16,9 @@
    python configure.py --machine=your_configuration_file [--your_arguments]
    ```
 
-   `your_configuration_file` is the configuration filename you got from step 1., and `[--your_arguments]` should match your simulation requirements. Please check out [[Option List | Installation:-Option-List]] for all the available options.
+   `your_configuration_file` is the configuration filename you got from step 1, and `[--your_arguments]` should match your simulation requirements. Please check out [[Option List | Installation:-Option-List]] for all the available options.
 
-   For example, the following command uses `configs/pleiades.config` machine configuration, sets the FFTW method to `FFTW2`, and enables gravity and GPU.
+   For example, the following command uses the `configs/pleiades.config` machine configuration, sets the FFTW method to `FFTW2`, and enables gravity and GPU.
 
    ``` bash
    python configure.py --machine=pleiades --fftw=FFTW2 --gravity=true --gpu=true

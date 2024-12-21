@@ -14,15 +14,7 @@ This test problem Plummer demonstrates the in situ Python analysis feature in GA
    ```bash
    --gravity=true --particle=true --passive=2 --mpi=true --fftw=FFTW2 --libyt=true --libyt_interactive=true
    ```
-   also please set the paths `FFTW_PATH`, `MPI_PATH`, and `LIBYT_PATH` in [[configuration file | Installation:-Machine-Configuration-File ]].
-   See also [[--gravity | Installation:-Option-List#--gravity]],
-   [[--particle | Installation:-Option-List#--particle]],
-   [[--passive| Installation:-Option-List#--passive]],
-   [[--mpi | Installation:-Option-List#--mpi]],
-   [[--fftw| Installation:-Option-List#--fftw]],
-   [[--libyt| Installation:-Option-List#--libyt]], and
-   [[--libyt_interactive | Installation:-Option-List#--libyt_interactive]].
-
+   Also please set the paths `FFTW_PATH`, `MPI_PATH`, and `LIBYT_PATH` in [[configuration file | Installation:-Machine-Configuration-File ]].
 
 3. Compile the code in the `src` folder.
 

@@ -81,7 +81,7 @@ Number of new AMR levels to be created at once during refinement.
     * **Restriction:**
 
 <a name="FLAG_BUFFER_SIZE"></a>
-* #### `FLAG_BUFFER_SIZE` &ensp; (0 &#8804; input &#8804; [[--patch_size | Installation:Option-List#--patch_size]]) &ensp; [ [[--patch_size | Installation:-Option-List#--patch_size]] ]
+* #### `FLAG_BUFFER_SIZE` &ensp; (0 &#8804; input &#8804; [[--patch_size | Installation:-Option-List#--patch_size]]) &ensp; [ [[--patch_size | Installation:-Option-List#--patch_size]] ]
     * **Description:**
 Number of flag buffers (denoted as <var>N</var><sub>buf</sub>).
 When checking refinement, a patch is flagged for refinement if any of
@@ -129,7 +129,7 @@ depends on both [[--patch_size | Installation:-Option-List#--patch_size]] and
 Maximum allowed AMR level. Do not confuse with the compilation option
 [[--nlevel | Installation:-Option-List#--nlevel]]. One can regard
 `MAX_LEVEL` as a runtime refinement criterion that simply forbids
-creating any patch above that level, and `NLEVEL-1` is the upper
+creating any patch above that level, and `--nlevel - 1` is the upper
 bound of `MAX_LEVEL`.
     * **Restriction:**
 

@@ -15,9 +15,9 @@ follow the steps below:
 
 1. Compile the code (See [[Installation]] for details)
     1. Set `CXX` in the [[configuration file | Installation:-Machine-Configuration-File]] to a serial compiler (e.g., `g++` or `icpc`)
-    2. Set the following arguments when generating Makefile:
-       * [[--mpi | Installation:-Option-List]]=false
-       * [[--openmp | Installation:-Option-List#--openmp]]=false
+    2. Set the following arguments when generating `Makefile`:
+       * [[--mpi | Installation:-Option-List#--mpi]]=`false`
+       * [[--openmp | Installation:-Option-List#--openmp]]=`false`
     3. Recompile the code by `make clean; make`
 
 2. Set the runtime parameters (see [[Runtime Parameters]] for details)

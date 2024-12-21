@@ -5,7 +5,7 @@ The machine configuration file is under `configs`. The configuration file contai
 
 ### 0. Rules of the configuration file
 * Comments must start with `#`.
-* The variable name and the value should be separated by spaces.
+* The variable name and its value must be separated by space(s).
 
 ### 1. Library paths
 

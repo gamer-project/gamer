@@ -86,7 +86,7 @@ Edit the section "source files" in the `Makefile_base` to add new source files.
    ```
 
 ## Adding new library paths
-1. Add `NEW_PATH := @@@NEW_PATH@@@` at `library paths` section in `Makefile_base`.
+1. Add `NEW_PATH := @@@NEW_PATH@@@` under the `library paths` section in `Makefile_base`.
 
    ```makefile
    # library paths
@@ -106,7 +106,7 @@ Edit the section "source files" in the `Makefile_base` to add new source files.
    ```
 
 ## Adding new compiler flag types
-1. Add `NEW_FLAG := @@@NEW_FLAG@@@` at `compilers and flags` section in `Makefile_base`.
+1. Add `NEW_FLAG := @@@NEW_FLAG@@@` under the `compilers and flags` section in `Makefile_base`.
 
    ```makefile
    # compilers and flags
