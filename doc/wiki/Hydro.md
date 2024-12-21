@@ -376,7 +376,7 @@ Only applicable when enabling the compilation option
 Cosmic-ray diffusion coefficient parallel to the magnetic field.
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--cr_diffusion | Installation:Option-List#--cr_diffusion]].
+[[--cr_diffusion | Installation:-Option-List#--cr_diffusion]].
 
 <a name="CR_DIFF_PERP"></a>
 * #### `CR_DIFF_PERP` &ensp; (&#8805;0.0) &ensp; [0.0]

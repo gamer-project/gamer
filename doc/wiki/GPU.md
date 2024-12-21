@@ -5,7 +5,7 @@ To enable GPU:
     1. Set
 [[GPU_COMPUTE_CAPABILITY | Installation:-Machine-Configuration-File#4-GPU-compute-capability]]
 according to the GPU architecture on your system in the [[configuration file | Installation:-Machine-Configuration-File]]
-    2. Generate Makefile with
+    2. Generate `Makefile` with
 [[--gpu | Installation:-Option-List#--gpu]]=`true`
     3. Recompile the code with `make clean; make`
 

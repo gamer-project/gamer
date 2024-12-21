@@ -5,7 +5,7 @@ To enable MPI support, follow the steps below:
 1. Generate the `Makefile` and recompile the code (see [[Installation]] for details)
     1. Set `CXX_MPI` to an MPI compiler (e.g., `mpicxx`) in the [[configuration file | Installation:-Machine-Configuration-File]]
     2. Set `MPI_PATH` to you MPI installation path in the [[configuration file | Installation:-Machine-Configuration-File]]
-    3. Generate Makefile with the following options:
+    3. Generate `Makefile` with the following options:
        * [[--mpi | Installation:-Option-List#--mpi]]=`true`
     4. Recompile the code by `make clean; make`
 
