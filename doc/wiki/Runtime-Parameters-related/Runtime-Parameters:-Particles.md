@@ -29,7 +29,7 @@ Initialization methods for particles.
 [[Setting IC from Files &#8212; Particles | Initial Conditions#IC-File-Particles]].
     * **Restriction:**
 It will be automatically reset to `PAR_INIT=2` when adopting
-[[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT ]]=2.
+[[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=2.
 
 <a name="PAR_NPAR"></a>
 * #### `PAR_NPAR` &ensp; (&#8805;0) &ensp; [none]

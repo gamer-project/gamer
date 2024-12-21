@@ -10,7 +10,7 @@ The followings are the outline of this document:
 * [Reference](#Reference)
 
 ## Introduction
-In the following document, the Wiki stands for the Wiki page on the GitHub website, and the doc stands for the markdown files under `docs/wiki`. Remember the doc and the Wiki are NOT always synchronized, you will have to use the action to copy either from doc to Wiki or from Wiki to doc. 
+In the following document, the Wiki stands for the Wiki page on the GitHub website, and the doc stands for the markdown files under `docs/wiki`. Remember the doc and the Wiki are NOT always synchronized, you will have to use the action to copy either from doc to Wiki or from Wiki to doc.
 
 Here is the squence diagram of wiki contribition. You can select any one of these three method to edit wiki. See [Edit Wiki](#Edit-Wiki).
 
@@ -20,7 +20,7 @@ sequenceDiagram
     participant doc
     participant Wiki
     participant local
-    
+
     GAMER public version->>doc: Fork
     rect rgb(240,255,240)
     rect rgb(200,250,200)
@@ -32,7 +32,7 @@ sequenceDiagram
     local->>Wiki: Push
     Wiki->>doc: Copy Wiki to doc
     end
-    
+
     rect rgb(255,250,240)
     rect rgb(250,235,215)
     Note over doc,Wiki: 2. From GitHub website
@@ -41,7 +41,7 @@ sequenceDiagram
     Note over Wiki: Edit on Wiki
     Wiki->>doc: Copy Wiki to doc
     end
-    
+
     rect rgb(240,255,255)
     rect rgb(200,255,255)
     Note over doc,local: 3. On the local terminal
@@ -52,7 +52,7 @@ sequenceDiagram
     doc->>Wiki: Copy doc to Wiki
     Note over Wiki: Preview
     end
-    
+
     doc->>GAMER public version: Pull request
 ```
 
@@ -81,10 +81,10 @@ sequenceDiagram
 
 1. **Create the repository secret token and email**
    * Go to `Setting` of your forked gamer repository > `Security` > `Secrets and variables` > `Actions` > `Repository secrets`
-   
+
    [[images/CreateSecret.png]]
 
-   * Click `New repository secrets`, and then you will see the following. Please replace `<your_personal_access_token>` with the token generated in the previous step at `Secret` and make sure the `Name` of the secret is `TOKEN_FOR_WIKI`. 
+   * Click `New repository secrets`, and then you will see the following. Please replace `<your_personal_access_token>` with the token generated in the previous step at `Secret` and make sure the `Name` of the secret is `TOKEN_FOR_WIKI`.
 
    [[images/SetToken.png]]
 
@@ -129,7 +129,7 @@ We provide three examples of editing the wiki pages: through `gollum` (recommend
    We treat the Wiki page on GitHub as a local in this method, and we use the workflow to approach the `pull` and `push` behavior of the Wiki.
    - **Copy wiki doc to wiki page**
 
-     This step is like `git checkout new_contribution_branch` but the GitHub Wiki website version. 
+     This step is like `git checkout new_contribution_branch` but the GitHub Wiki website version.
      * Click `Action` > `Workflows` > `Copy doc to wiki` > `Run workflow` > choose `new_contribution_branch` branch > Click green `Run workflow`. Once the workflow is done, the Wiki is also updated to the `new_contribution_branch` branch version.
 
       [[images/CopyDocFromNewBranch.png]]

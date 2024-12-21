@@ -34,4 +34,4 @@ Other related parameters:
 
 ## Links
 * [[Main page of Runtime Parameters | Runtime Parameters]]
-* [[Equation of state | equation-of-state]]
+* [[Equation of state | Equation-of-State]]

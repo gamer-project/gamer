@@ -18,7 +18,7 @@ initial condition (IC) and GAMER initialization:
 <a name="IC-Func-Grids"></a>
 ### Grids
 
-Set [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT ]]=1 and edit the following grid IC function:
+Set [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=1 and edit the following grid IC function:
 
 * [[TESTPROB_ID | Runtime Parameters:-General#TESTPROB_ID]]=0:
 edit the function `Init_Function_User()` in
@@ -111,7 +111,7 @@ divergence-free magnetic field automatically. We describe the two approaches
 separately in the following.
 
 To set the magnetic field directly,
-set [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT ]]=1 and [[OPT__INIT_BFIELD_BYVECPOT | Runtime-Parameters:-Initial-Conditions#OPT__INIT_BFIELD_BYVECPOT]]=0.
+set [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=1 and [[OPT__INIT_BFIELD_BYVECPOT | Runtime-Parameters:-Initial-Conditions#OPT__INIT_BFIELD_BYVECPOT]]=0.
 Edit the following magnetic field IC function:
 
 * [[TESTPROB_ID | Runtime Parameters:-General#TESTPROB_ID]]=0:
@@ -295,7 +295,7 @@ for its usage.
 Set [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=3 to load the grid initial condition from a
 uniform-mesh binary file named **`UM_IC`**. This file will be used to provide the
 initial grid data of the entire computational domain _fully refined_
-to the AMR level [[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LEVEL ]]
+to the AMR level [[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LEVEL]]
 (but see also [[OPT__UM_IC_DOWNGRADE | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_DOWNGRADE]] and
 [[OPT__UM_IC_REFINE | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_REFINE]] described below). The dimension of
 this uniform-mesh file (assuming a row-major array) can be either
