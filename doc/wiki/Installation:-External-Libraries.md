@@ -11,7 +11,7 @@ floating-point type prefix `--enable-type-prefix` for FFTW2
 and MPI support `--enable-mpi` for both FFTW2 and FFTW3.
 Here are example installation scripts using the GNU compiler for FFTW2 and FFTW3, respectively:
 
-### FFTW2 (`FFTW2_PATH`)
+### FFTW2 (`FFTW2_PATH`) <a name="FFTW2"></a>
 ``` bash
 export FFTW_PATH=PATH_TO_INSTALL_YOUR_FFTW
 export CC=gcc
@@ -30,7 +30,7 @@ make
 make install
 ```
 
-### FFTW3 (`FFTW3_PATH`)
+### FFTW3 (`FFTW3_PATH`) <a name="FFTW3"></a>
 ``` bash
 export FFTW_PATH=PATH_TO_INSTALL_YOUR_FFTW
 export CC=gcc
@@ -50,7 +50,7 @@ make install
 
 ```
 
-## GRACKLE (`GRACKLE_PATH`)
+## GRACKLE (`GRACKLE_PATH`) <a name="GRACKLE"></a>
 GAMER uses GRACKLE for the chemistry and radiative processes.
 Follow the installation instructions in the
 [GRACKLE website](http://grackle.readthedocs.io/en/latest/index.html).
@@ -70,7 +70,7 @@ support as well using
 
     > make omp-on
 
-## HDF5
+## HDF5 (`HDF5_PATH`) <a name="HDF5"></a>
 GAMER uses [HDF5](https://support.hdfgroup.org/HDF5/) for storing snapshots.
 It is not necessary to enable either `--enable-cxx` or `--enable-parallel` when
 configuring HDF5 since GAMER currently adopts the C interface with serial I/O.
@@ -83,7 +83,7 @@ make
 make install
 ```
 
-## LIBYT
+## LIBYT (`LIBYT_PATH`) <a name="LIBYT"></a>
 GAMER uses [libyt](https://github.com/yt-project/libyt) for in situ Python analysis.
 See [[In Situ Python Analysis | In-Situ-Python-Analysis]] for details.
 
