@@ -273,7 +273,8 @@ def str2bool( v ):
     return
 
 def add_option( opt_str, name, val, prefix="", suffix="" ):
-    # NOTE: Every -Doption must have a trailing space.
+    # NOTE: 1. Every -Doption must have a trailing space.
+    #       2. Do not insert any space before and after the equal sign `=`.
     if type(val) == type(True):
         if val: opt_str += "-D%s "%(name)
         LOGGER.info("%-25s : %r"%(name, val))
@@ -871,7 +872,7 @@ def set_gpu( gpus, flags, args ):
             gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=128"
         else:
             gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=70"
-    elif 500 <= compute_capability and compute_capability <= 870:
+    elif 500 <= compute_capability and compute_capability <= 900:
         if args["double"]:
             gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=192"
         else:
