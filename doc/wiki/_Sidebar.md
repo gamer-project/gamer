@@ -31,7 +31,7 @@
 **Developer Guide**
    * [[ Adding Parameters | Adding-Parameters ]]
    * [[ AMR Structure | AMR-Structure ]]
-   * [[ Configure.py | Configure.py ]]
+   * [[ configure.py | configure.py ]]
    * [[ ELBDM Hybrid Scheme | ELBDM-Hybrid-Scheme ]]
    * [[ ELBDM Spectral Solver | ELBDM-Spectral-Solver ]]
    * [[ ELBDM Spectral Interpolation | ELBDM-Spectral-Interpolation ]]
