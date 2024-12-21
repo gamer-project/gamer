@@ -98,12 +98,12 @@ Map to the "grackle_data_file" runtime parameter in GRACKLE.
 ### GRACKLE Configuration
 The floating-point accuracy and OpenMP support between GRACKLE and GAMER
 must be consistent with each other. See
-[[Library Configurations -- GRACKLE | Installation:-External-Libraries#grackle]]
+[[Library Configurations -- GRACKLE | Installation:-External-Libraries#GRACKLE]]
 for details.
 
 
 <br>
 
 ## Links
-* [[How to install GRACKLE | Installation:-External-Libraries#grackle]]
+* [[How to install GRACKLE | Installation:-External-Libraries#GRACKLE]]
 * [[Main page of Runtime Parameters | Runtime Parameters]]

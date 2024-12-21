@@ -224,7 +224,7 @@ in the same NUMA domain.
 
 
 ### OpenMP Support in GRACKLE
-See [[Library Configurations -- GRACKLE | Installation:-External-Libraries#grackle]]
+See [[Library Configurations -- GRACKLE | Installation:-External-Libraries#GRACKLE]]
 for how to enable OpenMP in GRACKLE.
 
 
@@ -232,5 +232,5 @@ for how to enable OpenMP in GRACKLE.
 
 ## Links
 * [[How to run the code | Running the code]]
-* [[How to install GRACKLE | Installation:-External-Libraries#grackle]]
+* [[How to install GRACKLE | Installation:-External-Libraries#GRACKLE]]
 * [[Main page of Runtime Parameters | Runtime Parameters]]
