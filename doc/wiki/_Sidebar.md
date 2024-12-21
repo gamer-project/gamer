@@ -6,6 +6,9 @@
 
 **User Guide**
 * [[ Installation | Installation ]]
+   * [[ Machine Configuration File | Installation:-Machine-Configuration-File ]]
+   * [[ External Libraries | Installation:-External-Libraries ]]
+   * [[ Option List | Installation:-Option-List ]]
 * [[ Running the Code | Running-the-Code ]]
 * [[ Adding New Simulations | Adding-New-Simulations ]]
    * [[ Initial Conditions | Initial-Conditions]]
@@ -29,6 +32,7 @@
 **Developer Guide**
    * [[ Adding Parameters | Adding-Parameters ]]
    * [[ AMR Structure | AMR-Structure ]]
+   * [[ configure.py | configure.py ]]
    * [[ ELBDM Hybrid Scheme | ELBDM-Hybrid-Scheme ]]
    * [[ ELBDM Spectral Solver | ELBDM-Spectral-Solver ]]
    * [[ ELBDM Spectral Interpolation | ELBDM-Spectral-Interpolation ]]

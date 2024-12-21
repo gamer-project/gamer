@@ -22,7 +22,7 @@ See also [[Hybrid MPI/OpenMP/GPU | MPI-and-OpenMP#hybrid-mpiopenmpgpu]] and
 [[MPI Binding and Thread Affinity | MPI-and-OpenMP#mpi-binding-and-thread-affinity]].
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[OPENMP | Installation: Simulation-Options#OPENMP]].
+[[--openmp | Installation:-Option-List#--openmp]].
 
 <a name="OPT__INIT_GRID_WITH_OMP"></a>
 * #### `OPT__INIT_GRID_WITH_OMP` &ensp; (0=off, 1=on) &ensp; [1]
@@ -32,7 +32,7 @@ of different grid patches. In can be enabled in most cases unless,
 for example, the initial condition setup involves random numbers.
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[OPENMP | Installation: Simulation-Options#OPENMP]].
+[[--openmp | Installation:-Option-List#--openmp]].
 
 <a name="LB_INPUT__WLI_MAX"></a>
 * #### `LB_INPUT__WLI_MAX` &ensp; (&#8805;0.0) &ensp; [0.1]
@@ -44,7 +44,7 @@ estimated to be higher than a given threshold. See
 for details.
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[LOAD_BALANCE | Installation: Simulation-Options#LOAD_BALANCE]].
+[[--mpi | Installation:-Option-List#--mpi]].
 
 <a name="LB_INPUT__PAR_WEIGHT"></a>
 * #### `LB_INPUT__PAR_WEIGHT` &ensp; (&#8805;0.0) &ensp; [0.0]
@@ -55,8 +55,8 @@ to improve load balancing for the simulations with particles. See
 for details. The typical values are 1.0 ~ 2.0.
     * **Restriction:**
 Only applicable when enabling the compilation options
-[[LOAD_BALANCE | Installation: Simulation-Options#LOAD_BALANCE]] and
-[[PARTICLE | Installation: Simulation-Options#PARTICLE]].
+[[--mpi | Installation:-Option-List#--mpi]] and
+[[--particle | Installation:-Option-List#--particle]].
 
 <a name="OPT__RECORD_LOAD_BALANCE"></a>
 * #### `OPT__RECORD_LOAD_BALANCE` &ensp; (0=off, 1=on) &ensp; [1]
@@ -65,7 +65,7 @@ Record the load balancing information in the log file
 [[Record__LoadBalance | Simulation-Logs:-Record__LoadBalance]].
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[LOAD_BALANCE | Installation: Simulation-Options#LOAD_BALANCE]].
+[[--mpi | Installation:-Option-List#--mpi]].
 
 <a name="OPT__MINIMIZE_MPI_BARRIER"></a>
 * #### `OPT__MINIMIZE_MPI_BARRIER` &ensp; (0=off, 1=on) &ensp; [0]
@@ -75,7 +75,7 @@ to improve load balancing. It can improve the performance notably,
 especially for simulations with particles.
     * **Restriction:**
 For simulations with particles, one must enable the compilation option
-[[STORE_POT_GHOST | Installation: Simulation-Options#STORE_POT_GHOST]] and
+[[--store_pot_ghost | Installation:-Option-List#--store_pot_ghost]] and
 set [[PAR_IMPROVE_ACC | Runtime Parameters:-Particles#PAR_IMPROVE_ACC]]=1.
 [[OPT__TIMING_BALANCE | Runtime Parameters:-Miscellaneous#OPT__TIMING_BALANCE]]
 must be disabled. In addition, it is currently recommended to disable

@@ -1,26 +1,9 @@
-## Library Paths
+* [FFTW](#FFTW)
+* [GRACKLE](#GRACKLE)
+* [HDF5](#HDF5)
+* [LIBYT](#LIBYT)
 
-Set the following library paths in the `Makefile` to help
-compiler locate them (if necessary):
-
-``` Makefile
-CUDA_PATH    :=
-FFTW2_PATH   :=
-FFTW3_PATH   :=
-MPI_PATH     :=
-HDF5_PATH    :=
-GRACKLE_PATH :=
-GSL_PATH     :=
-LIBYT_PATH   :=
-```
-Only the paths of libraries being used need to be set. In addition,
-it is usually unnecessary to set the paths that have been embedded
-into the compiling command (e.g., when using `CC` and `module load`
-in a Cray computer system).
-
-## Library Configurations
-
-### FFTW
+## FFTW
 GAMER supports both FFTW2 and FFTW3 for various calculations (e.g., the root-level Poisson solver).
 Follow the installation instructions on the [FFTW website](http://www.fftw.org/download.html).
 Note that it must be configured with
@@ -28,7 +11,7 @@ floating-point type prefix `--enable-type-prefix` for FFTW2
 and MPI support `--enable-mpi` for both FFTW2 and FFTW3.
 Here are example installation scripts using the GNU compiler for FFTW2 and FFTW3, respectively:
 
-#### FFTW2
+### FFTW2 (`FFTW2_PATH`) <a name="FFTW2"></a>
 ``` bash
 export FFTW_PATH=PATH_TO_INSTALL_YOUR_FFTW
 export CC=gcc
@@ -47,7 +30,7 @@ make
 make install
 ```
 
-#### FFTW3
+### FFTW3 (`FFTW3_PATH`) <a name="FFTW3"></a>
 ``` bash
 export FFTW_PATH=PATH_TO_INSTALL_YOUR_FFTW
 export CC=gcc
@@ -67,7 +50,7 @@ make install
 
 ```
 
-### GRACKLE
+## GRACKLE (`GRACKLE_PATH`) <a name="GRACKLE"></a>
 GAMER uses GRACKLE for the chemistry and radiative processes.
 Follow the installation instructions in the
 [GRACKLE website](http://grackle.readthedocs.io/en/latest/index.html).
@@ -78,16 +61,16 @@ consistent floating-point accuracy as GAMER using
 
 Specifically, configure GRACKLE with `make precision-64/32` when
 compiling GAMER with/without the option
-[[FLOAT8 | Installation: Simulation-Options#FLOAT8]], respectively.
+[[--double | Installation:-Option-List#--double]], respectively.
 
 In addition, when enabling OpenMP in GAMER (i.e., with the
-compile-time option [[OPENMP | Installation: Simulation-Options#OPENMP]]),
+compile-time option [[--openmp | Installation:-Option-List#--openmp]]),
 GRACKLE must be configured with OpenMP
 support as well using
 
     > make omp-on
 
-### HDF5
+## HDF5 (`HDF5_PATH`) <a name="HDF5"></a>
 GAMER uses [HDF5](https://support.hdfgroup.org/HDF5/) for storing snapshots.
 It is not necessary to enable either `--enable-cxx` or `--enable-parallel` when
 configuring HDF5 since GAMER currently adopts the C interface with serial I/O.
@@ -100,12 +83,12 @@ make
 make install
 ```
 
-### LIBYT
+## LIBYT (`LIBYT_PATH`) <a name="LIBYT"></a>
 GAMER uses [libyt](https://github.com/yt-project/libyt) for in situ Python analysis.
 See [[In Situ Python Analysis | In-Situ-Python-Analysis]] for details.
 
 libyt has two modes, normal mode and interactive mode.
-Please refer to [libyt -- How to Install](https://yt-project.github.io/libyt/HowToInstall.html#libyt).
+Please refer to [libyt -- How to Install](https://libyt.readthedocs.io/en/latest/how-to-install/how-to-install.html#how-to-install).
 
 Set `LIBYT_PATH` to the folder that contains subfolders `include` and `lib`.
 
@@ -113,6 +96,6 @@ Set `LIBYT_PATH` to the folder that contains subfolders `include` and `lib`.
 <br>
 
 ## Links
-* [[Makefile configuration -- Simulation Options | Installation: Simulation Options]]
-* [[Makefile configuration -- Compiler and Flags | Installation: Compiler and Flags]]
+* [[Machine Configuration File | Installation:-Machine-Configuration-File]]
+* [[Option List | Installation:-Option-List]]
 * [[Back to the main page of Installation | Installation]]

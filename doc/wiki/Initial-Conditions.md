@@ -93,7 +93,7 @@ See also
 [[ Add Problem-specific Grid Fields and Particle Attributes | Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes ]] for adding user-defined fluid fields.
 
 > [!CAUTION]
-> When enabling [[OPENMP | Installation:-Simulation Options#OPENMP]],
+> When enabling [[--openmp | Installation:-Option-List#--openmp]],
 the grid IC function must be **thread-safe** since it will be invoked by
 multiple threads in parallel.
 >
@@ -151,7 +151,7 @@ It should return the vector potential at a given location `x/y/z` and time `Time
 **Example: `Init_BField_ByVecPot_User_Template()` in `src/Model_Hydro/MHD_Init_BField_ByVecPot_Function.cpp`.**
 
 > [!CAUTION]
-> When enabling [[OPENMP | Installation:-Simulation Options#OPENMP]],
+> When enabling [[--openmp | Installation:-Option-List#--openmp]],
 the magnetic field or the vector potential IC function must be **thread-safe** since it will be invoked by
 multiple threads in parallel.
 >
@@ -197,7 +197,7 @@ particles**.
 The built-in particle types (defined in `include/Macro.h`) include
 `PTYPE_TRACER`, `PTYPE_GENERIC_MASSIVE`, `PTYPE_DARK_MATTER`, and `PTYPE_STAR`.
 For `PTYPE_TRACER`, one must also enable the compilation option
-[[TRACER | Installation: Simulation-Options#TRACER]].
+[[--tracer | Installation:-Option-List#--tracer]].
 
 The following example shows `Par_Init_ByFunction()` in
 `src/Particle/Par_Init_ByFunction.cpp`:
@@ -371,7 +371,7 @@ and the example code `tool/inits/create_UM_IC.cpp` for details.
 > [!CAUTION]
 > [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=3 does not fully support
 user-defined passively advected scalars (i.e.,
-[[NCOMP_PASSIVE_USER | Installation: Simulation-Options#NCOMP_PASSIVE_USER]]>0) yet.
+[[--passive | Installation:-Option-List#--passive]]>0) yet.
 [[Ask developers for help | Home#need-helps]] if needed.
 
 
@@ -397,7 +397,7 @@ row-major array) can be either
 and `NUM_PARTICLE` is the total number of particles
 (i.e., [[PAR_NPAR | Runtime-Parameters:-Particles#PAR_NPAR]]).
 By default, `NUM_ATTRIBUTE` is equal to
-`8` + [[PAR_NATT_USER | Installation: Simulation-Options#PAR_NATT_USER]],
+`8` + [[--par_attribute | Installation:-Option-List#--par_attribute]],
 corresponding to particle mass, position x/y/z, velocity x/y/z,
 type, and user-specified attributes (and in exactly this order).
 One can also use [[PAR_IC_MASS | Runtime-Parameters:-Particles#PAR_IC_MASS]] / [[PAR_IC_TYPE | Runtime-Parameters:-Particles#PAR_IC_TYPE]]
@@ -444,7 +444,7 @@ The built-in particle types (defined in `include/Macro.h`) include
 `PTYPE_TRACER=0.0`, `PTYPE_GENERIC_MASSIVE=1.0`, `PTYPE_DARK_MATTER=2.0`, and `PTYPE_STAR=3.0`.
 They have the floating-point types for now but will be changed to integers in the future.
 For `PTYPE_TRACER`, one must also enable the compilation option
-[[TRACER | Installation: Simulation-Options#TRACER]].
+[[--tracer | Installation:-Option-List#--tracer]].
 
 Note that it is not required to adopt [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=3 and
 [[PAR_INIT | Runtime-Parameters:-Particles#PAR_INIT]]=3 at the same time. In other words,
@@ -455,8 +455,8 @@ function and load the particle initial condition from a file (and vice versa).
 ## Compilation Options
 
 Related options:
-[[NCOMP_PASSIVE_USER | Installation: Simulation-Options#NCOMP_PASSIVE_USER]], &nbsp;
-[[PAR_NATT_USER | Installation: Simulation-Options#PAR_NATT_USER]] &nbsp;
+[[--passive | Installation:-Option-List#--passive]], &nbsp;
+[[--par_attribute | Installation:-Option-List#--par_attribute]] &nbsp;
 
 
 ## Runtime Parameters

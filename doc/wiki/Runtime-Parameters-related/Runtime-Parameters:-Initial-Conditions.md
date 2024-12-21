@@ -38,7 +38,7 @@ Set the magnetic field from either a vector potential file named `B_IC` (see
 analytical vector potential function (see
 [[Setting IC from Functions &#8212; Magnetic Field | Initial-Conditions#IC-Func-BField]]).
     * **Restriction:**
-For [[MHD | Installation: Simulation-Options#MHD]] only.
+For [[--mhd | Installation:-Option-List#--mhd]] only.
 
 <a name="RESTART_LOAD_NRANK"></a>
 * #### `RESTART_LOAD_NRANK` &ensp; (>0) &ensp; [1]
@@ -56,14 +56,14 @@ simulation starts over again.
     * **Restriction:**
 
 <a name="OPT__UM_IC_LEVEL"></a>
-* #### `OPT__UM_IC_LEVEL` &ensp; (0 &#8804; input < [[NLEVEL | Installation:-Simulation Options#NLEVEL]]) &ensp; [0]
+* #### `OPT__UM_IC_LEVEL` &ensp; (0 &#8804; input < [[--nlevel | Installation:-Option-List#--nlevel]]) &ensp; [0]
     * **Description:**
 Starting AMR level in the uniform-mesh initial condition file.
 See [[Setting IC from Files &#8212; Grids | Initial-Conditions#IC-File-Grids]] for details.
     * **Restriction:**
 
 <a name="OPT__UM_IC_NLEVEL"></a>
-* #### `OPT__UM_IC_NLEVEL` &ensp; (1 &#8804; input &#8804; [[NLEVEL | Installation:-Simulation Options#NLEVEL]]-[OPT__UM_IC_LEVEL](#OPT__UM_IC_LEVEL)) &ensp; [1]
+* #### `OPT__UM_IC_NLEVEL` &ensp; (1 &#8804; input &#8804; [[--nlevel | Installation:-Option-List#--nlevel]]-[OPT__UM_IC_LEVEL](#OPT__UM_IC_LEVEL)) &ensp; [1]
     * **Description:**
 Number of AMR levels in the uniform-mesh initial condition file.
 See [[Setting IC from Files &#8212; Grids | Initial-Conditions#IC-File-Grids]] for details.
@@ -74,9 +74,10 @@ See [[Setting IC from Files &#8212; Grids | Initial-Conditions#IC-File-Grids]] f
     * **Description:**
 Number of fluid variables stored in the uniform-mesh initial condition file.
 The default value is
-5+[[NCOMP_PASSIVE_USER | Installation: Simulation-Options#NCOMP_PASSIVE_USER]]
-for [[MODEL | Installation: Simulation-Options#MODEL]]=HYDRO.
+5+[[--passive | Installation:-Option-List#--passive]]
+for [[--model | Installation:-Option-List#--model]]=HYDRO.
 See [[Setting IC from Files &#8212; Grids | Initial-Conditions#IC-File-Grids]] for details.
+See [Setting IC from Files &#8212; Grids](#IC-File-Grids) for details.
     * **Restriction:**
 
 <a name="OPT__UM_IC_FORMAT"></a>
@@ -87,7 +88,7 @@ Data format of the uniform-mesh initial condition file. See
     * **Restriction:**
 
 <a name="OPT__UM_IC_FLOAT8"></a>
-* #### `OPT__UM_IC_FLOAT8` &ensp; (<0: same as [[FLOAT8 | Installation:-Simulation Options#FLOAT8]], 0=single precision, 1=double precision) &ensp; [-1]
+* #### `OPT__UM_IC_FLOAT8` &ensp; (<0: same as [[--double | Installation:-Option-List#--double]], 0=single precision, 1=double precision) &ensp; [-1]
     * **Description:**
 Floating-point precision of the uniform-mesh initial condition file.
     * **Restriction:**
@@ -149,7 +150,7 @@ machine precision for `OPT__FFTW_STARTUP != ESTIMATE`.
     * **Restriction:**
 `PATIENT` is not supported by FFTW2.
 Must use `ESTIMATE` when enabling
-[[BITWISE_REPRODUCIBILITY | Installation: Simulation-Options#BITWISE_REPRODUCIBILITY]].
+[[--bitwise_reproducibility | Installation:-Option-List#--bitwise_reproducibility]].
 
 
 ## Remarks

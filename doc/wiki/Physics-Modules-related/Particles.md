@@ -2,11 +2,11 @@
 ## Compilation Options
 
 Related options:
-[[PARTICLE | Installation: Simulation-Options#PARTICLE]], &nbsp;
-[[FLOAT8_PAR | Installation: Simulation-Options#FLOAT8_PAR]], &nbsp;
-[[STORE_PAR_ACC | Installation: Simulation-Options#STORE_PAR_ACC]], &nbsp;
-[[STAR_FORMATION | Installation: Simulation-Options#STAR_FORMATION]], &nbsp;
-[[PAR_NATT_USER | Installation: Simulation-Options#PAR_NATT_USER]] &nbsp;
+[[--particle | Installation:-Option-List#--particle]], &nbsp;
+[[--double_par | Installation:-Option-List#--double_par]], &nbsp;
+[[--store_par_acc | Installation:-Option-List#--store_par_acc]], &nbsp;
+[[--star_formation | Installation:-Option-List#--star_formation]], &nbsp;
+[[--par_attribute | Installation:-Option-List#--par_attribute]] &nbsp;
 
 
 ## Runtime Parameters

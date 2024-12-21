@@ -53,7 +53,7 @@ for details.
     * **Restriction:**
 
 <a name="PAR_IC_FLOAT8"></a>
-* #### `PAR_IC_FLOAT8` &ensp; (<0: same as [[FLOAT8_PAR | Installation:-Simulation Options#FLOAT8_PAR]], 0=single precision, 1=double precision) &ensp; [-1]
+* #### `PAR_IC_FLOAT8` &ensp; (<0: same as [[--double_par | Installation:-Option-List#--double_par]], 0=single precision, 1=double precision) &ensp; [-1]
     * **Description:**
 Floating-point precision of the particle initial condition file `PAR_IC`.
     * **Restriction:**
@@ -113,7 +113,7 @@ and is generally not recommended.
 Improve the force accuracy for particles close to the patch boundaries.
     * **Restriction:**
 Only applicable when adopting [PAR_INTERP](#PAR_INTERP)=2/3 and
-enabling the compilation option [[STORE_POT_GHOST | Installation: Simulation-Options#STORE_POT_GHOST]].
+enabling the compilation option [[--store_pot_ghost | Installation:-Option-List#--store_pot_ghost]].
 
 <a name="PAR_PREDICT_POS"></a>
 * #### `PAR_PREDICT_POS` &ensp; (0=off, 1=on) &ensp; [1]

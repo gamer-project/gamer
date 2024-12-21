@@ -1,18 +1,19 @@
 This page describes feedback from particles to grids and vice versa.
-Please enable the compilation option [[FEEDBACK | Installation: Simulation-Options#FEEDBACK]].
+Please enable the compilation option [[--feedback | Installation:-Option-List#--feedback]].
 
 
 ## Compilation Options
 
 Related options:
-[[PARTICLE | Installation: Simulation-Options#PARTICLE]], &nbsp;
-[[FEEDBACK | Installation: Simulation-Options#FEEDBACK]] &nbsp;
+[[--particle | Installation:-Option-List#--particle]], &nbsp;
+[[--feedback | Installation:-Option-List#--feedback]] &nbsp;
 
 
 ## Runtime Parameters
 [[Runtime-Parameters:-Feedback]]
 
 Other related parameters:
+
 
 ## Remarks
 
@@ -51,7 +52,7 @@ Follow the steps below to define your feedback when
     #  endif
     ```
 
-4. Make sure to enable `FEEDBACK` in `Makefile` and `FB_USER` in `Input__Parameter`.
+4. Make sure to enable [[--feedback | Installation:-Option-List#--feedback]] when generating `Makefile` and `FB_USER` in `Input__Parameter`.
 
 
 <br>

@@ -2,7 +2,7 @@
 ## Compilation Options
 
 Related options:
-[[COMOVING | Installation:-Simulation-Options#COMOVING]] &nbsp;
+[[--comoving | Installation:-Option-List#--comoving]] &nbsp;
 
 ## Runtime Parameters
 
@@ -26,12 +26,12 @@ Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) 
     * **Description:**
 Enable code units. One must also set exactly *three* units among
 [UNIT_L](#UNIT_L), [UNIT_M](#UNIT_M), [UNIT_T](#UNIT_T), [UNIT_V](#UNIT_V), [UNIT_D](#UNIT_D)
-(unless the compilation option [[COMOVING | Installation:-Simulation-Options#COMOVING]]
+(unless the compilation option [[--comoving | Installation:-Option-List#--comoving]]
 is adopted; see [Units in Cosmological Simulations](#units-in-cosmological-simulations) for details).
 See also [Unit Consistency](#unit-consistency).
     * **Restriction:**
 It will be turned on automatically when enabling the compilation option
-[[COMOVING | Installation:-Simulation-Options#COMOVING]].
+[[--comoving | Installation:-Option-List#--comoving]].
 
 <a name="UNIT_L"></a>
 * #### `UNIT_L` &ensp; (>0.0; &#8804;0.0 &#8594; set by other units) &ensp; [none]
@@ -39,7 +39,7 @@ It will be turned on automatically when enabling the compilation option
 Length unit in CGS.
     * **Restriction:**
 It will be overwritten when enabling the compilation option
-[[COMOVING | Installation:-Simulation-Options#COMOVING]].
+[[--comoving | Installation:-Option-List#--comoving]].
 See [Units in Cosmological Simulations](#units-in-cosmological-simulations)
 for details.
 
@@ -49,7 +49,7 @@ for details.
 Mass unit in CGS.
     * **Restriction:**
 It will be overwritten when enabling the compilation option
-[[COMOVING | Installation:-Simulation-Options#COMOVING]].
+[[--comoving | Installation:-Option-List#--comoving]].
 See [Units in Cosmological Simulations](#units-in-cosmological-simulations)
 for details.
 
@@ -59,7 +59,7 @@ for details.
 Time unit in CGS.
     * **Restriction:**
 It will be overwritten when enabling the compilation option
-[[COMOVING | Installation:-Simulation-Options#COMOVING]].
+[[--comoving | Installation:-Option-List#--comoving]].
 See [Units in Cosmological Simulations](#units-in-cosmological-simulations)
 for details.
 
@@ -69,7 +69,7 @@ for details.
 Velocity unit in CGS.
     * **Restriction:**
 It will be overwritten when enabling the compilation option
-[[COMOVING | Installation:-Simulation-Options#COMOVING]].
+[[--comoving | Installation:-Option-List#--comoving]].
 See [Units in Cosmological Simulations](#units-in-cosmological-simulations)
 for details.
 
@@ -79,7 +79,7 @@ for details.
 Mass density unit in CGS.
     * **Restriction:**
 It will be overwritten when enabling the compilation option
-[[COMOVING | Installation:-Simulation-Options#COMOVING]].
+[[--comoving | Installation:-Option-List#--comoving]].
 See [Units in Cosmological Simulations](#units-in-cosmological-simulations)
 for details.
 
@@ -109,7 +109,7 @@ For example, to convert particle velocity `vel_code` from code units
 to km/s, one can use `vel_kms = vel_code*UNIT_V*Const_s/Const_km;`.
 
 ### Units in Cosmological Simulations
-When enabling [[COMOVING | Installation:-Simulation-Options#COMOVING]],
+When enabling [[--comoving | Installation:-Option-List#--comoving]],
 the unit system is currently fixed as follows.
 - [UNIT_L](#UNIT_L) = <var>h</var><sup>-1</sup> <var>Mpc</var>,
 where <var>h</var>=[[HUBBLE0 | Runtime-Parameters:-Cosmology#HUBBLE0]] is the dimensionless Hubble constant.

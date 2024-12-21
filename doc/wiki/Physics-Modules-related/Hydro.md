@@ -2,17 +2,17 @@
 ## Compilation Options
 
 Related options:
-[[MODEL | Installation: Simulation-Options#MODEL]], &nbsp;
-[[FLU_SCHEME | Installation: Simulation-Options#FLU_SCHEME]], &nbsp;
-[[LR_SCHEME | Installation: Simulation-Options#LR_SCHEME]], &nbsp;
-[[RSOLVER | Installation: Simulation-Options#RSOLVER]], &nbsp;
-[[DUAL_ENERGY | Installation: Simulation-Options#DUAL_ENERGY]], &nbsp;
-[[NCOMP_PASSIVE_USER | Installation: Simulation-Options#NCOMP_PASSIVE_USER]], &nbsp;
-[[MHD | Installation: Simulation-Options#MHD]], &nbsp;
-[[COSMIC_RAY | Installation: Simulation-Options#COSMIC_RAY]], &nbsp;
-[[CR_DIFFUSION | Installation: Simulation-Options#CR_DIFFUSION]], &nbsp;
-[[EOS | Installation: Simulation-Options#EOS]], &nbsp;
-[[BAROTROPIC_EOS | Installation: Simulation-Options#BAROTROPIC_EOS]] &nbsp;
+[[--model | Installation:-Option-List#--model]], &nbsp;
+[[--flu_scheme | Installation:-Option-List#--flu_scheme]], &nbsp;
+[[--slope | Installation:-Option-List#--slope]], &nbsp;
+[[--flux | Installation:-Option-List#--flux]], &nbsp;
+[[--dual | Installation:-Option-List#--dual]], &nbsp;
+[[--passive | Installation:-Option-List#--passive]], &nbsp;
+[[--mhd | Installation:-Option-List#--mhd]], &nbsp;
+[[--cosmic_ray | Installation:-Option-List#--cosmic_ray]], &nbsp;
+[[--cr_diffusion | Installation:-Option-List#--cr_diffusion]], &nbsp;
+[[--eos | Installation:-Option-List#--eos]], &nbsp;
+[[--barotropic | Installation:-Option-List#--barotropic]] &nbsp;
 
 
 ## Runtime Parameters

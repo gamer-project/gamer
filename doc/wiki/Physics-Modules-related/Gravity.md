@@ -1,11 +1,11 @@
 ## Compilation Options
 
 Related options:
-[[GRAVITY | Installation:-Simulation-Options#GRAVITY]], &nbsp;
-[[POT_SCHEME | Installation:-Simulation-Options#POT_SCHEME]], &nbsp;
-[[STORE_POT_GHOST | Installation:-Simulation-Options#STORE_POT_GHOST]], &nbsp;
-[[UNSPLIT_GRAVITY | Installation:-Simulation-Options#UNSPLIT_GRAVITY]], &nbsp;
-[[COMOVING | Installation:-Simulation-Options#COMOVING]] &nbsp;
+[[--gravity | Installation:-Option-List#--gravity]], &nbsp;
+[[--pot_scheme | Installation:-Option-List#--pot_scheme]], &nbsp;
+[[--store_pot_ghost | Installation:-Option-List#--store_pot_ghost]], &nbsp;
+[[--unsplit_gravity | Installation:-Option-List#--unsplit_gravity]], &nbsp;
+[[--comoving | Installation:-Option-List#--comoving]] &nbsp;
 
 
 ## Runtime Parameters
@@ -66,7 +66,7 @@ above and replace `Acc` by `Pot`. A point-mass example can be found
 at `src/SelfGravity/CPU_Poisson/CPU_ExtPot_PointMass.cpp`.
 
 **Caution: wave dark matter simulations
-(i.e., [[MODEL | Installation:-Simulation-Options#MODEL]]=ELBDM)
+(i.e., [[--model | Installation:-Option-List#--model]]=ELBDM)
 does not support external acceleration. Just use external potential.**
 
 #### Using Table:

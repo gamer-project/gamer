@@ -6,7 +6,7 @@ consumption, see [[Simulation Logs | Simulation-Logs]].
 ## Compilation Options
 
 Related options:
-[[SUPPORT_HDF5 | Installation: Simulation-Options#SUPPORT_HDF5]] &nbsp;
+[[--hdf5 | Installation:-Option-List#--hdf5]] &nbsp;
 
 
 ## Runtime Parameters

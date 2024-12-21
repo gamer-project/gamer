@@ -52,7 +52,7 @@ too large time-steps on lower levels.
     * **Description:**
 Courant–Friedrichs–Lewy (CFL) safety factor for the hydrodynamic solver.
 The default value and stable regime depend on the adopted
-[[fluid scheme | Installation:-Simulation-Options#FLU_SCHEME]].
+[[fluid scheme | Installation:-Option-List#--flu_scheme]].
 See Section 2.6, Eqs. [1-2] in the [GAMER-2 code paper](https://arxiv.org/abs/1712.07070)
 for the exact formulae.
     * **Restriction:**
@@ -72,7 +72,7 @@ Using the speed of light as the maximum information propagation speed for determ
 in special relativistic hydrodynamic simulations.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[SRHD | Installation:-Simulation-Options#SRHD]].
+[[--srhd | Installation:-Option-List#--srhd]].
 
 <a name="DT__GRAVITY"></a>
 * #### `DT__GRAVITY` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [-1.0]
@@ -106,7 +106,7 @@ See Section 2.6, Eq. [3] in the [GAMER-2 code paper](https://arxiv.org/abs/1712.
 for the exact formula.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[STORE_PAR_ACC | Installation:-Simulation-Options#STORE_PAR_ACC]].
+[[--store_par_acc | Installation:-Option-List#--store_par_acc]].
 
 <a name="DT__CR_DIFFUSION"></a>
 * #### `DT__CR_DIFFUSION` &ensp; (&#8805;0.0) &ensp; [0.3]
@@ -114,7 +114,7 @@ Only applicable when adopting the compilation option
 CFL safety factor for cosmic-ray diffusion.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[CR_DIFFUSION | Installation:-Simulation-Options#CR_DIFFUSION]].
+[[--cr_diffusion | Installation:-Option-List#--cr_diffusion]].
 
 <a name="DT__MAX_DELTA_A"></a>
 * #### `DT__MAX_DELTA_A` &ensp; (&#8805;0.0) &ensp; [0.01]
@@ -123,7 +123,7 @@ Maximum allowed fraction of increase in the cosmic scale factor <var>a</var>.
 Specifically, it enforces &Delta;<var>a</var> &#8804; `DT__MAX_DELTA_A` &#8901; <var>a</var>.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[COMOVING | Installation:-Simulation-Options#COMOVING]].
+[[--comoving | Installation:-Option-List#--comoving]].
 
 <a name="DT__SYNC_PARENT_LV"></a>
 * #### `DT__SYNC_PARENT_LV` &ensp; (&#8805;0.0) &ensp; [0.1]

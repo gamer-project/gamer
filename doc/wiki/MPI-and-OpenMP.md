@@ -2,13 +2,11 @@
 
 ### MPI-only
 To enable MPI support, follow the steps below:
-1. Edit the `Makefile` and recompile the code (see [[Installation]] for details)
-    1. Set `CXX` to an MPI compiler (e.g., `mpicxx`)
-    2. Set `MPI_PATH` to you MPI installation path
-    3. Turn off
-[[SERIAL | Installation: Simulation-Options#SERIAL]]
-and turn on
-[[LOAD_BALANCE=HILBERT | Installation: Simulation-Options#LOAD_BALANCE]]
+1. Generate the `Makefile` and recompile the code (see [[Installation]] for details)
+    1. Set `CXX_MPI` to an MPI compiler (e.g., `mpicxx`) in the [[configuration file | Installation:-Machine-Configuration-File]]
+    2. Set `MPI_PATH` to you MPI installation path in the [[configuration file | Installation:-Machine-Configuration-File]]
+    3. Generate `Makefile` with the following options:
+       * [[--mpi | Installation:-Option-List#--mpi]]=`true`
     4. Recompile the code by `make clean; make`
 
 2. Launch the code with MPI (consult your system documentation),
@@ -22,7 +20,7 @@ for instance,
 To enable hybrid MPI/OpenMP, follow the MPI-only prescriptions
 given above with the following additional steps:
 1. Also turn on the compilation option
-[[OPENMP | Installation: Simulation-Options#OPENMP]]
+[[--openmp | Installation:-Option-List#--openmp]]
 and set the OpenMP flag `OPENMPFLAG` properly in the `Makefile`
 
 2. Set the number of threads through the runtime parameter
@@ -36,9 +34,8 @@ out the [Remarks](#remarks) below.
 ## Compilation Options
 
 Related options:
-[[SERIAL | Installation: Simulation-Options#SERIAL]], &nbsp;
-[[LOAD_BALANCE | Installation: Simulation-Options#LOAD_BALANCE]], &nbsp;
-[[OPENMP | Installation: Simulation-Options#OPENMP]] &nbsp;
+[[--mpi | Installation:-Option-List#--mpi]] &nbsp;
+[[--openmp | Installation:-Option-List#--openmp]] &nbsp;
 
 
 ## Runtime Parameters
@@ -146,7 +143,7 @@ in the same NUMA domain.
 
 
 ### OpenMP Support in GRACKLE
-See [[Library Configurations -- GRACKLE | Installation:-External-Libraries#grackle]]
+See [[Library Configurations -- GRACKLE | Installation:-External-Libraries#GRACKLE]]
 for how to enable OpenMP in GRACKLE.
 
 
@@ -154,5 +151,5 @@ for how to enable OpenMP in GRACKLE.
 
 ## Links
 * [[How to run the code | Running the code]]
-* [[How to install GRACKLE | Installation:-External-Libraries#grackle]]
+* [[How to install GRACKLE | Installation:-External-Libraries#GRACKLE]]
 * [[Main page of Runtime Parameters | Runtime Parameters]]
