@@ -17,7 +17,7 @@ and runtime/compilation parameters. Click the filename for details.
 | [[Record__ParticleCount \| Simulation-Logs:-Record__ParticleCount]] | Number of particles on each level in each MPI process | [[OPT__PARRTICLE_COUNT \| Runtime-Parameters:-Refinement#OPT__PARTICLE_COUNT]] |
 | [[Record__Performance \| Simulation-Logs:-Record__Performance]] | Code performance | [[OPT__RECORD_PERFORMANCE \| Runtime-Parameters:-Miscellaneous#OPT__RECORD_PERFORMANCE]] |
 | [[Record__TimeStep \| Simulation-Logs:-Record__TimeStep]] | Time-step constraints | [[OPT__RECORD_DT \| Runtime-Parameters:-Timestep#OPT__RECORD_DT]] |
-| [[Record__Timing \| Simulation-Logs:-Record__Timing]] | Detailed timing analysis of all major routines | [[TIMING \| Installation: Simulation-Options#TIMING]], [[TIMING_SOLVER \| Installation: Simulation-Options#TIMING_SOLVER]] |
+| [[Record__Timing \| Simulation-Logs:-Record__Timing]] | Detailed timing analysis of all major routines | [[--timing \| Installation:-Option-List#--timing]], [[--timing_solver \| Installation:-Option-List#--timing_solver]] |
 | [[Record__TimingMPI_Rank* \| Simulation-Logs:-Record__TimingMPI_Rank*]] | MPI bandwidths achieved by various MPI calls | [[OPT__TIMING_MPI \| Runtime-Parameters:-Miscellaneous#OPT__TIMING_MPI]] |
 | [[Record__DivB \| Simulation-Logs:-Record__DivB]] | Divergence-free error on the magnetic field | [[OPT__CK_DIVERGENCE_B \| Runtime-Parameters:-Miscellaneous#OPT__CK_DIVERGENCE_B]] |
 

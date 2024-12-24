@@ -14,13 +14,10 @@ To run the code in a serial mode (i.e., no MPI and OpenMP),
 follow the steps below:
 
 1. Compile the code (See [[Installation]] for details)
-    1. Turn on the compilation option
-[[SERIAL | Installation: Simulation-Options#SERIAL]]
-and turn off both
-[[LOAD_BALANCE | Installation: Simulation-Options#LOAD_BALANCE]]
-and
-[[OPENMP | Installation: Simulation-Options#OPENMP]]
-    2. Set `CXX` in the `Makefile` to a serial compiler (e.g., `g++` or `icpc`)
+    1. Set `CXX` in the [[configuration file | Installation:-Machine-Configuration-File]] to a serial compiler (e.g., `g++` or `icpc`)
+    2. Set the following arguments when generating `Makefile`:
+       * [[--mpi | Installation:-Option-List#--mpi]]=`false`
+       * [[--openmp | Installation:-Option-List#--openmp]]=`false`
     3. Recompile the code by `make clean; make`
 
 2. Set the runtime parameters (see [[Runtime Parameters]] for details)
