@@ -17,6 +17,7 @@
 // 1. common global variables
 // =======================================================================================================
 AMR_t               *amr = NULL;
+LB_GlobalTree       *GlobalTree = NULL;
 
 double               Time[NLEVEL]           = { 0.0 };
 double               dTime_AllLv[NLEVEL]    = { 0.0 };
@@ -128,13 +129,28 @@ bool                 OPT__OUTPUT_ENTHALPY;
 
 #elif ( MODEL == ELBDM )
 double               DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
-bool                 OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE;
+bool                 OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE, OPT__RES_PHASE;
 bool                 ELBDM_TAYLOR3_AUTO;
 double               ELBDM_TAYLOR3_COEFF;
 double               ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
+
+bool                 OPT__FLAG_SPECTRAL;
+int                  OPT__FLAG_SPECTRAL_N;
+double               FlagTable_Spectral[NLEVEL-1][2];
+
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
+bool                 OPT__FLAG_INTERFERENCE;
+double               FlagTable_Interference[NLEVEL-1][4];
+int                  ELBDM_FIRST_WAVE_LEVEL;
+bool                 ELBDM_MATCH_PHASE;
+double               DT__HYBRID_CFL, DT__HYBRID_CFL_INIT, DT__HYBRID_VELOCITY, DT__HYBRID_VELOCITY_INIT;
+#endif
+
 #ifdef QUARTIC_SELF_INTERACTION
 double               ELBDM_LAMBDA;
 #endif
+ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
+bool                 ELBDM_BASE_SPECTRAL;
 
 #else
 #error : unsupported MODEL !!
@@ -190,6 +206,7 @@ double               LB_INPUT__WLI_MAX;
 double               LB_INPUT__PAR_WEIGHT;
 #endif
 bool                 OPT__RECORD_LOAD_BALANCE;
+bool                 OPT__LB_EXCHANGE_FATHER;
 #endif
 bool                 OPT__MINIMIZE_MPI_BARRIER;
 #ifdef SUPPORT_FFTW
@@ -202,7 +219,7 @@ bool                 FFTW3_Double_OMP_Enabled, FFTW3_Single_OMP_Enabled;
 // (2-5) particle
 #ifdef PARTICLE
 double               DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
-bool                 OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL, OPT__FREEZE_PAR;
+bool                 OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL, OPT__FREEZE_PAR, OPT__OUTPUT_PAR_MESH;
 int                  OPT__OUTPUT_PAR_MODE, OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, PAR_IC_FLOAT8, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
 double               FlagTable_ParMassCell[NLEVEL-1];
 ParOutputDens_t      OPT__OUTPUT_PAR_DENS;
@@ -312,14 +329,25 @@ bool FB_Any;
 int  FB_ParaBuf;
 #endif
 
-// (2-13) cosmic ray
+// (2-13) spectral interpolation
+#ifdef SUPPORT_SPECTRAL_INT
+char   SPEC_INT_TABLE_PATH[MAX_STRING];
+int    SPEC_INT_GHOST_BOUNDARY;
+#if ( MODEL == ELBDM )
+bool   SPEC_INT_XY_INSTEAD_DEPHA;
+double SPEC_INT_VORTEX_THRESHOLD;
+#endif
+InterpolationHandler Int_InterpolationHandler;
+#endif // #ifdef SUPPORT_SPECTRAL_INT
+
+// (2-14) cosmic ray
 #ifdef COSMIC_RAY
 double GAMMA_CR;
 bool   OPT__FLAG_CRAY, OPT__FLAG_LOHNER_CRAY;
 double FlagTable_CRay[NLEVEL-1];
 #endif
 
-// (2-14) microphysics
+// (2-15) microphysics
 // a. data structure for the CPU/GPU solvers
 MicroPhy_t MicroPhy;
 
@@ -357,6 +385,15 @@ real (*h_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ]        = NULL;
 real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]        = NULL;
 #endif
 #endif // FLU_SCHEME
+#if ( MODEL == ELBDM )
+bool  (*h_IsCompletelyRefined[2])                                  = { NULL, NULL };
+#endif
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
+bool (*h_HasWaveCounterpart[2])[ CUBE(HYB_NXT) ]                   = { NULL, NULL };
+#endif
+#if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+gramfe_matmul_float (*h_GramFE_TimeEvo)[ 2*FLU_NXT ]               = NULL;
+#endif
 
 #ifdef GRAVITY
 // (3-2) Poisson and gravity solver
@@ -417,6 +454,7 @@ real  *h_SrcDlepProf_Radius                                        = NULL;
 #endif
 
 
+
 // 4. GPU (device) global memory arrays
 // =======================================================================================================
 #ifdef GPU
@@ -426,7 +464,7 @@ real (*d_Flu_Array_F_Out)[FLU_NOUT][ CUBE(PS2) ]                   = NULL;
 real (*d_Flux_Array)[9][NFLUX_TOTAL][ SQR(PS2) ]                   = NULL;
 double (*d_Corner_Array_F)[3]                                      = NULL;
 #ifdef DUAL_ENERGY
-char (*d_DE_Array_F_Out)[ PS2*PS2*PS2 ]                            = NULL;
+char (*d_DE_Array_F_Out)[ CUBE(PS2) ]                              = NULL;
 #endif
 #ifdef MHD
 real (*d_Mag_Array_F_In )[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ]    = NULL;
@@ -443,6 +481,15 @@ real (*d_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ]        = NULL;
 real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]        = NULL;
 #endif
 #endif // FLU_SCHEME
+#if ( MODEL == ELBDM )
+bool  (*d_IsCompletelyRefined)                                     = NULL;
+#endif
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
+bool (*d_HasWaveCounterpart)[ CUBE(HYB_NXT) ]                      = NULL;
+#endif
+#if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+gramfe_matmul_float (*d_Flu_TimeEvo)[ 2*FLU_NXT ]                  = NULL;
+#endif
 
 #ifdef GRAVITY
 // (4-2) Poisson and gravity solver
@@ -584,7 +631,17 @@ int main( int argc, char *argv[] )
    if ( OPT__PARTICLE_COUNT > 0 )         Par_Aux_Record_ParticleCount();
 #  endif
 
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   ELBDM_Aux_Record_Hybrid();
+#  endif
+
    Aux_Check();
+
+#  if ( MODEL == ELBDM )
+   if (  ( ELBDM_REMOVE_MOTION_CM == ELBDM_REMOVE_MOTION_CM_INIT && (OPT__INIT != INIT_BY_RESTART || OPT__RESTART_RESET) )  ||
+           ELBDM_REMOVE_MOTION_CM == ELBDM_REMOVE_MOTION_CM_EVERY_STEP  )
+      ELBDM_RemoveMotionCM();
+#  endif
 
 #  ifdef TIMING
    Aux_ResetTimer();
@@ -671,6 +728,15 @@ int main( int argc, char *argv[] )
       TIMING_FUNC(   Aux_Record_Center(),             Timer_Main[4],   TIMER_ON   );
 
       TIMING_FUNC(   Aux_Check(),                     Timer_Main[4],   TIMER_ON   );
+
+#     if ( MODEL == ELBDM )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      TIMING_FUNC(   ELBDM_Aux_Record_Hybrid(),       Timer_Main[4],   TIMER_ON   );
+#     endif
+
+      if ( ELBDM_REMOVE_MOTION_CM == ELBDM_REMOVE_MOTION_CM_EVERY_STEP )
+      TIMING_FUNC(   ELBDM_RemoveMotionCM(),          Timer_Main[4],   TIMER_ON   );
+#     endif // #if ( MODEL == ELBDM )
 //    ---------------------------------------------------------------------------------------------------
 
 

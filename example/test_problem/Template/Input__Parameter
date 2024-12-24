@@ -50,7 +50,17 @@ TESTPROB_ID                   0           # test problem ID [0]
                                           #  100: HYDRO CDM cosmological simulation (+GRAVITY & COMOVING & PARTICLE)
                                           #  101: HYDRO Zeldovich pancake collapse (+GRAVITY & COMOVING & PARTICLE)
                                           # 1000: ELBDM external potential (+GRAVITY)
-
+                                          # 1001: ELBDM Jeans instability in the comoving frame (+GRAVITY, +COMOVING)
+                                          # 1002: ELBDM Jeans instability in the physical frame (+GRAVITY)
+                                          # 1003: ELBDM soliton merger (+GRAVITY)
+                                          # 1004: ELBDM self-similar halo (+GRAVITY, +COMOVING)
+                                          # 1005: ELBDM rotating vortex pair
+                                          # 1006: ELBDM vortex pair in linear motion
+                                          # 1007: ELBDM halo extracted from a large-scale structure simulation (+GRAVITY)
+                                          # 1008: ELBDM 1D Gaussian wave packet
+                                          # 1009: ELBDM large-scale structure simulation (+GRAVITY, +COMOVING)
+                                          # 1010: ELBDM plane wave
+                                          # 1011: ELBDM small wave perturbations on homogeneous background
 
 # code units (in cgs)
 OPT__UNIT                     0           # specify code units -> must set exactly 3 basic units below [0] ##USELESS FOR COMOVING##
@@ -102,6 +112,10 @@ DT__FLUID_INIT               -1.0         # dt criterion: DT__FLUID at the first
 DT__SPEED_OF_LIGHT            0           # dt criterion: speed of light [0] ##SRHD ONLY##
 DT__GRAVITY                  -1.0         # dt criterion: gravity solver safety factor (<0=auto) [-1.0]
 DT__PHASE                     0.0         # dt criterion: phase rotation safety factor (0=off) [0.0] ##ELBDM ONLY##
+DT__HYBRID_CFL               -1.0         # dt criterion: hybrid solver CFL factor (<0=auto) (diffusion) [-1.0] ## ELBDM_HYBRID ONLY##
+DT__HYBRID_CFL_INIT          -1.0         # dt criterion: DT__HYBRID_CFL in the first step (<0=auto) [-1.0] ## ELBDM_HYBRID ONLY##
+DT__HYBRID_VELOCITY          -1.0         # dt criterion: hybrid solver CFL factor (<0=auto) (Hamilton-Jacobi) [-1.0] ## ELBDM_HYBRID ONLY##
+DT__HYBRID_VELOCITY_INIT     -1.0         # dt criterion: DT__HYBRID_VELOCITY in the first step (<0=auto) [-1.0] ## ELBDM_HYBRID ONLY##
 DT__PARVEL                    0.5         # dt criterion: particle velocity safety factor [0.5]
 DT__PARVEL_MAX               -1.0         # dt criterion: maximum allowed dt from particle velocity (<0=off) [-1.0]
 DT__PARACC                    0.5         # dt criterion: particle acceleration safety factor (0=off) [0.5] ##STORE_PAR_ACC ONLY##
@@ -139,6 +153,9 @@ OPT__FLAG_JEANS               0           # flag: Jeans length (Input__Flag_Jean
 OPT__FLAG_CURRENT             0           # flag: current density in MHD (Input__Flag_Current) [0] ##MHD ONLY##
 OPT__FLAG_CRAY                0           # flag: cosmic-ray energy (Input__Flag_CRay) [0] ##COSMIC_RAY ONLY##
 OPT__FLAG_ENGY_DENSITY        0           # flag: energy density (Input_Flag_EngyDensity) [0] ##ELBDM ONLY##
+OPT__FLAG_INTERFERENCE        0           # flag: interference level (Input__Flag_Interference) [0] ##ELBDM ONLY##
+OPT__FLAG_SPECTRAL            0           # flag: spectral refinement (Input__Flag_Spectral) [0] ##ELBDM ONLY##
+OPT__FLAG_SPECTRAL_N          2           # number of pol. coefficients to use for spectral refinement [2] ##ELBDM ONLY##
 OPT__FLAG_LOHNER_DENS         0           # flag: Lohner for mass density      (Input__Flag_Lohner) [0] ##BOTH HYDRO AND ELBDM##
 OPT__FLAG_LOHNER_ENGY         0           # flag: Lohner for energy density    (Input__Flag_Lohner) [0] ##HYDRO ONLY##
 OPT__FLAG_LOHNER_PRES         0           # flag: Lohner for pressure          (Input__Flag_Lohner) [0] ##HYDRO ONLY##
@@ -165,6 +182,7 @@ LB_INPUT__PAR_WEIGHT          0.0         # load-balance weighting of one partic
 OPT__RECORD_LOAD_BALANCE      1           # record the load-balance info [1]
 OPT__MINIMIZE_MPI_BARRIER     0           # minimize MPI barriers to improve load balance, especially with particles [0]
                                           # (STORE_POT_GHOST, PAR_IMPROVE_ACC=1, OPT__TIMING_BARRIER=0 only; recommend AUTO_REDUCE_DT=0)
+OPT__LB_EXCHANGE_FATHER       1           # exchange all cells of all father patches during load balancing (must enable for hybrid scheme + MPI) [0 usually, 1 for ELBDM_HYBRID] ## ELBDM_HYBRID ONLY###
 
 
 # source terms
@@ -237,8 +255,12 @@ ELBDM_MASS                    1.0         # particle mass in ev/c^2 (input unit 
 ELBDM_PLANCK_CONST            1.0         # reduced Planck constant (will be overwritten if OPT__UNIT or COMOVING is on)
 ELBDM_LAMBDA                  1.0         # quartic self-interaction coefficient [1.0] ##QUARTIC_SELF_INTERACTION ONLY##
 ELBDM_TAYLOR3_COEFF           0.166666667 # 3rd Taylor expansion coefficient [1.0/6.0] ##USELESS if ELBDM_TAYLOR3_AUTO is on##
-ELBDM_TAYLOR3_AUTO            1           # Optimize ELBDM_TAYLOR3_COEFF automatically to minimize the damping at kmax [1]
-
+ELBDM_TAYLOR3_AUTO            0           # Optimize ELBDM_TAYLOR3_COEFF automatically to minimize the damping at kmax [0]
+ELBDM_REMOVE_MOTION_CM        0           # remove the motion of center-of-mass (must enable OPT__CK_CONSERVATION):
+                                          # (0=off, 1=init, 2=every step) [0]
+ELBDM_BASE_SPECTRAL           0           # adopt the spectral method to evolve base-level wave function (must enable SUPPORT_FFTW) [0]
+ELBDM_MATCH_PHASE             1           # match child phases with father phases during data restriction [1] ##ELBDM_HYBRID ONLY##
+ELBDM_FIRST_WAVE_LEVEL       -1           # level at which to switch to the wave solver (must >=1) [-1] ##ELBDM_HYBRID ONLY##
 
 # fluid solvers in all models
 FLU_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU fluid solver (<=0=auto) [-1]
@@ -320,10 +342,11 @@ OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2
 INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
 OPT__FFTW_STARTUP            -1           # initialise fftw plans: (-1=auto, 0=ESTIMATE, 1=MEASURE, 2=PATIENT (only FFTW3)) [-1]
 
-# interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar)
+# interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar, 8=Spectral (##ELBDM & SUPPORT_SPECTRAL_INT ONLY##))
 OPT__INT_TIME                 1           # perform "temporal" interpolation for OPT__DT_LEVEL == 2/3 [1]
 OPT__INT_PRIM                 1           # switch to primitive variables when the interpolation on conserved variables fails [1] ##HYDRO ONLY##
 OPT__INT_PHASE                1           # interpolation on phase (does not support MinMod-1D) [1] ##ELBDM ONLY##
+OPT__RES_PHASE                0           # restriction on phase [0] ##ELBDM ONLY##
 OPT__FLU_INT_SCHEME          -1           # ghost-zone fluid variables for the fluid solver [-1]
 OPT__REF_FLU_INT_SCHEME      -1           # newly allocated fluid variables during grid refinement [-1]
 OPT__MAG_INT_SCHEME           4           # ghost-zone magnetic field for the MHD solver (2,3,4,6 only) [4]
@@ -336,6 +359,12 @@ INT_MONO_COEFF                2.0         # coefficient for ensuring the interpo
 INT_MONO_COEFF_B              2.0         # coefficient for ensuring the interpolation monotonicity of B field (1.0~4.0) [2.0] ##MHD ONLY##
 MONO_MAX_ITER                 10          # maximum number of iterations to reduce INT_MONO_COEFF when interpolation fails (0=off) [10]
 INT_OPP_SIGN_0TH_ORDER        1           # switch to 0th-order interpolation if adjacent values change signs [HYDRO:1; ELBDM:0]
+SPEC_INT_TABLE_PATH           ./          # path to tables for spectral interpolation ##ELBDM & SUPPORT_SPECTRAL_INT ONLY##
+SPEC_INT_XY_INSTEAD_DEPHA     1           # interpolate x and y (real and imaginary parts in current implementation)
+                                          # around vortices instead of density and phase for the spectral interpolation,
+                                          # which has the advantage of being well-defined across vortices [1] ##ELBDM & SUPPORT_SPECTRAL_INT ONLY##
+SPEC_INT_VORTEX_THRESHOLD     0.1         # vortex detection threshold for SPEC_INT_XY_INSTEAD_DEPHA [0.1] ##ELBDM & SUPPORT_SPECTRAL_INT ONLY##
+SPEC_INT_GHOST_BOUNDARY       4           # ghost boundary size for spectral interpolation [4] ##ELBDM & SUPPORT_SPECTRAL_INT ONLY##
 
 
 # data dump
@@ -344,6 +373,7 @@ OPT__OUTPUT_PART              0           # output a single line or slice: (0=of
 OPT__OUTPUT_TEXT_FORMAT_FLT   %24.16e     # string format of output text files [%24.16e]
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
 OPT__OUTPUT_PAR_MODE          0           # output the particle data: (0=off, 1=text-file, 2=C-binary) [0] ##PARTICLE ONLY##
+OPT__OUTPUT_PAR_MESH          1           # output the attributes of tracer particles mapped from mesh quantities -> edit "Input__Par_Mesh" [1] ##PARTICLE ONLY##
 OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
 OPT__OUTPUT_POT               1           # output gravitational potential [1] ##OPT__OUTPUT_TOTAL ONLY##

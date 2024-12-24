@@ -204,6 +204,7 @@ OPT__CK_DIVERGENCE_B          1           # check the divergence-free constraint
 
 
 # YT inline analysis
-YT_SCRIPT                     inline_script # inline python script name, exclude ".py" extension
-YT_VERBOSE                    1             # log level (0=off, 1=info, 2=warning, 3=debug)
-YT_FIG_BASENAME               Fig           # figure basename, use libyt default if not set: (default=Fig%9d)
+YT_SCRIPT                     inline_script # yt inline analysis script (do not include the ".py" file extension)
+YT_VERBOSE                    1             # verbose level of yt (0=off, 1=info, 2=warning, 3=debug) [1]
+YT_FIG_BASENAME               Fig           # figure basename [Fig]
+YT_JUPYTER_USE_CONNECTION_FILE 0            # use user-provided connection file when using libyt Jupyter UI [0]

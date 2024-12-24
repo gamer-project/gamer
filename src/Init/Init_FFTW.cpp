@@ -8,6 +8,12 @@ root_fftw::real_plan_nd FFTW_Plan_PS;                       // PS  : plan for ca
 #ifdef GRAVITY
 root_fftw::real_plan_nd FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;   // Poi : plan for the self-gravity Poisson solver
 #endif // #ifdef GRAVITY
+#if ( MODEL == ELBDM )
+root_fftw::complex_plan_nd   FFTW_Plan_Psi, FFTW_Plan_Psi_Inv;         // Psi : plan for the ELBDM spectral solver
+#if ( WAVE_SCHEME == WAVE_GRAMFE )
+gramfe_fftw::complex_plan_1d FFTW_Plan_ExtPsi, FFTW_Plan_ExtPsi_Inv;   // ExtPsi : plan for the Gram Fourier extension solver
+#endif // #if (WAVE_SCHEME == WAVE_GRAMFE)
+#endif // #if ( MODEL == ELBDM )
 
 
 
@@ -48,6 +54,7 @@ void Init_FFTW()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
+
 
 #  if ( SUPPORT_FFTW == FFTW3 )
    FFTW3_Double_OMP_Enabled = false;
@@ -116,8 +123,28 @@ void Init_FFTW()
    }
 #  endif // #  ifdef GRAVITY
 
+// determine the FFT size for the base-level FFT wave solver
+#  if ( MODEL == ELBDM )
+   int Psi_FFT_Size[3]    = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
+#  if ( defined(SERIAL) || SUPPORT_FFTW == FFTW3 )
+   int InvPsi_FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
+#  else // # ifdef SERIAL || FFTW3
+// Note that the dimensions of the inverse transform in FFTW2,
+// which are given by the dimensions of the output of the forward transform,
+// are Ny*Nz*Nx because we are using "FFTW_TRANSPOSED_ORDER" in fftwnd_mpi().
+   int InvPsi_FFT_Size[3] = { NX0_TOT[0], NX0_TOT[2], NX0_TOT[1] };
+#  endif // # ifdef SERIAL || FFTW3 ... # else
+
+#  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   int ExtPsi_FFT_Size    = GRAMFE_FLU_NXT;
+#  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
+#  endif // # if ( MODEL == ELBDM )
    real* PS   = NULL;
    real* RhoK = NULL;
+   real* PsiK = NULL;
+#  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   gramfe_fftw::fft_complex* ExtPsiK  = NULL;
+#  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
 
 // determine how to initialise fftw plans
    int StartupFlag;
@@ -139,7 +166,15 @@ void Init_FFTW()
 #  ifdef GRAVITY
    RhoK = (real*) root_fftw::fft_malloc(ComputePaddedTotalSize(Gravity_FFT_Size) * sizeof(real));
 #  endif // # ifdef GRAVITY
+#  if ( MODEL == ELBDM )
+   PsiK = (real*) root_fftw::fft_malloc( ComputeTotalSize      ( Psi_FFT_Size     ) * sizeof(real) * 2 );  // 2 * real for size of complex number
+#  endif // # if ( MODEL == ELBDM )
+
+#  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   ExtPsiK = (gramfe_fftw::fft_complex*)   gramfe_fftw::fft_malloc( ExtPsi_FFT_Size * sizeof(gramfe_fftw::fft_complex) );
+#  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
 #  endif // # if ( SUPPORT_FFTW == FFTW3 )
+
 
 // create plans for power spectrum and the self-gravity solver
    FFTW_Plan_PS      = root_fftw_create_3d_r2c_plan(PS_FFT_Size, PS, StartupFlag);
@@ -147,6 +182,33 @@ void Init_FFTW()
    FFTW_Plan_Poi     = root_fftw_create_3d_r2c_plan(Gravity_FFT_Size, RhoK, StartupFlag);
    FFTW_Plan_Poi_Inv = root_fftw_create_3d_c2r_plan(Gravity_FFT_Size, RhoK, StartupFlag);
 #  endif // # ifdef GRAVITY
+#  if ( MODEL == ELBDM )
+   FFTW_Plan_Psi     = root_fftw_create_3d_forward_c2c_plan ( Psi_FFT_Size,    PsiK, StartupFlag );
+   FFTW_Plan_Psi_Inv = root_fftw_create_3d_backward_c2c_plan( InvPsi_FFT_Size, PsiK, StartupFlag );
+
+#  if ( WAVE_SCHEME == WAVE_GRAMFE )
+
+// the Gram-Fourier extension planners only use one thread because OMP parallelisation evolves different patches parallely
+// From the FFTW3 documentation: https://www.fftw.org/fftw3_doc/Usage-of-Multi_002dthreaded-FFTW.html
+// "You can call fftw_plan_with_nthreads, create some plans,
+// call fftw_plan_with_nthreads again with a different argument, and create some more plans for a new number of threads."
+
+#  if ( defined(SUPPORT_FFTW3) && defined(OPENMP) )
+   if (FFTW3_Double_OMP_Enabled)  fftw_plan_with_nthreads(1);
+   if (FFTW3_Single_OMP_Enabled) fftwf_plan_with_nthreads(1);
+#  endif // # if ( defined(SUPPORT_FFTW3) && defined(OPENMP) )
+
+   FFTW_Plan_ExtPsi      = gramfe_fftw_create_1d_forward_c2c_plan ( ExtPsi_FFT_Size, ExtPsiK, StartupFlag );
+   FFTW_Plan_ExtPsi_Inv  = gramfe_fftw_create_1d_backward_c2c_plan( ExtPsi_FFT_Size, ExtPsiK, StartupFlag );
+
+// restore regular settings
+#  if ( defined(SUPPORT_FFTW3) && defined(OPENMP) )
+   if (FFTW3_Double_OMP_Enabled)  fftw_plan_with_nthreads(OMP_NTHREAD);
+   if (FFTW3_Single_OMP_Enabled) fftwf_plan_with_nthreads(OMP_NTHREAD);
+#  endif // # if ( defined(SUPPORT_FFTW3) && defined(OPENMP) )
+#  endif // #  if ( WAVE_SCHEME == WAVE_GRAMFE )
+
+#  endif // #  if ( MODEL == ELBDM )
 
 // free memory for arrays in fftw3
 #  if ( SUPPORT_FFTW == FFTW3 )
@@ -154,6 +216,12 @@ void Init_FFTW()
 #  ifdef GRAVITY
    root_fftw::fft_free(RhoK);
 #  endif // # ifdef GRAVITY
+#  if ( MODEL == ELBDM )
+   root_fftw::fft_free( PsiK );
+#  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   gramfe_fftw::fft_free( ExtPsiK );
+#  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
+#  endif // # if ( MODEL == ELBDM )
 #  endif // # if ( SUPPORT_FFTW == FFTW3 )
 
 
@@ -179,19 +247,33 @@ void End_FFTW()
    root_fftw::destroy_real_plan_nd  ( FFTW_Plan_Poi_Inv );
 #  endif // #  ifdef GRAVITY
 
+
+#  if ( MODEL == ELBDM )
+   root_fftw::destroy_complex_plan_nd  ( FFTW_Plan_Psi     );
+   root_fftw::destroy_complex_plan_nd  ( FFTW_Plan_Psi_Inv );
+
+#  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   gramfe_fftw::destroy_complex_plan_1d  ( FFTW_Plan_ExtPsi     );
+   gramfe_fftw::destroy_complex_plan_1d  ( FFTW_Plan_ExtPsi_Inv );
+#  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
+#  endif // #if ( MODEL == ELBDM )
+
 #  if ( SUPPORT_FFTW == FFTW3 )
 #  ifdef OPENMP
-   if (FFTW3_Double_OMP_Enabled)  fftw_cleanup_threads();
-   if (FFTW3_Single_OMP_Enabled) fftwf_cleanup_threads();
-#  endif
+   if ( FFTW3_Double_OMP_Enabled )  fftw_cleanup_threads();
+   if ( FFTW3_Single_OMP_Enabled ) fftwf_cleanup_threads();
+#  endif // # ifdef OPENMP
+
 #  ifdef SERIAL
    fftw_cleanup();
    fftwf_cleanup();
-#  else
+#  else // # ifdef SERIAL
+// fftwx_mpi_cleanup also calls fftwx_cleanup
    fftw_mpi_cleanup();
    fftwf_mpi_cleanup();
-#  endif
+#  endif // # ifdef SERIAL ... # else
 #  endif // # if ( SUPPORT_FFTW == FFTW3 )
+
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 

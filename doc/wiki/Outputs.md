@@ -6,7 +6,7 @@ consumption, see [[Simulation Logs | Simulation-Logs]].
 ## Compilation Options
 
 Related options:
-[[SUPPORT_HDF5 | Installation: Simulation-Options#SUPPORT_HDF5]] &nbsp;
+[[--hdf5 | Installation:-Option-List#--hdf5]] &nbsp;
 
 
 ## Runtime Parameters
@@ -17,6 +17,7 @@ Parameters described on this page:
 [OPT__OUTPUT_TEXT_FORMAT_FLT](#OPT__OUTPUT_TEXT_FORMAT_FLT), &nbsp;
 [OPT__OUTPUT_USER](#OPT__OUTPUT_USER), &nbsp;
 [OPT__OUTPUT_PAR_MODE](#OPT__OUTPUT_PAR_MODE), &nbsp;
+[OPT__OUTPUT_PAR_MESH](#OPT__OUTPUT_PAR_MESH), &nbsp;
 [OPT__OUTPUT_BASEPS](#OPT__OUTPUT_BASEPS), &nbsp;
 [OPT__OUTPUT_BASE](#OPT__OUTPUT_BASE), &nbsp;
 [OPT__OUTPUT_POT](#OPT__OUTPUT_POT), &nbsp;
@@ -60,7 +61,7 @@ See also [OPT__OUTPUT_MODE](#OPT__OUTPUT_MODE) for specifying the
 data dump frequency.
     * **Restriction:**
 `OPT__OUTPUT_TOTAL=1` is only applicable when enabling the compilation option
-[[SUPPORT_HDF5 | Installation: Simulation-Options#SUPPORT_HDF5]].
+[[--hdf5 | Installation:-Option-List#--hdf5]].
 [[Data analysis with yt | Data-Analysis]] is currently only supported for
 the HDF5 snapshots of GAMER.
 
@@ -105,6 +106,14 @@ This option is mainly for debugging purposes since the simulation snapshots
 particle data.
     * **Restriction:**
 
+<a name="OPT__OUTPUT_PAR_MESH"></a>
+* #### `OPT__OUTPUT_PAR_MESH` &ensp; (0=off, 1=on) &ensp; [1]
+    * **Description:**
+Map mesh attributes to tracer particles and output them in the HDF5 snapshots.
+Edit `Input__Par_Mesh` to specify the desired mesh attributes. An example file can be found at `example/input/Input__Par_Mesh`.
+    * **Restriction:**
+Only applicable when enabling [[--tracer | Installation:-Option-List#--tracer]] and setting [OPT__OUTPUT_TOTAL](#OPT__OUTPUT_TOTAL) to 1.
+
 <a name="OPT__OUTPUT_BASEPS"></a>
 * #### `OPT__OUTPUT_BASEPS` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
@@ -138,13 +147,13 @@ Only applicable when enabling [OPT__OUTPUT_TOTAL](#OPT__OUTPUT_TOTAL).
     * **Description:**
 Output the cell-centered magnetic field (**mandatory for yt analysis**).
     * **Restriction:**
-For [[MHD | Installation: Simulation-Options#MHD]] only.
+For [[--mhd | Installation:-Option-List#--mhd]] only.
 
 <a name="OPT__OUTPUT_PRES"></a>
 * #### `OPT__OUTPUT_PRES` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
 Output the gas pressure (or gas + cosmic-ray pressure when enabling
-[[COSMIC_RAY | Installation: Simulation-Options#COSMIC_RAY]]) on grids.
+[[--cosmic_ray | Installation:-Option-List#--cosmic_ray]]) on grids.
 Magnetic pressure is always excluded.
     * **Restriction:**
 
@@ -185,28 +194,28 @@ Output the Mach number on grids.
 Output $|\nabla \cdot B| \Delta h / |B|$, where $B$ is the magnetic field
 and $\Delta h$ is cell width.
     * **Restriction:**
-For [[MHD | Installation: Simulation-Options#MHD]] only.
+For [[--mhd | Installation:-Option-List#--mhd]] only.
 
 <a name="OPT__OUTPUT_LORENTZ"></a>
 * #### `OPT__OUTPUT_LORENTZ` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
 Output the SRHD Lorentz factor on grids.
     * **Restriction:**
-For [[SRHD | Installation: Simulation-Options#SRHD]] only.
+For [[--srhd | Installation:-Option-List#--srhd]] only.
 
 <a name="OPT__OUTPUT_3VELOCITY"></a>
 * #### `OPT__OUTPUT_3VELOCITY` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
 Output the SRHD three-velocity on grids.
     * **Restriction:**
-For [[SRHD | Installation: Simulation-Options#SRHD]] only.
+For [[--srhd | Installation:-Option-List#--srhd]] only.
 
 <a name="OPT__OUTPUT_ENTHALPY"></a>
 * #### `OPT__OUTPUT_ENTHALPY` &ensp; (0=off, 1=on) &ensp; [1]
     * **Description:**
 Output the SRHD reduced enthalpy on grids.
     * **Restriction:**
-For [[SRHD | Installation: Simulation-Options#SRHD]] only.
+For [[--srhd | Installation:-Option-List#--srhd]] only.
 
 <a name="OPT__OUTPUT_MODE"></a>
 * #### `OPT__OUTPUT_MODE` &ensp; (1=const step, 2=const dt, 3=dump table) &ensp; [none]
