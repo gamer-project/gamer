@@ -26,7 +26,7 @@ Mandatory steps are marked by &#x1F4CC;.
 
 ## I. Register a New Problem
 
-1. Add new problem name and ID to `include/Typedef.h` with the
+1. Add a new problem name and ID to `include/Typedef.h` with the
 type `TestProbID_t`. The following example adds
 `TESTPROB_HYDRO_NEW_PROBLEM = 123`:
 
@@ -65,10 +65,10 @@ function is called `Init_TestProb_Hydro_NewProblem()`:
 1. Create a new problem directory and file(s).
 
     ```bash
-    > cd src/TestProblem/Hydro/
-    > cp -r ../Template NewProblem
-    > cd NewProblem
-    > mv Init_TestProb_Template.cpp Init_TestProb_Hydro_NewProblem.cpp
+    cd src/TestProblem/Hydro/
+    cp -r ../Template NewProblem
+    cd NewProblem
+    mv Init_TestProb_Template.cpp Init_TestProb_Hydro_NewProblem.cpp
     ```
 
 2. Edit `Init_TestProb_Hydro_NewProblem.cpp` (hereafter referred to as the
@@ -88,7 +88,7 @@ For details see
 
 2. Magnetic field IC &#8212; choose one of the following two methods
 (only necessary when enabling
-[[MHD | Installation:-Simulation-Options#MHD]]):
+[[--mhd | Installation:-Option-List#--mhd]]):
 
     * Specify the magnetic field IC by editing the function `SetBFieldIC()`
 or specify the vector potential IC by editing a function linking to the function pointer
@@ -97,12 +97,11 @@ or specify the vector potential IC by editing a function linking to the function
     * Load either the magnetic field or vector potential IC from a
 uniform-mesh binary file. For details see
 [[Setting IC from Files &#8212; Magnetic Field | Initial-Conditions#IC-File-BField]].
-
-        **Caution: magnetic field is not currently supported in this method.**
+        ${{\color{red}\textsf{Caution:\ magnetic\ field\ is\ not\ currently\ supported\ in\ this\ method.\}}}\$
 
 3. Particles IC &#8212; choose one of the following two methods
 (only necessary when enabling
-[[PARTICLE | Installation:-Simulation-Options#PARTICLE]]):
+[[--particle | Installation:-Option-List#--particle]]):
 
     * Specify a particle initialization function.
         1. Define the function `Par_Init_ByFunction_NewProblem()`.
@@ -170,8 +169,10 @@ problem source file.
        delete ReadPara;
     ```
 
-    **Caution: VARIABLE, DEFAULT, MIN, and MAX must have the same
-data type.** Some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...)
+> [!CAUTION]
+> `VARIABLE`, `DEFAULT`, `MIN`, and `MAX` must have the same data type.
+>
+> Some handy constants (e.g., `Useless_bool`, `Eps_double`, `NoMin_int`, ...)
 are defined in `include/ReadPara.h`. See [[Adding Parameters | Adding-Parameters]] for details.
 
 3. [Optional] Edit `SetParameter()` to make a note of the values adopted
@@ -211,8 +212,8 @@ when running the code.
 
 It takes 4 small steps to add a new grid field:
 
-1. Set [[ NCOMP_PASSIVE_USER | Installation:-Simulation-Options#NCOMP_PASSIVE_USER]]
-to `N` (for `N` new fields) in the Makefile.
+1. Set [[ --passive | Installation:-Option-List#--passive]]
+to `N` (for `N` new fields) when generating the Makefile.
 
 2. Declare a global integer variable on the top of the problem source
 file to store the new field index. For example,
@@ -261,8 +262,9 @@ initialization function `Init_TestProb_Hydro_NewProblem()`.
     Init_Field_User_Ptr = AddNewField_NewProblem;
     ```
 
-    **Caution: the built-in field `Metal` with the field index `Idx_Metal`
-will be added automatically when enabling [[ GRACKLE_METAL | Chemistry-and-Radiation#GRACKLE_METAL ]].**
+> [!NOTE]
+> The built-in field `Metal` with the field index `Idx_Metal`
+will be added automatically when enabling [[ GRACKLE_METAL | Chemistry-and-Radiation#GRACKLE_METAL ]].
 
 4. Assign initial values to the new field in `SetGridIC()` using the corresponding
 field index. For example,
@@ -276,15 +278,16 @@ field index. For example,
         ...
     }
     ```
-    **Caution: assign mass density instead of mass fraction to `fluid[NewFieldIdx]`.**
+> [!CAUTION]
+> Assign mass density instead of mass fraction to `fluid[NewFieldIdx]`.
 
 ### Particle Attributes
 
 Adding a new particle attribute is very similar to adding a new grid field.
 So we only highlight the differences in each of the 4 steps above.
 
-1. Set [[ PAR_NATT_USER | Installation:-Simulation-Options#PAR_NATT_USER ]]
-instead in the Makefile.
+1. Set [[ --par_attribute | Installation:-Option-List#--par_attribute ]]
+instead when generating the Makefile.
 
 2. Declare a global integer variable on the top of the problem source
 file to store the new field index. For example,
@@ -545,7 +548,7 @@ Add a user-specified equation of state. See [[here | equation-of-state]] for det
    * `EoS_Init_Ptr`
    * `Eos_End_Ptr`
 * **Compilation Option:**
-[[EOS | Installation: Simulation-Options#EOS]]
+[[--eos | Installation:-Option-List#--eos]]
 * **Example:**
    * `src/EoS/User_Template`
    * `src/EoS/Gamma`
@@ -556,7 +559,7 @@ Add a user-specified feedback. See [[FB_USER | Feedback#FB_USER]] for details.
 * **Function Pointer:**
    * `FB_Init_User_Ptr`
 * **Compilation Option:**
-[[FEEDBACK | Installation: Simulation-Options#FEEDBACK]]
+[[--feedback | Installation:-Option-List#--feedback]]
 * **Runtime Option:**
 [[FB_USER | Feedback#FB_USER]]
 * **Example:**
@@ -612,8 +615,8 @@ as one of the test problems in GAMER.
 and other relevant files such as README and analysis scripts.
 
     ```bash
-    > cd example/test_problem/Hydro
-    > cp -rL ../Template NewProblem
+    cd example/test_problem/Hydro
+    cp -rL ../Template NewProblem
     ```
 
  2. Add and properly set all relevant input files `Input__*`.
