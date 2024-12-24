@@ -2,4 +2,4 @@
 
 PYTHON=python3
 
-${PYTHON} configure.py --machine=eureka_intel --model=ELBDM --double=True --hdf5=true --fftw=FFTW3
+${PYTHON} configure.py --machine=eureka_intel --model=ELBDM --double=True --hdf5=true --fftw=FFTW3 "$@"

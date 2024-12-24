@@ -3,4 +3,4 @@
 PYTHON=python3
 
 ${PYTHON} configure.py --machine=eureka_intel --mpi=true --hdf5=true --fftw=FFTW3 --gpu=true \
-                       --model=ELBDM --gravity=true --comoving=true
+                       --model=ELBDM --gravity=true --comoving=true "$@"
