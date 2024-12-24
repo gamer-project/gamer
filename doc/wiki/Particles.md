@@ -6,7 +6,8 @@ Related options:
 [[--double_par | Installation:-Option-List#--double_par]], &nbsp;
 [[--store_par_acc | Installation:-Option-List#--store_par_acc]], &nbsp;
 [[--star_formation | Installation:-Option-List#--star_formation]], &nbsp;
-[[--par_attribute | Installation:-Option-List#--par_attribute]] &nbsp;
+[[--par_attribute_flt | Installation:-Option-List#--par_attribute_flt]] &nbsp;
+[[--par_attribute_int | Installation:-Option-List#--par_attribute_int]] &nbsp;
 
 
 ## Runtime Parameters
