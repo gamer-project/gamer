@@ -490,7 +490,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 #ifdef SUPPORT_HDF5
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_HDF5_TestProb
+// Function    :  Output_HDF5_InputTest
 // Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
 //
 // Note         : 1. This function only works in MPI_RANK == 0
@@ -502,7 +502,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
+void Output_HDF5_InputTest( HDF5_Output_t *HDF5_InputTest )
 {
 
    HDF5_InputTest->Add( "Bondi_MassBH",          &Bondi_MassBH          );
@@ -529,7 +529,7 @@ void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
    HDF5_InputTest->Add( "Bondi_HSE_Pres_NormT",  &Bondi_HSE_Pres_NormT  );
    HDF5_InputTest->Add( "Bondi_HSE_Beta_Rcore",  &Bondi_HSE_Beta_Rcore  );
 
-} // FUNCTION : Output_HDF5_TestProb
+} // FUNCTION : Output_HDF5_InputTest
 #endif // #ifdef SUPPORT_HDF5
 
 
@@ -712,18 +712,18 @@ void Init_TestProb_Hydro_Bondi()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr   = SetGridIC;
-   Flag_User_Ptr            = Flag_Bondi;
-   Aux_Record_User_Ptr      = Record_Bondi;
-   BC_User_Ptr              = BondiBC;
-   Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Func_Bondi;
-   Flu_ResetByUser_API_Ptr  = Flu_ResetByUser_API_Bondi;
-   End_User_Ptr             = End_Bondi;
+   Init_Function_User_Ptr    = SetGridIC;
+   Flag_User_Ptr             = Flag_Bondi;
+   Aux_Record_User_Ptr       = Record_Bondi;
+   BC_User_Ptr               = BondiBC;
+   Flu_ResetByUser_Func_Ptr  = Flu_ResetByUser_Func_Bondi;
+   Flu_ResetByUser_API_Ptr   = Flu_ResetByUser_API_Bondi;
+   End_User_Ptr              = End_Bondi;
 #  ifdef GRAVITY
-   Init_ExtAcc_Ptr          = Init_ExtAcc_Bondi;
+   Init_ExtAcc_Ptr           = Init_ExtAcc_Bondi;
 #  endif
 #  ifdef SUPPORT_HDF5
-   Output_HDF5_TestProb_Ptr = Output_HDF5_TestProb;
+   Output_HDF5_InputTest_Ptr = Output_HDF5_InputTest;
 #  endif
 #  endif // #if ( MODEL == HYDRO  &&  defined GRAVITY )
 

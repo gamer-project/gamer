@@ -239,7 +239,7 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 
 #ifdef SUPPORT_HDF5
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_HDF5_TestProb
+// Function    :  Output_HDF5_InputTest
 // Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
 //
 // Note         : 1. This function only works in MPI_RANK == 0
@@ -251,7 +251,7 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
+void Output_HDF5_InputTest( HDF5_Output_t *HDF5_InputTest )
 {
 
    HDF5_InputTest->Add( "var_bool",   &var_bool   );
@@ -259,7 +259,7 @@ void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
    HDF5_InputTest->Add( "var_int",    &var_int    );
    HDF5_InputTest->Add( "var_str",     var_str    );
 
-} // FUNCTION : Output_HDF5_TestProb
+} // FUNCTION : Output_HDF5_InputTest
 #endif // #ifdef SUPPORT_HDF5
 #endif // #if ( MODEL == HYDRO )
 
@@ -344,7 +344,7 @@ void Init_TestProb_Template()
    FB_Init_User_Ptr                  = NULL; // option: FB_USER;                      example: TestProblem/Hydro/Plummer/FB_Plummer.cpp
 #  endif
 #  ifdef SUPPORT_HDF5
-   Output_HDF5_TestProb_Ptr          = Output_HDF5_TestProb;
+   Output_HDF5_InputTest_Ptr         = Output_HDF5_InputTest;
    Output_HDF5_User_Ptr              = NULL; //                                       example: Output/Output_DumData_Total_HDF5.cpp --> Output_HDF5_User_Template()
 #  endif
 

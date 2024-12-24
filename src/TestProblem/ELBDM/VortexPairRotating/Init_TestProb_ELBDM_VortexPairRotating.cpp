@@ -201,7 +201,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 #ifdef SUPPORT_HDF5
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_HDF5_TestProb
+// Function    :  Output_HDF5_InputTest
 // Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
 //
 // Note         : 1. This function only works in MPI_RANK == 0
@@ -213,7 +213,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
+void Output_HDF5_InputTest( HDF5_Output_t *HDF5_InputTest )
 {
 
    HDF5_InputTest->Add( "VorPairRot_BgAmp",  &VorPairRot_BgAmp  );
@@ -221,7 +221,7 @@ void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
    HDF5_InputTest->Add( "VorPairRot_Omega",  &VorPairRot_Omega  );
    HDF5_InputTest->Add( "VorPairRot_Phase0", &VorPairRot_Phase0 );
 
-} // FUNCTION : Output_HDF5_TestProb
+} // FUNCTION : Output_HDF5_InputTest
 #endif // #ifdef SUPPORT_HDF5
 
 
@@ -307,11 +307,11 @@ void Init_TestProb_ELBDM_VortexPairRotating()
    SetParameter();
 
 
-   Init_Function_User_Ptr   = SetGridIC;
-   BC_User_Ptr              = BC;
-   Output_User_Ptr          = OutputVortexPairRotatingError;
+   Init_Function_User_Ptr    = SetGridIC;
+   BC_User_Ptr               = BC;
+   Output_User_Ptr           = OutputVortexPairRotatingError;
 #  ifdef SUPPORT_HDF5
-   Output_HDF5_TestProb_Ptr = Output_HDF5_TestProb;
+   Output_HDF5_InputTest_Ptr = Output_HDF5_InputTest;
 #  endif
 #  endif // #if ( MODEL == ELBDM )
 

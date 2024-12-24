@@ -377,7 +377,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 #ifdef SUPPORT_HDF5
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_HDF5_TestProb
+// Function    :  Output_HDF5_InputTest
 // Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
 //
 // Note         : 1. This function only works in MPI_RANK == 0
@@ -389,7 +389,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
+void Output_HDF5_InputTest( HDF5_Output_t *HDF5_InputTest )
 {
 
    HDF5_InputTest->Add( "Gas_Par_Setup",   &Gas_Par_Setup   );
@@ -398,7 +398,7 @@ void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
    HDF5_InputTest->Add( "GasTemp_Init",    &GasTemp_Init    );
    HDF5_InputTest->Add( "NPar_X",          &NPar_X          );
 
-} // FUNCTION : Output_HDF5_TestProb
+} // FUNCTION : Output_HDF5_InputTest
 #endif // #ifdef SUPPORT_HDF5
 
 
@@ -593,13 +593,13 @@ void Init_TestProb_Hydro_Zeldovich()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr   = SetGridIC;
+   Init_Function_User_Ptr    = SetGridIC;
 #  ifdef PARTICLE
-   Par_Init_ByFunction_Ptr  = Par_Init_ByFunction_Zeldovich;
+   Par_Init_ByFunction_Ptr   = Par_Init_ByFunction_Zeldovich;
 #  endif // #ifdef PARTICLE
-   Output_User_Ptr          = ( Gas_Par_Setup == 1 ) ? OutputError : NULL; // output gas numerical and analytical profiles
+   Output_User_Ptr           = ( Gas_Par_Setup == 1 ) ? OutputError : NULL; // output gas numerical and analytical profiles
 #  ifdef SUPPORT_HDF5
-   Output_HDF5_TestProb_Ptr = Output_HDF5_TestProb;
+   Output_HDF5_InputTest_Ptr = Output_HDF5_InputTest;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

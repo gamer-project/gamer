@@ -15,7 +15,7 @@ static void GetCompound_SymConst ( hid_t &H5_TypeID );
 static void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored );
 static void GetCompound_General  ( hid_t &H5_TypeID, const HDF5_Output_t *HDF5_OutUser );
 
-void (*Output_HDF5_TestProb_Ptr)( HDF5_Output_t *HDF5_InputTest ) = NULL;
+void (*Output_HDF5_InputTest_Ptr)( HDF5_Output_t *HDF5_InputTest ) = NULL;
 void (*Output_HDF5_User_Ptr)( HDF5_Output_t *HDF5_OutUser ) = NULL;
 static herr_t H5_write_user( const hid_t H5_GroupID, const hid_t H5_Type_ID, const HDF5_Output_t *HDF5_OutUser );
 
@@ -289,7 +289,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       Aux_Message( stderr, "WARNING : file \"%s\" already exists and will be overwritten !!\n", FileName );
 
 // check the output test problem
-   if ( Output_HDF5_TestProb_Ptr == NULL )   Aux_Error( ERROR_INFO, "Output_HDF5_TestProb_Ptr == NULL !!\n" );
+   if ( Output_HDF5_InputTest_Ptr == NULL )   Aux_Error( ERROR_INFO, "Output_HDF5_InputTest_Ptr == NULL !!\n" );
 
 
 
@@ -464,7 +464,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       FillIn_Makefile ( Makefile );
       FillIn_SymConst ( SymConst );
       FillIn_InputPara( InputPara, NFieldStored, FieldLabelOut );
-      Output_HDF5_TestProb_Ptr( &HDF5_InputTest );
+      Output_HDF5_InputTest_Ptr( &HDF5_InputTest );
       if ( Output_HDF5_User_Ptr != NULL )   Output_HDF5_User_Ptr( &HDF5_OutputUser );
 
 
@@ -1577,8 +1577,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       H5_Status = H5Tclose( H5_TypeID_Com_Makefile  );
       H5_Status = H5Tclose( H5_TypeID_Com_SymConst  );
       H5_Status = H5Tclose( H5_TypeID_Com_InputPara );
-      if ( Output_HDF5_TestProb_Ptr != NULL )   H5_Status = H5Tclose( H5_TypeID_Com_InputTest );
-      if ( Output_HDF5_User_Ptr     != NULL )   H5_Status = H5Tclose( H5_TypeID_Com_OutputUser );
+      if ( Output_HDF5_InputTest_Ptr != NULL )   H5_Status = H5Tclose( H5_TypeID_Com_InputTest );
+      if ( Output_HDF5_User_Ptr      != NULL )   H5_Status = H5Tclose( H5_TypeID_Com_OutputUser );
    } // if ( MPI_Rank == 0 )
    H5_Status = H5Sclose( H5_SpaceID_Scalar );
    H5_Status = H5Pclose( H5_DataCreatePropList );

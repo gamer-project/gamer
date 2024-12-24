@@ -408,7 +408,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 #ifdef SUPPORT_HDF5
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_HDF5_TestProb
+// Function    :  Output_HDF5_InputTest
 // Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
 //
 // Note         : 1. This function only works in MPI_RANK == 0
@@ -420,7 +420,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
+void Output_HDF5_InputTest( HDF5_Output_t *HDF5_InputTest )
 {
 
    HDF5_InputTest->Add( "Jet_BgDens",           &Jet_BgDens           );
@@ -462,7 +462,7 @@ void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
    HDF5_InputTest->Add( "Jet1_CenOffset_z",     &Jet_CenOffset [1][2] );
    }
 
-} // FUNCTION : Output_HDF5_TestProb
+} // FUNCTION : Output_HDF5_InputTest
 #endif // #ifdef SUPPORT_HDF5
 
 
@@ -655,20 +655,20 @@ void Init_TestProb_Hydro_Jet()
    SetParameter();
 
 
-   Init_Function_User_Ptr   = SetGridIC;
-   Flag_User_Ptr            = NULL;
-   Mis_GetTimeStep_User_Ptr = NULL;
-   BC_User_Ptr              = IsolatedBC;
-   Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Jet;
-   Output_User_Ptr          = NULL;
-   Aux_Record_User_Ptr      = NULL;
-   End_User_Ptr             = End_Jet;
+   Init_Function_User_Ptr    = SetGridIC;
+   Flag_User_Ptr             = NULL;
+   Mis_GetTimeStep_User_Ptr  = NULL;
+   BC_User_Ptr               = IsolatedBC;
+   Flu_ResetByUser_Func_Ptr  = Flu_ResetByUser_Jet;
+   Output_User_Ptr           = NULL;
+   Aux_Record_User_Ptr       = NULL;
+   End_User_Ptr              = End_Jet;
 #  ifdef GRAVITY
    if ( OPT__EXT_ACC == EXT_ACC_FUNC )
-   Init_ExtAcc_Ptr          = Init_ExtAcc_Jet;
+   Init_ExtAcc_Ptr           = Init_ExtAcc_Jet;
 #  endif
 #  ifdef SUPPORT_HDF5
-   Output_HDF5_TestProb_Ptr = Output_HDF5_TestProb;
+   Output_HDF5_InputTest_Ptr = Output_HDF5_InputTest;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

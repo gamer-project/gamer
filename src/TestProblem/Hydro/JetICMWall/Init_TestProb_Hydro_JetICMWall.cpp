@@ -292,7 +292,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 #ifdef SUPPORT_HDF5
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_HDF5_TestProb
+// Function    :  Output_HDF5_InputTest
 // Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
 //
 // Note         : 1. This function only works in MPI_RANK == 0
@@ -304,7 +304,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
+void Output_HDF5_InputTest( HDF5_Output_t *HDF5_InputTest )
 {
 
    HDF5_InputTest->Add( "ICM_Density",       &ICM_Density       );
@@ -324,7 +324,7 @@ void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
    HDF5_InputTest->Add( "Jet_PrecessAngle",  &Jet_PrecessAngle  );
    HDF5_InputTest->Add( "Jet_PrecessPeriod", &Jet_PrecessPeriod );
 
-} // FUNCTION : Output_HDF5_TestProb
+} // FUNCTION : Output_HDF5_InputTest
 #endif // #ifdef SUPPORT_HDF5
 
 
@@ -482,18 +482,18 @@ void Init_TestProb_Hydro_JetICMWall()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr   = SetGridIC;
-   Init_Field_User_Ptr      = AddNewField_JetICMWall;
-   Flag_User_Ptr            = NULL;
-   Flag_Region_Ptr          = NULL;
-   Mis_GetTimeStep_User_Ptr = NULL;
-   BC_User_Ptr              = JetBC;
-   Flu_ResetByUser_Func_Ptr = NULL;
-   Output_User_Ptr          = NULL;
-   Aux_Record_User_Ptr      = NULL;
-   End_User_Ptr             = NULL;
+   Init_Function_User_Ptr    = SetGridIC;
+   Init_Field_User_Ptr       = AddNewField_JetICMWall;
+   Flag_User_Ptr             = NULL;
+   Flag_Region_Ptr           = NULL;
+   Mis_GetTimeStep_User_Ptr  = NULL;
+   BC_User_Ptr               = JetBC;
+   Flu_ResetByUser_Func_Ptr  = NULL;
+   Output_User_Ptr           = NULL;
+   Aux_Record_User_Ptr       = NULL;
+   End_User_Ptr              = NULL;
 #  ifdef SUPPORT_HDF5
-   Output_HDF5_TestProb_Ptr = Output_HDF5_TestProb;
+   Output_HDF5_InputTest_Ptr = Output_HDF5_InputTest;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

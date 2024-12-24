@@ -239,7 +239,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 #ifdef SUPPORT_HDF5
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_HDF5_TestProb
+// Function    :  Output_HDF5_InputTest
 // Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
 //
 // Note         : 1. This function only works in MPI_RANK == 0
@@ -251,7 +251,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
+void Output_HDF5_InputTest( HDF5_Output_t *HDF5_InputTest )
 {
 
    HDF5_InputTest->Add( "Perturbation_N",     &Perturbation_N           );
@@ -259,7 +259,7 @@ void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
    HDF5_InputTest->Add( "Perturbation_BgAmp", &Perturbation_BgAmplitude );
    HDF5_InputTest->Add( "Perturbation_NDim",  &Perturbation_NDim        );
 
-} // FUNCTION : Output_HDF5_TestProb
+} // FUNCTION : Output_HDF5_InputTest
 #endif // #ifdef SUPPORT_HDF5
 
 
@@ -311,10 +311,10 @@ void Init_TestProb_ELBDM_Perturbation()
 // set the problem-specific runtime parameters
    SetParameter();
 
-   Init_Function_User_Ptr   = SetGridIC;
-   Output_User_Ptr          = OutputError;
+   Init_Function_User_Ptr    = SetGridIC;
+   Output_User_Ptr           = OutputError;
 #  ifdef SUPPORT_HDF5
-   Output_HDF5_TestProb_Ptr = Output_HDF5_TestProb;
+   Output_HDF5_InputTest_Ptr = Output_HDF5_InputTest;
 #  endif
 #  endif
 
