@@ -28,8 +28,8 @@ Table format:
 * `Hydro_Acc`: gravitational acceleration in hydrodynamics (see
 [[DT__GRAVITY | Runtime-Parameters:-Timestep#DT__GRAVITY]])
 * `Data_Dump`: timestep to reach the next data dump time (see
-[[OPT__OUTPUT_MODE | Outputs#OPT__OUTPUT_MODE]] and
-[[OUTPUT_DT | Outputs#OUTPUT_DT]])
+[[OPT__OUTPUT_MODE | Runtime-Parameters:-Outputs#OPT__OUTPUT_MODE]] and
+[[OUTPUT_DT | Runtime-Parameters:-Outputs#OUTPUT_DT]])
 * `End_Time`: timestep to reach the simulation end time (see
 [[END_T | Runtime-Parameters:-General#END_T]])
 * `Par_Vel`: particle velocity (see
