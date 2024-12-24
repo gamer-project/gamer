@@ -50,6 +50,18 @@ void Init_MPI( int *argc, char ***argv )
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Init_MPI ... done\n" );
 #  endif
 
+// detect MPI ranks per node and give warning message if necessary (assume all nodes have the same MPI ranks per node)
+// reference: https://stackoverflow.com/questions/9022496/how-to-determine-mpi-rank-process-number-local-to-a-socket-node
+   int MPI_SizePerNode;
+   MPI_Comm shmcomm;
+   MPI_Comm_split_type( MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &shmcomm );
+   MPI_Comm_size( shmcomm, &MPI_SizePerNode );
+
+   if ( MPI_SizePerNode == 1  &&  MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : MPI rank per node is %d !! Using more MPI ranks per node may improve the performance!!\n", MPI_SizePerNode );
+
+   MPI_Comm_free( &shmcomm );
+
 } // FUNCTION : Init_MPI
 
 
