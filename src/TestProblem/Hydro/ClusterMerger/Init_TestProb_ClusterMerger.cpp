@@ -119,8 +119,8 @@ void Validate()
 #  endif
 
 #  ifdef PARTICLE
-   if ( PAR_NATT_USER != 1 )
-      Aux_Error( ERROR_INFO, "PAR_NATT_USER must be set to 1 in the Makefile !!");
+   if ( PAR_NATT_INT_USER != 1 )
+      Aux_Error( ERROR_INFO, "PAR_NATT_INT_USER must be set to 1 in the Makefile !!");
 #  endif
 
    if ( !OPT__UNIT )
@@ -807,7 +807,7 @@ void AddNewParticleAttribute_ClusterMerger()
 {
 
   if ( Idx_ParHalo == Idx_Undefined )
-    Idx_ParHalo = AddParticleAttribute( "ParHalo" );
+    Idx_ParHalo = AddParticleAttributeInt( "ParHalo" );
 
 } // FUNCTION : AddNewParticleAttribute_ClusterMerger
 #endif
