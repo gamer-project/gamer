@@ -1013,12 +1013,12 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                 endif
 #                 ifdef MHD
                   fprintf( File, ", %14.7e", Emag_In );
-                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGX][ IDX321_BX(ijk_out[0]  ,ijk_out[1]  ,ijk_out[2]  ,FLU_NXT,FLU_NXT) ] );
-                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGX][ IDX321_BX(ijk_out[0]+1,ijk_out[1]  ,ijk_out[2]  ,FLU_NXT,FLU_NXT) ] );
-                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGY][ IDX321_BY(ijk_out[0]  ,ijk_out[1]  ,ijk_out[2]  ,FLU_NXT,FLU_NXT) ] );
-                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGY][ IDX321_BY(ijk_out[0]  ,ijk_out[1]+1,ijk_out[2]  ,FLU_NXT,FLU_NXT) ] );
-                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGZ][ IDX321_BZ(ijk_out[0]  ,ijk_out[1]  ,ijk_out[2]  ,FLU_NXT,FLU_NXT) ] );
-                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGZ][ IDX321_BZ(ijk_out[0]  ,ijk_out[1]  ,ijk_out[2]+1,FLU_NXT,FLU_NXT) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGX][ IDX321_BX(idx_in_i  ,idx_in_j  ,idx_in_k  ,FLU_NXT,FLU_NXT) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGX][ IDX321_BX(idx_in_i+1,idx_in_j  ,idx_in_k  ,FLU_NXT,FLU_NXT) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGY][ IDX321_BY(idx_in_i  ,idx_in_j  ,idx_in_k  ,FLU_NXT,FLU_NXT) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGY][ IDX321_BY(idx_in_i  ,idx_in_j+1,idx_in_k  ,FLU_NXT,FLU_NXT) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGZ][ IDX321_BZ(idx_in_i  ,idx_in_j  ,idx_in_k  ,FLU_NXT,FLU_NXT) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGZ][ IDX321_BZ(idx_in_i  ,idx_in_j  ,idx_in_k+1,FLU_NXT,FLU_NXT) ] );
 #                 endif
                   fprintf( File, ")\n" );
 
