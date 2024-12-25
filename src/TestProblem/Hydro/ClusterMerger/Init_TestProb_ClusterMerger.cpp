@@ -62,6 +62,10 @@ static FieldIdx_t ColorField3Idx = Idx_Undefined;
 
 // problem-specific function prototypes
 #ifdef MASSIVE_PARTICLES
+int ParHaloIdx = Idx_Undefined;
+
+void AddNewParticleAttribute_ClusterMerger();
+
 long Read_Particle_Number_ClusterMerger(std::string filename);
 void Par_Init_ByFunction_ClusterMerger(const long NPar_ThisRank,
                                        const long NPar_AllRank,
@@ -113,6 +117,9 @@ void Validate()
    Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
 #  endif
 
+   if ( PAR_NATT_USER != 1 ) 
+      Aux_Error( ERROR_INFO, "PAR_NATT_USER must be set to 1 in the Makefile!!");
+
    if ( !OPT__UNIT )
       Aux_Error( ERROR_INFO, "OPT__UNIT must be enabled !!\n" );
 
@@ -124,7 +131,7 @@ void Validate()
    if ( OPT__BC_POT == BC_POT_PERIODIC )
       Aux_Error( ERROR_INFO, "do not use periodic BC (OPT__BC_POT = 1) for this test !!\n" );
 #  endif
-
+   
 #  ifdef MASSIVE_PARTICLES
    if ( OPT__INIT == INIT_BY_FUNCTION  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
       Aux_Error( ERROR_INFO, "please set PAR_INIT = 1 (by FUNCTION) !!\n" );
@@ -692,7 +699,7 @@ void Init_TestProb_Hydro_ClusterMerger()
    End_User_Ptr                   = End_ClusterMerger;
    Par_Init_ByFunction_Ptr        = Par_Init_ByFunction_ClusterMerger;
    Init_Field_User_Ptr            = AddNewField_ClusterMerger;
-   //Par_Init_Attribute_User_Ptr    = AddNewParticleAttribute_ClusterMerger;
+   Par_Init_Attribute_User_Ptr    = AddNewParticleAttribute_ClusterMerger;
 #  ifdef MHD
    Init_Function_BField_User_Ptr  = SetBFieldIC;
 #  endif
@@ -784,5 +791,16 @@ void AddNewField_ClusterMerger()
       ColorField3Idx = AddField( "ColorField3", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
 
 }
+
+#endif
+
+#ifdef MASSIVE_PARTICLES
+
+void AddNewParticleAttribute_ClusterMerger()
+{
+  if ( ParHaloIdx == Idx_Undefined )
+    ParHaloIdx = AddParticleAttribute( "ParHalo" );
+}
+
 
 #endif
