@@ -31,11 +31,17 @@ extern long    NPar_AllCluster;
 
 
 #ifdef MASSIVE_PARTICLES
+
+extern FieldIdx_t Idx_ParHalo;
+
 void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
                                   real_par_in xpos[], real_par_in ypos[],
                                   real_par_in zpos[], real_par_in xvel[],
                                   real_par_in yvel[], real_par_in zvel[],
                                   real_par_in mass[], real_par_in ptype[]);
+
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Init_ByFunction_ClusterMerger
@@ -80,7 +86,6 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
 //
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, ParPUid, AllAttributeFlt, AllAttributeInt
 //-------------------------------------------------------------------------------------------------------
-
 void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPar_AllRank,
                                         real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                         real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
@@ -138,7 +143,6 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
    // load data to the particle repository
-
    const std::string filenames[3] = { Merger_File_Par1, Merger_File_Par2, Merger_File_Par3 };
 
    for ( int c=0; c<NCluster; c++ )
@@ -173,8 +177,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       if ( MPI_Rank == 0 )
          Aux_Message( stdout, "   Storing cluster %d to the particle repository ...\n", c+1 );
 
-      // Compute offsets for assigning particles
-
+      // compute offsets for assigning particles
       double coffset;
       switch (c) {
       case 0:
@@ -212,7 +215,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
             ParVelY[pp] = (real_par)0.0;
             ParVelX[pp] = (real_par)0.0;
          } else {
-            // For massive particles get their mass
+            // for massive particles get their mass
             // and velocity
             ParMass[pp] = real_par( mass[p] / UNIT_M );
             ParVelX[pp] = real_par( xvel[p] / UNIT_V );
@@ -224,7 +227,11 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
          ParTime[pp] = (real_par)Time[0];
 
          ParPUid[pp] = (long_par)-1;
-      }
+
+	 // set tag for each cluster
+	 AllAttributeInt[Idx_ParHalo][pp] = (long_par)c;
+
+      } // for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++)
 
       delete [] mass;
       delete [] xpos;
@@ -286,8 +293,9 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
 } // FUNCTION : Par_Init_ByFunction_ClusterMerger
 
-#ifdef SUPPORT_HDF5
 
+
+#ifdef SUPPORT_HDF5
 void Read_Particles_ClusterMerger( std::string filename, long offset, long num,
                                    real_par_in xpos[], real_par_in ypos[],
                                    real_par_in zpos[], real_par_in xvel[],
@@ -295,8 +303,8 @@ void Read_Particles_ClusterMerger( std::string filename, long offset, long num,
                                    real_par_in mass[], real_par_in ptype[] )
 {
 
-   hid_t   file_id, dataset, dataspace, memspace;
-   herr_t  status;
+   hid_t  file_id, dataset, dataspace, memspace;
+   herr_t status;
 
    hsize_t start[2], stride[2], count[2], dims[2], maxdims[2];
    hsize_t start1d[1], stride1d[1], count1d[1], dims1d[1], maxdims1d[1];
@@ -306,35 +314,32 @@ void Read_Particles_ClusterMerger( std::string filename, long offset, long num,
 
    stride[0] = 1;
    stride[1] = 1;
-   start[0] = (hsize_t)offset;
+   start [0] = (hsize_t)offset;
 
-   file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-
+   file_id   = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
    dataset   = H5Dopen(file_id, "particle_position", H5P_DEFAULT);
-
    dataspace = H5Dget_space(dataset);
-
    rank      = H5Sget_simple_extent_dims(dataspace, dims, maxdims);
 
-   count[0] = (hsize_t)num;
-   count[1] = 1;
+   count   [0] = (hsize_t)num;
+   count   [1] = 1;
 
-   dims[0] = count[0];
-   dims[1] = 1;
+   dims    [0] = count[0];
+   dims    [1] = 1;
 
-   count1d[0] = (hsize_t)num;
-   dims1d[0] = count1d[0];
+   count1d [0] = (hsize_t)num;
+   dims1d  [0] = count1d[0];
    stride1d[0] = 1;
-   start1d[0] = 0;
-   start[1] = 0;
+   start1d [0] = 0;
+   start   [1] = 0;
 
-   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start,
-                                 stride, count, NULL);
-   memspace = H5Screate_simple(1, dims1d, NULL);
-   status = H5Sselect_hyperslab(memspace, H5S_SELECT_SET, start1d,
-                                 stride1d, count1d, NULL);
-   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
-                     H5P_DEFAULT, xpos);
+   status   = H5Sselect_hyperslab( dataspace, H5S_SELECT_SET, start,
+                                   stride, count, NULL );
+   memspace = H5Screate_simple( 1, dims1d, NULL );
+   status   = H5Sselect_hyperslab( memspace, H5S_SELECT_SET, start1d,
+                                   stride1d, count1d, NULL );
+   status   = H5Dread( dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
+                       H5P_DEFAULT, xpos );
 
    if (status < 0) {
       Aux_Message(stderr, "Could not read particle x-position!!\n");

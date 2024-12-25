@@ -475,7 +475,7 @@ void AddNewField_AGORA()
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  AddNewParticleAttributeFlt_AGORA
+// Function    :  AddNewParticleAttribute_AGORA
 // Description :  Add the problem-specific particle attributes
 //
 // Note        :  1. Ref: https://github.com/gamer-project/gamer/wiki/Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes
