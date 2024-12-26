@@ -30,14 +30,12 @@ typedef float  real_par;
 
 #ifdef SUPPORT_GRACKLE
 #include <grackle_float.h>
-#ifdef GRACKLE_FLOAT_8
+#if   defined GRACKLE_FLOAT_8
 typedef double real_che;
-#else
-#ifdef GRACKLE_FLOAT_4
+#elif defined GRACKLE_FLOAT_4
 typedef float  real_che;
 #else
-#error : GRACKLE_FLOAT_8 or GRACKLE_FLOAT_4 is not defined in grackle library!
-#endif
+#error : GRACKLE_FLOAT_8 or GRACKLE_FLOAT_4 is not defined in the grackle library!
 #endif
 #endif // #ifdef SUPPORT_GRACKLE
 

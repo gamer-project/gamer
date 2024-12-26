@@ -28,12 +28,12 @@ void Grackle_Init()
 
 
 // check
-// floating-point type (You can not compile with different type)
-/*
+// errors
    if ( typeid(real_che) != typeid(gr_float) )
       Aux_Error( ERROR_INFO, "inconsistent floating-point type (GAMER(real_che): %d, Grackle: %d) !!\n",
                  sizeof(real_che), sizeof(gr_float) );
-*/
+
+// warnings
    if ( MPI_Rank == 0  &&  sizeof(gr_float) != 8 )
        Aux_Message( stderr, "WARNING : Grackle suggests floating-point number to be 8 bytes (GRACKLE_FLOAT_8) !!\n" );
 
