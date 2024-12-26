@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 """
-User and developer guides of this script are provided in the following link.
+User guides of this script are provided in the following link.
 
-   https://github.com/gamer-project/gamer/wiki/Installation%3A-Configure.py
+   https://github.com/gamer-project/gamer/wiki/Installation
 
 """
 
@@ -228,21 +228,21 @@ class ArgumentParser( argparse.ArgumentParser ):
 
     def print_autocomplete( self, target_option, *args, **kwargs ):
         if target_option == "all":
-            all_options = []
-            for option in self.options:
-                all_options += option["flags"]
+            all_options = [ flag+("=" if "type" in option else "") for option in self.options for flag in option["flags"] ]
             print( " ".join(all_options) )
             return
 
-        if target_option == "--machine":
+        if target_option in ["--machine", "--machine="]:
             all_files = os.listdir( GAMER_CONFIG_DIR )
-            config_files = [ f for f in all_files if ".config" in f ]
+            config_files = [ "%s"%f for f in all_files if ".config" in f ]
             config_files = list( map( lambda f: f.replace( ".config", "" ), config_files ) )
             print( " ".join(config_files) )
             return
 
         for option in self.options:
-            if target_option not in option["flags"]: continue
+            trail_option = "=" if "type" in option else ""
+            if not any( target_option in [flag+trail_option, flag] for flag in option["flags"] ):
+                continue
 
             # option with choices
             if "choices" in option:
@@ -456,7 +456,7 @@ def load_arguments():
                        )
 
     parser.add_argument( "--flux", type=str, metavar="TYPE", gamer_name="RSOLVER",
-                         default=None, choices=["EXACT", "ROE", "HLLE", "HLLC", "HLLD", NONE_STR],
+                         default=None, choices=["EXACT", "ROE", "HLLE", "HLLC", "HLLD"],
                          depend={"model":"HYDRO"},
                          constraint={ "ROE":{"eos":"GAMMA"},
                                       "EXACT":{"eos":"GAMMA"} },

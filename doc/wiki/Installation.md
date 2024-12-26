@@ -38,9 +38,9 @@ e.g., `example/test_problem/Hydro/AcousticWave/generate_make.sh`.
 >    <pre>
 >    #!/usr/bin/python3
 >    """
->    User and developer guides of this script are provided in the following link.
+>    User guides of this script are provided in the following link.
 >
->    https://github.com/gamer-project/gamer/wiki/Installation%3A-Configure.py
+>    https://github.com/gamer-project/gamer/wiki/Installation
 >
 >    """
 >    </pre>
