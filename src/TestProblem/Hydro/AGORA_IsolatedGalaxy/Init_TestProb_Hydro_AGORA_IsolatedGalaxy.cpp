@@ -19,7 +19,7 @@ static double  AGORA_HaloGasTemp;               // halo gas temperature
        bool    AGORA_UseMetal = false;          // add and advect a metal density field
                                                 // --> to enable this option, one must
                                                 //     (1) set AGORA_(Disk/Halo)MetalMassFrac properly
-                                                //     (2) set NCOMP_PASSIVE_USER>=1 and PAR_NATT_USER>=1 in the Makefile
+                                                //     (2) set NCOMP_PASSIVE_USER>=1 and PAR_NATT_FLT_USER>=1 in the Makefile
                                                 // --> necessary if one wants to enable metal_cooling in Grackle
 static double  AGORA_DiskMetalMassFrac;         // disk metal mass fraction (disk_metal_mass / disk_gas_mass)
 static double  AGORA_HaloMetalMassFrac;         // halo metal mass fraction (halo_metal_mass / halo_gas_mass)
