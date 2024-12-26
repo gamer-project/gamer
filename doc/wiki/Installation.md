@@ -13,15 +13,15 @@
    To get the `Makefile`, please execute the following command:
 
    ```bash
-   python configure.py --machine=your_configuration_file [--your_arguments]
+   python configure.py [--your_arguments]
    ```
 
-   `your_configuration_file` is the configuration filename you got from step 1, and `[--your_arguments]` should match your simulation requirements. Please check out [[Option List | Installation:-Option-List]] for all the available options.
+   `[--your_arguments]` represent the options that should align with your simulation requirements. Please check out [[Option List | Installation:-Option-List]] for all the available options.
 
-   For example, the following command uses the `configs/pleiades.config` machine configuration, sets the FFTW method to `FFTW2`, and enables gravity and GPU.
+   For example, the following command sets the FFTW method to `FFTW2`, and enables gravity and GPU.
 
    ``` bash
-   python configure.py --machine=pleiades --fftw=FFTW2 --gravity=true --gpu=true
+   python configure.py --fftw=FFTW2 --gravity=true --gpu=true
    ```
 
 > [!TIP]
