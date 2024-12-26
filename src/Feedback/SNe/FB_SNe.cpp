@@ -99,6 +99,8 @@ void FB_distSNeFeedback( real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int explos
 //                                 where Min/Max specify the range of random numbers
 //
 // Return      :  Fluid, ParAtt
+//
+// Reference   :  https://github.com/enzo-project/enzo-dev/blob/8898b36d6e14c0db8af51efd7a6019c5838ce288/src/enzo/star_maker_ssn.F & Grid_StarParticleHandler.C
 //-------------------------------------------------------------------------------------------------------
 int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
             const int NPar, const long *ParSortID, real_par *ParAtt[PAR_NATT_TOTAL],
@@ -938,9 +940,9 @@ void FB_WindFeedback( const double particleAge, double &windEjectMass, double &w
 ////
 //// Parameter   : 
 ////
-//// Return      :  
+//// Return      : void
 ////
-//// Reference   : 
+//// Reference   : https://github.com/enzo-project/enzo-dev/blob/8898b36d6e14c0db8af51efd7a6019c5838ce288/src/enzo/star_maker_ssn.F#L806
 ////-------------------------------------------------------------------------------------------------------
 void FB_distSNeFeedback( real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const int explosionFlag,
                          const int idx[], const double sn_energy, const double Msun,
