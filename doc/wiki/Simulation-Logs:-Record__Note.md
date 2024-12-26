@@ -1,6 +1,6 @@
 This file records all the simulation configurations, including
 * [[Simulation notes | Running-the-Code#taking-notes]]
-* [[Makefile options | Installation:-Simulation-Options]]
+* [[Configuration options | Installation:-Option-List#Option-List]]
 * Symbolic constants defined in various headers
 * [[Runtime parameters | Runtime Parameters]] set by various `Input__*` tables
 * Simulation resolutions (i.e., cell width) on different AMR levels

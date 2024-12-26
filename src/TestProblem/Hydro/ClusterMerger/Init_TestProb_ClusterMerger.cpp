@@ -62,6 +62,10 @@ static FieldIdx_t ColorField3Idx = Idx_Undefined;
 
 // problem-specific function prototypes
 #ifdef MASSIVE_PARTICLES
+FieldIdx_t Idx_ParHalo = Idx_Undefined;
+
+void AddNewParticleAttribute_ClusterMerger();
+
 long Read_Particle_Number_ClusterMerger(std::string filename);
 void Par_Init_ByFunction_ClusterMerger(const long NPar_ThisRank,
                                        const long NPar_AllRank,
@@ -111,6 +115,11 @@ void Validate()
 
 #  ifdef COMOVING
    Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
+#  endif
+
+#  ifdef PARTICLE
+   if ( PAR_NATT_USER != 1 )
+      Aux_Error( ERROR_INFO, "PAR_NATT_USER must be set to 1 in the Makefile !!");
 #  endif
 
    if ( !OPT__UNIT )
@@ -614,8 +623,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    }
 
 } // FUNCTION : SetGridIC
-
 #endif // #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -646,8 +655,9 @@ void End_ClusterMerger()
 
 } // FUNCTION : End_ClusterMerger
 
-#ifdef MHD
 
+
+#ifdef MHD
 void SetBFieldIC( real magnetic[], const double x, const double y, const double z, const double Time,
                   const int lv, double AuxArray[] )
 {
@@ -658,8 +668,8 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
    return;
 
 } // FUNCTION : SetBFieldIC
-
 #endif // #ifdef MHD
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -688,23 +698,25 @@ void Init_TestProb_Hydro_ClusterMerger()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr         = SetGridIC;
-   End_User_Ptr                   = End_ClusterMerger;
-   Par_Init_ByFunction_Ptr        = Par_Init_ByFunction_ClusterMerger;
-   Init_Field_User_Ptr            = AddNewField_ClusterMerger;
-   //Par_Init_Attribute_User_Ptr    = AddNewParticleAttribute_ClusterMerger;
+   Init_Function_User_Ptr        = SetGridIC;
+   End_User_Ptr                  = End_ClusterMerger;
+   Par_Init_ByFunction_Ptr       = Par_Init_ByFunction_ClusterMerger;
+   Init_Field_User_Ptr           = AddNewField_ClusterMerger;
+   Par_Init_Attribute_User_Ptr   = AddNewParticleAttribute_ClusterMerger;
 #  ifdef MHD
-   Init_Function_BField_User_Ptr  = SetBFieldIC;
+   Init_Function_BField_User_Ptr = SetBFieldIC;
 #  endif
 #  endif // if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
+
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_TestProb_Hydro_ClusterMerger
 
-#ifdef SUPPORT_HDF5
 
-int Read_Num_Points_ClusterMerger(std::string filename)
+
+#ifdef SUPPORT_HDF5
+int Read_Num_Points_ClusterMerger( std::string filename )
 {
 
    hid_t   file_id, dataset, dataspace;
@@ -713,39 +725,40 @@ int Read_Num_Points_ClusterMerger(std::string filename)
 
    int rank;
 
-   file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+   file_id   = H5Fopen( filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT );
+   dataset   = H5Dopen( file_id, "/fields/radius", H5P_DEFAULT );
+   dataspace = H5Dget_space( dataset );
+   rank      = H5Sget_simple_extent_dims( dataspace, dims, maxdims );
 
-   dataset   = H5Dopen(file_id, "/fields/radius", H5P_DEFAULT);
-   dataspace = H5Dget_space(dataset);
-   rank      = H5Sget_simple_extent_dims(dataspace, dims, maxdims);
-
-   H5Fclose(file_id);
+   H5Fclose( file_id );
 
    return (int)dims[0];
 
 } // FUNCTION : Read_Num_Points_ClusterMerger
 
-void Read_Profile_ClusterMerger(std::string filename, std::string fieldname,
-                                double field[])
+
+
+void Read_Profile_ClusterMerger( std::string filename, std::string fieldname, double field[] )
 {
 
-   hid_t   file_id, dataset;
-   herr_t  status;
+   hid_t  file_id, dataset;
+   herr_t status;
 
-   file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+   file_id = H5Fopen( filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT );
+   dataset = H5Dopen( file_id, fieldname.c_str(), H5P_DEFAULT );
+   status  = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
+                      H5S_ALL, H5P_DEFAULT, field );
+   H5Dclose( dataset );
 
-   dataset = H5Dopen(file_id, fieldname.c_str(), H5P_DEFAULT);
-   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
-                     H5S_ALL, H5P_DEFAULT, field);
-   H5Dclose(dataset);
-
-   H5Fclose(file_id);
+   H5Fclose( file_id );
 
    return;
 
 } // FUNCTION : Read_Profile_ClusterMerger
 
-long Read_Particle_Number_ClusterMerger(std::string filename)
+
+
+long Read_Particle_Number_ClusterMerger( std::string filename )
 {
 
    hid_t   file_id, dataset, dataspace;
@@ -754,21 +767,21 @@ long Read_Particle_Number_ClusterMerger(std::string filename)
 
    int rank;
 
-   file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+   file_id   = H5Fopen( filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT );
+   dataset   = H5Dopen( file_id, "particle_mass", H5P_DEFAULT );
+   dataspace = H5Dget_space( dataset );
+   rank      = H5Sget_simple_extent_dims( dataspace, dims, maxdims );
 
-   dataset   = H5Dopen(file_id, "particle_mass", H5P_DEFAULT);
-   dataspace = H5Dget_space(dataset);
-   rank      = H5Sget_simple_extent_dims(dataspace, dims, maxdims);
-
-   H5Sclose(dataspace);
-   H5Dclose(dataset);
-   H5Fclose(file_id);
+   H5Sclose( dataspace );
+   H5Dclose( dataset );
+   H5Fclose( file_id );
 
    return (long)dims[0];
 
 } // FUNCTION : Read_Particle_Number_ClusterMerger
-
 #endif // #ifdef SUPPORT_HDF5
+
+
 
 #if ( MODEL == HYDRO )
 void AddNewField_ClusterMerger()
@@ -783,6 +796,17 @@ void AddNewField_ClusterMerger()
    if ( Merger_Coll_NumHalos > 2 && ColorField3Idx == Idx_Undefined )
       ColorField3Idx = AddField( "ColorField3", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
 
-}
+} // FUNCTION : AddNewField_ClusterMerger
+#endif
 
+
+
+#ifdef MASSIVE_PARTICLES
+void AddNewParticleAttribute_ClusterMerger()
+{
+
+  if ( Idx_ParHalo == Idx_Undefined )
+    Idx_ParHalo = AddParticleAttribute( "ParHalo" );
+
+} // FUNCTION : AddNewParticleAttribute_ClusterMerger
 #endif

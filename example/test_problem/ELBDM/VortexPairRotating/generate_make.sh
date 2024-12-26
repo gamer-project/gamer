@@ -2,4 +2,4 @@
 
 PYTHON=python3
 
-${PYTHON} configure.py --model=ELBDM --hdf5=true
+${PYTHON} configure.py --model=ELBDM --hdf5=true "$@"

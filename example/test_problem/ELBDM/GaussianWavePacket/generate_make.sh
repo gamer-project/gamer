@@ -2,4 +2,4 @@
 
 PYTHON=python3
 
-${PYTHON} configure.py --model=ELBDM
+${PYTHON} configure.py --model=ELBDM "$@"
