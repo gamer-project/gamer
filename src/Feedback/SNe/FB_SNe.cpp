@@ -161,7 +161,7 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
       const double dh 	      = amr->dh[lv];
       const double _dh	      = 1.0 / dh;
       const double Msun       = Const_Msun;
-      const double MinParMass = SF_CREATE_STAR_MIN_STAR_MASS;     //in unit of M_sun.
+      const double MinParMass = SF_CREATE_STAR_MIN_STAR_MASS * UNIT_M / Msun;     //in unit of M_sun.
       const bool NoFloor      = false;
       const double Emag	      = 0.0;
       const int distcells     = 26;  //number of cells that receive feedback
