@@ -292,12 +292,12 @@ void Init_Load_Parameter()
 
 // conduction
 #  ifdef CONDUCTION
-   ReadPara->Add( "CONDUCTION_TYPE",            &CONDUCTION_TYPE,                 1,               1,             2      );
-   ReadPara->Add( "CONDUCTION_FLUX_TYPE",       &CONDUCTION_FLUX_TYPE,            1,               1,             2      );
-   ReadPara->Add( "CONDUCTION_CONSTANT_COEFF",  &CONDUCTION_CONSTANT_COEFF,       0.0,             0.0,           NoMax_double   );
+   ReadPara->Add( "CONDUCTION_TYPE",            &CONDUCTION_TYPE,                 1,               1,             2              );
+   ReadPara->Add( "CONDUCTION_FLUX_TYPE",       &CONDUCTION_FLUX_TYPE,            1,               1,             2              );
+   ReadPara->Add( "CONDUCTION_CONSTANT_COEFF",  &CONDUCTION_CONSTANT_COEFF,       1.0,             0.0,           NoMax_double   );
    ReadPara->Add( "CONDUCTION_SPITZER_FRAC",    &CONDUCTION_SPITZER_FRAC,         1.0,             0.0,           NoMax_double   );
    ReadPara->Add( "CONDUCTION_COULOMB_LOG",     &CONDUCTION_COULOMB_LOG,          40.0,            0.0,           NoMax_double   );
-   ReadPara->Add( "CONDUCTION_MAX_DIFFUSIVITY", &CONDUCTION_MAX_DIFFUSIVITY,      NoMax_double,    0.0,           NoMax_double   );
+   ReadPara->Add( "CONDUCTION_MAX_DIFFUSIVITY", &CONDUCTION_MAX_DIFFUSIVITY,     -1.0,             Eps_double,    NoMax_double   );
    ReadPara->Add( "CONDUCTION_MUE",             &CONDUCTION_MUE,                  1.14,            0.0,           NoMax_double   );
    ReadPara->Add( "CONDUCTION_SATURATION",      &CONDUCTION_SATURATION,           true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "CONDUCTION_SAT_WHISTLER",    &CONDUCTION_SAT_WHISTLER,         false,           Useless_bool,  Useless_bool   );
@@ -305,13 +305,13 @@ void Init_Load_Parameter()
 
 // viscosity
 #  ifdef VISCOSITY
-   ReadPara->Add( "VISCOSITY_TYPE",             &VISCOSITY_TYPE,                  1,               1,             2      );
-   ReadPara->Add( "VISCOSITY_FLUX_TYPE",        &VISCOSITY_FLUX_TYPE,             1,               1,             2      );
-   ReadPara->Add( "VISCOSITY_COEFF_TYPE",       &VISCOSITY_COEFF_TYPE,            1,               1,             2      );
+   ReadPara->Add( "VISCOSITY_TYPE",             &VISCOSITY_TYPE,                  1,               1,             2              );
+   ReadPara->Add( "VISCOSITY_FLUX_TYPE",        &VISCOSITY_FLUX_TYPE,             1,               1,             2              );
+   ReadPara->Add( "VISCOSITY_COEFF_TYPE",       &VISCOSITY_COEFF_TYPE,            1,               1,             2              );
    ReadPara->Add( "VISCOSITY_CONSTANT_COEFF",   &VISCOSITY_CONSTANT_COEFF,        0.0,             0.0,           NoMax_double   );
    ReadPara->Add( "VISCOSITY_SPITZER_FRAC",     &VISCOSITY_SPITZER_FRAC,          1.0,             0.0,           NoMax_double   );
    ReadPara->Add( "VISCOSITY_COULOMB_LOG",      &VISCOSITY_COULOMB_LOG,           40.0,            0.0,           NoMax_double   );
-   ReadPara->Add( "VISCOSITY_MAX_DIFFUSIVITY",  &VISCOSITY_MAX_DIFFUSIVITY,       NoMax_double,    0.0,           NoMax_double   );
+   ReadPara->Add( "VISCOSITY_MAX_DIFFUSIVITY",  &VISCOSITY_MAX_DIFFUSIVITY,      -1.0,             Eps_double,    NoMax_double   );
    ReadPara->Add( "VISCOSITY_BOUNDS",           &VISCOSITY_BOUNDS,                false,           Useless_bool,  Useless_bool   );
 #  endif
 
