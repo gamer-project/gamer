@@ -1,0 +1,31 @@
+# problem-specific runtime parameters (HaloMerger_Halo_Num > 0 only)
+# 1st halo
+HaloMerger_Halo_1_CenCoordX             0.06469211      # x/y/z-coordinate of the center of the 1st halo (<0.0=auto -> box center) [-1.0]
+HaloMerger_Halo_1_CenCoordY             0.12938422      # (Note that CenCoordX/Y/Z denotes the HALO_IC box center, not the exact halo center, when HaloMerger_Halo_InitMode == 1)
+HaloMerger_Halo_1_CenCoordZ             0.12938422
+HaloMerger_Halo_1_VelocityX             0.5             # x/y/z-component of the bulk velocity of the 1st halo [0.0]
+HaloMerger_Halo_1_VelocityY             0.0
+HaloMerger_Halo_1_VelocityZ             0.0
+HaloMerger_Halo_1_HALO_IC_Filename      HALO_IC_Halo1   # filename of HALO_IC (binary file in vzyx format; row-major and v=field) (single AMR level) for the 1st halo (HaloMerger_Halo_InitMode == 1 only)
+HaloMerger_Halo_1_HALO_IC_BoxLenX       0.0646921095    # physical length in the x/y/z-direction of HALO_IC box for the 1st halo (must > 0.0) (HaloMerger_Halo_InitMode == 1 only)
+HaloMerger_Halo_1_HALO_IC_BoxLenY       0.0646921095
+HaloMerger_Halo_1_HALO_IC_BoxLenZ       0.0646921095
+HaloMerger_Halo_1_HALO_IC_NCellsX       640             # number of cells in the x/y/z-direction of HALO_IC box for the 1st halo (must > 0) (HaloMerger_Halo_InitMode == 1 only)
+HaloMerger_Halo_1_HALO_IC_NCellsY       640
+HaloMerger_Halo_1_HALO_IC_NCellsZ       640
+HaloMerger_Halo_1_HALO_IC_Float8        0               # data precision of HALO_IC for the 1st halo (0=float, 1=double) (HaloMerger_Halo_InitMode == 1 only) [0]
+# 2nd halo
+HaloMerger_Halo_2_CenCoordX             0.19407633
+HaloMerger_Halo_2_CenCoordY             0.12938422
+HaloMerger_Halo_2_CenCoordZ             0.12938422
+HaloMerger_Halo_2_VelocityX            -0.5
+HaloMerger_Halo_2_VelocityY             0.0
+HaloMerger_Halo_2_VelocityZ             0.0
+HaloMerger_Halo_2_HALO_IC_Filename      HALO_IC_Halo2
+HaloMerger_Halo_2_HALO_IC_BoxLenX       0.0646921095
+HaloMerger_Halo_2_HALO_IC_BoxLenY       0.0646921095
+HaloMerger_Halo_2_HALO_IC_BoxLenZ       0.0646921095
+HaloMerger_Halo_2_HALO_IC_NCellsX       640
+HaloMerger_Halo_2_HALO_IC_NCellsY       640
+HaloMerger_Halo_2_HALO_IC_NCellsZ       640
+HaloMerger_Halo_2_HALO_IC_Float8        0

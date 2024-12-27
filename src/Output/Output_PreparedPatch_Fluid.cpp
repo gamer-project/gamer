@@ -98,7 +98,15 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
       fprintf( File, "(%3s,%3s,%3s )", "i", "j", "k" );
 
 #     if ( MODEL == ELBDM )
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      if ( amr->use_wave_flag[TLv] ) {
+#     endif
       fprintf( File, " %*s %*s", StrLen_Flt, FieldLabel[REAL], StrLen_Flt, FieldLabel[IMAG] );
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      } else {
+      fprintf( File, " %*s %*s", StrLen_Flt, FieldLabel[DENS], StrLen_Flt, FieldLabel[PHAS] );
+      }
+#     endif
 
 #     else
       for (int v=0; v<FLU_NIN; v++)    fprintf( File, " %*s", StrLen_Flt, FieldLabel[v] );
@@ -121,9 +129,24 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
       for (int j=-FLU_GHOST_SIZE; j<FLU_GHOST_SIZE+PS1; j++)  {  J = j + Disp_j;
       for (int i=-FLU_GHOST_SIZE; i<FLU_GHOST_SIZE+PS1; i++)  {  I = i + Disp_i;
 
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         if ( amr->use_wave_flag[TLv] ) {
+#        endif
+
          Idx = K*FLU_NXT*FLU_NXT + J*FLU_NXT + I;
 
          for (int v=0; v<FLU_NIN; v++)    u[v] = h_Flu_Array[TID][v][Idx];
+
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         } else { // if ( amr->use_wave_flag[lv] )
+
+         real (*smaller_h_Flu_Array)[FLU_NIN][CUBE(HYB_NXT)] = (real (*)[FLU_NIN][CUBE(HYB_NXT)]) h_Flu_Array;
+         Idx = K*HYB_NXT*HYB_NXT + J*HYB_NXT + I;
+
+         for (int v=0; v<FLU_NIN; v++)    u[v] = smaller_h_Flu_Array[TID][v][Idx];
+
+         } // if ( amr->use_wave_flag[TLv] ) ... else ...
+#        endif
 
 //       cell indices
          fprintf( File, "(%3d,%3d,%3d )", i, j, k );
