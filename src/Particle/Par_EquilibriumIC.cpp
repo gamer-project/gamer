@@ -392,7 +392,7 @@ void Par_EquilibriumIC::constructDistribution()
 {
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "Constructing the distribution in Par_EquilibriumIC ...\n" );
 
-// maximum radius for the profiles to calculate the distribution function, should be much larger than the Cloud_MaxR
+// Maximum radius for the profiles to calculate the distribution function, should be much larger than the Cloud_MaxR
    RArray_MaxR = 1.0e3*Cloud_MaxR;
 
 // Load the input density table

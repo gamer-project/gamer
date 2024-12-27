@@ -3,8 +3,6 @@
 
 #ifdef MASSIVE_PARTICLES
 
-static RandomNumber_t *RNG = NULL;
-
 extern int      ParEqmIC_NumCloud;
 extern char   (*ParEqmIC_Cloud_ParaFilenames)[MAX_STRING];
 
@@ -50,7 +48,7 @@ extern char   (*ParEqmIC_Cloud_ExtPotTable)[MAX_STRING];
 //                ParPosX/Y/Z   : Particle position array with the size of NPar_ThisRank
 //                ParVelX/Y/Z   : Particle velocity array with the size of NPar_ThisRank
 //                ParTime       : Particle time     array with the size of NPar_ThisRank
-//                ParType       : Particle type     array with the size of NPar_ThisRan
+//                ParType       : Particle type     array with the size of NPar_ThisRank
 //                AllAttribute  : Pointer array for all particle attributes
 //                                --> Dimension = [PAR_NATT_TOTAL][NPar_ThisRank]
 //                                --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
@@ -58,7 +56,6 @@ extern char   (*ParEqmIC_Cloud_ExtPotTable)[MAX_STRING];
 //
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttribute
 //-------------------------------------------------------------------------------------------------------
-
 void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_AllRank,
                                    real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                    real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
@@ -91,17 +88,17 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
       for (int i=0; i<ParEqmIC_NumCloud; i++)
       {
 
-         // Check whether the particle number of each cloud is reasonable
+//       check whether the particle number of each particle cloud is reasonable
          if ( (Par_Idx0 + ParEqmIC_Cloud_ParNum[i]) > NPar_AllRank )
          {
             Aux_Error( ERROR_INFO, "particle number doesn't match (%ld + %ld = %ld > %ld) !!\n",
                        Par_Idx0, ParEqmIC_Cloud_ParNum[i], Par_Idx0+ParEqmIC_Cloud_ParNum[i], NPar_AllRank );
          }
 
-         // Initialize Par_EquilibriumIC for each cloud
+//       initialize Par_EquilibriumIC for each particle cloud
          Par_EquilibriumIC Cloud_Constructor( ParEqmIC_Cloud_Type[i] );
 
-         // Set the parameters for each particle cloud
+//       set the parameters for each particle cloud
          Cloud_Constructor.setCenterAndBulkVel( ParEqmIC_Cloud_Center [i][0], ParEqmIC_Cloud_Center [i][1], ParEqmIC_Cloud_Center [i][2],
                                                 ParEqmIC_Cloud_BulkVel[i][0], ParEqmIC_Cloud_BulkVel[i][1], ParEqmIC_Cloud_BulkVel[i][2] );
 
@@ -136,15 +133,15 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
          Aux_Message( stdout, "   Particle mass                      = % 13.7e\n",  Cloud_Constructor.ParticleMass      );
          Aux_Message( stdout, "   Total enclosed mass relative error = % 13.7e\n",  Cloud_Constructor.TotCloudMassError );
 
-//       update the particle index offset for the next cloud
+//       update the particle index offset for the next particle cloud
          Par_Idx0 += ParEqmIC_Cloud_ParNum[i];
 
       } // for (int i=0; i<ParEqmIC_CloudNum; i++)
 
-      // check whether the total particle number is reasonable
+//    check whether the total particle number is reasonable
       if ( Par_Idx0 != NPar_AllRank )
       {
-         Aux_Error( ERROR_INFO, "total particle number doesn't match (total = %ld > NPar_AllRank = %ld) !!\n", Par_Idx0, NPar_AllRank );
+         Aux_Error( ERROR_INFO, "total particle number doesn't match (total = %ld != NPar_AllRank = %ld) !!\n", Par_Idx0, NPar_AllRank );
       }
 
    } // if ( MPI_Rank == 0 )
@@ -154,8 +151,7 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
    Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, ParData_AllRank, AllAttribute );
 
 
-// synchronize all particles to the physical time on the base level
-// and assign particle type
+// synchronize all particles to the physical time on the base level and assign particle type
    for (long p=0; p<NPar_ThisRank; p++)
    {
       ParTime[p] = Time[0];
@@ -166,7 +162,6 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
 // free resource
    if ( MPI_Rank == 0 )
    {
-      delete RNG;
       for (int v=0; v<PAR_NATT_TOTAL; v++)   delete [] ParData_AllRank[v];
    }
 
