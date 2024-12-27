@@ -92,9 +92,12 @@ for example.
 See also
 [[ Add Problem-specific Grid Fields and Particle Attributes | Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes ]] for adding user-defined fluid fields.
 
-**Caution: when enabling [[OPENMP | Installation:-Simulation Options#OPENMP]],
-the grid IC function must be thread-safe** since it will be invoked by
-multiple threads in parallel. One can disable OpenMP parallelization
+> [!CAUTION]
+> When enabling [[--openmp | Installation:-Option-List#--openmp]],
+the grid IC function must be **thread-safe** since it will be invoked by
+multiple threads in parallel.
+>
+> One can disable OpenMP parallelization
 for the grid IC function by adopting
 [[OPT__INIT_GRID_WITH_OMP| MPI-and-OpenMP#OPT__INIT_GRID_WITH_OMP]]=0.
 
@@ -147,9 +150,12 @@ It should return the vector potential at a given location `x/y/z` and time `Time
 
 **Example: `Init_BField_ByVecPot_User_Template()` in `src/Model_Hydro/MHD_Init_BField_ByVecPot_Function.cpp`.**
 
-**Caution: when enabling [[OPENMP | Installation:-Simulation Options#OPENMP]],
-the magnetic field or the vector potential IC function must be thread-safe** since it will be invoked by
-multiple threads in parallel. One can disable OpenMP parallelization
+> [!CAUTION]
+> When enabling [[--openmp | Installation:-Option-List#--openmp]],
+the magnetic field or the vector potential IC function must be **thread-safe** since it will be invoked by
+multiple threads in parallel.
+>
+> One can disable OpenMP parallelization
 for the magnetic field IC function by adopting
 [[OPT__INIT_GRID_WITH_OMP| MPI-and-OpenMP#OPT__INIT_GRID_WITH_OMP]]=0.
 
@@ -191,7 +197,7 @@ particles**.
 The built-in particle types (defined in `include/Macro.h`) include
 `PTYPE_TRACER`, `PTYPE_GENERIC_MASSIVE`, `PTYPE_DARK_MATTER`, and `PTYPE_STAR`.
 For `PTYPE_TRACER`, one must also enable the compilation option
-[[TRACER | Installation: Simulation-Options#TRACER]].
+[[--tracer | Installation:-Option-List#--tracer]].
 
 The following example shows `Par_Init_ByFunction()` in
 `src/Particle/Par_Init_ByFunction.cpp`:
@@ -362,10 +368,11 @@ To support AMR data in `UM_IC`, set [OPT__UM_IC_NLEVEL](#OPT__UM_IC_NLEVEL)>1 an
 edit the input table `Input__UM_IC_RefineRegion`. See `example/input/Input__UM_IC_RefineRegion`
 and the example code `tool/inits/create_UM_IC.cpp` for details.
 
-**Caution: [OPT__INIT](#OPT__INIT)=3 does not fully support
+> [!CAUTION]
+> [OPT__INIT](#OPT__INIT)=3 does not fully support
 user-defined passively advected scalars (i.e.,
-[[NCOMP_PASSIVE_USER | Installation: Simulation-Options#NCOMP_PASSIVE_USER]]>0) yet.
-[[Ask developers for help | Home#need-helps]] if needed.**
+[[--passive | Installation:-Option-List#--passive]]>0) yet.
+[[Ask developers for help | Home#need-helps]] if needed.
 
 
 <a name="IC-File-BField"></a>
@@ -390,7 +397,7 @@ row-major array) can be either
 and `NUM_PARTICLE` is the total number of particles
 (i.e., [[PAR_NPAR | Particles#par_npar]]).
 By default, `NUM_ATTRIBUTE` is equal to
-`8` + [[PAR_NATT_USER | Installation: Simulation-Options#PAR_NATT_USER]],
+`8` + [[--par_attribute | Installation:-Option-List#--par_attribute]],
 corresponding to particle mass, position x/y/z, velocity x/y/z,
 type, and user-specified attributes (and in exactly this order).
 One can also use [[PAR_IC_MASS | Particles#par_ic_mass]] / [[PAR_IC_TYPE | Particles#par_ic_type]]
@@ -437,7 +444,7 @@ The built-in particle types (defined in `include/Macro.h`) include
 `PTYPE_TRACER=0.0`, `PTYPE_GENERIC_MASSIVE=1.0`, `PTYPE_DARK_MATTER=2.0`, and `PTYPE_STAR=3.0`.
 They have the floating-point types for now but will be changed to integers in the future.
 For `PTYPE_TRACER`, one must also enable the compilation option
-[[TRACER | Installation: Simulation-Options#TRACER]].
+[[--tracer | Installation:-Option-List#--tracer]].
 
 Note that it is not required to adopt [OPT__INIT](#OPT__INIT)=3 and
 [[PAR_INIT | Particles#PAR_INIT]]=3 at the same time. In other words,
@@ -448,8 +455,8 @@ function and load the particle initial condition from a file (and vice versa).
 ## Compilation Options
 
 Related options:
-[[NCOMP_PASSIVE_USER | Installation: Simulation-Options#NCOMP_PASSIVE_USER]], &nbsp;
-[[PAR_NATT_USER | Installation: Simulation-Options#PAR_NATT_USER]] &nbsp;
+[[--passive | Installation:-Option-List#--passive]], &nbsp;
+[[--par_attribute | Installation:-Option-List#--par_attribute]] &nbsp;
 
 
 ## Runtime Parameters
@@ -499,7 +506,7 @@ Set the magnetic field from either a vector potential file named `B_IC` (see
 analytical vector potential function (see
 [Setting IC from Functions &#8212; Magnetic Field](#IC-Func-BField)).
     * **Restriction:**
-For [[MHD | Installation: Simulation-Options#MHD]] only.
+For [[--mhd | Installation:-Option-List#--mhd]] only.
 
 <a name="RESTART_LOAD_NRANK"></a>
 * #### `RESTART_LOAD_NRANK` &ensp; (>0) &ensp; [1]
@@ -517,14 +524,14 @@ simulation starts over again.
     * **Restriction:**
 
 <a name="OPT__UM_IC_LEVEL"></a>
-* #### `OPT__UM_IC_LEVEL` &ensp; (0 &#8804; input < [[NLEVEL | Installation:-Simulation Options#NLEVEL]]) &ensp; [0]
+* #### `OPT__UM_IC_LEVEL` &ensp; (0 &#8804; input < [[--nlevel | Installation:-Option-List#--nlevel]]) &ensp; [0]
     * **Description:**
 Starting AMR level in the uniform-mesh initial condition file.
 See [Setting IC from Files &#8212; Grids](#IC-File-Grids) for details.
     * **Restriction:**
 
 <a name="OPT__UM_IC_NLEVEL"></a>
-* #### `OPT__UM_IC_NLEVEL` &ensp; (1 &#8804; input &#8804; [[NLEVEL | Installation:-Simulation Options#NLEVEL]]-[OPT__UM_IC_LEVEL](#OPT__UM_IC_LEVEL)) &ensp; [1]
+* #### `OPT__UM_IC_NLEVEL` &ensp; (1 &#8804; input &#8804; [[--nlevel | Installation:-Option-List#--nlevel]]-[OPT__UM_IC_LEVEL](#OPT__UM_IC_LEVEL)) &ensp; [1]
     * **Description:**
 Number of AMR levels in the uniform-mesh initial condition file.
 See [Setting IC from Files &#8212; Grids](#IC-File-Grids) for details.
@@ -535,8 +542,8 @@ See [Setting IC from Files &#8212; Grids](#IC-File-Grids) for details.
     * **Description:**
 Number of fluid variables stored in the uniform-mesh initial condition file.
 The default value is
-5+[[NCOMP_PASSIVE_USER | Installation: Simulation-Options#NCOMP_PASSIVE_USER]]
-for [[MODEL | Installation: Simulation-Options#MODEL]]=HYDRO.
+5+[[--passive | Installation:-Option-List#--passive]]
+for [[--model | Installation:-Option-List#--model]]=HYDRO.
 See [Setting IC from Files &#8212; Grids](#IC-File-Grids) for details.
     * **Restriction:**
 
@@ -548,7 +555,7 @@ Data format of the uniform-mesh initial condition file. See
     * **Restriction:**
 
 <a name="OPT__UM_IC_FLOAT8"></a>
-* #### `OPT__UM_IC_FLOAT8` &ensp; (<0: same as [[FLOAT8 | Installation:-Simulation Options#FLOAT8]], 0=single precision, 1=double precision) &ensp; [-1]
+* #### `OPT__UM_IC_FLOAT8` &ensp; (<0: same as [[--double | Installation:-Option-List#--double]], 0=single precision, 1=double precision) &ensp; [-1]
     * **Description:**
 Floating-point precision of the uniform-mesh initial condition file.
     * **Restriction:**
@@ -610,7 +617,7 @@ machine precision for `OPT__FFTW_STARTUP != ESTIMATE`.
     * **Restriction:**
 `PATIENT` is not supported by FFTW2.
 Must use `ESTIMATE` when enabling
-[[BITWISE_REPRODUCIBILITY | Installation: Simulation-Options#BITWISE_REPRODUCIBILITY]].
+[[--bitwise_reproducibility | Installation:-Option-List#--bitwise_reproducibility]].
 
 
 ## Remarks

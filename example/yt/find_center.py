@@ -32,14 +32,6 @@ prefix      = args.prefix
 def _TotDens(field, data):
     return data['Dens']+data['ParDens']
 
-yt.add_field( ('gamer', 'TotDens'), function=_TotDens, units='code_mass/code_length**3', sampling_type='cell' )
-
-
-field_dens       = ('gamer',    'Dens')
-field_pardens    = ('gamer', 'ParDens')
-field_totdens    = ('gamer', 'TotDens')
-field_pote       = ('gamer',    'Pote')
-
 
 yt.enable_parallelism()
 
@@ -53,39 +45,44 @@ for ds in ts.piter():
     print( '-------------------------------------------------------------------' )
     print( '' )
 
+    if ds.parameters["Particle"] == 1:
+        ds.add_field( ('gamer', 'TotDens'), function=_TotDens, units='code_mass/code_length**3', sampling_type='cell' )
+
     ad = ds.all_data()
 
-    #Extrema_density     = ad.quantities.extrema( field_dens ).in_units('code_density')
-    #print( 'Extrema_density         = ', Extrema_density )
-    MaxLoc_density      = ad.quantities.max_location( field_dens )
-    print( 'Max Density Value       = % 14.7e'%( MaxLoc_density[0].in_units('code_density').d ) )
-    print( 'Max Density Coord_x     = % 14.7e'%( MaxLoc_density[1].in_units('code_length').d  ) )
-    print( 'Max Density Coord_y     = % 14.7e'%( MaxLoc_density[2].in_units('code_length').d  ) )
-    print( 'Max Density Coord_z     = % 14.7e'%( MaxLoc_density[3].in_units('code_length').d  ) )
-    print( '' )
+    if ds.parameters["Model"] == 'Hydro' or ds.parameters["Model"] == 'ELBDM':
+        #Extrema_density     = ad.quantities.extrema( ('gamer','Dens') ).in_units('code_density')
+        #print( 'Extrema_density         = ', Extrema_density )
+        MaxLoc_density      = ad.quantities.max_location( ('gamer','Dens') )
+        print( 'Max Density Value       = % 14.7e'%( MaxLoc_density[0].in_units('code_density').d ) )
+        print( 'Max Density Coord_x     = % 14.7e'%( MaxLoc_density[1].in_units('code_length').d  ) )
+        print( 'Max Density Coord_y     = % 14.7e'%( MaxLoc_density[2].in_units('code_length').d  ) )
+        print( 'Max Density Coord_z     = % 14.7e'%( MaxLoc_density[3].in_units('code_length').d  ) )
+        print( '' )
 
-    #Extrema_pardensity  = ad.quantities.extrema( field_pardens ).in_units('code_density')
-    #print( 'Extrema_pardensity      = ', Extrema_pardensity )
-    MaxLoc_pardensity   = ad.quantities.max_location( field_pardens )
-    print( 'Max Par_Density Value   = % 14.7e'%( MaxLoc_pardensity[0].in_units('code_density').d ) )
-    print( 'Max Par_Density Coord_x = % 14.7e'%( MaxLoc_pardensity[1].in_units('code_length').d  ) )
-    print( 'Max Par_Density Coord_y = % 14.7e'%( MaxLoc_pardensity[2].in_units('code_length').d  ) )
-    print( 'Max Par_Density Coord_z = % 14.7e'%( MaxLoc_pardensity[3].in_units('code_length').d  ) )
-    print( '' )
+    if ds.parameters["Particle"] == 1:
+        #Extrema_pardensity  = ad.quantities.extrema( ('gamer','ParDens') ).in_units('code_density')
+        #print( 'Extrema_pardensity      = ', Extrema_pardensity )
+        MaxLoc_pardensity   = ad.quantities.max_location( ('gamer','ParDens') )
+        print( 'Max Par_Density Value   = % 14.7e'%( MaxLoc_pardensity[0].in_units('code_density').d ) )
+        print( 'Max Par_Density Coord_x = % 14.7e'%( MaxLoc_pardensity[1].in_units('code_length').d  ) )
+        print( 'Max Par_Density Coord_y = % 14.7e'%( MaxLoc_pardensity[2].in_units('code_length').d  ) )
+        print( 'Max Par_Density Coord_z = % 14.7e'%( MaxLoc_pardensity[3].in_units('code_length').d  ) )
+        print( '' )
 
-    #Extrema_totdensity  = ad.quantities.extrema( field_totdens ).in_units('code_density')
-    #print( 'Extrema_totdensity      = ', Extrema_totdensity )
-    MaxLoc_totdensity   = ad.quantities.max_location( field_totdens )
-    print( 'Max Tot_Density Value   = % 14.7e'%( MaxLoc_totdensity[0].in_units('code_density').d ) )
-    print( 'Max Tot_Density Coord_x = % 14.7e'%( MaxLoc_totdensity[1].in_units('code_length').d  ) )
-    print( 'Max Tot_Density Coord_y = % 14.7e'%( MaxLoc_totdensity[2].in_units('code_length').d  ) )
-    print( 'Max Tot_Density Coord_z = % 14.7e'%( MaxLoc_totdensity[3].in_units('code_length').d  ) )
-    print( '' )
+        #Extrema_totdensity  = ad.quantities.extrema( ('gamer','TotDens') ).in_units('code_density')
+        #print( 'Extrema_totdensity      = ', Extrema_totdensity )
+        MaxLoc_totdensity   = ad.quantities.max_location( ('gamer','TotDens') )
+        print( 'Max Tot_Density Value   = % 14.7e'%( MaxLoc_totdensity[0].in_units('code_density').d ) )
+        print( 'Max Tot_Density Coord_x = % 14.7e'%( MaxLoc_totdensity[1].in_units('code_length').d  ) )
+        print( 'Max Tot_Density Coord_y = % 14.7e'%( MaxLoc_totdensity[2].in_units('code_length').d  ) )
+        print( 'Max Tot_Density Coord_z = % 14.7e'%( MaxLoc_totdensity[3].in_units('code_length').d  ) )
+        print( '' )
 
     if ds.parameters["Opt__Output_Pot"] == 1:
-        #Extrema_pote        = ad.quantities.extrema( field_pote )
+        #Extrema_pote        = ad.quantities.extrema( ('gamer','Pote') )
         #print( 'Extrema_pote            = ', Extrema_pote )
-        MinLoc_pote         = ad.quantities.min_location( field_pote )
+        MinLoc_pote         = ad.quantities.min_location( ('gamer','Pote') )
         print( 'Min Potential Value     = % 14.7e'%( MinLoc_pote[0].in_units('code_length**2/code_time**2').d ) )
         print( 'Min Potential Coord_x   = % 14.7e'%( MinLoc_pote[1].in_units('code_length').d                 ) )
         print( 'Min Potential Coord_y   = % 14.7e'%( MinLoc_pote[2].in_units('code_length').d                 ) )
@@ -94,21 +91,23 @@ for ds in ts.piter():
     else:
         print( 'WARNING : To find the minimum gravitational potential, please turn on OPT__OUTPUT_POT in Input__Parameter !!\n' )
 
-    CoM_Gas             = ad.quantities.center_of_mass( use_gas=True, use_particles=False )
-    print( 'CoM_Gas Coord_x         = % 14.7e'%( CoM_Gas[0].in_units('code_length').d ) )
-    print( 'CoM_Gas Coord_y         = % 14.7e'%( CoM_Gas[1].in_units('code_length').d ) )
-    print( 'CoM_Gas Coord_z         = % 14.7e'%( CoM_Gas[2].in_units('code_length').d ) )
-    print( '' )
+    if ds.parameters["Model"] == 'Hydro' or ds.parameters["Model"] == 'ELBDM':
+        CoM_Gas             = ad.quantities.center_of_mass( use_gas=True, use_particles=False )
+        print( 'CoM_Gas Coord_x         = % 14.7e'%( CoM_Gas[0].in_units('code_length').d ) )
+        print( 'CoM_Gas Coord_y         = % 14.7e'%( CoM_Gas[1].in_units('code_length').d ) )
+        print( 'CoM_Gas Coord_z         = % 14.7e'%( CoM_Gas[2].in_units('code_length').d ) )
+        print( '' )
 
-    CoM_Par             = ad.quantities.center_of_mass( use_gas=False, use_particles=True, particle_type='all' )
-    print( 'CoM_Par Coord_x         = % 14.7e'%( CoM_Par[0].in_units('code_length').d ) )
-    print( 'CoM_Par Coord_y         = % 14.7e'%( CoM_Par[1].in_units('code_length').d ) )
-    print( 'CoM_Par Coord_z         = % 14.7e'%( CoM_Par[2].in_units('code_length').d ) )
-    print( '' )
+    if ds.parameters["Particle"] == 1:
+        CoM_Par             = ad.quantities.center_of_mass( use_gas=False, use_particles=True, particle_type='all' )
+        print( 'CoM_Par Coord_x         = % 14.7e'%( CoM_Par[0].in_units('code_length').d ) )
+        print( 'CoM_Par Coord_y         = % 14.7e'%( CoM_Par[1].in_units('code_length').d ) )
+        print( 'CoM_Par Coord_z         = % 14.7e'%( CoM_Par[2].in_units('code_length').d ) )
+        print( '' )
 
-    CoM_All             = ad.quantities.center_of_mass( use_gas=True, use_particles=True, particle_type='all' )
-    print( 'CoM_All Coord_x         = % 14.7e'%( CoM_All[0].in_units('code_length').d ) )
-    print( 'CoM_All Coord_y         = % 14.7e'%( CoM_All[1].in_units('code_length').d ) )
-    print( 'CoM_All Coord_z         = % 14.7e'%( CoM_All[2].in_units('code_length').d ) )
-    print( '')
+        CoM_All             = ad.quantities.center_of_mass( use_gas=True, use_particles=True, particle_type='all' )
+        print( 'CoM_All Coord_x         = % 14.7e'%( CoM_All[0].in_units('code_length').d ) )
+        print( 'CoM_All Coord_y         = % 14.7e'%( CoM_All[1].in_units('code_length').d ) )
+        print( 'CoM_All Coord_z         = % 14.7e'%( CoM_All[2].in_units('code_length').d ) )
+        print( '')
 

@@ -239,6 +239,9 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  ifdef GRAVITY
    LoadField( "AveDens_Init",         &KeyInfo.AveDens_Init,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
 #  endif
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   LoadField( "UseWaveScheme",         KeyInfo.UseWaveScheme,        H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+#  endif
 
 // must initialize all char* pointers as NULL so that we can safely free them later
 // --> in case they do not exist in the restart file
@@ -263,7 +266,10 @@ void Init_ByRestart_HDF5( const char *FileName )
 // 1-5-1. parameters must be reset
    for (int lv=0; lv<KeyInfo.NLevel; lv++)
    {
-      NPatchTotal[lv] = KeyInfo.NPatch[lv];
+      NPatchTotal       [lv] = KeyInfo.NPatch       [lv];
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      amr->use_wave_flag[lv] = KeyInfo.UseWaveScheme[lv];
+#     endif
    }
 
 #  ifdef PARTICLE
@@ -293,9 +299,12 @@ void Init_ByRestart_HDF5( const char *FileName )
 // --> assuming dTime_AllLv[] has been initialized as 0.0 properly
    for (int lv=KeyInfo.NLevel; lv<NLEVEL; lv++)
    {
-      Time          [lv] = 0.0;
-      NPatchTotal   [lv] = 0;
-      AdvanceCounter[lv] = 0;
+      Time              [lv] = 0.0;
+      NPatchTotal       [lv] = 0;
+      AdvanceCounter    [lv] = 0;
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      amr->use_wave_flag[lv] = KeyInfo.UseWaveScheme[ KeyInfo.NLevel - 1 ];
+#     endif
    }
 
 
@@ -625,6 +634,13 @@ void Init_ByRestart_HDF5( const char *FileName )
 // 3. load and allocate patches (load particles as well if PARTICLE is on)
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading patches and particles ...\n" );
 
+   int NCompStore = NCOMP_TOTAL;
+
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+// do not load STUB field (the hybrid scheme always stores density and phase)
+   NCompStore -= 1;
+#  endif
+
 #  ifdef LOAD_BALANCE
    const bool Recursive_No  = false;
 #  else
@@ -632,9 +648,9 @@ void Init_ByRestart_HDF5( const char *FileName )
    int  TRange_Min[3], TRange_Max[3];
 #  endif
 
-   char (*FieldName)[MAX_STRING] = new char [NCOMP_TOTAL][MAX_STRING];
+   char (*FieldName)[MAX_STRING] = new char [NCompStore][MAX_STRING];
    hsize_t H5_SetDims_Field[4], H5_MemDims_Field[4];
-   hid_t   H5_SetID_Field[NCOMP_TOTAL], H5_MemID_Field, H5_SpaceID_Field, H5_GroupID_GridData;
+   hid_t   H5_SetID_Field[NCompStore], H5_MemID_Field, H5_SpaceID_Field, H5_GroupID_GridData;
 
 #  ifdef MHD
    char (*FCMagName)[MAX_STRING] = new char [NCOMP_MAG][MAX_STRING];
@@ -663,7 +679,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 
 
 // 3-1. set the names of all grid fields and particle attributes
-   for (int v=0; v<NCOMP_TOTAL; v++)      sprintf( FieldName[v], "%s", FieldLabel[v] );
+   for (int v=0; v<NCompStore; v++)       sprintf( FieldName[v], "%s", FieldLabel[v] );
 
 #  ifdef MHD
    for (int v=0; v<NCOMP_MAG; v++)        sprintf( FCMagName[v], "%s", MagLabel[v] );
@@ -735,7 +751,7 @@ void Init_ByRestart_HDF5( const char *FileName )
          H5_GroupID_GridData = H5Gopen( H5_FileID, "GridData", H5P_DEFAULT );
          if ( H5_GroupID_GridData < 0 )   Aux_Error( ERROR_INFO, "failed to open the group \"%s\" !!\n", "GridData" );
 
-         for (int v=0; v<NCOMP_TOTAL; v++)
+         for (int v=0; v<NCompStore; v++)
          {
             H5_SetID_Field[v] = H5Dopen( H5_GroupID_GridData, FieldName[v], H5P_DEFAULT );
             if ( H5_SetID_Field[v] < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", FieldName[v] );
@@ -851,7 +867,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 #        endif // #ifdef LOAD_BALANCE ... else ...
 
 //       free resource
-         for (int v=0; v<NCOMP_TOTAL; v++)      H5_Status = H5Dclose( H5_SetID_Field[v] );
+         for (int v=0; v<NCompStore; v++)       H5_Status = H5Dclose( H5_SetID_Field[v] );
 #        ifdef MHD
          for (int v=0; v<NCOMP_MAG;   v++)      H5_Status = H5Dclose( H5_SetID_FCMag[v] );
 #        endif
@@ -1265,6 +1281,13 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
    herr_t  H5_Status;
    int     SonGID0, PID;
 
+   int NCompStore = NCOMP_TOTAL;
+
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+// do not load STUB field (the hybrid scheme always stores density and phase)
+   NCompStore -= 1 ;
+#  endif
+
 // allocate patch
    amr->pnew( lv, CrList[GID][0], CrList[GID][1], CrList[GID][2], -1, WithData_Yes, WithData_Yes, WithData_Yes );
 
@@ -1288,13 +1311,33 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
 
 // load cell-centered intrinsic variables from disk
 // --> excluding all derived variables such as gravitational potential and cell-centered B field
-   for (int v=0; v<NCOMP_TOTAL; v++)
+   for (int v=0; v<NCompStore; v++)
    {
       H5_Status = H5Dread( H5_SetID_Field[v], H5T_GAMER_REAL, H5_MemID_Field, H5_SpaceID_Field, H5P_DEFAULT,
                            amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v] );
       if ( H5_Status < 0 )
          Aux_Error( ERROR_INFO, "failed to load a field variable (lv %d, GID %d, v %d) !!\n", lv, GID, v );
    }
+
+
+// convert phase/density to real and imaginary parts
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+      real Dens, Phas, Im, Re;
+
+      for (int k=0; k<PS1; k++) {
+      for (int j=0; j<PS1; j++) {
+      for (int i=0; i<PS1; i++) {
+         Dens = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i];
+         Phas = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[PHAS][k][j][i];
+         Re   = SQRT(Dens) * COS(Phas);
+         Im   = SQRT(Dens) * SIN(Phas);
+
+         amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[REAL][k][j][i] = Re;
+         amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[IMAG][k][j][i] = Im;
+      }}}
+   }
+#  endif
 
 
 // load face-centered magnetic field from disk
@@ -1481,6 +1524,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "Laohu",                  &RS.Laohu,                  SID, TID, NonFatal, &RT.Laohu,                  1, NonFatal );
    LoadField( "SupportHDF5",            &RS.SupportHDF5,            SID, TID, NonFatal, &RT.SupportHDF5,            1, NonFatal );
    LoadField( "SupportGSL",             &RS.SupportGSL,             SID, TID, NonFatal, &RT.SupportGSL,             1, NonFatal );
+   LoadField( "SupportSpectralInt",     &RS.SupportSpectralInt,     SID, TID, NonFatal, &RT.SupportSpectralInt,     1, NonFatal );
    LoadField( "SupportFFTW",            &RS.SupportFFTW,            SID, TID, NonFatal, &RT.SupportFFTW,            1, NonFatal );
    LoadField( "SupportLibYT",           &RS.SupportLibYT,           SID, TID, NonFatal, &RT.SupportLibYT,           1, NonFatal );
 #  ifdef SUPPORT_LIBYT
@@ -1517,6 +1561,8 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "BarotropicEoS",          &RS.BarotropicEoS,          SID, TID, NonFatal, &RT.BarotropicEoS,          1, NonFatal );
 
 #  elif ( MODEL == ELBDM )
+   LoadField( "ELBDMScheme",            &RS.ELBDMScheme,            SID, TID, NonFatal, &RT.ELBDMScheme,            1, NonFatal );
+   LoadField( "WaveScheme",             &RS.WaveScheme,             SID, TID, NonFatal, &RT.WaveScheme,             1, NonFatal );
    LoadField( "ConserveMass",           &RS.ConserveMass,           SID, TID, NonFatal, &RT.ConserveMass,           1, NonFatal );
    LoadField( "Laplacian4th",           &RS.Laplacian4th,           SID, TID, NonFatal, &RT.Laplacian4th,           1, NonFatal );
    LoadField( "SelfInteraction4",       &RS.SelfInteraction4,       SID, TID, NonFatal, &RT.SelfInteraction4,       1, NonFatal );
@@ -1700,7 +1746,19 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
 #  elif  ( MODEL == ELBDM )
    LoadField( "Flu_BlockSize_x",      &RS.Flu_BlockSize_x,      SID, TID, NonFatal, &RT.Flu_BlockSize_x,       1, NonFatal );
    LoadField( "Flu_BlockSize_y",      &RS.Flu_BlockSize_y,      SID, TID, NonFatal, &RT.Flu_BlockSize_y,       1, NonFatal );
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   LoadField( "Flu_HJ_BlockSize_y",   &RS.Flu_HJ_BlockSize_y,   SID, TID, NonFatal, &RT.Flu_HJ_BlockSize_y,    1, NonFatal );
+#  endif
 
+#  if ( WAVE_SCHEME == WAVE_GRAMFE )
+   LoadField( "GramFEScheme",         &RS.GramFEScheme,         SID, TID, NonFatal, &RT.GramFEScheme,          1, NonFatal );
+   LoadField( "GramFEGamma",          &RS.GramFEGamma,          SID, TID, NonFatal, &RT.GramFEGamma,           1, NonFatal );
+   LoadField( "GramFEG",              &RS.GramFEG,              SID, TID, NonFatal, &RT.GramFEG,               1, NonFatal );
+   LoadField( "GramFENDelta",         &RS.GramFENDelta,         SID, TID, NonFatal, &RT.GramFENDelta,          1, NonFatal );
+   LoadField( "GramFEOrder",          &RS.GramFEOrder,          SID, TID, NonFatal, &RT.GramFEOrder,           1, NonFatal );
+   LoadField( "GramFEND",             &RS.GramFEND,             SID, TID, NonFatal, &RT.GramFEND,              1, NonFatal );
+   LoadField( "GramFEFluNxt",         &RS.GramFEFluNxt,         SID, TID, NonFatal, &RT.GramFEFluNxt,          1, NonFatal );
+#  endif
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
@@ -1715,9 +1773,11 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "Src_BlockSize",        &RS.Src_BlockSize,        SID, TID, NonFatal, &RT.Src_BlockSize,         1, NonFatal );
    LoadField( "Src_GhostSize",        &RS.Src_GhostSize,        SID, TID, NonFatal, &RT.Src_GhostSize,         1, NonFatal );
    LoadField( "Src_Nxt",              &RS.Src_Nxt,              SID, TID, NonFatal, &RT.Src_Nxt,               1, NonFatal );
+#  if ( MODEL == HYDRO )
    LoadField( "Src_NAuxDlep",         &RS.Src_NAuxDlep,         SID, TID, NonFatal, &RT.Src_NAuxDlep,          1, NonFatal );
    LoadField( "Src_DlepProfNVar",     &RS.Src_DlepProfNVar,     SID, TID, NonFatal, &RT.Src_DlepProfNVar,      1, NonFatal );
    LoadField( "Src_DlepProfNBinMax",  &RS.Src_DlepProfNBinMax,  SID, TID, NonFatal, &RT.Src_DlepProfNBinMax,   1, NonFatal );
+#  endif
    LoadField( "Src_NAuxUser",         &RS.Src_NAuxUser,         SID, TID, NonFatal, &RT.Src_NAuxUser,          1, NonFatal );
 
    LoadField( "Der_GhostSize",        &RS.Der_GhostSize,        SID, TID, NonFatal, &RT.Der_GhostSize,         1, NonFatal );
@@ -1855,7 +1915,13 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  endif
 #  if ( MODEL == ELBDM )
    LoadField( "Dt__Phase",               &RS.Dt__Phase,               SID, TID, NonFatal, &RT.Dt__Phase,                1, NonFatal );
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   LoadField( "Dt__HybridCFL",           &RS.Dt__HybridCFL,           SID, TID, NonFatal, &RT.Dt__HybridCFL,            1, NonFatal );
+   LoadField( "Dt__HybridCFLInit",       &RS.Dt__HybridCFLInit,       SID, TID, NonFatal, &RT.Dt__HybridCFLInit,        1, NonFatal );
+   LoadField( "Dt__HybridVelocity",      &RS.Dt__HybridVelocity,      SID, TID, NonFatal, &RT.Dt__HybridVelocity,       1, NonFatal );
+   LoadField( "Dt__HybridVelocityInit",  &RS.Dt__HybridVelocityInit,  SID, TID, NonFatal, &RT.Dt__HybridVelocityInit,   1, NonFatal );
 #  endif
+#  endif // #if ( MODEL == ELBDM )
 #  ifdef PARTICLE
    LoadField( "Dt__ParVel",              &RS.Dt__ParVel,              SID, TID, NonFatal, &RT.Dt__ParVel,               1, NonFatal );
    LoadField( "Dt__ParVelMax",           &RS.Dt__ParVelMax,           SID, TID, NonFatal, &RT.Dt__ParVelMax,            1, NonFatal );
@@ -1908,7 +1974,12 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  endif
 #  if ( MODEL == ELBDM )
    LoadField( "Opt__Flag_EngyDensity",   &RS.Opt__Flag_EngyDensity,   SID, TID, NonFatal, &RT.Opt__Flag_EngyDensity,    1, NonFatal );
+   LoadField( "Opt__Flag_Spectral",      &RS.Opt__Flag_Spectral,      SID, TID, NonFatal, &RT.Opt__Flag_Spectral,       1, NonFatal );
+   LoadField( "Opt__Flag_Spectral_N",    &RS.Opt__Flag_Spectral_N,    SID, TID, NonFatal, &RT.Opt__Flag_Spectral_N,     1, NonFatal );
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   LoadField( "Opt__Flag_Interference",  &RS.Opt__Flag_Interference,  SID, TID, NonFatal, &RT.Opt__Flag_Interference,   1, NonFatal );
 #  endif
+#  endif // #if ( MODEL == ELBDM )
    LoadField( "Opt__Flag_LohnerDens",    &RS.Opt__Flag_LohnerDens,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerDens,     1, NonFatal );
 #  if ( MODEL == HYDRO )
    LoadField( "Opt__Flag_LohnerEngy",    &RS.Opt__Flag_LohnerEngy,    SID, TID, NonFatal, &RT.Opt__Flag_LohnerEngy,     1, NonFatal );
@@ -1943,7 +2014,8 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "LB_Par_Weight",           &RS.LB_Par_Weight,           SID, TID, NonFatal, &RT.LB_Par_Weight,            1, NonFatal );
 #  endif
    LoadField( "Opt__RecordLoadBalance",  &RS.Opt__RecordLoadBalance,  SID, TID, NonFatal, &RT.Opt__RecordLoadBalance,   1, NonFatal );
-#  endif
+   LoadField( "Opt__LB_ExchangeFather",  &RS.Opt__LB_ExchangeFather,  SID, TID, NonFatal, &RT.Opt__LB_ExchangeFather,   1, NonFatal );
+#  endif // #ifdef LOAD_BALANCE
    LoadField( "Opt__MinimizeMPIBarrier", &RS.Opt__MinimizeMPIBarrier, SID, TID, NonFatal, &RT.Opt__MinimizeMPIBarrier,  1, NonFatal );
 
 // fluid solvers in HYDRO
@@ -1974,6 +2046,13 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  endif
    LoadField( "ELBDM_Taylor3_Coeff",     &RS.ELBDM_Taylor3_Coeff,     SID, TID, NonFatal, &RT.ELBDM_Taylor3_Coeff,      1, NonFatal );
    LoadField( "ELBDM_Taylor3_Auto",      &RS.ELBDM_Taylor3_Auto,      SID, TID, NonFatal, &RT.ELBDM_Taylor3_Auto,       1, NonFatal );
+   LoadField( "ELBDM_RemoveMotionCM",    &RS.ELBDM_RemoveMotionCM,    SID, TID, NonFatal, &RT.ELBDM_RemoveMotionCM,     1, NonFatal );
+   LoadField( "ELBDM_BaseSpectral",      &RS.ELBDM_BaseSpectral,      SID, TID, NonFatal, &RT.ELBDM_BaseSpectral,       1, NonFatal );
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+// ELBDM_FIRST_WAVE_LEVEL currently cannot be changed upon restart because the code cannot robustly handle the conversion
+// from Re/Im to Dens/Phase due to the phase ambiguity introduced by vortices
+   LoadField( "ELBDM_FirstWaveLevel",    &RS.ELBDM_FirstWaveLevel,    SID, TID, NonFatal, &RT.ELBDM_FirstWaveLevel,     1,    Fatal );
+#  endif
 #  endif // ELBDM
 
 // fluid solvers in both HYDRO/ELBDM
@@ -2121,6 +2200,10 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  endif
 #  if ( MODEL == ELBDM )
    LoadField( "Opt__Int_Phase",          &RS.Opt__Int_Phase,          SID, TID, NonFatal, &RT.Opt__Int_Phase,           1, NonFatal );
+   LoadField( "Opt__Res_Phase",          &RS.Opt__Res_Phase,          SID, TID, NonFatal, &RT.Opt__Res_Phase,           1, NonFatal );
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   LoadField( "Opt__Hybrid_Match_Phase", &RS.Opt__Hybrid_Match_Phase, SID, TID, NonFatal, &RT.Opt__Hybrid_Match_Phase,  1, NonFatal );
+#  endif
 #  endif
    LoadField( "Opt__Flu_IntScheme",      &RS.Opt__Flu_IntScheme,      SID, TID, NonFatal, &RT.Opt__Flu_IntScheme,       1, NonFatal );
    LoadField( "Opt__RefFlu_IntScheme",   &RS.Opt__RefFlu_IntScheme,   SID, TID, NonFatal, &RT.Opt__RefFlu_IntScheme,    1, NonFatal );
@@ -2140,6 +2223,14 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  endif
    LoadField( "Mono_MaxIter",            &RS.Mono_MaxIter,            SID, TID, NonFatal, &RT.Mono_MaxIter,             1, NonFatal );
    LoadField( "IntOppSign0thOrder",      &RS.IntOppSign0thOrder,      SID, TID, NonFatal, &RT.IntOppSign0thOrder,       1, NonFatal );
+#  ifdef SUPPORT_SPECTRAL_INT
+   LoadField( "SpecInt_TablePath",       &RS.SpecInt_TablePath,       SID, TID, NonFatal,  RT.SpecInt_TablePath,        1, NonFatal );
+   LoadField( "SpecInt_GhostBoundary",   &RS.SpecInt_GhostBoundary,   SID, TID, NonFatal, &RT.SpecInt_GhostBoundary,    1, NonFatal );
+#  if ( MODEL == ELBDM )
+   LoadField( "SpecInt_XY_Instead_DePha",&RS.SpecInt_XY_Instead_DePha,SID, TID, NonFatal, &RT.SpecInt_XY_Instead_DePha, 1, NonFatal );
+   LoadField( "SpecInt_VortexThreshold", &RS.SpecInt_VortexThreshold, SID, TID, NonFatal, &RT.SpecInt_VortexThreshold,  1, NonFatal );
+#  endif
+#  endif // #ifdef SUPPORT_SPECTRAL_INT
 
 // data dump
    LoadField( "Opt__Output_Total",           &RS.Opt__Output_Total,           SID, TID, NonFatal, &RT.Opt__Output_Total,           1, NonFatal );
@@ -2147,6 +2238,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Output_User",            &RS.Opt__Output_User,            SID, TID, NonFatal, &RT.Opt__Output_User,            1, NonFatal );
 #  ifdef PARTICLE
    LoadField( "Opt__Output_Par_Mode",        &RS.Opt__Output_Par_Mode,        SID, TID, NonFatal, &RT.Opt__Output_Par_Mode,        1, NonFatal );
+   LoadField( "Opt__Output_Par_Mesh",        &RS.Opt__Output_Par_Mesh,        SID, TID, NonFatal, &RT.Opt__Output_Par_Mesh,        1, NonFatal );
 #  endif
    LoadField( "Opt__Output_BasePS",          &RS.Opt__Output_BasePS,          SID, TID, NonFatal, &RT.Opt__Output_BasePS,          1, NonFatal );
    if ( OPT__OUTPUT_PART )
@@ -2290,9 +2382,18 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #     endif
 
 #     elif ( MODEL == ELBDM )
-      for (int t=0; t<2; t++)
+      for (int t=0; t<2; t++) {
       RS.FlagTable_EngyDensity [lv][t] = -1.0;
+      }
+      for (int t=0; t<2; t++) {
+      RS.FlagTable_Spectral    [lv][t] = -1.0;
+      }
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      for (int t=0; t<4; t++) {
+      RS.FlagTable_Interference[lv][t] = -1.0;
+      }
 #     endif
+#     endif // MODEL
 
 #     ifdef PARTICLE
       RS.FlagTable_NParPatch   [lv]    = -1;
@@ -2366,7 +2467,31 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    {
       if ( RS.FlagTable_EngyDensity[lv][t] != RT.FlagTable_EngyDensity[lv][t] )
          Aux_Message( stderr, "WARNING : \"%s[%d][%d]\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
-                       "FlagTable_EngyDensity", lv, t, RS.FlagTable_EngyDensity[lv][t],  RT.FlagTable_EngyDensity[lv][t] );
+                      "FlagTable_EngyDensity", lv, t, RS.FlagTable_EngyDensity[lv][t], RT.FlagTable_EngyDensity[lv][t] );
+   }}
+
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( OPT__FLAG_INTERFERENCE ) {
+   LoadField( "FlagTable_Interference",   RS.FlagTable_Interference,  SID, TID, NonFatal,  NullPtr,                    -1, NonFatal );
+
+   for (int lv=0; lv<MAX_LEVEL; lv++)
+   for (int t=0; t<4; t++)
+   {
+      if ( RS.FlagTable_Interference[lv][t] != RT.FlagTable_Interference[lv][t] )
+         Aux_Message( stderr, "WARNING : \"%s[%d][%d]\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
+                      "FlagTable_Interference", lv, t, RS.FlagTable_Interference[lv][t], RT.FlagTable_Interference[lv][t] );
+   }}
+#  endif // MODEL
+
+   if ( OPT__FLAG_SPECTRAL ) {
+   LoadField( "FlagTable_Spectral",       RS.FlagTable_Spectral,      SID, TID, NonFatal,  NullPtr,                    -1, NonFatal );
+
+   for (int lv=0; lv<MAX_LEVEL; lv++)
+   for (int t=0; t<2; t++)
+   {
+      if ( RS.FlagTable_Spectral[lv][t] != RT.FlagTable_Spectral[lv][t] )
+         Aux_Message( stderr, "WARNING : \"%s[%d][%d]\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
+                      "FlagTable_Spectral", lv, t, RS.FlagTable_Spectral[lv][t], RT.FlagTable_Spectral[lv][t] );
    }}
 #  endif // MODEL
 
