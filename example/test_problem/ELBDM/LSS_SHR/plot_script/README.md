@@ -72,9 +72,9 @@ This script is used to analyze the soliton-halo relation in the ELBDM model. The
     The figures will be stored in the directory `slice`.
 
 10. The script that reproduce the figure in the paper is in the directory `/script_for_paper_fig`. You need to finish the above steps to run the script.
-    - 'load_simulation.py' is used to load the simulation data. Use `load(path, halo, start_id, end_id, 'name)` to load the data.
-    - 'SHR_compare_paper.py' is used to reproduce the figure. 1 in the paper.
-    - 'plot__profile_paper.py' is used to reproduce the figure. 2 in the paper.
-    - 'plot__velocity_paper.py' is used to reproduce the figure. 3 in the paper.
-    - 'plot__c_nonisothermality_paper.py' is used to reproduce the figure. 4 in the paper.
-    - 'plot__ratio_paper.py' is used to reproduce the figure. 5 in the paper.
+    - `load_simulation.py` is used to load the simulation data. Use `load(path, halo, start_id, end_id, name)` to load the data.
+    - `SHR_compare_paper.py` is used to reproduce the figure. 1 in the paper.
+    - `plot__profile_paper.py` is used to reproduce the figure. 2 in the paper.
+    - `plot__velocity_paper.py` is used to reproduce the figure. 3 in the paper.
+    - `plot__c_nonisothermality_paper.py` is used to reproduce the figure. 4 in the paper.
+    - `plot__ratio_paper.py` is used to reproduce the figure. 5 in the paper.
