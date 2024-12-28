@@ -116,17 +116,19 @@ for i, line in enumerate(lines_cpp):
     minimum = words[4]
     maximum = words[5]
     try:
-        if params[key].NAdd >= 1: print( "%s has two or more Add function"%key )
+        if params[key].NAdd >= 1: print( "%-30s has two or more Add function"%key )
         params[key].default.append( REPLACE_DICT[default] if default in REPLACE_DICT else default )
         params[key].minimum.append( REPLACE_DICT[minimum] if minimum in REPLACE_DICT else minimum )
         params[key].maximum.append( REPLACE_DICT[maximum] if maximum in REPLACE_DICT else maximum )
         params[key].NAdd += 1
     except:
-        print( key, "does not exist in %s"%ALL_PARAM_FILE )
+        print( "%-30s does not exist in %s"%(key, ALL_PARAM_FILE) )
 
 # get the detailed description link from LINK_FILES
 for p in params:
     status = params[p].get_link_name( link_source_mds )
+    if not status:
+        print( "Can not find description of %-30s in all runtime parameter pages!"%(p) )
 
 # output markdown file
 with open( OUT_MD, 'w' ) as f:
