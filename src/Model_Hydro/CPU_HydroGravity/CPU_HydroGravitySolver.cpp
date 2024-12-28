@@ -385,7 +385,6 @@ void CPU_HydroGravitySolver(
          }
 
          const real minPres = TINY_NUMBER;
-         const real minJeansPres =  TINY_NUMBER;
          Hydro_Con2Pri( Cons_new, Prim_new, minPres, NULL_BOOL, NULL_INT, NULL,
                         NULL_BOOL, NULL_REAL, EoS.DensEint2Pres_FuncPtr, EoS.DensPres2Eint_FuncPtr,
                         EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr, EoS.AuxArrayDevPtr_Flt,
