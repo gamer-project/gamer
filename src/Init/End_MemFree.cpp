@@ -94,6 +94,10 @@ void End_MemFree()
    delete [] UM_IC_RefineRegion;    UM_IC_RefineRegion = NULL;
 
 
+// 10. global AMR structure
+   delete GlobalTree;   GlobalTree = NULL;
+
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
 } // FUNCTION : End_MemFree

@@ -2,6 +2,8 @@
 .DS_Store
 
 *.o
+*.bin
+*~
 
 bin/**
 src/generate_make.sh
@@ -11,7 +13,6 @@ GAMER_ExtractUniform
 GAMER_ExtractProfile
 Project
 .vscode
-*~
 src/Makefile
 src/Makefile.log
 
