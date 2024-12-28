@@ -44,7 +44,7 @@ void CUPOT_HydroGravitySolver(
    const real   g_Emag_Array   [][ CUBE(PS1) ],
    const real dt, const real dh, const bool P5_Gradient,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
-   const double TimeNew, const double TimeOld, const real MinEint );
+   const double TimeNew, const double TimeOld, const real MinEint, const EoS_t EoS );
 
 #elif ( MODEL == ELBDM )
 __global__
@@ -447,7 +447,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                     d_Emag_Array_G     + UsedPatch[s],
                                     dt, dh, P5_Gradient,
                                     (SelfGravity || ExtPot), ExtAcc, GPUExtAcc_Ptr,
-                                    TimeNew, TimeOld, MinEint );
+                                    TimeNew, TimeOld, MinEint, EoS );
 
 #        elif ( MODEL == ELBDM )
 #        if ( ELBDM_SCHEME == ELBDM_HYBRID )
