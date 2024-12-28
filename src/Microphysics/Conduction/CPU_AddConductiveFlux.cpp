@@ -269,10 +269,10 @@ void Hydro_AddConductiveFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT)
 {
 
 #  ifdef MHD
-   const int  didx_half[3] = { 1, N_HF_VAR, SQR(N_HF_VAR) };
    const int  mag_offset   = ( N_HF_VAR - PS2 ) / 2;
-   const int  half_offset  = ( N_HF_VAR - NFlux ) / 2;
 #  endif
+   const int  didx_half[3] = { 1, N_HF_VAR, SQR(N_HF_VAR) };
+   const int  half_offset  = ( N_HF_VAR - NFlux ) / 2;
    const int  flux_offset  = 1;  // skip the additional fluxes along the transverse directions for computing the CT electric field
    const real _dh          = (real)1.0 / dh;
 
