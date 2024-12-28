@@ -160,13 +160,13 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // region 1
    if ( x < x0 )
    {
-      Eint = CSF_U1;
+      Eint = CSF_U1*CSF_Rho;
    }
 
 // region 2
    else
    {
-      Eint = CSF_U2;
+      Eint = CSF_U2*CSF_Rho;
    }
 
    Dens = CSF_Rho;
