@@ -209,7 +209,7 @@ ELBDM_TAYLOR3_AUTO            1           # Optimize ELBDM_TAYLOR3_COEFF automat
 
 # fluid solvers in all models
 FLU_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU fluid solver (<=0=auto) [-1]
-GPU_NSTREAM                   4           # number of CUDA streams for the asynchronous memory copy in GPU (<=0=auto) [-1]
+GPU_NSTREAM                  -1           # number of CUDA streams for the asynchronous memory copy in GPU (<=0=auto) [-1]
 OPT__FIXUP_FLUX               1           # correct coarse grids by the fine-grid boundary fluxes [1] ##HYDRO and ELBDM ONLY##
 OPT__FIXUP_ELECTRIC           1           # correct coarse grids by the fine-grid boundary electric field [1] ##MHD ONLY##
 OPT__FIXUP_RESTRICT           1           # correct coarse grids by averaging the fine-grid data [1]

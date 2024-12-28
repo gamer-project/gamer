@@ -406,6 +406,10 @@ void Aux_TakeNote()
       fprintf( Note, "GPU_ARCH                        TURING\n" );
 #     elif ( GPU_ARCH == AMPERE )
       fprintf( Note, "GPU_ARCH                        AMPERE\n" );
+#     elif ( GPU_ARCH == ADA_LOVELACE )
+      fprintf( Note, "GPU_ARCH                        ADA_LOVELACE\n" );
+#     elif ( GPU_ARCH == HOPPER )
+      fprintf( Note, "GPU_ARCH                        HOPPER\n" );
 #     else
       fprintf( Note, "GPU_ARCH                        UNKNOWN\n" );
 #     endif
