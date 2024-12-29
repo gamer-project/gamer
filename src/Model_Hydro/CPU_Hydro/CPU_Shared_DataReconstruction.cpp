@@ -1059,7 +1059,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 // add viscous fluxes
 #  ifdef VISCOSITY
-   Hydro_AddViscousFlux( NULL, g_PriVar, Temp, g_Flux, g_FC_B, FLU_NXT, NGhost,
+   Hydro_AddViscousFlux( g_ConVar, NULL, Temp, g_Flux, g_FC_B, FLU_NXT, NGhost,
                          N_HF_FLUX, NSkip_N, NSkip_T, 1, dh, need_initialize, MicroPhy );
 #  endif
 

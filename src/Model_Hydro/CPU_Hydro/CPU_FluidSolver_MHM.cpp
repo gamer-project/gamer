@@ -537,7 +537,7 @@ void CPU_FluidSolver_MHM(
 #        ifdef CONDUCTION
          // Hydro_AddConductiveFlux_HalfStep( g_Flu_Array_In[P], g_Flux_Half_1PG, g_Mag_Array_In[P],
          //                                   g_PriVar_1PG+MAG_OFFSET, dh, &MicroPhy );
-         Hydro_AddConductiveFlux( g_Flu_Array_In[P], NULL, g_Flux_Half_1PG, g_Mag_Array_In[P], FLU_NXT, 0,
+         Hydro_AddConductiveFlux( g_Flu_Array_In[P], NULL, Temp, g_Flux_Half_1PG, g_Mag_Array_In[P], FLU_NXT, 0,
                                   N_HF_FLUX, NSkip_N, NSkip_T, 0, dh, need_initialize, &MicroPhy );
 #        endif
 
@@ -545,7 +545,7 @@ void CPU_FluidSolver_MHM(
 #        ifdef VISCOSITY
          // Hydro_AddViscousFlux_HalfStep( g_PriVar_1PG, g_Flux_Half_1PG, g_Mag_Array_In[P],
          //                                g_PriVar_1PG+MAG_OFFSET, dh, &MicroPhy );
-         Hydro_AddViscousFlux( g_Flu_Array_In[P], NULL, g_Flux_Half_1PG, g_Mag_Array_In[P], FLU_NXT, 0,
+         Hydro_AddViscousFlux( g_Flu_Array_In[P], NULL, Temp, g_Flux_Half_1PG, g_Mag_Array_In[P], FLU_NXT, 0,
                                N_HF_FLUX, NSkip_N, NSkip_T, 0, dh, need_initialize, &MicroPhy );
 #        endif
 
