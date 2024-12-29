@@ -779,7 +779,6 @@ void Hydro_AddConductiveFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
          if ( initialize )
          {
             for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_Flux[d][v][idx_flux] = (real)0.0;
-            initialize = false;
          }
 
 //       6. flux add-up
@@ -787,6 +786,8 @@ void Hydro_AddConductiveFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
       } // CGPU_LOOP( idx, flux_size_i*flux_size_j*flux_size_k )
    } // for (int d=0; d<3; d++)
+
+   if ( initialize ) initialize = false;
 
 #  ifdef __CUDACC__
    __syncthreads();
