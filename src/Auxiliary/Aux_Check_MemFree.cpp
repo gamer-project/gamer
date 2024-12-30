@@ -18,6 +18,11 @@
 void Aux_Check_MemFree( const double MinMemFree_Total, const char *comment )
 {
 
+#ifdef __APPLE__
+   // memory reporting is not currently supported on macOS
+   return;
+#endif
+
    const int  StrSize               = 128;
    const char FileName_Mem[StrSize] = "/proc/meminfo";
 
