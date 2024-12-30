@@ -1,5 +1,5 @@
 This page describes various equation of states (EoS) supported by the
-compilation option [[EOS | Installation: Simulation-Options#EOS]].
+compilation option [[--eos | Installation:-Option-List#--eos]].
 
 * [`EOS_GAMMA`](#EOS_GAMMA): constant-gamma EoS
 * [`EOS_ISOTHERMAL`](#EOS_ISOTHERMAL): isothermal EoS
@@ -21,12 +21,12 @@ An isothermal EoS with a constant sound speed set by
 ## EOS_COSMIC_RAY
 A cosmic-ray EoS with an adiabatic index for fluid [[GAMMA | Hydro#gamma]]
 and an effective adiabatic index for cosmic rays [[GAMMA_CR | Hydro#gamma_cr]].
-Must enable [[COSMIC_RAY | Installation: Simulation-Options#COSMIC_RAY]].
+Must enable [[--cosmic_ray | Installation:-Option-List#--cosmic_ray]].
 
 
 ## EOS_TAUBMATHEWS
 A special relativistic EoS with a variable gamma by [Taub 1948](https://ui.adsabs.harvard.edu/abs/1948PhRv...74..328T/abstract) and [Mathews 1971](https://ui.adsabs.harvard.edu/abs/1971ApJ...165..147M/abstract).
-Must enable [[SRHD | Installation: Simulation-Options#SRHD]].
+Must enable [[--srhd | Installation:-Option-List#--srhd]].
 
 
 ## EOS_USER
