@@ -1,6 +1,4 @@
-import matplotlib
-
-matplotlib.use('Agg')
+#!/usr/bin/env python3
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -100,6 +98,7 @@ ax.tick_params('both', length=1, width=0.2, which='minor')
 
 # Set y-axis ticks and labels with scientific notation
 from matplotlib.ticker import LogLocator
+
 y_major = LogLocator(base=10,numticks=9)
 y_minor = LogLocator(base=10, subs=[2.0, 5.0, 8.0], numticks=10)
 ax.yaxis.set_major_locator(y_major)

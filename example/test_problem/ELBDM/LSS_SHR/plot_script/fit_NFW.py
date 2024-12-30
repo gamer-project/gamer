@@ -1,9 +1,12 @@
+#!/usr/bin/env python3
+
 # Fit NFW profile
 # calculate potential energy in physical coordinate (without constant G)
 
+import numpy as np
 from scipy.integrate import quad
 from scipy.optimize import curve_fit
-import numpy as np
+
 
 def NFW_dens(r, dens_para):
     rho0 = dens_para[0]            # Msun/kpc^3

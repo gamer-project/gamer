@@ -1,7 +1,10 @@
+#!/usr/bin/env python3
+
 import argparse
 import sys
-import yt
+
 import pandas as pd
+import yt
 
 # load the command-line parameters
 parser = argparse.ArgumentParser( description='Projection of mass density' )

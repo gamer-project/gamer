@@ -1,7 +1,4 @@
-
-import matplotlib
-
-matplotlib.use('Agg')
+#!/usr/bin/env python3
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -117,6 +114,7 @@ plot_v(path+'/velocity/output_%d/'%halo, '', 'FDM')
 # plot legend 
 from matplotlib.legend_handler import HandlerTuple
 from matplotlib.lines import Line2D
+
 custom_legend = [
     Line2D([0], [0], ls = '-', color='mediumslateblue',lw = 1),
     Line2D([0], [0], ls='--', color='darkorange',lw = 1),

@@ -1,12 +1,12 @@
-import matplotlib
-matplotlib.use('Agg')
+#!/usr/bin/env python3
+
 import argparse
 import sys
 
 import matplotlib.pyplot as plt
 import pandas as pd
-import yt
 import shr.SHR as SHR
+import yt
 
 ### load the command-line parameters
 parser = argparse.ArgumentParser( description='Profile' )

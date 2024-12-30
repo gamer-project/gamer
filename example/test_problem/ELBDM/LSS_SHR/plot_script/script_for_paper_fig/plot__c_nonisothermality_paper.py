@@ -1,8 +1,7 @@
+#!/usr/bin/env python3
+
 import sys
 
-import matplotlib
-
-matplotlib.use('Agg')
 import load_simulation
 import matplotlib.pyplot as plt
 import numpy as np
