@@ -121,7 +121,7 @@ MIN_DENS                      0.0         # minimum mass density    (must >= 0.0
 MIN_PRES                      0.0         # minimum pressure        (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
 MIN_EINT                      0.0         # minimum internal energy (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
 MIN_ENTR                      0.0         # minimum entropy         (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
-OPT__FREEZE_HYDRO             1
+OPT__FREEZE_HYDRO             1		  # freeze hydrodynamic fluxes (but diffusive are allowed) [0] ##HYDRO ONLY##
 
 
 # conduction (CONDUCTION only)
