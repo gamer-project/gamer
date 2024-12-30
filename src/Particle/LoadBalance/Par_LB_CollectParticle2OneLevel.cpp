@@ -50,10 +50,10 @@ extern Timer_t *Timer_Par_MPI[NLEVEL][6];
 //                   --> Does NOT work with "PredictPos"
 //
 // Parameter   :  FaLv          : Father's refinement level
-//                FltAttBitIdx  : Bitwise indices of the target particle attributes (e.g., _PAR_MASS | _PAR_VELX)
+//                FltAttBitIdx  : Bitwise indices of the target particle floating-point attributes (e.g., _PAR_MASS | _PAR_VELX)
 //                                --> A user-defined attribute with an integer index FltAttIntIdx returned by
 //                                    AddParticleAttributeFlt() can be converted to a bitwise index by BIDX(FltAttIntIdx)
-//                IntAttBitIdx  : Bitwise indices of the target particle attributes (e.g., _PAR_TYPE)
+//                IntAttBitIdx  : Bitwise indices of the target particle integer attributes (e.g., _PAR_TYPE)
 //                                --> A user-defined attribute with an integer index IntAttIntIdx returned by
 //                                    AddParticleAttributeInt() can be converted to a bitwise index by BIDX(IntAttIntIdx)
 //                PredictPos    : Predict particle position, which is useful for particle mass assignement
@@ -67,7 +67,7 @@ extern Timer_t *Timer_Par_MPI[NLEVEL][6];
 //                                other particle data (e.g., particle mass and position)
 //                TimingSendPar : Measure the elapsed time of the routine "Par_LB_SendParticleData"
 //
-// Return      :  NPar_Copy, ParAttFlt_Copy[], and ParAttFlt_Copy[] (if JustCountNPar == false) for all non-leaf
+// Return      :  NPar_Copy, ParAttFlt_Copy[], and ParAttInt_Copy[] (if JustCountNPar == false) for all non-leaf
 //                patches at FaLv (and for sibling-buffer patches at FaLv if SibBufPatch is on, and for father-sibling-buffer
 //                patches at FaLv-1 if FaSibBufPatch is on and FaLv>0)
 //-------------------------------------------------------------------------------------------------------
@@ -416,7 +416,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, c
 // 2. send data to all ranks
 // these arrays will be allocated by Par_LB_SendParticleData() (using call by reference) and must be free'd later
 // --> except for RecvBuf_ParFltDataEachPatch and RecvBuf_ParIntDataEachPatch, which are just a pointer to
-//     the MPI recv buffer declared in LB_GetBufferData
+//     the MPI recv buffer declared in LB_GetBufferData()
    int      *RecvBuf_NPatchEachRank      = NULL;
    int      *RecvBuf_NParEachPatch       = NULL;
    long     *RecvBuf_LBIdxEachPatch      = NULL;

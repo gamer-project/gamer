@@ -1283,12 +1283,12 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
 //                NewParList          : Array to store the new particle indices
 //                                      --> It must be preallocated with a size equal to the maximum number of
 //                                          particles in one patch
-//                H5_SetID_ParFltData : HDF5 dataset ID for particle float   data
-//                H5_SetID_ParIntData : HDF5 dataset ID for particle integer data
+//                H5_SetID_ParFltData : HDF5 dataset ID for particle floating-point data
+//                H5_SetID_ParIntData : HDF5 dataset ID for particle integer        data
 //                H5_SpaceID_ParData  : HDF5 dataset dataspace ID for particle data
 //                GParID_Offset       : Starting global particle indices for all patches
 //                NParThisRank        : Total number of particles in this rank (for check only)
-//                FormatVersion       : HDF5 format version
+//                FormatVersion       : Snapshot format version
 //-------------------------------------------------------------------------------------------------------
 void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const bool Recursive,
                    const int *SonList, const int (*CrList)[3],
@@ -1446,7 +1446,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
                                     ParFltBuf[v-skip_type] );
             }
             if ( H5_Status < 0 )
-               Aux_Error( ERROR_INFO, "failed to load a particle float attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
+               Aux_Error( ERROR_INFO, "failed to load a particle floating-point attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
          }
       } // if ( FormatVersion < 2481 )
       else
@@ -1457,7 +1457,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
             H5_Status = H5Dread( H5_SetID_ParFltData[v], H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,
                                  ParFltBuf[v] );
             if ( H5_Status < 0 )
-               Aux_Error( ERROR_INFO, "failed to load a particle float attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
+               Aux_Error( ERROR_INFO, "failed to load a particle floating-point attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
          }
          for (int v=0; v<PAR_NATT_INT_STORED; v++)
          {

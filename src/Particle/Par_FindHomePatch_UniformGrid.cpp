@@ -26,10 +26,10 @@ static void SendParticle2HomeRank( const int lv, const bool OldParOnly, const lo
 //                               false --> only redistribute newly added particles specified by NNewPar, NewParAttFlt, and NewParAttInt
 //                                         --> Particles already exist in the current repository will not be redistributed
 //                NNewPar      : Number of new particles to be added                       (for OldParOnly==false only)
-//                NewParAttFlt : Pointer array storing the data of new particle float   attributes (for OldParOnly==false only)
+//                NewParAttFlt : Pointer array storing the data of new particle floatint-point attributes (for OldParOnly==false only)
 //                               --> Format: real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL]
 //                               --> Must be deallocated manually after invoking this function
-//                NewParAttInt : Pointer array storing the data of new particle integer attributes (for OldParOnly==false only)
+//                NewParAttInt : Pointer array storing the data of new particle integer        attributes (for OldParOnly==false only)
 //                               --> Format: long_par *NewParAttInt[PAR_NATT_INT_TOTAL]
 //                               --> Must be deallocated manually after invoking this function
 //
@@ -192,10 +192,10 @@ void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly, const l
 //                               false --> only redistribute newly added particles specified by NNewPar, NewParAttFlt, and NewParAttInt
 //                                         --> Particles already exist in the current repository will not be redistributed
 //                NNewPar      : Number of new particles to be added                       (for OldParOnly==false only)
-//                NewParAttFlt : Pointer array storing the data of new particle float   attributes (for OldParOnly==false only)
+//                NewParAttFlt : Pointer array storing the data of new particle floatint-point attributes (for OldParOnly==false only)
 //                               --> Format: real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL]
 //                               --> Must be deallocated manually after invoking this function
-//                NewParAttInt : Pointer array storing the data of new particle integer attributes (for OldParOnly==false only)
+//                NewParAttInt : Pointer array storing the data of new particle integer        attributes (for OldParOnly==false only)
 //                               --> Format: long_par *NewParAttInt[PAR_NATT_INT_TOTAL]
 //                               --> Must be deallocated manually after invoking this function
 //

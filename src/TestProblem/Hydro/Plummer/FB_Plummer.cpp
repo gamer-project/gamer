@@ -65,8 +65,8 @@ extern double Plummer_FB_Like;
 //                dt         : Time interval to advance solution
 //                NPar       : Number of particles
 //                ParSortID  : Sorted particle IDs
-//                ParAttFlt  : Particle float   attribute arrays
-//                ParAttInt  : Particle integer attribute arrays
+//                ParAttFlt  : Particle floating-point attribute arrays
+//                ParAttInt  : Particle integer        attribute arrays
 //                Fluid      : Array to store the input/output fluid data
 //                             --> Array size is fixed to (FB_NXT)^3=(PS2+2*FB_GHOST_SIZE)^3
 //                EdgeL      : Left edge of Fluid[]

@@ -126,6 +126,7 @@ void Par_Init_ByFile()
          FileOffset += NParAttInt*load_data_size_int;
       }
    }
+
    else
    {
       for (int r=0; r<MPI_Rank; r++)   FileOffset += NPar_EachRank[r]*load_data_size_flt;
@@ -187,7 +188,7 @@ void Par_Init_ByFile()
             for (int v=0; v<NParAttInt; v++) ParIntData1[v] = (long_par)( *((int*   )(ParIntData_ThisRank+(v*NParThisRank+p)*load_data_size_int)) );
       }
 
-//    assuming that the orders of the particle attributes stored on the disk and in Par->AttributeFlt[] are the same
+//    assuming that the orders of the particle attributes stored on the disk and in Par->AttributeFlt/Int[] are the same
 //    --> no need to skip acceleration and time since they are always put at the end of the attribute list
       for (int v_in=0, v_out=0; v_in<NParAttFlt; v_in++, v_out++)
       {

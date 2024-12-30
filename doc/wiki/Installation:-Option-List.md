@@ -85,8 +85,8 @@ disabled). See the "Restriction" of each option carefully.
 | `--store_par_acc`     | `true`, `false` | `true`  | Store particle acceleration (recommended) | - | <a name="--store_par_acc"></a> `STORE_PAR_ACC` |
 | `--star_formation`    | `true`, `false` | `false` | Enable star formation | Must enable `--store_pot_ghost` when using `--store_par_acc` | <a name="--star_formation"></a> `STAR_FORMATION` |
 | `--feedback`          | `true`, `false` | `false` | Enable feedback from particles to grids (and vice versa) | See [[here \| Feedback]] for details | <a name="--feedback"></a> `FEEDBACK` |
-| `--par_attribute_flt` | &#8805; 0       | `0`     | Number of user-defined particle float   attributes | See [[here \| Adding-New-Simulations#particle-attributes]] for details | <a name="--par_attribute_flt"></a> `PAR_NATT_FLT_USER` |
-| `--par_attribute_int` | &#8805; 0       | `0`     | Number of user-defined particle integer attributes | See [[here \| Adding-New-Simulations#particle-attributes]] for details | <a name="--par_attribute_int"></a> `PAR_NATT_INT_USER` |
+| `--par_attribute_flt` | &#8805; 0       | `0`     | Number of user-defined particle floating-point attributes | See [[here \| Adding-New-Simulations#particle-attributes]] for details | <a name="--par_attribute_flt"></a> `PAR_NATT_FLT_USER` |
+| `--par_attribute_int` | &#8805; 0       | `0`     | Number of user-defined particle integer        attributes | See [[here \| Adding-New-Simulations#particle-attributes]] for details | <a name="--par_attribute_int"></a> `PAR_NATT_INT_USER` |
 | `--double_par`     | `true`, `false` | Depend  | Enable double-precision floating-point accuracy for particles. It will be set to `--double` by default. | - | <a name="--double_par"></a> `FLOAT8_PAR` |
 
 ## Microphysics Options

@@ -52,8 +52,8 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                RemoveCell              : remove particles RemoveCell-base-level-cells away from the boundary
 //                                          (for non-periodic BC only)
 //                GhostSize               : Number of ghost zones required for interpolation scheme
-//                AttributeFlt            : Pointer arrays to different particle float   attributes (Mass, Pos, Vel, ...)
-//                AttributeInt            : Pointer arrays to different particle integer attributes (Type)
+//                AttributeFlt            : Pointer arrays to different particle floating-point attributes (Mass, Pos, Vel, ...)
+//                AttributeInt            : Pointer arrays to different particle integer        attributes (Type)
 //                InactiveParList         : List of inactive particle IDs
 //                Mesh_Attr               : Pointer arrays to different mesh quantities mapped onto tracer particles
 //                Mesh_Attr_Num           : Number of mesh quantities mapped onto tracer particles
@@ -432,8 +432,8 @@ struct Particle_t
    //                4. Note that the global variable "AveDensity_Init" will NOT be recalculated
    //                   automatically here
    //
-   // Parameter   :  NewAttFlt : Array storing the float   attributes of new particles
-   //                NewAttInt : Array storing the integer attributes of new particles
+   // Parameter   :  NewAttFlt : Array storing the floating-point attributes of new particles
+   //                NewAttInt : Array storing the integer        attributes of new particles
    //
    // Return      :  Index of the new particle (ParID)
    //===================================================================================

@@ -52,8 +52,8 @@
 //                dt         : Time interval to advance solution
 //                NPar       : Number of particles
 //                ParSortID  : Sorted particle IDs
-//                ParAttFlt  : Particle float   attribute arrays
-//                ParAttInt  : Particle integer attribute arrays
+//                ParAttFlt  : Particle floating-point attribute arrays
+//                ParAttInt  : Particle integer        attribute arrays
 //                Fluid      : Array to store the input/output fluid data
 //                             --> Array size is fixed to (FB_NXT)^3=(PS2+2*FB_GHOST_SIZE)^3
 //                EdgeL      : Left edge of Fluid[]
@@ -80,7 +80,7 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
    {
       if ( ParSortID == NULL )   Aux_Error( ERROR_INFO, "ParSortID == NULL for NPar = %d !!\n", NPar );
       if ( ParAttFlt == NULL )   Aux_Error( ERROR_INFO, "ParAttFlt == NULL for NPar = %d !!\n", NPar );
-      if ( ParAttInt == NULL )   Aux_Error( ERROR_INFO, "ParIntFlt == NULL for NPar = %d !!\n", NPar );
+      if ( ParAttInt == NULL )   Aux_Error( ERROR_INFO, "ParAttInt == NULL for NPar = %d !!\n", NPar );
    }
 #  endif // #ifdef GAMER_DEBUG
 

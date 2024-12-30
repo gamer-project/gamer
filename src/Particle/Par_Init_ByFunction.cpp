@@ -43,7 +43,7 @@ void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRa
 //                ParVelX/Y/Z     : Particle velocity array with the size of NPar_ThisRank
 //                ParTime         : Particle time     array with the size of NPar_ThisRank
 //                ParType         : Particle type     array with the size of NPar_ThisRank
-//                AllAttributeFlt : Pointer array for all particle float attributes
+//                AllAttributeFlt : Pointer array for all particle floating-point attributes
 //                                  --> Dimension = [PAR_NATT_FLT_TOTAL][NPar_ThisRank]
 //                                  --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
 //                                      to access the data
@@ -69,7 +69,6 @@ void Par_Init_ByFunction_Template( const long NPar_ThisRank, const long NPar_All
    {
       ParTime[p] = Time[0];
       ParType[p] = PTYPE_GENERIC_MASSIVE;
-
    }
 
 

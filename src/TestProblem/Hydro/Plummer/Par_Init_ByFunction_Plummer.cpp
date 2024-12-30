@@ -50,7 +50,7 @@ static void   RanVec_FixRadius( const double r, double RanVec[] );
 //                ParVelX/Y/Z     : Particle velocity array with the size of NPar_ThisRank
 //                ParTime         : Particle time     array with the size of NPar_ThisRank
 //                ParType         : Particle type     array with the size of NPar_ThisRank
-//                AllAttributeFlt : Pointer array for all particle float attributes
+//                AllAttributeFlt : Pointer array for all particle floating-point attributes
 //                                  --> Dimension = [PAR_NATT_FLT_TOTAL][NPar_ThisRank]
 //                                  --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
 //                                      to access the data

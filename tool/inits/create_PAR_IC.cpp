@@ -18,7 +18,6 @@ typedef int  long_par;
 #endif
 
 
-
 int main()
 {
 
@@ -46,7 +45,7 @@ int main()
 
    FILE *File = fopen( "PAR_IC", "wb" );
 
-   if ( PAR_IC_ATT_ID )
+   if ( PAR_IC_ID_ATT )
    {
       for (int p=0; p<NUM_PARTICLE; p++)
       {
@@ -59,7 +58,6 @@ int main()
       for (int v=0; v<NUM_ATTRIBUTE_FLT; v++) fwrite( ParIC_Flt[v], sizeof(real_par), NUM_PARTICLE, File );
       for (int v=0; v<NUM_ATTRIBUTE_INT; v++) fwrite( ParIC_Int[v], sizeof(long_par), NUM_PARTICLE, File );
    }
-
 
    fclose( File );
 

@@ -35,7 +35,7 @@ void Par_Output_BinaryFile( const char *FileName )
    MPI_Barrier( MPI_COMM_WORLD );
 
 
-// data
+// dump floating-point data
    real_par *attribute_flt_buff = (real_par*)malloc( sizeof(real_par)*amr->Par->NPar_AcPlusInac );
 
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
@@ -66,6 +66,8 @@ void Par_Output_BinaryFile( const char *FileName )
 
    free( attribute_flt_buff );
 
+
+// dump integer data
    long_par *attribute_int_buff = (long_par*)malloc( sizeof(long_par)*amr->Par->NPar_AcPlusInac );
 
    for (int v=0; v<PAR_NATT_INT_TOTAL; v++)

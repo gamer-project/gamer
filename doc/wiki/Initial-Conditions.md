@@ -186,7 +186,8 @@ void Par_Init_ByFunction( const long NPar_ThisRank, const long NPar_AllRank,
                           long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 ```
 It should set the particle IC in the arrays `ParMass`, `ParPosX/Y/Z`,
-`ParVelX/Y/Z`, `ParTime`, `ParType`, and, optionally, the pointer array `*AllAttributeFlt[PAR_NATT_FLT_TOTAL]` and `*AllAttributeInt[PAR_NATT_INT_TOTAL]`,
+`ParVelX/Y/Z`, `ParTime`, `ParType`, and, optionally, the pointer arrays
+`*AllAttributeFlt[PAR_NATT_FLT_TOTAL]` and `*AllAttributeInt[PAR_NATT_INT_TOTAL]`,
 all of which have the size of `NPar_ThisRank` &#8212; the number of particles
 to be set by this MPI rank. Note that particles set by this function
 are only temporarily stored in this MPI rank and will later be
@@ -229,7 +230,7 @@ The following example shows `Par_Init_ByFunction()` in
 //                ParVelX/Y/Z     : Particle velocity array with the size of NPar_ThisRank
 //                ParTime         : Particle time     array with the size of NPar_ThisRank
 //                ParType         : Particle type     array with the size of NPar_ThisRank
-//                AllAttributeFlt : Pointer array for all particle float attributes
+//                AllAttributeFlt : Pointer array for all particle floating-point attributes
 //                                  --> Dimension = [PAR_NATT_FLT_TOTAL][NPar_ThisRank]
 //                                  --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
 //                                      to access the data
@@ -402,7 +403,7 @@ row-major array) can be either
 and `NUM_PARTICLE` is the total number of particles
 (i.e., [[PAR_NPAR | Particles#par_npar]]).
 By default, `NUM_ATTRIBUTE` is equal to
-`8` + [[--par_attribute_flt | Installation:-Option-List#--par_attribute_flt]] + [[--par_attribute_int | Installation:-Option-List#--par_attribute_int]],
+`7` + [[--par_attribute_flt | Installation:-Option-List#--par_attribute_flt]] + [[--par_attribute_int | Installation:-Option-List#--par_attribute_int]],
 corresponding to particle mass, position x/y/z, velocity x/y/z,
 type, and user-specified attributes (and in exactly this order).
 One can also use [[PAR_IC_MASS | Particles#par_ic_mass]] / [[PAR_IC_TYPE | Particles#par_ic_type]]
@@ -421,7 +422,6 @@ and [[PAR_IC_FORMAT | Particles#par_ic_format]]=1.
 #define INT8_PAR
 
 
-
 #ifdef FLOAT8_PAR
 typedef double real_par;
 #else
@@ -433,7 +433,6 @@ typedef long long_par;
 #else
 typedef int  long_par;
 #endif
-
 
 
 int main()
@@ -463,7 +462,7 @@ int main()
 
    FILE *File = fopen( "PAR_IC", "wb" );
 
-   if ( PAR_IC_ATT_ID )
+   if ( PAR_IC_ID_ATT )
    {
       for (int p=0; p<NUM_PARTICLE; p++)
       {
@@ -476,7 +475,6 @@ int main()
       for (int v=0; v<NUM_ATTRIBUTE_FLT; v++) fwrite( ParIC_Flt[v], sizeof(real_par), NUM_PARTICLE, File );
       for (int v=0; v<NUM_ATTRIBUTE_INT; v++) fwrite( ParIC_Int[v], sizeof(long_par), NUM_PARTICLE, File );
    }
-
 
    fclose( File );
 

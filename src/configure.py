@@ -566,7 +566,7 @@ def load_arguments():
     parser.add_argument( "--par_attribute_flt", type=int, metavar="INTEGER", gamer_name="PAR_NATT_FLT_USER",
                          default=0,
                          depend={"particle":True},
-                         help="Set the number of user-defined particle float attributes.\n"
+                         help="Set the number of user-defined particle floating-point attributes.\n"
                        )
 
     parser.add_argument( "--par_attribute_int", type=int, metavar="INTEGER", gamer_name="PAR_NATT_INT_USER",
@@ -578,7 +578,7 @@ def load_arguments():
     parser.add_argument( "--double_par", type=str2bool, metavar="BOOLEAN", gamer_name="FLOAT8_PAR",
                          default=None,
                          depend={"particle":True},
-                         help="Enable double precision for particle float attributes.\n"
+                         help="Enable double precision for particle floating-point attributes.\n"
                        )
 
     parser.add_argument( "--long_par", type=str2bool, metavar="BOOLEAN", gamer_name="INT8_PAR",
@@ -946,7 +946,7 @@ def validation( paths, depends, constraints, **kwargs ):
             LOGGER.error("At least one of <--gravity> or <--tracer> must be enabled for <--particle>.")
             success = False
         if kwargs["par_attribute_flt"] < 0:
-            LOGGER.error("Number of particle float attributes should not be negative. Current: %d"%kwargs["par_attribute_flt"])
+            LOGGER.error("Number of particle floating-point attributes should not be negative. Current: %d"%kwargs["par_attribute_flt"])
             success = False
         if kwargs["par_attribute_int"] < 0:
             LOGGER.error("Number of particle integer attributes should not be negative. Current: %d"%kwargs["par_attribute_int"])

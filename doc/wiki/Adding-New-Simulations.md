@@ -317,7 +317,7 @@ and invoke `AddParticleAttribute()` for each of the new attribute. For example,
     ```
 
     The attribute indices `NewParAttFltIdx` and `NewParAttIntIdx` can be used to access the particle
-float and integer attribute data respectively (see the next step). One must also set the function pointer
+floating-point and integer attribute data, respectively (see the next step). One must also set the function pointer
 `Par_Init_Attribute_User_Ptr` in the problem initialization function.
 
     ```C++
@@ -325,7 +325,7 @@ float and integer attribute data respectively (see the next step). One must also
     ```
 
 4. Assign initial values to the new particle attribute by using the
-corresponding attribute index to access the pointer array
+corresponding attribute index to access the pointer arrays
 `*AllAttributeFlt[PAR_NATT_FLT_TOTAL]` and `*AllAttributeInt[PAR_NATT_INT_TOTAL]` (see
 [[Setting IC from Analytical Functions &#8212; Particles | Initial-Conditions#IC-Func-Particles]]).
 For example,

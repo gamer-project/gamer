@@ -485,8 +485,8 @@
 #ifdef PARTICLE
 
 // number of built-in particle attributes
-// (1) mass, position*3, velocity*3, and time
-// (2) type
+// floating-point: mass, position*3, velocity*3, and time
+// integer: type
 #  define PAR_NATT_FLT_BUILTIN0   8
 #  define PAR_NATT_INT_BUILTIN0   1
 
@@ -530,7 +530,7 @@
 #  define PAR_NATT_INT_TOTAL      ( PAR_NATT_INT_BUILTIN + PAR_NATT_INT_USER )
 
 
-// indices of built-in particle attributes in Par->AttributeFlt[]
+// indices of built-in particle floating-point attributes in Par->AttributeFlt[]
 // --> must NOT modify their values
 #  define  PAR_MASS           0
 #  define  PAR_POSX           1
@@ -540,7 +540,7 @@
 #  define  PAR_VELY           5
 #  define  PAR_VELZ           6
 
-// indices of built-in particle attributes in Par->AttributeInt[]
+// indices of built-in particle integer attributes in Par->AttributeInt[]
 // --> must NOT modify their values
 #  define  PAR_TYPE           0
 

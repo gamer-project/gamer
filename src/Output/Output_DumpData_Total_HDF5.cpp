@@ -260,7 +260,7 @@ Procedure for outputting new variables:
 //                                      output DENS and PHAS for the hybrid scheme (discard STUB)
 //                                      output use_wave_flag[lv] for the hybrid scheme
 //                2480 : 2024/07/17 --> output OPT__OUTPUT_PAR_MESH and particle attributes mapped from mesh quantities
-//                2481 : 2024/07/01 --> output particle integer attribute
+//                2481 : 2024/07/01 --> output particle integer attributes
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1272,8 +1272,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //          which may introduce a large memory overhead
 //          --> solution: we can output a fixed number of particles at a time (see Output_DumpData_Total.cpp)
    long     (*NParLv_EachRank)[NLEVEL] = new long [MPI_NRank][NLEVEL];   // number of particles at each level in each rank
-   real_par (*ParFltBuf1v1Lv)          = NULL;   // buffer storing the data of one particle float   attribute at one level
-   long_par (*ParIntBuf1v1Lv)          = NULL;   // buffer storing the data of one particle integer attribute at one level
+   real_par (*ParFltBuf1v1Lv)          = NULL;   // buffer storing the data of one particle floating-point attribute at one level
+   long_par (*ParIntBuf1v1Lv)          = NULL;   // buffer storing the data of one particle integer        attribute at one level
    int        Par_NAtt_Mesh            = amr->Par->Mesh_Attr_Num;
 
    long  GParID_Offset[NLEVEL];  // GParID = global particle index (==> unique for each particle)
@@ -1381,8 +1381,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
          if ( H5_Status < 0 )   Aux_Error( ERROR_INFO, "failed to create a hyperslab for the particle data !!\n" );
 
 
-//       output one particle attribute at one level in one rank at a time
-//       --> skip the last PAR_NATT_FLT_UNSTORED attributes since we do not want to store them on disk
+//       output one particle floating-point attribute at one level in one rank at a time
+//       --> skip the last PAR_NATT_FLT_UNSTORED floating-point attributes since we do not want to store them on disk
          for (int v=0; v<PAR_NATT_FLT_STORED+Par_NAtt_Mesh; v++)
          {
 //          6-3-3. collect particle data from all patches at the current target level
@@ -1411,16 +1411,16 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
             H5_Status = H5Dwrite( H5_SetID_ParFltData, H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT, ParFltBuf1v1Lv );
             if ( H5_Status < 0 )
-               Aux_Error( ERROR_INFO, "failed to write a particle float attribute (lv %d, v %d) !!\n", lv, v );
+               Aux_Error( ERROR_INFO, "failed to write a particle floating-point attribute (lv %d, v %d) !!\n", lv, v );
 
             H5_Status = H5Dclose( H5_SetID_ParFltData );
          } // for (int v=0; v<PAR_NATT_FLT_STORED+Par_NAtt_Mesh; v++)
 
-//       output one particle attribute at one level in one rank at a time
-//       --> skip the last PAR_NATT_INT_UNSTORED attributes since we do not want to store them on disk
+//       output one particle integer attribute at one level in one rank at a time
+//       --> skip the last PAR_NATT_INT_UNSTORED integer attributes since we do not want to store them on disk
          for (int v=0; v<PAR_NATT_INT_STORED; v++)
          {
-//          6-3-3. collect particle data from all patches at the current target level
+//          6-3-5. collect particle data from all patches at the current target level
             NParInBuf = 0;
 
             for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -1437,7 +1437,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
             }
 
 
-//          6-3-4. write data to disk
+//          6-3-6. write data to disk
             H5_SetID_ParIntData = H5Dopen( H5_GroupID_Particle, ParAttIntLabel[v], H5P_DEFAULT );
 
             H5_Status = H5Dwrite( H5_SetID_ParIntData, H5T_GAMER_LONG_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT, ParIntBuf1v1Lv );
@@ -1445,7 +1445,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                Aux_Error( ERROR_INFO, "failed to write a particle integer attribute (lv %d, v %d) !!\n", lv, v );
 
             H5_Status = H5Dclose( H5_SetID_ParIntData );
-         } // for (int v=0; v<PAR_NATT_FLT_STORED; v++)
+         } // for (int v=0; v<PAR_NATT_INT_STORED; v++)
 
 //       free resource
          H5_Status = H5Sclose( H5_MemID_ParData );

@@ -20,10 +20,10 @@
 //                   --> Must be deallocated afterward by calling Par_LB_CollectParticle2OneLevel_FreeMemory()
 //
 // Parameter   :  lv                  : Target refinement level
-//                FltAttBitIdx        : Bitwise indices of the target particle attributes (e.g., _PAR_MASS | _PAR_VELX)
+//                FltAttBitIdx        : Bitwise indices of the target particle floating-point attributes (e.g., _PAR_MASS | _PAR_VELX)
 //                                      --> A user-defined attribute with an integer index FltAttIntIdx returned by
 //                                          AddParticleAttributeFlt() can be converted to a bitwise index by BIDX(FltAttIntIdx)
-//                IntAttBitIdx        : Bitwise indices of the target particle attributes (e.g., _PAR_TYPE)
+//                IntAttBitIdx        : Bitwise indices of the target particle integer attributes (e.g., _PAR_TYPE)
 //                                      --> A user-defined attribute with an integer index IntAttIntIdx returned by
 //                                          AddParticleAttributeInt() can be converted to a bitwise index by BIDX(IntAttIntIdx)
 //                Buff_NPatchTotal    : Total number of buffer patches in Buff_PIDList
@@ -39,7 +39,7 @@
 //                Timer               : Timer used by Par_LB_SendParticleData()
 //                Timer_Comment       : String used by Par_LB_SendParticleData()
 //
-// Return      :  NPar_Copy and ParAttFlt_Copy[] (if NPar_Copy > 0) for all buffer patches specified in Buff_PIDList[]
+// Return      :  NPar_Copy and ParAttFlt/Int_Copy[] (if NPar_Copy > 0) for all buffer patches specified in Buff_PIDList[]
 //-------------------------------------------------------------------------------------------------------
 void Par_LB_CollectParticleFromRealPatch( const int lv, const long FltAttBitIdx, const long IntAttBitIdx,
                                           const int Buff_NPatchTotal, const int *Buff_PIDList, int *Buff_NPatchEachRank,
@@ -310,9 +310,9 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long FltAttBitIdx,
    int      *SendBuf_NPatchEachRank      = Real_NPatchEachRank;
    int      *RecvBuf_NPatchEachRank      = Buff_NPatchEachRank;
    int      *RecvBuf_NParEachPatch       = NULL;   // will be allocated by Par_LB_SendParticleData and must be free'd later
-   real_par *RecvBuf_ParFltDataEachPatch = NULL;   // a pointer to the MPI recv buffer declared in LB_GetBufferData
+   real_par *RecvBuf_ParFltDataEachPatch = NULL;   // a pointer to the MPI recv buffer declared in LB_GetBufferData()
                                                    // --> don't have to be free'd here
-   long_par *RecvBuf_ParIntDataEachPatch = NULL;   // a pointer to the MPI recv buffer declared in LB_GetBufferData
+   long_par *RecvBuf_ParIntDataEachPatch = NULL;   // a pointer to the MPI recv buffer declared in LB_GetBufferData()
                                                    // --> don't have to be free'd here
 
    long     *SendBuf_LBIdxEachRank       = NULL;   // useless and does not need to be allocated
