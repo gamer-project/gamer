@@ -46,8 +46,8 @@ newton_G              = (1*yt.units.newtons_constant).to('(kpc**3)/(s**2*Msun)')
 
 shr_calculator = SHR.SHR_calculator('planck18')
 
-df_vel = pd.read_csv('halo_velocity_%d'%halo, sep = '\s+' , header = 0, index_col = '#').loc[idx_start:idx_end:didx]
-df_halo = pd.read_csv('Halo_Parameter_%d'%halo, sep = '\s+' , header = 0, index_col = '#').loc[idx_start:idx_end:didx]
+df_vel = pd.read_csv('halo_velocity_%d'%halo, sep = r'\s+' , header = 0, index_col = '#').loc[idx_start:idx_end:didx]
+df_halo = pd.read_csv('Halo_Parameter_%d'%halo, sep = r'\s+' , header = 0, index_col = '#').loc[idx_start:idx_end:didx]
 
 m22 = df_halo['mass'].iloc[0]/1e-22
 halo_mass = df_halo['halo_mass']

@@ -35,19 +35,19 @@ CDM_particle_mass     = 170399.32174374 # Msun
 
 def plot_v(path, suffix, name):
 
-    df_halo_parameter = pd.read_csv( path+'/../../Halo_Parameter_%d'%halo , sep = '\s+' , header = 0 , index_col='#')
+    df_halo_parameter = pd.read_csv( path+'/../../Halo_Parameter_%d'%halo , sep = r'\s+' , header = 0 , index_col='#')
     current_time_z = df_halo_parameter['time'][idx]
     current_time_a = 1/(1+current_time_z)
     halo_radius = df_halo_parameter['halo_radius'][idx]/current_time_a
     core_radius = df_halo_parameter['core_radius_1'][idx]/current_time_a
     ### load data
-    df_gamer_dens = pd.read_csv( path+'AveDens_%06d%s'%(idx,suffix) , sep = '\s+' , header = None ,skiprows =[0])
-    df_gamer_v_bulk_r = pd.read_csv( path+'AveVr_%06d%s'%(idx,suffix) , sep = '\s+' , header = None ,skiprows =[0])
-    df_gamer_v_bulk_theta = pd.read_csv( path+'AveVtheta_%06d%s'%(idx,suffix) , sep = '\s+' , header = None ,skiprows =[0])
-    df_gamer_v_bulk_phi = pd.read_csv( path+'AveVphi_%06d%s'%(idx,suffix) , sep = '\s+' , header = None ,skiprows =[0])
-    df_gamer_v_qp_r = pd.read_csv( path+'AveWr_%06d%s'%(idx,suffix) , sep = '\s+' , header = None ,skiprows =[0])
-    df_gamer_v_qp_theta = pd.read_csv( path+'AveWtheta_%06d%s'%(idx,suffix) , sep = '\s+' , header = None ,skiprows =[0])
-    df_gamer_v_qp_phi = pd.read_csv( path+'AveWphi_%06d%s'%(idx,suffix) , sep = '\s+' , header = None ,skiprows =[0])
+    df_gamer_dens = pd.read_csv( path+'AveDens_%06d%s'%(idx,suffix) , sep = r'\s+' , header = None ,skiprows =[0])
+    df_gamer_v_bulk_r = pd.read_csv( path+'AveVr_%06d%s'%(idx,suffix) , sep = r'\s+' , header = None ,skiprows =[0])
+    df_gamer_v_bulk_theta = pd.read_csv( path+'AveVtheta_%06d%s'%(idx,suffix) , sep = r'\s+' , header = None ,skiprows =[0])
+    df_gamer_v_bulk_phi = pd.read_csv( path+'AveVphi_%06d%s'%(idx,suffix) , sep = r'\s+' , header = None ,skiprows =[0])
+    df_gamer_v_qp_r = pd.read_csv( path+'AveWr_%06d%s'%(idx,suffix) , sep = r'\s+' , header = None ,skiprows =[0])
+    df_gamer_v_qp_theta = pd.read_csv( path+'AveWtheta_%06d%s'%(idx,suffix) , sep = r'\s+' , header = None ,skiprows =[0])
+    df_gamer_v_qp_phi = pd.read_csv( path+'AveWphi_%06d%s'%(idx,suffix) , sep = r'\s+' , header = None ,skiprows =[0])
     
     ### read data
     gamer_dens = df_gamer_dens[2] # rho_bg
@@ -104,7 +104,7 @@ def plot_v(path, suffix, name):
 
 
     ### plot Jeans velocity
-    df_jeans = pd.read_csv( path+"../jeans/jeans_v_%d_%d"%(halo,idx), sep = '\s+' , header = 0)
+    df_jeans = pd.read_csv( path+"../jeans/jeans_v_%d_%d"%(halo,idx), sep = r'\s+' , header = 0)
     radius = df_jeans['radius(kpc)']
     j_v = df_jeans['jeans_v(km/s)']
     plt.plot(radius/current_time_a, np.array(j_v)*3**0.5/2**0.5, '-.',color = 'lightskyblue', lw = 1, label = 'v jeans')

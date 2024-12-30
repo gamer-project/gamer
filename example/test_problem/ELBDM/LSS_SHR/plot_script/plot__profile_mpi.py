@@ -68,7 +68,7 @@ storage = {}
 if writing_mode == 'new':
     coordinates = ts[0].arr( [ 0, 2.2, 0.4 ] , 'code_length' ) 
 elif writing_mode == 'append':
-    df = pd.read_csv( halo_parameter_filename, sep = '\s+' , header = 0 )
+    df = pd.read_csv( halo_parameter_filename, sep = r'\s+' , header = 0 )
     coordinates = ts[0].arr( [ df['x'].iloc[-1], df['y'].iloc[-1], df['z'].iloc[-1] ] , 'code_length' ) 
     print('%.21f'%coordinates.d[0], '%.21f'%coordinates.d[1], '%.21f'%coordinates.d[2])
 else:

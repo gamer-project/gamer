@@ -55,7 +55,7 @@ newton_G     = ds.units.newtons_constant.to('(kpc**3)/(s**2*Msun)').d  #(kpc^3)/
 
 
 ### read data
-df_FDM = pd.read_csv( 'Halo_Parameter_1' , sep = '\s+' , header = 0 , index_col='#')
+df_FDM = pd.read_csv( 'Halo_Parameter_1' , sep = r'\s+' , header = 0 , index_col='#')
 
 FDM_v_path = ''
 
@@ -122,21 +122,21 @@ max_v = 0
 
 def plot_v(path, suffix, name, idx, jeans =False, soliton_v =False):
 
-    df_halo_parameter = pd.read_csv( path+'../../Halo_Parameter_1' , sep = '\s+' , header = 0 , index_col='#')
+    df_halo_parameter = pd.read_csv( path+'../../Halo_Parameter_1' , sep = r'\s+' , header = 0 , index_col='#')
     current_time_z = df_halo_parameter['time'][idx]
     current_time_a = 1/(1+current_time_z)
     halo_radius = df_halo_parameter['halo_radius'][idx]/current_time_a
     core_radius = df_halo_parameter['core_radius_1'][idx]/current_time_a
 
     ### load data
-    df_gamer_dens         = pd.read_csv( path+'AveDens_%06d%s'%(idx,suffix) , sep = '\s+' , header = None ,skiprows =[0])
-    df_gamer_v_bulk_r     = pd.read_csv( path+'AveVr_%06d%s'%(idx,suffix) , sep = '\s+' , header = None ,skiprows =[0])
-    df_gamer_v_bulk_theta = pd.read_csv( path+'AveVtheta_%06d%s'%(idx,suffix) , sep = '\s+' , header = None ,skiprows =[0])
-    df_gamer_v_bulk_phi   = pd.read_csv( path+'AveVphi_%06d%s'%(idx,suffix) , sep = '\s+' , header = None ,skiprows =[0])
-    df_gamer_v_qp_r       = pd.read_csv( path+'AveWr_%06d%s'%(idx,suffix) , sep = '\s+' , header = None ,skiprows =[0])
-    df_gamer_v_qp_theta   = pd.read_csv( path+'AveWtheta_%06d%s'%(idx,suffix) , sep = '\s+' , header = None ,skiprows =[0])
-    df_gamer_v_qp_phi     = pd.read_csv( path+'AveWphi_%06d%s'%(idx,suffix) , sep = '\s+' , header = None ,skiprows =[0])
-    # df_gamer_virial       = pd.read_csv( path+'VirSurf_%06d%s'%(idx,suffix) , sep = '\s+' , header = None ,skiprows =[0])
+    df_gamer_dens         = pd.read_csv( path+'AveDens_%06d%s'%(idx,suffix) , sep = r'\s+' , header = None ,skiprows =[0])
+    df_gamer_v_bulk_r     = pd.read_csv( path+'AveVr_%06d%s'%(idx,suffix) , sep = r'\s+' , header = None ,skiprows =[0])
+    df_gamer_v_bulk_theta = pd.read_csv( path+'AveVtheta_%06d%s'%(idx,suffix) , sep = r'\s+' , header = None ,skiprows =[0])
+    df_gamer_v_bulk_phi   = pd.read_csv( path+'AveVphi_%06d%s'%(idx,suffix) , sep = r'\s+' , header = None ,skiprows =[0])
+    df_gamer_v_qp_r       = pd.read_csv( path+'AveWr_%06d%s'%(idx,suffix) , sep = r'\s+' , header = None ,skiprows =[0])
+    df_gamer_v_qp_theta   = pd.read_csv( path+'AveWtheta_%06d%s'%(idx,suffix) , sep = r'\s+' , header = None ,skiprows =[0])
+    df_gamer_v_qp_phi     = pd.read_csv( path+'AveWphi_%06d%s'%(idx,suffix) , sep = r'\s+' , header = None ,skiprows =[0])
+    # df_gamer_virial       = pd.read_csv( path+'VirSurf_%06d%s'%(idx,suffix) , sep = r'\s+' , header = None ,skiprows =[0])
     
     ### read data
     gamer_dens            = df_gamer_dens[2] # rho_bg
@@ -209,13 +209,13 @@ def plot_v(path, suffix, name, idx, jeans =False, soliton_v =False):
 
         if os.path.isfile(file_path):
             # File exists, proceed with reading
-            df = pd.read_csv(file_path, sep = '\s+' , header = 0)
+            df = pd.read_csv(file_path, sep = r'\s+' , header = 0)
             radius = df['radius(kpc)']
             j_v = df['jeans_v(km/s)']            
 
         else:
 
-            df_dens = pd.read_csv(path+'../../prof_dens/Data_%06d_%d_profile_data'%(idx,halo), sep = '\s+' , header = 0 )
+            df_dens = pd.read_csv(path+'../../prof_dens/Data_%06d_%d_profile_data'%(idx,halo), sep = r'\s+' , header = 0 )
             dens= np.array(df_dens['density(Msun/kpccm**3)'])/current_time_a**3
             radius = np.array(df_dens['radius(kpccm)'])*current_time_a
 

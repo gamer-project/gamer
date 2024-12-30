@@ -30,7 +30,7 @@ def plot_profile(path, name, core_is_true, NFW_is_true, order):
 
     # read data
     df = pd.read_csv( path+'/prof_dens/Data_%06d_%d_profile_data'%(idx, halo) , sep = '\t' , header = 0 )
-    df_halo_parameter = pd.read_csv( path+'/Halo_Parameter_%d'%1 , sep = '\s+' , header = 0 , index_col='#')
+    df_halo_parameter = pd.read_csv( path+'/Halo_Parameter_%d'%1 , sep = r'\s+' , header = 0 , index_col='#')
 
     current_time_z = df_halo_parameter['time'][idx]
     current_time_a = 1/(current_time_z+1)

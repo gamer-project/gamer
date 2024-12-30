@@ -45,7 +45,7 @@ dpi         = 150
 yt.enable_parallelism()
 
 
-df = pd.read_csv( 'Halo_Parameter_%d'%halo , sep = '\s+' , header = 0 , index_col='#')
+df = pd.read_csv( 'Halo_Parameter_%d'%halo , sep = r'\s+' , header = 0 , index_col='#')
 
 ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
 

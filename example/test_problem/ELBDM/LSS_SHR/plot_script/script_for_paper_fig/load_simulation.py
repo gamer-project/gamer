@@ -49,8 +49,8 @@ factor_name = {'time_a': 'time a', 'time_z' :'time z', 'halo_mass': 'halo mass (
 def load( path, halo, start, end, name, tag='N' ):
 
 
-    df_halo = pd.read_csv(path+'/Halo_Parameter_%d'%halo, sep = '\s+' , header = 0, index_col = '#').loc[start:end]
-    df_vel = pd.read_csv(path+'/halo_velocity_%d'%halo, sep = '\s+' , header = 0, index_col = '#').loc[start:end]
+    df_halo = pd.read_csv(path+'/Halo_Parameter_%d'%halo, sep = r'\s+' , header = 0, index_col = '#').loc[start:end]
+    df_vel = pd.read_csv(path+'/halo_velocity_%d'%halo, sep = r'\s+' , header = 0, index_col = '#').loc[start:end]
     
     time_a        = df_vel['time_a']
     time_z        = df_halo['time']

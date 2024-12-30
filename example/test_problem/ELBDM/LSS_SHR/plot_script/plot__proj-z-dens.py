@@ -58,7 +58,7 @@ for ds in ts.piter():
    pz_dens.save( 'proj/Data_%06d_Projection_%s_density.png'%(num, axis),mpl_kwargs={"dpi":dpi} )
 
    # zoom in projection
-   # df = pd.read_csv( 'Halo_Parameter_%d'%halo , sep = '\s+' , header = 0 , index_col='#')
+   # df = pd.read_csv( 'Halo_Parameter_%d'%halo , sep = r'\s+' , header = 0 , index_col='#')
    # coordinate_x = df['x'][num]
    # coordinate_y = df['y'][num]
    # coordinate_z = df['z'][num]
