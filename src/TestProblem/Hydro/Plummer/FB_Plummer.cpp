@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#ifdef FEEDBACK
+#if ( MODEL == HYDRO  &&  defined FEEDBACK )
 
 extern bool   Plummer_FB_Exp;
 extern double Plummer_FB_ExpEMin;
@@ -264,4 +264,4 @@ void FB_Init_Plummer()
 
 
 
-#endif // #ifdef FEEDBACK
+#endif // #if ( MODEL == HYDRO  &&  defined FEEDBACK )
