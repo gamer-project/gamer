@@ -85,9 +85,7 @@ void Par_LB_CollectParticleFromRealPatch( const int lv, const long FltAttBitIdx,
 #  ifdef DEBUG_PARTICLE
    if ( lv < 0  ||  lv >= NLEVEL )     Aux_Error( ERROR_INFO, "incorrect target level (%d) !!\n", lv );
 
-   if ( NAttFlt == 0  &&  MPI_Rank == 0 )    Aux_Message( stderr, "WARNING : NAttFlt == 0 !!\n" );
-
-   if ( NAttInt == 0  &&  MPI_Rank == 0 )    Aux_Message( stderr, "WARNING : NAttInt == 0 !!\n" );
+   if ( NAttFlt == 0  &&  NAttInt == 0  &&  MPI_Rank == 0 )    Aux_Message( stderr, "WARNING : NAttFlt/Int == 0 !!\n" );
 
    if      ( Buff_NPatchTotal < 0 )    Aux_Error( ERROR_INFO, "Buff_NPatchTotal = %d < 0 !!\n", Buff_NPatchTotal );
    else if ( Buff_NPatchTotal > 0 )

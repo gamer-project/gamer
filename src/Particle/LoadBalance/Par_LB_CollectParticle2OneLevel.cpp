@@ -127,8 +127,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, c
 
 // check
 #  ifdef DEBUG_PARTICLE
-   if ( NAttFlt == 0  &&  !JustCountNPar  &&  MPI_Rank == 0 )  Aux_Message( stderr, "WARNING : NAttFlt == 0 !!\n" );
-   if ( NAttInt == 0  &&  !JustCountNPar  &&  MPI_Rank == 0 )  Aux_Message( stderr, "WARNING : NAttInt == 0 !!\n" );
+   if ( NAttFlt == 0  &&  NAttInt == 0  &&  !JustCountNPar  &&  MPI_Rank == 0 )  Aux_Message( stderr, "WARNING : NAttFlt/Int == 0 !!\n" );
 
    if ( JustCountNPar )
    {
