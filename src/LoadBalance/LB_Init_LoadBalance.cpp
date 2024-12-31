@@ -329,7 +329,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, cons
 //                4. Particles will be redistributed along with the leaf patches as well
 //
 // Parameter   :  lv                : Target refinement level
-//                ParAttFlt_Old     : Pointers pointing to the particle floatint-point attribute arrays (amr->Par->AttributeFlt[])
+//                ParAttFlt_Old     : Pointers pointing to the particle floating-point attribute arrays (amr->Par->AttributeFlt[])
 //                ParAttInt_Old     : Pointers pointing to the particle integer        attribute arrays (amr->Par->AttributeInt[])
 //                RemoveParFromRepo : Remove particles on lv from the particle repository (amr->Par)
 //                                    --> Useful when applying LB_Init_LoadBalance() to a single level (i.e., TLv>=0)
