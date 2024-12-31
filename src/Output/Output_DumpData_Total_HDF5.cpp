@@ -1999,7 +1999,7 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.Float8_Par             = 0;
 #  endif
 
-#  ifdef FLOAT8_PAR
+#  ifdef INT8_PAR
    Makefile.Int8_Par               = 1;
 #  else
    Makefile.Int8_Par               = 0;
