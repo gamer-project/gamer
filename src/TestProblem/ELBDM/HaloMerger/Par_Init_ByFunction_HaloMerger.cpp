@@ -72,13 +72,13 @@ void Par_Init_ByFunction_HaloMerger( const long NPar_ThisRank, const long NPar_A
    {
 
    // allocate memory for particle attribute arrays
-      ParFltData_AllRank[PAR_MASS] = new real [NPar_AllRank];
-      ParFltData_AllRank[PAR_POSX] = new real [NPar_AllRank];
-      ParFltData_AllRank[PAR_POSY] = new real [NPar_AllRank];
-      ParFltData_AllRank[PAR_POSZ] = new real [NPar_AllRank];
-      ParFltData_AllRank[PAR_VELX] = new real [NPar_AllRank];
-      ParFltData_AllRank[PAR_VELY] = new real [NPar_AllRank];
-      ParFltData_AllRank[PAR_VELZ] = new real [NPar_AllRank];
+      ParFltData_AllRank[PAR_MASS] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSX] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSY] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSZ] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELX] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELY] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELZ] = new real_par [NPar_AllRank];
 
       long Par_Idx0 = 0;
 
