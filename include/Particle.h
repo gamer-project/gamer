@@ -458,7 +458,7 @@ struct Particle_t
                     NewAttFlt[PAR_POSX], NewAttFlt[PAR_POSY], NewAttFlt[PAR_POSZ] );
 
       if ( NewAttInt[PAR_TYPE] < (long_par)0  ||  NewAttInt[PAR_TYPE] >= (long_par)PAR_NTYPE )
-         Aux_Error( ERROR_INFO, "Incorrect particle type (%d) !!\n", (int)NewAttInt[PAR_TYPE] );
+         Aux_Error( ERROR_INFO, "Incorrect particle type (%ld) !!\n", (long)NewAttInt[PAR_TYPE] );
 #     endif
 
 
