@@ -132,7 +132,7 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
 
 // get the number of particles in each rank and set the corresponding offsets
    if ( (long)NParAttFlt*NPar_AllRank > (long)__INT_MAX__ )
-      Aux_Error( ERROR_INFO, "Total number of particle float attributes to be sent (%ld) exceeds the maximum integer (%ld) !!\n",
+      Aux_Error( ERROR_INFO, "Total number of particle floating-point attributes to be sent (%ld) exceeds the maximum integer (%ld) !!\n",
                  (long)NParAttFlt*NPar_AllRank, (long)__INT_MAX__ );
 
    if ( (long)NParAttInt*NPar_AllRank > (long)__INT_MAX__ )

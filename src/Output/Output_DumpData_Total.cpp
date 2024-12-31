@@ -964,6 +964,7 @@ void Output_DumpData_Total( const char *FileName )
    long NParInBuf, ParID, FileOffset_ThisVar;
    int  NParThisPatch;
 
+// output floating-point data
    for (int v=0; v<PAR_NATT_FLT_STORED; v++)
    for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
    {
@@ -1018,6 +1019,7 @@ void Output_DumpData_Total( const char *FileName )
       MPI_Barrier( MPI_COMM_WORLD );
    } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++), for (int v=0; v<PAR_NATT_FLT_STORED; v++)
 
+// output integer data
    for (int v=0; v<PAR_NATT_INT_STORED; v++)
    for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
    {

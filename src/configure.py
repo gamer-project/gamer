@@ -584,7 +584,7 @@ def load_arguments():
     parser.add_argument( "--long_par", type=str2bool, metavar="BOOLEAN", gamer_name="INT8_PAR",
                          default=True,
                          depend={"particle":True},
-                         help="Enable double precision for particle integer attributes.\n"
+                         help="Use the long integer data type for particle integer attributes.\n"
                        )
     # A.5 grackle
     parser.add_argument( "--grackle", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_GRACKLE",
