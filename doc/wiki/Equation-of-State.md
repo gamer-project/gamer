@@ -1,5 +1,5 @@
 This page describes various equation of states (EoS) supported by the
-compilation option [[EOS | Installation: Simulation-Options#EOS]].
+compilation option [[--eos | Installation:-Option-List#--eos]].
 
 * [`EOS_GAMMA`](#EOS_GAMMA): constant-gamma EoS
 * [`EOS_ISOTHERMAL`](#EOS_ISOTHERMAL): isothermal EoS
@@ -20,13 +20,13 @@ An isothermal EoS with a constant sound speed set by
 
 ## EOS_COSMIC_RAY
 A cosmic-ray EoS with an adiabatic index for fluid [[GAMMA | Hydro#gamma]]
-and an effective adiabatic index for cosmic rays [[GAMMA_CR | CosmicRay#gamma_cr]].
-Must enable [[COSMIC_RAY | Installation: Simulation-Options#COSMIC_RAY]].
+and an effective adiabatic index for cosmic rays [[GAMMA_CR | Hydro#gamma_cr]].
+Must enable [[--cosmic_ray | Installation:-Option-List#--cosmic_ray]].
 
 
 ## EOS_TAUBMATHEWS
-A special relativistic EoS with a variable gamma by Taub 1948 and Mathews 1971.
-Must enable [[SRHD | Installation: Simulation-Options#SRHD]].
+A special relativistic EoS with a variable gamma by [Taub 1948](https://ui.adsabs.harvard.edu/abs/1948PhRv...74..328T/abstract) and [Mathews 1971](https://ui.adsabs.harvard.edu/abs/1971ApJ...165..147M/abstract).
+Must enable [[--srhd | Installation:-Option-List#--srhd]].
 
 
 ## EOS_USER
@@ -58,9 +58,9 @@ in `include/Macro.h` (default is 10).
         * `EoS_DensTemp2Pres_NewProblem()`: convert gas mass density and temperature to gas pressure [OPTIONAL].
         * `EoS_General_NewProblem()`: general conversion between user-specified input and output variables [OPTIONAL].
 
-        **Caution:**
-        * All conversion functions must be thread-safe and not use any global variable.
-        * When a conversion function fails, it is recommended to return `NAN`
+> [!CAUTION]
+> * All conversion functions must be thread-safe and not use any global variable.
+> * When a conversion function fails, it is recommended to return `NAN`
 in order to trigger auto-corrections such as [[OPT__1ST_FLUX_CORR | Hydro#OPT__1ST_FLUX_CORR]]
 and [[AUTO_REDUCE_DT | Runtime-Parameters:-Timestep#AUTO_REDUCE_DT]].
 

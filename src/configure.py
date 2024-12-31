@@ -233,7 +233,8 @@ def str2bool( v ):
     return
 
 def add_option( opt_str, name, val ):
-    # NOTE: Every -Doption must have a trailing space.
+    # NOTE: 1. Every -Doption must have a trailing space.
+    #       2. Do not insert any space before and after the equal sign `=`.
     if type(val) == type(True):
         if val: opt_str += "-D%s "%(name)
         LOGGER.info("%-25s : %r"%(name, val))
@@ -372,7 +373,7 @@ def load_arguments():
     # machine config setup
     parser.add_argument( "--machine", type=str, metavar="MACHINE",
                          default="eureka_intel",
-                         help="Select the MACHINE.config file under ../configs directory. \nChoice: [eureka_intel, YOUR_MACHINE_NAME] => "
+                         help="Select the MACHINE.config file under ../configs directory.\nChoice: [eureka_intel, YOUR_MACHINE_NAME] => "
                        )
 
     # A. options of diffierent physical models
@@ -454,6 +455,18 @@ def load_arguments():
                        )
 
     # A.2 ELBDM scheme
+    parser.add_argument( "--elbdm_scheme", type=str, metavar="TYPE", gamer_name="ELBDM_SCHEME",
+                         default="ELBDM_WAVE", choices=["ELBDM_WAVE", "ELBDM_HYBRID"],
+                         depend={"model":"ELBDM"},
+                         help="Scheme type for <--model=ELBDM> (ELBDM_WAVE: wave-only, ELBDM_HYBRID: fluid-wave-hybrid-scheme).\n"
+                       )
+
+    parser.add_argument( "--wave_scheme", type=str, metavar="TYPE", gamer_name="WAVE_SCHEME",
+                         default="WAVE_FD", choices=["WAVE_FD", "WAVE_GRAMFE"],
+                         depend={"model":"ELBDM"},
+                         help="Wave scheme for <--model=ELBDM> (WAVE_FD: finite difference, WAVE_GRAMFE: local spectral method).\n"
+                       )
+
     parser.add_argument( "--conserve_mass", type=str2bool, metavar="BOOLEAN", gamer_name="CONSERVE_MASS",
                          default=True,
                          depend={"model":"ELBDM"},
@@ -461,9 +474,23 @@ def load_arguments():
                        )
 
     parser.add_argument( "--laplacian_four", type=str2bool, metavar="BOOLEAN", gamer_name="LAPLACIAN_4TH",
-                         default=True,
+                         default=None,
                          depend={"model":"ELBDM"},
-                         help="Enable the fourth-order Laplacian for <--model=ELBDM>.\n"
+                         constraint={ True:{"wave_scheme":"WAVE_FD"} },
+                         help="Enable the fourth-order Laplacian for <--model=ELBDM> (for <--wave_scheme=WAVE_FD> only).\n"
+                       )
+
+    parser.add_argument( "--gramfe_scheme", type=str, metavar="TYPE", gamer_name="GRAMFE_SCHEME",
+                         default="GRAMFE_MATMUL", choices=["GRAMFE_MATMUL", "GRAMFE_FFT"],
+                         depend={"model":"ELBDM", "wave_scheme":"WAVE_GRAMFE"},
+                         constraint={ "GRAMFE_MATMUL":{"gsl":True} },
+                         help="GramFE scheme for <--wave_scheme=WAVE_GRAMFE> (GRAMFE_MATMUL: faster for PATCH_SIZE=8, GRAMFE_FFT: faster for larger patch sizes).\n"
+                       )
+
+    parser.add_argument( "--hybrid_scheme", type=str, metavar="TYPE", gamer_name="HYBRID_SCHEME",
+                         default="HYBRID_MUSCL", choices=["HYBRID_UPWIND", "HYBRID_FROMM", "HYBRID_MUSCL"],
+                         depend={"model":"ELBDM", "elbdm_scheme":"ELBDM_HYBRID"},
+                         help="Fluid scheme for <--elbdm_scheme=ELBDM_HYBRID> (HYBRID_UPWIND: first-order, diffusive, HYBRID_FROMM: second-order, no limiter, unstable for fluid-only simulations, HYBRID_MUSCL: second-order, with limiter, useful for zoom-in and fluid-only simulations).\n"
                        )
 
     parser.add_argument( "--self_interaction", type=str2bool, metavar="BOOLEAN", gamer_name="QUARTIC_SELF_INTERACTION",
@@ -623,6 +650,12 @@ def load_arguments():
                          help="Support FFTW library.\n"
                        )
 
+    parser.add_argument( "--spectral_interpolation", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_SPECTRAL_INT",
+                         default=False,
+                         constraint={ True:{"gsl":True, "fftw":["FFTW2", "FFTW3"]} },
+                         help="Support spectral interpolation.\n"
+                       )
+
     parser.add_argument( "--libyt", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_LIBYT",
                          default=False,
                          help="Support yt inline analysis.\n"
@@ -734,6 +767,9 @@ def set_conditional_defaults( args ):
     if args["bitwise_reproducibility"] is None:
         args["bitwise_reproducibility"] = args["debug"]
 
+    if args["laplacian_four"] is None:
+        args["laplacian_four"] = True if args["wave_scheme"] == "WAVE_FD" else False
+
     if args["double_par"] is None:
         args["double_par"] = args["double"]
 
@@ -753,14 +789,18 @@ def set_gpu( gpus, flags, args ):
     gpu_opts = {}
     compute_capability = gpus["GPU_COMPUTE_CAPABILITY"]
 
+    if not args["gpu"]: return gpu_opts
+
     # 1. Check the compute capability
     if compute_capability == "":
-        if args["gpu"]: raise ValueError("GPU_COMPUTE_CAPABILITY is not set in `../configs/%s.config`. See `../configs/template.config` for illustration."%args["machine"])
-        return gpu_opts
+        raise ValueError("GPU_COMPUTE_CAPABILITY is not set in `../configs/%s.config`. See `../configs/template.config` for illustration."%args["machine"])
     compute_capability = int(compute_capability)
 
     if   compute_capability < 0:
-        compute_capability = get_gpu_compute_capability()
+        try:
+            compute_capability = get_gpu_compute_capability()
+        except:
+            raise ValueError("Fail to set GPU_COMPUTE_CAPABILITY automatically! Please set it manually in `../configs/%s.config`."%args["machine"])
     elif compute_capability < 200:
         raise ValueError("Incorrect GPU_COMPUTE_CAPABILITY range (>=200)")
     gpu_opts["GPU_COMPUTE_CAPABILITY"] = str(compute_capability)
@@ -775,7 +815,7 @@ def set_gpu( gpus, flags, args ):
             gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=128"
         else:
             gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=70"
-    elif 500 <= compute_capability and compute_capability <= 870:
+    elif 500 <= compute_capability and compute_capability <= 900:
         if args["double"]:
             gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=192"
         else:
@@ -816,6 +856,9 @@ def set_compile( paths, compilers, flags, kwargs ):
     # 3. Set the nvcc common flags
     # NOTE: `-G` may cause the GPU Poisson solver to fail
     if kwargs["debug"]: flags["NVCCFLAG_COM"] += "-g -Xptxas -v"
+    # enable C++ 17 support for ELBDM GPU Gram-Fourier extension scheme
+    if kwargs["model"] == "ELBDM" and kwargs["wave_scheme"] == "WAVE_GRAMFE" and kwargs["gramfe_scheme"] == "GRAMFE_FFT":
+        flags["NVCCFLAG_COM"] += "-std=c++17"
 
     # 4. Write flags to compile option dictionary.
     for key, val in flags.items():
@@ -858,7 +901,6 @@ def validation( paths, depends, constraints, **kwargs ):
         if kwargs["passive"] < 0:
             LOGGER.error("Passive scalar should not be negative. Current: %d"%kwargs["passive"])
             success = False
-
         if kwargs["dual"] not in [NONE_STR, "DE_ENPY"]:
             LOGGER.error("This dual energy form is not supported yet. Current: %s"%kwargs["dual"])
             success = False
@@ -867,10 +909,17 @@ def validation( paths, depends, constraints, **kwargs ):
         if kwargs["passive"] < 0:
             LOGGER.error("Passive scalar should not be negative. Current: %d"%kwargs["passive"])
             success = False
+        if kwargs["gramfe_scheme"] == "GRAMFE_FFT" and not kwargs["gpu"] and kwargs["fftw"] not in ["FFTW2", "FFTW3"]:
+            LOGGER.error("Must set <--fftw> when adopting <--gramfe_scheme=GRAMFE_FFT> and <--gpu=false>")
+            success = False
+        if kwargs["spectral_interpolation"] and kwargs["fftw"] == "FFTW2" and not kwargs["double"]:
+            LOGGER.error("Must enable <--double> when adopting <--spectral_interpolation> and <--fftw=FFTW2>")
+            success = False
 
     elif kwargs["model"] == "PAR_ONLY":
         LOGGER.error("<--model=PAR_ONLY> is not supported yet.")
         success = False
+
     else:
         LOGGER.error("Unrecognized model: %s. Please add to the model choices."%kwargs["model"])
         success = False
@@ -926,6 +975,11 @@ def warning( paths, **kwargs ):
             if kwargs[arg] != val: continue
             if paths.setdefault(p_name, "") != "": continue
             LOGGER.warning("%-15s is not given in %s.config when setting <--%s=%s>"%(p_name, kwargs["machine"], arg, str(val)))
+
+    if kwargs["model"] == "ELBDM" and kwargs["gpu"] and kwargs["wave_scheme"] == "WAVE_GRAMFE" and kwargs["gramfe_scheme"] == "GRAMFE_FFT":
+        if paths.setdefault("CUFFTDX_PATH", "") == "":
+            LOGGER.warning("CUFFTDX_PATH is not given in %s.config when enabling <--gramfe_scheme=GRAMFE_FFT>."%(kwargs["machine"]))
+
     return
 
 
@@ -999,7 +1053,7 @@ if __name__ == "__main__":
     for key in re.findall(r"@@@(.+?)@@@", makefile):
         makefile, num = re.subn(r"@@@%s@@@"%key, "", makefile)
         if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
-        LOGGER.warning("@@@%s@@@ is replaced to '' since there is no given value."%key)
+        LOGGER.warning("@@@%s@@@ is replaced to '' since the value is not given or the related option is disabled."%key)
 
     # 4.3 Write
     with open( GAMER_MAKE_OUT, "w") as make_out:

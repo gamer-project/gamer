@@ -30,40 +30,41 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 // Structure   :  AMR_t
 // Description :  Data structure of the AMR implementation
 //
-// Data Member :  patch        : Pointers of all patches
-//                num          : Number of patches (real patch + buffer patch) at each level
-//                scale        : Grid scale at each level (grid size normalized to that at the finest level)
-//                FluSg        : Sandglass of the current fluid          data [0/1]
-//                MagSg        : Sandglass of the current magnetic field data [0/1]
-//                PotSg        : Sandglass of the current potential      data [0/1]
-//                FluSgTime    : Physical time of FluSg
-//                MagSgTime    : Physical time of MagSg
-//                PotSgTime    : Physical time of PotSg
-//                NPatchComma  : (1) SERIAL: [1] = [2] = ... = [27] = num[lv] = total number of patches
-//                               (2) Parallel, but no LOAD_BALANCE:
-//                                   [ 0, start of buffer patches [s=0], start of buffer patches [s=1]
-//                                    ... start of buffer patches [s=25], total # of patches (=num[lv]) ]
-//                               (3) Parallel, with LOAD_BALANCE:
-//                                   [ 0, start of sibling-buffer patches, start of father-buffer patches,
-//                                     total # of patches (=num[lv]), same as [3], ...]
-//                                --> In all cases, [ 1] gives the total number of "real" patches
-//                                                  [27] gives the total number of "real+buffer" patches
-//                dh           : Grid size at each level
-//                BoxEdgeL     : Simulation box left  edge in the adopted coordinate system
-//                BoxEdgeR     : Simulation box right edge in the adopted coordinate system
-//                BoxCenter    : Simulation box center     in the adopted coordinate system
-//                BoxSize      : Simulation box size       in the adopted coordinate system
-//                BoxScale     : Simulation box scale
-//                WithFlux     : Whether of not to allocate the flux arrays at all coarse-fine boundaries
-//                WithElectric : Whether of not to allocate the electric field arrays at all coarse-fine boundaries
-//                Par          : Particle data
-//                ParaVar      : Variables for parallelization
-//                LB           : Variables for load-balance
-//                ResPower2    : ceil(  log2( effective resolution at lv )  ) --> mainly used by LOAD_BALANCE
-//                NUpdateLv    : Number of updates at each level in one global time-step
-//                               --> Do not take into account the number of patches and particles at each level
-//                               --> Mainly used for estimating the weighted load-imbalance factor to determine
-//                                   when to redistribute all patches (when LOAD_BALANCE is on)
+// Data Member :  patch         : Pointers of all patches
+//                num           : Number of patches (real patch + buffer patch) at each level
+//                scale         : Grid scale at each level (grid size normalized to that at the finest level)
+//                FluSg         : Sandglass of the current fluid          data [0/1]
+//                MagSg         : Sandglass of the current magnetic field data [0/1]
+//                PotSg         : Sandglass of the current potential      data [0/1]
+//                FluSgTime     : Physical time of FluSg
+//                MagSgTime     : Physical time of MagSg
+//                PotSgTime     : Physical time of PotSg
+//                NPatchComma   : (1) SERIAL: [1] = [2] = ... = [27] = num[lv] = total number of patches
+//                                (2) Parallel, but no LOAD_BALANCE:
+//                                    [ 0, start of buffer patches [s=0], start of buffer patches [s=1]
+//                                     ... start of buffer patches [s=25], total # of patches (=num[lv]) ]
+//                                (3) Parallel, with LOAD_BALANCE:
+//                                    [ 0, start of sibling-buffer patches, start of father-buffer patches,
+//                                      total # of patches (=num[lv]), same as [3], ...]
+//                                 --> In all cases, [ 1] gives the total number of "real" patches
+//                                                   [27] gives the total number of "real+buffer" patches
+//                dh            : Grid size at each level
+//                BoxEdgeL      : Simulation box left  edge in the adopted coordinate system
+//                BoxEdgeR      : Simulation box right edge in the adopted coordinate system
+//                BoxCenter     : Simulation box center     in the adopted coordinate system
+//                BoxSize       : Simulation box size       in the adopted coordinate system
+//                BoxScale      : Simulation box scale
+//                WithFlux      : Whether of not to allocate the flux arrays at all coarse-fine boundaries
+//                WithElectric  : Whether of not to allocate the electric field arrays at all coarse-fine boundaries
+//                Par           : Particle data
+//                ParaVar       : Variables for parallelization
+//                LB            : Variables for load-balance
+//                ResPower2     : ceil(  log2( effective resolution at lv )  ) --> mainly used by LOAD_BALANCE
+//                NUpdateLv     : Number of updates at each level in one global time-step
+//                                --> Do not take into account the number of patches and particles at each level
+//                                --> Mainly used for estimating the weighted load-imbalance factor to determine
+//                                    when to redistribute all patches (when LOAD_BALANCE is on)
+//                use_wave_flag : Flag that determines whether hybrid ELBDM scheme uses fluid or wave scheme at a given AMR level
 //
 // Method      :  AMR_t    : Constructor
 //               ~AMR_t    : Destructor
@@ -115,7 +116,9 @@ struct AMR_t
 #  endif
    long   NUpdateLv   [NLEVEL];
 
-
+#  if ( MODEL == ELBDM )
+   bool   use_wave_flag[NLEVEL];
+#  endif
 
    //===================================================================================
    // Constructor :  AMR_t
@@ -152,6 +155,16 @@ struct AMR_t
          PotSgTime[lv][   PotSg[lv] ] = -__FLT_MAX__;
          PotSgTime[lv][ 1-PotSg[lv] ] = -__FLT_MAX__;
 #        endif
+
+#        if ( MODEL == ELBDM )
+#        if   ( ELBDM_SCHEME == ELBDM_WAVE )
+         use_wave_flag[lv] = true;
+#        elif ( ELBDM_SCHEME == ELBDM_HYBRID )
+         use_wave_flag[lv] = false; // use fluid solver by default for hybrid scheme
+#        else
+#        error : UNKNOWN ELBDM_SCHEME !!
+#        endif // ELBDM_SCHEME
+#        endif // #if ( MODEL == ELBDM )
       }
 
       for (int Sg=0; Sg<2; Sg++)
