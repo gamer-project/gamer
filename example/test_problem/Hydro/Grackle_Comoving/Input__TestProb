@@ -1,0 +1,3 @@
+# problem-specific runtime parameters
+GrackleComoving_InitialTemperature 1e8
+GrackleComoving_InitialMetallicity 1.295e-2   # Zsun
