@@ -304,7 +304,8 @@ metallicity fraction). Whenever applicable, skip this step and use these
 pre-declared index variables directly.
 
 3.  Define a function called, for example, `AddNewParticleAttribute_NewProblem()`
-and invoke `AddParticleAttribute()` for each of the new attribute. For example,
+and invoke `AddParticleAttributeFlt()` and `AddParticleAttributeInt()` for each
+of the new floating-point and integer attribute, respectively. For example,
 
     ```C++
     void AddNewParticleAttribute_NewProblem()
