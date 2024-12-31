@@ -382,7 +382,7 @@ def load_arguments( sys_setting : SystemSetting ):
     # machine config setup
     parser.add_argument( "--machine", type=str, metavar="MACHINE",
                          default=sys_setting.get_default( "machine_name", "eureka_intel" ),
-                         help="Select the MACHINE.config file under ../configs directory.\nChoice: [eureka_intel, spock_intel, YOUR_MACHINE_NAME, ...] => "
+                         help="Select the *.config file under ../configs directory. Will overwrite the default machine set in the default setting file.\nChoice: [eureka_intel, spock_intel, ...] => "
                        )
 
     # A. options of diffierent physical models
@@ -736,15 +736,15 @@ def load_arguments( sys_setting : SystemSetting ):
 
 def load_config( config ):
     LOGGER.info("Using %s as the config."%(config))
+    if not os.path.isfile( config ):
+        raise FileNotFoundError("The config file <%s> does not exist."%(config))
+
     paths, compilers = {}, {"CXX":"", "CXX_MPI":""}
     flags = {"CXXFLAG":"", "OPENMPFLAG":"", "LIBFLAG":"", "NVCCFLAG_COM":"", "NVCCFLAG_FLU":"", "NVCCFLAG_POT":""}
     gpus  = {"GPU_COMPUTE_CAPABILITY":""}
 
-    if os.path.isfile( config ):
-        with open( config, "r" ) as f:
-            lines = f.readlines()
-    else:
-        raise FileNotFoundError("The config file <%s> does not exist."%(config))
+    with open( config, "r" ) as f:
+        lines = f.readlines()
 
     for line in lines:
         temp = list( filter( None, re.split(" |:=|\n", line) ) ) # separate by " " and ":="

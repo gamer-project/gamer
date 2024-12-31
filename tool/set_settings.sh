@@ -33,8 +33,8 @@ show_valid_keys() {
 show_help() {
     echo "Usage:"
     echo "  $0 (--local | --global) [-lv] [--<key>=<value> ...]"
-    echo "  $0 (--local | --global) [-lvd] [--delete key ...]"
-    echo "  $0 -h | --help"
+    echo "  $0 (--local | --global) [-lvd] [--delete <key> ...]"
+    echo "  $0 [-h | --help]"
     echo ""
     echo "Options:"
     echo "  --local              Use local settings"
@@ -61,7 +61,7 @@ DELETE_KEYS=()
 
 if [ "$#" -eq 0 ]; then
     show_help
-    exit 0
+    exit 1
 fi
 
 parse_set_parameter() {

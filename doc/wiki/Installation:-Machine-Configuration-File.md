@@ -11,8 +11,8 @@ For example, setting `--machine=pleiades` with the above command will use the `c
 If the machine configuration file is not available for your machine or the existing one is not appropriate, you will need to create a new one with the following instructions.
 
 > [!NOTE]
-> If you want to set the default machine configuration file for all of the Gamer copies under your user account, use the `--global` option instead of `--local`.
-Still, you can override the global setting for the individual Gamer copies with the `--local` option.
+> If you want to set the default machine configuration file for all of the GAMER copies under your user account, use the `--global` option instead of `--local`.
+Still, you can override the global setting for the individual GAMER copies with the `--local` option.
 Furthermore, you can override the default setting with the `--machine=` option in `configure.py`.
 
 ## Machine Configuration File
