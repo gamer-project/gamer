@@ -8,7 +8,7 @@ import numpy as np
 parser = argparse.ArgumentParser( description='Plot the gas slices and projections' )
 
 parser.add_argument( '-i1', action='store', required=False, type=str, dest='prefix_1',
-                     help='path prefix [%(default)s]', default='../' )
+                     help='path prefix [%(default)s]', default='./' )
 parser.add_argument( '-i2', action='store', required=False, type=str, dest='prefix_2',
                      help='path prefix [%(default)s]', default='../' )
 #parser.add_argument( '-s', action='store', required=True,  type=int, dest='idx_start',
