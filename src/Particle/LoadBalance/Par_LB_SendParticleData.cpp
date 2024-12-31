@@ -20,7 +20,7 @@
 //                   --> Par_LB_ExchangeParticleBetweenPatch() is called by
 //                       Par_PassParticle2Sibling() and Par_PassParticle2Son_MultiPatch()
 //
-// Parameter   :  NParAttFlt                  : Number of particle floatint-point attributes to be sent
+// Parameter   :  NParAttFlt                  : Number of particle floating-point attributes to be sent
 //                NParAttInt                  : Number of particle integer        attributes to be sent
 //                SendBuf_NPatchEachRank      : MPI send buffer --> number of patches sent to each rank
 //                SendBuf_NParEachPatch       : MPI send buffer --> number of particles in each patch to be sent
