@@ -165,8 +165,7 @@ void Par_LB_SendParticleData( const int NParAttFlt, const int NParAttInt, int *S
       long *RecvDisp_ParIntDataEachPatch  = new long [MPI_NRank];
 
 //    send/recv count
-      const int *SendPtr_Flt = NULL, *RecvPtr_Flt = NULL;
-      const int *SendPtr_Int = NULL, *RecvPtr_Int = NULL;
+      const int *SendPtr = NULL, *RecvPtr = NULL;
       NRecvParTotal = 0L;
 
       for (int r=0; r<MPI_NRank; r++)
@@ -176,15 +175,20 @@ void Par_LB_SendParticleData( const int NParAttFlt, const int NParAttInt, int *S
          SendCount_ParIntDataEachPatch[r] = 0L;
          RecvCount_ParIntDataEachPatch[r] = 0L;
 
-         SendPtr_Flt = SendBuf_NParEachPatch + SendDisp_NParEachPatch[r];
-         RecvPtr_Flt = RecvBuf_NParEachPatch + RecvDisp_NParEachPatch[r];
-         SendPtr_Int = SendBuf_NParEachPatch + SendDisp_NParEachPatch[r];
-         RecvPtr_Int = RecvBuf_NParEachPatch + RecvDisp_NParEachPatch[r];
+         SendPtr = SendBuf_NParEachPatch + SendDisp_NParEachPatch[r];
+         RecvPtr = RecvBuf_NParEachPatch + RecvDisp_NParEachPatch[r];
 
-         for (int p=0; p<SendBuf_NPatchEachRank[r]; p++)    SendCount_ParFltDataEachPatch[r] += (long)SendPtr_Flt[p];
-         for (int p=0; p<RecvBuf_NPatchEachRank[r]; p++)    RecvCount_ParFltDataEachPatch[r] += (long)RecvPtr_Flt[p];
-         for (int p=0; p<SendBuf_NPatchEachRank[r]; p++)    SendCount_ParIntDataEachPatch[r] += (long)SendPtr_Int[p];
-         for (int p=0; p<RecvBuf_NPatchEachRank[r]; p++)    RecvCount_ParIntDataEachPatch[r] += (long)RecvPtr_Int[p];
+         for (int p=0; p<SendBuf_NPatchEachRank[r]; p++)
+         {
+            SendCount_ParFltDataEachPatch[r] += (long)SendPtr[p];
+            SendCount_ParIntDataEachPatch[r] += (long)SendPtr[p];
+         }
+
+         for (int p=0; p<RecvBuf_NPatchEachRank[r]; p++)
+         {
+            RecvCount_ParFltDataEachPatch[r] += (long)RecvPtr[p];
+            RecvCount_ParIntDataEachPatch[r] += (long)RecvPtr[p];
+         }
 
          NRecvParTotal += RecvCount_ParFltDataEachPatch[r];
 
