@@ -15,20 +15,20 @@
 //
 // Parameter   :  NPar_ThisRank : Number of particles to be received by this MPI rank
 //                NPar_AllRank  : Total number of particles in all MPI ranks
-//                FltAttBitIdx  : Bitwise indices of the target particle attributes (e.g., _PAR_MASS | _PAR_VELX)
+//                FltAttBitIdx  : Bitwise indices of the target particle floating-point attributes (e.g., _PAR_MASS | _PAR_VELX)
 //                                --> A user-defined attribute with an integer index FltAttIntIdx returned by
 //                                    AddParticleAttributeFlt() can be converted to a bitwise index by BIDX(FltAttIntIdx)
-//                IntAttBitIdx  : Bitwise indices of the target particle attributes (e.g., _PAR_TYPE)
+//                IntAttBitIdx  : Bitwise indices of the target particle integer attributes (e.g., _PAR_TYPE)
 //                                --> A user-defined attribute with an integer index IntAttIntIdx returned by
 //                                    AddParticleAttributeInt() can be converted to a bitwise index by BIDX(IntAttIntIdx)
-//                Data_Send_Flt : Pointer array for all particle attributes to be sent
+//                Data_Send_Flt : Pointer array for all particle floating-point attributes to be sent
 //                                --> Dimension = [PAR_NATT_FLT_TOTAL][NPar_AllRank]
 //                                --> Target particle attributes are set by "FltAttBitIdx"
-//                Data_Send_Int : Pointer array for all particle attributes to be sent
+//                Data_Send_Int : Pointer array for all particle integer attributes to be sent
 //                                --> Dimension = [PAR_NATT_INT_TOTAL][NPar_AllRank]
 //                                --> Target particle attributes are set by "IntAttBitIdx"
-//                Data_Recv_Flt : Pointer array for all particle float   attributes to be received
-//                Data_Recv_Int : Pointer array for all particle integer attributes to be received
+//                Data_Recv_Flt : Pointer array for all particle floating-point attributes to be received
+//                Data_Recv_Int : Pointer array for all particle integer        attributes to be received
 //
 // Return      :  Data_Recv_Flt, Data_Recv_Int
 //-------------------------------------------------------------------------------------------------------
