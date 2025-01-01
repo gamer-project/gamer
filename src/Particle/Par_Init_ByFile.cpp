@@ -115,15 +115,12 @@ void Par_Init_ByFile()
    {
       for (int r=0; r<MPI_Rank; r++)   FileOffset += NPar_EachRank[r]*( long(NParAttFlt)*load_data_size_flt + long(NParAttInt)*load_data_size_int );
 
+      fseek( File, FileOffset, SEEK_SET );
+
       for (long p=0; p<NParThisRank; p++)
       {
-         fseek( File, FileOffset, SEEK_SET );
          fread( ParFltData_ThisRank+p*NParAttFlt*load_data_size_flt, load_data_size_flt, long(NParAttFlt), File );
-         FileOffset += NParAttFlt*load_data_size_flt;
-
-         fseek( File, FileOffset, SEEK_SET );
          fread( ParIntData_ThisRank+p*NParAttInt*load_data_size_int, load_data_size_int, long(NParAttInt), File );
-         FileOffset += NParAttInt*load_data_size_int;
       }
    }
 
