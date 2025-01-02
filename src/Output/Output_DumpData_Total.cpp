@@ -185,7 +185,7 @@ void Output_DumpData_Total( const char *FileName )
 
       FileOffset_Particle = ExpectFileSize;  // file offset at the beginning of particle data
 
-      ExpectFileSize += (long)PAR_NATT_FLT_STORED*amr->Par->NPar_Active_AllRank*sizeof(real);
+      ExpectFileSize += (long)PAR_NATT_FLT_STORED*amr->Par->NPar_Active_AllRank*sizeof(real_par);
       ExpectFileSize += (long)PAR_NATT_INT_STORED*amr->Par->NPar_Active_AllRank*sizeof(long_par);
 #     endif
 
@@ -949,7 +949,7 @@ void Output_DumpData_Total( const char *FileName )
    const long ParFltBufSize = 10000000;   // number of particles dumped at a time
    const long ParIntBufSize = 10000000;
 
-   real     *ParFltBuf = new real     [ParFltBufSize];
+   real_par *ParFltBuf = new real_par [ParFltBufSize];
    long_par *ParIntBuf = new long_par [ParIntBufSize];
 
 
@@ -958,7 +958,7 @@ void Output_DumpData_Total( const char *FileName )
 
 
 // output particle data (one attribute at a time to avoid creating holes in the file)
-   const long ParFltDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(real);
+   const long ParFltDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(real_par);
    const long ParIntDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(long_par);
 
    long NParInBuf, ParID, FileOffset_ThisVar;
@@ -973,7 +973,7 @@ void Output_DumpData_Total( const char *FileName )
          File = fopen( FileName, "ab" );
 
 //       set file position indicator to the end of the current file and check whether it's consistent with expectation
-         FileOffset_ThisVar = FileOffset_Particle + ParFltDataSize1v*v + GParID_Offset*sizeof(real);
+         FileOffset_ThisVar = FileOffset_Particle + ParFltDataSize1v*v + GParID_Offset*sizeof(real_par);
          NParInBuf          = 0;
 
          fseek( File, 0, SEEK_END );
@@ -1007,7 +1007,7 @@ void Output_DumpData_Total( const char *FileName )
 //          store particle data from I/O buffer to disk
             if ( PID+1 == amr->NPatchComma[lv][1]  ||  NParInBuf + amr->patch[0][lv][PID+1]->NPar > ParFltBufSize )
             {
-               fwrite( ParFltBuf, sizeof(real), NParInBuf, File );
+               fwrite( ParFltBuf, sizeof(real_par), NParInBuf, File );
 
                NParInBuf = 0;
             }
