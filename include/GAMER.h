@@ -51,6 +51,7 @@
 #  endif
 #endif // #if ( SUPPORT_FFTW == FFTW3 ) ... #elif ( SUPPORT_FFTW == FFTW2 )
 
+#ifdef SUPPORT_GRACKLE
 extern "C" {
 #  include <grackle.h>
 }
