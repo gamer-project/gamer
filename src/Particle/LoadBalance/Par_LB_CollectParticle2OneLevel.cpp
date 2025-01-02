@@ -15,7 +15,7 @@ extern Timer_t *Timer_Par_MPI[NLEVEL][6];
 //                descendants (sons, grandsons, ...) to patches at a target level
 //
 // Note        :  1. ParList[] in all descendants will NOT be changeed after calling this function
-//                2. ParAtt_Copy[] will be allocated for the target patches at FaLv
+//                2. ParAttFlt_Copy[] and ParAttInt_Copy[] will be allocated for the target patches at FaLv
 //                   --> Must be deallocated afterward by calling Par_LB_CollectParticle2OneLevel_FreeMemory()
 //                3. Only work on non-leaf real patches and buffer patches (the latter can be either leaf or non-leaf)
 //                   --> For leaf real patches the ParList_Copy[] will NOT be allocated
@@ -24,33 +24,38 @@ extern Timer_t *Timer_Par_MPI[NLEVEL][6];
 //                       --> It's because particles travelling from coarse to fine grids will stay in coarse grids
 //                           temporarily until the velocity correction is done.
 //                       --> For these patches, NPar_Copy will be **the sum of NPar and the number of particles
-//                           collected from other patches**, and ParList_Copy[] (or ParAtt_Copy[]) will contain
-//                           information of particles belonging to NPar as well.
+//                           collected from other patches**, and ParList_Copy[] (or ParAttFlt_Copy[] and ParAttInt_Copy[])
+//                           will contain information of particles belonging to NPar as well.
 //                       --> It makes implementation simplier. **For leaf real patches, one only needs to consider
 //                           NPar and ParList[]. While for all other patches, one only needs to consider NPar_Copy
-//                           and ParList_Copy[] (or ParAtt_Copy[]). One never needs to consider both.**
+//                           and ParList_Copy[] (or ParAttFlt_Copy[] and ParAttInt_Copy[]).
+//                           One never needs to consider both.**
 //                4. Invoked by Par_CollectParticle2OneLevel()
 //                5. For depositing particle mass onto grids, particle position can be predicted before sending to
 //                   other ranks (using the option PredictPos) so that we don't have to send particle velocity
-//                   --> Accordingly, if Par->PredictPos is on, ParAtt_Copy[] always stores the data
+//                   --> Accordingly, if Par->PredictPos is on, ParAttFlt_Copy[] always stores the data
 //                       after position prediction
 //                6. When SibBufPatch is on, this function will also collect particles for sibling-buffer patches at FaLv
 //                   --> Moreover, if FaSibBufPatch is also on, it will also collect particles for
 //                       father-sibling-buffer patches at FaLv-1 (if FaLv > 0)
 //                       --> Useful for constructing the density field at FaLv for the Poisson solver at FaLv
-//                       --> These data will be stored in NPar_Copy and ParAtt_Copy[] as well
+//                       --> These data will be stored in NPar_Copy, ParAttFlt_Copy[], and ParAttInt_Copy[] as well
 //                7. Option "JustCountNPar" can be used to count the number of particles in each real patch at FaLv
 //                   --> Do NOT collect other particle data (e.g., particle mass and position)
 //                   --> Particle count is stored in NPar_Copy
-//                   --> ParAtt_Copy[] will NOT be allocated
+//                   --> ParAttFlt_Copy[] will NOT be allocated
+//                   --> ParAttInt_Copy[] will NOT be allocated
 //                   --> Currently it does NOT work with the options SibBufPatch and FaSibBufPatch
 //                       --> It only counts particles for **real** patches at FaLv
 //                   --> Does NOT work with "PredictPos"
 //
 // Parameter   :  FaLv          : Father's refinement level
-//                AttBitIdx     : Bitwise indices of the target particle attributes (e.g., _PAR_MASS | _PAR_VELX)
-//                                --> A user-defined attribute with an integer index AttIntIdx returned by
-//                                    AddParticleAttribute() can be converted to a bitwise index by BIDX(AttIntIdx)
+//                FltAttBitIdx  : Bitwise indices of the target particle floating-point attributes (e.g., _PAR_MASS | _PAR_VELX)
+//                                --> A user-defined attribute with an integer index FltAttIntIdx returned by
+//                                    AddParticleAttributeFlt() can be converted to a bitwise index by BIDX(FltAttIntIdx)
+//                IntAttBitIdx  : Bitwise indices of the target particle integer attributes (e.g., _PAR_TYPE)
+//                                --> A user-defined attribute with an integer index IntAttIntIdx returned by
+//                                    AddParticleAttributeInt() can be converted to a bitwise index by BIDX(IntAttIntIdx)
 //                PredictPos    : Predict particle position, which is useful for particle mass assignement
 //                                --> We send particle position **after** prediction so that we don't have to
 //                                    send particle velocity
@@ -62,13 +67,13 @@ extern Timer_t *Timer_Par_MPI[NLEVEL][6];
 //                                other particle data (e.g., particle mass and position)
 //                TimingSendPar : Measure the elapsed time of the routine "Par_LB_SendParticleData"
 //
-// Return      :  NPar_Copy and ParAtt_Copy[] (if JustCountNPar == false) for all non-leaf patches at FaLv
-//                (and for sibling-buffer patches at FaLv if SibBufPatch is on, and for father-sibling-buffer
+// Return      :  NPar_Copy, ParAttFlt_Copy[], and ParAttInt_Copy[] (if JustCountNPar == false) for all non-leaf
+//                patches at FaLv (and for sibling-buffer patches at FaLv if SibBufPatch is on, and for father-sibling-buffer
 //                patches at FaLv-1 if FaSibBufPatch is on and FaLv>0)
 //-------------------------------------------------------------------------------------------------------
-void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, const bool PredictPos, const double TargetTime,
-                                      const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar,
-                                      const bool TimingSendPar )
+void Par_LB_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, const long IntAttBitIdx, const bool PredictPos,
+                                      const double TargetTime, const bool SibBufPatch, const bool FaSibBufPatch,
+                                      const bool JustCountNPar, const bool TimingSendPar )
 {
 
 // nothing to do for levels above the max level
@@ -80,19 +85,24 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 // determine the target particle attributes
 // --> assuming _VAR_NAME = 1L<<VAR_NAME (e.g., _PAR_MASS == 1L<<PAR_MASS == BIDX(PAR_MASS))
 // --> PosSendIdx[] is used by Par_PredictPos()
-   int NAtt=0, AttIntIdx[PAR_NATT_TOTAL], PosSendIdx[3]={-1, -1, -1};
+   int NAttFlt=0, FltAttIntIdx[PAR_NATT_FLT_TOTAL], PosSendIdx[3]={-1, -1, -1};
+   int NAttInt=0, IntAttIntIdx[PAR_NATT_INT_TOTAL];
 
    if ( !JustCountNPar )
-   for (int v=0; v<PAR_NATT_TOTAL; v++)
-      if ( AttBitIdx & (1L<<v) )    AttIntIdx[ NAtt ++ ] = v;
+   {
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
+         if ( FltAttBitIdx & (1L<<v) )    FltAttIntIdx[ NAttFlt ++ ] = v;
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
+         if ( IntAttBitIdx & (1L<<v) )    IntAttIntIdx[ NAttInt ++ ] = v;
+   }
 
    if ( PredictPos )
    {
-      for (int v=0; v<NAtt; v++)
+      for (int v=0; v<NAttFlt; v++)
       {
-         if      ( AttIntIdx[v] == PAR_POSX )   PosSendIdx[0] = v;
-         else if ( AttIntIdx[v] == PAR_POSY )   PosSendIdx[1] = v;
-         else if ( AttIntIdx[v] == PAR_POSZ )   PosSendIdx[2] = v;
+         if      ( FltAttIntIdx[v] == PAR_POSX )   PosSendIdx[0] = v;
+         else if ( FltAttIntIdx[v] == PAR_POSY )   PosSendIdx[1] = v;
+         else if ( FltAttIntIdx[v] == PAR_POSZ )   PosSendIdx[2] = v;
       }
 
 #     ifdef DEBUG_PARTICLE
@@ -117,7 +127,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 
 // check
 #  ifdef DEBUG_PARTICLE
-   if ( NAtt == 0  &&  !JustCountNPar  &&  MPI_Rank == 0 )  Aux_Message( stderr, "WARNING : NAtt == 0 !!\n" );
+   if ( NAttFlt == 0  &&  NAttInt == 0  &&  !JustCountNPar  &&  MPI_Rank == 0 )  Aux_Message( stderr, "WARNING : NAttFlt/Int == 0 !!\n" );
 
    if ( JustCountNPar )
    {
@@ -132,9 +142,16 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
          Aux_Error( ERROR_INFO, "particle parameters have been initialized already (FaLv %d, FaPID %d, NPar_Copy %d) !!\n",
                     FaLv, FaPID, amr->patch[0][FaLv][FaPID]->NPar_Copy );
 
-      for (int v=0; v<PAR_NATT_TOTAL; v++)
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
       {
-         if ( amr->patch[0][FaLv][FaPID]->ParAtt_Copy[v] != NULL )
+         if ( amr->patch[0][FaLv][FaPID]->ParAttFlt_Copy[v] != NULL )
+            Aux_Error( ERROR_INFO, "particle parameters have been initialized already (FaLv %d, FaPID %d, NPar_Copy %d, v %d) !!\n",
+                       FaLv, FaPID, amr->patch[0][FaLv][FaPID]->NPar_Copy, v );
+      }
+
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
+      {
+         if ( amr->patch[0][FaLv][FaPID]->ParAttInt_Copy[v] != NULL )
             Aux_Error( ERROR_INFO, "particle parameters have been initialized already (FaLv %d, FaPID %d, NPar_Copy %d, v %d) !!\n",
                        FaLv, FaPID, amr->patch[0][FaLv][FaPID]->NPar_Copy, v );
       }
@@ -142,7 +159,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 #  endif // #ifdef DEBUG_PARTICLE
 
 
-// 0. jump to step 5 if FaLv+1 is guaranteed to have no particle
+// 0. jump to step 6 if FaLv+1 is guaranteed to have no particle
 //    --> just collect particles for buffer patches
 //    --> note that we don't have to set NPar_Copy here since leaf real patches always have NPar_Copy == -1
    if ( FaLv == TOP_LEVEL  ||  NPatchTotal[FaLv+1] == 0 )
@@ -154,7 +171,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
          sprintf( Timer_Comment, "%3d %15s", FaLv, "Par_Coll2Sib" );
 
          Par_LB_CollectParticleFromRealPatch(
-            FaLv, AttBitIdx,
+            FaLv, FltAttBitIdx, IntAttBitIdx,
             amr->Par->R2B_Buff_NPatchTotal[FaLv][0], amr->Par->R2B_Buff_PIDList[FaLv][0], amr->Par->R2B_Buff_NPatchEachRank[FaLv][0],
             amr->Par->R2B_Real_NPatchTotal[FaLv][0], amr->Par->R2B_Real_PIDList[FaLv][0], amr->Par->R2B_Real_NPatchEachRank[FaLv][0],
             PredictPos, TargetTime, Timer[1], Timer_Comment );
@@ -167,7 +184,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
          sprintf( Timer_Comment, "%3d %15s", FaLv, "Par_Coll2FaSib" );
 
          Par_LB_CollectParticleFromRealPatch(
-            FaLv-1, AttBitIdx,
+            FaLv-1, FltAttBitIdx, IntAttBitIdx,
             amr->Par->R2B_Buff_NPatchTotal[FaLv][1], amr->Par->R2B_Buff_PIDList[FaLv][1], amr->Par->R2B_Buff_NPatchEachRank[FaLv][1],
             amr->Par->R2B_Real_NPatchTotal[FaLv][1], amr->Par->R2B_Real_PIDList[FaLv][1], amr->Par->R2B_Real_NPatchEachRank[FaLv][1],
             PredictPos, TargetTime, Timer[2], Timer_Comment );
@@ -178,12 +195,13 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 
 
 // 1. prepare the send buffers
-   int      *NParForEachRank          = new int [MPI_NRank];
-   int      *NPatchForEachRank        = new int [MPI_NRank];
-   int      *SendBuf_NPatchEachRank   = NPatchForEachRank;
-   int      *SendBuf_NParEachPatch    = NULL;
-   long     *SendBuf_LBIdxEachPatch   = NULL;
-   real_par *SendBuf_ParDataEachPatch = NULL;
+   int      *NParForEachRank             = new int [MPI_NRank];
+   int      *NPatchForEachRank           = new int [MPI_NRank];
+   int      *SendBuf_NPatchEachRank      = NPatchForEachRank;
+   int      *SendBuf_NParEachPatch       = NULL;
+   long     *SendBuf_LBIdxEachPatch      = NULL;
+   real_par *SendBuf_ParFltDataEachPatch = NULL;
+   long_par *SendBuf_ParIntDataEachPatch = NULL;
 
 #  if ( LOAD_BALANCE != HILBERT )
    const int PatchScaleFaLv = PS1 * amr->scale[FaLv];
@@ -263,26 +281,35 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
    SendBuf_LBIdxEachPatch = new long [NSendPatchTotal];
 
 // reuse the MPI send buffer declared in LB_GetBufferData() for better MPI performance
-   if ( !JustCountNPar )   SendBuf_ParDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Send( NSendParTotal*(long)NAtt*sizeof(real_par) );
+   if ( !JustCountNPar )
+   {
+      const long ParAllAttSize = NSendParTotal * ( (long)NAttFlt*sizeof(real_par) + (long)NAttInt*sizeof(long_par) );
+      SendBuf_ParFltDataEachPatch = (real_par *)LB_GetBufferData_MemAllocate_Send( ParAllAttSize );
+      SendBuf_ParIntDataEachPatch = (long_par *)( SendBuf_ParFltDataEachPatch + NSendParTotal*NAttFlt );
+   }
 
 
 // 1-3. set the array offsets of the send buffer of each rank
-   int *OffsetEachRank_Patch   = new int [MPI_NRank];
-   int *OffsetEachRank_ParData = new int [MPI_NRank];    // actually useless in the JustCountNPar mode
+   int *OffsetEachRank_Patch      = new int [MPI_NRank];
+   int *OffsetEachRank_ParFltData = new int [MPI_NRank];    // actually useless in the JustCountNPar mode
+   int *OffsetEachRank_ParIntData = new int [MPI_NRank];    // actually useless in the JustCountNPar mode
 
-   OffsetEachRank_Patch  [0] = 0;
-   OffsetEachRank_ParData[0] = 0;
+   OffsetEachRank_Patch     [0] = 0;
+   OffsetEachRank_ParFltData[0] = 0;
+   OffsetEachRank_ParIntData[0] = 0;
 
    for (int r=1; r<MPI_NRank; r++)
    {
-      OffsetEachRank_Patch  [r] = OffsetEachRank_Patch  [r-1] + NPatchForEachRank[r-1];
-      OffsetEachRank_ParData[r] = OffsetEachRank_ParData[r-1] + NParForEachRank  [r-1]*NAtt;
+      OffsetEachRank_Patch     [r] = OffsetEachRank_Patch     [r-1] + NPatchForEachRank[r-1];
+      OffsetEachRank_ParFltData[r] = OffsetEachRank_ParFltData[r-1] + NParForEachRank  [r-1]*NAttFlt;
+      OffsetEachRank_ParIntData[r] = OffsetEachRank_ParIntData[r-1] + NParForEachRank  [r-1]*NAttInt;
    }
 
 
 // 1-4. set the array offsets of the send buffer of each patch (mainly for the OpenMP parallelization)
-   int  *OffsetEachPatch_Patch   = new int  [NPatchAll];
-   long *OffsetEachPatch_ParData = new long [NPatchAll];   // actually useless in the JustCountNPar mode
+   int  *OffsetEachPatch_Patch      = new int  [NPatchAll];
+   long *OffsetEachPatch_ParFltData = new long [NPatchAll];   // actually useless in the JustCountNPar mode
+   long *OffsetEachPatch_ParIntData = new long [NPatchAll];   // actually useless in the JustCountNPar mode
 
    for (int lv=FaLv+1, q=0; lv<=MAX_LEVEL; lv++, q++)
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -294,15 +321,18 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 //    skip patches without particles (must skip since OffsetEachRank_* are not set for patches without particles)
       if ( NParThisPatch == 0 )  continue;
 
-      OffsetEachPatch_Patch  [AccIdx] =       OffsetEachRank_Patch  [TRank];
-      OffsetEachPatch_ParData[AccIdx] = (long)OffsetEachRank_ParData[TRank];
+      OffsetEachPatch_Patch     [AccIdx] =       OffsetEachRank_Patch     [TRank];
+      OffsetEachPatch_ParFltData[AccIdx] = (long)OffsetEachRank_ParFltData[TRank];
+      OffsetEachPatch_ParIntData[AccIdx] = (long)OffsetEachRank_ParIntData[TRank];
 
-      OffsetEachRank_Patch  [TRank] += 1;
-      OffsetEachRank_ParData[TRank] += NParThisPatch*NAtt;
+      OffsetEachRank_Patch     [TRank] += 1;
+      OffsetEachRank_ParFltData[TRank] += NParThisPatch*NAttFlt;
+      OffsetEachRank_ParIntData[TRank] += NParThisPatch*NAttInt;
    }
 
    delete [] OffsetEachRank_Patch;
-   delete [] OffsetEachRank_ParData;
+   delete [] OffsetEachRank_ParFltData;
+   delete [] OffsetEachRank_ParIntData;
 
 
 // 1-5. fill the send buffers
@@ -324,9 +354,13 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
             Aux_Error( ERROR_INFO, "OffsetEachPatch_Patch[%d] (%d) >= max (%d) !!\n",
                        AccIdx, OffsetEachPatch_Patch[AccIdx], NSendPatchTotal );
 
-         if ( OffsetEachPatch_ParData[AccIdx] + (long)NAtt > NSendParTotal*(long)NAtt )
-            Aux_Error( ERROR_INFO, "OffsetEachPatch_ParData[%d] + NAtt (%ld) > max (%ld) !!\n",
-                       AccIdx, OffsetEachPatch_ParData[AccIdx] + (long)NAtt, NSendParTotal*(long)NAtt );
+         if ( OffsetEachPatch_ParFltData[AccIdx] + (long)NAttFlt > NSendParTotal*(long)NAttFlt )
+            Aux_Error( ERROR_INFO, "OffsetEachPatch_ParFltData[%d] + NAttFlt (%ld) > max (%ld) !!\n",
+                       AccIdx, OffsetEachPatch_ParFltData[AccIdx] + (long)NAttFlt, NSendParTotal*(long)NAttFlt );
+
+         if ( OffsetEachPatch_ParIntData[AccIdx] + (long)NAttInt > NSendParTotal*(long)NAttInt )
+            Aux_Error( ERROR_INFO, "OffsetEachPatch_ParIntData[%d] + NAttInt (%ld) > max (%ld) !!\n",
+                       AccIdx, OffsetEachPatch_ParIntData[AccIdx] + (long)NAttInt, NSendParTotal*(long)NAttInt );
 #        endif
 
          SendBuf_NParEachPatch [ OffsetEachPatch_Patch[AccIdx] ] = NParThisPatch;
@@ -334,13 +368,15 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 
          if ( !JustCountNPar )
          {
-            real_par *SendPtr = SendBuf_ParDataEachPatch + OffsetEachPatch_ParData[AccIdx];
+            real_par *SendPtr_Flt = SendBuf_ParFltDataEachPatch + OffsetEachPatch_ParFltData[AccIdx];
+            long_par *SendPtr_Int = SendBuf_ParIntDataEachPatch + OffsetEachPatch_ParIntData[AccIdx];
 
             for (int p=0; p<NParThisPatch; p++)
             {
                const long ParID = amr->patch[0][lv][PID]->ParList[p];
 
-               for (int v=0; v<NAtt; v++)    SendPtr[v] = amr->Par->Attribute[ AttIntIdx[v] ][ParID];
+               for (int v=0; v<NAttFlt; v++)    SendPtr_Flt[v] = amr->Par->AttributeFlt[ FltAttIntIdx[v] ][ParID];
+               for (int v=0; v<NAttInt; v++)    SendPtr_Int[v] = amr->Par->AttributeInt[ IntAttIntIdx[v] ][ParID];
 
 //             predict particle position to TargetTime
                if ( PredictPos )
@@ -353,11 +389,12 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 #                 endif
 
 //                note that we don't have to worry about the periodic BC here (in other words, Pos can lie outside the box)
-                  Par_PredictPos( 1, &ParID, SendPtr+PosSendIdx[0], SendPtr+PosSendIdx[1], SendPtr+PosSendIdx[2], TargetTime );
+                  Par_PredictPos( 1, &ParID, SendPtr_Flt+PosSendIdx[0], SendPtr_Flt+PosSendIdx[1], SendPtr_Flt+PosSendIdx[2], TargetTime );
                }
 
 //             update array offset
-               SendPtr += NAtt;
+               SendPtr_Flt += NAttFlt;
+               SendPtr_Int += NAttInt;
             } // for (int p=0; p<NParThisPatch; p++)
          } // if ( !JustCountNPar )
       } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -366,7 +403,8 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 
 // 1-6. free memory
    delete [] OffsetEachPatch_Patch;
-   delete [] OffsetEachPatch_ParData;
+   delete [] OffsetEachPatch_ParFltData;
+   delete [] OffsetEachPatch_ParIntData;
    delete [] NParForEachRank;
    delete [] TRank_AllPatch;
    delete [] LBIdx_AllPatch;
@@ -376,11 +414,13 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 
 // 2. send data to all ranks
 // these arrays will be allocated by Par_LB_SendParticleData() (using call by reference) and must be free'd later
-// --> except for RecvBuf_ParDataEachPatch, which is just a pointer to the MPI recv buffer declared in LB_GetBufferData
-   int      *RecvBuf_NPatchEachRank   = NULL;
-   int      *RecvBuf_NParEachPatch    = NULL;
-   long     *RecvBuf_LBIdxEachPatch   = NULL;
-   real_par *RecvBuf_ParDataEachPatch = NULL;
+// --> except for RecvBuf_ParFltDataEachPatch and RecvBuf_ParIntDataEachPatch, which are just a pointer to
+//     the MPI recv buffer declared in LB_GetBufferData()
+   int      *RecvBuf_NPatchEachRank      = NULL;
+   int      *RecvBuf_NParEachPatch       = NULL;
+   long     *RecvBuf_LBIdxEachPatch      = NULL;
+   real_par *RecvBuf_ParFltDataEachPatch = NULL;
+   long_par *RecvBuf_ParIntDataEachPatch = NULL;
 
 // 2-1. exchange data
    const bool Exchange_NPatchEachRank_Yes = true;
@@ -393,9 +433,10 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
    sprintf( Timer_Comment, "%3d %15s", FaLv, "Par_Collect" );
 
 // note that Par_LB_SendParticleData will also return the total number of patches and particles received (using call by reference)
-   Par_LB_SendParticleData( NAtt, SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachPatch,
-                            SendBuf_ParDataEachPatch, NSendParTotal, RecvBuf_NPatchEachRank, RecvBuf_NParEachPatch,
-                            RecvBuf_LBIdxEachPatch, RecvBuf_ParDataEachPatch, NRecvPatchTotal, NRecvParTotal,
+   Par_LB_SendParticleData( NAttFlt, NAttInt, SendBuf_NPatchEachRank, SendBuf_NParEachPatch, SendBuf_LBIdxEachPatch,
+                            SendBuf_ParFltDataEachPatch, SendBuf_ParIntDataEachPatch, NSendParTotal,
+                            RecvBuf_NPatchEachRank, RecvBuf_NParEachPatch, RecvBuf_LBIdxEachPatch,
+                            RecvBuf_ParFltDataEachPatch, RecvBuf_ParIntDataEachPatch, NRecvPatchTotal, NRecvParTotal,
                             Exchange_NPatchEachRank_Yes, Exchange_LBIdxEachRank_Yes, Exchange_ParDataEachRank,
                             Timer[0], Timer_Comment );
 
@@ -463,17 +504,20 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 #  endif
 
 
-// 3-3. allocate ParAtt_Copy[] for each patch
+// 3-3. allocate ParAttFlt_Copy[] and ParAttInt_Copy[] for each patch
    if ( !JustCountNPar )
    for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
    {
       if ( amr->patch[0][FaLv][FaPID]->NPar_Copy > 0 )
       {
-         for (int v=0; v<NAtt; v++)
-            amr->patch[0][FaLv][FaPID]->ParAtt_Copy[ AttIntIdx[v] ] = new real_par [ amr->patch[0][FaLv][FaPID]->NPar_Copy ];
+         for (int v=0; v<NAttFlt; v++)
+            amr->patch[0][FaLv][FaPID]->ParAttFlt_Copy[ FltAttIntIdx[v] ] = new real_par [ amr->patch[0][FaLv][FaPID]->NPar_Copy ];
+
+         for (int v=0; v<NAttInt; v++)
+            amr->patch[0][FaLv][FaPID]->ParAttInt_Copy[ IntAttIntIdx[v] ] = new long_par [ amr->patch[0][FaLv][FaPID]->NPar_Copy ];
 
 //       reset to zero (instead of NPar) since we will use NPar_Copy to record the number of particles that has been
-//       added to ParAtt_Copy[]
+//       added to ParAttFlt_Copy[] and ParAttInt_Copy[]
          amr->patch[0][FaLv][FaPID]->NPar_Copy = 0;
       }
    }
@@ -482,7 +526,8 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 // 3-4. store the received particle data
 // --> currently we do not implement OpenMP here since different received patches at lv>FaLv may map to the same patch at FaLv
 // --> one cannot naively parallelize the "for (int t=0; t<NRecvPatchTotal; t++)" loop
-   const real_par *RecvPtr = RecvBuf_ParDataEachPatch;
+   const real_par *RecvPtr_Flt = RecvBuf_ParFltDataEachPatch;
+   const long_par *RecvPtr_Int = RecvBuf_ParIntDataEachPatch;
    int NPar_Copy_Old;
 
    if ( !JustCountNPar )
@@ -502,32 +547,42 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
       for (int p=NPar_Copy_Old; p<amr->patch[0][FaLv][FaPID_Match]->NPar_Copy; p++)
       {
 #        ifdef DEBUG_PARTICLE
-         for (int v=0; v<NAtt; v++)
+         for (int v=0; v<NAttFlt; v++)
          {
-            if ( amr->patch[0][FaLv][FaPID_Match]->ParAtt_Copy[ AttIntIdx[v] ] == NULL )
+            if ( amr->patch[0][FaLv][FaPID_Match]->ParAttFlt_Copy[ FltAttIntIdx[v] ] == NULL )
+               Aux_Error( ERROR_INFO, "particle parameters have NOT been initialized (FaLv %d, FaPID %d, NPar_Copy %d, v %d) !!\n",
+                          FaLv, FaPID_Match, amr->patch[0][FaLv][FaPID_Match]->NPar_Copy, v );
+         }
+
+         for (int v=0; v<NAttInt; v++)
+         {
+            if ( amr->patch[0][FaLv][FaPID_Match]->ParAttInt_Copy[ IntAttIntIdx[v] ] == NULL )
                Aux_Error( ERROR_INFO, "particle parameters have NOT been initialized (FaLv %d, FaPID %d, NPar_Copy %d, v %d) !!\n",
                           FaLv, FaPID_Match, amr->patch[0][FaLv][FaPID_Match]->NPar_Copy, v );
          }
 #        endif
 
-         for (int v=0; v<NAtt; v++)
-            amr->patch[0][FaLv][FaPID_Match]->ParAtt_Copy[ AttIntIdx[v] ][p] = *RecvPtr++;
+         for (int v=0; v<NAttFlt; v++)
+            amr->patch[0][FaLv][FaPID_Match]->ParAttFlt_Copy[ FltAttIntIdx[v] ][p] = *RecvPtr_Flt++;
+
+         for (int v=0; v<NAttInt; v++)
+            amr->patch[0][FaLv][FaPID_Match]->ParAttInt_Copy[ IntAttIntIdx[v] ][p] = *RecvPtr_Int++;
 
 #        ifdef DEBUG_PARTICLE
 //       we do not transfer inactive particles
-         if ( AttBitIdx & _PAR_MASS )
-         if ( amr->patch[0][FaLv][FaPID_Match]->ParAtt_Copy[PAR_MASS][p] < (real_par)0.0 )
+         if ( FltAttBitIdx & _PAR_MASS )
+         if ( amr->patch[0][FaLv][FaPID_Match]->ParAttFlt_Copy[PAR_MASS][p] < (real_par)0.0 )
             Aux_Error( ERROR_INFO, "found inactive particle (FaLv %d, FaPID %d, Mass %14.7e, particle %d) !!\n",
-                       FaLv, FaPID_Match, amr->patch[0][FaLv][FaPID_Match]->ParAtt_Copy[PAR_MASS][p], p );
+                       FaLv, FaPID_Match, amr->patch[0][FaLv][FaPID_Match]->ParAttFlt_Copy[PAR_MASS][p], p );
 
 //       check if the received particle lies within the target patch (may not when PredictPos is on)
-         if ( !PredictPos  &&  ( AttBitIdx & _PAR_POSX )  &&  ( AttBitIdx & _PAR_POSY )  &&  ( AttBitIdx & _PAR_POSZ ) )
+         if ( !PredictPos  &&  ( FltAttBitIdx & _PAR_POSX )  &&  ( FltAttBitIdx & _PAR_POSY )  &&  ( FltAttBitIdx & _PAR_POSZ ) )
          {
             const double     *EdgeL     = amr->patch[0][FaLv][FaPID_Match]->EdgeL;
             const double     *EdgeR     = amr->patch[0][FaLv][FaPID_Match]->EdgeR;
-            const real_par    ParPos[3] = { amr->patch[0][FaLv][FaPID_Match]->ParAtt_Copy[PAR_POSX][p],
-                                            amr->patch[0][FaLv][FaPID_Match]->ParAtt_Copy[PAR_POSY][p],
-                                            amr->patch[0][FaLv][FaPID_Match]->ParAtt_Copy[PAR_POSZ][p] };
+            const real_par    ParPos[3] = { amr->patch[0][FaLv][FaPID_Match]->ParAttFlt_Copy[PAR_POSX][p],
+                                            amr->patch[0][FaLv][FaPID_Match]->ParAttFlt_Copy[PAR_POSY][p],
+                                            amr->patch[0][FaLv][FaPID_Match]->ParAttFlt_Copy[PAR_POSZ][p] };
 
             for (int d=0; d<3; d++)
             {
@@ -551,7 +606,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 
 
 
-// 4. add particles temporarily residing in this patch to ParAtt_Copy[]
+// 4. add particles temporarily residing in this patch to ParAttFlt_Copy[] and ParAttInt_Copy[]
    if ( !JustCountNPar )
    for (int FaPID=0; FaPID<amr->NPatchComma[FaLv][1]; FaPID++)
    {
@@ -572,8 +627,11 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
 //          4-2. add particle data
 //          --> no need for position prediction here since these particles are all waiting for velocity correction
 //          and should already be synchronized with TargetTime
-            for (int v=0; v<NAtt; v++)
-               amr->patch[0][FaLv][FaPID]->ParAtt_Copy[ AttIntIdx[v] ][idx] = amr->Par->Attribute[ AttIntIdx[v] ][ParID];
+            for (int v=0; v<NAttFlt; v++)
+               amr->patch[0][FaLv][FaPID]->ParAttFlt_Copy[ FltAttIntIdx[v] ][idx] = amr->Par->AttributeFlt[ FltAttIntIdx[v] ][ParID];
+
+            for (int v=0; v<NAttInt; v++)
+               amr->patch[0][FaLv][FaPID]->ParAttInt_Copy[ IntAttIntIdx[v] ][idx] = amr->Par->AttributeInt[ IntAttIntIdx[v] ][ParID];
          } // for (int p=0; p<amr->patch[0][FaLv][FaPID]->NPar; p++)
 
 //       4-3. update NPar_Copy
@@ -614,7 +672,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
       sprintf( Timer_Comment, "%3d %15s", FaLv, "Par_Coll2Sib" );
 
       Par_LB_CollectParticleFromRealPatch(
-         FaLv, AttBitIdx,
+         FaLv, FltAttBitIdx, IntAttBitIdx,
          amr->Par->R2B_Buff_NPatchTotal[FaLv][0], amr->Par->R2B_Buff_PIDList[FaLv][0], amr->Par->R2B_Buff_NPatchEachRank[FaLv][0],
          amr->Par->R2B_Real_NPatchTotal[FaLv][0], amr->Par->R2B_Real_PIDList[FaLv][0], amr->Par->R2B_Real_NPatchEachRank[FaLv][0],
          PredictPos, TargetTime, Timer[1], Timer_Comment );
@@ -627,7 +685,7 @@ void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, cons
       sprintf( Timer_Comment, "%3d %15s", FaLv, "Par_Coll2FaSib" );
 
       Par_LB_CollectParticleFromRealPatch(
-         FaLv-1, AttBitIdx,
+         FaLv-1, FltAttBitIdx, IntAttBitIdx,
          amr->Par->R2B_Buff_NPatchTotal[FaLv][1], amr->Par->R2B_Buff_PIDList[FaLv][1], amr->Par->R2B_Buff_NPatchEachRank[FaLv][1],
          amr->Par->R2B_Real_NPatchTotal[FaLv][1], amr->Par->R2B_Real_PIDList[FaLv][1], amr->Par->R2B_Real_NPatchEachRank[FaLv][1],
          PredictPos, TargetTime, Timer[2], Timer_Comment );
@@ -656,10 +714,16 @@ void Par_LB_CollectParticle2OneLevel_FreeMemory( const int lv, const bool SibBuf
 // 1. real patches at lv
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
-      for (int v=0; v<PAR_NATT_TOTAL; v++)
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
       {
-         delete [] amr->patch[0][lv][PID]->ParAtt_Copy[v];
-         amr->patch[0][lv][PID]->ParAtt_Copy[v] = NULL;
+         delete [] amr->patch[0][lv][PID]->ParAttFlt_Copy[v];
+         amr->patch[0][lv][PID]->ParAttFlt_Copy[v] = NULL;
+      }
+
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
+      {
+         delete [] amr->patch[0][lv][PID]->ParAttInt_Copy[v];
+         amr->patch[0][lv][PID]->ParAttInt_Copy[v] = NULL;
       }
 
 //    -1 : indicating that NPar_Copy is not calculated yet
@@ -673,10 +737,16 @@ void Par_LB_CollectParticle2OneLevel_FreeMemory( const int lv, const bool SibBuf
    {
       const int PID = amr->Par->R2B_Buff_PIDList[lv][0][p];
 
-      for (int v=0; v<PAR_NATT_TOTAL; v++)
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
       {
-         delete [] amr->patch[0][lv][PID]->ParAtt_Copy[v];
-         amr->patch[0][lv][PID]->ParAtt_Copy[v] = NULL;
+         delete [] amr->patch[0][lv][PID]->ParAttFlt_Copy[v];
+         amr->patch[0][lv][PID]->ParAttFlt_Copy[v] = NULL;
+      }
+
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
+      {
+         delete [] amr->patch[0][lv][PID]->ParAttInt_Copy[v];
+         amr->patch[0][lv][PID]->ParAttInt_Copy[v] = NULL;
       }
 
 //    -1 : indicating that NPar_Copy is not calculated yet
@@ -692,10 +762,16 @@ void Par_LB_CollectParticle2OneLevel_FreeMemory( const int lv, const bool SibBuf
    {
       const int FaPID = amr->Par->R2B_Buff_PIDList[lv][1][p];
 
-      for (int v=0; v<PAR_NATT_TOTAL; v++)
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
       {
-         delete [] amr->patch[0][FaLv][FaPID]->ParAtt_Copy[v];
-         amr->patch[0][FaLv][FaPID]->ParAtt_Copy[v] = NULL;
+         delete [] amr->patch[0][FaLv][FaPID]->ParAttFlt_Copy[v];
+         amr->patch[0][FaLv][FaPID]->ParAttFlt_Copy[v] = NULL;
+      }
+
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
+      {
+         delete [] amr->patch[0][FaLv][FaPID]->ParAttInt_Copy[v];
+         amr->patch[0][FaLv][FaPID]->ParAttInt_Copy[v] = NULL;
       }
 
 //    -1 : indicating that NPar_Copy is not calculated yet
@@ -703,17 +779,22 @@ void Par_LB_CollectParticle2OneLevel_FreeMemory( const int lv, const bool SibBuf
    }
 
 
-// check: if we do everthing correctly, no patches (either real or buffer patches) at lv and lv-1
-//        should have ParAtt_Copy[] allocated
+// check: if we do everything correctly, no patches (either real or buffer patches) at lv and lv-1
+//        should have ParAttFlt_Copy[] and ParAttInt_Copy[] allocated
 #  ifdef DEBUG_PARTICLE
    for (int TLv=lv; (TLv>=lv-1 && TLv>=0); TLv--)
    {
 //    loop over all real and buffer patches
       for (int PID=0; PID<amr->num[TLv]; PID++)
       {
-         for (int v=0; v<PAR_NATT_TOTAL; v++)
-         if ( amr->patch[0][TLv][PID]->ParAtt_Copy[v] != NULL )
-            Aux_Error( ERROR_INFO, "lv %d, PID %d, v %d, ParAtt_Copy != NULL !!\n",
+         for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
+         if ( amr->patch[0][TLv][PID]->ParAttFlt_Copy[v] != NULL )
+            Aux_Error( ERROR_INFO, "lv %d, PID %d, v %d, ParAttFlt_Copy != NULL !!\n",
+                       TLv, PID, v );
+
+         for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
+         if ( amr->patch[0][TLv][PID]->ParAttInt_Copy[v] != NULL )
+            Aux_Error( ERROR_INFO, "lv %d, PID %d, v %d, ParAttInt_Copy != NULL !!\n",
                        TLv, PID, v );
 
          if ( amr->patch[0][TLv][PID]->NPar_Copy != -1 )

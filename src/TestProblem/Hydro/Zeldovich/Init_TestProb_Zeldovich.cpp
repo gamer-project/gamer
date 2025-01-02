@@ -40,7 +40,8 @@ static double Zeldovich_x_velocity_profile( const double x_Lagrangian, const dou
 void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_AllRank,
                                     real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                     real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                    real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] );
+                                    long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                    long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] );
 #endif // #ifdef PARTICLE
 #endif // #ifdef SUPPORT_GSL
 
@@ -394,24 +395,28 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //                       and LB_Init_LoadBalance()
 //                   --> Therefore, there is no constraint on which particles should be set by this function
 //
-// Parameter   :  NPar_ThisRank : Number of particles to be set by this MPI rank
-//                NPar_AllRank  : Total Number of particles in all MPI ranks
-//                ParMass       : Particle mass     array with the size of NPar_ThisRank
-//                ParPosX/Y/Z   : Particle position array with the size of NPar_ThisRank
-//                ParVelX/Y/Z   : Particle velocity array with the size of NPar_ThisRank
-//                ParTime       : Particle time     array with the size of NPar_ThisRank
-//                ParType       : Particle type     array with the size of NPar_ThisRank
-//                AllAttribute  : Pointer array for all particle attributes
-//                                --> Dimension = [PAR_NATT_TOTAL][NPar_ThisRank]
-//                                --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
-//                                    to access the data
+// Parameter   :  NPar_ThisRank   : Number of particles to be set by this MPI rank
+//                NPar_AllRank    : Total Number of particles in all MPI ranks
+//                ParMass         : Particle mass     array with the size of NPar_ThisRank
+//                ParPosX/Y/Z     : Particle position array with the size of NPar_ThisRank
+//                ParVelX/Y/Z     : Particle velocity array with the size of NPar_ThisRank
+//                ParTime         : Particle time     array with the size of NPar_ThisRank
+//                ParType         : Particle type     array with the size of NPar_ThisRank
+//                AllAttributeFlt : Pointer array for all particle floating-point attributes
+//                                  --> Dimension = [PAR_NATT_FLT_TOTAL][NPar_ThisRank]
+//                                  --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
+//                                      to access the data
+//                AllAttributeInt : Pointer array for all particle integer attributes
+//                                  --> Dimension = [PAR_NATT_INT_TOTAL][NPar_ThisRank]
+//                                  --> Use the attribute indices defined in Field.h to access the data
 //
-// Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttribute
+// Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttributeFlt, AllAttributeInt
 //-------------------------------------------------------------------------------------------------------
 void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_AllRank,
                                     real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                     real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                    real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] )
+                                    long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                    long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 {
 
 #  ifdef SUPPORT_GSL
@@ -421,8 +426,10 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-   real_par *ParData_AllRank[PAR_NATT_TOTAL];
-   for (int v=0; v<PAR_NATT_TOTAL; v++)   ParData_AllRank[v] = NULL;
+   real_par *ParFltData_AllRank[PAR_NATT_FLT_TOTAL];
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParFltData_AllRank[v] = NULL;
+   long_par *ParIntData_AllRank[PAR_NATT_INT_TOTAL];
+   for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   ParIntData_AllRank[v] = NULL;
 
 // only the master rank will construct the initial condition
    if ( MPI_Rank == 0 )
@@ -434,13 +441,13 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
 //    determine the individual mass of identical particles
       const double ParM = TotM_Boundary / NPar_AllRank;
 
-      ParData_AllRank[PAR_MASS] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_POSX] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_POSY] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_POSZ] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_VELX] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_VELY] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_VELZ] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_MASS] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSX] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSY] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSZ] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELX] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELY] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELZ] = new real_par [NPar_AllRank];
 
 //    set particle attributes
       for (long px=0; px<NPar_X; px++)
@@ -460,19 +467,19 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
             for (long pz=0; pz<NPar_YZ; pz++)
             {
 //             mass
-               ParData_AllRank[PAR_MASS][NPar_AllRank_Counter] = (real_par)ParM;
+               ParFltData_AllRank[PAR_MASS][NPar_AllRank_Counter] = (real_par)ParM;
 
 //             z-component position
                PosVec[2] = pz*dhx;
 
                for (int d=0; d<3; d++)
                {
-                  ParData_AllRank[PAR_POSX+d][NPar_AllRank_Counter] = (real_par)PosVec[d];
-                  ParData_AllRank[PAR_VELX+d][NPar_AllRank_Counter] = (real_par)VelVec[d];
+                  ParFltData_AllRank[PAR_POSX+d][NPar_AllRank_Counter] = (real_par)PosVec[d];
+                  ParFltData_AllRank[PAR_VELX+d][NPar_AllRank_Counter] = (real_par)VelVec[d];
 //                check periodicity
                   if ( OPT__BC_FLU[d*2] == BC_FLU_PERIODIC )
-                     ParData_AllRank[PAR_POSX+d][NPar_AllRank_Counter]
-                        = FMOD( ParData_AllRank[PAR_POSX+d][NPar_AllRank_Counter]+(real_par)amr->BoxSize[d], (real_par)amr->BoxSize[d] );
+                     ParFltData_AllRank[PAR_POSX+d][NPar_AllRank_Counter]
+                        = FMOD( ParFltData_AllRank[PAR_POSX+d][NPar_AllRank_Counter]+(real_par)amr->BoxSize[d], (real_par)amr->BoxSize[d] );
                }
 
                NPar_AllRank_Counter ++;
@@ -491,7 +498,8 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
    } // if ( MPI_Rank == 0 )
 
 // send particle attributes from the master rank to all ranks
-   Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, ParData_AllRank, AllAttribute );
+   Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, _NONE,
+                            ParFltData_AllRank, ParIntData_AllRank, AllAttributeFlt, AllAttributeInt );
 
 // synchronize all particles to the physical time on the base level, and set generic particle type
    for (long p=0; p<NPar_ThisRank; p++)
@@ -503,7 +511,8 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
 // free memory
    if ( MPI_Rank == 0 )
    {
-      for (int v=0; v<PAR_NATT_TOTAL; v++)   delete [] ParData_AllRank[v];
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   delete [] ParFltData_AllRank[v];
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   delete [] ParIntData_AllRank[v];
    }
 
 

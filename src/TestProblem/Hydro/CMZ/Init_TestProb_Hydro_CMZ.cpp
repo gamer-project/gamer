@@ -20,7 +20,8 @@ bool Flag_CMZ( const int i, const int j, const int k, const int lv, const int PI
 void Par_Init_ByFunction_BarredPot( const long NPar_ThisRank, const long NPar_AllRank,
                                     real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                     real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                    real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] );
+                                    long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                    long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] );
 #endif
 static void IsolatedBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
                         const int GhostSize, const int idx[], const double pos[], const double Time,
@@ -361,8 +362,8 @@ void AddNewParticleAttribute_BarredPot()
 {
 
 // "Idx_ParMetalFrac" has been predefined in Field.h
-    if ( Idx_ParMetalFrac == Idx_Undefined )
-          Idx_ParMetalFrac = AddParticleAttribute( "ParMetalFrac" );
+   if ( Idx_ParMetalFrac == Idx_Undefined )
+      Idx_ParMetalFrac = AddParticleAttributeFlt( "ParMetalFrac" );
 
 } // FUNCTION : AddNewParticleAttribute_BarredPot
 #endif
@@ -393,18 +394,18 @@ void Init_TestProb_Hydro_BarredPot()
 // set the problem-specific runtime parameters
    SetParameter();
 
-   Init_Function_User_Ptr  = SetGridIC;
-   Init_Field_User_Ptr     = AddNewField_BarredPot;
-   BC_User_Ptr             = IsolatedBC;
-   Flag_User_Ptr           = Flag_CMZ;
+   Init_Function_User_Ptr      = SetGridIC;
+   Init_Field_User_Ptr         = AddNewField_BarredPot;
+   BC_User_Ptr                 = IsolatedBC;
+   Flag_User_Ptr               = Flag_CMZ;
 #  ifdef PARTICLE
-   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_BarredPot;
+   Par_Init_ByFunction_Ptr     = Par_Init_ByFunction_BarredPot;
    Par_Init_Attribute_User_Ptr = AddNewParticleAttribute_BarredPot;
 #  endif
 #  ifdef GRAVITY
-//   Init_ExtAcc_Ptr         = Init_ExtAcc_BarredPot;
+//   Init_ExtAcc_Ptr              = Init_ExtAcc_BarredPot;
 //   if ( OPT__EXT_POT == EXT_POT_FUNC )
-   Init_ExtPot_Ptr         = Init_ExtPot_TabularP17;
+   Init_ExtPot_Ptr             = Init_ExtPot_TabularP17;
 #  endif // #ifdef GRAVITY
 #  endif // #if ( MODEL == HYDRO )
 

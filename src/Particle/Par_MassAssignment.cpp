@@ -66,18 +66,20 @@ static bool FarAwayParticle( real_par ParPosX, real_par ParPosY, real_par ParPos
 //                                           overhead if most input particles do have contribution to Rho[].
 //                UseInputMassPos : Use the input array InputMassPos[] to obtain particle mass and position
 //                                  --> Used by LOAD_BALANCE, where particle position and mass may be stored in
-//                                      ParAtt_Copy[] of each patch
+//                                      ParAttFlt_Copy[] of each patch
 //                                  --> ParList[] becomes useless and must be set to NULL
 //                                  --> Does not work with PredictPos since we don't have the information of particle
 //                                      time and velocity
 //                InputMassPos    : Particle mass and position arrays used by UseInputMassPos
+//                InputType       : Particle type array used by UseInputMassPos
 //
 // Return      :  Rho
 //-------------------------------------------------------------------------------------------------------
 void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t IntScheme, real *Rho,
                          const int RhoSize, const double *EdgeL, const double dh, const bool PredictPos,
                          const double TargetTime, const bool InitZero, const bool Periodic[], const int PeriodicSize[3],
-                         const bool UnitDens, const bool CheckFarAway, const bool UseInputMassPos, real_par **InputMassPos )
+                         const bool UnitDens, const bool CheckFarAway, const bool UseInputMassPos, real_par **InputMassPos,
+                         long_par **InputType )
 {
 
 // check
@@ -98,6 +100,8 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
       if ( PredictPos )    Aux_Error( ERROR_INFO, "PredictPos does NOT work with UseInputMassPos !!\n" );
       if ( NPar > 0  &&  InputMassPos == NULL )
          Aux_Error( ERROR_INFO, "InputMassPos == NULL for UseInputMassPos (NPar = %ld) !!\n", NPar );
+      if ( NPar > 0  &&  InputType == NULL )
+         Aux_Error( ERROR_INFO, "InputType == NULL for UseInputMassPos (NPar = %ld) !!\n", NPar );
 
 #     ifndef LOAD_BALANCE
       Aux_Message( stderr, "WARNING : are you sure you want to use UseInputMassPos when LOAD_BALANCE is off !?\n" );
@@ -108,6 +112,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
    {
       if ( NPar > 0  &&  ParList == NULL )   Aux_Error( ERROR_INFO, "ParList == NULL for NPar = %ld !!\n", NPar );
       if ( InputMassPos != NULL )   Aux_Error( ERROR_INFO, "InputMassPos != NULL when UseInputMassPos is off !!\n" );
+      if ( InputType    != NULL )   Aux_Error( ERROR_INFO, "InputType != NULL when UseInputMassPos is off !!\n" );
    }
 #  endif // #ifdef DEBUG_PARTICLE
 
@@ -122,7 +127,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 // 2. set up attribute arrays, copy particle position since they might be modified during the position prediction
    real_par *Mass   = NULL;
    real_par *Pos[3] = { NULL, NULL, NULL };
-   real_par *PType  = NULL;
+   long_par *PType  = NULL;
    long  ParID, Idx;
 
    if ( UseInputMassPos )
@@ -131,7 +136,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
       Pos[0] = InputMassPos[PAR_POSX];
       Pos[1] = InputMassPos[PAR_POSY];
       Pos[2] = InputMassPos[PAR_POSZ];
-      PType  = InputMassPos[PAR_TYPE];
+      PType  = InputType   [PAR_TYPE];
    }
 
    else
@@ -140,7 +145,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
 
       for (int d=0; d<3; d++)    Pos[d] = new real_par [NPar];
 
-      PType = new real_par [NPar];
+      PType = new long_par [NPar];
 
       for (long p=0; p<NPar; p++)
       {

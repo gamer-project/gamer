@@ -49,7 +49,7 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
 #  else
    const int   NT             = 1;
 #  endif
-   const real_par *ParType    = amr->Par->Type;
+   const long_par *ParType    = amr->Par->Type;
 
 #  ifndef STORE_PAR_ACC
    if ( UseAcc )
@@ -70,7 +70,7 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
 #  endif
 
    if ( IncNonleaf )
-      Par_CollectParticle2OneLevel( lv, _PAR_VEL|((UseAcc)?ParAccBIdx:0)|_PAR_TYPE, PredictPos_No,
+      Par_CollectParticle2OneLevel( lv, _PAR_VEL|((UseAcc)?ParAccBIdx:0), _PAR_TYPE, PredictPos_No,
                                     NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_No,
                                     TimingSendPar_No );
 
@@ -139,19 +139,19 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
 
          if ( UseCopy )
          {
-//          ParAtt_Copy[] is only defined in LOAD_BALANCE
+//          ParAttFlt/Int_Copy[] is only defined in LOAD_BALANCE
             real_par *Vel_Copy[3] = { NULL, NULL, NULL };
             real_par *Acc_Copy[3] = { NULL, NULL, NULL };
-            real_par *Typ_Copy = NULL;
+            long_par *Typ_Copy    = NULL;
 #           ifdef LOAD_BALANCE
             for (int d=0; d<3; d++)
             {
-               Vel_Copy[d] = amr->patch[0][lv][PID]->ParAtt_Copy[ PAR_VELX + d ];
+               Vel_Copy[d] = amr->patch[0][lv][PID]->ParAttFlt_Copy[ PAR_VELX + d ];
 #              ifdef STORE_PAR_ACC
-               Acc_Copy[d] = amr->patch[0][lv][PID]->ParAtt_Copy[ PAR_ACCX + d ];
+               Acc_Copy[d] = amr->patch[0][lv][PID]->ParAttFlt_Copy[ PAR_ACCX + d ];
 #              endif
             }
-            Typ_Copy = amr->patch[0][lv][PID]->ParAtt_Copy[ PAR_TYPE ];
+            Typ_Copy = amr->patch[0][lv][PID]->ParAttInt_Copy[ PAR_TYPE ];
 #           endif
 
             for (int p=0; p<NParThisPatch; p++)

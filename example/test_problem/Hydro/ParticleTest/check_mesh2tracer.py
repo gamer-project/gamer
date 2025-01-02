@@ -94,7 +94,7 @@ hdf_data.close()
 
 
 ### post-process
-cond_tracer = (ParType == 0.0)
+cond_tracer = (ParType == 0)
 
 print("Number of tracer particles: {}/{}".format(cond_tracer.sum(), cond_tracer.size))
 
