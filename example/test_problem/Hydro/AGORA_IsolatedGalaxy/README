@@ -4,7 +4,7 @@ Enable : MODEL=HYDRO, PARTICLE, GRAVITY, DUAL_ENERGY
 Disable: COMOVING
 
 
-Default setup:
+Simulation setup:
 ========================================
 1. Units:
    (1) External (for Input__TestProb only):
@@ -12,12 +12,19 @@ Default setup:
 
    (2) Internal (for all other input files and internal usage):
        [L] = kpc
-       [M] = 1.0e8 Msun
+       [M] = 1.0e9 Msun
        [T] = Myr
     -->[V] = [L]/[T] ~ 9.8e2 km/s
     -->[D] = [M]/[D]^3 ~ 6.8e-23 g/cm^3
 
-2. Default resolution ~ 80 pc (MAX_LEVEL = 7)
+2.  Low-resolution default setup
+   (1) Download the low-resolution initial conditions and Input_* by executing "sh download_ic.sh"
+   (2) Default resolution ~ 80 pc (Root grid 128^3; MAX_LEVEL = 7)
+
+3.  High-resolution setup
+   (1) Download the high-resolution initial conditions and Input_* by executing "sh download_ic_high_res.sh"
+   (2) Highest resolution ~ 20 pc (Root grid 64^3; MAX_LEVEL = 10)
+   (3) This setup reproduces the AGORA high-resolution run presented in the GAMER-2 paper (Schive et al. 2018)
 
 
 Note:
@@ -31,18 +38,9 @@ Note:
        Enzo setup              : https://bitbucket.org/enzo/enzo-dev/src/19f4a44e06f1c386573dc77b3608ba66b64d93bc/run/Hydro/Hydro-3D/AgoraGalaxy/?at=week-of-code
        Goldbaum et al. 2016    : https://arxiv.org/abs/1605.00646
        yt hub                  : https://girder.hub.yt/#collection/5736481ddd9119000164acf1
-3. Run the script "download_ic.sh" to download the low-resolution initial condition files for this test
-   --> It's the same script used in the "AgoraGalaxy" test problem of Enzo
+3. The low-resolution initial condition files from "sh download_ic_low_res.sh" are the same script used
+   in the "AgoraGalaxy" test problem of Enzo
 4. Some handy yt analysis scripts are put at "yt_script"
-
-
-High-resolution setup and notes:
-========================================
-To reproduce the AGORA high-resolution run presented in the GAMER-2 paper (Schive et al. 2018), follow the above steps with the following modifications:
-1. Download the high-resolution initial conditions by executing "sh download_ic_high_res.sh"
-2. Adjust the following parameters in "Input__Parameter":
-    PAR_NPAR                      21250000    # from the default value of 212500
-    MAX_LEVEL                     9           # from the default value of 7
 
 
 First-time GRACKLE installation guide (on NTU clusters as an example):

@@ -3,3 +3,8 @@ wget --no-check-certificate  -O ./CloudyData_UVB=HM2012.h5 https://github.com/gr
 tar xzvf LOW.tar.gz
 mv LOW/*.dat ./
 rmdir LOW
+
+ln -s ./Input_Options/Input__Flag_Jeans.low-res Input__Flag_Jeans
+ln -s ./Input_Options/Input__Flag_ParMassCell.low-res Input__Flag_ParMassCell
+ln -s ./Input_Options/Input__Flag_Rho.low-res Input__Flag_Rho
+ln -s ./Input_Options/Input__Parameter.low-res Input__Parameter
