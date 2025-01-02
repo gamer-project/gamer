@@ -48,7 +48,7 @@ PAR_INIT                      3           # initialization option for particles:
 PAR_IC_FORMAT                 1           # data format of PAR_IC: (1=[attribute][id], 2=[id][attribute]; row-major) [1]
 PAR_IC_FLOAT8                -1           # floating-point precision for PAR_IC (<0: default, 0: single, 1: double) [default: same as FLOAT8_PAR]
 PAR_IC_MASS                  -1.0         # mass of all particles for PAR_INIT==3 (<0=off) [-1.0]
-PAR_IC_TYPE                  -1           # type of all particles for PAR_INIT==3 (<0=off) [-1]
+PAR_IC_TYPE                   2           # type of all particles for PAR_INIT==3 (<0=off) [-1]
 PAR_INTERP                    3           # particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [2]
 PAR_INTEG                     2           # particle integration scheme: (1=Euler, 2=KDK) [2]
 PAR_TR_INTERP                 3           # tracer particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [3]
