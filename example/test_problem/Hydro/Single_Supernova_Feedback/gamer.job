@@ -1,0 +1,36 @@
+#!/bin/bash
+
+#PBS -N gamer
+#PBS -M r08244005@ntu.edu.tw
+#PBS -m abe
+#PBS -q workq
+#PBS -k n
+#PBS -l walltime=720:00:00
+#PBS -l nodes=2:ppn=16
+##PBS -o stdout
+##PBS -e stderr
+##PBS -W depend=afterok:JOB_ID
+##PBS -W depend=-afterany:JOB_ID 
+
+if [ "$PBS_ENVIRONMENT" != "PBS_INTERACTIVE" ]; then
+   cd $PBS_O_WORKDIR
+fi
+
+
+export LD_LIBRARY_PATH=/work1/yglee/Software/grackle/lib:$LD_LIBRARY_PATH
+
+echo $LD_LIBARARY_PATH
+
+mpirun -map-by ppr:1:socket:pe=16 --report-bindings ./gamer 1>>log 2>&1
+#./gamer
+
+#python time-to-timestep.py
+#mpirun --mca pml ^ucx python plot_slice.py -s 000000 -e 000600
+#mpirun --mca pml ^ucx python plot_profilelist.py -i1 /work1/yglee/Software/gamer-fork/bin/on_edge/ -i2 /work1/yglee/Software/gamer-fork/bin/synchronized/ -s 000490 -e 000600
+#mpirun --mca pml ^ucx python plot_profilelist.py -i1 /work1/yglee/Software/gamer-fork/bin/on_edge/ -i2 /work1/yglee/Software/gamer-fork/bin/Local/ -s 000360 -e 000600
+#mpirun --mca pml ^ucx python plot_profile_in_one.py -i1 /work1/yglee/Software/gamer-fork/bin/SSN_energy/ -i2 /work1/yglee/Software/enzo-dev/run/StarParticle/StarParticleSingleTest/
+
+#valgrind --leak-check=full --show-leak-kinds=all --verbose ./gamer
+
+## script to restart a simulation automatically if the run failed
+## sh auto_restart.sh 1>>stdout 2>>stderr
