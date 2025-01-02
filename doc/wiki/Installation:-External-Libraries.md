@@ -54,16 +54,12 @@ make install
 GAMER uses GRACKLE for the chemistry and radiative processes.
 Follow the installation instructions in the
 [GRACKLE website](http://grackle.readthedocs.io/en/latest/index.html).
-Note that it must be configured with a
-consistent floating-point accuracy as GAMER using
 
-    > make precision-{32,64}
+Compiling Grackle in double precision is recommended:
 
-Specifically, configure GRACKLE with `make precision-64/32` when
-compiling GAMER with/without the option
-[[--double | Installation:-Option-List#--double]], respectively.
+    > make precision-64
 
-In addition, when enabling OpenMP in GAMER (i.e., with the
+When enabling OpenMP in GAMER (i.e., with the
 compile-time option [[--openmp | Installation:-Option-List#--openmp]]),
 GRACKLE must be configured with OpenMP
 support as well using
