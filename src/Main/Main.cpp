@@ -87,6 +87,38 @@ OptLohnerForm_t      OPT__FLAG_LOHNER_FORM;
 OptCorrAfterSync_t   OPT__CORR_AFTER_ALL_SYNC;
 OptTimeStepLevel_t   OPT__DT_LEVEL;
 
+bool                 ConservedRefLoaded = false;
+double               Time_ConservedRef;
+#if   ( MODEL == HYDRO )
+#ifdef MHD
+double               Fluid_ConservedRef[12+NCOMP_PASSIVE+1];
+#else
+double               Fluid_ConservedRef[11+NCOMP_PASSIVE+1];
+#endif
+#elif ( MODEL == ELBDM )
+double               Fluid_ConservedRef[11+NCOMP_PASSIVE+1];
+#endif
+
+double               CoM_Gas_ConservedRef[3];
+
+#ifdef MASSIVE_PARTICLES
+double               Mass_Par_ConservedRef;
+double               CoMX_Par_ConservedRef, CoMY_Par_ConservedRef, CoMZ_Par_ConservedRef;
+double               MomX_Par_ConservedRef, MomY_Par_ConservedRef, MomZ_Par_ConservedRef;
+double               AngMomX_Par_ConservedRef, AngMomY_Par_ConservedRef, AngMomZ_Par_ConservedRef;
+double               Ekin_Par_ConservedRef, Eint_Par_ConservedRef, Epot_Par_ConservedRef, Etot_Par_ConservedRef;
+#if ( MODEL != PAR_ONLY )
+double               Mass_All_ConservedRef;
+double               CoMX_All_ConservedRef, CoMY_All_ConservedRef, CoMZ_All_ConservedRef;
+#if ( MODEL == HYDRO )
+double               MomX_All_ConservedRef, MomY_All_ConservedRef, MomZ_All_ConservedRef;
+double               AngMomX_All_ConservedRef, AngMomY_All_ConservedRef, AngMomZ_All_ConservedRef;
+#endif
+double               Etot_All_ConservedRef;
+#endif // if ( MODEL != PAR_ONLY )
+#endif // #ifdef MASSIVE_PARTICLES
+
+
 
 // 2. global variables for different applications
 // =======================================================================================================
@@ -616,8 +648,6 @@ int main( int argc, char *argv[] )
 #     endif
    }
 
-   Output_DumpData( 0 );
-
    if ( OPT__PATCH_COUNT > 0 )            Aux_Record_PatchCount();
    if ( OPT__RECORD_MEMORY )              Aux_GetMemInfo();
    if ( OPT__RECORD_USER ) {
@@ -642,6 +672,9 @@ int main( int argc, char *argv[] )
            ELBDM_REMOVE_MOTION_CM == ELBDM_REMOVE_MOTION_CM_EVERY_STEP  )
       ELBDM_RemoveMotionCM();
 #  endif
+
+// Must after Aux_Check to get the conserved values
+   Output_DumpData( 0 );
 
 #  ifdef TIMING
    Aux_ResetTimer();
