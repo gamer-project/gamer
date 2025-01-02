@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2481)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2500)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -260,7 +260,7 @@ Procedure for outputting new variables:
 //                                      output DENS and PHAS for the hybrid scheme (discard STUB)
 //                                      output use_wave_flag[lv] for the hybrid scheme
 //                2480 : 2024/07/17 --> output OPT__OUTPUT_PAR_MESH and particle attributes mapped from mesh quantities
-//                2481 : 2024/07/01 --> output particle integer attributes
+//                2500 : 2024/07/01 --> output particle integer attributes
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1596,7 +1596,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2481;
+   KeyInfo.FormatVersion        = 2500;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;

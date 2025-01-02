@@ -229,7 +229,7 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "Par_NAttFltStored",    &KeyInfo.Par_NAttFltStored,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttFltStored,     1,    Fatal );
    else
    LoadField( "Par_NAttFltStored",    &KeyInfo.Par_NAttFltStored,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttFltStored,     1, NonFatal );
-   if ( KeyInfo.FormatVersion >= 2481 )
+   if ( KeyInfo.FormatVersion >= 2500 )
    LoadField( "Par_NAttIntStored",    &KeyInfo.Par_NAttIntStored,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttIntStored,     1,    Fatal );
    else
    LoadField( "Par_NAttIntStored",    &KeyInfo.Par_NAttIntStored,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttIntStored,     1, NonFatal );
@@ -1424,7 +1424,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
       if ( H5_MemID_ParData < 0 )   Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemID_ParData" );
 
 //    load particle data from disk
-      if ( FormatVersion < 2481 )
+      if ( FormatVersion < 2500 )
       {
          const int PAR_TYPE_IDX_OLD = 7;
          int skip_type = 0;
@@ -1448,7 +1448,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
             if ( H5_Status < 0 )
                Aux_Error( ERROR_INFO, "failed to load a particle floating-point attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
          }
-      } // if ( FormatVersion < 2481 )
+      } // if ( FormatVersion < 2500 )
       else
       {
          for (int v=0; v<PAR_NATT_FLT_STORED; v++)
@@ -1467,7 +1467,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
             if ( H5_Status < 0 )
                Aux_Error( ERROR_INFO, "failed to load a particle integer attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
          }
-      } // if ( FormatVersion < 2481 ) ... else ...
+      } // if ( FormatVersion < 2500 ) ... else ...
 
 //    store particles to the particle repository (one particle at a time)
       NewParAttFlt[PAR_TIME] = Time[0];   // all particles are assumed to be synchronized with the base level
@@ -1647,7 +1647,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "Par_NAttFltUser",        &RS.Par_NAttFltUser,        SID, TID, NonFatal, &RT.Par_NAttFltUser,        1,    Fatal );
    else
    LoadField( "Par_NAttFltUser",        &RS.Par_NAttFltUser,        SID, TID, NonFatal, &RT.Par_NAttFltUser,        1, NonFatal );
-   if ( FormatVersion >= 2481 )
+   if ( FormatVersion >= 2500 )
    LoadField( "Par_NAttIntUser",        &RS.Par_NAttIntUser,        SID, TID, NonFatal, &RT.Par_NAttIntUser,        1,    Fatal );
    else
    LoadField( "Par_NAttIntUser",        &RS.Par_NAttIntUser,        SID, TID, NonFatal, &RT.Par_NAttIntUser,        1, NonFatal );
@@ -1770,7 +1770,7 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "Par_NAttFltStored",    &RS.Par_NAttFltStored,    SID, TID, NonFatal, &RT.Par_NAttFltStored,     1,    Fatal );
    else
    LoadField( "Par_NAttFltStored",    &RS.Par_NAttFltStored,    SID, TID, NonFatal, &RT.Par_NAttFltStored,     1, NonFatal );
-   if ( FormatVersion >= 2481 )
+   if ( FormatVersion >= 2500 )
    LoadField( "Par_NAttIntStored",    &RS.Par_NAttIntStored,    SID, TID, NonFatal, &RT.Par_NAttIntStored,     1,    Fatal );
    else
    LoadField( "Par_NAttIntStored",    &RS.Par_NAttIntStored,    SID, TID, NonFatal, &RT.Par_NAttIntStored,     1, NonFatal );
