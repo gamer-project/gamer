@@ -35,7 +35,7 @@ typedef double real_che;
 #elif defined GRACKLE_FLOAT_4
 typedef float  real_che;
 #else
-#error : GRACKLE_FLOAT_8 or GRACKLE_FLOAT_4 is not defined in the grackle library!
+#error : ERROR : GRACKLE_FLOAT_8 and GRACKLE_FLOAT_4 are not defined in Grackle library !!
 #endif
 #endif // #ifdef SUPPORT_GRACKLE
 
