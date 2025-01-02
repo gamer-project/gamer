@@ -10,10 +10,10 @@ TARGET_DIR="../../.vscode"
 # Specify files to exclude (space-separated list, e.g., "file1 file2")
 EXCLUDE_FILES="copy_to_vscode.sh README.md"
 
-if [ ! -d "$(realpath "$TARGET_DIR")" ]; then
-  echo "Target directory $(realpath "$TARGET_DIR") does not exist."
-  mkdir -p "$(realpath "$TARGET_DIR")"
-  echo "Target directory $(realpath "$TARGET_DIR") created."
+if [ ! -d "$TARGET_DIR" ]; then
+  echo "Target directory $TARGET_DIR does not exist."
+  mkdir -p "$TARGET_DIR"
+  echo "Target directory $TARGET_DIR created."
 fi
 
 # Prompt the user for the working directory under bin
@@ -52,5 +52,6 @@ for file in "$SOURCE_DIR"/*; do
     echo "$filename copied."
   fi
 
-  sed -i "s/Gamer_Working_SubDir/$WORKING_DIR/g" "$TARGET_DIR/$filename"
+  sed "s/GAMER_Working_SubDir/$WORKING_DIR/g" "$TARGET_DIR/$filename" > "$TARGET_DIR/$filename.tmp"
+  mv "$TARGET_DIR/$filename.tmp" "$TARGET_DIR/$filename"
 done
