@@ -1513,15 +1513,16 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
 
       SonGID0 = SonList[GID];
 
-      if ( SonGID0 == -1 )   return;
-
-      for (int SonGID=SonGID0; SonGID<SonGID0+8; SonGID++)
-         LoadOnePatch( H5_FileID, lv+1, SonGID, Recursive, SonList, CrList,
-                       H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field,
-                       H5_SetID_FCMag, H5_SpaceID_FCMag, H5_MemID_FCMag,
-                       NParList, ParFltBuf, ParIntBuf, NewParList,
-                       H5_SetID_ParFltData, H5_SetID_ParIntData, H5_SpaceID_ParData,
-                       GParID_Offset, NParThisRank, FormatVersion );
+      if ( SonGID0 != -1 )
+      {
+         for (int SonGID=SonGID0; SonGID<SonGID0+8; SonGID++)
+            LoadOnePatch( H5_FileID, lv+1, SonGID, Recursive, SonList, CrList,
+                          H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field,
+                          H5_SetID_FCMag, H5_SpaceID_FCMag, H5_MemID_FCMag,
+                          NParList, ParFltBuf, ParIntBuf, NewParList,
+                          H5_SetID_ParFltData, H5_SetID_ParIntData, H5_SpaceID_ParData,
+                          GParID_Offset, NParThisRank, FormatVersion );
+      }
    } // if ( Recursive )
 
 } // FUNCTION : LoadOnePatch
