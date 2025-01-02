@@ -1,18 +1,8 @@
-# Integrating Gamer with Visual Studio Code
+# Integrating GAMER with Visual Studio Code
 
-## Setup
-- Install VS Code Extension: "C/C++"
-- To disable auto-formatting, add the following to your `settings.json`:
-    ```json
-    {
-        "C_Cpp.formatting": "disabled"
-    }
-    ```
+Run `sh tool/vscode/copy_to_vscode.sh` to copy necessary files to the `.vscode` directory to integrate GAMER with VS Code.
 
-## Usage
-- Run `sh tool/vscode/copy_to_vscode.sh` to copy the necessary files to `.vscode` directory to integrate Gamer with VS Code.
-- After configuring Gamer with `configure.py`, press `Ctrl + Shift + B` to build gamer. This will update the macros, providing IntelliSense highlighting support.
-- Press `F5` to debug Gamer.
+Please check the [wiki](https://github.com/gamer-project/gamer/wiki/Developing-with-VS-Code) for more information.
 
 ## Files in this directory
 - `c_cpp_properties.json`: Contains the IntelliSense configuration for VS Code.

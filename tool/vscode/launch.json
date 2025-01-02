@@ -2,13 +2,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug Gamer",
+            "name": "Debug GAMER",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/bin/Gamer_Working_SubDir/gamer",
+            "program": "${workspaceFolder}/bin/GAMER_Working_SubDir/gamer",
             "args": [],
             "stopAtEntry": true,
-            "cwd": "${workspaceFolder}/bin/Gamer_Working_SubDir/",
+            "cwd": "${workspaceFolder}/bin/GAMER_Working_SubDir/",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",

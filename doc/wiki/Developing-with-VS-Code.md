@@ -1,21 +1,21 @@
-# Developing Gamer with Visual Studio Code
+# Developing GAMER with Visual Studio Code
 
-This guide provides step-by-step instructions on how to set up and use Visual Studio Code (VS Code) for developing the Gamer codebase.
+This guide provides step-by-step instructions on how to set up and use Visual Studio Code (VS Code) for developing the GAMER codebase.
 
 ## Setup
 
 ### Prerequisites
 
-- **Quick Start**: Follow the instructions in the [[Quick Start | Quick-Start]] guide to download Gamer and do at least one [[demo | Quick-Start:-1D-Shock-Tube]].
+- **Quick Start**: Follow the instructions in the [[Quick Start | Quick-Start]] guide to download GAMER and do at least one [[demo | Quick-Start:-1D-Shock-Tube]].
 - **Visual Studio Code**: Download and install from [https://code.visualstudio.com/](https://code.visualstudio.com/).
 - **C/C++ Extension**: Install the "C/C++" extension from the VS Code Marketplace.
 
 ### Setting up the workspace
 
 1. **Launch VS Code**.
-2. **Open the Gamer Project Folder**:
+2. **Open the GAMER Project Folder**:
    - Go to `File` > `Open Folder...`.
-   - Select your Gamer project directory.
+   - Select your GAMER project directory.
 
 ### Disabling auto-formatting
 
@@ -23,25 +23,37 @@ To disable auto-formatting in VS Code, add the following to your `settings.json`
 
 Access `settings.json` by navigating to `File` > `Preferences` > `Settings`, then search for `C_Cpp.formatting` and set it to `"disabled"`.
 
-### Configuring VS Code to integrate with Gamer
+### Configuring VS Code to integrate with GAMER
 
-Run the following script from the root directory of the Gamer project:
+Run the following script from the root directory of the GAMER project:
 ```bash
 sh tool/vscode/copy_to_vscode.sh
 ```
-This script copies the necessary configuration files to the `.vscode` directory, integrating Gamer with VS Code. This script will ask you to enter the working directory under `bin/` where the executables are located. These paths of working directories are located in the `launch.json` and `tasks.json` files.
+This script copies the necessary configuration files to the `.vscode` directory, integrating GAMER with VS Code. This script will ask you to enter the working directory under `bin/` where the executables are located. These paths of working directories are located in the `launch.json` and `tasks.json` files.
 
 ## Developing with VS Code
 
-### Run build task
+### Configure GAMER
 
-After configuring Gamer with [configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Configure.py), select `Terminal` > `Run Build Task...` or press `Ctrl + Shift + B` to start the build task. This will update the macros, providing IntelliSense highlighting support.
+Select `Terminal` > `Run Task...` > `build-GAMER` to configure GAMER with the `generate_make.sh` script in your working directory.
 
-Note: To make sure the debugger works correctly, ensure the compiler flags in `Makefile` are set to `-g -O0`. (TBD: Add a argument to `configure.py` to set the flags.)
+### Build
+
+After configuring GAMER with [configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Configure.py) or `generate_make.sh`, select `Terminal` > `Run Build Task...` or press `Ctrl + Shift + B` to start the build task. This will update the macros, providing IntelliSense highlighting support.
+
+> [!IMPORTANT]  
+> To make sure the debugger works correctly, ensure the compiler flags in `Makefile` are set to `-g -O0`. (TBD: Add a argument to `configure.py` to set the flags.)
 
 ### Start debugging
 
-To start debugging Gamer, select `Run` > `Start Debugging` or press `F5`. This will launch the debugger. See the [official documentation](https://code.visualstudio.com/docs/editor/debugging) to learn more about debugging with VS Code.
+To start debugging GAMER, select `Run` > `Start Debugging` or press `F5`. This will launch the debugger. See the [official documentation](https://code.visualstudio.com/docs/editor/debugging) to learn more about debugging with VS Code.
+
+> [!NOTE]  
+> If you are using macOS and `gdb` is not supported, then you need to setup `lldb` as the debugger in `launch.json` by yourself. You can refer to the [official documentation](https://code.visualstudio.com/docs/cpp/launch-json-reference) for more information.
+
+### Clean working directory
+
+Select `Terminal` > `Run Task...` > `clean-work-dir` to clean the working directory with the `clean.sh` script in your working directory.
 
 ## Understanding Configuration Files
 

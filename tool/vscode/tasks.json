@@ -9,7 +9,11 @@
             ],
             "options": {
                 "cwd": "${workspaceFolder}/src"
-            }
+            },
+            "presentation": {
+                "showReuseMessage": false
+            },
+            "hide": true
         },
         {
             "label": "extract-macros",
@@ -20,10 +24,14 @@
             ],
             "options": {
                 "cwd": "${workspaceFolder}/.vscode"
-            }
+            },
+            "presentation": {
+                "showReuseMessage": false
+            },
+            "hide": true
         },
         {
-            "label": "build-gamer",
+            "label": "_build-GAMER",
             "type": "shell",
             "command": "make",
             "args": [
@@ -36,9 +44,28 @@
             "problemMatcher": [
                 "$gcc"
             ],
+            "presentation": {
+                "showReuseMessage": false
+            },
+            "hide": true
+        },
+        {
+            "label": "copy-exe",
+            "type": "shell",
+            "command": "cp ../gamer .",
+            "options": {
+                "cwd": "${workspaceFolder}/bin/GAMER_Working_SubDir/"
+            },
+            "hide": true
+        },
+        {
+            "label": "build-GAMER",
+            "type": "shell",
             "dependsOn": [
                 "make-clean",
-                "extract-macros"
+                "extract-macros",
+                "_build-GAMER",
+                "copy-exe"
             ],
             "dependsOrder": "sequence",
             "group": {
@@ -46,6 +73,15 @@
                 "isDefault": true
             },
             "detail": "After you configure the Makefile, run this task to build the project."
+        },
+        {
+            "label": "config-GAMER",
+            "type": "shell",
+            "command": "cp ../bin/GAMER_Working_SubDir/generate_make.sh . && sh generate_make.sh",
+            "options": {
+                "cwd": "${workspaceFolder}/src"
+            },
+            "detail": "Run configure.py with generate_make.sh in the working directory."
         },
         {
             "label": "clean-work-dir",
@@ -59,9 +95,9 @@
                 "isDefault": false
             },
             "options": {
-                "cwd": "${workspaceFolder}/bin/Gamer_Working_SubDir/"
+                "cwd": "${workspaceFolder}/bin/GAMER_Working_SubDir/"
             },
-            "problemMatcher": []
+            "detail": "Clean the working directory with clean.sh."
         }
     ],
     "version": "2.0.0"
