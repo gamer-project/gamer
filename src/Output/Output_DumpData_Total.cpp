@@ -38,7 +38,7 @@ Procedure for outputting new variables:
 //                2203 : 2018/12/27 --> replace GRA_BLOCK_SIZE_Z by GRA_BLOCK_SIZE
 //                2210 : 2019/06/07 --> support MHD
 //                2220 : 2020/08/25 --> output EOS
-//                2230 : 2024/08/25 --> output particle integer attributes
+//                2300 : 2024/08/25 --> output particle integer attributes
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total( const char *FileName )
 {
@@ -192,7 +192,7 @@ void Output_DumpData_Total( const char *FileName )
 
 //    a. output the information of data format
 //    =================================================================================================
-      const long FormatVersion = 2230;
+      const long FormatVersion = 2300;
       const long CheckCode     = 123456789;
 
       fseek( File, HeaderOffset_Format, SEEK_SET );
