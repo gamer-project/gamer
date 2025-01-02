@@ -280,6 +280,7 @@ void Init_TestProb_Template()
    Init_Field_User_Ptr               = NULL; // set NCOMP_PASSIVE_USER;               example: TestProblem/Hydro/Plummer/Init_TestProb_Hydro_Plummer.cpp --> AddNewField()
    Flag_Region_Ptr                   = NULL; // option: OPT__FLAG_REGION;             example: Refing/Flag_Region.cpp
    Flag_User_Ptr                     = NULL; // option: OPT__FLAG_USER;               example: Refine/Flag_User.cpp
+   Flag_UserWorkBeforeFlag_Ptr       = NULL; // option: none;                         example: Refine/Flag_UserWorkBeforeFlag.cpp
    Mis_GetTimeStep_User_Ptr          = NULL; // option: OPT__DT_USER;                 example: Miscellaneous/Mis_GetTimeStep_User.cpp
    Mis_UserWorkBeforeNextLevel_Ptr   = NULL; //                                       example: Miscellaneous/Mis_UserWorkBeforeNextLevel.cpp
    Mis_UserWorkBeforeNextSubstep_Ptr = NULL; //                                       example: Miscellaneous/Mis_UserWorkBeforeNextSubstep.cpp

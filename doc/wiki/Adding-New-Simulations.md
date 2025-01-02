@@ -10,6 +10,7 @@ Mandatory steps are marked by &#x1F4CC;.
    *  [Output](#output)
    *  [Work Before Output](#work-before-output)
    *  [Refinement Criteria](#refinement-criteria)
+   *  [Work Before Refine](#work-before-refine)
    *  [Timestep Constraints](#timestep-constraints)
    *  [Boundary Conditions](#boundary-conditions)
    *  [Fields Resetting](#fields-resetting)
@@ -413,6 +414,18 @@ for details.
 [[OPT__FLAG_USER | Runtime-Parameters:-Refinement#OPT__FLAG_USER]]
 * **Example:**
 `src/Refine/Flag_User.cpp`
+
+### Work Before Refine
+* **Description:**
+Perform user-specified work before grid refinement.
+* **Prototype:**
+`void Flag_UserWorkBeforeFlag_NewProblem( const double Time, const int lv );`
+* **Function Pointer:**
+`Flag_UserWorkBeforeFlag_Ptr`
+* **Runtime Option:**
+None
+* **Example:**
+`src/Refine/Flag_UserWorkBeforeFlag.cpp`
 
 ### Timestep Constraints
 * **Description:**
