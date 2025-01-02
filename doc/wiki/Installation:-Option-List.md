@@ -24,7 +24,7 @@ disabled). See the "Restriction" of each option carefully.
 |:---:|:---:|---|
 | `-h`        | -               | Show a short help message. |
 | `-lh`       | -               | Show a detailed help message. |
-| `--machine` | Filename string | Select the `*.config` file from the `configs` directory. |
+| `--machine` | Filename string | Select the `*.config` file from the `configs` directory. It will overwrite the default settings. |
 
 &#8192;&#8192;&#8192;&#8192;&#8192;
 &#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;
