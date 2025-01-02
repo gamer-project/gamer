@@ -81,7 +81,7 @@ const TestProbID_t
    TESTPROB_HYDRO_CDM_LSS                      =  100,
    TESTPROB_HYDRO_ZELDOVICH                    =  101,
    TESTPROB_HYDRO_SinkParTest                  =  150,
-   TESTPROB_ELBDM_EXTPOT                       = 1000;
+   TESTPROB_ELBDM_EXTPOT                       = 1000,
    TESTPROB_ELBDM_JEANS_INSTABILITY_COMOVING   = 1001,
    TESTPROB_ELBDM_JEANS_INSTABILITY_PHYSICAL   = 1002,
    TESTPROB_ELBDM_SOLITON                      = 1003,
