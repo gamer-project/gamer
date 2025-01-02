@@ -1426,12 +1426,12 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
 //    load particle data from disk
       if ( FormatVersion < 2500 )
       {
-         const int PAR_TYPE_IDX_OLD = 7;
+         const int ParTypeIdx_old = 7;
          int skip_type = 0;
          for (int v=0; v<PAR_NATT_FLT_STORED+1; v++)
          {
 //          using ParFltBuf[v] here is safe since it's NOT called when NParThisPatch == 0
-            if ( v == PAR_TYPE_IDX_OLD )
+            if ( v == ParTypeIdx_old )
             {
                real_par *ParType_Buf = new real_par [NParThisPatch];
                H5_Status = H5Dread( H5_SetID_ParIntData[PAR_TYPE], H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,

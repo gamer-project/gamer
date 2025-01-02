@@ -648,14 +648,14 @@ void Init_ByRestart()
 //             load one particle attribute at a time
                if ( FormatVersion < 2300 )
                {
-                  const int PAR_TYPE_IDX_OLD = 7; // the particle type index before 2300 version
+                  const int ParTypeIdx_old = 7; // the particle type index before 2300 version
                   int skip_type = 0;
                   for (int v=0; v<PAR_NATT_FLT_STORED+1; v++)
                   {
                      fseek( File, FileOffset_Particle + v*ParFltDataSize1v + GParID*sizeof(real_par), SEEK_SET );
 
 //                   using ParFltBuf[v] here is safe since it's NOT called when NParThisPatch == 0
-                     if ( v == PAR_TYPE_IDX_OLD )
+                     if ( v == ParTypeIdx_old )
                      {
                         real_par *ParType_Buf = new real_par [NParThisPatch];
                         fread( ParType_Buf, sizeof(real_par), NParThisPatch, File );
