@@ -30,6 +30,8 @@
 #define VOLTA        5
 #define TURING       6
 #define AMPERE       7
+#define ADA_LOVELACE 8
+#define HOPPER       9
 
 #ifdef GPU
 #if   ( GPU_COMPUTE_CAPABILITY >= 200  &&  GPU_COMPUTE_CAPABILITY < 300 )
@@ -46,6 +48,10 @@
 # define GPU_ARCH TURING
 #elif ( GPU_COMPUTE_CAPABILITY >= 800  &&  GPU_COMPUTE_CAPABILITY < 890 )
 # define GPU_ARCH AMPERE
+#elif ( GPU_COMPUTE_CAPABILITY >= 890  &&  GPU_COMPUTE_CAPABILITY < 900 )
+# define GPU_ARCH ADA_LOVELACE
+#elif ( GPU_COMPUTE_CAPABILITY >= 900  &&  GPU_COMPUTE_CAPABILITY < 1000 )
+# define GPU_ARCH HOPPER
 #else
 # error : ERROR : Unknown GPU_COMPUTE_CAPABILITY !!
 #endif // GPU_COMPUTE_CAPABILITY
@@ -101,6 +107,27 @@
 #define EOS_USER        7
 
 
+// ELBDM schemes
+#define ELBDM_WAVE      1
+#define ELBDM_HYBRID    2
+
+
+// ELBDM wave schemes
+#define WAVE_FD         1
+#define WAVE_GRAMFE     2
+
+
+// ELBDM hybrid schemes
+#define HYBRID_UPWIND   1
+#define HYBRID_MUSCL    2
+#define HYBRID_FROMM    3
+
+
+// ELBDM gramfe schemes
+#define GRAMFE_FFT      1
+#define GRAMFE_MATMUL   2
+
+
 // Poisson solvers
 #define SOR          1
 #define MG           2
@@ -135,10 +162,14 @@
 #elif ( MODEL == ELBDM )
 #  define NCOMP_FLUID         3
 #  define NFLUX_FLUID         1
+#  define NCOMP_MAG           0
+#  define NCOMP_ELE           0
 
 #elif ( MODEL == PAR_ONLY )
 #  define NCOMP_FLUID         0
 #  define NFLUX_FLUID         0
+#  define NCOMP_MAG           0
+#  define NCOMP_ELE           0
 
 #else
 #  error : ERROR : unsupported MODEL (please edit NCOMP_FLUID and NFLUX_FLUID for the new MODEL) !!
@@ -196,10 +227,15 @@
 #  define FLU_NIN             NCOMP_TOTAL
 #  define FLU_NOUT            NCOMP_TOTAL
 
-// for ELBDM, we do not need to transfer the density component into GPU
+
+// for ELBDM, we do not need to transfer the density component into GPU;
+// also exclude passive scalars for now since it is not supported yet
+// --> consistent with excluding _PASSIVE when calling Prepare_PatchData() in Flu_Prepare.cpp
 #elif ( MODEL == ELBDM )
-#  define FLU_NIN             ( NCOMP_TOTAL - 1 )
-#  define FLU_NOUT            ( NCOMP_TOTAL - 0 )
+//#  define FLU_NIN             ( NCOMP_TOTAL - 1 )
+//#  define FLU_NOUT            ( NCOMP_TOTAL - 0 )
+#  define FLU_NIN             ( NCOMP_FLUID - 1 )
+#  define FLU_NOUT            ( NCOMP_FLUID - 0 )
 
 #elif ( MODEL == PAR_ONLY )
 #  define FLU_NIN             0
@@ -383,9 +419,15 @@
 
 #elif ( MODEL == ELBDM )
 // field indices of fluid[] --> element of [0 ... NCOMP_FLUID-1]
+// --> must NOT modify their values
 #  define  DENS               0
 #  define  REAL               1
 #  define  IMAG               2
+
+# if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  define  PHAS               1
+#  define  STUB               2
+# endif
 
 // field indices of passive[] --> element of [NCOMP_FLUID ... NCOMP_TOTAL-1]
 // none for ELBDM
@@ -397,8 +439,15 @@
 #  define _DENS               ( 1L << DENS )
 #  define _REAL               ( 1L << REAL )
 #  define _IMAG               ( 1L << IMAG )
+#  define _MAG                0
+# if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  define _PHAS               ( 1L << PHAS )
+#  define _STUB               ( 1L << STUB )
+# endif
+
 
 // bitwise flux indices
+// for the hybrid scheme, we also only need the density flux
 #  define _FLUX_DENS          ( 1L << FLUX_DENS )
 
 // bitwise indices of derived fields
@@ -407,6 +456,7 @@
 
 
 #elif ( MODEL == PAR_ONLY )
+#  define _MAG                0
 #  define _DERIVED            0
 #  define NDERIVE             0
 
@@ -551,6 +601,7 @@
 
 // number of fluid ghost zones for the fluid solver
 #if   ( MODEL == HYDRO )   // hydro
+
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
 #    if   ( LR_SCHEME == PLM )
 #     define LR_GHOST_SIZE          1
@@ -575,17 +626,98 @@
 #    endif // MHD
 #  endif // FLU_SCHEME
 
+
 #elif ( MODEL == ELBDM )   // ELBDM
-#  ifdef LAPLACIAN_4TH
-#     define FLU_GHOST_SIZE         6
-#  else
-#     define FLU_GHOST_SIZE         3
-#  endif
+
+#  if ( WAVE_SCHEME == WAVE_FD )
+#     ifdef LAPLACIAN_4TH
+#        define FLU_GHOST_SIZE         6
+#     else
+//     hybrid scheme requires FLU_GHOST_SIZE >= HYB_GHOST_SIZE (6)
+#      if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#        define FLU_GHOST_SIZE         6
+#      else
+#        define FLU_GHOST_SIZE         3
+#      endif
+#     endif // LAPLACIAN_4TH
+#  elif ( WAVE_SCHEME == WAVE_GRAMFE )
+// the accuracy of the local spectral method increases with larger FLU_GHOST_SIZE.
+// a minimum of FLU_GHOST_SIZE 6 has been found to be stable with the filter options alpha = 100 and beta = 32 * log(10)
+// larger ghost zones should increase stability and accuracy and allow for larger timesteps, but have not extensively tested
+// for smaller ghost zones, GRAMFE_ORDER should be decreased to values between 6 and 12 and the filter parameters should be adapted
+#        define FLU_GHOST_SIZE         8
+#  else // WAVE_SCHEME
+#     error : ERROR : unsupported WAVE_SCHEME !!
+#  endif // WAVE_SCHEME
 
 #else
 #  error : ERROR : unsupported MODEL !!
 #endif // MODEL
 
+// define fluid ghost boundary size for hybrid scheme
+// --> it must be smaller than or equal to FLU_GHOST_SIZE because the same fluid arrays are used for both the wave and fluid solvers
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#        define HYB_GHOST_SIZE         6
+#  endif
+
+# if ( WAVE_SCHEME == WAVE_GRAMFE  ||  SUPPORT_SPECTRAL_INT )
+//  number of evaluation points of Gram polynomials for computing FC(SVD) continuation
+#   define GRAMFE_GAMMA  150
+//  number of Fourier modes used in the FC(SVD) continuation
+//  roughly GRAMFE_G = GRAMFE_GAMMA/2
+#   define GRAMFE_G      63
+# endif
+
+// set default parameters of gram extension scheme
+# if ( MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_GRAMFE )
+//  number of boundary points used for Gram polynomial space on boundary
+#   define GRAMFE_NDELTA 14
+//  maximum order of Gram polynomials on boundary
+//  for GRAMFE_ORDER < GRAMFE_NDELTA, the boundary information is projected
+//  onto a lower-dimensional polynomial space
+//  this increases the stability but decreases the accuracy of the algorithm
+#   define GRAMFE_ORDER  14
+
+//  a boundary of size GRAMFE_NDELTA can only support polynomials of degree up to GRAMFE_ORDER
+#   if ( GRAMFE_ORDER > GRAMFE_NDELTA )
+#     error : ERROR : Gram Fourier extension order must not be higher than NDELTA !!
+#   endif
+
+//  size of the extension region
+//  --> total size of extended region = GRAMFE_FLU_NXT = FLU_NXT + GRAMFE_ND
+#   if   ( GRAMFE_SCHEME == GRAMFE_FFT )
+//  default values in order for GRAMFE_FLU_NXT to have small prime factorisations
+//  --> this is important for the FFT to be fast
+#    if   ( PATCH_SIZE == 8 )
+#     define GRAMFE_ND        32 // GRAMFE_FLU_NXT = 2^6
+#    elif ( PATCH_SIZE == 16 )
+#     define GRAMFE_ND        24 // GRAMFE_FLU_NXT = 2^3 * 3^2
+#    elif ( PATCH_SIZE == 32 )
+#     define GRAMFE_ND        28 // GRAMFE_FLU_NXT = 2^2 * 3^3
+#    elif ( PATCH_SIZE == 64 )
+#     define GRAMFE_ND        24 // GRAMFE_FLU_NXT = 2^3 * 3 * 7
+#    elif ( PATCH_SIZE == 128 )
+#     define GRAMFE_ND        28 // GRAMFE_FLU_NXT = 2^2 * 3 * 5^2
+#    else
+#     error : ERROR : Unsupported PATCH_SIZE for GRAMFE_FFT!!
+#    endif // PATCH_SIZE
+
+#   elif ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+//  for GRAMFE_MATMUL extension size is irrelevant since matrix multiplication works for all sizes
+#     define GRAMFE_ND        32 // GRAMFE_FLU_NXT = 2^6
+
+#     if ( PATCH_SIZE != 8  &&  PATCH_SIZE != 16 )
+#       error : ERROR : Unsupported PATCH_SIZE for GRAMFE_MATMUL (only support 8 and 16) !! Consider switching to GRAMFE_FFT.
+#     endif
+
+#   else
+#     error : ERROR : Unsupported GRAMFE_SCHEME!!
+#   endif
+
+//  total size of extended region
+#   define GRAMFE_FLU_NXT     ( FLU_NXT + GRAMFE_ND )
+
+# endif // # if ( MODEL == ELBDM  &&  WAVE_SCHEME == WAVE_GRAMFE )
 
 
 // self-gravity constants
@@ -593,9 +725,10 @@
 
 // number of input and output variables in the gravity solver
 #  if   ( MODEL == HYDRO )
-#        define GRA_NIN             NCOMP_FLUID
+#        define GRA_NIN             ( NCOMP_FLUID )
 
 // for ELBDM, we do not need to transfer the density component
+// --> this remains valid for hybrid solver that also has 2 components
 #  elif ( MODEL == ELBDM )
 #        define GRA_NIN             ( NCOMP_FLUID - 1 )
 
@@ -715,19 +848,27 @@
 #else
 #  define GRA_NXT       ( 1 )                                     // still define GRA_NXT   ...
 #  define USG_NXT_F     ( 1 )                                     // still define USG_NXT_F ...
-#endif
+#endif // GRAVITY
 #  define SRC_NXT       ( PS1 + 2*SRC_GHOST_SIZE )                // use patch as the unit
 #  define SRC_NXT_P1    ( SRC_NXT + 1 )
 #  define DER_NXT       ( PS1 + 2*DER_GHOST_SIZE )                // use patch as the unit
 #ifdef FEEDBACK
 #  define FB_NXT        ( PS2 + 2*FB_GHOST_SIZE )                 // use patch group as the unit
 #endif
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
+#  define HYB_NXT       ( PS2 + 2*HYB_GHOST_SIZE )
+#else
+#  define HYB_NXT       ( 1 )
+#endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 // size of auxiliary arrays and EoS tables
 #if ( MODEL == HYDRO )
 #  define EOS_NAUX_MAX           20    // EoS_AuxArray_Flt/Int[]
 #  define EOS_NTABLE_MAX         20    // *_EoS_Table[]
+#else
+#  define EOS_NAUX_MAX           0
+#  define EOS_NTABLE_MAX         0
 #endif
 
 #ifdef GRAVITY
@@ -773,6 +914,17 @@
 // in FB_AdvanceDt(), store the updated fluid data in a separate array to avoid data racing among different patch groups
 #if ( defined FEEDBACK  &&  FB_GHOST_SIZE > 0 )
 #  define FB_SEP_FLUOUT
+#endif
+
+
+// precision for FFT in GRAMFE_FFT and matrix multiplication in GRAMFE_MATMUL
+// --> enable double precision for GRAMFE_FFT by default since it is less stable compared to GRAMFE_MATMUL
+#if ( GRAMFE_SCHEME == GRAMFE_FFT )
+#   define GRAMFE_FFT_FLOAT8
+#endif
+
+#if ( ( GRAMFE_SCHEME == GRAMFE_MATMUL ) && defined( FLOAT8 ) )
+#   define GRAMFE_MATMUL_FLOAT8
 #endif
 
 
@@ -952,6 +1104,7 @@
 #  define   EXP( a )         exp( a )
 #  define  ATAN( a )        atan( a )
 #  define FLOOR( a )       floor( a )
+#  define ROUND( a )       round( a )
 #  define  FMAX( a, b )     fmax( a, b )
 #  define  FMIN( a, b )     fmin( a, b )
 #  define   POW( a, b )      pow( a, b )
@@ -966,6 +1119,7 @@
 #  define   EXP( a )         expf( a )
 #  define  ATAN( a )        atanf( a )
 #  define FLOOR( a )       floorf( a )
+#  define ROUND( a )       roundf( a )
 #  define  FMAX( a, b )     fmaxf( a, b )
 #  define  FMIN( a, b )     fminf( a, b )
 #  define   POW( a, b )      powf( a, b )
@@ -987,9 +1141,10 @@
 #define SATAN2( a, b )   (  ( (a) == (real)0.0  &&  (b) == (real)0.0 ) ? (real)0.0 : ATAN2( (a), (b) )  )
 
 
-// square/cube function
+// power functions
 #define SQR(  a )       ( (a)*(a)     )
 #define CUBE( a )       ( (a)*(a)*(a) )
+#define POW4( a )       ( (a)*(a)*(a)*(a) )
 
 
 // 3D to 1D array indices transformation
@@ -1079,6 +1234,7 @@
 #ifndef GRAVITY
 #  undef STORE_PAR_ACC
 #endif
+
 
 
 #endif  // #ifndef __MACRO_H__

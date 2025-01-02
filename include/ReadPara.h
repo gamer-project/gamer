@@ -268,7 +268,7 @@ struct ReadPara_t
             if (  strcmp( Key[k], LoadKey ) == 0  )
             {
                if ( Loaded[k]  &&  MPI_Rank == 0 )
-                  Aux_Message( stderr, "WARNING : duplicate      parameter [%-25s] at line %4d !!\n", LoadKey, LineNum );
+                  Aux_Message( stderr, "WARNING : duplicate      parameter [%-30s] at line %4d !!\n", LoadKey, LineNum );
 
                MatchIdx  = k;
                Loaded[k] = true;
@@ -294,7 +294,7 @@ struct ReadPara_t
          }
 
          else if ( MPI_Rank == 0 )
-            Aux_Message( stderr, "WARNING : unrecognizable parameter [%-25s] at line %4d !!\n", LoadKey, LineNum );
+            Aux_Message( stderr, "WARNING : unrecognizable parameter [%-30s] at line %4d !!\n", LoadKey, LineNum );
       } // while ( fgets( Line, MAX_STRING, File ) != NULL )
 
 
@@ -346,13 +346,13 @@ struct ReadPara_t
             if ( MPI_Rank == 0 )
             {
                if      ( def_int != NULL_INT )
-                  Aux_Message( stdout, "NOTE : parameter [%-25s] is set to the default value [%- 21ld]\n",
+                  Aux_Message( stdout, "NOTE : parameter [%-30s] is set to the default value [%- 21ld]\n",
                                Key[t], def_int );
                else if ( def_flt != NULL_REAL )
-                  Aux_Message( stdout, "NOTE : parameter [%-25s] is set to the default value [%- 21.14e]\n",
+                  Aux_Message( stdout, "NOTE : parameter [%-30s] is set to the default value [%- 21.14e]\n",
                                Key[t], def_flt );
                else
-                  Aux_Message( stdout, "NOTE : parameter [%-25s] is set to the default value [%- 21s]\n",
+                  Aux_Message( stdout, "NOTE : parameter [%-30s] is set to the default value [%- 21s]\n",
                                Key[t], (char*)Ptr[t] );
             }
          }
