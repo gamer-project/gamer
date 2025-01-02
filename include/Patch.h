@@ -154,6 +154,10 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                      (and particles temporarily locate in this patch waiting for the velocity correction, see
 //                                      discussion above)
 //                                      --> for SERIAL only
+//                ParAttFlt_Copy      : Pointer arrays storing the float   data of NPar_Copy particles collected from other patches
+//                                      --> for LOAD_BALANCE only
+//                ParAttInt_Copy      : Pointer arrays storing the integer data of NPar_Copy particles collected from other patches
+//                                      --> for LOAD_BALANCE only
 //                ParAtt_Copy         : Pointer arrays storing the data of NPar_Copy particles collected from other patches
 //                                      --> for LOAD_BALANCE only
 //                NPar_Escp           : Number of particles escaping from this patch
@@ -242,7 +246,8 @@ struct patch_t
 
    int    NPar_Copy;
 #  ifdef LOAD_BALANCE
-   real_par  *ParAtt_Copy[PAR_NATT_TOTAL];
+   real_par  *ParAttFlt_Copy[PAR_NATT_FLT_TOTAL];
+   long_par  *ParAttInt_Copy[PAR_NATT_INT_TOTAL];
 #  else
    long      *ParList_Copy;
 #  endif
@@ -448,8 +453,8 @@ struct patch_t
 
       NPar_Copy    = -1;         // -1 : indicating that it has not been calculated yet
 #     ifdef LOAD_BALANCE
-      for (int v=0; v<PAR_NATT_TOTAL; v++)
-      ParAtt_Copy[v] = NULL;
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParAttFlt_Copy[v] = NULL;
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   ParAttInt_Copy[v] = NULL;
 #     else
       ParList_Copy = NULL;
 #     endif
@@ -496,8 +501,10 @@ struct patch_t
 #     ifdef DEBUG_PARTICLE
       if ( ParList != NULL )              Aux_Error( ERROR_INFO, "ParList != NULL !!\n" );
 #     ifdef LOAD_BALANCE
-      for (int v=0; v<PAR_NATT_TOTAL; v++)
-      if ( ParAtt_Copy[v] != NULL )       Aux_Error( ERROR_INFO, "ParAtt_Copy[%d] != NULL !!\n", v );
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
+      if ( ParAttFlt_Copy[v] != NULL )       Aux_Error( ERROR_INFO, "ParAttFlt_Copy[%d] != NULL !!\n", v );
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
+      if ( ParAttInt_Copy[v] != NULL )       Aux_Error( ERROR_INFO, "ParAttInt_Copy[%d] != NULL !!\n", v );
 #     else
       if ( ParList_Copy != NULL )         Aux_Error( ERROR_INFO, "ParList_Copy != NULL !!\n" );
 #     endif
@@ -883,11 +890,11 @@ struct patch_t
    //===================================================================================
 #  ifdef DEBUG_PARTICLE
    void AddParticle( const int NNew, const long *NewList, long *NPar_Lv,
-                     const real_par *ParType, const real_par **ParPos, const long NParTot,
+                     const long_par *ParType, const real_par **ParPos, const long NParTot,
                      const char *Comment )
 #  else
    void AddParticle( const int NNew, const long *NewList, long *NPar_Lv,
-                     const real_par *ParType )
+                     const long_par *ParType )
 #  endif
    {
 
@@ -940,7 +947,7 @@ struct patch_t
                        Comment, ParID, NParTot );
       }
 
-      if ( NPar_Lv == NULL)   Aux_Error( ERROR_INFO, "NPar_Lv == NULL !!\n" );
+      if ( NPar_Lv == NULL )   Aux_Error( ERROR_INFO, "NPar_Lv == NULL !!\n" );
 #     endif // #ifdef DEBUG_PARTICLE
 
 
@@ -997,7 +1004,7 @@ struct patch_t
    //===================================================================================
    void RemoveParticle( const int NRemove, const int *RemoveList,
                         long *NPar_Lv, const bool RemoveAll,
-                        const real_par *ParType )
+                        const long_par *ParType )
    {
 
 //    removing all particles is easy

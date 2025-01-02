@@ -58,7 +58,7 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
 #  ifdef PARTICLE
    yt_par_type par_type_list[1];
    par_type_list[0].par_type = "io";
-   par_type_list[0].num_attr = PAR_NATT_TOTAL;
+   par_type_list[0].num_attr = PAR_NATT_FLT_TOTAL;
 
    param_yt.num_par_types = 1;
    param_yt.par_type_list = par_type_list;

@@ -120,7 +120,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &CoMX_Total, doubl
 
    const real_par *Pos[3]           = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
    const real_par *Mass             = amr->Par->Mass;
-   const real_par *PType            = amr->Par->Type;
+   const long_par *PType            = amr->Par->Type;
 
    double Ep_ThisRank               = 0.0;
    double PrepPotTime, dh, _dh, Ep_Coeff;

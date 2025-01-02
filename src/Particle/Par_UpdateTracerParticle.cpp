@@ -52,7 +52,7 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
          real_par *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
          real_par *ParVel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
          real_par *ParTime   = amr->Par->Time;
-   const real_par *ParType   = amr->Par->Type;
+   const long_par *ParType   = amr->Par->Type;
 
 
 // get the maximum number of particles in a single patch

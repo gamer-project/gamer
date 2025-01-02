@@ -36,7 +36,7 @@ void Par_Output_TracerParticle_Mesh()
    const int        ParGhost          = amr->Par->GhostSizeTracer;
    const int        VarSize           = PS1 + 2*ParGhost;
    const real_par  *ParPos[3]         = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
-   const real_par  *ParType           = amr->Par->Type;
+   const long_par  *ParType           = amr->Par->Type;
    const long       ParListSize       = amr->Par->ParListSize;
    const int        ParAttrNum        = amr->Par->Mesh_Attr_Num;
    const long      *ParAttrIdx        = amr->Par->Mesh_Attr_Idx;
