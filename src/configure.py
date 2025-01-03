@@ -686,7 +686,7 @@ def load_arguments():
                        )
 
     parser.add_argument( "--rng", type=str, metavar="TYPE", gamer_name="RANDOM_NUMBER",
-                         default="RNG_GNU_EXT",
+                         default=None,
                          choices=["RNG_GNU_EXT", "RNG_CPP11"],
                          help="Select the random number generator (RNG_GNU_EXT: GNU extension drand48_r, RNG_CPP11: c++11 <random>).\nRNG_GNU_EXT may not be supported on some macOS.\nFor RNG_CPP11, add -std=c++11 to CXXFLAG in your config file.\n"
                        )
@@ -783,6 +783,10 @@ def set_conditional_defaults( args ):
 
     if args["barotropic"] is None:
         args["barotropic"] = (args["eos"] == "ISOTHERMAL")
+
+    if args["rng"] is None:
+       args["rng"] = "RNG_CPP11" if sys.platform == "darwin" else "RNG_GNU_EXT"
+
     return args
 
 def set_gpu( gpus, flags, args ):
