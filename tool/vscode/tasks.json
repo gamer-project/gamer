@@ -1,103 +1,58 @@
 {
     "tasks": [
         {
-            "label": "make-clean",
-            "type": "shell",
-            "command": "make",
-            "args": [
-                "clean"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/src"
-            },
-            "presentation": {
-                "showReuseMessage": false
-            },
-            "hide": true
-        },
-        {
-            "label": "extract-macros",
-            "type": "shell",
-            "command": "python3",
-            "args": [
-                "extract_macros.py"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/.vscode"
-            },
-            "presentation": {
-                "showReuseMessage": false
-            },
-            "hide": true
-        },
-        {
-            "label": "_build-GAMER",
-            "type": "shell",
-            "command": "make",
-            "args": [
-                "-j",
-                "8"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/src"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "presentation": {
-                "showReuseMessage": false
-            },
-            "hide": true
-        },
-        {
-            "label": "copy-exe",
-            "type": "shell",
-            "command": "cp ../gamer .",
-            "options": {
-                "cwd": "${workspaceFolder}/bin/GAMER_Working_SubDir/"
-            },
-            "hide": true
-        },
-        {
             "label": "build-GAMER",
             "type": "shell",
-            "dependsOn": [
-                "make-clean",
-                "extract-macros",
-                "_build-GAMER",
-                "copy-exe"
-            ],
-            "dependsOrder": "sequence",
+            "command": "sh build.sh",
             "group": {
                 "kind": "build",
                 "isDefault": true
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/.vscode"
             },
             "detail": "After you configure the Makefile, run this task to build the project."
         },
         {
             "label": "config-GAMER",
             "type": "shell",
-            "command": "cp ../bin/GAMER_Working_SubDir/generate_make.sh . && sh generate_make.sh",
+            "command": "sh config.sh",
             "options": {
-                "cwd": "${workspaceFolder}/src"
+                "cwd": "${workspaceFolder}/.vscode"
             },
-            "detail": "Run configure.py with generate_make.sh in the working directory."
+            "detail": "Run configure.py with generate_make.sh in the working directory.",
+            "problemMatcher": []
         },
         {
             "label": "clean-work-dir",
             "type": "shell",
+            "command": "sh clean_work_dir.sh",
+            "options": {
+                "cwd": "${workspaceFolder}/.vscode"
+            },
+            "detail": "Clean the working directory with clean.sh.",
+            "problemMatcher": []
+        },
+        {
+            "label": "set-working-bin",
+            "type": "shell",
             "command": "sh",
             "args": [
-                "clean.sh"
+                "set_bin_working.sh",
+                "${input:bin-working}"
             ],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            },
             "options": {
-                "cwd": "${workspaceFolder}/bin/GAMER_Working_SubDir/"
+                "cwd": "${workspaceFolder}/.vscode"
             },
-            "detail": "Clean the working directory with clean.sh."
+            "detail": "Choose the working directory for the binary files.",
+            "problemMatcher": []
+        }
+    ],
+    "inputs": [
+        {
+            "id": "bin-working",
+            "type": "promptString",
+            "description": "Enter the working directory under bin/."
         }
     ],
     "version": "2.0.0"
