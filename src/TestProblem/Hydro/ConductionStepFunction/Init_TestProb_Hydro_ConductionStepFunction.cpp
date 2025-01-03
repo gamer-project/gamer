@@ -6,6 +6,7 @@
 static double CSF_U1;               // internal energy in left region
 static double CSF_U2;               // internal energy in right region
 static double CSF_Rho;              // background mass density
+static int    CSF_Bdir;             // magnetic field direction (X=1/Y=2/Z=3)
 
 // =======================================================================================
 
@@ -95,7 +96,9 @@ void SetParameter()
    ReadPara->Add( "CSF_U1",              &CSF_U1,                1000.0,        Eps_double,       NoMax_double      );
    ReadPara->Add( "CSF_U2",              &CSF_U2,                2000.0,        Eps_double,       NoMax_double      );
    ReadPara->Add( "CSF_Rho",             &CSF_Rho,               1.0,           Eps_double,       NoMax_double      );
-
+#  ifdef MHD
+   ReadPara->Add( "CSF_Bdir",            &CSF_Bdir,              1,             1,                3                 );
+#  endif
    ReadPara->Read( FileName );
 
    delete ReadPara;
@@ -185,6 +188,41 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[ENGY] = Etot;
 
 } // FUNCTION : SetGridIC
+
+#ifdef MHD
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SetBFieldIC
+// Description :  Set the problem-specific initial condition of magnetic field
+//
+// Note        :  1. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+//                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
+//                   --> Please ensure that everything here is thread-safe
+//
+// Parameter   :  magnetic : Array to store the output magnetic field
+//                x/y/z    : Target physical coordinates
+//                Time     : Target physical time
+//                lv       : Target refinement level
+//                AuxArray : Auxiliary array
+//
+// Return      :  magnetic
+//-------------------------------------------------------------------------------------------------------
+void SetBFieldIC( real magnetic[], const double x, const double y, const double z, const double Time,
+                  const int lv, double AuxArray[] )
+{
+
+   magnetic[MAGX] = 0.0;
+   magnetic[MAGY] = 0.0;
+   magnetic[MAGZ] = 0.0;
+
+   switch ( CSF_Bdir )
+   {
+      case 1:  magnetic[MAGX] = 1.0;  break;
+      case 2:  magnetic[MAGY] = 1.0;  break;
+      case 3:  magnetic[MAGZ] = 1.0;  break;
+   }
+
+} // FUNCTION : SetBFieldIC
+#endif // #ifdef MHD
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -215,7 +253,9 @@ void Init_TestProb_Hydro_ConductionStepFunction()
 
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr = SetGridIC;
-
+#  ifdef MHD
+   Init_Function_BField_User_Ptr = SetBFieldIC;
+#  endif
 #  endif // #if ( MODEL == HYDRO )
 
 
