@@ -10,5 +10,10 @@ Please check the [wiki](https://github.com/gamer-project/gamer/wiki/Developing-w
 - `launch.json`: Contains the debug configuration for VS Code.
 - `tasks.json`: Contains the build configuration for VS Code.
 - `extract_macros.py`: Script to extract the macros from the `Makefile.log` to `c_cpp_properties.json`.
-- `copy_to_vscode.sh`: Script to copy the above files to `.vscode` directory and set up the working path.
+- `copy_to_vscode.sh`: Script to copy the above files to `.vscode` directory.
+- `bin_working`: File for storing the name of the working directory under `bin/`.
+- `set_bin_working.sh`: Script to set up the path of the input files and the executable.
+- `build.sh`: Script for the build task.
+- `clean_work_dir.sh`: Script for the clean task.
+- `config.sh`: Script for the configuration task.
 - `README.md`: This file.

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Change to the directory where the script is located
 cd "$(dirname "$0")"
@@ -15,10 +15,6 @@ if [ ! -d "$TARGET_DIR" ]; then
   mkdir -p "$TARGET_DIR"
   echo "Target directory $TARGET_DIR created."
 fi
-
-# Prompt the user for the working directory under bin
-echo "Enter the working directory under bin/: (e.g. shocktube)"
-read -r WORKING_DIR
 
 # Function to check if a file is in the exclude list
 is_excluded() {
@@ -52,6 +48,4 @@ for file in "$SOURCE_DIR"/*; do
     echo "$filename copied."
   fi
 
-  sed "s/GAMER_Working_SubDir/$WORKING_DIR/g" "$TARGET_DIR/$filename" > "$TARGET_DIR/$filename.tmp"
-  mv "$TARGET_DIR/$filename.tmp" "$TARGET_DIR/$filename"
 done

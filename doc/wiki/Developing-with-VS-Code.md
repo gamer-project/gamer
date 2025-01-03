@@ -29,9 +29,11 @@ Run the following script from the root directory of the GAMER project:
 ```bash
 sh tool/vscode/copy_to_vscode.sh
 ```
-This script copies the necessary configuration files to the `.vscode` directory, integrating GAMER with VS Code. This script will ask you to enter the working directory under `bin/` where the executables are located. These paths of working directories are located in the `launch.json` and `tasks.json` files.
+This script copies the necessary configuration files to the `.vscode` directory, integrating GAMER with VS Code.
 
 ## Developing with VS Code
+
+Before starting to run the tasks below, **set the working directory** by selecting `Terminal` > `Run Task...` > `set-working-bin` and entering the name of the working directory under `bin/` where the input files are located.
 
 ### Configure GAMER
 
@@ -46,7 +48,7 @@ After configuring GAMER with [configure.py](https://github.com/gamer-project/gam
 
 ### Start debugging
 
-To start debugging GAMER, select `Run` > `Start Debugging` or press `F5`. This will launch the debugger. See the [official documentation](https://code.visualstudio.com/docs/editor/debugging) to learn more about debugging with VS Code.
+To start debugging GAMER, select `Run` > `Start Debugging` or press `F5`. After enter the working directory, the debugger will be launched. See the [official documentation](https://code.visualstudio.com/docs/editor/debugging) to learn more about debugging with VS Code.
 
 > [!NOTE]  
 > If you are using macOS and `gdb` is not supported, then you need to setup `lldb` as the debugger in `launch.json` by yourself. You can refer to the [official documentation](https://code.visualstudio.com/docs/cpp/launch-json-reference) for more information.
