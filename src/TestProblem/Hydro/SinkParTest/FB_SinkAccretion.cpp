@@ -256,6 +256,16 @@ int FB_SinkAccretion( const int lv, const double TimeNew, const double TimeOld, 
          RemovalIdx[NRemove][1] = vji;
          RemovalIdx[NRemove][2] = vki;
 
+         // Debug
+         // if ( MPI_Rank == 0 )
+         // {
+         const char FileName[] = "Record__Debug";
+         FILE *File = fopen( FileName, "a" );
+         fprintf( File, "%d %d %d\n", vii, vji, vki);
+         fclose( File );
+         // }
+         // Debug
+
          NRemove ++;
       } // vii, vji, vki
 
