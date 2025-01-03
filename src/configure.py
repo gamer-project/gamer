@@ -957,6 +957,10 @@ def validation( paths, depends, constraints, **kwargs ):
         LOGGER.error("<--overlap_mpi> is not supported yet.")
         success = False
 
+    if kwargs["rng"] != "RNG_CPP11" and sys.platform == "darwin":
+        LOGGER.error("<--rng=RNG_CPP11> is required for macOS.")
+        success = False
+
     if not success: raise BaseException( "The above vaildation failed." )
     return
 
