@@ -968,6 +968,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                {
                   const int  PID_Failed      = PID0_List[TID] + LocalID[ijk_out[2]/PS1][ijk_out[1]/PS1][ijk_out[0]/PS1];
                   const bool CheckMinEint_No = false;
+                  const bool CheckMinPres_No = false;
                   real In[NCOMP_TOTAL], tmp[NCOMP_TOTAL];
 
                   char FileName[100];
@@ -1005,8 +1006,11 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                 endif
                   fprintf( File, "\n" );
 
-                  fprintf( File, "               (%14s, %14s, %14s, %14s, %14s, %14s",
-                           FieldLabel[DENS], FieldLabel[MOMX], FieldLabel[MOMY], FieldLabel[MOMZ], FieldLabel[ENGY], "Eint" );
+                  fprintf( File, "               (" );
+                  for (int v=0; v<NCOMP_TOTAL; v++)
+                  fprintf( File, "%14s, ", FieldLabel[v] );
+
+                  fprintf( File, "%14s, %14s", "Eint", "Pres" );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14s", FieldLabel[DUAL] );
 #                 endif
@@ -1015,26 +1019,46 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                 endif
                   fprintf( File, ")\n" );
 
-                  fprintf( File, "input        = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
-                           In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
+                  fprintf( File, "input        = (" );
+                  for (int v=0; v<NCOMP_TOTAL; v++)
+                  fprintf( File, "%14.7e, ", In[v] );
+
+                  fprintf( File, "%14.7e, %14.7e",
                            Hydro_Con2Eint( In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
                                            CheckMinEint_No, NULL_REAL, Emag_In,
                                            EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ) );
+                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ),
+                           Hydro_Con2Pres( In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY], In+NCOMP_FLUID,
+                                           CheckMinPres_No, NULL_REAL, Emag_In,
+                                           EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL ) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", In[DUAL] );
 #                 endif
 #                 ifdef MHD
                   fprintf( File, ", %14.7e", Emag_In );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGX][ IDX321_BX(idx_in_i  ,idx_in_j  ,idx_in_k  ,FLU_NXT,FLU_NXT) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGX][ IDX321_BX(idx_in_i+1,idx_in_j  ,idx_in_k  ,FLU_NXT,FLU_NXT) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGY][ IDX321_BY(idx_in_i  ,idx_in_j  ,idx_in_k  ,FLU_NXT,FLU_NXT) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGY][ IDX321_BY(idx_in_i  ,idx_in_j+1,idx_in_k  ,FLU_NXT,FLU_NXT) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGZ][ IDX321_BZ(idx_in_i  ,idx_in_j  ,idx_in_k  ,FLU_NXT,FLU_NXT) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGZ][ IDX321_BZ(idx_in_i  ,idx_in_j  ,idx_in_k+1,FLU_NXT,FLU_NXT) ] );
 #                 endif
                   fprintf( File, ")\n" );
 
-                  fprintf( File, "output (old) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
-                           Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
+                  fprintf( File, "output (old) = (" );
+                  for (int v=0; v<NCOMP_TOTAL; v++)
+                  fprintf( File, "%14.7e, ", Out[v] );
+
+                  fprintf( File, "%14.7e, %14.7e",
                            Hydro_Con2Eint( Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
-                                           CheckMinEint_No, NULL_REAL, Emag_Out, EoS_GuessHTilde_CPUPtr,
-                                           EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                           h_EoS_Table ) );
+                                           CheckMinEint_No, NULL_REAL, Emag_Out,
+                                           EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ),
+                           Hydro_Con2Pres( Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY], Out+NCOMP_FLUID,
+                                           CheckMinPres_No, NULL_REAL, Emag_Out,
+                                           EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL ) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", Out[DUAL] );
 #                 endif
@@ -1049,16 +1073,30 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                 endif
                   fprintf( File, ")\n" );
 
-                  fprintf( File, "output (new) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
-                           Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
-                           Hydro_Con2Eint(Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
-                                          CheckMinEint_No, NULL_REAL, Emag_Update, EoS_GuessHTilde_CPUPtr,
-                                          EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table) );
+                  fprintf( File, "output (new) = (" );
+                  for (int v=0; v<NCOMP_TOTAL; v++)
+                  fprintf( File, "%14.7e, ", Update[v] );
+
+                  fprintf( File, "%14.7e, %14.7e",
+                           Hydro_Con2Eint( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
+                                           CheckMinEint_No, NULL_REAL, Emag_Update,
+                                           EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ),
+                           Hydro_Con2Pres( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update+NCOMP_FLUID,
+                                           CheckMinPres_No, NULL_REAL, Emag_Update,
+                                           EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL ) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", Update[DUAL] );
 #                 endif
 #                 ifdef MHD
                   fprintf( File, ", %14.7e", Emag_Update );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGX][ IDX321_BX(ijk_out[0]  ,ijk_out[1]  ,ijk_out[2]  ,PS2,PS2) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGX][ IDX321_BX(ijk_out[0]+1,ijk_out[1]  ,ijk_out[2]  ,PS2,PS2) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGY][ IDX321_BY(ijk_out[0]  ,ijk_out[1]  ,ijk_out[2]  ,PS2,PS2) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGY][ IDX321_BY(ijk_out[0]  ,ijk_out[1]+1,ijk_out[2]  ,PS2,PS2) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGZ][ IDX321_BZ(ijk_out[0]  ,ijk_out[1]  ,ijk_out[2]  ,PS2,PS2) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGZ][ IDX321_BZ(ijk_out[0]  ,ijk_out[1]  ,ijk_out[2]+1,PS2,PS2) ] );
 #                 endif
                   fprintf( File, ")\n" );
 
