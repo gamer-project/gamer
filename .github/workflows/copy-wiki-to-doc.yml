@@ -1,0 +1,27 @@
+name: Copy wiki to doc
+
+on:
+  workflow_dispatch:
+
+env:
+  GIT_AUTHOR_NAME: ${{ github.actor }}
+  GIT_AUTHOR_EMAIL: ${{ secrets.MY_EMAIL }}
+
+jobs:
+  job-copy-wiki-to-doc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.TOKEN_FOR_WIKI }} # allows us to push back to repo
+          ref: ${{ github.ref_name }}
+      - name: Copy Wiki to Doc
+        uses: newrelic/wiki-sync-action@main
+        with:
+          source: wiki
+          destination: doc/wiki
+          token: ${{ secrets.TOKEN_FOR_WIKI }}
+          gitAuthorName: ${{ env.GIT_AUTHOR_NAME }}
+          gitAuthorEmail: ${{ env.GIT_AUTHOR_EMAIL }}
+          branch: ${{ github.ref_name }}

@@ -1,0 +1,27 @@
+name: Copy doc to wiki
+
+on:
+  workflow_dispatch:
+  pull_request_target:
+    types:
+      - closed
+
+env:
+  GIT_AUTHOR_NAME: ${{ github.actor }}
+  GIT_AUTHOR_EMAIL: ${{ secrets.MY_EMAIL }}
+
+jobs:
+  job-copy-doc-to-wiki:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - name: Copy doc to wiki
+        uses: newrelic/wiki-sync-action@main
+        with:
+          source: doc/wiki
+          destination: wiki
+          token: ${{ secrets.TOKEN_FOR_WIKI }}
+          gitAuthorName: ${{ env.GIT_AUTHOR_NAME }}
+          gitAuthorEmail: ${{ env.GIT_AUTHOR_EMAIL }}

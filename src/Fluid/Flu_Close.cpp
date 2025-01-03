@@ -125,7 +125,8 @@ void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
 
 
 // copy the updated data from output arrays to the corresponding patch pointers
-#  if ( FLU_NOUT != NCOMP_TOTAL )
+// --> for ELBDM, passive scalars are excluded for now and thus FLU_NOUT == NCOMP_FLUID in Macro.h
+#  if ( FLU_NOUT != NCOMP_TOTAL  &&  MODEL != ELBDM )
 #     error : ERROR : FLU_NOUT != NCOMP_TOTAL (one must specify how to copy data from h_Flu_Array_F_Out to fluid) !!
 #  endif
 
@@ -144,6 +145,11 @@ void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
          int I, J, K, KJI;
 
 //       fluid variables
+#        if ( MODEL == ELBDM  &&  ELBDM_SCHEME == ELBDM_HYBRID  &&  !defined(GAMER_DEBUG) )
+//       hybrid scheme in debug mode on fluid levels transfers 3 fields back from GPU: DENS, PHAS and STUB
+//       --> STUB contains information about the cells that were updated using a first-order scheme where the fluid scheme fails
+         if ( amr->use_wave_flag[lv] ) {
+#        endif
          for (int v=0; v<FLU_NOUT; v++)      {
          for (int k=0; k<PATCH_SIZE; k++)    {  K = Table_z + k;
          for (int j=0; j<PATCH_SIZE; j++)    {  J = Table_y + j;
@@ -154,6 +160,24 @@ void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
             amr->patch[SaveSg_Flu][lv][PID]->fluid[v][k][j][i] = h_Flu_Array_F_Out[TID][v][KJI];
 
          }}}}
+#        if ( MODEL == ELBDM  &&  ELBDM_SCHEME == ELBDM_HYBRID  &&  !defined(GAMER_DEBUG) )
+//       when not in debug mode, only the fields DENS and PHAS need to be transferred back from GPU on fluid levels
+//       --> the number of fields equals FLU_NIN and not FLU_NOUT in this case
+         } else {
+         for (int v=0; v<FLU_NIN; v++)       {
+         for (int k=0; k<PATCH_SIZE; k++)    {  K = Table_z + k;
+         for (int j=0; j<PATCH_SIZE; j++)    {  J = Table_y + j;
+         for (int i=0; i<PATCH_SIZE; i++)    {  I = Table_x + i;
+
+            KJI = IDX321( I, J, K, PS2, PS2 );
+            real (*smaller_h_Flu_Array_F_Out)[FLU_NIN][CUBE(PS2)] = (real (*)[FLU_NIN][CUBE(PS2)]) h_Flu_Array_F_Out;
+
+            amr->patch[SaveSg_Flu][lv][PID]->fluid[v][k][j][i] = smaller_h_Flu_Array_F_Out[TID][v][KJI];
+
+         }}}}
+         }
+#        endif
+
 
 //       dual-energy status
 #        ifdef DUAL_ENERGY
@@ -944,6 +968,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                {
                   const int  PID_Failed      = PID0_List[TID] + LocalID[ijk_out[2]/PS1][ijk_out[1]/PS1][ijk_out[0]/PS1];
                   const bool CheckMinEint_No = false;
+                  const bool CheckMinPres_No = false;
                   real In[NCOMP_TOTAL], tmp[NCOMP_TOTAL];
 
                   char FileName[100];
@@ -981,8 +1006,11 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                 endif
                   fprintf( File, "\n" );
 
-                  fprintf( File, "               (%14s, %14s, %14s, %14s, %14s, %14s",
-                           FieldLabel[DENS], FieldLabel[MOMX], FieldLabel[MOMY], FieldLabel[MOMZ], FieldLabel[ENGY], "Eint" );
+                  fprintf( File, "               (" );
+                  for (int v=0; v<NCOMP_TOTAL; v++)
+                  fprintf( File, "%14s, ", FieldLabel[v] );
+
+                  fprintf( File, "%14s, %14s", "Eint", "Pres" );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14s", FieldLabel[DUAL] );
 #                 endif
@@ -991,26 +1019,46 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                 endif
                   fprintf( File, ")\n" );
 
-                  fprintf( File, "input        = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
-                           In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
+                  fprintf( File, "input        = (" );
+                  for (int v=0; v<NCOMP_TOTAL; v++)
+                  fprintf( File, "%14.7e, ", In[v] );
+
+                  fprintf( File, "%14.7e, %14.7e",
                            Hydro_Con2Eint( In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
                                            CheckMinEint_No, NULL_REAL, Emag_In,
                                            EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ) );
+                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ),
+                           Hydro_Con2Pres( In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY], In+NCOMP_FLUID,
+                                           CheckMinPres_No, NULL_REAL, Emag_In,
+                                           EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL ) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", In[DUAL] );
 #                 endif
 #                 ifdef MHD
                   fprintf( File, ", %14.7e", Emag_In );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGX][ IDX321_BX(idx_in_i  ,idx_in_j  ,idx_in_k  ,FLU_NXT,FLU_NXT) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGX][ IDX321_BX(idx_in_i+1,idx_in_j  ,idx_in_k  ,FLU_NXT,FLU_NXT) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGY][ IDX321_BY(idx_in_i  ,idx_in_j  ,idx_in_k  ,FLU_NXT,FLU_NXT) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGY][ IDX321_BY(idx_in_i  ,idx_in_j+1,idx_in_k  ,FLU_NXT,FLU_NXT) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGZ][ IDX321_BZ(idx_in_i  ,idx_in_j  ,idx_in_k  ,FLU_NXT,FLU_NXT) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_In[TID][MAGZ][ IDX321_BZ(idx_in_i  ,idx_in_j  ,idx_in_k+1,FLU_NXT,FLU_NXT) ] );
 #                 endif
                   fprintf( File, ")\n" );
 
-                  fprintf( File, "output (old) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
-                           Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
+                  fprintf( File, "output (old) = (" );
+                  for (int v=0; v<NCOMP_TOTAL; v++)
+                  fprintf( File, "%14.7e, ", Out[v] );
+
+                  fprintf( File, "%14.7e, %14.7e",
                            Hydro_Con2Eint( Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
-                                           CheckMinEint_No, NULL_REAL, Emag_Out, EoS_GuessHTilde_CPUPtr,
-                                           EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                           h_EoS_Table ) );
+                                           CheckMinEint_No, NULL_REAL, Emag_Out,
+                                           EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ),
+                           Hydro_Con2Pres( Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY], Out+NCOMP_FLUID,
+                                           CheckMinPres_No, NULL_REAL, Emag_Out,
+                                           EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL ) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", Out[DUAL] );
 #                 endif
@@ -1025,16 +1073,30 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                 endif
                   fprintf( File, ")\n" );
 
-                  fprintf( File, "output (new) = (%14.7e, %14.7e, %14.7e, %14.7e, %14.7e, %14.7e",
-                           Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
-                           Hydro_Con2Eint(Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
-                                          CheckMinEint_No, NULL_REAL, Emag_Update, EoS_GuessHTilde_CPUPtr,
-                                          EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table) );
+                  fprintf( File, "output (new) = (" );
+                  for (int v=0; v<NCOMP_TOTAL; v++)
+                  fprintf( File, "%14.7e, ", Update[v] );
+
+                  fprintf( File, "%14.7e, %14.7e",
+                           Hydro_Con2Eint( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
+                                           CheckMinEint_No, NULL_REAL, Emag_Update,
+                                           EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ),
+                           Hydro_Con2Pres( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update+NCOMP_FLUID,
+                                           CheckMinPres_No, NULL_REAL, Emag_Update,
+                                           EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL ) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
                   fprintf( File, ", %14.7e", Update[DUAL] );
 #                 endif
 #                 ifdef MHD
                   fprintf( File, ", %14.7e", Emag_Update );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGX][ IDX321_BX(ijk_out[0]  ,ijk_out[1]  ,ijk_out[2]  ,PS2,PS2) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGX][ IDX321_BX(ijk_out[0]+1,ijk_out[1]  ,ijk_out[2]  ,PS2,PS2) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGY][ IDX321_BY(ijk_out[0]  ,ijk_out[1]  ,ijk_out[2]  ,PS2,PS2) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGY][ IDX321_BY(ijk_out[0]  ,ijk_out[1]+1,ijk_out[2]  ,PS2,PS2) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGZ][ IDX321_BZ(ijk_out[0]  ,ijk_out[1]  ,ijk_out[2]  ,PS2,PS2) ] );
+                  fprintf( File, ", %14.7e", h_Mag_Array_F_Out[TID][MAGZ][ IDX321_BZ(ijk_out[0]  ,ijk_out[1]  ,ijk_out[2]+1,PS2,PS2) ] );
 #                 endif
                   fprintf( File, ")\n" );
 

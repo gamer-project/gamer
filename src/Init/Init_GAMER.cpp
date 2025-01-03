@@ -7,7 +7,8 @@
 // Function    :  Init
 // Description :  Initialize GAMER
 //
-// Note        :  1. Function pointer "Init_User_Ptr" may be set by a test problem initializer
+// Note        :  1. Function pointers "Init_User_Ptr" and "Init_User_AfterPoisson_Ptr" may be set by a
+//                   test problem initializer
 //
 // Parameter   :  argc, argv: Command line arguments
 //-------------------------------------------------------------------------------------------------------
@@ -187,6 +188,12 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
+// initialize variables for dumping particle attributes mapped from mesh quantities
+#  ifdef PARTICLE
+   if ( OPT__OUTPUT_PAR_MESH )   Par_Init_Attribute_Mesh();
+#  endif
+
+
 // initialize particles
 #  ifdef PARTICLE
    switch ( amr->Par->Init )
@@ -217,7 +224,7 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif // #ifdef PARTICLE
 
 
-// initialize the AMR structure and fluid field
+// initialize the local AMR structure and grid fields
    switch ( OPT__INIT )
    {
       case INIT_BY_FUNCTION :    Init_ByFunction();   break;
@@ -230,6 +237,13 @@ void Init_GAMER( int *argc, char ***argv )
    }
 
 
+// initialize the global AMR structure if required
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   delete GlobalTree;   // in case it has been allocated already
+   GlobalTree = new LB_GlobalTree;
+#  endif
+
+
 // ensure B field consistency on the shared interfaces between sibling patches
 #  if ( MODEL == HYDRO  &&  defined MHD )
    if ( OPT__SAME_INTERFACE_B )
@@ -237,7 +251,7 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
-// user-defined initialization
+// user-defined initialization (before the Poisson solver)
    if ( Init_User_Ptr != NULL )  Init_User_Ptr();
 
 
@@ -278,7 +292,7 @@ void Init_GAMER( int *argc, char ***argv )
       } // for (int lv=0; lv<NLEVEL; lv++)
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Calculating gravitational potential" );
-   } // if ( OPT__SELF_GRAVITY_TYPE  ||  OPT__EXT_POT )
+   } // if ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT )
 #  endif // #ifdef GARVITY
 
 
@@ -310,6 +324,10 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif // #ifdef TRACER
 
 #  endif // #ifdef PARTICLE
+
+
+// user-defined initialization (after the Poisson solver)
+   if ( Init_User_AfterPoisson_Ptr != NULL )    Init_User_AfterPoisson_Ptr();
 
 
 // initialize source-term fields (e.g., cooling time)

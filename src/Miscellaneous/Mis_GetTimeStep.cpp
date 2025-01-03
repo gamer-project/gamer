@@ -68,8 +68,25 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
    sprintf( dTime_Name[NdTime++], "%s", "Hydro_CFL" );
 
 #  elif ( MODEL == ELBDM )
-   dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Fluid( lv );
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif
+      dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Fluid( lv );
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } else {
+      dTime[NdTime] = HUGE_NUMBER;
+   }
+#  endif
    sprintf( dTime_Name[NdTime++], "%s", "ELBDM_CFL" );
+
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+      dTime[NdTime] = HUGE_NUMBER;
+   } else {
+      dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Hybrid_CFL( lv );
+   }
+   sprintf( dTime_Name[NdTime++], "%s", "Hybrid_CFL" );
+#  endif
 
 #  else
 #  error : ERROR : unsupported MODEL !!
@@ -178,10 +195,10 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
    {
       dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Phase( lv );
       sprintf( dTime_Name[NdTime++], "%s", "ELBDM_Phase" );
-   }
 
-// when fluid is freezed, disable this criterion by resetting it to a huge value
-   if ( OPT__FREEZE_FLUID )   dTime[NdTime-1] = HUGE_NUMBER;
+//    when fluid is freezed, disable this criterion by resetting it to a huge value
+      if ( OPT__FREEZE_FLUID )   dTime[NdTime-1] = HUGE_NUMBER;
+   }
 #  endif
 
 
@@ -202,6 +219,19 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
    if ( UseAcc ) {
    dTime[NdTime] *= dTime_dt;
    sprintf( dTime_Name[NdTime++], "%s", "Par_Acc" ); }
+#  endif
+
+
+// 1.9 CRITERION NINE : maximum velocity dS/dx ##ELBDM PHASE SOLVER ONLY##
+// =============================================================================================================
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+      dTime[NdTime] = HUGE_NUMBER;
+   } else {
+      dTime[NdTime] = dTime_dt * ELBDM_GetTimeStep_Hybrid_Velocity( lv );
+   }
+
+   sprintf( dTime_Name[NdTime++], "%s", "Hybrid_Vel" );
 #  endif
 
 

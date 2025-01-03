@@ -27,7 +27,7 @@ Note:
        Ji-hoon Kim, et al., 2016, ApJ, 833, 202 (arXiv: 1610.03066)
 2. Other references:
        AGORA website           : https://sites.google.com/site/santacruzcomparisonproject/
-       AGORA initial condition : http://goo.gl/8JzbIJ
+       AGORA initial condition : https://goo.gl/8JzbIJ
        Enzo setup              : https://bitbucket.org/enzo/enzo-dev/src/19f4a44e06f1c386573dc77b3608ba66b64d93bc/run/Hydro/Hydro-3D/AgoraGalaxy/?at=week-of-code
        Goldbaum et al. 2016    : https://arxiv.org/abs/1605.00646
        yt hub                  : https://girder.hub.yt/#collection/5736481ddd9119000164acf1

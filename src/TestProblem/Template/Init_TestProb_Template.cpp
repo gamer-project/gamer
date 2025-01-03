@@ -280,6 +280,7 @@ void Init_TestProb_Template()
    Init_Field_User_Ptr               = NULL; // set NCOMP_PASSIVE_USER;               example: TestProblem/Hydro/Plummer/Init_TestProb_Hydro_Plummer.cpp --> AddNewField()
    Flag_Region_Ptr                   = NULL; // option: OPT__FLAG_REGION;             example: Refing/Flag_Region.cpp
    Flag_User_Ptr                     = NULL; // option: OPT__FLAG_USER;               example: Refine/Flag_User.cpp
+   Flag_UserWorkBeforeFlag_Ptr       = NULL; // option: none;                         example: Refine/Flag_UserWorkBeforeFlag.cpp
    Mis_GetTimeStep_User_Ptr          = NULL; // option: OPT__DT_USER;                 example: Miscellaneous/Mis_GetTimeStep_User.cpp
    Mis_UserWorkBeforeNextLevel_Ptr   = NULL; //                                       example: Miscellaneous/Mis_UserWorkBeforeNextLevel.cpp
    Mis_UserWorkBeforeNextSubstep_Ptr = NULL; //                                       example: Miscellaneous/Mis_UserWorkBeforeNextSubstep.cpp
@@ -293,6 +294,7 @@ void Init_TestProb_Template()
    Output_UserWorkBeforeOutput_Ptr   = NULL; // option: none;                         example: Output/Output_UserWorkBeforeOutput.cpp
    Aux_Record_User_Ptr               = NULL; // option: OPT__RECORD_USER;             example: Auxiliary/Aux_Record_User.cpp
    Init_User_Ptr                     = NULL; // option: none;                         example: none
+   Init_User_AfterPoisson_Ptr        = NULL; // option: none;                         example: none
    End_User_Ptr                      = NULL; // option: none;                         example: TestProblem/Hydro/ClusterMerger_vs_Flash/Init_TestProb_ClusterMerger_vs_Flash.cpp --> End_ClusterMerger()
 #  ifdef GRAVITY
    Init_ExtAcc_Ptr                   = NULL; // option: OPT__EXT_ACC;                 example: SelfGravity/CPU_Gravity/CPU_ExtAcc_PointMass.cpp
