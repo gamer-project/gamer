@@ -14,7 +14,7 @@ parallel scalability and supports a rich set of physics modules.
 * Chemistry and radiative processes with [GRACKLE](http://grackle.readthedocs.io/en/latest/index.html)
 * General equation of state
 * [Cosmic rays with anisotropic diffusion](https://iopscience.iop.org/article/10.3847/1538-4357/ad50c5#apjad50c5app2)
-* Fuzzy (Wave) dark matter: [Nature Physics paper](http://www.nature.com/nphys/journal/v10/n7/covers/index.html), [code paper](https://arxiv.org/abs/2411.17288) 
+* Fuzzy (Wave) dark matter: [Nature Physics paper](http://www.nature.com/nphys/journal/v10/n7/covers/index.html), [code paper](https://arxiv.org/abs/2411.17288)
 
 ### Other Features
 * Adaptive mesh refinement

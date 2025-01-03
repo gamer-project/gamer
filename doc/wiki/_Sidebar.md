@@ -11,6 +11,7 @@
    * [[ Option List | Installation:-Option-List ]]
 * [[ Running the Code | Running-the-Code ]]
 * [[ Adding New Simulations | Adding-New-Simulations ]]
+   * [[ Initial Conditions | Initial-Conditions]]
 * [[ Runtime Parameters | Runtime-Parameters ]]
 * [[ MPI and OpenMP | MPI-and-OpenMP ]]
 * [[ GPU | GPU ]]
