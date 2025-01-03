@@ -72,6 +72,11 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 #     error : ERROR : HLLD_WAVESPEED only supports HLL_WAVESPEED_DAVIS !!
 #  endif
 
+   if ( OPT__FREEZE_HYDRO ) 
+   {
+      for (int v=0; v<NCOMP_TOTAL; v++)   Flux_Out[v] = 0.0;
+      return;
+   }
 
    const real MaxErr2         = SQR(MAX_ERROR);
    const real ZERO            = (real)0.0;

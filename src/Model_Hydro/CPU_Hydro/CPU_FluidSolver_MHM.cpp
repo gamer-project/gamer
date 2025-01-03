@@ -524,9 +524,8 @@ void CPU_FluidSolver_MHM(
 
 //       1-a-2. evaluate the half-step first-order fluxes by Riemann solver
 //       hydrodynamic fluxes
-         if ( ! OPT__FREEZE_HYDRO )
-            Hydro_RiemannPredict_Flux( g_Flu_Array_In[P], g_Flux_Half_1PG, g_Mag_Array_In[P], g_PriVar_1PG+MAG_OFFSET,
-                                       MinDens, MinPres, &EoS );
+         Hydro_RiemannPredict_Flux( g_Flu_Array_In[P], g_Flux_Half_1PG, g_Mag_Array_In[P], g_PriVar_1PG+MAG_OFFSET,
+                                    MinDens, MinPres, &EoS );
 
 //       add cosmic-ray fluxes
 #        ifdef CR_DIFFUSION
@@ -626,11 +625,10 @@ void CPU_FluidSolver_MHM(
 //          2. evaluate the full-step fluxes
 
 //          hydrodynamic fluxes
-            if ( ! OPT__FREEZE_HYDRO )
-               Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, NSkip_N, NSkip_T,
-                                  CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P],
-                                  dt, dh, Time, UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray,
-                                  MinDens, MinPres, &EoS );
+            Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, NSkip_N, NSkip_T,
+                               CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P],
+                               dt, dh, Time, UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray,
+                               MinDens, MinPres, &EoS );
 
 #           if ( defined VISCOSITY ) || ( defined CONDUCTION )
             // Need to compute temperature for thermal conduction and viscosity

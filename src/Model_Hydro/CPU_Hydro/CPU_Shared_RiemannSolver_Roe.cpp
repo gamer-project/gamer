@@ -98,6 +98,12 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
            __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
+   if ( OPT__FREEZE_HYDRO ) 
+   {
+      for (int v=0; v<NCOMP_TOTAL; v++)   Flux_Out[v] = 0.0;
+      return;
+   }
+
 
 // 1. reorder the input variables for different spatial directions
    real L[NCOMP_TOTAL_PLUS_MAG], R[NCOMP_TOTAL_PLUS_MAG];
