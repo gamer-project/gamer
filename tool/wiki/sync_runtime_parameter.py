@@ -159,3 +159,13 @@ with open( OUT_MD, 'w' ) as f:
         for i in range(params[key].NAdd):
             string = param_str_format%(params[key].link_name, params[key].default[i], params[key].minimum[i], params[key].maximum[i], params[key].description)
             f.write( string )
+
+    f.write( '\n' )
+    f.write( '\n' )
+    f.write( '## Remarks\n' )
+    f.write( '\n' )
+    f.write( '\n' )
+    f.write( '<br>\n' )
+    f.write( '\n' )
+    f.write( '## Links\n' )
+    f.write( '* [[Main page of Runtime Parameters | Runtime Parameters]]\n' )
