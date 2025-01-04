@@ -84,12 +84,12 @@ sequenceDiagram
 
    [[images/CreateSecret.png]]
 
-   * Click `New repository secret`, and then you will see the following. Please replace `<your_personal_access_token>` with the token generated in the previous step under `Secret` and make sure the `Name` of the secret is `TOKEN_FOR_WIKI`.
+   * Click `New repository secret`, and then you will see the following. Please replace `<your_personal_access_token>` with the token generated in the previous step under `Secret` and make sure the `Name` of the secret is `TOKEN_FOR_WIKI`. Click `Add secret`.
 
    [[images/SetToken.png]]
 
    * Click `New repository secret`. Please replace `<your_email_address>` with your account's email address under `Secret` and make sure the `Name` of the secret is `MY_EMAIL`. Click `Add secret`.
-      - NOTE: Your email address will remain private since it only exists in your repository. This step is only for recording your contribution by the action.
+      - NOTE: Your email address will remain private since it only exists in your repository. This step is only for recording your contribution by the action. 
 
    [[images/SetMail.png]]
 
