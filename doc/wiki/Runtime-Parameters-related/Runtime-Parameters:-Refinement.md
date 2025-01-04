@@ -5,7 +5,7 @@ It only takes three steps to enable AMR:
 * Set [MAX_LEVEL](#MAX_LEVEL)
 * Turn on at least one of the refinement criteria `OPT__FLAG_*`
 * Edit the corresponding input file(s)
-[[Input__Flag_* | Runtime-Parameters#input__flag_]]
+[[Input__Flag_* | Runtime-Parameters:-Input__Flag_*]]
 to specify the refinement thresholds
 
 See the descriptions of various refinement criteria `OPT__FLAG_*`
@@ -138,7 +138,7 @@ bound of `MAX_LEVEL`.
     * **Description:**
 Refinement criterion: gas mass density. Specify the refinement thresholds
 on different levels in the input file `Input__Flag_Rho` with the
-[[specific format | Runtime Parameters#input__flag_]].
+[[specific format | Runtime-Parameters:-Input__Flag_*]].
 An example file can be found at `example/input/Input__Flag_Rho8`
 (must rename it as `Input__Flag_Rho` to actually use it).
 By setting the density threshold ratio between adjacent
@@ -159,7 +159,7 @@ width along &xi; on level <var>l</var>, and &eta;<sub>l</sub> is the
 refinement threshold on level <var>l</var>.
 Specify the refinement thresholds on different levels in the input
 file `Input__Flag_RhoGradient` with the
-[[specific format | Runtime Parameters#input__flag_]].
+[[specific format | Runtime-Parameters:-Input__Flag_*]].
 An example file can be found at `example/input/Input__Flag_RhoGradient`.
     * **Restriction:**
 
@@ -170,7 +170,7 @@ Refinement criterion: gas pressure gradient. See
 [OPT__FLAG_RHO_GRADIENT](#OPT__FLAG_RHO_GRADIENT) for the definition
 of normalized slope. Specify the refinement thresholds on different
 levels in the input file `Input__Flag_PresGradient` with the
-[[specific format | Runtime Parameters#input__flag_]].
+[[specific format | Runtime-Parameters:-Input__Flag_*]].
 An example file can be found at `example/input/Input__Flag_PresGradient`.
     * **Restriction:**
 
@@ -181,7 +181,7 @@ Refinement criterion: Lorentz factor gradient. See
 [OPT__FLAG_RHO_GRADIENT](#OPT__FLAG_RHO_GRADIENT) for the definition
 of normalized slope. Specify the refinement thresholds on different
 levels in the input file `Input__Flag_LrtzGradient` with the
-[[specific format | Runtime Parameters#input__flag_]].
+[[specific format | Runtime-Parameters:-Input__Flag_*]].
 An example file can be found at `example/input/Input__Flag_LrtzGradient`.
     * **Restriction:**
 Must compile with [[--srhd | Installation:-Option-List#--srhd]].
@@ -197,7 +197,7 @@ where <var>v</var> is gas velocity, &Delta;&xi;<sub>l</sub> is the cell
 width along &xi; on level <var>l</var>, and &eta;<sub>l</sub> is the
 refinement threshold on level <var>l</var>. Specify the refinement
 thresholds on different levels in the input file `Input__Flag_Vorticity`
-with the [[specific format | Runtime Parameters#input__flag_]].
+with the [[specific format | Runtime-Parameters:-Input__Flag_*]].
 An example file can be found at `example/input/Input__Flag_Vorticity`.
     * **Restriction:**
 
@@ -212,7 +212,7 @@ Jeans length &lambda;<sub>J</sub> satisfies
 where &gamma; is adiabatic index ([[GAMMA | Runtime-Parameters:-Hydro#GAMMA]]), <var>P</var> is gas pressure, &rho; is gas mass density, <var>G</var> is gravitational constant, &Delta;&xi;<sub>l</sub> is the cell width along &xi; on level <var>l</var>, and <var>N</var><sub>l</sub> is the refinement threshold on level <var>l</var>.
 Specify the refinement
 thresholds on different levels in the input file `Input__Flag_Jeans`
-with the [[specific format | Runtime Parameters#input__flag_]].
+with the [[specific format | Runtime-Parameters:-Input__Flag_*]].
 An example file can be found at `example/input/Input__Flag_Jeans`.
 Recommended values: &#8805;4.
     * **Restriction:**
@@ -228,7 +228,7 @@ where <var>B</var> is the magnetic field, &Delta;&xi;<sub>l</sub> is the cell
 width along &xi; on level <var>l</var>, and &eta;<sub>l</sub> is the
 refinement threshold on level <var>l</var>. Specify the refinement
 thresholds on different levels in the input file `Input__Flag_Current`
-with the [[specific format | Runtime Parameters#input__flag_]].
+with the [[specific format | Runtime-Parameters:-Input__Flag_*]].
 An example file can be found at `example/input/Input__Flag_Current`.
     * **Restriction:**
 Must compile with [[--mhd | Installation:-Option-List#--mhd]].
@@ -238,7 +238,7 @@ Must compile with [[--mhd | Installation:-Option-List#--mhd]].
     * **Description:**
 Refinement criterion: cosmic-ray energy density. Specify the refinement
 thresholds on different levels in the input file `Input__Flag_CRay`
-with the [[specific format | Runtime Parameters#input__flag_]].
+with the [[specific format | Runtime-Parameters:-Input__Flag_*]].
 An example file can be found at `example/input/Input__Flag_CRay`.
     * **Restriction:**
 Must compile with [[--cosmic_ray | Installation:-Option-List#--cosmic_ray]].
@@ -305,7 +305,7 @@ derivatives, respectively.
 
         Specify the refinement thresholds on different levels in the input
 file `Input__Flag_Lohner` with the
-[[specific format | Runtime Parameters#input__flag_]].
+[[specific format | Runtime-Parameters:-Input__Flag_*]].
 An example file can be found at `example/input/Input__Flag_Lohner__FLASH2`
 (must rename it as `Input__Flag_Lohner` to actually use it).
 
@@ -343,7 +343,7 @@ or a problem-specific function (for the latter, see
 [[Add Problem Specific Functionalities | Adding-New-Simulations#vi-add-problem-specific-functionalities]]).
 Specify the refinement thresholds on different levels in the input file
 `Input__Flag_User` with the
-[[specific format | Runtime Parameters#input__flag_]].
+[[specific format | Runtime-Parameters:-Input__Flag_*]].
 An example file can be found at `example/input/Input__Flag_User`.
 See also [OPT__FLAG_USER_NUM](#OPT__FLAG_USER_NUM).
     * **Restriction:**
@@ -372,7 +372,7 @@ given threshold are flagged for refinement. For `OPT__FLAG_NPAR_PATCH=2`,
 not only patches with excessive numbers of particles but also their 26
 siblings are flagged for refinement. Specify the refinement thresholds
 on different levels in the input file `Input__Flag_NParPatch` with the
-[[specific format | Runtime Parameters#input__flag_]].
+[[specific format | Runtime-Parameters:-Input__Flag_*]].
 An example file can be found at `example/input/Input__Flag_NParPatch`.
 Note that the flag buffers (i.e.,
 [FLAG_BUFFER_SIZE](#FLAG_BUFFER_SIZE),
@@ -387,7 +387,7 @@ Currently always includes tracer particles.
     * **Description:**
 Refinement criterion: number of particles in a cell.
 Specify the refinement thresholds on different levels in the input file
-`Input__Flag_NParCell` with the [[specific format | Runtime Parameters#input__flag_]].
+`Input__Flag_NParCell` with the [[specific format | Runtime-Parameters:-Input__Flag_*]].
 An example file can be found at `example/input/Input__Flag_NParCell`.
     * **Restriction:**
 Currently always excludes tracer particles.
@@ -397,7 +397,7 @@ Currently always excludes tracer particles.
     * **Description:**
 Refinement criterion: total particle mass in a cell.
 Specify the refinement thresholds on different levels in the input file
-`Input__Flag_ParMassCell` with the [[specific format | Runtime Parameters#input__flag_]].
+`Input__Flag_ParMassCell` with the [[specific format | Runtime-Parameters:-Input__Flag_*]].
 An example file can be found at `example/input/Input__Flag_ParMassCell`.
     * **Restriction:**
 
@@ -439,7 +439,7 @@ is enabled.
     * **Description:**
 Preallocate patches as a memory pool to reduce memory fragmentation.
 One must specify the numbers of patches to be preallocated in the
-input file [[Input__MemoryPool | Runtime Parameters#input__memorypool]]
+input file [[Input__MemoryPool | Runtime-Parameters:-Input__MemoryPool]]
 (check the link for details).
     * **Restriction:**
 Only applicable when adopting [OPT__REUSE_MEMORY](#OPT__REUSE_MEMORY)=1/2.

@@ -193,7 +193,7 @@ during the runtime.
     ```
 
 4. Add these parameters to the input file `Input__TestProb`
-(see [[Input__TestProb | Runtime-Parameters#input__testprob]]
+(see [[Input__TestProb | Runtime-Parameters:-Input__TestProb]]
 for the file format).
 This file must be put in the same directory as the executable `gamer`
 when running the code.

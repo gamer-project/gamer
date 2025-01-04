@@ -22,7 +22,7 @@ Other related parameters: none
 Typically, the simulation output interval is controlled by
 [[OUTPUT_STEP | Runtime-Parameters:-Outputs#OUTPUT_STEP]],
 [[OUTPUT_DT | Runtime-Parameters:-Outputs#OUTPUT_DT]], or the timetable
-[[Input__DumpTable | Runtime Parameters#input__dumptable]]
+[[Input__DumpTable | Runtime-Parameters:-Input__DumpTable]]
 depending on
 [[OPT__OUTPUT_MODE | Runtime-Parameters:-Outputs#OPT__OUTPUT_MODE]].
 One can also enforce output by creating a file named

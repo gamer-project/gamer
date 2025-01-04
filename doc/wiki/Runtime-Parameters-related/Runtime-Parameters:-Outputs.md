@@ -209,7 +209,7 @@ For [[--srhd | Installation:-Option-List#--srhd]] only.
 Choose the data output frequency.
         * `1`: Every [OUTPUT_STEP](#OUTPUT_STEP) root-level step
         * `2`: Every [OUTPUT_DT](#OUTPUT_DT) time interval
-        * `3`: According to the dump timetable [[Input__DumpTable | Runtime-Parameters#input__dumptable]]
+        * `3`: According to the dump timetable [[Input__DumpTable | Runtime-Parameters:-Input__DumpTable]]
     * **Restriction:**
 Must enable at least one of the output options
 [OPT__OUTPUT_TOTAL](#OPT__OUTPUT_TOTAL),

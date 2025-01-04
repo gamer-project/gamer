@@ -162,7 +162,7 @@ make -j4
 2\. Set the number of OpenMP threads by editing the runtime parameter
 [[OMP_NTHREAD | Runtime-Parameters:-MPI-and-OpenMP#OMP_NTHREAD]]
 in the input file
-[[Input__Parameter | Runtime-Parameters#input__parameter]].
+[[Input__Parameter | Runtime-Parameters:-Input__Parameter]].
 The following example uses 4 threads.
 ```
 OMP_NTHREAD      4      # number of OpenMP threads (<=0=auto) [-1]

@@ -15,7 +15,16 @@
 * [[ Running the Code | Running-the-Code ]]
 * [[ Adding New Simulations | Adding-New-Simulations ]]
    * [[ Initial Conditions | Initial-Conditions]]
-* [[ Runtime Parameters | Runtime-Parameters ]]
+* <details>
+  <summary>[[ Runtime Parameters | Runtime-Parameters ]]</summary>
+
+  * [[Input__Parameter | Runtime-Parameters:-Input__Parameter]]
+  * [[Input__TestProb | Runtime-Parameters:-Input__TestProb]]
+  * [[Input__Flag_* | Runtime-Parameters:-Input__Flag_*]]
+  * [[Input__DumpTable | Runtime-Parameters:-Input__DumpTable]]
+  * [[Input__MemoryPool | Runtime-Parameters:-Input__MemoryPool]]
+  * [[Input__Note | Running-the-Code#taking-notes]]
+  </details>
 * [[ MPI and OpenMP | MPI-and-OpenMP ]]
 * [[ GPU | GPU ]]
 * <details open>
