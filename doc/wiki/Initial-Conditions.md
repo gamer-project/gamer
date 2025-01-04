@@ -307,9 +307,9 @@ directions, respectively. Since `UM_IC` should store the initial condition of
 a uniform mesh corresponding to level [[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LEVEL]],
 one must ensure that
 
-* `NX`=[[NX0_TOT_X | Runtime-Parameters:-General#NX0_TOT_X]]*2^[OPT__UM_IC_LEVEL](#OPT__UM_IC_LEVEL)
-* `NY`=[[NX0_TOT_Y | Runtime-Parameters:-General#NX0_TOT_Y]]*2^[OPT__UM_IC_LEVEL](#OPT__UM_IC_LEVEL)
-* `NZ`=[[NX0_TOT_Z | Runtime-Parameters:-General#NX0_TOT_Z]]*2^[OPT__UM_IC_LEVEL](#OPT__UM_IC_LEVEL)
+* `NX`=[[NX0_TOT_X | Runtime-Parameters:-General#NX0_TOT_X]]*2^[[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LEVEL]]
+* `NY`=[[NX0_TOT_Y | Runtime-Parameters:-General#NX0_TOT_Y]]*2^[[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LEVEL]]
+* `NZ`=[[NX0_TOT_Z | Runtime-Parameters:-General#NX0_TOT_Z]]*2^[[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LEVEL]]
 
 For example, for `NX0_TOT_X=16`, `NX0_TOT_Y=32`, `NX0_TOT_Z=48`, `OPT__UM_IC_LEVEL=1`, and
 `NCOMP_PASSIVE_USER=0`, `UM_IC` should have the dimension
@@ -460,7 +460,7 @@ Related options:
 
 
 ## Runtime Parameters
-[[ Runtime-Parameters:-Initial-Conditions ]]
+[[Runtime parameters: Initial Conditions | Runtime-Parameters:-Initial-Conditions]]
 
 Other related parameters:
 [[PAR_INIT | Runtime-Parameters:-Particles#PAR_INIT]], &nbsp;

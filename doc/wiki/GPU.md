@@ -21,7 +21,7 @@ Related options:
 
 
 ## Runtime Parameters
-[[Runtime-Parameters:-GPU]]
+[[Runtime parameters: GPU | Runtime-Parameters:-GPU]]
 
 Other related parameters: none
 
@@ -97,7 +97,7 @@ Please also consult your system documentation.
 * `OPT__GPUID_SELECT >= 0`: simply set GPU ID to `OPT__GPUID_SELECT`.
 Valid inputs are 0 to <var>N</var><sub>GPU</sub>-1.
 
-See also [[Hybrid MPI/OpenMP/GPU | Runtime-Parameters:-MPI-and-OpenMP#hybrid-mpiopenmpgpu]].
+See also [[Hybrid MPI/OpenMP/GPU | MPI-and-OpenMP#hybrid-mpiopenmpgpu]].
 
 To validate the ID and configuration of the GPU adopted by each
 MPI process, search for the keyword "Device Diagnosis" in the log file

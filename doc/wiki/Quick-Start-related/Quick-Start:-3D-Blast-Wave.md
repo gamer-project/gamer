@@ -70,7 +70,7 @@ OMP_NTHREAD      10      # number of OpenMP threads (<=0=auto) [-1]
 ```
 
 > [!IMPORTANT]
-> See [[Hybrid MPI/OpenMP/GPU | Runtime-Parameters:-MPI-and-OpenMP#hybrid-mpiopenmpgpu]]
+> See [[Hybrid MPI/OpenMP/GPU | MPI-and-OpenMP#hybrid-mpiopenmpgpu]]
 for the recommended configuration of the number of MPI processes and OpenMP threads.
 
 6\. Run the code with MPI (e.g., `mpirun, mpiexec, aprun`).

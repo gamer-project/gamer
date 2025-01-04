@@ -77,7 +77,6 @@ The default value is
 5+[[--passive | Installation:-Option-List#--passive]]
 for [[--model | Installation:-Option-List#--model]]=HYDRO.
 See [[Setting IC from Files &#8212; Grids | Initial-Conditions#IC-File-Grids]] for details.
-See [Setting IC from Files &#8212; Grids](#IC-File-Grids) for details.
     * **Restriction:**
 
 <a name="OPT__UM_IC_FORMAT"></a>
@@ -98,7 +97,7 @@ Floating-point precision of the uniform-mesh initial condition file.
     * **Description:**
 Downgrade (i.e. derefine) the uniform-mesh initial condition data for cells
 not satisfying any refinement criteria.
-See [[Setting IC from Files &#8212; Grids | Initial-Conditions#IC-File-Grids] for details.
+See [[Setting IC from Files &#8212; Grids | Initial-Conditions#IC-File-Grids]] for details.
     * **Restriction:**
 
 <a name="OPT__UM_IC_REFINE"></a>
@@ -107,7 +106,7 @@ See [[Setting IC from Files &#8212; Grids | Initial-Conditions#IC-File-Grids] fo
 Refine the uniform-mesh initial condition data from level `OPT__UM_IC_LEVEL` to
 [[MAX_LEVEL | Runtime Parameters:-Refinement#MAX_LEVEL]] for cells satisfying the adopted
 refinement criteria.
-See [[Setting IC from Files &#8212; Grids | #IC-File-Grids]] for details.
+See [[Setting IC from Files &#8212; Grids | Initial-Conditions#IC-File-Grids]] for details.
     * **Restriction:**
 
 <a name="OPT__UM_IC_LOAD_NRANK"></a>

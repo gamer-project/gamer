@@ -1,18 +1,18 @@
-We are glad you have something new to contribute to GAMER, and you would like to teach people how to use it!
+We are glad you have something new to contribute to GAMER and are willing to teach others how to use it!
 
-Before getting started, I recommend you have some basic knowledge of [repository, branch, fork](https://docs.github.com/en/repositories/creating-and-managing-repositories/about-repositories), [action](https://docs.github.com/en/actions), and [workflow](https://docs.github.com/en/actions/using-workflows).
+Before getting started, it’s recommended that you familiarize yourself with the basics of [repository, branch, fork](https://docs.github.com/en/repositories/creating-and-managing-repositories/about-repositories), [action](https://docs.github.com/en/actions), and [workflow](https://docs.github.com/en/actions/using-workflows).
 
 The followings are the outline of this document:
 * [Introduction](#Introduction)
 * [Setup](#Setup)
 * [Edit Wiki](#Edit-Wiki)
-* [Contribute](#Contribute)
+* [Pull request](#Pull-request)
 * [Reference](#Reference)
 
 ## Introduction
-In the following document, the Wiki stands for the Wiki page on the GitHub website, and the doc stands for the markdown files under `docs/wiki`. Remember the doc and the Wiki are NOT always synchronized, you will have to use the action to copy either from doc to Wiki or from Wiki to doc.
+In this document, "Wiki" refers to the Wiki page on the GitHub website, and "doc" stands for the markdown files located under `gamer/doc/wiki`. Note that doc and Wiki are NOT always synchronized. You will need to use the action to copy content either from doc to Wiki or from Wiki to doc.
 
-Here is the squence diagram of wiki contribition. You can select any one of these three method to edit wiki. See [Edit Wiki](#Edit-Wiki).
+Here is the squence diagram for Wiki contribitions. You can select any of these three method to edit Wiki. See [Edit Wiki](#Edit-Wiki) for details.
 
 ```mermaid
 sequenceDiagram
@@ -47,7 +47,7 @@ sequenceDiagram
     Note over doc,local: 3. On the local terminal
     end
     doc->>local: Clone
-    Note over local: Edit the code on the local terminal
+    Note over local: Edit content using the local terminal
     local->>doc: Push
     doc->>Wiki: Copy doc to Wiki
     Note over Wiki: Preview
@@ -68,8 +68,8 @@ sequenceDiagram
    [[images/CreateWiki.png]]
 
 1. **Create a token for the action**
-   * Go to `Setting` of your account > `Developer setting` > `Personal access tokens` > `Generate new token`
-      - NOTE: We use the `Tokens(classic)` in this example.
+   * Go to `Setting` of your account > `Developer settings` > `Personal access tokens` > `Generate new token (classic)`
+      - NOTE: We use the `Tokens (classic)` in this example.
    * Please check the `repo` and the `workflow` options.
       - NOTE: You can set the `Note` of this token freely
    * You might want to set the `Expiration` to `No expiration`.
@@ -80,16 +80,16 @@ sequenceDiagram
    * Remember to save the token since it will only be shown once!
 
 1. **Create the repository secret token and email**
-   * Go to `Setting` of your forked gamer repository > `Security` > `Secrets and variables` > `Actions` > `Repository secrets`
+   * Go to `Settings` of your forked gamer repository > `Security` > `Secrets and variables` > `Actions` > `Repository secrets`
 
    [[images/CreateSecret.png]]
 
-   * Click `New repository secrets`, and then you will see the following. Please replace `<your_personal_access_token>` with the token generated in the previous step at `Secret` and make sure the `Name` of the secret is `TOKEN_FOR_WIKI`.
+   * Click `New repository secret`, and then you will see the following. Please replace `<your_personal_access_token>` with the token generated in the previous step under `Secret` and make sure the `Name` of the secret is `TOKEN_FOR_WIKI`.
 
    [[images/SetToken.png]]
 
-   * Click `New repository secrets`. Please replace `<your_email_address>` with your account email address at `Secret` and make sure the `Name` of the secret is `MY_EMAIL`.
-      - NOTE: We will not know your address since it only exists in your repository. This step is only for recording your contribution by the action.
+   * Click `New repository secret`. Please replace `<your_email_address>` with your account's email address under `Secret` and make sure the `Name` of the secret is `MY_EMAIL`. Click `Add secret`.
+      - NOTE: Your email address will remain private since it only exists in your repository. This step is only for recording your contribution by the action.
 
    [[images/SetMail.png]]
 
@@ -97,62 +97,65 @@ sequenceDiagram
    * Click `Actions` > click the green button.
    ![image](https://github.com/ChunYen-Chen/CheckNode/assets/70311975/9e58d4a8-3248-4ceb-81ff-276a6943149d)
 
-1. **Initialize wiki**
-   * Click `Action` > `Workflows` > `Copy doc to wiki` > `Run workflow` > choose `Branch: main` > Click green `Run workflow`. Once the workflow is done, the wiki is also updated to the `main` branch version.
+1. **Initialize Wiki**
+   * Click `Actions` > `Copy doc to wiki` > `Run workflow` > Choose `Branch: main` > Click `Run workflow`. Once the workflow is complete, the Wiki will be updated to match `gamer/doc/wiki` on the `main` branch.
 
    [[images/InitializeWiki.png]]
 
 ## Edit Wiki
-We provide three examples of editing the wiki pages: through `gollum` (recommended), from the GitHub website, and on the local terminal. In the following examples, we call the new branch you would like to contribute as `new_contribution_branch`.
+We provide three methods for editing the Wiki pages: through `gollum` (recommended), directly on the GitHub website, or via the local terminal. In the following examples, the new branch you would like to contribute to is referred to as `new_contribution_branch`.
 
 1. **Through `gollum` (recommended)**
    - Install [gollum](https://github.com/gollum/gollum).
-   - Click `Action` > `Workflows` > `Copy doc to wiki` > `Run workflow` > choose `new_contribution_branch` branch > Click green `Run workflow`. Once the workflow is done, Wiki is also updated to the `new_contribution_branch` branch version.
+   - Click `Actions` > `Copy doc to wiki` > `Run workflow` > Choose `Branch: new_contribution_branch` > Click `Run workflow`. Once the workflow is complete, the Wiki will be updated to match `gamer/doc/wiki` on the `new_contribution_branch` branch.
    - Clone your forked Wiki git. You may find the Wiki URL at the bottom right of the Wiki page.
 
      [[images/WikiGitLocation.png]]
 
    - Edit by `gollum`.
-     * NOTE: To use `gollum` for a branch different from `master` (say `new_branch`), one needs to do `gollum --ref new_branch`.
+     * NOTE: To use `gollum` for a branch other than `master` (e.g., `new_branch`), use the command `gollum --ref new_branch`.
      * `gollum --lenient-tag-lookup /path/to/wiki`
      * Open `http://localhost:4567` in your browser.
    - Push your changes to the forked Wiki git
    - **Copy wiki to doc**
 
      This step is like `git push` to your branch.
-     * Click `Action` > `Workflows` > `Copy wiki to doc` > `Run workflow` > choose `new_contribution_branch` branch > Click green `Run workflow`. Once the workflow is done, the docs in the specific branch are updated to the latest Wiki.
+     * Click `Actions` > `Copy wiki to doc` > `Run workflow` > Choose `Branch: new_contribution_branch` > Click `Run workflow`. Once the workflow is complete, the content of `gamer/doc/wiki` in the `new_contribution_branch` branch will be updated to match the latest Wiki pages.
 
      [[images/CopyWikiToNewBranch.png]]
 
 1. **From GitHub website**
 
-   We treat the Wiki page on GitHub as a local in this method, and we use the workflow to approach the `pull` and `push` behavior of the Wiki.
-   - **Copy wiki doc to wiki page**
+   In this method, we treat the Wiki on GitHub as a local repository and use the workflow to replicate the pull and push behavior for the Wiki.
+   - **Copy doc to wiki**
 
-     This step is like `git checkout new_contribution_branch` but the GitHub Wiki website version.
-     * Click `Action` > `Workflows` > `Copy doc to wiki` > `Run workflow` > choose `new_contribution_branch` branch > Click green `Run workflow`. Once the workflow is done, the Wiki is also updated to the `new_contribution_branch` branch version.
+     This step is like `git checkout new_contribution_branch` but for the GitHub Wiki website version.
+     * Click `Actions` > `Copy doc to wiki` > `Run workflow` > Choose `Branch: new_contribution_branch` > Click `Run workflow`. Once the workflow is complete, the Wiki will be updated to match `gamer/doc/wiki` on the `new_contribution_branch` branch.
 
       [[images/CopyDocFromNewBranch.png]]
 
-   - **Edit on GitHub Wiki website**
+   - **Edit directly on the GitHub Wiki website**
 
       See [About wikis - GitHub Docs](https://docs.github.com/en/communities/documenting-your-project-with-wikis/about-wikis) for more details.
    - **Copy wiki to doc**
 
-     This step is like `git push` to your branch.
-     * Click `Action` > `Workflows` > `Sync wiki to doc` > `Run workflow` > choose `new_contribution_branch` branch > Click green `Run workflow`. Once the workflow is done, the docs in the `new_contribution_branch` branch are updated to the latest wiki.
+     This step is like `git push` to your `new_contribution_branch` branch.
+     * Click `Actions` > `Copy wiki to doc` > `Run workflow` > Choose `Branch: new_contribution_branch` > Click `Run workflow`. Once the workflow is complete, the content of `gamer/doc/wiki` in the `new_contribution_branch` branch will be updated to match the latest Wiki pages.
 
       [[images/CopyWikiToNewBranch.png]]
 
 1. **On the local terminal**
 
-   Just like how you edit the code on the local terminal. The files of Wiki can be found at `docs/wiki`. Once you push your changes to `origin`, you may preview your changes on the Wiki page by doing:
-   * Click `Action` > `Workflows` > `Copy doc to wiki` > `Run workflow` > choose `new_contribution_branch` branch > Click green `Run workflow`. Once the workflow is done, the Wiki is also updated to the `new_contribution_branch` branch version.
+   This process is similar to editing GAMER source code on the local terminal. The Wiki files are located in `gamer/doc/wiki`. After committing your changes to the `new_contribution_branch` branch and pushing them to the `origin` repository on GitHub, you can preview these changes on the Wiki pages by
+   * Click `Actions` > `Copy doc to wiki` > `Run workflow` > Choose `Branch: new_contribution_branch` > Click `Run workflow`. Once the workflow is complete, the Wiki will be updated to match `gamer/doc/wiki` on the `new_contribution_branch` branch.
 
-## Contribute
-   Before you file a new PR, please check that all the hyperlinks work, the images are clear enough, and all the related pages about the PR have been updated.
-   1. File a PR to the GAMER public version.
-      * NOTE: The contribution is made through the files in the doc (e.g. `doc/wiki/`), not through the Wiki page of the forked repository.
+## Pull request
+   1. Before filing a new PR, please ensure the following:
+      * All hyperlinks are functional.
+      * Images are clear.
+      * All related pages affected by this PR have been updated.
+   2. File a PR to the public GAMER repository.
+      * NOTE: Contributions should be made through the files in `gamer/doc/wiki/` rather than the Wiki pages.
 
 ## Reference
 1. [Bi-directional Wiki Sync Action](https://github.com/marketplace/actions/bi-directional-wiki-sync-action)

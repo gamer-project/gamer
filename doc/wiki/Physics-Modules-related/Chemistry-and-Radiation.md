@@ -5,7 +5,7 @@ Related options:
 [[--grackle | Installation:-Option-List#--grackle]] &nbsp;
 
 ## Runtime Parameters
-[[Runtime-Parameters:-Chemistry-and-Radiation]]
+[[Runtime parameters: Chemistry and Radiation | Runtime-Parameters:-Chemistry-and-Radiation]]
 
 Other related parameters:
 [[CHE_GPU_NPGROUP | Runtime-Parameters:-GPU#CHE_GPU_NPGROUP]] &nbsp;
@@ -14,7 +14,7 @@ Other related parameters:
 ## Remarks
 
 ### GRACKLE Configuration
-The floating-point accuracy and OpenMP support between GRACKLE and GAMER
+The OpenMP support between GRACKLE and GAMER
 must be consistent with each other. See
 [[Library Configurations -- GRACKLE | Installation:-External-Libraries#GRACKLE]]
 for details.
