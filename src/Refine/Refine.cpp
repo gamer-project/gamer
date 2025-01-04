@@ -271,7 +271,8 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 #        endif
 
 #        if ( ELBDM_SCHEME == ELBDM_HYBRID )
-         SwitchFinerLevelsToWaveScheme = ( !amr->use_wave_flag[lv+1]  &&  Pedigree->switch_to_wave_flag );
+         if ( !amr->use_wave_flag[lv+1]  &&  Pedigree->switch_to_wave_flag )
+            SwitchFinerLevelsToWaveScheme = true;
 #        endif
 
 
