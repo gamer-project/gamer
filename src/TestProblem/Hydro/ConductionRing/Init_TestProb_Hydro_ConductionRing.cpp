@@ -58,8 +58,8 @@ void Validate()
       Aux_Error( ERROR_INFO, "OPT__FREEZE_HYDRO must be enabled !!\n" );
 
    for (int f=0; f<6; f++)
-   if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
-      Aux_Error( ERROR_INFO, "please set \"OPT__BC_FLU_* = 1\" (i.e., periodic BC) !!\n" );
+   if ( OPT__BC_FLU[f] != BC_FLU_OUTFLOW )
+      Aux_Error( ERROR_INFO, "please set \"OPT__BC_FLU_* = 2\" (i.e., outflow BC) !!\n" );
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
 
@@ -115,7 +115,7 @@ void SetParameter()
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
-   const double End_T_Default    = 5.0;
+   const double End_T_Default    = 200.0;
    const long   End_Step_Default = __INT_MAX__;
 
    if ( END_STEP < 0 ) {
@@ -133,10 +133,12 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  CSF_U1              = % 14.7e\n", CSF_U1 );
-      Aux_Message( stdout, "  CSF_U2              = % 14.7e\n", CSF_U2 );
-      Aux_Message( stdout, "  CSF_Rho             = % 14.7e\n", CSF_Rho );
-      Aux_Message( stdout, "  CSF_Bangle          = % 14.7e\n", CSF_Bangle );
+      Aux_Message( stdout, "  Ring_U1              = % 14.7e\n", Ring_U1 );
+      Aux_Message( stdout, "  Ring_U2              = % 14.7e\n", Ring_U2 );
+      Aux_Message( stdout, "  Ring_R1              = % 14.7e\n", Ring_R1 );
+      Aux_Message( stdout, "  Ring_R2              = % 14.7e\n", Ring_R2 );
+      Aux_Message( stdout, "  Ring_Rho             = % 14.7e\n", Ring_Rho );
+      Aux_Message( stdout, "  Ring_Angle           = % 14.7e\n", Ring_Angle );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -184,7 +186,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Eint = Ring_U2*Ring_Rho;
    }
 
-   Dens = CSF_Rho;
+   Dens = Ring_Rho;
    MomX = 0.0;
    MomY = 0.0;
    MomZ = 0.0;
@@ -226,10 +228,8 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
    const double r          = sqrt( SQR(x-x0) + SQR(y-y0) );
    const double phi        = atan2( y-y0, x-x0 );
 
-   const real angle_rads = (real)CSF_Bangle*M_PI/180.0;
-
-   magnetic[MAGX] = - ( y - y0 ) * 0.5/sqrt(M_PI);
-   magnetic[MAGY] =   ( x - x0 ) * 0.5/sqrt(M_PI);
+   magnetic[MAGX] = - ( y - y0 ) * 0.5/sqrt(M_PI) / r;
+   magnetic[MAGY] =   ( x - x0 ) * 0.5/sqrt(M_PI) / r;
    magnetic[MAGZ] = 0.0;
 
 } // FUNCTION : SetBFieldIC
