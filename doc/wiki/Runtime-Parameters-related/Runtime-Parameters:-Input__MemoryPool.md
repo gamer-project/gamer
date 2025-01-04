@@ -1,5 +1,3 @@
-## Input__MemoryPool
-
 Number of patches to be preallocated on each AMR level when enabling
 [[OPT__MEMORY_POOL | Runtime-Parameters:-Refinement#OPT__MEMORY_POOL]].
 The following example will preallocate 100, 800 and 6400 patches on
