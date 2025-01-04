@@ -4,7 +4,7 @@ Before getting started, it’s recommended that you familiarize yourself with th
 
 The followings are the outline of this document:
 * [Introduction](#Introduction)
-* [Setup](#Setup)
+* [Initialize Wiki and Enable Action](#Initialize-Wiki-and-Enable-Action)
 * [Edit Wiki](#Edit-Wiki)
 * [Pull request](#Pull-request)
 * [Reference](#Reference)
@@ -56,7 +56,7 @@ sequenceDiagram
     doc->>GAMER public version: Pull request
 ```
 
-## Setup
+## Initialize Wiki and Enable Action
 **_This setup only needs to be done once (the first time) !!!_**
 
 1. **Check GAMER version**
