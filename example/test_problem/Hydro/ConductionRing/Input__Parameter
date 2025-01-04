@@ -14,7 +14,7 @@
 
 
 # simulation scale
-BOX_SIZE                      100.0       # box size along the longest side (in Mpc/h if COMOVING is adopted)
+BOX_SIZE                      2.0         # box size along the longest side (in Mpc/h if COMOVING is adopted)
 NX0_TOT_X                     128         # number of base-level cells along x
 NX0_TOT_Y                     128         # number of base-level cells along y
 NX0_TOT_Z                     128         # number of base-level cells along z
@@ -24,8 +24,8 @@ END_STEP                     -1           # end step (<0=auto -> must be set by 
 
 
 # test problems
-TESTPROB_ID                   24          # test problem ID [0]
-                                          # 24: ConductionStepFunction
+TESTPROB_ID                   25          # test problem ID [0]
+                                          # 24: ConductionRing
 
 
 # code units (in cgs)
@@ -33,12 +33,12 @@ OPT__UNIT                     0           # specify code units -> must set exact
 
 
 # boundary conditions
-OPT__BC_FLU_XM                1           # fluid boundary condition at the -x face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
-OPT__BC_FLU_XP                1           # fluid boundary condition at the +x face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
-OPT__BC_FLU_YM                1           # fluid boundary condition at the -y face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
-OPT__BC_FLU_YP                1           # fluid boundary condition at the +y face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
-OPT__BC_FLU_ZM                1           # fluid boundary condition at the -z face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
-OPT__BC_FLU_ZP                1           # fluid boundary condition at the +z face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
+OPT__BC_FLU_XM                2           # fluid boundary condition at the -x face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
+OPT__BC_FLU_XP                2           # fluid boundary condition at the +x face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
+OPT__BC_FLU_YM                2           # fluid boundary condition at the -y face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
+OPT__BC_FLU_YP                2           # fluid boundary condition at the +y face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
+OPT__BC_FLU_ZM                2           # fluid boundary condition at the -z face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
+OPT__BC_FLU_ZP                2           # fluid boundary condition at the +z face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
 
 
 # time-step
@@ -127,7 +127,7 @@ OPT__FREEZE_HYDRO             1		  # freeze hydrodynamic fluxes (but diffusive a
 # conduction (CONDUCTION only)
 CONDUCTION_TYPE               1           # (1=constant conduction, 2=Spitzer conduction) [1] ##CONDUCTION only##
 CONDUCTION_FLUX_TYPE          2           # (1=isotropic conduction, 2=anisotropic conduction) [1] ##CONDUCTION only, 2 is for MHD ONLY##
-CONDUCTION_CONSTANT_COEFF     15.0        # constant conductivity coefficient (if CONDUCTION_TYPE=1) [1.0] ##CONDUCTION only##
+CONDUCTION_CONSTANT_COEFF     1.5e-2      # constant conductivity coefficient (if CONDUCTION_TYPE=1) [1.0] ##CONDUCTION only##
 CONDUCTION_SPITZER_FRAC       1.0         # fraction of Spitzer conductivity (if CONDUCTION_TYPE=2) [1.0] ##CONDUCTION only##
 CONDUCTION_COULOMB_LOG        40.0        # Coulomb logarithm in Spitzer conduction definition (if CONDUCTION_TYPE=2) [40.0] ##CONDUCTION only##
 CONDUCTION_MAX_DIFFUSIVITY   -1.0         # maximum conductive diffusivity, to prevent extremely small timestep (-1=no limit) [-1.0] ##CONDUCTION only##
