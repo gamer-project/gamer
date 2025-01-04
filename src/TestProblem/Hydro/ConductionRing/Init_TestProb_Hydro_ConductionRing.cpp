@@ -57,6 +57,9 @@ void Validate()
    if ( !OPT__FREEZE_HYDRO )
       Aux_Error( ERROR_INFO, "OPT__FREEZE_HYDRO must be enabled !!\n" );
 
+   if ( CONDUCTION_FLUX_TYPE != ANISOTROPIC_CONDUCTION )
+      Aux_Error( ERROR_INFO, "please set \"CONDUCTION_FLUX_TYPE = 2\" (i.e., anisotropic conduction) !!\n" );
+   
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] != BC_FLU_OUTFLOW )
       Aux_Error( ERROR_INFO, "please set \"OPT__BC_FLU_* = 2\" (i.e., outflow BC) !!\n" );
