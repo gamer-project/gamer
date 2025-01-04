@@ -19,7 +19,7 @@
 * [[ MPI and OpenMP | MPI-and-OpenMP ]]
 * [[ GPU | GPU ]]
 * <details>
-  <summray>[[ Physics Modules | Physics-Modules ]]</summary>
+  <summary>[[ Physics Modules | Physics-Modules ]]</summary>
 
   * [[ Chemistry and Radiation | Chemistry-and-Radiation ]]
   * [[ Equation of State | Equation-of-State ]]
