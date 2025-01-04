@@ -5,7 +5,7 @@
 * [[ Quick Start | Quick-Start ]]
 
 **User Guide**
-* <details>
+* <details open>
   <summary>[[ Installation | Installation ]]</summary>
 
   * [[ Machine Configuration File | Installation:-Machine-Configuration-File ]]
@@ -18,7 +18,7 @@
 * [[ Runtime Parameters | Runtime-Parameters ]]
 * [[ MPI and OpenMP | MPI-and-OpenMP ]]
 * [[ GPU | GPU ]]
-* <details>
+* <details open>
   <summary>[[ Physics Modules | Physics-Modules ]]</summary>
 
   * [[ Chemistry and Radiation | Chemistry-and-Radiation ]]
