@@ -6,7 +6,7 @@
 static double CSF_U1;               // internal energy in left region
 static double CSF_U2;               // internal energy in right region
 static double CSF_Rho;              // background mass density
-static int    CSF_Bdir;             // magnetic field direction (X=1/Y=2/Z=3)
+static double CSF_Bangle;           // angle defining magnetic field direction in degrees
 
 // =======================================================================================
 
@@ -97,7 +97,7 @@ void SetParameter()
    ReadPara->Add( "CSF_U2",              &CSF_U2,                2000.0,        Eps_double,       NoMax_double      );
    ReadPara->Add( "CSF_Rho",             &CSF_Rho,               1.0,           Eps_double,       NoMax_double      );
 #  ifdef MHD
-   ReadPara->Add( "CSF_Bdir",            &CSF_Bdir,              1,             1,                3                 );
+   ReadPara->Add( "CSF_Bangle",          &CSF_Bangle,            0.0,           0.0,              360.0             );
 #  endif
    ReadPara->Read( FileName );
 
@@ -129,6 +129,9 @@ void SetParameter()
       Aux_Message( stdout, "  CSF_U1              = % 14.7e\n", CSF_U1 );
       Aux_Message( stdout, "  CSF_U2              = % 14.7e\n", CSF_U2 );
       Aux_Message( stdout, "  CSF_Rho             = % 14.7e\n", CSF_Rho );
+#     ifdef MHD
+      Aux_Message( stdout, "  CSF_Bangle          = % 14.7e\n", CSF_Bangle );
+#     endif
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -210,16 +213,11 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
                   const int lv, double AuxArray[] )
 {
 
-   magnetic[MAGX] = 0.0;
-   magnetic[MAGY] = 0.0;
-   magnetic[MAGZ] = 0.0;
+   const real angle_rads = (real)CSF_Bangle*M_PI/180.0;
 
-   switch ( CSF_Bdir )
-   {
-      case 1:  magnetic[MAGX] = 1.0;  break;
-      case 2:  magnetic[MAGY] = 1.0;  break;
-      case 3:  magnetic[MAGZ] = 1.0;  break;
-   }
+   magnetic[MAGX] = cos( angle_rads ) * 0.5/sqrt(M_PI);
+   magnetic[MAGY] = sin( angle_rads ) * 0.5/sqrt(M_PI);
+   magnetic[MAGZ] = 0.0;
 
 } // FUNCTION : SetBFieldIC
 #endif // #ifdef MHD
