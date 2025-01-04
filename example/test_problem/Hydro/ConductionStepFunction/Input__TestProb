@@ -1,0 +1,4 @@
+# problem-specific runtime parameters
+CSF_U1        1000.0       # (1/2/3) --> (fast/slow/Alfven wave)
+CSF_U2        2000.0       # (1/2/3) --> (fast/slow/Alfven wave)
+CSF_Rho       1.0          # background density

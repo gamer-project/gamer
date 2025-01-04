@@ -588,6 +588,18 @@ def load_arguments():
                          help="Enable cosmic-ray diffusion. Must enable <--mhd> and <--cosmic_ray>.\n"
                        )
 
+    parser.add_argument( "--viscosity", type=str2bool, metavar="BOOLEAN", gamer_name="VISCOSITY",
+                         default=False,
+                         constraint={ True:{"comoving":False} },
+                         help="Enable viscosity. Must enable <--hydro\n"
+	               )
+
+    parser.add_argument( "--conduction", type=str2bool, metavar="BOOLEAN", gamer_name="CONDUCTION",
+                         default=False,
+                         constraint={ True:{"comoving":False} },
+		                 help="Enable conduction. Must enable <--hydro.\n"
+                       )
+
     # B. miscellaneous options
     parser.add_argument( "--nlevel", type=int, metavar="INTEGER", gamer_name="NLEVEL",
                          default=10,
