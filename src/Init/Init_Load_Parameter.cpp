@@ -299,7 +299,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "CONDUCTION_COULOMB_LOG",     &CONDUCTION_COULOMB_LOG,          40.0,            0.0,           NoMax_double   );
    ReadPara->Add( "CONDUCTION_MAX_DIFFUSIVITY", &CONDUCTION_MAX_DIFFUSIVITY,     -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "CONDUCTION_MUE",             &CONDUCTION_MUE,                  1.14,            0.0,           NoMax_double   );
-   ReadPara->Add( "CONDUCTION_SATURATION",      &CONDUCTION_SATURATION,           true,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "CONDUCTION_SATURATION",      &CONDUCTION_SATURATION,           false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "CONDUCTION_SAT_WHISTLER",    &CONDUCTION_SAT_WHISTLER,         false,           Useless_bool,  Useless_bool   );
 #  endif
 
