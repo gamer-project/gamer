@@ -55,7 +55,9 @@ GAMER uses GRACKLE for the chemistry and radiative processes.
 Follow the installation instructions in the
 [GRACKLE website](http://grackle.readthedocs.io/en/latest/index.html).
 
-Compiling Grackle in double precision is recommended:
+Grackle and GAMER can be compiled with different floating-point precisions.
+It is [recommended](https://grackle.readthedocs.io/en/latest/Installation.html#compiler-settings)
+to compile Grackle in double precision:
 
     > make precision-64
 
