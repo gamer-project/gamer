@@ -58,10 +58,6 @@ void Init_ByRestart()
    if ( !Aux_CheckFileExist(FileName)  &&  MPI_Rank == 0 )
       Aux_Error( ERROR_INFO, "restart file \"%s\" does not exist !!\n", FileName );
 
-#  if ( ( defined PARTICLE ) && ( (defined FLOAT8 && !defined FLOAT8_PAR) || (!defined FLOAT8 && defined FLOAT8_PAR) ) )
-   Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for OPT__OUTPUT_TOTAL=2 (C-binary) !!\n" );
-#  endif
-
    MPI_Barrier( MPI_COMM_WORLD );
 
 
@@ -144,6 +140,12 @@ void Init_ByRestart()
       if ( FormatVersion < 2210 )
          Aux_Error( ERROR_INFO, "unsupported data format version for MHD (only support version >= 2210) !!\n" );
 #     endif
+
+#     if ( ( defined PARTICLE ) && ( (defined FLOAT8 && !defined FLOAT8_PAR) || (!defined FLOAT8 && defined FLOAT8_PAR) ) )
+      if ( FormatVersion < 2300 )
+         Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for OPT__OUTPUT_TOTAL=2 (C-binary) before version < 2300 !!\n" );
+#     endif
+
    }
    MPI_Barrier( MPI_COMM_WORLD );
 
