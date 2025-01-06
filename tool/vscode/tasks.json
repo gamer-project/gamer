@@ -1,0 +1,59 @@
+{
+    "tasks": [
+        {
+            "label": "build-GAMER",
+            "type": "shell",
+            "command": "sh build.sh",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/.vscode"
+            },
+            "detail": "After you configure the Makefile, run this task to build the project."
+        },
+        {
+            "label": "config-GAMER",
+            "type": "shell",
+            "command": "sh config.sh",
+            "options": {
+                "cwd": "${workspaceFolder}/.vscode"
+            },
+            "detail": "Run configure.py with generate_make.sh in the working directory.",
+            "problemMatcher": []
+        },
+        {
+            "label": "clean-work-dir",
+            "type": "shell",
+            "command": "sh clean_work_dir.sh",
+            "options": {
+                "cwd": "${workspaceFolder}/.vscode"
+            },
+            "detail": "Clean the working directory with clean.sh.",
+            "problemMatcher": []
+        },
+        {
+            "label": "set-working-bin",
+            "type": "shell",
+            "command": "sh",
+            "args": [
+                "set_bin_working.sh",
+                "${input:bin-working}"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/.vscode"
+            },
+            "detail": "Choose the working directory for the binary files.",
+            "problemMatcher": []
+        }
+    ],
+    "inputs": [
+        {
+            "id": "bin-working",
+            "type": "promptString",
+            "description": "Enter the working directory under bin/."
+        }
+    ],
+    "version": "2.0.0"
+}
