@@ -35,8 +35,8 @@ def plot_v(path, suffix, name):
     df_halo_parameter = pd.read_csv( path+'/../../Halo_Parameter_%d'%halo , sep = r'\s+' , header = 0 , index_col='#')
     current_time_z = df_halo_parameter['time'][idx]
     current_time_a = 1/(1+current_time_z)
-    halo_radius = df_halo_parameter['halo_radius'][idx]/current_time_a
-    core_radius = df_halo_parameter['core_radius_1'][idx]/current_time_a
+    halo_radius = df_halo_parameter['halo_radius'][idx]
+    core_radius = df_halo_parameter['core_radius_1'][idx]
     ### load data
     df_gamer_dens = pd.read_csv( path+'AveDens_%06d%s'%(idx,suffix) , sep = r'\s+' , header = None ,skiprows =[0])
     df_gamer_v_bulk_r = pd.read_csv( path+'AveVr_%06d%s'%(idx,suffix) , sep = r'\s+' , header = None ,skiprows =[0])
@@ -48,7 +48,7 @@ def plot_v(path, suffix, name):
     
     ### read data
     gamer_dens = df_gamer_dens[2] # rho_bg
-    gamer_r = df_gamer_dens[0]*1000/h # kpccm
+    gamer_r = df_gamer_dens[0]*1000/h*current_time_a # kpc
     gamer_shell_mass = np.array(df_gamer_dens[6]) # code mass
     
     ### gamer v unit = 100 km/s v:bulk w:qp
@@ -104,7 +104,7 @@ def plot_v(path, suffix, name):
     df_jeans = pd.read_csv( path+"../jeans/jeans_v_%d_%d"%(halo,idx), sep = r'\s+' , header = 0)
     radius = df_jeans['radius(kpc)']
     j_v = df_jeans['jeans_v(km/s)']
-    plt.plot(radius/current_time_a, np.array(j_v)*3**0.5/2**0.5, '-.',color = 'lightskyblue', lw = 1, label = 'v jeans')
+    plt.plot(radius, np.array(j_v)*3**0.5/2**0.5, '-.',color = 'lightskyblue', lw = 1, label = 'v jeans')
 
 
 fig, ax = plt.subplots(figsize=(figure_width, 2.5))

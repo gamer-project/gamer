@@ -23,8 +23,8 @@ softening_length = 0.3125
 
 def plot_profile(path, name, core_is_true, NFW_is_true, order):
 
-    def soliton(x, core_radius, time_a, particle_mass):   
-        return ((1.9/time_a*(current_time_a**-1)*(particle_mass/10**-23)**-2*(core_radius**-4))/((1 + 9.1*10**-2*(x/core_radius)**2)**8))*10**9
+    def soliton(x, core_radius, particle_mass):   
+        return ((1.9*(particle_mass/10**-23)**-2*(core_radius**-4))/((1 + 9.1*10**-2*(x/core_radius)**2)**8))*10**9
 
     # read data
     df = pd.read_csv( path+'/prof_dens/Data_%06d_%d_profile_data'%(idx, halo) , sep = '\t' , header = 0 )
@@ -32,8 +32,8 @@ def plot_profile(path, name, core_is_true, NFW_is_true, order):
 
     current_time_z = df_halo_parameter['time'][idx]
     current_time_a = 1/(current_time_z+1)
-    radius = df['radius(kpccm)'][:]
-    density = df['density(Msun/kpccm**3)'][:]
+    radius = df['radius(kpccm)'][:]*current_time_a
+    density = df['density(Msun/kpccm**3)'][:]/current_time_a**3
     dens = density
     halo_radius = df_halo_parameter['halo_radius'][idx]/current_time_a
     
@@ -52,12 +52,12 @@ def plot_profile(path, name, core_is_true, NFW_is_true, order):
     if (core_is_true):
         particle_mass = df_halo_parameter['mass'][idx]
 
-        core_radius = df_halo_parameter['core_radius_1'][idx]/current_time_a
+        core_radius = df_halo_parameter['core_radius_1'][idx]
         x = np.logspace(-1, 3, num=50)
         if order == 1:
-            ax.plot( x, soliton(x, core_radius, current_time_a, particle_mass), ':',lw = 1, color = 'peru', label='FDM high-res soliton fit')
+            ax.plot( x, soliton(x, core_radius, particle_mass), ':',lw = 1, color = 'peru', label='FDM high-res soliton fit')
         elif order == 2:
-            ax.plot( x, soliton(x, core_radius, current_time_a, particle_mass), ':',lw = 1, color = 'pink', label='FDM low-res soliton fit')
+            ax.plot( x, soliton(x, core_radius, particle_mass), ':',lw = 1, color = 'pink', label='FDM low-res soliton fit')
 
     # if NFW
     if (NFW_is_true):
