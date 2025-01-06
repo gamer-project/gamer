@@ -590,15 +590,13 @@ def load_arguments():
 
     parser.add_argument( "--viscosity", type=str2bool, metavar="BOOLEAN", gamer_name="VISCOSITY",
                          default=False,
-                         constraint={ True:{"comoving":False, "flu_scheme":["MHM", "MHM_RP"]},
-                                      False:{"flu_scheme":["CTU"]}},
+                         constraint={ True:{"comoving":False, "flu_scheme":["MHM", "MHM_RP"]}},
                          help="Enable viscosity. Must enable <--hydro\n"
 	               )
 
     parser.add_argument( "--conduction", type=str2bool, metavar="BOOLEAN", gamer_name="CONDUCTION",
                          default=False,
-                         constraint={ True:{"comoving":False, "flu_scheme":["MHM", "MHM_RP"]},
-                                      False:{"flu_scheme":["CTU"]}},
+                         constraint={ True:{"comoving":False, "flu_scheme":["MHM", "MHM_RP"]}},
 		                 help="Enable conduction. Must enable <--hydro.\n"
                        )
 
