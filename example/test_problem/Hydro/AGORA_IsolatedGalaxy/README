@@ -23,7 +23,7 @@ Simulation setup:
 
 3.  High-resolution setup
    (1) Download the high-resolution initial conditions and Input_* by executing "sh download_ic_high_res.sh"
-   (2) Highest resolution ~ 20 pc (Root grid 64^3; MAX_LEVEL = 10)
+   (2) Highest resolution ~ 20 pc (Root grid 128^3; MAX_LEVEL = 9)
    (3) This setup reproduces the AGORA high-resolution run presented in the GAMER-2 paper (Schive et al. 2018)
 
 

@@ -14,9 +14,9 @@
 
 # simulation scale
 BOX_SIZE                      1.31072e3   # box size along the longest side (in Mpc/h if COMOVING is adopted)
-NX0_TOT_X                     64          # number of base-level cells along x
-NX0_TOT_Y                     64          # number of base-level cells along y
-NX0_TOT_Z                     64          # number of base-level cells along z
+NX0_TOT_X                     128         # number of base-level cells along x
+NX0_TOT_Y                     128         # number of base-level cells along y
+NX0_TOT_Z                     128         # number of base-level cells along z
 OMP_NTHREAD                  -1           # number of OpenMP threads (<=0=auto) [-1] ##OPENMP ONLY##
 END_T                        -1.0         # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
 END_STEP                     -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
@@ -90,7 +90,7 @@ REGRID_COUNT                  4           # refine every REGRID_COUNT sub-step [
 FLAG_BUFFER_SIZE             -1           # number of buffer cells for the flag operation (0~PATCH_SIZE; <0=auto -> PATCH_SIZE) [-1]
 FLAG_BUFFER_SIZE_MAXM1_LV     2           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-1 (<0=auto -> REGRID_COUNT) [-1]
 FLAG_BUFFER_SIZE_MAXM2_LV    -1           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-2 (<0=auto) [-1]
-MAX_LEVEL                     10          # maximum refinement level (0~NLEVEL-1) [NLEVEL-1]
+MAX_LEVEL                     9           # maximum refinement level (0~NLEVEL-1) [NLEVEL-1]
 OPT__FLAG_RHO                 1           # flag: density (Input__Flag_Rho) [0]
 OPT__FLAG_RHO_GRADIENT        0           # flag: density gradient (Input__Flag_RhoGradient) [0]
 OPT__FLAG_PRES_GRADIENT       0           # flag: pressure gradient (Input__Flag_PresGradient) [0] ##HYDRO ONLY##
