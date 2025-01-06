@@ -12,11 +12,11 @@ from scipy.stats import linregress
 sys.path.append('../shr/')
 import SHR
 
-ds = yt.load('/projectV/vivi235711/gamer/m22_0.2_L_2.8_N_256_seed_7024648_hybrid/Data_000000')
+ds = yt.load('../../Data_000000')
 ### constant
 kpc2km                = (1*yt.units.kpc).to('km').d
 m_sun2_kg             = (1*yt.units.Msun).to('kg').d
-omega_M0          = ds.omega_matter
+omega_M0              = ds.omega_matter
 omega_lambda          = ds.omega_lambda
 h                     = ds.hubble_constant #dimensionless Hubble parameter 0.1km/(s*kpc)
 hubble0               = h*0.1 # km/(s*kpc)
@@ -44,7 +44,7 @@ factor_name = {'time_a': 'time a', 'time_z' :'time z', 'halo_mass': 'halo mass (
                'v_ave_QP': '$v_{ave,\ QP}$', 'v_ave_Both': '$v_{ave,\ Both}$', 'ave_QP_ratio': '$\dfrac{v_{ave,\ QP}}{v_{ave,\ Both}}$',\
                'v_soliton_QP_inner_QP': '$\dfrac{v_{soliton,\ QP}}{v_{inner,\ QP}}$', 'v_soliton_Both_inner_Both': '$\dfrac{v_{soliton,\ Both}}{v_{inner,\ Both}}$',\
                'v_inner_QP_ave_QP': '$\dfrac{v_{inner,\ QP}}{v_{ave,\ QP}}$', 'v_inner_Both_ave_Both': '$\dfrac{v_{inner,\ Both}}{v_{ave,\ Both}}$',\
-                'count': 'count', 'halo_age_Gyr': 'halo age (Gyr)', 'sphericity': 'sphericity'
+                'count': 'count', 'halo_age_Gyr': 'halo age (Gyr)'
                }
 
 
@@ -147,7 +147,7 @@ def load( path, halo, start, end, name, tag='N' ):
     df = check_virial(df)
     df['count']        = df.index-df.index[0]
 
-    # tag
+    # tag (for fake halo, can exclude if needed)
     # fake halo
     if tag[0] == 'Y':
         df.fake = 1
@@ -156,18 +156,6 @@ def load( path, halo, start, end, name, tag='N' ):
 
     
     df.name = name
-    global count
-    # plt.plot(halo_mass, Ep_fit_theo, color = colors_tab20[count],label = name)
-    # plt.plot(halo_mass, Ep_sim_fit, color = colors_tab20[count+1], label = name)
-    # plt.plot(halo_mass, Ek2_Ep, color = colors_tab20[count+2], label = name)
-    # plt.plot(halo_mass, v_inner_ave, color = colors_tab20[count+3], label = name)
-    # plt.plot(halo_mass, v_core_Both_inner, color = colors_tab20[count], label = name)
-    # plt.plot(halo_mass, v_core_QP_Both, color = colors_tab20[count+5], label = name)
-    # plt.plot(df['c_fit']  ,v_inner_QP_ave_QP,'.',lw = 0.5,color = colors_jet[count], label = name)
-    # plt.plot(halo_mass[end]*h, c_fit[end], '.')
-
-    count += 1
-
 
     frames.append(df)
 
@@ -175,8 +163,7 @@ def load( path, halo, start, end, name, tag='N' ):
 
 
 def load_sim():
-    global count
-    count = 0
+
     global frames
     frames = []
 
@@ -194,21 +181,9 @@ def check_virial(df):
         df = df.loc[start:end]
     return df
 
-def sphe(tensor):
-    eigenvalues, eigenvectors = LA.eig(tensor)
-    I1, I2, I3 = np.sort(eigenvalues)
-    S = ((I1+I2-I3)/(-I1+I2+I3))**0.5
-    return S
-
 def bin(num_bins, x_axis, scale, df, min=None, max=None):
     # Define the bins for mass
-    # num_bins = 10
-    # x_axis = 'halo_mass'
-    # x_axis = 'core_mass'
-    # x_axis = 'time_a'
-    # x_axis = 'halo_age_Gyr'
-    # space = 'log'
-    # space = 'lin'
+
     min = min or df[x_axis].min()
     max = max or df[x_axis].max()
 
@@ -222,58 +197,10 @@ def bin(num_bins, x_axis, scale, df, min=None, max=None):
         raise ValueError('scale must be "log" or "lin"')
     return interval, x_ticks
 
-# df['mass_bins'] = pd.cut(df[x_axis], bins=interval)
 
 colors_tab20 = plt.cm.tab20(np.linspace(0, 1, 20))
 
 global i
-
-def plot_avg( fac, df, x_axis, interval, x_ticks, name, i, time_range=None, line = '-'):
-
-    df_range = df if time_range else df
-    # print(df_range.empty)
-    if df_range.empty:
-        print(name+' is empty')
-        return
-    
-    df_range['bins'] = pd.cut(df_range[x_axis], bins=interval)
-    average_velocity = df_range.groupby('bins')[fac].mean().values
-    std = df_range.groupby('bins')[fac].std().values
-    count = df_range.groupby('bins')[fac].count().values
-
-    plt.plot(x_ticks, average_velocity, line, color = colors_tab20[i], label = name)
-    plt.plot(x_ticks, average_velocity, '.', color = colors_tab20[i])
-    plt.errorbar(x_ticks, average_velocity, yerr=std, fmt='none',ecolor =colors_tab20[i+1] , capsize=3)
-
-    # if i == 0:
-    #     for j in range(len(x_ticks)):
-    #         plt.annotate(count[j], xy = (x_ticks[j], average_velocity[j]+0.02*i),
-    #                     xytext = (+5, 0),textcoords='offset points', size = 8, color = colors_tab20[i])
-
-    return i+2
-
-
-def average_weighting(frames, x_axis, interval, x_ticks, fac, name, i, time_range=None, line = '-', fit = False, fit_type = (False, False)):
-    # Make all halo has same weighting in the mass bins
-    frames_weight = []
-    for frame in frames:
-        # Create mass bins and calculate the mean velocity for each bin
-        frame['bins'] = pd.cut(frame[x_axis], bins=interval)
-        tem_df = pd.DataFrame()
-        tem_df[fac] = frame.groupby('bins')[fac].mean()
-        tem_df[x_axis] = x_ticks
-        tem_df.index = x_ticks
-        # std = df_range.groupby('mass_bins')[fac].std().values
-        # count = df_range.groupby('mass_bins')[fac].count().values
-        frames_weight.append(tem_df)
-
-    combined_df = pd.concat(frames_weight)
-    if fit:
-        cleaned_df = combined_df.dropna()
-        fit_regres(cleaned_df[x_axis], cleaned_df[fac], fit_type, i)
-    i = plot_avg(fac,combined_df, x_axis, interval, x_ticks, name, i, time_range=time_range, line = line)
-
-    return i
 
 def fit_regres(x, y, fit_type, i=0):
     x_log, y_log = fit_type

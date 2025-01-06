@@ -3,6 +3,7 @@
 import sys
 
 import load_simulation
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
