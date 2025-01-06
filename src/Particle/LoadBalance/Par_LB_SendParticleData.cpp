@@ -261,7 +261,6 @@ void Par_LB_SendParticleData( const int NParAttFlt, const int NParAttInt, int *S
          const double SendMB = (double)NSendParTotal*NParAttFlt*sizeof(real_par)*1.0e-6 + (double)NSendParTotal*NParAttInt*sizeof(long_par)*1.0e-6;
          const double RecvMB = (double)NRecvParTotal*NParAttFlt*sizeof(real_par)*1.0e-6 + (double)NRecvParTotal*NParAttInt*sizeof(long_par)*1.0e-6;
 
-         // TODO: NVar is wrong
          fprintf( File, "%19s %2d+%1d %4s %10s %10s %10.5f %8.3f %8.3f %10.3f %10.3f\n",
                   Timer_Comment, NParAttFlt, NParAttInt, "X", "X", "X", dtime, SendMB, RecvMB, SendMB/dtime, RecvMB/dtime );
 
