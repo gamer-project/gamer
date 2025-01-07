@@ -127,7 +127,7 @@ display Fig__Riemann_Density_000010.png
 <details>
 <summary><u><i>Execution results</i></u></summary>
 
-[[images/shocktube.png | alt=shocktube]]
+[[/images/shocktube.png | alt=shocktube]]
 </details>
 
 
