@@ -168,18 +168,20 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
    const int  Int8_Par_RT    = 0;
 #  endif
    int Float8_Par_check_flag;
-   LoadField( "Par_NAttFltStored",    &NParAttFlt,          H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,         -1, NonFatal );
-   LoadField( "Par_NAttIntStored",    &NParAttInt,          H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,         -1, NonFatal );
-   LoadField( "Par_NPar",             &NPar,                H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,   NullPtr,         -1, NonFatal );
+   LoadField( "Par_NPar",             &NPar,                H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,    Fatal,   NullPtr,         -1, NonFatal );
    Float8_Par_check_flag =
-   LoadField( "Float8_Par",           &Float8_Par_RS,       H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,NonFatal,  &Float8_Par_RT,    1,    Fatal );
-   if ( FormatVersion > 2500 )
+   LoadField( "Float8_Par",           &Float8_Par_RS,       H5_SetID_KeyInfo,    H5_TypeID_KeyInfo, NonFatal,  &Float8_Par_RT,    1,    Fatal );
+   if ( FormatVersion >= 2500 )
    {
-   LoadField( "Int8_Par",             &Int8_Par_RS,         H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,NonFatal,  &Int8_Par_RT,      1,    Fatal );
+   LoadField( "Par_NAttFltStored",    &NParAttFlt,          H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,    Fatal,   NullPtr,         -1, NonFatal );
+   LoadField( "Par_NAttIntStored",    &NParAttInt,          H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,    Fatal,   NullPtr,         -1, NonFatal );
+   LoadField( "Int8_Par",             &Int8_Par_RS,         H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,    Fatal,  &Int8_Par_RT,      1,    Fatal );
    }
    else
    {
-   LoadField( "Int8_Par",             &Int8_Par_RS,         H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,   Fatal,  &Int8_Par_RT,      1,    Fatal );
+   LoadField( "Par_NAttStored",       &NParAttFlt,          H5_SetID_KeyInfo,    H5_TypeID_KeyInfo,    Fatal,   NullPtr,         -1, NonFatal );
+   NParAttInt = 0;
+   LoadField( "Int8_Par",             &Int8_Par_RS,         H5_SetID_KeyInfo,    H5_TypeID_KeyInfo, NonFatal,  &Int8_Par_RT,      1,    Fatal );
    }
    if ( Float8_Par_check_flag != 0  &&  sizeof(real) != sizeof(real_par) )
       Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 in Makefile when Float8_Par is not stored in the snapshot !!\n");
@@ -211,7 +213,8 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
    for (int v=0; v<NParAttFlt; v++)
    {
       char Key[MAX_STRING];
-      sprintf( Key, "ParAttFltLabel%02d", v );
+      if ( FormatVersion >= 2500 )   sprintf( Key, "ParAttFltLabel%02d", v );
+      else                           sprintf( Key,    "ParAttLabel%02d", v );
       LoadField( Key,                &ParAttFltLabel_In[v], H5_SetID_InputPara,  H5_TypeID_InputPara, Fatal,   NullPtr,         -1, NonFatal );
    }
 
