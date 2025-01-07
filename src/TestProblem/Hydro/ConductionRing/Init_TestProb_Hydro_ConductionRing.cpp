@@ -3,13 +3,12 @@
 
 // problem-specific global variables
 // =======================================================================================
-static double Ring_U1;               // internal energy in ring
-static double Ring_U2;               // internal energy outside ring
+static double Ring_U;                // background internal energy
 static double Ring_R1;               // inner radius of ring
 static double Ring_R2;               // outer radius of ring
 static double Ring_Rho;              // background mass density
 static double Ring_Angle;            // angle defining initial region of U2
-
+static double chi;                   // factor for conduction coefficient
 // =======================================================================================
 
 
@@ -115,6 +114,7 @@ void SetParameter()
 
 // (2) set the problem-specific derived parameters
 
+   chi = CONDUCTION_CONSTANT_COEFF*(GAMMA-1.0)*MOLECULAR_WEIGHT/Ring_Rho;
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
@@ -136,8 +136,7 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  Ring_U1              = % 14.7e\n", Ring_U1 );
-      Aux_Message( stdout, "  Ring_U2              = % 14.7e\n", Ring_U2 );
+      Aux_Message( stdout, "  Ring_U1              = % 14.7e\n", Ring_U  );
       Aux_Message( stdout, "  Ring_R1              = % 14.7e\n", Ring_R1 );
       Aux_Message( stdout, "  Ring_R2              = % 14.7e\n", Ring_R2 );
       Aux_Message( stdout, "  Ring_Rho             = % 14.7e\n", Ring_Rho );
@@ -172,22 +171,19 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    const double x0         = 0.5*amr->BoxSize[0];
    const double y0         = 0.5*amr->BoxSize[0];
-   const double angle_rads = (real)Ring_Angle*M_PI/180.0;
-   const double r          = sqrt( SQR(x-x0) + SQR(y-y0) );
-   const double phi        = atan2( y-y0, x-x0 );
+   const double angle_rads = Ring_Angle*M_PI/180.0;
+   const double r          = SQRT( SQR(x-x0) + SQR(y-y0) );
+   const double phi        = SATAN2( y-y0, x-x0 );
+   const double D          = 2.0*SQRT(chi*Time);
 
    double Dens, MomX, MomY, MomZ, Eint, Etot;
 
 // inside region
-   if ( 0.5 < r && r < 0.7 && FABS(phi) < angle_rads )
-   {
-      Eint = Ring_U1*Ring_Rho;
-   }
+   if ( 0.5 < r && r < 0.7 )
+      Eint = Ring_U*Ring_Rho + erfc((phi-angle_rads)*r/D)-erfc((phi+angle_rads)*r/D);
 // outside region
-   else
-   {
-      Eint = Ring_U2*Ring_Rho;
-   }
+   else{
+      Eint = Ring_U*Ring_Rho;
 
    Dens = Ring_Rho;
    MomX = 0.0;
@@ -238,6 +234,32 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 
 } // FUNCTION : SetBFieldIC
 #endif // #ifdef MHD
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  OutputError
+// Description :  Output the L1 error
+//
+// Note        :  1. Invoke Output_L1Error()
+//                2. Use SetGridIC() to provide the analytical solution at any given time
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+static void OutputError()
+{
+
+   const char Prefix[100]     = "ConductionRing";
+   const OptOutputPart_t Part = OUTPUT_XY;
+
+#  ifdef MHD
+   Output_L1Error( SetGridIC, SetBFieldIC, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
+#  else
+   Output_L1Error( SetGridIC, NULL,        Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
+#  endif
+
+} // FUNCTION : OutputError
+
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -268,6 +290,7 @@ void Init_TestProb_Hydro_ConductionRing()
 
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr = SetGridIC;
+   Output_User_Ptr               = OutputError;
 #  ifdef MHD
    Init_Function_BField_User_Ptr = SetBFieldIC;
 #  endif
