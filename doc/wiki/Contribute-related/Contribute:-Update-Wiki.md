@@ -95,7 +95,7 @@ sequenceDiagram
 
 1. **Enable actions (workflows)**
    * Click `Actions` > click the green button.
-   ![image](https://github.com/ChunYen-Chen/CheckNode/assets/70311975/9e58d4a8-3248-4ceb-81ff-276a6943149d)
+   [[/images/EnableWorkflows.png]]
 
 1. **Initialize Wiki**
    * Click `Actions` > `Copy doc to wiki` > `Run workflow` > Choose `Branch: main` > Click `Run workflow`. Once the workflow is complete, the Wiki will be updated to match `gamer/doc/wiki` on the `main` branch.
