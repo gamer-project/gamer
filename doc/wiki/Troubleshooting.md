@@ -11,23 +11,23 @@
    * **Solution**: Update `CUDA` to 11.3 or higher.
 
 * * *
-* #### Check static array by [AddressSanitizer](https://github.com/google/sanitizers/wiki/AddressSanitizer) (ASen)
-   * **Description**: To detect the wrong usage of the static array.
+* #### Check static arrays with [AddressSanitizer](https://github.com/google/sanitizers/wiki/AddressSanitizer) (ASan)
+   * **Description**: Detect incorrect usage of static arrays.
    * **Steps**:
-      1. Use `g++` compiler.
-      1. Compile and link with flags `-fsanitize=undefined -fsanitize=address`.
+      1. Use the `g++` compiler.
+      2. Compile and link with flags `-fsanitize=undefined -fsanitize=address`.
 
-   * **Example of using `eureka` machine**
+   * **Example (on the `eureka` machine)**
       1. Uncomment the following lines in `configs/eureka_gnu.config`
          ```
          #CXXFLAG -fsanitize=undefined -fsanitize=address
          #LIBFLAG -fsanitize=undefined -fsanitize=address
          ```
-      1. Generate `Makefile`
+      2. Generate `Makefile`
          ```
          python configure.py --machine=eureka_gnu [--your_other_arguments]
          ```
-      1. Compile
+      3. Compile
          ```
          make clean && make -j4
          ```
