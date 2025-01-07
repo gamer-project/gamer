@@ -206,6 +206,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 } // FUNCTION : SetGridIC
 
+#ifdef MHD 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetBFieldIC
 // Description :  Set the problem-specific initial condition of magnetic field
@@ -236,6 +237,7 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
    magnetic[MAGZ] = 0.0;
 
 } // FUNCTION : SetBFieldIC
+#endif // #ifdef MHD
 #endif // #if ( MODEL == HYDRO )
 
 
