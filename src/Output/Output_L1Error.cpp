@@ -38,7 +38,10 @@ static void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const
 //                               --> Usually set to the same function pointer for initializing B field
 //                                   (e.g., SetBFieldIC() in various test problems)
 //                Prefix       : Prefix of the output filename
-//                Part         : OUTPUT_X    : x line
+//                Part         : OUTPUT_XY   : x-y plane
+//                               OUTPUT_XZ   : x-z plane
+//                               OUTPUT_YZ   : y-z plane
+//                               OUTPUT_X    : x line
 //                               OUTPUT_Y    : y line
 //                               OUTPUT_Z    : z line
 //                               OUTPUT_DIAG : diagonal along (+1,+1,+1)
@@ -146,15 +149,33 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 
    for (int v=0; v<NERR; v++)    L1_Err[v] = 0.0;
 
+   int dim; 
+
    switch ( Part )
    {
-      case OUTPUT_X    :                    Check_y = true;   Check_z = true;   break;
-      case OUTPUT_Y    :  Check_x = true;                     Check_z = true;   break;
-      case OUTPUT_Z    :  Check_x = true;   Check_y = true;                     break;
-      case OUTPUT_DIAG :  Check_x = false;  Check_y = false;  Check_z = false;  break;
-      default          :  Aux_Error( ERROR_INFO, "unsupported option \"Part = %d\" [4/5/6/7] !!\n", Part );
+      case OUTPUT_XY   :                                      Check_z = true;   dim = 2;  break;
+      case OUTPUT_YZ   :  Check_x = true;                                       dim = 2;  break;
+      case OUTPUT_XZ   :                    Check_y = true;                     dim = 2;  break;
+      case OUTPUT_X    :                    Check_y = true;   Check_z = true;   dim = 1;  break;
+      case OUTPUT_Y    :  Check_x = true;                     Check_z = true;   dim = 1;  break;
+      case OUTPUT_Z    :  Check_x = true;   Check_y = true;                     dim = 1;  break;
+      case OUTPUT_DIAG :  Check_x = false;  Check_y = false;  Check_z = false;  dim = 1;  break;
+      default          :  Aux_Error( ERROR_INFO, "unsupported option \"Part = %d\" [1/2/3/4/5/6/7] !!\n", Part );
    }
 
+   char coord1, coord2; 
+
+   if ( dim == 2 ) 
+   {
+
+      switch ( Part )
+      {
+         case OUTPUT_XY :  coord1 = 'X';  coord2 = 'Y';  break;
+         case OUTPUT_YZ :  coord1 = 'Y';  coord2 = 'Z';  break;
+         case OUTPUT_XZ :  coord1 = 'X';  coord2 = 'Z';  break;
+      }
+
+   }
 
 // output one MPI rank at a time
    for (int TRank=0; TRank<MPI_NRank; TRank++)
@@ -168,8 +189,13 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
          if ( TRank == 0 )
          {
             for (int v=0; v<NERR; v++)
-               fprintf( File[v], "#%*s %*s %*s %*s\n", StrLen_Flt, "Coord.", StrLen_Flt, "Numerical",
-                        StrLen_Flt, "Analytical", StrLen_Flt, "Error" );
+               if ( dim == 1 ) 
+                  fprintf( File[v], "#%*s %*s %*s %*s\n", StrLen_Flt, "Coord.", StrLen_Flt, "Numerical",
+                           StrLen_Flt, "Analytical", StrLen_Flt, "Error" );
+               else 
+                  fprintf( File[v], "#%*s %c %*s %c %*s %*s %*s\n", StrLen_Flt, "Coord. ", coord1, StrLen_Flt, 
+                           "Coord. ", coord2, StrLen_Flt, "Numerical", StrLen_Flt, "Analytical", StrLen_Flt, 
+                           "Error" );
          }
 
 
@@ -242,10 +268,13 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
    {
       switch ( Part )
       {
-         case OUTPUT_X    :  Norm = amr->BoxSize[0];  break;
-         case OUTPUT_Y    :  Norm = amr->BoxSize[1];  break;
-         case OUTPUT_Z    :  Norm = amr->BoxSize[2];  break;
-         case OUTPUT_DIAG :  Norm = amr->BoxSize[0];  break;
+         case OUTPUT_XY   :  Norm = amr->BoxSize[0]*amr->BoxSize[1];  break;
+         case OUTPUT_XZ   :  Norm = amr->BoxSize[0]*amr->BoxSize[2];  break;
+         case OUTPUT_YZ   :  Norm = amr->BoxSize[1]*amr->BoxSize[2];  break;
+         case OUTPUT_X    :  Norm = amr->BoxSize[0];                  break;
+         case OUTPUT_Y    :  Norm = amr->BoxSize[1];                  break;
+         case OUTPUT_Z    :  Norm = amr->BoxSize[2];                  break;
+         case OUTPUT_DIAG :  Norm = amr->BoxSize[0];                  break;
          default          :  Aux_Error( ERROR_INFO, "unsupported option \"Part = %d\" [4/5/6/7] !!\n", Part );
       }
 
@@ -303,7 +332,16 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
       } // if ( FirstTime )
 
 //    output data
-      fprintf( File_L1, "%6d %13.7e", (Part==OUTPUT_DIAG)?NX0_TOT[0]:NX0_TOT[Part-OUTPUT_X], Time[0] );
+      int NGrid;
+      if ( dim == 1 ) 
+         NGrid = (Part==OUTPUT_DIAG)?NX0_TOT[0]:NX0_TOT[Part-OUTPUT_X];
+      else
+      {
+         if ( Part == OUTPUT_XY )    NGrid = NX0_TOT[0]*NX0_TOT[1];
+         if ( Part == OUTPUT_XZ )    NGrid = NX0_TOT[0]*NX0_TOT[2];
+         if ( Part == OUTPUT_YZ )    NGrid = NX0_TOT[1]*NX0_TOT[2];
+      }
+      fprintf( File_L1, "%6d %13.7e", NGrid, Time[0] );
 
       for (int v=0; v<NERR; v++)   fprintf( File_L1, BlankPlusFormat_Flt, L1_Err_Sum[v] );
 
@@ -427,26 +465,33 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 #  endif
 
 
-// record the physical coordinate
-   double r;
+// record the physical coordinate(s)
+   double r1, r2;
+   int dim;
 
    switch ( Part )
    {
-      case OUTPUT_X    : r = x;              break;
-      case OUTPUT_Y    : r = y;              break;
-      case OUTPUT_Z    : r = z;              break;
-      case OUTPUT_DIAG : r = sqrt(3.0)*x;    break;
-      default          : Aux_Error( ERROR_INFO, "unsupported option \"Part = %d\" [4/5/6/7] !!\n", Part );
+      case OUTPUT_XY   : r1 = x;           r2 = y;           dim = 2;  break;
+      case OUTPUT_XZ   : r1 = x;           r2 = z;           dim = 2;  break;
+      case OUTPUT_YZ   : r1 = y;           r2 = z;           dim = 2;  break;
+      case OUTPUT_X    : r1 = x;           r2 = x;           dim = 1;  break;
+      case OUTPUT_Y    : r1 = y;           r2 = y;           dim = 1;  break;
+      case OUTPUT_Z    : r1 = z;           r2 = z;           dim = 1;  break;
+      case OUTPUT_DIAG : r1 = sqrt(3.0)*x; r2 = sqrt(3.0)*x; dim = 1;  break;
+      default          : Aux_Error( ERROR_INFO, "unsupported option \"Part = %d\" [1/2/3/4/5/6/7] !!\n", Part );
    }
 
+   const double dv = (dim==1) ? dh : SQR(dh);
 
 // estimate and output errors
    for (int v=0; v<NERR; v++)
    {
       Err   [v]  = FABS( Anal[v] - Nume[v] );
-      L1_Err[v] += Err[v]*dh;
+      L1_Err[v] += Err[v]*dv;
 
-      fprintf( File[v], BlankPlusFormat_Flt, r       );
+      fprintf( File[v], BlankPlusFormat_Flt, r1      );
+      if ( dim == 2 )
+         fprintf( File[v], BlankPlusFormat_Flt, r2      );
       fprintf( File[v], BlankPlusFormat_Flt, Nume[v] );
       fprintf( File[v], BlankPlusFormat_Flt, Anal[v] );
       fprintf( File[v], BlankPlusFormat_Flt, Err[v]  );
