@@ -1,12 +1,12 @@
 ## Enabling GPU
 
 To enable GPU:
-1. Edit the `Makefile` and recompile the code (see [[Installation]] for details)
-    1. Turn on
-[[GPU | Installation: Simulation-Options#GPU]]
-    2. Set
-[[GPU_COMPUTE_CAPABILITY | Installation: Simulation-Options#GPU_COMPUTE_CAPABILITY]]
-according to the GPU architecture on your system
+1. Generate the `Makefile` and recompile the code (see [[Installation]] for details)
+    1. Set
+[[GPU_COMPUTE_CAPABILITY | Installation:-Machine-Configuration-File#4-GPU-compute-capability]]
+according to the GPU architecture on your system in the [[configuration file | Installation:-Machine-Configuration-File]]
+    2. Generate `Makefile` with
+[[--gpu | Installation:-Option-List#--gpu]]=`true`
     3. Recompile the code with `make clean; make`
 
 2. [Query the GPUs on your system](#query-gpus) [optional]
@@ -17,62 +17,13 @@ according to the GPU architecture on your system
 ## Compilation Options
 
 Related options:
-[[GPU | Installation: Simulation-Options#GPU]], &nbsp;
-[[GPU_COMPUTE_CAPABILITY | Installation: Simulation-Options#GPU_COMPUTE_CAPABILITY]] &nbsp;
+[[--gpu | Installation:-Option-List#--gpu]], &nbsp;
 
 
 ## Runtime Parameters
-
-Parameters described on this page:
-[OPT__GPUID_SELECT](#OPT__GPUID_SELECT), &nbsp;
-[FLU_GPU_NPGROUP](#FLU_GPU_NPGROUP), &nbsp;
-[POT_GPU_NPGROUP](#POT_GPU_NPGROUP), &nbsp;
-[CHE_GPU_NPGROUP](#CHE_GPU_NPGROUP), &nbsp;
-[NSTREAM](#NSTREAM) &nbsp;
+[[Runtime parameters: GPU | Runtime-Parameters:-GPU]]
 
 Other related parameters: none
-
-Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**
-
-<a name="OPT__GPUID_SELECT"></a>
-* #### `OPT__GPUID_SELECT` &ensp; (-2=CUDA, -1=MPI rank, &#8805;0=input) &ensp; [-1]
-    * **Description:**
-See [Set and Validate GPU IDs](#set-and-validate-gpu-ids).
-    * **Restriction:**
-Must be smaller than the total number of GPUs in a node.
-
-<a name="FLU_GPU_NPGROUP"></a>
-* #### `FLU_GPU_NPGROUP` &ensp; (>0; &#8804;0 &#8594; set to default) &ensp; [depend on the GPU spec]
-    * **Description:**
-Number of patch groups updated by the GPU/CPU fluid solvers at a single time.
-See also [[Performance Optimizations: GPU | Performance Optimizations:-GPU]].
-    * **Restriction:**
-Must be a multiple of [GPU_NSTREAM](#GPU_NSTREAM).
-
-<a name="POT_GPU_NPGROUP"></a>
-* #### `POT_GPU_NPGROUP` &ensp; (>0; &#8804;0 &#8594; set to default) &ensp; [depend on the GPU spec]
-    * **Description:**
-Number of patch groups updated by the GPU/CPU Poisson solvers at a single time.
-See also [[Performance Optimizations: GPU | Performance Optimizations:-GPU]].
-    * **Restriction:**
-Must be a multiple of [GPU_NSTREAM](#GPU_NSTREAM).
-
-<a name="CHE_GPU_NPGROUP"></a>
-* #### `CHE_GPU_NPGROUP` &ensp; (>0; &#8804;0 &#8594; set to default) &ensp; [depend on the GPU spec]
-    * **Description:**
-Number of patch groups updated by the GPU/CPU GRACKLE solvers at a single time.
-See also [[Performance Optimizations: GPU | Performance Optimizations:-GPU]].
-The GPU version is currently not supported.
-    * **Restriction:**
-
-<a name="NSTREAM"></a>
-* #### `NSTREAM` &ensp; (>0; &#8804;0 &#8594; set to default) &ensp; [depend on the GPU spec]
-    * **Description:**
-Number of CUDA streams for the asynchronous memory copy between CPU and GPU.
-See also [[Performance Optimizations: GPU | Performance Optimizations:-GPU]].
-    * **Restriction:**
-See the restrictions on [FLU_GPU_NPGROUP](#FLU_GPU_NPGROUP) and
-[POT_GPU_NPGROUP](#POT_GPU_NPGROUP).
 
 
 ## Remarks
@@ -117,7 +68,7 @@ and there are currently two running jobs using GPU ID 0 and 1, respectively.
 
 On a node with <var>N</var><sub>GPU</sub>, each GPU has a unique
 ID in the range 0 to <var>N</var><sub>GPU</sub>-1. GAMER uses the runtime
-parameter [OPT__GPUID_SELECT](#OPT__GPUID_SELECT) to set the GPU ID
+parameter [[OPT__GPUID_SELECT | Runtime-Parameters:-GPU#OPT__GPUID_SELECT]] to set the GPU ID
 associated with each MPI process.
 
 * `OPT__GPUID_SELECT = -2`: set by CUDA runtime. Typically, this
