@@ -6,7 +6,7 @@ The followings are the outline of this document:
 * [Introduction](#Introduction)
 * [Initialize Wiki and Enable Action](#Initialize-Wiki-and-Enable-Action)
 * [Edit Wiki](#Edit-Wiki)
-* [Pull request](#Pull-request)
+* [Pull Request](#Pull-Request)
 * [Reference](#Reference)
 
 ## Introduction
@@ -68,7 +68,7 @@ sequenceDiagram
    [[images/CreateWiki.png]]
 
 1. **Create a token for the action**
-   * Go to `Setting` of your account > `Developer settings` > `Personal access tokens` > `Generate new token (classic)`
+   * Go to `Settings` of your account > `Developer settings` > `Personal access tokens` > `Generate new token (classic)`
       - NOTE: We use the `Tokens (classic)` in this example.
    * Please check the `repo` and the `workflow` options.
       - NOTE: You can set the `Note` of this token freely
@@ -89,7 +89,7 @@ sequenceDiagram
    [[images/SetToken.png]]
 
    * Click `New repository secret`. Please replace `<your_email_address>` with your account's email address under `Secret` and make sure the `Name` of the secret is `MY_EMAIL`. Click `Add secret`.
-      - NOTE: Your email address will remain private since it only exists in your repository. This step is only for recording your contribution by the action. 
+      - NOTE: Your email address will remain private since it only exists in your repository. This step is only for recording your contribution by the action.
 
    [[images/SetMail.png]]
 
@@ -146,10 +146,10 @@ We provide three methods for editing the Wiki pages: through `gollum` (recommend
 
 1. **On the local terminal**
 
-   This process is similar to editing GAMER source code on the local terminal. The Wiki files are located in `gamer/doc/wiki`. After committing your changes to the `new_contribution_branch` branch and pushing them to the `origin` repository on GitHub, you can preview these changes on the Wiki pages by
+   This process is similar to editing GAMER source code on the local terminal. The Wiki files are located in `gamer/doc/wiki`. After committing your changes to the `new_contribution_branch` branch and pushing them to GitHub, you can preview these changes on the Wiki pages by
    * Click `Actions` > `Copy doc to wiki` > `Run workflow` > Choose `Branch: new_contribution_branch` > Click `Run workflow`. Once the workflow is complete, the Wiki will be updated to match `gamer/doc/wiki` on the `new_contribution_branch` branch.
 
-## Pull request
+## Pull Request
    1. Before filing a new PR, please ensure the following:
       * All hyperlinks are functional.
       * Images are clear.
