@@ -229,11 +229,11 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 
    const double x0         = 0.5*amr->BoxSize[0];
    const double y0         = 0.5*amr->BoxSize[0];
-   const double r          = sqrt( SQR(x-x0) + SQR(y-y0) );
-   const double phi        = atan2( y-y0, x-x0 );
+   const double r          = SQRT( SQR(x-x0) + SQR(y-y0) );
+   const double phi        = SATAN2( y-y0, x-x0 );
 
-   magnetic[MAGX] = - ( y - y0 ) * 0.5/sqrt(M_PI) / r;
-   magnetic[MAGY] =   ( x - x0 ) * 0.5/sqrt(M_PI) / r;
+   magnetic[MAGX] = - ( y - y0 ) * 0.5/SQRT(M_PI) / r;
+   magnetic[MAGY] =   ( x - x0 ) * 0.5/SQRT(M_PI) / r;
    magnetic[MAGZ] = 0.0;
 
 } // FUNCTION : SetBFieldIC
