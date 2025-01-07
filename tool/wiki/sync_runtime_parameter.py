@@ -9,23 +9,23 @@ from string import ascii_uppercase as auc
 #====================================================================================================
 ALL_PARAM_FILE = "../../example/input/Input__Parameter"
 PARAM_CPP_FILE = "../../src/Init/Init_Load_Parameter.cpp"
-LINK_FILES     = [ "../../doc/wiki/Runtime-Parameters:-General.md",
-                   "../../doc/wiki/MPI-and-OpenMP.md",
-                   "../../doc/wiki/GPU.md",
-                   "../../doc/wiki/Runtime-Parameters:-Units.md",
-                   "../../doc/wiki/Initial-Conditions.md",
-                   "../../doc/wiki/Hydro.md",
-                   "../../doc/wiki/Gravity.md",
-                   "../../doc/wiki/Particles.md",
-                   "../../doc/wiki/Runtime-Parameters:-Cosmology.md",
-                   "../../doc/wiki/Chemistry-and-Radiation.md",
-                   "../../doc/wiki/Star-Formation.md",
-                   "../../doc/wiki/Feedback.md",
-                   "../../doc/wiki/Runtime-Parameters:-Timestep.md",
-                   "../../doc/wiki/Runtime-Parameters:-Refinement.md",
-                   "../../doc/wiki/Runtime-Parameters:-Interpolation.md",
-                   "../../doc/wiki/Outputs.md",
-                   "../../doc/wiki/Runtime-Parameters:-Miscellaneous.md"
+LINK_FILES     = [ "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Chemistry-and-Radiation.md",
+                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Cosmology.md",
+                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Feedback.md",
+                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-GPU.md",
+                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-General.md",
+                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Gravity.md",
+                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Hydro.md",
+                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Initial-Conditions.md",
+                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Interpolation.md",
+                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-MPI-and-OpenMP.md",
+                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Miscellaneous.md",
+                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Outputs.md",
+                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Particles.md",
+                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Refinement.md",
+                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Star-Formation.md",
+                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Timestep.md",
+                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Units.md"
                  ]
 OUT_MD         = "Runtime-Parameters:-All.md"
 REPLACE_DICT   = { "NoMin_double":"None", "NoMax_double":"None", "NoDef_double":"None",
@@ -47,9 +47,9 @@ class parameter():
         name, description = self.get_name_description( string )
         self.name         = name
         self.link_name    = name
-        self.default      = []
-        self.minimum      = []
-        self.maximum      = []
+        self.default      = ""
+        self.minimum      = ""
+        self.maximum      = ""
         self.description  = description
         self.NAdd         = 0
 
@@ -115,14 +115,21 @@ for i, line in enumerate(lines_cpp):
     default = words[3]
     minimum = words[4]
     maximum = words[5]
-    try:
-        if params[key].NAdd >= 1: print( "%-30s has more than one ReadPara->Add() function in %s"%(key, PARAM_CPP_FILE) )
-        params[key].default.append( REPLACE_DICT[default] if default in REPLACE_DICT else default )
-        params[key].minimum.append( REPLACE_DICT[minimum] if minimum in REPLACE_DICT else minimum )
-        params[key].maximum.append( REPLACE_DICT[maximum] if maximum in REPLACE_DICT else maximum )
-        params[key].NAdd += 1
-    except:
+
+    if key not in params:
         print( "%-30s does not exist in %s"%(key, ALL_PARAM_FILE) )
+        continue
+
+    if params[key].NAdd >= 1:
+        print( "%-30s has more than one ReadPara->Add() function in %s"%(key, PARAM_CPP_FILE) )
+        params[key].default = "Depend"
+        params[key].minimum = "Depend"
+        params[key].maximum = "Depend"
+    else:
+        params[key].default = REPLACE_DICT[default] if default in REPLACE_DICT else default
+        params[key].minimum = REPLACE_DICT[minimum] if minimum in REPLACE_DICT else minimum
+        params[key].maximum = REPLACE_DICT[maximum] if maximum in REPLACE_DICT else maximum
+    params[key].NAdd += 1
 
 # get the detailed description link from LINK_FILES
 for p in params:
@@ -151,7 +158,7 @@ with open( OUT_MD, 'w' ) as f:
     start_char = ''
     params_sorted_key = sorted( params.keys() )
     for key in params_sorted_key:
-        # Add alphabet title
+        # add alphabet title
         if start_char != key[0]:
             start_char = key[0]
             f.write( '\n' )
@@ -159,9 +166,8 @@ with open( OUT_MD, 'w' ) as f:
             f.write( param_str_format%("Name", "Default", "Min", "Max", "Short description") )
             f.write( param_str_format%(":---", ":---", ":---", ":---", ":---") )
 
-        for i in range(params[key].NAdd):
-            string = param_str_format%(params[key].link_name, params[key].default[i], params[key].minimum[i], params[key].maximum[i], params[key].description)
-            f.write( string )
+        string = param_str_format%(params[key].link_name, params[key].default, params[key].minimum, params[key].maximum, params[key].description)
+        f.write( string )
 
     f.write( '\n' )
     f.write( '\n' )
