@@ -101,12 +101,12 @@ def yt_inline_inputArg( fields ):
 
 Projection of field `Cloud01` along the z-axis:
 
-[[images/InSitu_Projection_z_Cloud0.png | alt=insitu_projection]]
+[[/images/InSitu_Projection_z_Cloud0.png | alt=insitu_projection]]
 
 
 Particle plot using particle position x and y as axes with particle mass mapped to a colorbar:
 
-[[images/InSitu_Particle_z_particle_mass.png | alt=insitu_particle]]
+[[/images/InSitu_Particle_z_particle_mass.png | alt=insitu_particle]]
 
 10. Since we have run libyt in interactive mode, the program should now pause and wait for user input.
 
