@@ -253,9 +253,9 @@ static void OutputError()
    const OptOutputPart_t Part = OUTPUT_XY;
 
 #  ifdef MHD
-   Output_L1Error( SetGridIC, SetBFieldIC, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
+   Output_L1Error( SetGridIC, SetBFieldIC, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, 0.5*amr->BoxSize[2] );
 #  else
-   Output_L1Error( SetGridIC, NULL,        Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
+   Output_L1Error( SetGridIC, NULL,        Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, 0.5*amr->BoxSize[2] );
 #  endif
 
 } // FUNCTION : OutputError
