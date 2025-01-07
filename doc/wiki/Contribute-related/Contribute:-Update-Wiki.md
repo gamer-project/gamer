@@ -63,15 +63,15 @@ sequenceDiagram
    * Please make sure you have the latest GAMER.
 
 1. **Create the first page**
-   * Click the Wiki page and create the first page
+   * Click the Wiki page and create the first page.
 
    [[images/CreateWiki.png]]
 
 1. **Create a token for the action**
-   * Go to `Settings` of your account > `Developer settings` > `Personal access tokens` > `Generate new token (classic)`
+   * Go to `Settings` of your account > `Developer settings` > `Personal access tokens` > `Generate new token (classic)`.
       - NOTE: We use the `Tokens (classic)` in this example.
    * Please check the `repo` and the `workflow` options.
-      - NOTE: You can set the `Note` of this token freely
+      - NOTE: You can set the `Note` of this token freely.
    * You might want to set the `Expiration` to `No expiration`.
    * Click the green `Generate token` at the bottom.
 
@@ -80,7 +80,7 @@ sequenceDiagram
    * Remember to save the token since it will only be shown once!
 
 1. **Create the repository secret token and email**
-   * Go to `Settings` of your forked gamer repository > `Security` > `Secrets and variables` > `Actions` > `Repository secrets`
+   * Go to `Settings` of your forked gamer repository > `Security` > `Secrets and variables` > `Actions` > `Repository secrets`.
 
    [[images/CreateSecret.png]]
 
@@ -116,7 +116,7 @@ We provide three methods for editing the Wiki pages: through `gollum` (recommend
      * NOTE: To use `gollum` for a branch other than `master` (e.g., `new_branch`), use the command `gollum --ref new_branch`.
      * `gollum --lenient-tag-lookup /path/to/wiki`
      * Open `http://localhost:4567` in your browser.
-   - Push your changes to the forked Wiki git
+   - Push your changes to the forked Wiki git.
    - **Copy wiki to doc**
 
      This step is like `git push` to your branch.
