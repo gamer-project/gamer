@@ -88,7 +88,7 @@ with open( PARAM_CPP_FILE, 'r' ) as f:
 
 link_source_mds = {}
 for file_path in LINK_FILES:
-    file_name = file_path.split('/')[-1][:-3] # get the file name without path and trailing `.md`
+    file_name = file_path.split('/')[-1][:-3] # get the filename without path and trailing `.md`
     with open( file_path, 'r' ) as f:
         link_source_mds[file_name] = f.read()
 
@@ -106,7 +106,7 @@ for i, line in enumerate(lines):
     last_key = line.split()[0]
     params[last_key] = parameter( line )
 
-# get all default, min, max, value from PARAM_CPP_FILE
+# get all default, min, max, and value from PARAM_CPP_FILE
 for i, line in enumerate(lines_cpp):
     if "ReadPara->Add" not in line: continue
     words = list( filter( None, re.split( ',| ', line ) ) )
@@ -137,7 +137,7 @@ for p in params:
     if not status:
         print( "Can not find the description of %-30s in all runtime parameter pages!"%(p) )
 
-# output markdown file
+# output the markdown file
 with open( OUT_MD, 'w' ) as f:
     param_str_format = '| %-100s | %15s | %15s | %15s | %s |\n'
 
