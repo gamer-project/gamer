@@ -1,0 +1,35 @@
+Compilation flags:
+========================================
+Enable : MODEL=HYDRO, PARTICLE, GRAVITY, DUAL_ENERGY, FEEDBACK, STAR_FORMATION
+Disable: COMOVING
+
+
+Default setup:
+========================================
+1. Units:
+   (1) External (for Input__TestProb only):
+       See the comment of each runtime variable
+
+   (2) Internal (for all other input files and internal usage):
+       [L] = 1.2344e21 ~ 400 kpc
+       [M] = [D]*[L]^3 ~ 1.9e39 g/cm^3
+       [T] = 3.15e13 ~ 10 Myr
+    -->[V] = [L]/[T] ~ 3.9e7 km/s
+    -->[D] = 1.0e-24 ~ 1 particle/cc
+
+2. Default resolution ~ 6.25 pc (MAX_LEVEL = 0)
+
+
+Note:
+========================================
+1. Mimic the "StarParticleSingleTest" test problem setup of Enzo
+   --> Nathan Goldbaum, et al., 2015, ApJ, 814, 131 (arXiv: 1510.08458)
+       Ji-hoon Kim, et al., 2016, ApJ, 833, 202 (arXiv: 1610.03066)
+2. Other references:
+       Enzo test problem setup : https://bitbucket.org/enzo/enzo-dev/src/19f4a44e06f1c386573dc77b3608ba66b64d93bc/run/StarParticle/StarParticleSingleTest
+       Enzo Hub	source code(1) : https://github.com/enzo-project/enzo-dev/blob/8898b36d6e14c0db8af51efd7a6019c5838ce288/src/enzo/Grid_StarParticleHandler.C#L1875
+       Enzo Hub source code(2) : https://github.com/enzo-project/enzo-dev/blob/8898b36d6e14c0db8af51efd7a6019c5838ce288/src/enzo/star_maker_ssn.F#L255
+       yt hub                  : https://girder.hub.yt/#collection/5736481ddd9119000164acf1
+3. Source code (1) from Enzo inspired how to spread SN explosion through time and star particles;
+   source code (2) inspired how SNe feedback to surrounding ISM.
+4. Some handy yt analysis scripts are put at "yt_script"

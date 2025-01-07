@@ -25,6 +25,7 @@ void Init_TestProb_Hydro_ParEqmIC();
 void Init_TestProb_Hydro_BarredPot();
 void Init_TestProb_Hydro_ParticleTest();
 void Init_TestProb_Hydro_CDM_LSS();
+void Init_TestProb_Hydro_Feedback();
 void Init_TestProb_Hydro_Zeldovich();
 void Init_TestProb_Hydro_EnergyPowerSpectrum();
 void Init_TestProb_Hydro_CR_SoundWave();
@@ -96,6 +97,7 @@ void Init_TestProb()
       case TESTPROB_HYDRO_CR_SOUNDWAVE :                 Init_TestProb_Hydro_CR_SoundWave();                break;
       case TESTPROB_HYDRO_CR_SHOCKTUBE :                 Init_TestProb_Hydro_CR_ShockTube();                break;
       case TESTPROB_HYDRO_CR_DIFFUSION :                 Init_TestProb_Hydro_CR_Diffusion();                break;
+      case TESTPROB_HYDRO_FEEDBACK :                     Init_TestProb_Hydro_Feedback();                    break;
 
       case TESTPROB_ELBDM_EXTPOT :                       Init_TestProb_ELBDM_ExtPot();                      break;
       case TESTPROB_ELBDM_JEANS_INSTABILITY_COMOVING :   Init_TestProb_ELBDM_JeansInstabilityComoving();    break;
