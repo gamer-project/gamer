@@ -1,22 +1,3 @@
-
-## Compilation Options
-
-Related options:
-[[--model | Installation:-Option-List#--model]], &nbsp;
-[[--flu_scheme | Installation:-Option-List#--flu_scheme]], &nbsp;
-[[--slope | Installation:-Option-List#--slope]], &nbsp;
-[[--flux | Installation:-Option-List#--flux]], &nbsp;
-[[--dual | Installation:-Option-List#--dual]], &nbsp;
-[[--passive | Installation:-Option-List#--passive]], &nbsp;
-[[--mhd | Installation:-Option-List#--mhd]], &nbsp;
-[[--cosmic_ray | Installation:-Option-List#--cosmic_ray]], &nbsp;
-[[--cr_diffusion | Installation:-Option-List#--cr_diffusion]], &nbsp;
-[[--eos | Installation:-Option-List#--eos]], &nbsp;
-[[--barotropic | Installation:-Option-List#--barotropic]] &nbsp;
-
-
-## Runtime Parameters
-
 Parameters described on this page:
 [OPT__BC_FLU_XM](#OPT__BC_FLU_XM), &nbsp;
 [OPT__BC_FLU_XP](#OPT__BC_FLU_XP), &nbsp;
@@ -57,13 +38,6 @@ Parameters described on this page:
 [CR_DIFF_PERP](#CR_DIFF_PERP), &nbsp;
 [CR_DIFF_MIN_B](#CR_DIFF_MIN_B) &nbsp;
 
-Other related parameters:
-[[DT__FLUID | Runtime Parameters:-Timestep#DT__FLUID]], &nbsp;
-[[DT__FLUID_INIT | Runtime Parameters:-Timestep#DT__FLUID_INIT]], &nbsp;
-[[DT__CR_DIFFUSION | Runtime Parameters:-Timestep#DT__CR_DIFFUSION]], &nbsp;
-[[AUTO_REDUCE_DT | Runtime Parameters:-Timestep#AUTO_REDUCE_DT]], &nbsp;
-[[FLU_GPU_NPGROUP | GPU#FLU_GPU_NPGROUP]], &nbsp;
-[[AUTO_REDUCE_MINMOD_FACTOR | Runtime-Parameters:-Timestep#AUTO_REDUCE_MINMOD_FACTOR ]] &nbsp;
 
 Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**
 
@@ -83,7 +57,7 @@ when [[TESTPROB_ID | Runtime Parameters:-General#TESTPROB_ID]]&#8800;0.
 When adopting periodic conditions, they must be applied to both the -x and +x faces.
 Particles only support the periodic boundary conditions. When adopting any non-periodic
 boundary condition for fluid, particles will be removed when getting too close
-to the boundaries (see [[ PAR_REMOVE_CELL | Particles#PAR_REMOVE_CELL ]] ).
+to the boundaries (see [[ PAR_REMOVE_CELL | Runtime-Parameters:-Particles#PAR_REMOVE_CELL ]] ).
 
 <a name="OPT__BC_FLU_XP"></a>
 * #### `OPT__BC_FLU_XP` &ensp; (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode) &ensp; [none]
@@ -403,4 +377,4 @@ Only applicable when enabling the compilation option
 
 ## Links
 * [[Main page of Runtime Parameters | Runtime Parameters]]
-* [[Equation of state |equation-of-state]]
+* [[Main page of Hydro | Hydro]]

@@ -211,7 +211,7 @@ Check the conservation laws. The results will be recorded in the file
 * #### `OPT__CK_NORMALIZE_PASSIVE` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
 Check the normalization of passive scalars. Make sure to turn on
-[[OPT__NORMALIZE_PASSIVE | Hydro#OPT__NORMALIZE_PASSIVE ]].
+[[OPT__NORMALIZE_PASSIVE | Runtime-Parameters:-Hydro#OPT__NORMALIZE_PASSIVE ]].
 Otherwise this check will likely fail.
     * **Restriction:**
 
@@ -220,8 +220,8 @@ Otherwise this check will likely fail.
     * **Description:**
 Check the data restriction (i.e., the averages of fine-grid data equal the
 coarse-grid data). Make sure to turn on both
-[[OPT__FIXUP_RESTRICT | Hydro#OPT__FIXUP_RESTRICT]] and
-[[OPT__INIT_RESTRICT | Initial-Conditions#OPT__INIT_RESTRICT]].
+[[OPT__FIXUP_RESTRICT | Runtime-Parameters:-Hydro#OPT__FIXUP_RESTRICT]] and
+[[OPT__INIT_RESTRICT | Runtime-Parameters:-Initial-Conditions#OPT__INIT_RESTRICT]].
 Otherwise this check will likely fail.
     * **Restriction:**
 
