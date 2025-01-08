@@ -22,6 +22,7 @@ void Aux_Check_Refinement( const int lv, const char *comment );
 void Aux_Check_Restrict( const int lv, const char *comment );
 void Aux_Error( const char *File, const int Line, const char *Func, const char *Format, ... );
 bool Aux_CheckFileExist( const char *FileName );
+bool Aux_CheckFolderExist( const char *FolderName );
 void Aux_GetCPUInfo( const char *FileName );
 void Aux_GetMemInfo();
 void Aux_Message( FILE *Type, const char *Format, ... );

@@ -21,3 +21,26 @@ bool Aux_CheckFileExist( const char *FileName )
    return ( stat(FileName,&Buf) == 0 );
 
 } // FUNCTION : Aux_CheckFileExist
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Aux_CheckFolderExist
+// Description :  Check whether or not the target folder exists
+//
+// Note        :  Use the "stat" function to query the existence of the target folder
+//
+// Parameter   :  FileName : Name of the target folder
+//
+// Return      :  true/false <-> file exists/not exists
+//-------------------------------------------------------------------------------------------------------
+bool Aux_CheckFolderExist( const char *FolderName )
+{
+
+   struct stat Buf;
+
+   if( stat( FolderName, &Buf ) != 0 )   return false; // not exist
+   else if( Buf.st_mode & S_IFDIR )      return true;  // is directory
+   else                                  return false; // not a diretory
+
+} // FUNCTION : Aux_CheckFolderExist
