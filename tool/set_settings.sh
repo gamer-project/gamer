@@ -60,7 +60,7 @@ declare -A SETTINGS
 DELETE_KEYS=()
 
 if [ "$#" -eq 0 ]; then
-    show_help
+    printf "$(show_help)\n" >&2
     exit 1
 fi
 
@@ -68,44 +68,43 @@ parse_set_parameter() {
     local PARAM="$1"
     local KEY="${PARAM%%=*}"
     if [[ ! " ${VALID_KEYS[@]} " =~ " $KEY " ]]; then
-        echo "Error: Invalid key '$KEY'."
-        show_valid_keys
+        echo "Error: Invalid key '$KEY'." >&2
+        printf "$(show_valid_keys)\n" >&2
         exit 1
     fi
     if [[ "$PARAM" != *=* ]]; then
-        echo "Error: Invalid format for key '$KEY'. Use --$KEY=<value>."
+        echo "Error: Invalid format for key '$KEY'. Use --$KEY=<value>." >&2
         exit 1
     fi
     local VALUE="${PARAM#*=}"
     if [[ -z "$VALUE" ]]; then
-        echo "Error: Value for key '$KEY' cannot be empty. Use --$KEY=<value>."
-        echo "If you want to delete '$KEY', use --delete $KEY."
+        echo "Error: Value for key '$KEY' cannot be empty. Use --$KEY=<value>." >&2
+        echo "If you want to delete '$KEY', use --delete $KEY." >&2
         exit 1
     fi
     if [[ "$VALUE" =~ \  ]]; then
-        echo "Error: Value for key '$KEY' cannot contain spaces."
+        echo "Error: Value for key '$KEY' cannot contain spaces." >&2
         exit 1
     fi
     SETTINGS["$KEY"]="$VALUE"
 }
 
 parse_delete_keys() {
-    local keys_processed=0
+    keys_processed=0
     if [[ "$#" -eq 0 ]]; then
-        echo "Error: -d or --delete requires at least one key."
+        echo "Error: -d or --delete requires at least one key." >&2
         exit 1
     fi
     while [[ "$#" -gt 0 && "${1:0:1}" != "-" ]]; do
         if [[ ! " ${VALID_KEYS[@]} " =~ " $1 " ]]; then
-            echo "Error: Invalid key '$1' for deletion."
-            show_valid_keys
+            echo "Error: Invalid key '$1' for deletion." >&2
+            printf "$(show_valid_keys)\n" >&2
             exit 1
         fi
         DELETE_KEYS+=("$1")
         shift
         keys_processed=$((keys_processed + 1))
     done
-    return $keys_processed
 }
 
 while [[ "$#" -gt 0 ]]; do
@@ -125,11 +124,11 @@ while [[ "$#" -gt 0 ]]; do
                         set -- "$@" "-$(echo "${OPT:1}" | tr -d 'd')"
                     fi
                     parse_delete_keys "$@"
-                    shift $?
+                    shift $keys_processed
                     break ;;
                 *)
-                    echo "Unknown option: -${OPT:0:1}"
-                    echo "Use -h or --help for usage information."
+                    echo "Error: Unknown option: -${OPT:0:1}" >&2
+                    echo "Use -h or --help for usage information." >&2
                     exit 1 ;;
             esac
             OPT="${OPT:1}"
@@ -145,7 +144,7 @@ while [[ "$#" -gt 0 ]]; do
                 DELETE=true
                 shift
                 parse_delete_keys "$@"
-                shift $? ;;
+                shift $keys_processed ;;
             --clear-all)
                 DELETE=true
                 DELETE_KEYS=("${VALID_KEYS[@]}")   # Set DELETE_KEYS to all valid keys
@@ -155,8 +154,8 @@ while [[ "$#" -gt 0 ]]; do
                 parse_set_parameter "${1#--}"
                 shift ;;
             *)
-                echo "Unknown parameter passed: $1"
-                echo "Use -h or --help for usage information."
+                echo "Error: Unknown parameter passed: $1" >&2
+                echo "Use -h or --help for usage information." >&2
                 exit 1 ;;
         esac
     fi
@@ -166,7 +165,7 @@ cd "$(dirname "$0")"
 
 # Ensure either --local or --global is specified
 if [ "$LOCAL" = true ] && [ "$GLOBAL" = true ]; then
-    echo "Error: Cannot specify both --local and --global."
+    echo "Error: Cannot specify both --local and --global." >&2
     exit 1
 elif [ "$LOCAL" = true ]; then
     SETTING_FILE="../src/.local_settings"
@@ -175,13 +174,13 @@ elif [ "$GLOBAL" = true ]; then
     SETTING_FILE="$HOME/.config/gamer/global_settings"
     SETTING_TYPE="global"
 else
-    echo "Error: Specify either --local or --global."
+    echo "Error: Specify either --local or --global." >&2
     exit 1
 fi
 
 # Ensure mutually exclusive operations
 if [ "$SET" = true ] && [ "$DELETE" = true ]; then
-    echo "Error: Cannot set and delete parameters at the same time."
+    echo "Error: Cannot set and delete parameters at the same time." >&2
     exit 1
 elif [ "$SET" = false ] && [ "$DELETE" = false ]; then
     LIST=true
