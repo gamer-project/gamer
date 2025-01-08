@@ -3418,6 +3418,14 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Flag_User",          HOFFSET(InputPara_t,Opt__Flag_User         ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_User_Num",      HOFFSET(InputPara_t,Opt__Flag_User_Num     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_Region",        HOFFSET(InputPara_t,Opt__Flag_Region       ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__Flag_Angular",       HOFFSET(InputPara_t,Opt__Flag_Angular      ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Angular_CenX",            HOFFSET(InputPara_t,Angular_CenX           ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "Angular_CenY",            HOFFSET(InputPara_t,Angular_CenY           ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "Angular_CenZ",            HOFFSET(InputPara_t,Angular_CenZ           ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "Opt__Flag_Radial",        HOFFSET(InputPara_t,Opt__Flag_Radial       ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Radial_CenX",             HOFFSET(InputPara_t,Radial_CenX            ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "Radial_CenY",             HOFFSET(InputPara_t,Radial_CenY            ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "Radial_CenZ",             HOFFSET(InputPara_t,Radial_CenZ            ), H5T_NATIVE_DOUBLE  );
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Opt__Flag_NParPatch",     HOFFSET(InputPara_t,Opt__Flag_NParPatch    ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_NParCell",      HOFFSET(InputPara_t,Opt__Flag_NParCell     ), H5T_NATIVE_INT     );
