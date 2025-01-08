@@ -13,7 +13,7 @@ KEY_DESCRIPTIONS=(
 # List of valid keys
 VALID_KEYS=("${!KEY_DESCRIPTIONS[@]}")
 
-# Keys padded with trailing spaces for formatting output
+# For padding keys with trailing spaces to format output
 MAX_KEY_LENGTH=0
 for KEY in "${VALID_KEYS[@]}"; do
     if [ ${#KEY} -gt $MAX_KEY_LENGTH ]; then
@@ -21,6 +21,7 @@ for KEY in "${VALID_KEYS[@]}"; do
     fi
 done
 
+# Print keys in a formatted way
 print_key(){  
     # $1 : the key name  
     # $2 : the key value or additional message
@@ -56,7 +57,7 @@ show_help() {
 
 ##################### PARSER ######################
 
-# Parser arguments
+# Parser parameters
 LOCAL=false
 GLOBAL=false
 LIST=false
@@ -65,44 +66,21 @@ SET=false
 declare -A SETTINGS
 DELETE_KEYS=()
 
-# Parser functions
+# Parser utility functions
 parse_set_parameter() {
     local PARAM="$1"
     local KEY="${PARAM%%=*}"
-    if [[ ! " ${VALID_KEYS[@]} " =~ " $KEY " ]]; then
-        echo "Error: Invalid key '$KEY'." >&2
-        printf "$(show_valid_keys)\n" >&2
-        exit 1
-    fi
     if [[ "$PARAM" != *=* ]]; then
-        echo "Error: Invalid format for key '$KEY'. Use --$KEY=<value>." >&2
+        echo "Error: Invalid format for the key '$KEY'. Use --$KEY=<value>." >&2
         exit 1
     fi
     local VALUE="${PARAM#*=}"
-    if [[ -z "$VALUE" ]]; then
-        echo "Error: Value for key '$KEY' cannot be empty. Use --$KEY=<value>." >&2
-        echo "If you want to delete '$KEY', use --delete $KEY." >&2
-        exit 1
-    fi
-    if [[ "$VALUE" =~ \  ]]; then
-        echo "Error: Value for key '$KEY' cannot contain spaces." >&2
-        exit 1
-    fi
     SETTINGS["$KEY"]="$VALUE"
 }
 
 parse_delete_keys() {
     KEYS_PROCESSED=0
-    if [[ "$#" -eq 0 ]]; then
-        echo "Error: -d or --delete requires at least one key." >&2
-        exit 1
-    fi
     while [[ "$#" -gt 0 && "${1:0:1}" != "-" ]]; do
-        if [[ ! " ${VALID_KEYS[@]} " =~ " $1 " ]]; then
-            echo "Error: Invalid key '$1' for deletion." >&2
-            printf "$(show_valid_keys)\n" >&2
-            exit 1
-        fi
         DELETE_KEYS+=("$1")
         shift
         KEYS_PROCESSED=$((KEYS_PROCESSED + 1))
@@ -165,14 +143,14 @@ while [[ "$#" -gt 0 ]]; do
                 parse_set_parameter "${1#--}"
                 shift ;;
             *)
-                echo "Error: Unknown parameter passed: $1" >&2
+                echo "Error: Unknown option: $1" >&2
                 echo "Use -h or --help for usage information." >&2
                 exit 1 ;;
         esac
     fi
 done
 
-################ VALIDATE ARGUMENTS ###############
+############### VALIDATE PARAMETERS ###############
 
 # Ensure at least one operation is specified
 if [ "$SET" = false ] && [ "$DELETE" = false ] && [ "$LIST" = false ]; then
@@ -181,10 +159,44 @@ if [ "$SET" = false ] && [ "$DELETE" = false ] && [ "$LIST" = false ]; then
     exit 1
 fi
 
+# Validate the keys and values for setting
+if [ "$SET" = true ]; then
+    for KEY in "${!SETTINGS[@]}"; do
+        if [[ ! " ${VALID_KEYS[@]} " =~ " $KEY " ]]; then
+            echo "Error: Invalid key '$KEY'." >&2
+            printf "$(show_valid_keys)\n" >&2
+            exit 1
+        fi
+        if [[ -z "${SETTINGS[$KEY]}" ]]; then
+            echo "Error: The value for the key '$KEY' cannot be empty. Use --$KEY=<value>." >&2
+            exit 1
+        fi
+        if [[ "${SETTINGS[$KEY]}" =~ \  ]]; then
+            echo "Error: The value for the key '$KEY' cannot contain spaces." >&2
+            exit 1
+        fi
+    done
+fi
+
 # Ensure mutually exclusive operations
 if [ "$SET" = true ] && [ "$DELETE" = true ]; then
     echo "Error: Cannot set and delete parameters at the same time." >&2
     exit 1
+fi
+
+# Validate the keys for deletion
+if [ "$DELETE" = true ]; then
+    if [ ${#DELETE_KEYS[@]} -eq 0 ]; then
+        echo "Error: No keys specified for deletion." >&2
+        exit 1
+    fi
+    for KEY in "${DELETE_KEYS[@]}"; do
+        if [[ ! " ${VALID_KEYS[@]} " =~ " $KEY " ]]; then
+            echo "Error: Invalid key '$KEY' for deletion." >&2
+            printf "$(show_valid_keys)\n" >&2
+            exit 1
+        fi
+    done
 fi
 
 # Ensure either --local or --global is specified
