@@ -239,9 +239,9 @@ void Init_Load_FlagCriteria()
          else if ( FlagMode == 16 )
          {
             sscanf( input_line, "%d%lf%lf%lf", &Trash, &FlagTable_Angular[lv][0], &FlagTable_Angular[lv][1], &FlagTable_Angular[lv][2] );
-            if ( FlagTable_Angular[lv][0] > 0.0  &&
-                 FlagTable_Angular[lv][1] > 0.0  &&
-                 FlagTable_Angular[lv][0] > 0.5*FlagTable_Angular[lv][1] )
+            if ( FlagTable_Angular[lv][0] >= 0.0  &&
+                 FlagTable_Angular[lv][1] >= 0.0  &&
+                 FlagTable_Angular[lv][0] >  0.5*FlagTable_Angular[lv][1] )
                Aux_Message( stderr, "WARNING : AngRes_Max (%20.14e) > 0.5*AngRes_Min (%20.14e) at lv %d (note that AngRes_Max has higher priority) !!\n",
                             FlagTable_Angular[lv][0], 0.5*FlagTable_Angular[lv][1], lv );
          }
