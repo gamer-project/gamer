@@ -51,7 +51,8 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                                          the velocity gradient is large
 //                RemoveCell              : remove particles RemoveCell-base-level-cells away from the boundary
 //                                          (for non-periodic BC only)
-//                GhostSize               : Number of ghost zones required for interpolation scheme
+//                GhostSize               : Number of ghost zones required for the interpolation scheme of massive particles
+//                GhostSizeTracer         : Number of ghost zones required for the interpolation scheme of tracer  particles
 //                Attribute               : Pointer arrays to different particle attributes (Mass, Pos, Vel, ...)
 //                InactiveParList         : List of inactive particle IDs
 //                Mesh_Attr               : Pointer arrays to different mesh quantities mapped onto tracer particles
