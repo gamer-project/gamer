@@ -32,18 +32,19 @@ show_valid_keys() {
 
 show_help() {
     echo "Usage:"
-    echo "  $0 (--local | --global) [-lv] [--<key>=<value> ...]"
-    echo "  $0 (--local | --global) [-lvd] [--delete <key> ...]"
-    echo "  $0 [-h | --help]"
+    echo "  $0 (--local | --global) [-v] --<key>=<value> ..."
+    echo "  $0 (--local | --global) [-v] (-d | --delete) <key> ..."
+    echo "  $0 (--local | --global) (-l | --list)"
+    echo "  $0 (-h | --help)"
     echo ""
     echo "Options:"
     echo "  --local              Use local settings"
     echo "  --global             Use global settings"
-    echo "  -l, --list           List current settings"
     echo "  -v, --verbose        Show verbose output"
     echo "  --<key>=<value>      Set a parameter"
     echo "  -d, --delete key     Delete a parameter"
     echo "  --clear-all          Clear all parameters"
+    echo "  -l, --list           List current settings"
     echo "  -h, --help           Show this help message"
     echo ""
     show_valid_keys
@@ -53,7 +54,6 @@ show_help() {
 LOCAL=false
 GLOBAL=false
 LIST=false
-VERBOSE=false
 DELETE=false
 SET=false
 declare -A SETTINGS
@@ -114,7 +114,7 @@ while [[ "$#" -gt 0 ]]; do
         while [[ -n "$OPT" ]]; do # Possibly combined
             case "${OPT:0:1}" in
                 l) LIST=true ;;
-                v) VERBOSE=true ;;
+                v) LIST=true ;;
                 h) show_help; exit 0 ;;
                 d)
                     DELETE=true
@@ -138,7 +138,7 @@ while [[ "$#" -gt 0 ]]; do
             --local) LOCAL=true; shift ;;
             --global) GLOBAL=true; shift ;;
             --list) LIST=true; shift ;;
-            --verbose) VERBOSE=true; shift ;;
+            --verbose) LIST=true; shift ;;
             --help) show_help; exit 0 ;;
             --delete)
                 DELETE=true
@@ -201,27 +201,24 @@ fi
 DIR="$(dirname "$SETTING_FILE")"
 if [ ! -d "$DIR" ]; then
     mkdir -p "$DIR"
-    [ "$VERBOSE" = true ] && echo "Created directory '$(realpath "$DIR")'."
+    echo "Created directory $DIR."
 fi
 if [ ! -f "$SETTING_FILE" ]; then
     if touch "$SETTING_FILE"; then
-        [ "$VERBOSE" = true ] && echo "Created file $(basename "$SETTING_FILE") in '$(realpath "$DIR")'."
+        echo "Created file $(basename "$SETTING_FILE") in $DIR."
     else
-        echo "Fatal: Failed to create file $(basename "$SETTING_FILE") in '$(realpath "$DIR")'." >&2
+        echo "Fatal: Failed to create file $(basename "$SETTING_FILE") in $DIR." >&2
         exit 1
     fi
 fi
 
 # The head of message to the user
 if [ "$LIST" = true ]; then # Header for listing settings
-    echo "$SETTING_TYPE settings in $(realpath "$SETTING_FILE")"
+    echo "$SETTING_TYPE settings in $SETTING_FILE"
     echo "---------------------------"
-elif [ "$VERBOSE" = true ]; then
-    echo "Loaded $SETTING_TYPE settings from '$(realpath "$SETTING_FILE")'."
 fi
 
 # Main loop to update or delete settings
-VERBOSE_OUTPUT="" # Store the echo output for verbose mode
 for KEY in "${VALID_KEYS[@]}"; do
     OLD_VALUE="${EXISTING_SETTINGS[$KEY]}"
     NEW_VALUE="${SETTINGS[$KEY]}"
@@ -237,22 +234,12 @@ for KEY in "${VALID_KEYS[@]}"; do
                 echo "$PADDED_KEY   $OLD_VALUE -> $NEW_VALUE"
             fi
         fi
-        if [ "$VERBOSE" = true ]; then
-            if [ -z "$OLD_VALUE" ]; then
-                VERBOSE_OUTPUT+="Set '$KEY' to '$NEW_VALUE'.\n"
-            else
-                VERBOSE_OUTPUT+="Updated '$KEY' from '$OLD_VALUE' to '$NEW_VALUE'.\n"
-            fi
-        fi
 
     elif [ "$DELETE" = true ] && [[ " ${DELETE_KEYS[@]} " =~ " $KEY " ]]; then # The key will be deleted
 
         unset EXISTING_SETTINGS["$KEY"] # Delete the key
         if [ "$LIST" = true ] && [ -n "$OLD_VALUE" ]; then
             echo "$PADDED_KEY   $OLD_VALUE -> (deleted)"
-        fi
-        if [ "$VERBOSE" = true ] && [ -n "$OLD_VALUE" ]; then
-            VERBOSE_OUTPUT+="Deleted '$KEY' which was set to '$OLD_VALUE'.\n"
         fi
 
     elif [ "$LIST" = true ] && [ -n "$OLD_VALUE" ]; then
@@ -273,8 +260,6 @@ done
 if [ $? -ne 0 ]; then
     echo "Fatal: Failed to write to '$SETTING_FILE'." >&2
     exit 1
-elif [ "$VERBOSE" = true ]; then
-    echo -en "$VERBOSE_OUTPUT"
 fi
 if [ "$SET" = true ] || [ "$DELETE" = true ]; then
     echo "Successfully updated $SETTING_TYPE settings."
