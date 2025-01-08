@@ -31,6 +31,7 @@ Parameters described on this page:
 [OUTPUT_PART_Y](#OUTPUT_PART_Y), &nbsp;
 [OUTPUT_PART_Z](#OUTPUT_PART_Z), &nbsp;
 [INIT_DUMPID](#INIT_DUMPID), &nbsp;
+[DUMP_DIR](#DUMP_DIR), &nbsp;
 
 
 Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**
@@ -281,6 +282,13 @@ z coordinate for [OPT__OUTPUT_PART](#OPT__OUTPUT_PART).
 Set the first data dump ID. Note that it is unnecessary to set this value
 in most cases, even when restarting simulations, unless you want to overwrite
 the default value.
+    * **Restriction:**
+
+<a name="DUMP_DIR"></a>
+* #### `DUMP_DIR` &ensp; (string) &ensp; [.]
+    * **Description:**
+Set the output data directory. Note that it is unnecessary to set this value
+in most cases unless you want to overwrite the default value.
     * **Restriction:**
 
 
