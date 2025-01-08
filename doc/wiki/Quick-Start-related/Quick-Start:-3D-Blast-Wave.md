@@ -62,7 +62,7 @@ Input__Flag_Lohner  Input__Parameter  Input__TestProb  README  clean.sh  gamer  
 </details>
 
 5\. Edit the input file
-[[Input__Parameter | Runtime Parameters#input__parameter]]
+[[Input__Parameter | Runtime-Parameters:-Input__Parameter]]
 to set the total number of OpenMP threads per MPI process.
 The following example will launch 10 threads per process.
 ```

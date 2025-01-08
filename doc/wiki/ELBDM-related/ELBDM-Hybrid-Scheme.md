@@ -267,7 +267,7 @@ This modification to the fluid scheme is work-in-progress and must be modified i
 
 ## Potential Improvements
 - Global memory accesses in the ELBDM solver are uncoalesced, suggesting potential for optimization by implementing an effective 3D transpose on the GPU.
-- Currently `ELBDM_FIRST_WAVE_LEVEL` is fixed. Ideally, the code should be able to adaptively increase the first wave level when the resolution turns out to be insufficient for the wave solver. This would require implementing a detection for insufficient resolution and converting patches back from the wave to the fluid representation. 
+- Currently `ELBDM_FIRST_WAVE_LEVEL` is fixed. Ideally, the code should be able to adaptively increase the first wave level when the resolution turns out to be insufficient for the wave solver. This would require implementing a detection for insufficient resolution and converting patches back from the wave to the fluid representation.
 
 ## Zoom-In Simulation
 
