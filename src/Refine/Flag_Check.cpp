@@ -64,6 +64,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
       if (  !Flag_Region_Ptr( i, j, k, lv, PID )  )    return false;
    }
 
+
 // check angular resolution
 // ===========================================================================================
    if ( OPT__FLAG_ANGULAR )
@@ -439,6 +440,7 @@ int Check_Angular( const int i, const int j, const int k, const int lv, const in
                    const double CenX, const double CenY, const double CenZ,
                    const double AngRes_Max, const double AngRes_Min, const double AngRes_Max_R )
 {
+
 // check
 #  ifdef GAMER_DEBUG
    if (  i < 0  ||  i >= PS1  ||  j < 0  ||  j >= PS1  ||  k < 0  ||  k >= PS1  )
@@ -484,6 +486,7 @@ int Check_Angular( const int i, const int j, const int k, const int lv, const in
 bool Check_Radial( const int i, const int j, const int k, const int lv, const int PID,
                    const double CenX, const double CenY, const double CenZ, const double Refine_Rad )
 {
+
 // check
 #  ifdef GAMER_DEBUG
    if (  i < 0  ||  i >= PS1  ||  j < 0  ||  j >= PS1  ||  k < 0  ||  k >= PS1  )
