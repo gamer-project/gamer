@@ -167,7 +167,7 @@ OPT__FLAG_USER                0           # flag: user-defined (Input__Flag_User
 OPT__FLAG_USER_NUM            1           # number of threshold values in user-defined table (Input__Flag_User) [1]
 OPT__FLAG_REGION              0           # flag: specify the regions **allowed** to be refined -> edit "Flag_Region.cpp" [0]
 OPT__FLAG_ANGULAR             0           # flag: angular resolution (Input__Flag_AngularResolution) [0]
-ANGULAR_CEN_X                -1.0         # x coordinate of angular resolution center (if one of ANGULAR_CEN_X/Y/Z < 0 -> box center) [-1.0]
+ANGULAR_CEN_X                -1.0         # x center coordinate for OPT__FLAG_ANGULAR (< 0=auto -> box center) [-1.0]
 ANGULAR_CEN_Y                -1.0         # y coordinate of angular resolution center (if one of ANGULAR_CEN_X/Y/Z < 0 -> box center) [-1.0]
 ANGULAR_CEN_Z                -1.0         # z coordinate of angular resolution center (if one of ANGULAR_CEN_X/Y/Z < 0 -> box center) [-1.0]
 OPT__FLAG_RADIAL              0           # flag: radial resolution (Input__Flag_RadialResolution) [0]
