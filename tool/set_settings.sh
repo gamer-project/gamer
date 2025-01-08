@@ -247,21 +247,21 @@ for KEY in "${VALID_KEYS[@]}"; do
         print_key "$KEY" "$OLD_VALUE"
     fi
 done
-[ "$LIST" = true ] && echo ""
+[ "$LIST" = true ] && echo "---------------------------"
 
-# Write updated settings to file
-{
-    echo "# GAMER setting file"
-    for KEY in "${!EXISTING_SETTINGS[@]}"; do
-        print_key "${KEY}" "${EXISTING_SETTINGS[$KEY]}"
-    done
-} > "$SETTING_FILE"
-
-# Check if writing to file was successful
-if [ $? -ne 0 ]; then
-    echo "Fatal: Failed to write to '$SETTING_FILE'." >&2
-    exit 1
-fi
 if [ "$SET" = true ] || [ "$DELETE" = true ]; then
+    # Write updated settings to file
+    {
+        echo "# GAMER setting file"
+        for KEY in "${!EXISTING_SETTINGS[@]}"; do
+            print_key "${KEY}" "${EXISTING_SETTINGS[$KEY]}"
+        done
+    } > "$SETTING_FILE"
+
+    # Check if writing to file was successful
+    if [ $? -ne 0 ]; then
+        echo "Fatal: Failed to write to '$SETTING_FILE'." >&2
+        exit 1
+    fi
     echo "Successfully updated $SETTING_TYPE settings."
 fi
