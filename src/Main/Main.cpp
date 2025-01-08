@@ -75,6 +75,7 @@ int                  OPT__UM_IC_FLOAT8;
 double               COM_CEN_X, COM_CEN_Y, COM_CEN_Z, COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R;
 int                  COM_MAX_ITER;
 double               ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z;
+char                 DUMP_DIR[MAX_STRING];
 
 UM_IC_Format_t       OPT__UM_IC_FORMAT;
 TestProbID_t         TESTPROB_ID;
@@ -850,7 +851,10 @@ int main( int argc, char *argv[] )
 
    if ( MPI_Rank == 0  &&  OPT__RECORD_NOTE )
    {
-      FILE *Note = fopen( "Record__Note", "a" );
+      char FileName[MAX_STRING];
+      sprintf( FileName, "%s/Record__Note", DUMP_DIR );
+
+      FILE *Note = fopen( FileName, "a" );
       fprintf( Note, "\n" );
       fprintf( Note, "Total Processing Time : %lf s\n", Timer_Total.GetValue() );
       fprintf( Note, "\n" );

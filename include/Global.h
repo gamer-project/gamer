@@ -83,6 +83,7 @@ extern int        OPT__UM_IC_FLOAT8;
 extern double     COM_CEN_X, COM_CEN_Y, COM_CEN_Z, COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R;
 extern int        COM_MAX_ITER;
 extern double     ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z;
+extern char       DUMP_DIR[MAX_STRING];
 
 extern UM_IC_Format_t     OPT__UM_IC_FORMAT;
 extern TestProbID_t       TESTPROB_ID;
