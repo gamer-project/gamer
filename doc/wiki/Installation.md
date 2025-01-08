@@ -2,13 +2,24 @@
 
    Please see [[Machine Configuration File | Installation:-Machine-Configuration-File]].
 
-2. Go to the source directory
+2. Set your machine configuration file as default
+
+   ```bash
+   sh tool/config/set_settings.sh --local --machine=your_machine
+   ```
+
+   > [!NOTE]
+   > If you want to set the default machine configuration file for all of the GAMER copies under your user account, use the `--global` option instead of `--local`.
+   Still, you can override the global setting for the individual GAMER copies with the `--local` option.
+   Furthermore, you can override the default setting with the `--machine=` [[option | Installation:-Option-List]] in `configure.py`.
+
+3. Go to the source directory
 
    ```bash
    cd src
    ```
 
-3. Generate `Makefile` using the Python script `configure.py`
+4. Generate `Makefile` using the Python script `configure.py`
 
    To get the `Makefile`, please execute the following command:
 
@@ -28,7 +39,7 @@
 > An example script `generate_make.sh` to generate Makefile can be found in each test problem folder,
 e.g., `example/test_problem/Hydro/AcousticWave/generate_make.sh`.
 
-4. Compile the code
+5. Compile the code
 
    ```bash
    make clean

@@ -1,21 +1,9 @@
 The machine configuration file is under `configs`. The configuration file contains the library paths, the compiler types, the compilation flags, and the GPU compute capability.
 
-If there is a configuration file that matches the name of your machine, you should set it as the default by
+> [!TIP]
+> Check the `configs` directory to see if there is a configuration file already available for your machine.
 
-```bash
-sh tool/config/set_settings.sh --local --machine=your_machine
-```
-
-For example, setting `--machine=pleiades` with the above command will use the `configs/pleiades.config` machine configuration when compiling the code.
-
-If the machine configuration file is not available for your machine or the existing one is not appropriate, you will need to create a new one with the following instructions.
-
-> [!NOTE]
-> If you want to set the default machine configuration file for all of the GAMER copies under your user account, use the `--global` option instead of `--local`.
-Still, you can override the global setting for the individual GAMER copies with the `--local` option.
-Furthermore, you can override the default setting with the `--machine=` option in `configure.py`.
-
-## Machine Configuration File
+## Set Up the Machine Configuration File
 
 To set up your machine configuration file, go to `configs` and make a copy of `template.config` to modify it.
     
@@ -24,8 +12,7 @@ cd configs
 cp template.config your_machine.config
 ```
 
-Please refer to the following sections to set up your machine configuration file. And don't forget to set the machine configuration file as the default by the `tool/config/set_settings.sh` command above.
-
+Please refer to the following sections to set up your machine configuration file.
 
 ### 0. Rules of the configuration file
 * Comments must start with `#`.
