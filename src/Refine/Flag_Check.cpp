@@ -423,15 +423,13 @@ bool Check_Curl( const int i, const int j, const int k,
 // Note        :  1. Enabled by the runtime option "OPT__FLAG_ANGULAR"
 //                2. AngRes_Max has higher priority than AngRes_Min in case of 2.0 * AngRes_Max > AngRes_Min
 //
-// Parameter   :  i,j,k        : Indices of the target element in the patch ptr[0][lv][PID]
+// Parameter   :  i,j,k        : Target cell indices in the patch amr->patch[0][lv][PID]
 //                lv           : Refinement level of the target patch
 //                PID          : ID of the target patch
-//                CenX         : x coordinate of center of calculating angular resolution
-//                CenY         : y coordinate of center of calculating angular resolution
-//                CenZ         : z coordinate of center of calculating angular resolution
-//                AngRes_Max   : The maximum allowed angular resolution
-//                AngRes_Min   : The minimum allowed angular resolution
-//                AngRes_Max_R : The minimum radius to apply AngRes_Max
+//                CenX/Y/Z     : x/y/z-coordinate of the center for calculating angular resolution
+//                AngRes_Max   : Maximum allowed angular resolution
+//                AngRes_Min   : Minimum allowed angular resolution
+//                AngRes_Max_R : Minimum radius to apply AngRes_Max
 //
 // Return      :  0 : if the cell is not in the refine region
 //                1 : if the minimum angular resolution is     reached
@@ -445,7 +443,7 @@ int Check_Angular( const int i, const int j, const int k, const int lv, const in
 #  ifdef GAMER_DEBUG
    if (  i < 0  ||  i >= PS1  ||  j < 0  ||  j >= PS1  ||  k < 0  ||  k >= PS1  )
       Aux_Error( ERROR_INFO, "incorrect index (i,j,k) = (%d,%d,%d) !!\n", i, j, k );
-#  endif // #ifdef GAMER_DEBUG
+#  endif
 
    const double dh     = amr->dh[lv];                                         // cell size
    const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,     // x,y,z position
@@ -470,16 +468,14 @@ int Check_Angular( const int i, const int j, const int k, const int lv, const in
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Check_Radial
-// Description :  Check if the cell is in Refined_Rad
+// Description :  Check if the cell is within the given radius
 //
 // Note        :  1. Enabled by the runtime option "OPT__FLAG_RADIAL"
 //
-// Parameter   :  i,j,k       : Indices of the target element in the patch ptr[0][lv][PID]
+// Parameter   :  i,j,k       : Target cell indices in the patch amr->patch[0][lv][PID]
 //                lv          : Refinement level of the target patch
 //                PID         : ID of the target patch
-//                CenX        : x coordinate of center of calculating angular resolution
-//                CenY        : y coordinate of center of calculating angular resolution
-//                CenZ        : z coordinate of center of calculating angular resolution
+//                CenX/Y/Z     : x/y/z-coordinate of the center for calculating angular resolution
 //                Refine_Rad  : The radius of must refined at level (lv)
 //
 // Return      :  "true"  if r <  Refine_Rad
@@ -492,7 +488,7 @@ bool Check_Radial( const int i, const int j, const int k, const int lv, const in
 #  ifdef GAMER_DEBUG
    if (  i < 0  ||  i >= PS1  ||  j < 0  ||  j >= PS1  ||  k < 0  ||  k >= PS1  )
       Aux_Error( ERROR_INFO, "incorrect index (i,j,k) = (%d,%d,%d) !!\n", i, j, k );
-#  endif // #ifdef GAMER_DEBUG
+#  endif
 
    const double dh     = amr->dh[lv];                                         // cell size
    const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,     // x,y,z position
@@ -501,7 +497,7 @@ bool Check_Radial( const int i, const int j, const int k, const int lv, const in
    const double dR [3] = { Pos[0]-CenX, Pos[1]-CenY, Pos[2]-CenZ };
    const double R      = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
 
-// not refine if the radius is not set
+// do not refine if the target radius is not set
    if ( Refine_Rad < 0.0 )   return false;
 
 // refine the region within r < Refine_Rad and the innermost cells
