@@ -491,13 +491,13 @@ struct InputPara_t
    int    Opt__Flag_Rho;
    int    Opt__Flag_RhoGradient;
    int    Opt__Flag_Angular;
-   double Angular_CenX;
-   double Angular_CenY;
-   double Angular_CenZ;
+   double FlagAngular_CenX;
+   double FlagAngular_CenY;
+   double FlagAngular_CenZ;
    int    Opt__Flag_Radial;
-   double Radial_CenX;
-   double Radial_CenY;
-   double Radial_CenZ;
+   double FlagRadial_CenX;
+   double FlagRadial_CenY;
+   double FlagRadial_CenZ;
 #  if ( MODEL == HYDRO )
    int    Opt__Flag_PresGradient;
    int    Opt__Flag_Vorticity;

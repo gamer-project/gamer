@@ -77,8 +77,8 @@ int                  OPT__UM_IC_FLOAT8;
 double               COM_CEN_X, COM_CEN_Y, COM_CEN_Z, COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R;
 int                  COM_MAX_ITER;
 double               ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z;
-double               ANGULAR_CEN_X, ANGULAR_CEN_Y, ANGULAR_CEN_Z;
-double               RADIAL_CEN_X, RADIAL_CEN_Y, RADIAL_CEN_Z;
+double               FLAG_ANGULAR_CEN_X, FLAG_ANGULAR_CEN_Y, FLAG_ANGULAR_CEN_Z;
+double               FLAG_RADIAL_CEN_X, FLAG_RADIAL_CEN_Y, FLAG_RADIAL_CEN_Z;
 
 UM_IC_Format_t       OPT__UM_IC_FORMAT;
 TestProbID_t         TESTPROB_ID;

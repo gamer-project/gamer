@@ -260,8 +260,8 @@ Procedure for outputting new variables:
 //                                      output DENS and PHAS for the hybrid scheme (discard STUB)
 //                                      output use_wave_flag[lv] for the hybrid scheme
 //                2480 : 2024/07/17 --> output OPT__OUTPUT_PAR_MESH and particle attributes mapped from mesh quantities
-//                2481 : 2024/12/11 --> output OPT__FLAG_ANGULAR, FlagTable_Angular, ANGULAR_CEN_X, ANGULAR_CEN_Y, ANGULAR_CEN_Z
-//                                             OPT__FLAG_RADIAL,  FlagTable_Radial,   RADIAL_CEN_X,  RADIAL_CEN_Y,  RADIAL_CEN_Z
+//                2481 : 2024/12/11 --> output OPT__FLAG_ANGULAR, FlagTable_Angular, FLAG_ANGULAR_CEN_X, FLAG_ANGULAR_CEN_Y, FLAG_ANGULAR_CEN_Z
+//                                             OPT__FLAG_RADIAL,  FlagTable_Radial,  FLAG_RADIAL_CEN_X,  FLAG_RADIAL_CEN_Y,  FLAG_RADIAL_CEN_Z
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -2347,13 +2347,13 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Flag_Rho           = OPT__FLAG_RHO;
    InputPara.Opt__Flag_RhoGradient   = OPT__FLAG_RHO_GRADIENT;
    InputPara.Opt__Flag_Angular       = OPT__FLAG_ANGULAR;
-   InputPara.Angular_CenX            = ANGULAR_CEN_X;
-   InputPara.Angular_CenY            = ANGULAR_CEN_Y;
-   InputPara.Angular_CenZ            = ANGULAR_CEN_Z;
+   InputPara.FlagAngular_CenX        = FLAG_ANGULAR_CEN_X;
+   InputPara.FlagAngular_CenY        = FLAG_ANGULAR_CEN_Y;
+   InputPara.FlagAngular_CenZ        = FLAG_ANGULAR_CEN_Z;
    InputPara.Opt__Flag_Radial        = OPT__FLAG_RADIAL;
-   InputPara.Radial_CenX             = RADIAL_CEN_X;
-   InputPara.Radial_CenY             = RADIAL_CEN_Y;
-   InputPara.Radial_CenZ             = RADIAL_CEN_Z;
+   InputPara.FlagRadial_CenX         = FLAG_RADIAL_CEN_X;
+   InputPara.FlagRadial_CenY         = FLAG_RADIAL_CEN_Y;
+   InputPara.FlagRadial_CenZ         = FLAG_RADIAL_CEN_Z;
 #  if ( MODEL == HYDRO )
    InputPara.Opt__Flag_PresGradient  = OPT__FLAG_PRES_GRADIENT;
    InputPara.Opt__Flag_Vorticity     = OPT__FLAG_VORTICITY;
@@ -3419,13 +3419,13 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Flag_User_Num",      HOFFSET(InputPara_t,Opt__Flag_User_Num     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_Region",        HOFFSET(InputPara_t,Opt__Flag_Region       ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_Angular",       HOFFSET(InputPara_t,Opt__Flag_Angular      ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Angular_CenX",            HOFFSET(InputPara_t,Angular_CenX           ), H5T_NATIVE_DOUBLE  );
-   H5Tinsert( H5_TypeID, "Angular_CenY",            HOFFSET(InputPara_t,Angular_CenY           ), H5T_NATIVE_DOUBLE  );
-   H5Tinsert( H5_TypeID, "Angular_CenZ",            HOFFSET(InputPara_t,Angular_CenZ           ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "FlagAngular_CenX",        HOFFSET(InputPara_t,FlagAngular_CenX       ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "FlagAngular_CenY",        HOFFSET(InputPara_t,FlagAngular_CenY       ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "FlagAngular_CenZ",        HOFFSET(InputPara_t,FlagAngular_CenZ       ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Opt__Flag_Radial",        HOFFSET(InputPara_t,Opt__Flag_Radial       ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "Radial_CenX",             HOFFSET(InputPara_t,Radial_CenX            ), H5T_NATIVE_DOUBLE  );
-   H5Tinsert( H5_TypeID, "Radial_CenY",             HOFFSET(InputPara_t,Radial_CenY            ), H5T_NATIVE_DOUBLE  );
-   H5Tinsert( H5_TypeID, "Radial_CenZ",             HOFFSET(InputPara_t,Radial_CenZ            ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "FlagRadial_CenX",         HOFFSET(InputPara_t,FlagRadial_CenX        ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "FlagRadial_CenY",         HOFFSET(InputPara_t,FlagRadial_CenY        ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "FlagRadial_CenZ",         HOFFSET(InputPara_t,FlagRadial_CenZ        ), H5T_NATIVE_DOUBLE  );
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Opt__Flag_NParPatch",     HOFFSET(InputPara_t,Opt__Flag_NParPatch    ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_NParCell",      HOFFSET(InputPara_t,Opt__Flag_NParCell     ), H5T_NATIVE_INT     );

@@ -369,7 +369,7 @@ specified regions.
 * #### `OPT__FLAG_ANGULAR` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
 Refinement criterion: angular resolution with respect to the specified center
-(`ANGULAR_CEN_X`, `ANGULAR_CEN_Y`, `ANGULAR_CEN_Z`).
+(`FLAG_ANGULAR_CEN_X`, `FLAG_ANGULAR_CEN_Y`, `FLAG_ANGULAR_CEN_Z`).
 Cells located at a distance greater than `AngRes_Max_R` are not allowed to exceed
 the angular resolution `AngRes_Max`. Cells are refined if their angular resolution
 is lower than `AngRes_Min`. Set `AngRes_Max < 0.0` or `AngRes_Min < 0.0` to
@@ -380,13 +380,13 @@ with the [[specific format | Runtime Parameters#input__flag_]].
 An example file can be found at `example/input/Input__Flag_AngularResolution`.
     * **Restriction:**
 `AngRes_Max` has higher priority over `AngRes_Min`.
-It is generally recommended to set `AngRes_Max < 0.5*AngRes_Min`. 
+It is generally recommended to set `AngRes_Max < 0.5*AngRes_Min`.
 
 <a name="OPT__FLAG_RADIAL"></a>
 * #### `OPT__FLAG_RADIAL` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
-Refinement criterion: distance to the specified center (`RADIAL_CEN_X`,
-`RADIAL_CEN_Y`, `RADIAL_CEN_Z`).
+Refinement criterion: distance to the specified center (`FLAG_RADIAL_CEN_X`,
+`FLAG_RADIAL_CEN_Y`, `FLAG_RADIAL_CEN_Z`).
 Cells are refined if they are located at a distance smaller than `Refine_Rad`.
 The value of `Refine_Rad` can be specified in the input file `Input__Flag_RadialResolution`
 with the [[specific format | Runtime Parameters#input__flag_]].

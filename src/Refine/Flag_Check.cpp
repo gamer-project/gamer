@@ -69,7 +69,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 // ===========================================================================================
    if ( OPT__FLAG_ANGULAR )
    {
-      int flag = Check_Angular( i, j, k, lv, PID, ANGULAR_CEN_X, ANGULAR_CEN_Y, ANGULAR_CEN_Z,
+      int flag = Check_Angular( i, j, k, lv, PID, FLAG_ANGULAR_CEN_X, FLAG_ANGULAR_CEN_Y, FLAG_ANGULAR_CEN_Z,
                                 FlagTable_Angular[lv][0], FlagTable_Angular[lv][1], FlagTable_Angular[lv][2] );
       if      ( flag == 0 )    return false;
       else if ( flag == 1 )    Flag = true;
@@ -81,7 +81,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 // ===========================================================================================
    if ( OPT__FLAG_RADIAL )
    {
-      Flag |= Check_Radial( i, j, k, lv, PID, RADIAL_CEN_X, RADIAL_CEN_Y, RADIAL_CEN_Z, FlagTable_Radial[lv] );
+      Flag |= Check_Radial( i, j, k, lv, PID, FLAG_RADIAL_CEN_X, FLAG_RADIAL_CEN_Y, FLAG_RADIAL_CEN_Z, FlagTable_Radial[lv] );
       if ( Flag )    return Flag;
    }
 

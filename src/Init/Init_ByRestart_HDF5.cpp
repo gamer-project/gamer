@@ -2427,9 +2427,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    }}
 
    if ( OPT__FLAG_ANGULAR ) {
-   LoadField( "Angular_CenX",            &RS.Angular_CenX,            SID, TID, NonFatal, &RT.Angular_CenX,             1, NonFatal );
-   LoadField( "Angular_CenY",            &RS.Angular_CenY,            SID, TID, NonFatal, &RT.Angular_CenY,             1, NonFatal );
-   LoadField( "Angular_CenZ",            &RS.Angular_CenZ,            SID, TID, NonFatal, &RT.Angular_CenZ,             1, NonFatal );
+   LoadField( "FlagAngular_CenX",        &RS.FlagAngular_CenX,        SID, TID, NonFatal, &RT.FlagAngular_CenX,         1, NonFatal );
+   LoadField( "FlagAngular_CenY",        &RS.FlagAngular_CenY,        SID, TID, NonFatal, &RT.FlagAngular_CenY,         1, NonFatal );
+   LoadField( "FlagAngular_CenZ",        &RS.FlagAngular_CenZ,        SID, TID, NonFatal, &RT.FlagAngular_CenZ,         1, NonFatal );
    LoadField( "FlagTable_Angular",        RS.FlagTable_Angular,       SID, TID, NonFatal,  NullPtr,                    -1, NonFatal );
 
    for (int lv=0; lv<MAX_LEVEL; lv++)
@@ -2441,9 +2441,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    }}
 
    if ( OPT__FLAG_RADIAL ) {
-   LoadField( "Radial_CenX",             &RS.Radial_CenX,             SID, TID, NonFatal, &RT.Radial_CenX,              1, NonFatal );
-   LoadField( "Radial_CenY",             &RS.Radial_CenY,             SID, TID, NonFatal, &RT.Radial_CenY,              1, NonFatal );
-   LoadField( "Radial_CenZ",             &RS.Radial_CenZ,             SID, TID, NonFatal, &RT.Radial_CenZ,              1, NonFatal );
+   LoadField( "FlagRadial_CenX",         &RS.FlagRadial_CenX,         SID, TID, NonFatal, &RT.FlagRadial_CenX,          1, NonFatal );
+   LoadField( "FlagRadial_CenY",         &RS.FlagRadial_CenY,         SID, TID, NonFatal, &RT.FlagRadial_CenY,          1, NonFatal );
+   LoadField( "FlagRadial_CenZ",         &RS.FlagRadial_CenZ,         SID, TID, NonFatal, &RT.FlagRadial_CenZ,          1, NonFatal );
    LoadField( "FlagTable_Radial",         RS.FlagTable_Radial,        SID, TID, NonFatal, &RT.FlagTable_Radial,        N1, NonFatal );
    }
 

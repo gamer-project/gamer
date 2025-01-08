@@ -1035,16 +1035,16 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_ANGULAR              % d\n",      OPT__FLAG_ANGULAR         );
       if ( OPT__FLAG_ANGULAR )
       {
-      fprintf( Note, "   ANGULAR_CEN_X               % 14.7e\n",  ANGULAR_CEN_X             );
-      fprintf( Note, "   ANGULAR_CEN_Y               % 14.7e\n",  ANGULAR_CEN_Y             );
-      fprintf( Note, "   ANGULAR_CEN_Z               % 14.7e\n",  ANGULAR_CEN_Z             );
+      fprintf( Note, "   FLAG_ANGULAR_CEN_X          % 14.7e\n",  FLAG_ANGULAR_CEN_X        );
+      fprintf( Note, "   FLAG_ANGULAR_CEN_Y          % 14.7e\n",  FLAG_ANGULAR_CEN_Y        );
+      fprintf( Note, "   FLAG_ANGULAR_CEN_Z          % 14.7e\n",  FLAG_ANGULAR_CEN_Z        );
       }
       fprintf( Note, "OPT__FLAG_RADIAL               % d\n",      OPT__FLAG_RADIAL          );
       if ( OPT__FLAG_RADIAL )
       {
-      fprintf( Note, "   RADIAL_CEN_X                % 14.7e\n",  RADIAL_CEN_X              );
-      fprintf( Note, "   RADIAL_CEN_Y                % 14.7e\n",  RADIAL_CEN_Y              );
-      fprintf( Note, "   RADIAL_CEN_Z                % 14.7e\n",  RADIAL_CEN_Z              );
+      fprintf( Note, "   FLAG_RADIAL_CEN_X           % 14.7e\n",  FLAG_RADIAL_CEN_X         );
+      fprintf( Note, "   FLAG_RADIAL_CEN_Y           % 14.7e\n",  FLAG_RADIAL_CEN_Y         );
+      fprintf( Note, "   FLAG_RADIAL_CEN_Z           % 14.7e\n",  FLAG_RADIAL_CEN_Z         );
       }
 #     ifdef PARTICLE
       fprintf( Note, "OPT__FLAG_NPAR_PATCH           % d\n",      OPT__FLAG_NPAR_PATCH      );
