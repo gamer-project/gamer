@@ -2,4 +2,4 @@
 
 PYTHON=python3
 
-${PYTHON} configure.py --machine=eureka_intel --model=ELBDM --elbdm_scheme=ELBDM_HYBRID --hdf5=true --mpi=true
+${PYTHON} configure.py --machine=eureka_intel --model=ELBDM --elbdm_scheme=ELBDM_HYBRID --hdf5=true --mpi=true "$@"
