@@ -217,8 +217,8 @@ void Par_LB_SendParticleData( const int NParAtt, int *SendBuf_NPatchEachRank, in
          dtime = Timer->GetValue() - time0;
 
 //       output to the same log file as LB_GetBufferData
-         char FileName[100];
-         sprintf( FileName, "Record__TimingMPI_Rank%05d", MPI_Rank );
+         char FileName[MAX_STRING];
+         sprintf( FileName, "%s/Record__TimingMPI_Rank%05d", DUMP_DIR, MPI_Rank );
 
          FILE *File = fopen( FileName, "a" );
 

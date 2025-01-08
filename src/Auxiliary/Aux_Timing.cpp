@@ -226,9 +226,9 @@ void Aux_ResetTimer()
 void Aux_Record_Timing()
 {
 
-   const char FileName[] = "Record__Timing";
-
    FILE *File = NULL;
+   char FileName[MAX_STRING];
+   sprintf( FileName, "%s/Record__Timing", DUMP_DIR );
 
    const char Comment_LB[][4] = { "Max", "Min", "Ave" };
    const int  NLB             = 8;

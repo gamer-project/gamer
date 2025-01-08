@@ -19,7 +19,8 @@ void ELBDM_Aux_Record_Hybrid()
 
 
    static bool FirstTime = true;
-   const char *FileName  = "Record__Hybrid";
+   char FileName[MAX_STRING];
+   sprintf( FileName, "%s/Record__Hybrid", DUMP_DIR );
    FILE *File = NULL;
 
    if ( FirstTime )
