@@ -455,11 +455,11 @@ int Check_Angular( const int i, const int j, const int k, const int lv, const in
    const double R      = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
 
 // (1) check the maximum allowed refinement level based on angular resolution
-   if ( AngRes_Max > 0.0  &&  2.0 * R * AngRes_Max > dh  &&  R > AngRes_Max_R )
+   if ( AngRes_Max >= 0.0  &&  2.0 * R * AngRes_Max > dh  &&  R > AngRes_Max_R )
       return 0;
 
 // (2) check if the minimum angular resolution is reached
-   if ( AngRes_Min > 0.0  &&  R * AngRes_Min < dh )
+   if ( AngRes_Min >= 0.0  &&  R * AngRes_Min < dh )
       return 1;
 
    return 2;
