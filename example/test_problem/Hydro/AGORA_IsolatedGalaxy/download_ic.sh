@@ -1,6 +1,16 @@
-wget --no-check-certificate -O ./LOW.tar.gz https://www.dropbox.com/sh/1xzt1rysy9v3a9l/AAAMlJBQG1OQFW4cjhp11Ex6a/LOW.tar.gz?dl=1
-wget https://bitbucket.org/grackle/grackle/raw/default/input/CloudyData_UVB=HM2012.h5
-tar xzvf LOW.tar.gz
-mv LOW/*.dat ./
-rmdir LOW
-rm LOW.tar.gz
+#!/bin/bash
+
+LOCAL_FILENAME1="LOW"
+LOCAL_FILENAME2="CloudyData_UVB=HM2012.h5"
+FILE_ID1="677ca225999605c485c8de6f"
+FILE_ID2="677ca211999605c485c8de6c"
+
+# 1. download
+#curl https://hub.yt/api/v1/item/${FILE_ID1}/download -o "${LOCAL_FILENAME1}.tar.gz"
+#curl https://hub.yt/api/v1/item/${FILE_ID2}/download -o "${LOCAL_FILENAME2}"
+
+# 2. unzip
+tar xzvf ${LOCAL_FILENAME1}.tar.gz
+mv ${LOCAL_FILENAME1}/*.dat ./
+rmdir ${LOCAL_FILENAME1}
+rm ${LOCAL_FILENAME1}.tar.gz
