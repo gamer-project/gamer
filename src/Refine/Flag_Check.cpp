@@ -4,9 +4,12 @@ static bool Check_Gradient( const int i, const int j, const int k, const real In
 static bool Check_Curl( const int i, const int j, const int k,
                         const real vx[][PS1][PS1], const real vy[][PS1][PS1], const real vz[][PS1][PS1],
                         const double Threshold );
-static int  Check_Angular( const int i, const int j, const int k, const int lv, const int PID,
-                           const double CenX, const double CenY, const double CenZ,
-                           const double AngRes_Max, const double AngRes_Min, const double AngRes_Max_R );
+static bool Check_Angular_Max( const int i, const int j, const int k, const int lv, const int PID,
+                               const double CenX, const double CenY, const double CenZ,
+                               const double AngRes_Max, const double AngRes_Max_R );
+static bool Check_Angular_Min( const int i, const int j, const int k, const int lv, const int PID,
+                               const double CenX, const double CenY, const double CenZ,
+                               const double AngRes_Min );
 static bool Check_Radial( const int i, const int j, const int k, const int lv, const int PID,
                           const double CenX, const double CenY, const double CenZ, const double Refine_Rad );
 
@@ -65,24 +68,14 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    }
 
 
-// check angular resolution
+// check maximum angular resolution
 // ===========================================================================================
    if ( OPT__FLAG_ANGULAR )
    {
-      int flag = Check_Angular( i, j, k, lv, PID, FLAG_ANGULAR_CEN_X, FLAG_ANGULAR_CEN_Y, FLAG_ANGULAR_CEN_Z,
-                                FlagTable_Angular[lv][0], FlagTable_Angular[lv][1], FlagTable_Angular[lv][2] );
-      if      ( flag == 0 )    return false;
-      else if ( flag == 1 )    Flag = true;
-      if ( Flag )              return Flag;
-   }
-
-
-// check radial resolution
-// ===========================================================================================
-   if ( OPT__FLAG_RADIAL )
-   {
-      Flag |= Check_Radial( i, j, k, lv, PID, FLAG_RADIAL_CEN_X, FLAG_RADIAL_CEN_Y, FLAG_RADIAL_CEN_Z, FlagTable_Radial[lv] );
-      if ( Flag )    return Flag;
+      bool Within = Check_Angular_Max( i, j, k, lv, PID, FLAG_ANGULAR_CEN_X, FLAG_ANGULAR_CEN_Y,
+                                       FLAG_ANGULAR_CEN_Z, FlagTable_Angular[lv][0],
+                                       FlagTable_Angular[lv][2] );
+      if ( ! Within )   return false;
    }
 
 
@@ -271,6 +264,26 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #  endif
 
 
+// check minimum angular resolution
+// ===========================================================================================
+   if ( OPT__FLAG_ANGULAR )
+   {
+      Flag |= Check_Angular_Min( i, j, k, lv, PID, FLAG_ANGULAR_CEN_X, FLAG_ANGULAR_CEN_Y,
+                                 FLAG_ANGULAR_CEN_Z, FlagTable_Angular[lv][1] );
+      if ( Flag )    return Flag;
+   }
+
+
+// check radial resolution
+// ===========================================================================================
+   if ( OPT__FLAG_RADIAL )
+   {
+      Flag |= Check_Radial( i, j, k, lv, PID, FLAG_RADIAL_CEN_X, FLAG_RADIAL_CEN_Y,
+                            FLAG_RADIAL_CEN_Z, FlagTable_Radial[lv] );
+      if ( Flag )    return Flag;
+   }
+
+
 // check user-defined criteria
 // ===========================================================================================
    if ( OPT__FLAG_USER )
@@ -417,28 +430,23 @@ bool Check_Curl( const int i, const int j, const int k,
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Check_Angular
-// Description :  Check if dh/R at cell (i,j,k) is larger than the minimum angular resolution and smaller
-//                than the maximum angular resolution
+// Function    :  Check_Angular_Max
+// Description :  Check if dh/R at cell (i,j,k) is smaller than the maximum angular resolution
 //
 // Note        :  1. Enabled by the runtime option "OPT__FLAG_ANGULAR"
-//                2. AngRes_Max has higher priority than AngRes_Min in case of 2.0 * AngRes_Max > AngRes_Min
 //
 // Parameter   :  i,j,k        : Target cell indices in the patch amr->patch[0][lv][PID]
 //                lv           : Refinement level of the target patch
 //                PID          : ID of the target patch
 //                CenX/Y/Z     : x/y/z-coordinate of the center for calculating angular resolution
 //                AngRes_Max   : Maximum allowed angular resolution
-//                AngRes_Min   : Minimum allowed angular resolution
 //                AngRes_Max_R : Minimum radius to apply AngRes_Max
 //
-// Return      :  0 : if the cell is not in the refine region
-//                1 : if the minimum angular resolution is     reached
-//                2 : if the minimum angular resolution is not reached
+// Return      :  "true/false"  if the input cell "is/is not" within the region allowed for refinement
 //-------------------------------------------------------------------------------------------------------
-int Check_Angular( const int i, const int j, const int k, const int lv, const int PID,
-                   const double CenX, const double CenY, const double CenZ,
-                   const double AngRes_Max, const double AngRes_Min, const double AngRes_Max_R )
+bool Check_Angular_Max( const int i, const int j, const int k, const int lv, const int PID,
+                        const double CenX, const double CenY, const double CenZ,
+                        const double AngRes_Max, const double AngRes_Max_R )
 {
 
 // check
@@ -454,17 +462,48 @@ int Check_Angular( const int i, const int j, const int k, const int lv, const in
    const double dR [3] = { Pos[0]-CenX, Pos[1]-CenY, Pos[2]-CenZ };
    const double R      = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
 
-// (1) check the maximum allowed refinement level based on angular resolution
-   if ( AngRes_Max >= 0.0  &&  2.0 * R * AngRes_Max > dh  &&  R > AngRes_Max_R )
-      return 0;
+   return ( AngRes_Max < 0.0  ||  2.0 * R * AngRes_Max <= dh  ||  R <= AngRes_Max_R );
 
-// (2) check if the minimum angular resolution is reached
-   if ( AngRes_Min >= 0.0  &&  R * AngRes_Min < dh )
-      return 1;
+} // FUNCTION : Check_Angular_Max
 
-   return 2;
 
-} // FUNCTION : Check_Angular
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Check_Angular_Min
+// Description :  Check if dh/R at cell (i,j,k) is larger than the minimum angular resolution
+//
+// Note        :  1. Enabled by the runtime option "OPT__FLAG_ANGULAR"
+//
+// Parameter   :  i,j,k        : Target cell indices in the patch amr->patch[0][lv][PID]
+//                lv           : Refinement level of the target patch
+//                PID          : ID of the target patch
+//                CenX/Y/Z     : x/y/z-coordinate of the center for calculating angular resolution
+//                AngRes_Min   : Minimum allowed angular resolution
+//
+// Return      :  "true"  if the minimum angular resolution is     reached
+//                "false" if the minimum angular resolution is not reached
+//-------------------------------------------------------------------------------------------------------
+bool Check_Angular_Min( const int i, const int j, const int k, const int lv, const int PID,
+                        const double CenX, const double CenY, const double CenZ,
+                        const double AngRes_Min )
+{
+
+// check
+#  ifdef GAMER_DEBUG
+   if (  i < 0  ||  i >= PS1  ||  j < 0  ||  j >= PS1  ||  k < 0  ||  k >= PS1  )
+      Aux_Error( ERROR_INFO, "incorrect index (i,j,k) = (%d,%d,%d) !!\n", i, j, k );
+#  endif
+
+   const double dh     = amr->dh[lv];                                         // cell size
+   const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,     // x,y,z position
+                           amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
+                           amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
+   const double dR [3] = { Pos[0]-CenX, Pos[1]-CenY, Pos[2]-CenZ };
+   const double R      = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
+
+   return ( AngRes_Min >= 0.0  &&  R * AngRes_Min < dh );
+
+} // FUNCTION : Check_Angular_Min
 
 
 
