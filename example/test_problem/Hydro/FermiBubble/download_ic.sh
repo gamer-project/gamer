@@ -1,13 +1,14 @@
-API_URL="https://girder.hub.yt/api/v1"
-FILE_ID="66c6bdb532f323dee1b80149"
-LOCAL_FOLDER="./"
+#!/bin/bash
 
-# download
-girder-cli --api-url ${API_URL} download --parent-type item ${FILE_ID} ${LOCAL_FOLDER}
+LOCAL_FILENAME="FermiBubble"
+FILE_ID="677d3e9e999605c485c8de8c"
 
-# unzip
-tar zxvf FermiBubble.tar.gz
-rm FermiBubble.tar.gz
+# 1. download
+curl https://hub.yt/api/v1/item/${FILE_ID}/download -o "${LOCAL_FILENAME}.tar.gz"
+
+# 2. unzip
+tar zxvf ${LOCAL_FILENAME}.tar.gz
+rm ${LOCAL_FILENAME}.tar.gz
 mv IC/FermiBubble_IC ./
 mv IC/R12 ./
 rm -rf IC
