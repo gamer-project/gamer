@@ -1,6 +1,10 @@
 #include "GAMER.h"
 
 #ifdef PARTICLE
+// declare as static so that other functions cannot invoke it directly and must use the function pointer
+static void Par_Init_ByFile_Default();
+
+void (*Par_Init_ByFile_User_Ptr)() = Par_Init_ByFile_Default;
 
 
 
@@ -50,6 +54,54 @@ void Par_Init_ByFile()
    if ( amr->Par->ParICFormat != PAR_IC_FORMAT_ID_ATT  &&  amr->Par->ParICFormat != PAR_IC_FORMAT_ATT_ID )
       Aux_Error( ERROR_INFO, "unknown data format in PAR_IC (%d) !!\n", amr->Par->ParICFormat );
 
+   Par_Init_ByFile_User_Ptr();
+
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
+
+} // FUNCITON : Par_Init_ByFile
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Par_Init_ByFile_Default
+// Description :  Initialize particle attributes from a file
+//
+// Note        :  1. Invoked by Par_Init_ByFile() using the fuction pointer Par_Init_ByFile_User_Ptr()
+//                   --> The function pointer may be reset by various test problem initializers, in which case
+//                       this funtion will become useless
+//                2. Periodicity should be taken care of in this function
+//                   --> No particles should lie outside the simulation box even for the periodic BC
+//                3. Particles lying outside the active region will be removed later by Par_Aux_InitCheck()
+//                   if non-periodic B.C. is adopted
+//                4. Particles loaded here are only temporarily stored in this rank
+//                   --> They will be redistributed when calling Par_FindHomePatch_UniformGrid()
+//                       and LB_Init_LoadBalance()
+//                   --> So there is no constraint on which particles should be set by this function
+//                5. Currently the target file name is fixed to "PAR_IC"
+//                6. The data format of the PAR_IC file is controlled by the runtime parameter "PAR_IC_FORMAT"
+//                   --> PAR_IC_FORMAT_ATT_ID: [particle attribute][particle id] in a row-major order
+//                       PAR_IC_FORMAT_ID_ATT: [particle id][particle attribute] in a row-major order
+//                7  Load the following attributes with the specified order:
+//
+//                      mass, position x/y/z, velocity x/y/z, type,
+//                      [, creation time (when enabling STAR_FORMATION)]
+//                      [, user-specified attributes (when PAR_NATT_USER>0)]
+//
+//                   --> The mass of all particles can be set to PAR_IC_MASS instead (by having PAR_IC_MASS>=0.0),
+//                       in which case PAR_IC should exclude partice mass
+//                   --> The type of all particles can be set to PAR_IC_TYPE instead (by having PAR_IC_TYPE>=0),
+//                       in which case PAR_IC should exclude partice type
+//                   --> No need to provide particle acceleration and time
+//                8. For LOAD_BALANCE, the number of particles in each rank must be set in advance
+//                   --> Currently it's set by Init_Parallelization()
+//
+// Parameter   :  None
+//
+// Return      :  amr->Par->Attribute[]
+//-------------------------------------------------------------------------------------------------------
+void Par_Init_ByFile_Default()
+{
 
    const char FileName[]    = "PAR_IC";
    const long NParAllRank   = amr->Par->NPar_Active_AllRank;
@@ -171,10 +223,7 @@ void Par_Init_ByFile()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
-
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
-
-} // FUNCTION : Par_Init_ByFile
+} // FUNCTION : Par_Init_ByFile_Default
 
 
 
