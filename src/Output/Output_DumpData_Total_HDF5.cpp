@@ -3216,7 +3216,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  if ( NLEVEL > 1 )
    const hsize_t H5_ArrDims_NLvM1             = NLEVEL-1;             // array size of [NLEVEL-1]
    const hsize_t H5_ArrDims_NLvM1_2[2]        = { NLEVEL-1, 2 };      // array size of [NLEVEL-1][2]
-   const hsize_t H5_ArrDims_NLvM1_3[3]        = { NLEVEL-1, 3 };      // array size of [NLEVEL-1][3]
+   const hsize_t H5_ArrDims_NLvM1_3[2]        = { NLEVEL-1, 3 };      // array size of [NLEVEL-1][3]
    const hsize_t H5_ArrDims_NLvM1_4[2]        = { NLEVEL-1, 4 };      // array size of [NLEVEL-1][4]
    const hsize_t H5_ArrDims_NLvM1_5[2]        = { NLEVEL-1, 5 };      // array size of [NLEVEL-1][5]
    const hsize_t H5_ArrDims_NLvM1_6[2]        = { NLEVEL-1, 6 };      // array size of [NLEVEL-1][6]
