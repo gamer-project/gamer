@@ -18,15 +18,17 @@ for KEY in "${VALID_KEYS[@]}"; do
         MAX_KEY_LENGTH=${#KEY}
     fi
 done
-declare -A PADDED_KEYS
-for KEY in "${VALID_KEYS[@]}"; do
-    PADDED_KEYS[$KEY]=$(printf "%-${MAX_KEY_LENGTH}s" "$KEY")
-done
+
+print_key(){  
+    # $1 : the key name  
+    # $2 : the key value or additional message
+    printf "%-${MAX_KEY_LENGTH}s   %s\n" "$1" "$2"
+}
 
 show_valid_keys() {
     echo "Valid keys and their functionalities:"
     for KEY in "${!KEY_DESCRIPTIONS[@]}"; do
-        echo "  ${PADDED_KEYS[$KEY]}  ${KEY_DESCRIPTIONS[$KEY]}"
+        echo "  $(print_key "$KEY" "${KEY_DESCRIPTIONS[$KEY]}")"
     done
 }
 
@@ -222,16 +224,15 @@ fi
 for KEY in "${VALID_KEYS[@]}"; do
     OLD_VALUE="${EXISTING_SETTINGS[$KEY]}"
     NEW_VALUE="${SETTINGS[$KEY]}"
-    PADDED_KEY="${PADDED_KEYS[$KEY]}"
 
     if [ "$SET" = true ] && [ -n "$NEW_VALUE" ]; then # The key will be set
 
         EXISTING_SETTINGS["$KEY"]="$NEW_VALUE" # Update or set new value
         if [ "$LIST" = true ]; then
             if [ -z "$OLD_VALUE" ]; then
-                echo "$PADDED_KEY   $NEW_VALUE (new)"
+                print_key "$KEY" "$NEW_VALUE (new)"
             else
-                echo "$PADDED_KEY   $OLD_VALUE -> $NEW_VALUE"
+                print_key "$KEY" "$OLD_VALUE -> $NEW_VALUE"
             fi
         fi
 
@@ -239,11 +240,11 @@ for KEY in "${VALID_KEYS[@]}"; do
 
         unset EXISTING_SETTINGS["$KEY"] # Delete the key
         if [ "$LIST" = true ] && [ -n "$OLD_VALUE" ]; then
-            echo "$PADDED_KEY   $OLD_VALUE -> (deleted)"
+            print_key "$KEY" "$OLD_VALUE -> (deleted)"
         fi
 
     elif [ "$LIST" = true ] && [ -n "$OLD_VALUE" ]; then
-        echo "$PADDED_KEY   $OLD_VALUE"
+        print_key "$KEY" "$OLD_VALUE"
     fi
 done
 [ "$LIST" = true ] && echo ""
@@ -252,7 +253,7 @@ done
 {
     echo "# GAMER setting file"
     for KEY in "${!EXISTING_SETTINGS[@]}"; do
-        echo "${PADDED_KEYS[$KEY]}    ${EXISTING_SETTINGS[$KEY]}"
+        print_key "${KEY}" "${EXISTING_SETTINGS[$KEY]}"
     done
 } > "$SETTING_FILE"
 
