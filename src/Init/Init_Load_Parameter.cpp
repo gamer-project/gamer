@@ -494,6 +494,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__OUTPUT_PART",           &OPT__OUTPUT_PART,                0,               0,             7              );
    ReadPara->Add( "OPT__OUTPUT_USER",           &OPT__OUTPUT_USER,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_TEXT_FORMAT_FLT", OPT__OUTPUT_TEXT_FORMAT_FLT,     "%24.16e",       Useless_str,   Useless_str    );
+   ReadPara->Add( "OPT__OUTPUT_TEXT_FORMAT_INT", OPT__OUTPUT_TEXT_FORMAT_INT,     "%12ld",         Useless_str,   Useless_str    );
 #  ifdef PARTICLE
    ReadPara->Add( "OPT__OUTPUT_PAR_MODE",       &OPT__OUTPUT_PAR_MODE,            0,               0,             2              );
 #  ifdef TRACER

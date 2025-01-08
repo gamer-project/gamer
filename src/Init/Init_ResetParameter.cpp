@@ -336,6 +336,13 @@ void Init_ResetParameter()
    StrLen_Flt = MAX( abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+1)), abs(atoi(OPT__OUTPUT_TEXT_FORMAT_FLT+2)) );
    sprintf( BlankPlusFormat_Flt, " %s", OPT__OUTPUT_TEXT_FORMAT_FLT );
 
+   if ( strlen(OPT__OUTPUT_TEXT_FORMAT_INT) > MAX_STRING-1 )
+      Aux_Error( ERROR_INFO, "Length of OPT__OUTPUT_TEXT_FORMAT_INT (%d) should be smaller than MAX_STRING-1 (%d) !!\n",
+                 strlen(OPT__OUTPUT_TEXT_FORMAT_INT), MAX_STRING-1 );
+
+   StrLen_Int = MAX( abs(atoi(OPT__OUTPUT_TEXT_FORMAT_INT+1)), abs(atoi(OPT__OUTPUT_TEXT_FORMAT_INT+2)) );
+   sprintf( BlankPlusFormat_Int, " %s", OPT__OUTPUT_TEXT_FORMAT_INT );
+
 
 // ELBDM parameters
 #  if ( MODEL == ELBDM )

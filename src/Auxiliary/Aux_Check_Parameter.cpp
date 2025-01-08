@@ -386,6 +386,10 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : StrLen_Flt (%d) <= 0 (OPT__OUTPUT_TEXT_FORMAT_FLT=%s) --> text output might be misaligned !!\n",
                    StrLen_Flt, OPT__OUTPUT_TEXT_FORMAT_FLT );
 
+   if ( StrLen_Int <= 0 )
+      Aux_Message( stderr, "WARNING : StrLen_Int (%d) <= 0 (OPT__OUTPUT_TEXT_FORMAT_INT=%s) --> text output might be misaligned !!\n",
+                   StrLen_Int, OPT__OUTPUT_TEXT_FORMAT_INT );
+
    if ( OPT__CK_REFINE )
       Aux_Message( stderr, "WARNING : \"%s\" check may fail due to the proper-nesting constraint !!\n",
                    "OPT__CK_REFINE" );
