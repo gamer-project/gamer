@@ -1959,6 +1959,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Flag_Rho",           &RS.Opt__Flag_Rho,           SID, TID, NonFatal, &RT.Opt__Flag_Rho,            1, NonFatal );
    LoadField( "Opt__Flag_RhoGradient",   &RS.Opt__Flag_RhoGradient,   SID, TID, NonFatal, &RT.Opt__Flag_RhoGradient,    1, NonFatal );
    LoadField( "Opt__Flag_Angular",       &RS.Opt__Flag_Angular,       SID, TID, NonFatal, &RT.Opt__Flag_Angular,        1, NonFatal );
+   LoadField( "Opt__Flag_Radial",        &RS.Opt__Flag_Radial,        SID, TID, NonFatal, &RT.Opt__Flag_Radial,         1, NonFatal );
 #  if ( MODEL == HYDRO )
    LoadField( "Opt__Flag_PresGradient",  &RS.Opt__Flag_PresGradient,  SID, TID, NonFatal, &RT.Opt__Flag_PresGradient,   1, NonFatal );
    LoadField( "Opt__Flag_Vorticity",     &RS.Opt__Flag_Vorticity,     SID, TID, NonFatal, &RT.Opt__Flag_Vorticity,      1, NonFatal );
