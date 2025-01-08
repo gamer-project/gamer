@@ -8,6 +8,8 @@ KEY_DESCRIPTIONS=(
 )
 ###################################################
 
+#################### UTILITIES ####################
+
 # List of valid keys
 VALID_KEYS=("${!KEY_DESCRIPTIONS[@]}")
 
@@ -52,7 +54,9 @@ show_help() {
     show_valid_keys
 }
 
-# Parse arguments
+##################### PARSER ######################
+
+# Parser arguments
 LOCAL=false
 GLOBAL=false
 LIST=false
@@ -61,11 +65,7 @@ SET=false
 declare -A SETTINGS
 DELETE_KEYS=()
 
-if [ "$#" -eq 0 ]; then
-    printf "$(show_help)\n" >&2
-    exit 1
-fi
-
+# Parser functions
 parse_set_parameter() {
     local PARAM="$1"
     local KEY="${PARAM%%=*}"
@@ -92,7 +92,7 @@ parse_set_parameter() {
 }
 
 parse_delete_keys() {
-    keys_processed=0
+    KEYS_PROCESSED=0
     if [[ "$#" -eq 0 ]]; then
         echo "Error: -d or --delete requires at least one key." >&2
         exit 1
@@ -105,10 +105,11 @@ parse_delete_keys() {
         fi
         DELETE_KEYS+=("$1")
         shift
-        keys_processed=$((keys_processed + 1))
+        KEYS_PROCESSED=$((KEYS_PROCESSED + 1))
     done
 }
 
+# Main parser loop
 while [[ "$#" -gt 0 ]]; do
     if [[ "${1:0:1}" = "-" && "${1:0:2}" != "--" ]]; then # Short options
         OPT="${1:1}"
@@ -126,7 +127,7 @@ while [[ "$#" -gt 0 ]]; do
                         set -- "$@" "-$(echo "${OPT:1}" | tr -d 'd')"
                     fi
                     parse_delete_keys "$@"
-                    shift $keys_processed
+                    shift $KEYS_PROCESSED
                     break ;;
                 *)
                     echo "Error: Unknown option: -${OPT:0:1}" >&2
@@ -137,8 +138,16 @@ while [[ "$#" -gt 0 ]]; do
         done
     else                                       # Long options
         case $1 in
-            --local) LOCAL=true; shift ;;
-            --global) GLOBAL=true; shift ;;
+            --local)
+                LOCAL=true
+                SETTING_TYPE="local"
+                SETTING_FILE="../src/.local_settings"
+                shift ;;
+            --global)
+                GLOBAL=true; 
+                SETTING_TYPE="global"
+                SETTING_FILE="$HOME/.config/gamer/global_settings"
+                shift ;;
             --list) LIST=true; shift ;;
             --verbose) LIST=true; shift ;;
             --help) show_help; exit 0 ;;
@@ -146,7 +155,7 @@ while [[ "$#" -gt 0 ]]; do
                 DELETE=true
                 shift
                 parse_delete_keys "$@"
-                shift $keys_processed ;;
+                shift $KEYS_PROCESSED ;;
             --clear-all)
                 DELETE=true
                 DELETE_KEYS=("${VALID_KEYS[@]}")   # Set DELETE_KEYS to all valid keys
@@ -163,20 +172,12 @@ while [[ "$#" -gt 0 ]]; do
     fi
 done
 
-cd "$(dirname "$0")"
+################ VALIDATE ARGUMENTS ###############
 
-# Ensure either --local or --global is specified
-if [ "$LOCAL" = true ] && [ "$GLOBAL" = true ]; then
-    echo "Error: Cannot specify both --local and --global." >&2
-    exit 1
-elif [ "$LOCAL" = true ]; then
-    SETTING_FILE="../src/.local_settings"
-    SETTING_TYPE="local"
-elif [ "$GLOBAL" = true ]; then
-    SETTING_FILE="$HOME/.config/gamer/global_settings"
-    SETTING_TYPE="global"
-else
-    echo "Error: Specify either --local or --global." >&2
+# Ensure at least one operation is specified
+if [ "$SET" = false ] && [ "$DELETE" = false ] && [ "$LIST" = false ]; then
+    echo "Error: Specify at least one operation." >&2
+    printf "$(show_help)\n" >&2
     exit 1
 fi
 
@@ -184,11 +185,22 @@ fi
 if [ "$SET" = true ] && [ "$DELETE" = true ]; then
     echo "Error: Cannot set and delete parameters at the same time." >&2
     exit 1
-elif [ "$SET" = false ] && [ "$DELETE" = false ]; then
-    LIST=true
 fi
 
-# Load existing settings
+# Ensure either --local or --global is specified
+if [ "$LOCAL" = true ] && [ "$GLOBAL" = true ]; then
+    echo "Error: Cannot specify both --local and --global." >&2
+    exit 1
+elif [ "$LOCAL" = false ] && [ "$GLOBAL" = false ]; then
+    echo "Error: Specify either --local or --global." >&2
+    exit 1
+fi
+
+################ LOAD SETTINGS FILE ###############
+
+cd "$(dirname "$0")"
+
+# Load if the settings file exists
 declare -A EXISTING_SETTINGS
 if [ -f "$SETTING_FILE" ]; then
     while read -r LINE; do
@@ -199,22 +211,9 @@ if [ -f "$SETTING_FILE" ]; then
     done < "$SETTING_FILE"
 fi
 
-# Create the directory and the settings file if it doesn't exist
-DIR="$(dirname "$SETTING_FILE")"
-if [ ! -d "$DIR" ]; then
-    mkdir -p "$DIR"
-    echo "Created directory $DIR."
-fi
-if [ ! -f "$SETTING_FILE" ]; then
-    if touch "$SETTING_FILE"; then
-        echo "Created file $(basename "$SETTING_FILE") in $DIR."
-    else
-        echo "Fatal: Failed to create file $(basename "$SETTING_FILE") in $DIR." >&2
-        exit 1
-    fi
-fi
+################# UPDATE SETTINGS #################
 
-# The head of message to the user
+# The head of the list
 if [ "$LIST" = true ]; then # Header for listing settings
     echo "$SETTING_TYPE settings in $SETTING_FILE"
     echo "---------------------------"
@@ -243,13 +242,31 @@ for KEY in "${VALID_KEYS[@]}"; do
             print_key "$KEY" "$OLD_VALUE -> (deleted)"
         fi
 
-    elif [ "$LIST" = true ] && [ -n "$OLD_VALUE" ]; then
+    elif [ "$LIST" = true ] && [ -n "$OLD_VALUE" ]; then # List the existing settings
         print_key "$KEY" "$OLD_VALUE"
     fi
 done
 [ "$LIST" = true ] && echo "---------------------------"
 
+################ SAVE SETTINGS FILE ###############
+
 if [ "$SET" = true ] || [ "$DELETE" = true ]; then
+
+    # Create the directory and the settings file if it doesn't exist
+    DIR="$(dirname "$SETTING_FILE")"
+    if [ ! -d "$DIR" ]; then
+        mkdir -p "$DIR"
+        echo "Created directory $DIR."
+    fi
+    if [ ! -f "$SETTING_FILE" ]; then
+        if touch "$SETTING_FILE"; then
+            echo "Created file $(basename "$SETTING_FILE") in $DIR."
+        else
+            echo "Fatal: Failed to create file $(basename "$SETTING_FILE") in $DIR." >&2
+            exit 1
+        fi
+    fi
+
     # Write updated settings to file
     {
         echo "# GAMER setting file"
