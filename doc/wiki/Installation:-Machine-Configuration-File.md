@@ -3,7 +3,7 @@ The machine configuration file is under `configs`. The configuration file contai
 If there is a configuration file that matches the name of your machine, you should set it as the default by
 
 ```bash
-sh tool/set_settings.sh --local --machine=your_machine
+sh tool/config/set_settings.sh --local --machine=your_machine
 ```
 
 For example, setting `--machine=pleiades` with the above command will use the `configs/pleiades.config` machine configuration when compiling the code.
@@ -24,7 +24,7 @@ cd configs
 cp template.config your_machine.config
 ```
 
-Please refer to the following sections to set up your machine configuration file. And don't forget to set the machine configuration file as the default by the `tool/set_settings.sh` command above.
+Please refer to the following sections to set up your machine configuration file. And don't forget to set the machine configuration file as the default by the `tool/config/set_settings.sh` command above.
 
 
 ### 0. Rules of the configuration file

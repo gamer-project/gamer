@@ -119,7 +119,7 @@ while [[ "$#" -gt 0 ]]; do
             --local)
                 LOCAL=true
                 SETTING_TYPE="local"
-                SETTING_FILE="../src/.local_settings"
+                SETTING_FILE="../../src/.local_settings"
                 shift ;;
             --global)
                 GLOBAL=true; 
