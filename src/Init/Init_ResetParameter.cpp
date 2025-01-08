@@ -725,16 +725,24 @@ void Init_ResetParameter()
 // angular resolution center
    if ( OPT__FLAG_ANGULAR )
    {
-      if ( ANGULAR_CEN_X < 0.0  ||  ANGULAR_CEN_X > amr->BoxSize[0]  ||
-           ANGULAR_CEN_Y < 0.0  ||  ANGULAR_CEN_Y > amr->BoxSize[1]  ||
-           ANGULAR_CEN_Z < 0.0  ||  ANGULAR_CEN_Z > amr->BoxSize[2] )
+      if ( ANGULAR_CEN_X < 0.0 )
       {
          ANGULAR_CEN_X = amr->BoxCenter[0];
-         ANGULAR_CEN_Y = amr->BoxCenter[1];
-         ANGULAR_CEN_Z = amr->BoxCenter[2];
 
          PRINT_RESET_PARA( ANGULAR_CEN_X, FORMAT_REAL, "" );
+      }
+
+      if ( ANGULAR_CEN_Y < 0.0 )
+      {
+         ANGULAR_CEN_Y = amr->BoxCenter[1];
+
          PRINT_RESET_PARA( ANGULAR_CEN_Y, FORMAT_REAL, "" );
+      }
+
+      if ( ANGULAR_CEN_Z < 0.0 )
+      {
+         ANGULAR_CEN_Z = amr->BoxCenter[2];
+
          PRINT_RESET_PARA( ANGULAR_CEN_Z, FORMAT_REAL, "" );
       }
    }
@@ -743,16 +751,24 @@ void Init_ResetParameter()
 // radial resolution center
    if ( OPT__FLAG_RADIAL )
    {
-      if ( RADIAL_CEN_X < 0.0  ||  RADIAL_CEN_X > amr->BoxSize[0]  ||
-           RADIAL_CEN_Y < 0.0  ||  RADIAL_CEN_Y > amr->BoxSize[1]  ||
-           RADIAL_CEN_Z < 0.0  ||  RADIAL_CEN_Z > amr->BoxSize[2] )
+      if ( RADIAL_CEN_X < 0.0 )
       {
          RADIAL_CEN_X = amr->BoxCenter[0];
-         RADIAL_CEN_Y = amr->BoxCenter[1];
-         RADIAL_CEN_Z = amr->BoxCenter[2];
 
          PRINT_RESET_PARA( RADIAL_CEN_X, FORMAT_REAL, "" );
+      }
+
+      if ( RADIAL_CEN_Y < 0.0 )
+      {
+         RADIAL_CEN_Y = amr->BoxCenter[1];
+
          PRINT_RESET_PARA( RADIAL_CEN_Y, FORMAT_REAL, "" );
+      }
+
+      if ( RADIAL_CEN_Z < 0.0 )
+      {
+         RADIAL_CEN_Z = amr->BoxCenter[2];
+
          PRINT_RESET_PARA( RADIAL_CEN_Z, FORMAT_REAL, "" );
       }
    }
