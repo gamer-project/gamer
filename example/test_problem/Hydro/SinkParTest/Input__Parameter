@@ -122,7 +122,7 @@ PAR_PREDICT_POS               1           # predict particle position during mas
 PAR_REMOVE_CELL              -1.0         # remove particles X-root-cells from the boundaries (non-periodic BC only; <0=auto) [-1.0]
 
 # star formation (STAR_FORMATION only)
-SF_CREATE_STAR_SCHEME         1           # star formation schemes (0=off, 1=AGORA) [0]
+SF_CREATE_STAR_SCHEME         2           # star formation schemes (0=off, 1=AGORA, 2=sink particle) [0]
 SF_CREATE_STAR_RSEED          123         # random seed [123]
 SF_CREATE_STAR_DET_RANDOM    -1           # make random numbers deterministic (i.e., independent of OpenMP and MPI, <0=auto) [-1]
 SF_CREATE_STAR_MIN_LEVEL     -1           # minimum AMR level allowed to form stars (<0=auto -> MAX_LEVEL) [0]
