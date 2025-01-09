@@ -100,7 +100,7 @@ void Microphysics_Init()
    MicroPhy.ViscMaxDiffusivity = VISCOSITY_MAX_DIFFUSIVITY;
    MicroPhy.ViscBounds = VISCOSITY_BOUNDS;
 
-   if ( MicroPhy.CondType == CONSTANT_VISCOSITY )
+   if ( MicroPhy.ViscType == CONSTANT_VISCOSITY )
    {
       // We must convert the viscosity coefficient to code units. To avoid
       // precision errors, we do this one step at a time.
