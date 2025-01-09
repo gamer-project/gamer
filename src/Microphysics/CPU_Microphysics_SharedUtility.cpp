@@ -22,6 +22,38 @@ real MC_limiter( const real a, const real b )
 
 } // FUNCTION : MC_limiter
 
+//-----------------------------------------------------------------------------------------
+// Function    : van_leer 
+// Description : vanLeer slope limiter
+//
+// Parameter   : a, b : Input slopes
+//
+// Return      : Limited slope
+//-----------------------------------------------------------------------------------------
+GPU_DEVICE
+real van_leer( const real a, const real b )
+{
+
+   return ( a*b > (real)0.0 ) ? ( (real)2.0*a*b / (a+b) ) : (real)0.0;
+
+} // FUNCTION : van_leer
+
+//-----------------------------------------------------------------------------------------
+// Function    : van_leer2 
+// Description : vanLeer slope limiter called twice
+//
+// Parameter   : a, b, c, d : Input slopes
+//
+// Return      : Limited slope
+//-----------------------------------------------------------------------------------------
+GPU_DEVICE
+real van_leer2( const real a, const real b, const real c, const real d )
+{
+
+   return van_leer( van_leer(a,b), van_leer(c,d) );
+
+} // FUNCTION : van_leer2
+
 
 //-----------------------------------------------------------------------------------------
 // Function    : minmod
