@@ -126,7 +126,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
       CGPU_LOOP( idx, flux_size_i*flux_size_j*flux_size_k )
       {
-//       1. calcualte indices
+//       1. calculate indices
 //       flux index
 //       --------------------
 //       |        |         |
@@ -340,12 +340,12 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
          }
 
 //       6. flux add-up
-         g_Flux_Half[d][    d+1][idx_flux] += stress_N;
-         g_Flux_Half[d][TDir1+1][idx_flux] += stress_T1;
-         g_Flux_Half[d][TDir2+1][idx_flux] += stress_T2;
+         g_Flux[d][    d+1][idx_flux] += stress_N;
+         g_Flux[d][TDir1+1][idx_flux] += stress_T1;
+         g_Flux[d][TDir2+1][idx_flux] += stress_T2;
 #        ifndef BAROTROPIC_EOS
          real Total_Flux = stress_N*v_N + stress_T1*v_T1 + stress_T2*v_T2;
-         g_Flux_Half[d][ENGY][idx_flux] += Total_Flux;
+         g_Flux[d][ENGY][idx_flux] += Total_Flux;
 #        endif
 
       } // CGPU_LOOP( idx, flux_size_i*flux_size_j*flux_size_k )
