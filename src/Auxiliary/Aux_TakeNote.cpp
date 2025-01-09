@@ -2059,7 +2059,7 @@ int get_cpuid()
    int CPU;
 
 #  ifdef __APPLE__
-   // macOS does not have an implementation of sched_getcpu that works cross-arch
+// macOS does not have an implementation of sched_getcpu that works cross-arch
    CPU = -1;
 #  else
    CPU = sched_getcpu();

@@ -718,7 +718,7 @@ int main( int argc, char *argv[] )
 
       if ( OPT__RECORD_MEMORY )
 #     ifndef __APPLE__
-      // memory reporting is not currently supported on macOS
+//    memory reporting is not currently supported on macOS
       TIMING_FUNC(   Aux_GetMemInfo(),                Timer_Main[4],   TIMER_ON   );
 #     endif
 

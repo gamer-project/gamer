@@ -19,7 +19,7 @@ void Aux_Check_MemFree( const double MinMemFree_Total, const char *comment )
 {
 
 #ifdef __APPLE__
-   // memory reporting is not currently supported on macOS
+// memory reporting is not currently supported on macOS
    return;
 #endif
 
