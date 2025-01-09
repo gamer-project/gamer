@@ -79,9 +79,10 @@ def soliton(x, xc ,time_a):
     return 1.9/time_a*((particle_mass/1e-23)**-2)*((xc)**-4)/(1+9.1*1e-2*(x/xc)**2)**8*1e9
 
 def find_virial(para,zeta,current_time_a, NFW = False):
-    
+    # in comoving coordinate
     def enclosed_mass(x):
         if NFW:
+            x = x/current_time_a
             rho0 = para[0]
             Rs = para[1]
             mass = 4*np.pi*rho0*Rs**3*(np.log((Rs+x)/Rs)-(x/(Rs+x)))
@@ -201,7 +202,7 @@ for sto, ds in ts.piter(storage=storage):
     range_FDM = (radius>core_radius_1*6) & (radius<halo_radius)
     rho0, Rs = fit_NFW.fit_NFW_dens(radius*current_time_a, density/current_time_a**3, range_FDM)
     halo_radius_NFW = find_virial((rho0,Rs), zeta, current_time_a, True)
-    halo_mass_NFW = fit_NFW.NFW_mass((rho0, Rs), halo_radius_NFW)
+    halo_mass_NFW = fit_NFW.NFW_mass((rho0, Rs), halo_radius_NFW*current_time_a)
     Ep_fit = fit_NFW.get_Ep_ideal(halo_mass_NFW, halo_radius_NFW, halo_radius_NFW/Rs, 'NFW')
 
     Ep_sim = fit_NFW.get_Ep_sph_sym((radius,density), halo_radius, halo_mass)
@@ -224,7 +225,7 @@ for sto, ds in ts.piter(storage=storage):
     sto_list.append(core_mass_3)
     sto_list.append(rho0)
     sto_list.append(Rs)
-    sto_list.append(halo_radius_NFW)
+    sto_list.append(halo_radius_NFW*current_time_a)
     sto_list.append(halo_mass_NFW)
     sto_list.append(Ep_fit)
     sto_list.append(Ep_sim)
