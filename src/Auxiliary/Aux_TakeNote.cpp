@@ -1127,6 +1127,7 @@ void Aux_TakeNote()
       fprintf( Note, "SF_CREATE_STAR_MIN_LEVEL       % d\n",           SF_CREATE_STAR_MIN_LEVEL                       );
       fprintf( Note, "SF_CREATE_STAR_MIN_GAS_DENS    % 14.7e\n",       SF_CREATE_STAR_MIN_GAS_DENS                    );
       fprintf( Note, "                              =% 14.7e cm^-3\n", SF_CREATE_STAR_MIN_GAS_DENS*UNIT_D/Const_mH    );
+      fprintf( Note, "SF_CREATE_STAR_MAX_GAS_JEANSL  % 14.7e\n",       SF_CREATE_STAR_MAX_GAS_JEANSL                  );
       fprintf( Note, "SF_CREATE_STAR_MASS_EFF        % 14.7e\n",       SF_CREATE_STAR_MASS_EFF                        );
       fprintf( Note, "SF_CREATE_STAR_MIN_STAR_MASS   % 14.7e\n",       SF_CREATE_STAR_MIN_STAR_MASS                   );
       fprintf( Note, "                              =% 14.7e Msun\n",  SF_CREATE_STAR_MIN_STAR_MASS*UNIT_M/Const_Msun );

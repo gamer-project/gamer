@@ -822,7 +822,7 @@ void CPU_GrackleSolver( grackle_field_data *Che_FieldData, code_units Che_Units,
 void SF_CreateStar( const int lv, const real TimeNew, const real dt );
 void SF_FreeRNG();
 void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, RandomNumber_t *RNG,
-                          const real GasDensThres, const real Efficiency, const real MinStarMass, const real MaxStarMFrac,
+                          const real GasDensThres, const real GasJeansLThres, const real Efficiency, const real MinStarMass, const real MaxStarMFrac,
                           const bool DetRandom, const bool UseMetal );
 #endif
 

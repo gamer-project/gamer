@@ -1842,6 +1842,14 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : SF_CREATE_STAR_MIN_LEVEL (%d) > MAX_LEVEL (%d) --> no star particles will form !!\n",
                    SF_CREATE_STAR_MIN_LEVEL, MAX_LEVEL );
 
+   if ( SF_CREATE_STAR_MAX_GAS_JEANSL > 0.0  &&  JEANS_MIN_PRES )
+   {
+      Aux_Message( stderr, "WARNING : SF_CREATE_STAR_MAX_GAS_JEANSL = %14.8e, but JEANS_MIN_PRES_NCELL = %d and JEANS_MIN_PRES_LEVEL = %d\n",
+                   SF_CREATE_STAR_MAX_GAS_JEANSL, JEANS_MIN_PRES_NCELL, JEANS_MIN_PRES_LEVEL );
+      Aux_Message( stderr, "          --> no star particles will form on level = %d and above !!\n",
+                   (int)ceil( JEANS_MIN_PRES_LEVEL - log2( JEANS_MIN_PRES_NCELL / SF_CREATE_STAR_MAX_GAS_JEANSL ) ) );
+   }
+
    if ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_AGORA  &&  !SF_CREATE_STAR_DET_RANDOM )
    {
       Aux_Message( stderr, "WARNING : SF_CREATE_STAR_SCHEME == 1 will break bitwise reproducibility due to the \n" );

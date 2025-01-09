@@ -18,24 +18,25 @@
 //                4. Currently this function does not check whether the cell mass exceeds the Jeans mass
 //                   --> Ref: "jeanmass" in star_maker_ssn.F of Enzo
 //
-// Parameter   :  lv           : Target refinement level
-//                TimeNew      : Current physical time (after advancing solution by dt)
-//                dt           : Time interval to advance solution
-//                               --> Currently this function does not distinguish dt and the physical time interval (dTime)
-//                               --> Does NOT support COMOVING yet
-//                RNG          : Random number generator
-//                GasDensThres : Minimum gas density for creating star particles                (--> "SF_CREATE_STAR_MIN_GAS_DENS"  )
-//                Efficiency   : Gas-to-star mass efficiency                                    (--> "SF_CREATE_STAR_MASS_EFF"      )
-//                MinStarMass  : Minimum star particle mass for the stochastical star formation (--> "SF_CREATE_STAR_MIN_STAR_MASS" )
-//                MaxStarMFrac : Maximum gas mass fraction allowed to convert to stars          (--> "SF_CREATE_STAR_MAX_STAR_MFRAC")
-//                DetRandom    : Make random numbers determinisitic                             (--> "SF_CREATE_STAR_DET_RANDOM"    )
-//                UseMetal     : Store the metal mass fraction in star particles
+// Parameter   :  lv             : Target refinement level
+//                TimeNew        : Current physical time (after advancing solution by dt)
+//                dt             : Time interval to advance solution
+//                                 --> Currently this function does not distinguish dt and the physical time interval (dTime)
+//                                 --> Does NOT support COMOVING yet
+//                RNG            : Random number generator
+//                GasDensThres   : Minimum gas density for creating star particles                (--> "SF_CREATE_STAR_MIN_GAS_DENS"  )
+//                GasJeansLThres : Maximum gas Jenas length for creating star particles           (--> "SF_CREATE_STAR_MAX_GAS_JEANSL")
+//                Efficiency     : Gas-to-star mass efficiency                                    (--> "SF_CREATE_STAR_MASS_EFF"      )
+//                MinStarMass    : Minimum star particle mass for the stochastical star formation (--> "SF_CREATE_STAR_MIN_STAR_MASS" )
+//                MaxStarMFrac   : Maximum gas mass fraction allowed to convert to stars          (--> "SF_CREATE_STAR_MAX_STAR_MFRAC")
+//                DetRandom      : Make random numbers determinisitic                             (--> "SF_CREATE_STAR_DET_RANDOM"    )
+//                UseMetal       : Store the metal mass fraction in star particles
 //
 // Return      :  1. Particle repository will be updated
 //                2. fluid[] array of gas will be updated
 //-------------------------------------------------------------------------------------------------------
 void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, RandomNumber_t *RNG,
-                          const real GasDensThres, const real Efficiency, const real MinStarMass, const real MaxStarMFrac,
+                          const real GasDensThres, const real GasJeansLThres, const real Efficiency, const real MinStarMass, const real MaxStarMFrac,
                           const bool DetRandom, const bool UseMetal )
 {
 
@@ -143,8 +144,57 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          GasDens = fluid[DENS][k][j][i];
          GasMass = GasDens*dv;
 
-//       1-1. create star particles only if the gas density exceeds the given threshold
+//       1-1-1. create star particles only if the gas density exceeds the given threshold
          if ( GasDens < GasDensThres )    continue;
+
+//       1-1-2. create star particles only if the gas Jeans length is less than the given threshold
+         if ( GasJeansLThres > 0.0 )
+         {
+            const bool CheckMinPres_Yes = true;
+
+//          if applicable, compute pressure from the dual-energy variable to reduce the round-off errors
+#           ifdef DUAL_ENERGY
+
+#           if   ( DUAL_ENERGY == DE_ENPY )
+            real GasPres = Hydro_DensDual2Pres( fluid[DENS][k][j][i], fluid[DUAL][k][j][i],
+                                                EoS_AuxArray_Flt[1], CheckMinPres_Yes, MIN_PRES );
+#           elif ( DUAL_ENERGY == DE_EINT )
+#           error : DE_EINT is NOT supported yet !!
+#           endif
+
+#           else // #ifdef DUAL_ENERGY
+
+#           ifdef MHD
+            //const real Emag = (real)0.5*(  SQR( MagCC[MAGX][k][j][i] )
+            //                             + SQR( MagCC[MAGY][k][j][i] )
+            //                             + SQR( MagCC[MAGZ][k][j][i] )  );
+            const real Emag = NULL_REAL;
+#           else
+            const real Emag = NULL_REAL;
+#           endif
+
+#           if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  NCOMP_PASSIVE > 0 )
+            real Passive[NCOMP_PASSIVE];
+            for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = fluid[ NCOMP_FLUID + v ][k][j][i];
+#           else
+            const real *Passive = NULL;
+#           endif
+
+            real GasPres = Hydro_Con2Pres( fluid[DENS][k][j][i], fluid[MOMX][k][j][i], fluid[MOMY][k][j][i],
+                                           fluid[MOMZ][k][j][i], fluid[ENGY][k][j][i], Passive,
+                                           CheckMinPres_Yes, MIN_PRES, Emag,
+                                           EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                           NULL );
+#           endif // #ifdef DUAL_ENERGY ... else ...
+            real GasCssqr  = EoS_DensPres2CSqr_CPUPtr( GasDens, GasPres, NULL,
+                                                       EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+
+            real GasJeansL = SQRT( ( M_PI * GasCssqr ) / ( NEWTON_G * GasDens ) );
+
+            if ( GasJeansL > GasJeansLThres*dh )    continue;
+         }
+
 
 
 //       1-2. estimate the gas free-fall time
