@@ -392,7 +392,7 @@ extern int    VISCOSITY_TYPE;
 extern int    VISCOSITY_FLUX_TYPE;
 extern int    VISCOSITY_COEFF_TYPE;
 extern double DT__VISCOSITY;
-extern double VISCOSITY_CONST_COEFF;
+extern double VISCOSITY_CONSTANT_COEFF;
 extern double VISCOSITY_SPITZER_FRAC;
 extern double VISCOSITY_COULOMB_LOG;
 extern double VISCOSITY_MAX_DIFFUSIVITY;

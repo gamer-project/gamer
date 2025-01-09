@@ -2608,7 +2608,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Visc_FluxType           = VISCOSITY_FLUX_TYPE;
    InputPara.Visc_CoeffType          = VISCOSITY_COEFF_TYPE;
    InputPara.Visc_Bounds             = VISCOSITY_BOUNDS;
-   InputPara.Visc_ConstCoeff         = VISCOSITY_CONST_COEFF;
+   InputPara.Visc_ConstCoeff         = VISCOSITY_CONSTANT_COEFF;
    InputPara.Visc_MaxDiffusivity     = VISCOSITY_MAX_DIFFUSIVITY;
    InputPara.Visc_SpitzerFraction    = VISCOSITY_SPITZER_FRAC;
    InputPara.Visc_CoulombLog         = VISCOSITY_COULOMB_LOG;

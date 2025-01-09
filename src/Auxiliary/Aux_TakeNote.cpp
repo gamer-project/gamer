@@ -1182,12 +1182,12 @@ void Aux_TakeNote()
 #     ifdef VISCOSITY
       fprintf( Note, "Parameters of Viscosity\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "VISCOSITY_TYPE                  %d\n",      VISCOSITY_TYPE          );
-      fprintf( Note, "VISCOSITY_FLUX_TYPE             %d\n",      VISCOSITY_FLUX_TYPE     );
-      fprintf( Note, "VISCOSITY_COEFF_TYPE            %d\n",      VISCOSITY_COEFF_TYPE    );
-      fprintf( Note, "VISCOSITY_CONST_COEFF           %13.7e\n",  VISCOSITY_CONST_COEFF   );
-      fprintf( Note, "VISCOSITY_SPITZER_FRACTION      %13.7e\n",  VISCOSITY_SPITZER_FRACTION );
-      fprintf( Note, "VISCOSITY_COULOMB_LOG           %13.7e\n",  VISCOSITY_COULOMB_LOG   );
+      fprintf( Note, "VISCOSITY_TYPE                  %d\n",      VISCOSITY_TYPE           );
+      fprintf( Note, "VISCOSITY_FLUX_TYPE             %d\n",      VISCOSITY_FLUX_TYPE      );
+      fprintf( Note, "VISCOSITY_COEFF_TYPE            %d\n",      VISCOSITY_COEFF_TYPE     );
+      fprintf( Note, "VISCOSITY_CONSTANT_COEFF        %13.7e\n",  VISCOSITY_CONSTANT_COEFF );
+      fprintf( Note, "VISCOSITY_SPITZER_FRAC          %13.7e\n",  VISCOSITY_SPITZER_FRAC   );
+      fprintf( Note, "VISCOSITY_COULOMB_LOG           %13.7e\n",  VISCOSITY_COULOMB_LOG    );
       fprintf( Note, "VISCOSITY_MAX_DIFFUSIVITY       %13.7e\n",  VISCOSITY_MAX_DIFFUSIVITY  );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");

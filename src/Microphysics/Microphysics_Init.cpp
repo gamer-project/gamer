@@ -94,7 +94,7 @@ void Microphysics_Init()
    MicroPhy.ViscFluxType = VISCOSITY_FLUX_TYPE;
    MicroPhy.ViscCoeffType = VISCOSITY_COEFF_TYPE;
    MicroPhy.Visc_safety = DT__VISCOSITY;
-   MicroPhy.ViscConstCoeff = VISCOSITY_CONST_COEFF;
+   MicroPhy.ViscConstCoeff = VISCOSITY_CONSTANT_COEFF;
    MicroPhy.ViscSpitzerFraction = VISCOSITY_SPITZER_FRAC;
    MicroPhy.ViscCoulombLog = VISCOSITY_COULOMB_LOG;
    MicroPhy.ViscMaxDiffusivity = VISCOSITY_MAX_DIFFUSIVITY;

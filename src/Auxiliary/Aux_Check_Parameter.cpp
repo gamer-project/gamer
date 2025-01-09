@@ -1963,8 +1963,8 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "SPITZER_VISCOSITY does not work with BAROTROPIC_EOS !!\n" );
 #  endif
 
-   if ( VISCOSITY_TYPE == CONSTANT_VISCOSITY && VISCOSITY_CONST_COEFF <= 0.0 )
-      Aux_Error( ERROR_INFO, "VISCOSITY_CONST_COEFF <= 0 !!\n" );
+   if ( VISCOSITY_TYPE == CONSTANT_VISCOSITY && VISCOSITY_CONSTANT_COEFF <= 0.0 )
+      Aux_Error( ERROR_INFO, "VISCOSITY_CONSTANT_COEFF <= 0 !!\n" );
 
    if ( VISCOSITY_TYPE == SPITZER_VISCOSITY && VISCOSITY_COULOMB_LOG <= 0.0 )
       Aux_Error( ERROR_INFO, "VISCOSITY_COULOMB_LOG <= 0 !!\n" );
@@ -1972,7 +1972,7 @@ void Aux_Check_Parameter()
    if ( VISCOSITY_TYPE == SPITZER_VISCOSITY && VISCOSITY_SPITZER_FRAC <= 0.0)
       Aux_Error( ERROR_INFO, "VISCOSITY_SPITZER_FRAC <= 0 !!\n" );
 
-   if ( VISCOSITY_TYPE == SPITZER_VISCOSITY && !OPT_UNIT )
+   if ( VISCOSITY_TYPE == SPITZER_VISCOSITY && !OPT__UNIT )
       Aux_Error( ERROR_INFO, "SPITZER_VISCOSITY only works with OPT__UNIT !!\n" );
 
 // warning
@@ -1980,9 +1980,9 @@ void Aux_Check_Parameter()
    if ( MPI_Rank == 0 ) {
 
       if ( VISCOSITY_TYPE == CONSTANT_VISCOSITY &&
-         VISCOSITY_COEFF_TYPE == VISCOSITY_KINETIC_COEFF &&
-         VISCOSITY_COEFF > VISCOSITY_COEFF_MAX )
-         Aux_Message( stderr, "WARNING : VISCOSITY_CONST_COEFF is greater than VISCOSITY_COEFF_MAX !!\n" );
+           VISCOSITY_COEFF_TYPE == VISCOSITY_KINETIC_COEFF &&
+           VISCOSITY_KINETIC_COEFF > VISCOSITY_MAX_DIFFUSIVITY )
+         Aux_Message( stderr, "WARNING : VISCOSITY_CONST_COEFF is greater than VISCOSITY_MAX_DIFFUSIVITY !!\n" );
 
       if ( DT__VISCOSITY < 0.0  ||  DT__VISCOSITY > 1.0 )
          Aux_Message( stderr, "WARNING : DT__VISCOSITY (%14.7e) is not within the normal range [0...1] !!\n", DT__VISCOSITY );

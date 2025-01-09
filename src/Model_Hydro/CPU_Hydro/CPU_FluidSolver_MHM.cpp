@@ -171,15 +171,6 @@ void Hydro_AddConductiveFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                               bool &initialize, const MicroPhy_t *MicroPhy );
 #endif
 #ifdef VISCOSITY
-void Hydro_AddViscousFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ], const real Temp[ CUBE(FLU_NXT) ],
-                                    real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                                    const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
-                                    const real g_CC_B[][ CUBE(FLU_NXT) ],
-                                    const real dh, const MicroPhy_t *MicroPhy );
-void Hydro_AddViscousFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ], const real Temp[ CUBE(FLU_NXT) ],
-                                    real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                                    const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
-                                    const int NFlux, const real dh, const MicroPhy_t *MicroPhy );
 void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                            const real g_PriVar[][ CUBE(FLU_NXT) ],
                            const real Temp[],
@@ -530,8 +521,6 @@ void CPU_FluidSolver_MHM(
 
 //       add viscous fluxes
 #        ifdef VISCOSITY
-         // Hydro_AddViscousFlux_HalfStep( g_PriVar_1PG, g_Flux_Half_1PG, g_Mag_Array_In[P],
-         //                                g_PriVar_1PG+MAG_OFFSET, dh, &MicroPhy );
          Hydro_AddViscousFlux( g_Flu_Array_In[P], NULL, Temp, g_Flux_Half_1PG, g_Mag_Array_In[P], FLU_NXT, 0,
                                N_HF_FLUX, NSkip_N, NSkip_T, 0, dh, need_initialize, &MicroPhy );
 #        endif
@@ -649,8 +638,6 @@ void CPU_FluidSolver_MHM(
 
 //          add viscous fluxes
 #           ifdef VISCOSITY
-            // Hydro_AddViscousFlux_FullStep( g_PriVar_Half_1PG, Temp, g_FC_Flux_1PG, g_FC_Mag_Half_1PG,
-            //                                N_FL_FLUX, dh, &MicroPhy );
             Hydro_AddViscousFlux( NULL, g_PriVar_Half_1PG, Temp, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_HF_VAR,
                                   OffsetPri, N_FL_FLUX, NSkip_N, NSkip_T, 0, dh, need_initialize, &MicroPhy );
 #           endif
