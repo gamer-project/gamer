@@ -10,7 +10,7 @@ curl https://hub.yt/api/v1/item/${FILE_ID2}/download -o "${LOCAL_FILENAME2}"
 
 # file unzip
 tar xzvf ${LOCAL_FILENAME1}.tar.gz
-mv ${LOCAL_FILENAME1}/*.dat ./
+mv ${LOCAL_FILENAME1}/* ./
 rm -rf ${LOCAL_FILENAME1}
 rm ${LOCAL_FILENAME1}.tar.gz
 
