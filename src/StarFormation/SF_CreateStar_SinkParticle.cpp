@@ -45,18 +45,14 @@ int FindLocalPID(int pi, int pj, int pk, int &PGi, int &PGj, int &PGk, int NGhos
 //
 // Parameter   :  lv           : Target refinement level
 //                TimeNew      : Current physical time (after advancing solution by dt)
-//                dt           : Time interval to advance solution
-//                               --> Currently this function does not distinguish dt and the physical time interval (dTime)
-//                               --> Does NOT support COMOVING yet
-//                AccCellNum   : Accretion radius in cells                                      (--> "SF_CREATE_STAR_ACC_RADIUS"    )
-//                MaxNewPar    : Number of particle per MPI rank                                (--> "SF_CREATE_STAR_MAX_NPAR_MPI"  )
+//                GasDensThres : Minimum gas density for creating sink particles                (--> "SF_CREATE_SINK_MIN_GAS_DENS"  )
+//                AccCellNum   : Accretion radius in cells                                      (--> "SF_CREATE_SINK_ACC_RADIUS"    )
+//                MaxNewPar    : Number of particle per MPI rank                                (--> "SF_CREATE_SINK_MAX_NPAR_MPI"  )
 //
 // Return      :  1. Particle repository will be updated
 //                2. fluid[] array of gas will be updated
 //-------------------------------------------------------------------------------------------------------
-void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real dt, RandomNumber_t *RNG,
-                                 const real GasDensThres, const real Efficiency, const real MinStarMass, const real MaxStarMFrac,
-                                 const bool DetRandom, const bool UseMetal)
+void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real GasDensThres)
 {
 // check
 #  if ( defined STORE_PAR_ACC  &&  !defined STORE_POT_GHOST )
