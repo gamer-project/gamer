@@ -151,7 +151,7 @@ with open( OUT_MD, 'w' ) as f:
     f.write( '- `example/input/Input__Paramter`\n' )
     f.write( '- `tool/wiki/sync_runtime_parameter.py`.\n' )
     f.write( '\n' )
-    f.write( 'For the "Depend" value, please check out the details of the parameter page.\n' )
+    f.write( 'For variables with `Default/Min/Max` labeled as `Depend`, click the parameter names for more details.\n' )
     f.write( '\n' )
     f.write( '# Index\n' )
     f.write( ', '.join( ['[%s](#%s)'%(i, i) for i in auc] ) )
