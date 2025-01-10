@@ -160,9 +160,9 @@ make -j4
 > Remember to copy the new executable to `bin/shocktube`.
 
 2\. Set the number of OpenMP threads by editing the runtime parameter
-[[OMP_NTHREAD | MPI-and-OpenMP#OMP_NTHREAD]]
+[[OMP_NTHREAD | Runtime-Parameters:-MPI-and-OpenMP#OMP_NTHREAD]]
 in the input file
-[[Input__Parameter | Runtime-Parameters#input__parameter]].
+[[Input__Parameter | Runtime-Parameters:-Input__Parameter]].
 The following example uses 4 threads.
 ```
 OMP_NTHREAD      4      # number of OpenMP threads (<=0=auto) [-1]
@@ -209,12 +209,12 @@ CPU core IDs of all OpenMP threads (tid == thread ID):
 Check the following things:
 * **The number under `NThread` is the same as the runtime
 parameter
-[[OMP_NTHREAD | MPI-and-OpenMP#OMP_NTHREAD]]
+[[OMP_NTHREAD | Runtime-Parameters:-MPI-and-OpenMP#OMP_NTHREAD]]
 you just set**
 * **Different threads use different CPU cores**
 
 6\. Check the performance. It should be about
-[[OMP_NTHREAD | MPI-and-OpenMP#OMP_NTHREAD]]
+[[OMP_NTHREAD | Runtime-Parameters:-MPI-and-OpenMP#OMP_NTHREAD]]
 times faster
 than the case without OpenMP.
 ``` bash

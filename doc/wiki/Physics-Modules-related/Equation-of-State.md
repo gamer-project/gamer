@@ -9,18 +9,18 @@ compilation option [[--eos | Installation:-Option-List#--eos]].
 
 
 ## EOS_GAMMA
-An ideal-gas EoS with a constant adiabatic index [[GAMMA | Hydro#gamma]].
+An ideal-gas EoS with a constant adiabatic index [[GAMMA | Runtime-Parameters:-Hydro#GAMMA]].
 
 
 ## EOS_ISOTHERMAL
 An isothermal EoS with a constant sound speed set by
-[[MOLECULAR_WEIGHT | Hydro#MOLECULAR_WEIGHT]] and
-[[ISO_TEMP | Hydro#ISO_TEMP]].
+[[MOLECULAR_WEIGHT | Runtime-Parameters:-Hydro#MOLECULAR_WEIGHT]] and
+[[ISO_TEMP | Runtime-Parameters:-Hydro#ISO_TEMP]].
 
 
 ## EOS_COSMIC_RAY
-A cosmic-ray EoS with an adiabatic index for fluid [[GAMMA | Hydro#gamma]]
-and an effective adiabatic index for cosmic rays [[GAMMA_CR | Hydro#gamma_cr]].
+A cosmic-ray EoS with an adiabatic index for fluid [[GAMMA | Runtime-Parameters:-Hydro#GAMMA]]
+and an effective adiabatic index for cosmic rays [[GAMMA_CR | Runtime-Parameters:-Hydro#GAMMA_CR]].
 Must enable [[--cosmic_ray | Installation:-Option-List#--cosmic_ray]].
 
 
@@ -61,7 +61,7 @@ in `include/Macro.h` (default is 10).
 > [!CAUTION]
 > * All conversion functions must be thread-safe and not use any global variable.
 > * When a conversion function fails, it is recommended to return `NAN`
-in order to trigger auto-corrections such as [[OPT__1ST_FLUX_CORR | Hydro#OPT__1ST_FLUX_CORR]]
+in order to trigger auto-corrections such as [[OPT__1ST_FLUX_CORR | Runtime-Parameters:-Hydro#OPT__1ST_FLUX_CORR]]
 and [[AUTO_REDUCE_DT | Runtime-Parameters:-Timestep#AUTO_REDUCE_DT]].
 
 3. Edit the problem source file `Init_TestProb_Hydro_NewProblem.cpp` to enable this new EoS.
@@ -85,5 +85,6 @@ and [[AUTO_REDUCE_DT | Runtime-Parameters:-Timestep#AUTO_REDUCE_DT]].
 <br>
 
 ## Links
+* [[Main page of Physics Modules | Physics-Modules]]
 * [[Main page of Runtime Parameters | Runtime Parameters]]
 * [[Hydro |hydro]]
