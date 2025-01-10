@@ -149,7 +149,7 @@ with open( OUT_MD, 'w' ) as f:
     f.write( 'The workflow is triggered when changes are pushed to any of the following files:\n' )
     f.write( '- `src/Init/Init_Load_Parameter.cpp`\n' )
     f.write( '- `example/input/Input__Paramter`\n' )
-    f.write( '- `tool/wiki/sync_runtime_parameter.py`.\n' )
+    f.write( '- `tool/wiki/sync_runtime_parameter.py`\n' )
     f.write( '\n' )
     f.write( 'For variables with `Default/Min/Max` labeled as `Depend`, click the parameter names for more details.\n' )
     f.write( '\n' )
