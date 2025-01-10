@@ -74,6 +74,9 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real dt
 #  ifdef GAMER_DEBUG
    if ( Idx_ParCreTime == Idx_Undefined )
       Aux_Error( ERROR_INFO, "Idx_ParCreTime is undefined !!\n" );
+
+   if ( Idx_ParID == Idx_Undefined )
+      Aux_Error( ERROR_INFO, "Idx_ParID is undefined !!\n" );
 #  endif // #ifdef GAMER_DEBUG
 
 // constant parameters
