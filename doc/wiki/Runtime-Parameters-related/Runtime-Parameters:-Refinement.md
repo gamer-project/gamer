@@ -379,7 +379,7 @@ Refinement criterion: angular resolution with respect to the specified center
 [FLAG_ANGULAR_CEN_Z](#FLAG_ANGULAR_CEN_Z)). Cells located at a distance greater than
 `AngRes_Max_R` are not allowed to exceed the angular resolution `AngRes_Max`.
 Cells are refined if their angular resolution is lower than `AngRes_Min`. Set
-`AngRes_Max < 0.0` or `AngRes_Min < 0.0` to disable the respective criterian.
+`AngRes_Max < 0.0` or `AngRes_Min < 0.0` to disable the respective criterion.
 Specify the refinement thresholds `AngRes_Max, AngRes_Min, AngRes_Max_R`
 on different levels in the input file `Input__Flag_AngularResolution`
 with the [[specific format | Runtime-Parameters:-Input__Flag_*]].
