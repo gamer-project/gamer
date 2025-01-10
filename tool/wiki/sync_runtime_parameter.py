@@ -1,4 +1,38 @@
 #!/bin/python3
+"""
+## What it can do
+
+Automatically update `doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-All.md`
+when any of the following files are changed, updated, or pushed:
+- `tool/wiki/sync_runtime_parameter.py`
+- `src/Init/Init_Load_Parameter.cpp`
+- `example/test_problem/Template/Input__Parameter`
+
+## How it works
+
+1. Detection:
+   The new workflow, "Update All Parameters Wiki Page", detects changes in any of the three specified files.
+2. Execution:
+   If changes are detected, the workflow runs the script `tool/wiki/sync_runtime_parameter.py`.
+3. Update:
+   The script updates `doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-All.md` by creating
+   a new commit with the message: `[Workflow] Update all parameters wiki page`.
+
+## Script Algorithm
+
+1. Extract Parameter Names and Comments:
+   Retrieve all parameter names and their associated short comments from `example/test_problem/Template/Input__Parameter`.
+2. Retrieve Parameter Details:
+   Gather the minimum, maximum, and default values of each parameter from `src/Init/Init_Load_Parameter.cpp`.
+3. Link Integration:
+   Identify the original page links using the references placed at the top of each runtime parameter
+   wiki page (e.g., `[BOX_SIZE](#BOX_SIZE), &nbsp;`).
+4. Markdown Generation:
+   Compile the extracted data and generate the updated markdown file.
+"""
+#====================================================================================================
+# Imports
+#====================================================================================================
 import re
 from string import ascii_uppercase as auc
 
