@@ -2546,14 +2546,15 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 
 // star formation
 #  ifdef STAR_FORMATION
-   InputPara.SF_CreateStar_Scheme       = SF_CREATE_STAR_SCHEME;
-   InputPara.SF_CreateStar_RSeed        = SF_CREATE_STAR_RSEED;
-   InputPara.SF_CreateStar_DetRandom    = SF_CREATE_STAR_DET_RANDOM;
-   InputPara.SF_CreateStar_MinLevel     = SF_CREATE_STAR_MIN_LEVEL;
-   InputPara.SF_CreateStar_MinGasDens   = SF_CREATE_STAR_MIN_GAS_DENS;
-   InputPara.SF_CreateStar_MassEff      = SF_CREATE_STAR_MASS_EFF;
-   InputPara.SF_CreateStar_MinStarMass  = SF_CREATE_STAR_MIN_STAR_MASS;
-   InputPara.SF_CreateStar_MaxStarMFrac = SF_CREATE_STAR_MAX_STAR_MFRAC;
+   InputPara.SF_CreateStar_Scheme           = SF_CREATE_STAR_SCHEME;
+   InputPara.SF_CreateStar_RSeed            = SF_CREATE_STAR_RSEED;
+   InputPara.SF_CreateStar_DetRandom        = SF_CREATE_STAR_DET_RANDOM;
+   InputPara.SF_CreateStar_MinLevel         = SF_CREATE_STAR_MIN_LEVEL;
+   InputPara.SF_CreateStar_MinGasDens       = SF_CREATE_STAR_MIN_GAS_DENS;
+   InputPara.SF_CreateStar_MassEff          = SF_CREATE_STAR_MASS_EFF;
+   InputPara.SF_CreateStar_MinStarMass      = SF_CREATE_STAR_MIN_STAR_MASS;
+   InputPara.SF_CreateStar_MaxStarMFrac     = SF_CREATE_STAR_MAX_STAR_MFRAC;
+   InputPara.SF_CreateStar_SinkMinGasDens   = SF_CREATE_SINK_MIN_GAS_DENS;
 #  endif
 
 // feedback

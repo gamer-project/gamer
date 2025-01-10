@@ -73,7 +73,7 @@ void SF_CreateStar( const int lv, const real TimeNew, const real dt )
                                                                SF_CREATE_STAR_MAX_STAR_MFRAC, SF_CREATE_STAR_DET_RANDOM,
                                                                UseMetal );
       
-      case SF_CREATE_STAR_SCHEME_SINKPARTICLE: SF_CreateStar_SinkParticle( lv, TimeNew, SF_CREATE_STAR_MIN_GAS_DENS );
+      case SF_CREATE_STAR_SCHEME_SINKPARTICLE: SF_CreateStar_SinkParticle( lv, TimeNew, SF_CREATE_SINK_MIN_GAS_DENS );
       break;
 #     endif
 
