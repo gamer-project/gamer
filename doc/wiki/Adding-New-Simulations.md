@@ -7,6 +7,7 @@ Mandatory steps are marked by &#x1F4CC;.
 4. [Add Problem-specific Parameters](#iv-add-problem-specific-parameters)
 5. [Add Problem-specific Grid Fields and Particle Attributes](#v-add-problem-specific-grid-fields-and-particle-attributes)
 6. [Add Problem-specific Functionalities](#vi-add-problem-specific-functionalities)
+   *  [Initial Condition by File](#initial-condition-by-file)
    *  [Output](#output)
    *  [Work Before Output](#work-before-output)
    *  [Refinement Criteria](#refinement-criteria)
@@ -341,6 +342,34 @@ For example,
 
 
 ## VI. Add Problem-specific Functionalities
+
+### Initial Condition by File
+* **Description:**
+This funciton will overwrite the [[setting the fluid field | Initial-Conditions#IC-File-Grids]]
+from the `UM_IC`.
+* **Prototype:**
+`void Init_ByFile_NewProblem( real fluid_out[], const real fluid_in[], const int nvar_in,
+                              const double x, const double y, const double z, const double Time,
+                              const int lv, double AuxArray[] );`
+* **Function Pointer:**
+`Init_ByFile_User_Ptr`
+* **Runtime Option:**
+[[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=3
+* **Example:**
+`src/Init/Init_ByFile.cpp` &#8594; `Init_ByFile_Default()`
+
+* **Description:**
+This funciton will overwrite the
+[[initialize particle attributes routine from a file | Initial-Conditions#IC-File-Particles]].
+* **Prototype:**
+`void Par_Init_ByFile_NewProblem();`
+* **Function Pointer:**
+`Par_Init_ByFile_User_Ptr`
+* **Runtime Option:**
+[[PAR_INIT | Runtime-Parameters:-Particles#PAR_INIT]]=3
+* **Example:**
+`src/Particle/Par_Init_ByFile.cpp` &#8594; `Par_Init_ByFile_Default()`
+
 
 ### Output
 The following example illustrates the procedure to add a problem-specific
