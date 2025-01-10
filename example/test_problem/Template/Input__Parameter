@@ -194,14 +194,14 @@ SRC_GPU_NPGROUP              -1           # number of patch groups sent into the
 # Grackle library for chemistry and radiative cooling (SUPPORT_GRACKLE only)
 GRACKLE_ACTIVATE              1           # enable Grackle [1]
 GRACKLE_VERBOSE               1           # map to "grackle_verbose" [1]
-GRACKLE_COOLING               1           # ...    "with_radiative_cooling" [1]
-GRACKLE_PRIMORDIAL            0           # ...    "primordial_chemistry" (0=Cloudy, 1/2/3=6-/9-/12-species) [0]
+GRACKLE_COOLING               1           # map to "with_radiative_cooling" [1]
+GRACKLE_PRIMORDIAL            0           # map to "primordial_chemistry" (0=Cloudy, 1/2/3=6-/9-/12-species) [0]
                                           #        (must increase NCOMP_PASSIVE_USER by 6/9/12, respectively)
-GRACKLE_METAL                 0           # ...    "metal_cooling" (must increase NCOMP_PASSIVE_USER by 1) [0]
-GRACKLE_UV                    0           # ...    "UVbackground" [0]
-GRACKLE_CMB_FLOOR             1           # ...    "cmb_temperature_floor" [1]
-GRACKLE_PE_HEATING            0           # ...    "photoelectric_heating" [0]
-GRACKLE_PE_HEATING_RATE       8.5e-26     # ...    "photoelectric_heating_rate (in erg/cm^3/s)" [8.5e-26]
+GRACKLE_METAL                 0           # map to "metal_cooling" (must increase NCOMP_PASSIVE_USER by 1) [0]
+GRACKLE_UV                    0           # map to "UVbackground" [0]
+GRACKLE_CMB_FLOOR             1           # map to "cmb_temperature_floor" [1]
+GRACKLE_PE_HEATING            0           # map to "photoelectric_heating" [0]
+GRACKLE_PE_HEATING_RATE       8.5e-26     # map to "photoelectric_heating_rate (in erg/cm^3/s)" [8.5e-26]
 GRACKLE_CLOUDY_TABLE          CloudyData_noUVB.h5  # "grackle_data_file"
 GRACKLE_THREE_BODY_RATE       4           # used Glover+08 rate
 GRACKLE_CIE_COOLING           1           # 0: off; 1:on
@@ -308,16 +308,16 @@ OPT__EXT_POT                  0           # add external potential    (0=off, 1=
 
 # tabular external potential
 EXT_POT_TABLE_NAME            ExtPotTable # external potential table: filename
-EXT_POT_TABLE_NPOINT_X        129         # ...                     : table size (i.e., number of data points) along x/y/z
-EXT_POT_TABLE_NPOINT_Y        129         #
-EXT_POT_TABLE_NPOINT_Z        129         #
-EXT_POT_TABLE_DH_X            0.0078125   # ...                     : spatial interval between adjacent data points
-EXT_POT_TABLE_DH_Y            0.0078125   #
-EXT_POT_TABLE_DH_Z            0.0078125   #
-EXT_POT_TABLE_EDGEL_X         0.0         # ...                     : starting x/y/z coordinates
-EXT_POT_TABLE_EDGEL_Y         0.0         #
-EXT_POT_TABLE_EDGEL_Z         0.0         #
-EXT_POT_TABLE_FLOAT8         -1           # ...                     : double precision (<0=auto -> FLOAT8, 0=off, 1=on) [-1]
+EXT_POT_TABLE_NPOINT_X        129         # external potential table: table size (i.e., number of data points) along x
+EXT_POT_TABLE_NPOINT_Y        129         # external potential table: table size (i.e., number of data points) along y
+EXT_POT_TABLE_NPOINT_Z        129         # external potential table: table size (i.e., number of data points) along z
+EXT_POT_TABLE_DH_X            0.0078125   # external potential table: spatial interval between adjacent x data points
+EXT_POT_TABLE_DH_Y            0.0078125   # external potential table: spatial interval between adjacent y data points
+EXT_POT_TABLE_DH_Z            0.0078125   # external potential table: spatial interval between adjacent z data points
+EXT_POT_TABLE_EDGEL_X         0.0         # external potential table: starting x coordinates
+EXT_POT_TABLE_EDGEL_Y         0.0         # external potential table: starting y coordinates
+EXT_POT_TABLE_EDGEL_Z         0.0         # external potential table: starting z coordinates
+EXT_POT_TABLE_FLOAT8         -1           # external potential table: double precision (<0=auto -> FLOAT8, 0=off, 1=on) [-1]
                                           # --> not supported yet; use -1 for now
 OPT__GRAVITY_EXTRA_MASS       0           # add extra mass source when computing gravity [0]
 
