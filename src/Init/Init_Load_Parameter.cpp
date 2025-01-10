@@ -250,7 +250,7 @@ void Init_Load_Parameter()
 
 // star formation
 #  ifdef STAR_FORMATION
-   ReadPara->Add( "SF_CREATE_STAR_SCHEME",         &SF_CREATE_STAR_SCHEME,         0,              0,             1              );
+   ReadPara->Add( "SF_CREATE_STAR_SCHEME",         &SF_CREATE_STAR_SCHEME,         0,              0,             2              );
    ReadPara->Add( "SF_CREATE_STAR_RSEED",          &SF_CREATE_STAR_RSEED,          123,            0,             NoMax_int      );
 // do not check SF_CREATE_STAR_DET_RANDOM since its default depends on the makefile option BITWISE_REPRODUCIBILITY
    ReadPara->Add( "SF_CREATE_STAR_DET_RANDOM",     &SF_CREATE_STAR_DET_RANDOM,    -1,              NoMin_int,     NoMax_int      );
