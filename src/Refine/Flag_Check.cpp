@@ -439,7 +439,7 @@ bool Check_Curl( const int i, const int j, const int k,
 //                lv           : Refinement level of the target patch
 //                PID          : ID of the target patch
 //                CenX/Y/Z     : x/y/z-coordinate of the center for calculating angular resolution
-//                AngRes_Max   : Maximum allowed angular resolution
+//                AngRes_Max   : Maximum allowed angular resolution (in radians)
 //                AngRes_Max_R : Minimum radius to apply AngRes_Max
 //
 // Return      :  "true/false"  if the input cell "is/is not" within the region allowed for refinement
@@ -478,10 +478,10 @@ bool Check_Angular_Max( const int i, const int j, const int k, const int lv, con
 //                lv           : Refinement level of the target patch
 //                PID          : ID of the target patch
 //                CenX/Y/Z     : x/y/z-coordinate of the center for calculating angular resolution
-//                AngRes_Min   : Minimum allowed angular resolution
+//                AngRes_Min   : Minimum allowed angular resolution (in radians)
 //
-// Return      :  "true"  if the minimum angular resolution is     reached
-//                "false" if the minimum angular resolution is not reached
+// Return      :  "true"  if the minimum angular resolution is not reached
+//                "false" if the minimum angular resolution is     reached
 //-------------------------------------------------------------------------------------------------------
 bool Check_Angular_Min( const int i, const int j, const int k, const int lv, const int PID,
                         const double CenX, const double CenY, const double CenZ,
@@ -516,8 +516,8 @@ bool Check_Angular_Min( const int i, const int j, const int k, const int lv, con
 // Parameter   :  i,j,k       : Target cell indices in the patch amr->patch[0][lv][PID]
 //                lv          : Refinement level of the target patch
 //                PID         : ID of the target patch
-//                CenX/Y/Z     : x/y/z-coordinate of the center for calculating angular resolution
-//                Refine_Rad  : The radius of must refined at level (lv)
+//                CenX/Y/Z    : x/y/z-coordinate of the center for calculating radial resolution
+//                Refine_Rad  : Radius at level lv within which grids are refined
 //
 // Return      :  "true"  if r <  Refine_Rad
 //                "false" if r >= Refine_Rad or Refine_Rad is not set
