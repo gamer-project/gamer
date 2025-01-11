@@ -361,6 +361,10 @@ routine will add grids to levels [[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initia
 [[ MAX_LEVEL | Runtime-Parameters:-Refinement#MAX_LEVEL]]
 in the regions satisfying any refinement criterion.
 
+A custom routine for assigning data to each cell from the loaded data
+can be specified using the function pointer
+[[Init_ByFile_User_Ptr | Adding-New-Simulations#initial-condition-from-files---grids]].
+
 The initial condition file `UM_IC` can be loaded concurrently by multiple
 MPI processes using [[OPT__UM_IC_LOAD_NRANK | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LOAD_NRANK]].
 
@@ -445,6 +449,10 @@ The built-in particle types (defined in `include/Macro.h`) include
 They have the floating-point types for now but will be changed to integers in the future.
 For `PTYPE_TRACER`, one must also enable the compilation option
 [[--tracer | Installation:-Option-List#--tracer]].
+
+A custom routine for assigning particle attributes from the loaded data
+can be specified using the function pointer
+[[Par_Init_ByFile_User_Ptr | Adding-New-Simulations#initial-condition-from-files---particles]].
 
 Note that it is not required to adopt [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=3 and
 [[PAR_INIT | Runtime-Parameters:-Particles#PAR_INIT]]=3 at the same time. In other words,

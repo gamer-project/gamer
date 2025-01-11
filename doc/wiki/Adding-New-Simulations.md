@@ -8,8 +8,8 @@ Mandatory steps are marked by &#x1F4CC;.
 5. [Add Problem-specific Grid Fields and Particle Attributes](#v-add-problem-specific-grid-fields-and-particle-attributes)
 6. [Add Problem-specific Functionalities](#vi-add-problem-specific-functionalities)
    *  [Output](#output)
-   *  [Initial Condition by File - Fluid](#initial-condition-by-file---fluid)
-   *  [Initial Condition by File - Particle](#initial-condition-by-file---particle)
+   *  [Initial Condition from Files - Grids](#initial-condition-from-files---grids)
+   *  [Initial Condition from Files - Particles](#initial-condition-from-files---particles)
    *  [Work Before Output](#work-before-output)
    *  [Refinement Criteria](#refinement-criteria)
    *  [Work Before Refine](#work-before-refine)
@@ -382,10 +382,9 @@ Other user-specified functionalities such as refinement criteria and
 timestep constraints can be added in a similar way and are outlined below.
 
 
-### Initial Condition by File - Fluid
+### Initial Condition from Files - Grids
 * **Description:**
-This funciton will overwrite the [[setting the fluid field | Initial-Conditions#IC-File-Grids]]
-from the `UM_IC`.
+Provide a custom routine for [[Setting IC from Files - Grids | Initial-Conditions#IC-File-Grids]].
 * **Prototype:**
 `void Init_ByFile_NewProblem( real fluid_out[], const real fluid_in[], const int nvar_in,
                               const double x, const double y, const double z, const double Time,
@@ -397,10 +396,9 @@ from the `UM_IC`.
 * **Example:**
 `src/Init/Init_ByFile.cpp` &#8594; `Init_ByFile_Default()`
 
-### Initial Condition by File - Particle
+### Initial Condition from Files - Particles
 * **Description:**
-This funciton will overwrite the
-[[initialize particle attributes routine from a file | Initial-Conditions#IC-File-Particles]].
+Provide a custom routine for [[Setting IC from Files - Particles | Initial-Conditions#IC-File-Particles]].
 * **Prototype:**
 `void Par_Init_ByFile_NewProblem();`
 * **Function Pointer:**
