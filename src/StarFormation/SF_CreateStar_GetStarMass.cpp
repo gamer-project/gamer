@@ -2,7 +2,7 @@
 
 #if ( defined PARTICLE  &&  defined STAR_FORMATION  &&  MODEL == HYDRO )
 
-static real SF_CreateStar_GetStarMass_StochasticLoaclSchmidtLaw( const real GasDens, const real dv, const real dt,
+static real SF_CreateStar_GetStarMass_StochasticLoaclSchmidtLaw( const real GasDens, const real dv, const real dt, RandomNumber_t *RNG,
                                                                  const real Efficiency, const real MinStarMass, const int TID );
 static real SF_CreateStar_GetStarMass_MaxStarM( const real GasDens, const real dv, const real MaxStarMFrac );
 
@@ -19,18 +19,19 @@ static real SF_CreateStar_GetStarMass_MaxStarM( const real GasDens, const real d
 //                dt             : Time interval to advance solution
 //                                 --> Currently this function does not distinguish dt and the physical time interval (dTime)
 //                                 --> Does NOT support COMOVING yet
+//                RNG            : Random number generator
 //                TID            : OpenMP thread ID
 //
 // Return      :  StarMass
 //-------------------------------------------------------------------------------------------------------
-real SF_CreateStar_GetStarMass( const real GasDens, const real dv, const real dt, const int TID )
+real SF_CreateStar_GetStarMass( const real GasDens, const real dv, const real dt, RandomNumber_t *RNG, const int TID )
 {
    real StarMass = -1.0;
 
    switch ( SF_CREATE_STAR_SCHEME )
    {
       case SF_CREATE_STAR_SCHEME_AGORA:
-         StarMass = SF_CreateStar_GetStarMass_StochasticLoaclSchmidtLaw( GasDens, dv, dt, SF_CREATE_STAR_MASS_EFF, SF_CREATE_STAR_MIN_STAR_MASS, TID );
+         StarMass = SF_CreateStar_GetStarMass_StochasticLoaclSchmidtLaw( GasDens, dv, dt, RNG, SF_CREATE_STAR_MASS_EFF, SF_CREATE_STAR_MIN_STAR_MASS, TID );
          break;
       case SF_CREATE_STAR_SCHEME_DWARFGALAXY:
          StarMass = SF_CreateStar_GetStarMass_MaxStarM( GasDens, dv, SF_CREATE_STAR_MAX_STAR_MFRAC );
@@ -62,12 +63,13 @@ real SF_CreateStar_GetStarMass( const real GasDens, const real dv, const real dt
 //                dt             : Time interval to advance solution
 //                                 --> Currently this function does not distinguish dt and the physical time interval (dTime)
 //                                 --> Does NOT support COMOVING yet
+//                RNG            : Random number generator
 //                Efficiency     : Gas-to-star mass efficiency                                    (--> "SF_CREATE_STAR_MASS_EFF"      )
 //                MinStarMass    : Minimum star particle mass for the stochastical star formation (--> "SF_CREATE_STAR_MIN_STAR_MASS" )
 //
 // Return      :  StarMass
 //-------------------------------------------------------------------------------------------------------
-real SF_CreateStar_GetStarMass_StochasticLoaclSchmidtLaw( const real GasDens, const real dv, const real dt,
+real SF_CreateStar_GetStarMass_StochasticLoaclSchmidtLaw( const real GasDens, const real dv, const real dt, RandomNumber_t *RNG,
                                                           const real Efficiency, const real MinStarMass, const int TID )
 {
    real StarMass = -1.0;

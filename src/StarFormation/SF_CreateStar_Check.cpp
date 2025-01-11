@@ -4,7 +4,9 @@
 #if ( defined PARTICLE  &&  defined STAR_FORMATION  &&  MODEL == HYDRO )
 
 static bool SF_CreateStar_Check_GasDensity( const real GasDensity, const double Threshold );
+# ifdef GRAVITY
 static bool SF_CreateStar_Check_GasJeansLength( const real GasDensity, const real GasCs2, const double Threshold );
+# endif
 
 
 
@@ -43,8 +45,10 @@ bool SF_CreateStar_Check( const int lv, const int PID, const int i, const int j,
          break;
 
       case SF_CREATE_STAR_SCHEME_DWARFGALAXY:
+#        ifdef GRAVITY
 //       create star particles only if the gas Jeans length is less than the given threshold
          AllowSF &= SF_CreateStar_Check_GasJeansLength( fluid[DENS][k][j][i], Cs2[k][j][i], dh*SF_CREATE_STAR_MAX_GAS_JEANSL );
+#        endif
          if ( !AllowSF )    return AllowSF;
          break;
 
@@ -88,6 +92,7 @@ bool SF_CreateStar_Check_GasDensity( const real GasDensity, const double Thresho
 
 
 
+#ifdef GRAVITY
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SF_CreateStar_Check_GasJeansLength
 // Description :  Check if the gas Jeans length is below the given threshold
@@ -105,13 +110,14 @@ bool SF_CreateStar_Check_GasJeansLength( const real GasDensity, const real GasCs
 {
    bool AllowSF = false;
 
-   real GasJeansL = SQRT( ( M_PI * GasCs2 ) / ( NEWTON_G * GasDens ) );
+   real GasJeansL = SQRT( ( M_PI * GasCs2 ) / ( NEWTON_G * GasDensity ) );
 
    if ( GasJeansL < Threshold )    AllowSF = true;
 
    return AllowSF;
 
 } // FUNCTION : SF_CreateStar_Check_GasDensity
+#endif // #ifdef GRAVITY
 
 
 

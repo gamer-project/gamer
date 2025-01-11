@@ -518,7 +518,7 @@ const GracklePriChe_t
 typedef int SF_CreateStarScheme_t;
 const SF_CreateStarScheme_t
    SF_CREATE_STAR_SCHEME_NONE        = 0,
-   SF_CREATE_STAR_SCHEME_AGORA       = 1;
+   SF_CREATE_STAR_SCHEME_AGORA       = 1,
    SF_CREATE_STAR_SCHEME_DWARFGALAXY = 2;
 #endif
 

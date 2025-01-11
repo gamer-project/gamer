@@ -85,10 +85,9 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
 
    bool NeedPres = false;
    bool NeedCs2  = false;
-#  ifdef GRAVITY
-   if ( GasJeansLThres > 0.0 )   NeedPres = true;
-   if ( GasJeansLThres > 0.0 )   NeedCs2  = true;
-#  endif
+
+   if ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_DWARFGALAXY )   NeedCs2  = true;
+   if ( NeedCs2 )   NeedPres = true;
 
 #  ifdef MHD
    if ( NeedPres )   MagCC = new real [3][PS1][PS1][PS1];
@@ -131,7 +130,6 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
       pot_ext = amr->patch[PotSg][lv][PID]->pot_ext;
 #     endif
 
-#     if ( MODEL == HYDRO )
 #     ifdef MHD
 //    evaluate cell-centered B field
       if ( NeedPres )
@@ -177,6 +175,7 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
 #           else
             const real Emag = NULL_REAL;
 #           endif
+
 #           if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  NCOMP_PASSIVE > 0 )
             real Passive[NCOMP_PASSIVE];
             for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = fluid[ NCOMP_FLUID + v ][k][j][i];
@@ -233,7 +232,7 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
          if ( !SF_CreateStar_Check( lv, PID, i, j, k, dh, fluid, Pres, Cs2 ) )   continue;
 
 //       1-2. get the star mass
-         StarMass = SF_CreateStar_GetStarMass( GasDens, dv, dt, TID );
+         StarMass = SF_CreateStar_GetStarMass( GasDens, dv, dt, RNG, TID );
          if ( StarMass <= 0.0 )   continue;
 
 //       check the maximum gas mass fraction allowed to convert to stars
