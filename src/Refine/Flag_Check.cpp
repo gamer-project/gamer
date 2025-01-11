@@ -58,6 +58,19 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
    bool Flag = false;
 
+
+// *******************************************************************************************
+// refinement flags must be checked in the following order
+// 1. no-refinement criteria --> exclude patches outside the regions allowed for refinement
+// 2. OPT__FLAG_INTERFERENCE --> ensure amr->patch[0][lv][PID]->switch_to_wave_flag is set correctly
+// 3. refinement criteria
+// *******************************************************************************************
+
+
+// *****************************
+// 1. no-refinement criteria
+// *****************************
+
 // check whether the input cell is within the regions allowed to be refined
 // ===========================================================================================
    if ( OPT__FLAG_REGION )
@@ -79,8 +92,12 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    }
 
 
-// check ELBDM interference
-// --> must be performed before any other checks in order to set switch_to_wave_flag correctly
+
+// *****************************
+// 2. OPT__FLAG_INTERFERENCE
+// *****************************
+
+// ELBDM interference check must be performed before any other refinement checks in order to set switch_to_wave_flag correctly
 // ===========================================================================================
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( OPT__FLAG_INTERFERENCE  &&  !amr->use_wave_flag[lv] )
@@ -95,6 +112,11 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    }
 #  endif
 
+
+
+// *****************************
+// 3. refinement criteria
+// *****************************
 
 #  ifdef PARTICLE
 // check the number of particles on each cell
