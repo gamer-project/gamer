@@ -377,8 +377,8 @@ specified regions.
 Refinement criterion: angular resolution with respect to the specified center
 ([FLAG_ANGULAR_CEN_X](#FLAG_ANGULAR_CEN_X), [FLAG_ANGULAR_CEN_Y](#FLAG_ANGULAR_CEN_Y),
 [FLAG_ANGULAR_CEN_Z](#FLAG_ANGULAR_CEN_Z)). Cells located at a distance greater than
-`AngRes_Max_R` are not allowed to exceed the angular resolution `AngRes_Max`.
-Cells are refined if their angular resolution is lower than `AngRes_Min`. Set
+`AngRes_Max_R` are not allowed to exceed the angular resolution `AngRes_Max` (in radians).
+Cells are refined if their angular resolution is lower than `AngRes_Min` (in radians). Set
 `AngRes_Max < 0.0` or `AngRes_Min < 0.0` to disable the respective criterion.
 Specify the refinement thresholds `AngRes_Max, AngRes_Min, AngRes_Max_R`
 on different levels in the input file `Input__Flag_AngularResolution`
@@ -391,7 +391,7 @@ It is generally recommended to set `AngRes_Max < 0.5*AngRes_Min`.
 <a name="FLAG_ANGULAR_CEN_X"></a>
 * #### `FLAG_ANGULAR_CEN_X` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [center of the x edge]
     * **Description:**
-X coordinate of the angular resolution center of [OPT__FLAG_ANGULAR](#OPT__FLAG_ANGULAR)
+x-coordinate of the center for calculating the angular resolution for [OPT__FLAG_ANGULAR](#OPT__FLAG_ANGULAR)
 refinement criterion.
     * **Restriction:**
 
@@ -421,7 +421,7 @@ An example file can be found at `example/input/Input__Flag_RadialResolution`.
 <a name="FLAG_RADIAL_CEN_X"></a>
 * #### `FLAG_RADIAL_CEN_X` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [center of the x edge]
     * **Description:**
-X coordinate of the radial resolution center of [OPT__FLAG_ANGULAR](#OPT__FLAG_RADIAL)
+x-coordinate of the center for calculating the radial resolution for [OPT__FLAG_RADIAL](#OPT__FLAG_RADIAL)
 refinement criterion.
     * **Restriction:**
 
