@@ -1,0 +1,314 @@
+#include "GAMER.h"
+
+
+
+// problem-specific global variables
+// =======================================================================================
+static double StarFormationThreshold_MassDensity_Min;    // Minimum mass density in the box
+static double StarFormationThreshold_MassDensity_Max;    // Maximum mass density in the box
+static double StarFormationThreshold_Temperature_Min;    // Minimum temperature in the box
+static double StarFormationThreshold_Temperature_Max;    // Maximum temperature in the box
+
+static double StarFormationThreshold_logDens_Min;       // Minimum log( mass density ) in the box
+static double StarFormationThreshold_logDens_Max;       // Maximum log( mass density ) in the box
+static double StarFormationThreshold_logDens_Range;     // Range of log ( mass density )
+static double StarFormationThreshold_logTemp_Min;       // Minimum log( temperature ) in the box
+static double StarFormationThreshold_logTemp_Max;       // Maximum log( temperature ) in the box
+static double StarFormationThreshold_logTemp_Range;     // Range of log ( temperature )
+// =======================================================================================
+
+
+// problem-specific function prototypes
+#ifdef PARTICLE
+void Par_Init_ByFunction_StarFormationThreshold( const long NPar_ThisRank, const long NPar_AllRank,
+                                                 real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                                 real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                                 real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] );
+#endif
+
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Validate
+// Description :  Validate the compilation flags and runtime parameters for this test problem
+//
+// Note        :  None
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Validate()
+{
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ...\n", TESTPROB_ID );
+
+
+// errors
+#  if ( MODEL != HYDRO )
+   Aux_Error( ERROR_INFO, "MODEL != HYDRO !!\n" );
+#  endif
+
+#  ifndef PARTICLE
+   Aux_Error( ERROR_INFO, "PARTICLE must be enabled !!\n" );
+#  endif
+
+#  ifndef GRAVITY
+   Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
+#  endif
+
+#  ifndef STAR_FORMATION
+   Aux_Error( ERROR_INFO, "STAR_FORMATION must be enabled !!\n" );
+#  endif
+
+#  ifdef COMOVING
+   Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
+#  endif
+
+   if ( !OPT__UNIT )
+      Aux_Error( ERROR_INFO, "OPT__UNIT must be enabled !!\n" );
+
+   for (int f=0; f<6; f++)
+   if ( OPT__BC_FLU[f] == BC_FLU_PERIODIC )
+      Aux_Error( ERROR_INFO, "do not use periodic BC (OPT__BC_FLU* = 1) for this test !!\n" );
+
+#  ifdef GRAVITY
+   if ( OPT__BC_POT == BC_POT_PERIODIC )
+      Aux_Error( ERROR_INFO, "do not use periodic BC (OPT__BC_POT = 1) for this test !!\n" );
+#  endif
+
+#  ifdef PARTICLE
+   if ( OPT__INIT == INIT_BY_FUNCTION  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
+      Aux_Error( ERROR_INFO, "please set PAR_INIT = 1 (by FUNCTION) !!\n" );
+#  endif
+
+
+// warnings
+   if ( MPI_Rank == 0 )
+   {
+#     ifndef DUAL_ENERGY
+         Aux_Message( stderr, "WARNING : it's recommended to enable DUAL_ENERGY for this test !!\n" );
+#     endif
+   } // if ( MPI_Rank == 0 )
+
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
+
+} // FUNCTION : Validate
+
+
+
+#if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SetParameter
+// Description :  Load and set the problem-specific runtime parameters
+//
+// Note        :  1. Filename is set to "Input__TestProb" by default
+//                2. Major tasks in this function:
+//                   (1) load the problem-specific runtime parameters
+//                   (2) set the problem-specific derived parameters
+//                   (3) reset other general-purpose parameters if necessary
+//                   (4) make a note of the problem-specific parameters
+//                3. Must call EoS_Init() before calling any other EoS routine
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void SetParameter()
+{
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ...\n" );
+
+
+// (1) load the problem-specific runtime parameters
+   const char FileName[] = "Input__TestProb";
+   ReadPara_t *ReadPara  = new ReadPara_t;
+
+// (1-1) add parameters in the following format:
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
+// ********************************************************************************************************************************
+// ReadPara->Add( "KEY_IN_THE_FILE",                               &VARIABLE,                                          DEFAULT,       MIN,              MAX               );
+// ********************************************************************************************************************************
+   ReadPara->Add( "StarFormationThreshold_MassDensity_Min",        &StarFormationThreshold_MassDensity_Min,            1.0e-29,       Eps_double,       NoMax_double      );
+   ReadPara->Add( "StarFormationThreshold_MassDensity_Max",        &StarFormationThreshold_MassDensity_Max,            1.0e-21,       Eps_double,       NoMax_double      );
+   ReadPara->Add( "StarFormationThreshold_Temperature_Min",        &StarFormationThreshold_Temperature_Min,            1.0e+01,       Eps_double,       NoMax_double      );
+   ReadPara->Add( "StarFormationThreshold_Temperature_Max",        &StarFormationThreshold_Temperature_Min,            1.0e+07,       Eps_double,       NoMax_double      );
+
+   ReadPara->Read( FileName );
+
+   delete ReadPara;
+
+// (1-2) set the default values
+
+// (1-3) check the runtime parameters
+   if ( StarFormationThreshold_MassDensity_Min > StarFormationThreshold_MassDensity_Max )
+      Aux_Error( ERROR_INFO, "MassDensity_Min = %14.7e > MassDensity_Max = %14.7e !!\n",
+                 StarFormationThreshold_MassDensity_Min, StarFormationThreshold_MassDensity_Max );
+
+   if ( StarFormationThreshold_Temperature_Min > StarFormationThreshold_Temperature_Max )
+      Aux_Error( ERROR_INFO, "Temperature_Min = %14.7e > Temperature_Max = %14.7e !!\n",
+                 StarFormationThreshold_Temperature_Min, StarFormationThreshold_Temperature_Max );
+
+
+// (2) set the problem-specific derived parameters
+// convert to code units
+   StarFormationThreshold_MassDensity_Min /= UNIT_D;
+   StarFormationThreshold_MassDensity_Max /= UNIT_D;
+
+   StarFormationThreshold_logDens_Min   = log10( StarFormationThreshold_MassDensity_Min );
+   StarFormationThreshold_logDens_Max   = log10( StarFormationThreshold_MassDensity_Max );
+   StarFormationThreshold_logDens_Range = StarFormationThreshold_logDens_Max - StarFormationThreshold_logDens_Min;
+   StarFormationThreshold_logTemp_Min   = log10( StarFormationThreshold_Temperature_Min );
+   StarFormationThreshold_logTemp_Max   = log10( StarFormationThreshold_Temperature_Max );
+   StarFormationThreshold_logTemp_Range = StarFormationThreshold_logTemp_Max - StarFormationThreshold_logTemp_Min;
+
+
+// (3) reset other general-purpose parameters
+//     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
+   const double t_ff = sqrt( (3.0*M_PI) / (32.0*NEWTON_G*StarFormationThreshold_MassDensity_Min) ); // maximum free-fall time
+
+   const long   End_Step_Default = __INT_MAX__;
+   const double End_T_Default    = 1.0*t_ff;
+
+   if ( END_STEP < 0 ) {
+      END_STEP = End_Step_Default;
+      PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
+   }
+
+   if ( END_T < 0.0 ) {
+      END_T = End_T_Default;
+      PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
+   }
+
+
+// (4) make a note
+   if ( MPI_Rank == 0 )
+   {
+      Aux_Message( stdout, "=============================================================================\n" );
+      Aux_Message( stdout, "  test problem ID                             = %d\n",             TESTPROB_ID                                            );
+      Aux_Message( stdout, "  StarFormationThreshold_MassDensity_Min      = %13.7e UNIT_D\n",  StarFormationThreshold_MassDensity_Min                 );
+      Aux_Message( stdout, "                                              = %13.7e g/cm^3\n",  StarFormationThreshold_MassDensity_Min*UNIT_D          );
+      Aux_Message( stdout, "                                              = %13.7e mH/cm^3\n", StarFormationThreshold_MassDensity_Min*UNIT_D/Const_mH );
+      Aux_Message( stdout, "  StarFormationThreshold_MassDensity_Max      = %13.7e UNIT_D\n",  StarFormationThreshold_MassDensity_Max                 );
+      Aux_Message( stdout, "                                              = %13.7e g/cm^3\n",  StarFormationThreshold_MassDensity_Max*UNIT_D          );
+      Aux_Message( stdout, "                                              = %13.7e mH/cm^3\n", StarFormationThreshold_MassDensity_Max*UNIT_D/Const_mH );
+      Aux_Message( stdout, "  StarFormationThreshold_Temperature_Min      = %13.7e K\n",       StarFormationThreshold_Temperature_Min                 );
+      Aux_Message( stdout, "  StarFormationThreshold_Temperature_Max      = %13.7e K\n",       StarFormationThreshold_Temperature_Max                 );
+      Aux_Message( stdout, "=============================================================================\n" );
+   }
+
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
+
+} // FUNCTION : SetParameter
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SetGridIC
+// Description :  Set the problem-specific initial condition on grids
+//
+// Note        :  1. This function may also be used to estimate the numerical errors when OPT__OUTPUT_USER is enabled
+//                   --> In this case, it should provide the analytical solution at the given "Time"
+//                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+//                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
+//                   --> Please ensure that everything here is thread-safe
+//                3. Even when DUAL_ENERGY is adopted for HYDRO, one does NOT need to set the dual-energy variable here
+//                   --> It will be calculated automatically
+//                4. For MHD, do NOT add magnetic energy (i.e., 0.5*B^2) to fluid[ENGY] here
+//                   --> It will be added automatically later
+//
+// Parameter   :  fluid    : Fluid field to be initialized
+//                x/y/z    : Physical coordinates
+//                Time     : Physical time
+//                lv       : Target refinement level
+//                AuxArray : Auxiliary array
+//
+// Return      :  fluid
+//-------------------------------------------------------------------------------------------------------
+void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
+                const int lv, double AuxArray[] )
+{
+
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( EoS_DensTemp2Pres_CPUPtr == NULL )
+      Aux_Error( ERROR_INFO, "EoS_DensTemp2Pres_CPUPtr == NULL !!\n" );
+#  endif
+
+// compute the gas log density     by linear interpolation in x-direction
+   const double logDens = StarFormationThreshold_logDens_Min +
+                          StarFormationThreshold_logDens_Range*( x / amr->BoxSize[0] );
+   const double Dens    = pow( 10, logDens );
+
+// compute the gas log temperature by linear interpolation in y-direction
+   const double logTemp = StarFormationThreshold_logTemp_Min +
+                          StarFormationThreshold_logTemp_Range*( y / amr->BoxSize[1] );
+   const double Temp    = pow( 10, logTemp );
+
+// compute the gas pressure
+   const double Pres = EoS_DensTemp2Pres_CPUPtr( Dens, Temp, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                 h_EoS_Table ); // assuming EoS requires no passive scalars
+
+// assume no momentum
+   const double MomX = 0.0;
+   const double MomY = 0.0;
+   const double MomZ = 0.0;
+
+// compute the total gas energy
+   const double Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
+                                                 EoS_AuxArray_Int, h_EoS_Table );   // assuming EoS requires no passive scalars
+   const double Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );     // do NOT include magnetic energy here
+
+
+// set the output array
+   fluid[DENS] = Dens;
+   fluid[MOMX] = MomX;
+   fluid[MOMY] = MomY;
+   fluid[MOMZ] = MomZ;
+   fluid[ENGY] = Etot;
+
+} // FUNCTION : SetGridIC
+#endif // #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Init_TestProb_Hydro_StarFormationThreshold
+// Description :  Test problem initializer
+//
+// Note        :  None
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Init_TestProb_Hydro_StarFormationThreshold()
+{
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
+
+
+// validate the compilation flags and runtime parameters
+   Validate();
+
+
+// replace HYDRO by the target model (e.g., MHD/ELBDM) and also check other compilation flags if necessary (e.g., GRAVITY/PARTICLE)
+#  if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
+// set the problem-specific runtime parameters
+   SetParameter();
+
+
+// set the function pointers of various problem-specific routines
+   Init_Function_User_Ptr            = SetGridIC;
+   Par_Init_ByFunction_Ptr           = Par_Init_ByFunction_StarFormationThreshold;
+#  endif // #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
+
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
+
+} // FUNCTION : Init_TestProb_Hydro_StarFormationThreshold

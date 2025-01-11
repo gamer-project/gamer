@@ -1,0 +1,5 @@
+# problem-specific runtime parameters
+StarFormationThreshold_MassDensity_Min             # Minimum mass density in the box (in g/cm^3) [1.0e-29]
+StarFormationThreshold_MassDensity_Max             # Maximum mass density in the box (in g/cm^3) [1.0e-21]
+StarFormationThreshold_Temperature_Min             # Minimum temperature in the box (in K) [1.0e+01]
+StarFormationThreshold_Temperature_Max             # Maximum temperature in the box (in K) [1.0e+07]
