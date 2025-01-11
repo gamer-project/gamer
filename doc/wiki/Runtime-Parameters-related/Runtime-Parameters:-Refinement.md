@@ -389,20 +389,20 @@ An example file can be found at `example/input/Input__Flag_AngularResolution`.
 It is generally recommended to set `AngRes_Max < 0.5*AngRes_Min`.
 
 <a name="FLAG_ANGULAR_CEN_X"></a>
-* #### `FLAG_ANGULAR_CEN_X` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [center of the x edge]
+* #### `FLAG_ANGULAR_CEN_X` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [box center]
     * **Description:**
 x-coordinate of the center for calculating the angular resolution for [OPT__FLAG_ANGULAR](#OPT__FLAG_ANGULAR)
 refinement criterion.
     * **Restriction:**
 
 <a name="FLAG_ANGULAR_CEN_Y"></a>
-* #### `FLAG_ANGULAR_CEN_Y` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [center of the y edge]
+* #### `FLAG_ANGULAR_CEN_Y` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [box center]
     * **Description:**
 See [FLAG_ANGULAR_CEN_X](#FLAG_ANGULAR_CEN_X).
     * **Restriction:**
 
 <a name="FLAG_ANGULAR_CEN_Z"></a>
-* #### `FLAG_ANGULAR_CEN_Z` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [center of the z edge]
+* #### `FLAG_ANGULAR_CEN_Z` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [box center]
     * **Description:**
 See [FLAG_ANGULAR_CEN_X](#FLAG_ANGULAR_CEN_X).
     * **Restriction:**
@@ -419,20 +419,20 @@ An example file can be found at `example/input/Input__Flag_RadialResolution`.
     * **Restriction:**
 
 <a name="FLAG_RADIAL_CEN_X"></a>
-* #### `FLAG_RADIAL_CEN_X` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [center of the x edge]
+* #### `FLAG_RADIAL_CEN_X` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [box center]
     * **Description:**
 x-coordinate of the center for calculating the radial resolution for [OPT__FLAG_RADIAL](#OPT__FLAG_RADIAL)
 refinement criterion.
     * **Restriction:**
 
 <a name="FLAG_RADIAL_CEN_Y"></a>
-* #### `FLAG_RADIAL_CEN_Y` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [center of the y edge]
+* #### `FLAG_RADIAL_CEN_Y` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [box center]
     * **Description:**
 See [FLAG_RADIAL_CEN_X](#FLAG_RADIAL_CEN_X).
     * **Restriction:**
 
 <a name="FLAG_RADIAL_CEN_Z"></a>
-* #### `FLAG_RADIAL_CEN_Z` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [center of the z edge]
+* #### `FLAG_RADIAL_CEN_Z` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [box center]
     * **Description:**
 See [FLAG_RADIAL_CEN_X](#FLAG_RADIAL_CEN_X).
     * **Restriction:**
