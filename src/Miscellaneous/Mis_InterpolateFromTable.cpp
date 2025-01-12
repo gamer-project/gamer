@@ -44,7 +44,7 @@ T Mis_InterpolateFromTable( const int N, const T Table_x[], const T Table_y[], c
 
 
 // linear interpolation
-   T y = Mis_LinearInterpolate( Table_x[IdxL], Table_x[IdxL+1], Table_y[IdxL], Table_y[IdxL+1], x );
+   T y = Mis_LinearInterpolate( x, Table_x[IdxL], Table_x[IdxL+1], Table_y[IdxL], Table_y[IdxL+1] );
 
    return y;
 
@@ -182,7 +182,7 @@ T Mis_InterpolateFrom_nDim_Table_withIdxL( const int nDim, const int N_x[], T co
       fC[i]  = Table_f[ Idx_f_corner ];
    }
 
-   T y = Mis_MultilinearInterpolate( nDim, xL, xR, fC, x );
+   T y = Mis_MultilinearInterpolate( nDim, x, xL, xR, fC );
 
    delete [] xL;
    delete [] xR;
