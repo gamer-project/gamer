@@ -13,14 +13,10 @@ Related options:
 
 
 ## Runtime Parameters
-
-Parameters described on this page:
-TBF.
+[[Runtime parameters: ELBDM | Runtime-Parameters:-ELBDM]]
 
 Other related parameters:
 TBF.
-
-Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**
 
 
 ## Remarks
@@ -29,4 +25,5 @@ Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) 
 <br>
 
 ## Links
+* [[Main page of Physics Modules | Physics-Modules]]
 * [[Main page of Runtime Parameters | Runtime Parameters]]

@@ -1036,6 +1036,20 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_USER                 % d\n",      OPT__FLAG_USER            );
       fprintf( Note, "OPT__FLAG_USER_NUM             % d\n",      OPT__FLAG_USER_NUM        );
       fprintf( Note, "OPT__FLAG_REGION               % d\n",      OPT__FLAG_REGION          );
+      fprintf( Note, "OPT__FLAG_ANGULAR              % d\n",      OPT__FLAG_ANGULAR         );
+      if ( OPT__FLAG_ANGULAR )
+      {
+      fprintf( Note, "   FLAG_ANGULAR_CEN_X          % 14.7e\n",  FLAG_ANGULAR_CEN_X        );
+      fprintf( Note, "   FLAG_ANGULAR_CEN_Y          % 14.7e\n",  FLAG_ANGULAR_CEN_Y        );
+      fprintf( Note, "   FLAG_ANGULAR_CEN_Z          % 14.7e\n",  FLAG_ANGULAR_CEN_Z        );
+      }
+      fprintf( Note, "OPT__FLAG_RADIAL               % d\n",      OPT__FLAG_RADIAL          );
+      if ( OPT__FLAG_RADIAL )
+      {
+      fprintf( Note, "   FLAG_RADIAL_CEN_X           % 14.7e\n",  FLAG_RADIAL_CEN_X         );
+      fprintf( Note, "   FLAG_RADIAL_CEN_Y           % 14.7e\n",  FLAG_RADIAL_CEN_Y         );
+      fprintf( Note, "   FLAG_RADIAL_CEN_Z           % 14.7e\n",  FLAG_RADIAL_CEN_Z         );
+      }
 #     ifdef PARTICLE
       fprintf( Note, "OPT__FLAG_NPAR_PATCH           % d\n",      OPT__FLAG_NPAR_PATCH      );
       fprintf( Note, "OPT__FLAG_NPAR_CELL            % d\n",      OPT__FLAG_NPAR_CELL       );
@@ -1722,6 +1736,29 @@ void Aux_TakeNote()
          for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_RhoGradient[lv] );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n" );
+      }
+
+      if ( OPT__FLAG_ANGULAR )
+      {
+         fprintf( Note, "Flag Criterion (Angular Resolution)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level          AngRes_Max          AngRes_Min        AngRes_Max_R\n");
+         for (int lv=0; lv<MAX_LEVEL; lv++)
+            fprintf( Note, "%7d%20.7e%20.7e%20.7e\n", lv, FlagTable_Angular[lv][0], FlagTable_Angular[lv][1],
+                     FlagTable_Angular[lv][2] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+
+      if ( OPT__FLAG_RADIAL )
+      {
+         fprintf( Note, "Flag Criterion (Radial Resolution)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level          Refine_Rad\n");
+         for (int lv=0; lv<MAX_LEVEL; lv++)
+            fprintf( Note, "%7d%20.7e\n", lv, FlagTable_Radial[lv] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
       }
 
 #     if   ( MODEL == HYDRO )

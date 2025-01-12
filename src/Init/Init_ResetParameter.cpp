@@ -722,6 +722,58 @@ void Init_ResetParameter()
 #  endif
 
 
+// angular resolution center
+   if ( OPT__FLAG_ANGULAR )
+   {
+      if ( FLAG_ANGULAR_CEN_X < 0.0 )
+      {
+         FLAG_ANGULAR_CEN_X = amr->BoxCenter[0];
+
+         PRINT_RESET_PARA( FLAG_ANGULAR_CEN_X, FORMAT_REAL, "" );
+      }
+
+      if ( FLAG_ANGULAR_CEN_Y < 0.0 )
+      {
+         FLAG_ANGULAR_CEN_Y = amr->BoxCenter[1];
+
+         PRINT_RESET_PARA( FLAG_ANGULAR_CEN_Y, FORMAT_REAL, "" );
+      }
+
+      if ( FLAG_ANGULAR_CEN_Z < 0.0 )
+      {
+         FLAG_ANGULAR_CEN_Z = amr->BoxCenter[2];
+
+         PRINT_RESET_PARA( FLAG_ANGULAR_CEN_Z, FORMAT_REAL, "" );
+      }
+   }
+
+
+// radial resolution center
+   if ( OPT__FLAG_RADIAL )
+   {
+      if ( FLAG_RADIAL_CEN_X < 0.0 )
+      {
+         FLAG_RADIAL_CEN_X = amr->BoxCenter[0];
+
+         PRINT_RESET_PARA( FLAG_RADIAL_CEN_X, FORMAT_REAL, "" );
+      }
+
+      if ( FLAG_RADIAL_CEN_Y < 0.0 )
+      {
+         FLAG_RADIAL_CEN_Y = amr->BoxCenter[1];
+
+         PRINT_RESET_PARA( FLAG_RADIAL_CEN_Y, FORMAT_REAL, "" );
+      }
+
+      if ( FLAG_RADIAL_CEN_Z < 0.0 )
+      {
+         FLAG_RADIAL_CEN_Z = amr->BoxCenter[2];
+
+         PRINT_RESET_PARA( FLAG_RADIAL_CEN_Z, FORMAT_REAL, "" );
+      }
+   }
+
+
 // turn off refinement criteria and checks related to density if "DENS" is not defined
 #  ifndef DENS
    if ( OPT__FLAG_RHO )
