@@ -236,10 +236,9 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
          if ( StarMass <= 0.0 )   continue;
 
 //       check the maximum gas mass fraction allowed to convert to stars
-         if ( StarMass > GasMass*SF_CREATE_STAR_MAX_STAR_MFRAC )
-         {
-            StarMass  = MIN( StarMass, GasMass*SF_CREATE_STAR_MAX_STAR_MFRAC );
-         }
+         StarMFrac = StarMass / GasMass;
+         StarMFrac = MIN( StarMFrac, SF_CREATE_STAR_MAX_STAR_MFRAC );
+         StarMass  = GasMass*StarMFrac;
 
 
 
@@ -316,7 +315,6 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
 
 //       3. remove the gas that has been converted to stars
 //       ===========================================================================================================
-         StarMFrac = StarMass / GasMass;
          GasMFracLeft = (real)1.0 - StarMFrac;
 
          for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v][k][j][i] *= GasMFracLeft;

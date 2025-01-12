@@ -3,9 +3,9 @@
 
 #if ( defined PARTICLE  &&  defined STAR_FORMATION  &&  MODEL == HYDRO )
 
-static bool SF_CreateStar_Check_GasDensity( const real GasDensity, const double Threshold );
+static bool SF_CreateStar_Check_GasDensity( const real GasDensity, const real Threshold );
 # ifdef GRAVITY
-static bool SF_CreateStar_Check_GasJeansLength( const real GasDensity, const real GasCs2, const double Threshold );
+static bool SF_CreateStar_Check_GasJeansLength( const real GasDensity, const real GasCs2, const real Threshold );
 # endif
 
 
@@ -80,7 +80,7 @@ bool SF_CreateStar_Check( const int lv, const int PID, const int i, const int j,
 // Return      :  "true"  if the gas density is larger           than the given threshold
 //                "false" if the gas density is equal or smaller than the given threshold
 //-------------------------------------------------------------------------------------------------------
-bool SF_CreateStar_Check_GasDensity( const real GasDensity, const double Threshold )
+bool SF_CreateStar_Check_GasDensity( const real GasDensity, const real Threshold )
 {
    bool AllowSF = false;
 
@@ -106,7 +106,7 @@ bool SF_CreateStar_Check_GasDensity( const real GasDensity, const double Thresho
 // Return      :  "true"  if the gas Jeans length is smaller         than the given threshold
 //                "false" if the gas Jeans length is equal or larger than the given threshold
 //-------------------------------------------------------------------------------------------------------
-bool SF_CreateStar_Check_GasJeansLength( const real GasDensity, const real GasCs2, const double Threshold )
+bool SF_CreateStar_Check_GasJeansLength( const real GasDensity, const real GasCs2, const real Threshold )
 {
    bool AllowSF = false;
 
