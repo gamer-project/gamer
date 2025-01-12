@@ -84,7 +84,7 @@ bool SF_CreateStar_Check_GasDensity( const real GasDensity, const double Thresho
 {
    bool AllowSF = false;
 
-   if ( GasDensity > Threshold )    AllowSF = true;
+   if ( GasDensity >= Threshold )    AllowSF = true;
 
    return AllowSF;
 
@@ -112,7 +112,7 @@ bool SF_CreateStar_Check_GasJeansLength( const real GasDensity, const real GasCs
 
    real GasJeansL = SQRT( ( M_PI * GasCs2 ) / ( NEWTON_G * GasDensity ) );
 
-   if ( GasJeansL < Threshold )    AllowSF = true;
+   if ( GasJeansL <= Threshold )    AllowSF = true;
 
    return AllowSF;
 

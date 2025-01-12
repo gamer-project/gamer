@@ -66,6 +66,7 @@ real SF_CreateStar_GetStarMass( const real GasDens, const real dv, const real dt
 //                RNG            : Random number generator
 //                Efficiency     : Gas-to-star mass efficiency                                    (--> "SF_CREATE_STAR_MASS_EFF"      )
 //                MinStarMass    : Minimum star particle mass for the stochastical star formation (--> "SF_CREATE_STAR_MIN_STAR_MASS" )
+//                TID            : OpenMP thread ID
 //
 // Return      :  StarMass
 //-------------------------------------------------------------------------------------------------------
