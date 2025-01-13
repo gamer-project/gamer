@@ -500,6 +500,14 @@ struct InputPara_t
    int    MaxLevel;
    int    Opt__Flag_Rho;
    int    Opt__Flag_RhoGradient;
+   int    Opt__Flag_Angular;
+   double FlagAngular_CenX;
+   double FlagAngular_CenY;
+   double FlagAngular_CenZ;
+   int    Opt__Flag_Radial;
+   double FlagRadial_CenX;
+   double FlagRadial_CenY;
+   double FlagRadial_CenZ;
 #  if ( MODEL == HYDRO )
    int    Opt__Flag_PresGradient;
    int    Opt__Flag_Vorticity;
@@ -905,6 +913,8 @@ struct InputPara_t
    double FlagTable_Rho         [NLEVEL-1];
    double FlagTable_RhoGradient [NLEVEL-1];
    double FlagTable_Lohner      [NLEVEL-1][5];
+   double FlagTable_Angular     [NLEVEL-1][3];
+   double FlagTable_Radial      [NLEVEL-1];
    hvl_t  FlagTable_User        [NLEVEL-1];
 #  if   ( MODEL == HYDRO )
    double FlagTable_PresGradient[NLEVEL-1];
