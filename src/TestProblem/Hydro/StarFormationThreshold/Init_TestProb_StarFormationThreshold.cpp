@@ -9,12 +9,14 @@ static double StarFormationThreshold_MassDensity_Max;    // Maximum mass density
 static double StarFormationThreshold_Temperature_Min;    // Minimum temperature in the box
 static double StarFormationThreshold_Temperature_Max;    // Maximum temperature in the box
 
-static double StarFormationThreshold_logDens_Min;       // Minimum log( mass density ) in the box
-static double StarFormationThreshold_logDens_Max;       // Maximum log( mass density ) in the box
-static double StarFormationThreshold_logDens_Range;     // Range of log ( mass density )
-static double StarFormationThreshold_logTemp_Min;       // Minimum log( temperature ) in the box
-static double StarFormationThreshold_logTemp_Max;       // Maximum log( temperature ) in the box
-static double StarFormationThreshold_logTemp_Range;     // Range of log ( temperature )
+static double StarFormationThreshold_logDens_Min;        // Minimum log( mass density ) in the box
+static double StarFormationThreshold_logDens_Max;        // Maximum log( mass density ) in the box
+static double StarFormationThreshold_logDens_Range;      // Range of log ( mass density )
+static double StarFormationThreshold_logTemp_Min;        // Minimum log( temperature ) in the box
+static double StarFormationThreshold_logTemp_Max;        // Maximum log( temperature ) in the box
+static double StarFormationThreshold_logTemp_Range;      // Range of log ( temperature )
+static double StarFormationThreshold_FreeFallTime_Min;   // Minimum free-fall time in the box
+static double StarFormationThreshold_FreeFallTime_Max;   // Maximum free-fall time in the box
 // =======================================================================================
 
 
@@ -134,8 +136,8 @@ void SetParameter()
 // ********************************************************************************************************************************
    ReadPara->Add( "StarFormationThreshold_MassDensity_Min",        &StarFormationThreshold_MassDensity_Min,            1.0e-29,       Eps_double,       NoMax_double      );
    ReadPara->Add( "StarFormationThreshold_MassDensity_Max",        &StarFormationThreshold_MassDensity_Max,            1.0e-21,       Eps_double,       NoMax_double      );
-   ReadPara->Add( "StarFormationThreshold_Temperature_Min",        &StarFormationThreshold_Temperature_Min,            1.0e+01,       Eps_double,       NoMax_double      );
-   ReadPara->Add( "StarFormationThreshold_Temperature_Max",        &StarFormationThreshold_Temperature_Min,            1.0e+07,       Eps_double,       NoMax_double      );
+   ReadPara->Add( "StarFormationThreshold_Temperature_Min",        &StarFormationThreshold_Temperature_Min,            1.0e+00,       Eps_double,       NoMax_double      );
+   ReadPara->Add( "StarFormationThreshold_Temperature_Max",        &StarFormationThreshold_Temperature_Max,            1.0e+08,       Eps_double,       NoMax_double      );
 
    ReadPara->Read( FileName );
 
@@ -165,13 +167,14 @@ void SetParameter()
    StarFormationThreshold_logTemp_Max   = log10( StarFormationThreshold_Temperature_Max );
    StarFormationThreshold_logTemp_Range = StarFormationThreshold_logTemp_Max - StarFormationThreshold_logTemp_Min;
 
+   StarFormationThreshold_FreeFallTime_Max = sqrt( (3.0*M_PI) / (32.0*NEWTON_G*StarFormationThreshold_MassDensity_Min) );
+   StarFormationThreshold_FreeFallTime_Min = sqrt( (3.0*M_PI) / (32.0*NEWTON_G*StarFormationThreshold_MassDensity_Max) );
+
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
-   const double t_ff = sqrt( (3.0*M_PI) / (32.0*NEWTON_G*StarFormationThreshold_MassDensity_Min) ); // maximum free-fall time
-
    const long   End_Step_Default = __INT_MAX__;
-   const double End_T_Default    = 1.0*t_ff;
+   const double End_T_Default    = 1.0*sqrt( StarFormationThreshold_FreeFallTime_Max * StarFormationThreshold_FreeFallTime_Min );
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
@@ -188,15 +191,19 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID                             = %d\n",             TESTPROB_ID                                            );
-      Aux_Message( stdout, "  StarFormationThreshold_MassDensity_Min      = %13.7e UNIT_D\n",  StarFormationThreshold_MassDensity_Min                 );
-      Aux_Message( stdout, "                                              = %13.7e g/cm^3\n",  StarFormationThreshold_MassDensity_Min*UNIT_D          );
-      Aux_Message( stdout, "                                              = %13.7e mH/cm^3\n", StarFormationThreshold_MassDensity_Min*UNIT_D/Const_mH );
-      Aux_Message( stdout, "  StarFormationThreshold_MassDensity_Max      = %13.7e UNIT_D\n",  StarFormationThreshold_MassDensity_Max                 );
-      Aux_Message( stdout, "                                              = %13.7e g/cm^3\n",  StarFormationThreshold_MassDensity_Max*UNIT_D          );
-      Aux_Message( stdout, "                                              = %13.7e mH/cm^3\n", StarFormationThreshold_MassDensity_Max*UNIT_D/Const_mH );
-      Aux_Message( stdout, "  StarFormationThreshold_Temperature_Min      = %13.7e K\n",       StarFormationThreshold_Temperature_Min                 );
-      Aux_Message( stdout, "  StarFormationThreshold_Temperature_Max      = %13.7e K\n",       StarFormationThreshold_Temperature_Max                 );
+      Aux_Message( stdout, "  test problem ID                             = %d\n",             TESTPROB_ID                                              );
+      Aux_Message( stdout, "  StarFormationThreshold_MassDensity_Min      = %13.7e UNIT_D\n",  StarFormationThreshold_MassDensity_Min                   );
+      Aux_Message( stdout, "                                              = %13.7e g/cm^3\n",  StarFormationThreshold_MassDensity_Min*UNIT_D            );
+      Aux_Message( stdout, "                                              = %13.7e mH/cm^3\n", StarFormationThreshold_MassDensity_Min*UNIT_D/Const_mH   );
+      Aux_Message( stdout, "                           -> Free-fall time  = %13.7e UNIT_T\n",  StarFormationThreshold_FreeFallTime_Max                  );
+      Aux_Message( stdout, "                                              = %13.7e Myr\n",     StarFormationThreshold_FreeFallTime_Max*UNIT_T/Const_Myr );
+      Aux_Message( stdout, "  StarFormationThreshold_MassDensity_Max      = %13.7e UNIT_D\n",  StarFormationThreshold_MassDensity_Max                   );
+      Aux_Message( stdout, "                                              = %13.7e g/cm^3\n",  StarFormationThreshold_MassDensity_Max*UNIT_D            );
+      Aux_Message( stdout, "                                              = %13.7e mH/cm^3\n", StarFormationThreshold_MassDensity_Max*UNIT_D/Const_mH   );
+      Aux_Message( stdout, "                           -> Free-fall time  = %13.7e UNIT_T\n",  StarFormationThreshold_FreeFallTime_Min                  );
+      Aux_Message( stdout, "                                              = %13.7e Myr\n",     StarFormationThreshold_FreeFallTime_Min*UNIT_T/Const_Myr );
+      Aux_Message( stdout, "  StarFormationThreshold_Temperature_Min      = %13.7e K\n",       StarFormationThreshold_Temperature_Min                   );
+      Aux_Message( stdout, "  StarFormationThreshold_Temperature_Max      = %13.7e K\n",       StarFormationThreshold_Temperature_Max                   );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -273,6 +280,74 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[ENGY] = Etot;
 
 } // FUNCTION : SetGridIC
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Flu_ResetByUser_StarFormationThreshold
+// Description :  Function to reset the fluid field
+//
+// Note        :  1. Invoked by "Flu_ResetByUser_API()" and "Model_Init_ByFunction_AssignData()" using the
+//                   function pointer "Flu_ResetByUser_Func_Ptr"
+//                2. This function will be invoked when constructing the initial condition
+//                    (by calling "Model_Init_ByFunction_AssignData()") and after each update
+//                    (by calling "Flu_ResetByUser_API()")
+//                3. Input "fluid" array stores the original values
+//                4. Even when DUAL_ENERGY is adopted, one does NOT need to set the dual-energy variable here
+//                   --> It will be set automatically in "Flu_ResetByUser_API()" and "Model_Init_ByFunction_AssignData()"
+//                5. Enabled by the runtime option "OPT__RESET_FLUID"
+//
+// Parameter   :  fluid    : Fluid array storing both the input (origial) and reset values
+//                           --> Including both active and passive variables
+//                Emag     : Magnetic energy (MHD only)
+//                x/y/z    : Target physical coordinates
+//                Time     : Target physical time
+//                dt       : Time interval to advance solution
+//                lv       : Target refinement level
+//                AuxArray : Auxiliary array
+//
+// Return      :  true  : This cell has been reset
+//                false : This cell has not been reset
+//-------------------------------------------------------------------------------------------------------
+int Flu_ResetByUser_StarFormationThreshold( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
+                                            const double dt, const int lv, double AuxArray[] )
+{
+
+   SetGridIC( fluid, x, y, z, Time, lv, AuxArray );
+
+   return true;
+
+} // FUNCTION : Flu_ResetByUser_StarFormationThreshold
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Mis_GetTimeStep_StarFormationThreshold
+// Description :  0.1 times minimum free-fall time
+//
+// Note        :  1. This function should be applied to both physical and comoving coordinates and always
+//                   return the evolution time-step (dt) actually used in various solvers
+//                   --> Physical coordinates : dt = physical time interval
+//                       Comoving coordinates : dt = delta(scale_factor) / ( Hubble_parameter*scale_factor^3 )
+//                   --> We convert dt back to the physical time interval, which equals "delta(scale_factor)"
+//                       in the comoving coordinates, in Mis_GetTimeStep()
+//                2. Invoked by Mis_GetTimeStep() using the function pointer "Mis_GetTimeStep_User_Ptr",
+//                   which must be set by a test problem initializer
+//                3. Enabled by the runtime option "OPT__DT_USER"
+//
+// Parameter   :  lv       : Target refinement level
+//                dTime_dt : dTime/dt (== 1.0 if COMOVING is off)
+//
+// Return      :  dt
+//-------------------------------------------------------------------------------------------------------
+double Mis_GetTimeStep_StarFormationThreshold( const int lv, const double dTime_dt )
+{
+
+   double dt_user = 0.1*StarFormationThreshold_FreeFallTime_Min;
+
+   return dt_user;
+
+} // FUNCTION : Mis_GetTimeStep_StarFormationThreshold
 #endif // #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 
 
@@ -306,6 +381,8 @@ void Init_TestProb_Hydro_StarFormationThreshold()
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr            = SetGridIC;
    Par_Init_ByFunction_Ptr           = Par_Init_ByFunction_StarFormationThreshold;
+   Flu_ResetByUser_Func_Ptr          = Flu_ResetByUser_StarFormationThreshold;
+   Mis_GetTimeStep_User_Ptr          = Mis_GetTimeStep_StarFormationThreshold;
 #  endif // #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 
 

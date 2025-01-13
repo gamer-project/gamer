@@ -1,9 +1,10 @@
 import argparse
 import sys
 import yt
+import numpy as np
 
 # load the command-line parameters
-parser = argparse.ArgumentParser( description='Plot the particle projection' )
+parser = argparse.ArgumentParser( description='Plot the star mass phase diagram' )
 
 parser.add_argument( '-s', action='store', required=True,  type=int, dest='idx_start',
                      help='first data index' )
@@ -27,7 +28,6 @@ didx        = args.didx
 prefix      = '../'
 
 colormap    = 'algae'
-center_mode = 'c'
 dpi         = 150
 
 
@@ -35,27 +35,24 @@ yt.enable_parallelism()
 
 ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
 
-
-# define the particle filter for the newly formed stars
-def new_star( pfilter, data ):
-   filter = data[ 'all', 'ParCreTime' ] > 0
-   return filter
-
-yt.add_particle_filter( 'new_star', function=new_star, filtered_type='all', requires=['ParCreTime'] )
-
-AllPar = ( 'all',      'particle_mass' )
-NewPar = ( 'new_star', 'particle_mass' )
-
+x_lim_min = 0.0
+x_lim_max = 3.0e2
+y_lim_min = 0.0
+y_lim_max = 5.0e4
 
 for ds in ts.piter():
 
-#  add the particle filter
-   ds.add_particle_filter( 'new_star' )
+   ad = ds.all_data()
 
-#  face-on (new particles)
-   pz = yt.ParticleProjectionPlot( ds, 'z', NewPar, center=center_mode )
-   pz.set_unit( NewPar, 'Msun' )
-   pz.set_zlim( NewPar, 1.0e4, 1.0e8 )
-   pz.set_cmap( NewPar, colormap )
-   pz.annotate_timestamp( time_unit='Myr', corner='upper_right', text_args={'color':'k'} )
-   pz.save( name=ds.basename+'_NewPar', mpl_kwargs={"dpi":dpi} )
+
+#  plot
+   p = yt.PhasePlot( ds, ('all', 'ParCreTime'), ('all', 'particle_mass'), ('all', 'particle_ones'),
+                     weight_field=None, x_bins=32, y_bins=128 )
+   p.set_unit( 'ParCreTime',    'Myr'  )
+   p.set_unit( 'particle_mass', 'Msun' )
+   p.set_log(  'ParCreTime',     False )
+   p.set_log(  'particle_mass',  False )
+   p.set_xlim( x_lim_min, x_lim_max )
+   p.set_ylim( y_lim_min, y_lim_max )
+   p.set_cmap( ('all', 'particle_ones'), colormap )
+   p.save( mpl_kwargs={'dpi':dpi} )

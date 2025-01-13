@@ -1,6 +1,7 @@
 import argparse
 import sys
 import yt
+import numpy as np
 
 # load the command-line parameters
 parser = argparse.ArgumentParser( description='Plot the gas slices and projections' )
@@ -27,7 +28,6 @@ didx        = args.didx
 prefix      = '../'
 
 colormap    = 'algae'
-width_kpc   = 30
 center_mode = 'c'
 dpi         = 150
 
@@ -35,104 +35,57 @@ dpi         = 150
 yt.enable_parallelism()
 
 ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
-#ts = yt.load( 'Data_??????' )
+
+
+fields   = [ 'density', 'temperature', 'thermal_energy_density', 'number_density', 'sound_speed', 'pressure', 'jeans_length', 'jeans_mass', 'particle_density_on_grid' ]
+
+units    = { 'density'                 : 'g/cm**3',
+             'temperature'             : 'K',
+             'thermal_energy_density'  : 'erg/cm**3',
+             'number_density'          : 'cm**-3',
+             'sound_speed'             : 'cm/s',
+             'pressure'                : 'erg/cm**3',
+             'jeans_length'            : 'kpc',
+             'jeans_mass'              : 'Msun',
+             'particle_density_on_grid': 'Msun/pc**3',
+           }
+
+zlim_min = { 'density'                 : 1.0e-29,
+             'temperature'             : 1.0e0,
+             'thermal_energy_density'  : 1.0e-21,
+             'number_density'          : 1.0e-5,
+             'sound_speed'             : 1.0e4,
+             'pressure'                : 1.0e-21,
+             'jeans_length'            : 1.0e-3,
+             'jeans_mass'              : 1.0e2,
+             'particle_density_on_grid': 1.0e-2,
+           }
+
+zlim_max = { 'density'                 : 1.0e-21,
+             'temperature'             : 1.0e8,
+             'thermal_energy_density'  : 1.0e-5,
+             'number_density'          : 1.0e3,
+             'sound_speed'             : 1.0e8,
+             'pressure'                : 1.0e-5,
+             'jeans_length'            : 1.0e5,
+             'jeans_mass'              : 1.0e17,
+             'particle_density_on_grid': 1.0e2,
+           }
 
 for ds in ts.piter():
 
-#  define density^2 for calculating the weighted temperature
-   def _density_square( field, data ):
-      return data["density"]**2
+   def _jeans_length( field, data ):
+      return np.sqrt( (np.pi * data["sound_speed"]**2 )/( data.ds.units.newtons_constant * data["density"] ) )
 
-   ds.add_field( ("gas", "density_square"), function=_density_square, sampling_type="cell", units="g**2/cm**6" )
+   ds.add_field( ("gas", "jeans_length"), function=_jeans_length, sampling_type="cell", units="cm" )
 
+   for field in fields:
 
-#  density slice -- face-on
-   sz_dens = yt.SlicePlot( ds, 'z', 'density', center=center_mode, width=(width_kpc,'kpc') )
-   sz_dens.set_zlim( 'density', 1.0e-26, 3.0e-23 )
-   sz_dens.set_cmap( 'density', colormap )
-   sz_dens.annotate_timestamp( time_unit='Myr', corner='upper_right' )
-   sz_dens.annotate_grids( periodic=False )
-   sz_dens.save( mpl_kwargs={"dpi":dpi} )
-
-
-#  density slice -- edge-on
-   sx_dens = yt.SlicePlot( ds, 'x', 'density', center=center_mode, width=(width_kpc,'kpc') )
-   sx_dens.set_zlim( 'density', 1.0e-26, 3.0e-23 )
-   sx_dens.set_cmap( 'density', colormap )
-   sx_dens.annotate_timestamp( time_unit='Myr', corner='upper_right' )
-   sx_dens.annotate_grids( periodic=False )
-   sx_dens.save( mpl_kwargs={"dpi":dpi} )
-
-
-#  density projection -- face-on
-   pz_dens = yt.ProjectionPlot( ds, 'z', 'density', center=center_mode, width=(width_kpc,'kpc'), method='integrate', weight_field=None )
-   pz_dens.set_zlim( 'density', 1.0e-5, 1.0e-1 )
-   pz_dens.set_cmap( 'density', colormap )
-   pz_dens.annotate_timestamp( time_unit='Myr', corner='upper_right' )
-   pz_dens.save( mpl_kwargs={"dpi":dpi} )
-
-
-#  density projection -- edge-on
-   pz_dens = yt.ProjectionPlot( ds, 'x', 'density', center=center_mode, width=(width_kpc,'kpc'), method='integrate', weight_field=None )
-   pz_dens.set_zlim( 'density', 1.0e-5, 1.0e-1 )
-   pz_dens.set_cmap( 'density', colormap )
-   pz_dens.annotate_timestamp( time_unit='Myr', corner='upper_right' )
-   pz_dens.save( mpl_kwargs={"dpi":dpi} )
-
-
-#  temperature slice -- face-on
-   sz_temp = yt.SlicePlot( ds, 'z', 'temperature', center=center_mode, width=(width_kpc,'kpc') )
-   sz_temp.set_zlim( 'temperature', 1.0e2, 1.0e4 )
-   sz_temp.set_cmap( 'temperature', colormap )
-   sz_temp.annotate_timestamp( time_unit='Myr', corner='upper_right' )
-   sz_temp.annotate_grids( periodic=False )
-   sz_temp.save( mpl_kwargs={"dpi":dpi} )
-
-
-#  temperature slice -- edge-on
-   sx_temp = yt.SlicePlot( ds, 'x', 'temperature', center=center_mode, width=(width_kpc,'kpc') )
-   sx_temp.set_zlim( 'temperature', 1.0e2, 1.0e4 )
-   sx_temp.set_cmap( 'temperature', colormap )
-   sx_temp.annotate_timestamp( time_unit='Myr', corner='upper_right' )
-   sx_temp.annotate_grids( periodic=False )
-   sx_temp.save( mpl_kwargs={"dpi":dpi} )
-
-
-#  temperature projection -- face-on
-   pz_temp = yt.ProjectionPlot( ds, 'z', 'temperature', center=center_mode, width=(width_kpc,'kpc'),
-                                method='integrate', weight_field='density_square' )
-   pz_temp.set_zlim( 'temperature', 1.0e2, 1.0e4 )
-   pz_temp.set_cmap( 'temperature', colormap )
-   pz_temp.annotate_timestamp( time_unit='Myr', corner='upper_right' )
-   pz_temp.save( mpl_kwargs={"dpi":dpi} )
-
-
-#  temperature projection -- edge-on
-   px_temp = yt.ProjectionPlot( ds, 'x', 'temperature', center=center_mode, width=(width_kpc,'kpc'),
-                                method='integrate', weight_field='density_square' )
-   px_temp.set_zlim( 'temperature', 1.0e2, 1.0e4 )
-   px_temp.set_cmap( 'temperature', colormap )
-   px_temp.annotate_timestamp( time_unit='Myr', corner='upper_right' )
-   px_temp.save( mpl_kwargs={"dpi":dpi} )
-
-
-#  velocity magnitude slice -- face-on
-   sz_vabs = yt.SlicePlot( ds, 'z', 'velocity_magnitude', center=center_mode, width=(width_kpc,'kpc') )
-   sz_vabs.set_unit( 'velocity_magnitude', 'km/s' )
-   sz_vabs.set_log ( 'velocity_magnitude', False )
-   sz_vabs.set_zlim( 'velocity_magnitude', 5.0e1, 2.3e2 )
-   sz_vabs.set_cmap( 'velocity_magnitude', colormap )
-   sz_vabs.annotate_quiver('velocity_x', 'velocity_y', factor=16)
-   sz_vabs.annotate_timestamp( time_unit='Myr', corner='upper_right' )
-   sz_vabs.save( mpl_kwargs={"dpi":dpi} )
-
-
-#  velocity magnitude slice -- edge-on
-   sz_vabs = yt.SlicePlot( ds, 'x', 'velocity_magnitude', center=center_mode, width=(width_kpc,'kpc') )
-   sz_vabs.set_unit( 'velocity_magnitude', 'km/s' )
-   sz_vabs.set_log ( 'velocity_magnitude', False )
-   sz_vabs.set_zlim( 'velocity_magnitude', 5.0e1, 2.3e2 )
-   sz_vabs.set_cmap( 'velocity_magnitude', colormap )
-   sz_vabs.annotate_timestamp( time_unit='Myr', corner='upper_right' )
-   sz_vabs.save( mpl_kwargs={"dpi":dpi} )
-
+      sz = yt.SlicePlot( ds, 'z', field, center=center_mode )
+      sz.set_axes_unit( 'kpc' )
+      sz.set_unit( field, units[field] )
+      sz.set_zlim( field, zlim_min[field], zlim_max[field] )
+      sz.set_cmap( field, colormap )
+      sz.annotate_timestamp( time_unit='Myr', corner='upper_right' )
+      sz.annotate_grids( periodic=False )
+      sz.save( mpl_kwargs={'dpi':dpi} )

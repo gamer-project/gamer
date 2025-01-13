@@ -13,10 +13,10 @@
 
 
 # simulation scale
-BOX_SIZE                      1.0e3       # box size along the longest side (in Mpc/h if COMOVING is adopted)
+BOX_SIZE                      8.0         # box size along the longest side (in Mpc/h if COMOVING is adopted)
 NX0_TOT_X                     128         # number of base-level cells along x
 NX0_TOT_Y                     128         # number of base-level cells along y
-NX0_TOT_Z                     128         # number of base-level cells along z
+NX0_TOT_Z                     32          # number of base-level cells along z
 OMP_NTHREAD                  -1           # number of OpenMP threads (<=0=auto) [-1] ##OPENMP ONLY##
 END_T                        -1.0         # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
 END_STEP                     -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
@@ -53,7 +53,8 @@ PAR_INTERP                    2           # particle interpolation scheme: (1=NG
 PAR_INTEG                     2           # particle integration scheme: (1=Euler, 2=KDK) [2]
 PAR_IMPROVE_ACC               1           # improve force accuracy at patch boundaries [1] ##STORE_POT_GHOST and PAR_INTERP=2/3 ONLY##
 PAR_PREDICT_POS               1           # predict particle position during mass assignment [1]
-PAR_REMOVE_CELL              -1.0         # remove particles X-root-cells from the boundaries (non-periodic BC only; <0=auto) [-1.0]
+PAR_REMOVE_CELL               0.0         # remove particles X-root-cells from the boundaries (non-periodic BC only; <0=auto) [-1.0]
+OPT__FREEZE_PAR               1           # do not update particles (except for tracers) [0]
 
 
 # time-step
@@ -67,7 +68,7 @@ DT__SYNC_PARENT_LV            0.05        # dt criterion: allow dt to adjust by 
                                           #               with the parent level (for OPT__DT_LEVEL==3 only) [0.1]
 DT__SYNC_CHILDREN_LV          0.1         # dt criterion: allow dt to adjust by (1.0-DT__SYNC_CHILDREN) in order to synchronize
                                           #               with the children level (for OPT__DT_LEVEL==3 only; 0=off) [0.1]
-OPT__DT_USER                  0           # dt criterion: user-defined -> edit "Mis_GetTimeStep_UserCriteria.cpp" [0]
+OPT__DT_USER                  1           # dt criterion: user-defined -> edit "Mis_GetTimeStep_UserCriteria.cpp" [0]
 OPT__DT_LEVEL                 3           # dt at different AMR levels (1=shared, 2=differ by two, 3=flexible) [3]
 OPT__RECORD_DT                1           # record info of the dt determination [1]
 AUTO_REDUCE_DT                1           # reduce dt automatically when the program fails (for OPT__DT_LEVEL==3 only) [1]
@@ -163,6 +164,7 @@ OPT__FIXUP_RESTRICT           1           # correct coarse grids by averaging th
 OPT__CORR_AFTER_ALL_SYNC     -1           # apply various corrections after all levels are synchronized (see "Flu_CorrAfterAllSync"):
                                           # (-1=auto, 0=off, 1=every step, 2=before dump) [-1]
 OPT__NORMALIZE_PASSIVE        0           # ensure "sum(passive_scalar_density) == gas_density" [1]
+OPT__RESET_FLUID              1           # reset fluid variables after each update -> edit "Flu_ResetByUser.cpp" [0]
 OPT__FREEZE_FLUID             1           # do not evolve fluid at all [0]
 MIN_DENS                      0.0         # minimum mass density    (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##
 MIN_PRES                      0.0         # minimum pressure        (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
@@ -209,7 +211,7 @@ MONO_MAX_ITER                 10          # maximum number of iterations to redu
 OPT__OUTPUT_TOTAL             1           # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
 OPT__OUTPUT_PART              1           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
-OPT__OUTPUT_PAR_MODE          0           # output the particle data: (0=off, 1=text-file, 2=C-binary) [0] ##PARTICLE ONLY##
+OPT__OUTPUT_PAR_MODE          1           # output the particle data: (0=off, 1=text-file, 2=C-binary) [0] ##PARTICLE ONLY##
 OPT__OUTPUT_POT               1           # output gravitational potential [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_PAR_DENS          1           # output the particle or total mass density on grids:
                                           # (0=off, 1=particle mass density, 2=total mass density) [1] ##OPT__OUTPUT_TOTAL ONLY##
@@ -228,7 +230,7 @@ OUTPUT_STEP                   5           # output data every OUTPUT_STEP step #
 OUTPUT_DT                     1.0e1       # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
 OUTPUT_PART_X                -1.0         # x coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Y                -1.0         # y coordinate for OPT__OUTPUT_PART [-1.0]
-OUTPUT_PART_Z                -1.0         # z coordinate for OPT__OUTPUT_PART [-1.0]
+OUTPUT_PART_Z                 1.0         # z coordinate for OPT__OUTPUT_PART [-1.0]
 INIT_DUMPID                  -1           # set the first dump ID (<0=auto) [-1]
 
 

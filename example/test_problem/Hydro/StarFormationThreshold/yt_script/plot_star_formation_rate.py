@@ -6,9 +6,9 @@ from yt.data_objects.particle_filters import add_particle_filter
 from matplotlib import pyplot as plt
 
 
-filein  = "../Data_000050"
+filein  = "../Data_000022"
 fileout = "fig__star_formation_rate"
-nbin    = 50
+nbin    = 100
 dpi     = 150
 
 
@@ -48,13 +48,25 @@ sfr    = np.array(  [ mass[upper_idx == j+1].sum() / ( (t_bin[j+1] - t_bin[j])*M
 sfr[sfr == 0] = np.nan
 
 
+# analytical
+def _SchmidtLaw_star_formation_rate( field, data ):
+   t_ff       = np.sqrt( ( 3.0 * np.pi )/( 32.0 * data.ds.units.newtons_constant * data["density"] ) )
+   efficiency = data.ds.parameters['SF_CreateStar_MassEff']
+   return efficiency * data["cell_mass"] / t_ff
+
+ds.add_field( ("gas", "SchmidtLaw_star_formation_rate"), function=_SchmidtLaw_star_formation_rate, sampling_type="cell", units="g/s" )
+
+sfr_analytical = ds.all_data().quantities.total_quantity( 'SchmidtLaw_star_formation_rate' ).in_units('Msun/yr').d
+
+
 # plot
-plt.plot( time, sfr )
-plt.ylim( 0.0, 1.0e1 )
+plt.axhline( sfr_analytical, color='r', linestyle='--', label='Analytical' )
+plt.plot( time, sfr, label='Simulation' )
+plt.legend()
+plt.ylim( 0.0, 500 )
 plt.xlabel( "$\mathrm{t\ [Myr]}$",               fontsize="large" )
 plt.ylabel( "$\mathrm{SFR\ [M_\odot yr^{-1}]}$", fontsize="large" )
 
 
 # show/save figure
 plt.savefig( fileout+".png", bbox_inches="tight", pad_inches=0.05, dpi=dpi )
-#plt.show()
