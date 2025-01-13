@@ -18,7 +18,7 @@
 void Hydro_ComputeViscosity( real &visc_mu, real &visc_nu, const MicroPhy_t *MicroPhy,
                              const real Dens, const real Temp );
 real MC_limiter( const real a, const real b );
-real van_leer2( const real a, const_real b, const real c, const real d );
+real van_leer2( const real a, const real b, const real c, const real d );
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -69,13 +69,14 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
    const int  didx_cvar[3] = { 1, N_Var, SQR(N_Var) };
    const real _dh          = (real)1.0 / dh;
+   const real two_thirds   = 2./3.;
 #  ifdef MHD
    const int skip_update_T = 1;
 #  else
    const int skip_update_T = 0;
 #  endif
 
-// pre-compute velocity for simplicity
+// pre-compute velocity for simplicity, depending on if we have conservative or primitive variables
    real Vel[3][ CUBE(FLU_NXT) ];
    
    for (int d=0; d<3; d++)
@@ -197,6 +198,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //       2. compute the mean magnetic field at the face-centered flux location
 #        ifdef MHD
          real B_N_mean, B_T1_mean, B_T2_mean, B_amp, B2;
+//       These are only needed if viscosity is anisotropic
          if ( MicroPhy->ViscFluxType == ANISOTROPIC_VISCOSITY )
          {
             if ( g_FC_B == NULL )
@@ -233,50 +235,116 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
          real N_slope_N, T1_slope_N, T2_slope_N;
          real N_slope_T1, T1_slope_T1, T2_slope_T1;
          real N_slope_T2, T1_slope_T2, T2_slope_T2;
-         real divV_l, divV_r, divV;
+         real divV;
 
 //       face-centered velocities
          v_N  = 0.5 * ( Vel[    d][ idx_cvar                ] + Vel[    d][ idx_cvar + didx_cvar[d] ] );
          v_T1 = 0.5 * ( Vel[TDir1][ idx_cvar                ] + Vel[TDir1][ idx_cvar + didx_cvar[d] ] );
          v_T2 = 0.5 * ( Vel[TDir2][ idx_cvar                ] + Vel[TDir2][ idx_cvar + didx_cvar[d] ] );
-
-//       normal direction
+   
+//       normal direction derivative
          N_slope_N  = ( Vel[    d][ idx_cvar + didx_cvar[d] ] - Vel[    d][ idx_cvar ] ) * _dh;
          T1_slope_N = ( Vel[TDir1][ idx_cvar + didx_cvar[d] ] - Vel[TDir1][ idx_cvar ] ) * _dh;
          T2_slope_N = ( Vel[TDir2][ idx_cvar + didx_cvar[d] ] - Vel[TDir2][ idx_cvar ] ) * _dh;
 
-//       divergence
-         divV  = 0.5 * ( Vel[    d][ idx_cvar + didx_cvar[    d] ] - Vel[    d][ idx_cvar - didx_cvar[    d] ] ) * _dh;
-         divV += 0.5 * ( Vel[TDir1][ idx_cvar + didx_cvar[TDir1] ] - Vel[TDir1][ idx_cvar - didx_cvar[TDir1] ] ) * _dh;
-         divV += 0.5 * ( Vel[TDir2][ idx_cvar + didx_cvar[TDir2] ] - Vel[TDir2][ idx_cvar - didx_cvar[TDir2] ] ) * _dh;
-   
          if ( MicroPhy->ViscFluxType == ANISOTROPIC_VISCOSITY )
          {
 
-//          transverse direction 1
+//          transverse direction 1 derivative
             N_slope_T1  = van_leer2( 
-               Vel[    d][ idx_cvar + didx_cvar[TDir1] ] - Vel[    d][ idx_cvar                    ],
-               Vel[    d][ idx_cvar                    ] - Vel[    d][ idx_cvar - didx_cvar[TDir1] ],
-               Vel[    d][ idx_cvar + didx_cvar[    d] ] - Vel[    d][ idx_cvar - didx_cvar[    d] ],
-               Vel[    d][ idx_cvar + didx_cvar[    d] ] - Vel[    d][ idx_cvar - didx_cvar[    d] ],
+               Vel[    d][ idx_cvar + didx_cvar[d] + didx_cvar[TDir1] ] - 
+               Vel[    d][ idx_cvar + didx_cvar[d]                    ],
+               Vel[    d][ idx_cvar + didx_cvar[d]                    ] - 
+               Vel[    d][ idx_cvar + didx_cvar[d] - didx_cvar[TDir1] ],
+               Vel[    d][ idx_cvar                + didx_cvar[TDir1] ] - 
+               Vel[    d][ idx_cvar                                   ],
+               Vel[    d][ idx_cvar                                   ] - 
+               Vel[    d][ idx_cvar                - didx_cvar[TDir1] ]
             ) * _dh;
             T1_slope_T1 = van_leer2( 
-               Vel[TDir1][ idx_cvar + didx_cvar[TDir1] ] - Vel[TDir1][ idx_cvar                    ],
-               Vel[TDir1][ idx_cvar                    ] - Vel[TDir1][ idx_cvar - didx_cvar[TDir1] ],
-               Vel[TDir1][ idx_cvar + didx_cvar[    d] ] - Vel[TDir1][ idx_cvar - didx_cvar[    d] ],
-               Vel[TDir1][ idx_cvar + didx_cvar[    d] ] - Vel[TDir1][ idx_cvar - didx_cvar[    d] ],
+               Vel[TDir1][ idx_cvar + didx_cvar[d] + didx_cvar[TDir1] ] - 
+               Vel[TDir1][ idx_cvar + didx_cvar[d]                    ],
+               Vel[TDir1][ idx_cvar + didx_cvar[d]                    ] - 
+               Vel[TDir1][ idx_cvar + didx_cvar[d] - didx_cvar[TDir1] ],
+               Vel[TDir1][ idx_cvar                + didx_cvar[TDir1] ] - 
+               Vel[TDir1][ idx_cvar                                   ],
+               Vel[TDir1][ idx_cvar                                   ] - 
+               Vel[TDir1][ idx_cvar                - didx_cvar[TDir1] ]
             ) * _dh;
-            T2_slope_T1 = van_leer2( 
-               Vel[TDir2][ idx_cvar + didx_cvar[TDir1] ] - Vel[TDir2][ idx_cvar                    ],
-               Vel[TDir2][ idx_cvar                    ] - Vel[TDir2][ idx_cvar - didx_cvar[TDir1] ],
-               Vel[TDir2][ idx_cvar + didx_cvar[    d] ] - Vel[TDir2][ idx_cvar - didx_cvar[    d] ],
-               Vel[TDir2][ idx_cvar + didx_cvar[    d] ] - Vel[TDir2][ idx_cvar - didx_cvar[    d] ],
+            T2_slope_T1  = van_leer2( 
+               Vel[TDir2][ idx_cvar + didx_cvar[d] + didx_cvar[TDir1] ] - 
+               Vel[TDir2][ idx_cvar + didx_cvar[d]                    ],
+               Vel[TDir2][ idx_cvar + didx_cvar[d]                    ] - 
+               Vel[TDir2][ idx_cvar + didx_cvar[d] - didx_cvar[TDir1] ],
+               Vel[TDir2][ idx_cvar                + didx_cvar[TDir1] ] - 
+               Vel[TDir2][ idx_cvar                                   ],
+               Vel[TDir2][ idx_cvar                                   ] - 
+               Vel[TDir2][ idx_cvar                - didx_cvar[TDir1] ]
             ) * _dh;
 
-//          transverse direction 2
+//          transverse direction 2 derivative
+            N_slope_T2  = van_leer2( 
+               Vel[    d][ idx_cvar + didx_cvar[d] + didx_cvar[TDir2] ] - 
+               Vel[    d][ idx_cvar + didx_cvar[d]                    ],
+               Vel[    d][ idx_cvar + didx_cvar[d]                    ] - 
+               Vel[    d][ idx_cvar + didx_cvar[d] - didx_cvar[TDir2] ],
+               Vel[    d][ idx_cvar                + didx_cvar[TDir2] ] - 
+               Vel[    d][ idx_cvar                                   ],
+               Vel[    d][ idx_cvar                                   ] - 
+               Vel[    d][ idx_cvar                - didx_cvar[TDir2] ]
+            ) * _dh;
+            T1_slope_T2 = van_leer2( 
+               Vel[TDir1][ idx_cvar + didx_cvar[d] + didx_cvar[TDir2] ] - 
+               Vel[TDir1][ idx_cvar + didx_cvar[d]                    ],
+               Vel[TDir1][ idx_cvar + didx_cvar[d]                    ] - 
+               Vel[TDir1][ idx_cvar + didx_cvar[d] - didx_cvar[TDir2] ],
+               Vel[TDir1][ idx_cvar                + didx_cvar[TDir2] ] - 
+               Vel[TDir1][ idx_cvar                                   ],
+               Vel[TDir1][ idx_cvar                                   ] - 
+               Vel[TDir1][ idx_cvar                - didx_cvar[TDir2] ]
+            ) * _dh;
+            T2_slope_T2 = van_leer2( 
+               Vel[TDir2][ idx_cvar + didx_cvar[d] + didx_cvar[TDir2] ] - 
+               Vel[TDir2][ idx_cvar + didx_cvar[d]                    ],
+               Vel[TDir2][ idx_cvar + didx_cvar[d]                    ] - 
+               Vel[TDir2][ idx_cvar + didx_cvar[d] - didx_cvar[TDir2] ],
+               Vel[TDir2][ idx_cvar                + didx_cvar[TDir2] ] - 
+               Vel[TDir2][ idx_cvar                                   ],
+               Vel[TDir2][ idx_cvar                                   ] - 
+               Vel[TDir2][ idx_cvar                - didx_cvar[TDir2] ]
+            ) * _dh;
+
+//          divergence
+            divV = N_slope_N + T1_slope_T1 + T2_slope_T2;     
+
          }
          else // ISOTROPIC_VISCOSITY
          {
+
+//          transverse direction 1 and 2 derivatives
+
+            N_slope_T1 = 0.25 * ( Vel[    d][ idx_cvar + didx_cvar[d] + didx_cvar[TDir1] ] +
+                                  Vel[    d][ idx_cvar                + didx_cvar[TDir1] ] -
+                                  Vel[    d][ idx_cvar + didx_cvar[d] - didx_cvar[TDir1] ] - 
+                                  Vel[    d][ idx_cvar                - didx_cvar[TDir1] ] ) * _dh;
+            N_slope_T2 = 0.25 * ( Vel[    d][ idx_cvar + didx_cvar[d] + didx_cvar[TDir2] ] +
+                                  Vel[    d][ idx_cvar                + didx_cvar[TDir2] ] -
+                                  Vel[    d][ idx_cvar + didx_cvar[d] - didx_cvar[TDir2] ] - 
+                                  Vel[    d][ idx_cvar                - didx_cvar[TDir2] ] ) * _dh;
+
+//          divergence
+            divV = 0.25 * ( Vel[    d][ idx_cvar                    + didx_cvar[    d] ] -
+                            Vel[    d][ idx_cvar                    - didx_cvar[    d] ] +
+                            Vel[    d][ idx_cvar + didx_cvar[    d] + didx_cvar[    d] ] -
+                            Vel[    d][ idx_cvar + didx_cvar[    d] - didx_cvar[    d] ] +
+                            Vel[TDir1][ idx_cvar                    + didx_cvar[TDir1] ] -
+                            Vel[TDir1][ idx_cvar                    - didx_cvar[TDir1] ] +
+                            Vel[TDir1][ idx_cvar + didx_cvar[    d] + didx_cvar[TDir1] ] -
+                            Vel[TDir1][ idx_cvar + didx_cvar[    d] - didx_cvar[TDir1] ] +
+                            Vel[TDir2][ idx_cvar                    + didx_cvar[TDir2] ] - 
+                            Vel[TDir2][ idx_cvar                    - didx_cvar[TDir2] ] +
+                            Vel[TDir2][ idx_cvar + didx_cvar[    d] + didx_cvar[TDir2] ] - 
+                            Vel[TDir2][ idx_cvar + didx_cvar[    d] - didx_cvar[TDir2] ] ) * _dh;
 
          } // if ( MicroPhy->ViscFluxType == ANISOTROPIC_VISCOSITY ) ... else ...
 
@@ -284,7 +352,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //       get the viscosity
 //       --> for non-constant viscosity coefficients, take the spatial average along the normal direction
 //           to get the face-centered coefficients
-         real mu_l, mu_r, mu, visc_nu, delta_p, Total_Flux;
+         real mu_l, mu_r, mu, visc_nu, delta_p;
          real dens_L, dens_R, temp_L, temp_R;
          if ( g_PriVar == NULL )
          {
@@ -306,13 +374,15 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
          real stress_N, stress_T1, stress_T2;
          if ( MicroPhy->ViscFluxType == ISOTROPIC_VISCOSITY )
          {
-            // TODO FIX THIS
-            stress_N  = 0.0;
-            stress_T1 = 0.0;
-            stress_T2 = 0.0;
+
+            stress_N  = -mu * ( 2.0*N_slope_N - two_thirds*divV );
+            stress_T1 = -mu * ( T1_slope_N );
+            stress_T2 = -mu * ( T2_slope_N );
+
          }
          else if ( MicroPhy->ViscFluxType == ANISOTROPIC_VISCOSITY )
          {
+
             real BBdV, delta_p;
             BBdV  = B_N_mean  * ( B_N_mean *  N_slope_N + B_T1_mean *  N_slope_T1 + B_T2_mean *  N_slope_T2 );
             BBdV += B_T1_mean * ( B_N_mean * T1_slope_N + B_T1_mean * T1_slope_T1 + B_T2_mean * T1_slope_T2 );
@@ -323,6 +393,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
             stress_N  = -delta_p*(B_N_mean*B_N_mean - 1./3.);
             stress_T1 = -delta_p*B_T1_mean*B_N_mean;
             stress_T2 = -delta_p*B_T2_mean*B_N_mean;
+
          }
          else
          {
@@ -340,8 +411,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
          g_Flux[d][TDir1+1][idx_flux] += stress_T1;
          g_Flux[d][TDir2+1][idx_flux] += stress_T2;
 #        ifndef BAROTROPIC_EOS
-         real Total_Flux = stress_N*v_N + stress_T1*v_T1 + stress_T2*v_T2;
-         g_Flux[d][ENGY][idx_flux] += Total_Flux;
+         g_Flux[d][ENGY][idx_flux] += stress_N*v_N + stress_T1*v_T1 + stress_T2*v_T2;
 #        endif
 
       } // CGPU_LOOP( idx, flux_size_i*flux_size_j*flux_size_k )

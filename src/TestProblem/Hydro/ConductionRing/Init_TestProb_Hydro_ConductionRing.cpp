@@ -56,9 +56,11 @@ void Validate()
    if ( !OPT__FREEZE_HYDRO )
       Aux_Error( ERROR_INFO, "OPT__FREEZE_HYDRO must be enabled !!\n" );
 
+#  ifdef CONDUCTION
    if ( CONDUCTION_FLUX_TYPE != ANISOTROPIC_CONDUCTION )
       Aux_Error( ERROR_INFO, "please set \"CONDUCTION_FLUX_TYPE = 2\" (i.e., anisotropic conduction) !!\n" );
-   
+#  endif
+
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] != BC_FLU_OUTFLOW )
       Aux_Error( ERROR_INFO, "please set \"OPT__BC_FLU_* = 2\" (i.e., outflow BC) !!\n" );
@@ -101,8 +103,7 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",     &VARIABLE_ADDRESS,      DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "Ring_U1",             &Ring_U1,               10.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Ring_U2",             &Ring_U2,               12.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Ring_U",              &Ring_U,                10.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Ring_Rho",            &Ring_Rho,               1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "Ring_R1",             &Ring_R1,                0.5,          0.0,              NoMax_double      );
    ReadPara->Add( "Ring_R2",             &Ring_R2,                0.7,          0.0,              NoMax_double      );
@@ -114,7 +115,9 @@ void SetParameter()
 
 // (2) set the problem-specific derived parameters
 
+#  ifdef CONDUCTION
    chi = CONDUCTION_CONSTANT_COEFF*(GAMMA-1.0)*MOLECULAR_WEIGHT/Ring_Rho;
+#  endif
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
@@ -182,7 +185,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    if ( 0.5 < r && r < 0.7 )
       Eint = Ring_U*Ring_Rho + erfc((phi-angle_rads)*r/D)-erfc((phi+angle_rads)*r/D);
 // outside region
-   else{
+   else
       Eint = Ring_U*Ring_Rho;
 
    Dens = Ring_Rho;

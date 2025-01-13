@@ -10,7 +10,8 @@ static double VPD_v0;            // velocity amplitude
 static double VPD_B0;            // background magnetic field
 static int    VPD_Dir;           // wave direction: (0/1/2/3) --> (x/y/z/diagonal)
 
-static double VPD_WaveLength     // wavelength of velocity profile
+static double VPD_Gamma;         // damping rate due to viscosity
+static double VPD_WaveLength;    // wavelength of velocity profile
 // =======================================================================================
 
 
@@ -56,11 +57,15 @@ void Validate()
    if ( !OPT__FREEZE_HYDRO )
       Aux_Error( ERROR_INFO, "OPT__FREEZE_HYDRO must be enabled !!\n" );
 
+#  ifdef VISCOSITY
+
    if ( VISCOSITY_TYPE != CONSTANT_VISCOSITY )
       Aux_Error( ERROR_INFO, "please set \"VISCOSITY_TYPE = 1\" (i.e., constant viscosity) !!\n" );
 
    if ( VISCOSITY_COEFF_TYPE != VISCOSITY_KINETIC_COEFF )
       Aux_Error( ERROR_INFO, "please set \"VISCOUS_COEFF_TYPE = 1\" (i.e., constant kinematic viscosity) !!\n" );
+
+#  endif
 
    if ( VPD_Dir == 3  &&  ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )  )
       Aux_Error( ERROR_INFO, "simulation domain must be cubic for VPD_Dir = %d !!\n", VPD_Dir );
@@ -207,7 +212,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       case 3:  r = SQRT( SQR(x) + SQR(y) + SQR(z) );  break;
    }
 
-   WaveK = 2.0*M_PI/VPD_Wavelength;
+   WaveK = 2.0*M_PI/VPD_WaveLength;
    Gamma = 4.0*VISCOSITY_KINETIC_COEFF*SQR(WaveK)/3.0;
    
    Mom  = Dens*VPD_v0*sin( WaveK*r )*EXP(-Gamma*Time);
@@ -290,7 +295,6 @@ static void OutputError()
    Output_L1Error( SetGridIC, SetBFieldIC, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
 
 } // FUNCTION : OutputError
-#endif // #ifdef MHD
 #endif // #if ( MODEL == HYDRO )
 
 
