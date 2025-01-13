@@ -31,10 +31,8 @@ real SF_CreateStar_GetStarMass( const real GasDens, const real dv, const real dt
    switch ( SF_CREATE_STAR_SCHEME )
    {
       case SF_CREATE_STAR_SCHEME_AGORA:
-         StarMass = SF_CreateStar_GetStarMass_StochasticLoaclSchmidtLaw( GasDens, dv, dt, RNG, SF_CREATE_STAR_MASS_EFF, SF_CREATE_STAR_MIN_STAR_MASS, TID );
-         break;
       case SF_CREATE_STAR_SCHEME_DWARFGALAXY:
-         StarMass = SF_CreateStar_GetStarMass_MaxStarM( GasDens, dv, SF_CREATE_STAR_MAX_STAR_MFRAC );
+         StarMass = SF_CreateStar_GetStarMass_StochasticLoaclSchmidtLaw( GasDens, dv, dt, RNG, SF_CREATE_STAR_MASS_EFF, SF_CREATE_STAR_MIN_STAR_MASS, TID );
          break;
 
       case SF_CREATE_STAR_SCHEME_NONE:

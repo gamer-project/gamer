@@ -89,3 +89,12 @@ for ds in ts.piter():
       sz.annotate_timestamp( time_unit='Myr', corner='upper_right' )
       sz.annotate_grids( periodic=False )
       sz.save( mpl_kwargs={'dpi':dpi} )
+
+
+   lambda_J_max = ds.parameters['SF_CreateStar_MaxGasJeansL'] * ds.domain_width[0]/ds.domain_dimensions[0]
+   rho_cutoff   = ds.quan( 1.0e-21, 'g/cm**3' )
+   T_cutoff     = rho_cutoff * lambda_J_max**2 * ( ds.units.newtons_constant*ds.mu*ds.units.hydrogen_mass )/( ds.units.boltzmann_constant * np.pi * ds.gamma )
+
+   print('lambda_J_max = ', lambda_J_max )
+   print('rho_cutoff   = ', rho_cutoff   )
+   print('T_cutoff     = ', T_cutoff     )

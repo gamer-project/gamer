@@ -49,6 +49,11 @@ sfr[sfr == 0] = np.nan
 
 
 # analytical
+def _jeans_length_dh( field, data ):
+   return np.sqrt( (np.pi * data["sound_speed"]**2 )/( data.ds.units.newtons_constant * data["density"] ) )/data["dx"]
+
+ds.add_field( ("gas", "jeans_length_dh"), function=_jeans_length_dh, sampling_type="cell", units="dimensionless" )
+
 def _SchmidtLaw_star_formation_rate( field, data ):
    t_ff       = np.sqrt( ( 3.0 * np.pi )/( 32.0 * data.ds.units.newtons_constant * data["density"] ) )
    efficiency = data.ds.parameters['SF_CreateStar_MassEff']
@@ -56,7 +61,7 @@ def _SchmidtLaw_star_formation_rate( field, data ):
 
 ds.add_field( ("gas", "SchmidtLaw_star_formation_rate"), function=_SchmidtLaw_star_formation_rate, sampling_type="cell", units="g/s" )
 
-sfr_analytical = ds.all_data().quantities.total_quantity( 'SchmidtLaw_star_formation_rate' ).in_units('Msun/yr').d
+sfr_analytical = ds.cut_region( ds.all_data(), ["obj['gas', 'jeans_length_dh'] <= %.2e"%ds.parameters['SF_CreateStar_MaxGasJeansL']]).quantities.total_quantity( 'SchmidtLaw_star_formation_rate' ).in_units('Msun/yr').d
 
 
 # plot
