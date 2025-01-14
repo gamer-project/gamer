@@ -24,8 +24,6 @@ T Mis_LinearInterpolate( const T x, const T xL, const T xR, const T f_xL, const 
 {
 #  ifdef GAMER_DEBUG
    if ( xL >= xR )   Aux_Error( ERROR_INFO, "xL >= xR !!\n" );
-   if ( x  <  xL )   Aux_Error( ERROR_INFO, "x  <  xL !!\n" );
-   if ( x  >  xR )   Aux_Error( ERROR_INFO, "x  >  xR !!\n" );
 #  endif
 
    const T f_x = f_xL + ( f_xR - f_xL )/( xR - xL )*( x - xL );
@@ -67,11 +65,7 @@ T Mis_BilinearInterpolate( const T x, const T y,
 {
 #  ifdef GAMER_DEBUG
    if ( xL >= xR )   Aux_Error( ERROR_INFO, "xL >= xR !!\n" );
-   if ( x  <  xL )   Aux_Error( ERROR_INFO, "x  <  xL !!\n" );
-   if ( x  >  xR )   Aux_Error( ERROR_INFO, "x  >  xR !!\n" );
    if ( yL >= yR )   Aux_Error( ERROR_INFO, "yL >= yR !!\n" );
-   if ( y  <  yL )   Aux_Error( ERROR_INFO, "y  <  yL !!\n" );
-   if ( y  >  yR )   Aux_Error( ERROR_INFO, "y  >  yR !!\n" );
 #  endif
 
    const T weight_xR  = ( x  - xL )/( xR - xL );
@@ -137,14 +131,8 @@ T Mis_TrilinearInterpolate( const T x, const T y, const T z,
 {
 #  ifdef GAMER_DEBUG
    if ( xL >= xR )   Aux_Error( ERROR_INFO, "xL >= xR !!\n" );
-   if ( x  <  xL )   Aux_Error( ERROR_INFO, "x  <  xL !!\n" );
-   if ( x  >  xR )   Aux_Error( ERROR_INFO, "x  >  xR !!\n" );
    if ( yL >= yR )   Aux_Error( ERROR_INFO, "yL >= yR !!\n" );
-   if ( y  <  yL )   Aux_Error( ERROR_INFO, "y  <  yL !!\n" );
-   if ( y  >  yR )   Aux_Error( ERROR_INFO, "y  >  yR !!\n" );
    if ( zL >= zR )   Aux_Error( ERROR_INFO, "zL >= zR !!\n" );
-   if ( z  <  zL )   Aux_Error( ERROR_INFO, "z  <  zL !!\n" );
-   if ( z  >  zR )   Aux_Error( ERROR_INFO, "z  >  zR !!\n" );
 #  endif
 
    const T weight_xR  = ( x  - xL )/( xR - xL );
@@ -228,11 +216,7 @@ T Mis_MultilinearInterpolate( const int nDim, const T x[], const T xL[], const T
    if ( fC == NULL )   Aux_Error( ERROR_INFO, "fC == NULL !!\n" );
    if ( x  == NULL )   Aux_Error( ERROR_INFO, "xT == NULL !!\n" );
    for (int d=0; d<nDim; d++)
-   {
       if ( xL[d] >= xR[d] )   Aux_Error( ERROR_INFO, "xL >= xR in d=%d !!\n", d );
-      if ( x[d]  <  xL[d] )   Aux_Error( ERROR_INFO, "x  <  xL in d=%d !!\n", d );
-      if ( x[d]  >  xR[d] )   Aux_Error( ERROR_INFO, "x  >  xR in d=%d !!\n", d );
-   }
 #  endif
 
    if ( nDim == 1 )
