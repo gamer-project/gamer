@@ -9,6 +9,7 @@ static double VPD_P0;            // background pressure
 static double VPD_v0;            // velocity amplitude
 static double VPD_B0;            // background magnetic field
 static int    VPD_Dir;           // wave direction: (0/1/2/3) --> (x/y/z/diagonal)
+static int    VPD_BDir;          // magnetic field direction: (0/1/2/3) --> (x/y/z/diagonal)
 
 static double VPD_Gamma;         // damping rate due to viscosity
 static double VPD_WaveLength;    // wavelength of velocity profile
@@ -67,8 +68,11 @@ void Validate()
 
 #  endif
 
-   if ( VPD_Dir == 3  &&  ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )  )
-      Aux_Error( ERROR_INFO, "simulation domain must be cubic for VPD_Dir = %d !!\n", VPD_Dir );
+   if ( VPD_Dir == 3   &&  ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )  )
+      Aux_Error( ERROR_INFO, "simulation domain must be cubic for VPD_Dir = %d !!\n",  VPD_Dir  );
+   
+   if ( VPD_BDir == 3  &&  ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )  )
+      Aux_Error( ERROR_INFO, "simulation domain must be cubic for VPD_BDir = %d !!\n", VPD_BDir );
 
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
@@ -127,8 +131,9 @@ void SetParameter()
    ReadPara->Add( "VPD_Rho0",    &VPD_Rho0,         1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "VPD_P0",      &VPD_P0,           1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "VPD_v0",      &VPD_v0,           1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "VPD_Dir",     &VPD_Dir,          3,            0,                3                 );
+   ReadPara->Add( "VPD_Dir",     &VPD_Dir,          0,            0,                3                 );
    ReadPara->Add( "VPD_B0",      &VPD_B0,           1.0,          0.0,              NoMax_double      );
+   ReadPara->Add( "VPD_BDir",    &VPD_BDir,         0,            0,                3                 );
 
    ReadPara->Read( FileName );
 
@@ -261,7 +266,7 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
                   const int lv, double AuxArray[] )
 {
    
-   if ( VPD_Dir == 3 ) 
+   if ( VPD_BDir == 3 ) 
    {
       magnetic[MAGX] = VPD_B0 / sqrt(3.0);
       magnetic[MAGY] = VPD_B0 / sqrt(3.0);
@@ -269,9 +274,9 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
    }
    else 
    {
-      const int TDir1 = (VPD_Dir+1)%3;    // transverse direction 1
-      const int TDir2 = (VPD_Dir+2)%3;    // transverse direction 2
-      magnetic[MAGX+VPD_Dir] = VPD_B0;
+      const int TDir1 = (VPD_BDir+1)%3;    // transverse direction 1
+      const int TDir2 = (VPD_BDir+2)%3;    // transverse direction 2
+      magnetic[MAGX+VPD_BDir] = VPD_B0;
       magnetic[MAGX+TDir1]   = 0.0;
       magnetic[MAGX+TDir2]   = 0.0;
    }
