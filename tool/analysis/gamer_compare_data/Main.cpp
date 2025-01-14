@@ -432,10 +432,10 @@ int CompareParticleData()
       if ( NParAttInt1 != NParAttInt2 )
          Aux_Error( ERROR_INFO, "inconsistent numbers of particle integer attributes (%d vs %d) !!\n", NParAttInt1, NParAttInt2 );
 
-      if ( ParFltData1 == NULL  ||  ParFltData2 == NULL )
+      if (  NParAttFlt1 != 0  &&  ( ParFltData1 == NULL || ParFltData2 == NULL )  )
          Aux_Error( ERROR_INFO, "particle floating-point arrays have not been allocated yet !!\n" );
 
-      if ( ParIntData1 == NULL  ||  ParIntData2 == NULL )
+      if (  NParAttInt1 != 0  &&  ( ParIntData1 == NULL || ParIntData2 == NULL )  )
          Aux_Error( ERROR_INFO, "particle integer arrays have not been allocated yet !!\n" );
 
       if ( Format1 == 2  &&  Format2 == 2 )
@@ -561,8 +561,8 @@ int CompareParticleData()
       fprintf( File, "\n" );
    }
 
-   fprintf( File, "# %12s  %12s  %4s  %14s  %14s  %14s  %14s\n",
-                  "ParID1", "ParID2", "Att", "Data1", "Data2", "AbsErr", "RelErr" );
+   fprintf( File, "# %12s  %12s  %4s  %14s  %14s  %14s\n",
+                  "ParID1", "ParID2", "Att", "Data1", "Data2", "AbsErr" );
 
    for (int v=0; v<NParAttInt1; v++)
    for (long p=0; p<NPar1; p++)

@@ -140,7 +140,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                          IDs stored in ParList_Copy, which points to the same particle repository
 //                                          (i.e., the amr->Par->Attribute[]). In comparison, in LOAD_BALANCE mode,
 //                                          since particles corresponding to NPar_Copy may be collected from other ranks,
-//                                          these patches will allocate a local particle attribute arrays called ParAttFlt_Copy and ParAttInt_Copy
+//                                          these patches will allocate local particle attribute arrays called ParAttFlt_Copy and ParAttInt_Copy
 //                                      --> Note that non-leaf patches may have NPar>0 temporarily after updating particle position.
 //                                          It's because particles travelling from coarse to fine grids will stay in coarse grids
 //                                          temporarily until the velocity correction is done.

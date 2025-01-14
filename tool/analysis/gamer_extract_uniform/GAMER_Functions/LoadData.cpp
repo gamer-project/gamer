@@ -839,8 +839,8 @@ void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, bool &Data
 //                HeaderOffset_X : Offsets of different headers
 //                LoadPar        : Whether or not the RESTART file stores the particle data
 //                LoadParDens    : Whether or not the RESTART file stores the particle density on grids
-//                NParFltVarOut  : Number of particles floating-point attributes stored (for checking the file size only)
-//                NParIntVarOut  : Number of particles integer        attributes stored (for checking the file size only)
+//                NParFltVarOut  : Number of particle floating-point attributes stored (for checking the file size only)
+//                NParIntVarOut  : Number of particle integer        attributes stored (for checking the file size only)
 //                H0             : Dimensionless Hubble parameter
 //                WithUnit       : true --> restart file stores the code units
 //                Unit_*         : Code units

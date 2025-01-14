@@ -118,7 +118,7 @@ void LoadData( const char *FileName, AMR_t &amr, int &Format, int &NField, int &
 
 #  if ( (defined FLOAT8 && !defined FLOAT8_PAR) || (!defined FLOAT8 && defined FLOAT8_PAR) )
    if ( FormatVersion < 2300 )
-         Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for OPT__OUTPUT_TOTAL=2 (C-binary) before version < 2300 !!\n" );
+      Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for OPT__OUTPUT_TOTAL=2 (C-binary) for versions < 2300 !!\n" );
 #  endif
 
 
@@ -239,7 +239,7 @@ void LoadData( const char *FileName, AMR_t &amr, int &Format, int &NField, int &
                  FileName, InputSize, ExpectSize );
 
 #  if ( (defined FLOAT8 && !defined FLOAT8_PAR) || (!defined FLOAT8 && defined FLOAT8_PAR) )
-   if ( WithPar  &&  FormatVersion < 2300 )   Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for C-binary snapshots for version < 2300 !!\n" );
+   if ( WithPar  &&  FormatVersion < 2300 )   Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for C-binary snapshots for versions < 2300 !!\n" );
 #  endif
 
    Aux_Message( stdout, "      Verifying the size of the RESTART file ... passed\n" );

@@ -84,9 +84,9 @@ Floating-point precision of the particle initial condition file `PAR_IC`.
     * **Restriction:**
 
 <a name="PAR_IC_INT8"></a>
-* #### `PAR_IC_INT8` &ensp; (<0: same as [[--long_par | Installation:-Option-List#--long_par]], 0=single precision, 1=double precision) &ensp; [-1]
+* #### `PAR_IC_INT8` &ensp; (<0: same as [[--long_par | Installation:-Option-List#--long_par]], 0=32-bit integer (`int`), 1=64-bit integer (`long`)) &ensp; [-1]
     * **Description:**
-Integer precision of the particle initial condition file `PAR_IC`.
+Integer width of the particle initial condition file `PAR_IC`.
     * **Restriction:**
 
 <a name="PAR_IC_MASS"></a>

@@ -1288,7 +1288,7 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
 //                H5_SpaceID_ParData  : HDF5 dataset dataspace ID for particle data
 //                GParID_Offset       : Starting global particle indices for all patches
 //                NParThisRank        : Total number of particles in this rank (for check only)
-//                FormatVersion       : Snapshot format version
+//                FormatVersion       : HDF5 snapshot format version
 //-------------------------------------------------------------------------------------------------------
 void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const bool Recursive,
                    const int *SonList, const int (*CrList)[3],
@@ -1428,7 +1428,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
       {
          const int ParTypeIdx_old = 7;
          int skip_type = 0;
-         for (int v=0; PAR_NATT_FLT_STORED+1; v++)
+         for (int v=0; v<PAR_NATT_FLT_STORED+1; v++)
          {
 //          using ParFltBuf[v] here is safe since it's NOT called when NParThisPatch == 0
             if ( v == ParTypeIdx_old )
