@@ -532,6 +532,8 @@ void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out
                          const real dt, const real dh, const int NOut, const int NEle, const int Offset_B_In )
 {
 
+   if ( OPT__FREEZE_HYDRO )  return;
+
    const int  NOutP1      = NOut + 1;
    const int  didx_ele[3] = { 1, NEle, SQR(NEle) };
    const real dt_dh       = dt / dh;
@@ -863,6 +865,7 @@ void MHD_UpdateMagnetic_Half(       real fc[][NCOMP_LR],
                               const int idx_i, const int idx_j, const int idx_k,
                               const int NEle )
 {
+   if ( OPT__FREEZE_HYDRO )  return;
 
    const real dt_dh2    = (real)0.5*dt/dh;
    const int  fL        = 0;
