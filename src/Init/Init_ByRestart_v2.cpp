@@ -145,7 +145,6 @@ void Init_ByRestart()
       if ( FormatVersion < 2300 )
          Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for OPT__OUTPUT_TOTAL=2 (C-binary) for versions < 2300 !!\n" );
 #     endif
-
    }
    MPI_Barrier( MPI_COMM_WORLD );
 

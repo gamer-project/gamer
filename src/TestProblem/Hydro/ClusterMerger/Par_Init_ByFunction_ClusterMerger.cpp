@@ -224,8 +224,8 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
          // synchronize all particles to the physical time at the base level
          ParTime[pp] = (real_par)Time[0];
 
-	 // set tag for each cluster
-	 AllAttributeInt[Idx_ParHalo][pp] = (long_par)c;
+         // set tag for each cluster
+         AllAttributeInt[Idx_ParHalo][pp] = (long_par)c;
 
       } // for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++)
 
