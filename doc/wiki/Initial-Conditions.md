@@ -257,7 +257,7 @@ void Par_Init_ByFunction( const long NPar_ThisRank, const long NPar_AllRank,
    {
       ParTime[p] = Time[0];
       ParType[p] = PTYPE_GENERIC_MASSIVE;
-      ParPUid[p] = (long_par)p;
+      ParPUid[p] = (long_par)-1;
    }
 
 // set other particle attributes randomly
