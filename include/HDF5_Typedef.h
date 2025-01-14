@@ -30,6 +30,12 @@ datatypes in the HDF5 format
 # else
 #  define H5T_GAMER_REAL_PAR H5T_NATIVE_FLOAT
 # endif
+
+# ifdef INT8_PAR
+#  define H5T_GAMER_LONG_PAR H5T_NATIVE_LONG
+# else
+#  define H5T_GAMER_LONG_PAR H5T_NATIVE_INT
+# endif
 #endif // #ifdef PARTICLE
 
 
@@ -76,8 +82,10 @@ struct KeyInfo_t
    int    NMagStored;               // NCOMP_MAG (declare it even when MHD is off)
 #  ifdef PARTICLE
    long   Par_NPar;                 // amr->Par->NPar_Active_AllRank
-   int    Par_NAttStored;           // PAR_NATT_STORED
+   int    Par_NAttFltStored;        // PAR_NATT_FLT_STORED
+   int    Par_NAttIntStored;        // PAR_NATT_INT_STORED
    int    Float8_Par;
+   int    Int8_Par;
 #  endif
 #  ifdef COSMIC_RAY
    int    CR_Diffusion;
@@ -186,8 +194,10 @@ struct Makefile_t
    int StoreParAcc;
    int StarFormation;
    int Feedback;
-   int Par_NAttUser;
+   int Par_NAttFltUser;
+   int Par_NAttIntUser;
    int Float8_Par;
+   int Int8_Par;
 #  endif
 
 #  ifdef COSMIC_RAY
@@ -268,7 +278,8 @@ struct SymConst_t
 
 
 #  ifdef PARTICLE
-   int    Par_NAttStored;
+   int    Par_NAttFltStored;
+   int    Par_NAttIntStored;
    int    Par_NType;
 #  ifdef GRAVITY
    int    RhoExt_GhostSize;
@@ -419,6 +430,7 @@ struct InputPara_t
    double Par_ICMass;
    int    Par_ICType;
    int    Par_ICFloat8;
+   int    Par_ICInt8;
    int    Par_Interp;
    int    Par_InterpTracer;
    int    Par_Integ;
@@ -430,7 +442,8 @@ struct InputPara_t
    int    Par_GhostSize;
    int    Par_GhostSizeTracer;
    int    Par_TracerVelCorr;
-   char  *ParAttLabel[PAR_NATT_TOTAL];
+   char  *ParAttFltLabel[PAR_NATT_FLT_TOTAL];
+   char  *ParAttIntLabel[PAR_NATT_INT_TOTAL];
 #  endif
 
 // cosmology

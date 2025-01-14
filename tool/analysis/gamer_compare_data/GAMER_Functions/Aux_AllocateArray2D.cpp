@@ -58,8 +58,12 @@ void Aux_DeallocateArray2D( T** &Array )
 
 
 // explicit template instantiation
+template void Aux_AllocateArray2D <int>    ( int**    &Array, const int J, const int I );
+template void Aux_AllocateArray2D <long>   ( long**   &Array, const int J, const int I );
 template void Aux_AllocateArray2D <float>  ( float**  &Array, const int J, const int I );
 template void Aux_AllocateArray2D <double> ( double** &Array, const int J, const int I );
 
+template void Aux_DeallocateArray2D <int>    ( int**    &Array );
+template void Aux_DeallocateArray2D <long>   ( long**   &Array );
 template void Aux_DeallocateArray2D <float>  ( float**  &Array );
 template void Aux_DeallocateArray2D <double> ( double** &Array );

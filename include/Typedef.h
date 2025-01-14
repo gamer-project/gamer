@@ -28,6 +28,12 @@ typedef double real_par;
 typedef float  real_par;
 #endif
 
+#ifdef INT8_PAR
+typedef long long_par;
+#else
+typedef int  long_par;
+#endif
+
 #ifdef SUPPORT_GRACKLE
 #include <grackle_float.h>
 #if   defined GRACKLE_FLOAT_8
