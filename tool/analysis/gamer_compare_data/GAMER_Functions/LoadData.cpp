@@ -116,11 +116,6 @@ void LoadData( const char *FileName, AMR_t &amr, int &Format, int &NField, int &
    if ( FormatVersion < 2000 )
       Aux_Error( ERROR_INFO, "unsupported data format version (only support version >= 2000) !!\n" );
 
-#  if ( (defined FLOAT8 && !defined FLOAT8_PAR) || (!defined FLOAT8 && defined FLOAT8_PAR) )
-   if ( FormatVersion < 2300 )
-      Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for OPT__OUTPUT_TOTAL=2 (C-binary) for versions < 2300 !!\n" );
-#  endif
-
 
 // check if the size of different data types are consistent
    int size_bool_restart, size_int_restart, size_long_restart, size_real_restart, size_double_restart;
