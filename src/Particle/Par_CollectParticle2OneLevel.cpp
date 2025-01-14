@@ -31,10 +31,10 @@ bool Particle_Collected = false;
 //                       It's because particles travelling from coarse to fine grids will stay in coarse grids
 //                       temporarily until the velocity correction is done.
 //                       --> For these patches, NPar_Copy will be **the sum of NPar and the number of particles
-//                           collected from other patches**, and ParList_Copy (or ParAttFlt_Copy and ParAttInt) will contain
+//                           collected from other patches**, and ParList_Copy (or ParAttFlt_Copy and ParAttInt_Copy) will contain
 //                           information of particles belonging to NPar as well.
 //                       --> It makes implementation simplier. **For leaf real patches, one only needs to consider
-//                           NPar and ParList. While for all other patches, one only needs to consider NPar_Copy,
+//                           NPar and ParList. While for all other patches, one only needs to consider NPar_Copy and
 //                           ParList_Copy (or ParAttFlt_Copy and ParAttInt_Copy). One never needs to consider both.**
 //                5. When using OpenMP, one must ensure that different threads do NOT invoke this function
 //                   for the same patch at the same time !!!
@@ -53,11 +53,11 @@ bool Particle_Collected = false;
 //                9. Only the master thread in OpenMP is allowed to call this routine
 //
 // Parameter   :  FaLv          : Target refinement leve
-//                FltAttBitIdx  : Bitwise indices of the target particle attributes (e.g., _PAR_MASS | _PAR_VELX)
+//                FltAttBitIdx  : Bitwise indices of the target particle floating-point attributes (e.g., _PAR_MASS | _PAR_VELX)
 //                                --> A user-defined attribute with an integer index FltAttIntIdx returned by
 //                                    AddParticleAttributeFlt() can be converted to a bitwise index by BIDX(FltAttIntIdx)
 //                                --> Used by LOAD_BALANCE only
-//                IntAttBitIdx  : Bitwise indices of the target particle attributes (e.g., _PAR_TYPE)
+//                IntAttBitIdx  : Bitwise indices of the target particle integer attributes (e.g., _PAR_TYPE)
 //                                --> A user-defined attribute with an integer index IntAttIntIdx returned by
 //                                    AddParticleAttributeInt() can be converted to a bitwise index by BIDX(IntAttIntIdx)
 //                                --> Used by LOAD_BALANCE only

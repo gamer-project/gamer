@@ -33,7 +33,7 @@ static char    DensTableFile[MAX_STRING]; // fixed halo density profile filename
 static double *DensTable = NULL;          // density table, radius should be in kpc and density should be in g/cm^3
 static int     DensTable_Nbin;            // number of bins of density table
 static bool    AddParWhenRestart;         // add a new disk to an existing snapshot, must enable OPT__RESTART_RESET
-static bool    AddParWhenRestartByFile;   // add a new disk via PAR_IC
+static bool    AddParWhenRestartByFile;   // add a new disk via DiskHeatingParticleIC
 static long    AddParWhenRestartNPar;     // particle number of the new disk
 static int     NewDisk_RSeed;             // random seed for setting new disk particle position and velocity
 static double  Disk_Mass;                 // thin disk total mass (code unit)
@@ -409,11 +409,12 @@ void Init_NewDiskRestart()
    real_par *Vel_AllRank[3] = { NewParAttFlt[PAR_VELX], NewParAttFlt[PAR_VELY], NewParAttFlt[PAR_VELZ] };
    long_par *Type_AllRank   =   NewParAttInt[PAR_TYPE];
 
-   if ( AddParWhenRestartByFile ) // add new disk via PAR_IC
+   if ( AddParWhenRestartByFile ) // add new disk via DiskHeatingParticleIC
    {
 //    load data
       if ( MPI_Rank == 0 ) {
-         const char FileName[] = "PAR_IC";
+//       NOTE: DiskHeatingParticleIC uses the floating-point type for particle type and assumes single precision
+         const char FileName[] = "DiskHeatingParticleIC";
          const int  NParAtt    = 8;    // mass, pos*3, vel*3, type
 
 //       check

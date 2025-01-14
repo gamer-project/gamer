@@ -39,7 +39,7 @@ extern long    *HaloMerger_ParCloud_NPar;
 //                ParTime         : Particle time     array with the size of NPar_ThisRank
 //                ParType         : Particle type     array with the size of NPar_ThisRank
 //                ParPUid         : Particle UID      array with the size of NPar_ThisRank
-//                AllAttributeFlt : Pointer array for all particle float attributes
+//                AllAttributeFlt : Pointer array for all particle floating-point attributes
 //                                --> Dimension = [PAR_NATT_FLT_TOTAL][NPar_ThisRank]
 //                                --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
 //                                    to access the data
@@ -74,13 +74,13 @@ void Par_Init_ByFunction_HaloMerger( const long NPar_ThisRank, const long NPar_A
    {
 
    // allocate memory for particle attribute arrays
-      ParFltData_AllRank[PAR_MASS] = new real [NPar_AllRank];
-      ParFltData_AllRank[PAR_POSX] = new real [NPar_AllRank];
-      ParFltData_AllRank[PAR_POSY] = new real [NPar_AllRank];
-      ParFltData_AllRank[PAR_POSZ] = new real [NPar_AllRank];
-      ParFltData_AllRank[PAR_VELX] = new real [NPar_AllRank];
-      ParFltData_AllRank[PAR_VELY] = new real [NPar_AllRank];
-      ParFltData_AllRank[PAR_VELZ] = new real [NPar_AllRank];
+      ParFltData_AllRank[PAR_MASS] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSX] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSY] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSZ] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELX] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELY] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELZ] = new real_par [NPar_AllRank];
 
       long Par_Idx0 = 0;
 
@@ -148,7 +148,7 @@ void Par_Init_ByFunction_HaloMerger( const long NPar_ThisRank, const long NPar_A
    } // if ( MPI_Rank == 0 )
 
 // send particle attributes from the master rank to all ranks
-   Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, 0L,
+   Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, _NONE,
                             ParFltData_AllRank, ParIntData_AllRank, AllAttributeFlt, AllAttributeInt );
 
 // synchronize all particles to the physical time on the base level and assign particle type

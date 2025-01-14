@@ -321,7 +321,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 //                since different patch groups will be affected by the same particles when feedback is non-local
 //            --> if we modify the input particle data here, some patch groups may read the **updated** particle data
 //            --> to solve this problem, we will store the updated particle data in a temporary particle repository
-//                ParAttFlt_Updated[] and ParAttInt_Update[]
+//                ParAttFlt_Updated[] and ParAttInt_Updated[]
 #        ifdef LOAD_BALANCE
          if ( UseParAttCopy )
          {
@@ -329,7 +329,6 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
             {
                if ( ParAttFltBitIdx_In & BIDX(v) )
                {
-
 #                 ifdef DEBUG_PARTICLE
                   if ( NPar > 0  &&  amr->patch[0][lv][PID]->ParAttFlt_Copy[v] == NULL )
                      Aux_Error( ERROR_INFO, "ParAttFlt_Copy == NULL for NPar (%d) > 0 (lv %d, PID %d, v %d) !!\n",
@@ -345,7 +344,6 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
             {
                if ( ParAttIntBitIdx_In & BIDX(v) )
                {
-
 #                 ifdef DEBUG_PARTICLE
                   if ( NPar > 0  &&  amr->patch[0][lv][PID]->ParAttInt_Copy[v] == NULL )
                      Aux_Error( ERROR_INFO, "ParAttInt_Copy == NULL for NPar (%d) > 0 (lv %d, PID %d, v %d) !!\n",
@@ -406,7 +404,6 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
             {
                for (int p=0; p<NPar; p++)
                {
-
                   real_par *ParPos = ParAttFlt_Local[ ParPosIdx[d] ] + p;
                   const double dr  = (double)*ParPos - PGCenter[d];
 
@@ -441,7 +438,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 
-//       9. store the updated particle data in ParAttFlt_Updated[]
+//       9. store the updated particle data in ParAttFlt/Int_Updated[]
 //          --> only for particles in the central 8 patches
 //              --> particles in the sibling patches will be updated and stored when applying feedback to these patches
 //              --> avoid duplicate updates

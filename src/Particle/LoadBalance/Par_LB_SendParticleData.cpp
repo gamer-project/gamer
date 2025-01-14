@@ -12,21 +12,21 @@
 // Note        :  1. SendBuf_XXX must be preallocated and will NOT be deallocated in this function
 //                2. RecvBuf_XXX will be allocated in this function (using call by reference) and must be
 //                   deallocated manually after calling this function
-//                   --> Except for RecvBuf_ParFltDataEachPatch, which is just a pointer to the MPI recv buffer
+//                   --> Except for RecvBuf_ParFlt/IntDataEachPatch, which are just pointers to the MPI recv buffer
 //                       declared in LB_GetBufferData
-//                3. SendBuf_ParFltDataEachPatch format: [ParID][ParAttribute] instead of [ParAttribute][ParID]
+//                3. SendBuf_ParFlt/IntDataEachPatch format: [ParID][ParAttribute] instead of [ParAttribute][ParID]
 //                4. Called by Par_LB_CollectParticleFromRealPatch(), Par_LB_CollectParticle2OneLevel(), and
 //                   Par_LB_ExchangeParticleBetweenPatch()
 //                   --> Par_LB_ExchangeParticleBetweenPatch() is called by
 //                       Par_PassParticle2Sibling() and Par_PassParticle2Son_MultiPatch()
 //
-// Parameter   :  NParAttFlt                  : Number of particle float   attributes to be sent
-//                NParAttInt                  : Number of particle integer attributes to be sent
+// Parameter   :  NParAttFlt                  : Number of particle floating-point attributes to be sent
+//                NParAttInt                  : Number of particle integer        attributes to be sent
 //                SendBuf_NPatchEachRank      : MPI send buffer --> number of patches sent to each rank
 //                SendBuf_NParEachPatch       : MPI send buffer --> number of particles in each patch to be sent
 //                SendBuf_LBIdxEachPatch      : MPI send buffer --> load-balance index of each patch to be sent
-//                SendBuf_ParFltDataEachPatch : MPI send buffer --> particle float   data in each patch to be sent
-//                SendBuf_ParIntDataEachPatch : MPI send buffer --> particle integer data in each patch to be sent
+//                SendBuf_ParFltDataEachPatch : MPI send buffer --> particle floating-point data in each patch to be sent
+//                SendBuf_ParIntDataEachPatch : MPI send buffer --> particle integer        data in each patch to be sent
 //                NSendParTotal               : Total number of particles sent to all ranks (used by OPT__TIMING_MPI only)
 //                RecvBuf_XXX                 : MPI recv buffer
 //                NRecvPatchTotal             : Total number of patches   received from all ranks
@@ -165,8 +165,7 @@ void Par_LB_SendParticleData( const int NParAttFlt, const int NParAttInt, int *S
       long *RecvDisp_ParIntDataEachPatch  = new long [MPI_NRank];
 
 //    send/recv count
-      const int *SendPtr_Flt = NULL, *RecvPtr_Flt = NULL;
-      const int *SendPtr_Int = NULL, *RecvPtr_Int = NULL;
+      const int *SendPtr = NULL, *RecvPtr = NULL;
       NRecvParTotal = 0L;
 
       for (int r=0; r<MPI_NRank; r++)
@@ -176,18 +175,22 @@ void Par_LB_SendParticleData( const int NParAttFlt, const int NParAttInt, int *S
          SendCount_ParIntDataEachPatch[r] = 0L;
          RecvCount_ParIntDataEachPatch[r] = 0L;
 
-         SendPtr_Flt = SendBuf_NParEachPatch + SendDisp_NParEachPatch[r];
-         RecvPtr_Flt = RecvBuf_NParEachPatch + RecvDisp_NParEachPatch[r];
-         SendPtr_Int = SendBuf_NParEachPatch + SendDisp_NParEachPatch[r];
-         RecvPtr_Int = RecvBuf_NParEachPatch + RecvDisp_NParEachPatch[r];
+         SendPtr = SendBuf_NParEachPatch + SendDisp_NParEachPatch[r];
+         RecvPtr = RecvBuf_NParEachPatch + RecvDisp_NParEachPatch[r];
 
-         for (int p=0; p<SendBuf_NPatchEachRank[r]; p++)    SendCount_ParFltDataEachPatch[r] += (long)SendPtr_Flt[p];
-         for (int p=0; p<RecvBuf_NPatchEachRank[r]; p++)    RecvCount_ParFltDataEachPatch[r] += (long)RecvPtr_Flt[p];
-         for (int p=0; p<SendBuf_NPatchEachRank[r]; p++)    SendCount_ParIntDataEachPatch[r] += (long)SendPtr_Int[p];
-         for (int p=0; p<RecvBuf_NPatchEachRank[r]; p++)    RecvCount_ParIntDataEachPatch[r] += (long)RecvPtr_Int[p];
+         for (int p=0; p<SendBuf_NPatchEachRank[r]; p++)
+         {
+            SendCount_ParFltDataEachPatch[r] += (long)SendPtr[p];
+            SendCount_ParIntDataEachPatch[r] += (long)SendPtr[p];
+         }
+
+         for (int p=0; p<RecvBuf_NPatchEachRank[r]; p++)
+         {
+            RecvCount_ParFltDataEachPatch[r] += (long)RecvPtr[p];
+            RecvCount_ParIntDataEachPatch[r] += (long)RecvPtr[p];
+         }
 
          NRecvParTotal += RecvCount_ParFltDataEachPatch[r];
-         // NRecvParTotal += RecvCount_ParIntDataEachPatch[r];
 
          SendCount_ParFltDataEachPatch[r] *= (long)NParAttFlt;
          RecvCount_ParFltDataEachPatch[r] *= (long)NParAttFlt;
@@ -258,7 +261,6 @@ void Par_LB_SendParticleData( const int NParAttFlt, const int NParAttInt, int *S
          const double SendMB = (double)NSendParTotal*NParAttFlt*sizeof(real_par)*1.0e-6 + (double)NSendParTotal*NParAttInt*sizeof(long_par)*1.0e-6;
          const double RecvMB = (double)NRecvParTotal*NParAttFlt*sizeof(real_par)*1.0e-6 + (double)NRecvParTotal*NParAttInt*sizeof(long_par)*1.0e-6;
 
-         // TODO: NVar is wrong
          fprintf( File, "%19s %2d+%1d %4s %10s %10s %10.5f %8.3f %8.3f %10.3f %10.3f\n",
                   Timer_Comment, NParAttFlt, NParAttInt, "X", "X", "X", dtime, SendMB, RecvMB, SendMB/dtime, RecvMB/dtime );
 

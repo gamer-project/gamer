@@ -229,7 +229,7 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "Par_NAttFltStored",    &KeyInfo.Par_NAttFltStored,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttFltStored,     1,    Fatal );
    else
    LoadField( "Par_NAttFltStored",    &KeyInfo.Par_NAttFltStored,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttFltStored,     1, NonFatal );
-   if ( KeyInfo.FormatVersion >= 2481 )
+   if ( KeyInfo.FormatVersion >= 2500 )
    LoadField( "Par_NAttIntStored",    &KeyInfo.Par_NAttIntStored,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttIntStored,     1,    Fatal );
    else
    LoadField( "Par_NAttIntStored",    &KeyInfo.Par_NAttIntStored,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttIntStored,     1, NonFatal );
@@ -1283,12 +1283,12 @@ herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Ta
 //                NewParList          : Array to store the new particle indices
 //                                      --> It must be preallocated with a size equal to the maximum number of
 //                                          particles in one patch
-//                H5_SetID_ParFltData : HDF5 dataset ID for particle float   data
-//                H5_SetID_ParIntData : HDF5 dataset ID for particle integer data
+//                H5_SetID_ParFltData : HDF5 dataset ID for particle floating-point data
+//                H5_SetID_ParIntData : HDF5 dataset ID for particle integer        data
 //                H5_SpaceID_ParData  : HDF5 dataset dataspace ID for particle data
 //                GParID_Offset       : Starting global particle indices for all patches
 //                NParThisRank        : Total number of particles in this rank (for check only)
-//                FormatVersion       : HDF5 format version
+//                FormatVersion       : HDF5 snapshot format version
 //-------------------------------------------------------------------------------------------------------
 void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const bool Recursive,
                    const int *SonList, const int (*CrList)[3],
@@ -1424,14 +1424,14 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
       if ( H5_MemID_ParData < 0 )   Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemID_ParData" );
 
 //    load particle data from disk
-      if ( FormatVersion < 2481 )
+      if ( FormatVersion < 2500 )
       {
-         const int PAR_TYPE_IDX_OLD = 7;
+         const int ParTypeIdx_old = 7;
          int skip_type = 0;
          for (int v=0; v<PAR_NATT_FLT_STORED+1; v++)
          {
 //          using ParFltBuf[v] here is safe since it's NOT called when NParThisPatch == 0
-            if ( v == PAR_TYPE_IDX_OLD )
+            if ( v == ParTypeIdx_old )
             {
                real_par *ParType_Buf = new real_par [NParThisPatch];
                H5_Status = H5Dread( H5_SetID_ParIntData[PAR_TYPE], H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,
@@ -1446,9 +1446,9 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
                                     ParFltBuf[v-skip_type] );
             }
             if ( H5_Status < 0 )
-               Aux_Error( ERROR_INFO, "failed to load a particle float attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
+               Aux_Error( ERROR_INFO, "failed to load a particle floating-point attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
          }
-      } // if ( FormatVersion < 2481 )
+      } // if ( FormatVersion < 2500 )
       else
       {
          for (int v=0; v<PAR_NATT_FLT_STORED; v++)
@@ -1457,7 +1457,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
             H5_Status = H5Dread( H5_SetID_ParFltData[v], H5T_GAMER_REAL_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,
                                  ParFltBuf[v] );
             if ( H5_Status < 0 )
-               Aux_Error( ERROR_INFO, "failed to load a particle float attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
+               Aux_Error( ERROR_INFO, "failed to load a particle floating-point attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
          }
          for (int v=0; v<PAR_NATT_INT_STORED; v++)
          {
@@ -1467,7 +1467,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
             if ( H5_Status < 0 )
                Aux_Error( ERROR_INFO, "failed to load a particle integer attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
          }
-      } // if ( FormatVersion < 2481 ) ... else ...
+      } // if ( FormatVersion < 2500 ) ... else ...
 
 //    store particles to the particle repository (one particle at a time)
       NewParAttFlt[PAR_TIME] = Time[0];   // all particles are assumed to be synchronized with the base level
@@ -1513,15 +1513,16 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
 
       SonGID0 = SonList[GID];
 
-      if ( SonGID0 == -1 )   return;
-
-      for (int SonGID=SonGID0; SonGID<SonGID0+8; SonGID++)
-         LoadOnePatch( H5_FileID, lv+1, SonGID, Recursive, SonList, CrList,
-                       H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field,
-                       H5_SetID_FCMag, H5_SpaceID_FCMag, H5_MemID_FCMag,
-                       NParList, ParFltBuf, ParIntBuf, NewParList,
-                       H5_SetID_ParFltData, H5_SetID_ParIntData, H5_SpaceID_ParData,
-                       GParID_Offset, NParThisRank, FormatVersion );
+      if ( SonGID0 != -1 )
+      {
+         for (int SonGID=SonGID0; SonGID<SonGID0+8; SonGID++)
+            LoadOnePatch( H5_FileID, lv+1, SonGID, Recursive, SonList, CrList,
+                          H5_SetID_Field, H5_SpaceID_Field, H5_MemID_Field,
+                          H5_SetID_FCMag, H5_SpaceID_FCMag, H5_MemID_FCMag,
+                          NParList, ParFltBuf, ParIntBuf, NewParList,
+                          H5_SetID_ParFltData, H5_SetID_ParIntData, H5_SpaceID_ParData,
+                          GParID_Offset, NParThisRank, FormatVersion );
+      }
    } // if ( Recursive )
 
 } // FUNCTION : LoadOnePatch
@@ -1647,7 +1648,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "Par_NAttFltUser",        &RS.Par_NAttFltUser,        SID, TID, NonFatal, &RT.Par_NAttFltUser,        1,    Fatal );
    else
    LoadField( "Par_NAttFltUser",        &RS.Par_NAttFltUser,        SID, TID, NonFatal, &RT.Par_NAttFltUser,        1, NonFatal );
-   if ( FormatVersion >= 2481 )
+   if ( FormatVersion >= 2500 )
    LoadField( "Par_NAttIntUser",        &RS.Par_NAttIntUser,        SID, TID, NonFatal, &RT.Par_NAttIntUser,        1,    Fatal );
    else
    LoadField( "Par_NAttIntUser",        &RS.Par_NAttIntUser,        SID, TID, NonFatal, &RT.Par_NAttIntUser,        1, NonFatal );
@@ -1770,7 +1771,7 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "Par_NAttFltStored",    &RS.Par_NAttFltStored,    SID, TID, NonFatal, &RT.Par_NAttFltStored,     1,    Fatal );
    else
    LoadField( "Par_NAttFltStored",    &RS.Par_NAttFltStored,    SID, TID, NonFatal, &RT.Par_NAttFltStored,     1, NonFatal );
-   if ( FormatVersion >= 2481 )
+   if ( FormatVersion >= 2500 )
    LoadField( "Par_NAttIntStored",    &RS.Par_NAttIntStored,    SID, TID, NonFatal, &RT.Par_NAttIntStored,     1,    Fatal );
    else
    LoadField( "Par_NAttIntStored",    &RS.Par_NAttIntStored,    SID, TID, NonFatal, &RT.Par_NAttIntStored,     1, NonFatal );
@@ -2033,6 +2034,8 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "MaxLevel",                &RS.MaxLevel,                SID, TID, NonFatal, &RT.MaxLevel,                 1, NonFatal );
    LoadField( "Opt__Flag_Rho",           &RS.Opt__Flag_Rho,           SID, TID, NonFatal, &RT.Opt__Flag_Rho,            1, NonFatal );
    LoadField( "Opt__Flag_RhoGradient",   &RS.Opt__Flag_RhoGradient,   SID, TID, NonFatal, &RT.Opt__Flag_RhoGradient,    1, NonFatal );
+   LoadField( "Opt__Flag_Angular",       &RS.Opt__Flag_Angular,       SID, TID, NonFatal, &RT.Opt__Flag_Angular,        1, NonFatal );
+   LoadField( "Opt__Flag_Radial",        &RS.Opt__Flag_Radial,        SID, TID, NonFatal, &RT.Opt__Flag_Radial,         1, NonFatal );
 #  if ( MODEL == HYDRO )
    LoadField( "Opt__Flag_PresGradient",  &RS.Opt__Flag_PresGradient,  SID, TID, NonFatal, &RT.Opt__Flag_PresGradient,   1, NonFatal );
    LoadField( "Opt__Flag_Vorticity",     &RS.Opt__Flag_Vorticity,     SID, TID, NonFatal, &RT.Opt__Flag_Vorticity,      1, NonFatal );
@@ -2437,6 +2440,11 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
       for (int t=0; t<5; t++)
       RS.FlagTable_Lohner      [lv][t] = -1.0;
 
+      for (int t=0; t<3; t++)
+      RS.FlagTable_Angular     [lv][t] = -1.0;
+
+      RS.FlagTable_Radial      [lv]    = -1.0;
+
       RS.FlagTable_User        [lv].p   = malloc( OPT__FLAG_USER_NUM*sizeof(double) );
       RS.FlagTable_User        [lv].len = OPT__FLAG_USER_NUM;
       for (int t=0; t<OPT__FLAG_USER_NUM; t++)
@@ -2493,6 +2501,27 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
          Aux_Message( stderr, "WARNING : \"%s[%d][%d]\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
                        "FlagTable_Lohner", lv, t, RS.FlagTable_Lohner[lv][t],  RT.FlagTable_Lohner[lv][t] );
    }}
+
+   if ( OPT__FLAG_ANGULAR ) {
+   LoadField( "FlagAngular_CenX",        &RS.FlagAngular_CenX,        SID, TID, NonFatal, &RT.FlagAngular_CenX,         1, NonFatal );
+   LoadField( "FlagAngular_CenY",        &RS.FlagAngular_CenY,        SID, TID, NonFatal, &RT.FlagAngular_CenY,         1, NonFatal );
+   LoadField( "FlagAngular_CenZ",        &RS.FlagAngular_CenZ,        SID, TID, NonFatal, &RT.FlagAngular_CenZ,         1, NonFatal );
+   LoadField( "FlagTable_Angular",        RS.FlagTable_Angular,       SID, TID, NonFatal,  NullPtr,                    -1, NonFatal );
+
+   for (int lv=0; lv<MAX_LEVEL; lv++)
+   for (int t=0; t<3; t++)
+   {
+      if ( RS.FlagTable_Angular[lv][t] != RT.FlagTable_Angular[lv][t] )
+         Aux_Message( stderr, "WARNING : \"%s[%d][%d]\" : RESTART file (%20.14e) != runtime (%20.14e) !!\n",
+                       "FlagTable_Angular", lv, t, RS.FlagTable_Angular[lv][t],  RT.FlagTable_Angular[lv][t] );
+   }}
+
+   if ( OPT__FLAG_RADIAL ) {
+   LoadField( "FlagRadial_CenX",         &RS.FlagRadial_CenX,         SID, TID, NonFatal, &RT.FlagRadial_CenX,          1, NonFatal );
+   LoadField( "FlagRadial_CenY",         &RS.FlagRadial_CenY,         SID, TID, NonFatal, &RT.FlagRadial_CenY,          1, NonFatal );
+   LoadField( "FlagRadial_CenZ",         &RS.FlagRadial_CenZ,         SID, TID, NonFatal, &RT.FlagRadial_CenZ,          1, NonFatal );
+   LoadField( "FlagTable_Radial",         RS.FlagTable_Radial,        SID, TID, NonFatal, &RT.FlagTable_Radial,        N1, NonFatal );
+   }
 
    if ( OPT__FLAG_USER ) {
    for (int lv=0; lv<MAX_LEVEL; lv++)

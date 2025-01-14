@@ -58,10 +58,6 @@ void Init_ByRestart()
    if ( !Aux_CheckFileExist(FileName)  &&  MPI_Rank == 0 )
       Aux_Error( ERROR_INFO, "restart file \"%s\" does not exist !!\n", FileName );
 
-#  if ( ( defined PARTICLE ) && ( (defined FLOAT8 && !defined FLOAT8_PAR) || (!defined FLOAT8 && defined FLOAT8_PAR) ) )
-   Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for OPT__OUTPUT_TOTAL=2 (C-binary) !!\n" );
-#  endif
-
    MPI_Barrier( MPI_COMM_WORLD );
 
 
@@ -143,6 +139,11 @@ void Init_ByRestart()
 #     ifdef MHD
       if ( FormatVersion < 2210 )
          Aux_Error( ERROR_INFO, "unsupported data format version for MHD (only support version >= 2210) !!\n" );
+#     endif
+
+#     if (  defined PARTICLE  &&  ( (defined FLOAT8 && !defined FLOAT8_PAR) || (!defined FLOAT8 && defined FLOAT8_PAR) )  )
+      if ( FormatVersion < 2300 )
+         Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for OPT__OUTPUT_TOTAL=2 (C-binary) for versions < 2300 !!\n" );
 #     endif
    }
    MPI_Barrier( MPI_COMM_WORLD );
@@ -332,7 +333,7 @@ void Init_ByRestart()
       ExpectSize   += ParInfoSize;
    }
 
-   if ( FormatVersion >= 2230 )
+   if ( FormatVersion >= 2300 )
    {
       ExpectSize += (long)PAR_NATT_FLT_STORED*amr->Par->NPar_Active_AllRank*sizeof(real_par);
       ExpectSize += (long)PAR_NATT_INT_STORED*amr->Par->NPar_Active_AllRank*sizeof(long_par);
@@ -646,16 +647,16 @@ void Init_ByRestart()
                amr->patch[0][lv][PID]->NPar = 0;
 
 //             load one particle attribute at a time
-               if ( FormatVersion < 2230 )
+               if ( FormatVersion < 2300 )
                {
-                  const int PAR_TYPE_IDX_OLD = 7; // the particle type index after 2230 version
+                  const int ParTypeIdx_old = 7; // the particle type index before 2300 version
                   int skip_type = 0;
                   for (int v=0; v<PAR_NATT_FLT_STORED+1; v++)
                   {
                      fseek( File, FileOffset_Particle + v*ParFltDataSize1v + GParID*sizeof(real_par), SEEK_SET );
 
 //                   using ParFltBuf[v] here is safe since it's NOT called when NParThisPatch == 0
-                     if ( v == PAR_TYPE_IDX_OLD )
+                     if ( v == ParTypeIdx_old )
                      {
                         real_par *ParType_Buf = new real_par [NParThisPatch];
                         fread( ParType_Buf, sizeof(real_par), NParThisPatch, File );
@@ -668,7 +669,8 @@ void Init_ByRestart()
                         fread( ParFltBuf[v-skip_type], sizeof(real_par), NParThisPatch, File );
                      }
                   }
-               } // if ( FormatVersion < 2230 )
+               } // if ( FormatVersion < 2300 )
+
                else
                {
                   for (int v=0; v<PAR_NATT_FLT_STORED; v++)
@@ -686,7 +688,7 @@ void Init_ByRestart()
 //                   using ParIntBuf[v] here is safe since it's NOT called when NParThisPatch == 0
                      fread( ParIntBuf[v], sizeof(long_par), NParThisPatch, File );
                   }
-               } // if ( FormatVersion < 2230 ) ... else ...
+               } // if ( FormatVersion < 2300 ) ... else ...
 
 //             store particles to the particle repository (one particle at a time)
                for (int p=0; p<NParThisPatch; p++ )
@@ -1406,7 +1408,7 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 //    check in PARTICLE
 //    ------------------
 #     ifdef PARTICLE
-      if      ( FormatVersion >= 2230 )
+      if      ( FormatVersion >= 2300 )
       CompareVar( "PAR_NATT_FLT_STORED",     par_natt_flt_stored,          PAR_NATT_FLT_STORED,          Fatal );
       else if ( FormatVersion >= 2200 )
       CompareVar( "PAR_NATT_FLT_STORED",     par_natt_flt_stored,          PAR_NATT_FLT_STORED+1,        Fatal );
@@ -1418,12 +1420,12 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
       else
       CompareVar( "PAR_NATT_FLT_USER",       par_natt_flt_user,            PAR_NATT_FLT_USER,         NonFatal );
 
-      if ( FormatVersion >= 2230 )
+      if ( FormatVersion >= 2300 )
       CompareVar( "PAR_NATT_INT_STORED",     par_natt_int_stored,          PAR_NATT_INT_STORED,          Fatal );
       else
       CompareVar( "PAR_NATT_INT_STORED",     par_natt_int_stored,          PAR_NATT_INT_STORED,       NonFatal );
 
-      if ( FormatVersion >= 2230 )
+      if ( FormatVersion >= 2300 )
       CompareVar( "PAR_NATT_INT_USER",       par_natt_int_user,            PAR_NATT_INT_USER,            Fatal );
       else
       CompareVar( "PAR_NATT_INT_USER",       par_natt_int_user,            PAR_NATT_INT_USER,         NonFatal );

@@ -71,7 +71,7 @@ static bool FarAwayParticle( real_par ParPosX, real_par ParPosY, real_par ParPos
 //                                  --> Does not work with PredictPos since we don't have the information of particle
 //                                      time and velocity
 //                InputMassPos    : Particle mass and position arrays used by UseInputMassPos
-//                InputType       : Particle type arrays used by UseInputMassPos
+//                InputType       : Particle type array used by UseInputMassPos
 //
 // Return      :  Rho
 //-------------------------------------------------------------------------------------------------------
@@ -136,7 +136,7 @@ void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t
       Pos[0] = InputMassPos[PAR_POSX];
       Pos[1] = InputMassPos[PAR_POSY];
       Pos[2] = InputMassPos[PAR_POSZ];
-      PType  = InputType[PAR_TYPE];
+      PType  = InputType   [PAR_TYPE];
    }
 
    else

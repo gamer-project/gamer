@@ -10,8 +10,8 @@ void Par_Init_Attribute_User_Template();
 void (*Par_Init_Attribute_User_Ptr)() = NULL;
 
 
-static int NDefinedAttFlt;    // total number of defined float   attributes
-static int NDefinedAttInt;    // total number of defined integer attributes
+static int NDefinedAttFlt;    // total number of defined floating-point attributes
+static int NDefinedAttInt;    // total number of defined integer        attributes
 
 
 
@@ -20,7 +20,7 @@ static int NDefinedAttInt;    // total number of defined integer attributes
 // Description :  Set all particle attributes (including both built-in and user-defined attributes)
 //
 // Note        :  1. Invoked by Init_GAMER()
-//                2. Total number of attributes is determined by PAR_NATT_FLT_TOTAL = PAR_NATT_FLT_BUILTIN + PAR_NATT_FLT_USER
+//                2. Total number of attributes is determined by PAR_NATT_FLT/INT_TOTAL = PAR_NATT_FLT/INT_BUILTIN + PAR_NATT_FLT/INT_USER
 //                3. To initialize user-defined particle attributes, the function pointer "Par_Init_Attribute_User_Ptr"
 //                   must be set by a test problem initializer
 //
@@ -67,7 +67,7 @@ void Par_Init_Attribute()
 // 4. must put built-in attributes not to be stored on disk at the END of the attribute list
 //    --> make it easier to discard them when storing data on disk (see Output_DumpData_Total(_HDF5).cpp)
 //    --> must also be consistent with the symbolic constant (e.g., PAR_TIME and PAR_ACC*) defined in Macro.h
-//    --> total number of attributes not to be stored on disk is set by PAR_NATT_FLT_UNSTORED
+//    --> total number of attributes not to be stored on disk is set by PAR_NATT_FLT/INT_UNSTORED
 //        --> currently including time and acceleration*3
 #  ifdef STORE_PAR_ACC
    Idx_ParAccX = AddParticleAttributeFlt( "ParAccX" );
@@ -80,7 +80,7 @@ void Par_Init_Attribute()
 
 // 5. validate if all attributes have been set properly
    if ( NDefinedAttFlt != PAR_NATT_FLT_TOTAL )
-      Aux_Error( ERROR_INFO, "total number of defined float attributes (%d) != expectation (%d) !!\n"
+      Aux_Error( ERROR_INFO, "total number of defined floating-point attributes (%d) != expectation (%d) !!\n"
                  "        --> Modify PAR_NATT_FLT_USER in the Makefile or invoke AddParticleAttributeFlt() properly\n",
                  NDefinedAttFlt, PAR_NATT_FLT_TOTAL );
 
@@ -98,7 +98,7 @@ void Par_Init_Attribute()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  AddParticleAttributeFlt
-// Description :  Add a new particle float attribute to the attribute list
+// Description :  Add a new particle floating-point attribute to the attribute list
 //
 // Note        :  1. This function will
 //                   (1) set the attribute label, which will be used as the output name of the attribute
@@ -106,7 +106,7 @@ void Par_Init_Attribute()
 //                       data (e.g., amr->Par->AttributeFlt[])
 //                2. One must invoke AddParticleAttributeFlt() exactly PAR_NATT_FLT_TOTAL times to set the labels
 //                   of all attributes
-//                3. Invoked by Par_Init_AttributeFlt() and various test problem initializers
+//                3. Invoked by Par_Init_Attribute() and various test problem initializers
 //
 // Parameter   :  InputLabel : Label (i.e., name) of the new attribute
 //
@@ -124,7 +124,7 @@ FieldIdx_t AddParticleAttributeFlt( const char *InputLabel )
       Aux_Error( ERROR_INFO, "InputLabel == NULL !!\n" );
 
    if ( NDefinedAttFlt > PAR_NATT_FLT_TOTAL )
-      Aux_Error( ERROR_INFO, "total number of defined particle float attributes (%d) exceeds expectation (%d) after adding \"%s\" !!\n"
+      Aux_Error( ERROR_INFO, "total number of defined particle floating-point attributes (%d) exceeds expectation (%d) after adding \"%s\" !!\n"
                  "        --> Modify PAR_NATT_FLT_USER in the Makefile properly\n",
                  NDefinedAttFlt, PAR_NATT_FLT_TOTAL, InputLabel );
 
@@ -154,7 +154,7 @@ FieldIdx_t AddParticleAttributeFlt( const char *InputLabel )
 //                       data (e.g., amr->Par->AttributeInt[])
 //                2. One must invoke AddParticleAttributeInt() exactly PAR_NATT_INT_TOTAL times to set the labels
 //                   of all attributes
-//                3. Invoked by Par_Init_AttributeInt() and various test problem initializers
+//                3. Invoked by Par_Init_Attribute() and various test problem initializers
 //
 // Parameter   :  InputLabel : Label (i.e., name) of the new attribute
 //
@@ -194,7 +194,7 @@ FieldIdx_t AddParticleAttributeInt( const char *InputLabel )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  GetParticleAttributeFltIndex
-// Description :  Return the index of the target particle float attribute
+// Description :  Return the index of the target particle floating-point attribute
 //
 // Note        :  1. Usage: AttIdx = GetParticleAttributeFltIndex( ParAttFltLabel );
 //                2. Return Idx_Undefined if the target attribute cannot be found
@@ -221,7 +221,7 @@ FieldIdx_t GetParticleAttributeFltIndex( const char *InputLabel, const Check_t C
    }
 
    if ( Check == CHECK_ON  &&  Idx_Out == Idx_Undefined )
-      Aux_Error( ERROR_INFO, "cannot find the target particle float attribute \"%s\" !!\n", InputLabel );
+      Aux_Error( ERROR_INFO, "cannot find the target particle floating-point attribute \"%s\" !!\n", InputLabel );
 
    return Idx_Out;
 

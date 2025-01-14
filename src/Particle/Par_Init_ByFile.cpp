@@ -1,6 +1,12 @@
 #include "GAMER.h"
 
 #ifdef PARTICLE
+// declare as static so that other functions cannot invoke it directly and must use the function pointer
+static void Par_Init_ByFile_Default();
+
+// this function pointer may be overwritten by various test problem initializers
+// --> link to Par_Init_ByFile_Default() by default
+void (*Par_Init_ByFile_User_Ptr)() = Par_Init_ByFile_Default;
 
 
 
@@ -50,6 +56,28 @@ void Par_Init_ByFile()
    if ( amr->Par->ParICFormat != PAR_IC_FORMAT_ID_ATT  &&  amr->Par->ParICFormat != PAR_IC_FORMAT_ATT_ID )
       Aux_Error( ERROR_INFO, "unknown data format in PAR_IC (%d) !!\n", amr->Par->ParICFormat );
 
+
+   Par_Init_ByFile_User_Ptr();
+
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
+
+} // FUNCITON : Par_Init_ByFile
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Par_Init_ByFile_Default
+// Description :  Initialize particle attributes from a file
+//
+// Note        :  1. Refer to the "Note" section in "Particle/Par_Init_ByFile.cpp -> Par_Init_ByFile()"
+//
+// Parameter   :  None
+//
+// Return      :  amr->Par->Attribute[]
+//-------------------------------------------------------------------------------------------------------
+void Par_Init_ByFile_Default()
+{
 
    const char FileName[]    = "PAR_IC";
    const long NParAllRank   = amr->Par->NPar_Active_AllRank;
@@ -115,17 +143,15 @@ void Par_Init_ByFile()
    {
       for (int r=0; r<MPI_Rank; r++)   FileOffset += NPar_EachRank[r]*( long(NParAttFlt)*load_data_size_flt + long(NParAttInt)*load_data_size_int );
 
+      fseek( File, FileOffset, SEEK_SET );
+
       for (long p=0; p<NParThisRank; p++)
       {
-         fseek( File, FileOffset, SEEK_SET );
          fread( ParFltData_ThisRank+p*NParAttFlt*load_data_size_flt, load_data_size_flt, long(NParAttFlt), File );
-         FileOffset += NParAttFlt*load_data_size_flt;
-
-         fseek( File, FileOffset, SEEK_SET );
          fread( ParIntData_ThisRank+p*NParAttInt*load_data_size_int, load_data_size_int, long(NParAttInt), File );
-         FileOffset += NParAttInt*load_data_size_int;
       }
    }
+
    else
    {
       for (int r=0; r<MPI_Rank; r++)   FileOffset += NPar_EachRank[r]*load_data_size_flt;
@@ -187,7 +213,7 @@ void Par_Init_ByFile()
             for (int v=0; v<NParAttInt; v++) ParIntData1[v] = (long_par)( *((int*   )(ParIntData_ThisRank+(v*NParThisRank+p)*load_data_size_int)) );
       }
 
-//    assuming that the orders of the particle attributes stored on the disk and in Par->AttributeFlt[] are the same
+//    assuming that the orders of the particle attributes stored on the disk and in Par->AttributeFlt/Int[] are the same
 //    --> no need to skip acceleration and time since they are always put at the end of the attribute list
       for (int v_in=0, v_out=0; v_in<NParAttFlt; v_in++, v_out++)
       {
@@ -217,10 +243,7 @@ void Par_Init_ByFile()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
-
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
-
-} // FUNCTION : Par_Init_ByFile
+} // FUNCTION : Par_Init_ByFile_Default
 
 
 

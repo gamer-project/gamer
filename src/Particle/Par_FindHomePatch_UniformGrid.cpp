@@ -26,10 +26,10 @@ static void SendParticle2HomeRank( const int lv, const bool OldParOnly, const lo
 //                               false --> only redistribute newly added particles specified by NNewPar, NewParAttFlt, and NewParAttInt
 //                                         --> Particles already exist in the current repository will not be redistributed
 //                NNewPar      : Number of new particles to be added                       (for OldParOnly==false only)
-//                NewParAttFlt : Pointer array storing the data of new particle float   attributes (for OldParOnly==false only)
+//                NewParAttFlt : Pointer array storing the data of new particle floating-point attributes (for OldParOnly==false only)
 //                               --> Format: real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL]
 //                               --> Must be deallocated manually after invoking this function
-//                NewParAttInt : Pointer array storing the data of new particle integer attributes (for OldParOnly==false only)
+//                NewParAttInt : Pointer array storing the data of new particle integer        attributes (for OldParOnly==false only)
 //                               --> Format: long_par *NewParAttInt[PAR_NATT_INT_TOTAL]
 //                               --> Must be deallocated manually after invoking this function
 //
@@ -192,10 +192,10 @@ void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly, const l
 //                               false --> only redistribute newly added particles specified by NNewPar, NewParAttFlt, and NewParAttInt
 //                                         --> Particles already exist in the current repository will not be redistributed
 //                NNewPar      : Number of new particles to be added                       (for OldParOnly==false only)
-//                NewParAttFlt : Pointer array storing the data of new particle float   attributes (for OldParOnly==false only)
+//                NewParAttFlt : Pointer array storing the data of new particle floating-point attributes (for OldParOnly==false only)
 //                               --> Format: real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL]
 //                               --> Must be deallocated manually after invoking this function
-//                NewParAttInt : Pointer array storing the data of new particle integer attributes (for OldParOnly==false only)
+//                NewParAttInt : Pointer array storing the data of new particle integer        attributes (for OldParOnly==false only)
 //                               --> Format: long_par *NewParAttInt[PAR_NATT_INT_TOTAL]
 //                               --> Must be deallocated manually after invoking this function
 //
@@ -311,16 +311,17 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly, const long NNew
       OldAttIntPtrPtr[v] = &amr->Par->AttributeInt[v];
    }
 
+// 3-2. redistribute floating-point data
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
    {
-//    3-2. initialize the array offsets of all target ranks
+//    3-2-1. initialize the array offsets of all target ranks
       for (int r=0; r<MPI_NRank; r++)  Offset[r] = Send_Disp[r];
 
-//    3-3. prepare send buffer (skip inactive particles)
+//    3-2-2. prepare send buffer (skip inactive particles)
       for (long ParID=0; ParID<NTarPar; ParID++)
          if ( TRank[ParID] != -1 )  SendBuf_Flt[ Offset[TRank[ParID]] ++ ] = SendAttFltPtr[v][ParID];
 
-//    3-4. free/allocate the old/new particle arrays and set the recv buffer
+//    3-2-3. free/allocate the old/new particle arrays and set the recv buffer
       if ( OldParOnly )
       {
          free( SendAttFltPtr[v] );
@@ -335,20 +336,21 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly, const long NNew
          RecvBuf_Flt           = *(OldAttFltPtrPtr[v]) + NOldPar;
       }
 
-//    3-5. redistribute data
+//    3-2-4. redistribute data
       MPI_Alltoallv_GAMER( SendBuf_Flt, Send_Count, Send_Disp, MPI_GAMER_REAL_PAR, RecvBuf_Flt, Recv_Count, Recv_Disp, MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
    } // for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
 
+// 3-3. redistribute integer data
    for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
    {
-//    3-2. initialize the array offsets of all target ranks
+//    3-3-1. initialize the array offsets of all target ranks
       for (int r=0; r<MPI_NRank; r++)  Offset[r] = Send_Disp[r];
 
-//    3-3. prepare send buffer (skip inactive particles)
+//    3-3-2. prepare send buffer (skip inactive particles)
       for (long ParID=0; ParID<NTarPar; ParID++)
          if ( TRank[ParID] != -1 )  SendBuf_Int[ Offset[TRank[ParID]] ++ ] = SendAttIntPtr[v][ParID];
 
-//    3-4. free/allocate the old/new particle arrays and set the recv buffer
+//    3-3-3. free/allocate the old/new particle arrays and set the recv buffer
       if ( OldParOnly )
       {
          free( SendAttIntPtr[v] );
@@ -363,7 +365,7 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly, const long NNew
          RecvBuf_Int           = *(OldAttIntPtrPtr[v]) + NOldPar;
       }
 
-//    3-5. redistribute data
+//    3-3-4. redistribute data
       MPI_Alltoallv_GAMER( SendBuf_Int, Send_Count, Send_Disp, MPI_GAMER_LONG_PAR, RecvBuf_Int, Recv_Count, Recv_Disp, MPI_GAMER_LONG_PAR, MPI_COMM_WORLD );
    } // for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
 

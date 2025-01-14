@@ -139,7 +139,7 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
 
          if ( UseCopy )
          {
-//          ParAttFlt_Copy[] is only defined in LOAD_BALANCE
+//          ParAttFlt/Int_Copy[] is only defined in LOAD_BALANCE
             real_par *Vel_Copy[3] = { NULL, NULL, NULL };
             real_par *Acc_Copy[3] = { NULL, NULL, NULL };
             long_par *Typ_Copy    = NULL;

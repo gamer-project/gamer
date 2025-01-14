@@ -123,7 +123,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                      --> This number is independent of periodicity (because of the padded patches)
 //                LB_Idx              : Space-filling-curve index for load balance
 //                NPar                : Number of particles belonging to this leaf patch
-//                NPar_Type           : Number of different types of particles belonging to this leaf patch
+//                NParType            : Number of different types of particles belonging to this leaf patch
 //                ParListSize         : Size of the array ParList (ParListSize can be >= NPar)
 //                ParList             : List recording the IDs of all particles belonging to this leaf real patch
 //                NPar_Copy           : Number of particles collected from other patches. There are three kinds of patches that
@@ -140,25 +140,23 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                          IDs stored in ParList_Copy, which points to the same particle repository
 //                                          (i.e., the amr->Par->Attribute[]). In comparison, in LOAD_BALANCE mode,
 //                                          since particles corresponding to NPar_Copy may be collected from other ranks,
-//                                          these patches will allocate a local particle attribute array called ParAtt_Copy
+//                                          these patches will allocate local particle attribute arrays called ParAttFlt_Copy and ParAttInt_Copy
 //                                      --> Note that non-leaf patches may have NPar>0 temporarily after updating particle position.
 //                                          It's because particles travelling from coarse to fine grids will stay in coarse grids
 //                                          temporarily until the velocity correction is done.
 //                                          --> For these patches, NPar_Copy will be **the sum of NPar and the number of particles
-//                                              collected from other patches**, and ParList_Copy (or ParAtt_Copy) will contain
-//                                              information of particles belonging to NPar as well.
+//                                              collected from other patches**, and ParList_Copy (or ParAttFlt_Copy and ParAttInt_Copy)
+//                                              will contain information of particles belonging to NPar as well.
 //                                          --> It makes implementation simplier. For leaf real patches, one only needs to consider
 //                                              NPar and ParList. While for all other patches, one only needs to consider NPar_Copy
-//                                              and ParList_Copy (or ParAtt_Copy). One never needs to consider both.
+//                                              and ParList_Copy (or ParAttFlt_Copy and ParAttInt_Copy). One never needs to consider both.
 //                ParList_Copy        : List recording the IDs of all particles belonging to the descendants of this patch
 //                                      (and particles temporarily locate in this patch waiting for the velocity correction, see
 //                                      discussion above)
 //                                      --> for SERIAL only
-//                ParAttFlt_Copy      : Pointer arrays storing the float   data of NPar_Copy particles collected from other patches
+//                ParAttFlt_Copy      : Pointer arrays storing the floating-point data of NPar_Copy particles collected from other patches
 //                                      --> for LOAD_BALANCE only
-//                ParAttInt_Copy      : Pointer arrays storing the integer data of NPar_Copy particles collected from other patches
-//                                      --> for LOAD_BALANCE only
-//                ParAtt_Copy         : Pointer arrays storing the data of NPar_Copy particles collected from other patches
+//                ParAttInt_Copy      : Pointer arrays storing the integer        data of NPar_Copy particles collected from other patches
 //                                      --> for LOAD_BALANCE only
 //                NPar_Escp           : Number of particles escaping from this patch
 //                ParList_Escp        : List recording the IDs of all particles escaping from this patch

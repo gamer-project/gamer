@@ -8,8 +8,11 @@ Mandatory steps are marked by &#x1F4CC;.
 5. [Add Problem-specific Grid Fields and Particle Attributes](#v-add-problem-specific-grid-fields-and-particle-attributes)
 6. [Add Problem-specific Functionalities](#vi-add-problem-specific-functionalities)
    *  [Output](#output)
+   *  [Initial Condition from Files - Grids](#initial-condition-from-files---grids)
+   *  [Initial Condition from Files - Particles](#initial-condition-from-files---particles)
    *  [Work Before Output](#work-before-output)
    *  [Refinement Criteria](#refinement-criteria)
+   *  [Work Before Refine](#work-before-refine)
    *  [Timestep Constraints](#timestep-constraints)
    *  [Boundary Conditions](#boundary-conditions)
    *  [Fields Resetting](#fields-resetting)
@@ -193,7 +196,7 @@ during the runtime.
     ```
 
 4. Add these parameters to the input file `Input__TestProb`
-(see [[Input__TestProb | Runtime-Parameters#input__testprob]]
+(see [[Input__TestProb | Runtime-Parameters:-Input__TestProb]]
 for the file format).
 This file must be put in the same directory as the executable `gamer`
 when running the code.
@@ -225,7 +228,7 @@ file to store the new field index. For example,
 
     Note that some field index variables have been pre-declared in
 `include/Field.h` (e.g., `Idx_Metal` for the field `Metal` used by,
-for example, [[ GRACKLE_METAL | Chemistry-and-Radiation#GRACKLE_METAL ]]).
+for example, [[ GRACKLE_METAL | Runtime-Parameters:-Chemistry-and-Radiation#GRACKLE_METAL ]]).
 Whenever applicable, skip this step and use these pre-declared index variables
 directly.
 
@@ -249,12 +252,12 @@ is just to avoid redundant assignments to the same field index variable.
     The second parameter should be set to either `NORMALIZE_YES` or `NORMALIZE_NO`.
 It controls whether the new field will be renormalized by the total gas density
 after every update when enabling
-[[ OPT__NORMALIZE_PASSIVE | Hydro#OPT__NORMALIZE_PASSIVE ]].
+[[ OPT__NORMALIZE_PASSIVE | Runtime-Parameters:-Hydro#OPT__NORMALIZE_PASSIVE ]].
 
     The third parameter should be set to either `INTERP_FRAC_YES` or `INTERP_FRAC_NO`.
 It controls whether the new field will be converted to mass fraction during interpolation
 when enabling
-[[ OPT__INT_FRAC_PASSIVE_LR | Hydro#OPT__INT_FRAC_PASSIVE_LR ]].
+[[ OPT__INT_FRAC_PASSIVE_LR | Runtime-Parameters:-Hydro#OPT__INT_FRAC_PASSIVE_LR ]].
 
     One must also set the function pointer `Init_Field_User_Ptr` in the problem
 initialization function `Init_TestProb_Hydro_NewProblem()`.
@@ -265,7 +268,7 @@ initialization function `Init_TestProb_Hydro_NewProblem()`.
 
 > [!NOTE]
 > The built-in field `Metal` with the field index `Idx_Metal`
-will be added automatically when enabling [[ GRACKLE_METAL | Chemistry-and-Radiation#GRACKLE_METAL ]].
+will be added automatically when enabling [[ GRACKLE_METAL | Runtime-Parameters:-Chemistry-and-Radiation#GRACKLE_METAL ]].
 
 4. Assign initial values to the new field in `SetGridIC()` using the corresponding
 field index. For example,
@@ -305,7 +308,8 @@ metallicity fraction). Whenever applicable, skip this step and use these
 pre-declared index variables directly.
 
 3.  Define a function called, for example, `AddNewParticleAttribute_NewProblem()`
-and invoke `AddParticleAttribute()` for each of the new attribute. For example,
+and invoke `AddParticleAttributeFlt()` and `AddParticleAttributeInt()` for each
+of the new floating-point and integer attribute, respectively. For example,
 
     ```C++
     void AddNewParticleAttribute_NewProblem()
@@ -318,7 +322,7 @@ and invoke `AddParticleAttribute()` for each of the new attribute. For example,
     ```
 
     The attribute indices `NewParAttFltIdx` and `NewParAttIntIdx` can be used to access the particle
-float and integer attribute data respectively (see the next step). One must also set the function pointer
+floating-point and integer attribute data, respectively (see the next step). One must also set the function pointer
 `Par_Init_Attribute_User_Ptr` in the problem initialization function.
 
     ```C++
@@ -326,7 +330,7 @@ float and integer attribute data respectively (see the next step). One must also
     ```
 
 4. Assign initial values to the new particle attribute by using the
-corresponding attribute index to access the pointer array
+corresponding attribute index to access the pointer arrays
 `*AllAttributeFlt[PAR_NATT_FLT_TOTAL]` and `*AllAttributeInt[PAR_NATT_INT_TOTAL]` (see
 [[Setting IC from Analytical Functions &#8212; Particles | Initial-Conditions#IC-Func-Particles]]).
 For example,
@@ -376,7 +380,7 @@ The following example illustrates the procedure to add a problem-specific
     ```
 
 4. Turn on the corresponding runtime option
-[[OPT__OUTPUT_USER | Outputs#OPT__OUTPUT_USER]].
+[[OPT__OUTPUT_USER | Runtime-Parameters:-Outputs#OPT__OUTPUT_USER]].
 when running the code.
 
     ```
@@ -386,6 +390,32 @@ when running the code.
 Other user-specified functionalities such as refinement criteria and
 timestep constraints can be added in a similar way and are outlined below.
 
+
+### Initial Condition from Files - Grids
+* **Description:**
+Provide a custom routine for [[Setting IC from Files - Grids | Initial-Conditions#IC-File-Grids]].
+* **Prototype:**
+`void Init_ByFile_NewProblem( real fluid_out[], const real fluid_in[], const int nvar_in,
+                              const double x, const double y, const double z, const double Time,
+                              const int lv, double AuxArray[] );`
+* **Function Pointer:**
+`Init_ByFile_User_Ptr`
+* **Runtime Option:**
+[[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=3
+* **Example:**
+`src/Init/Init_ByFile.cpp` &#8594; `Init_ByFile_Default()`
+
+### Initial Condition from Files - Particles
+* **Description:**
+Provide a custom routine for [[Setting IC from Files - Particles | Initial-Conditions#IC-File-Particles]].
+* **Prototype:**
+`void Par_Init_ByFile_NewProblem();`
+* **Function Pointer:**
+`Par_Init_ByFile_User_Ptr`
+* **Runtime Option:**
+[[PAR_INIT | Runtime-Parameters:-Particles#PAR_INIT]]=3
+* **Example:**
+`src/Particle/Par_Init_ByFile.cpp` &#8594; `Par_Init_ByFile_Default()`
 ### Work Before Output
 * **Description:**
 Perform user-specified work before dumping simulation data (e.g., `Data_xxxxxx`).
@@ -415,6 +445,18 @@ for details.
 * **Example:**
 `src/Refine/Flag_User.cpp`
 
+### Work Before Refine
+* **Description:**
+Perform user-specified work before grid refinement.
+* **Prototype:**
+`void Flag_UserWorkBeforeFlag_NewProblem( const double Time, const int lv );`
+* **Function Pointer:**
+`Flag_UserWorkBeforeFlag_Ptr`
+* **Runtime Option:**
+None
+* **Example:**
+`src/Refine/Flag_UserWorkBeforeFlag.cpp`
+
 ### Timestep Constraints
 * **Description:**
 Add user-specified timestep constraints.
@@ -436,7 +478,7 @@ Add user-specified (i.e., inflow) boundary conditions.
 `BC_User_Ptr` for the cell-centered fluid variables and
 `BC_BField_User_Ptr` for the face-centered magnetic field
 * **Runtime Option:**
-[[OPT__BC_FLU_* | Hydro#OPT__BC_FLU_XM]] = 4
+[[OPT__BC_FLU_* | Runtime-Parameters:-Hydro#OPT__BC_FLU_XM]] = 4
 * **Example:**
 `src/TestProblem/ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp`
 &#8594; `BC()`
@@ -454,7 +496,7 @@ Using the vector potential is recommended since it reduces the divergence-free e
 Note that one still needs to define `MHD_ResetByUser_BField_Ptr` when using the vector potential
 (see the example below).
 * **Restriction:**
-  * [[INIT_SUBSAMPLING_NCELL | Initial-Conditions#INIT_SUBSAMPLING_NCELL]] has no effect on resetting the initial magnetic field.
+  * [[INIT_SUBSAMPLING_NCELL | Runtime-Parameters:-Initial-Conditions#INIT_SUBSAMPLING_NCELL]] has no effect on resetting the initial magnetic field.
   * To ensure that the reset magnetic field satisfies the divergence-free condition to the machine precision,
 one must (i) use the vector potential and (ii) ensure that the reset fields do not touch any coarse-fine
 AMR interfaces. Supporting resetting a divergence-free magnetic field across coarse-fine AMR interfaces
@@ -469,7 +511,7 @@ will be implemented in the future.
 * **Function Pointer:**
 `Flu_ResetByUser_Func_Ptr`, `MHD_ResetByUser_BField_Ptr`, `MHD_ResetByUser_VecPot_Ptr`
 * **Runtime Option:**
-[[OPT__RESET_FLUID | Hydro#OPT__RESET_FLUID]], [[OPT__RESET_FLUID_INIT | Hydro#OPT__RESET_FLUID_INIT]]
+[[OPT__RESET_FLUID | Runtime-Parameters:-Hydro#OPT__RESET_FLUID]], [[OPT__RESET_FLUID_INIT | Runtime-Parameters:-Hydro#OPT__RESET_FLUID_INIT]]
 * **Example:**
 `src/Fluid/Flu_ResetByUser.cpp`, `src/Model_Hydro/MHD_ResetByUser.cpp`, `src/TestProblem/Hydro/BlastWave/MHD_ResetByUser_BlastWave.cpp`
 
@@ -526,7 +568,7 @@ for details.
 * **Function Pointer:**
    * `Init_ExtAcc_Ptr`
 * **Runtime Option:**
-[[OPT__EXT_ACC | Gravity#OPT__EXT_ACC]]
+[[OPT__EXT_ACC | Runtime-Parameters:-Gravity#OPT__EXT_ACC]]
 * **Example:**
    * `src/TestProblem/Hydro/Plummer/Init_TestProb_Hydro_Plummer.cpp`
    * `src/TestProblem/Hydro/Plummer/ExtAcc_Plummer.cpp`
@@ -542,7 +584,7 @@ for details.
 * **Function Pointer:**
    * `Init_ExtPot_Ptr`
 * **Runtime Option:**
-[[OPT__EXT_POT | Gravity#OPT__EXT_POT]]
+[[OPT__EXT_POT | Runtime-Parameters:-Gravity#OPT__EXT_POT]]
 * **Example:**
    * `src/TestProblem/Hydro/Plummer/Init_TestProb_Hydro_Plummer.cpp`
    * `src/TestProblem/Hydro/Plummer/ExtPot_Plummer.cpp`
@@ -563,13 +605,13 @@ Add a user-specified equation of state. See [[here | equation-of-state]] for det
 
 ### Feedback
 * **Description:**
-Add a user-specified feedback. See [[FB_USER | Feedback#FB_USER]] for details.
+Add a user-specified feedback. See [[FB_USER | Runtime-Parameters:-Feedback#FB_USER]] for details.
 * **Function Pointer:**
    * `FB_Init_User_Ptr`
 * **Compilation Option:**
 [[--feedback | Installation:-Option-List#--feedback]]
 * **Runtime Option:**
-[[FB_USER | Feedback#FB_USER]]
+[[FB_USER | Runtime-Parameters:-Feedback#FB_USER]]
 * **Example:**
    * `src/TestProblem/Hydro/Plummer/FB_Plummer.cpp`
 

@@ -24,7 +24,9 @@
 //                AttrSize3D      : Number of cells on side of input grid
 //                Attr            : The input grid of values for the variable to be mapped
 //                NPar            : The number of particles belonging to this patch
-//                ParList         : The list of particles on this patch
+//                InterpParPos    : The positions of the NPar particles on this patch
+//                ParType         : The types of the NPar particles on this patch
+//                ParList         : The list of particle IDs on this patch
 //                UseTracers      : Whether to map to only tracer particles or only active particles
 //                ParAttr         : The array to store the mapped particle attribute
 //                CorrectVelocity : If true, particle velocities will be corrected in regions of

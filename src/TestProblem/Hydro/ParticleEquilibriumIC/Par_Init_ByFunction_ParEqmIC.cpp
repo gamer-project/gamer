@@ -32,7 +32,7 @@ static RandomNumber_t *RNG = NULL;
 //                ParTime         : Particle time     array with the size of NPar_ThisRank
 //                ParType         : Particle type     array with the size of NPar_ThisRank
 //                ParPUid         : Particle UID      array with the size of NPar_ThisRank
-//                AllAttributeFlt : Pointer array for all particle float attributes
+//                AllAttributeFlt : Pointer array for all particle floating-point attributes
 //                                  --> Dimension = [PAR_NATT_FLT_TOTAL][NPar_ThisRank]
 //                                  --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
 //                                      to access the data
@@ -105,7 +105,7 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
 
 
 // send particle attributes from the master rank to all ranks
-   Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, 0L,
+   Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, _NONE,
                             ParFltData_AllRank, ParIntData_AllRank, AllAttributeFlt, AllAttributeInt );
 
 

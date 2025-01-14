@@ -18,14 +18,13 @@ typedef int  long_par;
 #endif
 
 
-
 int main()
 {
 
    const int  NUM_PARTICLE      = 20000;
    const int  NUM_ATTRIBUTE_FLT = 7;
    const int  NUM_ATTRIBUTE_INT = 1;
-   const bool PAR_IC_ATT_ID     = true; // data format of PAR_IC: (true: [attribute][id], false: [id][attribute]; row-major)
+   const bool PAR_IC_ID_ATT     = true; // data format of PAR_IC: (true: [id][attribute], false: [attribute][id]; row-major)
 
    real_par (*ParIC_Flt)[NUM_PARTICLE] = new real_par [NUM_ATTRIBUTE_FLT][NUM_PARTICLE];
    long_par (*ParIC_Int)[NUM_PARTICLE] = new long_par [NUM_ATTRIBUTE_INT][NUM_PARTICLE];
@@ -46,7 +45,7 @@ int main()
 
    FILE *File = fopen( "PAR_IC", "wb" );
 
-   if ( PAR_IC_ATT_ID )
+   if ( PAR_IC_ID_ATT )
    {
       for (int p=0; p<NUM_PARTICLE; p++)
       {
@@ -59,7 +58,6 @@ int main()
       for (int v=0; v<NUM_ATTRIBUTE_FLT; v++) fwrite( ParIC_Flt[v], sizeof(real_par), NUM_PARTICLE, File );
       for (int v=0; v<NUM_ATTRIBUTE_INT; v++) fwrite( ParIC_Int[v], sizeof(long_par), NUM_PARTICLE, File );
    }
-
 
    fclose( File );
 

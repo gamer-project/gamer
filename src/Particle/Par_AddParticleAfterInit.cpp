@@ -16,11 +16,11 @@
 //                       snapshot
 //
 // Parameter   :  NNewPar      : Number of new particles to be added
-//                NewParAttFlt : Pointer array storing the data of new particle float attributes
+//                NewParAttFlt : Pointer array storing the data of new particle floating-point attributes
 //                               --> Format: real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL]
 //                               --> Must be deallocated manually after invoking this function
 //                NewParAttInt : Pointer array storing the data of new particle integer attributes
-//                               --> Format: real_par *NewParAttInt[PAR_NATT_INT_TOTAL]
+//                               --> Format: long_par *NewParAttInt[PAR_NATT_INT_TOTAL]
 //                               --> Must be deallocated manually after invoking this function
 //
 // Return      :  1. amr->Par

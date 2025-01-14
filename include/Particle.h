@@ -51,10 +51,11 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                                          the velocity gradient is large
 //                RemoveCell              : remove particles RemoveCell-base-level-cells away from the boundary
 //                                          (for non-periodic BC only)
-//                GhostSize               : Number of ghost zones required for interpolation scheme
+//                GhostSize               : Number of ghost zones required for the interpolation scheme of massive particles
+//                GhostSizeTracer         : Number of ghost zones required for the interpolation scheme of tracer  particles
 //                NextUID                 : Next new particle UID over all MPI ranks. The UID starts from 1.
-//                AttributeFlt            : Pointer arrays to different particle float   attributes (Mass, Pos, Vel, ...)
-//                AttributeInt            : Pointer arrays to different particle integer attributes (Type)
+//                AttributeFlt            : Pointer arrays to different particle floating-point attributes (Mass, Pos, Vel, ...)
+//                AttributeInt            : Pointer arrays to different particle integer        attributes (Type)
 //                InactiveParList         : List of inactive particle IDs
 //                Mesh_Attr               : Pointer arrays to different mesh quantities mapped onto tracer particles
 //                Mesh_Attr_Num           : Number of mesh quantities mapped onto tracer particles
@@ -439,8 +440,8 @@ struct Particle_t
    //                4. Note that the global variable "AveDensity_Init" will NOT be recalculated
    //                   automatically here
    //
-   // Parameter   :  NewAttFlt : Array storing the float   attributes of new particles
-   //                NewAttInt : Array storing the integer attributes of new particles
+   // Parameter   :  NewAttFlt : Array storing the floating-point attributes of new particles
+   //                NewAttInt : Array storing the integer        attributes of new particles
    //
    // Return      :  Index of the new particle (ParID)
    //===================================================================================
@@ -465,7 +466,7 @@ struct Particle_t
                     NewAttFlt[PAR_POSX], NewAttFlt[PAR_POSY], NewAttFlt[PAR_POSZ] );
 
       if ( NewAttInt[PAR_TYPE] < (long_par)0  ||  NewAttInt[PAR_TYPE] >= (long_par)PAR_NTYPE )
-         Aux_Error( ERROR_INFO, "Incorrect particle type (%d) !!\n", (int)NewAttInt[PAR_TYPE] );
+         Aux_Error( ERROR_INFO, "Incorrect particle type (%ld) !!\n", (long)NewAttInt[PAR_TYPE] );
 #     endif
 
 
