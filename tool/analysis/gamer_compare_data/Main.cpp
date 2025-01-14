@@ -554,6 +554,7 @@ int CompareParticleData()
 
    fprintf( File, "\n\n" );
    fprintf( File, "#=============================================================================================================\n" );
+
    if ( Format1 == 2  &&  Format2 == 2 )
    {
       fprintf( File, "# Integer attribute list:\n" );
