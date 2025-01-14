@@ -575,8 +575,6 @@ int CompareParticleData()
 
       AbsIntErr = long(IntData1 - IntData2);
 
-      if ( IntData1 == 0.0  &&  IntData2 == 0.0 )  continue;
-
       if ( AbsIntErr != 0L )
       {
          ErrorDetected = true;
