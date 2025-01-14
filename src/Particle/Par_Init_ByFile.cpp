@@ -1,6 +1,12 @@
 #include "GAMER.h"
 
 #ifdef PARTICLE
+// declare as static so that other functions cannot invoke it directly and must use the function pointer
+static void Par_Init_ByFile_Default();
+
+// this function pointer may be overwritten by various test problem initializers
+// --> link to Par_Init_ByFile_Default() by default
+void (*Par_Init_ByFile_User_Ptr)() = Par_Init_ByFile_Default;
 
 
 
@@ -50,6 +56,28 @@ void Par_Init_ByFile()
    if ( amr->Par->ParICFormat != PAR_IC_FORMAT_ID_ATT  &&  amr->Par->ParICFormat != PAR_IC_FORMAT_ATT_ID )
       Aux_Error( ERROR_INFO, "unknown data format in PAR_IC (%d) !!\n", amr->Par->ParICFormat );
 
+
+   Par_Init_ByFile_User_Ptr();
+
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
+
+} // FUNCITON : Par_Init_ByFile
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Par_Init_ByFile_Default
+// Description :  Initialize particle attributes from a file
+//
+// Note        :  1. Refer to the "Note" section in "Particle/Par_Init_ByFile.cpp -> Par_Init_ByFile()"
+//
+// Parameter   :  None
+//
+// Return      :  amr->Par->Attribute[]
+//-------------------------------------------------------------------------------------------------------
+void Par_Init_ByFile_Default()
+{
 
    const char FileName[]    = "PAR_IC";
    const long NParAllRank   = amr->Par->NPar_Active_AllRank;
@@ -215,10 +243,7 @@ void Par_Init_ByFile()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
-
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
-
-} // FUNCTION : Par_Init_ByFile
+} // FUNCTION : Par_Init_ByFile_Default
 
 
 
