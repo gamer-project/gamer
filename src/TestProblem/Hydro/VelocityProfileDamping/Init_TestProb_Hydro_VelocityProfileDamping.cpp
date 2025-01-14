@@ -260,7 +260,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 void SetBFieldIC( real magnetic[], const double x, const double y, const double z, const double Time,
                   const int lv, double AuxArray[] )
 {
-
+   
    if ( VPD_Dir == 3 ) 
    {
       magnetic[MAGX] = VPD_B0 / sqrt(3.0);
@@ -269,7 +269,11 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
    }
    else 
    {
+      const int TDir1 = (VPD_Dir+1)%3;    // transverse direction 1
+      const int TDir2 = (VPD_Dir+2)%3;    // transverse direction 2
       magnetic[MAGX+VPD_Dir] = VPD_B0;
+      magnetic[MAGX+TDir1]   = 0.0;
+      magnetic[MAGX+TDir2]   = 0.0;
    }
 
 } // FUNCTION : SetBFieldIC
