@@ -54,8 +54,8 @@ void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
-// NOTE: DiskHeating_PAR_IC uses the floating-point type for particle type and assumes single precision
-   const char FileName[]   = "DiskHeating_PAR_IC";
+// NOTE: DiskHeatingParticleIC uses the floating-point type for particle type and assumes single precision
+   const char FileName[]   = "DiskHeatingParticleIC";
    const long NParAllRank  = amr->Par->NPar_Active_AllRank;
          long NParThisRank = amr->Par->NPar_AcPlusInac;        // cannot be "const" due to MPI_Allgather()
    const int  NParAtt      = 8;                                // mass, pos*3, vel*3, type
