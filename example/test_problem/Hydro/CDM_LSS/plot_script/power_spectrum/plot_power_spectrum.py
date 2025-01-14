@@ -8,12 +8,20 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import LogFormatterSciNotation, LogLocator, MultipleLocator, NullFormatter
 
 particle_lv      = 7
-a_dump           = np.genfromtxt("../../Input__DumpTable", skip_header=1, skip_footer=1)
+a_dump           = np.genfromtxt("../../Record__Dump", skip_header=1)
 a_dump           = a_dump[:,1]
 
-data_music       = np.loadtxt("/work1/koarakawaii/music/bin/GENERATE_GADGET_for_CDM/box_length=30.0/input_powerspec.txt")
+data_music       = np.loadtxt("../../input_powerspec.txt")
 k_music          = data_music[:,0]
 PS_music         = data_music[:,-2]
+
+data_camb        = np.loadtxt("powerspec_z0_Planck18.dat")
+k_camb           = data_camb[:,0]
+PS_camb          = data_camb[:,1]
+
+data_hires       = np.loadtxt("powerspec_highres_Data_000072.dat")
+k_hires          = data_hires[:,0]
+PS_hires         = data_hires[:,1] / (8*math.pi**3)
 
 ts0                  = yt.load('../../Data_000000')
 base_level_cell_num  = int(ts0.domain_dimensions[1])
@@ -21,7 +29,7 @@ max_AMR_level        = int(ts0.parameters["MaxLevel"])
 box_length           = float(ts0.domain_width[1].in_units("Mpc/h"))  # [Mpc/h] = [code_length]
 NPar_base            = int(round(np.power(int(ts0["Par_NPar"]), 0.3333333)))
 
-User_Defined_List = np.array(range(20))
+User_Defined_List = np.arange(0, 73, 4)
 colors = plt.cm.jet(np.linspace(0,1,len(User_Defined_List)))
 
 k_gadget_list       = []
@@ -31,6 +39,8 @@ plt.figure(figsize=(7,3), dpi=320)
 plt.subplots_adjust(wspace=0.25)
 ax1 = plt.subplot(121)
 ax1.loglog(k_music, PS_music, c='k', ls="--", label="MUSIC Input PS", lw=0.5)
+ax1.loglog(k_camb, PS_camb, c='r', ls="--", label="CAMB PS (z=0; Planck18)", lw=0.5)
+ax1.loglog(k_hires, PS_hires, c='b', ls="--", label="$z$ = 0.0 (NMesh=512)", lw=0.5)
 k_min = 2.*np.pi/box_length
 k_max = k_min*2**(particle_lv)/2.
 ax1.loglog([k_min,k_min],[10**-11,10**2.], c="orange", lw=0.5, ls=":")
