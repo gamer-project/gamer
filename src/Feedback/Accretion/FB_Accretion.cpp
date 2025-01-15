@@ -43,6 +43,7 @@
 //                12. Must have FB_GHOST_SIZE>=1 for the mass accretion feedback
 //
 // Parameter   :  lv         : Target refinement level
+//                AccCellNum : Accretion radius in cells at highest refinement level          (--> "SF_CREATE_SINK_ACC_RADIUS"    )
 //                NPar       : Number of particles
 //                ParSortID  : Sorted particle IDs
 //                ParAtt     : Particle attribute arrays
@@ -55,7 +56,7 @@
 //
 // Return      :  Fluid, ParAtt
 //-------------------------------------------------------------------------------------------------------
-int FB_Accretion( const int lv, const int NPar, const long *ParSortID, real_par *ParAtt[PAR_NATT_TOTAL],
+int FB_Accretion( const int lv, const real AccCellNum, const int NPar, const long *ParSortID, real_par *ParAtt[PAR_NATT_TOTAL],
                   real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[] )
 {
 
@@ -69,16 +70,22 @@ int FB_Accretion( const int lv, const int NPar, const long *ParSortID, real_par 
    }
 #  endif // #ifdef GAMER_DEBUG
 
+   if ( FB_GHOST_SIZE < 2*AccCellNum )
+      Aux_Error( ERROR_INFO, "FB_GHOST_SIZE should be larger than twice of SF_CREATE_SINK_ACC_RADIUS !!" );
+
+   if ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_NONE )
+      Aux_Error( ERROR_INFO, "FB_ACC only supports SF_CREATE_STAR_SCHEME_AGORA and SF_CREATE_STAR_SCHEME_SINKPARTICLE !!" );
+
    real GasDens, Eg, Ekin, GasCell2ParDisti, GasRelVel[3]; 
    real Eg2, GasCell2ParDist2;
    real ControlPos[3];
    real Corner_Array[3]; // the corner of the ghost zone
 
-   const int    AccCellNum     = 4;
-   const int    MaxRemovalGas  = 10000;
-   const double GasDensThres   = SF_CREATE_SINK_MIN_GAS_DENS;
+   if      ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_AGORA)         const double GasDensThres   = SF_CREATE_STAR_MIN_GAS_DENS;
+   else if ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_SINKPARTICLE)  const double GasDensThres   = SF_CREATE_SINK_MIN_GAS_DENS;
 
    const int    NGhost         = PS1 / 2; // the number of ghost cell at each side
+   const int    MaxRemovalGas  = CUBE( PS1 )
    const double AccRadius      = AccCellNum*dh;
    const double _dh            = 1.0 / dh;
    const double dv             = CUBE( dh );
@@ -86,10 +93,6 @@ int FB_Accretion( const int lv, const int NPar, const long *ParSortID, real_par 
    const double epsilon        = 1e-5*dh;
 
    long   (*RemovalIdx)[3]         = new long [MaxRemovalGas][3];
-
-// Some check
-   if (FB_GHOST_SIZE < 2*AccCellNum)
-      Aux_Error( ERROR_INFO, "FB_GHOST_SIZE should be larger than twice of SF_CREATE_SINK_ACC_RADIUS !!" );
 
 // prepare the corner array
    for (int d=0; d<3; d++)    Corner_Array[d] = EdgeL[d] + 0.5*dh ;
@@ -103,7 +106,6 @@ int FB_Accretion( const int lv, const int NPar, const long *ParSortID, real_par 
       }
    }
 #  endif
-
 
    for (int t=0; t<NPar; t++)
    {
