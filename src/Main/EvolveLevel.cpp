@@ -558,10 +558,10 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
 //###REVISE: we have assumed that SF_CreateStar() requires no ghost zones
          if ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_SINKPARTICLE)
-         (
+         {
             const int    NGhost         = PS1 / 2;
             Buf_GetBufferData( lv, SaveSg_Flu, SaveSg_Mag, SaveSg_Pot, DATA_GENERAL, _TOTAL|_POTE, _MAG, NGhost, USELB_YES );
-         )
+         }
 
          TIMING_FUNC(   SF_CreateStar( lv, TimeNew, dt_SubStep ),
                         Timer_SF[lv],   TIMER_ON   );
