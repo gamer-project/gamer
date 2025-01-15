@@ -38,12 +38,12 @@ __gamer_configure_autocomplete() {
 
     # Not the GAEMR `configure.py`
     if [ $? -ne 0 ]; then
-       COMPREPLY=( $( compgen -o default -- ${COMP_WORDS[COMP_CWORD]} ) )
-       # add a trailing space since `-o nospace`
-       for i in "${!COMPREPLY[@]}"; do
-           COMPREPLY[$i]="${COMPREPLY[$i]} "
-       done
-       return 0
+        COMPREPLY=( $( compgen -o default -- ${COMP_WORDS[COMP_CWORD]} ) )
+        # add a trailing space since `-o nospace`
+        for i in "${!COMPREPLY[@]}"; do
+            COMPREPLY[$i]="${COMPREPLY[$i]} "
+        done
+        return 0
     fi
 
     all_options=$(./configure.py --autocomplete_info=all)
