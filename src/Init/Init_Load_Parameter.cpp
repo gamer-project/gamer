@@ -260,6 +260,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "SF_CREATE_STAR_MIN_STAR_MASS",  &SF_CREATE_STAR_MIN_STAR_MASS,  0.0,            0.0,           NoMax_double   );
    ReadPara->Add( "SF_CREATE_STAR_MAX_STAR_MFRAC", &SF_CREATE_STAR_MAX_STAR_MFRAC, 0.5,            Eps_double,    1.0            );
    ReadPara->Add( "SF_CREATE_SINK_MIN_GAS_DENS",   &SF_CREATE_SINK_MIN_GAS_DENS,   1.0e10,         0.0,           NoMax_double   );
+   ReadPara->Add( "SF_CREATE_SINK_ACC_RADIUS",     &SF_CREATE_SINK_ACC_RADIUS,     0.5*PS1,        0.0,           0.5*PS1        );
 #  endif
 
 

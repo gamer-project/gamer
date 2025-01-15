@@ -265,6 +265,7 @@ double                SF_CREATE_STAR_MASS_EFF;
 double                SF_CREATE_STAR_MIN_STAR_MASS;
 double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 double                SF_CREATE_SINK_MIN_GAS_DENS;
+double                SF_CREATE_SINK_ACC_RADIUS;
 #endif
 
 // (2-9) equation of state

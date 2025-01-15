@@ -2142,14 +2142,16 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 
 // star formation
 #  ifdef STAR_FORMATION
-   LoadField( "SF_CreateStar_Scheme",       &RS.SF_CreateStar_Scheme,       SID, TID, NonFatal, &RT.SF_CreateStar_Scheme,       1, NonFatal );
-   LoadField( "SF_CreateStar_RSeed",        &RS.SF_CreateStar_RSeed,        SID, TID, NonFatal, &RT.SF_CreateStar_RSeed,        1, NonFatal );
-   LoadField( "SF_CreateStar_DetRandom",    &RS.SF_CreateStar_DetRandom,    SID, TID, NonFatal, &RT.SF_CreateStar_DetRandom,    1, NonFatal );
-   LoadField( "SF_CreateStar_MinLevel",     &RS.SF_CreateStar_MinLevel,     SID, TID, NonFatal, &RT.SF_CreateStar_MinLevel,     1, NonFatal );
-   LoadField( "SF_CreateStar_MinGasDens",   &RS.SF_CreateStar_MinGasDens,   SID, TID, NonFatal, &RT.SF_CreateStar_MinGasDens,   1, NonFatal );
-   LoadField( "SF_CreateStar_MassEff",      &RS.SF_CreateStar_MassEff,      SID, TID, NonFatal, &RT.SF_CreateStar_MassEff,      1, NonFatal );
-   LoadField( "SF_CreateStar_MinStarMass",  &RS.SF_CreateStar_MinStarMass,  SID, TID, NonFatal, &RT.SF_CreateStar_MinStarMass,  1, NonFatal );
-   LoadField( "SF_CreateStar_MaxStarMFrac", &RS.SF_CreateStar_MaxStarMFrac, SID, TID, NonFatal, &RT.SF_CreateStar_MaxStarMFrac, 1, NonFatal );
+   LoadField( "SF_CreateStar_Scheme",         &RS.SF_CreateStar_Scheme,         SID, TID, NonFatal, &RT.SF_CreateStar_Scheme,         1, NonFatal );
+   LoadField( "SF_CreateStar_RSeed",          &RS.SF_CreateStar_RSeed,          SID, TID, NonFatal, &RT.SF_CreateStar_RSeed,          1, NonFatal );
+   LoadField( "SF_CreateStar_DetRandom",      &RS.SF_CreateStar_DetRandom,      SID, TID, NonFatal, &RT.SF_CreateStar_DetRandom,      1, NonFatal );
+   LoadField( "SF_CreateStar_MinLevel",       &RS.SF_CreateStar_MinLevel,       SID, TID, NonFatal, &RT.SF_CreateStar_MinLevel,       1, NonFatal );
+   LoadField( "SF_CreateStar_MinGasDens",     &RS.SF_CreateStar_MinGasDens,     SID, TID, NonFatal, &RT.SF_CreateStar_MinGasDens,     1, NonFatal );
+   LoadField( "SF_CreateStar_MassEff",        &RS.SF_CreateStar_MassEff,        SID, TID, NonFatal, &RT.SF_CreateStar_MassEff,        1, NonFatal );
+   LoadField( "SF_CreateStar_MinStarMass",    &RS.SF_CreateStar_MinStarMass,    SID, TID, NonFatal, &RT.SF_CreateStar_MinStarMass,    1, NonFatal );
+   LoadField( "SF_CreateStar_MaxStarMFrac",   &RS.SF_CreateStar_MaxStarMFrac,   SID, TID, NonFatal, &RT.SF_CreateStar_MaxStarMFrac,   1, NonFatal );
+   LoadField( "SF_CreateStar_SinkMinGasDens", &RS.SF_CreateStar_SinkMinGasDens, SID, TID, NonFatal, &RT.SF_CreateStar_SinkMinGasDens, 1, NonFatal );
+   LoadField( "SF_CreateStar_SinkAccRadius",  &RS.SF_CreateStar_SinkAccRadius,  SID, TID, NonFatal, &RT.SF_CreateStar_SinkAccRadius,  1, NonFatal );
 #  endif
 
 // feedback

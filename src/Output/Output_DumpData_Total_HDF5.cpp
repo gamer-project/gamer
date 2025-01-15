@@ -2555,6 +2555,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.SF_CreateStar_MinStarMass      = SF_CREATE_STAR_MIN_STAR_MASS;
    InputPara.SF_CreateStar_MaxStarMFrac     = SF_CREATE_STAR_MAX_STAR_MFRAC;
    InputPara.SF_CreateStar_SinkMinGasDens   = SF_CREATE_SINK_MIN_GAS_DENS;
+   InputPara.SF_CreateStar_SinkAccRadius    = SF_CREATE_SINK_ACC_RADIUS;
 #  endif
 
 // feedback

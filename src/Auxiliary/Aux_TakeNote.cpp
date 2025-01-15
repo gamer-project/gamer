@@ -1132,7 +1132,8 @@ void Aux_TakeNote()
       fprintf( Note, "                              =% 14.7e Msun\n",  SF_CREATE_STAR_MIN_STAR_MASS*UNIT_M/Const_Msun                  );
       fprintf( Note, "SF_CREATE_STAR_MAX_STAR_MFRAC  % 14.7e\n",       SF_CREATE_STAR_MAX_STAR_MFRAC                                   ); 
       fprintf( Note, "SF_CREATE_SINK_MIN_GAS_DENS    % 14.7e\n",       SF_CREATE_SINK_MIN_GAS_DENS                                     );
-      fprintf( Note, "                              =% 14.7e cm^-3\n", SF_CREATE_SINK_MIN_GAS_DENS*UNIT_D/Const_mH/MOLECULAR_WEIGHT    ); }
+      fprintf( Note, "                              =% 14.7e cm^-3\n", SF_CREATE_SINK_MIN_GAS_DENS*UNIT_D/Const_mH/MOLECULAR_WEIGHT    ); 
+      fprintf( Note, "SF_CREATE_SINK_ACC_RADIUS      % 14.7e\n",       SF_CREATE_SINK_ACC_RADIUS                                       ); }
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
 #     endif // #ifdef STAR_FORMATION
