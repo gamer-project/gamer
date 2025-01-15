@@ -22,16 +22,18 @@ for KEY in "${VALID_KEYS[@]}"; do
 done
 
 # Print keys in a formatted way
-print_key(){  
-    # $1 : the key name  
+print_key() {
+    # $1 : the key name
     # $2 : the key value or additional message
+    # $3 : indent number (optional, default 0)
+    printf "%${3}s" ""
     printf "%-${MAX_KEY_LENGTH}s   %s\n" "$1" "$2"
 }
 
 show_valid_keys() {
     echo "Valid keys and their functionalities:"
     for KEY in "${!KEY_DESCRIPTIONS[@]}"; do
-        echo "  $(print_key "$KEY" "${KEY_DESCRIPTIONS[$KEY]}")"
+        print_key "$KEY" "${KEY_DESCRIPTIONS[$KEY]}" 2
     done
 }
 
@@ -109,7 +111,7 @@ while [[ "$#" -gt 0 ]]; do
                     break ;;
                 *)
                     echo "Error: Unknown option: -${OPT:0:1}" >&2
-                    echo "Use -h or --help for usage information." >&2
+                    printf "$(show_help)\n" >&2
                     exit 1 ;;
             esac
             OPT="${OPT:1}"
@@ -122,7 +124,7 @@ while [[ "$#" -gt 0 ]]; do
                 SETTING_FILE="../../src/.local_settings"
                 shift ;;
             --global)
-                GLOBAL=true; 
+                GLOBAL=true;
                 SETTING_TYPE="global"
                 SETTING_FILE="$HOME/.config/gamer/global_settings"
                 shift ;;
@@ -144,7 +146,7 @@ while [[ "$#" -gt 0 ]]; do
                 shift ;;
             *)
                 echo "Error: Unknown option: $1" >&2
-                echo "Use -h or --help for usage information." >&2
+                printf "$(show_help)\n" >&2
                 exit 1 ;;
         esac
     fi

@@ -8,10 +8,10 @@
    sh tool/config/set_settings.sh --local --machine=your_machine
    ```
 
-   > [!NOTE]
-   > If you want to set the default machine configuration file for all of the GAMER copies under your user account, use the `--global` option instead of `--local`.
-   Still, you can override the global setting for the individual GAMER copies with the `--local` option.
-   Furthermore, you can override the default setting with the `--machine=` [[option | Installation:-Option-List]] in `configure.py`.
+> [!NOTE]
+> If you want to set the default machine configuration file for all of the GAMER copies under your user account, use the `--global` option instead of `--local`.
+Still, you can override the global setting for the individual GAMER copies with the `--local` option.
+Furthermore, you can override the default setting by passing the [[--machine | Installation:-Option-List#--machine]]=`your_machine` when executing `configure.py`. 
 
 3. Go to the source directory
 
