@@ -810,7 +810,7 @@ struct InputPara_t
    int    Opt__Output_Step;
    double Opt__Output_Dt;
    char  *Opt__Output_Text_Format_Flt;
-   char  *Opt__Output_Text_Format_Int;
+   int    Opt__Output_Text_Length_Int;
    double Output_PartX;
    double Output_PartY;
    double Output_PartZ;
