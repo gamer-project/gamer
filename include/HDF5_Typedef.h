@@ -686,6 +686,7 @@ struct InputPara_t
    double SF_CreateStar_MaxStarMFrac;
    double SF_CreateStar_SinkMinGasDens;
    double SF_CreateStar_SinkAccRadius;
+   int    SF_CreateStar_SinkMaxNParMPI;
 #  endif
 
 // feedback

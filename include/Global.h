@@ -285,6 +285,7 @@ extern double                SF_CREATE_STAR_MIN_STAR_MASS;
 extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 extern double                SF_CREATE_SINK_MIN_GAS_DENS;
 extern double                SF_CREATE_SINK_ACC_RADIUS;
+extern int                   SF_CREATE_SINK_MAX_NPAR_MPI;
 #endif
 
 

@@ -2152,6 +2152,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "SF_CreateStar_MaxStarMFrac",   &RS.SF_CreateStar_MaxStarMFrac,   SID, TID, NonFatal, &RT.SF_CreateStar_MaxStarMFrac,   1, NonFatal );
    LoadField( "SF_CreateStar_SinkMinGasDens", &RS.SF_CreateStar_SinkMinGasDens, SID, TID, NonFatal, &RT.SF_CreateStar_SinkMinGasDens, 1, NonFatal );
    LoadField( "SF_CreateStar_SinkAccRadius",  &RS.SF_CreateStar_SinkAccRadius,  SID, TID, NonFatal, &RT.SF_CreateStar_SinkAccRadius,  1, NonFatal );
+   LoadField( "SF_CreateStar_SinkMaxNParMPI", &RS.SF_CreateStar_SinkMaxNParMPI, SID, TID, NonFatal, &RT.SF_CreateStar_SinkMaxNParMPI, 1, NonFatal );
 #  endif
 
 // feedback

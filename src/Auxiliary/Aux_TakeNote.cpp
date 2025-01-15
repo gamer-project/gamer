@@ -1120,7 +1120,7 @@ void Aux_TakeNote()
 #     ifdef STAR_FORMATION
       fprintf( Note, "Parameters of Star Formation\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "SF_CREATE_STAR_SCHEME          % d\n",           SF_CREATE_STAR_SCHEME                          );
+      fprintf( Note, "SF_CREATE_STAR_SCHEME          % d\n",           SF_CREATE_STAR_SCHEME                                           );
       if ( SF_CREATE_STAR_SCHEME != SF_CREATE_STAR_SCHEME_NONE ) {
       fprintf( Note, "SF_CREATE_STAR_RSEED           % d\n",           SF_CREATE_STAR_RSEED                                            );
       fprintf( Note, "SF_CREATE_STAR_DET_RANDOM      % d\n",           SF_CREATE_STAR_DET_RANDOM                                       );
@@ -1133,7 +1133,8 @@ void Aux_TakeNote()
       fprintf( Note, "SF_CREATE_STAR_MAX_STAR_MFRAC  % 14.7e\n",       SF_CREATE_STAR_MAX_STAR_MFRAC                                   ); 
       fprintf( Note, "SF_CREATE_SINK_MIN_GAS_DENS    % 14.7e\n",       SF_CREATE_SINK_MIN_GAS_DENS                                     );
       fprintf( Note, "                              =% 14.7e cm^-3\n", SF_CREATE_SINK_MIN_GAS_DENS*UNIT_D/Const_mH/MOLECULAR_WEIGHT    ); 
-      fprintf( Note, "SF_CREATE_SINK_ACC_RADIUS      % 14.7e\n",       SF_CREATE_SINK_ACC_RADIUS                                       ); }
+      fprintf( Note, "SF_CREATE_SINK_ACC_RADIUS      % 14.7e\n",       SF_CREATE_SINK_ACC_RADIUS                                       );
+      fprintf( Note, "SF_CREATE_SINK_MAX_NPAR_MPI    % d\n",           SF_CREATE_SINK_MAX_NPAR_MPI                                     ); }
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
 #     endif // #ifdef STAR_FORMATION

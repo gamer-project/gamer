@@ -46,13 +46,14 @@ int FindLocalPID(int pi, int pj, int pk, int &PGi, int &PGj, int &PGk, int NGhos
 // Parameter   :  lv           : Target refinement level
 //                TimeNew      : Current physical time (after advancing solution by dt)
 //                GasDensThres : Minimum gas density for creating sink particles                (--> "SF_CREATE_SINK_MIN_GAS_DENS"  )
-//                AccCellNum   : Accretion radius in cells                                      (--> "SF_CREATE_SINK_ACC_RADIUS"    )
-//                MaxNewPar    : Number of particle per MPI rank                                (--> "SF_CREATE_SINK_MAX_NPAR_MPI"  )
+//                AccCellNum   : Accretion radius in cells at highest refinement level          (--> "SF_CREATE_SINK_ACC_RADIUS"    )
+//                MaxNewPar    : Maximum number of particle per MPI rank                        (--> "SF_CREATE_SINK_MAX_NPAR_MPI"  )
 //
 // Return      :  1. Particle repository will be updated
 //                2. fluid[] array of gas will be updated
 //-------------------------------------------------------------------------------------------------------
-void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real GasDensThres, const real AccCellNum)
+void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real GasDensThres, const real AccCellNum, 
+                                 const int MaxNewPar )
 {
 // check
 #  if ( defined STORE_PAR_ACC  &&  !defined STORE_POT_GHOST )
@@ -78,10 +79,6 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
 // constant parameters
    const double dh             = amr->dh[lv];
    const double dv             = CUBE( dh );
-
-// User-defined parapeters
-   // const int    AccCellNum     = 4; // this should be user-defined parameter
-   const int    MaxNewPar      = 1000;
 
    const int    NGhost         = PS1 / 2; // the number of ghost cell at each side
    const int    Size_Flu       = PS2 + 2*NGhost; // final cube size
