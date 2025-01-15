@@ -3,6 +3,7 @@ Parameters described on this page:
 [PAR_NPAR](#PAR_NPAR), &nbsp;
 [PAR_IC_FORMAT](#PAR_IC_FORMAT), &nbsp;
 [PAR_IC_FLOAT8](#PAR_IC_FLOAT8), &nbsp;
+[PAR_IC_INT8](#PAR_IC_INT8), &nbsp;
 [PAR_IC_MASS](#PAR_IC_MASS), &nbsp;
 [PAR_IC_TYPE](#PAR_IC_TYPE), &nbsp;
 [PAR_INTERP](#PAR_INTERP), &nbsp;
@@ -56,6 +57,12 @@ for details.
 * #### `PAR_IC_FLOAT8` &ensp; (<0: same as [[--double_par | Installation:-Option-List#--double_par]], 0=single precision, 1=double precision) &ensp; [-1]
     * **Description:**
 Floating-point precision of the particle initial condition file `PAR_IC`.
+    * **Restriction:**
+
+<a name="PAR_IC_INT8"></a>
+* #### `PAR_IC_INT8` &ensp; (<0: same as [[--long_par | Installation:-Option-List#--long_par]], 0=32-bit integer (`int`), 1=64-bit integer (`long`)) &ensp; [-1]
+    * **Description:**
+Integer width of the particle initial condition file `PAR_IC`.
     * **Restriction:**
 
 <a name="PAR_IC_MASS"></a>

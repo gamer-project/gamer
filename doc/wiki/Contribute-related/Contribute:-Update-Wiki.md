@@ -65,7 +65,7 @@ sequenceDiagram
 1. **Create the first page**
    * Click the Wiki page and create the first page.
 
-   [[images/CreateWiki.png]]
+   [[/images/CreateWiki.png]]
 
 1. **Create a token for the action**
    * Go to `Settings` of your account > `Developer settings` > `Personal access tokens` > `Generate new token (classic)`.
@@ -75,32 +75,32 @@ sequenceDiagram
    * You might want to set the `Expiration` to `No expiration`.
    * Click the green `Generate token` at the bottom.
 
-   [[images/CreateToken.png]]
+   [[/images/CreateToken.png]]
 
    * Remember to save the token since it will only be shown once!
 
 1. **Create the repository secret token and email**
    * Go to `Settings` of your forked gamer repository > `Security` > `Secrets and variables` > `Actions` > `Repository secrets`.
 
-   [[images/CreateSecret.png]]
+   [[/images/CreateSecret.png]]
 
    * Click `New repository secret`, and then you will see the following. Please replace `<your_personal_access_token>` with the token generated in the previous step under `Secret` and make sure the `Name` of the secret is `TOKEN_FOR_WIKI`. Click `Add secret`.
 
-   [[images/SetToken.png]]
+   [[/images/SetToken.png]]
 
    * Click `New repository secret`. Please replace `<your_email_address>` with your account's email address under `Secret` and make sure the `Name` of the secret is `MY_EMAIL`. Click `Add secret`.
       - NOTE: Your email address will remain private since it only exists in your repository. This step is only for recording your contribution by the action.
 
-   [[images/SetMail.png]]
+   [[/images/SetMail.png]]
 
 1. **Enable actions (workflows)**
    * Click `Actions` > click the green button.
-   ![image](https://github.com/ChunYen-Chen/CheckNode/assets/70311975/9e58d4a8-3248-4ceb-81ff-276a6943149d)
+   [[/images/EnableWorkflows.png]]
 
 1. **Initialize Wiki**
    * Click `Actions` > `Copy doc to wiki` > `Run workflow` > Choose `Branch: main` > Click `Run workflow`. Once the workflow is complete, the Wiki will be updated to match `gamer/doc/wiki` on the `main` branch.
 
-   [[images/InitializeWiki.png]]
+   [[/images/InitializeWiki.png]]
 
 ## Edit Wiki
 We provide three methods for editing the Wiki pages: through `gollum` (recommended), directly on the GitHub website, or via the local terminal. In the following examples, the new branch you would like to contribute to is referred to as `new_contribution_branch`.
@@ -110,7 +110,7 @@ We provide three methods for editing the Wiki pages: through `gollum` (recommend
    - Click `Actions` > `Copy doc to wiki` > `Run workflow` > Choose `Branch: new_contribution_branch` > Click `Run workflow`. Once the workflow is complete, the Wiki will be updated to match `gamer/doc/wiki` on the `new_contribution_branch` branch.
    - Clone your forked Wiki git. You may find the Wiki URL at the bottom right of the Wiki page.
 
-     [[images/WikiGitLocation.png]]
+     [[/images/WikiGitLocation.png]]
 
    - Edit by `gollum`.
      * NOTE: To use `gollum` for a branch other than `master` (e.g., `new_branch`), use the command `gollum --ref new_branch`.
@@ -122,7 +122,7 @@ We provide three methods for editing the Wiki pages: through `gollum` (recommend
      This step is like `git push` to your branch.
      * Click `Actions` > `Copy wiki to doc` > `Run workflow` > Choose `Branch: new_contribution_branch` > Click `Run workflow`. Once the workflow is complete, the content of `gamer/doc/wiki` in the `new_contribution_branch` branch will be updated to match the latest Wiki pages.
 
-     [[images/CopyWikiToNewBranch.png]]
+     [[/images/CopyWikiToNewBranch.png]]
 
 1. **From GitHub website**
 
@@ -132,7 +132,7 @@ We provide three methods for editing the Wiki pages: through `gollum` (recommend
      This step is like `git checkout new_contribution_branch` but for the GitHub Wiki website version.
      * Click `Actions` > `Copy doc to wiki` > `Run workflow` > Choose `Branch: new_contribution_branch` > Click `Run workflow`. Once the workflow is complete, the Wiki will be updated to match `gamer/doc/wiki` on the `new_contribution_branch` branch.
 
-      [[images/CopyDocFromNewBranch.png]]
+      [[/images/CopyDocFromNewBranch.png]]
 
    - **Edit directly on the GitHub Wiki website**
 
@@ -142,7 +142,7 @@ We provide three methods for editing the Wiki pages: through `gollum` (recommend
      This step is like `git push` to your `new_contribution_branch` branch.
      * Click `Actions` > `Copy wiki to doc` > `Run workflow` > Choose `Branch: new_contribution_branch` > Click `Run workflow`. Once the workflow is complete, the content of `gamer/doc/wiki` in the `new_contribution_branch` branch will be updated to match the latest Wiki pages.
 
-      [[images/CopyWikiToNewBranch.png]]
+      [[/images/CopyWikiToNewBranch.png]]
 
 1. **On the local terminal**
 

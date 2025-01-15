@@ -77,6 +77,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "PAR_INIT",                   &amr->Par->Init,                 -1,                1,             3              );
    ReadPara->Add( "PAR_IC_FORMAT",              &amr->Par->ParICFormat,      PAR_IC_FORMAT_ATT_ID,  1,             2              );
    ReadPara->Add( "PAR_IC_FLOAT8",              &PAR_IC_FLOAT8,                  -1,                NoMin_int,     1              );
+   ReadPara->Add( "PAR_IC_INT8",                &PAR_IC_INT8,                    -1,                NoMin_int,     1              );
    ReadPara->Add( "PAR_IC_MASS",                &amr->Par->ParICMass,            -1.0,              NoMin_double,  NoMax_double   );
    ReadPara->Add( "PAR_IC_TYPE",                &amr->Par->ParICType,            -1,                NoMin_int,     PAR_NTYPE-1    );
    ReadPara->Add( "PAR_INTERP",                 &amr->Par->Interp,                PAR_INTERP_CIC,   1,             3              );
@@ -190,6 +191,14 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__FLAG_USER",             &OPT__FLAG_USER,                  false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_USER_NUM",         &OPT__FLAG_USER_NUM,              1,               1,             NoMax_int      );
    ReadPara->Add( "OPT__FLAG_REGION",           &OPT__FLAG_REGION,                false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__FLAG_ANGULAR",          &OPT__FLAG_ANGULAR,               false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "FLAG_ANGULAR_CEN_X",         &FLAG_ANGULAR_CEN_X,             -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "FLAG_ANGULAR_CEN_Y",         &FLAG_ANGULAR_CEN_Y,             -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "FLAG_ANGULAR_CEN_Z",         &FLAG_ANGULAR_CEN_Z,             -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "OPT__FLAG_RADIAL",           &OPT__FLAG_RADIAL,                false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "FLAG_RADIAL_CEN_X",          &FLAG_RADIAL_CEN_X,              -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "FLAG_RADIAL_CEN_Y",          &FLAG_RADIAL_CEN_Y,              -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "FLAG_RADIAL_CEN_Z",          &FLAG_RADIAL_CEN_Z,              -1.0,             NoMin_double,  NoMax_double   );
 #  ifdef PARTICLE
    ReadPara->Add( "OPT__FLAG_NPAR_PATCH",       &OPT__FLAG_NPAR_PATCH,            0,               0,             2              );
    ReadPara->Add( "OPT__FLAG_NPAR_CELL",        &OPT__FLAG_NPAR_CELL,             false,           Useless_bool,  Useless_bool   );
