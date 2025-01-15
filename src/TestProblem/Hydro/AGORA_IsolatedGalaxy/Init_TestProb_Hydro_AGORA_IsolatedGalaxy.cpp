@@ -19,7 +19,7 @@ static double  AGORA_HaloGasTemp;               // halo gas temperature
        bool    AGORA_UseMetal = false;          // add and advect a metal density field
                                                 // --> to enable this option, one must
                                                 //     (1) set AGORA_(Disk/Halo)MetalMassFrac properly
-                                                //     (2) set NCOMP_PASSIVE_USER>=1 and PAR_NATT_USER>=1 in the Makefile
+                                                //     (2) set NCOMP_PASSIVE_USER>=1 and PAR_NATT_FLT_USER>=1 in the Makefile
                                                 // --> necessary if one wants to enable metal_cooling in Grackle
 static double  AGORA_DiskMetalMassFrac;         // disk metal mass fraction (disk_metal_mass / disk_gas_mass)
 static double  AGORA_HaloMetalMassFrac;         // halo metal mass fraction (halo_metal_mass / halo_gas_mass)
@@ -39,7 +39,8 @@ bool Flag_AGORA( const int i, const int j, const int k, const int lv, const int 
 void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRank,
                                 real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                 real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] );
+                                long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] );
 #endif
 
 
@@ -491,7 +492,7 @@ void AddNewParticleAttribute_AGORA()
 
 // "Idx_ParMetalFrac" has been predefined in Field.h
    if ( AGORA_UseMetal  &&  Idx_ParMetalFrac == Idx_Undefined )
-      Idx_ParMetalFrac = AddParticleAttribute( "ParMetalFrac" );
+      Idx_ParMetalFrac = AddParticleAttributeFlt( "ParMetalFrac" );
 
 } // FUNCTION : AddNewParticleAttribute_AGORA
 #endif // #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
