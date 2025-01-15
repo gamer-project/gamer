@@ -137,7 +137,8 @@ SF_CREATE_SINK_MAX_NPAR_MPI   1000        # maximum number of particle per MPI r
 # feedback (FEEDBACK only)
 FB_LEVEL                     -1           # AMR level to apply feedback (must be MAX_LEVEL for now; <0=auto -> MAX_LEVEL) [-1]
 FB_RSEED                      456         # random seed [456]
-FB_USER                       1           # user-defined feedback [0]
+FB_ACC                        1           # particle accrectioin [0]
+FB_USER                       0           # user-defined feedback [0]
 
 # fluid solver in HYDRO (MODEL==HYDRO only)
 GAMMA                         1.666666667 # ratio of specific heats (i.e., adiabatic index) [5.0/3.0]

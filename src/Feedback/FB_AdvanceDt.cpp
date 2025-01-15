@@ -380,11 +380,14 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
                                    amr->patch[0][lv][PID0]->EdgeL[2] - FB_GHOST_SIZE*amr->dh[lv] };
          int Status;
 
-         if ( FB_SNE  )    Status = FB_SNe     ( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Local, fluid_PG,
-                                                 EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
+         if ( FB_SNE  )    Status = FB_SNe       ( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Local, fluid_PG,
+                                                   EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
 
-         if ( FB_USER )    Status = FB_User_Ptr( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Local, fluid_PG,
-                                                 EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
+         if ( FB_ACC )     Status = FB_Accretion ( lv, NPar, ParSortID, ParAtt_Local, fluid_PG,
+                                                   EdgeL, amr->dh[lv], CoarseFine );
+
+         if ( FB_USER )    Status = FB_User_Ptr  ( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAtt_Local, fluid_PG,
+                                                   EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
 
 
 

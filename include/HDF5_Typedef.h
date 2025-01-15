@@ -694,6 +694,7 @@ struct InputPara_t
    int   FB_Level;
    int   FB_RSeed;
    int   FB_SNe;
+   int   FB_Acc;
    int   FB_User;
 #  endif
 

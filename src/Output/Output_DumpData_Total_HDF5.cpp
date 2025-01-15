@@ -2564,6 +2564,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.FB_Level                = FB_LEVEL;
    InputPara.FB_RSeed                = FB_RSEED;
    InputPara.FB_SNe                  = FB_SNE;
+   InputPara.FB_Acc                  = FB_ACC;
    InputPara.FB_User                 = FB_USER;
 #  endif
 

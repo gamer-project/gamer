@@ -2160,6 +2160,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "FB_Level",                &RS.FB_Level,                SID, TID, NonFatal, &RT.FB_Level,                 1, NonFatal );
    LoadField( "FB_RSeed",                &RS.FB_RSeed,                SID, TID, NonFatal, &RT.FB_RSeed,                 1, NonFatal );
    LoadField( "FB_SNe",                  &RS.FB_SNe,                  SID, TID, NonFatal, &RT.FB_SNe,                   1, NonFatal );
+   LoadField( "FB_Acc",                  &RS.FB_Acc,                  SID, TID, NonFatal, &RT.FB_Acc,                   1, NonFatal );
    LoadField( "FB_User",                 &RS.FB_User,                 SID, TID, NonFatal, &RT.FB_User,                  1, NonFatal );
 #  endif
 
