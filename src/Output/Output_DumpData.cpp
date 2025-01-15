@@ -130,7 +130,7 @@ void Output_DumpData( const int Stage )
 
       if ( OPT__OUTPUT_BASE )
       {
-         sprintf( FileName_Part+str_offset, "%s", "Base" );
+         strcat( FileName_Part, "Base" );
          strcat( FileName_Part, FileName_Temp );
       }
       else

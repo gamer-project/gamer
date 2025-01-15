@@ -331,8 +331,8 @@ void Aux_Check_Parameter()
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 
-   if ( ! Aux_CheckFolderExist( DUMP_DIR ) )
-      Aux_Error( ERROR_INFO, "%s folder does not exist!\n", DUMP_DIR );
+   if (  ! Aux_CheckFolderExist( DUMP_DIR )  )
+      Aux_Error( ERROR_INFO, "\"%s\" folder set by DUMP_DIR does not exist !!\n", DUMP_DIR );
 
 
 
