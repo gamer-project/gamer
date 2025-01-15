@@ -87,6 +87,10 @@ int FB_Accretion( const int lv, const int NPar, const long *ParSortID, real_par 
 
    long   (*RemovalIdx)[3]         = new long [MaxRemovalGas][3];
 
+// Some check
+   if (FB_GHOST_SIZE < 2*AccCellNum)
+      Aux_Error( ERROR_INFO, "FB_GHOST_SIZE should be larger than twice of SF_CREATE_SINK_ACC_RADIUS !!" );
+
 // prepare the corner array
    for (int d=0; d<3; d++)    Corner_Array[d] = EdgeL[d] + 0.5*dh ;
 
