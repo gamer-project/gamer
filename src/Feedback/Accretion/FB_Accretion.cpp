@@ -42,22 +42,23 @@
 //                11. Linked to FB_User_Ptr in FB_Init_Plummer()
 //                12. Must have FB_GHOST_SIZE>=1 for the mass accretion feedback
 //
-// Parameter   :  lv         : Target refinement level
-//                AccCellNum : Accretion radius in cells at highest refinement level          (--> "SF_CREATE_SINK_ACC_RADIUS"    )
-//                NPar       : Number of particles
-//                ParSortID  : Sorted particle IDs
-//                ParAtt     : Particle attribute arrays
-//                Fluid      : Array to store the input/output fluid data
-//                             --> Array size is fixed to (FB_NXT)^3=(PS2+2*FB_GHOST_SIZE)^3
-//                EdgeL      : Left edge of Fluid[]
-//                             --> Right edge is given by EdgeL[]+FB_NXT*dh
-//                dh         : Cell size of Fluid[]
-//                CoarseFine : Coarse-fine boundaries along the 26 sibling directions
+// Parameter   :  lv           : Target refinement level
+//                GasDensThres : Minimum gas density for creating sink particles                (--> "SF_CREATE_SINK_MIN_GAS_DENS"  )
+//                AccCellNum   : Accretion radius in cells at highest refinement level          (--> "SF_CREATE_SINK_ACC_RADIUS"    )
+//                NPar         : Number of particles
+//                ParSortID    : Sorted particle IDs
+//                ParAtt       : Particle attribute arrays
+//                Fluid        : Array to store the input/output fluid data
+//                               --> Array size is fixed to (FB_NXT)^3=(PS2+2*FB_GHOST_SIZE)^3
+//                EdgeL        : Left edge of Fluid[]
+//                               --> Right edge is given by EdgeL[]+FB_NXT*dh
+//                dh           : Cell size of Fluid[]
+//                CoarseFine   : Coarse-fine boundaries along the 26 sibling directions
 //
 // Return      :  Fluid, ParAtt
 //-------------------------------------------------------------------------------------------------------
-int FB_Accretion( const int lv, const real AccCellNum, const int NPar, const long *ParSortID, real_par *ParAtt[PAR_NATT_TOTAL],
-                  real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[] )
+int FB_Accretion( const int lv, const real GasDensThres, const real AccCellNum, const int NPar, const long *ParSortID, 
+                  real_par *ParAtt[PAR_NATT_TOTAL], real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[] )
 {
 
 // check
@@ -73,16 +74,10 @@ int FB_Accretion( const int lv, const real AccCellNum, const int NPar, const lon
    if ( FB_GHOST_SIZE < 2*AccCellNum )
       Aux_Error( ERROR_INFO, "FB_GHOST_SIZE should be larger than twice of SF_CREATE_SINK_ACC_RADIUS !!" );
 
-   if ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_NONE )
-      Aux_Error( ERROR_INFO, "FB_ACC only supports SF_CREATE_STAR_SCHEME_AGORA and SF_CREATE_STAR_SCHEME_SINKPARTICLE !!" );
-
    real GasDens, Eg, Ekin, GasCell2ParDisti, GasRelVel[3]; 
    real Eg2, GasCell2ParDist2;
    real ControlPos[3];
    real Corner_Array[3]; // the corner of the ghost zone
-
-   if      ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_AGORA)         const double GasDensThres   = SF_CREATE_STAR_MIN_GAS_DENS;
-   else if ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_SINKPARTICLE)  const double GasDensThres   = SF_CREATE_SINK_MIN_GAS_DENS;
 
    const int    NGhost         = PS1 / 2; // the number of ghost cell at each side
    const int    MaxRemovalGas  = CUBE( PS1 );
