@@ -7,6 +7,7 @@ wget --no-check-certificate  -O ./CloudyData_UVB=HM2012.h5 https://github.com/gr
 tar xzvf LOW.tar.gz
 mv LOW/*.dat ./
 rmdir LOW
+rm LOW.tar.gz
 
 # Input_* soft links
 ln -s ./Input_Options/Input__Flag_Jeans.low-res Input__Flag_Jeans
