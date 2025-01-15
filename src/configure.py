@@ -119,40 +119,6 @@ class ArgumentParser( argparse.ArgumentParser ):
         if len(argv) != 0: self.error( msg )
         return args, self.gamer_names, self.depends, self.constraints
 
-    def _get_option_tuples(self, option_string):
-        # This function is directly from the source code of `argparse`.
-        # We decided to add the function manually because versions prior to Python 3.5 do not support `allow_abbrev`.
-        # See: https://github.com/python/cpython/blob/main/Lib/argparse.py
-        result = []
-
-        # option strings starting with two prefix characters are only split at the "="
-        chars = self.prefix_chars
-        if option_string[0] in chars and option_string[1] in chars:
-            pass # we always use `allow_abbrev=False`
-
-        # single character options can be concatenated with their arguments
-        # but multiple character options always have to have their arguments separate
-        elif option_string[0] in chars and option_string[1] not in chars:
-            option_prefix = option_string
-            short_option_prefix = option_string[:2]
-            short_explicit_arg = option_string[2:]
-
-            for option_string in self._option_string_actions:
-                if option_string == short_option_prefix:
-                    action = self._option_string_actions[option_string]
-                    tup = action, option_string, "", short_explicit_arg
-                    result.append(tup)
-                elif option_string.startswith(option_prefix):
-                    action = self._option_string_actions[option_string]
-                    tup = action, option_string, None, None
-                    result.append(tup)
-
-        # shouldn't ever get here
-        else:
-            self.error(("unexpected option string: %s") % option_string)
-
-        return result # return the collected option tuples
-
     def print_usage( self, *args, **kwargs ):
         if "usage" in self.program:
             print("Usage: %s\n" % self.program["usage"])
@@ -367,7 +333,8 @@ def load_arguments( sys_setting : SystemSetting ):
     parser = ArgumentParser( description = GAMER_DESCRIPTION,
                              formatter_class = argparse.RawTextHelpFormatter,
                              epilog = GAMER_EPILOG,
-                             add_help = False
+                             add_help = False,
+                             allow_abbrev=False
                            )
 
     parser.add_argument( "-h", "--help",
