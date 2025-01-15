@@ -39,15 +39,14 @@ show_valid_keys() {
 
 show_help() {
     echo "Usage:"
-    echo "  $0 (--local | --global) [-v] --<key>=<value> ..."
-    echo "  $0 (--local | --global) [-v] (-d | --delete) <key> ..."
+    echo "  $0 (--local | --global) [-l] --<key>=<value> ..."
+    echo "  $0 (--local | --global) [-l] (-d | --delete) <key> ..."
     echo "  $0 (--local | --global) (-l | --list)"
     echo "  $0 (-h | --help)"
     echo ""
     echo "Options:"
     echo "  --local              Use local settings"
     echo "  --global             Use global settings"
-    echo "  -v, --verbose        Show verbose output"
     echo "  --<key>=<value>      Set a parameter"
     echo "  -d, --delete key     Delete a parameter"
     echo "  --clear-all          Clear all parameters"
@@ -97,7 +96,6 @@ while [[ "$#" -gt 0 ]]; do
         while [[ -n "$OPT" ]]; do # Possibly combined
             case "${OPT:0:1}" in
                 l) LIST=true ;;
-                v) LIST=true ;;
                 h) show_help; exit 0 ;;
                 d)
                     DELETE=true
@@ -129,7 +127,6 @@ while [[ "$#" -gt 0 ]]; do
                 SETTING_FILE="$HOME/.config/gamer/global_settings"
                 shift ;;
             --list) LIST=true; shift ;;
-            --verbose) LIST=true; shift ;;
             --help) show_help; exit 0 ;;
             --delete)
                 DELETE=true
