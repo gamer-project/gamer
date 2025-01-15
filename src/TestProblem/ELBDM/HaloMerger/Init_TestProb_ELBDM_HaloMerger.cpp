@@ -697,6 +697,7 @@ void SetParameter()
                Aux_Message( stdout, "   Table%d at r = %13.7e --> %13.7e\n", index_soliton, 8.0*CoreRadiusRef, Mis_InterpolateFromTable( HaloMerger_Soliton_DensProf_NBin[index_soliton], Table_Radius, Table_Density, 8.0*CoreRadiusRef ) );
                Aux_Message( stdout, "\n" );
             }
+            UnitTest_Mis_LinearInterpolate();
 
             if ( HaloMerger_Soliton_DensProf_Rescale[index_soliton] )
             {
