@@ -4,6 +4,14 @@ static bool Check_Gradient( const int i, const int j, const int k, const real In
 static bool Check_Curl( const int i, const int j, const int k,
                         const real vx[][PS1][PS1], const real vy[][PS1][PS1], const real vz[][PS1][PS1],
                         const double Threshold );
+static bool Check_Angular_Max( const int i, const int j, const int k, const int lv, const int PID,
+                               const double CenX, const double CenY, const double CenZ,
+                               const double AngRes_Max, const double AngRes_Max_R );
+static bool Check_Angular_Min( const int i, const int j, const int k, const int lv, const int PID,
+                               const double CenX, const double CenY, const double CenZ,
+                               const double AngRes_Min );
+static bool Check_Radial( const int i, const int j, const int k, const int lv, const int PID,
+                          const double CenX, const double CenY, const double CenZ, const double Refine_Rad );
 
 
 
@@ -35,8 +43,7 @@ static bool Check_Curl( const int i, const int j, const int k,
 //                JeansCoeff    : Pi*GAMMA/(SafetyFactor^2*G), where SafetyFactor = FlagTable_Jeans[lv]
 //                                --> Flag if dh^2 > JeansCoeff*Pres/Dens^2
 //                Interf_Var    : Input array storing the density and phase for the interference condition
-//                Spectral_Cond : Input variable storing the normalised average density ratio between the
-//                                average extension density and the average physical density
+//                Spectral_Cond : Input variable storing the spectral refinement condition
 //
 // Return      :  "true"  if any  of the refinement criteria is satisfied
 //                "false" if none of the refinement criteria is satisfied
@@ -51,6 +58,19 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
    bool Flag = false;
 
+
+// *******************************************************************************************
+// refinement flags must be checked in the following order
+// 1. no-refinement criteria --> exclude patches outside the regions allowed for refinement
+// 2. OPT__FLAG_INTERFERENCE --> ensure amr->patch[0][lv][PID]->switch_to_wave_flag is set correctly
+// 3. refinement criteria
+// *******************************************************************************************
+
+
+// *****************************
+// 1. no-refinement criteria
+// *****************************
+
 // check whether the input cell is within the regions allowed to be refined
 // ===========================================================================================
    if ( OPT__FLAG_REGION )
@@ -61,8 +81,23 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    }
 
 
-// check ELBDM interference
-// --> must be performed before any other checks in order to set switch_to_wave_flag correctly
+// check maximum angular resolution
+// ===========================================================================================
+   if ( OPT__FLAG_ANGULAR )
+   {
+      bool Within = Check_Angular_Max( i, j, k, lv, PID, FLAG_ANGULAR_CEN_X, FLAG_ANGULAR_CEN_Y,
+                                       FLAG_ANGULAR_CEN_Z, FlagTable_Angular[lv][0],
+                                       FlagTable_Angular[lv][2] );
+      if ( ! Within )   return false;
+   }
+
+
+
+// *****************************
+// 2. OPT__FLAG_INTERFERENCE
+// *****************************
+
+// ELBDM interference check must be performed before any other refinement checks in order to set switch_to_wave_flag correctly
 // ===========================================================================================
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    if ( OPT__FLAG_INTERFERENCE  &&  !amr->use_wave_flag[lv] )
@@ -77,6 +112,11 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    }
 #  endif
 
+
+
+// *****************************
+// 3. refinement criteria
+// *****************************
 
 #  ifdef PARTICLE
 // check the number of particles on each cell
@@ -246,6 +286,26 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #  endif
 
 
+// check minimum angular resolution
+// ===========================================================================================
+   if ( OPT__FLAG_ANGULAR )
+   {
+      Flag |= Check_Angular_Min( i, j, k, lv, PID, FLAG_ANGULAR_CEN_X, FLAG_ANGULAR_CEN_Y,
+                                 FLAG_ANGULAR_CEN_Z, FlagTable_Angular[lv][1] );
+      if ( Flag )    return Flag;
+   }
+
+
+// check radial resolution
+// ===========================================================================================
+   if ( OPT__FLAG_RADIAL )
+   {
+      Flag |= Check_Radial( i, j, k, lv, PID, FLAG_RADIAL_CEN_X, FLAG_RADIAL_CEN_Y,
+                            FLAG_RADIAL_CEN_Z, FlagTable_Radial[lv] );
+      if ( Flag )    return Flag;
+   }
+
+
 // check user-defined criteria
 // ===========================================================================================
    if ( OPT__FLAG_USER )
@@ -388,3 +448,125 @@ bool Check_Curl( const int i, const int j, const int k,
    return Flag;
 
 } // FUNCTION : Check_Curl
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Check_Angular_Max
+// Description :  Check if dh/R at cell (i,j,k) is smaller than the maximum angular resolution
+//
+// Note        :  1. Enabled by the runtime option "OPT__FLAG_ANGULAR"
+//
+// Parameter   :  i,j,k        : Target cell indices in the patch amr->patch[0][lv][PID]
+//                lv           : Refinement level of the target patch
+//                PID          : ID of the target patch
+//                CenX/Y/Z     : x/y/z-coordinate of the center for calculating angular resolution
+//                AngRes_Max   : Maximum allowed angular resolution (in radians)
+//                AngRes_Max_R : Minimum radius to apply AngRes_Max
+//
+// Return      :  "true/false"  if the input cell "is/is not" within the region allowed for refinement
+//-------------------------------------------------------------------------------------------------------
+bool Check_Angular_Max( const int i, const int j, const int k, const int lv, const int PID,
+                        const double CenX, const double CenY, const double CenZ,
+                        const double AngRes_Max, const double AngRes_Max_R )
+{
+
+// check
+#  ifdef GAMER_DEBUG
+   if (  i < 0  ||  i >= PS1  ||  j < 0  ||  j >= PS1  ||  k < 0  ||  k >= PS1  )
+      Aux_Error( ERROR_INFO, "incorrect index (i,j,k) = (%d,%d,%d) !!\n", i, j, k );
+#  endif
+
+   const double dh     = amr->dh[lv];                                         // cell size
+   const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,     // x,y,z position
+                           amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
+                           amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
+   const double dR [3] = { Pos[0]-CenX, Pos[1]-CenY, Pos[2]-CenZ };
+   const double R      = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
+
+   return ( AngRes_Max < 0.0  ||  2.0 * R * AngRes_Max <= dh  ||  R <= AngRes_Max_R );
+
+} // FUNCTION : Check_Angular_Max
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Check_Angular_Min
+// Description :  Check if dh/R at cell (i,j,k) is larger than the minimum angular resolution
+//
+// Note        :  1. Enabled by the runtime option "OPT__FLAG_ANGULAR"
+//
+// Parameter   :  i,j,k        : Target cell indices in the patch amr->patch[0][lv][PID]
+//                lv           : Refinement level of the target patch
+//                PID          : ID of the target patch
+//                CenX/Y/Z     : x/y/z-coordinate of the center for calculating angular resolution
+//                AngRes_Min   : Minimum allowed angular resolution (in radians)
+//
+// Return      :  "true"  if the minimum angular resolution is not reached
+//                "false" if the minimum angular resolution is     reached
+//-------------------------------------------------------------------------------------------------------
+bool Check_Angular_Min( const int i, const int j, const int k, const int lv, const int PID,
+                        const double CenX, const double CenY, const double CenZ,
+                        const double AngRes_Min )
+{
+
+// check
+#  ifdef GAMER_DEBUG
+   if (  i < 0  ||  i >= PS1  ||  j < 0  ||  j >= PS1  ||  k < 0  ||  k >= PS1  )
+      Aux_Error( ERROR_INFO, "incorrect index (i,j,k) = (%d,%d,%d) !!\n", i, j, k );
+#  endif
+
+   const double dh     = amr->dh[lv];                                         // cell size
+   const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,     // x,y,z position
+                           amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
+                           amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
+   const double dR [3] = { Pos[0]-CenX, Pos[1]-CenY, Pos[2]-CenZ };
+   const double R      = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
+
+   return ( AngRes_Min >= 0.0  &&  R * AngRes_Min < dh );
+
+} // FUNCTION : Check_Angular_Min
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Check_Radial
+// Description :  Check if the cell is within the given radius
+//
+// Note        :  1. Enabled by the runtime option "OPT__FLAG_RADIAL"
+//
+// Parameter   :  i,j,k       : Target cell indices in the patch amr->patch[0][lv][PID]
+//                lv          : Refinement level of the target patch
+//                PID         : ID of the target patch
+//                CenX/Y/Z    : x/y/z-coordinate of the center for calculating radial resolution
+//                Refine_Rad  : Radius at level lv within which grids are refined
+//
+// Return      :  "true"  if r <  Refine_Rad
+//                "false" if r >= Refine_Rad or Refine_Rad is not set
+//-------------------------------------------------------------------------------------------------------
+bool Check_Radial( const int i, const int j, const int k, const int lv, const int PID,
+                   const double CenX, const double CenY, const double CenZ, const double Refine_Rad )
+{
+
+// check
+#  ifdef GAMER_DEBUG
+   if (  i < 0  ||  i >= PS1  ||  j < 0  ||  j >= PS1  ||  k < 0  ||  k >= PS1  )
+      Aux_Error( ERROR_INFO, "incorrect index (i,j,k) = (%d,%d,%d) !!\n", i, j, k );
+#  endif
+
+   const double dh     = amr->dh[lv];                                         // cell size
+   const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,     // x,y,z position
+                           amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
+                           amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
+   const double dR [3] = { Pos[0]-CenX, Pos[1]-CenY, Pos[2]-CenZ };
+   const double R      = sqrt( SQR(dR[0]) + SQR(dR[1]) + SQR(dR[2]) );
+
+// do not refine if the target radius is not set
+   if ( Refine_Rad < 0.0 )   return false;
+
+// refine the region within r < Refine_Rad and the innermost cells
+   if ( R < dh  ||  R < Refine_Rad )   return true;
+
+   return false;
+
+} // FUNCTION : Check_Radial

@@ -87,6 +87,7 @@ OPT__FLAG_LOHNER_FORM         1           # form of Lohner: (1=FLASH-1, 2=FLASH-
 OPT__FLAG_ENGY_DENSITY        0           # flag: energy density (Input_Flag_EngyDensity) [0] ##ELBDM ONLY##
 OPT__FLAG_INTERFERENCE        1           # flag: interference level (Input__Flag_Interference) [0] ##ELBDM ONLY##
 OPT__FLAG_SPECTRAL            1           # flag: spectral refinement (Input__Flag_Spectral) [0] ##ELBDM ONLY##
+OPT__FLAG_SPECTRAL_N          2           # number of pol. coefficients to use for spectral refinement [2] ##ELBDM ONLY##
 OPT__FLAG_USER                0           # flag: user-defined (Input__Flag_User) -> edit "Flag_User.cpp" [0]
 OPT__FLAG_REGION              0           # flag: specify the regions **allowed** to be refined -> edit "Flag_Region.cpp" [0]
 OPT__FLAG_NPAR_PATCH          0           # flag: # of particles per patch (Input__Flag_NParPatch): (0=off, 1=itself, 2=itself+siblings) [0]
@@ -172,11 +173,11 @@ OPT__GRA_INT_SCHEME           4           # ghost-zone potential for the gravity
 OPT__REF_POT_INT_SCHEME       4           # newly allocated potential during grid refinement [4]
 INT_MONO_COEFF                2.0         # coefficient for ensuring the interpolation monotonicity (1.0~4.0) [2.0]
 SPEC_INT_TABLE_PATH           ./          # path to tables for spectral interpolation ##ELBDM & SUPPORT_SPECTRAL_INT ONLY##
-SPEC_INT_XY_INSTEAD_DEPHA     1           # interpolate x = density^0.5*cos( phase/SPEC_INT_WAVELENGTH_MAGNIFIER ),
-                                          #             y = density^0.5*sin( phase/SPEC_INT_WAVELENGTH_MAGNIFIER ) instead of density and phase
-                                          # for the spectral interpolation, which has the advantage of being well-defined across vortices [1]
-SPEC_INT_WAVELENGTH_MAGNIFIER 1.0e2       # stretching factor of wavelength for SPEC_INT_XY_INSTEAD_DEPHA
-                                          # --> for SPEC_INT_WAVELENGTH_MAGNIFIER=1, x=real part and y=imaginary part [1.0e2]
+SPEC_INT_XY_INSTEAD_DEPHA     1           # interpolate x and y (real and imaginary parts in current implementation)
+                                          # around vortices instead of density and phase for the spectral interpolation,
+                                          # which has the advantage of being well-defined across vortices [1] ##ELBDM & SUPPORT_SPECTRAL_INT ONLY##
+SPEC_INT_VORTEX_THRESHOLD     0.1         # vortex detection threshold for SPEC_INT_XY_INSTEAD_DEPHA [0.1] ##ELBDM & SUPPORT_SPECTRAL_INT ONLY##
+SPEC_INT_GHOST_BOUNDARY       4           # ghost boundary size for spectral interpolation [4] ##ELBDM & SUPPORT_SPECTRAL_INT ONLY##
 
 
 # data dump

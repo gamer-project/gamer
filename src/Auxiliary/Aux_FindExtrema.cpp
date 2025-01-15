@@ -169,7 +169,7 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
    const real   MinTemp_No        = -1.0;
    const real   MinEntr_No        = -1.0;
    const bool   DE_Consistency_No = false;
-#  ifdef PARTICLE
+#  ifdef MASSIVE_PARTICLES
    const bool   TimingSendPar_No  = false;
    const bool   JustCountNPar_No  = false;
 #  ifdef LOAD_BALANCE
@@ -181,7 +181,7 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
    const bool   SibBufPatch       = NULL_BOOL;
    const bool   FaSibBufPatch     = NULL_BOOL;
 #  endif
-#  endif // #ifdef PARTICLE
+#  endif // #ifdef MASSIVE_PARTICLES
 
 
 // initialize the extrema
@@ -205,10 +205,10 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
       for (int t=0; t<NTotal; t++)  PID0_List[t] = 8*t;
 
 //    initialize the particle density array (rho_ext) and collect particles to the target level
-#     ifdef PARTICLE
+#     ifdef MASSIVE_PARTICLES
       if ( Extrema->Field & _PAR_DENS  ||  Extrema->Field & _TOTAL_DENS )
       {
-         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos, Time[lv],
+         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, _PAR_TYPE, PredictPos, Time[lv],
                                        SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
 
          Prepare_PatchData_InitParticleDensityArray( lv, Time[lv] );
@@ -324,7 +324,7 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
       } // for (int Disp=0; Disp<NTotal; Disp+=NPG_Max)
 
 //    free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
-#     ifdef PARTICLE
+#     ifdef MASSIVE_PARTICLES
       if ( Extrema->Field & _PAR_DENS  ||  Extrema->Field & _TOTAL_DENS )
       {
          Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );

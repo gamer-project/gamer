@@ -289,7 +289,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 
          for (int v=0; v<NCOMP_PASSIVE; v++) {
             char tmp_str[MAX_STRING];
-            sprintf(tmp_str, "Error(Passive%02d)", v);
+            sprintf( tmp_str, "Error(Passive%02d)", v );
             fprintf( File_L1, " %*s", StrLen_Flt, tmp_str );
          }
 

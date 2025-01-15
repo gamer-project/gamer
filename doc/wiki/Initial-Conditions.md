@@ -18,7 +18,7 @@ initial condition (IC) and GAMER initialization:
 <a name="IC-Func-Grids"></a>
 ### Grids
 
-Set [OPT__INIT](#OPT__INIT)=1 and edit the following grid IC function:
+Set [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=1 and edit the following grid IC function:
 
 * [[TESTPROB_ID | Runtime Parameters:-General#TESTPROB_ID]]=0:
 edit the function `Init_Function_User()` in
@@ -92,11 +92,14 @@ for example.
 See also
 [[ Add Problem-specific Grid Fields and Particle Attributes | Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes ]] for adding user-defined fluid fields.
 
-**Caution: when enabling [[OPENMP | Installation:-Simulation Options#OPENMP]],
-the grid IC function must be thread-safe** since it will be invoked by
-multiple threads in parallel. One can disable OpenMP parallelization
+> [!CAUTION]
+> When enabling [[--openmp | Installation:-Option-List#--openmp]],
+the grid IC function must be **thread-safe** since it will be invoked by
+multiple threads in parallel.
+>
+> One can disable OpenMP parallelization
 for the grid IC function by adopting
-[[OPT__INIT_GRID_WITH_OMP| MPI-and-OpenMP#OPT__INIT_GRID_WITH_OMP]]=0.
+[[OPT__INIT_GRID_WITH_OMP| Runtime-Parameters:-MPI-and-OpenMP#OPT__INIT_GRID_WITH_OMP]]=0.
 
 
 <a name="IC-Func-BField"></a>
@@ -108,7 +111,7 @@ divergence-free magnetic field automatically. We describe the two approaches
 separately in the following.
 
 To set the magnetic field directly,
-set [OPT__INIT](#OPT__INIT)=1 and [OPT__INIT_BFIELD_BYVECPOT](#OPT__INIT_BFIELD_BYVECPOT)=0.
+set [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=1 and [[OPT__INIT_BFIELD_BYVECPOT | Runtime-Parameters:-Initial-Conditions#OPT__INIT_BFIELD_BYVECPOT]]=0.
 Edit the following magnetic field IC function:
 
 * [[TESTPROB_ID | Runtime Parameters:-General#TESTPROB_ID]]=0:
@@ -133,7 +136,7 @@ variable `magnetic[]` at a given location `x/y/z` and time `Time`, where
 accessible by the keys `MAGX`, `MAGY`, `MAGZ`.
 
 To set the vector potential,
-set [OPT__INIT](#OPT__INIT)=1 and [OPT__INIT_BFIELD_BYVECPOT](#OPT__INIT_BFIELD_BYVECPOT)=2.
+set [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=1 and [[OPT__INIT_BFIELD_BYVECPOT | Runtime-Parameters:-Initial-Conditions#OPT__INIT_BFIELD_BYVECPOT]]=2.
 Then edit a problem-specific initialization function linked to the function pointer
 `Init_BField_ByVecPot_User_Ptr`, which has the following prototype:
 
@@ -147,17 +150,20 @@ It should return the vector potential at a given location `x/y/z` and time `Time
 
 **Example: `Init_BField_ByVecPot_User_Template()` in `src/Model_Hydro/MHD_Init_BField_ByVecPot_Function.cpp`.**
 
-**Caution: when enabling [[OPENMP | Installation:-Simulation Options#OPENMP]],
-the magnetic field or the vector potential IC function must be thread-safe** since it will be invoked by
-multiple threads in parallel. One can disable OpenMP parallelization
+> [!CAUTION]
+> When enabling [[--openmp | Installation:-Option-List#--openmp]],
+the magnetic field or the vector potential IC function must be **thread-safe** since it will be invoked by
+multiple threads in parallel.
+>
+> One can disable OpenMP parallelization
 for the magnetic field IC function by adopting
-[[OPT__INIT_GRID_WITH_OMP| MPI-and-OpenMP#OPT__INIT_GRID_WITH_OMP]]=0.
+[[OPT__INIT_GRID_WITH_OMP| Runtime-Parameters:-MPI-and-OpenMP#OPT__INIT_GRID_WITH_OMP]]=0.
 
 
 <a name="IC-Func-Particles"></a>
 ### Particles
 
-Set [[PAR_INIT | Particles#PAR_INIT]]=1 and edit the following
+Set [[PAR_INIT | Runtime-Parameters:-Particles#PAR_INIT]]=1 and edit the following
 particle IC function:
 
 * [[TESTPROB_ID | Runtime Parameters:-General#TESTPROB_ID]]=0:
@@ -174,12 +180,14 @@ The particle IC function has the following prototype:
 
 ```C++
 void Par_Init_ByFunction( const long NPar_ThisRank, const long NPar_AllRank,
-                          real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                          real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                          real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
+                          real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                          real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                          long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                          long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 ```
 It should set the particle IC in the arrays `ParMass`, `ParPosX/Y/Z`,
-`ParVelX/Y/Z`, `ParTime`, `ParType`, and, optionally, the pointer array `*AllAttribute[PAR_NATT_TOTAL]`,
+`ParVelX/Y/Z`, `ParTime`, `ParType`, and, optionally, the pointer arrays
+`*AllAttributeFlt[PAR_NATT_FLT_TOTAL]` and `*AllAttributeInt[PAR_NATT_INT_TOTAL]`,
 all of which have the size of `NPar_ThisRank` &#8212; the number of particles
 to be set by this MPI rank. Note that particles set by this function
 are only temporarily stored in this MPI rank and will later be
@@ -191,7 +199,7 @@ particles**.
 The built-in particle types (defined in `include/Macro.h`) include
 `PTYPE_TRACER`, `PTYPE_GENERIC_MASSIVE`, `PTYPE_DARK_MATTER`, and `PTYPE_STAR`.
 For `PTYPE_TRACER`, one must also enable the compilation option
-[[TRACER | Installation: Simulation-Options#TRACER]].
+[[--tracer | Installation:-Option-List#--tracer]].
 
 The following example shows `Par_Init_ByFunction()` in
 `src/Particle/Par_Init_ByFunction.cpp`:
@@ -215,25 +223,29 @@ The following example shows `Par_Init_ByFunction()` in
 //                       and LB_Init_LoadBalance()
 //                   --> Therefore, there is no constraint on which particles should be set by this function
 //
-// Parameter   :  NPar_ThisRank : Number of particles to be set by this MPI rank
-//                NPar_AllRank  : Total Number of particles in all MPI ranks
-//                ParMass       : Particle mass     array with the size of NPar_ThisRank
-//                ParPosX/Y/Z   : Particle position array with the size of NPar_ThisRank
-//                ParVelX/Y/Z   : Particle velocity array with the size of NPar_ThisRank
-//                ParTime       : Particle time     array with the size of NPar_ThisRank
-//                ParType       : Particle type     array with the size of NPar_ThisRank
-//                AllAttribute  : Pointer array for all particle attributes
-//                                --> Dimension = [PAR_NATT_TOTAL][NPar_ThisRank]
-//                                --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
-//                                    to access the data
+// Parameter   :  NPar_ThisRank   : Number of particles to be set by this MPI rank
+//                NPar_AllRank    : Total Number of particles in all MPI ranks
+//                ParMass         : Particle mass     array with the size of NPar_ThisRank
+//                ParPosX/Y/Z     : Particle position array with the size of NPar_ThisRank
+//                ParVelX/Y/Z     : Particle velocity array with the size of NPar_ThisRank
+//                ParTime         : Particle time     array with the size of NPar_ThisRank
+//                ParType         : Particle type     array with the size of NPar_ThisRank
+//                AllAttributeFlt : Pointer array for all particle floating-point attributes
+//                                  --> Dimension = [PAR_NATT_FLT_TOTAL][NPar_ThisRank]
+//                                  --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
+//                                      to access the data
+//                AllAttributeInt : Pointer array for all particle integer attributes
+//                                  --> Dimension = [PAR_NATT_INT_TOTAL][NPar_ThisRank]
+//                                  --> Use the attribute indices defined in Field.h to access the data
 
 //
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttribute
 //-------------------------------------------------------------------------------------------------------
 void Par_Init_ByFunction( const long NPar_ThisRank, const long NPar_AllRank,
-                          real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                          real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                          real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
+                          real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                          real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                          long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                          long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 {
 
 // synchronize all particles to the physical time on the base level
@@ -248,26 +260,26 @@ void Par_Init_ByFunction( const long NPar_ThisRank, const long NPar_AllRank,
    real *ParPos[3] = { ParPosX, ParPosY, ParPosZ };
    real *ParVel[3] = { ParVelX, ParVelY, ParVelZ };
 
-   const uint RSeed     = 2;                                         // random seed
-   const real MassMin   = 1.0e-2;                                    // minimum value of particle mass
-   const real MassMax   = 1.0;                                       // maximum value of particle mass
-   const real PosMin[3] = { 0.0, 0.0, 0.0 };                         // minimum value of particle position
-   const real PosMax[3] = { real( amr->BoxSize[0]*(1.0-1.0e-5) ),    // maximum value of particle position
-                            real( amr->BoxSize[1]*(1.0-1.0e-5) ),
-                            real( amr->BoxSize[2]*(1.0-1.0e-5) ) };
-   const real VelMin[3] = { -1.0, -1.0, -1.0 };                      // minimum value of particle velocity
-   const real VelMax[3] = { +1.0, +1.0, +1.0 };                      // maximum value of particle velocity
+   const uint     RSeed     = 2;                                         // random seed
+   const real_par MassMin   = 1.0e-2;                                    // minimum value of particle mass
+   const real_par MassMax   = 1.0;                                       // maximum value of particle mass
+   const real_par PosMin[3] = { 0.0, 0.0, 0.0 };                         // minimum value of particle position
+   const real_par PosMax[3] = { real( amr->BoxSize[0]*(1.0-1.0e-5) ),    // maximum value of particle position
+                                real( amr->BoxSize[1]*(1.0-1.0e-5) ),
+                                real( amr->BoxSize[2]*(1.0-1.0e-5) ) };
+   const real_par VelMin[3] = { -1.0, -1.0, -1.0 };                      // minimum value of particle velocity
+   const real_par VelMax[3] = { +1.0, +1.0, +1.0 };                      // maximum value of particle velocity
 
    srand( RSeed );
 
    for (long p=0; p<NPar_ThisRank; p++)
    {
-      ParMass[p] = ( (real)rand()/RAND_MAX )*( MassMax - MassMin ) + MassMin;
+      ParMass[p] = ( (real_par)rand()/RAND_MAX )*( MassMax - MassMin ) + MassMin;
 
       for (int d=0; d<3; d++)
       {
-         ParPos[d][p] = ( (real)rand()/RAND_MAX )*( PosMax[d] - PosMin[d] ) + PosMin[d];
-         ParVel[d][p] = ( (real)rand()/RAND_MAX )*( VelMax[d] - VelMin[d] ) + VelMin[d];
+         ParPos[d][p] = ( (real_par)rand()/RAND_MAX )*( PosMax[d] - PosMin[d] ) + PosMin[d];
+         ParVel[d][p] = ( (real_par)rand()/RAND_MAX )*( VelMax[d] - VelMin[d] ) + VelMin[d];
       }
    }
 
@@ -286,33 +298,33 @@ for its usage.
 
 <a name="IC-File-Grids"></a>
 ### Grids
-Set [OPT__INIT](#OPT__INIT)=3 to load the grid initial condition from a
+Set [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=3 to load the grid initial condition from a
 uniform-mesh binary file named **`UM_IC`**. This file will be used to provide the
 initial grid data of the entire computational domain _fully refined_
-to the AMR level [OPT__UM_IC_LEVEL](#OPT__UM_IC_LEVEL)
-(but see also [OPT__UM_IC_DOWNGRADE](#OPT__UM_IC_DOWNGRADE) and
-[OPT__UM_IC_REFINE](#OPT__UM_IC_REFINE) described below). The dimension of
+to the AMR level [[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LEVEL]]
+(but see also [[OPT__UM_IC_DOWNGRADE | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_DOWNGRADE]] and
+[[OPT__UM_IC_REFINE | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_REFINE]] described below). The dimension of
 this uniform-mesh file (assuming a row-major array) can be either
-`[NFIELD][NZ][NY][NX]` (for [OPT__UM_IC_FORMAT](#OPT__UM_IC_FORMAT)=1) or
-`[NZ][NY][NX][NFIELD]` (for [OPT__UM_IC_FORMAT](#OPT__UM_IC_FORMAT)=2), where
-`NFIELD` is the number of fluid fields set by [OPT__UM_IC_NVAR](#OPT__UM_IC_NVAR)
+`[NFIELD][NZ][NY][NX]` (for [[OPT__UM_IC_FORMAT | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_FORMAT]]=1) or
+`[NZ][NY][NX][NFIELD]` (for [[OPT__UM_IC_FORMAT | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_FORMAT]]=2), where
+`NFIELD` is the number of fluid fields set by [[OPT__UM_IC_NVAR | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_NVAR]]
 and `NX/Y/Z` are the grid dimensions (i.e., number of cells) along the x/y/z
 directions, respectively. Since `UM_IC` should store the initial condition of
-a uniform mesh corresponding to level [OPT__UM_IC_LEVEL](#OPT__UM_IC_LEVEL),
+a uniform mesh corresponding to level [[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LEVEL]],
 one must ensure that
 
-* `NX`=[[NX0_TOT_X | Runtime-Parameters:-General#NX0_TOT_X]]*2^[OPT__UM_IC_LEVEL](#OPT__UM_IC_LEVEL)
-* `NY`=[[NX0_TOT_Y | Runtime-Parameters:-General#NX0_TOT_Y]]*2^[OPT__UM_IC_LEVEL](#OPT__UM_IC_LEVEL)
-* `NZ`=[[NX0_TOT_Z | Runtime-Parameters:-General#NX0_TOT_Z]]*2^[OPT__UM_IC_LEVEL](#OPT__UM_IC_LEVEL)
+* `NX`=[[NX0_TOT_X | Runtime-Parameters:-General#NX0_TOT_X]]*2^[[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LEVEL]]
+* `NY`=[[NX0_TOT_Y | Runtime-Parameters:-General#NX0_TOT_Y]]*2^[[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LEVEL]]
+* `NZ`=[[NX0_TOT_Z | Runtime-Parameters:-General#NX0_TOT_Z]]*2^[[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LEVEL]]
 
 For example, for `NX0_TOT_X=16`, `NX0_TOT_Y=32`, `NX0_TOT_Z=48`, `OPT__UM_IC_LEVEL=1`, and
 `NCOMP_PASSIVE_USER=0`, `UM_IC` should have the dimension
 `[5+0][48*2^1][32*2^1][16*2^1]=[5][96][64][32]`
-for [OPT__UM_IC_FORMAT](#OPT__UM_IC_FORMAT)=1 or
-`[96][64][32][5]` for [OPT__UM_IC_FORMAT](#OPT__UM_IC_FORMAT)=2,
+for [[OPT__UM_IC_FORMAT | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_FORMAT]]=1 or
+`[96][64][32][5]` for [[OPT__UM_IC_FORMAT | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_FORMAT]]=2,
 assuming the array indices are row-major. The following C++ example
 sets up a static and uniform gas with mass density of 1
-and total energy density of 2 (assuming [OPT__UM_IC_FORMAT](#OPT__UM_IC_FORMAT)=1).
+and total energy density of 2 (assuming [[OPT__UM_IC_FORMAT | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_FORMAT]]=1).
 
 ```c++
 #include <cstdio>
@@ -346,31 +358,36 @@ int main()
 ```
 
 The entire computational domain will always be first fully refined to the
-AMR level [OPT__UM_IC_LEVEL](#OPT__UM_IC_LEVEL). After that, if
-[OPT__UM_IC_DOWNGRADE](#OPT__UM_IC_DOWNGRADE) is enabled, the initialization
-routine will remove grids on levels 1 &#8212; [OPT__UM_IC_LEVEL](#OPT__UM_IC_LEVEL)
+AMR level [[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LEVEL]]. After that, if
+[[OPT__UM_IC_DOWNGRADE | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_DOWNGRADE]] is enabled, the initialization
+routine will remove grids on levels 1 &#8212; [[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LEVEL]]
 that do not satisfy any refinement criterion.
-Also, if [OPT__UM_IC_REFINE](#OPT__UM_IC_REFINE) is enabled, the initialization
-routine will add grids to levels [OPT__UM_IC_LEVEL](#OPT__UM_IC_LEVEL)+1 &#8212;
+Also, if [[OPT__UM_IC_REFINE | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_REFINE]] is enabled, the initialization
+routine will add grids to levels [[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LEVEL]]+1 &#8212;
 [[ MAX_LEVEL | Runtime-Parameters:-Refinement#MAX_LEVEL]]
 in the regions satisfying any refinement criterion.
 
-The initial condition file `UM_IC` can be loaded concurrently by multiple
-MPI processes using [OPT__UM_IC_LOAD_NRANK](#OPT__UM_IC_LOAD_NRANK).
+A custom routine for assigning data to each cell from the loaded data
+can be specified using the function pointer
+[[Init_ByFile_User_Ptr | Adding-New-Simulations#initial-condition-from-files---grids]].
 
-To support AMR data in `UM_IC`, set [OPT__UM_IC_NLEVEL](#OPT__UM_IC_NLEVEL)>1 and
+The initial condition file `UM_IC` can be loaded concurrently by multiple
+MPI processes using [[OPT__UM_IC_LOAD_NRANK | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LOAD_NRANK]].
+
+To support AMR data in `UM_IC`, set [[OPT__UM_IC_NLEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_NLEVEL]]>1 and
 edit the input table `Input__UM_IC_RefineRegion`. See `example/input/Input__UM_IC_RefineRegion`
 and the example code `tool/inits/create_UM_IC.cpp` for details.
 
-**Caution: [OPT__INIT](#OPT__INIT)=3 does not fully support
+> [!CAUTION]
+> [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=3 does not fully support
 user-defined passively advected scalars (i.e.,
-[[NCOMP_PASSIVE_USER | Installation: Simulation-Options#NCOMP_PASSIVE_USER]]>0) yet.
-[[Ask developers for help | Home#need-helps]] if needed.**
+[[--passive | Installation:-Option-List#--passive]]>0) yet.
+[[Ask developers for help | Home#need-helps]] if needed.
 
 
 <a name="IC-File-BField"></a>
 ### Magnetic Field
-Set [OPT__INIT](#OPT__INIT)=1 and [OPT__INIT_BFIELD_BYVECPOT](#OPT__INIT_BFIELD_BYVECPOT)=1
+Set [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=1 and [[OPT__INIT_BFIELD_BYVECPOT | Runtime-Parameters:-Initial-Conditions#OPT__INIT_BFIELD_BYVECPOT]]=1
 to load the vector potential IC from a uniform-mesh HDF5 file
 named **`B_IC`**. The built-in routines will construct a corresponding
 divergence-free magnetic field automatically.
@@ -381,66 +398,107 @@ divergence-free magnetic field automatically.
 <a name="IC-File-Particles"></a>
 ### Particles
 
-Set [[PAR_INIT | Particles#PAR_INIT]]=3 to load the particle initial condition
+Set [[PAR_INIT | Runtime-Parameters:-Particles#PAR_INIT]]=3 to load the particle initial condition
 from a binary file named **`PAR_IC`**. The dimension of this file (assuming a
 row-major array) can be either
-`[NUM_ATTRIBUTE][NUM_PARTICLE]` (for [[PAR_IC_FORMAT | Particles#par_ic_format]]=1) or
-`[NUM_PARTICLE][NUM_ATTRIBUTE]` (for [[PAR_IC_FORMAT | Particles#par_ic_format]]=2), where
+`[NUM_ATTRIBUTE][NUM_PARTICLE]` (for [[PAR_IC_FORMAT | Runtime-Parameters:-Particles#PAR_IC_FORMAT]]=1) or
+`[NUM_PARTICLE][NUM_ATTRIBUTE]` (for [[PAR_IC_FORMAT | Runtime-Parameters:-Particles#PAR_IC_FORMAT]]=2), where
 `NUM_ATTRIBUTE` is the number of particle attributes to be loaded
 and `NUM_PARTICLE` is the total number of particles
-(i.e., [[PAR_NPAR | Particles#par_npar]]).
+(i.e., [[PAR_NPAR | Runtime-Parameters:-Particles#PAR_NPAR]]).
 By default, `NUM_ATTRIBUTE` is equal to
-`8` + [[PAR_NATT_USER | Installation: Simulation-Options#PAR_NATT_USER]],
+`7` + [[--par_attribute_flt | Installation:-Option-List#--par_attribute_flt]] + [[--par_attribute_int | Installation:-Option-List#--par_attribute_int]],
 corresponding to particle mass, position x/y/z, velocity x/y/z,
 type, and user-specified attributes (and in exactly this order).
-One can also use [[PAR_IC_MASS | Particles#par_ic_mass]] / [[PAR_IC_TYPE | Particles#par_ic_type]]
+One can also use [[PAR_IC_MASS | Runtime-Parameters:-Particles#PAR_IC_MASS]] / [[PAR_IC_TYPE | Runtime-Parameters:-Particles#PAR_IC_TYPE]]
 to assign the same particle mass / type to all particles,
 in which case the file `PAR_IC` should not store particle mass / type.
 
 The following C++ example constructs a particle initial condition
-file with 1000 particles assuming [[PAR_IC_MASS | Particles#par_ic_mass]]<0,
-[[PAR_IC_TYPE | Particles#par_ic_type]]<0,
-and [[PAR_IC_FORMAT | Particles#par_ic_format]]=1.
+file with 1000 particles assuming [[PAR_IC_MASS | Runtime-Parameters:-Particles#PAR_IC_MASS]]<0,
+[[PAR_IC_TYPE | Runtime-Parameters:-Particles#PAR_IC_TYPE]]<0,
+and [[PAR_IC_FORMAT | Runtime-Parameters:-Particles#PAR_IC_FORMAT]]=1.
 
 ```c++
 #include <cstdio>
 
+//#define FLOAT8_PAR
+#define INT8_PAR
+
+
+#ifdef FLOAT8_PAR
+typedef double real_par;
+#else
+typedef float  real_par;
+#endif
+
+#ifdef INT8_PAR
+typedef long long_par;
+#else
+typedef int  long_par;
+#endif
+
+
 int main()
 {
-   const int NUM_PARTICLE  = 1000;
-   const int NUM_ATTRIBUTE = 8;
 
-   float (*ParIC)[NUM_PARTICLE] = new float [NUM_ATTRIBUTE][NUM_PARTICLE];
+   const int  NUM_PARTICLE      = 1000;
+   const int  NUM_ATTRIBUTE_FLT = 7;
+   const int  NUM_ATTRIBUTE_INT = 1;
+   const bool PAR_IC_ID_ATT     = true; // data format of PAR_IC: (true: [id][attribute], false: [attribute][id]; row-major)
+
+   real_par (*ParIC_Flt)[NUM_PARTICLE] = new real_par [NUM_ATTRIBUTE_FLT][NUM_PARTICLE];
+   long_par (*ParIC_Int)[NUM_PARTICLE] = new long_par [NUM_ATTRIBUTE_INT][NUM_PARTICLE];
 
    for (int p=0; p<NUM_PARTICLE; p++)
    {
 //    replace the following lines by your particle initial condition
-      ParIC[0][p] = 1.1;   // mass
-      ParIC[1][p] = 2.2;   // position x
-      ParIC[2][p] = 3.3;   // position y
-      ParIC[3][p] = 4.4;   // position z
-      ParIC[4][p] = 5.5;   // velocity x
-      ParIC[5][p] = 6.6;   // velocity y
-      ParIC[6][p] = 7.7;   // velocity z
-      ParIC[7][p] = 1.0;   // type (generic massive)
+      ParIC_Flt[0][p] = 1.1;   // mass
+      ParIC_Flt[1][p] = 2.2;   // position x
+      ParIC_Flt[2][p] = 3.3;   // position y
+      ParIC_Flt[3][p] = 4.4;   // position z
+      ParIC_Flt[4][p] = 5.5;   // velocity x
+      ParIC_Flt[5][p] = 6.6;   // velocity y
+      ParIC_Flt[6][p] = 7.7;   // velocity z
+
+      ParIC_Int[0][p] = 1;     // type (generic massive)
    }
 
    FILE *File = fopen( "PAR_IC", "wb" );
-   fwrite( ParIC, sizeof(float), NUM_PARTICLE*NUM_ATTRIBUTE, File );
+
+   if ( PAR_IC_ID_ATT )
+   {
+      for (int p=0; p<NUM_PARTICLE; p++)
+      {
+         for (int v=0; v<NUM_ATTRIBUTE_FLT; v++) fwrite( &ParIC_Flt[v][p], sizeof(real_par), 1, File );
+         for (int v=0; v<NUM_ATTRIBUTE_INT; v++) fwrite( &ParIC_Int[v][p], sizeof(long_par), 1, File );
+      }
+   }
+   else
+   {
+      for (int v=0; v<NUM_ATTRIBUTE_FLT; v++) fwrite( ParIC_Flt[v], sizeof(real_par), NUM_PARTICLE, File );
+      for (int v=0; v<NUM_ATTRIBUTE_INT; v++) fwrite( ParIC_Int[v], sizeof(long_par), NUM_PARTICLE, File );
+   }
+
    fclose( File );
 
-   delete [] ParIC;
-}
+   delete [] ParIC_Flt;
+   delete [] ParIC_Int;
+
+} // FUNCTION : main
 ```
 
 The built-in particle types (defined in `include/Macro.h`) include
-`PTYPE_TRACER=0.0`, `PTYPE_GENERIC_MASSIVE=1.0`, `PTYPE_DARK_MATTER=2.0`, and `PTYPE_STAR=3.0`.
-They have the floating-point types for now but will be changed to integers in the future.
+`PTYPE_TRACER=0`, `PTYPE_GENERIC_MASSIVE=1`, `PTYPE_DARK_MATTER=2`, and `PTYPE_STAR=3`.
 For `PTYPE_TRACER`, one must also enable the compilation option
-[[TRACER | Installation: Simulation-Options#TRACER]].
+[[--tracer | Installation:-Option-List#--tracer]].
 
-Note that it is not required to adopt [OPT__INIT](#OPT__INIT)=3 and
-[[PAR_INIT | Particles#PAR_INIT]]=3 at the same time. In other words,
+A custom routine for assigning particle attributes from the loaded data
+can be specified using the function pointer
+[[Par_Init_ByFile_User_Ptr | Adding-New-Simulations#initial-condition-from-files---particles]].
+
+Note that it is not required to adopt [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=3 and
+[[PAR_INIT | Runtime-Parameters:-Particles#PAR_INIT]]=3 at the same time. In other words,
 it is perfectly fine to set the grid initial condition from an analytical
 function and load the particle initial condition from a file (and vice versa).
 
@@ -448,169 +506,19 @@ function and load the particle initial condition from a file (and vice versa).
 ## Compilation Options
 
 Related options:
-[[NCOMP_PASSIVE_USER | Installation: Simulation-Options#NCOMP_PASSIVE_USER]], &nbsp;
-[[PAR_NATT_USER | Installation: Simulation-Options#PAR_NATT_USER]] &nbsp;
+[[--passive | Installation:-Option-List#--passive]], &nbsp;
+[[--par_attribute_flt | Installation:-Option-List#--par_attribute_flt]] &nbsp;
+[[--par_attribute_int | Installation:-Option-List#--par_attribute_int]] &nbsp;
 
 
 ## Runtime Parameters
-
-Parameters described on this page:
-[OPT__INIT](#OPT__INIT), &nbsp;
-[OPT__INIT_BFIELD_BYVECPOT](#OPT__INIT_BFIELD_BYVECPOT), &nbsp;
-[RESTART_LOAD_NRANK](#RESTART_LOAD_NRANK), &nbsp;
-[OPT__RESTART_RESET](#OPT__RESTART_RESET), &nbsp;
-[OPT__UM_IC_LEVEL](#OPT__UM_IC_LEVEL), &nbsp;
-[OPT__UM_IC_NLEVEL](#OPT__UM_IC_NLEVEL), &nbsp;
-[OPT__UM_IC_NVAR](#OPT__UM_IC_NVAR), &nbsp;
-[OPT__UM_IC_FORMAT](#OPT__UM_IC_FORMAT), &nbsp;
-[OPT__UM_IC_FLOAT8](#OPT__UM_IC_FLOAT8), &nbsp;
-[OPT__UM_IC_DOWNGRADE](#OPT__UM_IC_DOWNGRADE), &nbsp;
-[OPT__UM_IC_REFINE](#OPT__UM_IC_REFINE), &nbsp;
-[OPT__UM_IC_LOAD_NRANK](#OPT__UM_IC_LOAD_NRANK), &nbsp;
-[OPT__INIT_RESTRICT](#OPT__INIT_RESTRICT), &nbsp;
-[INIT_SUBSAMPLING_NCELL](#INIT_SUBSAMPLING_NCELL), &nbsp;
-[OPT__FFTW_STARTUP](#OPT__FFTW_STARTUP) &nbsp;
+[[Runtime parameters: Initial Conditions | Runtime-Parameters:-Initial-Conditions]]
 
 Other related parameters:
-[[PAR_INIT | Particles#PAR_INIT]], &nbsp;
-[[PAR_IC_FORMAT | Particles#PAR_IC_FORMAT]], &nbsp;
-[[PAR_IC_MASS | Particles#PAR_IC_MASS]], &nbsp;
-[[OPT__INIT_GRID_WITH_OMP | MPI and OpenMP#OPT__INIT_GRID_WITH_OMP]] &nbsp;
-
-Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**
-
-<a name="OPT__INIT"></a>
-* #### `OPT__INIT` &ensp; (1=function, 2=restart, 3=`UM_IC` file) &ensp; [none]
-    * **Description:**
-Grid initialization method.
-`OPT__INIT=1`: using analytical functions; see
-[Setting IC from Analytical Functions &#8212; Grids](#IC-Func-Grids).
-`OPT__INIT=2`:
-[[restarting from a simulation snapshot | Running-the-Code#restarting-from-a-snapshot]].
-`OPT__INIT=3`: loading a uniform-mesh binary file named `UM_IC`; see
-[Setting IC from Files &#8212; Grids](#IC-File-Grids).
-    * **Restriction:**
-
-<a name="OPT__INIT_BFIELD_BYVECPOT"></a>
-* #### `OPT__INIT_BFIELD_BYVECPOT` &ensp; (0=off, 1=file, 2=function) &ensp; [0]
-    * **Description:**
-Set the magnetic field from either a vector potential file named `B_IC` (see
-[Setting IC from Files &#8212; Magnetic Field](#IC-File-BField)) or an
-analytical vector potential function (see
-[Setting IC from Functions &#8212; Magnetic Field](#IC-Func-BField)).
-    * **Restriction:**
-For [[MHD | Installation: Simulation-Options#MHD]] only.
-
-<a name="RESTART_LOAD_NRANK"></a>
-* #### `RESTART_LOAD_NRANK` &ensp; (>0) &ensp; [1]
-    * **Description:**
-Number of parallel I/O for restart. In other words, `RESTART_LOAD_NRANK`
-MPI processes will load the restart file in parallel.
-    * **Restriction:**
-
-<a name="OPT__RESTART_RESET"></a>
-* #### `OPT__RESTART_RESET` &ensp; (0=off, 1=on) &ensp; [0]
-    * **Description:**
-During restart, reset some of the simulation status parameters
-(e.g., step, time, snapshot ID) to their initial values as if the
-simulation starts over again.
-    * **Restriction:**
-
-<a name="OPT__UM_IC_LEVEL"></a>
-* #### `OPT__UM_IC_LEVEL` &ensp; (0 &#8804; input < [[NLEVEL | Installation:-Simulation Options#NLEVEL]]) &ensp; [0]
-    * **Description:**
-Starting AMR level in the uniform-mesh initial condition file.
-See [Setting IC from Files &#8212; Grids](#IC-File-Grids) for details.
-    * **Restriction:**
-
-<a name="OPT__UM_IC_NLEVEL"></a>
-* #### `OPT__UM_IC_NLEVEL` &ensp; (1 &#8804; input &#8804; [[NLEVEL | Installation:-Simulation Options#NLEVEL]]-[OPT__UM_IC_LEVEL](#OPT__UM_IC_LEVEL)) &ensp; [1]
-    * **Description:**
-Number of AMR levels in the uniform-mesh initial condition file.
-See [Setting IC from Files &#8212; Grids](#IC-File-Grids) for details.
-    * **Restriction:**
-
-<a name="OPT__UM_IC_NVAR"></a>
-* #### `OPT__UM_IC_NVAR` &ensp; (0 &#8804; input < total number of gas fields) &ensp; [total number of gas fields]
-    * **Description:**
-Number of fluid variables stored in the uniform-mesh initial condition file.
-The default value is
-5+[[NCOMP_PASSIVE_USER | Installation: Simulation-Options#NCOMP_PASSIVE_USER]]
-for [[MODEL | Installation: Simulation-Options#MODEL]]=HYDRO.
-See [Setting IC from Files &#8212; Grids](#IC-File-Grids) for details.
-    * **Restriction:**
-
-<a name="OPT__UM_IC_FORMAT"></a>
-* #### `OPT__UM_IC_FORMAT` &ensp; (1=[v][z][y][x], 2=[z][y][x][v]; row-major and v=field) &ensp; [1]
-    * **Description:**
-Data format of the uniform-mesh initial condition file. See
-[Setting IC from Files &#8212; Grids](#IC-File-Grids) for details.
-    * **Restriction:**
-
-<a name="OPT__UM_IC_FLOAT8"></a>
-* #### `OPT__UM_IC_FLOAT8` &ensp; (<0: same as [[FLOAT8 | Installation:-Simulation Options#FLOAT8]], 0=single precision, 1=double precision) &ensp; [-1]
-    * **Description:**
-Floating-point precision of the uniform-mesh initial condition file.
-    * **Restriction:**
-
-<a name="OPT__UM_IC_DOWNGRADE"></a>
-* #### `OPT__UM_IC_DOWNGRADE` &ensp; (0=off, 1=on) &ensp; [1]
-    * **Description:**
-Downgrade (i.e. derefine) the uniform-mesh initial condition data for cells
-not satisfying any refinement criteria.
-See [Setting IC from Files &#8212; Grids](#IC-File-Grids) for details.
-    * **Restriction:**
-
-<a name="OPT__UM_IC_REFINE"></a>
-* #### `OPT__UM_IC_REFINE` &ensp; (0=off, 1=on) &ensp; [1]
-    * **Description:**
-Refine the uniform-mesh initial condition data from level `OPT__UM_IC_LEVEL` to
-[[MAX_LEVEL | Runtime Parameters:-Refinement#MAX_LEVEL]] for cells satisfying the adopted
-refinement criteria.
-See [Setting IC from Files &#8212; Grids](#IC-File-Grids) for details.
-    * **Restriction:**
-
-<a name="OPT__UM_IC_LOAD_NRANK"></a>
-* #### `OPT__UM_IC_LOAD_NRANK` &ensp; (>0) &ensp; [1]
-    * **Description:**
-Number of parallel I/O for loading the uniform-mesh initial condition file.
-Specifically, it allows `OPT__UM_IC_LOAD_NRANK` MPI processes to load the
-initial condition file concurrently. But the actually achieved parallel I/O
-depends on the system specifications.
-See also [Setting IC from Files &#8212; Grids](#IC-File-Grids).
-    * **Restriction:**
-
-<a name="OPT__INIT_RESTRICT"></a>
-* #### `OPT__INIT_RESTRICT` &ensp; (0=off, 1=on) &ensp; [1]
-    * **Description:**
-For non-leaf patches, replace fluid data by the volume-weighted average
-of their child patch data. It is similar to the option
-[[OPT__FIXUP_RESTRICT | Hydro#OPT__FIXUP_RESTRICT]]
-except that it only applies to the initial condition.
-    * **Restriction:**
-
-<a name="INIT_SUBSAMPLING_NCELL"></a>
-* #### `INIT_SUBSAMPLING_NCELL` &ensp; (0=off, >0 &#8594; number of sub-cells along each direction) &ensp; [0]
-    * **Description:**
-Perform sub-sampling when constructing the grid IC to make it smoother.
-Specifically, each cell will be divided into <var>N</var><sub>sub</sub><sup>3</sup>
-sub-cells when calling the grid IC function, where
-<var>N</var><sub>sub</sub> = `INIT_SUBSAMPLING_NCELL`, and then
-take the volume-weighted average of these sub-cells.
-    * **Restriction:**
-Only applicable when adopting [OPT__INIT](#OPT__INIT)=1.
-
-<a name="OPT__FFTW_STARTUP"></a>
-* #### `OPT__FFTW_STARTUP` &ensp; (-1 &#8594; set to default, 0=ESTIMATE, 1=MEASURE, 2=PATIENT) &ensp; [-1]
-    * **Description:**
-Initialize FFTW plans. `MEASURE` is recommended for the balance
-between FFTW plan initialization time and FFT performance.
-Note that simulation results can vary in each run on the level of
-machine precision for `OPT__FFTW_STARTUP != ESTIMATE`.
-    * **Restriction:**
-`PATIENT` is not supported by FFTW2.
-Must use `ESTIMATE` when enabling
-[[BITWISE_REPRODUCIBILITY | Installation: Simulation-Options#BITWISE_REPRODUCIBILITY]].
+[[PAR_INIT | Runtime-Parameters:-Particles#PAR_INIT]], &nbsp;
+[[PAR_IC_FORMAT | Runtime-Parameters:-Particles#PAR_IC_FORMAT]], &nbsp;
+[[PAR_IC_MASS | Runtime-Parameters:-Particles#PAR_IC_MASS]], &nbsp;
+[[OPT__INIT_GRID_WITH_OMP | Runtime-Parameters:-MPI-and-OpenMP#OPT__INIT_GRID_WITH_OMP]] &nbsp;
 
 
 ## Remarks

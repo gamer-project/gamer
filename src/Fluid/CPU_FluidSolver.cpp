@@ -1,8 +1,6 @@
-#include "GAMER.h"
-
-
-
 #ifndef GPU
+
+
 
 #include "GAMER.h"
 #include "CUFLU.h"
@@ -313,14 +311,14 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    } else {
 //    cast h_Flu_Array_In since HYB_NXT is possibly smaller than FLU_NXT
-      real (*smaller_h_Flu_Array_In )[FLU_NIN ][ CUBE(HYB_NXT) ] = ( real (*)[FLU_NIN][ CUBE(HYB_NXT) ] ) h_Flu_Array_In;
+      real (*smaller_h_Flu_Array_In )[FLU_NIN ][ CUBE(HYB_NXT) ] = ( real (*)[FLU_NIN ][ CUBE(HYB_NXT) ] ) h_Flu_Array_In;
 
 //    in debug mode, send DENS, PHAS and STUB back from CPU/GPU solvers
 //    in regular mode, only send DENS and PHAS back from CPU/GPU solvers
 #     ifndef GAMER_DEBUG
-      real (*smaller_h_Flu_Array_Out)[FLU_NIN ][ CUBE(PS2)     ] = (real (*)[FLU_NIN ][ CUBE(PS2)     ] ) h_Flu_Array_Out;
+      real (*smaller_h_Flu_Array_Out)[FLU_NIN ][ CUBE(PS2)     ] = ( real (*)[FLU_NIN ][ CUBE(PS2)     ] ) h_Flu_Array_Out;
 #     else
-      real (*smaller_h_Flu_Array_Out)[FLU_NOUT][ CUBE(PS2)     ] = (real (*)[FLU_NOUT][ CUBE(PS2)     ] ) h_Flu_Array_Out;
+      real (*smaller_h_Flu_Array_Out)[FLU_NOUT][ CUBE(PS2)     ] = ( real (*)[FLU_NOUT][ CUBE(PS2)     ] ) h_Flu_Array_Out;
 #     endif
 
       CPU_ELBDMSolver_HamiltonJacobi( smaller_h_Flu_Array_In, smaller_h_Flu_Array_Out, h_Flux_Array, h_IsCompletelyRefined,
