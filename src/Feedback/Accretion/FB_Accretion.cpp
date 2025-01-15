@@ -85,7 +85,7 @@ int FB_Accretion( const int lv, const real AccCellNum, const int NPar, const lon
    else if ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_SINKPARTICLE)  const double GasDensThres   = SF_CREATE_SINK_MIN_GAS_DENS;
 
    const int    NGhost         = PS1 / 2; // the number of ghost cell at each side
-   const int    MaxRemovalGas  = CUBE( PS1 )
+   const int    MaxRemovalGas  = CUBE( PS1 );
    const double AccRadius      = AccCellNum*dh;
    const double _dh            = 1.0 / dh;
    const double dv             = CUBE( dh );
