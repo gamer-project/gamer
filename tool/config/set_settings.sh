@@ -15,9 +15,9 @@ VALID_KEYS=("${!KEY_DESCRIPTIONS[@]}")
 
 # For padding keys with trailing spaces to format output
 MAX_KEY_LENGTH=0
-for KEY in "${VALID_KEYS[@]}"; do
-    if [ ${#KEY} -gt $MAX_KEY_LENGTH ]; then
-        MAX_KEY_LENGTH=${#KEY}
+for key in "${VALID_KEYS[@]}"; do
+    if [ ${#key} -gt $MAX_KEY_LENGTH ]; then
+        MAX_KEY_LENGTH=${#key}
     fi
 done
 
@@ -32,8 +32,8 @@ print_key() {
 
 show_valid_keys() {
     echo "Valid keys and their functionalities:"
-    for KEY in "${!KEY_DESCRIPTIONS[@]}"; do
-        print_key "$KEY" "${KEY_DESCRIPTIONS[$KEY]}" 2
+    for key in "${!KEY_DESCRIPTIONS[@]}"; do
+        print_key "$key" "${KEY_DESCRIPTIONS[$key]}" 2
     done
 }
 
@@ -62,21 +62,22 @@ show_help() {
 LOCAL=false
 GLOBAL=false
 LIST=false
-DELETE=false
 SET=false
+DELETE=false
+KEYS_PROCESSED=0
 declare -A SETTINGS
 DELETE_KEYS=()
 
 # Parser utility functions
 parse_set_parameter() {
-    local PARAM="$1"
-    local KEY="${PARAM%%=*}"
-    if [[ "$PARAM" != *=* ]]; then
-        echo "Error: Invalid format for the key '$KEY'. Use --$KEY=<value>." >&2
+    local param="$1"
+    local key="${param%%=*}"
+    if [[ "$param" != *=* ]]; then
+        echo "Error: Invalid format for the key '$key'. Use --$key=<value>." >&2
         exit 1
     fi
-    local VALUE="${PARAM#*=}"
-    SETTINGS["$KEY"]="$VALUE"
+    local value="${param#*=}"
+    SETTINGS["$key"]="$value"
 }
 
 parse_delete_keys() {
@@ -91,28 +92,28 @@ parse_delete_keys() {
 # Main parser loop
 while [[ "$#" -gt 0 ]]; do
     if [[ "${1:0:1}" = "-" && "${1:0:2}" != "--" ]]; then # Short options
-        OPT="${1:1}"
+        opt="${1:1}"
         shift
-        while [[ -n "$OPT" ]]; do # Possibly combined
-            case "${OPT:0:1}" in
+        while [[ -n "$opt" ]]; do # Possibly combined
+            case "${opt:0:1}" in
                 l) LIST=true ;;
                 h) show_help; exit 0 ;;
                 d)
                     DELETE=true
                     # Put the remaining combined short options back to the argument list
                     # Warning: This method will only apply if all other options are not order sensitive
-                    if [[ -n "${OPT:1}" ]]; then
-                        set -- "$@" "-$(echo "${OPT:1}" | tr -d 'd')"
+                    if [[ -n "${opt:1}" ]]; then
+                        set -- "$@" "-$(echo "${opt:1}" | tr -d 'd')"
                     fi
                     parse_delete_keys "$@"
                     shift $KEYS_PROCESSED
                     break ;;
                 *)
-                    echo "Error: Unknown option: -${OPT:0:1}" >&2
+                    echo "Error: Unknown option: -${opt:0:1}" >&2
                     printf "$(show_help)\n" >&2
                     exit 1 ;;
             esac
-            OPT="${OPT:1}"
+            opt="${opt:1}"
         done
     else                                       # Long options
         case $1 in
@@ -160,18 +161,18 @@ fi
 
 # Validate the keys and values for setting
 if [ "$SET" = true ]; then
-    for KEY in "${!SETTINGS[@]}"; do
-        if [[ ! " ${VALID_KEYS[@]} " =~ " $KEY " ]]; then
-            echo "Error: Invalid key '$KEY'." >&2
+    for key in "${!SETTINGS[@]}"; do
+        if [[ ! " ${VALID_KEYS[@]} " =~ " $key " ]]; then
+            echo "Error: Invalid key '$key'." >&2
             printf "$(show_valid_keys)\n" >&2
             exit 1
         fi
-        if [[ -z "${SETTINGS[$KEY]}" ]]; then
-            echo "Error: The value for the key '$KEY' cannot be empty. Use --$KEY=<value>." >&2
+        if [[ -z "${SETTINGS[$key]}" ]]; then
+            echo "Error: The value for the key '$key' cannot be empty. Use --$key=<value>." >&2
             exit 1
         fi
-        if [[ "${SETTINGS[$KEY]}" =~ \  ]]; then
-            echo "Error: The value for the key '$KEY' cannot contain spaces." >&2
+        if [[ "${SETTINGS[$key]}" =~ \  ]]; then
+            echo "Error: The value for the key '$key' cannot contain spaces." >&2
             exit 1
         fi
     done
@@ -189,9 +190,9 @@ if [ "$DELETE" = true ]; then
         echo "Error: No keys specified for deletion." >&2
         exit 1
     fi
-    for KEY in "${DELETE_KEYS[@]}"; do
-        if [[ ! " ${VALID_KEYS[@]} " =~ " $KEY " ]]; then
-            echo "Error: Invalid key '$KEY' for deletion." >&2
+    for key in "${DELETE_KEYS[@]}"; do
+        if [[ ! " ${VALID_KEYS[@]} " =~ " $key " ]]; then
+            echo "Error: Invalid key '$key' for deletion." >&2
             printf "$(show_valid_keys)\n" >&2
             exit 1
         fi
@@ -216,9 +217,9 @@ declare -A EXISTING_SETTINGS
 if [ -f "$SETTING_FILE" ]; then
     while read -r LINE; do
         [[ "$LINE" =~ ^#.*$ ]] && continue
-        KEY="$(echo "$LINE" | awk '{print $1}')"
-        VALUE="$(echo "$LINE" | awk '{print $2}')"
-        EXISTING_SETTINGS["$KEY"]="$VALUE"
+        key="$(echo "$LINE" | awk '{print $1}')"
+        value="$(echo "$LINE" | awk '{print $2}')"
+        EXISTING_SETTINGS["$key"]="$value"
     done < "$SETTING_FILE"
 fi
 
@@ -231,30 +232,30 @@ if [ "$LIST" = true ]; then # Header for listing settings
 fi
 
 # Main loop to update or delete settings
-for KEY in "${VALID_KEYS[@]}"; do
-    OLD_VALUE="${EXISTING_SETTINGS[$KEY]}"
-    NEW_VALUE="${SETTINGS[$KEY]}"
+for key in "${VALID_KEYS[@]}"; do
+    old_value="${EXISTING_SETTINGS[$key]}"
+    new_value="${SETTINGS[$key]}"
 
-    if [ "$SET" = true ] && [ -n "$NEW_VALUE" ]; then # The key will be set
+    if [ "$SET" = true ] && [ -n "$new_value" ]; then # The key will be set
 
-        EXISTING_SETTINGS["$KEY"]="$NEW_VALUE" # Update or set new value
+        EXISTING_SETTINGS["$key"]="$new_value" # Update or set new value
         if [ "$LIST" = true ]; then
-            if [ -z "$OLD_VALUE" ]; then
-                print_key "$KEY" "$NEW_VALUE (new)"
+            if [ -z "$old_value" ]; then
+                print_key "$key" "$new_value (new)"
             else
-                print_key "$KEY" "$OLD_VALUE -> $NEW_VALUE"
+                print_key "$key" "$old_value -> $new_value"
             fi
         fi
 
-    elif [ "$DELETE" = true ] && [[ " ${DELETE_KEYS[@]} " =~ " $KEY " ]]; then # The key will be deleted
+    elif [ "$DELETE" = true ] && [[ " ${DELETE_KEYS[@]} " =~ " $key " ]]; then # The key will be deleted
 
-        unset EXISTING_SETTINGS["$KEY"] # Delete the key
-        if [ "$LIST" = true ] && [ -n "$OLD_VALUE" ]; then
-            print_key "$KEY" "$OLD_VALUE -> (deleted)"
+        unset EXISTING_SETTINGS["$key"] # Delete the key
+        if [ "$LIST" = true ] && [ -n "$old_value" ]; then
+            print_key "$key" "$old_value -> (deleted)"
         fi
 
-    elif [ "$LIST" = true ] && [ -n "$OLD_VALUE" ]; then # List the existing settings
-        print_key "$KEY" "$OLD_VALUE"
+    elif [ "$LIST" = true ] && [ -n "$old_value" ]; then # List the existing settings
+        print_key "$key" "$old_value"
     fi
 done
 [ "$LIST" = true ] && echo "---------------------------"
@@ -264,16 +265,16 @@ done
 if [ "$SET" = true ] || [ "$DELETE" = true ]; then
 
     # Create the directory and the settings file if it doesn't exist
-    DIR="$(dirname "$SETTING_FILE")"
-    if [ ! -d "$DIR" ]; then
-        mkdir -p "$DIR"
-        echo "Created directory $DIR."
+    dir="$(dirname "$SETTING_FILE")"
+    if [ ! -d "$dir" ]; then
+        mkdir -p "$dir"
+        echo "Created directory $dir."
     fi
     if [ ! -f "$SETTING_FILE" ]; then
         if touch "$SETTING_FILE"; then
-            echo "Created file $(basename "$SETTING_FILE") in $DIR."
+            echo "Created file $(basename "$SETTING_FILE") in $dir."
         else
-            echo "Fatal: Failed to create file $(basename "$SETTING_FILE") in $DIR." >&2
+            echo "Fatal: Failed to create file $(basename "$SETTING_FILE") in $dir." >&2
             exit 1
         fi
     fi
@@ -281,8 +282,8 @@ if [ "$SET" = true ] || [ "$DELETE" = true ]; then
     # Write updated settings to file
     {
         echo "# GAMER setting file"
-        for KEY in "${!EXISTING_SETTINGS[@]}"; do
-            print_key "${KEY}" "${EXISTING_SETTINGS[$KEY]}"
+        for key in "${!EXISTING_SETTINGS[@]}"; do
+            print_key "${key}" "${EXISTING_SETTINGS[$key]}"
         done
     } > "$SETTING_FILE"
 
