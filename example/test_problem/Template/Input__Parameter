@@ -49,7 +49,7 @@ TESTPROB_ID                   0           # test problem ID [0]
                                           #   23: HYDRO MHD Cosmic Ray Diffusion
                                           #  100: HYDRO CDM cosmological simulation (+GRAVITY & COMOVING & PARTICLE)
                                           #  101: HYDRO Zeldovich pancake collapse (+GRAVITY & COMOVING & PARTICLE)
-                                          #  102: HYDRO Grackle comoving (+COMOVING)
+                                          #  102: HYDRO Grackle comoving (+GRAVITY & COMOVING & GRACKLE )
                                           # 1000: ELBDM external potential (+GRAVITY)
                                           # 1001: ELBDM Jeans instability in the comoving frame (+GRAVITY, +COMOVING)
                                           # 1002: ELBDM Jeans instability in the physical frame (+GRAVITY)
