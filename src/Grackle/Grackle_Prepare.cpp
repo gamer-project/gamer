@@ -103,13 +103,13 @@ void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int
    Che_Units.a_value              = Time[lv];
 #  endif
 
-   const int  Size1pg          = CUBE(PS2);
-   const int  Size1v           = NPG*Size1pg;
-   const real MassRatio_pe    = Const_mp / Const_me;
+   const int  Size1pg             = CUBE(PS2);
+   const int  Size1v              = NPG*Size1pg;
+   const real MassRatio_pe        = Const_mp / Const_me;
 #  ifdef DUAL_ENERGY
-   const bool CheckMinPres_No  = false;
+   const bool CheckMinPres_No     = false;
 #  else
-   const bool CheckMinEint_Yes = true;
+   const bool CheckMinEint_Yes    = true;
 #  endif
 
    real *Ptr_Dens0  = h_Che_Array + CheIdx_Dens *Size1v;
