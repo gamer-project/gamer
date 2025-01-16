@@ -2,4 +2,4 @@
 
 PYTHON=python3
 
-${PYTHON} configure.py --model=HYDRO --hdf5=true --mhd=true --viscosity=true "$@"
+${PYTHON} configure.py --model=HYDRO --hdf5=true --mhd=true --viscosity=true --double=True "$@"
