@@ -811,28 +811,25 @@ void Init_ResetParameter()
 
 
 // set default value for the origin of angular momentum
-   if ( OPT__CK_CONSERVATION )
+   if ( ANGMOM_ORIGIN_X < 0.0 )
    {
-      if ( ANGMOM_ORIGIN_X < 0.0 )
-      {
-         ANGMOM_ORIGIN_X = amr->BoxCenter[0];
+      ANGMOM_ORIGIN_X = amr->BoxCenter[0];
 
-         PRINT_RESET_PARA( ANGMOM_ORIGIN_X, FORMAT_REAL, "" );
-      }
+      PRINT_RESET_PARA( ANGMOM_ORIGIN_X, FORMAT_REAL, "" );
+   }
 
-      if ( ANGMOM_ORIGIN_Y < 0.0 )
-      {
-         ANGMOM_ORIGIN_Y = amr->BoxCenter[1];
+   if ( ANGMOM_ORIGIN_Y < 0.0 )
+   {
+      ANGMOM_ORIGIN_Y = amr->BoxCenter[1];
 
-         PRINT_RESET_PARA( ANGMOM_ORIGIN_Y, FORMAT_REAL, "" );
-      }
+      PRINT_RESET_PARA( ANGMOM_ORIGIN_Y, FORMAT_REAL, "" );
+   }
 
-      if ( ANGMOM_ORIGIN_Z < 0.0 )
-      {
-         ANGMOM_ORIGIN_Z = amr->BoxCenter[2];
+   if ( ANGMOM_ORIGIN_Z < 0.0 )
+   {
+      ANGMOM_ORIGIN_Z = amr->BoxCenter[2];
 
-         PRINT_RESET_PARA( ANGMOM_ORIGIN_Z, FORMAT_REAL, "" );
-      }
+      PRINT_RESET_PARA( ANGMOM_ORIGIN_Z, FORMAT_REAL, "" );
    }
 
 // set default value for OPT__RECORD_CENTER
