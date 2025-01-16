@@ -290,6 +290,7 @@ the default value.
 Specify the output data directory. In most cases, it is unnecessary to set this value
 unless you want to overwrite the default directory.
     * **Restriction:**
+The string length should be shorter than `MAX_STRING-100`.
 
 
 ## Remarks
