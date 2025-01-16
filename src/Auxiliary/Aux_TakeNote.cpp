@@ -41,7 +41,9 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fclose( Note );
 
-      system( "cat ./Input__Note >> Record__Note" );
+      char Command[MAX_STRING];
+      sprintf( Command, "cat ./Input__Note >> %s/Record__Note", OUTPUT_DIR );
+      system( Command );
 
       Note = fopen( FileName, "a" );
       fprintf( Note, "***********************************************************************************\n" );
