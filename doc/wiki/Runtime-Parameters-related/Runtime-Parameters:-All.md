@@ -69,7 +69,6 @@ For variables with `Default/Min/Max` labeled as `Depend`, click the parameter na
 | [[ DT__SYNC_CHILDREN_LV \| Runtime-Parameters:-Timestep#DT__SYNC_CHILDREN_LV ]]                      |             0.1 |             0.0 |             1.0 | dt criterion: allow dt to adjust by (1.0-DT__SYNC_CHILDREN) in order to synchronize with the children level (for OPT__DT_LEVEL==3 only; 0=off) [0.1] |
 | [[ DT__SYNC_PARENT_LV \| Runtime-Parameters:-Timestep#DT__SYNC_PARENT_LV ]]                          |             0.1 |             0.0 |            None | dt criterion: allow dt to adjust by (1.0+DT__SYNC_PARENT) in order to synchronize with the parent level (for OPT__DT_LEVEL==3 only) [0.1] |
 | [[ DUAL_ENERGY_SWITCH \| Runtime-Parameters:-Hydro#DUAL_ENERGY_SWITCH ]]                             |          2.0e-2 |             0.0 |            None | apply dual-energy if E_int/E_kin < DUAL_ENERGY_SWITCH [2.0e-2] ##DUAL_ENERGY ONLY## |
-| [[ DUMP_DIR \| Runtime-Parameters:-Outputs#DUMP_DIR ]]                                               |             "." |            None |            None | set the output directory [.] |
 
 # E
 | Name                                                                                                 |         Default |             Min |             Max | Short description |
@@ -342,6 +341,7 @@ For variables with `Default/Min/Max` labeled as `Depend`, click the parameter na
 | [[ OPT__UM_IC_REFINE \| Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_REFINE ]]                  |               1 |            None |            None | refine UM_IC from level OPT__UM_IC_LEVEL to MAX_LEVEL [1] |
 | [[ OPT__UNIT \| Runtime-Parameters:-Units#OPT__UNIT ]]                                               |               0 |            None |            None | specify code units -> must set exactly 3 basic units below [0] ##USELESS FOR COMOVING## |
 | [[ OPT__VERBOSE \| Runtime-Parameters:-Miscellaneous#OPT__VERBOSE ]]                                 |               0 |            None |            None | output the simulation progress in detail [0] |
+| [[ OUTPUT_DIR \| Runtime-Parameters:-Outputs#OUTPUT_DIR ]]                                           |             "." |            None |            None | set the output directory [.] |
 | [[ OUTPUT_DT \| Runtime-Parameters:-Outputs#OUTPUT_DT ]]                                             |            -1.0 |            None |            None | output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY## |
 | [[ OUTPUT_PART_X \| Runtime-Parameters:-Outputs#OUTPUT_PART_X ]]                                     |            -1.0 |            None |            None | x coordinate for OPT__OUTPUT_PART [-1.0] |
 | [[ OUTPUT_PART_Y \| Runtime-Parameters:-Outputs#OUTPUT_PART_Y ]]                                     |            -1.0 |            None |            None | y coordinate for OPT__OUTPUT_PART [-1.0] |
