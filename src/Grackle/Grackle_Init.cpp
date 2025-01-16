@@ -51,7 +51,7 @@ void Grackle_Init()
 // https://github.com/grackle-project/grackle/issues/192
 // --> the density and length units are conversion factors from code values to cgs in proper coordinates,
 //     while the time and velocity units should remain constant, i.e., velocity_units = length_units / (a_scale * time_units)
-// --> the specific energy passed to Grackle is u = k_B * T / ((gamma - 1) * mu * m_p)
+// --> the specific energy passed to Grackle is defined on proper coordinates, i.e., u = k_B * T / ((gamma - 1) * mu * m_p)
    Che_Units.comoving_coordinates = 1;
    Che_Units.density_units        = UNIT_D / CUBE(Time[0]);
    Che_Units.length_units         = UNIT_L * Time[0];
