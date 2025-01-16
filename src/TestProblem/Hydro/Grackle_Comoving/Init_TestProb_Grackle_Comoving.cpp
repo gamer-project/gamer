@@ -461,7 +461,7 @@ double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
 
 // calculate cooling time
    if ( calculate_cooling_time( &Che_Units, &my_fields, my_cooling_time ) == 0 )
-     Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
+      Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
 
    dTime_user = FMIN(dTime_user, 0.01 * fabs(my_cooling_time[0]));
 
@@ -469,7 +469,7 @@ double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
 
 // recalculate cooling time
    if ( calculate_cooling_time( &Che_Units, &my_fields, my_cooling_time ) == 0 )
-     Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
+      Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
 
    dTime_user = FMIN(dTime_user, 0.01 * fabs(my_cooling_time[0]));
 #  endif // #ifdef SUPPORT_GRACKLE
@@ -511,8 +511,8 @@ void Init_TestProb_Hydro_Grackle_Comoving()
       my_fields.grid_end      [i] = 0;
    }
    my_fields.grid_dimension[0] = field_size;
-   my_fields.grid_end[0] = field_size - 1;
-   my_fields.grid_dx = 0.0; // used only for H2 self-shielding approximation
+   my_fields.grid_end[0]       = field_size - 1;
+   my_fields.grid_dx           = 0.0; // used only for H2 self-shielding approximation
 
    my_fields.density         = new gr_float [field_size];
    my_fields.internal_energy = new gr_float [field_size];
