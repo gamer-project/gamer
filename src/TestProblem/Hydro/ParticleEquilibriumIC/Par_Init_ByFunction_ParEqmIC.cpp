@@ -24,33 +24,39 @@ static RandomNumber_t *RNG = NULL;
 //                       and LB_Init_LoadBalance()
 //                   --> Therefore, there is no constraint on which particles should be set by this function
 //
-// Parameter   :  NPar_ThisRank : Number of particles to be set by this MPI rank
-//                NPar_AllRank  : Total Number of particles in all MPI ranks
-//                ParMass       : Particle mass     array with the size of NPar_ThisRank
-//                ParPosX/Y/Z   : Particle position array with the size of NPar_ThisRank
-//                ParVelX/Y/Z   : Particle velocity array with the size of NPar_ThisRank
-//                ParTime       : Particle time     array with the size of NPar_ThisRank
-//                ParType       : Particle type     array with the size of NPar_ThisRan
-//                AllAttribute  : Pointer array for all particle attributes
-//                                --> Dimension = [PAR_NATT_TOTAL][NPar_ThisRank]
-//                                --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
-//                                    to access the data
+// Parameter   :  NPar_ThisRank   : Number of particles to be set by this MPI rank
+//                NPar_AllRank    : Total Number of particles in all MPI ranks
+//                ParMass         : Particle mass     array with the size of NPar_ThisRank
+//                ParPosX/Y/Z     : Particle position array with the size of NPar_ThisRank
+//                ParVelX/Y/Z     : Particle velocity array with the size of NPar_ThisRank
+//                ParTime         : Particle time     array with the size of NPar_ThisRank
+//                ParType         : Particle type     array with the size of NPar_ThisRan
+//                AllAttributeFlt : Pointer array for all particle floating-point attributes
+//                                  --> Dimension = [PAR_NATT_FLT_TOTAL][NPar_ThisRank]
+//                                  --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
+//                                      to access the data
+//                AllAttributeInt : Pointer array for all particle integer attributes
+//                                  --> Dimension = [PAR_NATT_INT_TOTAL][NPar_ThisRank]
+//                                  --> Use the attribute indices defined in Field.h to access the data
 //
-// Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttribute
+// Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttributeFlt, AllAttributeInt
 //-------------------------------------------------------------------------------------------------------
 
 void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_AllRank,
                                    real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                    real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                   real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] )
+                                   long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                   long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
 // define the particle attribute arrays
-   real_par *ParData_AllRank[PAR_NATT_TOTAL];
-   for (int v=0; v<PAR_NATT_TOTAL; v++)   ParData_AllRank[v] = NULL;
+   real_par *ParFltData_AllRank[PAR_NATT_FLT_TOTAL];
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParFltData_AllRank[v] = NULL;
+   long_par *ParIntData_AllRank[PAR_NATT_INT_TOTAL];
+   for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   ParIntData_AllRank[v] = NULL;
 
 
 // define the particle IC constructor
@@ -61,13 +67,13 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
    if ( MPI_Rank == 0 ) {
 
 //    allocate memory for particle attribute arrays
-      ParData_AllRank[PAR_MASS] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_POSX] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_POSY] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_POSZ] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_VELX] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_VELY] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_VELZ] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_MASS] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSX] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSY] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSZ] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELX] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELY] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELZ] = new real_par [NPar_AllRank];
 
 //    input filenames as parameters into Filename_Loader
       Filename_Loader.Read_Filenames( "Input__TestProb" );
@@ -87,7 +93,7 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
          }
 
 //       set an equilibrium initial condition for each cloud
-         Cloud_Constructor.Par_SetEquilibriumIC( ParData_AllRank[PAR_MASS], ParData_AllRank+PAR_POSX, ParData_AllRank+PAR_VELX, Par_Idx0 );
+         Cloud_Constructor.Par_SetEquilibriumIC( ParFltData_AllRank[PAR_MASS], ParFltData_AllRank+PAR_POSX, ParFltData_AllRank+PAR_VELX, Par_Idx0 );
 
 //       update the particle index offset for the next cloud
          Par_Idx0 += Cloud_Constructor.params.Cloud_Par_Num;
@@ -97,7 +103,8 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
 
 
 // send particle attributes from the master rank to all ranks
-   Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, ParData_AllRank, AllAttribute );
+   Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, _NONE,
+                            ParFltData_AllRank, ParIntData_AllRank, AllAttributeFlt, AllAttributeInt );
 
 
 // synchronize all particles to the physical time on the base level
@@ -112,7 +119,8 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
    if ( MPI_Rank == 0 )
    {
       delete RNG;
-      for (int v=0; v<PAR_NATT_TOTAL; v++)   delete [] ParData_AllRank[v];
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   delete [] ParFltData_AllRank[v];
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   delete [] ParIntData_AllRank[v];
    }
 
 
