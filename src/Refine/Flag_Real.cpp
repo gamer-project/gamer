@@ -165,14 +165,14 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 // collect particles to **real** patches at lv
 #  ifdef PARTICLE
    if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_PAR_MASS_CELL )
-      Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos_No,
+      Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, _PAR_TYPE, PredictPos_No,
                                     NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_No,
                                     TimingSendPar_No );
 
 // Par_CollectParticle2OneLevel() with JustCountNPar_No will set NPar_Copy for each patch as well
 // --> so call Par_CollectParticle2OneLevel() with JustCountNPar_Yes only when OPT__FLAG_NPAR_CELL == false
    else if ( OPT__FLAG_NPAR_PATCH != 0 )
-      Par_CollectParticle2OneLevel( lv, _NONE, PredictPos_No,
+      Par_CollectParticle2OneLevel( lv, _NONE, _NONE, PredictPos_No,
                                     NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_Yes,
                                     TimingSendPar_No );
 #  endif
@@ -469,6 +469,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                   int        NParThisPatch;
                   bool       UseInputMassPos;
                   real_par **InputMassPos = NULL;
+                  long_par **InputType    = NULL;
 
 //                determine the number of particles and the particle list
                   if ( amr->patch[0][lv][PID]->son == -1 )
@@ -477,6 +478,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                      ParList         = amr->patch[0][lv][PID]->ParList;
                      UseInputMassPos = false;
                      InputMassPos    = NULL;
+                     InputType       = NULL;
 
 #                    ifdef DEBUG_PARTICLE
                      if ( amr->patch[0][lv][PID]->NPar_Copy != -1 )
@@ -491,11 +493,13 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #                    ifdef LOAD_BALANCE
                      ParList         = NULL;
                      UseInputMassPos = true;
-                     InputMassPos    = amr->patch[0][lv][PID]->ParAtt_Copy;
+                     InputMassPos    = amr->patch[0][lv][PID]->ParAttFlt_Copy;
+                     InputType       = amr->patch[0][lv][PID]->ParAttInt_Copy;
 #                    else
                      ParList         = amr->patch[0][lv][PID]->ParList_Copy;
                      UseInputMassPos = false;
                      InputMassPos    = NULL;
+                     InputType       = NULL;
 #                    endif
 
 #                    ifdef DEBUG_PARTICLE
@@ -515,9 +519,11 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                      if ( UseInputMassPos )
                      {
                         if ( InputMassPos[PAR_MASS] == NULL  ||  InputMassPos[PAR_POSX] == NULL  ||
-                             InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL  ||
-                             InputMassPos[PAR_TYPE] == NULL )
+                             InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL )
                            Aux_Error( ERROR_INFO, "InputMassPos[0/1/2/3] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
+                                      NParThisPatch, lv, PID );
+                        if ( InputType[PAR_TYPE] == NULL )
+                           Aux_Error( ERROR_INFO, "InputType[0] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
                                       NParThisPatch, lv, PID );
                      }
 
@@ -536,13 +542,13 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                   Par_MassAssignment( ParList, NParThisPatch, PAR_INTERP_NGP, ParCount[0][0], PS1,
                                       amr->patch[0][lv][PID]->EdgeL, amr->dh[lv], PredictPos_No, NULL_REAL,
                                       InitZero_Yes, Periodic_No, NULL, UnitDens_Yes, CheckFarAway_No,
-                                      UseInputMassPos, InputMassPos );
+                                      UseInputMassPos, InputMassPos, InputType );
 
                   if ( OPT__FLAG_PAR_MASS_CELL )
                   Par_MassAssignment( ParList, NParThisPatch, PAR_INTERP_NGP, ParDens [0][0], PS1,
                                       amr->patch[0][lv][PID]->EdgeL, amr->dh[lv], PredictPos_No, NULL_REAL,
                                       InitZero_Yes, Periodic_No, NULL, UnitDens_No,  CheckFarAway_No,
-                                      UseInputMassPos, InputMassPos );
+                                      UseInputMassPos, InputMassPos, InputType );
                } // if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_PAR_MASS_CELL )
 #              endif // #ifdef PARTICLE
 
