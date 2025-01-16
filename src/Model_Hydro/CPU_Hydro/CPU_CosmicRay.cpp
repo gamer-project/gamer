@@ -39,6 +39,8 @@ void CR_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PLUS_MAG],
                                        const real dt_dh2, const EoS_t *EoS )
 {
 
+   if ( OPT__FREEZE_HYDRO )  return;
+
 // 1. calculate the cosmic-ray pressure
    const real pCR_old = EoS->CREint2CRPres_FuncPtr( g_ConVar_In[CRAY][idx_in], EoS->AuxArrayDevPtr_Flt,
                                                     EoS->AuxArrayDevPtr_Int, EoS->Table );
@@ -109,6 +111,8 @@ void CR_AdiabaticWork_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
                                 const real g_FC_Var[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                                 const real dt, const real dh, const EoS_t *EoS )
 {
+
+   if ( OPT__FREEZE_HYDRO )  return;
 
    const int didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
    const int didx_fc[3]   = { 1, N_FC_VAR,  SQR(N_FC_VAR)  };
