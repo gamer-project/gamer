@@ -19,12 +19,13 @@ Compile-time simulation options are classified into the following categories:
 disabled). See the "Restriction" of each option carefully.
 
 ## `configure.py` Only
+<a name="--machine"></a>
 
 | Option | Value | Description |
 |:---:|:---:|---|
 | `-h`        | -               | Show a short help message. |
 | `-lh`       | -               | Show a detailed help message. |
-| `--machine` | Filename string | Select the `*.config` file from the `configs` directory. It will overwrite the default machine set in the default setting file. |
+| `--machine` | Filename string | Select the `*.config` file from the `configs` directory. It will overwrite the default machine set in the [[default setting file | Installation#default_setting]]. |
 
 &#8192;&#8192;&#8192;&#8192;&#8192;
 &#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;
