@@ -379,7 +379,7 @@ void End_GrackleComoving()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Mis_GetTimeStep_GrackleComoving
-// Description :  returns 0.1 * cooling time
+// Description :  returns 0.01 * cooling time
 //
 // Note        :  1. This function should be applied to both physical and comoving coordinates and always
 //                   return the evolution time-step (dt) actually used in various solvers
@@ -398,8 +398,9 @@ void End_GrackleComoving()
 //-------------------------------------------------------------------------------------------------------
 double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
 {
+#  ifdef COMOVING
 
-   double dTime_user = HUGE_NUMBER;
+   double dt_user_phy = HUGE_NUMBER;
 
 #  ifdef SUPPORT_GRACKLE
    int    FluSg = amr->FluSg[0];
@@ -463,7 +464,7 @@ double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
    if ( calculate_cooling_time( &Che_Units, &my_fields, my_cooling_time ) == 0 )
       Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
 
-   dTime_user = FMIN(dTime_user, 0.01 * fabs(my_cooling_time[0]));
+   dt_user_phy = FMIN(dt_user_phy, 0.01 * fabs(my_cooling_time[0]));
 
    my_fields.internal_energy[0] *= 0.9;
 
@@ -471,10 +472,17 @@ double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
    if ( calculate_cooling_time( &Che_Units, &my_fields, my_cooling_time ) == 0 )
       Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
 
-   dTime_user = FMIN(dTime_user, 0.01 * fabs(my_cooling_time[0]));
+   dt_user_phy = FMIN(dt_user_phy, 0.01 * fabs(my_cooling_time[0]));
 #  endif // #ifdef SUPPORT_GRACKLE
 
-   return dTime_user / SQR(Time[lv]);
+// convert the time-step size to comoving coordinates
+   const double dt_user = dt_user_phy / SQR(Time[lv]);
+
+   return dt_user / SQR(Time[lv]);
+
+#  else  // #ifdef COMOVING
+   Aux_Error( ERROR_INFO, "Mis_GetTimeStep_GrackleComoving assumes COMOVING enabled !!\n" );
+#  endif // #ifdef COMOVING
 
 } // FUNCTION : Mis_GetTimeStep_GrackleComoving
 
