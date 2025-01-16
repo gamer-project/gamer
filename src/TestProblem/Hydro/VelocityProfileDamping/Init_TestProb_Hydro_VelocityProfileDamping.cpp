@@ -11,7 +11,6 @@ static double VPD_B0;            // background magnetic field
 static int    VPD_Dir;           // wave direction: (0/1/2/3) --> (x/y/z/diagonal)
 static int    VPD_BDir;          // magnetic field direction: (0/1/2/3) --> (x/y/z/diagonal)
 
-static double VPD_Gamma;         // damping rate due to viscosity
 static double VPD_WaveLength;    // wavelength of velocity profile
 // =======================================================================================
 
@@ -41,6 +40,10 @@ void Validate()
 
 #  ifndef MHD
    Aux_Error( ERROR_INFO, "MHD must be enabled !!\n" );
+#  endif
+
+#  ifndef VISCOSITY
+   Aux_Error( ERROR_INFO, "VISCOSITY must be enabled !!\n" );
 #  endif
 
 #  ifdef GRAVITY
@@ -142,7 +145,6 @@ void SetParameter()
 
 // (2) set the problem-specific derived parameters
    VPD_WaveLength = ( VPD_Dir == 3 ) ? amr->BoxSize[0]*sqrt(3.0) : amr->BoxSize[VPD_Dir];
-   VPD_Gamma = VISCOSITY_KINETIC_COEFF;
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
@@ -204,23 +206,26 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   double r, WaveK, Gamma;
+   double kr, WaveK, Gamma;
    double Dens, Mom, MomX, MomY, MomZ, Pres, Eint, Etot;
 
-   Dens = VPD_Rho0;
-   Pres = VPD_P0;
+   Dens  = VPD_Rho0;
+   Pres  = VPD_P0;
+   WaveK = 2.0*M_PI/VPD_WaveLength;
 
    switch ( VPD_Dir ) {
-      case 0:  r = x;                                 break;
-      case 1:  r = y;                                 break;
-      case 2:  r = z;                                 break;
-      case 3:  r = SQRT( SQR(x) + SQR(y) + SQR(z) );  break;
+      case 0:  kr = WaveK*x;                                 break;
+      case 1:  kr = WaveK*y;                                 break;
+      case 2:  kr = WaveK*z;                                 break;
+      case 3:  kr = WaveK*( x + y + z )/sqrt(3.0);           break;
    }
 
    WaveK = 2.0*M_PI/VPD_WaveLength;
+#  ifdef VISCOSITY
    Gamma = 4.0*VISCOSITY_KINETIC_COEFF*SQR(WaveK)/3.0;
-   
-   Mom  = Dens*VPD_v0*sin( WaveK*r )*EXP(-Gamma*Time);
+#  endif
+
+   Mom  = Dens*VPD_v0*sin( kr )*EXP(-Gamma*Time);
 
    switch ( VPD_Dir ) {
       case 0:  MomX = Mom;            MomY = 0.0;   MomZ = 0.0;   break;
