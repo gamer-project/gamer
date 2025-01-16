@@ -6,6 +6,11 @@ Enable  : MODEL=ELBDM, GRAVITY, PARTICLE, STORE_PAR_ACC, SUPPORT_HDF5,
 Disable : COMOVING
 
 
+Note:
+========================================
+DiskHeatingParticleIC uses the floating-point type for particle type and assumes single precision
+
+
 Quick start:
 =======================================
 0. Copy "generate_make.sh" to the directory "src", execute "sh generate_make.sh" to generate "Makefile",
@@ -17,7 +22,7 @@ Quick start:
 
 3. Default END_T is 2.5e-1 (about 3.5 Gyr) as in Yang et al. 2023 and OUTPUT_DT is 1.0e-2 (about 0.14 Gyr)
 
-4. To switch to a high-resolution run, command "ln -sf ic_files/PAR_IC_0.4_M7 PAR_IC"
+4. To switch to a high-resolution run, command "ln -sf ic_files/PAR_IC_0.4_M7 DiskHeatingParticleIC"
    Set PAR_NPAR=80000000, MAX_LEVEL=3, and change all values in Input__Flag_NParPatch to 800
 
 
@@ -32,7 +37,7 @@ General initial condition setup:
 
    c. Set center to be location of the soliton in get_par_ic.py
 
-   d. Execute get_par_ic.py, it will generate PAR_IC
+   d. Execute get_par_ic.py, it will generate DiskHeatingParticleIC
 
 2. Halo
 

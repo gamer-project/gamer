@@ -516,6 +516,7 @@ def load_arguments( sys_setting : SystemSetting ):
                          default=False,
                          help="Enable particles.\n"
                        )
+
     parser.add_argument( "--tracer", type=str2bool, metavar="BOOLEAN", gamer_name="TRACER",
                          default=False,
                          depend={"particle":True},
@@ -540,16 +541,28 @@ def load_arguments( sys_setting : SystemSetting ):
                          help="Feedback from particles to grids and vice versa.\n"
                        )
 
-    parser.add_argument( "--par_attribute", type=int, metavar="INTEGER", gamer_name="PAR_NATT_USER",
+    parser.add_argument( "--par_attribute_flt", type=int, metavar="INTEGER", gamer_name="PAR_NATT_FLT_USER",
                          default=0,
                          depend={"particle":True},
-                         help="Set the number of user-defined particle attributes.\n"
+                         help="Set the number of user-defined particle floating-point attributes.\n"
+                       )
+
+    parser.add_argument( "--par_attribute_int", type=int, metavar="INTEGER", gamer_name="PAR_NATT_INT_USER",
+                         default=0,
+                         depend={"particle":True},
+                         help="Set the number of user-defined particle integer attributes.\n"
                        )
 
     parser.add_argument( "--double_par", type=str2bool, metavar="BOOLEAN", gamer_name="FLOAT8_PAR",
                          default=None,
                          depend={"particle":True},
-                         help="Enable double precision for particle attributes.\n"
+                         help="Enable double precision for particle floating-point attributes.\n"
+                       )
+
+    parser.add_argument( "--long_par", type=str2bool, metavar="BOOLEAN", gamer_name="INT8_PAR",
+                         default=True,
+                         depend={"particle":True},
+                         help="Use the long integer data type for particle integer attributes.\n"
                        )
     # A.5 grackle
     parser.add_argument( "--grackle", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_GRACKLE",
@@ -951,8 +964,11 @@ def validation( paths, depends, constraints, **kwargs ):
         if not kwargs["gravity"] and not kwargs["tracer"]:
             LOGGER.error("At least one of <--gravity> or <--tracer> must be enabled for <--particle>.")
             success = False
-        if kwargs["par_attribute"] < 0:
-            LOGGER.error("Number of particle attributes should not be negative. Current: %d"%kwargs["par_attribute"])
+        if kwargs["par_attribute_flt"] < 0:
+            LOGGER.error("Number of particle floating-point attributes should not be negative. Current: %d"%kwargs["par_attribute_flt"])
+            success = False
+        if kwargs["par_attribute_int"] < 0:
+            LOGGER.error("Number of particle integer attributes should not be negative. Current: %d"%kwargs["par_attribute_int"])
             success = False
 
     # B. Miscellaneous options
