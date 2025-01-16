@@ -972,7 +972,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   real In[NCOMP_TOTAL], tmp[NCOMP_TOTAL];
 
                   char FileName[MAX_STRING];
-                  sprintf( FileName, "%s/FailedPatchGroup_r%03d_lv%02d_PID0-%05d", DUMP_DIR, MPI_Rank, lv, PID0_List[TID] );
+                  sprintf( FileName, "%s/FailedPatchGroup_r%03d_lv%02d_PID0-%05d", OUTPUT_DIR, MPI_Rank, lv, PID0_List[TID] );
 
 //                use "a" instead of "w" since there may be more than one failed cell in a given patch group
                   FILE *File = fopen( FileName, "a" );

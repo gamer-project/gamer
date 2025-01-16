@@ -50,7 +50,7 @@ void Output_PatchMap( const int lv, const int PID, const int TSg, const int Comp
    patch_t *Data     = amr->patch[TSg][lv][PID];
 
    char FileName[MAX_STRING];
-   sprintf( FileName, "%s/PatchMap_r%d_lv%d_p%d_v%d", DUMP_DIR, MPI_Rank, lv, PID, Comp );
+   sprintf( FileName, "%s/PatchMap_r%d_lv%d_p%d_v%d", OUTPUT_DIR, MPI_Rank, lv, PID, Comp );
    if ( comment != NULL )
    {
       strcat( FileName, "_" );

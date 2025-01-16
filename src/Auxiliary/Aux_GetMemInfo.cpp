@@ -27,7 +27,7 @@ void Aux_GetMemInfo()
    double Vm_double[NInfo], Vm_max[NInfo], Vm_sum[NInfo];
    size_t len=0;
 
-   sprintf( FileName_Record, "%s/Record__MemInfo", DUMP_DIR );
+   sprintf( FileName_Record, "%s/Record__MemInfo", OUTPUT_DIR );
 
 
 // 1. read memory information from the file "FileName_Status"

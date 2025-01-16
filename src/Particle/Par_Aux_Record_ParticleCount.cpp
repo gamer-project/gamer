@@ -17,7 +17,7 @@ void Par_Aux_Record_ParticleCount()
 
    static bool FirstTime = true;
    char FileName[MAX_STRING];
-   sprintf( FileName, "%s/Record__ParticleCount", DUMP_DIR );
+   sprintf( FileName, "%s/Record__ParticleCount", OUTPUT_DIR );
 
    if ( MPI_Rank == 0  &&  FirstTime )
    {

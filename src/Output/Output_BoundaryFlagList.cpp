@@ -21,8 +21,8 @@ void Output_BoundaryFlagList( const int option, const int lv, const char *commen
 
 
    char FileName[MAX_STRING];
-   if ( option )  sprintf( FileName, "%s/BoundaryFlagList_%d_%d", DUMP_DIR, MPI_Rank, lv );
-   else           sprintf( FileName, "%s/BufferFlagList_%d_%d",   DUMP_DIR, MPI_Rank, lv );
+   if ( option )  sprintf( FileName, "%s/BoundaryFlagList_%d_%d", OUTPUT_DIR, MPI_Rank, lv );
+   else           sprintf( FileName, "%s/BufferFlagList_%d_%d",   OUTPUT_DIR, MPI_Rank, lv );
 
    if ( comment != NULL )
    {

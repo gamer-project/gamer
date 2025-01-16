@@ -19,7 +19,7 @@ void Output_PatchCorner( const int lv, const char *comment )
 {
 
    char FileName[MAX_STRING];
-   sprintf( FileName, "%s/PatchCorner_%05d_%02d", DUMP_DIR, MPI_Rank, lv );
+   sprintf( FileName, "%s/PatchCorner_%05d_%02d", OUTPUT_DIR, MPI_Rank, lv );
    if ( comment != NULL )
    {
       strcat( FileName, "_" );

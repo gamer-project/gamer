@@ -21,8 +21,8 @@ void Output_ExchangeDataPatchList( const int option, const int lv, const char *c
 
 
    char FileName[MAX_STRING];
-   if ( option )  sprintf( FileName, "%s/SendDataPatchList_%d_%d", DUMP_DIR, MPI_Rank, lv );
-   else           sprintf( FileName, "%s/RecvDataPatchList_%d_%d", DUMP_DIR, MPI_Rank, lv );
+   if ( option )  sprintf( FileName, "%s/SendDataPatchList_%d_%d", OUTPUT_DIR, MPI_Rank, lv );
+   else           sprintf( FileName, "%s/RecvDataPatchList_%d_%d", OUTPUT_DIR, MPI_Rank, lv );
 
    if ( comment != NULL )
    {

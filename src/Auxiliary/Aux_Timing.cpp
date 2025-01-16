@@ -228,7 +228,7 @@ void Aux_Record_Timing()
 
    FILE *File = NULL;
    char FileName[MAX_STRING];
-   sprintf( FileName, "%s/Record__Timing", DUMP_DIR );
+   sprintf( FileName, "%s/Record__Timing", OUTPUT_DIR );
 
    const char Comment_LB[][4] = { "Max", "Min", "Ave" };
    const int  NLB             = 8;

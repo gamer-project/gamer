@@ -25,7 +25,7 @@ void Aux_Record_User_Template()
 
    static bool FirstTime = true;
    char FileName[MAX_STRING];
-   sprintf( FileName, "%s/Record__User", DUMP_DIR );
+   sprintf( FileName, "%s/Record__User", OUTPUT_DIR );
 
    if ( FirstTime )
    {

@@ -25,9 +25,9 @@ void Output_ExchangeFluxPatchList( const int option, const int lv, const char *c
    char FileName[MAX_STRING];
    switch ( option )
    {
-      case 0:  sprintf( FileName, "%s/SendFluxPatchList_%d_%d", DUMP_DIR, MPI_Rank, lv );
+      case 0:  sprintf( FileName, "%s/SendFluxPatchList_%d_%d", OUTPUT_DIR, MPI_Rank, lv );
                break;
-      case 1:  sprintf( FileName, "%s/RecvFluxPatchList_%d_%d", DUMP_DIR, MPI_Rank, lv );
+      case 1:  sprintf( FileName, "%s/RecvFluxPatchList_%d_%d", OUTPUT_DIR, MPI_Rank, lv );
                break;
    }
 

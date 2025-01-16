@@ -37,7 +37,7 @@ void Record_Bondi()
 {
 
    char FileName[MAX_STRING];
-   sprintf( FileName, "%s/Record__BondiAccretionRate", DUMP_DIR );
+   sprintf( FileName, "%s/Record__BondiAccretionRate", OUTPUT_DIR );
 
    static bool   FirstTime = true;
    static double Time0, dTime;

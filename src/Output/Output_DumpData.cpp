@@ -110,12 +110,12 @@ void Output_DumpData( const int Stage )
 
    if ( OPT__OUTPUT_TOTAL )
    {
-      sprintf( FileName_Total, "%s/Data_%06d", DUMP_DIR, DumpID );
+      sprintf( FileName_Total, "%s/Data_%06d", OUTPUT_DIR, DumpID );
    }
 
    if ( OPT__OUTPUT_PART )
    {
-      int str_offset = sprintf( FileName_Part, "%s/", DUMP_DIR );
+      int str_offset = sprintf( FileName_Part, "%s/", OUTPUT_DIR );
       switch ( OPT__OUTPUT_PART )
       {
          case OUTPUT_XY :    sprintf( FileName_Temp, "XYslice_z%.3f_%06d", OUTPUT_PART_Z, DumpID );   break;
@@ -139,13 +139,13 @@ void Output_DumpData( const int Stage )
    } // if ( OPT__OUTPUT_PART )
 
    if ( OPT__OUTPUT_BASEPS )
-      sprintf( FileName_PS, "%s/PowerSpec_%06d", DUMP_DIR, DumpID );
+      sprintf( FileName_PS, "%s/PowerSpec_%06d", OUTPUT_DIR, DumpID );
 
 #  ifdef PARTICLE
    if ( OPT__OUTPUT_PAR_MODE == OUTPUT_PAR_TEXT )
-      sprintf( FileName_Particle, "%s/Particle_%06d.txt", DUMP_DIR, DumpID );
+      sprintf( FileName_Particle, "%s/Particle_%06d.txt", OUTPUT_DIR, DumpID );
    if ( OPT__OUTPUT_PAR_MODE == OUTPUT_PAR_CBIN )
-      sprintf( FileName_Particle, "%s/Particle_%06d.cbin", DUMP_DIR, DumpID );
+      sprintf( FileName_Particle, "%s/Particle_%06d.cbin", OUTPUT_DIR, DumpID );
 #  endif
 
 
@@ -318,7 +318,7 @@ void Write_DumpRecord()
 {
 
    char FileName[MAX_STRING];
-   sprintf( FileName, "%s/Record__Dump", DUMP_DIR );
+   sprintf( FileName, "%s/Record__Dump", OUTPUT_DIR );
 
 
 // create the "Record__Dump" file at the first dump

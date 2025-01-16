@@ -22,7 +22,7 @@ void Aux_Record_Center()
 
    static bool FirstTime = true;
    char FileName[MAX_STRING];
-   sprintf( FileName, "%s/Record__Center", DUMP_DIR );
+   sprintf( FileName, "%s/Record__Center", OUTPUT_DIR );
 
 
 // 1. Maximum fluid density in HYDRO/ELBDM

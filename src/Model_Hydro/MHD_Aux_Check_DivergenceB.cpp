@@ -130,7 +130,7 @@ void MHD_Aux_Check_DivergenceB( const bool Verbose, const char *comment )
    {
       static bool FirstTime = true;
       char FileName[MAX_STRING];
-      sprintf( FileName, "%s/Record__DivB", DUMP_DIR );
+      sprintf( FileName, "%s/Record__DivB", OUTPUT_DIR );
 
 //    output header
       if ( FirstTime )

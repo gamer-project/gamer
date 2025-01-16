@@ -552,7 +552,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OUTPUT_PART_Y",              &OUTPUT_PART_Y,                  -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "OUTPUT_PART_Z",              &OUTPUT_PART_Z,                  -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "INIT_DUMPID",                &INIT_DUMPID,                    -1,               NoMin_int,     NoMax_int      );
-   ReadPara->Add( "DUMP_DIR",                    DUMP_DIR,                       ".",              Useless_str,   Useless_str    );
+   ReadPara->Add( "OUTPUT_DIR",                  OUTPUT_DIR,                     ".",              Useless_str,   Useless_str    );
 
 
 // yt inline analysis

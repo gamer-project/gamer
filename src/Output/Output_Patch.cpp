@@ -60,7 +60,7 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
 #  endif
 
    char FileName[MAX_STRING];
-   sprintf( FileName, "%s/Patch_r%d_lv%d_p%d", DUMP_DIR, MPI_Rank, lv, PID );
+   sprintf( FileName, "%s/Patch_r%d_lv%d_p%d", OUTPUT_DIR, MPI_Rank, lv, PID );
    if ( comment != NULL )
    {
       strcat( FileName, "_" );

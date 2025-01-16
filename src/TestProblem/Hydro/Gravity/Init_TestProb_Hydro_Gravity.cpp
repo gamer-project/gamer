@@ -371,7 +371,7 @@ void Aux_Record_Gravity()
    {
 //    header
       char FileName[MAX_STRING];
-      sprintf( FileName, "%s/Record__PoissonPerformance", DUMP_DIR );
+      sprintf( FileName, "%s/Record__PoissonPerformance", OUTPUT_DIR );
 
       if ( !Aux_CheckFileExist(FileName) )
       {

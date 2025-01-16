@@ -27,7 +27,7 @@ void Aux_TakeNote()
 
    FILE *Note;
    char FileName[MAX_STRING];
-   sprintf( FileName, "%s/Record__Note", DUMP_DIR );
+   sprintf( FileName, "%s/Record__Note", OUTPUT_DIR );
 
 
    if ( MPI_Rank == 0 )
@@ -1642,7 +1642,7 @@ void Aux_TakeNote()
       fprintf( Note, "OUTPUT_PART_Y                  % 21.14e\n", OUTPUT_PART_Y               );
       fprintf( Note, "OUTPUT_PART_Z                  % 21.14e\n", OUTPUT_PART_Z               );
       fprintf( Note, "INIT_DUMPID                    % d\n",      INIT_DUMPID                 );
-      fprintf( Note, "DUMP_DIR                        %s\n",      DUMP_DIR                    );
+      fprintf( Note, "OUTPUT_DIR                      %s\n",      OUTPUT_DIR                  );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
 

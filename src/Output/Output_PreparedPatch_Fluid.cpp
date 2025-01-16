@@ -51,7 +51,7 @@ void Output_PreparedPatch_Fluid( const int TLv, const int TPID,
       patch_t *Relation = amr->patch[0][TLv][TPID];
 
       char FileName[MAX_STRING];
-      sprintf( FileName, "%s/PrePatch_Fluid_r%d_lv%d_p%d", DUMP_DIR, MPI_Rank, TLv, TPID );
+      sprintf( FileName, "%s/PrePatch_Fluid_r%d_lv%d_p%d", OUTPUT_DIR, MPI_Rank, TLv, TPID );
       if ( comment != NULL )
       {
          strcat( FileName, "_" );

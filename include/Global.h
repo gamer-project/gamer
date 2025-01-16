@@ -85,7 +85,7 @@ extern int        OPT__UM_IC_FLOAT8;
 extern double     COM_CEN_X, COM_CEN_Y, COM_CEN_Z, COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R;
 extern int        COM_MAX_ITER;
 extern double     ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z;
-extern char       DUMP_DIR[MAX_STRING];
+extern char       OUTPUT_DIR[MAX_STRING];
 extern double     FLAG_ANGULAR_CEN_X, FLAG_ANGULAR_CEN_Y, FLAG_ANGULAR_CEN_Z;
 extern double     FLAG_RADIAL_CEN_X, FLAG_RADIAL_CEN_Y, FLAG_RADIAL_CEN_Z;
 

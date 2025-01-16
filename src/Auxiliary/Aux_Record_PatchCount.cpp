@@ -13,7 +13,7 @@ void Aux_Record_PatchCount()
 {
 
    char FileName[MAX_STRING];
-   sprintf( FileName, "%s/Record__PatchCount", DUMP_DIR );
+   sprintf( FileName, "%s/Record__PatchCount", OUTPUT_DIR );
 
    static bool FirstTime = true;
 
