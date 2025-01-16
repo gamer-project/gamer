@@ -47,6 +47,7 @@ TESTPROB_ID                   0           # test problem ID [0]
                                           #   20: HYDRO MHD Cosmic Ray Soundwave
                                           #   21: HYDRO MHD Cosmic Ray Shocktube
                                           #   23: HYDRO MHD Cosmic Ray Diffusion
+                                          #   24: HYDRO SRHD Fermi Bubble
                                           #  100: HYDRO CDM cosmological simulation (+GRAVITY & COMOVING & PARTICLE)
                                           #  101: HYDRO Zeldovich pancake collapse (+GRAVITY & COMOVING & PARTICLE)
                                           # 1000: ELBDM external potential (+GRAVITY)

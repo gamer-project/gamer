@@ -8,6 +8,20 @@
 
 
 
+#ifdef COSMIC_RAY
+#ifdef __CUDACC__
+__device__ static real EoS_CREint2CRPres_TaubMathews( const real E_CR,
+                                                      const double AuxArray_Flt[], const int AuxArray_Int[],
+                                                      const real *const Table[EOS_NTABLE_MAX] );
+#else // #ifdef __CUDACC__
+static real EoS_CREint2CRPres_TaubMathews( const real E_CR,
+                                           const double AuxArray_Flt[], const int AuxArray_Int[],
+                                           const real *const Table[EOS_NTABLE_MAX] );
+#endif // #ifdef __CUDACC__ ... else ...
+#endif // #ifdef COSMIC_RAY
+
+
+
 /********************************************************
 1. Approximately relativistic ideal gas EoS (Taub-Mathews EoS)
 
@@ -56,6 +70,10 @@ void EoS_SetAuxArray_TaubMathews( double AuxArray_Flt[], int AuxArray_Int[] )
    AuxArray_Flt[0] = ( OPT__UNIT ) ? MOLECULAR_WEIGHT * MU_NORM / Const_kB * (UNIT_E/UNIT_M)
                                    : MOLECULAR_WEIGHT;
    AuxArray_Flt[1] = 1.0 / AuxArray_Flt[0];
+#  ifdef COSMIC_RAY
+   AuxArray_Flt[2] = GAMMA_CR;
+   AuxArray_Flt[3] = GAMMA_CR - 1.0;
+#  endif
 
 } // FUNCTION : EoS_SetAuxArray_TaubMathews
 #endif // #ifndef __CUDACC__
@@ -249,6 +267,55 @@ static real EoS_DensPres2CSqr_TaubMathews( const real Dens, const real Pres, con
 
 
 
+#ifdef COSMIC_RAY
+//-------------------------------------------------------------------------------------------------------
+// Function    :  EoS_CREint2CRPres_TaubMathews
+// Description :  Convert cosmic-ray energy density to cosmic-ray pressure
+//
+// Note        :  1. Internal energy density here is per unit volume instead of per unit mass
+//                2. See EoS_SetAuxArray_GammaCR() for the values stored in AuxArray_Flt/Int[]
+//
+// Parameter   :  E_CR       : Cosmic-ray energy density
+//                AuxArray_* : Auxiliary arrays (see the Note above)
+//
+// Return      :  Cosmic ray pressure
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE_NOINLINE
+static real EoS_CREint2CRPres_TaubMathews( const real E_CR,
+                                           const double AuxArray_Flt[], const int AuxArray_Int[],
+                                           const real *const Table[EOS_NTABLE_MAX] )
+{
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( E_CR < (real)0.0 )
+      printf( "ERROR : invalid input cosmic-ray energy density (%13.7e) in %s() !!\n", E_CR, __FUNCTION__ );
+#  endif // GAMER_DEBUG
+
+
+   const real GammaCR_m1 = (real)AuxArray_Flt[3];
+   real Pres_CR;
+
+   Pres_CR = GammaCR_m1*E_CR;
+
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( Pres_CR < (real)0.0 )
+   {
+      printf( "ERROR : invalid output cosmic-ray pressure (%13.7e) in %s() !!\n", Pres_CR, __FUNCTION__ );
+      printf( "        CRay=%13.7e\n", E_CR );
+   }
+#  endif // GAMER_DEBUG
+
+
+   return Pres_CR;
+
+} // FUNCTION : EoS_CREint2CRPres_TaubMathews
+#endif // #ifdef COSMIC_RAY
+
+
+
 // =============================================
 // III. Set EoS initialization functions
 // =============================================
@@ -259,10 +326,15 @@ static real EoS_DensPres2CSqr_TaubMathews( const real Dens, const real Pres, con
 #  define FUNC_SPACE            static
 #endif
 
-FUNC_SPACE EoS_GUESS_t  EoS_GuessHTilde_Ptr   = EoS_GuessHTilde_TaubMathews;
-FUNC_SPACE EoS_H2TEM_t  EoS_HTilde2Temp_Ptr   = EoS_HTilde2Temp_TaubMathews;
-FUNC_SPACE EoS_TEM2H_t  EoS_Temp2HTilde_Ptr   = EoS_Temp2HTilde_TaubMathews;
-FUNC_SPACE EoS_DP2C_t   EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_TaubMathews;
+FUNC_SPACE EoS_GUESS_t   EoS_GuessHTilde_Ptr   = EoS_GuessHTilde_TaubMathews;
+FUNC_SPACE EoS_H2TEM_t   EoS_HTilde2Temp_Ptr   = EoS_HTilde2Temp_TaubMathews;
+FUNC_SPACE EoS_TEM2H_t   EoS_Temp2HTilde_Ptr   = EoS_Temp2HTilde_TaubMathews;
+FUNC_SPACE EoS_DP2C_t    EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_TaubMathews;
+#ifdef COSMIC_RAY
+FUNC_SPACE EoS_CRE2CRP_t EoS_CREint2CRPres_Ptr = EoS_CREint2CRPres_TaubMathews;
+#else
+FUNC_SPACE EoS_CRE2CRP_t EoS_CREint2CRPres_Ptr = NULL;
+#endif
 
 //-----------------------------------------------------------------------------------------
 // Function    :  EoS_SetCPU/GPUFunc_TaubMathews
@@ -288,12 +360,14 @@ __host__
 void EoS_SetGPUFunc_TaubMathews( EoS_GUESS_t &EoS_GuessHTilde_GPUPtr,
                                  EoS_H2TEM_t &EoS_HTilde2Temp_GPUPtr,
                                  EoS_TEM2H_t &EoS_Temp2HTilde_GPUPtr,
-                                 EoS_DP2C_t  &EoS_DensPres2CSqr_GPUPtr )
+                                 EoS_DP2C_t  &EoS_DensPres2CSqr_GPUPtr,
+                                 EoS_CRE2CRP_t &EoS_CREint2CRPres_GPUPtr )
 {
-   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_GuessHTilde_GPUPtr,   EoS_GuessHTilde_Ptr,   sizeof(EoS_GUESS_t) )  );
-   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_HTilde2Temp_GPUPtr,   EoS_HTilde2Temp_Ptr,   sizeof(EoS_H2TEM_t) )  );
-   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_Temp2HTilde_GPUPtr,   EoS_Temp2HTilde_Ptr,   sizeof(EoS_TEM2H_t) )  );
-   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensPres2CSqr_GPUPtr, EoS_DensPres2CSqr_Ptr, sizeof(EoS_DP2C_t ) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_GuessHTilde_GPUPtr,   EoS_GuessHTilde_Ptr,   sizeof(EoS_GUESS_t  ) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_HTilde2Temp_GPUPtr,   EoS_HTilde2Temp_Ptr,   sizeof(EoS_H2TEM_t  ) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_Temp2HTilde_GPUPtr,   EoS_Temp2HTilde_Ptr,   sizeof(EoS_TEM2H_t  ) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensPres2CSqr_GPUPtr, EoS_DensPres2CSqr_Ptr, sizeof(EoS_DP2C_t   ) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_CREint2CRPres_GPUPtr, EoS_CREint2CRPres_Ptr, sizeof(EoS_CRE2CRP_t) )  );
 }
 
 #else // #ifdef __CUDACC__
@@ -301,12 +375,14 @@ void EoS_SetGPUFunc_TaubMathews( EoS_GUESS_t &EoS_GuessHTilde_GPUPtr,
 void EoS_SetCPUFunc_TaubMathews( EoS_GUESS_t &EoS_GuessHTilde_CPUPtr,
                                  EoS_H2TEM_t &EoS_HTilde2Temp_CPUPtr,
                                  EoS_TEM2H_t &EoS_Temp2HTilde_CPUPtr,
-                                 EoS_DP2C_t  &EoS_DensPres2CSqr_CPUPtr )
+                                 EoS_DP2C_t  &EoS_DensPres2CSqr_CPUPtr,
+                                 EoS_CRE2CRP_t &EoS_CREint2CRPres_CPUPtr )
 {
    EoS_GuessHTilde_CPUPtr   = EoS_GuessHTilde_Ptr;
    EoS_HTilde2Temp_CPUPtr   = EoS_HTilde2Temp_Ptr;
    EoS_Temp2HTilde_CPUPtr   = EoS_Temp2HTilde_Ptr;
    EoS_DensPres2CSqr_CPUPtr = EoS_DensPres2CSqr_Ptr;
+   EoS_CREint2CRPres_CPUPtr = EoS_CREint2CRPres_Ptr;
 }
 
 #endif // #ifdef __CUDACC__ ... else ...
@@ -317,9 +393,9 @@ void EoS_SetCPUFunc_TaubMathews( EoS_GUESS_t &EoS_GuessHTilde_CPUPtr,
 
 // local function prototypes
 void EoS_SetAuxArray_TaubMathews( double [] );
-void EoS_SetCPUFunc_TaubMathews(EoS_GUESS_t &, EoS_H2TEM_t &, EoS_TEM2H_t &, EoS_DP2C_t & );
+void EoS_SetCPUFunc_TaubMathews( EoS_GUESS_t &, EoS_H2TEM_t &, EoS_TEM2H_t &, EoS_DP2C_t &, EoS_CRE2CRP_t & );
 #ifdef GPU
-void EoS_SetGPUFunc_TaubMathews(EoS_GUESS_t &, EoS_H2TEM_t &, EoS_TEM2H_t &, EoS_DP2C_t & );
+void EoS_SetGPUFunc_TaubMathews( EoS_GUESS_t &, EoS_H2TEM_t &, EoS_TEM2H_t &, EoS_DP2C_t &, EoS_CRE2CRP_t & );
 #endif
 
 //-----------------------------------------------------------------------------------------
@@ -341,9 +417,11 @@ void EoS_Init_TaubMathews()
 {
 
    EoS_SetAuxArray_TaubMathews( EoS_AuxArray_Flt, EoS_AuxArray_Int );
-   EoS_SetCPUFunc_TaubMathews( EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_DensPres2CSqr_CPUPtr );
+   EoS_SetCPUFunc_TaubMathews( EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_Temp2HTilde_CPUPtr,
+                               EoS_DensPres2CSqr_CPUPtr, EoS_CREint2CRPres_CPUPtr );
 #  ifdef GPU
-   EoS_SetGPUFunc_TaubMathews( EoS_GuessHTilde_GPUPtr, EoS_HTilde2Temp_GPUPtr, EoS_Temp2HTilde_GPUPtr, EoS_DensPres2CSqr_GPUPtr );
+   EoS_SetGPUFunc_TaubMathews( EoS_GuessHTilde_GPUPtr, EoS_HTilde2Temp_GPUPtr, EoS_Temp2HTilde_GPUPtr,
+                               EoS_DensPres2CSqr_GPUPtr, EoS_CREint2CRPres_GPUPtr );
 #  endif
 
 } // FUNCTION : EoS_Init_TaubMathews
