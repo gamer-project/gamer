@@ -264,14 +264,9 @@ int UnitTest_Mis_LinearInterpolate()
 // Test 1. Mis_LinearInterpolate
    double Result_1 = Mis_LinearInterpolate( 2.5, 2.0, 3.0, 4.0, -2.0 );
    double Answer_1 = 1.0;
-   if ( !Mis_CompareRealValue( Result_1, Answer_1, NULL, false ) )
-   {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "Fail in %s Test 1 !!\n", __FUNCTION__ );
-   }
-   else
-   {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "Pass in %s Test 1 !!\n", __FUNCTION__ );
-   }
+   if ( MPI_Rank == 0 )
+   if ( !Mis_CompareRealValue( Result_1, Answer_1, NULL, false ) )   Aux_Message( stdout, "Fail in %s Test 1 !!\n", __FUNCTION__ );
+   else                                                              Aux_Message( stdout, "Pass in %s Test 1 !!\n", __FUNCTION__ );
 
 
 // Test 2. Mis_BilinearInterpolate
@@ -280,14 +275,10 @@ int UnitTest_Mis_LinearInterpolate()
                                              -2.0, 4.0, 0.0, 5.0,
                                               4.0, 16.0, 29.0, 41.0 );
    double Answer_2 = 20.5;
-   if ( !Mis_CompareRealValue( Result_2, Answer_2, NULL, false ) )
-   {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "Fail in %s Test 2 !!\n", __FUNCTION__ );
-   }
-   else
-   {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "Pass in %s Test 2 !!\n", __FUNCTION__ );
-   }
+   if ( MPI_Rank == 0 )
+   if ( !Mis_CompareRealValue( Result_2, Answer_2, NULL, false ) )   Aux_Message( stdout, "Fail in %s Test 2 !!\n", __FUNCTION__ );
+   else                                                              Aux_Message( stdout, "Pass in %s Test 2 !!\n", __FUNCTION__ );
+
 
 // Test 3. Mis_TrilinearInterpolate
 // f(x,y,z) = 2 * x^3 + 3 * y^2 - z
@@ -295,14 +286,9 @@ int UnitTest_Mis_LinearInterpolate()
                                                1.0, 4.0, 4.0, 7.0, 7.0, 9.0,
                                                43.0, 169.0, 142.0, 268.0, 41.0, 167.0, 140.0, 266.0 );
    double Answer_3 = 160.5;
-   if ( !Mis_CompareRealValue( Result_3, Answer_3, NULL, false ) )
-   {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "Fail in %s Test 3 !!\n", __FUNCTION__ );
-   }
-   else
-   {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "Pass in %s Test 3 !!\n", __FUNCTION__ );
-   }
+   if ( MPI_Rank == 0 )
+   if ( !Mis_CompareRealValue( Result_3, Answer_3, NULL, false ) )   Aux_Message( stdout, "Fail in %s Test 3 !!\n", __FUNCTION__ );
+   else                                                              Aux_Message( stdout, "Pass in %s Test 3 !!\n", __FUNCTION__ );
 
 
 // Test 4. Mis_MultilinearInterpolate for 1D
@@ -313,14 +299,9 @@ int UnitTest_Mis_LinearInterpolate()
 
    float Result_4 = Mis_MultilinearInterpolate( 1, x_4, xL_4, xR_4, fC_4 );
    float Answer_4 = 1.0;
-   if ( !Mis_CompareRealValue( Result_4, Answer_4, NULL, false ) )
-   {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "Fail in %s Test 4 !!\n", __FUNCTION__ );
-   }
-   else
-   {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "Pass in %s Test 4 !!\n", __FUNCTION__ );
-   }
+   if ( MPI_Rank == 0 )
+   if ( !Mis_CompareRealValue( Result_4, Answer_4, NULL, false ) )   Aux_Message( stdout, "Fail in %s Test 4 !!\n", __FUNCTION__ );
+   else                                                              Aux_Message( stdout, "Pass in %s Test 4 !!\n", __FUNCTION__ );
 
 
 // Test 5. Mis_MultilinearInterpolate for 2D
@@ -332,14 +313,9 @@ int UnitTest_Mis_LinearInterpolate()
 
    float Result_5 = Mis_MultilinearInterpolate( 2, x_5, xL_5, xR_5, fC_5 );
    float Answer_5 = 20.5;
-   if ( !Mis_CompareRealValue( Result_5, Answer_5, NULL, false ) )
-   {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "Fail in %s Test 5 !!\n", __FUNCTION__ );
-   }
-   else
-   {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "Pass in %s Test 5 !!\n", __FUNCTION__ );
-   }
+   if ( MPI_Rank == 0 )
+   if ( !Mis_CompareRealValue( Result_5, Answer_5, NULL, false ) )   Aux_Message( stdout, "Fail in %s Test 5 !!\n", __FUNCTION__ );
+   else                                                              Aux_Message( stdout, "Pass in %s Test 5 !!\n", __FUNCTION__ );
 
 
 // Test 6. Mis_MultilinearInterpolate for 3D
@@ -351,14 +327,9 @@ int UnitTest_Mis_LinearInterpolate()
 
    double Result_6 = Mis_MultilinearInterpolate( 3, x_6, xL_6, xR_6, fC_6 );
    double Answer_6 = 160.5;
-   if ( !Mis_CompareRealValue( Result_6, Answer_6, NULL, false ) )
-   {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "Fail in %s Test 6 !!\n", __FUNCTION__ );
-   }
-   else
-   {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "Pass in %s Test 6 !!\n", __FUNCTION__ );
-   }
+   if ( MPI_Rank == 0 )
+   if ( !Mis_CompareRealValue( Result_6, Answer_6, NULL, false ) )   Aux_Message( stdout, "Fail in %s Test 6 !!\n", __FUNCTION__ );
+   else                                                              Aux_Message( stdout, "Pass in %s Test 6 !!\n", __FUNCTION__ );
 
 
    return 0;
