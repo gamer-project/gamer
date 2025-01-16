@@ -722,6 +722,58 @@ void Init_ResetParameter()
 #  endif
 
 
+// angular resolution center
+   if ( OPT__FLAG_ANGULAR )
+   {
+      if ( FLAG_ANGULAR_CEN_X < 0.0 )
+      {
+         FLAG_ANGULAR_CEN_X = amr->BoxCenter[0];
+
+         PRINT_RESET_PARA( FLAG_ANGULAR_CEN_X, FORMAT_REAL, "" );
+      }
+
+      if ( FLAG_ANGULAR_CEN_Y < 0.0 )
+      {
+         FLAG_ANGULAR_CEN_Y = amr->BoxCenter[1];
+
+         PRINT_RESET_PARA( FLAG_ANGULAR_CEN_Y, FORMAT_REAL, "" );
+      }
+
+      if ( FLAG_ANGULAR_CEN_Z < 0.0 )
+      {
+         FLAG_ANGULAR_CEN_Z = amr->BoxCenter[2];
+
+         PRINT_RESET_PARA( FLAG_ANGULAR_CEN_Z, FORMAT_REAL, "" );
+      }
+   }
+
+
+// radial resolution center
+   if ( OPT__FLAG_RADIAL )
+   {
+      if ( FLAG_RADIAL_CEN_X < 0.0 )
+      {
+         FLAG_RADIAL_CEN_X = amr->BoxCenter[0];
+
+         PRINT_RESET_PARA( FLAG_RADIAL_CEN_X, FORMAT_REAL, "" );
+      }
+
+      if ( FLAG_RADIAL_CEN_Y < 0.0 )
+      {
+         FLAG_RADIAL_CEN_Y = amr->BoxCenter[1];
+
+         PRINT_RESET_PARA( FLAG_RADIAL_CEN_Y, FORMAT_REAL, "" );
+      }
+
+      if ( FLAG_RADIAL_CEN_Z < 0.0 )
+      {
+         FLAG_RADIAL_CEN_Z = amr->BoxCenter[2];
+
+         PRINT_RESET_PARA( FLAG_RADIAL_CEN_Z, FORMAT_REAL, "" );
+      }
+   }
+
+
 // turn off refinement criteria and checks related to density if "DENS" is not defined
 #  ifndef DENS
    if ( OPT__FLAG_RHO )
@@ -1006,7 +1058,7 @@ void Init_ResetParameter()
 #  endif
 
 
-// PAR_IC_FLOAT8
+// PAR_IC_FLOAT/INT8
 #  ifdef PARTICLE
    if ( amr->Par->Init == PAR_INIT_BY_FILE  &&  PAR_IC_FLOAT8 < 0 )
    {
@@ -1018,6 +1070,18 @@ void Init_ResetParameter()
 #     endif
 
       PRINT_RESET_PARA( PAR_IC_FLOAT8, FORMAT_INT, "to be consistent with FLOAT8_PAR" );
+   }
+
+   if ( amr->Par->Init == PAR_INIT_BY_FILE  &&  PAR_IC_INT8 < 0 )
+   {
+//    set PAR_IC_INT8 = INT8_PAR by default
+#     ifdef INT8_PAR
+      PAR_IC_INT8 = 1;
+#     else
+      PAR_IC_INT8 = 0;
+#     endif
+
+      PRINT_RESET_PARA( PAR_IC_INT8, FORMAT_INT, "to be consistent with INT8_PAR" );
    }
 #endif
 
