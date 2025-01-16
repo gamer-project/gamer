@@ -698,6 +698,7 @@ void SetParameter()
                Aux_Message( stdout, "\n" );
             }
             UnitTest_Mis_LinearInterpolate();
+            UnitTest_Mis_InterpolateFromTable();
 
             if ( HaloMerger_Soliton_DensProf_Rescale[index_soliton] )
             {

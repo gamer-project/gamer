@@ -53,6 +53,143 @@ T Mis_InterpolateFromTable( const int N, const T Table_x[], const T Table_y[], c
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  Mis_InterpolateFrom2DTable
+// Description :  Assuming f=f(x,y), return the interpolated value of f for a given point (x,y)
+//
+// Note        :  1. Interpolation table Table_x and Table_y must be sorted into ascending numerical order in advance
+//                2. Target point x must lie in the range Table_x[0] <= x < Table_x[N_x-1]
+//                   Target point y must lie in the range Table_y[0] <= y < Table_y[N_y-1]
+//                   --> Otherwise the function returns NULL_REAL
+//                3. Currently the function only supports linear interpolation
+//                4. Overloaded with different types
+//                5. Explicit template instantiation is put in the end of this file
+//
+// Parameter   :  N_x      : Number of elements in the interpolation tables Table_x
+//                           --> Must be >= 2
+//                N_y      : Number of elements in the interpolation tables Table_y
+//                           --> Must be >= 2
+//                Table_x  : Interpolation table x, size = N_x
+//                Table_y  : Interpolation table y, size = N_y
+//                Table_f  : Interpolation table f, size = N_y*N_x
+//                x        : Target point x for interpolation
+//                y        : Target point y for interpolation
+//
+// Return      :  f(x,y)    if x lies in the range Table_x[0] <= x < Table_x[N_x-1] and
+//                             y lies in the range Table_y[0] <= y < Table_y[N_y-1]
+//                NULL_REAL if (x,y) lies outside the above range
+//-------------------------------------------------------------------------------------------------------
+template <typename T>
+T Mis_InterpolateFrom2DTable( const int N_x, const int N_y,
+                              const T Table_x[], const T Table_y[], const T Table_f[],
+                              const T x, const T y )
+{
+
+// initial check
+#  ifdef GAMER_DEBUG
+   if ( Table_x == NULL )  Aux_Error( ERROR_INFO, "Table_x == NULL !!\n" );
+   if ( Table_y == NULL )  Aux_Error( ERROR_INFO, "Table_y == NULL !!\n" );
+   if ( Table_f == NULL )  Aux_Error( ERROR_INFO, "Table_f == NULL !!\n" );
+#  endif
+
+
+// get index
+   int IdxL_x = GetIdxL_From1DCoordinateTable( N_x, Table_x, x );
+   int IdxL_y = GetIdxL_From1DCoordinateTable( N_y, Table_y, y );
+
+   if ( IdxL_x == NULL_INT  ||  IdxL_y == NULL_INT )    return NULL_REAL;
+
+
+// linear interpolation
+   T f = Mis_BilinearInterpolate( x, y,
+                                  Table_x[IdxL_x], Table_x[IdxL_x+1],
+                                  Table_y[IdxL_y], Table_y[IdxL_y+1],
+                                  Table_f[ IdxL_y   *N_x +  IdxL_x   ],
+                                  Table_f[ IdxL_y   *N_x + (IdxL_x+1)],
+                                  Table_f[(IdxL_y+1)*N_x +  IdxL_x   ],
+                                  Table_f[(IdxL_y+1)*N_x + (IdxL_x+1)] );
+
+   return f;
+
+} // FUNCTION : Mis_InterpolateFrom2DTable
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Mis_InterpolateFrom3DTable
+// Description :  Assuming f=f(x,y,z), return the interpolated value of f for a given point (x,y,z)
+//
+// Note        :  1. Interpolation table Table_x, Table_y and Table_z must be sorted into ascending numerical order in advance
+//                2. Target point x must lie in the range Table_x[0] <= x < Table_x[N_x-1]
+//                   Target point y must lie in the range Table_y[0] <= y < Table_y[N_y-1]
+//                   Target point z must lie in the range Table_z[0] <= z < Table_z[N_z-1]
+//                   --> Otherwise the function returns NULL_REAL
+//                3. Currently the function only supports linear interpolation
+//                4. Overloaded with different types
+//                5. Explicit template instantiation is put in the end of this file
+//
+// Parameter   :  N_x      : Number of elements in the interpolation tables Table_x
+//                           --> Must be >= 2
+//                N_y      : Number of elements in the interpolation tables Table_y
+//                           --> Must be >= 2
+//                N_z      : Number of elements in the interpolation tables Table_z
+//                           --> Must be >= 2
+//                Table_x  : Interpolation table x, size = N_x
+//                Table_y  : Interpolation table y, size = N_y
+//                Table_z  : Interpolation table z, size = N_z
+//                Table_f  : Interpolation table f, size = N_z*N_y*N_x
+//                x        : Target point x for interpolation
+//                y        : Target point y for interpolation
+//                z        : Target point z for interpolation
+//
+// Return      :  f(x,y)    if x lies in the range Table_x[0] <= x < Table_x[N_x-1] and
+//                             y lies in the range Table_y[0] <= y < Table_y[N_y-1] and
+//                             z lies in the range Table_z[0] <= z < Table_z[N_z-1]
+//                NULL_REAL if (x,y,z) lies outside the above range
+//-------------------------------------------------------------------------------------------------------
+template <typename T>
+T Mis_InterpolateFrom3DTable( const int N_x, const int N_y, const int N_z,
+                              const T Table_x[], const T Table_y[], const T Table_z[], const T Table_f[],
+                              const T x, const T y, const T z )
+{
+
+// initial check
+#  ifdef GAMER_DEBUG
+   if ( Table_x == NULL )  Aux_Error( ERROR_INFO, "Table_x == NULL !!\n" );
+   if ( Table_y == NULL )  Aux_Error( ERROR_INFO, "Table_y == NULL !!\n" );
+   if ( Table_z == NULL )  Aux_Error( ERROR_INFO, "Table_z == NULL !!\n" );
+   if ( Table_f == NULL )  Aux_Error( ERROR_INFO, "Table_f == NULL !!\n" );
+#  endif
+
+
+// get index
+   int IdxL_x = GetIdxL_From1DCoordinateTable( N_x, Table_x, x );
+   int IdxL_y = GetIdxL_From1DCoordinateTable( N_y, Table_y, y );
+   int IdxL_z = GetIdxL_From1DCoordinateTable( N_z, Table_z, z );
+
+   if ( IdxL_x == NULL_INT  ||  IdxL_y == NULL_INT  ||  IdxL_z == NULL_INT )    return NULL_REAL;
+
+
+// linear interpolation
+   T f = Mis_TrilinearInterpolate( x, y, z,
+                                   Table_x[IdxL_x], Table_x[IdxL_x+1],
+                                   Table_y[IdxL_y], Table_y[IdxL_y+1],
+                                   Table_z[IdxL_z], Table_z[IdxL_z+1],
+                                   Table_f[IDX321( IdxL_x,   IdxL_y,   IdxL_z,   N_x, N_y )],
+                                   Table_f[IDX321( IdxL_x+1, IdxL_y,   IdxL_z,   N_x, N_y )],
+                                   Table_f[IDX321( IdxL_x,   IdxL_y+1, IdxL_z,   N_x, N_y )],
+                                   Table_f[IDX321( IdxL_x+1, IdxL_y+1, IdxL_z,   N_x, N_y )],
+                                   Table_f[IDX321( IdxL_x,   IdxL_y,   IdxL_z+1, N_x, N_y )],
+                                   Table_f[IDX321( IdxL_x+1, IdxL_y,   IdxL_z+1, N_x, N_y )],
+                                   Table_f[IDX321( IdxL_x,   IdxL_y+1, IdxL_z+1, N_x, N_y )],
+                                   Table_f[IDX321( IdxL_x+1, IdxL_y+1, IdxL_z+1, N_x, N_y )] );
+
+   return f;
+
+} // FUNCTION : Mis_InterpolateFrom3DTable
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  Mis_InterpolateFrom_nDim_Table
 // Description :  Assuming f=f(\vec{x}), return the interpolated value of f for a given point
 //                \vec{x} = (x_0, x_1, ..., x_{n-1}) in n-dimensional table
@@ -362,33 +499,214 @@ int GetIdx_corner_nDim_Table( const int Idx_corner_local, const int nDim, const 
 int UnitTest_Mis_InterpolateFromTable()
 {
 
-// Test 1. Mis_LinearInterpolate
-   double Result_1 = Mis_LinearInterpolate( 2.5, 2.0, 3.0, 4.0, -2.0 );
-   double Answer_1 = 1.0;
-   if ( !Mis_CompareRealValue( Result_1, Answer_1, NULL, false ) )
-   {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "Fail in %s Test 1 !!\n", __FUNCTION__ );
-   }
-   else
-   {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "Pass in %s Test 1 !!\n", __FUNCTION__ );
-   }
+// Example 1D table
+   int    N_1D      = 10;
+   double Table_X_1D[10] = { 1.0, 2.0, 3.0,  4.0,  5.0,  6.0,  7.0,  8.0,  9.0,  10.0 };
+   double Table_f_1D[10] = { 1.0, 4.0, 9.0, 16.0, 25.0, 36.0, 49.0, 64.0, 81.0, 100.0 };
+   int         N_x_1D[1] = { N_1D };
+   double *Table_x_1D[1] = { Table_X_1D };
 
 
-// Test 2. Mis_BilinearInterpolate
-// f(x,y) = x^2 + y^2
-   double Result_2 = Mis_BilinearInterpolate( 2.5, 1.5,
-                                             -2.0, 4.0, 0.0, 5.0,
-                                              4.0, 16.0, 29.0, 41.0 );
-   double Answer_2 = 20.5;
-   if ( !Mis_CompareRealValue( Result_2, Answer_2, NULL, false ) )
-   {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "Fail in %s Test 2 !!\n", __FUNCTION__ );
-   }
-   else
-   {
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "Pass in %s Test 2 !!\n", __FUNCTION__ );
-   }
+// Example 2D table
+   int     N_X_2D       = 4;
+   int     N_Y_2D       = 3;
+   int     N_x_2D[2]    = { N_X_2D, N_Y_2D };
+
+   float *Table_X_2D  = new float [N_X_2D];
+   for (int i=0; i<N_X_2D; i++)
+      Table_X_2D[i] = 1.0+i;   // { 1.0, 2.0, 3.0, 4.0 }
+
+   float *Table_Y_2D  = new float [N_Y_2D];
+   for (int j=0; j<N_Y_2D; j++)
+      Table_Y_2D[j] = 1.0+j*j; // { 1.0, 2.0, 5.0 }
+
+   float **Table_x_2D = new float* [2];
+   Table_x_2D[0] = Table_X_2D;
+   Table_x_2D[1] = Table_Y_2D;
+
+   float *Table_f_2D = new float [N_Y_2D*N_X_2D];
+   for (int j=0; j<N_Y_2D; j++)
+   for (int i=0; i<N_X_2D; i++)
+      Table_f_2D[ j*N_X_2D + i ] = Table_X_2D[i]*Table_Y_2D[j];
+                                   // { 1.0,  2.0,  3.0,  4.0,
+                                   //   2.0,  4.0,  6.0,  8.0,
+                                   //   5.0, 10.0, 15.0, 20.0 }
+
+// Example 3D table
+   int     N_X_3D    = 4;
+   int     N_Y_3D    = 2;
+   int     N_Z_3D    = 3;
+   int     N_x_3D[3] = { N_X_3D, N_Y_3D, N_Z_3D };
+
+   double *Table_X_3D = new double [N_X_3D];
+   for (int i=0; i<N_X_3D; i++)   Table_X_3D[i] = 1.0+i;   // { 1.0, 2.0, 3.0, 4.0 }
+
+   double *Table_Y_3D = new double [N_Y_3D];
+   for (int j=0; j<N_Y_3D; j++)   Table_Y_3D[j] = 2.0+j;   // { 2.0, 3.0 }
+
+   double *Table_Z_3D = new double [N_Z_3D];
+   for (int k=0; k<N_Z_3D; k++)   Table_Z_3D[k] = 4.0+k*k; // { 4.0, 5.0, 8.0 }
+
+   double **Table_x_3D = new double* [3];
+   Table_x_3D[0] = Table_X_3D;
+   Table_x_3D[1] = Table_Y_3D;
+   Table_x_3D[2] = Table_Z_3D;
+
+   double *Table_f_3D = new double [N_Z_3D*N_Y_3D*N_X_3D];
+   for (int k=0; k<N_Z_3D; k++)
+   for (int j=0; j<N_Y_3D; j++)
+   for (int i=0; i<N_X_3D; i++)
+      Table_f_3D[ ( k*N_Y_3D + j )*N_X_3D + i ] = Table_X_3D[i] * SQR( Table_Y_3D[j] ) * Table_Z_3D[k];
+                                                  // { 16.0,  32.0,   48.0,   64.0,
+                                                  //   36.0,  72.0,  108.0,  144.0,
+                                                  //
+                                                  //   20.0,  40.0,   60.0,   80.0,
+                                                  //   45.0,  90.0,  135.0,  180.0,
+                                                  //
+                                                  //   32.0,  64.0,   96.0,  128.0,
+                                                  //   72.0, 144.0,  216.0,  288.0 }
+
+
+// Test 1. Mis_InterpolateFromTable
+   double Result_1 = Mis_InterpolateFromTable( N_1D, Table_X_1D, Table_f_1D, 5.5 );
+   double Answer_1 = 30.5;
+   if ( MPI_Rank == 0 )
+   if ( !Mis_CompareRealValue( Result_1, Answer_1, NULL, false ) )   Aux_Message( stdout, "Fail in %s Test 1 !!\n", __FUNCTION__ );
+   else                                                              Aux_Message( stdout, "Pass in %s Test 1 !!\n", __FUNCTION__ );
+
+
+// Test 2. Mis_InterpolateFromTable Outside
+   double Result_2 = Mis_InterpolateFromTable( N_1D, Table_X_1D, Table_f_1D, 10.5 );
+   double Answer_2 = NULL_REAL;
+   if ( MPI_Rank == 0 )
+   if ( !Mis_CompareRealValue( Result_2, Answer_2, NULL, false ) )   Aux_Message( stdout, "Fail in %s Test 2 !!\n", __FUNCTION__ );
+   else                                                              Aux_Message( stdout, "Pass in %s Test 2 !!\n", __FUNCTION__ );
+
+
+// Test 3. Mis_InterpolateFrom2DTable
+   float Result_3 = Mis_InterpolateFrom2DTable( N_X_2D, N_Y_2D,
+                                                Table_X_2D, Table_Y_2D, Table_f_2D,
+                                                (float)2.5, (float)4.0 );
+   float Answer_3 = 10.0;
+   if ( MPI_Rank == 0 )
+   if ( !Mis_CompareRealValue( Result_3, Answer_3, NULL, false ) )   Aux_Message( stdout, "Fail in %s Test 3 !!\n", __FUNCTION__ );
+   else                                                              Aux_Message( stdout, "Pass in %s Test 3 !!\n", __FUNCTION__ );
+
+
+// Test 4. Mis_InterpolateFrom3DTable
+   double Result_4 = Mis_InterpolateFrom3DTable( N_X_3D, N_Y_3D, N_Z_3D,
+                                                 Table_X_3D, Table_Y_3D, Table_Z_3D, Table_f_3D,
+                                                 3.5, 2.2, 4.6 );
+   double Answer_4 = 80.5;
+   if ( MPI_Rank == 0 )
+   if ( !Mis_CompareRealValue( Result_4, Answer_4, NULL, false ) )   Aux_Message( stdout, "Fail in %s Test 4 !!\n", __FUNCTION__ );
+   else                                                              Aux_Message( stdout, "Pass in %s Test 4 !!\n", __FUNCTION__ );
+
+
+// Test 5. Mis_InterpolateFrom_nDim_Table 1D
+   double x_5[1] = { 5.5 };
+   double Result_5 = Mis_InterpolateFrom_nDim_Table( 1, N_x_1D, Table_x_1D, Table_f_1D, x_5, 0 );
+   double Answer_5 = 30.5;
+   if ( MPI_Rank == 0 )
+   if ( !Mis_CompareRealValue( Result_5, Answer_5, NULL, false ) )   Aux_Message( stdout, "Fail in %s Test 5 !!\n", __FUNCTION__ );
+   else                                                              Aux_Message( stdout, "Pass in %s Test 5 !!\n", __FUNCTION__ );
+
+
+// Test 6. Mis_InterpolateFrom_nDim_Table 2D
+   float x_6[2] = {2.5, 4.0};
+   float Result_6 = Mis_InterpolateFrom_nDim_Table( 2, N_x_2D, Table_x_2D, Table_f_2D, x_6, 0 );
+   float Answer_6 = 10.0;
+   if ( MPI_Rank == 0 )
+   if ( !Mis_CompareRealValue( Result_6, Answer_6, NULL, false ) )   Aux_Message( stdout, "Fail in %s Test 6 !!\n", __FUNCTION__ );
+   else                                                              Aux_Message( stdout, "Pass in %s Test 6 !!\n", __FUNCTION__ );
+
+
+// Test 7. Mis_InterpolateFrom_nDim_Table 3D
+   double x_7[3] = { 3.5, 2.2, 4.6 };
+   double Result_7 = Mis_InterpolateFrom_nDim_Table( 3, N_x_3D, Table_x_3D, Table_f_3D, x_7, 0 );
+   double Answer_7 = 80.5;
+   if ( MPI_Rank == 0 )
+   if ( !Mis_CompareRealValue( Result_7, Answer_7, NULL, false ) )   Aux_Message( stdout, "Fail in %s Test 7 !!\n", __FUNCTION__ );
+   else                                                              Aux_Message( stdout, "Pass in %s Test 7 !!\n", __FUNCTION__ );
+
+
+// Test 8. Mis_InterpolateFrom_nDim_Table 2D Outside extension
+   float x_8[2] = { 5.0, 4.0 };
+   float Result_8 = Mis_InterpolateFrom_nDim_Table( 2, N_x_2D, Table_x_2D, Table_f_2D, x_8, 1 );
+   float Answer_8 = 16.0;
+   if ( MPI_Rank == 0 )
+   if ( !Mis_CompareRealValue( Result_8, Answer_8, NULL, false ) )   Aux_Message( stdout, "Fail in %s Test 8 !!\n", __FUNCTION__ );
+   else                                                              Aux_Message( stdout, "Pass in %s Test 8 !!\n", __FUNCTION__ );
+
+
+// Test 9. Mis_InterpolateFrom_nDim_Table 2D Outside extrapolation
+   float x_9[2] = { 6.0, 0.5 };
+   float Result_9 = Mis_InterpolateFrom_nDim_Table( 2, N_x_2D, Table_x_2D, Table_f_2D, x_9, 2 );
+   float Answer_9 = 3.0;
+   if ( MPI_Rank == 0 )
+   if ( !Mis_CompareRealValue( Result_9, Answer_9, NULL, false ) )   Aux_Message( stdout, "Fail in %s Test 9 !!\n", __FUNCTION__ );
+   else                                                              Aux_Message( stdout, "Pass in %s Test 9 !!\n", __FUNCTION__ );
+
+
+// Test 10. Mis_InterpolateFrom_nDim_Table 3D Outside extrapolation
+   double x_10[3] = { 1.5, 4.0, 9.0 };
+   double Result_10 = Mis_InterpolateFrom_nDim_Table( 3, N_x_3D, Table_x_3D, Table_f_3D, x_10, 2 );
+   double Answer_10 = 189.0;
+   if ( MPI_Rank == 0 )
+   if ( !Mis_CompareRealValue( Result_10, Answer_10, NULL, false ) )   Aux_Message( stdout, "Fail in %s Test 10 !!\n", __FUNCTION__ );
+   else                                                                Aux_Message( stdout, "Pass in %s Test 10 !!\n", __FUNCTION__ );
+
+
+// Test 11. Mis_InterpolateFrom_nDim_Table 2D
+   float  x_11[2] = { 4.0, 5.0 };
+   int IdxL_11[2] = { 0 , 0 };
+   float Result_11 = Mis_InterpolateFrom_nDim_Table_withIdxL( 2, N_x_2D, Table_x_2D, Table_f_2D, x_11, IdxL_11 );
+   float Answer_11 = 20.0;
+   if ( MPI_Rank == 0 )
+   if ( !Mis_CompareRealValue( Result_11, Answer_11, NULL, false ) )   Aux_Message( stdout, "Fail in %s Test 11 !!\n", __FUNCTION__ );
+   else                                                                Aux_Message( stdout, "Pass in %s Test 11 !!\n", __FUNCTION__ );
+
+
+// Test 12. Mis_InterpolateFrom_nDim_Table 3D
+   double x_12[3] = { 3.0, 4.0, 8.0 };
+   int IdxL_12[3] = { 1, 0, 1 };
+   double Result_12 = Mis_InterpolateFrom_nDim_Table_withIdxL( 3, N_x_3D, Table_x_3D, Table_f_3D, x_12, IdxL_12 );
+   double Answer_12 = 336.0;
+   if ( MPI_Rank == 0 )
+   if ( !Mis_CompareRealValue( Result_12, Answer_12, NULL, false ) )   Aux_Message( stdout, "Fail in %s Test 12 !!\n", __FUNCTION__ );
+   else                                                                Aux_Message( stdout, "Pass in %s Test 12 !!\n", __FUNCTION__ );
+
+
+// Test 13. Mis_InterpolateFrom_nDim_Table 3D Outside
+   double x_13[3] = { 1.5, 2.5, 8.5 };
+   int IdxL_13[3] = { -1, -2, 3 };
+   double Result_13 = Mis_InterpolateFrom_nDim_Table_withIdxL( 3, N_x_3D, Table_x_3D, Table_f_3D, x_13, IdxL_13 );
+   double Answer_13 = 32.0;
+   if ( MPI_Rank == 0 )
+   if ( !Mis_CompareRealValue( Result_13, Answer_13, NULL, false ) )   Aux_Message( stdout, "Fail in %s Test 13 !!\n", __FUNCTION__ );
+   else                                                                Aux_Message( stdout, "Pass in %s Test 13 !!\n", __FUNCTION__ );
+
+
+// Test 14. GetIdx_corner_nDim_Table
+   int IdxL_14[3] = { 1, 1, 2 };
+   int Result_14 = GetIdx_corner_nDim_Table( 1, 3, N_x_3D, IdxL_14 );
+   int Answer_14 = 22;
+   if ( MPI_Rank == 0 )
+   if ( Result_14 != Answer_14 )   Aux_Message( stdout, "Fail in %s Test 14 !!\n", __FUNCTION__ );
+   else                            Aux_Message( stdout, "Pass in %s Test 14 !!\n", __FUNCTION__ );
+
+
+// free memory
+   delete [] Table_X_2D;
+   delete [] Table_Y_2D;
+   delete [] Table_x_2D;
+   delete [] Table_f_2D;
+
+   delete [] Table_X_3D;
+   delete [] Table_Y_3D;
+   delete [] Table_Z_3D;
+   delete [] Table_x_3D;
+   delete [] Table_f_3D;
 
 
    return 0;
@@ -400,7 +718,11 @@ int UnitTest_Mis_InterpolateFromTable()
 // explicit template instantiation
 template float  Mis_InterpolateFromTable <float>  ( const int N, const float  Table_x[], const float  Table_y[], const float  x );
 template double Mis_InterpolateFromTable <double> ( const int N, const double Table_x[], const double Table_y[], const double x );
-template float  Mis_InterpolateFrom_nDim_Table <float>  ( const int nDim, const int N_x[], float  const* const* Table_x, const float  Table_f[], const float  x[] );
-template double Mis_InterpolateFrom_nDim_Table <double> ( const int nDim, const int N_x[], double const* const* Table_x, const double Table_f[], const double x[] );
+template float  Mis_InterpolateFrom2DTable <float>  ( const int N_x, const int N_y, const float  Table_x[], const float  Table_y[], const float  Table_f[], const float  x, const float  y );
+template double Mis_InterpolateFrom2DTable <double> ( const int N_x, const int N_y, const double Table_x[], const double Table_y[], const double Table_f[], const double x, const double y );
+template float  Mis_InterpolateFrom3DTable <float>  ( const int N_x, const int N_y, const int N_z, const float  Table_x[], const float  Table_y[], const float  Table_z[], const float  Table_f[], const float  x, const float  y, const float  z );
+template double Mis_InterpolateFrom3DTable <double> ( const int N_x, const int N_y, const int N_z, const double Table_x[], const double Table_y[], const double Table_z[], const double Table_f[], const double x, const double y, const double z );
+template float  Mis_InterpolateFrom_nDim_Table <float>  ( const int nDim, const int N_x[], float  const* const* Table_x, const float  Table_f[], const float  x[], const int OutsideMethod );
+template double Mis_InterpolateFrom_nDim_Table <double> ( const int nDim, const int N_x[], double const* const* Table_x, const double Table_f[], const double x[], const int OutsideMethod );
 template float  Mis_InterpolateFrom_nDim_Table_withIdxL <float>  ( const int nDim, const int N_x[], float  const* const* Table_x, const float  Table_f[], const float  x[], const int IdxL[] );
 template double Mis_InterpolateFrom_nDim_Table_withIdxL <double> ( const int nDim, const int N_x[], double const* const* Table_x, const double Table_f[], const double x[], const int IdxL[] );
