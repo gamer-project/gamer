@@ -115,6 +115,7 @@ void Output_DumpData( const int Stage )
 
    if ( OPT__OUTPUT_PART )
    {
+      sprintf( FileName_Part, "%s/", OUTPUT_DIR );
       switch ( OPT__OUTPUT_PART )
       {
          case OUTPUT_XY :    sprintf( FileName_Temp, "XYslice_z%.3f_%06d", OUTPUT_PART_Z, DumpID );   break;
