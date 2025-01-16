@@ -272,7 +272,7 @@ void Aux_Record_GrackleComoving()
 #     error : DE_EINT is NOT supported yet !!
 #     endif
 
-#  endif // #ifdef DUAL_ENERGY
+#     endif // #ifdef DUAL_ENERGY
 
       const double MassRatio_pe = Const_mp / Const_me;
 
@@ -317,7 +317,7 @@ void Aux_Record_GrackleComoving()
       if ( calculate_cooling_time( &Che_Units, &my_fields, my_cooling_time ) == 0 )
          Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
 //    calculate temperature
-      if ( calculate_temperature(&Che_Units, &my_fields, my_temperature ) == 0 )
+      if ( calculate_temperature( &Che_Units, &my_fields, my_temperature ) == 0 )
          Aux_Error( ERROR_INFO, "Error in calculate_temperature.\n" );
 //    calculate gamma
       if ( calculate_gamma( &Che_Units, &my_fields, my_gamma ) == 0 )
@@ -338,7 +338,7 @@ void Aux_Record_GrackleComoving()
 #     endif // #ifdef SUPPORT_GRACKLE
    } // if ( MPI_Rank == 0 )
 
-} // FUNCTION : Aux_Record_User_Template
+} // FUNCTION : Aux_Record_GrackleComoving
 
 
 
