@@ -69,6 +69,7 @@ For variables with `Default/Min/Max` labeled as `Depend`, click the parameter na
 | [[ DT__SYNC_CHILDREN_LV \| Runtime-Parameters:-Timestep#DT__SYNC_CHILDREN_LV ]]                      |             0.1 |             0.0 |             1.0 | dt criterion: allow dt to adjust by (1.0-DT__SYNC_CHILDREN) in order to synchronize with the children level (for OPT__DT_LEVEL==3 only; 0=off) [0.1] |
 | [[ DT__SYNC_PARENT_LV \| Runtime-Parameters:-Timestep#DT__SYNC_PARENT_LV ]]                          |             0.1 |             0.0 |            None | dt criterion: allow dt to adjust by (1.0+DT__SYNC_PARENT) in order to synchronize with the parent level (for OPT__DT_LEVEL==3 only) [0.1] |
 | [[ DUAL_ENERGY_SWITCH \| Runtime-Parameters:-Hydro#DUAL_ENERGY_SWITCH ]]                             |          2.0e-2 |             0.0 |            None | apply dual-energy if E_int/E_kin < DUAL_ENERGY_SWITCH [2.0e-2] ##DUAL_ENERGY ONLY## |
+| [[ DUMP_DIR \| Runtime-Parameters:-Outputs#DUMP_DIR ]]                                               |             "." |            None |            None | set the output directory [.] |
 
 # E
 | Name                                                                                                 |         Default |             Min |             Max | Short description |

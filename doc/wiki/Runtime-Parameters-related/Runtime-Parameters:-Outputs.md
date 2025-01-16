@@ -287,8 +287,8 @@ the default value.
 <a name="OUTPUT_DIR"></a>
 * #### `OUTPUT_DIR` &ensp; (string) &ensp; [.]
     * **Description:**
-Set the output data directory. Note that it is unnecessary to set this value
-in most cases unless you want to overwrite the default value.
+Specify the output data directory. In most cases, it is unnecessary to set this value
+unless you want to overwrite the default directory.
     * **Restriction:**
 
 
