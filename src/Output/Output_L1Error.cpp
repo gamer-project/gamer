@@ -105,7 +105,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 #  endif // ELBDM_SCHEME
 
    for (int v=0; v<NCOMP_PASSIVE; v++)
-   sprintf( FileName[NCOMP_FLUID+v], "%s_Passive%02d_%06d", Prefix, v, DumpID );
+   sprintf( FileName[NCOMP_FLUID+v], "%s/%s_Passive%02d_%06d", OUTPUT_DIR, Prefix, v, DumpID );
 
 #  else
 #  error : ERROR : unsupported MODEL !!
