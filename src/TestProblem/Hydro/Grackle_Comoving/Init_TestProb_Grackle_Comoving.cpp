@@ -59,9 +59,6 @@ void Validate()
 #  endif
 
 
-// warnings
-
-
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
 
 } // FUNCTION : Validate
@@ -96,11 +93,11 @@ void SetParameter()
 // (1-1) add parameters in the following format:
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
 // --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
-// ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
-// ********************************************************************************************************************************
-   ReadPara->Add( "GrackleComoving_InitialTemperature", &GrackleComoving_InitialTemperature,  -1.0,  Eps_double,   NoMax_double );
-   ReadPara->Add( "GrackleComoving_InitialMetallicity", &GrackleComoving_InitialMetallicity,   0.0,  0.0,          NoMax_double );
+// **************************************************************************************************************************************
+// ReadPara->Add( "KEY_IN_THE_FILE",                    &VARIABLE,                             DEFAULT,     MIN,          MAX          );
+// **************************************************************************************************************************************
+   ReadPara->Add( "GrackleComoving_InitialTemperature", &GrackleComoving_InitialTemperature,  -1.0,         Eps_double,   NoMax_double );
+   ReadPara->Add( "GrackleComoving_InitialMetallicity", &GrackleComoving_InitialMetallicity,   0.0,         0.0,          1.0          );
 
    ReadPara->Read( FileName );
 
@@ -169,9 +166,15 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    double Dens, MomX, MomY, MomZ, Eint, Etot;
 
 #  ifdef SUPPORT_GRACKLE
-   const double mu                = 4 / (8 - 5 * (1 - grackle_data->HydrogenFractionByMass)); // fully ionized gas
-   const double temperature_units = get_temperature_units(&Che_Units); // set temperature units
-   const double u                 = GrackleComoving_InitialTemperature / (mu * (GAMMA - 1.) * temperature_units) * SQR(Time);
+   const double mu                = 4 / (8 - 5 * (1 - grackle_data->HydrogenFractionByMass));      // fully ionized gas
+   const double temperature_units = get_temperature_units(&Che_Units);                             // set temperature units
+
+// convert GracleComoving_InitialTemperature to comoving internal energy assuming mu above
+// --> the mean molecular weight can be different from MOLECULAR_WEIGHT
+//     the temperature in this test problem can be different the temperature field output by OUT__OUTPUT_TEMP
+   const double u = GrackleComoving_InitialTemperature / (mu * (GAMMA - 1.) * temperature_units) * SQR(Time);
+
+
    Dens = 1.0;
    MomX = 0.0;
    MomY = 0.0;
@@ -228,7 +231,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 void Aux_Record_GrackleComoving()
 {
 
-   const char FileName[] = "Record__User";
+   const char FileName[] = "Record__GrackleComoving";
    static bool FirstTime = true;
 
    if ( FirstTime )
@@ -239,7 +242,7 @@ void Aux_Record_GrackleComoving()
          if ( Aux_CheckFileExist(FileName) )    Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
 
          FILE *File_User = fopen( FileName, "a" );
-         fprintf( File_User, "#%13s%14s%3s%14s%14s%14s%14s%14s",  "Time", "Step", "", "dt [s]", "n [1/cc]", "mu", "Temp [K]", "Edens [erg/cc], Lcool[erg cm^3 s^-1]" );
+         fprintf( File_User, "#%14s%14s%3s%22s%22s%22s%22s%22s%22s",  "a_scale", "Step", "", "dt [s]", "n [1/cc]", "mu", "Temp [K]", "Edens [erg cm^-3]", "Lcool[erg cm^3 s^-1]" );
          fprintf( File_User, "\n" );
 
          fclose( File_User );
@@ -328,7 +331,7 @@ void Aux_Record_GrackleComoving()
       const double Temp              = my_temperature[0];
       const double Lcool             = Edens / fabs(my_cooling_time[0] * UNIT_T) / n / n;
 
-      fprintf( File_User, "%14.7e%14ld%3s%14.7e%14.7e%14.7e%14.7e%14.7e%14.7e", Time[0], Step, "", dt_SubStep, n, mu, Temp, Edens, Lcool );
+      fprintf( File_User, "%14.7e%14ld%3s%22.7e%22.7e%22.7e%22.7e%22.7e%22.7e", Time[0], Step, "", dt_SubStep, n, mu, Temp, Edens, Lcool );
       fprintf( File_User, "\n" );
 
       fclose( File_User );
