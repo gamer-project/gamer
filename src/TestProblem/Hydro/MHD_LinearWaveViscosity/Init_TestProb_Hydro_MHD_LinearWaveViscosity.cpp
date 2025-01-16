@@ -225,7 +225,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double WaveLength = MHDLinearVisc_WaveLength;
    const double WaveK      = MHDLinearVisc_WaveNumber;
 
-   double kr, WaveW, WaveFormV, WaveFormRho, Gamma, DampForm;
+   double kr, WaveW, WaveFormV, WaveForm, Gamma, DampForm;
    double Dens, Mom, MomX, MomY, MomZ, Pres, Eint, Etot;
 
    switch ( MHDLinearVisc_Dir ) {
@@ -235,17 +235,20 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       case 3:  kr = WaveK*( x + y + z )/sqrt(3.0);  break;
    }
 
+   WaveW       = WaveK*WaveSpeed;
+
    if ( MHDLinearVisc_Mode == 1 )
    {
-      WaveW       = WaveK*WaveSpeed;
+      
 #     ifdef VISCOSITY 
-      Gamma       = VISCOSITY_CONSTANT_COEFF*WaveK*WaveK/6.0;
+      Gamma     = VISCOSITY_CONSTANT_COEFF*WaveK*WaveK/6.0;
 #     endif
-      WaveFormRho =  cos( kr ) * sin( WaveW*Time );
-      WaveFormV   = -sin( kr ) * ( WaveW*cos( WaveW*Time ) - Gamma*sin( WaveW*Time ) ) / WaveK;
-      DampForm    = EXP( -Gamma*Time );
-      Dens        = Rho0 * ( 1.0 + A*WaveFormRho*DampForm );
-      Mom         = Dens*A*WaveFormV*DampForm;
+      WaveForm  =  cos( kr ) * sin( WaveW*Time );
+      WaveFormV = -sin( kr ) * ( WaveW*cos( WaveW*Time ) - Gamma*sin( WaveW*Time ) ) / WaveK;
+      DampForm  = EXP( -Gamma*Time );
+      Dens      = Rho0 * ( 1.0 + A*WaveForm*DampForm );
+      Mom       = Dens*A*WaveFormV*DampForm;
+      Pres      = P0 * ( 1.0 + A*WaveForm*DampForm );
 
       switch ( MHDLinearVisc_Dir ) {
          case 0:  MomX = Mom;            MomY = 0.0;   MomZ = 0.0;   break;
@@ -254,11 +257,38 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          case 3:  MomX = Mom/sqrt(3.0);  MomY = MomX;  MomZ = MomX;  break;
       }
 
-      Pres = P0 * ( 1.0 + A*WaveFormRho*DampForm );
    } // if ( MHDLinearVisc_Mode == 1 )
+
+   else if ( MHDLinearVisc_Mode == 2 || MHDLinearVisc_Mode == 3 ) 
+   {
+
+      Dens      =  Rho0;
+      Pres      =  P0;
+
+      if ( MHDLinearVisc_Mode == 2 )
+      {
+         
+         WaveFormV = sin( kr ) * sin( WaveW*Time );
+         Mom       = -Dens * WaveSpeed * A * WaveFormV;
+         
+         switch ( MHDLinearVisc_Dir ) {
+            case 0:  MomX = 0.0;            MomY = Mom;   MomZ = 0.0;   break;
+            case 1:  MomX = 0.0;            MomY = 0.0;   MomZ = Mom;   break;
+            case 2:  MomX = Mom;            MomY = 0.0;   MomZ = 0.0;   break;
+            case 3:  MomX = Mom/sqrt(3.0);  MomY = MomX;  MomZ = MomX;  break;
+         }
+
+      }
+      else ( MHDLinearVisc_Mode == 3 )
+      {
+      
+      }
+
+   } // else if ( MHDLinearVisc_Mode == 2 || MHDLinearVisc_Mode == 3 )
 
    else
       Aux_Error( ERROR_INFO, "unsupported MHDLinearVisc_Mode = %d !!\n", MHDLinearVisc_Mode );
+
 
 // compute the total gas energy
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
