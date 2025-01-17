@@ -434,7 +434,8 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
                                                    fluid_PG, EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
 
          if ( FB_ACC )     Status = FB_Accretion ( lv, SF_CREATE_SINK_MIN_GAS_DENS, SF_CREATE_SINK_ACC_RADIUS, NPar,    // currently only support SF_CREATE_SINK_MIN_GAS_DENS
-                                                   ParSortID, ParAttFlt_Local, fluid_PG, EdgeL, amr->dh[lv], CoarseFine );
+                                                   ParSortID, ParAttFlt_Local, ParAttInt_Local, fluid_PG, EdgeL, amr->dh[lv], 
+                                                   CoarseFine );
 
          if ( FB_USER )    Status = FB_User_Ptr  ( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAttFlt_Local, ParAttInt_Local,
                                                    fluid_PG, EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );

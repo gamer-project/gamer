@@ -93,11 +93,12 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
    const real   GraConst       = ( false                ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // P5 is NOT supported yet
 
    int          NNewPar = 0; // number of new particle
-   real       (*RemovalFlu)[5]                   = new real     [MaxNewPar][5]; // information used to remove gas from the cell
-   long       (*RemovalPos)[4]                   = new long     [MaxNewPar][4]; // some IDs used to remove gas from the cell
-   real_par   (*NewParAtt)[PAR_NATT_TOTAL]       = new real_par [MaxNewPar][PAR_NATT_TOTAL]; // attribute of the new particles
-   long        *NewParRepo                       = new long     [MaxNewPar]; // particle respository that will be added
-   long        *NewParPID                        = new long     [MaxNewPar]; // PID where the particle is formed
+   real       (*RemovalFlu)[5]                      = new real     [MaxNewPar][5]; // information used to remove gas from the cell
+   long       (*RemovalPos)[4]                      = new long     [MaxNewPar][4]; // some IDs used to remove gas from the cell
+   real_par   (*NewParAttFlt)[PAR_NATT_FLT_TOTAL]   = new real_par [MaxNewPar][PAR_NATT_FLT_TOTAL]; // attribute of the new particles
+   long_par   (*NewParAttInt)[PAR_NATT_INT_TOTAL]   = new long_par [MaxNewPar][PAR_NATT_INT_TOTAL];
+   long        *NewParRepo                          = new long     [MaxNewPar]; // particle respository that will be added
+   long        *NewParPID                           = new long     [MaxNewPar]; // PID where the particle is formed
 
 // Some check
    if (AccCellNum > 0.5*PS1)
@@ -111,8 +112,9 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
    const bool PredictPos_No     = false;
    const bool SibBufPatch_Yes   = true;
    const bool FaSibBufPatch_No  = false;
-   const long ParAttBitIdx_In   = _PAR_TOTAL;
-   Par_CollectParticle2OneLevel( lv, ParAttBitIdx_In, PredictPos_No, TimeNew, SibBufPatch_Yes, FaSibBufPatch_No,
+   const long ParAttFltBitIdx_In = _PAR_FLT_TOTAL;
+   const long ParAttIntBitIdx_In = _PAR_INT_TOTAL;
+   Par_CollectParticle2OneLevel( lv, ParAttFltBitIdx_In, ParAttIntBitIdx_In, PredictPos_No, TimeNew, SibBufPatch_Yes, FaSibBufPatch_No,
                                  JustCountNPar_No, TimingSendPar_Yes );
 
 // start of OpenMP parallel region
@@ -271,10 +273,10 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
          bool InsideAccRadius = false;
          bool NotPassDen      = false;
 
-         real  *ParAtt_Local[PAR_NATT_TOTAL];
+         real  *ParAtt_Local[PAR_NATT_FLT_TOTAL];
          int    NParMax   = -1;
 
-         for (int v=0; v<PAR_NATT_TOTAL; v++)   ParAtt_Local[v] = NULL; // array to store nearby particle
+         for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParAtt_Local[v] = NULL; // array to store nearby particle
 
          for (int t=0; t<NNearbyPatch; t++)
          {
@@ -287,8 +289,8 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
 
          if ( NParMax > 0 )
          {
-            for (int v=0; v<PAR_NATT_TOTAL; v++)
-               if ( ParAttBitIdx_In & BIDX(v) )    ParAtt_Local[v] = new real [NParMax];
+            for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
+               if ( ParAttFltBitIdx_In & BIDX(v) )    ParAtt_Local[v] = new real [NParMax];
          }
 
          // iterate over all nearby patches of the target patch group
@@ -328,8 +330,8 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
 
 #           ifdef LOAD_BALANCE
             if ( UseParAttCopy ) {
-               for (int v=0; v<PAR_NATT_TOTAL; v++) {
-                  if ( ParAttBitIdx_In & BIDX(v) ) {
+               for (int v=0; v<PAR_NATT_FLT_TOTAL; v++) {
+                  if ( ParAttFltBitIdx_In & BIDX(v) ) {
 
 #                 ifdef DEBUG_PARTICLE
                   if ( NPar > 0  &&  amr->patch[0][lv][PPID]->ParAtt_Copy[v] == NULL )
@@ -338,7 +340,7 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
 #                 endif
 
                   for (int p=0; p<NPar; p++)
-                     ParAtt_Local[v][p] = amr->patch[0][lv][PPID]->ParAtt_Copy[v][p];
+                     ParAtt_Local[v][p] = amr->patch[0][lv][PPID]->ParAttFlt_Copy[v][p];
             }}}
 
             else
@@ -350,10 +352,10 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
                               NPar, lv, PPID );
 #              endif
 
-               for (int v=0; v<PAR_NATT_TOTAL; v++) {
-                  if ( ParAttBitIdx_In & BIDX(v) )
+               for (int v=0; v<PAR_NATT_FLT_TOTAL; v++) {
+                  if ( ParAttFltBitIdx_In & BIDX(v) )
                      for (int p=0; p<NPar; p++)
-                        ParAtt_Local[v][p] = amr->Par->Attribute[v][ ParList[p] ];
+                        ParAtt_Local[v][p] = amr->Par->AttributeFlt[v][ ParList[p] ];
                }
             } // if ( UseParAttCopy ) ... else ...
 
@@ -396,7 +398,7 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
 
          if ( NParMax > 0 )
          {
-            for (int v=0; v<PAR_NATT_TOTAL; v++)      
+            for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)      
             {
                delete [] ParAtt_Local[v]; ParAtt_Local[v] = NULL;
             }
@@ -564,16 +566,16 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
 #        endif
 #        pragma omp critical
          {
-            NewParAtt[NNewPar][PAR_MASS]  = (GasDens - GasDensThres)*dv;
-            NewParAtt[NNewPar][PAR_POSX]  = PosX;
-            NewParAtt[NNewPar][PAR_POSY]  = PosY;
-            NewParAtt[NNewPar][PAR_POSZ]  = PosZ;
-            NewParAtt[NNewPar][PAR_VELX]  = VelX;
-            NewParAtt[NNewPar][PAR_VELY]  = VelY;
-            NewParAtt[NNewPar][PAR_VELZ]  = VelZ;
-            NewParAtt[NNewPar][PAR_TIME]  = TimeNew;
-            NewParAtt[NNewPar][PAR_TYPE]  = PTYPE_STAR;
-            NewParAtt[NNewPar][Idx_ParID] = -1; // initialize the value to be -1
+            NewParAttFlt[NNewPar][PAR_MASS]  = (GasDens - GasDensThres)*dv;
+            NewParAttFlt[NNewPar][PAR_POSX]  = PosX;
+            NewParAttFlt[NNewPar][PAR_POSY]  = PosY;
+            NewParAttFlt[NNewPar][PAR_POSZ]  = PosZ;
+            NewParAttFlt[NNewPar][PAR_VELX]  = VelX;
+            NewParAttFlt[NNewPar][PAR_VELY]  = VelY;
+            NewParAttFlt[NNewPar][PAR_VELZ]  = VelZ;
+            NewParAttFlt[NNewPar][PAR_TIME]  = TimeNew;
+            NewParAttInt[NNewPar][PAR_TYPE]  = PTYPE_STAR;
+            NewParAttInt[NNewPar][Idx_ParID] = -1; // initialize the value to be -1
 
    //       particle acceleration
    #        ifdef STORE_PAR_ACC
@@ -602,12 +604,12 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
                GasAcc[2] += GraConst*(PotNeighbor[4] - PotNeighbor[5]);
             }
 
-            NewParAtt[NNewPar][PAR_ACCX] = GasAcc[0];
-            NewParAtt[NNewPar][PAR_ACCY] = GasAcc[1];
-            NewParAtt[NNewPar][PAR_ACCZ] = GasAcc[2];
+            NewParAttFlt[NNewPar][PAR_ACCX] = GasAcc[0];
+            NewParAttFlt[NNewPar][PAR_ACCY] = GasAcc[1];
+            NewParAttFlt[NNewPar][PAR_ACCZ] = GasAcc[2];
    #        endif // ifdef STORE_PAR_ACC
 
-            NewParAtt[NNewPar][Idx_ParCreTime  ] = TimeNew;
+            NewParAttFlt[NNewPar][Idx_ParCreTime  ] = TimeNew;
             NewParPID[NNewPar] = PID;
 
             GasMFracLeft = GasDensThres/GasDens;
@@ -713,10 +715,10 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
    for (int p=0; p<SelNNewPar; p++)
    {
       int pi = SelNewParID[p];
-      NewParAtt[pi][Idx_ParID] = NParAllRank + NParPreRank + p; // reassign the ID
+      NewParAttInt[pi][Idx_ParID] = NParAllRank + NParPreRank + p; // reassign the ID
 
       // add particles to the particle repository
-      NewParRepo[p] = amr->Par->AddOneParticle( NewParAtt[pi] );
+      NewParRepo[p] = amr->Par->AddOneParticle( NewParAttFlt[pi], NewParAttInt[pi] );
    }
 
    delete [] SelNewParID;
@@ -741,7 +743,7 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
       }
    } // for (int i=0; i<SelNNewPar; i++)
 
-   const real_par *PType = amr->Par->Type;
+   const long_par *PType = amr->Par->Type;
    int NParInPatch; // particle number in this patch
 
    for (int i=0; i<UniqueCount; i++)
@@ -786,7 +788,8 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
 
    delete [] RemovalPos;
    delete [] RemovalFlu;
-   delete [] NewParAtt;
+   delete [] NewParAttFlt;
+   delete [] NewParAttInt;
    delete [] NewParRepo;
    delete [] NewParPID;
 

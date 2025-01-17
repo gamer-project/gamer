@@ -5,12 +5,12 @@
 //-------------------------------------------------------------------------------------------------------
 // Function    :  FB_Accretion
 // Description :  Accretion for particle, Ref: Federrath et al. 2010.
-// Note        :  1. Input and output fluid and particle data are stored in Fluid[] and ParAtt[], respectively
+// Note        :  1. Input and output fluid and particle data are stored in Fluid[] and ParAttFlt[], respectively
 //                   --> This function is responsible for updating gas and particles within
 //                       ** FB_GHOST_SIZE <= cell indices i,j,k < FB_GHOST_SIZE+PS2 **
 //                   --> Updating gas and particles outside this range is fine but will have no effect at all
-//                2. Must use ParSortID[] to access ParAtt[]
-//                   --> ParAtt[PAR_MASS/PAR_POSX/etc][ ParSortID[...] ]
+//                2. Must use ParSortID[] to access ParAttFlt[]
+//                   --> ParAttFlt[PAR_MASS/PAR_POSX/etc][ ParSortID[...] ]
 //                3. Particles may be outside the target region
 //                4. To ensure the consistency of random numbers, one must call the random number generator for
 //                   ALL particles, including those too far away to affect the target region
@@ -47,7 +47,8 @@
 //                AccCellNum   : Accretion radius in cells at highest refinement level          (--> "SF_CREATE_SINK_ACC_RADIUS"    )
 //                NPar         : Number of particles
 //                ParSortID    : Sorted particle IDs
-//                ParAtt       : Particle attribute arrays
+//                ParAttFlt    : Particle floating-point attribute arrays
+//                ParAttInt    : Particle integer        attribute arrays
 //                Fluid        : Array to store the input/output fluid data
 //                               --> Array size is fixed to (FB_NXT)^3=(PS2+2*FB_GHOST_SIZE)^3
 //                EdgeL        : Left edge of Fluid[]
@@ -55,10 +56,11 @@
 //                dh           : Cell size of Fluid[]
 //                CoarseFine   : Coarse-fine boundaries along the 26 sibling directions
 //
-// Return      :  Fluid, ParAtt
+// Return      :  Fluid, ParAttFlt
 //-------------------------------------------------------------------------------------------------------
 int FB_Accretion( const int lv, const real GasDensThres, const real AccCellNum, const int NPar, const long *ParSortID, 
-                  real_par *ParAtt[PAR_NATT_TOTAL], real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[] )
+                  real_par *ParAttFlt[PAR_NATT_FLT_TOTAL], long_par *ParAttInt[PAR_NATT_INT_TOTAL], 
+                  real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[] )
 {
 
 // check
@@ -67,7 +69,7 @@ int FB_Accretion( const int lv, const real GasDensThres, const real AccCellNum, 
    if ( NPar > 0 )
    {
       if ( ParSortID == NULL )   Aux_Error( ERROR_INFO, "ParSortID == NULL for NPar = %d !!\n", NPar );
-      if ( ParAtt == NULL )      Aux_Error( ERROR_INFO, "ParAtt == NULL for NPar = %d !!\n", NPar );
+      if ( ParAttFlt == NULL )   Aux_Error( ERROR_INFO, "ParAttFlt == NULL for NPar = %d !!\n", NPar );
    }
 #  endif // #ifdef GAMER_DEBUG
 
@@ -105,7 +107,7 @@ int FB_Accretion( const int lv, const real GasDensThres, const real AccCellNum, 
    for (int t=0; t<NPar; t++)
    {
       const int    p      = ParSortID[t];
-      const double xyz[3] = { ParAtt[PAR_POSX][p], ParAtt[PAR_POSY][p], ParAtt[PAR_POSZ][p] }; // particle position
+      const double xyz[3] = { ParAttFlt[PAR_POSX][p], ParAttFlt[PAR_POSY][p], ParAttFlt[PAR_POSZ][p] }; // particle position
 
       int idx[3]; // cell idx in FB_NXT^3
       for (int d=0; d<3; d++)    idx[d] = (int)floor( ( xyz[d] - EdgeL[d] )*_dh );
@@ -162,9 +164,9 @@ int FB_Accretion( const int lv, const real GasDensThres, const real AccCellNum, 
 //       ===========================================================================================================
          real RadialVel;
 
-         GasRelVel[0] = Fluid[MOMX][vki][vji][vii]/GasDens - ParAtt[PAR_VELX][p];
-         GasRelVel[1] = Fluid[MOMY][vki][vji][vii]/GasDens - ParAtt[PAR_VELY][p];
-         GasRelVel[2] = Fluid[MOMZ][vki][vji][vii]/GasDens - ParAtt[PAR_VELZ][p];
+         GasRelVel[0] = Fluid[MOMX][vki][vji][vii]/GasDens - ParAttFlt[PAR_VELX][p];
+         GasRelVel[1] = Fluid[MOMY][vki][vji][vii]/GasDens - ParAttFlt[PAR_VELY][p];
+         GasRelVel[2] = Fluid[MOMZ][vki][vji][vii]/GasDens - ParAttFlt[PAR_VELZ][p];
 
          RadialVel = (GasRelVel[0]*(ControlPos[0] - xyz[0]) + GasRelVel[1]*(ControlPos[1] - xyz[1]) + GasRelVel[2]*(ControlPos[2] - xyz[2]))/GasCell2ParDisti;
 
@@ -175,7 +177,7 @@ int FB_Accretion( const int lv, const real GasDensThres, const real AccCellNum, 
 //       ===========================================================================================================
          real SelfPhi = (real)0.0; // self-potential
 
-         SelfPhi += -NEWTON_G*ParAtt[PAR_MASS][p]/(GasCell2ParDisti+epsilon); // potential from the sink
+         SelfPhi += -NEWTON_G*ParAttFlt[PAR_MASS][p]/(GasCell2ParDisti+epsilon); // potential from the sink
 
          Eg   = GasDens*dv*SelfPhi; // gravitational potential energy
          Ekin = 0.5*GasDens*dv*( SQR(GasRelVel[0]) + SQR(GasRelVel[1]) + SQR(GasRelVel[2])); // kinetic energy
@@ -191,7 +193,7 @@ int FB_Accretion( const int lv, const real GasDensThres, const real AccCellNum, 
             const int    pp      = ParSortID[tt];
             if ( pp == p )              continue;
 
-            const double xxyyzz[3] = { ParAtt[PAR_POSX][pp], ParAtt[PAR_POSY][pp], ParAtt[PAR_POSZ][pp] }; // particle position
+            const double xxyyzz[3] = { ParAttFlt[PAR_POSX][pp], ParAttFlt[PAR_POSY][pp], ParAttFlt[PAR_POSZ][pp] }; // particle position
             
             int idxx[3]; // cell idx in FB_NXT^3
             for (int d=0; d<3; d++)    idxx[d] = (int)floor( ( xxyyzz[d] - EdgeL[d] )*_dh );
@@ -206,7 +208,7 @@ int FB_Accretion( const int lv, const real GasDensThres, const real AccCellNum, 
 
             real SelfPhi2 = (real)0.0; // self-potential
 
-            SelfPhi2 += -NEWTON_G*ParAtt[PAR_MASS][pp]/(GasCell2ParDist2+epsilon); // potential from the sink
+            SelfPhi2 += -NEWTON_G*ParAttFlt[PAR_MASS][pp]/(GasCell2ParDist2+epsilon); // potential from the sink
 
             Eg2   = GasDens*dv*SelfPhi2;
             if ( Eg2 <= Eg ) // whether the gas cell is more bound to another particle
@@ -255,10 +257,10 @@ int FB_Accretion( const int lv, const real GasDensThres, const real AccCellNum, 
 
 //    Update particle mass and velocity
 //    ===========================================================================================================
-      ParAtt[PAR_VELX][p] =  (DeltaMom[0] + ParAtt[PAR_MASS][p]*ParAtt[PAR_VELX][p])/(DeltaMTot + ParAtt[PAR_MASS][p]);  // center-of-mass velocity of the sink after accretion
-      ParAtt[PAR_VELY][p] =  (DeltaMom[1] + ParAtt[PAR_MASS][p]*ParAtt[PAR_VELY][p])/(DeltaMTot + ParAtt[PAR_MASS][p]);
-      ParAtt[PAR_VELZ][p] =  (DeltaMom[2] + ParAtt[PAR_MASS][p]*ParAtt[PAR_VELZ][p])/(DeltaMTot + ParAtt[PAR_MASS][p]);
-      ParAtt[PAR_MASS][p] +=  DeltaMTot;
+      ParAttFlt[PAR_VELX][p] =  (DeltaMom[0] + ParAttFlt[PAR_MASS][p]*ParAttFlt[PAR_VELX][p])/(DeltaMTot + ParAttFlt[PAR_MASS][p]);  // center-of-mass velocity of the sink after accretion
+      ParAttFlt[PAR_VELY][p] =  (DeltaMom[1] + ParAttFlt[PAR_MASS][p]*ParAttFlt[PAR_VELY][p])/(DeltaMTot + ParAttFlt[PAR_MASS][p]);
+      ParAttFlt[PAR_VELZ][p] =  (DeltaMom[2] + ParAttFlt[PAR_MASS][p]*ParAttFlt[PAR_VELZ][p])/(DeltaMTot + ParAttFlt[PAR_MASS][p]);
+      ParAttFlt[PAR_MASS][p] +=  DeltaMTot;
    } // for (int t=0; t<NPar; t++)
 
    delete [] RemovalIdx;
