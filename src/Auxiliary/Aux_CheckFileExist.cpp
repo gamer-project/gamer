@@ -52,14 +52,16 @@ bool Aux_CheckFolderExist( const char *FolderName )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_CheckPermission
-// Description :  Check whether or not the target file has requested permission
+// Description :  Check whether or not the target file has requested permissions
 //
 // Note        :  Use the "stat" function to query the permission of the target file
 //
 // Parameter   :  FileName : Name of the target file
-//             :  perms    : permission of the file (4->read, 2->write, 1->execute)
+//             :  perms    : Permissions code sum of the target file (4->read, 2->write, 1->execute)
+//                           --> Example: 1. read and write   permissions => 6=4+2
+//                                        2. read and execute permissions => 5=4+1
 //
-// Return      :  true/false <-> you does/does not have the file permission
+// Return      :  true/false <-> you does/does not have the file permissions
 //-------------------------------------------------------------------------------------------------------
 bool Aux_CheckPermission( const char *FileName, const int perms )
 {
