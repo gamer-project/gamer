@@ -130,14 +130,14 @@ SF_CREATE_STAR_MIN_GAS_DENS   2.98932e+11       # minimum gas density allowed to
 SF_CREATE_STAR_MASS_EFF       0.5         # Gas-to-star mass conversion efficiency [1.0e-2]
 SF_CREATE_STAR_MIN_STAR_MASS  0.0         # minimum star particle mass for the stochastical star formation (in Msun) [0.0]
 SF_CREATE_STAR_MAX_STAR_MFRAC 0.5         # maximum gas mass fraction allowed to convert to stars per substep [0.5]
-SF_CREATE_SINK_MIN_GAS_DENS   1.2997043e+11 # minimum gas density allowed to form sink particles (count/cm^3) [1.0e10]
+SF_CREATE_SINK_MIN_GAS_DENS   1.0452132e+10 # minimum gas density allowed to form sink particles (count/cm^3) [1.0e10]
 SF_CREATE_SINK_ACC_RADIUS     4.0         # accretion radius in cells at highest refinement level [0.5*PATCH_SIZE]
 SF_CREATE_SINK_MAX_NPAR_MPI   1000        # maximum number of particle per MPI rank [100]
 
 # feedback (FEEDBACK only)
 FB_LEVEL                     -1           # AMR level to apply feedback (must be MAX_LEVEL for now; <0=auto -> MAX_LEVEL) [-1]
 FB_RSEED                      456         # random seed [456]
-FB_ACC                        1           # particle accrectioin [0]
+FB_ACC                        1           # particle accretion [0]
 FB_USER                       0           # user-defined feedback [0]
 
 # fluid solver in HYDRO (MODEL==HYDRO only)
