@@ -76,10 +76,6 @@ static void HaloMerger_Add_Velocity( double *RealPart, double *ImagPart,
                                      const double Velocity_X, const double Velocity_Y, const double Velocity_Z,
                                      const double Position_X, const double Position_Y, const double Position_Z );
 
-static double HaloMerger_Trilinear_Interpolation( const double Target_X, const double Target_Y, const double Target_Z,
-                                                  const double Ref_Value[2][2][2],
-                                                  const double Ref_X[2], const double Ref_Y[2], const double Ref_Z[2] );
-
 static double HaloMerger_Get_Value_From_HALO_IC_Data( const double x, const double y, const double z, const int v, const int index_halo );
 // =======================================================================================
 #endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
@@ -1499,44 +1495,6 @@ void HaloMerger_Add_Velocity( double *RealPart, double *ImagPart,
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  HaloMerger_Trilinear_Interpolation
-// Description :  Apply linear interpolation to get the desired value from the data at the eight corners of a 3D cube
-//
-// Note        :  1. Ref_Value is in the order zyx (i.e. Ref_Value[z][y][x])
-//
-// Parameter   :  Target_X   : target x-coordinate
-//                Target_Y   : target y-coordinate
-//                Target_Z   : target z-coordinate
-//                Ref_Value  : reference values at the eight corners
-//                Ref_X      : reference x-coordinates at the eight corners
-//                Ref_Y      : reference y-coordinates at the eight corners
-//                Ref_Z      : reference z-coordinates at the eight corners
-// Return      :  Value_ZYX  : values interpolated from the eight corners
-//-------------------------------------------------------------------------------------------------------
-double HaloMerger_Trilinear_Interpolation( const double Target_X, const double Target_Y, const double Target_Z,
-                                           const double Ref_Value[2][2][2],
-                                           const double Ref_X[2], const double Ref_Y[2], const double Ref_Z[2] )
-{
-    // linear interpolation in z-direction
-    const double Value_Z00 = Ref_Value[0][0][0] + ( Ref_Value[1][0][0] - Ref_Value[0][0][0])/(Ref_Z[1] - Ref_Z[0])*(Target_Z - Ref_Z[0]);
-    const double Value_Z01 = Ref_Value[0][0][1] + ( Ref_Value[1][0][1] - Ref_Value[0][0][1])/(Ref_Z[1] - Ref_Z[0])*(Target_Z - Ref_Z[0]);
-    const double Value_Z10 = Ref_Value[0][1][0] + ( Ref_Value[1][1][0] - Ref_Value[0][1][0])/(Ref_Z[1] - Ref_Z[0])*(Target_Z - Ref_Z[0]);
-    const double Value_Z11 = Ref_Value[0][1][1] + ( Ref_Value[1][1][1] - Ref_Value[0][1][1])/(Ref_Z[1] - Ref_Z[0])*(Target_Z - Ref_Z[0]);
-
-    // linear interpolation in y-direction
-    const double Value_ZY0 = Value_Z00          + ( Value_Z10          - Value_Z00         )/(Ref_Y[1] - Ref_Y[0])*(Target_Y - Ref_Y[0]);
-    const double Value_ZY1 = Value_Z01          + ( Value_Z11          - Value_Z01         )/(Ref_Y[1] - Ref_Y[0])*(Target_Y - Ref_Y[0]);
-
-    // linear interpolation in x-direction
-    const double Value_ZYX = Value_ZY0          + ( Value_ZY1          - Value_ZY0         )/(Ref_X[1] - Ref_X[0])*(Target_X - Ref_X[0]);
-
-    return Value_ZYX;
-
-} // FUNCTION : HaloMerger_Trilinear_Interpolation
-
-
-
-//-------------------------------------------------------------------------------------------------------
 // Function    :  HaloMerger_Get_Value_From_HALO_IC_Data
 // Description :  Get the target value of field v at (x,y,z) by reading the HALO_IC of halo and performing linear interpolation
 //
@@ -1572,13 +1530,16 @@ double HaloMerger_Get_Value_From_HALO_IC_Data( const double x, const double y, c
                                              (int)floor( (z - HALO_IC_Range_EdgeL[2])/HALO_IC_dh[2] - 0.5 )};
 
     // 3. physical coordinates of the eight corners
-    double IntCorner_Coord[3][2];
+    double IntCorner_L_Coord[3];
+    double IntCorner_R_Coord[3];
     for (int d=0; d<3; d++)
-    for (int IntCorner_ID=0; IntCorner_ID<2; IntCorner_ID++)
-       IntCorner_Coord[d][IntCorner_ID] = HALO_IC_Range_EdgeL[d] + (IntCorner000_HALOICIndex[d] + IntCorner_ID + 0.5)*HALO_IC_dh[d];
+    {
+       IntCorner_L_Coord[d] = HALO_IC_Range_EdgeL[d] + (IntCorner000_HALOICIndex[d] + 0.5)*HALO_IC_dh[d];
+       IntCorner_R_Coord[d] = HALO_IC_Range_EdgeL[d] + (IntCorner000_HALOICIndex[d] + 1.5)*HALO_IC_dh[d];
+    }
 
     // 4. values at the eight corners
-    double IntCorner_Value[2][2][2];
+    double IntCorner_Value[8];
     for (int IntCorner_ID_k=0; IntCorner_ID_k<2; IntCorner_ID_k++){ const int IntCorner_HALOICIndex_k = IntCorner000_HALOICIndex[2] + IntCorner_ID_k;
     for (int IntCorner_ID_j=0; IntCorner_ID_j<2; IntCorner_ID_j++){ const int IntCorner_HALOICIndex_j = IntCorner000_HALOICIndex[1] + IntCorner_ID_j;
     for (int IntCorner_ID_i=0; IntCorner_ID_i<2; IntCorner_ID_i++){ const int IntCorner_HALOICIndex_i = IntCorner000_HALOICIndex[0] + IntCorner_ID_i;
@@ -1588,7 +1549,7 @@ double HaloMerger_Get_Value_From_HALO_IC_Data( const double x, const double y, c
             IntCorner_HALOICIndex_k < 0  ||  IntCorner_HALOICIndex_k >= HALO_IC_Nz )
        {
           // set the value as zero when the corner is outside the HALO_IC file
-          IntCorner_Value[IntCorner_ID_k][IntCorner_ID_j][IntCorner_ID_i] = 0.0;
+          IntCorner_Value[IDX321( IntCorner_ID_i, IntCorner_ID_j, IntCorner_ID_k, 2, 2 )] = 0.0;
        }
        else
        {
@@ -1597,7 +1558,7 @@ double HaloMerger_Get_Value_From_HALO_IC_Data( const double x, const double y, c
                                    + (long)IntCorner_HALOICIndex_j*HALO_IC_Nx
                                    + (long)IntCorner_HALOICIndex_i;
 
-          IntCorner_Value[IntCorner_ID_k][IntCorner_ID_j][IntCorner_ID_i] = ( HALO_IC_Float8 ) ?
+          IntCorner_Value[IDX321( IntCorner_ID_i, IntCorner_ID_j, IntCorner_ID_k, 2, 2 )] = ( HALO_IC_Float8 ) ?
              (double)(*((double*)&HaloMerger_Halo_HALO_IC_Data[index_halo][IdxIn_HALO_IC*load_data_size])):
              (double)(*( (float*)&HaloMerger_Halo_HALO_IC_Data[index_halo][IdxIn_HALO_IC*load_data_size]));
        }
@@ -1605,7 +1566,8 @@ double HaloMerger_Get_Value_From_HALO_IC_Data( const double x, const double y, c
     }}} // for (int IntCorner_ID_kji=0; IntCorner_ID_kji<2; IntCorner_ID_kji++)
 
     // 5. 3D linear interpolation
-    const double Interpolated_Value = HaloMerger_Trilinear_Interpolation( x, y, z, IntCorner_Value, IntCorner_Coord[0], IntCorner_Coord[1], IntCorner_Coord[2] );
+    const double Target_Coordinates[3] = { x, y, z };
+    const double Interpolated_Value = Mis_MultilinearInterpolate( 3, Target_Coordinates, IntCorner_L_Coord, IntCorner_R_Coord, IntCorner_Value );
 
     return Interpolated_Value;
 
