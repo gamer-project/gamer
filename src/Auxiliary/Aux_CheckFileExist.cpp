@@ -57,9 +57,9 @@ bool Aux_CheckFolderExist( const char *FolderName )
 // Note        :  Use the "stat" function to query the permission of the target file
 //
 // Parameter   :  FileName : Name of the target file
-//             :  perms    : Permissions code sum of the target file (4->read, 2->write, 1->execute)
-//                           --> Example: 1. read and write   permissions => 6=4+2
-//                                        2. read and execute permissions => 5=4+1
+//             :  perms    : Permissions code of the target file (sum of 4->read, 2->write, 1->execute)
+//                           --> Examples: 1. read and write   permissions => 6 (4+2)
+//                                         2. read and execute permissions => 5 (4+1)
 //
 // Return      :  true/false <-> you does/does not have the file permissions
 //-------------------------------------------------------------------------------------------------------
