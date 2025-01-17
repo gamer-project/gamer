@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2500)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2501)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -263,6 +263,7 @@ Procedure for outputting new variables:
 //                2481 : 2024/12/11 --> output OPT__FLAG_ANGULAR, FlagTable_Angular, FLAG_ANGULAR_CEN_X, FLAG_ANGULAR_CEN_Y, FLAG_ANGULAR_CEN_Z
 //                                             OPT__FLAG_RADIAL,  FlagTable_Radial,  FLAG_RADIAL_CEN_X,  FLAG_RADIAL_CEN_Y,  FLAG_RADIAL_CEN_Z
 //                2500 : 2024/07/01 --> output particle integer attributes
+//                2501 : 2025/01/15 --> output OPT__OUTPUT_TEXT_LENGTH_INT
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1598,7 +1599,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2500;
+   KeyInfo.FormatVersion        = 2501;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2767,6 +2768,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Output_Step            = OUTPUT_STEP;
    InputPara.Opt__Output_Dt              = OUTPUT_DT;
    InputPara.Opt__Output_Text_Format_Flt = OPT__OUTPUT_TEXT_FORMAT_FLT;
+   InputPara.Opt__Output_Text_Length_Int = OPT__OUTPUT_TEXT_LENGTH_INT;
    InputPara.Output_PartX                = OUTPUT_PART_X;
    InputPara.Output_PartY                = OUTPUT_PART_Y;
    InputPara.Output_PartZ                = OUTPUT_PART_Z;
@@ -3808,6 +3810,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Output_Step",            HOFFSET(InputPara_t,Opt__Output_Step           ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Dt",              HOFFSET(InputPara_t,Opt__Output_Dt             ), H5T_NATIVE_DOUBLE           );
    H5Tinsert( H5_TypeID, "Opt__Output_Text_Format_Flt", HOFFSET(InputPara_t,Opt__Output_Text_Format_Flt), H5_TypeID_VarStr            );
+   H5Tinsert( H5_TypeID, "Opt__Output_Text_Length_Int", HOFFSET(InputPara_t,Opt__Output_Text_Length_Int), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Output_PartX",                HOFFSET(InputPara_t,Output_PartX               ), H5T_NATIVE_DOUBLE           );
    H5Tinsert( H5_TypeID, "Output_PartY",                HOFFSET(InputPara_t,Output_PartY               ), H5T_NATIVE_DOUBLE           );
    H5Tinsert( H5_TypeID, "Output_PartZ",                HOFFSET(InputPara_t,Output_PartZ               ), H5T_NATIVE_DOUBLE           );
