@@ -32,7 +32,7 @@ Parameters described on this page:
 [OUTPUT_PART_Y](#OUTPUT_PART_Y), &nbsp;
 [OUTPUT_PART_Z](#OUTPUT_PART_Z), &nbsp;
 [INIT_DUMPID](#INIT_DUMPID), &nbsp;
-[OUTPUT_DIR](#OUTPUT_DIR), &nbsp;
+[OUTPUT_DIR](#OUTPUT_DIR) &nbsp;
 
 
 Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**

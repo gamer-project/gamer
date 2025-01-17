@@ -64,14 +64,14 @@ bool Aux_CheckFolderExist( const char *FolderName )
 bool Aux_CheckPermission( const char *FileName, const int perms )
 {
 
-   if ( perms < 0  ||  perms > 7 )   Aux_Error( ERROR_INFO, "Incorrect file permission code %d (0~7)\n", perms);
+   if ( perms < 0  ||  perms > 7 )   Aux_Error( ERROR_INFO, "Incorrect file permission code %d (0~7) !!\n", perms );
 
    const uid_t curUserId  = getuid(); // get user  id
    const gid_t curGroupId = getgid(); // get group id
 
    struct stat Buf;
 
-   if ( stat(FileName, &Buf) != 0 )    Aux_Error( ERROR_INFO, "%s does not exist!!\n", FileName );
+   if ( stat(FileName, &Buf) != 0 )    Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", FileName );
 
    int perm_r, perm_w, perm_x;
    if      ( Buf.st_uid == curUserId  ) { perm_r = S_IRUSR; perm_w = S_IWUSR; perm_x = S_IXUSR; } // user
