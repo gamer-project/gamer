@@ -1,21 +1,22 @@
 #!/bin/python
 
-# compute cooling curve from the time evolution of the temperature
-# and compare with the cooling curve table
+# reconstruct the cooling rate from the time evolution of the temperature
+# and compare with the cooling rate table
 import numpy as np
 import matplotlib.pyplot as plt
 
 # Load the data
-data = np.loadtxt('../Record__User', skiprows=2)
+data = np.loadtxt('../Record__GrackleComoving', skiprows=2)
 
-time = data[:,0] # scale factor
-dt   = data[:,2] # sec
-nden = data[:,3] # cm^-3
-mu   = data[:,4] # mean molecular weight
-temp = data[:,5] # K
-eden = data[:,6] # erg/cm^3
-# lcool = data[:,7] # erg/cm^3/s
+time          = data[:,0] # scale factor
+dt            = data[:,2] # sec
+nden          = data[:,3] # cm^-3
+mu            = data[:,4] # mean molecular weight
+temp          = data[:,5] # K
+eden          = data[:,6] # erg/cm^3
+lcool_grackle = data[:,7] # erg/cm^3/s (cooling rate computed by Grackle)
 
+# reconstruct the cooling rate from Record__GrackleComoving
 dedt = np.gradient(eden) / dt
 dadt = np.gradient(time) / dt
 
@@ -27,14 +28,16 @@ L_cool = (-dedt_rad) / nden**2
 fig, ax = plt.subplots(1, 2, figsize=(10, 5))
 # ax[0].plot(temp, lcool, 'r-')
 
-# cooling curve table
+# cooling rate table
 for z in range(0, 10):
-    cr = np.loadtxt('coolingrate_z{:.1f}.dat'.format(z))
+    cr = np.loadtxt('../coolingrate_z{:.1f}.dat'.format(z))
     ax[0].plot(cr[:,0], cr[:,1], '--', lw=0.5, label='z={}'.format(z))
 
+# cooling rate computed by Grackle during the simulation
+ax[0].plot(temp, lcool_grackle, label='Grackle', ms=0, ls='dashed', lw=1, color='gray')
+
 # result from GAMER
-ax[0].plot(temp, L_cool, label='GAMER', ms=0, ls='-', lw=0.5, color='black')
-ax[0].scatter(temp[-1], L_cool[-1], s=3, label='GAMER (z=0)')
+ax[0].scatter(temp[-1], L_cool[-1], s=3, label='GAMER (reconstructed) (z=0)')
 for z in range(1, 9):
     a = 1 / (1 + z)
     idx = np.where(time <= a)[0][-1]
@@ -42,8 +45,10 @@ for z in range(1, 9):
     a1 = time[idx+1]
     temp_a = (temp[idx] * (a1 - a) + temp[idx+1] * (a - a0)) / (a1 - a0)
     L_cool_a = (L_cool[idx] * (a1 - a) + L_cool[idx+1] * (a - a0)) / (a1 - a0)
-    ax[0].scatter(temp_a, L_cool_a, s=3, label='GAMER (z={})'.format(z))
-ax[0].scatter(temp[0], L_cool[0], s=3, label='GAMER (z=9)')
+    ax[0].scatter(temp_a, L_cool_a, s=3, label='GAMER (reconstructed) (z={})'.format(z), zorder=10)
+ax[0].scatter(temp[0], L_cool[0], s=3, label='GAMER (reconstructed) (z=9)', zorder=10)
+
+ax[0].plot(temp, L_cool, label='GAMER (reconstructed)', ms=0, ls='solid', lw=0.5, color='black')
 
 ax[0].set_xlabel('Temperature [K]')
 ax[0].set_ylabel(r'$\Lambda$ [erg cm$^3$ s$^{-1}$]')

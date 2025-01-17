@@ -5,16 +5,18 @@
 // problem-specific global variables
 // =======================================================================================
 static double              GrackleComoving_InitialTemperature;
-static double              GrackleComoving_InitialMetallicity;
+       double              GrackleComoving_InitialMetallicity;
 #ifdef SUPPORT_GRACKLE
-static grackle_field_data  my_fields;
-static gr_float           *my_temperature;
-static gr_float           *my_gamma;
-static gr_float           *my_cooling_time;
+       grackle_field_data  my_fields;
+       gr_float           *my_temperature;
+       gr_float           *my_gamma;
+       gr_float           *my_cooling_time;
 #endif // #ifdef SUPPORT_GRACKLE
 // =======================================================================================
 
 
+// problem-specific function prototypes
+void Compute_CoolingCurve( const double z_value, const double T_min, const double T_max, const double dT );
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -242,7 +244,7 @@ void Aux_Record_GrackleComoving()
          if ( Aux_CheckFileExist(FileName) )    Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
 
          FILE *File_User = fopen( FileName, "a" );
-         fprintf( File_User, "#%14s%14s%3s%22s%22s%22s%22s%22s%22s",  "a_scale", "Step", "", "dt [s]", "n [1/cc]", "mu", "Temp [K]", "Edens [erg cm^-3]", "Lcool[erg cm^3 s^-1]" );
+         fprintf( File_User, "#%13s%14s%3s%22s%22s%22s%22s%22s%22s",  "a_scale", "Step", "", "dt [s]", "n [1/cc]", "mu", "Temp [K]", "Edens [erg cm^-3]", "Lcool[erg cm^3 s^-1]" );
          fprintf( File_User, "\n" );
 
          fclose( File_User );
@@ -323,13 +325,13 @@ void Aux_Record_GrackleComoving()
       if ( calculate_gamma( &Che_Units, &my_fields, my_gamma ) == 0 )
          Aux_Error( ERROR_INFO, "Error in calculate_gamma.\n" );
 
-      const double dt_SubStep        = Mis_dTime2dt( Time[0], dTime_Base ) * SQR(Time[0]) * UNIT_T;
-      const double temperature_units = get_temperature_units(&Che_Units); // set temperature units
-      const double mu                = my_temperature[0] / (my_fields.internal_energy[0] * (my_gamma[0] - 1.) * temperature_units);
-      const double n                 = Dens / CUBE(Time[0]) * UNIT_D / mu / Const_mp;
-      const double Edens             = Eint * UNIT_P / SQR(Time[0]) / CUBE(Time[0]);
-      const double Temp              = my_temperature[0];
-      const double Lcool             = Edens / fabs(my_cooling_time[0] * UNIT_T) / n / n;
+      const double dt_SubStep        = Mis_dTime2dt( Time[0], dTime_Base ) * SQR(Time[0]) * UNIT_T;                                 // physical time-step size
+      const double temperature_units = get_temperature_units(&Che_Units);                                                           // grackle temperature unit
+      const double mu                = my_temperature[0] / (my_fields.internal_energy[0] * (my_gamma[0] - 1.) * temperature_units); // mean molecular weight
+      const double n                 = Dens / CUBE(Time[0]) * UNIT_D / mu / Const_mp;                                               // Hydrogen number density
+      const double Edens             = Eint * UNIT_P / SQR(Time[0]) / CUBE(Time[0]);                                                // internal energy density
+      const double Temp              = my_temperature[0];                                                                           // temperature
+      const double Lcool             = Edens / fabs(my_cooling_time[0] * UNIT_T) / n / n;                                           // cooling rate obtained from grackle
 
       fprintf( File_User, "%14.7e%14ld%3s%22.7e%22.7e%22.7e%22.7e%22.7e%22.7e", Time[0], Step, "", dt_SubStep, n, mu, Temp, Edens, Lcool );
       fprintf( File_User, "\n" );
@@ -352,6 +354,24 @@ void Aux_Record_GrackleComoving()
 //-------------------------------------------------------------------------------------------------------
 void End_GrackleComoving()
 {
+   // generate cooling rate table for comparison
+   if ( MPI_Rank == 0 )
+   {
+      Aux_Message( stdout, "==========================================\n");
+      Aux_Message( stdout, "Generating cooling rate tables...\n");
+	   Compute_CoolingCurve( 0, 4, 8, 0.02);
+	   Compute_CoolingCurve( 1, 4, 8, 0.02);
+	   Compute_CoolingCurve( 2, 4, 8, 0.02);
+	   Compute_CoolingCurve( 3, 4, 8, 0.02);
+	   Compute_CoolingCurve( 4, 4, 8, 0.02);
+	   Compute_CoolingCurve( 5, 4, 8, 0.02);
+	   Compute_CoolingCurve( 6, 4, 8, 0.02);
+	   Compute_CoolingCurve( 7, 4, 8, 0.02);
+	   Compute_CoolingCurve( 8, 4, 8, 0.02);
+	   Compute_CoolingCurve( 9, 4, 8, 0.02);
+      Aux_Message( stdout, "==========================================\n");
+   }
+
 #  ifdef SUPPORT_GRACKLE
    delete [] my_fields.grid_dimension;     my_fields.grid_dimension  = NULL;
    delete [] my_fields.grid_start;         my_fields.grid_start      = NULL;
@@ -359,19 +379,31 @@ void End_GrackleComoving()
 
    delete [] my_fields.density;            my_fields.density         = NULL;
    delete [] my_fields.internal_energy;    my_fields.internal_energy = NULL;
+   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
    delete [] my_fields.HI_density;         my_fields.HI_density      = NULL;
    delete [] my_fields.HII_density;        my_fields.HII_density     = NULL;
    delete [] my_fields.HeI_density;        my_fields.HeI_density     = NULL;
    delete [] my_fields.HeII_density;       my_fields.HeII_density    = NULL;
    delete [] my_fields.HeIII_density;      my_fields.HeIII_density   = NULL;
    delete [] my_fields.e_density;          my_fields.e_density       = NULL;
+   }
+   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9 ) {
    delete [] my_fields.HM_density;         my_fields.HM_density      = NULL;
    delete [] my_fields.H2I_density;        my_fields.H2I_density     = NULL;
    delete [] my_fields.H2II_density;       my_fields.H2II_density    = NULL;
+   }
+   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE12 ) {
    delete [] my_fields.DI_density;         my_fields.DI_density      = NULL;
    delete [] my_fields.DII_density;        my_fields.DII_density     = NULL;
    delete [] my_fields.HDI_density;        my_fields.HDI_density     = NULL;
+   }
+   if ( GRACKLE_METAL ) {
    delete [] my_fields.metal_density;      my_fields.metal_density   = NULL;
+   }
+
+   delete [] my_temperature;               my_temperature            = NULL;
+   delete [] my_gamma;                     my_gamma                  = NULL;
+   delete [] my_cooling_time;              my_cooling_time           = NULL;
 #  endif // #ifdef SUPPORT_GRACKLE
 } // FUNCTION : End_GrackleComoving
 
@@ -524,23 +556,27 @@ void Init_TestProb_Hydro_Grackle_Comoving()
 
    my_fields.density         = new gr_float [field_size];
    my_fields.internal_energy = new gr_float [field_size];
-// for primordial_chemistry >= 1
+   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
    my_fields.HI_density      = new gr_float [field_size];
    my_fields.HII_density     = new gr_float [field_size];
    my_fields.HeI_density     = new gr_float [field_size];
    my_fields.HeII_density    = new gr_float [field_size];
    my_fields.HeIII_density   = new gr_float [field_size];
    my_fields.e_density       = new gr_float [field_size];
-// for primordial_chemistry >= 2
+   }
+   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9 ) {
    my_fields.HM_density      = new gr_float [field_size];
    my_fields.H2I_density     = new gr_float [field_size];
    my_fields.H2II_density    = new gr_float [field_size];
-// for primordial_chemistry >= 3
+   }
+   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE12 ) {
    my_fields.DI_density      = new gr_float [field_size];
    my_fields.DII_density     = new gr_float [field_size];
    my_fields.HDI_density     = new gr_float [field_size];
-// for metal_cooling = 1
+   }
+   if ( GRACKLE_METAL ) {
    my_fields.metal_density   = new gr_float [field_size];
+   }
 
    my_temperature            = new gr_float [field_size];
    my_gamma                  = new gr_float [field_size];
