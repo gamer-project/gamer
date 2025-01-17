@@ -333,7 +333,7 @@ endif # SUPPORT_GRACKLE
 # star formation source files (included only if "STAR_FORMATION" is turned on)
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DSTAR_FORMATION, $(SIMU_OPTION))" "-DSTAR_FORMATION"
-CPU_FILE    += SF_CreateStar.cpp  SF_CreateStar_AGORA.cpp
+CPU_FILE    += SF_CreateStar.cpp  SF_CreateStar_AGORA.cpp SF_CreateStar_SinkParticle.cpp
 
 vpath %.cpp    StarFormation
 endif # STAR_FORMATION
@@ -342,9 +342,9 @@ endif # STAR_FORMATION
 # feedback source files (included only if "FEEDBACK" is turned on)
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DFEEDBACK, $(SIMU_OPTION))" "-DFEEDBACK"
-CPU_FILE    += FB_AdvanceDt.cpp  FB_Init.cpp  FB_End.cpp  FB_Auxiliary.cpp  FB_User_Template.cpp  FB_SNe.cpp
+CPU_FILE    += FB_AdvanceDt.cpp  FB_Init.cpp  FB_End.cpp  FB_Auxiliary.cpp  FB_User_Template.cpp  FB_SNe.cpp FB_Accretion.cpp
 
-vpath %.cpp    Feedback  Feedback/User_Template  Feedback/SNe
+vpath %.cpp    Feedback  Feedback/User_Template  Feedback/SNe Feedback/Accretion
 endif # FEEDBACK
 
 
