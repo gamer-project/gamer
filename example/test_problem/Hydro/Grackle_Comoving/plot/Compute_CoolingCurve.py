@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Load the data
-data = np.loadtxt('../Record__GrackleComoving', skiprows=2)
+data = np.loadtxt('../Record__GrackleComoving', skiprows=10)
 
 time          = data[:,0] # scale factor
 dt            = data[:,2] # sec

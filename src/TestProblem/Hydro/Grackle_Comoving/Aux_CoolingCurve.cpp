@@ -142,6 +142,20 @@ void Compute_CoolingCurve( const double z_value, const double T_min, const doubl
         Aux_Error( ERROR_INFO, "Error in solve_chemistry.\n");
       }
 
+      // reset the internal energy
+      if (calculate_temperature(&my_units, &my_fields, my_temperature) == 0) {
+        Aux_Error( ERROR_INFO, "Error in calculate_temperature.\n");
+      }
+      if (calculate_gamma(&my_units, &my_fields, my_gamma) == 0) {
+        Aux_Error( ERROR_INFO, "Error in calculate_gamma.\n");
+      }
+      double mu                    = my_temperature[0] / (my_fields.internal_energy[0] * (my_gamma[0] - 1.) * temperature_units);
+      my_fields.internal_energy[0] = pow(10.0, logT) / (mu * (my_gamma[0] - 1.) * temperature_units);
+
+      if (calculate_temperature(&my_units, &my_fields, my_temperature) == 0) {
+        Aux_Error( ERROR_INFO, "Error in calculate_temperature.\n");
+      }
+
       // check convergence
       double diff = 0.0;
       if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
@@ -162,22 +176,7 @@ void Compute_CoolingCurve( const double z_value, const double T_min, const doubl
       diff = fmax(diff, fabs(my_fields.DII_density  [0] - buf_DII_density  ) / my_fields.DII_density  [0]);
       diff = fmax(diff, fabs(my_fields.HDI_density  [0] - buf_HDI_density  ) / my_fields.HDI_density  [0]);
       }
-
-      // reset the internal energy
-      if (calculate_temperature(&my_units, &my_fields, my_temperature) == 0) {
-        Aux_Error( ERROR_INFO, "Error in calculate_temperature.\n");
-      }
-      if (calculate_gamma(&my_units, &my_fields, my_gamma) == 0) {
-        Aux_Error( ERROR_INFO, "Error in calculate_gamma.\n");
-      }
-      double mu                    = my_temperature[0] / (my_fields.internal_energy[0] * (my_gamma[0] - 1.) * temperature_units);
-      my_fields.internal_energy[0] = pow(10.0, logT) / (mu * (my_gamma[0] - 1.) * temperature_units);
-
-      // check convergence
-      if (calculate_temperature(&my_units, &my_fields, my_temperature) == 0) {
-        Aux_Error( ERROR_INFO, "Error in calculate_temperature.\n");
-      }
-      diff = fmax(diff, fabs(my_temperature[0] - pow(10.0, logT)) / my_temperature[0]);
+      diff = fmax(diff, fabs(my_temperature         [0] - pow(10.0, logT)  ) / my_temperature         [0]);
 
       if (diff < 1.e-3)   break; // converged
 

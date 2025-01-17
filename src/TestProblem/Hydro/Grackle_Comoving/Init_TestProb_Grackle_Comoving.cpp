@@ -244,6 +244,14 @@ void Aux_Record_GrackleComoving()
          if ( Aux_CheckFileExist(FileName) )    Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
 
          FILE *File_User = fopen( FileName, "a" );
+         fprintf( File_User, "# a_scale              : scale factor\n");
+         fprintf( File_User, "# Step                 : current step\n");
+         fprintf( File_User, "# dt [s]               : physical time-step size in sec\n");
+         fprintf( File_User, "# n [1/cc]             : Hydrogen number density in physical cm^-3\n");
+         fprintf( File_User, "# mu                   : mean molecular weight\n");
+         fprintf( File_User, "# Temp [K]             : temperature in Kelvin\n");
+         fprintf( File_User, "# Edens [erg cm^-3]    : internal energy density in physical erg cm^-3\n");
+         fprintf( File_User, "# Lcool[erg cm^3 s^-1] : cooling rate in physical erg cm^-3 s^-1\n");
          fprintf( File_User, "#%13s%14s%3s%22s%22s%22s%22s%22s%22s",  "a_scale", "Step", "", "dt [s]", "n [1/cc]", "mu", "Temp [K]", "Edens [erg cm^-3]", "Lcool[erg cm^3 s^-1]" );
          fprintf( File_User, "\n" );
 

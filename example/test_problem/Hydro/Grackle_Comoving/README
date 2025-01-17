@@ -16,10 +16,14 @@ Default setup:
 Note:
 ========================================
 1. This test problem computes the thermal evolution on comoving coordinate with the Grackle library
-2. Run `make run` in `plot` directory to generate reference tables of cooling functions
-   --> The C program `plot/coolingrate_proper.c` computes the cooling rate in the proper coordinate
-3. Run `make plot` in `plot` directory to draw the cooling functions
-   --> The python script `plot/Compute_CoolingCurve.py` computes the cooling rate from the simulation output and compares it with the reference table
+2. At the end of the simulation, the code will generate the cooling rate table computed on proper coordinates for comparison
+3. Run the python script `plot/Compute_CoolingCurve.py` to draw the cooling functions
+   --> The python script computes the cooling rate from the simulation output and compares it with the reference table
 4. The floating point precision of Grackle must be same with GAMER to compile the code successfully
 5. Run the script `download_datatable.sh` to download the cooling rate table `CloudyData_noUVB.h5` from the Grackle GitHub repository
 6. It is recommended to use double-float precision for the Grackle library
+7. The values of the mean molecular weight and the temperature in the test problems can be different from the original output of GAMER
+   --> The mean molecular weight is computed from the Hydrogen and Helium ionization fraction in Grackle
+       --> can be different from the value of MOLECULAR_WEIGHT in Input__Parameter and Record__Note
+   --> The temperature is calculated considering the mean molecular weight and the total energy density in Grackle
+       --> can be different from the temperature field output by OPT__OUTPUT_TEMP
