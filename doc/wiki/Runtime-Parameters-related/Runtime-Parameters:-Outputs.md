@@ -32,6 +32,7 @@ Parameters described on this page:
 [OUTPUT_PART_Y](#OUTPUT_PART_Y), &nbsp;
 [OUTPUT_PART_Z](#OUTPUT_PART_Z), &nbsp;
 [INIT_DUMPID](#INIT_DUMPID), &nbsp;
+[OUTPUT_DIR](#OUTPUT_DIR) &nbsp;
 
 
 Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**
@@ -289,6 +290,14 @@ Set the first data dump ID. Note that it is unnecessary to set this value
 in most cases, even when restarting simulations, unless you want to overwrite
 the default value.
     * **Restriction:**
+
+<a name="OUTPUT_DIR"></a>
+* #### `OUTPUT_DIR` &ensp; (string) &ensp; [.]
+    * **Description:**
+Specify the output data directory. In most cases, it is unnecessary to set this value
+unless you want to overwrite the default directory.
+    * **Restriction:**
+The string length should be shorter than `MAX_STRING-100`.
 
 
 ## Remarks

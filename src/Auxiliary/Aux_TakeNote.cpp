@@ -25,8 +25,10 @@ void Aux_TakeNote()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_TakeNote ...\n" );
 
 
-   const char FileName[] = "Record__Note";
    FILE *Note;
+   char FileName[MAX_STRING];
+   sprintf( FileName, "%s/Record__Note", OUTPUT_DIR );
+
 
    if ( MPI_Rank == 0 )
    {
@@ -39,7 +41,9 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fclose( Note );
 
-      system( "cat ./Input__Note >> Record__Note" );
+      char Command[MAX_STRING];
+      sprintf( Command, "cat ./Input__Note >> %s/Record__Note", OUTPUT_DIR );
+      system( Command );
 
       Note = fopen( FileName, "a" );
       fprintf( Note, "***********************************************************************************\n" );
@@ -1641,6 +1645,7 @@ void Aux_TakeNote()
       fprintf( Note, "OUTPUT_PART_Y                  % 21.14e\n", OUTPUT_PART_Y               );
       fprintf( Note, "OUTPUT_PART_Z                  % 21.14e\n", OUTPUT_PART_Z               );
       fprintf( Note, "INIT_DUMPID                    % d\n",      INIT_DUMPID                 );
+      fprintf( Note, "OUTPUT_DIR                      %s\n",      OUTPUT_DIR                  );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
 
