@@ -1,8 +1,12 @@
-filename=UM_IC_run05-halo08-lv4
-link=https://use.yt/upload/d75aa595
+#!/bin/bash
 
-curl -L ${link} -o ${filename}.tgz
-tar -zxvf ${filename}.tgz
-rm ${filename}.tgz
+LOCAL_FILENAME="UM_IC_run05-halo08-lv4"
+FILE_ID="677cbad6999605c485c8de77"
 
-ln -s ${filename} UM_IC
+# 1. download
+curl https://hub.yt/api/v1/item/${FILE_ID}/download -o "${LOCAL_FILENAME}.tgz"
+
+# 2. unzip and link
+tar -zxvf ${LOCAL_FILENAME}.tgz
+rm ${LOCAL_FILENAME}.tgz
+ln -s ${LOCAL_FILENAME} UM_IC

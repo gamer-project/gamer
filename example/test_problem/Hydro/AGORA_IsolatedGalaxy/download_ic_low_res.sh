@@ -1,13 +1,19 @@
 #!/bin/bash
+
+LOCAL_FILENAME1="LOW"
+LOCAL_FILENAME2="CloudyData_UVB=HM2012.h5"
+FILE_ID1="677ca225999605c485c8de6f"
+FILE_ID2="677ca211999605c485c8de6c"
+
 # file download
-wget --no-check-certificate -O ./LOW.tar.gz https://www.dropbox.com/sh/1xzt1rysy9v3a9l/AAAMlJBQG1OQFW4cjhp11Ex6a/LOW.tar.gz?dl=1
-wget --no-check-certificate  -O ./CloudyData_UVB=HM2012.h5 https://github.com/grackle-project/grackle_data_files/raw/main/input/CloudyData_UVB=HM2012.h5
+curl https://hub.yt/api/v1/item/${FILE_ID1}/download -o "${LOCAL_FILENAME1}.tar.gz"
+curl https://hub.yt/api/v1/item/${FILE_ID2}/download -o "${LOCAL_FILENAME2}"
 
 # file unzip
-tar xzvf LOW.tar.gz
-mv LOW/*.dat ./
-rmdir LOW
-rm LOW.tar.gz
+tar xzvf ${LOCAL_FILENAME1}.tar.gz
+mv ${LOCAL_FILENAME1}/*.dat ./
+rmdir ${LOCAL_FILENAME1}
+rm ${LOCAL_FILENAME1}.tar.gz
 
 # Input_* soft links
 ln -s ./Input_Options/Input__Flag_Jeans.low-res Input__Flag_Jeans
