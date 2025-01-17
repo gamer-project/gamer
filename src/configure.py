@@ -16,9 +16,16 @@ import sys
 import re
 import ctypes
 
-# Check the version of Python
+
+
+####################################################################################################
+# Validation
+####################################################################################################
+# Check the Python version
 if sys.version_info[0] < 3 or sys.version_info[1] < 5:
     raise BaseException("Python 3.5 or later is required.")
+
+
 
 ####################################################################################################
 # Global variables
