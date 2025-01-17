@@ -233,7 +233,8 @@ def str2bool( v ):
     return
 
 def add_option( opt_str, name, val ):
-    # NOTE: Every -Doption must have a trailing space.
+    # NOTE: 1. Every -Doption must have a trailing space.
+    #       2. Do not insert any space before and after the equal sign `=`.
     if type(val) == type(True):
         if val: opt_str += "-D%s "%(name)
         LOGGER.info("%-25s : %r"%(name, val))
@@ -463,7 +464,7 @@ def load_arguments():
     parser.add_argument( "--wave_scheme", type=str, metavar="TYPE", gamer_name="WAVE_SCHEME",
                          default="WAVE_FD", choices=["WAVE_FD", "WAVE_GRAMFE"],
                          depend={"model":"ELBDM"},
-                         help="Wave scheme for <--model=ELBDM> (WAVE_FD:finite difference, WAVE_GRAMFE: local spectral method).\n"
+                         help="Wave scheme for <--model=ELBDM> (WAVE_FD: finite difference, WAVE_GRAMFE: local spectral method).\n"
                        )
 
     parser.add_argument( "--conserve_mass", type=str2bool, metavar="BOOLEAN", gamer_name="CONSERVE_MASS",
@@ -537,6 +538,7 @@ def load_arguments():
                          default=False,
                          help="Enable particles.\n"
                        )
+
     parser.add_argument( "--tracer", type=str2bool, metavar="BOOLEAN", gamer_name="TRACER",
                          default=False,
                          depend={"particle":True},
@@ -561,16 +563,28 @@ def load_arguments():
                          help="Feedback from particles to grids and vice versa.\n"
                        )
 
-    parser.add_argument( "--par_attribute", type=int, metavar="INTEGER", gamer_name="PAR_NATT_USER",
+    parser.add_argument( "--par_attribute_flt", type=int, metavar="INTEGER", gamer_name="PAR_NATT_FLT_USER",
                          default=0,
                          depend={"particle":True},
-                         help="Set the number of user-defined particle attributes.\n"
+                         help="Set the number of user-defined particle floating-point attributes.\n"
+                       )
+
+    parser.add_argument( "--par_attribute_int", type=int, metavar="INTEGER", gamer_name="PAR_NATT_INT_USER",
+                         default=0,
+                         depend={"particle":True},
+                         help="Set the number of user-defined particle integer attributes.\n"
                        )
 
     parser.add_argument( "--double_par", type=str2bool, metavar="BOOLEAN", gamer_name="FLOAT8_PAR",
                          default=None,
                          depend={"particle":True},
-                         help="Enable double precision for particle attributes.\n"
+                         help="Enable double precision for particle floating-point attributes.\n"
+                       )
+
+    parser.add_argument( "--long_par", type=str2bool, metavar="BOOLEAN", gamer_name="INT8_PAR",
+                         default=True,
+                         depend={"particle":True},
+                         help="Use the long integer data type for particle integer attributes.\n"
                        )
     # A.5 grackle
     parser.add_argument( "--grackle", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_GRACKLE",
@@ -814,7 +828,7 @@ def set_gpu( gpus, flags, args ):
             gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=128"
         else:
             gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=70"
-    elif 500 <= compute_capability and compute_capability <= 870:
+    elif 500 <= compute_capability and compute_capability <= 900:
         if args["double"]:
             gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=192"
         else:
@@ -931,8 +945,11 @@ def validation( paths, depends, constraints, **kwargs ):
         if not kwargs["gravity"] and not kwargs["tracer"]:
             LOGGER.error("At least one of <--gravity> or <--tracer> must be enabled for <--particle>.")
             success = False
-        if kwargs["par_attribute"] < 0:
-            LOGGER.error("Number of particle attributes should not be negative. Current: %d"%kwargs["par_attribute"])
+        if kwargs["par_attribute_flt"] < 0:
+            LOGGER.error("Number of particle floating-point attributes should not be negative. Current: %d"%kwargs["par_attribute_flt"])
+            success = False
+        if kwargs["par_attribute_int"] < 0:
+            LOGGER.error("Number of particle integer attributes should not be negative. Current: %d"%kwargs["par_attribute_int"])
             success = False
 
     # B. Miscellaneous options

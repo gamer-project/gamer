@@ -23,7 +23,7 @@ DensTableFile           DensTableExample       # density table name, radius shou
 
 # parameters for new disk (disabled in this example)
 AddParWhenRestart       0                      # add a new disk to an existing snapshot [0] ## must set OPT__INIT=2 and OPT__RESTART_RESET=1 ##
-AddParWhenRestartByFile 0                      # 0=add a thin disk (must enable SUPPORT_GSL), 1=add new disk via PAR_IC [1] ## AddParWhenRestart = 1 ONLY ##
+AddParWhenRestartByFile 0                      # 0=add a thin disk (must enable SUPPORT_GSL), 1=add new disk via DiskHeatingParticleIC [1] ## AddParWhenRestart = 1 ONLY ##
 AddParWhenRestartNPar   10000000               # total particles of new disk [0] ## AddParWhenRestart = 1 ONLY ##
 NewDisk_RSeed           1002                   # random seed for setting thin disk particle position and velocity [1002] ## AddParWhenRestartByFile = 0 ONLY ##
 Disk_Mass               0.00139812             # thin disk total mass (code unit) [1.0] ## AddParWhenRestartByFile = 0 ONLY ##
