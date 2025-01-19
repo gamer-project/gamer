@@ -36,7 +36,8 @@ extern int    Bondi_SinkNCell;
 void Record_Bondi()
 {
 
-   const char FileName[] = "Record__BondiAccretionRate";
+   char FileName[MAX_STRING];
+   sprintf( FileName, "%s/Record__BondiAccretionRate", OUTPUT_DIR );
 
    static bool   FirstTime = true;
    static double Time0, dTime;

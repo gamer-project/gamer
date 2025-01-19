@@ -332,6 +332,17 @@ void Aux_Check_Parameter()
 #  endif // #if ( MODEL == HYDRO )
 
 
+   if ( strlen(OUTPUT_DIR) > MAX_STRING-100-1 )
+      Aux_Error( ERROR_INFO, "Length of OUTPUT_DIR (%d) should be smaller than MAX_STRING-100-1 (%d) !!\n",
+                 strlen(OUTPUT_DIR), MAX_STRING-100-1 );
+
+   if (  ! Aux_CheckFolderExist( OUTPUT_DIR )  )
+      Aux_Error( ERROR_INFO, "\"%s\" folder set by OUTPUT_DIR does not exist !!\n", OUTPUT_DIR );
+
+   if (  ! Aux_CheckPermission( OUTPUT_DIR, 2+1 )  )
+      Aux_Error( ERROR_INFO, "You do not have write and execute permissions for the \"%s\" folder set by OUTPUT_DIR !!\n", OUTPUT_DIR );
+
+
 
 // general warnings
 // =======================================================================================
