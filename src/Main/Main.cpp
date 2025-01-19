@@ -619,12 +619,7 @@ int main( int argc, char *argv[] )
    Output_DumpData( 0 );
 
    if ( OPT__PATCH_COUNT > 0 )            Aux_Record_PatchCount();
-   if ( OPT__RECORD_MEMORY )              
-#     ifdef __APPLE__
-      Aux_Message( stderr, "WARNING : memory reporting is not currently supported on macOS !!\n" );
-#     else
-      Aux_GetMemInfo();
-#     endif
+   if ( OPT__RECORD_MEMORY )              Aux_GetMemInfo();
 
    if ( OPT__RECORD_USER ) {
       if ( Aux_Record_User_Ptr != NULL )  Aux_Record_User_Ptr();
@@ -717,10 +712,7 @@ int main( int argc, char *argv[] )
       TIMING_FUNC(   Aux_Record_PatchCount(),         Timer_Main[4],   TIMER_ON   );
 
       if ( OPT__RECORD_MEMORY )
-#     ifndef __APPLE__
-//    memory reporting is not currently supported on macOS
       TIMING_FUNC(   Aux_GetMemInfo(),                Timer_Main[4],   TIMER_ON   );
-#     endif
 
       if ( OPT__RECORD_USER )
       TIMING_FUNC(   Aux_Record_User_Ptr(),           Timer_Main[4],   TIMER_ON   );
