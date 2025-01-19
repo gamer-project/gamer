@@ -54,6 +54,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                            const real g_PriVar[][ CUBE(FLU_NXT) ],
                            const real Temp[],
                                  real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                 real     dp[][ CUBE(N_FC_FLUX) ],
                            const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                            const int N_Var, const int N_Ghost, const int N_Flux, const int NSkip_N,
                            const int NSkip_T, const int NSkip_MHM_Half, const real dh,
@@ -390,6 +391,8 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
             delta_p = mu*(3.0*BBdV - divV);
             if ( MicroPhy->ViscFluxType == ANISOTROPIC_VISCOSITY && MicroPhy->ViscBounds )
                delta_p = FMIN( FMAX( delta_p, -B2 ), 0.5*B2 );
+            if ( dp != NULL )
+               dp[d][idx_flux] = delta_p;
             stress_N  = -delta_p*(B_N_mean*B_N_mean - 1./3.);
             stress_T1 = -delta_p*B_T1_mean*B_N_mean;
             stress_T2 = -delta_p*B_T2_mean*B_N_mean;
@@ -399,6 +402,8 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
          {
             // TODO: some error message?
          }
+
+         if ( g_Flux == NULL ) continue;
 
 //       5. initialize flux if need
          if ( initialize )

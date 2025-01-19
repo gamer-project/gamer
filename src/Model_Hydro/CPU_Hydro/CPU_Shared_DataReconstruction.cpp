@@ -107,6 +107,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                            const real g_PriVar[][ CUBE(FLU_NXT) ],
                            const real Temp[],
                                  real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                 real     dp[][ CUBE(N_FC_FLUX) ],
                            const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                            const int N_Var, const int N_Ghost, const int N_Flux, const int NSkip_N,
                            const int NSkip_T, const int NSkip_MHM_Half, const real dh,
@@ -423,7 +424,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 // add viscous fluxes
 #  ifdef VISCOSITY
-   Hydro_AddViscousFlux( g_ConVar, NULL, Temp, g_Flux, g_FC_B, FLU_NXT, NGhost,
+   Hydro_AddViscousFlux( g_ConVar, NULL, Temp, g_Flux, NULL, g_FC_B, FLU_NXT, NGhost,
                          N_HF_FLUX, NSkip_N, NSkip_T, 1, dh, need_initialize, MicroPhy );
 #  endif
 
@@ -1059,7 +1060,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 // add viscous fluxes
 #  ifdef VISCOSITY
-   Hydro_AddViscousFlux( g_ConVar, NULL, Temp, g_Flux, g_FC_B, FLU_NXT, NGhost,
+   Hydro_AddViscousFlux( g_ConVar, NULL, Temp, g_Flux, NULL, g_FC_B, FLU_NXT, NGhost,
                          N_HF_FLUX, NSkip_N, NSkip_T, 1, dh, need_initialize, MicroPhy );
 #  endif
 
