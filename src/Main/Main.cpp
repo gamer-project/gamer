@@ -626,7 +626,6 @@ int main( int argc, char *argv[] )
 
    if ( OPT__PATCH_COUNT > 0 )            Aux_Record_PatchCount();
    if ( OPT__RECORD_MEMORY )              Aux_GetMemInfo();
-
    if ( OPT__RECORD_USER ) {
       if ( Aux_Record_User_Ptr != NULL )  Aux_Record_User_Ptr();
       else
