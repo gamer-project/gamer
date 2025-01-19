@@ -64,6 +64,12 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
                                const real* const EoS_Table[EOS_NTABLE_MAX] )
 {
 
+   if ( OPT__FREEZE_HYDRO ) 
+   {
+      for (int v=0; v<NCOMP_TOTAL; v++)   Flux_Out[v] = 0.0;
+      return;
+   }
+
 // 1. reorder the input variables for different spatial directions
    real L[NCOMP_TOTAL], R[NCOMP_TOTAL];
 
@@ -399,6 +405,12 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
                                const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                                const real* const EoS_Table[EOS_NTABLE_MAX] )
 {
+
+   if ( OPT__FREEZE_HYDRO ) 
+   {
+      for (int v=0; v<NCOMP_TOTAL; v++)   Flux_Out[v] = 0.0;
+      return;
+   }
 
 // 1. reorder the input variables for different spatial directions
    real L[NCOMP_TOTAL], R[NCOMP_TOTAL];
