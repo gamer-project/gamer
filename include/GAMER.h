@@ -52,12 +52,6 @@
 #endif // #if ( SUPPORT_FFTW == FFTW3 ) ... #elif ( SUPPORT_FFTW == FFTW2 )
 
 #ifdef SUPPORT_GRACKLE
-#ifdef FLOAT8
-#  define CONFIG_BFLOAT_8
-#else
-#  define CONFIG_BFLOAT_4
-#endif
-
 extern "C" {
 #  include <grackle.h>
 }

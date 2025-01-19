@@ -186,7 +186,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
 #        ifdef MASSIVE_PARTICLES
          if ( WeightingDensityField & _PAR_DENS  ||  WeightingDensityField & _TOTAL_DENS )
          {
-            Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos, Time[lv],
+            Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, _PAR_TYPE, PredictPos, Time[lv],
                                           SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
 
             Prepare_PatchData_InitParticleDensityArray( lv, Time[lv] );

@@ -280,6 +280,7 @@ void Init_TestProb_Template()
    Init_Field_User_Ptr               = NULL; // set NCOMP_PASSIVE_USER;               example: TestProblem/Hydro/Plummer/Init_TestProb_Hydro_Plummer.cpp --> AddNewField()
    Flag_Region_Ptr                   = NULL; // option: OPT__FLAG_REGION;             example: Refing/Flag_Region.cpp
    Flag_User_Ptr                     = NULL; // option: OPT__FLAG_USER;               example: Refine/Flag_User.cpp
+   Flag_UserWorkBeforeFlag_Ptr       = NULL; // option: none;                         example: Refine/Flag_UserWorkBeforeFlag.cpp
    Mis_GetTimeStep_User_Ptr          = NULL; // option: OPT__DT_USER;                 example: Miscellaneous/Mis_GetTimeStep_User.cpp
    Mis_UserWorkBeforeNextLevel_Ptr   = NULL; //                                       example: Miscellaneous/Mis_UserWorkBeforeNextLevel.cpp
    Mis_UserWorkBeforeNextSubstep_Ptr = NULL; //                                       example: Miscellaneous/Mis_UserWorkBeforeNextSubstep.cpp
@@ -305,7 +306,8 @@ void Init_TestProb_Template()
 #  endif
 #  ifdef PARTICLE
    Par_Init_ByFunction_Ptr           = NULL; // option: PAR_INIT=1;                   example: Particle/Par_Init_ByFunction.cpp
-   Par_Init_Attribute_User_Ptr       = NULL; // set PAR_NATT_USER;                    example: TestProblem/Hydro/AGORA_IsolatedGalaxy/Init_TestProb_Hydro_AGORA_IsolatedGalaxy.cpp --> AddNewParticleAttribute()
+// Par_Init_ByFile_User_Ptr          = NULL; // option: PAR_INIT=3;                   example: Particle/Par_Init_ByFile.cpp -> Par_Init_ByFile_Default()
+   Par_Init_Attribute_User_Ptr       = NULL; // set PAR_NATT_FLT/INT_USER;            example: TestProblem/Hydro/AGORA_IsolatedGalaxy/Init_TestProb_Hydro_AGORA_IsolatedGalaxy.cpp --> AddNewParticleAttribute()
 #  endif
 #  if ( EOS == EOS_USER )
    EoS_Init_Ptr                      = NULL; // option: EOS in the Makefile;          example: EoS/User_Template/CPU_EoS_User_Template.cpp

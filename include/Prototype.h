@@ -22,6 +22,8 @@ void Aux_Check_Refinement( const int lv, const char *comment );
 void Aux_Check_Restrict( const int lv, const char *comment );
 void Aux_Error( const char *File, const int Line, const char *Func, const char *Format, ... );
 bool Aux_CheckFileExist( const char *FileName );
+bool Aux_CheckFolderExist( const char *FolderName );
+bool Aux_CheckPermission( const char *FileName, const int perms );
 void Aux_GetCPUInfo( const char *FileName );
 void Aux_GetMemInfo();
 void Aux_Message( FILE *Type, const char *Format, ... );
@@ -697,8 +699,9 @@ void CUAPI_SendGramFEMatrix2GPU( gramfe_matmul_float (*h_GramFE_TimeEvo)[ 2*FLU_
 void Par_Init_ByFile();
 void Par_Output_TextFile( const char *comment );
 void Par_Output_BinaryFile( const char *comment );
-void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly,
-                                    const long NNewPar, real_par *NewParAtt[PAR_NATT_TOTAL] );
+void Par_FindHomePatch_UniformGrid( const int lv, const bool OldParOnly, const long NNewPar,
+                                    real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL],
+                                    long_par *NewParAttInt[PAR_NATT_INT_TOTAL] );
 void Par_PassParticle2Son_SinglePatch( const int FaLv, const int FaPID );
 void Par_PassParticle2Son_MultiPatch( const int FaLv, const ParPass2Son_t Mode, const bool TimingSendPar,
                                       const int NFaPatch, const int *FaPIDList );
@@ -707,7 +710,8 @@ void Par_Aux_Check_Particle( const char *comment );
 void Par_MassAssignment( const long *ParList, const long NPar, const ParInterp_t IntScheme, real *Rho,
                          const int RhoSize, const double *EdgeL, const double dh, const bool PredictPos,
                          const double TargetTime, const bool InitZero, const bool Periodic[], const int PeriodicSize[3],
-                         const bool UnitDens, const bool CheckFarAway, const bool UseInputMassPos, real_par **InputMassPos );
+                         const bool UnitDens, const bool CheckFarAway, const bool UseInputMassPos, real_par **InputMassPos,
+                         long_par **InputType );
 void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOld, const ParUpStep_t UpdateStep,
                          const bool StoreAcc, const bool UseStoredAcc );
 void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double TimeOld,
@@ -721,9 +725,9 @@ void Par_Aux_GetConservedQuantity( double &Mass, double &CoMX, double &CoMY, dou
                                    double &AngMomX, double &AngMomY, double &AngMomZ, double &Ek, double &Ep );
 void Par_Aux_InitCheck();
 void Par_Aux_Record_ParticleCount();
-void Par_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, const bool PredictPos, const double TargetTime,
-                                   const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar,
-                                   const bool TimingSendPar );
+void Par_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, const long IntAttBitIdx,
+                                   const bool PredictPos, const double TargetTime, const bool SibBufPatch,
+                                   const bool FaSibBufPatch, const bool JustCountNPar, const bool TimingSendPar );
 void Par_CollectParticle2OneLevel_FreeMemory( const int FaLv, const bool SibBufPatch, const bool FaSibBufPatch );
 int  Par_Synchronize( const double SyncTime, const ParSync_t SyncOption );
 void Par_Synchronize_Restore( const double SyncTime );
@@ -732,24 +736,27 @@ void Prepare_PatchData_FreeParticleDensityArray( const int lv );
 void Par_PredictPos( const long NPar, const long *ParList, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                      const double TargetTime );
 void Par_Init_Attribute();
-void Par_AddParticleAfterInit( const long NNewPar, real_par *NewParAtt[PAR_NATT_TOTAL] );
-void Par_ScatterParticleData( const long NPar_ThisRank, const long NPar_AllRank, const long AttBitIdx,
-                              real_par *Data_Send[PAR_NATT_TOTAL], real_par *Data_Recv[PAR_NATT_TOTAL] );
+void Par_AddParticleAfterInit( const long NNewPar, real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL], long_par *NewParAttInt[PAR_NATT_INT_TOTAL] );
+void Par_ScatterParticleData( const long NPar_ThisRank, const long NPar_AllRank, const long FltAttBitIdx, const long IntAttBitIdx,
+                              real_par *Data_Send_Flt[PAR_NATT_FLT_TOTAL], long_par *Data_Send_Int[PAR_NATT_INT_TOTAL],
+                              real_par *Data_Recv_Flt[PAR_NATT_FLT_TOTAL], long_par *Data_Recv_Int[PAR_NATT_INT_TOTAL] );
 void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
                             const double _dh, const int AttrSize3D, const real *Attr,
                             const int NPar, real_par *InterpParPos[3],
-                            const real_par ParType[], const long ParList[],
+                            const long_par ParType[], const long ParList[],
                             const bool UseTracers, real_par ParAttr[], const bool CorrectVelocity );
 void Par_Init_Attribute_Mesh();
 void Par_Output_TracerParticle_Mesh();
-FieldIdx_t AddParticleAttribute( const char *InputLabel );
-FieldIdx_t GetParticleAttributeIndex( const char *InputLabel, const Check_t Check );
+FieldIdx_t AddParticleAttributeFlt( const char *InputLabel );
+FieldIdx_t AddParticleAttributeInt( const char *InputLabel );
+FieldIdx_t GetParticleAttributeFltIndex( const char *InputLabel, const Check_t Check );
+FieldIdx_t GetParticleAttributeIntIndex( const char *InputLabel, const Check_t Check );
 #ifdef LOAD_BALANCE
-void Par_LB_CollectParticle2OneLevel( const int FaLv, const long AttBitIdx, const bool PredictPos, const double TargetTime,
-                                      const bool SibBufPatch, const bool FaSibBufPatch, const bool JustCountNPar,
-                                      const bool TimingSendPar );
+void Par_LB_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, const long IntAttBitIdx, const bool PredictPos,
+                                      const double TargetTime, const bool SibBufPatch, const bool FaSibBufPatch,
+                                      const bool JustCountNPar, const bool TimingSendPar );
 void Par_LB_CollectParticle2OneLevel_FreeMemory( const int lv, const bool SibBufPatch, const bool FaSibBufPatch );
-void Par_LB_CollectParticleFromRealPatch( const int lv, const long AttBitIdx,
+void Par_LB_CollectParticleFromRealPatch( const int lv, const long FltAttBitIdx, const long IntAttBitIdx,
                                           const int Buff_NPatchTotal, const int *Buff_PIDList, int *Buff_NPatchEachRank,
                                           const int Real_NPatchTotal, const int *Real_PIDList, int *Real_NPatchEachRank,
                                           const bool PredictPos, const double TargetTime,
@@ -758,10 +765,10 @@ void Par_LB_ExchangeParticleBetweenPatch( const int lv,
                                           const int Send_NPatchTotal, const int *Send_PIDList, int *Send_NPatchEachRank,
                                           const int Recv_NPatchTotal, const int *Recv_PIDList, int *Recv_NPatchEachRank,
                                           Timer_t *Timer, const char *Timer_Comment );
-void Par_LB_SendParticleData( const int NParAtt, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
-                              long *SendBuf_LBIdxEachPatch, real_par *SendBuf_ParDataEachPatch, const long NSendParTotal,
-                              int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
-                              real_par *&RecvBuf_ParDataEachPatch, int &NRecvPatchTotal, long &NRecvParTotal,
+void Par_LB_SendParticleData( const int NParAttFlt, const int NParAttInt, int *SendBuf_NPatchEachRank, int *SendBuf_NParEachPatch,
+                              long *SendBuf_LBIdxEachPatch, real_par *SendBuf_ParFltDataEachPatch, long_par *SendBuf_ParIntDataEachPatch,
+                              const long NSendParTotal, int *&RecvBuf_NPatchEachRank, int *&RecvBuf_NParEachPatch, long *&RecvBuf_LBIdxEachPatch,
+                              real_par *&RecvBuf_ParFltDataEachPatch, long_par *&RecvBuf_ParIntDataEachPatch, int &NRecvPatchTotal, long &NRecvParTotal,
                               const bool Exchange_NPatchEachRank, const bool Exchange_LBIdxEachRank,
                               const bool Exchange_ParDataEachRank, Timer_t *Timer, const char *Timer_Comment );
 void Par_LB_RecordExchangeParticlePatchID( const int MainLv );
@@ -809,8 +816,8 @@ void Grackle_Init_FieldData();
 void Grackle_End();
 void Init_MemAllocate_Grackle( const int Che_NPG );
 void End_MemFree_Grackle();
-void Grackle_Prepare( const int lv, real h_Che_Array[], const int NPG, const int *PID0_List );
-void Grackle_Close( const int lv, const int SaveSg, const real h_Che_Array[], const int NPG, const int *PID0_List );
+void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const int *PID0_List );
+void Grackle_Close( const int lv, const int SaveSg, const real_che h_Che_Array[], const int NPG, const int *PID0_List );
 void Grackle_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
                         const bool OverlapMPI, const bool Overlap_Sync );
 void CPU_GrackleSolver( grackle_field_data *Che_FieldData, code_units Che_Units, const int NPatchGroup, const real dt );

@@ -103,15 +103,19 @@ void Output_DumpData( const int Stage )
 
 
 // set the file names for all output functions
-   char FileName_Total[50], FileName_Part[50], FileName_Temp[50], FileName_PS[50];
+   char FileName_Total[MAX_STRING], FileName_Part[MAX_STRING], FileName_Temp[MAX_STRING], FileName_PS[MAX_STRING];
 #  ifdef PARTICLE
-   char FileName_Particle[50];
+   char FileName_Particle[MAX_STRING];
 #  endif
 
-   if ( OPT__OUTPUT_TOTAL )   sprintf( FileName_Total, "Data_%06d", DumpID );
+   if ( OPT__OUTPUT_TOTAL )
+   {
+      sprintf( FileName_Total, "%s/Data_%06d", OUTPUT_DIR, DumpID );
+   }
 
    if ( OPT__OUTPUT_PART )
    {
+      sprintf( FileName_Part, "%s/", OUTPUT_DIR );
       switch ( OPT__OUTPUT_PART )
       {
          case OUTPUT_XY :    sprintf( FileName_Temp, "XYslice_z%.3f_%06d", OUTPUT_PART_Z, DumpID );   break;
@@ -126,22 +130,22 @@ void Output_DumpData( const int Stage )
 
       if ( OPT__OUTPUT_BASE )
       {
-         sprintf( FileName_Part, "%s", "Base" );
+         strcat( FileName_Part, "Base" );
          strcat( FileName_Part, FileName_Temp );
       }
       else
-         strcpy( FileName_Part, FileName_Temp );
+         strcat( FileName_Part, FileName_Temp );
 
    } // if ( OPT__OUTPUT_PART )
 
    if ( OPT__OUTPUT_BASEPS )
-      sprintf( FileName_PS, "PowerSpec_%06d", DumpID );
+      sprintf( FileName_PS, "%s/PowerSpec_%06d", OUTPUT_DIR, DumpID );
 
 #  ifdef PARTICLE
    if ( OPT__OUTPUT_PAR_MODE == OUTPUT_PAR_TEXT )
-      sprintf( FileName_Particle, "Particle_%06d.txt", DumpID );
+      sprintf( FileName_Particle, "%s/Particle_%06d.txt", OUTPUT_DIR, DumpID );
    if ( OPT__OUTPUT_PAR_MODE == OUTPUT_PAR_CBIN )
-      sprintf( FileName_Particle, "Particle_%06d.cbin", DumpID );
+      sprintf( FileName_Particle, "%s/Particle_%06d.cbin", OUTPUT_DIR, DumpID );
 #  endif
 
 
@@ -313,7 +317,8 @@ void Output_DumpData( const int Stage )
 void Write_DumpRecord()
 {
 
-   const char FileName[] = "Record__Dump";
+   char FileName[MAX_STRING];
+   sprintf( FileName, "%s/Record__Dump", OUTPUT_DIR );
 
 
 // create the "Record__Dump" file at the first dump
