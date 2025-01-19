@@ -36,8 +36,9 @@ __gamer_configure_autocomplete() {
 
     __gamer_check_gamer_info $configure_filename
 
-    # Not the GAEMR `configure.py`
+    # Not the GAEMR `configure.py`, fallback to default.
     if [ $? -ne 0 ]; then
+        compopt -o default +o nospace
         return 0
     fi
 
@@ -90,6 +91,4 @@ __gamer_configure_autocomplete() {
 
 } # __gamer_configure_autocomplete()
 
-complete -o default -o nospace -F __gamer_configure_autocomplete ./configure.py
-complete -o default -o nospace -F __gamer_configure_autocomplete python
-complete -o default -o nospace -F __gamer_configure_autocomplete python3
+complete -o nospace -F __gamer_configure_autocomplete ./configure.py python python3
