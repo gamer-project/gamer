@@ -155,7 +155,7 @@ OPT__OUTPUT_ENTR              0           # output gas entropy [0] ##HYDRO ONLY#
 OPT__OUTPUT_CS                0           # output sound speed [0] ##HYDRO ONLY##
 OPT__OUTPUT_DIVVEL            0           # output divergence(velocity) [0] ##HYDRO ONLY##
 OPT__OUTPUT_MACH              0           # output mach number [0] ##HYDRO ONLY##
-OPT__OUTPUT_DIVMAG            0           # output |divergence(B)*dh/|B|| [0] ##MHD ONLY##
+OPT__OUTPUT_DIVMAG            1           # output |divergence(B)*dh/|B|| [0] ##MHD ONLY##
 OPT__OUTPUT_USER_FIELD        0           # output user-defined derived fields [0] -> edit "Flu_DerivedField_User.cpp"
 OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
@@ -193,7 +193,7 @@ OPT__CK_FLUX_ALLOCATE         0           # check if all flux arrays are properl
 OPT__CK_NEGATIVE              0           # check the negative values: (0=off, 1=density, 2=pressure and entropy, 3=both) [0] ##HYDRO ONLY##
 OPT__CK_MEMFREE               1.0         # check the free memory in GB (0=off, >0=threshold) [1.0]
 OPT__CK_INTERFACE_B           0           # check the consistency of patch interface B field [0] ##MHD ONLY##
-OPT__CK_DIVERGENCE_B          0           # check the divergence-free constraint on B field (0=off, 1=on, 2=on+verbose) [0] ##MHD ONLY##
+OPT__CK_DIVERGENCE_B          1           # check the divergence-free constraint on B field (0=off, 1=on, 2=on+verbose) [0] ##MHD ONLY##
 
 VISCOSITY_TYPE                1           # (1=constant viscosity, 2=Spitzer viscosity) [1] ##VISCOSITY only##
 VISCOSITY_FLUX_TYPE           2           # (1=isotropic viscosity, 2=anisotropic viscosity) [1] ##VISCOSITY only, 2 is for MHD ONLY##

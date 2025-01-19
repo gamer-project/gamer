@@ -127,7 +127,7 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "MHDLinearVisc_Mode",    &MHDLinearVisc_Mode,        -1,            1,                3                 );
+   ReadPara->Add( "MHDLinearVisc_Mode",    &MHDLinearVisc_Mode,        -1,            1,                2                 );
    ReadPara->Add( "MHDLinearVisc_Rho0",    &MHDLinearVisc_Rho0,        -1.0,          Eps_double,       NoMax_double      );
    ReadPara->Add( "MHDLinearVisc_A",       &MHDLinearVisc_A,           -1.0,          0.0,              NoMax_double      );
    ReadPara->Add( "MHDLinearVisc_P0",      &MHDLinearVisc_P0,          -1.0,          Eps_double,       NoMax_double      );
@@ -140,14 +140,14 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
-   MHDLinearVisc_WaveLength = ( MHDLinearVisc_Dir == 3 ) ? amr->BoxSize[0]/sqrt(3.0) : amr->BoxSize[MHDLinearVisc_Dir];
+   MHDLinearVisc_WaveLength = ( MHDLinearVisc_Dir == 3 ) ? amr->BoxSize[0]*sqrt(3.0) : amr->BoxSize[MHDLinearVisc_Dir];
    MHDLinearVisc_WaveNumber = 2.0*M_PI/MHDLinearVisc_WaveLength;
 
 // assuming EOS_GAMMA
    if ( MHDLinearVisc_Mode == 1 )
 //    fast magnetosonic wave
       MHDLinearVisc_WaveSpeed = sqrt( GAMMA*MHDLinearVisc_P0/MHDLinearVisc_Rho0 + SQR(MHDLinearVisc_B0)/MHDLinearVisc_Rho0 - SQR(VISCOSITY_CONSTANT_COEFF*MHDLinearVisc_WaveNumber/6.0));
-   else if ( MHDLinearVisc_Mode == 2 || MHDLinearVisc_Mode == 3 )
+   else if ( MHDLinearVisc_Mode == 2 )
 //    Alfven waves
       MHDLinearVisc_WaveSpeed = MHDLinearVisc_B0/SQRT(MHDLinearVisc_Rho0);
    else
@@ -239,7 +239,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    if ( MHDLinearVisc_Mode == 1 )
    {
-      
+
+//    fast magnetosonic wave
 #     ifdef VISCOSITY 
       Gamma     = VISCOSITY_CONSTANT_COEFF*WaveK*WaveK/6.0;
 #     endif
@@ -259,28 +260,24 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    } // if ( MHDLinearVisc_Mode == 1 )
 
-   else if ( MHDLinearVisc_Mode == 2 || MHDLinearVisc_Mode == 3 ) 
+   else if ( MHDLinearVisc_Mode == 2 ) 
    {
 
+//    linearly polarized Alfven wave
       Dens = Rho0;
       Pres = P0;
 
-      if ( MHDLinearVisc_Mode == 2 )
-      {
-         
-         WaveFormV = sin( kr ) * sin( WaveW*Time );
-         Mom       = -Dens * WaveSpeed * A * WaveFormV;
-         
-         switch ( MHDLinearVisc_Dir ) {
-            case 0:  MomX = 0.0;                MomY = Mom/sqrt(2.0);  MomZ =  Mom/sqrt(2.0);  break;
-            case 1:  MomX = Mom/sqrt(2.0);      MomY = 0.0;            MomZ =  Mom/sqrt(2.0);  break;
-            case 2:  MomX = Mom/sqrt(2.0);      MomY = Mom/sqrt(2.0);  MomZ =  0.0;            break;
-            case 3:  MomX = 0.5*Mom/sqrt(1.5);  MomY = MomX;           MomZ = -2.0*MomX;       break;
-         }
-
+      WaveFormV = sin( kr ) * sin( WaveW*Time );
+      Mom       = -Dens * WaveSpeed * A * WaveFormV;
+      
+      switch ( MHDLinearVisc_Dir ) {
+         case 0:  MomX = 0.0;                MomY = Mom/sqrt(2.0);  MomZ =  Mom/sqrt(2.0);  break;
+         case 1:  MomX = Mom/sqrt(2.0);      MomY = 0.0;            MomZ =  Mom/sqrt(2.0);  break;
+         case 2:  MomX = Mom/sqrt(2.0);      MomY = Mom/sqrt(2.0);  MomZ =  0.0;            break;
+         case 3:  MomX = 0.5*Mom/sqrt(1.5);  MomY = MomX;           MomZ = -2.0*MomX;       break;
       }
 
-   } // else if ( MHDLinearVisc_Mode == 2 || MHDLinearVisc_Mode == 3 )
+   } // else if ( MHDLinearVisc_Mode == 2 )
    else
       Aux_Error( ERROR_INFO, "unsupported MHDLinearVisc_Mode = %d !!\n", MHDLinearVisc_Mode );
 
@@ -375,7 +372,7 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
       }
 
    } // if ( MHDLinearVisc_Mode == 1 )
-   else if ( MHDLinearVisc_Mode == 2 || MHDLinearVisc_Mode == 3 ) 
+   else if ( MHDLinearVisc_Mode == 2 ) 
    {
 
       WaveFormB = -cos( kr ) * cos( WaveW*Time );
@@ -403,7 +400,7 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
                  break;
       }
 
-   }
+   } // else if ( MHDLinearVisc_Mode == 1 )
    else
       Aux_Error( ERROR_INFO, "unsupported MHDLinearVisc_Mode = %d !!\n", MHDLinearVisc_Mode );
 
