@@ -243,6 +243,11 @@ void Aux_Check_Parameter()
    if ( OPT__MEMORY_POOL  &&  !OPT__REUSE_MEMORY )
       Aux_Error( ERROR_INFO, "please turn on OPT__REUSE_MEMORY for OPT__MEMORY_POOL !!\n" );
 
+#  ifdef __APPLE__
+   if ( OPT__RECORD_MEMORY )
+      Aux_Message( stderr, "WARNING : memory reporting is not currently supported on macOS !!\n" );
+#  endif
+
    if ( OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_NONE  &&  OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_EVERY_STEP  &&
         OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_BEFORE_DUMP )
       Aux_Error( ERROR_INFO, "incorrect option \"OPT__CORR_AFTER_ALL_SYNC = %d\" [0/1/2] !!\n", OPT__CORR_AFTER_ALL_SYNC );
