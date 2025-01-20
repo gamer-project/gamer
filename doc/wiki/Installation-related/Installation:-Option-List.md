@@ -24,7 +24,7 @@ disabled). See the "Restriction" of each option carefully.
 |:---:|:---:|---|
 | `-h`                                 | -               | Show a short help message. |
 | `-lh`                                | -               | Show a detailed help message. |
-| `--machine` <a name="--machine"></a> | Filename string | Select the `*.config` file from the `configs` directory. It will overwrite the default machine set in the [[default setting file | Installation#default_setting]]. |
+| `--machine` <a name="--machine"></a> | Filename string | Select the `*.config` file from the `configs` directory. It will overwrite the default machine set in the [[default setting file \| Installation#default_setting]]. |
 
 &#8192;&#8192;&#8192;&#8192;&#8192;
 &#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;&#8192;

@@ -3,6 +3,7 @@
    Please see [[Machine Configuration File | Installation:-Machine-Configuration-File]].
 
 <a name="default_setting"></a>
+
 2. Set your machine configuration file as default
 
    ```bash
