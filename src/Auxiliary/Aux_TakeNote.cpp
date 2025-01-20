@@ -1042,6 +1042,9 @@ void Aux_TakeNote()
       fprintf( Note, "FB_RSEED                       % d\n",      FB_RSEED                );
       fprintf( Note, "FB_SNE                         % d\n",      FB_SNE                  );
       fprintf( Note, "FB_USER                        % d\n",      FB_USER                 );
+      fprintf( Note, "FB_CELL                        % d\n",      FB_CELL                 );
+      fprintf( Note, "FB_RADI                        % d\n",      FB_RADI                 );
+      fprintf( Note, "FB_STEP                        % d\n",      FB_STEP                 );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n");
 #     endif // #ifdef FEEDBACK

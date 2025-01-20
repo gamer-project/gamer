@@ -8,7 +8,7 @@ import numpy as np
 parser = argparse.ArgumentParser( description='Plot the gas slices and projections' )
 
 parser.add_argument( '-i1', action='store', required=False, type=str, dest='prefix_1',
-                     help='path prefix [%(default)s]', default='./' )
+                     help='path prefix [%(default)s]', default='../' )
 parser.add_argument( '-i2', action='store', required=False, type=str, dest='prefix_2',
                      help='path prefix [%(default)s]', default='../' )
 #parser.add_argument( '-s', action='store', required=True,  type=int, dest='idx_start',
@@ -43,9 +43,9 @@ yt.enable_parallelism()
 #load data
 ts_1 = yt.load( prefix_1 + "/Data_000349" )
 ts_2 = yt.load( prefix_1 + "/Data_000354" )
-ts_3 = yt.load( prefix_1 + "/Data_000394" )
-ts_4 = yt.load( prefix_1 + "/Data_000490" )
-ts_5 = yt.load( prefix_1 + "/Data_000600" )
+ts_3 = yt.load( prefix_1 + "/Data_000400" )
+ts_4 = yt.load( prefix_1 + "/Data_000450" )
+ts_5 = yt.load( prefix_1 + "/Data_000490" )
 
 #add new field for weighting
 def _density_square( field, data ):
@@ -65,42 +65,6 @@ GAMER_sphere_4 = ts_4.sphere( center_mode, 0.5*ts_4.domain_width.to_value().max(
 GAMER_sphere_5 = ts_5.sphere( center_mode, 0.5*ts_5.domain_width.to_value().max() )
 
    #create profiles
-
-#density
-#GAMER_profile_1 = yt.create_profile( GAMER_sphere_1, 'radius', fields='density', weight_field='cell_volume', n_bins=256 )
-#GAMER_profile_2 = yt.create_profile( GAMER_sphere_2, 'radius', fields='density', weight_field='cell_volume', n_bins=256 )
-#GAMER_profile_3 = yt.create_profile( GAMER_sphere_3, 'radius', fields='density', weight_field='cell_volume', n_bins=256 )
-#GAMER_profile_4 = yt.create_profile( GAMER_sphere_4, 'radius', fields='density', weight_field='cell_volume', n_bins=256 )
-#GAMER_profile_5 = yt.create_profile( GAMER_sphere_5, 'radius', fields='density', weight_field='cell_volume', n_bins=256 )
-
-#remove zero element from profile
-#array_GAMER_r_1     = GAMER_profile_1.x.in_units('pc').d
-#array_GAMER_dens_1  = GAMER_profile_1['density'].in_units('Msun/pc**3').d
-#array_GAMER_r_2     = GAMER_profile_2.x.in_units('pc').d
-#array_GAMER_dens_2  = GAMER_profile_2['density'].in_units('Msun/pc**3').d
-#array_GAMER_r_3     = GAMER_profile_3.x.in_units('pc').d
-#array_GAMER_dens_3  = GAMER_profile_3['density'].in_units('Msun/pc**3').d
-#array_GAMER_r_4     = GAMER_profile_4.x.in_units('pc').d
-#array_GAMER_dens_4  = GAMER_profile_4['density'].in_units('Msun/pc**3').d
-#array_GAMER_r_5     = GAMER_profile_5.x.in_units('pc').d
-#array_GAMER_dens_5  = GAMER_profile_5['density'].in_units('Msun/pc**3').d
-
-#print( array_GAMER_radius_1 )
-#print( array_GAMER_density_1 )
-
-#array_GAMER_r_1    = array_GAMER_r_1[ array_GAMER_dens_1>0.0 ]
-#array_GAMER_dens_1 = array_GAMER_dens_1[ array_GAMER_dens_1>0.0 ]
-#array_GAMER_r_2    = array_GAMER_r_2[ array_GAMER_dens_2>0.0 ]
-#array_GAMER_dens_2 = array_GAMER_dens_2[ array_GAMER_dens_2>0.0 ]
-#array_GAMER_r_3    = array_GAMER_r_3[ array_GAMER_dens_3>0.0 ]
-#array_GAMER_dens_3 = array_GAMER_dens_3[ array_GAMER_dens_3>0.0 ]
-#array_GAMER_r_4    = array_GAMER_r_4[ array_GAMER_dens_4>0.0 ]
-#array_GAMER_dens_4 = array_GAMER_dens_4[ array_GAMER_dens_4>0.0 ]
-#array_GAMER_r_5    = array_GAMER_r_5[ array_GAMER_dens_5>0.0 ]
-#array_GAMER_dens_5 = array_GAMER_dens_5[ array_GAMER_dens_5>0.0 ]
-
-#print( array_GAMER_radius_1_remove_zero )
-#print( array_GAMER_density_1_remove_zero )
 
 #temperature
 GAMER_profile_1 = yt.create_profile( GAMER_sphere_1, 'radius', fields='temperature', weight_field='density_square', n_bins=256 )
@@ -170,28 +134,12 @@ LStyle_Dash       = [4, 2]
 LStyle_DashDot    = [4, 2, 1, 2]
 LStyle_DotDashDot = [1, 2, 4, 2, 1, 2]
 
-#density
-#ax.plot( array_GAMER_r_1, array_GAMER_dens_1, c=plt.cm.autumn_r( 1.00 ), linewidth=2, label='t = 0.0 Myr', zorder=2.5 )
-#ax.plot( array_GAMER_r_2, array_GAMER_dens_2, c=plt.cm.autumn_r( 0.82 ), linewidth=2, label='t = 3.5 Myr', zorder=2.5 )
-#ax.plot( array_GAMER_r_3, array_GAMER_dens_3, c=plt.cm.autumn_r( 0.64 ), linewidth=2, label='t = 4.0 Myr', zorder=2.5 )
-#ax.plot( array_GAMER_r_4, array_GAMER_dens_4, c=plt.cm.autumn_r( 0.46 ), linewidth=2, label='t = 5.0 Myr', zorder=2.5 )
-#ax.plot( array_GAMER_r_5, array_GAMER_dens_5, c=plt.cm.autumn_r( 0.28 ), linewidth=2, label='t = 6.0 Myr', zorder=2.5 )
-
-#add_col_titles( ax, 5, 1, ["energy"] )
-
-#ax.set_yscale( 'log' )
-#ax.set_xscale( 'log' )
-#ax.set_xlim( 3.0e0, 2.0e2 )
-#ax.set_ylim( 2.0e-5, 1.0e0 )
-#ax.set_xlabel( 'r (pc)' )
-#ax.set_ylabel( r'$\rho\ (M_\odot/{\rm pc}^3)$' )
-
 #temperature
 ax.plot( array_GAMER_r_1, array_GAMER_temp_1, c=plt.cm.autumn_r( 1.00 ), linewidth=2, label='t = 0.0 Myr', zorder=2.5 ) 
 ax.plot( array_GAMER_r_2, array_GAMER_temp_2, c=plt.cm.autumn_r( 0.82 ), linewidth=2, label='t = 3.5 Myr', zorder=2.5 )
 ax.plot( array_GAMER_r_3, array_GAMER_temp_3, c=plt.cm.autumn_r( 0.64 ), linewidth=2, label='t = 4.0 Myr', zorder=2.5 )
-ax.plot( array_GAMER_r_4, array_GAMER_temp_4, c=plt.cm.autumn_r( 0.46 ), linewidth=2, label='t = 5.0 Myr', zorder=2.5 )
-ax.plot( array_GAMER_r_5, array_GAMER_temp_5, c=plt.cm.autumn_r( 0.28 ), linewidth=2, label='t = 6.0 Myr', zorder=2.5 )
+ax.plot( array_GAMER_r_4, array_GAMER_temp_4, c=plt.cm.autumn_r( 0.46 ), linewidth=2, label='t = 4.5 Myr', zorder=2.5 )
+ax.plot( array_GAMER_r_5, array_GAMER_temp_5, c=plt.cm.autumn_r( 0.28 ), linewidth=2, label='t = 4.9 Myr', zorder=2.5 )
 
 add_col_titles( ax, 5, 1, ["energy"] )
 
@@ -204,5 +152,5 @@ ax.set_ylabel( 'T (K)' )
 
 # save the figure
 plt.tight_layout()
-fig.savefig( 'temperature_profiles_all_time_energy.pdf' )
+fig.savefig( 'temperature_profiles_all_time_momentum.pdf' )
 

@@ -181,9 +181,12 @@ SF_CREATE_STAR_MAX_STAR_MFRAC 0.5         # maximum gas mass fraction allowed to
 
 # feedback (FEEDBACK only)
 FB_LEVEL                     -1           # AMR level to apply feedback (must be MAX_LEVEL for now; <0=auto -> MAX_LEVEL) [-1]
-FB_RSEED                      456         # random seed [456]
+FB_RSEED                      121         # random seed [456]
 FB_SNE                        1           # supernova explosion feedback [0]
 FB_USER                       0           # user-defined feedback [0]
+FB_CELL                       26          # distribution cells of feedback (1 for energy feedback, 26 for momentum feedback to 3*3*3 space)
+FB_RADI                       1           # distribution radius of feedback (0 for energy feedback)
+FB_STEP                       3           # regulate shape of feedback range within radius (0 for energy feedback)
 
 
 # fluid solver in HYDRO (MODEL==HYDRO only)

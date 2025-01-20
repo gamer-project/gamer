@@ -53,16 +53,14 @@ n_rows             = 1                 # number of rows in the figure panels
 n_cols             = 4                 # number of columns in the figure panels
 
 # fields to plot the projections
-#field_toplot       = ('gas','density') # target field
-field_toplot       = ('gas','temperature') # target field
+field_toplot       = ('gas','density') # target field
 
 
 Plotting_UNIT_L    = 'pc'              # length unit in the plot
 Plotting_UNIT_D    = 'Msun/pc**3'      # density unit in the plot
 Plotting_UNIT_T    = 'Myr'             # time unit in the plot
 
-#UNIT_D_todisplay   = r'$\mathit{\rho}\ ({\rm M}_{\odot}{\rm pc}^{\rm -3})$'
-UNIT_D_todisplay   = 'T (K)'
+UNIT_D_todisplay   = r'$\mathit{\rho}\ ({\rm M}_{\odot}{\rm pc}^{\rm -3})$'
 
 axis               = 'z'               # direction for projection
 zoom               = 1                 # region for main plot
@@ -71,13 +69,9 @@ slab_thickness     = 400.0             # slab thickness for the projection (in p
 annotated_scale    = 100               # length scale to be annotated in the figure (in plotting unit)
 #annotated_radius   = 10.0             # radius of sphere to be annotated in the figure (in plotting unit)
 
-#colormap           = 'viridis'         # ['viridis', 'plasma', 'inferno', 'magma', 'cividis']
-#color_lim_min      = 8.e-3             # color bar upper limit for projection (in plotting unit)
-#color_lim_max      = 2.2e-2            # color bar lower limit for projection (in plotting unit)
-
-colormap           = 'magma'
-color_lim_min      = 5.e2              # color bar upper limit for projection (in plotting unit)
-color_lim_max      = 1.1e5             # color bar lower limit for projection (in plotting unit)
+colormap           = 'viridis'         # ['viridis', 'plasma', 'inferno', 'magma', 'cividis']
+color_lim_min      = 8.e-3             # color bar upper limit for projection (in plotting unit)
+color_lim_max      = 2.2e-2            # color bar lower limit for projection (in plotting unit)
 
 buff_size          = 1024              # buffer size for the projection figure
 
@@ -98,10 +92,10 @@ fig                = plt.figure( 1,(fig_size_x, fig_size_y), dpi=dpi )
 ###################################################################################################
 # path
 Data_path    = np.empty( n_rows*n_cols, dtype=object )
-Data_path[0] = './Data_000354'
-Data_path[1] = './Data_000400'
-Data_path[2] = './Data_000500'
-Data_path[3] = './Data_000600'
+Data_path[0] = '../Data_000354'
+Data_path[1] = '../Data_000400'
+Data_path[2] = '../Data_000450'
+Data_path[3] = '../Data_000490'
 
 # data ID
 Data_idx     = np.empty( n_rows*n_cols, dtype=int )
@@ -149,14 +143,8 @@ def main() -> None:
 
         ###################################################################################################
         # Projection plot
-        #proj = yt.ProjectionPlot( ds, axis, field_toplot,
-        #                          weight_field=('index','ones'),
-        #                          data_source=Data_region,
-        #                          center=Data_loc, width=(Data_Width, Data_Width),
-        #                          buff_size=(buff_size, buff_size) )
-
         proj = yt.ProjectionPlot( ds, axis, field_toplot,
-                                  weight_field=('density'),
+                                  weight_field=('index','ones'),
                                   data_source=Data_region,
                                   center=Data_loc, width=(Data_Width, Data_Width),
                                   buff_size=(buff_size, buff_size) )
@@ -168,8 +156,7 @@ def main() -> None:
         proj.set_axes_unit( Plotting_UNIT_L )
 
         # Set the field unit
-        #proj.set_unit( field_toplot, Plotting_UNIT_D )
-        proj.set_unit( field_toplot, 'K' )
+        proj.set_unit( field_toplot, Plotting_UNIT_D )
 
         # Set the colorbar limits
         proj.set_zlim( field_toplot, color_lim_min, color_lim_max )
@@ -194,24 +181,9 @@ def main() -> None:
 
         # Annotate the text for title
         if panel_idx == 0:
-            proj.annotate_text( [0.025, 0.80], '\nGAMER\nenergy',
+            proj.annotate_text( [0.025, 0.80], '\nGAMER\nmomentum',
                	                coord_system="axis",
                        	        text_args={ "size":1.25*FONT_SIZE, "color":"white", "weight":"normal", "bbox":dict(boxstyle="round",ec='white',fc='white',alpha=0.0) } )
-
-        if panel_idx == 4:
-            proj.annotate_text( [0.025, 0.80], '\nGAMER\nmomentum',
-                                coord_system="axis",
-                                text_args={ "size":1.25*FONT_SIZE, "color":"white", "weight":"normal", "bbox":dict(boxstyle="round",ec='white',fc='white',alpha=0.0) } )
-
-        if panel_idx == 8:
-            proj.annotate_text( [0.025, 0.80], '\nEnzo\nenergy',
-                                coord_system="axis",
-                                text_args={ "size":1.25*FONT_SIZE, "color":"white", "weight":"normal", "bbox":dict(boxstyle="round",ec='white',fc='white',alpha=0.0) } )
-
-        if panel_idx == 12:
-            proj.annotate_text( [0.025, 0.80], '\nEnzo\nmomentum',
-                                coord_system="axis",
-                                text_args={ "size":1.25*FONT_SIZE, "color":"white", "weight":"normal", "bbox":dict(boxstyle="round",ec='white',fc='white',alpha=0.0) } )
 
         # Annotate the scale
         if panel_idx%4 == 3:
@@ -251,8 +223,8 @@ def main() -> None:
     fig.set_dpi( dpi )
     fig.set_size_inches( fig_size_x, fig_size_y )
 
-    fig.savefig( "fig_standard_paper_figure_2D_t_momentum.png", dpi=dpi )
-    fig.savefig( "fig_standard_paper_figure_2D_t_momentum.pdf", dpi=dpi )
+    fig.savefig( "fig_standard_paper_figure_2D_d_momentum.png", dpi=dpi )
+    fig.savefig( "fig_standard_paper_figure_2D_d_momentum.pdf", dpi=dpi )
 
 
 if __name__ == '__main__':

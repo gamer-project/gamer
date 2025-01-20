@@ -332,7 +332,7 @@ extern void (*Flu_DerivedField_User_Ptr)( real Out[], const real FluIn[], const 
 // (2-12) feedback
 // =======================================================================================================
 #ifdef FEEDBACK
-extern int  FB_LEVEL, FB_RSEED;
+extern int  FB_LEVEL, FB_RSEED, FB_CELL, FB_RADI, FB_STEP;
 extern bool FB_SNE, FB_USER;
 extern bool FB_Any;
 extern int  FB_ParaBuf;

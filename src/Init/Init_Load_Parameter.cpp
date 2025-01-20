@@ -251,6 +251,9 @@ void Init_Load_Parameter()
    ReadPara->Add( "FB_RSEED",                   &FB_RSEED,                        456,             0,             NoMax_int      );
    ReadPara->Add( "FB_SNE",                     &FB_SNE,                          false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "FB_USER",                    &FB_USER,                         false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "FB_CELL",                    &FB_CELL,                         1,               1,             NoMax_int      );
+   ReadPara->Add( "FB_RADI",                    &FB_RADI,                         0,               0,             NoMax_int      );
+   ReadPara->Add( "FB_STEP",                    &FB_STEP,                         0,               0,             NoMax_int      );
 #  endif
 
 // cosmic ray

@@ -164,9 +164,9 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
       const double MinParMass = SF_CREATE_STAR_MIN_STAR_MASS * UNIT_M / Msun;     //in unit of M_sun.
       const bool NoFloor      = false;
       const double Emag	      = 0.0;
-      const int distcells     = 26;  //number of cells that receive feedback
-      const int distrad	      = 1;  //radius of feedback distribution
-      const int diststep      = 3;  //control of how much within distrad is occupied 
+      const int distcells     = FB_CELL;  //number of cells that receive feedback
+      const int distrad	      = FB_RADI;   //radius of feedback distribution
+      const int diststep      = FB_STEP;   //control of how much within distrad is occupied 
 
       // Particle variables
       const long par_idx        = ParSortID[n];
@@ -330,7 +330,7 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
       // if all above isn't used, it means no SNe
       if ( explosionFlag[n] == -1 )  explosionFlag[n] = 0; 
 
-      // if ( explosionFlag[n] > 0 ) {
+      if ( explosionFlag[n] > 0 ) printf("exploded at %lf\n", TimeOld);
       //   printf("exploded\n");
       //   explosionFlag[n] = 1;} // fixed explosion flag to 1 for SSN test purpose.
 
@@ -454,8 +454,10 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
       // if ( fb_energy > 0 ) printf("feedback done.\n");
 
       // 5: SN Momentum feedback to nearby cells
+      if (FB_CELL > 1 && FB_RADI > 0 && FB_STEP > 0) {
       FB_distSNeFeedback( Fluid, explosionFlag[n], idx, sn_energy, Msun, dh,
 			  distcells, distrad, diststep );
+	}
 
       } // if particle inside patch
    } // for (n = 0; n < NPar; n++ )
