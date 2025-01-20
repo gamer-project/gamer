@@ -197,11 +197,46 @@ class ArgumentParser( argparse.ArgumentParser ):
         if "epilog"       in self.program: print(self.program["epilog"])
 
 class SystemSetting( dict ):
+    """
+    Store the system settings from the default setting file.
+
+    Format of the setting file:
+    1. Comment starts with `#`.
+    2. The line begins with the variable name, followed by one or multiple spaces, and then the value.
+    3. Only the fisrt value of the line will be loaded.
+    4. If a variable is defined multiple times, only the last occurrence will be used.
+    """
     def __init__( self, *args, **kwargs ):
         super().__init__( *args, **kwargs )
 
     def get_default( self, key, default_val ):
         return self.get(key, default_val)
+    
+    def load( self, pathname ):
+        """Load the system settings from the default setting file. If a setting exists,
+        it will be overwritten. Return `False` if the file does not exist.
+
+        Parameters:
+            pathname : str - The path of the default setting file to be loaded.
+
+        Returns:
+            bool - Whether the file exists.    
+        """
+        if not os.path.isfile(pathname):
+            return False
+        
+        with open( pathname, "r" ) as f:
+            lines = f.readlines()
+            for line in lines:
+                tokens = line.strip().split()
+                if len(tokens) == 0: continue      # empty line
+                if tokens[0][0] == "#": continue   # skip comment line
+                if len(tokens) >= 2:
+                    self[tokens[0]] = tokens[1]
+                else:                              # key without value
+                    self[tokens[0]] = None
+
+        return True
 
 
 
@@ -357,7 +392,7 @@ def load_arguments( sys_setting : SystemSetting ):
 
     # machine config setup
     parser.add_argument( "--machine", type=str, metavar="MACHINE",
-                         default=sys_setting.get_default( "machine_name", "eureka_intel" ),
+                         default=sys_setting.get_default( "machine", "eureka_intel" ),
                          help="Select the *.config file from the ../configs directory. This will overwrite the default machine specified in the default setting file.\nChoice: [eureka_intel, spock_intel, ...] => "
                        )
 
@@ -762,43 +797,6 @@ def load_config( config ):
 
     return paths, compilers, flags, gpus
 
-def load_setting():
-    """
-    Return the default machine setting in the following order:
-    1. Read the local  setting located at `GAMER_LOCAL_SETTING`.
-    2. Read the global setting located at `GAMER_GLOBAL_SETTING`.
-    3. Fall back to `eureka_intel` for backward compatibility.
-
-    Format of the setting file:
-    1. Comment starts with `#`.
-    2. The line begins with the variable name, followed by one or multiple spaces, and then the value.
-    3. Only the fisrt value of the line will be loaded.
-    4. If a variable is defined multiple times, only the last occurrence will be used.
-    """
-    sys_setting  = SystemSetting()
-
-    if   os.path.isfile( GAMER_LOCAL_SETTING  ): setting_file = GAMER_LOCAL_SETTING
-    elif os.path.isfile( GAMER_GLOBAL_SETTING ): setting_file = GAMER_GLOBAL_SETTING
-    else:
-        LOGGER.info("System setting file not detected.")
-        return sys_setting
-
-    LOGGER.info("Using %s as setting file."%(setting_file))
-
-    with open( setting_file, "r" ) as f:
-        lines = f.readlines()
-
-    for line in lines:
-        tokens = line.strip().split()
-        if len(tokens) == 0: continue      # empty line
-        if tokens[0][0] == "#": continue   # skip comment line
-        if len(tokens) >= 2:
-           sys_setting[tokens[0]] = tokens[1]
-        else:                              # key without value
-           sys_setting[tokens[0]] = None
-
-    return sys_setting
-
 def set_conditional_defaults( args ):
     if args["unsplit_gravity"] is None:
         args["unsplit_gravity"] = (args["model"] == "HYDRO")
@@ -1040,7 +1038,9 @@ if __name__ == "__main__":
     LOGGER.info( " ".join( [sys.executable] + sys.argv ) )
 
     # 2. Load system settings
-    sys_setting = load_setting()
+    sys_setting = SystemSetting()
+    sys_setting.load(GAMER_GLOBAL_SETTING)
+    sys_setting.load(GAMER_LOCAL_SETTING)
 
     # 3. Load the input arguments
     args, name_table, depends, constraints = load_arguments( sys_setting )
