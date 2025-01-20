@@ -10,8 +10,8 @@
    ```
 
 > [!NOTE]
-> If you want to set the default machine configuration file for all of the GAMER copies under your user account, use the `--global` option instead of `--local`.
-Still, you can override the global setting for the individual GAMER copies with the `--local` option.
+> If you want to set the default machine configuration file for all GAMER copies under your user account, use the `--global` option instead of `--local`.
+You can still override the global setting for individual GAMER copies using the `--local` option.
 Furthermore, you can override the default setting by passing the [[--machine | Installation:-Option-List#--machine]]=`your_machine` when executing `configure.py`. 
 
 3. Go to the source directory
@@ -28,9 +28,9 @@ Furthermore, you can override the default setting by passing the [[--machine | I
    python configure.py [--your_arguments]
    ```
 
-   `[--your_arguments]` represent the options that should align with your simulation requirements. Please check out [[Option List | Installation:-Option-List]] for all the available options.
+   `[--your_arguments]` represent the options that should align with your simulation requirements. Refer to [[Option List | Installation:-Option-List]] for a complete list of available options.
 
-   For example, the following command sets the FFTW method to `FFTW2`, and enables gravity and GPU.
+   For example, the following command sets the FFTW method to `FFTW2` and enables gravity and GPU.
 
    ``` bash
    python configure.py --fftw=FFTW2 --gravity=true --gpu=true

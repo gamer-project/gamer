@@ -358,7 +358,7 @@ def load_arguments( sys_setting : SystemSetting ):
     # machine config setup
     parser.add_argument( "--machine", type=str, metavar="MACHINE",
                          default=sys_setting.get_default( "machine_name", "eureka_intel" ),
-                         help="Select the *.config file under ../configs directory. Will overwrite the default machine set in the default setting file.\nChoice: [eureka_intel, spock_intel, ...] => "
+                         help="Select the *.config file from the ../configs directory. This will overwrite the default machine specified in the default setting file.\nChoice: [eureka_intel, spock_intel, ...] => "
                        )
 
     # A. options of diffierent physical models
@@ -771,9 +771,9 @@ def load_setting():
 
     Format of the setting file:
     1. Comment starts with `#`.
-    2. Separate the variable name and value with space. The line starts with the variable name.
+    2. The line begins with the variable name, followed by one or multiple spaces, and then the value.
     3. Only the fisrt value of the line will be loaded.
-    4. Only the last variable of duplicated variables will be loaded.
+    4. If a variable is defined multiple times, only the last occurrence will be used.
     """
     sys_setting  = SystemSetting()
 

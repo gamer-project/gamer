@@ -4,11 +4,11 @@ Follow the instructions in [[Download]] to get the latest version of GAMER.
 
 ### Setup Your Machine Configuration File
 
-The machine configuration file is under `configs`. The configuration file contains the library paths, the compiler types, the compilation flags, and the GPU compute capability. Check the existing configuration files to see if there is one that matches your machine.
+The machine configuration file is located under `configs`. This file contains the library paths, compiler types, compilation flags, and GPU compute capability. Check the existing configuration files to see if one matches your machine.
 
-If the machine configuration file is not available for your machine or the existing one is not appropriate, you will need to create a new one. Follow the instructions in [[Machine Configuration File | Installation:-Machine-Configuration-File]] to set the configuration file of your machine.
+If no suitable configuration file is available, you will need to create a new one. Follow the instructions in [[Machine Configuration File | Installation:-Machine-Configuration-File]] to set up a configuration file for your machine.
 
-If there is a configuration file that matches your machine, you should set it as the default by
+If a configuration file matches your machine, you can set it as the default by running
 
 ```bash
 sh tool/config/set_settings.sh --local --machine=your_machine
