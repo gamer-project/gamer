@@ -236,7 +236,7 @@ following modifications.
 
 1\. Re-generate `Makefile` by [[configure.py | Installation]] and recompile `gamer`.
 ``` bash
-sh generate_make.sh --machine=YOUR_MACHINE --openmp=true --gpu=true
+sh generate_make.sh --openmp=true --gpu=true
 make clean
 make -j4
 ```

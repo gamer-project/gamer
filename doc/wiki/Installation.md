@@ -2,33 +2,46 @@
 
    Please see [[Machine Configuration File | Installation:-Machine-Configuration-File]].
 
-2. Go to the source directory
+<a name="default_setting"></a>
+
+2. Set your machine configuration file as default
+
+   ```bash
+   sh tool/config/set_settings.sh --local --machine=your_machine
+   ```
+
+> [!NOTE]
+> If you want to set the default machine configuration file for all GAMER copies under your user account, use the `--global` option instead of `--local`.
+You can still override the global setting for individual GAMER copies using the `--local` option.
+Furthermore, you can override the default setting by passing the [[--machine | Installation:-Option-List#--machine]]=`your_machine` when executing `configure.py`. 
+
+3. Go to the source directory
 
    ```bash
    cd src
    ```
 
-3. Generate `Makefile` using the Python script `configure.py`
+4. Generate `Makefile` using the Python script `configure.py`
 
    To get the `Makefile`, please execute the following command:
 
    ```bash
-   python configure.py --machine=your_configuration_file [--your_arguments]
+   python configure.py [--your_arguments]
    ```
 
-   `your_configuration_file` is the configuration filename you got from step 1, and `[--your_arguments]` should match your simulation requirements. Please check out [[Option List | Installation:-Option-List]] for all the available options.
+   `[--your_arguments]` represent the options that should align with your simulation requirements. Refer to [[Option List | Installation:-Option-List]] for a complete list of available options.
 
-   For example, the following command uses the `configs/pleiades.config` machine configuration, sets the FFTW method to `FFTW2`, and enables gravity and GPU.
+   For example, the following command sets the FFTW method to `FFTW2` and enables gravity and GPU.
 
    ``` bash
-   python configure.py --machine=pleiades --fftw=FFTW2 --gravity=true --gpu=true
+   python configure.py --fftw=FFTW2 --gravity=true --gpu=true
    ```
 
 > [!TIP]
 > An example script `generate_make.sh` to generate Makefile can be found in each test problem folder,
 e.g., `example/test_problem/Hydro/AcousticWave/generate_make.sh`.
 
-4. Compile the code
+5. Compile the code
 
    ```bash
    make clean
