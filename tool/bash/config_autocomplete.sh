@@ -4,6 +4,8 @@ __gamer_check_gamer_info() {
     # Check if the current directory is GAMER and the `configure.py` for generating `Makefile`
     # $1 : configure.py filename
 
+    [ ! "$1" = "configure.py" ] && return 1
+
     local isGitDir=`git rev-parse --is-inside-work-tree 2>/dev/null`
     [ ! "$isGitDir" = true ] && return 1
 
