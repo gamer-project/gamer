@@ -20,18 +20,10 @@ __gamer_check_gamer_info() {
 
 __gamer_configure_autocomplete() {
 
-    local all_options sub_options all_option_array sub_option_array configure_filename
-    local not_set=true
-    local first=${COMP_WORDS[0]}
-    local second=${COMP_WORDS[1]}
-    local subsub="${COMP_WORDS[COMP_CWORD-2]}"
-    local sub="${COMP_WORDS[COMP_CWORD-1]}"
-    local cur="${COMP_WORDS[COMP_CWORD]}"
-
-    if [[ "$first" == "python"* ]]; then
-        configure_filename=$second
+    if [[ "$COMP_WORDS[0]" == "python"* ]]; then
+        configure_filename=${COMP_WORDS[1]}
     else
-        configure_filename=$first
+        configure_filename=${COMP_WORDS[0]}
     fi
 
     __gamer_check_gamer_info $configure_filename
@@ -41,6 +33,12 @@ __gamer_configure_autocomplete() {
         compopt -o default +o nospace
         return 0
     fi
+
+    local all_options sub_options all_option_array sub_option_array configure_filename
+    local not_set=true
+    local subsub="${COMP_WORDS[COMP_CWORD-2]}"
+    local sub="${COMP_WORDS[COMP_CWORD-1]}"
+    local cur="${COMP_WORDS[COMP_CWORD]}"
 
     all_options=$(./configure.py --autocomplete_info=all)
     IFS=' ' read -r -a all_option_array <<< "${all_options}"
