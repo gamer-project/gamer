@@ -57,6 +57,8 @@ e.g., `example/test_problem/Hydro/AcousticWave/generate_make.sh`.
 >    ```bash
 >    source ~/config_autocomplete.sh
 >    ```
+>    NOTE: There are three commands registered in the `config_autocomplete.sh`, `python` `python3` and `./configure.py`.
+>          If you would like to register your command, please add the command at the bottom of the script.
 >
 > 1. Reload `~/.bashrc` to enable the feature
 >    ```bash
