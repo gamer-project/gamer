@@ -210,8 +210,8 @@ class SystemSetting( dict ):
         super().__init__( *args, **kwargs )
 
     def get_default( self, key, default_val ):
-        return self.get(key, default_val)
-    
+        return self.get( key, default_val )
+
     def load( self, pathname ):
         """
         Load the system settings from the default setting file. If a setting exists,
