@@ -63,7 +63,7 @@ e.g., `example/test_problem/Hydro/AcousticWave/generate_make.sh`.
 >    source ~/.bashrc
 >    ```
 >
-> Now, try to type `./configure.py` then press `<tab>` twice!
+> Now, try to type `./configure.py` then press `<tab>` multiple times!
 
 4. Compile the code
 
