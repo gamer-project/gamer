@@ -213,18 +213,18 @@ class SystemSetting( dict ):
         return self.get(key, default_val)
     
     def load( self, pathname ):
-        """Load the system settings from the default setting file. If a setting exists,
+        """
+        Load the system settings from the default setting file. If a setting exists,
         it will be overwritten. Return `False` if the file does not exist.
 
         Parameters:
             pathname : str - The path of the default setting file to be loaded.
 
         Returns:
-            bool - Whether the file exists.    
+            bool - Whether the file exists.
         """
         if not os.path.isfile(pathname):
             return False
-        
         with open( pathname, "r" ) as f:
             lines = f.readlines()
             for line in lines:
