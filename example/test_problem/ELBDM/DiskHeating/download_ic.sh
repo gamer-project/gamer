@@ -14,4 +14,4 @@ curl https://hub.yt/api/v1/item/${FILE_ID}/download -o "${LOCAL_FILENAME}.tgz"
 tar -zxvf ${LOCAL_FILENAME}.tgz
 rm ${LOCAL_FILENAME}.tgz
 ln -s ${LOCAL_FILENAME}/UM_IC_0.4_M7 UM_IC
-ln -s ${filename}/PAR_IC_0.4_M7_low_res DiskHeatingParticleIC
+ln -s ${LOCAL_FILENAME}/PAR_IC_0.4_M7_low_res DiskHeatingParticleIC
