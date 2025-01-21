@@ -29,7 +29,9 @@ PRINT_WIDTH = 100
 GAMER_CONFIG_DIR  = os.path.join("..", "configs")
 GAMER_MAKE_BASE   = "Makefile_base"
 GAMER_MAKE_OUT    = "Makefile"
-GAMER_DESCRIPTION = "Prepare a customized Makefile for GAMER.\nDefault values are marked by '*'.\nUse -lh to show a detailed help message.\n"
+GAMER_DESCRIPTION = "Prepare a customized Makefile for GAMER.\n"\
+                    "Default values are marked by '*'.\n"\
+                    "Use -lh to show a detailed help message.\n"
 GAMER_EPILOG      = "2023 Computational Astrophysics Lab, NTU. All rights reserved.\n"
 
 LOGGER     = logging.getLogger()
@@ -117,7 +119,9 @@ class ArgumentParser( argparse.ArgumentParser ):
             msg += 'Unrecognized argument: %s'%(arg)
             if min_dist <= CLOSE_DIST: msg += ', do you mean: %s ?\n'%(pos_key)
             msg += '\n'
-            if arg == '--gpu_arch': msg += "ERROR: <--gpu_arch> is deprecated. Please set <GPU_COMPUTE_CAPABILITY> in your machine *.config file (see ../configs/template.config).\n"
+            if arg == '--gpu_arch':
+                msg += "ERROR: <--gpu_arch> is deprecated. "\
+                       "Please set <GPU_COMPUTE_CAPABILITY> in your machine *.config file (see ../configs/template.config).\n"
 
         if len(argv) != 0: self.error( msg )
         return args, self.gamer_names, self.depends, self.constraints, self.prefix, self.suffix
@@ -413,13 +417,15 @@ def load_arguments():
     # autocomplete information
     parser.add_argument( "--autocomplete_info", type=str, metavar="--OPTION",
                          default=None,
-                         help="Print out the autocomplete information. See: ../tool/bash/config_autocomplete.sh\n"
+                         help="Print out the autocomplete information. "\
+                              "See: ../tool/bash/config_autocomplete.sh\n"
                        )
 
     # machine config setup
     parser.add_argument( "--machine", type=str, metavar="MACHINE",
                          default="eureka_intel",
-                         help="Select the MACHINE.config file under ../configs directory.\nChoice: [eureka_intel, YOUR_MACHINE_NAME] => "
+                         help="Select the MACHINE.config file under ../configs directory.\n"\
+                              "Choice: [eureka_intel, YOUR_MACHINE_NAME] => "
                        )
 
     # verbose compilation mode
@@ -431,13 +437,16 @@ def load_arguments():
     # A. options of diffierent physical models
     parser.add_argument( "--model", type=str, metavar="TYPE", gamer_name="MODEL",
                          default="HYDRO", choices=["HYDRO", "ELBDM", "PAR_ONLY"],
-                         help="The physical model (HYDRO: hydrodynamics/magnetohydrodynamics, ELBDM: wave dark matter, PAR_ONLY: partivle-only). Must be set in any cases. PAR_ONLY is not supported yet.\n"
+                         help="The physical model (HYDRO: hydrodynamics/magnetohydrodynamics, "\
+                              "ELBDM: wave dark matter, PAR_ONLY: partivle-only). "\
+                              "Must be set in any cases. PAR_ONLY is not supported yet.\n"
                        )
 
     parser.add_argument( "--passive", type=int, metavar="INTEGER", gamer_name="NCOMP_PASSIVE_USER",
                          default=0,
                          depend={"model":["HYDRO", "ELBDM"]},
-                         help="Set the number of user-defined passively advected scalars. Useless for RTVD. <--model=ELBDM> doesn't support passive scalars and only regards them as auxiliary fields.\n"
+                         help="Set the number of user-defined passively advected scalars. Useless for RTVD. "\
+                              "<--model=ELBDM> doesn't support passive scalars and only regards them as auxiliary fields.\n"
                        )
 
     # A.1 Hydro options
@@ -452,7 +461,8 @@ def load_arguments():
     parser.add_argument( "--slope", type=str, metavar="TYPE", gamer_name="LR_SCHEME",
                          default="PPM", choices=["PLM", "PPM"],
                          depend={"model":"HYDRO"},
-                         help="The spatial data reconstruction method (PLM: piecewise-linear, PPM: piecewise-parabolic). Useless for <--flu_scheme=RTVD>.\n"
+                         help="The spatial data reconstruction method (PLM: piecewise-linear, "\
+                              "PPM: piecewise-parabolic). Useless for <--flu_scheme=RTVD>.\n"
                        )
 
     parser.add_argument( "--flux", type=str, metavar="TYPE", gamer_name="RSOLVER",
@@ -460,14 +470,17 @@ def load_arguments():
                          depend={"model":"HYDRO"},
                          constraint={ "ROE":{"eos":"GAMMA"},
                                       "EXACT":{"eos":"GAMMA"} },
-                         help="The Riemann solver. Pure hydro: EXACT/ROE/HLLE/HLLC^, MHD: ROE/HLLE/HLLD^, SRHD: HLLE/HLLC^, (^ indicates the recommended and default solvers). Useless for RTVD.\n"
+                         help="The Riemann solver. Pure hydro: EXACT/ROE/HLLE/HLLC^, "\
+                              "MHD: ROE/HLLE/HLLD^, SRHD: HLLE/HLLC^, (^ indicates the recommended and default solvers). "\
+                              "Useless for RTVD.\n"
                        )
 
     parser.add_argument( "--dual", type=str, metavar="TYPE", gamer_name="DUAL_ENERGY", prefix="DE_",
                          default=NONE_STR, choices=[NONE_STR, "ENPY", "EINT"],
                          depend={"model":"HYDRO"},
                          constraint={ "ENPY":{"eos":"GAMMA"} },
-                         help="The dual-energy formalism (ENPY: entropy, EINT: internal energy). EINT is not supported yet. Useless for RTVD.\n"
+                         help="The dual-energy formalism (ENPY: entropy, EINT: internal energy). "\
+                              "EINT is not supported yet. Useless for RTVD.\n"
                        )
 
     parser.add_argument( "--mhd", type=str2bool, metavar="BOOLEAN", gamer_name="MHD",
@@ -481,7 +494,8 @@ def load_arguments():
     parser.add_argument( "--srhd", type=str2bool, metavar="BOOLEAN", gamer_name="SRHD",
                          default=False,
                          depend={"model":"HYDRO"},
-                         constraint={ True:{"flu_scheme":["MHM", "MHM_RP"], "flux":["HLLE", "HLLC"], "eos":["TAUBMATHEWS"], "dual":[NONE_STR], "mhd":False, "gravity":False} },
+                         constraint={ True:{"flu_scheme":["MHM", "MHM_RP"], "flux":["HLLE", "HLLC"],
+                                      "eos":["TAUBMATHEWS"], "dual":[NONE_STR], "mhd":False, "gravity":False} },
                          help="Special Relativistic Hydrodynamics.\n"
                        )
 
@@ -496,14 +510,16 @@ def load_arguments():
                          default=None, choices=["GAMMA", "ISOTHERMAL", "NUCLEAR", "TABULAR", "COSMIC_RAY", "TAUBMATHEWS", "USER"],
                          depend={"model":"HYDRO"},
                          constraint={ "ISOTHERMAL":{"barotropic":True}, "COSMIC_RAY":{"cosmic_ray":True}, "TAUBMATHEWS":{"srhd":True} },
-                         help="Equation of state. Must be set when <--model=HYDRO>. Must enable <--barotropic> for ISOTHERMAL.\n"
+                         help="Equation of state. Must be set when <--model=HYDRO>. "\
+                              "Must enable <--barotropic> for ISOTHERMAL.\n"
                        )
 
     parser.add_argument( "--barotropic", type=str2bool, metavar="BOOLEAN", gamer_name="BAROTROPIC_EOS",
                          default=None,
                          depend={"model":"HYDRO"},
                          constraint={ True:{"eos":["ISOTHERMAL", "TABULAR", "USER"]} },
-                         help="Whether or not the equation of state set by <--eos> is barotropic. Mandatory for <--eos=ISOTHEMAL>. Optional for <--eos=TABULAR> and <--eos=USER>.\n"
+                         help="Whether or not the equation of state set by <--eos> is barotropic. "\
+                              "Mandatory for <--eos=ISOTHEMAL>. Optional for <--eos=TABULAR> and <--eos=USER>.\n"
                        )
 
     # A.2 ELBDM scheme
@@ -536,20 +552,24 @@ def load_arguments():
                          default="MATMUL", choices=["MATMUL", "FFT"],
                          depend={"model":"ELBDM", "wave_scheme":"GRAMFE"},
                          constraint={ "MATMUL":{"gsl":True} },
-                         help="GramFE scheme for <--wave_scheme=GRAMFE> (MATMUL: faster for PATCH_SIZE=8, FFT: faster for larger patch sizes).\n"
+                         help="GramFE scheme for <--wave_scheme=GRAMFE> "\
+                              "(MATMUL: faster for PATCH_SIZE=8, FFT: faster for larger patch sizes).\n"
                        )
 
     parser.add_argument( "--hybrid_scheme", type=str, metavar="TYPE", gamer_name="HYBRID_SCHEME", prefix="HYBRID_",
                          default="MUSCL", choices=["UPWIND", "FROMM", "MUSCL"],
                          depend={"model":"ELBDM", "elbdm_scheme":"HYBRID"},
-                         help="Fluid scheme for <--elbdm_scheme=HYBRID> (UPWIND: first-order, diffusive, FROMM: second-order, no limiter, unstable for fluid-only simulations, MUSCL: second-order, with limiter, useful for zoom-in and fluid-only simulations).\n"
+                         help="Fluid scheme for <--elbdm_scheme=HYBRID> (UPWIND: first-order, diffusive, "\
+                              "FROMM: second-order, no limiter, unstable for fluid-only simulations, "\
+                              "MUSCL: second-order, with limiter, useful for zoom-in and fluid-only simulations).\n"
                        )
 
     parser.add_argument( "--self_interaction", type=str2bool, metavar="BOOLEAN", gamer_name="QUARTIC_SELF_INTERACTION",
                          default=False,
                          depend={"model":"ELBDM"},
                          constraint={ True:{"gravity":True, "comoving":False} },
-                         help="Include the quartic self-interaction potential for <--model=ELBDM>. Must enable <--gravity>. Does not support <--comoving>.\n"
+                         help="Include the quartic self-interaction potential for <--model=ELBDM>. "\
+                              "Must enable <--gravity>. Does not support <--comoving>.\n"
                        )
 
     # A.3 gravity
@@ -562,20 +582,24 @@ def load_arguments():
     parser.add_argument( "--pot_scheme", type=str, metavar="TYPE", gamer_name="POT_SCHEME",
                          default="SOR", choices=["SOR", "MG"],
                          depend={"gravity":True},
-                         help="Select the Poisson solver. SOR: successive-overrelaxation (recommended), MG: multigrid. Must be set when <--gravity> is enabled.\n"
+                         help="Select the Poisson solver. SOR: successive-overrelaxation (recommended), MG: multigrid. "\
+                              "Must be set when <--gravity> is enabled.\n"
                        )
 
     parser.add_argument( "--store_pot_ghost", type=str2bool, metavar="BOOLEAN", gamer_name="STORE_POT_GHOST",
                          default=True,
                          depend={"gravity":True},
-                         help="Store GRA_GHOST_SIZE ghost-zone potential for each patch on each side. Recommended when PARTICLE is enabled for improving accuaracy for particles around the patch boundaries. Must be enabled for <--star_formation> + <--store_par_acc>.\n"
+                         help="Store GRA_GHOST_SIZE ghost-zone potential for each patch on each side. "\
+                              "Recommended when PARTICLE is enabled for improving accuaracy for particles around the patch boundaries. "\
+                              "Must be enabled for <--star_formation> + <--store_par_acc>.\n"
                        )
 
     parser.add_argument( "--unsplit_gravity", type=str2bool, metavar="BOOLEAN", gamer_name="UNSPLIT_GRAVITY",
                          default=None,
                          depend={"gravity":True},
                          constraint={ True:{"model":"HYDRO"} },
-                         help="Use unsplitting method to couple gravity to the target model (recommended). Supported only for <--model=HYDRO>. When <--model=HYDRO>, the default is True.\n"
+                         help="Use unsplitting method to couple gravity to the target model (recommended). "\
+                              "Supported only for <--model=HYDRO>. When <--model=HYDRO>, the default is True.\n"
                        )
 
     parser.add_argument( "--comoving", type=str2bool, metavar="BOOLEAN", gamer_name="COMOVING",
@@ -605,7 +629,8 @@ def load_arguments():
     parser.add_argument( "--star_formation", type=str2bool, metavar="BOOLEAN", gamer_name="STAR_FORMATION",
                          default=False,
                          depend={"particle":True},
-                         help="Allow creating new particles after initialization. Must trun on <--store_pot_ghost> when <--store_par_acc> is adoped.\n"
+                         help="Allow creating new particles after initialization. "
+                              "Must trun on <--store_pot_ghost> when <--store_par_acc> is adoped.\n"
                        )
 
     parser.add_argument( "--feedback", type=str2bool, metavar="BOOLEAN", gamer_name="FEEDBACK",
@@ -629,7 +654,9 @@ def load_arguments():
     parser.add_argument( "--grackle", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_GRACKLE",
                          default=False,
                          constraint={ True:{"model":"HYDRO", "eos":["GAMMA", "COSMIC_RAY"], "comoving":False} },
-                         help="Enable Grackle, a chemistry and radiative cooling library. Must set <--passive> according to the primordial chemistry network set by GRACKLE_PRIMORDIAL. Please enable OpenMP when compiling Grackle (by 'make omp-on').\n"
+                         help="Enable Grackle, a chemistry and radiative cooling library. "\
+                              "Must set <--passive> according to the primordial chemistry network set by GRACKLE_PRIMORDIAL. "\
+                              "Please enable OpenMP when compiling Grackle (by 'make omp-on').\n"
                        )
 
     # A.6 microphysics
@@ -653,7 +680,8 @@ def load_arguments():
 
     parser.add_argument( "--patch_size", type=int, metavar="INTEGER", gamer_name="PATCH_SIZE",
                          default=8,
-                         help="Set the number of cells along each direction in a single patch. Must be an even number greater than or equal to 8.\n"
+                         help="Set the number of cells along each direction in a single patch. "\
+                              "Must be an even number greater than or equal to 8.\n"
                        )
 
     parser.add_argument( "--debug", type=str2bool, metavar="BOOLEAN", gamer_name="GAMER_DEBUG",
@@ -674,7 +702,9 @@ def load_arguments():
     parser.add_argument( "--timing_solver", type=str2bool, metavar="BOOLEAN", gamer_name="TIMING_SOLVER",
                          default=False,
                          constraint={ True:{"timing":True} },
-                         help="Enable more detailed timing analysis of GPU solvers. This option will disable CPU/GPU overlapping and thus deteriorate performance. Must enable <--timing>.\n"
+                         help="Enable more detailed timing analysis of GPU solvers. "\
+                              "This option will disable CPU/GPU overlapping and thus deteriorate performance. "\
+                              "Must enable <--timing>.\n"
                        )
 
     parser.add_argument( "--double", type=str2bool, metavar="BOOLEAN", gamer_name="FLOAT8",
@@ -716,31 +746,38 @@ def load_arguments():
     parser.add_argument( "--libyt_patchgroup", type=str2bool, metavar="BOOLEAN", gamer_name="LIBYT_USE_PATCH_GROUP",
                          default=True,
                          depend={"libyt":True},
-                         help="Use patch groups instead of patches as the unit in libyt for better performance (recommended). Must enable <--libyt>.\n"
+                         help="Use patch groups instead of patches as the unit in libyt for better performance (recommended). "\
+                              "Must enable <--libyt>.\n"
                        )
 
     parser.add_argument( "--libyt_interactive", type=str2bool, metavar="BOOLEAN", gamer_name="LIBYT_INTERACTIVE",
                          default=False,
                          depend={"libyt":True},
-                         help="Enable the interactive mode of libyt. This activates python prompt and does not shut down a simulation when there are errors in an inline python script. Must compile libyt with INTERACTIVE_MODE. Must enable <--libyt>.\n"
+                         help="Enable the interactive mode of libyt. "\
+                              "This activates python prompt and does not shut down a simulation when there are errors in an inline python script. "\
+                              "Must compile libyt with INTERACTIVE_MODE. Must enable <--libyt>.\n"
                        )
 
     parser.add_argument( "--libyt_reload", type=str2bool, metavar="BOOLEAN", gamer_name="LIBYT_RELOAD",
                          default=False,
                          depend={"libyt":True},
-                         help="Allow for reloading libyt scripts during runtime. Must compile libyt with INTERACTIVE_MODE. Must enable <--libyt>.\n"
+                         help="Allow for reloading libyt scripts during runtime. "\
+                              "Must compile libyt with INTERACTIVE_MODE. Must enable <--libyt>.\n"
                        )
 
     parser.add_argument( "--libyt_jupyter", type=str2bool, metavar="BOOLEAN", gamer_name="LIBYT_JUPYTER",
                          default=False,
                          depend={"libyt":True},
-                         help="Allow for in situ analysis using Jupyter Notebook / JupyterLab through libyt. Must compile libyt with JUPYTER_KERNEL. Must enable <--libyt>.\n"
+                         help="Allow for in situ analysis using Jupyter Notebook / JupyterLab through libyt. "\
+                              "Must compile libyt with JUPYTER_KERNEL. Must enable <--libyt>.\n"
                        )
 
     parser.add_argument( "--rng", type=str, metavar="TYPE", gamer_name="RANDOM_NUMBER",
                          default="RNG_GNU_EXT",
                          choices=["RNG_GNU_EXT", "RNG_CPP11"],
-                         help="Select the random number generator (RNG_GNU_EXT: GNU extension drand48_r, RNG_CPP11: c++11 <random>).\nRNG_GNU_EXT may not be supported on some macOS.\nFor RNG_CPP11, add -std=c++11 to CXXFLAG in your config file.\n"
+                         help="Select the random number generator (RNG_GNU_EXT: GNU extension drand48_r, RNG_CPP11: c++11 <random>).\n"
+                              "RNG_GNU_EXT may not be supported on some macOS.\n"\
+                              "For RNG_CPP11, add -std=c++11 to CXXFLAG in your config file.\n"
                        )
 
     # C. parallelization and flags
