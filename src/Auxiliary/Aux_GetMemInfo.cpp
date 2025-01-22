@@ -22,8 +22,9 @@ void Aux_GetMemInfo()
    return;
 #  endif
 
-   const int  PID               = getpid();
-   const int  NInfo             = 4;   // number of memory information to be recorded (VmSize/Peak, VmRSS/HWM)
+
+   const int PID   = getpid();
+   const int NInfo = 4; // number of memory information to be recorded (VmSize/Peak, VmRSS/HWM)
 
    static bool FirstTime=true;
    char   FileName_Record[MAX_STRING], FileName_Status[MAX_STRING], Useless[NInfo][MAX_STRING], *line=NULL;
