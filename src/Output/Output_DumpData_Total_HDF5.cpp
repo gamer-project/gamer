@@ -368,6 +368,13 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    if ( OPT__OUTPUT_DIVMAG )  sprintf( FieldLabelOut[DivMagDumpIdx], "%s", "DivMag" );
 #  endif
 
+#  ifdef VISCOSITY
+   const int DeltaPDumpIdx = ( OPT__OUTPUT_DELTAP ) ? NFieldStored++ : NoDump;
+   if ( DeltaPDumpIdx >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_DELTAP )  sprintf( FieldLabelOut[DeltaPDumpIdx], "%s", "DeltaP" );
+#  endif
+
 #  ifdef SRHD
    const int LorentzDumpIdx = ( OPT__OUTPUT_LORENTZ ) ? NFieldStored++ : NoDump;
    if ( LorentzDumpIdx >= NFIELD_STORED_MAX )
@@ -1030,6 +1037,37 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      FieldData[PID][k][j][i] = DivB;
                   }
                }
+#              endif
+
+#              ifdef VISCOSITY
+               else if ( v == DeltaPDumpIdx )
+               {
+                  for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+                  {
+//                   prepare the input fields
+//                   --> must prepare all NCOMP_TOTAL and NCOMP_MAG fields
+                     Prepare_PatchData( lv, Time[lv], Der_FluIn[0][0], Der_MagFC[0][0], DER_GHOST_SIZE, 1, &PID0,
+                                        _TOTAL, _MAG, OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCH, NSIDE_26,
+                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
+                                        DE_Consistency_No );
+
+                     for (int LocalID=0; LocalID<8; LocalID++)
+                     {
+
+                        for (int k=0; k<DER_NXT; k++)
+                        for (int j=0; j<DER_NXT; j++)
+                        for (int i=0; i<DER_NXT; i++)
+                        {
+
+//                         compute and store the target derived field
+                           const int PID  = PID0 + LocalID;
+                           const int NDer = 1;
+                           Hydro_Compute_DeltaP( FieldData[PID][0][0], Der_FluIn[LocalID][0], Der_MagCC[0],
+                                                 NDer, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, amr->dh[lv] );
+                        }
+                     } // for (int LocalID=0; LocalID<8; LocalID++)
+                  } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+               } // if ( v == DeltaPDumpIdx )
 #              endif
 
 #              ifdef SRHD
