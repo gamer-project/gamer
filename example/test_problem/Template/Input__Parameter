@@ -87,6 +87,7 @@ PAR_NPAR                      0           # total number of particles (must be s
 PAR_INIT                      1           # initialization option for particles: (1=FUNCTION, 2=RESTART, 3=FILE->"PAR_IC")
 PAR_IC_FORMAT                 1           # data format of PAR_IC: (1=[attribute][id], 2=[id][attribute]; row-major) [1]
 PAR_IC_FLOAT8                -1           # floating-point precision for PAR_IC (<0: default, 0: single, 1: double) [default: same as FLOAT8_PAR]
+PAR_IC_INT8                  -1           # integer width for PAR_IC (<0: default, 0: 32-bit, 1: 64-bit) [default: same as INT8_PAR]
 PAR_IC_MASS                  -1.0         # mass of all particles for PAR_INIT==3 (<0=off) [-1.0]
 PAR_IC_TYPE                  -1           # type of all particles for PAR_INIT==3 (<0=off) [-1]
 PAR_INTERP                    3           # particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [2]
@@ -166,6 +167,14 @@ OPT__FLAG_LOHNER_FORM         2           # form of Lohner: (1=FLASH-1, 2=FLASH-
 OPT__FLAG_USER                0           # flag: user-defined (Input__Flag_User) -> edit "Flag_User.cpp" [0]
 OPT__FLAG_USER_NUM            1           # number of threshold values in user-defined table (Input__Flag_User) [1]
 OPT__FLAG_REGION              0           # flag: specify the regions **allowed** to be refined -> edit "Flag_Region.cpp" [0]
+OPT__FLAG_ANGULAR             0           # flag: angular resolution (Input__Flag_AngularResolution) [0]
+FLAG_ANGULAR_CEN_X           -1.0         # x center coordinate for OPT__FLAG_ANGULAR (<0=auto -> box center) [-1.0]
+FLAG_ANGULAR_CEN_Y           -1.0         # y center coordinate for OPT__FLAG_ANGULAR (<0=auto -> box center) [-1.0]
+FLAG_ANGULAR_CEN_Z           -1.0         # z center coordinate for OPT__FLAG_ANGULAR (<0=auto -> box center) [-1.0]
+OPT__FLAG_RADIAL              0           # flag: radial resolution (Input__Flag_RadialResolution) [0]
+FLAG_RADIAL_CEN_X            -1.0         # x center coordinate for OPT__FLAG_RADIAL (<0=auto -> box center) [-1.0]
+FLAG_RADIAL_CEN_Y            -1.0         # y center coordinate for OPT__FLAG_RADIAL (<0=auto -> box center) [-1.0]
+FLAG_RADIAL_CEN_Z            -1.0         # z center coordinate for OPT__FLAG_RADIAL (<0=auto -> box center) [-1.0]
 OPT__FLAG_NPAR_PATCH          0           # flag: # of particles per patch (Input__Flag_NParPatch): (0=off, 1=itself, 2=itself+siblings) [0]
 OPT__FLAG_NPAR_CELL           0           # flag: # of particles per cell  (Input__Flag_NParCell) [0]
 OPT__FLAG_PAR_MASS_CELL       0           # flag: total particle mass per cell (Input__Flag_ParMassCell) [0]
@@ -194,14 +203,14 @@ SRC_GPU_NPGROUP              -1           # number of patch groups sent into the
 # Grackle library for chemistry and radiative cooling (SUPPORT_GRACKLE only)
 GRACKLE_ACTIVATE              1           # enable Grackle [1]
 GRACKLE_VERBOSE               1           # map to "grackle_verbose" [1]
-GRACKLE_COOLING               1           # ...    "with_radiative_cooling" [1]
-GRACKLE_PRIMORDIAL            0           # ...    "primordial_chemistry" (0=Cloudy, 1/2/3=6-/9-/12-species) [0]
+GRACKLE_COOLING               1           # map to "with_radiative_cooling" [1]
+GRACKLE_PRIMORDIAL            0           # map to "primordial_chemistry" (0=Cloudy, 1/2/3=6-/9-/12-species) [0]
                                           #        (must increase NCOMP_PASSIVE_USER by 6/9/12, respectively)
-GRACKLE_METAL                 0           # ...    "metal_cooling" (must increase NCOMP_PASSIVE_USER by 1) [0]
-GRACKLE_UV                    0           # ...    "UVbackground" [0]
-GRACKLE_CMB_FLOOR             1           # ...    "cmb_temperature_floor" [1]
-GRACKLE_PE_HEATING            0           # ...    "photoelectric_heating" [0]
-GRACKLE_PE_HEATING_RATE       8.5e-26     # ...    "photoelectric_heating_rate (in erg/cm^3/s)" [8.5e-26]
+GRACKLE_METAL                 0           # map to "metal_cooling" (must increase NCOMP_PASSIVE_USER by 1) [0]
+GRACKLE_UV                    0           # map to "UVbackground" [0]
+GRACKLE_CMB_FLOOR             1           # map to "cmb_temperature_floor" [1]
+GRACKLE_PE_HEATING            0           # map to "photoelectric_heating" [0]
+GRACKLE_PE_HEATING_RATE       8.5e-26     # map to "photoelectric_heating_rate (in erg/cm^3/s)" [8.5e-26]
 GRACKLE_CLOUDY_TABLE          CloudyData_noUVB.h5  # "grackle_data_file"
 GRACKLE_THREE_BODY_RATE       4           # used Glover+08 rate
 GRACKLE_CIE_COOLING           1           # 0: off; 1:on
@@ -308,16 +317,16 @@ OPT__EXT_POT                  0           # add external potential    (0=off, 1=
 
 # tabular external potential
 EXT_POT_TABLE_NAME            ExtPotTable # external potential table: filename
-EXT_POT_TABLE_NPOINT_X        129         # ...                     : table size (i.e., number of data points) along x/y/z
-EXT_POT_TABLE_NPOINT_Y        129         #
-EXT_POT_TABLE_NPOINT_Z        129         #
-EXT_POT_TABLE_DH_X            0.0078125   # ...                     : spatial interval between adjacent data points
-EXT_POT_TABLE_DH_Y            0.0078125   #
-EXT_POT_TABLE_DH_Z            0.0078125   #
-EXT_POT_TABLE_EDGEL_X         0.0         # ...                     : starting x/y/z coordinates
-EXT_POT_TABLE_EDGEL_Y         0.0         #
-EXT_POT_TABLE_EDGEL_Z         0.0         #
-EXT_POT_TABLE_FLOAT8         -1           # ...                     : double precision (<0=auto -> FLOAT8, 0=off, 1=on) [-1]
+EXT_POT_TABLE_NPOINT_X        129         # external potential table: table size (i.e., number of data points) along x
+EXT_POT_TABLE_NPOINT_Y        129         # external potential table: table size (i.e., number of data points) along y
+EXT_POT_TABLE_NPOINT_Z        129         # external potential table: table size (i.e., number of data points) along z
+EXT_POT_TABLE_DH_X            0.0078125   # external potential table: spatial interval between adjacent x data points
+EXT_POT_TABLE_DH_Y            0.0078125   # external potential table: spatial interval between adjacent y data points
+EXT_POT_TABLE_DH_Z            0.0078125   # external potential table: spatial interval between adjacent z data points
+EXT_POT_TABLE_EDGEL_X         0.0         # external potential table: starting x coordinates
+EXT_POT_TABLE_EDGEL_Y         0.0         # external potential table: starting y coordinates
+EXT_POT_TABLE_EDGEL_Z         0.0         # external potential table: starting z coordinates
+EXT_POT_TABLE_FLOAT8         -1           # external potential table: double precision (<0=auto -> FLOAT8, 0=off, 1=on) [-1]
                                           # --> not supported yet; use -1 for now
 OPT__GRAVITY_EXTRA_MASS       0           # add extra mass source when computing gravity [0]
 
@@ -370,7 +379,8 @@ SPEC_INT_GHOST_BOUNDARY       4           # ghost boundary size for spectral int
 # data dump
 OPT__OUTPUT_TOTAL             1           # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
 OPT__OUTPUT_PART              0           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
-OPT__OUTPUT_TEXT_FORMAT_FLT   %24.16e     # string format of output text files [%24.16e]
+OPT__OUTPUT_TEXT_FORMAT_FLT   %24.16e     # string format of floating-point variables in output text files [%24.16e]
+OPT__OUTPUT_TEXT_LENGTH_INT   12          # string length of integer variables in output text files [12]
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
 OPT__OUTPUT_PAR_MODE          0           # output the particle data: (0=off, 1=text-file, 2=C-binary) [0] ##PARTICLE ONLY##
 OPT__OUTPUT_PAR_MESH          1           # output the attributes of tracer particles mapped from mesh quantities -> edit "Input__Par_Mesh" [1] ##PARTICLE ONLY##
@@ -401,6 +411,7 @@ OUTPUT_PART_X                -1.0         # x coordinate for OPT__OUTPUT_PART [-
 OUTPUT_PART_Y                -1.0         # y coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Z                -1.0         # z coordinate for OPT__OUTPUT_PART [-1.0]
 INIT_DUMPID                  -1           # set the first dump ID (<0=auto) [-1]
+OUTPUT_DIR                    .           # set the output directory [.]
 
 
 # yt inline analysis (SUPPORT_LIBYT only)

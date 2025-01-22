@@ -25,8 +25,10 @@ void Aux_TakeNote()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_TakeNote ...\n" );
 
 
-   const char FileName[] = "Record__Note";
    FILE *Note;
+   char FileName[MAX_STRING];
+   sprintf( FileName, "%s/Record__Note", OUTPUT_DIR );
+
 
    if ( MPI_Rank == 0 )
    {
@@ -39,7 +41,9 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fclose( Note );
 
-      system( "cat ./Input__Note >> Record__Note" );
+      char Command[MAX_STRING];
+      sprintf( Command, "cat ./Input__Note >> %s/Record__Note", OUTPUT_DIR );
+      system( Command );
 
       Note = fopen( FileName, "a" );
       fprintf( Note, "***********************************************************************************\n" );
@@ -361,6 +365,12 @@ void Aux_TakeNote()
       fprintf( Note, "FLOAT8_PAR                      ON\n" );
 #     else
       fprintf( Note, "FLOAT8_PAR                      OFF\n" );
+#     endif
+
+#     ifdef INT8_PAR
+      fprintf( Note, "INT8_PAR                        ON\n" );
+#     else
+      fprintf( Note, "INT8_PAR                        OFF\n" );
 #     endif
 
 #     ifdef SERIAL
@@ -786,9 +796,12 @@ void Aux_TakeNote()
       fprintf( Note, "#define SRC_BLOCK_SIZE         % d\n",      SRC_BLOCK_SIZE        );
 #     endif // #ifdef GPU
 #     ifdef PARTICLE
-      fprintf( Note, "#define PAR_NATT_TOTAL         % d\n",      PAR_NATT_TOTAL        );
-      fprintf( Note, "#define PAR_NATT_USER          % d\n",      PAR_NATT_USER         );
-      fprintf( Note, "#define PAR_NATT_STORED        % d\n",      PAR_NATT_STORED       );
+      fprintf( Note, "#define PAR_NATT_FLT_TOTAL     % d\n",      PAR_NATT_FLT_TOTAL    );
+      fprintf( Note, "#define PAR_NATT_FLT_USER      % d\n",      PAR_NATT_FLT_USER     );
+      fprintf( Note, "#define PAR_NATT_FLT_STORED    % d\n",      PAR_NATT_FLT_STORED   );
+      fprintf( Note, "#define PAR_NATT_INT_TOTAL     % d\n",      PAR_NATT_INT_TOTAL    );
+      fprintf( Note, "#define PAR_NATT_INT_USER      % d\n",      PAR_NATT_INT_USER     );
+      fprintf( Note, "#define PAR_NATT_INT_STORED    % d\n",      PAR_NATT_INT_STORED   );
       fprintf( Note, "#define PAR_NTYPE              % d\n",      PAR_NTYPE             );
 #     endif
       fprintf( Note, "#define MAX_STRING             % d\n",      MAX_STRING            );
@@ -908,6 +921,7 @@ void Aux_TakeNote()
       fprintf( Note, "Par->Init                      % d\n",      amr->Par->Init                );
       fprintf( Note, "Par->ParICFormat               % d\n",      amr->Par->ParICFormat         );
       fprintf( Note, "PAR_IC_FLOAT8                  % d\n",      PAR_IC_FLOAT8                 );
+      fprintf( Note, "PAR_IC_INT8                    % d\n",      PAR_IC_INT8                   );
       fprintf( Note, "Par->ParICMass                 % 14.7e\n",  amr->Par->ParICMass           );
       fprintf( Note, "Par->ParICType                 % d\n",      amr->Par->ParICType           );
       fprintf( Note, "Par->Interp                    % d\n",      amr->Par->Interp              );
@@ -1036,6 +1050,20 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_USER                 % d\n",      OPT__FLAG_USER            );
       fprintf( Note, "OPT__FLAG_USER_NUM             % d\n",      OPT__FLAG_USER_NUM        );
       fprintf( Note, "OPT__FLAG_REGION               % d\n",      OPT__FLAG_REGION          );
+      fprintf( Note, "OPT__FLAG_ANGULAR              % d\n",      OPT__FLAG_ANGULAR         );
+      if ( OPT__FLAG_ANGULAR )
+      {
+      fprintf( Note, "   FLAG_ANGULAR_CEN_X          % 14.7e\n",  FLAG_ANGULAR_CEN_X        );
+      fprintf( Note, "   FLAG_ANGULAR_CEN_Y          % 14.7e\n",  FLAG_ANGULAR_CEN_Y        );
+      fprintf( Note, "   FLAG_ANGULAR_CEN_Z          % 14.7e\n",  FLAG_ANGULAR_CEN_Z        );
+      }
+      fprintf( Note, "OPT__FLAG_RADIAL               % d\n",      OPT__FLAG_RADIAL          );
+      if ( OPT__FLAG_RADIAL )
+      {
+      fprintf( Note, "   FLAG_RADIAL_CEN_X           % 14.7e\n",  FLAG_RADIAL_CEN_X         );
+      fprintf( Note, "   FLAG_RADIAL_CEN_Y           % 14.7e\n",  FLAG_RADIAL_CEN_Y         );
+      fprintf( Note, "   FLAG_RADIAL_CEN_Z           % 14.7e\n",  FLAG_RADIAL_CEN_Z         );
+      }
 #     ifdef PARTICLE
       fprintf( Note, "OPT__FLAG_NPAR_PATCH           % d\n",      OPT__FLAG_NPAR_PATCH      );
       fprintf( Note, "OPT__FLAG_NPAR_CELL            % d\n",      OPT__FLAG_NPAR_CELL       );
@@ -1558,6 +1586,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_PART               % d\n",      OPT__OUTPUT_PART            );
       fprintf( Note, "OPT__OUTPUT_USER               % d\n",      OPT__OUTPUT_USER            );
       fprintf( Note, "OPT__OUTPUT_TEXT_FORMAT_FLT     %s\n",      OPT__OUTPUT_TEXT_FORMAT_FLT );
+      fprintf( Note, "OPT__OUTPUT_TEXT_LENGTH_INT    % d\n",      OPT__OUTPUT_TEXT_LENGTH_INT );
 #     ifdef PARTICLE
       fprintf( Note, "OPT__OUTPUT_PAR_MODE           % d\n",      OPT__OUTPUT_PAR_MODE        );
 #     ifdef TRACER
@@ -1616,6 +1645,7 @@ void Aux_TakeNote()
       fprintf( Note, "OUTPUT_PART_Y                  % 21.14e\n", OUTPUT_PART_Y               );
       fprintf( Note, "OUTPUT_PART_Z                  % 21.14e\n", OUTPUT_PART_Z               );
       fprintf( Note, "INIT_DUMPID                    % d\n",      INIT_DUMPID                 );
+      fprintf( Note, "OUTPUT_DIR                      %s\n",      OUTPUT_DIR                  );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
 
@@ -1717,6 +1747,29 @@ void Aux_TakeNote()
          for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_RhoGradient[lv] );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n" );
+      }
+
+      if ( OPT__FLAG_ANGULAR )
+      {
+         fprintf( Note, "Flag Criterion (Angular Resolution)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level          AngRes_Max          AngRes_Min        AngRes_Max_R\n");
+         for (int lv=0; lv<MAX_LEVEL; lv++)
+            fprintf( Note, "%7d%20.7e%20.7e%20.7e\n", lv, FlagTable_Angular[lv][0], FlagTable_Angular[lv][1],
+                     FlagTable_Angular[lv][2] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+
+      if ( OPT__FLAG_RADIAL )
+      {
+         fprintf( Note, "Flag Criterion (Radial Resolution)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level          Refine_Rad\n");
+         for (int lv=0; lv<MAX_LEVEL; lv++)
+            fprintf( Note, "%7d%20.7e\n", lv, FlagTable_Radial[lv] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
       }
 
 #     if   ( MODEL == HYDRO )
