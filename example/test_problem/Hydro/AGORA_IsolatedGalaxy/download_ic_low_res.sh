@@ -12,7 +12,7 @@ curl https://hub.yt/api/v1/item/${FILE_ID1}/download -o "${LOCAL_FILENAME1}.tar.
 curl https://hub.yt/api/v1/item/${FILE_ID2}/download -o "${LOCAL_FILENAME2}"
 
 # compare sha256sum
-! [ `sha256sum ${LOCAL_FILENAME1}.tar.gz | awk '{print $1}'` = "${FILE_SHA256_1}" ] && echo "File broken: ${LOCAL_FILENAME1}"
+! [ `sha256sum ${LOCAL_FILENAME1}.tar.gz | awk '{print $1}'` = "${FILE_SHA256_1}" ] && echo "File broken: ${LOCAL_FILENAME1}.tar.gz"
 ! [ `sha256sum ${LOCAL_FILENAME2}        | awk '{print $1}'` = "${FILE_SHA256_2}" ] && echo "File broken: ${LOCAL_FILENAME2}"
 
 # file unzip
