@@ -47,7 +47,6 @@ GAMER_EPILOG         = "2023 Computational Astrophysics Lab, NTU. All rights res
 
 LOGGER     = logging.getLogger()
 LOG_FORMAT = "%(asctime)s %(levelname)-8s: %(message)s"
-logging.basicConfig( filename=GAMER_MAKE_OUT+".log", filemode="w", level=logging.INFO, format=LOG_FORMAT )
 
 
 
