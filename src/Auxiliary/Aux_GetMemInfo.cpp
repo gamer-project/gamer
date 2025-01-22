@@ -17,6 +17,11 @@
 void Aux_GetMemInfo()
 {
 
+// memory reporting is not currently supported on macOS
+#  ifdef __APPLE__
+   return;
+#  endif
+
    const int  PID               = getpid();
    const int  NInfo             = 4;   // number of memory information to be recorded (VmSize/Peak, VmRSS/HWM)
 
