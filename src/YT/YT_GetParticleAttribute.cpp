@@ -2,7 +2,7 @@
 
 #ifdef SUPPORT_LIBYT
 
-void YT_GetPID(const long gid, int *level, int *PID);
+void YT_GetPID( const long gid, int *level, int *PID );
 
 #ifdef PARTICLE
 
@@ -21,36 +21,43 @@ void YT_GetPID(const long gid, int *level, int *PID);
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Get_ParticleAttribute(const int list_len, const long *list_gid, const char *ptype, const char *attr, yt_array *data_array){
-    // Get attribute index in GAMER
-    FieldIdx_t ParAttrFlt_Idx = GetParticleAttributeFltIndex( attr, CHECK_ON );
+void Get_ParticleAttribute( const int list_len, const long *list_gid, const char *ptype, const char *attr, yt_array *data_array )
+{
 
-    // loop through list_gid
-    for(int lid=0; lid<list_len; lid++){
-        // Parse level and pid from gid
-        int level, PID0;
-        YT_GetPID( list_gid[lid], &level, &PID0 );
+// get attribute index in GAMER
+   FieldIdx_t ParAttrFlt_Idx = GetParticleAttributeFltIndex( attr, CHECK_ON );
 
-        // write data
-#ifdef  LIBYT_USE_PATCH_GROUP
-        long  ParID;
-        long  data_idx = 0;
-        for (int i=0; i<8; i++){ // run through 8 patches
-            for (int p=0; p<amr->patch[0][level][PID0 + i]->NPar; p++){ // run through particle data in one PID
-                ParID = amr->patch[0][level][PID0 + i]->ParList[p];
-                ((real_par *) data_array[lid].data_ptr)[data_idx] = amr->Par->AttributeFlt[ParAttrFlt_Idx][ParID];
-                data_idx += 1;
-            }
-        }
-#else
-        long ParID;
-        for(int p=0; p<amr->patch[0][level][PID0]->NPar; p++){
-            ParID = amr->patch[0][level][PID0]->ParList[p];
-            ((real_par *) data_array[lid].data_ptr)[p] = amr->Par->AttributeFlt[ParAttrFlt_Idx][ParID];
-        }
-#endif // #ifdef LIBYT_USE_PATCH_GROUP
-    }
-}
+// loop through list_gid
+   for (int lid=0; lid<list_len; lid++)
+   {
+//    parse level and pid from gid
+      int level, PID0;
+      YT_GetPID( list_gid[lid], &level, &PID0 );
+
+//    write data
+#     ifdef LIBYT_USE_PATCH_GROUP
+      long ParID;
+      long data_idx = 0;
+      for (int i=0; i<8; i++) // run through 8 patches
+      {
+         for (int p=0; p<amr->patch[0][level][PID0 + i]->NPar; p++) // run through particle data in one PID
+         {
+            ParID = amr->patch[0][level][PID0 + i]->ParList[p];
+            ((real_par *) data_array[lid].data_ptr)[data_idx] = amr->Par->AttributeFlt[ParAttrFlt_Idx][ParID];
+            data_idx += 1;
+         }
+      }
+#     else
+      long ParID;
+      for (int p=0; p<amr->patch[0][level][PID0]->NPar; p++)
+      {
+         ParID = amr->patch[0][level][PID0]->ParList[p];
+         ((real_par *) data_array[lid].data_ptr)[p] = amr->Par->AttributeFlt[ParAttrFlt_Idx][ParID];
+      }
+#     endif // #ifdef LIBYT_USE_PATCH_GROUP
+   } // for(int lid=0; lid<list_len; lid++)
+
+} // FUNCITON : Get_ParticleAttribute
 
 #endif // #ifdef PARTICLE
 
