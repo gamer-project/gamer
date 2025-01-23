@@ -41,51 +41,18 @@ Furthermore, you can override the default setting by passing the [[--machine | I
 > An example script `generate_make.sh` to generate Makefile can be found in each test problem folder,
 e.g., `example/test_problem/Hydro/AcousticWave/generate_make.sh`.
 
-> [!TIP]
-> Since there are too many options in GAMER, we introduce the autocomplete feature of `configure.py`. You can set the feature by the following steps:
-> 1. Update the [shebang](https://en.wikipedia.org/wiki/Shebang_(Unix)) of `configure.py` if needed
->
->    For example, replace `#!/usr/bin/python3` with your `python` path.
->    <details>
->    <summary><u><i>top of configure.py</i></u></summary>
->    <pre>
->    #!/usr/bin/python3
->    """
->    User guides of this script are provided in the following link.
->
->    https://github.com/gamer-project/gamer/wiki/Installation
->
->    """
->    </pre>
->    </details>
->
-> 1. Copy the autocomplete shell script to your `/home/usr` (`~`)
->    ```bash
->    cp tool/bash/config_autocomplete.sh ~/
->    ```
->
-> 1. Update the `~/.bashrc` to load the autocomplete script
->
->    Please add the following line to `~/.bashrc`:
->    ```bash
->    source ~/config_autocomplete.sh
->    ```
->    NOTE: There are three commands registered in the `config_autocomplete.sh`, `python` `python3` and `./configure.py`.
->          If you would like to register your command, please add the command at the bottom of the script.
->
-> 1. Reload `~/.bashrc` to enable the feature
->    ```bash
->    source ~/.bashrc
->    ```
->
-> Now, try to type `./configure.py` then press `<tab>` multiple times!
-
 5. Compile the code
 
    ```bash
    make clean
    make
    ```
+
+   If the compilation succeeds, you will see the following message
+   <pre>
+   Compiling GAMER --> Successful!
+   </pre>
+   and get an executable `gamer`, which will be automatically copied to `../bin/gamer`.
 
 > [!TIP]
 > To reduce the compilation time, you can perform a parallel
@@ -98,8 +65,42 @@ invoke 4 compilation jobs simultaneously:
 > However, please consult the documentation of your system to avoid
 violating the usage policy.
 
-If the compilation succeeds, you will see the following message
-<pre>
-Compiling GAMER --> Successful!
-</pre>
-and get an executable `gamer`, which will be automatically copied to `../bin/gamer`.
+
+6. [Optional] Autocompletion of `configure.py`
+
+   Since there are too many options in GAMER, we introduce the autocomplete feature of `configure.py`. You can set the feature by the following steps:
+   1. Update the [shebang](https://en.wikipedia.org/wiki/Shebang_(Unix)) of `configure.py` if needed
+
+      For example, replace `#!/usr/bin/python3` with your `python` path.
+      <details>
+      <summary><u><i>top of configure.py</i></u></summary>
+      <pre>
+      #!/usr/bin/python3
+      """
+      User guides of this script are provided in the following link.
+
+      https://github.com/gamer-project/gamer/wiki/Installation
+      """
+      </pre>
+      </details>
+
+   2. Copy the autocomplete shell script to your `/home/usr` (`~`)
+      ```bash
+      cp tool/bash/config_autocomplete.sh ~/
+      ```
+
+   2. Update the `~/.bashrc` to load the autocomplete script
+
+      Please add the following line to `~/.bashrc`:
+      ```bash
+      source ~/config_autocomplete.sh
+      ```
+      NOTE: There are three commands registered in the `config_autocomplete.sh`, `python` `python3` and `./configure.py`.
+            If you would like to register your command, please add the command at the bottom of the script.
+
+   3. Reload `~/.bashrc` to enable the feature
+      ```bash
+      source ~/.bashrc
+      ```
+
+   Now, try to type `./configure.py` and then press `<tab>` multiple times!
