@@ -198,7 +198,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 #        ifdef MHD
          real B_N_mean, B_T1_mean, B_T2_mean, B_amp, B2;
 //       These are only needed if viscosity is anisotropic
-         if ( MicroPhy->ViscFluxType == ANISOTROPIC_VISCOSITY )
+         if ( VISCOSITY_FLUX_TYPE == ANISOTROPIC_VISCOSITY )
          {
             if ( g_FC_B == NULL )
             {
@@ -246,7 +246,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
          T1_slope_N = ( Vel[TDir1][ idx_cvar + didx_cvar[d] ] - Vel[TDir1][ idx_cvar ] ) * _dh;
          T2_slope_N = ( Vel[TDir2][ idx_cvar + didx_cvar[d] ] - Vel[TDir2][ idx_cvar ] ) * _dh;
 
-         if ( MicroPhy->ViscFluxType == ANISOTROPIC_VISCOSITY )
+         if ( VISCOSITY_FLUX_TYPE == ANISOTROPIC_VISCOSITY )
          {
 
 //          transverse direction 1 derivative
@@ -371,7 +371,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
          mu = 0.5*( mu_l + mu_r );
 
          real stress_N, stress_T1, stress_T2;
-         if ( MicroPhy->ViscFluxType == ISOTROPIC_VISCOSITY )
+         if ( VISCOSITY_FLUX_TYPE == ISOTROPIC_VISCOSITY )
          {
 
             stress_N  = -mu * ( 2.0*N_slope_N - two_thirds*divV );
@@ -379,7 +379,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
             stress_T2 = -mu * ( T2_slope_N );
 
          }
-         else if ( MicroPhy->ViscFluxType == ANISOTROPIC_VISCOSITY )
+         else if ( VISCOSITY_FLUX_TYPE == ANISOTROPIC_VISCOSITY )
          {
 
             real BBdV, delta_p;
@@ -387,7 +387,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
             BBdV += B_T1_mean * ( B_N_mean * T1_slope_N + B_T1_mean * T1_slope_T1 + B_T2_mean * T1_slope_T2 );
             BBdV += B_T2_mean * ( B_N_mean * T2_slope_N + B_T1_mean * T2_slope_T1 + B_T2_mean * T2_slope_T2 );
             delta_p = mu*(3.0*BBdV - divV);
-            if ( MicroPhy->ViscFluxType == ANISOTROPIC_VISCOSITY && MicroPhy->ViscBounds )
+            if ( VISCOSITY_FLUX_TYPE == ANISOTROPIC_VISCOSITY && VISCOSITY_BOUNDS )
                delta_p = FMIN( FMAX( delta_p, -B2 ), 0.5*B2 );
             stress_N  = -delta_p*(B_N_mean*B_N_mean - 1./3.);
             stress_T1 = -delta_p*B_T1_mean*B_N_mean;
@@ -426,105 +426,187 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
 
 #ifdef MHD
-real Hydro_Compute_DeltaP( const int lv, const int PID, const int MagSg, const int NCellInX, 
-                           const int NCellInY, const int NCellInZ, const int NGhost, const real dh )
+void Hydro_Compute_DeltaP( real Out[], const real FluIn[], const real faceB[], const real Temp[], 
+                           const int NGhost, const real dh )
 {
    real BBdV, delta_p, divV;
-   real dens_L, dens_R;
-   real v_N, v_T1, v_T2;
+   real dens_L, dens_R, temp_L, temp_R, visc_nu;
    real N_slope_N, T1_slope_N, T2_slope_N;
    real N_slope_T1, T1_slope_T1, T2_slope_T1;
    real N_slope_T2, T1_slope_T2, T2_slope_T2;
-   real dp_cc = 0.0;
-
+   int idx_fN, idx_fT1, idx_fT2;
+   
    const real _dh = (real)1.0 / dh;
-   const real (*faceB)[PS1P1*PS1*PS1] = amr->patch[MagSg][lv][PID]->magnetic;
-   const int didx[3] = { 1, PS1, SQR(PS1) };
+   const int didx[3] = { 1, DER_NXT, SQR(DER_NXT) };
 
-// determine the output array size
-   const int NCellOutX = NCellInX - 2*NGhost;
-   const int NCellOutY = NCellInY - 2*NGhost;
-   const int NCellOutZ = NCellInZ - 2*NGhost;
+// determine the output array size on a side
+   const int NCellOut = DER_NXT - 2*NGhost;
+   const int didxo[3] = { 1, NCellOut, SQR(NCellOut) };
 
 // pre-compute velocity for simplicity, depending on if we have conservative or primitive variables
-   real Vel[3][ NCellOutX*NCellOutY*NCellOutZ ];
-   
+   real Vel[3][ CUBE(DER_NXT) ];
    for (int d=0; d<3; d++)
-      for (int idx=0; idx<CUBE(PS1); idx++)
+      for (int idx=0; idx<CUBE(DER_NXT); idx++)
          Vel[d][idx] = FluIn[d+MOMX][idx] / FluIn[DENS][idx];
 
+// loop over every cell
+   for (int ko=0; ko<NCellOut; ko++)  {  const int k = ko + NGhost;
+   for (int jo=0; jo<NCellOut; jo++)  {  const int j = jo + NGhost;
+   for (int io=0; io<NCellOut; io++)  {  const int i = io + NGhost;
+
+   const int idxi   = IDX321   ( i,   j,  k,  DER_NXT,  DER_NXT );
+   const int idx_Bx = IDX321_BX( i,   j,  k,  DER_NXT,  DER_NXT );
+   const int idx_By = IDX321_BY( i,   j,  k,  DER_NXT,  DER_NXT );
+   const int idx_Bz = IDX321_BZ( i,   j,  k,  DER_NXT,  DER_NXT );
+   const int idxo   = IDX321   ( io, jo, ko, NCellOut, NCellOut );
+
+// loop over every direction
    for (int d=0; d<3; d++)
    {
       const int TDir1  = (d+1)%3;    // transverse direction 1
       const int TDir2  = (d+2)%3;    // transverse direction 2
-      const int dB     = d + MAGX;
+      const int dB     =     d + MAGX;
       const int TD1B   = TDir1 + MAGX;
       const int TD2B   = TDir2 + MAGX;
-
-      for (int fc=-1; fc < 1; fc++)
+   
+      switch ( d ) 
       {
 
-         const int idx_cvar = IDX321   ( i, j, k, Nx, Ny ) + fc*didx[d];
-         const int idx_Bx   = IDX321_BX( i, j, k, Nx, Ny ) + fc*didx[d];
-         const int idx_By   = IDX321_BY( i, j, k, Nx, Ny ) + fc*didx[d];
-         const int idx_Bz   = IDX321_BZ( i, j, k, Nx, Ny ) + fc*didx[d];
+         case 0:
+            sizeB_i = DER_NXT+1;  sizeB_j = DER_NXT;    sizeB_k = DER_NXT;
+            idx_fN  = idx_Bx;     idx_fT1 = idx_By;     idx_fT2 = idx_Bz;
+            break;
+         case 1:
+            sizeB_i = DER_NXT;    sizeB_j = DER_NXT+1;  sizeB_k = DER_NXT;
+            idx_fN  = idx_By;     idx_fT1 = idx_Bx;     idx_fT2 = idx_Bz;
+            break;
+         case 2:
+            sizeB_i = DER_NXT;    sizeB_j = DER_NXT;    sizeB_k = DER_NXT+1;
+            idx_fN  = idx_Bz;     idx_fT1 = idx_Bx;     idx_fT2 = idx_By;
+            break;
 
-//       face-centered velocities
-         v_N  = 0.5 * ( Vel[    d][ idx_cvar           ] + Vel[    d][ idx_cvar + didx[d] ] );
-         v_T1 = 0.5 * ( Vel[TDir1][ idx_cvar           ] + Vel[TDir1][ idx_cvar + didx[d] ] );
-         v_T2 = 0.5 * ( Vel[TDir2][ idx_cvar           ] + Vel[TDir2][ idx_cvar + didx[d] ] );
+      }
 
-//       normal direction derivative
-         N_slope_N  = ( Vel[    d][ idx_cvar           ] - Vel[    d][ idx_cvar + didx[d] ] ) * _dh;
-         T1_slope_N = ( Vel[TDir1][ idx_cvar           ] - Vel[TDir1][ idx_cvar + didx[d] ] ) * _dh;
-         T2_slope_N = ( Vel[TDir2][ idx_cvar           ] - Vel[TDir2][ idx_cvar + didx[d] ] ) * _dh;
+      const int idxol    = IDX321   ( i, j, k, DER_NXT,  );
 
-//       compute the mean magnetic field at the face-centered flux location
-         B_N_mean  =              faceB[  dB][ idx_fc_BN                                            ];
-         B_T1_mean = (real)0.25*( faceB[TD1B][ idx_fc_BT1                                           ] +
-                                  faceB[TD1B][ idx_fc_BT1                    + stride_fc_BT1[TDir1] ] +
-                                  faceB[TD1B][ idx_fc_BT1 - stride_fc_BT1[d]                        ] +
-                                  faceB[TD1B][ idx_fc_BT1 - stride_fc_BT1[d] + stride_fc_BT1[TDir1] ] );
-         B_T2_mean = (real)0.25*( faceB[TD2B][ idx_fc_BT2                                           ] +
-                                  faceB[TD2B][ idx_fc_BT2                    + stride_fc_BT2[TDir2] ] +
-                                  faceB[TD2B][ idx_fc_BT2 - stride_fc_BT2[d]                        ] +
-                                  faceB[TD2B][ idx_fc_BT2 - stride_fc_BT2[d] + stride_fc_BT2[TDir2] ] );
+      const int stride_fc_BT1[3] = { 1, sizeB_k, sizeB_k*sizeB_i };
+      const int stride_fc_BT2[3] = { 1, sizeB_j, sizeB_j*sizeB_k };
 
-         B2        = SQR(B_N_mean) + SQR(B_T1_mean) + SQR(B_T2_mean);
-         B_amp     = SQRT( B2 );
-//       normalize magnetic field
-         B_N_mean  /= B_amp;
-         B_T1_mean /= B_amp;
-         B_T2_mean /= B_amp;
+//    normal direction derivative
+      N_slope_N  = ( Vel[    d][ idxi           ] - Vel[    d][ idxi + didx[d] ] ) * _dh;
+      T1_slope_N = ( Vel[TDir1][ idxi           ] - Vel[TDir1][ idxi + didx[d] ] ) * _dh;
+      T2_slope_N = ( Vel[TDir2][ idxi           ] - Vel[TDir2][ idxi + didx[d] ] ) * _dh;
 
-         temp_L = Temp[ idx_cvar                ];
-         temp_R = Temp[ idx_cvar + didx_cvar[d] ];
+//    transverse direction 1 derivative
+      N_slope_T1  = van_leer2( 
+         Vel[    d][ idxi + didx[d] + didx[TDir1] ] - 
+         Vel[    d][ idxi + didx[d]               ],
+         Vel[    d][ idxi + didx[d]               ] - 
+         Vel[    d][ idxi + didx[d] - didx[TDir1] ],
+         Vel[    d][ idxi           + didx[TDir1] ] - 
+         Vel[    d][ idxi                         ],
+         Vel[    d][ idxi                         ] - 
+         Vel[    d][ idxi           - didx[TDir1] ]
+      ) * _dh;
+      T1_slope_T1 = van_leer2( 
+         Vel[TDir1][ idxi + didx[d] + didx[TDir1] ] - 
+         Vel[TDir1][ idxi + didx[d]               ],
+         Vel[TDir1][ idxi + didx[d]               ] - 
+         Vel[TDir1][ idxi + didx[d] - didx[TDir1] ],
+         Vel[TDir1][ idxi           + didx[TDir1] ] - 
+         Vel[TDir1][ idxi                         ],
+         Vel[TDir1][ idxi                         ] - 
+         Vel[TDir1][ idxi           - didx[TDir1] ]
+      ) * _dh;
+      T2_slope_T1  = van_leer2( 
+         Vel[TDir2][ idxi + didx[d] + didx[TDir1] ] - 
+         Vel[TDir2][ idxi + didx[d]               ],
+         Vel[TDir2][ idxi + didx[d]               ] - 
+         Vel[TDir2][ idxi + didx[d] - didx[TDir1] ],
+         Vel[TDir2][ idxi           + didx[TDir1] ] - 
+         Vel[TDir2][ idxi                         ],
+         Vel[TDir2][ idxi                         ] - 
+         Vel[TDir2][ idxi           - didx[TDir1] ]
+      ) * _dh;
 
-         Hydro_ComputeViscosity( mu_l, visc_nu, MicroPhy, dens_L, temp_L );
-         Hydro_ComputeViscosity( mu_r, visc_nu, MicroPhy, dens_R, temp_R );
-         mu = 0.5*( mu_l + mu_r );
+//    transverse direction 2 derivative
+      N_slope_T2  = van_leer2( 
+         Vel[    d][ idxi + didx[d] + didx[TDir2] ] - 
+         Vel[    d][ idxi + didx[d]               ],
+         Vel[    d][ idxi + didx[d]               ] - 
+         Vel[    d][ idxi + didx[d] - didx[TDir2] ],
+         Vel[    d][ idxi           + didx[TDir2] ] - 
+         Vel[    d][ idxi                         ],
+         Vel[    d][ idxi                         ] - 
+         Vel[    d][ idxi           - didx[TDir2] ]
+      ) * _dh;
+      T1_slope_T2 = van_leer2( 
+         Vel[TDir1][ idxi + didx[d] + didx[TDir2] ] - 
+         Vel[TDir1][ idxi + didx[d]               ],
+         Vel[TDir1][ idxi + didx[d]               ] - 
+         Vel[TDir1][ idxi + didx[d] - didx[TDir2] ],
+         Vel[TDir1][ idxi           + didx[TDir2] ] - 
+         Vel[TDir1][ idxi                         ],
+         Vel[TDir1][ idxi                         ] - 
+         Vel[TDir1][ idxi           - didx[TDir2] ]
+      ) * _dh;
+      T2_slope_T2 = van_leer2( 
+         Vel[TDir2][ idxi + didx[d] + didx[TDir2] ] - 
+         Vel[TDir2][ idxi + didx[d]               ],
+         Vel[TDir2][ idxi + didx[d]               ] - 
+         Vel[TDir2][ idxi + didx[d] - didx[TDir2] ],
+         Vel[TDir2][ idxi           + didx[TDir2] ] - 
+         Vel[TDir2][ idxi                         ],
+         Vel[TDir2][ idxi                         ] - 
+         Vel[TDir2][ idxi           - didx[TDir2] ]
+      ) * _dh;
 
-//       divergence
-         divV = N_slope_N + T1_slope_T1 + T2_slope_T2;     
+//    compute the mean magnetic field at the face-centered flux location
+      B_N_mean  =              faceB[  dB][ idx_fN                                            ];
+      B_T1_mean = (real)0.25*( faceB[TD1B][ idx_fT1                                           ] +
+                               faceB[TD1B][ idx_fT1                    + stride_fc_BT1[TDir1] ] +
+                               faceB[TD1B][ idx_fT1 - stride_fc_BT1[d]                        ] +
+                               faceB[TD1B][ idx_fT1 - stride_fc_BT1[d] + stride_fc_BT1[TDir1] ] );
+      B_T2_mean = (real)0.25*( faceB[TD2B][ idx_fT2                                           ] +
+                               faceB[TD2B][ idx_fT2                    + stride_fc_BT2[TDir2] ] +
+                               faceB[TD2B][ idx_fT2 - stride_fc_BT2[d]                        ] +
+                               faceB[TD2B][ idx_fT2 - stride_fc_BT2[d] + stride_fc_BT2[TDir2] ] );
 
-         BBdV  = B_N_mean  * ( B_N_mean *  N_slope_N + B_T1_mean *  N_slope_T1 + B_T2_mean *  N_slope_T2 );
-         BBdV += B_T1_mean * ( B_N_mean * T1_slope_N + B_T1_mean * T1_slope_T1 + B_T2_mean * T1_slope_T2 );
-         BBdV += B_T2_mean * ( B_N_mean * T2_slope_N + B_T1_mean * T2_slope_T1 + B_T2_mean * T2_slope_T2 );
-         delta_p = mu*(3.0*BBdV - divV);
-         if ( MicroPhy->ViscFluxType == ANISOTROPIC_VISCOSITY && MicroPhy->ViscBounds )
-            delta_p = FMIN( FMAX( delta_p, -B2 ), 0.5*B2 );
+      B2        = SQR(B_N_mean) + SQR(B_T1_mean) + SQR(B_T2_mean);
+      B_amp     = SQRT( B2 );
+//    normalize magnetic field
+      B_N_mean  /= B_amp;
+      B_T1_mean /= B_amp;
+      B_T2_mean /= B_amp;
 
-         dp_cc += delta_p;
+      temp_L = Temp[ idxi           ];
+      temp_R = Temp[ idxi + didx[d] ];
 
-      } // for (int fc = 0; fc < 2; fc++)
+      Hydro_ComputeViscosity( mu_l, visc_nu, MicroPhy, dens_L, temp_L );
+      Hydro_ComputeViscosity( mu_r, visc_nu, MicroPhy, dens_R, temp_R );
+      mu = 0.5*( mu_l + mu_r );
+
+//    divergence
+      divV = N_slope_N + T1_slope_T1 + T2_slope_T2;     
+
+      BBdV  = B_N_mean  * ( B_N_mean *  N_slope_N + B_T1_mean *  N_slope_T1 + B_T2_mean *  N_slope_T2 );
+      BBdV += B_T1_mean * ( B_N_mean * T1_slope_N + B_T1_mean * T1_slope_T1 + B_T2_mean * T1_slope_T2 );
+      BBdV += B_T2_mean * ( B_N_mean * T2_slope_N + B_T1_mean * T2_slope_T1 + B_T2_mean * T2_slope_T2 );
+      delta_p = mu*(3.0*BBdV - divV);
+      if ( VISCOSITY_FLUX_TYPE == ANISOTROPIC_VISCOSITY && VISCOSITY_BOUNDS )
+         delta_p = FMIN( FMAX( delta_p, -B2 ), 0.5*B2 );
+
+      Out[ idxo            ] += delta_p/6.0;
+      Out[ idxo - didxo[d] ] += delta_p/6.0;
 
    } // for (int d=0; d<3; d++)
 
-// Now take the average over all 6 faces
-   dp_cc /= 6.0;
+   }}} // k,j,i
 
-   return dp_cc;
-}
+   return;
+
+} // FUNCTION : Hydro_Compute_DeltaP
+
 #endif // #ifdef MHD
 
 #endif // #ifdef VISCOSITY

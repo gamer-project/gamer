@@ -1039,8 +1039,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                }
 #              endif
 
-#              ifdef VISCOSITY
-               else if ( v == DeltaPDumpIdx )
+#              if defined( VISCOSITY ) || defined( CONDUCTION ) 
+               else if ( v == DeltaPDumpIdx || v == KappaDumpIdx )
                {
                   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                   {
@@ -1054,21 +1054,38 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      for (int LocalID=0; LocalID<8; LocalID++)
                      {
 
+                        real TempIn[CUBE(DER_NXT)];
+
                         for (int k=0; k<DER_NXT; k++)
                         for (int j=0; j<DER_NXT; j++)
                         for (int i=0; i<DER_NXT; i++)
                         {
 
-//                         compute and store the target derived field
-                           const int PID  = PID0 + LocalID;
-                           const int NDer = 1;
-                           Hydro_Compute_DeltaP( FieldData[PID][0][0], Der_FluIn[LocalID][0], Der_MagCC[0],
-                                                 NDer, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, amr->dh[lv] );
+                           real u[NCOMP_TOTAL], Temp, Emag=NULL_REAL;
+
+                           for (int v=0; v<NCOMP_TOTAL; v++)   
+                              u[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
+
+#                          ifdef MHD
+                           Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#                          endif
+                           Temp = Hydro_Con2Temp( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
+                                                  CheckMinTemp_No, NULL_REAL, Emag, EoS_DensEint2Temp_CPUPtr,
+                                                  EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+
+                           const int IdxCC = IDX321( i, j, k, DER_NXT, DER_NXT );
+                           TempIn[IdxCC] = Temp;
+
                         }
+//                      compute and store the target derived field
+                        const int PID  = PID0 + LocalID;
+                        Hydro_Compute_DeltaP( FieldData[PID][0][0], Der_FluIn[LocalID][0], Der_MagCC[0],
+                                              NDer, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, amr->dh[lv] );
                      } // for (int LocalID=0; LocalID<8; LocalID++)
                   } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
-               } // if ( v == DeltaPDumpIdx )
-#              endif
+               } // if ( v == DeltaPDumpIdx || v == KappaDumpIdx )
+#              endif // if defined( VISCOSITY ) || defined( CONDUCTION ) 
 
 #              ifdef SRHD
                else if (  ( v >= VelDumpIdx0 && v < VelDumpIdx0+3 )  ||  v == LorentzDumpIdx )
