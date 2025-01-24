@@ -204,19 +204,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
                   EdgeL  = amr->patch[0][lv][PID]->EdgeL;
                   EdgeR  = amr->patch[0][lv][PID]->EdgeR;
 
-                  if ( Part == OUTPUT_BOX )
-                  {
-//                   check whether the cell is within the target range
-                     for (int k=0; k<PS1; k++)  {
-                     for (int j=0; j<PS1; j++)  {
-                     for (int i=0; i<PS1; i++)  {
-
-                        WriteFile( AnalFunc_Flu, AnalFunc_Mag, File, lv, PID, i, j, k, L1_Err, Part );
-
-                     }}} // i, j, k
-                  } // if ( Part == OUTPUT_BOX )
-
-                  else if ( Part == OUTPUT_DIAG ) // (+1,+1,+1) diagonal
+                  if ( Part == OUTPUT_DIAG ) // (+1,+1,+1) diagonal
                   {
                      if ( Corner[0] == Corner[1]  &&  Corner[0] == Corner[2] )
                      {
@@ -225,7 +213,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
                            WriteFile( AnalFunc_Flu, AnalFunc_Mag, File, lv, PID, k, k, k, L1_Err, Part );
                         }
                      }
-                  } // else if ( Part == OUTPUT_DIAG )
+                  } // if ( Part == OUTPUT_DIAG )
 
 
                   else // x/y/z lines || xy/yz/xz slices
@@ -249,7 +237,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 
                         }}}
                      }
-                  } // if ( Part == OUTPUT_BOX ) ... else ...
+                  } // if ( Part == OUTPUT_DIAG ) ... else ...
                } // if ( amr->patch[0][lv][PID]->son == -1 )
             } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
          } // for (int lv=0; lv<NLEVEL; lv++)

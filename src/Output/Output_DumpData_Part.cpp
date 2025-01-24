@@ -197,23 +197,7 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
                   EdgeL  = amr->patch[0][lv][PID]->EdgeL;
                   EdgeR  = amr->patch[0][lv][PID]->EdgeR;
 
-                  if ( Part == OUTPUT_BOX ) // entire box
-                  {
-//                   compute the derived fields
-                     GetDerivedField( Der_FluIn, Der_Out, Der_MagFC, Der_MagCC, lv, PID, Der_PrepFluIn );
-                     Der_PrepFluIn = false;
-
-//                   write data
-                     for (int k=0; k<PS1; k++)  {  kk = Corner[2] + k*scale;
-                     for (int j=0; j<PS1; j++)  {  jj = Corner[1] + j*scale;
-                     for (int i=0; i<PS1; i++)  {  ii = Corner[0] + i*scale;
-
-                        WriteFile( File, lv, PID, i, j, k, ii, jj, kk, Der_Out );
-
-                     }}} // i, j, k
-                  } // if ( Part == OUTPUT_BOX )
-
-                  else if ( Part == OUTPUT_DIAG ) // (+1,+1,+1) diagonal
+                  if ( Part == OUTPUT_DIAG ) // (+1,+1,+1) diagonal
                   {
 //                   check whether the patch corner is along the diagonal
                      if ( Corner[0] == Corner[1]  &&  Corner[0] == Corner[2] )
@@ -230,7 +214,7 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
                            WriteFile( File, lv, PID, k, k, k, kk, kk, kk, Der_Out );
                         }
                      }
-                  } // else if ( Part == OUTPUT_DIAG )
+                  } // if ( Part == OUTPUT_DIAG )
 
 
                   else // x/y/z lines || xy/yz/xz slices
@@ -260,7 +244,7 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
                         }}}
                      } // if patch corner is within the target range
 
-                  } // if ( Part == OUTPUT_BOX ) ... else ...
+                  } // if ( Part == OUTPUT_DIAG ) ... else ...
                } // if ( amr->patch[0][lv][PID]->son == -1 )
             } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
          } // for (int lv=0; lv<NLv; lv++)
