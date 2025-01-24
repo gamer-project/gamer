@@ -54,9 +54,9 @@ data dump frequency.
 the HDF5 snapshots of GAMER.
 
 <a name="OPT__OUTPUT_PART"></a>
-* #### `OPT__OUTPUT_PART` &ensp; (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diagonal) &ensp; [0]
+* #### `OPT__OUTPUT_PART` &ensp; (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diagonal, 8=entire box) &ensp; [0]
     * **Description:**
-Output the data of a single line or slice in the text format.
+Output the data of a single line, slice, or entire box in the text format.
 Use [OUTPUT_PART_X](#OUTPUT_PART_X), [OUTPUT_PART_Y](#OUTPUT_PART_Y), and
 [OUTPUT_PART_Z](#OUTPUT_PART_Z) to specify the target coordinates.
 This output option is mainly for quick inspection for simple test problems
