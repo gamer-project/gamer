@@ -15,3 +15,4 @@ curl https://hub.yt/api/v1/item/${FILE_ID}/download -o "${LOCAL_FILENAME}"
 
 # 4. unzip
 unzip ${LOCAL_FILENAME}
+rm ${LOCAL_FILENAME}
