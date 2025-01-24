@@ -2,4 +2,4 @@
 
 PYTHON=python3
 
-${PYTHON} configure.py --model=HYDRO --hdf5=True --conduction=True "$@"
+${PYTHON} configure.py --model=HYDRO --hdf5=True --conduction=True --flu_scheme=MHM_RP "$@"
