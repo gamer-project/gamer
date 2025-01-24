@@ -1040,8 +1040,11 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #              endif
 
 #              if defined( VISCOSITY ) || defined( CONDUCTION ) 
-               else if ( v == DeltaPDumpIdx || v == KappaDumpIdx )
+               else if ( v == DeltaPDumpIdx )
                {
+         
+                  const bool CheckMinTemp_No = false;
+
                   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                   {
 //                   prepare the input fields
@@ -1054,7 +1057,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      for (int LocalID=0; LocalID<8; LocalID++)
                      {
 
-                        real TempIn[CUBE(DER_NXT)];
+                        const int PID = PID0 + LocalID;
+
+                        real TempIn[CUBE(DER_NXT)], Temp;
 
                         for (int k=0; k<DER_NXT; k++)
                         for (int j=0; j<DER_NXT; j++)
@@ -1079,12 +1084,11 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
                         }
 //                      compute and store the target derived field
-                        const int PID  = PID0 + LocalID;
-                        Hydro_Compute_DeltaP( FieldData[PID][0][0], Der_FluIn[LocalID][0], Der_MagFC[LocalID][0],
-                                              Temp, DER_GHOST_SIZE, amr->dh[lv], MicroPhy );
+                        Hydro_Compute_DeltaP( FieldData[PID][0][0], Der_FluIn[LocalID], Der_MagFC[LocalID],
+                                              TempIn, DER_GHOST_SIZE, amr->dh[lv], &MicroPhy );
                      } // for (int LocalID=0; LocalID<8; LocalID++)
                   } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
-               } // if ( v == DeltaPDumpIdx || v == KappaDumpIdx )
+               } // if ( v == DeltaPDumpIdx )
 #              endif // if defined( VISCOSITY ) || defined( CONDUCTION ) 
 
 #              ifdef SRHD

@@ -426,7 +426,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
 
 #ifdef MHD
-void Hydro_Compute_DeltaP( real Out[], const real FluIn[][CUBE(DER_NXT)], const real faceB[][CUBE(DER_NXT)], 
+void Hydro_Compute_DeltaP( real Out[], const real FluIn[][CUBE(DER_NXT)], const real faceB[][SQR(DER_NXT)*DER_NXT_P1], 
                            const real Temp[], const int NGhost, const real dh, const MicroPhy_t *MicroPhy  )
 {
    real BBdV, delta_p, divV;

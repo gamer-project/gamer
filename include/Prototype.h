@@ -159,7 +159,7 @@ real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Gamma_m1,
 #ifdef VISCOSITY
 void Hydro_ComputeViscosity( real &visc_mu, real &visc_nu, const MicroPhy_t *MicroPhy,
                              const real Dens, const real Temp );
-void Hydro_Compute_DeltaP( real Out[], const real FluIn[][CUBE(DER_NXT)], const real faceB[][CUBE(DER_NXT)], 
+void Hydro_Compute_DeltaP( real Out[], const real FluIn[][CUBE(DER_NXT)], const real faceB[][SQR(DER_NXT)*DER_NXT_P1], 
                            const real Temp[], const int NGhost, const real dh, const MicroPhy_t *MicroPhy );
 #endif
 #ifdef CONDUCTION
