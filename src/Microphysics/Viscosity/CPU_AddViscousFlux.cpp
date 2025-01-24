@@ -468,9 +468,6 @@ void Hydro_Compute_DeltaP( real Out[], const real FluIn[][CUBE(DER_NXT)], const 
    {
       const int TDir1  = (d+1)%3;    // transverse direction 1
       const int TDir2  = (d+2)%3;    // transverse direction 2
-      //const int dB     =     d + MAGX;
-      //const int TD1B   = TDir1 + MAGX;
-      //const int TD2B   = TDir2 + MAGX;
    
       switch ( d ) 
       {
@@ -481,7 +478,7 @@ void Hydro_Compute_DeltaP( real Out[], const real FluIn[][CUBE(DER_NXT)], const 
             break;
          case 1:
             sizeB_i = DER_NXT;    sizeB_j = DER_NXT+1;  sizeB_k = DER_NXT;
-            idx_fN  = idx_By;     idx_fT1 = idx_Bx;     idx_fT2 = idx_Bz;
+            idx_fN  = idx_By;     idx_fT1 = idx_Bz;     idx_fT2 = idx_Bx;
             break;
          case 2:
             sizeB_i = DER_NXT;    sizeB_j = DER_NXT;    sizeB_k = DER_NXT+1;
@@ -494,9 +491,9 @@ void Hydro_Compute_DeltaP( real Out[], const real FluIn[][CUBE(DER_NXT)], const 
       const int stride_fc_BT2[3] = { 1, sizeB_j, sizeB_j*sizeB_k };
 
 //    normal direction derivative
-      N_slope_N  = ( Vel[    d][ idxi           ] - Vel[    d][ idxi + didx[d] ] ) * _dh;
-      T1_slope_N = ( Vel[TDir1][ idxi           ] - Vel[TDir1][ idxi + didx[d] ] ) * _dh;
-      T2_slope_N = ( Vel[TDir2][ idxi           ] - Vel[TDir2][ idxi + didx[d] ] ) * _dh;
+      N_slope_N  = ( Vel[    d][ idxi + didx[d] ] - Vel[    d][ idxi ] ) * _dh;
+      T1_slope_N = ( Vel[TDir1][ idxi + didx[d] ] - Vel[TDir1][ idxi ] ) * _dh;
+      T2_slope_N = ( Vel[TDir2][ idxi + didx[d] ] - Vel[TDir2][ idxi ] ) * _dh;
 
 //    transverse direction 1 derivative
       N_slope_T1  = van_leer2( 
@@ -596,7 +593,7 @@ void Hydro_Compute_DeltaP( real Out[], const real FluIn[][CUBE(DER_NXT)], const 
       BBdV += B_T1_mean * ( B_N_mean * T1_slope_N + B_T1_mean * T1_slope_T1 + B_T2_mean * T1_slope_T2 );
       BBdV += B_T2_mean * ( B_N_mean * T2_slope_N + B_T1_mean * T2_slope_T1 + B_T2_mean * T2_slope_T2 );
       delta_p = mu*(3.0*BBdV - divV);
-      if ( VISCOSITY_FLUX_TYPE == ANISOTROPIC_VISCOSITY && VISCOSITY_BOUNDS )
+      if ( VISCOSITY_BOUNDS )
          delta_p = FMIN( FMAX( delta_p, -B2 ), 0.5*B2 );
 
       Out[ idxo            ] += delta_p/6.0;
