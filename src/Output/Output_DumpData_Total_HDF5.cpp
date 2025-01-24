@@ -1080,8 +1080,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                         }
 //                      compute and store the target derived field
                         const int PID  = PID0 + LocalID;
-                        Hydro_Compute_DeltaP( FieldData[PID][0][0], Der_FluIn[LocalID][0], Der_MagCC[0],
-                                              NDer, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, amr->dh[lv] );
+                        Hydro_Compute_DeltaP( FieldData[PID][0][0], Der_FluIn[LocalID][0], Der_MagFC[LocalID][0],
+                                              Temp, DER_GHOST_SIZE, amr->dh[lv], MicroPhy );
                      } // for (int LocalID=0; LocalID<8; LocalID++)
                   } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                } // if ( v == DeltaPDumpIdx || v == KappaDumpIdx )
@@ -2864,6 +2864,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  ifdef MHD
    InputPara.Opt__Output_DivMag          = OPT__OUTPUT_DIVMAG;
 #  endif
+#  ifdef VISCOSITY
+   InputPara.Opt__Output_DeltaP          = OPT__OUTPUT_DELTAP;
+#  endif
 #  ifdef SRHD
    InputPara.Opt__Output_3Velocity       = OPT__OUTPUT_3VELOCITY;
    InputPara.Opt__Output_Lorentz         = OPT__OUTPUT_LORENTZ;
@@ -3954,6 +3957,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Output_Mach",            HOFFSET(InputPara_t,Opt__Output_Mach           ), H5T_NATIVE_INT              );
 #  ifdef MHD
    H5Tinsert( H5_TypeID, "Opt__Output_DivMag",          HOFFSET(InputPara_t,Opt__Output_DivMag         ), H5T_NATIVE_INT              );
+#  endif
+#  ifdef VISCOSITY
+   H5Tinsert( H5_TypeID, "Opt__Output_DeltaP",          HOFFSET(InputPara_t,Opt__Output_DeltaP         ), H5T_NATIVE_INT              );
 #  endif
 #  ifdef SRHD
    H5Tinsert( H5_TypeID, "Opt__Output_3Velocity",       HOFFSET(InputPara_t,Opt__Output_3Velocity      ), H5T_NATIVE_INT              );

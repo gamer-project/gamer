@@ -403,6 +403,7 @@ extern double VISCOSITY_CONSTANT_COEFF;
 extern double VISCOSITY_SPITZER_FRAC;
 extern double VISCOSITY_COULOMB_LOG;
 extern double VISCOSITY_MAX_DIFFUSIVITY;
+extern bool   OPT__OUTPUT_DELTAP;
 #endif
 
 #ifdef CONDUCTION

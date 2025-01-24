@@ -1659,6 +1659,9 @@ void Aux_TakeNote()
 #     ifdef MHD
       fprintf( Note, "OPT__OUTPUT_DIVMAG             % d\n",      OPT__OUTPUT_DIVMAG          );
 #     endif
+#     ifdef VISCOSITY
+      fprintf( Note, "OPT__OUTPUT_DELTAP             % d\n",      OPT__OUTPUT_DELTAP          );
+#     endif
       fprintf( Note, "OPT__OUTPUT_USER_FIELD         % d\n",      OPT__OUTPUT_USER_FIELD      );
 #     ifdef SRHD
       fprintf( Note, "OPT__OUTPUT_3VELOCITY          % d\n",      OPT__OUTPUT_3VELOCITY       );

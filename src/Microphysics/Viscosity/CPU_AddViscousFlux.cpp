@@ -426,15 +426,18 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
 
 #ifdef MHD
-void Hydro_Compute_DeltaP( real Out[], const real FluIn[], const real faceB[], const real Temp[], 
-                           const int NGhost, const real dh )
+void Hydro_Compute_DeltaP( real Out[], const real FluIn[][CUBE(DER_NXT)], const real faceB[][CUBE(DER_NXT)], 
+                           const real Temp[], const int NGhost, const real dh, const MicroPhy_t *MicroPhy  )
 {
    real BBdV, delta_p, divV;
    real dens_L, dens_R, temp_L, temp_R, visc_nu;
    real N_slope_N, T1_slope_N, T2_slope_N;
    real N_slope_T1, T1_slope_T1, T2_slope_T1;
    real N_slope_T2, T1_slope_T2, T2_slope_T2;
+   real B_amp, B_N_mean, B_T1_mean, B_T2_mean, B2;
+   real mu, mu_l, mu_r;
    int idx_fN, idx_fT1, idx_fT2;
+   int sizeB_i, sizeB_j, sizeB_k;
    
    const real _dh = (real)1.0 / dh;
    const int didx[3] = { 1, DER_NXT, SQR(DER_NXT) };
@@ -465,9 +468,9 @@ void Hydro_Compute_DeltaP( real Out[], const real FluIn[], const real faceB[], c
    {
       const int TDir1  = (d+1)%3;    // transverse direction 1
       const int TDir2  = (d+2)%3;    // transverse direction 2
-      const int dB     =     d + MAGX;
-      const int TD1B   = TDir1 + MAGX;
-      const int TD2B   = TDir2 + MAGX;
+      //const int dB     =     d + MAGX;
+      //const int TD1B   = TDir1 + MAGX;
+      //const int TD2B   = TDir2 + MAGX;
    
       switch ( d ) 
       {
@@ -486,8 +489,6 @@ void Hydro_Compute_DeltaP( real Out[], const real FluIn[], const real faceB[], c
             break;
 
       }
-
-      const int idxol    = IDX321   ( i, j, k, DER_NXT,  );
 
       const int stride_fc_BT1[3] = { 1, sizeB_k, sizeB_k*sizeB_i };
       const int stride_fc_BT2[3] = { 1, sizeB_j, sizeB_j*sizeB_k };
@@ -562,15 +563,15 @@ void Hydro_Compute_DeltaP( real Out[], const real FluIn[], const real faceB[], c
       ) * _dh;
 
 //    compute the mean magnetic field at the face-centered flux location
-      B_N_mean  =              faceB[  dB][ idx_fN                                            ];
-      B_T1_mean = (real)0.25*( faceB[TD1B][ idx_fT1                                           ] +
-                               faceB[TD1B][ idx_fT1                    + stride_fc_BT1[TDir1] ] +
-                               faceB[TD1B][ idx_fT1 - stride_fc_BT1[d]                        ] +
-                               faceB[TD1B][ idx_fT1 - stride_fc_BT1[d] + stride_fc_BT1[TDir1] ] );
-      B_T2_mean = (real)0.25*( faceB[TD2B][ idx_fT2                                           ] +
-                               faceB[TD2B][ idx_fT2                    + stride_fc_BT2[TDir2] ] +
-                               faceB[TD2B][ idx_fT2 - stride_fc_BT2[d]                        ] +
-                               faceB[TD2B][ idx_fT2 - stride_fc_BT2[d] + stride_fc_BT2[TDir2] ] );
+      B_N_mean  =              faceB[    d][ idx_fN                                            ];
+      B_T1_mean = (real)0.25*( faceB[TDir1][ idx_fT1                                           ] +
+                               faceB[TDir1][ idx_fT1                    + stride_fc_BT1[TDir1] ] +
+                               faceB[TDir1][ idx_fT1 - stride_fc_BT1[d]                        ] +
+                               faceB[TDir1][ idx_fT1 - stride_fc_BT1[d] + stride_fc_BT1[TDir1] ] );
+      B_T2_mean = (real)0.25*( faceB[TDir2][ idx_fT2                                           ] +
+                               faceB[TDir2][ idx_fT2                    + stride_fc_BT2[TDir2] ] +
+                               faceB[TDir2][ idx_fT2 - stride_fc_BT2[d]                        ] +
+                               faceB[TDir2][ idx_fT2 - stride_fc_BT2[d] + stride_fc_BT2[TDir2] ] );
 
       B2        = SQR(B_N_mean) + SQR(B_T1_mean) + SQR(B_T2_mean);
       B_amp     = SQRT( B2 );

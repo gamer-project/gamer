@@ -568,6 +568,9 @@ void Init_Load_Parameter()
 #  ifdef MHD
    ReadPara->Add( "OPT__OUTPUT_DIVMAG",         &OPT__OUTPUT_DIVMAG,              false,           Useless_bool,  Useless_bool   );
 #  endif
+#  ifdef VISCOSITY
+   ReadPara->Add( "OPT__OUTPUT_DELTAP",         &OPT__OUTPUT_DELTAP,              false,           Useless_bool,  Useless_bool   );
+#  endif
 #  ifdef SRHD
    ReadPara->Add( "OPT__OUTPUT_LORENTZ",        &OPT__OUTPUT_LORENTZ,             false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_3VELOCITY",      &OPT__OUTPUT_3VELOCITY,           false,           Useless_bool,  Useless_bool   );

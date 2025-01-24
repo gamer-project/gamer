@@ -2397,6 +2397,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  ifdef MHD
    LoadField( "Opt__Output_DivMag",          &RS.Opt__Output_DivMag,          SID, TID, NonFatal, &RT.Opt__Output_DivMag,          1, NonFatal );
 #  endif
+#  ifdef VISCOSITY
+   LoadField( "Opt__Output_DeltaP",          &RS.Opt__Output_DeltaP,          SID, TID, NonFatal, &RT.Opt__Output_DeltaP,          1, NonFatal );
+#  endif
 #  ifdef SRHD
    LoadField( "Opt__Output_Lorentz",         &RS.Opt__Output_Lorentz,         SID, TID, NonFatal, &RT.Opt__Output_Lorentz,         1, NonFatal );
    LoadField( "Opt__Output_3Velocity",       &RS.Opt__Output_3Velocity,       SID, TID, NonFatal, &RT.Opt__Output_3Velocity,       1, NonFatal );
