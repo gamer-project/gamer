@@ -140,7 +140,7 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
-   MHDLinearVisc_WaveLength = ( MHDLinearVisc_Dir == 3 ) ? amr->BoxSize[0]*sqrt(3.0) : amr->BoxSize[MHDLinearVisc_Dir];
+   MHDLinearVisc_WaveLength = ( MHDLinearVisc_Dir == 3 ) ? amr->BoxSize[0]/sqrt(3.0) : amr->BoxSize[MHDLinearVisc_Dir];
    MHDLinearVisc_WaveNumber = 2.0*M_PI/MHDLinearVisc_WaveLength;
 
 // assuming EOS_GAMMA

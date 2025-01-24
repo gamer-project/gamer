@@ -580,8 +580,10 @@ void Hydro_Compute_DeltaP( real Out[], const real FluIn[][CUBE(DER_NXT)], const 
       B_T1_mean /= B_amp;
       B_T2_mean /= B_amp;
 
-      temp_L = Temp[ idxi           ];
-      temp_R = Temp[ idxi + didx[d] ];
+      dens_L = FluIn[DENS][ idxi           ];
+      dens_R = FluIn[DENS][ idxi + didx[d] ];
+      temp_L =        Temp[ idxi           ];
+      temp_R =        Temp[ idxi + didx[d] ];
 
       Hydro_ComputeViscosity( mu_l, visc_nu, MicroPhy, dens_L, temp_L );
       Hydro_ComputeViscosity( mu_r, visc_nu, MicroPhy, dens_R, temp_R );

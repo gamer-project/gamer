@@ -1068,18 +1068,21 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
                            real u[NCOMP_TOTAL], Temp, Emag=NULL_REAL;
 
+                           const int IdxCC = IDX321( i, j, k, DER_NXT, DER_NXT );
+
                            for (int v=0; v<NCOMP_TOTAL; v++)   
-                              u[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
+                              u[v] = Der_FluIn[LocalID][v][IdxCC];   
 
 #                          ifdef MHD
-                           Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+                           Emag = MHD_GetCellCenteredBEnergy( Der_MagFC[LocalID][MAGX], Der_MagFC[LocalID][MAGY],
+                                                              Der_MagFC[LocalID][MAGZ], DER_NXT, DER_NXT, DER_NXT, 
+                                                              i, j, k );
 #                          endif
                            Temp = Hydro_Con2Temp( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
                                                   CheckMinTemp_No, NULL_REAL, Emag, EoS_DensEint2Temp_CPUPtr,
                                                   EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-
-                           const int IdxCC = IDX321( i, j, k, DER_NXT, DER_NXT );
+                           
                            TempIn[IdxCC] = Temp;
 
                         }
