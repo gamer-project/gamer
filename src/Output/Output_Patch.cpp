@@ -59,8 +59,8 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
    real    (*pot)[PS1][PS1]           = amr->patch[PotSg][lv][PID]->pot;
 #  endif
 
-   char FileName[100];
-   sprintf( FileName, "Patch_r%d_lv%d_p%d", MPI_Rank, lv, PID );
+   char FileName[MAX_STRING];
+   sprintf( FileName, "%s/Patch_r%d_lv%d_p%d", OUTPUT_DIR, MPI_Rank, lv, PID );
    if ( comment != NULL )
    {
       strcat( FileName, "_" );

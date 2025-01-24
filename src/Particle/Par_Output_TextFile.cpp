@@ -38,7 +38,7 @@ void Par_Output_TextFile( const char *FileName )
       fprintf( File, " %*s", (v==0)?StrLen_Flt-1:StrLen_Flt, ParAttFltLabel[v] );
 
       for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
-      fprintf( File, " %*s", StrLen_Flt, ParAttIntLabel[v] );
+      fprintf( File, " %*s", OPT__OUTPUT_TEXT_LENGTH_INT, ParAttIntLabel[v] );
 
       fprintf( File, "\n" );
 
@@ -59,11 +59,7 @@ void Par_Output_TextFile( const char *FileName )
             if ( amr->Par->Mass[p] < 0.0 )   continue;
 
             for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   fprintf( File, BlankPlusFormat_Flt, amr->Par->AttributeFlt[v][p] );
-#           ifdef INT8_PAR
-            for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   fprintf( File, " %*ld", StrLen_Flt, amr->Par->AttributeInt[v][p] );
-#           else
-            for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   fprintf( File, " %*d",  StrLen_Flt, amr->Par->AttributeInt[v][p] );
-#           endif
+            for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   fprintf( File, " %*ld", OPT__OUTPUT_TEXT_LENGTH_INT, (long)amr->Par->AttributeInt[v][p] );
 
             fprintf( File, "\n" );
          }
