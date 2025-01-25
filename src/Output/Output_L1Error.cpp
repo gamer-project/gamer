@@ -146,6 +146,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
    bool    Check_x = false;
    bool    Check_y = false;
    bool    Check_z = false;
+   long    NGrid   = 0L;
 
    double L1_Err[NERR];
    static bool FirstTime = true;
@@ -211,6 +212,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
                         for (int k=0; k<PS1; k++)
                         {
                            WriteFile( AnalFunc_Flu, AnalFunc_Mag, File, lv, PID, k, k, k, L1_Err, Part );
+                           NGrid++;
                         }
                      }
                   } // if ( Part == OUTPUT_DIAG )
@@ -233,6 +235,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
                                                       if ( Check_x && ( xx>x || xx+dh<=x ) )    continue;
 
                            WriteFile( AnalFunc_Flu, AnalFunc_Mag, File, lv, PID, i, j, k, L1_Err, Part );
+                           NGrid++;
 
                         }}}
                      }
@@ -252,7 +255,9 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 
 // gather the L1 error from all ranks and output the results
    double L1_Err_Sum[NERR], Norm;
-   MPI_Reduce( L1_Err, L1_Err_Sum, NERR, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+   long   NGrid_Sum;
+   MPI_Reduce(  L1_Err,  L1_Err_Sum, NERR, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+   MPI_Reduce( &NGrid,  &NGrid_Sum,  1,    MPI_LONG,   MPI_SUM, 0, MPI_COMM_WORLD );
 
    if ( MPI_Rank == 0 )
    {
@@ -279,7 +284,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
       if ( FirstTime )
       {
 #        if   ( MODEL == HYDRO )
-         fprintf( File_L1, "#%5s %13s %*s %*s %*s %*s %*s", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
+         fprintf( File_L1, "#%11s %13s %*s %*s %*s %*s %*s", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
                   StrLen_Flt, "Error(MomX)", StrLen_Flt, "Error(MomY)", StrLen_Flt, "Error(MomZ)", StrLen_Flt, "Error(Pres)" );
 
          for (int v=0; v<NCOMP_PASSIVE; v++) {
@@ -300,10 +305,10 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 #        elif ( MODEL == ELBDM )
 #        if   ( ELBDM_SCHEME == ELBDM_WAVE )
 
-         fprintf( File_L1, "#%5s %13s %*s %*s %*s", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
+         fprintf( File_L1, "#%11s %13s %*s %*s %*s", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
                   StrLen_Flt, "Error(Real)", StrLen_Flt, "Error(Imag)" );
 #        elif ( ELBDM_SCHEME == ELBDM_HYBRID )
-         fprintf( File_L1, "#%5s %13s %*s %*s %*s", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
+         fprintf( File_L1, "#%11s %13s %*s %*s %*s", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
                   StrLen_Flt, "Error(Phas)", StrLen_Flt, "Stub" );
 #        else
 #        error : ERROR : unsupported ELBDM_SCHEME !!
@@ -325,18 +330,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
       } // if ( FirstTime )
 
 //    output data
-      int NGrid;
-
-      if      ( dim == 1 ) NGrid = (Part==OUTPUT_DIAG)?NX0_TOT[0]:NX0_TOT[Part-OUTPUT_X];
-      else if ( dim == 3 ) NGrid = NX0_TOT[0]*NX0_TOT[1]*NX0_TOT[2];
-      else
-      {
-         if ( Part == OUTPUT_XY )    NGrid = NX0_TOT[0]*NX0_TOT[1];
-         if ( Part == OUTPUT_XZ )    NGrid = NX0_TOT[0]*NX0_TOT[2];
-         if ( Part == OUTPUT_YZ )    NGrid = NX0_TOT[1]*NX0_TOT[2];
-      }
-
-      fprintf( File_L1, "%6d %13.7e", NGrid, Time[0] );
+      fprintf( File_L1, "%12ld %13.7e", NGrid_Sum, Time[0] );
 
       for (int v=0; v<NERR; v++)   fprintf( File_L1, BlankPlusFormat_Flt, L1_Err_Sum[v] );
 
