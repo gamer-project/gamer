@@ -1864,7 +1864,7 @@ void Aux_Check_Parameter()
    if ( ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_AGORA  ||  SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_DWARFGALAXY )
         &&  !SF_CREATE_STAR_DET_RANDOM )
    {
-      Aux_Message( stderr, "WARNING : SF_CREATE_STAR_SCHEME == 1 or 2 will break bitwise reproducibility due to the \n" );
+      Aux_Message( stderr, "WARNING : SF_CREATE_STAR_SCHEME == 1 or 2 will break bitwise reproducibility due to the\n" );
       Aux_Message( stderr, "          random values used for the stochastic star formation !!\n" );
       Aux_Message( stderr, "          --> Enable \"SF_CREATE_STAR_DET_RANDOM\" if reproducibility is of great concern\n" );
    }
