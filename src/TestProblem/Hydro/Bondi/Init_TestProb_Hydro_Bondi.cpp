@@ -1,8 +1,9 @@
 #include "GAMER.h"
 
+#ifdef SUPPORT_GSL
 #include <gsl/gsl_errno.h>
-#include <gsl/gsl_matrix.h>
 #include <gsl/gsl_odeiv2.h>
+#endif
 
 
 // problem-specific global variables
@@ -108,6 +109,9 @@ bool Flag_Bondi( const int i, const int j, const int k, const int lv, const int 
 int Flu_ResetByUser_Func_Bondi( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
                                 const double dt, const int lv, double AuxArray[] );
 void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );
+#ifdef SUPPORT_GSL
+static void Soliton_SetPresProfileTable();
+#endif
 static void HSE_SetDensProfileTable();
 static void BondiBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
                      const int GhostSize, const int idx[], const double pos[], const double Time,
@@ -413,7 +417,9 @@ void SetParameter()
       }
       Bondi_Soliton_rc *= UnitExt_L/UNIT_L;
       Bondi_Soliton_t  *= Bondi_TimeB;
+#     ifdef SUPPORT_GSL
       Soliton_SetPresProfileTable();
+#     endif
    }
 
    if ( Bondi_Init )
@@ -747,6 +753,8 @@ void HSE_SetDensProfileTable()
 } // FUNCTION : HSE_SetDensProfileTable
 
 
+
+#ifdef SUPPORT_GSL
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Soliton_SetPresProfileTable
 // Description :  Set up the pressure profile table for Soliton
@@ -755,8 +763,9 @@ void HSE_SetDensProfileTable()
 //
 // Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
-int odefunc ( double x, const double y[], double f[], void *params)
+int odefunc( double x, const double y[], double f[], void *params )
 {
+
    x /= Const_kpc;
    double rc = Bondi_Soliton_rc*UNIT_L/Const_kpc;
    double m22 = Bondi_Soliton_m22;
@@ -767,7 +776,11 @@ int odefunc ( double x, const double y[], double f[], void *params)
    f[0] = -Const_NewtonG*M*rho/SQR(x*Const_kpc);
 
    return GSL_SUCCESS;
-}
+
+} // FUNCTION : odefunc
+
+
+
 int * jac;
 void Soliton_SetPresProfileTable()
 {
@@ -799,7 +812,10 @@ void Soliton_SetPresProfileTable()
       Bondi_Soliton_PresProf[1][NBin-b] = y[0];
    }
    gsl_odeiv2_driver_free (d);
-} // void Soliton_SetDensProfileTable()
+
+} // FUNCTION : Soliton_SetPresProfileTable
+#endif // #ifdef SUPPORT_GSL
+
 
 
 //-------------------------------------------------------------------------------------------------------
