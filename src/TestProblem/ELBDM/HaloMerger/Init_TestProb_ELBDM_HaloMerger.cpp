@@ -31,7 +31,8 @@ static int     *HaloMerger_Halo_HALO_IC_Float8                     = NULL; // da
 static double (*HaloMerger_Halo_HALO_IC_dh)[3]                     = NULL; // grid size of each halo
 static double (*HaloMerger_Halo_HALO_IC_Range_EdgeL)[3]            = NULL; // left edge of the range of each halo
 static double (*HaloMerger_Halo_HALO_IC_Range_EdgeR)[3]            = NULL; // right edge of the range of each halo
-static char   **HaloMerger_Halo_HALO_IC_Data                       = NULL; // array to store the data read from HALO_IC
+static double **HaloMerger_Halo_HALO_IC_Data                       = NULL; // array to store the data read from HALO_IC
+static double* (*HaloMerger_Halo_HALO_IC_Coords)[3]                = NULL; // array to store the coordinates of data from HALO_IC
 
 // Soliton-related internal variables
 static double  *HaloMerger_Soliton_CoreRadius                      = NULL; // core radius of each soliton
@@ -213,7 +214,8 @@ void SetParameter()
       HaloMerger_Halo_HALO_IC_dh            = new double [HaloMerger_Halo_Num][3];
       HaloMerger_Halo_HALO_IC_Range_EdgeL   = new double [HaloMerger_Halo_Num][3];
       HaloMerger_Halo_HALO_IC_Range_EdgeR   = new double [HaloMerger_Halo_Num][3];
-      HaloMerger_Halo_HALO_IC_Data          = new char*  [HaloMerger_Halo_Num];
+      HaloMerger_Halo_HALO_IC_Data          = new double* [HaloMerger_Halo_Num];
+      HaloMerger_Halo_HALO_IC_Coords        = new double* [HaloMerger_Halo_Num][3];
       } // if ( HaloMerger_Halo_InitMode == 1 )
       else
          Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
@@ -609,7 +611,8 @@ void SetParameter()
              const long HALO_IC_TotSize  = HALO_IC_NVar*HALO_IC_NCells3D*load_data_size;
 
              // allocate the memory for the array to read the data
-             HaloMerger_Halo_HALO_IC_Data[index_halo] = new char [ HALO_IC_TotSize ];
+             HaloMerger_Halo_HALO_IC_Data[index_halo] = new double [ (long)HALO_IC_NVar*HALO_IC_NCells3D ];
+             char* HALO_IC_RawData = new char [ HALO_IC_TotSize ];
 
              // open the file
              FILE *File = fopen( HaloMerger_Halo_HALO_IC_Filename[index_halo], "rb" );
@@ -623,10 +626,27 @@ void SetParameter()
 
              // load data from the file
              fseek( File, 0, SEEK_SET );
-             fread( HaloMerger_Halo_HALO_IC_Data[index_halo], 1, HALO_IC_TotSize, File );
+             fread( HALO_IC_RawData, 1, HALO_IC_TotSize, File );
+
+             for (long i=0; i<(long)HALO_IC_NVar*HALO_IC_NCells3D; i++)
+                HaloMerger_Halo_HALO_IC_Data[index_halo][i] = ( HaloMerger_Halo_HALO_IC_Float8[index_halo] ) ?
+                                                              (double)(*((double*)&HALO_IC_RawData[i*load_data_size])):
+                                                              (double)(*( (float*)&HALO_IC_RawData[i*load_data_size]));
 
              // close the file
              fclose( File );
+
+             // free the memory
+             delete [] HALO_IC_RawData;
+
+             // construct the arrays of the coordinates
+             for (int d=0; d<3; d++)
+             {
+                HaloMerger_Halo_HALO_IC_Coords[index_halo][d] = new double[HaloMerger_Halo_HALO_IC_NCells[index_halo][d]];
+
+                for (int i=0; i<HaloMerger_Halo_HALO_IC_NCells[index_halo][d]; i++)
+                   HaloMerger_Halo_HALO_IC_Coords[index_halo][d][i] = HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][d] + (i + 0.5)*HaloMerger_Halo_HALO_IC_dh[index_halo][d];
+             }
 
          } // for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
 
@@ -1379,6 +1399,8 @@ void End_HaloMerger()
          for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
          {
             delete [] HaloMerger_Halo_HALO_IC_Data[index_halo];
+
+            for (int d=0; d<3; d++)   delete [] HaloMerger_Halo_HALO_IC_Coords[index_halo][d];
          }
 
          delete [] HaloMerger_Halo_HALO_IC_Filename;
@@ -1389,6 +1411,7 @@ void End_HaloMerger()
          delete [] HaloMerger_Halo_HALO_IC_Range_EdgeL;
          delete [] HaloMerger_Halo_HALO_IC_Range_EdgeR;
          delete [] HaloMerger_Halo_HALO_IC_Data;
+         delete [] HaloMerger_Halo_HALO_IC_Coords;
 
       } // if ( HaloMerger_Halo_InitMode == 1 )
       else
@@ -1509,67 +1532,25 @@ void HaloMerger_Add_Velocity( double *RealPart, double *ImagPart,
 //-------------------------------------------------------------------------------------------------------
 double HaloMerger_Get_Value_From_HALO_IC_Data( const double x, const double y, const double z, const int v, const int index_halo )
 {
-    // 1. HALO_IC information
-    const int HALO_IC_Nx        = HaloMerger_Halo_HALO_IC_NCells[index_halo][0];
-    const int HALO_IC_Ny        = HaloMerger_Halo_HALO_IC_NCells[index_halo][1];
-    const int HALO_IC_Nz        = HaloMerger_Halo_HALO_IC_NCells[index_halo][2];
-    const int HALO_IC_NVar      = 2; // (Real part & Imag part)
-    const int HALO_IC_Float8    = HaloMerger_Halo_HALO_IC_Float8[index_halo];
-    size_t load_data_size       = ( HALO_IC_Float8 ) ? sizeof(double) : sizeof(float);
+   // 1. HALO_IC information
+   const long ICSize1v = (long)v*HaloMerger_Halo_HALO_IC_NCells[index_halo][2]
+                                *HaloMerger_Halo_HALO_IC_NCells[index_halo][1]
+                                *HaloMerger_Halo_HALO_IC_NCells[index_halo][0];
 
-    double HALO_IC_Range_EdgeL[3];
-    double HALO_IC_dh[3];
-    for (int d=0; d<3; d++) HALO_IC_Range_EdgeL[d] = HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][d];
-    for (int d=0; d<3; d++) HALO_IC_dh[d]          = HaloMerger_Halo_HALO_IC_dh[index_halo][d];
+   // 2. index of the bottom-left corner in the HALO_IC
+   const int IntCorner000_HALOICIndex[3] = {(int)floor( (x - HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][0])/HaloMerger_Halo_HALO_IC_dh[index_halo][0] - 0.5 ),
+                                            (int)floor( (y - HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][1])/HaloMerger_Halo_HALO_IC_dh[index_halo][1] - 0.5 ),
+                                            (int)floor( (z - HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][2])/HaloMerger_Halo_HALO_IC_dh[index_halo][2] - 0.5 )};
 
-    // Use the eight corners from the HALO_IC to do the linear interpolation
+   // 3. 3D linear interpolation
+   const double Target_Coordinates[3] = { x, y, z };
 
-    // 2. index of the bottom-left corner in the HALO_IC
-    const int IntCorner000_HALOICIndex[3] = {(int)floor( (x - HALO_IC_Range_EdgeL[0])/HALO_IC_dh[0] - 0.5 ),
-                                             (int)floor( (y - HALO_IC_Range_EdgeL[1])/HALO_IC_dh[1] - 0.5 ),
-                                             (int)floor( (z - HALO_IC_Range_EdgeL[2])/HALO_IC_dh[2] - 0.5 )};
+   const double Interpolated_Value = Mis_InterpolateFrom_nDim_Table_withIdxL( 3, HaloMerger_Halo_HALO_IC_NCells[index_halo],
+                                                                                 HaloMerger_Halo_HALO_IC_Coords[index_halo],
+                                                                                &HaloMerger_Halo_HALO_IC_Data[index_halo][ICSize1v],
+                                                                                 Target_Coordinates, IntCorner000_HALOICIndex );
 
-    // 3. physical coordinates of the eight corners
-    double IntCorner_L_Coord[3];
-    double IntCorner_R_Coord[3];
-    for (int d=0; d<3; d++)
-    {
-       IntCorner_L_Coord[d] = HALO_IC_Range_EdgeL[d] + (IntCorner000_HALOICIndex[d] + 0.5)*HALO_IC_dh[d];
-       IntCorner_R_Coord[d] = HALO_IC_Range_EdgeL[d] + (IntCorner000_HALOICIndex[d] + 1.5)*HALO_IC_dh[d];
-    }
-
-    // 4. values at the eight corners
-    double IntCorner_Value[8];
-    for (int IntCorner_ID_k=0; IntCorner_ID_k<2; IntCorner_ID_k++){ const int IntCorner_HALOICIndex_k = IntCorner000_HALOICIndex[2] + IntCorner_ID_k;
-    for (int IntCorner_ID_j=0; IntCorner_ID_j<2; IntCorner_ID_j++){ const int IntCorner_HALOICIndex_j = IntCorner000_HALOICIndex[1] + IntCorner_ID_j;
-    for (int IntCorner_ID_i=0; IntCorner_ID_i<2; IntCorner_ID_i++){ const int IntCorner_HALOICIndex_i = IntCorner000_HALOICIndex[0] + IntCorner_ID_i;
-
-       if ( IntCorner_HALOICIndex_i < 0  ||  IntCorner_HALOICIndex_i >= HALO_IC_Nx  ||
-            IntCorner_HALOICIndex_j < 0  ||  IntCorner_HALOICIndex_j >= HALO_IC_Ny  ||
-            IntCorner_HALOICIndex_k < 0  ||  IntCorner_HALOICIndex_k >= HALO_IC_Nz )
-       {
-          // set the value as zero when the corner is outside the HALO_IC file
-          IntCorner_Value[IDX321( IntCorner_ID_i, IntCorner_ID_j, IntCorner_ID_k, 2, 2 )] = 0.0;
-       }
-       else
-       {
-          const long IdxIn_HALO_IC = (long)v*HALO_IC_Nz*HALO_IC_Ny*HALO_IC_Nx
-                                   + (long)IntCorner_HALOICIndex_k*HALO_IC_Ny*HALO_IC_Nx
-                                   + (long)IntCorner_HALOICIndex_j*HALO_IC_Nx
-                                   + (long)IntCorner_HALOICIndex_i;
-
-          IntCorner_Value[IDX321( IntCorner_ID_i, IntCorner_ID_j, IntCorner_ID_k, 2, 2 )] = ( HALO_IC_Float8 ) ?
-             (double)(*((double*)&HaloMerger_Halo_HALO_IC_Data[index_halo][IdxIn_HALO_IC*load_data_size])):
-             (double)(*( (float*)&HaloMerger_Halo_HALO_IC_Data[index_halo][IdxIn_HALO_IC*load_data_size]));
-       }
-
-    }}} // for (int IntCorner_ID_kji=0; IntCorner_ID_kji<2; IntCorner_ID_kji++)
-
-    // 5. 3D linear interpolation
-    const double Target_Coordinates[3] = { x, y, z };
-    const double Interpolated_Value = Mis_MultilinearInterpolate( 3, Target_Coordinates, IntCorner_L_Coord, IntCorner_R_Coord, IntCorner_Value );
-
-    return Interpolated_Value;
+   return Interpolated_Value;
 
 } // FUNCTION : HaloMerger_Get_Value_From_HALO_IC_Data
 #endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
