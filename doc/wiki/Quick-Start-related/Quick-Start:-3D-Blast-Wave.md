@@ -239,7 +239,7 @@ display Data_000010_Slice_z_density.png
 <details>
 <summary><u><i>Execution results</i></u></summary>
 
-[[images/blastwave.png | alt=blastwave]]
+[[/images/blastwave.png | alt=blastwave]]
 </details>
 
 <br>

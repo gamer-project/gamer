@@ -208,7 +208,7 @@ void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int Mi
 #     ifdef MASSIVE_PARTICLES
       if ( Extrema->Field & _PAR_DENS  ||  Extrema->Field & _TOTAL_DENS )
       {
-         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos, Time[lv],
+         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, _PAR_TYPE, PredictPos, Time[lv],
                                        SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
 
          Prepare_PatchData_InitParticleDensityArray( lv, Time[lv] );

@@ -180,12 +180,14 @@ The particle IC function has the following prototype:
 
 ```C++
 void Par_Init_ByFunction( const long NPar_ThisRank, const long NPar_AllRank,
-                          real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                          real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                          real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
+                          real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                          real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                          long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                          long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 ```
 It should set the particle IC in the arrays `ParMass`, `ParPosX/Y/Z`,
-`ParVelX/Y/Z`, `ParTime`, `ParType`, and, optionally, the pointer array `*AllAttribute[PAR_NATT_TOTAL]`,
+`ParVelX/Y/Z`, `ParTime`, `ParType`, and, optionally, the pointer arrays
+`*AllAttributeFlt[PAR_NATT_FLT_TOTAL]` and `*AllAttributeInt[PAR_NATT_INT_TOTAL]`,
 all of which have the size of `NPar_ThisRank` &#8212; the number of particles
 to be set by this MPI rank. Note that particles set by this function
 are only temporarily stored in this MPI rank and will later be
@@ -221,25 +223,29 @@ The following example shows `Par_Init_ByFunction()` in
 //                       and LB_Init_LoadBalance()
 //                   --> Therefore, there is no constraint on which particles should be set by this function
 //
-// Parameter   :  NPar_ThisRank : Number of particles to be set by this MPI rank
-//                NPar_AllRank  : Total Number of particles in all MPI ranks
-//                ParMass       : Particle mass     array with the size of NPar_ThisRank
-//                ParPosX/Y/Z   : Particle position array with the size of NPar_ThisRank
-//                ParVelX/Y/Z   : Particle velocity array with the size of NPar_ThisRank
-//                ParTime       : Particle time     array with the size of NPar_ThisRank
-//                ParType       : Particle type     array with the size of NPar_ThisRank
-//                AllAttribute  : Pointer array for all particle attributes
-//                                --> Dimension = [PAR_NATT_TOTAL][NPar_ThisRank]
-//                                --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
-//                                    to access the data
+// Parameter   :  NPar_ThisRank   : Number of particles to be set by this MPI rank
+//                NPar_AllRank    : Total Number of particles in all MPI ranks
+//                ParMass         : Particle mass     array with the size of NPar_ThisRank
+//                ParPosX/Y/Z     : Particle position array with the size of NPar_ThisRank
+//                ParVelX/Y/Z     : Particle velocity array with the size of NPar_ThisRank
+//                ParTime         : Particle time     array with the size of NPar_ThisRank
+//                ParType         : Particle type     array with the size of NPar_ThisRank
+//                AllAttributeFlt : Pointer array for all particle floating-point attributes
+//                                  --> Dimension = [PAR_NATT_FLT_TOTAL][NPar_ThisRank]
+//                                  --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
+//                                      to access the data
+//                AllAttributeInt : Pointer array for all particle integer attributes
+//                                  --> Dimension = [PAR_NATT_INT_TOTAL][NPar_ThisRank]
+//                                  --> Use the attribute indices defined in Field.h to access the data
 
 //
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttribute
 //-------------------------------------------------------------------------------------------------------
 void Par_Init_ByFunction( const long NPar_ThisRank, const long NPar_AllRank,
-                          real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                          real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                          real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
+                          real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                          real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                          long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                          long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 {
 
 // synchronize all particles to the physical time on the base level
@@ -254,26 +260,26 @@ void Par_Init_ByFunction( const long NPar_ThisRank, const long NPar_AllRank,
    real *ParPos[3] = { ParPosX, ParPosY, ParPosZ };
    real *ParVel[3] = { ParVelX, ParVelY, ParVelZ };
 
-   const uint RSeed     = 2;                                         // random seed
-   const real MassMin   = 1.0e-2;                                    // minimum value of particle mass
-   const real MassMax   = 1.0;                                       // maximum value of particle mass
-   const real PosMin[3] = { 0.0, 0.0, 0.0 };                         // minimum value of particle position
-   const real PosMax[3] = { real( amr->BoxSize[0]*(1.0-1.0e-5) ),    // maximum value of particle position
-                            real( amr->BoxSize[1]*(1.0-1.0e-5) ),
-                            real( amr->BoxSize[2]*(1.0-1.0e-5) ) };
-   const real VelMin[3] = { -1.0, -1.0, -1.0 };                      // minimum value of particle velocity
-   const real VelMax[3] = { +1.0, +1.0, +1.0 };                      // maximum value of particle velocity
+   const uint     RSeed     = 2;                                         // random seed
+   const real_par MassMin   = 1.0e-2;                                    // minimum value of particle mass
+   const real_par MassMax   = 1.0;                                       // maximum value of particle mass
+   const real_par PosMin[3] = { 0.0, 0.0, 0.0 };                         // minimum value of particle position
+   const real_par PosMax[3] = { real( amr->BoxSize[0]*(1.0-1.0e-5) ),    // maximum value of particle position
+                                real( amr->BoxSize[1]*(1.0-1.0e-5) ),
+                                real( amr->BoxSize[2]*(1.0-1.0e-5) ) };
+   const real_par VelMin[3] = { -1.0, -1.0, -1.0 };                      // minimum value of particle velocity
+   const real_par VelMax[3] = { +1.0, +1.0, +1.0 };                      // maximum value of particle velocity
 
    srand( RSeed );
 
    for (long p=0; p<NPar_ThisRank; p++)
    {
-      ParMass[p] = ( (real)rand()/RAND_MAX )*( MassMax - MassMin ) + MassMin;
+      ParMass[p] = ( (real_par)rand()/RAND_MAX )*( MassMax - MassMin ) + MassMin;
 
       for (int d=0; d<3; d++)
       {
-         ParPos[d][p] = ( (real)rand()/RAND_MAX )*( PosMax[d] - PosMin[d] ) + PosMin[d];
-         ParVel[d][p] = ( (real)rand()/RAND_MAX )*( VelMax[d] - VelMin[d] ) + VelMin[d];
+         ParPos[d][p] = ( (real_par)rand()/RAND_MAX )*( PosMax[d] - PosMin[d] ) + PosMin[d];
+         ParVel[d][p] = ( (real_par)rand()/RAND_MAX )*( VelMax[d] - VelMin[d] ) + VelMin[d];
       }
    }
 
@@ -361,6 +367,10 @@ routine will add grids to levels [[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initia
 [[ MAX_LEVEL | Runtime-Parameters:-Refinement#MAX_LEVEL]]
 in the regions satisfying any refinement criterion.
 
+A custom routine for assigning data to each cell from the loaded data
+can be specified using the function pointer
+[[Init_ByFile_User_Ptr | Adding-New-Simulations#initial-condition-from-files---grids]].
+
 The initial condition file `UM_IC` can be loaded concurrently by multiple
 MPI processes using [[OPT__UM_IC_LOAD_NRANK | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LOAD_NRANK]].
 
@@ -397,7 +407,7 @@ row-major array) can be either
 and `NUM_PARTICLE` is the total number of particles
 (i.e., [[PAR_NPAR | Runtime-Parameters:-Particles#PAR_NPAR]]).
 By default, `NUM_ATTRIBUTE` is equal to
-`8` + [[--par_attribute | Installation:-Option-List#--par_attribute]],
+`7` + [[--par_attribute_flt | Installation:-Option-List#--par_attribute_flt]] + [[--par_attribute_int | Installation:-Option-List#--par_attribute_int]],
 corresponding to particle mass, position x/y/z, velocity x/y/z,
 type, and user-specified attributes (and in exactly this order).
 One can also use [[PAR_IC_MASS | Runtime-Parameters:-Particles#PAR_IC_MASS]] / [[PAR_IC_TYPE | Runtime-Parameters:-Particles#PAR_IC_TYPE]]
@@ -412,39 +422,80 @@ and [[PAR_IC_FORMAT | Runtime-Parameters:-Particles#PAR_IC_FORMAT]]=1.
 ```c++
 #include <cstdio>
 
+//#define FLOAT8_PAR
+#define INT8_PAR
+
+
+#ifdef FLOAT8_PAR
+typedef double real_par;
+#else
+typedef float  real_par;
+#endif
+
+#ifdef INT8_PAR
+typedef long long_par;
+#else
+typedef int  long_par;
+#endif
+
+
 int main()
 {
-   const int NUM_PARTICLE  = 1000;
-   const int NUM_ATTRIBUTE = 8;
 
-   float (*ParIC)[NUM_PARTICLE] = new float [NUM_ATTRIBUTE][NUM_PARTICLE];
+   const int  NUM_PARTICLE      = 1000;
+   const int  NUM_ATTRIBUTE_FLT = 7;
+   const int  NUM_ATTRIBUTE_INT = 1;
+   const bool PAR_IC_ID_ATT     = true; // data format of PAR_IC: (true: [id][attribute], false: [attribute][id]; row-major)
+
+   real_par (*ParIC_Flt)[NUM_PARTICLE] = new real_par [NUM_ATTRIBUTE_FLT][NUM_PARTICLE];
+   long_par (*ParIC_Int)[NUM_PARTICLE] = new long_par [NUM_ATTRIBUTE_INT][NUM_PARTICLE];
 
    for (int p=0; p<NUM_PARTICLE; p++)
    {
 //    replace the following lines by your particle initial condition
-      ParIC[0][p] = 1.1;   // mass
-      ParIC[1][p] = 2.2;   // position x
-      ParIC[2][p] = 3.3;   // position y
-      ParIC[3][p] = 4.4;   // position z
-      ParIC[4][p] = 5.5;   // velocity x
-      ParIC[5][p] = 6.6;   // velocity y
-      ParIC[6][p] = 7.7;   // velocity z
-      ParIC[7][p] = 1.0;   // type (generic massive)
+      ParIC_Flt[0][p] = 1.1;   // mass
+      ParIC_Flt[1][p] = 2.2;   // position x
+      ParIC_Flt[2][p] = 3.3;   // position y
+      ParIC_Flt[3][p] = 4.4;   // position z
+      ParIC_Flt[4][p] = 5.5;   // velocity x
+      ParIC_Flt[5][p] = 6.6;   // velocity y
+      ParIC_Flt[6][p] = 7.7;   // velocity z
+
+      ParIC_Int[0][p] = 1;     // type (generic massive)
    }
 
    FILE *File = fopen( "PAR_IC", "wb" );
-   fwrite( ParIC, sizeof(float), NUM_PARTICLE*NUM_ATTRIBUTE, File );
+
+   if ( PAR_IC_ID_ATT )
+   {
+      for (int p=0; p<NUM_PARTICLE; p++)
+      {
+         for (int v=0; v<NUM_ATTRIBUTE_FLT; v++) fwrite( &ParIC_Flt[v][p], sizeof(real_par), 1, File );
+         for (int v=0; v<NUM_ATTRIBUTE_INT; v++) fwrite( &ParIC_Int[v][p], sizeof(long_par), 1, File );
+      }
+   }
+   else
+   {
+      for (int v=0; v<NUM_ATTRIBUTE_FLT; v++) fwrite( ParIC_Flt[v], sizeof(real_par), NUM_PARTICLE, File );
+      for (int v=0; v<NUM_ATTRIBUTE_INT; v++) fwrite( ParIC_Int[v], sizeof(long_par), NUM_PARTICLE, File );
+   }
+
    fclose( File );
 
-   delete [] ParIC;
-}
+   delete [] ParIC_Flt;
+   delete [] ParIC_Int;
+
+} // FUNCTION : main
 ```
 
 The built-in particle types (defined in `include/Macro.h`) include
-`PTYPE_TRACER=0.0`, `PTYPE_GENERIC_MASSIVE=1.0`, `PTYPE_DARK_MATTER=2.0`, and `PTYPE_STAR=3.0`.
-They have the floating-point types for now but will be changed to integers in the future.
+`PTYPE_TRACER=0`, `PTYPE_GENERIC_MASSIVE=1`, `PTYPE_DARK_MATTER=2`, and `PTYPE_STAR=3`.
 For `PTYPE_TRACER`, one must also enable the compilation option
 [[--tracer | Installation:-Option-List#--tracer]].
+
+A custom routine for assigning particle attributes from the loaded data
+can be specified using the function pointer
+[[Par_Init_ByFile_User_Ptr | Adding-New-Simulations#initial-condition-from-files---particles]].
 
 Note that it is not required to adopt [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=3 and
 [[PAR_INIT | Runtime-Parameters:-Particles#PAR_INIT]]=3 at the same time. In other words,
@@ -456,7 +507,8 @@ function and load the particle initial condition from a file (and vice versa).
 
 Related options:
 [[--passive | Installation:-Option-List#--passive]], &nbsp;
-[[--par_attribute | Installation:-Option-List#--par_attribute]] &nbsp;
+[[--par_attribute_flt | Installation:-Option-List#--par_attribute_flt]] &nbsp;
+[[--par_attribute_int | Installation:-Option-List#--par_attribute_int]] &nbsp;
 
 
 ## Runtime Parameters
