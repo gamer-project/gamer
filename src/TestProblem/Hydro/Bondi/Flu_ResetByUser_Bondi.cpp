@@ -119,7 +119,7 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const int MagSg, 
    real   fluid[NCOMP_TOTAL], fluid_bk[NCOMP_TOTAL];
    double x, y, z, x0, y0, z0;
 // Define varible to record sink mass at every time step
-   double SinkMass_OneSubStep_ThisRank = 0;
+   double SinkMass_OneSubStep_ThisRank = 0.0;
    double SinkMass_OneSubStep_AllRank;
 
 // reset to 0 since we only want to record the number of void cells **for one sub-step**
@@ -214,9 +214,12 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const int MagSg, 
       }}} // i,j,k
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
-   MPI_Allreduce( &SinkMass_OneSubStep_ThisRank, &SinkMass_OneSubStep_AllRank, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+   if ( Bondi_dynBH )
+   {
+      MPI_Allreduce( &SinkMass_OneSubStep_ThisRank, &SinkMass_OneSubStep_AllRank, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
 
-   if ( Bondi_dynBH )   Bondi_MassBH += SinkMass_OneSubStep_AllRank;
+      Bondi_MassBH += SinkMass_OneSubStep_AllRank;
+   }
 
 } // FUNCTION : Flu_ResetByUser_API_Bondi
 

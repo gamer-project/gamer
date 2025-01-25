@@ -17,6 +17,8 @@ static double  Bondi_T0;                  // background temperature
 static double  Bondi_InBC_T;              // temperature inside the void region
 static double  Bondi_InBC_NCell;          // number of finest cells for the radius of the void region
 static double  Bondi_Soften_NCell;        // number of finest cells for the soften length (<=0.0 ==> disable)
+       bool    Bondi_void;                // enable the void region
+       bool    Bondi_dynBH;               // dynamically increase BH mass
 
        double  Bondi_InBC_R;              // radius of the void region (=Bondi_InBC_NCell*dh[MAX_LEVEL])
        double  Bondi_InBC_P;              // pressure inside the void region
@@ -76,17 +78,15 @@ static double  Bondi_HSE_Beta_P1;         // P(r) = P1*( 1/x + atan(x) ) + P2 as
 static double  Bondi_HSE_Beta_P2;         // P1=G*MassBH*Rho0/Rcore, and P2 currently fixed to -0.5*pi*P1 so that P(inf)=0
 
 // parameters for soliton
-       bool    Bondi_void;                // enable the void region
-       bool    Bondi_dynBH;               // dynamically increase BH mass
        bool    Bondi_Soliton;             // add soliton external potential
-       double  Bondi_Soliton_m22;         // FDM particle mass for Bondi_Soliton
+       double  Bondi_Soliton_m22;         // FDM particle mass in 1e-22 eV/c^2 for Bondi_Soliton
        int     Bondi_Soliton_type;        // functional form for gradually introducing the soliton potential
-                                          // (1:arctan, 2:linear, 3:smooth step function, 4:sigmoid, 5:tanh)
+                                          //   (1:arctan, 2:linear, 3:smooth step function, 4:sigmoid, 5:tanh)
        double  Bondi_Soliton_t;           // characteristic time normalized to Bondi_TimeB for adding the soliton potential
        double  Bondi_Soliton_rc;          // soliton radius for Bondi_Soliton
-                                          // (<0.0 --> compute from Bondi_Soliton_MassHalo/Redshift using the core-halo relation)
-       double  Bondi_Soliton_MassHalo;    // halo mass for Bondi_Soliton when Bondi_Soliton_rc<0.0
-       double  Bondi_Soliton_Redshift;    // redshift for Bondi_Soliton when Bondi_Soliton_rc<0.0
+                                          //   (<0.0 --> compute from Bondi_Soliton_MassHalo/Redshift using the core-halo relation)
+static double  Bondi_Soliton_MassHalo;    // halo mass for Bondi_Soliton when Bondi_Soliton_rc<0.0
+static double  Bondi_Soliton_Redshift;    // redshift for Bondi_Soliton when Bondi_Soliton_rc<0.0
 // =======================================================================================
 
 
@@ -228,41 +228,41 @@ void SetParameter()
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
 // --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
 // ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,                  DEFAULT,      MIN,              MAX               );
+// ReadPara->Add( "KEY_IN_THE_FILE",         &VARIABLE,                  DEFAULT,      MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "Bondi_MassBH",         &Bondi_MassBH,             -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Bondi_Rho0",           &Bondi_Rho0,               -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Bondi_T0",             &Bondi_T0,                 -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Bondi_RefineRadius0",  &Bondi_RefineRadius0,      -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Bondi_HalfMaxLvRefR",  &Bondi_HalfMaxLvRefR,       true,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "Bondi_InBC_Rho",       &Bondi_InBC_Rho,           -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Bondi_InBC_T",         &Bondi_InBC_T,             -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Bondi_InBC_NCell",     &Bondi_InBC_NCell,         -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Bondi_Soften_NCell",   &Bondi_Soften_NCell,       -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Bondi_MassBH",            &Bondi_MassBH,             -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Bondi_Rho0",              &Bondi_Rho0,               -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Bondi_T0",                &Bondi_T0,                 -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Bondi_RefineRadius0",     &Bondi_RefineRadius0,      -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Bondi_HalfMaxLvRefR",     &Bondi_HalfMaxLvRefR,       true,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Bondi_InBC_Rho",          &Bondi_InBC_Rho,           -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Bondi_InBC_T",            &Bondi_InBC_T,             -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Bondi_InBC_NCell",        &Bondi_InBC_NCell,         -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Bondi_Soften_NCell",      &Bondi_Soften_NCell,       -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Bondi_void",              &Bondi_void,                true,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Bondi_dynBH",             &Bondi_dynBH,               false,        Useless_bool,     Useless_bool      );
 
-   ReadPara->Add( "Bondi_HSE",            &Bondi_HSE,                 false,        Useless_bool,     Useless_bool      );
-   ReadPara->Add( "Bondi_HSE_Mode",       &Bondi_HSE_Mode,            1,            1,                3                 );
-   ReadPara->Add( "Bondi_HSE_Dens_NBin",  &Bondi_HSE_Dens_NBin,       10000,        2,                NoMax_int         );
-   ReadPara->Add( "Bondi_HSE_Dens_MinR",  &Bondi_HSE_Dens_MinR,      -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Bondi_HSE_Dens_MaxR",  &Bondi_HSE_Dens_MaxR,      -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Bondi_HSE_Dens_NormR", &Bondi_HSE_Dens_NormR,     -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Bondi_HSE_Dens_NormD", &Bondi_HSE_Dens_NormD,     -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Bondi_HSE_Truncate",   &Bondi_HSE_Truncate,        true,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "Bondi_HSE_TrunR",      &Bondi_HSE_TrunR,          -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Bondi_HSE_TrunD",      &Bondi_HSE_TrunD,          -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Bondi_HSE_TrunSmoothR",&Bondi_HSE_TrunSmoothR,    -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Bondi_HSE_Pres_NormT", &Bondi_HSE_Pres_NormT,      false,        Useless_bool,     Useless_bool      );
-   ReadPara->Add( "Bondi_HSE_Beta_Rcore", &Bondi_HSE_Beta_Rcore,     -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Bondi_HSE",               &Bondi_HSE,                 false,        Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Bondi_HSE_Mode",          &Bondi_HSE_Mode,            1,            1,                3                 );
+   ReadPara->Add( "Bondi_HSE_Dens_NBin",     &Bondi_HSE_Dens_NBin,       10000,        2,                NoMax_int         );
+   ReadPara->Add( "Bondi_HSE_Dens_MinR",     &Bondi_HSE_Dens_MinR,      -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Bondi_HSE_Dens_MaxR",     &Bondi_HSE_Dens_MaxR,      -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Bondi_HSE_Dens_NormR",    &Bondi_HSE_Dens_NormR,     -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Bondi_HSE_Dens_NormD",    &Bondi_HSE_Dens_NormD,     -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Bondi_HSE_Truncate",      &Bondi_HSE_Truncate,        true,         Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Bondi_HSE_TrunR",         &Bondi_HSE_TrunR,          -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Bondi_HSE_TrunD",         &Bondi_HSE_TrunD,          -1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "Bondi_HSE_TrunSmoothR",   &Bondi_HSE_TrunSmoothR,    -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Bondi_HSE_Pres_NormT",    &Bondi_HSE_Pres_NormT,      false,        Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Bondi_HSE_Beta_Rcore",    &Bondi_HSE_Beta_Rcore,     -1.0,          Eps_double,       NoMax_double      );
 
-   ReadPara->Add( "Bondi_void",               &Bondi_void,                    true,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "Bondi_dynBH",              &Bondi_dynBH,                   true,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "Bondi_Soliton",            &Bondi_Soliton,                 false,        Useless_bool,     Useless_bool      );
-   ReadPara->Add( "Bondi_Soliton_m22",        &Bondi_Soliton_m22,            -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Bondi_Soliton_type",       &Bondi_Soliton_type,            5,          1,        5 );
-   ReadPara->Add( "Bondi_Soliton_t",          &Bondi_Soliton_t,              -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Bondi_Soliton_rc",         &Bondi_Soliton_rc,             -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Bondi_Soliton_MassHalo",   &Bondi_Soliton_MassHalo,       -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Bondi_Soliton_Redshift",   &Bondi_Soliton_Redshift,       -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Bondi_Soliton",           &Bondi_Soliton,             false,        Useless_bool,     Useless_bool      );
+   ReadPara->Add( "Bondi_Soliton_m22",       &Bondi_Soliton_m22,        -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Bondi_Soliton_type",      &Bondi_Soliton_type,        5,            1,                5                 );
+   ReadPara->Add( "Bondi_Soliton_t",         &Bondi_Soliton_t,          -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Bondi_Soliton_rc",        &Bondi_Soliton_rc,         -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Bondi_Soliton_MassHalo",  &Bondi_Soliton_MassHalo,   -1.0,          NoMin_double,     NoMax_double      );
+   ReadPara->Add( "Bondi_Soliton_Redshift",  &Bondi_Soliton_Redshift,   -1.0,          NoMin_double,     NoMax_double      );
 
    ReadPara->Read( FileName );
 
@@ -291,6 +291,14 @@ void SetParameter()
       for (int s=0; s<6; s++)
          if ( OPT__BC_FLU[s] != BC_FLU_OUTFLOW  &&  MPI_Rank == 0 )
             Aux_Message( stderr, "WARNING : OPT__BC_FLU[%d] != BC_FLU_OUTFLOW for non-HSE setup !?\n", s );
+   }
+
+   if ( Bondi_Soliton )
+   {
+      if ( Bondi_Soliton_m22      <= 0.0 )  Aux_Error( ERROR_INFO, "Bondi_Soliton_m22 (%14.7e) <= 0.0 !!\n",      Bondi_Soliton_m22      );
+      if ( Bondi_Soliton_t        <  0.0 )  Aux_Error( ERROR_INFO, "Bondi_Soliton_t (%14.7e) < 0.0 !!\n",         Bondi_Soliton_t        );
+      if ( Bondi_Soliton_MassHalo <= 0.0 )  Aux_Error( ERROR_INFO, "Bondi_Soliton_MassHalo (%14.7e) <= 0.0 !!\n", Bondi_Soliton_MassHalo );
+      if ( Bondi_Soliton_Redshift <  0.0 )  Aux_Error( ERROR_INFO, "Bondi_Soliton_Redshift (%14.7e) < 0.0 !!\n",  Bondi_Soliton_Redshift );
    }
 
 
@@ -380,11 +388,14 @@ void SetParameter()
       }
    } // if ( Bondi_HSE )
 
+
+// (4) initialize the soliton setup
    if ( Bondi_Soliton )
    {
-      if ( Bondi_Soliton_rc < 0.0 ) {
+      if ( Bondi_Soliton_rc < 0.0 )
+      {
          double z = Bondi_Soliton_Redshift;
-         double Mh = Bondi_Soliton_MassHalo;
+         double Mh = Bondi_Soliton_MassHalo*UnitExt_M/Const_Msun; // convert to Msun
          double H0 = 67.66;
          double Om0 = 0.3111;
          H0 = H0*1e5/(Const_kpc*1e3);
@@ -395,14 +406,16 @@ void SetParameter()
          double kiz_z  = (18*SQR(3.14159265)+82*(Om_z-1)-39*SQR(Om_z-1))/Om_z;
          double kiz_0  = (18*SQR(3.14159265)+82*(Om_0-1)-39*SQR(Om_0-1))/Om_0;
 
-         Bondi_Soliton_rc = 1.6/Bondi_Soliton_m22*pow(1+z,-1.0/2.0)*pow(kiz_z/kiz_0,-1.0/6.0)*pow(Mh/1e9,-1.0/3.0);
+         Bondi_Soliton_rc  = 1.6/Bondi_Soliton_m22*pow(1+z,-1.0/2.0)*pow(kiz_z/kiz_0,-1.0/6.0)*pow(Mh/1e9,-1.0/3.0); // in kpc
+         Bondi_Soliton_rc *= Const_kpc/UnitExt_L;  // convert to external units to match the manually input value
       }
-      Bondi_Soliton_rc *= UnitExt_L/UNIT_L;
-      Bondi_Soliton_t  *= Bondi_TimeB;
-   }
+
+      Bondi_Soliton_rc *= UnitExt_L/UNIT_L;  // convert to internal units
+      Bondi_Soliton_t  *= Bondi_TimeB;       // input Bondi_Soliton_t is normalized to the Bondi time
+   } // if ( Bondi_Soliton )
 
 
-// (4) reset other general-purpose parameters
+// (5) reset other general-purpose parameters
 //     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
    const long   End_Step_Default = __INT_MAX__;
    const double End_T_Default    = 1.0e1*Bondi_TimeB;    // 10 Bondi time
