@@ -76,8 +76,6 @@ void Par_Init_ByFunction_HaloMerger( const long NPar_ThisRank, const long NPar_A
 static void HaloMerger_Add_Velocity( double *RealPart, double *ImagPart,
                                      const double Velocity_X, const double Velocity_Y, const double Velocity_Z,
                                      const double Position_X, const double Position_Y, const double Position_Z );
-
-static double HaloMerger_Get_Value_From_HALO_IC_Data( const double x, const double y, const double z, const int v, const int index_halo );
 // =======================================================================================
 #endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
@@ -1241,9 +1239,25 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                  z >= HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][2]  &&
                  z <= HaloMerger_Halo_HALO_IC_Range_EdgeR[index_halo][2] )
             {
-//             assume real part first and then imaginary part
-               Real_halo = HaloMerger_Get_Value_From_HALO_IC_Data( x, y, z, 0, index_halo );
-               Imag_halo = HaloMerger_Get_Value_From_HALO_IC_Data( x, y, z, 1, index_halo );
+               const double Target_Coordinates[3] = { x, y, z };
+
+//             size of one field
+               const long ICSize1v = (long)HaloMerger_Halo_HALO_IC_NCells[index_halo][2]*
+                                           HaloMerger_Halo_HALO_IC_NCells[index_halo][1]*
+                                           HaloMerger_Halo_HALO_IC_NCells[index_halo][0];
+
+//             index of the bottom-left corner in the HALO_IC
+               const int IntCorner000_HALOICIndex[3] = {(int)floor( (x - HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][0])/HaloMerger_Halo_HALO_IC_dh[index_halo][0] - 0.5 ),
+                                                        (int)floor( (y - HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][1])/HaloMerger_Halo_HALO_IC_dh[index_halo][1] - 0.5 ),
+                                                        (int)floor( (z - HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][2])/HaloMerger_Halo_HALO_IC_dh[index_halo][2] - 0.5 )};
+
+//             3D linear interpolation, assume real part first and then imaginary part
+               Real_halo = Mis_InterpolateFrom_nDim_Table_withIdxL( 3, HaloMerger_Halo_HALO_IC_NCells[index_halo], HaloMerger_Halo_HALO_IC_Coords[index_halo],
+                                                                    &HaloMerger_Halo_HALO_IC_Data[index_halo][0*ICSize1v],
+                                                                    Target_Coordinates, IntCorner000_HALOICIndex );
+               Imag_halo = Mis_InterpolateFrom_nDim_Table_withIdxL( 3, HaloMerger_Halo_HALO_IC_NCells[index_halo], HaloMerger_Halo_HALO_IC_Coords[index_halo],
+                                                                    &HaloMerger_Halo_HALO_IC_Data[index_halo][1*ICSize1v],
+                                                                    Target_Coordinates, IntCorner000_HALOICIndex );
             }
 
             break;
@@ -1515,45 +1529,6 @@ void HaloMerger_Add_Velocity( double *RealPart, double *ImagPart,
    *ImagPart = Imag_New;
 
 } // FUNCTION : HaloMerger_Add_Velocity
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  HaloMerger_Get_Value_From_HALO_IC_Data
-// Description :  Get the target value of field v at (x,y,z) by reading the HALO_IC of halo and performing linear interpolation
-//
-// Note        :  None
-//
-// Parameter   :  x                  : target x-coordinate
-//                y                  : target y-coordinate
-//                z                  : target z-coordinate
-//                v                  : index of the target field
-//                index_halo         : index of target halo
-// Return      :  Interpolated_Value : value interpolated from the HALO_IC of halo
-//-------------------------------------------------------------------------------------------------------
-double HaloMerger_Get_Value_From_HALO_IC_Data( const double x, const double y, const double z, const int v, const int index_halo )
-{
-   const double Target_Coordinates[3] = { x, y, z };
-
-// size of one field
-   const long ICSize1v = (long)v*HaloMerger_Halo_HALO_IC_NCells[index_halo][2]
-                                *HaloMerger_Halo_HALO_IC_NCells[index_halo][1]
-                                *HaloMerger_Halo_HALO_IC_NCells[index_halo][0];
-
-// index of the bottom-left corner in the HALO_IC
-   const int IntCorner000_HALOICIndex[3] = {(int)floor( (x - HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][0])/HaloMerger_Halo_HALO_IC_dh[index_halo][0] - 0.5 ),
-                                            (int)floor( (y - HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][1])/HaloMerger_Halo_HALO_IC_dh[index_halo][1] - 0.5 ),
-                                            (int)floor( (z - HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][2])/HaloMerger_Halo_HALO_IC_dh[index_halo][2] - 0.5 )};
-
-// 3D linear interpolation
-   const double Interpolated_Value = Mis_InterpolateFrom_nDim_Table_withIdxL( 3, HaloMerger_Halo_HALO_IC_NCells[index_halo],
-                                                                                 HaloMerger_Halo_HALO_IC_Coords[index_halo],
-                                                                                &HaloMerger_Halo_HALO_IC_Data[index_halo][ICSize1v],
-                                                                                 Target_Coordinates, IntCorner000_HALOICIndex );
-
-   return Interpolated_Value;
-
-} // FUNCTION : HaloMerger_Get_Value_From_HALO_IC_Data
 #endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
 
