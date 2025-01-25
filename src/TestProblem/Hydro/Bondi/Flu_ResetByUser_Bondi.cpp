@@ -51,7 +51,7 @@ int Flu_ResetByUser_Func_Bondi( real fluid[], const double Emag, const double x,
                                 const double dt, const int lv, double AuxArray[] )
 {
 
-   if ( !Bondi_void ) 
+   if ( !Bondi_void )
       return false;
 
    const double Pos[3]  = { x, y, z };
@@ -206,7 +206,7 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const int MagSg, 
             {
 //             void region must be completely refined to the max level
                Aux_Error( ERROR_INFO, "void region lies outside the max-level region !!\n" );
-	    }
+            }
          } // if ( Reset )
       }}} // i,j,k
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)

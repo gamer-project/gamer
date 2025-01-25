@@ -408,7 +408,7 @@ void SetParameter()
          double Om_0   = Om0/(1-Om0*(1-(1+a0)/a0));
          double kiz_z  = (18*SQR(3.14159265)+82*(Om_z-1)-39*SQR(Om_z-1))/Om_z;
          double kiz_0  = (18*SQR(3.14159265)+82*(Om_0-1)-39*SQR(Om_0-1))/Om_0;
-         
+
          Bondi_Soliton_rc = 1.6/Bondi_Soliton_m22*pow(1+z,-1.0/2.0)*pow(kiz_z/kiz_0,-1.0/6.0)*pow(Mh/1e9,-1.0/3.0);
       }
       Bondi_Soliton_rc *= UnitExt_L/UNIT_L;
@@ -429,7 +429,7 @@ void SetParameter()
       Bondi_Init_Prof_d = Bondi_Init_Data + 1*Bondi_Init_bin;
       Bondi_Init_Prof_v = Bondi_Init_Data + 2*Bondi_Init_bin;
       Bondi_Init_Prof_p = Bondi_Init_Data + 3*Bondi_Init_bin;
-      
+
       for( int b=0; b<Bondi_Init_bin; b++ )
       {
          Bondi_Init_Prof_r[b] *= Const_kpc/UNIT_L;
@@ -595,7 +595,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       const double r = sqrt( SQR(x-amr->BoxCenter[0]) + SQR(y-amr->BoxCenter[1]) + SQR(z-amr->BoxCenter[2]) );
       Dens = Mis_InterpolateFromTable( Bondi_Init_bin, Bondi_Init_Prof_r, Bondi_Init_Prof_d, r )/UNIT_D;
       Pres = Mis_InterpolateFromTable( Bondi_Init_bin, Bondi_Init_Prof_r, Bondi_Init_Prof_p, r )/UNIT_P;
-      
+
       const double vmag = Mis_InterpolateFromTable( Bondi_Init_bin, Bondi_Init_Prof_r, Bondi_Init_Prof_v, r )/UNIT_V;
       //const double dh   = amr->dh[lv];
       //const real   dv   = CUBE(dh);
@@ -623,7 +623,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          Aux_Error( ERROR_INFO, "Wrong Table\n");
       }
       Pres *= 1/(UNIT_P);
-   } 
+   }
 
 
 // uniform background
@@ -760,7 +760,7 @@ int odefunc ( double x, const double y[], double f[], void *params)
    x /= Const_kpc;
    double rc = Bondi_Soliton_rc*UNIT_L/Const_kpc;
    double m22 = Bondi_Soliton_m22;
-   
+
    double rho = 1.945*pow(m22/1e-1, -2.0)*pow(rc*1e3, -4.0)*1e12/pow(1+(9.1e-2)*SQR(x/rc), 8.0)*Const_Msun/pow(Const_pc, 3.0);
    double a = sqrt(pow(2.0,1.0/8.0)-1)*(x/rc);
    double M = 4.17e9/(SQR(m22/1e-1)*(rc*1e3)*pow(SQR(a)+1, 7.0))*(3465*pow(a,13.0)+23100*pow(a,11.0)+65373*pow(a,9.0)+101376*pow(a,7.0)+92323*pow(a,5.0)+48580*pow(a,3.0)-3465*a+3465*pow(SQR(a)+1, 7.0)*atan(a))*Const_Msun;
@@ -777,7 +777,7 @@ void Soliton_SetPresProfileTable()
    const double r_min = 0.1*amr->dh[MAX_LEVEL]*UNIT_L;
    const double r_max = (0.5*sqrt(3.0)*amr->BoxSize[0])*UNIT_L;
    for (int v=0; v<2; v++)    Bondi_Soliton_PresProf[v] = new double [NBin];
-   
+
    int dim = 1;
    gsl_odeiv2_system sys = {odefunc, NULL, dim, NULL};
 
@@ -800,7 +800,7 @@ void Soliton_SetPresProfileTable()
    }
    gsl_odeiv2_driver_free (d);
 } // void Soliton_SetDensProfileTable()
-  
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  End_Bondi

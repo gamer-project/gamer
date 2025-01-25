@@ -76,9 +76,8 @@ void SetExtAccAuxArray_Bondi( double AuxArray[], const double Time )
               case 5: // tanh
                   AuxArray[8] *= tanh(Time/Bondi_Soliton_t);
                   break;
-                
           }
-      } 
+      }
    }
 
 } // FUNCTION : SetExtAccAuxArray_Bondi
