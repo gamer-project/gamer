@@ -58,10 +58,6 @@ void Init_ByRestart()
    if ( !Aux_CheckFileExist(FileName)  &&  MPI_Rank == 0 )
       Aux_Error( ERROR_INFO, "restart file \"%s\" does not exist !!\n", FileName );
 
-#  if ( ( defined PARTICLE ) && ( (defined FLOAT8 && !defined FLOAT8_PAR) || (!defined FLOAT8 && defined FLOAT8_PAR) ) )
-   Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for OPT__OUTPUT_TOTAL=2 (C-binary) !!\n" );
-#  endif
-
    MPI_Barrier( MPI_COMM_WORLD );
 
 
@@ -143,6 +139,11 @@ void Init_ByRestart()
 #     ifdef MHD
       if ( FormatVersion < 2210 )
          Aux_Error( ERROR_INFO, "unsupported data format version for MHD (only support version >= 2210) !!\n" );
+#     endif
+
+#     if (  defined PARTICLE  &&  ( (defined FLOAT8 && !defined FLOAT8_PAR) || (!defined FLOAT8 && defined FLOAT8_PAR) )  )
+      if ( FormatVersion < 2300 )
+         Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for OPT__OUTPUT_TOTAL=2 (C-binary) for versions < 2300 !!\n" );
 #     endif
    }
    MPI_Barrier( MPI_COMM_WORLD );
@@ -332,7 +333,16 @@ void Init_ByRestart()
       ExpectSize   += ParInfoSize;
    }
 
-   ExpectSize += (long)PAR_NATT_STORED*amr->Par->NPar_Active_AllRank*sizeof(real_par);
+   if ( FormatVersion >= 2300 )
+   {
+      ExpectSize += (long)PAR_NATT_FLT_STORED*amr->Par->NPar_Active_AllRank*sizeof(real_par);
+      ExpectSize += (long)PAR_NATT_INT_STORED*amr->Par->NPar_Active_AllRank*sizeof(long_par);
+   }
+   else
+   {
+      ExpectSize += (long)PAR_NATT_FLT_STORED*amr->Par->NPar_Active_AllRank*sizeof(real_par);
+      ExpectSize += (long)1*amr->Par->NPar_Active_AllRank*sizeof(real_par); // ParType
+   }
 #  endif
 
    fseek( File, 0, SEEK_END );
@@ -577,22 +587,26 @@ void Init_ByRestart()
 // e. load particles
 // =================================================================================================
 #  ifdef PARTICLE
-   const long ParDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(real_par);
+   const long ParFltDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(real_par);
+   const long ParIntDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(long_par);
 
    long  *NewParList     = new long [MaxNParInOnePatch];
-   real_par **ParBuf     = NULL;
+   real_par **ParFltBuf  = NULL;
+   long_par **ParIntBuf  = NULL;
 
-   real_par NewParAtt[PAR_NATT_TOTAL];
+   real_par NewParAttFlt[PAR_NATT_FLT_TOTAL];
+   long_par NewParAttInt[PAR_NATT_INT_TOTAL];
    long GParID;
    int  NParThisPatch;
 
-// be careful about using ParBuf returned from Aux_AllocateArray2D, which is set to NULL if MaxNParInOnePatch == 0
-// --> for example, accessing ParBuf[0...PAR_NATT_STORED-1] will be illegal when MaxNParInOnePatch == 0
-   Aux_AllocateArray2D( ParBuf, PAR_NATT_STORED, MaxNParInOnePatch );
+// be careful about using ParFlt/IntBuf returned from Aux_AllocateArray2D, which is set to NULL if MaxNParInOnePatch == 0
+// --> for example, accessing ParFlt/IntBuf[0...PAR_NATT_FLT/INT_STORED-1] will be illegal when MaxNParInOnePatch == 0
+   Aux_AllocateArray2D( ParFltBuf, PAR_NATT_FLT_STORED, MaxNParInOnePatch );
+   Aux_AllocateArray2D( ParIntBuf, PAR_NATT_INT_STORED, MaxNParInOnePatch );
 
 
 // all particles are assumed to be synchronized with the base level
-   NewParAtt[PAR_TIME] = Time[0];
+   NewParAttFlt[PAR_TIME] = Time[0];
 
 
 // allocate particle repository
@@ -633,21 +647,57 @@ void Init_ByRestart()
                amr->patch[0][lv][PID]->NPar = 0;
 
 //             load one particle attribute at a time
-               for (int v=0; v<PAR_NATT_STORED; v++)
+               if ( FormatVersion < 2300 )
                {
-                  fseek( File, FileOffset_Particle + v*ParDataSize1v + GParID*sizeof(real_par), SEEK_SET );
+                  const int ParTypeIdx_old = 7; // the particle type index before 2300 version
+                  int skip_type = 0;
+                  for (int v=0; v<PAR_NATT_FLT_STORED+1; v++)
+                  {
+                     fseek( File, FileOffset_Particle + v*ParFltDataSize1v + GParID*sizeof(real_par), SEEK_SET );
 
-//                using ParBuf[v] here is safe since it's NOT called when NParThisPatch == 0
-                  fread( ParBuf[v], sizeof(real_par), NParThisPatch, File );
-               }
+//                   using ParFltBuf[v] here is safe since it's NOT called when NParThisPatch == 0
+                     if ( v == ParTypeIdx_old )
+                     {
+                        real_par *ParType_Buf = new real_par [NParThisPatch];
+                        fread( ParType_Buf, sizeof(real_par), NParThisPatch, File );
+                        for (int p=0; p<NParThisPatch; p++)   ParIntBuf[PAR_TYPE][p] = (long_par)ParType_Buf[p];
+                        delete [] ParType_Buf;
+                        skip_type = 1;
+                     }
+                     else
+                     {
+                        fread( ParFltBuf[v-skip_type], sizeof(real_par), NParThisPatch, File );
+                     }
+                  }
+               } // if ( FormatVersion < 2300 )
+
+               else
+               {
+                  for (int v=0; v<PAR_NATT_FLT_STORED; v++)
+                  {
+                     fseek( File, FileOffset_Particle + v*ParFltDataSize1v + GParID*sizeof(real_par), SEEK_SET );
+
+//                   using ParFltBuf[v] here is safe since it's NOT called when NParThisPatch == 0
+                     fread( ParFltBuf[v], sizeof(real_par), NParThisPatch, File );
+                  }
+
+                  for (int v=0; v<PAR_NATT_INT_STORED; v++)
+                  {
+                     fseek( File, FileOffset_Particle + PAR_NATT_FLT_STORED*ParFltDataSize1v + v*ParIntDataSize1v + GParID*sizeof(long_par), SEEK_SET );
+
+//                   using ParIntBuf[v] here is safe since it's NOT called when NParThisPatch == 0
+                     fread( ParIntBuf[v], sizeof(long_par), NParThisPatch, File );
+                  }
+               } // if ( FormatVersion < 2300 ) ... else ...
 
 //             store particles to the particle repository (one particle at a time)
                for (int p=0; p<NParThisPatch; p++ )
                {
-//                skip the last PAR_NATT_UNSTORED attributes since we do not store them on disk
-                  for (int v=0; v<PAR_NATT_STORED; v++)  NewParAtt[v] = ParBuf[v][p];
+//                skip the last PAR_NATT_FLT/INT_UNSTORED attributes since we do not store them on disk
+                  for (int v=0; v<PAR_NATT_FLT_STORED; v++)  NewParAttFlt[v] = ParFltBuf[v][p];
+                  for (int v=0; v<PAR_NATT_INT_STORED; v++)  NewParAttInt[v] = ParIntBuf[v][p];
 
-                  NewParList[p] = amr->Par->AddOneParticle( NewParAtt );
+                  NewParList[p] = amr->Par->AddOneParticle( NewParAttFlt, NewParAttInt );
 
 #                 ifdef DEBUG_PARTICLE
                   if ( NewParList[p] >= NParThisRank )
@@ -657,7 +707,7 @@ void Init_ByRestart()
                } // for (int p=0; p<NParThisPatch )
 
 //             link particles to this patch
-               const real_par *PType = amr->Par->Type;
+               const long_par *PType = amr->Par->Type;
 #              ifdef DEBUG_PARTICLE
                char Comment[100];
                sprintf( Comment, "%s, PID %d, NPar %d", __FUNCTION__, PID, NParThisPatch );
@@ -685,7 +735,8 @@ void Init_ByRestart()
 
 // free memory
    delete [] NewParList;
-   Aux_DeallocateArray2D( ParBuf );
+   Aux_DeallocateArray2D( ParFltBuf );
+   Aux_DeallocateArray2D( ParIntBuf );
 #  endif // #ifdef PARTICLE
 
 
@@ -869,7 +920,8 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    bool   use_psolver_10to14;
    int    ncomp_fluid, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
    int    flu_block_size_x, flu_block_size_y, pot_block_size_x, pot_block_size_z, gra_block_size;
-   int    par_natt_stored, par_natt_user;
+   int    par_natt_flt_stored, par_natt_flt_user;
+   int    par_natt_int_stored, par_natt_int_user;
    double min_pres, max_error;
 
    fseek( File, HeaderOffset_Constant, SEEK_SET );
@@ -893,8 +945,10 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
    fread( &pot_block_size_x,           sizeof(int),                     1,             File );
    fread( &pot_block_size_z,           sizeof(int),                     1,             File );
    fread( &gra_block_size,             sizeof(int),                     1,             File );
-   fread( &par_natt_stored,            sizeof(int),                     1,             File );
-   fread( &par_natt_user,              sizeof(int),                     1,             File );
+   fread( &par_natt_flt_stored,        sizeof(int),                     1,             File );
+   fread( &par_natt_flt_user,          sizeof(int),                     1,             File );
+   fread( &par_natt_int_stored,        sizeof(int),                     1,             File );
+   fread( &par_natt_int_user,          sizeof(int),                     1,             File );
 
 
 // c. load the simulation parameters recorded in the file "Input__Parameter"
@@ -1016,7 +1070,9 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 
    if ( FormatVersion < 2210 )   opt__output_cc_mag = false;
 
+#  if ( MODEL == HYDRO )
    if ( FormatVersion < 2220 )   eos                = EOS_GAMMA;
+#  endif
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading simulation parameters ... done\n" );
@@ -1194,7 +1250,9 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 
       CompareVar( "MAX_PATCH", max_patch, MAX_PATCH, NonFatal );
 
+#     if ( MODEL == HYDRO )
       CompareVar( "EOS",       eos,       EOS,       NonFatal );
+#     endif
 
 
 
@@ -1350,19 +1408,31 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, int &NLv_Re
 //    check in PARTICLE
 //    ------------------
 #     ifdef PARTICLE
-      if ( FormatVersion >= 2200 )
-      CompareVar( "PAR_NATT_STORED",         par_natt_stored,              PAR_NATT_STORED,              Fatal );
+      if      ( FormatVersion >= 2300 )
+      CompareVar( "PAR_NATT_FLT_STORED",     par_natt_flt_stored,          PAR_NATT_FLT_STORED,          Fatal );
+      else if ( FormatVersion >= 2200 )
+      CompareVar( "PAR_NATT_FLT_STORED",     par_natt_flt_stored,          PAR_NATT_FLT_STORED+1,        Fatal );
       else
-      CompareVar( "PAR_NATT_STORED",         par_natt_stored,              PAR_NATT_STORED,           NonFatal );
+      CompareVar( "PAR_NATT_FLT_STORED",     par_natt_flt_stored,          PAR_NATT_FLT_STORED,       NonFatal );
 
       if ( FormatVersion >= 2200 )
-      CompareVar( "PAR_NATT_USER",           par_natt_user,                PAR_NATT_USER,                Fatal );
+      CompareVar( "PAR_NATT_FLT_USER",       par_natt_flt_user,            PAR_NATT_FLT_USER,            Fatal );
       else
-      CompareVar( "PAR_NATT_USER",           par_natt_user,                PAR_NATT_USER,             NonFatal );
+      CompareVar( "PAR_NATT_FLT_USER",       par_natt_flt_user,            PAR_NATT_FLT_USER,         NonFatal );
 
-      if ( par_natt_user > 0  &&  FormatVersion < 2200  &&  MPI_Rank == 0 )
-         Aux_Message( stderr, "WARNING : loading user-defined particle attributes (PAR_NATT_USER = %d) "
-                              "from version < 2200 will likely fail !!\n", par_natt_user );
+      if ( FormatVersion >= 2300 )
+      CompareVar( "PAR_NATT_INT_STORED",     par_natt_int_stored,          PAR_NATT_INT_STORED,          Fatal );
+      else
+      CompareVar( "PAR_NATT_INT_STORED",     par_natt_int_stored,          PAR_NATT_INT_STORED,       NonFatal );
+
+      if ( FormatVersion >= 2300 )
+      CompareVar( "PAR_NATT_INT_USER",       par_natt_int_user,            PAR_NATT_INT_USER,            Fatal );
+      else
+      CompareVar( "PAR_NATT_INT_USER",       par_natt_int_user,            PAR_NATT_INT_USER,         NonFatal );
+
+      if ( par_natt_flt_user > 0  &&  FormatVersion < 2200  &&  MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : loading user-defined particle attributes (PAR_NATT_FLT_USER = %d) "
+                              "from version < 2200 will likely fail !!\n", par_natt_flt_user );
 #     endif
 
 

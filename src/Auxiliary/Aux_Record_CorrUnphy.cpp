@@ -15,8 +15,9 @@
 void Aux_Record_CorrUnphy()
 {
 
-   const char FileName[] = "Record__NCorrUnphy";
    static bool FirstTime = true;
+   char FileName[MAX_STRING];
+   sprintf( FileName, "%s/Record__NCorrUnphy", OUTPUT_DIR );
 
    long NCorrAllRank[NLEVEL];
    FILE *File = NULL;

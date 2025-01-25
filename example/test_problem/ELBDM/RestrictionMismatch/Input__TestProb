@@ -1,0 +1,5 @@
+# problem-specific runtime parameters
+Gau_v0       32                     # mean velocity [1.0]
+Gau_Width    2                      # Gaussian width [0.1]
+Gau_Center   4                      # Gaussian center [box center]
+Gau_XYZ      0                      # wave propagation direction (0/1/2 --> x/y/z) [0]

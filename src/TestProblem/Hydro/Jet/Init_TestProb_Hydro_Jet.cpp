@@ -31,6 +31,7 @@ static double  *Jet_MaxDis        = NULL;          // maximum distance between t
 static double *Jet_HSE_BgTable_Data = NULL;        // for Jet_HSE: background gas table [radius/density/temperature]
 static int     Jet_HSE_BgTable_NBin;               // for Jet_HSE: number of bins in Jet_HSE_BgTable_Data[]
 // =======================================================================================
+
 #ifdef GRAVITY
 void Init_ExtAcc_Jet();
 #endif
@@ -439,11 +440,17 @@ void End_Jet()
 //
 // Note        :  1. Linked to the function pointer "BC_User_Ptr"
 //
-// Parameter   :  fluid    : Fluid field to be set
-//                x/y/z    : Physical coordinates
-//                Time     : Physical time
-//                lv       : Refinement level
-//                AuxArray : Auxiliary array
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
+//                ArraySize      : Size of Array including the ghost zones on each side
+//                fluid          : Fluid fields to be set
+//                NVar_Flu       : Number of fluid variables to be prepared
+//                GhostSize      : Number of ghost zones
+//                idx            : Array indices
+//                pos            : Physical coordinates
+//                Time           : Physical time
+//                lv             : Refinement level
+//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
+//                AuxArray       : Auxiliary array
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------

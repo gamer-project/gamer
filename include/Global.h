@@ -8,6 +8,7 @@
 #ifdef SUPPORT_LIBYT
 #include <libyt.h>
 #endif
+#include "GatherTree.h"
 
 
 // **********************************************************************************************************
@@ -18,7 +19,8 @@
 
 // 1. common global variables
 // ============================================================================================================
-extern AMR_t     *amr;                                // AMR tree structure
+extern AMR_t     *amr;                                // local AMR tree structure
+extern LB_GlobalTree *GlobalTree;                     // global AMR tree structure
 extern double     Time[NLEVEL];                       // "present"  physical time at each level
 extern double     Time_Prev[NLEVEL];                  // "previous" physical time at each level
 extern double     dTime_AllLv[NLEVEL];                // current evolution physical time interval at each level
@@ -30,6 +32,8 @@ extern double     dTime_Base;                         // physical time interval 
 extern double     FlagTable_Rho        [NLEVEL-1];    // refinement criterion of density
 extern double     FlagTable_RhoGradient[NLEVEL-1];    // refinement criterion of density gradient
 extern double     FlagTable_Lohner     [NLEVEL-1][5]; // refinement criterion based on Lohner's error estimator
+extern double     FlagTable_Angular    [NLEVEL-1][3]; // refinement criterion based on angular resolution
+extern double     FlagTable_Radial     [NLEVEL-1];    // refinement criterion based on radial resolution
 extern double    *FlagTable_User       [NLEVEL-1];    // user-defined refinement criterion
 extern double    *DumpTable;                          // dump table recording the physical times to output data
 extern int        DumpTable_NDump;                    // number of data dumps in the dump table
@@ -64,7 +68,7 @@ extern int        INIT_DUMPID, INIT_SUBSAMPLING_NCELL, OPT__TIMING_BARRIER, OPT_
 extern double     OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z, AUTO_REDUCE_DT_FACTOR, AUTO_REDUCE_DT_FACTOR_MIN;
 extern double     AUTO_REDUCE_INT_MONO_FACTOR, AUTO_REDUCE_INT_MONO_MIN;
 extern double     OPT__CK_MEMFREE, INT_MONO_COEFF, UNIT_L, UNIT_M, UNIT_T, UNIT_V, UNIT_D, UNIT_E, UNIT_P;
-extern bool       OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_USER, OPT__FLAG_LOHNER_DENS, OPT__FLAG_REGION;
+extern bool       OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_USER, OPT__FLAG_LOHNER_DENS, OPT__FLAG_REGION, OPT__FLAG_ANGULAR, OPT__FLAG_RADIAL;
 extern int        OPT__FLAG_USER_NUM, MONO_MAX_ITER, OPT__RESET_FLUID_INIT;
 extern bool       OPT__DT_USER, OPT__RECORD_DT, OPT__RECORD_MEMORY, OPT__MEMORY_POOL, OPT__RESTART_RESET;
 extern bool       OPT__FIXUP_RESTRICT, OPT__INIT_RESTRICT, OPT__VERBOSE, OPT__MANUAL_CONTROL, OPT__UNIT;
@@ -77,10 +81,14 @@ extern bool       OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLA
 extern bool       OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
 extern bool       OPT__INT_FRAC_PASSIVE_LR, OPT__CK_INPUT_FLUID, OPT__SORT_PATCH_BY_LBIDX;
 extern char       OPT__OUTPUT_TEXT_FORMAT_FLT[MAX_STRING];
+extern int        OPT__OUTPUT_TEXT_LENGTH_INT;
 extern int        OPT__UM_IC_FLOAT8;
 extern double     COM_CEN_X, COM_CEN_Y, COM_CEN_Z, COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R;
 extern int        COM_MAX_ITER;
 extern double     ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z;
+extern char       OUTPUT_DIR[MAX_STRING-100];
+extern double     FLAG_ANGULAR_CEN_X, FLAG_ANGULAR_CEN_Y, FLAG_ANGULAR_CEN_Z;
+extern double     FLAG_RADIAL_CEN_X, FLAG_RADIAL_CEN_Y, FLAG_RADIAL_CEN_Z;
 
 extern UM_IC_Format_t     OPT__UM_IC_FORMAT;
 extern TestProbID_t       TESTPROB_ID;
@@ -138,11 +146,25 @@ extern bool             OPT__OUTPUT_ENTHALPY;
 
 #elif ( MODEL == ELBDM )
 extern double           DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
-extern bool             OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE, ELBDM_TAYLOR3_AUTO;
+extern bool             OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE, OPT__RES_PHASE, ELBDM_TAYLOR3_AUTO;
 extern double           ELBDM_TAYLOR3_COEFF, ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
 #ifdef QUARTIC_SELF_INTERACTION
 extern double           ELBDM_LAMBDA;
 #endif
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
+extern bool             OPT__FLAG_INTERFERENCE;
+extern double           FlagTable_Interference[NLEVEL-1][4];
+extern double           DT__HYBRID_CFL, DT__HYBRID_CFL_INIT, DT__HYBRID_VELOCITY, DT__HYBRID_VELOCITY_INIT;
+extern bool             ELBDM_MATCH_PHASE;
+extern int              ELBDM_FIRST_WAVE_LEVEL;
+#endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+
+extern bool             OPT__FLAG_SPECTRAL;
+extern int              OPT__FLAG_SPECTRAL_N;
+extern double           FlagTable_Spectral[NLEVEL-1][2];
+
+extern ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
+extern bool             ELBDM_BASE_SPECTRAL;
 
 #else
 #  error : ERROR : unsupported MODEL !!
@@ -201,6 +223,7 @@ extern double     LB_INPUT__WLI_MAX;                  // LB->WLI_Max loaded from
 extern double     LB_INPUT__PAR_WEIGHT;               // LB->Par_Weight loaded from "Input__Parameter"
 #endif
 extern bool       OPT__RECORD_LOAD_BALANCE;
+extern bool       OPT__LB_EXCHANGE_FATHER;
 #endif
 extern bool       OPT__MINIMIZE_MPI_BARRIER;
 #ifdef SUPPORT_FFTW
@@ -214,11 +237,12 @@ extern bool       FFTW3_Double_OMP_Enabled, FFTW3_Single_OMP_Enabled;
 // ============================================================================================================
 #ifdef PARTICLE
 extern double          DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
-extern bool            OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL, OPT__FREEZE_PAR;
+extern bool            OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL, OPT__FREEZE_PAR, OPT__OUTPUT_PAR_MESH;
 extern int             OPT__OUTPUT_PAR_MODE, OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
 extern double          FlagTable_ParMassCell[NLEVEL-1];
 extern ParOutputDens_t OPT__OUTPUT_PAR_DENS;
 extern int             PAR_IC_FLOAT8;
+extern int             PAR_IC_INT8;
 #endif
 
 
@@ -338,6 +362,18 @@ extern bool FB_Any;
 extern int  FB_ParaBuf;
 #endif
 
+// (2-13) spectral interpolation
+#ifdef SUPPORT_SPECTRAL_INT
+extern char   SPEC_INT_TABLE_PATH[MAX_STRING];
+extern int    SPEC_INT_GHOST_BOUNDARY;
+#if ( MODEL == ELBDM )
+extern bool   SPEC_INT_XY_INSTEAD_DEPHA;
+extern double SPEC_INT_VORTEX_THRESHOLD;
+#endif
+class InterpolationHandler;
+extern InterpolationHandler Int_InterpolationHandler;
+#endif // #ifdef SUPPORT_SPECTRAL_INT
+
 
 // (2-13) cosmic ray
 // =======================================================================================================
@@ -374,6 +410,15 @@ extern real       (*h_Mag_Array_F_In [2])[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
 extern real       (*h_Mag_Array_F_Out[2])[NCOMP_MAG][ PS2P1*SQR(PS2)          ];
 extern real       (*h_Ele_Array      [2])[9][NCOMP_ELE][ PS2P1*PS2 ];
 #endif
+#if ( MODEL == ELBDM )
+extern bool       (*h_IsCompletelyRefined[2]);
+#endif
+#if ( ELBDM_SCHEME == ELBDM_HYBRID )
+extern bool       (*h_HasWaveCounterpart[2])[ CUBE(HYB_NXT) ];
+#endif
+#if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
+extern gramfe_matmul_float (*h_GramFE_TimeEvo)[ 2*FLU_NXT ];
+#endif
 
 #ifdef GRAVITY
 extern real       (*h_Rho_Array_P     [2])[RHO_NXT][RHO_NXT][RHO_NXT];
@@ -398,7 +443,7 @@ extern real       (*h_Flu_Array_USG_G [2])[GRA_NIN-1][PS1][PS1][PS1];
 #endif // #ifdef GRAVITY
 
 #ifdef SUPPORT_GRACKLE
-extern real       (*h_Che_Array[2]);
+extern real_che   (*h_Che_Array[2]);
 // do not declare Grackle variables for CUDA source files since they do not include <grackle.h>
 #ifndef __CUDACC__
 extern grackle_field_data *Che_FieldData;

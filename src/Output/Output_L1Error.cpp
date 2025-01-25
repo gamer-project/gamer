@@ -74,30 +74,41 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
    char FileName[NERR][MAX_STRING];
 
 #  if   ( MODEL == HYDRO )
-   sprintf( FileName[            0], "%s_Dens_%06d", Prefix, DumpID );
-   sprintf( FileName[            1], "%s_MomX_%06d", Prefix, DumpID );
-   sprintf( FileName[            2], "%s_MomY_%06d", Prefix, DumpID );
-   sprintf( FileName[            3], "%s_MomZ_%06d", Prefix, DumpID );
-   sprintf( FileName[            4], "%s_Pres_%06d", Prefix, DumpID );
+   sprintf( FileName[            0], "%s/%s_Dens_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            1], "%s/%s_MomX_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            2], "%s/%s_MomY_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            3], "%s/%s_MomZ_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            4], "%s/%s_Pres_%06d", OUTPUT_DIR, Prefix, DumpID );
 
    for (int v=0; v<NCOMP_PASSIVE; v++)
-   sprintf( FileName[NCOMP_FLUID+v], "%s_Passive%02d_%06d", Prefix, v, DumpID );
+   sprintf( FileName[NCOMP_FLUID+v], "%s/%s_Passive%02d_%06d", OUTPUT_DIR, Prefix, v, DumpID );
 
 #  ifdef MHD
-   sprintf( FileName[NCOMP_TOTAL+0], "%s_MagX_%06d", Prefix, DumpID );
-   sprintf( FileName[NCOMP_TOTAL+1], "%s_MagY_%06d", Prefix, DumpID );
-   sprintf( FileName[NCOMP_TOTAL+2], "%s_MagZ_%06d", Prefix, DumpID );
+   sprintf( FileName[NCOMP_TOTAL+0], "%s/%s_MagX_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[NCOMP_TOTAL+1], "%s/%s_MagY_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[NCOMP_TOTAL+2], "%s/%s_MagZ_%06d", OUTPUT_DIR, Prefix, DumpID );
 #  endif
 
-   sprintf( FileName[     NBASIC+0], "%s_Temp_%06d", Prefix, DumpID );
+   sprintf( FileName[     NBASIC+0], "%s/%s_Temp_%06d", OUTPUT_DIR, Prefix, DumpID );
 
 #  elif ( MODEL == ELBDM )
-   sprintf( FileName[            0], "%s_Dens_%06d", Prefix, DumpID );
-   sprintf( FileName[            1], "%s_Real_%06d", Prefix, DumpID );
-   sprintf( FileName[            2], "%s_Imag_%06d", Prefix, DumpID );
+#  if   ( ELBDM_SCHEME == ELBDM_WAVE )
+   sprintf( FileName[            0], "%s/%s_Dens_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            1], "%s/%s_Real_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            2], "%s/%s_Imag_%06d", OUTPUT_DIR, Prefix, DumpID );
+#  elif ( ELBDM_SCHEME == ELBDM_HYBRID )
+   sprintf( FileName[            0], "%s/%s_Dens_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            1], "%s/%s_Phas_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            2], "%s/%s_Stub_%06d", OUTPUT_DIR, Prefix, DumpID );
+#  else
+#  error : ERROR : unsupported ELBDM_SCHEME !!
+#  endif // ELBDM_SCHEME
+
+   for (int v=0; v<NCOMP_PASSIVE; v++)
+   sprintf( FileName[NCOMP_FLUID+v], "%s/%s_Passive%02d_%06d", OUTPUT_DIR, Prefix, v, DumpID );
 
 #  else
-#  error : unsupported MODEL !!
+#  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
 
 
@@ -240,7 +251,9 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 
       for (int v=0; v<NERR; v++)    L1_Err_Sum[v] /= Norm;
 
-      FILE *File_L1 = fopen( "Record__L1Err", "a" );
+      char FileName_L1[MAX_STRING];
+      sprintf( FileName_L1, "%s/Record__L1Err", OUTPUT_DIR );
+      FILE *File_L1 = fopen( FileName_L1, "a" );
 
 //    output header
       if ( FirstTime )
@@ -265,11 +278,27 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
          fprintf( File_L1, "\n" );
 
 #        elif ( MODEL == ELBDM )
-         fprintf( File_L1, "#%5s %13s %*s %*s %*s\n", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
+#        if   ( ELBDM_SCHEME == ELBDM_WAVE )
+
+         fprintf( File_L1, "#%5s %13s %*s %*s %*s", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
                   StrLen_Flt, "Error(Real)", StrLen_Flt, "Error(Imag)" );
+#        elif ( ELBDM_SCHEME == ELBDM_HYBRID )
+         fprintf( File_L1, "#%5s %13s %*s %*s %*s", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
+                  StrLen_Flt, "Error(Phas)", StrLen_Flt, "Stub" );
+#        else
+#        error : ERROR : unsupported ELBDM_SCHEME !!
+#        endif // ELBDM_SCHEME
+
+         for (int v=0; v<NCOMP_PASSIVE; v++) {
+            char tmp_str[MAX_STRING];
+            sprintf( tmp_str, "Error(Passive%02d)", v );
+            fprintf( File_L1, " %*s", StrLen_Flt, tmp_str );
+         }
+
+         fprintf( File_L1, "\n" );
 
 #        else
-#        error : unsupported MODEL !!
+#        error : ERROR : unsupported MODEL !!
 #        endif // MODEL
 
          FirstTime = false;
@@ -323,10 +352,10 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 
    real Nume[NERR], Anal[NERR], Err[NERR];
 
-
 // get the numerical solution
    for (int v=0; v<NCOMP_TOTAL; v++)
       Nume[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
+
 
 // note that we use the cell-centered B field to compute errors
 #  ifdef MHD
@@ -348,7 +377,8 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
                                                  Nume[ENGY], Nume+NCOMP_FLUID,
                                                  CheckMinPres_No, NULL_REAL, Emag_Nume,
                                                  EoS_DensEint2Pres_CPUPtr,
-                                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+                                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                 EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
    const real  Temp_Nume       = Hydro_Con2Temp( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ],
                                                  Nume[ENGY], Nume+NCOMP_FLUID,
                                                  CheckMinTemp_No, NULL_REAL, Emag_Nume,
@@ -386,6 +416,16 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 
    Anal[ENGY    ] = Pres_Anal;
    Anal[NBASIC+0] = Temp_Anal;
+#  endif
+
+// convert real and imaginary part to phase for wave patches in hybrid scheme
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+      Anal[PHAS] = SATAN2(Anal[IMAG], Anal[REAL]);
+      Nume[PHAS] = SATAN2(Nume[IMAG], Nume[REAL]);
+      Anal[STUB] = 0;
+      Nume[STUB] = 0;
+   }
 #  endif
 
 

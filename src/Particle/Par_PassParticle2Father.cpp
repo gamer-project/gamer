@@ -61,7 +61,7 @@ void Par_PassParticle2Father( const int FaLv, const int FaPID )
 
 // 3. add particles to father
 //###NOTE : No OpenMP since AddParticle will modify amr->Par->NPar_Lv[]
-   const real_par *PType = amr->Par->Type;
+   const long_par *PType = amr->Par->Type;
 #  ifdef DEBUG_PARTICLE
    const real_par *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
    amr->patch[0][FaLv][FaPID]->AddParticle( NParSon, ParListSon, &amr->Par->NPar_Lv[FaLv], PType, ParPos, amr->Par->NPar_AcPlusInac, __FUNCTION__ );
@@ -71,7 +71,7 @@ void Par_PassParticle2Father( const int FaLv, const int FaPID )
 
 
 // 4. remove particles in all sons
-//###NOTE : No OpenMP since RemoveParticle will modify amr->Par->NPar_Lv[]
+//###NOTE: No OpenMP since RemoveParticle will modify amr->Par->NPar_Lv[]
    const bool RemoveAllParticle = true;
    for (int SonPID=SonPID0; SonPID<SonPID0+8; SonPID++)
       amr->patch[0][SonLv][SonPID]->RemoveParticle( NULL_INT, NULL,

@@ -87,7 +87,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
    real_par *ParAcc[3]       = { amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ };
 #  endif
    real_par *ParTime         = amr->Par->Time;
-   const real_par *ParType   = amr->Par->Type;
+   const long_par *ParType   = amr->Par->Type;
 
 // determine PotSg for STORE_POT_GHOST
 #  ifdef STORE_POT_GHOST

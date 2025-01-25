@@ -15,22 +15,23 @@
 // =======================================================================================
 
 // problem-specific function prototypes
-
 bool Flag_CMZ( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 #ifdef PARTICLE
 void Par_Init_ByFunction_BarredPot( const long NPar_ThisRank, const long NPar_AllRank,
                                     real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                     real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                    real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] );
+                                    long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                    long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] );
 #endif
 static void IsolatedBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
                         const int GhostSize, const int idx[], const double pos[], const double Time,
                         const int lv, const int TFluVarIdxList[], double AuxArray[] );
-
 //void Init_ExtAcc_BarredPot();
 //void Init_ExtPot_BarredPot();
-
 void Init_ExtPot_TabularP17();
+
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -167,14 +168,13 @@ void SetParameter()
 // (4) make a note
    if ( MPI_Rank == 0 )
    {
-      Aux_Message( stdout, "==================================================================================\n" );
-      Aux_Message( stdout, "  test problem ID               = %d\n",              TESTPROB_ID                     );
-      Aux_Message( stdout, "  Log bar velocity              = %13.7e km/s \n",    BarredPot_V0*UNIT_V/Const_km    );
-      Aux_Message( stdout, "  Log bar axis ratio            = %13.7e \n",         BarredPot_q                     );
-      Aux_Message( stdout, "  Log bar pattern speed         = %13.7e km/s/kpc\n", BarredPot_Omegabar/UNIT_T
-                                                                                              *Const_kpc/Const_km );
-      Aux_Message( stdout, "  Initial Gas disk temperature  = %13.7e K \n",       BarredPot_initT                 );
-      Aux_Message( stdout, "==================================================================================\n" );
+      Aux_Message( stdout, "==================================================================================\n"             );
+      Aux_Message( stdout, "  test problem ID              = %d\n",              TESTPROB_ID                                  );
+      Aux_Message( stdout, "  Log bar velocity             = %13.7e km/s\n",     BarredPot_V0*UNIT_V/Const_km                 );
+      Aux_Message( stdout, "  Log bar axis ratio           = %13.7e\n",          BarredPot_q                                  );
+      Aux_Message( stdout, "  Log bar pattern speed        = %13.7e km/s/kpc\n", BarredPot_Omegabar/UNIT_T*Const_kpc/Const_km );
+      Aux_Message( stdout, "  Initial Gas disk temperature = %13.7e K\n",        BarredPot_initT                              );
+      Aux_Message( stdout, "==================================================================================\n"             );
    }
 
 
@@ -291,11 +291,17 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Note        :  1. Linked to the function pointer "BC_User_Ptr"
 //
-// Parameter   :  fluid    : Fluid field to be set
-//                x/y/z    : Physical coordinates
-//                Time     : Physical time
-//                lv       : Refinement level
-//                AuxArray : Auxiliary array
+// Parameter   :  Array          : Array to store the prepared data including ghost zones
+//                ArraySize      : Size of Array including the ghost zones on each side
+//                fluid          : Fluid fields to be set
+//                NVar_Flu       : Number of fluid variables to be prepared
+//                GhostSize      : Number of ghost zones
+//                idx            : Array indices
+//                pos            : Physical coordinates
+//                Time           : Physical time
+//                lv             : Refinement level
+//                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
+//                AuxArray       : Auxiliary array
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
@@ -304,6 +310,7 @@ void IsolatedBC( real Array[], const int ArraySize[], real fluid[], const int NV
                  const int lv, const int TFluVarIdxList[], double AuxArray[] )
 {
 
+// simply call the IC function
    SetGridIC( fluid, pos[0], pos[1], pos[2], Time, lv, AuxArray );
 
 } // FUNCTION : IsolatedBC
@@ -355,8 +362,8 @@ void AddNewParticleAttribute_BarredPot()
 {
 
 // "Idx_ParMetalFrac" has been predefined in Field.h
-    if ( Idx_ParMetalFrac == Idx_Undefined )
-          Idx_ParMetalFrac = AddParticleAttribute( "ParMetalFrac" );
+   if ( Idx_ParMetalFrac == Idx_Undefined )
+      Idx_ParMetalFrac = AddParticleAttributeFlt( "ParMetalFrac" );
 
 } // FUNCTION : AddNewParticleAttribute_BarredPot
 #endif
@@ -387,18 +394,18 @@ void Init_TestProb_Hydro_BarredPot()
 // set the problem-specific runtime parameters
    SetParameter();
 
-   Init_Function_User_Ptr  = SetGridIC;
-   Init_Field_User_Ptr     = AddNewField_BarredPot;
-   BC_User_Ptr             = IsolatedBC;
-   Flag_User_Ptr           = Flag_CMZ;
+   Init_Function_User_Ptr      = SetGridIC;
+   Init_Field_User_Ptr         = AddNewField_BarredPot;
+   BC_User_Ptr                 = IsolatedBC;
+   Flag_User_Ptr               = Flag_CMZ;
 #  ifdef PARTICLE
-   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_BarredPot;
+   Par_Init_ByFunction_Ptr     = Par_Init_ByFunction_BarredPot;
    Par_Init_Attribute_User_Ptr = AddNewParticleAttribute_BarredPot;
 #  endif
 #  ifdef GRAVITY
-//   Init_ExtAcc_Ptr         = Init_ExtAcc_BarredPot;
+//   Init_ExtAcc_Ptr              = Init_ExtAcc_BarredPot;
 //   if ( OPT__EXT_POT == EXT_POT_FUNC )
-   Init_ExtPot_Ptr         = Init_ExtPot_TabularP17;
+   Init_ExtPot_Ptr             = Init_ExtPot_TabularP17;
 #  endif // #ifdef GRAVITY
 #  endif // #if ( MODEL == HYDRO )
 

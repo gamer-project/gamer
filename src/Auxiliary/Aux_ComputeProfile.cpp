@@ -47,10 +47,11 @@ extern void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, 
 //                                        Data[empty_bin]=Weight[empty_bin]=NCell[empty_bin]=0
 //                TVarBitIdx  : Bitwise indices of target variables for computing the profiles
 //                              --> Supported indices (defined in Macro.h):
-//                                     HYDRO : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _VELR,
-//                                             _PRES, _TEMP, _ENTR, _EINT
-//                                             [, _DUAL, _CRAY, _POTE, __MAGX_CC, _MAGY_CC, _MAGZ_CC, _MAGE_CC]
-//                                     ELBDM : _DENS, _REAL, _IMAG [, _POTE]
+//                                     HYDRO        : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _VELR,
+//                                                    _PRES, _TEMP, _ENTR, _EINT
+//                                                    [, _DUAL, _CRAY, _POTE, __MAGX_CC, _MAGY_CC, _MAGZ_CC, _MAGE_CC]
+//                                     ELBDM_WAVE   : _DENS, _REAL, _IMAG [, _POTE]
+//                                     ELBDM_HYBRID : _DENS, _PHAS [, _POTE]
 //                              --> All fields supported by Prepare_PatchData() are also supported here
 //                              --> For a passive scalar with an integer field index FieldIdx returned by AddField(),
 //                                  one can convert it to a bitwise field index by BIDX(FieldIdx)
@@ -144,7 +145,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 #  ifdef GRAVITY
    SupportedFields |= _POTE;
 #  endif
-#  ifdef PARTICLE
+#  ifdef MASSIVE_PARTICLES
    SupportedFields |= _PAR_DENS;
    SupportedFields |= _TOTAL_DENS;
 #  endif
@@ -156,7 +157,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
 
 // record whether particle density is requested
-#  ifdef PARTICLE
+#  ifdef MASSIVE_PARTICLES
    bool NeedPar = false;
    for (int p=0; p<NProf; p++) {
       if ( TVarBitIdx[p] == _PAR_DENS  ||  TVarBitIdx[p] == _TOTAL_DENS ) {
@@ -274,7 +275,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
 
 //    initialize the particle density array (rho_ext) and collect particles to the target level
-#     ifdef PARTICLE
+#     ifdef MASSIVE_PARTICLES
       const bool TimingSendPar_No = false;
       const bool JustCountNPar_No = false;
 #     ifdef LOAD_BALANCE
@@ -290,12 +291,12 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
       if ( NeedPar )
       {
 //       these two routines should NOT be put inside an OpenMP parallel region
-         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos,
+         Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, _PAR_TYPE, PredictPos,
                                        PrepTime, SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
 
          Prepare_PatchData_InitParticleDensityArray( lv, PrepTime );
       } // if ( NeedPar )
-#     endif // #ifdef PARTICLE
+#     endif // #ifdef MASSIVE_PARTICLES
 
 
 //    different OpenMP threads and MPI processes first compute profiles independently
@@ -546,7 +547,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
 //    free particle resources
 //    --> these two routines should NOT be put inside an OpenMP parallel region
-#     ifdef PARTICLE
+#     ifdef MASSIVE_PARTICLES
       if ( NeedPar )
       {
          Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );

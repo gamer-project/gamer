@@ -20,7 +20,8 @@ static double ParTest_Ang_Freq;       // gas angular frequency
 void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar_AllRank,
                                        real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                        real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                       real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] );
+                                       long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                       long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] );
 #endif
 
 bool Flag_ParticleTest( const int i, const int j, const int k, const int lv,
@@ -202,20 +203,22 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 {
 
 
-   const double dr[2]     = { x - 0.5*amr->BoxSize[0], y - 0.5*amr->BoxSize[1] };
-   const double Radius    = sqrt( dr[0]*dr[0] + dr[1]*dr[1] );
+   const double dr_Bg [2]  = { x - 0.25*amr->BoxSize[0], y - 0.25*amr->BoxSize[1] };
+   const double dr_Mom[2]  = { x - 0.50*amr->BoxSize[0], y - 0.50*amr->BoxSize[1] };
+   const double Radius_Bg  = sqrt( dr_Bg [0]*dr_Bg [0] + dr_Bg [1]*dr_Bg [1] );
+   const double Radius_Mom = sqrt( dr_Mom[0]*dr_Mom[0] + dr_Mom[1]*dr_Mom[1] );
 
-   const double Velocity = ParTest_Ang_Freq*Radius;
+   const double Velocity = ParTest_Ang_Freq*Radius_Mom;
 
-   const double Cos_theta = dr[0]/Radius;
-   const double Sin_theta = dr[1]/Radius;
+   const double Cos_theta = dr_Mom[0]/Radius_Mom;
+   const double Sin_theta = dr_Mom[1]/Radius_Mom;
 
    double Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
 
-   Dens = ParTest_Dens_Bg;
-   Pres = ParTest_Pres_Bg;
-   MomX = -ParTest_Dens_Bg*Velocity*Sin_theta;
-   MomY = ParTest_Dens_Bg*Velocity*Cos_theta;
+   Dens = ParTest_Dens_Bg * ( 1.0 + 5.0 * Radius_Bg / amr->BoxSize[0] );
+   Pres = ParTest_Pres_Bg * ( 1.0 + 5.0 * Radius_Bg / amr->BoxSize[0] );
+   MomX = -Dens*Velocity*Sin_theta;
+   MomY = Dens*Velocity*Cos_theta;
    MomZ = 0.0;
 
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
