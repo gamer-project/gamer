@@ -92,7 +92,6 @@ static double  Bondi_Soliton_Redshift;    // redshift for Bondi_Soliton when Bon
 
 // problem-specific function prototypes
 void Init_ExtAcc_Bondi();
-void Init_ExtPot_Bondi();
 void Record_Bondi();
 bool Flag_Bondi( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 int Flu_ResetByUser_Func_Bondi( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
@@ -111,7 +110,8 @@ void SetExtAccAuxArray_Bondi( double [], const double );
 #ifdef GRAVITY
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Poi_UserWorkBeforePoisson_Bondi
-// Description :  Call SetExtAccAuxArray_Bondi() to reset Bondi_MassBH before invoking the Poisson solver
+// Description :  Call SetExtAccAuxArray_Bondi() to reset Bondi_MassBH and soliton parameters before
+//                invoking the Poisson solver
 //
 // Note        :  1. Invoked by Gra_AdvanceDt() using the function pointer "Poi_UserWorkBeforePoisson_Ptr"
 //
@@ -394,19 +394,18 @@ void SetParameter()
    {
       if ( Bondi_Soliton_rc < 0.0 )
       {
-         double z = Bondi_Soliton_Redshift;
-         double Mh = Bondi_Soliton_MassHalo*UnitExt_M/Const_Msun; // convert to Msun
-         double H0 = 67.66;
-         double Om0 = 0.3111;
-         H0 = H0*1e5/(Const_kpc*1e3);
-         double a0 = Om0*SQR(H0)/(2.47e-5*SQR(1e7/(Const_kpc*1e3)));
-         double H_H0_z = 1/(1-Om0*(1-pow(1+z,3.0)*(1+z+a0)/a0));
-         double Om_z   = Om0*pow(1+z,3.0)*H_H0_z;
-         double Om_0   = Om0/(1-Om0*(1-(1+a0)/a0));
-         double kiz_z  = (18*SQR(3.14159265)+82*(Om_z-1)-39*SQR(Om_z-1))/Om_z;
-         double kiz_0  = (18*SQR(3.14159265)+82*(Om_0-1)-39*SQR(Om_0-1))/Om_0;
+         const double z      = Bondi_Soliton_Redshift;
+         const double Mh     = Bondi_Soliton_MassHalo*UnitExt_M/Const_Msun;   // convert to Msun
+         const double H0     = 67.66*1e5/( Const_kpc*1e3 );                     // hard-coded for now
+         const double Om0    = 0.3111;                                        // hard-coded for now
+         const double a0     = Om0*SQR(H0)/(  2.47e-5*SQR( 1e7/(Const_kpc*1e3) )  );
+         const double H_H0_z = 1.0/(  1.0-Om0*( 1.0-pow(1.0+z,3.0)*(1.0+z+a0)/a0 )  );
+         const double Om_z   = Om0*pow(1.0+z,3.0)*H_H0_z;
+         const double Om_0   = Om0/(  1.0-Om0*( 1.0-(1.0+a0)/a0 )  );
+         const double kiz_z  = ( 18.0*SQR(M_PI) + 82.0*(Om_z-1.0) - 39.0*SQR(Om_z-1.0) )/Om_z;
+         const double kiz_0  = ( 18.0*SQR(M_PI) + 82.0*(Om_0-1.0) - 39.0*SQR(Om_0-1.0) )/Om_0;
 
-         Bondi_Soliton_rc  = 1.6/Bondi_Soliton_m22*pow(1+z,-1.0/2.0)*pow(kiz_z/kiz_0,-1.0/6.0)*pow(Mh/1e9,-1.0/3.0); // in kpc
+         Bondi_Soliton_rc  = 1.6/Bondi_Soliton_m22*pow( 1.0+z, -1.0/2.0 )*pow( kiz_z/kiz_0, -1.0/6.0 )*pow( Mh/1e9, -1.0/3.0 );  // in kpc
          Bondi_Soliton_rc *= Const_kpc/UnitExt_L;  // convert to external units to match the manually input value
       }
 
