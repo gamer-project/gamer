@@ -4,7 +4,7 @@ import yt
 import numpy as np
 
 # load the command-line parameters
-parser = argparse.ArgumentParser( description='Plot the star mass phase diagram' )
+parser = argparse.ArgumentParser( description='Plot the star mass distribution' )
 
 parser.add_argument( '-s', action='store', required=True,  type=int, dest='idx_start',
                      help='first data index' )
@@ -36,18 +36,16 @@ yt.enable_parallelism()
 ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
 
 x_lim_min = 0.0
-x_lim_max = 3.0e2
+x_lim_max = 2.5e2
 y_lim_min = 0.0
-y_lim_max = 5.0e4
+y_lim_max = 4.0e3
 
 for ds in ts.piter():
 
-   ad = ds.all_data()
-
-
 #  plot
    p = yt.PhasePlot( ds, ('all', 'ParCreTime'), ('all', 'particle_mass'), ('all', 'particle_ones'),
-                     weight_field=None, x_bins=32, y_bins=128 )
+                     weight_field=None, x_bins=256, y_bins=256 )
+
    p.set_unit( 'ParCreTime',    'Myr'  )
    p.set_unit( 'particle_mass', 'Msun' )
    p.set_log(  'ParCreTime',     False )

@@ -86,11 +86,11 @@ FLAG_BUFFER_SIZE             -1           # number of buffer cells for the flag 
 FLAG_BUFFER_SIZE_MAXM1_LV     2           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-1 (<0=auto -> REGRID_COUNT) [-1]
 FLAG_BUFFER_SIZE_MAXM2_LV    -1           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-2 (<0=auto) [-1]
 MAX_LEVEL                     0           # maximum refinement level (0~NLEVEL-1) [NLEVEL-1]
-OPT__FLAG_RHO                 1           # flag: density (Input__Flag_Rho) [0]
+OPT__FLAG_RHO                 0           # flag: density (Input__Flag_Rho) [0]
 OPT__FLAG_RHO_GRADIENT        0           # flag: density gradient (Input__Flag_RhoGradient) [0]
 OPT__FLAG_PRES_GRADIENT       0           # flag: pressure gradient (Input__Flag_PresGradient) [0] ##HYDRO ONLY##
 OPT__FLAG_VORTICITY           0           # flag: vorticity (Input__Flag_Vorticity) [0] ##HYDRO ONLY##
-OPT__FLAG_JEANS               1           # flag: Jeans length (Input__Flag_Jeans) [0] ##HYDRO ONLY##
+OPT__FLAG_JEANS               0           # flag: Jeans length (Input__Flag_Jeans) [0] ##HYDRO ONLY##
 OPT__FLAG_LOHNER_DENS         0           # flag: Lohner for mass density   (Input__Flag_Lohner) [0] ##BOTH HYDRO AND ELBDM##
 OPT__FLAG_LOHNER_ENGY         0           # flag: Lohner for energy density (Input__Flag_Lohner) [0] ##HYDRO ONLY##
 OPT__FLAG_LOHNER_PRES         0           # flag: Lohner for pressure       (Input__Flag_Lohner) [0] ##HYDRO ONLY##
@@ -139,7 +139,7 @@ SF_CREATE_STAR_MIN_LEVEL     -1           # minimum AMR level allowed to form st
 SF_CREATE_STAR_MIN_GAS_DENS   5.0e0       # minimum gas density allowed to form stars (in HI count/cm^3) (for SF_CREATE_STAR_SCHEME=1 only) [1.0e1]
 SF_CREATE_STAR_MAX_GAS_JEANSL 1.0         # maximum gas Jeans length allowed to form stars (in dh of each level) (for SF_CREATE_STAR_SCHEME=2 only) [1.0]
 SF_CREATE_STAR_MASS_EFF       1.0e-2      # Gas-to-star mass conversion efficiency [1.0e-2]
-SF_CREATE_STAR_MIN_STAR_MASS  3.2e4       # minimum star particle mass for the stochastical star formation (in Msun) [0.0]
+SF_CREATE_STAR_MIN_STAR_MASS  1.0e3       # minimum star particle mass for the stochastical star formation (in Msun) [0.0]
 SF_CREATE_STAR_MAX_STAR_MFRAC 0.5         # maximum gas mass fraction allowed to convert to stars per substep [0.5]
 
 
@@ -211,7 +211,7 @@ MONO_MAX_ITER                 10          # maximum number of iterations to redu
 OPT__OUTPUT_TOTAL             1           # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
 OPT__OUTPUT_PART              1           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
-OPT__OUTPUT_PAR_MODE          1           # output the particle data: (0=off, 1=text-file, 2=C-binary) [0] ##PARTICLE ONLY##
+OPT__OUTPUT_PAR_MODE          0           # output the particle data: (0=off, 1=text-file, 2=C-binary) [0] ##PARTICLE ONLY##
 OPT__OUTPUT_POT               1           # output gravitational potential [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_PAR_DENS          1           # output the particle or total mass density on grids:
                                           # (0=off, 1=particle mass density, 2=total mass density) [1] ##OPT__OUTPUT_TOTAL ONLY##

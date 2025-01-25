@@ -45,12 +45,10 @@ z_lim_max = 1.0e8
 
 for ds in ts.piter():
 
-   ad = ds.all_data()
-
-
 #  plot
    temp_dens = yt.PhasePlot( ds, ('gas', 'density'), ('gas', 'temperature'), ('gas', 'cell_mass'),
                              weight_field=None, x_bins=nbin, y_bins=nbin )
+
    temp_dens.set_unit( 'cell_mass', 'Msun' )
    temp_dens.set_xlim( x_lim_min, x_lim_max )
    temp_dens.set_ylim( y_lim_min, y_lim_max )
@@ -60,7 +58,5 @@ for ds in ts.piter():
    temp_dens.annotate_text( xpos=x_lim_min*10**(0.80*(np.log10(x_lim_max)-np.log10(x_lim_min))),
                             ypos=y_lim_min*10**(0.95*(np.log10(y_lim_max)-np.log10(y_lim_min))),
                             text='$t$ = {:.1f} {:s}'.format( ds.current_time.in_units('Myr').d, 'Myr' ),
-                            color='black' )
+                            color='white' )
    temp_dens.save( mpl_kwargs={'dpi':dpi} )
-
-

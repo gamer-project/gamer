@@ -6,14 +6,31 @@ from yt.data_objects.particle_filters import add_particle_filter
 from matplotlib import pyplot as plt
 
 
-filein  = "../Data_000022"
+filein  = "../Data_%06d"%np.genfromtxt("../Record__Dump")[-1][0]
 fileout = "fig__star_formation_rate"
-nbin    = 100
+nbin    = 20
 dpi     = 150
 
 
 # load data
 ds = yt.load( filein )
+
+
+# define the derived fields for the star formation rate
+
+# jeans length divided by cell size
+def _jeans_length_dh( field, data ):
+   return np.sqrt( (np.pi * data["sound_speed"]**2 )/( data.ds.units.newtons_constant * data["density"] ) )/data["dx"]
+
+ds.add_field( ("gas", "jeans_length_dh"), function=_jeans_length_dh, sampling_type="cell", units="dimensionless" )
+
+# star mass formed per unit time (in code_mass/code_time)
+def _SchmidtLaw_star_formation_rate( field, data ):
+   t_ff       = np.sqrt( ( 3.0 * np.pi )/( 32.0 * data.ds.units.newtons_constant * data["density"] ) )
+   efficiency = data.ds.parameters['SF_CreateStar_MassEff']
+   return efficiency * data["cell_mass"] / t_ff
+
+ds.add_field( ("gas", "SchmidtLaw_star_formation_rate"), function=_SchmidtLaw_star_formation_rate, sampling_type="cell", units="g/s" )
 
 
 # define the particle filter for the newly formed stars
@@ -48,20 +65,14 @@ sfr    = np.array(  [ mass[upper_idx == j+1].sum() / ( (t_bin[j+1] - t_bin[j])*M
 sfr[sfr == 0] = np.nan
 
 
-# analytical
-def _jeans_length_dh( field, data ):
-   return np.sqrt( (np.pi * data["sound_speed"]**2 )/( data.ds.units.newtons_constant * data["density"] ) )/data["dx"]
+# calculate the analytical star formation rate
+if   ds.parameters['SF_CreateStar_Scheme'] == 1:   # with minimum density threshold
+   star_formation_region = ds.cut_region( ds.all_data(), ["obj['gas', 'density'] >= %.2e"%ds.parameters['SF_CreateStar_MinGasDens']] )
 
-ds.add_field( ("gas", "jeans_length_dh"), function=_jeans_length_dh, sampling_type="cell", units="dimensionless" )
+elif ds.parameters['SF_CreateStar_Scheme'] == 2:   # with maximum Jeans length thredshold
+   star_formation_region = ds.cut_region( ds.all_data(), ["obj['gas', 'jeans_length_dh'] <= %.2e"%ds.parameters['SF_CreateStar_MaxGasJeansL']] )
 
-def _SchmidtLaw_star_formation_rate( field, data ):
-   t_ff       = np.sqrt( ( 3.0 * np.pi )/( 32.0 * data.ds.units.newtons_constant * data["density"] ) )
-   efficiency = data.ds.parameters['SF_CreateStar_MassEff']
-   return efficiency * data["cell_mass"] / t_ff
-
-ds.add_field( ("gas", "SchmidtLaw_star_formation_rate"), function=_SchmidtLaw_star_formation_rate, sampling_type="cell", units="g/s" )
-
-sfr_analytical = ds.cut_region( ds.all_data(), ["obj['gas', 'jeans_length_dh'] <= %.2e"%ds.parameters['SF_CreateStar_MaxGasJeansL']]).quantities.total_quantity( 'SchmidtLaw_star_formation_rate' ).in_units('Msun/yr').d
+sfr_analytical = star_formation_region.quantities.total_quantity('SchmidtLaw_star_formation_rate').in_units('Msun/yr').d
 
 
 # plot

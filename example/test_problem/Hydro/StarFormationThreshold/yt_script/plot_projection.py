@@ -101,8 +101,12 @@ for ds in ts.piter():
    # plot the projections
    for field in fields:
 
+      ad = ds.all_data()
+      ad.min_level = 0
+      ad.max_level = 0
+
       # Projection weighted by 1 -> get the average; assume no refined level
-      pz = yt.ProjectionPlot( ds, 'z', field, weight_field=('index','ones'), center='c' )
+      pz = yt.ProjectionPlot( ds, 'z', field, weight_field=('index','ones'), center='c', data_source=ad )
       pz.set_axes_unit( 'kpc' )
       pz.set_unit( field, units[field] )
       pz.set_zlim( field, zlim_min[field], zlim_max[field] )
