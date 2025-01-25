@@ -178,11 +178,11 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
          {
             for (int v=0; v<NERR; v++)
             {
-               fprintf( File[v], "#%*s %c", StrLen_Flt, "Coord. ", coord1 );
+               fprintf( File[v], "#%*s %c", StrLen_Flt, "Coord.", coord1 );
                if ( dim >= 2 )
-               fprintf( File[v], " %*s %c", StrLen_Flt, "Coord. ", coord2 );
+               fprintf( File[v], " %*s %c", StrLen_Flt, "Coord.", coord2 );
                if ( dim == 3 )
-               fprintf( File[v], " %*s %c", StrLen_Flt, "Coord. ", coord3 );
+               fprintf( File[v], " %*s %c", StrLen_Flt, "Coord.", coord3 );
 
                fprintf( File[v], " %*s %*s %*s\n",
                         StrLen_Flt, "Numerical", StrLen_Flt, "Analytical", StrLen_Flt, "Error" );
@@ -214,7 +214,6 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
                         }
                      }
                   } // if ( Part == OUTPUT_DIAG )
-
 
                   else // x/y/z lines || xy/yz/xz slices
                   {
@@ -367,7 +366,10 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 //                PID          : Patch ID
 //                i/j/k        : Cell indices within the patch
 //                L1_Err       : Array to record the L1 errors of all variables
-//                Part         : OUTPUT_X    : x line
+//                Part         : OUTPUT_XY   : x-y plane
+//                               OUTPUT_XZ   : x-z plane
+//                               OUTPUT_YZ   : y-z plane
+//                               OUTPUT_X    : x line
 //                               OUTPUT_Y    : y line
 //                               OUTPUT_Z    : z line
 //                               OUTPUT_DIAG : diagonal along (+1,+1,+1)
