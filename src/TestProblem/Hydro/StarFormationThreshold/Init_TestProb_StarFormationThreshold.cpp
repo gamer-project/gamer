@@ -72,6 +72,12 @@ void Validate()
    if ( !OPT__UNIT )
       Aux_Error( ERROR_INFO, "OPT__UNIT must be enabled !!\n" );
 
+   if ( !OPT__FREEZE_FLUID )
+      Aux_Error( ERROR_INFO, "OPT__FREEZE_FLUID must be enabled !!\n" );
+
+   if ( !OPT__FREEZE_PAR )
+      Aux_Error( ERROR_INFO, "OPT__FREEZE_PAR must be enabled !!\n" );
+
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] == BC_FLU_PERIODIC )
       Aux_Error( ERROR_INFO, "do not use periodic BC (OPT__BC_FLU* = 1) for this test !!\n" );
@@ -93,6 +99,10 @@ void Validate()
 #     ifndef DUAL_ENERGY
          Aux_Message( stderr, "WARNING : it's recommended to enable DUAL_ENERGY for this test !!\n" );
 #     endif
+
+      if ( !OPT__RESET_FLUID )
+         Aux_Message( stderr, "WARNING : it's recommended to enable OPT__RESET_FLUID for this test !!\n" );
+
    } // if ( MPI_Rank == 0 )
 
 

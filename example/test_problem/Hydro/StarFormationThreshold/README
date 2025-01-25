@@ -31,7 +31,7 @@ Note:
    - SF_CREATE_STAR_SCHEME = 1 -> the minimum gas density (SF_CREATE_STAR_MIN_GAS_DENS)
    - SF_CREATE_STAR_SCHEME = 2 -> the maximum gas Jeans length (SF_CREATE_STAR_MAX_GAS_JEANSL)
 
-4. The default time step is set to the free-fall time of the max density
+4. The default time step is set to 0.1x the free-fall time of the max density
 
 5. In the default setup, the maximum gas cell mass is about 3356870 Msun
    - With SF_CREATE_STAR_MASS_EFF = 1.0e-2 and dt~0.1 free-fall time,
