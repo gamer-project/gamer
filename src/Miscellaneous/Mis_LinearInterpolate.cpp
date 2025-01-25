@@ -219,9 +219,10 @@ T Mis_MultilinearInterpolate( const int nDim, const T x[], const T xL[], const T
       if ( xL[d] >= xR[d] )   Aux_Error( ERROR_INFO, "xL >= xR in d=%d !!\n", d );
 #  endif
 
+// end of the recursion
    if ( nDim == 1 )
       return Mis_LinearInterpolate( x[0], xL[0], xR[0], fC[0], fC[1] );
-/*
+
    if ( nDim == 2 )
       return Mis_BilinearInterpolate( x[0], x[1],
                                      xL[0], xR[0], xL[1], xR[1],
@@ -230,8 +231,8 @@ T Mis_MultilinearInterpolate( const int nDim, const T x[], const T xL[], const T
       return Mis_TrilinearInterpolate( x[0], x[1], x[2],
                                       xL[0], xR[0], xL[1], xR[1], xL[2], xR[2],
                                       fC[0], fC[1], fC[2], fC[3], fC[4], fC[5], fC[6], fC[7] );
-*/
 
+// interpolation for the next lower dimension
    const int NCorner_LowerDim = (int)POW( 2, nDim-1 );
    T *fC_LowerDim = new T [NCorner_LowerDim];
 

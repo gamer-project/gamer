@@ -16,6 +16,7 @@ static int GetIdx_corner_nDim_Table( const int Idx_corner_local, const int nDim,
 //                3. Currently the function only supports linear interpolation
 //                4. Overloaded with different types
 //                5. Explicit template instantiation is put in the end of this file
+//                6. See the unit tests in the bottom of this file for example usage
 //
 // Parameter   :  N        : Number of elements in the interpolation tables Table_x and Table_y
 //                           --> Must be >= 2
@@ -63,6 +64,7 @@ T Mis_InterpolateFromTable( const int N, const T Table_x[], const T Table_y[], c
 //                3. Currently the function only supports linear interpolation
 //                4. Overloaded with different types
 //                5. Explicit template instantiation is put in the end of this file
+//                6. See the unit tests in the bottom of this file for example usage
 //
 // Parameter   :  N_x      : Number of elements in the interpolation tables Table_x
 //                           --> Must be >= 2
@@ -126,6 +128,7 @@ T Mis_InterpolateFrom2DTable( const int N_x, const int N_y,
 //                3. Currently the function only supports linear interpolation
 //                4. Overloaded with different types
 //                5. Explicit template instantiation is put in the end of this file
+//                6. See the unit tests in the bottom of this file for example usage
 //
 // Parameter   :  N_x      : Number of elements in the interpolation tables Table_x
 //                           --> Must be >= 2
@@ -200,6 +203,7 @@ T Mis_InterpolateFrom3DTable( const int N_x, const int N_y, const int N_z,
 //                3. Currently the function only supports linear interpolation
 //                4. Overloaded with different types
 //                5. Explicit template instantiation is put in the end of this file
+//                6. See the unit tests in the bottom of this file for example usage
 //
 // Parameter   :  nDim          : Number of dimensions of the Table_f
 //                N_x           : Number of elements in the interpolation tables of each dimension Table_x[d]
@@ -288,6 +292,7 @@ T Mis_InterpolateFrom_nDim_Table( const int nDim, const int N_x[], T const* cons
 //                3. Currently the function only supports linear interpolation
 //                4. Overloaded with different types
 //                5. Explicit template instantiation is put in the end of this file
+//                6. See the unit tests in the bottom of this file for example usage
 //
 // Parameter   :  nDim     : Number of dimensions of the Table_f
 //                N_x      : Number of elements in the interpolation tables of each dimension Table_x[d]
@@ -567,7 +572,7 @@ int UnitTest_Mis_InterpolateFromTable()
                                                   //   72.0, 144.0,  216.0,  288.0 }
 
 
-// Test 1. Mis_InterpolateFromTable
+// Test 1. Mis_InterpolateFromTable, normal case
    double Result_1 = Mis_InterpolateFromTable( N_1D, Table_X_1D, Table_f_1D, 5.5 );
    double Answer_1 = 30.5;
    if ( MPI_Rank == 0 )
@@ -575,7 +580,7 @@ int UnitTest_Mis_InterpolateFromTable()
    else                                                              Aux_Message( stdout, "Pass in %s Test 1 !!\n", __FUNCTION__ );
 
 
-// Test 2. Mis_InterpolateFromTable Outside
+// Test 2. Mis_InterpolateFromTable, x is outside the table
    double Result_2 = Mis_InterpolateFromTable( N_1D, Table_X_1D, Table_f_1D, 10.5 );
    double Answer_2 = NULL_REAL;
    if ( MPI_Rank == 0 )
@@ -583,7 +588,7 @@ int UnitTest_Mis_InterpolateFromTable()
    else                                                              Aux_Message( stdout, "Pass in %s Test 2 !!\n", __FUNCTION__ );
 
 
-// Test 3. Mis_InterpolateFrom2DTable
+// Test 3. Mis_InterpolateFrom2DTable, normal case
    float Result_3 = Mis_InterpolateFrom2DTable( N_X_2D, N_Y_2D,
                                                 Table_X_2D, Table_Y_2D, Table_f_2D,
                                                 (float)2.5, (float)4.0 );
@@ -593,7 +598,7 @@ int UnitTest_Mis_InterpolateFromTable()
    else                                                              Aux_Message( stdout, "Pass in %s Test 3 !!\n", __FUNCTION__ );
 
 
-// Test 4. Mis_InterpolateFrom3DTable
+// Test 4. Mis_InterpolateFrom3DTable, normal case
    double Result_4 = Mis_InterpolateFrom3DTable( N_X_3D, N_Y_3D, N_Z_3D,
                                                  Table_X_3D, Table_Y_3D, Table_Z_3D, Table_f_3D,
                                                  3.5, 2.2, 4.6 );
@@ -603,7 +608,7 @@ int UnitTest_Mis_InterpolateFromTable()
    else                                                              Aux_Message( stdout, "Pass in %s Test 4 !!\n", __FUNCTION__ );
 
 
-// Test 5. Mis_InterpolateFrom_nDim_Table 1D
+// Test 5. Mis_InterpolateFrom_nDim_Table, 1D normal case
    double x_5[1] = { 5.5 };
    double Result_5 = Mis_InterpolateFrom_nDim_Table( 1, N_x_1D, Table_x_1D, Table_f_1D, x_5, 0 );
    double Answer_5 = 30.5;
@@ -612,8 +617,8 @@ int UnitTest_Mis_InterpolateFromTable()
    else                                                              Aux_Message( stdout, "Pass in %s Test 5 !!\n", __FUNCTION__ );
 
 
-// Test 6. Mis_InterpolateFrom_nDim_Table 2D
-   float x_6[2] = {2.5, 4.0};
+// Test 6. Mis_InterpolateFrom_nDim_Table, 2D normal case
+   float x_6[2] = { 2.5, 4.0 };
    float Result_6 = Mis_InterpolateFrom_nDim_Table( 2, N_x_2D, Table_x_2D, Table_f_2D, x_6, 0 );
    float Answer_6 = 10.0;
    if ( MPI_Rank == 0 )
@@ -621,7 +626,7 @@ int UnitTest_Mis_InterpolateFromTable()
    else                                                              Aux_Message( stdout, "Pass in %s Test 6 !!\n", __FUNCTION__ );
 
 
-// Test 7. Mis_InterpolateFrom_nDim_Table 3D
+// Test 7. Mis_InterpolateFrom_nDim_Table, 3D normal case
    double x_7[3] = { 3.5, 2.2, 4.6 };
    double Result_7 = Mis_InterpolateFrom_nDim_Table( 3, N_x_3D, Table_x_3D, Table_f_3D, x_7, 0 );
    double Answer_7 = 80.5;
@@ -630,7 +635,7 @@ int UnitTest_Mis_InterpolateFromTable()
    else                                                              Aux_Message( stdout, "Pass in %s Test 7 !!\n", __FUNCTION__ );
 
 
-// Test 8. Mis_InterpolateFrom_nDim_Table 2D Outside extension
+// Test 8. Mis_InterpolateFrom_nDim_Table, 2D and use the extended value for the point outside the table
    float x_8[2] = { 5.0, 4.0 };
    float Result_8 = Mis_InterpolateFrom_nDim_Table( 2, N_x_2D, Table_x_2D, Table_f_2D, x_8, 1 );
    float Answer_8 = 16.0;
@@ -639,7 +644,7 @@ int UnitTest_Mis_InterpolateFromTable()
    else                                                              Aux_Message( stdout, "Pass in %s Test 8 !!\n", __FUNCTION__ );
 
 
-// Test 9. Mis_InterpolateFrom_nDim_Table 2D Outside extrapolation
+// Test 9. Mis_InterpolateFrom_nDim_Table, 2D and use the extrapolated value for the point outside the table
    float x_9[2] = { 6.0, 0.5 };
    float Result_9 = Mis_InterpolateFrom_nDim_Table( 2, N_x_2D, Table_x_2D, Table_f_2D, x_9, 2 );
    float Answer_9 = 3.0;
@@ -648,7 +653,7 @@ int UnitTest_Mis_InterpolateFromTable()
    else                                                              Aux_Message( stdout, "Pass in %s Test 9 !!\n", __FUNCTION__ );
 
 
-// Test 10. Mis_InterpolateFrom_nDim_Table 3D Outside extrapolation
+// Test 10. Mis_InterpolateFrom_nDim_Table 3D and use the extrapolated value for the point outside the table
    double x_10[3] = { 1.5, 4.0, 9.0 };
    double Result_10 = Mis_InterpolateFrom_nDim_Table( 3, N_x_3D, Table_x_3D, Table_f_3D, x_10, 2 );
    double Answer_10 = 189.0;
@@ -657,7 +662,7 @@ int UnitTest_Mis_InterpolateFromTable()
    else                                                                Aux_Message( stdout, "Pass in %s Test 10 !!\n", __FUNCTION__ );
 
 
-// Test 11. Mis_InterpolateFrom_nDim_Table 2D
+// Test 11. Mis_InterpolateFrom_nDim_Table, 2D and the IdxL is provided
    float  x_11[2] = { 4.0, 5.0 };
    int IdxL_11[2] = { 0 , 0 };
    float Result_11 = Mis_InterpolateFrom_nDim_Table_withIdxL( 2, N_x_2D, Table_x_2D, Table_f_2D, x_11, IdxL_11 );
@@ -667,7 +672,7 @@ int UnitTest_Mis_InterpolateFromTable()
    else                                                                Aux_Message( stdout, "Pass in %s Test 11 !!\n", __FUNCTION__ );
 
 
-// Test 12. Mis_InterpolateFrom_nDim_Table 3D
+// Test 12. Mis_InterpolateFrom_nDim_Table, 3D and the IdxL is provided
    double x_12[3] = { 3.0, 4.0, 8.0 };
    int IdxL_12[3] = { 1, 0, 1 };
    double Result_12 = Mis_InterpolateFrom_nDim_Table_withIdxL( 3, N_x_3D, Table_x_3D, Table_f_3D, x_12, IdxL_12 );
@@ -677,7 +682,7 @@ int UnitTest_Mis_InterpolateFromTable()
    else                                                                Aux_Message( stdout, "Pass in %s Test 12 !!\n", __FUNCTION__ );
 
 
-// Test 13. Mis_InterpolateFrom_nDim_Table 3D Outside
+// Test 13. Mis_InterpolateFrom_nDim_Table, 3D and use the extended value when an out-of-range IdxL is provided
    double x_13[3] = { 1.5, 2.5, 8.5 };
    int IdxL_13[3] = { -1, -2, 3 };
    double Result_13 = Mis_InterpolateFrom_nDim_Table_withIdxL( 3, N_x_3D, Table_x_3D, Table_f_3D, x_13, IdxL_13 );
@@ -687,7 +692,7 @@ int UnitTest_Mis_InterpolateFromTable()
    else                                                                Aux_Message( stdout, "Pass in %s Test 13 !!\n", __FUNCTION__ );
 
 
-// Test 14. GetIdx_corner_nDim_Table
+// Test 14. GetIdx_corner_nDim_Table, 3D normal case
    int IdxL_14[3] = { 1, 1, 2 };
    int Result_14 = GetIdx_corner_nDim_Table( 1, 3, N_x_3D, IdxL_14 );
    int Answer_14 = 22;
