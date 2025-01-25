@@ -74,38 +74,38 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
    char FileName[NERR][MAX_STRING];
 
 #  if   ( MODEL == HYDRO )
-   sprintf( FileName[            0], "%s_Dens_%06d", Prefix, DumpID );
-   sprintf( FileName[            1], "%s_MomX_%06d", Prefix, DumpID );
-   sprintf( FileName[            2], "%s_MomY_%06d", Prefix, DumpID );
-   sprintf( FileName[            3], "%s_MomZ_%06d", Prefix, DumpID );
-   sprintf( FileName[            4], "%s_Pres_%06d", Prefix, DumpID );
+   sprintf( FileName[            0], "%s/%s_Dens_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            1], "%s/%s_MomX_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            2], "%s/%s_MomY_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            3], "%s/%s_MomZ_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            4], "%s/%s_Pres_%06d", OUTPUT_DIR, Prefix, DumpID );
 
    for (int v=0; v<NCOMP_PASSIVE; v++)
-   sprintf( FileName[NCOMP_FLUID+v], "%s_Passive%02d_%06d", Prefix, v, DumpID );
+   sprintf( FileName[NCOMP_FLUID+v], "%s/%s_Passive%02d_%06d", OUTPUT_DIR, Prefix, v, DumpID );
 
 #  ifdef MHD
-   sprintf( FileName[NCOMP_TOTAL+0], "%s_MagX_%06d", Prefix, DumpID );
-   sprintf( FileName[NCOMP_TOTAL+1], "%s_MagY_%06d", Prefix, DumpID );
-   sprintf( FileName[NCOMP_TOTAL+2], "%s_MagZ_%06d", Prefix, DumpID );
+   sprintf( FileName[NCOMP_TOTAL+0], "%s/%s_MagX_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[NCOMP_TOTAL+1], "%s/%s_MagY_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[NCOMP_TOTAL+2], "%s/%s_MagZ_%06d", OUTPUT_DIR, Prefix, DumpID );
 #  endif
 
-   sprintf( FileName[     NBASIC+0], "%s_Temp_%06d", Prefix, DumpID );
+   sprintf( FileName[     NBASIC+0], "%s/%s_Temp_%06d", OUTPUT_DIR, Prefix, DumpID );
 
 #  elif ( MODEL == ELBDM )
 #  if   ( ELBDM_SCHEME == ELBDM_WAVE )
-   sprintf( FileName[            0], "%s_Dens_%06d", Prefix, DumpID );
-   sprintf( FileName[            1], "%s_Real_%06d", Prefix, DumpID );
-   sprintf( FileName[            2], "%s_Imag_%06d", Prefix, DumpID );
+   sprintf( FileName[            0], "%s/%s_Dens_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            1], "%s/%s_Real_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            2], "%s/%s_Imag_%06d", OUTPUT_DIR, Prefix, DumpID );
 #  elif ( ELBDM_SCHEME == ELBDM_HYBRID )
-   sprintf( FileName[            0], "%s_Dens_%06d", Prefix, DumpID );
-   sprintf( FileName[            1], "%s_Phas_%06d", Prefix, DumpID );
-   sprintf( FileName[            2], "%s_Stub_%06d", Prefix, DumpID );
+   sprintf( FileName[            0], "%s/%s_Dens_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            1], "%s/%s_Phas_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            2], "%s/%s_Stub_%06d", OUTPUT_DIR, Prefix, DumpID );
 #  else
 #  error : ERROR : unsupported ELBDM_SCHEME !!
 #  endif // ELBDM_SCHEME
 
    for (int v=0; v<NCOMP_PASSIVE; v++)
-   sprintf( FileName[NCOMP_FLUID+v], "%s_Passive%02d_%06d", Prefix, v, DumpID );
+   sprintf( FileName[NCOMP_FLUID+v], "%s/%s_Passive%02d_%06d", OUTPUT_DIR, Prefix, v, DumpID );
 
 #  else
 #  error : ERROR : unsupported MODEL !!
@@ -251,7 +251,9 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 
       for (int v=0; v<NERR; v++)    L1_Err_Sum[v] /= Norm;
 
-      FILE *File_L1 = fopen( "Record__L1Err", "a" );
+      char FileName_L1[MAX_STRING];
+      sprintf( FileName_L1, "%s/Record__L1Err", OUTPUT_DIR );
+      FILE *File_L1 = fopen( FileName_L1, "a" );
 
 //    output header
       if ( FirstTime )

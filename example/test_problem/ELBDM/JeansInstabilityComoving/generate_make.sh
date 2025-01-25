@@ -2,5 +2,5 @@
 
 PYTHON=python3
 
-${PYTHON} configure.py --machine=eureka_intel --hdf5=true --gpu=true --fftw=FFTW3 --double=true \
+${PYTHON} configure.py --hdf5=true --gpu=true --fftw=FFTW3 --double=true \
                        --model=ELBDM --gravity=true --comoving=true "$@"

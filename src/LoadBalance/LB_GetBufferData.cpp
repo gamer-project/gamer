@@ -1639,8 +1639,8 @@ void LB_GetBufferData( const int lv, const int FluSg, const int MagSg, const int
 #  ifdef TIMING
    if ( OPT__TIMING_MPI )
    {
-      char FileName[100];
-      sprintf( FileName, "Record__TimingMPI_Rank%05d", MPI_Rank );
+      char FileName[MAX_STRING];
+      sprintf( FileName, "%s/Record__TimingMPI_Rank%05d", OUTPUT_DIR, MPI_Rank );
 
       char ModeName[100];
       switch ( GetBufMode )

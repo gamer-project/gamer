@@ -50,7 +50,7 @@ const static flag_spectral_float  Flag_Spectral_Polynomials[FLAG_SPECTRAL_ORDER]
 //                Cond  : Reference to a floating-point variable storing the magnitude
 //                        of the largest coefficient
 //
-// Return      :  Cond 
+// Return      :  Cond
 //-------------------------------------------------------------------------------------------------------
 void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond )
 {
