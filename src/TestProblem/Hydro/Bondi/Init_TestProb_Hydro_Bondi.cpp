@@ -1,9 +1,5 @@
 #include "GAMER.h"
 
-#ifdef SUPPORT_GSL
-#include <gsl/gsl_errno.h>
-#include <gsl/gsl_odeiv2.h>
-#endif
 
 
 // problem-specific global variables
@@ -91,7 +87,6 @@ static double  Bondi_HSE_Beta_P2;         // P1=G*MassBH*Rho0/Rcore, and P2 curr
                                           // (<0.0 --> compute from Bondi_Soliton_MassHalo/Redshift using the core-halo relation)
        double  Bondi_Soliton_MassHalo;    // halo mass for Bondi_Soliton when Bondi_Soliton_rc<0.0
        double  Bondi_Soliton_Redshift;    // redshift for Bondi_Soliton when Bondi_Soliton_rc<0.0
-static double *Bondi_Soliton_PresProf[2] = { NULL, NULL };  // pressure profile table: [0/1] = [radius/density]
 // =======================================================================================
 
 
@@ -103,9 +98,6 @@ bool Flag_Bondi( const int i, const int j, const int k, const int lv, const int 
 int Flu_ResetByUser_Func_Bondi( real fluid[], const double Emag, const double x, const double y, const double z, const double Time,
                                 const double dt, const int lv, double AuxArray[] );
 void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );
-#ifdef SUPPORT_GSL
-static void Soliton_SetPresProfileTable();
-#endif
 static void HSE_SetDensProfileTable();
 static void BondiBC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
                      const int GhostSize, const int idx[], const double pos[], const double Time,
@@ -407,9 +399,6 @@ void SetParameter()
       }
       Bondi_Soliton_rc *= UnitExt_L/UNIT_L;
       Bondi_Soliton_t  *= Bondi_TimeB;
-#     ifdef SUPPORT_GSL
-      Soliton_SetPresProfileTable();
-#     endif
    }
 
 
@@ -680,70 +669,6 @@ void HSE_SetDensProfileTable()
 
 
 
-#ifdef SUPPORT_GSL
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Soliton_SetPresProfileTable
-// Description :  Set up the pressure profile table for the soliton
-//
-// Note        :  1. Assume P(r->inf)=0
-//
-// Parameter   :  None
-//-------------------------------------------------------------------------------------------------------
-int odefunc( double x, const double y[], double f[], void *params )
-{
-
-   x /= Const_kpc;
-   double rc = Bondi_Soliton_rc*UNIT_L/Const_kpc;
-   double m22 = Bondi_Soliton_m22;
-
-   double rho = 1.945*pow(m22/1e-1, -2.0)*pow(rc*1e3, -4.0)*1e12/pow(1+(9.1e-2)*SQR(x/rc), 8.0)*Const_Msun/pow(Const_pc, 3.0);
-   double a = sqrt(pow(2.0,1.0/8.0)-1)*(x/rc);
-   double M = 4.17e9/(SQR(m22/1e-1)*(rc*1e3)*pow(SQR(a)+1, 7.0))*(3465*pow(a,13.0)+23100*pow(a,11.0)+65373*pow(a,9.0)+101376*pow(a,7.0)+92323*pow(a,5.0)+48580*pow(a,3.0)-3465*a+3465*pow(SQR(a)+1, 7.0)*atan(a))*Const_Msun;
-   f[0] = -Const_NewtonG*M*rho/SQR(x*Const_kpc);
-
-   return GSL_SUCCESS;
-
-} // FUNCTION : odefunc
-
-
-
-int * jac;
-void Soliton_SetPresProfileTable()
-{
-
-// allocate table --> deallocated by End_Bondi()
-   const int    NBin = 100000;
-   const double r_min = 0.1*amr->dh[MAX_LEVEL]*UNIT_L;
-   const double r_max = (0.5*sqrt(3.0)*amr->BoxSize[0])*UNIT_L;
-   for (int v=0; v<2; v++)    Bondi_Soliton_PresProf[v] = new double [NBin];
-
-   int dim = 1;
-   gsl_odeiv2_system sys = {odefunc, NULL, dim, NULL};
-
-   gsl_odeiv2_driver * d = gsl_odeiv2_driver_alloc_y_new (&sys, gsl_odeiv2_step_rk4, 1e-6, 1e-6, 0.0);
-
-   double x0 = -r_max, xf = -r_min;
-   double x = x0;
-   double y[1] = { 0.0 };
-   for( int b=1; b<=NBin; b++)
-   {
-      double xi = x0 + b*(xf-x0)/NBin;
-      int status = gsl_odeiv2_driver_apply (d, &x, xi, y);
-      if (status != GSL_SUCCESS)
-      {
-            Aux_Error( ERROR_INFO, "Error in Soliton_SetPresProfileTable, return value=%d\n", status );
-            break;
-      }
-      Bondi_Soliton_PresProf[0][NBin-b] = -x/UNIT_L;
-      Bondi_Soliton_PresProf[1][NBin-b] = y[0];
-   }
-   gsl_odeiv2_driver_free (d);
-
-} // FUNCTION : Soliton_SetPresProfileTable
-#endif // #ifdef SUPPORT_GSL
-
-
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  End_Bondi
 // Description :  Free memory before terminating the program
@@ -759,8 +684,6 @@ void End_Bondi()
    {
       delete [] Bondi_HSE_DensProf[v];
       Bondi_HSE_DensProf[v] = NULL;
-      delete [] Bondi_Soliton_PresProf[v];
-      Bondi_Soliton_PresProf[v] = NULL;
    }
 
 } // FUNCTION : End_Bondi
