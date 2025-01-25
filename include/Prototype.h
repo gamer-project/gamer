@@ -159,8 +159,6 @@ real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Gamma_m1,
 #ifdef VISCOSITY
 void Hydro_ComputeViscosity( real &visc_mu, real &visc_nu, const MicroPhy_t *MicroPhy,
                              const real Dens, const real Temp );
-void Hydro_Compute_DeltaP( real Out[], const real FluIn[][CUBE(DER_NXT)], const real faceB[][SQR(DER_NXT)*DER_NXT_P1], 
-                           const real Temp[], const int NGhost, const real dh, const MicroPhy_t *MicroPhy );
 #endif
 #ifdef CONDUCTION
 void Hydro_ComputeConduction( real &cond_kappa, real &cond_chi, const MicroPhy_t *MicroPhy,
@@ -213,6 +211,11 @@ void Flu_DerivedField_DivVel( real Out[], const real FluIn[], const real MagIn[]
 void Flu_DerivedField_Mach( real Out[], const real FluIn[], const real MagIn[], const int NFieldOut,
                             const int NCellInX, const int NCellInY, const int NCellInZ,
                             const int NGhost, const double dh );
+#ifdef VISCOSITY
+void Flu_DerivedField_DeltaP( real Out[], const real FluIn[], const real MagIn[], const int NFieldOut,
+                              const int NCellInX, const int NCellInY, const int NCellInZ,
+                              const int NGhost, const double dh );
+#endif
 #endif
 
 

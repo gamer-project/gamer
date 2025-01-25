@@ -1039,12 +1039,11 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                }
 #              endif
 
-#              if defined( VISCOSITY ) || defined( CONDUCTION ) 
+#              ifdef MHD
+#              ifdef VISCOSITY
                else if ( v == DeltaPDumpIdx )
                {
          
-                  const bool CheckMinTemp_No = false;
-
                   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                   {
 //                   prepare the input fields
@@ -1057,42 +1056,32 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      for (int LocalID=0; LocalID<8; LocalID++)
                      {
 
-                        const int PID = PID0 + LocalID;
-
-                        real TempIn[CUBE(DER_NXT)], Temp;
-
+//                      convert B field from face-centered to cell-centered
                         for (int k=0; k<DER_NXT; k++)
                         for (int j=0; j<DER_NXT; j++)
                         for (int i=0; i<DER_NXT; i++)
                         {
-
-                           real u[NCOMP_TOTAL], Temp, Emag=NULL_REAL;
-
                            const int IdxCC = IDX321( i, j, k, DER_NXT, DER_NXT );
+                           real B_CC[NCOMP_MAG];
 
-                           for (int v=0; v<NCOMP_TOTAL; v++)   
-                              u[v] = Der_FluIn[LocalID][v][IdxCC];   
+                           MHD_GetCellCenteredBField( B_CC, Der_MagFC[LocalID][MAGX], Der_MagFC[LocalID][MAGY],
+                                                      Der_MagFC[LocalID][MAGZ], DER_NXT, DER_NXT, DER_NXT, i, j, k );
 
-#                          ifdef MHD
-                           Emag = MHD_GetCellCenteredBEnergy( Der_MagFC[LocalID][MAGX], Der_MagFC[LocalID][MAGY],
-                                                              Der_MagFC[LocalID][MAGZ], DER_NXT, DER_NXT, DER_NXT, 
-                                                              i, j, k );
-#                          endif
-                           Temp = Hydro_Con2Temp( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
-                                                  CheckMinTemp_No, NULL_REAL, Emag, EoS_DensEint2Temp_CPUPtr,
-                                                  EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                                  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-                           
-                           TempIn[IdxCC] = Temp;
-
+                           Der_MagCC[MAGX][IdxCC] = B_CC[MAGX];
+                           Der_MagCC[MAGY][IdxCC] = B_CC[MAGY];
+                           Der_MagCC[MAGZ][IdxCC] = B_CC[MAGZ];
                         }
+
 //                      compute and store the target derived field
-                        Hydro_Compute_DeltaP( FieldData[PID][0][0], Der_FluIn[LocalID], Der_MagFC[LocalID],
-                                              TempIn, DER_GHOST_SIZE, amr->dh[lv], &MicroPhy );
+                        const int PID  = PID0 + LocalID;
+                        const int NDer = 1;
+                        Flu_DerivedField_DeltaP( FieldData[PID][0][0], Der_FluIn[LocalID][0], Der_MagCC[0],
+                                                 NDer, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, amr->dh[lv] );
                      } // for (int LocalID=0; LocalID<8; LocalID++)
                   } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                } // if ( v == DeltaPDumpIdx )
-#              endif // if defined( VISCOSITY ) || defined( CONDUCTION ) 
+#              endif // #ifdef VISCOSITY
+#              endif // #ifdef MHD
 
 #              ifdef SRHD
                else if (  ( v >= VelDumpIdx0 && v < VelDumpIdx0+3 )  ||  v == LorentzDumpIdx )
