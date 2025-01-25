@@ -1986,6 +1986,9 @@ void Aux_Check_Parameter()
    if ( VISCOSITY_TYPE == SPITZER_VISCOSITY && !OPT__UNIT )
       Aux_Error( ERROR_INFO, "SPITZER_VISCOSITY only works with OPT__UNIT !!\n" );
 
+   if ( VISCOSITY_FLUX_TYPE != ANISOTROPIC_VISCOSITY && OPT__OUTPUT_DELTAP )
+      Aux_Error( ERROR_INFO, "OPT__OUTPUT_DELTAP only works with ANISOTROPIC_VISCOSITY !!\n" );
+
 // warning
 // ------------------------------
    if ( MPI_Rank == 0 ) {

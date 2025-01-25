@@ -1044,6 +1044,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                else if ( v == DeltaPDumpIdx )
                {
          
+                  if ( VISCOSITY_FLUX_TYPE != ANISOTROPIC_VISCOSITY )
+                     Aux_Error( ERROR_INFO, "OPT__OUTPUT_DELTAP only works with ANISOTROPIC_VISCOSITY !!\n" );
+
                   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                   {
 //                   prepare the input fields
