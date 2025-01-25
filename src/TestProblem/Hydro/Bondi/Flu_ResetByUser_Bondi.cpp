@@ -21,6 +21,9 @@ extern int    Bondi_SinkNCell;
 extern bool   Bondi_void;
 extern bool   Bondi_dynBH;
 
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_ResetByUser_Func_Bondi
 // Description :  Function to reset the fluid field in the Bondi accretion problem
@@ -51,8 +54,8 @@ int Flu_ResetByUser_Func_Bondi( real fluid[], const double Emag, const double x,
                                 const double dt, const int lv, double AuxArray[] )
 {
 
-   if ( !Bondi_void )
-      return false;
+   if ( !Bondi_void )   return false;
+
 
    const double Pos[3]  = { x, y, z };
    const double InBC_R2 = SQR( Bondi_InBC_R );
@@ -213,7 +216,7 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const int MagSg, 
 
    MPI_Allreduce( &SinkMass_OneSubStep_ThisRank, &SinkMass_OneSubStep_AllRank, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
 
-   if( Bondi_dynBH ){ Bondi_MassBH += SinkMass_OneSubStep_AllRank; }
+   if ( Bondi_dynBH )   Bondi_MassBH += SinkMass_OneSubStep_AllRank;
 
 } // FUNCTION : Flu_ResetByUser_API_Bondi
 

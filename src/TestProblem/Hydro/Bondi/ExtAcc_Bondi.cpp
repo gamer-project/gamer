@@ -49,36 +49,42 @@ void SetExtAccAuxArray_Bondi( double AuxArray[], const double Time )
    AuxArray[3] = NEWTON_G*Bondi_MassBH;   // gravitational_constant*point_source_mass
    AuxArray[4] = Bondi_Soften_R;          // soften_length (<=0.0 --> disable)
    AuxArray[5] = Bondi_Soliton;
-   if( Bondi_Soliton )
+
+   if ( Bondi_Soliton )
    {
       AuxArray[6] = Bondi_Soliton_m22;
       AuxArray[7] = Bondi_Soliton_rc;
       AuxArray[8] = NEWTON_G*Const_Msun/UNIT_M;
       AuxArray[9] = UNIT_L/Const_kpc;
-      if( Bondi_Soliton_type > 0 )
+
+      switch ( Bondi_Soliton_type )
       {
-          switch(Bondi_Soliton_type)
-          {
-              case 1: // arctan function
-                  AuxArray[8] *= 2/(real)3.14159265*ATAN(Time/Bondi_Soliton_t);
-                  break;
-              case 2: // linear function
-                  if( Time < Bondi_Soliton_t )
-                      AuxArray[8] *= Time/Bondi_Soliton_t;
-                  break;
-              case 3: // smooth step function
-                  if( Time < Bondi_Soliton_t )
-                      AuxArray[8] *= 3*SQR(Time/Bondi_Soliton_t)-2*CUBE(Time/Bondi_Soliton_t);
-                  break;
-              case 4: // sigmoid
-                  AuxArray[8] *= 2/(1+exp(-Time*log(3)/Bondi_Soliton_t))-1;
-                  break;
-              case 5: // tanh
-                  AuxArray[8] *= tanh(Time/Bondi_Soliton_t);
-                  break;
-          }
-      }
-   }
+         case 1: // arctan function
+            AuxArray[8] *= 2.0/M_PI*atan( Time/Bondi_Soliton_t );
+            break;
+
+         case 2: // linear function
+            if ( Time < Bondi_Soliton_t )
+               AuxArray[8] *= Time/Bondi_Soliton_t;
+            break;
+
+         case 3: // smooth step function
+            if ( Time < Bondi_Soliton_t )
+               AuxArray[8] *= 3.0*SQR( Time/Bondi_Soliton_t ) - 2.0*CUBE( Time/Bondi_Soliton_t );
+            break;
+
+         case 4: // sigmoid
+            AuxArray[8] *= 2.0 / (  1.0 + exp( -Time*log(3.0)/Bondi_Soliton_t )  ) - 1.0;
+            break;
+
+         case 5: // tanh
+            AuxArray[8] *= tanh( Time/Bondi_Soliton_t );
+            break;
+
+         default:
+            Aux_Error( ERROR_INFO, "unsupported Bondi_Soliton_type (%d) !!\n", Bondi_Soliton_type );
+      } // switch ( Bondi_Soliton_type )
+   } // if ( Bondi_Soliton )
 
 } // FUNCTION : SetExtAccAuxArray_Bondi
 #endif // #ifndef __CUDACC__
@@ -111,18 +117,18 @@ static void ExtAcc_Bondi( real Acc[], const double x, const double y, const doub
    const double Cen[3] = { UserArray[0], UserArray[1], UserArray[2] };
          real GM       = (real)UserArray[3];
    const real eps      = (real)UserArray[4];
-   const bool SOL      = (real)UserArray[5];
+   const bool Soliton  = (real)UserArray[5];
    const real dx       = (real)(x - Cen[0]);
    const real dy       = (real)(y - Cen[1]);
    const real dz       = (real)(z - Cen[2]);
    const real r        = SQRT( dx*dx + dy*dy + dz*dz );
 
-   if( SOL )
+   if ( Soliton )
    {
-      const real m22      = (real)UserArray[6];
-      const real rc       = (real)UserArray[7];  // In code unit or kpc
-      const real Coeff    = (real)UserArray[8];
-      const real UNIT_L   = (real)UserArray[9];
+      const real m22    = (real)UserArray[6];
+      const real rc     = (real)UserArray[7];  // In code unit or kpc
+      const real Coeff  = (real)UserArray[8];
+      const real UNIT_L = (real)UserArray[9];
 
 #ifdef Plummer
       double M = GM*CUBE(r)/pow(SQR(r)+SQR(rc),1.5);

@@ -8,96 +8,97 @@
 
 // problem-specific global variables
 // =======================================================================================
-       double Bondi_MassBH;         // black hole mass
-static double Bondi_Rho0;           // background density
-static double Bondi_T0;             // background temperature
-       double Bondi_RefineRadius0;  // refinement radius at the base level
-                                    // NOTE: refinement radius at Lv is set to Bondi_RefineRadius0*2^(-Lv)
-                                    // --> all refinement shells have roughly the same number of cells at its level
-                                    //     (except Lv=MAX_LEVEL, which will have twice the number of cells along the radius
-                                    //     unless Bondi_HalfMaxLvRefR is on)
-       bool   Bondi_HalfMaxLvRefR;  // halve the refinement radius at the maximum level
-       double Bondi_InBC_Rho;       // density     inside the void region
-static double Bondi_InBC_T;         // temperature inside the void region
-static double Bondi_InBC_NCell;     // number of finest cells for the radius of the void region
-static double Bondi_Soften_NCell;   // number of finest cells for the soften length (<=0.0 ==> disable)
+       double  Bondi_MassBH;              // black hole mass
+static double  Bondi_Rho0;                // background density
+static double  Bondi_T0;                  // background temperature
+       double  Bondi_RefineRadius0;       // refinement radius at the base level
+                                          // NOTE: refinement radius at Lv is set to Bondi_RefineRadius0*2^(-Lv)
+                                          // --> all refinement shells have roughly the same number of cells at its level
+                                          //     (except Lv=MAX_LEVEL, which will have twice the number of cells along the radius
+                                          //     unless Bondi_HalfMaxLvRefR is on)
+       bool    Bondi_HalfMaxLvRefR;       // halve the refinement radius at the maximum level
+       double  Bondi_InBC_Rho;            // density     inside the void region
+static double  Bondi_InBC_T;              // temperature inside the void region
+static double  Bondi_InBC_NCell;          // number of finest cells for the radius of the void region
+static double  Bondi_Soften_NCell;        // number of finest cells for the soften length (<=0.0 ==> disable)
 
-       double Bondi_InBC_R;         // radius of the void region (=Bondi_InBC_NCell*dh[MAX_LEVEL])
-       double Bondi_InBC_P;         // pressure inside the void region
-       double Bondi_InBC_E;         // energy inside the void region
-       double Bondi_Soften_R;       // soften length (=Bondi_Soften_NCell*dh[MAX_LEVEL])
-static double Bondi_P0;             // background pressure
-static double Bondi_Cs;             // background sound speed
-static double Bondi_RS;             // Schwarzschild radius
-static double Bondi_RB;             // Bondi radius
-static double Bondi_TimeB;          // Bondi time
+       double  Bondi_InBC_R;              // radius of the void region (=Bondi_InBC_NCell*dh[MAX_LEVEL])
+       double  Bondi_InBC_P;              // pressure inside the void region
+       double  Bondi_InBC_E;              // energy inside the void region
+       double  Bondi_Soften_R;            // soften length (=Bondi_Soften_NCell*dh[MAX_LEVEL])
+static double  Bondi_P0;                  // background pressure
+static double  Bondi_Cs;                  // background sound speed
+static double  Bondi_RS;                  // Schwarzschild radius
+static double  Bondi_RB;                  // Bondi radius
+static double  Bondi_TimeB;               // Bondi time
 
-       double Bondi_SinkMass;       // total mass             in the void region removed in one global time-step
-       double Bondi_SinkMomX;       // total x-momentum       ...
-       double Bondi_SinkMomY;       // total y-momentum       ...
-       double Bondi_SinkMomZ;       // total z-momentum       ...
-       double Bondi_SinkMomXAbs;    // total |x-momentum|     ...
-       double Bondi_SinkMomYAbs;    // total |y-momentum|     ...
-       double Bondi_SinkMomZAbs;    // total |z-momentum|     ...
-       double Bondi_SinkEk;         // total kinematic energy ...
-       double Bondi_SinkEt;         // total thermal   energy ...
-       int    Bondi_SinkNCell;      // total number of finest cells within the void region
+       double  Bondi_SinkMass;            // total mass             in the void region removed in one global time-step
+       double  Bondi_SinkMomX;            // total x-momentum       ...
+       double  Bondi_SinkMomY;            // total y-momentum       ...
+       double  Bondi_SinkMomZ;            // total z-momentum       ...
+       double  Bondi_SinkMomXAbs;         // total |x-momentum|     ...
+       double  Bondi_SinkMomYAbs;         // total |y-momentum|     ...
+       double  Bondi_SinkMomZAbs;         // total |z-momentum|     ...
+       double  Bondi_SinkEk;              // total kinematic energy ...
+       double  Bondi_SinkEt;              // total thermal   energy ...
+       int     Bondi_SinkNCell;           // total number of finest cells within the void region
 
 // external units in cgs
-const double UnitExt_L = Const_kpc;
-const double UnitExt_D = 1.0;
-const double UnitExt_M = Const_Msun;
-const double UnitExt_E = Const_keV;
+const double   UnitExt_L = Const_kpc;
+const double   UnitExt_D = 1.0;
+const double   UnitExt_M = Const_Msun;
+const double   UnitExt_E = Const_keV;
 
 
 // hydrostatic equilibrium (HSE)
-static bool   Bondi_HSE;            // enable HSE
-static int    Bondi_HSE_Mode;       // initial configuration (1:T=Bondi_T0, 2:rho~1/r, 3:beta model)
-static double Bondi_HSE_Dens_NormR; // normalize the density profile to density(r=NormR)=NormD
-static double Bondi_HSE_Dens_NormD; // see Bondi_HSE_Dens_NormR
+static bool    Bondi_HSE;                 // enable HSE
+static int     Bondi_HSE_Mode;            // initial configuration (1:T=Bondi_T0, 2:rho~1/r, 3:beta model)
+static double  Bondi_HSE_Dens_NormR;      // normalize the density profile to density(r=NormR)=NormD
+static double  Bondi_HSE_Dens_NormD;      // see Bondi_HSE_Dens_NormR
 
 // parameters for Bondi_HSE_Mode=1
-static int    Bondi_HSE_Dens_NBin;  // number of bins in the density profile table
-static double Bondi_HSE_Dens_MinR;  // minimum radius in the density profile
-static double Bondi_HSE_Dens_MaxR;  // maximum ...
-static bool   Bondi_HSE_Truncate;   // truncate density within r<TrunR to density=TrunD
-static double Bondi_HSE_TrunR;      // see Bondi_HSE_Truncate
-static double Bondi_HSE_TrunD;      // see Bondi_HSE_Truncate
-static double Bondi_HSE_TrunSmoothR;// smooth out density within TrunR-SmoothR<r<TrunR+SmoothR
+static int     Bondi_HSE_Dens_NBin;       // number of bins in the density profile table
+static double  Bondi_HSE_Dens_MinR;       // minimum radius in the density profile
+static double  Bondi_HSE_Dens_MaxR;       // maximum ...
+static bool    Bondi_HSE_Truncate;        // truncate density within r<TrunR to density=TrunD
+static double  Bondi_HSE_TrunR;           // see Bondi_HSE_Truncate
+static double  Bondi_HSE_TrunD;           // see Bondi_HSE_Truncate
+static double  Bondi_HSE_TrunSmoothR;     // smooth out density within TrunR-SmoothR<r<TrunR+SmoothR
 
 static double *Bondi_HSE_DensProf[2] = { NULL, NULL };   // density profile table: [0/1] = [radius/density]
 
 // parameters for Bondi_HSE_Mode=2
-static bool   Bondi_HSE_Pres_NormT;    // true --> adjust P2 in the pressure profile such that T(r=NormR)=Bondi_T0
-static double Bondi_HSE_Pres_NormP1;   // P=P1*r^-2+P2 (P2=0 when Bondi_HSE_Pres_NormT=false)
-static double Bondi_HSE_Pres_NormP2;
+static bool    Bondi_HSE_Pres_NormT;      // true --> adjust P2 in the pressure profile such that T(r=NormR)=Bondi_T0
+static double  Bondi_HSE_Pres_NormP1;     // P=P1*r^-2+P2 (P2=0 when Bondi_HSE_Pres_NormT=false)
+static double  Bondi_HSE_Pres_NormP2;
 
 // parameters for Bondi_HSE_Mode=3 (beta model)
-const  double Bondi_HSE_Beta = 2.0/3.0;   // beta (must be 2/3 for now)
-static double Bondi_HSE_Beta_Rcore;       // core radius (input parameter)
-static double Bondi_HSE_Beta_Rho0;        // peak density (set by Bondi_HSE_Dens_NormR/D)
-static double Bondi_HSE_Beta_P1;          // P(r) = P1*( 1/x + atan(x) ) + P2 assuming beta=2/3, where x=r/Rcore,
-static double Bondi_HSE_Beta_P2;          // P1=G*MassBH*Rho0/Rcore, and P2 currently fixed to -0.5*pi*P1 so that P(inf)=0
+const  double  Bondi_HSE_Beta = 2.0/3.0;  // beta (must be 2/3 for now)
+static double  Bondi_HSE_Beta_Rcore;      // core radius (input parameter)
+static double  Bondi_HSE_Beta_Rho0;       // peak density (set by Bondi_HSE_Dens_NormR/D)
+static double  Bondi_HSE_Beta_P1;         // P(r) = P1*( 1/x + atan(x) ) + P2 assuming beta=2/3, where x=r/Rcore,
+static double  Bondi_HSE_Beta_P2;         // P1=G*MassBH*Rho0/Rcore, and P2 currently fixed to -0.5*pi*P1 so that P(inf)=0
 
 // parameters for soliton
-       bool   Bondi_void;
-       bool   Bondi_dynBH;
-       bool   Bondi_Soliton;
-       double Bondi_Soliton_m22;
-       int    Bondi_Soliton_type;
-       double Bondi_Soliton_t;
-       double Bondi_Soliton_rc;
-       double Bondi_Soliton_MassHalo;
-       double Bondi_Soliton_Redshift;
-static double *Bondi_Soliton_PresProf[2] = { NULL, NULL };   // pressure profile tabke: [0/1] = [radius/density]
+       bool    Bondi_void;                // enable the void region
+       bool    Bondi_dynBH;               // dynamically increase BH mass
+       bool    Bondi_Soliton;             // add soliton external potential
+       double  Bondi_Soliton_m22;         // FDM particle mass for Bondi_Soliton
+       int     Bondi_Soliton_type;        // functional form for gradually introducing the soliton potential
+                                          // (1:arctan, 2:linear, 3:smooth step function, 4:sigmoid, 5:tanh)
+       double  Bondi_Soliton_t;           // characteristic time normalized to Bondi_TimeB for adding the soliton potential
+       double  Bondi_Soliton_rc;          // soliton radius for Bondi_Soliton
+                                          // (<0.0 --> compute from Bondi_Soliton_MassHalo/Redshift using the core-halo relation)
+       double  Bondi_Soliton_MassHalo;    // halo mass for Bondi_Soliton when Bondi_Soliton_rc<0.0
+       double  Bondi_Soliton_Redshift;    // redshift for Bondi_Soliton when Bondi_Soliton_rc<0.0
+static double *Bondi_Soliton_PresProf[2] = { NULL, NULL };  // pressure profile table: [0/1] = [radius/density]
 
-// parameters for bondi initial condition
-       bool   Bondi_Init;
-static char   Bondi_Init_Filename[1000];
+// parameters for Bondi initial condition
+       bool    Bondi_Init;
+static char    Bondi_Init_Filename[MAX_STRING];
 static double *Bondi_Init_Data=NULL;
-static int    Bondi_Init_bin;
+static int     Bondi_Init_bin;
        double *Bondi_Init_Prof_r, *Bondi_Init_Prof_d, *Bondi_Init_Prof_v, *Bondi_Init_Prof_p;
-
 // =======================================================================================
 
 
@@ -272,7 +273,7 @@ void SetParameter()
    ReadPara->Add( "Bondi_dynBH",              &Bondi_dynBH,                   true,         Useless_bool,     Useless_bool      );
    ReadPara->Add( "Bondi_Soliton",            &Bondi_Soliton,                 false,        Useless_bool,     Useless_bool      );
    ReadPara->Add( "Bondi_Soliton_m22",        &Bondi_Soliton_m22,            -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Bondi_Soliton_type",       &Bondi_Soliton_type,            0,          NoMin_int,        NoMax_int         );
+   ReadPara->Add( "Bondi_Soliton_type",       &Bondi_Soliton_type,            5,          1,        5 );
    ReadPara->Add( "Bondi_Soliton_t",          &Bondi_Soliton_t,              -1.0,          NoMin_double,     NoMax_double      );
    ReadPara->Add( "Bondi_Soliton_rc",         &Bondi_Soliton_rc,             -1.0,          NoMin_double,     NoMax_double      );
    ReadPara->Add( "Bondi_Soliton_MassHalo",   &Bondi_Soliton_MassHalo,       -1.0,          NoMin_double,     NoMax_double      );
@@ -400,7 +401,7 @@ void SetParameter()
 
    if ( Bondi_Soliton )
    {
-      if( Bondi_Soliton_rc < 0.0 ){
+      if ( Bondi_Soliton_rc < 0.0 ) {
          double z = Bondi_Soliton_Redshift;
          double Mh = Bondi_Soliton_MassHalo;
          double H0 = 67.66;
@@ -757,7 +758,7 @@ void HSE_SetDensProfileTable()
 #ifdef SUPPORT_GSL
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Soliton_SetPresProfileTable
-// Description :  Set up the pressure profile table for Soliton
+// Description :  Set up the pressure profile table for the soliton
 //
 // Note        :  1. Assume P(r->inf)=0
 //
