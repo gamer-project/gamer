@@ -18,6 +18,12 @@ ds = yt.load( filein )
 
 # define the derived fields for the star formation rate
 
+# gas density divided by code_density
+def _density_code_density( field, data ):
+   return data["density"] / data.ds.units.code_density
+
+ds.add_field( ("gas", "density_code_density"), function=_density_code_density, sampling_type="cell", units="dimensionless" )
+
 # jeans length divided by cell size
 def _jeans_length_dh( field, data ):
    return np.sqrt( (np.pi * data["sound_speed"]**2 )/( data.ds.units.newtons_constant * data["density"] ) )/data["dx"]
@@ -67,7 +73,7 @@ sfr[sfr == 0] = np.nan
 
 # calculate the analytical star formation rate
 if   ds.parameters['SF_CreateStar_Scheme'] == 1:   # with minimum density threshold
-   star_formation_region = ds.cut_region( ds.all_data(), ["obj['gas', 'density'] >= %.2e"%ds.parameters['SF_CreateStar_MinGasDens']] )
+   star_formation_region = ds.cut_region( ds.all_data(), ["obj['gas', 'density_code_density'] >= %.2e"%ds.parameters['SF_CreateStar_MinGasDens']] )
 
 elif ds.parameters['SF_CreateStar_Scheme'] == 2:   # with maximum Jeans length thredshold
    star_formation_region = ds.cut_region( ds.all_data(), ["obj['gas', 'jeans_length_dh'] <= %.2e"%ds.parameters['SF_CreateStar_MaxGasJeansL']] )
