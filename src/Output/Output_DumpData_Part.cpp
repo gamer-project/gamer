@@ -25,6 +25,7 @@ static void GetDerivedField( real (*Der_FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)      
 //                           OUTPUT_Y    : y  line
 //                           OUTPUT_Z    : z  line
 //                           OUTPUT_DIAG : diagonal along (+1,+1,+1)
+//                           OUTPUT_BOX  : entire box
 //
 //                BaseOnly : Only output the base-level data
 //
@@ -42,9 +43,10 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 
 
 // check the input parameters
-   if ( Part != OUTPUT_XY  &&  Part != OUTPUT_YZ  &&  Part != OUTPUT_XZ  &&
-        Part != OUTPUT_X   &&  Part != OUTPUT_Y   &&  Part != OUTPUT_Z   &&  Part != OUTPUT_DIAG )
-      Aux_Error( ERROR_INFO, "unsupported option \"Part = %d\" [0 ~ 6] !!\n", Part );
+   if ( Part != OUTPUT_XY    &&  Part != OUTPUT_YZ  &&  Part != OUTPUT_XZ  &&
+        Part != OUTPUT_X     &&  Part != OUTPUT_Y   &&  Part != OUTPUT_Z   &&
+        Part != OUTPUT_DIAG  &&  Part != OUTPUT_BOX )
+      Aux_Error( ERROR_INFO, "unsupported option \"Part = %d\" [0 ~ 8] !!\n", Part );
 
    if (  ( Part == OUTPUT_YZ  ||  Part == OUTPUT_Y  ||  Part == OUTPUT_Z )  &&
          ( x < 0.0  ||  x >= amr->BoxSize[0] )  )
@@ -93,14 +95,15 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 
    switch ( Part )
    {
-      case OUTPUT_XY :                                      Check_z = true;   break;
-      case OUTPUT_YZ :  Check_x = true;                                       break;
-      case OUTPUT_XZ :                    Check_y = true;                     break;
-      case OUTPUT_X  :                    Check_y = true;   Check_z = true;   break;
-      case OUTPUT_Y  :  Check_x = true;                     Check_z = true;   break;
-      case OUTPUT_Z  :  Check_x = true;   Check_y = true;                     break;
+      case OUTPUT_XY   :                                      Check_z = true;   break;
+      case OUTPUT_YZ   :  Check_x = true;                                       break;
+      case OUTPUT_XZ   :                    Check_y = true;                     break;
+      case OUTPUT_X    :                    Check_y = true;   Check_z = true;   break;
+      case OUTPUT_Y    :  Check_x = true;                     Check_z = true;   break;
+      case OUTPUT_Z    :  Check_x = true;   Check_y = true;                     break;
 
       case OUTPUT_DIAG :
+      case OUTPUT_BOX  :
       case OUTPUT_PART_NONE : break; // do nothing
    }
 
@@ -241,7 +244,7 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
                         }}}
                      } // if patch corner is within the target range
 
-                  } // if ( Part == OUTPUT_DIAG ... else ... )
+                  } // if ( Part == OUTPUT_DIAG ) ... else ...
                } // if ( amr->patch[0][lv][PID]->son == -1 )
             } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
          } // for (int lv=0; lv<NLv; lv++)
