@@ -8,6 +8,8 @@ Bondi_InBC_Rho          1.0e-32        # density     inside the void region (in 
 Bondi_InBC_T            1.0e-7         # temperature inside the void region (in keV)
 Bondi_InBC_NCell        2.0            # number of finest cells (can be a fractional number) for the inner BC
 Bondi_Soften_NCell      0.0            # number of finest cells (can be a fractional number) for the soften length (<=0.0 -> disable)
+Bondi_void              1              # enable the void region [1]
+Bondi_dynBH             0              # dynamically increase BH mass [0]
 
 Bondi_HSE               0              # enable HSE [0]
 Bondi_HSE_Mode          1              # initial configuration (1:T=Bondi_T0, 2:rho~1/r, 3:beta model) [1]
@@ -22,3 +24,13 @@ Bondi_HSE_TrunD         1.6735328e-24  # see Bondi_HSE_Truncate (in g/cm^3)
 Bondi_HSE_TrunSmoothR   5.0e-2         # smooth out density within TrunR-SmoothR<r<TrunR+SmoothR (in kpc; <0.0->off) [-1.0]
 Bondi_HSE_Pres_NormT    0              # normalize pressure profile such that T(r=Dens_NormR)=Bondi_T0 [0]
 Bondi_HSE_Beta_Rcore    1.0e-1         # core radius in the beta model (in kpc)
+
+Bondi_Soliton           0              # add soliton external potential [0]
+Bondi_Soliton_m22       1.0            # FDM particle mass in 1e-22 eV/c^2 for Bondi_Soliton [-1.0]
+Bondi_Soliton_type      5              # functional form for gradually introducing the soliton potential
+                                       #   (0:unity, 1:arctan, 2:linear, 3:smooth step function, 4:sigmoid, 5:tanh) [5]
+Bondi_Soliton_t         4.0e3          # characteristic time normalized to Bondi_TimeB for adding the soliton potential [-1.0]
+Bondi_Soliton_rc       -1.0            # soliton radius for Bondi_Soliton (in kpc)
+                                       #   (<0.0 --> compute from Bondi_Soliton_MassHalo/Redshift using the core-halo relation) [-1.0]
+Bondi_Soliton_MassHalo  1.0e11         # halo mass for determining Bondi_Soliton_rc (in Msun) [-1.0]
+Bondi_Soliton_Redshift  7.0            # redshift for determining Bondi_Soliton_rc [-1.0]
