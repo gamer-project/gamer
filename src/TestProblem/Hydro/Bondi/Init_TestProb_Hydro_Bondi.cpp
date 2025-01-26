@@ -392,20 +392,21 @@ void SetParameter()
 // (4) initialize the soliton setup
    if ( Bondi_Soliton )
    {
+//    compute the soliton radius using the core-halo relation from Eq. 7 in Schive et al., PRL 113, 261302 (2014)
       if ( Bondi_Soliton_rc < 0.0 )
       {
          const double z      = Bondi_Soliton_Redshift;
          const double Mh     = Bondi_Soliton_MassHalo*UnitExt_M/Const_Msun;   // convert to Msun
-         const double H0     = 67.66*1e5/( Const_kpc*1e3 );                     // hard-coded for now
+         const double H0     = 67.66*Const_km/Const_Mpc;                      // hard-coded for now
          const double Om0    = 0.3111;                                        // hard-coded for now
          const double a0     = Om0*SQR(H0)/(  2.47e-5*SQR( 1e7/(Const_kpc*1e3) )  );
          const double H_H0_z = 1.0/(  1.0-Om0*( 1.0-pow(1.0+z,3.0)*(1.0+z+a0)/a0 )  );
          const double Om_z   = Om0*pow(1.0+z,3.0)*H_H0_z;
          const double Om_0   = Om0/(  1.0-Om0*( 1.0-(1.0+a0)/a0 )  );
-         const double kiz_z  = ( 18.0*SQR(M_PI) + 82.0*(Om_z-1.0) - 39.0*SQR(Om_z-1.0) )/Om_z;
-         const double kiz_0  = ( 18.0*SQR(M_PI) + 82.0*(Om_0-1.0) - 39.0*SQR(Om_0-1.0) )/Om_0;
+         const double zeta_z  = ( 18.0*SQR(M_PI) + 82.0*(Om_z-1.0) - 39.0*SQR(Om_z-1.0) )/Om_z;
+         const double zeta_0  = ( 18.0*SQR(M_PI) + 82.0*(Om_0-1.0) - 39.0*SQR(Om_0-1.0) )/Om_0;
 
-         Bondi_Soliton_rc  = 1.6/Bondi_Soliton_m22*pow( 1.0+z, -1.0/2.0 )*pow( kiz_z/kiz_0, -1.0/6.0 )*pow( Mh/1e9, -1.0/3.0 );  // in kpc
+         Bondi_Soliton_rc  = 1.6/Bondi_Soliton_m22*pow( 1.0+z, -1.0/2.0 )*pow( zeta_z/zeta_0, -1.0/6.0 )*pow( Mh/1e9, -1.0/3.0 );  // in kpc
          Bondi_Soliton_rc *= Const_kpc/UnitExt_L;  // convert to external units to match the manually input value
       }
 
@@ -434,56 +435,56 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID       = %d\n",                     TESTPROB_ID                                                   );
-      Aux_Message( stdout, "  Bondi_MassBH          = %13.7e (%13.7e Msun)\n",   Bondi_MassBH, Bondi_MassBH*UNIT_M/Const_Msun                  );
-      Aux_Message( stdout, "  Bondi_Rho0            = %13.7e (%13.7e g/cm^3)\n", Bondi_Rho0, Bondi_Rho0*UNIT_D                                 );
-      Aux_Message( stdout, "  Bondi_T0              = %13.7e (%13.7e keV)\n",    Bondi_T0, Bondi_T0*UNIT_E/Const_keV                           );
-      Aux_Message( stdout, "  Bondi_RefineRadius0   = %13.7e (%13.7e kpc)\n",    Bondi_RefineRadius0, Bondi_RefineRadius0*UNIT_L/Const_kpc     );
-      Aux_Message( stdout, "  Bondi_HalfMaxLvRefR   = %s\n",                     (Bondi_HalfMaxLvRefR)?"YES":"NO"                              );
-      Aux_Message( stdout, "  Bondi_InBC_Rho        = %13.7e (%13.7e g/cm^3)\n", Bondi_InBC_Rho, Bondi_InBC_Rho*UNIT_D                         );
-      Aux_Message( stdout, "  Bondi_InBC_T          = %13.7e (%13.7e keV)\n",    Bondi_InBC_T, Bondi_InBC_T*UNIT_E/Const_keV                   );
-      Aux_Message( stdout, "  Bondi_InBC_NCell      = %13.7e\n",                 Bondi_InBC_NCell                                              );
-      Aux_Message( stdout, "  Bondi_InBC_R          = %13.7e (%13.7e kpc)\n",    Bondi_InBC_R, Bondi_InBC_R*UNIT_L/Const_kpc                   );
-      Aux_Message( stdout, "  Bondi_InBC_E          = %13.7e\n",                 Bondi_InBC_E                                                  );
-      Aux_Message( stdout, "  Bondi_Soften_NCell    = %13.7e\n",                 Bondi_Soften_NCell                                            );
-      Aux_Message( stdout, "  Bondi_Soften_R        = %13.7e (%13.7e kpc)\n",    Bondi_Soften_R, Bondi_Soften_R*UNIT_L/Const_kpc               );
-      Aux_Message( stdout, "  Bondi_Cs              = %13.7e (%13.7e km/s)\n",   Bondi_Cs, Bondi_Cs*UNIT_V/Const_km                            );
-      Aux_Message( stdout, "  Schwarzschild radius  = %13.7e (%13.7e kpc)\n",    Bondi_RS, Bondi_RS*UNIT_L/Const_kpc                           );
-      Aux_Message( stdout, "  Bondi         radius  = %13.7e (%13.7e kpc)\n",    Bondi_RB, Bondi_RB*UNIT_L/Const_kpc                           );
-      Aux_Message( stdout, "  Bondi         time    = %13.7e (%13.7e Myr)\n",    Bondi_TimeB, Bondi_TimeB*UNIT_T/Const_Myr                     );
+      Aux_Message( stdout, "  test problem ID        = %d\n",                     TESTPROB_ID                                                   );
+      Aux_Message( stdout, "  Bondi_MassBH           = %13.7e (%13.7e Msun)\n",   Bondi_MassBH, Bondi_MassBH*UNIT_M/Const_Msun                  );
+      Aux_Message( stdout, "  Bondi_Rho0             = %13.7e (%13.7e g/cm^3)\n", Bondi_Rho0, Bondi_Rho0*UNIT_D                                 );
+      Aux_Message( stdout, "  Bondi_T0               = %13.7e (%13.7e keV)\n",    Bondi_T0, Bondi_T0*UNIT_E/Const_keV                           );
+      Aux_Message( stdout, "  Bondi_RefineRadius0    = %13.7e (%13.7e kpc)\n",    Bondi_RefineRadius0, Bondi_RefineRadius0*UNIT_L/Const_kpc     );
+      Aux_Message( stdout, "  Bondi_HalfMaxLvRefR    = %s\n",                     (Bondi_HalfMaxLvRefR)?"YES":"NO"                              );
+      Aux_Message( stdout, "  Bondi_InBC_Rho         = %13.7e (%13.7e g/cm^3)\n", Bondi_InBC_Rho, Bondi_InBC_Rho*UNIT_D                         );
+      Aux_Message( stdout, "  Bondi_InBC_T           = %13.7e (%13.7e keV)\n",    Bondi_InBC_T, Bondi_InBC_T*UNIT_E/Const_keV                   );
+      Aux_Message( stdout, "  Bondi_InBC_NCell       = %13.7e\n",                 Bondi_InBC_NCell                                              );
+      Aux_Message( stdout, "  Bondi_InBC_R           = %13.7e (%13.7e kpc)\n",    Bondi_InBC_R, Bondi_InBC_R*UNIT_L/Const_kpc                   );
+      Aux_Message( stdout, "  Bondi_InBC_E           = %13.7e\n",                 Bondi_InBC_E                                                  );
+      Aux_Message( stdout, "  Bondi_Soften_NCell     = %13.7e\n",                 Bondi_Soften_NCell                                            );
+      Aux_Message( stdout, "  Bondi_Soften_R         = %13.7e (%13.7e kpc)\n",    Bondi_Soften_R, Bondi_Soften_R*UNIT_L/Const_kpc               );
+      Aux_Message( stdout, "  Bondi_Cs               = %13.7e (%13.7e km/s)\n",   Bondi_Cs, Bondi_Cs*UNIT_V/Const_km                            );
+      Aux_Message( stdout, "  Schwarzschild radius   = %13.7e (%13.7e kpc)\n",    Bondi_RS, Bondi_RS*UNIT_L/Const_kpc                           );
+      Aux_Message( stdout, "  Bondi         radius   = %13.7e (%13.7e kpc)\n",    Bondi_RB, Bondi_RB*UNIT_L/Const_kpc                           );
+      Aux_Message( stdout, "  Bondi         time     = %13.7e (%13.7e Myr)\n",    Bondi_TimeB, Bondi_TimeB*UNIT_T/Const_Myr                     );
 
-      Aux_Message( stdout, "  Bondi_HSE             = %s\n",                     (Bondi_HSE)?"YES":"NO"                                        );
+      Aux_Message( stdout, "  Bondi_HSE              = %s\n",                     (Bondi_HSE)?"YES":"NO"                                        );
       if ( Bondi_HSE ) {
-      Aux_Message( stdout, "  Bondi_HSE_Mode        = %d\n",                     Bondi_HSE_Mode                                                );
-      Aux_Message( stdout, "  Bondi_HSE_Dens_NBin   = %d\n",                     Bondi_HSE_Dens_NBin                                           );
-      Aux_Message( stdout, "  Bondi_HSE_Dens_MinR   = %13.7e (%13.7e kpc)\n",    Bondi_HSE_Dens_MinR, Bondi_HSE_Dens_MinR*UNIT_L/Const_kpc     );
-      Aux_Message( stdout, "  Bondi_HSE_Dens_MaxR   = %13.7e (%13.7e kpc)\n",    Bondi_HSE_Dens_MaxR, Bondi_HSE_Dens_MaxR*UNIT_L/Const_kpc     );
-      Aux_Message( stdout, "  Bondi_HSE_Dens_NormR  = %13.7e (%13.7e kpc)\n",    Bondi_HSE_Dens_NormR, Bondi_HSE_Dens_NormR*UNIT_L/Const_kpc   );
-      Aux_Message( stdout, "  Bondi_HSE_Dens_NormD  = %13.7e (%13.7e g/cm^3)\n", Bondi_HSE_Dens_NormD, Bondi_HSE_Dens_NormD*UNIT_D             );
-      Aux_Message( stdout, "  Bondi_HSE_Truncate    = %s\n",                     (Bondi_HSE_Truncate)?"YES":"NO"                               );
-      Aux_Message( stdout, "  Bondi_HSE_TrunR       = %13.7e (%13.7e kpc)\n",    Bondi_HSE_TrunR, Bondi_HSE_TrunR*UNIT_L/Const_kpc             );
-      Aux_Message( stdout, "  Bondi_HSE_TrunD       = %13.7e (%13.7e g/cm^3)\n", Bondi_HSE_TrunD, Bondi_HSE_TrunD*UNIT_D                       );
-      Aux_Message( stdout, "  Bondi_HSE_TrunSmoothR = %13.7e (%13.7e kpc)\n",    Bondi_HSE_TrunSmoothR, Bondi_HSE_TrunSmoothR*UNIT_L/Const_kpc );
-      Aux_Message( stdout, "  Bondi_HSE_Pres_NormT  = %s\n",                     (Bondi_HSE_Pres_NormT)?"YES":"NO"                             );
-      Aux_Message( stdout, "  Bondi_HSE_Beta        = %13.7e\n",                 Bondi_HSE_Beta                                                );
-      Aux_Message( stdout, "  Bondi_HSE_Beta_Rho0   = %13.7e (%13.7e g/cm^3)\n", Bondi_HSE_Beta_Rho0, Bondi_HSE_Beta_Rho0*UNIT_D               );
-      Aux_Message( stdout, "  Bondi_HSE_Beta_Rcore  = %13.7e (%13.7e kpc)\n",    Bondi_HSE_Beta_Rcore, Bondi_HSE_Beta_Rcore*UNIT_L/Const_kpc   ); }
+      Aux_Message( stdout, "  Bondi_HSE_Mode         = %d\n",                     Bondi_HSE_Mode                                                );
+      Aux_Message( stdout, "  Bondi_HSE_Dens_NBin    = %d\n",                     Bondi_HSE_Dens_NBin                                           );
+      Aux_Message( stdout, "  Bondi_HSE_Dens_MinR    = %13.7e (%13.7e kpc)\n",    Bondi_HSE_Dens_MinR, Bondi_HSE_Dens_MinR*UNIT_L/Const_kpc     );
+      Aux_Message( stdout, "  Bondi_HSE_Dens_MaxR    = %13.7e (%13.7e kpc)\n",    Bondi_HSE_Dens_MaxR, Bondi_HSE_Dens_MaxR*UNIT_L/Const_kpc     );
+      Aux_Message( stdout, "  Bondi_HSE_Dens_NormR   = %13.7e (%13.7e kpc)\n",    Bondi_HSE_Dens_NormR, Bondi_HSE_Dens_NormR*UNIT_L/Const_kpc   );
+      Aux_Message( stdout, "  Bondi_HSE_Dens_NormD   = %13.7e (%13.7e g/cm^3)\n", Bondi_HSE_Dens_NormD, Bondi_HSE_Dens_NormD*UNIT_D             );
+      Aux_Message( stdout, "  Bondi_HSE_Truncate     = %s\n",                     (Bondi_HSE_Truncate)?"YES":"NO"                               );
+      Aux_Message( stdout, "  Bondi_HSE_TrunR        = %13.7e (%13.7e kpc)\n",    Bondi_HSE_TrunR, Bondi_HSE_TrunR*UNIT_L/Const_kpc             );
+      Aux_Message( stdout, "  Bondi_HSE_TrunD        = %13.7e (%13.7e g/cm^3)\n", Bondi_HSE_TrunD, Bondi_HSE_TrunD*UNIT_D                       );
+      Aux_Message( stdout, "  Bondi_HSE_TrunSmoothR  = %13.7e (%13.7e kpc)\n",    Bondi_HSE_TrunSmoothR, Bondi_HSE_TrunSmoothR*UNIT_L/Const_kpc );
+      Aux_Message( stdout, "  Bondi_HSE_Pres_NormT   = %s\n",                     (Bondi_HSE_Pres_NormT)?"YES":"NO"                             );
+      Aux_Message( stdout, "  Bondi_HSE_Beta         = %13.7e\n",                 Bondi_HSE_Beta                                                );
+      Aux_Message( stdout, "  Bondi_HSE_Beta_Rho0    = %13.7e (%13.7e g/cm^3)\n", Bondi_HSE_Beta_Rho0, Bondi_HSE_Beta_Rho0*UNIT_D               );
+      Aux_Message( stdout, "  Bondi_HSE_Beta_Rcore   = %13.7e (%13.7e kpc)\n",    Bondi_HSE_Beta_Rcore, Bondi_HSE_Beta_Rcore*UNIT_L/Const_kpc   ); }
 
-      Aux_Message( stdout, "  Bondi_void                = %s\n",                     (Bondi_void)?"YES":"NO"                                        );
-      Aux_Message( stdout, "  Bondi_dynBH               = %s\n",                     (Bondi_dynBH)?"YES":"NO"                                        );
-      Aux_Message( stdout, "  Bondi_Soliton             = %s\n",                     (Bondi_Soliton)?"YES":"NO"                                        );
+      Aux_Message( stdout, "  Bondi_void             = %s\n",                     (Bondi_void)?"YES":"NO"                                       );
+      Aux_Message( stdout, "  Bondi_dynBH            = %s\n",                     (Bondi_dynBH)?"YES":"NO"                                      );
+      Aux_Message( stdout, "  Bondi_Soliton          = %s\n",                     (Bondi_Soliton)?"YES":"NO"                                    );
       if( Bondi_Soliton ) {
-      Aux_Message( stdout, "  Bondi_Soliton_m22         = %13.7e\n",                 Bondi_Soliton_m22                                                 );
-      Aux_Message( stdout, "  Bondi_Soliton_type        = %d\n",                     Bondi_Soliton_type                                                );
-      Aux_Message( stdout, "  Bondi_Soliton_t           = %13.7e (%13.7e Myr)\n",    Bondi_Soliton_t, Bondi_Soliton_t*UNIT_T/Const_Myr                 );
-      Aux_Message( stdout, "  Bondi_Soliton_rc          = %13.7e (%13.7e kpc)\n",    Bondi_Soliton_rc, Bondi_Soliton_rc*UNIT_L/Const_kpc               );
-      Aux_Message( stdout, "  Bondi_Soliton_MassHalo    = %13.7e Msun\n",            Bondi_Soliton_MassHalo                                            );
-      Aux_Message( stdout, "  Bondi_Soliton_Redshift    = %13.7e\n",                 Bondi_Soliton_Redshift                                            );}
+      Aux_Message( stdout, "  Bondi_Soliton_m22      = %13.7e\n",                 Bondi_Soliton_m22                                             );
+      Aux_Message( stdout, "  Bondi_Soliton_type     = %d\n",                     Bondi_Soliton_type                                            );
+      Aux_Message( stdout, "  Bondi_Soliton_t        = %13.7e (%13.7e Myr)\n",    Bondi_Soliton_t, Bondi_Soliton_t*UNIT_T/Const_Myr             );
+      Aux_Message( stdout, "  Bondi_Soliton_rc       = %13.7e (%13.7e kpc)\n",    Bondi_Soliton_rc, Bondi_Soliton_rc*UNIT_L/Const_kpc           );
+      Aux_Message( stdout, "  Bondi_Soliton_MassHalo = %13.7e Msun\n",            Bondi_Soliton_MassHalo*UnitExt_M/Const_Msun                   );
+      Aux_Message( stdout, "  Bondi_Soliton_Redshift = %13.7e\n",                 Bondi_Soliton_Redshift                                        ); }
       Aux_Message( stdout, "=============================================================================\n" );
    } // if ( MPI_Rank == 0 )
 
 
-  if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
 
 } // FUNCTION : SetParameter
 
@@ -761,13 +762,13 @@ void Init_TestProb_Hydro_Bondi()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr   = SetGridIC;
-   Flag_User_Ptr            = Flag_Bondi;
-   Aux_Record_User_Ptr      = Record_Bondi;
-   BC_User_Ptr              = BondiBC;
-   Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_Func_Bondi;
-   Flu_ResetByUser_API_Ptr  = Flu_ResetByUser_API_Bondi;
-   End_User_Ptr             = End_Bondi;
+   Init_Function_User_Ptr        = SetGridIC;
+   Flag_User_Ptr                 = Flag_Bondi;
+   Aux_Record_User_Ptr           = Record_Bondi;
+   BC_User_Ptr                   = BondiBC;
+   Flu_ResetByUser_Func_Ptr      = Flu_ResetByUser_Func_Bondi;
+   Flu_ResetByUser_API_Ptr       = Flu_ResetByUser_API_Bondi;
+   End_User_Ptr                  = End_Bondi;
 #  ifdef GRAVITY
    Init_ExtAcc_Ptr               = Init_ExtAcc_Bondi;
    Poi_UserWorkBeforePoisson_Ptr = Poi_UserWorkBeforePoisson_Bondi;
