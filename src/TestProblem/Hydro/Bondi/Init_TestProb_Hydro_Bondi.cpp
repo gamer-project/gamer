@@ -85,8 +85,8 @@ static double  Bondi_HSE_Beta_P2;         // P1=G*MassBH*Rho0/Rcore, and P2 curr
        double  Bondi_Soliton_t;           // characteristic time normalized to Bondi_TimeB for adding the soliton potential
        double  Bondi_Soliton_rc;          // soliton radius for Bondi_Soliton
                                           //   (<0.0 --> compute from Bondi_Soliton_MassHalo/Redshift using the core-halo relation)
-static double  Bondi_Soliton_MassHalo;    // halo mass for Bondi_Soliton when Bondi_Soliton_rc<0.0
-static double  Bondi_Soliton_Redshift;    // redshift for Bondi_Soliton when Bondi_Soliton_rc<0.0
+static double  Bondi_Soliton_MassHalo;    // halo mass for determining Bondi_Soliton_rc
+static double  Bondi_Soliton_Redshift;    // redshift for determining Bondi_Soliton_rc
 // =======================================================================================
 
 
@@ -119,7 +119,7 @@ void SetExtAccAuxArray_Bondi( double [], const double );
 //                lv   : Target refinement level
 //
 // Return      :  None
-//////-------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
 void Poi_UserWorkBeforePoisson_Bondi( const double Time, const int lv )
 {
 
@@ -452,6 +452,8 @@ void SetParameter()
       Aux_Message( stdout, "  Schwarzschild radius   = %13.7e (%13.7e kpc)\n",    Bondi_RS, Bondi_RS*UNIT_L/Const_kpc                           );
       Aux_Message( stdout, "  Bondi         radius   = %13.7e (%13.7e kpc)\n",    Bondi_RB, Bondi_RB*UNIT_L/Const_kpc                           );
       Aux_Message( stdout, "  Bondi         time     = %13.7e (%13.7e Myr)\n",    Bondi_TimeB, Bondi_TimeB*UNIT_T/Const_Myr                     );
+      Aux_Message( stdout, "  Bondi_void             = %s\n",                     (Bondi_void)?"YES":"NO"                                       );
+      Aux_Message( stdout, "  Bondi_dynBH            = %s\n",                     (Bondi_dynBH)?"YES":"NO"                                      );
 
       Aux_Message( stdout, "  Bondi_HSE              = %s\n",                     (Bondi_HSE)?"YES":"NO"                                        );
       if ( Bondi_HSE ) {
@@ -470,8 +472,6 @@ void SetParameter()
       Aux_Message( stdout, "  Bondi_HSE_Beta_Rho0    = %13.7e (%13.7e g/cm^3)\n", Bondi_HSE_Beta_Rho0, Bondi_HSE_Beta_Rho0*UNIT_D               );
       Aux_Message( stdout, "  Bondi_HSE_Beta_Rcore   = %13.7e (%13.7e kpc)\n",    Bondi_HSE_Beta_Rcore, Bondi_HSE_Beta_Rcore*UNIT_L/Const_kpc   ); }
 
-      Aux_Message( stdout, "  Bondi_void             = %s\n",                     (Bondi_void)?"YES":"NO"                                       );
-      Aux_Message( stdout, "  Bondi_dynBH            = %s\n",                     (Bondi_dynBH)?"YES":"NO"                                      );
       Aux_Message( stdout, "  Bondi_Soliton          = %s\n",                     (Bondi_Soliton)?"YES":"NO"                                    );
       if( Bondi_Soliton ) {
       Aux_Message( stdout, "  Bondi_Soliton_m22      = %13.7e\n",                 Bondi_Soliton_m22                                             );

@@ -32,5 +32,5 @@ Bondi_Soliton_type      5              # functional form for gradually introduci
 Bondi_Soliton_t        -1.0            # characteristic time normalized to Bondi_TimeB for adding the soliton potential [-1.0]
 Bondi_Soliton_rc       -1.0            # soliton radius for Bondi_Soliton (in kpc)
                                        #   (<0.0 --> compute from Bondi_Soliton_MassHalo/Redshift using the core-halo relation) [-1.0]
-Bondi_Soliton_MassHalo -1.0            # halo mass for Bondi_Soliton when Bondi_Soliton_rc<0.0 (in Msun) [-1.0]
-Bondi_Soliton_Redshift -1.0            # redshift for Bondi_Soliton when Bondi_Soliton_rc<0.0 [-1.0]
+Bondi_Soliton_MassHalo -1.0            # halo mass for determining Bondi_Soliton_rc (in Msun) [-1.0]
+Bondi_Soliton_Redshift -1.0            # redshift for determining Bondi_Soliton_rc [-1.0]
