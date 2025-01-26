@@ -304,8 +304,6 @@ template <typename T> T     Mis_TrilinearInterpolate( const T x, const T y, cons
                                                       const T f_xL_yL_zL, const T f_xR_yL_zL, const T f_xL_yR_zL, const T f_xR_yR_zL,
                                                       const T f_xL_yL_zR, const T f_xR_yL_zR, const T f_xL_yR_zR, const T f_xR_yR_zR );
 template <typename T> T     Mis_MultilinearInterpolate( const int nDim, const T x[], const T xL[], const T xR[], const T fC[] );
-int UnitTest_Mis_LinearInterpolate();
-int UnitTest_Mis_InterpolateFromTable();
 template <typename T> ulong Mis_Idx3D2Idx1D( const int Size[], const int Idx3D[] );
 template <typename U, typename T> void  Mis_Heapsort( const U N, T Array[], U IdxTable[] );
 template <typename T> int   Mis_Matching_char( const int N, const T Array[], const int M, const T Key[], char Match[] );

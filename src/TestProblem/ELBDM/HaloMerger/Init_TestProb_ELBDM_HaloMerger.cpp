@@ -703,18 +703,6 @@ void SetParameter()
 
             const double *Table_Radius  = HaloMerger_Soliton_DensProf[index_soliton] + 0*HaloMerger_Soliton_DensProf_NBin[index_soliton];  // radius
             const double *Table_Density = HaloMerger_Soliton_DensProf[index_soliton] + 1*HaloMerger_Soliton_DensProf_NBin[index_soliton];  // density
-            if ( MPI_Rank == 0 )
-            {
-               Aux_Message( stdout, "\n" );
-               Aux_Message( stdout, "   Table%d at r = %13.7e --> %13.7e\n", index_soliton, 0.5*CoreRadiusRef, Mis_InterpolateFromTable( HaloMerger_Soliton_DensProf_NBin[index_soliton], Table_Radius, Table_Density, 0.5*CoreRadiusRef ) );
-               Aux_Message( stdout, "   Table%d at r = %13.7e --> %13.7e\n", index_soliton, 1.0*CoreRadiusRef, Mis_InterpolateFromTable( HaloMerger_Soliton_DensProf_NBin[index_soliton], Table_Radius, Table_Density, 1.0*CoreRadiusRef ) );
-               Aux_Message( stdout, "   Table%d at r = %13.7e --> %13.7e\n", index_soliton, 2.0*CoreRadiusRef, Mis_InterpolateFromTable( HaloMerger_Soliton_DensProf_NBin[index_soliton], Table_Radius, Table_Density, 2.0*CoreRadiusRef ) );
-               Aux_Message( stdout, "   Table%d at r = %13.7e --> %13.7e\n", index_soliton, 4.0*CoreRadiusRef, Mis_InterpolateFromTable( HaloMerger_Soliton_DensProf_NBin[index_soliton], Table_Radius, Table_Density, 4.0*CoreRadiusRef ) );
-               Aux_Message( stdout, "   Table%d at r = %13.7e --> %13.7e\n", index_soliton, 8.0*CoreRadiusRef, Mis_InterpolateFromTable( HaloMerger_Soliton_DensProf_NBin[index_soliton], Table_Radius, Table_Density, 8.0*CoreRadiusRef ) );
-               Aux_Message( stdout, "\n" );
-            }
-            UnitTest_Mis_LinearInterpolate();
-            UnitTest_Mis_InterpolateFromTable();
 
             if ( HaloMerger_Soliton_DensProf_Rescale[index_soliton] )
             {
