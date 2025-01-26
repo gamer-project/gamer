@@ -81,7 +81,7 @@ static double  Bondi_HSE_Beta_P2;         // P1=G*MassBH*Rho0/Rcore, and P2 curr
        bool    Bondi_Soliton;             // add soliton external potential
        double  Bondi_Soliton_m22;         // FDM particle mass in 1e-22 eV/c^2 for Bondi_Soliton
        int     Bondi_Soliton_type;        // functional form for gradually introducing the soliton potential
-                                          //   (1:arctan, 2:linear, 3:smooth step function, 4:sigmoid, 5:tanh)
+                                          //   (0:unity, 1:arctan, 2:linear, 3:smooth step function, 4:sigmoid, 5:tanh)
        double  Bondi_Soliton_t;           // characteristic time normalized to Bondi_TimeB for adding the soliton potential
        double  Bondi_Soliton_rc;          // soliton radius for Bondi_Soliton
                                           //   (<0.0 --> compute from Bondi_Soliton_MassHalo/Redshift using the core-halo relation)
@@ -258,7 +258,7 @@ void SetParameter()
 
    ReadPara->Add( "Bondi_Soliton",           &Bondi_Soliton,             false,        Useless_bool,     Useless_bool      );
    ReadPara->Add( "Bondi_Soliton_m22",       &Bondi_Soliton_m22,        -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Bondi_Soliton_type",      &Bondi_Soliton_type,        5,            1,                5                 );
+   ReadPara->Add( "Bondi_Soliton_type",      &Bondi_Soliton_type,        5,            0,                5                 );
    ReadPara->Add( "Bondi_Soliton_t",         &Bondi_Soliton_t,          -1.0,          NoMin_double,     NoMax_double      );
    ReadPara->Add( "Bondi_Soliton_rc",        &Bondi_Soliton_rc,         -1.0,          NoMin_double,     NoMax_double      );
    ReadPara->Add( "Bondi_Soliton_MassHalo",  &Bondi_Soliton_MassHalo,   -1.0,          NoMin_double,     NoMax_double      );

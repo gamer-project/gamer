@@ -28,7 +28,7 @@ Bondi_HSE_Beta_Rcore    1.0e-1         # core radius in the beta model (in kpc)
 Bondi_Soliton           0              # add soliton external potential [0]
 Bondi_Soliton_m22      -1.0            # FDM particle mass in 1e-22 eV/c^2 for Bondi_Soliton [-1.0]
 Bondi_Soliton_type      5              # functional form for gradually introducing the soliton potential
-                                       #   (1:arctan, 2:linear, 3:smooth step function, 4:sigmoid, 5:tanh) [5]
+                                       #   (0:unity, 1:arctan, 2:linear, 3:smooth step function, 4:sigmoid, 5:tanh) [5]
 Bondi_Soliton_t        -1.0            # characteristic time normalized to Bondi_TimeB for adding the soliton potential [-1.0]
 Bondi_Soliton_rc       -1.0            # soliton radius for Bondi_Soliton (in kpc)
                                        #   (<0.0 --> compute from Bondi_Soliton_MassHalo/Redshift using the core-halo relation) [-1.0]

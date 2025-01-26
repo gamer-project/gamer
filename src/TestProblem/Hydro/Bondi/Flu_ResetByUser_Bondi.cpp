@@ -118,8 +118,7 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const int MagSg, 
    int    Reset;
    real   fluid[NCOMP_TOTAL], fluid_bk[NCOMP_TOTAL];
    double x, y, z, x0, y0, z0;
-// Define varible to record sink mass at every time step
-   double SinkMass_OneSubStep_ThisRank = 0.0;
+   double SinkMass_OneSubStep_ThisRank = 0.0;   // variables to record sink mass at every time step
    double SinkMass_OneSubStep_AllRank;
 
 // reset to 0 since we only want to record the number of void cells **for one sub-step**
