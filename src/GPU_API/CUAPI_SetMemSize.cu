@@ -40,38 +40,46 @@ void CUAPI_SetMemSize( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGr
       {
 #        if   ( MODEL == HYDRO )
 #           if   ( GPU_ARCH == FERMI )
-            GPU_NStream = 8;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == KEPLER )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == MAXWELL )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == PASCAL )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == VOLTA )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == TURING )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == AMPERE )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
+#           elif ( GPU_ARCH == ADA_LOVELACE )
+            GPU_NStream = 4;
+#           elif ( GPU_ARCH == HOPPER )
+            GPU_NStream = 4;
 #           else
 #           error : UNKNOWN GPU_ARCH !!
 #           endif
 
 #        elif ( MODEL == ELBDM )
 #           if   ( GPU_ARCH == FERMI )
-            GPU_NStream = 8;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == KEPLER )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == MAXWELL )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == PASCAL )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == VOLTA )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == TURING )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
 #           elif ( GPU_ARCH == AMPERE )
-            GPU_NStream = 16;
+            GPU_NStream = 4;
+#           elif ( GPU_ARCH == ADA_LOVELACE )
+            GPU_NStream = 4;
+#           elif ( GPU_ARCH == HOPPER )
+            GPU_NStream = 4;
 #           else
 #           error : ERROR : UNKNOWN GPU_ARCH !!
 #           endif
@@ -106,6 +114,10 @@ void CUAPI_SetMemSize( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGr
          Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #        elif ( GPU_ARCH == AMPERE )
          Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#        elif ( GPU_ARCH == ADA_LOVELACE )
+         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#        elif ( GPU_ARCH == HOPPER )
+         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #        else
 #        error : UNKNOWN GPU_ARCH !!
 #        endif
@@ -124,6 +136,10 @@ void CUAPI_SetMemSize( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGr
 #        elif ( GPU_ARCH == TURING )
          Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #        elif ( GPU_ARCH == AMPERE )
+         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#        elif ( GPU_ARCH == ADA_LOVELACE )
+         Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#        elif ( GPU_ARCH == HOPPER )
          Flu_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #        else
 #        error : UNKNOWN GPU_ARCH !!
@@ -153,6 +169,10 @@ void CUAPI_SetMemSize( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGr
       Pot_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #     elif ( GPU_ARCH == AMPERE )
       Pot_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#     elif ( GPU_ARCH == ADA_LOVELACE )
+      Pot_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#     elif ( GPU_ARCH == HOPPER )
+      Pot_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #     else
 #     error : UNKNOWN GPU_ARCH !!
 #     endif
@@ -179,6 +199,10 @@ void CUAPI_SetMemSize( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGr
       Che_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #     elif ( GPU_ARCH == AMPERE )
       Che_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#     elif ( GPU_ARCH == ADA_LOVELACE )
+      Che_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#     elif ( GPU_ARCH == HOPPER )
+      Che_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #     else
 #     error : UNKNOWN GPU_ARCH !!
 #     endif
@@ -203,6 +227,10 @@ void CUAPI_SetMemSize( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGr
 #     elif ( GPU_ARCH == TURING )
       Src_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #     elif ( GPU_ARCH == AMPERE )
+      Src_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#     elif ( GPU_ARCH == ADA_LOVELACE )
+      Src_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
+#     elif ( GPU_ARCH == HOPPER )
       Src_GPU_NPGroup = 1*GPU_NStream*DeviceProp.multiProcessorCount;
 #     else
 #     error : UNKNOWN GPU_ARCH !!

@@ -46,39 +46,53 @@ void SetExtAccAuxArray_Bondi( double AuxArray[], const double Time )
    AuxArray[0] = amr->BoxCenter[0];
    AuxArray[1] = amr->BoxCenter[1];
    AuxArray[2] = amr->BoxCenter[2];
-   AuxArray[3] = NEWTON_G*Bondi_MassBH;   // gravitational_constant*point_source_mass
+   AuxArray[3] = NEWTON_G*Bondi_MassBH;   // gravitational_constant*black_hole_mass (in code units)
    AuxArray[4] = Bondi_Soften_R;          // soften_length (<=0.0 --> disable)
-   AuxArray[5] = Bondi_Soliton;
-   if( Bondi_Soliton )
+
+   double Coeff_t;
+   switch ( Bondi_Soliton_type )
    {
-      AuxArray[6] = Bondi_Soliton_m22;
-      AuxArray[7] = Bondi_Soliton_rc;
-      AuxArray[8] = NEWTON_G*Const_Msun/UNIT_M;
-      AuxArray[9] = UNIT_L/Const_kpc;
-      if( Bondi_Soliton_type > 0 )
-      {
-          switch(Bondi_Soliton_type)
-          {
-              case 1: // arctan function
-                  AuxArray[8] *= 2/(real)3.14159265*ATAN(Time/Bondi_Soliton_t);
-                  break;
-              case 2: // linear function
-                  if( Time < Bondi_Soliton_t )
-                      AuxArray[8] *= Time/Bondi_Soliton_t;
-                  break;
-              case 3: // smooth step function
-                  if( Time < Bondi_Soliton_t )
-                      AuxArray[8] *= 3*SQR(Time/Bondi_Soliton_t)-2*CUBE(Time/Bondi_Soliton_t);
-                  break;
-              case 4: // sigmoid
-                  AuxArray[8] *= 2/(1+exp(-Time*log(3)/Bondi_Soliton_t))-1;
-                  break;
-              case 5: // tanh
-                  AuxArray[8] *= tanh(Time/Bondi_Soliton_t);
-                  break;
-                
-          }
-      } 
+//    unity
+      case 0:  Coeff_t = 1.0;
+         break;
+
+//    arctan function
+      case 1:  Coeff_t = 2.0/M_PI*atan( Time/Bondi_Soliton_t );
+         break;
+
+//    linear function
+      case 2:  Coeff_t = ( Time < Bondi_Soliton_t ) ? Time/Bondi_Soliton_t
+                                                    : 1.0;
+         break;
+
+//    smooth step function
+      case 3:  Coeff_t = ( Time < Bondi_Soliton_t ) ? 3.0*SQR( Time/Bondi_Soliton_t ) - 2.0*CUBE( Time/Bondi_Soliton_t )
+                                                    : 1.0;
+         break;
+
+//    sigmoid
+      case 4:  Coeff_t = 2.0 / (  1.0 + exp( -Time*log(3.0)/Bondi_Soliton_t )  ) - 1.0;
+         break;
+
+//    tanh
+      case 5:  Coeff_t = tanh( Time/Bondi_Soliton_t );
+         break;
+
+      default:
+         Aux_Error( ERROR_INFO, "unsupported Bondi_Soliton_type (%d) !!\n", Bondi_Soliton_type );
+   } // switch ( Bondi_Soliton_type )
+
+   if ( Bondi_Soliton )
+   {
+      AuxArray[5] = Coeff_t*NEWTON_G*( 4.17e9*Const_Msun/UNIT_M )/
+                    (  SQR( Bondi_Soliton_m22*(real)10.0 )*( Bondi_Soliton_rc*UNIT_L/Const_pc )  );
+      AuxArray[6] = Bondi_Soliton_rc;
+   }
+
+   else
+   {
+      AuxArray[5] = -1.0;
+      AuxArray[6] = -1.0;
    }
 
 } // FUNCTION : SetExtAccAuxArray_Bondi
@@ -109,31 +123,30 @@ static void ExtAcc_Bondi( real Acc[], const double x, const double y, const doub
                           const double UserArray[] )
 {
 
-   const double Cen[3] = { UserArray[0], UserArray[1], UserArray[2] };
-         real GM       = (real)UserArray[3];
-   const real eps      = (real)UserArray[4];
-   const bool SOL      = (real)UserArray[5];
-   const real dx       = (real)(x - Cen[0]);
-   const real dy       = (real)(y - Cen[1]);
-   const real dz       = (real)(z - Cen[2]);
-   const real r        = SQRT( dx*dx + dy*dy + dz*dz );
+   const double Cen[3]  = { UserArray[0], UserArray[1], UserArray[2] };
+         real   GM      = (real)UserArray[3];
+   const real   eps     = (real)UserArray[4];
+   const real   GM0_sol = (real)UserArray[5];
+   const real   rc      = (real)UserArray[6];
+   const real   dx      = (real)(x - Cen[0]);
+   const real   dy      = (real)(y - Cen[1]);
+   const real   dz      = (real)(z - Cen[2]);
+   const real   r       = SQRT( dx*dx + dy*dy + dz*dz );
 
-   if( SOL )
+   if ( GM0_sol > (real)0.0  &&  rc > (real)0.0 )
    {
-      const real m22      = (real)UserArray[6];
-      const real rc       = (real)UserArray[7];  // In code unit or kpc
-      const real Coeff    = (real)UserArray[8];
-      const real UNIT_L   = (real)UserArray[9];
-
-#ifdef Plummer
-      double M = GM*CUBE(r)/pow(SQR(r)+SQR(rc),1.5);
-#else
-      real a = SQRT(POW(2.0,1.0/8.0)-1)*(r/rc);
-      real M = (real)4.17e9/(SQR(m22/1e-1)*(rc*UNIT_L*1e3)*POW(SQR(a)+1, 7.0))*((real)3465*POW(a,13.0)+(real)23100*POW(a,11.0)+(real)65373*POW(a,9.0)+(real)101376*POW(a,7.0)+(real)92323*POW(a,5.0)+(real)48580*POW(a,3.0)-(real)3465*a+(real)3465*POW(SQR(a)+1, 7.0)*ATAN(a));
-      M *= Coeff;
-#endif
-      GM += M;
-   }
+      const real a      = SQRT(  POW( (real)2.0, (real)1.0/(real)8.0 ) - (real)1.0  )*(r/rc);
+      const real GM_sol = (real)GM0_sol/(  POW( SQR(a)+(real)1.0, (real)7.0 )  )*
+                          (  (real)  3465*POW( a, (real)13.0 )
+                            +(real) 23100*POW( a, (real)11.0 )
+                            +(real) 65373*POW( a, (real) 9.0 )
+                            +(real)101376*POW( a, (real) 7.0 )
+                            +(real) 92323*POW( a, (real) 5.0 )
+                            +(real) 48580*POW( a, (real) 3.0 )
+                            -(real)  3465*a
+                            +(real)  3465*POW( SQR(a)+(real)1.0, (real)7.0 )*ATAN(a)  );
+      GM += GM_sol;
+   } // if ( GM0_sol > 0.0  &&  rc > 0.0 )
 
 // Plummer
 #  if   ( defined SOFTEN_PLUMMER )

@@ -44,9 +44,9 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
    const double BoxEdge[3]       = { (NX0_TOT[0]*(1<<TOP_LEVEL))*dh_min,
                                      (NX0_TOT[1]*(1<<TOP_LEVEL))*dh_min,
                                      (NX0_TOT[2]*(1<<TOP_LEVEL))*dh_min }; // prevent from the round-off error problem
-// ParPos should NOT be used after calling Par_LB_ExchangeParticleBetweenPatch() since amr->Par->Attribute may be reallocated
+// ParPos should NOT be used after calling Par_LB_ExchangeParticleBetweenPatch() since amr->Par->AttributeFlt may be reallocated
    real_par *ParPos[3]           = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
-   const real_par *PType = amr->Par->Type;
+   const long_par *PType = amr->Par->Type;
 
    int     NPar_Remove_Tot=0;
    int     NPar, NGuess, NPar_Remove, ArraySize[26], ijk[3], Side, TSib, SibPID, FaPID, FaSib, FaSibPID;
@@ -219,7 +219,7 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
 
 
 //    3. remove the escaping particles (set amr->Par->NPar_Lv later due to OpenMP)
-      const real_par *PType = amr->Par->Type;
+      const long_par *PType = amr->Par->Type;
       amr->patch[0][lv][PID]->RemoveParticle( NPar_Remove, RemoveParList, NULL,
                                               RemoveAllPar_No, PType );
       delete [] RemoveParList;
@@ -246,7 +246,7 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
 //          SibPID can be negative for non-periodic BC.
             if ( SibPID >= 0  &&  amr->patch[0][lv][SibPID]->NPar_Escp[ MirSib[s] ] > 0 )
             {
-//###NOTE : No OpenMP since AddParticle will modify amr->Par->NPar_Lv[]
+//###NOTE: No OpenMP since AddParticle will modify amr->Par->NPar_Lv[]
 #              ifdef DEBUG_PARTICLE
                if ( SibPID >= amr->NPatchComma[lv][1] )
                   Aux_Error( ERROR_INFO, "buffer patch cannot have escaping particles (PID %d, s %d, SibPID %d, NPar_Escp %d) !!\n",
@@ -274,7 +274,7 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
       } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
 
-//###NOTE : NO OpenMP since particles from different patches can enter the same father-sibling patch
+//###NOTE: NO OpenMP since particles from different patches can enter the same father-sibling patch
 //    6. pass particles to the father-sibling patches (fine --> coarse)
       if ( lv > 0 )
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -315,7 +315,7 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
 
 
 //          add particles to the target father->sibling patch (which can be real of buffer patches)
-//###NOTE : No OpenMP since AddParticle will modify amr->Par->NPar_Lv[]
+//###NOTE: No OpenMP since AddParticle will modify amr->Par->NPar_Lv[]
 #           ifdef DEBUG_PARTICLE
             char Comment[100];
             sprintf( Comment, "%s F->C", __FUNCTION__ );

@@ -7,7 +7,8 @@
 # 3. Parameters set to "auto" (usually by setting to a negative value) do not have deterministic default values
 #    and will be set according to the adopted compilation options and/or other runtime parameters
 # 4. To add new parameters, please edit "Init/Init_Load_Parameter.cpp"
-# 5. All dimensional variables should be set consistently with the code units (set by UNIT_L/M/T/V/D)
+# 5. All dimensional variables should be set consistently with the code units (set by UNIT_L/M/T/V/D) unless
+#    otherwise specified (e.g., SF_CREATE_STAR_MIN_GAS_DENS & SF_CREATE_STAR_MIN_STAR_MASS)
 # 6. For boolean options: 0/1 -> off/on
 # =================================================================================================================
 
@@ -42,6 +43,7 @@ OPT__BC_POT                   2           # gravity boundary condition: (1=perio
 
 
 # time-step
+DT__MAX                      -1.0         # dt criterion: maximum allowed dt (<0=off) [-1.0]
 DT__FLUID                    -1.0         # dt criterion: fluid solver CFL factor (<0=auto) [-1.0]
 DT__FLUID_INIT               -1.0         # dt criterion: DT__FLUID at the first step (<0=auto) [-1.0]
 DT__GRAVITY                  -1.0         # dt criterion: gravity solver safety factor (<0=auto) [-1.0]
@@ -80,7 +82,7 @@ OPT__MEMORY_POOL              0           # preallocate patches for OPT__REUSE_M
 # load balance (LOAD_BALANCE only)
 LB_INPUT__WLI_MAX             0.1         # weighted-load-imbalance (WLI) threshold for redistributing all patches [0.1]
 OPT__RECORD_LOAD_BALANCE      1           # record the load-balance info [1]
-OPT__MINIMIZE_MPI_BARRIER     0           # minimize MPI barriers to improve load balance, especially with particles [1]
+OPT__MINIMIZE_MPI_BARRIER     0           # minimize MPI barriers to improve load balance, especially with particles [0]
                                           # (STORE_POT_GHOST, PAR_IMPROVE_ACC=1, OPT__TIMING_BARRIER=0 only; recommend AUTO_REDUCE_DT=0)
 
 
@@ -89,7 +91,10 @@ ELBDM_MASS                    2.3         # particle mass in ev/c^2 (input unit 
 ELBDM_PLANCK_CONST            1.0         # reduced Planck constant (will be overwritten if OPT__UNIT or COMOVING is on)
 ELBDM_LAMBDA                  1.0         # quartic self-interaction coefficient [1.0] ##QUARTIC_SELF_INTERACTION ONLY##
 ELBDM_TAYLOR3_COEFF           0.166666667 # 3rd Taylor expansion coefficient [1.0/6.0] ##USELESS if ELBDM_TAYLOR3_AUTO is on##
-ELBDM_TAYLOR3_AUTO            1           # Optimize ELBDM_TAYLOR3_COEFF automatically to minimize the damping at kmax [1]
+ELBDM_TAYLOR3_AUTO            0           # Optimize ELBDM_TAYLOR3_COEFF automatically to minimize the damping at kmax [0]
+ELBDM_REMOVE_MOTION_CM        0           # remove the motion of center-of-mass (must enable OPT__CK_CONSERVATION):
+                                          # (0=off, 1=init, 2=every step) [0]
+ELBDM_BASE_SPECTRAL           0           # adopt the spectral method to evolve base-level wave function (must enable SUPPORT_FFTW) [0]
 
 
 # fluid solvers in all models
@@ -108,21 +113,24 @@ SOR_OMEGA                    -1.0         # over-relaxation parameter in SOR: (<
 SOR_MAX_ITER                 -1           # maximum number of iterations in SOR: (<0=auto) [-1]
 SOR_MIN_ITER                 -1           # minimum number of iterations in SOR: (<0=auto) [-1]
 POT_GPU_NPGROUP              -1           # number of patch groups sent into the GPU Poisson solver (<=0=auto) [-1]
-OPT__GRA_P5_GRADIENT          0           # 5-points gradient in the Gravity solver (must have GRA/USG_GHOST_SIZE_G>=2) [0]
 OPT__SELF_GRAVITY             1           # add self-gravity [1]
 OPT__EXT_ACC                  0           # add external acceleration (0=off, 1=function, 2=table) [0] ##HYDRO ONLY##
 OPT__EXT_POT                  1           # add external potential    (0=off, 1=function, 2=table) [0]
+                                          # --> for 2 (table), edit the corresponding parameters below too
 
 
 # initialization
 OPT__INIT                     1           # initialization option: (1=FUNCTION, 2=RESTART, 3=FILE->"UM_IC")
 RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number of MPI ranks) for restart [1]
 OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]
+OPT__INIT_GRID_WITH_OMP       1           # enable OpenMP when assigning the initial condition of each grid patch [1]
 OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
 INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
 
 
-# interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar)
+# interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar, 8=Spectral (##ELBDM & SUPPORT_SPECTRAL_INT ONLY##))
+
+OPT__INT_TIME                 1           # perform "temporal" interpolation for OPT__DT_LEVEL == 2/3 [1]
 OPT__INT_PHASE                1           # interpolation on phase (does not support MinMod-1D) [1] ##ELBDM ONLY##
 OPT__FLU_INT_SCHEME          -1           # ghost-zone fluid variables for the fluid solver [-1]
 OPT__REF_FLU_INT_SCHEME      -1           # newly allocated fluid variables during grid refinement [-1]
@@ -131,15 +139,15 @@ OPT__RHO_INT_SCHEME           4           # ghost-zone mass density for the Pois
 OPT__GRA_INT_SCHEME           4           # ghost-zone potential for the gravity solver (for UNSPLIT_GRAVITY as well) [4]
 OPT__REF_POT_INT_SCHEME       4           # newly allocated potential during grid refinement [4]
 INT_MONO_COEFF                2.0         # coefficient for ensuring the interpolation monotonicity (1.0~4.0) [2.0]
+SPEC_INT_TABLE_PATH           ./          # path to tables for spectral interpolation ##ELBDM & SUPPORT_SPECTRAL_INT ONLY##
 
 
 # data dump
 OPT__OUTPUT_TOTAL             1           # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
-OPT__OUTPUT_PART              7           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
+OPT__OUTPUT_PART              7           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag, 8=entire box) [0]
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
 OPT__OUTPUT_POT               1           # output gravitational potential [1] ##OPT__OUTPUT_TOTAL ONLY##
-                                          # (0=off, 1=particle mass density, 2=total mass density) [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_USER_FIELD        0           # output user-defined derived fields [0] -> edit "Flu_DerivedField_User.cpp"
 OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
@@ -148,6 +156,7 @@ OUTPUT_PART_X                 0.5         # x coordinate for OPT__OUTPUT_PART [-
 OUTPUT_PART_Y                 0.5         # y coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Z                 0.5         # z coordinate for OPT__OUTPUT_PART [-1.0]
 INIT_DUMPID                  -1           # set the first dump ID (<0=auto) [-1]
+OUTPUT_DIR                    .           # set the output directory [.]
 
 
 # miscellaneous
@@ -160,6 +169,7 @@ OPT__RECORD_PERFORMANCE       1           # record the code performance [1]
 OPT__MANUAL_CONTROL           1           # support manually dump data or stop run during the runtime
                                           # (by generating the file DUMP_GAMER_DUMP or STOP_GAMER_STOP) [1]
 OPT__RECORD_USER              0           # record the user-specified info -> edit "Aux_Record_User.cpp" [0]
+OPT__OPTIMIZE_AGGRESSIVE      0           # apply aggressive optimizations (experimental) [0]
 
 
 # checks

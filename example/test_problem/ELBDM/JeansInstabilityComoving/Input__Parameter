@@ -1,0 +1,198 @@
+
+
+# =================================================================================================================
+# NOTE:
+# 1. Comment symbol: #
+# 2. [*]: defaults
+# 3. Parameters set to "auto" (usually by setting to a negative value) do not have deterministic default values
+#    and will be set according to the adopted compilation options and/or other runtime parameters
+# 4. To add new parameters, please edit "Init/Init_Load_Parameter.cpp"
+# 5. All dimensional variables should be set consistently with the code units (set by UNIT_L/M/T/V/D) unless
+#    otherwise specified (e.g., SF_CREATE_STAR_MIN_GAS_DENS & SF_CREATE_STAR_MIN_STAR_MASS)
+# 6. For boolean options: 0/1 -> off/on
+# =================================================================================================================
+
+
+# simulation scale
+BOX_SIZE                      1.0         # box size along the longest side (in Mpc/h if COMOVING is adopted)
+NX0_TOT_X                     32          # number of base-level cells along x
+NX0_TOT_Y                     32          # number of base-level cells along y
+NX0_TOT_Z                     32          # number of base-level cells along z
+OMP_NTHREAD                  -1           # number of OpenMP threads (<=0=auto) [-1] ##OPENMP ONLY##
+END_T                        -1.0         # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
+END_STEP                     -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
+
+
+# test problems
+TESTPROB_ID                   1001        # test problem ID [0]
+                                          #    0: none
+                                          # 1000: ELBDM external potential (+GRAVITY)
+                                          # 1001: ELBDM Jeans instability in the comoving frame (+GRAVITY, +COMOVING)
+
+
+# code units (in cgs)
+OPT__UNIT                     0           # specify code units -> must set exactly 3 basic units below [0] ##USELESS FOR COMOVING##
+UNIT_L                       -1.0         # length unit        (<=0 -> set to UNIT_V*UNIT_T or (UNIT_M/UNIT_D)^(1/3)) [-1.0]
+UNIT_M                       -1.0         # mass unit          (<=0 -> set to UNIT_D*UNIT_L^3)                        [-1.0]
+UNIT_T                       -1.0         # time unit          (<=0 -> set to UNIT_L/UNIT_V)                          [-1.0]
+UNIT_V                       -1.0         # velocity unit      (<=0 -> set to UNIT_L/UNIT_T)                          [-1.0]
+UNIT_D                       -1.0         # mass density unit  (<=0 -> set to UNIT_M/UNIT_L^3)                        [-1.0]
+
+
+# boundary conditions
+OPT__BC_FLU_XM                1           # fluid boundary condition at the -x face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode) ##2/3/5 for HYDRO ONLY##
+OPT__BC_FLU_XP                1           # fluid boundary condition at the +x face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode) ##2/3/5 for HYDRO ONLY##
+OPT__BC_FLU_YM                1           # fluid boundary condition at the -y face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode) ##2/3/5 for HYDRO ONLY##
+OPT__BC_FLU_YP                1           # fluid boundary condition at the +y face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode) ##2/3/5 for HYDRO ONLY##
+OPT__BC_FLU_ZM                1           # fluid boundary condition at the -z face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode) ##2/3/5 for HYDRO ONLY##
+OPT__BC_FLU_ZP                1           # fluid boundary condition at the +z face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode) ##2/3/5 for HYDRO ONLY##
+OPT__BC_POT                   1           # gravity boundary condition: (1=periodic, 2=isolated)
+
+
+# cosmology (COMOVING only)
+A_INIT                        1.0e-3      # initial scale factor
+OMEGA_M0                      1.0         # omega matter at the present time
+HUBBLE0                       0.70        # dimensionless Hubble parameter (currently only for converting ELBDM_MASS to code units)
+
+
+# time-step
+DT__FLUID                    -1.0         # dt criterion: fluid solver CFL factor (<0=auto) [-1.0]
+DT__FLUID_INIT               -1.0         # dt criterion: DT__FLUID at the first step (<0=auto) [-1.0]
+DT__GRAVITY                  -1.0         # dt criterion: gravity solver safety factor (<0=auto) [-1.0]
+DT__PHASE                     0.0         # dt criterion: phase rotation safety factor (0=off) [0.0] ##ELBDM ONLY##
+DT__MAX_DELTA_A               0.01        # dt criterion: maximum variation of the cosmic scale factor [0.01]
+DT__SYNC_PARENT_LV            0.1         # dt criterion: allow dt to adjust by (1.0+DT__SYNC_PARENT) in order to synchronize
+                                          #               with the parent level (for OPT__DT_LEVEL==3 only) [0.1]
+DT__SYNC_CHILDREN_LV          0.1         # dt criterion: allow dt to adjust by (1.0-DT__SYNC_CHILDREN) in order to synchronize
+                                          #               with the children level (for OPT__DT_LEVEL==3 only; 0=off) [0.1]
+OPT__DT_USER                  0           # dt criterion: user-defined -> edit "Mis_GetTimeStep_UserCriteria.cpp" [0]
+OPT__DT_LEVEL                 3           # dt at different AMR levels (1=shared, 2=differ by two, 3=flexible) [3]
+OPT__RECORD_DT                1           # record info of the dt determination [1]
+AUTO_REDUCE_DT                1           # reduce dt automatically when the program fails (for OPT__DT_LEVEL==3 only) [1]
+AUTO_REDUCE_DT_FACTOR         1.0         # reduce dt by a factor of AUTO_REDUCE_DT_FACTOR when the program fails [1.0]
+AUTO_REDUCE_DT_FACTOR_MIN     0.1         # minimum allowed AUTO_REDUCE_DT_FACTOR after consecutive failures [0.1]
+
+
+# grid refinement (examples of Input__Flag_XXX tables are put at "example/input/")
+REGRID_COUNT                  4           # refine every REGRID_COUNT sub-step [4]
+FLAG_BUFFER_SIZE             -1           # number of buffer cells for the flag operation (0~PATCH_SIZE; <0=auto -> PATCH_SIZE) [-1]
+FLAG_BUFFER_SIZE_MAXM1_LV    -1           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-1 (<0=auto -> REGRID_COUNT) [-1]
+FLAG_BUFFER_SIZE_MAXM2_LV    -1           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-2 (<0=auto) [-1]
+MAX_LEVEL                     0           # maximum refinement level (0~NLEVEL-1) [NLEVEL-1]
+OPT__FLAG_RHO                 0           # flag: density (Input__Flag_Rho) [0]
+OPT__FLAG_RHO_GRADIENT        0           # flag: density gradient (Input__Flag_RhoGradient) [0]
+OPT__FLAG_ENGY_DENSITY        0           # flag: energy density (Input_Flag_EngyDensity) [0] ##ELBDM ONLY##
+OPT__FLAG_LOHNER_DENS         0           # flag: Lohner for mass density   (Input__Flag_Lohner) [0] ##BOTH HYDRO AND ELBDM##
+OPT__FLAG_LOHNER_FORM         2           # form of Lohner: (1=FLASH-1, 2=FLASH-2, 3=form-invariant-1, 4=form-invariant-2) [2]
+OPT__FLAG_USER                0           # flag: user-defined (Input__Flag_User) -> edit "Flag_User.cpp" [0]
+OPT__FLAG_REGION              0           # flag: specify the regions **allowed** to be refined -> edit "Flag_Region.cpp" [0]
+OPT__PATCH_COUNT              1           # record the # of patches   at each level: (0=off, 1=every step, 2=every sub-step) [1]
+OPT__REUSE_MEMORY             2           # reuse patch memory to reduce memory fragmentation: (0=off, 1=on, 2=aggressive) [2]
+OPT__MEMORY_POOL              0           # preallocate patches for OPT__REUSE_MEMORY=1/2 (Input__MemoryPool) [0]
+
+
+# load balance (LOAD_BALANCE only)
+LB_INPUT__WLI_MAX             0.1         # weighted-load-imbalance (WLI) threshold for redistributing all patches [0.1]
+OPT__RECORD_LOAD_BALANCE      1           # record the load-balance info [1]
+OPT__MINIMIZE_MPI_BARRIER     0           # minimize MPI barriers to improve load balance, especially with particles [0]
+                                          # (STORE_POT_GHOST, PAR_IMPROVE_ACC=1, OPT__TIMING_BARRIER=0 only; recommend AUTO_REDUCE_DT=0)
+
+
+# fluid solver in ELBDM (MODEL==ELBDM only)
+ELBDM_MASS                    2.5e-22     # particle mass in ev/c^2 (input unit is fixed even when OPT__UNIT or COMOVING is on)
+ELBDM_PLANCK_CONST            1.0         # reduced Planck constant (will be overwritten if OPT__UNIT or COMOVING is on)
+ELBDM_LAMBDA                  1.0         # quartic self-interaction coefficient [1.0] ##QUARTIC_SELF_INTERACTION ONLY##
+ELBDM_TAYLOR3_COEFF           0.166666667 # 3rd Taylor expansion coefficient [1.0/6.0] ##USELESS if ELBDM_TAYLOR3_AUTO is on##
+ELBDM_TAYLOR3_AUTO            0           # Optimize ELBDM_TAYLOR3_COEFF automatically to minimize the damping at kmax [0]
+ELBDM_REMOVE_MOTION_CM        0           # remove the motion of center-of-mass (must enable OPT__CK_CONSERVATION):
+                                          # (0=off, 1=init, 2=every step) [0]
+ELBDM_BASE_SPECTRAL           0           # adopt the spectral method to evolve base-level wave function (must enable SUPPORT_FFTW) [0]
+
+
+# fluid solvers in all models
+FLU_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU fluid solver (<=0=auto) [-1]
+GPU_NSTREAM                  -1           # number of CUDA streams for the asynchronous memory copy in GPU (<=0=auto) [-1]
+OPT__FIXUP_FLUX               1           # correct coarse grids by the fine-grid boundary fluxes [1] ##HYDRO and ELBDM ONLY##
+OPT__FIXUP_RESTRICT           1           # correct coarse grids by averaging the fine-grid data [1]
+OPT__CORR_AFTER_ALL_SYNC     -1           # apply various corrections after all levels are synchronized (see "Flu_CorrAfterAllSync"):
+                                          # (-1=auto, 0=off, 1=every step, 2=before dump) [-1]
+OPT__OVERLAP_MPI              0           # overlap MPI communication with CPU/GPU computations [0] ##NOT SUPPORTED YET##
+OPT__RESET_FLUID              0           # reset fluid variables after each update -> edit "Flu_ResetByUser.cpp" [0]
+MIN_DENS                      0.0         # minimum mass density (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##
+
+
+# gravity solvers in all models
+NEWTON_G                      1.0         # gravitational constant (will be overwritten if OPT__UNIT or COMOVING is on)
+SOR_OMEGA                    -1.0         # over-relaxation parameter in SOR: (<0=auto) [-1.0]
+SOR_MAX_ITER                 -1           # maximum number of iterations in SOR: (<0=auto) [-1]
+SOR_MIN_ITER                 -1           # minimum number of iterations in SOR: (<0=auto) [-1]
+OPT__SELF_GRAVITY             1           # add self-gravity [1]
+OPT__EXT_ACC                  0           # add external acceleration (0=off, 1=function, 2=table) [0] ##HYDRO ONLY##
+                                          # --> 2 (table) is not supported yet
+OPT__EXT_POT                  0           # add external potential    (0=off, 1=function, 2=table) [0]
+                                          # --> for 2 (table), edit the corresponding parameters below too
+
+
+# initialization
+OPT__INIT                     1           # initialization option: (1=FUNCTION, 2=RESTART, 3=FILE->"UM_IC")
+RESTART_LOAD_NRANK            1           # number of parallel I/O (i.e., number of MPI ranks) for restart [1]
+OPT__RESTART_RESET            0           # reset some simulation status parameters (e.g., current step and time) during restart [0]
+OPT__INIT_RESTRICT            1           # restrict all data during the initialization [1]
+OPT__INIT_GRID_WITH_OMP       1           # enable OpenMP when assigning the initial condition of each grid patch [1]
+OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
+INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
+
+
+# interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar, 8=Spectral (##ELBDM & SUPPORT_SPECTRAL_INT ONLY##))
+
+OPT__INT_TIME                 1           # perform "temporal" interpolation for OPT__DT_LEVEL == 2/3 [1]
+OPT__INT_PHASE                1           # interpolation on phase (does not support MinMod-1D) [1] ##ELBDM ONLY##
+OPT__FLU_INT_SCHEME          -1           # ghost-zone fluid variables for the fluid solver [-1]
+OPT__REF_FLU_INT_SCHEME      -1           # newly allocated fluid variables during grid refinement [-1]
+OPT__POT_INT_SCHEME           4           # ghost-zone potential for the Poisson solver (only supports 4 & 5) [4]
+OPT__RHO_INT_SCHEME           4           # ghost-zone mass density for the Poisson solver [4]
+OPT__GRA_INT_SCHEME           4           # ghost-zone potential for the gravity solver (for UNSPLIT_GRAVITY as well) [4]
+OPT__REF_POT_INT_SCHEME       4           # newly allocated potential during grid refinement [4]
+INT_MONO_COEFF                2.0         # coefficient for ensuring the interpolation monotonicity (1.0~4.0) [2.0]
+SPEC_INT_TABLE_PATH           ./          # path to tables for spectral interpolation ##ELBDM & SUPPORT_SPECTRAL_INT ONLY##
+
+
+# data dump
+OPT__OUTPUT_TOTAL             1           # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
+OPT__OUTPUT_PART              0           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag, 8=entire box) [0]
+OPT__OUTPUT_USER              1           # output the user-specified data -> edit "Output_User.cpp" [0]
+OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
+OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
+OPT__OUTPUT_POT               1           # output gravitational potential [1] ##OPT__OUTPUT_TOTAL ONLY##
+OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
+OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
+OUTPUT_DT                     2.5e-2      # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
+OUTPUT_PART_X                -1.0         # x coordinate for OPT__OUTPUT_PART [-1.0]
+OUTPUT_PART_Y                -1.0         # y coordinate for OPT__OUTPUT_PART [-1.0]
+OUTPUT_PART_Z                -1.0         # z coordinate for OPT__OUTPUT_PART [-1.0]
+INIT_DUMPID                  -1           # set the first dump ID (<0=auto) [-1]
+OUTPUT_DIR                    .           # set the output directory [.]
+
+
+# miscellaneous
+OPT__VERBOSE                  0           # output the simulation progress in detail [0]
+OPT__TIMING_BARRIER          -1           # synchronize before timing -> more accurate, but may slow down the run (<0=auto) [-1]
+OPT__TIMING_BALANCE           0           # record the max/min elapsed time in various code sections for checking load balance [0]
+OPT__TIMING_MPI               0           # record the MPI bandwidth achieved in various code sections [0] ##LOAD_BALANCE ONLY##
+OPT__RECORD_MEMORY            1           # record the memory consumption [1]
+OPT__RECORD_PERFORMANCE       1           # record the code performance [1]
+OPT__MANUAL_CONTROL           1           # support manually dump data or stop run during the runtime
+                                          # (by generating the file DUMP_GAMER_DUMP or STOP_GAMER_STOP) [1]
+OPT__RECORD_USER              0           # record the user-specified info -> edit "Aux_Record_User.cpp" [0]
+OPT__OPTIMIZE_AGGRESSIVE      0           # apply aggressive optimizations (experimental) [0]
+
+
+# checks
+OPT__CK_REFINE                0           # check the grid refinement [0]
+OPT__CK_PROPER_NESTING        0           # check the proper-nesting condition [0]
+OPT__CK_CONSERVATION          0           # check the conservation law [0]
+OPT__CK_RESTRICT              0           # check the data restriction [0]
+OPT__CK_FINITE                0           # check if all variables are finite [0]
+OPT__CK_PATCH_ALLOCATE        0           # check if all patches are properly allocated [0]
+OPT__CK_FLUX_ALLOCATE         0           # check if all flux arrays are properly allocated ##HYDRO and ELBDM ONLY## [0]
+OPT__CK_MEMFREE               1.0         # check the free memory in GB (0=off, >0=threshold) [1.0]

@@ -2,4 +2,4 @@
 
 PYTHON=python3
 
-${PYTHON} configure.py --machine=eureka_intel --gpu=true --hdf5=true --fftw=FFTW3 --model=HYDRO --gravity=true
+${PYTHON} configure.py --gpu=true --hdf5=true --fftw=FFTW3 --model=HYDRO --gravity=true "$@"

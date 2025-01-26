@@ -1,0 +1,25 @@
+#!/bin/bash
+
+#PBS -N gamer_isolatedhalo_test_libyt
+##PBS -M YOUR_EMAIL
+##PBS -m abe
+#PBS -q workq
+#PBS -k n
+#PBS -l walltime=72:00:00:00
+#PBS -l nodes=1:ppn=16
+##PBS -o stdout
+##PBS -e stderr
+##PBS -W depend=afterok:JOB_ID
+##PBS -W depend=afterany:JOB_ID
+
+export OMP_NUM_THREADS=4
+
+LOG_FILE=log_gamer_libyt
+EXE=gamer
+
+if [ "$PBS_ENVIRONMENT" != "PBS_INTERACTIVE" ]; then
+   cd $PBS_O_WORKDIR
+fi
+
+export OMPI_MCA_osc=sm,pt2pt
+mpirun -map-by ppr:4:socket:pe=4 --report-bindings --output-filename $LOG_FILE ./$EXE  #for AMR, pe means how many threads you want to fork out

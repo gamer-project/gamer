@@ -21,6 +21,9 @@ extern int    Bondi_SinkNCell;
 extern bool   Bondi_void;
 extern bool   Bondi_dynBH;
 
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_ResetByUser_Func_Bondi
 // Description :  Function to reset the fluid field in the Bondi accretion problem
@@ -51,8 +54,8 @@ int Flu_ResetByUser_Func_Bondi( real fluid[], const double Emag, const double x,
                                 const double dt, const int lv, double AuxArray[] )
 {
 
-   if ( !Bondi_void ) 
-      return false;
+   if ( !Bondi_void )   return false;
+
 
    const double Pos[3]  = { x, y, z };
    const double InBC_R2 = SQR( Bondi_InBC_R );
@@ -115,8 +118,7 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const int MagSg, 
    int    Reset;
    real   fluid[NCOMP_TOTAL], fluid_bk[NCOMP_TOTAL];
    double x, y, z, x0, y0, z0;
-// Define varible to record sink mass at every time step
-   double SinkMass_OneSubStep_ThisRank = 0;
+   double SinkMass_OneSubStep_ThisRank = 0.0;   // variables to record sink mass at every time step
    double SinkMass_OneSubStep_AllRank;
 
 // reset to 0 since we only want to record the number of void cells **for one sub-step**
@@ -206,14 +208,17 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const int MagSg, 
             {
 //             void region must be completely refined to the max level
                Aux_Error( ERROR_INFO, "void region lies outside the max-level region !!\n" );
-	    }
+            }
          } // if ( Reset )
       }}} // i,j,k
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
-   MPI_Allreduce( &SinkMass_OneSubStep_ThisRank, &SinkMass_OneSubStep_AllRank, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+   if ( Bondi_dynBH )
+   {
+      MPI_Allreduce( &SinkMass_OneSubStep_ThisRank, &SinkMass_OneSubStep_AllRank, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
 
-   if( Bondi_dynBH ){ Bondi_MassBH += SinkMass_OneSubStep_AllRank; }
+      Bondi_MassBH += SinkMass_OneSubStep_AllRank;
+   }
 
 } // FUNCTION : Flu_ResetByUser_API_Bondi
 

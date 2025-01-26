@@ -188,6 +188,12 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
+// initialize variables for dumping particle attributes mapped from mesh quantities
+#  ifdef PARTICLE
+   if ( OPT__OUTPUT_PAR_MESH )   Par_Init_Attribute_Mesh();
+#  endif
+
+
 // initialize particles
 #  ifdef PARTICLE
    switch ( amr->Par->Init )
@@ -197,7 +203,7 @@ void Init_GAMER( int *argc, char ***argv )
             Par_Init_ByFunction_Ptr( amr->Par->NPar_Active, amr->Par->NPar_Active_AllRank,
                                      amr->Par->Mass, amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ,
                                      amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ, amr->Par->Time,
-                                     amr->Par->Type, amr->Par->Attribute );
+                                     amr->Par->Type, amr->Par->AttributeFlt, amr->Par->AttributeInt );
          else
             Aux_Error( ERROR_INFO, "Par_Init_ByFunction_Ptr == NULL for PAR_INIT = 1 !!\n" );
          break;
@@ -218,7 +224,7 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif // #ifdef PARTICLE
 
 
-// initialize the AMR structure and fluid field
+// initialize the local AMR structure and grid fields
    switch ( OPT__INIT )
    {
       case INIT_BY_FUNCTION :    Init_ByFunction();   break;
@@ -229,6 +235,13 @@ void Init_GAMER( int *argc, char ***argv )
 
       default : Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "OPT__INIT", OPT__INIT );
    }
+
+
+// initialize the global AMR structure if required
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   delete GlobalTree;   // in case it has been allocated already
+   GlobalTree = new LB_GlobalTree;
+#  endif
 
 
 // ensure B field consistency on the shared interfaces between sibling patches
@@ -279,7 +292,7 @@ void Init_GAMER( int *argc, char ***argv )
       } // for (int lv=0; lv<NLEVEL; lv++)
 
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Calculating gravitational potential" );
-   } // if ( OPT__SELF_GRAVITY_TYPE  ||  OPT__EXT_POT )
+   } // if ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT )
 #  endif // #ifdef GARVITY
 
 
