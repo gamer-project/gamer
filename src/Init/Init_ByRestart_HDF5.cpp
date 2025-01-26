@@ -2400,6 +2400,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  ifdef VISCOSITY
    LoadField( "Opt__Output_DeltaP",          &RS.Opt__Output_DeltaP,          SID, TID, NonFatal, &RT.Opt__Output_DeltaP,          1, NonFatal );
 #  endif
+#  ifdef CONDUCTION
+   LoadField( "Opt__Output_Kappa",           &RS.Opt__Output_Kappa,           SID, TID, NonFatal, &RT.Opt__Output_Kappa,           1, NonFatal );
+#  endif
 #  ifdef SRHD
    LoadField( "Opt__Output_Lorentz",         &RS.Opt__Output_Lorentz,         SID, TID, NonFatal, &RT.Opt__Output_Lorentz,         1, NonFatal );
    LoadField( "Opt__Output_3Velocity",       &RS.Opt__Output_3Velocity,       SID, TID, NonFatal, &RT.Opt__Output_3Velocity,       1, NonFatal );

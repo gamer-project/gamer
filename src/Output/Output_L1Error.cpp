@@ -153,8 +153,6 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 
    for (int v=0; v<NERR; v++)    L1_Err[v] = 0.0;
 
-   int dim; 
-
    switch ( Part )
    {
       case OUTPUT_XY   :                                      Check_z = true;   dim = 2;  coord1 = 'X';  coord2 = 'Y';                 break;

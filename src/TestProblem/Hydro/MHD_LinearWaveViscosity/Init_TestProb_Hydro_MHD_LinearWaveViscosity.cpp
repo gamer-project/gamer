@@ -143,6 +143,7 @@ void SetParameter()
    MHDLinearVisc_WaveLength = ( MHDLinearVisc_Dir == 3 ) ? amr->BoxSize[0]/sqrt(3.0) : amr->BoxSize[MHDLinearVisc_Dir];
    MHDLinearVisc_WaveNumber = 2.0*M_PI/MHDLinearVisc_WaveLength;
 
+#  ifdef VISCOSITY
 // assuming EOS_GAMMA
    if ( MHDLinearVisc_Mode == 1 )
 //    fast magnetosonic wave
@@ -152,7 +153,7 @@ void SetParameter()
       MHDLinearVisc_WaveSpeed = MHDLinearVisc_B0/SQRT(MHDLinearVisc_Rho0);
    else
       Aux_Error( ERROR_INFO, "unsupported MHDLinearVisc_Mode = %d !!\n", MHDLinearVisc_Mode );
-
+#  endif
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_RESET_PARA is defined in Macro.h

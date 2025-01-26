@@ -417,6 +417,7 @@ extern double CONDUCTION_SPITZER_FRAC;
 extern double CONDUCTION_COULOMB_LOG;
 extern double CONDUCTION_MAX_DIFFUSIVITY;
 extern double CONDUCTION_MUE;
+extern bool   OPT__OUTPUT_KAPPA;
 #endif
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU

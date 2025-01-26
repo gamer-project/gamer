@@ -216,6 +216,11 @@ void Flu_DerivedField_DeltaP( real Out[], const real FluIn[], const real MagIn[]
                               const int NCellInX, const int NCellInY, const int NCellInZ,
                               const int NGhost, const double dh );
 #endif
+#ifdef CONDUCTION
+void Flu_DerivedField_Kappa( real Out[], const real FluIn[], const real MagIn[], const int NFieldOut,
+                             const int NCellInX, const int NCellInY, const int NCellInZ,
+                             const int NGhost, const double dh );
+#endif
 #endif
 
 

@@ -375,6 +375,13 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    if ( OPT__OUTPUT_DELTAP )  sprintf( FieldLabelOut[DeltaPDumpIdx], "%s", "DeltaP" );
 #  endif
 
+#  ifdef CONDUCTION
+   const int KappaDumpIdx = ( OPT__OUTPUT_KAPPA ) ? NFieldStored++ : NoDump;
+   if ( KappaDumpIdx >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_KAPPA )  sprintf( FieldLabelOut[KappaDumpIdx], "%s", "Kappa" );
+#  endif
+
 #  ifdef SRHD
    const int LorentzDumpIdx = ( OPT__OUTPUT_LORENTZ ) ? NFieldStored++ : NoDump;
    if ( LorentzDumpIdx >= NFIELD_STORED_MAX )
@@ -1085,6 +1092,50 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                } // if ( v == DeltaPDumpIdx )
 #              endif // #ifdef VISCOSITY
 #              endif // #ifdef MHD
+
+#              ifdef CONDUCTION
+               else if ( v == KappaDumpIdx )
+               {
+         
+                  for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+                  {
+//                   prepare the input fields
+//                   --> must prepare all NCOMP_TOTAL and NCOMP_MAG fields
+                     Prepare_PatchData( lv, Time[lv], Der_FluIn[0][0], Der_MagFC[0][0], DER_GHOST_SIZE, 1, &PID0,
+                                        _TOTAL, _MAG, OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCH, NSIDE_26,
+                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
+                                        DE_Consistency_No );
+
+                     for (int LocalID=0; LocalID<8; LocalID++)
+                     {
+
+#                       ifdef MHD
+//                      convert B field from face-centered to cell-centered
+                        for (int k=0; k<DER_NXT; k++)
+                        for (int j=0; j<DER_NXT; j++)
+                        for (int i=0; i<DER_NXT; i++)
+                        {
+                           const int IdxCC = IDX321( i, j, k, DER_NXT, DER_NXT );
+                           real B_CC[NCOMP_MAG];
+
+                           MHD_GetCellCenteredBField( B_CC, Der_MagFC[LocalID][MAGX], Der_MagFC[LocalID][MAGY],
+                                                      Der_MagFC[LocalID][MAGZ], DER_NXT, DER_NXT, DER_NXT, i, j, k );
+
+                           Der_MagCC[MAGX][IdxCC] = B_CC[MAGX];
+                           Der_MagCC[MAGY][IdxCC] = B_CC[MAGY];
+                           Der_MagCC[MAGZ][IdxCC] = B_CC[MAGZ];
+                        }
+#                       endif // #ifdef MHD
+
+//                      compute and store the target derived field
+                        const int PID  = PID0 + LocalID;
+                        const int NDer = 1;
+                        Flu_DerivedField_Kappa( FieldData[PID][0][0], Der_FluIn[LocalID][0], Der_MagCC[0],
+                                                NDer, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, amr->dh[lv] );
+                     } // for (int LocalID=0; LocalID<8; LocalID++)
+                  } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+               } // if ( v == KappaDumpIdx )
+#              endif // #ifdef CONDUCTION
 
 #              ifdef SRHD
                else if (  ( v >= VelDumpIdx0 && v < VelDumpIdx0+3 )  ||  v == LorentzDumpIdx )
@@ -2866,6 +2917,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  ifdef VISCOSITY
    InputPara.Opt__Output_DeltaP          = OPT__OUTPUT_DELTAP;
 #  endif
+#  ifdef CONDUCTION
+   InputPara.Opt__Output_Kappa           = OPT__OUTPUT_KAPPA;
+#  endif
 #  ifdef SRHD
    InputPara.Opt__Output_3Velocity       = OPT__OUTPUT_3VELOCITY;
    InputPara.Opt__Output_Lorentz         = OPT__OUTPUT_LORENTZ;
@@ -3959,6 +4013,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  endif
 #  ifdef VISCOSITY
    H5Tinsert( H5_TypeID, "Opt__Output_DeltaP",          HOFFSET(InputPara_t,Opt__Output_DeltaP         ), H5T_NATIVE_INT              );
+#  endif
+#  ifdef CONDUCTION
+   H5Tinsert( H5_TypeID, "Opt__Output_Kappa",           HOFFSET(InputPara_t,Opt__Output_Kappa          ), H5T_NATIVE_INT              );
 #  endif
 #  ifdef SRHD
    H5Tinsert( H5_TypeID, "Opt__Output_3Velocity",       HOFFSET(InputPara_t,Opt__Output_3Velocity      ), H5T_NATIVE_INT              );

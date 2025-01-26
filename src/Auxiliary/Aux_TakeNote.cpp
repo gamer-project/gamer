@@ -1662,6 +1662,9 @@ void Aux_TakeNote()
 #     ifdef VISCOSITY
       fprintf( Note, "OPT__OUTPUT_DELTAP             % d\n",      OPT__OUTPUT_DELTAP          );
 #     endif
+#     ifdef CONDUCTION
+      fprintf( Note, "OPT__OUTPUT_KAPPA              % d\n",      OPT__OUTPUT_KAPPA           );
+#     endif
       fprintf( Note, "OPT__OUTPUT_USER_FIELD         % d\n",      OPT__OUTPUT_USER_FIELD      );
 #     ifdef SRHD
       fprintf( Note, "OPT__OUTPUT_3VELOCITY          % d\n",      OPT__OUTPUT_3VELOCITY       );
