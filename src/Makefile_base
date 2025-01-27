@@ -333,7 +333,7 @@ endif # SUPPORT_GRACKLE
 # star formation source files (included only if "STAR_FORMATION" is turned on)
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DSTAR_FORMATION, $(SIMU_OPTION))" "-DSTAR_FORMATION"
-CPU_FILE    += SF_CreateStar.cpp  SF_CreateStar_AGORA.cpp
+CPU_FILE    += SF_CreateStar.cpp  SF_CreateStar_GeneralGalaxy.cpp SF_CreateStar_Check.cpp SF_CreateStar_GetStarMass.cpp
 
 vpath %.cpp    StarFormation
 endif # STAR_FORMATION
