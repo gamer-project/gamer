@@ -33,7 +33,8 @@ void Aux_Check_Conservation( const char *comment )
 {
 
    static bool FirstTime = true;
-   const char *FileName  = "Record__Conservation";
+   char FileName[MAX_STRING];
+   sprintf( FileName, "%s/Record__Conservation", OUTPUT_DIR );
 
 
 #  if ( MODEL != HYDRO  &&  MODEL != ELBDM  &&  MODEL != PAR_ONLY )
