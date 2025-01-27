@@ -59,6 +59,9 @@ void Validate()
    for (int f=0; f<4; f++)
    if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
       Aux_Error( ERROR_INFO, "must adopt periodic BC (i.e., \"OPT__BC_FLU_* = 1\") for the x-y directions!!\n" );
+   for (int f=4; f<6; f++)
+   if ( OPT__BC_FLU[f] != BC_FLU_USER )
+      Aux_Error( ERROR_INFO, "must adopt user BC (i.e., \"OPT__BC_USER_* = 4\") for the z directions!!\n" );
 
 // warnings
    if ( MPI_Rank == 0 )
@@ -270,9 +273,10 @@ void MTI_BC( real Array[], const int ArraySize[], real fluid[], const int NVar_F
 
    const real g0 = -3.0*MHD_MTI_P0/MHD_MTI_Rho0/MHD_MTI_z0;
    const real T0 = MHD_MTI_P0 / MHD_MTI_Rho0;
-   const real zbnd = ;
+   const real zbnd = pos[2] > amr->BoxSize[2] ? amr->BoxSize[2] : 0.0;
    const real Temp = T0 * ( 1.0 - zbnd / MHD_MTI_z0 );
-   const real Dens = ;
+   const real RhoBnd = MHD_MTI_Rho0 * SQR( 1.0 - zbnd / MHD_MTI_z0 );
+   const real Dens = RhoBnd * EXP ( -g0 * ( pos[2] - zbnd ) / T0 );
    const real Pres = Dens * Temp;
    const real MomX = 0.0;
    const real MomY = 0.0;
