@@ -307,7 +307,6 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
 #        error : ERROR : unsupported Riemann solver (EXACT/ROE/HLLE/HLLC/HLLD) !!
 #        endif
 
-
 //       3. switch to a different Riemann solver if the default one fails
 #        if ( RSOLVER_RESCUE != NONE )
          for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
@@ -359,7 +358,6 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
             } // if ( Flux_1Face[v] != Flux_1Face[v] )
          } // for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
 #        endif // #if ( RSOLVER_RESCUE != NONE )
-
 
 //       4. store the fluxes of all cells in g_FC_Flux[]
 //       --> including the magnetic components since they are required for CT
