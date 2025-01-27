@@ -297,9 +297,9 @@ void Flu_DerivedField_DeltaP( real Out[], const real FluIn[], const real MagIn[]
       for (int j=0; j<3; j++) 
       {
          int vi = i+MOMX;
-         int ioff = 1 ? j==0 : 0;
-         int joff = 1 ? j==1 : 0;
-         int koff = 1 ? j==2 : 0;
+         int ioff = int(j == 0);
+         int joff = int(j == 1);
+         int koff = int(j == 2);
 
          vp = FluIn3D[vi][ki+koff][ji+joff][ii+ioff] / FluIn3D[DENS][ki+koff][ji+joff][ii+ioff];
          vm = FluIn3D[vi][ki-koff][ji-joff][ii-ioff] / FluIn3D[DENS][ki-koff][ji-joff][ii-ioff];
@@ -424,9 +424,9 @@ void Flu_DerivedField_Kappa( real Out[], const real FluIn[], const real MagIn[],
 
          for (int i=0; i<3; i++)
          {
-            int ioff = 1 ? i==0 : 0;
-            int joff = 1 ? i==1 : 0;
-            int koff = 1 ? i==2 : 0;
+            int ioff = int(i == 0);
+            int joff = int(i == 1);
+            int koff = int(i == 2);
 
             for (int v=0; v<NCOMP_TOTAL; v++) 
             {
