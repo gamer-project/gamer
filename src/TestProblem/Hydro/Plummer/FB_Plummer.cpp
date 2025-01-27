@@ -26,7 +26,7 @@ extern double Plummer_FB_Like;
 //                   --> Updating gas and particles outside this range is fine but will have no effect at all
 //                2. Must use ParSortID[] to access ParAttFlt[] and ParAttInt[]
 //                   --> ParAttFlt[PAR_MASS/PAR_POSX/etc][ ParSortID[...] ]
-//                   --> ParAttInt[PAR_TYPE/etc][ ParSortID[...] ]
+//                   --> ParAttInt[PAR_TYPE/PAR_PUID/etc][ ParSortID[...] ]
 //                3. Particles may be outside the target region
 //                4. To ensure the consistency of random numbers, one must call the random number generator for
 //                   ALL particles, including those too far away to affect the target region
