@@ -347,7 +347,7 @@ void Init_TestProb_Hydro_MHD_MTI()
    Validate();
 
 
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO  &&  defined GRAVITY )
 // set the problem-specific runtime parameters
    SetParameter();
 
@@ -359,9 +359,7 @@ void Init_TestProb_Hydro_MHD_MTI()
    Init_Function_BField_User_Ptr = SetBFieldIC;
    BC_BField_User_Ptr            = BC_BField_MTI;
 #  endif
-#  ifdef GRAVITY
    Init_ExtAcc_Ptr               = Init_ExtAcc_MTI;
-#  endif
 #  endif // #if ( MODEL == HYDRO )
 
 
