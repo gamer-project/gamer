@@ -32,7 +32,7 @@ void Init_TestProb_Hydro_CR_ShockTube();
 void Init_TestProb_Hydro_CR_Diffusion();
 void Init_TestProb_Hydro_ConductionStepFunction();
 void Init_TestProb_Hydro_ConductionRing();
-void Init_TestProb_Hydro_MHD_MagnetothermalInstability();
+void Init_TestProb_Hydro_MHD_MTI();
 void Init_TestProb_Hydro_VelocityProfileDamping();
 void Init_TestProb_Hydro_MHD_LinearWaveViscosity();
 void Init_TestProb_Hydro_MHD_CPAW();

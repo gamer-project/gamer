@@ -4,16 +4,22 @@
 
 // problem-specific global variables
 // =======================================================================================
-static double MHD_MTI_Rho0;          // scale density
-static double MHD_MTI_P0;            // scale pressure
+       double MHD_MTI_Rho0;          // scale density
+       double MHD_MTI_P0;            // scale pressure
 static double MHD_MTI_v0;            // velocity perturbation amplitude
-static double MHD_MTI_z0;            // scale height
+       double MHD_MTI_z0;            // scale height
 static double MHD_MTI_B0;            // background magnetic field
 static int    MHD_MTI_Dir;           // magnetic field direction (0/1/2) --> (x/y/z)
 // =======================================================================================
 
 
-
+// problem-specific function prototypes
+void Init_ExtAcc_MTI();
+static void BC_MTI( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+                    const int GhostSize, const int idx[], const double pos[], const double Time,
+                    const int lv, const int TFluVarIdxList[], double AuxArray[] );
+static void BC_BField_MTI( real magnetic[], const double x, const double y, const double z, 
+                           const double Time, const int lv, double AuxArray[] );
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -121,19 +127,11 @@ void SetParameter()
    delete ReadPara;
 
 
-// (2) set the problem-specific derived parameters
-   MHD_MTI_WaveLength = ( MHD_MTI_Dir == 3 ) ? amr->BoxSize[0]/sqrt(3.0) : amr->BoxSize[MHD_MTI_Dir];
-
-// assuming EOS_GAMMA
-   if ( MHD_MTI_Mode == 1 )
-      MHD_MTI_WaveSpeed = sqrt( GAMMA*MHD_MTI_P0/MHD_MTI_Rho0 + SQR(MHD_MTI_B0)/MHD_MTI_Rho0 );
-   else
-      Aux_Error( ERROR_INFO, "unsupported MHD_MTI_Mode = %d !!\n", MHD_MTI_Mode );
-
-
-// (3) reset other general-purpose parameters
+// (2) reset other general-purpose parameters
 //     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
-   const double End_T_Default    = MHD_MTI_WaveLength / MHD_MTI_WaveSpeed;
+
+   const double sound_speed      = SQRT( 5.0*MHD_MTI_P0/3.0/MHD_MTI_Rho0 );
+   const double End_T_Default    = 5.0*amr->BoxSize[2] / sound_speed;
    const long   End_Step_Default = __INT_MAX__;
 
    if ( END_STEP < 0 ) {
@@ -152,7 +150,6 @@ void SetParameter()
    {
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "  test problem ID      = %d\n",      TESTPROB_ID        );
-      Aux_Message( stdout, "  mode                 = %d\n",      MHD_MTI_Mode       );
       Aux_Message( stdout, "  background density   = % 14.7e\n", MHD_MTI_Rho0       );
       Aux_Message( stdout, "  background pressure  = % 14.7e\n", MHD_MTI_P0         );
       Aux_Message( stdout, "  velocity amplitude   = % 14.7e\n", MHD_MTI_v0         );
@@ -247,7 +244,7 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 #endif // #ifdef MHD
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  MTI_BC
+// Function    :  BC_MTI
 // Description :  Set the external boundary condition to the IC condition
 //
 // Note        :  1. Linked to the function pointer "BC_User_Ptr"
@@ -266,7 +263,7 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 //
 // Return      :  fluid
 //-------------------------------------------------------------------------------------------------------
-void MTI_BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
+void BC_MTI( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
              const int GhostSize, const int idx[], const double pos[], const double Time,
              const int lv, const int TFluVarIdxList[], double AuxArray[] )
 {
@@ -281,6 +278,7 @@ void MTI_BC( real Array[], const int ArraySize[], real fluid[], const int NVar_F
    const real MomX = 0.0;
    const real MomY = 0.0;
    const real MomZ = 0.0;
+         real Eint, Etot;
 
 // compute the total gas energy
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
@@ -294,7 +292,38 @@ void MTI_BC( real Array[], const int ArraySize[], real fluid[], const int NVar_F
    fluid[MOMZ] = MomZ;
    fluid[ENGY] = Etot;
 
-} // FUNCTION : MTI_BC
+} // FUNCTION : BC_MTI
+
+#ifdef MHD
+//-------------------------------------------------------------------------------------------------------
+// Function    :  BC_BField_MTI
+// Description :  User-specified boundary condition template for the magnetic field
+//
+// Note        :  1. Invoked by MHD_BoundaryCondition_User() using the function pointer
+//                   "BC_BField_User_Ptr", which must be set by a test problem initializer
+//                2. Always return NCOMP_MAG magentic field components
+//                3. Enabled by the runtime options "OPT__BC_FLU_* == 4"
+//
+// Parameter   :  magnetic : Array to store the output magnetic field
+//                x/y/z    : Target physical coordinates
+//                Time     : Target physical time
+//                lv       : Target refinement level
+//                AuxArray : Auxiliary array
+//
+// Return      :  magnetic
+//-------------------------------------------------------------------------------------------------------
+void BC_BField_MTI( real magnetic[], const double x, const double y, const double z, const double Time,
+                    const int lv, double AuxArray[] )
+{
+
+// Just call the IC
+   SetBFieldIC( magnetic, x, y, z, Time, lv, AuxArray );
+
+   return;
+
+} // FUNCTION : BC_BField_MTI
+
+#endif // #ifdef MHD
 
 #endif // #if ( MODEL == HYDRO  &&  defined GRAVITY )
 
@@ -325,9 +354,10 @@ void Init_TestProb_Hydro_MHD_MTI()
 
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr        = SetGridIC;
-   BC_User_Ptr                   = MTI_BC;
+   BC_User_Ptr                   = BC_MTI;
 #  ifdef MHD
    Init_Function_BField_User_Ptr = SetBFieldIC;
+   BC_BField_User_Ptr            = BC_BField_MTI;
 #  endif
 #  ifdef GRAVITY
    Init_ExtAcc_Ptr               = Init_ExtAcc_MTI;
