@@ -280,7 +280,7 @@ void BC_MTI( real Array[], const int ArraySize[], real fluid[], const int NVar_F
    const real zbnd = pos[2] > amr->BoxSize[2] ? amr->BoxSize[2] : 0.0;
    const real Temp = T0 * ( 1.0 - zbnd / MHD_MTI_z0 );
    const real RhoBnd = MHD_MTI_Rho0 * SQR( 1.0 - zbnd / MHD_MTI_z0 );
-   const real Dens = RhoBnd * EXP ( -g0 * ( pos[2] - zbnd ) / T0 );
+   const real Dens = RhoBnd * EXP ( g0 * ( pos[2] - zbnd ) / T0 );
    const real Pres = Dens * Temp;
    const real MomX = Array3D[MOMX][kk][idx[1]][idx[0]];
    const real MomY = Array3D[MOMY][kk][idx[1]][idx[0]];
