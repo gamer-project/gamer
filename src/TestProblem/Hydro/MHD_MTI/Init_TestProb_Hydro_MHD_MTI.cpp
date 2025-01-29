@@ -10,6 +10,7 @@ static double MHD_MTI_v0;            // velocity perturbation amplitude
        double MHD_MTI_z0;            // scale height
 static double MHD_MTI_B0;            // background magnetic field
 static int    MHD_MTI_Dir;           // magnetic field direction (0/1/2) --> (x/y/z)
+       double g0;                    // constant gravitational acceleration
 // =======================================================================================
 
 
@@ -126,12 +127,15 @@ void SetParameter()
 
    delete ReadPara;
 
+// (2) set the problem-specific derived parameters
 
-// (2) reset other general-purpose parameters
+   g0 = 3.0*MHD_MTI_P0/MHD_MTI_Rho0/MHD_MTI_z0;
+
+// (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
 
-   const double sound_speed      = SQRT( 5.0*MHD_MTI_P0/3.0/MHD_MTI_Rho0 );
-   const double End_T_Default    = 5.0*amr->BoxSize[2] / sound_speed;
+   const double omega_buoy       = SQRT( g0 / MHD_MTI_z0 );
+   const double End_T_Default    = 20.0 * 2.0 * M_PI / omega_buoy;
    const long   End_Step_Default = __INT_MAX__;
 
    if ( END_STEP < 0 ) {
@@ -149,12 +153,13 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID      = %d\n",      TESTPROB_ID        );
-      Aux_Message( stdout, "  background density   = % 14.7e\n", MHD_MTI_Rho0       );
-      Aux_Message( stdout, "  background pressure  = % 14.7e\n", MHD_MTI_P0         );
-      Aux_Message( stdout, "  velocity amplitude   = % 14.7e\n", MHD_MTI_v0         );
-      Aux_Message( stdout, "  background B field   = % 14.7e\n", MHD_MTI_B0         );
-      Aux_Message( stdout, "  B-field direction    = %d\n",      MHD_MTI_Dir        );
+      Aux_Message( stdout, "  test problem ID            = %d\n",      TESTPROB_ID        );
+      Aux_Message( stdout, "  background density         = % 14.7e\n", MHD_MTI_Rho0       );
+      Aux_Message( stdout, "  background pressure        = % 14.7e\n", MHD_MTI_P0         );
+      Aux_Message( stdout, "  velocity amplitude         = % 14.7e\n", MHD_MTI_v0         );
+      Aux_Message( stdout, "  background B field         = % 14.7e\n", MHD_MTI_B0         );
+      Aux_Message( stdout, "  B-field direction          = %d\n",      MHD_MTI_Dir        );
+      Aux_Message( stdout, "  gravitational acceleration = % 14.7e\n", g0                 );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -194,7 +199,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    Pres = MHD_MTI_P0   * CUBE( 1.0 - z / MHD_MTI_z0 );
    MomX = 0.0;
    MomY = 0.0;
-   MomZ = Dens * MHD_MTI_v0 * sin ( 2.0*M_PI*z / amr->BoxSize[2] );
+   MomZ = Dens * MHD_MTI_v0 * sin ( 4.0*M_PI*z / amr->BoxSize[2] );
 
 // compute the total gas energy
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
@@ -236,7 +241,7 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
    magnetic[MAGX]        = 0.0;
    magnetic[MAGY]        = 0.0;
    magnetic[MAGZ]        = 0.0;
-   magnetic[MHD_MTI_Dir] = MHD_MTI_B0;
+   magnetic[MHD_MTI_Dir] = 0.5 * MHD_MTI_B0 / SQRT( M_PI );
 
 } // FUNCTION : SetBFieldIC
 
@@ -275,12 +280,11 @@ void BC_MTI( real Array[], const int ArraySize[], real fluid[], const int NVar_F
    typedef real (*vla)[ ArraySize[2] ][ ArraySize[1] ][ ArraySize[0] ];
    vla Array3D = ( vla )Array;
 
-   const real g0 = -3.0*MHD_MTI_P0/MHD_MTI_Rho0/MHD_MTI_z0;
    const real T0 = MHD_MTI_P0 / MHD_MTI_Rho0;
    const real zbnd = pos[2] > amr->BoxSize[2] ? amr->BoxSize[2] : 0.0;
    const real Temp = T0 * ( 1.0 - zbnd / MHD_MTI_z0 );
    const real RhoBnd = MHD_MTI_Rho0 * SQR( 1.0 - zbnd / MHD_MTI_z0 );
-   const real Dens = RhoBnd * EXP ( g0 * ( pos[2] - zbnd ) / T0 );
+   const real Dens = RhoBnd * EXP ( -g0 * ( pos[2] - zbnd ) / T0 );
    const real Pres = Dens * Temp;
    const real MomX = Array3D[MOMX][kk][idx[1]][idx[0]];
    const real MomY = Array3D[MOMY][kk][idx[1]][idx[0]];

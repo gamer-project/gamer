@@ -16,9 +16,7 @@
 
 #ifndef __CUDACC__
 
-extern double MHD_MTI_Rho0;
-extern double MHD_MTI_P0;
-extern double MHD_MTI_z0;
+extern double g0;
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -37,7 +35,7 @@ extern double MHD_MTI_z0;
 void SetExtAccAuxArray_MTI( double AuxArray[], const double Time )
 {
 
-   AuxArray[0] = -3.0*MHD_MTI_P0/MHD_MTI_Rho0/MHD_MTI_z0;
+   AuxArray[0] = g0;
 
 } // FUNCTION : SetExtAccAuxArray_MTI
 #endif // #ifndef __CUDACC__
@@ -67,11 +65,9 @@ static void ExtAcc_MTI( real Acc[], const double x, const double y, const double
                         const double UserArray[] )
 {
 
-   const real g0 = (real)UserArray[0];
-
    Acc[0] = 0.0;
    Acc[1] = 0.0;
-   Acc[2] = g0;
+   Acc[2] = -(real)UserArray[0];
 
 } // FUNCTION : ExtAcc_MTI
 
