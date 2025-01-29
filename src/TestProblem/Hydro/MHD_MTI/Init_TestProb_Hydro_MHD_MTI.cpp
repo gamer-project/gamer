@@ -268,6 +268,13 @@ void BC_MTI( real Array[], const int ArraySize[], real fluid[], const int NVar_F
              const int lv, const int TFluVarIdxList[], double AuxArray[] )
 {
 
+
+   const int k_ref = pos[2] > amr->BoxSize[2] ? 2*( ArraySize[2] - GhostSize ) - 1 : 2*GhostSize-1;  
+   const int kk = k_ref - idx[2];
+
+   typedef real (*vla)[ ArraySize[2] ][ ArraySize[1] ][ ArraySize[0] ];
+   vla Array3D = ( vla )Array;
+
    const real g0 = -3.0*MHD_MTI_P0/MHD_MTI_Rho0/MHD_MTI_z0;
    const real T0 = MHD_MTI_P0 / MHD_MTI_Rho0;
    const real zbnd = pos[2] > amr->BoxSize[2] ? amr->BoxSize[2] : 0.0;
@@ -275,9 +282,9 @@ void BC_MTI( real Array[], const int ArraySize[], real fluid[], const int NVar_F
    const real RhoBnd = MHD_MTI_Rho0 * SQR( 1.0 - zbnd / MHD_MTI_z0 );
    const real Dens = RhoBnd * EXP ( -g0 * ( pos[2] - zbnd ) / T0 );
    const real Pres = Dens * Temp;
-   const real MomX = 0.0;
-   const real MomY = 0.0;
-   const real MomZ = 0.0;
+   const real MomX = Array3D[MOMX][kk][idx[1]][idx[0]];
+   const real MomY = Array3D[MOMY][kk][idx[1]][idx[0]];
+   const real MomZ = -Array3D[MOMZ][kk][idx[1]][idx[0]];
          real Eint, Etot;
 
 // compute the total gas energy

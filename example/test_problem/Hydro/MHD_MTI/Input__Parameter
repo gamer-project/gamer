@@ -14,7 +14,7 @@
 
 
 # simulation scale
-BOX_SIZE                      1.0         # box size along the longest side (in Mpc/h if COMOVING is adopted)
+BOX_SIZE                      0.1         # box size along the longest side (in Mpc/h if COMOVING is adopted)
 NX0_TOT_X                     64          # number of base-level cells along x
 NX0_TOT_Y                     64          # number of base-level cells along y
 NX0_TOT_Z                     64          # number of base-level cells along z
@@ -142,7 +142,7 @@ OPT__EXT_POT                  0           # add external potential    (0=off, 1=
 # conduction (CONDUCTION only)
 CONDUCTION_TYPE               1           # (1=constant conduction, 2=Spitzer conduction) [1] ##CONDUCTION only##
 CONDUCTION_FLUX_TYPE          2           # (1=isotropic conduction, 2=anisotropic conduction) [1] ##CONDUCTION only, 2 is for MHD ONLY##
-CONDUCTION_CONSTANT_COEFF     1.5e-1      # constant conductivity coefficient (if CONDUCTION_TYPE=1) [1.0] ##CONDUCTION only##
+CONDUCTION_CONSTANT_COEFF     1.0e-2      # constant conductivity coefficient (if CONDUCTION_TYPE=1) [1.0] ##CONDUCTION only##
 CONDUCTION_SPITZER_FRAC       1.0         # fraction of Spitzer conductivity (if CONDUCTION_TYPE=2) [1.0] ##CONDUCTION only##
 CONDUCTION_COULOMB_LOG        40.0        # Coulomb logarithm in Spitzer conduction definition (if CONDUCTION_TYPE=2) [40.0] ##CONDUCTION only##
 CONDUCTION_MAX_DIFFUSIVITY   -1.0         # maximum conductive diffusivity, to prevent extremely small timestep (-1=no limit) [-1.0] ##CONDUCTION only##
