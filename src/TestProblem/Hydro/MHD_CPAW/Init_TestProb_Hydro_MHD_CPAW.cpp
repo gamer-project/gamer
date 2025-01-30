@@ -124,7 +124,7 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
-   MHD_CPAW_WaveLength = ( MHD_CPAW_Dir == 3 ) ? amr->BoxSize[0]*sqrt(3.0) : amr->BoxSize[MHD_CPAW_Dir];
+   MHD_CPAW_WaveLength = ( MHD_CPAW_Dir == 3 ) ? amr->BoxSize[0]/sqrt(3.0) : amr->BoxSize[MHD_CPAW_Dir];
    MHD_CPAW_WaveNumber = 2.0*M_PI/MHD_CPAW_WaveLength;
    MHD_CPAW_WaveSpeed = MHD_CPAW_B0/SQRT(MHD_CPAW_Rho0);
 
@@ -199,8 +199,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double WaveLength = MHD_CPAW_WaveLength;
    const double WaveK      = MHD_CPAW_WaveNumber;
 
-   double kr, WaveW, WaveFormV, WaveForm, Gamma, DampForm;
-   double Dens, Mom, MomX, MomY, MomZ, Pres, Eint, Etot;
+   double kr, WaveW, WaveForm1, WaveForm2, Gamma, DampForm;
+   double Dens, Mom1, Mom2, MomX, MomY, MomZ, Pres, Eint, Etot;
 
    switch ( MHD_CPAW_Dir ) {
       case 0:  kr = WaveK*x;                        break;
@@ -214,14 +214,32 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    Dens = Rho0;
    Pres = P0;
 
-   WaveFormV = sin( kr ) * sin( WaveW*Time );
-   Mom       = -Dens * WaveSpeed * A * WaveFormV;
-   
+   WaveForm1 = cos( kr - WaveW*Time );
+   WaveForm2 = sin( kr - WaveW*Time );
+   Mom1      = Dens * WaveSpeed * A * WaveForm1;
+   Mom2      = Dens * WaveSpeed * A * WaveForm2;
+
    switch ( MHD_CPAW_Dir ) {
-      case 0:  MomX = 0.0;                MomY = Mom/sqrt(2.0);  MomZ =  Mom/sqrt(2.0);  break;
-      case 1:  MomX = Mom/sqrt(2.0);      MomY = 0.0;            MomZ =  Mom/sqrt(2.0);  break;
-      case 2:  MomX = Mom/sqrt(2.0);      MomY = Mom/sqrt(2.0);  MomZ =  0.0;            break;
-      case 3:  MomX = 0.5*Mom/sqrt(1.5);  MomY = MomX;           MomZ = -2.0*MomX;       break;
+      case 0:  
+         MomX =  0.0;                
+         MomY =  Mom1/sqrt(2.0); 
+         MomZ =  Mom2/sqrt(2.0); 
+         break;
+      case 1:  
+         MomX =  Mom2/sqrt(2.0);     
+         MomY =  0.0;            
+         MomZ =  Mom1/sqrt(2.0); 
+         break;
+      case 2:  
+         MomX =  Mom1/sqrt(2.0);    
+         MomY =  Mom2/sqrt(2.0); 
+         MomZ =  0.0;           
+         break;
+      case 3:  
+         MomX =  Mom1/sqrt(2.0) + Mom2/sqrt(6.0);  
+         MomY = -Mom1/sqrt(2.0) + Mom2/sqrt(6.0);           
+         MomZ = -2.0*Mom2/sqrt(6.0)       
+         break;
    }
 
 // compute the total gas energy
