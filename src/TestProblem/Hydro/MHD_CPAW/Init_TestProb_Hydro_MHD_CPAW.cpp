@@ -238,7 +238,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       case 3:  
          MomX =  Mom1/sqrt(2.0) + Mom2/sqrt(6.0);  
          MomY = -Mom1/sqrt(2.0) + Mom2/sqrt(6.0);           
-         MomZ = -2.0*Mom2/sqrt(6.0)       
+         MomZ = -2.0*Mom2/sqrt(6.0);       
          break;
    }
 
@@ -260,73 +260,83 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 #ifdef MHD
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SetBFieldIC
-// Description :  Set the problem-specific initial condition of magnetic field
+// Function    :  SetAFieldIC
+// Description :  Function template to initialize the magnetic vector potential
 //
-// Note        :  1. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+// Note        :  1. Invoked by MHD_Init_BField_ByVecPot_Function() using the function pointer
+//                   "Init_BField_ByVecPot_User_Ptr", which must be set by a test problem initializer
+//                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
 //                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
 //                   --> Please ensure that everything here is thread-safe
 //
-// Parameter   :  magnetic : Array to store the output magnetic field
-//                x/y/z    : Target physical coordinates
-//                Time     : Target physical time
-//                lv       : Target refinement level
-//                AuxArray : Auxiliary array
+// Parameter   :  x/y/z     : Target physical coordinates
+//                Time      : Target physical time
+//                lv        : Target refinement level
+//                Component : Component of the output magnetic vector potential
+//                            --> Supported components: 'x', 'y', 'z'
+//                AuxArray  : Auxiliary array
+//                            --> Useless since it is currently fixed to NULL
 //
-// Return      :  magnetic
+// Return      :  "Component"-component of the magnetic vector potential at (x, y, z, Time)
 //-------------------------------------------------------------------------------------------------------
-void SetBFieldIC( real magnetic[], const double x, const double y, const double z, const double Time,
-                  const int lv, double AuxArray[] )
+double SetAFieldIC( const double x, const double y, const double z, const double Time,
+                    const int lv, const char Component, double AuxArray[] )
 {
 
 // short names
-   const double Rho0       = MHD_CPAW_Rho0;
    const double A          = MHD_CPAW_A;
-   const double P0         = MHD_CPAW_P0;
    const double B0         = MHD_CPAW_B0;
    const double WaveSpeed  = MHD_CPAW_WaveSpeed;
    const double WaveLength = MHD_CPAW_WaveLength;
    const double WaveK      = MHD_CPAW_WaveNumber;
 
-   double kr, B1, B, WaveW, WaveFormB, Gamma, DampForm;
-   double Bx, By, Bz;
+   double kr, WaveW, WaveForm1, WaveForm2;
+   double e1x, e1y, e1z, e2x, e2y, e2z;
+   double A1, A2, mag_vecpot;
 
    switch ( MHD_CPAW_Dir ) {
-      case 0:  kr = WaveK*x;                        break;
-      case 1:  kr = WaveK*y;                        break;
-      case 2:  kr = WaveK*z;                        break;
-      case 3:  kr = WaveK*( x + y + z )/sqrt(3.0);  break;
+      case 0:  
+         kr  =  WaveK*x;
+         e1x =  0.0;           e1y =  1.0/sqrt(2.0); e1z =  1.0/sqrt(2.0);
+         e2x =  0.0;           e2y =  1.0/sqrt(2.0); e2z =  1.0/sqrt(2.0);                        
+         break;
+      case 1:  
+         kr  =  WaveK*y;  
+         e1x =  1.0/sqrt(2.0); e1y =  0.0;           e1z =  1.0/sqrt(2.0);
+         e2x =  1.0/sqrt(2.0); e1y =  0.0;           e2z =  1.0/sqrt(2.0);                                     
+         break;
+      case 2:  
+         kr  =  WaveK*z;       
+         e1x =  1.0/sqrt(2.0); e1y =  1.0/sqrt(2.0); e1z =  0.0;
+         e2x =  1.0/sqrt(2.0); e1y =  1.0/sqrt(2.0); e2z =  0.0;                                            
+         break;
+      case 3:  
+         kr  =  WaveK*( x + y + z )/sqrt(3.0);  
+         e1x =  1.0/sqrt(2.0); e1y = -1.0/sqrt(2.0); e1z =  0.0;
+         e2x =  1.0/sqrt(6.0); e1y =  1.0/sqrt(6.0); e2z = -2.0/sqrt(6.0);                                            
+         break;
    }
    
-   WaveW       = WaveK*WaveSpeed;
+   WaveW     = WaveK*WaveSpeed;
 
-   WaveFormB = -cos( kr ) * cos( WaveW*Time );
-   B1        = B0 * A * WaveFormB;
+   WaveForm1 =  sin( kr - WaveW*Time );
+   WaveForm2 = -cos( kr - WaveW*Time );
+   A1        = B0 * A * WaveForm1 / WaveK;
+   A2        = B0 * A * WaveForm2 / WaveK;
 
-   switch ( MHD_CPAW_Dir ) {
-      case 0: magnetic[MAGX] = B0;
-              magnetic[MAGY] = B1 / sqrt(2.0);
-              magnetic[MAGZ] = B1 / sqrt(2.0);
-              break;
-
-      case 1: magnetic[MAGX] = B1 / sqrt(2.0);
-              magnetic[MAGY] = B0;
-              magnetic[MAGZ] = B1 / sqrt(2.0);
-              break;
-
-      case 2: magnetic[MAGX] = B1 / sqrt(2.0);
-              magnetic[MAGY] = B1 / sqrt(2.0);
-              magnetic[MAGZ] = B0;
-              break;
-
-      case 3: magnetic[MAGX] = B0/sqrt(3.0) + B1 / ( 2.0*sqrt(1.5) );
-              magnetic[MAGY] = B0/sqrt(3.0) + B1 / ( 2.0*sqrt(1.5) );
-              magnetic[MAGZ] = B0/sqrt(3.0) - B1 / sqrt(1.5);
-              break;
+   switch ( Component )
+   {
+      case 'x' :   mag_vecpot = A1*e1x+A2*e2x;  break;
+      case 'y' :   mag_vecpot = A1*e1y+A2*e2y;  break;
+      case 'z' :   mag_vecpot = A1*e1z+A2*e2z;  break;
+      default  :   Aux_Error( ERROR_INFO, "unsupported component (%c) !!\n", Component );
    }
 
-} // FUNCTION : SetBFieldIC
 
+   return mag_vecpot;
+
+} // FUNCTION : SetAFieldIC
+#endif // #ifdef MHD
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -346,10 +356,9 @@ static void OutputError()
    const char Prefix[100]     = "MHD_CPAW";
    const OptOutputPart_t Part = OUTPUT_X + MHD_CPAW_Dir;
 
-   Output_L1Error( SetGridIC, SetBFieldIC, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
+   Output_L1Error( SetGridIC, NULL, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
 
 } // FUNCTION : OutputError
-#endif // #ifdef MHD
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -382,7 +391,7 @@ void Init_TestProb_Hydro_MHD_CPAW()
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr        = SetGridIC;
 #  ifdef MHD
-   Init_Function_BField_User_Ptr = SetBFieldIC;
+   Init_BField_ByVecPot_User_Ptr = SetAFieldIC;
    Output_User_Ptr               = OutputError;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
