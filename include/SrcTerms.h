@@ -78,7 +78,7 @@ struct SrcTerms_t
    int       Dlep_Profile_NBin;
 #  endif
 
-// ExactCooling
+// exactCooling
 #  if ( MODEL == HYDRO )
    SrcFunc_t EC_FuncPtr;
    SrcFunc_t EC_CPUPtr;

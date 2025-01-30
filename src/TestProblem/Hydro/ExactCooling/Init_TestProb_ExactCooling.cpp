@@ -282,7 +282,7 @@ void Output_ExactCooling()
    }
 
 } // FUNCTION : Output_ExactCooling
-#endif
+#endif // #if ( MODEL == HYDRO )
 
 
 

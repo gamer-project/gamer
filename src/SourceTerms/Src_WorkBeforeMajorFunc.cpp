@@ -46,7 +46,8 @@ void Src_WorkBeforeMajorFunc( const int lv, const double TimeNew, const double T
                                                Src_Dlep_AuxArray_Flt, Src_Dlep_AuxArray_Int );
 // (2) exact cooling
    if ( SrcTerms.ExactCooling )
-      Src_WorkBeforeMajorFunc_ExactCooling( lv, TimeNew, TimeOld, dt, Src_EC_AuxArray_Flt, Src_EC_AuxArray_Int );
+      Src_WorkBeforeMajorFunc_ExactCooling   ( lv, TimeNew, TimeOld, dt,
+                                               Src_EC_AuxArray_Flt, Src_EC_AuxArray_Int );
 #  endif
 
 // (3) user-specified source term
