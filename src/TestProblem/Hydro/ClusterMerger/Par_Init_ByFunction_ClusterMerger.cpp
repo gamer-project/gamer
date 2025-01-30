@@ -780,7 +780,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                   const double  patch_pos[3] = { (EdgeL[0]+EdgeR[0])*0.5, (EdgeL[1]+EdgeR[1])*0.5, (EdgeL[2]+EdgeR[2])*0.5 };
                   const double  patch_d      = DIST_3D_DBL( EdgeL, EdgeR ) * 0.5;
 
-                  if ( DIST_SQR_3D( patch_pos, Cen_new_pre[c] ) <= SQR(20*R_acc+patch_d) )
+                  if ( DIST_SQR_3D( patch_pos, Cen_new_pre[c] ) <= SQR(10*R_acc+patch_d) )
                   {
                      for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                      {

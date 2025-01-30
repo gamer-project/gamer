@@ -510,7 +510,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                const double *EdgeR        = amr->patch[0][lv][PID]->EdgeR;
                const double  patch_pos[3] = { (EdgeL[0]+EdgeR[0])*0.5, (EdgeL[1]+EdgeR[1])*0.5, (EdgeL[2]+EdgeR[2])*0.5 };
                const double  patch_d      = sqrt( SQR(EdgeL[0]-EdgeR[0]) + SQR(EdgeL[1]-EdgeR[1]) + SQR(EdgeL[2]-EdgeR[2]) ) * 0.5;
-               if ( SQR(patch_pos[0]-ClusterCen[c][0]) + SQR(patch_pos[1]-ClusterCen[c][1]) + SQR(patch_pos[2]-ClusterCen[c][2]) <= SQR(2*R_acc+patch_d) )
+               if ( SQR(patch_pos[0]-ClusterCen[c][0]) + SQR(patch_pos[1]-ClusterCen[c][1]) + SQR(patch_pos[2]-ClusterCen[c][2]) <= SQR(R_acc+patch_d) )
                {
                   for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                   {

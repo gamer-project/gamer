@@ -1,6 +1,5 @@
 #include "GAMER.h"
 
-extern double (*Mis_GetTimeStep_User_Ptr)( const int lv, const double dTime_dt );
 extern double Mis_GetTimeStep_ExactCooling( const int lv, const double dTime_dt );
 
 
@@ -238,7 +237,7 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 #  endif
 
 
-// 1.9 CRITERION TEN : ExactCooling source term ##HYDRO ONLY##
+// 1.10 CRITERION TEN : ExactCooling source term ##HYDRO ONLY##
 // =============================================================================================================
 #  if ( MODEL == HYDRO )
    double EC_dtCoef = SrcTerms.EC_dtCoef;

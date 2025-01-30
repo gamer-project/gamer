@@ -159,7 +159,6 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
 void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );
 
 extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );
-void Output_ClusterMerger();
 void Init_User_ClusterMerger();
 #ifdef SUPPORT_HDF5
 static herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Target,
