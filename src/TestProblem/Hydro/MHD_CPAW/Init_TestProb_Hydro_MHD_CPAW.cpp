@@ -55,6 +55,9 @@ void Validate()
    Aux_Error( ERROR_INFO, "EOS != EOS_GAMMA !!\n" );
 #  endif
 
+   if ( OPT__INIT_BFIELD_BYVECPOT != INIT_MAG_BYVECPOT_FUNC )
+      Aux_Error( ERROR_INFO, "Must set OPT__INIT_BFIELD_BYVECPOT != %d !!\n", INIT_MAG_BYVECPOT_FUNC );
+
    if ( MHD_CPAW_Dir == 3  &&  ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )  )
       Aux_Error( ERROR_INFO, "simulation domain must be cubic for MHD_CPAW_Dir = %d !!\n", MHD_CPAW_Dir );
 
