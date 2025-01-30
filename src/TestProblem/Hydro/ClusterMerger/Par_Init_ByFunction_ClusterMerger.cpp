@@ -1012,7 +1012,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
    }
    else // if ( fixBH == true )
    {
-      for (int d=0; d<3; d++)   Cen_new[0][d] = 7.5;
+      for (int d=0; d<3; d++)   Cen_new[0][d] = amr->BoxCenter[d];
       for (int d=0; d<3; d++)   Cen_Vel[0][d] = 0.0;
    } // if ( fixBH == true ) ... else ...
 

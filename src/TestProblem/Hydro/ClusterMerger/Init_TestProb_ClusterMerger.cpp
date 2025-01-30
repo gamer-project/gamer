@@ -156,8 +156,10 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );
 void Output_ClusterMerger();
 void Init_User_ClusterMerger();
+#ifdef SUPPORT_HDF5
 static herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Target,
                          const hid_t H5_TypeID_Target );
+#endif
 
 
 
@@ -492,6 +494,13 @@ void SetParameter()
       } // if ( Merger_Coll_NumHalos > 2  &&  Merger_Coll_IsGas3 )
 
 //    (2-2) initialize the BH position and velocity
+      if ( fixBH )
+      {
+         Merger_Coll_PosX1 = amr->BoxCenter[0];
+         Merger_Coll_PosY1 = amr->BoxCenter[1];
+         Merger_Coll_VelX1 = 0.0;
+         Merger_Coll_VelY1 = 0.0;
+      }
       double ClusterCenter[3][3] = {{ Merger_Coll_PosX1, Merger_Coll_PosY1, amr->BoxCenter[2] },
                                     { Merger_Coll_PosX2, Merger_Coll_PosY2, amr->BoxCenter[2] },
                                     { Merger_Coll_PosX3, Merger_Coll_PosY3, amr->BoxCenter[2] }};
