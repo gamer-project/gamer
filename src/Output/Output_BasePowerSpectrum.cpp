@@ -5,10 +5,12 @@
 //output the dimensionless power spectrum
 //#define DIMENSIONLESS_FORM
 
-
 static void GetBasePowerSpectrum( real *VarK, const int j_start, const int dj, double *PS_total, double *NormDC );
 
-extern root_fftw::real_plan_nd     FFTW_Plan_PS;
+extern root_fftw::real_plan_nd FFTW_Plan_PS;
+
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_BasePowerSpectrum
@@ -48,26 +50,27 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
    local_ny_after_transpose      = NULL_INT;
    local_y_start_after_transpose = NULL_INT;
    total_local_size              = local_nx*local_ny*local_nz;
-#  else // # ifdef SERIAL
+#  else // #ifdef SERIAL
 #  if ( SUPPORT_FFTW == FFTW3 )
    total_local_size = fftw_mpi_local_size_3d_transposed( FFT_Size[2], local_ny, local_nx, MPI_COMM_WORLD,
-                           &local_nz, &local_z_start, &local_ny_after_transpose, &local_y_start_after_transpose );
-#  else // # if ( SUPPORT_FFTW == FFTW3 )
+                                                         &local_nz, &local_z_start, &local_ny_after_transpose,
+                                                         &local_y_start_after_transpose );
+#  else
    rfftwnd_mpi_local_sizes( FFTW_Plan_PS, &local_nz, &local_z_start, &local_ny_after_transpose,
                             &local_y_start_after_transpose, &total_local_size );
-#  endif // #  if ( SUPPORT_FFTW == FFTW3 ) ... # else
-#  endif // #  ifdef SERIAL ... # else
+#  endif
+#  endif // #ifdef SERIAL ... else ...
 
 // check integer overflow (assuming local_nx*local_ny*local_nz ~ total_local_size)
    const long local_nxyz = (long)local_nx*(long)local_ny*(long)local_nz;
 
-   if ( local_nx < 0 || local_ny < 0 || local_nz < 0 )
-      Aux_Error( ERROR_INFO, "local_nx/y/z (%ld, %ld, %ld) < 0 for FFT !!", local_nx, local_ny, local_nz );
+   if ( local_nx < 0  ||  local_ny < 0  ||  local_nz < 0 )
+      Aux_Error( ERROR_INFO, "local_nx/y/z (%ld, %ld, %ld) < 0 for FFT !!\n", local_nx, local_ny, local_nz );
 
    if (  ( sizeof(mpi_index_int) == sizeof(int) && local_nxyz > __INT_MAX__ )  ||  total_local_size < 0  )
       Aux_Error( ERROR_INFO, "local_nx*local_ny*local_nz = %d*%d*%d = %ld > __INT_MAX__ (%d)\n"
                      "        and/or total_local_size (%ld) < 0 for FFT, suggesting integer overflow !!\n"
-                     "        --> Try using more MPI processes\n",
+                     "        --> Try using more MPI processes or switching to FFTW3\n",
                  local_nx, local_ny, local_nz, local_nxyz, __INT_MAX__, total_local_size );
 
 // collect "local_nz" from all ranks and set the corresponding list "List_z_start"
@@ -89,7 +92,7 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
    const int NRecvSlice = MIN( List_z_start[MPI_Rank]+local_nz, NX0_TOT[2] ) - MIN( List_z_start[MPI_Rank], NX0_TOT[2] );
 
    double *PS_total     = NULL;
-   real   *VarK         = (real*) root_fftw::fft_malloc(sizeof(real) * total_local_size); // array storing data
+   real   *VarK         = (real*)root_fftw::fft_malloc( sizeof(real)*total_local_size );  // array storing data
    real   *SendBuf      = new real [ (long)amr->NPatchComma[0][1]*CUBE(PS1) ];            // MPI send buffer for data
    real   *RecvBuf      = new real [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];            // MPI recv buffer for data
    long   *SendBuf_SIdx = new long [ (long)amr->NPatchComma[0][1]*PS1 ];                  // MPI send buffer for 1D coordinate in slab
@@ -120,7 +123,7 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
 #  endif
 
    if ( TVar == _TOTAL_DENS ) {
-      Par_CollectParticle2OneLevel( 0, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos, Time[0],
+      Par_CollectParticle2OneLevel( 0, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, _PAR_TYPE, PredictPos, Time[0],
                                     SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
 
       Prepare_PatchData_InitParticleDensityArray( 0, Time[0] );
@@ -165,7 +168,7 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
 
 
 // 7. free memory
-   root_fftw::fft_free(VarK);
+   root_fftw::fft_free( VarK );
    delete [] SendBuf;
    delete [] RecvBuf;
    delete [] SendBuf_SIdx;

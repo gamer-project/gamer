@@ -135,12 +135,17 @@ static double *JetDirection = NULL;       // jet direction[time/theta_1/phi_1/th
 
 // problem-specific function prototypes
 #ifdef MASSIVE_PARTICLES
-long Read_Particle_Number_ClusterMerger( std::string filename );
-void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank,
-                                        const long NPar_AllRank,
-                                        real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
-                                        real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                        real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] );
+FieldIdx_t Idx_ParHalo = Idx_Undefined;
+
+void AddNewParticleAttribute_ClusterMerger();
+
+long Read_Particle_Number_ClusterMerger(std::string filename);
+void Par_Init_ByFunction_ClusterMerger(const long NPar_ThisRank,
+                                       const long NPar_AllRank,
+                                       real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                       real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                       long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                       long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] );
 void Aux_Record_ClusterMerger();
 #endif
 
@@ -196,6 +201,11 @@ void Validate()
 
 #  ifdef COMOVING
    Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
+#  endif
+
+#  ifdef PARTICLE
+   if ( PAR_NATT_INT_USER != 1 )
+      Aux_Error( ERROR_INFO, "PAR_NATT_INT_USER must be set to 1 in the Makefile !!");
 #  endif
 
    if ( !OPT__UNIT )
@@ -837,7 +847,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 } // FUNCTION : SetGridIC
 
 
-
 #ifdef SUPPORT_HDF5
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_HDF5_TestProb
@@ -916,7 +925,6 @@ void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
 } // FUNCTION : Output_HDF5_TestProb
 
 
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_HDF5_User_ClusterMerger
 // Description :  Store the problem specific parameter in HDF5 outputs (Data_*) under User group
@@ -961,7 +969,6 @@ void Output_HDF5_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
 #endif // #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 
 
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  End_ClusterMerger
 // Description :  Free memory before terminating the program
@@ -991,24 +998,7 @@ void End_ClusterMerger()
 } // FUNCTION : End_ClusterMerger
 
 
-
 #ifdef MHD
-//-------------------------------------------------------------------------------------------------------
-// Function    :  SetBFieldIC
-// Description :  Set the problem-specific initial condition of magnetic field
-//
-// Note        :  1. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
-//                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
-//                   --> Please ensure that everything here is thread-safe
-//
-// Parameter   :  magnetic : Array to store the output magnetic field
-//                x/y/z    : Target physical coordinates
-//                Time     : Target physical time
-//                lv       : Target refinement level
-//                AuxArray : Auxiliary array
-//
-// Return      :  magnetic
-//-------------------------------------------------------------------------------------------------------
 void SetBFieldIC( real magnetic[], const double x, const double y, const double z, const double Time,
                   const int lv, double AuxArray[] )
 {
@@ -1054,19 +1044,20 @@ void Init_TestProb_Hydro_ClusterMerger()
    Aux_Record_User_Ptr            = Aux_Record_ClusterMerger;
    Par_Init_ByFunction_Ptr        = Par_Init_ByFunction_ClusterMerger;
    Init_Field_User_Ptr            = AddNewField_ClusterMerger;
-
+   Par_Init_Attribute_User_Ptr    = AddNewParticleAttribute_ClusterMerger;
    Flu_ResetByUser_Func_Ptr       = Flu_ResetByUser_Func_ClusterMerger;
    Flu_ResetByUser_API_Ptr        = Flu_ResetByUser_API_ClusterMerger;
    Init_User_Ptr                  = Init_User_ClusterMerger;
 
 #  ifdef MHD
-   Init_Function_BField_User_Ptr  = SetBFieldIC;
+   Init_Function_BField_User_Ptr = SetBFieldIC;
 #  endif
 #  ifdef SUPPORT_HDF5
    Output_HDF5_TestProb_Ptr       = Output_HDF5_TestProb;
    Output_HDF5_User_Ptr           = Output_HDF5_User_ClusterMerger;
 #  endif
 #  endif // if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
+
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
@@ -1075,16 +1066,6 @@ void Init_TestProb_Hydro_ClusterMerger()
 
 
 #ifdef SUPPORT_HDF5
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Read_Num_Points_ClusterMerger
-// Description :  TBF
-//
-// Note        :  TBF
-//
-// Parameter   :  TBF
-//
-// Return      :  TBF
-//-------------------------------------------------------------------------------------------------------
 int Read_Num_Points_ClusterMerger( std::string filename )
 {
 
@@ -1095,7 +1076,6 @@ int Read_Num_Points_ClusterMerger( std::string filename )
    int rank;
 
    file_id   = H5Fopen( filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT );
-
    dataset   = H5Dopen( file_id, "/fields/radius", H5P_DEFAULT );
    dataspace = H5Dget_space( dataset );
    rank      = H5Sget_simple_extent_dims( dataspace, dims, maxdims );
@@ -1121,14 +1101,15 @@ int Read_Num_Points_ClusterMerger( std::string filename )
 void Read_Profile_ClusterMerger( std::string filename, std::string fieldname, double field[] )
 {
 
-   hid_t   file_id, dataset;
-   herr_t  status;
+   hid_t  file_id, dataset;
+   herr_t status;
 
    file_id = H5Fopen( filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT );
    dataset = H5Dopen( file_id, fieldname.c_str(), H5P_DEFAULT );
-   status  = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, field );
-
+   status  = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
+                      H5S_ALL, H5P_DEFAULT, field );
    H5Dclose( dataset );
+
    H5Fclose( file_id );
 
    return;
@@ -1171,8 +1152,6 @@ long Read_Particle_Number_ClusterMerger( std::string filename )
 #endif // #ifdef SUPPORT_HDF5
 
 
-
-
 #if ( MODEL == HYDRO )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  AddNewField_ClusterMerger
@@ -1203,6 +1182,16 @@ void AddNewField_ClusterMerger()
 } // FUNCTION : AddNewField_ClusterMerger
 #endif
 
+
+#ifdef MASSIVE_PARTICLES
+void AddNewParticleAttribute_ClusterMerger()
+{
+
+  if ( Idx_ParHalo == Idx_Undefined )
+    Idx_ParHalo = AddParticleAttributeInt( "ParHalo" );
+
+} // FUNCTION : AddNewParticleAttribute_ClusterMerger
+#endif
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -1281,7 +1270,6 @@ void Init_User_ClusterMerger()
 #  endif // #ifdef SUPPORT_HDF5
 
 } // FUNCTION : Init_User_ClusterMerger
-
 
 
 #ifdef SUPPORT_HDF5

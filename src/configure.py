@@ -19,6 +19,15 @@ import ctypes
 
 
 ####################################################################################################
+# Validation
+####################################################################################################
+# Check the Python version
+if sys.version_info[0] < 3 or sys.version_info[1] < 5:
+    raise BaseException("Python 3.5 or later is required.")
+
+
+
+####################################################################################################
 # Global variables
 ####################################################################################################
 NONE_STR = "OFF"
@@ -26,15 +35,17 @@ NONE_STR = "OFF"
 CLOSE_DIST  = 2
 PRINT_WIDTH = 100
 
-GAMER_CONFIG_DIR  = os.path.join("..", "configs")
-GAMER_MAKE_BASE   = "Makefile_base"
-GAMER_MAKE_OUT    = "Makefile"
-GAMER_DESCRIPTION = "Prepare a customized Makefile for GAMER.\nDefault values are marked by '*'.\nUse -lh to show a detailed help message.\n"
-GAMER_EPILOG      = "2023 Computational Astrophysics Lab, NTU. All rights reserved.\n"
+GAMER_CONFIG_DIR     = os.path.join("..", "configs")
+GAMER_MAKE_BASE      = "Makefile_base"
+GAMER_MAKE_OUT       = "Makefile"
+GAMER_LOCAL_SETTING  = ".local_settings"
+GAMER_GLOBAL_SETTING = os.path.expanduser("~/.config/gamer/global_settings")
+GAMER_DESCRIPTION    = "Prepare a customized Makefile for GAMER.\nDefault values are marked by '*'.\nUse -lh to show a detailed help message.\n"
+GAMER_EPILOG         = "2023 Computational Astrophysics Lab, NTU. All rights reserved.\n"
 
 LOGGER     = logging.getLogger()
-LOG_FORMAT = '%(asctime)s %(levelname)-8s: %(message)s'
-logging.basicConfig( filename=GAMER_MAKE_OUT+'.log', filemode='w', level=logging.INFO, format=LOG_FORMAT )
+LOG_FORMAT = "%(asctime)s %(levelname)-8s: %(message)s"
+logging.basicConfig( filename=GAMER_MAKE_OUT+".log", filemode="w", level=logging.INFO, format=LOG_FORMAT )
 
 
 
@@ -45,17 +56,17 @@ class CustomFormatter( logging.Formatter ):
     """
     See: https://stackoverflow.com/questions/384076/how-can-i-color-python-logging-output
     """
-    HEADER    = '\033[95m'
-    OKBLUE    = '\033[94m'
-    OKCYAN    = '\033[96m'
-    OKGREEN   = '\033[92m'
-    WARNING   = '\033[93m'
-    FAIL      = '\033[91m'
-    ENDC      = '\033[0m'
-    BOLD      = '\033[1m'
-    UNDERLINE = '\033[4m'
+    HEADER    = "\033[95m"
+    OKBLUE    = "\033[94m"
+    OKCYAN    = "\033[96m"
+    OKGREEN   = "\033[92m"
+    WARNING   = "\033[93m"
+    FAIL      = "\033[91m"
+    ENDC      = "\033[0m"
+    BOLD      = "\033[1m"
+    UNDERLINE = "\033[4m"
 
-    CONSOLE_FORMAT = '%(levelname)-8s: %(message)s'
+    CONSOLE_FORMAT = "%(levelname)-8s: %(message)s"
     FORMATS = { logging.DEBUG   : HEADER  + CONSOLE_FORMAT + ENDC,
                 logging.INFO    : ENDC    + "%(message)s"  + ENDC,
                 logging.WARNING : WARNING + CONSOLE_FORMAT + ENDC,
@@ -97,7 +108,7 @@ class ArgumentParser( argparse.ArgumentParser ):
         msg = "\n"
         for arg in argv:
             if arg[0] != "-":
-                msg += 'Unrecognized positional argument: %s\n'%(arg)
+                msg += "Unrecognized positional argument: %s\n"%(arg)
                 continue
             arg = arg.split("=")[0]     # separate the assigned value.
             min_dist = 100000
@@ -107,47 +118,13 @@ class ArgumentParser( argparse.ArgumentParser ):
                 if dist >= min_dist: continue
                 min_dist = dist
                 pos_key = "--"+key
-            msg += 'Unrecognized argument: %s'%(arg)
-            if min_dist <= CLOSE_DIST: msg += ', do you mean: %s ?\n'%(pos_key)
-            msg += '\n'
-            if arg == '--gpu_arch': msg += "ERROR: <--gpu_arch> is deprecated. Please set <GPU_COMPUTE_CAPABILITY> in your machine *.config file (see ../configs/template.config).\n"
+            msg += "Unrecognized argument: %s"%(arg)
+            if min_dist <= CLOSE_DIST: msg += ", do you mean: %s ?\n"%(pos_key)
+            msg += "\n"
+            if arg == "--gpu_arch": msg += "ERROR: <--gpu_arch> is deprecated. Please set <GPU_COMPUTE_CAPABILITY> in your machine *.config file (see ../configs/template.config).\n"
 
         if len(argv) != 0: self.error( msg )
         return args, self.gamer_names, self.depends, self.constraints
-
-    def _get_option_tuples(self, option_string):
-        # This function is directly from the source code of `argparse`.
-        # We decided to add the function manually because versions prior to Python 3.5 do not support `allow_abbrev`.
-        # See: https://github.com/python/cpython/blob/main/Lib/argparse.py
-        result = []
-
-        # option strings starting with two prefix characters are only split at the '='
-        chars = self.prefix_chars
-        if option_string[0] in chars and option_string[1] in chars:
-            pass # we always use `allow_abbrev=False`
-
-        # single character options can be concatenated with their arguments
-        # but multiple character options always have to have their arguments separate
-        elif option_string[0] in chars and option_string[1] not in chars:
-            option_prefix = option_string
-            short_option_prefix = option_string[:2]
-            short_explicit_arg = option_string[2:]
-
-            for option_string in self._option_string_actions:
-                if option_string == short_option_prefix:
-                    action = self._option_string_actions[option_string]
-                    tup = action, option_string, '', short_explicit_arg
-                    result.append(tup)
-                elif option_string.startswith(option_prefix):
-                    action = self._option_string_actions[option_string]
-                    tup = action, option_string, None, None
-                    result.append(tup)
-
-        # shouldn't ever get here
-        else:
-            self.error(_('unexpected option string: %s') % option_string)
-
-        return result # return the collected option tuples
 
     def print_usage( self, *args, **kwargs ):
         if "usage" in self.program:
@@ -219,6 +196,48 @@ class ArgumentParser( argparse.ArgumentParser ):
         if "print_detail" in kwargs: self.print_option()
         if "epilog"       in self.program: print(self.program["epilog"])
 
+class SystemSetting( dict ):
+    """
+    Store the system settings from the default setting file.
+
+    Format of the setting file:
+    1. Comment starts with `#`.
+    2. The line begins with the variable name, followed by one or multiple spaces, and then the value.
+    3. Only the fisrt value of the line will be loaded.
+    4. If a variable is defined multiple times, only the last occurrence will be used.
+    """
+    def __init__( self, *args, **kwargs ):
+        super().__init__( *args, **kwargs )
+
+    def get_default( self, key, default_val ):
+        return self.get( key, default_val )
+
+    def load( self, pathname ):
+        """
+        Load the system settings from the default setting file. If a setting exists,
+        it will be overwritten. Return `False` if the file does not exist.
+
+        Parameters:
+            pathname : str - The path of the default setting file to be loaded.
+
+        Returns:
+            bool - Whether the file exists.
+        """
+        if not os.path.isfile(pathname):
+            return False
+        with open( pathname, "r" ) as f:
+            lines = f.readlines()
+            for line in lines:
+                tokens = line.strip().split()
+                if len(tokens) == 0: continue      # empty line
+                if tokens[0][0] == "#": continue   # skip comment line
+                if len(tokens) >= 2:
+                    self[tokens[0]] = tokens[1]
+                else:                              # key without value
+                    self[tokens[0]] = None
+
+        return True
+
 
 
 ####################################################################################################
@@ -233,7 +252,8 @@ def str2bool( v ):
     return
 
 def add_option( opt_str, name, val ):
-    # NOTE: Every -Doption must have a trailing space.
+    # NOTE: 1. Every -Doption must have a trailing space.
+    #       2. Do not insert any space before and after the equal sign `=`.
     if type(val) == type(True):
         if val: opt_str += "-D%s "%(name)
         LOGGER.info("%-25s : %r"%(name, val))
@@ -289,7 +309,7 @@ def get_gpu_compute_capability():
     Others: https://en.wikipedia.org/wiki/CUDA#GPUs_supported
     """
     CUDA_SUCCESS = 0
-    libnames = ('libcuda.so', 'libcuda.dylib', 'cuda.dll')
+    libnames = ("libcuda.so", "libcuda.dylib", "cuda.dll")
     for libname in libnames:
         try:
             cuda = ctypes.CDLL(libname)
@@ -298,7 +318,7 @@ def get_gpu_compute_capability():
         else:
             break
     else:
-        raise OSError("could not load any of: " + ' '.join(libnames))
+        raise OSError("could not load any of: " + " ".join(libnames))
 
     nGpus, cc_major, cc_minor, device = ctypes.c_int(), ctypes.c_int(), ctypes.c_int(), ctypes.c_int()
 
@@ -351,11 +371,12 @@ def string_align( string, indent_str, width, end_char ):
             if string[i] == end_char: new_line = True
     return new_str
 
-def load_arguments():
+def load_arguments( sys_setting : SystemSetting ):
     parser = ArgumentParser( description = GAMER_DESCRIPTION,
                              formatter_class = argparse.RawTextHelpFormatter,
                              epilog = GAMER_EPILOG,
-                             add_help = False
+                             add_help = False,
+                             allow_abbrev=False
                            )
 
     parser.add_argument( "-h", "--help",
@@ -371,8 +392,8 @@ def load_arguments():
 
     # machine config setup
     parser.add_argument( "--machine", type=str, metavar="MACHINE",
-                         default="eureka_intel",
-                         help="Select the MACHINE.config file under ../configs directory. \nChoice: [eureka_intel, YOUR_MACHINE_NAME] => "
+                         default=sys_setting.get_default( "machine", "eureka_intel" ),
+                         help="Select the *.config file from the ../configs directory. This will overwrite the default machine specified in the default setting file.\nChoice: [eureka_intel, spock_intel, ...] => "
                        )
 
     # A. options of diffierent physical models
@@ -454,6 +475,18 @@ def load_arguments():
                        )
 
     # A.2 ELBDM scheme
+    parser.add_argument( "--elbdm_scheme", type=str, metavar="TYPE", gamer_name="ELBDM_SCHEME",
+                         default="ELBDM_WAVE", choices=["ELBDM_WAVE", "ELBDM_HYBRID"],
+                         depend={"model":"ELBDM"},
+                         help="Scheme type for <--model=ELBDM> (ELBDM_WAVE: wave-only, ELBDM_HYBRID: fluid-wave-hybrid-scheme).\n"
+                       )
+
+    parser.add_argument( "--wave_scheme", type=str, metavar="TYPE", gamer_name="WAVE_SCHEME",
+                         default="WAVE_FD", choices=["WAVE_FD", "WAVE_GRAMFE"],
+                         depend={"model":"ELBDM"},
+                         help="Wave scheme for <--model=ELBDM> (WAVE_FD: finite difference, WAVE_GRAMFE: local spectral method).\n"
+                       )
+
     parser.add_argument( "--conserve_mass", type=str2bool, metavar="BOOLEAN", gamer_name="CONSERVE_MASS",
                          default=True,
                          depend={"model":"ELBDM"},
@@ -461,9 +494,23 @@ def load_arguments():
                        )
 
     parser.add_argument( "--laplacian_four", type=str2bool, metavar="BOOLEAN", gamer_name="LAPLACIAN_4TH",
-                         default=True,
+                         default=None,
                          depend={"model":"ELBDM"},
-                         help="Enable the fourth-order Laplacian for <--model=ELBDM>.\n"
+                         constraint={ True:{"wave_scheme":"WAVE_FD"} },
+                         help="Enable the fourth-order Laplacian for <--model=ELBDM> (for <--wave_scheme=WAVE_FD> only).\n"
+                       )
+
+    parser.add_argument( "--gramfe_scheme", type=str, metavar="TYPE", gamer_name="GRAMFE_SCHEME",
+                         default="GRAMFE_MATMUL", choices=["GRAMFE_MATMUL", "GRAMFE_FFT"],
+                         depend={"model":"ELBDM", "wave_scheme":"WAVE_GRAMFE"},
+                         constraint={ "GRAMFE_MATMUL":{"gsl":True} },
+                         help="GramFE scheme for <--wave_scheme=WAVE_GRAMFE> (GRAMFE_MATMUL: faster for PATCH_SIZE=8, GRAMFE_FFT: faster for larger patch sizes).\n"
+                       )
+
+    parser.add_argument( "--hybrid_scheme", type=str, metavar="TYPE", gamer_name="HYBRID_SCHEME",
+                         default="HYBRID_MUSCL", choices=["HYBRID_UPWIND", "HYBRID_FROMM", "HYBRID_MUSCL"],
+                         depend={"model":"ELBDM", "elbdm_scheme":"ELBDM_HYBRID"},
+                         help="Fluid scheme for <--elbdm_scheme=ELBDM_HYBRID> (HYBRID_UPWIND: first-order, diffusive, HYBRID_FROMM: second-order, no limiter, unstable for fluid-only simulations, HYBRID_MUSCL: second-order, with limiter, useful for zoom-in and fluid-only simulations).\n"
                        )
 
     parser.add_argument( "--self_interaction", type=str2bool, metavar="BOOLEAN", gamer_name="QUARTIC_SELF_INTERACTION",
@@ -511,6 +558,7 @@ def load_arguments():
                          default=False,
                          help="Enable particles.\n"
                        )
+
     parser.add_argument( "--tracer", type=str2bool, metavar="BOOLEAN", gamer_name="TRACER",
                          default=False,
                          depend={"particle":True},
@@ -535,16 +583,28 @@ def load_arguments():
                          help="Feedback from particles to grids and vice versa.\n"
                        )
 
-    parser.add_argument( "--par_attribute", type=int, metavar="INTEGER", gamer_name="PAR_NATT_USER",
+    parser.add_argument( "--par_attribute_flt", type=int, metavar="INTEGER", gamer_name="PAR_NATT_FLT_USER",
                          default=0,
                          depend={"particle":True},
-                         help="Set the number of user-defined particle attributes.\n"
+                         help="Set the number of user-defined particle floating-point attributes.\n"
+                       )
+
+    parser.add_argument( "--par_attribute_int", type=int, metavar="INTEGER", gamer_name="PAR_NATT_INT_USER",
+                         default=0,
+                         depend={"particle":True},
+                         help="Set the number of user-defined particle integer attributes.\n"
                        )
 
     parser.add_argument( "--double_par", type=str2bool, metavar="BOOLEAN", gamer_name="FLOAT8_PAR",
                          default=None,
                          depend={"particle":True},
-                         help="Enable double precision for particle attributes.\n"
+                         help="Enable double precision for particle floating-point attributes.\n"
+                       )
+
+    parser.add_argument( "--long_par", type=str2bool, metavar="BOOLEAN", gamer_name="INT8_PAR",
+                         default=True,
+                         depend={"particle":True},
+                         help="Use the long integer data type for particle integer attributes.\n"
                        )
     # A.5 grackle
     parser.add_argument( "--grackle", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_GRACKLE",
@@ -623,6 +683,12 @@ def load_arguments():
                          help="Support FFTW library.\n"
                        )
 
+    parser.add_argument( "--spectral_interpolation", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_SPECTRAL_INT",
+                         default=False,
+                         constraint={ True:{"gsl":True, "fftw":["FFTW2", "FFTW3"]} },
+                         help="Support spectral interpolation.\n"
+                       )
+
     parser.add_argument( "--libyt", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_LIBYT",
                          default=False,
                          help="Support yt inline analysis.\n"
@@ -653,7 +719,7 @@ def load_arguments():
                        )
 
     parser.add_argument( "--rng", type=str, metavar="TYPE", gamer_name="RANDOM_NUMBER",
-                         default="RNG_GNU_EXT",
+                         default=None,
                          choices=["RNG_GNU_EXT", "RNG_CPP11"],
                          help="Select the random number generator (RNG_GNU_EXT: GNU extension drand48_r, RNG_CPP11: c++11 <random>).\nRNG_GNU_EXT may not be supported on some macOS.\nFor RNG_CPP11, add -std=c++11 to CXXFLAG in your config file.\n"
                        )
@@ -694,10 +760,14 @@ def load_arguments():
 
 def load_config( config ):
     LOGGER.info("Using %s as the config."%(config))
+    if not os.path.isfile( config ):
+        raise FileNotFoundError("The config file <%s> does not exist."%(config))
+
     paths, compilers = {}, {"CXX":"", "CXX_MPI":""}
     flags = {"CXXFLAG":"", "OPENMPFLAG":"", "LIBFLAG":"", "NVCCFLAG_COM":"", "NVCCFLAG_FLU":"", "NVCCFLAG_POT":""}
     gpus  = {"GPU_COMPUTE_CAPABILITY":""}
-    with open( config, 'r') as f:
+
+    with open( config, "r" ) as f:
         lines = f.readlines()
 
     for line in lines:
@@ -720,10 +790,10 @@ def load_config( config ):
             if gpus[temp[0]] != "": LOGGER.warning("The original value will be overwritten. <%s>: %s --> %s"%(temp[0], gpus[temp[0]], temp[1]))
             gpus[temp[0]] = temp[1]
         else:
-            try:
+            if len(temp) >= 2:
                paths[temp[0]] = temp[1]
-            except:
-               paths[temp[0]] = ''
+            else:                               # key without value
+               paths[temp[0]] = ""
 
     return paths, compilers, flags, gpus
 
@@ -733,6 +803,9 @@ def set_conditional_defaults( args ):
 
     if args["bitwise_reproducibility"] is None:
         args["bitwise_reproducibility"] = args["debug"]
+
+    if args["laplacian_four"] is None:
+        args["laplacian_four"] = True if args["wave_scheme"] == "WAVE_FD" else False
 
     if args["double_par"] is None:
         args["double_par"] = args["double"]
@@ -747,20 +820,28 @@ def set_conditional_defaults( args ):
 
     if args["barotropic"] is None:
         args["barotropic"] = (args["eos"] == "ISOTHERMAL")
+
+    if args["rng"] is None:
+       args["rng"] = "RNG_CPP11" if sys.platform == "darwin" else "RNG_GNU_EXT"
+
     return args
 
 def set_gpu( gpus, flags, args ):
     gpu_opts = {}
     compute_capability = gpus["GPU_COMPUTE_CAPABILITY"]
 
+    if not args["gpu"]: return gpu_opts
+
     # 1. Check the compute capability
     if compute_capability == "":
-        if args["gpu"]: raise ValueError("GPU_COMPUTE_CAPABILITY is not set in `../configs/%s.config`. See `../configs/template.config` for illustration."%args["machine"])
-        return gpu_opts
+        raise ValueError("GPU_COMPUTE_CAPABILITY is not set in `../configs/%s.config`. See `../configs/template.config` for illustration."%args["machine"])
     compute_capability = int(compute_capability)
 
     if   compute_capability < 0:
-        compute_capability = get_gpu_compute_capability()
+        try:
+            compute_capability = get_gpu_compute_capability()
+        except:
+            raise ValueError("Fail to set GPU_COMPUTE_CAPABILITY automatically! Please set it manually in `../configs/%s.config`."%args["machine"])
     elif compute_capability < 200:
         raise ValueError("Incorrect GPU_COMPUTE_CAPABILITY range (>=200)")
     gpu_opts["GPU_COMPUTE_CAPABILITY"] = str(compute_capability)
@@ -775,7 +856,7 @@ def set_gpu( gpus, flags, args ):
             gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=128"
         else:
             gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=70"
-    elif 500 <= compute_capability and compute_capability <= 870:
+    elif 500 <= compute_capability and compute_capability <= 900:
         if args["double"]:
             gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=192"
         else:
@@ -816,6 +897,9 @@ def set_compile( paths, compilers, flags, kwargs ):
     # 3. Set the nvcc common flags
     # NOTE: `-G` may cause the GPU Poisson solver to fail
     if kwargs["debug"]: flags["NVCCFLAG_COM"] += "-g -Xptxas -v"
+    # enable C++ 17 support for ELBDM GPU Gram-Fourier extension scheme
+    if kwargs["model"] == "ELBDM" and kwargs["wave_scheme"] == "WAVE_GRAMFE" and kwargs["gramfe_scheme"] == "GRAMFE_FFT":
+        flags["NVCCFLAG_COM"] += "-std=c++17"
 
     # 4. Write flags to compile option dictionary.
     for key, val in flags.items():
@@ -847,7 +931,7 @@ def validation( paths, depends, constraints, **kwargs ):
                 if type(check_val) != type([]): check_val = [check_val]   # transform to list
                 if kwargs[check_opt] in check_val: continue     # satisify the validation
 
-                val_str = ', '.join(str(x) for x in check_val)
+                val_str = ", ".join(str(x) for x in check_val)
                 LOGGER.error("The option <--%s=%s> requires <--%s> to be set to [%s]. Current: <--%s=%s>."%(opt, str(kwargs[opt]), check_opt, val_str, check_opt, kwargs[check_opt]))
                 success = False
 
@@ -858,7 +942,6 @@ def validation( paths, depends, constraints, **kwargs ):
         if kwargs["passive"] < 0:
             LOGGER.error("Passive scalar should not be negative. Current: %d"%kwargs["passive"])
             success = False
-
         if kwargs["dual"] not in [NONE_STR, "DE_ENPY"]:
             LOGGER.error("This dual energy form is not supported yet. Current: %s"%kwargs["dual"])
             success = False
@@ -867,10 +950,17 @@ def validation( paths, depends, constraints, **kwargs ):
         if kwargs["passive"] < 0:
             LOGGER.error("Passive scalar should not be negative. Current: %d"%kwargs["passive"])
             success = False
+        if kwargs["gramfe_scheme"] == "GRAMFE_FFT" and not kwargs["gpu"] and kwargs["fftw"] not in ["FFTW2", "FFTW3"]:
+            LOGGER.error("Must set <--fftw> when adopting <--gramfe_scheme=GRAMFE_FFT> and <--gpu=false>")
+            success = False
+        if kwargs["spectral_interpolation"] and kwargs["fftw"] == "FFTW2" and not kwargs["double"]:
+            LOGGER.error("Must enable <--double> when adopting <--spectral_interpolation> and <--fftw=FFTW2>")
+            success = False
 
     elif kwargs["model"] == "PAR_ONLY":
         LOGGER.error("<--model=PAR_ONLY> is not supported yet.")
         success = False
+
     else:
         LOGGER.error("Unrecognized model: %s. Please add to the model choices."%kwargs["model"])
         success = False
@@ -883,8 +973,11 @@ def validation( paths, depends, constraints, **kwargs ):
         if not kwargs["gravity"] and not kwargs["tracer"]:
             LOGGER.error("At least one of <--gravity> or <--tracer> must be enabled for <--particle>.")
             success = False
-        if kwargs["par_attribute"] < 0:
-            LOGGER.error("Number of particle attributes should not be negative. Current: %d"%kwargs["par_attribute"])
+        if kwargs["par_attribute_flt"] < 0:
+            LOGGER.error("Number of particle floating-point attributes should not be negative. Current: %d"%kwargs["par_attribute_flt"])
+            success = False
+        if kwargs["par_attribute_int"] < 0:
+            LOGGER.error("Number of particle integer attributes should not be negative. Current: %d"%kwargs["par_attribute_int"])
             success = False
 
     # B. Miscellaneous options
@@ -902,6 +995,10 @@ def validation( paths, depends, constraints, **kwargs ):
 
     if kwargs["overlap_mpi"]:
         LOGGER.error("<--overlap_mpi> is not supported yet.")
+        success = False
+
+    if kwargs["rng"] != "RNG_CPP11" and sys.platform == "darwin":
+        LOGGER.error("<--rng=RNG_CPP11> is required for macOS.")
         success = False
 
     if not success: raise BaseException( "The above vaildation failed." )
@@ -926,6 +1023,11 @@ def warning( paths, **kwargs ):
             if kwargs[arg] != val: continue
             if paths.setdefault(p_name, "") != "": continue
             LOGGER.warning("%-15s is not given in %s.config when setting <--%s=%s>"%(p_name, kwargs["machine"], arg, str(val)))
+
+    if kwargs["model"] == "ELBDM" and kwargs["gpu"] and kwargs["wave_scheme"] == "WAVE_GRAMFE" and kwargs["gramfe_scheme"] == "GRAMFE_FFT":
+        if paths.setdefault("CUFFTDX_PATH", "") == "":
+            LOGGER.warning("CUFFTDX_PATH is not given in %s.config when enabling <--gramfe_scheme=GRAMFE_FFT>."%(kwargs["machine"]))
+
     return
 
 
@@ -943,36 +1045,41 @@ if __name__ == "__main__":
     command = " ".join(["# This makefile is generated by the following command:", "\n#", sys.executable] + sys.argv + ["\n"])
     LOGGER.info( " ".join( [sys.executable] + sys.argv ) )
 
-    # 2. Load the input arguments
-    args, name_table, depends, constraints = load_arguments()
+    # 2. Load system settings
+    sys_setting = SystemSetting()
+    sys_setting.load(GAMER_GLOBAL_SETTING)
+    sys_setting.load(GAMER_LOCAL_SETTING)
 
-    # 3. Prepare the makefile args
-    # 3.1 Load the machine setup
+    # 3. Load the input arguments
+    args, name_table, depends, constraints = load_arguments( sys_setting )
+
+    # 4. Prepare the makefile args
+    # 4.1 Load the machine setup
     paths, compilers, flags, gpus = load_config( os.path.join(GAMER_CONFIG_DIR, args["machine"]+".config") )
 
-    # 3.2 Validate arguments
+    # 4.2 Validate arguments
     validation( paths, depends, constraints, **args )
 
     warning( paths, **args )
 
-    # 3.3 Add the SIMU_OPTION
+    # 4.3 Add the SIMU_OPTION
     LOGGER.info("========================================")
     LOGGER.info("GAMER has the following setting.")
     LOGGER.info("----------------------------------------")
     sims = set_sims( name_table, depends, **args )
 
-    # 3.4 Set the compiler
+    # 4.4 Set the compiler
     compiles = set_compile( paths, compilers, flags, args )
 
-    # 3.5 Set the GPU
+    # 4.5 Set the GPU
     gpu_setup = set_gpu( gpus, flags, args )
 
-    # 4. Create Makefile
-    # 4.1 Read
+    # 5. Create Makefile
+    # 5.1 Read
     with open( GAMER_MAKE_BASE, "r" ) as make_base:
         makefile = make_base.read()
 
-    # 4.2 Replace
+    # 5.2 Replace
     LOGGER.info("----------------------------------------")
     for key, val in paths.items():
         LOGGER.info("%-25s : %s"%(key, val))
@@ -999,9 +1106,9 @@ if __name__ == "__main__":
     for key in re.findall(r"@@@(.+?)@@@", makefile):
         makefile, num = re.subn(r"@@@%s@@@"%key, "", makefile)
         if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
-        LOGGER.warning("@@@%s@@@ is replaced to '' since there is no given value."%key)
+        LOGGER.warning("@@@%s@@@ is replaced to '' since the value is not given or the related option is disabled."%key)
 
-    # 4.3 Write
+    # 5.3 Write
     with open( GAMER_MAKE_OUT, "w") as make_out:
         make_out.write( command + makefile )
 

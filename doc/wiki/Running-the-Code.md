@@ -14,13 +14,10 @@ To run the code in a serial mode (i.e., no MPI and OpenMP),
 follow the steps below:
 
 1. Compile the code (See [[Installation]] for details)
-    1. Turn on the compilation option
-[[SERIAL | Installation: Simulation-Options#SERIAL]]
-and turn off both
-[[LOAD_BALANCE | Installation: Simulation-Options#LOAD_BALANCE]]
-and
-[[OPENMP | Installation: Simulation-Options#OPENMP]]
-    2. Set `CXX` in the `Makefile` to a serial compiler (e.g., `g++` or `icpc`)
+    1. Set `CXX` in the [[configuration file | Installation:-Machine-Configuration-File]] to a serial compiler (e.g., `g++` or `icpc`)
+    2. Set the following arguments when generating `Makefile`:
+       * [[--mpi | Installation:-Option-List#--mpi]]=`false`
+       * [[--openmp | Installation:-Option-List#--openmp]]=`false`
     3. Recompile the code by `make clean; make`
 
 2. Set the runtime parameters (see [[Runtime Parameters]] for details)
@@ -31,7 +28,7 @@ directory as the executable `gamer`
 3. Launch the code
 
     ```bash
-    > ./gamer
+    ./gamer
     ```
 
 4. Check the outputs
@@ -48,16 +45,17 @@ Further readings:
 
 To restart a simulation from a snapshot (e.g., `Data_000123`),
 do the following steps:
-1. Set [[OPT__INIT | Initial Conditions#OPT__INIT]]=2
+1. Set [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=2
 2. Create a soft link named `RESTART` to a targeted snapshot:
 `ln -s Data_000123 RESTART`
 3. Run the code as usual
 
-Note that many runtime parameters can be changed during restart
+> [!NOTE]
+> Many runtime parameters can be changed during restart
 (e.g., number of MPI processes and OpenMP threads, maximum refinement level,
 refinement criteria, time-step criteria). The next data dump ID will be
 automatically set to the ID of the restart file plus one (unless specified by
-[[INIT_DUMPID | Outputs#INIT_DUMPID]]).
+[[INIT_DUMPID | Runtime-Parameters:-Outputs#INIT_DUMPID]]).
 
 
 ## Terminating or Pausing Simulations
@@ -85,22 +83,34 @@ To resume it, simply delete this file.
 
 One can put simulation notes in a text file named `Input__Note`. The content
 of this file will be automatically copied to the top of the log file
-[[Record__Note | Outputs:-Record__Note]] during code initialization. For example,
+[[Record__Note | Simulation Logs:-Record__Note]] during code initialization. For example,
 ```bash
-> cat Input__Note
+cat Input__Note
+```
+<details>
+<summary><u><i>Execution results</i></u></summary>
 
+<pre>
 ~ PUT YOUR SIMULATION NOTES HERE ~
+</pre>
+</details>
 
-> ./gamer
-> head Record__Note
+```bash
+./gamer
+head Record__Note
+```
+<details>
+<summary><u><i>Execution results</i></u></summary>
 
+<pre>
 Simulation Note
 ***********************************************************************************
 
 ~ PUT YOUR SIMULATION NOTES HERE ~
 
 ***********************************************************************************
-```
+</pre>
+</details>
 
 <br>
 

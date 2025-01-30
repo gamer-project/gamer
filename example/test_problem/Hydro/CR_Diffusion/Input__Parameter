@@ -209,7 +209,7 @@ ELBDM_TAYLOR3_AUTO            1           # Optimize ELBDM_TAYLOR3_COEFF automat
 
 # fluid solvers in all models
 FLU_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU fluid solver (<=0=auto) [-1]
-GPU_NSTREAM                   4           # number of CUDA streams for the asynchronous memory copy in GPU (<=0=auto) [-1]
+GPU_NSTREAM                  -1           # number of CUDA streams for the asynchronous memory copy in GPU (<=0=auto) [-1]
 OPT__FIXUP_FLUX               1           # correct coarse grids by the fine-grid boundary fluxes [1] ##HYDRO and ELBDM ONLY##
 OPT__FIXUP_ELECTRIC           1           # correct coarse grids by the fine-grid boundary electric field [1] ##MHD ONLY##
 OPT__FIXUP_RESTRICT           1           # correct coarse grids by averaging the fine-grid data [1]
@@ -279,7 +279,7 @@ INT_OPP_SIGN_0TH_ORDER        1           # switch to 0th-order interpolation if
 
 # data dump
 OPT__OUTPUT_TOTAL             1           # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
-OPT__OUTPUT_PART              0           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
+OPT__OUTPUT_PART              0           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag, 8=entire box) [0]
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
 OPT__OUTPUT_PAR_TEXT          0           # output the particle text file [0] ##PARTICLE ONLY##
 OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
@@ -295,11 +295,14 @@ OUTPUT_PART_X                 0.0         # x coordinate for OPT__OUTPUT_PART [-
 OUTPUT_PART_Y                 0.0         # y coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Z                 0.0         # z coordinate for OPT__OUTPUT_PART [-1.0]
 INIT_DUMPID                  -1           # set the first dump ID (<0=auto) [-1]
+OUTPUT_DIR                    .           # set the output directory [.]
 
 
 # yt inline analysis (SUPPORT_LIBYT only)
 YT_SCRIPT                     yt_inline   # yt inline analysis script (do not include the ".py" file extension)
-YT_VERBOSE                    1           # verbose level of yt: (0=off, 1=info, 2=warning, 3=debug) [1]
+YT_VERBOSE                    1           # verbose level of yt (0=off, 1=info, 2=warning, 3=debug) [1]
+YT_FIG_BASENAME               Fig         # figure basename [Fig]
+YT_JUPYTER_USE_CONNECTION_FILE 0          # use user-provided connection file when using libyt Jupyter UI [0]
 
 
 # miscellaneous

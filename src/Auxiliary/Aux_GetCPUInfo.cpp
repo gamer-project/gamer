@@ -12,6 +12,13 @@
 void Aux_GetCPUInfo( const char *FileName )
 {
 
+// CPU info reporting is not currently supported on macOS
+#  ifdef __APPLE__
+   Aux_Message( stderr, "WARNING : function \"%s\" is not supported on macOS !!\n", __FUNCTION__ );
+   return;
+#  endif
+
+
    FILE *Note = fopen( FileName, "a" );
    char *line = NULL;
    size_t len = 0;

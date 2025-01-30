@@ -24,160 +24,164 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 // Structure   :  patch_t
 // Description :  Data structure of a single patch
 //
-// Data Member :  fluid           : Fluid variables (mass density, momentum density x, y ,z, energy density)
-//                                  --> Including passively advected variables (e.g., metal density)
-//                magnetic        : Magnetic field (Bx, By, Bz)
-//                pot             : Potential
-//                pot_ext         : Potential with GRA_GHOST_SIZE ghost cells on each side
-//                                  --> Allocated only if STORE_POT_GHOST is on
-//                                  --> Ghost-zone potential are obtained from the Poisson solver directly
-//                                      (not from exchanging potential between sibling patches)
-//                                  --> Currently it is used for Par->ImproveAcc and SF_CreateStar_AGORA() only
-//                                  --> Currently it's useless for buffer patches
-//                de_status       : Assigned to (DE_UPDATED_BY_ETOT / DE_UPDATED_BY_DUAL / DE_UPDATED_BY_MIN_PRES /
-//                                               DE_UPDATED_BY_ETOT_GRA)
-//                                  to indicate whether each cell is updated by the total energy, dual energy variable,
-//                                  or minimum allowed pressure
-//                                  --> DE_UPDATED_BY_XXX are defined in Macro.h
-//                                  --> It's a character array with the size PS1^3
-//                                  --> Currently it's only allocated for Sg=0
-//                rho_ext         : Density with RHOEXT_GHOST_SIZE (typically 2) ghost cells on each side
-//                                  --> Only allocated **temporarily** in the function Prepare_PatchData for storing
-//                                      particle mass density
-//                                      --> Also note that this array does NOT necessary store the correct particle mass density
-//                                          (especially for cells adjacent to the C-C and C-F boundaries) and thus should
-//                                          NOT be used outside Prepare_PatchData)
-//                                  --> Note that even with NGP mass assignment which requires no ghost zone we
-//                                      still allocate rho_ext as (PS1+RHOEXT_GHOST_SIZE)^3
-//                flux[6]         : Fluid flux (for the flux-correction operation)
-//                                  --> Including passively advected flux (for the flux-correction operation)
-//                flux_tmp[6]     : Temporary fluid flux for the option "AUTO_REDUCE_DT"
-//                flux_bitrep[6]  : Fluid flux for achieving bitwise reproducibility (i.e., ensuring that the round-off errors are
-//                                  exactly the same in different parallelization parameters/strategies)
-//                electric        : Electric field for the MHD fix-up operation
-///                                 --> Array structure = [sibling index][E field index][cell index]
-//                                  --> For sibling indices 0-5, there are two E fields on each face
-//                                      --> E field index on x faces: [0/1] = Ey/Ez
-//                                                           y faces: [0/1] = Ez/Ex
-//                                                           z faces: [0/1] = Ex/Ey
-//                                          Cell index dimension on x faces: [Nz][Ny] (= [PS1-1][PS1] for Ey and [PS1][PS1-1] for Ez)
-//                                                     dimension on y faces: [Nx][Nz] (= [PS1-1][PS1] for Ez and [PS1][PS1-1] for Ex)
-//                                                     dimension on z faces: [Ny][Nx] (= [PS1-1][PS1] for Ex and [PS1][PS1-1] for Ey)
-//                                  --> For sibling indices 6-17, there is only one E field on each edge
-//                                      --> E field index is always 0 (6-9->Ez, 10-13->Ex, 14-17->Ey)
-//                                          Cell index dimension is always [PS1]
-//                                  --> To unify the array structure of sibling indices 0-5 and 6-17, we actually convert the
-//                                      2D array [E field index][cell index] into a 1D array
-//                electric_tmp    : Temporary electric field for the option "AUTO_REDUCE_DT"
-//                electric_bitrep : Electric field for achieving bitwise reproducibility in MHD (i.e., ensuring that the
-//                                  round-off errors are exactly the same in different parallelization parameters/strategies)
-//                ele_corrected   : Array recording whether each component in electric[] has been corrected by the fix-up operation
-//                corner[3]       : Grid indices of the cell at patch corner
-//                                  --> Note that for an external patch its recorded "corner" will lie outside
-//                                      the simulation domain. In other words, periodicity is NOT used to
-//                                      convert corner to that of the corresponding real patch
-//                                  --> For example, external patches can have corner < 0
-//                                  --> Different from EdgeL/R, which always assume periodicity
-//                sibling[26]     : Patch IDs of the 26 sibling patches (-1->no sibling; -1XX->external)
+// Data Member :  fluid               : Fluid variables (mass density, momentum density x, y ,z, energy density)
+//                                      --> Including passively advected variables (e.g., metal density)
+//                magnetic            : Magnetic field (Bx, By, Bz)
+//                pot                 : Potential
+//                pot_ext             : Potential with GRA_GHOST_SIZE ghost cells on each side
+//                                      --> Allocated only if STORE_POT_GHOST is on
+//                                      --> Ghost-zone potential are obtained from the Poisson solver directly
+//                                          (not from exchanging potential between sibling patches)
+//                                      --> Currently it is used for Par->ImproveAcc and SF_CreateStar_AGORA() only
+//                                      --> Currently it's useless for buffer patches
+//                de_status           : Assigned to (DE_UPDATED_BY_ETOT / DE_UPDATED_BY_DUAL / DE_UPDATED_BY_MIN_PRES /
+//                                                   DE_UPDATED_BY_ETOT_GRA)
+//                                      to indicate whether each cell is updated by the total energy, dual energy variable,
+//                                      or minimum allowed pressure
+//                                      --> DE_UPDATED_BY_XXX are defined in Macro.h
+//                                      --> It's a character array with the size PS1^3
+//                                      --> Currently it's only allocated for Sg=0
+//                rho_ext             : Density with RHOEXT_GHOST_SIZE (typically 2) ghost cells on each side
+//                                      --> Only allocated **temporarily** in the function Prepare_PatchData for storing
+//                                          particle mass density
+//                                          --> Also note that this array does NOT necessary store the correct particle mass density
+//                                              (especially for cells adjacent to the C-C and C-F boundaries) and thus should
+//                                              NOT be used outside Prepare_PatchData)
+//                                      --> Note that even with NGP mass assignment which requires no ghost zone we
+//                                          still allocate rho_ext as (PS1+RHOEXT_GHOST_SIZE)^3
+//                flux[6]             : Fluid flux (for the flux-correction operation)
+//                                      --> Including passively advected flux (for the flux-correction operation)
+//                flux_tmp[6]         : Temporary fluid flux for the option "AUTO_REDUCE_DT"
+//                flux_bitrep[6]      : Fluid flux for achieving bitwise reproducibility (i.e., ensuring that the round-off errors are
+//                                      exactly the same in different parallelization parameters/strategies)
+//                electric            : Electric field for the MHD fix-up operation
+///                                     --> Array structure = [sibling index][E field index][cell index]
+//                                      --> For sibling indices 0-5, there are two E fields on each face
+//                                          --> E field index on x faces: [0/1] = Ey/Ez
+//                                                               y faces: [0/1] = Ez/Ex
+//                                                               z faces: [0/1] = Ex/Ey
+//                                              Cell index dimension on x faces: [Nz][Ny] (= [PS1-1][PS1] for Ey and [PS1][PS1-1] for Ez)
+//                                                         dimension on y faces: [Nx][Nz] (= [PS1-1][PS1] for Ez and [PS1][PS1-1] for Ex)
+//                                                         dimension on z faces: [Ny][Nx] (= [PS1-1][PS1] for Ex and [PS1][PS1-1] for Ey)
+//                                      --> For sibling indices 6-17, there is only one E field on each edge
+//                                          --> E field index is always 0 (6-9->Ez, 10-13->Ex, 14-17->Ey)
+//                                              Cell index dimension is always [PS1]
+//                                      --> To unify the array structure of sibling indices 0-5 and 6-17, we actually convert the
+//                                          2D array [E field index][cell index] into a 1D array
+//                electric_tmp        : Temporary electric field for the option "AUTO_REDUCE_DT"
+//                electric_bitrep     : Electric field for achieving bitwise reproducibility in MHD (i.e., ensuring that the
+//                                      round-off errors are exactly the same in different parallelization parameters/strategies)
+//                ele_corrected       : Array recording whether each component in electric[] has been corrected by the fix-up operation
+//                corner[3]           : Grid indices of the cell at patch corner
+//                                      --> Note that for an external patch its recorded "corner" will lie outside
+//                                          the simulation domain. In other words, periodicity is NOT used to
+//                                          convert corner to that of the corresponding real patch
+//                                      --> For example, external patches can have corner < 0
+//                                      --> Different from EdgeL/R, which always assume periodicity
+//                sibling[26]         : Patch IDs of the 26 sibling patches (-1->no sibling; -1XX->external)
 //
-//                                  NOTE FOR NON-PERIODIC BOUNDARY CONDITIONS:
-//                                  If a target sibling patch is an external patch (which lies outside the simulation domain),
-//                                  the corresponding sibling index is set to "SIB_OFFSET_NONPERIODIC-Sibling", where Sibling
-//                                  represents the sibling direction of the boundary region.
-//                                  (e.g., if amr->sibling[XX] lies outside the -y boundary (boundary sibling = 2), we set
-//                                   amr->sibling[XX] = SIB_OFFSET_NONPERIODIC-2 = -102 for SIB_OFFSET_NONPERIODIC==-100)
-//                                  --> All patches without sibling patches along the XX direction will have
-//                                      "amr->sibling[XX] < 0"
+//                                      NOTE FOR NON-PERIODIC BOUNDARY CONDITIONS:
+//                                      If a target sibling patch is an external patch (which lies outside the simulation domain),
+//                                      the corresponding sibling index is set to "SIB_OFFSET_NONPERIODIC-Sibling", where Sibling
+//                                      represents the sibling direction of the boundary region.
+//                                      (e.g., if amr->sibling[XX] lies outside the -y boundary (boundary sibling = 2), we set
+//                                       amr->sibling[XX] = SIB_OFFSET_NONPERIODIC-2 = -102 for SIB_OFFSET_NONPERIODIC==-100)
+//                                      --> All patches without sibling patches along the XX direction will have
+//                                          "amr->sibling[XX] < 0"
 //
-//                father          : Patch ID of the father patch
-//                son             : Patch ID of the child patch (-1->no son)
+//                father              : Patch ID of the father patch
+//                son                 : Patch ID of the child patch (-1->no son)
 //
-//                                  LOAD_BALANCE NOTE:
-//                                  For patches with sons living abroad (not at the same rank as iteself), their son indices
-//                                  are set to "SON_OFFSET_LB-SonRank", where SonRank represents the MPI rank where their
-//                                  sons live. (e.g., if the real son at rank 123, the son index is set to
-//                                  SON_OFFSET_LB-123=-1123 for SON_OFFSET_LB==-1000)
-//                                  --> All patches (i.e., both real and buffer patches) with sons will have SonPID != -1
+//                                      LOAD_BALANCE NOTE:
+//                                      For patches with sons living abroad (not at the same rank as iteself), their son indices
+//                                      are set to "SON_OFFSET_LB-SonRank", where SonRank represents the MPI rank where their
+//                                      sons live. (e.g., if the real son at rank 123, the son index is set to
+//                                      SON_OFFSET_LB-123=-1123 for SON_OFFSET_LB==-1000)
+//                                      --> All patches (i.e., both real and buffer patches) with sons will have SonPID != -1
 //
-//                flag            : Refinement flag (true/false)
-//                Active          : Used by OPT__REUSE_MEMORY to indicate whether this patch is active or inactive
-//                                  --> active:    patch has been allocated and activated   (included in   num[lv])
-//                                      inactive:  patch has been allocated but deactivated (excluded from num[lv])
-//                                  --> Note that active/inactive have nothing to do with the allocation of field arrays (e.g., fluid)
-//                                      --> For both active and inactive patches, field arrays may be allocated or == NULL
-//                                  --> However, currently the flux arrays (i.e., flux, flux_tmp, and flux_bitrep) are guaranteed
-//                                      to be NULL for inactive patches
-//                EdgeL/R         : Left and right edge of the patch
-//                                  --> Note that we always apply periodicity to EdgeL/R. So for an external patch its
-//                                      recorded "EdgeL/R" will still lie inside the simulation domain and will be
-//                                      exactly the same as the EdgeL/R of the corresponding real patches.
-//                                  --> For example, the external patches just outside the simulation left edge will have
-//                                      EdgeL = BoxEdgeR-PatchSize*dh[lv] and EdgeR = BoxEdgeR, and for those just outside
-//                                      the simulation right edge will have EdgeL = BoxEdgeL and EdgeR = BoxEdgeL+PatchSize*dh[lv]
-//                                  --> Different from corner[3], which do NOT assume periodicity
-//                PaddedCr1D      : 1D corner coordiniate padded with two base-level patches on each side
-//                                  in each direction, normalized to the finest-level patch scale (PATCH_SIZE)
-//                                  --> Each PaddedCr1D defines a unique 3D position
-//                                  --> Patches at different levels with the same PaddedCr1D have the same
-//                                      3D corner coordinates
-//                                  --> This number is independent of periodicity (because of the padded patches)
-//                LB_Idx          : Space-filling-curve index for load balance
-//                NPar            : Number of particles belonging to this leaf patch
-//                NPar_Type       : Number of different types of particles belonging to this leaf patch
-//                ParListSize     : Size of the array ParList (ParListSize can be >= NPar)
-//                ParList         : List recording the IDs of all particles belonging to this leaf real patch
-//                NPar_Copy       : Number of particles collected from other patches. There are three kinds of patches that
-//                                  can have NPar_Copy != -1
-//                                  --> (1) Non-leaf real   patches (both SERIAL and LOAD_BALANCE)
-//                                          --> Particles collected from the descendants (sons, grandsons, ...) of this patch
-//                                      (2) Non-leaf buffer patches (LOAD_BALANCE only)
-//                                          --> Particles collected from the corresponding non-leaf real patches in (1)
-//                                      (3) Leaf     buffer patches (LOAD_BALANCE only)
-//                                          --> Particles collected from the corresponding leaf real patches
-//                                              (those with NPar and ParList property set)
-//                                  --> **Leaf real** patches will always have NPar_Copy == -1
-//                                  --> In SERIAL mode, these non-leaf real patches will have their particle
-//                                      IDs stored in ParList_Copy, which points to the same particle repository
-//                                      (i.e., the amr->Par->Attribute[]). In comparison, in LOAD_BALANCE mode,
-//                                      since particles corresponding to NPar_Copy may be collected from other ranks,
-//                                      these patches will allocate a local particle attribute array called ParAtt_Copy
-//                                  --> Note that non-leaf patches may have NPar>0 temporarily after updating particle position.
-//                                      It's because particles travelling from coarse to fine grids will stay in coarse grids
-//                                      temporarily until the velocity correction is done.
-//                                      --> For these patches, NPar_Copy will be **the sum of NPar and the number of particles
-//                                          collected from other patches**, and ParList_Copy (or ParAtt_Copy) will contain
-//                                          information of particles belonging to NPar as well.
-//                                      --> It makes implementation simplier. For leaf real patches, one only needs to consider
-//                                          NPar and ParList. While for all other patches, one only needs to consider NPar_Copy
-//                                          and ParList_Copy (or ParAtt_Copy). One never needs to consider both.
-//                ParList_Copy    : List recording the IDs of all particles belonging to the descendants of this patch
-//                                  (and particles temporarily locate in this patch waiting for the velocity correction, see
-//                                  discussion above)
-//                                  --> for SERIAL only
-//                ParAtt_Copy     : Pointer arrays storing the data of NPar_Copy particles collected from other patches
-//                                  --> for LOAD_BALANCE only
-//                NPar_Escp       : Number of particles escaping from this patch
-//                ParList_Escp    : List recording the IDs of all particles escaping from this patch
+//                flag                : Refinement flag (true/false)
+//                Active              : Used by OPT__REUSE_MEMORY to indicate whether this patch is active or inactive
+//                                      --> active:    patch has been allocated and activated   (included in   num[lv])
+//                                          inactive:  patch has been allocated but deactivated (excluded from num[lv])
+//                                      --> Note that active/inactive have nothing to do with the allocation of field arrays (e.g., fluid)
+//                                          --> For both active and inactive patches, field arrays may be allocated or == NULL
+//                                      --> However, currently the flux arrays (i.e., flux, flux_tmp, and flux_bitrep) are guaranteed
+//                                          to be NULL for inactive patches
+//                EdgeL/R             : Left and right edge of the patch
+//                                      --> Note that we always apply periodicity to EdgeL/R. So for an external patch its
+//                                          recorded "EdgeL/R" will still lie inside the simulation domain and will be
+//                                          exactly the same as the EdgeL/R of the corresponding real patches.
+//                                      --> For example, the external patches just outside the simulation left edge will have
+//                                          EdgeL = BoxEdgeR-PatchSize*dh[lv] and EdgeR = BoxEdgeR, and for those just outside
+//                                          the simulation right edge will have EdgeL = BoxEdgeL and EdgeR = BoxEdgeL+PatchSize*dh[lv]
+//                                      --> Different from corner[3], which do NOT assume periodicity
+//                PaddedCr1D          : 1D corner coordiniate padded with two base-level patches on each side
+//                                      in each direction, normalized to the finest-level patch scale (PATCH_SIZE)
+//                                      --> Each PaddedCr1D defines a unique 3D position
+//                                      --> Patches at different levels with the same PaddedCr1D have the same
+//                                          3D corner coordinates
+//                                      --> This number is independent of periodicity (because of the padded patches)
+//                LB_Idx              : Space-filling-curve index for load balance
+//                NPar                : Number of particles belonging to this leaf patch
+//                NParType            : Number of different types of particles belonging to this leaf patch
+//                ParListSize         : Size of the array ParList (ParListSize can be >= NPar)
+//                ParList             : List recording the IDs of all particles belonging to this leaf real patch
+//                NPar_Copy           : Number of particles collected from other patches. There are three kinds of patches that
+//                                      can have NPar_Copy != -1
+//                                      --> (1) Non-leaf real   patches (both SERIAL and LOAD_BALANCE)
+//                                              --> Particles collected from the descendants (sons, grandsons, ...) of this patch
+//                                          (2) Non-leaf buffer patches (LOAD_BALANCE only)
+//                                              --> Particles collected from the corresponding non-leaf real patches in (1)
+//                                          (3) Leaf     buffer patches (LOAD_BALANCE only)
+//                                              --> Particles collected from the corresponding leaf real patches
+//                                                  (those with NPar and ParList property set)
+//                                      --> **Leaf real** patches will always have NPar_Copy == -1
+//                                      --> In SERIAL mode, these non-leaf real patches will have their particle
+//                                          IDs stored in ParList_Copy, which points to the same particle repository
+//                                          (i.e., the amr->Par->Attribute[]). In comparison, in LOAD_BALANCE mode,
+//                                          since particles corresponding to NPar_Copy may be collected from other ranks,
+//                                          these patches will allocate local particle attribute arrays called ParAttFlt_Copy and ParAttInt_Copy
+//                                      --> Note that non-leaf patches may have NPar>0 temporarily after updating particle position.
+//                                          It's because particles travelling from coarse to fine grids will stay in coarse grids
+//                                          temporarily until the velocity correction is done.
+//                                          --> For these patches, NPar_Copy will be **the sum of NPar and the number of particles
+//                                              collected from other patches**, and ParList_Copy (or ParAttFlt_Copy and ParAttInt_Copy)
+//                                              will contain information of particles belonging to NPar as well.
+//                                          --> It makes implementation simplier. For leaf real patches, one only needs to consider
+//                                              NPar and ParList. While for all other patches, one only needs to consider NPar_Copy
+//                                              and ParList_Copy (or ParAttFlt_Copy and ParAttInt_Copy). One never needs to consider both.
+//                ParList_Copy        : List recording the IDs of all particles belonging to the descendants of this patch
+//                                      (and particles temporarily locate in this patch waiting for the velocity correction, see
+//                                      discussion above)
+//                                      --> for SERIAL only
+//                ParAttFlt_Copy      : Pointer arrays storing the floating-point data of NPar_Copy particles collected from other patches
+//                                      --> for LOAD_BALANCE only
+//                ParAttInt_Copy      : Pointer arrays storing the integer        data of NPar_Copy particles collected from other patches
+//                                      --> for LOAD_BALANCE only
+//                NPar_Escp           : Number of particles escaping from this patch
+//                ParList_Escp        : List recording the IDs of all particles escaping from this patch
+//                switch_to_wave_flag : Determine whether an ELBDM patch using fluid scheme is converted to wave patch after refinement
+//                                      --> Set in Flag_Check() and Flag_Real()
 //
-// Method      :  patch_t         : Constructor
-//               ~patch_t         : Destructor
-//                Activate        : Activate patch
-//                fnew            : Allocate flux[]
-//                fdelete         : Deallocate flux[]
-//                enew            : Allocate electric[]
-//                edelete         : Deallocate electric[]
-//                hnew            : Allocate fluid[]
-//                hdelete         : Deallocate fluid[]
-//                mnew            : Allocate magnetic[]
-//                mdelete         : Deallocate magnetic[]
-//                gnew            : Allocate pot[]
-//                gdelete         : Deallocate pot[]
-//                snew            : Allocate de_status[]
-//                sdelete         : Deallocate de_status[]
-//                dnew            : Allocate rho_ext[]
-//                ddelete         : Deallocate rho_ext[]
-//                AddParticle     : Add particles to the particle list
-//                RemoveParticle  : Remove particles from the particle list
+// Method      :  patch_t        : Constructor
+//               ~patch_t        : Destructor
+//                Activate       : Activate patch
+//                fnew           : Allocate flux[]
+//                fdelete        : Deallocate flux[]
+//                enew           : Allocate electric[]
+//                edelete        : Deallocate electric[]
+//                hnew           : Allocate fluid[]
+//                hdelete        : Deallocate fluid[]
+//                mnew           : Allocate magnetic[]
+//                mdelete        : Deallocate magnetic[]
+//                gnew           : Allocate pot[]
+//                gdelete        : Deallocate pot[]
+//                snew           : Allocate de_status[]
+//                sdelete        : Deallocate de_status[]
+//                dnew           : Allocate rho_ext[]
+//                ddelete        : Deallocate rho_ext[]
+//                AddParticle    : Add particles to the particle list
+//                RemoveParticle : Remove particles from the particle list
 //-------------------------------------------------------------------------------------------------------
 struct patch_t
 {
@@ -240,7 +244,8 @@ struct patch_t
 
    int    NPar_Copy;
 #  ifdef LOAD_BALANCE
-   real_par  *ParAtt_Copy[PAR_NATT_TOTAL];
+   real_par  *ParAttFlt_Copy[PAR_NATT_FLT_TOTAL];
+   long_par  *ParAttInt_Copy[PAR_NATT_INT_TOTAL];
 #  else
    long      *ParList_Copy;
 #  endif
@@ -250,6 +255,9 @@ struct patch_t
 
 #  endif
 
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   bool   switch_to_wave_flag;
+#  endif
 
    //===================================================================================
    // Constructor :  patch_t
@@ -331,6 +339,11 @@ struct patch_t
       son       = -1;
       flag      = false;
       Active    = true;
+
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+//    do not switch to fluid scheme by default
+      switch_to_wave_flag = false;
+#     endif
 
       for (int s=0; s<26; s++ )  sibling[s] = -1;     // -1 <--> NO sibling
 
@@ -438,8 +451,8 @@ struct patch_t
 
       NPar_Copy    = -1;         // -1 : indicating that it has not been calculated yet
 #     ifdef LOAD_BALANCE
-      for (int v=0; v<PAR_NATT_TOTAL; v++)
-      ParAtt_Copy[v] = NULL;
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParAttFlt_Copy[v] = NULL;
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   ParAttInt_Copy[v] = NULL;
 #     else
       ParList_Copy = NULL;
 #     endif
@@ -486,8 +499,10 @@ struct patch_t
 #     ifdef DEBUG_PARTICLE
       if ( ParList != NULL )              Aux_Error( ERROR_INFO, "ParList != NULL !!\n" );
 #     ifdef LOAD_BALANCE
-      for (int v=0; v<PAR_NATT_TOTAL; v++)
-      if ( ParAtt_Copy[v] != NULL )       Aux_Error( ERROR_INFO, "ParAtt_Copy[%d] != NULL !!\n", v );
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
+      if ( ParAttFlt_Copy[v] != NULL )       Aux_Error( ERROR_INFO, "ParAttFlt_Copy[%d] != NULL !!\n", v );
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
+      if ( ParAttInt_Copy[v] != NULL )       Aux_Error( ERROR_INFO, "ParAttInt_Copy[%d] != NULL !!\n", v );
 #     else
       if ( ParList_Copy != NULL )         Aux_Error( ERROR_INFO, "ParList_Copy != NULL !!\n" );
 #     endif
@@ -873,11 +888,11 @@ struct patch_t
    //===================================================================================
 #  ifdef DEBUG_PARTICLE
    void AddParticle( const int NNew, const long *NewList, long *NPar_Lv,
-                     const real_par *ParType, const real_par **ParPos, const long NParTot,
+                     const long_par *ParType, const real_par **ParPos, const long NParTot,
                      const char *Comment )
 #  else
    void AddParticle( const int NNew, const long *NewList, long *NPar_Lv,
-                     const real_par *ParType )
+                     const long_par *ParType )
 #  endif
    {
 
@@ -987,7 +1002,7 @@ struct patch_t
    //===================================================================================
    void RemoveParticle( const int NRemove, const int *RemoveList,
                         long *NPar_Lv, const bool RemoveAll,
-                        const real_par *ParType )
+                        const long_par *ParType )
    {
 
 //    removing all particles is easy

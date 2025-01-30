@@ -51,13 +51,16 @@ void CUAPI_DiagnoseDevice()
    else if ( DeviceProp.major == 7 )                             NCorePerMP =  64;
    else if ( DeviceProp.major == 8  &&  DeviceProp.minor == 0 )  NCorePerMP =  64;
    else if ( DeviceProp.major == 8  &&  DeviceProp.minor == 6 )  NCorePerMP = 128;
+   else if ( DeviceProp.major == 8  &&  DeviceProp.minor == 9 )  NCorePerMP = 128;
+   else if ( DeviceProp.major == 9 )                             NCorePerMP = 128;
    else
       fprintf( stderr, "WARNING : unable to determine the number of cores per multiprocessor for version %d.%d ...\n",
                DeviceProp.major, DeviceProp.minor );
 
 
 // record the device properties
-   const char FileName[] = "Record__Note";
+   char FileName[MAX_STRING];
+   sprintf( FileName, "%s/Record__Note", OUTPUT_DIR );
 
    if ( MPI_Rank == 0 )
    {

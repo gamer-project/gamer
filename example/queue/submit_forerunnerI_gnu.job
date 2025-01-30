@@ -1,0 +1,32 @@
+#!/bin/bash
+
+#################################################################
+#       OpenMPI(compiled by GNU) job script example             #
+#################################################################
+
+#SBATCH --account=ACCOUNT                               # (-A) Account/project number
+#SBATCH --job-name=JOB_NAME                             # (-J) Job name
+#SBATCH --partition=ct448                               # (-p) Specific slurm partition
+#SBATCH --nodes=2                                       # (-N) Maximum number of nodes to be allocated
+#SBATCH --ntasks=32                                     # (-n) Number of total MPI tasks (i.e. processes)
+#SBATCH --cpus-per-task=7                               # (-c) Number of cores per MPI task
+#SBATCH --ntasks-per-node=16                            # Maximum number of tasks on each node
+#SBATCH --mem=482000M                                   # Memory limit per compute node for the job. Do not use with mem-per-cpu flag.
+#SBATCH --time=2:00:00                                  # (-t) Wall time limit (days-hrs:min:sec)
+##SBATCH -o job.%j.out
+##SBATCH -e job.%j.err
+##SBATCH --mail-type=BEGIN,END,FAIL                      # Mail events (NONE, BEGIN, END, FAIL, ALL)
+##SBATCH --mail-user=EMAIL_ADDRESS                       # Where to send mail.  Set this to your email address
+##SBATCH --exclude=icpnp[101-102,255-256]                # Example for excluding specified nodes
+
+LOG_FILE=log
+
+module purge
+module use /home/d07222009/module_CALAB
+module load gnu_13.2.0/gcc/13.2.0 gnu_13.2.0/fftw/3.3.10 gnu_13.2.0/gsl/2.8.0 gnu_13.2.0/hdf5/1.14.4 gnu_13.2.0/openmpi/5.0.0 gnu_13.2.0/openucx/1.18.0
+module list 1>>$LOG_FILE 2>&1
+
+# See: https://docs.open-mpi.org/en/v5.0.x/man-openmpi/man1/mpirun.1.html#the-map-by-option
+# There are 8 NUMA nodes on each node, 4 per socket
+mpirun -map-by ppr:2:numa:pe=7 --report-bindings ./gamer 1>>$LOG_FILE 2>&1
+echo "=============================================================" >> $LOG_FILE

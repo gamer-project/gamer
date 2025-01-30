@@ -24,7 +24,9 @@
 //                AttrSize3D      : Number of cells on side of input grid
 //                Attr            : The input grid of values for the variable to be mapped
 //                NPar            : The number of particles belonging to this patch
-//                ParList         : The list of particles on this patch
+//                InterpParPos    : The positions of the NPar particles on this patch
+//                ParType         : The types of the NPar particles on this patch
+//                ParList         : The list of particle IDs on this patch
 //                UseTracers      : Whether to map to only tracer particles or only active particles
 //                ParAttr         : The array to store the mapped particle attribute
 //                CorrectVelocity : If true, particle velocities will be corrected in regions of
@@ -35,7 +37,7 @@
 void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
                             const double _dh, const int AttrSize3D, const real *Attr,
                             const int NPar, real_par *InterpParPos[3],
-                            const real_par ParType[], const long ParList[],
+                            const long_par ParType[], const long ParList[],
                             const bool UseTracers, real_par ParAttr[], const bool CorrectVelocity )
 {
 

@@ -33,6 +33,19 @@ void Init_TestProb_Hydro_CR_ShockTube();
 void Init_TestProb_Hydro_CR_Diffusion();
 
 void Init_TestProb_ELBDM_ExtPot();
+void Init_TestProb_ELBDM_JeansInstabilityComoving();
+void Init_TestProb_ELBDM_JeansInstabilityPhysical();
+void Init_TestProb_ELBDM_Soliton();
+void Init_TestProb_ELBDM_SelfSimilarHalo();
+void Init_TestProb_ELBDM_VortexPairRotating();
+void Init_TestProb_ELBDM_VortexPairLinear();
+void Init_TestProb_ELBDM_IsolatedHalo();
+void Init_TestProb_ELBDM_GaussianWavePacket();
+void Init_TestProb_ELBDM_LSS();
+void Init_TestProb_ELBDM_PlaneWave();
+void Init_TestProb_ELBDM_Perturbation();
+void Init_TestProb_ELBDM_HaloMerger();
+void Init_TestProb_ELBDM_DiskHeating();
 
 
 
@@ -87,6 +100,19 @@ void Init_TestProb()
       case TESTPROB_HYDRO_CR_DIFFUSION :                 Init_TestProb_Hydro_CR_Diffusion();                break;
 
       case TESTPROB_ELBDM_EXTPOT :                       Init_TestProb_ELBDM_ExtPot();                      break;
+      case TESTPROB_ELBDM_JEANS_INSTABILITY_COMOVING :   Init_TestProb_ELBDM_JeansInstabilityComoving();    break;
+//    case TESTPROB_ELBDM_JEANS_INSTABILITY_PHYSICAL :   Init_TestProb_ELBDM_JeansInstabilityPhysical();    break;
+      case TESTPROB_ELBDM_SOLITON :                      Init_TestProb_ELBDM_Soliton();                     break;
+      case TESTPROB_ELBDM_SELF_SIMILAR_HALO :            Init_TestProb_ELBDM_SelfSimilarHalo();             break;
+      case TESTPROB_ELBDM_VORTEX_PAIR_ROTATING :         Init_TestProb_ELBDM_VortexPairRotating();          break;
+      case TESTPROB_ELBDM_VORTEX_PAIR_LINEAR :           Init_TestProb_ELBDM_VortexPairLinear();            break;
+      case TESTPROB_ELBDM_ISOLATED_HALO :                Init_TestProb_ELBDM_IsolatedHalo();                break;
+      case TESTPROB_ELBDM_GAUSSIAN_WAVE_PACKET :         Init_TestProb_ELBDM_GaussianWavePacket();          break;
+      case TESTPROB_ELBDM_LSS :                          Init_TestProb_ELBDM_LSS();                         break;
+      case TESTPROB_ELBDM_PLANE_WAVE :                   Init_TestProb_ELBDM_PlaneWave();                   break;
+      case TESTPROB_ELBDM_PERTURBATION :                 Init_TestProb_ELBDM_Perturbation();                break;
+      case TESTPROB_ELBDM_HALO_MERGER :                  Init_TestProb_ELBDM_HaloMerger();                  break;
+      case TESTPROB_ELBDM_DISK_HEATING :                 Init_TestProb_ELBDM_DiskHeating();                 break;
 
       default: Aux_Error( ERROR_INFO, "unsupported TESTPROB_ID (%d) !!\n", TESTPROB_ID );
    } // switch( TESTPROB_ID )

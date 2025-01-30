@@ -4,11 +4,11 @@
 
 
 
-static void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool RemoveParFromRepo, const bool SendGridData );
+static void LB_RedistributeRealPatch( const int lv, real_par **ParAttFlt_Old, long_par **ParAttInt_Old, const bool RemoveParFromRepo, const bool SendGridData );
 static void LB_SortRealPatch( const int lv );
 #ifdef PARTICLE
-static void LB_RedistributeParticle_Init( real_par **ParAtt_Old );
-static void LB_RedistributeParticle_End ( real_par **ParAtt_Old );
+static void LB_RedistributeParticle_Init( real_par **ParAttFlt_Old, long_par **ParAttInt_Old );
+static void LB_RedistributeParticle_End ( real_par **ParAttFlt_Old, long_par **ParAttInt_Old );
 #endif
 
 
@@ -117,26 +117,30 @@ void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, cons
    const bool RemoveParFromRepo_No  = false;
 
 #  ifdef PARTICLE
-   real_par  *ParAtt_Old[PAR_NATT_TOTAL];
+   real_par  *ParAttFlt_Old[PAR_NATT_FLT_TOTAL];
+   long_par  *ParAttInt_Old[PAR_NATT_INT_TOTAL];
 #  else
-   real_par **ParAtt_Old = NULL;
+   real_par **ParAttFlt_Old = NULL;
+   long_par **ParAttInt_Old = NULL;
 #  endif
 
 #  ifdef PARTICLE
    if ( Redistribute )
    {
       if ( TLv < 0 )
-         LB_RedistributeParticle_Init( ParAtt_Old );
+         LB_RedistributeParticle_Init( ParAttFlt_Old, ParAttInt_Old );
 
       else
       {
-         for (int v=0; v<PAR_NATT_TOTAL; v++)   ParAtt_Old[v] = amr->Par->Attribute[v];
+         for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParAttFlt_Old[v] = amr->Par->AttributeFlt[v];
+         for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   ParAttInt_Old[v] = amr->Par->AttributeInt[v];
       }
    }
 
    else
    {
-      for (int v=0; v<PAR_NATT_TOTAL; v++)   ParAtt_Old[v] = NULL;
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParAttFlt_Old[v] = NULL;
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   ParAttInt_Old[v] = NULL;
    }
 #  endif
 
@@ -146,7 +150,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, cons
 
 //    3.1 re-distribute real patches (and particles)
       if ( Redistribute )
-      LB_RedistributeRealPatch( lv, ParAtt_Old, (TLv<0)?RemoveParFromRepo_No:RemoveParFromRepo_Yes, SendGridData );
+      LB_RedistributeRealPatch( lv, ParAttFlt_Old, ParAttInt_Old, (TLv<0)?RemoveParFromRepo_No:RemoveParFromRepo_Yes, SendGridData );
 
 //    3.2 sort real patches
       if ( SortRealPatch )
@@ -168,7 +172,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, cons
    } // for (int lv=lv_min; lv<=lv_max; lv++)
 
 #  ifdef PARTICLE
-   if ( Redistribute  &&  TLv < 0 )    LB_RedistributeParticle_End( ParAtt_Old );
+   if ( Redistribute  &&  TLv < 0 )    LB_RedistributeParticle_End( ParAttFlt_Old, ParAttInt_Old );
 #  endif
 
 
@@ -293,6 +297,13 @@ void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, cons
    }
 
 
+// 8. construct the global AMR structure if required
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   delete GlobalTree;   // in case it has been allocated already
+   GlobalTree = new LB_GlobalTree;
+#  endif
+
+
    if ( MPI_Rank == 0 )
    {
       char lv_str[MAX_STRING];
@@ -318,13 +329,14 @@ void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, cons
 //                4. Particles will be redistributed along with the leaf patches as well
 //
 // Parameter   :  lv                : Target refinement level
-//                ParAtt_Old        : Pointers pointing to the particle attribute arrays (amr->Par->Attribute[])
+//                ParAttFlt_Old     : Pointers pointing to the particle floating-point attribute arrays (amr->Par->AttributeFlt[])
+//                ParAttInt_Old     : Pointers pointing to the particle integer        attribute arrays (amr->Par->AttributeInt[])
 //                RemoveParFromRepo : Remove particles on lv from the particle repository (amr->Par)
 //                                    --> Useful when applying LB_Init_LoadBalance() to a single level (i.e., TLv>=0)
 //                SendGridData      : Transfer grid data
 //                                    --> Particle data will always be transferred
 //-------------------------------------------------------------------------------------------------------
-void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool RemoveParFromRepo, const bool SendGridData )
+void LB_RedistributeRealPatch( const int lv, real_par **ParAttFlt_Old, long_par **ParAttInt_Old, const bool RemoveParFromRepo, const bool SendGridData )
 {
 
 // 1. count the number of real patches (and particles) to be sent and received
@@ -367,17 +379,25 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
 #  ifdef PARTICLE
    const bool RemoveAllParticle = true;
 
-   long NSend_Total_ParData, NRecv_Total_ParData;
+   long NSend_Total_ParFltData, NRecv_Total_ParFltData;
+   long NSend_Total_ParIntData, NRecv_Total_ParIntData;
    long ParID;
 
-   long *NDone_ParData       = new long [MPI_NRank];
-   long *Send_NCount_ParData = new long [MPI_NRank];
-   long *Recv_NCount_ParData = new long [MPI_NRank];
-   long *Send_NDisp_ParData  = new long [MPI_NRank];
-   long *Recv_NDisp_ParData  = new long [MPI_NRank];
+   long *NDone_ParFltData       = new long [MPI_NRank];
+   long *Send_NCount_ParFltData = new long [MPI_NRank];
+   long *Recv_NCount_ParFltData = new long [MPI_NRank];
+   long *Send_NDisp_ParFltData  = new long [MPI_NRank];
+   long *Recv_NDisp_ParFltData  = new long [MPI_NRank];
+
+   long *NDone_ParIntData       = new long [MPI_NRank];
+   long *Send_NCount_ParIntData = new long [MPI_NRank];
+   long *Recv_NCount_ParIntData = new long [MPI_NRank];
+   long *Send_NDisp_ParIntData  = new long [MPI_NRank];
+   long *Recv_NDisp_ParIntData  = new long [MPI_NRank];
 
 #  ifdef DEBUG_PARTICLE
-   if ( ParAtt_Old  == NULL )    Aux_Error( ERROR_INFO, "ParAtt_Old == NULL !!\n" );
+   if ( ParAttFlt_Old  == NULL )    Aux_Error( ERROR_INFO, "ParAttFlt_Old == NULL !!\n" );
+   if ( ParAttInt_Old  == NULL )    Aux_Error( ERROR_INFO, "ParAttInt_Old == NULL !!\n" );
 #  endif
 #  endif // #ifdef PARTICLE
 
@@ -385,14 +405,17 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
    {
       Send_NCount_Patch  [r] = 0;
 #     ifdef PARTICLE
-      Send_NCount_ParData[r] = 0L;
+      Send_NCount_ParFltData[r] = 0L;
+      Send_NCount_ParIntData[r] = 0L;
 #     endif
    }
    Send_NDisp_Patch  [0] = 0;
    Recv_NDisp_Patch  [0] = 0;
 #  ifdef PARTICLE
-   Send_NDisp_ParData[0] = 0L;
-   Recv_NDisp_ParData[0] = 0L;
+   Send_NDisp_ParFltData[0] = 0L;
+   Recv_NDisp_ParFltData[0] = 0L;
+   Send_NDisp_ParIntData[0] = 0L;
+   Recv_NDisp_ParIntData[0] = 0L;
 #  endif
 
 // 1.1 send count
@@ -403,17 +426,23 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
 
       Send_NCount_Patch  [TRank] ++;
 #     ifdef PARTICLE
-      Send_NCount_ParData[TRank] += (long)amr->patch[0][lv][PID]->NPar;
+      Send_NCount_ParFltData[TRank] += (long)amr->patch[0][lv][PID]->NPar;
+      Send_NCount_ParIntData[TRank] += (long)amr->patch[0][lv][PID]->NPar;
 #     endif
    }
 #  ifdef PARTICLE
-   for (int r=0; r<MPI_NRank; r++)  Send_NCount_ParData[r] *= (long)PAR_NATT_TOTAL;
+   for (int r=0; r<MPI_NRank; r++)
+   {
+      Send_NCount_ParFltData[r] *= (long)PAR_NATT_FLT_TOTAL;
+      Send_NCount_ParIntData[r] *= (long)PAR_NATT_INT_TOTAL;
+   }
 #  endif
 
 // 1.2 receive count
    MPI_Alltoall( Send_NCount_Patch,   1, MPI_INT,  Recv_NCount_Patch,   1, MPI_INT,  MPI_COMM_WORLD );
 #  ifdef PARTICLE
-   MPI_Alltoall( Send_NCount_ParData, 1, MPI_LONG, Recv_NCount_ParData, 1, MPI_LONG, MPI_COMM_WORLD );
+   MPI_Alltoall( Send_NCount_ParFltData, 1, MPI_LONG, Recv_NCount_ParFltData, 1, MPI_LONG, MPI_COMM_WORLD );
+   MPI_Alltoall( Send_NCount_ParIntData, 1, MPI_LONG, Recv_NCount_ParIntData, 1, MPI_LONG, MPI_COMM_WORLD );
 #  endif
 
 // 1.3 send/recv displacement
@@ -422,8 +451,10 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
       Send_NDisp_Patch  [r] = Send_NDisp_Patch  [r-1] + Send_NCount_Patch  [r-1];
       Recv_NDisp_Patch  [r] = Recv_NDisp_Patch  [r-1] + Recv_NCount_Patch  [r-1];
 #     ifdef PARTICLE
-      Send_NDisp_ParData[r] = Send_NDisp_ParData[r-1] + Send_NCount_ParData[r-1];
-      Recv_NDisp_ParData[r] = Recv_NDisp_ParData[r-1] + Recv_NCount_ParData[r-1];
+      Send_NDisp_ParFltData[r] = Send_NDisp_ParFltData[r-1] + Send_NCount_ParFltData[r-1];
+      Recv_NDisp_ParFltData[r] = Recv_NDisp_ParFltData[r-1] + Recv_NCount_ParFltData[r-1];
+      Send_NDisp_ParIntData[r] = Send_NDisp_ParIntData[r-1] + Send_NCount_ParIntData[r-1];
+      Recv_NDisp_ParIntData[r] = Recv_NDisp_ParIntData[r-1] + Recv_NCount_ParIntData[r-1];
 #     endif
    }
 
@@ -452,8 +483,10 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
    NSend_Total_Patch   = Send_NDisp_Patch  [ MPI_NRank-1 ] + Send_NCount_Patch  [ MPI_NRank-1 ];
    NRecv_Total_Patch   = Recv_NDisp_Patch  [ MPI_NRank-1 ] + Recv_NCount_Patch  [ MPI_NRank-1 ];
 #  ifdef PARTICLE
-   NSend_Total_ParData = Send_NDisp_ParData[ MPI_NRank-1 ] + Send_NCount_ParData[ MPI_NRank-1 ];
-   NRecv_Total_ParData = Recv_NDisp_ParData[ MPI_NRank-1 ] + Recv_NCount_ParData[ MPI_NRank-1 ];
+   NSend_Total_ParFltData = Send_NDisp_ParFltData[ MPI_NRank-1 ] + Send_NCount_ParFltData[ MPI_NRank-1 ];
+   NRecv_Total_ParFltData = Recv_NDisp_ParFltData[ MPI_NRank-1 ] + Recv_NCount_ParFltData[ MPI_NRank-1 ];
+   NSend_Total_ParIntData = Send_NDisp_ParIntData[ MPI_NRank-1 ] + Send_NCount_ParIntData[ MPI_NRank-1 ];
+   NRecv_Total_ParIntData = Recv_NDisp_ParIntData[ MPI_NRank-1 ] + Recv_NCount_ParIntData[ MPI_NRank-1 ];
 #  endif
 
 // 1.6 check
@@ -463,9 +496,12 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
                  NSend_Total_Patch, amr->NPatchComma[lv][1] );
 #  endif
 #  ifdef DEBUG_PARTICLE
-   if ( NSend_Total_ParData != (long)amr->Par->NPar_Lv[lv]*(long)PAR_NATT_TOTAL )
-      Aux_Error( ERROR_INFO, "NSend_Total_ParData (%ld) != expected (%ld) !!\n",
-                 NSend_Total_ParData, (long)amr->Par->NPar_Lv[lv]*(long)PAR_NATT_TOTAL );
+   if ( NSend_Total_ParFltData != (long)amr->Par->NPar_Lv[lv]*(long)PAR_NATT_FLT_TOTAL )
+      Aux_Error( ERROR_INFO, "NSend_Total_ParFltData (%ld) != expected (%ld) !!\n",
+                 NSend_Total_ParFltData, (long)amr->Par->NPar_Lv[lv]*(long)PAR_NATT_FLT_TOTAL );
+   if ( NSend_Total_ParIntData != (long)amr->Par->NPar_Lv[lv]*(long)PAR_NATT_INT_TOTAL )
+      Aux_Error( ERROR_INFO, "NSend_Total_ParIntData (%ld) != expected (%ld) !!\n",
+                 NSend_Total_ParIntData, (long)amr->Par->NPar_Lv[lv]*(long)PAR_NATT_INT_TOTAL );
 #  endif
 
 
@@ -488,7 +524,8 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
 #  endif
 
    real     *SendPtr         = NULL;
-   real_par *SendPtr_Par     = NULL;
+   real_par *SendPtr_ParFlt  = NULL;
+   long_par *SendPtr_ParInt  = NULL;
    long     *SendBuf_LBIdx   = new long [ NSend_Total_Patch ];
    real     *SendBuf_Flu     = ( SendGridData ) ? new real [ SendDataSizeFlu1v*NCOMP_TOTAL ] : NULL;
 #  ifdef GRAVITY
@@ -501,15 +538,17 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
    real     *SendBuf_Mag     = ( SendGridData ) ? new real [ SendDataSizeMag1v*NCOMP_MAG ]   : NULL;
 #  endif
 #  ifdef PARTICLE
-   real_par *SendBuf_ParData = new real_par [ NSend_Total_ParData ];
-   int      *SendBuf_NPar    = new int      [ NSend_Total_Patch ];
+   real_par *SendBuf_ParFltData = new real_par [ NSend_Total_ParFltData ];
+   long_par *SendBuf_ParIntData = new long_par [ NSend_Total_ParIntData ];
+   int      *SendBuf_NPar       = new int      [ NSend_Total_Patch ];
 #  endif
 
    for (int r=0; r<MPI_NRank; r++)
    {
       NDone_Patch  [r] = 0;
 #     ifdef PARTICLE
-      NDone_ParData[r] = 0L;
+      NDone_ParFltData[r] = 0L;
+      NDone_ParIntData[r] = 0L;
 #     endif
    }
 
@@ -556,7 +595,8 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
 #     ifdef PARTICLE
       SendBuf_NPar[ Send_NDisp_Patch[TRank] + NDone_Patch[TRank] ] = amr->patch[0][lv][PID]->NPar;
 
-      SendPtr_Par = SendBuf_ParData + Send_NDisp_ParData[TRank] + NDone_ParData[TRank];
+      SendPtr_ParFlt = SendBuf_ParFltData + Send_NDisp_ParFltData[TRank] + NDone_ParFltData[TRank];
+      SendPtr_ParInt = SendBuf_ParIntData + Send_NDisp_ParIntData[TRank] + NDone_ParIntData[TRank];
 
       for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
       {
@@ -564,11 +604,12 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
 
 //       there should be no inactive particles associated with patches
 #        ifdef DEBUG_PARTICLE
-         if ( ParAtt_Old[PAR_MASS][ParID] < (real_par)0.0 )
-            Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, ParAtt_Old[PAR_MASS][ParID] );
+         if ( ParAttFlt_Old[PAR_MASS][ParID] < (real_par)0.0 )
+            Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParID, ParAttFlt_Old[PAR_MASS][ParID] );
 #        endif
 
-         for (int v=0; v<PAR_NATT_TOTAL; v++)   *SendPtr_Par++ = ParAtt_Old[v][ParID];
+         for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   *SendPtr_ParFlt++ = ParAttFlt_Old[v][ParID];
+         for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   *SendPtr_ParInt++ = ParAttInt_Old[v][ParID];
 
 //       remove this particle from the particle repository
          if ( RemoveParFromRepo )   amr->Par->RemoveOneParticle( ParID, PAR_INACTIVE_MPI );
@@ -577,11 +618,12 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
 
       NDone_Patch  [TRank] ++;
 #     ifdef PARTICLE
-      NDone_ParData[TRank] += (long)amr->patch[0][lv][PID]->NPar*(long)PAR_NATT_TOTAL;
+      NDone_ParFltData[TRank] += (long)amr->patch[0][lv][PID]->NPar*(long)PAR_NATT_FLT_TOTAL;
+      NDone_ParIntData[TRank] += (long)amr->patch[0][lv][PID]->NPar*(long)PAR_NATT_INT_TOTAL;
 
 //    detach particles from patches to avoid warning messages when deleting
 //    patches with particles
-      const real_par *PType = amr->Par->Type;
+      const long_par *PType = amr->Par->Type;
       amr->patch[0][lv][PID]->RemoveParticle( NULL_INT, NULL, &amr->Par->NPar_Lv[lv], RemoveAllParticle, PType );
 #     endif
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -613,8 +655,9 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
    real *RecvBuf_Mag     = ( SendGridData ) ? new real [ RecvDataSizeMag1v*NCOMP_MAG ]   : NULL;
 #  endif
 #  ifdef PARTICLE
-   real_par *RecvBuf_ParData = new real_par [ NRecv_Total_ParData ];
-   int      *RecvBuf_NPar    = new int      [ NRecv_Total_Patch ];
+   real_par *RecvBuf_ParFltData = new real_par [ NRecv_Total_ParFltData ];
+   long_par *RecvBuf_ParIntData = new long_par [ NRecv_Total_ParIntData ];
+   int      *RecvBuf_NPar       = new int      [ NRecv_Total_Patch ];
 #  endif
 
 
@@ -664,8 +707,10 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
                   RecvBuf_NPar, Recv_NCount_Patch, Recv_NDisp_Patch, MPI_INT, MPI_COMM_WORLD );
 
 // 4.7 particle data
-   MPI_Alltoallv_GAMER( SendBuf_ParData, Send_NCount_ParData, Send_NDisp_ParData, MPI_GAMER_REAL_PAR,
-                        RecvBuf_ParData, Recv_NCount_ParData, Recv_NDisp_ParData, MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
+   MPI_Alltoallv_GAMER( SendBuf_ParFltData, Send_NCount_ParFltData, Send_NDisp_ParFltData, MPI_GAMER_REAL_PAR,
+                        RecvBuf_ParFltData, Recv_NCount_ParFltData, Recv_NDisp_ParFltData, MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
+   MPI_Alltoallv_GAMER( SendBuf_ParIntData, Send_NCount_ParIntData, Send_NDisp_ParIntData, MPI_GAMER_LONG_PAR,
+                        RecvBuf_ParIntData, Recv_NCount_ParIntData, Recv_NDisp_ParIntData, MPI_GAMER_LONG_PAR, MPI_COMM_WORLD );
 #  endif // #ifdef PARTICLE
 
 
@@ -696,10 +741,14 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
    delete [] SendBuf_Mag;
 #  endif
 #  ifdef PARTICLE
-   delete [] Send_NCount_ParData;
-   delete [] Send_NDisp_ParData;
-   delete [] NDone_ParData;
-   delete [] SendBuf_ParData;
+   delete [] Send_NCount_ParFltData;
+   delete [] Send_NDisp_ParFltData;
+   delete [] NDone_ParFltData;
+   delete [] SendBuf_ParFltData;
+   delete [] Send_NCount_ParIntData;
+   delete [] Send_NDisp_ParIntData;
+   delete [] NDone_ParIntData;
+   delete [] SendBuf_ParIntData;
    delete [] SendBuf_NPar;
 #  endif
 
@@ -716,14 +765,15 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
 // check: for RemoveParFromRepo == false, the size of particle repository should be exactly equal to the received particles
 // --> see LB_RedistributeParticle_Init()
 #  ifdef DEBUG_PARTICLE
-   const long NParExpect = amr->Par->NPar_AcPlusInac + NRecv_Total_ParData/(long)PAR_NATT_TOTAL;
+   const long NParExpect = amr->Par->NPar_AcPlusInac + NRecv_Total_ParFltData/(long)PAR_NATT_FLT_TOTAL;
    if ( !RemoveParFromRepo  &&  NParExpect > amr->Par->ParListSize )
       Aux_Error( ERROR_INFO, "NParExpect (%ld) > ParListSize (%ld) !!\n", NParExpect, amr->Par->ParListSize );
 #  endif
 
-   const real_par *RecvPtr_Par = RecvBuf_ParData;
-   long *ParList               = NULL;
-   int   ParListSizeMax        = 0;    // must NOT be negative to deal with the case NRecv_Total_Patch == 0
+   const real_par *RecvPtr_ParFlt = RecvBuf_ParFltData;
+   const long_par *RecvPtr_ParInt = RecvBuf_ParIntData;
+   long *ParList                  = NULL;
+   int   ParListSizeMax           = 0;    // must NOT be negative to deal with the case NRecv_Total_Patch == 0
 
    for (int t=0; t<NRecv_Total_Patch; t++)   ParListSizeMax = MAX( ParListSizeMax, RecvBuf_NPar[t] );
 
@@ -790,22 +840,23 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
          for (int p=0; p<RecvBuf_NPar[PID]; p++)
          {
 //          add a single particle to the particle repository
-            ParID        = amr->Par->AddOneParticle( RecvPtr_Par );
-            RecvPtr_Par += PAR_NATT_TOTAL;
+            ParID           = amr->Par->AddOneParticle( RecvPtr_ParFlt, RecvPtr_ParInt );
+            RecvPtr_ParFlt += PAR_NATT_FLT_TOTAL;
+            RecvPtr_ParInt += PAR_NATT_INT_TOTAL;
 
 //          store the new particle index
             ParList[p] = ParID;
 
 //          we do not transfer inactive particles
 #           ifdef DEBUG_PARTICLE
-            if ( amr->Par->Attribute[PAR_MASS][ParID] < (real)0.0 )
+            if ( amr->Par->AttributeFlt[PAR_MASS][ParID] < (real)0.0 )
                Aux_Error( ERROR_INFO, "Transferring inactive particle (ParID %d, Mass %14.7e) !!\n",
-                          ParID, amr->Par->Attribute[PAR_MASS][ParID] );
+                          ParID, amr->Par->AttributeFlt[PAR_MASS][ParID] );
 #           endif
          }
 
 //       6.3 associate particles with their home patches
-         const real_par *PType = amr->Par->Type;
+         const long_par *PType = amr->Par->Type;
 #        ifdef DEBUG_PARTICLE
 //       do not set ParPos too early since pointers to the particle repository (e.g., amr->Par->PosX)
 //       may change after calling amr->Par->AddOneParticle()
@@ -862,9 +913,12 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAtt_Old, const bool R
    delete [] RecvBuf_Mag;
 #  endif
 #  ifdef PARTICLE
-   delete [] Recv_NCount_ParData;
-   delete [] Recv_NDisp_ParData;
-   delete [] RecvBuf_ParData;
+   delete [] Recv_NCount_ParFltData;
+   delete [] Recv_NDisp_ParFltData;
+   delete [] RecvBuf_ParFltData;
+   delete [] Recv_NCount_ParIntData;
+   delete [] Recv_NDisp_ParIntData;
+   delete [] RecvBuf_ParIntData;
    delete [] RecvBuf_NPar;
    delete [] ParList;
 #  endif
@@ -986,19 +1040,25 @@ void LB_SortRealPatch( const int lv )
 //                   when calling LB_RedistributeRealPatch() later.
 //                3. One must call LB_SetCutPoint() for all levels in advance
 //
-// Parameter   :  ParAtt_Old : Pointers for backing up the old particle attribute arrays (amr->Par->Attribute[])
+// Parameter   :  ParAttFlt_Old : Pointers for backing up the old particle floating-point attribute arrays (amr->Par->AttributeFlt[])
+//                ParAttInt_Old : Pointers for backing up the old particle integer        attribute arrays (amr->Par->AttributeInt[])
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void LB_RedistributeParticle_Init( real_par **ParAtt_Old )
+void LB_RedistributeParticle_Init( real_par **ParAttFlt_Old, long_par **ParAttInt_Old )
 {
 
 // backup the old particle attribute arrays
-// remember to reset Attribute[] to NULL so that amr->Par->InitRepo will NOT delete these arrays
-   for (int v=0; v<PAR_NATT_TOTAL; v++)
+// remember to reset AttributeFlt/Int[] to NULL so that amr->Par->InitRepo will NOT delete these arrays
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
    {
-      ParAtt_Old         [v] = amr->Par->Attribute[v];
-      amr->Par->Attribute[v] = NULL;
+      ParAttFlt_Old         [v] = amr->Par->AttributeFlt[v];
+      amr->Par->AttributeFlt[v] = NULL;
+   }
+   for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
+   {
+      ParAttInt_Old         [v] = amr->Par->AttributeInt[v];
+      amr->Par->AttributeInt[v] = NULL;
    }
 
 
@@ -1041,15 +1101,17 @@ void LB_RedistributeParticle_Init( real_par **ParAtt_Old )
 //
 // Note        :  1. Free old particle attribute arrays
 //
-// Parameter   :  ParAtt_Old : Pointers for backing up the old particle attribute arrays (amr->Par->Attribute[])
+// Parameter   :  ParAttFlt_Old : Pointers for backing up the old particle floating-point attribute arrays (amr->Par->AttributeFlt[])
+//                ParAttInt_Old : Pointers for backing up the old particle integer        attribute arrays (amr->Par->AttributeInt[])
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void LB_RedistributeParticle_End( real_par **ParAtt_Old )
+void LB_RedistributeParticle_End( real_par **ParAttFlt_Old, long_par **ParAttInt_Old )
 {
 
 // remove old particle attribute arrays
-   for (int v=0; v<PAR_NATT_TOTAL; v++)   free( ParAtt_Old [v] );
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   free( ParAttFlt_Old[v] );
+   for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   free( ParAttInt_Old[v] );
 
 
 // check the total number of particles
