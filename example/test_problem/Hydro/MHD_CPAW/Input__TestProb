@@ -1,0 +1,6 @@
+# problem-specific runtime parameters
+MHD_CPAW_Rho0        2.0            # background density
+MHD_CPAW_A	     0.001          # perturbation amplitude
+MHD_CPAW_P0          0.6            # background pressure
+MHD_CPAW_B0          1.0            # background magnetic field amplitude
+MHD_CPAW_Dir         0              # wave direction: (0/1/2/3) --> (x/y/z/diagonal)
