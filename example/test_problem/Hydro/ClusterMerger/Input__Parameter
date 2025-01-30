@@ -126,10 +126,10 @@ OPT__MINIMIZE_MPI_BARRIER     0           # minimize MPI barriers to improve loa
 
 # source terms
 SRC_DELEPTONIZATION           0           # deleptonization (for simulations of stellar core collapse) [0] ##HYDRO ONLY##
-SRC_EXACTCOOLING              0           # exact cooling scheme from Gaspari (2009) [0] ##HYDRO ONLY##
-SRC_EC_TEF_N                  6001        # number of points for lambda(T) sampling in LOG
-SRC_EC_SUBCYCLING             1           # perform subcycling when the cooling time step is small [0=off, 1=on]
-SRC_EC_DTCOEF                 0.5         # the coefficient of the cooling time step
+SRC_EXACTCOOLING              0           # exact cooling scheme from Gaspari (2009) [0] ##HYDRO ONLY## -> NOT supported yet!
+SRC_EC_TEF_N                  6001        # number of points for lambda(T) sampling in LOG [1501]
+SRC_EC_SUBCYCLING             1           # perform subcycling when the cooling time step is small (0=off, 1=on) [0]
+SRC_EC_DTCOEF                 0.5         # the coefficient of the cooling time step [0.5]
 SRC_USER                      0           # user-defined source terms -> edit "Src_User.cpp" [0]
 SRC_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU source-term solver (<=0=auto) [-1]
 
@@ -159,11 +159,11 @@ OPT__CORR_AFTER_ALL_SYNC     -1           # apply various corrections after all 
 OPT__NORMALIZE_PASSIVE        1           # ensure "sum(passive_scalar_density) == gas_density" [1]
 OPT__RESET_FLUID              0           # reset fluid variables after each update -> edit "Flu_ResetByUser.cpp" [0]
 OPT__RESET_FLUID_INIT         0           # reset fluid variables during initialization (<0=auto -> OPT__RESET_FLUID, 0=off, 1=on) [-1]
-MIN_DENS                      0.0         # minimum mass density (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##
-MIN_PRES                      0.0         # minimum pressure     (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
-MIN_EINT                      0.0         # minimum internal energy (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
+MIN_DENS                      0.0         # minimum mass density     (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##
+MIN_PRES                      0.0         # minimum pressure         (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
+MIN_EINT                      0.0         # minimum internal energy  (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
 MIN_TEMP                      1.0e4       # minimum temperature in K (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
-MIN_ENTR                      0.0         # minimum entropy         (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
+MIN_ENTR                      0.0         # minimum entropy          (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
 
 
 # gravity solvers in all models
