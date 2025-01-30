@@ -199,7 +199,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    Pres = MHD_MTI_P0   * CUBE( 1.0 - z / MHD_MTI_z0 );
    MomX = 0.0;
    MomY = 0.0;
-   MomZ = Dens * MHD_MTI_v0 * sin ( 4.0*M_PI*z / amr->BoxSize[2] );
+   MomZ = Dens * MHD_MTI_v0 * sin ( 4.0*M_PI*y / amr->BoxSize[0] );
 
 // compute the total gas energy
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
