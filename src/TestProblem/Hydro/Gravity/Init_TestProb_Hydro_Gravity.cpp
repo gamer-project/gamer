@@ -89,6 +89,52 @@ void Validate()
 
 #if ( MODEL == HYDRO  &&  defined GRAVITY )
 //-------------------------------------------------------------------------------------------------------
+// Function    :  LoadInputTestProb
+// Description :  Loading the problem-specific runtime parameters and storing them in HDF5 snapshots (Data_*)
+//
+// Note        :  1. Invoked by SetParameter()
+//                2. Invoked by Output_DumpData_Total_HDF5() using the fuction pointer "Output_HDF5_InputTest_Ptr"
+//                3. If there is no problem-specific runtime parameters to load, please add at least one parameter
+//                   to avoid empty structure of `HDF5_Output_t`.
+//                   --> Example:
+//                       AddInputTestPara( load_mode, "NewTestproblem_TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+//
+// Parameter   :  load_mode      : Load data structure mode
+//                                 LOAD_READPARA    : Load ReadPara_t
+//                                 LOAD_HDF5_OUTPUT : Load HDF5_Output_t
+//                ReadPara       : Data structure for loading runtime parameters
+//                HDF5_InputTest : Data structure storing the parameters to be stored in HDF5 snapshot
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void LoadInputTestProb( const LoadInputTestMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
+{
+
+#  ifndef SUPPORT_HDF5
+   if ( load_mode == LOAD_HDF5_OUTPUT )   Aux_Error( ERROR_INFO, "please turn on SUPPORT_HDF5 in the Makefile for load_mode == LOAD_HDF5_OUTPUT !!\n" );
+#  endif
+
+   if ( load_mode == LOAD_READPARA     &&  ReadPara       == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_READPARA and ReadPara == NULL !!\n" );
+   if ( load_mode == LOAD_HDF5_OUTPUT  &&  HDF5_InputTest == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_HDF5_OUTPUT and HDF5_InputTest == NULL !!\n" );
+
+// add parameters in the following format:
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
+// --> AddInputTestPara() is defined in "include/TestProb.h"
+// ********************************************************************************************************************************
+// AddInputTestPara( load_mode, "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
+// ********************************************************************************************************************************
+   AddInputTestPara( load_mode, "Gra_DensProf",      &Gra_DensProf,          2,             1,                2                 );
+   AddInputTestPara( load_mode, "Gra_Radius0",       &Gra_Radius0,           1.0,           Eps_double,       NoMax_double      );
+   AddInputTestPara( load_mode, "Gra_Dens0",         &Gra_Dens0,             1.0,           Eps_double,       NoMax_double      );
+   AddInputTestPara( load_mode, "Gra_NIterPerf",     &Gra_NIterPerf,         0,             0,                NoMax_int         );
+   AddInputTestPara( load_mode, "Gra_PerfExcRoot",   &Gra_PerfExcRoot,       false,         Useless_bool,     Useless_bool      );
+
+} // FUNCITON : LoadInputTestProb
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
 //
@@ -113,17 +159,7 @@ void SetParameter()
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
-// (1-1) add parameters in the following format:
-// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
-// --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
-// ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
-// ********************************************************************************************************************************
-   ReadPara->Add( "Gra_DensProf",      &Gra_DensProf,          2,             1,                2                 );
-   ReadPara->Add( "Gra_Radius0",       &Gra_Radius0,           1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Gra_Dens0",         &Gra_Dens0,             1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Gra_NIterPerf",     &Gra_NIterPerf,         0,             0,                NoMax_int         );
-   ReadPara->Add( "Gra_PerfExcRoot",   &Gra_PerfExcRoot,       false,         Useless_bool,     Useless_bool      );
+   LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
 
    ReadPara->Read( FileName );
 
@@ -231,34 +267,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[ENGY] = 1.0e10;
 
 } // FUNCTION : SetGridIC
-
-
-
-#ifdef SUPPORT_HDF5
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Output_HDF5_InputTest
-// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
-//
-// Note         : 1. This function only works in MPI_RANK == 0
-//                2. We support int, uint, long, ulong, bool, float, double, and string datatypes
-//                3. There MUST be at least one parameter to be stored
-//                4. The pointer of the data MUST still exist outside the function, e.g. global variables
-//
-// Parameter   :  HDF5_InputTest : the structure storing the parameters
-//
-// Return      :  None
-//-------------------------------------------------------------------------------------------------------
-void Output_HDF5_InputTest( HDF5_Output_t *HDF5_InputTest )
-{
-
-   HDF5_InputTest->Add( "Gra_DensProf",    &Gra_DensProf    );
-   HDF5_InputTest->Add( "Gra_Radius0",     &Gra_Radius0     );
-   HDF5_InputTest->Add( "Gra_Dens0",       &Gra_Dens0       );
-   HDF5_InputTest->Add( "Gra_NIterPerf",   &Gra_NIterPerf   );
-   HDF5_InputTest->Add( "Gra_PerfExcRoot", &Gra_PerfExcRoot );
-
-} // FUNCTION : Output_HDF5_InputTest
-#endif // #ifdef SUPPORT_HDF5
 
 
 
@@ -453,7 +461,7 @@ void Init_TestProb_Hydro_Gravity()
    Output_User_Ptr           = OutputError;
    Aux_Record_User_Ptr       = Aux_Record_Gravity;
 #  ifdef SUPPORT_HDF5
-   Output_HDF5_InputTest_Ptr = Output_HDF5_InputTest;
+   Output_HDF5_InputTest_Ptr = LoadInputTestProb;
 #  endif
 #  endif
 

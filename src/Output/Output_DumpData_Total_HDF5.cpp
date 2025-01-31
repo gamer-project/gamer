@@ -15,7 +15,7 @@ static void GetCompound_SymConst ( hid_t &H5_TypeID );
 static void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored );
 static void GetCompound_General  ( hid_t &H5_TypeID, const HDF5_Output_t *HDF5_OutUser );
 
-void (*Output_HDF5_InputTest_Ptr)( HDF5_Output_t *HDF5_InputTest ) = NULL;
+void (*Output_HDF5_InputTest_Ptr)( const LoadInputTestMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest ) = NULL;
 void (*Output_HDF5_User_Ptr)( HDF5_Output_t *HDF5_OutUser ) = NULL;
 static herr_t H5_write_user( const hid_t H5_GroupID, const hid_t H5_Type_ID, const HDF5_Output_t *HDF5_OutUser );
 
@@ -467,7 +467,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       FillIn_Makefile ( Makefile );
       FillIn_SymConst ( SymConst );
       FillIn_InputPara( InputPara, NFieldStored, FieldLabelOut );
-      Output_HDF5_InputTest_Ptr( &HDF5_InputTest );
+      Output_HDF5_InputTest_Ptr( LOAD_HDF5_OUTPUT, NULL, &HDF5_InputTest );
       if ( Output_HDF5_User_Ptr != NULL )   Output_HDF5_User_Ptr( &HDF5_OutputUser );
 
 

@@ -96,6 +96,70 @@ void Validate()
 
 #if ( MODEL == HYDRO )
 //-------------------------------------------------------------------------------------------------------
+// Function    :  LoadInputTestProb
+// Description :  Loading the problem-specific runtime parameters and storing them in HDF5 snapshots (Data_*)
+//
+// Note        :  1. Invoked by SetParameter()
+//                2. Invoked by Output_DumpData_Total_HDF5() using the fuction pointer "Output_HDF5_InputTest_Ptr"
+//                3. If there is no problem-specific runtime parameters to load, please add at least one parameter
+//                   to avoid empty structure of `HDF5_Output_t`.
+//                   --> Example:
+//                       AddInputTestPara( load_mode, "NewTestproblem_TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+//
+// Parameter   :  load_mode      : Load data structure mode
+//                                 LOAD_READPARA    : Load ReadPara_t
+//                                 LOAD_HDF5_OUTPUT : Load HDF5_Output_t
+//                ReadPara       : Data structure for loading runtime parameters
+//                HDF5_InputTest : Data structure storing the parameters to be stored in HDF5 snapshot
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void LoadInputTestProb( const LoadInputTestMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
+{
+
+#  ifndef SUPPORT_HDF5
+   if ( load_mode == LOAD_HDF5_OUTPUT )   Aux_Error( ERROR_INFO, "please turn on SUPPORT_HDF5 in the Makefile for load_mode == LOAD_HDF5_OUTPUT !!\n" );
+#  endif
+
+   if ( load_mode == LOAD_READPARA     &&  ReadPara       == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_READPARA and ReadPara == NULL !!\n" );
+   if ( load_mode == LOAD_HDF5_OUTPUT  &&  HDF5_InputTest == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_HDF5_OUTPUT and HDF5_InputTest == NULL !!\n" );
+
+// add parameters in the following format:
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
+// --> AddInputTestPara() is defined in "include/TestProb.h"
+// ********************************************************************************************************************************
+// AddInputTestPara( load_mode, "KEY_IN_THE_FILE",   &VARIABLE,               DEFAULT,      MIN,              MAX               );
+// ********************************************************************************************************************************
+   AddInputTestPara( load_mode, "Riemann_Prob",      &Riemann_Prob,          -1,            0,                12                );
+   AddInputTestPara( load_mode, "Riemann_LR",        &Riemann_LR,             1,            NoMin_int,        NoMax_int         );
+   AddInputTestPara( load_mode, "Riemann_XYZ",       &Riemann_XYZ,            0,            0,                2                 );
+   AddInputTestPara( load_mode, "Riemann_RhoL",      &Riemann_RhoL,           __DBL_MAX__,  __DBL_MIN__,      __DBL_MAX__       );
+   AddInputTestPara( load_mode, "Riemann_RhoR",      &Riemann_RhoR,           __DBL_MAX__,  __DBL_MIN__,      __DBL_MAX__       );
+   AddInputTestPara( load_mode, "Riemann_VelL",      &Riemann_VelL,           __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
+   AddInputTestPara( load_mode, "Riemann_VelR",      &Riemann_VelR,           __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
+   AddInputTestPara( load_mode, "Riemann_PreL",      &Riemann_PreL,           __DBL_MAX__,  __DBL_MIN__,      __DBL_MAX__       );
+   AddInputTestPara( load_mode, "Riemann_PreR",      &Riemann_PreR,           __DBL_MAX__,  __DBL_MIN__,      __DBL_MAX__       );
+   AddInputTestPara( load_mode, "Riemann_VelL_T1",   &Riemann_VelL_T1,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
+   AddInputTestPara( load_mode, "Riemann_VelL_T2",   &Riemann_VelL_T2,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
+   AddInputTestPara( load_mode, "Riemann_VelR_T1",   &Riemann_VelR_T1,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
+   AddInputTestPara( load_mode, "Riemann_VelR_T2",   &Riemann_VelR_T2,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
+   AddInputTestPara( load_mode, "Riemann_Pos",       &Riemann_Pos,            NoDef_double, NoMin_double,     NoMax_double      );
+   AddInputTestPara( load_mode, "Riemann_Width",     &Riemann_Width,          NoDef_double, Eps_double,       NoMax_double      );
+   AddInputTestPara( load_mode, "Riemann_EndT",      &Riemann_EndT,           __DBL_MAX__, -__DBL_MIN__,      __DBL_MAX__       );
+#  ifdef MHD
+   AddInputTestPara( load_mode, "Riemann_Mag",       &Riemann_Mag,            __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
+   AddInputTestPara( load_mode, "Riemann_MagL_T1",   &Riemann_MagL_T1,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
+   AddInputTestPara( load_mode, "Riemann_MagL_T2",   &Riemann_MagL_T2,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
+   AddInputTestPara( load_mode, "Riemann_MagR_T1",   &Riemann_MagR_T1,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
+   AddInputTestPara( load_mode, "Riemann_MagR_T2",   &Riemann_MagR_T2,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
+#  endif
+
+} // FUNCITON : LoadInputTestProb
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
 //
@@ -120,35 +184,7 @@ void SetParameter()
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
-// (1-1) add parameters in the following format:
-// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
-// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
-// ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
-// ********************************************************************************************************************************
-   ReadPara->Add( "Riemann_Prob",      &Riemann_Prob,          -1,            0,                12                );
-   ReadPara->Add( "Riemann_LR",        &Riemann_LR,             1,            NoMin_int,        NoMax_int         );
-   ReadPara->Add( "Riemann_XYZ",       &Riemann_XYZ,            0,            0,                2                 );
-   ReadPara->Add( "Riemann_RhoL",      &Riemann_RhoL,           __DBL_MAX__,  __DBL_MIN__,      __DBL_MAX__       );
-   ReadPara->Add( "Riemann_RhoR",      &Riemann_RhoR,           __DBL_MAX__,  __DBL_MIN__,      __DBL_MAX__       );
-   ReadPara->Add( "Riemann_VelL",      &Riemann_VelL,           __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
-   ReadPara->Add( "Riemann_VelR",      &Riemann_VelR,           __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
-   ReadPara->Add( "Riemann_PreL",      &Riemann_PreL,           __DBL_MAX__,  __DBL_MIN__,      __DBL_MAX__       );
-   ReadPara->Add( "Riemann_PreR",      &Riemann_PreR,           __DBL_MAX__,  __DBL_MIN__,      __DBL_MAX__       );
-   ReadPara->Add( "Riemann_VelL_T1",   &Riemann_VelL_T1,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
-   ReadPara->Add( "Riemann_VelL_T2",   &Riemann_VelL_T2,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
-   ReadPara->Add( "Riemann_VelR_T1",   &Riemann_VelR_T1,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
-   ReadPara->Add( "Riemann_VelR_T2",   &Riemann_VelR_T2,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
-   ReadPara->Add( "Riemann_Pos",       &Riemann_Pos,            NoDef_double, NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Riemann_Width",     &Riemann_Width,          NoDef_double, Eps_double,       NoMax_double      );
-   ReadPara->Add( "Riemann_EndT",      &Riemann_EndT,           __DBL_MAX__, -__DBL_MIN__,      __DBL_MAX__       );
-#  ifdef MHD
-   ReadPara->Add( "Riemann_Mag",       &Riemann_Mag,            __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
-   ReadPara->Add( "Riemann_MagL_T1",   &Riemann_MagL_T1,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
-   ReadPara->Add( "Riemann_MagL_T2",   &Riemann_MagL_T2,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
-   ReadPara->Add( "Riemann_MagR_T1",   &Riemann_MagR_T1,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
-   ReadPara->Add( "Riemann_MagR_T2",   &Riemann_MagR_T2,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
-#  endif
+   LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
 
    ReadPara->Read( FileName );
 
@@ -498,52 +534,6 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 
 } // FUNCTION : SetBFieldIC
 #endif // #ifdef MHD
-
-
-
-#ifdef SUPPORT_HDF5
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Output_HDF5_InputTest
-// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
-//
-// Note         : 1. This function only works in MPI_RANK == 0
-//                2. We support int, uint, long, ulong, bool, float, double, and string datatypes
-//                3. There MUST be at least one parameter to be stored
-//                4. The pointer of the data MUST still exist outside the function, e.g. global variables
-//
-// Parameter   :  HDF5_InputTest : the structure storing the parameters
-//
-// Return      :  None
-//-------------------------------------------------------------------------------------------------------
-void Output_HDF5_InputTest( HDF5_Output_t *HDF5_InputTest )
-{
-
-   HDF5_InputTest->Add( "Riemann_Prob",    &Riemann_Prob    );
-   HDF5_InputTest->Add( "Riemann_LR",      &Riemann_LR      );
-   HDF5_InputTest->Add( "Riemann_XYZ",     &Riemann_XYZ     );
-   HDF5_InputTest->Add( "Riemann_RhoL",    &Riemann_RhoL    );
-   HDF5_InputTest->Add( "Riemann_RhoR",    &Riemann_RhoR    );
-   HDF5_InputTest->Add( "Riemann_VelL",    &Riemann_VelL    );
-   HDF5_InputTest->Add( "Riemann_VelR",    &Riemann_VelR    );
-   HDF5_InputTest->Add( "Riemann_PreL",    &Riemann_PreL    );
-   HDF5_InputTest->Add( "Riemann_PreR",    &Riemann_PreR    );
-   HDF5_InputTest->Add( "Riemann_VelL_T1", &Riemann_VelL_T1 );
-   HDF5_InputTest->Add( "Riemann_VelL_T2", &Riemann_VelL_T2 );
-   HDF5_InputTest->Add( "Riemann_VelR_T1", &Riemann_VelR_T1 );
-   HDF5_InputTest->Add( "Riemann_VelR_T2", &Riemann_VelR_T2 );
-   HDF5_InputTest->Add( "Riemann_Pos",     &Riemann_Pos     );
-   HDF5_InputTest->Add( "Riemann_Width",   &Riemann_Width   );
-   HDF5_InputTest->Add( "Riemann_EndT",    &Riemann_EndT    );
-#  ifdef MHD
-   HDF5_InputTest->Add( "Riemann_Mag",     &Riemann_Mag     );
-   HDF5_InputTest->Add( "Riemann_MagL_T1", &Riemann_MagL_T1 );
-   HDF5_InputTest->Add( "Riemann_MagL_T2", &Riemann_MagL_T2 );
-   HDF5_InputTest->Add( "Riemann_MagR_T1", &Riemann_MagR_T1 );
-   HDF5_InputTest->Add( "Riemann_MagR_T2", &Riemann_MagR_T2 );
-#  endif
-
-} // FUNCTION : Output_HDF5_InputTest
-#endif // #ifdef SUPPORT_HDF5
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -579,7 +569,7 @@ void Init_TestProb_Hydro_Riemann()
    Init_Function_BField_User_Ptr = SetBFieldIC;
 #  endif
 #  ifdef SUPPORT_HDF5
-   Output_HDF5_InputTest_Ptr     = Output_HDF5_InputTest;
+   Output_HDF5_InputTest_Ptr     = LoadInputTestProb;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

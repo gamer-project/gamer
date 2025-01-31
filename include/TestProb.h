@@ -7,12 +7,28 @@
 #include "ReadPara.h"
 #ifdef SUPPORT_HDF5
 #include "HDF5_Typedef.h"
+#else
+struct HDF5_Output_t
+{
+   void Add( const char NewKey[], void* NewPtr )
+   {
+   }
+};
 #endif
+
+
+// common macro
+#  define AddInputTestPara( load_mode, para_name, para_ptr, ... )         \
+   {                                                                      \
+      if ( load_mode ) HDF5_InputTest->Add( para_name, para_ptr );        \
+      else             ReadPara->Add( para_name, para_ptr, __VA_ARGS__ ); \
+   }
 
 
 // common function prototypes
 static void Validate();
 static void SetParameter();
+static void LoadInputTestProb( const LoadInputTestMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest );
 static void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                        const int lv, double AuxArray[] );
 #ifdef MHD
@@ -41,7 +57,7 @@ extern void (*Init_User_Ptr)();
 extern void (*Init_User_AfterPoisson_Ptr)();
 extern void (*Output_User_Ptr)();
 #ifdef SUPPORT_HDF5
-extern void (*Output_HDF5_InputTest_Ptr)( HDF5_Output_t *HDF5_InputTest );
+extern void (*Output_HDF5_InputTest_Ptr)( const LoadInputTestMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest );
 extern void (*Output_HDF5_User_Ptr)( HDF5_Output_t *HDF5_OutUser );
 #endif
 extern void (*Output_UserWorkBeforeOutput_Ptr)();

@@ -554,6 +554,13 @@ const ExtremaMode_t
    EXTREMA_MAX = 2;
 
 
+// option in LoadInputTestProb()
+typedef int LoadInputTestMode_t;
+const LoadInputTestMode_t
+   LOAD_READPARA    = 0,
+   LOAD_HDF5_OUTPUT = 1;
+
+
 // function pointers
 typedef real (*EoS_GUESS_t)    ( const real Con[], real* const Constant, const double AuxArray_Flt[],
                                  const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] );
