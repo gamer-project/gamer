@@ -13,6 +13,10 @@
 #error : ERROR : unsupported RANDOM_NUMBER !!
 #endif
 
+#if ( ( defined (__APPLE__) || defined (__MACH__) )  &&  RANDOM_NUMBER != RNG_CPP11 )
+#error : ERROR : macOS requires RANDOM_NUMBER == RNG_CPP11 !!
+#endif
+
 void Aux_Error( const char *File, const int Line, const char *Func, const char *Format, ... );
 
 

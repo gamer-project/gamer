@@ -243,6 +243,11 @@ void Aux_Check_Parameter()
    if ( OPT__MEMORY_POOL  &&  !OPT__REUSE_MEMORY )
       Aux_Error( ERROR_INFO, "please turn on OPT__REUSE_MEMORY for OPT__MEMORY_POOL !!\n" );
 
+#  ifdef __APPLE__
+   if ( OPT__RECORD_MEMORY )
+      Aux_Message( stderr, "WARNING : memory reporting is not currently supported on macOS !!\n" );
+#  endif
+
    if ( OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_NONE  &&  OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_EVERY_STEP  &&
         OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_BEFORE_DUMP )
       Aux_Error( ERROR_INFO, "incorrect option \"OPT__CORR_AFTER_ALL_SYNC = %d\" [0/1/2] !!\n", OPT__CORR_AFTER_ALL_SYNC );
@@ -330,6 +335,17 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "OPT__OUTPUT_ENTR does not support EOS_ISOTHERMAL !!\n" );
 #  endif
 #  endif // #if ( MODEL == HYDRO )
+
+
+   if ( strlen(OUTPUT_DIR) > MAX_STRING-100-1 )
+      Aux_Error( ERROR_INFO, "Length of OUTPUT_DIR (%d) should be smaller than MAX_STRING-100-1 (%d) !!\n",
+                 strlen(OUTPUT_DIR), MAX_STRING-100-1 );
+
+   if (  ! Aux_CheckFolderExist( OUTPUT_DIR )  )
+      Aux_Error( ERROR_INFO, "\"%s\" folder set by OUTPUT_DIR does not exist !!\n", OUTPUT_DIR );
+
+   if (  ! Aux_CheckPermission( OUTPUT_DIR, 2+1 )  )
+      Aux_Error( ERROR_INFO, "You do not have write and execute permissions for the \"%s\" folder set by OUTPUT_DIR !!\n", OUTPUT_DIR );
 
 
 

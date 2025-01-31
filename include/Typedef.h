@@ -215,7 +215,8 @@ const OptOutputPart_t
    OUTPUT_X         = 4,
    OUTPUT_Y         = 5,
    OUTPUT_Z         = 6,
-   OUTPUT_DIAG      = 7;
+   OUTPUT_DIAG      = 7,
+   OUTPUT_BOX       = 8;
 
 
 // OPT_OUTPUT_PAR_MODE options

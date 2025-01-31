@@ -38,10 +38,14 @@ static void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const
 //                               --> Usually set to the same function pointer for initializing B field
 //                                   (e.g., SetBFieldIC() in various test problems)
 //                Prefix       : Prefix of the output filename
-//                Part         : OUTPUT_X    : x line
+//                Part         : OUTPUT_XY   : x-y plane
+//                               OUTPUT_XZ   : x-z plane
+//                               OUTPUT_YZ   : y-z plane
+//                               OUTPUT_X    : x line
 //                               OUTPUT_Y    : y line
 //                               OUTPUT_Z    : z line
 //                               OUTPUT_DIAG : diagonal along (+1,+1,+1)
+//                               OUTPUT_BOX  : entire box
 //                x/y/z        : spatial coordinates for Part
 //
 // Return      :  None
@@ -74,38 +78,38 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
    char FileName[NERR][MAX_STRING];
 
 #  if   ( MODEL == HYDRO )
-   sprintf( FileName[            0], "%s_Dens_%06d", Prefix, DumpID );
-   sprintf( FileName[            1], "%s_MomX_%06d", Prefix, DumpID );
-   sprintf( FileName[            2], "%s_MomY_%06d", Prefix, DumpID );
-   sprintf( FileName[            3], "%s_MomZ_%06d", Prefix, DumpID );
-   sprintf( FileName[            4], "%s_Pres_%06d", Prefix, DumpID );
+   sprintf( FileName[            0], "%s/%s_Dens_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            1], "%s/%s_MomX_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            2], "%s/%s_MomY_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            3], "%s/%s_MomZ_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            4], "%s/%s_Pres_%06d", OUTPUT_DIR, Prefix, DumpID );
 
    for (int v=0; v<NCOMP_PASSIVE; v++)
-   sprintf( FileName[NCOMP_FLUID+v], "%s_Passive%02d_%06d", Prefix, v, DumpID );
+   sprintf( FileName[NCOMP_FLUID+v], "%s/%s_Passive%02d_%06d", OUTPUT_DIR, Prefix, v, DumpID );
 
 #  ifdef MHD
-   sprintf( FileName[NCOMP_TOTAL+0], "%s_MagX_%06d", Prefix, DumpID );
-   sprintf( FileName[NCOMP_TOTAL+1], "%s_MagY_%06d", Prefix, DumpID );
-   sprintf( FileName[NCOMP_TOTAL+2], "%s_MagZ_%06d", Prefix, DumpID );
+   sprintf( FileName[NCOMP_TOTAL+0], "%s/%s_MagX_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[NCOMP_TOTAL+1], "%s/%s_MagY_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[NCOMP_TOTAL+2], "%s/%s_MagZ_%06d", OUTPUT_DIR, Prefix, DumpID );
 #  endif
 
-   sprintf( FileName[     NBASIC+0], "%s_Temp_%06d", Prefix, DumpID );
+   sprintf( FileName[     NBASIC+0], "%s/%s_Temp_%06d", OUTPUT_DIR, Prefix, DumpID );
 
 #  elif ( MODEL == ELBDM )
 #  if   ( ELBDM_SCHEME == ELBDM_WAVE )
-   sprintf( FileName[            0], "%s_Dens_%06d", Prefix, DumpID );
-   sprintf( FileName[            1], "%s_Real_%06d", Prefix, DumpID );
-   sprintf( FileName[            2], "%s_Imag_%06d", Prefix, DumpID );
+   sprintf( FileName[            0], "%s/%s_Dens_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            1], "%s/%s_Real_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            2], "%s/%s_Imag_%06d", OUTPUT_DIR, Prefix, DumpID );
 #  elif ( ELBDM_SCHEME == ELBDM_HYBRID )
-   sprintf( FileName[            0], "%s_Dens_%06d", Prefix, DumpID );
-   sprintf( FileName[            1], "%s_Phas_%06d", Prefix, DumpID );
-   sprintf( FileName[            2], "%s_Stub_%06d", Prefix, DumpID );
+   sprintf( FileName[            0], "%s/%s_Dens_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            1], "%s/%s_Phas_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            2], "%s/%s_Stub_%06d", OUTPUT_DIR, Prefix, DumpID );
 #  else
 #  error : ERROR : unsupported ELBDM_SCHEME !!
 #  endif // ELBDM_SCHEME
 
    for (int v=0; v<NCOMP_PASSIVE; v++)
-   sprintf( FileName[NCOMP_FLUID+v], "%s_Passive%02d_%06d", Prefix, v, DumpID );
+   sprintf( FileName[NCOMP_FLUID+v], "%s/%s_Passive%02d_%06d", OUTPUT_DIR, Prefix, v, DumpID );
 
 #  else
 #  error : ERROR : unsupported MODEL !!
@@ -133,6 +137,8 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 
 
 // prepare to output errors
+   int     dim;
+   char    coord1, coord2, coord3;
    double  dh, xx, yy, zz;
    int    *Corner  = NULL;
    double *EdgeL   = NULL;
@@ -140,6 +146,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
    bool    Check_x = false;
    bool    Check_y = false;
    bool    Check_z = false;
+   long    NGrid   = 0L;
 
    double L1_Err[NERR];
    static bool FirstTime = true;
@@ -148,13 +155,16 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 
    switch ( Part )
    {
-      case OUTPUT_X    :                    Check_y = true;   Check_z = true;   break;
-      case OUTPUT_Y    :  Check_x = true;                     Check_z = true;   break;
-      case OUTPUT_Z    :  Check_x = true;   Check_y = true;                     break;
-      case OUTPUT_DIAG :  Check_x = false;  Check_y = false;  Check_z = false;  break;
-      default          :  Aux_Error( ERROR_INFO, "unsupported option \"Part = %d\" [4/5/6/7] !!\n", Part );
+      case OUTPUT_XY   :                                      Check_z = true;   dim = 2;  coord1 = 'X';  coord2 = 'Y';                 break;
+      case OUTPUT_YZ   :  Check_x = true;                                       dim = 2;  coord1 = 'Y';  coord2 = 'Z';                 break;
+      case OUTPUT_XZ   :                    Check_y = true;                     dim = 2;  coord1 = 'X';  coord2 = 'Z';                 break;
+      case OUTPUT_X    :                    Check_y = true;   Check_z = true;   dim = 1;  coord1 = 'X';                                break;
+      case OUTPUT_Y    :  Check_x = true;                     Check_z = true;   dim = 1;  coord1 = 'Y';                                break;
+      case OUTPUT_Z    :  Check_x = true;   Check_y = true;                     dim = 1;  coord1 = 'Z';                                break;
+      case OUTPUT_DIAG :  Check_x = false;  Check_y = false;  Check_z = false;  dim = 1;  coord1 = 'X';                                break;
+      case OUTPUT_BOX  :  Check_x = false;  Check_y = false;  Check_z = false;  dim = 3;  coord1 = 'X';  coord2 = 'Y';  coord3 = 'Z';  break;
+      default          :  Aux_Error( ERROR_INFO, "unsupported option \"Part = %d\" [1/2/3/4/5/6/7/8] !!\n", Part );
    }
-
 
 // output one MPI rank at a time
    for (int TRank=0; TRank<MPI_NRank; TRank++)
@@ -168,8 +178,16 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
          if ( TRank == 0 )
          {
             for (int v=0; v<NERR; v++)
-               fprintf( File[v], "#%*s %*s %*s %*s\n", StrLen_Flt, "Coord.", StrLen_Flt, "Numerical",
-                        StrLen_Flt, "Analytical", StrLen_Flt, "Error" );
+            {
+               fprintf( File[v], "#%*s %c", StrLen_Flt, "Coord.", coord1 );
+               if ( dim >= 2 )
+               fprintf( File[v], " %*s %c", StrLen_Flt, "Coord.", coord2 );
+               if ( dim == 3 )
+               fprintf( File[v], " %*s %c", StrLen_Flt, "Coord.", coord3 );
+
+               fprintf( File[v], " %*s %*s %*s\n",
+                        StrLen_Flt, "Numerical", StrLen_Flt, "Analytical", StrLen_Flt, "Error" );
+            }
          }
 
 
@@ -194,10 +212,10 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
                         for (int k=0; k<PS1; k++)
                         {
                            WriteFile( AnalFunc_Flu, AnalFunc_Mag, File, lv, PID, k, k, k, L1_Err, Part );
+                           NGrid++;
                         }
                      }
                   } // if ( Part == OUTPUT_DIAG )
-
 
                   else // x/y/z lines || xy/yz/xz slices
                   {
@@ -217,10 +235,11 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
                                                       if ( Check_x && ( xx>x || xx+dh<=x ) )    continue;
 
                            WriteFile( AnalFunc_Flu, AnalFunc_Mag, File, lv, PID, i, j, k, L1_Err, Part );
+                           NGrid++;
 
                         }}}
                      }
-                  } // if ( Part == OUTPUT_DIAG ... else ... )
+                  } // if ( Part == OUTPUT_DIAG ) ... else ...
                } // if ( amr->patch[0][lv][PID]->son == -1 )
             } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
          } // for (int lv=0; lv<NLEVEL; lv++)
@@ -236,33 +255,41 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 
 // gather the L1 error from all ranks and output the results
    double L1_Err_Sum[NERR], Norm;
-   MPI_Reduce( L1_Err, L1_Err_Sum, NERR, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+   long   NGrid_Sum;
+   MPI_Reduce(  L1_Err,  L1_Err_Sum, NERR, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+   MPI_Reduce( &NGrid,  &NGrid_Sum,  1,    MPI_LONG,   MPI_SUM, 0, MPI_COMM_WORLD );
 
    if ( MPI_Rank == 0 )
    {
       switch ( Part )
       {
-         case OUTPUT_X    :  Norm = amr->BoxSize[0];  break;
-         case OUTPUT_Y    :  Norm = amr->BoxSize[1];  break;
-         case OUTPUT_Z    :  Norm = amr->BoxSize[2];  break;
-         case OUTPUT_DIAG :  Norm = amr->BoxSize[0];  break;
-         default          :  Aux_Error( ERROR_INFO, "unsupported option \"Part = %d\" [4/5/6/7] !!\n", Part );
+         case OUTPUT_XY   :  Norm = amr->BoxSize[0]*amr->BoxSize[1];                  break;
+         case OUTPUT_XZ   :  Norm = amr->BoxSize[0]*amr->BoxSize[2];                  break;
+         case OUTPUT_YZ   :  Norm =                 amr->BoxSize[1]*amr->BoxSize[2];  break;
+         case OUTPUT_X    :  Norm = amr->BoxSize[0];                                  break;
+         case OUTPUT_Y    :  Norm =                 amr->BoxSize[1];                  break;
+         case OUTPUT_Z    :  Norm =                                 amr->BoxSize[2];  break;
+         case OUTPUT_DIAG :  Norm = amr->BoxSize[0];                                  break;
+         case OUTPUT_BOX  :  Norm = amr->BoxSize[0]*amr->BoxSize[1]*amr->BoxSize[2];  break;
+         default          :  Aux_Error( ERROR_INFO, "unsupported option \"Part = %d\" [1/2/3/4/5/6/7/8] !!\n", Part );
       }
 
       for (int v=0; v<NERR; v++)    L1_Err_Sum[v] /= Norm;
 
-      FILE *File_L1 = fopen( "Record__L1Err", "a" );
+      char FileName_L1[MAX_STRING];
+      sprintf( FileName_L1, "%s/Record__L1Err", OUTPUT_DIR );
+      FILE *File_L1 = fopen( FileName_L1, "a" );
 
 //    output header
       if ( FirstTime )
       {
 #        if   ( MODEL == HYDRO )
-         fprintf( File_L1, "#%5s %13s %*s %*s %*s %*s %*s", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
+         fprintf( File_L1, "#%11s %13s %*s %*s %*s %*s %*s", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
                   StrLen_Flt, "Error(MomX)", StrLen_Flt, "Error(MomY)", StrLen_Flt, "Error(MomZ)", StrLen_Flt, "Error(Pres)" );
 
          for (int v=0; v<NCOMP_PASSIVE; v++) {
             char tmp_str[MAX_STRING];
-            sprintf(tmp_str, "Error(Passive%02d)", v);
+            sprintf( tmp_str, "Error(Passive%02d)", v );
             fprintf( File_L1, " %*s", StrLen_Flt, tmp_str );
          }
 
@@ -278,10 +305,10 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 #        elif ( MODEL == ELBDM )
 #        if   ( ELBDM_SCHEME == ELBDM_WAVE )
 
-         fprintf( File_L1, "#%5s %13s %*s %*s %*s", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
+         fprintf( File_L1, "#%11s %13s %*s %*s %*s", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
                   StrLen_Flt, "Error(Real)", StrLen_Flt, "Error(Imag)" );
 #        elif ( ELBDM_SCHEME == ELBDM_HYBRID )
-         fprintf( File_L1, "#%5s %13s %*s %*s %*s", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
+         fprintf( File_L1, "#%11s %13s %*s %*s %*s", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
                   StrLen_Flt, "Error(Phas)", StrLen_Flt, "Stub" );
 #        else
 #        error : ERROR : unsupported ELBDM_SCHEME !!
@@ -303,7 +330,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
       } // if ( FirstTime )
 
 //    output data
-      fprintf( File_L1, "%6d %13.7e", (Part==OUTPUT_DIAG)?NX0_TOT[0]:NX0_TOT[Part-OUTPUT_X], Time[0] );
+      fprintf( File_L1, "%12ld %13.7e", NGrid_Sum, Time[0] );
 
       for (int v=0; v<NERR; v++)   fprintf( File_L1, BlankPlusFormat_Flt, L1_Err_Sum[v] );
 
@@ -333,10 +360,14 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 //                PID          : Patch ID
 //                i/j/k        : Cell indices within the patch
 //                L1_Err       : Array to record the L1 errors of all variables
-//                Part         : OUTPUT_X    : x line
+//                Part         : OUTPUT_XY   : x-y plane
+//                               OUTPUT_XZ   : x-z plane
+//                               OUTPUT_YZ   : y-z plane
+//                               OUTPUT_X    : x line
 //                               OUTPUT_Y    : y line
 //                               OUTPUT_Z    : z line
 //                               OUTPUT_DIAG : diagonal along (+1,+1,+1)
+//                               OUTPUT_BOX  : entire box
 //
 // Return      :  L1_Err
 //-------------------------------------------------------------------------------------------------------
@@ -427,26 +458,39 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 #  endif
 
 
-// record the physical coordinate
-   double r;
+// record the physical coordinate(s)
+   double r1, r2, r3;
+   int dim;
 
    switch ( Part )
    {
-      case OUTPUT_X    : r = x;              break;
-      case OUTPUT_Y    : r = y;              break;
-      case OUTPUT_Z    : r = z;              break;
-      case OUTPUT_DIAG : r = sqrt(3.0)*x;    break;
-      default          : Aux_Error( ERROR_INFO, "unsupported option \"Part = %d\" [4/5/6/7] !!\n", Part );
+      case OUTPUT_XY   : r1 = x;            r2 = y;           dim = 2;  break;
+      case OUTPUT_XZ   : r1 = x;            r2 = z;           dim = 2;  break;
+      case OUTPUT_YZ   : r1 = y;            r2 = z;           dim = 2;  break;
+      case OUTPUT_X    : r1 = x;                              dim = 1;  break;
+      case OUTPUT_Y    : r1 = y;                              dim = 1;  break;
+      case OUTPUT_Z    : r1 = z;                              dim = 1;  break;
+      case OUTPUT_DIAG : r1 = sqrt(3.0)*x;                    dim = 1;  break;
+      case OUTPUT_BOX  : r1 = x;            r2 = y;  r3 = z;  dim = 3;  break;
+      default          : Aux_Error( ERROR_INFO, "unsupported option \"Part = %d\" [1/2/3/4/5/6/7/8] !!\n", Part );
    }
 
+   const double dv = (dim==1) ? dh : (dim==2) ? SQR(dh) : CUBE(dh);
 
 // estimate and output errors
    for (int v=0; v<NERR; v++)
    {
       Err   [v]  = FABS( Anal[v] - Nume[v] );
-      L1_Err[v] += Err[v]*dh;
+      L1_Err[v] += Err[v]*dv;
 
-      fprintf( File[v], BlankPlusFormat_Flt, r       );
+      fprintf( File[v], "  "                         );
+      fprintf( File[v], BlankPlusFormat_Flt, r1      );
+      if ( dim >= 2 ) {
+      fprintf( File[v], "  "                         );
+      fprintf( File[v], BlankPlusFormat_Flt, r2      ); }
+      if ( dim == 3 ) {
+      fprintf( File[v], "  "                         );
+      fprintf( File[v], BlankPlusFormat_Flt, r3      ); }
       fprintf( File[v], BlankPlusFormat_Flt, Nume[v] );
       fprintf( File[v], BlankPlusFormat_Flt, Anal[v] );
       fprintf( File[v], BlankPlusFormat_Flt, Err[v]  );

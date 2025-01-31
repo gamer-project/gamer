@@ -1,7 +1,18 @@
-> [!TIP]
-> To set up your machine configuration file, make a copy of `template.config` and modify it.
+The machine configuration file is located under `configs`. It specifies the library paths, compiler types, compilation flags, and GPU compute capability.
 
-The machine configuration file is under `configs`. The configuration file contains the library paths, the compiler types, the compilation flags, and the GPU compute capability.
+> [!TIP]
+> Check the `configs` directory to see if a configuration file is already available for your machine.
+
+## Set Up the Machine Configuration File
+
+To set up your machine configuration file, go to `configs` and make a copy of `template.config` to modify:
+    
+```bash
+cd configs
+cp template.config your_machine.config
+```
+
+Please refer to the following sections to set up your machine configuration file.
 
 ### 0. Rules of the configuration file
 * Comments must start with `#`.
