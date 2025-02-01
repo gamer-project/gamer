@@ -203,7 +203,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double WaveK      = MHD_CPAW_WaveNumber;
 
    double kr, WaveW, WaveForm1, WaveForm2, Gamma, DampForm;
-   double Dens, Mom1, Mom2, MomX, MomY, MomZ, Pres, Eint, Etot;
+   double Dens, Mom0, Mom1, Mom2, MomX, MomY, MomZ, Pres, Eint, Etot;
 
    switch ( MHD_CPAW_Dir ) {
       case 0:  kr = WaveK*x;                        break;
@@ -217,31 +217,32 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    Dens = Rho0;
    Pres = P0;
 
-   WaveForm1 = cos( kr - WaveW*Time );
-   WaveForm2 = sin( kr - WaveW*Time );
-   Mom1      = Dens * WaveSpeed * A * WaveForm1;
-   Mom2      = Dens * WaveSpeed * A * WaveForm2;
+   WaveForm1 =  sin( kr - WaveW*Time );
+   WaveForm2 =  cos( kr - WaveW*Time );
+   Mom0      =  Dens * WaveSpeed;
+   Mom1      = -Dens * WaveSpeed * A * WaveForm1;
+   Mom2      = -Dens * WaveSpeed * A * WaveForm2;
 
    switch ( MHD_CPAW_Dir ) {
       case 0:  
-         MomX =  0.0;                
-         MomY =  Mom1/sqrt(2.0); 
-         MomZ =  Mom2/sqrt(2.0); 
+         MomX =  Mom0;                
+         MomY =  Mom1; 
+         MomZ =  Mom2; 
          break;
       case 1:  
-         MomX =  Mom2/sqrt(2.0);     
-         MomY =  0.0;            
-         MomZ =  Mom1/sqrt(2.0); 
+         MomX =  Mom2;     
+         MomY =  Mom0;            
+         MomZ =  Mom1; 
          break;
       case 2:  
-         MomX =  Mom1/sqrt(2.0);    
-         MomY =  Mom2/sqrt(2.0); 
-         MomZ =  0.0;           
+         MomX =  Mom1;    
+         MomY =  Mom2; 
+         MomZ =  Mom0;           
          break;
       case 3:  
-         MomX =  Mom1/sqrt(2.0) + Mom2/sqrt(6.0);  
-         MomY = -Mom1/sqrt(2.0) + Mom2/sqrt(6.0);           
-         MomZ = -2.0*Mom2/sqrt(6.0);       
+         MomX =  Mom0/sqrt(3.0) + Mom1/sqrt(2.0) + Mom2/sqrt(6.0);  
+         MomY =  Mom0/sqrt(3.0) - Mom1/sqrt(2.0) + Mom2/sqrt(6.0);           
+         MomZ =  Mom0/sqrt(3.0) - 2.0*Mom2/sqrt(6.0);       
          break;
    }
 
@@ -296,17 +297,20 @@ double SetAFieldIC( const double x, const double y, const double z, const double
    double kr, WaveW, WaveForm1, WaveForm2;
    double e1x, e1y, e1z, e2x, e2y, e2z;
    double A1, A2, mag_vecpot;
+   double xcomp, ycomp, zcomp;
 
    switch ( MHD_CPAW_Dir ) {
       case 0:  
-         kr  =  WaveK*x;
-         e1x =  0.0;           e1y =  1.0/sqrt(2.0); e1z =  1.0/sqrt(2.0);
-         e2x =  0.0;           e2y =  1.0/sqrt(2.0); e2z =  1.0/sqrt(2.0);                        
+         kr    = WaveK*x;
+         e1x   = 0.0;          e1y   =  1.0; e1z   =  0.0;
+         e2x   = 0.0;          e2y   =  0.0; e2z   =  1.0;   
+         xcomp = 0.0;          ycomp = z;             zcomp =  y;                     
          break;
       case 1:  
-         kr  =  WaveK*y;  
-         e1x =  1.0/sqrt(2.0); e1y =  0.0;           e1z =  1.0/sqrt(2.0);
-         e2x =  1.0/sqrt(2.0); e1y =  0.0;           e2z =  1.0/sqrt(2.0);                                     
+         kr    =  WaveK*y;  
+         e1x   =  1.0;         e1y =  0.0;           e1z =  1.0/sqrt(2.0);
+         e2x   =  1.0;         e1y =  0.0;           e2z =  1.0/sqrt(2.0);       
+         xcomp = 0.0;          ycomp = -z;             zcomp =  y;                                          
          break;
       case 2:  
          kr  =  WaveK*z;       
@@ -322,16 +326,16 @@ double SetAFieldIC( const double x, const double y, const double z, const double
    
    WaveW     = WaveK*WaveSpeed;
 
-   WaveForm1 =  sin( kr - WaveW*Time );
-   WaveForm2 = -cos( kr - WaveW*Time );
-   A1        = B0 * A * WaveForm1 / WaveK;
-   A2        = B0 * A * WaveForm2 / WaveK;
+   WaveForm1 = -sin( kr - WaveW*Time );
+   WaveForm2 =  cos( kr - WaveW*Time );
+   A1        =  B0 * A * WaveForm1 / WaveK;
+   A2        =  B0 * A * WaveForm2 / WaveK;
 
    switch ( Component )
    {
-      case 'x' :   mag_vecpot = A1*e1x+A2*e2x;  break;
-      case 'y' :   mag_vecpot = A1*e1y+A2*e2y;  break;
-      case 'z' :   mag_vecpot = A1*e1z+A2*e2z;  break;
+      case 'x' :   mag_vecpot = 0.5*B0*xcomp+A1*e1x+A2*e2x;  break;
+      case 'y' :   mag_vecpot = 0.5*B0*ycomp+A1*e1y+A2*e2y;  break;
+      case 'z' :   mag_vecpot = 0.5*B0*zcomp+A1*e1z+A2*e2z;  break;
       default  :   Aux_Error( ERROR_INFO, "unsupported component (%c) !!\n", Component );
    }
 
