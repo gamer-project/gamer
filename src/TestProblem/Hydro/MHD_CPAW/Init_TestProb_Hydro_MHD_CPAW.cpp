@@ -304,23 +304,28 @@ double SetAFieldIC( const double x, const double y, const double z, const double
          kr    = WaveK*x;
          e1x   = 0.0;          e1y   =  1.0; e1z   =  0.0;
          e2x   = 0.0;          e2y   =  0.0; e2z   =  1.0;   
-         xcomp = 0.0;          ycomp = z;             zcomp =  y;                     
+         xcomp = 0.0;          ycomp =  0.0;  zcomp =  y;                     
          break;
       case 1:  
-         kr    =  WaveK*y;  
-         e1x   =  1.0;         e1y =  0.0;           e1z =  1.0/sqrt(2.0);
-         e2x   =  1.0;         e1y =  0.0;           e2z =  1.0/sqrt(2.0);       
-         xcomp = 0.0;          ycomp = -z;             zcomp =  y;                                          
+         kr    = WaveK*y;  
+         e1x   = 0.0;          e1y   =  0.0;         e1z   =  1.0;
+         e2x   = 1.0;          e1y   =  0.0;         e2z   =  0.0;       
+         xcomp = z;            ycomp = 0.0;          zcomp =  0.0;                                          
          break;
       case 2:  
-         kr  =  WaveK*z;       
-         e1x =  1.0/sqrt(2.0); e1y =  1.0/sqrt(2.0); e1z =  0.0;
-         e2x =  1.0/sqrt(2.0); e1y =  1.0/sqrt(2.0); e2z =  0.0;                                            
+         kr    = WaveK*z;       
+         e1x   = 1.0;          e1y   =  0.0;           e1z   =  0.0;
+         e2x   = 0.0;          e1y   =  1.0;           e2z   =  0.0;      
+         xcomp = z;            ycomp = x;            zcomp =  0.0;                                          
+                             
          break;
       case 3:  
          kr  =  WaveK*( x + y + z )/sqrt(3.0);  
-         e1x =  1.0/sqrt(2.0); e1y = -1.0/sqrt(2.0); e1z =  0.0;
-         e2x =  1.0/sqrt(6.0); e1y =  1.0/sqrt(6.0); e2z = -2.0/sqrt(6.0);                                            
+         e1x =  1.0/sqrt(2.0); e1y = -1.0/sqrt(2.0); e1z   =  0.0;
+         e2x =  1.0/sqrt(6.0); e1y =  1.0/sqrt(6.0); e2z   = -2.0/sqrt(6.0);     
+         xcomp = 0.5*(z-y)/sqrt(3.0);    
+         ycomp = 0.5*(x-z)/sqrt(3.0);    
+         zcomp = 0.5*(y-x)/sqrt(3.0);                                          
          break;
    }
    
@@ -333,9 +338,9 @@ double SetAFieldIC( const double x, const double y, const double z, const double
 
    switch ( Component )
    {
-      case 'x' :   mag_vecpot = 0.5*B0*xcomp+A1*e1x+A2*e2x;  break;
-      case 'y' :   mag_vecpot = 0.5*B0*ycomp+A1*e1y+A2*e2y;  break;
-      case 'z' :   mag_vecpot = 0.5*B0*zcomp+A1*e1z+A2*e2z;  break;
+      case 'x' :   mag_vecpot = B0*xcomp+A1*e1x+A2*e2x;  break;
+      case 'y' :   mag_vecpot = B0*ycomp+A1*e1y+A2*e2y;  break;
+      case 'z' :   mag_vecpot = B0*zcomp+A1*e1z+A2*e2z;  break;
       default  :   Aux_Error( ERROR_INFO, "unsupported component (%c) !!\n", Component );
    }
 
@@ -343,6 +348,74 @@ double SetAFieldIC( const double x, const double y, const double z, const double
    return mag_vecpot;
 
 } // FUNCTION : SetAFieldIC
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  CheckBField
+// Description :  Check the problem-specific magnetic field
+//
+// Note        :  1. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+//                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
+//                   --> Please ensure that everything here is thread-safe
+//
+// Parameter   :  magnetic : Array to store the output magnetic field
+//                x/y/z    : Target physical coordinates
+//                Time     : Target physical time
+//                lv       : Target refinement level
+//                AuxArray : Auxiliary array
+//
+// Return      :  magnetic
+//-------------------------------------------------------------------------------------------------------
+void CheckBField( real magnetic[], const double x, const double y, const double z, const double Time,
+                    const int lv, double AuxArray[] )
+{
+
+
+// short names
+   const double A          = MHD_CPAW_A;
+   const double B0         = MHD_CPAW_B0;
+   const double WaveSpeed  = MHD_CPAW_WaveSpeed;
+   const double WaveLength = MHD_CPAW_WaveLength;
+   const double WaveK      = MHD_CPAW_WaveNumber;
+
+   double kr, B1, B2, WaveW, WaveForm1, WaveForm2;
+
+   switch ( MHD_CPAW_Dir ) {
+      case 0:  kr = WaveK*x;                        break;
+      case 1:  kr = WaveK*y;                        break;
+      case 2:  kr = WaveK*z;                        break;
+      case 3:  kr = WaveK*( x + y + z )/sqrt(3.0);  break;
+   }
+
+   WaveW     =  WaveK*WaveSpeed;
+   WaveForm1 =  sin( kr - WaveW*Time );
+   WaveForm2 =  cos( kr - WaveW*Time );
+   B1        =  B0 * A * WaveForm1;
+   B2        =  B0 * A * WaveForm2;
+
+   switch ( MHD_CPAW_Dir ) {
+      case 0: magnetic[MAGX] = B0;
+              magnetic[MAGY] = B1;
+              magnetic[MAGZ] = B2;
+              break;
+
+      case 1: magnetic[MAGX] = B2;
+              magnetic[MAGY] = B0;
+              magnetic[MAGZ] = B1;
+              break;
+
+      case 2: magnetic[MAGX] = B1;
+              magnetic[MAGY] = B2;
+              magnetic[MAGZ] = B0;
+              break;
+
+      case 3: magnetic[MAGX] = B0/sqrt(3.0) + B1/sqrt(2.0) + B2/sqrt(6.0);
+              magnetic[MAGY] = B0/sqrt(3.0) - B1/sqrt(2.0) + B2/sqrt(6.0); 
+              magnetic[MAGZ] = B0/sqrt(3.0) - 2.0*B2/sqrt(6.0);     
+              break;
+   }
+
+} // FUNCTION : CheckBField
+
 #endif // #ifdef MHD
 
 
@@ -363,7 +436,7 @@ static void OutputError()
    const char Prefix[100]     = "MHD_CPAW";
    const OptOutputPart_t Part = OUTPUT_X + MHD_CPAW_Dir;
 
-   Output_L1Error( SetGridIC, NULL, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
+   Output_L1Error( SetGridIC, CheckBField, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
 
 } // FUNCTION : OutputError
 #endif // #if ( MODEL == HYDRO )
