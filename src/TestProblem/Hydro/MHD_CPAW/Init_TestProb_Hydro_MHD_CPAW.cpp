@@ -220,29 +220,29 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    WaveForm1 =  sin( kr - WaveW*Time );
    WaveForm2 =  cos( kr - WaveW*Time );
    Mom0      =  Dens * WaveSpeed;
-   Mom1      = -Dens * WaveSpeed * A * WaveForm1;
-   Mom2      = -Dens * WaveSpeed * A * WaveForm2;
+   Mom1      = -Mom0 * A * WaveForm1;
+   Mom2      = -Mom0 * A * WaveForm2;
 
    switch ( MHD_CPAW_Dir ) {
       case 0:  
-         MomX =  Mom0;                
-         MomY =  Mom1; 
-         MomZ =  Mom2; 
+         MomX = Mom0;                
+         MomY = Mom1; 
+         MomZ = Mom2; 
          break;
       case 1:  
-         MomX =  Mom2;     
-         MomY =  Mom0;            
-         MomZ =  Mom1; 
+         MomX = Mom2;     
+         MomY = Mom0;            
+         MomZ = Mom1; 
          break;
       case 2:  
-         MomX =  Mom1;    
-         MomY =  Mom2; 
-         MomZ =  Mom0;           
+         MomX = Mom1;    
+         MomY = Mom2; 
+         MomZ = Mom0;           
          break;
       case 3:  
-         MomX =  Mom0/sqrt(3.0) + Mom1/sqrt(2.0) + Mom2/sqrt(6.0);  
-         MomY =  Mom0/sqrt(3.0) - Mom1/sqrt(2.0) + Mom2/sqrt(6.0);           
-         MomZ =  Mom0/sqrt(3.0) - 2.0*Mom2/sqrt(6.0);       
+         MomX = Mom0/sqrt(3.0) + Mom1/sqrt(2.0) + Mom2/sqrt(6.0);  
+         MomY = Mom0/sqrt(3.0) - Mom1/sqrt(2.0) + Mom2/sqrt(6.0);           
+         MomZ = Mom0/sqrt(3.0) - 2.0*Mom2/sqrt(6.0);       
          break;
    }
 
