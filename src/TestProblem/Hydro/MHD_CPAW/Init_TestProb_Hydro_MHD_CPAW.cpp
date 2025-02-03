@@ -12,7 +12,8 @@ static int    MHD_CPAW_Dir;           // wave direction: (0/1/2/3) --> (x/y/z/di
 
 static double MHD_CPAW_WaveSpeed;     // propagation speed
 static double MHD_CPAW_WaveLength;    // wavelength
-static double MHD_CPAW_WaveNumber;    // wavelength
+static double MHD_CPAW_WaveNumber;    // wavenumber
+static double MHD_CPAW_WaveFrequency; // wave frequency
 // =======================================================================================
 
 
@@ -128,13 +129,14 @@ void SetParameter()
 
 // (2) set the problem-specific derived parameters
    MHD_CPAW_WaveLength = ( MHD_CPAW_Dir == 3 ) ? amr->BoxSize[0]/sqrt(3.0) : amr->BoxSize[MHD_CPAW_Dir];
-   MHD_CPAW_WaveNumber = 2.0*M_PI/MHD_CPAW_WaveLength;
-   MHD_CPAW_WaveSpeed = MHD_CPAW_B0/SQRT(MHD_CPAW_Rho0);
+   MHD_CPAW_WaveNumber    = 2.0*M_PI/MHD_CPAW_WaveLength;
+   MHD_CPAW_WaveSpeed     = MHD_CPAW_B0/SQRT(MHD_CPAW_Rho0);
+   MHD_CPAW_WaveFrequency = MHD_CPAW_WaveNumber*MHD_CPAW_WaveSpeed;
 
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
-   const double End_T_Default    = MHD_CPAW_WaveLength / MHD_CPAW_WaveSpeed;
+   const double End_T_Default    = 2.0*M_PI/MHD_CPAW_WaveFrequency;
    const long   End_Step_Default = __INT_MAX__;
 
    if ( END_STEP < 0 ) {
@@ -152,23 +154,22 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID        = %d\n",      TESTPROB_ID          );
-      Aux_Message( stdout, "  background density     = % 14.7e\n", MHD_CPAW_Rho0       );
-      Aux_Message( stdout, "  perturbation amplitude = % 14.7e\n", MHD_CPAW_A          );
-      Aux_Message( stdout, "  background pressure    = % 14.7e\n", MHD_CPAW_P0         );
-      Aux_Message( stdout, "  background B field     = % 14.7e\n", MHD_CPAW_B0         );
-      Aux_Message( stdout, "  direction              = %d\n",      MHD_CPAW_Dir        );
-      Aux_Message( stdout, "  wave speed             = % 14.7e\n", MHD_CPAW_WaveSpeed  );
-      Aux_Message( stdout, "  wavelength             = % 14.7e\n", MHD_CPAW_WaveLength );
-      Aux_Message( stdout, "  wavenumber             = % 14.7e\n", MHD_CPAW_WaveNumber );
+      Aux_Message( stdout, "  test problem ID        = %d\n",      TESTPROB_ID            );
+      Aux_Message( stdout, "  background density     = % 14.7e\n", MHD_CPAW_Rho0          );
+      Aux_Message( stdout, "  perturbation amplitude = % 14.7e\n", MHD_CPAW_A             );
+      Aux_Message( stdout, "  background pressure    = % 14.7e\n", MHD_CPAW_P0            );
+      Aux_Message( stdout, "  background B field     = % 14.7e\n", MHD_CPAW_B0            );
+      Aux_Message( stdout, "  direction              = %d\n",      MHD_CPAW_Dir           );
+      Aux_Message( stdout, "  wave speed             = % 14.7e\n", MHD_CPAW_WaveSpeed     );
+      Aux_Message( stdout, "  wavelength             = % 14.7e\n", MHD_CPAW_WaveLength    );
+      Aux_Message( stdout, "  wavenumber             = % 14.7e\n", MHD_CPAW_WaveNumber    );
+      Aux_Message( stdout, "  wave frequency         = % 14.7e\n", MHD_CPAW_WaveFrequency );
       Aux_Message( stdout, "=============================================================================\n" );
    }
-
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
 
 } // FUNCTION : SetParameter
-
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -201,8 +202,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double WaveSpeed  = MHD_CPAW_WaveSpeed;
    const double WaveLength = MHD_CPAW_WaveLength;
    const double WaveK      = MHD_CPAW_WaveNumber;
+   const double WaveW      = MHD_CPAW_WaveFrequency;
 
-   double kr, WaveW, WaveForm1, WaveForm2, Gamma, DampForm;
+   double kr, WaveForm1, WaveForm2, Gamma, DampForm;
    double Dens, Mom0, Mom1, Mom2, MomX, MomY, MomZ, Pres, Eint, Etot;
 
    switch ( MHD_CPAW_Dir ) {
@@ -211,8 +213,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       case 2:  kr = WaveK*z;                        break;
       case 3:  kr = WaveK*( x + y + z )/sqrt(3.0);  break;
    }
-
-   WaveW       = WaveK*WaveSpeed;
 
    Dens = Rho0;
    Pres = P0;
@@ -245,7 +245,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          MomZ = Mom0/sqrt(3.0) - 2.0*Mom2/sqrt(6.0);       
          break;
    }
-
+   
 // compute the total gas energy
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
                                     EoS_AuxArray_Int, h_EoS_Table );   // assuming EoS requires no passive scalars
@@ -290,47 +290,43 @@ double SetAFieldIC( const double x, const double y, const double z, const double
 // short names
    const double A          = MHD_CPAW_A;
    const double B0         = MHD_CPAW_B0;
-   const double WaveSpeed  = MHD_CPAW_WaveSpeed;
-   const double WaveLength = MHD_CPAW_WaveLength;
    const double WaveK      = MHD_CPAW_WaveNumber;
+   const double WaveW      = MHD_CPAW_WaveFrequency;
 
-   double kr, WaveW, WaveForm1, WaveForm2;
+   double kr, WaveForm1, WaveForm2;
    double e1x, e1y, e1z, e2x, e2y, e2z;
    double A1, A2, mag_vecpot;
    double xcomp, ycomp, zcomp;
 
    switch ( MHD_CPAW_Dir ) {
       case 0:  
-         kr    = WaveK*x;
-         e1x   = 0.0;          e1y   =  1.0; e1z   =  0.0;
-         e2x   = 0.0;          e2y   =  0.0; e2z   =  1.0;   
-         xcomp = 0.0;          ycomp =  0.0;  zcomp =  y;                     
+         kr    =  WaveK*x;
+         e1x   =  0.0;           e1y   =  1.0;           e1z   =  0.0;
+         e2x   =  0.0;           e2y   =  0.0;           e2z   =  1.0;   
+         xcomp =  0.0;           ycomp =  0.0;           zcomp =  y;                     
          break;
       case 1:  
-         kr    = WaveK*y;  
-         e1x   = 0.0;          e1y   =  0.0;         e1z   =  1.0;
-         e2x   = 1.0;          e1y   =  0.0;         e2z   =  0.0;       
-         xcomp = z;            ycomp = 0.0;          zcomp =  0.0;                                          
+         kr    =  WaveK*y;  
+         e1x   =  0.0;           e1y   =  0.0;           e1z   =  1.0;
+         e2x   =  1.0;           e1y   =  0.0;           e2z   =  0.0;       
+         xcomp =  z;             ycomp =  0.0;           zcomp =  0.0;                                          
          break;
       case 2:  
-         kr    = WaveK*z;       
-         e1x   = 1.0;          e1y   =  0.0;           e1z   =  0.0;
-         e2x   = 0.0;          e1y   =  1.0;           e2z   =  0.0;      
-         xcomp = z;            ycomp = x;            zcomp =  0.0;                                          
-                             
+         kr    =  WaveK*z;       
+         e1x   =  1.0;           e1y   =  0.0;           e1z   =  0.0;
+         e2x   =  0.0;           e1y   =  1.0;           e2z   =  0.0;      
+         xcomp =  0.0;           ycomp = x;              zcomp =  0.0;                                          
          break;
       case 3:  
-         kr  =  WaveK*( x + y + z )/sqrt(3.0);  
-         e1x =  1.0/sqrt(2.0); e1y = -1.0/sqrt(2.0); e1z   =  0.0;
-         e2x =  1.0/sqrt(6.0); e1y =  1.0/sqrt(6.0); e2z   = -2.0/sqrt(6.0);     
-         xcomp = 0.5*(z-y)/sqrt(3.0);    
-         ycomp = 0.5*(x-z)/sqrt(3.0);    
-         zcomp = 0.5*(y-x)/sqrt(3.0);                                          
+         kr    =  WaveK*( x + y + z )/sqrt(3.0);  
+         e1x   =  1.0/sqrt(2.0); e1y   = -1.0/sqrt(2.0);  e1z   =  0.0;
+         e2x   =  1.0/sqrt(6.0); e2y   =  1.0/sqrt(6.0);  e2z   = -2.0/sqrt(6.0);     
+         xcomp =  z/sqrt(3.0);    
+         ycomp =  x/sqrt(3.0);    
+         zcomp =  y/sqrt(3.0);                                          
          break;
    }
    
-   WaveW     = WaveK*WaveSpeed;
-
    WaveForm1 = -sin( kr - WaveW*Time );
    WaveForm2 =  cos( kr - WaveW*Time );
    A1        =  B0 * A * WaveForm1 / WaveK;
@@ -338,10 +334,10 @@ double SetAFieldIC( const double x, const double y, const double z, const double
 
    switch ( Component )
    {
-      case 'x' :   mag_vecpot = B0*xcomp+A1*e1x+A2*e2x;  break;
-      case 'y' :   mag_vecpot = B0*ycomp+A1*e1y+A2*e2y;  break;
-      case 'z' :   mag_vecpot = B0*zcomp+A1*e1z+A2*e2z;  break;
-      default  :   Aux_Error( ERROR_INFO, "unsupported component (%c) !!\n", Component );
+      case 'x' :  mag_vecpot = B0*xcomp+A1*e1x+A2*e2x;  break;
+      case 'y' :  mag_vecpot = B0*ycomp+A1*e1y+A2*e2y;  break;
+      case 'z' :  mag_vecpot = B0*zcomp+A1*e1z+A2*e2z;  break;
+      default  :  Aux_Error( ERROR_INFO, "unsupported component (%c) !!\n", Component );
    }
 
 
@@ -373,11 +369,10 @@ void CheckBField( real magnetic[], const double x, const double y, const double 
 // short names
    const double A          = MHD_CPAW_A;
    const double B0         = MHD_CPAW_B0;
-   const double WaveSpeed  = MHD_CPAW_WaveSpeed;
-   const double WaveLength = MHD_CPAW_WaveLength;
    const double WaveK      = MHD_CPAW_WaveNumber;
+   const double WaveW      = MHD_CPAW_WaveFrequency;
 
-   double kr, B1, B2, WaveW, WaveForm1, WaveForm2;
+   double kr, B1, B2, WaveForm1, WaveForm2;
 
    switch ( MHD_CPAW_Dir ) {
       case 0:  kr = WaveK*x;                        break;
@@ -386,7 +381,6 @@ void CheckBField( real magnetic[], const double x, const double y, const double 
       case 3:  kr = WaveK*( x + y + z )/sqrt(3.0);  break;
    }
 
-   WaveW     =  WaveK*WaveSpeed;
    WaveForm1 =  sin( kr - WaveW*Time );
    WaveForm2 =  cos( kr - WaveW*Time );
    B1        =  B0 * A * WaveForm1;
