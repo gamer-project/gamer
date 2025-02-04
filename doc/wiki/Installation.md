@@ -84,17 +84,19 @@ violating the usage policy.
       </pre>
       </details>
 
-   2. Copy the autocomplete shell script to your `/home/usr` (`~`)
+   2. Copy the autocomplete shell script to `${HOME}/.config/gamer` (`~/.config/gamer/`)
       ```bash
-      cp tool/bash/config_autocomplete.sh ~/
+      mkdir -p ~/.config/gamer
+      cp tool/config/config_autocomplete.sh ~/.config/gamer/
       ```
 
    3. Update `~/.bashrc` to load the autocomplete script
 
       Please add the following line to `~/.bashrc`:
       ```bash
-      source ~/config_autocomplete.sh
+      source ~/.config/gamer/config_autocomplete.sh
       ```
+
 > [!NOTE]
 > The `config_autocomplete.sh` script registers autocomplete for three commands: `python`, `python3`, and `./configure.py.`.
 If you want to add more commands, simply append them at the bottom of the script.
