@@ -68,12 +68,12 @@ violating the usage policy.
 
 6. [Optional] Autocompletion of `configure.py`
 
-   Since there are too many options in GAMER, we introduce the autocomplete feature of `configure.py`. You can set the feature by the following steps:
-   1. Update the [shebang](https://en.wikipedia.org/wiki/Shebang_(Unix)) of `configure.py` if needed
+   Since there are many options in GAMER, we have introduced an autocomplete feature for `configure.py`. You can enable this feature by the following steps:
+   1. Update the [shebang](https://en.wikipedia.org/wiki/Shebang_(Unix)) of `configure.py` (if needed)
 
-      For example, replace `#!/usr/bin/python3` with your `python` path.
+      For example, replace `#!/usr/bin/python3` with the path to your preferred Python interpreter.
       <details>
-      <summary><u><i>top of configure.py</i></u></summary>
+      <summary><u><i>Example at the top of configure.py</i></u></summary>
       <pre>
       #!/usr/bin/python3
       """
@@ -89,16 +89,17 @@ violating the usage policy.
       cp tool/bash/config_autocomplete.sh ~/
       ```
 
-   2. Update the `~/.bashrc` to load the autocomplete script
+   3. Update `~/.bashrc` to load the autocomplete script
 
       Please add the following line to `~/.bashrc`:
       ```bash
       source ~/config_autocomplete.sh
       ```
-      NOTE: There are three commands registered in the `config_autocomplete.sh`, `python` `python3` and `./configure.py`.
-            If you would like to register your command, please add the command at the bottom of the script.
+> [!NOTE]
+> The `config_autocomplete.sh` script registers autocomplete for three commands: `python`, `python3`, and `./configure.py.`.
+If you want to add more commands, simply append them at the bottom of the script.
 
-   3. Reload `~/.bashrc` to enable the feature
+   4. Reload `~/.bashrc` to enable the autocomplete feature
       ```bash
       source ~/.bashrc
       ```

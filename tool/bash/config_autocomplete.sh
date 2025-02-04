@@ -50,7 +50,7 @@ __gamer_configure_autocomplete() {
 
     COMPREPLY=() # NOTE: please add a space when ending the option
 
-    # option choices
+    # Option choices
     for opt in "${all_option_array[@]}"
     do
         # --option=xx
@@ -80,7 +80,7 @@ __gamer_configure_autocomplete() {
             done
             not_set=false
             break
-        # special case without trailing `=` (-h and -lh)
+        # Special case without trailing `=` (-h and -lh)
         elif [[ "$cur" == "-h" || "$cur" == "-lh" ]]; then
             COMPREPLY+=("$cur ")
             not_set=false

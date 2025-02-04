@@ -225,12 +225,12 @@ class ArgumentParser( argparse.ArgumentParser ):
             if not any( target_option in [flag+trail_option, flag] for flag in option["flags"] ):
                 continue
 
-            # option with choices
+            # options with choices
             if "choices" in option:
                 print( " ".join(option["choices"]) )
                 return
 
-            # help like option
+            # help-like options
             if "type" not in option: return
 
             # boolean type choices
@@ -437,8 +437,8 @@ def load_arguments( sys_setting : SystemSetting ):
     # autocomplete information
     parser.add_argument( "--autocomplete_info", type=str, metavar="--OPTION",
                          default=None,
-                         help="Print out the autocomplete information. "\
-                              "See: ../tool/bash/config_autocomplete.sh\n"
+                         help="Print the autocomplete information "\
+                              "used by the config_autocomplete.sh script.\n"
                        )
 
     # machine config setup
@@ -652,7 +652,7 @@ def load_arguments( sys_setting : SystemSetting ):
                          default=False,
                          depend={"particle":True},
                          help="Allow creating new particles after initialization. "
-                              "Must trun on <--store_pot_ghost> when <--store_par_acc> is adoped.\n"
+                              "Must turn on <--store_pot_ghost> when <--store_par_acc> is adoped.\n"
                        )
 
     parser.add_argument( "--feedback", type=str2bool, metavar="BOOLEAN", gamer_name="FEEDBACK",
@@ -1215,5 +1215,5 @@ if __name__ == "__main__":
 
     LOGGER.info("========================================")
     LOGGER.info("%s is created."%GAMER_MAKE_OUT)
-    if args["verbose_make"]: LOGGER.info("%s is in verbose mode!"%GAMER_MAKE_OUT)
+    if args["verbose_make"]: LOGGER.info("%s is in verbose mode."%GAMER_MAKE_OUT)
     LOGGER.info("========================================")
