@@ -118,13 +118,14 @@ void Output_DumpData( const int Stage )
       sprintf( FileName_Part, "%s/", OUTPUT_DIR );
       switch ( OPT__OUTPUT_PART )
       {
-         case OUTPUT_XY :    sprintf( FileName_Temp, "XYslice_z%.3f_%06d", OUTPUT_PART_Z, DumpID );   break;
-         case OUTPUT_YZ :    sprintf( FileName_Temp, "YZslice_x%.3f_%06d", OUTPUT_PART_X, DumpID );   break;
-         case OUTPUT_XZ :    sprintf( FileName_Temp, "XZslice_y%.3f_%06d", OUTPUT_PART_Y, DumpID );   break;
-         case OUTPUT_X  :    sprintf( FileName_Temp, "Xline_y%.3f_z%.3f_%06d", OUTPUT_PART_Y, OUTPUT_PART_Z, DumpID );  break;
-         case OUTPUT_Y  :    sprintf( FileName_Temp, "Yline_x%.3f_z%.3f_%06d", OUTPUT_PART_X, OUTPUT_PART_Z, DumpID );  break;
-         case OUTPUT_Z  :    sprintf( FileName_Temp, "Zline_x%.3f_y%.3f_%06d", OUTPUT_PART_X, OUTPUT_PART_Y, DumpID );  break;
+         case OUTPUT_XY   :  sprintf( FileName_Temp, "XYslice_z%.3f_%06d", OUTPUT_PART_Z, DumpID );   break;
+         case OUTPUT_YZ   :  sprintf( FileName_Temp, "YZslice_x%.3f_%06d", OUTPUT_PART_X, DumpID );   break;
+         case OUTPUT_XZ   :  sprintf( FileName_Temp, "XZslice_y%.3f_%06d", OUTPUT_PART_Y, DumpID );   break;
+         case OUTPUT_X    :  sprintf( FileName_Temp, "Xline_y%.3f_z%.3f_%06d", OUTPUT_PART_Y, OUTPUT_PART_Z, DumpID );  break;
+         case OUTPUT_Y    :  sprintf( FileName_Temp, "Yline_x%.3f_z%.3f_%06d", OUTPUT_PART_X, OUTPUT_PART_Z, DumpID );  break;
+         case OUTPUT_Z    :  sprintf( FileName_Temp, "Zline_x%.3f_y%.3f_%06d", OUTPUT_PART_X, OUTPUT_PART_Y, DumpID );  break;
          case OUTPUT_DIAG :  sprintf( FileName_Temp, "Diag_%06d", DumpID );   break;
+         case OUTPUT_BOX  :  sprintf( FileName_Temp, "Box_%06d", DumpID );   break;
          default :           Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "OPT__OUTPUT_PART", OPT__OUTPUT_PART );
       } // switch ( OPT__OUTPUT_PART )
 
