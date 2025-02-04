@@ -1,122 +1,153 @@
-Compilation flags:
-========================================
-Enable  : MODEL=ELBDM, GRAVITY, PARTICLE, STORE_PAR_ACC, SUPPORT_HDF5,
-          SUPPORT_GSL (optional, only useful for thin disk)
+# `configure.py` options
+- Must enable
+  - [[--model | Installation:-Option-List#--model]]=`ELBDM`
+  - [[--gravity | Installation:-Option-List#--gravity]]
+  - [[--particle | Installation:-Option-List#--particle]]
+  - [[--store_par_acc | Installation:-Option-List#--store_par_acc]]
+  - [[--hdf5 | Installation:-Option-List#--hdf5]]
+  - [[--gsl | Installation:-Option-List#--gsl]] (optional, only useful for thin disk)
+- Must disable
+  - [[--comoving | Installation:-Option-List#--comoving]]
+- Available options
+  - [[Miscellaneous Options | Installation:-Option-List#miscellaneous-options]]
 
-Disable : COMOVING
+# Note
+- DiskHeatingParticleIC uses the floating-point type for particle type and assumes single precision
 
+# Quick start
+0. Generate `gamer`
 
-Note:
-========================================
-DiskHeatingParticleIC uses the floating-point type for particle type and assumes single precision
+   1. Copy `generate_make.sh` to the directory `src`
 
+   2. Generate `Makefile`
+      ```bash
+      sh generate_make.sh
+      ```
 
-Quick start:
-=======================================
-0. Copy "generate_make.sh" to the directory "src", execute "sh generate_make.sh" to generate "Makefile",
-   and then execute "make clean" and "make -j 4" to generate the executable "gamer"
+   3. Compile `gamer`
+      ```bash
+      make clean
+      make -j 4
+      ```
 
-1. Download initial conditions of m_22=0.4, M_h=7e10 Msun halo and stellar disk with "sh download_ic.sh"
+1. Download initial conditions of `m_22=0.4`, `M_h=7e10` Msun halo and stellar disk with
+   ```bash
+   sh download_ic.sh
+   ```
 
-2. Ensure PAR_INIT = 1 and OPT__INIT = 3 in Input__Parameter
+2. Ensure [[PAR_INIT | Runtime-Parameters:-Particles#PAR_INIT]]=`1` and [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=`3` in `Input__Parameter`
 
-3. Default END_T is 2.5e-1 (about 3.5 Gyr) as in Yang et al. 2023 and OUTPUT_DT is 1.0e-2 (about 0.14 Gyr)
+3. Default [[END_T | Runtime-Parameters:-General#END_T]] is 2.5e-1 (about 3.5 Gyr) as in [Yang et al. 2023](https://doi.org/10.1093/mnras/stae793) and [[OUTPUT_DT | Runtime-Parameters:-Outputs#OUTPUT_DT]] is 1.0e-2 (about 0.14 Gyr)
 
-4. To switch to a high-resolution run, command "ln -sf ic_files/PAR_IC_0.4_M7 DiskHeatingParticleIC"
-   Set PAR_NPAR=80000000, MAX_LEVEL=3, and change all values in Input__Flag_NParPatch to 800
+4. To switch to the high-resolution run
 
+   1. Link high-resolution `DiskHeatingParticleIC`
+      ```bash
+      ln -sf ic_files/PAR_IC_0.4_M7 DiskHeatingParticleIC
+      ```
 
-General initial condition setup:
-========================================
-1. Disk
-
-   a. Generate the disk via modified GALIC (https://github.com/HsunYeong/GALIC.git)
-      The snapshots have the filenames snap_XXX.hdf5
-
-   b. Set the filename, units in get_par_ic.py to match the GALIC set-up
-
-   c. Set center to be location of the soliton in get_par_ic.py
-
-   d. Execute get_par_ic.py, it will generate DiskHeatingParticleIC
-
-2. Halo
-
-   a. If the data is binary file UM_IC
-
-      * Set OPT__INIT = 3 and PAR_INIT = 1
-      * Input__UM_IC_RefineRegion is required
-
-   b. If the data is GAMER snapshot
-
-      * Command "ln -s Data_XXXXXX RESTART" to create a soft link
-      * Set OPT__INIT = 2 and PAR_INIT = 2 in Input__Parameter
-      * Turn on AddParWhenRestart and AddParWhenRestartByFile in Input__TestProb
-      * Set AddParWhenRestartNPar in Input__TestProb
-      * Turn on OPT__RESTART_RESET in Input__Parameter
-      # Recommand to turn off AddParWhenRestart, AddParWhenRestartByFile, OPT__RESTART_RESET right after the simulation starts
-
-   c. The code for FDM halo reconstruction (https://github.com/calab-ntu/psidm-halo-reconstruction)
-
-3. Thin disk (optional)
-
-   a. Command "ln -s Data_XXXXXX RESTART" to create a soft link for restart
-
-   b. Set Set OPT__INIT = 2 and PAR_INIT = 2 and turn on OPT__RESTART_RESET in Input__Parameter
-
-   c. Turn on AddParWhenRestart in Input__TestProb
-
-   d. Set AddParWhenRestartNPar, Disk_Mass, Disk_R, and DispTableFile in Input__TestProb
+   2. Set [[PAR_NPAR | Runtime-Parameters:-Particles#PAR_NPAR]]=`80000000`, [[MAX_LEVEL | Runtime-Parameters:-Refinement#MAX_LEVEL]]=`3`, and change all values in `Input__Flag_NParPatch` to `800`
 
 
-Analysis scripts:
-========================================
-1. particle_proj.py, plot_halo_slice.py:
+# General initial condition setup
+- Disk
 
-   * Plot the projection of disk particles or halo density slice
-   * Output files: particle_proj_*.png, Data_*_Slice_x_Dens.png
+  1. Generate the disk via modified [GALIC](https://github.com/HsunYeong/GALIC.git).
+     The snapshots have the filenames `snap_XXX.hdf5`
 
-2. plot_halo_density.py, plot_halo_potential.py:
+  2. Set the filename, and units in `get_par_ic.py` to match the GALIC set-up
 
-   * Compute and plot shell-averaged halo density or gravitational potential profiles
-   * Output files: Data_*_1d-Profile_radius_Dens.png, Halo_Dens_Data_*.npy,
-                   Data_*_1d-Profile_radius_Pote.png, Halo_Pote_Data_*.npy
+  3. Set center to be the location of the soliton in `get_par_ic.py`
 
-3. data_disk.py:
+  4. Execute `get_par_ic.py`, it will generate `DiskHeatingParticleIC`
 
-   * Compute the disk information (rotation speed, velocity dispersion, surface density, scale height, etc.)
-   * Output files: Data_Disk_*.npy
+- Halo
 
-4. data_halo.py:
+  - If the data is binary file `UM_IC`
 
-   * Compute the halo information (enclosed mass, velocity dispersion, etc.)
-   * Required files: Halo_Dens_*.npy (generated by "plot_halo_density.py") and Halo_Pote_*.npy (by "plot_halo_potential.py")
-   * Output files: Data_Halo_*.npy
+    1. Set [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=`3` and [[PAR_INIT | Runtime-Parameters:-Particles#PAR_INIT]]=`1`
 
-5. vel_distribution.py
+    2. `Input__UM_IC_RefineRegion` is required
 
-   * Compute the velocity distribution in 2-kpc-wide radial bins centered on R = 4, 6, 8, 10 kpc
-   * Output files: Vel_data_*.npz, vel_*.png
+  - If the data is GAMER snapshot (`Data_XXXXXX`)
 
-6. get_heating.py
+    1. Create a soft link for restart
+       ```bash
+       ln -s Data_XXXXXX RESTART
+       ```
 
-   * Compute the theoretical heating rate of the stellar disk as a function of radius
-   * Required files: Data_Disk_*.npy (generated by "data_disk.py"), Data_Halo_*.npy (by "data_halo.py")
-   * Output files: Heating_*.npz
+    2. Set [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=`2` and [[PAR_INIT | Runtime-Parameters:-Particles#PAR_INIT]]=`2` in `Input__Parameter`
 
-7. get_heating_rate_theory.py
+    3. Turn on `AddParWhenRestart` and `AddParWhenRestartByFile` in `Input__TestProb`
 
-   * Get the time-averaged theoretical heating rate
-   * Required files: Heating_*.npz (generated by "get_heating.py")
-   * Output files: printed plain text
+    4. Set `AddParWhenRestartNPar` in `Input__TestProb`
 
-8. get_heating_rate_simulation.py
+    5. Turn on [[OPT__RESTART_RESET | Runtime-Parameters:-Initial-Conditions#OPT__RESTART_RESET]] in `Input__Parameter`
+    - Recommend to turn off `AddParWhenRestart`, `AddParWhenRestartByFile`, [[OPT__RESTART_RESET | Runtime-Parameters:-Initial-Conditions#OPT__RESTART_RESET]] right after the simulation starts
 
-   * Compute ensemble- and time-averaged disk heating rates measured from simulation data
-   * Required files: Vel_data_*.npz (generated by "vel_distribution.py")
-   * Output files: sigma_z_sqr.png and printed plain text
+  - The code for [FDM halo reconstruction](https://github.com/calab-ntu/psidm-halo-reconstruction)
 
-9. plot_data_example.py
+- Thin disk (optional)
 
-   * An example script to plot the angle-averaged disk rotation curve and shell-averaged density profile
-   * Required files: Data_Disk_*.npy (generated by "data_disk.py") and/or Data_Halo_*.npy (by "data_halo.py")
-   * Output files: Rotation_Curve.png, Halo_Density_Profile.png
+  1. Create a soft link for restart
+     ```bash
+     ln -s Data_XXXXXX RESTART
+     ```
+
+  2. Set [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=`2` and [[PAR_INIT | Runtime-Parameters:-Particles#PAR_INIT]]=`2` and turn on [[OPT__RESTART_RESET | Runtime-Parameters:-Initial-Conditions#OPT__RESTART_RESET]] in `Input__Parameter`
+
+  3. Turn on `AddParWhenRestart` in `Input__TestProb`
+
+  4. Set `AddParWhenRestartNPar`, `Disk_Mass`, `Disk_R`, and `DispTableFile` in `Input__TestProb`
+
+
+# Analysis scripts
+- `particle_proj.py`, `plot_halo_slice.py`
+
+  - Plot the projection of disk particles or halo density slice
+  - Output files: `particle_proj_*.png`, `Data_*_Slice_x_Dens.png`
+
+- `plot_halo_density.py`, `plot_halo_potential.py`
+
+  - Compute and plot shell-averaged halo density or gravitational potential profiles
+  - Output files: `Data_*_1d-Profile_radius_Dens.png`, `Halo_Dens_Data_*.npy`, `Data_*_1d-Profile_radius_Pote.png`, and `Halo_Pote_Data_*.npy`
+
+- `data_disk.py`
+
+  - Compute the disk information (rotation speed, velocity dispersion, surface density, scale height, etc.)
+  - Output files: `Data_Disk_*.npy`
+
+- `data_halo.py`
+
+  - Compute the halo information (enclosed mass, velocity dispersion, etc.)
+  - Required files: `Halo_Dens_*.npy` (generated by `plot_halo_density.py`) and `Halo_Pote_*.npy` (by `plot_halo_potential.py`)
+  - Output files: `Data_Halo_*.npy`
+
+- `vel_distribution.py`
+
+  - Compute the velocity distribution in 2-kpc-wide radial bins centered on R = 4, 6, 8, 10 kpc
+  - Output files: `Vel_data_*.npz`, `vel_*.png`
+
+- `get_heating.py`
+
+  - Compute the theoretical heating rate of the stellar disk as a function of radius
+  - Required files: `Data_Disk_*.npy` (generated by `data_disk.py`), `Data_Halo_*.npy` (by `data_halo.py`)
+  - Output files: `Heating_*.npz`
+
+- `get_heating_rate_theory.py`
+
+  - Get the time-averaged theoretical heating rate
+  - Required files: `Heating_*.npz` (generated by `get_heating.py`)
+  - Output files: printed plain text
+
+- `get_heating_rate_simulation.py`
+
+  - Compute ensemble- and time-averaged disk heating rates measured from simulation data
+  - Required files: `Vel_data_*.npz` (generated by `vel_distribution.py`)
+  - Output files: `sigma_z_sqr.png` and printed plain text
+
+- `plot_data_example.py`
+
+  - An example script to plot the angle-averaged disk rotation curve and shell-averaged density profile
+  - Required files: `Data_Disk_*.npy` (generated by `data_disk.py`) and/or `Data_Halo_*.npy` (by `data_halo.py`)
+  - Output files: `Rotation_Curve.png`, `Halo_Density_Profile.png`

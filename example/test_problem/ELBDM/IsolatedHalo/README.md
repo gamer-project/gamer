@@ -1,69 +1,97 @@
-Compilation flags:
-========================================
-Enable : MODEL=ELBDM, GRAVITY
-Disable: COMOVING
+# `configure.py` options
+- Must enable
+  - [[--model | Installation:-Option-List#--model]]=`ELBDM`
+  - [[--gravity | Installation:-Option-List#--gravity]]
+- Must disable
+  - [[--comoving | Installation:-Option-List#--comoving]]
+- Available options
+  - [[Miscellaneous Options | Installation:-Option-List#miscellaneous-options]]
 
 
-Default setup:
-========================================
-1. Code units
-   (1) UNIT_L = Mpc/h, where h=0.6955 is the present dimensionless Hubble parameter
-   (2) UNIT_V = 100 km/s
-   (3) UNIT_D = rho_bg (background matter density at z=0)
-       --> Mass density and wavefunction are normalized to rho_bg
+# Default setup
+- Code units
+  - `UNIT_L` = Mpc/h, where h=0.6955 is the present dimensionless Hubble parameter
+  - `UNIT_V` = 100 km/s
+  - `UNIT_D` = rho_bg (background matter density at z=0)
+    - Mass density and wavefunction are normalized to rho_bg
 
-2. ELBDM_MASS              8.0e-23
-   ELBDM_REMOVE_MOTION_CM  1
-   ELBDM_TAYLOR3_AUTO      0
+- ELBDM
+  | Parameter name         | Value   |
+  |------------------------|---------|
+  | ELBDM_MASS             | 8.0e-23 |
+  | ELBDM_REMOVE_MOTION_CM | 1       |
+  | ELBDM_TAYLOR3_AUTO     | 0       |
 
-3. OPT__BC_FLU_*           1  (periodic)
-   OPT__BC_POT             2  (isolated)
+- Boundary conditions
+  | Parameter name | Value | Note     |
+  |----------------|-------|----------|
+  | OPT__BC_FLU_*  | 1     | periodic |
+  | OPT__BC_POT    | 2     | isolated |
 
-4. MAX_LEVEL               0
-
-
-Libyt covering_grid setup:
-========================================
-1. Code units
-   (1) UNIT_L = Mpc/h, where h=0.6955 is the present dimensionless Hubble parameter
-   (2) UNIT_V = 100 km/s
-   (3) UNIT_D = rho_bg (background matter density at z=0)
-       --> Mass density and wavefunction are normalized to rho_bg
-
-2. ELBDM_MASS              8.0e-23
-   ELBDM_REMOVE_MOTION_CM  1
-   ELBDM_TAYLOR3_AUTO      0
-
-3. OPT__BC_FLU_*           1  (periodic)
-   OPT__BC_POT             2  (isolated)
-
-4. MAX_LEVEL               1
-   OPT__FLAG_RHO           1
-
-5. END_T                   5.7116620e-03
-   END_STEP                32
-
-6. YT_SCRIPT               libyt_script/inline_script_covering_grid
-   YT_VERBOSE              1
+- AMR
+  | Parameter name | Value |
+  |----------------|-------|
+  | MAX_LEVEL      | 0     |
 
 
-Note:
-========================================
-1. Download the IC file: sh download_ic.sh
+# Libyt `covering_grid` setup
+- Code units
+  - `UNIT_L` = Mpc/h, where h=0.6955 is the present dimensionless Hubble parameter
+  - `UNIT_V` = 100 km/s
+  - `UNIT_D` = rho_bg (background matter density at z=0)
+    - Mass density and wavefunction are normalized to rho_bg
 
-2. Some examples of yt visualization scripts are put in "yt_script"
+- ELBDM
+  | Parameter name         | Value   |
+  |------------------------|---------|
+  | ELBDM_MASS             | 8.0e-23 |
+  | ELBDM_REMOVE_MOTION_CM | 1       |
+  | ELBDM_TAYLOR3_AUTO     | 0       |
 
-3. Simulate a single isolated halo extracted from a cosmological simulation
+- Boundary conditions
+  | Parameter name | Value | Note     |
+  |----------------|-------|----------|
+  | OPT__BC_FLU_*  | 1     | periodic |
+  | OPT__BC_POT    | 2     | isolated |
 
-4. About libyt covering_grid test
-   a. Use submit script "./libyt_script/submit_gamer.job" for job submission
+- AMR
+  | Parameter name | Value |
+  |----------------|-------|
+  | MAX_LEVEL      | 1     |
+  | OPT__FLAG_RHO  | 1     |
 
-   b. Put "./libyt_script/inline_script_covering_grid.py" under the same folder as gamer
+- End simulation condition
+  | Parameter name | Value         |
+  |----------------|---------------|
+  | END_T          | 5.7116620e-03 |
+  | END_STEP       | 32            |
 
-   c. For determining the "left_edge" and "dims" in function "ds.covering_grid":
-      left_edge: LV1 resolution is 0.175/512/2 ; region covered by LV1 box (by "ds.covering_grid") is 0.175/512/2*512; 0.04375 = (0.175 - 0.175/512/2*512)/2
-      dims:      Plan to cover region with half of the simulation box length, i.e. will have 256X256X256 base level cells -> refine to MAX_LEVEL=1 -> LV1 cells is 512X512X512
+- libyt
+  | Parameter name | Value                                    |
+  |----------------|------------------------------------------|
+  | YT_SCRIPT      | libyt_script/inline_script_covering_grid |
+  | YT_VERBOSE     | 1                                        |
 
-   d. Use "plot_slice-dens_covering_grid.py" to extract density slices from .npz files
 
-   e. Use "make_movie.sh" to convert .png pictures into .mp4
+# Note
+- Download the IC file
+  ```bash
+  sh download_ic.sh
+  ```
+
+- Some examples of yt visualization scripts are put in `yt_script`
+
+- Simulate a single isolated halo extracted from a cosmological simulation
+
+- About libyt `covering_grid` test
+  - Use submit script `./libyt_script/submit_gamer.job` for job submission
+
+  - Put `./libyt_script/inline_script_covering_grid.py` under the same folder as gamer
+
+  - For determining the `left_edge` and `dims` in function `ds.covering_grid`:
+    - `left_edge`: LV1 resolution is `0.175/512/2`; region covered by LV1 box (by `ds.covering_grid`) is `0.175/512/2*512`; `0.04375` = `(0.175 - 0.175/512/2*512)/2`
+    - `dims`:      Plan to cover region with half of the simulation box length, i.e. will have 256X256X256 base level cells -> refine to [[MAX_LEVEL | Runtime-Parameters:-Refinement#MAX_LEVEL]]=`1` -> LV1 cells is 512X512X512
+
+  - Use `plot_slice-dens_covering_grid.py` to extract density slices from `.npz` files
+
+  - Use `make_movie.sh` to convert `.png` pictures into `.mp4`

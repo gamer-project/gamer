@@ -1,14 +1,16 @@
-Compilation flags:
-========================================
-Enable : MODEL=ELBDM, GRAVITY, COMOVING
-Disable: PARTICLE
+# `configure.py` options
+- Must enable
+  - [[--model | Installation:-Option-List#--model]]=`ELBDM`
+  - [[--gravity | Installation:-Option-List#--gravity]]
+  - [[--comoving | Installation:-Option-List#--comoving]]
+- Must disable
+  - [[--particle | Installation:-Option-List#--particle]]
+- Available options
+  - [[Miscellaneous Options | Installation:-Option-List#miscellaneous-options]]
 
 
-Default setup:
-========================================
+# Default setup
 
 
-Note:
-========================================
-1. Test the evolution of the self-similar solution of halos in the comoving frame
-
+# Note
+- Test the evolution of the self-similar solution of halos in the comoving frame

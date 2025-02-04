@@ -1,16 +1,22 @@
-Compilation flags:
-========================================
-Enable : MODEL=HYDRO, MHD
-Disable: GRAVITY, PARTICLE
+# `configure.py` options
+- Must enable
+  - [[--model | Installation:-Option-List#--model]]=`HYDRO`
+  - [[--mhd | Installation:-Option-List#--mhd]]
+- Must disable
+  - [[--particle | Installation:-Option-List#--particle]]
+  - [[--gravity | Installation:-Option-List#--gravity]]
+- Available options
+  - [[Miscellaneous Options | Installation:-Option-List#miscellaneous-options]]
 
 
-Default setup:
-========================================
-1. Periodic BC
+# Default setup
+- Periodic BC
 
 
-Note:
-========================================
-1. Reference: Zhang et al., 2018, ApJS, 236, 50 (https://arxiv.org/abs/1804.03479)
-2. ABC_NPeriod (n): 1 --> stable; 2 --> unstable
-3. Initial perturbations have not been implemented yet
+# Note
+- Reference
+  - [Zhang et al., 2018, ApJS, 236, 50](https://arxiv.org/abs/1804.03479)
+- `ABC_NPeriod` (n)
+  - `1` --> stable
+  - `2` --> unstable
+- Initial perturbations have not been implemented yet

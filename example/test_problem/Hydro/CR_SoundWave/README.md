@@ -1,25 +1,26 @@
-Compilation flags:
-========================================
-Enable :
-        MODEL=HYDRO
-        EOS=EOS_GAMMA_CR
-        FLOAT8
-        COSMIC_RAY
-Disable:
-        COMOVING
-        PARTICLE
-        GRAVITY
-        CR_DIFFUSION
+# `configure.py` options
+- Must enable
+  - [[--model | Installation:-Option-List#--model]]=`HYDRO`
+  - [[--eos | Installation:-Option-List#--eos]]=`COSMIC_RAY`
+  - [[--double | Installation:-Option-List#--double]]
+  - [[--cosmic_ray | Installation:-Option-List#--cosmic_ray]]
+- Must disable
+  - [[--comoving | Installation:-Option-List#--comoving]]
+  - [[--particle | Installation:-Option-List#--particle]]
+  - [[--gravity | Installation:-Option-List#--gravity]]
+  - [[--cr_diffusion | Installation:-Option-List#--cr_diffusion]]
+- Available options
+  - [[Miscellaneous Options | Installation:-Option-List#miscellaneous-options]]
 
 
-Default setup:
-========================================
-None
+# Default setup
+- Resolution = 64^3
+- Run for one period
 
 
-Note:
-========================================
-1. Support both 1D and 3D cases --> set by CR_Acoustic_Dir
-2. A simple python script "plot_wave.py" is attached
-3. "Record__L1Err" records the L1 errors
-4. CosmicRay_AcousticWave_*_* record the numerical and analytical solutions along the diagonal
+# Note
+- Support both 1D and 3D cases
+  - set by `CR_Acoustic_Dir`
+- A simple Python script `plot_wave.py` is attached
+- `Record__L1Err` records the L1 errors
+- `CosmicRay_AcousticWave_*_*` record the numerical and analytical solutions along the diagonal
