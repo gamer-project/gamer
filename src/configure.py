@@ -574,7 +574,7 @@ def load_arguments( sys_setting : SystemSetting ):
                          depend={"model":"ELBDM", "wave_scheme":"GRAMFE"},
                          constraint={ "MATMUL":{"gsl":True} },
                          help="GramFE scheme for <--wave_scheme=GRAMFE> "\
-                              "(MATMUL: faster for PATCH_SIZE=8, FFT: faster for larger patch sizes).\n"
+                              "(MATMUL: faster for <--patch_size=8>, FFT: faster for larger patch sizes).\n"
                        )
 
     parser.add_argument( "--hybrid_scheme", type=str, metavar="TYPE", gamer_name="HYBRID_SCHEME", prefix="HYBRID_",
@@ -1177,13 +1177,17 @@ if __name__ == "__main__":
         makefile = make_base.read()
 
     # 6.2 Replace
-    LOGGER.info("----------------------------------------")
-    for key, val in paths.items():
-        LOGGER.info("%-25s : %s"%(key, val))
+    verbose_mode = "1" if args["verbose_make"] else "0"
+    makefile, num = re.subn(r"@@@COMPILE_VERBOSE@@@", verbose_mode, makefile)
+    if num == 0: raise BaseException("The string @@@COMPILE_VERBOSE@@@ is not replaced correctly.")
+
+    for key, val in sims.items():
         makefile, num = re.subn(r"@@@%s@@@"%(key), val, makefile)
         if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
 
-    for key, val in sims.items():
+    LOGGER.info("----------------------------------------")
+    for key, val in paths.items():
+        LOGGER.info("%-25s : %s"%(key, val))
         makefile, num = re.subn(r"@@@%s@@@"%(key), val, makefile)
         if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
 
@@ -1198,10 +1202,6 @@ if __name__ == "__main__":
         LOGGER.info("%-25s : %s"%(key, val))
         makefile, num = re.subn(r"@@@%s@@@"%(key), val, makefile)
         if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
-
-    verbose_mode = "1" if args["verbose_make"] else "0"
-    makefile, num = re.subn(r"@@@COMPILE_VERBOSE@@@", verbose_mode, makefile)
-    if num == 0: raise BaseException("The string @@@COMPILE_VERBOSE@@@ is not replaced correctly.")
 
     LOGGER.info("----------------------------------------")
     for key in re.findall(r"@@@(.+?)@@@", makefile):
