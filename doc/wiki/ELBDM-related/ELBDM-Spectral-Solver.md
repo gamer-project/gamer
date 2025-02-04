@@ -3,7 +3,7 @@
 ## Setup and Configuration
 
 ### Compilation Options
-- **Wave Scheme Selection**: To enable the spectral solver, set `WAVE_SCHEME` to `WAVE_GRAMFE` in the Makefile or configure with `--wave_scheme=WAVE_GRAMFE` for the ELBDM model.
+- **Wave Scheme Selection**: To enable the spectral solver, set `WAVE_SCHEME` to `WAVE_GRAMFE` in the Makefile or configure with `--wave_scheme=GRAMFE` for the ELBDM model.
 - **Spectral Scheme Options**: Choose between `MATMUL` (faster for `PATCH_SIZE=8`) and `FFT` (faster for larger patch sizes) by setting `SCHEME` in the Makefile or configure with `--gramfe_scheme` accordingly.
 - **Additional Libraries**: The CPU version requires FFTW 3 for single precision and FFTW 2/3 for double precision. The GPU version of `FFT` needs the cuFFTDx library. Set `FFTW2_PATH`, `FFTW3_PATH`, and `CUFFTDX_PATH` in the Makefile or configuration files `*.config`.
 
@@ -103,7 +103,7 @@ Understanding the differences between the `MATMUL` and `FFT` schemes in GAMER is
 - **Choice of Scheme**: By default `MATMUL` should be used. `FFT` should be considered for larger patch sizes and debugging.
 
 ## Performance Metrics
-- The performance ratio `Perf_FD / Perf_Spectral` indicates the efficiency compared to the finite-difference scheme. This varies based on patch size (e.g., 4.3 for `PATCH_SIZE=8` and 2.6 for `PATCH_SIZE=16` for `FFT`; comparable performance of `MATMUL` and `WAVE_FD` for `PATCH_SIZE=8`).
+- The performance ratio `Perf_FD / Perf_Spectral` indicates the efficiency compared to the finite-difference scheme. This varies based on patch size (e.g., 4.3 for `PATCH_SIZE=8` and 2.6 for `PATCH_SIZE=16` for `FFT`; comparable performance of `MATMUL` and `FD` for `PATCH_SIZE=8`).
 
 ## Issues and Considerations
 - **Stability with Single Precision**: Using single precision can lead to instability in the scheme.
