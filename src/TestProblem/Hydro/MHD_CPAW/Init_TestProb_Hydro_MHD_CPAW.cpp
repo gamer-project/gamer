@@ -8,12 +8,17 @@ static double MHD_CPAW_Rho0;          // background density
 static double MHD_CPAW_A;             // perturbation amplitude
 static double MHD_CPAW_P0;            // background pressure
 static double MHD_CPAW_B0;            // background magnetic field
-static int    MHD_CPAW_Dir;           // wave direction: (0/1/2/3) --> (x/y/z/diagonal)
+static double MHD_CPAW_Angle2;        // 
+static double MHD_CPAW_Angle3;        // 
 
 static double MHD_CPAW_WaveSpeed;     // propagation speed
 static double MHD_CPAW_WaveLength;    // wavelength
 static double MHD_CPAW_WaveNumber;    // wavenumber
 static double MHD_CPAW_WaveFrequency; // wave frequency
+static double MHD_CPAW_CosAngle2;     // cosine of angle 2
+static double MHD_CPAW_SinAngle2;     // sine of angle 2
+static double MHD_CPAW_CosAngle3;     // cosine of angle 3
+static double MHD_CPAW_SinAngle3;     // sine of angle 3
 // =======================================================================================
 
 
@@ -58,9 +63,6 @@ void Validate()
 
    if ( OPT__INIT_BFIELD_BYVECPOT != INIT_MAG_BYVECPOT_FUNC )
       Aux_Error( ERROR_INFO, "Must set OPT__INIT_BFIELD_BYVECPOT != %d !!\n", INIT_MAG_BYVECPOT_FUNC );
-
-   if ( MHD_CPAW_Dir == 3  &&  ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )  )
-      Aux_Error( ERROR_INFO, "simulation domain must be cubic for MHD_CPAW_Dir = %d !!\n", MHD_CPAW_Dir );
 
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
@@ -116,23 +118,46 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "MHD_CPAW_Rho0",    &MHD_CPAW_Rho0,        -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "MHD_CPAW_A",       &MHD_CPAW_A,           -1.0,          0.0,              NoMax_double      );
-   ReadPara->Add( "MHD_CPAW_P0",      &MHD_CPAW_P0,          -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "MHD_CPAW_Dir",     &MHD_CPAW_Dir,          3,            0,                3                 );
-   ReadPara->Add( "MHD_CPAW_B0",      &MHD_CPAW_B0,          -1.0,          0.0,              NoMax_double      );
+   ReadPara->Add( "MHD_CPAW_Rho0",    &MHD_CPAW_Rho0,         1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "MHD_CPAW_A",       &MHD_CPAW_A,         1.0e-3,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "MHD_CPAW_P0",      &MHD_CPAW_P0,           0.1,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "MHD_CPAW_B0",      &MHD_CPAW_B0,           1.0,          Eps_double,       NoMax_double      );
+   ReadPara->Add( "MHD_CPAW_Angle2",  &MHD_CPAW_Angle2,      -1.0,          NoMin_double,     180.0             );
+   ReadPara->Add( "MHD_CPAW_Angle3",  &MHD_CPAW_Angle3,      -1.0,          NoMin_double,     180.0             );
 
    ReadPara->Read( FileName );
 
    delete ReadPara;
 
-
 // (2) set the problem-specific derived parameters
-   MHD_CPAW_WaveLength = ( MHD_CPAW_Dir == 3 ) ? amr->BoxSize[0]/sqrt(3.0) : amr->BoxSize[MHD_CPAW_Dir];
+   if ( MHD_CPAW_Angle3 == -1.0) 
+   {
+      MHD_CPAW_Angle3  = ATAN( amr->BoxSize[0]/amr->BoxSize[1] );
+      MHD_CPAW_Angle3 *= 180.0/M_PI;
+   }
+   MHD_CPAW_CosAngle3     = cos( MHD_CPAW_Angle3*M_PI/180.0 );
+   MHD_CPAW_SinAngle3     = sin( MHD_CPAW_Angle3*M_PI/180.0 );
+
+   if ( MHD_CPAW_Angle2 == -1.0) 
+   {
+      MHD_CPAW_Angle2 = ATAN( 0.5*( amr->BoxSize[0] * MHD_CPAW_CosAngle3 + 
+                                    amr->BoxSize[1] * MHD_CPAW_SinAngle3 ) /
+                                    amr->BoxSize[2] );
+      MHD_CPAW_Angle2 *= 180.0/M_PI;
+   }
+   MHD_CPAW_CosAngle2     = cos( MHD_CPAW_Angle2*M_PI/180.0 );
+   MHD_CPAW_SinAngle2     = sin( MHD_CPAW_Angle2*M_PI/180.0 );
+
+   const double x1 = amr->BoxSize[0]*MHD_CPAW_CosAngle2*MHD_CPAW_CosAngle3;
+   const double x2 = amr->BoxSize[1]*MHD_CPAW_CosAngle2*MHD_CPAW_SinAngle3;
+   const double x3 = amr->BoxSize[2]*MHD_CPAW_SinAngle2;
+
+   MHD_CPAW_WaveLength    = x1;
+   if ( MHD_CPAW_Angle3 != 0.0 ) MHD_CPAW_WaveLength = FMIN( MHD_CPAW_WaveLength, x2 );
+   if ( MHD_CPAW_Angle2 != 0.0 ) MHD_CPAW_WaveLength = FMIN( MHD_CPAW_WaveLength, x3 );
    MHD_CPAW_WaveNumber    = 2.0*M_PI/MHD_CPAW_WaveLength;
    MHD_CPAW_WaveSpeed     = MHD_CPAW_B0/SQRT(MHD_CPAW_Rho0);
    MHD_CPAW_WaveFrequency = MHD_CPAW_WaveNumber*MHD_CPAW_WaveSpeed;
-
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
@@ -159,7 +184,6 @@ void SetParameter()
       Aux_Message( stdout, "  perturbation amplitude = % 14.7e\n", MHD_CPAW_A             );
       Aux_Message( stdout, "  background pressure    = % 14.7e\n", MHD_CPAW_P0            );
       Aux_Message( stdout, "  background B field     = % 14.7e\n", MHD_CPAW_B0            );
-      Aux_Message( stdout, "  direction              = %d\n",      MHD_CPAW_Dir           );
       Aux_Message( stdout, "  wave speed             = % 14.7e\n", MHD_CPAW_WaveSpeed     );
       Aux_Message( stdout, "  wavelength             = % 14.7e\n", MHD_CPAW_WaveLength    );
       Aux_Message( stdout, "  wavenumber             = % 14.7e\n", MHD_CPAW_WaveNumber    );
@@ -203,16 +227,16 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double WaveLength = MHD_CPAW_WaveLength;
    const double WaveK      = MHD_CPAW_WaveNumber;
    const double WaveW      = MHD_CPAW_WaveFrequency;
+   const double sin_a3     = MHD_CPAW_SinAngle3;
+   const double cos_a3     = MHD_CPAW_CosAngle3;
+   const double sin_a2     = MHD_CPAW_SinAngle2;
+   const double cos_a2     = MHD_CPAW_CosAngle2;
 
-   double kr, WaveForm1, WaveForm2, Gamma, DampForm;
+   double kr, r, WaveForm1, WaveForm2, Gamma, DampForm;
    double Dens, Mom0, Mom1, Mom2, MomX, MomY, MomZ, Pres, Eint, Etot;
 
-   switch ( MHD_CPAW_Dir ) {
-      case 0:  kr = WaveK*x;                        break;
-      case 1:  kr = WaveK*y;                        break;
-      case 2:  kr = WaveK*z;                        break;
-      case 3:  kr = WaveK*( x + y + z )/sqrt(3.0);  break;
-   }
+   r  = cos_a2 * ( x*cos_a3 + y*sin_a3 ) + z*sin_a2;
+   kr = WaveK*r;
 
    Dens = Rho0;
    Pres = P0;
@@ -223,28 +247,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    Mom1      = -Mom0 * A * WaveForm1;
    Mom2      = -Mom0 * A * WaveForm2;
 
-   switch ( MHD_CPAW_Dir ) {
-      case 0:  
-         MomX = Mom0;                
-         MomY = Mom1; 
-         MomZ = Mom2; 
-         break;
-      case 1:  
-         MomX = Mom2;     
-         MomY = Mom0;            
-         MomZ = Mom1; 
-         break;
-      case 2:  
-         MomX = Mom1;    
-         MomY = Mom2; 
-         MomZ = Mom0;           
-         break;
-      case 3:  
-         MomX = Mom0/sqrt(3.0) + Mom1/sqrt(2.0) + Mom2/sqrt(6.0);  
-         MomY = Mom0/sqrt(3.0) - Mom1/sqrt(2.0) + Mom2/sqrt(6.0);           
-         MomZ = Mom0/sqrt(3.0) - 2.0*Mom2/sqrt(6.0);       
-         break;
-   }
+   MomX = Mom0*cos_a2*cos_a3 - Mom1*sin_a3 - Mom2*sin_a2*cos_a3;  
+   MomY = Mom0*cos_a2*sin_a3 + Mom1*cos_a3 - Mom2*sin_a2*sin_a3;     
+   MomZ = Mom0*sin_a2                      + Mom2*cos_a2;       
    
 // compute the total gas energy
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
@@ -292,54 +297,32 @@ double SetAFieldIC( const double x, const double y, const double z, const double
    const double B0         = MHD_CPAW_B0;
    const double WaveK      = MHD_CPAW_WaveNumber;
    const double WaveW      = MHD_CPAW_WaveFrequency;
+   const double sin_a3     = MHD_CPAW_SinAngle3;
+   const double cos_a3     = MHD_CPAW_CosAngle3;
+   const double sin_a2     = MHD_CPAW_SinAngle2;
+   const double cos_a2     = MHD_CPAW_CosAngle2;
 
-   double kr, WaveForm1, WaveForm2;
+   double kr, r, xx, WaveForm1, WaveForm2;
    double e1x, e1y, e1z, e2x, e2y, e2z;
    double A1, A2, mag_vecpot;
    double xcomp, ycomp, zcomp;
 
-   switch ( MHD_CPAW_Dir ) {
-      case 0:  
-         kr    =  WaveK*x;
-         e1x   =  0.0;           e1y   =  1.0;           e1z   =  0.0;
-         e2x   =  0.0;           e2y   =  0.0;           e2z   =  1.0;   
-         xcomp =  0.0;           ycomp =  0.0;           zcomp =  y;                     
-         break;
-      case 1:  
-         kr    =  WaveK*y;  
-         e1x   =  0.0;           e1y   =  0.0;           e1z   =  1.0;
-         e2x   =  1.0;           e1y   =  0.0;           e2z   =  0.0;       
-         xcomp =  z;             ycomp =  0.0;           zcomp =  0.0;                                          
-         break;
-      case 2:  
-         kr    =  WaveK*z;       
-         e1x   =  1.0;           e1y   =  0.0;           e1z   =  0.0;
-         e2x   =  0.0;           e1y   =  1.0;           e2z   =  0.0;      
-         xcomp =  0.0;           ycomp = x;              zcomp =  0.0;                                          
-         break;
-      case 3:  
-         kr    =  WaveK*( x + y + z )/sqrt(3.0);  
-         e1x   =  1.0/sqrt(2.0); e1y   = -1.0/sqrt(2.0);  e1z   =  0.0;
-         e2x   =  1.0/sqrt(6.0); e2y   =  1.0/sqrt(6.0);  e2z   = -2.0/sqrt(6.0);     
-         xcomp =  z/sqrt(3.0);    
-         ycomp =  x/sqrt(3.0);    
-         zcomp =  y/sqrt(3.0);                                          
-         break;
-   }
-   
-   WaveForm1 = -sin( kr - WaveW*Time );
+   r  = cos_a2 * ( x*cos_a3 + y*sin_a3 ) + sin_a2*z;
+   kr = WaveK*r;
+   xx = -x*sin_a3 + y*cos_a3;
+
+   WaveForm1 =  sin( kr - WaveW*Time );
    WaveForm2 =  cos( kr - WaveW*Time );
    A1        =  B0 * A * WaveForm1 / WaveK;
-   A2        =  B0 * A * WaveForm2 / WaveK;
+   A2        =  B0 * A * WaveForm2 / WaveK + B0*xx;
 
    switch ( Component )
    {
-      case 'x' :  mag_vecpot = B0*xcomp+A1*e1x+A2*e2x;  break;
-      case 'y' :  mag_vecpot = B0*ycomp+A1*e1y+A2*e2y;  break;
-      case 'z' :  mag_vecpot = B0*zcomp+A1*e1z+A2*e2z;  break;
-      default  :  Aux_Error( ERROR_INFO, "unsupported component (%c) !!\n", Component );
+      case 'x':  mag_vecpot = -A1*sin_a3-A2*sin_a2*cos_a3;  break;
+      case 'y':  mag_vecpot =  A1*cos_a3-A2*sin_a2*sin_a3;  break;
+      case 'z':  mag_vecpot =  A2*cos_a2;                   break;
+      default :  Aux_Error( ERROR_INFO, "unsupported component (%c) !!\n", Component );
    }
-
 
    return mag_vecpot;
 
@@ -371,42 +354,24 @@ void CheckBField( real magnetic[], const double x, const double y, const double 
    const double B0         = MHD_CPAW_B0;
    const double WaveK      = MHD_CPAW_WaveNumber;
    const double WaveW      = MHD_CPAW_WaveFrequency;
+   const double sin_a3     = MHD_CPAW_SinAngle3;
+   const double cos_a3     = MHD_CPAW_CosAngle3;
+   const double sin_a2     = MHD_CPAW_SinAngle2;
+   const double cos_a2     = MHD_CPAW_CosAngle2;
 
-   double kr, B1, B2, WaveForm1, WaveForm2;
+   double kr, r, B1, B2, WaveForm1, WaveForm2;
 
-   switch ( MHD_CPAW_Dir ) {
-      case 0:  kr = WaveK*x;                        break;
-      case 1:  kr = WaveK*y;                        break;
-      case 2:  kr = WaveK*z;                        break;
-      case 3:  kr = WaveK*( x + y + z )/sqrt(3.0);  break;
-   }
+   r  = cos_a2 * ( x*cos_a3 + y*sin_a3 ) + z*sin_a2;
+   kr = WaveK*r;
 
    WaveForm1 =  sin( kr - WaveW*Time );
    WaveForm2 =  cos( kr - WaveW*Time );
    B1        =  B0 * A * WaveForm1;
    B2        =  B0 * A * WaveForm2;
 
-   switch ( MHD_CPAW_Dir ) {
-      case 0: magnetic[MAGX] = B0;
-              magnetic[MAGY] = B1;
-              magnetic[MAGZ] = B2;
-              break;
-
-      case 1: magnetic[MAGX] = B2;
-              magnetic[MAGY] = B0;
-              magnetic[MAGZ] = B1;
-              break;
-
-      case 2: magnetic[MAGX] = B1;
-              magnetic[MAGY] = B2;
-              magnetic[MAGZ] = B0;
-              break;
-
-      case 3: magnetic[MAGX] = B0/sqrt(3.0) + B1/sqrt(2.0) + B2/sqrt(6.0);
-              magnetic[MAGY] = B0/sqrt(3.0) - B1/sqrt(2.0) + B2/sqrt(6.0); 
-              magnetic[MAGZ] = B0/sqrt(3.0) - 2.0*B2/sqrt(6.0);     
-              break;
-   }
+   magnetic[MAGX] = B0*cos_a2*cos_a3 - B1*sin_a3 - B2*sin_a2*cos_a3;  
+   magnetic[MAGY] = B0*cos_a2*sin_a3 + B1*cos_a3 - B2*sin_a2*sin_a3;     
+   magnetic[MAGZ] = B0*sin_a2                    + B2*cos_a2;       
 
 } // FUNCTION : CheckBField
 
@@ -428,7 +393,7 @@ static void OutputError()
 {
 
    const char Prefix[100]     = "MHD_CPAW";
-   const OptOutputPart_t Part = OUTPUT_X + MHD_CPAW_Dir;
+   const OptOutputPart_t Part = OUTPUT_XY;
 
    Output_L1Error( SetGridIC, CheckBField, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
 

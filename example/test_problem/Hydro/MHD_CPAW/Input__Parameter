@@ -14,10 +14,10 @@
 
 
 # simulation scale
-BOX_SIZE                      1.0         # box size along the longest side (in Mpc/h if COMOVING is adopted)
+BOX_SIZE                      2.0         # box size along the longest side (in Mpc/h if COMOVING is adopted)
 NX0_TOT_X                     64          # number of base-level cells along x
-NX0_TOT_Y                     64          # number of base-level cells along y
-NX0_TOT_Z                     64          # number of base-level cells along z
+NX0_TOT_Y                     32          # number of base-level cells along y
+NX0_TOT_Z                     32          # number of base-level cells along z
 OMP_NTHREAD                  -1           # number of OpenMP threads (<=0=auto) [-1] ##OPENMP ONLY##
 END_T                        -1.0         # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
 END_STEP                     -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
@@ -25,7 +25,7 @@ END_STEP                     -1           # end step (<0=auto -> must be set by 
 
 # test problems
 TESTPROB_ID                   29          # test problem ID [0]
-                                          # 28: HYDRO MHD Circularly polarized Alfven wave test (+MHD)
+                                          # 29: HYDRO MHD Circularly polarized Alfven wave test (+MHD)
 
 					  
 # code units (in cgs)
@@ -199,7 +199,7 @@ OPT__CK_DIVERGENCE_B          1           # check the divergence-free constraint
 VISCOSITY_TYPE                1           # (1=constant viscosity, 2=Spitzer viscosity) [1] ##VISCOSITY only##
 VISCOSITY_FLUX_TYPE           2           # (1=isotropic viscosity, 2=anisotropic viscosity) [1] ##VISCOSITY only, 2 is for MHD ONLY##
 VISCOSITY_COEFF_TYPE          1
-VISCOSITY_CONSTANT_COEFF      0.1        # constant conductivity coefficient (if CONDUCTION_TYPE=1) [1.0] ##CONDUCTION only##
+VISCOSITY_CONSTANT_COEFF      0.000001        # constant conductivity coefficient (if CONDUCTION_TYPE=1) [1.0] ##CONDUCTION only##
 VISCOSITY_SPITZER_FRAC       1.0         # fraction of Spitzer conductivity (if CONDUCTION_TYPE=2) [1.0] ##CONDUCTION only##
 VISCOSITY_COULOMB_LOG        40.0        # Coulomb logarithm in Spitzer conduction definition (if CONDUCTION_TYPE=2) [40.0] ##CONDUCTION only##
 VISCOSITY_MAX_DIFFUSIVITY   -1.0         # maximum conductive diffusivity, to prevent extremely small timestep (-1=no limit) [-1.0] ##CONDUCTION only##
