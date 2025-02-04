@@ -35,7 +35,7 @@ Edit the section "source files" in the `Makefile_base` to add new source files.
 2. [Optional] If the argument depends on other arguments, add `depend={"depend_arg1":depend_value1, "depend_arg2":depend_value2}` so the argument will be loaded only if `depend_arg1==depend_value1` and `depend_arg2==depend_value2`.
 
    ```python
-   parser.add_argument( "--new_argument", type=int, metavar="INTEGER", gamer_name="NEW_SIMUALTION_OPTION",
+   parser.add_argument( "--new_argument", type=int, metavar="INTEGER", gamer_name="NEW_SIMULATION_OPTION",
                         default=0,
                         depend={"depend_arg1":depend_value1, "depend_arg2":depend_value2},
                         help="Your help message.\n"
