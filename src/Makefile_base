@@ -21,7 +21,7 @@ EXECUTABLE := gamer
 
 # output detailed compilation commands (0/1 = off/on)
 #######################################################################################################
-COMPILE_VERBOSE := 0
+COMPILE_VERBOSE := @@@COMPILE_VERBOSE@@@
 
 
 
