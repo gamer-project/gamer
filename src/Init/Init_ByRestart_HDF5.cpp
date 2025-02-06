@@ -278,7 +278,7 @@ void Init_ByRestart_HDF5( const char *FileName )
    const bool GetPassiveSum = ( PassiveNorm_NVar > 0 );
    const int  NVar          = NVar_NoPassive + NCOMP_PASSIVE + ( (GetPassiveSum)?1:0 );
 
-   if ( KeyInfo.FormatVersion >= 2501 )
+   if ( KeyInfo.FormatVersion >= 2502 )
    {
    LoadField( "Time_ConservedRef",           &Time_ConservedRef,                     H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
 #  if   ( MODEL == HYDRO )
@@ -351,7 +351,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  endif // #if ( MODEL != PAR_ONLY )
 #  endif // #ifdef MASSIVE_PARTICLES
    ConservedRefLoaded = true;
-   } // if ( KeyInfo.FormatVersion >= 2501 )
+   } // if ( KeyInfo.FormatVersion >= 2502 )
 
 
 // 1-4. close all objects
@@ -2447,6 +2447,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Output_Step",            &RS.Opt__Output_Step,            SID, TID, NonFatal, &RT.Opt__Output_Step,            1, NonFatal );
    LoadField( "Opt__Output_Dt",              &RS.Opt__Output_Dt,              SID, TID, NonFatal, &RT.Opt__Output_Dt,              1, NonFatal );
    LoadField( "Opt__Output_Text_Format_Flt", &RS.Opt__Output_Text_Format_Flt, SID, TID, NonFatal,  RT.Opt__Output_Text_Format_Flt, 1, NonFatal );
+   LoadField( "Opt__Output_Text_Length_Int", &RS.Opt__Output_Text_Length_Int, SID, TID, NonFatal, &RT.Opt__Output_Text_Length_Int, 1, NonFatal );
    }
    if ( OPT__OUTPUT_PART ) {
    LoadField( "Output_PartX",                &RS.Output_PartX,                SID, TID, NonFatal, &RT.Output_PartX,                1, NonFatal );
