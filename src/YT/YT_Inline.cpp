@@ -221,8 +221,8 @@ void YT_Inline()
    yt_particle *ParticleList;
    yt_get_ParticlesPtr( &ParticleList );
 
-// set attributes
-   for (int v=0; v<ParticleList[0].num_attr; v++)
+// set floating-point attributes
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
    {
 //     set attribute name
        ParticleList[0].attr_list[v].attr_name  = ParAttFltLabel[v];
@@ -231,6 +231,20 @@ void YT_Inline()
        ParticleList[0].attr_list[v].attr_dtype = YT_DOUBLE;
 #      else
        ParticleList[0].attr_list[v].attr_dtype = YT_FLOAT;
+#      endif
+//     set attribute unit
+   }
+
+// set integer attributes
+   for (int v=PAR_NATT_FLT_TOTAL; v<ParticleList[0].num_attr; v++)
+   {
+//     set attribute name
+       ParticleList[0].attr_list[v].attr_name  = ParAttIntLabel[v-PAR_NATT_FLT_TOTAL];
+//     set attribute data type
+#      ifdef INT8_PAR
+       ParticleList[0].attr_list[v].attr_dtype = YT_LONG;
+#      else
+       ParticleList[0].attr_list[v].attr_dtype = YT_INT;
 #      endif
 //     set attribute unit
    }
