@@ -469,7 +469,7 @@ void Aux_Check_Conservation( const char *comment )
       CoMZ_All    = ( Fluid_AllRank[0]*CoM_Gas[2] + Mass_Par*CoMZ_Par )/Mass_All;
 #     endif // if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
 
-//    record the reference values if not loaded, e.g. first time, not from restart, or HDF5 version < 2502
+//    record the reference values if not initialized, e.g. first time, not from restart, or HDF5 version < 2502
       if ( ! ConservedRefInitialized )
       {
          Time_ConservedRef = Time[0];
