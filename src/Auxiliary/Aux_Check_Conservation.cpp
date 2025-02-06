@@ -470,7 +470,7 @@ void Aux_Check_Conservation( const char *comment )
 #     endif // if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
 
 //    record the reference values if not loaded, e.g. first time, not from restart, or HDF5 version < 2502
-      if ( ! ConservedRefLoaded )
+      if ( ! ConservedRefInitialized )
       {
          Time_ConservedRef = Time[0];
 
@@ -505,10 +505,10 @@ void Aux_Check_Conservation( const char *comment )
          Etot_All_ConservedRef    =    Etot_All;
 #        endif // #if ( MODEL != PAR_ONLY )
 #        endif // #ifdef MASSIVE_PARTICLES
-      } // if ( ! ConservedRefLoaded )
+      } // if ( ! ConservedRefInitialized )
    } // if ( MPI_Rank == 0 )
 
-   ConservedRefLoaded = true;
+   ConservedRefInitialized = true;
 
 // only record the reference if not check conservation
    if ( ! OPT__CK_CONSERVATION )

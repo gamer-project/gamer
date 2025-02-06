@@ -102,7 +102,7 @@ extern OptLohnerForm_t    OPT__FLAG_LOHNER_FORM;
 extern OptCorrAfterSync_t OPT__CORR_AFTER_ALL_SYNC;
 extern OptTimeStepLevel_t OPT__DT_LEVEL;
 
-extern bool       ConservedRefLoaded;
+extern bool       ConservedRefInitialized;
 extern double     Time_ConservedRef;
 #if   ( MODEL == HYDRO )
 #ifdef MHD

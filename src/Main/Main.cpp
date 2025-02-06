@@ -93,7 +93,7 @@ OptLohnerForm_t      OPT__FLAG_LOHNER_FORM;
 OptCorrAfterSync_t   OPT__CORR_AFTER_ALL_SYNC;
 OptTimeStepLevel_t   OPT__DT_LEVEL;
 
-bool                 ConservedRefLoaded = false;
+bool                 ConservedRefInitialized = false;
 double               Time_ConservedRef;
 #if   ( MODEL == HYDRO )
 #ifdef MHD
