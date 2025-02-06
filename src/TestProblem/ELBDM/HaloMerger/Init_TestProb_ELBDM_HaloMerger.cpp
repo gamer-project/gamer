@@ -1382,15 +1382,31 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  End_HaloMerger
-// Description :  Free memory before terminating the program
+// Function    :  Init_FreeMemory_ELBDM_HaloMerger
+// Description :  Free memory AFTER SetGridIC() and Par_Init_ByFunction_HaloMerger()
 //
-// Note        :  1. Linked to the function pointer "End_User_Ptr" to replace "End_User()"
+// Note        :  1. Invoked by Init_GAMER() using the function pointer "Init_User_Ptr",
+//                   which must be set by a test problem initializer
+//                2. Gravitational potential on grids and particle acceleration have not been computed
+//                   at this stage
+//                   --> Use Init_User_AfterPoisson_Ptr() instead if this information is required
+//                   --> It's OK to modify mass density on grids and particle mass/position here
+//                       --> But grid distribution won't change unless you manually call the corresponding
+//                           grid refinement routines here
+//                       --> Modifying particle position requires special attention in order to ensure that
+//                           all particles still reside in leaf patches. Do this only if you know what
+//                           you are doing.
+//                3. To add new particles, remember to call Par_AddParticleAfterInit()
 //
 // Parameter   :  None
+//
+// Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void End_HaloMerger()
+void Init_FreeMemory_ELBDM_HaloMerger()
 {
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
+
 
 // Halos
    if ( HaloMerger_Halo_Num > 0 )
@@ -1477,7 +1493,9 @@ void End_HaloMerger()
 
    } // if ( HaloMerger_ParCloud_Num > 0 )
 
-} // FUNCTION : End_HaloMerger
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
+
+} // FUNCTION : Init_FreeMemory_ELBDM_HaloMerger
 
 
 
@@ -1549,7 +1567,7 @@ void Init_TestProb_ELBDM_HaloMerger()
 
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr  = SetGridIC;
-   End_User_Ptr            = End_HaloMerger;
+   Init_User_Ptr           = Init_FreeMemory_ELBDM_HaloMerger;
    Init_ExtPot_Ptr         = Init_ExtPot_ELBDM_HaloMerger;
 #  ifdef MASSIVE_PARTICLES
    Par_Init_ByFunction_Ptr = Par_Init_ByFunction_HaloMerger;
