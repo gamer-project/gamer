@@ -104,9 +104,7 @@ double               Fluid_ConservedRef[11+NCOMP_PASSIVE+1];
 #elif ( MODEL == ELBDM )
 double               Fluid_ConservedRef[11+NCOMP_PASSIVE+1];
 #endif
-
 double               CoM_Gas_ConservedRef[3];
-
 #ifdef MASSIVE_PARTICLES
 double               Mass_Par_ConservedRef;
 double               CoMX_Par_ConservedRef, CoMY_Par_ConservedRef, CoMZ_Par_ConservedRef;
@@ -121,7 +119,6 @@ double               AngMomX_All_ConservedRef, AngMomY_All_ConservedRef, AngMomZ
 double               Etot_All_ConservedRef;
 #endif // if ( MODEL != PAR_ONLY )
 #endif // #ifdef MASSIVE_PARTICLES
-
 
 
 // 2. global variables for different applications

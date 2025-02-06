@@ -113,9 +113,7 @@ extern double     Fluid_ConservedRef[11+NCOMP_PASSIVE+1];
 #elif ( MODEL == ELBDM )
 extern double     Fluid_ConservedRef[11+NCOMP_PASSIVE+1];
 #endif
-
 extern double     CoM_Gas_ConservedRef[3];
-
 #ifdef MASSIVE_PARTICLES
 extern double     Mass_Par_ConservedRef;
 extern double     CoMX_Par_ConservedRef, CoMY_Par_ConservedRef, CoMZ_Par_ConservedRef;
