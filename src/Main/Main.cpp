@@ -668,14 +668,14 @@ int main( int argc, char *argv[] )
 
    Aux_Check();
 
+// must be called after Aux_Check() to obtain the reference conserved values (ConRef_*) first
+   Output_DumpData( 0 );
+
 #  if ( MODEL == ELBDM )
    if (  ( ELBDM_REMOVE_MOTION_CM == ELBDM_REMOVE_MOTION_CM_INIT && (OPT__INIT != INIT_BY_RESTART || OPT__RESTART_RESET) )  ||
            ELBDM_REMOVE_MOTION_CM == ELBDM_REMOVE_MOTION_CM_EVERY_STEP  )
       ELBDM_RemoveMotionCM();
 #  endif
-
-// must be called after Aux_Check() to obtain the reference conserved values (ConRef_*) first
-   Output_DumpData( 0 );
 
 #  ifdef TIMING
    Aux_ResetTimer();
