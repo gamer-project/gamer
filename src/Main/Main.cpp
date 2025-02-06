@@ -116,10 +116,8 @@ double               Ekin_Par_ConservedRef, Eint_Par_ConservedRef, Epot_Par_Cons
 #if ( MODEL != PAR_ONLY )
 double               Mass_All_ConservedRef;
 double               CoMX_All_ConservedRef, CoMY_All_ConservedRef, CoMZ_All_ConservedRef;
-#if ( MODEL == HYDRO )
 double               MomX_All_ConservedRef, MomY_All_ConservedRef, MomZ_All_ConservedRef;
 double               AngMomX_All_ConservedRef, AngMomY_All_ConservedRef, AngMomZ_All_ConservedRef;
-#endif
 double               Etot_All_ConservedRef;
 #endif // if ( MODEL != PAR_ONLY )
 #endif // #ifdef MASSIVE_PARTICLES
