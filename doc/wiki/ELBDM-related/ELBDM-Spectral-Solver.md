@@ -3,9 +3,9 @@
 ## Setup and Configuration
 
 ### Compilation Options
-- **Wave Scheme Selection**: To enable the spectral solver, set `WAVE_SCHEME` to `WAVE_GRAMFE` in the Makefile or configure with `--wave_scheme=WAVE_GRAMFE` for the ELBDM model.
-- **Spectral Scheme Options**: Choose between `GRAMFE_MATMUL` (faster for `PATCH_SIZE=8`) and `GRAMFE_FFT` (faster for larger patch sizes) by setting `GRAMFE_SCHEME` in the Makefile or configure with `--gramfe_scheme` accordingly.
-- **Additional Libraries**: The CPU version requires FFTW 3 for single precision and FFTW 2/3 for double precision. The GPU version of `GRAMFE_FFT` needs the cuFFTDx library. Set `FFTW2_PATH`, `FFTW3_PATH`, and `CUFFTDX_PATH` in the Makefile or configuration files `*.config`.
+- **Wave Scheme Selection**: To enable the spectral solver, set `WAVE_SCHEME` to `WAVE_GRAMFE` in the Makefile or configure with `--wave_scheme=GRAMFE` for the ELBDM model.
+- **Spectral Scheme Options**: Choose between `MATMUL` (faster for `PATCH_SIZE=8`) and `FFT` (faster for larger patch sizes) by setting `SCHEME` in the Makefile or configure with `--gramfe_scheme` accordingly.
+- **Additional Libraries**: The CPU version requires FFTW 3 for single precision and FFTW 2/3 for double precision. The GPU version of `FFT` needs the cuFFTDx library. Set `FFTW2_PATH`, `FFTW3_PATH`, and `CUFFTDX_PATH` in the Makefile or configuration files `*.config`.
 
 ### Precision and Performance Options
 - **Floating Point Precision**: Controlled by `GRAMFE_ENABLE_SINGLE_PRECISION`. The default is double precision. Single precision is not recommended due to stability issues.
@@ -68,29 +68,29 @@
 4. **Avoidance of Gibbs Phenomenon**: Smooth extensions largely prevent the Gibbs phenomenon.
 5. **Discarding Extended Domain**: After computation, the extended domain is discarded.
 
-## Differences between GRAMFE_MATMUL and GRAMFE_FFT Schemes
+## Differences between MATMUL and FFT Schemes
 
 ### Overview
-Understanding the differences between the `GRAMFE_MATMUL` and `GRAMFE_FFT` schemes in GAMER is crucial for users to choose the appropriate method for their specific simulation needs. Both schemes are based on the Gram-Fourier extension algorithm but differ in their computational approach and performance characteristics.
+Understanding the differences between the `MATMUL` and `FFT` schemes in GAMER is crucial for users to choose the appropriate method for their specific simulation needs. Both schemes are based on the Gram-Fourier extension algorithm but differ in their computational approach and performance characteristics.
 
-### GRAMFE_MATMUL Scheme
+### MATMUL Scheme
 
 #### Description
-- **Matrix Multiplication Approach**: In the `GRAMFE_MATMUL` scheme, the entire operation sequence - GramFE extension, FFT, time evolution, IFFT, and discarding of extension data - is precomputed and represented as a single matrix (which is possible because of linearity).
+- **Matrix Multiplication Approach**: In the `MATMUL` scheme, the entire operation sequence - GramFE extension, FFT, time evolution, IFFT, and discarding of extension data - is precomputed and represented as a single matrix (which is possible because of linearity).
 - **Application to Input Vectors**: This precomputed matrix can be directly applied to input vectors, eliminating the need to compute each operation at runtime.
 
 #### Advantages
-- **Reduced Runtime Computation**: By precomputing the entire operation sequence, the `GRAMFE_MATMUL` scheme minimizes runtime computational overhead.
+- **Reduced Runtime Computation**: By precomputing the entire operation sequence, the `MATMUL` scheme minimizes runtime computational overhead.
 - **Efficiency for Small Patch Sizes**: This scheme is particularly efficient for smaller data sizes where the cost of matrix multiplication is lower.
 
 #### Disadvantages
 - **Memory Usage**: The precomputed matrix, especially for large patch sizes, can consume significant memory resources.
 - **Precomputation Time**: There is an upfront cost in time to compute and store the matrix, which might be substantial depending on the accuracy used.
 
-### GRAMFE_FFT Scheme
+### FFT Scheme
 
 #### Description
-- **Runtime Computation**: The `GRAMFE_FFT` scheme performs the GramFE extension, FFT, time evolution, IFFT, and discarding of extension data operations at runtime.
+- **Runtime Computation**: The `FFT` scheme performs the GramFE extension, FFT, time evolution, IFFT, and discarding of extension data operations at runtime.
 
 #### Advantages
 - **Scalability for Large Patch Sizes**: This scheme is more scalable for larger patch sizes, as it does not require storing large precomputed matrices.
@@ -100,10 +100,10 @@ Understanding the differences between the `GRAMFE_MATMUL` and `GRAMFE_FFT` schem
 - **Dependence on FFT Performance**: The efficiency of the scheme is closely tied to the performance of the FFT algorithm used.
 
 ### Conclusion
-- **Choice of Scheme**: By default `GRAMFE_MATMUL` should be used. `GRAMFE_FFT` should be considered for larger patch sizes and debugging.
+- **Choice of Scheme**: By default `MATMUL` should be used. `FFT` should be considered for larger patch sizes and debugging.
 
 ## Performance Metrics
-- The performance ratio `Perf_FD / Perf_Spectral` indicates the efficiency compared to the finite-difference scheme. This varies based on patch size (e.g., 4.3 for `PATCH_SIZE=8` and 2.6 for `PATCH_SIZE=16` for `GRAMFE_FFT`; comparable performance of `GRAMFE_MATMUL` and `WAVE_FD` for `PATCH_SIZE=8`).
+- The performance ratio `Perf_FD / Perf_Spectral` indicates the efficiency compared to the finite-difference scheme. This varies based on patch size (e.g., 4.3 for `PATCH_SIZE=8` and 2.6 for `PATCH_SIZE=16` for `FFT`; comparable performance of `MATMUL` and `FD` for `PATCH_SIZE=8`).
 
 ## Issues and Considerations
 - **Stability with Single Precision**: Using single precision can lead to instability in the scheme.
@@ -119,7 +119,7 @@ Understanding the differences between the `GRAMFE_MATMUL` and `GRAMFE_FFT` schem
 
 #### Current Precision and Limitations
 
-The calculation of the evolution matrix in the `GRAMFE_MATMUL` scheme currently requires at least 128-bit precision to maintain an error below single precision. The extension matrix has a high condition number, typically around 10^15 or higher, which necessitates this high precision.
+The calculation of the evolution matrix in the `MATMUL` scheme currently requires at least 128-bit precision to maintain an error below single precision. The extension matrix has a high condition number, typically around 10^15 or higher, which necessitates this high precision.
 
 #### Proposed Enhancements
 
