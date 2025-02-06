@@ -443,7 +443,7 @@ void Aux_Check_Conservation( const char *comment )
    Etot_Par = Ekin_Par + Epot_Par;
 #  endif
 
-// calculate conservedd quantities for fluid + particle
+// All = fluid + particles
 #  if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
    double Mass_All, MomX_All, MomY_All, MomZ_All, AngMomX_All, AngMomY_All, AngMomZ_All,
           Etot_All, CoMX_All, CoMY_All, CoMZ_All;
@@ -508,7 +508,7 @@ void Aux_Check_Conservation( const char *comment )
       } // if ( ! ConservedRefLoaded )
    } // if ( MPI_Rank == 0 )
 
-   if ( ! ConservedRefLoaded ) ConservedRefLoaded = true;
+   ConservedRefLoaded = true;
 
 // only record the reference if not check conservation
    if ( ! OPT__CK_CONSERVATION )

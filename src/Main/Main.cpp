@@ -679,7 +679,7 @@ int main( int argc, char *argv[] )
       ELBDM_RemoveMotionCM();
 #  endif
 
-// Must after Aux_Check to get the conserved values
+// must be called after Aux_Check() to obtain the reference conserved values (ConRef_*) first
    Output_DumpData( 0 );
 
 #  ifdef TIMING
