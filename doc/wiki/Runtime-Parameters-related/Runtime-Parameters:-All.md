@@ -396,9 +396,9 @@ For variables with `Default/Min/Max` labeled as `Depend`, click the parameter na
 | SPEC_INT_TABLE_PATH                                                                                  |            None |            None |            None | path to tables for spectral interpolation ##ELBDM & SUPPORT_SPECTRAL_INT ONLY## |
 | SPEC_INT_VORTEX_THRESHOLD                                                                            |             0.1 |             0.0 |            None | vortex detection threshold for SPEC_INT_XY_INSTEAD_DEPHA [0.1] ##ELBDM & SUPPORT_SPECTRAL_INT ONLY## |
 | SPEC_INT_XY_INSTEAD_DEPHA                                                                            |               1 |            None |            None | interpolate x and y (real and imaginary parts in current implementation) around vortices instead of density and phase for the spectral interpolation, which has the advantage of being well-defined across vortices [1] ##ELBDM & SUPPORT_SPECTRAL_INT ONLY## |
-| [[ SRC_DELEPTONIZATION \| Runtime-Parameters:-Source-Terms#SRC_DELEPTONIZATION ]]                    |               0 |            None |            None | deleptonization (for simulations of stellar core collapse) [0] ##HYDRO ONLY## |
+| SRC_DELEPTONIZATION                                                                                  |               0 |            None |            None | deleptonization (for simulations of stellar core collapse) [0] ##HYDRO ONLY## |
 | [[ SRC_GPU_NPGROUP \| Runtime-Parameters:-GPU#SRC_GPU_NPGROUP ]]                                     |              -1 |            None |            None | number of patch groups sent into the CPU/GPU source-term solver (<=0=auto) [-1] |
-| [[ SRC_USER \| Runtime-Parameters:-Source-Terms#SRC_USER ]]                                          |               0 |            None |            None | user-defined source terms -> edit "Src_User.cpp" [0] |
+| SRC_USER                                                                                             |               0 |            None |            None | user-defined source terms -> edit "Src_User.cpp" [0] |
 
 # T
 | Name                                                                                                 |         Default |             Min |             Max | Short description |
