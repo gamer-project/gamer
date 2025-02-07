@@ -27,6 +27,7 @@
    * [[Equation of State | Equation-of-State]]
    * [[Gravity | Gravity]]
    * [[Particles | Particles]]
+   * [[Source Terms | Source-Terms]]
    * [[Chemistry and Radiation | Chemistry-and-Radiation]]
    * [[Star Formation | Star-Formation]]
    * [[Feedback | Feedback]]

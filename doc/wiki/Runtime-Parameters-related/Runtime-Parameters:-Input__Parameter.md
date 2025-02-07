@@ -35,6 +35,9 @@ This page includes the following topics:
 * [[Cosmology | Runtime-Parameters:-Cosmology]]
 -- Cosmological parameters
 
+* [[Source Terms | Runtime-Parameters:-Source-Terms]]
+-- Source terms parameters
+
 * [[Chemistry and Radiation | Runtime-Parameters:-Chemistry-and-Radiation]]
 -- GRACKLE parameters
 
