@@ -99,7 +99,7 @@ double LB_EstimateLoadImbalance()
       if ( OPT__RECORD_LOAD_BALANCE )
       {
          static bool FirstTime = true;
-         char FileName[MAX_STRING];
+         char FileName[2*MAX_STRING];
          sprintf( FileName, "%s/Record__LoadBalance", OUTPUT_DIR );
 
          if ( FirstTime )

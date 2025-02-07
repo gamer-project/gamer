@@ -23,7 +23,7 @@ void Aux_TakeNote()
 
 
    FILE *Note;
-   char FileName[MAX_STRING];
+   char FileName[2*MAX_STRING];
    sprintf( FileName, "%s/Record__Note", OUTPUT_DIR );
 
 
@@ -38,7 +38,7 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fclose( Note );
 
-      char Command[MAX_STRING];
+      char Command[2*MAX_STRING];
       sprintf( Command, "cat ./Input__Note >> %s/Record__Note", OUTPUT_DIR );
       system( Command );
 

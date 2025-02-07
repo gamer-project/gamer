@@ -129,7 +129,7 @@ void MHD_Aux_Check_DivergenceB( const bool Verbose, const char *comment )
    if ( MPI_Rank == 0 )
    {
       static bool FirstTime = true;
-      char FileName[MAX_STRING];
+      char FileName[2*MAX_STRING];
       sprintf( FileName, "%s/Record__DivB", OUTPUT_DIR );
 
 //    output header
