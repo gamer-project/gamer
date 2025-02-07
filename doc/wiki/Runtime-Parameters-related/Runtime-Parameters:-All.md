@@ -122,16 +122,16 @@ For variables with `Default/Min/Max` labeled as `Depend`, click the parameter na
 | [[ GFUNC_COEFF0 \| Runtime-Parameters:-Gravity#GFUNC_COEFF0 ]]                                       |            -1.0 |            None |            None | Green's function coefficient at the origin for the isolated BC (<0=auto) [-1.0] |
 | [[ GPU_NSTREAM \| Runtime-Parameters:-GPU#GPU_NSTREAM ]]                                             |              -1 |            None |            None | number of CUDA streams for the asynchronous memory copy in GPU (<=0=auto) [-1] |
 | [[ GRACKLE_ACTIVATE \| Runtime-Parameters:-Chemistry-and-Radiation#GRACKLE_ACTIVATE ]]               |               1 |            None |            None | enable Grackle [1] |
-| GRACKLE_CIE_COOLING                                                                                  |               0 |            None |            None | 0: off; 1:on |
+| [[ GRACKLE_CIE_COOLING \| Runtime-Parameters:-Chemistry-and-Radiation#GRACKLE_CIE_COOLING ]]         |               0 |            None |            None | map to "cie_cooling" (0=off, 1=on) [0] |
 | [[ GRACKLE_CLOUDY_TABLE \| Runtime-Parameters:-Chemistry-and-Radiation#GRACKLE_CLOUDY_TABLE ]]       |            None |            None |            None | "grackle_data_file" |
 | [[ GRACKLE_CMB_FLOOR \| Runtime-Parameters:-Chemistry-and-Radiation#GRACKLE_CMB_FLOOR ]]             |               1 |            None |            None | map to "cmb_temperature_floor" [1] |
 | [[ GRACKLE_COOLING \| Runtime-Parameters:-Chemistry-and-Radiation#GRACKLE_COOLING ]]                 |               1 |            None |            None | map to "with_radiative_cooling" [1] |
-| GRACKLE_H2_OPA_APPROX                                                                                |               0 |               0 |               1 | H2 opacity from Ripamonti+04; 0:off, 1:Ripomonti+04 |
+| [[ GRACKLE_H2_OPA_APPROX \| Runtime-Parameters:-Chemistry-and-Radiation#GRACKLE_H2_OPA_APPROX ]]     |               0 |               0 |               1 | map to "h2_optical_depth_approximation" (0=off, 1=Ripomonti+04) [0] |
 | [[ GRACKLE_METAL \| Runtime-Parameters:-Chemistry-and-Radiation#GRACKLE_METAL ]]                     |               0 |            None |            None | map to "metal_cooling" (must increase NCOMP_PASSIVE_USER by 1) [0] |
 | [[ GRACKLE_PE_HEATING \| Runtime-Parameters:-Chemistry-and-Radiation#GRACKLE_PE_HEATING ]]           |               0 |            None |            None | map to "photoelectric_heating" [0] |
 | [[ GRACKLE_PE_HEATING_RATE \| Runtime-Parameters:-Chemistry-and-Radiation#GRACKLE_PE_HEATING_RATE ]] |         8.5e-26 |             0.0 |            None | map to "photoelectric_heating_rate (in erg/cm^3/s)" [8.5e-26] |
 | [[ GRACKLE_PRIMORDIAL \| Runtime-Parameters:-Chemistry-and-Radiation#GRACKLE_PRIMORDIAL ]]           |               0 |               0 |               3 | map to "primordial_chemistry" (0=Cloudy, 1/2/3=6-/9-/12-species) [0] (must increase NCOMP_PASSIVE_USER by 6/9/12, respectively) |
-| GRACKLE_THREE_BODY_RATE                                                                              |               0 |               0 |               5 | used Glover+08 rate |
+| [[ GRACKLE_THREE_BODY_RATE \| Runtime-Parameters:-Chemistry-and-Radiation#GRACKLE_THREE_BODY_RATE ]] |               0 |               0 |               5 | map to "three_body_rate" (4=Glover+08 rate) [0] |
 | [[ GRACKLE_UV \| Runtime-Parameters:-Chemistry-and-Radiation#GRACKLE_UV ]]                           |               0 |            None |            None | map to "UVbackground" [0] |
 | [[ GRACKLE_VERBOSE \| Runtime-Parameters:-Chemistry-and-Radiation#GRACKLE_VERBOSE ]]                 |               1 |            None |            None | map to "grackle_verbose" [1] |
 
