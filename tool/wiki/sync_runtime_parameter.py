@@ -58,6 +58,7 @@ LINK_FILES     = [ "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters
                    "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Particles.md",
                    "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Refinement.md",
                    "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Star-Formation.md",
+                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Source-Terms.md",
                    "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Timestep.md",
                    "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Units.md"
                  ]
