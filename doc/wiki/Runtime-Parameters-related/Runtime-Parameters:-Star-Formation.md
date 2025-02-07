@@ -28,7 +28,7 @@ Only applicable when enabling the compilation option
 [[--star_formation | Installation:-Option-List#--star_formation]].
 
 <a name="SF_CREATE_STAR_DET_RANDOM"></a>
-* #### `SF_CREATE_STAR_DET_RANDOM` &ensp; (0=off, 1=on; <0=auto) &ensp; [-1]
+* #### `SF_CREATE_STAR_DET_RANDOM` &ensp; (0=off, 1=on; <0 &#8594; set by [[--bitwise_reproducibility | Installation:-Option-List#--bitwise_reproducibility]]) &ensp; [-1]
     * **Description:**
 Make random numbers deterministic (i.e., independent of OpenMP and MPI).
     * **Restriction:**
@@ -36,7 +36,7 @@ Only applicable when enabling the compilation option
 [[--star_formation | Installation:-Option-List#--star_formation]].
 
 <a name="SF_CREATE_STAR_MIN_LEVEL"></a>
-* #### `SF_CREATE_STAR_MIN_LEVEL` &ensp; (&#8805;0; <0 &#8594; MAX_LEVEL) &ensp; [0]
+* #### `SF_CREATE_STAR_MIN_LEVEL` &ensp; (&#8805;0; <0 &#8594; [[MAX_LEVEL | Runtime Parameters:-Refinement#MAX_LEVEL]]) &ensp; [0]
     * **Description:**
 Minimum AMR level allowed to form stars.
     * **Restriction:**
@@ -53,7 +53,7 @@ Only applicable when enabling the compilation option
 [[--star_formation | Installation:-Option-List#--star_formation]].
 
 <a name="SF_CREATE_STAR_MASS_EFF"></a>
-* #### `SF_CREATE_STAR_MASS_EFF` &ensp; (>0.0) &ensp; [1.0e-2]
+* #### `SF_CREATE_STAR_MASS_EFF` &ensp; (0.0 < input &#8804; 1.0) &ensp; [1.0e-2]
     * **Description:**
 Gas-to-star mass conversion efficiency.
     * **Restriction:**
@@ -70,7 +70,7 @@ Only applicable when enabling the compilation option
 [[--star_formation | Installation:-Option-List#--star_formation]].
 
 <a name="SF_CREATE_STAR_MAX_STAR_MFRAC"></a>
-* #### `SF_CREATE_STAR_MAX_STAR_MFRAC` &ensp; (>0.0) &ensp; [0.5]
+* #### `SF_CREATE_STAR_MAX_STAR_MFRAC` &ensp; (0.0 < input &#8804; 1.0) &ensp; [0.5]
     * **Description:**
 Maximum gas mass fraction allowed to convert to stars per substep.
     * **Restriction:**
