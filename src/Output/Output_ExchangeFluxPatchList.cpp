@@ -22,7 +22,7 @@ void Output_ExchangeFluxPatchList( const int option, const int lv, const char *c
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "lv", lv );
 
 
-   char FileName[MAX_STRING];
+   char FileName[2*MAX_STRING];
    switch ( option )
    {
       case 0:  sprintf( FileName, "%s/SendFluxPatchList_%d_%d", OUTPUT_DIR, MPI_Rank, lv );

@@ -31,7 +31,7 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 
    static bool FirstTime  = true;
    const int   NdTimeMax  = 20;
-   char FileName[MAX_STRING];
+   char FileName[2*MAX_STRING];
    sprintf( FileName, "%s/Record__TimeStep", OUTPUT_DIR );
 
    char  (*dTime_Name)[MAX_STRING] = new char   [NdTimeMax][MAX_STRING];
