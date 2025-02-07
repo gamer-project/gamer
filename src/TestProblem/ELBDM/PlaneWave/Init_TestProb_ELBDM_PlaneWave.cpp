@@ -82,6 +82,52 @@ void Validate()
 
 #if ( MODEL == ELBDM )
 //-------------------------------------------------------------------------------------------------------
+// Function    :  LoadInputTestProb
+// Description :  Loading the problem-specific runtime parameters and storing them in HDF5 snapshots (Data_*)
+//
+// Note        :  1. Invoked by SetParameter()
+//                2. Invoked by Output_DumpData_Total_HDF5() using the fuction pointer "Output_HDF5_InputTest_Ptr"
+//                3. If there is no problem-specific runtime parameters to load, please add at least one parameter
+//                   to avoid empty structure of `HDF5_Output_t`.
+//                   --> Example:
+//                       AddInputTestPara( load_mode, "NewTestproblem_TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+//
+// Parameter   :  load_mode      : Load data structure mode
+//                                 LOAD_READPARA    : Load ReadPara_t
+//                                 LOAD_HDF5_OUTPUT : Load HDF5_Output_t
+//                ReadPara       : Data structure for loading runtime parameters
+//                HDF5_InputTest : Data structure storing the parameters to be stored in HDF5 snapshot
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void LoadInputTestProb( const LoadInputTestMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
+{
+
+#  ifndef SUPPORT_HDF5
+   if ( load_mode == LOAD_HDF5_OUTPUT )   Aux_Error( ERROR_INFO, "please turn on SUPPORT_HDF5 in the Makefile for load_mode == LOAD_HDF5_OUTPUT !!\n" );
+#  endif
+
+   if ( load_mode == LOAD_READPARA     &&  ReadPara       == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_READPARA and ReadPara == NULL !!\n" );
+   if ( load_mode == LOAD_HDF5_OUTPUT  &&  HDF5_InputTest == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_HDF5_OUTPUT and HDF5_InputTest == NULL !!\n" );
+
+// add parameters in the following format:
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
+// --> AddInputTestPara() is defined in "include/TestProb.h"
+// ********************************************************************************************************************************
+// AddInputTestPara( load_mode, "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
+// ********************************************************************************************************************************
+   AddInputTestPara( load_mode, "PWave_NWavelength", &PWave_NWavelength,     2,             1,                NoMax_int         );
+   AddInputTestPara( load_mode, "PWave_Amp",         &PWave_Amp,             1.0,           Eps_double,       NoMax_double      );
+   AddInputTestPara( load_mode, "PWave_Phase0",      &PWave_Phase0,          0.0,           NoMin_double,     NoMax_double      );
+   AddInputTestPara( load_mode, "PWave_XYZ",         &PWave_XYZ,             0,             0,                3                 );
+   AddInputTestPara( load_mode, "PWave_LSR",         &PWave_LSR,             1,             NoMin_int,        NoMax_int         );
+
+} // FUNCITON : LoadInputTestProb
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
 //
@@ -106,25 +152,15 @@ void SetParameter()
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
-// (1-1) add parameters in the following format:
-// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
-// --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
-// ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
-// ********************************************************************************************************************************
-   ReadPara->Add( "PWave_NWavelength", &PWave_NWavelength,     2,             1,                NoMax_int         );
-   ReadPara->Add( "PWave_Amp",         &PWave_Amp,             1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "PWave_Phase0",      &PWave_Phase0,          0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "PWave_XYZ",         &PWave_XYZ,             0,             0,                3                 );
-   ReadPara->Add( "PWave_LSR",         &PWave_LSR,             1,             NoMin_int,        NoMax_int         );
+   LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
 
    ReadPara->Read( FileName );
 
    delete ReadPara;
 
-// (1-2) set the default values
+// (1-1) set the default values
 
-// (1-3) check and reset the runtime parameters
+// (1-2) check and reset the runtime parameters
    if ( PWave_XYZ == 3  &&  ( amr->BoxSize[0] != amr->BoxSize[1]  ||  amr->BoxSize[0] != amr->BoxSize[2] ) )
       Aux_Error( ERROR_INFO, "simulation domain must be CUBIC in %s test if PWave_XYZ == 3 !!\n", "ELBDM PlaneWave" );
 
@@ -382,6 +418,9 @@ void Init_TestProb_ELBDM_PlaneWave()
    Init_Field_User_Ptr             = AddNewField_PlaneWave;
    Output_User_Ptr                 = OutputError;
    Output_UserWorkBeforeOutput_Ptr = Output_UserWorkBeforeOutput_PlaneWave;
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_InputTest_Ptr       = LoadInputTestProb;
+#  endif
 #  endif // #if ( MODEL == ELBDM )
 
 

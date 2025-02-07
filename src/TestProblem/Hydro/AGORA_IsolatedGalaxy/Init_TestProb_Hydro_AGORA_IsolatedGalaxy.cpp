@@ -145,6 +145,61 @@ void Validate()
 
 #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 //-------------------------------------------------------------------------------------------------------
+// Function    :  LoadInputTestProb
+// Description :  Loading the problem-specific runtime parameters and storing them in HDF5 snapshots (Data_*)
+//
+// Note        :  1. Invoked by SetParameter()
+//                2. Invoked by Output_DumpData_Total_HDF5() using the fuction pointer "Output_HDF5_InputTest_Ptr"
+//                3. If there is no problem-specific runtime parameters to load, please add at least one parameter
+//                   to avoid empty structure of `HDF5_Output_t`.
+//                   --> Example:
+//                       AddInputTestPara( load_mode, "NewTestproblem_TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+//
+// Parameter   :  load_mode      : Load data structure mode
+//                                 LOAD_READPARA    : Load ReadPara_t
+//                                 LOAD_HDF5_OUTPUT : Load HDF5_Output_t
+//                ReadPara       : Data structure for loading runtime parameters
+//                HDF5_InputTest : Data structure storing the parameters to be stored in HDF5 snapshot
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void LoadInputTestProb( const LoadInputTestMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
+{
+
+#  ifndef SUPPORT_HDF5
+   if ( load_mode == LOAD_HDF5_OUTPUT )   Aux_Error( ERROR_INFO, "please turn on SUPPORT_HDF5 in the Makefile for load_mode == LOAD_HDF5_OUTPUT !!\n" );
+#  endif
+
+   if ( load_mode == LOAD_READPARA     &&  ReadPara       == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_READPARA and ReadPara == NULL !!\n" );
+   if ( load_mode == LOAD_HDF5_OUTPUT  &&  HDF5_InputTest == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_HDF5_OUTPUT and HDF5_InputTest == NULL !!\n" );
+
+// add parameters in the following format:
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
+// --> AddInputTestPara() is defined in "include/TestProb.h"
+// ********************************************************************************************************************************
+// AddInputTestPara( load_mode, "KEY_IN_THE_FILE",         &VARIABLE,                 DEFAULT,       MIN,              MAX               );
+// ********************************************************************************************************************************
+   AddInputTestPara( load_mode, "AGORA_VcProf_Filename",    AGORA_VcProf_Filename,    NoDef_str,     Useless_str,      Useless_str       );
+   AddInputTestPara( load_mode, "AGORA_HaloPar_Filename",   AGORA_HaloPar_Filename,   NoDef_str,     Useless_str,      Useless_str       );
+   AddInputTestPara( load_mode, "AGORA_DiskPar_Filename",   AGORA_DiskPar_Filename,   NoDef_str,     Useless_str,      Useless_str       );
+   AddInputTestPara( load_mode, "AGORA_BulgePar_Filename",  AGORA_BulgePar_Filename,  NoDef_str,     Useless_str,      Useless_str       );
+   AddInputTestPara( load_mode, "AGORA_DiskScaleLength",   &AGORA_DiskScaleLength,   -1.0,           Eps_double,       NoMax_double      );
+   AddInputTestPara( load_mode, "AGORA_DiskScaleHeight",   &AGORA_DiskScaleHeight,   -1.0,           Eps_double,       NoMax_double      );
+   AddInputTestPara( load_mode, "AGORA_DiskTotalMass",     &AGORA_DiskTotalMass,     -1.0,           Eps_double,       NoMax_double      );
+   AddInputTestPara( load_mode, "AGORA_DiskGasMassFrac",   &AGORA_DiskGasMassFrac,   -1.0,           Eps_double,       NoMax_double      );
+   AddInputTestPara( load_mode, "AGORA_DiskGasTemp",       &AGORA_DiskGasTemp,       -1.0,           Eps_double,       NoMax_double      );
+   AddInputTestPara( load_mode, "AGORA_HaloGasNumDensH",   &AGORA_HaloGasNumDensH,   -1.0,           Eps_double,       NoMax_double      );
+   AddInputTestPara( load_mode, "AGORA_HaloGasTemp",       &AGORA_HaloGasTemp,       -1.0,           Eps_double,       NoMax_double      );
+   AddInputTestPara( load_mode, "AGORA_UseMetal",          &AGORA_UseMetal,           false,         Useless_bool,     Useless_bool      );
+   AddInputTestPara( load_mode, "AGORA_DiskMetalMassFrac", &AGORA_DiskMetalMassFrac,  0.0,           0.0,              1.0               );
+   AddInputTestPara( load_mode, "AGORA_HaloMetalMassFrac", &AGORA_HaloMetalMassFrac,  0.0,           0.0,              1.0               );
+
+} // FUNCITON : LoadInputTestProb
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
 //
@@ -170,26 +225,7 @@ void SetParameter()
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
-// add parameters in the following format:
-// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
-// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
-// ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",         &VARIABLE,                 DEFAULT,       MIN,              MAX               );
-// ********************************************************************************************************************************
-   ReadPara->Add( "AGORA_VcProf_Filename",    AGORA_VcProf_Filename,    NoDef_str,     Useless_str,      Useless_str       );
-   ReadPara->Add( "AGORA_HaloPar_Filename",   AGORA_HaloPar_Filename,   NoDef_str,     Useless_str,      Useless_str       );
-   ReadPara->Add( "AGORA_DiskPar_Filename",   AGORA_DiskPar_Filename,   NoDef_str,     Useless_str,      Useless_str       );
-   ReadPara->Add( "AGORA_BulgePar_Filename",  AGORA_BulgePar_Filename,  NoDef_str,     Useless_str,      Useless_str       );
-   ReadPara->Add( "AGORA_DiskScaleLength",   &AGORA_DiskScaleLength,   -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "AGORA_DiskScaleHeight",   &AGORA_DiskScaleHeight,   -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "AGORA_DiskTotalMass",     &AGORA_DiskTotalMass,     -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "AGORA_DiskGasMassFrac",   &AGORA_DiskGasMassFrac,   -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "AGORA_DiskGasTemp",       &AGORA_DiskGasTemp,       -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "AGORA_HaloGasNumDensH",   &AGORA_HaloGasNumDensH,   -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "AGORA_HaloGasTemp",       &AGORA_HaloGasTemp,       -1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "AGORA_UseMetal",          &AGORA_UseMetal,           false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "AGORA_DiskMetalMassFrac", &AGORA_DiskMetalMassFrac,  0.0,           0.0,              1.0               );
-   ReadPara->Add( "AGORA_HaloMetalMassFrac", &AGORA_HaloMetalMassFrac,  0.0,           0.0,              1.0               );
+   LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
 
    ReadPara->Read( FileName );
 
@@ -382,6 +418,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 } // FUNCTION : SetGridIC
 
 
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  GaussianQuadratureIntegrate
 // Description :  Use the 5-point Gaussian quadrature integration to calculate the average density of a given cell
@@ -531,6 +568,9 @@ void Init_TestProb_Hydro_AGORA_IsolatedGalaxy()
    End_User_Ptr                = End_AGORA;
    Par_Init_ByFunction_Ptr     = Par_Init_ByFunction_AGORA;
    Par_Init_Attribute_User_Ptr = AddNewParticleAttribute_AGORA;
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_InputTest_Ptr   = LoadInputTestProb;
+#  endif
 #  endif // if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 
 
