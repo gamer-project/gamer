@@ -12,7 +12,7 @@ Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) 
     * **Description:**
 The Python script name to be loaded.
 Do not include the file extension `.py`.
-For example, set it to `inline_script` if the script name is `inline_script.py`
+For example, set it to `inline_script` if the script name is `inline_script.py`.
     * **Restriction:**
 Only applicable when enabling the compilation option
 [[--libyt | Installation:-Option-List#--libyt]].
