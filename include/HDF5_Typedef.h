@@ -107,75 +107,7 @@ struct KeyInfo_t
    long   UniqueDataID;
 
 // conserved variables
-   double        Time_ConservedRef;
-#  if   ( MODEL == HYDRO )
-   double    Mass_Gas_ConservedRef;
-   double    CoMX_Gas_ConservedRef;
-   double    CoMY_Gas_ConservedRef;
-   double    CoMZ_Gas_ConservedRef;
-   double    MomX_Gas_ConservedRef;
-   double    MomY_Gas_ConservedRef;
-   double    MomZ_Gas_ConservedRef;
-   double AngMomX_Gas_ConservedRef;
-   double AngMomY_Gas_ConservedRef;
-   double AngMomZ_Gas_ConservedRef;
-   double    Ekin_Gas_ConservedRef;
-   double    Eint_Gas_ConservedRef;
-   double    Epot_Gas_ConservedRef;
-#  ifdef MHD
-   double    Emag_Gas_ConservedRef;
-#  endif
-   double    Etot_Gas_ConservedRef;
-#  elif ( MODEL == ELBDM )
-   double    Mass_Psi_ConservedRef;
-   double    CoMX_Psi_ConservedRef;
-   double    CoMY_Psi_ConservedRef;
-   double    CoMZ_Psi_ConservedRef;
-   double    MomX_Psi_ConservedRef;
-   double    MomY_Psi_ConservedRef;
-   double    MomZ_Psi_ConservedRef;
-   double AngMomX_Psi_ConservedRef;
-   double AngMomY_Psi_ConservedRef;
-   double AngMomZ_Psi_ConservedRef;
-   double    Ekin_Psi_ConservedRef;
-   double    Epot_Psi_ConservedRef;
-   double    Esel_Psi_ConservedRef;
-   double    Etot_Psi_ConservedRef;
-#  endif
-
-#  if ( NCOMP_PASSIVE > 0 )
-   double     Passive_ConservedRef[NCOMP_PASSIVE];
-   double Passive_Sum_ConservedRef;
-#  endif
-
-#  ifdef MASSIVE_PARTICLES
-   double    Mass_Par_ConservedRef;
-   double    CoMX_Par_ConservedRef;
-   double    CoMY_Par_ConservedRef;
-   double    CoMZ_Par_ConservedRef;
-   double    MomX_Par_ConservedRef;
-   double    MomY_Par_ConservedRef;
-   double    MomZ_Par_ConservedRef;
-   double AngMomX_Par_ConservedRef;
-   double AngMomY_Par_ConservedRef;
-   double AngMomZ_Par_ConservedRef;
-   double    Ekin_Par_ConservedRef;
-   double    Epot_Par_ConservedRef;
-   double    Etot_Par_ConservedRef;
-#  if ( MODEL != PAR_ONLY )
-   double    Mass_All_ConservedRef;
-   double    CoMX_All_ConservedRef;
-   double    CoMY_All_ConservedRef;
-   double    CoMZ_All_ConservedRef;
-   double    MomX_All_ConservedRef;
-   double    MomY_All_ConservedRef;
-   double    MomZ_All_ConservedRef;
-   double AngMomX_All_ConservedRef;
-   double AngMomY_All_ConservedRef;
-   double AngMomZ_All_ConservedRef;
-   double    Etot_All_ConservedRef;
-#  endif // #if ( MODEL != PAR_ONLY )
-#  endif // #ifdef MASSIVE_PARTICLES
+   double ConservedRef[1+NCONREF_MAX+NCOMP_PASSIVE+1];
 
 }; // struct KeyInfo_t
 

@@ -103,31 +103,7 @@ extern OptCorrAfterSync_t OPT__CORR_AFTER_ALL_SYNC;
 extern OptTimeStepLevel_t OPT__DT_LEVEL;
 
 extern bool       ConservedRefInitialized;
-extern double     Time_ConservedRef;
-#if   ( MODEL == HYDRO )
-#ifdef MHD
-extern double     Fluid_ConservedRef[12+NCOMP_PASSIVE+1];
-#else
-extern double     Fluid_ConservedRef[11+NCOMP_PASSIVE+1];
-#endif
-#elif ( MODEL == ELBDM )
-extern double     Fluid_ConservedRef[11+NCOMP_PASSIVE+1];
-#endif
-extern double     CoM_Gas_ConservedRef[3];
-#ifdef MASSIVE_PARTICLES
-extern double     Mass_Par_ConservedRef;
-extern double     CoMX_Par_ConservedRef, CoMY_Par_ConservedRef, CoMZ_Par_ConservedRef;
-extern double     MomX_Par_ConservedRef, MomY_Par_ConservedRef, MomZ_Par_ConservedRef;
-extern double     AngMomX_Par_ConservedRef, AngMomY_Par_ConservedRef, AngMomZ_Par_ConservedRef;
-extern double     Ekin_Par_ConservedRef, Eint_Par_ConservedRef, Epot_Par_ConservedRef, Etot_Par_ConservedRef;
-#if ( MODEL != PAR_ONLY )
-extern double     Mass_All_ConservedRef;
-extern double     CoMX_All_ConservedRef, CoMY_All_ConservedRef, CoMZ_All_ConservedRef;
-extern double     MomX_All_ConservedRef, MomY_All_ConservedRef, MomZ_All_ConservedRef;
-extern double     AngMomX_All_ConservedRef, AngMomY_All_ConservedRef, AngMomZ_All_ConservedRef;
-extern double     Etot_All_ConservedRef;
-#endif // if ( MODEL != PAR_ONLY )
-#endif // #ifdef MASSIVE_PARTICLES
+extern double     ConservedRef[1+NCONREF_MAX+NCOMP_PASSIVE+1];
 
 
 

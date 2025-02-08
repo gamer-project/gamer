@@ -1694,95 +1694,9 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    srand( time(NULL) );
    KeyInfo.UniqueDataID = rand();
 
-// ugly index from Aux_Check_Conservation.cpp
-#  if   ( MODEL == HYDRO )
-#  ifdef MHD
-   const int    NVar_NoPassive    = 12;
-#  else
-   const int    NVar_NoPassive    = 11;
-#  endif
-   const int    idx_etot          = NVar_NoPassive - 1;
-#  elif ( MODEL == ELBDM )
-   const int    NVar_NoPassive    = 11;
-   const int    idx_etot          = NVar_NoPassive - 1;
-#  endif
-   const bool GetPassiveSum = ( PassiveNorm_NVar > 0 );
-   const int  NVar          = NVar_NoPassive + NCOMP_PASSIVE + ( (GetPassiveSum)?1:0 );
-
    if ( !ConservedRefInitialized )   Aux_Error( ERROR_INFO, "Conserved variables reference are not assigned yet!!\n" );
-   KeyInfo.Time_ConservedRef        = Time_ConservedRef;
-#  if   ( MODEL == HYDRO )
-   KeyInfo.Mass_Gas_ConservedRef    = Fluid_ConservedRef[0];
-   KeyInfo.CoMX_Gas_ConservedRef    = CoM_Gas_ConservedRef[0];
-   KeyInfo.CoMY_Gas_ConservedRef    = CoM_Gas_ConservedRef[1];
-   KeyInfo.CoMZ_Gas_ConservedRef    = CoM_Gas_ConservedRef[2];
-   KeyInfo.MomX_Gas_ConservedRef    = Fluid_ConservedRef[1];
-   KeyInfo.MomY_Gas_ConservedRef    = Fluid_ConservedRef[2];
-   KeyInfo.MomZ_Gas_ConservedRef    = Fluid_ConservedRef[3];
-   KeyInfo.AngMomX_Gas_ConservedRef = Fluid_ConservedRef[4];
-   KeyInfo.AngMomY_Gas_ConservedRef = Fluid_ConservedRef[5];
-   KeyInfo.AngMomZ_Gas_ConservedRef = Fluid_ConservedRef[6];
-   KeyInfo.Ekin_Gas_ConservedRef    = Fluid_ConservedRef[7];
-   KeyInfo.Eint_Gas_ConservedRef    = Fluid_ConservedRef[8];
-   KeyInfo.Epot_Gas_ConservedRef    = Fluid_ConservedRef[9];
-#  ifdef MHD
-   KeyInfo.Emag_Gas_ConservedRef    = Fluid_ConservedRef[10];
-#  endif
-   KeyInfo.Etot_Gas_ConservedRef    = Fluid_ConservedRef[idx_etot];
-#  elif ( MODEL == ELBDM )
-   KeyInfo.Mass_Psi_ConservedRef    = Fluid_ConservedRef[0];
-   KeyInfo.CoMX_Psi_ConservedRef    = CoM_Gas_ConservedRef[0];
-   KeyInfo.CoMY_Psi_ConservedRef    = CoM_Gas_ConservedRef[1];
-   KeyInfo.CoMZ_Psi_ConservedRef    = CoM_Gas_ConservedRef[2];
-   KeyInfo.MomX_Psi_ConservedRef    = Fluid_ConservedRef[1];
-   KeyInfo.MomY_Psi_ConservedRef    = Fluid_ConservedRef[2];
-   KeyInfo.MomZ_Psi_ConservedRef    = Fluid_ConservedRef[3];
-   KeyInfo.AngMomX_Psi_ConservedRef = Fluid_ConservedRef[4];
-   KeyInfo.AngMomY_Psi_ConservedRef = Fluid_ConservedRef[5];
-   KeyInfo.AngMomZ_Psi_ConservedRef = Fluid_ConservedRef[6];
-   KeyInfo.Ekin_Psi_ConservedRef    = Fluid_ConservedRef[7];
-   KeyInfo.Epot_Psi_ConservedRef    = Fluid_ConservedRef[8];
-   KeyInfo.Esel_Psi_ConservedRef    = Fluid_ConservedRef[9];
-   KeyInfo.Etot_Psi_ConservedRef    = Fluid_ConservedRef[idx_etot];
-#  endif
 
-#  if ( NCOMP_PASSIVE > 0 )
-   for (int v=0; v<NCOMP_PASSIVE; v++)
-   KeyInfo.Passive_ConservedRef[v]  = Fluid_ConservedRef[NVar_NoPassive+v];
-   if ( PassiveNorm_NVar > 0 )
-   KeyInfo.Passive_Sum_ConservedRef = Fluid_ConservedRef[NVar-1];
-   else
-   KeyInfo.Passive_Sum_ConservedRef = 0.0;
-#  endif
-
-#  ifdef MASSIVE_PARTICLES
-   KeyInfo.Mass_Par_ConservedRef    =    Mass_Par_ConservedRef;
-   KeyInfo.CoMX_Par_ConservedRef    =    CoMX_Par_ConservedRef;
-   KeyInfo.CoMY_Par_ConservedRef    =    CoMY_Par_ConservedRef;
-   KeyInfo.CoMZ_Par_ConservedRef    =    CoMZ_Par_ConservedRef;
-   KeyInfo.MomX_Par_ConservedRef    =    MomX_Par_ConservedRef;
-   KeyInfo.MomY_Par_ConservedRef    =    MomY_Par_ConservedRef;
-   KeyInfo.MomZ_Par_ConservedRef    =    MomZ_Par_ConservedRef;
-   KeyInfo.AngMomX_Par_ConservedRef = AngMomX_Par_ConservedRef;
-   KeyInfo.AngMomY_Par_ConservedRef = AngMomY_Par_ConservedRef;
-   KeyInfo.AngMomZ_Par_ConservedRef = AngMomZ_Par_ConservedRef;
-   KeyInfo.Ekin_Par_ConservedRef    =    Ekin_Par_ConservedRef;
-   KeyInfo.Epot_Par_ConservedRef    =    Epot_Par_ConservedRef;
-   KeyInfo.Etot_Par_ConservedRef    =    Etot_Par_ConservedRef;
-#  if ( MODEL != PAR_ONLY )
-   KeyInfo.Mass_All_ConservedRef    =    Mass_All_ConservedRef;
-   KeyInfo.CoMX_All_ConservedRef    =    CoMX_All_ConservedRef;
-   KeyInfo.CoMY_All_ConservedRef    =    CoMY_All_ConservedRef;
-   KeyInfo.CoMZ_All_ConservedRef    =    CoMZ_All_ConservedRef;
-   KeyInfo.MomX_All_ConservedRef    =    MomX_All_ConservedRef;
-   KeyInfo.MomY_All_ConservedRef    =    MomY_All_ConservedRef;
-   KeyInfo.MomZ_All_ConservedRef    =    MomZ_All_ConservedRef;
-   KeyInfo.AngMomX_All_ConservedRef = AngMomX_All_ConservedRef;
-   KeyInfo.AngMomY_All_ConservedRef = AngMomY_All_ConservedRef;
-   KeyInfo.AngMomZ_All_ConservedRef = AngMomZ_All_ConservedRef;
-   KeyInfo.Etot_All_ConservedRef    =    Etot_All_ConservedRef;
-#  endif // #if ( MODEL != PAR_ONLY )
-#  endif // #ifdef MASSIVE_PARTICLES
+   for (int v=0; v<1+NCONREF_MAX+NCOMP_PASSIVE+1; v++)   KeyInfo.ConservedRef[v] = ConservedRef[v];
 
 } // FUNCTION : FillIn_KeyInfo
 
@@ -2996,18 +2910,16 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
 {
 
 // create the array type
-   const hsize_t H5_ArrDims_3Var         = 3;                        // array size of [3]
-   const hsize_t H5_ArrDims_NLv          = NLEVEL;                   // array size of [NLEVEL]
+   const hsize_t H5_ArrDims_3Var             = 3;                             // array size of [3]
+   const hsize_t H5_ArrDims_NLv              = NLEVEL;                        // array size of [NLEVEL]
+   const hsize_t H5_ArrDims_NConservedRef    = 1+NCONREF_MAX+NCOMP_PASSIVE+1; // array size of [1+NCONREF_MAX+NCOMP_PASSIVE+1]
 
-   const hid_t   H5_TypeID_Arr_3Double   = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_3Var      );
-   const hid_t   H5_TypeID_Arr_3Int      = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_3Var      );
-   const hid_t   H5_TypeID_Arr_NLvInt    = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_NLv       );
-   const hid_t   H5_TypeID_Arr_NLvLong   = H5Tarray_create( H5T_NATIVE_LONG,   1, &H5_ArrDims_NLv       );
-   const hid_t   H5_TypeID_Arr_NLvDouble = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_NLv       );
-#  if ( NCOMP_PASSIVE > 0 )
-   const hsize_t H5_ArrDims_NPassive          = NCOMP_PASSIVE;            // array size of [NCOMP_PASSIVE]
-   const hid_t   H5_TypeID_Arr_NPassiveDouble = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_NPassive );
-#  endif
+   const hid_t   H5_TypeID_Arr_3Double       = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_3Var          );
+   const hid_t   H5_TypeID_Arr_3Int          = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_3Var          );
+   const hid_t   H5_TypeID_Arr_NLvInt        = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_NLv           );
+   const hid_t   H5_TypeID_Arr_NLvLong       = H5Tarray_create( H5T_NATIVE_LONG,   1, &H5_ArrDims_NLv           );
+   const hid_t   H5_TypeID_Arr_NLvDouble     = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_NLv           );
+   const hid_t   H5_TypeID_Arr_NConservedRef = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_NConservedRef );
 
 
 // create the "variable-length string" datatype
@@ -3071,74 +2983,7 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "GitCommit",                HOFFSET(KeyInfo_t,GitCommit               ), H5_TypeID_VarStr        );
    H5Tinsert( H5_TypeID, "UniqueDataID",             HOFFSET(KeyInfo_t,UniqueDataID            ), H5T_NATIVE_LONG         );
 
-   H5Tinsert( H5_TypeID, "Time_ConservedRef",        HOFFSET(KeyInfo_t,Time_ConservedRef       ), H5T_NATIVE_DOUBLE       );
-#  if   ( MODEL == HYDRO )
-   H5Tinsert( H5_TypeID, "Mass_Gas_ConservedRef",    HOFFSET(KeyInfo_t,Mass_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMX_Gas_ConservedRef",    HOFFSET(KeyInfo_t,CoMX_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMY_Gas_ConservedRef",    HOFFSET(KeyInfo_t,CoMY_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMZ_Gas_ConservedRef",    HOFFSET(KeyInfo_t,CoMZ_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "MomX_Gas_ConservedRef",    HOFFSET(KeyInfo_t,MomX_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "MomY_Gas_ConservedRef",    HOFFSET(KeyInfo_t,MomY_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "MomZ_Gas_ConservedRef",    HOFFSET(KeyInfo_t,MomZ_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "AngMomX_Gas_ConservedRef", HOFFSET(KeyInfo_t,AngMomX_Gas_ConservedRef), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "AngMomY_Gas_ConservedRef", HOFFSET(KeyInfo_t,AngMomY_Gas_ConservedRef), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "AngMomZ_Gas_ConservedRef", HOFFSET(KeyInfo_t,AngMomZ_Gas_ConservedRef), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "Ekin_Gas_ConservedRef",    HOFFSET(KeyInfo_t,Ekin_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "Eint_Gas_ConservedRef",    HOFFSET(KeyInfo_t,Eint_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "Epot_Gas_ConservedRef",    HOFFSET(KeyInfo_t,Epot_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-#  ifdef MHD
-   H5Tinsert( H5_TypeID, "Emag_Gas_ConservedRef",    HOFFSET(KeyInfo_t,Emag_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-#  endif
-   H5Tinsert( H5_TypeID, "Etot_Gas_ConservedRef",    HOFFSET(KeyInfo_t,Etot_Gas_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-#  elif ( MODEL == ELBDM )
-   H5Tinsert( H5_TypeID, "Mass_Psi_ConservedRef",    HOFFSET(KeyInfo_t,Mass_Psi_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMX_Psi_ConservedRef",    HOFFSET(KeyInfo_t,CoMX_Psi_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMY_Psi_ConservedRef",    HOFFSET(KeyInfo_t,CoMY_Psi_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMZ_Psi_ConservedRef",    HOFFSET(KeyInfo_t,CoMZ_Psi_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "Ekin_Psi_ConservedRef",    HOFFSET(KeyInfo_t,Ekin_Psi_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "Epot_Psi_ConservedRef",    HOFFSET(KeyInfo_t,Epot_Psi_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "Esel_Psi_ConservedRef",    HOFFSET(KeyInfo_t,Esel_Psi_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "Etot_Psi_ConservedRef",    HOFFSET(KeyInfo_t,Etot_Psi_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-#  endif
-#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   H5Tinsert( H5_TypeID, "UseWaveScheme",        HOFFSET(KeyInfo_t,UseWaveScheme       ), H5_TypeID_Arr_NLvInt    );
-#  endif
-
-#  if ( NCOMP_PASSIVE > 0 )
-   H5Tinsert( H5_TypeID, "Passive_ConservedRef",     HOFFSET(KeyInfo_t,Passive_ConservedRef    ), H5_TypeID_Arr_NPassiveDouble );
-   H5Tinsert( H5_TypeID, "Passive_Sum_ConservedRef", HOFFSET(KeyInfo_t,Passive_Sum_ConservedRef), H5T_NATIVE_DOUBLE       );
-#  endif
-
-#  ifdef MASSIVE_PARTICLES
-   H5Tinsert( H5_TypeID, "Mass_Par_ConservedRef",    HOFFSET(KeyInfo_t,Mass_Par_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMX_Par_ConservedRef",    HOFFSET(KeyInfo_t,CoMX_Par_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMY_Par_ConservedRef",    HOFFSET(KeyInfo_t,CoMY_Par_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMZ_Par_ConservedRef",    HOFFSET(KeyInfo_t,CoMZ_Par_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "MomX_Par_ConservedRef",    HOFFSET(KeyInfo_t,MomX_Par_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "MomY_Par_ConservedRef",    HOFFSET(KeyInfo_t,MomY_Par_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "MomZ_Par_ConservedRef",    HOFFSET(KeyInfo_t,MomZ_Par_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "AngMomX_Par_ConservedRef", HOFFSET(KeyInfo_t,AngMomX_Par_ConservedRef), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "AngMomY_Par_ConservedRef", HOFFSET(KeyInfo_t,AngMomY_Par_ConservedRef), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "AngMomZ_Par_ConservedRef", HOFFSET(KeyInfo_t,AngMomZ_Par_ConservedRef), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "Ekin_Par_ConservedRef",    HOFFSET(KeyInfo_t,Ekin_Par_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "Epot_Par_ConservedRef",    HOFFSET(KeyInfo_t,Epot_Par_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "Etot_Par_ConservedRef",    HOFFSET(KeyInfo_t,Etot_Par_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-#  if ( MODEL != PAR_ONLY )
-   H5Tinsert( H5_TypeID, "Mass_All_ConservedRef",    HOFFSET(KeyInfo_t,Mass_All_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMX_All_ConservedRef",    HOFFSET(KeyInfo_t,CoMX_All_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMY_All_ConservedRef",    HOFFSET(KeyInfo_t,CoMY_All_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "CoMZ_All_ConservedRef",    HOFFSET(KeyInfo_t,CoMZ_All_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-#  if ( MODEL == HYDRO )
-   H5Tinsert( H5_TypeID, "MomX_All_ConservedRef",    HOFFSET(KeyInfo_t,MomX_All_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "MomY_All_ConservedRef",    HOFFSET(KeyInfo_t,MomY_All_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "MomZ_All_ConservedRef",    HOFFSET(KeyInfo_t,MomZ_All_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "AngMomX_All_ConservedRef", HOFFSET(KeyInfo_t,AngMomX_All_ConservedRef), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "AngMomY_All_ConservedRef", HOFFSET(KeyInfo_t,AngMomY_All_ConservedRef), H5T_NATIVE_DOUBLE       );
-   H5Tinsert( H5_TypeID, "AngMomZ_All_ConservedRef", HOFFSET(KeyInfo_t,AngMomZ_All_ConservedRef), H5T_NATIVE_DOUBLE       );
-#  endif
-   H5Tinsert( H5_TypeID, "Etot_All_ConservedRef",    HOFFSET(KeyInfo_t,Etot_All_ConservedRef   ), H5T_NATIVE_DOUBLE       );
-#  endif // #if ( MODEL != PAR_ONLY )
-#  endif // #ifdef MASSIVE_PARTICLES
+   H5Tinsert( H5_TypeID, "ConservedRef",             HOFFSET(KeyInfo_t,ConservedRef            ), H5_TypeID_Arr_NConservedRef );
 
 // free memory
    H5_Status = H5Tclose( H5_TypeID_Arr_3Double       );
@@ -3146,10 +2991,8 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvInt        );
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvLong       );
    H5_Status = H5Tclose( H5_TypeID_Arr_NLvDouble     );
+   H5_Status = H5Tclose( H5_TypeID_Arr_NConservedRef );
    H5_Status = H5Tclose( H5_TypeID_VarStr            );
-#  if ( NCOMP_PASSIVE > 0 )
-   H5_Status = H5Tclose( H5_TypeID_Arr_NPassiveDouble );
-#  endif
 
 } // FUNCTION : GetCompound_KeyInfo
 

@@ -263,93 +263,9 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "GitBranch",            &KeyInfo.GitBranch,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal,  EXPAND_AND_QUOTE(GIT_BRANCH), 1, NonFatal );
    LoadField( "GitCommit",            &KeyInfo.GitCommit,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal,  EXPAND_AND_QUOTE(GIT_COMMIT), 1, NonFatal );
 
-// ugly index from Aux_Check_Conservation.cpp
-#  if   ( MODEL == HYDRO )
-#  ifdef MHD
-   const int    NVar_NoPassive    = 12;
-#  else
-   const int    NVar_NoPassive    = 11;
-#  endif
-   const int    idx_etot          = NVar_NoPassive - 1;
-#  elif ( MODEL == ELBDM )
-   const int    NVar_NoPassive    = 5;
-   const int    idx_etot          = NVar_NoPassive - 1;
-#  endif
-   const bool GetPassiveSum = ( PassiveNorm_NVar > 0 );
-   const int  NVar          = NVar_NoPassive + NCOMP_PASSIVE + ( (GetPassiveSum)?1:0 );
-
    if ( KeyInfo.FormatVersion >= 2502 )
    {
-   LoadField( "Time_ConservedRef",           &Time_ConservedRef,                     H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-#  if   ( MODEL == HYDRO )
-   LoadField( "Mass_Gas_ConservedRef",       &Fluid_ConservedRef[0],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "CoMX_Gas_ConservedRef",       &CoM_Gas_ConservedRef[0],               H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "CoMY_Gas_ConservedRef",       &CoM_Gas_ConservedRef[1],               H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "CoMZ_Gas_ConservedRef",       &CoM_Gas_ConservedRef[2],               H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "MomX_Gas_ConservedRef",       &Fluid_ConservedRef[1],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "MomY_Gas_ConservedRef",       &Fluid_ConservedRef[2],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "MomZ_Gas_ConservedRef",       &Fluid_ConservedRef[3],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "AngMomX_Gas_ConservedRef",    &Fluid_ConservedRef[4],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "AngMomY_Gas_ConservedRef",    &Fluid_ConservedRef[5],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "AngMomZ_Gas_ConservedRef",    &Fluid_ConservedRef[6],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "Ekin_Gas_ConservedRef",       &Fluid_ConservedRef[7],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "Eint_Gas_ConservedRef",       &Fluid_ConservedRef[8],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "Epot_Gas_ConservedRef",       &Fluid_ConservedRef[9],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-#  ifdef MHD
-   LoadField( "Emag_Gas_ConservedRef",       &Fluid_ConservedRef[10],                H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-#  endif
-   LoadField( "Etot_Gas_ConservedRef",       &Fluid_ConservedRef[idx_etot],          H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-#  elif ( MODEL == ELBDM )
-   LoadField( "Mass_Psi_ConservedRef",       &Fluid_ConservedRef[0],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "CoMX_Psi_ConservedRef",       &CoM_Gas_ConservedRef[0],               H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "CoMY_Psi_ConservedRef",       &CoM_Gas_ConservedRef[1],               H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "CoMZ_Psi_ConservedRef",       &CoM_Gas_ConservedRef[2],               H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "MomX_Psi_ConservedRef",       &Fluid_ConservedRef[1],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "MomY_Psi_ConservedRef",       &Fluid_ConservedRef[2],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "MomZ_Psi_ConservedRef",       &Fluid_ConservedRef[3],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "AngMomX_Psi_ConservedRef",    &Fluid_ConservedRef[4],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "AngMomY_Psi_ConservedRef",    &Fluid_ConservedRef[5],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "AngMomZ_Psi_ConservedRef",    &Fluid_ConservedRef[6],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "Ekin_Psi_ConservedRef",       &Fluid_ConservedRef[7],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "Epot_Psi_ConservedRef",       &Fluid_ConservedRef[8],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "Esel_Psi_ConservedRef",       &Fluid_ConservedRef[9],                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "Etot_Psi_ConservedRef",       &Fluid_ConservedRef[idx_etot],          H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-#  endif
-
-#  if ( NCOMP_PASSIVE > 0 )
-   LoadField( "Passive_ConservedRef",        &Fluid_ConservedRef[NVar_NoPassive],    H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Fluid_ConservedRef[NVar_NoPassive],   NCOMP_PASSIVE, NonFatal );
-   if ( GetPassiveSum )
-   LoadField( "Passive_Sum_ConservedRef",    &Fluid_ConservedRef[NVar-1],            H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-#  endif
-
-#  ifdef MASSIVE_PARTICLES
-   LoadField( "Mass_Par_ConservedRef",       &Mass_Par_ConservedRef,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "CoMX_Par_ConservedRef",       &CoMX_Par_ConservedRef,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "CoMY_Par_ConservedRef",       &CoMY_Par_ConservedRef,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "CoMZ_Par_ConservedRef",       &CoMZ_Par_ConservedRef,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "MomX_Par_ConservedRef",       &MomX_Par_ConservedRef,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "MomY_Par_ConservedRef",       &MomY_Par_ConservedRef,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "MomZ_Par_ConservedRef",       &MomZ_Par_ConservedRef,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "AngMomX_Par_ConservedRef",    &AngMomX_Par_ConservedRef,              H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "AngMomY_Par_ConservedRef",    &AngMomY_Par_ConservedRef,              H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "AngMomZ_Par_ConservedRef",    &AngMomZ_Par_ConservedRef,              H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "Ekin_Par_ConservedRef",       &Ekin_Par_ConservedRef,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "Epot_Par_ConservedRef",       &Epot_Par_ConservedRef,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "Etot_Par_ConservedRef",       &Etot_Par_ConservedRef,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-#  if ( MODEL != PAR_ONLY )
-   LoadField( "Mass_All_ConservedRef",       &Mass_All_ConservedRef,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "CoMX_All_ConservedRef",       &CoMX_All_ConservedRef,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "CoMY_All_ConservedRef",       &CoMY_All_ConservedRef,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "CoMZ_All_ConservedRef",       &CoMZ_All_ConservedRef,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "MomX_All_ConservedRef",       &MomX_All_ConservedRef,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "MomY_All_ConservedRef",       &MomY_All_ConservedRef,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "MomZ_All_ConservedRef",       &MomZ_All_ConservedRef,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "AngMomX_All_ConservedRef",    &AngMomX_All_ConservedRef,              H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "AngMomY_All_ConservedRef",    &AngMomY_All_ConservedRef,              H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "AngMomZ_All_ConservedRef",    &AngMomZ_All_ConservedRef,              H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-   LoadField( "Etot_All_ConservedRef",       &Etot_All_ConservedRef,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
-#  endif // #if ( MODEL != PAR_ONLY )
-#  endif // #ifdef MASSIVE_PARTICLES
+   LoadField( "ConservedRef",          ConservedRef,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  ConservedRef, 1+NCONREF_MAX+NCOMP_PASSIVE+1, NonFatal );
    ConservedRefInitialized = true;
    } // if ( KeyInfo.FormatVersion >= 2502 )
 
