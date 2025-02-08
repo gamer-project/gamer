@@ -88,7 +88,7 @@ void Aux_Check_Conservation( const char *comment )
    const IntScheme_t IntScheme    = INT_CQUAR;
    const char   FluLabel[NVar_NoPassive][MAX_STRING] = { "Mass_Psi", "MomX_Psi", "MomY_Psi", "MomZ_Psi",
                                                          "AngMomX_Psi", "AngMomY_Psi", "AngMomZ_Psi",
-                                                         "Ekin_Psi", "Epot_Psi", "Esel_Par", "Etot_Par"
+                                                         "Ekin_Psi", "Epot_Psi", "Esel_Psi", "Etot_Psi"
                                                        };
    const char   FluCoMLabel[3][MAX_STRING] = { "CoMX_Psi", "CoMY_Psi", "CoMZ_Psi" };
 
@@ -536,8 +536,12 @@ void Aux_Check_Conservation( const char *comment )
 
 //    note that a variable length array cannot have static storage duration
       double AbsErr_Flu[NVar_Flu], RelErr_Flu[NVar_Flu], AbsErr_CoM_Flu[3], AveVel_CoM_Flu[3];
+#     ifdef MASSIVE_PARTICLES
       double AbsErr_Par[NVar_Par], RelErr_Par[NVar_Par], AbsErr_CoM_Par[3], AveVel_CoM_Par[3];
+#     if ( MODEL != PAR_ONLY )
       double AbsErr_All[NVar_All], RelErr_All[NVar_All], AbsErr_CoM_All[3], AveVel_CoM_All[3];
+#     endif // #if ( MODEL != PAR_ONLY )
+#     endif // #ifdef MASSIVE_PARTICLES
 
       if ( FirstTime )
       {
