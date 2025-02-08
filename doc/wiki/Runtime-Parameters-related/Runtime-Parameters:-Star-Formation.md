@@ -54,7 +54,7 @@ Minimum gas density allowed to form stars.
 See the $\rho_{\rm gas,\ thres}$ in Eq.(4) in [Kim et al. 2016](https://iopscience.iop.org/article/10.3847/1538-4357/833/2/202).
 Note that the input value should always be in units of HI count/cm^3,
 and it will be converted internally to the gas mass density
-as $m_H\times$ HI count/cm^3 (i.e., assuming mean molecular weight $\mu=1$).
+as $m_H\times$ HI count/cm^3 (i.e., assuming the gas is composed of only HI and the mean molecular weight $\mu=1$).
     * **Restriction:**
 Only applicable when enabling the compilation option
 [[--star_formation | Installation:-Option-List#--star_formation]].
