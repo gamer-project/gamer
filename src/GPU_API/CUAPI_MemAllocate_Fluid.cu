@@ -208,7 +208,7 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
       TotalSize += Corner_MemSize_S;
    }
 
-#  if ( MODEL == HYDRO )
+#  if ( MODEL == HYDRO && defined( SRC_EXACTCOOLING ) )
    TotalSize += EC_TEF_lambda_MemSize + EC_TEF_alpha_MemSize + EC_TEFc_MemSize;
 #  endif
 

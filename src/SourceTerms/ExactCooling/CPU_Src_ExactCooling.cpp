@@ -24,7 +24,6 @@ extern double *d_SrcEC_TEFc;
 // local function prototypes
 #ifndef __CUDACC__
 
-extern bool IsInit_tcool[NLEVEL];
 void Src_SetAuxArray_ExactCooling( double [], int [] );
 void Src_SetConstMemory_ExactCooling( const double AuxArray_Flt[], const int AuxArray_Int[],
                                       double *&DevPtr_Flt, int *&DevPtr_Int );

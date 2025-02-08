@@ -397,6 +397,11 @@ extern double CR_DIFF_MIN_B;
 #endif
 
 
+// (2-15) exact cooling
+// =======================================================================================================
+#ifdef SRC_EXACTCOOLING
+bool   IsInit_tcool[NLEVEL];
+#endif
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // ============================================================================================================

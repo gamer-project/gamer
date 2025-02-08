@@ -1,9 +1,6 @@
 #include "GAMER.h"
 
 
-extern bool   IsInit_tcool[NLEVEL];
-
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Mis_GetTimeStep_ExactCooling
 // Description :  Estimate the evolution time-step constrained by the ExactCooling source term
