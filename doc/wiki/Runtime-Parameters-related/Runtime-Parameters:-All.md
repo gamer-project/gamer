@@ -417,10 +417,10 @@ For variables with `Default/Min/Max` labeled as `Depend`, click the parameter na
 # Y
 | Name                                                                                                 |         Default |             Min |             Max | Short description |
 | :---                                                                                                 |            :--- |            :--- |            :--- | :--- |
-| YT_FIG_BASENAME                                                                                      |            None |            None |            None | figure basename [Fig] |
-| YT_JUPYTER_USE_CONNECTION_FILE                                                                       |               0 |            None |            None | use user-provided connection file when using libyt Jupyter UI [0] |
-| YT_SCRIPT                                                                                            |            None |            None |            None | yt inline analysis script (do not include the ".py" file extension) |
-| YT_VERBOSE                                                                                           |               1 |               0 |               3 | verbose level of yt (0=off, 1=info, 2=warning, 3=debug) [1] |
+| [[ YT_FIG_BASENAME \| Runtime-Parameters:-In-Situ-Python-Analysis#YT_FIG_BASENAME ]]                 |            None |            None |            None | figure basename [Fig] |
+| [[ YT_JUPYTER_USE_CONNECTION_FILE \| Runtime-Parameters:-In-Situ-Python-Analysis#YT_JUPYTER_USE_CONNECTION_FILE ]] |               0 |            None |            None | use user-provided connection file when using libyt Jupyter UI [0] |
+| [[ YT_SCRIPT \| Runtime-Parameters:-In-Situ-Python-Analysis#YT_SCRIPT ]]                             |            None |            None |            None | yt inline analysis script (do not include the ".py" file extension) |
+| [[ YT_VERBOSE \| Runtime-Parameters:-In-Situ-Python-Analysis#YT_VERBOSE ]]                           |               1 |               0 |               3 | verbose level of yt (0=off, 1=info, 2=warning, 3=debug) [1] |
 
 
 ## Remarks

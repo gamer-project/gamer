@@ -59,6 +59,9 @@ This page includes the following topics:
 * [[Outputs | Runtime-Parameters:-Outputs]]
 -- Data output parameters
 
+* [[In Situ Python Analysis | Runtime-Parameters:-In-Situ-Python-Analysis]]
+-- libyt in situ analysis parameters
+
 * [[Miscellaneous | Runtime-Parameters:-Miscellaneous]]
 -- Miscellaneous parameters such as timing options, log files, and self-checking options...
 
