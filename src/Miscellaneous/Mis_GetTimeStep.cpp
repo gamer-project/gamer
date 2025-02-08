@@ -250,6 +250,7 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
    }
    dTime[NdTime] = EC_dtCoef * dTime_dt * Mis_GetTimeStep_ExactCooling( lv, dTime_dt );
    sprintf( dTime_Name[NdTime++], "%s", "ExactCooling" );
+#  endif
 
 
 // 2. get the minimum time-step from all criteria
