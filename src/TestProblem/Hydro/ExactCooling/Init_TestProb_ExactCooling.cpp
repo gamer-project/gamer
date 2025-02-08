@@ -211,7 +211,7 @@ void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
 //-------------------------------------------------------------------------------------------------------
 void Output_ExactCooling()
 {
-   const char FileName[] = "Output__Error";
+   const char FileName[] = "Record__CoolingErr";
    static bool FirstTime = true;
 
 // header

@@ -32,7 +32,7 @@ extern long    NPar_EachCluster[3];
 extern long    NPar_AllCluster;
 
 
-// variables that need to be record in Record__Center
+// variables that need to be record in Record__ClusterCenter
 // =======================================================================================
 extern double  Bondi_MassBH1;
 extern double  Bondi_MassBH2;
@@ -586,7 +586,7 @@ void Read_Particles_ClusterMerger( std::string filename, long offset, long num,
 void Aux_Record_ClusterMerger()
 {
 
-   const char FileName[] = "Record__Center";
+   const char FileName[] = "Record__ClusterCenter";
    static bool FirstTime = true;
 
 // header
