@@ -101,7 +101,6 @@ void Aux_Check_Conservation( const char *comment )
 
 // get the sum of passive scalars to be normalized
    const bool GetPassiveSum      = ( PassiveNorm_NVar > 0 );
-   const int  NVar_Max           = NVar_NoPassive + NCOMP_PASSIVE + 1; // for declaring the static variable Fluid_Ref
    const int  NVar_Flu           = NVar_NoPassive + NCOMP_PASSIVE + ( (GetPassiveSum)?1:0 );
    const int  idx_offset_flu     = 1;
    const int  idx_offset_flu_com = idx_offset_flu+NVar_Flu;
