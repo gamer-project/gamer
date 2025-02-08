@@ -274,7 +274,7 @@ void LoadData_HDF5( const char *FileName )
 #     elif ( MODEL == MHD )
 #     elif ( MODEL == ELBDM )
       if ( ELBDM_GetVir )  NOut += 8;
-      if (  OutputSphere ) NOut += 6;
+      if ( OutputSphere )  NOut += 6;
 #     else
 #     error : ERROR : unsupported MODEL !!
 #     endif // MODEL
@@ -401,7 +401,7 @@ void LoadData_HDF5( const char *FileName )
       for (int v=0; v<NCOMP_TOTAL; v++)
       {
 #        if ( MODEL == ELBDM )
-            if (ELBDM_Scheme==2 && v==2) continue;
+         if ( ELBDM_Scheme == 2  &&  v == 2 )   continue;
 #        endif
          sprintf( FieldName[v], "%s", FieldName_In[v] );
       }
@@ -463,7 +463,7 @@ void LoadData_HDF5( const char *FileName )
    for (int v=0; v<NCOMP_TOTAL; v++)
    {
 #     if ( MODEL == ELBDM )
-         if (ELBDM_Scheme==2 && v==2) continue;
+      if ( ELBDM_Scheme == 2  &&  v == 2 )   continue;
 #     endif
       H5_SetID_Field[v] = H5Dopen( H5_GroupID_GridData, FieldName[v], H5P_DEFAULT );
       if ( H5_SetID_Field[v] < 0 )  Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", FieldName[v] );
@@ -796,14 +796,14 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
       for (int v=0; v<NCOMP_TOTAL; v++)
       {  
          // Hybrid Scheme : Only has dens and phase parts
-         if ( ELBDM_Scheme==2 && v==2 ) continue;
+         if ( ELBDM_Scheme == 2  &&  v == 2 )   continue;
          H5_Status = H5Dread( H5_SetID_Field[v], H5T_GAMER_REAL, H5_MemID_Field, H5_SpaceID_Field, H5P_DEFAULT,
                               amr.patch[lv][PID]->fluid[v] );
          if ( H5_Status < 0 )
             Aux_Error( ERROR_INFO, "failed to load a field variable (lv %d, GID %d, v %d) !!\n", lv, GID, v );
       }
       // Transfer dens and phase to real and imag
-      if (ELBDM_Scheme == 2 )
+      if ( ELBDM_Scheme == 2 )
       {  
          for (int i=0; i<PATCH_SIZE; i++)
             for (int j=0; j<PATCH_SIZE; j++)

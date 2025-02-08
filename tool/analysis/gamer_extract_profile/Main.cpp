@@ -254,16 +254,16 @@ void Remove_CMVel()
    double CMV[3] = {};
    const double dh_min = amr.dh[NLEVEL-1];
 
-   long int *nCount     = new long int [NShell];
-   double   *volume     = new double   [NShell];
-   double   *average_dens    = new double   [NShell];
+   long int *nCount       = new long int [NShell];
+   double   *volume       = new double   [NShell];
+   double   *average_dens = new double   [NShell];
 
 // initialize variables for storing average data
    for (int n=0; n<NShell; n++)
    {
       average_dens[n] = 0.0;
-      nCount[n] = 0;
-      volume[n] = 0.0;
+      nCount      [n] = 0;
+      volume      [n] = 0.0;
    } // for (int n=0; n<NShell; n++)
 
 #  if   ( MODEL == HYDRO )
@@ -279,7 +279,7 @@ void Remove_CMVel()
    const real _2Eta2 = _Eta*_2Eta;
    const real _Eta2  = _Eta*_Eta;
    real Dens, Real, Imag, Pot, _Dens, ParDens;
-   real  GradR[3], GradI[3], GradD[3], _2dh, _dh2, dv_Eta;
+   real GradR[3], GradI[3], GradD[3], _2dh, _dh2, dv_Eta;
    real v[3], w[3];
 
 #  else
@@ -397,34 +397,34 @@ void Remove_CMVel()
                   Real    = Field[p][REAL    ][k][j][i];
                   Imag    = Field[p][IMAG    ][k][j][i];
 
-                  if (Dens == 0) continue;
+                  if ( Dens == 0 )   continue;
 
 
                   if ( ELBDM_GetVir )
                   {
-                     if (Richardson)
+                     if ( Richardson )
                      {
                         // Richardson extrapolation 2 order
-                        GradD[0] = (4*_2dh*( Field[p][DENS][k ][j ][ip] - Field[p][DENS][k ][j ][im] ) 
-                                    - 0.5*_2dh*( Field[p][DENS][k ][j ][ipp] - Field[p][DENS][k ][j ][imm] ))/3;
-                        GradD[1] = (4*_2dh*( Field[p][DENS][k ][jp][i ] - Field[p][DENS][k ][jm][i ] )
-                                    - 0.5*_2dh*( Field[p][DENS][k ][jpp][i ] - Field[p][DENS][k ][jmm][i ] ))/3;
-                        GradD[2] = (4*_2dh*( Field[p][DENS][kp][j ][i ] - Field[p][DENS][km][j ][i ] )
-                                    - 0.5*_2dh*( Field[p][DENS][kpp][j ][i ] - Field[p][DENS][kmm][j ][i ] ))/3;
+                        GradD[0] = (    4*_2dh*( Field[p][DENS][k  ][j  ][ip ] - Field[p][DENS][k  ][j  ][im ] ) 
+                                    - 0.5*_2dh*( Field[p][DENS][k  ][j  ][ipp] - Field[p][DENS][k  ][j  ][imm] ))/3;
+                        GradD[1] = (    4*_2dh*( Field[p][DENS][k  ][jp ][i  ] - Field[p][DENS][k  ][jm ][i  ] )
+                                    - 0.5*_2dh*( Field[p][DENS][k  ][jpp][i  ] - Field[p][DENS][k  ][jmm][i  ] ))/3;
+                        GradD[2] = (    4*_2dh*( Field[p][DENS][kp ][j  ][i  ] - Field[p][DENS][km ][j  ][i  ] )
+                                    - 0.5*_2dh*( Field[p][DENS][kpp][j  ][i  ] - Field[p][DENS][kmm][j  ][i  ] ))/3;
 
-                        GradR[0] = (4*_2dh*( Field[p][REAL][k ][j ][ip] - Field[p][REAL][k ][j ][im] )
-                                    - 0.5*_2dh*( Field[p][REAL][k ][j ][ipp] - Field[p][REAL][k ][j ][imm] ))/3;
-                        GradR[1] = (4*_2dh*( Field[p][REAL][k ][jp][i ] - Field[p][REAL][k ][jm][i ] )
-                                    - 0.5*_2dh*( Field[p][REAL][k ][jpp][i ] - Field[p][REAL][k ][jmm][i ] ))/3;
-                        GradR[2] = (4*_2dh*( Field[p][REAL][kp][j ][i ] - Field[p][REAL][km][j ][i ] )
-                                    - 0.5*_2dh*( Field[p][REAL][kpp][j ][i ] - Field[p][REAL][kmm][j ][i ] ))/3;
+                        GradR[0] = (    4*_2dh*( Field[p][REAL][k  ][j  ][ip ] - Field[p][REAL][k  ][j  ][im ] )
+                                    - 0.5*_2dh*( Field[p][REAL][k  ][j  ][ipp] - Field[p][REAL][k  ][j  ][imm] ))/3;
+                        GradR[1] = (    4*_2dh*( Field[p][REAL][k  ][jp ][i  ] - Field[p][REAL][k  ][jm ][i  ] )
+                                    - 0.5*_2dh*( Field[p][REAL][k  ][jpp][i  ] - Field[p][REAL][k  ][jmm][i  ] ))/3;
+                        GradR[2] = (    4*_2dh*( Field[p][REAL][kp ][j  ][i  ] - Field[p][REAL][km ][j  ][i  ] )
+                                    - 0.5*_2dh*( Field[p][REAL][kpp][j  ][i  ] - Field[p][REAL][kmm][j  ][i  ] ))/3;
 
-                        GradI[0] = (4*_2dh*( Field[p][IMAG][k ][j ][ip] - Field[p][IMAG][k ][j ][im] )
-                                    - 0.5*_2dh*( Field[p][IMAG][k ][j ][ipp] - Field[p][IMAG][k ][j ][imm] ))/3;
-                        GradI[1] = (4*_2dh*( Field[p][IMAG][k ][jp][i ] - Field[p][IMAG][k ][jm][i ] )
-                                    - 0.5*_2dh*( Field[p][IMAG][k ][jpp][i ] - Field[p][IMAG][k ][jmm][i ] ))/3;
-                        GradI[2] = (4*_2dh*( Field[p][IMAG][kp][j ][i ] - Field[p][IMAG][km][j ][i ] )
-                                    - 0.5*_2dh*( Field[p][IMAG][kpp][j ][i ] - Field[p][IMAG][kmm][j ][i ] ))/3;
+                        GradI[0] = (    4*_2dh*( Field[p][IMAG][k  ][j  ][ip ] - Field[p][IMAG][k  ][j  ][im ] )
+                                    - 0.5*_2dh*( Field[p][IMAG][k  ][j  ][ipp] - Field[p][IMAG][k  ][j  ][imm] ))/3;
+                        GradI[1] = (    4*_2dh*( Field[p][IMAG][k  ][jp ][i  ] - Field[p][IMAG][k  ][jm ][i  ] )
+                                    - 0.5*_2dh*( Field[p][IMAG][k  ][jpp][i  ] - Field[p][IMAG][k  ][jmm][i  ] ))/3;
+                        GradI[2] = (    4*_2dh*( Field[p][IMAG][kp ][j  ][i  ] - Field[p][IMAG][km ][j  ][i  ] )
+                                    - 0.5*_2dh*( Field[p][IMAG][kpp][j  ][i  ] - Field[p][IMAG][kmm][j  ][i  ] ))/3;
                      }
                      else
                      {
@@ -460,7 +460,7 @@ void Remove_CMVel()
 
 //                sum up values at the same shell
                   Var = 0;
-                  average_dens[ShellID] += (double)(dv*Dens     );
+                  average_dens[ShellID] += (double)(dv*Dens);
 
 
 #                 else
@@ -540,10 +540,6 @@ void Remove_CMVel()
                                              x  = ( fabs(x1) <= fabs(x2) ) ?  x1 : x2;
 
             Radius = sqrt( x*x + y*y + z*z );
-
-
-
-
 
             real S = (x*CMV[0]+y*CMV[1]+z*CMV[2])*ELBDM_ETA*(dh_min);
             Dens = amr.patch[lv][PID]->fluid[DENS][k][j][i];
@@ -734,7 +730,7 @@ void GetRMS()
                   Real    = Field[p][REAL    ][k][j][i];
                   Imag    = Field[p][IMAG    ][k][j][i];
 
-                  if (Dens == 0) continue;
+                  if ( Dens == 0 )   continue;
 
                   for (int u=0, uu=NCOMP_FLUID; u<NCOMP_PASSIVE; u++, uu++)
                   pass[u] = Field[p][uu      ][k][j][i];
@@ -751,36 +747,36 @@ void GetRMS()
                      if (Richardson)
                      {
                         // Richardson extrapolation 2 order
-                        GradD[0] = (4*_2dh*( Field[p][DENS][k ][j ][ip] - Field[p][DENS][k ][j ][im] ) 
-                                    - 0.5*_2dh*( Field[p][DENS][k ][j ][ipp] - Field[p][DENS][k ][j ][imm] ))/3;
-                        GradD[1] = (4*_2dh*( Field[p][DENS][k ][jp][i ] - Field[p][DENS][k ][jm][i ] )
-                                    - 0.5*_2dh*( Field[p][DENS][k ][jpp][i ] - Field[p][DENS][k ][jmm][i ] ))/3;
-                        GradD[2] = (4*_2dh*( Field[p][DENS][kp][j ][i ] - Field[p][DENS][km][j ][i ] )
-                                    - 0.5*_2dh*( Field[p][DENS][kpp][j ][i ] - Field[p][DENS][kmm][j ][i ] ))/3;
+                        GradD[0] = (    4*_2dh*( Field[p][DENS][k  ][j  ][ip ] - Field[p][DENS][k  ][j  ][im ] ) 
+                                    - 0.5*_2dh*( Field[p][DENS][k  ][j  ][ipp] - Field[p][DENS][k  ][j  ][imm] ))/3;
+                        GradD[1] = (    4*_2dh*( Field[p][DENS][k  ][jp ][i  ] - Field[p][DENS][k  ][jm ][i  ] )
+                                    - 0.5*_2dh*( Field[p][DENS][k  ][jpp][i  ] - Field[p][DENS][k  ][jmm][i  ] ))/3;
+                        GradD[2] = (    4*_2dh*( Field[p][DENS][kp ][j  ][i  ] - Field[p][DENS][km ][j  ][i  ] )
+                                    - 0.5*_2dh*( Field[p][DENS][kpp][j  ][i  ] - Field[p][DENS][kmm][j  ][i  ] ))/3;
 
-                        GradR[0] = (4*_2dh*( Field[p][REAL][k ][j ][ip] - Field[p][REAL][k ][j ][im] )
-                                    - 0.5*_2dh*( Field[p][REAL][k ][j ][ipp] - Field[p][REAL][k ][j ][imm] ))/3;
-                        GradR[1] = (4*_2dh*( Field[p][REAL][k ][jp][i ] - Field[p][REAL][k ][jm][i ] )
-                                    - 0.5*_2dh*( Field[p][REAL][k ][jpp][i ] - Field[p][REAL][k ][jmm][i ] ))/3;
-                        GradR[2] = (4*_2dh*( Field[p][REAL][kp][j ][i ] - Field[p][REAL][km][j ][i ] )
-                                    - 0.5*_2dh*( Field[p][REAL][kpp][j ][i ] - Field[p][REAL][kmm][j ][i ] ))/3;
+                        GradR[0] = (    4*_2dh*( Field[p][REAL][k  ][j  ][ip ] - Field[p][REAL][k  ][j  ][im ] )
+                                    - 0.5*_2dh*( Field[p][REAL][k  ][j  ][ipp] - Field[p][REAL][k  ][j  ][imm] ))/3;
+                        GradR[1] = (    4*_2dh*( Field[p][REAL][k  ][jp ][i  ] - Field[p][REAL][k  ][jm ][i  ] )
+                                    - 0.5*_2dh*( Field[p][REAL][k  ][jpp][i  ] - Field[p][REAL][k  ][jmm][i  ] ))/3;
+                        GradR[2] = (    4*_2dh*( Field[p][REAL][kp ][j  ][i  ] - Field[p][REAL][km ][j  ][i  ] )
+                                    - 0.5*_2dh*( Field[p][REAL][kpp][j  ][i  ] - Field[p][REAL][kmm][j  ][i  ] ))/3;
 
-                        GradI[0] = (4*_2dh*( Field[p][IMAG][k ][j ][ip] - Field[p][IMAG][k ][j ][im] )
-                                    - 0.5*_2dh*( Field[p][IMAG][k ][j ][ipp] - Field[p][IMAG][k ][j ][imm] ))/3;
-                        GradI[1] = (4*_2dh*( Field[p][IMAG][k ][jp][i ] - Field[p][IMAG][k ][jm][i ] )
-                                    - 0.5*_2dh*( Field[p][IMAG][k ][jpp][i ] - Field[p][IMAG][k ][jmm][i ] ))/3;
-                        GradI[2] = (4*_2dh*( Field[p][IMAG][kp][j ][i ] - Field[p][IMAG][km][j ][i ] )
-                                    - 0.5*_2dh*( Field[p][IMAG][kpp][j ][i ] - Field[p][IMAG][kmm][j ][i ] ))/3;
+                        GradI[0] = (    4*_2dh*( Field[p][IMAG][k  ][j  ][ip ] - Field[p][IMAG][k  ][j  ][im ] )
+                                    - 0.5*_2dh*( Field[p][IMAG][k  ][j  ][ipp] - Field[p][IMAG][k  ][j  ][imm] ))/3;
+                        GradI[1] = (    4*_2dh*( Field[p][IMAG][k  ][jp ][i  ] - Field[p][IMAG][k  ][jm ][i  ] )
+                                    - 0.5*_2dh*( Field[p][IMAG][k  ][jpp][i  ] - Field[p][IMAG][k  ][jmm][i  ] ))/3;
+                        GradI[2] = (    4*_2dh*( Field[p][IMAG][kp ][j  ][i  ] - Field[p][IMAG][km ][j  ][i  ] )
+                                    - 0.5*_2dh*( Field[p][IMAG][kpp][j  ][i  ] - Field[p][IMAG][kmm][j  ][i  ] ))/3;
 
-                        LapR     = ( 4*_dh2*( Field[p][REAL][k ][j ][ip] + Field[p][REAL][k ][jp][i ] + Field[p][REAL][kp][j ][i ] +
-                                       Field[p][REAL][k ][j ][im] + Field[p][REAL][k ][jm][i ] + Field[p][REAL][km][j ][i ] - 6.0*Real) 
-                                       - 0.25*_dh2*( ( Field[p][REAL][k ][j ][ipp] + Field[p][REAL][k ][jpp][i ] + Field[p][REAL][kpp][j ][i ] +
-                                       Field[p][REAL][k ][j ][imm] + Field[p][REAL][k ][jmm][i ] + Field[p][REAL][kmm][j ][i ] - 6.0*Real )))/3;
+                        LapR     = (    4*_dh2*( Field[p][REAL][k  ][j  ][ip ] + Field[p][REAL][k  ][jp ][i  ] + Field[p][REAL][kp ][j  ][i  ] +
+                                                 Field[p][REAL][k  ][j  ][im ] + Field[p][REAL][k  ][jm ][i  ] + Field[p][REAL][km ][j  ][i  ] - 6.0*Real ) 
+                                   - 0.25*_dh2*( Field[p][REAL][k  ][j  ][ipp] + Field[p][REAL][k  ][jpp][i  ] + Field[p][REAL][kpp][j  ][i  ] +
+                                                 Field[p][REAL][k  ][j  ][imm] + Field[p][REAL][k  ][jmm][i  ] + Field[p][REAL][kmm][j  ][i  ] - 6.0*Real ) )/3;
 
-                        LapI     = ( 4*_dh2*( Field[p][IMAG][k ][j ][ip] + Field[p][IMAG][k ][jp][i ] + Field[p][IMAG][kp][j ][i ] +
-                                       Field[p][IMAG][k ][j ][im] + Field[p][IMAG][k ][jm][i ] + Field[p][IMAG][km][j ][i ] - 6.0*Imag) 
-                                       - 0.25*_dh2*( ( Field[p][IMAG][k ][j ][ipp] + Field[p][IMAG][k ][jpp][i ] + Field[p][IMAG][kpp][j ][i ] +
-                                       Field[p][IMAG][k ][j ][imm] + Field[p][IMAG][k ][jmm][i ] + Field[p][IMAG][kmm][j ][i ] - 6.0*Imag )))/3;
+                        LapI     = (    4*_dh2*( Field[p][IMAG][k  ][j  ][ip ] + Field[p][IMAG][k  ][jp ][i  ] + Field[p][IMAG][kp ][j  ][i  ] +
+                                                 Field[p][IMAG][k  ][j  ][im ] + Field[p][IMAG][k  ][jm ][i  ] + Field[p][IMAG][km ][j  ][i  ] - 6.0*Imag ) 
+                                   - 0.25*_dh2*( Field[p][IMAG][k  ][j  ][ipp] + Field[p][IMAG][k  ][jpp][i  ] + Field[p][IMAG][kpp][j  ][i  ] +
+                                                 Field[p][IMAG][k  ][j  ][imm] + Field[p][IMAG][k  ][jmm][i  ] + Field[p][IMAG][kmm][j  ][i  ] - 6.0*Imag ) )/3;
                      }
                      else
                      {
@@ -827,11 +823,11 @@ void GetRMS()
 
                      v_sph[0] = vr;
                      v_sph[1] = ( z*x*v[0] + z*y*v[1] - (x*x+y*y)*v[2] ) /sqrt(x*x+y*y) / Radius;
-                     v_sph[2] = ( -y*v[0] + x*v[1]) /sqrt(x*x+y*y);
+                     v_sph[2] = ( -y*v[0] + x*v[1] ) /sqrt(x*x+y*y);
 
                      w_sph[0] = wr;
                      w_sph[1] = ( z*x*w[0] + z*y*w[1] - (x*x+y*y)*w[2] ) /sqrt(x*x+y*y) / Radius;
-                     w_sph[2] = ( -y*w[0] + x*w[1]) /sqrt(x*x+y*y);
+                     w_sph[2] = ( -y*w[0] + x*w[1] ) /sqrt(x*x+y*y);
                   } // if ( ELBDM_GetVir )
 
 
@@ -1119,36 +1115,36 @@ void ShellAverage()
                      if (Richardson)
                      {
                         // Richardson extrapolation 2 order
-                        GradD[0] = (4*_2dh*( Field[p][DENS][k ][j ][ip] - Field[p][DENS][k ][j ][im] ) 
-                                    - 0.5*_2dh*( Field[p][DENS][k ][j ][ipp] - Field[p][DENS][k ][j ][imm] ))/3;
-                        GradD[1] = (4*_2dh*( Field[p][DENS][k ][jp][i ] - Field[p][DENS][k ][jm][i ] )
-                                    - 0.5*_2dh*( Field[p][DENS][k ][jpp][i ] - Field[p][DENS][k ][jmm][i ] ))/3;
-                        GradD[2] = (4*_2dh*( Field[p][DENS][kp][j ][i ] - Field[p][DENS][km][j ][i ] )
-                                    - 0.5*_2dh*( Field[p][DENS][kpp][j ][i ] - Field[p][DENS][kmm][j ][i ] ))/3;
+                        GradD[0] = (    4*_2dh*( Field[p][DENS][k  ][j  ][ip ] - Field[p][DENS][k  ][j  ][im ] ) 
+                                    - 0.5*_2dh*( Field[p][DENS][k  ][j  ][ipp] - Field[p][DENS][k  ][j  ][imm] ))/3;
+                        GradD[1] = (    4*_2dh*( Field[p][DENS][k  ][jp ][i  ] - Field[p][DENS][k  ][jm ][i  ] )
+                                    - 0.5*_2dh*( Field[p][DENS][k  ][jpp][i  ] - Field[p][DENS][k  ][jmm][i  ] ))/3;
+                        GradD[2] = (    4*_2dh*( Field[p][DENS][kp ][j  ][i  ] - Field[p][DENS][km ][j  ][i  ] )
+                                    - 0.5*_2dh*( Field[p][DENS][kpp][j  ][i  ] - Field[p][DENS][kmm][j  ][i  ] ))/3;
 
-                        GradR[0] = (4*_2dh*( Field[p][REAL][k ][j ][ip] - Field[p][REAL][k ][j ][im] )
-                                    - 0.5*_2dh*( Field[p][REAL][k ][j ][ipp] - Field[p][REAL][k ][j ][imm] ))/3;
-                        GradR[1] = (4*_2dh*( Field[p][REAL][k ][jp][i ] - Field[p][REAL][k ][jm][i ] )
-                                    - 0.5*_2dh*( Field[p][REAL][k ][jpp][i ] - Field[p][REAL][k ][jmm][i ] ))/3;
-                        GradR[2] = (4*_2dh*( Field[p][REAL][kp][j ][i ] - Field[p][REAL][km][j ][i ] )
-                                    - 0.5*_2dh*( Field[p][REAL][kpp][j ][i ] - Field[p][REAL][kmm][j ][i ] ))/3;
+                        GradR[0] = (    4*_2dh*( Field[p][REAL][k  ][j  ][ip ] - Field[p][REAL][k  ][j  ][im ] )
+                                    - 0.5*_2dh*( Field[p][REAL][k  ][j  ][ipp] - Field[p][REAL][k  ][j  ][imm] ))/3;
+                        GradR[1] = (    4*_2dh*( Field[p][REAL][k  ][jp ][i  ] - Field[p][REAL][k  ][jm ][i  ] )
+                                    - 0.5*_2dh*( Field[p][REAL][k  ][jpp][i  ] - Field[p][REAL][k  ][jmm][i  ] ))/3;
+                        GradR[2] = (    4*_2dh*( Field[p][REAL][kp ][j  ][i  ] - Field[p][REAL][km ][j  ][i  ] )
+                                    - 0.5*_2dh*( Field[p][REAL][kpp][j  ][i  ] - Field[p][REAL][kmm][j  ][i  ] ))/3;
 
-                        GradI[0] = (4*_2dh*( Field[p][IMAG][k ][j ][ip] - Field[p][IMAG][k ][j ][im] )
-                                    - 0.5*_2dh*( Field[p][IMAG][k ][j ][ipp] - Field[p][IMAG][k ][j ][imm] ))/3;
-                        GradI[1] = (4*_2dh*( Field[p][IMAG][k ][jp][i ] - Field[p][IMAG][k ][jm][i ] )
-                                    - 0.5*_2dh*( Field[p][IMAG][k ][jpp][i ] - Field[p][IMAG][k ][jmm][i ] ))/3;
-                        GradI[2] = (4*_2dh*( Field[p][IMAG][kp][j ][i ] - Field[p][IMAG][km][j ][i ] )
-                                    - 0.5*_2dh*( Field[p][IMAG][kpp][j ][i ] - Field[p][IMAG][kmm][j ][i ] ))/3;
+                        GradI[0] = (    4*_2dh*( Field[p][IMAG][k  ][j  ][ip ] - Field[p][IMAG][k  ][j  ][im ] )
+                                    - 0.5*_2dh*( Field[p][IMAG][k  ][j  ][ipp] - Field[p][IMAG][k  ][j  ][imm] ))/3;
+                        GradI[1] = (    4*_2dh*( Field[p][IMAG][k  ][jp ][i  ] - Field[p][IMAG][k  ][jm ][i  ] )
+                                    - 0.5*_2dh*( Field[p][IMAG][k  ][jpp][i  ] - Field[p][IMAG][k  ][jmm][i  ] ))/3;
+                        GradI[2] = (    4*_2dh*( Field[p][IMAG][kp ][j  ][i  ] - Field[p][IMAG][km ][j  ][i  ] )
+                                    - 0.5*_2dh*( Field[p][IMAG][kpp][j  ][i  ] - Field[p][IMAG][kmm][j  ][i  ] ))/3;
 
-                        LapR     = ( 4*_dh2*( Field[p][REAL][k ][j ][ip] + Field[p][REAL][k ][jp][i ] + Field[p][REAL][kp][j ][i ] +
-                                       Field[p][REAL][k ][j ][im] + Field[p][REAL][k ][jm][i ] + Field[p][REAL][km][j ][i ] - 6.0*Real) 
-                                       - 0.25*_dh2*( ( Field[p][REAL][k ][j ][ipp] + Field[p][REAL][k ][jpp][i ] + Field[p][REAL][kpp][j ][i ] +
-                                       Field[p][REAL][k ][j ][imm] + Field[p][REAL][k ][jmm][i ] + Field[p][REAL][kmm][j ][i ] - 6.0*Real )))/3;
+                        LapR     = (    4*_dh2*( Field[p][REAL][k  ][j  ][ip ] + Field[p][REAL][k  ][jp ][i  ] + Field[p][REAL][kp ][j  ][i  ] +
+                                                 Field[p][REAL][k  ][j  ][im ] + Field[p][REAL][k  ][jm ][i  ] + Field[p][REAL][km ][j  ][i  ] - 6.0*Real ) 
+                                   - 0.25*_dh2*( Field[p][REAL][k  ][j  ][ipp] + Field[p][REAL][k  ][jpp][i  ] + Field[p][REAL][kpp][j  ][i  ] +
+                                                 Field[p][REAL][k  ][j  ][imm] + Field[p][REAL][k  ][jmm][i  ] + Field[p][REAL][kmm][j  ][i  ] - 6.0*Real ) )/3;
 
-                        LapI     = ( 4*_dh2*( Field[p][IMAG][k ][j ][ip] + Field[p][IMAG][k ][jp][i ] + Field[p][IMAG][kp][j ][i ] +
-                                       Field[p][IMAG][k ][j ][im] + Field[p][IMAG][k ][jm][i ] + Field[p][IMAG][km][j ][i ] - 6.0*Imag) 
-                                       - 0.25*_dh2*( ( Field[p][IMAG][k ][j ][ipp] + Field[p][IMAG][k ][jpp][i ] + Field[p][IMAG][kpp][j ][i ] +
-                                       Field[p][IMAG][k ][j ][imm] + Field[p][IMAG][k ][jmm][i ] + Field[p][IMAG][kmm][j ][i ] - 6.0*Imag )))/3;
+                        LapI     = (    4*_dh2*( Field[p][IMAG][k  ][j  ][ip ] + Field[p][IMAG][k  ][jp ][i  ] + Field[p][IMAG][kp ][j  ][i  ] +
+                                                 Field[p][IMAG][k  ][j  ][im ] + Field[p][IMAG][k  ][jm ][i  ] + Field[p][IMAG][km ][j  ][i  ] - 6.0*Imag) 
+                                   - 0.25*_dh2*( Field[p][IMAG][k  ][j  ][ipp] + Field[p][IMAG][k  ][jpp][i  ] + Field[p][IMAG][kpp][j  ][i  ] +
+                                                 Field[p][IMAG][k  ][j  ][imm] + Field[p][IMAG][k  ][jmm][i  ] + Field[p][IMAG][kmm][j  ][i  ] - 6.0*Imag ))/3;
                      }
                      else
                      {
