@@ -17,6 +17,9 @@ This guide provides step-by-step instructions on how to set up and use Visual St
    - Go to `File` > `Open Folder...`.
    - Select your GAMER project directory.
 
+> [!TIP]  
+> With remote-ssh, open the directory as an absoluted path to avoid [this problem](https://github.com/microsoft/vscode-cpptools/issues/4818).
+
 ### Disabling auto-formatting
 
 To disable auto-formatting in VS Code, add the following to your `settings.json`:
