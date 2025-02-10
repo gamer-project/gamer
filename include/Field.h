@@ -30,7 +30,7 @@ SET_GLOBAL( FieldIdx_t Idx_CRay,          Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_Dual,          Idx_Undefined );
 #endif
 #ifdef SRC_EXACTCOOLING
-SET_GLOBAL( FieldIdx_t Idx_tcool,         Idx_Undefined );
+SET_GLOBAL( FieldIdx_t Idx_TCool,         Idx_Undefined );
 #endif
 
 // Grackle fields

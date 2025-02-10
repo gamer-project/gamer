@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 static void Output_ExactCooling();
@@ -31,6 +30,18 @@ void Validate()
 
 #  if ( MODEL != HYDRO )
    Aux_Error( ERROR_INFO, "MODEL != HYDRO !!\n" );
+#  endif
+
+#  ifndef GRAVITY
+   Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
+#  endif
+
+#  ifdef COMOVING
+   Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
+#  endif
+
+#  ifdef PARTICLE
+   Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
@@ -250,10 +261,9 @@ void Output_ExactCooling()
    for (int j=1; j<PS1; j++) {
    for (int i=1; i<PS1; i++) {
       for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][0]->fluid[v][k][j][i];
-      Temp_nume_tmp = (real) Hydro_Con2Temp( fluid[0], fluid[1], fluid[2], fluid[3], fluid[4], fluid+NCOMP_FLUID,
-                                             true, MIN_TEMP, 0.0,
-                                             EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                             EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+      Temp_nume_tmp = Hydro_Con2Temp( fluid[0], fluid[1], fluid[2], fluid[3], fluid[4], fluid+NCOMP_FLUID,
+                                      true, MIN_TEMP, 0.0, EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, 
+                                      EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       Tcool_nume += 1.0/(GAMMA-1)*(Const_kB*cl_moli_mole*Temp_nume_tmp)/(fluid[0]*UNIT_D/MU_NORM*cl_mol*3.2217e-27*sqrt(Temp_nume_tmp))/Const_Myr;
       Temp_nume += Temp_nume_tmp;
       count += 1;
@@ -306,18 +316,10 @@ void Init_TestProb_Hydro_ExactCooling()
    Validate();
 
 
-// replace HYDRO by the target model (e.g., MHD/ELBDM) and also check other compilation flags if necessary (e.g., GRAVITY/PARTICLE)
 #  if ( MODEL == HYDRO )
 // set the problem-specific runtime parameters
    SetParameter();
 
-
-// procedure to enable a problem-specific function:
-// 1. define a user-specified function (example functions are given below)
-// 2. declare its function prototype on the top of this file
-// 3. set the corresponding function pointer below to the new problem-specific function
-// 4. enable the corresponding runtime option in "Input__Parameter"
-//    --> for instance, enable OPT__OUTPUT_USER for Output_User_Ptr
 
    Init_Function_User_Ptr         = SetGridIC;
    Output_User_Ptr                = Output_ExactCooling;

@@ -126,7 +126,6 @@ void Src_SetAuxArray_ExactCooling( double AuxArray_Flt[], int AuxArray_Int[] )
    AuxArray_Int[0] = TEF_N;
    AuxArray_Int[1] = subcycling;
 
-
 } // FUNCTION : Src_SetAuxArray_ExactCooling
 #endif // #ifndef __CUDACC__
 
@@ -243,6 +242,7 @@ double TEFinv( double Y, int k, const double TEF_lambda[], const double TEF_alph
 void Src_WorkBeforeMajorFunc_ExactCooling( const int lv, const double TimeNew, const double TimeOld, const double dt,
                                            double AuxArray_Flt[], int AuxArray_Int[] )
 {
+//  nothing to do here
 } // FUNCTION : Src_WorkBeforeMajorFunc_ExactCooling
 #endif // #ifndef __CUDACC__
 
@@ -379,6 +379,8 @@ void Src_SetConstMemory_ExactCooling( const double AuxArray_Flt[], const int Aux
 void Src_Init_ExactCooling()
 {
 
+   Aux_Error( ERROR_INFO, "SRC_EXACTCOOLING is not supported !!\n" );
+
 // set the auxiliary arrays
    Src_SetAuxArray_ExactCooling( Src_EC_AuxArray_Flt, Src_EC_AuxArray_Int );
 
@@ -498,6 +500,8 @@ void CUAPI_MemFree_ExactCooling()
    SrcTerms.EC_TEFc_DevPtr       = NULL;
 
 } // FUNCTION : CUAPI_MemFree_ExactCooling
+
+
 #endif // #ifdef __CUDACC__
 
 

@@ -33,17 +33,12 @@ void Src_Init()
 
 
 // check if at least one source term is activated
-   if (
-#       if ( MODEL == HYDRO )
-        SrcTerms.Deleptonization  ||
-        SrcTerms.ExactCooling     ||
-#       endif
-        SrcTerms.User
-      )
-      SrcTerms.Any = true;
-   else
-      SrcTerms.Any = false;
-
+   SrcTerms.Any = false;
+#  if ( MODEL == HYDRO )
+   SrcTerms.Any |= SrcTerms.Deleptonization;
+   SrcTerms.Any |= SrcTerms.ExactCooling;
+#  endif
+   SrcTerms.Any |= SrcTerms.User;
 
 // set auxiliary parameters
    for (int d=0; d<3; d++)    SrcTerms.BoxCenter[d] = amr->BoxCenter[d];
