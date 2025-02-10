@@ -94,7 +94,7 @@ OptCorrAfterSync_t   OPT__CORR_AFTER_ALL_SYNC;
 OptTimeStepLevel_t   OPT__DT_LEVEL;
 
 bool                 ConRefInitialized = false;
-double               ConRef[1+NCONREF_MAX+NCOMP_PASSIVE+1];
+double               ConRef[1+NCONREF_MAX+NCOMP_PASSIVE]; // time + conserved variables + passive scalars
 
 
 // 2. global variables for different applications

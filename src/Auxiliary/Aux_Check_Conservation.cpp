@@ -497,6 +497,8 @@ void Aux_Check_Conservation( const char *comment )
 //    record the reference values if not initialized, e.g., first time or restart from an HDF5 snapshot with version < 2502
       if ( ! ConRefInitialized )
       {
+         for (int v=0; v<1+NCONREF_MAX+NCOMP_PASSIVE; v++)   ConRef[v] = NULL_REAL;
+
          ConRef[0] = Time[0];
          for (int v=0; v<NVar_Flu; v++)   ConRef[idx_offset_flu    +v] = Fluid_AllRank[v];
          for (int d=0; d<3; d++)          ConRef[idx_offset_flu_com+d] = CoM_Flu[d];
