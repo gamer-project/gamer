@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2501)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2502)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -2933,30 +2933,30 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
 // get the compound type
    H5_TypeID = H5Tcreate( H5T_COMPOUND, sizeof(KeyInfo_t) );
 
-   H5Tinsert( H5_TypeID, "FormatVersion",            HOFFSET(KeyInfo_t,FormatVersion           ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "Model",                    HOFFSET(KeyInfo_t,Model                   ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "Float8",                   HOFFSET(KeyInfo_t,Float8                  ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "Gravity",                  HOFFSET(KeyInfo_t,Gravity                 ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "Particle",                 HOFFSET(KeyInfo_t,Particle                ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "NLevel",                   HOFFSET(KeyInfo_t,NLevel                  ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "NCompFluid",               HOFFSET(KeyInfo_t,NCompFluid              ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "NCompPassive",             HOFFSET(KeyInfo_t,NCompPassive            ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "PatchSize",                HOFFSET(KeyInfo_t,PatchSize               ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "DumpID",                   HOFFSET(KeyInfo_t,DumpID                  ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "NX0",                      HOFFSET(KeyInfo_t,NX0                     ), H5_TypeID_Arr_3Int      );
-   H5Tinsert( H5_TypeID, "BoxScale",                 HOFFSET(KeyInfo_t,BoxScale                ), H5_TypeID_Arr_3Int      );
-   H5Tinsert( H5_TypeID, "NPatch",                   HOFFSET(KeyInfo_t,NPatch                  ), H5_TypeID_Arr_NLvInt    );
-   H5Tinsert( H5_TypeID, "CellScale",                HOFFSET(KeyInfo_t,CellScale               ), H5_TypeID_Arr_NLvInt    );
+   H5Tinsert( H5_TypeID, "FormatVersion",        HOFFSET(KeyInfo_t,FormatVersion       ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Model",                HOFFSET(KeyInfo_t,Model               ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Float8",               HOFFSET(KeyInfo_t,Float8              ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Gravity",              HOFFSET(KeyInfo_t,Gravity             ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Particle",             HOFFSET(KeyInfo_t,Particle            ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "NLevel",               HOFFSET(KeyInfo_t,NLevel              ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "NCompFluid",           HOFFSET(KeyInfo_t,NCompFluid          ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "NCompPassive",         HOFFSET(KeyInfo_t,NCompPassive        ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "PatchSize",            HOFFSET(KeyInfo_t,PatchSize           ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "DumpID",               HOFFSET(KeyInfo_t,DumpID              ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "NX0",                  HOFFSET(KeyInfo_t,NX0                 ), H5_TypeID_Arr_3Int      );
+   H5Tinsert( H5_TypeID, "BoxScale",             HOFFSET(KeyInfo_t,BoxScale            ), H5_TypeID_Arr_3Int      );
+   H5Tinsert( H5_TypeID, "NPatch",               HOFFSET(KeyInfo_t,NPatch              ), H5_TypeID_Arr_NLvInt    );
+   H5Tinsert( H5_TypeID, "CellScale",            HOFFSET(KeyInfo_t,CellScale           ), H5_TypeID_Arr_NLvInt    );
 #  if ( MODEL == HYDRO )
-   H5Tinsert( H5_TypeID, "Magnetohydrodynamics",     HOFFSET(KeyInfo_t,Magnetohydrodynamics    ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "SRHydrodynamics",          HOFFSET(KeyInfo_t,SRHydrodynamics         ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "CosmicRay",                HOFFSET(KeyInfo_t,CosmicRay               ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Magnetohydrodynamics", HOFFSET(KeyInfo_t,Magnetohydrodynamics), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "SRHydrodynamics",      HOFFSET(KeyInfo_t,SRHydrodynamics     ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "CosmicRay",            HOFFSET(KeyInfo_t,CosmicRay           ), H5T_NATIVE_INT          );
 #  endif
 
-   H5Tinsert( H5_TypeID, "Step",                     HOFFSET(KeyInfo_t,Step                    ), H5T_NATIVE_LONG         );
-   H5Tinsert( H5_TypeID, "AdvanceCounter",           HOFFSET(KeyInfo_t,AdvanceCounter          ), H5_TypeID_Arr_NLvLong   );
-   H5Tinsert( H5_TypeID, "NFieldStored",             HOFFSET(KeyInfo_t,NFieldStored            ), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "NMagStored",               HOFFSET(KeyInfo_t,NMagStored              ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "Step",                 HOFFSET(KeyInfo_t,Step                ), H5T_NATIVE_LONG         );
+   H5Tinsert( H5_TypeID, "AdvanceCounter",       HOFFSET(KeyInfo_t,AdvanceCounter      ), H5_TypeID_Arr_NLvLong   );
+   H5Tinsert( H5_TypeID, "NFieldStored",         HOFFSET(KeyInfo_t,NFieldStored        ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "NMagStored",           HOFFSET(KeyInfo_t,NMagStored          ), H5T_NATIVE_INT          );
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Par_NPar",             HOFFSET(KeyInfo_t,Par_NPar            ), H5T_NATIVE_LONG         );
    H5Tinsert( H5_TypeID, "Par_NAttFltStored",    HOFFSET(KeyInfo_t,Par_NAttFltStored   ), H5T_NATIVE_INT          );
@@ -2966,24 +2966,27 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
 #  endif
 
 #  ifdef COSMIC_RAY
-   H5Tinsert( H5_TypeID, "CR_Diffusion",             HOFFSET(KeyInfo_t,CR_Diffusion            ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "CR_Diffusion",         HOFFSET(KeyInfo_t,CR_Diffusion        ), H5T_NATIVE_INT          );
 #  endif
 
-   H5Tinsert( H5_TypeID, "BoxSize",                  HOFFSET(KeyInfo_t,BoxSize                 ), H5_TypeID_Arr_3Double   );
-   H5Tinsert( H5_TypeID, "Time",                     HOFFSET(KeyInfo_t,Time                    ), H5_TypeID_Arr_NLvDouble );
-   H5Tinsert( H5_TypeID, "CellSize",                 HOFFSET(KeyInfo_t,CellSize                ), H5_TypeID_Arr_NLvDouble );
-   H5Tinsert( H5_TypeID, "dTime_AllLv",              HOFFSET(KeyInfo_t,dTime_AllLv             ), H5_TypeID_Arr_NLvDouble );
+   H5Tinsert( H5_TypeID, "BoxSize",              HOFFSET(KeyInfo_t,BoxSize             ), H5_TypeID_Arr_3Double   );
+   H5Tinsert( H5_TypeID, "Time",                 HOFFSET(KeyInfo_t,Time                ), H5_TypeID_Arr_NLvDouble );
+   H5Tinsert( H5_TypeID, "CellSize",             HOFFSET(KeyInfo_t,CellSize            ), H5_TypeID_Arr_NLvDouble );
+   H5Tinsert( H5_TypeID, "dTime_AllLv",          HOFFSET(KeyInfo_t,dTime_AllLv         ), H5_TypeID_Arr_NLvDouble );
 #  ifdef GRAVITY
-   H5Tinsert( H5_TypeID, "AveDens_Init",             HOFFSET(KeyInfo_t,AveDens_Init            ), H5T_NATIVE_DOUBLE       );
+   H5Tinsert( H5_TypeID, "AveDens_Init",         HOFFSET(KeyInfo_t,AveDens_Init        ), H5T_NATIVE_DOUBLE       );
+#  endif
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   H5Tinsert( H5_TypeID, "UseWaveScheme",        HOFFSET(KeyInfo_t,UseWaveScheme       ), H5_TypeID_Arr_NLvInt    );
 #  endif
 
-   H5Tinsert( H5_TypeID, "CodeVersion",              HOFFSET(KeyInfo_t,CodeVersion             ), H5_TypeID_VarStr        );
-   H5Tinsert( H5_TypeID, "DumpWallTime",             HOFFSET(KeyInfo_t,DumpWallTime            ), H5_TypeID_VarStr        );
-   H5Tinsert( H5_TypeID, "GitBranch",                HOFFSET(KeyInfo_t,GitBranch               ), H5_TypeID_VarStr        );
-   H5Tinsert( H5_TypeID, "GitCommit",                HOFFSET(KeyInfo_t,GitCommit               ), H5_TypeID_VarStr        );
-   H5Tinsert( H5_TypeID, "UniqueDataID",             HOFFSET(KeyInfo_t,UniqueDataID            ), H5T_NATIVE_LONG         );
+   H5Tinsert( H5_TypeID, "CodeVersion",          HOFFSET(KeyInfo_t,CodeVersion         ), H5_TypeID_VarStr        );
+   H5Tinsert( H5_TypeID, "DumpWallTime",         HOFFSET(KeyInfo_t,DumpWallTime        ), H5_TypeID_VarStr        );
+   H5Tinsert( H5_TypeID, "GitBranch",            HOFFSET(KeyInfo_t,GitBranch           ), H5_TypeID_VarStr        );
+   H5Tinsert( H5_TypeID, "GitCommit",            HOFFSET(KeyInfo_t,GitCommit           ), H5_TypeID_VarStr        );
+   H5Tinsert( H5_TypeID, "UniqueDataID",         HOFFSET(KeyInfo_t,UniqueDataID        ), H5T_NATIVE_LONG         );
 
-   H5Tinsert( H5_TypeID, "ConservedRef",             HOFFSET(KeyInfo_t,ConservedRef            ), H5_TypeID_Arr_NConservedRef );
+   H5Tinsert( H5_TypeID, "ConservedRef",         HOFFSET(KeyInfo_t,ConservedRef        ), H5_TypeID_Arr_NConservedRef );
 
 // free memory
    H5_Status = H5Tclose( H5_TypeID_Arr_3Double       );
