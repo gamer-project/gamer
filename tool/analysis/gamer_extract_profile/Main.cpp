@@ -47,7 +47,7 @@ double      INT_MONO_COEFF    = 2.0;
 bool        ELBDM_IntPhase    = true;
 bool        ELBDM_GetVir      = false;    // analyze the ELBDM virial condition (output vel, Ek, and virial surface terms)
 double      ELBDM_ETA         = NULL_REAL;
-int         ELBDM_Scheme;
+int         ELBDM_Scheme      = 1;        // 
 IntScheme_t IntScheme         = INT_CQUAR;
 double    (*ELBDM_Mom)[3]     = NULL;     // momentum used for subtracting the CM Ek in ELBDM_GetVir
 double     *ELBDM_RhoUr2      = NULL;     // Rho*(vr^2 + wr^2) in the virial surface terms
