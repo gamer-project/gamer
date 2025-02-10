@@ -577,18 +577,18 @@ void Init_TestProb_Hydro_Plummer()
    SetParameter();
 
 
-   Init_Function_User_Ptr  = SetGridIC;
-   Init_Field_User_Ptr     = AddNewField_Plummer;
+   Init_Function_User_Ptr   = SetGridIC;
+   Init_Field_User_Ptr      = AddNewField_Plummer;
 #  ifdef GRAVITY
-   Init_ExtAcc_Ptr         = Init_ExtAcc_Plummer;
+   Init_ExtAcc_Ptr          = Init_ExtAcc_Plummer;
    if ( OPT__EXT_POT == EXT_POT_FUNC )
-   Init_ExtPot_Ptr         = Init_ExtPot_Plummer;
+   Init_ExtPot_Ptr          = Init_ExtPot_Plummer;
 #  ifdef MASSIVE_PARTICLES
-   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_Plummer;
+   Par_Init_ByFunction_Ptr  = Par_Init_ByFunction_Plummer;
 #  endif
 #  endif
 #  ifdef FEEDBACK
-   FB_Init_User_Ptr        = FB_Init_Plummer;
+   FB_Init_User_Ptr         = FB_Init_Plummer;
 #  endif
 #  ifdef SUPPORT_HDF5
    Output_HDF5_TestProb_Ptr = Output_HDF5_TestProb;
