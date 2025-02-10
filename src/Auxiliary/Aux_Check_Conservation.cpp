@@ -487,13 +487,7 @@ void Aux_Check_Conservation( const char *comment )
    {
 //    calculate the sum of conserved quantities in different models
 #     if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
-      All_AllRank[0           ] = Fluid_AllRank[           0] + Par_AllRank[           0]; // Mass
-      All_AllRank[1           ] = Fluid_AllRank[           1] + Par_AllRank[           1]; // MomX
-      All_AllRank[2           ] = Fluid_AllRank[           2] + Par_AllRank[           2]; // MomY
-      All_AllRank[3           ] = Fluid_AllRank[           3] + Par_AllRank[           3]; // MomZ
-      All_AllRank[4           ] = Fluid_AllRank[           4] + Par_AllRank[           4]; // AngMomX
-      All_AllRank[5           ] = Fluid_AllRank[           5] + Par_AllRank[           5]; // AngMomY
-      All_AllRank[6           ] = Fluid_AllRank[           6] + Par_AllRank[           6]; // AngMomZ
+      for (int v=0; v<7; v++)   All_AllRank[v] = Fluid_AllRank[v] + Par_AllRank[v];
       All_AllRank[idx_etot_all] = Fluid_AllRank[idx_etot_flu] + Par_AllRank[idx_etot_par]; // for HYDRO/ELBDM, total energy is stored in the last element
 
       for (int d=0; d<3; d++)
@@ -520,6 +514,7 @@ void Aux_Check_Conservation( const char *comment )
 
    ConservedRefInitialized = true;
 
+
 // only record the reference if not check conservation
    if ( ! OPT__CK_CONSERVATION )
    {
@@ -529,12 +524,12 @@ void Aux_Check_Conservation( const char *comment )
       return;
    }
 
+
 // output
    if ( MPI_Rank == 0 )
    {
       const int index_before_column_CoM = 0;
 
-//    note that a variable length array cannot have static storage duration
       double AbsErr_Flu[NVar_Flu], RelErr_Flu[NVar_Flu], AbsErr_CoM_Flu[3], AveVel_CoM_Flu[3];
 #     ifdef MASSIVE_PARTICLES
       double AbsErr_Par[NVar_Par], RelErr_Par[NVar_Par], AbsErr_CoM_Par[3], AveVel_CoM_Par[3];

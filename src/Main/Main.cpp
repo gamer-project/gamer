@@ -97,7 +97,6 @@ bool                 ConservedRefInitialized = false;
 double               ConservedRef[1+NCONREF_MAX+NCOMP_PASSIVE+1];
 
 
-
 // 2. global variables for different applications
 // =======================================================================================================
 // (2-1) fluid solver in different models
