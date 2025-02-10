@@ -1,6 +1,5 @@
 # problem-specific runtime parameters
 Merger_Coll_NumHalos    2                        # number of halos
-AGN_feedback            0                        # turn on/off (1/0) AGN feedback
 
 # parameters for cluster 1
 Merger_File_Prof1       profile1_gamer.h5        # profile table of cluster 1
@@ -51,6 +50,7 @@ Jet_HalfHeight3         0.70                     # jet 3: half height of the cyl
 Jet_Radius3             0.35                     # jet 3: radius of the cylinder-shape jet source (in kpc)
 
 # parameters of AGN jet feedback
+AGN_feedback            0                        # turn on/off (1/0) AGN feedback
 Accretion_Mode          1                        # 1: hot mode; 2: code mode; 3: combine (hot + cold)
 eta                     1.0                      # mass loading factor in jet feedback
 eps_f                   0.001                    # the radiative efficiency in jet feedback
