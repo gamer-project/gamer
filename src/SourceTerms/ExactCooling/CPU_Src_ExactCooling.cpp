@@ -107,12 +107,12 @@ void Src_SetAuxArray_ExactCooling( double AuxArray_Flt[], int AuxArray_Int[] )
 
    const double cl_X         = 0.7;                                       // mass-fraction of hydrogen
    const double cl_Z         = 0.018;                                     // metallicity (in Zsun)
-   const double cl_mol       = 1.0/(2*cl_X+0.75*(1-cl_X-cl_Z)+cl_Z*0.5);  // mean (total) molecular weights
+   const double cl_mol       = 1.0/(2*cl_X+0.75*(1-cl_X-cl_Z)+cl_Z*0.5);  // mean (total)  molecular weights
    const double cl_mole      = 2.0/(1+cl_X);                              // mean electron molecular weights
-   const double cl_moli      = 1.0/cl_X;                                  // mean proton molecular weights
+   const double cl_moli      = 1.0/cl_X;                                  // mean proton   molecular weights
    const double cl_moli_mole = cl_moli*cl_mole;
 
-// Store them in the aux array
+// store them in the aux array
    AuxArray_Flt[0] = 1.0/(GAMMA-1.0);
    AuxArray_Flt[1] = TEF_TN;
    AuxArray_Flt[2] = TEF_Tmin;
@@ -403,7 +403,7 @@ void Src_Init_ExactCooling()
 
    if ( OPT__INIT == INIT_BY_RESTART )   for (int i=0; i<NLEVEL; i++)   IsInit_tcool[i] = true;
 
-// Allocate h_SrcEC_* arrays
+// allocate h_SrcEC_* arrays
    h_SrcEC_TEF_lambda = new double [SrcTerms.EC_TEF_N];
    h_SrcEC_TEF_alpha  = new double [SrcTerms.EC_TEF_N];
    h_SrcEC_TEFc       = new double [SrcTerms.EC_TEF_N];
@@ -471,8 +471,8 @@ void Src_End_ExactCooling()
 #  endif
 
 } // FUNCTION : Src_End_ExactCooling
-
 #endif // #ifndef __CUDACC__
+
 
 
 #ifdef __CUDACC__
