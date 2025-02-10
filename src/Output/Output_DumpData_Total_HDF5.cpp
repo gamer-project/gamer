@@ -1694,9 +1694,9 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    srand( time(NULL) );
    KeyInfo.UniqueDataID = rand();
 
-   if ( !ConservedRefInitialized )   Aux_Error( ERROR_INFO, "Conserved variables reference are not assigned yet!!\n" );
+   if ( !ConRefInitialized )   Aux_Error( ERROR_INFO, "Conserved variables reference are not assigned yet!!\n" );
 
-   for (int v=0; v<1+NCONREF_MAX+NCOMP_PASSIVE+1; v++)   KeyInfo.ConservedRef[v] = ConservedRef[v];
+   for (int v=0; v<1+NCONREF_MAX+NCOMP_PASSIVE+1; v++)   KeyInfo.ConRef[v] = ConRef[v];
 
 } // FUNCTION : FillIn_KeyInfo
 
@@ -2910,16 +2910,16 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
 {
 
 // create the array type
-   const hsize_t H5_ArrDims_3Var             = 3;                             // array size of [3]
-   const hsize_t H5_ArrDims_NLv              = NLEVEL;                        // array size of [NLEVEL]
-   const hsize_t H5_ArrDims_NConservedRef    = 1+NCONREF_MAX+NCOMP_PASSIVE+1; // array size of [1+NCONREF_MAX+NCOMP_PASSIVE+1]
+   const hsize_t H5_ArrDims_3Var         = 3;                             // array size of [3]
+   const hsize_t H5_ArrDims_NLv          = NLEVEL;                        // array size of [NLEVEL]
+   const hsize_t H5_ArrDims_NConRef      = 1+NCONREF_MAX+NCOMP_PASSIVE+1; // array size of [1+NCONREF_MAX+NCOMP_PASSIVE+1]
 
-   const hid_t   H5_TypeID_Arr_3Double       = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_3Var          );
-   const hid_t   H5_TypeID_Arr_3Int          = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_3Var          );
-   const hid_t   H5_TypeID_Arr_NLvInt        = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_NLv           );
-   const hid_t   H5_TypeID_Arr_NLvLong       = H5Tarray_create( H5T_NATIVE_LONG,   1, &H5_ArrDims_NLv           );
-   const hid_t   H5_TypeID_Arr_NLvDouble     = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_NLv           );
-   const hid_t   H5_TypeID_Arr_NConservedRef = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_NConservedRef );
+   const hid_t   H5_TypeID_Arr_3Double   = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_3Var    );
+   const hid_t   H5_TypeID_Arr_3Int      = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_3Var    );
+   const hid_t   H5_TypeID_Arr_NLvInt    = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_NLv     );
+   const hid_t   H5_TypeID_Arr_NLvLong   = H5Tarray_create( H5T_NATIVE_LONG,   1, &H5_ArrDims_NLv     );
+   const hid_t   H5_TypeID_Arr_NLvDouble = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_NLv     );
+   const hid_t   H5_TypeID_Arr_NConRef   = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_NConRef );
 
 
 // create the "variable-length string" datatype
@@ -2986,16 +2986,16 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "GitCommit",            HOFFSET(KeyInfo_t,GitCommit           ), H5_TypeID_VarStr        );
    H5Tinsert( H5_TypeID, "UniqueDataID",         HOFFSET(KeyInfo_t,UniqueDataID        ), H5T_NATIVE_LONG         );
 
-   H5Tinsert( H5_TypeID, "ConservedRef",         HOFFSET(KeyInfo_t,ConservedRef        ), H5_TypeID_Arr_NConservedRef );
+   H5Tinsert( H5_TypeID, "ConRef",               HOFFSET(KeyInfo_t,ConRef              ), H5_TypeID_Arr_NConRef   );
 
 // free memory
-   H5_Status = H5Tclose( H5_TypeID_Arr_3Double       );
-   H5_Status = H5Tclose( H5_TypeID_Arr_3Int          );
-   H5_Status = H5Tclose( H5_TypeID_Arr_NLvInt        );
-   H5_Status = H5Tclose( H5_TypeID_Arr_NLvLong       );
-   H5_Status = H5Tclose( H5_TypeID_Arr_NLvDouble     );
-   H5_Status = H5Tclose( H5_TypeID_Arr_NConservedRef );
-   H5_Status = H5Tclose( H5_TypeID_VarStr            );
+   H5_Status = H5Tclose( H5_TypeID_Arr_3Double   );
+   H5_Status = H5Tclose( H5_TypeID_Arr_3Int      );
+   H5_Status = H5Tclose( H5_TypeID_Arr_NLvInt    );
+   H5_Status = H5Tclose( H5_TypeID_Arr_NLvLong   );
+   H5_Status = H5Tclose( H5_TypeID_Arr_NLvDouble );
+   H5_Status = H5Tclose( H5_TypeID_Arr_NConRef   );
+   H5_Status = H5Tclose( H5_TypeID_VarStr        );
 
 } // FUNCTION : GetCompound_KeyInfo
 

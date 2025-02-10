@@ -495,24 +495,24 @@ void Aux_Check_Conservation( const char *comment )
 #     endif // if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
 
 //    record the reference values if not initialized, e.g. first time, not from restart, or HDF5 version < 2502
-      if ( ! ConservedRefInitialized )
+      if ( ! ConRefInitialized )
       {
-         ConservedRef[0] = Time[0];
-         for (int v=0; v<NVar_Flu; v++)   ConservedRef[idx_offset_flu    +v] = Fluid_AllRank[v];
-         for (int d=0; d<3; d++)          ConservedRef[idx_offset_flu_com+d] = CoM_Flu[d];
+         ConRef[0] = Time[0];
+         for (int v=0; v<NVar_Flu; v++)   ConRef[idx_offset_flu    +v] = Fluid_AllRank[v];
+         for (int d=0; d<3; d++)          ConRef[idx_offset_flu_com+d] = CoM_Flu[d];
 
 #        ifdef MASSIVE_PARTICLES
-         for (int v=0; v<NVar_Par; v++)   ConservedRef[idx_offset_par    +v] = Par_AllRank[v];
-         for (int d=0; d<3; d++)          ConservedRef[idx_offset_par_com+d] = CoM_Par[d];
+         for (int v=0; v<NVar_Par; v++)   ConRef[idx_offset_par    +v] = Par_AllRank[v];
+         for (int d=0; d<3; d++)          ConRef[idx_offset_par_com+d] = CoM_Par[d];
 #        if ( MODEL != PAR_ONLY )
-         for (int v=0; v<NVar_All; v++)   ConservedRef[idx_offset_all    +v] = All_AllRank[v];
-         for (int d=0; d<3; d++)          ConservedRef[idx_offset_all_com+d] = CoM_All[d];
+         for (int v=0; v<NVar_All; v++)   ConRef[idx_offset_all    +v] = All_AllRank[v];
+         for (int d=0; d<3; d++)          ConRef[idx_offset_all_com+d] = CoM_All[d];
 #        endif // #if ( MODEL != PAR_ONLY )
 #        endif // #ifdef MASSIVE_PARTICLES
-      } // if ( ! ConservedRefInitialized )
+      } // if ( ! ConRefInitialized )
    } // if ( MPI_Rank == 0 )
 
-   ConservedRefInitialized = true;
+   ConRefInitialized = true;
 
 
 // only record the reference if not check conservation
@@ -543,7 +543,7 @@ void Aux_Check_Conservation( const char *comment )
 //       output header
          FILE *File = fopen( FileName, "a" );
 
-         Aux_Message( File, "# Ref time        : %13.7e\n", ConservedRef[0] );
+         Aux_Message( File, "# Ref time        : %13.7e\n", ConRef[0] );
          Aux_Message( File, "\n" );
 
 #        if   ( MODEL == HYDRO )
@@ -665,37 +665,37 @@ void Aux_Check_Conservation( const char *comment )
 //    calculate errors
       for (int v=0; v<NVar_Flu; v++)
       {
-         AbsErr_Flu[v] = Fluid_AllRank[v] - ConservedRef[idx_offset_flu+v];
-         RelErr_Flu[v] = AbsErr_Flu[v] / fabs(ConservedRef[idx_offset_flu+v]);
+         AbsErr_Flu[v] = Fluid_AllRank[v] - ConRef[idx_offset_flu+v];
+         RelErr_Flu[v] = AbsErr_Flu[v] / fabs(ConRef[idx_offset_flu+v]);
       }
       for (int d=0; d<3; d++)
       {
-         AbsErr_CoM_Flu[d] = CoM_Flu[d] - ConservedRef[idx_offset_flu_com+d];
-         AveVel_CoM_Flu[d] = AbsErr_CoM_Flu[d] / (Time[0]-ConservedRef[0]);
+         AbsErr_CoM_Flu[d] = CoM_Flu[d] - ConRef[idx_offset_flu_com+d];
+         AveVel_CoM_Flu[d] = AbsErr_CoM_Flu[d] / (Time[0]-ConRef[0]);
       }
 
 #     ifdef MASSIVE_PARTICLES
       for (int v=0; v<NVar_Par; v++)
       {
-         AbsErr_Par[v] = Par_AllRank[v] - ConservedRef[idx_offset_par+v];
-         RelErr_Par[v] = AbsErr_Par[v] / fabs(ConservedRef[idx_offset_par+v]);
+         AbsErr_Par[v] = Par_AllRank[v] - ConRef[idx_offset_par+v];
+         RelErr_Par[v] = AbsErr_Par[v] / fabs(ConRef[idx_offset_par+v]);
       }
       for (int d=0; d<3; d++)
       {
-         AbsErr_CoM_Par[d] = CoM_Par[d] - ConservedRef[idx_offset_par_com+d];
-         AveVel_CoM_Par[d] = AbsErr_CoM_Par[d] / (Time[0]-ConservedRef[0]);
+         AbsErr_CoM_Par[d] = CoM_Par[d] - ConRef[idx_offset_par_com+d];
+         AveVel_CoM_Par[d] = AbsErr_CoM_Par[d] / (Time[0]-ConRef[0]);
       }
 
 #     if ( MODEL != PAR_ONLY )
       for (int v=0; v<NVar_All; v++)
       {
-         AbsErr_All[v] = All_AllRank[v] - ConservedRef[idx_offset_all+v];
-         RelErr_All[v] = AbsErr_All[v] / fabs(ConservedRef[idx_offset_all+v]);
+         AbsErr_All[v] = All_AllRank[v] - ConRef[idx_offset_all+v];
+         RelErr_All[v] = AbsErr_All[v] / fabs(ConRef[idx_offset_all+v]);
       }
       for (int d=0; d<3; d++)
       {
-         AbsErr_CoM_All[d] = CoM_All[d] - ConservedRef[idx_offset_all_com+d];
-         AveVel_CoM_All[d] = AbsErr_CoM_All[d] / (Time[0]-ConservedRef[0]);
+         AbsErr_CoM_All[d] = CoM_All[d] - ConRef[idx_offset_all_com+d];
+         AveVel_CoM_All[d] = AbsErr_CoM_All[d] / (Time[0]-ConRef[0]);
       }
 #     endif // #if ( MODEL != PAR_ONLY )
 #     endif // #ifdef MASSIVE_PARTICLES

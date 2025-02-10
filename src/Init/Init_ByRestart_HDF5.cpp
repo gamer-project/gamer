@@ -265,8 +265,8 @@ void Init_ByRestart_HDF5( const char *FileName )
 
    if ( KeyInfo.FormatVersion >= 2502 )
    {
-   LoadField( "ConservedRef",          ConservedRef,                 H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  ConservedRef, 1+NCONREF_MAX+NCOMP_PASSIVE+1, NonFatal );
-   ConservedRefInitialized = true;
+   LoadField( "ConRef",                ConRef,                       H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  ConRef, 1+NCONREF_MAX+NCOMP_PASSIVE+1, NonFatal );
+   ConRefInitialized = true;
    } // if ( KeyInfo.FormatVersion >= 2502 )
 
 
