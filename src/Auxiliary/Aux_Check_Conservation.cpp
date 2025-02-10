@@ -103,7 +103,7 @@ void Aux_Check_Conservation( const char *comment )
    const bool GetPassiveSum      = ( PassiveNorm_NVar > 0 );
    const int  NVar_Flu           = NVar_NoPassive + NCOMP_PASSIVE + ( (GetPassiveSum)?1:0 );
    const int  idx_offset_flu     = 1;
-   const int  idx_offset_flu_com = idx_offset_flu+NVar_Flu;
+   const int  idx_offset_flu_com = idx_offset_flu + NVar_Flu;
 
    double dh, dv, Fluid_ThisRank[NVar_Flu], Fluid_AllRank[NVar_Flu], Fluid_lv[NVar_Flu];   // dv : cell volume at each level
    int    FluSg;
@@ -449,7 +449,7 @@ void Aux_Check_Conservation( const char *comment )
 // calculate conserved quantities for particles
 #  ifdef MASSIVE_PARTICLES
    const int  NVar_Par           = 10; // 10: mass, momentum (x/y/z), angular momentum (x/y/z), kinetic/potential/total energies
-   const int  idx_etot_par       = NVar_Par-1;
+   const int  idx_etot_par       = NVar_Par - 1;
    const int  idx_offset_par     = idx_offset_flu_com + 3;
    const int  idx_offset_par_com = idx_offset_par + NVar_Par;
    const char ParLabel[NVar_Par][MAX_STRING] = { "Mass_Par", "MomX_Par", "MomY_Par", "MomZ_Par", "AngMomX_Par",
@@ -470,7 +470,7 @@ void Aux_Check_Conservation( const char *comment )
 // All = fluid + particles
 #  if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
    const int  NVar_All           = 8; // 8: mass, momentum (x/y/z), angular momentum (x/y/z), total energy
-   const int  idx_etot_all       = NVar_All-1;
+   const int  idx_etot_all       = NVar_All - 1;
    const int  idx_offset_all     = idx_offset_par_com + 3;
    const int  idx_offset_all_com = idx_offset_all + NVar_All;
    const char AllLabel[NVar_All][MAX_STRING] = { "Mass_All", "MomX_All", "MomY_All", "MomZ_All", "AngMomX_All",
@@ -482,7 +482,7 @@ void Aux_Check_Conservation( const char *comment )
 #  endif // if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
 
 
-// record conserved variables reference value
+// record the reference values of conserved variables
    if ( MPI_Rank == 0 )
    {
 //    calculate the sum of conserved quantities in different models
@@ -494,7 +494,7 @@ void Aux_Check_Conservation( const char *comment )
          CoM_All[d] = ( Fluid_AllRank[0]*CoM_Flu[d] + Par_AllRank[0]*CoM_Par[d] )/All_AllRank[0];
 #     endif // if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
 
-//    record the reference values if not initialized, e.g. first time, not from restart, or HDF5 version < 2502
+//    record the reference values if not initialized, e.g., first time or restart from an HDF5 snapshot with version < 2502
       if ( ! ConRefInitialized )
       {
          ConRef[0] = Time[0];
@@ -515,7 +515,7 @@ void Aux_Check_Conservation( const char *comment )
    ConRefInitialized = true;
 
 
-// only record the reference if not check conservation
+// only record the reference values when conservation check is disabled
    if ( ! OPT__CK_CONSERVATION )
    {
 #     if ( MODEL == ELBDM )
@@ -722,15 +722,12 @@ void Aux_Check_Conservation( const char *comment )
 #     ifdef MASSIVE_PARTICLES
       for (int v=0; v<NVar_Par; v++)
       {
+         Aux_Message( File, "  %17.7e  %17.7e  %17.7e", Par_AllRank[v], AbsErr_Par[v], RelErr_Par[v] );
 
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e", Par_AllRank[v], AbsErr_Par[v], RelErr_Par[v] );
-
-      if ( v == index_before_column_CoM )
-      {
-      for (int d=0; d<3; d++)
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e", CoM_Par[d], AbsErr_CoM_Par[d], AveVel_CoM_Par[d] );
-      }
-
+         if ( v == index_before_column_CoM ) {
+         for (int d=0; d<3; d++)
+         Aux_Message( File, "  %17.7e  %17.7e  %17.7e", CoM_Par[d], AbsErr_CoM_Par[d], AveVel_CoM_Par[d] );
+         }
       } // for (int v=0; v<NVar_Par; v++)
 
 #     if ( MODEL != PAR_ONLY )

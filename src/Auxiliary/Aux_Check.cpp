@@ -16,7 +16,7 @@ void Aux_Check( )
    if ( OPT__CK_PROPER_NESTING )
       for (int lv=1; lv<NLEVEL; lv++)                    Aux_Check_ProperNesting( lv, "DIAGNOSIS" );
 
-// record the reference values even not checking the conservation
+// record the reference values even when conservation check is disabled
    if ( OPT__CK_CONSERVATION  ||  !ConRefInitialized )   Aux_Check_Conservation( "DIAGNOSIS" );
 
 #  if ( NCOMP_PASSIVE > 0 )
