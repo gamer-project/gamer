@@ -347,7 +347,7 @@ void Init_TestProb_Template()
 #  endif
 #  ifdef SUPPORT_HDF5
    Output_HDF5_TestProb_Ptr          = Output_HDF5_TestProb;
-   Output_HDF5_User_Ptr              = NULL; //                                       example: Output/Output_DumData_Total_HDF5.cpp --> Output_HDF5_User_Template()
+   Output_HDF5_User_Ptr              = NULL; //                                       example: Output/Output_DumpData_Total_HDF5.cpp --> Output_HDF5_User_Template()
 #  endif
 
 
