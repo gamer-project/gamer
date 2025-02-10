@@ -264,7 +264,7 @@ Procedure for outputting new variables:
 //                                             OPT__FLAG_RADIAL,  FlagTable_Radial,  FLAG_RADIAL_CEN_X,  FLAG_RADIAL_CEN_Y,  FLAG_RADIAL_CEN_Z
 //                2500 : 2024/07/01 --> output particle integer attributes
 //                2501 : 2025/01/15 --> output OPT__OUTPUT_TEXT_LENGTH_INT
-//                2502 : 2025/01/16 --> output conserved variables reference data
+//                2502 : 2025/01/16 --> output ConRef[]
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1694,7 +1694,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    srand( time(NULL) );
    KeyInfo.UniqueDataID = rand();
 
-   if ( !ConservedRefInitialized )   Aux_Error( ERROR_INFO, "Conserved variables reference are not assigned yet!!\n" );
+   if ( !ConservedRefInitialized )   Aux_Error( ERROR_INFO, "Reference values for conserved variables have not been assigned yet !!\n" );
 
    for (int v=0; v<1+NCONREF_MAX+NCOMP_PASSIVE+1; v++)   KeyInfo.ConservedRef[v] = ConservedRef[v];
 

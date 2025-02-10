@@ -222,7 +222,7 @@
 #  define NFLUX_TOTAL         ( NFLUX_FLUID + NFLUX_PASSIVE )
 
 
-// maximum number of recorded conserved variables of ConservedRef[]
+// maximum number of reference values stored in ConRef[]
 #  define NCONREF_MAX         60
 
 
