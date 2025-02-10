@@ -64,17 +64,17 @@ extern double *Time_table;                              // the time table of jet
 extern double *Theta_table[3];                          // the theta table of jet direction for 3 clusters
 extern double *Phi_table[3];                            // the phi table of jet direction for 3 clusters
 
-extern bool   AdjustBHPos;
-extern bool   AdjustBHVel;
-extern double AdjustPeriod;
-extern int    AdjustCount;                              // count the number of adjustments
-extern int    JetDirection_case;                        // methods for choosing the jet direction
-       int    merge_index = 0;                          // record BH 1 merge BH 2 / BH 2 merge BH 1
+extern bool    AdjustBHPos;
+extern bool    AdjustBHVel;
+extern double  AdjustPeriod;
+extern int     AdjustCount;                             // count the number of adjustments
+extern int     JetDirection_case;                       // methods for choosing the jet direction
+       int     merge_index = 0;                         // record BH 1 merge BH 2 / BH 2 merge BH 1
 
-       double ang_mom_sum[3][3] = { { 1.0, 0.0, 0.0 },
-                                    { 1.0, 0.0, 0.0 },
-                                    { 1.0, 0.0, 0.0 } };
-       bool if_overlap = false;
+       double  ang_mom_sum[3][3] = { { 1.0, 0.0, 0.0 },
+                                     { 1.0, 0.0, 0.0 },
+                                     { 1.0, 0.0, 0.0 } };
+       bool    if_overlap = false;
 
 extern void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][3], double Cen_new[][3], double Cen_Vel[][3] );
 
@@ -122,7 +122,7 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
 
 // (1) SMBH Accretion (note: gas depletion is currently disabled)
    double dr2[3][3], r2[3];
-   const double V_dep = 4.0 / 3.0 * M_PI * pow( R_dep, 3.0 ); // the region to remove gas
+   const double V_dep = 4.0 / 3.0 * M_PI * pow( R_dep, 3.0 ); // the volume to remove gas
 // the density need to be removed
    double D_dep[3] = { Mdot_BH1*dt/V_dep, Mdot_BH2*dt/V_dep, Mdot_BH3*dt/V_dep };
    int    iftrue   = 0; // mark whether this cell is reset or not [0/1]
@@ -190,10 +190,10 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
       {
          which_cluster += c+1;
 
-//       Record the old momentum
-         double MOMX_old = fluid[MOMX];
-         double MOMY_old = fluid[MOMY];
-         double MOMZ_old = fluid[MOMZ];
+//       record the old momentum
+         const double MOMX_old = fluid[MOMX];
+         const double MOMY_old = fluid[MOMY];
+         const double MOMZ_old = fluid[MOMZ];
 
          fluid[DENS] += M_inj[c];
 
@@ -300,12 +300,10 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 //       relabel the BH and DM particles being merged
          for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
          {
-            bool if_cluster = false;
-            if ( amr->Par->Type[p] == real(PTYPE_CLUSTER+1)  ||  amr->Par->Type[p] == real(PTYPE_CEN+1) )
-               if_cluster = true;
+            if ( amr->Par->Type[p] != real(PTYPE_CLUSTER+1)  &&  amr->Par->Type[p] != real(PTYPE_CEN+1) )   continue;
+            if ( amr->Par->Mass[p] < (real)0.0 )   continue;
 
-            if ( amr->Par->Mass[p] >= (real)0.0  &&  if_cluster )
-               amr->Par->Type[p] = PTYPE_CLUSTER;
+            amr->Par->Type[p] = PTYPE_CLUSTER;
          } // for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
          Aux_Message( stdout, "BHs Merge! In rank %d, TimeNew = %14.8e; merge_index = %d, "
                               "BHPos1 = %14.8e, %14.8e, %14.8e; BHPos2 = %14.8e, %14.8e, %14.8e; "
