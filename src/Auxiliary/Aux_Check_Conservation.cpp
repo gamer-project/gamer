@@ -105,8 +105,8 @@ void Aux_Check_Conservation( const char *comment )
    const int  idx_offset_flu     = 1;
    const int  idx_offset_flu_com = idx_offset_flu + NVar_Flu;
 
-   int NStoredConRef_noTime_noPassive = 0;
-   NStoredConRef_noTime_noPassive += NVar_Flu - NCOMP_PASSIVE + 3;
+   int NStoredConRef_noTime = 0;
+   NStoredConRef_noTime += NVar_Flu + 3; // +3: center-of-mass position
 
    double dh, dv, Fluid_ThisRank[NVar_Flu], Fluid_AllRank[NVar_Flu], Fluid_lv[NVar_Flu];   // dv : cell volume at each level
    int    FluSg;
@@ -463,7 +463,7 @@ void Aux_Check_Conservation( const char *comment )
    double Par_AllRank[NVar_Par];
    double CoM_Par[3];
 
-   NStoredConRef_noTime_noPassive += NVar_Par + 3;
+   NStoredConRef_noTime += NVar_Par + 3; // +3: center-of-mass position
 
    Par_Aux_GetConservedQuantity( Par_AllRank[0], CoM_Par[0], CoM_Par[1], CoM_Par[2],
                                  Par_AllRank[1], Par_AllRank[2], Par_AllRank[3],
@@ -485,7 +485,7 @@ void Aux_Check_Conservation( const char *comment )
    double All_AllRank[NVar_Par];
    double CoM_All[3];
 
-   NStoredConRef_noTime_noPassive += NVar_All + 3;
+   NStoredConRef_noTime += NVar_All + 3; // +3: center-of-mass position
 #  endif // if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
 
 
@@ -494,7 +494,7 @@ void Aux_Check_Conservation( const char *comment )
    {
 //    calculate the sum of conserved quantities in different models
 #     if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
-      for (int v=0; v<7; v++)   All_AllRank[v] = Fluid_AllRank[v] + Par_AllRank[v];
+      for (int v=0; v<7; v++)   All_AllRank[v] = Fluid_AllRank[v] + Par_AllRank[v]; // 0-6: mass, momentum x/y/z, angular momentum x/y/z
       All_AllRank[idx_etot_all] = Fluid_AllRank[idx_etot_flu] + Par_AllRank[idx_etot_par]; // for HYDRO/ELBDM, total energy is stored in the last element
 
       for (int d=0; d<3; d++)
@@ -504,10 +504,10 @@ void Aux_Check_Conservation( const char *comment )
 //    record the reference values if not initialized, e.g., first time or restart from an HDF5 snapshot with version < 2502
       if ( ! ConRefInitialized )
       {
-         if ( NStoredConRef_noTime_noPassive > NCONREF_MAX )
+         if ( NStoredConRef_noTime > NCONREF_MAX )
             Aux_Error( ERROR_INFO, "exceed NCOMREF_MAX (%d) !!\n", NCONREF_MAX );
 
-         for (int v=0; v<1+NCONREF_MAX+NCOMP_PASSIVE; v++)   ConRef[v] = NULL_REAL;
+         for (int v=0; v<1+NCONREF_MAX; v++)   ConRef[v] = NULL_REAL;
 
          ConRef[0] = Time[0];
          for (int v=0; v<NVar_Flu; v++)   ConRef[idx_offset_flu    +v] = Fluid_AllRank[v];
@@ -721,14 +721,12 @@ void Aux_Check_Conservation( const char *comment )
       for (int v=0; v<NVar_Flu; v++)
       {
 
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e", Fluid_AllRank[v], AbsErr_Flu[v], RelErr_Flu[v] );
+         Aux_Message( File, "  %17.7e  %17.7e  %17.7e", Fluid_AllRank[v], AbsErr_Flu[v], RelErr_Flu[v] );
 
-      if ( v == index_before_column_CoM )
-      {
-      for (int d=0; d<3; d++)
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e", CoM_Flu[d], AbsErr_CoM_Flu[d], AveVel_CoM_Flu[d] );
-      }
-
+         if ( v == index_before_column_CoM ) {
+         for (int d=0; d<3; d++)
+         Aux_Message( File, "  %17.7e  %17.7e  %17.7e", CoM_Flu[d], AbsErr_CoM_Flu[d], AveVel_CoM_Flu[d] );
+         }
       } // for (int v=0; v<NVar_Flu; v++)
 
 #     ifdef MASSIVE_PARTICLES
@@ -746,14 +744,12 @@ void Aux_Check_Conservation( const char *comment )
       for (int v=0; v<NVar_All; v++)
       {
 
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e", All_AllRank[v], AbsErr_All[v], RelErr_All[v] );
+         Aux_Message( File, "  %17.7e  %17.7e  %17.7e", All_AllRank[v], AbsErr_All[v], RelErr_All[v] );
 
-      if ( v == index_before_column_CoM )
-      {
-      for (int d=0; d<3; d++)
-      Aux_Message( File, "  %17.7e  %17.7e  %17.7e", CoM_All[d], AbsErr_CoM_All[d], AveVel_CoM_All[d] );
-      }
-
+         if ( v == index_before_column_CoM ) {
+         for (int d=0; d<3; d++)
+         Aux_Message( File, "  %17.7e  %17.7e  %17.7e", CoM_All[d], AbsErr_CoM_All[d], AveVel_CoM_All[d] );
+         }
       } // for (int v=0; v<NVar_All; v++)
 #     endif // if ( MODEL != PAR_ONLY )
 #     endif // #ifdef MASSIVE_PARTICLES

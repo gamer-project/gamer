@@ -1696,7 +1696,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    if ( !ConRefInitialized )   Aux_Error( ERROR_INFO, "Reference values for conserved variables have not been assigned yet !!\n" );
 
-   for (int v=0; v<1+NCONREF_MAX+NCOMP_PASSIVE; v++)   KeyInfo.ConRef[v] = ConRef[v];
+   for (int v=0; v<1+NCONREF_MAX; v++)   KeyInfo.ConRef[v] = ConRef[v];
 
 } // FUNCTION : FillIn_KeyInfo
 
@@ -2912,9 +2912,9 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
 {
 
 // create the array type
-   const hsize_t H5_ArrDims_3Var         = 3;                           // array size of [3]
-   const hsize_t H5_ArrDims_NLv          = NLEVEL;                      // array size of [NLEVEL]
-   const hsize_t H5_ArrDims_NConRef      = 1+NCONREF_MAX+NCOMP_PASSIVE; // array size of [1+NCONREF_MAX+NCOMP_PASSIVE]
+   const hsize_t H5_ArrDims_3Var         = 3;             // array size of [3]
+   const hsize_t H5_ArrDims_NLv          = NLEVEL;        // array size of [NLEVEL]
+   const hsize_t H5_ArrDims_NConRef      = 1+NCONREF_MAX; // array size of [1+NCONREF_MAX]
 
    const hid_t   H5_TypeID_Arr_3Double   = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_3Var    );
    const hid_t   H5_TypeID_Arr_3Int      = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_3Var    );

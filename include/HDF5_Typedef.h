@@ -107,7 +107,7 @@ struct KeyInfo_t
    long   UniqueDataID;
 
 // conserved variables
-   double ConRef[1+NCONREF_MAX+NCOMP_PASSIVE];
+   double ConRef[1+NCONREF_MAX];
 
 }; // struct KeyInfo_t
 

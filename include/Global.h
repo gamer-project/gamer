@@ -103,7 +103,7 @@ extern OptCorrAfterSync_t OPT__CORR_AFTER_ALL_SYNC;
 extern OptTimeStepLevel_t OPT__DT_LEVEL;
 
 extern bool       ConRefInitialized;
-extern double     ConRef[1+NCONREF_MAX+NCOMP_PASSIVE];
+extern double     ConRef[1+NCONREF_MAX];
 
 
 
