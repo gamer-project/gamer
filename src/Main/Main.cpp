@@ -398,13 +398,13 @@ real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]          = NULL;
 #endif
 #endif // FLU_SCHEME
 #if ( MODEL == ELBDM )
-bool  (*h_IsCompletelyRefined[2])                                  = { NULL, NULL };
+bool  (*h_IsCompletelyRefined[2])                                    = { NULL, NULL };
 #endif
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
-bool (*h_HasWaveCounterpart[2])[ CUBE(HYB_NXT) ]                   = { NULL, NULL };
+bool (*h_HasWaveCounterpart[2])[ CUBE(HYB_NXT) ]                     = { NULL, NULL };
 #endif
 #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-gramfe_matmul_float (*h_GramFE_TimeEvo)[ 2*FLU_NXT ]               = NULL;
+gramfe_matmul_float (*h_GramFE_TimeEvo)[ 2*FLU_NXT ]                 = NULL;
 #endif
 
 #ifdef GRAVITY
@@ -497,13 +497,13 @@ real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ]          = NULL;
 #endif
 #endif // FLU_SCHEME
 #if ( MODEL == ELBDM )
-bool  (*d_IsCompletelyRefined)                                     = NULL;
+bool  (*d_IsCompletelyRefined)                                       = NULL;
 #endif
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
-bool (*d_HasWaveCounterpart)[ CUBE(HYB_NXT) ]                      = NULL;
+bool (*d_HasWaveCounterpart)[ CUBE(HYB_NXT) ]                        = NULL;
 #endif
 #if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
-gramfe_matmul_float (*d_Flu_TimeEvo)[ 2*FLU_NXT ]                  = NULL;
+gramfe_matmul_float (*d_Flu_TimeEvo)[ 2*FLU_NXT ]                    = NULL;
 #endif
 
 #ifdef GRAVITY

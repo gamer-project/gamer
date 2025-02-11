@@ -252,7 +252,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
    const bool    CurrentMaxLv = (  NPatchTotal[lv] > 0  &&  ( lv == MAX_LEVEL  ||  NPatchTotal[lv+1] == 0 )  );
    const double  dh           = amr->dh[lv];
    const real    dv           = CUBE(dh);
-#  if ( MODEL == HYDRO  ||  MODEL == MHD )
+#  if ( MODEL == HYDRO  &&  !defined SRHD )
    const real    Gamma_m1     = GAMMA - (real)1.0;
    const real   _Gamma_m1     = (real)1.0 / Gamma_m1;
 #  endif
@@ -365,7 +365,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
 
 //    (4) calculate the accretion and feedback
-      real   fluid[NCOMP_TOTAL], fluid_bk[NCOMP_TOTAL], fluid_acc[NCOMP_TOTAL];
+      real   fluid[NCOMP_TOTAL], fluid_old[NCOMP_TOTAL], fluid_acc[NCOMP_TOTAL];
       double x, y, z, x0, y0, z0, x2, y2, z2, x02, y02, z02;
 
 //    reset to 0 since we only want to record the number of void cells **for one sub-step**
@@ -381,7 +381,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
       double rho        [3]       =  { 0.0, 0.0, 0.0 };  // the average density inside the accretion radius (hot gas)
       double mass_cold  [3]       =  { 0.0, 0.0, 0.0 };  // cold gas mass (T < 5e5 K) inside the accretion radius
       double Cs         [3]       =  { 0.0, 0.0, 0.0 };  // the average sound speed inside the accretion radius
-      double gas_vel    [3][3]    = {{ 0.0, 0.0, 0.0 },  // average gas velocity
+      double gas_mom    [3][3]    = {{ 0.0, 0.0, 0.0 },  // average gas momentum
                                      { 0.0, 0.0, 0.0 },
                                      { 0.0, 0.0, 0.0 }};
       double ang_mom    [3][3]    = {{ 0.0, 0.0, 0.0 },  // total angular momentum inside the accretion radius
@@ -393,7 +393,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
 //    variables for all ranks
       int    num_sum[3];
-      double rho_sum[3], Cs_sum[3], gas_vel_sum[3][3], V_cyl_exact_sum[3], normalize_sum[3];
+      double rho_sum[3], Cs_sum[3], gas_mom_sum[3][3], gas_vel_sum[3][3], V_cyl_exact_sum[3], normalize_sum[3];
 
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {
@@ -439,7 +439,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                      Pres = Hydro_CheckMinPres( Pres, MIN_PRES );
                      double tmp_Cs = sqrt( EoS_DensPres2CSqr_CPUPtr( fluid_acc[0], Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ) );
                      Cs[c] += tmp_Cs;
-                     for (int d=0; d<3; d++)   gas_vel[c][d] += fluid_acc[d+1]*dv;
+                     for (int d=0; d<3; d++)   gas_mom[c][d] += fluid_acc[d+1]*dv;
                      num[c] += 1;
                   } // if ( Temp <= 5e5 )
                   double dr[3] = { x2-ClusterCen[c][0], y2-ClusterCen[c][1], z2-ClusterCen[c][2] };
@@ -489,7 +489,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
          MPI_Allreduce( &rho[c],         &rho_sum[c],         1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
          MPI_Allreduce( &mass_cold[c],   &ColdGasMass[c],     1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
          MPI_Allreduce( &Cs[c],          &Cs_sum[c],          1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( gas_vel[c],       gas_vel_sum[c],     3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( gas_mom[c],       gas_mom_sum[c],     3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
          MPI_Allreduce( ang_mom[c],       ang_mom_sum[c],     3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
          MPI_Allreduce( &V_cyl_exact[c], &V_cyl_exact_sum[c], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
          MPI_Allreduce( &normalize[c],   &normalize_sum[c],   1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
@@ -539,7 +539,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
          }
          else
          {
-            for (int d=0; d<3; d++)  gas_vel_sum[c][d] /= rho_sum[c];
+            for (int d=0; d<3; d++)  gas_vel_sum[c][d] = gas_mom_sum[c][d] / rho_sum[c];
             rho_sum[c] /= ( 4.0 / 3.0 * M_PI * pow(R_acc, 3) );
             Cs_sum[c]  /= (double)num_sum[c];
             for (int d=0; d<3; d++)   v += SQR( BH_Vel[c][d] - gas_vel_sum[c][d] );
@@ -633,11 +633,10 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 //    (6) perform injection
       int Reset;
 //    use the "static" schedule for reproducibility
-#     pragma omp parallel for private( Reset, fluid, fluid_bk, x, y, z, x0, y0, z0 ) schedule( static ) \
+#     pragma omp parallel for private( Reset, fluid, fluid_old, x, y, z, x0, y0, z0 ) schedule( static ) \
       reduction( +:CM_Bondi_SinkMass, CM_Bondi_SinkMomX, CM_Bondi_SinkMomY, CM_Bondi_SinkMomZ, \
                    CM_Bondi_SinkMomXAbs, CM_Bondi_SinkMomYAbs, CM_Bondi_SinkMomZAbs, \
                    CM_Bondi_SinkE, CM_Bondi_SinkEk, CM_Bondi_SinkEt, CM_Bondi_SinkNCell )
-
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {
          x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
@@ -653,7 +652,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                fluid   [v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
 //             backup the unmodified values since we want to record the amount of sunk variables removed at the maximum level
-               fluid_bk[v] = fluid[v];
+               fluid_old[v] = fluid[v];
             }
 
 #           ifdef MHD
@@ -695,21 +694,21 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                if ( CurrentMaxLv )
                {
                   double Ek, Ek_new, Et, Et_new;
-                  Ek     = (real)0.5*( SQR(fluid_bk[MOMX]) + SQR(fluid_bk[MOMY]) + SQR(fluid_bk[MOMZ]) ) / (fluid_bk[DENS]);
+                  Ek     = (real)0.5*( SQR(fluid_old[MOMX]) + SQR(fluid_old[MOMY]) + SQR(fluid_old[MOMZ]) ) / (fluid_old[DENS]);
                   Ek_new = (real)0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
-                  Et     = fluid_bk[ENGY] - Ek - Emag;
+                  Et     = fluid_old[ENGY] - Ek - Emag;
                   Et_new = fluid[ENGY] - Ek_new - Emag;
 
-                  CM_Bondi_SinkMass[Reset-1]    += dv *     ( fluid[DENS] - fluid_bk[DENS] );
-                  CM_Bondi_SinkMomX[Reset-1]    += dv *     ( fluid[MOMX] - fluid_bk[MOMX] );
-                  CM_Bondi_SinkMomY[Reset-1]    += dv *     ( fluid[MOMY] - fluid_bk[MOMY] );
-                  CM_Bondi_SinkMomZ[Reset-1]    += dv *     ( fluid[MOMZ] - fluid_bk[MOMZ] );
-                  CM_Bondi_SinkMomXAbs[Reset-1] += dv * FABS( fluid[MOMX] - fluid_bk[MOMX] );
-                  CM_Bondi_SinkMomYAbs[Reset-1] += dv * FABS( fluid[MOMY] - fluid_bk[MOMY] );
-                  CM_Bondi_SinkMomZAbs[Reset-1] += dv * FABS( fluid[MOMZ] - fluid_bk[MOMZ] );
-                  CM_Bondi_SinkE[Reset-1]       += dv *     ( fluid[ENGY] - fluid_bk[ENGY] );
-                  CM_Bondi_SinkEk[Reset-1]      += dv *     ( Ek_new      - Ek             );
-                  CM_Bondi_SinkEt[Reset-1]      += dv *     ( Et_new      - Et             );
+                  CM_Bondi_SinkMass[Reset-1]    += dv *     ( fluid[DENS] - fluid_old[DENS] );
+                  CM_Bondi_SinkMomX[Reset-1]    += dv *     ( fluid[MOMX] - fluid_old[MOMX] );
+                  CM_Bondi_SinkMomY[Reset-1]    += dv *     ( fluid[MOMY] - fluid_old[MOMY] );
+                  CM_Bondi_SinkMomZ[Reset-1]    += dv *     ( fluid[MOMZ] - fluid_old[MOMZ] );
+                  CM_Bondi_SinkMomXAbs[Reset-1] += dv * FABS( fluid[MOMX] - fluid_old[MOMX] );
+                  CM_Bondi_SinkMomYAbs[Reset-1] += dv * FABS( fluid[MOMY] - fluid_old[MOMY] );
+                  CM_Bondi_SinkMomZAbs[Reset-1] += dv * FABS( fluid[MOMZ] - fluid_old[MOMZ] );
+                  CM_Bondi_SinkE[Reset-1]       += dv *     ( fluid[ENGY] - fluid_old[ENGY] );
+                  CM_Bondi_SinkEk[Reset-1]      += dv *     ( Ek_new      - Ek              );
+                  CM_Bondi_SinkEt[Reset-1]      += dv *     ( Et_new      - Et              );
                   CM_Bondi_SinkNCell[Reset-1]   ++;
                } // if ( CurrentMaxLv )
             } // if ( Reset != 0 )
