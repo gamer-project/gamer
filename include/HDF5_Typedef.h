@@ -376,6 +376,8 @@ struct SymConst_t
 
    int    NFieldStoredMax;
 
+   int    NConRefMax;
+
 }; // struct SymConst_t
 
 

@@ -1873,6 +1873,8 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
 
    LoadField( "NFieldStoredMax",      &RS.NFieldStoredMax,      SID, TID, NonFatal, &RT.NFieldStoredMax,       1, NonFatal );
 
+   LoadField( "NConRefMax",           &RS.NConRefMax,           SID, TID, NonFatal, &RT.NConRefMax,            1, NonFatal );
+
 
 // 5. close all objects
    Status = H5Tclose( TID );

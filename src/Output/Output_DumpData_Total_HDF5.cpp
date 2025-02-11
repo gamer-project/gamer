@@ -2276,6 +2276,8 @@ void FillIn_SymConst( SymConst_t &SymConst )
 
    SymConst.NFieldStoredMax      = NFIELD_STORED_MAX;
 
+   SymConst.NConRefMax           = NCONREF_MAX;
+
 } // FUNCTION : FillIn_SymConst
 
 
@@ -3264,6 +3266,8 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 #  endif
 
    H5Tinsert( H5_TypeID, "NFieldStoredMax",      HOFFSET(SymConst_t,NFieldStoredMax     ), H5T_NATIVE_INT    );
+
+   H5Tinsert( H5_TypeID, "NConRefMax",           HOFFSET(SymConst_t,NConRefMax          ), H5T_NATIVE_INT    );
 
 } // FUNCTION : GetCompound_SymConst
 
