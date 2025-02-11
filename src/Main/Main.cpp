@@ -93,6 +93,9 @@ OptLohnerForm_t      OPT__FLAG_LOHNER_FORM;
 OptCorrAfterSync_t   OPT__CORR_AFTER_ALL_SYNC;
 OptTimeStepLevel_t   OPT__DT_LEVEL;
 
+bool                 ConRefInitialized = false;
+double               ConRef[1+NCONREF_MAX]; // time + conserved variables
+
 
 // 2. global variables for different applications
 // =======================================================================================================
@@ -631,8 +634,6 @@ int main( int argc, char *argv[] )
 #     endif
    }
 
-   Output_DumpData( 0 );
-
    if ( OPT__PATCH_COUNT > 0 )            Aux_Record_PatchCount();
    if ( OPT__RECORD_MEMORY )              Aux_GetMemInfo();
    if ( OPT__RECORD_USER ) {
@@ -651,6 +652,9 @@ int main( int argc, char *argv[] )
 #  endif
 
    Aux_Check();
+
+// must be called after Aux_Check() to obtain the reference conserved values (ConRef_*) first
+   Output_DumpData( 0 );
 
 #  if ( MODEL == ELBDM )
    if (  ( ELBDM_REMOVE_MOTION_CM == ELBDM_REMOVE_MOTION_CM_INIT && (OPT__INIT != INIT_BY_RESTART || OPT__RESTART_RESET) )  ||

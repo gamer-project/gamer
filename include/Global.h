@@ -102,6 +102,9 @@ extern OptLohnerForm_t    OPT__FLAG_LOHNER_FORM;
 extern OptCorrAfterSync_t OPT__CORR_AFTER_ALL_SYNC;
 extern OptTimeStepLevel_t OPT__DT_LEVEL;
 
+extern bool       ConRefInitialized;
+extern double     ConRef[1+NCONREF_MAX];
+
 
 
 // 2. global variables for different applications
@@ -383,7 +386,7 @@ extern InterpolationHandler Int_InterpolationHandler;
 // =======================================================================================================
 #ifdef COSMIC_RAY
 extern double GAMMA_CR;
-extern bool OPT__FLAG_CRAY, OPT__FLAG_LOHNER_CRAY;
+extern bool   OPT__FLAG_CRAY, OPT__FLAG_LOHNER_CRAY;
 extern double FlagTable_CRay[NLEVEL-1];
 #endif
 
