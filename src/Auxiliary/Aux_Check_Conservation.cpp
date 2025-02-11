@@ -30,7 +30,7 @@ void Aux_Check_Conservation( const char *comment )
 {
 
    static bool FirstTime = true;
-   char FileName[MAX_STRING];
+   char FileName[2*MAX_STRING];
    sprintf( FileName, "%s/Record__Conservation", OUTPUT_DIR );
 
 

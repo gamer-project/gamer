@@ -20,7 +20,7 @@ void Output_BoundaryFlagList( const int option, const int lv, const char *commen
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "option", option );
 
 
-   char FileName[MAX_STRING];
+   char FileName[2*MAX_STRING];
    if ( option )  sprintf( FileName, "%s/BoundaryFlagList_%d_%d", OUTPUT_DIR, MPI_Rank, lv );
    else           sprintf( FileName, "%s/BufferFlagList_%d_%d",   OUTPUT_DIR, MPI_Rank, lv );
 

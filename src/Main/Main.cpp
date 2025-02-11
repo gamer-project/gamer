@@ -78,7 +78,7 @@ int                  OPT__UM_IC_FLOAT8;
 double               COM_CEN_X, COM_CEN_Y, COM_CEN_Z, COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R;
 int                  COM_MAX_ITER;
 double               ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z;
-char                 OUTPUT_DIR[MAX_STRING-100];
+char                 OUTPUT_DIR[MAX_STRING];
 double               FLAG_ANGULAR_CEN_X, FLAG_ANGULAR_CEN_Y, FLAG_ANGULAR_CEN_Z;
 double               FLAG_RADIAL_CEN_X, FLAG_RADIAL_CEN_Y, FLAG_RADIAL_CEN_Z;
 
@@ -860,7 +860,7 @@ int main( int argc, char *argv[] )
 
    if ( MPI_Rank == 0  &&  OPT__RECORD_NOTE )
    {
-      char FileName[MAX_STRING];
+      char FileName[2*MAX_STRING];
       sprintf( FileName, "%s/Record__Note", OUTPUT_DIR );
 
       FILE *Note = fopen( FileName, "a" );
