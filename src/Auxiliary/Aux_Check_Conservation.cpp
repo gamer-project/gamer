@@ -105,6 +105,9 @@ void Aux_Check_Conservation( const char *comment )
    const int  idx_offset_flu     = 1;
    const int  idx_offset_flu_com = idx_offset_flu + NVar_Flu;
 
+   int NStoredConRef_noTime_noPassive = 0;
+   NStoredConRef_noTime_noPassive += NVar_Flu - NCOMP_PASSIVE + 3;
+
    double dh, dv, Fluid_ThisRank[NVar_Flu], Fluid_AllRank[NVar_Flu], Fluid_lv[NVar_Flu];   // dv : cell volume at each level
    int    FluSg;
 #  ifdef GRAVITY
@@ -460,6 +463,8 @@ void Aux_Check_Conservation( const char *comment )
    double Par_AllRank[NVar_Par];
    double CoM_Par[3];
 
+   NStoredConRef_noTime_noPassive += NVar_Par + 3;
+
    Par_Aux_GetConservedQuantity( Par_AllRank[0], CoM_Par[0], CoM_Par[1], CoM_Par[2],
                                  Par_AllRank[1], Par_AllRank[2], Par_AllRank[3],
                                  Par_AllRank[4], Par_AllRank[5], Par_AllRank[6], Par_AllRank[7], Par_AllRank[8] );
@@ -479,6 +484,8 @@ void Aux_Check_Conservation( const char *comment )
    const char AllCoMLabel[3][MAX_STRING] = { "CoMX_All", "CoMY_All", "CoMZ_All" };
    double All_AllRank[NVar_Par];
    double CoM_All[3];
+
+   NStoredConRef_noTime_noPassive += NVar_All + 3;
 #  endif // if ( defined MASSIVE_PARTICLES  &&  MODEL != PAR_ONLY )
 
 
@@ -497,6 +504,9 @@ void Aux_Check_Conservation( const char *comment )
 //    record the reference values if not initialized, e.g., first time or restart from an HDF5 snapshot with version < 2502
       if ( ! ConRefInitialized )
       {
+         if ( NStoredConRef_noTime_noPassive > NCONREF_MAX )
+            Aux_Error( ERROR_INFO, "exceed NCOMREF_MAX (%d) !!\n", NCONREF_MAX );
+
          for (int v=0; v<1+NCONREF_MAX+NCOMP_PASSIVE; v++)   ConRef[v] = NULL_REAL;
 
          ConRef[0] = Time[0];
