@@ -16,15 +16,6 @@ static char    Merger_File_Prof3[1000];   // profile table of cluster 3
        char    Merger_File_Par1 [1000];   // particle file of cluster 1
        char    Merger_File_Par2 [1000];   // particle file of cluster 2
        char    Merger_File_Par3 [1000];   // particle file of cluster 3
-       double  Unit_R1;                   // unit of length   in cluster 1's IC file
-       double  Unit_D1;                   // unit of density  in cluster 1's IC file
-       double  Unit_P1;                   // unit of pressure in cluster 1's IC file
-       double  Unit_R2;                   // unit of length   in cluster 2's IC file
-       double  Unit_D2;                   // unit of density  in cluster 2's IC file
-       double  Unit_P2;                   // unit of pressure in cluster 2's IC file
-       double  Unit_R3;                   // unit of length   in cluster 3's IC file
-       double  Unit_D3;                   // unit of density  in cluster 3's IC file
-       double  Unit_P3;                   // unit of pressure in cluster 3's IC file
        bool    Merger_Coll_IsGas1;        // (true/false) --> does cluster 1 have gas
        bool    Merger_Coll_IsGas2;        // (true/false) --> does cluster 2 have gas
        bool    Merger_Coll_IsGas3;        // (true/false) --> does cluster 3 have gas
@@ -274,15 +265,6 @@ void SetParameter()
    ReadPara->Add( "Merger_File_Par2",         Merger_File_Par2,         NoDef_str,        Useless_str,   Useless_str    );
    ReadPara->Add( "Merger_File_Prof3",        Merger_File_Prof3,        NoDef_str,        Useless_str,   Useless_str    );
    ReadPara->Add( "Merger_File_Par3",         Merger_File_Par3,         NoDef_str,        Useless_str,   Useless_str    );
-   ReadPara->Add( "Unit_R1",                 &Unit_R1,                  1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Unit_D1",                 &Unit_D1,                  1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Unit_P1",                 &Unit_P1,                  1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Unit_R2",                 &Unit_R2,                  1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Unit_D2",                 &Unit_D2,                  1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Unit_P2",                 &Unit_P2,                  1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Unit_R3",                 &Unit_R3,                  1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Unit_D3",                 &Unit_D3,                  1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Unit_P3",                 &Unit_P3,                  1.0,              NoMin_double,  NoMax_double   );
    ReadPara->Add( "Merger_Coll_PosX1",       &Merger_Coll_PosX1,       -1.0,              NoMin_double,  NoMax_double   );
    ReadPara->Add( "Merger_Coll_PosY1",       &Merger_Coll_PosY1,       -1.0,              NoMin_double,  NoMax_double   );
    ReadPara->Add( "Merger_Coll_PosX2",       &Merger_Coll_PosX2,       -1.0,              NoMin_double,  NoMax_double   );
@@ -407,9 +389,9 @@ void SetParameter()
 //          convert to code units (assuming the input units are cgs)
             for (int b=0; b<Merger_NBin1; b++)
             {
-               Table_R1[b] *= Unit_R1/UNIT_L;
-               Table_D1[b] *= Unit_D1/UNIT_D;
-               Table_P1[b] *= Unit_P1/UNIT_P;
+               Table_R1[b] /= UNIT_L;
+               Table_D1[b] /= UNIT_D;
+               Table_P1[b] /= UNIT_P;
             }
          } // if ( MPI_Rank == 0 )
 
@@ -448,9 +430,9 @@ void SetParameter()
 //          convert to code units (assuming the input units are cgs)
             for (int b=0; b<Merger_NBin2; b++)
             {
-               Table_R2[b] *= Unit_R2/UNIT_L;
-               Table_D2[b] *= Unit_D2/UNIT_D;
-               Table_P2[b] *= Unit_P2/UNIT_P;
+               Table_R2[b] /= UNIT_L;
+               Table_D2[b] /= UNIT_D;
+               Table_P2[b] /= UNIT_P;
             }
          } // if ( MPI_Rank == 0 )
 
@@ -489,9 +471,9 @@ void SetParameter()
 //          convert to code units (assuming the input units are cgs)
             for (int b=0; b<Merger_NBin3; b++)
             {
-               Table_R3[b] *= Unit_R3/UNIT_L;
-               Table_D3[b] *= Unit_D3/UNIT_D;
-               Table_P3[b] *= Unit_P3/UNIT_P;
+               Table_R3[b] /= UNIT_L;
+               Table_D3[b] /= UNIT_D;
+               Table_P3[b] /= UNIT_P;
             }
          } // if ( MPI_Rank == 0 )
 
@@ -874,15 +856,6 @@ void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
    HDF5_InputTest->Add( "Merger_File_Par2",         Merger_File_Par2        );
    HDF5_InputTest->Add( "Merger_File_Prof3",        Merger_File_Prof3       );
    HDF5_InputTest->Add( "Merger_File_Par3",         Merger_File_Par3        );
-   HDF5_InputTest->Add( "Unit_R1",                 &Unit_R1                 );
-   HDF5_InputTest->Add( "Unit_D1",                 &Unit_D1                 );
-   HDF5_InputTest->Add( "Unit_P1",                 &Unit_P1                 );
-   HDF5_InputTest->Add( "Unit_R2",                 &Unit_R2                 );
-   HDF5_InputTest->Add( "Unit_D2",                 &Unit_D2                 );
-   HDF5_InputTest->Add( "Unit_P2",                 &Unit_P2                 );
-   HDF5_InputTest->Add( "Unit_R3",                 &Unit_R3                 );
-   HDF5_InputTest->Add( "Unit_D3",                 &Unit_D3                 );
-   HDF5_InputTest->Add( "Unit_P3",                 &Unit_P3                 );
    HDF5_InputTest->Add( "Merger_Coll_PosX1",       &Merger_Coll_PosX1       );
    HDF5_InputTest->Add( "Merger_Coll_PosY1",       &Merger_Coll_PosY1       );
    HDF5_InputTest->Add( "Merger_Coll_PosX2",       &Merger_Coll_PosX2       );

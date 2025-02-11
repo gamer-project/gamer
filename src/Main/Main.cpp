@@ -319,6 +319,7 @@ double     Src_Dlep_AuxArray_Flt[SRC_NAUX_DLEP];
 int        Src_Dlep_AuxArray_Int[SRC_NAUX_DLEP];
 double     Src_EC_AuxArray_Flt[SRC_NAUX_EC];
 int        Src_EC_AuxArray_Int[SRC_NAUX_EC];
+bool       IsInit_tcool[NLEVEL];
 #endif
 double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
 int        Src_User_AuxArray_Int[SRC_NAUX_USER];

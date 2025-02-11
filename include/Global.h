@@ -338,6 +338,8 @@ extern double     Src_Dlep_AuxArray_Flt[SRC_NAUX_DLEP];
 extern int        Src_Dlep_AuxArray_Int[SRC_NAUX_DLEP];
 extern double     Src_EC_AuxArray_Flt[SRC_NAUX_EC];
 extern int        Src_EC_AuxArray_Int[SRC_NAUX_EC];
+// flag for checking whether the tcool field is initialized
+extern bool       IsInit_tcool[NLEVEL];
 #endif
 extern double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
 extern int        Src_User_AuxArray_Int[SRC_NAUX_USER];
@@ -396,12 +398,6 @@ extern double DT__CR_DIFFUSION;
 extern double CR_DIFF_MIN_B;
 #endif
 
-
-// (2-15) exact cooling
-// =======================================================================================================
-#ifdef SRC_EXACTCOOLING
-bool   IsInit_tcool[NLEVEL];
-#endif
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // ============================================================================================================
