@@ -342,12 +342,12 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
       }
       else if ( JetDirection_case == 2 ) // import from table
       {
-         double Time_period      = Time_table[JetDirection_NBin-1];
-         double Time_interpolate = fmod( TimeNew, Time_period );
+         const double Time_period      = Time_table[JetDirection_NBin-1];
+         const double Time_interpolate = fmod( TimeNew, Time_period );
          for (int c=0; c<Merger_Coll_NumHalos; c++)
          {
-            double theta = Mis_InterpolateFromTable( JetDirection_NBin, Time_table, Theta_table[c], Time_interpolate );
-            double phi   = Mis_InterpolateFromTable( JetDirection_NBin, Time_table, Phi_table[c],   Time_interpolate );
+            const double theta = Mis_InterpolateFromTable( JetDirection_NBin, Time_table, Theta_table[c], Time_interpolate );
+            const double phi   = Mis_InterpolateFromTable( JetDirection_NBin, Time_table, Phi_table[c],   Time_interpolate );
 
             Jet_Vec[c][0] = cos(theta);
             Jet_Vec[c][1] = sin(theta)*cos(phi);
@@ -358,7 +358,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
       {
          for (int c=0; c<Merger_Coll_NumHalos; c++)
          {
-            double ang_mom_norm = sqrt( SQR(ang_mom_sum[c][0]) + SQR(ang_mom_sum[c][1]) + SQR(ang_mom_sum[c][2]) );
+            const double ang_mom_norm = sqrt( SQR(ang_mom_sum[c][0]) + SQR(ang_mom_sum[c][1]) + SQR(ang_mom_sum[c][2]) );
             for (int d=0; d<3; d++)   Jet_Vec[c][d] = ang_mom_sum[c][d] / ang_mom_norm;
          }
       } // if ( JetDirection_case == 1 ) ... else ...
@@ -437,8 +437,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                      rho[c] += fluid_acc[0]*dv;
                      double Pres = EoS_DensTemp2Pres_CPUPtr( fluid_acc[0], Temp, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                      Pres = Hydro_CheckMinPres( Pres, MIN_PRES );
-                     double tmp_Cs = sqrt( EoS_DensPres2CSqr_CPUPtr( fluid_acc[0], Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ) );
-                     Cs[c] += tmp_Cs;
+                     Cs[c] += sqrt( EoS_DensPres2CSqr_CPUPtr( fluid_acc[0], Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ) );
                      for (int d=0; d<3; d++)   gas_mom[c][d] += fluid_acc[d+1]*dv;
                      num[c] += 1;
                   } // if ( Temp <= 5e5 )
@@ -513,10 +512,10 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                   for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                   {
                      const long ParID = amr->patch[0][lv][PID]->ParList[p];
-                     const real ParX  = amr->Par->PosX[ParID];
-                     const real ParY  = amr->Par->PosY[ParID];
-                     const real ParZ  = amr->Par->PosZ[ParID];
-                     const real ParM  = amr->Par->Mass[ParID];
+                     const real_par ParX  = amr->Par->PosX[ParID];
+                     const real_par ParY  = amr->Par->PosY[ParID];
+                     const real_par ParZ  = amr->Par->PosZ[ParID];
+                     const real_par ParM  = amr->Par->Mass[ParID];
                      if ( SQR(ParX-ClusterCen[c][0]) + SQR(ParY-ClusterCen[c][1]) + SQR(ParZ-ClusterCen[c][2]) <= SQR(R_acc) )
                         par_mass += ParM;
                   } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
@@ -667,7 +666,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 //          operations necessary only when this cell has been reset
             if ( Reset != 0 )
             {
-#              if ( MODEL == HYDRO  ||  MODEL == MHD )
+#              if ( MODEL == HYDRO  &&  !defined SRHD )
 //             abort the program instead of applying a density floor
                if ( fluid[DENS] < MIN_DENS )   Aux_Error( ERROR_INFO, "Fluid density has reached the floor!\n" );
 
