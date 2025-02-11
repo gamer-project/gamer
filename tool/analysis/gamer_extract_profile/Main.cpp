@@ -53,14 +53,14 @@ double    (*ELBDM_Mom)[3]     = NULL;     // momentum used for subtracting the C
 double     *ELBDM_RhoUr2      = NULL;     // Rho*(vr^2 + wr^2) in the virial surface terms
 double     *ELBDM_dRho_dr     = NULL;     // dRho/dr in the virial surface terms
 double     *ELBDM_LapRho      = NULL;     // Lap(Rho) in the virial surface terms
-bool        Richardson        = true;     // Richardson extrapolation for the velocity
+bool        ELBDM_RichExtrap  = true;     // Richardson extrapolation for the velocity
 #else
 IntScheme_t IntScheme         = INT_CQUAD;
 #endif
 bool        GetAvePot         = false;    // calculate the spherically symmetric gravitational potential
 double      NewtonG           = WRONG;    // gravitational constant (must be set if it cannot be determined from the input data)
 bool        RemoveCMV         = false;    // remove the center-of-mass velocity 
-bool        OutputSphere      = false;    // output the sphere coordinate (r, theta, phi) velocity
+bool        OutputSphVel      = false;    // output the sphere coordinate (r, theta, phi) velocity
 
 
 // variables for the mode "maximum density"
@@ -243,8 +243,8 @@ void GetMaxRho()
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Get_CMVel
-// Description :  Output center of mass velocity
+// Function    :  Remove_CMVel
+// Description :  Remove center of mass velocity
 //-------------------------------------------------------------------------------------------------------
 
 void Remove_CMVel()
@@ -252,19 +252,8 @@ void Remove_CMVel()
    
    cout << "Get center of mass velocity ..." << endl;
    double CMV[3] = {};
+   double massAll = 0.0;
    const double dh_min = amr.dh[NLEVEL-1];
-
-   long int *nCount       = new long int [NShell];
-   double   *volume       = new double   [NShell];
-   double   *average_dens = new double   [NShell];
-
-// initialize variables for storing average data
-   for (int n=0; n<NShell; n++)
-   {
-      average_dens[n] = 0.0;
-      nCount      [n] = 0;
-      volume      [n] = 0.0;
-   } // for (int n=0; n<NShell; n++)
 
 #  if   ( MODEL == HYDRO )
 #  warning : WAIT HYDRO !!!
@@ -273,13 +262,13 @@ void Remove_CMVel()
 #  warning : WAIT MHD !!!
 
 #  elif ( MODEL == ELBDM )
-   const int  NGhost = (ELBDM_GetVir) ? 2 : 0;
+   const int  NGhost = 2;
    const real _Eta   = 1.0/ELBDM_ETA;
    const real _2Eta  = 0.5*_Eta;
    const real _2Eta2 = _Eta*_2Eta;
    const real _Eta2  = _Eta*_Eta;
    real Dens, Real, Imag, Pot, _Dens, ParDens;
-   real GradR[3], GradI[3], GradD[3], _2dh, _dh2, dv_Eta;
+   real GradR[3], GradI[3], GradD[3], _2dh;
    real v[3], w[3];
 
 #  else
@@ -290,45 +279,29 @@ void Remove_CMVel()
    const bool ELBDM_IntPhase = false;
 #  endif
 
-#  if   ( MODEL == HYDRO )
-#  warning : WAIT HYDRO !!!
-
-#  elif ( MODEL == MHD )
-#  warning : WAIT MHD !!!
-
-#  elif ( MODEL == ELBDM )
    const int ArraySize = PATCH_SIZE + 2*NGhost;
    const int NPG       = 1;
    const NSide_t NSide = NSIDE_26;
 
-   int    ShellID, Var, i, j, k, im, jm, km, ip, jp, kp, POTE, PAR_DENS, NextIdx;
+   int    ShellID, Var, i, j, k, im, jm, km, ip, jp, kp;
    int    imm, jmm, kmm, ipp, jpp, kpp;
    long   TVar;
    double Radius, scale, dv;
    double x, x1, x2, y, y1, y2, z, z1, z2;   // (x,y,z) : relative coordinates to the vector "Center"
-   double massAll = 0.0;
 
-   real *Field1D = new real [NPG*8*NIn*ArraySize*ArraySize*ArraySize];
-   real (*Field)[NIn][ArraySize][ArraySize][ArraySize] = ( real(*)[NIn][ArraySize][ArraySize][ArraySize] )Field1D;
+   real *Field1D = new real [NPG*8*NCOMP_TOTAL*ArraySize*ArraySize*ArraySize];
+   real (*Field)[NCOMP_TOTAL][ArraySize][ArraySize][ArraySize] = ( real(*)[NCOMP_TOTAL][ArraySize][ArraySize][ArraySize] )Field1D;
 
 
 // determine the target variables
    TVar    = _TOTAL;
-   NextIdx = NCOMP_TOTAL;
-
-   if ( OutputPot     )    {  TVar |= _POTE;       POTE     = NextIdx ++;  }
-   if ( OutputParDens )    {  TVar |= _PAR_DENS;   PAR_DENS = NextIdx ++;  }
 
 
    for (int lv=0; lv<NLEVEL; lv++)
    {
       scale  = (double)amr.scale[lv];
       dv     = CUBE(scale);
-#     if ( MODEL == ELBDM )
       _2dh   = 0.5/amr.dh[lv];
-      _dh2   = 1.0/SQR(amr.dh[lv]);
-      dv_Eta = dv/ELBDM_ETA*CUBE( amr.dh[NLEVEL-1] );
-#     endif
 
       cout << "   Level " << lv << " ... ";
 
@@ -400,75 +373,66 @@ void Remove_CMVel()
                   if ( Dens == 0 )   continue;
 
 
-                  if ( ELBDM_GetVir )
+                  if ( ELBDM_RichExtrap )
                   {
-                     if ( Richardson )
-                     {
-                        // Richardson extrapolation 2 order
-                        GradD[0] = (    4*_2dh*( Field[p][DENS][k  ][j  ][ip ] - Field[p][DENS][k  ][j  ][im ] ) 
-                                    - 0.5*_2dh*( Field[p][DENS][k  ][j  ][ipp] - Field[p][DENS][k  ][j  ][imm] ))/3;
-                        GradD[1] = (    4*_2dh*( Field[p][DENS][k  ][jp ][i  ] - Field[p][DENS][k  ][jm ][i  ] )
-                                    - 0.5*_2dh*( Field[p][DENS][k  ][jpp][i  ] - Field[p][DENS][k  ][jmm][i  ] ))/3;
-                        GradD[2] = (    4*_2dh*( Field[p][DENS][kp ][j  ][i  ] - Field[p][DENS][km ][j  ][i  ] )
-                                    - 0.5*_2dh*( Field[p][DENS][kpp][j  ][i  ] - Field[p][DENS][kmm][j  ][i  ] ))/3;
+//                   Richardson extrapolation 2 order
+                     GradD[0] = (    4*_2dh*( Field[p][DENS][k  ][j  ][ip ] - Field[p][DENS][k  ][j  ][im ] ) 
+                                 - 0.5*_2dh*( Field[p][DENS][k  ][j  ][ipp] - Field[p][DENS][k  ][j  ][imm] ))/3;
+                     GradD[1] = (    4*_2dh*( Field[p][DENS][k  ][jp ][i  ] - Field[p][DENS][k  ][jm ][i  ] )
+                                 - 0.5*_2dh*( Field[p][DENS][k  ][jpp][i  ] - Field[p][DENS][k  ][jmm][i  ] ))/3;
+                     GradD[2] = (    4*_2dh*( Field[p][DENS][kp ][j  ][i  ] - Field[p][DENS][km ][j  ][i  ] )
+                                 - 0.5*_2dh*( Field[p][DENS][kpp][j  ][i  ] - Field[p][DENS][kmm][j  ][i  ] ))/3;
 
-                        GradR[0] = (    4*_2dh*( Field[p][REAL][k  ][j  ][ip ] - Field[p][REAL][k  ][j  ][im ] )
-                                    - 0.5*_2dh*( Field[p][REAL][k  ][j  ][ipp] - Field[p][REAL][k  ][j  ][imm] ))/3;
-                        GradR[1] = (    4*_2dh*( Field[p][REAL][k  ][jp ][i  ] - Field[p][REAL][k  ][jm ][i  ] )
-                                    - 0.5*_2dh*( Field[p][REAL][k  ][jpp][i  ] - Field[p][REAL][k  ][jmm][i  ] ))/3;
-                        GradR[2] = (    4*_2dh*( Field[p][REAL][kp ][j  ][i  ] - Field[p][REAL][km ][j  ][i  ] )
-                                    - 0.5*_2dh*( Field[p][REAL][kpp][j  ][i  ] - Field[p][REAL][kmm][j  ][i  ] ))/3;
+                     GradR[0] = (    4*_2dh*( Field[p][REAL][k  ][j  ][ip ] - Field[p][REAL][k  ][j  ][im ] )
+                                 - 0.5*_2dh*( Field[p][REAL][k  ][j  ][ipp] - Field[p][REAL][k  ][j  ][imm] ))/3;
+                     GradR[1] = (    4*_2dh*( Field[p][REAL][k  ][jp ][i  ] - Field[p][REAL][k  ][jm ][i  ] )
+                                 - 0.5*_2dh*( Field[p][REAL][k  ][jpp][i  ] - Field[p][REAL][k  ][jmm][i  ] ))/3;
+                     GradR[2] = (    4*_2dh*( Field[p][REAL][kp ][j  ][i  ] - Field[p][REAL][km ][j  ][i  ] )
+                                 - 0.5*_2dh*( Field[p][REAL][kpp][j  ][i  ] - Field[p][REAL][kmm][j  ][i  ] ))/3;
 
-                        GradI[0] = (    4*_2dh*( Field[p][IMAG][k  ][j  ][ip ] - Field[p][IMAG][k  ][j  ][im ] )
-                                    - 0.5*_2dh*( Field[p][IMAG][k  ][j  ][ipp] - Field[p][IMAG][k  ][j  ][imm] ))/3;
-                        GradI[1] = (    4*_2dh*( Field[p][IMAG][k  ][jp ][i  ] - Field[p][IMAG][k  ][jm ][i  ] )
-                                    - 0.5*_2dh*( Field[p][IMAG][k  ][jpp][i  ] - Field[p][IMAG][k  ][jmm][i  ] ))/3;
-                        GradI[2] = (    4*_2dh*( Field[p][IMAG][kp ][j  ][i  ] - Field[p][IMAG][km ][j  ][i  ] )
-                                    - 0.5*_2dh*( Field[p][IMAG][kpp][j  ][i  ] - Field[p][IMAG][kmm][j  ][i  ] ))/3;
-                     }
-                     else
-                     {
-                        GradD[0] = _2dh*( Field[p][DENS][k ][j ][ip] - Field[p][DENS][k ][j ][im] );
-                        GradD[1] = _2dh*( Field[p][DENS][k ][jp][i ] - Field[p][DENS][k ][jm][i ] );
-                        GradD[2] = _2dh*( Field[p][DENS][kp][j ][i ] - Field[p][DENS][km][j ][i ] );
+                     GradI[0] = (    4*_2dh*( Field[p][IMAG][k  ][j  ][ip ] - Field[p][IMAG][k  ][j  ][im ] )
+                                 - 0.5*_2dh*( Field[p][IMAG][k  ][j  ][ipp] - Field[p][IMAG][k  ][j  ][imm] ))/3;
+                     GradI[1] = (    4*_2dh*( Field[p][IMAG][k  ][jp ][i  ] - Field[p][IMAG][k  ][jm ][i  ] )
+                                 - 0.5*_2dh*( Field[p][IMAG][k  ][jpp][i  ] - Field[p][IMAG][k  ][jmm][i  ] ))/3;
+                     GradI[2] = (    4*_2dh*( Field[p][IMAG][kp ][j  ][i  ] - Field[p][IMAG][km ][j  ][i  ] )
+                                 - 0.5*_2dh*( Field[p][IMAG][kpp][j  ][i  ] - Field[p][IMAG][kmm][j  ][i  ] ))/3;
+                  }
+                  else
+                  {
+                     GradD[0] = _2dh*( Field[p][DENS][k ][j ][ip] - Field[p][DENS][k ][j ][im] );
+                     GradD[1] = _2dh*( Field[p][DENS][k ][jp][i ] - Field[p][DENS][k ][jm][i ] );
+                     GradD[2] = _2dh*( Field[p][DENS][kp][j ][i ] - Field[p][DENS][km][j ][i ] );
 
-                        GradR[0] = _2dh*( Field[p][REAL][k ][j ][ip] - Field[p][REAL][k ][j ][im] );
-                        GradR[1] = _2dh*( Field[p][REAL][k ][jp][i ] - Field[p][REAL][k ][jm][i ] );
-                        GradR[2] = _2dh*( Field[p][REAL][kp][j ][i ] - Field[p][REAL][km][j ][i ] );
+                     GradR[0] = _2dh*( Field[p][REAL][k ][j ][ip] - Field[p][REAL][k ][j ][im] );
+                     GradR[1] = _2dh*( Field[p][REAL][k ][jp][i ] - Field[p][REAL][k ][jm][i ] );
+                     GradR[2] = _2dh*( Field[p][REAL][kp][j ][i ] - Field[p][REAL][km][j ][i ] );
 
-                        GradI[0] = _2dh*( Field[p][IMAG][k ][j ][ip] - Field[p][IMAG][k ][j ][im] );
-                        GradI[1] = _2dh*( Field[p][IMAG][k ][jp][i ] - Field[p][IMAG][k ][jm][i ] );
-                        GradI[2] = _2dh*( Field[p][IMAG][kp][j ][i ] - Field[p][IMAG][km][j ][i ] );
-                     }
+                     GradI[0] = _2dh*( Field[p][IMAG][k ][j ][ip] - Field[p][IMAG][k ][j ][im] );
+                     GradI[1] = _2dh*( Field[p][IMAG][k ][jp][i ] - Field[p][IMAG][k ][jm][i ] );
+                     GradI[2] = _2dh*( Field[p][IMAG][kp][j ][i ] - Field[p][IMAG][km][j ][i ] );
+                  }
 
-                     _Dens  = 1.0 / Dens;
+                  _Dens  = 1.0 / Dens;
 
-                     for (int d=0; d<3; d++)
-                     {
-                        v[d] = _Eta*_Dens*( Real*GradI[d] - Imag*GradR[d] );
-                        // w[d] = _2Eta*_Dens*GradD[d]; // This would cause jumped velocity sometimes
-                        w[d] = _Eta*_Dens*( Real*GradR[d] + Imag*GradI[d] );
+                  for (int d=0; d<3; d++)
+                  {
+                     v[d] = _Eta*_Dens*( Real*GradI[d] - Imag*GradR[d] );
+                     // w[d] = _2Eta*_Dens*GradD[d]; // This would cause jumped velocity sometimes
+                     w[d] = _Eta*_Dens*( Real*GradR[d] + Imag*GradI[d] );
 
-                     }
+                  }
 
-//                   sum up velocity for CMV
-                     CMV[0] += (double)(dv*Dens*v[0]);
-                     CMV[1] += (double)(dv*Dens*v[1]);
-                     CMV[2] += (double)(dv*Dens*v[2]);
-
-                  } // if ( ELBDM_GetVir )
+//                sum up velocity for CMV
+                  CMV[0] += (double)(dv*Dens*v[0]);
+                  CMV[1] += (double)(dv*Dens*v[1]);
+                  CMV[2] += (double)(dv*Dens*v[2]);
 
 //                sum up values at the same shell
-                  Var = 0;
-                  average_dens[ShellID] += (double)(dv*Dens);
-
+                  massAll += (double)(dv*Dens);
 
 #                 else
 #                 error : ERROR : unsupported MODEL !!
 #                 endif // MODEL
-
-                  volume[ShellID] += dv;
-                  nCount[ShellID] ++;
 
                } // if ( Radius < MaxRadius )
             }}} // kk, jj, ii
@@ -479,12 +443,7 @@ void Remove_CMVel()
 
    } // for (int lv=0; lv<NLEVEL; lv++)
    delete [] Field1D;
-#  else
-#  error : ERROR : unsupported MODEL !!
-#  endif // MODEL
 
-// get the average values
-   for (int n=0; n<NShell; n++)    average_dens[n] /= volume[n];
 
 // get the average velocity
 #  if   ( MODEL == HYDRO )
@@ -494,21 +453,13 @@ void Remove_CMVel()
 #  warning : WAIT MHD !!!
 
 #  elif ( MODEL == ELBDM )
-   if ( ELBDM_GetVir )
-   {
-      for (int n=0; n<NShell; n++)
-         if (nCount[n]!=0)  massAll += volume[n]*average_dens[n];
-      for (int t=0; t<3; t++) CMV[t] = CMV[t]/massAll;
-   }
+   for (int t=0; t<3; t++) CMV[t] = CMV[t]/massAll;
 
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
 
 
-   if ( volume        != NULL )  delete [] volume;
-   if ( nCount        != NULL )  delete [] nCount;
-   if ( average_dens  != NULL )  delete [] average_dens;
    cout << " Bulk CoM velocity = ("<< CMV[0]<< ", "<< CMV[1] << ", "<<CMV[2]<< ")" << endl;
 
    cout << "Remove the motion of center-of-mass by phase shift" << endl;
@@ -558,7 +509,7 @@ void Remove_CMVel()
 #   else
 #   error : ERROR : unsupported MODEL !!
 #   endif // MODEL
-} // FUNCTION : Get_CMVel 
+} // FUNCTION : Remove_CMVel 
 
 
 
@@ -744,9 +695,9 @@ void GetRMS()
 
                   if ( ELBDM_GetVir )
                   {
-                     if (Richardson)
+                     if ( ELBDM_RichExtrap )
                      {
-                        // Richardson extrapolation 2 order
+//                      Richardson extrapolation 2 order
                         GradD[0] = (    4*_2dh*( Field[p][DENS][k  ][j  ][ip ] - Field[p][DENS][k  ][j  ][im ] ) 
                                     - 0.5*_2dh*( Field[p][DENS][k  ][j  ][ipp] - Field[p][DENS][k  ][j  ][imm] ))/3;
                         GradD[1] = (    4*_2dh*( Field[p][DENS][k  ][jp ][i  ] - Field[p][DENS][k  ][jm ][i  ] )
@@ -821,6 +772,7 @@ void GetRMS()
                      wr_abs = fabs( wr );
                      wt_abs = sqrt(  fabs( w[0]*w[0] + w[1]*w[1] + w[2]*w[2] - wr*wr )  );
 
+                     if ( OutputSphVel ){
                      v_sph[0] = vr;
                      v_sph[1] = ( z*x*v[0] + z*y*v[1] - (x*x+y*y)*v[2] ) /sqrt(x*x+y*y) / Radius;
                      v_sph[2] = ( -y*v[0] + x*v[1] ) /sqrt(x*x+y*y);
@@ -828,6 +780,7 @@ void GetRMS()
                      w_sph[0] = wr;
                      w_sph[1] = ( z*x*w[0] + z*y*w[1] - (x*x+y*y)*w[2] ) /sqrt(x*x+y*y) / Radius;
                      w_sph[2] = ( -y*w[0] + x*w[1] ) /sqrt(x*x+y*y);
+                     }
                   } // if ( ELBDM_GetVir )
 
 
@@ -856,7 +809,7 @@ void GetRMS()
                   RMS[ShellID][Var] += dv*pow( double(wr_abs )-Average[ShellID][Var], 2.0 );  Var++;
                   RMS[ShellID][Var] += dv*pow( double(wt_abs )-Average[ShellID][Var], 2.0 );  Var++; }
 
-                  if ( OutputSphere ) {
+                  if ( OutputSphVel ) {
                   RMS[ShellID][Var] += dv*Dens*pow( double(v_sph[0])-Average[ShellID][Var], 2.0 );  Var++;
                   RMS[ShellID][Var] += dv*Dens*pow( double(v_sph[1])-Average[ShellID][Var], 2.0 );  Var++;
                   RMS[ShellID][Var] += dv*Dens*pow( double(v_sph[2])-Average[ShellID][Var], 2.0 );  Var++;
@@ -882,8 +835,10 @@ void GetRMS()
    for (int n=0; n<NShell; n++)
    for (int v=0; v<NOut; v++)    RMS[n][v] = sqrt( RMS[n][v]/Volume[n] );
 
+   if ( OutputSphVel ){
    for (int n=0; n<NShell; n++)
    for (int v=NOut-6; v<NOut; v++)    RMS[n][v] = RMS[n][v]/sqrt(Average[n][0]);
+   }
 
    delete [] Field1D;
 
@@ -1112,9 +1067,9 @@ void ShellAverage()
 
                   if ( ELBDM_GetVir )
                   {
-                     if (Richardson)
+                     if ( ELBDM_RichExtrap )
                      {
-                        // Richardson extrapolation 2 order
+//                      Richardson extrapolation 2 order
                         GradD[0] = (    4*_2dh*( Field[p][DENS][k  ][j  ][ip ] - Field[p][DENS][k  ][j  ][im ] ) 
                                     - 0.5*_2dh*( Field[p][DENS][k  ][j  ][ipp] - Field[p][DENS][k  ][j  ][imm] ))/3;
                         GradD[1] = (    4*_2dh*( Field[p][DENS][k  ][jp ][i  ] - Field[p][DENS][k  ][jm ][i  ] )
@@ -1193,6 +1148,7 @@ void ShellAverage()
                      wr1 = fabs( wr );
                      wt1 = sqrt( wt2 );
 
+                     if ( OutputSphVel ){
                      v_sph[0] = vr;
                      v_sph[1] = ( z*x*v[0] + z*y*v[1] - (x*x+y*y)*v[2] ) /sqrt(x*x+y*y) / Radius;
                      v_sph[2] = ( -y*v[0] + x*v[1]) /sqrt(x*x+y*y);
@@ -1200,6 +1156,7 @@ void ShellAverage()
                      w_sph[0] = wr;
                      w_sph[1] = ( z*x*w[0] + z*y*w[1] - (x*x+y*y)*w[2] ) /sqrt(x*x+y*y) / Radius;
                      w_sph[2] = ( -y*w[0] + x*w[1]) /sqrt(x*x+y*y);
+                     }
                   } // if ( ELBDM_GetVir )
 
 
@@ -1228,7 +1185,7 @@ void ShellAverage()
                   Average[ShellID][Var++] += (double)(dv*Dens*wr2 );
                   Average[ShellID][Var++] += (double)(dv*Dens*wt2 );
 
-                  if ( OutputSphere ) {
+                  if ( OutputSphVel ) {
                   Average[ShellID][Var++] += (double)(dv*Dens*v_sph[0] );
                   Average[ShellID][Var++] += (double)(dv*Dens*v_sph[1] );
                   Average[ShellID][Var++] += (double)(dv*Dens*v_sph[2] );
@@ -1273,7 +1230,7 @@ void ShellAverage()
                   if ( wr1     > Max[ShellID][Var] )  Max[ShellID][Var] = wr1;      Var++;
                   if ( wt1     > Max[ShellID][Var] )  Max[ShellID][Var] = wt1;      Var++; }
 
-                  if ( OutputSphere ) {
+                  if ( OutputSphVel ) {
                   if ( v_sph[0] > Max[ShellID][Var] )  Max[ShellID][Var] = v_sph[0];  Var++;
                   if ( v_sph[1] > Max[ShellID][Var] )  Max[ShellID][Var] = v_sph[1];  Var++;
                   if ( v_sph[2] > Max[ShellID][Var] )  Max[ShellID][Var] = v_sph[2];  Var++;
@@ -1305,7 +1262,7 @@ void ShellAverage()
                   if ( wr1     < Min[ShellID][Var] )  Min[ShellID][Var] = wr1;      Var++;
                   if ( wt1     < Min[ShellID][Var] )  Min[ShellID][Var] = wt1;      Var++; }
 
-                  if ( OutputSphere ) {
+                  if ( OutputSphVel ) {
                   if ( v_sph[0] < Min[ShellID][Var] )  Min[ShellID][Var] = v_sph[0];  Var++;
                   if ( v_sph[1] < Min[ShellID][Var] )  Min[ShellID][Var] = v_sph[1];  Var++;
                   if ( v_sph[2] < Min[ShellID][Var] )  Min[ShellID][Var] = v_sph[2];  Var++;
@@ -1366,12 +1323,16 @@ void ShellAverage()
       for (int n=0; n<NShell; n++)
       {
 //       <v> = <Rho*v>/<Rho>, <|v|> = sqrt( <Rho*v^2>/<Rho> )
-         for (int t=0; t<12; t++)    Average[n][Idx_v+t] /= Average[n][0];
+         for (int t=0; t<6; t++)    Average[n][Idx_v+t] /= Average[n][0];
 
          Average[n][Idx_v+1] = sqrt( Average[n][Idx_v+1] );
          Average[n][Idx_v+2] = sqrt( Average[n][Idx_v+2] );
          Average[n][Idx_v+4] = sqrt( Average[n][Idx_v+4] );
          Average[n][Idx_v+5] = sqrt( Average[n][Idx_v+5] );
+
+         if ( OutputSphVel ) {
+         for (int t=6; t<12; t++)   Average[n][Idx_v+t] /= Average[n][0];
+         }
       }
    }
 
@@ -1400,65 +1361,65 @@ void ReadOption( int argc, char **argv )
    {
       switch ( c )
       {
-         case 'i': FileName_In      = optarg;
+         case 'i': FileName_In       = optarg;
                    break;
-         case 'e': FileName_Tree    = optarg;
+         case 'e': FileName_Tree     = optarg;
                    break;
-         case 'o': Suffix           = optarg;
+         case 'o': Suffix            = optarg;
                    break;
-         case 'n': NShell           = atoi(optarg);
+         case 'n': NShell            = atoi(optarg);
                    break;
-         case 'x': Center[0]        = atof(optarg);
+         case 'x': Center[0]         = atof(optarg);
                    break;
-         case 'y': Center[1]        = atof(optarg);
+         case 'y': Center[1]         = atof(optarg);
                    break;
-         case 'z': Center[2]        = atof(optarg);
+         case 'z': Center[2]         = atof(optarg);
                    break;
-         case 'r': MaxRadius        = atof(optarg);
+         case 'r': MaxRadius         = atof(optarg);
                    break;
-         case 'R': UseMaxRhoPos_R   = atof(optarg);
+         case 'R': UseMaxRhoPos_R    = atof(optarg);
                    break;
-         case 'p': Periodic         = true;
+         case 'p': Periodic          = true;
                    break;
-         case 'm': UseMaxRhoPos     = atoi(optarg);
+         case 'm': UseMaxRhoPos      = atoi(optarg);
                    break;
-         case 'D': UseMaxRhoPos_Par = true;
+         case 'D': UseMaxRhoPos_Par  = true;
                    break;
-         case 'S': Mode_ShellAve    = true;
+         case 'S': Mode_ShellAve     = true;
                    break;
-         case 'M': Mode_MaxRho      = true;
+         case 'M': Mode_MaxRho       = true;
                    break;
-         case 't': RhoThres         = atof(optarg);
+         case 't': RhoThres          = atof(optarg);
                    break;
-         case 's': InputScale       = true;
+         case 's': InputScale        = true;
                    break;
-         case 'L': LogBin           = atof(optarg);
+         case 'L': LogBin            = atof(optarg);
                    break;
-         case 'a': GetNShell        = atof(optarg);
+         case 'a': GetNShell         = atof(optarg);
                    break;
-         case 'I': IntScheme        = (IntScheme_t)atoi(optarg);
+         case 'I': IntScheme         = (IntScheme_t)atoi(optarg);
                    break;
-         case 'T': UseTree          = true;
+         case 'T': UseTree           = true;
                    break;
 #        if ( MODEL == ELBDM )
-         case 'P': ELBDM_IntPhase   = false;
+         case 'P': ELBDM_IntPhase    = false;
                    break;
-         case 'V': ELBDM_GetVir     = true;
+         case 'V': ELBDM_GetVir      = true;
                    break;
-         case 'b': Richardson       = false;
+         case 'b': ELBDM_RichExtrap = false;
                    break;
 #        endif
-         case 'u': INT_MONO_COEFF   = atof(optarg);
+         case 'u': INT_MONO_COEFF    = atof(optarg);
                    break;
-         case 'c': OutputCenter     = true;
+         case 'c': OutputCenter      = true;
                    break;
-         case 'g': GetAvePot        = true;
+         case 'g': GetAvePot         = true;
                    break;
-         case 'G': NewtonG          = atof(optarg);
+         case 'G': NewtonG           = atof(optarg);
                    break;
-         case 'O': OutputSphere     = true;
+         case 'O': OutputSphVel      = true;
                    break;
-         case 'C': RemoveCMV        = true;
+         case 'C': RemoveCMV         = true;
                    break;
          case 'h':
          case '?': cerr << endl << "usage: " << argv[0]
@@ -1501,6 +1462,10 @@ void ReadOption( int argc, char **argv )
                         << " [-S (turn on the mode \"shell average\") [off]]"
                         << endl << "                             "
                         << " [-M (turn on the mode \"maximum density\") [off]]"
+                        << endl << "                             "
+                        << " [-O (output the spherical velocity components) [off]]"
+                        << endl << "                             "
+                        << " [-C (remove the center-of-mass velocity) [off]]"
                         << endl << endl;
                    exit( 1 );
 
@@ -1564,6 +1529,12 @@ void ReadOption( int argc, char **argv )
       GetAvePot = true;
 
       fprintf( stdout, "NOTE : option \"GetAvePot (-g)\" is turned on automatically for \"ELBDM_GetVir (-V)\"\n" );
+   }
+   if ( ELBDM_GetVir  &&  !OutputSphVel )
+   {
+      OutputSphVel = true;
+
+      fprintf( stdout, "NOTE : option \"OutputSphVel (-O)\" is turned on automatically for \"ELBDM_GetVir (-V)\"\n" );
    }
 #  endif
 
@@ -1701,7 +1672,7 @@ void Output_ShellAve()
                         sprintf( FileName[Var++], "%s", "AveWr-A"  );
                         sprintf( FileName[Var++], "%s", "AveWt-A"  );
    }
-   if ( OutputSphere )
+   if ( OutputSphVel )
    {
                         sprintf( FileName[Var++], "%s", "AveVr"    );
                         sprintf( FileName[Var++], "%s", "AveVtheta");
@@ -1797,7 +1768,7 @@ void Output_ShellAve()
       fprintf( File, "#%19s  %10s  %13s  %13s  %13s  %13s", "Radius", "NCount", "Ave", "RMS", "Max", "Min" );
 
       if ( OutputAccMass )
-      fprintf( File, "  %13s  %13s  %13s  %13s","ShellMass", "ShellVol", "AccMass", "AveDens" );
+      fprintf( File, "  %13s  %13s  %13s  %13s %13s","ShellMass", "ShellVol", "AccMass", "AccVolume", "AveDens" );
 
 #     if ( MODEL == ELBDM )
       if ( ELBDM_OutputAccEk )
@@ -1829,7 +1800,7 @@ void Output_ShellAve()
             AccMass   += Average[n][v]*Volume[n];
             AccVolume += Volume[n];
 
-            fprintf( File, "  %13.6e  %13.6e  %13.6e  %13.6e", Average[n][v]*Volume[n], Volume[n], AccMass, AccMass/AccVolume );
+            fprintf( File, "  %13.6e  %13.6e  %13.6e  %13.6e %13.6e", Average[n][v]*Volume[n], Volume[n], AccMass, AccVolume, AccMass/AccVolume );
          }
 
 
@@ -2529,9 +2500,12 @@ void TakeNote( int argc, char **argv )
    printf( "ELBDM_GetVir     =  %s\n",      (ELBDM_GetVir  )?"YES":"NO" );
    printf( "ELBDM_ETA        = %14.7e\n",   ELBDM_ETA );
    printf( "ELBDMScheme      =  %d\n",      ELBDM_Scheme   );
+   printf( "ELBDM_RichExtrap =  %s\n",      (ELBDM_RichExtrap)?"YES":"NO" );
 #  endif
    printf( "INT_MONO_COEFF   = %14.7e\n",   INT_MONO_COEFF );
    printf( "GetAvePot        =  %s\n",      (GetAvePot)?"YES":"NO"      );
+   printf( "Remove_CMVel     =  %s\n",      (Remove_CMVel)?"YES":"NO"  );
+   printf( "OutputSphVel     =  %s\n",      (OutputSphVel)?"YES":"NO"  );
    if ( GetAvePot )
    printf( "NewtonG          = %14.7e\n",   NewtonG                     );
    printf( "======================================================================================\n"   );
