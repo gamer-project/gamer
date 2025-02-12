@@ -1,6 +1,5 @@
 # measure high resolution power spectrum using nbodykit
 # to install nbodykit, follow the instruction from https://nbodykit.readthedocs.io/en/latest/getting-started/install.html
-# hint: install cython version 0.29 instead of the latest version to avoid gil error (by pip install Cython==0.29.37)
 from nbodykit.lab import RandomCatalog, FFTPower
 import numpy as np
 import h5py
@@ -21,17 +20,21 @@ posz = np.array(snapshot["Particle/ParPosZ"])
 pos = np.vstack((posx, posy, posz)).T
 
 # create a catalog object
+# ref: https://nbodykit.readthedocs.io/en/latest/catalogs/mock-data.html#RandomCatalog
 particle_catalog = RandomCatalog(csize=npar) # overwritten by the actual values below
 
 particle_catalog['Mass'] = mass
 particle_catalog['Position'] = pos
 
-# create a mesh object
-mesh = particle_catalog.to_mesh(Nmesh=Nmesh, BoxSize=boxsize)#, value='Mass')
+# create a mesh object 
+# ref: https://nbodykit.readthedocs.io/en/latest/api/_autosummary/nbodykit.base.catalog.html#nbodykit.base.catalog.CatalogSource.to_mesh
+mesh = particle_catalog.to_mesh(Nmesh=Nmesh, BoxSize=boxsize)
 
 # compute the power spectrum
+# ref: https://nbodykit.readthedocs.io/en/latest/api/_autosummary/nbodykit.algorithms.fftpower.html#nbodykit.algorithms.fftpower.FFTPower
+#      https://nbodykit.readthedocs.io/en/latest/results/algorithms/fftpower.html#fftpower
 boxlen = boxsize[0]
-r = FFTPower(mesh, mode='1d', kmin=1/boxlen, kmax=Nmesh/boxlen, dk=0.1)
+r = FFTPower(mesh, mode='1d', kmin=2*np.pi/boxlen, kmax=np.pi*Nmesh/boxlen, dk=2*np.pi/boxlen)
 
 # the result is stored at "power" attribute
 Pk = r.power

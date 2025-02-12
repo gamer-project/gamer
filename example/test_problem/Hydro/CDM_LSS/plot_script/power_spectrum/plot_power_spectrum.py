@@ -11,7 +11,7 @@ particle_lv      = 7
 a_dump           = np.genfromtxt("../../Record__Dump", skip_header=1)
 a_dump           = a_dump[:,1]
 
-data_music       = np.loadtxt("../../input_powerspec.txt")
+data_music       = np.loadtxt("./input_powerspec.txt")
 k_music          = data_music[:,0]
 PS_music         = data_music[:,-2]
 
@@ -39,7 +39,7 @@ plt.figure(figsize=(7,3), dpi=320)
 plt.subplots_adjust(wspace=0.25)
 ax1 = plt.subplot(121)
 ax1.loglog(k_music, PS_music, c='k', ls="--", label="MUSIC Input PS", lw=0.5)
-ax1.loglog(k_camb, PS_camb, c='r', ls="--", label="CAMB PS (z=0; Planck18)", lw=0.5)
+ax1.loglog(k_camb, PS_camb, c='r', ls="--", label="CAMB PS ($z$=0; Planck18)", lw=0.5)
 ax1.loglog(k_hires, PS_hires, c='b', ls="--", label="$z$ = 0.0 (NMesh=512)", lw=0.5)
 k_min = 2.*np.pi/box_length
 k_max = k_min*2**(particle_lv)/2.
@@ -67,7 +67,7 @@ ax1.set_xticklabels(10.**np.arange(-1,3.1,1.), fontsize=7.)
 ax1.xaxis.set_minor_locator(minor_ticks_x)
 ax1.xaxis.set_major_formatter(LogFormatterSciNotation(base=10.0))
 ax1.xaxis.set_minor_formatter(NullFormatter())
-ax1.set_ylim([10**-8.1,10**0.6])
+ax1.set_ylim([10**-8.1,10**1.2])
 ax1.set_yticks(10.**np.arange(-8,1.1,2.))
 ax1.set_yticklabels(10.**np.arange(-8,1.1,2.), fontsize=7.)
 ax1.yaxis.set_minor_locator(minor_ticks_y)
