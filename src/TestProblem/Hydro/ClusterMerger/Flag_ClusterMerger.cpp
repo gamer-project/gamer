@@ -7,7 +7,6 @@
 
 extern int    Merger_Coll_NumHalos;
 extern double R_acc;                // the radius to compute the accretoin rate
-extern double Jet_Vec[3][3];        // jet direction
 extern double ClusterCen[3][3];
 
 static bool   FirstTime = true;
