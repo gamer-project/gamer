@@ -267,6 +267,7 @@ void LoadData_HDF5( const char *FileName )
          OutputParDens = 0;
 
 #     if   ( MODEL == HYDRO )
+      if ( OutputSphVel )  NOut += 3;
 #     elif ( MODEL == MHD )
 #     elif ( MODEL == ELBDM )
       if ( ELBDM_GetVir )  NOut += 8;

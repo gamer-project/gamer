@@ -257,6 +257,8 @@ void Remove_CMVel()
 
 #  if   ( MODEL == HYDRO )
 #  warning : WAIT HYDRO !!!
+   const int NGhost = 0;
+   real rho, vx, vy, vz, vr, vt, egy, pres, Pot, ParDens;
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -301,7 +303,9 @@ void Remove_CMVel()
    {
       scale  = (double)amr.scale[lv];
       dv     = CUBE(scale);
+#     if ( MODEL == ELBDM )
       _2dh   = 0.5/amr.dh[lv];
+      #     endif
 
       cout << "   Level " << lv << " ... ";
 
@@ -526,6 +530,7 @@ void GetRMS()
 #  if   ( MODEL == HYDRO )
    const int NGhost = 0;
    real rho, vx, vy, vz, vr, vt, egy, pres, Pot, ParDens;
+   real v_sph[3];
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -655,6 +660,13 @@ void GetRMS()
                   vr   = ( x*vx + y*vy + z*vz ) / Radius;
                   vt   = sqrt( fabs(vx*vx + vy*vy + vz*vz - vr*vr) );
 
+                  if ( OutputSphVel )
+                  {
+                     v_sph[0] = vr;
+                     v_sph[1] = ( z*x*vx + z*y*vy - (x*x+y*y)*vz ) /sqrt(x*x+y*y) / Radius;
+                     v_sph[2] = ( x*vy - y*vx ) /sqrt(x*x+y*y);
+                  }
+
 
 //                evalute the square of deviation on the shell
                   Var = 0;
@@ -672,6 +684,11 @@ void GetRMS()
 
                   if ( OutputParDens ) {
                   RMS[ShellID][Var] += dv*pow( double(ParDens)-Average[ShellID][Var], 2.0 );    Var++; }
+
+                  if ( OutputSphVel ) {
+                  RMS[ShellID][Var] += dv*rho*pow( double(v_sph[0])-Average[ShellID][Var], 2.0 );    Var++;
+                  RMS[ShellID][Var] += dv*rho*pow( double(v_sph[1])-Average[ShellID][Var], 2.0 );    Var++;
+                  RMS[ShellID][Var] += dv*rho*pow( double(v_sph[2])-Average[ShellID][Var], 2.0 );    Var++; }
 
 #                 elif ( MODEL == MHD )
 #                 warning : WAIT MHD !!!
@@ -859,6 +876,7 @@ void ShellAverage()
 #  if   ( MODEL == HYDRO )
    const int NGhost = 0;
    real px, py, pz, pr, pt, vr, vt, pres, rho, egy, Pot, ParDens;
+   real v_sph[3];
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
@@ -992,6 +1010,13 @@ void ShellAverage()
                   vr   = pr/rho;
                   vt   = pt/rho;
 
+                  if ( OutputSphVel )
+                  {
+                     v_sph[0] = vr;
+                     v_sph[1] = ( z*x*px + z*y*py - (x*x+y*y)*pz ) /sqrt(x*x+y*y) / Radius;
+                     v_sph[2] = ( x*py - y*px ) /sqrt(x*x+y*y);
+                  }
+
 
 //                sum up values at the same shell
                   Var = 0;
@@ -1009,6 +1034,13 @@ void ShellAverage()
 
                   if ( OutputParDens )
                   Average[ShellID][Var++] += (double)(dv*ParDens );
+
+                  if ( OutputSphVel )
+                  {
+                     Average[ShellID][Var++] += (double)(dv*rho*v_sph[0]);
+                     Average[ShellID][Var++] += (double)(dv*rho*v_sph[1]);
+                     Average[ShellID][Var++] += (double)(dv*rho*v_sph[2]);
+                  }
 
 
 //                store the maximum and minimum values
@@ -1649,6 +1681,12 @@ void Output_ShellAve()
    if      ( OutputPot )            sprintf( FileName[Var++], "%s", "AvePot"     );
    if      ( OutputParDens == 1 )   sprintf( FileName[Var++], "%s", "AveParDens" );
    else if ( OutputParDens == 2 )   sprintf( FileName[Var++], "%s", "AveTotDens" );
+   if      ( OutputSphVel )
+   {
+                                    sprintf( FileName[Var++], "%s", "AveVr"     );
+                                    sprintf( FileName[Var++], "%s", "AveVtheta" );
+                                    sprintf( FileName[Var++], "%s", "AveVphi"   );
+   }
 
 #  elif ( MODEL == MHD )
 #  warning : WAIT MHD !!!
