@@ -19,7 +19,7 @@ Default setup:
 
 3. PAR_IC_FORMAT           1
    PAR_IC_MASS            -1.0
-   PAR_IC_TYPE            -1
+   PAR_IC_TYPE             2
 
 
 Note:
