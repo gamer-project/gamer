@@ -71,7 +71,7 @@ void Src_Init()
 #  if ( MODEL == HYDRO )
    SrcTerms.EC_FuncPtr                = NULL;
    SrcTerms.EC_CPUPtr                 = NULL;
-#  ifdef GPUEC
+#  ifdef GPU
    SrcTerms.EC_GPUPtr                 = NULL;
 #  endif
    SrcTerms.EC_AuxArrayDevPtr_Flt     = NULL;
