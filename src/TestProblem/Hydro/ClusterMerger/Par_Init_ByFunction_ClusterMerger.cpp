@@ -600,10 +600,10 @@ void Aux_Record_ClusterMerger()
          {
             fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "x",             c, "y",             c, "z",             c );
             fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "BHVel_x[km/s]", c, "BHVel_y",       c, "BHVel_z",       c );
-            fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "GasVel_x",      c,"GasVel_y",       c,"GasVel_z",       c );
+            fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "GasVel_x",      c, "GasVel_y",      c,"GasVel_z",       c );
             fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "RelativeVel",   c, "SoundSpeed",    c, "GasDens(cgs)",  c );
             fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "mass_BH[Msun]", c, "Mdot(cgs)",     c, "NVoidCell",     c );
-            fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "MomXInj(cgs)",  c, "MomYInj",       c,"MomZInj",        c );
+            fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "MomXInj(cgs)",  c, "MomYInj",       c, "MomZInj",       c );
             fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "MomXInjAbs",    c, "MomYInjAbs",    c, "MomZInjAbs",    c );
             fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "EInj_exp[erg]", c, "E_Inj[erg]",    c, "E_Inj_err",     c );
             fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "Ek_Inj[erg]",   c, "Et_Inj[erg]",   c, "PowerInj(cgs)", c );
@@ -628,17 +628,17 @@ void Aux_Record_ClusterMerger()
 
    for (int c=0; c<Merger_Coll_NumHalos; c++)
    {
-      MPI_Reduce( &CM_Bondi_SinkNCell[c],  &SinkNCell_Sum[c], 1, MPI_INT,    MPI_SUM, 0, MPI_COMM_WORLD );
-      MPI_Reduce( &CM_Bondi_SinkMass[c],    &Mass_Sum[c],     1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-      MPI_Reduce( &CM_Bondi_SinkMomX[c],    &MomX_Sum[c],     1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-      MPI_Reduce( &CM_Bondi_SinkMomY[c],    &MomY_Sum[c],     1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-      MPI_Reduce( &CM_Bondi_SinkMomZ[c],    &MomZ_Sum[c],     1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-      MPI_Reduce( &CM_Bondi_SinkMomXAbs[c], &MomXAbs_Sum[c],  1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-      MPI_Reduce( &CM_Bondi_SinkMomYAbs[c], &MomYAbs_Sum[c],  1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-      MPI_Reduce( &CM_Bondi_SinkMomZAbs[c], &MomZAbs_Sum[c],  1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-      MPI_Reduce( &CM_Bondi_SinkE[c],       &E_Sum[c],        1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-      MPI_Reduce( &CM_Bondi_SinkEk[c],      &Ek_Sum[c],       1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-      MPI_Reduce( &CM_Bondi_SinkEt[c],      &Et_Sum[c],       1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+      MPI_Reduce( &CM_Bondi_SinkNCell[c],   &SinkNCell_Sum[c], 1, MPI_INT,    MPI_SUM, 0, MPI_COMM_WORLD );
+      MPI_Reduce( &CM_Bondi_SinkMass[c],    &Mass_Sum[c],      1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+      MPI_Reduce( &CM_Bondi_SinkMomX[c],    &MomX_Sum[c],      1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+      MPI_Reduce( &CM_Bondi_SinkMomY[c],    &MomY_Sum[c],      1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+      MPI_Reduce( &CM_Bondi_SinkMomZ[c],    &MomZ_Sum[c],      1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+      MPI_Reduce( &CM_Bondi_SinkMomXAbs[c], &MomXAbs_Sum[c],   1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+      MPI_Reduce( &CM_Bondi_SinkMomYAbs[c], &MomYAbs_Sum[c],   1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+      MPI_Reduce( &CM_Bondi_SinkMomZAbs[c], &MomZAbs_Sum[c],   1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+      MPI_Reduce( &CM_Bondi_SinkE[c],       &E_Sum[c],         1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+      MPI_Reduce( &CM_Bondi_SinkEk[c],      &Ek_Sum[c],        1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+      MPI_Reduce( &CM_Bondi_SinkEt[c],      &Et_Sum[c],        1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
 
       Mass_Sum[c]    *= UNIT_M/Const_Msun;
       MomX_Sum[c]    *= UNIT_M*UNIT_V;
@@ -885,10 +885,12 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                      pote_local[i-start] = 0.0;
                      for (int j=0; j<num_par_sum[c]; j++)
                      {
-                        double rel_pos = sqrt( SQR(ParX_sum[c][i]-ParX_sum[c][j]) + SQR(ParY_sum[c][i]-ParY_sum[c][j]) +
-                                               SQR(ParZ_sum[c][i]-ParZ_sum[c][j]) );
-                        if       ( rel_pos > soften )                pote_local[i-start] += ParM_sum[c][j] / rel_pos;
-                        else if  ( rel_pos <= soften  &&  i != j )   pote_local[i-start] += ParM_sum[c][j] / soften;
+                        if ( i == j )   continue;
+
+                        cosnt double rel_pos = sqrt( SQR(ParX_sum[c][i]-ParX_sum[c][j]) + SQR(ParY_sum[c][i]-ParY_sum[c][j]) +
+                                                     SQR(ParZ_sum[c][i]-ParZ_sum[c][j]) );
+                        if       ( rel_pos >  soften )   pote_local[i-start] += ParM_sum[c][j] / rel_pos;
+                        else if  ( rel_pos <= soften )   pote_local[i-start] += ParM_sum[c][j] / soften;
                      }
                      pote_local[i-start] *= -NEWTON_G;
                   }
