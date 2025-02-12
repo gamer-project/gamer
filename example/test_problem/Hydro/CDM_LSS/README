@@ -26,7 +26,8 @@ Note:
 ========================================
 1. CDM cosmological large-scale structure simulations
 
-2. Fiducial PAR_IC file can be generated using MUSIC (https://bitbucket.org/ohahn/music/src/master/) with the parameter file ics_music.conf
+2. Fiducial PAR_IC file can be downloaded with the command: sh download_ic.sh
+   --> Optionally, PAR_IC file can be generated using MUSIC (https://bitbucket.org/ohahn/music/src/master/) with the parameter file ics_music.conf
 
 3. GAMER currently doesn't support particle-only simulations. So the following temporary solutions are adopted:
    a. Set gas density/energy to arbitrarily small (for MODEL=HYDRO) or wave function to zero (for MODEL=ELBDM) in SetGridIC()
