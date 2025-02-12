@@ -19,7 +19,7 @@ void ELBDM_Aux_Record_Hybrid()
 
 
    static bool FirstTime = true;
-   char FileName[MAX_STRING];
+   char FileName[2*MAX_STRING];
    sprintf( FileName, "%s/Record__Hybrid", OUTPUT_DIR );
    FILE *File = NULL;
 
