@@ -54,7 +54,7 @@ newton_G     = ds.units.newtons_constant.to('(kpc**3)/(s**2*Msun)').d  #(kpc^3)/
 
 
 ### read data
-df_FDM = pd.read_csv( 'Halo_Parameter_1' , sep = r'\s+' , header = 0 , index_col='#')
+df_FDM = pd.read_csv( 'Halo_Parameter_%d'%halo , sep = r'\s+' , header = 0 , index_col='#')
 
 FDM_v_path = ''
 
@@ -121,7 +121,7 @@ max_v = 0
 
 def plot_v(path, suffix, name, idx, jeans =False, soliton_v =False):
 
-    df_halo_parameter = pd.read_csv( path+'../../Halo_Parameter_1' , sep = r'\s+' , header = 0 , index_col='#')
+    df_halo_parameter = pd.read_csv( path+'../../Halo_Parameter_%d'%halo , sep = r'\s+' , header = 0 , index_col='#')
     current_time_z = df_halo_parameter['time'][idx]
     current_time_a = 1/(1+current_time_z)
     halo_radius = df_halo_parameter['halo_radius'][idx]/current_time_a
