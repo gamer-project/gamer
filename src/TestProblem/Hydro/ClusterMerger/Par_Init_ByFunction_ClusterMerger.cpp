@@ -600,9 +600,9 @@ void Aux_Record_ClusterMerger()
          {
             fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "x",             c, "y",             c, "z",             c );
             fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "BHVel_x[km/s]", c, "BHVel_y",       c, "BHVel_z",       c );
-            fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "GasVel_x",      c, "GasVel_y",      c,"GasVel_z",       c );
+            fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "GasVel_x",      c, "GasVel_y",      c, "GasVel_z",       c );
             fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "RelativeVel",   c, "SoundSpeed",    c, "GasDens(cgs)",  c );
-            fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "mass_BH[Msun]", c, "Mdot(cgs)",     c, "NVoidCell",     c );
+            fprintf( File_User, " %13s%1d %13s%1d",         "mass_BH[Msun]", c, "NVoidCell",     c );
             fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "MomXInj(cgs)",  c, "MomYInj",       c, "MomZInj",       c );
             fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "MomXInjAbs",    c, "MomYInjAbs",    c, "MomZInjAbs",    c );
             fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "EInj_exp[erg]", c, "E_Inj[erg]",    c, "E_Inj_err",     c );
@@ -610,7 +610,7 @@ void Aux_Record_ClusterMerger()
             fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "MInjexp[Msun]", c, "MassInj[Msun]", c, "M_Inj_err",     c );
             fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "Mdot(cgs)",     c, "Pdot(cgs)",     c, "Edot(cgs)",     c );
             fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "Jet_Vec_x",     c, "Jet_Vec_y",     c, "Jet_Vec_z",     c );
-            fprintf( File_User, " %13s%1d %13s%1d", "num_par_sum", c, "ColdGasMass", c );
+            fprintf( File_User, " %13s%1d %13s%1d",         "num_par_sum",   c, "ColdGasMass", c );
          }
          fprintf( File_User, "\n" );
          fclose( File_User );
