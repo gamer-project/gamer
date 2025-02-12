@@ -337,9 +337,9 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
       for (int c=0; c<NCluster; c++)
       {
-         long   min_pidx   = -1;
-         real   min_pos[3] = { NULL_REAL, NULL_REAL, NULL_REAL };
-         double min_r      = __DBL_MAX__;
+         long   pidx_min       = -1;
+         real   pos_min[3]     = { NULL_REAL, NULL_REAL, NULL_REAL };
+         double r_min_ThisRank = __DBL_MAX__;
 
 //       get the particle in this rank closest to the cluster center
          for (long p=pidx_offset; p<pidx_offset+NPar_ThisRank_EachCluster[c]; p++)
@@ -347,23 +347,23 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
             const double r = SQR( ParPos[0][p] - Centers[c][0] ) +
                              SQR( ParPos[1][p] - Centers[c][1] ) +
                              SQR( ParPos[2][p] - Centers[c][2] );
-            if ( r < min_r )
+            if ( r < r_min_ThisRank )
             {
-               min_pidx   = p;
-               min_r      = r;
-               min_pos[0] = ParPos[0][p];
-               min_pos[1] = ParPos[1][p];
-               min_pos[2] = ParPos[2][p];
+               pidx_min       = p;
+               r_min_ThisRank = r;
+               pos_min[0]     = ParPos[0][p];
+               pos_min[1]     = ParPos[1][p];
+               pos_min[2]     = ParPos[2][p];
             }
          } // for (long p=pidx_offset; p<pidx_offset+NPar_ThisRank_EachCluster[c]; p++)
 
 //       collect data among all ranks
-         double min_r_allrank;
+         double r_min_AllRank;
          int    NFound_ThisRank=0, NFound_AllRank;
-         MPI_Allreduce( &min_r, &min_r_allrank, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD );
-         if ( min_r == min_r_allrank )
+         MPI_Allreduce( &r_min_ThisRank, &r_min_AllRank, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD );
+         if ( r_min_ThisRank == r_min_AllRank )
          {
-            ParType[min_pidx] = PTYPE_BLACK_HOLE;
+            ParType[pidx_min] = PTYPE_BLACK_HOLE;
             NFound_ThisRank = 1;
          }
 
@@ -717,11 +717,11 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
 
    if ( fixBH == false )
    {
-      double min_pos[3][3], DM_Vel[3][3];   // the updated BH position and velocity
+      double pos_min[3][3], DM_Vel[3][3];   // the updated BH position and velocity
       const bool CurrentMaxLv = (  NPatchTotal[lv] > 0  &&  ( lv == MAX_LEVEL  ||  NPatchTotal[lv+1] == 0 )  );
 
-//    initialize min_pos to be the old center
-      for (int c=0; c<Merger_Coll_NumHalos; c++)   for (int d=0; d<3; d++)   min_pos[c][d] = Cen_old[c][d];
+//    initialize pos_min to be the old center
+      for (int c=0; c<Merger_Coll_NumHalos; c++)   for (int d=0; d<3; d++)   pos_min[c][d] = Cen_old[c][d];
 
       if ( (CurrentMaxLv  &&  AdjustPos == true)  ||  (CurrentMaxLv  &&  AdjustVel == true) )
       {
@@ -742,7 +742,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
          while ( IfConverge == false  &&  count <= 10 )
          {
             for (int c=0; c<Merger_Coll_NumHalos; c++)
-               for (int d=0; d<3; d++)  Cen_new_pre[c][d] = min_pos[c][d];
+               for (int d=0; d<3; d++)  Cen_new_pre[c][d] = pos_min[c][d];
 
             int N_max[Merger_Coll_NumHalos]; // maximum particle numbers (to allocate the array size)
             for (int c=0; c<Merger_Coll_NumHalos; c++)   N_max[c] = 10000;
@@ -905,9 +905,9 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                      if ( pote[i] < Pote_min )
                      {
                         Pote_min      = pote[i];
-                        min_pos[c][0] = ParX_sum[c][i];
-                        min_pos[c][1] = ParY_sum[c][i];
-                        min_pos[c][2] = ParZ_sum[c][i];
+                        pos_min[c][0] = ParX_sum[c][i];
+                        pos_min[c][1] = ParY_sum[c][i];
+                        pos_min[c][2] = ParZ_sum[c][i];
                      }
                   }
                   delete[] pote;
@@ -935,7 +935,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
             count += 1;
             double dis[3] = {0.0, 0.0, 0.0};
             for (int c=0; c<Merger_Coll_NumHalos; c++)
-               for (int d=0; d<3; d++)   dis[c] += SQR( min_pos[c][d] - Cen_new_pre[c][d] );
+               for (int d=0; d<3; d++)   dis[c] += SQR( pos_min[c][d] - Cen_new_pre[c][d] );
 
             if ( count > 1  &&  sqrt(dis[0]) < dis_exp  &&  sqrt(dis[1]) < dis_exp )   IfConverge = true;
 
@@ -989,9 +989,9 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
             {
                if ( CurrentMaxLv  &&  AdjustPos == true )
                {
-                  amr->Par->PosX[p] = min_pos[c][0];
-                  amr->Par->PosY[p] = min_pos[c][1];
-                  amr->Par->PosZ[p] = min_pos[c][2];
+                  amr->Par->PosX[p] = pos_min[c][0];
+                  amr->Par->PosY[p] = pos_min[c][1];
+                  amr->Par->PosZ[p] = pos_min[c][2];
                }
                if ( CurrentMaxLv  &&  AdjustVel == true )
                {
