@@ -213,9 +213,6 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       }
 #     endif
 
-//    reset the particle type for different clusters
-      for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++)   ptype[p] = PTYPE_CLUSTER + c;
-
       if ( MPI_Rank == 0 )   Aux_Message( stdout, "done\n" );
 
 //    store data to the particle repository
@@ -366,7 +363,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
          MPI_Allreduce( &min_r, &min_r_allrank, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD );
          if ( min_r == min_r_allrank )
          {
-            ParType[min_pidx] = PTYPE_CEN + c;
+            ParType[min_pidx] = PTYPE_BLACK_HOLE;
             NFound_ThisRank = 1;
          }
 
@@ -769,7 +766,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                VelZ[c] = (double*)malloc( N_max[c]*sizeof(double) );
             }
 
-//          find the particles within the arrection radius
+//          find the particles within the accretion radius
             for (int c=0; c<Merger_Coll_NumHalos; c++)
             {
                num_par_sum[c] = 0;
@@ -794,7 +791,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                         const real VelZ_tmp      = amr->Par->VelZ[ParID];
                         const real ParPos_tmp[3] = { ParX_tmp, ParY_tmp, ParZ_tmp };
                         bool if_cluster = false;
-                        if ( amr->Par->Type[ParID] == real(PTYPE_CLUSTER+c)  ||  amr->Par->Type[ParID] == real(PTYPE_CEN+c) )   if_cluster = true;
+                        if ( amr->Par->AttributeInt[Idx_ParHalo][ParID] == c )  if_cluster = true;
 
                         if ( if_cluster  &&  DIST_SQR_3D( ParPos_tmp, Cen_new_pre[c] ) <= SQR(10*R_acc) )
                         {
@@ -988,7 +985,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
          double Vel_Tmp[3] = { -__FLT_MAX__, -__FLT_MAX__, -__FLT_MAX__ };
          for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
          {
-            if ( amr->Par->Mass[p] >= (real)0.0  &&  amr->Par->Type[p] == real(PTYPE_CEN+c) )
+            if ( amr->Par->Mass[p] >= (real)0.0  &&  amr->Par->AttributeInt[Idx_ParHalo][p] == c )
             {
                if ( CurrentMaxLv  &&  AdjustPos == true )
                {
@@ -1009,7 +1006,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                Vel_Tmp[1] = amr->Par->VelY[p];
                Vel_Tmp[2] = amr->Par->VelZ[p];
                break;
-            } // if ( amr->Par->Mass[p] >= (real)0.0  &&  amr->Par->Type[p] == real(PTYPE_CEN+c) )
+            } // if ( amr->Par->Mass[p] >= (real)0.0  &&  amr->Par->AttributeInt[Idx_ParHalo][p] == c )
          } // for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
 
 //       use MPI_MAX since Cen_Tmp[] is initialized as -inf

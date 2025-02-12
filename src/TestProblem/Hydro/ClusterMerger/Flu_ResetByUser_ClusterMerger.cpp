@@ -3,78 +3,79 @@
 #if ( MODEL == HYDRO  &&  defined GRAVITY )
 
 
-extern int     Merger_Coll_NumHalos, Accretion_Mode;
-extern double  eta, eps_f, eps_m, R_acc, R_dep;         // parameters of jet feedback
-extern bool    AGN_feedback;
+extern int        Merger_Coll_NumHalos, Accretion_Mode;
+extern double     eta, eps_f, eps_m, R_acc, R_dep;         // parameters of jet feedback
+extern bool       AGN_feedback;
+extern FieldIdx_t Idx_ParHalo;
 
-extern double  CM_Bondi_SinkMass[3];
-extern double  CM_Bondi_SinkMomX[3];
-extern double  CM_Bondi_SinkMomY[3];
-extern double  CM_Bondi_SinkMomZ[3];
-extern double  CM_Bondi_SinkMomXAbs[3];
-extern double  CM_Bondi_SinkMomYAbs[3];
-extern double  CM_Bondi_SinkMomZAbs[3];
-extern double  CM_Bondi_SinkE[3];
-extern double  CM_Bondi_SinkEk[3];
-extern double  CM_Bondi_SinkEt[3];
-extern int     CM_Bondi_SinkNCell[3];
+extern double     CM_Bondi_SinkMass[3];
+extern double     CM_Bondi_SinkMomX[3];
+extern double     CM_Bondi_SinkMomY[3];
+extern double     CM_Bondi_SinkMomZ[3];
+extern double     CM_Bondi_SinkMomXAbs[3];
+extern double     CM_Bondi_SinkMomYAbs[3];
+extern double     CM_Bondi_SinkMomZAbs[3];
+extern double     CM_Bondi_SinkE[3];
+extern double     CM_Bondi_SinkEk[3];
+extern double     CM_Bondi_SinkEt[3];
+extern int        CM_Bondi_SinkNCell[3];
 
-extern double  Bondi_MassBH1;
-extern double  Bondi_MassBH2;
-extern double  Bondi_MassBH3;
-extern double  Mdot_BH1;                                // the accretion rate
-extern double  Mdot_BH2;
-extern double  Mdot_BH3;
-extern double  Jet_HalfHeight1;
-extern double  Jet_HalfHeight2;
-extern double  Jet_HalfHeight3;
-extern double  Jet_Radius1;
-extern double  Jet_Radius2;
-extern double  Jet_Radius3;
-extern double  Jet_Vec[3][3];                           // jet direction
-extern double  Mdot[3];                                 // the feedback injection rate
-extern double  Pdot[3];
-extern double  Edot[3];
-extern double  GasVel[3][3];                            // gas velocity
-extern double  SoundSpeed[3];
-extern double  GasDens[3];
-extern double  RelativeVel[3];                          // the relative velocity between BH and gas
-extern double  ColdGasMass[3];
-extern double  GasMass[3];
-extern double  ParMass[3];
-extern double  ClusterCen[3][3];
-extern double  BH_Pos[3][3];                            // BH position (for updating ClusterCen)
-extern double  BH_Vel[3][3];                            // BH velocity
+extern double     Bondi_MassBH1;
+extern double     Bondi_MassBH2;
+extern double     Bondi_MassBH3;
+extern double     Mdot_BH1;                                // the accretion rate
+extern double     Mdot_BH2;
+extern double     Mdot_BH3;
+extern double     Jet_HalfHeight1;
+extern double     Jet_HalfHeight2;
+extern double     Jet_HalfHeight3;
+extern double     Jet_Radius1;
+extern double     Jet_Radius2;
+extern double     Jet_Radius3;
+extern double     Jet_Vec[3][3];                           // jet direction
+extern double     Mdot[3];                                 // the feedback injection rate
+extern double     Pdot[3];
+extern double     Edot[3];
+extern double     GasVel[3][3];                            // gas velocity
+extern double     SoundSpeed[3];
+extern double     GasDens[3];
+extern double     RelativeVel[3];                          // the relative velocity between BH and gas
+extern double     ColdGasMass[3];
+extern double     GasMass[3];
+extern double     ParMass[3];
+extern double     ClusterCen[3][3];
+extern double     BH_Pos[3][3];                            // BH position (for updating ClusterCen)
+extern double     BH_Vel[3][3];                            // BH velocity
 
-       double  Jet_WaveK[3];                            // jet wavenumber used in the sin() function to have smooth bidirectional jets
-       double  Jet_HalfHeight[3];
-       double  Jet_Radius[3];
-       double  V_cyl[3];                                // the volume of jet source
-       double  M_inj[3], P_inj[3], E_inj[3];            // the injected density
-       double  normalize_const[3];                      // the exact normalization constant
+       double     Jet_WaveK[3];                            // jet wavenumber used in the sin() function to have smooth bidirectional jets
+       double     Jet_HalfHeight[3];
+       double     Jet_Radius[3];
+       double     V_cyl[3];                                // the volume of jet source
+       double     M_inj[3], P_inj[3], E_inj[3];            // the injected density
+       double     normalize_const[3];                      // the exact normalization constant
 
 // the variables that need to be recorded
-       double  E_inj_exp[3] = { 0.0, 0.0, 0.0 };        // the expected amount of injected energy
-       double  M_inj_exp[3] = { 0.0, 0.0, 0.0 };        // the expected amount of injected gas mass
-       double  dt_base;
+       double     E_inj_exp[3] = { 0.0, 0.0, 0.0 };        // the expected amount of injected energy
+       double     M_inj_exp[3] = { 0.0, 0.0, 0.0 };        // the expected amount of injected gas mass
+       double     dt_base;
 
-static bool    FirstTime = true;
-extern int     JetDirection_NBin;                       // number of bins of the jet direction table
-extern double *Time_table;                              // the time table of jet direction
-extern double *Theta_table[3];                          // the theta table of jet direction for 3 clusters
-extern double *Phi_table[3];                            // the phi table of jet direction for 3 clusters
+static bool       FirstTime = true;
+extern int        JetDirection_NBin;                       // number of bins of the jet direction table
+extern double    *Time_table;                              // the time table of jet direction
+extern double    *Theta_table[3];                          // the theta table of jet direction for 3 clusters
+extern double    *Phi_table[3];                            // the phi table of jet direction for 3 clusters
 
-extern bool    AdjustBHPos;
-extern bool    AdjustBHVel;
-extern double  AdjustPeriod;
-extern int     AdjustCount;                             // count the number of adjustments
-extern int     JetDirection_case;                       // methods for choosing the jet direction
-       int     merge_index = 0;                         // record BH 1 merge BH 2 / BH 2 merge BH 1
+extern bool       AdjustBHPos;
+extern bool       AdjustBHVel;
+extern double     AdjustPeriod;
+extern int        AdjustCount;                             // count the number of adjustments
+extern int        JetDirection_case;                       // methods for choosing the jet direction
+       int        merge_index = 0;                         // record BH 1 merge BH 2 / BH 2 merge BH 1
 
-       double  ang_mom_sum[3][3] = { { 1.0, 0.0, 0.0 },
-                                     { 1.0, 0.0, 0.0 },
-                                     { 1.0, 0.0, 0.0 } };
-       bool    if_overlap = false;
+       double     ang_mom_sum[3][3] = { { 1.0, 0.0, 0.0 },
+                                        { 1.0, 0.0, 0.0 },
+                                        { 1.0, 0.0, 0.0 } };
+       bool       if_overlap = false;
 
 extern void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][3], double Cen_new[][3], double Cen_Vel[][3] );
 
@@ -300,10 +301,10 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 //       relabel the BH and DM particles being merged
          for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
          {
-            if ( amr->Par->Type[p] != real(PTYPE_CLUSTER+1)  &&  amr->Par->Type[p] != real(PTYPE_CEN+1) )   continue;
+            if ( amr->Par->AttributeInt[Idx_ParHalo][p] != (long_par)1 )   continue;
             if ( amr->Par->Mass[p] < (real)0.0 )   continue;
 
-            amr->Par->Type[p] = PTYPE_CLUSTER;
+            amr->Par->Type[p] = PTYPE_DARK_MATTER;
          } // for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
          Aux_Message( stdout, "BHs Merge! In rank %d, TimeNew = %14.8e; merge_index = %d, "
                               "BHPos1 = %14.8e, %14.8e, %14.8e; BHPos2 = %14.8e, %14.8e, %14.8e; "

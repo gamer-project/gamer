@@ -614,8 +614,7 @@
 #  define  PTYPE_GENERIC_MASSIVE    (long_par)1
 #  define  PTYPE_DARK_MATTER        (long_par)2
 #  define  PTYPE_STAR               (long_par)3
-#  define  PTYPE_CEN                (long_par)4
-#  define  PTYPE_CLUSTER            (long_par)6
+#  define  PTYPE_BLACK_HOLE         (long_par)4
 
 # ifdef GRAVITY
 #  define MASSIVE_PARTICLES
