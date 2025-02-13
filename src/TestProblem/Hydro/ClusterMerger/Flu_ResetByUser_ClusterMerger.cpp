@@ -508,19 +508,17 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                const double *EdgeR        = amr->patch[0][lv][PID]->EdgeR;
                const double  patch_pos[3] = { (EdgeL[0]+EdgeR[0])*0.5, (EdgeL[1]+EdgeR[1])*0.5, (EdgeL[2]+EdgeR[2])*0.5 };
                const double  patch_d      = sqrt( SQR(EdgeL[0]-EdgeR[0]) + SQR(EdgeL[1]-EdgeR[1]) + SQR(EdgeL[2]-EdgeR[2]) ) * 0.5;
-               if ( SQR(patch_pos[0]-ClusterCen[c][0]) + SQR(patch_pos[1]-ClusterCen[c][1]) + SQR(patch_pos[2]-ClusterCen[c][2]) <= SQR(R_acc+patch_d) )
+               if ( DIST_SQR_3D( patch_pos, ClusterCen[c] ) <= SQR(2*R_acc+patch_d) )
                {
                   for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                   {
                      const long ParID = amr->patch[0][lv][PID]->ParList[p];
-                     const real_par ParX  = amr->Par->PosX[ParID];
-                     const real_par ParY  = amr->Par->PosY[ParID];
-                     const real_par ParZ  = amr->Par->PosZ[ParID];
                      const real_par ParM  = amr->Par->Mass[ParID];
-                     if ( SQR(ParX-ClusterCen[c][0]) + SQR(ParY-ClusterCen[c][1]) + SQR(ParZ-ClusterCen[c][2]) <= SQR(R_acc) )
+                     const real_par ParPos[3] = { amr->Par->PosX[ParID], amr->Par->PosY[ParID], amr->Par->PosZ[ParID] };
+                     if ( DIST_SQR_3D( ParPos, ClusterCen[c] ) <= SQR(R_acc) )
                         par_mass += ParM;
                   } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
-               } // if ( SQR(patch_pos[0]-ClusterCen[c][0]) + SQR(patch_pos[1]-ClusterCen[c][1]) + SQR(patch_pos[2]-ClusterCen[c][2]) <= SQR(2*R_acc+patch_d) )
+               } // if ( DIST_SQR_3D( patch_pos, ClusterCen[c] ) <= SQR(2*R_acc+patch_d) )
             } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
             MPI_Allreduce( &par_mass, &ParMass[c], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
          }

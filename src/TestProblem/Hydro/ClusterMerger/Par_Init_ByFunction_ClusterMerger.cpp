@@ -723,7 +723,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
 //    initialize pos_min to be the old center
       for (int c=0; c<Merger_Coll_NumHalos; c++)   for (int d=0; d<3; d++)   pos_min[c][d] = Cen_old[c][d];
 
-      if ( (CurrentMaxLv  &&  AdjustPos == true)  ||  (CurrentMaxLv  &&  AdjustVel == true) )
+      if ( CurrentMaxLv  &&  (AdjustPos  ||  AdjustVel) )
       {
 //       do not support periodic BC
          for (int f=0; f<6; f++)
@@ -734,12 +734,12 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
 #        endif
 
 
-         double dis_exp    = 1e-6;  // to check if the output BH positions of each calculaiton are close enough
-         bool   IfConverge = false; // if the BH positions are close enough, then complete the calculation
-         int    count      = 0;     // how many times the calculation is performed (minimum: 2, maximum: 10)
+         const double dis_exp = 1e-6;  // to check if the output BH positions of each calculaiton are close enough
+         bool   converged     = false; // if the BH positions are close enough, then complete the calculation
+         int    counter       = 0;     // how many times the calculation is performed (minimum: 2, maximum: 10)
          double Cen_new_pre[3][3];
 
-         while ( IfConverge == false  &&  count <= 10 )
+         while ( converged == false  &&  counter <= 10 )
          {
             for (int c=0; c<Merger_Coll_NumHalos; c++)
                for (int d=0; d<3; d++)  Cen_new_pre[c][d] = pos_min[c][d];
@@ -790,21 +790,19 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                         const real VelY_tmp      = amr->Par->VelY[ParID];
                         const real VelZ_tmp      = amr->Par->VelZ[ParID];
                         const real ParPos_tmp[3] = { ParX_tmp, ParY_tmp, ParZ_tmp };
-                        bool if_cluster = false;
-                        if ( amr->Par->AttributeInt[Idx_ParHalo][ParID] == c )  if_cluster = true;
 
-                        if ( if_cluster  &&  DIST_SQR_3D( ParPos_tmp, Cen_new_pre[c] ) <= SQR(10*R_acc) )
-                        {
-//                         record the mass, position and velocity of this particle
-                           ParX[c][num_par[c]] = ParX_tmp;
-                           ParY[c][num_par[c]] = ParY_tmp;
-                           ParZ[c][num_par[c]] = ParZ_tmp;
-                           ParM[c][num_par[c]] = ParM_tmp;
-                           VelX[c][num_par[c]] = VelX_tmp;
-                           VelY[c][num_par[c]] = VelY_tmp;
-                           VelZ[c][num_par[c]] = VelZ_tmp;
-                           num_par[c] += 1;
-                        }
+                        if ( amr->Par->AttributeInt[Idx_ParHalo][ParID] != c )  continue;
+                        if ( DIST_SQR_3D( ParPos_tmp, Cen_new_pre[c] ) > SQR(10*R_acc) )   continue;
+
+//                      record the mass, position and velocity of this particle
+                        ParX[c][num_par[c]] = ParX_tmp;
+                        ParY[c][num_par[c]] = ParY_tmp;
+                        ParZ[c][num_par[c]] = ParZ_tmp;
+                        ParM[c][num_par[c]] = ParM_tmp;
+                        VelX[c][num_par[c]] = VelX_tmp;
+                        VelY[c][num_par[c]] = VelY_tmp;
+                        VelZ[c][num_par[c]] = VelZ_tmp;
+                        num_par[c] += 1;
 
                         if ( num_par[c] >= N_max[c] )
                         {
@@ -904,13 +902,11 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                   double Pote_min = 0.0;
                   for (int i=0; i<num_par_sum[c]; i++)
                   {
-                     if ( pote[i] < Pote_min )
-                     {
-                        Pote_min      = pote[i];
-                        pos_min[c][0] = ParX_sum[c][i];
-                        pos_min[c][1] = ParY_sum[c][i];
-                        pos_min[c][2] = ParZ_sum[c][i];
-                     }
+                     if ( pote[i] >= Pote_min )  continue;
+                     Pote_min      = pote[i];
+                     min_pos[c][0] = ParX_sum[c][i];
+                     min_pos[c][1] = ParY_sum[c][i];
+                     min_pos[c][2] = ParZ_sum[c][i];
                   }
                   delete[] pote;
                   delete[] pote_local;
@@ -934,12 +930,12 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
             } // if ( AdjustVel == true )
 
 //          iterate the above calculation until the output BH positions become close enough
-            count += 1;
+            counter += 1;
             double dis[3] = {0.0, 0.0, 0.0};
             for (int c=0; c<Merger_Coll_NumHalos; c++)
                for (int d=0; d<3; d++)   dis[c] += SQR( pos_min[c][d] - Cen_new_pre[c][d] );
 
-            if ( count > 1  &&  sqrt(dis[0]) < dis_exp  &&  sqrt(dis[1]) < dis_exp )   IfConverge = true;
+            if ( counter > 1  &&  sqrt(dis[0]) < dis_exp  &&  sqrt(dis[1]) < dis_exp )   converged = true;
 
             for (int c=0; c<Merger_Coll_NumHalos; c++)
             {
@@ -976,8 +972,8 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
             free( VelX );
             free( VelY );
             free( VelZ );
-         } // while ( IfConverge == false )
-      } // if ( ( CurrentMaxLv  &&  AdjustPos == true )  ||  ( CurrentMaxLv  &&  AdjustVel == true ) )
+         } // while ( converged == false )
+      } // if ( CurrentMaxLv  &&  (AdjustPos  ||  AdjustVel) )
 
 
 //    find the BH particles and adjust their position and velocity
@@ -987,28 +983,29 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
          double Vel_Tmp[3] = { -__FLT_MAX__, -__FLT_MAX__, -__FLT_MAX__ };
          for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
          {
-            if ( amr->Par->Mass[p] >= (real)0.0  &&  amr->Par->AttributeInt[Idx_ParHalo][p] == c )
+            if ( amr->Par->Mass[p] < (real_par)0.0  ||  amr->Par->AttributeInt[Idx_ParHalo][p] != c )
+               continue;
+
+            if ( CurrentMaxLv  &&  AdjustPos == true )
             {
-               if ( CurrentMaxLv  &&  AdjustPos == true )
-               {
-                  amr->Par->PosX[p] = pos_min[c][0];
-                  amr->Par->PosY[p] = pos_min[c][1];
-                  amr->Par->PosZ[p] = pos_min[c][2];
-               }
-               if ( CurrentMaxLv  &&  AdjustVel == true )
-               {
-                  amr->Par->VelX[p] = DM_Vel[c][0];
-                  amr->Par->VelY[p] = DM_Vel[c][1];
-                  amr->Par->VelZ[p] = DM_Vel[c][2];
-               }
-               Cen_Tmp[0] = amr->Par->PosX[p];
-               Cen_Tmp[1] = amr->Par->PosY[p];
-               Cen_Tmp[2] = amr->Par->PosZ[p];
-               Vel_Tmp[0] = amr->Par->VelX[p];
-               Vel_Tmp[1] = amr->Par->VelY[p];
-               Vel_Tmp[2] = amr->Par->VelZ[p];
-               break;
-            } // if ( amr->Par->Mass[p] >= (real)0.0  &&  amr->Par->AttributeInt[Idx_ParHalo][p] == c )
+               amr->Par->PosX[p] = pos_min[c][0];
+               amr->Par->PosY[p] = pos_min[c][1];
+               amr->Par->PosZ[p] = pos_min[c][2];
+            }
+            if ( CurrentMaxLv  &&  AdjustVel == true )
+            {
+               amr->Par->VelX[p] = DM_Vel[c][0];
+               amr->Par->VelY[p] = DM_Vel[c][1];
+               amr->Par->VelZ[p] = DM_Vel[c][2];
+            }
+            Cen_Tmp[0] = amr->Par->PosX[p];
+            Cen_Tmp[1] = amr->Par->PosY[p];
+            Cen_Tmp[2] = amr->Par->PosZ[p];
+            Vel_Tmp[0] = amr->Par->VelX[p];
+            Vel_Tmp[1] = amr->Par->VelY[p];
+            Vel_Tmp[2] = amr->Par->VelZ[p];
+            break;
+         
          } // for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
 
 //       use MPI_MAX since Cen_Tmp[] is initialized as -inf
