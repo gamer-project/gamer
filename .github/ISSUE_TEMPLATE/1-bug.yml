@@ -1,0 +1,121 @@
+name: 🐛 Bug Report
+description: File a bug report
+labels: ["triage"]
+type: "Bug"
+
+body:
+
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+
+        This issue tracker is for bugs and issues found in the GAMER project.
+        If you are looking for help with GAMER, please check out the [GAMER Slack](https://join.slack.com/t/gamer-project/shared_invite/enQtNTUwMDA5ODAwMTMzLTc3ZWY2MWE2YTlmMDI0MTQ4M2JjOTg2NmU4OWVkOGY1ZTI3MmY5NjUxOTk1ZjM5ZjNjOGViMGY3ZGExMDdiYzU).
+
+        Please fill out the following form to the best of your ability.
+
+  - type: textarea
+    id: issue_content
+    attributes:
+      label: What happened?
+      description: Also tell us, what did you expect to happen?
+      placeholder: Tell us what you see!
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce_step
+    attributes:
+      label: Steps to reproduce
+      description: Please provide steps to help us reproduce the issue.
+      placeholder: |
+        e.g.
+        1. Copy the shocktube test problem from `example/Hydro/Riemann/*`.
+        2. Build GAMER with CXXFLAG -g -O0 in the machine configuration file.
+        3. Run `./gamer`. And a segmentation fault occurs.
+    validations:
+      required: true
+
+  - type: input
+    id: commit_hash
+    attributes:
+      label: Commit hash
+      description: Please provide the commit hash of the version you are using by running `git rev-parse HEAD`.
+      placeholder: e.g. 2f1ceb7ceb6249f0252d58cdc0269383631bdd68 or 2f1ceb7
+    validations:
+      required: true
+
+  - type: input
+    id: config_cmd
+    attributes:
+      label: Configuration command
+      description: Please provide the configuration command you used to generate the Makefile. Could also be found in `generate_make.sh` if you used it.
+      placeholder: e.g. python configure.py --fftw=FFTW2 --gravity=true --gpu=true
+
+  - type: textarea
+    id: files_modified
+    attributes:
+      label: Source files modified
+      description: Please provide a list of source files you modified, if any.
+      placeholder: e.g. src/Hydro/Gravity/Init_TestProb_Hydro_Gravity.cpp
+
+  - type: dropdown
+    id: operation_system
+    attributes:
+      label: What is your OS?
+      description: If you connect to a remote server, please specify the OS of the server.
+      multiple: false
+      options:
+        - linux (x86)
+        - linux (ARM)
+        - MacOS (x86, Intel chip)
+        - MacOS (ARM, Apple chip)
+        - Windows (x86)
+        - Windows (ARM)
+        - Other (Please specify below)
+
+  - type: textarea
+    id: machine
+    attributes:
+      label: Machine Configuration File
+      description: Please provide the machine configuration file you are using. If it is a provided one, just specify the name.
+      placeholder: |
+        e.g.
+        # NTU-spock
+        CUDA_PATH       /software/cuda/12.1
+        FFTW2_PATH      /software/fftw/2.1.5-intel-2023.1.0-openmpi-4.1.5-ucx_mt
+        FFTW3_PATH      /software/fftw/3.3.10-intel-2023.1.0-openmpi-4.1.5-ucx_mt
+        MPI_PATH        /software/openmpi/4.1.5-ucx_mt-intel-2023.1.0
+        ...
+
+        # compilers
+        CXX     icpc
+        CXX_MPI mpicxx
+        ...
+
+  - type: checkboxes
+    id: labels
+    attributes:
+      label: Related topics
+      description: You may select more than one.
+      options:
+        - label: Hydro
+        - label: MHD
+        - label: FDM
+        - label: AMR
+        - label: Gravity
+        - label: Particle
+        - label: Parallel
+        - label: GPU
+        - label: Memory
+        - label: YT
+        - label: Tool
+        - label: Docs
+
+  - type: textarea
+    id: additional_info
+    attributes:
+      label: Additional information
+      description: Please provide any additional information that may be helpful in resolving the issue.
+      placeholder: Any other details you think might be relevant. e.g. screen shots, logs, etc.

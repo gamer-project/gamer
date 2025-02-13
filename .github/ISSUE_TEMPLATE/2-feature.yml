@@ -1,0 +1,66 @@
+name: 💪 Feature Request
+description: Suggest a new feature
+labels: ["triage"]
+type: "Feature"
+
+body:
+
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature idea!
+
+        Please fill out the following form to help us understand your feature request.
+
+  - type: textarea
+    id: feature_description
+    attributes:
+      label: What is the proposed feature?
+      description: Describe the feature you would like to see.
+      placeholder: A clear and concise description of your feature.
+    validations:
+      required: true
+
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Use case
+      description: Provide examples or use cases where this feature could be applied.
+      placeholder: Describe specific use cases in detail.
+    validations:
+      required: true
+      
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation and benefits
+      description: Explain why this feature would be useful and how it can benefit the project.
+      placeholder: Describe the reason and expected benefits.
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional_info
+    attributes:
+      label: Additional information
+      description: Provide any additional information or context that may be helpful.
+      placeholder: Any other relevant details or context.
+
+  - type: checkboxes
+    id: labels
+    attributes:
+      label: Related topics
+      description: You may select more than one.
+      options:
+        - label: Hydro
+        - label: MHD
+        - label: FDM
+        - label: AMR
+        - label: Gravity
+        - label: Particle
+        - label: Parallel
+        - label: GPU
+        - label: Memory
+        - label: YT
+        - label: Tool
+        - label: Docs
