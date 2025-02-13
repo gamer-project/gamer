@@ -1,6 +1,5 @@
 name: 📝 Assign Task
 description: Assign a new task (Dev Team Only)
-type: "Task"
 
 body:
 

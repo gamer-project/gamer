@@ -1,7 +1,6 @@
 name: 💪 Feature Request
 description: Suggest a new feature
 labels: ["triage"]
-type: "Feature"
 
 body:
 
