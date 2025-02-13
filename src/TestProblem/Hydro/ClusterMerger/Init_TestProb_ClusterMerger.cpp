@@ -313,13 +313,13 @@ void SetParameter()
                  NCOMP_PASSIVE_USER, Merger_Coll_NumHalos + (int)Merger_Coll_UseMetals );
 
 // set the correct parameters when fixing the BH
-   if ( Merger_Coll_NumHalos != 1  &&  fixBH == true )
+   if ( Merger_Coll_NumHalos != 1  &&  fixBH )
    {
       fixBH = false;
       Aux_Message( stdout, "WARNING! Reset fixBH to be false for multiple clusters!\n" );
    }
 
-   if ( fixBH == true )
+   if ( fixBH )
    {
       AdjustBHPos = false;
       AdjustBHVel = false;
@@ -487,8 +487,6 @@ void SetParameter()
 //    (2-2) initialize the BH position and velocity
       if ( fixBH )
       {
-         Merger_Coll_PosX1 = amr->BoxCenter[0];
-         Merger_Coll_PosY1 = amr->BoxCenter[1];
          Merger_Coll_VelX1 = 0.0;
          Merger_Coll_VelY1 = 0.0;
       }
