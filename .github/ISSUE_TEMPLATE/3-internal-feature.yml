@@ -1,0 +1,50 @@
+name: 🐟 Assign Feature
+description: Assign a new feature (Dev Team Only)
+type: "Feature"
+
+body:
+
+  - type: markdown
+    attributes:
+      value: |
+        🐟🐟🐟🐟🐟🐟🐟🐟🐟🐟
+        🐟🐳 DEV TEAM ONLY 🐳🐟
+        🐟🐟🐟🐟🐟🐟🐟🐟🐟🐟
+        This is a template for the development team to assign a new feature.
+        If you are not a member of the team, please do not use this template.
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goals
+    validations:
+      required: true
+
+  - type: textarea
+    id: task
+    attributes:
+      label: Tasks
+      value: |
+        - [ ] Task 1
+        - [ ] Task 2
+        - [ ] Task 3
+    validations:
+      required: true
+
+  - type: textarea
+    id: opt_task
+    attributes:
+      label: Optional tasks
+      value: |
+        - [ ] Task A
+        - [ ] Task B
+  
+  - type: textarea
+    id: additional
+    attributes:
+      label: References and possible tools
+
+  - type: textarea
+    id: note
+    attributes:
+      label: Notes
