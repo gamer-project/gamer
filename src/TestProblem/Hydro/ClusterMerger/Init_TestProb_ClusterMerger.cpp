@@ -121,6 +121,7 @@ static double *JetDirection = NULL;       // jet direction[time/theta_1/phi_1/th
                                           //    2: import from table (generate JetDirection.txt)
                                           //    3: align with angular momentum
        bool   fixBH;                      // fix the BH at the simulation box center and set its velocity to be zero (1 cluster only)
+       int    Merger_Coll_NumBHs;         // number of BHs in the simulation
 // =======================================================================================
 
 
@@ -324,7 +325,7 @@ void SetParameter()
       AdjustBHPos = false;
       AdjustBHVel = false;
    }
-
+   
 // convert to code units
    Merger_Coll_PosX1 *= Const_kpc / UNIT_L;
    Merger_Coll_PosY1 *= Const_kpc / UNIT_L;
@@ -356,6 +357,7 @@ void SetParameter()
 
    if ( OPT__INIT != INIT_BY_RESTART )
    {
+
 //    (2) load the radial profiles
       const std::string filename1( Merger_File_Prof1 );
       const std::string filename2( Merger_File_Prof2 );
@@ -497,7 +499,10 @@ void SetParameter()
                                     { Merger_Coll_VelX2, Merger_Coll_VelY2, 0.0 },
                                     { Merger_Coll_VelX3, Merger_Coll_VelY3, 0.0 }};
 
-      for (int c=0; c<Merger_Coll_NumHalos; c++)
+//    set the number of black holes to be the same as the number of clusters initially
+      Merger_Coll_NumBHs = Merger_Coll_NumHalos;
+                                 
+      for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
          for (int d=0; d<3; d++)   ClusterCen[c][d] = ClusterCenter[c][d];
          for (int d=0; d<3; d++)   BH_Pos[c][d] = ClusterCen[c][d];
@@ -915,8 +920,8 @@ void Output_HDF5_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
    BH_Mass[1] = Bondi_MassBH2;
    BH_Mass[2] = Bondi_MassBH3;
 
-   HDF5_OutUser->Add( "Merger_Coll_NumHalos", &Merger_Coll_NumHalos );
-   for (int c=0; c<Merger_Coll_NumHalos; c++)
+   HDF5_OutUser->Add( "Merger_Coll_NumBHs", &Merger_Coll_NumBHs );
+   for (int c=0; c<Merger_Coll_NumBHs; c++)
    {
       for (int d=0; d<3; d++)
       {
@@ -1211,8 +1216,8 @@ void Init_User_ClusterMerger()
    if ( H5_TypeID_OutputUser < 0 )
       Aux_Error( ERROR_INFO, "failed to open the datatype of \"%s\" !!\n", "User/OutputUser" );
 
-   LoadField( "Merger_Coll_NumHalos", &Merger_Coll_NumHalos, H5_SetID_OutputUser, H5_TypeID_OutputUser );
-   for (int c=0; c<Merger_Coll_NumHalos; c++)
+   LoadField( "Merger_Coll_NumBHs", &Merger_Coll_NumBHs, H5_SetID_OutputUser, H5_TypeID_OutputUser );
+   for (int c=0; c<Merger_Coll_NumBHs; c++)
    {
       for (int d=0; d<3; d++)
       {

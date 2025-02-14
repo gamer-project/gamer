@@ -3,7 +3,7 @@
 #if ( MODEL == HYDRO  &&  defined GRAVITY )
 
 
-extern int        Merger_Coll_NumHalos, Accretion_Mode;
+extern int        Merger_Coll_NumBHs, Accretion_Mode;
 extern double     eta, eps_f, eps_m, R_acc, R_dep;         // parameters of jet feedback
 extern bool       AGN_feedback;
 extern FieldIdx_t Idx_ParHalo;
@@ -128,7 +128,7 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
    double D_dep[3] = { Mdot_BH1*dt/V_dep, Mdot_BH2*dt/V_dep, Mdot_BH3*dt/V_dep };
    int    reset   = false; // mark whether this cell is reset or not [false/true]
 
-   for (int c=0; c<Merger_Coll_NumHalos; c++)
+   for (int c=0; c<Merger_Coll_NumBHs; c++)
    {
       for (int d=0; d<3; d++)   dr2[c][d] = SQR( Pos[d] - ClusterCen[c][d] );
       r2[c] = dr2[c][0] + dr2[c][1] + dr2[c][2];
@@ -141,7 +141,7 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
 //         fluid[ENGY] -= 0.5*D_dep[c]*( SQR(GasVel[c][0]) + SQR(GasVel[c][1]) + SQR(GasVel[c][2]) );
 //         reset = true;
       } // if ( r2[c] <= SQR(R_dep) )
-   } // for (int c=0; c<Merger_Coll_NumHalos; c++)
+   } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
 
 // (2) Jet Feedback
@@ -154,15 +154,15 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
 
    if ( if_overlap )
    {
-      if ( Merger_Coll_NumHalos == 1 )  Aux_Error( ERROR_INFO, "Error: Merger_Coll_NumHalos = 1 but if_overlap = true!\n" );
+      if ( Merger_Coll_NumBHs == 1 )  Aux_Error( ERROR_INFO, "Error: Merger_Coll_NumBHs = 1 but if_overlap = true!\n" );
       if ( Edot[0] >= Edot[1] )   status = 0;   // only inject cluster 1
       else                        status = 1;   // only inject cluster 2
-      n_jet = Merger_Coll_NumHalos-1;
+      n_jet = Merger_Coll_NumBHs-1;
    }
    else // if ( if_overlap )
    {
       status = 0;
-      n_jet = Merger_Coll_NumHalos;
+      n_jet = Merger_Coll_NumBHs;
    } // if ( if_overlap ) ...  else ...
 
    for (int c=status; c<(n_jet+status); c++)
@@ -289,11 +289,11 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
    } // if ( AbsRelPos > soften ) ... else ...
 
 // merge the two BHs if they are located within R_acc, and the relative velocity is small enough
-   if ( Merger_Coll_NumHalos == 2 )
+   if ( Merger_Coll_NumBHs == 2 )
    {
       if ( AbsRelPos < R_acc  &&  AbsRelVel < 3*escape_vel )
       {
-         Merger_Coll_NumHalos -= 1;
+         Merger_Coll_NumBHs -= 1;
          if ( Bondi_MassBH1 >= Bondi_MassBH2 )   merge_index = 1;   // record BH 1 merge BH 2 / BH 2 merge BH 1
          else                                    merge_index = 2;
          Bondi_MassBH1 += Bondi_MassBH2;
@@ -315,7 +315,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                       BH_Vel[0][0], BH_Vel[0][1], BH_Vel[0][2], BH_Vel[1][0], BH_Vel[1][1], BH_Vel[1][2],
                       AbsRelPos, AbsRelVel, escape_vel );
       } // if ( AbsRelPos < R_acc  &&  AbsRelVel < 3*escape_vel )
-   } // if ( Merger_Coll_NumHalos == 2 )
+   } // if ( Merger_Coll_NumBHs == 2 )
 
 
    if ( AGN_feedback )
@@ -334,7 +334,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 //    set the jet direction vector
       if ( JetDirection_case == 1 ) // fixed at x-axis
       {
-         for (int c=0; c<Merger_Coll_NumHalos; c++)
+         for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
             Jet_Vec[c][0] = 1.0;
             Jet_Vec[c][1] = 0.0;
@@ -345,7 +345,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
       {
          const double Time_period      = Time_table[JetDirection_NBin-1];
          const double Time_interpolate = fmod( TimeNew, Time_period );
-         for (int c=0; c<Merger_Coll_NumHalos; c++)
+         for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
             const double theta = Mis_InterpolateFromTable( JetDirection_NBin, Time_table, Theta_table[c], Time_interpolate );
             const double phi   = Mis_InterpolateFromTable( JetDirection_NBin, Time_table, Phi_table[c],   Time_interpolate );
@@ -357,7 +357,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
       }
       else if ( JetDirection_case == 3 ) // align with angular momentum
       {
-         for (int c=0; c<Merger_Coll_NumHalos; c++)
+         for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
             const double ang_mom_norm = sqrt( SQR(ang_mom_sum[c][0]) + SQR(ang_mom_sum[c][1]) + SQR(ang_mom_sum[c][2]) );
             for (int d=0; d<3; d++)   Jet_Vec[c][d] = ang_mom_sum[c][d] / ang_mom_norm;
@@ -370,7 +370,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
       double x, y, z, x0, y0, z0, x2, y2, z2, x02, y02, z02;
 
 //    reset to 0 since we only want to record the number of void cells **for one sub-step**
-      for (int c=0; c<Merger_Coll_NumHalos; c++)
+      for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
          CM_Bondi_SinkNCell[c] = 0;
          Jet_WaveK[c]          = 0.5 * M_PI / Jet_HalfHeight[c];
@@ -416,7 +416,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
             int status_overlap = 0;
 
-            for (int c=0; c<Merger_Coll_NumHalos; c++)
+            for (int c=0; c<Merger_Coll_NumBHs; c++)
             {
 //             calculate the average density, sound speed and gas velocity inside accretion radius
                if ( SQR(x2-ClusterCen[c][0]) + SQR(y2-ClusterCen[c][1]) + SQR(z2-ClusterCen[c][2]) <= SQR(R_acc) )
@@ -483,14 +483,14 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                      status_overlap += c+1;
                   } // if ( Jet_dh_2 <= Jet_HalfHeight[c]  &&  Jet_dr_2 <= Jet_Radius[c] )
                } // if ( CurrentMaxLv )
-            } // for (int c=0; c<Merger_Coll_NumHalos; c++)
+            } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
             if ( status_overlap >= 3 )   if_overlap_each_rank = true;
 
          }}} // for (int k=0; k<PS1; k++); for (int j=0; j<PS1; j++); for (int i=0; i<PS1; i++)
       } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
-      for (int c=0; c<Merger_Coll_NumHalos; c++)
+      for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
          MPI_Allreduce( &num[c],         &num_sum[c],         1, MPI_INT,        MPI_SUM, MPI_COMM_WORLD );
          MPI_Allreduce( &gas_mass[c],    &GasMass[c],         1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
@@ -501,11 +501,11 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
          MPI_Allreduce( ang_mom[c],       ang_mom_sum[c],     3, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
          MPI_Allreduce( &V_cyl_exact[c], &V_cyl_exact_sum[c], 1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
          MPI_Allreduce( &normalize[c],   &normalize_sum[c],   1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
-      } // for (int c=0; c<Merger_Coll_NumHalos; c++)
+      } // for (int c=0; c<Merger_Coll_NumBHs; c++)
       MPI_Allreduce( &if_overlap_each_rank, &if_overlap, 1, MPI_CXX_BOOL, MPI_LOR, MPI_COMM_WORLD );
 
 //    calculate the total DM mass inside the accretion radius
-      for (int c=0; c<Merger_Coll_NumHalos; c++)
+      for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
          if ( Accretion_Mode == 2  ||  Accretion_Mode == 3 )
          {
@@ -530,10 +530,10 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
             } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
             MPI_Allreduce( &par_mass, &ParMass[c], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
          }
-      } // for (int c=0; c<Merger_Coll_NumHalos; c++)
+      } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
 //    calculate the accretion rate
-      for (int c=0; c<Merger_Coll_NumHalos; c++)
+      for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
          double v = 0.0;  // the relative velocity between BH and gas
          if ( num_sum[c] == 0 )
@@ -592,21 +592,21 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
          if ( V_cyl_exact_sum[c] != 0 )   normalize_const[c] = V_cyl_exact_sum[c] / normalize_sum[c];
          else                             normalize_const[c] = 0.5 * M_PI;
-      } // for (int c=0; c<Merger_Coll_NumHalos; c++)
+      } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
       Mdot_BH1 = Mdot_BH[0];
       Mdot_BH2 = Mdot_BH[1];
       Mdot_BH3 = Mdot_BH[2];
 
 //    update BH mass
-      for (int c=0; c<Merger_Coll_NumHalos; c++)   if ( CurrentMaxLv )   Bondi_MassBH[c] += Mdot_BH[c] * dt;
+      for (int c=0; c<Merger_Coll_NumBHs; c++)   if ( CurrentMaxLv )   Bondi_MassBH[c] += Mdot_BH[c] * dt;
       Bondi_MassBH1 = Bondi_MassBH[0];
       Bondi_MassBH2 = Bondi_MassBH[1];
       Bondi_MassBH3 = Bondi_MassBH[2];
 
 
 //    (5) calculate the injection rate
-      for (int c=0; c<Merger_Coll_NumHalos; c++)
+      for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
          Mdot[c]  = eta * Mdot_BH[c];
          Pdot[c]  = sqrt(2*eta*eps_f*(1.0-eps_m)) * Mdot_BH[c] * (Const_c/UNIT_V);
@@ -626,12 +626,12 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
             P_inj[c] = Pdot[c] * dt / V_cyl[c];
             E_inj[c] = Edot[c] * dt / V_cyl[c];
          } // if ( CurrentMaxLv  &&  V_cyl_exact_sum[c] != 0 ) ... else ...
-      } // for (int c=0; c<Merger_Coll_NumHalos; c++)
+      } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
       if ( CurrentMaxLv )
       {
-         for (int c=0; c<Merger_Coll_NumHalos; c++)   E_inj_exp[c] += Edot[c]*dt;
-         for (int c=0; c<Merger_Coll_NumHalos; c++)   M_inj_exp[c] += Mdot[c]*dt;
+         for (int c=0; c<Merger_Coll_NumBHs; c++)   E_inj_exp[c] += Edot[c]*dt;
+         for (int c=0; c<Merger_Coll_NumBHs; c++)   M_inj_exp[c] += Mdot[c]*dt;
       } // if ( CurrentMaxLv )
       if ( lv == 0 )   dt_base = dt;
 

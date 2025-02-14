@@ -15,6 +15,7 @@ extern char    Merger_File_Par1[1000];
 extern char    Merger_File_Par2[1000];
 extern char    Merger_File_Par3[1000];
 extern int     Merger_Coll_NumHalos;
+extern int     Merger_Coll_NumBHs;
 extern double  Merger_Coll_PosX1;
 extern double  Merger_Coll_PosY1;
 extern double  Merger_Coll_PosX2;
@@ -596,7 +597,7 @@ void Aux_Record_ClusterMerger()
 
          FILE *File_User = fopen( FileName, "a" );
          fprintf( File_User, "#%13s%14s",  "Time", "Step" );
-         for (int c=0; c<Merger_Coll_NumHalos; c++)
+         for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
             fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "x",             c, "y",             c, "z",             c );
             fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "BHVel_x[km/s]", c, "BHVel_y",       c, "BHVel_z",       c );
@@ -626,7 +627,7 @@ void Aux_Record_ClusterMerger()
    int SinkNCell_Sum[3];
    double Mass_Sum[3], MomX_Sum[3], MomY_Sum[3], MomZ_Sum[3], MomXAbs_Sum[3], MomYAbs_Sum[3], MomZAbs_Sum[3], E_Sum[3], Ek_Sum[3], Et_Sum[3];
 
-   for (int c=0; c<Merger_Coll_NumHalos; c++)
+   for (int c=0; c<Merger_Coll_NumBHs; c++)
    {
       MPI_Reduce( &CM_Bondi_SinkNCell[c],   &SinkNCell_Sum[c], 1, MPI_INT,    MPI_SUM, 0, MPI_COMM_WORLD );
       MPI_Reduce( &CM_Bondi_SinkMass[c],    &Mass_Sum[c],      1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
@@ -652,16 +653,16 @@ void Aux_Record_ClusterMerger()
       Et_Sum[c]      *= UNIT_E;
       E_inj_exp[c]   *= UNIT_E;
       M_inj_exp[c]   *= UNIT_M/Const_Msun;
-   } // for (int c=0; c<Merger_Coll_NumHalos; c++)
+   } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
-   for (int c=0; c<Merger_Coll_NumHalos; c++)   E_power_inj[c] = E_Sum[c]/(dt_base*UNIT_T);
+   for (int c=0; c<Merger_Coll_NumBHs; c++)   E_power_inj[c] = E_Sum[c]/(dt_base*UNIT_T);
 
 // output the properties of the cluster centers
    if ( MPI_Rank == 0 )
    {
       FILE *File_User = fopen( FileName, "a" );
       fprintf( File_User, "%14.7e%14ld", Time[0], Step );
-      for (int c=0; c<Merger_Coll_NumHalos; c++)
+      for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
          fprintf( File_User, " %14.7e %14.7e %14.7e", ClusterCen[c][0], ClusterCen[c][1], ClusterCen[c][2] );
          fprintf( File_User, " %14.7e %14.7e %14.7e", BH_Vel[c][0]*UNIT_V/(Const_km/Const_s), BH_Vel[c][1]*UNIT_V/(Const_km/Const_s), BH_Vel[c][2]*UNIT_V/(Const_km/Const_s) );
@@ -682,7 +683,7 @@ void Aux_Record_ClusterMerger()
    } // if ( MPI_Rank == 0 )
 
 // reset the cumulative variables to zero
-   for (int c=0; c<Merger_Coll_NumHalos; c++)
+   for (int c=0; c<Merger_Coll_NumBHs; c++)
    {
       CM_Bondi_SinkMass[c]    = 0.0;
       CM_Bondi_SinkMomX[c]    = 0.0;
@@ -721,7 +722,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
       const bool CurrentMaxLv = (  NPatchTotal[lv] > 0  &&  ( lv == MAX_LEVEL  ||  NPatchTotal[lv+1] == 0 )  );
 
 //    initialize pos_min to be the old center
-      for (int c=0; c<Merger_Coll_NumHalos; c++)   for (int d=0; d<3; d++)   pos_min[c][d] = Cen_old[c][d];
+      for (int c=0; c<Merger_Coll_NumBHs; c++)   for (int d=0; d<3; d++)   pos_min[c][d] = Cen_old[c][d];
 
       if ( CurrentMaxLv  &&  (AdjustPos  ||  AdjustVel) )
       {
@@ -741,33 +742,33 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
 
          while ( converged == false  &&  counter <= 10 )
          {
-            for (int c=0; c<Merger_Coll_NumHalos; c++)
+            for (int c=0; c<Merger_Coll_NumBHs; c++)
                for (int d=0; d<3; d++)  Cen_new_pre[c][d] = pos_min[c][d];
 
-            int N_max[Merger_Coll_NumHalos]; // maximum particle numbers (to allocate the array size)
-            for (int c=0; c<Merger_Coll_NumHalos; c++)   N_max[c] = 10000;
+            int N_max[Merger_Coll_NumBHs]; // maximum particle numbers (to allocate the array size)
+            for (int c=0; c<Merger_Coll_NumBHs; c++)   N_max[c] = 10000;
 
             int      num_par[3] = {0, 0, 0};   // (each rank) number of particles inside the target region of each cluster
-            double **ParX       = (double**)malloc( Merger_Coll_NumHalos*sizeof(double*) );
-            double **ParY       = (double**)malloc( Merger_Coll_NumHalos*sizeof(double*) );
-            double **ParZ       = (double**)malloc( Merger_Coll_NumHalos*sizeof(double*) );
-            double **ParM       = (double**)malloc( Merger_Coll_NumHalos*sizeof(double*) );
-            double **VelX       = (double**)malloc( Merger_Coll_NumHalos*sizeof(double*) );
-            double **VelY       = (double**)malloc( Merger_Coll_NumHalos*sizeof(double*) );
-            double **VelZ       = (double**)malloc( Merger_Coll_NumHalos*sizeof(double*) );
-            for (int c=0; c<Merger_Coll_NumHalos; c++)
+            real_par **ParX     = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
+            real_par **ParY     = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
+            real_par **ParZ     = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
+            real_par **ParM     = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
+            real_par **VelX     = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
+            real_par **VelY     = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
+            real_par **VelZ     = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
+            for (int c=0; c<Merger_Coll_NumBHs; c++)
             {
-               ParX[c] = (double*)malloc( N_max[c]*sizeof(double) );
-               ParY[c] = (double*)malloc( N_max[c]*sizeof(double) );
-               ParZ[c] = (double*)malloc( N_max[c]*sizeof(double) );
-               ParM[c] = (double*)malloc( N_max[c]*sizeof(double) );
-               VelX[c] = (double*)malloc( N_max[c]*sizeof(double) );
-               VelY[c] = (double*)malloc( N_max[c]*sizeof(double) );
-               VelZ[c] = (double*)malloc( N_max[c]*sizeof(double) );
+               ParX[c] = (real_par*)malloc( N_max[c]*sizeof(real_par) );
+               ParY[c] = (real_par*)malloc( N_max[c]*sizeof(real_par) );
+               ParZ[c] = (real_par*)malloc( N_max[c]*sizeof(real_par) );
+               ParM[c] = (real_par*)malloc( N_max[c]*sizeof(real_par) );
+               VelX[c] = (real_par*)malloc( N_max[c]*sizeof(real_par) );
+               VelY[c] = (real_par*)malloc( N_max[c]*sizeof(real_par) );
+               VelZ[c] = (real_par*)malloc( N_max[c]*sizeof(real_par) );
             }
 
 //          find the particles within the accretion radius
-            for (int c=0; c<Merger_Coll_NumHalos; c++)
+            for (int c=0; c<Merger_Coll_NumBHs; c++)
             {
                num_par_sum[c] = 0;
                for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -818,14 +819,14 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                      } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                   }  // if ( DIST_SQR_3D( patch_pos, Cen_new_pre[c] ) <= SQR(20*R_acc+patch_d) )
                } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-            } // for (int c=0; c<Merger_Coll_NumHalos; c++)
+            } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
 //          collect the number of target particles from each rank
             MPI_Allreduce( num_par, num_par_sum, 3, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
 
             int num_par_eachRank[3][MPI_NRank];
             int displs[3][MPI_NRank];
-            for (int c=0; c<Merger_Coll_NumHalos; c++)
+            for (int c=0; c<Merger_Coll_NumBHs; c++)
             {
                MPI_Allgather( &num_par[c], 1, MPI_INT, num_par_eachRank[c], 1, MPI_INT, MPI_COMM_WORLD );
                displs[c][0] = 0;
@@ -833,14 +834,14 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
             }
 
 //          collect the mass, position and velocity of target particles to the root rank
-            real_par **ParX_sum = new real_par* [Merger_Coll_NumHalos];
-            real_par **ParY_sum = new real_par* [Merger_Coll_NumHalos];
-            real_par **ParZ_sum = new real_par* [Merger_Coll_NumHalos];
-            real_par **ParM_sum = new real_par* [Merger_Coll_NumHalos];
-            real_par **VelX_sum = new real_par* [Merger_Coll_NumHalos];
-            real_par **VelY_sum = new real_par* [Merger_Coll_NumHalos];
-            real_par **VelZ_sum = new real_par* [Merger_Coll_NumHalos];
-            for (int c=0; c<Merger_Coll_NumHalos; c++)
+            real_par **ParX_sum = new real_par* [Merger_Coll_NumBHs];
+            real_par **ParY_sum = new real_par* [Merger_Coll_NumBHs];
+            real_par **ParZ_sum = new real_par* [Merger_Coll_NumBHs];
+            real_par **ParM_sum = new real_par* [Merger_Coll_NumBHs];
+            real_par **VelX_sum = new real_par* [Merger_Coll_NumBHs];
+            real_par **VelY_sum = new real_par* [Merger_Coll_NumBHs];
+            real_par **VelZ_sum = new real_par* [Merger_Coll_NumBHs];
+            for (int c=0; c<Merger_Coll_NumBHs; c++)
             {
                ParX_sum[c] = new real_par [num_par_sum[c]];
                ParY_sum[c] = new real_par [num_par_sum[c]];
@@ -851,7 +852,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                VelZ_sum[c] = new real_par [num_par_sum[c]];
             }
 
-            for (int c=0; c<Merger_Coll_NumHalos; c++)
+            for (int c=0; c<Merger_Coll_NumBHs; c++)
             {
                MPI_Allgatherv( ParX[c], num_par[c], MPI_GAMER_REAL_PAR, ParX_sum[c], num_par_eachRank[c], 
                                displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
@@ -873,7 +874,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
             if ( AdjustPos == true )
             {
                double soften = amr->dh[MAX_LEVEL];
-               for (int c=0; c<Merger_Coll_NumHalos; c++)
+               for (int c=0; c<Merger_Coll_NumBHs; c++)
                {
                   double *pote = new double [num_par_sum[c]];
 
@@ -917,13 +918,13 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                   }
                   delete[] pote;
                   delete[] pote_local;
-               } // for (int c=0; c<Merger_Coll_NumHalos; c++)
+               } // for (int c=0; c<Merger_Coll_NumBHs; c++)
             } // if ( AdjustPos == true )
 
 //          calculate the average DM velocity
             if ( AdjustVel == true )
             {
-               for (int c=0; c<Merger_Coll_NumHalos; c++)
+               for (int c=0; c<Merger_Coll_NumBHs; c++)
                {
                   for (int d=0; d<3; d++)   DM_Vel[c][d] = 0.0;
                   for (int i=0; i<num_par_sum[c]; i++)
@@ -939,12 +940,12 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
 //          iterate the above calculation until the output BH positions become close enough
             counter += 1;
             double dis[3] = {0.0, 0.0, 0.0};
-            for (int c=0; c<Merger_Coll_NumHalos; c++)
+            for (int c=0; c<Merger_Coll_NumBHs; c++)
                for (int d=0; d<3; d++)   dis[c] += SQR( pos_min[c][d] - Cen_new_pre[c][d] );
 
             if ( counter > 1  &&  sqrt(dis[0]) < dis_exp  &&  sqrt(dis[1]) < dis_exp )   converged = true;
 
-            for (int c=0; c<Merger_Coll_NumHalos; c++)
+            for (int c=0; c<Merger_Coll_NumBHs; c++)
             {
                delete [] ParX_sum[c];
                delete [] ParY_sum[c];
@@ -962,7 +963,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
             delete [] VelY_sum;
             delete [] VelZ_sum;
 
-            for (int c=0; c<Merger_Coll_NumHalos; c++)
+            for (int c=0; c<Merger_Coll_NumBHs; c++)
             {
                free( ParX[c] );
                free( ParY[c] );
@@ -984,7 +985,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
 
 
 //    find the BH particles and adjust their position and velocity
-      for (int c=0; c<Merger_Coll_NumHalos; c++)
+      for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
          double Cen_Tmp[3] = { -__FLT_MAX__, -__FLT_MAX__, -__FLT_MAX__ }; // set to -inf
          double Vel_Tmp[3] = { -__FLT_MAX__, -__FLT_MAX__, -__FLT_MAX__ };
@@ -1018,7 +1019,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
 //       use MPI_MAX since Cen_Tmp[] is initialized as -inf
          MPI_Allreduce( Cen_Tmp, Cen_new[c], 3, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
          MPI_Allreduce( Vel_Tmp, Cen_Vel[c], 3, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
-      } // for (int c=0; c<Merger_Coll_NumHalos; c++)
+      } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
       if ( CurrentMaxLv  &&  AdjustPos == true )
       {
@@ -1033,7 +1034,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
       for (int d=0; d<3; d++)   Cen_Vel[0][d] = 0.0;
    } // if ( fixBH == true ) ... else ...
 
-   for (int c=0; c<Merger_Coll_NumHalos; c++)
+   for (int c=0; c<Merger_Coll_NumBHs; c++)
       for (int d=0; d<3; d++)  Cen_old[c][d] = Cen_new[c][d];
 
 } // FUNCTION : GetClusterCenter
