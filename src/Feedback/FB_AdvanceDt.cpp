@@ -10,6 +10,11 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
             real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
             const int TID, RandomNumber_t *RNG );
 
+int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                       const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL], long_par *ParAttInt[PAR_NATT_INT_TOTAL],
+                       real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
+                       const int TID, RandomNumber_t *RNG );
+
 
 // user-specified feedback to be set by a test problem initializer
 int (*FB_User_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
@@ -430,11 +435,14 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
                                    amr->patch[0][lv][PID0]->EdgeL[2] - FB_GHOST_SIZE*amr->dh[lv] };
          int Status;
 
-         if ( FB_SNE  )    Status = FB_SNe     ( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAttFlt_Local, ParAttInt_Local,
-                                                 fluid_PG, EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
+         if ( FB_SNE  )              Status = FB_SNe     ( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAttFlt_Local, ParAttInt_Local,
+                                                           fluid_PG, EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
 
-         if ( FB_USER )    Status = FB_User_Ptr( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAttFlt_Local, ParAttInt_Local,
-                                                 fluid_PG, EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
+         if ( FB_RESOLVED_SNEII )    Status = FB_Resolved_SNeII( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAttFlt_Local, ParAttInt_Local,
+                                                                 fluid_PG, EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
+
+         if ( FB_USER )              Status = FB_User_Ptr( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAttFlt_Local, ParAttInt_Local,
+                                                           fluid_PG, EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
 
 
 

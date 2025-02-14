@@ -78,6 +78,11 @@ void Par_Init_ByFunction_Template( const long NPar_ThisRank, const long NPar_All
    for (int p=0; p<NPar_ThisRank; p++)    AllAttributeFlt[Idx_ParCreTime][p] = -1.0;
 #  endif
 
+#  ifdef FEEDBACK
+   if ( FB_RESOLVED_SNEII )
+   for (int p=0; p<NPar_ThisRank; p++)    AllAttributeFlt[Idx_ParSNIITime][p] = INFINITY;
+#  endif
+
 
 // set other particle attributes
 // ============================================================================================================

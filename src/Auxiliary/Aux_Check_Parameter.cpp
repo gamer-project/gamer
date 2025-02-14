@@ -1889,6 +1889,10 @@ void Aux_Check_Parameter()
    if ( FB_ParaBuf > PATCH_SIZE )
       Aux_Error( ERROR_INFO, "FB_ParaBuf (%d) > PATCH_SIZE (%d) !!\n", FB_ParaBuf, PATCH_SIZE );
 
+   if ( FB_RESOLVED_SNEII  &&  PAR_NATT_FLT_USER < 1 )
+      Aux_Error( ERROR_INFO, "FB_RESOLVED_SNEII needs one user-defined particle attribute, but PAR_NATT_FLT_USER = %d !!\n",
+                 PAR_NATT_FLT_USER );
+
 // warning
 // ------------------------------
    if ( MPI_Rank == 0 ) {
