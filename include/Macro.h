@@ -606,8 +606,8 @@
 
 // particle type macros
 
-// number of particle types (default: 4)
-#  define  PAR_NTYPE                8
+// number of particle types (default: 5)
+#  define  PAR_NTYPE                5
 
 // particle type indices (must be in the range 0<=index<PAR_NTYPE)
 #  define  PTYPE_TRACER             (long_par)0
