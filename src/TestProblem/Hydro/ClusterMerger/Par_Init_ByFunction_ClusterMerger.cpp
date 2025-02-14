@@ -781,15 +781,15 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                   {
                      for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                      {
-                        const long ParID         = amr->patch[0][lv][PID]->ParList[p];
-                        const real ParX_tmp      = amr->Par->PosX[ParID];
-                        const real ParY_tmp      = amr->Par->PosY[ParID];
-                        const real ParZ_tmp      = amr->Par->PosZ[ParID];
-                        const real ParM_tmp      = amr->Par->Mass[ParID];
-                        const real VelX_tmp      = amr->Par->VelX[ParID];
-                        const real VelY_tmp      = amr->Par->VelY[ParID];
-                        const real VelZ_tmp      = amr->Par->VelZ[ParID];
-                        const real ParPos_tmp[3] = { ParX_tmp, ParY_tmp, ParZ_tmp };
+                        const long_par ParID         = amr->patch[0][lv][PID]->ParList[p];
+                        const real_par ParX_tmp      = amr->Par->PosX[ParID];
+                        const real_par ParY_tmp      = amr->Par->PosY[ParID];
+                        const real_par ParZ_tmp      = amr->Par->PosZ[ParID];
+                        const real_par ParM_tmp      = amr->Par->Mass[ParID];
+                        const real_par VelX_tmp      = amr->Par->VelX[ParID];
+                        const real_par VelY_tmp      = amr->Par->VelY[ParID];
+                        const real_par VelZ_tmp      = amr->Par->VelZ[ParID];
+                        const real_par ParPos_tmp[3] = { ParX_tmp, ParY_tmp, ParZ_tmp };
 
                         if ( amr->Par->AttributeInt[Idx_ParHalo][ParID] != c )  continue;
                         if ( DIST_SQR_3D( ParPos_tmp, Cen_new_pre[c] ) > SQR(10*R_acc) )   continue;
@@ -807,13 +807,13 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                         if ( num_par[c] >= N_max[c] )
                         {
                             N_max[c] = num_par[c] + 1;  // increase the new maximum size if needed
-                            ParX[c]  = (double*)realloc( ParX[c], N_max[c]*sizeof(double) );
-                            ParY[c]  = (double*)realloc( ParY[c], N_max[c]*sizeof(double) );
-                            ParZ[c]  = (double*)realloc( ParZ[c], N_max[c]*sizeof(double) );
-                            ParM[c]  = (double*)realloc( ParM[c], N_max[c]*sizeof(double) );
-                            VelX[c]  = (double*)realloc( VelX[c], N_max[c]*sizeof(double) );
-                            VelY[c]  = (double*)realloc( VelY[c], N_max[c]*sizeof(double) );
-                            VelZ[c]  = (double*)realloc( VelZ[c], N_max[c]*sizeof(double) );
+                            ParX[c]  = (real_par*)realloc( ParX[c], N_max[c]*sizeof(real_par) );
+                            ParY[c]  = (real_par*)realloc( ParY[c], N_max[c]*sizeof(real_par) );
+                            ParZ[c]  = (real_par*)realloc( ParZ[c], N_max[c]*sizeof(real_par) );
+                            ParM[c]  = (real_par*)realloc( ParM[c], N_max[c]*sizeof(real_par) );
+                            VelX[c]  = (real_par*)realloc( VelX[c], N_max[c]*sizeof(real_par) );
+                            VelY[c]  = (real_par*)realloc( VelY[c], N_max[c]*sizeof(real_par) );
+                            VelZ[c]  = (real_par*)realloc( VelZ[c], N_max[c]*sizeof(real_par) );
                         }
                      } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                   }  // if ( DIST_SQR_3D( patch_pos, Cen_new_pre[c] ) <= SQR(20*R_acc+patch_d) )
@@ -833,33 +833,40 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
             }
 
 //          collect the mass, position and velocity of target particles to the root rank
-            double **ParX_sum = new double* [Merger_Coll_NumHalos];
-            double **ParY_sum = new double* [Merger_Coll_NumHalos];
-            double **ParZ_sum = new double* [Merger_Coll_NumHalos];
-            double **ParM_sum = new double* [Merger_Coll_NumHalos];
-            double **VelX_sum = new double* [Merger_Coll_NumHalos];
-            double **VelY_sum = new double* [Merger_Coll_NumHalos];
-            double **VelZ_sum = new double* [Merger_Coll_NumHalos];
+            real_par **ParX_sum = new real_par* [Merger_Coll_NumHalos];
+            real_par **ParY_sum = new real_par* [Merger_Coll_NumHalos];
+            real_par **ParZ_sum = new real_par* [Merger_Coll_NumHalos];
+            real_par **ParM_sum = new real_par* [Merger_Coll_NumHalos];
+            real_par **VelX_sum = new real_par* [Merger_Coll_NumHalos];
+            real_par **VelY_sum = new real_par* [Merger_Coll_NumHalos];
+            real_par **VelZ_sum = new real_par* [Merger_Coll_NumHalos];
             for (int c=0; c<Merger_Coll_NumHalos; c++)
             {
-               ParX_sum[c] = new double [num_par_sum[c]];
-               ParY_sum[c] = new double [num_par_sum[c]];
-               ParZ_sum[c] = new double [num_par_sum[c]];
-               ParM_sum[c] = new double [num_par_sum[c]];
-               VelX_sum[c] = new double [num_par_sum[c]];
-               VelY_sum[c] = new double [num_par_sum[c]];
-               VelZ_sum[c] = new double [num_par_sum[c]];
+               ParX_sum[c] = new real_par [num_par_sum[c]];
+               ParY_sum[c] = new real_par [num_par_sum[c]];
+               ParZ_sum[c] = new real_par [num_par_sum[c]];
+               ParM_sum[c] = new real_par [num_par_sum[c]];
+               VelX_sum[c] = new real_par [num_par_sum[c]];
+               VelY_sum[c] = new real_par [num_par_sum[c]];
+               VelZ_sum[c] = new real_par [num_par_sum[c]];
             }
 
             for (int c=0; c<Merger_Coll_NumHalos; c++)
             {
-               MPI_Allgatherv( ParX[c], num_par[c], MPI_DOUBLE, ParX_sum[c], num_par_eachRank[c], displs[c], MPI_DOUBLE, MPI_COMM_WORLD );
-               MPI_Allgatherv( ParY[c], num_par[c], MPI_DOUBLE, ParY_sum[c], num_par_eachRank[c], displs[c], MPI_DOUBLE, MPI_COMM_WORLD );
-               MPI_Allgatherv( ParZ[c], num_par[c], MPI_DOUBLE, ParZ_sum[c], num_par_eachRank[c], displs[c], MPI_DOUBLE, MPI_COMM_WORLD );
-               MPI_Allgatherv( ParM[c], num_par[c], MPI_DOUBLE, ParM_sum[c], num_par_eachRank[c], displs[c], MPI_DOUBLE, MPI_COMM_WORLD );
-               MPI_Allgatherv( VelX[c], num_par[c], MPI_DOUBLE, VelX_sum[c], num_par_eachRank[c], displs[c], MPI_DOUBLE, MPI_COMM_WORLD );
-               MPI_Allgatherv( VelY[c], num_par[c], MPI_DOUBLE, VelY_sum[c], num_par_eachRank[c], displs[c], MPI_DOUBLE, MPI_COMM_WORLD );
-               MPI_Allgatherv( VelZ[c], num_par[c], MPI_DOUBLE, VelZ_sum[c], num_par_eachRank[c], displs[c], MPI_DOUBLE, MPI_COMM_WORLD );
+               MPI_Allgatherv( ParX[c], num_par[c], MPI_GAMER_REAL_PAR, ParX_sum[c], num_par_eachRank[c], 
+                               displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
+               MPI_Allgatherv( ParY[c], num_par[c], MPI_GAMER_REAL_PAR, ParY_sum[c], num_par_eachRank[c], 
+                               displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
+               MPI_Allgatherv( ParZ[c], num_par[c], MPI_GAMER_REAL_PAR, ParZ_sum[c], num_par_eachRank[c], 
+                               displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
+               MPI_Allgatherv( ParM[c], num_par[c], MPI_GAMER_REAL_PAR, ParM_sum[c], num_par_eachRank[c], 
+                               displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
+               MPI_Allgatherv( VelX[c], num_par[c], MPI_GAMER_REAL_PAR, VelX_sum[c], num_par_eachRank[c], 
+                               displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
+               MPI_Allgatherv( VelY[c], num_par[c], MPI_GAMER_REAL_PAR, VelY_sum[c], num_par_eachRank[c], 
+                               displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
+               MPI_Allgatherv( VelZ[c], num_par[c], MPI_GAMER_REAL_PAR, VelZ_sum[c], num_par_eachRank[c], 
+                               displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
             }
 
 //          compute potential and find the minimum position, and calculate the average DM velocity on the root rank

@@ -6,7 +6,7 @@
 #if ( MODEL == HYDRO  &&  defined GRAVITY )
 
 extern int    Merger_Coll_NumHalos;
-extern double R_acc;                // the radius to compute the accretoin rate
+extern double R_acc;                // the radius to compute the accretion rate
 extern double ClusterCen[3][3];
 
 static bool   FirstTime = true;

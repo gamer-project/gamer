@@ -47,17 +47,17 @@ extern double     ClusterCen[3][3];
 extern double     BH_Pos[3][3];                            // BH position (for updating ClusterCen)
 extern double     BH_Vel[3][3];                            // BH velocity
 
-       double     Jet_WaveK[3];                            // jet wavenumber used in the sin() function to have smooth bidirectional jets
-       double     Jet_HalfHeight[3];
-       double     Jet_Radius[3];
-       double     V_cyl[3];                                // the volume of jet source
-       double     M_inj[3], P_inj[3], E_inj[3];            // the injected density
-       double     normalize_const[3];                      // the exact normalization constant
+static double     Jet_WaveK[3];                            // jet wavenumber used in the sin() function to have smooth bidirectional jets
+static double     Jet_HalfHeight[3];
+static double     Jet_Radius[3];
+static double     V_cyl[3];                                // the volume of jet source
+static double     M_inj[3], P_inj[3], E_inj[3];            // the injected density
+static double     normalize_const[3];                      // the exact normalization constant
 
 // the variables that need to be recorded
-       double     E_inj_exp[3] = { 0.0, 0.0, 0.0 };        // the expected amount of injected energy
-       double     M_inj_exp[3] = { 0.0, 0.0, 0.0 };        // the expected amount of injected gas mass
-       double     dt_base;
+static double     E_inj_exp[3] = { 0.0, 0.0, 0.0 };        // the expected amount of injected energy
+static double     M_inj_exp[3] = { 0.0, 0.0, 0.0 };        // the expected amount of injected gas mass
+static double     dt_base;
 
 static bool       FirstTime = true;
 extern int        JetDirection_NBin;                       // number of bins of the jet direction table
@@ -192,10 +192,10 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
          which_cluster += c+1;
 
 //       record the old momentum
-         const double momx_old = fluid[MOMX];
-         const double momy_old = fluid[MOMY];
-         const double momz_old = fluid[MOMZ];
-         const double dens_old = fluid[DENS];
+         const real momx_old = fluid[MOMX];
+         const real momy_old = fluid[MOMY];
+         const real momz_old = fluid[MOMZ];
+         const real dens_old = fluid[DENS];
    
          fluid[DENS] += M_inj[c];
 
@@ -206,9 +206,9 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
 
 //       use a sine function to make the velocity smooth within the jet from +Jet_Vec to -Jet_Vec
          EngySin = E_inj[c]*normalize_const[c]*sin( Jet_WaveK[c]*Jet_dh );
-         double P_SQR    = SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]);
+         real P_SQR    = SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]);
 //       the new momentum is calculated from the old density, new density, old momentum and injected energy
-         double P_new = sqrt( 2*fluid[DENS]*(EngySin+0.5*P_SQR/dens_old) );
+         real P_new = sqrt( 2*fluid[DENS]*(EngySin+0.5*P_SQR/dens_old) );
          P_new *= SIGN( Vec_c2m[0]*Jet_Vec[c][0] + Vec_c2m[1]*Jet_Vec[c][1] + Vec_c2m[2]*Jet_Vec[c][2] );
          fluid[MOMX] = P_new * Jet_Vec[c][0];
          fluid[MOMY] = P_new * Jet_Vec[c][1];
@@ -377,24 +377,24 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
       }
 
 //    variables for each rank
-      int    num        [3]       =  { 0, 0, 0 };        // the number of cells inside the accretion radius
-      double gas_mass   [3]       =  { 0.0, 0.0, 0.0 };  // total gas mass inside the accretion radius
-      double rho        [3]       =  { 0.0, 0.0, 0.0 };  // the average density inside the accretion radius (hot gas)
-      double mass_cold  [3]       =  { 0.0, 0.0, 0.0 };  // cold gas mass (T < 5e5 K) inside the accretion radius
-      double Cs         [3]       =  { 0.0, 0.0, 0.0 };  // the average sound speed inside the accretion radius
-      double gas_mom    [3][3]    = {{ 0.0, 0.0, 0.0 },  // average gas momentum
-                                     { 0.0, 0.0, 0.0 },
-                                     { 0.0, 0.0, 0.0 }};
-      double ang_mom    [3][3]    = {{ 0.0, 0.0, 0.0 },  // total angular momentum inside the accretion radius
-                                     { 0.0, 0.0, 0.0 },
-                                     { 0.0, 0.0, 0.0 }};
-      double V_cyl_exact[3]       =  { 0.0, 0.0, 0.0 };  // exact volume of jet cylinder
-      double normalize  [3]       =  { 0.0, 0.0, 0.0 };  // for computing the correct normalization constant
-      bool   if_overlap_each_rank = false;
+      int  num        [3]       =  { 0, 0, 0 };        // the number of cells inside the accretion radius
+      real gas_mass   [3]       =  { 0.0, 0.0, 0.0 };  // total gas mass inside the accretion radius
+      real rho        [3]       =  { 0.0, 0.0, 0.0 };  // the average density inside the accretion radius (hot gas)
+      real mass_cold  [3]       =  { 0.0, 0.0, 0.0 };  // cold gas mass (T < 5e5 K) inside the accretion radius
+      real Cs         [3]       =  { 0.0, 0.0, 0.0 };  // the average sound speed inside the accretion radius
+      real gas_mom    [3][3]    = {{ 0.0, 0.0, 0.0 },  // average gas momentum
+                                   { 0.0, 0.0, 0.0 },
+                                   { 0.0, 0.0, 0.0 }};
+      real ang_mom    [3][3]    = {{ 0.0, 0.0, 0.0 },  // total angular momentum inside the accretion radius
+                                   { 0.0, 0.0, 0.0 },
+                                   { 0.0, 0.0, 0.0 }};
+      real V_cyl_exact[3]       =  { 0.0, 0.0, 0.0 };  // exact volume of jet cylinder
+      real normalize  [3]       =  { 0.0, 0.0, 0.0 };  // for computing the correct normalization constant
+      bool if_overlap_each_rank = false;
 
 //    variables for all ranks
       int    num_sum[3];
-      double rho_sum[3], Cs_sum[3], gas_mom_sum[3][3], gas_vel_sum[3][3], V_cyl_exact_sum[3], normalize_sum[3];
+      real rho_sum[3], Cs_sum[3], gas_mom_sum[3][3], gas_vel_sum[3][3], V_cyl_exact_sum[3], normalize_sum[3];
 
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {
@@ -423,22 +423,30 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                {
                   gas_mass[c] += fluid_acc[0]*dv;
 #                 ifdef DUAL_ENERGY
-                  double pres = Hydro_DensDual2Pres( fluid_acc[0], fluid_acc[DUAL], EoS_AuxArray_Flt[1], false, NULL_REAL );
-                  double eint = EoS_DensPres2Eint_CPUPtr( fluid_acc[0], pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-                  double Temp = EoS_DensEint2Temp_CPUPtr( fluid_acc[0], eint, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                  const real Pres = Hydro_DensDual2Pres( fluid_acc[0], fluid_acc[DUAL], EoS_AuxArray_Flt[1], 
+                                                         false, NULL_REAL );
+                  const real Eint = EoS_DensPres2Eint_CPUPtr( fluid_acc[0], Pres, NULL, EoS_AuxArray_Flt, 
+                                                              EoS_AuxArray_Int, h_EoS_Table );
+                  const real Temp = EoS_DensEint2Temp_CPUPtr( fluid_acc[0], Eint, NULL, EoS_AuxArray_Flt, 
+                                                              EoS_AuxArray_Int, h_EoS_Table );
 #                 else
-                  double Temp = (real)Hydro_Con2Temp( fluid_acc[0], fluid_acc[1], fluid_acc[2], fluid_acc[3], fluid_acc[4],
-                                                      fluid_acc+NCOMP_FLUID, false, MIN_TEMP, Emag,
-                                                      EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                                      EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                  const real Pres = Hydro_Con2Pres( fluid_acc[0], fluid_acc[1], fluid_acc[2], fluid_acc[3], 
+                                                    fluid_acc[4], fluid_acc+NCOMP_FLUID, true, MIN_PRES, Emag,
+                                                    EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, 
+                                                    EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, 
+                                                    h_EoS_Table );
+                  const real Temp = Hydro_Con2Temp( fluid_acc[0], fluid_acc[1], fluid_acc[2], fluid_acc[3], 
+                                                    fluid_acc[4], fluid_acc+NCOMP_FLUID, false, MIN_TEMP, Emag,
+                                                    EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, 
+                                                    EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, 
+                                                    h_EoS_Table );
 #                 endif
                   if ( Temp <= 5e5 )   mass_cold[c] += fluid_acc[0]*dv;
                   else
                   {
                      rho[c] += fluid_acc[0]*dv;
-                     double Pres = EoS_DensTemp2Pres_CPUPtr( fluid_acc[0], Temp, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-                     Pres = Hydro_CheckMinPres( Pres, MIN_PRES );
-                     Cs[c] += sqrt( EoS_DensPres2CSqr_CPUPtr( fluid_acc[0], Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ) );
+                     Cs[c] += sqrt( EoS_DensPres2CSqr_CPUPtr( fluid_acc[0], Pres, NULL, EoS_AuxArray_Flt, 
+                                    EoS_AuxArray_Int, h_EoS_Table ) );
                      for (int d=0; d<3; d++)   gas_mom[c][d] += fluid_acc[d+1]*dv;
                      num[c] += 1;
                   } // if ( Temp <= 5e5 )
@@ -451,9 +459,9 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 //             calculate the exact volume of jet cylinder and normalization
                if ( CurrentMaxLv )
                {
-                  double Jet_dr_2, Jet_dh_2, S_2, Area_2;
-                  double Dis_c2m_2, Dis_c2v_2, Dis_v2m_2, Vec_c2m_2[3], Vec_v2m_2[3];
-                  double TempVec_2[3];
+                  real Jet_dr_2, Jet_dh_2, S_2, Area_2;
+                  real Dis_c2m_2, Dis_c2v_2, Dis_v2m_2, Vec_c2m_2[3], Vec_v2m_2[3];
+                  real TempVec_2[3];
                   double Pos_2[3] = {x2, y2, z2};
 
                   for (int d=0; d<3; d++)    Vec_c2m_2[d] = Pos_2[d] - ClusterCen[c][d];
@@ -484,15 +492,15 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
       for (int c=0; c<Merger_Coll_NumHalos; c++)
       {
-         MPI_Allreduce( &num[c],         &num_sum[c],         1, MPI_INT,    MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( &gas_mass[c],    &GasMass[c],         1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( &rho[c],         &rho_sum[c],         1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( &mass_cold[c],   &ColdGasMass[c],     1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( &Cs[c],          &Cs_sum[c],          1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( gas_mom[c],       gas_mom_sum[c],     3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( ang_mom[c],       ang_mom_sum[c],     3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( &V_cyl_exact[c], &V_cyl_exact_sum[c], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( &normalize[c],   &normalize_sum[c],   1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( &num[c],         &num_sum[c],         1, MPI_INT,        MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( &gas_mass[c],    &GasMass[c],         1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( &rho[c],         &rho_sum[c],         1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( &mass_cold[c],   &ColdGasMass[c],     1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( &Cs[c],          &Cs_sum[c],          1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( gas_mom[c],       gas_mom_sum[c],     3, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( ang_mom[c],       ang_mom_sum[c],     3, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( &V_cyl_exact[c], &V_cyl_exact_sum[c], 1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( &normalize[c],   &normalize_sum[c],   1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
       } // for (int c=0; c<Merger_Coll_NumHalos; c++)
       MPI_Allreduce( &if_overlap_each_rank, &if_overlap, 1, MPI_CXX_BOOL, MPI_LOR, MPI_COMM_WORLD );
 
@@ -691,11 +699,11 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 //             record the amount of sunk variables removed at the maximum level
                if ( CurrentMaxLv )
                {
-                  real Ekin_old, Ekin_new, Eint_old, Eint_new;
-                  Ekin_old = (real)0.5*( SQR(fluid_old[MOMX]) + SQR(fluid_old[MOMY]) + SQR(fluid_old[MOMZ]) ) / (fluid_old[DENS]);
-                  Ekin_new = (real)0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
-                  Eint_old = fluid_old[ENGY] - Ek - Emag;
-                  Eint_new = fluid[ENGY] - Ek_new - Emag;
+                  const real Ekin_old = 0.5*( SQR(fluid_old[MOMX]) + SQR(fluid_old[MOMY]) + SQR(fluid_old[MOMZ]) ) / 
+                                             (fluid_old[DENS]);
+                  const real Ekin_new = 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
+                  const real Eint_old = fluid_old[ENGY] - Ek - Emag;
+                  const real Eint_new = fluid[ENGY] - Ek_new - Emag;
 
                   CM_Bondi_SinkMass[Reset-1]    += dv *     ( fluid[DENS] - fluid_old[DENS] );
                   CM_Bondi_SinkMomX[Reset-1]    += dv *     ( fluid[MOMX] - fluid_old[MOMX] );
