@@ -18,7 +18,7 @@ body:
   - type: textarea
     id: issue_content
     attributes:
-      label: What happened?
+      label: 🔎 What happened?
       description: Also tell us, what did you expect to happen?
       placeholder: Tell us what you see!
     validations:
@@ -27,7 +27,7 @@ body:
   - type: textarea
     id: reproduce_step
     attributes:
-      label: Steps to reproduce
+      label: 📃 Steps to reproduce
       description: Please provide steps to help us reproduce the issue.
       placeholder: |
         e.g.
@@ -40,7 +40,7 @@ body:
   - type: input
     id: commit_hash
     attributes:
-      label: Commit hash
+      label: ⌚ Commit hash
       description: Please provide the commit hash of the version you are using by running `git rev-parse HEAD`.
       placeholder: e.g. 2f1ceb7ceb6249f0252d58cdc0269383631bdd68 or 2f1ceb7
     validations:
@@ -49,21 +49,21 @@ body:
   - type: input
     id: config_cmd
     attributes:
-      label: Configuration command
+      label: 🔧 Configuration command
       description: Please provide the configuration command you used to generate the Makefile. Could also be found in `generate_make.sh` if you used it.
       placeholder: e.g. python configure.py --fftw=FFTW2 --gravity=true --gpu=true
 
   - type: textarea
     id: files_modified
     attributes:
-      label: Source files modified
+      label: 🔨 Source files modified
       description: Please provide a list of source files you modified, if any.
       placeholder: e.g. src/Hydro/Gravity/Init_TestProb_Hydro_Gravity.cpp
 
   - type: dropdown
     id: operation_system
     attributes:
-      label: What is your OS?
+      label: 💻 What is your OS?
       description: If you connect to a remote server, please specify the OS of the server.
       multiple: false
       options:
@@ -78,7 +78,7 @@ body:
   - type: textarea
     id: machine
     attributes:
-      label: Machine Configuration File
+      label: 💾 Machine Configuration File
       description: Please provide the machine configuration file you are using. If it is a provided one, just specify the name.
       placeholder: |
         e.g.
@@ -97,7 +97,7 @@ body:
   - type: checkboxes
     id: labels
     attributes:
-      label: Related topics
+      label: 🔖 Related topics
       description: You may select more than one.
       options:
         - label: Hydro
@@ -116,6 +116,6 @@ body:
   - type: textarea
     id: additional_info
     attributes:
-      label: Additional information
+      label: 💬 Additional information
       description: Please provide any additional information that may be helpful in resolving the issue.
       placeholder: Any other details you think might be relevant. e.g. screen shots, logs, etc.

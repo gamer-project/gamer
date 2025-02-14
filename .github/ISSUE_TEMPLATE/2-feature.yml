@@ -15,7 +15,7 @@ body:
   - type: textarea
     id: feature_description
     attributes:
-      label: What is the proposed feature?
+      label: 💭 What is the proposed feature?
       description: Describe the feature you would like to see.
       placeholder: A clear and concise description of your feature.
     validations:
@@ -24,7 +24,7 @@ body:
   - type: textarea
     id: use_case
     attributes:
-      label: Use case
+      label: 🔆 Use case
       description: Provide examples or use cases where this feature could be applied.
       placeholder: Describe specific use cases in detail.
     validations:
@@ -33,7 +33,7 @@ body:
   - type: textarea
     id: motivation
     attributes:
-      label: Motivation and benefits
+      label: 💡 Motivation and benefits
       description: Explain why this feature would be useful and how it can benefit the project.
       placeholder: Describe the reason and expected benefits.
     validations:
@@ -42,14 +42,14 @@ body:
   - type: textarea
     id: additional_info
     attributes:
-      label: Additional information
+      label: 💬 Additional information
       description: Provide any additional information or context that may be helpful.
       placeholder: Any other relevant details or context.
 
   - type: checkboxes
     id: labels
     attributes:
-      label: Related topics
+      label: 🔖 Related topics
       description: You may select more than one.
       options:
         - label: Hydro
