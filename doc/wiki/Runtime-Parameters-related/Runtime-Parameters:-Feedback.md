@@ -46,7 +46,7 @@ the fixed explosion delay time ([[FB_RESOLVED_SNEII_DELAY_TIME | Runtime Paramet
 When the supernova explodes, it will inject
 the given amount of thermal energy ([[FB_RESOLVED_SNEII_EJECT_ENGY | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII_EJECT_ENGY ]]),
 mass ([[FB_RESOLVED_SNEII_EJECT_MASS | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII_EJECT_MASS ]]), and
-metal(FB_RESOLVED_SNEII_EJECT_METAL[[FB_RESOLVED_SNEII_EJECT_METAL | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII_EJECT_METAL ]])
+metal([[FB_RESOLVED_SNEII_EJECT_METAL | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII_EJECT_METAL ]])
 into fluid of the one cell where the particle is located.
 See sec. 2.6 in [Chia-Yu Hu et al. 2023](https://doi.org/10.3847/1538-4357/accf9e) for reference.
     * **Restriction:**
