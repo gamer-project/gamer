@@ -47,6 +47,7 @@ PAR_NPAR                      2097152     # total number of particles (must be s
 PAR_INIT                      3           # initialization option for particles: (1=FUNCTION, 2=RESTART, 3=FILE->"PAR_IC")
 PAR_IC_FORMAT                 1           # data format of PAR_IC: (1=[attribute][id], 2=[id][attribute]; row-major) [1]
 PAR_IC_FLOAT8                -1           # floating-point precision for PAR_IC (<0: default, 0: single, 1: double) [default: same as FLOAT8_PAR]
+PAR_IC_INT8                  -1           # integer width for PAR_IC (<0: default, 0: 32-bit, 1: 64-bit) [default: same as INT8_PAR]
 PAR_IC_MASS                  -1.0         # mass of all particles for PAR_INIT==3 (<0=off) [-1.0]
 PAR_IC_TYPE                  -1           # type of all particles for PAR_INIT==3 (<0=off) [-1]
 PAR_INTERP                    3           # particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [2]
@@ -200,7 +201,7 @@ INT_MONO_COEFF                2.0         # coefficient for ensuring the interpo
 
 # data dump
 OPT__OUTPUT_TOTAL             1           # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
-OPT__OUTPUT_PART              0           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
+OPT__OUTPUT_PART              0           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag, 8=entire box) [0]
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
 OPT__OUTPUT_PAR_MODE          0           # output the particle data: (0=off, 1=text-file, 2=C-binary) [0] ##PARTICLE ONLY##
 OPT__OUTPUT_BASEPS            1           # output the base-level power spectrum [0]
@@ -215,6 +216,7 @@ OUTPUT_PART_X                -1.0         # x coordinate for OPT__OUTPUT_PART [-
 OUTPUT_PART_Y                -1.0         # y coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Z                -1.0         # z coordinate for OPT__OUTPUT_PART [-1.0]
 INIT_DUMPID                  -1           # set the first dump ID (<0=auto) [-1]
+OUTPUT_DIR                    .           # set the output directory [.]
 
 
 # miscellaneous

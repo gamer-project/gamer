@@ -70,7 +70,7 @@ disk_velz = disk_velz[ indexR[:num] ]
 
 disk_type = np.full(num, 2)
 disk_mass = np.full(num, mass)
-with open('PAR_IC', 'wb') as output:
+with open('DiskHeatingParticleIC', 'wb') as output:
     output.write(disk_mass.astype('f').tobytes())
     output.write(disk_posx.astype('f').tobytes())
     output.write(disk_posy.astype('f').tobytes())
@@ -82,4 +82,4 @@ with open('PAR_IC', 'wb') as output:
 output.close()
 #print('Disk particles = '+ str(len(disk_posx)))
 print('Disk particles = '+ str(num))
-print('PAR_IC complete')
+print('DiskHeatingParticleIC complete')

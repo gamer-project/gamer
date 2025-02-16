@@ -28,6 +28,12 @@ typedef double real_par;
 typedef float  real_par;
 #endif
 
+#ifdef INT8_PAR
+typedef long long_par;
+#else
+typedef int  long_par;
+#endif
+
 #ifdef SUPPORT_GRACKLE
 #include <grackle_float.h>
 #if   defined GRACKLE_FLOAT_8
@@ -209,7 +215,8 @@ const OptOutputPart_t
    OUTPUT_X         = 4,
    OUTPUT_Y         = 5,
    OUTPUT_Z         = 6,
-   OUTPUT_DIAG      = 7;
+   OUTPUT_DIAG      = 7,
+   OUTPUT_BOX       = 8;
 
 
 // OPT_OUTPUT_PAR_MODE options

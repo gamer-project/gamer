@@ -32,6 +32,8 @@ extern double     dTime_Base;                         // physical time interval 
 extern double     FlagTable_Rho        [NLEVEL-1];    // refinement criterion of density
 extern double     FlagTable_RhoGradient[NLEVEL-1];    // refinement criterion of density gradient
 extern double     FlagTable_Lohner     [NLEVEL-1][5]; // refinement criterion based on Lohner's error estimator
+extern double     FlagTable_Angular    [NLEVEL-1][3]; // refinement criterion based on angular resolution
+extern double     FlagTable_Radial     [NLEVEL-1];    // refinement criterion based on radial resolution
 extern double    *FlagTable_User       [NLEVEL-1];    // user-defined refinement criterion
 extern double    *DumpTable;                          // dump table recording the physical times to output data
 extern int        DumpTable_NDump;                    // number of data dumps in the dump table
@@ -66,7 +68,7 @@ extern int        INIT_DUMPID, INIT_SUBSAMPLING_NCELL, OPT__TIMING_BARRIER, OPT_
 extern double     OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z, AUTO_REDUCE_DT_FACTOR, AUTO_REDUCE_DT_FACTOR_MIN;
 extern double     AUTO_REDUCE_INT_MONO_FACTOR, AUTO_REDUCE_INT_MONO_MIN;
 extern double     OPT__CK_MEMFREE, INT_MONO_COEFF, UNIT_L, UNIT_M, UNIT_T, UNIT_V, UNIT_D, UNIT_E, UNIT_P;
-extern bool       OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_USER, OPT__FLAG_LOHNER_DENS, OPT__FLAG_REGION;
+extern bool       OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_USER, OPT__FLAG_LOHNER_DENS, OPT__FLAG_REGION, OPT__FLAG_ANGULAR, OPT__FLAG_RADIAL;
 extern int        OPT__FLAG_USER_NUM, MONO_MAX_ITER, OPT__RESET_FLUID_INIT;
 extern bool       OPT__DT_USER, OPT__RECORD_DT, OPT__RECORD_MEMORY, OPT__MEMORY_POOL, OPT__RESTART_RESET;
 extern bool       OPT__FIXUP_RESTRICT, OPT__INIT_RESTRICT, OPT__VERBOSE, OPT__MANUAL_CONTROL, OPT__UNIT;
@@ -79,10 +81,14 @@ extern bool       OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLA
 extern bool       OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
 extern bool       OPT__INT_FRAC_PASSIVE_LR, OPT__CK_INPUT_FLUID, OPT__SORT_PATCH_BY_LBIDX;
 extern char       OPT__OUTPUT_TEXT_FORMAT_FLT[MAX_STRING];
+extern int        OPT__OUTPUT_TEXT_LENGTH_INT;
 extern int        OPT__UM_IC_FLOAT8;
 extern double     COM_CEN_X, COM_CEN_Y, COM_CEN_Z, COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R;
 extern int        COM_MAX_ITER;
 extern double     ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z;
+extern char       OUTPUT_DIR[MAX_STRING];
+extern double     FLAG_ANGULAR_CEN_X, FLAG_ANGULAR_CEN_Y, FLAG_ANGULAR_CEN_Z;
+extern double     FLAG_RADIAL_CEN_X, FLAG_RADIAL_CEN_Y, FLAG_RADIAL_CEN_Z;
 
 extern UM_IC_Format_t     OPT__UM_IC_FORMAT;
 extern TestProbID_t       TESTPROB_ID;
@@ -95,6 +101,9 @@ extern OptFluBC_t         OPT__BC_FLU[6];          // boundary conditions of flu
 extern OptLohnerForm_t    OPT__FLAG_LOHNER_FORM;
 extern OptCorrAfterSync_t OPT__CORR_AFTER_ALL_SYNC;
 extern OptTimeStepLevel_t OPT__DT_LEVEL;
+
+extern bool       ConRefInitialized;
+extern double     ConRef[1+NCONREF_MAX];
 
 
 
@@ -236,6 +245,7 @@ extern int             OPT__OUTPUT_PAR_MODE, OPT__PARTICLE_COUNT, OPT__FLAG_NPAR
 extern double          FlagTable_ParMassCell[NLEVEL-1];
 extern ParOutputDens_t OPT__OUTPUT_PAR_DENS;
 extern int             PAR_IC_FLOAT8;
+extern int             PAR_IC_INT8;
 #endif
 
 
@@ -372,7 +382,7 @@ extern InterpolationHandler Int_InterpolationHandler;
 // =======================================================================================================
 #ifdef COSMIC_RAY
 extern double GAMMA_CR;
-extern bool OPT__FLAG_CRAY, OPT__FLAG_LOHNER_CRAY;
+extern bool   OPT__FLAG_CRAY, OPT__FLAG_LOHNER_CRAY;
 extern double FlagTable_CRay[NLEVEL-1];
 #endif
 
