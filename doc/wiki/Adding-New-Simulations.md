@@ -78,6 +78,10 @@ function is called `Init_TestProb_Hydro_NewProblem()`:
 *problem source file*) to replace all strings
 `Init_TestProb_Template` by `Init_TestProb_Hydro_NewProblem`.
 
+> [!TIP]
+> You can also add additional source files in `src/TestProblem/Hydro/NewProblem`.
+They will be compiled automatically without the need to modify the `Makefile`.
+
 
 ## III. Set Initial Conditions
 1. Grids IC &#8212; choose one of the following two methods:

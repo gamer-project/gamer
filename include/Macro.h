@@ -227,6 +227,10 @@
 #  define NFLUX_TOTAL         ( NFLUX_FLUID + NFLUX_PASSIVE )
 
 
+// maximum number of reference values stored in ConRef[]
+#  define NCONREF_MAX         60
+
+
 // number of input/output fluid variables in the fluid solver
 #if   ( MODEL == HYDRO )
 #  define FLU_NIN             NCOMP_TOTAL

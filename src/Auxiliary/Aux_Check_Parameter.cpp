@@ -135,13 +135,13 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "currently the check \"%s\" must work with \"%s\" !!\n",
                  "OPT__CK_REFINE", "OPT__FLAG_RHO" );
 
-   if ( OPT__CK_CONSERVATION  &&  ANGMOM_ORIGIN_X > amr->BoxEdgeR[0] )
+   if ( ANGMOM_ORIGIN_X > amr->BoxEdgeR[0] )
       Aux_Error( ERROR_INFO, "incorrect ANGMOM_ORIGIN_X = %lf (out of range [X<=%lf]) !!\n", ANGMOM_ORIGIN_X, amr->BoxEdgeR[0] );
 
-   if ( OPT__CK_CONSERVATION  &&  ANGMOM_ORIGIN_Y > amr->BoxEdgeR[1] )
+   if ( ANGMOM_ORIGIN_Y > amr->BoxEdgeR[1] )
       Aux_Error( ERROR_INFO, "incorrect ANGMOM_ORIGIN_Y = %lf (out of range [Y<=%lf]) !!\n", ANGMOM_ORIGIN_Y, amr->BoxEdgeR[1] );
 
-   if ( OPT__CK_CONSERVATION  &&  ANGMOM_ORIGIN_Z > amr->BoxEdgeR[2] )
+   if ( ANGMOM_ORIGIN_Z > amr->BoxEdgeR[2] )
       Aux_Error( ERROR_INFO, "incorrect ANGMOM_ORIGIN_Z = %lf (out of range [Z<=%lf]) !!\n", ANGMOM_ORIGIN_Z, amr->BoxEdgeR[2] );
 
    if ( OPT__RECORD_CENTER  &&  COM_CEN_X > amr->BoxSize[0] )
@@ -337,9 +337,9 @@ void Aux_Check_Parameter()
 #  endif // #if ( MODEL == HYDRO )
 
 
-   if ( strlen(OUTPUT_DIR) > MAX_STRING-100-1 )
-      Aux_Error( ERROR_INFO, "Length of OUTPUT_DIR (%d) should be smaller than MAX_STRING-100-1 (%d) !!\n",
-                 strlen(OUTPUT_DIR), MAX_STRING-100-1 );
+   if ( strlen(OUTPUT_DIR) > MAX_STRING-1 )
+      Aux_Error( ERROR_INFO, "Length of OUTPUT_DIR (%d) should be smaller than MAX_STRING-1 (%d) !!\n",
+                 strlen(OUTPUT_DIR), MAX_STRING-1 );
 
    if (  ! Aux_CheckFolderExist( OUTPUT_DIR )  )
       Aux_Error( ERROR_INFO, "\"%s\" folder set by OUTPUT_DIR does not exist !!\n", OUTPUT_DIR );
