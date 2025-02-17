@@ -26,6 +26,7 @@ static real SF_CreateStar_GetStarMass_MaxStarM( const real GasDens, const real d
 //-------------------------------------------------------------------------------------------------------
 real SF_CreateStar_GetStarMass( const real GasDens, const real dv, const real dt, RandomNumber_t *RNG, const int TID )
 {
+
    real StarMass = -1.0;
 
    switch ( SF_CREATE_STAR_SCHEME )
@@ -71,6 +72,7 @@ real SF_CreateStar_GetStarMass( const real GasDens, const real dv, const real dt
 real SF_CreateStar_GetStarMass_StochasticLoaclSchmidtLaw( const real GasDens, const real dv, const real dt, RandomNumber_t *RNG,
                                                           const real Efficiency, const real MinStarMass, const int TID )
 {
+
    real StarMass = -1.0;
 
    const real   Coeff_FreeFall = SQRT( (32.0*NEWTON_G)/(3.0*M_PI) );
@@ -112,7 +114,7 @@ real SF_CreateStar_GetStarMass_StochasticLoaclSchmidtLaw( const real GasDens, co
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SF_CreateStar_GetStarMass_MaxStarMass
+// Function    :  SF_CreateStar_GetStarMass_MaxStarM
 // Description :  Maximum gas mass allowed to be converted to star
 //
 // Note        :  1.
@@ -125,6 +127,7 @@ real SF_CreateStar_GetStarMass_StochasticLoaclSchmidtLaw( const real GasDens, co
 //-------------------------------------------------------------------------------------------------------
 real SF_CreateStar_GetStarMass_MaxStarM( const real GasDens, const real dv, const real MaxStarMFrac )
 {
+
    real StarMass = -1.0;
 
    StarMass  = GasDens * dv * MaxStarMFrac;

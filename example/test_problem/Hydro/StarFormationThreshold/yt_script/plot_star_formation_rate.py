@@ -4,6 +4,7 @@ import yt
 import numpy as np
 from yt.data_objects.particle_filters import add_particle_filter
 from matplotlib import pyplot as plt
+import warnings
 
 
 filein  = "../Data_%06d"%np.genfromtxt("../Record__Dump")[-1][0]
@@ -78,8 +79,14 @@ if   ds.parameters['SF_CreateStar_Scheme'] == 1:   # with minimum density thresh
 elif ds.parameters['SF_CreateStar_Scheme'] == 2:   # with maximum Jeans length thredshold
    star_formation_region = ds.cut_region( ds.all_data(), ["obj['gas', 'jeans_length_dh'] <= %.2e"%ds.parameters['SF_CreateStar_MaxGasJeansL']] )
 
+else:
+   raise RuntimeError('Unsupported SF_CreateStar_Scheme = %d !!'%(ds.parameters['SF_CreateStar_Scheme']))
+
 sfr_analytical = star_formation_region.quantities.total_quantity('SchmidtLaw_star_formation_rate').in_units('Msun/yr').d
 
+# The analytical star formation rate is calculated only by the last data and assume the density is a constant
+if ds.parameters['Opt__ResetFluid'] == 0:
+   warnings.warn('WARNING: The analytical solution assume a constant-density environment !!')
 
 # plot
 plt.axhline( sfr_analytical, color='r', linestyle='--', label='Analytical' )

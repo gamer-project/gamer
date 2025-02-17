@@ -1,6 +1,6 @@
 Compilation flags:
 ========================================
-Enable : MODEL=HYDRO, PARTICLE, GRAVITY, DUAL_ENERGY, STAR_FORMATION
+Enable : MODEL=HYDRO, PARTICLE, GRAVITY, STAR_FORMATION
 Disable: COMOVING
 
 
@@ -25,7 +25,9 @@ Note:
    - Linearly varying log( temperature ) in the y direction
    - No variation in the z direction
 
-2. Both the fluid and the particles are freezed and the fluid is reset to the initial condition every step
+2. Both the fluid and the particles are freezed and
+   the fluid is reset to the initial condition every step by default to keep a constant environment
+   - One can also set OPT__RESET_FLUID = 0 to see how the fluid decreases and is converted into stars
 
 3. This is to test the star formation conditions that star should only form at the allowed region
    - SF_CREATE_STAR_SCHEME = 1 -> the minimum gas density (SF_CREATE_STAR_MIN_GAS_DENS)

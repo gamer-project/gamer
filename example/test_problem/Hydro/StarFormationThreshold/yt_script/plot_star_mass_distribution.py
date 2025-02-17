@@ -42,6 +42,11 @@ y_lim_max = 4.0e3
 
 for ds in ts.piter():
 
+#  check particle
+   if len( ds.all_data()['all', 'particle_ones'] ) == 0:
+      print( 'WARNING: There is no particle in %s !!'%ds )
+      continue
+
 #  plot
    p = yt.PhasePlot( ds, ('all', 'ParCreTime'), ('all', 'particle_mass'), ('all', 'particle_ones'),
                      weight_field=None, x_bins=256, y_bins=256 )

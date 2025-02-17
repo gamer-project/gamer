@@ -96,12 +96,9 @@ void Validate()
 // warnings
    if ( MPI_Rank == 0 )
    {
-#     ifndef DUAL_ENERGY
-         Aux_Message( stderr, "WARNING : it's recommended to enable DUAL_ENERGY for this test !!\n" );
-#     endif
 
       if ( !OPT__RESET_FLUID )
-         Aux_Message( stderr, "WARNING : it's recommended to enable OPT__RESET_FLUID for this test !!\n" );
+         Aux_Message( stderr, "WARNING : it's recommended to enable OPT__RESET_FLUID to have a constant environment for this test !!\n" );
 
    } // if ( MPI_Rank == 0 )
 

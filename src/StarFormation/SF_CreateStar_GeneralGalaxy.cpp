@@ -34,11 +34,11 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
 #  endif
 
 #  ifndef GRAVITY
-#     error : must turn on GRAVITY for SF_CreateStar_GeneralGalaxy() !!
+   Aux_Error( ERROR_INFO, "Must turn on GRAVITY for %s() !!\n", __FUNCTION__ );
 #  endif
 
 #  ifdef COMOVING
-#     error : SF_CreateStar_GeneralGalaxy() does not support COMOVING yet !!
+   Aux_Error( ERROR_INFO, "%s() does not support COMOVING yet !!\n", __FUNCTION__ );
 #  endif
 
 #  ifdef GAMER_DEBUG
@@ -86,7 +86,7 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
    bool NeedPres = false;
    bool NeedCs2  = false;
 
-   if ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_DWARFGALAXY )   NeedCs2  = true;
+   if ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_DWARFGALAXY )   NeedCs2 = true;
    if ( NeedCs2 )   NeedPres = true;
 
 #  ifdef MHD
@@ -237,8 +237,7 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
          if ( StarMass <= 0.0 )   continue;
 
 //       check the maximum gas mass fraction allowed to convert to stars
-         StarMFrac = StarMass / GasMass;
-         StarMFrac = MIN( StarMFrac, SF_CREATE_STAR_MAX_STAR_MFRAC );
+         StarMFrac = MIN( StarMass/GasMass, SF_CREATE_STAR_MAX_STAR_MFRAC );
          StarMass  = GasMass*StarMFrac;
 
 

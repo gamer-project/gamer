@@ -134,6 +134,9 @@ for ds in ts.piter():
             x_1 = ds.domain_right_edge[0]
             y_1 = np.log10( get_T_for_MaxJeansLength( ds.quan( zlim_max['density'], 'g/cm**3' ) ) )
 
+         else:
+            raise RuntimeError('Unsupported SF_CreateStar_Scheme = %d !!'%(ds.parameters['SF_CreateStar_Scheme']))
+
          pz.annotate_line( [ x_0, y_0,  ds.domain_right_edge[2] ],
                            [ x_1, y_1,  ds.domain_right_edge[2] ],
                            coord_system="data", color='red', linewidth=3, linestyle='--' )

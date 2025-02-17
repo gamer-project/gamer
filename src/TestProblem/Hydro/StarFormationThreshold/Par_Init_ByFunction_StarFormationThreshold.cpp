@@ -47,7 +47,7 @@ void Par_Init_ByFunction_StarFormationThreshold( const long NPar_ThisRank, const
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
-   if ( NPar_ThisRank !=0  ||  NPar_AllRank != 0 )
+   if ( NPar_ThisRank != 0  ||  NPar_AllRank != 0 )
       Aux_Error( ERROR_INFO, "total number of particles [%ld] != 0 !!\n", NPar_AllRank );
 
 
