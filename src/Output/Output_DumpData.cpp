@@ -103,9 +103,9 @@ void Output_DumpData( const int Stage )
 
 
 // set the file names for all output functions
-   char FileName_Total[MAX_STRING], FileName_Part[MAX_STRING], FileName_Temp[MAX_STRING], FileName_PS[MAX_STRING];
+   char FileName_Total[2*MAX_STRING], FileName_Part[2*MAX_STRING], FileName_Temp[2*MAX_STRING], FileName_PS[2*MAX_STRING];
 #  ifdef PARTICLE
-   char FileName_Particle[MAX_STRING];
+   char FileName_Particle[2*MAX_STRING];
 #  endif
 
    if ( OPT__OUTPUT_TOTAL )
@@ -318,7 +318,7 @@ void Output_DumpData( const int Stage )
 void Write_DumpRecord()
 {
 
-   char FileName[MAX_STRING];
+   char FileName[2*MAX_STRING];
    sprintf( FileName, "%s/Record__Dump", OUTPUT_DIR );
 
 
