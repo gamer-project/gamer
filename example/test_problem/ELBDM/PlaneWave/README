@@ -21,3 +21,7 @@ Note:
 4. Support using the analytical-solution BC (OPT__BC_FLU_* = 4) and it must be used when:
    a. PWave_NWavelength is not a integer
    b. Using the hybrid scheme to run the case of travelling wave and there are only fluid levels at the boundary
+5. For ELBDM_SCHEME = ELBDM_HYBRID
+   a. the default setup is without refinement and adopts the fluid scheme;
+      When setting MAX_LEVEL > 0, the refinement is based on OPT__FLAG_INTERFERENCE
+      and the refined levels adopt the wave scheme while the base level adopts the fluid scheme

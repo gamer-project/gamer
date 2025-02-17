@@ -25,4 +25,6 @@ Note:
       - non-travelling but non-periodic
    c. The default setup may lead to "time-step is too small" error
       --> Try a larger Gau_Width to avoid it
-
+   d. The default setup is without refinement and adopts the fluid scheme;
+      When setting MAX_LEVEL > 0, the refinement is based on OPT__FLAG_INTERFERENCE
+      and the refined levels adopt the wave scheme while the base level adopts the fluid scheme
