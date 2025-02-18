@@ -46,6 +46,20 @@
             },
             "detail": "Choose the working directory for the binary files.",
             "problemMatcher": []
+        },
+        {
+            "label": "updated_mac_launch",
+            "type": "shell",
+            "command": "sh",
+            "args": [
+                "updated_mac_launch.sh",
+                "${input:lldb-mi_path}"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/.vscode"
+            },
+            "detail": "Update launch.json with the path to your lldb-mi executable for mac user.",
+            "problemMatcher": []
         }
     ],
     "inputs": [
@@ -53,6 +67,11 @@
             "id": "bin-working",
             "type": "promptString",
             "description": "Enter the working directory under bin/."
+        },
+        {
+            "id": "lldb-mi_path",
+            "type": "promptString",
+            "description": "Enter the path to your lldb-mi executable."
         }
     ],
     "version": "2.0.0"
