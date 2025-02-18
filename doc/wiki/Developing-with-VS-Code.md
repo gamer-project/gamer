@@ -51,7 +51,8 @@ After configuring GAMER with [configure.py](https://github.com/gamer-project/gam
 To start debugging GAMER, select `Run` > `Start Debugging` or press `F5`. After enter the working directory, the debugger will be launched. See the [official documentation](https://code.visualstudio.com/docs/editor/debugging) to learn more about debugging with VS Code.
 
 > [!NOTE]  
-> If you are using macOS and `gdb` is not supported, then you need to setup `lldb` as the debugger in `launch.json` by yourself. You can refer to the [official documentation](https://code.visualstudio.com/docs/cpp/launch-json-reference) for more information.
+> If `gdb` is not supported on macOS, you can set up `lldb` as the debugger. Make sure [`lldb-mi`](https://github.com/lldb-tools/lldb-mi) is installed. Then select `Terminal` > `Run Task...` > `updated_mac_launch`. This task updates the debugger path in `launch.json` to your `lldb-mi` installation.
+> For manual setup or additional details, refer to the [official documentation](https://code.visualstudio.com/docs/cpp/launch-json-reference).
 
 ### Clean working directory
 
