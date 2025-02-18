@@ -75,9 +75,6 @@ void Validate()
    if ( !OPT__FREEZE_FLUID )
       Aux_Error( ERROR_INFO, "OPT__FREEZE_FLUID must be enabled !!\n" );
 
-   if ( !OPT__FREEZE_PAR )
-      Aux_Error( ERROR_INFO, "OPT__FREEZE_PAR must be enabled !!\n" );
-
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] == BC_FLU_PERIODIC )
       Aux_Error( ERROR_INFO, "do not use periodic BC (OPT__BC_FLU* = 1) for this test !!\n" );
@@ -90,6 +87,9 @@ void Validate()
 #  ifdef PARTICLE
    if ( OPT__INIT == INIT_BY_FUNCTION  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
       Aux_Error( ERROR_INFO, "please set PAR_INIT = 1 (by FUNCTION) !!\n" );
+
+   if ( !OPT__FREEZE_PAR )
+      Aux_Error( ERROR_INFO, "OPT__FREEZE_PAR must be enabled !!\n" );
 #  endif
 
 
