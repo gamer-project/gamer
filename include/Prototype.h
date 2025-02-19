@@ -250,7 +250,7 @@ void Init_ByFile();
 void Init_UniformGrid( const int lv, const bool FindHomePatchForPar );
 void Init_Field();
 FieldIdx_t AddField( const char *InputLabel, const FixUpFlux_t FixUp_Flux, const FixUpRestrict_t FixUp_Restrict,
-                     const NormPassive_t Norm, const IntFracPassive_t IntFrac );
+                     const FloorPassive_t Floor, const NormPassive_t Norm, const IntFracPassive_t IntFrac );
 FieldIdx_t GetFieldIndex( const char *InputLabel, const Check_t Check );
 #ifdef OPENMP
 void Init_OpenMP();

@@ -49,11 +49,11 @@ void Init_Field()
 //    --> must not change the following order of declaration since they must be consistent
 //        with the symbolic constants defined in Macro.h (e.g., DENS)
 #  if   ( MODEL == HYDRO )
-   Idx_Dens    = AddField( "Dens",     FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
-   Idx_MomX    = AddField( "MomX",     FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
-   Idx_MomY    = AddField( "MomY",     FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
-   Idx_MomZ    = AddField( "MomZ",     FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
-   Idx_Engy    = AddField( "Engy",     FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_Dens    = AddField( "Dens",     FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_NULL, NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_MomX    = AddField( "MomX",     FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_NULL, NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_MomY    = AddField( "MomY",     FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_NULL, NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_MomZ    = AddField( "MomZ",     FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_NULL, NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_Engy    = AddField( "Engy",     FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_NULL, NORMALIZE_NO, INTERP_FRAC_NO );
 
    if ( Idx_Dens != DENS )    Aux_Error( ERROR_INFO, "inconsistent Idx_Dens (%d != %d) !!\n", Idx_Dens, DENS );
    if ( Idx_MomX != MOMX )    Aux_Error( ERROR_INFO, "inconsistent Idx_MomX (%d != %d) !!\n", Idx_MomX, MOMX );
@@ -69,18 +69,18 @@ void Init_Field()
 
 #  elif ( MODEL == ELBDM )
 #  if   ( ELBDM_SCHEME == ELBDM_WAVE )
-   Idx_Dens    = AddField( "Dens",     FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
-   Idx_Real    = AddField( "Real",     FIXUP_FLUX_NO,  FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
-   Idx_Imag    = AddField( "Imag",     FIXUP_FLUX_NO,  FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_Dens    = AddField( "Dens",     FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_NULL, NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_Real    = AddField( "Real",     FIXUP_FLUX_NO,  FIXUP_REST_YES, FLOOR_NULL, NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_Imag    = AddField( "Imag",     FIXUP_FLUX_NO,  FIXUP_REST_YES, FLOOR_NULL, NORMALIZE_NO, INTERP_FRAC_NO );
 
    if ( Idx_Dens != DENS )    Aux_Error( ERROR_INFO, "inconsistent Idx_Dens (%d != %d) !!\n", Idx_Dens, DENS );
    if ( Idx_Real != REAL )    Aux_Error( ERROR_INFO, "inconsistent Idx_Real (%d != %d) !!\n", Idx_Real, REAL );
    if ( Idx_Imag != IMAG )    Aux_Error( ERROR_INFO, "inconsistent Idx_Imag (%d != %d) !!\n", Idx_Imag, IMAG );
 
 #  elif ( ELBDM_SCHEME == ELBDM_HYBRID )
-   Idx_Dens    = AddField( "Dens",     FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
-   Idx_Phas    = AddField( "Phase",    FIXUP_FLUX_NO,  FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
-   Idx_Stub    = AddField( "Stub",     FIXUP_FLUX_NO,  FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_Dens    = AddField( "Dens",     FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_NULL, NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_Phas    = AddField( "Phase",    FIXUP_FLUX_NO,  FIXUP_REST_YES, FLOOR_NULL, NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_Stub    = AddField( "Stub",     FIXUP_FLUX_NO,  FIXUP_REST_YES, FLOOR_NULL, NORMALIZE_NO, INTERP_FRAC_NO );
    Idx_Real    = Idx_Phas;
    Idx_Imag    = Idx_Stub;
 
@@ -101,31 +101,31 @@ void Init_Field()
 // 2. add other predefined fields
 #  ifdef SUPPORT_GRACKLE
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
-   Idx_e       = AddField( "Electron", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_YES, INTERP_FRAC_YES );
-   Idx_HI      = AddField( "HI",       FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_YES, INTERP_FRAC_YES );
-   Idx_HII     = AddField( "HII",      FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_YES, INTERP_FRAC_YES );
-   Idx_HeI     = AddField( "HeI",      FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_YES, INTERP_FRAC_YES );
-   Idx_HeII    = AddField( "HeII",     FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_YES, INTERP_FRAC_YES );
-   Idx_HeIII   = AddField( "HeIII",    FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   Idx_e       = AddField( "Electron", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   Idx_HI      = AddField( "HI",       FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   Idx_HII     = AddField( "HII",      FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   Idx_HeI     = AddField( "HeI",      FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   Idx_HeII    = AddField( "HeII",     FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   Idx_HeIII   = AddField( "HeIII",    FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
    }
 
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9 ) {
-   Idx_HM      = AddField( "HM",       FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_YES, INTERP_FRAC_YES );
-   Idx_H2I     = AddField( "H2I",      FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_YES, INTERP_FRAC_YES );
-   Idx_H2II    = AddField( "H2II",     FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   Idx_HM      = AddField( "HM",       FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   Idx_H2I     = AddField( "H2I",      FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   Idx_H2II    = AddField( "H2II",     FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
    }
 
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE12 ) {
-   Idx_DI      = AddField( "DI",       FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_YES, INTERP_FRAC_YES );
-   Idx_DII     = AddField( "DII",      FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_YES, INTERP_FRAC_YES );
-   Idx_HDI     = AddField( "HDI",      FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   Idx_DI      = AddField( "DI",       FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   Idx_DII     = AddField( "DII",      FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   Idx_HDI     = AddField( "HDI",      FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
    }
 
 // normalize the metallicity field only when adopting the non-equilibrium chemistry
 // --> may need a machanism to allow users to overwrite this default setup
    if ( GRACKLE_METAL )
-   Idx_Metal   = AddField( "Metal",    FIXUP_FLUX_YES, FIXUP_REST_YES, (GRACKLE_PRIMORDIAL==GRACKLE_PRI_CHE_CLOUDY)?NORMALIZE_NO:NORMALIZE_YES,
-                                                                                      INTERP_FRAC_YES );
+   Idx_Metal   = AddField( "Metal",    FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES,
+                        (GRACKLE_PRIMORDIAL==GRACKLE_PRI_CHE_CLOUDY)?NORMALIZE_NO:NORMALIZE_YES, INTERP_FRAC_YES );
 #  endif // #ifdef SUPPORT_GRACKLE
 
 
@@ -137,12 +137,12 @@ void Init_Field()
 //    corresponding symbolic constants (e.g., DUAL/CRAY) defined in Macro.h
 //    --> as we still rely on these constants (e.g., DENS, DUAL) in the fluid solvers
 #  ifdef COSMIC_RAY
-   Idx_CRay = AddField( "CRay", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_CRay = AddField( "CRay", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_NO, INTERP_FRAC_NO );
    if ( Idx_CRay != CRAY )    Aux_Error( ERROR_INFO, "inconsistent Idx_CRay (%d != %d) !!\n", Idx_CRay, CRAY );
 #  endif
 
 #  ifdef DUAL_ENERGY
-   Idx_Dual = AddField( "Dual", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_Dual = AddField( "Dual", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_NO, INTERP_FRAC_NO );
    if ( Idx_Dual != DUAL )    Aux_Error( ERROR_INFO, "inconsistent Idx_Dual (%d != %d) !!\n", Idx_Dual, DUAL );
 #  endif
 
@@ -206,6 +206,7 @@ void Init_Field()
 // Parameter   :  InputLabel     : Label (i.e., name) of the new field
 //                FixUp_Flux     : whether or not to apply fix-up flux operations
 //                FixUp_Restrict : whether or not to apply fix-up restrict operations
+//                Floor          : whether or not to apply floor operations (passive scalars only)
 //                Norm           : whether or not to normalize the new field
 //                IntFrac        : whether or not to convert the new field to fraction form during interpolation
 //
@@ -216,7 +217,7 @@ void Init_Field()
 //                (5) PassiveIntFrac_NVar & PassiveIntFrac_VarIdx[]
 //-------------------------------------------------------------------------------------------------------
 FieldIdx_t AddField( const char *InputLabel, const FixUpFlux_t FixUp_Flux, const FixUpRestrict_t FixUp_Restrict,
-                     const NormPassive_t Norm, const IntFracPassive_t IntFrac )
+                     const FloorPassive_t Floor, const NormPassive_t Norm, const IntFracPassive_t IntFrac )
 {
 
    const FieldIdx_t FieldIdx = NDefinedField ++;
@@ -348,6 +349,6 @@ void Init_Field_User_Template()
 {
 
 // example
-// Idx_NewField = AddField( "NewFieldLabel", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+// Idx_NewField = AddField( "NewFieldLabel", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
 
 } // FUNCTION : Init_Field_User_Template
