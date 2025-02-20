@@ -81,7 +81,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #  else
    const real JeansCoeff_Factor       = M_PI/( SQR(FlagTable_Jeans[lv])*NEWTON_G ); // flag if dh^2 > JeansCoeff_Factor*Gamma*Pres/Dens^2
 #  endif
-   #  endif
+#  endif
 #  ifndef GRAVITY
    const OptPotBC_t OPT__BC_POT       = BC_POT_NONE;
 #  endif
