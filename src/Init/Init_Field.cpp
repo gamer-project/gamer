@@ -35,6 +35,7 @@ void Init_Field()
    NDefinedField       = 0;
    FixUpVar_Flux       = 0;
    FixUpVar_Restrict   = 0;
+   PassiveVar_Floor    = 0;
    PassiveNorm_NVar    = 0;
    PassiveIntFrac_NVar = 0;
 
@@ -195,10 +196,12 @@ void Init_Field()
 //                       --> The fix-up flux operations will be applied to these scalars
 //                   (4) add the new field to FixUpVar_Restrict if FixUp_Restrict==true
 //                       --> The fix-up restrict operations will be applied to these scalars
-//                   (5) add the new field to PassiveNorm_VarIdx[] if Norm==true
+//                   (5) add the new field to PassiveVar_Floor if Floor==true
+//                       --> The floor operations will be applied to these passive scalars
+//                   (6) add the new field to PassiveNorm_VarIdx[] if Norm==true
 //                       --> The sum of passive scalars in this list will be normalized to the gas density
 //                       --> sum(passive_scalar_density) == gas_density
-//                   (6) add the new field to PassiveIntFrac_VarIdx[] if IntFrac==true
+//                   (7) add the new field to PassiveIntFrac_VarIdx[] if IntFrac==true
 //                       --> These passive scalars will be converted to fracion form during interpolation
 //                2. One must invoke AddField() exactly NCOMP_TOTAL times to set the labels of all fields
 //                3. Invoked by Init_Field() and various test problem initializers
@@ -212,7 +215,7 @@ void Init_Field()
 //
 // Return      :  (1) FieldLabel[]
 //                (2) Index of the newly added field
-//                (3) FixUpVar_Flux and FixUpVar_Restrict
+//                (3) FixUpVar_Flux, FixUpVar_Restrict and PassiveVar_Floor
 //                (4) PassiveNorm_NVar & PassiveNorm_VarIdx[]
 //                (5) PassiveIntFrac_NVar & PassiveIntFrac_VarIdx[]
 //-------------------------------------------------------------------------------------------------------
@@ -244,6 +247,18 @@ FieldIdx_t AddField( const char *InputLabel, const FixUpFlux_t FixUp_Flux, const
 // set the bitwise field indices for fix-up operations
    if ( FixUp_Flux )       FixUpVar_Flux     |= (1L<<FieldIdx);
    if ( FixUp_Restrict )   FixUpVar_Restrict |= (1L<<FieldIdx);
+
+
+// set the bitwise field indices for floor operations
+// --> note that PassiveVar_Floor is written 1 for fields with FLOOR_NULL (not passive scalars)
+//     this makes Hydro_IsUnphysical work properly for non-passive scalars
+   if ( FieldIdx < NCOMP_FLUID && Floor != FLOOR_NULL )
+      Aux_Error( ERROR_INFO, "Field index (%d) with passive floor option is not a passive scalar !!\n"
+                 "        --> Set FLOOR_NULL when adding a built-in fluid field by AddField()\n", FieldIdx );
+   if ( FieldIdx >= NCOMP_FLUID && Floor == FLOOR_NULL )
+      Aux_Error( ERROR_INFO, "Field index (%d) with Floor==FLOOR_NULL is a passive scalar !!\n"
+                 "        --> Set FLOOR_NO or FLOOR_YES when adding a passive scalar by AddField()\n", FieldIdx );
+   if ( Floor )            PassiveVar_Floor  |= (1L<<FieldIdx);
 
 
 // set the normalization list
