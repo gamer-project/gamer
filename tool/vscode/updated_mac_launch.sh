@@ -18,16 +18,33 @@ else
     read lldb_mi_path
 fi
 
+# Parameters to change
+MIMODE="lldb"
+MIDEBUGGERPATH=$lldb_mi_path
+MIDEBUGGERARGS="-q"
+
 # Input file
 INPUT_FILE="launch.json"
 
 # Replace MIMode from "gdb" to "lldb"
-sed -i '' 's/"MIMode": "gdb"/"MIMode": "lldb"/' "$INPUT_FILE"
+if grep -q "\"MIMode\": \"$MIMODE\"" "$INPUT_FILE"; then
+    echo "Warning: 'MIMode' is already set to '$MIMODE'."
+else
+    sed -i '' 's/"MIMode": "gdb"/"MIMode": "'"$MIMODE"'"/' "$INPUT_FILE"
+    echo "'MIMode' changed to '$MIMODE'."
+fi
 
 # Replace miDebuggerPath to the new path
-sed -i '' 's|"miDebuggerPath": "/usr/bin/gdb"|"miDebuggerPath": "$lldb_mi_path"|' "$INPUT_FILE"
+sed -i '' 's|"miDebuggerPath": .*|"miDebuggerPath": "'"$MIDEBUGGERPATH"'",|' "$INPUT_FILE"
+echo "'miDebuggerPath' changed to '$MIDEBUGGERPATH'."
+
 
 # Replace miDebuggerArgs to "-q"
-sed -i '' 's/"miDebuggerArgs": "-quiet"/"miDebuggerArgs": "-q"/' "$INPUT_FILE"
+if grep -q "\"miDebuggerArgs\": \"$MIDEBUGGERARGS\"" "$INPUT_FILE"; then
+    echo "Warning: 'miDebuggerArgs' is already set to '$MIDEBUGGERARGS'."
+else
+    sed -i '' 's/"miDebuggerArgs": "-quiet"/"miDebuggerArgs": "'"$MIDEBUGGERARGS"'"/' "$INPUT_FILE"
+    echo "'miDebuggerArgs' changed to '$MIDEBUGGERARGS'."
+fi
 
 echo "launch.json updated successfully."
