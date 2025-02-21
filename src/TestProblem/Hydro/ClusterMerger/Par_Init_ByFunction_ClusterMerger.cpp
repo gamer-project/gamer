@@ -871,7 +871,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
             }
 
 //          compute potential and find the minimum position, and calculate the average DM velocity on the root rank
-            if ( AdjustPos == true )
+            if ( AdjustPos )
             {
                double soften = amr->dh[MAX_LEVEL];
                for (int c=0; c<Merger_Coll_NumBHs; c++)
@@ -901,11 +901,11 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                      pote_local[i-start] *= -NEWTON_G;
                   }
 
-                  int recvcounts[MPI_NRank], displs[MPI_NRank];
-                  for (int i=0; i<MPI_NRank; i++)  recvcounts[i] = (i < remainder ? par_per_rank+1 : par_per_rank);
-                  displs[0] = 0;
-                  for (int i=1; i<MPI_NRank; i++)  displs[i] = displs[i-1] + recvcounts[i-1];
-                  MPI_Allgatherv( pote_local, end-start, MPI_DOUBLE, pote, recvcounts, displs, MPI_DOUBLE, MPI_COMM_WORLD );
+                  int N_recv[MPI_NRank], N_disp[MPI_NRank];
+                  for (int i=0; i<MPI_NRank; i++)  N_recv[i] = (i < remainder ? par_per_rank+1 : par_per_rank);
+                  N_disp[0] = 0;
+                  for (int i=1; i<MPI_NRank; i++)  N_disp[i] = N_disp[i-1] + N_recv[i-1];
+                  MPI_Allgatherv( pote_local, end-start, MPI_DOUBLE, pote, N_recv, N_disp, MPI_DOUBLE, MPI_COMM_WORLD );
 
                   double Pote_min = 0.0;
                   for (int i=0; i<num_par_sum[c]; i++)
