@@ -285,9 +285,6 @@ void SetParameter()
    ReadPara->Add( "Bondi_MassBH3",           &Bondi_MassBH3,           -1.0,              Eps_double,    NoMax_double   );
    ReadPara->Add( "R_acc",                   &R_acc,                   -1.0,              NoMin_double,  NoMax_double   );
    ReadPara->Add( "R_dep",                   &R_dep,                   -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Mdot_BH1",                &Mdot_BH1,                -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Mdot_BH2",                &Mdot_BH2,                -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Mdot_BH3",                &Mdot_BH3,                -1.0,              NoMin_double,  NoMax_double   );
    ReadPara->Add( "Jet_HalfHeight1",         &Jet_HalfHeight1,         -1.0,              Eps_double,    NoMax_double   );
    ReadPara->Add( "Jet_HalfHeight2",         &Jet_HalfHeight2,         -1.0,              Eps_double,    NoMax_double   );
    ReadPara->Add( "Jet_HalfHeight3",         &Jet_HalfHeight3,         -1.0,              Eps_double,    NoMax_double   );
@@ -344,9 +341,6 @@ void SetParameter()
    Bondi_MassBH3     *= Const_Msun / UNIT_M;
    R_acc             *= Const_kpc / UNIT_L;
    R_dep             *= Const_kpc / UNIT_L;
-   Mdot_BH1          *= (Const_Msun/Const_yr) / (UNIT_M/UNIT_T);
-   Mdot_BH2          *= (Const_Msun/Const_yr) / (UNIT_M/UNIT_T);
-   Mdot_BH3          *= (Const_Msun/Const_yr) / (UNIT_M/UNIT_T);
    Jet_HalfHeight1   *= Const_kpc / UNIT_L;
    Jet_HalfHeight2   *= Const_kpc / UNIT_L;
    Jet_HalfHeight3   *= Const_kpc / UNIT_L;
@@ -501,7 +495,10 @@ void SetParameter()
 
 //    set the number of black holes to be the same as the number of clusters initially
       Merger_Coll_NumBHs = Merger_Coll_NumHalos;
-                                 
+     
+//    set initial accretion rate to zero
+      Mdot_BH1 = Mdot_BH2 = Mdot_BH3 = 0.0;
+
       for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
          for (int d=0; d<3; d++)   ClusterCen[c][d] = ClusterCenter[c][d];
@@ -878,9 +875,6 @@ void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
    HDF5_InputTest->Add( "Bondi_MassBH3",           &Bondi_MassBH3           );
    HDF5_InputTest->Add( "R_acc",                   &R_acc                   );
    HDF5_InputTest->Add( "R_dep",                   &R_dep                   );
-   HDF5_InputTest->Add( "Mdot_BH1",                &Mdot_BH1                );
-   HDF5_InputTest->Add( "Mdot_BH2",                &Mdot_BH2                );
-   HDF5_InputTest->Add( "Mdot_BH3",                &Mdot_BH3                );
    HDF5_InputTest->Add( "Jet_HalfHeight1",         &Jet_HalfHeight1         );
    HDF5_InputTest->Add( "Jet_HalfHeight2",         &Jet_HalfHeight2         );
    HDF5_InputTest->Add( "Jet_HalfHeight3",         &Jet_HalfHeight3         );
@@ -920,22 +914,26 @@ void Output_HDF5_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
    BH_Mass[1] = Bondi_MassBH2;
    BH_Mass[2] = Bondi_MassBH3;
 
+   double BH_Mdot[3] = { Mdot_BH1, Mdot_BH2, Mdot_BH3 };
+
    HDF5_OutUser->Add( "Merger_Coll_NumBHs", &Merger_Coll_NumBHs );
    for (int c=0; c<Merger_Coll_NumBHs; c++)
    {
       for (int d=0; d<3; d++)
       {
          char BH_Pos_name[50], ClusterCen_name[50], BH_Vel_name[50];
-         sprintf( BH_Pos_name, "BH_Pos_%d_%d", c, d );
+         sprintf( BH_Pos_name,     "BH_Pos_%d_%d",     c, d );
          sprintf( ClusterCen_name, "ClusterCen_%d_%d", c, d );
-         sprintf( BH_Vel_name, "BH_Vel_%d_%d", c, d );
+         sprintf( BH_Vel_name,     "BH_Vel_%d_%d",     c, d );
          HDF5_OutUser->Add( BH_Pos_name,     &BH_Pos[c][d]     );
          HDF5_OutUser->Add( ClusterCen_name, &ClusterCen[c][d] );
          HDF5_OutUser->Add( BH_Vel_name,     &BH_Vel[c][d]     );
       }
-      char BH_Mass_name[50];
+      char BH_Mass_name[50], BH_Mdot_name[50];
       sprintf( BH_Mass_name, "BH_Mass_%d", c );
+      sprintf( BH_Mdot_name, "BH_Mdot_%d", c );
       HDF5_OutUser->Add( BH_Mass_name, &BH_Mass[c] );
+      HDF5_OutUser->Add( BH_Mdot_name, &BH_Mdot[c] );
    }
    HDF5_OutUser->Add( "AdjustCount", &AdjustCount );
 
@@ -1216,6 +1214,8 @@ void Init_User_ClusterMerger()
    if ( H5_TypeID_OutputUser < 0 )
       Aux_Error( ERROR_INFO, "failed to open the datatype of \"%s\" !!\n", "User/OutputUser" );
 
+   double BH_Mdot[3] = { 0.0, 0.0, 0.0 };
+
    LoadField( "Merger_Coll_NumBHs", &Merger_Coll_NumBHs, H5_SetID_OutputUser, H5_TypeID_OutputUser );
    for (int c=0; c<Merger_Coll_NumBHs; c++)
    {
@@ -1229,9 +1229,11 @@ void Init_User_ClusterMerger()
          LoadField( ClusterCen_name, &ClusterCen[c][d], H5_SetID_OutputUser, H5_TypeID_OutputUser );
          LoadField( BH_Vel_name,     &BH_Vel[c][d],     H5_SetID_OutputUser, H5_TypeID_OutputUser );
       }
-      char BH_Mass_name[50];
+      char BH_Mass_name[50], BH_Mdot_name[50];
       sprintf( BH_Mass_name, "BH_Mass_%d", c );
+      sprintf( BH_Mdot_name, "BH_Mdot_%d", c );
       LoadField( BH_Mass_name, &BH_Mass[c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
+      LoadField( BH_Mdot_name, &BH_Mdot[c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
    }
    LoadField( "AdjustCount", &AdjustCount, H5_SetID_OutputUser, H5_TypeID_OutputUser );
 
@@ -1242,6 +1244,11 @@ void Init_User_ClusterMerger()
    Bondi_MassBH1 = BH_Mass[0];
    Bondi_MassBH2 = BH_Mass[1];
    Bondi_MassBH3 = BH_Mass[2];
+
+   Mdot_BH1 = BH_Mdot[0];
+   Mdot_BH2 = BH_Mdot[1];
+   Mdot_BH3 = BH_Mdot[2];
+
 #  endif // #ifdef SUPPORT_HDF5
 
 } // FUNCTION : Init_User_ClusterMerger

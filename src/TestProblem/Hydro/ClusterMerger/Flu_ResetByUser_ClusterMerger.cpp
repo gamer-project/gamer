@@ -89,6 +89,31 @@ extern double (*MHD_ResetByUser_BField_Ptr)( const double x, const double y, con
 #endif
 
 
+double BH_accretion_rate( const int mode, const double r_acc, const double mass_BH, const double rho_gas,
+                          const double cs, const double v_rel, const double mass_coldGas, const double mass_gas,
+                          const double mass_par )
+{
+
+   double acc_cold = 0.0, acc_hot = 0.0;
+
+// hot accretion rate
+   if ( mode == 1  ||  mode == 3  &&  rho_gas > 0.0 )
+   {
+      acc_hot = 4.0 * M_PI * SQR(NEWTON_G) * SQR(mass_BH) * rho_gas /
+                pow( SQR(cs) + SQR(v_rel), 1.5 );
+   }
+
+// cold accretion rate
+   if ( mode == 2  ||  mode == 3  &&  (mass_gas+mass_par) > 0.0 )
+   {
+      const double t_ff = sqrt( 2*CUBE(r_acc) / NEWTON_G / (mass_gas+mass_par) );
+      acc_cold = mass_coldGas / t_ff;
+   }
+
+   return acc_cold + acc_hot;
+
+} // FUNCTION : BH_accretion_rate
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_ResetByUser_Func_ClusterMerger
@@ -533,6 +558,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
       } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
 //    calculate the accretion rate
+
       for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
          double v = 0.0;  // the relative velocity between BH and gas
@@ -556,42 +582,13 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
             for (int d=0; d<3; d++)  GasVel[c][d] = gas_vel_sum[c][d];
          } // if ( num_sum[c] == 0 ) ... else ...
 
-         if ( Accretion_Mode == 1 ) // hot mode
-         {
-            if ( num_sum[c] == 0 )
-            {
-               Mdot_BH[c] = 0.0;
-            }
-            else
-            {
-               Mdot_BH[c] = 4.0 * M_PI * SQR(NEWTON_G) * SQR(Bondi_MassBH[c]) * GasDens[c] /
-                            pow( SQR(SoundSpeed[c]) + SQR(RelativeVel[c]), 1.5 );
-            }
-         }
-         else if ( Accretion_Mode == 2 ) // cold mode
-         {
-            double t_ff = sqrt( 2*pow(R_acc, 3) / NEWTON_G / (GasMass[c]+ParMass[c]) );
-            Mdot_BH[c] = ColdGasMass[c] / t_ff;
-         }
-         else if ( Accretion_Mode == 3 ) // combine (hot + cold)
-         {
-            double Mdot_hot, t_ff, Mdot_cold;
-            if ( num_sum[c] == 0 )
-            {
-               Mdot_hot = 0.0;
-            }
-            else
-            {
-               Mdot_hot = 4.0 * M_PI * SQR(NEWTON_G) * SQR(Bondi_MassBH[c]) * GasDens[c] /
-                          pow( SQR(SoundSpeed[c]) + SQR(RelativeVel[c]), 1.5 );
-            }
-            t_ff       = sqrt( 2*pow(R_acc, 3) / NEWTON_G / (GasMass[c]+ParMass[c]) );
-            Mdot_cold  = ColdGasMass[c] / t_ff;
-            Mdot_BH[c] = Mdot_hot + Mdot_cold;
-         } // if ( Accretion_Mode == 1 ) ... else ...
+         Mdot_BH[c] = BH_accretion_rate( Accretion_Mode, R_acc, Bondi_MassBH[c], GasDens[c], 
+                                       SoundSpeed[c], RelativeVel[c], ColdGasMass[c], 
+                                       GasMass[c], ParMass[c] );
 
          if ( V_cyl_exact_sum[c] != 0 )   normalize_const[c] = V_cyl_exact_sum[c] / normalize_sum[c];
          else                             normalize_const[c] = 0.5 * M_PI;
+   
       } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
       Mdot_BH1 = Mdot_BH[0];
@@ -603,7 +600,6 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
       Bondi_MassBH1 = Bondi_MassBH[0];
       Bondi_MassBH2 = Bondi_MassBH[1];
       Bondi_MassBH3 = Bondi_MassBH[2];
-
 
 //    (5) calculate the injection rate
       for (int c=0; c<Merger_Coll_NumBHs; c++)
