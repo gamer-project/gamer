@@ -278,6 +278,44 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 
 } // FUNCTION : SetBFieldIC
 #endif // #ifdef MHD
+
+
+
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Output_HDF5_TestProb
+// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
+//
+// Note         : 1. This function only works in MPI_RANK == 0
+//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype
+//                3. There MUST be more than one parameter to be stored
+//                4. The pointer of the data MUST still exist outside the function, e.g. global variables
+//
+// Parameter   :  HDF5_InputTest : the structure storing the parameters
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
+{
+
+   HDF5_InputTest->Add( "Blast_Dens_Bg",        &Blast_Dens_Bg       );
+   HDF5_InputTest->Add( "Blast_Pres_Bg",        &Blast_Pres_Bg       );
+   HDF5_InputTest->Add( "Blast_Pres_Exp",       &Blast_Pres_Exp      );
+   HDF5_InputTest->Add( "Blast_Radius",         &Blast_Radius        );
+   HDF5_InputTest->Add( "Blast_Center_X",       &Blast_Center[0]     );
+   HDF5_InputTest->Add( "Blast_Center_Y",       &Blast_Center[1]     );
+   HDF5_InputTest->Add( "Blast_Center_Z",       &Blast_Center[2]     );
+#  ifdef MHD
+   HDF5_InputTest->Add( "Blast_BField",         &Blast_BField        );
+   HDF5_InputTest->Add( "Blast_ResetB_amp",     &Blast_ResetB_amp    );
+   HDF5_InputTest->Add( "Blast_ResetB_r0",      &Blast_ResetB_r0     );
+   HDF5_InputTest->Add( "Blast_ResetB_tmin",    &Blast_ResetB_tmin   );
+   HDF5_InputTest->Add( "Blast_ResetB_tmax",    &Blast_ResetB_tmax   );
+   HDF5_InputTest->Add( "Blast_ResetB_VecPot",  &Blast_ResetB_VecPot );
+#  endif
+
+} // FUNCTION : Output_HDF5_TestProb
+#endif // #ifdef SUPPORT_HDF5
 #endif // #if ( MODEL == HYDRO )
 
 
@@ -315,6 +353,9 @@ void Init_TestProb_Hydro_BlastWave()
    MHD_ResetByUser_VecPot_Ptr    = (Blast_ResetB_VecPot) ? MHD_ResetByUser_VecPot_BlastWave : NULL;
 #  endif
    Flag_User_Ptr                 = Flag_BlastWave;
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_TestProb_Ptr      = Output_HDF5_TestProb;
+#  endif
 #  endif // #if ( MODEL == HYDRO )
 
 
