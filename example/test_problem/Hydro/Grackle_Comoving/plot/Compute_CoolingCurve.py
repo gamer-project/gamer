@@ -1,6 +1,6 @@
 #!/bin/python
 
-# reconstruct the cooling rate from the time evolution of the temperature
+# reconstruct the cooling rate from the a_scale evolution of the temperature
 # and compare with the cooling rate table
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 # Load the data
 data = np.loadtxt('../Record__GrackleComoving', skiprows=10)
 
-time          = data[:,0] # scale factor
+a_scale       = data[:,0] # scale factor
 dt            = data[:,2] # sec
 nden          = data[:,3] # cm^-3
 mu            = data[:,4] # mean molecular weight
@@ -18,9 +18,9 @@ lcool_grackle = data[:,7] # erg/cm^3/s (cooling rate computed by Grackle)
 
 # reconstruct the cooling rate from Record__GrackleComoving
 dedt = np.gradient(eden) / dt
-dadt = np.gradient(time) / dt
+dadt = np.gradient(a_scale) / dt
 
-dedt_com = eden * (-5 / time * dadt) # loss due to cosmic expansion
+dedt_com = eden * (-5 / a_scale * dadt) # loss due to cosmic expansion
 dedt_rad = dedt - dedt_com           # loss due to radiation
 
 L_cool = (-dedt_rad) / nden**2
@@ -39,9 +39,9 @@ ax[0].plot(temp, lcool_grackle, label='Grackle', ms=0, ls='dashed', lw=1, color=
 ax[0].scatter(temp[-1], L_cool[-1], s=3, label='GAMER (reconstructed) (z=0)')
 for z in range(1, 9):
     a = 1 / (1 + z)
-    idx = np.where(time <= a)[0][-1]
-    a0 = time[idx]
-    a1 = time[idx+1]
+    idx = np.where(a_scale <= a)[0][-1]
+    a0 = a_scale[idx]
+    a1 = a_scale[idx+1]
     temp_a = (temp[idx] * (a1 - a) + temp[idx+1] * (a - a0)) / (a1 - a0)
     L_cool_a = (L_cool[idx] * (a1 - a) + L_cool[idx+1] * (a - a0)) / (a1 - a0)
     ax[0].scatter(temp_a, L_cool_a, s=3, label='GAMER (reconstructed) (z={})'.format(z), zorder=10)
@@ -57,7 +57,7 @@ ax[0].set_xlim(1e4, 2e8)
 ax[0].set_ylim(3e-25, 2e-21)
 ax[0].legend(ncol=2, fontsize=6)
 
-ax[1].plot(time, temp, 'r-')
+ax[1].plot(a_scale, temp, 'r-')
 ax[1].set_xlabel('a')
 ax[1].set_ylabel('Temperature [K]')
 ax[1].set_yscale('log')

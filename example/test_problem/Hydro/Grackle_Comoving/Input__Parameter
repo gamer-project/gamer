@@ -66,7 +66,7 @@ OPT__FREEZE_PAR               0           # do not update particles (except for 
 PAR_TR_VEL_CORR               0           # correct tracer particle velocities in regions of discontinuous flow [0]
 
 # cosmology (COMOVING only)
-A_INIT                        0.1         # initial scale factor
+A_INIT                        0.099       # initial scale factor
 OMEGA_M0                      0.3         # omega matter at the present time
 HUBBLE0                       0.70        # dimensionless Hubble parameter (currently only for converting ELBDM_MASS to code units)
 
