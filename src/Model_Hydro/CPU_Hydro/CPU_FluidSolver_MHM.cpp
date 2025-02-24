@@ -914,6 +914,7 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 #     endif // #ifndef SRHD
 #     if ( NCOMP_PASSIVE > 0 )
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+      if ( PassiveVar_Floor & BIDX(v) )
       out_con[v] = FMAX( out_con[v], TINY_NUMBER );
 #     endif
 
