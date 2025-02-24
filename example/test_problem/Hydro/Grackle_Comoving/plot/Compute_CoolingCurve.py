@@ -26,7 +26,6 @@ dedt_rad = dedt - dedt_com           # loss due to radiation
 L_cool = (-dedt_rad) / nden**2
 
 fig, ax = plt.subplots(1, 2, figsize=(10, 5))
-# ax[0].plot(temp, lcool, 'r-')
 
 # cooling rate table
 for z in range(0, 10):
