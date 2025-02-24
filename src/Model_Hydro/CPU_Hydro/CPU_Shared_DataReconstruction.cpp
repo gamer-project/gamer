@@ -612,9 +612,10 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          fcPri[faceR][4] = Hydro_CheckMinPres( fcPri[faceR][4], MinPres );
 
 #        if ( NCOMP_PASSIVE > 0 )
-         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++) {
-         fcPri[faceL][v] = FMAX( fcPri[faceL][v], TINY_NUMBER );
-         fcPri[faceR][v] = FMAX( fcPri[faceR][v], TINY_NUMBER ); }
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+            if ( PassiveVar_Floor & BIDX(v) ) {
+            fcPri[faceL][v] = FMAX( fcPri[faceL][v], TINY_NUMBER );
+            fcPri[faceR][v] = FMAX( fcPri[faceR][v], TINY_NUMBER ); }
 #        endif
 
 #        endif // #if ( FLU_SCHEME == CTU )
@@ -1319,9 +1320,10 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
          fcPri[faceR][4] = Hydro_CheckMinPres( fcPri[faceR][4], MinPres );
 
 #        if ( NCOMP_PASSIVE > 0 )
-         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++) {
-         fcPri[faceL][v] = FMAX( fcPri[faceL][v], TINY_NUMBER );
-         fcPri[faceR][v] = FMAX( fcPri[faceR][v], TINY_NUMBER ); }
+         for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+            if ( PassiveVar_Floor & BIDX(v) ) {
+            fcPri[faceL][v] = FMAX( fcPri[faceL][v], TINY_NUMBER );
+            fcPri[faceR][v] = FMAX( fcPri[faceR][v], TINY_NUMBER ); }
 #        endif
 
 #        endif // #if ( FLU_SCHEME == CTU )
@@ -2147,7 +2149,8 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
 #     endif // #ifndef BAROTROPIC_EOS
 #     endif // #ifndef SRHD
 #     if ( NCOMP_PASSIVE > 0 )
-      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++) fcCon[f][v] = FMAX( fcCon[f][v], TINY_NUMBER );
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+         if ( PassiveVar_Floor & BIDX(v) )  fcCon[f][v] = FMAX( fcCon[f][v], TINY_NUMBER );
 #     endif
    } // for (int f=0; f<6; f++)
 #  endif // #ifdef MHM_CHECK_PREDICT
