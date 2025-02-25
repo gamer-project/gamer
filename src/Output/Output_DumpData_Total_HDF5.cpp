@@ -302,12 +302,12 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       }
 #     endif
 
-      sprintf( FieldLabelOut[ FluDumpIdx0 + v - NCompFluSkip ], "%s", FieldLabel[v] );
+      const int FluDumpIdx = NFieldStored++;
+      if ( FluDumpIdx >= NFIELD_STORED_MAX )
+         Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+      sprintf( FieldLabelOut[ FluDumpIdx ], "%s", FieldLabel[v] );
    }
    const int NCompStore  = NCOMP_TOTAL - NCompFluSkip;
-   NFieldStored += NCompStore;
-   if ( FluDumpIdx0+NCompStore-1 >= NFIELD_STORED_MAX )
-      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
 
 #  ifdef GRAVITY
    const int PotDumpIdx = ( OPT__OUTPUT_POT ) ? NFieldStored++ : NoDump;
