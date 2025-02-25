@@ -1591,7 +1591,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 //             for preparing patch with real and imaginary part on level lv
                const bool ConvertWaveToFluid = (  amr->use_wave_flag[lv]  &&  !amr->use_wave_flag[lv-1]  &&  ( TVarCC & (_REAL | _IMAG) )  );
                if ( ConvertWaveToFluid ) {
-//                Preserve other flags while replacing _REAL and _IMAG with _DENS and _PHAS
+//                preserve other flags while replacing _REAL and _IMAG with _DENS and _PHAS
                   TVarCCBuffer     = ( TVarCC & ~(_REAL | _IMAG) ) | (_DENS | _PHAS);
                   NVarCC_FluBuffer = 0;
                   for (int v=0; v<NCOMP_TOTAL; v++)

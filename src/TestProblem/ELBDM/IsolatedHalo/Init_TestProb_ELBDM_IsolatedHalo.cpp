@@ -35,7 +35,7 @@ void Validate()
 #  endif
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   Aux_Error( ERROR_INFO, "Test problem %d does not support ELBDM_HYBRID. The phase cannot be unwrapped due to the presence of the vortex in the halo !!\n", TESTPROB_ID );
+   Aux_Error( ERROR_INFO, "Test problem %d does not support ELBDM_HYBRID. The phase cannot be unwrapped due to the presence of vortices in the halo !!\n", TESTPROB_ID );
 #  endif
 
 
