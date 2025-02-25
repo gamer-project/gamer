@@ -251,6 +251,12 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
           &&  amr->use_wave_flag[lv]   )
       Aux_Error( ERROR_INFO, "%s() for hybrid scheme currently requires that the real and imaginary parts of the wave function are prepared together !!\n"
                              "This is probably due to operation (b2-3-1) and can probably be easily fixed.\n", __FUNCTION__ );
+
+   if ( ( TVarCC & _DENS )  &&  ( TVarCC & (_REAL | _IMAG) )  &&
+        GhostSize > 0  &&  lv > 0  &&  amr->use_wave_flag[lv]  &&  !amr->use_wave_flag[lv-1] )
+      Aux_Error( ERROR_INFO, "%s() for hybrid scheme currently does not support preparing the density "
+                             "and the real/imaginary part of the wave function simultaneously !!\n"
+                             "This is probably due to operation (b2-3-1) and can probably be easily fixed.\n", __FUNCTION__ );
 #  endif
 
    if ( IntPhase )
