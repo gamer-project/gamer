@@ -579,7 +579,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  OPT__LR_LIMITER, MINMOD_COEFF, MINMOD_MAX_ITER,
                                  ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
                                  TimeOld, (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, MicroPhy,
-                                 MIN_DENS, MIN_PRES, MIN_EINT, DUAL_ENERGY_SWITCH,
+                                 MIN_DENS, MIN_PRES, MIN_EINT, DUAL_ENERGY_SWITCH, PassiveVar_Floor,
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar,
                                  OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar,
                                  JEANS_MIN_PRES, JeansMinPres_Coeff,
@@ -596,7 +596,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  OPT__LR_LIMITER, MINMOD_COEFF, MINMOD_MAX_ITER,
                                  ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
                                  TimeOld, (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, MicroPhy,
-                                 MIN_DENS, MIN_PRES, MIN_EINT, DUAL_ENERGY_SWITCH,
+                                 MIN_DENS, MIN_PRES, MIN_EINT, DUAL_ENERGY_SWITCH, PassiveVar_Floor,
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, PassiveNorm_VarIdx,
                                  OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
                                  JEANS_MIN_PRES, JeansMinPres_Coeff, UseWaveFlag );
