@@ -103,45 +103,50 @@ void Output_DumpData( const int Stage )
 
 
 // set the file names for all output functions
-   char FileName_Total[50], FileName_Part[50], FileName_Temp[50], FileName_PS[50];
+   char FileName_Total[2*MAX_STRING], FileName_Part[2*MAX_STRING], FileName_Temp[2*MAX_STRING], FileName_PS[2*MAX_STRING];
 #  ifdef PARTICLE
-   char FileName_Particle[50];
+   char FileName_Particle[2*MAX_STRING];
 #  endif
 
-   if ( OPT__OUTPUT_TOTAL )   sprintf( FileName_Total, "Data_%06d", DumpID );
+   if ( OPT__OUTPUT_TOTAL )
+   {
+      sprintf( FileName_Total, "%s/Data_%06d", OUTPUT_DIR, DumpID );
+   }
 
    if ( OPT__OUTPUT_PART )
    {
+      sprintf( FileName_Part, "%s/", OUTPUT_DIR );
       switch ( OPT__OUTPUT_PART )
       {
-         case OUTPUT_XY :    sprintf( FileName_Temp, "XYslice_z%.3f_%06d", OUTPUT_PART_Z, DumpID );   break;
-         case OUTPUT_YZ :    sprintf( FileName_Temp, "YZslice_x%.3f_%06d", OUTPUT_PART_X, DumpID );   break;
-         case OUTPUT_XZ :    sprintf( FileName_Temp, "XZslice_y%.3f_%06d", OUTPUT_PART_Y, DumpID );   break;
-         case OUTPUT_X  :    sprintf( FileName_Temp, "Xline_y%.3f_z%.3f_%06d", OUTPUT_PART_Y, OUTPUT_PART_Z, DumpID );  break;
-         case OUTPUT_Y  :    sprintf( FileName_Temp, "Yline_x%.3f_z%.3f_%06d", OUTPUT_PART_X, OUTPUT_PART_Z, DumpID );  break;
-         case OUTPUT_Z  :    sprintf( FileName_Temp, "Zline_x%.3f_y%.3f_%06d", OUTPUT_PART_X, OUTPUT_PART_Y, DumpID );  break;
+         case OUTPUT_XY   :  sprintf( FileName_Temp, "XYslice_z%.3f_%06d", OUTPUT_PART_Z, DumpID );   break;
+         case OUTPUT_YZ   :  sprintf( FileName_Temp, "YZslice_x%.3f_%06d", OUTPUT_PART_X, DumpID );   break;
+         case OUTPUT_XZ   :  sprintf( FileName_Temp, "XZslice_y%.3f_%06d", OUTPUT_PART_Y, DumpID );   break;
+         case OUTPUT_X    :  sprintf( FileName_Temp, "Xline_y%.3f_z%.3f_%06d", OUTPUT_PART_Y, OUTPUT_PART_Z, DumpID );  break;
+         case OUTPUT_Y    :  sprintf( FileName_Temp, "Yline_x%.3f_z%.3f_%06d", OUTPUT_PART_X, OUTPUT_PART_Z, DumpID );  break;
+         case OUTPUT_Z    :  sprintf( FileName_Temp, "Zline_x%.3f_y%.3f_%06d", OUTPUT_PART_X, OUTPUT_PART_Y, DumpID );  break;
          case OUTPUT_DIAG :  sprintf( FileName_Temp, "Diag_%06d", DumpID );   break;
+         case OUTPUT_BOX  :  sprintf( FileName_Temp, "Box_%06d", DumpID );   break;
          default :           Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "OPT__OUTPUT_PART", OPT__OUTPUT_PART );
       } // switch ( OPT__OUTPUT_PART )
 
       if ( OPT__OUTPUT_BASE )
       {
-         sprintf( FileName_Part, "%s", "Base" );
+         strcat( FileName_Part, "Base" );
          strcat( FileName_Part, FileName_Temp );
       }
       else
-         strcpy( FileName_Part, FileName_Temp );
+         strcat( FileName_Part, FileName_Temp );
 
    } // if ( OPT__OUTPUT_PART )
 
    if ( OPT__OUTPUT_BASEPS )
-      sprintf( FileName_PS, "PowerSpec_%06d", DumpID );
+      sprintf( FileName_PS, "%s/PowerSpec_%06d", OUTPUT_DIR, DumpID );
 
 #  ifdef PARTICLE
    if ( OPT__OUTPUT_PAR_MODE == OUTPUT_PAR_TEXT )
-      sprintf( FileName_Particle, "Particle_%06d.txt", DumpID );
+      sprintf( FileName_Particle, "%s/Particle_%06d.txt", OUTPUT_DIR, DumpID );
    if ( OPT__OUTPUT_PAR_MODE == OUTPUT_PAR_CBIN )
-      sprintf( FileName_Particle, "Particle_%06d.cbin", DumpID );
+      sprintf( FileName_Particle, "%s/Particle_%06d.cbin", OUTPUT_DIR, DumpID );
 #  endif
 
 
@@ -313,7 +318,8 @@ void Output_DumpData( const int Stage )
 void Write_DumpRecord()
 {
 
-   const char FileName[] = "Record__Dump";
+   char FileName[2*MAX_STRING];
+   sprintf( FileName, "%s/Record__Dump", OUTPUT_DIR );
 
 
 // create the "Record__Dump" file at the first dump

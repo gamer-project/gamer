@@ -34,6 +34,10 @@ void Validate()
    Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
 #  endif
 
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   Aux_Error( ERROR_INFO, "Test problem %d does not support ELBDM_HYBRID. The phase cannot be unwrapped due to the presence of vortices in the halo !!\n", TESTPROB_ID );
+#  endif
+
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
 

@@ -18,7 +18,7 @@
 //                Recv_NCount:   Number of elements to be received by each rank from other ranks in RecvBuf; length equals MPI_NRank
 //                Recv_NDisp:    Displacement indicating the stride where the received data (from other ranks) starts in RecvdBuf for each rank;
 //                               length equals MPI_NRank
-//                Recv_Datatype: Received data type for MPI (MPI_GAMER_REAL/MPI_GAMER_REAL_PAR)
+//                Recv_Datatype: Received data type for MPI (MPI_GAMER_REAL/MPI_GAMER_REAL_PAR/MPI_GAMER_LONG_PAR)
 //                comm:          MPI communicator
 //
 // Return      :  RecvBuf

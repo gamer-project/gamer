@@ -147,7 +147,7 @@ void Par_Aux_Check_Particle( const char *comment )
                   bool CheckTypePass = true;
 
 //                particle types must be recognizable
-                  if ( amr->Par->Type[ParID] < (real_par)0  ||  amr->Par->Type[ParID] >= (real_par)PAR_NTYPE )
+                  if ( amr->Par->Type[ParID] < (long_par)0  ||  amr->Par->Type[ParID] >= (long_par)PAR_NTYPE )
                      CheckTypePass = false;
 
 //                only support tracer particles when disabling GRAVITY

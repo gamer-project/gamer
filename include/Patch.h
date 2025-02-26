@@ -123,7 +123,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                      --> This number is independent of periodicity (because of the padded patches)
 //                LB_Idx              : Space-filling-curve index for load balance
 //                NPar                : Number of particles belonging to this leaf patch
-//                NPar_Type           : Number of different types of particles belonging to this leaf patch
+//                NParType            : Number of different types of particles belonging to this leaf patch
 //                ParListSize         : Size of the array ParList (ParListSize can be >= NPar)
 //                ParList             : List recording the IDs of all particles belonging to this leaf real patch
 //                NPar_Copy           : Number of particles collected from other patches. There are three kinds of patches that
@@ -140,21 +140,23 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                          IDs stored in ParList_Copy, which points to the same particle repository
 //                                          (i.e., the amr->Par->Attribute[]). In comparison, in LOAD_BALANCE mode,
 //                                          since particles corresponding to NPar_Copy may be collected from other ranks,
-//                                          these patches will allocate a local particle attribute array called ParAtt_Copy
+//                                          these patches will allocate local particle attribute arrays called ParAttFlt_Copy and ParAttInt_Copy
 //                                      --> Note that non-leaf patches may have NPar>0 temporarily after updating particle position.
 //                                          It's because particles travelling from coarse to fine grids will stay in coarse grids
 //                                          temporarily until the velocity correction is done.
 //                                          --> For these patches, NPar_Copy will be **the sum of NPar and the number of particles
-//                                              collected from other patches**, and ParList_Copy (or ParAtt_Copy) will contain
-//                                              information of particles belonging to NPar as well.
+//                                              collected from other patches**, and ParList_Copy (or ParAttFlt_Copy and ParAttInt_Copy)
+//                                              will contain information of particles belonging to NPar as well.
 //                                          --> It makes implementation simplier. For leaf real patches, one only needs to consider
 //                                              NPar and ParList. While for all other patches, one only needs to consider NPar_Copy
-//                                              and ParList_Copy (or ParAtt_Copy). One never needs to consider both.
+//                                              and ParList_Copy (or ParAttFlt_Copy and ParAttInt_Copy). One never needs to consider both.
 //                ParList_Copy        : List recording the IDs of all particles belonging to the descendants of this patch
 //                                      (and particles temporarily locate in this patch waiting for the velocity correction, see
 //                                      discussion above)
 //                                      --> for SERIAL only
-//                ParAtt_Copy         : Pointer arrays storing the data of NPar_Copy particles collected from other patches
+//                ParAttFlt_Copy      : Pointer arrays storing the floating-point data of NPar_Copy particles collected from other patches
+//                                      --> for LOAD_BALANCE only
+//                ParAttInt_Copy      : Pointer arrays storing the integer        data of NPar_Copy particles collected from other patches
 //                                      --> for LOAD_BALANCE only
 //                NPar_Escp           : Number of particles escaping from this patch
 //                ParList_Escp        : List recording the IDs of all particles escaping from this patch
@@ -242,7 +244,8 @@ struct patch_t
 
    int    NPar_Copy;
 #  ifdef LOAD_BALANCE
-   real_par  *ParAtt_Copy[PAR_NATT_TOTAL];
+   real_par  *ParAttFlt_Copy[PAR_NATT_FLT_TOTAL];
+   long_par  *ParAttInt_Copy[PAR_NATT_INT_TOTAL];
 #  else
    long      *ParList_Copy;
 #  endif
@@ -448,8 +451,8 @@ struct patch_t
 
       NPar_Copy    = -1;         // -1 : indicating that it has not been calculated yet
 #     ifdef LOAD_BALANCE
-      for (int v=0; v<PAR_NATT_TOTAL; v++)
-      ParAtt_Copy[v] = NULL;
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParAttFlt_Copy[v] = NULL;
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   ParAttInt_Copy[v] = NULL;
 #     else
       ParList_Copy = NULL;
 #     endif
@@ -496,8 +499,10 @@ struct patch_t
 #     ifdef DEBUG_PARTICLE
       if ( ParList != NULL )              Aux_Error( ERROR_INFO, "ParList != NULL !!\n" );
 #     ifdef LOAD_BALANCE
-      for (int v=0; v<PAR_NATT_TOTAL; v++)
-      if ( ParAtt_Copy[v] != NULL )       Aux_Error( ERROR_INFO, "ParAtt_Copy[%d] != NULL !!\n", v );
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
+      if ( ParAttFlt_Copy[v] != NULL )       Aux_Error( ERROR_INFO, "ParAttFlt_Copy[%d] != NULL !!\n", v );
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
+      if ( ParAttInt_Copy[v] != NULL )       Aux_Error( ERROR_INFO, "ParAttInt_Copy[%d] != NULL !!\n", v );
 #     else
       if ( ParList_Copy != NULL )         Aux_Error( ERROR_INFO, "ParList_Copy != NULL !!\n" );
 #     endif
@@ -883,11 +888,11 @@ struct patch_t
    //===================================================================================
 #  ifdef DEBUG_PARTICLE
    void AddParticle( const int NNew, const long *NewList, long *NPar_Lv,
-                     const real_par *ParType, const real_par **ParPos, const long NParTot,
+                     const long_par *ParType, const real_par **ParPos, const long NParTot,
                      const char *Comment )
 #  else
    void AddParticle( const int NNew, const long *NewList, long *NPar_Lv,
-                     const real_par *ParType )
+                     const long_par *ParType )
 #  endif
    {
 
@@ -997,7 +1002,7 @@ struct patch_t
    //===================================================================================
    void RemoveParticle( const int NRemove, const int *RemoveList,
                         long *NPar_Lv, const bool RemoveAll,
-                        const real_par *ParType )
+                        const long_par *ParType )
    {
 
 //    removing all particles is easy

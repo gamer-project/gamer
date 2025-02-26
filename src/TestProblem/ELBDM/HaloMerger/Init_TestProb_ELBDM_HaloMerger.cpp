@@ -65,9 +65,10 @@ void Init_ExtPot_ELBDM_HaloMerger();
 // =======================================================================================
 #ifdef MASSIVE_PARTICLES
 void Par_Init_ByFunction_HaloMerger( const long NPar_ThisRank, const long NPar_AllRank,
-                                     real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                     real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                     real *ParType, real *AllAttribute[PAR_NATT_TOTAL] );
+                                     real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                     real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                     long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                     long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] );
 #endif
 
 // problem-specific functions
@@ -120,6 +121,10 @@ void Validate()
 #  ifndef SUPPORT_GSL
    Aux_Error( ERROR_INFO, "SUPPORT_GSL must be enabled !!\n" );
 #  endif
+#  endif
+
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   Aux_Error( ERROR_INFO, "Test problem %d does not support ELBDM_HYBRID. The phase cannot be connected continuously at the boundaries of objects !!\n", TESTPROB_ID );
 #  endif
 
    if ( !OPT__UNIT )

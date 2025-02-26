@@ -30,6 +30,12 @@ datatypes in the HDF5 format
 # else
 #  define H5T_GAMER_REAL_PAR H5T_NATIVE_FLOAT
 # endif
+
+# ifdef INT8_PAR
+#  define H5T_GAMER_LONG_PAR H5T_NATIVE_LONG
+# else
+#  define H5T_GAMER_LONG_PAR H5T_NATIVE_INT
+# endif
 #endif // #ifdef PARTICLE
 
 
@@ -74,8 +80,10 @@ struct KeyInfo_t
    int    NMagStored;               // NCOMP_MAG (declare it even when MHD is off)
 #  ifdef PARTICLE
    long   Par_NPar;                 // amr->Par->NPar_Active_AllRank
-   int    Par_NAttStored;           // PAR_NATT_STORED
+   int    Par_NAttFltStored;        // PAR_NATT_FLT_STORED
+   int    Par_NAttIntStored;        // PAR_NATT_INT_STORED
    int    Float8_Par;
+   int    Int8_Par;
 #  endif
 #  ifdef COSMIC_RAY
    int    CR_Diffusion;
@@ -97,6 +105,9 @@ struct KeyInfo_t
    char  *GitBranch;
    char  *GitCommit;
    long   UniqueDataID;
+
+// conserved variables
+   double ConRef[1+NCONREF_MAX];
 
 }; // struct KeyInfo_t
 
@@ -182,8 +193,10 @@ struct Makefile_t
    int StoreParAcc;
    int StarFormation;
    int Feedback;
-   int Par_NAttUser;
+   int Par_NAttFltUser;
+   int Par_NAttIntUser;
    int Float8_Par;
+   int Int8_Par;
 #  endif
 
 #  ifdef COSMIC_RAY
@@ -264,7 +277,8 @@ struct SymConst_t
 
 
 #  ifdef PARTICLE
-   int    Par_NAttStored;
+   int    Par_NAttFltStored;
+   int    Par_NAttIntStored;
    int    Par_NType;
 #  ifdef GRAVITY
    int    RhoExt_GhostSize;
@@ -362,6 +376,8 @@ struct SymConst_t
 
    int    NFieldStoredMax;
 
+   int    NConRefMax;
+
 }; // struct SymConst_t
 
 
@@ -415,6 +431,7 @@ struct InputPara_t
    double Par_ICMass;
    int    Par_ICType;
    int    Par_ICFloat8;
+   int    Par_ICInt8;
    int    Par_Interp;
    int    Par_InterpTracer;
    int    Par_Integ;
@@ -426,7 +443,8 @@ struct InputPara_t
    int    Par_GhostSize;
    int    Par_GhostSizeTracer;
    int    Par_TracerVelCorr;
-   char  *ParAttLabel[PAR_NATT_TOTAL];
+   char  *ParAttFltLabel[PAR_NATT_FLT_TOTAL];
+   char  *ParAttIntLabel[PAR_NATT_INT_TOTAL];
 #  endif
 
 // cosmology
@@ -490,6 +508,14 @@ struct InputPara_t
    int    MaxLevel;
    int    Opt__Flag_Rho;
    int    Opt__Flag_RhoGradient;
+   int    Opt__Flag_Angular;
+   double FlagAngular_CenX;
+   double FlagAngular_CenY;
+   double FlagAngular_CenZ;
+   int    Opt__Flag_Radial;
+   double FlagRadial_CenX;
+   double FlagRadial_CenY;
+   double FlagRadial_CenZ;
 #  if ( MODEL == HYDRO )
    int    Opt__Flag_PresGradient;
    int    Opt__Flag_Vorticity;
@@ -810,6 +836,7 @@ struct InputPara_t
    int    Opt__Output_Step;
    double Opt__Output_Dt;
    char  *Opt__Output_Text_Format_Flt;
+   int    Opt__Output_Text_Length_Int;
    double Output_PartX;
    double Output_PartY;
    double Output_PartZ;
@@ -871,6 +898,8 @@ struct InputPara_t
    double FlagTable_Rho         [NLEVEL-1];
    double FlagTable_RhoGradient [NLEVEL-1];
    double FlagTable_Lohner      [NLEVEL-1][5];
+   double FlagTable_Angular     [NLEVEL-1][3];
+   double FlagTable_Radial      [NLEVEL-1];
    hvl_t  FlagTable_User        [NLEVEL-1];
 #  if   ( MODEL == HYDRO )
    double FlagTable_PresGradient[NLEVEL-1];
