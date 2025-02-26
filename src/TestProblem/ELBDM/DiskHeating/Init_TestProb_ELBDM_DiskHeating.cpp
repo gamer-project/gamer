@@ -91,6 +91,10 @@ void Validate()
    Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
 #  endif
 
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   Aux_Error( ERROR_INFO, "Test problem %d does not support ELBDM_HYBRID. The phase cannot be unwrapped due to the presence of vortices in the halo !!\n", TESTPROB_ID );
+#  endif
+
 
 // warnings
    if ( MPI_Rank == 0 )
@@ -332,8 +336,17 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    }
 
    fluid[DENS] = (real)dens;
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif
    fluid[REAL] = sqrt( fluid[DENS] );
    fluid[IMAG] = 0.0;
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } else {
+   fluid[PHAS] = 0.0;
+   fluid[STUB] = 0.0;
+   }
+#  endif
 
 } // FUNCTION : SetGridIC
 

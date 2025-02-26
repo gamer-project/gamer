@@ -213,8 +213,13 @@
 // total number of passive scalars
 #  define NCOMP_PASSIVE       ( NCOMP_PASSIVE_USER + NCOMP_PASSIVE_BUILTIN )
 
+#if   ( MODEL == HYDRO )
 // assuming all passive scalars have the corresponding fluxes
 #  define NFLUX_PASSIVE       NCOMP_PASSIVE
+#elif ( MODEL == ELBDM )
+// assuming no flux for the passive scalars
+#  define NFLUX_PASSIVE       0
+#endif // MODEL
 
 
 // total number of variables in each cell and in the flux array including both active and passive variables

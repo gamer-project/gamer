@@ -3,11 +3,11 @@ reset
 
 # target files
 # -----------------------------------------------------------
-FILE_IN_PREFIX  = 'PlaneWave'
+FILE_IN_PREFIX  = 'Gaussian'
 FILE_IN_SUFFIX  = ''
-FILE_OUT_PREFIX = 'Fig__PlaneWave'
+FILE_OUT_PREFIX = 'Fig__Gaussian'
 START_ID        = 0
-END_ID          = 48
+END_ID          = 17
 DELTA_ID        = 1
 PAUSE           = -1.0  # <= 0.0 --> mouse
 
@@ -29,9 +29,9 @@ set ylabel "Wave function"
 #set format x "10^{%T}"
 #set format y "10^{%T}"
  set pointsize 1.0
- set size square
- set yrange [-2.00:5.00]
- set xrange [0.0:1.0]
+#set size square
+#set xrange [3.0e-2:1e2]
+ set yrange [-2.5:2.5]
 
 
 # set the output file extension automatically
@@ -50,9 +50,9 @@ print "Start plotting ..."
 do for [ID=START_ID:END_ID:DELTA_ID] {
 
 #  set the input and output filenames
-   FILE_IN_REAL = sprintf( '%s_Real_%06d', FILE_IN_PREFIX, ID, FILE_IN_SUFFIX )
-   FILE_IN_IMAG = sprintf( '%s_Imag_%06d', FILE_IN_PREFIX, ID, FILE_IN_SUFFIX )
+   FILE_IN_PHAS = sprintf( '%s_Phas_%06d', FILE_IN_PREFIX, ID, FILE_IN_SUFFIX )
    FILE_IN_DENS = sprintf( '%s_Dens_%06d', FILE_IN_PREFIX, ID, FILE_IN_SUFFIX )
+   FILE_IN      = sprintf( '< paste %s %s', FILE_IN_DENS, FILE_IN_PHAS )
 
    if ( GPVAL_TERM ne 'x11' ) { set output sprintf( '%s_%06d.%s', FILE_OUT_PREFIX, ID, FILE_OUT_EXT ) }
 
@@ -71,12 +71,12 @@ do for [ID=START_ID:END_ID:DELTA_ID] {
 
 #  plot
 
-   plot FILE_IN_DENS  u ($1):($2**0.5) smooth unique w p pt 6 lc 4 title 'Simulation Dens^{1/2}' \
-       ,FILE_IN_DENS  u ($1):($3**0.5) smooth unique w l      lc 8 title 'Analytical Dens^{1/2}' \
-       ,FILE_IN_REAL  u ($1):($2     ) smooth unique w p pt 7 lc 6 title 'Simulation Real' \
-       ,FILE_IN_REAL  u ($1):($3     ) smooth unique w l dt 4 lc 8 title 'Analytical Real' \
-       ,FILE_IN_IMAG  u ($1):($2     ) smooth unique w p pt 8 lc 7 title 'Simulation Imag' \
-       ,FILE_IN_IMAG  u ($1):($3     ) smooth unique w l dt 5 lc 8 title 'Analytical Imag'
+   plot FILE_IN_DENS  u ($1):($2**0.5)         smooth unique w p pt 6 lc 4 title 'Simulation Dens^{1/2}' \
+       ,FILE_IN_DENS  u ($1):($3**0.5)         smooth unique w l      lc 8 title 'Analytical Dens^{1/2}' \
+       ,FILE_IN       u ($1):($2**0.5)*cos($6) smooth unique w p pt 7 lc 6 title 'Simulation Real' \
+       ,FILE_IN       u ($1):($3**0.5)*cos($7) smooth unique w l dt 4 lc 8 title 'Analytical Real' \
+       ,FILE_IN       u ($1):($2**0.5)*sin($6) smooth unique w p pt 8 lc 7 title 'Simulation Imag' \
+       ,FILE_IN       u ($1):($3**0.5)*sin($7) smooth unique w l dt 5 lc 8 title 'Analytical Imag'
 
 
    if ( GPVAL_TERM eq 'x11' ) { if ( PAUSE <= 0.0 ) { pause mouse }   else { pause PAUSE } };
