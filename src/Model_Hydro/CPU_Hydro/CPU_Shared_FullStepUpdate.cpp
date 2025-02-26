@@ -46,6 +46,8 @@
 //                dh                : Cell size
 //                MinDens/Eint      : Density and internal energy floors
 //                DualEnergySwitch  : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
+//                FloorVar          : Bitwise flag to specify the passive scalars to be floored
+//                                    --> Should be set to the global variable "PassiveVar_Floor"
 //                NormPassive       : true --> normalize passive scalars so that the sum of their mass density
 //                                             is equal to the gas mass density
 //                NNorm             : Number of passive scalars to be normalized
@@ -62,8 +64,8 @@
 GPU_DEVICE
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                           const real dt, const real dh, const real MinDens, const real MinEint,
-                           const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
+                           const real dt, const real dh, const real MinDens, const real MinEint, const real DualEnergySwitch,
+                           const long FloorVar, const bool NormPassive, const int NNorm, const int NormIdx[],
                            const EoS_t *EoS, int *s_FullStepFailure, const int Iteration, const int MinMod_MaxIter )
 {
 
@@ -143,7 +145,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //    2. floor and normalize passive scalars
 #     if ( NCOMP_PASSIVE > 0 )
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
-         if ( PassiveVar_Floor & BIDX(v) )  Output_1Cell[v] = FMAX( Output_1Cell[v], TINY_NUMBER );
+         if ( FloorVar & BIDX(v) )  Output_1Cell[v] = FMAX( Output_1Cell[v], TINY_NUMBER );
 
       if ( NormPassive )
          Hydro_NormalizePassive( Output_1Cell[DENS], Output_1Cell+NCOMP_FLUID, NNorm, NormIdx );
