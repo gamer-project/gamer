@@ -3,11 +3,11 @@ reset
 
 # target files
 # -----------------------------------------------------------
-FILE_IN_PREFIX  = 'PlaneWave'
+FILE_IN_PREFIX  = 'Gaussian'
 FILE_IN_SUFFIX  = ''
-FILE_OUT_PREFIX = 'Fig__PlaneWave'
+FILE_OUT_PREFIX = 'Fig__Gaussian'
 START_ID        = 0
-END_ID          = 48
+END_ID          = 17
 DELTA_ID        = 1
 PAUSE           = -1.0  # <= 0.0 --> mouse
 
@@ -29,9 +29,9 @@ set ylabel "Wave function"
 #set format x "10^{%T}"
 #set format y "10^{%T}"
  set pointsize 1.0
- set size square
- set yrange [-2.00:5.00]
- set xrange [0.0:1.0]
+#set size square
+#set xrange [3.0e-2:1e2]
+ set yrange [-2.5:2.5]
 
 
 # set the output file extension automatically
