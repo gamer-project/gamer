@@ -15,8 +15,11 @@ static double              GrackleComoving_InitialTemperature;
 // =======================================================================================
 
 
+
 // problem-specific function prototypes
-void Compute_CoolingCurve( const double z_value, const double T_min, const double T_max, const double dT );
+#ifdef SUPPORT_GRACKLE
+void Aux_CoolingCurve( const double z_value, const double T_min, const double T_max, const double dT );
+#endif
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -36,7 +39,7 @@ void Validate()
 
 
 // errors
-#  if   !( MODEL == HYDRO )
+#  if ( MODEL != HYDRO )
    Aux_Error( ERROR_INFO, "MODEL != HYDRO !!\n" );
 #  endif
 
@@ -67,6 +70,7 @@ void Validate()
 
 
 
+#if ( MODEL == HYDRO  &&  defined SUPPORT_GRACKLE  &&  defined COMOVING )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -167,7 +171,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 {
    double Dens, MomX, MomY, MomZ, Eint, Etot;
 
-#  ifdef SUPPORT_GRACKLE
    const double mu                = 4 / (8 - 5 * (1 - grackle_data->HydrogenFractionByMass));      // fully ionized gas
    const double temperature_units = get_temperature_units(&Che_Units);                             // set temperature units
 
@@ -191,6 +194,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[ENGY] = Etot;
 
 // initialize all chemical species
+// --> assuming fully ionized gas
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
    fluid[Idx_HI   ] = 0.0;
    fluid[Idx_HII  ] = grackle_data->HydrogenFractionByMass * (1.0 - GrackleComoving_InitialMetallicity) * Dens;
@@ -208,13 +212,12 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // 12-species network
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE12 ) {
    fluid[Idx_DI   ] = 0.0;
-   fluid[Idx_DII  ] = grackle_data->DeuteriumToHydrogenRatio * fluid[Idx_HI];
+   fluid[Idx_DII  ] = grackle_data->DeuteriumToHydrogenRatio * fluid[Idx_HII];
    fluid[Idx_HDI  ] = 0.0;
    }
    if ( GRACKLE_METAL ) {
    fluid[Idx_Metal] = GrackleComoving_InitialMetallicity * Dens;
    }
-#  endif // #ifdef SUPPORT_GRACKLE
 } // FUNCTION : SetGridIC
 
 
@@ -286,7 +289,6 @@ void Aux_Record_GrackleComoving()
 
       const double MassRatio_pe = Const_mp / Const_me;
 
-#     ifdef SUPPORT_GRACKLE
       my_fields.density        [0] = Dens;
       my_fields.internal_energy[0] = Eint / Dens / SQR(Time[0]);
 
@@ -326,9 +328,11 @@ void Aux_Record_GrackleComoving()
 //    calculate cooling time
       if ( calculate_cooling_time( &Che_Units, &my_fields, my_cooling_time ) == 0 )
          Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
+
 //    calculate temperature
       if ( calculate_temperature( &Che_Units, &my_fields, my_temperature ) == 0 )
          Aux_Error( ERROR_INFO, "Error in calculate_temperature.\n" );
+
 //    calculate gamma
       if ( calculate_gamma( &Che_Units, &my_fields, my_gamma ) == 0 )
          Aux_Error( ERROR_INFO, "Error in calculate_gamma.\n" );
@@ -345,10 +349,86 @@ void Aux_Record_GrackleComoving()
       fprintf( File_User, "\n" );
 
       fclose( File_User );
-#     endif // #ifdef SUPPORT_GRACKLE
    } // if ( MPI_Rank == 0 )
 
 } // FUNCTION : Aux_Record_GrackleComoving
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Init_GrackleComoving
+// Description :  Initialization of GrackleComoving
+//
+// Note        :  1. Invoked by Init_GAMER() using the function pointer "Init_User_Ptr",
+//                   which must be set by a test problem initializer
+//                2. Gravitational potential on grids and particle acceleration have not been computed
+//                   at this stage
+//                   --> Use Init_User_AfterPoisson_Ptr() instead if this information is required
+//                   --> It's OK to modify mass density on grids and particle mass/position here
+//                       --> But grid distribution won't change unless you manually call the corresponding
+//                           grid refinement routines here
+//                       --> Modifying particle position requires special attention in order to ensure that
+//                           all particles still reside in leaf patches. Do this only if you know what
+//                           you are doing.
+//                3. To add new particles, remember to call Par_AddParticleAfterInit()
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Init_GrackleComoving()
+{
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
+   
+// set grid dimension and size
+// grid_start and grid_end are used to ignore ghost zones
+   const int field_size = 1;
+   my_fields.grid_rank = 3;
+   my_fields.grid_dimension = new int [3];
+   my_fields.grid_start     = new int [3];
+   my_fields.grid_end       = new int [3];
+   for (int i=0; i<3; i++) {
+      my_fields.grid_dimension[i] = 1; // the active dimension not including ghost zones.
+      my_fields.grid_start    [i] = 0;
+      my_fields.grid_end      [i] = 0;
+   }
+   my_fields.grid_dimension[0] = field_size;
+   my_fields.grid_end[0]       = field_size - 1;
+   my_fields.grid_dx           = 0.0; // used only for H2 self-shielding approximation
+
+   my_fields.density         = new gr_float [field_size];
+   my_fields.internal_energy = new gr_float [field_size];
+   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
+   my_fields.HI_density      = new gr_float [field_size];
+   my_fields.HII_density     = new gr_float [field_size];
+   my_fields.HeI_density     = new gr_float [field_size];
+   my_fields.HeII_density    = new gr_float [field_size];
+   my_fields.HeIII_density   = new gr_float [field_size];
+   my_fields.e_density       = new gr_float [field_size];
+   }
+   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9 ) {
+   my_fields.HM_density      = new gr_float [field_size];
+   my_fields.H2I_density     = new gr_float [field_size];
+   my_fields.H2II_density    = new gr_float [field_size];
+   }
+   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE12 ) {
+   my_fields.DI_density      = new gr_float [field_size];
+   my_fields.DII_density     = new gr_float [field_size];
+   my_fields.HDI_density     = new gr_float [field_size];
+   }
+   if ( GRACKLE_METAL ) {
+   my_fields.metal_density   = new gr_float [field_size];
+   }
+
+   my_temperature            = new gr_float [field_size];
+   my_gamma                  = new gr_float [field_size];
+   my_cooling_time           = new gr_float [field_size];
+
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
+
+}
 
 
 
@@ -366,21 +446,13 @@ void End_GrackleComoving()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "==========================================\n");
-      Aux_Message( stdout, "Generating cooling rate tables...\n");
-	   Compute_CoolingCurve( 0, 4, 8, 0.02);
-	   Compute_CoolingCurve( 1, 4, 8, 0.02);
-	   Compute_CoolingCurve( 2, 4, 8, 0.02);
-	   Compute_CoolingCurve( 3, 4, 8, 0.02);
-	   Compute_CoolingCurve( 4, 4, 8, 0.02);
-	   Compute_CoolingCurve( 5, 4, 8, 0.02);
-	   Compute_CoolingCurve( 6, 4, 8, 0.02);
-	   Compute_CoolingCurve( 7, 4, 8, 0.02);
-	   Compute_CoolingCurve( 8, 4, 8, 0.02);
-	   Compute_CoolingCurve( 9, 4, 8, 0.02);
+      Aux_Message( stdout, "Generating cooling rate tables ...\n");
+      for ( double z=floor(1.0/END_T-1.0); z<=(1.0/A_INIT-1.0); z+=1.0 )
+         Aux_CoolingCurve( z, 4, 8, 0.02);
+      Aux_Message( stdout, "Generating cooling rate tables ... done\n");
       Aux_Message( stdout, "==========================================\n");
    }
 
-#  ifdef SUPPORT_GRACKLE
    delete [] my_fields.grid_dimension;     my_fields.grid_dimension  = NULL;
    delete [] my_fields.grid_start;         my_fields.grid_start      = NULL;
    delete [] my_fields.grid_end;           my_fields.grid_end        = NULL;
@@ -412,7 +484,6 @@ void End_GrackleComoving()
    delete [] my_temperature;               my_temperature            = NULL;
    delete [] my_gamma;                     my_gamma                  = NULL;
    delete [] my_cooling_time;              my_cooling_time           = NULL;
-#  endif // #ifdef SUPPORT_GRACKLE
 } // FUNCTION : End_GrackleComoving
 
 
@@ -438,11 +509,9 @@ void End_GrackleComoving()
 //-------------------------------------------------------------------------------------------------------
 double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
 {
-#  ifdef COMOVING
 
    double dt_user_phy = HUGE_NUMBER;
 
-#  ifdef SUPPORT_GRACKLE
    int    FluSg = amr->FluSg[0];
    double Dens  = amr->patch[FluSg][0][0]->fluid[DENS][0][0][0];
    double Eint  = amr->patch[FluSg][0][0]->fluid[ENGY][0][0][0]; // assume no magnetic and kinetic energy
@@ -500,32 +569,32 @@ double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
    Che_Units.a_units              = 1.0;
    Che_Units.a_value              = Time[lv];
 
+
 // calculate cooling time
    if ( calculate_cooling_time( &Che_Units, &my_fields, my_cooling_time ) == 0 )
       Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
 
    dt_user_phy = FMIN(dt_user_phy, 0.01 * fabs(my_cooling_time[0]));
 
+   
+// recalculate cooling time with 10% lower internal energy
+// --> to avoid overestimating the time-step size when the cooling time gets shorter as the temperature decreases
    my_fields.internal_energy[0] *= 0.9;
 
-// recalculate cooling time
    if ( calculate_cooling_time( &Che_Units, &my_fields, my_cooling_time ) == 0 )
       Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
 
    dt_user_phy = FMIN(dt_user_phy, 0.01 * fabs(my_cooling_time[0]));
-#  endif // #ifdef SUPPORT_GRACKLE
+
 
 // convert the time-step size to comoving coordinates
    const double dt_user = dt_user_phy / SQR(Time[lv]);
 
-   return dt_user / SQR(Time[lv]);
 
-#  else  // #ifdef COMOVING
-   Aux_Error( ERROR_INFO, "Mis_GetTimeStep_GrackleComoving assumes COMOVING enabled !!\n" );
-#  endif // #ifdef COMOVING
+   return dt_user;
 
 } // FUNCTION : Mis_GetTimeStep_GrackleComoving
-
+#endif // #if ( MODEL == HYDRO  &&  defined SUPPORT_GRACKLE  &&  defined COMOVING )
 
 
 
@@ -545,64 +614,20 @@ void Init_TestProb_Hydro_Grackle_Comoving()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-// set grid dimension and size
-// grid_start and grid_end are used to ignore ghost zones
-   const int field_size = 1;
-#  ifdef SUPPORT_GRACKLE
-   my_fields.grid_rank = 3;
-   my_fields.grid_dimension = new int [3];
-   my_fields.grid_start     = new int [3];
-   my_fields.grid_end       = new int [3];
-   for (int i=0; i<3; i++) {
-      my_fields.grid_dimension[i] = 1; // the active dimension not including ghost zones.
-      my_fields.grid_start    [i] = 0;
-      my_fields.grid_end      [i] = 0;
-   }
-   my_fields.grid_dimension[0] = field_size;
-   my_fields.grid_end[0]       = field_size - 1;
-   my_fields.grid_dx           = 0.0; // used only for H2 self-shielding approximation
-
-   my_fields.density         = new gr_float [field_size];
-   my_fields.internal_energy = new gr_float [field_size];
-   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
-   my_fields.HI_density      = new gr_float [field_size];
-   my_fields.HII_density     = new gr_float [field_size];
-   my_fields.HeI_density     = new gr_float [field_size];
-   my_fields.HeII_density    = new gr_float [field_size];
-   my_fields.HeIII_density   = new gr_float [field_size];
-   my_fields.e_density       = new gr_float [field_size];
-   }
-   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9 ) {
-   my_fields.HM_density      = new gr_float [field_size];
-   my_fields.H2I_density     = new gr_float [field_size];
-   my_fields.H2II_density    = new gr_float [field_size];
-   }
-   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE12 ) {
-   my_fields.DI_density      = new gr_float [field_size];
-   my_fields.DII_density     = new gr_float [field_size];
-   my_fields.HDI_density     = new gr_float [field_size];
-   }
-   if ( GRACKLE_METAL ) {
-   my_fields.metal_density   = new gr_float [field_size];
-   }
-
-   my_temperature            = new gr_float [field_size];
-   my_gamma                  = new gr_float [field_size];
-   my_cooling_time           = new gr_float [field_size];
-#  endif // #ifdef SUPPORT_GRACKLE
-
-
 // validate the compilation flags and runtime parameters
    Validate();
 
+#  if ( MODEL == HYDRO  &&  defined SUPPORT_GRACKLE  &&  defined COMOVING )
 // set the problem-specific runtime parameters
    SetParameter();
 
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr   = SetGridIC;
    Aux_Record_User_Ptr      = Aux_Record_GrackleComoving;
+   Init_User_Ptr            = Init_GrackleComoving;
    End_User_Ptr             = End_GrackleComoving;
    Mis_GetTimeStep_User_Ptr = Mis_GetTimeStep_GrackleComoving;
+#  endif // #if ( MODEL == HYDRO  &&  defined SUPPORT_GRACKLE  &&  defined COMOVING )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
