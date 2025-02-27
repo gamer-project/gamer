@@ -382,7 +382,7 @@ void Init_GrackleComoving()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
-   
+
 // set grid dimension and size
 // grid_start and grid_end are used to ignore ghost zones
    const int field_size = 1;
@@ -578,7 +578,7 @@ double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
 
    dt_user_phy = FMIN(dt_user_phy, 0.01 * fabs(my_cooling_time[0]));
 
-   
+
 // recalculate cooling time with 10% lower internal energy
 // --> to avoid overestimating the time-step size when the cooling time gets shorter as the temperature decreases
    my_fields.internal_energy[0] *= 0.9;
