@@ -60,6 +60,8 @@ void Validate()
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
 
+   if ( !OPT__RECORD_USER )
+￼     Aux_Error( ERROR_INFO, "must turn on OPT__RECORD_USER for this test !!\n" );
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
 
