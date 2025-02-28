@@ -674,7 +674,7 @@ def load_arguments( sys_setting : SystemSetting ):
                        )
 
     parser.add_argument( "--double_par", type=str2bool, metavar="BOOLEAN", gamer_name="FLOAT8_PAR",
-                         default=None,
+                         default=True,
                          depend={"particle":True},
                          help="Enable double precision for particle floating-point attributes.\n"
                        )
@@ -901,9 +901,6 @@ def set_conditional_defaults( args ):
 
     if args["laplacian_four"] is None:
         args["laplacian_four"] = True if args["wave_scheme"] == "FD" else False
-
-    if args["double_par"] is None:
-        args["double_par"] = args["double"]
 
     if args["flux"] is None:
         args["flux"] = "HLLD" if args["mhd"] else "HLLC"
