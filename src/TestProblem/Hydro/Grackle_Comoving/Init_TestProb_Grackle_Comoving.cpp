@@ -14,12 +14,12 @@ static double              GrackleComoving_InitialTemperature;
 #endif // #ifdef SUPPORT_GRACKLE
 // =======================================================================================
 
-
-
 // problem-specific function prototypes
 #ifdef SUPPORT_GRACKLE
 void Aux_CoolingCurve( const double z_value, const double T_min, const double T_max, const double dT );
 #endif
+
+
 
 
 //-------------------------------------------------------------------------------------------------------
