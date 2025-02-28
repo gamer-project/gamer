@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import glob
 
 
-# Load the data 
+# Load the data
 data = np.loadtxt('../Record__GrackleComoving', skiprows=9)
 
 # data columns
