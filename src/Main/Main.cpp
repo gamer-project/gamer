@@ -270,6 +270,7 @@ int                   SF_CREATE_STAR_RSEED;
 int                   SF_CREATE_STAR_DET_RANDOM;
 int                   SF_CREATE_STAR_MIN_LEVEL;
 double                SF_CREATE_STAR_MIN_GAS_DENS;
+double                SF_CREATE_STAR_MAX_GAS_JEANSL;
 double                SF_CREATE_STAR_MASS_EFF;
 double                SF_CREATE_STAR_MIN_STAR_MASS;
 double                SF_CREATE_STAR_MAX_STAR_MFRAC;

@@ -1,0 +1,46 @@
+Compilation flags:
+========================================
+Enable : MODEL=HYDRO, PARTICLE, GRAVITY, STAR_FORMATION
+Disable: COMOVING
+
+
+Default setup:
+========================================
+1. Units:
+   (1) External (for Input__TestProb only):
+       See the comment of each runtime variable
+
+   (2) Internal (for all other input files and internal usage):
+       [L] = kpc
+       [M] = 1.0e9 Msun
+       [T] = Myr
+    -->[V] = [L]/[T] ~ 9.8e2 km/s
+    -->[D] = [M]/[D]^3 ~ 6.8e-23 g/cm^3
+
+
+Note:
+========================================
+1. The initial conditions is a distribution of varying mass density and temperature
+   - Linearly varying log( mass density ) in the x direction
+   - Linearly varying log( temperature ) in the y direction
+   - No variation in the z direction
+
+2. Both the fluid and the particles are freezed and
+   the fluid is reset to the initial condition every step by default to keep a constant environment
+   - One can also set OPT__RESET_FLUID = 0 to see how the fluid decreases and is converted into stars
+
+3. This is to test the star formation conditions that star should only form at the allowed region
+   - SF_CREATE_STAR_SCHEME = 1 -> the minimum gas density (SF_CREATE_STAR_MIN_GAS_DENS)
+   - SF_CREATE_STAR_SCHEME = 2 -> the maximum gas Jeans length (SF_CREATE_STAR_MAX_GAS_JEANSL)
+
+4. The default time step is set to 0.1x the free-fall time of the max density
+
+5. In the default setup, the maximum gas cell mass is about 3356870 Msun
+   - With SF_CREATE_STAR_MASS_EFF = 1.0e-2 and dt~0.1 free-fall time,
+     the maximum star mass is about 3357 Msun,
+     which is larger than SF_CREATE_STAR_MIN_STAR_MASS = 1000 Msun
+   - The formed star mass in a fixed time step is proportional to (gas density)^(3/2)
+     according to the local Schmidt star formation law
+   - When the expected star mass is less than SF_CREATE_STAR_MIN_STAR_MASS, the star forms stochastically
+
+6. Some handy yt analysis scripts are put at "yt_script"
