@@ -36,9 +36,8 @@ static real Hydro_CheckMinTemp( const real InTemp, const real MinTemp );
 GPU_DEVICE
 static real Hydro_CheckMinEntr( const real InEntr, const real MinEntr );
 GPU_DEVICE
-static bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const char SingleFieldName[],
-                                const real Min, const real Max, const real Emag,
-                                const EoS_DE2P_t EoS_DensEint2Pres,
+static bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[],
+                                const real Emag, const EoS_DE2P_t EoS_DensEint2Pres,
                                 const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                                 const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                                 const real *const EoS_Table[EOS_NTABLE_MAX],
@@ -810,7 +809,6 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 // Description :  Check unphysical results
 //
 // Note        :  1. Support various modes:
-//                   UNPHY_MODE_SING         : Check if the input single field is NAN or lies outside the accepted range
 //                   UNPHY_MODE_CONS         : Check if the input conserved variables, including passive scalars, are unphysical
 //                   UNPHY_MODE_PRIM         : Check if the input primitive variables, including passive scalars, are unphysical
 //                   UNPHY_MODE_PASSIVE_ONLY : Check if the input passive scalars are unphysical
@@ -824,11 +822,9 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 //                   - Mass density must be positive
 //                   - Pressure cannot be negative
 //
-// Parameter   :  Mode              : UNPHY_MODE_SING, UNPHY_MODE_CONS, UNPHY_MODE_PRIM, UNPHY_MODE_PASSIVE_ONLY
+// Parameter   :  Mode              : UNPHY_MODE_CONS, UNPHY_MODE_PRIM, UNPHY_MODE_PASSIVE_ONLY
 //                                    --> See "Note" for details
 //                Fields            : Field data to be checked
-//                SingleFieldName   : Name of the target field for UNPHY_MODE_SING
-//                Min/Max           : Accepted range for UNPHY_MODE_SING
 //                Emag              : Magnetic energy density (0.5*B^2) --> For MHD only
 //                EoS_*             : EoS parameters
 //                File              : __FILE__
@@ -841,9 +837,8 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 //                false --> Otherwise
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const char SingleFieldName[],
-                         const real Min, const real Max, const real Emag,
-                         const EoS_DE2P_t EoS_DensEint2Pres,
+bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[],
+                         const real Emag, const EoS_DE2P_t EoS_DensEint2Pres,
                          const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                          const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                          const real *const EoS_Table[EOS_NTABLE_MAX],
@@ -861,24 +856,6 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const ch
 
    switch ( Mode )
    {
-//    === check single field ===
-      case UNPHY_MODE_SING:
-      {
-//       check if the input single field is NAN or lies outside the accepted range
-         if ( Fields[0] < Min  ||  Fields[0] > Max  ||  Fields[0] != Fields[0] )
-            UnphyCell = true;
-
-//       print out the unphysical value
-#        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
-         if ( UnphyCell && Verbose )
-            printf( "ERROR : invalid %s = %14.7e (min %14.7e, max %14.7e) at file <%s>, line <%d>, function <%s> !!\n",
-                    (SingleFieldName==NULL)?"unknown field":SingleFieldName, Fields[0], Min, Max,
-                    File, Line, Function );
-#        endif
-      } // case UNPHY_MODE_SING
-      break;
-
-
 //    === check conserved variables, including passive scalars ===
       case UNPHY_MODE_CONS:
       {

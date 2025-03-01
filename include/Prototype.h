@@ -136,9 +136,8 @@ real Hydro_CheckMinTemp( const real InTemp, const real MinTemp );
 real Hydro_CheckMinEntr( const real InEntr, const real MinEntr );
 real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real InEngy,
                                const real MinEint, const real Emag );
-bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[], const char SingleFieldName[],
-                         const real Min, const real Max, const real Emag,
-                         const EoS_DE2P_t EoS_DensEint2Pres,
+bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[],
+                         const real Emag, const EoS_DE2P_t EoS_DensEint2Pres,
                          const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                          const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                          const real *const EoS_Table[EOS_NTABLE_MAX],
