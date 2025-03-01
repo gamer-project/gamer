@@ -341,8 +341,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
 //       5-2. general check
          bool Fail_ThisCell
-            = Hydro_IsUnphysical( (FData_is_Prim)?UNPHY_MODE_PRIM:UNPHY_MODE_CONS, Temp, NULL,
-                                  NULL_REAL, NULL_REAL, Emag,
+            = Hydro_IsUnphysical( (FData_is_Prim)?UNPHY_MODE_PRIM:UNPHY_MODE_CONS, Temp, Emag,
                                   EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
                                   ERROR_INFO, UNPHY_SILENCE );
@@ -445,8 +444,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
 #              ifdef GAMER_DEBUG
-               if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, Cons, NULL,
-                                         NULL_REAL, NULL_REAL, Emag,
+               if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, Cons, Emag,
                                          EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
                                          ERROR_INFO, UNPHY_VERBOSE )  )

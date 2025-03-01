@@ -2102,8 +2102,7 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
    for (int f=0; f<6; f++)
    {
 #     ifdef SRHD
-      if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, fcCon[f], NULL,
-                                NULL_REAL, NULL_REAL, NULL_REAL,
+      if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, fcCon[f], NULL_REAL,
                                 EoS->DensEint2Pres_FuncPtr,
                                 EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
                                 EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table,

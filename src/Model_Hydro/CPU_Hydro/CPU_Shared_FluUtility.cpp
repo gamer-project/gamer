@@ -219,8 +219,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
    real HTilde, Factor, Temp, LorentzFactor;
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_IsUnphysical( UNPHY_MODE_CONS, In, NULL,
-                       NULL_REAL, NULL_REAL, NULL_REAL,
+   Hydro_IsUnphysical( UNPHY_MODE_CONS, In, NULL_REAL,
                        EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table,
                        ERROR_INFO, UNPHY_VERBOSE );

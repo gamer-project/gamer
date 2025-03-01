@@ -77,13 +77,11 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Hydro_Rotate3D( R, XYZ, true, MAG_OFFSET );
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_IsUnphysical( UNPHY_MODE_CONS, L, NULL,
-                       NULL_REAL, NULL_REAL, NULL_REAL,
+   Hydro_IsUnphysical( UNPHY_MODE_CONS, L, NULL_REAL,
                        EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table,
                        ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_IsUnphysical( UNPHY_MODE_CONS, R, NULL,
-                       NULL_REAL, NULL_REAL, NULL_REAL,
+   Hydro_IsUnphysical( UNPHY_MODE_CONS, R, NULL_REAL,
                        EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table,
                        ERROR_INFO, UNPHY_VERBOSE );
@@ -112,13 +110,11 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &rFactor );
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_IsUnphysical( UNPHY_MODE_PRIM, PL, NULL,
-                       NULL_REAL, NULL_REAL, NULL_REAL,
+   Hydro_IsUnphysical( UNPHY_MODE_PRIM, PL, NULL_REAL,
                        EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table,
                        ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_IsUnphysical( UNPHY_MODE_PRIM, PR, NULL,
-                       NULL_REAL, NULL_REAL, NULL_REAL,
+   Hydro_IsUnphysical( UNPHY_MODE_PRIM, PR, NULL_REAL,
                        EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table,
                        ERROR_INFO, UNPHY_VERBOSE );
