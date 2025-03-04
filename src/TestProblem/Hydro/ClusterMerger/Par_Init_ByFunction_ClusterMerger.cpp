@@ -876,53 +876,53 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                double soften = amr->dh[MAX_LEVEL];
                for (int c=0; c<Merger_Coll_NumBHs; c++)
                {
-                  double *pote = new double [num_par_sum[c]];
+                  double *pote_AllRank = new double [num_par_sum[c]];
 
 //                distribute MPI jobs
                   int     par_per_rank = num_par_sum[c] / MPI_NRank;
                   int     remainder    = num_par_sum[c] % MPI_NRank;
                   int     start        = MPI_Rank*par_per_rank + MIN( MPI_Rank, remainder );
                   int     end          = start + par_per_rank + (MPI_Rank < remainder ? 1 : 0);
-                  double *pote_local   = new double [end-start];
+                  double *pote_ThisRank   = new double [end-start];
 
 #                 pragma omp parallel for schedule( static )
                   for (int i=start; i<end; i++)
                   {
-                     pote_local[i-start] = 0.0;
+                     pote_ThisRank[i-start] = 0.0;
                      for (int j=0; j<num_par_sum[c]; j++)
                      {
                         if ( i == j )   continue;
 
                         cosnt double rel_pos = sqrt( SQR(ParX_sum[c][i]-ParX_sum[c][j]) + SQR(ParY_sum[c][i]-ParY_sum[c][j]) +
                                                      SQR(ParZ_sum[c][i]-ParZ_sum[c][j]) );
-                        if       ( rel_pos >  soften )   pote_local[i-start] += ParM_sum[c][j] / rel_pos;
-                        else if  ( rel_pos <= soften )   pote_local[i-start] += ParM_sum[c][j] / soften;
+                        if       ( rel_pos >  soften )   pote_ThisRank[i-start] += ParM_sum[c][j] / rel_pos;
+                        else if  ( rel_pos <= soften )   pote_ThisRank[i-start] += ParM_sum[c][j] / soften;
                      }
-                     pote_local[i-start] *= -NEWTON_G;
+                     pote_ThisRank[i-start] *= -NEWTON_G;
                   }
 
                   int N_recv[MPI_NRank], N_disp[MPI_NRank];
                   for (int i=0; i<MPI_NRank; i++)  N_recv[i] = (i < remainder ? par_per_rank+1 : par_per_rank);
                   N_disp[0] = 0;
                   for (int i=1; i<MPI_NRank; i++)  N_disp[i] = N_disp[i-1] + N_recv[i-1];
-                  MPI_Allgatherv( pote_local, end-start, MPI_DOUBLE, pote, N_recv, N_disp, MPI_DOUBLE, MPI_COMM_WORLD );
+                  MPI_Allgatherv( pote_ThisRank, end-start, MPI_DOUBLE, pote_AllRank, N_recv, N_disp, MPI_DOUBLE, MPI_COMM_WORLD );
 
                   double Pote_min = 0.0;
                   for (int i=0; i<num_par_sum[c]; i++)
                   {
-                     if ( pote[i] >= Pote_min )  continue;
-                     Pote_min      = pote[i];
+                     if ( pote_AllRank[i] >= Pote_min )  continue;
+                     Pote_min      = pote_AllRank[i];
                      min_pos[c][0] = ParX_sum[c][i];
                      min_pos[c][1] = ParY_sum[c][i];
                      min_pos[c][2] = ParZ_sum[c][i];
                   }
-                  delete[] pote;
-                  delete[] pote_local;
+                  delete[] pote_AllRank;
+                  delete[] pote_ThisRank;
                } // for (int c=0; c<Merger_Coll_NumBHs; c++)
-            } // if ( AdjustPos == true )
+            } // if ( AdjustPos )
 
 //          calculate the average DM velocity
-            if ( AdjustVel == true )
+            if ( AdjustVel )
             {
                for (int c=0; c<Merger_Coll_NumBHs; c++)
                {
@@ -935,7 +935,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                   }
                   for (int d=0; d<3; d++)   DM_Vel[c][d] /= num_par_sum[c];
                }
-            } // if ( AdjustVel == true )
+            } // if ( AdjustVel )
 
 //          iterate the above calculation until the output BH positions become close enough
             counter += 1;
