@@ -16,6 +16,7 @@ static char    Merger_File_Prof3[1000];   // profile table of cluster 3
        char    Merger_File_Par1 [1000];   // particle file of cluster 1
        char    Merger_File_Par2 [1000];   // particle file of cluster 2
        char    Merger_File_Par3 [1000];   // particle file of cluster 3
+static char    JetDirection_file[1000];   // jet direction file
        bool    Merger_Coll_IsGas1;        // (true/false) --> does cluster 1 have gas
        bool    Merger_Coll_IsGas2;        // (true/false) --> does cluster 2 have gas
        bool    Merger_Coll_IsGas3;        // (true/false) --> does cluster 3 have gas
@@ -253,53 +254,54 @@ void SetParameter()
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
 // --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
 // ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",         &VARIABLE,                 DEFAULT,          MIN,           MAX            );
+// ReadPara->Add( "KEY_IN_THE_FILE",         &VARIABLE,                 DEFAULT,            MIN,           MAX            );
 // ********************************************************************************************************************************
-   ReadPara->Add( "Merger_Coll_NumHalos",    &Merger_Coll_NumHalos,     2,                1,             3              );
-   ReadPara->Add( "AGN_feedback",            &AGN_feedback,             false,            Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Merger_Coll_IsGas1",      &Merger_Coll_IsGas1,       true,             Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Merger_Coll_IsGas2",      &Merger_Coll_IsGas2,       true,             Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Merger_Coll_IsGas3",      &Merger_Coll_IsGas3,       true,             Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Merger_File_Prof1",        Merger_File_Prof1,        NoDef_str,        Useless_str,   Useless_str    );
-   ReadPara->Add( "Merger_File_Par1",         Merger_File_Par1,         NoDef_str,        Useless_str,   Useless_str    );
-   ReadPara->Add( "Merger_File_Prof2",        Merger_File_Prof2,        NoDef_str,        Useless_str,   Useless_str    );
-   ReadPara->Add( "Merger_File_Par2",         Merger_File_Par2,         NoDef_str,        Useless_str,   Useless_str    );
-   ReadPara->Add( "Merger_File_Prof3",        Merger_File_Prof3,        NoDef_str,        Useless_str,   Useless_str    );
-   ReadPara->Add( "Merger_File_Par3",         Merger_File_Par3,         NoDef_str,        Useless_str,   Useless_str    );
-   ReadPara->Add( "Merger_Coll_PosX1",       &Merger_Coll_PosX1,       -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_PosY1",       &Merger_Coll_PosY1,       -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_PosX2",       &Merger_Coll_PosX2,       -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_PosY2",       &Merger_Coll_PosY2,       -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_PosX3",       &Merger_Coll_PosX3,       -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_PosY3",       &Merger_Coll_PosY3,       -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_VelX1",       &Merger_Coll_VelX1,       -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_VelY1",       &Merger_Coll_VelY1,       -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_VelX2",       &Merger_Coll_VelX2,       -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_VelY2",       &Merger_Coll_VelY2,       -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_VelX3",       &Merger_Coll_VelX3,       -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_VelY3",       &Merger_Coll_VelY3,       -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_UseMetals",   &Merger_Coll_UseMetals,    true,             Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Merger_Coll_LabelCenter", &Merger_Coll_LabelCenter,  true,             Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Bondi_MassBH1",           &Bondi_MassBH1,           -1.0,              Eps_double,    NoMax_double   );
-   ReadPara->Add( "Bondi_MassBH2",           &Bondi_MassBH2,           -1.0,              Eps_double,    NoMax_double   );
-   ReadPara->Add( "Bondi_MassBH3",           &Bondi_MassBH3,           -1.0,              Eps_double,    NoMax_double   );
-   ReadPara->Add( "R_acc",                   &R_acc,                   -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "R_dep",                   &R_dep,                   -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Jet_HalfHeight1",         &Jet_HalfHeight1,         -1.0,              Eps_double,    NoMax_double   );
-   ReadPara->Add( "Jet_HalfHeight2",         &Jet_HalfHeight2,         -1.0,              Eps_double,    NoMax_double   );
-   ReadPara->Add( "Jet_HalfHeight3",         &Jet_HalfHeight3,         -1.0,              Eps_double,    NoMax_double   );
-   ReadPara->Add( "Jet_Radius1",             &Jet_Radius1,             -1.0,              Eps_double,    NoMax_double   );
-   ReadPara->Add( "Jet_Radius2",             &Jet_Radius2,             -1.0,              Eps_double,    NoMax_double   );
-   ReadPara->Add( "Jet_Radius3",             &Jet_Radius3,             -1.0,              Eps_double,    NoMax_double   );
-   ReadPara->Add( "Accretion_Mode",          &Accretion_Mode,           1,                1,             3              );
-   ReadPara->Add( "eta",                     &eta,                     -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "eps_f",                   &eps_f,                   -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "eps_m",                   &eps_m,                   -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "AdjustBHPos",             &AdjustBHPos,              false,            Useless_bool,  Useless_bool   );
-   ReadPara->Add( "AdjustBHVel",             &AdjustBHVel,              false,            Useless_bool,  Useless_bool   );
-   ReadPara->Add( "AdjustPeriod",            &AdjustPeriod,            -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "JetDirection_case",       &JetDirection_case,        1,                1,             3              );
-   ReadPara->Add( "fixBH",                   &fixBH,                    false,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "Merger_Coll_NumHalos",    &Merger_Coll_NumHalos,     2,                  1,             3              );
+   ReadPara->Add( "AGN_feedback",            &AGN_feedback,             false,              Useless_bool,  Useless_bool   );
+   ReadPara->Add( "Merger_Coll_IsGas1",      &Merger_Coll_IsGas1,       true,               Useless_bool,  Useless_bool   );
+   ReadPara->Add( "Merger_Coll_IsGas2",      &Merger_Coll_IsGas2,       true,               Useless_bool,  Useless_bool   );
+   ReadPara->Add( "Merger_Coll_IsGas3",      &Merger_Coll_IsGas3,       true,               Useless_bool,  Useless_bool   );
+   ReadPara->Add( "Merger_File_Prof1",        Merger_File_Prof1,        NoDef_str,          Useless_str,   Useless_str    );
+   ReadPara->Add( "Merger_File_Par1",         Merger_File_Par1,         NoDef_str,          Useless_str,   Useless_str    );
+   ReadPara->Add( "Merger_File_Prof2",        Merger_File_Prof2,        NoDef_str,          Useless_str,   Useless_str    );
+   ReadPara->Add( "Merger_File_Par2",         Merger_File_Par2,         NoDef_str,          Useless_str,   Useless_str    );
+   ReadPara->Add( "Merger_File_Prof3",        Merger_File_Prof3,        NoDef_str,          Useless_str,   Useless_str    );
+   ReadPara->Add( "Merger_File_Par3",         Merger_File_Par3,         NoDef_str,          Useless_str,   Useless_str    );
+   ReadPara->Add( "Merger_Coll_PosX1",       &Merger_Coll_PosX1,       -1.0,                NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_PosY1",       &Merger_Coll_PosY1,       -1.0,                NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_PosX2",       &Merger_Coll_PosX2,       -1.0,                NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_PosY2",       &Merger_Coll_PosY2,       -1.0,                NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_PosX3",       &Merger_Coll_PosX3,       -1.0,                NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_PosY3",       &Merger_Coll_PosY3,       -1.0,                NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_VelX1",       &Merger_Coll_VelX1,       -1.0,                NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_VelY1",       &Merger_Coll_VelY1,       -1.0,                NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_VelX2",       &Merger_Coll_VelX2,       -1.0,                NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_VelY2",       &Merger_Coll_VelY2,       -1.0,                NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_VelX3",       &Merger_Coll_VelX3,       -1.0,                NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_VelY3",       &Merger_Coll_VelY3,       -1.0,                NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Merger_Coll_UseMetals",   &Merger_Coll_UseMetals,    true,               Useless_bool,  Useless_bool   );
+   ReadPara->Add( "Merger_Coll_LabelCenter", &Merger_Coll_LabelCenter,  true,               Useless_bool,  Useless_bool   );
+   ReadPara->Add( "Bondi_MassBH1",           &Bondi_MassBH1,           -1.0,                Eps_double,    NoMax_double   );
+   ReadPara->Add( "Bondi_MassBH2",           &Bondi_MassBH2,           -1.0,                Eps_double,    NoMax_double   );
+   ReadPara->Add( "Bondi_MassBH3",           &Bondi_MassBH3,           -1.0,                Eps_double,    NoMax_double   );
+   ReadPara->Add( "R_acc",                   &R_acc,                   -1.0,                NoMin_double,  NoMax_double   );
+   ReadPara->Add( "R_dep",                   &R_dep,                   -1.0,                NoMin_double,  NoMax_double   );
+   ReadPara->Add( "Jet_HalfHeight1",         &Jet_HalfHeight1,         -1.0,                Eps_double,    NoMax_double   );
+   ReadPara->Add( "Jet_HalfHeight2",         &Jet_HalfHeight2,         -1.0,                Eps_double,    NoMax_double   );
+   ReadPara->Add( "Jet_HalfHeight3",         &Jet_HalfHeight3,         -1.0,                Eps_double,    NoMax_double   );
+   ReadPara->Add( "Jet_Radius1",             &Jet_Radius1,             -1.0,                Eps_double,    NoMax_double   );
+   ReadPara->Add( "Jet_Radius2",             &Jet_Radius2,             -1.0,                Eps_double,    NoMax_double   );
+   ReadPara->Add( "Jet_Radius3",             &Jet_Radius3,             -1.0,                Eps_double,    NoMax_double   );
+   ReadPara->Add( "Accretion_Mode",          &Accretion_Mode,           1,                  1,             3              );
+   ReadPara->Add( "eta",                     &eta,                     -1.0,                NoMin_double,  NoMax_double   );
+   ReadPara->Add( "eps_f",                   &eps_f,                   -1.0,                NoMin_double,  NoMax_double   );
+   ReadPara->Add( "eps_m",                   &eps_m,                   -1.0,                NoMin_double,  NoMax_double   );
+   ReadPara->Add( "AdjustBHPos",             &AdjustBHPos,              false,              Useless_bool,  Useless_bool   );
+   ReadPara->Add( "AdjustBHVel",             &AdjustBHVel,              false,              Useless_bool,  Useless_bool   );
+   ReadPara->Add( "AdjustPeriod",            &AdjustPeriod,            -1.0,                NoMin_double,  NoMax_double   );
+   ReadPara->Add( "JetDirection_case",       &JetDirection_case,        1,                  1,             3              );
+   ReadPara->Add( "JetDirection_file",       &JetDirection_case,        "JetDirection.txt", Useless_str,   Useless_str    );
+   ReadPara->Add( "fixBH",                   &fixBH,                    false,              Useless_bool,  Useless_bool   );
 
    ReadPara->Read( FileName );
 
@@ -568,8 +570,9 @@ void SetParameter()
       const bool AllocMem_Yes = true;                    // allocate memory for JetDirection
       const int  NCol         = 7;                       // total number of columns to load
       const int  Col[NCol]    = { 0, 1, 2, 3, 4, 5, 6 }; // target columns: (time, theta_1, phi_1, theta_2, phi_2, theta_3, phi_3)
+      const std::string jet_dir_file( JetDirection_file );
 
-      JetDirection_NBin = Aux_LoadTable( JetDirection, "JetDirection.txt", NCol, Col, RowMajor_No, AllocMem_Yes );
+      JetDirection_NBin = Aux_LoadTable( JetDirection, jet_dir_file.c_str(), NCol, Col, RowMajor_No, AllocMem_Yes );
       Time_table = JetDirection + 0*JetDirection_NBin;
       for (int d=0; d<3; d++)
       {
@@ -889,6 +892,7 @@ void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
    HDF5_InputTest->Add( "AdjustBHVel",             &AdjustBHVel             );
    HDF5_InputTest->Add( "AdjustPeriod",            &AdjustPeriod            );
    HDF5_InputTest->Add( "JetDirection_case",       &JetDirection_case       );
+   HDF5_InputTest->Add( "JetDirection_file",       &JetDirection_file       );
    HDF5_InputTest->Add( "fixBH",                   &fixBH                   );
 
 } // FUNCTION : Output_HDF5_TestProb
