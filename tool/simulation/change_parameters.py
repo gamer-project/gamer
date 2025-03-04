@@ -135,24 +135,30 @@ def execution( **kwargs ):
     cwd               = os.getcwd()
     record_parameters = kwargs["record"]
 
-    # 1. Run gamer
+    # 1. Add parameter change by other parameters
+    record_parameters["NX0_TOT_Y"] = record_parameters["NX0_TOT_X"]
+    replace_parameter( "Input__Parameter", "NX0_TOT_Y", record_parameters["NX0_TOT_Y"] )
+    record_parameters["NX0_TOT_Z"] = record_parameters["NX0_TOT_X"]
+    replace_parameter( "Input__Parameter", "NX0_TOT_Z", record_parameters["NX0_TOT_Z"] )
+
+    # 2. Run gamer
     # subprocess.run( ["./gamer > log 2>&1"], shell=True )
     subprocess.run( ["mpirun -map-by ppr:2:socket:pe=8 --report-bindings ./gamer 1>>log 2>&1"], shell=True )
     # subprocess.run( ["mpirun -map-by ppr:4:socket:pe=8 --report-bindings ./gamer 1>>log 2>&1"], shell=True )
 
-    # 2. Analysis: Call python scripts etc.
+    # 3. Analysis: Call python scripts etc.
 
-    # 3. Create a folder named by the parameters to be changed
+    # 4. Create a folder named by the parameters to be changed
     par_dir  = "gamer_" + "_".join(record_parameters.keys())
 
     if not os.path.isdir(par_dir): os.mkdir(par_dir)
 
-    # 4. Create a subfolder named by the current runtime parameters
+    # 5. Create a subfolder named by the current runtime parameters
     sub_dir  = str(record_parameters)
     dest_dir = os.path.join(par_dir, sub_dir)
     if not os.path.isdir(dest_dir): os.mkdir(dest_dir)
 
-    # 5. Move input and output files to the subfolder; delete with os.remove() (files) and shutil.rmtree() (directories) if necessary
+    # 6. Move input and output files to the subfolder; delete with os.remove() (files) and shutil.rmtree() (directories) if necessary
     move_files = [ r'*.png', r'Record*', r'Data*', r'Particle_*', r'log']
     copy_files = [ r'Input*', ]
 
@@ -176,7 +182,7 @@ if __name__ == "__main__":
     # 1. Set up the files and parameters to be changed
     file_name1   = "Input__Parameter"                                             # file name
     const_paras1 = { "END_T":-1, "END_STEP":5 }                                   # the constant parameters
-    iter_paras1  = { "OPT__FLAG_RHO":[0, 1], "MAX_LEVEL":[2, 3] }                 # the parameters iterated as the given list
+    iter_paras1  = { "NX0_TOT_X":[64, 128], "MAX_LEVEL":[2, 3] }                  # the parameters iterated as the given list
     file1        = File( file_name1, const_paras1, iter_paras1, flag_file=False ) # set the `File` class
 
     # this will change the entire column to the same value
