@@ -21,11 +21,13 @@ Must set `LIBYT_PATH` in the [[machine configuration file | Installation:-Machin
 to the path containing the folders `include` and `lib` of `libyt`.
 
 ### Runtime Parameters
+[[Runtime parameters: In Situ Python Analysis | Runtime-Parameters:-In-Situ-Python-Analysis]]
 
 libyt has the following runtime parameters:
-- `YT_SCRIPT`: The Python script name to be loaded. Do not include the file extension `.py`.
-- `YT_VERBOSE`: Log level of libyt (0=off, 1=info, 2=warning, 3=debug).
-- `YT_FIG_BASENAME`: Figure basename of the outputs from yt.
+- [[YT_SCRIPT | Runtime-Parameters:-In-Situ-Python-Analysis#YT_SCRIPT]]
+- [[YT_VERBOSE | Runtime-Parameters:-In-Situ-Python-Analysis#YT_VERBOSE]]
+- [[YT_FIG_BASENAME | Runtime-Parameters:-In-Situ-Python-Analysis#YT_FIG_BASENAME]]
+- [[YT_JUPYTER_USE_CONNECTION_FILE | Runtime-Parameters:-In-Situ-Python-Analysis#YT_JUPYTER_USE_CONNECTION_FILE]]
 
 For example, `Input__Parameter` with the following lines will read the Python script `inline_script.py`,
 set log level to information only, and set the figure basename to `MHD`.
