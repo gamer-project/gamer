@@ -106,6 +106,9 @@ struct KeyInfo_t
    char  *GitCommit;
    long   UniqueDataID;
 
+// conserved variables
+   double ConRef[1+NCONREF_MAX];
+
 }; // struct KeyInfo_t
 
 
@@ -372,6 +375,8 @@ struct SymConst_t
 #  endif
 
    int    NFieldStoredMax;
+
+   int    NConRefMax;
 
 }; // struct SymConst_t
 
@@ -835,6 +840,7 @@ struct InputPara_t
    int    Opt__Output_Step;
    double Opt__Output_Dt;
    char  *Opt__Output_Text_Format_Flt;
+   int    Opt__Output_Text_Length_Int;
    double Output_PartX;
    double Output_PartY;
    double Output_PartZ;

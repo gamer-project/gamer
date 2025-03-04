@@ -81,7 +81,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 // 2. allocate a temporary particle repository to store the updated particle data
-//    --> must initialize it since we will replace amr->Par->AttributeFlt[] by ParAttFlt_Updated[] and 
+//    --> must initialize it since we will replace amr->Par->AttributeFlt[] by ParAttFlt_Updated[] and
 //        amr->Par->AttributeInt[] by ParAttInt_Updated[] at the end of this routine
 //        --> otherwise, the data of particles skipped by this routine (e.g., those not on FB_LEVEL) will be incorrect
 //        --> also to retain the information of inactive particles

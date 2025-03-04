@@ -65,7 +65,7 @@ mpirun -map-by ppr:2:socket:pe=8 --report-bindings ./gamer 1>>log 2>&1
    ![Data_000069_PS](https://github.com/gamer-project/gamer/assets/6187378/260649c1-69e7-4a44-8dc9-06ccf6fe798d)
    </details>
 
-The wave scheme (`GRAMFE_MATMUL`) is used for the dark grey and black grids.
+The wave scheme (`MATMUL`) is used for the dark grey and black grids.
 The relative mass conservation error at $z=0$ with spectral interpolation on is $6.72e-04$.
 
 
@@ -90,15 +90,15 @@ The hybrid scheme is particularly suited for cosmological simulations where a si
 
 The configure.py script is the starting point for setting up a simulation. For the hybrid scheme, ensure the following flags are set:
 
-- `--elbdm_scheme = ELBDM_HYBRID`: Determines the scheme type for ELBDM simulations. There are two options:
-    - `ELBDM_WAVE`: Wave-only scheme.
-    - `ELBDM_HYBRID`: Fluid-wave hybrid scheme.
+- `--elbdm_scheme = HYBRID`: Determines the scheme type for ELBDM simulations. There are two options:
+    - `WAVE`: Wave-only scheme.
+    - `HYBRID`: Fluid-wave hybrid scheme.
 - `--hybrid_scheme`: This option is specific to the hybrid scheme, defining the fluid dynamics treatment:
-    - `HYBRID_UPWIND`: First-order upwind scheme. It is diffusive but stable.
-    - `HYBRID_FROMM`: Second-order Fromm scheme. It has no limiter but can be unstable.
-    - `HYBRID_MUSCL`: Second-order MUSCL scheme. It includes a limiter, balancing accuracy and stability.
+    - `UPWIND`: First-order upwind scheme. It is diffusive but stable.
+    - `FROMM`: Second-order Fromm scheme. It has no limiter but can be unstable.
+    - `MUSCL`: Second-order MUSCL scheme. It includes a limiter, balancing accuracy and stability.
 
-    For zoom-in and fluid-only simulations, use `--hybrid_scheme HYBRID_MUSCL` since unrefined regions may become unstable otherwise. For fully refined simulations use `--hybrid_scheme HYBRID_FROMM` since it is slightly faster and more accurate than `HYBRID_MUSCL`. In case you encounter instabilities, test the more diffusive, first-order scheme `--hybrid_scheme HYBRID_UPWIND`.
+    For zoom-in and fluid-only simulations, use `--hybrid_scheme MUSCL` since unrefined regions may become unstable otherwise. For fully refined simulations use `--hybrid_scheme FROMM` since it is slightly faster and more accurate than `MUSCL`. In case you encounter instabilities, test the more diffusive, first-order scheme `--hybrid_scheme UPWIND`.
 
 ## Configuring the `Input__Parameter` file
 
@@ -225,7 +225,7 @@ $$S(x, t) = \arctan\left(\frac{\Im(\psi(x, t))}{\Re(\psi(x, t)}\right).$$
 We must therefore determine the correct phase by requiring continuity at the matching boundary. On a discrete grid, this translates into the requirement that the phase field $S(x, t)$ must not change by more than $2 \pi$ between neighbouring grid points at the matching boundary. In other words, we must resolve the de Broglie wavelength at the matching boundary in order for the reverse boundary matching problem to admit a unique solution. This immediately shows that a useful hybrid scheme based on this approach necessarily requires an AMR algorithm with at least two refinement levels for the phase equation: An outer refinement level where the grids need not resolve the de Broglie wavelength and a second refinement level where the de Broglie wavelength is resolved and the reverse boundary matching problem has a unique solution.
 
 ## Implementation
-We evolve the continuity equation using a first-order upwind scheme (`HYBRID_UPWIND`), the second-order Fromm scheme without limiter (`HYBRID_FROMM`) or a MUSCL scheme with a linear subgrid model together with the van Albada limiter (`HYBRID_MUSCL`). As for the HJ scheme, we use a finite difference scheme. The convection term is discretised via the Sethian-Osher flux. The velocities at the cell faces are then computed as regular finite differences. We treat the cell averages $\bar{\rho}$ in the finite volume scheme as point values $\rho$ in the discretisation of the quantum pressure term. Technically, we use the MUSCL scheme as a conservative finite-difference method and not as a finite volume scheme. This has the consequence that the maximum order of accuracy we can reach with the linear subgrid MUSCL scheme is second order. The quantum pressure term is discretised as
+We evolve the continuity equation using a first-order upwind scheme (`UPWIND`), the second-order Fromm scheme without limiter (`FROMM`) or a MUSCL scheme with a linear subgrid model together with the van Albada limiter (`MUSCL`). As for the HJ scheme, we use a finite difference scheme. The convection term is discretised via the Sethian-Osher flux. The velocities at the cell faces are then computed as regular finite differences. We treat the cell averages $\bar{\rho}$ in the finite volume scheme as point values $\rho$ in the discretisation of the quantum pressure term. Technically, we use the MUSCL scheme as a conservative finite-difference method and not as a finite volume scheme. This has the consequence that the maximum order of accuracy we can reach with the linear subgrid MUSCL scheme is second order. The quantum pressure term is discretised as
 $$\frac{\Delta \sqrt{\rho}}{\sqrt{\rho}} = \left(\frac{1}{2} \Delta \log(\rho) + \frac{1}{4} \left(\nabla \log(\rho)\right)^2\right)$$
 with second-order central finite differences for both the gradient operator and the Laplacian.
 The resulting semi-discrete scheme is discretised with a third-order RK method. A second-order discretisation also works well, but requires a more stringent CFL condition.

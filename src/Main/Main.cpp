@@ -73,10 +73,12 @@ bool                 OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_
 bool                 OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
 bool                 OPT__INT_FRAC_PASSIVE_LR, OPT__CK_INPUT_FLUID, OPT__SORT_PATCH_BY_LBIDX;
 char                 OPT__OUTPUT_TEXT_FORMAT_FLT[MAX_STRING];
+int                  OPT__OUTPUT_TEXT_LENGTH_INT;
 int                  OPT__UM_IC_FLOAT8;
 double               COM_CEN_X, COM_CEN_Y, COM_CEN_Z, COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R;
 int                  COM_MAX_ITER;
 double               ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z;
+char                 OUTPUT_DIR[MAX_STRING];
 double               FLAG_ANGULAR_CEN_X, FLAG_ANGULAR_CEN_Y, FLAG_ANGULAR_CEN_Z;
 double               FLAG_RADIAL_CEN_X, FLAG_RADIAL_CEN_Y, FLAG_RADIAL_CEN_Z;
 
@@ -90,6 +92,9 @@ OptFluBC_t           OPT__BC_FLU[6];
 OptLohnerForm_t      OPT__FLAG_LOHNER_FORM;
 OptCorrAfterSync_t   OPT__CORR_AFTER_ALL_SYNC;
 OptTimeStepLevel_t   OPT__DT_LEVEL;
+
+bool                 ConRefInitialized = false;
+double               ConRef[1+NCONREF_MAX]; // time + conserved variables
 
 
 // 2. global variables for different applications
@@ -623,8 +628,6 @@ int main( int argc, char *argv[] )
 #     endif
    }
 
-   Output_DumpData( 0 );
-
    if ( OPT__PATCH_COUNT > 0 )            Aux_Record_PatchCount();
    if ( OPT__RECORD_MEMORY )              Aux_GetMemInfo();
    if ( OPT__RECORD_USER ) {
@@ -643,6 +646,9 @@ int main( int argc, char *argv[] )
 #  endif
 
    Aux_Check();
+
+// must be called after Aux_Check() to obtain the reference conserved values (ConRef_*) first
+   Output_DumpData( 0 );
 
 #  if ( MODEL == ELBDM )
    if (  ( ELBDM_REMOVE_MOTION_CM == ELBDM_REMOVE_MOTION_CM_INIT && (OPT__INIT != INIT_BY_RESTART || OPT__RESTART_RESET) )  ||
@@ -857,7 +863,10 @@ int main( int argc, char *argv[] )
 
    if ( MPI_Rank == 0  &&  OPT__RECORD_NOTE )
    {
-      FILE *Note = fopen( "Record__Note", "a" );
+      char FileName[2*MAX_STRING];
+      sprintf( FileName, "%s/Record__Note", OUTPUT_DIR );
+
+      FILE *Note = fopen( FileName, "a" );
       fprintf( Note, "\n" );
       fprintf( Note, "Total Processing Time : %lf s\n", Timer_Total.GetValue() );
       fprintf( Note, "\n" );

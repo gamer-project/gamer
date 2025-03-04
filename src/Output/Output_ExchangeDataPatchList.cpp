@@ -20,9 +20,9 @@ void Output_ExchangeDataPatchList( const int option, const int lv, const char *c
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "option", option );
 
 
-   char FileName[100];
-   if ( option )  sprintf( FileName, "SendDataPatchList_%d_%d", MPI_Rank, lv );
-   else           sprintf( FileName, "RecvDataPatchList_%d_%d", MPI_Rank, lv );
+   char FileName[2*MAX_STRING];
+   if ( option )  sprintf( FileName, "%s/SendDataPatchList_%d_%d", OUTPUT_DIR, MPI_Rank, lv );
+   else           sprintf( FileName, "%s/RecvDataPatchList_%d_%d", OUTPUT_DIR, MPI_Rank, lv );
 
    if ( comment != NULL )
    {
