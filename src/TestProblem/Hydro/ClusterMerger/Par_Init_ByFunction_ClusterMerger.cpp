@@ -709,9 +709,14 @@ void Aux_Record_ClusterMerger()
 //
 // Note        :  1. Must enable Merger_Coll_LabelCenter
 //
-// Parameter   :  Cen : Cluster centers
+// Parameter   :  lv        : Refeinement level to search on
+//                AdjustPos : If true, adjust the positions of the BHs
+//                AdjustVel : If true, adjust the velocities of the BHs
+//                Cen_old   : Old BH position array with the shape of [Merger_Coll_NumBHs][3]
+//                Cen_new   : New BH position array with the shape of [Merger_Coll_NumBHs][3]
+//                Cen_Vel   : BH CoM velocity array with the shape of [Merger_Coll_NumBHs][3]
 //
-// Return      :  Cen[]
+// Return      :  Cen_new, Cen_Vel (passed into and updated by this function)
 //-------------------------------------------------------------------------------------------------------
 void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][3], double Cen_new[][3], double Cen_Vel[][3] )
 {
@@ -826,11 +831,13 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
 
             int num_par_eachRank[3][MPI_NRank];
             int displs[3][MPI_NRank];
+            int num_par_sum_max = 0;
             for (int c=0; c<Merger_Coll_NumBHs; c++)
             {
                MPI_Allgather( &num_par[c], 1, MPI_INT, num_par_eachRank[c], 1, MPI_INT, MPI_COMM_WORLD );
                displs[c][0] = 0;
                for (int i=1; i<MPI_NRank; i++)  displs[c][i] = displs[c][i-1] + num_par_eachRank[c][i-1];
+               num_par_sum_max = MAX( num_par_sum_max, num_par_sum[c] );
             }
 
 //          collect the mass, position and velocity of target particles to the root rank
@@ -874,16 +881,16 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
             if ( AdjustPos )
             {
                double soften = amr->dh[MAX_LEVEL];
+               double *pote_AllRank  = new double [num_par_sum_max];
+               double *pote_ThisRank = new double [num_par_sum_max];
                for (int c=0; c<Merger_Coll_NumBHs; c++)
                {
-                  double *pote_AllRank = new double [num_par_sum[c]];
 
 //                distribute MPI jobs
                   int     par_per_rank = num_par_sum[c] / MPI_NRank;
                   int     remainder    = num_par_sum[c] % MPI_NRank;
                   int     start        = MPI_Rank*par_per_rank + MIN( MPI_Rank, remainder );
                   int     end          = start + par_per_rank + (MPI_Rank < remainder ? 1 : 0);
-                  double *pote_ThisRank   = new double [end-start];
 
 #                 pragma omp parallel for schedule( static )
                   for (int i=start; i<end; i++)
@@ -916,9 +923,9 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                      min_pos[c][1] = ParY_sum[c][i];
                      min_pos[c][2] = ParZ_sum[c][i];
                   }
-                  delete[] pote_AllRank;
-                  delete[] pote_ThisRank;
                } // for (int c=0; c<Merger_Coll_NumBHs; c++)
+               delete[] pote_AllRank;
+               delete[] pote_ThisRank;
             } // if ( AdjustPos )
 
 //          calculate the average DM velocity
@@ -927,13 +934,15 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                for (int c=0; c<Merger_Coll_NumBHs; c++)
                {
                   for (int d=0; d<3; d++)   DM_Vel[c][d] = 0.0;
+                  double ParM_Tot = 0.0;
                   for (int i=0; i<num_par_sum[c]; i++)
                   {
-                     DM_Vel[c][0] += VelX_sum[c][i];
-                     DM_Vel[c][1] += VelY_sum[c][i];
-                     DM_Vel[c][2] += VelZ_sum[c][i];
+                     DM_Vel[c][0] += VelX_sum[c][i]*ParM_sum[c];
+                     DM_Vel[c][1] += VelY_sum[c][i]*ParM_sum[c];
+                     DM_Vel[c][2] += VelZ_sum[c][i]*ParM_sum[c];
+                     ParM_Tot     += ParM_sum[c];
                   }
-                  for (int d=0; d<3; d++)   DM_Vel[c][d] /= num_par_sum[c];
+                  for (int d=0; d<3; d++)   DM_Vel[c][d] /= ParM_Tot;
                }
             } // if ( AdjustVel )
 
