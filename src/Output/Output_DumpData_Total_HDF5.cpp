@@ -4109,7 +4109,7 @@ herr_t H5_write_compound( const hid_t H5_SetID, const hid_t H5_TypeID, const HDF
    H5_TypeID_VarStr = H5Tcopy( H5T_C_S1 );
    H5_Status        = H5Tset_size( H5_TypeID_VarStr, MAX_STRING ); // H5T_VARIABLE will cause segmentation fault
 
-   char   data[HDF5_Output->TotalSize];
+   char   *data = new char [HDF5_Output->TotalSize];
    size_t offset = 0;
 
    for (int i=0; i<HDF5_Output->NPara; i++)
@@ -4146,6 +4146,8 @@ herr_t H5_write_compound( const hid_t H5_SetID, const hid_t H5_TypeID, const HDF
    H5_Status_write = H5Dwrite( H5_SetID, H5_TypeID, H5S_ALL, H5S_ALL, H5P_DEFAULT, data );
 
    H5_Status = H5Tclose( H5_TypeID_VarStr );
+
+   delete [] data;
 
    return H5_Status_write;
 
