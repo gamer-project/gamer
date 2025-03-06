@@ -112,24 +112,24 @@ void Validate()
 #if ( MODEL == ELBDM )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LoadInputTestProb
-// Description :  Loading the problem-specific runtime parameters and storing them in HDF5 snapshots (Data_*)
+// Description :  Read problem-specific runtime parameters from Input__TestProb and store them in HDF5 snapshots (Data_*)
 //
-// Note        :  1. Invoked by SetParameter()
-//                2. Invoked by Output_DumpData_Total_HDF5() using the fuction pointer "Output_HDF5_InputTest_Ptr"
-//                3. If there is no problem-specific runtime parameters to load, please add at least one parameter
-//                   to avoid empty structure of `HDF5_Output_t`.
+// Note        :  1. Invoked by SetParameter() to read parameters
+//                2. Invoked by Output_DumpData_Total_HDF5() using the function pointer Output_HDF5_InputTest_Ptr to store parameters
+//                3. If there is no problem-specific runtime parameter to load, add at least one parameter
+//                   to prevent an empty structure in HDF5_Output_t
 //                   --> Example:
-//                       AddInputTestPara( load_mode, "NewTestproblem_TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+//                       LOAD_PARA( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
 //
-// Parameter   :  load_mode      : Load data structure mode
-//                                 LOAD_READPARA    : Load ReadPara_t
-//                                 LOAD_HDF5_OUTPUT : Load HDF5_Output_t
-//                ReadPara       : Data structure for loading runtime parameters
-//                HDF5_InputTest : Data structure storing the parameters to be stored in HDF5 snapshot
+// Parameter   :  load_mode      : Mode for loading parameters
+//                                 --> LOAD_READPARA    : Read parameters from Input__TestProb
+//                                     LOAD_HDF5_OUTPUT : Store parameters in HDF5 snapshots
+//                ReadPara       : Data structure for reading parameters (used with LOAD_READPARA)
+//                HDF5_InputTest : Data structure for storing parameters in HDF5 snapshots (used with LOAD_HDF5_OUTPUT)
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void LoadInputTestProb( const LoadInputTestMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
+void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
 {
 
 #  ifndef SUPPORT_HDF5
@@ -142,30 +142,30 @@ void LoadInputTestProb( const LoadInputTestMode_t load_mode, ReadPara_t *ReadPar
 // add parameters in the following format:
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
 // --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
-// --> AddInputTestPara() is defined in "include/TestProb.h"
+// --> LOAD_PARA() is defined in "include/TestProb.h"
 // ********************************************************************************************************************************
-// AddInputTestPara( load_mode, "KEY_IN_THE_FILE",         &VARIABLE,                DEFAULT,       MIN,              MAX               );
+// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",         &VARIABLE,                DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   AddInputTestPara( load_mode, "CenX",                    &Cen[0],                  NoDef_double,  NoMin_double,     NoMax_double      );
-   AddInputTestPara( load_mode, "CenY",                    &Cen[1],                  NoDef_double,  NoMin_double,     NoMax_double      );
-   AddInputTestPara( load_mode, "CenZ",                    &Cen[2],                  NoDef_double,  NoMin_double,     NoMax_double      );
-   AddInputTestPara( load_mode, "AddFixedHalo",            &AddFixedHalo,            false,         Useless_bool,     Useless_bool      );
-   AddInputTestPara( load_mode, "HaloUseTable",            &HaloUseTable,            false,         Useless_bool,     Useless_bool      );
-   AddInputTestPara( load_mode, "m_22",                    &m_22,                    0.4,           Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "CoreRadius",              &CoreRadius,              1.0,           Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "Rho_0",                   &Rho_0,                   1.0,           Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "Rs",                      &Rs,                      1.0,           Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "Alpha",                   &Alpha,                   1.0,           Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "Beta",                    &Beta,                    1.0,           Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "Gamma",                   &Gamma,                   1.0,           Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "DensTableFile",           DensTableFile,            NoDef_str,     Useless_str,      Useless_str       );
-   AddInputTestPara( load_mode, "AddParWhenRestart",       &AddParWhenRestart,       false,         Useless_bool,     Useless_bool      );
-   AddInputTestPara( load_mode, "AddParWhenRestartByFile", &AddParWhenRestartByFile, true,          Useless_bool,     Useless_bool      );
-   AddInputTestPara( load_mode, "AddParWhenRestartNPar",   &AddParWhenRestartNPar,   (long)0,       (long)0,          NoMax_long        );
-   AddInputTestPara( load_mode, "NewDisk_RSeed",           &NewDisk_RSeed,           1002,          0,                NoMax_int         );
-   AddInputTestPara( load_mode, "Disk_Mass",               &Disk_Mass,               1.0,           Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "Disk_R",                  &Disk_R,                  1.0,           Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "DispTableFile",           DispTableFile,            NoDef_str,     Useless_str,      Useless_str       );
+   LOAD_PARA( load_mode, "CenX",                    &Cen[0],                  NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "CenY",                    &Cen[1],                  NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "CenZ",                    &Cen[2],                  NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "AddFixedHalo",            &AddFixedHalo,            false,         Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "HaloUseTable",            &HaloUseTable,            false,         Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "m_22",                    &m_22,                    0.4,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "CoreRadius",              &CoreRadius,              1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Rho_0",                   &Rho_0,                   1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Rs",                      &Rs,                      1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Alpha",                   &Alpha,                   1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Beta",                    &Beta,                    1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Gamma",                   &Gamma,                   1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "DensTableFile",           DensTableFile,            NoDef_str,     Useless_str,      Useless_str       );
+   LOAD_PARA( load_mode, "AddParWhenRestart",       &AddParWhenRestart,       false,         Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "AddParWhenRestartByFile", &AddParWhenRestartByFile, true,          Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "AddParWhenRestartNPar",   &AddParWhenRestartNPar,   (long)0,       (long)0,          NoMax_long        );
+   LOAD_PARA( load_mode, "NewDisk_RSeed",           &NewDisk_RSeed,           1002,          0,                NoMax_int         );
+   LOAD_PARA( load_mode, "Disk_Mass",               &Disk_Mass,               1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Disk_R",                  &Disk_R,                  1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "DispTableFile",           DispTableFile,            NoDef_str,     Useless_str,      Useless_str       );
 
 } // FUNCITON : LoadInputTestProb
 
@@ -194,6 +194,7 @@ void SetParameter()
 
 
 // (1) load the problem-specific runtime parameters
+// (1-1) read parameters from Input__TestProb
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
@@ -203,9 +204,9 @@ void SetParameter()
 
    delete ReadPara;
 
-// (1-1) set the default values
+// (1-2) set the default values
 
-// (1-2) check the runtime parameters
+// (1-3) check the runtime parameters
 
 
 // (2) set the problem-specific derived parameters

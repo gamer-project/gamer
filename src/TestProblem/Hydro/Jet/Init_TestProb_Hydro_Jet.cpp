@@ -87,24 +87,24 @@ void Validate()
 #if ( MODEL == HYDRO )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LoadInputTestProb
-// Description :  Loading the problem-specific runtime parameters and storing them in HDF5 snapshots (Data_*)
+// Description :  Read problem-specific runtime parameters from Input__TestProb and store them in HDF5 snapshots (Data_*)
 //
-// Note        :  1. Invoked by SetParameter()
-//                2. Invoked by Output_DumpData_Total_HDF5() using the fuction pointer "Output_HDF5_InputTest_Ptr"
-//                3. If there is no problem-specific runtime parameters to load, please add at least one parameter
-//                   to avoid empty structure of `HDF5_Output_t`.
+// Note        :  1. Invoked by SetParameter() to read parameters
+//                2. Invoked by Output_DumpData_Total_HDF5() using the function pointer Output_HDF5_InputTest_Ptr to store parameters
+//                3. If there is no problem-specific runtime parameter to load, add at least one parameter
+//                   to prevent an empty structure in HDF5_Output_t
 //                   --> Example:
-//                       AddInputTestPara( load_mode, "NewTestproblem_TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+//                       LOAD_PARA( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
 //
-// Parameter   :  load_mode      : Load data structure mode
-//                                 LOAD_READPARA    : Load ReadPara_t
-//                                 LOAD_HDF5_OUTPUT : Load HDF5_Output_t
-//                ReadPara       : Data structure for loading runtime parameters
-//                HDF5_InputTest : Data structure storing the parameters to be stored in HDF5 snapshot
+// Parameter   :  load_mode      : Mode for loading parameters
+//                                 --> LOAD_READPARA    : Read parameters from Input__TestProb
+//                                     LOAD_HDF5_OUTPUT : Store parameters in HDF5 snapshots
+//                ReadPara       : Data structure for reading parameters (used with LOAD_READPARA)
+//                HDF5_InputTest : Data structure for storing parameters in HDF5 snapshots (used with LOAD_HDF5_OUTPUT)
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void LoadInputTestProb( const LoadInputTestMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
+void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
 {
 
 #  ifndef SUPPORT_HDF5
@@ -117,52 +117,52 @@ void LoadInputTestProb( const LoadInputTestMode_t load_mode, ReadPara_t *ReadPar
 // add parameters in the following format:
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
 // --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
-// --> AddInputTestPara() is defined in "include/TestProb.h"
-// ********************************************************************************************************************************
-// AddInputTestPara( load_mode, "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
-// ********************************************************************************************************************************
-   AddInputTestPara( load_mode, "Jet_NJet",          &Jet_NJet,             -1,             1,                2                 );
+// --> LOAD_PARA() is defined in "include/TestProb.h"
+// **************************************************************************************************************************
+// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",     &VARIABLE,              DEFAULT,       MIN,              MAX               );
+// **************************************************************************************************************************
+   LOAD_PARA( load_mode, "Jet_NJet",            &Jet_NJet,             -1,             1,                2                 );
 
 // load the input parameters independent of the number of jets
-   AddInputTestPara( load_mode, "Jet_BgDens",          &Jet_BgDens,           -1.0,           Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "Jet_BgTemp",          &Jet_BgTemp,           -1.0,           Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "Jet_BgVel_x",         &Jet_BgVel[0],          0.0,           NoMin_double,     NoMax_double      );
-   AddInputTestPara( load_mode, "Jet_BgVel_y",         &Jet_BgVel[1],          0.0,           NoMin_double,     NoMax_double      );
-   AddInputTestPara( load_mode, "Jet_BgVel_z",         &Jet_BgVel[2],          0.0,           NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Jet_BgDens",          &Jet_BgDens,           -1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Jet_BgTemp",          &Jet_BgTemp,           -1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Jet_BgVel_x",         &Jet_BgVel[0],          0.0,           NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Jet_BgVel_y",         &Jet_BgVel[1],          0.0,           NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Jet_BgVel_z",         &Jet_BgVel[2],          0.0,           NoMin_double,     NoMax_double      );
 
 // load the input parameters of the hydrostatic equilibrium setup
-   AddInputTestPara( load_mode, "Jet_HSE",             &Jet_HSE,               false,         Useless_bool,     Useless_bool      );
-   AddInputTestPara( load_mode, "Jet_HSE_D",           &Jet_HSE_D,             NoDef_double,  Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "Jet_HSE_M200",        &Jet_HSE_M200,          NoDef_double,  Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "Jet_HSE_R200",        &Jet_HSE_R200,          NoDef_double,  Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "Jet_HSE_C200",        &Jet_HSE_C200,          NoDef_double,  Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "Jet_HSE_BgTable_File", Jet_HSE_BgTable_File,  NoDef_str,     Useless_str,      Useless_str       );
+   LOAD_PARA( load_mode, "Jet_HSE",             &Jet_HSE,               false,         Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "Jet_HSE_D",           &Jet_HSE_D,             NoDef_double,  Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Jet_HSE_M200",        &Jet_HSE_M200,          NoDef_double,  Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Jet_HSE_R200",        &Jet_HSE_R200,          NoDef_double,  Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Jet_HSE_C200",        &Jet_HSE_C200,          NoDef_double,  Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Jet_HSE_BgTable_File", Jet_HSE_BgTable_File,  NoDef_str,     Useless_str,      Useless_str       );
 
 // load the input parameters of each jet
-   AddInputTestPara( load_mode, "Jet0_Radius",         &Jet_Radius    [0],    -1.0,           Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "Jet0_HalfHeight",     &Jet_HalfHeight[0],    -1.0,           Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "Jet0_SrcVel",         &Jet_SrcVel    [0],    -1.0,           Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "Jet0_SrcDens",        &Jet_SrcDens   [0],    -1.0,           Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "Jet0_SrcTemp",        &Jet_SrcTemp   [0],    -1.0,           Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "Jet0_Vec_x",          &Jet_Vec       [0][0],  NoDef_double,  NoMin_double,     NoMax_double      );
-   AddInputTestPara( load_mode, "Jet0_Vec_y",          &Jet_Vec       [0][1],  NoDef_double,  NoMin_double,     NoMax_double      );
-   AddInputTestPara( load_mode, "Jet0_Vec_z",          &Jet_Vec       [0][2],  NoDef_double,  NoMin_double,     NoMax_double      );
-   AddInputTestPara( load_mode, "Jet0_CenOffset_x",    &Jet_CenOffset [0][0],  NoDef_double,  NoMin_double,     NoMax_double      );
-   AddInputTestPara( load_mode, "Jet0_CenOffset_y",    &Jet_CenOffset [0][1],  NoDef_double,  NoMin_double,     NoMax_double      );
-   AddInputTestPara( load_mode, "Jet0_CenOffset_z",    &Jet_CenOffset [0][2],  NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Jet0_Radius",         &Jet_Radius    [0],    -1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Jet0_HalfHeight",     &Jet_HalfHeight[0],    -1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Jet0_SrcVel",         &Jet_SrcVel    [0],    -1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Jet0_SrcDens",        &Jet_SrcDens   [0],    -1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Jet0_SrcTemp",        &Jet_SrcTemp   [0],    -1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Jet0_Vec_x",          &Jet_Vec       [0][0],  NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Jet0_Vec_y",          &Jet_Vec       [0][1],  NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Jet0_Vec_z",          &Jet_Vec       [0][2],  NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Jet0_CenOffset_x",    &Jet_CenOffset [0][0],  NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Jet0_CenOffset_y",    &Jet_CenOffset [0][1],  NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Jet0_CenOffset_z",    &Jet_CenOffset [0][2],  NoDef_double,  NoMin_double,     NoMax_double      );
 
    if ( Jet_NJet == 2 ) {
-   AddInputTestPara( load_mode, "Jet1_Radius",         &Jet_Radius    [1],    -1.0,           Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "Jet1_HalfHeight",     &Jet_HalfHeight[1],    -1.0,           Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "Jet1_SrcVel",         &Jet_SrcVel    [1],    -1.0,           Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "Jet1_SrcDens",        &Jet_SrcDens   [1],    -1.0,           Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "Jet1_SrcTemp",        &Jet_SrcTemp   [1],    -1.0,           Eps_double,       NoMax_double      );
-   AddInputTestPara( load_mode, "Jet1_Vec_x",          &Jet_Vec       [1][0],  NoDef_double,  NoMin_double,     NoMax_double      );
-   AddInputTestPara( load_mode, "Jet1_Vec_y",          &Jet_Vec       [1][1],  NoDef_double,  NoMin_double,     NoMax_double      );
-   AddInputTestPara( load_mode, "Jet1_Vec_z",          &Jet_Vec       [1][2],  NoDef_double,  NoMin_double,     NoMax_double      );
-   AddInputTestPara( load_mode, "Jet1_CenOffset_x",    &Jet_CenOffset [1][0],  NoDef_double,  NoMin_double,     NoMax_double      );
-   AddInputTestPara( load_mode, "Jet1_CenOffset_y",    &Jet_CenOffset [1][1],  NoDef_double,  NoMin_double,     NoMax_double      );
-   AddInputTestPara( load_mode, "Jet1_CenOffset_z",    &Jet_CenOffset [1][2],  NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Jet1_Radius",         &Jet_Radius    [1],    -1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Jet1_HalfHeight",     &Jet_HalfHeight[1],    -1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Jet1_SrcVel",         &Jet_SrcVel    [1],    -1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Jet1_SrcDens",        &Jet_SrcDens   [1],    -1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Jet1_SrcTemp",        &Jet_SrcTemp   [1],    -1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Jet1_Vec_x",          &Jet_Vec       [1][0],  NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Jet1_Vec_y",          &Jet_Vec       [1][1],  NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Jet1_Vec_z",          &Jet_Vec       [1][2],  NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Jet1_CenOffset_x",    &Jet_CenOffset [1][0],  NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Jet1_CenOffset_y",    &Jet_CenOffset [1][1],  NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Jet1_CenOffset_z",    &Jet_CenOffset [1][2],  NoDef_double,  NoMin_double,     NoMax_double      );
    }
 
 } // FUNCITON : LoadInputTestProb
@@ -191,20 +191,17 @@ void SetParameter()
 
 
 // (1) load the problem-specific runtime parameters
+// (1-1) read parameters from Input__TestProb
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
-// (1-1) add parameters in the following format:
-// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
-// --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
-// ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
-// ********************************************************************************************************************************
 // load the number of jets first
-   ReadPara->Add( "Jet_NJet",          &Jet_NJet,             -1,             1,                2                 );
+   ReadPara->Add( "Jet_NJet", &Jet_NJet, -1, 1, 2 );
    ReadPara->Read( FileName );
    delete ReadPara;
-   ReadPara = new ReadPara_t; // for loading the remaining parameters
+
+// for loading the remaining parameters
+   ReadPara = new ReadPara_t;
 
 // allocate memory for the variables whose size depends on the number of jets
    Jet_Radius     = new double [Jet_NJet];

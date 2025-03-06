@@ -556,10 +556,10 @@ const ExtremaMode_t
 
 
 // option in LoadInputTestProb()
-typedef int LoadInputTestMode_t;
-const LoadInputTestMode_t
-   LOAD_READPARA    = 0,
-   LOAD_HDF5_OUTPUT = 1;
+typedef int LoadParaMode_t;
+const LoadParaMode_t
+   LOAD_READPARA    = 1,
+   LOAD_HDF5_OUTPUT = 2;
 
 
 // function pointers

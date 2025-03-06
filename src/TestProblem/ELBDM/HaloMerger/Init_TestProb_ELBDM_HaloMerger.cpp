@@ -147,24 +147,24 @@ void Validate()
 #if ( MODEL == ELBDM  &&  defined GRAVITY )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LoadInputTestProb
-// Description :  Loading the problem-specific runtime parameters and storing them in HDF5 snapshots (Data_*)
+// Description :  Read problem-specific runtime parameters from Input__TestProb and store them in HDF5 snapshots (Data_*)
 //
-// Note        :  1. Invoked by SetParameter()
-//                2. Invoked by Output_DumpData_Total_HDF5() using the fuction pointer "Output_HDF5_InputTest_Ptr"
-//                3. If there is no problem-specific runtime parameters to load, please add at least one parameter
-//                   to avoid empty structure of `HDF5_Output_t`.
+// Note        :  1. Invoked by SetParameter() to read parameters
+//                2. Invoked by Output_DumpData_Total_HDF5() using the function pointer Output_HDF5_InputTest_Ptr to store parameters
+//                3. If there is no problem-specific runtime parameter to load, add at least one parameter
+//                   to prevent an empty structure in HDF5_Output_t
 //                   --> Example:
-//                       AddInputTestPara( load_mode, "NewTestproblem_TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+//                       LOAD_PARA( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
 //
-// Parameter   :  load_mode      : Load data structure mode
-//                                 LOAD_READPARA    : Load ReadPara_t
-//                                 LOAD_HDF5_OUTPUT : Load HDF5_Output_t
-//                ReadPara       : Data structure for loading runtime parameters
-//                HDF5_InputTest : Data structure storing the parameters to be stored in HDF5 snapshot
+// Parameter   :  load_mode      : Mode for loading parameters
+//                                 --> LOAD_READPARA    : Read parameters from Input__TestProb
+//                                     LOAD_HDF5_OUTPUT : Store parameters in HDF5 snapshots
+//                ReadPara       : Data structure for reading parameters (used with LOAD_READPARA)
+//                HDF5_InputTest : Data structure for storing parameters in HDF5 snapshots (used with LOAD_HDF5_OUTPUT)
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void LoadInputTestProb( const LoadInputTestMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
+void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
 {
 
 #  ifndef SUPPORT_HDF5
@@ -177,24 +177,24 @@ void LoadInputTestProb( const LoadInputTestMode_t load_mode, ReadPara_t *ReadPar
 // add parameters in the following format:
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
 // --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
-// --> AddInputTestPara() is defined in "include/TestProb.h"
-// ********************************************************************************************************************************
-// AddInputTestPara( load_mode, "KEY_IN_THE_FILE",                       &VARIABLE,                                   DEFAULT,          MIN,           MAX              );
-// ********************************************************************************************************************************
-   AddInputTestPara( load_mode, "HaloMerger_Halo_Num",                   &HaloMerger_Halo_Num,                        2,                0,             NoMax_int        );
-   AddInputTestPara( load_mode, "HaloMerger_Halo_InitMode",              &HaloMerger_Halo_InitMode,                   1,                1,             1                );
-   AddInputTestPara( load_mode, "HaloMerger_Soliton_Num",                &HaloMerger_Soliton_Num,                     0,                0,             NoMax_int        );
-   AddInputTestPara( load_mode, "HaloMerger_Soliton_InitMode",           &HaloMerger_Soliton_InitMode,                1,                1,             2                );
-   AddInputTestPara( load_mode, "HaloMerger_ParCloud_Num",               &HaloMerger_ParCloud_Num,                    0,                0,             NoMax_int        );
-   AddInputTestPara( load_mode, "HaloMerger_ParCloud_InitMode",          &HaloMerger_ParCloud_InitMode,               1,                1,             1                );
-   AddInputTestPara( load_mode, "HaloMerger_ExtPot_UniDenSph_M",         &HaloMerger_ExtPot_UniDenSph_M,              0.0,              0.0,           NoMax_double     );
-   AddInputTestPara( load_mode, "HaloMerger_ExtPot_UniDenSph_R",         &HaloMerger_ExtPot_UniDenSph_R,              1.0,              Eps_double,    NoMax_double     );
-   AddInputTestPara( load_mode, "HaloMerger_ExtPot_UniDenSph_CenCoordX", &HaloMerger_ExtPot_UniDenSph_CenCoordX,     -1.0,              NoMin_double,  amr->BoxEdgeR[0] );
-   AddInputTestPara( load_mode, "HaloMerger_ExtPot_UniDenSph_CenCoordY", &HaloMerger_ExtPot_UniDenSph_CenCoordY,     -1.0,              NoMin_double,  amr->BoxEdgeR[1] );
-   AddInputTestPara( load_mode, "HaloMerger_ExtPot_UniDenSph_CenCoordZ", &HaloMerger_ExtPot_UniDenSph_CenCoordZ,     -1.0,              NoMin_double,  amr->BoxEdgeR[2] );
-   AddInputTestPara( load_mode, "HaloMerger_ExtPot_UniDenSph_VelocityX", &HaloMerger_ExtPot_UniDenSph_VelocityX,      0.0,              NoMin_double,  NoMax_double     );
-   AddInputTestPara( load_mode, "HaloMerger_ExtPot_UniDenSph_VelocityY", &HaloMerger_ExtPot_UniDenSph_VelocityY,      0.0,              NoMin_double,  NoMax_double     );
-   AddInputTestPara( load_mode, "HaloMerger_ExtPot_UniDenSph_VelocityZ", &HaloMerger_ExtPot_UniDenSph_VelocityZ,      0.0,              NoMin_double,  NoMax_double     );
+// --> LOAD_PARA() is defined in "include/TestProb.h"
+// ****************************************************************************************************************************************************************
+// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",                       &VARIABLE,                                   DEFAULT,          MIN,           MAX              );
+// ****************************************************************************************************************************************************************
+   LOAD_PARA( load_mode, "HaloMerger_Halo_Num",                   &HaloMerger_Halo_Num,                        2,                0,             NoMax_int        );
+   LOAD_PARA( load_mode, "HaloMerger_Halo_InitMode",              &HaloMerger_Halo_InitMode,                   1,                1,             1                );
+   LOAD_PARA( load_mode, "HaloMerger_Soliton_Num",                &HaloMerger_Soliton_Num,                     0,                0,             NoMax_int        );
+   LOAD_PARA( load_mode, "HaloMerger_Soliton_InitMode",           &HaloMerger_Soliton_InitMode,                1,                1,             2                );
+   LOAD_PARA( load_mode, "HaloMerger_ParCloud_Num",               &HaloMerger_ParCloud_Num,                    0,                0,             NoMax_int        );
+   LOAD_PARA( load_mode, "HaloMerger_ParCloud_InitMode",          &HaloMerger_ParCloud_InitMode,               1,                1,             1                );
+   LOAD_PARA( load_mode, "HaloMerger_ExtPot_UniDenSph_M",         &HaloMerger_ExtPot_UniDenSph_M,              0.0,              0.0,           NoMax_double     );
+   LOAD_PARA( load_mode, "HaloMerger_ExtPot_UniDenSph_R",         &HaloMerger_ExtPot_UniDenSph_R,              1.0,              Eps_double,    NoMax_double     );
+   LOAD_PARA( load_mode, "HaloMerger_ExtPot_UniDenSph_CenCoordX", &HaloMerger_ExtPot_UniDenSph_CenCoordX,     -1.0,              NoMin_double,  amr->BoxEdgeR[0] );
+   LOAD_PARA( load_mode, "HaloMerger_ExtPot_UniDenSph_CenCoordY", &HaloMerger_ExtPot_UniDenSph_CenCoordY,     -1.0,              NoMin_double,  amr->BoxEdgeR[1] );
+   LOAD_PARA( load_mode, "HaloMerger_ExtPot_UniDenSph_CenCoordZ", &HaloMerger_ExtPot_UniDenSph_CenCoordZ,     -1.0,              NoMin_double,  amr->BoxEdgeR[2] );
+   LOAD_PARA( load_mode, "HaloMerger_ExtPot_UniDenSph_VelocityX", &HaloMerger_ExtPot_UniDenSph_VelocityX,      0.0,              NoMin_double,  NoMax_double     );
+   LOAD_PARA( load_mode, "HaloMerger_ExtPot_UniDenSph_VelocityY", &HaloMerger_ExtPot_UniDenSph_VelocityY,      0.0,              NoMin_double,  NoMax_double     );
+   LOAD_PARA( load_mode, "HaloMerger_ExtPot_UniDenSph_VelocityZ", &HaloMerger_ExtPot_UniDenSph_VelocityZ,      0.0,              NoMin_double,  NoMax_double     );
 
 } // FUNCITON : LoadInputTestProb
 
@@ -222,6 +222,7 @@ void SetParameter()
 
 
 // (1) load the problem-specific runtime parameters
+// (1-1) read parameters from Input__TestProb
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
@@ -1385,19 +1386,20 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 #ifdef SUPPORT_HDF5
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_HDF5_User_HaloMerger
-// Description :  Store the problem specific parameter in HDF5 outputs (Data_*) under User group
+// Function    :  Output_HDF5_UserPara_HaloMerger
+// Description :  Template for storing user-specified parameters in an HDF5 snapshot at User/UserPara
 //
-// Note         : 1. This function only works in MPI_RANK == 0
-//                2. We support int, uint, long, ulong, bool, float, double, and string datatypes
-//                3. There MUST be at least one parameter to be stored
-//                4. The pointer of the data MUST still exist outside the function, e.g. global variables
+// Note         : 1. This function is only called by the root MPI rank
+//                2. Support int, uint, long, ulong, bool, float, double, and string datatypes
+//                3. HDF5_UserPara MUST store at least one parameter
+//                4. The data pointer (i.e., the second argument passed to HDF5_UserPara->Add()) MUST persist outside this function (e.g., global variables)
+//                5. Linked to the function pointer Output_HDF5_UserPara_Ptr
 //
-// Parameter   :  HDF5_OutUser : the structure storing the parameters
+// Parameter   :  HDF5_UserPara : Structure storing all parameters to be written
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Output_HDF5_User_HaloMerger( HDF5_Output_t *HDF5_OutUser )
+void Output_HDF5_UserPara_HaloMerger( HDF5_Output_t *HDF5_UserPara )
 {
 
 // halo-related parameters
@@ -1445,23 +1447,23 @@ void Output_HDF5_User_HaloMerger( HDF5_Output_t *HDF5_OutUser )
             Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
                        "HaloMerger_Halo_InitMode", HaloMerger_Halo_InitMode );
 
-         HDF5_OutUser->Add( HaloMerger_Halo_i_CenCoordX,             &HaloMerger_Halo_CenCoord[index_halo][0] );
-         HDF5_OutUser->Add( HaloMerger_Halo_i_CenCoordY,             &HaloMerger_Halo_CenCoord[index_halo][1] );
-         HDF5_OutUser->Add( HaloMerger_Halo_i_CenCoordZ,             &HaloMerger_Halo_CenCoord[index_halo][2] );
-         HDF5_OutUser->Add( HaloMerger_Halo_i_VelocityX,             &HaloMerger_Halo_Velocity[index_halo][0] );
-         HDF5_OutUser->Add( HaloMerger_Halo_i_VelocityY,             &HaloMerger_Halo_Velocity[index_halo][1] );
-         HDF5_OutUser->Add( HaloMerger_Halo_i_VelocityZ,             &HaloMerger_Halo_Velocity[index_halo][2] );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_CenCoordX,             &HaloMerger_Halo_CenCoord[index_halo][0] );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_CenCoordY,             &HaloMerger_Halo_CenCoord[index_halo][1] );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_CenCoordZ,             &HaloMerger_Halo_CenCoord[index_halo][2] );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_VelocityX,             &HaloMerger_Halo_Velocity[index_halo][0] );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_VelocityY,             &HaloMerger_Halo_Velocity[index_halo][1] );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_VelocityZ,             &HaloMerger_Halo_Velocity[index_halo][2] );
 
          if ( HaloMerger_Halo_InitMode == 1 )
          {
-         HDF5_OutUser->Add( HaloMerger_Halo_i_HALO_IC_Filename,       HaloMerger_Halo_HALO_IC_Filename[index_halo]  );
-         HDF5_OutUser->Add( HaloMerger_Halo_i_HALO_IC_BoxLenX,       &HaloMerger_Halo_HALO_IC_BoxLen[index_halo][0] );
-         HDF5_OutUser->Add( HaloMerger_Halo_i_HALO_IC_BoxLenY,       &HaloMerger_Halo_HALO_IC_BoxLen[index_halo][1] );
-         HDF5_OutUser->Add( HaloMerger_Halo_i_HALO_IC_BoxLenZ,       &HaloMerger_Halo_HALO_IC_BoxLen[index_halo][2] );
-         HDF5_OutUser->Add( HaloMerger_Halo_i_HALO_IC_NCellsX,       &HaloMerger_Halo_HALO_IC_NCells[index_halo][0] );
-         HDF5_OutUser->Add( HaloMerger_Halo_i_HALO_IC_NCellsY,       &HaloMerger_Halo_HALO_IC_NCells[index_halo][1] );
-         HDF5_OutUser->Add( HaloMerger_Halo_i_HALO_IC_NCellsZ,       &HaloMerger_Halo_HALO_IC_NCells[index_halo][2] );
-         HDF5_OutUser->Add( HaloMerger_Halo_i_HALO_IC_Float8,        &HaloMerger_Halo_HALO_IC_Float8[index_halo]    );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_Filename,       HaloMerger_Halo_HALO_IC_Filename[index_halo]  );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_BoxLenX,       &HaloMerger_Halo_HALO_IC_BoxLen[index_halo][0] );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_BoxLenY,       &HaloMerger_Halo_HALO_IC_BoxLen[index_halo][1] );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_BoxLenZ,       &HaloMerger_Halo_HALO_IC_BoxLen[index_halo][2] );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_NCellsX,       &HaloMerger_Halo_HALO_IC_NCells[index_halo][0] );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_NCellsY,       &HaloMerger_Halo_HALO_IC_NCells[index_halo][1] );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_NCellsZ,       &HaloMerger_Halo_HALO_IC_NCells[index_halo][2] );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_Float8,        &HaloMerger_Halo_HALO_IC_Float8[index_halo]    );
          } // if ( HaloMerger_Halo_InitMode == 1 )
          else
             Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
@@ -1515,23 +1517,23 @@ void Output_HDF5_User_HaloMerger( HDF5_Output_t *HDF5_OutUser )
             Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
                        "HaloMerger_Soliton_InitMode", HaloMerger_Soliton_InitMode );
 
-         HDF5_OutUser->Add( HaloMerger_Soliton_i_CoreRadius,            &HaloMerger_Soliton_CoreRadius[index_soliton]  );
-         HDF5_OutUser->Add( HaloMerger_Soliton_i_CoreRho,               &HaloMerger_Soliton_CoreRho[index_soliton]     );
-         HDF5_OutUser->Add( HaloMerger_Soliton_i_CenCoordX,             &HaloMerger_Soliton_CenCoord[index_soliton][0] );
-         HDF5_OutUser->Add( HaloMerger_Soliton_i_CenCoordY,             &HaloMerger_Soliton_CenCoord[index_soliton][1] );
-         HDF5_OutUser->Add( HaloMerger_Soliton_i_CenCoordZ,             &HaloMerger_Soliton_CenCoord[index_soliton][2] );
-         HDF5_OutUser->Add( HaloMerger_Soliton_i_VelocityX,             &HaloMerger_Soliton_Velocity[index_soliton][0] );
-         HDF5_OutUser->Add( HaloMerger_Soliton_i_VelocityY,             &HaloMerger_Soliton_Velocity[index_soliton][1] );
-         HDF5_OutUser->Add( HaloMerger_Soliton_i_VelocityZ,             &HaloMerger_Soliton_Velocity[index_soliton][2] );
+         HDF5_UserPara->Add( HaloMerger_Soliton_i_CoreRadius,            &HaloMerger_Soliton_CoreRadius[index_soliton]  );
+         HDF5_UserPara->Add( HaloMerger_Soliton_i_CoreRho,               &HaloMerger_Soliton_CoreRho[index_soliton]     );
+         HDF5_UserPara->Add( HaloMerger_Soliton_i_CenCoordX,             &HaloMerger_Soliton_CenCoord[index_soliton][0] );
+         HDF5_UserPara->Add( HaloMerger_Soliton_i_CenCoordY,             &HaloMerger_Soliton_CenCoord[index_soliton][1] );
+         HDF5_UserPara->Add( HaloMerger_Soliton_i_CenCoordZ,             &HaloMerger_Soliton_CenCoord[index_soliton][2] );
+         HDF5_UserPara->Add( HaloMerger_Soliton_i_VelocityX,             &HaloMerger_Soliton_Velocity[index_soliton][0] );
+         HDF5_UserPara->Add( HaloMerger_Soliton_i_VelocityY,             &HaloMerger_Soliton_Velocity[index_soliton][1] );
+         HDF5_UserPara->Add( HaloMerger_Soliton_i_VelocityZ,             &HaloMerger_Soliton_Velocity[index_soliton][2] );
 
          if ( HaloMerger_Soliton_InitMode == 1 )
          {
-         HDF5_OutUser->Add( HaloMerger_Soliton_i_DensProf_Filename,      HaloMerger_Soliton_DensProf_Filename[index_soliton] );
-         HDF5_OutUser->Add( HaloMerger_Soliton_i_DensProf_Rescale,      &HaloMerger_Soliton_DensProf_Rescale[index_soliton]  );
+         HDF5_UserPara->Add( HaloMerger_Soliton_i_DensProf_Filename,      HaloMerger_Soliton_DensProf_Filename[index_soliton] );
+         HDF5_UserPara->Add( HaloMerger_Soliton_i_DensProf_Rescale,      &HaloMerger_Soliton_DensProf_Rescale[index_soliton]  );
          } // if ( HaloMerger_Soliton_InitMode == 1 )
          else if ( HaloMerger_Soliton_InitMode == 2 )
          {
-         HDF5_OutUser->Add( HaloMerger_Soliton_i_OuterSlope,            &HaloMerger_Soliton_OuterSlope[index_soliton]        );
+         HDF5_UserPara->Add( HaloMerger_Soliton_i_OuterSlope,            &HaloMerger_Soliton_OuterSlope[index_soliton]        );
          } // else if ( HaloMerger_Soliton_InitMode == 2 )
          else
             Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
@@ -1578,19 +1580,19 @@ void Output_HDF5_User_HaloMerger( HDF5_Output_t *HDF5_OutUser )
             Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
                        "HaloMerger_ParCloud_InitMode", HaloMerger_ParCloud_InitMode );
 
-         HDF5_OutUser->Add( HaloMerger_ParCloud_i_CenCoordX,         &HaloMerger_ParCloud_CenCoord[index_parcloud][0] );
-         HDF5_OutUser->Add( HaloMerger_ParCloud_i_CenCoordY,         &HaloMerger_ParCloud_CenCoord[index_parcloud][1] );
-         HDF5_OutUser->Add( HaloMerger_ParCloud_i_CenCoordZ,         &HaloMerger_ParCloud_CenCoord[index_parcloud][2] );
-         HDF5_OutUser->Add( HaloMerger_ParCloud_i_VelocityX,         &HaloMerger_ParCloud_Velocity[index_parcloud][0] );
-         HDF5_OutUser->Add( HaloMerger_ParCloud_i_VelocityY,         &HaloMerger_ParCloud_Velocity[index_parcloud][1] );
-         HDF5_OutUser->Add( HaloMerger_ParCloud_i_VelocityZ,         &HaloMerger_ParCloud_Velocity[index_parcloud][2] );
+         HDF5_UserPara->Add( HaloMerger_ParCloud_i_CenCoordX,         &HaloMerger_ParCloud_CenCoord[index_parcloud][0] );
+         HDF5_UserPara->Add( HaloMerger_ParCloud_i_CenCoordY,         &HaloMerger_ParCloud_CenCoord[index_parcloud][1] );
+         HDF5_UserPara->Add( HaloMerger_ParCloud_i_CenCoordZ,         &HaloMerger_ParCloud_CenCoord[index_parcloud][2] );
+         HDF5_UserPara->Add( HaloMerger_ParCloud_i_VelocityX,         &HaloMerger_ParCloud_Velocity[index_parcloud][0] );
+         HDF5_UserPara->Add( HaloMerger_ParCloud_i_VelocityY,         &HaloMerger_ParCloud_Velocity[index_parcloud][1] );
+         HDF5_UserPara->Add( HaloMerger_ParCloud_i_VelocityZ,         &HaloMerger_ParCloud_Velocity[index_parcloud][2] );
 
          if ( HaloMerger_ParCloud_InitMode == 1 )
          {
-         HDF5_OutUser->Add( HaloMerger_ParCloud_i_DensProf_Filename,  HaloMerger_ParCloud_DensProf_Filename[index_parcloud] );
-         HDF5_OutUser->Add( HaloMerger_ParCloud_i_DensProf_MaxR,     &HaloMerger_ParCloud_DensProf_MaxR[index_parcloud]     );
-         HDF5_OutUser->Add( HaloMerger_ParCloud_i_RSeed,             &HaloMerger_ParCloud_RSeed[index_parcloud]             );
-         HDF5_OutUser->Add( HaloMerger_ParCloud_i_NPar,              &HaloMerger_ParCloud_NPar[index_parcloud]              );
+         HDF5_UserPara->Add( HaloMerger_ParCloud_i_DensProf_Filename,  HaloMerger_ParCloud_DensProf_Filename[index_parcloud] );
+         HDF5_UserPara->Add( HaloMerger_ParCloud_i_DensProf_MaxR,     &HaloMerger_ParCloud_DensProf_MaxR[index_parcloud]     );
+         HDF5_UserPara->Add( HaloMerger_ParCloud_i_RSeed,             &HaloMerger_ParCloud_RSeed[index_parcloud]             );
+         HDF5_UserPara->Add( HaloMerger_ParCloud_i_NPar,              &HaloMerger_ParCloud_NPar[index_parcloud]              );
          } // if ( HaloMerger_ParCloud_InitMode == 1 )
          else
             Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
@@ -1892,7 +1894,7 @@ void Init_TestProb_ELBDM_HaloMerger()
 #  endif // ifdef MASSIVE_PARTICLES
 #  ifdef SUPPORT_HDF5
    Output_HDF5_InputTest_Ptr = LoadInputTestProb;
-   Output_HDF5_User_Ptr      = Output_HDF5_User_HaloMerger;
+   Output_HDF5_UserPara_Ptr  = Output_HDF5_UserPara_HaloMerger;
 #  endif
 
 #  endif // if ( MODEL == ELBDM  &&  defined GRAVITY )

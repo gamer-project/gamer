@@ -157,9 +157,9 @@ problem source file.
 
     ```C++
     // add parameters in the following format:
-    // *************************************************************************************************
+    // ***************************************************************************************************************
     // AddInputTestPara( load_mode, "KEY_IN_THE_FILE",   &VARIABLE,     DEFAULT,       MIN,            MAX          );
-    // *************************************************************************************************
+    // ***************************************************************************************************************
        AddInputTestPara( load_mode, "var_bool",          &var_bool,     true,          Useless_bool,   Useless_bool );
        AddInputTestPara( load_mode, "var_double",        &var_double,   1.0,           Eps_double,     NoMax_double );
        AddInputTestPara( load_mode, "var_int",           &var_int,      2,             0,              5            );
@@ -175,9 +175,9 @@ are defined in `include/ReadPara.h`. See [[Adding Parameters | Adding-Parameters
 > [!CAUTION]
 > There should be at least one variable to store. Otherwise, please store a global constant.
 > ```c++
->    AddInputTestPara( load_mode, "NewTestproblem_TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+>    AddInputTestPara( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
 > ```
-> See `src/TestProblem/Hydro/CDM_LSS/Init_TestProb_Hydro_CDM_LSS.cpp`.
+> See `src/TestProblem/Hydro/CDM_LSS/Init_TestProb_Hydro_CDM_LSS.cpp` for an example.
 
 3. [Optional] Edit `SetParameter()` to make a note of the values adopted
 during the runtime.
@@ -618,15 +618,15 @@ Add a user-specified feedback. See [[FB_USER | Runtime-Parameters:-Feedback#FB_U
 * **Description:**
 Store user-specified variables in HDF5 snapshots.
 * **Prototype:**
-   * `void Output_HDF5_User_NewProblem( HDF5_Output_t *HDF5_OutUser );`
+   * `void Output_HDF5_UserPara_NewProblem( HDF5_Output_t *HDF5_UserPara );`
 * **Function Pointer:**
-   * `Output_HDF5_User_Ptr`
+   * `Output_HDF5_UserPara_Ptr`
 * **Compilation Option:**
 [[SUPPORT_HDF5 | Installation: Simulation-Options#SUPPORT_HDF5]]
 * **Runtime Option:**
 None
 * **Example:**
-   * `Output/Output_DumData_Total_HDF5.cpp` --> `Output_HDF5_User_Template()`
+   * `Output/Output_DumData_Total_HDF5.cpp` --> `Output_HDF5_UserPara_Template()`
 
 
 ## VII. Add Problem-specific Validators
