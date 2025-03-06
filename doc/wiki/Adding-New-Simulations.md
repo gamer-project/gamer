@@ -161,13 +161,13 @@ problem source file.
 
     ```C++
     // add parameters in the following format:
-    // ***************************************************************************************************************
-    // AddInputTestPara( load_mode, "KEY_IN_THE_FILE",   &VARIABLE,     DEFAULT,       MIN,            MAX          );
-    // ***************************************************************************************************************
-       AddInputTestPara( load_mode, "var_bool",          &var_bool,     true,          Useless_bool,   Useless_bool );
-       AddInputTestPara( load_mode, "var_double",        &var_double,   1.0,           Eps_double,     NoMax_double );
-       AddInputTestPara( load_mode, "var_int",           &var_int,      2,             0,              5            );
-       AddInputTestPara( load_mode, "var_str",            var_str,      Useless_str,   Useless_str,    Useless_str  );
+    // ********************************************************************************************************
+    // LOAD_PARA( load_mode, "KEY_IN_THE_FILE",   &VARIABLE,     DEFAULT,       MIN,            MAX          );
+    // ********************************************************************************************************
+       LOAD_PARA( load_mode, "var_bool",          &var_bool,     true,          Useless_bool,   Useless_bool );
+       LOAD_PARA( load_mode, "var_double",        &var_double,   1.0,           Eps_double,     NoMax_double );
+       LOAD_PARA( load_mode, "var_int",           &var_int,      2,             0,              5            );
+       LOAD_PARA( load_mode, "var_str",            var_str,      Useless_str,   Useless_str,    Useless_str  );
     ```
 
 > [!CAUTION]
@@ -179,7 +179,7 @@ are defined in `include/ReadPara.h`. See [[Adding Parameters | Adding-Parameters
 > [!CAUTION]
 > There should be at least one variable to store. Otherwise, please store a global constant.
 > ```c++
->    AddInputTestPara( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+>    LOAD_PARA( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
 > ```
 > See `src/TestProblem/Hydro/CDM_LSS/Init_TestProb_Hydro_CDM_LSS.cpp` for an example.
 
