@@ -79,7 +79,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2502)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2503)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -274,7 +274,8 @@ Procedure for outputting new variables:
 //                                             OPT__FLAG_RADIAL,  FlagTable_Radial,  FLAG_RADIAL_CEN_X,  FLAG_RADIAL_CEN_Y,  FLAG_RADIAL_CEN_Z
 //                2500 : 2024/07/01 --> output particle integer attributes
 //                2501 : 2025/01/15 --> output OPT__OUTPUT_TEXT_LENGTH_INT
-//                2502 : 2025/01/17 --> output user-defined parameters in "User/UserPara" and
+//                2502 : 2025/01/16 --> output ConRef[]
+//                2503 : 2025/01/17 --> output user-defined parameters in "User/UserPara" and
 //                                             Input__TestProb parameters in "Info/InputTest"
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
@@ -301,17 +302,24 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    int  NFieldStored = 0;
 
    const int FluDumpIdx0 = NFieldStored;
-#  if (  ELBDM_SCHEME == ELBDM_HYBRID  &&  !defined( GAMER_DEBUG )  )
-   const int NCompStore  = NCOMP_TOTAL - 1;  // do not store STUB field unless we are in debug mode
-#  else
-   const int NCompStore  = NCOMP_TOTAL;
-#  endif
 
-   NFieldStored += NCompStore;
+   int NCompFluSkip = 0;
+   for (int v=0; v<NCOMP_TOTAL; v++)
+   {
+#     if (  ELBDM_SCHEME == ELBDM_HYBRID  &&  !defined( GAMER_DEBUG )  )
+      if ( v == STUB )  // do not store STUB field unless we are in debug mode
+      {
+         NCompFluSkip += 1;
+         continue;
+      }
+#     endif
 
-   if ( FluDumpIdx0+NCompStore-1 >= NFIELD_STORED_MAX )
-      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   for (int v=0; v<NCompStore; v++)    sprintf( FieldLabelOut[ FluDumpIdx0 + v ], "%s", FieldLabel[v] );
+      const int FluDumpIdx = NFieldStored++;
+      if ( FluDumpIdx >= NFIELD_STORED_MAX )
+         Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+      sprintf( FieldLabelOut[ FluDumpIdx ], "%s", FieldLabel[v] );
+   }
+   const int NCompStore  = NCOMP_TOTAL - NCompFluSkip;
 
 #  ifdef GRAVITY
    const int PotDumpIdx = ( OPT__OUTPUT_POT ) ? NFieldStored++ : NoDump;
@@ -1173,7 +1181,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                } // if ( v >= UserDumpIdx0  &&  v < UserDumpIdx0 + UserDerField_Num )
 
 //             e. fluid variables
-               else if ( v >= FluDumpIdx0  &&  v < FluDumpIdx0+NCompStore )
+               else if ( v >= FluDumpIdx0  &&  v < FluDumpIdx0+NCOMP_FLUID-NCompFluSkip )
                {
 //                convert real/imag to density/phase in hybrid scheme
 //                bitwise reproducibility currently fails in hybrid scheme because of conversion from RE/IM to DENS/PHAS when storing fields in HDF5
@@ -1202,7 +1210,14 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #                 endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
                   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
                      memcpy( FieldData[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v], FieldSizeOnePatch );
-               } // if ( v >= FluDumpIdx0  &&  v < FluDumpIdx0+NCompStore )
+               } // if ( v >= FluDumpIdx0  &&  v < FluDumpIdx0+NCOMP_FLUID-NCompFluSkip )
+
+//             f. passive fluid variables
+               else if ( v >= FluDumpIdx0+NCOMP_FLUID-NCompFluSkip  &&  v < FluDumpIdx0+NCompStore )
+               {
+                  for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                     memcpy( FieldData[PID], amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v+NCompFluSkip], FieldSizeOnePatch );
+               } // if ( v >= FluDumpIdx0+NCOMP_FLUID-NCompFluSkip  &&  v < FluDumpIdx0+NCompStore )
 
                else
                   Aux_Error( ERROR_INFO, "incorrect index (%d) !!\n", v );
@@ -1647,7 +1662,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2502;
+   KeyInfo.FormatVersion        = 2503;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1740,6 +1755,10 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 //###REVISE: replace rand() by UUID
    srand( time(NULL) );
    KeyInfo.UniqueDataID = rand();
+
+   if ( !ConRefInitialized )   Aux_Error( ERROR_INFO, "Reference values for conserved variables have not been assigned yet !!\n" );
+
+   for (int v=0; v<1+NCONREF_MAX; v++)   KeyInfo.ConRef[v] = ConRef[v];
 
 } // FUNCTION : FillIn_KeyInfo
 
@@ -2318,6 +2337,8 @@ void FillIn_SymConst( SymConst_t &SymConst )
 #  endif
 
    SymConst.NFieldStoredMax      = NFIELD_STORED_MAX;
+
+   SymConst.NConRefMax           = NCONREF_MAX;
 
 } // FUNCTION : FillIn_SymConst
 
@@ -2953,14 +2974,16 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
 {
 
 // create the array type
-   const hsize_t H5_ArrDims_3Var         = 3;                        // array size of [3]
-   const hsize_t H5_ArrDims_NLv          = NLEVEL;                   // array size of [NLEVEL]
+   const hsize_t H5_ArrDims_3Var         = 3;             // array size of [3]
+   const hsize_t H5_ArrDims_NLv          = NLEVEL;        // array size of [NLEVEL]
+   const hsize_t H5_ArrDims_NConRef      = 1+NCONREF_MAX; // array size of [1+NCONREF_MAX]
 
-   const hid_t   H5_TypeID_Arr_3Double   = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_3Var      );
-   const hid_t   H5_TypeID_Arr_3Int      = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_3Var      );
-   const hid_t   H5_TypeID_Arr_NLvInt    = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_NLv       );
-   const hid_t   H5_TypeID_Arr_NLvLong   = H5Tarray_create( H5T_NATIVE_LONG,   1, &H5_ArrDims_NLv       );
-   const hid_t   H5_TypeID_Arr_NLvDouble = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_NLv       );
+   const hid_t   H5_TypeID_Arr_3Double   = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_3Var    );
+   const hid_t   H5_TypeID_Arr_3Int      = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_3Var    );
+   const hid_t   H5_TypeID_Arr_NLvInt    = H5Tarray_create( H5T_NATIVE_INT,    1, &H5_ArrDims_NLv     );
+   const hid_t   H5_TypeID_Arr_NLvLong   = H5Tarray_create( H5T_NATIVE_LONG,   1, &H5_ArrDims_NLv     );
+   const hid_t   H5_TypeID_Arr_NLvDouble = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_NLv     );
+   const hid_t   H5_TypeID_Arr_NConRef   = H5Tarray_create( H5T_NATIVE_DOUBLE, 1, &H5_ArrDims_NConRef );
 
 
 // create the "variable-length string" datatype
@@ -2990,8 +3013,8 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "CellScale",            HOFFSET(KeyInfo_t,CellScale           ), H5_TypeID_Arr_NLvInt    );
 #  if ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Magnetohydrodynamics", HOFFSET(KeyInfo_t,Magnetohydrodynamics), H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "SRHydrodynamics",      HOFFSET(KeyInfo_t,SRHydrodynamics),      H5T_NATIVE_INT          );
-   H5Tinsert( H5_TypeID, "CosmicRay",            HOFFSET(KeyInfo_t,CosmicRay),            H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "SRHydrodynamics",      HOFFSET(KeyInfo_t,SRHydrodynamics     ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "CosmicRay",            HOFFSET(KeyInfo_t,CosmicRay           ), H5T_NATIVE_INT          );
 #  endif
 
    H5Tinsert( H5_TypeID, "Step",                 HOFFSET(KeyInfo_t,Step                ), H5T_NATIVE_LONG         );
@@ -3027,14 +3050,16 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "GitCommit",            HOFFSET(KeyInfo_t,GitCommit           ), H5_TypeID_VarStr        );
    H5Tinsert( H5_TypeID, "UniqueDataID",         HOFFSET(KeyInfo_t,UniqueDataID        ), H5T_NATIVE_LONG         );
 
+   H5Tinsert( H5_TypeID, "ConRef",               HOFFSET(KeyInfo_t,ConRef              ), H5_TypeID_Arr_NConRef   );
 
 // free memory
-   H5_Status = H5Tclose( H5_TypeID_Arr_3Double       );
-   H5_Status = H5Tclose( H5_TypeID_Arr_3Int          );
-   H5_Status = H5Tclose( H5_TypeID_Arr_NLvInt        );
-   H5_Status = H5Tclose( H5_TypeID_Arr_NLvLong       );
-   H5_Status = H5Tclose( H5_TypeID_Arr_NLvDouble     );
-   H5_Status = H5Tclose( H5_TypeID_VarStr            );
+   H5_Status = H5Tclose( H5_TypeID_Arr_3Double   );
+   H5_Status = H5Tclose( H5_TypeID_Arr_3Int      );
+   H5_Status = H5Tclose( H5_TypeID_Arr_NLvInt    );
+   H5_Status = H5Tclose( H5_TypeID_Arr_NLvLong   );
+   H5_Status = H5Tclose( H5_TypeID_Arr_NLvDouble );
+   H5_Status = H5Tclose( H5_TypeID_Arr_NConRef   );
+   H5_Status = H5Tclose( H5_TypeID_VarStr        );
 
 } // FUNCTION : GetCompound_KeyInfo
 
@@ -3303,6 +3328,8 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 #  endif
 
    H5Tinsert( H5_TypeID, "NFieldStoredMax",      HOFFSET(SymConst_t,NFieldStoredMax     ), H5T_NATIVE_INT    );
+
+   H5Tinsert( H5_TypeID, "NConRefMax",           HOFFSET(SymConst_t,NConRefMax          ), H5T_NATIVE_INT    );
 
 } // FUNCTION : GetCompound_SymConst
 

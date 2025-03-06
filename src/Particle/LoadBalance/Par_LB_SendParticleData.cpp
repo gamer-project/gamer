@@ -253,7 +253,7 @@ void Par_LB_SendParticleData( const int NParAttFlt, const int NParAttInt, int *S
          dtime = Timer->GetValue() - time0;
 
 //       output to the same log file as LB_GetBufferData
-         char FileName[MAX_STRING];
+         char FileName[2*MAX_STRING];
          sprintf( FileName, "%s/Record__TimingMPI_Rank%05d", OUTPUT_DIR, MPI_Rank );
 
          FILE *File = fopen( FileName, "a" );

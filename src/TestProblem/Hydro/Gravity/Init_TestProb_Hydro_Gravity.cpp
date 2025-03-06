@@ -407,7 +407,7 @@ void Aux_Record_Gravity()
    if ( MPI_Rank == 0 )
    {
 //    header
-      char FileName[MAX_STRING];
+      char FileName[2*MAX_STRING];
       sprintf( FileName, "%s/Record__PoissonPerformance", OUTPUT_DIR );
 
       if ( !Aux_CheckFileExist(FileName) )

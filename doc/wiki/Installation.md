@@ -48,6 +48,12 @@ e.g., `example/test_problem/Hydro/AcousticWave/generate_make.sh`.
    make
    ```
 
+   If the compilation succeeds, you will see the following message
+   <pre>
+   Compiling GAMER --> Successful!
+   </pre>
+   and get an executable `gamer`, which will be automatically copied to `../bin/gamer`.
+
 > [!TIP]
 > To reduce the compilation time, you can perform a parallel
 compilation by `make -j N`, where `N` is the number of compilation
@@ -59,8 +65,45 @@ invoke 4 compilation jobs simultaneously:
 > However, please consult the documentation of your system to avoid
 violating the usage policy.
 
-If the compilation succeeds, you will see the following message
-<pre>
-Compiling GAMER --> Successful!
-</pre>
-and get an executable `gamer`, which will be automatically copied to `../bin/gamer`.
+
+6. [Optional] Autocompletion of `configure.py`
+
+   Since there are many options in GAMER, we have introduced an autocomplete feature for `configure.py`. You can enable this feature by the following steps:
+   1. Update the [shebang](https://en.wikipedia.org/wiki/Shebang_(Unix)) of `configure.py` (if needed)
+
+      For example, replace `#!/usr/bin/python3` with the path to your preferred Python interpreter.
+      <details>
+      <summary><u><i>Example at the top of configure.py</i></u></summary>
+      <pre>
+      #!/usr/bin/python3
+      """
+      User guides of this script are provided in the following link.
+
+      https://github.com/gamer-project/gamer/wiki/Installation
+      """
+      </pre>
+      </details>
+
+   2. Copy the autocomplete shell script to `${HOME}/.config/gamer` (`~/.config/gamer/`)
+      ```bash
+      mkdir -p ~/.config/gamer
+      cp tool/config/config_autocomplete.sh ~/.config/gamer/
+      ```
+
+   3. Update `~/.bashrc` to load the autocomplete script
+
+      Please add the following line to `~/.bashrc`:
+      ```bash
+      source ~/.config/gamer/config_autocomplete.sh
+      ```
+
+> [!NOTE]
+> The `config_autocomplete.sh` script registers autocomplete for three commands: `python`, `python3`, and `./configure.py.`.
+If you want to add more commands, simply append them at the bottom of the script.
+
+   4. Reload `~/.bashrc` to enable the autocomplete feature
+      ```bash
+      source ~/.bashrc
+      ```
+
+   Now, try to type `./configure.py` and then press `<tab>` multiple times!
