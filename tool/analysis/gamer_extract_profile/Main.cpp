@@ -819,12 +819,12 @@ void GetRMS()
                   if ( ELBDM_GetVir ) {
                   RMS[ShellID][Var] += dv*pow( double(Ek_Lap )-Average[ShellID][Var], 2.0 );  Var++;
                   RMS[ShellID][Var] += dv*pow( double(Ek_Gra )-Average[ShellID][Var], 2.0 );  Var++;
-                  RMS[ShellID][Var] += dv*pow( double(vr     )-Average[ShellID][Var], 2.0 );  Var++;
-                  RMS[ShellID][Var] += dv*pow( double(vr_abs )-Average[ShellID][Var], 2.0 );  Var++;
-                  RMS[ShellID][Var] += dv*pow( double(vt_abs )-Average[ShellID][Var], 2.0 );  Var++;
-                  RMS[ShellID][Var] += dv*pow( double(wr     )-Average[ShellID][Var], 2.0 );  Var++;
-                  RMS[ShellID][Var] += dv*pow( double(wr_abs )-Average[ShellID][Var], 2.0 );  Var++;
-                  RMS[ShellID][Var] += dv*pow( double(wt_abs )-Average[ShellID][Var], 2.0 );  Var++; }
+                  RMS[ShellID][Var] += dv*Dens*pow( double(vr     )-Average[ShellID][Var], 2.0 );  Var++;
+                  RMS[ShellID][Var] += dv*Dens*pow( double(vr_abs )-Average[ShellID][Var], 2.0 );  Var++;
+                  RMS[ShellID][Var] += dv*Dens*pow( double(vt_abs )-Average[ShellID][Var], 2.0 );  Var++;
+                  RMS[ShellID][Var] += dv*Dens*pow( double(wr     )-Average[ShellID][Var], 2.0 );  Var++;
+                  RMS[ShellID][Var] += dv*Dens*pow( double(wr_abs )-Average[ShellID][Var], 2.0 );  Var++;
+                  RMS[ShellID][Var] += dv*Dens*pow( double(wt_abs )-Average[ShellID][Var], 2.0 );  Var++; }
 
                   if ( OutputSphVel ) {
                   RMS[ShellID][Var] += dv*Dens*pow( double(v_sph[0])-Average[ShellID][Var], 2.0 );  Var++;
@@ -852,11 +852,20 @@ void GetRMS()
    for (int n=0; n<NShell; n++)
    for (int v=0; v<NOut; v++)    RMS[n][v] = sqrt( RMS[n][v]/Volume[n] );
 
+#  if ( MODEL == ELBDM )
+   if (ELBDM_GetVir) {
+   for (int n=0; n<NShell; n++)
+   for (int v=NOut-12; v<NOut-6; v++)    RMS[n][v] = RMS[n][v]/sqrt(Average[n][0]);
+   }
+
    if ( OutputSphVel ){
    for (int n=0; n<NShell; n++)
    for (int v=NOut-6; v<NOut; v++)    RMS[n][v] = RMS[n][v]/sqrt(Average[n][0]);
    }
 
+#  else
+#  error : ERROR : unsupported MODEL !!
+#  endif // MODEL
    delete [] Field1D;
 
 } // FUNCTION : GetRMS
