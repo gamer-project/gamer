@@ -94,6 +94,53 @@ void Validate()
 
 #if ( MODEL == HYDRO )
 //-------------------------------------------------------------------------------------------------------
+// Function    :  LoadInputTestProb
+// Description :  Read problem-specific runtime parameters from Input__TestProb and store them in HDF5 snapshots (Data_*)
+//
+// Note        :  1. Invoked by SetParameter() to read parameters
+//                2. Invoked by Output_DumpData_Total_HDF5() using the function pointer Output_HDF5_InputTest_Ptr to store parameters
+//                3. If there is no problem-specific runtime parameter to load, add at least one parameter
+//                   to prevent an empty structure in HDF5_Output_t
+//                   --> Example:
+//                       LOAD_PARA( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+//
+// Parameter   :  load_mode      : Mode for loading parameters
+//                                 --> LOAD_READPARA    : Read parameters from Input__TestProb
+//                                     LOAD_HDF5_OUTPUT : Store parameters in HDF5 snapshots
+//                ReadPara       : Data structure for reading parameters (used with LOAD_READPARA)
+//                HDF5_InputTest : Data structure for storing parameters in HDF5 snapshots (used with LOAD_HDF5_OUTPUT)
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
+{
+
+#  ifndef SUPPORT_HDF5
+   if ( load_mode == LOAD_HDF5_OUTPUT )   Aux_Error( ERROR_INFO, "please turn on SUPPORT_HDF5 in the Makefile for load_mode == LOAD_HDF5_OUTPUT !!\n" );
+#  endif
+
+   if ( load_mode == LOAD_READPARA     &&  ReadPara       == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_READPARA and ReadPara == NULL !!\n" );
+   if ( load_mode == LOAD_HDF5_OUTPUT  &&  HDF5_InputTest == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_HDF5_OUTPUT and HDF5_InputTest == NULL !!\n" );
+
+// add parameters in the following format:
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
+// --> LOAD_PARA() is defined in "include/TestProb.h"
+// ***************************************************************************************************************************
+// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",      &VARIABLE,              DEFAULT,       MIN,              MAX               );
+// ***************************************************************************************************************************
+   LOAD_PARA( load_mode, "BarredPot_V0",         &BarredPot_V0,          200.,          Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "BarredPot_q" ,         &BarredPot_q ,          0.9 ,          Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "BarredPot_Rc",         &BarredPot_Rc,          0.05,          Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "BarredPot_Omegabar",   &BarredPot_Omegabar,    40. ,          Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "BarredPot_fullBS"  ,   &BarredPot_fullBS,      0.1 ,          Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "BarredPot_initT"   ,   &BarredPot_initT,       1.0e4,         Eps_double,       NoMax_double      );
+
+} // FUNCITON : LoadInputTestProb
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
 //
@@ -116,21 +163,12 @@ void SetParameter()
 
 
 // (1) load the problem-specific runtime parameters
+// (1-1) read parameters from Input__TestProb
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
-// (1-1) add parameters in the following format:
-// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
-// --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
-// ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,              DEFAULT,       MIN,              MAX               );
-// ********************************************************************************************************************************
-   ReadPara->Add( "BarredPot_V0",         &BarredPot_V0,          200.,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "BarredPot_q" ,         &BarredPot_q ,          0.9 ,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "BarredPot_Rc",         &BarredPot_Rc,          0.05,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "BarredPot_Omegabar",   &BarredPot_Omegabar,    40. ,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "BarredPot_fullBS"  ,   &BarredPot_fullBS,      0.1 ,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "BarredPot_initT"   ,   &BarredPot_initT,       1.0e4,         Eps_double,       NoMax_double      );
+   LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
+
    ReadPara->Read( FileName );
 
    delete ReadPara;
@@ -367,7 +405,7 @@ void AddNewParticleAttribute_BarredPot()
 
 } // FUNCTION : AddNewParticleAttribute_BarredPot
 #endif
-#endif // #if ( MODEL == HYDRO)
+#endif // #if ( MODEL == HYDRO )
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -407,6 +445,9 @@ void Init_TestProb_Hydro_BarredPot()
 //   if ( OPT__EXT_POT == EXT_POT_FUNC )
    Init_ExtPot_Ptr             = Init_ExtPot_TabularP17;
 #  endif // #ifdef GRAVITY
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_InputTest_Ptr   = LoadInputTestProb;
+#  endif
 #  endif // #if ( MODEL == HYDRO )
 
 
