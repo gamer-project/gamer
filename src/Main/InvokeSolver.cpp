@@ -550,7 +550,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                    TimeOld*NEWTON_G*SQR(JEANS_MIN_PRES_NCELL*amr->dh[JEANS_MIN_PRES_LEVEL])/(GAMMA*M_PI) : NULL_REAL;
 #  else
    const real JeansMinPres_Coeff = ( JEANS_MIN_PRES ) ?
-                                   NEWTON_G*SQR(JEANS_MIN_PRES_NCELL*amr->dh[JEANS_MIN_PRES_LEVEL])/(GAMMA*M_PI) : NULL_REAL;
+                                           NEWTON_G*SQR(JEANS_MIN_PRES_NCELL*amr->dh[JEANS_MIN_PRES_LEVEL])/(GAMMA*M_PI) : NULL_REAL;
 #  endif
 #  else
    const real JEANS_MIN_PRES     = false;
