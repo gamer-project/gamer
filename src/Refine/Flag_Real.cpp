@@ -77,9 +77,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 #  if ( MODEL == HYDRO  &&  defined GRAVITY )
 #  ifdef COMOVING
-   const real JeansCoeff_Factor       = M_PI/( Time[lv]*SQR(FlagTable_Jeans[lv])*NEWTON_G ); // flag if dh^2 > JeansCoeff_Factor*Gamma*Pres/Dens^2
+   const real JeansCoeff_Factor       = M_PI/( SQR(FlagTable_Jeans[lv])*NEWTON_G*Time[lv] ); // flag if dh^2 > JeansCoeff_Factor*Gamma*Pres/Dens^2
 #  else
-   const real JeansCoeff_Factor       = M_PI/( SQR(FlagTable_Jeans[lv])*NEWTON_G ); // flag if dh^2 > JeansCoeff_Factor*Gamma*Pres/Dens^2
+   const real JeansCoeff_Factor       = M_PI/( SQR(FlagTable_Jeans[lv])*NEWTON_G          );
 #  endif
 #  endif
 #  ifndef GRAVITY
