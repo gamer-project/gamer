@@ -34,7 +34,7 @@ double Mis_GetTimeStep_ExactCooling( const int lv, const double dTime_dt )
 #  endif
 
    double  dt_EC     = HUGE_NUMBER;
-   double *OMP_dt_EC = new double [NT];
+   double *OMP_dt_EC;
 
 
    return dt_EC;
