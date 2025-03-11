@@ -181,6 +181,8 @@ extern double        AveDensity_Init;     // initial average mass density (in al
 extern int           Pot_ParaBuf;         // number of parallel buffers to exchange potential for the
                                           // Poisson/Gravity solvers and the potential refinement
 extern int           Rho_ParaBuf;         // number of parallel buffers to exchange density for the Poisson solver
+extern bool          FFTW_Inited[NLEVEL];
+extern bool          GreenFuncK_Inited[NLEVEL];
 extern real         *GreenFuncK;
 extern double        GFUNC_COEFF0;
 extern double        DT__GRAVITY;
