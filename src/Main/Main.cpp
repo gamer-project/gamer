@@ -170,6 +170,8 @@ bool                 ELBDM_BASE_SPECTRAL;
 double               AveDensity_Init = -1.0;    // initialize it as <= 0 to check if it is properly set later
 int                  Pot_ParaBuf, Rho_ParaBuf;
 
+bool                 FFTW_Inited[NLEVEL] = { false };
+bool                 GreenFuncK_Inited[NLEVEL] = { false };
 real                *GreenFuncK = NULL;
 double               GFUNC_COEFF0;
 double               DT__GRAVITY;
