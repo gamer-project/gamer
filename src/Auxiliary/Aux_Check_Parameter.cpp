@@ -1855,10 +1855,10 @@ void Aux_Check_Parameter()
 
    if ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_DWARFGALAXY  &&  JEANS_MIN_PRES )
    {
-      Aux_Message( stderr, "WARNING : SF_CREATE_STAR_MAX_GAS_JEANSL = %14.8e, but JEANS_MIN_PRES_NCELL = %d and JEANS_MIN_PRES_LEVEL = %d\n",
+      Aux_Message( stderr, "WARNING : SF_CREATE_STAR_SCHEME == %d is incompatible with JEANS_MIN_PRES !!\n",
+                   SF_CREATE_STAR_SCHEME_DWARFGALAXY );
+      Aux_Message( stderr, "          --> SF_CREATE_STAR_MAX_GAS_JEANSL = %14.8e, but JEANS_MIN_PRES_NCELL = %d and JEANS_MIN_PRES_LEVEL = %d\n",
                    SF_CREATE_STAR_MAX_GAS_JEANSL, JEANS_MIN_PRES_NCELL, JEANS_MIN_PRES_LEVEL );
-      Aux_Message( stderr, "          --> no star particles will form on level = %d and above !!\n",
-                   (int)ceil( JEANS_MIN_PRES_LEVEL - log2( JEANS_MIN_PRES_NCELL / SF_CREATE_STAR_MAX_GAS_JEANSL ) ) );
    }
 
    if ( ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_AGORA  ||  SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_DWARFGALAXY )
