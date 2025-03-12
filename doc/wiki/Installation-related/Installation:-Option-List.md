@@ -87,7 +87,7 @@ disabled). See the "Restriction" of each option carefully.
 | `--feedback`          | `true`, `false` | `false` | Enable feedback from particles to grids (and vice versa) | See [[here \| Feedback]] for details | <a name="--feedback"></a> `FEEDBACK` |
 | `--par_attribute_flt` | &#8805; 0       | `0`     | Number of user-defined particle floating-point attributes | See [[here \| Adding-New-Simulations#particle-attributes]] for details | <a name="--par_attribute_flt"></a> `PAR_NATT_FLT_USER` |
 | `--par_attribute_int` | &#8805; 0       | `0`     | Number of user-defined particle integer        attributes | See [[here \| Adding-New-Simulations#particle-attributes]] for details | <a name="--par_attribute_int"></a> `PAR_NATT_INT_USER` |
-| `--double_par`        | `true`, `false` | Depend  | Enable double-precision floating-point accuracy for particles. It will be set to `--double` by default. | - | <a name="--double_par"></a> `FLOAT8_PAR` |
+| `--double_par`        | `true`, `false` | `true`  | Enable double-precision floating-point accuracy for particles. | - | <a name="--double_par"></a> `FLOAT8_PAR` |
 | `--long_par`          | `true`, `false` | `true`  | Enable long interger data type for particles. | - | <a name="--long_par"></a> `INT8_PAR` |
 
 ## Microphysics Options
