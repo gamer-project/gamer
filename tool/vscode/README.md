@@ -8,6 +8,7 @@ Please check the [wiki](https://github.com/gamer-project/gamer/wiki/Developing-w
 - `c_cpp_properties.json`: Contains the IntelliSense configuration for VS Code.
 - `gamercpp.natvis`: Contains the visualization configuration for VS Code debugger.
 - `launch.json`: Contains the debug configuration for VS Code.
+- `settings.json`: Contains the settings for the editor in VS Code.
 - `tasks.json`: Contains the build configuration for VS Code.
 - `extract_macros.py`: Script to extract the macros from the `Makefile.log` to `c_cpp_properties.json`.
 - `copy_to_vscode.sh`: Script to copy the above files to `.vscode` directory.
