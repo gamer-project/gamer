@@ -7,15 +7,15 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for suggesting a new feature idea!
+        Thanks for suggesting a new feature!
 
-        Please fill out the following form to help us understand your feature request.
+        Please fill out the following form to help us better understand your request.
 
   - type: textarea
     id: feature_description
     attributes:
-      label: 💭 What is the proposed feature?
-      description: Describe the feature you would like to see.
+      label: 💭 Proposed feature
+      description: Provide a clear and concise description of the feature you are suggesting.
       placeholder: A clear and concise description of your feature.
     validations:
       required: true
@@ -24,7 +24,7 @@ body:
     id: use_case
     attributes:
       label: 🔆 Use case
-      description: Provide examples or use cases where this feature could be applied.
+      description: Describe where this feature would be applied.
       placeholder: Describe specific use cases in detail.
     validations:
       required: true
@@ -32,8 +32,8 @@ body:
   - type: textarea
     id: motivation
     attributes:
-      label: 💡 Motivation and benefits
-      description: Explain why this feature would be useful and how it can benefit the project.
+      label: 💡 Motivation
+      description: Explain why this feature is needed and how it benefits the project.
       placeholder: Describe the reason and expected benefits.
     validations:
       required: true
@@ -49,7 +49,7 @@ body:
     id: labels
     attributes:
       label: 🔖 Related topics
-      description: You may select more than one.
+      description: Select relevant topics (you may choose more than one).
       options:
         - label: Hydro
         - label: MHD
@@ -57,7 +57,7 @@ body:
         - label: AMR
         - label: Gravity
         - label: Particle
-        - label: Parallel
+        - label: Parallelization
         - label: GPU
         - label: Memory
         - label: YT

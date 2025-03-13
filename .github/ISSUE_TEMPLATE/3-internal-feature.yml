@@ -22,7 +22,7 @@ body:
   - type: textarea
     id: task
     attributes:
-      label: 📋 Tasks
+      label: 📋 Mandatory tasks
       value: |
         - [ ] Task 1
         - [ ] Task 2
@@ -41,9 +41,9 @@ body:
   - type: textarea
     id: additional
     attributes:
-      label: References and possible tools
+      label: References
 
   - type: textarea
     id: note
     attributes:
-      label: Notes
+      label: Supplementary info
