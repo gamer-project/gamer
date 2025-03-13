@@ -13,7 +13,7 @@ extern void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, 
 // Note        :  1. Results will be stored in the input "Prof" object
 //                   --> Prof->Radius    []: Radial coordinate at each bin
 //                       Prof->Data      []: Profile data at each bin
-//                       Prof->Data_Sigma[]: Standard Devitation of profile data at each bin
+//                       Prof->Data_Sigma[]: Standard devitation of profile data at each bin
 //                       Prof->Weight    []: Total weighting at each bin
 //                       Prof->NCell     []: Number of cells at each bin
 //                       Prof->NBin        : Total number of bins
@@ -91,9 +91,9 @@ extern void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, 
 //                      char Filename[MAX_STRING];
 //                      sprintf( Filename, "Profile%d.txt", p );
 //                      FILE *File = fopen( Filename, "w" );
-//                      fprintf( File, "#%19s  %21s  %21s  %10s\n", "Radius", "Data", "Data_Sigma", "Weight", "Cells" );
+//                      fprintf( File, "#%19s  %21s  %21s  %21s  %10s\n", "Radius", "Data", "Data_Sigma", "Weight", "Cells" );
 //                      for (int b=0; b<Prof[p]->NBin; b++)
-//                         fprintf( File, "%20.14e  %21.14e  %21.14e  %10ld\n",
+//                         fprintf( File, "%20.14e  %21.14e  %21.14e  %21.14e  %10ld\n",
 //                                  Prof[p]->Radius[b], Prof[p]->Data[b], Prof[p]->Data_Sigma[b], Prof[p]->Weight[b], Prof[p]->NCell[b] );
 //                      fclose( File );
 //                   }
@@ -538,8 +538,8 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 //                   update the profile
                      const int bin = Patch_Bin[TID][LocalID][k][j][i];
 
-                     OMP_Data      [p][TID][bin] += Patch_Data[TID][LocalID][k][j][i]*Weight;
-                     OMP_Data_Sigma[p][TID][bin] += Patch_Data[TID][LocalID][k][j][i]*Patch_Data[TID][LocalID][k][j][i]*Weight;
+                     OMP_Data      [p][TID][bin] +=      Patch_Data[TID][LocalID][k][j][i]*Weight;
+                     OMP_Data_Sigma[p][TID][bin] += SQR( Patch_Data[TID][LocalID][k][j][i] )*Weight;
                      OMP_Weight    [p][TID][bin] += Weight;
                      OMP_NCell     [p][TID][bin] ++;
                   } // i,j,k
@@ -600,18 +600,18 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
    {
       if ( MPI_Rank == 0 )
       {
-         MPI_Reduce( MPI_IN_PLACE,    Prof[p]->Data,       Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-         MPI_Reduce( MPI_IN_PLACE,    Prof[p]->Data_Sigma, Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-         MPI_Reduce( MPI_IN_PLACE,    Prof[p]->Weight,     Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-         MPI_Reduce( MPI_IN_PLACE,    Prof[p]->NCell ,     Prof[p]->NBin, MPI_LONG,   MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( MPI_IN_PLACE,        Prof[p]->Data,       Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( MPI_IN_PLACE,        Prof[p]->Data_Sigma, Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( MPI_IN_PLACE,        Prof[p]->Weight,     Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( MPI_IN_PLACE,        Prof[p]->NCell,      Prof[p]->NBin, MPI_LONG,   MPI_SUM, 0, MPI_COMM_WORLD );
       }
 
       else
       {
-         MPI_Reduce( Prof[p]->Data,       NULL,            Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-         MPI_Reduce( Prof[p]->Data_Sigma, NULL,            Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-         MPI_Reduce( Prof[p]->Weight,     NULL,            Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-         MPI_Reduce( Prof[p]->NCell,      NULL,            Prof[p]->NBin, MPI_LONG,   MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( Prof[p]->Data,       NULL,                Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( Prof[p]->Data_Sigma, NULL,                Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( Prof[p]->Weight,     NULL,                Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( Prof[p]->NCell,      NULL,                Prof[p]->NBin, MPI_LONG,   MPI_SUM, 0, MPI_COMM_WORLD );
       }
    }
 #  endif
@@ -626,10 +626,13 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 //       skip empty bins since both their data and weight are zero
          if ( Prof[p]->NCell[b] > 0L )
          {
-            Prof[p]->Data[b] /= Prof[p]->Weight[b];
-            Prof[p]->Data_Sigma[b] = Prof[p]->Data_Sigma[b]/Prof[p]->Weight[b] - Prof[p]->Data[b]*Prof[p]->Data[b];
-            if (Prof[p]->Data_Sigma[b] < 0.0)   Prof[p]->Data_Sigma[b] = 0.0;
-            else                                Prof[p]->Data_Sigma[b] = sqrt(Prof[p]->Data_Sigma[b]);
+            Prof[p]->Data      [b] /= Prof[p]->Weight[b];
+            Prof[p]->Data_Sigma[b]  = Prof[p]->Data_Sigma[b]/Prof[p]->Weight[b] - SQR( Prof[p]->Data[b] );
+
+            if ( Prof[p]->Data_Sigma[b] < 0.0 )
+               Aux_Error( ERROR_INFO, "Prof[%d]->Data_Sigma[%d] = %14.7e < 0.0 !!\n", p, b, Prof[p]->Data_Sigma[b] );
+            else
+               Prof[p]->Data_Sigma[b] = sqrt(Prof[p]->Data_Sigma[b]);
          }
       }
    }

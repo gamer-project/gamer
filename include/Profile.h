@@ -20,7 +20,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                Allocated   : Whether or not member arrays such as Radius[] have been allocated
 //                Radius      : Radial coordinate at each bin
 //                Data        : Profile data at each bin
-//                Data_Sigma  : Standard deviation of Data at each bin
+//                Data_Sigma  : Standard deviation of profile data at each bin
 //                Weight      : Total weighting at each bin
 //                NCell       : Number of cells at each bin
 //
