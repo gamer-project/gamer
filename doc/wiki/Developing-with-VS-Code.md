@@ -40,7 +40,7 @@ Before starting to run the tasks below, **set the working directory** by selecti
 
 ### Configure GAMER
 
-Select `Terminal` > `Run Task...` > `build-GAMER` to configure GAMER with the `generate_make.sh` script in your working directory.
+Select `Terminal` > `Run Task...` > `config-GAMER` to configure GAMER with the `generate_make.sh` script in your working directory.
 
 ### Build
 
