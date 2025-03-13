@@ -6,11 +6,10 @@ body:
   - type: markdown
     attributes:
       value: |
-        🐟🐟🐟🐟🐟🐟🐟🐟🐟🐟
-        🐟🐳 DEV TEAM ONLY 🐳🐟
-        🐟🐟🐟🐟🐟🐟🐟🐟🐟🐟
+        🐟🐟🐟🐟🐟🐟🐟🐟🐟|| DEV TEAM ONLY ||🐟🐟🐟🐟🐟🐟🐟🐟🐟
         This is a template for the development team to assign a new feature.
         If you are not a member of the team, please do not use this template.
+        🐟🐟🐟🐟🐟🐟🐟🐟🐟|| DEV TEAM ONLY ||🐟🐟🐟🐟🐟🐟🐟🐟🐟
 
   - type: textarea
     id: goal
