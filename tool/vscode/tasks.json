@@ -6,7 +6,7 @@
             "command": "sh build.sh",
             "group": {
                 "kind": "build",
-                "isDefault": true
+                "isDefault": false
             },
             "options": {
                 "cwd": "${workspaceFolder}/.vscode"
@@ -59,6 +59,20 @@
                 "cwd": "${workspaceFolder}/.vscode"
             },
             "detail": "Update launch.json with the path to your lldb-mi executable for mac user.",
+            "problemMatcher": []
+        },
+        {
+            "label": "config-and-build",
+            "dependsOn": [
+                "config-GAMER",
+                "build-GAMER"
+            ],
+            "dependsOrder": "sequence",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Run config-GAMER and build-GAMER.",
             "problemMatcher": []
         }
     ],

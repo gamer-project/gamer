@@ -38,7 +38,10 @@ Select `Terminal` > `Run Task...` > `config-GAMER` to configure GAMER with the `
 
 ### Build
 
-After configuring GAMER with [configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Configure.py) or `generate_make.sh`, select `Terminal` > `Run Build Task...` or press `Ctrl + Shift + B` to start the build task. This will update the macros, providing IntelliSense highlighting support.
+After configuring GAMER with [configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Configure.py) or `generate_make.sh`, select `Terminal` > `Run Task...` > `build-GAMER` to start the build task. This will update the macros, providing IntelliSense highlighting support.
+
+> [!TIP]
+> If you want to configure and build GAMER in one click, select `Terminal` > `Run Build Task...` or press `Ctrl + Shift + B` to run `config-GAMER` and `build-GAMER` in sequence.
 
 > [!IMPORTANT]  
 > To make sure the debugger works correctly, ensure the compiler flags in `Makefile` are set to `-g -O0`. (TBD: Add a argument to `configure.py` to set the flags.)
