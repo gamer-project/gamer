@@ -19,7 +19,6 @@ body:
     attributes:
       label: 🔎 What happened?
       description: Explain the problem and expected behavior.
-      placeholder: Tell us what you see!
     validations:
       required: true
 
@@ -63,7 +62,7 @@ body:
     id: operation_system
     attributes:
       label: 💻 Operating system
-      description: Please specify the OS of your machine.
+      description: Please specify the OS of your machine. If your OS is not listed, please select "Other" and specify it in the "Additional information" section.
       multiple: false
       options:
         - linux (x86)
@@ -72,7 +71,7 @@ body:
         - macOS (Apple silicon)
         - Windows (x86)
         - Windows (ARM)
-        - Other (Please specify below)
+        - Other (Please specify)
 
   - type: textarea
     id: machine
@@ -111,10 +110,10 @@ body:
         - label: YT
         - label: Tool
         - label: Docs
+        - label: Other
 
   - type: textarea
     id: additional_info
     attributes:
       label: 💬 Additional information
       description: Please provide any additional information that may help diagnose the issue (e.g., screenshots, stdout/stderr, and `Record__Note`).
-      placeholder: Any other details you think might be relevant. e.g. screen shots, logs, etc.

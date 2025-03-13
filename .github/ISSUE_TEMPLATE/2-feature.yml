@@ -16,7 +16,6 @@ body:
     attributes:
       label: 💭 Proposed feature
       description: Provide a clear and concise description of the feature you are suggesting.
-      placeholder: A clear and concise description of your feature.
     validations:
       required: true
 
@@ -25,7 +24,6 @@ body:
     attributes:
       label: 🔆 Use case
       description: Describe where this feature would be applied.
-      placeholder: Describe specific use cases in detail.
     validations:
       required: true
       
@@ -34,7 +32,6 @@ body:
     attributes:
       label: 💡 Motivation
       description: Explain why this feature is needed and how it benefits the project.
-      placeholder: Describe the reason and expected benefits.
     validations:
       required: true
 
@@ -43,7 +40,6 @@ body:
     attributes:
       label: 💬 Additional information
       description: Provide any additional information or context that may be helpful.
-      placeholder: Any other relevant details or context.
 
   - type: checkboxes
     id: labels
@@ -63,3 +59,4 @@ body:
         - label: YT
         - label: Tool
         - label: Docs
+        - label: Other
