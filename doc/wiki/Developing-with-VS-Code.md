@@ -20,12 +20,6 @@ This guide provides step-by-step instructions on how to set up and use Visual St
 > [!TIP]  
 > With remote-ssh, open the directory as an absoluted path to avoid [this problem](https://github.com/microsoft/vscode-cpptools/issues/4818).
 
-### Disabling auto-formatting
-
-To disable auto-formatting in VS Code, add the following to your `settings.json`:
-
-Access `settings.json` by navigating to `File` > `Preferences` > `Settings`, then search for `C_Cpp.formatting` and set it to `"disabled"`.
-
 ### Configuring VS Code to integrate with GAMER
 
 Run the following script from the root directory of the GAMER project:
@@ -66,5 +60,6 @@ Select `Terminal` > `Run Task...` > `clean-work-dir` to clean the working direct
 These are the configuration files that are copied to the `.vscode` directory:
 - `c_cpp_properties.json`: Configures IntelliSense settings, including include paths and macros. See the [official documentation](https://code.visualstudio.com/docs/cpp/c-cpp-properties-schema-reference) for more information and the [document of IntelliSense](https://code.visualstudio.com/docs/editor/intellisense) to learn about IntelliSense in VS Code.
 - `launch.json`: Contains debugging configurations such as executable paths and arguments. See the [official documentation](https://code.visualstudio.com/docs/cpp/launch-json-reference) for more information.
+- `settings.json`: Specifies editor settings, such as the spaces for indentation and the type of the file without extension. See the [official documentation](https://code.visualstudio.com/docs/editor/settings) for more information.
 - `tasks.json`: Specifies the build and other dependent tasks. Learn more about [tasks in VS Code](https://code.visualstudio.com/docs/editor/tasks).
 - `gamercpp.natvis`: Defines custom visualizations for data structures in the debugger. Learn more about [customizing the visualization of data structures](https://learn.microsoft.com/en-us/visualstudio/debugger/create-custom-views-of-native-objects?view=vs-2022).
