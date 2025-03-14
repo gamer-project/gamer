@@ -11,8 +11,8 @@ static void End_FFTW_PowerSpectrum();
 
 // Poi : plan for the self-gravity Poisson solver
 #ifdef GRAVITY
-root_fftw::real_plan_nd FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
-static void Init_FFTW_Poisson( const int StartupFlag );
+root_fftw::real_plan_nd FFTW_Plan_Poi[NLEVEL], FFTW_Plan_Poi_Inv[NLEVEL];
+static void Init_FFTW_Poisson( const int StartupFlag, const int lv );
 static void End_FFTW_Poisson();
 #endif // #ifdef GRAVITY
 
@@ -70,11 +70,15 @@ int ComputeTotalSize( int* size )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_FFTW
 // Description :  Create the FFTW plans
+//
+// Parameter   :  lv : Target level
 //-------------------------------------------------------------------------------------------------------
-void Init_FFTW()
+void Init_FFTW( const int lv )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
+
+   if ( FFTW_Inited[lv] )   return;
 
    static bool FirstTime = true;
 
@@ -146,19 +150,21 @@ void Init_FFTW()
       FirstTime = false;
    } // if ( FirstTime )
 
-   Init_FFTW_PowerSpectrum( StartupFlag );
+   if ( lv == 0 )   Init_FFTW_PowerSpectrum( StartupFlag );
 
 #  ifdef GRAVITY
-   Init_FFTW_Poisson( StartupFlag );
+   Init_FFTW_Poisson( StartupFlag, lv );
 #  endif
 
 #  if ( MODEL == ELBDM )
-   Init_FFTW_ELBDMSpectral( StartupFlag );
+   if ( lv == 0 )   Init_FFTW_ELBDMSpectral( StartupFlag );
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
-   Init_FFTW_GramFE( StartupFlag );
+   if ( lv == 0 )   Init_FFTW_GramFE( StartupFlag );
 #  endif // #if ( WAVE_SCHEME == WAVE_GRAMFE )
 #  endif // #if ( MODEL == ELBDM )
+
+   FFTW_Inited[lv] = true;
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
@@ -268,14 +274,15 @@ void End_FFTW_PowerSpectrum()
 // Description :  Create the FFTW plan for the self-gravity Poisson solver
 //
 // Parameter   :  StartupFlag : Initialize FFTW plan method
+//                lv          : Target level
 //
 // Return      :  none
 //-------------------------------------------------------------------------------------------------------
-void Init_FFTW_Poisson( const int StartupFlag )
+void Init_FFTW_Poisson( const int StartupFlag, const int lv )
 {
 
 // determine the FFT size
-   int Gravity_FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
+   int Gravity_FFT_Size[3] = { NX0_TOT[0]*(int)(1L<<lv), NX0_TOT[1]*(int)(1L<<lv), NX0_TOT[2]*(int)(1L<<lv) };
 
 // the zero-padding method is adopted for the isolated BC
    if ( OPT__BC_POT == BC_POT_ISOLATED )
@@ -296,8 +303,8 @@ void Init_FFTW_Poisson( const int StartupFlag )
 #  endif
 
 // create plans
-   FFTW_Plan_Poi     = root_fftw_create_3d_r2c_plan( Gravity_FFT_Size, RhoK, StartupFlag );
-   FFTW_Plan_Poi_Inv = root_fftw_create_3d_c2r_plan( Gravity_FFT_Size, RhoK, StartupFlag );
+   FFTW_Plan_Poi[lv]     = root_fftw_create_3d_r2c_plan( Gravity_FFT_Size, RhoK, StartupFlag );
+   FFTW_Plan_Poi_Inv[lv] = root_fftw_create_3d_c2r_plan( Gravity_FFT_Size, RhoK, StartupFlag );
 
 // free memory for arrays in fftw3
 #  if ( SUPPORT_FFTW == FFTW3 )
@@ -317,8 +324,13 @@ void Init_FFTW_Poisson( const int StartupFlag )
 void End_FFTW_Poisson()
 {
 
-   root_fftw::destroy_real_plan_nd( FFTW_Plan_Poi     );
-   root_fftw::destroy_real_plan_nd( FFTW_Plan_Poi_Inv );
+   for (int lv=0; lv<NLEVEL; lv++)
+   {
+      if ( ! FFTW_Inited[lv] )   continue;
+
+      root_fftw::destroy_real_plan_nd( FFTW_Plan_Poi[lv]     );
+      root_fftw::destroy_real_plan_nd( FFTW_Plan_Poi_Inv[lv] );
+   }
 
 } // FUNCITON : End_FFTW_Poisson
 #endif // #ifdef GRAVITY
@@ -480,11 +492,13 @@ void End_FFTW_GramFE()
 //                InPlacePad     : Whether or not to pad the array size for in-place real-to-complex FFT
 //                ForPoisson     : Preparing the density field for the Poisson solver
 //                AddExtraMass   : Adding an extra density field for computing gravitational potential (only works with ForPoisson)
+//                lv             : Target level
 //-------------------------------------------------------------------------------------------------------
 void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf_SIdx, long *RecvBuf_SIdx,
                  int **List_PID, int **List_k, long *List_NSend_Var, long *List_NRecv_Var,
                  const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
-                 const double PrepTime, const long TVar, const bool InPlacePad, const bool ForPoisson, const bool AddExtraMass )
+                 const double PrepTime, const long TVar, const bool InPlacePad, const bool ForPoisson,
+                 const bool AddExtraMass, const int lv )
 {
 
 // check
@@ -507,13 +521,12 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
                  local_nz, List_z_start[MPI_Rank+1] - List_z_start[MPI_Rank] );
 #  endif // GAMER_DEBUG
 
-
    const int SSize[2]   = { ( InPlacePad ? 2*(FFT_Size[0]/2+1) : FFT_Size[0] ), FFT_Size[1] };     // padded slab size in the x and y directions
    const int PSSize     = PS1*PS1;                                // patch slice size
-// const int MemUnit    = amr->NPatchComma[0][1]*PS1/MPI_NRank;   // set arbitrarily
-   const int MemUnit    = amr->NPatchComma[0][1]*PS1;             // set arbitrarily
+// const int MemUnit    = amr->NPatchComma[lv][1]*PS1/MPI_NRank;  // set arbitrarily
+   const int MemUnit    = amr->NPatchComma[lv][1]*PS1;            // set arbitrarily
    const int AveNz      = FFT_Size[2]/MPI_NRank + ( ( FFT_Size[2]%MPI_NRank == 0 ) ? 0 : 1 );    // average slab thickness
-   const int Scale0     = amr->scale[0];
+   const int Scale      = amr->scale[lv];
 
    int   Cr[3];                        // corner coordinates of each patch normalized to the base-level grid size
    int   BPos_z;                       // z coordinate of each patch slice in the simulation box
@@ -555,12 +568,12 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 
    real (*VarPatch)[PS1][PS1][PS1] = new real [8*NPG][PS1][PS1][PS1];
 
-   for (int PID0=0; PID0<amr->NPatchComma[0][1]; PID0+=8)
+   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
    {
 //    even with NSIDE_00 and GhostSize=0, we still need OPT__BC_FLU to determine whether periodic BC is adopted
 //    for depositing particle mass onto grids.
 //    also note that we do not check minimum density here since no ghost zones are required
-      Prepare_PatchData( 0, PrepTime, VarPatch[0][0][0], NULL, GhostSize, NPG, &PID0, TVar, _NONE,
+      Prepare_PatchData( lv, PrepTime, VarPatch[0][0][0], NULL, GhostSize, NPG, &PID0, TVar, _NONE,
                          IntScheme, INT_NONE, UNIT_PATCH, NSide_None, IntPhase_No, OPT__BC_FLU, PotBC_None,
                          MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
@@ -569,20 +582,20 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 //    add extra mass source for gravity if required
       if ( ForPoisson  &&  AddExtraMass )
       {
-         const double dh = amr->dh[0];
+         const double dh = amr->dh[lv];
 
          for (int PID=PID0, LocalID=0; PID<PID0+8; PID++, LocalID++)
          {
-            const double x0 = amr->patch[0][0][PID]->EdgeL[0] + 0.5*dh;
-            const double y0 = amr->patch[0][0][PID]->EdgeL[1] + 0.5*dh;
-            const double z0 = amr->patch[0][0][PID]->EdgeL[2] + 0.5*dh;
+            const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
+            const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
+            const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
 
             double x, y, z;
 
             for (int k=0; k<PS1; k++)  {  z = z0 + k*dh;
             for (int j=0; j<PS1; j++)  {  y = y0 + j*dh;
             for (int i=0; i<PS1; i++)  {  x = x0 + i*dh;
-               VarPatch[LocalID][k][j][i] += Poi_AddExtraMassForGravity_Ptr( x, y, z, Time[0], 0, NULL );
+               VarPatch[LocalID][k][j][i] += Poi_AddExtraMassForGravity_Ptr( x, y, z, Time[lv], lv, NULL );
             }}}
          }
       }
@@ -592,7 +605,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 //    copy data to the send buffer
       for (int PID=PID0, LocalID=0; PID<PID0+8; PID++, LocalID++)
       {
-         for (int d=0; d<3; d++)    Cr[d] = amr->patch[0][0][PID]->corner[d] / Scale0;
+         for (int d=0; d<3; d++)    Cr[d] = amr->patch[0][lv][PID]->corner[d] / Scale;
 
          for (int k=0; k<PS1; k++)
          {
@@ -681,8 +694,8 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 #  ifdef GAMER_DEBUG
    const long NSend_Total  = Send_Disp_Var[MPI_NRank-1] + List_NSend_Var[MPI_NRank-1];
    const long NRecv_Total  = Recv_Disp_Var[MPI_NRank-1] + List_NRecv_Var[MPI_NRank-1];
-   const long NSend_Expect = (long)amr->NPatchComma[0][1]*(long)CUBE(PS1);
-   const long NRecv_Expect = (long)NX0_TOT[0]*(long)NX0_TOT[1]*(long)NRecvSlice;
+   const long NSend_Expect = (long)amr->NPatchComma[lv][1]*(long)CUBE(PS1);
+   const long NRecv_Expect = (long)NX0_TOT[0]*(long)(1<<lv)*(long)NX0_TOT[1]*(long)(1<<lv)*(long)NRecvSlice;
 
    if ( NSend_Total != NSend_Expect )  Aux_Error( ERROR_INFO, "NSend_Total = %ld != expected value = %ld !!\n",
                                                   NSend_Total, NSend_Expect );
@@ -717,7 +730,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 
 
 // 5. store the received data to the padded array "VarS" for FFTW
-   const long NPSlice = (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice/PSSize;  // total number of received patch slices
+   const long NPSlice = (long)NX0_TOT[0]*(long)(1L<<lv)*NX0_TOT[1]*(long)(1L<<lv)*NRecvSlice/PSSize;  // total number of received patch slices
    long  dSIdx, Counter = 0;
    real *VarS_Ptr = NULL;
 
@@ -800,10 +813,11 @@ int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Gues
 //                NSendSlice : Total number of z slices need to be sent to other ranks (could be zero in the isolated BC)
 //                TVar       : Target variable to be prepared
 //                InPlacePad : Whether or not to pad the array size for in-place real-to-complex FFT
+//                lv         : Target level
 //-------------------------------------------------------------------------------------------------------
 void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx,
                  int **List_PID, int **List_k, long *List_NSend, long *List_NRecv, const int local_nz, const int FFT_Size[],
-                 const int NSendSlice, const long TVar, const bool InPlacePad )
+                 const int NSendSlice, const long TVar, const bool InPlacePad, const int lv )
 {
 
 // check
@@ -835,8 +849,8 @@ void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveS
 
 // 1. store the evaluated data to the send buffer
    const int   SSize[2]   = { ( InPlacePad ? 2*(FFT_Size[0]/2+1) : FFT_Size[0] ), FFT_Size[1] };  // padded slab size in the x and y directions
-   const int   PSSize     = PS1*PS1;                                          // patch slice size
-   const long  NPSlice    = (long)NX0_TOT[0]*NX0_TOT[1]*NSendSlice/PSSize;    // total number of patch slices to be sent
+   const int   PSSize     = PS1*PS1;                                                              // patch slice size
+   const long  NPSlice    = (long)NX0_TOT[0]*(long)(1<<lv)*NX0_TOT[1]*(long)(1<<lv)*NSendSlice/PSSize;        // total number of patch slices to be sent
    const real *VarS_Ptr   = NULL;
 
    long SIdx, dSIdx, Counter = 0;
@@ -884,10 +898,10 @@ void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveS
          k   = List_k  [r][t];
 
          if ( TVarIdx < NCOMP_TOTAL )
-            memcpy( amr->patch[SaveSg][0][PID]->fluid[TVarIdx][k], RecvPtr, PSSize*sizeof(real) );
+            memcpy( amr->patch[SaveSg][lv][PID]->fluid[TVarIdx][k], RecvPtr, PSSize*sizeof(real) );
 #        ifdef GRAVITY
          else if ( TVarIdx == NCOMP_TOTAL+NDERIVE ) // TVar == _POTE
-            memcpy( amr->patch[SaveSg][0][PID]->pot[k], RecvPtr, PSSize*sizeof(real) );
+            memcpy( amr->patch[SaveSg][lv][PID]->pot[k], RecvPtr, PSSize*sizeof(real) );
 #        endif
          else
             Aux_Error( ERROR_INFO, "incorrect target variable index %s = %d !!\n", "TVarIdx", TVarIdx );
