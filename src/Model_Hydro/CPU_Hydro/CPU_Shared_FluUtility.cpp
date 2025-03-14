@@ -932,7 +932,7 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[],
 
 //       print out the unphysical values
 #        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
-         if ( UnphyCell && Verbose )
+         if ( UnphyCell  &&  Verbose )
          {
             printf( "ERROR : unphysical conserved variables at file <%s>, line <%d>, function <%s> !!\n",
                     File, Line, Function );
@@ -1008,7 +1008,7 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[],
 
 //       print out the unphysical values
 #        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
-         if ( UnphyCell && Verbose )
+         if ( UnphyCell  &&  Verbose )
          {
             printf( "ERROR : unphysical primitive variables at file <%s>, line <%d>, function <%s> !!\n",
                     File, Line, Function );
@@ -1045,7 +1045,7 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[],
 
 //       print out the unphysical values
 #        if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
-         if ( UnphyCell && Verbose )
+         if ( UnphyCell  &&  Verbose )
          {
             printf( "ERROR : unphysical passive scalars at file <%s>, line <%d>, function <%s> !!\n",
                     File, Line, Function );
@@ -1098,7 +1098,8 @@ GPU_DEVICE
 bool Hydro_IsUnphysical_Single( const real Fields[], const char SingleFieldName[], const real Min, const real Max,
                                 const char File[], const int Line, const char Function[], const IsUnphVerb_t Verbose )
 {
-   // check
+
+// check
 #  ifdef GAMER_DEBUG
    if ( Fields == NULL )   printf( "ERROR : access a NULL pointer at file <%s>, line <%d>, function <%s> !!\n",
                                    File, Line, Function );
@@ -1112,7 +1113,7 @@ bool Hydro_IsUnphysical_Single( const real Fields[], const char SingleFieldName[
 
 // print out the unphysical value
 #  if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
-   if ( UnphyCell && Verbose )
+   if ( UnphyCell  &&  Verbose )
       printf( "ERROR : invalid %s = %14.7e (min %14.7e, max %14.7e) at file <%s>, line <%d>, function <%s> !!\n",
                (SingleFieldName==NULL)?"unknown field":SingleFieldName, Fields[0], Min, Max,
                File, Line, Function );
