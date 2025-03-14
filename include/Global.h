@@ -183,7 +183,7 @@ extern int           Pot_ParaBuf;         // number of parallel buffers to excha
 extern int           Rho_ParaBuf;         // number of parallel buffers to exchange density for the Poisson solver
 extern bool          FFTW_Inited[NLEVEL];
 extern bool          GreenFuncK_Inited[NLEVEL];
-extern real         *GreenFuncK;
+extern real         *GreenFuncK[NLEVEL];
 extern double        GFUNC_COEFF0;
 extern double        DT__GRAVITY;
 extern double        NEWTON_G;
