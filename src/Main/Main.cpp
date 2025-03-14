@@ -172,7 +172,7 @@ int                  Pot_ParaBuf, Rho_ParaBuf;
 
 bool                 FFTW_Inited[NLEVEL] = { false };
 bool                 GreenFuncK_Inited[NLEVEL] = { false };
-real                *GreenFuncK = NULL;
+real                *GreenFuncK[NLEVEL] = { NULL };
 double               GFUNC_COEFF0;
 double               DT__GRAVITY;
 double               NEWTON_G;
