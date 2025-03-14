@@ -17,8 +17,8 @@ This guide provides step-by-step instructions on how to set up and use Visual St
    - Go to `File` > `Open Folder...`.
    - Select your GAMER project directory.
 
-> [!TIP]  
-> With remote-ssh, open the directory as an absoluted path to avoid [this problem](https://github.com/microsoft/vscode-cpptools/issues/4818).
+> [!TIP]
+> With remote-ssh, open the directory as an absolute path to avoid [this problem](https://github.com/microsoft/vscode-cpptools/issues/4818).
 
 ### Configuring VS Code to integrate with GAMER
 
@@ -43,14 +43,14 @@ After configuring GAMER with [configure.py](https://github.com/gamer-project/gam
 > [!TIP]
 > If you want to configure and build GAMER in one click, select `Terminal` > `Run Build Task...` or press `Ctrl + Shift + B` to run `config-GAMER` and `build-GAMER` in sequence.
 
-> [!IMPORTANT]  
+> [!IMPORTANT]
 > To make sure the debugger works correctly, ensure the compiler flags in `Makefile` are set to `-g -O0`. (TBD: Add a argument to `configure.py` to set the flags.)
 
 ### Start debugging
 
 To start debugging GAMER, select `Run` > `Start Debugging` or press `F5`. After enter the working directory, the debugger will be launched. See the [official documentation](https://code.visualstudio.com/docs/editor/debugging) to learn more about debugging with VS Code.
 
-> [!NOTE]  
+> [!NOTE]
 > If `gdb` is not supported on macOS, you can set up `lldb` as the debugger. Make sure [`lldb-mi`](https://github.com/lldb-tools/lldb-mi) is installed. Then select `Terminal` > `Run Task...` > `updated_mac_launch`. This task updates the debugger path in `launch.json` to your `lldb-mi` installation.
 > For manual setup or additional details, refer to the [official documentation](https://code.visualstudio.com/docs/cpp/launch-json-reference).
 
