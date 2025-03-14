@@ -2,10 +2,10 @@ import re
 import json
 
 '''
-This script updates the "defines" section in the .vscode/c_cpp_properties.json file in Visual Studio Code 
-by directly parsing the Makefile.log file to extract relevant compiler macros (definitions). It provides an automated 
-way to synchronize project-specific preprocessor definitions with the VSCode configuration. This approach allows 
-VSCode to recognize the defines directly from your build configuration, improving VSCode IntelliSense and error 
+This script updates the "defines" section in the .vscode/c_cpp_properties.json file in Visual Studio Code
+by directly parsing the Makefile.log file to extract relevant compiler macros (definitions). It provides an automated
+way to synchronize project-specific preprocessor definitions with the VSCode configuration. This approach allows
+VSCode to recognize the defines directly from your build configuration, improving VSCode IntelliSense and error
 detection without manual intervention.
 
 Usage:
@@ -13,7 +13,7 @@ Usage:
 2. Set the paths to `Makefile.log` and `c_cpp_properties.json` in the script as follows:
    - `makefile_log_path`: Path to `Makefile.log`, which contains compiler settings output (default: "../src/Makefile.log").
    - `c_cpp_properties_path`: Path to the VSCode C++ configuration file (default: "c_cpp_properties.json").
-3. Run the script each time `Makefile.log` is updated, or set it as a pre-build or post-build task in VSCode 
+3. Run the script each time `Makefile.log` is updated, or set it as a pre-build or post-build task in VSCode
    to keep the configuration in sync.
 '''
 # Path to Makefile.log and c_cpp_properties.json
