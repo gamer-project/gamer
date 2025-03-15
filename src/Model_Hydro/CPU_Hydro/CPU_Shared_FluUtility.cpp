@@ -43,7 +43,7 @@ static bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[],
                                 const real *const EoS_Table[EOS_NTABLE_MAX],
                                 const char File[], const int Line, const char Function[], const IsUnphVerb_t Verbose );
 GPU_DEVICE
-static bool Hydro_IsUnphysical_Single( const real Fields[], const char SingleFieldName[], const real Min, const real Max,
+static bool Hydro_IsUnphysical_Single( const real Field, const char SingleFieldName[], const real Min, const real Max,
                                        const char File[], const int Line, const char Function[], const IsUnphVerb_t Verbose );
 #ifdef SRHD
 GPU_DEVICE
@@ -1082,7 +1082,7 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[],
 // Function    :  Hydro_IsUnphysical_Single
 // Description :  Check if the input field is NAN or lies outside the accepted range
 //
-// Parameter   :  Fields            : Field data to be checked
+// Parameter   :  Field             : Field data to be checked
 //                SingleFieldName   : Name of the target field
 //                Min/Max           : Accepted range
 //                File              : __FILE__
@@ -1095,27 +1095,21 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[],
 //                false --> Otherwise
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-bool Hydro_IsUnphysical_Single( const real Fields[], const char SingleFieldName[], const real Min, const real Max,
+bool Hydro_IsUnphysical_Single( const real Field, const char SingleFieldName[], const real Min, const real Max,
                                 const char File[], const int Line, const char Function[], const IsUnphVerb_t Verbose )
 {
-
-// check
-#  ifdef GAMER_DEBUG
-   if ( Fields == NULL )   printf( "ERROR : access a NULL pointer at file <%s>, line <%d>, function <%s> !!\n",
-                                   File, Line, Function );
-#  endif
 
    bool UnphyCell = false;
 
 // check if the input single field is NAN or lies outside the accepted range
-   if ( Fields[0] < Min  ||  Fields[0] > Max  ||  Fields[0] != Fields[0] )
+   if ( Field < Min  ||  Field > Max  ||  Field != Field )
       UnphyCell = true;
 
 // print out the unphysical value
 #  if ( !defined __CUDACC__  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
    if ( UnphyCell  &&  Verbose )
       printf( "ERROR : invalid %s = %14.7e (min %14.7e, max %14.7e) at file <%s>, line <%d>, function <%s> !!\n",
-               (SingleFieldName==NULL)?"unknown field":SingleFieldName, Fields[0], Min, Max,
+               (SingleFieldName==NULL)?"unknown field":SingleFieldName, Field, Min, Max,
                File, Line, Function );
 #  endif
 
