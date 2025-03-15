@@ -5,11 +5,31 @@
 
 // common headers
 #include "ReadPara.h"
+#ifdef SUPPORT_HDF5
+#include "HDF5_Typedef.h"
+#else
+struct HDF5_Output_t
+{
+   void Add( const char NewKey[], void* NewPtr )
+   {
+   }
+};
+#endif
+
+
+// common macro
+#  define LOAD_PARA( load_mode, para_name, para_ptr, ... )                                                                \
+   {                                                                                                                      \
+      if      ( load_mode == LOAD_HDF5_OUTPUT )    HDF5_InputTest->Add( para_name, para_ptr );                            \
+      else if ( load_mode == LOAD_READPARA    )    ReadPara->Add( para_name, para_ptr, __VA_ARGS__ );                     \
+      else                                         Aux_Error( ERROR_INFO, "unsupported load_mode (%d) !!\n", load_mode ); \
+   }
 
 
 // common function prototypes
 static void Validate();
 static void SetParameter();
+static void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest );
 static void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                        const int lv, double AuxArray[] );
 #ifdef MHD
@@ -34,6 +54,10 @@ extern void (*Init_Field_User_Ptr)();
 extern void (*Init_User_Ptr)();
 extern void (*Init_User_AfterPoisson_Ptr)();
 extern void (*Output_User_Ptr)();
+#ifdef SUPPORT_HDF5
+extern void (*Output_HDF5_InputTest_Ptr)( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest );
+extern void (*Output_HDF5_UserPara_Ptr)( HDF5_Output_t *HDF5_UserPara );
+#endif
 extern void (*Output_UserWorkBeforeOutput_Ptr)();
 extern bool (*Flag_Region_Ptr)( const int i, const int j, const int k, const int lv, const int PID );
 extern bool (*Flag_User_Ptr)( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
