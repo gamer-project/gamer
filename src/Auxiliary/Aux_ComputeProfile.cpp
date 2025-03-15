@@ -13,7 +13,7 @@ extern void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, 
 // Note        :  1. Results will be stored in the input "Prof" object
 //                   --> Prof->Radius    []: Radial coordinate at each bin
 //                       Prof->Data      []: Profile data at each bin
-//                       Prof->Data_Sigma[]: Standard devitation of profile data at each bin
+//                       Prof->Data_Sigma[]: Standard deviation of profile data at each bin
 //                       Prof->Weight    []: Total weighting at each bin
 //                       Prof->NCell     []: Number of cells at each bin
 //                       Prof->NBin        : Total number of bins
@@ -538,7 +538,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 //                   update the profile
                      const int bin = Patch_Bin[TID][LocalID][k][j][i];
 
-                     OMP_Data      [p][TID][bin] +=      Patch_Data[TID][LocalID][k][j][i]*Weight;
+                     OMP_Data      [p][TID][bin] +=      Patch_Data[TID][LocalID][k][j][i]  *Weight;
                      OMP_Data_Sigma[p][TID][bin] += SQR( Patch_Data[TID][LocalID][k][j][i] )*Weight;
                      OMP_Weight    [p][TID][bin] += Weight;
                      OMP_NCell     [p][TID][bin] ++;
@@ -632,7 +632,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
             if ( Prof[p]->Data_Sigma[b] < 0.0 )
                Aux_Error( ERROR_INFO, "Prof[%d]->Data_Sigma[%d] = %14.7e < 0.0 !!\n", p, b, Prof[p]->Data_Sigma[b] );
             else
-               Prof[p]->Data_Sigma[b] = sqrt(Prof[p]->Data_Sigma[b]);
+               Prof[p]->Data_Sigma[b] = sqrt( Prof[p]->Data_Sigma[b] );
          }
       }
    }
