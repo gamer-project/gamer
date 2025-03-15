@@ -290,6 +290,7 @@ extern int                   SF_CREATE_STAR_RSEED;
 extern int                   SF_CREATE_STAR_DET_RANDOM;
 extern int                   SF_CREATE_STAR_MIN_LEVEL;
 extern double                SF_CREATE_STAR_MIN_GAS_DENS;
+extern double                SF_CREATE_STAR_MAX_GAS_JEANSL;
 extern double                SF_CREATE_STAR_MASS_EFF;
 extern double                SF_CREATE_STAR_MIN_STAR_MASS;
 extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
