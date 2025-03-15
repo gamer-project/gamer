@@ -41,12 +41,12 @@ After configuring GAMER with [configure.py](https://github.com/gamer-project/gam
 > [!TIP]
 > To configure and build GAMER in one step, select `Terminal` > `Run Build Task...` or press `Ctrl + Shift + B` to run `config-GAMER` and `build-GAMER` sequentially.
 
-> [!IMPORTANT]
-> Ensure the compiler flags in `Makefile` are set to `-g -O0` for debugging. (TBD: Add a argument to `configure.py` to set the flags.)
-
 ### Debugging GAMER
 
 To start debugging, select `Run` > `Start Debugging` or press `F5`. After entering the working directory, the debugger will launch. See the [official documentation](https://code.visualstudio.com/docs/editor/debugging) to learn more about debugging in VS Code.
+
+> [!IMPORTANT]
+> Ensure the compiler flags in `Makefile` are set to `-g -O0` for debugging. (TBD: Add an argument to `configure.py` to set these flags.)
 
 > [!NOTE]
 > If `gdb` is not supported on macOS, you can set up `lldb` as the debugger. Ensure [`lldb-mi`](https://github.com/lldb-tools/lldb-mi) is installed, then select `Terminal` > `Run Task...` > `updated_mac_launch`. This updates the debugger path in `launch.json` to your `lldb-mi` installation.
