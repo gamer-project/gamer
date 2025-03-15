@@ -1,16 +1,14 @@
-# Developing GAMER with Visual Studio Code
-
-This guide provides step-by-step instructions on how to set up and use Visual Studio Code (VS Code) for developing the GAMER codebase.
+This guide provides step-by-step instructions for setting up and using Visual Studio Code (VS Code) to develop the GAMER codebase.
 
 ## Setup
 
 ### Prerequisites
 
-- **Quick Start**: Follow the instructions in the [[Quick Start | Quick-Start]] guide to download GAMER and do at least one [[demo | Quick-Start:-1D-Shock-Tube]].
-- **Visual Studio Code**: Download and install from [https://code.visualstudio.com/](https://code.visualstudio.com/).
+- **Quick Start**: Follow the [[Quick Start | Quick-Start]] guide to download GAMER and complete at least one [[demo | Quick-Start:-1D-Shock-Tube]].
+- **Visual Studio Code**: Download and install VS Code from [https://code.visualstudio.com/](https://code.visualstudio.com/).
 - **C/C++ Extension**: Install the "C/C++" extension from the VS Code Marketplace.
 
-### Setting up the workspace
+### Setting Up the Workspace
 
 1. **Launch VS Code**.
 2. **Open the GAMER Project Folder**:
@@ -18,9 +16,9 @@ This guide provides step-by-step instructions on how to set up and use Visual St
    - Select your GAMER project directory.
 
 > [!TIP]
-> With remote-ssh, open the directory as an absolute path to avoid [this problem](https://github.com/microsoft/vscode-cpptools/issues/4818).
+> When using remote-SSH, open the directory as an absolute path to avoid [this issue](https://github.com/microsoft/vscode-cpptools/issues/4818).
 
-### Configuring VS Code to integrate with GAMER
+### Configuring VS Code for GAMER
 
 Run the following script from the root directory of the GAMER project:
 ```bash
@@ -30,39 +28,39 @@ This script copies the necessary configuration files to the `.vscode` directory,
 
 ## Developing with VS Code
 
-Before starting to run the tasks below, **set the working directory** by selecting `Terminal` > `Run Task...` > `set-working-bin` and entering the name of the working directory under `bin/` where the input files are located.
+Before running the tasks below, **set the working directory** by selecting `Terminal` > `Run Task...` > `set-working-bin` and entering the name of the working directory under `bin/` where the input files are located.
 
-### Configure GAMER
+### Configuring GAMER
 
-Select `Terminal` > `Run Task...` > `config-GAMER` to configure GAMER with the `generate_make.sh` script in your working directory.
+Select `Terminal` > `Run Task...` > `config-GAMER` to configure GAMER using the `generate_make.sh` script in your working directory.
 
-### Build
+### Building GAMER
 
-After configuring GAMER with [configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Configure.py) or `generate_make.sh`, select `Terminal` > `Run Task...` > `build-GAMER` to start the build task. This will update the macros, providing IntelliSense highlighting support.
+After configuring GAMER with [configure.py](https://github.com/gamer-project/gamer/wiki/Installation%3A-Configure.py) or `generate_make.sh`, select `Terminal` > `Run Task...` > `build-GAMER` to start the build process. This updates the macros and enables IntelliSense highlighting.
 
 > [!TIP]
-> If you want to configure and build GAMER in one click, select `Terminal` > `Run Build Task...` or press `Ctrl + Shift + B` to run `config-GAMER` and `build-GAMER` in sequence.
+> To configure and build GAMER in one step, select `Terminal` > `Run Build Task...` or press `Ctrl + Shift + B` to run `config-GAMER` and `build-GAMER` sequentially.
 
 > [!IMPORTANT]
-> To make sure the debugger works correctly, ensure the compiler flags in `Makefile` are set to `-g -O0`. (TBD: Add a argument to `configure.py` to set the flags.)
+> Ensure the compiler flags in `Makefile` are set to `-g -O0` for debugging. (TBD: Add a argument to `configure.py` to set the flags.)
 
-### Start debugging
+### Debugging GAMER
 
-To start debugging GAMER, select `Run` > `Start Debugging` or press `F5`. After enter the working directory, the debugger will be launched. See the [official documentation](https://code.visualstudio.com/docs/editor/debugging) to learn more about debugging with VS Code.
+To start debugging, select `Run` > `Start Debugging` or press `F5`. After entering the working directory, the debugger will launch. See the [official documentation](https://code.visualstudio.com/docs/editor/debugging) to learn more about debugging in VS Code.
 
 > [!NOTE]
-> If `gdb` is not supported on macOS, you can set up `lldb` as the debugger. Make sure [`lldb-mi`](https://github.com/lldb-tools/lldb-mi) is installed. Then select `Terminal` > `Run Task...` > `updated_mac_launch`. This task updates the debugger path in `launch.json` to your `lldb-mi` installation.
+> If `gdb` is not supported on macOS, you can set up `lldb` as the debugger. Ensure [`lldb-mi`](https://github.com/lldb-tools/lldb-mi) is installed, then select `Terminal` > `Run Task...` > `updated_mac_launch`. This updates the debugger path in `launch.json` to your `lldb-mi` installation.
 > For manual setup or additional details, refer to the [official documentation](https://code.visualstudio.com/docs/cpp/launch-json-reference).
 
-### Clean working directory
+### Cleaning the Working Directory
 
-Select `Terminal` > `Run Task...` > `clean-work-dir` to clean the working directory with the `clean.sh` script in your working directory.
+Select `Terminal` > `Run Task...` > `clean-work-dir` to clean the working directory using the `clean.sh` script in your working directory.
 
 ## Understanding Configuration Files
 
-These are the configuration files that are copied to the `.vscode` directory:
-- `c_cpp_properties.json`: Configures IntelliSense settings, including include paths and macros. See the [official documentation](https://code.visualstudio.com/docs/cpp/c-cpp-properties-schema-reference) for more information and the [document of IntelliSense](https://code.visualstudio.com/docs/editor/intellisense) to learn about IntelliSense in VS Code.
-- `launch.json`: Contains debugging configurations such as executable paths and arguments. See the [official documentation](https://code.visualstudio.com/docs/cpp/launch-json-reference) for more information.
-- `settings.json`: Specifies editor settings, such as the spaces for indentation and the type of the file without extension. See the [official documentation](https://code.visualstudio.com/docs/editor/settings) for more information.
-- `tasks.json`: Specifies the build and other dependent tasks. Learn more about [tasks in VS Code](https://code.visualstudio.com/docs/editor/tasks).
-- `gamercpp.natvis`: Defines custom visualizations for data structures in the debugger. Learn more about [customizing the visualization of data structures](https://learn.microsoft.com/en-us/visualstudio/debugger/create-custom-views-of-native-objects?view=vs-2022).
+The following configuration files are copied to the `.vscode` directory:
+- `c_cpp_properties.json`: Configures IntelliSense settings, including include paths and macros. See the [schema reference](https://code.visualstudio.com/docs/cpp/c-cpp-properties-schema-reference) and [IntelliSense documentation](https://code.visualstudio.com/docs/editor/intellisense) for details.
+- `launch.json`: Defines debugging configurations such as executable paths and arguments. See the [official documentation](https://code.visualstudio.com/docs/cpp/launch-json-reference) for more information.
+- `settings.json`: Specifies editor settings, such as indentation spaces and file types for extensions. See the [VS Code settings guide](https://code.visualstudio.com/docs/editor/settings) for details.
+- `tasks.json`: Defines build and auxiliary tasks. Learn more about [tasks in VS Code](https://code.visualstudio.com/docs/editor/tasks).
+- `gamercpp.natvis`: Customizes data structure visualizations in the debugger. Learn more about [customizing native object views](https://learn.microsoft.com/en-us/visualstudio/debugger/create-custom-views-of-native-objects?view=vs-2022).
