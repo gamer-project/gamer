@@ -409,8 +409,8 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Hydro_Rotate3D( R, XYZ, true, MAG_OFFSET );
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_IsUnphysical_Single( &L[0], "density", TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_IsUnphysical_Single( &R[0], "density", TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( L[0], "density", TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( R[0], "density", TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -440,8 +440,8 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Cs_R  = SQRT(  EoS_DensPres2CSqr( R[0], P_R, R+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table )  );
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_IsUnphysical_Single( &P_R, "pressure", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_IsUnphysical_Single( &P_L, "pressure", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( P_R, "pressure", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( P_L, "pressure", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -487,7 +487,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Cs_Roe   = SQRT( Cs2_Roe );
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_IsUnphysical_Single( &Cs2_Roe, "Cs2_Roe", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Cs2_Roe, "Cs2_Roe", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 // maximum and minimum eigenvalues
@@ -538,8 +538,8 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    W_R = u_R + Cs_R*q_R;
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_IsUnphysical_Single( &q_L, "q_L", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_IsUnphysical_Single( &q_R, "q_R", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( q_L, "q_L", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( q_R, "q_R", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 

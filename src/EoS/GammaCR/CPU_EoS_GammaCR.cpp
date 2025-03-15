@@ -128,8 +128,8 @@ static real EoS_DensEint2Pres_GammaCR( const real Dens, const real Eint, const r
 #  ifdef GAMER_DEBUG
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
-   Hydro_IsUnphysical_Single( &Dens, "input density",         TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_IsUnphysical_Single( &Eint, "input internal energy", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Dens, "input density",         TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Eint, "input internal energy", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
 
@@ -171,8 +171,8 @@ static real EoS_DensPres2Eint_GammaCR( const real Dens, const real Pres, const r
 #  ifdef GAMER_DEBUG
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
-   Hydro_IsUnphysical_Single( &Dens, "input density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_IsUnphysical_Single( &Pres, "input pressure", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Dens, "input density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Pres, "input pressure", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
 
@@ -214,8 +214,8 @@ static real EoS_DensPres2CSqr_GammaCR( const real Dens, const real Pres, const r
 #  ifdef GAMER_DEBUG
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
-   Hydro_IsUnphysical_Single( &Dens, "input density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_IsUnphysical_Single( &Pres, "input pressure", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Dens, "input density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Pres, "input pressure", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
 
@@ -260,8 +260,8 @@ static real EoS_DensEint2Temp_GammaCR( const real Dens, const real Eint, const r
 #  ifdef GAMER_DEBUG
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
-   Hydro_IsUnphysical_Single( &Dens, "input density",         TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_IsUnphysical_Single( &Eint, "input internal energy", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Dens, "input density",         TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Eint, "input internal energy", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
    const real Gamma_m1  = (real)AuxArray_Flt[1];
@@ -303,8 +303,8 @@ static real EoS_DensTemp2Pres_GammaCR( const real Dens, const real Temp, const r
 #  ifdef GAMER_DEBUG
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
-   Hydro_IsUnphysical_Single( &Dens, "input density",     TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_IsUnphysical_Single( &Temp, "input temperature", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Dens, "input density",     TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Temp, "input temperature", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
 
@@ -346,8 +346,8 @@ static real EoS_DensEint2Entr_GammaCR( const real Dens, const real Eint, const r
 #  ifdef GAMER_DEBUG
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
-   Hydro_IsUnphysical_Single( &Dens, "input density",         TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_IsUnphysical_Single( &Eint, "input internal energy", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Dens, "input density",         TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Eint, "input internal energy", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
 

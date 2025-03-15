@@ -319,8 +319,8 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
    Hydro_Rotate3D( R, XYZ, true, MAG_OFFSET );
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_IsUnphysical_Single( &L[0], "density", TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_IsUnphysical_Single( &R[0], "density", TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( L[0], "density", TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( R[0], "density", TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -375,8 +375,8 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
    a2_R  = EoS_DensPres2CSqr( R[0], P_R, R+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_IsUnphysical_Single( &P_L, "pressure", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_IsUnphysical_Single( &P_R, "pressure", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( P_L, "pressure", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( P_R, "pressure", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 #  if ( defined GAMER_DEBUG  &&  defined MHD )
@@ -507,7 +507,7 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
    a2_Roe  = Gamma*_Rho_Roe*Hydro_CheckMinPres( a2_Roe*Rho_Roe*_Gamma, MinPres );   // apply pressure floor
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_IsUnphysical_Single( &a2_Roe, "a2_Roe", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( a2_Roe, "a2_Roe", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif // #ifdef CHECK_UNPHYSICAL_IN_FLUID
 
 #  ifdef MHD
@@ -528,10 +528,10 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
    Cf2_min_Cs2_Roe = SQRT( SQR(Ca2_min_a2_Roe) + (real)4.0*a2_Roe*Cat2_Roe );
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_IsUnphysical_Single( &a2_Roe,      "a2_Roe",     (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( a2_Roe,      "a2_Roe",     (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 
 #  ifdef MHD
-   Hydro_IsUnphysical_Single( &Gamma_m1_mY, "Gamma_m1-Y", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Gamma_m1_mY, "Gamma_m1-Y", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 #  endif // #ifdef CHECK_UNPHYSICAL_IN_FLUID
 
@@ -614,8 +614,8 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
    MaxV_R = FMAX( MaxV_R, ZERO );
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_IsUnphysical_Single( &q_L, "q_L", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_IsUnphysical_Single( &q_R, "q_R", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( q_L, "q_L", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( q_R, "q_R", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 

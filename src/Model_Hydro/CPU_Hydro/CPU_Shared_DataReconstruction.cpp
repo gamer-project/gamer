@@ -1429,8 +1429,8 @@ void Hydro_Pri2Char( real InOut[], const real Dens, const real Pres, const real 
 #  endif
 
 #  if ( defined CHECK_UNPHYSICAL_IN_FLUID  &&  !defined MHD )
-   Hydro_IsUnphysical_Single( &Pres, "pressure", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_IsUnphysical_Single( &Dens, "density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Pres, "pressure", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Dens, "density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -1519,8 +1519,8 @@ void Hydro_Char2Pri( real InOut[], const real Dens, const real Pres, const real 
 #  endif
 
 #  if ( defined CHECK_UNPHYSICAL_IN_FLUID  &&  !defined MHD )
-   Hydro_IsUnphysical_Single( &Pres, "pressure", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_IsUnphysical_Single( &Dens, "density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Pres, "pressure", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Dens, "density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -1622,8 +1622,8 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
 #  endif
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_IsUnphysical_Single( &CC_Var[4], "pressure", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_IsUnphysical_Single( &CC_Var[0], "density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( CC_Var[4], "pressure", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( CC_Var[0], "density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -1733,8 +1733,8 @@ void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
    }
    else {
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
-      Hydro_IsUnphysical_Single( &a2_min_Cs2, "a2_min_Cs2", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
-      Hydro_IsUnphysical_Single( &Cf2_min_a2, "Cf2_min_a2", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical_Single( a2_min_Cs2, "a2_min_Cs2", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical_Single( Cf2_min_a2, "Cf2_min_a2", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #     endif
 
       const real _Cf2_min_Cs2 = (real)1.0 / Cf2_min_Cs2;
@@ -2111,14 +2111,14 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
 
 #     else
 
-      if (  Hydro_IsUnphysical_Single( &fcCon[f][DENS], "density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_SILENCE )  )
+      if (  Hydro_IsUnphysical_Single( fcCon[f][DENS], "density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_SILENCE )  )
          reset_cell = true;
 
 #     ifndef BAROTROPIC_EOS
-      if (  Hydro_IsUnphysical_Single( &fcCon[f][4],    "energy",   TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_SILENCE )  )
+      if (  Hydro_IsUnphysical_Single( fcCon[f][4],    "energy",   TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_SILENCE )  )
          reset_cell = true;
 
-      if (  Hydro_IsUnphysical_Single( &fcPri[f][4],    "pressure", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_SILENCE )  )
+      if (  Hydro_IsUnphysical_Single( fcPri[f][4],    "pressure", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_SILENCE )  )
          reset_cell = true;
 #     endif // #ifndef BAROTROPIC_EOS
 #     endif // #ifdef SRHD ... else ...
