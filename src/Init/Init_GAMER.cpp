@@ -90,7 +90,7 @@ void Init_GAMER( int *argc, char ***argv )
 
 #  ifdef SUPPORT_FFTW
 // initialize FFTW
-   Init_FFTW();
+   Init_FFTW( 0 );
 #  endif
 
 
@@ -266,7 +266,7 @@ void Init_GAMER( int *argc, char ***argv )
    {
 #     ifdef SUPPORT_FFTW
 //    initialize the k-space Green's function for the isolated BC.
-      if ( OPT__SELF_GRAVITY  &&  OPT__BC_POT == BC_POT_ISOLATED )    Init_GreenFuncK();
+      if ( OPT__SELF_GRAVITY  &&  OPT__BC_POT == BC_POT_ISOLATED )    Init_GreenFuncK( 0 );
 #     endif
 
 
