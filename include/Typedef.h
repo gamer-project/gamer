@@ -555,7 +555,7 @@ const ExtremaMode_t
    EXTREMA_MAX = 2;
 
 
-// option in LoadInputTestProb()
+// options in LoadInputTestProb()
 typedef int LoadParaMode_t;
 const LoadParaMode_t
    LOAD_READPARA    = 1,

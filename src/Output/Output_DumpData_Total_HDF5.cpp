@@ -19,7 +19,7 @@ void (*Output_HDF5_InputTest_Ptr)( const LoadParaMode_t load_mode, ReadPara_t *R
 void (*Output_HDF5_UserPara_Ptr)( HDF5_Output_t *HDF5_UserPara ) = NULL;
 static herr_t H5_write_compound( const hid_t H5_SetID, const hid_t H5_Type_ID, const HDF5_Output_t *HDF5_Output );
 
-static void Output_HDF5_UserPara_Template( HDF5_Output_t *HDF5_OutUser );
+static void Output_HDF5_UserPara_Template( HDF5_Output_t *HDF5_UserPara );
 
 
 

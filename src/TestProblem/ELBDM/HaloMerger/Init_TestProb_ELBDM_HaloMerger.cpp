@@ -1391,7 +1391,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #ifdef SUPPORT_HDF5
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_HDF5_UserPara_HaloMerger
-// Description :  Template for storing user-specified parameters in an HDF5 snapshot at User/UserPara
+// Description :  Store user-specified parameters in an HDF5 snapshot at User/UserPara
 //
 // Note        : 1. This function is only called by the root MPI rank
 //               2. Support int, uint, long, ulong, bool, float, double, and string datatypes
