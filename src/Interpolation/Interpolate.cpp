@@ -339,6 +339,19 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 #        endif
 
 
+//       use dual-energy fix before the general check
+#        ifdef DUAL_ENERGY
+         const bool CheckMinPres_No = false;
+         const real UseDual2FixEngy = HUGE_NUMBER;
+         char dummy;    // we do not record the dual-energy status here
+
+         if ( !FData_is_Prim )
+            Hydro_DualEnergyFix( Temp[DENS], Temp[MOMX], Temp[MOMY], Temp[MOMZ], Temp[ENGY], Temp[DUAL],
+                                 dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2],
+                                 CheckMinPres_No, NULL_REAL, UseDual2FixEngy, Emag );
+#        endif
+
+
 //       5-2. general check
          bool Fail_ThisCell
             = Hydro_IsUnphysical( (FData_is_Prim)?UNPHY_MODE_PRIM:UNPHY_MODE_CONS, Temp, NULL,
