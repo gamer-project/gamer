@@ -54,8 +54,8 @@ void Output_FlagMap( const int lv, const int xyz, const char *comment )
    }
 
 
-   char FileName[100];
-   sprintf( FileName, "FlagMap_%d_%d_%2s", MPI_Rank, lv, Dim[1] );
+   char FileName[2*MAX_STRING];
+   sprintf( FileName, "%s/FlagMap_%d_%d_%2s", OUTPUT_DIR, MPI_Rank, lv, Dim[1] );
    if ( comment != NULL )
    {
       strcat( FileName, "_" );

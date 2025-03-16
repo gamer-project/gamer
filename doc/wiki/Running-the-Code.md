@@ -45,7 +45,7 @@ Further readings:
 
 To restart a simulation from a snapshot (e.g., `Data_000123`),
 do the following steps:
-1. Set [[OPT__INIT | Initial Conditions#OPT__INIT]]=2
+1. Set [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=2
 2. Create a soft link named `RESTART` to a targeted snapshot:
 `ln -s Data_000123 RESTART`
 3. Run the code as usual
@@ -55,7 +55,7 @@ do the following steps:
 (e.g., number of MPI processes and OpenMP threads, maximum refinement level,
 refinement criteria, time-step criteria). The next data dump ID will be
 automatically set to the ID of the restart file plus one (unless specified by
-[[INIT_DUMPID | Outputs#INIT_DUMPID]]).
+[[INIT_DUMPID | Runtime-Parameters:-Outputs#INIT_DUMPID]]).
 
 
 ## Terminating or Pausing Simulations
