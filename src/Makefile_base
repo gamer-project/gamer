@@ -21,7 +21,7 @@ EXECUTABLE := gamer
 
 # output detailed compilation commands (0/1 = off/on)
 #######################################################################################################
-COMPILE_VERBOSE := 0
+COMPILE_VERBOSE := @@@COMPILE_VERBOSE@@@
 
 
 
@@ -109,7 +109,8 @@ CPU_FILE    += Output_DumpData_Total.cpp  Output_DumpData.cpp  Output_DumpManual
                Output_DumpData_Total_HDF5.cpp  Output_L1Error.cpp  Output_UserWorkBeforeOutput.cpp
 
 CPU_FILE    += Flag_Real.cpp  Refine.cpp   SiblingSearch.cpp  SiblingSearch_Base.cpp  FindFather.cpp \
-               Flag_User.cpp  Flag_Check.cpp  Flag_Lohner.cpp  Flag_Region.cpp  Sync_UseWaveFlag.cpp
+               Flag_User.cpp  Flag_Check.cpp  Flag_Lohner.cpp  Flag_Region.cpp  Sync_UseWaveFlag.cpp \
+	       Flag_UserWorkBeforeFlag.cpp
 
 CPU_FILE    += Table_01.cpp  Table_02.cpp  Table_03.cpp  Table_04.cpp  Table_05.cpp  Table_06.cpp \
                Table_07.cpp  Table_SiblingSharingSameEdge.cpp  Table_SiblingPatch.cpp
@@ -406,7 +407,7 @@ endif
 # -------------------------------------------------------------------------------
 ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
 LIB += -L$(CUDA_PATH)/lib64
-LIB += -Wl,-rpath=$(CUDA_PATH)/lib64
+LIB += -Wl,-rpath,$(CUDA_PATH)/lib64
 LIB += -lcudart
 endif
 
@@ -416,7 +417,7 @@ endif
 
 ifeq "$(filter -DSUPPORT_FFTW=FFTW3, $(SIMU_OPTION))" "-DSUPPORT_FFTW=FFTW3"
    LIB += -L$(FFTW3_PATH)/lib
-   LIB += -Wl,-rpath=$(FFTW3_PATH)/lib
+   LIB += -Wl,-rpath,$(FFTW3_PATH)/lib
    ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" "-DSERIAL"
       LIB += -lfftw3 -lfftw3f -lm
    else
@@ -430,7 +431,7 @@ endif
 
 ifeq "$(filter -DSUPPORT_FFTW=FFTW2, $(SIMU_OPTION))" "-DSUPPORT_FFTW=FFTW2"
    LIB += -L$(FFTW2_PATH)/lib
-   LIB += -Wl,-rpath=$(FFTW2_PATH)/lib
+   LIB += -Wl,-rpath,$(FFTW2_PATH)/lib
    ifeq "$(filter -DFLOAT8, $(SIMU_OPTION))" "-DFLOAT8"
       ifeq "$(filter -DSERIAL, $(SIMU_OPTION))" "-DSERIAL"
          LIB += -ldrfftw -ldfftw
@@ -448,22 +449,22 @@ endif
 
 ifeq "$(filter -DSUPPORT_GRACKLE, $(SIMU_OPTION))" "-DSUPPORT_GRACKLE"
 LIB += -L$(GRACKLE_PATH)/lib -lgrackle
-LIB += -Wl,-rpath=$(GRACKLE_PATH)/lib
+LIB += -Wl,-rpath,$(GRACKLE_PATH)/lib
 endif
 
 ifeq "$(filter -DSUPPORT_HDF5, $(SIMU_OPTION))" "-DSUPPORT_HDF5"
 LIB += -L$(HDF5_PATH)/lib -lhdf5
-LIB += -Wl,-rpath=$(HDF5_PATH)/lib
+LIB += -Wl,-rpath,$(HDF5_PATH)/lib
 endif
 
 ifeq "$(filter -DSUPPORT_GSL, $(SIMU_OPTION))" "-DSUPPORT_GSL"
 LIB += -L$(GSL_PATH)/lib -lgsl -lgslcblas
-LIB += -Wl,-rpath=$(GSL_PATH)/lib
+LIB += -Wl,-rpath,$(GSL_PATH)/lib
 endif
 
 ifeq "$(filter -DSUPPORT_LIBYT, $(SIMU_OPTION))" "-DSUPPORT_LIBYT"
 LIB += -L$(LIBYT_PATH)/lib -lyt
-LIB += -Wl,-rpath=$(LIBYT_PATH)/lib
+LIB += -Wl,-rpath,$(LIBYT_PATH)/lib
 endif
 
 

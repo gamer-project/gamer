@@ -27,12 +27,16 @@ void Grackle_Init()
 
 
 // check
-// floating-point type (don't know how to validate it yet...)
-   /*
-   if ( typeid(real) != typeid(gr_float) )
-      Aux_Error( ERROR_INFO, "inconsistent floating-point type (GAMER: %d, Grackle: %d) !!\n",
-                 sizeof(real), sizeof(gr_float) );
-                 */
+// errors
+   if ( typeid(real_che) != typeid(gr_float) )
+      Aux_Error( ERROR_INFO, "inconsistent floating-point type: GAMER (real_che) = %d, Grackle (gr_float) = %d !!\n",
+                 sizeof(real_che), sizeof(gr_float) );
+
+// warnings
+   if ( MPI_Rank == 0  &&  sizeof(gr_float) != 8 )
+       Aux_Message( stderr, "WARNING : Grackle recommends using double precision (GRACKLE_FLOAT_8) !!\n" );
+
+   if ( MPI_Rank == 0 )   Aux_Message( stdout, "Grackle floating-point number (gr_float) uses %d bytes\n", sizeof(gr_float) );
 
 
    if (  ( GRACKLE_PRIMORDIAL == GRACKLE_PRI_CHE_CLOUDY || GRACKLE_METAL || GRACKLE_UV )  &&
@@ -79,7 +83,7 @@ void Grackle_Init()
   chemistry_data *Che_Data = new chemistry_data;
 
   if ( set_default_chemistry_parameters(Che_Data) == 0 )
-    Aux_Error( ERROR_INFO, "set_default_chemistry_parameters() failed !!\n" );
+     Aux_Error( ERROR_INFO, "set_default_chemistry_parameters() failed !!\n" );
 
 
 // set chemistry by accessing "grackle_data"
@@ -112,7 +116,7 @@ void Grackle_Init()
 
 // initialize the chemistry object
    if ( initialize_chemistry_data(&Che_Units) == 0 )
-     Aux_Error( ERROR_INFO, "initialize_chemistry_data() failed !!\n" );
+      Aux_Error( ERROR_INFO, "initialize_chemistry_data() failed !!\n" );
 
 
 // initialize the "grackle_field_data" object of Grackle

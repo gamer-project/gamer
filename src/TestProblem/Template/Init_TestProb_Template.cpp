@@ -69,8 +69,53 @@ void Validate()
 
 
 
-// replace HYDRO by the target model (e.g., MHD/ELBDM) and also check other compilation flags if necessary (e.g., GRAVITY/PARTICLE)
+// replace HYDRO by the target model (e.g., ELBDM) and also check other compilation flags if necessary (e.g., GRAVITY/PARTICLE)
 #if ( MODEL == HYDRO )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  LoadInputTestProb
+// Description :  Read problem-specific runtime parameters from Input__TestProb and store them in HDF5 snapshots (Data_*)
+//
+// Note        :  1. Invoked by SetParameter() to read parameters
+//                2. Invoked by Output_DumpData_Total_HDF5() using the function pointer Output_HDF5_InputTest_Ptr to store parameters
+//                3. If there is no problem-specific runtime parameter to load, add at least one parameter
+//                   to prevent an empty structure in HDF5_Output_t
+//                   --> Example:
+//                       LOAD_PARA( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+//
+// Parameter   :  load_mode      : Mode for loading parameters
+//                                 --> LOAD_READPARA    : Read parameters from Input__TestProb
+//                                     LOAD_HDF5_OUTPUT : Store parameters in HDF5 snapshots
+//                ReadPara       : Data structure for reading parameters (used with LOAD_READPARA)
+//                HDF5_InputTest : Data structure for storing parameters in HDF5 snapshots (used with LOAD_HDF5_OUTPUT)
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
+{
+
+#  ifndef SUPPORT_HDF5
+   if ( load_mode == LOAD_HDF5_OUTPUT )   Aux_Error( ERROR_INFO, "please turn on SUPPORT_HDF5 in the Makefile for load_mode == LOAD_HDF5_OUTPUT !!\n" );
+#  endif
+
+   if ( load_mode == LOAD_READPARA     &&  ReadPara       == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_READPARA and ReadPara == NULL !!\n" );
+   if ( load_mode == LOAD_HDF5_OUTPUT  &&  HDF5_InputTest == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_HDF5_OUTPUT and HDF5_InputTest == NULL !!\n" );
+
+// add parameters in the following format:
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
+// --> LOAD_PARA() is defined in "include/TestProb.h"
+// ************************************************************************************************************************
+// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
+// ************************************************************************************************************************
+   LOAD_PARA( load_mode, "var_bool",          &var_bool,              true,          Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "var_double",        &var_double,            1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "var_int",           &var_int,               2,             0,                5                 );
+   LOAD_PARA( load_mode, "var_str",            var_str,               NoDef_str,     Useless_str,      Useless_str       );
+
+} // FUNCITON : LoadInputTestProb
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -94,19 +139,11 @@ void SetParameter()
 
 
 // (1) load the problem-specific runtime parameters
+// (1-1) read parameters from Input__TestProb
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
-// (1-1) add parameters in the following format:
-// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
-// --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
-// ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
-// ********************************************************************************************************************************
-   ReadPara->Add( "var_bool",          &var_bool,              true,          Useless_bool,     Useless_bool      );
-   ReadPara->Add( "var_double",        &var_double,            1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "var_int",           &var_int,               2,             0,                5                 );
-   ReadPara->Add( "var_str",            var_str,               NoDef_str,     Useless_str,      Useless_str       );
+   LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
 
    ReadPara->Read( FileName );
 
@@ -280,6 +317,7 @@ void Init_TestProb_Template()
    Init_Field_User_Ptr               = NULL; // set NCOMP_PASSIVE_USER;               example: TestProblem/Hydro/Plummer/Init_TestProb_Hydro_Plummer.cpp --> AddNewField()
    Flag_Region_Ptr                   = NULL; // option: OPT__FLAG_REGION;             example: Refing/Flag_Region.cpp
    Flag_User_Ptr                     = NULL; // option: OPT__FLAG_USER;               example: Refine/Flag_User.cpp
+   Flag_UserWorkBeforeFlag_Ptr       = NULL; // option: none;                         example: Refine/Flag_UserWorkBeforeFlag.cpp
    Mis_GetTimeStep_User_Ptr          = NULL; // option: OPT__DT_USER;                 example: Miscellaneous/Mis_GetTimeStep_User.cpp
    Mis_UserWorkBeforeNextLevel_Ptr   = NULL; //                                       example: Miscellaneous/Mis_UserWorkBeforeNextLevel.cpp
    Mis_UserWorkBeforeNextSubstep_Ptr = NULL; //                                       example: Miscellaneous/Mis_UserWorkBeforeNextSubstep.cpp
@@ -305,7 +343,8 @@ void Init_TestProb_Template()
 #  endif
 #  ifdef PARTICLE
    Par_Init_ByFunction_Ptr           = NULL; // option: PAR_INIT=1;                   example: Particle/Par_Init_ByFunction.cpp
-   Par_Init_Attribute_User_Ptr       = NULL; // set PAR_NATT_USER;                    example: TestProblem/Hydro/AGORA_IsolatedGalaxy/Init_TestProb_Hydro_AGORA_IsolatedGalaxy.cpp --> AddNewParticleAttribute()
+// Par_Init_ByFile_User_Ptr          = NULL; // option: PAR_INIT=3;                   example: Particle/Par_Init_ByFile.cpp -> Par_Init_ByFile_Default()
+   Par_Init_Attribute_User_Ptr       = NULL; // set PAR_NATT_FLT/INT_USER;            example: TestProblem/Hydro/AGORA_IsolatedGalaxy/Init_TestProb_Hydro_AGORA_IsolatedGalaxy.cpp --> AddNewParticleAttribute()
 #  endif
 #  if ( EOS == EOS_USER )
    EoS_Init_Ptr                      = NULL; // option: EOS in the Makefile;          example: EoS/User_Template/CPU_EoS_User_Template.cpp
@@ -315,6 +354,10 @@ void Init_TestProb_Template()
    Src_Init_User_Ptr                 = NULL; // option: SRC_USER;                     example: SourceTerms/User_Template/CPU_Src_User_Template.cpp
 #  ifdef FEEDBACK
    FB_Init_User_Ptr                  = NULL; // option: FB_USER;                      example: TestProblem/Hydro/Plummer/FB_Plummer.cpp
+#  endif
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_InputTest_Ptr         = LoadInputTestProb;
+   Output_HDF5_UserPara_Ptr          = NULL; //                                       example: Output/Output_DumData_Total_HDF5.cpp --> Output_HDF5_UserPara_Template()
 #  endif
 
 

@@ -33,7 +33,7 @@ static char    DensTableFile[MAX_STRING]; // fixed halo density profile filename
 static double *DensTable = NULL;          // density table, radius should be in kpc and density should be in g/cm^3
 static int     DensTable_Nbin;            // number of bins of density table
 static bool    AddParWhenRestart;         // add a new disk to an existing snapshot, must enable OPT__RESTART_RESET
-static bool    AddParWhenRestartByFile;   // add a new disk via PAR_IC
+static bool    AddParWhenRestartByFile;   // add a new disk via DiskHeatingParticleIC
 static long    AddParWhenRestartNPar;     // particle number of the new disk
 static int     NewDisk_RSeed;             // random seed for setting new disk particle position and velocity
 static double  Disk_Mass;                 // thin disk total mass (code unit)
@@ -45,9 +45,10 @@ static int     DispTable_Nbin;            // number of bins of velocity dispersi
 
 #ifdef PARTICLE
 void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_AllRank,
-                                      real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                      real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                      real *ParType, real *AllAttribute[PAR_NATT_TOTAL]);
+                                      real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                      real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                      long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                      long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] );
 static void Init_NewDiskRestart();
 static void Init_NewDiskVelocity();
 #endif
@@ -90,6 +91,10 @@ void Validate()
    Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
 #  endif
 
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   Aux_Error( ERROR_INFO, "Test problem %d does not support ELBDM_HYBRID. The phase cannot be unwrapped due to the presence of vortices in the halo !!\n", TESTPROB_ID );
+#  endif
+
 
 // warnings
    if ( MPI_Rank == 0 )
@@ -109,6 +114,67 @@ void Validate()
 
 
 #if ( MODEL == ELBDM )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  LoadInputTestProb
+// Description :  Read problem-specific runtime parameters from Input__TestProb and store them in HDF5 snapshots (Data_*)
+//
+// Note        :  1. Invoked by SetParameter() to read parameters
+//                2. Invoked by Output_DumpData_Total_HDF5() using the function pointer Output_HDF5_InputTest_Ptr to store parameters
+//                3. If there is no problem-specific runtime parameter to load, add at least one parameter
+//                   to prevent an empty structure in HDF5_Output_t
+//                   --> Example:
+//                       LOAD_PARA( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+//
+// Parameter   :  load_mode      : Mode for loading parameters
+//                                 --> LOAD_READPARA    : Read parameters from Input__TestProb
+//                                     LOAD_HDF5_OUTPUT : Store parameters in HDF5 snapshots
+//                ReadPara       : Data structure for reading parameters (used with LOAD_READPARA)
+//                HDF5_InputTest : Data structure for storing parameters in HDF5 snapshots (used with LOAD_HDF5_OUTPUT)
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
+{
+
+#  ifndef SUPPORT_HDF5
+   if ( load_mode == LOAD_HDF5_OUTPUT )   Aux_Error( ERROR_INFO, "please turn on SUPPORT_HDF5 in the Makefile for load_mode == LOAD_HDF5_OUTPUT !!\n" );
+#  endif
+
+   if ( load_mode == LOAD_READPARA     &&  ReadPara       == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_READPARA and ReadPara == NULL !!\n" );
+   if ( load_mode == LOAD_HDF5_OUTPUT  &&  HDF5_InputTest == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_HDF5_OUTPUT and HDF5_InputTest == NULL !!\n" );
+
+// add parameters in the following format:
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
+// --> LOAD_PARA() is defined in "include/TestProb.h"
+// ********************************************************************************************************************************
+// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",         &VARIABLE,                DEFAULT,       MIN,              MAX               );
+// ********************************************************************************************************************************
+   LOAD_PARA( load_mode, "CenX",                    &Cen[0],                  NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "CenY",                    &Cen[1],                  NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "CenZ",                    &Cen[2],                  NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "AddFixedHalo",            &AddFixedHalo,            false,         Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "HaloUseTable",            &HaloUseTable,            false,         Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "m_22",                    &m_22,                    0.4,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "CoreRadius",              &CoreRadius,              1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Rho_0",                   &Rho_0,                   1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Rs",                      &Rs,                      1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Alpha",                   &Alpha,                   1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Beta",                    &Beta,                    1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Gamma",                   &Gamma,                   1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "DensTableFile",           DensTableFile,            NoDef_str,     Useless_str,      Useless_str       );
+   LOAD_PARA( load_mode, "AddParWhenRestart",       &AddParWhenRestart,       false,         Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "AddParWhenRestartByFile", &AddParWhenRestartByFile, true,          Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "AddParWhenRestartNPar",   &AddParWhenRestartNPar,   (long)0,       (long)0,          NoMax_long        );
+   LOAD_PARA( load_mode, "NewDisk_RSeed",           &NewDisk_RSeed,           1002,          0,                NoMax_int         );
+   LOAD_PARA( load_mode, "Disk_Mass",               &Disk_Mass,               1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Disk_R",                  &Disk_R,                  1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "DispTableFile",           DispTableFile,            NoDef_str,     Useless_str,      Useless_str       );
+
+} // FUNCITON : LoadInputTestProb
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -132,36 +198,11 @@ void SetParameter()
 
 
 // (1) load the problem-specific runtime parameters
+// (1-1) read parameters from Input__TestProb
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
-// (1-1) add parameters in the following format:
-// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
-// --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
-// ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",         &VARIABLE,                DEFAULT,       MIN,              MAX               );
-// ********************************************************************************************************************************
-   ReadPara->Add( "CenX",                    &Cen[0],                  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "CenY",                    &Cen[1],                  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "CenZ",                    &Cen[2],                  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "AddFixedHalo",            &AddFixedHalo,            false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "HaloUseTable",            &HaloUseTable,            false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "m_22",                    &m_22,                    0.4,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "CoreRadius",              &CoreRadius,              1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Rho_0",                   &Rho_0,                   1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Rs",                      &Rs,                      1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Alpha",                   &Alpha,                   1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Beta",                    &Beta,                    1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Gamma",                   &Gamma,                   1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "DensTableFile",           DensTableFile,            NoDef_str,     Useless_str,      Useless_str       );
-   ReadPara->Add( "AddParWhenRestart",       &AddParWhenRestart,       false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "AddParWhenRestartByFile", &AddParWhenRestartByFile, true,          Useless_bool,     Useless_bool      );
-   ReadPara->Add( "AddParWhenRestartNPar",   &AddParWhenRestartNPar,   (long)0,       (long)0,          NoMax_long        );
-   ReadPara->Add( "NewDisk_RSeed",           &NewDisk_RSeed,           1002,          0,                NoMax_int         );
-   ReadPara->Add( "Disk_Mass",               &Disk_Mass,               1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Disk_R",                  &Disk_R,                  1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "DispTableFile",           DispTableFile,            NoDef_str,     Useless_str,      Useless_str       );
-
+   LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
 
    ReadPara->Read( FileName );
 
@@ -331,8 +372,17 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    }
 
    fluid[DENS] = (real)dens;
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif
    fluid[REAL] = sqrt( fluid[DENS] );
    fluid[IMAG] = 0.0;
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } else {
+   fluid[PHAS] = 0.0;
+   fluid[STUB] = 0.0;
+   }
+#  endif
 
 } // FUNCTION : SetGridIC
 
@@ -394,22 +444,25 @@ void Init_NewDiskRestart()
 
    const long NNewPar      = ( MPI_Rank == 0 ) ? AddParWhenRestartNPar : 0;
    const long NPar_AllRank = NNewPar;
-   real *NewParAtt[PAR_NATT_TOTAL];
+   real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL];
+   long_par *NewParAttInt[PAR_NATT_INT_TOTAL];
 
-   for (int v=0; v<PAR_NATT_TOTAL; v++)   NewParAtt[v] = new real [NNewPar];
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   NewParAttFlt[v] = new real_par [NNewPar];
+   for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   NewParAttInt[v] = new long_par [NNewPar];
 
 // set particle attributes
-   real *Time_AllRank   =   NewParAtt[PAR_TIME];
-   real *Mass_AllRank   =   NewParAtt[PAR_MASS];
-   real *Pos_AllRank[3] = { NewParAtt[PAR_POSX], NewParAtt[PAR_POSY], NewParAtt[PAR_POSZ] };
-   real *Vel_AllRank[3] = { NewParAtt[PAR_VELX], NewParAtt[PAR_VELY], NewParAtt[PAR_VELZ] };
-   real *Type_AllRank   =   NewParAtt[PAR_TYPE];
+   real_par *Time_AllRank   =   NewParAttFlt[PAR_TIME];
+   real_par *Mass_AllRank   =   NewParAttFlt[PAR_MASS];
+   real_par *Pos_AllRank[3] = { NewParAttFlt[PAR_POSX], NewParAttFlt[PAR_POSY], NewParAttFlt[PAR_POSZ] };
+   real_par *Vel_AllRank[3] = { NewParAttFlt[PAR_VELX], NewParAttFlt[PAR_VELY], NewParAttFlt[PAR_VELZ] };
+   long_par *Type_AllRank   =   NewParAttInt[PAR_TYPE];
 
-   if ( AddParWhenRestartByFile ) // add new disk via PAR_IC
+   if ( AddParWhenRestartByFile ) // add new disk via DiskHeatingParticleIC
    {
 //    load data
       if ( MPI_Rank == 0 ) {
-         const char FileName[] = "PAR_IC";
+//       NOTE: DiskHeatingParticleIC uses the floating-point type for particle type and assumes single precision
+         const char FileName[] = "DiskHeatingParticleIC";
          const int  NParAtt    = 8;    // mass, pos*3, vel*3, type
 
 //       check
@@ -420,7 +473,7 @@ void Init_NewDiskRestart()
 
          fseek( FileTemp, 0, SEEK_END );
 
-         const long ExpectSize = long(NParAtt)*NPar_AllRank*sizeof(real);
+         const long ExpectSize = long(NParAtt)*NPar_AllRank*sizeof(real_par);
          const long FileSize   = ftell( FileTemp );
          if ( FileSize != ExpectSize )
             Aux_Error( ERROR_INFO, "size of the file <%s> = %ld != expect = %ld !!\n",
@@ -429,15 +482,15 @@ void Init_NewDiskRestart()
 
          Aux_Message( stdout, "   Loading data ... " );
 
-         real *ParData_AllRank = new real [ NPar_AllRank*NParAtt ];
+         real_par *ParData_AllRank = new real_par [ NPar_AllRank*NParAtt ];
 
 //       note that fread() may fail for large files if sizeof(size_t) == 4 instead of 8
          FILE *File = fopen( FileName, "rb" );
 
          for (int v=0; v<NParAtt; v++)
          {
-            fseek( File, v*NPar_AllRank*sizeof(real), SEEK_SET );
-            fread( ParData_AllRank+v*NPar_AllRank, sizeof(real), NPar_AllRank, File );
+            fseek( File, v*NPar_AllRank*sizeof(real_par), SEEK_SET );
+            fread( ParData_AllRank+v*NPar_AllRank, sizeof(real_par), NPar_AllRank, File );
          }
 
          fclose( File );
@@ -457,7 +510,7 @@ void Init_NewDiskRestart()
 //          mass
             Mass_AllRank[p] = ParData1[0];
 //          label
-            Type_AllRank[p] = ParData1[7]; // 1=CDM halo, 2=disk
+            Type_AllRank[p] = (long_par)ParData1[7]; // 1=CDM halo, 2=disk
 
 //          position
             Pos_AllRank[0][p] = ParData1[1];
@@ -518,7 +571,7 @@ void Init_NewDiskRestart()
 //          mass
             Mass_AllRank[p] = ParM;
 //          label
-            Type_AllRank[p] = 3;      // use 3 to represent thin disk particles
+            Type_AllRank[p] = (long_par)3;      // use 3 to represent thin disk particles
 
 //          position: statisfying surface density Sigma=Disk_Mass/(2*pi*Disk_R**2)*exp(-R/Disk_R)
             Ran  = RNG->GetValue( 0, 0.0, 1.0 );
@@ -548,10 +601,11 @@ void Init_NewDiskRestart()
 
 
 // add particles here
-   Par_AddParticleAfterInit( NNewPar, NewParAtt );
+   Par_AddParticleAfterInit( NNewPar, NewParAttFlt, NewParAttInt );
 
 // free memory
-   for (int v=0; v<PAR_NATT_TOTAL; v++)   delete [] NewParAtt[v];
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   delete [] NewParAttFlt[v];
+   for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   delete [] NewParAttInt[v];
 
 #  if ( defined PARTICLE  &&  defined LOAD_BALANCE )
    const double Par_Weight = amr->LB->Par_Weight;
@@ -606,10 +660,10 @@ void Init_NewDiskVelocity()
 #  endif
 
    const long NPar_ThisRank = amr->Par->NPar_AcPlusInac;
-   real *ParType   =   amr->Par->Type;
-   real *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
-   real *ParVel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
-   real *ParAcc[3] = { amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ };
+   long_par *ParType   =   amr->Par->Type;
+   real_par *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+   real_par *ParVel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
+   real_par *ParAcc[3] = { amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ };
 
    real ParRadius[2];
    real NormParRadius[2];
@@ -724,6 +778,9 @@ void Init_TestProb_ELBDM_DiskHeating()
    Par_Init_ByFunction_Ptr    = Par_Init_ByFunction_DiskHeating;
    Init_User_Ptr              = Init_NewDiskRestart;
    Init_User_AfterPoisson_Ptr = Init_NewDiskVelocity;
+#  endif
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_InputTest_Ptr  = LoadInputTestProb;
 #  endif
 #  endif // #if ( MODEL == ELBDM )
 
