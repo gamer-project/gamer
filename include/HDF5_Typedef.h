@@ -1087,9 +1087,6 @@ struct HDF5_Output_t
 //    parameter name
       strncpy( Key[NPara], NewKey, MAX_STRING );
 
-//    make sure C-strings are null-terminated
-      NewPtr[MAX_STRING-1] = '\0';
-
 //    parameter address
       Ptr[NPara] = NewPtr;
 
