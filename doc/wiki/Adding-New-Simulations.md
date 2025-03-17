@@ -157,24 +157,17 @@ problem source file.
     static char   var_str[MAX_STRING];
     ```
 
-2. Edit the function `SetParameter()` to load these parameters.
+2. Edit the function `LoadInputTestProb()` to load these parameters.
 
     ```C++
-       const char FileName[] = "Input__TestProb";
-       ReadPara_t *ReadPara  = new ReadPara_t;
-
     // add parameters in the following format:
-    // *************************************************************************************************
-    // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,     DEFAULT,       MIN,            MAX          );
-    // *************************************************************************************************
-       ReadPara->Add( "var_bool",          &var_bool,     true,          Useless_bool,   Useless_bool );
-       ReadPara->Add( "var_double",        &var_double,   1.0,           Eps_double,     NoMax_double );
-       ReadPara->Add( "var_int",           &var_int,      2,             0,              5            );
-       ReadPara->Add( "var_str",            var_str,      Useless_str,   Useless_str,    Useless_str  );
-
-       ReadPara->Read( FileName );
-
-       delete ReadPara;
+    // ********************************************************************************************************
+    // LOAD_PARA( load_mode, "KEY_IN_THE_FILE",   &VARIABLE,     DEFAULT,       MIN,            MAX          );
+    // ********************************************************************************************************
+       LOAD_PARA( load_mode, "var_bool",          &var_bool,     true,          Useless_bool,   Useless_bool );
+       LOAD_PARA( load_mode, "var_double",        &var_double,   1.0,           Eps_double,     NoMax_double );
+       LOAD_PARA( load_mode, "var_int",           &var_int,      2,             0,              5            );
+       LOAD_PARA( load_mode, "var_str",            var_str,      Useless_str,   Useless_str,    Useless_str  );
     ```
 
 > [!CAUTION]
@@ -182,6 +175,13 @@ problem source file.
 >
 > Some handy constants (e.g., `Useless_bool`, `Eps_double`, `NoMin_int`, ...)
 are defined in `include/ReadPara.h`. See [[Adding Parameters | Adding-Parameters]] for details.
+
+> [!CAUTION]
+> There should be at least one variable to store. Otherwise, please store a global constant.
+> ```c++
+>    LOAD_PARA( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+> ```
+> See `src/TestProblem/Hydro/CDM_LSS/Init_TestProb_Hydro_CDM_LSS.cpp` for an example.
 
 3. [Optional] Edit `SetParameter()` to make a note of the values adopted
 during the runtime.
@@ -199,34 +199,7 @@ during the runtime.
     }
     ```
 
-4. Edit the function `Output_HDF5_TestProb()` to store the variables in HDF5 files.
-   ```c++
-   void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
-   {
-
-      HDF5_InputTest->Add( "var_bool",   &var_bool   );
-      HDF5_InputTest->Add( "var_double", &var_double );
-      HDF5_InputTest->Add( "var_int",    &var_int    );
-      HDF5_InputTest->Add( "var_str",     var_str    );
-
-   } // FUNCTION : Output_HDF5_TestProb
-   ```
-> [!NOTE]
-> You should contain all the variables in step 2.
-
-> [!CAUTION]
-> There should be at least one variable to store. Otherwise, it should be like
-> ```c++
-> void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
-> {
->
->    HDF5_InputTest->Add( "CDM_LSS_TestProb_ID",  &TESTPROB_ID );
->
-> } // FUNCTION : Output_HDF5_TestProb
-> ```
-> See `src/TestProblem/Hydro/CDM_LSS/Init_TestProb_Hydro_CDM_LSS.cpp`.
-
-5. Add these parameters to the input file `Input__TestProb`
+4. Add these parameters to the input file `Input__TestProb`
 (see [[Input__TestProb | Runtime-Parameters:-Input__TestProb]]
 for the file format).
 This file must be put in the same directory as the executable `gamer`
@@ -647,17 +620,17 @@ Add a user-specified feedback. See [[FB_USER | Runtime-Parameters:-Feedback#FB_U
 
 ### HDF5 Output
 * **Description:**
-Store user-specified variables. Similar usage of as [Store Problem-specific Variables](#iv-store-problem-specific-variables).
+Store user-specified variables in HDF5 snapshots.
 * **Prototype:**
-   * `void Output_HDF5_User_NewProblem( HDF5_Output_t *HDF5_OutUser );`
+   * `void Output_HDF5_UserPara_NewProblem( HDF5_Output_t *HDF5_UserPara );`
 * **Function Pointer:**
-   * `Output_HDF5_User_Ptr`
+   * `Output_HDF5_UserPara_Ptr`
 * **Compilation Option:**
 [[SUPPORT_HDF5 | Installation: Simulation-Options#SUPPORT_HDF5]]
 * **Runtime Option:**
 None
 * **Example:**
-   * `Output/Output_DumData_Total_HDF5.cpp` --> `Output_HDF5_User_Template()`
+   * `Output/Output_DumData_Total_HDF5.cpp` --> `Output_HDF5_UserPara_Template()`
 
 
 ## VII. Add Problem-specific Validators

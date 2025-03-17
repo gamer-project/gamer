@@ -199,6 +199,80 @@ void Validate()
 
 #if ( MODEL == HYDRO  &&  defined GRAVITY )
 //-------------------------------------------------------------------------------------------------------
+// Function    :  LoadInputTestProb
+// Description :  Read problem-specific runtime parameters from Input__TestProb and store them in HDF5 snapshots (Data_*)
+//
+// Note        :  1. Invoked by SetParameter() to read parameters
+//                2. Invoked by Output_DumpData_Total_HDF5() using the function pointer Output_HDF5_InputTest_Ptr to store parameters
+//                3. If there is no problem-specific runtime parameter to load, add at least one parameter
+//                   to prevent an empty structure in HDF5_Output_t
+//                   --> Example:
+//                       LOAD_PARA( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+//
+// Parameter   :  load_mode      : Mode for loading parameters
+//                                 --> LOAD_READPARA    : Read parameters from Input__TestProb
+//                                     LOAD_HDF5_OUTPUT : Store parameters in HDF5 snapshots
+//                ReadPara       : Data structure for reading parameters (used with LOAD_READPARA)
+//                HDF5_InputTest : Data structure for storing parameters in HDF5 snapshots (used with LOAD_HDF5_OUTPUT)
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
+{
+
+#  ifndef SUPPORT_HDF5
+   if ( load_mode == LOAD_HDF5_OUTPUT )   Aux_Error( ERROR_INFO, "please turn on SUPPORT_HDF5 in the Makefile for load_mode == LOAD_HDF5_OUTPUT !!\n" );
+#  endif
+
+   if ( load_mode == LOAD_READPARA     &&  ReadPara       == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_READPARA and ReadPara == NULL !!\n" );
+   if ( load_mode == LOAD_HDF5_OUTPUT  &&  HDF5_InputTest == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_HDF5_OUTPUT and HDF5_InputTest == NULL !!\n" );
+
+// add parameters in the following format:
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
+// --> LOAD_PARA() is defined in "include/TestProb.h"
+// ********************************************************************************************************************************
+// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",        &VARIABLE,                  DEFAULT,      MIN,              MAX               );
+// ********************************************************************************************************************************
+   LOAD_PARA( load_mode, "Bondi_MassBH",           &Bondi_MassBH,             -1.0,          Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Bondi_Rho0",             &Bondi_Rho0,               -1.0,          Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Bondi_T0",               &Bondi_T0,                 -1.0,          Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Bondi_RefineRadius0",    &Bondi_RefineRadius0,      -1.0,          Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Bondi_HalfMaxLvRefR",    &Bondi_HalfMaxLvRefR,       true,         Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "Bondi_InBC_Rho",         &Bondi_InBC_Rho,           -1.0,          Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Bondi_InBC_T",           &Bondi_InBC_T,             -1.0,          Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Bondi_InBC_NCell",       &Bondi_InBC_NCell,         -1.0,          Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Bondi_Soften_NCell",     &Bondi_Soften_NCell,       -1.0,          NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Bondi_void",             &Bondi_void,                true,         Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "Bondi_dynBH",            &Bondi_dynBH,               false,        Useless_bool,     Useless_bool      );
+
+   LOAD_PARA( load_mode, "Bondi_HSE",              &Bondi_HSE,                 false,        Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "Bondi_HSE_Mode",         &Bondi_HSE_Mode,            1,            1,                3                 );
+   LOAD_PARA( load_mode, "Bondi_HSE_Dens_NBin",    &Bondi_HSE_Dens_NBin,       10000,        2,                NoMax_int         );
+   LOAD_PARA( load_mode, "Bondi_HSE_Dens_MinR",    &Bondi_HSE_Dens_MinR,      -1.0,          NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Bondi_HSE_Dens_MaxR",    &Bondi_HSE_Dens_MaxR,      -1.0,          NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Bondi_HSE_Dens_NormR",   &Bondi_HSE_Dens_NormR,     -1.0,          NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Bondi_HSE_Dens_NormD",   &Bondi_HSE_Dens_NormD,     -1.0,          Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Bondi_HSE_Truncate",     &Bondi_HSE_Truncate,        true,         Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "Bondi_HSE_TrunR",        &Bondi_HSE_TrunR,          -1.0,          NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Bondi_HSE_TrunD",        &Bondi_HSE_TrunD,          -1.0,          Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Bondi_HSE_TrunSmoothR",  &Bondi_HSE_TrunSmoothR,    -1.0,          NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Bondi_HSE_Pres_NormT",   &Bondi_HSE_Pres_NormT,      false,        Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "Bondi_HSE_Beta_Rcore",   &Bondi_HSE_Beta_Rcore,     -1.0,          Eps_double,       NoMax_double      );
+
+   LOAD_PARA( load_mode, "Bondi_Soliton",          &Bondi_Soliton,             false,        Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "Bondi_Soliton_m22",      &Bondi_Soliton_m22,        -1.0,          NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Bondi_Soliton_type",     &Bondi_Soliton_type,        5,            0,                5                 );
+   LOAD_PARA( load_mode, "Bondi_Soliton_t",        &Bondi_Soliton_t,          -1.0,          NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Bondi_Soliton_rc",       &Bondi_Soliton_rc,         -1.0,          NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Bondi_Soliton_MassHalo", &Bondi_Soliton_MassHalo,   -1.0,          NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Bondi_Soliton_Redshift", &Bondi_Soliton_Redshift,   -1.0,          NoMin_double,     NoMax_double      );
+
+} // FUNCITON : LoadInputTestProb
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
 //
@@ -221,48 +295,11 @@ void SetParameter()
 
 
 // (1) load the problem-specific runtime parameters
+// (1-1) read parameters from Input__TestProb
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
-// (1-1) add parameters in the following format:
-// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
-// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
-// ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",         &VARIABLE,                  DEFAULT,      MIN,              MAX               );
-// ********************************************************************************************************************************
-   ReadPara->Add( "Bondi_MassBH",            &Bondi_MassBH,             -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Bondi_Rho0",              &Bondi_Rho0,               -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Bondi_T0",                &Bondi_T0,                 -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Bondi_RefineRadius0",     &Bondi_RefineRadius0,      -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Bondi_HalfMaxLvRefR",     &Bondi_HalfMaxLvRefR,       true,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "Bondi_InBC_Rho",          &Bondi_InBC_Rho,           -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Bondi_InBC_T",            &Bondi_InBC_T,             -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Bondi_InBC_NCell",        &Bondi_InBC_NCell,         -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Bondi_Soften_NCell",      &Bondi_Soften_NCell,       -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Bondi_void",              &Bondi_void,                true,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "Bondi_dynBH",             &Bondi_dynBH,               false,        Useless_bool,     Useless_bool      );
-
-   ReadPara->Add( "Bondi_HSE",               &Bondi_HSE,                 false,        Useless_bool,     Useless_bool      );
-   ReadPara->Add( "Bondi_HSE_Mode",          &Bondi_HSE_Mode,            1,            1,                3                 );
-   ReadPara->Add( "Bondi_HSE_Dens_NBin",     &Bondi_HSE_Dens_NBin,       10000,        2,                NoMax_int         );
-   ReadPara->Add( "Bondi_HSE_Dens_MinR",     &Bondi_HSE_Dens_MinR,      -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Bondi_HSE_Dens_MaxR",     &Bondi_HSE_Dens_MaxR,      -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Bondi_HSE_Dens_NormR",    &Bondi_HSE_Dens_NormR,     -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Bondi_HSE_Dens_NormD",    &Bondi_HSE_Dens_NormD,     -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Bondi_HSE_Truncate",      &Bondi_HSE_Truncate,        true,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "Bondi_HSE_TrunR",         &Bondi_HSE_TrunR,          -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Bondi_HSE_TrunD",         &Bondi_HSE_TrunD,          -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "Bondi_HSE_TrunSmoothR",   &Bondi_HSE_TrunSmoothR,    -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Bondi_HSE_Pres_NormT",    &Bondi_HSE_Pres_NormT,      false,        Useless_bool,     Useless_bool      );
-   ReadPara->Add( "Bondi_HSE_Beta_Rcore",    &Bondi_HSE_Beta_Rcore,     -1.0,          Eps_double,       NoMax_double      );
-
-   ReadPara->Add( "Bondi_Soliton",           &Bondi_Soliton,             false,        Useless_bool,     Useless_bool      );
-   ReadPara->Add( "Bondi_Soliton_m22",       &Bondi_Soliton_m22,        -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Bondi_Soliton_type",      &Bondi_Soliton_type,        5,            0,                5                 );
-   ReadPara->Add( "Bondi_Soliton_t",         &Bondi_Soliton_t,          -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Bondi_Soliton_rc",        &Bondi_Soliton_rc,         -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Bondi_Soliton_MassHalo",  &Bondi_Soliton_MassHalo,   -1.0,          NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Bondi_Soliton_Redshift",  &Bondi_Soliton_Redshift,   -1.0,          NoMin_double,     NoMax_double      );
+   LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
 
    ReadPara->Read( FileName );
 
@@ -584,52 +621,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 
-#ifdef SUPPORT_HDF5
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Output_HDF5_TestProb
-// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
-//
-// Note         : 1. This function only works in MPI_RANK == 0
-//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype
-//                3. There MUST be more than one parameter to be stored
-//                4. The pointer of the data MUST still exist outside the function, e.g. global variables
-//
-// Parameter   :  HDF5_InputTest : the structure storing the parameters
-//
-// Return      :  None
-//-------------------------------------------------------------------------------------------------------
-void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
-{
-
-   HDF5_InputTest->Add( "Bondi_MassBH",          &Bondi_MassBH          );
-   HDF5_InputTest->Add( "Bondi_Rho0",            &Bondi_Rho0            );
-   HDF5_InputTest->Add( "Bondi_T0",              &Bondi_T0              );
-   HDF5_InputTest->Add( "Bondi_RefineRadius0",   &Bondi_RefineRadius0   );
-   HDF5_InputTest->Add( "Bondi_HalfMaxLvRefR",   &Bondi_HalfMaxLvRefR   );
-   HDF5_InputTest->Add( "Bondi_InBC_Rho",        &Bondi_InBC_Rho        );
-   HDF5_InputTest->Add( "Bondi_InBC_T",          &Bondi_InBC_T          );
-   HDF5_InputTest->Add( "Bondi_InBC_NCell",      &Bondi_InBC_NCell      );
-   HDF5_InputTest->Add( "Bondi_Soften_NCell",    &Bondi_Soften_NCell    );
-
-   HDF5_InputTest->Add( "Bondi_HSE",             &Bondi_HSE             );
-   HDF5_InputTest->Add( "Bondi_HSE_Mode",        &Bondi_HSE_Mode        );
-   HDF5_InputTest->Add( "Bondi_HSE_Dens_NBin",   &Bondi_HSE_Dens_NBin   );
-   HDF5_InputTest->Add( "Bondi_HSE_Dens_MinR",   &Bondi_HSE_Dens_MinR   );
-   HDF5_InputTest->Add( "Bondi_HSE_Dens_MaxR",   &Bondi_HSE_Dens_MaxR   );
-   HDF5_InputTest->Add( "Bondi_HSE_Dens_NormR",  &Bondi_HSE_Dens_NormR  );
-   HDF5_InputTest->Add( "Bondi_HSE_Dens_NormD",  &Bondi_HSE_Dens_NormD  );
-   HDF5_InputTest->Add( "Bondi_HSE_Truncate",    &Bondi_HSE_Truncate    );
-   HDF5_InputTest->Add( "Bondi_HSE_TrunR",       &Bondi_HSE_TrunR       );
-   HDF5_InputTest->Add( "Bondi_HSE_TrunD",       &Bondi_HSE_TrunD       );
-   HDF5_InputTest->Add( "Bondi_HSE_TrunSmoothR", &Bondi_HSE_TrunSmoothR );
-   HDF5_InputTest->Add( "Bondi_HSE_Pres_NormT",  &Bondi_HSE_Pres_NormT  );
-   HDF5_InputTest->Add( "Bondi_HSE_Beta_Rcore",  &Bondi_HSE_Beta_Rcore  );
-
-} // FUNCTION : Output_HDF5_TestProb
-#endif // #ifdef SUPPORT_HDF5
-
-
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  HSE_SetDensProfileTable
 // Description :  Set up the density profile table for HSE
@@ -820,7 +811,7 @@ void Init_TestProb_Hydro_Bondi()
    Poi_UserWorkBeforePoisson_Ptr = Poi_UserWorkBeforePoisson_Bondi;
 #  endif
 #  ifdef SUPPORT_HDF5
-   Output_HDF5_TestProb_Ptr      = Output_HDF5_TestProb;
+   Output_HDF5_InputTest_Ptr     = LoadInputTestProb;
 #  endif
 #  endif // #if ( MODEL == HYDRO  &&  defined GRAVITY )
 

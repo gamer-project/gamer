@@ -545,8 +545,13 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  endif
 
 #  if ( MODEL == HYDRO  &&  defined GRAVITY )
+#  ifdef COMOVING
    const real JeansMinPres_Coeff = ( JEANS_MIN_PRES ) ?
-                                   NEWTON_G*SQR(JEANS_MIN_PRES_NCELL*amr->dh[JEANS_MIN_PRES_LEVEL])/(GAMMA*M_PI) : NULL_REAL;
+                                   TimeOld*NEWTON_G*SQR(JEANS_MIN_PRES_NCELL*amr->dh[JEANS_MIN_PRES_LEVEL])/(GAMMA*M_PI) : NULL_REAL;
+#  else
+   const real JeansMinPres_Coeff = ( JEANS_MIN_PRES ) ?
+                                           NEWTON_G*SQR(JEANS_MIN_PRES_NCELL*amr->dh[JEANS_MIN_PRES_LEVEL])/(GAMMA*M_PI) : NULL_REAL;
+#  endif
 #  else
    const real JEANS_MIN_PRES     = false;
    const real JeansMinPres_Coeff = NULL_REAL;

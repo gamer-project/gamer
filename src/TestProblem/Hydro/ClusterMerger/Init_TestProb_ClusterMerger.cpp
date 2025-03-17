@@ -225,6 +225,92 @@ void Validate()
 
 #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 //-------------------------------------------------------------------------------------------------------
+// Function    :  LoadInputTestProb
+// Description :  Read problem-specific runtime parameters from Input__TestProb and store them in HDF5 snapshots (Data_*)
+//
+// Note        :  1. Invoked by SetParameter() to read parameters
+//                2. Invoked by Output_DumpData_Total_HDF5() using the function pointer Output_HDF5_InputTest_Ptr to store parameters
+//                3. If there is no problem-specific runtime parameter to load, add at least one parameter
+//                   to prevent an empty structure in HDF5_Output_t
+//                   --> Example:
+//                       LOAD_PARA( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+//
+// Parameter   :  load_mode      : Mode for loading parameters
+//                                 --> LOAD_READPARA    : Read parameters from Input__TestProb
+//                                     LOAD_HDF5_OUTPUT : Store parameters in HDF5 snapshots
+//                ReadPara       : Data structure for reading parameters (used with LOAD_READPARA)
+//                HDF5_InputTest : Data structure for storing parameters in HDF5 snapshots (used with LOAD_HDF5_OUTPUT)
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
+{
+
+#  ifndef SUPPORT_HDF5
+   if ( load_mode == LOAD_HDF5_OUTPUT )   Aux_Error( ERROR_INFO, "please turn on SUPPORT_HDF5 in the Makefile for load_mode == LOAD_HDF5_OUTPUT !!\n" );
+#  endif
+
+   if ( load_mode == LOAD_READPARA     &&  ReadPara       == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_READPARA and ReadPara == NULL !!\n" );
+   if ( load_mode == LOAD_HDF5_OUTPUT  &&  HDF5_InputTest == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_HDF5_OUTPUT and HDF5_InputTest == NULL !!\n" );
+
+// add parameters in the following format:
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
+// --> LOAD_PARA() is defined in "include/TestProb.h"
+// ***************************************************************************************************************************
+// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",        &VARIABLE,               DEFAULT,          MIN,           MAX            );
+// ***************************************************************************************************************************
+   LOAD_PARA( load_mode, "Merger_Coll_NumHalos",   &Merger_Coll_NumHalos,      2,                  1,             3              );
+   LOAD_PARA( load_mode, "Merger_Coll_IsGas1",     &Merger_Coll_IsGas1,        true,               Useless_bool,  Useless_bool   );
+   LOAD_PARA( load_mode, "Merger_Coll_IsGas2",     &Merger_Coll_IsGas2,        true,               Useless_bool,  Useless_bool   );
+   LOAD_PARA( load_mode, "Merger_Coll_IsGas3",     &Merger_Coll_IsGas3,        true,               Useless_bool,  Useless_bool   );
+   LOAD_PARA( load_mode, "Merger_File_Prof1",       Merger_File_Prof1,         NoDef_str,          Useless_str,   Useless_str    );
+   LOAD_PARA( load_mode, "Merger_File_Par1",        Merger_File_Par1,          NoDef_str,          Useless_str,   Useless_str    );
+   LOAD_PARA( load_mode, "Merger_File_Prof2",       Merger_File_Prof2,         NoDef_str,          Useless_str,   Useless_str    );
+   LOAD_PARA( load_mode, "Merger_File_Par2",        Merger_File_Par2,          NoDef_str,          Useless_str,   Useless_str    );
+   LOAD_PARA( load_mode, "Merger_File_Prof3",       Merger_File_Prof3,         NoDef_str,          Useless_str,   Useless_str    );
+   LOAD_PARA( load_mode, "Merger_File_Par3",        Merger_File_Par3,          NoDef_str,          Useless_str,   Useless_str    );
+   LOAD_PARA( load_mode, "Merger_Coll_PosX1",      &Merger_Coll_PosX1,        -1.0,                NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_PosY1",      &Merger_Coll_PosY1,        -1.0,                NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_PosX2",      &Merger_Coll_PosX2,        -1.0,                NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_PosY2",      &Merger_Coll_PosY2,        -1.0,                NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_PosX3",      &Merger_Coll_PosX3,        -1.0,                NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_PosY3",      &Merger_Coll_PosY3,        -1.0,                NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_VelX1",      &Merger_Coll_VelX1,        -1.0,                NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_VelY1",      &Merger_Coll_VelY1,        -1.0,                NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_VelX2",      &Merger_Coll_VelX2,        -1.0,                NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_VelY2",      &Merger_Coll_VelY2,        -1.0,                NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_VelX3",      &Merger_Coll_VelX3,        -1.0,                NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_VelY3",      &Merger_Coll_VelY3,        -1.0,                NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_UseMetals",  &Merger_Coll_UseMetals,     true,               Useless_bool,  Useless_bool   );
+   LOAD_PARA( load_mode, "Merger_Coll_LabelCenter", &Merger_Coll_LabelCenter,  true,               Useless_bool,  Useless_bool   );
+   LOAD_PARA( load_mode, "Bondi_MassBH1",           &Bondi_MassBH1,           -1.0,                Eps_double,    NoMax_double   );
+   LOAD_PARA( load_mode, "Bondi_MassBH2",           &Bondi_MassBH2,           -1.0,                Eps_double,    NoMax_double   );
+   LOAD_PARA( load_mode, "Bondi_MassBH3",           &Bondi_MassBH3,           -1.0,                Eps_double,    NoMax_double   );
+   LOAD_PARA( load_mode, "R_acc",                   &R_acc,                   -1.0,                NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "R_dep",                   &R_dep,                   -1.0,                NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Jet_HalfHeight1",         &Jet_HalfHeight1,         -1.0,                Eps_double,    NoMax_double   );
+   LOAD_PARA( load_mode, "Jet_HalfHeight2",         &Jet_HalfHeight2,         -1.0,                Eps_double,    NoMax_double   );
+   LOAD_PARA( load_mode, "Jet_HalfHeight3",         &Jet_HalfHeight3,         -1.0,                Eps_double,    NoMax_double   );
+   LOAD_PARA( load_mode, "Jet_Radius1",             &Jet_Radius1,             -1.0,                Eps_double,    NoMax_double   );
+   LOAD_PARA( load_mode, "Jet_Radius2",             &Jet_Radius2,             -1.0,                Eps_double,    NoMax_double   );
+   LOAD_PARA( load_mode, "Jet_Radius3",             &Jet_Radius3,             -1.0,                Eps_double,    NoMax_double   );
+   LOAD_PARA( load_mode, "Accretion_Mode",          &Accretion_Mode,           1,                  1,             3              );
+   LOAD_PARA( load_mode, "eta",                     &eta,                     -1.0,                NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "eps_f",                   &eps_f,                   -1.0,                NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "eps_m",                   &eps_m,                   -1.0,                NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "AdjustBHPos",             &AdjustBHPos,              false,              Useless_bool,  Useless_bool   );
+   LOAD_PARA( load_mode, "AdjustBHVel",             &AdjustBHVel,              false,              Useless_bool,  Useless_bool   );
+   LOAD_PARA( load_mode, "AdjustPeriod",            &AdjustPeriod,            -1.0,                NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "JetDirection_case",       &JetDirection_case,        1,                  1,             3              );
+   LOAD_PARA( load_mode, "JetDirection_file",       &JetDirection_case,        "JetDirection.txt", Useless_str,   Useless_str    );
+   LOAD_PARA( load_mode, "fixBH",                   &fixBH,                    false,              Useless_bool,  Useless_bool   );
+
+} // FUNCITON : LoadInputTestProb
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
 //
@@ -247,61 +333,11 @@ void SetParameter()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ...\n" );
 
 // (1) load the problem-specific runtime parameters
+// (1-1) read parameters from Input__TestProb
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
-// add parameters in the following format:
-// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
-// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
-// ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",         &VARIABLE,                 DEFAULT,            MIN,           MAX            );
-// ********************************************************************************************************************************
-   ReadPara->Add( "Merger_Coll_NumHalos",    &Merger_Coll_NumHalos,     2,                  1,             3              );
-   ReadPara->Add( "AGN_feedback",            &AGN_feedback,             false,              Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Merger_Coll_IsGas1",      &Merger_Coll_IsGas1,       true,               Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Merger_Coll_IsGas2",      &Merger_Coll_IsGas2,       true,               Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Merger_Coll_IsGas3",      &Merger_Coll_IsGas3,       true,               Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Merger_File_Prof1",        Merger_File_Prof1,        NoDef_str,          Useless_str,   Useless_str    );
-   ReadPara->Add( "Merger_File_Par1",         Merger_File_Par1,         NoDef_str,          Useless_str,   Useless_str    );
-   ReadPara->Add( "Merger_File_Prof2",        Merger_File_Prof2,        NoDef_str,          Useless_str,   Useless_str    );
-   ReadPara->Add( "Merger_File_Par2",         Merger_File_Par2,         NoDef_str,          Useless_str,   Useless_str    );
-   ReadPara->Add( "Merger_File_Prof3",        Merger_File_Prof3,        NoDef_str,          Useless_str,   Useless_str    );
-   ReadPara->Add( "Merger_File_Par3",         Merger_File_Par3,         NoDef_str,          Useless_str,   Useless_str    );
-   ReadPara->Add( "Merger_Coll_PosX1",       &Merger_Coll_PosX1,       -1.0,                NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_PosY1",       &Merger_Coll_PosY1,       -1.0,                NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_PosX2",       &Merger_Coll_PosX2,       -1.0,                NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_PosY2",       &Merger_Coll_PosY2,       -1.0,                NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_PosX3",       &Merger_Coll_PosX3,       -1.0,                NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_PosY3",       &Merger_Coll_PosY3,       -1.0,                NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_VelX1",       &Merger_Coll_VelX1,       -1.0,                NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_VelY1",       &Merger_Coll_VelY1,       -1.0,                NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_VelX2",       &Merger_Coll_VelX2,       -1.0,                NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_VelY2",       &Merger_Coll_VelY2,       -1.0,                NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_VelX3",       &Merger_Coll_VelX3,       -1.0,                NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_VelY3",       &Merger_Coll_VelY3,       -1.0,                NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_UseMetals",   &Merger_Coll_UseMetals,    true,               Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Merger_Coll_LabelCenter", &Merger_Coll_LabelCenter,  true,               Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Bondi_MassBH1",           &Bondi_MassBH1,           -1.0,                Eps_double,    NoMax_double   );
-   ReadPara->Add( "Bondi_MassBH2",           &Bondi_MassBH2,           -1.0,                Eps_double,    NoMax_double   );
-   ReadPara->Add( "Bondi_MassBH3",           &Bondi_MassBH3,           -1.0,                Eps_double,    NoMax_double   );
-   ReadPara->Add( "R_acc",                   &R_acc,                   -1.0,                NoMin_double,  NoMax_double   );
-   ReadPara->Add( "R_dep",                   &R_dep,                   -1.0,                NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Jet_HalfHeight1",         &Jet_HalfHeight1,         -1.0,                Eps_double,    NoMax_double   );
-   ReadPara->Add( "Jet_HalfHeight2",         &Jet_HalfHeight2,         -1.0,                Eps_double,    NoMax_double   );
-   ReadPara->Add( "Jet_HalfHeight3",         &Jet_HalfHeight3,         -1.0,                Eps_double,    NoMax_double   );
-   ReadPara->Add( "Jet_Radius1",             &Jet_Radius1,             -1.0,                Eps_double,    NoMax_double   );
-   ReadPara->Add( "Jet_Radius2",             &Jet_Radius2,             -1.0,                Eps_double,    NoMax_double   );
-   ReadPara->Add( "Jet_Radius3",             &Jet_Radius3,             -1.0,                Eps_double,    NoMax_double   );
-   ReadPara->Add( "Accretion_Mode",          &Accretion_Mode,           1,                  1,             3              );
-   ReadPara->Add( "eta",                     &eta,                     -1.0,                NoMin_double,  NoMax_double   );
-   ReadPara->Add( "eps_f",                   &eps_f,                   -1.0,                NoMin_double,  NoMax_double   );
-   ReadPara->Add( "eps_m",                   &eps_m,                   -1.0,                NoMin_double,  NoMax_double   );
-   ReadPara->Add( "AdjustBHPos",             &AdjustBHPos,              false,              Useless_bool,  Useless_bool   );
-   ReadPara->Add( "AdjustBHVel",             &AdjustBHVel,              false,              Useless_bool,  Useless_bool   );
-   ReadPara->Add( "AdjustPeriod",            &AdjustPeriod,            -1.0,                NoMin_double,  NoMax_double   );
-   ReadPara->Add( "JetDirection_case",       &JetDirection_case,        1,                  1,             3              );
-   ReadPara->Add( "JetDirection_file",       &JetDirection_case,        "JetDirection.txt", Useless_str,   Useless_str    );
-   ReadPara->Add( "fixBH",                   &fixBH,                    false,              Useless_bool,  Useless_bool   );
+   LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
 
    ReadPara->Read( FileName );
 
@@ -829,73 +865,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    }
 
 } // FUNCTION : SetGridIC
-
-
-#ifdef SUPPORT_HDF5
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Output_HDF5_TestProb
-// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
-//
-// Note         : 1. This function only works in MPI_RANK == 0
-//                2. We supports int, uint, long, ulong, bool, float, double, and string datatype
-//                3. There MUST be more than one parameter to be stored
-//                4. The pointer of the data MUST still exist outside the function, e.g. global variables
-//
-// Parameter   :  HDF5_InputTest : the structure storing the parameters
-//
-// Return      :  None
-//-------------------------------------------------------------------------------------------------------
-void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
-{
-
-   HDF5_InputTest->Add( "Merger_Coll_NumHalos",    &Merger_Coll_NumHalos    );
-   HDF5_InputTest->Add( "AGN_feedback",            &AGN_feedback            );
-   HDF5_InputTest->Add( "Merger_Coll_IsGas1",      &Merger_Coll_IsGas1      );
-   HDF5_InputTest->Add( "Merger_Coll_IsGas2",      &Merger_Coll_IsGas2      );
-   HDF5_InputTest->Add( "Merger_Coll_IsGas3",      &Merger_Coll_IsGas3      );
-   HDF5_InputTest->Add( "Merger_File_Prof1",        Merger_File_Prof1       );
-   HDF5_InputTest->Add( "Merger_File_Par1",         Merger_File_Par1        );
-   HDF5_InputTest->Add( "Merger_File_Prof2",        Merger_File_Prof2       );
-   HDF5_InputTest->Add( "Merger_File_Par2",         Merger_File_Par2        );
-   HDF5_InputTest->Add( "Merger_File_Prof3",        Merger_File_Prof3       );
-   HDF5_InputTest->Add( "Merger_File_Par3",         Merger_File_Par3        );
-   HDF5_InputTest->Add( "Merger_Coll_PosX1",       &Merger_Coll_PosX1       );
-   HDF5_InputTest->Add( "Merger_Coll_PosY1",       &Merger_Coll_PosY1       );
-   HDF5_InputTest->Add( "Merger_Coll_PosX2",       &Merger_Coll_PosX2       );
-   HDF5_InputTest->Add( "Merger_Coll_PosY2",       &Merger_Coll_PosY2       );
-   HDF5_InputTest->Add( "Merger_Coll_PosX3",       &Merger_Coll_PosX3       );
-   HDF5_InputTest->Add( "Merger_Coll_PosY3",       &Merger_Coll_PosY3       );
-   HDF5_InputTest->Add( "Merger_Coll_VelX1",       &Merger_Coll_VelX1       );
-   HDF5_InputTest->Add( "Merger_Coll_VelY1",       &Merger_Coll_VelY1       );
-   HDF5_InputTest->Add( "Merger_Coll_VelX2",       &Merger_Coll_VelX2       );
-   HDF5_InputTest->Add( "Merger_Coll_VelY2",       &Merger_Coll_VelY2       );
-   HDF5_InputTest->Add( "Merger_Coll_VelX3",       &Merger_Coll_VelX3       );
-   HDF5_InputTest->Add( "Merger_Coll_VelY3",       &Merger_Coll_VelY3       );
-   HDF5_InputTest->Add( "Merger_Coll_UseMetals",   &Merger_Coll_UseMetals   );
-   HDF5_InputTest->Add( "Merger_Coll_LabelCenter", &Merger_Coll_LabelCenter );
-   HDF5_InputTest->Add( "Bondi_MassBH1",           &Bondi_MassBH1           );
-   HDF5_InputTest->Add( "Bondi_MassBH2",           &Bondi_MassBH2           );
-   HDF5_InputTest->Add( "Bondi_MassBH3",           &Bondi_MassBH3           );
-   HDF5_InputTest->Add( "R_acc",                   &R_acc                   );
-   HDF5_InputTest->Add( "R_dep",                   &R_dep                   );
-   HDF5_InputTest->Add( "Jet_HalfHeight1",         &Jet_HalfHeight1         );
-   HDF5_InputTest->Add( "Jet_HalfHeight2",         &Jet_HalfHeight2         );
-   HDF5_InputTest->Add( "Jet_HalfHeight3",         &Jet_HalfHeight3         );
-   HDF5_InputTest->Add( "Jet_Radius1",             &Jet_Radius1             );
-   HDF5_InputTest->Add( "Jet_Radius2",             &Jet_Radius2             );
-   HDF5_InputTest->Add( "Jet_Radius3",             &Jet_Radius3             );
-   HDF5_InputTest->Add( "Accretion_Mode",          &Accretion_Mode          );
-   HDF5_InputTest->Add( "eta",                     &eta                     );
-   HDF5_InputTest->Add( "eps_f",                   &eps_f                   );
-   HDF5_InputTest->Add( "eps_m",                   &eps_m                   );
-   HDF5_InputTest->Add( "AdjustBHPos",             &AdjustBHPos             );
-   HDF5_InputTest->Add( "AdjustBHVel",             &AdjustBHVel             );
-   HDF5_InputTest->Add( "AdjustPeriod",            &AdjustPeriod            );
-   HDF5_InputTest->Add( "JetDirection_case",       &JetDirection_case       );
-   HDF5_InputTest->Add( "JetDirection_file",       &JetDirection_file       );
-   HDF5_InputTest->Add( "fixBH",                   &fixBH                   );
-
-} // FUNCTION : Output_HDF5_TestProb
+#endif // #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -1030,8 +1000,8 @@ void Init_TestProb_Hydro_ClusterMerger()
    Init_Function_BField_User_Ptr = SetBFieldIC;
 #  endif
 #  ifdef SUPPORT_HDF5
-   Output_HDF5_TestProb_Ptr       = Output_HDF5_TestProb;
    Output_HDF5_User_Ptr           = Output_HDF5_User_ClusterMerger;
+   Output_HDF5_InputTest_Ptr      = LoadInputTestProb;
 #  endif
 #  endif // if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 
