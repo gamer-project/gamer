@@ -15,7 +15,7 @@
 // ########################
 
 // current version
-#define VERSION      "gamer-2.3.0.dev"
+#define VERSION      "gamer-2.2.1"
 
 
 // option == NONE --> the option is turned off
