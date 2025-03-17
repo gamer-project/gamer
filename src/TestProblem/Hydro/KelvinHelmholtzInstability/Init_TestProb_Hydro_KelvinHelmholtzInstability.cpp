@@ -75,6 +75,58 @@ void Validate()
 
 #if ( MODEL == HYDRO )
 //-------------------------------------------------------------------------------------------------------
+// Function    :  LoadInputTestProb
+// Description :  Read problem-specific runtime parameters from Input__TestProb and store them in HDF5 snapshots (Data_*)
+//
+// Note        :  1. Invoked by SetParameter() to read parameters
+//                2. Invoked by Output_DumpData_Total_HDF5() using the function pointer Output_HDF5_InputTest_Ptr to store parameters
+//                3. If there is no problem-specific runtime parameter to load, add at least one parameter
+//                   to prevent an empty structure in HDF5_Output_t
+//                   --> Example:
+//                       LOAD_PARA( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+//
+// Parameter   :  load_mode      : Mode for loading parameters
+//                                 --> LOAD_READPARA    : Read parameters from Input__TestProb
+//                                     LOAD_HDF5_OUTPUT : Store parameters in HDF5 snapshots
+//                ReadPara       : Data structure for reading parameters (used with LOAD_READPARA)
+//                HDF5_InputTest : Data structure for storing parameters in HDF5 snapshots (used with LOAD_HDF5_OUTPUT)
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
+{
+
+#  ifndef SUPPORT_HDF5
+   if ( load_mode == LOAD_HDF5_OUTPUT )   Aux_Error( ERROR_INFO, "please turn on SUPPORT_HDF5 in the Makefile for load_mode == LOAD_HDF5_OUTPUT !!\n" );
+#  endif
+
+   if ( load_mode == LOAD_READPARA     &&  ReadPara       == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_READPARA and ReadPara == NULL !!\n" );
+   if ( load_mode == LOAD_HDF5_OUTPUT  &&  HDF5_InputTest == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_HDF5_OUTPUT and HDF5_InputTest == NULL !!\n" );
+
+// add parameters in the following format:
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
+// --> LOAD_PARA() is defined in "include/TestProb.h"
+// **************************************************************************************************************************
+// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",     &VARIABLE,               DEFAULT,      MIN,              MAX               );
+// **************************************************************************************************************************
+   LOAD_PARA( load_mode, "KH_RSeed",            &KH_RSeed,              -1,            0,                NoMax_int         );
+   LOAD_PARA( load_mode, "KH_RAmp",             &KH_RAmp,               -1.0,          Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "KH_Pres",             &KH_Pres,               -1.0,          Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "KH_Vx1",              &KH_Vx1,                NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "KH_Vx2",              &KH_Vx2,                NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "KH_Vy1",              &KH_Vy1,                NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "KH_Vy2",              &KH_Vy2,                NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "KH_Rho1",             &KH_Rho1,               -1.0,          Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "KH_Rho2",             &KH_Rho2,               -1.0,          Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "KH_RefineShearMaxLv", &KH_RefineShearMaxLv,   2,             0,                TOP_LEVEL         );
+   LOAD_PARA( load_mode, "KH_PeriodicZFactor",  &KH_PeriodicZFactor,    1,             1,                NoMax_int         );
+
+} // FUNCITON : LoadInputTestProb
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
 //
@@ -96,26 +148,11 @@ void SetParameter()
 
 
 // (1) load the problem-specific runtime parameters
+// (1-1) read parameters from Input__TestProb
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
-// add parameters in the following format:
-// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
-// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
-// ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",     &VARIABLE_ADDRESS,      DEFAULT,       MIN,              MAX               );
-// ********************************************************************************************************************************
-   ReadPara->Add( "KH_RSeed",            &KH_RSeed,              -1,            0,                NoMax_int         );
-   ReadPara->Add( "KH_RAmp",             &KH_RAmp,               -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "KH_Pres",             &KH_Pres,               -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "KH_Vx1",              &KH_Vx1,                NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "KH_Vx2",              &KH_Vx2,                NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "KH_Vy1",              &KH_Vy1,                NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "KH_Vy2",              &KH_Vy2,                NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "KH_Rho1",             &KH_Rho1,               -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "KH_Rho2",             &KH_Rho2,               -1.0,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "KH_RefineShearMaxLv", &KH_RefineShearMaxLv,   2,             0,                TOP_LEVEL         );
-   ReadPara->Add( "KH_PeriodicZFactor",  &KH_PeriodicZFactor,    1,             1,                NoMax_int         );
+   LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
 
    ReadPara->Read( FileName );
 
@@ -302,8 +339,11 @@ void Init_TestProb_Hydro_KelvinHelmholtzInstability()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr = SetGridIC;
-   Flag_User_Ptr          = Flag_KelvinHelmholtzInstability;
+   Init_Function_User_Ptr    = SetGridIC;
+   Flag_User_Ptr             = Flag_KelvinHelmholtzInstability;
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_InputTest_Ptr = LoadInputTestProb;
+#  endif
 #  endif // #if ( MODEL == HYDRO )
 
 

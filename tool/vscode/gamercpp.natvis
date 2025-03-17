@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="Timer_t">
+    <DisplayString Condition="Status">Timer running</DisplayString>
+    <DisplayString Condition="!Status">Timer stop: {Time*1.0e-6} sec</DisplayString>
+  </Type>
+</AutoVisualizer>

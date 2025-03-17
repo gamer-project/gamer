@@ -281,6 +281,12 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "GitBranch",            &KeyInfo.GitBranch,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal,  EXPAND_AND_QUOTE(GIT_BRANCH), 1, NonFatal );
    LoadField( "GitCommit",            &KeyInfo.GitCommit,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal,  EXPAND_AND_QUOTE(GIT_COMMIT), 1, NonFatal );
 
+   if ( KeyInfo.FormatVersion >= 2502 )
+   {
+   LoadField( "ConRef",                ConRef,                       H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   ConRefInitialized = true;
+   }
+
 
 // 1-4. close all objects
    H5_Status = H5Tclose( H5_TypeID_KeyInfo );
@@ -1891,6 +1897,8 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
 #  endif
 
    LoadField( "NFieldStoredMax",      &RS.NFieldStoredMax,      SID, TID, NonFatal, &RT.NFieldStoredMax,       1, NonFatal );
+
+   LoadField( "NConRefMax",           &RS.NConRefMax,           SID, TID, NonFatal, &RT.NConRefMax,            1, NonFatal );
 
 
 // 5. close all objects

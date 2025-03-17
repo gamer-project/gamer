@@ -23,6 +23,7 @@ Mandatory steps are marked by &#x1F4CC;.
    *  [External Potential](#external-potential)
    *  [Equation of State](#equation-of-state)
    *  [Feedback](#feedback)
+   *  [HDF5 Output](#hdf5-output)
 7. [Add Problem-specific Validators](#vii-add-problem-specific-validators)
 8. [Store Problem-specific Input Files](#viii-store-problem-specific-input-files)
 
@@ -156,24 +157,17 @@ problem source file.
     static char   var_str[MAX_STRING];
     ```
 
-2. Edit the function `SetParameter()` to load these parameters.
+2. Edit the function `LoadInputTestProb()` to load these parameters.
 
     ```C++
-       const char FileName[] = "Input__TestProb";
-       ReadPara_t *ReadPara  = new ReadPara_t;
-
     // add parameters in the following format:
-    // *************************************************************************************************
-    // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,     DEFAULT,       MIN,            MAX          );
-    // *************************************************************************************************
-       ReadPara->Add( "var_bool",          &var_bool,     true,          Useless_bool,   Useless_bool );
-       ReadPara->Add( "var_double",        &var_double,   1.0,           Eps_double,     NoMax_double );
-       ReadPara->Add( "var_int",           &var_int,      2,             0,              5            );
-       ReadPara->Add( "var_str",            var_str,      Useless_str,   Useless_str,    Useless_str  );
-
-       ReadPara->Read( FileName );
-
-       delete ReadPara;
+    // ********************************************************************************************************
+    // LOAD_PARA( load_mode, "KEY_IN_THE_FILE",   &VARIABLE,     DEFAULT,       MIN,            MAX          );
+    // ********************************************************************************************************
+       LOAD_PARA( load_mode, "var_bool",          &var_bool,     true,          Useless_bool,   Useless_bool );
+       LOAD_PARA( load_mode, "var_double",        &var_double,   1.0,           Eps_double,     NoMax_double );
+       LOAD_PARA( load_mode, "var_int",           &var_int,      2,             0,              5            );
+       LOAD_PARA( load_mode, "var_str",            var_str,      Useless_str,   Useless_str,    Useless_str  );
     ```
 
 > [!CAUTION]
@@ -181,6 +175,13 @@ problem source file.
 >
 > Some handy constants (e.g., `Useless_bool`, `Eps_double`, `NoMin_int`, ...)
 are defined in `include/ReadPara.h`. See [[Adding Parameters | Adding-Parameters]] for details.
+
+> [!CAUTION]
+> There should be at least one variable to store. Otherwise, please store a global constant.
+> ```c++
+>    LOAD_PARA( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+> ```
+> See `src/TestProblem/Hydro/CDM_LSS/Init_TestProb_Hydro_CDM_LSS.cpp` for an example.
 
 3. [Optional] Edit `SetParameter()` to make a note of the values adopted
 during the runtime.
@@ -617,6 +618,20 @@ Add a user-specified feedback. See [[FB_USER | Runtime-Parameters:-Feedback#FB_U
 * **Example:**
    * `src/TestProblem/Hydro/Plummer/FB_Plummer.cpp`
 
+### HDF5 Output
+* **Description:**
+Store user-specified variables in HDF5 snapshots.
+* **Prototype:**
+   * `void Output_HDF5_UserPara_NewProblem( HDF5_Output_t *HDF5_UserPara );`
+* **Function Pointer:**
+   * `Output_HDF5_UserPara_Ptr`
+* **Compilation Option:**
+[[SUPPORT_HDF5 | Installation: Simulation-Options#SUPPORT_HDF5]]
+* **Runtime Option:**
+None
+* **Example:**
+   * `Output/Output_DumData_Total_HDF5.cpp` --> `Output_HDF5_UserPara_Template()`
+
 
 ## VII. Add Problem-specific Validators
 
@@ -676,7 +691,6 @@ and other relevant files such as README and analysis scripts.
 3. Edit `README` to help conduct this test problem.
 
 4. Add analysis scripts (if any).
-
 
 <br>
 
