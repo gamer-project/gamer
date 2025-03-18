@@ -50,3 +50,4 @@
 * [[ELBDM Spectral Interpolation | ELBDM-Spectral-Interpolation]]
 * [[Style Guide | Style-Guide]]
 * [[How to Contribute | How-to-Contribute]]
+* [[Developing with VS Code | Developing-with-VS-Code]]
