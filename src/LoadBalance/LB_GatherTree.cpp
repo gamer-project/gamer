@@ -44,6 +44,8 @@ LB_LocalPatchExchangeList::LB_LocalPatchExchangeList() : isInitialised(false), L
    {
       LBIdxList_Local        [lv] = new long   [ amr->NPatchComma[lv][1] ];
       CrList_Local           [lv] = new int    [ amr->NPatchComma[lv][1] ][3];
+      CrLList_Local          [lv] = new int    [ amr->NPatchComma[lv][1] ][3];
+      CrRList_Local          [lv] = new int    [ amr->NPatchComma[lv][1] ][3];
       FaList_Local           [lv] = new int    [ amr->NPatchComma[lv][1] ];
       SonList_Local          [lv] = new int    [ amr->NPatchComma[lv][1] ];
       SibList_Local          [lv] = new int    [ amr->NPatchComma[lv][1] ][26];
@@ -69,6 +71,8 @@ LB_LocalPatchExchangeList::~LB_LocalPatchExchangeList() {
    {
       delete []         LBIdxList_Local[lv];
       delete []            CrList_Local[lv];
+      delete []           CrLList_Local[lv];
+      delete []           CrRList_Local[lv];
       delete []            FaList_Local[lv];
       delete []           SonList_Local[lv];
       delete []           SibList_Local[lv];
@@ -99,6 +103,8 @@ LB_GlobalPatchExchangeList::LB_GlobalPatchExchangeList( LB_PatchCount& pc, int r
    if ( root < 0  ||  root == MPI_Rank) {
       LBIdxList_AllLv      = new long   [ pc.NPatchAllLv ];
       CrList_AllLv         = new int    [ pc.NPatchAllLv ][3];
+      CrLList_AllLv        = new int    [ pc.NPatchAllLv ][3];
+      CrRList_AllLv        = new int    [ pc.NPatchAllLv ][3];
       FaList_AllLv         = new int    [ pc.NPatchAllLv ];
       SonList_AllLv        = new int    [ pc.NPatchAllLv ];
       SibList_AllLv        = new int    [ pc.NPatchAllLv ][26];
@@ -115,6 +121,8 @@ LB_GlobalPatchExchangeList::LB_GlobalPatchExchangeList( LB_PatchCount& pc, int r
    } else {
       LBIdxList_AllLv      = NULL;
       CrList_AllLv         = NULL;
+      CrLList_AllLv        = NULL;
+      CrRList_AllLv        = NULL;
       FaList_AllLv         = NULL;
       SonList_AllLv        = NULL;
       SibList_AllLv        = NULL;
@@ -136,6 +144,8 @@ LB_GlobalPatchExchangeList::~LB_GlobalPatchExchangeList() {
    if ( isAllocated ) {
       delete []      LBIdxList_AllLv;
       delete []         CrList_AllLv;
+      delete []        CrLList_AllLv;
+      delete []        CrRList_AllLv;
       delete []         FaList_AllLv;
       delete []        SonList_AllLv;
       delete []        SibList_AllLv;
@@ -317,7 +327,11 @@ void LB_FillLocalPatchExchangeList( LB_PatchCount& pc, LB_LocalPatchExchangeList
 
 //       2. corner
          for (int d=0; d<3; d++)
-         lel.CrList_Local[lv][PID][d] = amr->patch[0][lv][PID]->corner[d];
+         {
+            lel.CrList_Local[lv][PID][d]  = amr->patch[0][lv][PID]->corner[d];
+            lel.CrLList_Local[lv][PID][d] = amr->patch[0][lv][PID]->cornerL[d];
+            lel.CrRList_Local[lv][PID][d] = amr->patch[0][lv][PID]->cornerR[d];
+         }
 
 
 //       3. father GID
@@ -519,6 +533,8 @@ void LB_FillGlobalPatchExchangeList( LB_PatchCount& pc, LB_LocalPatchExchangeLis
 
 // sending and receiving lists for MPI communication
    int RecvCount_Cr        [MPI_NRank], RecvDisp_Cr        [MPI_NRank];
+   int RecvCount_CrL       [MPI_NRank], RecvDisp_CrL       [MPI_NRank];
+   int RecvCount_CrR       [MPI_NRank], RecvDisp_CrR       [MPI_NRank];
    int RecvCount_Fa        [MPI_NRank], RecvDisp_Fa        [MPI_NRank];
    int RecvCount_Son       [MPI_NRank], RecvDisp_Son       [MPI_NRank];
    int RecvCount_Sib       [MPI_NRank], RecvDisp_Sib       [MPI_NRank];
@@ -540,6 +556,8 @@ void LB_FillGlobalPatchExchangeList( LB_PatchCount& pc, LB_LocalPatchExchangeLis
          RecvCount_Son       [r] = RecvCount_Fa[r];
          RecvCount_Sib       [r] = RecvCount_Fa[r]*26;
          RecvCount_Cr        [r] = RecvCount_Fa[r]*3;
+         RecvCount_CrL       [r] = RecvCount_Fa[r]*3;
+         RecvCount_CrR       [r] = RecvCount_Fa[r]*3;
          RecvCount_EdgeL     [r] = RecvCount_Fa[r]*3;
          RecvCount_EdgeR     [r] = RecvCount_Fa[r]*3;
          RecvCount_PaddedCr1D[r] = RecvCount_Fa[r];
@@ -552,6 +570,8 @@ void LB_FillGlobalPatchExchangeList( LB_PatchCount& pc, LB_LocalPatchExchangeLis
          RecvDisp_Son        [r] = RecvDisp_Fa[r];
          RecvDisp_Sib        [r] = RecvDisp_Fa[r]*26;
          RecvDisp_Cr         [r] = RecvDisp_Fa[r]*3;
+         RecvDisp_CrL        [r] = RecvDisp_Fa[r]*3;
+         RecvDisp_CrR        [r] = RecvDisp_Fa[r]*3;
          RecvDisp_EdgeL      [r] = RecvDisp_Fa[r]*3;
          RecvDisp_EdgeR      [r] = RecvDisp_Fa[r]*3;
          RecvDisp_PaddedCr1D [r] = RecvDisp_Fa[r];
@@ -574,6 +594,12 @@ void LB_FillGlobalPatchExchangeList( LB_PatchCount& pc, LB_LocalPatchExchangeLis
 
          MPI_Allgatherv( lel.CrList_Local[lv][0],  amr->NPatchComma[lv][1]*3,    MPI_INT,
                       (gel.CrList_AllLv+pc.GID_LvStart[lv])[0],         RecvCount_Cr,           RecvDisp_Cr,         MPI_INT,                   MPI_COMM_WORLD );
+
+         MPI_Allgatherv( lel.CrLList_Local[lv][0], amr->NPatchComma[lv][1]*3,    MPI_INT,
+                      (gel.CrLList_AllLv+pc.GID_LvStart[lv])[0],        RecvCount_CrL,          RecvDisp_CrL,        MPI_INT,                   MPI_COMM_WORLD );
+
+         MPI_Allgatherv( lel.CrRList_Local[lv][0], amr->NPatchComma[lv][1]*3,    MPI_INT,
+                      (gel.CrRList_AllLv+pc.GID_LvStart[lv])[0],        RecvCount_CrR,          RecvDisp_CrR,        MPI_INT,                   MPI_COMM_WORLD );
 
          MPI_Allgatherv( lel.EdgeLList_Local[lv][0],  amr->NPatchComma[lv][1]*3, MPI_DOUBLE,
                       (gel.EdgeLList_AllLv+pc.GID_LvStart[lv])[0],      RecvCount_EdgeL,        RecvDisp_EdgeL,      MPI_DOUBLE,                MPI_COMM_WORLD );
@@ -603,6 +629,12 @@ void LB_FillGlobalPatchExchangeList( LB_PatchCount& pc, LB_LocalPatchExchangeLis
 
          MPI_Gatherv( lel.CrList_Local[lv][0],  amr->NPatchComma[lv][1]*3,       MPI_INT,
                       (gel.CrList_AllLv+pc.GID_LvStart[lv])[0],         RecvCount_Cr,           RecvDisp_Cr,         MPI_INT,             root, MPI_COMM_WORLD );
+
+         MPI_Gatherv( lel.CrLList_Local[lv][0],  amr->NPatchComma[lv][1]*3,       MPI_INT,
+                      (gel.CrLList_AllLv+pc.GID_LvStart[lv])[0],        RecvCount_CrL,          RecvDisp_CrL,        MPI_INT,             root, MPI_COMM_WORLD );
+
+         MPI_Gatherv( lel.CrLList_Local[lv][0], amr->NPatchComma[lv][1]*3,       MPI_INT,
+                      (gel.CrRList_AllLv+pc.GID_LvStart[lv])[0],        RecvCount_CrR,          RecvDisp_CrR,        MPI_INT,             root, MPI_COMM_WORLD );
 
          MPI_Gatherv( lel.EdgeLList_Local[lv][0],  amr->NPatchComma[lv][1]*3,    MPI_DOUBLE,
                       (gel.EdgeLList_AllLv+pc.GID_LvStart[lv])[0],      RecvCount_EdgeL,        RecvDisp_EdgeL,      MPI_DOUBLE,          root, MPI_COMM_WORLD );
@@ -674,6 +706,10 @@ LB_GlobalPatch* LB_ConstructGlobalTree( LB_PatchCount& pc, LB_GlobalPatchExchang
          global_tree[MyGID].sibling[s] = gel.SibList_AllLv       [MyGID][s];
          for (int c=0; c<3 ; c++)
          global_tree[MyGID].corner[c]  = gel.CrList_AllLv        [MyGID][c];
+         for (int c=0; c<3 ; c++)
+         global_tree[MyGID].cornerL[c] = gel.CrList_AllLv        [MyGID][c];
+         for (int c=0; c<3 ; c++)
+         global_tree[MyGID].cornerR[c] = gel.CrList_AllLv        [MyGID][c];
          for (int c=0; c<3 ; c++)
          global_tree[MyGID].EdgeL[c]   = gel.EdgeLList_AllLv     [MyGID][c];
          for (int c=0; c<3 ; c++)

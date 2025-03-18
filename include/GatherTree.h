@@ -19,6 +19,8 @@ class NonCopyable
 struct LB_GlobalPatch
 {
    int    corner[3];
+   int    cornerL[3];
+   int    cornerR[3];
    int    sibling[26];
    int    father;
    int    son;
@@ -61,6 +63,8 @@ struct LB_LocalPatchExchangeList : private NonCopyable
 
    long    *LBIdxList_Local     [NLEVEL];      // load balance ids
    int    (*CrList_Local        [NLEVEL])[3];  // patch corners
+   int    (*CrLList_Local       [NLEVEL])[3];  // patch left corners
+   int    (*CrRList_Local       [NLEVEL])[3];  // patch right corners
    int     *FaList_Local        [NLEVEL];      // father GIDs
    int     *SonList_Local       [NLEVEL];      // son GIDs
    int    (*SibList_Local       [NLEVEL])[26]; // sibling GIDs
@@ -88,6 +92,8 @@ struct LB_GlobalPatchExchangeList : private NonCopyable
 
    long    *LBIdxList_AllLv;            // load balance ids
    int    (*CrList_AllLv         )[3];  // patch corners
+   int    (*CrLList_AllLv        )[3];  // patch corners
+   int    (*CrRList_AllLv        )[3];  // patch corners
    int     *FaList_AllLv;               // father GIDs
    int     *SonList_AllLv;              // son GIDs
    int    (*SibList_AllLv        )[26]; // sibling GIDs
