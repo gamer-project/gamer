@@ -1114,7 +1114,7 @@ def warning( paths, **kwargs ):
     # 3. Path
     path_links = { "gpu":{True:"CUDA_PATH"}, "fftw":{"FFTW2":"FFTW2_PATH", "FFTW3":"FFTW3_PATH"},
                    "mpi":{True:"MPI_PATH"}, "hdf5":{True:"HDF5_PATH"}, "grackle":{True:"GRACKLE_PATH"},
-                   "gsl":{True:"GSL_PATH"}, "libyt":{True:"LIBYT_PATH"} }
+                   "gsl":{True:"GSL_PATH"}, "libyt":{True:"LIBYT_PATH"}, "hypre":{True:"HYPRE_PATH"} }
 
     for arg, links in path_links.items():
         for val, p_name in links.items():

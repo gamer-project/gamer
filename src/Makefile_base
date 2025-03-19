@@ -53,6 +53,7 @@ GRACKLE_PATH := @@@GRACKLE_PATH@@@
 GSL_PATH     := @@@GSL_PATH@@@
 LIBYT_PATH   := @@@LIBYT_PATH@@@
 CUFFTDX_PATH := @@@CUFFTDX_PATH@@@
+HYPRE_PATH   := @@@HYPRE_PATH@@@
 
 
 
@@ -575,6 +576,7 @@ GRACKLE_PATH := $(strip $(GRACKLE_PATH))
 GSL_PATH     := $(strip $(GSL_PATH))
 LIBYT_PATH   := $(strip $(LIBYT_PATH))
 CUFFTDX_PATH := $(strip $(CUFFTDX_PATH))
+HYPRE_PATH   := $(strip $(HYPRE_PATH))
 
 
 # implicit rules (do NOT modify the order of the following rules)
