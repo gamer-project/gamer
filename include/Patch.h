@@ -78,6 +78,8 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                          convert corner to that of the corresponding real patch
 //                                      --> For example, external patches can have corner < 0
 //                                      --> Different from EdgeL/R, which always assume periodicity
+//                cornerL[3]          : Grid indices of the cell at the left  patch corner on the current level
+//                cornerR[3]          : Grid indices of the cell at the right patch corner on the current level
 //                sibling[26]         : Patch IDs of the 26 sibling patches (-1->no sibling; -1XX->external)
 //
 //                                      NOTE FOR NON-PERIODIC BOUNDARY CONDITIONS:
@@ -225,6 +227,8 @@ struct patch_t
 #  endif
 
    int    corner[3];
+   int    cornerL[3];
+   int    cornerR[3];
    int    sibling[26];
    int    father;
    int    son;
@@ -377,6 +381,9 @@ struct patch_t
 //       --> assuming periodicity
          EdgeL[d] = BoxEdgeL[d] + (double)(  ( corner[d] + BoxScale[d] ) % BoxScale[d]           )*dh_min;
          EdgeR[d] = BoxEdgeL[d] + (double)(  ( corner[d] + BoxScale[d] ) % BoxScale[d] + PScale  )*dh_min;
+
+         cornerL[d] = corner[d] / (1<<(NLEVEL-1-lv));
+         cornerR[d] = cornerL[d] + PS1 - 1;
 
 //       do no use the following non-periodic version anymore --> it does not work with the current particle implementation
          /*
