@@ -468,6 +468,11 @@ LIB += -L$(LIBYT_PATH)/lib -lyt
 LIB += -Wl,-rpath,$(LIBYT_PATH)/lib
 endif
 
+ifeq "$(filter -DSUPPORT_HYPRE, $(SIMU_OPTION))" "-DSUPPORT_HYPRE"
+LIB += -L$(HYPRE_PATH)/lib -lHYPRE
+LIB += -Wl,-rpath=$(HYPRE_PATH)/lib
+endif
+
 
 # headers
 # -------------------------------------------------------------------------------
@@ -503,6 +508,10 @@ endif
 
 ifeq "$(filter -DSUPPORT_LIBYT, $(SIMU_OPTION))" "-DSUPPORT_LIBYT"
 INCLUDE += -I$(LIBYT_PATH)/include
+endif
+
+ifeq "$(filter -DSUPPORT_HYPRE, $(SIMU_OPTION))" "-DSUPPORT_HYPRE"
+INCLUDE += -I$(HYPRE_PATH)/include
 endif
 
 ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
