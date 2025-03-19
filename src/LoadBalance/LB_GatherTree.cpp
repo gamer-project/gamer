@@ -8,7 +8,7 @@ Instructions for adding new patch_t members to GatherTree:
 -  add lists to LB_LocalPatchExchangeList and LB_GlobalPatchExchangeList
 -> modify "LB_GatherTree.cpp"
 -  read new member in LB_FillLocalExchangeList
--  transfer member in LB_FillGlobalExchangeList
+-  transfer member in LB_FillGlobalPatchExchangeList
 -  write member to LB_GlobalPatch in LB_ConstructGlobalTree
 */
 

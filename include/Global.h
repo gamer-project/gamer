@@ -367,7 +367,9 @@ extern bool FB_Any;
 extern int  FB_ParaBuf;
 #endif
 
+
 // (2-13) spectral interpolation
+// =======================================================================================================
 #ifdef SUPPORT_SPECTRAL_INT
 extern char   SPEC_INT_TABLE_PATH[MAX_STRING];
 extern int    SPEC_INT_GHOST_BOUNDARY;
@@ -380,7 +382,7 @@ extern InterpolationHandler Int_InterpolationHandler;
 #endif // #ifdef SUPPORT_SPECTRAL_INT
 
 
-// (2-13) cosmic ray
+// (2-14) cosmic ray
 // =======================================================================================================
 #ifdef COSMIC_RAY
 extern double GAMMA_CR;
@@ -389,7 +391,7 @@ extern double FlagTable_CRay[NLEVEL-1];
 #endif
 
 
-// (2-14) microphysics
+// (2-15) microphysics
 // =======================================================================================================
 extern MicroPhy_t MicroPhy;
 #ifdef CR_DIFFUSION
