@@ -65,7 +65,7 @@ extern void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, 
 //                PrepTimeIn  : Target physical time to prepare data
 //                              --> If PrepTimeIn<0, turn off temporal interpolation and always use the most recent data
 //                GetSigma    : true  --> compute the standard deviation of profile data
-//                              false --> set Data_Sigma[b]=0
+//                              false --> set Data_Sigma=0
 //
 // Example     :  const double      Center[3]      = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
 //                const double      MaxRadius      = 0.5*amr->BoxSize[0];
