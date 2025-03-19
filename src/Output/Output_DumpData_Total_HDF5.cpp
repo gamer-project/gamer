@@ -525,11 +525,14 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       H5_Status          = H5Dclose( H5_SetID_InputPara );
 
 //    3-4-5. InputTest
+      if ( Output_HDF5_InputTest_Ptr != NULL )
+      {
       H5_SetID_InputTest = H5Dcreate( H5_GroupID_Info, "InputTest", H5_TypeID_Com_InputTest, H5_SpaceID_Scalar,
                                       H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT );
       if ( H5_SetID_InputTest < 0 ) Aux_Error( ERROR_INFO, "failed to create the dataset \"%s\" !!\n", "InputTest" );
       H5_Status          = H5_write_compound( H5_SetID_InputTest, H5_TypeID_Com_InputTest, &HDF5_InputTest );
       H5_Status          = H5Dclose( H5_SetID_InputTest );
+      }
 
       H5_Status = H5Gclose( H5_GroupID_Info );
 
