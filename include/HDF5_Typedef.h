@@ -153,6 +153,7 @@ struct Makefile_t
    int LibYTJupyter;
 #  endif
    int SupportGrackle;
+   int SupportHypre;
    int RandomNumber;
 
 #  ifdef GRAVITY

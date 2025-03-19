@@ -806,6 +806,11 @@ def load_arguments( sys_setting : SystemSetting ):
                               "Must compile libyt with JUPYTER_KERNEL. Must enable <--libyt>.\n"
                        )
 
+    parser.add_argument( "--hypre", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_HYPRE",
+                         default=False,
+                         help="Support HYPRE library.\n"
+                       )
+
     parser.add_argument( "--rng", type=str, metavar="TYPE", gamer_name="RANDOM_NUMBER",
                          default=None,
                          choices=["RNG_GNU_EXT", "RNG_CPP11"],

@@ -79,7 +79,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2503)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2510)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -277,6 +277,7 @@ Procedure for outputting new variables:
 //                2502 : 2025/01/16 --> output ConRef[]
 //                2503 : 2025/01/17 --> output user-defined parameters in "User/UserPara" and
 //                                             Input__TestProb parameters in "Info/InputTest"
+//                2510 : 2025/**/** --> output Hypre options
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1662,7 +1663,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2503;
+   KeyInfo.FormatVersion        = 2510;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1928,6 +1929,12 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.SupportGrackle         = 1;
 #  else
    Makefile.SupportGrackle         = 0;
+#  endif
+
+#  ifdef SUPPORT_HYPRE
+   Makefile.SupportHypre           = 1;
+#  else
+   Makefile.SupportHypre           = 0;
 #  endif
 
    Makefile.RandomNumber           = RANDOM_NUMBER;
@@ -3109,6 +3116,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "LibYTJupyter",           HOFFSET(Makefile_t,LibYTJupyter           ), H5T_NATIVE_INT );
 #  endif
    H5Tinsert( H5_TypeID, "SupportGrackle",         HOFFSET(Makefile_t,SupportGrackle         ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "SupportHypre",           HOFFSET(Makefile_t,SupportHypre           ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "RandomNumber",           HOFFSET(Makefile_t,RandomNumber           ), H5T_NATIVE_INT );
 
    H5Tinsert( H5_TypeID, "NLevel",                 HOFFSET(Makefile_t,NLevel                 ), H5T_NATIVE_INT );

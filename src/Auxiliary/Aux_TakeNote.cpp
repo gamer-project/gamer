@@ -480,6 +480,12 @@ void Aux_TakeNote()
       fprintf( Note, "SUPPORT_LIBYT                   OFF\n" );
 #     endif // #ifdef SUPPORT_LIBYT ... else ...
 
+#     ifdef SUPPORT_HYPRE
+      fprintf( Note, "SUPPORT_HYPRE                   ON\n" );
+#     else
+      fprintf( Note, "SUPPORT_HYPRE                   OFF\n" );
+#     endif
+
 #     if   ( RANDOM_NUMBER == RNG_GNU_EXT )
       fprintf( Note, "RANDOM_NUMBER                   RNG_GNU_EXT\n" );
 #     elif ( RANDOM_NUMBER == RNG_CPP11 )
