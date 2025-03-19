@@ -562,6 +562,11 @@ const LoadParaMode_t
    LOAD_HDF5_OUTPUT = 2;
 
 
+// Hypre
+#ifdef SUPPORT_HYPRE
+typedef int Hypre_Solver_t;
+#endif
+
 // function pointers
 typedef real (*EoS_GUESS_t)    ( const real Con[], real* const Constant, const double AuxArray_Flt[],
                                  const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] );
