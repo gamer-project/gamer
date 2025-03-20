@@ -1524,8 +1524,12 @@ void Aux_Check_Parameter()
 #     error : ERROR : SUPPORT_FFTW != FFTW2/FFTW3 !!
 #  endif
 
-#  if ( POT_SCHEME != SOR  &&  POT_SCHEME != MG )
-#     error : ERROR : unsupported Poisson solver in the makefile (SOR/MG) !!
+#  if ( POT_SCHEME != SOR  &&  POT_SCHEME != MG  &&  POT_SCHEME != HYPRE_POI )
+#     error : ERROR : unsupported Poisson solver in the makefile (SOR/MG/HYPRE_POI) !!
+#  endif
+
+#  if ( POT_SCHEME == HYPRE_POI  &&  !defined SUPPORT_HYPRE )
+#     error : ERROR : must enable SUPPORT_HYPRE for POT_SCHEME == HYPRE_POI !!
 #  endif
 
 #  if ( POT_GHOST_SIZE <= GRA_GHOST_SIZE )

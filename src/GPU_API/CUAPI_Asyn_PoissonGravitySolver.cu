@@ -414,6 +414,11 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                       dh, MG_Max_Iter, MG_NPre_Smooth, MG_NPost_Smooth, MG_Tolerated_Error,
                                       Poi_Coeff, IntScheme );
 
+
+#           elif ( POT_SCHEME == HYPRE_POI )
+
+            Aux_Error( ERROR_INFO, "POT_SCHEME == HYPRE_POI is not supported yet !!\n" );
+
 #           else
 
 #           error : unsupported GPU Poisson solver
