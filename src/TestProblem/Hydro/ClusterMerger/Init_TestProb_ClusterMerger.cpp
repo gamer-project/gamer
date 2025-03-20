@@ -647,42 +647,68 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID        = %d\n",           TESTPROB_ID );
-      Aux_Message( stdout, "  number of clusters     = %d\n",           Merger_Coll_NumHalos );
-      Aux_Message( stdout, "  turn on AGN feedback   = %s\n",          (AGN_feedback)? "yes":"no" );
-      if ( Merger_Coll_IsGas1 )
-      Aux_Message( stdout, "  profile file 1         = %s\n",           Merger_File_Prof1 );
-      Aux_Message( stdout, "  particle file 1        = %s\n",           Merger_File_Par1 );
-      Aux_Message( stdout, "  cluster 1 w/ gas       = %s\n",          (Merger_Coll_IsGas1)? "yes":"no" );
-      if ( Merger_Coll_IsGas1 )
-      Aux_Message( stdout, "  cluster 1 x-position   = %g\n",           Merger_Coll_PosX1 );
-      Aux_Message( stdout, "  cluster 1 y-position   = %g\n",           Merger_Coll_PosY1 );
-      Aux_Message( stdout, "  cluster 1 x-velocity   = %g\n",           Merger_Coll_VelX1 );
-      Aux_Message( stdout, "  cluster 1 y-velocity   = %g\n",           Merger_Coll_VelY1 );
+      Aux_Message( stdout, "  test problem ID           = %d\n",           TESTPROB_ID );
+      Aux_Message( stdout, "  number of clusters        = %d\n",           Merger_Coll_NumHalos );
+      Aux_Message( stdout, "  turn on AGN feedback      = %s\n",          (AGN_feedback)? "yes":"no" );
+      Aux_Message( stdout, "  profile file 1            = %s\n",           Merger_File_Prof1 );
+      Aux_Message( stdout, "  particle file 1           = %s\n",           Merger_File_Par1 );
+      Aux_Message( stdout, "  cluster 1 w/ gas          = %s\n",          (Merger_Coll_IsGas1)? "yes":"no" );
+      Aux_Message( stdout, "  cluster 1 x-position      = %g\n",           Merger_Coll_PosX1 );
+      Aux_Message( stdout, "  cluster 1 y-position      = %g\n",           Merger_Coll_PosY1 );
+      Aux_Message( stdout, "  cluster 1 x-velocity      = %g\n",           Merger_Coll_VelX1 );
+      Aux_Message( stdout, "  cluster 1 y-velocity      = %g\n",           Merger_Coll_VelY1 );
+      if ( AGN_feedback ) {
+      Aux_Message( stdout, "  cluster 1 BH mass         = %g\n",           Bondi_MassBH1     );
+      Aux_Message( stdout, "  cluster 1 jet half-height = %g\n",           Jet_HalfHeight1   );
+      Aux_Message( stdout, "  cluster 1 jet radius      = %g\n",           Jet_Radius1       );   
+      }
       if ( Merger_Coll_NumHalos > 1 ) {
-      if ( Merger_Coll_IsGas2 )
-      Aux_Message( stdout, "  profile file 2         = %s\n",           Merger_File_Prof2 );
-      Aux_Message( stdout, "  particle file 2        = %s\n",           Merger_File_Par2 );
-      Aux_Message( stdout, "  cluster 2 w/ gas       = %s\n",          (Merger_Coll_IsGas2)? "yes":"no" );
-      if ( Merger_Coll_IsGas2 )
-      Aux_Message( stdout, "  cluster 2 x-position   = %g\n",           Merger_Coll_PosX2 );
-      Aux_Message( stdout, "  cluster 2 y-position   = %g\n",           Merger_Coll_PosY2 );
-      Aux_Message( stdout, "  cluster 2 x-velocity   = %g\n",           Merger_Coll_VelX2 );
-      Aux_Message( stdout, "  cluster 2 y-velocity   = %g\n",           Merger_Coll_VelY2 );
-      }
+      Aux_Message( stdout, "  profile file 2            = %s\n",           Merger_File_Prof2 );
+      Aux_Message( stdout, "  particle file 2           = %s\n",           Merger_File_Par2 );
+      Aux_Message( stdout, "  cluster 2 w/ gas          = %s\n",          (Merger_Coll_IsGas2)? "yes":"no" );
+      Aux_Message( stdout, "  cluster 2 x-position      = %g\n",           Merger_Coll_PosX2 );
+      Aux_Message( stdout, "  cluster 2 y-position      = %g\n",           Merger_Coll_PosY2 );
+      Aux_Message( stdout, "  cluster 2 x-velocity      = %g\n",           Merger_Coll_VelX2 );
+      Aux_Message( stdout, "  cluster 2 y-velocity      = %g\n",           Merger_Coll_VelY2 );
+      if ( AGN_feedback ) {
+      Aux_Message( stdout, "  cluster 2 BH mass         = %g\n",           Bondi_MassBH2     );
+      Aux_Message( stdout, "  cluster 2 jet half-height = %g\n",           Jet_HalfHeight2   );
+      Aux_Message( stdout, "  cluster 2 jet radius      = %g\n",           Jet_Radius2       );   
+      }   
+      } // if ( Merger_Coll_NumHalos > 1 )
       if ( Merger_Coll_NumHalos > 2 ) {
-      if ( Merger_Coll_IsGas3 )
-      Aux_Message( stdout, "  profile file 3         = %s\n",           Merger_File_Prof3 );
-      Aux_Message( stdout, "  particle file 3        = %s\n",           Merger_File_Par3 );
-      Aux_Message( stdout, "  cluster 3 w/ gas       = %s\n",          (Merger_Coll_IsGas3)? "yes":"no" );
-      if ( Merger_Coll_IsGas3 )
-      Aux_Message( stdout, "  cluster 3 x-position   = %g\n",           Merger_Coll_PosX3 );
-      Aux_Message( stdout, "  cluster 3 y-position   = %g\n",           Merger_Coll_PosY3 );
-      Aux_Message( stdout, "  cluster 3 x-velocity   = %g\n",           Merger_Coll_VelX3 );
-      Aux_Message( stdout, "  cluster 3 y-velocity   = %g\n",           Merger_Coll_VelY3 );
+      Aux_Message( stdout, "  profile file 3            = %s\n",           Merger_File_Prof3 );
+      Aux_Message( stdout, "  particle file 3           = %s\n",           Merger_File_Par3 );
+      Aux_Message( stdout, "  cluster 3 w/ gas          = %s\n",          (Merger_Coll_IsGas3)? "yes":"no" );
+      Aux_Message( stdout, "  cluster 3 x-position      = %g\n",           Merger_Coll_PosX3 );
+      Aux_Message( stdout, "  cluster 3 y-position      = %g\n",           Merger_Coll_PosY3 );
+      Aux_Message( stdout, "  cluster 3 x-velocity      = %g\n",           Merger_Coll_VelX3 );
+      Aux_Message( stdout, "  cluster 3 y-velocity      = %g\n",           Merger_Coll_VelY3 );
+      if ( AGN_feedback ) {
+      Aux_Message( stdout, "  cluster 2 BH mass         = %g\n",           Bondi_MassBH3     );
+      Aux_Message( stdout, "  cluster 2 jet half-height = %g\n",           Jet_HalfHeight3   );
+      Aux_Message( stdout, "  cluster 2 jet radius      = %g\n",           Jet_Radius3       );   
+      }      
+      } // if ( Merger_Coll_NumHalos > 2 )
+      Aux_Message( stdout, "  use metals                = %s\n",          (Merger_Coll_UseMetals)? "yes":"no" );
+      Aux_Message( stdout, "  label cluster centers     = %s\n",          (Merger_Coll_LabelCenter)? "yes":"no" );
+      if ( AGN_feedback ) {
+      Aux_Message( stdout, "  BH fixed                  = %s\n",          (fixBH)? "yes":"no" );
+      Aux_Message( stdout, "  accretion mode            = %d\n",          Accretion_Mode      );    
+      Aux_Message( stdout, "  eta                       = %g\n",          eta                 );
+      Aux_Message( stdout, "  eps_f                     = %g\n",          eps_f               );
+      Aux_Message( stdout, "  eps_m                     = %g\n",          eps_m               );
+      Aux_Message( stdout, "  accretion radius          = %g\n",          R_acc               );
+      Aux_Message( stdout, "  depletion radius          = %g\n",          R_dep               );
+      Aux_Message( stdout, "  jet direction case        = %d\n",          JetDirection_case   ); 
+      if ( JetDirection_case == 2 ) {
+      Aux_Message( stdout, "  jet direction file        = %s\n",          JetDirection_file   );
       }
-      Aux_Message( stdout, "  use metals             = %s\n",          (Merger_Coll_UseMetals)? "yes":"no" );
-      Aux_Message( stdout, "  label cluster centers  = %s\n",          (Merger_Coll_LabelCenter)? "yes":"no" );
+      Aux_Message( stdout, "  adjust BH position        = %s\n",          (AdjustBHPos)? "yes":"no" ); 
+      Aux_Message( stdout, "  adjust BH velocity        = %s\n",          (AdjustBHVel)? "yes":"no" ); 
+      Aux_Message( stdout, "  adjust period             = %g\n",          AdjustPeriod        );
+      } // if ( AGN_feedback )                
+       
       Aux_Message( stdout, "=============================================================================\n" );
 
 //    check if the accretion region is larger than the jet cylinder

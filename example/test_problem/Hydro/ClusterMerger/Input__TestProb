@@ -39,7 +39,7 @@ Jet_Radius3             2.5                      # jet 3: radius of the cylinder
 
 # parameters of AGN jet feedback
 AGN_feedback            0                        # turn on/off (1/0) AGN feedback
-Accretion_Mode          3                        # 1: hot mode; 2: code mode; 3: combine (hot + cold)
+Accretion_Mode          3                        # 1: hot mode; 2: cold mode; 3: combine (hot + cold)
 eta                     1.0                      # mass loading factor in jet feedback
 eps_f                   0.11                     # the radiative efficiency in jet feedback
 eps_m                   0.0                      # the fraction of total energy that goes into the thermal 

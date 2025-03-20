@@ -392,7 +392,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
 //    (4) calculate the accretion and feedback
       real   fluid[NCOMP_TOTAL], fluid_old[NCOMP_TOTAL], fluid_acc[NCOMP_TOTAL];
-      double x, y, z, x0, y0, z0, x2, y2, z2, x02, y02, z02;
+      double x, y, z, x2, y2, z2, x02, y02, z02;
 
 //    reset to 0 since we only want to record the number of void cells **for one sub-step**
       for (int c=0; c<Merger_Coll_NumBHs; c++)
@@ -633,12 +633,13 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
 
 //    (6) perform injection
-      int Reset;
 //    use the "static" schedule for reproducibility
-#     pragma omp parallel for private( Reset, fluid, fluid_old, x, y, z, x0, y0, z0 ) schedule( static ) \
+#     pragma omp parallel for private( fluid, fluid_old, x, y, z ) schedule( static ) \
       reduction( +:CM_Bondi_SinkMass, CM_Bondi_SinkMomX, CM_Bondi_SinkMomY, CM_Bondi_SinkMomZ, \
                    CM_Bondi_SinkMomXAbs, CM_Bondi_SinkMomYAbs, CM_Bondi_SinkMomZAbs, \
                    CM_Bondi_SinkE, CM_Bondi_SinkEk, CM_Bondi_SinkEt, CM_Bondi_SinkNCell )
+      int Reset;
+      double x0, y0, z0;
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {
          x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
