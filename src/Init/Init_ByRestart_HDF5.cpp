@@ -2380,6 +2380,16 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Yt_JupyterUseConnectionFile", &RS.Yt_JupyterUseConnectionFile, SID, TID, NonFatal, &RT.Yt_JupyterUseConnectionFile, 1, NonFatal );
 #  endif
 
+// Hypre
+#  ifdef SUPPORT_HYPRE
+   LoadField( "Hypre_Solver",                &RS.Hypre_Solver,                SID, TID, NonFatal, &RT.Hypre_Solver,                1, NonFatal );
+   LoadField( "Hypre_PrintLevel",            &RS.Hypre_PrintLevel,            SID, TID, NonFatal, &RT.Hypre_PrintLevel,            1, NonFatal );
+   LoadField( "Hypre_EnableLogging",         &RS.Hypre_EnableLogging,         SID, TID, NonFatal, &RT.Hypre_EnableLogging,         1, NonFatal );
+   LoadField( "Hypre_MaxIter",               &RS.Hypre_MaxIter,               SID, TID, NonFatal, &RT.Hypre_MaxIter,               1, NonFatal );
+   LoadField( "Hypre_RelTol",                &RS.Hypre_RelTol,                SID, TID, NonFatal, &RT.Hypre_RelTol,                1, NonFatal );
+   LoadField( "Hypre_AbsTol",                &RS.Hypre_AbsTol,                SID, TID, NonFatal, &RT.Hypre_AbsTol,                1, NonFatal );
+#  endif
+
 // miscellaneous
    LoadField( "Opt__Verbose",            &RS.Opt__Verbose,            SID, TID, NonFatal, &RT.Opt__Verbose,             1, NonFatal );
    LoadField( "Opt__TimingBarrier",      &RS.Opt__TimingBarrier,      SID, TID, NonFatal, &RT.Opt__TimingBarrier,       1, NonFatal );

@@ -848,6 +848,16 @@ struct InputPara_t
    int    Yt_JupyterUseConnectionFile;
 #  endif
 
+// Hypre
+#  ifdef SUPPORT_HYPRE
+   int    Hypre_Solver;
+   int    Hypre_PrintLevel;
+   int    Hypre_EnableLogging;
+   int    Hypre_MaxIter;
+   double Hypre_RelTol;
+   double Hypre_AbsTol;
+#  endif
+
 // miscellaneous
    int    Opt__Verbose;
    int    Opt__TimingBarrier;

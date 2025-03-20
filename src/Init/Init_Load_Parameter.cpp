@@ -566,6 +566,20 @@ void Init_Load_Parameter()
 #  endif
 #  endif
 
+
+// Hypre
+#  ifdef SUPPORT_HYPRE
+   ReadPara->Add( "HYPRE_SOLVER",               &HYPRE_SOLVER,                    0,               0,             0              );
+   ReadPara->Add( "HYPRE_PRINT_LEVEL",          &HYPRE_PRINT_LEVEL,               2,               0,             NoMax_int      );
+   ReadPara->Add( "HYPRE_ENABLE_LOGGING",       &HYPRE_ENABLE_LOGGING,            1,               0,             1              );
+   ReadPara->Add( "HYPRE_MAX_ITER",             &HYPRE_MAX_ITER,                 -1,               NoMin_int,     NoMax_int      );
+   ReadPara->Add( "HYPRE_NPRE_RELAX",           &HYPRE_NPRE_RELAX,               -1,               NoMin_int,     NoMax_int      );
+   ReadPara->Add( "HYPRE_NPOST_RELAX",          &HYPRE_NPOST_RELAX,              -1,               NoMin_int,     NoMax_int      );
+   ReadPara->Add( "HYPRE_REL_TOL",              &HYPRE_REL_TOL,                  -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "HYPRE_ABS_TOL",              &HYPRE_ABS_TOL,                  -1.0,             NoMin_double,  NoMax_double   );
+#  endif
+
+
 // miscellaneous
    ReadPara->Add( "OPT__VERBOSE",               &OPT__VERBOSE,                    false,           Useless_bool,  Useless_bool   );
 // do not check OPT__TIMING_BARRIER since it depends on other options

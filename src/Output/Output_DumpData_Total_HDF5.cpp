@@ -2855,6 +2855,15 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Yt_JupyterUseConnectionFile = YT_JUPYTER_USE_CONNECTION_FILE;
 #  endif
 
+#  ifdef SUPPORT_HYPRE
+   InputPara.Hypre_Solver                = HYPRE_SOLVER;
+   InputPara.Hypre_PrintLevel            = HYPRE_PRINT_LEVEL;
+   InputPara.Hypre_EnableLogging         = HYPRE_ENABLE_LOGGING;
+   InputPara.Hypre_MaxIter               = HYPRE_MAX_ITER;
+   InputPara.Hypre_RelTol                = HYPRE_REL_TOL;
+   InputPara.Hypre_AbsTol                = HYPRE_ABS_TOL;
+#  endif
+
 // miscellaneous
    InputPara.Opt__Verbose            = OPT__VERBOSE;
    InputPara.Opt__TimingBarrier      = OPT__TIMING_BARRIER;
@@ -3902,6 +3911,16 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 // libyt jupyter
 #  if ( defined(SUPPORT_LIBYT) && defined(LIBYT_JUPYTER) )
    H5Tinsert( H5_TypeID, "Yt_JupyterUseConnectionFile", HOFFSET(InputPara_t,Yt_JupyterUseConnectionFile), H5T_NATIVE_INT              );
+#  endif
+
+// Hypre
+#  ifdef SUPPORT_HYPRE
+   H5Tinsert( H5_TypeID, "Hypre_Solver",            HOFFSET(InputPara_t,Hypre_Solver           ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Hypre_PrintLevel",        HOFFSET(InputPara_t,Hypre_PrintLevel       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Hypre_EnableLogging",     HOFFSET(InputPara_t,Hypre_EnableLogging    ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Hypre_MaxIter",           HOFFSET(InputPara_t,Hypre_MaxIter          ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Hypre_RelTol",            HOFFSET(InputPara_t,Hypre_RelTol           ), H5T_NATIVE_DOUBLE           );
+   H5Tinsert( H5_TypeID, "Hypre_AbsTol",            HOFFSET(InputPara_t,Hypre_AbsTol           ), H5T_NATIVE_DOUBLE           );
 #  endif
 
 // miscellaneous

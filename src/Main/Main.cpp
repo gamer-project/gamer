@@ -370,6 +370,14 @@ double DT__CR_DIFFUSION;
 double CR_DIFF_MIN_B;
 #endif
 
+// (2-16) Hypre
+#ifdef SUPPORT_HYPRE
+Hypre_Solver_t HYPRE_SOLVER;
+int            HYPRE_PRINT_LEVEL, HYPRE_ENABLE_LOGGING;
+int            HYPRE_MAX_ITER, HYPRE_NPRE_RELAX, HYPRE_NPOST_RELAX;
+double         HYPRE_REL_TOL, HYPRE_ABS_TOL;
+#endif
+
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // =======================================================================================================

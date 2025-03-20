@@ -1292,6 +1292,39 @@ void Init_ResetParameter()
 #  endif
 
 
+// Hypre
+#  ifdef SUPPORT_HYPRE
+   if ( HYPRE_MAX_ITER < 0 )
+   {
+      HYPRE_MAX_ITER = 50;
+
+      PRINT_RESET_PARA( HYPRE_MAX_ITER, FORMAT_INT, "" );
+   }
+
+   if ( HYPRE_REL_TOL < 0.0 )
+   {
+#     ifdef FLOAT8
+      HYPRE_REL_TOL = 1.e-14;
+#     else
+      HYPRE_REL_TOL = 1.e-6;
+#     endif
+
+      PRINT_RESET_PARA( HYPRE_REL_TOL, FORMAT_REAL, "" );
+   }
+
+   if ( HYPRE_ABS_TOL < 0.0 )
+   {
+#     ifdef FLOAT8
+      HYPRE_ABS_TOL = 1.e-14;
+#     else
+      HYPRE_ABS_TOL = 1.e-6;
+#     endif
+
+      PRINT_RESET_PARA( HYPRE_ABS_TOL, FORMAT_REAL, "" );
+   }
+#  endif // #ifdef SUPPORT_HYPRE
+
+
 // must set OPT__FFTW_STARTUP = FFTW_STARTUP_ESTIMATE for BITWISE_REPRODUCIBILITY
 // --> even when disabling BITWISE_REPRODUCIBILITY, we still use FFTW_STARTUP_ESTIMATE
 //     by default since otherwise the FFT results can vary in each run on the level
