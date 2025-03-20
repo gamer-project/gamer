@@ -8,6 +8,9 @@
 #ifdef SUPPORT_LIBYT
 #include <libyt.h>
 #endif
+#ifdef SUPPORT_HYPRE
+#include "Hypre.h"
+#endif
 #include "GatherTree.h"
 
 
@@ -405,10 +408,17 @@ extern double CR_DIFF_MIN_B;
 // (2-16) Hypre
 // =======================================================================================================
 #ifdef SUPPORT_HYPRE
-extern Hypre_Solver_t HYPRE_SOLVER;
-extern int            HYPRE_PRINT_LEVEL, HYPRE_ENABLE_LOGGING;
-extern int            HYPRE_MAX_ITER, HYPRE_NPRE_RELAX, HYPRE_NPOST_RELAX;
-extern double         HYPRE_REL_TOL, HYPRE_ABS_TOL;
+extern Hypre_Solver_t        HYPRE_SOLVER;
+extern int                   HYPRE_PRINT_LEVEL, HYPRE_ENABLE_LOGGING;
+extern int                   HYPRE_MAX_ITER, HYPRE_NPRE_RELAX, HYPRE_NPOST_RELAX;
+extern double                HYPRE_REL_TOL, HYPRE_ABS_TOL;
+extern HYPRE_SStructGrid     Hypre_grid;
+extern HYPRE_SStructGraph    Hypre_graph;
+extern HYPRE_SStructStencil  Hypre_stencil;
+extern HYPRE_SStructMatrix   Hypre_A;
+extern HYPRE_SStructVector   Hypre_b;
+extern HYPRE_SStructVector   Hypre_x;
+extern HYPRE_SStructSolver   Hypre_solver;
 #endif
 
 
