@@ -127,6 +127,8 @@ FB_RESOLVED_SNEII_DELAY_TIME  10.0        # explosion delay time of SNeII after 
 FB_RESOLVED_SNEII_EJECT_ENGY  1.0e51      # ejected internal energy of each SNeII explosion (in erg) (for FB_RESOLVED_SNEII only) [1.0e51]
 FB_RESOLVED_SNEII_EJECT_MASS  15.0        # ejected total mass of each SNeII explosion (in Msun) (for FB_RESOLVED_SNEII only) [0.0]
 FB_RESOLVED_SNEII_EJECT_METAL 3.0         # ejected metal mass of each SNeII explosion (in Msun) (for FB_RESOLVED_SNEII only) [0.0]
+FB_RESOLVED_SNEII_MIN_M_GAS   10.0        # minimum mass of gas in the environment of SNeII to apply feedback (in Msun) (for FB_RESOLVED_SNEII only) [0.0]
+FB_RESOLVED_SNEII_RECORD      1           # record the SNeII explosion info (for FB_RESOLVED_SNEII only) [0]
 
 
 # fluid solver in HYDRO (MODEL==HYDRO only)

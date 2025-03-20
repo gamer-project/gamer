@@ -78,6 +78,9 @@ for ds in ts.piter():
    sz.annotate_text( (-400, -370), 'Total internal energy = {: >10.2e}'.format( ad.quantities.total_quantity("thermal_energy").in_units("erg") ), coord_system='plot' )
    sz.annotate_text( (-400, -400), 'Total kinetic energy  = {: >10.2e}'.format( ad.quantities.total_quantity("kinetic_energy").in_units("erg") ), coord_system='plot' )
    sz.save( mpl_kwargs={"dpi":dpi} )
+   sz.annotate_cell_edges()
+   sz.zoom( 16 )
+   sz.save( '%s_Slice_z_density_zoom-in.png'%ds, mpl_kwargs={"dpi":dpi} )
 
 
    # Temparature
@@ -93,6 +96,9 @@ for ds in ts.piter():
    sz.annotate_text( (-400, -370), 'Total internal energy = {: >10.2e}'.format( ad.quantities.total_quantity("thermal_energy").in_units("erg") ), coord_system='plot' )
    sz.annotate_text( (-400, -400), 'Total kinetic energy  = {: >10.2e}'.format( ad.quantities.total_quantity("kinetic_energy").in_units("erg") ), coord_system='plot' )
    sz.save( mpl_kwargs={"dpi":dpi} )
+   sz.annotate_cell_edges()
+   sz.zoom( 16 )
+   sz.save( '%s_Slice_z_temperature_zoom-in.png'%ds, mpl_kwargs={"dpi":dpi} )
 
 
    # Metal density

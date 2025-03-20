@@ -1181,7 +1181,11 @@ void Aux_TakeNote()
       fprintf( Note, "FB_RESOLVED_SNEII_EJECT_MASS   % 14.7e\n",       FB_RESOLVED_SNEII_EJECT_MASS                    );
       fprintf( Note, "                              =% 14.7e Msun\n",  FB_RESOLVED_SNEII_EJECT_MASS*UNIT_M/Const_Msun  );
       fprintf( Note, "FB_RESOLVED_SNEII_EJECT_METAL  % 14.7e\n",       FB_RESOLVED_SNEII_EJECT_METAL                   );
-      fprintf( Note, "                              =% 14.7e Msun\n",  FB_RESOLVED_SNEII_EJECT_METAL*UNIT_M/Const_Msun ); }
+      fprintf( Note, "                              =% 14.7e Msun\n",  FB_RESOLVED_SNEII_EJECT_METAL*UNIT_M/Const_Msun );
+      fprintf( Note, "FB_RESOLVED_SNEII_MIN_M_GAS    % 14.7e\n",       FB_RESOLVED_SNEII_MIN_M_GAS                     );
+      fprintf( Note, "                              =% 14.7e Msun\n",  FB_RESOLVED_SNEII_MIN_M_GAS*UNIT_M/Const_Msun   );
+      fprintf( Note, "FB_RESOLVED_SNEII_RECORD       % d\n",           FB_RESOLVED_SNEII_RECORD                        );
+      }
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
 #     endif // #ifdef FEEDBACK

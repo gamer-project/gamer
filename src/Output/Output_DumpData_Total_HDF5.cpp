@@ -265,8 +265,9 @@ Procedure for outputting new variables:
 //                2500 : 2024/07/01 --> output particle integer attributes
 //                2501 : 2025/01/15 --> output OPT__OUTPUT_TEXT_LENGTH_INT
 //                2502 : 2025/01/16 --> output ConRef[]
-//                2503 : 2025/02/14 --> output FB_RESOLVED_SNEII, FB_RESOLVED_SNEII_N_PER_MASS, FB_RESOLVED_SNEII_DELAY_TIME,
-//                                             FB_RESOLVED_SNEII_EJECT_ENGY, FB_RESOLVED_SNEII_EJECT_MASS, FB_RESOLVED_SNEII_EJECT_METAL
+//                2503 : 2025/03/20 --> output FB_RESOLVED_SNEII, FB_RESOLVED_SNEII_N_PER_MASS, FB_RESOLVED_SNEII_DELAY_TIME,
+//                                             FB_RESOLVED_SNEII_EJECT_ENGY, FB_RESOLVED_SNEII_EJECT_MASS, FB_RESOLVED_SNEII_EJECT_METAL,
+//                                             FB_RESOLVED_SNEII_MIN_M_GAS, FB_RESOLVED_SNEII_RECORD
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -2662,6 +2663,8 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.FB_ResolvedSNeII_EjectEngy  = FB_RESOLVED_SNEII_EJECT_ENGY;
    InputPara.FB_ResolvedSNeII_EjectMass  = FB_RESOLVED_SNEII_EJECT_MASS;
    InputPara.FB_ResolvedSNeII_EjectMetal = FB_RESOLVED_SNEII_EJECT_METAL;
+   InputPara.FB_ResolvedSNeII_MinMGas    = FB_RESOLVED_SNEII_MIN_M_GAS;
+   InputPara.FB_ResolvedSNeII_Record     = FB_RESOLVED_SNEII_RECORD;
 #  endif
 
 // cosmic ray
@@ -3733,6 +3736,8 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "FB_ResolvedSNeII_EjectEngy",  HOFFSET(InputPara_t,FB_ResolvedSNeII_EjectEngy  ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "FB_ResolvedSNeII_EjectMass",  HOFFSET(InputPara_t,FB_ResolvedSNeII_EjectMass  ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "FB_ResolvedSNeII_EjectMetal", HOFFSET(InputPara_t,FB_ResolvedSNeII_EjectMetal ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "FB_ResolvedSNeII_MinMGas",    HOFFSET(InputPara_t,FB_ResolvedSNeII_MinMGas    ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "FB_ResolvedSNeII_Record",     HOFFSET(InputPara_t,FB_ResolvedSNeII_Record     ), H5T_NATIVE_INT     );
 #  endif
 
 // cosmic ray

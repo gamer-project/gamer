@@ -9,6 +9,8 @@ Parameters described on this page:
 [FB_RESOLVED_SNEII_EJECT_ENGY](#FB_RESOLVED_SNEII_EJECT_ENGY), &nbsp;
 [FB_RESOLVED_SNEII_EJECT_MASS](#FB_RESOLVED_SNEII_EJECT_MASS), &nbsp;
 [FB_RESOLVED_SNEII_EJECT_METAL](#FB_RESOLVED_SNEII_EJECT_METAL), &nbsp;
+[FB_RESOLVED_SNEII_MIN_M_GAS](#FB_RESOLVED_SNEII_MIN_M_GAS), &nbsp;
+[FB_RESOLVED_SNEII_RECORD](#FB_RESOLVED_SNEII_RECORD), &nbsp;
 
 
 Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**
@@ -43,11 +45,14 @@ with a probability of star particle mass times
 number of SNII per stellar masses ([[FB_RESOLVED_SNEII_N_PER_MASS | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII_N_PER_MASS ]]).
 The selected particle for supernova will then explode when the age of the star particle reaches
 the fixed explosion delay time ([[FB_RESOLVED_SNEII_DELAY_TIME | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII_DELAY_TIME ]]).
-When the supernova explodes, it will inject
+When the supernova explodes, it will uniformly inject
 the given amount of thermal energy ([[FB_RESOLVED_SNEII_EJECT_ENGY | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII_EJECT_ENGY ]]),
 mass ([[FB_RESOLVED_SNEII_EJECT_MASS | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII_EJECT_MASS ]]), and
-metal([[FB_RESOLVED_SNEII_EJECT_METAL | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII_EJECT_METAL ]])
-into fluid of the one cell where the particle is located.
+metal ([[FB_RESOLVED_SNEII_EJECT_METAL | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII_EJECT_METAL ]])
+into fluid of the surrounding cells where the particle is located.
+The number of cells to apply feedback will increase from one until the enclosed mass exceeds the given
+minimum gas mass ([[FB_RESOLVED_SNEII_MIN_M_GAS | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII_MIN_M_GAS ]]), or
+the diameter equals `FB_GHOST_SIZE+1`, or the region crosses the coarse-fine boundary.
 See sec. 2.6 in [Chia-Yu Hu et al. 2023](https://doi.org/10.3847/1538-4357/accf9e) for reference.
     * **Restriction:**
 Must set one extra particle attribute with [[ --par_attribute_flt | Installation:-Option-List#--par_attribute_flt ]].
@@ -104,6 +109,26 @@ Note that the input value should always be in units of Msun.
 The actual amount of the ejected metal will not be greater than
 [[FB_RESOLVED_SNEII_EJECT_MASS | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII_EJECT_MASS ]]
 and the metal mass of the particle.
+    * **Restriction:**
+Only for [[FB_RESOLVED_SNEII | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII ]].
+
+<a name="FB_RESOLVED_SNEII_MIN_M_GAS"></a>
+* #### `FB_RESOLVED_SNEII_MIN_M_GAS` &ensp; (&#8805;0.0) &ensp; [0.0]
+    * **Description:**
+Minimum mass of gas in the environment of SNeII to apply feedback.
+If the mass of the cell where the particle is in is sufficient, then the feedback is applied to a single cell.
+Otherwise, the diameter of the feedback region will increase from `1` to `FB_GHOST_SIZE+1`
+until the enclosed mass is higher than this given threshold.
+When the particle is too close to the AMR coarse-fine boundary,
+the feedback region will be limited such that no feedback will be applied in the coarse level.
+Note that the input value should always be in units of Msun.
+    * **Restriction:**
+Only for [[FB_RESOLVED_SNEII | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII ]].
+
+<a name="FB_RESOLVED_SNEII_RECORD"></a>
+* #### `FB_RESOLVED_SNEII_RECORD` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Record the information of the resolved Type II supernovae feedback.
     * **Restriction:**
 Only for [[FB_RESOLVED_SNEII | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII ]].
 

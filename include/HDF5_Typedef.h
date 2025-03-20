@@ -724,6 +724,8 @@ struct InputPara_t
    double FB_ResolvedSNeII_EjectEngy;
    double FB_ResolvedSNeII_EjectMass;
    double FB_ResolvedSNeII_EjectMetal;
+   double FB_ResolvedSNeII_MinMGas;
+   int    FB_ResolvedSNeII_Record;
 #  endif
 
 // cosmic ray

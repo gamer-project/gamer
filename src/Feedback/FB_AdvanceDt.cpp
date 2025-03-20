@@ -12,8 +12,11 @@ int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const doub
 
 int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld, const double dt,
                        const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL], long_par *ParAttInt[PAR_NATT_INT_TOTAL],
-                       real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
+                       const real (*Fluid_In)[FB_NXT][FB_NXT][FB_NXT],
+                       real (*Fluid_Out)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
                        const int TID, RandomNumber_t *RNG );
+
+void Record_FB_Resolved_SNeII( const int lv );
 
 
 // user-specified feedback to be set by a test problem initializer
@@ -132,6 +135,10 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
    real (*fluid_updated)[NCOMP_TOTAL][PS1][PS1][PS1] = new real [ amr->NPatchComma[lv][1] ][NCOMP_TOTAL][PS1][PS1][PS1];
 #  endif
 
+// whether the feedback routine needs separate before-update and updated patch group fluid data
+   bool NeedSeparateFluidPG = false;
+   if ( FB_RESOLVED_SNEII )   NeedSeparateFluidPG = true;
+
 
 
 // get the sibling index differences along different directions
@@ -153,7 +160,10 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 
 // array to store the input and output fluid data
-   real (*fluid_PG)[FB_NXT][FB_NXT][FB_NXT] = new real [NCOMP_TOTAL][FB_NXT][FB_NXT][FB_NXT];
+   real (*fluid_PG             )[FB_NXT][FB_NXT][FB_NXT] = new real [NCOMP_TOTAL][FB_NXT][FB_NXT][FB_NXT];
+   real (*fluid_PG_BeforeUpdate)[FB_NXT][FB_NXT][FB_NXT] = NULL;
+   if ( NeedSeparateFluidPG )   fluid_PG_BeforeUpdate    = new real [NCOMP_TOTAL][FB_NXT][FB_NXT][FB_NXT];
+
 
 
 // iterate over all real patches
@@ -184,6 +194,10 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
       Prepare_PatchData( lv, TimeNew, fluid_PG[0][0][0], NULL, FB_GHOST_SIZE, NPG, &PID0, FluidBitIdx, _NONE,
                          OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
                          OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+
+//    4-1. backup the fluid data before update
+      if ( NeedSeparateFluidPG )
+         memcpy( fluid_PG_BeforeUpdate[0][0][0], fluid_PG[0][0][0], NCOMP_TOTAL*CUBE(FB_NXT)*sizeof(real) );
 
 
 
@@ -439,7 +453,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
                                                            fluid_PG, EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
 
          if ( FB_RESOLVED_SNEII )    Status = FB_Resolved_SNeII( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAttFlt_Local, ParAttInt_Local,
-                                                                 fluid_PG, EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
+                                                                 fluid_PG_BeforeUpdate, fluid_PG, EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
 
          if ( FB_USER )              Status = FB_User_Ptr( lv, TimeNew, TimeOld, dt, NPar, ParSortID, ParAttFlt_Local, ParAttInt_Local,
                                                            fluid_PG, EdgeL, amr->dh[lv], CoarseFine, TID, FB_RNG );
@@ -502,6 +516,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 
 // free memory
    delete [] fluid_PG;
+   if ( NeedSeparateFluidPG )   delete [] fluid_PG_BeforeUpdate;
 
    } // end of OpenMP parallel region
 
@@ -538,6 +553,11 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 #  ifdef FB_SEP_FLUOUT
    delete [] fluid_updated;
 #  endif
+
+
+
+// 14. record the feedback information
+   if ( FB_RESOLVED_SNEII_RECORD )   Record_FB_Resolved_SNeII( lv );
 
 } // FUNCTION : FB_AdvanceDt
 

@@ -1281,6 +1281,32 @@ void Init_ResetParameter()
       FB_RESOLVED_SNEII_EJECT_METAL *= Const_Msun / UNIT_M;
 
       PRINT_RESET_PARA( FB_RESOLVED_SNEII_EJECT_METAL, FORMAT_REAL, "to be consistent with the code units" );
+
+
+//    FB_RESOLVED_SNEII_MIN_M_GAS: Msun --> code units
+      FB_RESOLVED_SNEII_MIN_M_GAS *= Const_Msun / UNIT_M;
+
+      PRINT_RESET_PARA( FB_RESOLVED_SNEII_MIN_M_GAS, FORMAT_REAL, "to be consistent with the code units" );
+
+
+//    always turn on "FB_RESOLVED_SNEII_RECORD" in the debug mode
+#     ifdef GAMER_DEBUG
+      if ( !FB_RESOLVED_SNEII_RECORD )
+      {
+         FB_RESOLVED_SNEII_RECORD = true;
+
+         PRINT_RESET_PARA( FB_RESOLVED_SNEII_RECORD, FORMAT_INT, "since GAMER_DEBUG is enabled" );
+      }
+#     endif
+   }
+   else
+   {
+      if ( FB_RESOLVED_SNEII_RECORD )
+      {
+         FB_RESOLVED_SNEII_RECORD = false;
+
+         PRINT_RESET_PARA( FB_RESOLVED_SNEII_RECORD, FORMAT_INT, "since FB_RESOLVED_SNEII is off" );
+      }
    }
 #  endif // #ifdef FEEDBACK
 
