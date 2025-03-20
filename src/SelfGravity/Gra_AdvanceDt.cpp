@@ -169,16 +169,31 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
    else // if ( FullRefinedLv )
    {
       if      (  Poisson  &&  !Gravity )
+      {
+#        if ( POT_SCHEME == HYPRE_POI )
+         Hypre_SolvePoisson( SaveSg_Pot, lv, TimeNew );
+#        else
          InvokeSolver( POISSON_SOLVER,             lv, TimeNew, TimeOld, NULL_REAL, Poi_Coeff, NULL_INT,   NULL_INT, SaveSg_Pot,
                        OverlapMPI, Overlap_Sync );
+#        endif
+      }
 
       else if ( !Poisson  &&   Gravity )
          InvokeSolver( GRAVITY_SOLVER,             lv, TimeNew, TimeOld, dt,        NULL_REAL, SaveSg_Flu, NULL_INT, NULL_INT,
                        OverlapMPI, Overlap_Sync );
 
       else if (  Poisson  &&   Gravity )
+      {
+#        if ( POT_SCHEME == HYPRE_POI )
+         Hypre_SolvePoisson( SaveSg_Pot, lv, TimeNew );
+
+         InvokeSolver( GRAVITY_SOLVER,             lv, TimeNew, TimeOld, dt,        NULL_REAL, SaveSg_Flu, NULL_INT, NULL_INT,
+                       OverlapMPI, Overlap_Sync );
+#        else
          InvokeSolver( POISSON_AND_GRAVITY_SOLVER, lv, TimeNew, TimeOld, dt,        Poi_Coeff, SaveSg_Flu, NULL_INT, SaveSg_Pot,
                        OverlapMPI, Overlap_Sync );
+#        endif
+      }
    }
 
 

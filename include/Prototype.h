@@ -848,6 +848,9 @@ int FB_Aux_CellPatchRelPos( const int ijk[] );
 // Hypre
 #ifdef SUPPORT_HYPRE
 void Hypre_Init();
+void Hypre_PrepareSingleLevel( const int lv, const int NExtend );
+void Hypre_Free();
+void Hypre_SolvePoisson( const int SaveSg_Pot, const int lv, const double TimeNew );
 void Hypre_End();
 #endif
 

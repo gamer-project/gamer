@@ -7,10 +7,18 @@
 #  define DEBUG_HYPRE
 #endif
 
+#ifndef SERIAL
+#define HYPRE_MPI_COMM   MPI_COMM_WORLD
+#else
+#define HYPRE_MPI_COMM   NULL
+#endif
+
 
 #include "HYPRE_config.h"
 #include "HYPRE_sstruct_ls.h"
 #include "HYPRE_sstruct_mv.h"
+#include "HYPRE_struct_ls.h"
+#include "HYPRE_struct_mv.h"
 
 
 // macro for checking Hypre function return

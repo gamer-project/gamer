@@ -565,6 +565,9 @@ const LoadParaMode_t
 // Hypre
 #ifdef SUPPORT_HYPRE
 typedef int Hypre_Solver_t;
+const Hypre_Solver_t
+   HYPRE_SOLVER_SSTRUCT_SYS_PFMG = 1,
+   HYPRE_SOLVER_SSTRUCT_SPLIT    = 2;
 #endif
 
 // function pointers

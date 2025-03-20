@@ -1675,7 +1675,9 @@ void Aux_TakeNote()
 #     ifdef SUPPORT_HYPRE
       fprintf( Note, "Parameters of Hypre\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "HYPRE_SOLVER                    %s\n",      "UNKNOWN"                 );
+      fprintf( Note, "HYPRE_SOLVER                    %s\n",      ( HYPRE_SOLVER == HYPRE_SOLVER_SSTRUCT_SYS_PFMG ) ? "SSTRUCT_SYS_PFMG" :
+                                                                  ( HYPRE_SOLVER == HYPRE_SOLVER_SSTRUCT_SPLIT    ) ? "SSTRUCT_SPLIT"    :
+                                                                                                                      "UNKNOWN" );
       fprintf( Note, "HYPRE_PRINT_LEVEL              % d\n",      HYPRE_PRINT_LEVEL         );
       fprintf( Note, "HYPRE_ENABLE_LOGGING           % d\n",      HYPRE_ENABLE_LOGGING      );
       fprintf( Note, "HYPRE_MAX_ITER                 % d\n",      HYPRE_MAX_ITER            );
