@@ -88,6 +88,12 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
+// initialize Hypre
+#  ifdef SUPPORT_HYPRE
+   Hypre_Init();
+#  endif
+
+
 #  ifdef SUPPORT_FFTW
 // initialize FFTW
    Init_FFTW( 0 );

@@ -37,6 +37,10 @@ void End_GAMER()
    Grackle_End();
 #  endif
 
+#  ifdef SUPPORT_HYPRE
+   Hypre_End();
+#  endif
+
 #  if ( MODEL == HYDRO )
    EoS_End();
 #  endif

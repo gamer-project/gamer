@@ -845,6 +845,13 @@ int FB_Aux_CellPatchRelPos( const int ijk[] );
 #endif
 
 
+// Hypre
+#ifdef SUPPORT_HYPRE
+void Hypre_Init();
+void Hypre_End();
+#endif
+
+
 // EoS in hydrodynamics
 #if ( MODEL == HYDRO )
 void EoS_Init();
