@@ -1,0 +1,4 @@
+# Level    Threshold_Refine  Threshold_Derefine              Filter              Soften          MinDensity
+      0                0.80                0.80                0.01                0.00                0.00
+      1                0.80                0.80                0.01                0.00                0.00
+      2                0.80                0.80                0.01                0.00                0.00
