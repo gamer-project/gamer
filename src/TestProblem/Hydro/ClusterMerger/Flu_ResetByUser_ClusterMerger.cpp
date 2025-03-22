@@ -159,12 +159,17 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
       r2[c] = dr2[c][0] + dr2[c][1] + dr2[c][2];
       if ( r2[c] <= SQR(R_dep) )
       {
-//         fluid[DENS] -= D_dep[c];
-//         fluid[MOMX] -= D_dep[c]*GasVel[c][0];
-//         fluid[MOMY] -= D_dep[c]*GasVel[c][1];
-//         fluid[MOMZ] -= D_dep[c]*GasVel[c][2];
-//         fluid[ENGY] -= 0.5*D_dep[c]*( SQR(GasVel[c][0]) + SQR(GasVel[c][1]) + SQR(GasVel[c][2]) );
-//         reset = true;
+
+           fluid[DENS] -= D_dep[c];
+
+           if ( fluid[DENS] < MIN_DENS )  fluid[DENS] = MIN_DENS;
+
+           fluid[MOMX] *= fluid[DENS]/dens_old;
+           fluid[MOMY] *= fluid[DENS]/dens_old;
+           fluid[MOMZ] *= fluid[DENS]/dens_old;
+           fluid[ENGY] *= fluid[DENS]/dens_old;
+           reset = true;
+   
       } // if ( r2[c] <= SQR(R_dep) )
    } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
