@@ -25,7 +25,7 @@ strong parallel scalability, and supports a rich set of physics modules.
 * Load balancing with Hilbert space-filling curve
 * Bitwise reproducibility
 * Simple compilation using `configure.py` and machine files
-* [HDF5](https://support.hdfgroup.org/HDF5) output
+* [HDF5](https://www.hdfgroup.org/solutions/hdf5/) output
 * Data analysis with [yt](http://yt-project.org)
 * In situ Python analysis with [libyt](https://github.com/yt-project/libyt)
 * Source-term interface
