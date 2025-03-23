@@ -1250,6 +1250,67 @@ void Init_ResetParameter()
 #  endif // #ifdef STAR_FORMATION
 
 
+#  ifdef FEEDBACK
+   if ( FB_RESOLVED_SNEII )
+   {
+//    FB_RESOLVED_SNEII_N_PER_MASS: 1/Msun --> code units
+      FB_RESOLVED_SNEII_N_PER_MASS *= UNIT_M / Const_Msun;
+
+      PRINT_RESET_PARA( FB_RESOLVED_SNEII_N_PER_MASS, FORMAT_REAL, "to be consistent with the code units" );
+
+
+//    FB_RESOLVED_SNEII_DELAY_TIME: Myr --> code units
+      FB_RESOLVED_SNEII_DELAY_TIME *= Const_Myr / UNIT_T;
+
+      PRINT_RESET_PARA( FB_RESOLVED_SNEII_DELAY_TIME, FORMAT_REAL, "to be consistent with the code units" );
+
+
+//    FB_RESOLVED_SNEII_EJECT_ENGY: erg --> code units
+      FB_RESOLVED_SNEII_EJECT_ENGY /= UNIT_E;
+
+      PRINT_RESET_PARA( FB_RESOLVED_SNEII_EJECT_ENGY, FORMAT_REAL, "to be consistent with the code units" );
+
+
+//    FB_RESOLVED_SNEII_EJECT_MASS: Msun --> code units
+      FB_RESOLVED_SNEII_EJECT_MASS *= Const_Msun / UNIT_M;
+
+      PRINT_RESET_PARA( FB_RESOLVED_SNEII_EJECT_MASS, FORMAT_REAL, "to be consistent with the code units" );
+
+
+//    FB_RESOLVED_SNEII_EJECT_METAL: Msun --> code units
+      FB_RESOLVED_SNEII_EJECT_METAL *= Const_Msun / UNIT_M;
+
+      PRINT_RESET_PARA( FB_RESOLVED_SNEII_EJECT_METAL, FORMAT_REAL, "to be consistent with the code units" );
+
+
+//    FB_RESOLVED_SNEII_MIN_M_GAS: Msun --> code units
+      FB_RESOLVED_SNEII_MIN_M_GAS *= Const_Msun / UNIT_M;
+
+      PRINT_RESET_PARA( FB_RESOLVED_SNEII_MIN_M_GAS, FORMAT_REAL, "to be consistent with the code units" );
+
+
+//    always turn on "FB_RESOLVED_SNEII_RECORD" in the debug mode
+#     ifdef GAMER_DEBUG
+      if ( !FB_RESOLVED_SNEII_RECORD )
+      {
+         FB_RESOLVED_SNEII_RECORD = true;
+
+         PRINT_RESET_PARA( FB_RESOLVED_SNEII_RECORD, FORMAT_INT, "since GAMER_DEBUG is enabled" );
+      }
+#     endif
+   }
+   else
+   {
+      if ( FB_RESOLVED_SNEII_RECORD )
+      {
+         FB_RESOLVED_SNEII_RECORD = false;
+
+         PRINT_RESET_PARA( FB_RESOLVED_SNEII_RECORD, FORMAT_INT, "since FB_RESOLVED_SNEII is off" );
+      }
+   }
+#  endif // #ifdef FEEDBACK
+
+
 // disable OPT__MINIMIZE_MPI_BARRIER in the serial mode
 #  ifdef SERIAL
    if ( OPT__MINIMIZE_MPI_BARRIER )
