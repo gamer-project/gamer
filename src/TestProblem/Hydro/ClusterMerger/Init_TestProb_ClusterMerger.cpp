@@ -303,7 +303,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "AdjustBHVel",             &AdjustBHVel,              false,              Useless_bool,  Useless_bool   );
    LOAD_PARA( load_mode, "AdjustPeriod",            &AdjustPeriod,            -1.0,                NoMin_double,  NoMax_double   );
    LOAD_PARA( load_mode, "JetDirection_case",       &JetDirection_case,        1,                  1,             3              );
-   LOAD_PARA( load_mode, "JetDirection_file",       &JetDirection_case,        "JetDirection.txt", Useless_str,   Useless_str    );
+   LOAD_PARA( load_mode, "JetDirection_file",        JetDirection_file,        "JetDirection.txt", Useless_str,   Useless_str    );
    LOAD_PARA( load_mode, "fixBH",                   &fixBH,                    false,              Useless_bool,  Useless_bool   );
 
 } // FUNCITON : LoadInputTestProb
@@ -894,6 +894,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #endif // #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 
 
+#ifdef SUPPORT_HDF5
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_HDF5_User_ClusterMerger
 // Description :  Store the problem specific parameter in HDF5 outputs (Data_*) under User group
@@ -939,7 +940,7 @@ void Output_HDF5_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
 
 } // FUNCTION : Output_HDF5_User_Example
 #endif // #ifdef SUPPORT_HDF5
-#endif // #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -1026,7 +1027,7 @@ void Init_TestProb_Hydro_ClusterMerger()
    Init_Function_BField_User_Ptr = SetBFieldIC;
 #  endif
 #  ifdef SUPPORT_HDF5
-   Output_HDF5_User_Ptr           = Output_HDF5_User_ClusterMerger;
+   Output_HDF5_UserPara_Ptr       = Output_HDF5_User_ClusterMerger;
    Output_HDF5_InputTest_Ptr      = LoadInputTestProb;
 #  endif
 #  endif // if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )

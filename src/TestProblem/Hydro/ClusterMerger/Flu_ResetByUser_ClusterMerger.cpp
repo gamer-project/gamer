@@ -55,9 +55,9 @@ static double     M_inj[3], P_inj[3], E_inj[3];            // the injected densi
 static double     normalize_const[3];                      // the exact normalization constant
 
 // the variables that need to be recorded
-static double     E_inj_exp[3] = { 0.0, 0.0, 0.0 };        // the expected amount of injected energy
-static double     M_inj_exp[3] = { 0.0, 0.0, 0.0 };        // the expected amount of injected gas mass
-static double     dt_base;
+       double     E_inj_exp[3] = { 0.0, 0.0, 0.0 };        // the expected amount of injected energy
+       double     M_inj_exp[3] = { 0.0, 0.0, 0.0 };        // the expected amount of injected gas mass
+       double     dt_base;
 
 static bool       FirstTime = true;
 extern int        JetDirection_NBin;                       // number of bins of the jet direction table
@@ -180,6 +180,7 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
       if ( r2[c] <= SQR(R_dep) )
       {
 
+           double dens_old = fluid[DENS];
            fluid[DENS] -= D_dep[c];
 
            if ( fluid[DENS] < MIN_DENS )  fluid[DENS] = MIN_DENS;
@@ -484,7 +485,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                                                     fluid_acc[4], fluid_acc+NCOMP_FLUID, true, MIN_PRES, Emag,
                                                     EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr,
                                                     EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                                    h_EoS_Table );
+                                                    h_EoS_Table, NULL );
                   const real Temp = Hydro_Con2Temp( fluid_acc[0], fluid_acc[1], fluid_acc[2], fluid_acc[3],
                                                     fluid_acc[4], fluid_acc+NCOMP_FLUID, false, MIN_TEMP, Emag,
                                                     EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr,
@@ -658,13 +659,13 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
 
 //    (6) perform injection
+      int Reset;
+      double x0, y0, z0;
 //    use the "static" schedule for reproducibility
 #     pragma omp parallel for private( fluid, fluid_old, x, y, z ) schedule( static ) \
       reduction( +:CM_Bondi_SinkMass, CM_Bondi_SinkMomX, CM_Bondi_SinkMomY, CM_Bondi_SinkMomZ, \
                    CM_Bondi_SinkMomXAbs, CM_Bondi_SinkMomYAbs, CM_Bondi_SinkMomZAbs, \
                    CM_Bondi_SinkE, CM_Bondi_SinkEk, CM_Bondi_SinkEt, CM_Bondi_SinkNCell )
-      int Reset;
-      double x0, y0, z0;
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {
          x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
@@ -724,8 +725,8 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                   const real Ekin_old = 0.5*( SQR(fluid_old[MOMX]) + SQR(fluid_old[MOMY]) + SQR(fluid_old[MOMZ]) ) /
                                              (fluid_old[DENS]);
                   const real Ekin_new = 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
-                  const real Eint_old = fluid_old[ENGY] - Ek - Emag;
-                  const real Eint_new = fluid[ENGY] - Ek_new - Emag;
+                  const real Eint_old = fluid_old[ENGY] - Ekin_old - Emag;
+                  const real Eint_new = fluid[ENGY]     - Ekin_new - Emag;
 
                   CM_Bondi_SinkMass[Reset-1]    += dv *     ( fluid[DENS] - fluid_old[DENS] );
                   CM_Bondi_SinkMomX[Reset-1]    += dv *     ( fluid[MOMX] - fluid_old[MOMX] );

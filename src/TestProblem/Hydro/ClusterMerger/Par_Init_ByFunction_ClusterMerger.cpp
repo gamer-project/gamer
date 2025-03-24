@@ -909,8 +909,8 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                   {
                      if ( i == j )   continue;
 
-                     cosnt double rel_pos = sqrt( SQR(ParX_sum[c][i]-ParX_sum[c][j]) + SQR(ParY_sum[c][i]-ParY_sum[c][j]) +
-                                                   SQR(ParZ_sum[c][i]-ParZ_sum[c][j]) );
+                     const double rel_pos = sqrt( SQR(ParX_sum[c][i]-ParX_sum[c][j]) + SQR(ParY_sum[c][i]-ParY_sum[c][j]) +
+                                                  SQR(ParZ_sum[c][i]-ParZ_sum[c][j]) );
                      if       ( rel_pos >  soften )   pote_ThisRank[i-start] += ParM_sum[c][j] / rel_pos;
                      else if  ( rel_pos <= soften )   pote_ThisRank[i-start] += ParM_sum[c][j] / soften;
                   }
@@ -928,9 +928,9 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                {
                   if ( pote_AllRank[i] >= Pote_min )  continue;
                   Pote_min      = pote_AllRank[i];
-                  min_pos[c][0] = ParX_sum[c][i];
-                  min_pos[c][1] = ParY_sum[c][i];
-                  min_pos[c][2] = ParZ_sum[c][i];
+                  pos_min[c][0] = ParX_sum[c][i];
+                  pos_min[c][1] = ParY_sum[c][i];
+                  pos_min[c][2] = ParZ_sum[c][i];
                }
             } // for (int c=0; c<Merger_Coll_NumBHs; c++)
             delete[] pote_AllRank;
@@ -946,10 +946,10 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                double ParM_Tot = 0.0;
                for (int i=0; i<num_par_sum[c]; i++)
                {
-                  DM_Vel[c][0] += VelX_sum[c][i]*ParM_sum[c];
-                  DM_Vel[c][1] += VelY_sum[c][i]*ParM_sum[c];
-                  DM_Vel[c][2] += VelZ_sum[c][i]*ParM_sum[c];
-                  ParM_Tot     += ParM_sum[c];
+                  DM_Vel[c][0] += VelX_sum[c][i]*ParM_sum[c][i];
+                  DM_Vel[c][1] += VelY_sum[c][i]*ParM_sum[c][i];
+                  DM_Vel[c][2] += VelZ_sum[c][i]*ParM_sum[c][i];
+                  ParM_Tot     += ParM_sum[c][i];
                }
                for (int d=0; d<3; d++)   DM_Vel[c][d] /= ParM_Tot;
             }
