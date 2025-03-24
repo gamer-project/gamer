@@ -89,6 +89,25 @@ extern double (*MHD_ResetByUser_BField_Ptr)( const double x, const double y, con
 #endif
 
 
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  BH_accretion_rate
+// Description :  Calculate the black hole accretion rate
+//
+// Note        :
+//
+// Parameter   :  mode         : Accretion mode
+//                r_acc        : Accretion radius of the black hole
+//                mass_BH      : Mass of the black hole
+//                rho_gas      : Average gas density within the accretion radius
+//                cs           : Average sound speed within the accretion radius
+//                v_rel        : Relative velocity of the gas within the accretion radius and the black hole
+//                mass_coldGas : Mass of the cold gas within the accretion radius
+//                mass_gas     : Mass of the gas      within the accretion radius
+//                mass_par     : Mass of the particle within the accretion radius
+//
+// Return      :  acc : accretion rate
+//-------------------------------------------------------------------------------------------------------
 double BH_accretion_rate( const int mode, const double r_acc, const double mass_BH, const double rho_gas,
                           const double cs, const double v_rel, const double mass_coldGas, const double mass_gas,
                           const double mass_par )
@@ -113,6 +132,7 @@ double BH_accretion_rate( const int mode, const double r_acc, const double mass_
    return acc_cold + acc_hot;
 
 } // FUNCTION : BH_accretion_rate
+
 
 
 //-------------------------------------------------------------------------------------------------------
