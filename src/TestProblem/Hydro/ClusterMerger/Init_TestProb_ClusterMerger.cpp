@@ -902,6 +902,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #endif // #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 
 
+
 #ifdef SUPPORT_HDF5
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_HDF5_User_ClusterMerger
@@ -952,7 +953,7 @@ void Output_HDF5_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
    }
    HDF5_OutUser->Add( "AdjustCount", &AdjustCount );
 
-} // FUNCTION : Output_HDF5_User_Example
+} // FUNCTION : Output_HDF5_User_ClusterMerger
 #endif // #ifdef SUPPORT_HDF5
 
 
@@ -984,6 +985,7 @@ void End_ClusterMerger()
    delete [] Table_M3;
 
 } // FUNCTION : End_ClusterMerger
+
 
 
 #ifdef MHD
@@ -1168,7 +1170,8 @@ void AddNewField_ClusterMerger()
       ColorField3Idx = AddField( "ColorField3", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
 
 } // FUNCTION : AddNewField_ClusterMerger
-#endif
+#endif // #if ( MODEL == HYDRO )
+
 
 
 #ifdef MASSIVE_PARTICLES
@@ -1179,7 +1182,8 @@ void AddNewParticleAttribute_ClusterMerger()
     Idx_ParHalo = AddParticleAttributeInt( "ParHalo" );
 
 } // FUNCTION : AddNewParticleAttribute_ClusterMerger
-#endif
+#endif // #ifdef MASSIVE_PARTICLES
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -1281,6 +1285,7 @@ void Init_User_ClusterMerger()
 #  endif // #ifdef SUPPORT_HDF5
 
 } // FUNCTION : Init_User_ClusterMerger
+
 
 
 #ifdef SUPPORT_HDF5
