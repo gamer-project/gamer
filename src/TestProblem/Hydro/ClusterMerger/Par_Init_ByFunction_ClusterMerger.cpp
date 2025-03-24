@@ -205,7 +205,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
                                     xpos, ypos, zpos, xvel, yvel, zvel, mass, ptype );
 
 #     ifndef TRACER
-      for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++) 
+      for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++)
       {
          if ( (long_par)ptype[p] == PTYPE_TRACER )
             Aux_Error( ERROR_INFO,
@@ -293,9 +293,9 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
    const double ClusterCenter2[3] = { Merger_Coll_PosX2, Merger_Coll_PosY2, amr->BoxCenter[2] };
    const double ClusterCenter3[3] = { Merger_Coll_PosX3, Merger_Coll_PosY3, amr->BoxCenter[2] };
 
-   for (long p=0; p<NPar_ThisRank_EachCluster[0]; p++) 
+   for (long p=0; p<NPar_ThisRank_EachCluster[0]; p++)
    {
-      if ( ParType[p] != PTYPE_TRACER ) 
+      if ( ParType[p] != PTYPE_TRACER )
       {
          ParVelX[p] += Merger_Coll_VelX1;
          ParVelY[p] += Merger_Coll_VelY1;
@@ -303,9 +303,9 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       for (int d=0; d<3; d++)   ParPos[d][p] += ClusterCenter1[d];
    }
 
-   for (long p=NPar_ThisRank_EachCluster[0]; p<NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p++) 
+   for (long p=NPar_ThisRank_EachCluster[0]; p<NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p++)
    {
-      if ( ParType[p] != PTYPE_TRACER ) 
+      if ( ParType[p] != PTYPE_TRACER )
       {
          ParVelX[p] += Merger_Coll_VelX2;
          ParVelY[p] += Merger_Coll_VelY2;
@@ -313,9 +313,9 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       for (int d=0; d<3; d++)   ParPos[d][p] += ClusterCenter2[d];
    }
 
-   for (long p=NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p<NPar_ThisRank; p++) 
+   for (long p=NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p<NPar_ThisRank; p++)
    {
-      if ( ParType[p] != PTYPE_TRACER ) 
+      if ( ParType[p] != PTYPE_TRACER )
       {
          ParVelX[p] += Merger_Coll_VelX3;
          ParVelY[p] += Merger_Coll_VelY3;
@@ -726,10 +726,10 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
    {
       for (int d=0; d<3; d++)   Cen_new[0][d] = amr->BoxCenter[d];
       for (int d=0; d<3; d++)   Cen_Vel[0][d] = 0.0;
-      
+
       for (int c=0; c<Merger_Coll_NumBHs; c++)
          for (int d=0; d<3; d++)  Cen_old[c][d] = Cen_new[c][d];
-   
+
       return;
    } // if ( fixBH )
 
@@ -870,19 +870,19 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
 
          for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
-            MPI_Allgatherv( ParX[c], num_par[c], MPI_GAMER_REAL_PAR, ParX_sum[c], num_par_eachRank[c], 
+            MPI_Allgatherv( ParX[c], num_par[c], MPI_GAMER_REAL_PAR, ParX_sum[c], num_par_eachRank[c],
                               displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
-            MPI_Allgatherv( ParY[c], num_par[c], MPI_GAMER_REAL_PAR, ParY_sum[c], num_par_eachRank[c], 
+            MPI_Allgatherv( ParY[c], num_par[c], MPI_GAMER_REAL_PAR, ParY_sum[c], num_par_eachRank[c],
                               displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
-            MPI_Allgatherv( ParZ[c], num_par[c], MPI_GAMER_REAL_PAR, ParZ_sum[c], num_par_eachRank[c], 
+            MPI_Allgatherv( ParZ[c], num_par[c], MPI_GAMER_REAL_PAR, ParZ_sum[c], num_par_eachRank[c],
                               displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
-            MPI_Allgatherv( ParM[c], num_par[c], MPI_GAMER_REAL_PAR, ParM_sum[c], num_par_eachRank[c], 
+            MPI_Allgatherv( ParM[c], num_par[c], MPI_GAMER_REAL_PAR, ParM_sum[c], num_par_eachRank[c],
                               displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
-            MPI_Allgatherv( VelX[c], num_par[c], MPI_GAMER_REAL_PAR, VelX_sum[c], num_par_eachRank[c], 
+            MPI_Allgatherv( VelX[c], num_par[c], MPI_GAMER_REAL_PAR, VelX_sum[c], num_par_eachRank[c],
                               displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
-            MPI_Allgatherv( VelY[c], num_par[c], MPI_GAMER_REAL_PAR, VelY_sum[c], num_par_eachRank[c], 
+            MPI_Allgatherv( VelY[c], num_par[c], MPI_GAMER_REAL_PAR, VelY_sum[c], num_par_eachRank[c],
                               displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
-            MPI_Allgatherv( VelZ[c], num_par[c], MPI_GAMER_REAL_PAR, VelZ_sum[c], num_par_eachRank[c], 
+            MPI_Allgatherv( VelZ[c], num_par[c], MPI_GAMER_REAL_PAR, VelZ_sum[c], num_par_eachRank[c],
                               displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
          }
 
@@ -1030,7 +1030,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
          Vel_Tmp[1] = amr->Par->VelY[p];
          Vel_Tmp[2] = amr->Par->VelZ[p];
          break;
-      
+
       } // for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
 
 //    use MPI_MAX since Cen_Tmp[] is initialized as -inf

@@ -360,7 +360,7 @@ void SetParameter()
       AdjustBHPos = false;
       AdjustBHVel = false;
    }
-   
+
 // convert to code units
    Merger_Coll_PosX1 *= Const_kpc / UNIT_L;
    Merger_Coll_PosY1 *= Const_kpc / UNIT_L;
@@ -533,7 +533,7 @@ void SetParameter()
 
 //    set the number of black holes to be the same as the number of clusters initially
       Merger_Coll_NumBHs = Merger_Coll_NumHalos;
-     
+
 //    set initial accretion rate to zero
       Mdot_BH1 = Mdot_BH2 = Mdot_BH3 = 0.0;
 
@@ -660,7 +660,7 @@ void SetParameter()
       if ( AGN_feedback ) {
       Aux_Message( stdout, "  cluster 1 BH mass         = %g\n",           Bondi_MassBH1     );
       Aux_Message( stdout, "  cluster 1 jet half-height = %g\n",           Jet_HalfHeight1   );
-      Aux_Message( stdout, "  cluster 1 jet radius      = %g\n",           Jet_Radius1       );   
+      Aux_Message( stdout, "  cluster 1 jet radius      = %g\n",           Jet_Radius1       );
       }
       if ( Merger_Coll_NumHalos > 1 ) {
       Aux_Message( stdout, "  profile file 2            = %s\n",           Merger_File_Prof2 );
@@ -673,8 +673,8 @@ void SetParameter()
       if ( AGN_feedback ) {
       Aux_Message( stdout, "  cluster 2 BH mass         = %g\n",           Bondi_MassBH2     );
       Aux_Message( stdout, "  cluster 2 jet half-height = %g\n",           Jet_HalfHeight2   );
-      Aux_Message( stdout, "  cluster 2 jet radius      = %g\n",           Jet_Radius2       );   
-      }   
+      Aux_Message( stdout, "  cluster 2 jet radius      = %g\n",           Jet_Radius2       );
+      }
       } // if ( Merger_Coll_NumHalos > 1 )
       if ( Merger_Coll_NumHalos > 2 ) {
       Aux_Message( stdout, "  profile file 3            = %s\n",           Merger_File_Prof3 );
@@ -687,28 +687,28 @@ void SetParameter()
       if ( AGN_feedback ) {
       Aux_Message( stdout, "  cluster 2 BH mass         = %g\n",           Bondi_MassBH3     );
       Aux_Message( stdout, "  cluster 2 jet half-height = %g\n",           Jet_HalfHeight3   );
-      Aux_Message( stdout, "  cluster 2 jet radius      = %g\n",           Jet_Radius3       );   
-      }      
+      Aux_Message( stdout, "  cluster 2 jet radius      = %g\n",           Jet_Radius3       );
+      }
       } // if ( Merger_Coll_NumHalos > 2 )
       Aux_Message( stdout, "  use metals                = %s\n",          (Merger_Coll_UseMetals)? "yes":"no" );
       Aux_Message( stdout, "  label cluster centers     = %s\n",          (Merger_Coll_LabelCenter)? "yes":"no" );
       if ( AGN_feedback ) {
       Aux_Message( stdout, "  BH fixed                  = %s\n",          (fixBH)? "yes":"no" );
-      Aux_Message( stdout, "  accretion mode            = %d\n",          Accretion_Mode      );    
+      Aux_Message( stdout, "  accretion mode            = %d\n",          Accretion_Mode      );
       Aux_Message( stdout, "  eta                       = %g\n",          eta                 );
       Aux_Message( stdout, "  eps_f                     = %g\n",          eps_f               );
       Aux_Message( stdout, "  eps_m                     = %g\n",          eps_m               );
       Aux_Message( stdout, "  accretion radius          = %g\n",          R_acc               );
       Aux_Message( stdout, "  depletion radius          = %g\n",          R_dep               );
-      Aux_Message( stdout, "  jet direction case        = %d\n",          JetDirection_case   ); 
+      Aux_Message( stdout, "  jet direction case        = %d\n",          JetDirection_case   );
       if ( JetDirection_case == 2 ) {
       Aux_Message( stdout, "  jet direction file        = %s\n",          JetDirection_file   );
       }
-      Aux_Message( stdout, "  adjust BH position        = %s\n",          (AdjustBHPos)? "yes":"no" ); 
-      Aux_Message( stdout, "  adjust BH velocity        = %s\n",          (AdjustBHVel)? "yes":"no" ); 
+      Aux_Message( stdout, "  adjust BH position        = %s\n",          (AdjustBHPos)? "yes":"no" );
+      Aux_Message( stdout, "  adjust BH velocity        = %s\n",          (AdjustBHVel)? "yes":"no" );
       Aux_Message( stdout, "  adjust period             = %g\n",          AdjustPeriod        );
-      } // if ( AGN_feedback )                
-       
+      } // if ( AGN_feedback )
+
       Aux_Message( stdout, "=============================================================================\n" );
 
 //    check if the accretion region is larger than the jet cylinder

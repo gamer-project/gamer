@@ -169,7 +169,7 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
            fluid[MOMZ] *= fluid[DENS]/dens_old;
            fluid[ENGY] *= fluid[DENS]/dens_old;
            reset = true;
-   
+
       } // if ( r2[c] <= SQR(R_dep) )
    } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
@@ -226,7 +226,7 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
          const real momy_old = fluid[MOMY];
          const real momz_old = fluid[MOMZ];
          const real dens_old = fluid[DENS];
-   
+
          fluid[DENS] += M_inj[c];
 
 //       transfer into BH frame
@@ -453,29 +453,29 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                {
                   gas_mass[c] += fluid_acc[0]*dv;
 #                 ifdef DUAL_ENERGY
-                  const real Pres = Hydro_DensDual2Pres( fluid_acc[0], fluid_acc[DUAL], EoS_AuxArray_Flt[1], 
+                  const real Pres = Hydro_DensDual2Pres( fluid_acc[0], fluid_acc[DUAL], EoS_AuxArray_Flt[1],
                                                          false, NULL_REAL );
-                  const real Eint = EoS_DensPres2Eint_CPUPtr( fluid_acc[0], Pres, NULL, EoS_AuxArray_Flt, 
+                  const real Eint = EoS_DensPres2Eint_CPUPtr( fluid_acc[0], Pres, NULL, EoS_AuxArray_Flt,
                                                               EoS_AuxArray_Int, h_EoS_Table );
-                  const real Temp = EoS_DensEint2Temp_CPUPtr( fluid_acc[0], Eint, NULL, EoS_AuxArray_Flt, 
+                  const real Temp = EoS_DensEint2Temp_CPUPtr( fluid_acc[0], Eint, NULL, EoS_AuxArray_Flt,
                                                               EoS_AuxArray_Int, h_EoS_Table );
 #                 else
-                  const real Pres = Hydro_Con2Pres( fluid_acc[0], fluid_acc[1], fluid_acc[2], fluid_acc[3], 
+                  const real Pres = Hydro_Con2Pres( fluid_acc[0], fluid_acc[1], fluid_acc[2], fluid_acc[3],
                                                     fluid_acc[4], fluid_acc+NCOMP_FLUID, true, MIN_PRES, Emag,
-                                                    EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, 
-                                                    EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, 
+                                                    EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr,
+                                                    EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                     h_EoS_Table );
-                  const real Temp = Hydro_Con2Temp( fluid_acc[0], fluid_acc[1], fluid_acc[2], fluid_acc[3], 
+                  const real Temp = Hydro_Con2Temp( fluid_acc[0], fluid_acc[1], fluid_acc[2], fluid_acc[3],
                                                     fluid_acc[4], fluid_acc+NCOMP_FLUID, false, MIN_TEMP, Emag,
-                                                    EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, 
-                                                    EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, 
+                                                    EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr,
+                                                    EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                     h_EoS_Table );
 #                 endif
                   if ( Temp <= 5e5 )   mass_cold[c] += fluid_acc[0]*dv;
                   else
                   {
                      rho[c] += fluid_acc[0]*dv;
-                     Cs[c] += sqrt( EoS_DensPres2CSqr_CPUPtr( fluid_acc[0], Pres, NULL, EoS_AuxArray_Flt, 
+                     Cs[c] += sqrt( EoS_DensPres2CSqr_CPUPtr( fluid_acc[0], Pres, NULL, EoS_AuxArray_Flt,
                                     EoS_AuxArray_Int, h_EoS_Table ) );
                      for (int d=0; d<3; d++)   gas_mom[c][d] += fluid_acc[d+1]*dv;
                      num[c] += 1;
@@ -587,13 +587,13 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
             for (int d=0; d<3; d++)  GasVel[c][d] = gas_vel_sum[c][d];
          } // if ( num_sum[c] == 0 ) ... else ...
 
-         Mdot_BH[c] = BH_accretion_rate( Accretion_Mode, R_acc, Bondi_MassBH[c], GasDens[c], 
-                                       SoundSpeed[c], RelativeVel[c], ColdGasMass[c], 
+         Mdot_BH[c] = BH_accretion_rate( Accretion_Mode, R_acc, Bondi_MassBH[c], GasDens[c],
+                                       SoundSpeed[c], RelativeVel[c], ColdGasMass[c],
                                        GasMass[c], ParMass[c] );
 
          if ( V_cyl_exact_sum[c] != 0 )   normalize_const[c] = V_cyl_exact_sum[c] / normalize_sum[c];
          else                             normalize_const[c] = 0.5 * M_PI;
-   
+
       } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
       Mdot_BH1 = Mdot_BH[0];
@@ -701,7 +701,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 //             record the amount of sunk variables removed at the maximum level
                if ( CurrentMaxLv )
                {
-                  const real Ekin_old = 0.5*( SQR(fluid_old[MOMX]) + SQR(fluid_old[MOMY]) + SQR(fluid_old[MOMZ]) ) / 
+                  const real Ekin_old = 0.5*( SQR(fluid_old[MOMX]) + SQR(fluid_old[MOMY]) + SQR(fluid_old[MOMZ]) ) /
                                              (fluid_old[DENS]);
                   const real Ekin_new = 0.5*( SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]) ) / fluid[DENS];
                   const real Eint_old = fluid_old[ENGY] - Ek - Emag;
@@ -721,7 +721,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                } // if ( CurrentMaxLv )
 
 //             store the reset values
-               for (int v=0; v<NCOMP_TOTAL; v++)   
+               for (int v=0; v<NCOMP_TOTAL; v++)
                   amr->patch[FluSg][lv][PID]->fluid[v][k][j][i] = fluid[v];
 
             } // if ( Reset != 0 )
