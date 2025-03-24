@@ -38,9 +38,15 @@ extern long    NPar_AllCluster;
 extern double  Bondi_MassBH1;
 extern double  Bondi_MassBH2;
 extern double  Bondi_MassBH3;
-extern double  Mdot_BH1;
-extern double  Mdot_BH2;
-extern double  Mdot_BH3;
+extern double  Mdot_tot_BH1;
+extern double  Mdot_tot_BH2;
+extern double  Mdot_tot_BH3;
+extern double  Mdot_hot_BH1;
+extern double  Mdot_hot_BH2;
+extern double  Mdot_hot_BH3;
+extern double  Mdot_cold_BH1;
+extern double  Mdot_cold_BH2;
+extern double  Mdot_cold_BH3;
 
 extern double  CM_Bondi_SinkMass[3];
 extern double  CM_Bondi_SinkMomX[3];
@@ -205,7 +211,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
                                     xpos, ypos, zpos, xvel, yvel, zvel, mass, ptype );
 
 #     ifndef TRACER
-      for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++) 
+      for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++)
       {
          if ( (long_par)ptype[p] == PTYPE_TRACER )
             Aux_Error( ERROR_INFO,
@@ -293,9 +299,9 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
    const double ClusterCenter2[3] = { Merger_Coll_PosX2, Merger_Coll_PosY2, amr->BoxCenter[2] };
    const double ClusterCenter3[3] = { Merger_Coll_PosX3, Merger_Coll_PosY3, amr->BoxCenter[2] };
 
-   for (long p=0; p<NPar_ThisRank_EachCluster[0]; p++) 
+   for (long p=0; p<NPar_ThisRank_EachCluster[0]; p++)
    {
-      if ( ParType[p] != PTYPE_TRACER ) 
+      if ( ParType[p] != PTYPE_TRACER )
       {
          ParVelX[p] += Merger_Coll_VelX1;
          ParVelY[p] += Merger_Coll_VelY1;
@@ -303,9 +309,9 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       for (int d=0; d<3; d++)   ParPos[d][p] += ClusterCenter1[d];
    }
 
-   for (long p=NPar_ThisRank_EachCluster[0]; p<NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p++) 
+   for (long p=NPar_ThisRank_EachCluster[0]; p<NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p++)
    {
-      if ( ParType[p] != PTYPE_TRACER ) 
+      if ( ParType[p] != PTYPE_TRACER )
       {
          ParVelX[p] += Merger_Coll_VelX2;
          ParVelY[p] += Merger_Coll_VelY2;
@@ -313,9 +319,9 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       for (int d=0; d<3; d++)   ParPos[d][p] += ClusterCenter2[d];
    }
 
-   for (long p=NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p<NPar_ThisRank; p++) 
+   for (long p=NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p<NPar_ThisRank; p++)
    {
-      if ( ParType[p] != PTYPE_TRACER ) 
+      if ( ParType[p] != PTYPE_TRACER )
       {
          ParVelX[p] += Merger_Coll_VelX3;
          ParVelY[p] += Merger_Coll_VelY3;
@@ -596,22 +602,24 @@ void Aux_Record_ClusterMerger()
             Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
 
          FILE *File_User = fopen( FileName, "a" );
-         fprintf( File_User, "#%13s%14s",  "Time", "Step" );
+         fprintf( File_User, "#%19s%20s",  "Time", "Step" );
          for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
-            fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "x",             c, "y",             c, "z",             c );
-            fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "BHVel_x[km/s]", c, "BHVel_y",       c, "BHVel_z",       c );
-            fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "GasVel_x",      c, "GasVel_y",      c, "GasVel_z",       c );
-            fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "RelativeVel",   c, "SoundSpeed",    c, "GasDens(cgs)",  c );
-            fprintf( File_User, " %13s%1d %13s%1d",         "mass_BH[Msun]", c, "NVoidCell",     c );
-            fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "MomXInj(cgs)",  c, "MomYInj",       c, "MomZInj",       c );
-            fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "MomXInjAbs",    c, "MomYInjAbs",    c, "MomZInjAbs",    c );
-            fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "EInj_exp[erg]", c, "E_Inj[erg]",    c, "E_Inj_err",     c );
-            fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "Ek_Inj[erg]",   c, "Et_Inj[erg]",   c, "PowerInj(cgs)", c );
-            fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "MInjexp[Msun]", c, "MassInj[Msun]", c, "M_Inj_err",     c );
-            fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "Mdot(cgs)",     c, "Pdot(cgs)",     c, "Edot(cgs)",     c );
-            fprintf( File_User, " %13s%1d %13s%1d %13s%1d", "Jet_Vec_x",     c, "Jet_Vec_y",     c, "Jet_Vec_z",     c );
-            fprintf( File_User, " %13s%1d %13s%1d",         "num_par_sum",   c, "ColdGasMass", c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "x",                c, "y",                c, "z",                 c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "BHVel_x[km/s]",    c, "BHVel_y",          c, "BHVel_z",           c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "GasVel_x",         c, "GasVel_y",         c, "GasVel_z",          c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "RelativeVel",      c, "SoundSpeed",       c, "GasDens(cgs)",      c );
+            fprintf( File_User, " %19s%1d",                 "mass_BH[Msun]",    c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "Mdot_tot_BH(cgs)", c, "Mdot_hot_BH(cgs)", c, "Mdot_cold_BH(cgs)", c );
+            fprintf( File_User, " %19s%1d",                 "NVoidCell",        c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "MomXInj(cgs)",     c, "MomYInj",          c, "MomZInj",           c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "MomXInjAbs",       c, "MomYInjAbs",       c, "MomZInjAbs",        c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "EInj_exp[erg]",    c, "E_Inj[erg]",       c, "E_Inj_err",         c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "Ek_Inj[erg]",      c, "Et_Inj[erg]",      c, "PowerInj(cgs)",     c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "MInjexp[Msun]",    c, "MassInj[Msun]",    c, "M_Inj_err",         c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "Mdot(cgs)",        c, "Pdot(cgs)",        c, "Edot(cgs)",         c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "Jet_Vec_x",        c, "Jet_Vec_y",        c, "Jet_Vec_z",         c );
+            fprintf( File_User, " %19s%1d %19s%1d",         "num_par_sum",      c, "ColdGasMass",      c );
          }
          fprintf( File_User, "\n" );
          fclose( File_User );
@@ -621,7 +629,9 @@ void Aux_Record_ClusterMerger()
    } // if ( FirstTime )
 
    double Bondi_MassBH[3] = { Bondi_MassBH1, Bondi_MassBH2, Bondi_MassBH3 };
-   double Mdot_BH[3] = { Mdot_BH1, Mdot_BH2, Mdot_BH3 };
+   double Mdot_tot_BH[3]  = { Mdot_tot_BH1,  Mdot_tot_BH2,  Mdot_tot_BH3  };
+   double Mdot_hot_BH[3]  = { Mdot_hot_BH1,  Mdot_hot_BH2,  Mdot_hot_BH3  };
+   double Mdot_cold_BH[3] = { Mdot_cold_BH1, Mdot_cold_BH2, Mdot_cold_BH3 };
 
 // sum over the variables and convert units
    int SinkNCell_Sum[3];
@@ -661,22 +671,24 @@ void Aux_Record_ClusterMerger()
    if ( MPI_Rank == 0 )
    {
       FILE *File_User = fopen( FileName, "a" );
-      fprintf( File_User, "%14.7e%14ld", Time[0], Step );
+      fprintf( File_User, "%20.7e%20ld", Time[0], Step );
       for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
-         fprintf( File_User, " %14.7e %14.7e %14.7e", ClusterCen[c][0], ClusterCen[c][1], ClusterCen[c][2] );
-         fprintf( File_User, " %14.7e %14.7e %14.7e", BH_Vel[c][0]*UNIT_V/(Const_km/Const_s), BH_Vel[c][1]*UNIT_V/(Const_km/Const_s), BH_Vel[c][2]*UNIT_V/(Const_km/Const_s) );
-         fprintf( File_User, " %14.7e %14.7e %14.7e", GasVel[c][0]*UNIT_V/(Const_km/Const_s), GasVel[c][1]*UNIT_V/(Const_km/Const_s), GasVel[c][2]*UNIT_V/(Const_km/Const_s) );
-         fprintf( File_User, " %14.7e %14.7e %14.7e", RelativeVel[c]*UNIT_V/(Const_km/Const_s), SoundSpeed[c]*UNIT_V/(Const_km/Const_s), GasDens[c]*UNIT_D );
-         fprintf( File_User, " %14.7e %14.7e %14d",   Bondi_MassBH[c]*UNIT_M/Const_Msun, Mdot_BH[c]*UNIT_M/UNIT_T, SinkNCell_Sum[c] );
-         fprintf( File_User, " %14.7e %14.7e %14.7e", MomX_Sum[c], MomY_Sum[c], MomZ_Sum[c] );
-         fprintf( File_User, " %14.7e %14.7e %14.7e", MomXAbs_Sum[c], MomYAbs_Sum[c], MomZAbs_Sum[c] );
-         fprintf( File_User, " %14.7e %14.7e %14.7e", E_inj_exp[c], E_Sum[c], (E_Sum[c]-E_inj_exp[c])/E_inj_exp[c] );
-         fprintf( File_User, " %14.7e %14.7e %14.7e", Ek_Sum[c], Et_Sum[c], E_power_inj[c] );
-         fprintf( File_User, " %14.7e %14.7e %14.7e", M_inj_exp[c], Mass_Sum[c], (Mass_Sum[c]-M_inj_exp[c])/M_inj_exp[c] );
-         fprintf( File_User, " %14.7e %14.7e %14.7e", Mdot[c]*UNIT_M/UNIT_T, Pdot[c]*UNIT_M*UNIT_V/UNIT_T, Edot[c]*UNIT_E/UNIT_T );
-         fprintf( File_User, " %14.7e %14.7e %14.7e", Jet_Vec[c][0], Jet_Vec[c][1], Jet_Vec[c][2] );
-         fprintf( File_User, " %14d %14.7e",          num_par_sum[c], ColdGasMass[c]*UNIT_M/Const_Msun );
+         fprintf( File_User, " %20.7e %20.7e %20.7e", ClusterCen[c][0], ClusterCen[c][1], ClusterCen[c][2] );
+         fprintf( File_User, " %20.7e %20.7e %20.7e", BH_Vel[c][0]*UNIT_V/(Const_km/Const_s), BH_Vel[c][1]*UNIT_V/(Const_km/Const_s), BH_Vel[c][2]*UNIT_V/(Const_km/Const_s) );
+         fprintf( File_User, " %20.7e %20.7e %20.7e", GasVel[c][0]*UNIT_V/(Const_km/Const_s), GasVel[c][1]*UNIT_V/(Const_km/Const_s), GasVel[c][2]*UNIT_V/(Const_km/Const_s) );
+         fprintf( File_User, " %20.7e %20.7e %20.7e", RelativeVel[c]*UNIT_V/(Const_km/Const_s), SoundSpeed[c]*UNIT_V/(Const_km/Const_s), GasDens[c]*UNIT_D );
+         fprintf( File_User, " %20.7e",               Bondi_MassBH[c]*UNIT_M/Const_Msun );
+         fprintf( File_User, " %20.7e %20.7e %20.7e", Mdot_tot_BH[c]*UNIT_M/UNIT_T, Mdot_hot_BH[c]*UNIT_M/UNIT_T, Mdot_cold_BH[c]*UNIT_M/UNIT_T );
+         fprintf( File_User, " %20d",                 SinkNCell_Sum[c] );
+         fprintf( File_User, " %20.7e %20.7e %20.7e", MomX_Sum[c], MomY_Sum[c], MomZ_Sum[c] );
+         fprintf( File_User, " %20.7e %20.7e %20.7e", MomXAbs_Sum[c], MomYAbs_Sum[c], MomZAbs_Sum[c] );
+         fprintf( File_User, " %20.7e %20.7e %20.7e", E_inj_exp[c], E_Sum[c], (E_Sum[c]-E_inj_exp[c])/E_inj_exp[c] );
+         fprintf( File_User, " %20.7e %20.7e %20.7e", Ek_Sum[c], Et_Sum[c], E_power_inj[c] );
+         fprintf( File_User, " %20.7e %20.7e %20.7e", M_inj_exp[c], Mass_Sum[c], (Mass_Sum[c]-M_inj_exp[c])/M_inj_exp[c] );
+         fprintf( File_User, " %20.7e %20.7e %20.7e", Mdot[c]*UNIT_M/UNIT_T, Pdot[c]*UNIT_M*UNIT_V/UNIT_T, Edot[c]*UNIT_E/UNIT_T );
+         fprintf( File_User, " %20.7e %20.7e %20.7e", Jet_Vec[c][0], Jet_Vec[c][1], Jet_Vec[c][2] );
+         fprintf( File_User, " %20d %20.7e",          num_par_sum[c], ColdGasMass[c]*UNIT_M/Const_Msun );
       }
       fprintf( File_User, "\n" );
       fclose( File_User );
@@ -726,10 +738,10 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
    {
       for (int d=0; d<3; d++)   Cen_new[0][d] = amr->BoxCenter[d];
       for (int d=0; d<3; d++)   Cen_Vel[0][d] = 0.0;
-      
+
       for (int c=0; c<Merger_Coll_NumBHs; c++)
          for (int d=0; d<3; d++)  Cen_old[c][d] = Cen_new[c][d];
-   
+
       return;
    } // if ( fixBH )
 
@@ -870,19 +882,19 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
 
          for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
-            MPI_Allgatherv( ParX[c], num_par[c], MPI_GAMER_REAL_PAR, ParX_sum[c], num_par_eachRank[c], 
+            MPI_Allgatherv( ParX[c], num_par[c], MPI_GAMER_REAL_PAR, ParX_sum[c], num_par_eachRank[c],
                               displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
-            MPI_Allgatherv( ParY[c], num_par[c], MPI_GAMER_REAL_PAR, ParY_sum[c], num_par_eachRank[c], 
+            MPI_Allgatherv( ParY[c], num_par[c], MPI_GAMER_REAL_PAR, ParY_sum[c], num_par_eachRank[c],
                               displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
-            MPI_Allgatherv( ParZ[c], num_par[c], MPI_GAMER_REAL_PAR, ParZ_sum[c], num_par_eachRank[c], 
+            MPI_Allgatherv( ParZ[c], num_par[c], MPI_GAMER_REAL_PAR, ParZ_sum[c], num_par_eachRank[c],
                               displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
-            MPI_Allgatherv( ParM[c], num_par[c], MPI_GAMER_REAL_PAR, ParM_sum[c], num_par_eachRank[c], 
+            MPI_Allgatherv( ParM[c], num_par[c], MPI_GAMER_REAL_PAR, ParM_sum[c], num_par_eachRank[c],
                               displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
-            MPI_Allgatherv( VelX[c], num_par[c], MPI_GAMER_REAL_PAR, VelX_sum[c], num_par_eachRank[c], 
+            MPI_Allgatherv( VelX[c], num_par[c], MPI_GAMER_REAL_PAR, VelX_sum[c], num_par_eachRank[c],
                               displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
-            MPI_Allgatherv( VelY[c], num_par[c], MPI_GAMER_REAL_PAR, VelY_sum[c], num_par_eachRank[c], 
+            MPI_Allgatherv( VelY[c], num_par[c], MPI_GAMER_REAL_PAR, VelY_sum[c], num_par_eachRank[c],
                               displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
-            MPI_Allgatherv( VelZ[c], num_par[c], MPI_GAMER_REAL_PAR, VelZ_sum[c], num_par_eachRank[c], 
+            MPI_Allgatherv( VelZ[c], num_par[c], MPI_GAMER_REAL_PAR, VelZ_sum[c], num_par_eachRank[c],
                               displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
          }
 
@@ -909,8 +921,8 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                   {
                      if ( i == j )   continue;
 
-                     cosnt double rel_pos = sqrt( SQR(ParX_sum[c][i]-ParX_sum[c][j]) + SQR(ParY_sum[c][i]-ParY_sum[c][j]) +
-                                                   SQR(ParZ_sum[c][i]-ParZ_sum[c][j]) );
+                     const double rel_pos = sqrt( SQR(ParX_sum[c][i]-ParX_sum[c][j]) + SQR(ParY_sum[c][i]-ParY_sum[c][j]) +
+                                                  SQR(ParZ_sum[c][i]-ParZ_sum[c][j]) );
                      if       ( rel_pos >  soften )   pote_ThisRank[i-start] += ParM_sum[c][j] / rel_pos;
                      else if  ( rel_pos <= soften )   pote_ThisRank[i-start] += ParM_sum[c][j] / soften;
                   }
@@ -928,9 +940,9 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                {
                   if ( pote_AllRank[i] >= Pote_min )  continue;
                   Pote_min      = pote_AllRank[i];
-                  min_pos[c][0] = ParX_sum[c][i];
-                  min_pos[c][1] = ParY_sum[c][i];
-                  min_pos[c][2] = ParZ_sum[c][i];
+                  pos_min[c][0] = ParX_sum[c][i];
+                  pos_min[c][1] = ParY_sum[c][i];
+                  pos_min[c][2] = ParZ_sum[c][i];
                }
             } // for (int c=0; c<Merger_Coll_NumBHs; c++)
             delete[] pote_AllRank;
@@ -946,10 +958,10 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                double ParM_Tot = 0.0;
                for (int i=0; i<num_par_sum[c]; i++)
                {
-                  DM_Vel[c][0] += VelX_sum[c][i]*ParM_sum[c];
-                  DM_Vel[c][1] += VelY_sum[c][i]*ParM_sum[c];
-                  DM_Vel[c][2] += VelZ_sum[c][i]*ParM_sum[c];
-                  ParM_Tot     += ParM_sum[c];
+                  DM_Vel[c][0] += VelX_sum[c][i]*ParM_sum[c][i];
+                  DM_Vel[c][1] += VelY_sum[c][i]*ParM_sum[c][i];
+                  DM_Vel[c][2] += VelZ_sum[c][i]*ParM_sum[c][i];
+                  ParM_Tot     += ParM_sum[c][i];
                }
                for (int d=0; d<3; d++)   DM_Vel[c][d] /= ParM_Tot;
             }
@@ -1030,7 +1042,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
          Vel_Tmp[1] = amr->Par->VelY[p];
          Vel_Tmp[2] = amr->Par->VelZ[p];
          break;
-      
+
       } // for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
 
 //    use MPI_MAX since Cen_Tmp[] is initialized as -inf

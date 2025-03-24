@@ -82,9 +82,15 @@ static FieldIdx_t ColorField3Idx = Idx_Undefined;
        double Bondi_MassBH1;              // black hole mass of cluster 1
        double Bondi_MassBH2;              // black hole mass of cluster 2
        double Bondi_MassBH3;              // black hole mass of cluster 3
-       double Mdot_BH1;                   // the accretion rate of BH 1
-       double Mdot_BH2;                   // the accretion rate of BH 2
-       double Mdot_BH3;                   // the accretion rate of BH 3
+       double Mdot_tot_BH1;               // the total accretion rate of BH 1
+       double Mdot_tot_BH2;               // the total accretion rate of BH 2
+       double Mdot_tot_BH3;               // the total accretion rate of BH 3
+       double Mdot_hot_BH1;               // the hot   accretion rate of BH 1
+       double Mdot_hot_BH2;               // the hot   accretion rate of BH 2
+       double Mdot_hot_BH3;               // the hot   accretion rate of BH 3
+       double Mdot_cold_BH1;              // the cold  accretion rate of BH 1
+       double Mdot_cold_BH2;              // the cold  accretion rate of BH 2
+       double Mdot_cold_BH3;              // the cold  accretion rate of BH 3
        double Jet_HalfHeight1;            // half height of the cylinder-shape jet source of cluster 1
        double Jet_HalfHeight2;            // half height of the cylinder-shape jet source of cluster 2
        double Jet_HalfHeight3;            // half height of the cylinder-shape jet source of cluster 3
@@ -303,7 +309,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "AdjustBHVel",             &AdjustBHVel,              false,              Useless_bool,  Useless_bool   );
    LOAD_PARA( load_mode, "AdjustPeriod",            &AdjustPeriod,            -1.0,                NoMin_double,  NoMax_double   );
    LOAD_PARA( load_mode, "JetDirection_case",       &JetDirection_case,        1,                  1,             3              );
-   LOAD_PARA( load_mode, "JetDirection_file",       &JetDirection_case,        "JetDirection.txt", Useless_str,   Useless_str    );
+   LOAD_PARA( load_mode, "JetDirection_file",        JetDirection_file,        "JetDirection.txt", Useless_str,   Useless_str    );
    LOAD_PARA( load_mode, "fixBH",                   &fixBH,                    false,              Useless_bool,  Useless_bool   );
 
 } // FUNCITON : LoadInputTestProb
@@ -360,7 +366,7 @@ void SetParameter()
       AdjustBHPos = false;
       AdjustBHVel = false;
    }
-   
+
 // convert to code units
    Merger_Coll_PosX1 *= Const_kpc / UNIT_L;
    Merger_Coll_PosY1 *= Const_kpc / UNIT_L;
@@ -533,9 +539,11 @@ void SetParameter()
 
 //    set the number of black holes to be the same as the number of clusters initially
       Merger_Coll_NumBHs = Merger_Coll_NumHalos;
-     
+
 //    set initial accretion rate to zero
-      Mdot_BH1 = Mdot_BH2 = Mdot_BH3 = 0.0;
+      Mdot_tot_BH1  = Mdot_tot_BH2  = Mdot_tot_BH3  = 0.0;
+      Mdot_hot_BH1  = Mdot_hot_BH2  = Mdot_hot_BH3  = 0.0;
+      Mdot_cold_BH1 = Mdot_cold_BH2 = Mdot_cold_BH3 = 0.0;
 
       for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
@@ -660,7 +668,7 @@ void SetParameter()
       if ( AGN_feedback ) {
       Aux_Message( stdout, "  cluster 1 BH mass         = %g\n",           Bondi_MassBH1     );
       Aux_Message( stdout, "  cluster 1 jet half-height = %g\n",           Jet_HalfHeight1   );
-      Aux_Message( stdout, "  cluster 1 jet radius      = %g\n",           Jet_Radius1       );   
+      Aux_Message( stdout, "  cluster 1 jet radius      = %g\n",           Jet_Radius1       );
       }
       if ( Merger_Coll_NumHalos > 1 ) {
       Aux_Message( stdout, "  profile file 2            = %s\n",           Merger_File_Prof2 );
@@ -673,8 +681,8 @@ void SetParameter()
       if ( AGN_feedback ) {
       Aux_Message( stdout, "  cluster 2 BH mass         = %g\n",           Bondi_MassBH2     );
       Aux_Message( stdout, "  cluster 2 jet half-height = %g\n",           Jet_HalfHeight2   );
-      Aux_Message( stdout, "  cluster 2 jet radius      = %g\n",           Jet_Radius2       );   
-      }   
+      Aux_Message( stdout, "  cluster 2 jet radius      = %g\n",           Jet_Radius2       );
+      }
       } // if ( Merger_Coll_NumHalos > 1 )
       if ( Merger_Coll_NumHalos > 2 ) {
       Aux_Message( stdout, "  profile file 3            = %s\n",           Merger_File_Prof3 );
@@ -687,28 +695,28 @@ void SetParameter()
       if ( AGN_feedback ) {
       Aux_Message( stdout, "  cluster 2 BH mass         = %g\n",           Bondi_MassBH3     );
       Aux_Message( stdout, "  cluster 2 jet half-height = %g\n",           Jet_HalfHeight3   );
-      Aux_Message( stdout, "  cluster 2 jet radius      = %g\n",           Jet_Radius3       );   
-      }      
+      Aux_Message( stdout, "  cluster 2 jet radius      = %g\n",           Jet_Radius3       );
+      }
       } // if ( Merger_Coll_NumHalos > 2 )
       Aux_Message( stdout, "  use metals                = %s\n",          (Merger_Coll_UseMetals)? "yes":"no" );
       Aux_Message( stdout, "  label cluster centers     = %s\n",          (Merger_Coll_LabelCenter)? "yes":"no" );
       if ( AGN_feedback ) {
       Aux_Message( stdout, "  BH fixed                  = %s\n",          (fixBH)? "yes":"no" );
-      Aux_Message( stdout, "  accretion mode            = %d\n",          Accretion_Mode      );    
+      Aux_Message( stdout, "  accretion mode            = %d\n",          Accretion_Mode      );
       Aux_Message( stdout, "  eta                       = %g\n",          eta                 );
       Aux_Message( stdout, "  eps_f                     = %g\n",          eps_f               );
       Aux_Message( stdout, "  eps_m                     = %g\n",          eps_m               );
       Aux_Message( stdout, "  accretion radius          = %g\n",          R_acc               );
       Aux_Message( stdout, "  depletion radius          = %g\n",          R_dep               );
-      Aux_Message( stdout, "  jet direction case        = %d\n",          JetDirection_case   ); 
+      Aux_Message( stdout, "  jet direction case        = %d\n",          JetDirection_case   );
       if ( JetDirection_case == 2 ) {
       Aux_Message( stdout, "  jet direction file        = %s\n",          JetDirection_file   );
       }
-      Aux_Message( stdout, "  adjust BH position        = %s\n",          (AdjustBHPos)? "yes":"no" ); 
-      Aux_Message( stdout, "  adjust BH velocity        = %s\n",          (AdjustBHVel)? "yes":"no" ); 
+      Aux_Message( stdout, "  adjust BH position        = %s\n",          (AdjustBHPos)? "yes":"no" );
+      Aux_Message( stdout, "  adjust BH velocity        = %s\n",          (AdjustBHVel)? "yes":"no" );
       Aux_Message( stdout, "  adjust period             = %g\n",          AdjustPeriod        );
-      } // if ( AGN_feedback )                
-       
+      } // if ( AGN_feedback )
+
       Aux_Message( stdout, "=============================================================================\n" );
 
 //    check if the accretion region is larger than the jet cylinder
@@ -894,6 +902,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 #endif // #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 
 
+
+#ifdef SUPPORT_HDF5
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Output_HDF5_User_ClusterMerger
 // Description :  Store the problem specific parameter in HDF5 outputs (Data_*) under User group
@@ -914,7 +924,9 @@ void Output_HDF5_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
    BH_Mass[1] = Bondi_MassBH2;
    BH_Mass[2] = Bondi_MassBH3;
 
-   double BH_Mdot[3] = { Mdot_BH1, Mdot_BH2, Mdot_BH3 };
+   double BH_Mdot_tot[3]  = { Mdot_tot_BH1,  Mdot_tot_BH2,  Mdot_tot_BH3  };
+   double BH_Mdot_hot[3]  = { Mdot_hot_BH1,  Mdot_hot_BH2,  Mdot_hot_BH3  };
+   double BH_Mdot_cold[3] = { Mdot_cold_BH1, Mdot_cold_BH2, Mdot_cold_BH3 };
 
    HDF5_OutUser->Add( "Merger_Coll_NumBHs", &Merger_Coll_NumBHs );
    for (int c=0; c<Merger_Coll_NumBHs; c++)
@@ -929,17 +941,21 @@ void Output_HDF5_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
          HDF5_OutUser->Add( ClusterCen_name, &ClusterCen[c][d] );
          HDF5_OutUser->Add( BH_Vel_name,     &BH_Vel[c][d]     );
       }
-      char BH_Mass_name[50], BH_Mdot_name[50];
-      sprintf( BH_Mass_name, "BH_Mass_%d", c );
-      sprintf( BH_Mdot_name, "BH_Mdot_%d", c );
-      HDF5_OutUser->Add( BH_Mass_name, &BH_Mass[c] );
-      HDF5_OutUser->Add( BH_Mdot_name, &BH_Mdot[c] );
+      char BH_Mass_name[50], BH_Mdot_tot_name[50], BH_Mdot_hot_name[50], BH_Mdot_cold_name[50];
+      sprintf( BH_Mass_name,      "BH_Mass_%d",      c );
+      sprintf( BH_Mdot_tot_name,  "BH_Mdot_tot_%d",  c );
+      sprintf( BH_Mdot_hot_name,  "BH_Mdot_hot_%d",  c );
+      sprintf( BH_Mdot_cold_name, "BH_Mdot_cold_%d", c );
+      HDF5_OutUser->Add( BH_Mass_name,      &BH_Mass     [c] );
+      HDF5_OutUser->Add( BH_Mdot_tot_name,  &BH_Mdot_tot [c] );
+      HDF5_OutUser->Add( BH_Mdot_hot_name,  &BH_Mdot_hot [c] );
+      HDF5_OutUser->Add( BH_Mdot_cold_name, &BH_Mdot_cold[c] );
    }
    HDF5_OutUser->Add( "AdjustCount", &AdjustCount );
 
-} // FUNCTION : Output_HDF5_User_Example
+} // FUNCTION : Output_HDF5_User_ClusterMerger
 #endif // #ifdef SUPPORT_HDF5
-#endif // #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -969,6 +985,7 @@ void End_ClusterMerger()
    delete [] Table_M3;
 
 } // FUNCTION : End_ClusterMerger
+
 
 
 #ifdef MHD
@@ -1026,7 +1043,7 @@ void Init_TestProb_Hydro_ClusterMerger()
    Init_Function_BField_User_Ptr = SetBFieldIC;
 #  endif
 #  ifdef SUPPORT_HDF5
-   Output_HDF5_User_Ptr           = Output_HDF5_User_ClusterMerger;
+   Output_HDF5_UserPara_Ptr       = Output_HDF5_User_ClusterMerger;
    Output_HDF5_InputTest_Ptr      = LoadInputTestProb;
 #  endif
 #  endif // if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
@@ -1153,7 +1170,8 @@ void AddNewField_ClusterMerger()
       ColorField3Idx = AddField( "ColorField3", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
 
 } // FUNCTION : AddNewField_ClusterMerger
-#endif
+#endif // #if ( MODEL == HYDRO )
+
 
 
 #ifdef MASSIVE_PARTICLES
@@ -1164,7 +1182,8 @@ void AddNewParticleAttribute_ClusterMerger()
     Idx_ParHalo = AddParticleAttributeInt( "ParHalo" );
 
 } // FUNCTION : AddNewParticleAttribute_ClusterMerger
-#endif
+#endif // #ifdef MASSIVE_PARTICLES
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -1214,7 +1233,9 @@ void Init_User_ClusterMerger()
    if ( H5_TypeID_OutputUser < 0 )
       Aux_Error( ERROR_INFO, "failed to open the datatype of \"%s\" !!\n", "User/OutputUser" );
 
-   double BH_Mdot[3] = { 0.0, 0.0, 0.0 };
+   double BH_Mdot_tot [3] = { 0.0, 0.0, 0.0 };
+   double BH_Mdot_hot [3] = { 0.0, 0.0, 0.0 };
+   double BH_Mdot_cold[3] = { 0.0, 0.0, 0.0 };
 
    LoadField( "Merger_Coll_NumBHs", &Merger_Coll_NumBHs, H5_SetID_OutputUser, H5_TypeID_OutputUser );
    for (int c=0; c<Merger_Coll_NumBHs; c++)
@@ -1229,11 +1250,15 @@ void Init_User_ClusterMerger()
          LoadField( ClusterCen_name, &ClusterCen[c][d], H5_SetID_OutputUser, H5_TypeID_OutputUser );
          LoadField( BH_Vel_name,     &BH_Vel[c][d],     H5_SetID_OutputUser, H5_TypeID_OutputUser );
       }
-      char BH_Mass_name[50], BH_Mdot_name[50];
-      sprintf( BH_Mass_name, "BH_Mass_%d", c );
-      sprintf( BH_Mdot_name, "BH_Mdot_%d", c );
-      LoadField( BH_Mass_name, &BH_Mass[c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
-      LoadField( BH_Mdot_name, &BH_Mdot[c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
+      char BH_Mass_name[50], BH_Mdot_tot_name[50], BH_Mdot_hot_name[50], BH_Mdot_cold_name[50];
+      sprintf( BH_Mass_name,      "BH_Mass_%d",      c );
+      sprintf( BH_Mdot_tot_name,  "BH_Mdot_tot_%d",  c );
+      sprintf( BH_Mdot_hot_name,  "BH_Mdot_hot_%d",  c );
+      sprintf( BH_Mdot_cold_name, "BH_Mdot_cold_%d", c );
+      LoadField( BH_Mass_name,      &BH_Mass     [c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
+      LoadField( BH_Mdot_tot_name,  &BH_Mdot_tot [c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
+      LoadField( BH_Mdot_hot_name,  &BH_Mdot_hot [c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
+      LoadField( BH_Mdot_cold_name, &BH_Mdot_cold[c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
    }
    LoadField( "AdjustCount", &AdjustCount, H5_SetID_OutputUser, H5_TypeID_OutputUser );
 
@@ -1245,13 +1270,22 @@ void Init_User_ClusterMerger()
    Bondi_MassBH2 = BH_Mass[1];
    Bondi_MassBH3 = BH_Mass[2];
 
-   Mdot_BH1 = BH_Mdot[0];
-   Mdot_BH2 = BH_Mdot[1];
-   Mdot_BH3 = BH_Mdot[2];
+   Mdot_tot_BH1  = BH_Mdot_tot[0];
+   Mdot_tot_BH2  = BH_Mdot_tot[1];
+   Mdot_tot_BH3  = BH_Mdot_tot[2];
+
+   Mdot_hot_BH1  = BH_Mdot_hot[0];
+   Mdot_hot_BH2  = BH_Mdot_hot[1];
+   Mdot_hot_BH3  = BH_Mdot_hot[2];
+
+   Mdot_cold_BH1 = BH_Mdot_cold[0];
+   Mdot_cold_BH2 = BH_Mdot_cold[1];
+   Mdot_cold_BH3 = BH_Mdot_cold[2];
 
 #  endif // #ifdef SUPPORT_HDF5
 
 } // FUNCTION : Init_User_ClusterMerger
+
 
 
 #ifdef SUPPORT_HDF5
