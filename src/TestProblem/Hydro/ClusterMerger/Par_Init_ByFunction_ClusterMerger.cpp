@@ -38,9 +38,15 @@ extern long    NPar_AllCluster;
 extern double  Bondi_MassBH1;
 extern double  Bondi_MassBH2;
 extern double  Bondi_MassBH3;
-extern double  Mdot_BH1;
-extern double  Mdot_BH2;
-extern double  Mdot_BH3;
+extern double  Mdot_tot_BH1;
+extern double  Mdot_tot_BH2;
+extern double  Mdot_tot_BH3;
+extern double  Mdot_hot_BH1;
+extern double  Mdot_hot_BH2;
+extern double  Mdot_hot_BH3;
+extern double  Mdot_cold_BH1;
+extern double  Mdot_cold_BH2;
+extern double  Mdot_cold_BH3;
 
 extern double  CM_Bondi_SinkMass[3];
 extern double  CM_Bondi_SinkMomX[3];
@@ -599,19 +605,21 @@ void Aux_Record_ClusterMerger()
          fprintf( File_User, "#%19s%20s",  "Time", "Step" );
          for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
-            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "x",             c, "y",             c, "z",             c );
-            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "BHVel_x[km/s]", c, "BHVel_y",       c, "BHVel_z",       c );
-            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "GasVel_x",      c, "GasVel_y",      c, "GasVel_z",       c );
-            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "RelativeVel",   c, "SoundSpeed",    c, "GasDens(cgs)",  c );
-            fprintf( File_User, " %19s%1d %19s%1d",         "mass_BH[Msun]", c, "NVoidCell",     c );
-            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "MomXInj(cgs)",  c, "MomYInj",       c, "MomZInj",       c );
-            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "MomXInjAbs",    c, "MomYInjAbs",    c, "MomZInjAbs",    c );
-            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "EInj_exp[erg]", c, "E_Inj[erg]",    c, "E_Inj_err",     c );
-            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "Ek_Inj[erg]",   c, "Et_Inj[erg]",   c, "PowerInj(cgs)", c );
-            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "MInjexp[Msun]", c, "MassInj[Msun]", c, "M_Inj_err",     c );
-            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "Mdot(cgs)",     c, "Pdot(cgs)",     c, "Edot(cgs)",     c );
-            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "Jet_Vec_x",     c, "Jet_Vec_y",     c, "Jet_Vec_z",     c );
-            fprintf( File_User, " %19s%1d %19s%1d",         "num_par_sum",   c, "ColdGasMass", c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "x",                c, "y",                c, "z",                 c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "BHVel_x[km/s]",    c, "BHVel_y",          c, "BHVel_z",           c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "GasVel_x",         c, "GasVel_y",         c, "GasVel_z",          c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "RelativeVel",      c, "SoundSpeed",       c, "GasDens(cgs)",      c );
+            fprintf( File_User, " %19s%1d",                 "mass_BH[Msun]",    c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "Mdot_tot_BH(cgs)", c, "Mdot_hot_BH(cgs)", c, "Mdot_cold_BH(cgs)", c );
+            fprintf( File_User, " %19s%1d",                 "NVoidCell",        c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "MomXInj(cgs)",     c, "MomYInj",          c, "MomZInj",           c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "MomXInjAbs",       c, "MomYInjAbs",       c, "MomZInjAbs",        c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "EInj_exp[erg]",    c, "E_Inj[erg]",       c, "E_Inj_err",         c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "Ek_Inj[erg]",      c, "Et_Inj[erg]",      c, "PowerInj(cgs)",     c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "MInjexp[Msun]",    c, "MassInj[Msun]",    c, "M_Inj_err",         c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "Mdot(cgs)",        c, "Pdot(cgs)",        c, "Edot(cgs)",         c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "Jet_Vec_x",        c, "Jet_Vec_y",        c, "Jet_Vec_z",         c );
+            fprintf( File_User, " %19s%1d %19s%1d",         "num_par_sum",      c, "ColdGasMass",      c );
          }
          fprintf( File_User, "\n" );
          fclose( File_User );
@@ -621,7 +629,9 @@ void Aux_Record_ClusterMerger()
    } // if ( FirstTime )
 
    double Bondi_MassBH[3] = { Bondi_MassBH1, Bondi_MassBH2, Bondi_MassBH3 };
-   double Mdot_BH[3] = { Mdot_BH1, Mdot_BH2, Mdot_BH3 };
+   double Mdot_tot_BH[3]  = { Mdot_tot_BH1,  Mdot_tot_BH2,  Mdot_tot_BH3  };
+   double Mdot_hot_BH[3]  = { Mdot_hot_BH1,  Mdot_hot_BH2,  Mdot_hot_BH3  };
+   double Mdot_cold_BH[3] = { Mdot_cold_BH1, Mdot_cold_BH2, Mdot_cold_BH3 };
 
 // sum over the variables and convert units
    int SinkNCell_Sum[3];
@@ -668,7 +678,9 @@ void Aux_Record_ClusterMerger()
          fprintf( File_User, " %20.7e %20.7e %20.7e", BH_Vel[c][0]*UNIT_V/(Const_km/Const_s), BH_Vel[c][1]*UNIT_V/(Const_km/Const_s), BH_Vel[c][2]*UNIT_V/(Const_km/Const_s) );
          fprintf( File_User, " %20.7e %20.7e %20.7e", GasVel[c][0]*UNIT_V/(Const_km/Const_s), GasVel[c][1]*UNIT_V/(Const_km/Const_s), GasVel[c][2]*UNIT_V/(Const_km/Const_s) );
          fprintf( File_User, " %20.7e %20.7e %20.7e", RelativeVel[c]*UNIT_V/(Const_km/Const_s), SoundSpeed[c]*UNIT_V/(Const_km/Const_s), GasDens[c]*UNIT_D );
-         fprintf( File_User, " %20.7e %20.7e %20d",   Bondi_MassBH[c]*UNIT_M/Const_Msun, Mdot_BH[c]*UNIT_M/UNIT_T, SinkNCell_Sum[c] );
+         fprintf( File_User, " %20.7e",               Bondi_MassBH[c]*UNIT_M/Const_Msun );
+         fprintf( File_User, " %20.7e %20.7e %20.7e", Mdot_tot_BH[c]*UNIT_M/UNIT_T, Mdot_hot_BH[c]*UNIT_M/UNIT_T, Mdot_cold_BH[c]*UNIT_M/UNIT_T );
+         fprintf( File_User, " %20d",                 SinkNCell_Sum[c] );
          fprintf( File_User, " %20.7e %20.7e %20.7e", MomX_Sum[c], MomY_Sum[c], MomZ_Sum[c] );
          fprintf( File_User, " %20.7e %20.7e %20.7e", MomXAbs_Sum[c], MomYAbs_Sum[c], MomZAbs_Sum[c] );
          fprintf( File_User, " %20.7e %20.7e %20.7e", E_inj_exp[c], E_Sum[c], (E_Sum[c]-E_inj_exp[c])/E_inj_exp[c] );

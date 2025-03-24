@@ -82,9 +82,15 @@ static FieldIdx_t ColorField3Idx = Idx_Undefined;
        double Bondi_MassBH1;              // black hole mass of cluster 1
        double Bondi_MassBH2;              // black hole mass of cluster 2
        double Bondi_MassBH3;              // black hole mass of cluster 3
-       double Mdot_BH1;                   // the accretion rate of BH 1
-       double Mdot_BH2;                   // the accretion rate of BH 2
-       double Mdot_BH3;                   // the accretion rate of BH 3
+       double Mdot_tot_BH1;               // the total accretion rate of BH 1
+       double Mdot_tot_BH2;               // the total accretion rate of BH 2
+       double Mdot_tot_BH3;               // the total accretion rate of BH 3
+       double Mdot_hot_BH1;               // the hot   accretion rate of BH 1
+       double Mdot_hot_BH2;               // the hot   accretion rate of BH 2
+       double Mdot_hot_BH3;               // the hot   accretion rate of BH 3
+       double Mdot_cold_BH1;              // the cold  accretion rate of BH 1
+       double Mdot_cold_BH2;              // the cold  accretion rate of BH 2
+       double Mdot_cold_BH3;              // the cold  accretion rate of BH 3
        double Jet_HalfHeight1;            // half height of the cylinder-shape jet source of cluster 1
        double Jet_HalfHeight2;            // half height of the cylinder-shape jet source of cluster 2
        double Jet_HalfHeight3;            // half height of the cylinder-shape jet source of cluster 3
@@ -535,7 +541,9 @@ void SetParameter()
       Merger_Coll_NumBHs = Merger_Coll_NumHalos;
 
 //    set initial accretion rate to zero
-      Mdot_BH1 = Mdot_BH2 = Mdot_BH3 = 0.0;
+      Mdot_tot_BH1  = Mdot_tot_BH2  = Mdot_tot_BH3  = 0.0;
+      Mdot_hot_BH1  = Mdot_hot_BH2  = Mdot_hot_BH3  = 0.0;
+      Mdot_cold_BH1 = Mdot_cold_BH2 = Mdot_cold_BH3 = 0.0;
 
       for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
@@ -915,7 +923,9 @@ void Output_HDF5_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
    BH_Mass[1] = Bondi_MassBH2;
    BH_Mass[2] = Bondi_MassBH3;
 
-   double BH_Mdot[3] = { Mdot_BH1, Mdot_BH2, Mdot_BH3 };
+   double BH_Mdot_tot[3]  = { Mdot_tot_BH1,  Mdot_tot_BH2,  Mdot_tot_BH3  };
+   double BH_Mdot_hot[3]  = { Mdot_hot_BH1,  Mdot_hot_BH2,  Mdot_hot_BH3  };
+   double BH_Mdot_cold[3] = { Mdot_cold_BH1, Mdot_cold_BH2, Mdot_cold_BH3 };
 
    HDF5_OutUser->Add( "Merger_Coll_NumBHs", &Merger_Coll_NumBHs );
    for (int c=0; c<Merger_Coll_NumBHs; c++)
@@ -930,11 +940,15 @@ void Output_HDF5_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
          HDF5_OutUser->Add( ClusterCen_name, &ClusterCen[c][d] );
          HDF5_OutUser->Add( BH_Vel_name,     &BH_Vel[c][d]     );
       }
-      char BH_Mass_name[50], BH_Mdot_name[50];
-      sprintf( BH_Mass_name, "BH_Mass_%d", c );
-      sprintf( BH_Mdot_name, "BH_Mdot_%d", c );
-      HDF5_OutUser->Add( BH_Mass_name, &BH_Mass[c] );
-      HDF5_OutUser->Add( BH_Mdot_name, &BH_Mdot[c] );
+      char BH_Mass_name[50], BH_Mdot_tot_name[50], BH_Mdot_hot_name[50], BH_Mdot_cold_name[50];
+      sprintf( BH_Mass_name,      "BH_Mass_%d",      c );
+      sprintf( BH_Mdot_tot_name,  "BH_Mdot_tot_%d",  c );
+      sprintf( BH_Mdot_hot_name,  "BH_Mdot_hot_%d",  c );
+      sprintf( BH_Mdot_cold_name, "BH_Mdot_cold_%d", c );
+      HDF5_OutUser->Add( BH_Mass_name,      &BH_Mass     [c] );
+      HDF5_OutUser->Add( BH_Mdot_tot_name,  &BH_Mdot_tot [c] );
+      HDF5_OutUser->Add( BH_Mdot_hot_name,  &BH_Mdot_hot [c] );
+      HDF5_OutUser->Add( BH_Mdot_cold_name, &BH_Mdot_cold[c] );
    }
    HDF5_OutUser->Add( "AdjustCount", &AdjustCount );
 
@@ -1215,7 +1229,9 @@ void Init_User_ClusterMerger()
    if ( H5_TypeID_OutputUser < 0 )
       Aux_Error( ERROR_INFO, "failed to open the datatype of \"%s\" !!\n", "User/OutputUser" );
 
-   double BH_Mdot[3] = { 0.0, 0.0, 0.0 };
+   double BH_Mdot_tot [3] = { 0.0, 0.0, 0.0 };
+   double BH_Mdot_hot [3] = { 0.0, 0.0, 0.0 };
+   double BH_Mdot_cold[3] = { 0.0, 0.0, 0.0 };
 
    LoadField( "Merger_Coll_NumBHs", &Merger_Coll_NumBHs, H5_SetID_OutputUser, H5_TypeID_OutputUser );
    for (int c=0; c<Merger_Coll_NumBHs; c++)
@@ -1230,11 +1246,15 @@ void Init_User_ClusterMerger()
          LoadField( ClusterCen_name, &ClusterCen[c][d], H5_SetID_OutputUser, H5_TypeID_OutputUser );
          LoadField( BH_Vel_name,     &BH_Vel[c][d],     H5_SetID_OutputUser, H5_TypeID_OutputUser );
       }
-      char BH_Mass_name[50], BH_Mdot_name[50];
-      sprintf( BH_Mass_name, "BH_Mass_%d", c );
-      sprintf( BH_Mdot_name, "BH_Mdot_%d", c );
-      LoadField( BH_Mass_name, &BH_Mass[c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
-      LoadField( BH_Mdot_name, &BH_Mdot[c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
+      char BH_Mass_name[50], BH_Mdot_tot_name[50], BH_Mdot_hot_name[50], BH_Mdot_cold_name[50];
+      sprintf( BH_Mass_name,      "BH_Mass_%d",      c );
+      sprintf( BH_Mdot_tot_name,  "BH_Mdot_tot_%d",  c );
+      sprintf( BH_Mdot_hot_name,  "BH_Mdot_hot_%d",  c );
+      sprintf( BH_Mdot_cold_name, "BH_Mdot_cold_%d", c );
+      LoadField( BH_Mass_name,      &BH_Mass     [c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
+      LoadField( BH_Mdot_tot_name,  &BH_Mdot_tot [c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
+      LoadField( BH_Mdot_hot_name,  &BH_Mdot_hot [c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
+      LoadField( BH_Mdot_cold_name, &BH_Mdot_cold[c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
    }
    LoadField( "AdjustCount", &AdjustCount, H5_SetID_OutputUser, H5_TypeID_OutputUser );
 
@@ -1246,9 +1266,17 @@ void Init_User_ClusterMerger()
    Bondi_MassBH2 = BH_Mass[1];
    Bondi_MassBH3 = BH_Mass[2];
 
-   Mdot_BH1 = BH_Mdot[0];
-   Mdot_BH2 = BH_Mdot[1];
-   Mdot_BH3 = BH_Mdot[2];
+   Mdot_tot_BH1  = BH_Mdot_tot[0];
+   Mdot_tot_BH2  = BH_Mdot_tot[1];
+   Mdot_tot_BH3  = BH_Mdot_tot[2];
+
+   Mdot_hot_BH1  = BH_Mdot_hot[0];
+   Mdot_hot_BH2  = BH_Mdot_hot[1];
+   Mdot_hot_BH3  = BH_Mdot_hot[2];
+
+   Mdot_cold_BH1 = BH_Mdot_cold[0];
+   Mdot_cold_BH2 = BH_Mdot_cold[1];
+   Mdot_cold_BH3 = BH_Mdot_cold[2];
 
 #  endif // #ifdef SUPPORT_HDF5
 
