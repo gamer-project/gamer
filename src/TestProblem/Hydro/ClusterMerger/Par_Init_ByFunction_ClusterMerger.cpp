@@ -833,8 +833,9 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
 
                      if ( num_par[c] >= N_max[c] )
                      {
-                           N_max[c] = num_par[c] + 1;  // increase the new maximum size if needed
-                           ParX[c]  = (real_par*)realloc( ParX[c], N_max[c]*sizeof(real_par) );
+//                         increase the new maximum size if needed
+                           N_max[c] = (int)ceil( PARLIST_GROWTH_FACTOR*(num_par[c]+1) );
+                           ParX[c]  = (real_par*)realloc( ParX[c], *sizeof(real_par) );
                            ParY[c]  = (real_par*)realloc( ParY[c], N_max[c]*sizeof(real_par) );
                            ParZ[c]  = (real_par*)realloc( ParZ[c], N_max[c]*sizeof(real_par) );
                            ParM[c]  = (real_par*)realloc( ParM[c], N_max[c]*sizeof(real_par) );
