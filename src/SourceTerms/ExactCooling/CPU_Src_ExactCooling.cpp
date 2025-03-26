@@ -190,6 +190,7 @@ GPU_DEVICE static
 double TEF( double TEMP, int k, const double TEF_lambda[], const double TEF_alpha[], const double TEFc[],
             const double AuxArray_Flt[], const int AuxArray_Int[] )
 {
+   return 0.0;
 } // FUNCTION : TEF
 
 
@@ -208,6 +209,7 @@ GPU_DEVICE static
 double TEFinv( double Y, int k, const double TEF_lambda[], const double TEF_alpha[], const double TEFc[],
                const double AuxArray_Flt[], const int AuxArray_Int[] )
 {
+   return 0.0;
 } // FUNCTION : TEFinv
 
 
