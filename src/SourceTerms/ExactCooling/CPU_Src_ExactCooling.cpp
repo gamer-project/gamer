@@ -403,7 +403,7 @@ void Src_Init_ExactCooling()
    SrcTerms.EC_FuncPtr = SrcTerms.EC_CPUPtr;
 #  endif
 
-   if ( OPT__INIT == INIT_BY_RESTART )   
+   if ( OPT__INIT == INIT_BY_RESTART )
       for (int i=0; i<NLEVEL; i++)   IsInit_tcool[i] = true;
    else
       for (int i=0; i<NLEVEL; i++)   IsInit_tcool[i] = false;

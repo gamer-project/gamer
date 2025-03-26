@@ -299,7 +299,7 @@ void Output_ExactCooling()
    for (int i=1; i<PS1; i++) {
       for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][0]->fluid[v][k][j][i];
       Temp_nume_tmp = Hydro_Con2Temp( fluid[0], fluid[1], fluid[2], fluid[3], fluid[4], fluid+NCOMP_FLUID,
-                                      true, MIN_TEMP, 0.0, EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, 
+                                      true, MIN_TEMP, 0.0, EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr,
                                       EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       Tcool_nume += 1.0/(GAMMA-1)*(Const_kB*cl_moli_mole*Temp_nume_tmp)/(fluid[0]*UNIT_D/MU_NORM*cl_mol*3.2217e-27*sqrt(Temp_nume_tmp))/Const_Myr;
       Temp_nume += Temp_nume_tmp;

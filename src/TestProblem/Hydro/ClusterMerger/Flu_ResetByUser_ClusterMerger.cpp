@@ -238,7 +238,7 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
 
       Jet_dh = Jet_Vec[c][0]*Vec_c2m[0] + Jet_Vec[c][1]*Vec_c2m[1] + Jet_Vec[c][2]*Vec_c2m[2];
       Jet_dr = sqrt( SQR(Dis_c2m) - SQR(Jet_dh) );
-   
+
       if ( Jet_dh <= Jet_HalfHeight[c]  &&  Jet_dr <= Jet_Radius[c] )
       {
          which_cluster += c+1;
