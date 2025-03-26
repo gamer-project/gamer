@@ -733,7 +733,7 @@ void Aux_Record_ClusterMerger()
 void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][3], double Cen_new[][3], double Cen_Vel[][3] )
 {
 
-   // fix the BH position and rest BH
+// fix the BH position and rest BH
    if ( fixBH )
    {
       for (int d=0; d<3; d++)   Cen_new[0][d] = amr->BoxCenter[d];
@@ -821,7 +821,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                      if ( amr->Par->AttributeInt[Idx_ParHalo][ParID] != c )  continue;
                      if ( DIST_SQR_3D( ParPos_tmp, Cen_new_pre[c] ) > SQR(10*R_acc) )   continue;
 
-//                      record the mass, position and velocity of this particle
+//                   record the mass, position and velocity of this particle
                      ParX[c][num_par[c]] = ParX_tmp;
                      ParY[c][num_par[c]] = ParY_tmp;
                      ParZ[c][num_par[c]] = ParZ_tmp;
@@ -884,19 +884,19 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
          for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
             MPI_Allgatherv( ParX[c], num_par[c], MPI_GAMER_REAL_PAR, ParX_sum[c], num_par_eachRank[c],
-                              displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
+                            displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
             MPI_Allgatherv( ParY[c], num_par[c], MPI_GAMER_REAL_PAR, ParY_sum[c], num_par_eachRank[c],
-                              displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
+                            displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
             MPI_Allgatherv( ParZ[c], num_par[c], MPI_GAMER_REAL_PAR, ParZ_sum[c], num_par_eachRank[c],
-                              displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
+                            displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
             MPI_Allgatherv( ParM[c], num_par[c], MPI_GAMER_REAL_PAR, ParM_sum[c], num_par_eachRank[c],
-                              displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
+                            displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
             MPI_Allgatherv( VelX[c], num_par[c], MPI_GAMER_REAL_PAR, VelX_sum[c], num_par_eachRank[c],
-                              displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
+                            displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
             MPI_Allgatherv( VelY[c], num_par[c], MPI_GAMER_REAL_PAR, VelY_sum[c], num_par_eachRank[c],
-                              displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
+                            displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
             MPI_Allgatherv( VelZ[c], num_par[c], MPI_GAMER_REAL_PAR, VelZ_sum[c], num_par_eachRank[c],
-                              displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
+                            displs[c], MPI_GAMER_REAL_PAR, MPI_COMM_WORLD );
          }
 
 //       compute potential and find the minimum position, and calculate the average DM velocity on the root rank
@@ -909,12 +909,12 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
             {
 
 //                distribute MPI jobs
-               int     par_per_rank = num_par_sum[c] / MPI_NRank;
-               int     remainder    = num_par_sum[c] % MPI_NRank;
-               int     start        = MPI_Rank*par_per_rank + MIN( MPI_Rank, remainder );
-               int     end          = start + par_per_rank + (MPI_Rank < remainder ? 1 : 0);
+               int par_per_rank = num_par_sum[c] / MPI_NRank;
+               int remainder    = num_par_sum[c] % MPI_NRank;
+               int start        = MPI_Rank*par_per_rank + MIN( MPI_Rank, remainder );
+               int end          = start + par_per_rank + (MPI_Rank < remainder ? 1 : 0);
 
-#                 pragma omp parallel for schedule( static )
+#              pragma omp parallel for schedule( static )
                for (int i=start; i<end; i++)
                {
                   pote_ThisRank[i-start] = 0.0;
@@ -1024,13 +1024,13 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
          if ( amr->Par->Mass[p] < (real_par)0.0  ||  amr->Par->AttributeInt[Idx_ParHalo][p] != c )
             continue;
 
-         if ( CurrentMaxLv  &&  AdjustPos == true )
+         if ( CurrentMaxLv  &&  AdjustPos )
          {
             amr->Par->PosX[p] = pos_min[c][0];
             amr->Par->PosY[p] = pos_min[c][1];
             amr->Par->PosZ[p] = pos_min[c][2];
          }
-         if ( CurrentMaxLv  &&  AdjustVel == true )
+         if ( CurrentMaxLv  &&  AdjustVel )
          {
             amr->Par->VelX[p] = DM_Vel[c][0];
             amr->Par->VelY[p] = DM_Vel[c][1];

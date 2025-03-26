@@ -209,9 +209,8 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
 
 
 // (2) Jet Feedback
-   double Jet_dr, Jet_dh, S, Area;
-   double Dis_c2m, Dis_c2v, Dis_v2m, Vec_c2m[3], Vec_v2m[3];
-   double TempVec[3];
+   double Jet_dr, Jet_dh;
+   double Dis_c2m, Vec_c2m[3];
    real   EngySin;
    int    status, n_jet;
    int    which_cluster = 0;
@@ -231,26 +230,15 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
 
    for (int c=status; c<(n_jet+status); c++)
    {
+
 //    distance: jet center to mesh
-      for (int d=0; d<3; d++)    Vec_c2m[d] = Pos[d] - ClusterCen[c][d];
+      for (int d=0; d<3; d++)   Vec_c2m[d] = Pos[d] - ClusterCen[c][d];
+
       Dis_c2m = sqrt( SQR(Vec_c2m[0]) + SQR(Vec_c2m[1]) + SQR(Vec_c2m[2]) );
 
-//    vectors for calculating the distance between cells and the jet sources
-      for (int d=0; d<3; d++)    TempVec[d] = ClusterCen[c][d] + Jet_Vec[c][d];
-
-//    distance: temporary vector to mesh
-      for (int d=0; d<3; d++)    Vec_v2m[d] = Pos[d] - TempVec[d];
-      Dis_v2m = sqrt( SQR(Vec_v2m[0]) + SQR(Vec_v2m[1]) + SQR(Vec_v2m[2]) );
-
-//    distance: jet center to temporary vector
-      Dis_c2v = sqrt( SQR(Jet_Vec[c][0]) + SQR(Jet_Vec[c][1]) + SQR(Jet_Vec[c][2]) );
-
-//    check whether or not the target cell is within the jet source
-      S      = 0.5*( Dis_c2m + Dis_v2m + Dis_c2v );
-      Area   = sqrt( S*(S-Dis_c2m)*(S-Dis_v2m)*(S-Dis_c2v) );
-      Jet_dr = 2.0*Area/Dis_c2v;
-      Jet_dh = sqrt( Dis_c2m*Dis_c2m - Jet_dr*Jet_dr );
-
+      Jet_dh = Jet_Vec[c][0]*Vec_c2m[0] + Jet_Vec[c][1]*Vec_c2m[1] + Jet_Vec[c][2]*Vec_c2m[2];
+      Jet_dr = sqrt( SQR(Dis_c2m) - SQR(Jet_dh) );
+   
       if ( Jet_dh <= Jet_HalfHeight[c]  &&  Jet_dr <= Jet_Radius[c] )
       {
          which_cluster += c+1;
@@ -261,6 +249,7 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
          const real momz_old = fluid[MOMZ];
          const real dens_old = fluid[DENS];
 
+//       accrete mass
          fluid[DENS] += M_inj[c];
 
 //       transfer into BH frame
@@ -525,22 +514,14 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 //             calculate the exact volume of jet cylinder and normalization
                if ( CurrentMaxLv )
                {
-                  real Jet_dr_2, Jet_dh_2, S_2, Area_2;
-                  real Dis_c2m_2, Dis_c2v_2, Dis_v2m_2, Vec_c2m_2[3], Vec_v2m_2[3];
-                  real TempVec_2[3];
+
+                  double Jet_dr_2, Jet_dh_2, Dis_c2m_2, Vec_c2m_2[3];
                   double Pos_2[3] = {x2, y2, z2};
 
-                  for (int d=0; d<3; d++)    Vec_c2m_2[d] = Pos_2[d] - ClusterCen[c][d];
+                  for (int d=0; d<3; d++)   Vec_c2m_2[d] = Pos_2[d] - ClusterCen[c][d];
                   Dis_c2m_2 = sqrt( SQR(Vec_c2m_2[0]) + SQR(Vec_c2m_2[1]) + SQR(Vec_c2m_2[2]) );
-                  for (int d=0; d<3; d++)    TempVec_2[d] = ClusterCen[c][d] + Jet_Vec[c][d];
-                  for (int d=0; d<3; d++)    Vec_v2m_2[d] = Pos_2[d] - TempVec_2[d];
-                  Dis_v2m_2 = sqrt( SQR(Vec_v2m_2[0]) + SQR(Vec_v2m_2[1]) + SQR(Vec_v2m_2[2]) );
-                  Dis_c2v_2 = sqrt( SQR(Jet_Vec[c][0]) + SQR(Jet_Vec[c][1]) + SQR(Jet_Vec[c][2]) );
-
-                  S_2      = 0.5*( Dis_c2m_2 + Dis_v2m_2 + Dis_c2v_2 );
-                  Area_2   = sqrt( S_2*(S_2-Dis_c2m_2)*(S_2-Dis_v2m_2)*(S_2-Dis_c2v_2) );
-                  Jet_dr_2 = 2.0*Area_2/Dis_c2v_2;
-                  Jet_dh_2 = sqrt( Dis_c2m_2*Dis_c2m_2 - Jet_dr_2*Jet_dr_2 );
+                  Jet_dh_2 = Jet_Vec[c][0]*Vec_c2m_2[0] + Jet_Vec[c][1]*Vec_c2m_2[1] + Jet_Vec[c][2]*Vec_c2m_2[2];
+                  Jet_dr_2 = sqrt( SQR(Dis_c2m_2) - SQR(Jet_dh_2) );
 
                   if ( Jet_dh_2 <= Jet_HalfHeight[c]  &&  Jet_dr_2 <= Jet_Radius[c] )
                   {
