@@ -189,7 +189,7 @@ void CPU_HydroGravitySolver(
 
 
 //       external acceleration
-         if ( ExtAcc )
+         if ( ExtAcc && !OPT__FREEZE_HYDRO )
          {
             double x, y, z;
 
@@ -208,7 +208,7 @@ void CPU_HydroGravitySolver(
 
 
 //       self-gravity and external potential
-         if ( UsePot )
+         if ( UsePot && !OPT__FREEZE_HYDRO )
          {
             const int ip1_new = idx_new + didx_new[0];
             const int jp1_new = idx_new + didx_new[1];
