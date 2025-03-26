@@ -2207,6 +2207,10 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Src_Deleptonization",     &RS.Src_Deleptonization,     SID, TID, NonFatal, &RT.Src_Deleptonization,      1, NonFatal );
    LoadField( "Src_User",                &RS.Src_User,                SID, TID, NonFatal, &RT.Src_User,                 1, NonFatal );
    LoadField( "Src_GPU_NPGroup",         &RS.Src_GPU_NPGroup,         SID, TID, NonFatal, &RT.Src_GPU_NPGroup,          1, NonFatal );
+   LoadField( "Src_ExactCooling",        &RS.Src_ExactCooling,        SID, TID, NonFatal, &RT.Src_ExactCooling,        1, NonFatal );
+   LoadField( "Src_EC_TEF_N",            &RS.Src_EC_TEF_N,            SID, TID, NonFatal, &RT.Src_EC_TEF_N,           1, NonFatal );
+   LoadField( "Src_EC_subcycling",       &RS.Src_EC_subcycling,       SID, TID, NonFatal, &RT.Src_EC_subcycling,        1, NonFatal );
+   LoadField( "Src_EC_dtCoef",           &RS.Src_EC_dtCoef,           SID, TID, NonFatal, &RT.Src_EC_dtCoef,          1, NonFatal );
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE

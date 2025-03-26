@@ -2664,6 +2664,10 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 // source terms
    InputPara.Src_Deleptonization     = SrcTerms.Deleptonization;
    InputPara.Src_User                = SrcTerms.User;
+   InputPara.Src_ExactCooling        = SrcTerms.ExactCooling;
+   InputPara.Src_EC_TEF_N            = SrcTerms.EC_TEF_N;
+   InputPara.Src_EC_subcycling       = SrcTerms.EC_subcycling;
+   InputPara.Src_EC_dtCoef           = SrcTerms.EC_dtCoef;
    InputPara.Src_GPU_NPGroup         = SRC_GPU_NPGROUP;
 
 // Grackle
@@ -3730,6 +3734,10 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Src_Deleptonization",     HOFFSET(InputPara_t,Src_Deleptonization    ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Src_User",                HOFFSET(InputPara_t,Src_User               ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Src_GPU_NPGroup",         HOFFSET(InputPara_t,Src_GPU_NPGroup        ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Src_ExactCooling",        HOFFSET(InputPara_t,Src_ExactCooling       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Src_EC_TEF_N",            HOFFSET(InputPara_t,Src_EC_TEF_N           ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Src_EC_subcycling",       HOFFSET(InputPara_t,Src_EC_subcycling      ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Src_EC_dtCoef",           HOFFSET(InputPara_t,Src_EC_dtCoef          ), H5T_NATIVE_DOUBLE           );
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE
