@@ -681,6 +681,10 @@ struct InputPara_t
    int    Src_Deleptonization;
    int    Src_User;
    int    Src_GPU_NPGroup;
+   int    Src_ExactCooling;
+   int    Src_EC_TEF_N;
+   int    Src_EC_subcycling;
+   double Src_EC_dtCoef;
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE
