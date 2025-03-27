@@ -185,7 +185,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
                                    EoS->DensEint2Pres_FuncPtr,
                                    EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table,
-                                   ERROR_INFO, UNPHY_SILENCE )  )
+                                   FloorVar, ERROR_INFO, UNPHY_SILENCE )  )
          {
 #           ifdef __CUDACC__  // GPU
 //          use atomicExch_block() on Pascal (or later) GPUs to avoid inter-block synchronization for better performance

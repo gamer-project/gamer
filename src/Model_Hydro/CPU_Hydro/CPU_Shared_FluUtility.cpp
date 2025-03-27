@@ -40,7 +40,7 @@ static bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[],
                                 const real Emag, const EoS_DE2P_t EoS_DensEint2Pres,
                                 const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                                 const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                                const real *const EoS_Table[EOS_NTABLE_MAX],
+                                const real *const EoS_Table[EOS_NTABLE_MAX], const long FloorVar,
                                 const char File[], const int Line, const char Function[], const IsUnphVerb_t Verbose );
 GPU_DEVICE
 static bool Hydro_IsUnphysical_Single( const real Field, const char SingleFieldName[], const real Min, const real Max,
@@ -222,7 +222,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
    Hydro_IsUnphysical( UNPHY_MODE_CONS, In, NULL_REAL,
                        EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table,
-                       ERROR_INFO, UNPHY_VERBOSE );
+                       PassiveVar_Floor, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
    HTilde = Hydro_Con2HTilde( In, EoS_GuessHTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
@@ -826,6 +826,8 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 //                Fields            : Field data to be checked
 //                Emag              : Magnetic energy density (0.5*B^2) --> For MHD only
 //                EoS_*             : EoS parameters
+//                FloorVar          : Bitwise flag to specify the passive scalars to be floored
+//                                    --> Should be set to the global variable "PassiveVar_Floor"
 //                File              : __FILE__
 //                Line              : __LINE__
 //                Function          : __FUNCTION__
@@ -840,7 +842,7 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[],
                          const real Emag, const EoS_DE2P_t EoS_DensEint2Pres,
                          const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                          const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                         const real *const EoS_Table[EOS_NTABLE_MAX],
+                         const real *const EoS_Table[EOS_NTABLE_MAX], const long FloorVar,
                          const char File[], const int Line, const char Function[], const IsUnphVerb_t Verbose )
 {
 
@@ -881,7 +883,7 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[],
 //          check passive scalars (which can be zero)
             else
             {
-               if ( Fields[v] < (real)0.0 && PassiveVar_Floor & BIDX(v) )
+               if ( Fields[v] < (real)0.0 && FloorVar & BIDX(v) )
                   UnphyCell = true;
                if ( Fields[v] < -HUGE_NUMBER  ||  Fields[v] > HUGE_NUMBER )
                   UnphyCell = true;
@@ -998,7 +1000,7 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[],
 //          check passive scalars (which can be zero)
             else
             {
-               if ( Fields[v] < (real)0.0 && PassiveVar_Floor & BIDX(v) )
+               if ( Fields[v] < (real)0.0 && FloorVar & BIDX(v) )
                   UnphyCell = true;
                if ( Fields[v] < -HUGE_NUMBER  ||  Fields[v] > HUGE_NUMBER )
                   UnphyCell = true;
@@ -1043,7 +1045,7 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[],
                UnphyCell = true;
 
 //          check negative (passive scalars can be zero)
-            if ( Fields[v] < (real)0.0 && PassiveVar_Floor & BIDX(v+NCOMP_FLUID) )
+            if ( Fields[v] < (real)0.0 && FloorVar & BIDX(v+NCOMP_FLUID) )
                UnphyCell = true;
 
 //          check infinity
