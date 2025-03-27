@@ -245,7 +245,7 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
                if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, CorrVal, NULL_REAL,
                                          EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
-                                         ERROR_INFO, UNPHY_VERBOSE )  )
+                                         PassiveVar_Floor, ERROR_INFO, UNPHY_VERBOSE )  )
 #              else
                if ( CorrVal[DENS] <= MIN_DENS
 #                   ifndef BAROTROPIC_EOS

@@ -140,7 +140,7 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[],
                          const real Emag, const EoS_DE2P_t EoS_DensEint2Pres,
                          const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                          const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                         const real *const EoS_Table[EOS_NTABLE_MAX],
+                         const real *const EoS_Table[EOS_NTABLE_MAX], const long FloorVar,
                          const char File[], const int Line, const char Function[], const IsUnphVerb_t Verbose );
 bool Hydro_IsUnphysical_Single( const real Field, const char SingleFieldName[], const real Min, const real Max,
                                 const char File[], const int Line, const char Function[], const IsUnphVerb_t Verbose );
