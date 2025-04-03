@@ -10,7 +10,7 @@
 #ifndef SERIAL
 #define HYPRE_MPI_COMM   MPI_COMM_WORLD
 #else
-#define HYPRE_MPI_COMM   NULL
+#define HYPRE_MPI_COMM   NULL_INT
 #endif
 
 
