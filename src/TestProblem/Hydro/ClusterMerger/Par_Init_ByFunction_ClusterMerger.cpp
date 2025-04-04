@@ -818,7 +818,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                      const real_par VelZ_tmp      = amr->Par->VelZ[ParID];
                      const real_par ParPos_tmp[3] = { ParX_tmp, ParY_tmp, ParZ_tmp };
 
-                     if ( amr->Par->AttributeInt[Idx_ParHalo][ParID] != c )  continue;
+                     if ( amr->Par->AttributeInt[Idx_ParHalo][ParID] != (long_par)c )   continue;
                      if ( DIST_SQR_3D( ParPos_tmp, Cen_new_pre[c] ) > SQR(10*R_acc) )   continue;
 
 //                   record the mass, position and velocity of this particle
@@ -1021,8 +1021,9 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
       double Vel_Tmp[3] = { -__FLT_MAX__, -__FLT_MAX__, -__FLT_MAX__ };
       for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
       {
-         if ( amr->Par->Mass[p] < (real_par)0.0  ||  amr->Par->AttributeInt[Idx_ParHalo][p] != c )
-            continue;
+         if ( amr->Par->Mass[p] < (real_par)0.0 )                       continue;
+         if ( amr->Par->AttributeInt[Idx_ParHalo][p] != (long_par)c )   continue;
+         if ( amr->Par->Type[p] != PTYPE_BLACK_HOLE )                   continue;
 
          if ( CurrentMaxLv  &&  AdjustPos )
          {

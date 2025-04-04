@@ -301,6 +301,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "Jet_Radius1",             &Jet_Radius1,             -1.0,                Eps_double,    NoMax_double   );
    LOAD_PARA( load_mode, "Jet_Radius2",             &Jet_Radius2,             -1.0,                Eps_double,    NoMax_double   );
    LOAD_PARA( load_mode, "Jet_Radius3",             &Jet_Radius3,             -1.0,                Eps_double,    NoMax_double   );
+   LOAD_PARA( load_mode, "AGN_feedback",            &AGN_feedback,             false,              Useless_bool,  Useless_bool   );
    LOAD_PARA( load_mode, "Accretion_Mode",          &Accretion_Mode,           1,                  1,             3              );
    LOAD_PARA( load_mode, "eta",                     &eta,                     -1.0,                NoMin_double,  NoMax_double   );
    LOAD_PARA( load_mode, "eps_f",                   &eps_f,                   -1.0,                NoMin_double,  NoMax_double   );
@@ -1225,7 +1226,7 @@ void Init_User_ClusterMerger()
    if ( H5_FileID < 0 )
       Aux_Error( ERROR_INFO, "failed to open the restart HDF5 file \"%s\" !!\n", FileName );
 
-   H5_SetID_OutputUser  = H5Dopen( H5_FileID, "User/OutputUser", H5P_DEFAULT );
+   H5_SetID_OutputUser  = H5Dopen( H5_FileID, "User/UserPara", H5P_DEFAULT );
    if ( H5_SetID_OutputUser < 0 )
       Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", "User/OutputUser" );
 
