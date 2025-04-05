@@ -259,6 +259,14 @@ int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld,
 
       } // for (int diameter=1; diameter<=maxfbDiameter; diameter++)
 
+//    to give feedback, the particle has to be in the range to update fluid
+      if ( cell_idx[0] + (fbDiameter  -isOnLeftCell[0])/2 <        FB_GHOST_SIZE  ||
+           cell_idx[0] - (fbDiameter-1+isOnLeftCell[0])/2 >= PS2 + FB_GHOST_SIZE  ||
+           cell_idx[1] + (fbDiameter  -isOnLeftCell[1])/2 <        FB_GHOST_SIZE  ||
+           cell_idx[1] - (fbDiameter-1+isOnLeftCell[1])/2 >= PS2 + FB_GHOST_SIZE  ||
+           cell_idx[2] + (fbDiameter  -isOnLeftCell[2])/2 <        FB_GHOST_SIZE  ||
+           cell_idx[2] - (fbDiameter-1+isOnLeftCell[2])/2 >= PS2 + FB_GHOST_SIZE )  continue;
+
 
 //    4. record the information of SNeII event before applying feedback
       if ( FB_RESOLVED_SNEII_RECORD  &&  FB_Aux_CellPatchRelPos( cell_idx ) == -1 )
