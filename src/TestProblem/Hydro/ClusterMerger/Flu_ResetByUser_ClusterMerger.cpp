@@ -236,7 +236,7 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
 
       Dis_c2m = sqrt( SQR(Vec_c2m[0]) + SQR(Vec_c2m[1]) + SQR(Vec_c2m[2]) );
 
-      Jet_dh = Jet_Vec[c][0]*Vec_c2m[0] + Jet_Vec[c][1]*Vec_c2m[1] + Jet_Vec[c][2]*Vec_c2m[2];
+      Jet_dh = fabs( Jet_Vec[c][0]*Vec_c2m[0] + Jet_Vec[c][1]*Vec_c2m[1] + Jet_Vec[c][2]*Vec_c2m[2] );
       Jet_dr = sqrt( SQR(Dis_c2m) - SQR(Jet_dh) );
 
       if ( Jet_dh <= Jet_HalfHeight[c]  &&  Jet_dr <= Jet_Radius[c] )
@@ -514,13 +514,12 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 //             calculate the exact volume of jet cylinder and normalization
                if ( CurrentMaxLv )
                {
-
                   double Jet_dr_2, Jet_dh_2, Dis_c2m_2, Vec_c2m_2[3];
                   double Pos_2[3] = {x2, y2, z2};
 
                   for (int d=0; d<3; d++)   Vec_c2m_2[d] = Pos_2[d] - ClusterCen[c][d];
                   Dis_c2m_2 = sqrt( SQR(Vec_c2m_2[0]) + SQR(Vec_c2m_2[1]) + SQR(Vec_c2m_2[2]) );
-                  Jet_dh_2 = Jet_Vec[c][0]*Vec_c2m_2[0] + Jet_Vec[c][1]*Vec_c2m_2[1] + Jet_Vec[c][2]*Vec_c2m_2[2];
+                  Jet_dh_2 = fabs( Jet_Vec[c][0]*Vec_c2m_2[0] + Jet_Vec[c][1]*Vec_c2m_2[1] + Jet_Vec[c][2]*Vec_c2m_2[2] );
                   Jet_dr_2 = sqrt( SQR(Dis_c2m_2) - SQR(Jet_dh_2) );
 
                   if ( Jet_dh_2 <= Jet_HalfHeight[c]  &&  Jet_dr_2 <= Jet_Radius[c] )
@@ -663,8 +662,6 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
 
 //    (6) perform injection
-      int Reset;
-      double x0, y0, z0;
 //    use the "static" schedule for reproducibility
 #     pragma omp parallel for private( fluid, fluid_old, x, y, z ) schedule( static ) \
       reduction( +:CM_Bondi_SinkMass, CM_Bondi_SinkMomX, CM_Bondi_SinkMomY, CM_Bondi_SinkMomZ, \
@@ -672,9 +669,10 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                    CM_Bondi_SinkE, CM_Bondi_SinkEk, CM_Bondi_SinkEt, CM_Bondi_SinkNCell )
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {
-         x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
-         y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
-         z0 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
+         int Reset;
+         const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
+         const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
+         const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
 
          for (int k=0; k<PS1; k++)  {  z = z0 + k*dh;
          for (int j=0; j<PS1; j++)  {  y = y0 + j*dh;
