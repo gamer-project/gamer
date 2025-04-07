@@ -91,6 +91,10 @@ void Validate()
    Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
 #  endif
 
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   Aux_Error( ERROR_INFO, "Test problem %d does not support ELBDM_HYBRID. The phase cannot be unwrapped due to the presence of vortices in the halo !!\n", TESTPROB_ID );
+#  endif
+
 
 // warnings
    if ( MPI_Rank == 0 )
@@ -110,6 +114,67 @@ void Validate()
 
 
 #if ( MODEL == ELBDM )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  LoadInputTestProb
+// Description :  Read problem-specific runtime parameters from Input__TestProb and store them in HDF5 snapshots (Data_*)
+//
+// Note        :  1. Invoked by SetParameter() to read parameters
+//                2. Invoked by Output_DumpData_Total_HDF5() using the function pointer Output_HDF5_InputTest_Ptr to store parameters
+//                3. If there is no problem-specific runtime parameter to load, add at least one parameter
+//                   to prevent an empty structure in HDF5_Output_t
+//                   --> Example:
+//                       LOAD_PARA( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+//
+// Parameter   :  load_mode      : Mode for loading parameters
+//                                 --> LOAD_READPARA    : Read parameters from Input__TestProb
+//                                     LOAD_HDF5_OUTPUT : Store parameters in HDF5 snapshots
+//                ReadPara       : Data structure for reading parameters (used with LOAD_READPARA)
+//                HDF5_InputTest : Data structure for storing parameters in HDF5 snapshots (used with LOAD_HDF5_OUTPUT)
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
+{
+
+#  ifndef SUPPORT_HDF5
+   if ( load_mode == LOAD_HDF5_OUTPUT )   Aux_Error( ERROR_INFO, "please turn on SUPPORT_HDF5 in the Makefile for load_mode == LOAD_HDF5_OUTPUT !!\n" );
+#  endif
+
+   if ( load_mode == LOAD_READPARA     &&  ReadPara       == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_READPARA and ReadPara == NULL !!\n" );
+   if ( load_mode == LOAD_HDF5_OUTPUT  &&  HDF5_InputTest == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_HDF5_OUTPUT and HDF5_InputTest == NULL !!\n" );
+
+// add parameters in the following format:
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
+// --> LOAD_PARA() is defined in "include/TestProb.h"
+// ********************************************************************************************************************************
+// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",         &VARIABLE,                DEFAULT,       MIN,              MAX               );
+// ********************************************************************************************************************************
+   LOAD_PARA( load_mode, "CenX",                    &Cen[0],                  NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "CenY",                    &Cen[1],                  NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "CenZ",                    &Cen[2],                  NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "AddFixedHalo",            &AddFixedHalo,            false,         Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "HaloUseTable",            &HaloUseTable,            false,         Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "m_22",                    &m_22,                    0.4,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "CoreRadius",              &CoreRadius,              1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Rho_0",                   &Rho_0,                   1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Rs",                      &Rs,                      1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Alpha",                   &Alpha,                   1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Beta",                    &Beta,                    1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Gamma",                   &Gamma,                   1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "DensTableFile",           DensTableFile,            NoDef_str,     Useless_str,      Useless_str       );
+   LOAD_PARA( load_mode, "AddParWhenRestart",       &AddParWhenRestart,       false,         Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "AddParWhenRestartByFile", &AddParWhenRestartByFile, true,          Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "AddParWhenRestartNPar",   &AddParWhenRestartNPar,   (long)0,       (long)0,          NoMax_long        );
+   LOAD_PARA( load_mode, "NewDisk_RSeed",           &NewDisk_RSeed,           1002,          0,                NoMax_int         );
+   LOAD_PARA( load_mode, "Disk_Mass",               &Disk_Mass,               1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Disk_R",                  &Disk_R,                  1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "DispTableFile",           DispTableFile,            NoDef_str,     Useless_str,      Useless_str       );
+
+} // FUNCITON : LoadInputTestProb
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -133,36 +198,11 @@ void SetParameter()
 
 
 // (1) load the problem-specific runtime parameters
+// (1-1) read parameters from Input__TestProb
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
-// (1-1) add parameters in the following format:
-// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
-// --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
-// ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",         &VARIABLE,                DEFAULT,       MIN,              MAX               );
-// ********************************************************************************************************************************
-   ReadPara->Add( "CenX",                    &Cen[0],                  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "CenY",                    &Cen[1],                  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "CenZ",                    &Cen[2],                  NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "AddFixedHalo",            &AddFixedHalo,            false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "HaloUseTable",            &HaloUseTable,            false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "m_22",                    &m_22,                    0.4,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "CoreRadius",              &CoreRadius,              1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Rho_0",                   &Rho_0,                   1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Rs",                      &Rs,                      1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Alpha",                   &Alpha,                   1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Beta",                    &Beta,                    1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Gamma",                   &Gamma,                   1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "DensTableFile",           DensTableFile,            NoDef_str,     Useless_str,      Useless_str       );
-   ReadPara->Add( "AddParWhenRestart",       &AddParWhenRestart,       false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "AddParWhenRestartByFile", &AddParWhenRestartByFile, true,          Useless_bool,     Useless_bool      );
-   ReadPara->Add( "AddParWhenRestartNPar",   &AddParWhenRestartNPar,   (long)0,       (long)0,          NoMax_long        );
-   ReadPara->Add( "NewDisk_RSeed",           &NewDisk_RSeed,           1002,          0,                NoMax_int         );
-   ReadPara->Add( "Disk_Mass",               &Disk_Mass,               1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Disk_R",                  &Disk_R,                  1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "DispTableFile",           DispTableFile,            NoDef_str,     Useless_str,      Useless_str       );
-
+   LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
 
    ReadPara->Read( FileName );
 
@@ -332,8 +372,17 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    }
 
    fluid[DENS] = (real)dens;
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   if ( amr->use_wave_flag[lv] ) {
+#  endif
    fluid[REAL] = sqrt( fluid[DENS] );
    fluid[IMAG] = 0.0;
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   } else {
+   fluid[PHAS] = 0.0;
+   fluid[STUB] = 0.0;
+   }
+#  endif
 
 } // FUNCTION : SetGridIC
 
@@ -729,6 +778,9 @@ void Init_TestProb_ELBDM_DiskHeating()
    Par_Init_ByFunction_Ptr    = Par_Init_ByFunction_DiskHeating;
    Init_User_Ptr              = Init_NewDiskRestart;
    Init_User_AfterPoisson_Ptr = Init_NewDiskVelocity;
+#  endif
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_InputTest_Ptr  = LoadInputTestProb;
 #  endif
 #  endif // #if ( MODEL == ELBDM )
 

@@ -59,7 +59,7 @@ void CUAPI_DiagnoseDevice()
 
 
 // record the device properties
-   char FileName[MAX_STRING];
+   char FileName[2*MAX_STRING];
    sprintf( FileName, "%s/Record__Note", OUTPUT_DIR );
 
    if ( MPI_Rank == 0 )
