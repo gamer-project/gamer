@@ -1,0 +1,40 @@
+name: Update all parameters wiki page
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'example/test_problem/Template/Input__Parameter'
+      - 'tool/wiki/sync_runtime_parameter.py'
+      - 'src/Init/Init_Load_Parameter.cpp'
+
+env:
+  GIT_AUTHOR_NAME: ${{ github.actor }}
+  GIT_AUTHOR_EMAIL: ${{ secrets.MY_EMAIL }}
+
+jobs:
+  Update-all-parameters-page:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.TOKEN_FOR_WIKI }}
+      - name: run script
+        run: |
+          cd tool/wiki
+          python --version
+          python sync_runtime_parameter.py
+      - name: move markdown
+        run: |
+          mv tool/wiki/Runtime-Parameters:-All.md doc/wiki/Runtime-Parameters-related
+      - name: set git config
+        run: |
+          git config --global user.email "${{env.GIT_AUTHOR_EMAIL}}"
+          git config --global user.name "${{env.GIT_AUTHOR_NAME}}"
+      - name: make a commit and push if the file changed
+        run: |
+          git diff --exit-code doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-All.md || \
+          ( git add doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-All.md && \
+          git commit -m "[Workflow] Update all parameters wiki page" && \
+          git push )

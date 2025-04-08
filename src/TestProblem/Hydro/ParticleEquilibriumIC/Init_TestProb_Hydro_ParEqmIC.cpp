@@ -30,7 +30,8 @@ static double   ParEqmIC_SmallGas;                                // negligibly 
 void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_AllRank,
                                    real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                    real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                   real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] );
+                                   long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                   long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] );
 #endif
 
 // external potential routines
@@ -102,6 +103,49 @@ void Validate()
 
 #if ( MODEL == HYDRO )
 //-------------------------------------------------------------------------------------------------------
+// Function    :  LoadInputTestProb
+// Description :  Read problem-specific runtime parameters from Input__TestProb and store them in HDF5 snapshots (Data_*)
+//
+// Note        :  1. Invoked by SetParameter() to read parameters
+//                2. Invoked by Output_DumpData_Total_HDF5() using the function pointer Output_HDF5_InputTest_Ptr to store parameters
+//                3. If there is no problem-specific runtime parameter to load, add at least one parameter
+//                   to prevent an empty structure in HDF5_Output_t
+//                   --> Example:
+//                       LOAD_PARA( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+//
+// Parameter   :  load_mode      : Mode for loading parameters
+//                                 --> LOAD_READPARA    : Read parameters from Input__TestProb
+//                                     LOAD_HDF5_OUTPUT : Store parameters in HDF5 snapshots
+//                ReadPara       : Data structure for reading parameters (used with LOAD_READPARA)
+//                HDF5_InputTest : Data structure for storing parameters in HDF5 snapshots (used with LOAD_HDF5_OUTPUT)
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
+{
+
+#  ifndef SUPPORT_HDF5
+   if ( load_mode == LOAD_HDF5_OUTPUT )   Aux_Error( ERROR_INFO, "please turn on SUPPORT_HDF5 in the Makefile for load_mode == LOAD_HDF5_OUTPUT !!\n" );
+#  endif
+
+   if ( load_mode == LOAD_READPARA     &&  ReadPara       == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_READPARA and ReadPara == NULL !!\n" );
+   if ( load_mode == LOAD_HDF5_OUTPUT  &&  HDF5_InputTest == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_HDF5_OUTPUT and HDF5_InputTest == NULL !!\n" );
+
+// add parameters in the following format:
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
+// --> LOAD_PARA() is defined in "include/TestProb.h"
+// ******************************************************************************************************************************
+// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",         &VARIABLE,              DEFAULT,       MIN,              MAX               );
+// ******************************************************************************************************************************
+   LOAD_PARA( load_mode, "ParEqmIC_SmallGas",       &ParEqmIC_SmallGas,     1e-3,          0.,               NoMax_double      );
+   LOAD_PARA( load_mode, "ParEqmIC_NumCloud",       &ParEqmIC_NumCloud,     1,             1,                NoMax_int         );
+
+} // FUNCITON : LoadInputTestProb
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
 //
@@ -123,19 +167,11 @@ void SetParameter()
 
 
 // (1) load the problem-specific runtime parameters
-   const char FileName[] = "Input__TestProb";
-   ReadPara_t *ReadPara  = new ReadPara_t;
+// (1-1) read parameters from Input__TestProb
+   const char* FileName = "Input__TestProb";
+   ReadPara_t *ReadPara = new ReadPara_t;
 
-// (1-1) add parameters in the following format:
-// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
-// --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
-   // ********************************************************************************************************************************
-   // ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,              DEFAULT,       MIN,              MAX               );
-   // ********************************************************************************************************************************
-   ReadPara->Add( "ParEqmIC_SmallGas",       &ParEqmIC_SmallGas,     1e-3,          Eps_double,       NoMax_double      );
-   ReadPara->Add( "ParEqmIC_NumCloud",       &ParEqmIC_NumCloud,     1,             1,                NoMax_int         );
-
-   ReadPara->Read( FileName );
+   LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
 
    ParEqmIC_Cloud_ParaFilenames = new char [ParEqmIC_NumCloud][MAX_STRING];
 
@@ -147,7 +183,6 @@ void SetParameter()
    }
 
    ReadPara->Read( FileName );
-
    delete ReadPara;
 
 // (1-2) set the default values
@@ -242,7 +277,7 @@ void SetParameter()
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
    const long   End_Step_Default = __INT_MAX__;
-   const double End_T_Default    =  10;
+   const double End_T_Default    = 10;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
@@ -398,14 +433,18 @@ void Init_TestProb_Hydro_ParEqmIC()
    SetParameter();
 
 
-   Init_Function_User_Ptr  = SetGridIC;
-   End_User_Ptr            = End_ParEqmIC;
+   Init_Function_User_Ptr    = SetGridIC;
+   End_User_Ptr              = End_ParEqmIC;
+   Init_Function_User_Ptr    = SetGridIC;
 #  ifdef MASSIVE_PARTICLES
-   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_ParEqmIC;
+   Par_Init_ByFunction_Ptr   = Par_Init_ByFunction_ParEqmIC;
 #  endif
 #  ifdef GRAVITY
    if ( OPT__EXT_POT == EXT_POT_FUNC )
-   Init_ExtPot_Ptr         = Init_ExtPot_ParEqmIC;
+   Init_ExtPot_Ptr           = Init_ExtPot_ParEqmIC;
+#  endif
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_InputTest_Ptr = LoadInputTestProb;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

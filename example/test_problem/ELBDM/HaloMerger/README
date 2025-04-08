@@ -1,7 +1,7 @@
 Compilation flags:
 ========================================
 Enable : MODEL=ELBDM, GRAVITY (, PARTICLE, SUPPORT_GSL)
-Disable: COMOVING
+Disable: COMOVING, ELBDM_SCHEME=ELBDM_HYBRID
 
 
 Default setup:
