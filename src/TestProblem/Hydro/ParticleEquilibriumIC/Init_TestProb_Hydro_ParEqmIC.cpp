@@ -173,6 +173,8 @@ void SetParameter()
 
    LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
 
+   ReadPara->Read( FileName );
+
    ParEqmIC_Cloud_ParaFilenames = new char [ParEqmIC_NumCloud][MAX_STRING];
 
    char ParEqmIC_Cloud_ParaFilename_i[MAX_STRING];
@@ -183,6 +185,7 @@ void SetParameter()
    }
 
    ReadPara->Read( FileName );
+
    delete ReadPara;
 
 // (1-2) set the default values
