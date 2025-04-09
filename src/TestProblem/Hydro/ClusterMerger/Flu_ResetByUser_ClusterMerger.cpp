@@ -127,7 +127,7 @@ void BH_accretion_rate( const int mode, double *Mdot_tot, double *Mdot_hot, doub
    double acc_cold = 0.0, acc_hot = 0.0;
 
 // hot accretion rate
-   if ( mode == 1  ||  mode == 3  &&  rho_gas > 0.0 )
+   if ( (mode == 1  ||  mode == 3)  &&  rho_gas > 0.0 )
    {
       acc_hot = 4.0 * M_PI * SQR(NEWTON_G) * SQR(mass_BH) * rho_gas /
                 pow( SQR(cs) + SQR(v_rel), 1.5 );
