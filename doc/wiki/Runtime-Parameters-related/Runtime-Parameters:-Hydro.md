@@ -155,7 +155,8 @@ solutions.
     * **Description:**
 Maximum number of iterations to reduce [MINMOD_COEFF](#MINMOD_COEFF)
 when data reconstruction fails. It improves code stability but
-may break strict conservation.
+may break strict conservation and magnetic field consistency at
+patch interfaces.
     * **Restriction:**
 
 <a name="OPT__1ST_FLUX_CORR"></a>
