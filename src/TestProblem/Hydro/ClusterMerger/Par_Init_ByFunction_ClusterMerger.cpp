@@ -214,9 +214,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++)
       {
          if ( (long_par)ptype[p] == PTYPE_TRACER )
-            Aux_Error( ERROR_INFO,
-"Tracer particles were found in the input data for cluster %d, but TRACER is not defined!\n",
-                       c );
+            Aux_Error( ERROR_INFO, "Tracer particles were found in the input data for cluster %d, but TRACER is not defined!\n", c );
       }
 #     endif
 
@@ -228,7 +226,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
 //    compute offsets for assigning particles
       double coffset;
-      switch (c)
+      switch ( c )
       {
          case 0: coffset = 0;
                  break;
@@ -236,7 +234,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
                  break;
          case 2: coffset = NPar_ThisRank_EachCluster[0] + NPar_ThisRank_EachCluster[1];
                  break;
-      } // switch (c)
+      } // switch ( c )
 
       for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++)
       {
@@ -253,8 +251,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
          ParPosZ[pp] = real_par( zpos[p] / UNIT_L );
 
          if ( (long_par)ptype[p] == PTYPE_TRACER ) {
-//          tracer particles have zero mass and their velocities will be set by
-//          the grid later
+//          tracer particles have zero mass and their velocities will be set by the grid later
             ParMass[pp] = (real_par)0.0;
             ParVelX[pp] = (real_par)0.0;
             ParVelY[pp] = (real_par)0.0;
@@ -274,7 +271,6 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
 //       set tag for each cluster
          AllAttributeInt[Idx_ParHalo][pp] = (long_par)c;
-
       } // for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++)
 
       delete [] mass;
@@ -285,7 +281,6 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       delete [] yvel;
       delete [] zvel;
       delete [] ptype;
-
    } // for (int c=0; c<NCluster; c++)
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
@@ -598,7 +593,7 @@ void Aux_Record_ClusterMerger()
    {
       if ( MPI_Rank == 0 )
       {
-         if ( Aux_CheckFileExist(FileName) )
+         if ( Aux_CheckFileExist( FileName ) )
             Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
 
          FILE *File_User = fopen( FileName, "a" );
@@ -833,15 +828,15 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
 
                      if ( num_par[c] >= N_max[c] )
                      {
-//                         increase the new maximum size if needed
-                           N_max[c] = (int)ceil( PARLIST_GROWTH_FACTOR*(num_par[c]+1) );
-                           ParX[c]  = (real_par*)realloc( ParX[c], N_max[c]*sizeof(real_par) );
-                           ParY[c]  = (real_par*)realloc( ParY[c], N_max[c]*sizeof(real_par) );
-                           ParZ[c]  = (real_par*)realloc( ParZ[c], N_max[c]*sizeof(real_par) );
-                           ParM[c]  = (real_par*)realloc( ParM[c], N_max[c]*sizeof(real_par) );
-                           VelX[c]  = (real_par*)realloc( VelX[c], N_max[c]*sizeof(real_par) );
-                           VelY[c]  = (real_par*)realloc( VelY[c], N_max[c]*sizeof(real_par) );
-                           VelZ[c]  = (real_par*)realloc( VelZ[c], N_max[c]*sizeof(real_par) );
+//                      increase the new maximum size if needed
+                        N_max[c] = (int)ceil( PARLIST_GROWTH_FACTOR*(num_par[c]+1) );
+                        ParX[c]  = (real_par*)realloc( ParX[c], N_max[c]*sizeof(real_par) );
+                        ParY[c]  = (real_par*)realloc( ParY[c], N_max[c]*sizeof(real_par) );
+                        ParZ[c]  = (real_par*)realloc( ParZ[c], N_max[c]*sizeof(real_par) );
+                        ParM[c]  = (real_par*)realloc( ParM[c], N_max[c]*sizeof(real_par) );
+                        VelX[c]  = (real_par*)realloc( VelX[c], N_max[c]*sizeof(real_par) );
+                        VelY[c]  = (real_par*)realloc( VelY[c], N_max[c]*sizeof(real_par) );
+                        VelZ[c]  = (real_par*)realloc( VelZ[c], N_max[c]*sizeof(real_par) );
                      }
                   } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                }  // if ( DIST_SQR_3D( patch_pos, Cen_new_pre[c] ) <= SQR(20*R_acc+patch_d) )
@@ -902,13 +897,12 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
 //       compute potential and find the minimum position, and calculate the average DM velocity on the root rank
          if ( AdjustPos )
          {
-            double soften = amr->dh[MAX_LEVEL];
+            double  soften        = amr->dh[MAX_LEVEL];
             double *pote_AllRank  = new double [num_par_sum_max];
             double *pote_ThisRank = new double [num_par_sum_max];
             for (int c=0; c<Merger_Coll_NumBHs; c++)
             {
-
-//                distribute MPI jobs
+//             distribute MPI jobs
                int par_per_rank = num_par_sum[c] / MPI_NRank;
                int remainder    = num_par_sum[c] % MPI_NRank;
                int start        = MPI_Rank*par_per_rank + MIN( MPI_Rank, remainder );
@@ -1044,7 +1038,6 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
          Vel_Tmp[1] = amr->Par->VelY[p];
          Vel_Tmp[2] = amr->Par->VelZ[p];
          break;
-
       } // for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
 
 //    use MPI_MAX since Cen_Tmp[] is initialized as -inf
