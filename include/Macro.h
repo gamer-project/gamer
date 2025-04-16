@@ -314,7 +314,12 @@
 #  define PASSIVE_NEXT_IDX2   ( PASSIVE_NEXT_IDX1 )
 # endif
 
+# ifdef EXACT_COOLING
 #  define TCOOL               ( PASSIVE_NEXT_IDX2 )
+#  define PASSIVE_NEXT_IDX3   ( TCOOL - 1         )
+# else
+#  define PASSIVE_NEXT_IDX3   ( PASSIVE_NEXT_IDX2 )
+# endif
 
 #endif // #if ( NCOMP_PASSIVE > 0 )
 
@@ -352,7 +357,12 @@
 #  define FLUX_NEXT_IDX2   ( FLUX_NEXT_IDX1  )
 # endif
 
+# ifdef EXACT_COOLING
 #  define FLUX_TCOOL       ( FLUX_NEXT_IDX2  )
+#  define FLUX_NEXT_IDX3   ( FLUX_TCOOL - 1  )
+# else
+#  define FLUX_NEXT_IDX3   ( FLUX_NEXT_IDX2  )
+# endif
 
 #endif // #if ( NCOMP_PASSIVE > 0 )
 
@@ -376,7 +386,9 @@
 #  define _CRAY               ( 1L << CRAY )
 # endif
 
+# ifdef EXACT_COOLING
 #  define _TCOOL              ( 1L << TCOOL )
+# endif
 
 #endif // #if ( NCOMP_PASSIVE > 0 )
 
@@ -407,7 +419,9 @@
 #  define _FLUX_CRAY          ( 1L << FLUX_CRAY )
 # endif
 
+# ifdef EXACT_COOLING
 #  define _FLUX_TCOOL         ( 1L << FLUX_TCOOL )
+# endif
 
 #endif // #if ( NFLUX_PASSIVE > 0 )
 

@@ -1818,6 +1818,10 @@ void Aux_Check_Parameter()
 #     error : ERROR : SRC_GHOST_SIZE must be zero for now !!
 #  endif
 
+#  ifdef EXACT_COOLING
+#     error : ERROR : EXACT_COOLING does not support yet !!
+#  endif
+
 #  if ( MODEL != HYDRO )
    if ( SrcTerms.Deleptonization )
       Aux_Error( ERROR_INFO, "SRC_DELEPTONIZATION is only supported in HYDRO !!\n" );
