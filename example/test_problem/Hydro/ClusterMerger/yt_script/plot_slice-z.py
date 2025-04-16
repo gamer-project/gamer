@@ -85,7 +85,7 @@ for ds in ts.piter():
    cdm_mass.set_unit( field, 'Msun' )
    cdm_mass.set_zlim( field, 1.0e9, 1.0e12 )
    cdm_mass.set_cmap( field, colormap_cdm )
-   cdm_mass.set_colorbar_label( field, 'Dark matter mass [$M_{\odot}$]' )
+   cdm_mass.set_colorbar_label( field, r'Dark matter mass [$M_{\odot}$]' )
    cdm_mass.annotate_timestamp( time_unit='Myr', corner='upper_right' )
    cdm_mass.annotate_particles( width=(10.0*Mpc), p_size=10.0, col='b', ptype='smbh' )
 
