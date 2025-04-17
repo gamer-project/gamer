@@ -104,6 +104,24 @@ void Init_Load_DumpTable()
 
    if ( input_line != NULL )     free( input_line );
 
+// insert initial time Time[0]
+   for (int t=0; t<DumpTable_NDump; t++)
+   {
+//    check if the initial time is already in the dump table
+      if (   (  Time[0] != 0.0 && fabs( (Time[0]-DumpTable[t])/Time[0] ) < 1.0e-8  )  ||
+             (  Time[0] == 0.0 && fabs(  Time[0]-DumpTable[t]          ) < 1.0e-12 )      )   break;
+
+//    insert the initial time into the dump table
+      if (   (  Time[0] < DumpTable[t]  ) && (  t == 0 || Time[0] > DumpTable[t-1]  )   )
+      {
+         for (int s=DumpTable_NDump; s>t; s--)
+            DumpTable[s] = DumpTable[s-1];
+         DumpTable[t] = Time[0];
+         DumpTable_NDump++;
+         Aux_Message( stdout, "NOTE : initial time %13.7e is inserted into the dump table\n", Time[0] );
+         break;
+      }
+   }
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Init_Load_DumpTable ... done\n" );
 
