@@ -52,6 +52,10 @@
 #endif // #if ( SUPPORT_FFTW == FFTW3 ) ... #elif ( SUPPORT_FFTW == FFTW2 )
 
 #ifdef SUPPORT_GRACKLE
+// suppress a compile-time warning message of grackle version prior to 3.3.0.
+// --> see lines 191-201 of https://github.com/grackle-project/grackle/blob/grackle-3.2.1/src/clib/grackle.h
+#define OMIT_LEGACY_INTERNAL_GRACKLE_FUNC
+
 extern "C" {
 #  include <grackle.h>
 }
