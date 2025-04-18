@@ -32,7 +32,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                      --> Allocated only if STORE_POT_GHOST is on
 //                                      --> Ghost-zone potential are obtained from the Poisson solver directly
 //                                          (not from exchanging potential between sibling patches)
-//                                      --> Currently it is used for Par->ImproveAcc and SF_CreateStar_AGORA() only
+//                                      --> Currently it is used for Par->ImproveAcc and SF_CreateStar_GeneralGalaxy() only
 //                                      --> Currently it's useless for buffer patches
 //                de_status           : Assigned to (DE_UPDATED_BY_ETOT / DE_UPDATED_BY_DUAL / DE_UPDATED_BY_MIN_PRES /
 //                                                   DE_UPDATED_BY_ETOT_GRA)
