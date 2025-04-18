@@ -38,6 +38,7 @@ void CUFLU_FluidSolver_MHM(
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch,
+   const long FloorVar,
    const bool NormPassive, const int NNorm,
    const bool FracPassive, const int NFrac,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
@@ -66,6 +67,7 @@ void CUFLU_FluidSolver_CTU(
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch,
+   const long FloorVar,
    const bool NormPassive, const int NNorm,
    const bool FracPassive, const int NFrac,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
@@ -247,6 +249,8 @@ extern cudaStream_t *Stream;
 //                MicroPhy              : Microphysics object
 //                MinDens/Pres/Eint     : Density, pressure, and internal energy floors
 //                DualEnergySwitch      : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
+//                FloorVar              : Bitwise flag to specify the passive scalars to be floored
+//                                        --> Should be set to the global variable "PassiveVar_Floor"
 //                NormPassive           : true --> normalize passive scalars so that the sum of their mass density
 //                                                 is equal to the gas mass density
 //                NNorm                 : Number of passive scalars to be normalized
@@ -277,6 +281,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              const double Time, const bool UsePot, const OptExtAcc_t ExtAcc, const MicroPhy_t MicroPhy,
                              const real MinDens, const real MinPres, const real MinEint,
                              const real DualEnergySwitch,
+                             const long FloorVar,
                              const bool NormPassive, const int NNorm,
                              const bool FracPassive, const int NFrac,
                              const bool JeansMinPres, const real JeansMinPres_Coeff,
@@ -567,7 +572,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_EC_Ele          + UsedPatch[s],
               dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff, MinMod_MaxIter,
               Time, UsePot, ExtAcc, GPUExtAcc_Ptr, MinDens, MinPres, MinEint,
-              DualEnergySwitch, NormPassive, NNorm, FracPassive, NFrac,
+              DualEnergySwitch, FloorVar, NormPassive, NNorm, FracPassive, NFrac,
               JeansMinPres, JeansMinPres_Coeff, EoS, MicroPhy );
 
 #        elif ( FLU_SCHEME == CTU )
@@ -590,7 +595,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_EC_Ele          + UsedPatch[s],
               dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff,
               Time, UsePot, ExtAcc, GPUExtAcc_Ptr, MinDens, MinPres, MinEint,
-              DualEnergySwitch, NormPassive, NNorm, FracPassive, NFrac,
+              DualEnergySwitch, FloorVar, NormPassive, NNorm, FracPassive, NFrac,
               JeansMinPres, JeansMinPres_Coeff, EoS );
 
 #        else

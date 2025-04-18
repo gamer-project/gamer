@@ -245,7 +245,7 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
                if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, CorrVal, NULL_REAL,
                                          EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
-                                         ERROR_INFO, UNPHY_VERBOSE )  )
+                                         PassiveVar_Floor, ERROR_INFO, UNPHY_VERBOSE )  )
 #              else
                if ( CorrVal[DENS] <= MIN_DENS
 #                   ifndef BAROTROPIC_EOS
@@ -289,7 +289,9 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
 //                floor and normalize the passive scalars
 #                 if ( NCOMP_PASSIVE > 0  &&  MODEL == HYDRO )
                   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
-                     if ( TVar & BIDX(v) )   CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+                     if ( TVar & BIDX(v) )
+                     // TODO: Why `TVar` need to be pass as an argument, instead of using the global one? CUDA?
+                        if ( PassiveVar_Floor & BIDX(v) ) CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
 
                   if ( OPT__NORMALIZE_PASSIVE )
                      Hydro_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
