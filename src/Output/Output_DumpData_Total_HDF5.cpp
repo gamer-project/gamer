@@ -79,7 +79,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2503)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2504)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -277,6 +277,7 @@ Procedure for outputting new variables:
 //                2502 : 2025/01/16 --> output ConRef[]
 //                2503 : 2025/01/17 --> output user-defined parameters in "User/UserPara" and
 //                                             Input__TestProb parameters in "Info/InputTest"
+//                2504 : 2025/04/29 --> output OPT__PAR_INIT_CHECK
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1665,7 +1666,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2503;
+   KeyInfo.FormatVersion        = 2504;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2415,6 +2416,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__FreezePar          = OPT__FREEZE_PAR;
    InputPara.Par_GhostSize           = amr->Par->GhostSize;
    InputPara.Par_GhostSizeTracer     = amr->Par->GhostSizeTracer;
+   InputPara.Opt__ParInitCheck       = OPT__PAR_INIT_CHECK;
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
    InputPara.ParAttFltLabel[v]       = ParAttFltLabel[v];
    for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
@@ -3454,6 +3456,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__FreezePar",          HOFFSET(InputPara_t,Opt__FreezePar         ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_GhostSize",           HOFFSET(InputPara_t,Par_GhostSize          ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_GhostSizeTracer",     HOFFSET(InputPara_t,Par_GhostSizeTracer    ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__ParInitCheck",       HOFFSET(InputPara_t,Opt__ParInitCheck      ), H5T_NATIVE_INT     );
 
 // store the name of all particle attributes
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
