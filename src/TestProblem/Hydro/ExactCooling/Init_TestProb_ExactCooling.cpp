@@ -36,6 +36,10 @@ void Validate()
    Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
 #  endif
 
+#  ifndef EXACT_COOLING
+   Aux_Error( ERROR_INFO, "EXACT_COOLING must be enabled !!\n" );
+#  endif
+
 #  ifdef COMOVING
    Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
 #  endif
