@@ -799,47 +799,46 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                const double  patch_pos[3] = { (EdgeL[0]+EdgeR[0])*0.5, (EdgeL[1]+EdgeR[1])*0.5, (EdgeL[2]+EdgeR[2])*0.5 };
                const double  patch_d      = DIST_3D_DBL( EdgeL, EdgeR ) * 0.5;
 
-               if ( DIST_SQR_3D( patch_pos, Cen_new_pre[c] ) <= SQR(10*R_acc+patch_d) )
+               if ( DIST_SQR_3D( patch_pos, Cen_new_pre[c] ) > SQR(10*R_acc+patch_d) )   continue;
+
+               for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                {
-                  for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
+                  const long_par ParID         = amr->patch[0][lv][PID]->ParList[p];
+                  const real_par ParX_tmp      = amr->Par->PosX[ParID];
+                  const real_par ParY_tmp      = amr->Par->PosY[ParID];
+                  const real_par ParZ_tmp      = amr->Par->PosZ[ParID];
+                  const real_par ParM_tmp      = amr->Par->Mass[ParID];
+                  const real_par VelX_tmp      = amr->Par->VelX[ParID];
+                  const real_par VelY_tmp      = amr->Par->VelY[ParID];
+                  const real_par VelZ_tmp      = amr->Par->VelZ[ParID];
+                  const real_par ParPos_tmp[3] = { ParX_tmp, ParY_tmp, ParZ_tmp };
+
+                  if ( amr->Par->AttributeInt[Idx_ParHalo][ParID] != (long_par)c )   continue;
+                  if ( DIST_SQR_3D( ParPos_tmp, Cen_new_pre[c] ) > SQR(10*R_acc) )   continue;
+
+//                record the mass, position and velocity of this particle
+                  ParX[c][num_par[c]] = ParX_tmp;
+                  ParY[c][num_par[c]] = ParY_tmp;
+                  ParZ[c][num_par[c]] = ParZ_tmp;
+                  ParM[c][num_par[c]] = ParM_tmp;
+                  VelX[c][num_par[c]] = VelX_tmp;
+                  VelY[c][num_par[c]] = VelY_tmp;
+                  VelZ[c][num_par[c]] = VelZ_tmp;
+                  num_par[c] += 1;
+
+                  if ( num_par[c] >= N_max[c] )
                   {
-                     const long_par ParID         = amr->patch[0][lv][PID]->ParList[p];
-                     const real_par ParX_tmp      = amr->Par->PosX[ParID];
-                     const real_par ParY_tmp      = amr->Par->PosY[ParID];
-                     const real_par ParZ_tmp      = amr->Par->PosZ[ParID];
-                     const real_par ParM_tmp      = amr->Par->Mass[ParID];
-                     const real_par VelX_tmp      = amr->Par->VelX[ParID];
-                     const real_par VelY_tmp      = amr->Par->VelY[ParID];
-                     const real_par VelZ_tmp      = amr->Par->VelZ[ParID];
-                     const real_par ParPos_tmp[3] = { ParX_tmp, ParY_tmp, ParZ_tmp };
-
-                     if ( amr->Par->AttributeInt[Idx_ParHalo][ParID] != (long_par)c )   continue;
-                     if ( DIST_SQR_3D( ParPos_tmp, Cen_new_pre[c] ) > SQR(10*R_acc) )   continue;
-
-//                   record the mass, position and velocity of this particle
-                     ParX[c][num_par[c]] = ParX_tmp;
-                     ParY[c][num_par[c]] = ParY_tmp;
-                     ParZ[c][num_par[c]] = ParZ_tmp;
-                     ParM[c][num_par[c]] = ParM_tmp;
-                     VelX[c][num_par[c]] = VelX_tmp;
-                     VelY[c][num_par[c]] = VelY_tmp;
-                     VelZ[c][num_par[c]] = VelZ_tmp;
-                     num_par[c] += 1;
-
-                     if ( num_par[c] >= N_max[c] )
-                     {
-//                      increase the new maximum size if needed
-                        N_max[c] = (int)ceil( PARLIST_GROWTH_FACTOR*(num_par[c]+1) );
-                        ParX[c]  = (real_par*)realloc( ParX[c], N_max[c]*sizeof(real_par) );
-                        ParY[c]  = (real_par*)realloc( ParY[c], N_max[c]*sizeof(real_par) );
-                        ParZ[c]  = (real_par*)realloc( ParZ[c], N_max[c]*sizeof(real_par) );
-                        ParM[c]  = (real_par*)realloc( ParM[c], N_max[c]*sizeof(real_par) );
-                        VelX[c]  = (real_par*)realloc( VelX[c], N_max[c]*sizeof(real_par) );
-                        VelY[c]  = (real_par*)realloc( VelY[c], N_max[c]*sizeof(real_par) );
-                        VelZ[c]  = (real_par*)realloc( VelZ[c], N_max[c]*sizeof(real_par) );
-                     }
-                  } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
-               }  // if ( DIST_SQR_3D( patch_pos, Cen_new_pre[c] ) <= SQR(20*R_acc+patch_d) )
+//                   increase the new maximum size if needed
+                     N_max[c] = (int)ceil( PARLIST_GROWTH_FACTOR*(num_par[c]+1) );
+                     ParX[c]  = (real_par*)realloc( ParX[c], N_max[c]*sizeof(real_par) );
+                     ParY[c]  = (real_par*)realloc( ParY[c], N_max[c]*sizeof(real_par) );
+                     ParZ[c]  = (real_par*)realloc( ParZ[c], N_max[c]*sizeof(real_par) );
+                     ParM[c]  = (real_par*)realloc( ParM[c], N_max[c]*sizeof(real_par) );
+                     VelX[c]  = (real_par*)realloc( VelX[c], N_max[c]*sizeof(real_par) );
+                     VelY[c]  = (real_par*)realloc( VelY[c], N_max[c]*sizeof(real_par) );
+                     VelZ[c]  = (real_par*)realloc( VelZ[c], N_max[c]*sizeof(real_par) );
+                  }
+               } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
             } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
          } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
