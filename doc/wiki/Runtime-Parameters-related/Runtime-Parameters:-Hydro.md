@@ -196,7 +196,7 @@ Only applicable when enabling the compilation option
 [[--dual | Installation:-Option-List#--dual]].
 
 <a name="OPT__SAME_INTERFACE_B"></a>
-* #### `OPT__SAME_INTERFACE_B` &ensp; (0=off, 1=on) &ensp; [0]
+* #### `OPT__SAME_INTERFACE_B` &ensp; (-1=set to default, 0=off, 1=on) &ensp; [depend]
     * **Description:**
 Ensure adjacent patches on the same level have exactly the same magnetic field
 on their shared interfaces (including round-off errors).

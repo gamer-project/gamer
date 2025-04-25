@@ -123,7 +123,7 @@ bool                 OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC_MA
 bool                 OPT__OUTPUT_DIVMAG;
 int                  OPT__CK_DIVERGENCE_B;
 double               UNIT_B;
-bool                 OPT__SAME_INTERFACE_B;
+int                  OPT__SAME_INTERFACE_B;
 
 OptInitMagByVecPot_t OPT__INIT_BFIELD_BYVECPOT;
 #endif
@@ -698,7 +698,7 @@ int main( int argc, char *argv[] )
       TIMING_FUNC(   Flu_CorrAfterAllSync(),          Timer_Main[6],   TIMER_ON   );
 
 #     if ( MODEL == HYDRO  &&  defined MHD )
-      if ( OPT__SAME_INTERFACE_B )
+      if ( OPT__SAME_INTERFACE_B == SAME_INTERFACE_B_YES )
       {
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
             Aux_Message( stdout, "   MHD_SameInterfaceB                       ... " );
