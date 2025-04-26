@@ -53,6 +53,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                                          (for non-periodic BC only)
 //                GhostSize               : Number of ghost zones required for the interpolation scheme of massive particles
 //                GhostSizeTracer         : Number of ghost zones required for the interpolation scheme of tracer  particles
+//                NextUID                 : Next new particle UID over all MPI ranks. The UID starts from 1.
 //                AttributeFlt            : Pointer arrays to different particle floating-point attributes (Mass, Pos, Vel, ...)
 //                AttributeInt            : Pointer arrays to different particle integer        attributes (Type)
 //                InactiveParList         : List of inactive particle IDs
@@ -100,8 +101,9 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                Pos                     : Particle position
 //                Vel                     : Particle velocity
 //                Time                    : Particle physical time
-//                Type                    : Particle type (e.g., tracer, generic, dark matter, star)
 //                Acc                     : Particle acceleration (only when STORE_PAR_ACC is on)
+//                Type                    : Particle type (e.g., tracer, generic, dark matter, star)
+//                PUid                    : Particle UID
 //
 // Method      :  Particle_t        : Constructor
 //               ~Particle_t        : Destructor
@@ -135,6 +137,7 @@ struct Particle_t
    double        RemoveCell;
    int           GhostSize;
    int           GhostSizeTracer;
+   long_par      NextUID;
    real_par     *AttributeFlt[PAR_NATT_FLT_TOTAL];
    long_par     *AttributeInt[PAR_NATT_INT_TOTAL];
    long         *InactiveParList;
@@ -180,6 +183,7 @@ struct Particle_t
    real_par     *AccZ;
 #  endif
    long_par     *Type;
+   long_par     *PUid;
 
 
    //===================================================================================
@@ -209,6 +213,7 @@ struct Particle_t
       RemoveCell          = -999.9;
       GhostSize           = -1;
       GhostSizeTracer     = -1;
+      NextUID             = 1;
 
       for (int lv=0; lv<NLEVEL; lv++)  NPar_Lv[lv] = 0;
 
@@ -258,12 +263,13 @@ struct Particle_t
       VelY = NULL;
       VelZ = NULL;
       Time = NULL;
-      Type = NULL;
 #     ifdef STORE_PAR_ACC
       AccX = NULL;
       AccY = NULL;
       AccZ = NULL;
 #     endif
+      Type = NULL;
+      PUid = NULL;
 
    } // METHOD : Particle_t
 
@@ -415,6 +421,7 @@ struct Particle_t
       AccZ = AttributeFlt[PAR_ACCZ];
 #     endif
       Type = AttributeInt[PAR_TYPE];
+      PUid = AttributeInt[PAR_PUID];
 
    } // METHOD : InitRepo
 
@@ -503,6 +510,7 @@ struct Particle_t
             AccZ = AttributeFlt[PAR_ACCZ];
 #           endif
             Type = AttributeInt[PAR_TYPE];
+            PUid = AttributeInt[PAR_PUID];
          }
 
          ParID = NPar_AcPlusInac;
