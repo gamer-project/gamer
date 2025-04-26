@@ -1853,9 +1853,18 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : SF_CREATE_STAR_MIN_LEVEL (%d) > MAX_LEVEL (%d) --> no star particles will form !!\n",
                    SF_CREATE_STAR_MIN_LEVEL, MAX_LEVEL );
 
-   if ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_AGORA  &&  !SF_CREATE_STAR_DET_RANDOM )
+   if ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_DWARFGALAXY  &&  JEANS_MIN_PRES )
    {
-      Aux_Message( stderr, "WARNING : SF_CREATE_STAR_SCHEME == 1 will break bitwise reproducibility due to the \n" );
+      Aux_Message( stderr, "WARNING : SF_CREATE_STAR_SCHEME == %d is incompatible with JEANS_MIN_PRES !!\n",
+                   SF_CREATE_STAR_SCHEME_DWARFGALAXY );
+      Aux_Message( stderr, "          --> SF_CREATE_STAR_MAX_GAS_JEANSL = %14.8e, but JEANS_MIN_PRES_NCELL = %d and JEANS_MIN_PRES_LEVEL = %d\n",
+                   SF_CREATE_STAR_MAX_GAS_JEANSL, JEANS_MIN_PRES_NCELL, JEANS_MIN_PRES_LEVEL );
+   }
+
+   if ( ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_AGORA  ||  SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_DWARFGALAXY )
+        &&  !SF_CREATE_STAR_DET_RANDOM )
+   {
+      Aux_Message( stderr, "WARNING : SF_CREATE_STAR_SCHEME == 1 or 2 will break bitwise reproducibility due to the\n" );
       Aux_Message( stderr, "          random values used for the stochastic star formation !!\n" );
       Aux_Message( stderr, "          --> Enable \"SF_CREATE_STAR_DET_RANDOM\" if reproducibility is of great concern\n" );
    }
