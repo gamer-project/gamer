@@ -97,7 +97,7 @@ void Init_Load_DumpTable()
 
 
    if ( line == MaxLine )
-      Aux_Error( ERROR_INFO, "please prepare a symbol * in the end of the file <%s> !!\n", FileName );
+      Aux_Error( ERROR_INFO, "please prepare a * symbol at the end of the file <%s> !!\n", FileName );
 
 
    fclose( File );
