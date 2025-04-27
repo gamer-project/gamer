@@ -85,7 +85,7 @@ void Init_Load_DumpTable()
 //       verify the loaded dump table
          for (int t=1; t<=line; t++)
          {
-            if ( DumpTable[t] < DumpTable[t-1] )
+            if ( DumpTable[t] <= DumpTable[t-1] )
                Aux_Error( ERROR_INFO, "values recorded in \"%s\" must be monotonically increasing !!\n",
                           FileName );
          }
