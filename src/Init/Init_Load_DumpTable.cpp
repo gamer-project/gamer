@@ -68,7 +68,7 @@ void Init_Load_DumpTable()
          {
             for (int t=line-1; t>=0; t--)
             {
-               if ( END_T > DumpTable[t] )
+               if ( END_T >= DumpTable[t] )
                {
                   END_T = DumpTable[t];
 
