@@ -1,6 +1,6 @@
-<h1 align="center">
-🎮🖥️ <a href="">GAMER</a>: A <a href="">G</a>PU-accelerated 🌌👾<br>
-<a href="">A</a>daptive <a href="">ME</a>sh <a href="">R</a>efinement code for astrophysics
+<h1 align="left">
+🎮&nbsp;<a href="">GAMER</a>:<br>
+👾&nbsp;<a href="">G</a>PU-accelerated <a href="">A</a>daptive <a href="">ME</a>sh <a href="">R</a>efinement
 </h1>
 
 [![GitHub Release](https://img.shields.io/github/v/release/gamer-project/gamer)](https://github.com/gamer-project/gamer/releases)
