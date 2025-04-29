@@ -1,0 +1,61 @@
+Compilation flags:
+========================================
+Enable : MODEL=HYDRO, GRAVITY, PARTICLE, FEEDBACK
+Disable: COMOVING
+
+
+Default setup:
+========================================
+1. Units:
+   (1) External (for Input__TestProb only):
+       See the comment of each runtime variable
+
+   (2) Internal (for all other input files and internal usage):
+       [L] = kpc
+       [M] = 1.0e9 Msun
+       [T] = Myr
+    -->[V] = [L]/[T] ~ 9.8e2 km/s
+    -->[D] = [M]/[L]^3 ~ 6.8e-23 g/cm^3
+
+2. Default maximum resolution ~ 3.5 pc (root grid 32^3; MAX_LEVEL = 3)
+
+3. Refinement criteria
+   (1) Numer of particles in each cell
+       --> Refinement threshold = 0
+       --> Refine the cell with the particle to level >= FB_MIN_LEVEL to have feedback
+   (2) Lohner's error estimator on pressure
+       --> Refinement threshold = 0.80
+   (3) User-defined cell position (only when `OPT__FLAG_USER` is enabled)
+       --> Refinement threshold = number of cells as the half width of the central box = 8.0
+       --> Refine the cells within the central box but not in the upper-right corner
+
+
+Note:
+========================================
+1. To test the effect of the Type II supernova feedback when the star particle explodes in a typical ISM environment
+   - SN locally deposits thermal energy, mass, metal into the surrounding gas at a given delay time
+   - The parameters for the feedback can be set in `Input__Parameter` --> See `FB_RESOLVED_SNEII*` for details
+   - There is only one particle and its initial mass, metal fraction, position, and velocity can be set in `Input__TestProb`
+   - The density, temperature, and metal fraction for the background ISM gas can be set in `Input__TestProb`
+2. The results are similar to the `Hydro/BlastWave` test problem
+   - To compare the default results, use the input files provided in `ForBlastWave/` to run `Hydro/BlastWave` test problem
+   - Set `FB_RESOLVED_SNEII_EJECT_MASS` = 0.0 to only deposit energy
+3. The self-gravity is off (`OPT__SELF_GRAVITY=0`); The compilatin option GRAVITY is enabled only to have a star particle
+4. With `FB_RESOLVED_SNEII_MIN_M_GAS` > 0.0, the feedback may be applied to more than one surrounding cells
+   The feedback radius depends on the enclosed gas mass, `FB_GHOST_SIZE`, and the distance to the coarse-fine boundary
+   To test the non-local feedback, one can set the following parameters:
+   - In Input__TestProb
+     - `SNBlast_Dens_Bg`             = 1.0e-24
+     - `SNBlast_ParCenter_X/Y/Z`     = 0.450
+     - `SNBlast_ParVelocity_X/Y/Z`   = 0.0
+   - In Input__Parameter
+     - `FB_RESOLVED_SNEII_MIN_M_GAS` = 10.0
+     - `FLAG_BUFFER_SIZE_MAXM1_LV`   = 0   (optional, to test the particle near the coarse-fine boundary)
+   To test the non-local feedback on a level not equal to MAX_LEVEL, one can further set the following parameters:
+   - In Input__Parameter
+     - `MAX_LEVEL`                   = 4
+     - `OPT__FLAG_USER`              = 1   (to refine grids of level 4)
+     - `FLAG_BUFFER_SIZE_MAXM1_LV`   = 0   (to let the particle be on level 3)
+5. Plot scripts are attached:
+   - `plot_diag.gpt` to plot the density along the diagonal line for the blast wave profile
+   - `plot_slice_gas.py` to plot the slices of density, temperature, and metal density and to check the amount of deposited energy and metal

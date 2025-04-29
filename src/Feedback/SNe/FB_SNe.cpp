@@ -21,7 +21,10 @@
 //                   ALL particles, including those too far away to affect the target region
 //                5. No need to worry about the periodic boundary condition here
 //                   --> Particle positions have been remapped in FB_AdvanceDt()
-//                6. CoarseFine[] records the coarse-fine boundaries along the 26 sibling directions, defined as
+//                6. Non-local feedback should not cross the boundary to either a coarser or a finer level
+//                   to provide complete feedback and avoid inconsistency between levels
+//                   --> Use CoarseFine[] and NonLeaf[] to check whether the cells are in the coarse patches and non-leaf patches, respectively.
+//                   (a) CoarseFine[] records the coarse-fine boundaries along the 26 sibling directions, defined as
 //                            24  13  25
 //                            15  05  17     z+1 plane
 //                            22  12  23
@@ -33,6 +36,26 @@
 //                   ^        20  11  21
 //                   |        14  04  16     z-1 plane
 //                   --->x    18  10  19
+//                   (b) NonLeaf[] records the non-leaf patches among the 64 local patches, defined as
+//                          62  46  47  63
+//                          51  30  31  55
+//                          50  28  29  54   z=3 plane
+//                          60  44  45  61
+//
+//                          37  22  23  39
+//                          11  05  07  15
+//                          10  03  06  14   z=2 plane
+//                          33  18  19  35
+//
+//                          36  20  21  38
+//                          09  02  04  13
+//                          08  00  01  12   z=1 plane
+//                          32  16  17  34
+//
+//                   y      58  42  43  59
+//                   ^      49  25  27  53
+//                   |      48  24  26  52   z=0 plane
+//                   --->x  56  40  41  57
 //                7. Invoked by FB_AdvanceDt()
 //                8. Must NOT change particle positions
 //                9. Since Fluid[] stores both the input and output data, the order of particles may affect the
@@ -60,6 +83,7 @@
 //                             --> Right edge is given by EdgeL[]+FB_NXT*dh
 //                dh         : Cell size of Fluid[]
 //                CoarseFine : Coarse-fine boundaries along the 26 sibling directions
+//                NonLeaf    : Non-leaf patches among the 64 patches of the Fluid array
 //                TID        : Thread ID
 //                RNG        : Random number generator
 //                             --> Random number can be obtained by "RNG->GetValue( TID, Min, Max )",
@@ -69,7 +93,7 @@
 //-------------------------------------------------------------------------------------------------------
 int FB_SNe( const int lv, const double TimeNew, const double TimeOld, const double dt,
             const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL], long_par *ParAttInt[PAR_NATT_INT_TOTAL],
-            real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
+            real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[], bool NonLeaf[],
             const int TID, RandomNumber_t *RNG )
 {
 

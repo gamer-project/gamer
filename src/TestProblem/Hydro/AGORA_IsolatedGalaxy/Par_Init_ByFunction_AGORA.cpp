@@ -232,6 +232,11 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
    for (int p=0; p<NPar_ThisRank; p++)    AllAttributeFlt[Idx_ParCreTime  ][p] = Useless;
 #  endif
 
+#  ifdef FEEDBACK
+   if ( FB_RESOLVED_SNEII )
+   for (int p=0; p<NPar_ThisRank; p++)    AllAttributeFlt[Idx_ParSNIITime ][p] = INFINITY;
+#  endif
+
    if ( AGORA_UseMetal )
    for (int p=0; p<NPar_ThisRank; p++)    AllAttributeFlt[Idx_ParMetalFrac][p] = Useless;
 

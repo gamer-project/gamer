@@ -147,6 +147,21 @@ SF_CREATE_STAR_MIN_STAR_MASS  2.0e3       # minimum star particle mass for the s
 SF_CREATE_STAR_MAX_STAR_MFRAC 0.5         # maximum gas mass fraction allowed to convert to stars per substep [0.5]
 
 
+# feedback (FEEDBACK only)
+FB_MIN_LEVEL                 -1           # minimum AMR level allowed to apply feedback (<0=auto -> MAX_LEVEL) [0]
+FB_RSEED                      456         # random seed [456]
+FB_SNE                        0           # supernova explosion feedback [0]
+FB_RESOLVED_SNEII             1           # Type II supernovae feedback for high enough grid and particle resolution (must add one extra PAR_NATT_FLT_USER)
+FB_USER                       0           # user-defined feedback [0]
+FB_RESOLVED_SNEII_N_PER_MASS  1.0e-5      # number of SNeII per stellar mass (in 1/Msun) (for FB_RESOLVED_SNEII only) [0.01]
+FB_RESOLVED_SNEII_DELAY_TIME  100.0       # explosion delay time of SNeII after star formation (in Myr) (for FB_RESOLVED_SNEII only) [10.0]
+FB_RESOLVED_SNEII_EJECT_ENGY  1.0e51      # ejected internal energy of each SNeII explosion (in erg) (for FB_RESOLVED_SNEII only) [1.0e51]
+FB_RESOLVED_SNEII_EJECT_MASS  0.0         # ejected total mass of each SNeII explosion (in Msun) (for FB_RESOLVED_SNEII only) [0.0]
+FB_RESOLVED_SNEII_EJECT_METAL 0.0         # ejected metal mass of each SNeII explosion (in Msun) (for FB_RESOLVED_SNEII only) [0.0]
+FB_RESOLVED_SNEII_MIN_M_GAS   0.0         # minimum mass of gas in the environment of SNeII to apply feedback (in Msun) (for FB_RESOLVED_SNEII only) [0.0]
+FB_RESOLVED_SNEII_RECORD      0           # record the SNeII explosion info (for FB_RESOLVED_SNEII only) [0]
+
+
 # fluid solver in HYDRO (MODEL==HYDRO only)
 GAMMA                         1.666667    # ratio of specific heats (i.e., adiabatic index) [5.0/3.0]
 MOLECULAR_WEIGHT              0.6         # mean molecular weight -> currently only for post-processing [0.6]
