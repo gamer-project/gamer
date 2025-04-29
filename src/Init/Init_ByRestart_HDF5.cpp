@@ -2240,7 +2240,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 
 // feedback
 #  ifdef FEEDBACK
-   LoadField( "FB_Level",                    &RS.FB_Level,                    SID, TID, NonFatal, &RT.FB_Level,                    1, NonFatal );
+   LoadField( "FB_MinLevel",                 &RS.FB_MinLevel,                 SID, TID, NonFatal, &RT.FB_MinLevel,                 1, NonFatal );
    LoadField( "FB_RSeed",                    &RS.FB_RSeed,                    SID, TID, NonFatal, &RT.FB_RSeed,                    1, NonFatal );
    LoadField( "FB_SNe",                      &RS.FB_SNe,                      SID, TID, NonFatal, &RT.FB_SNe,                      1, NonFatal );
    LoadField( "FB_ResolvedSNeII",            &RS.FB_ResolvedSNeII,            SID, TID, NonFatal, &RT.FB_ResolvedSNeII,            1, NonFatal );

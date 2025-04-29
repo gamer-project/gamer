@@ -1876,7 +1876,9 @@ void Aux_Check_Parameter()
 #     error : FEEDBACK must work with PARTICLE !!
 #  endif
 
-   if ( FB_LEVEL != MAX_LEVEL )  Aux_Error( ERROR_INFO, "FB_LEVEL (%d) != MAX_LEVEL (%d) !!\n", FB_LEVEL, MAX_LEVEL );
+   if ( FB_MIN_LEVEL > MAX_LEVEL )
+      Aux_Message( stderr, "WARNING : FB_MIN_LEVEL (%d) > MAX_LEVEL (%d) --> no feedback will be applied !!\n",
+                   FB_MIN_LEVEL, MAX_LEVEL );
 
    for (int d=0; d<3; d++)
    {

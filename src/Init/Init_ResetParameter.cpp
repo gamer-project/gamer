@@ -1220,11 +1220,11 @@ void Init_ResetParameter()
 
 // feedback options
 #  ifdef FEEDBACK
-   if ( FB_LEVEL < 0 )
+   if ( FB_MIN_LEVEL < 0 )
    {
-      FB_LEVEL = MAX_LEVEL;
+      FB_MIN_LEVEL = MAX_LEVEL;
 
-      PRINT_RESET_PARA( FB_LEVEL, FORMAT_INT, "" );
+      PRINT_RESET_PARA( FB_MIN_LEVEL, FORMAT_INT, "" );
    }
 #  endif // #ifdef FEEDBACK
 

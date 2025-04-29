@@ -280,6 +280,7 @@ Procedure for outputting new variables:
 //                2504 : 2025/03/20 --> output FB_RESOLVED_SNEII, FB_RESOLVED_SNEII_N_PER_MASS, FB_RESOLVED_SNEII_DELAY_TIME,
 //                                             FB_RESOLVED_SNEII_EJECT_ENGY, FB_RESOLVED_SNEII_EJECT_MASS, FB_RESOLVED_SNEII_EJECT_METAL,
 //                                             FB_RESOLVED_SNEII_MIN_M_GAS, FB_RESOLVED_SNEII_RECORD
+//                                      replace FB_LEVEL by FB_MIN_LEVEL
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -2704,7 +2705,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 
 // feedback
 #  ifdef FEEDBACK
-   InputPara.FB_Level                    = FB_LEVEL;
+   InputPara.FB_MinLevel                 = FB_MIN_LEVEL;
    InputPara.FB_RSeed                    = FB_RSEED;
    InputPara.FB_SNe                      = FB_SNE;
    InputPara.FB_ResolvedSNeII            = FB_RESOLVED_SNEII;
@@ -3777,7 +3778,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 
 // feedback
 #  ifdef FEEDBACK
-   H5Tinsert( H5_TypeID, "FB_Level",                    HOFFSET(InputPara_t,FB_Level                    ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "FB_MinLevel",                 HOFFSET(InputPara_t,FB_MinLevel                 ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "FB_RSeed",                    HOFFSET(InputPara_t,FB_RSeed                    ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "FB_SNe",                      HOFFSET(InputPara_t,FB_SNe                      ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "FB_ResolvedSNeII",            HOFFSET(InputPara_t,FB_ResolvedSNeII            ), H5T_NATIVE_INT     );

@@ -273,7 +273,7 @@ void Init_Load_Parameter()
 
 // feedback
 #  ifdef FEEDBACK
-   ReadPara->Add( "FB_LEVEL",                      &FB_LEVEL,                     -1,              NoMin_int,     TOP_LEVEL      );
+   ReadPara->Add( "FB_MIN_LEVEL",                  &FB_MIN_LEVEL,                  0,              NoMin_int,     TOP_LEVEL      );
    ReadPara->Add( "FB_RSEED",                      &FB_RSEED,                      456,            0,             NoMax_int      );
    ReadPara->Add( "FB_SNE",                        &FB_SNE,                        false,          Useless_bool,  Useless_bool   );
    ReadPara->Add( "FB_RESOLVED_SNEII",             &FB_RESOLVED_SNEII,             false,          Useless_bool,  Useless_bool   );

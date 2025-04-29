@@ -22,6 +22,7 @@ void Par_Init_ByFunction_SNFeedbackBlastWave( const long NPar_ThisRank, const lo
                                               real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
                                               long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
                                               long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] );
+bool Flag_SNFeedbackBlastWave( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 #endif
 
 
@@ -399,6 +400,7 @@ void Init_TestProb_Hydro_SNFeedbackBlastWave()
 
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr        = SetGridIC;
+   Flag_User_Ptr                 = Flag_SNFeedbackBlastWave;
    Init_Field_User_Ptr           = AddNewField_SNFeedbackBlastWave;
 #  ifdef MASSIVE_PARTICLES
    Par_Init_ByFunction_Ptr       = Par_Init_ByFunction_SNFeedbackBlastWave;

@@ -99,7 +99,7 @@ For variables with `Default/Min/Max` labeled as `Depend`, click the parameter na
 # F
 | Name                                                                                                 |         Default |             Min |             Max | Short description |
 | :---                                                                                                 |            :--- |            :--- |            :--- | :--- |
-| [[ FB_LEVEL \| Runtime-Parameters:-Feedback#FB_LEVEL ]]                                              |              -1 |            None |       TOP_LEVEL | AMR level to apply feedback (must be MAX_LEVEL for now; <0=auto -> MAX_LEVEL) [-1] |
+| [[ FB_MIN_LEVEL \| Runtime-Parameters:-Feedback#FB_MIN_LEVEL ]]                                      |               0 |            None |       TOP_LEVEL | minimum AMR level allowed to apply feedback (<0=auto -> MAX_LEVEL) [0] |
 | [[ FB_RESOLVED_SNEII \| Runtime-Parameters:-Feedback#FB_RESOLVED_SNEII ]]                            |               0 |            None |            None | Type II supernovae feedback for high enough grid and particle resolution (must add one extra PAR_NATT_FLT_USER) |
 | [[ FB_RESOLVED_SNEII_DELAY_TIME \| Runtime-Parameters:-Feedback#FB_RESOLVED_SNEII_DELAY_TIME ]]      |            10.0 |             0.0 |            None | explosion delay time of SNeII after star formation (in Myr) (for FB_RESOLVED_SNEII only) [10.0] |
 | [[ FB_RESOLVED_SNEII_EJECT_ENGY \| Runtime-Parameters:-Feedback#FB_RESOLVED_SNEII_EJECT_ENGY ]]      |          1.0e51 |             0.0 |            None | ejected internal energy of each SNeII explosion (in erg) (for FB_RESOLVED_SNEII only) [1.0e51] |

@@ -30,7 +30,10 @@ static       double **recordSNeII    = NULL;                 // array of stored 
 //                   ALL particles, including those too far away to affect the target region
 //                5. No need to worry about the periodic boundary condition here
 //                   --> Particle positions have been remapped in FB_AdvanceDt()
-//                6. CoarseFine[] records the coarse-fine boundaries along the 26 sibling directions, defined as
+//                6. Non-local feedback should not cross the boundary to either a coarser or a finer level
+//                   to provide complete feedback and avoid inconsistency between levels
+//                   --> Use CoarseFine[] and NonLeaf[] to check whether the cells are in the coarse patches and non-leaf patches, respectively.
+//                   (a) CoarseFine[] records the coarse-fine boundaries along the 26 sibling directions, defined as
 //                            24  13  25
 //                            15  05  17     z+1 plane
 //                            22  12  23
@@ -42,6 +45,26 @@ static       double **recordSNeII    = NULL;                 // array of stored 
 //                   ^        20  11  21
 //                   |        14  04  16     z-1 plane
 //                   --->x    18  10  19
+//                   (b) NonLeaf[] records the non-leaf patches among the 64 local patches, defined as
+//                          62  46  47  63
+//                          51  30  31  55
+//                          50  28  29  54   z=3 plane
+//                          60  44  45  61
+//
+//                          37  22  23  39
+//                          11  05  07  15
+//                          10  03  06  14   z=2 plane
+//                          33  18  19  35
+//
+//                          36  20  21  38
+//                          09  02  04  13
+//                          08  00  01  12   z=1 plane
+//                          32  16  17  34
+//
+//                   y      58  42  43  59
+//                   ^      49  25  27  53
+//                   |      48  24  26  52   z=0 plane
+//                   --->x  56  40  41  57
 //                7. Invoked by FB_AdvanceDt()
 //                8. Must NOT change particle positions
 //                9. Although the input and output data are separated as Fluid_In[] and Fluid_Out[],
@@ -81,6 +104,7 @@ static       double **recordSNeII    = NULL;                 // array of stored 
 //                             --> Right edge is given by EdgeL[]+FB_NXT*dh
 //                dh         : Cell size of Fluid_In[] and Fluid_Out[]
 //                CoarseFine : Coarse-fine boundaries along the 26 sibling directions
+//                NonLeaf    : Non-leaf patches among the 64 patches of the Fluid array
 //                TID        : Thread ID
 //                RNG        : Random number generator
 //                             --> Random number can be obtained by "RNG->GetValue( TID, Min, Max )",
@@ -91,7 +115,7 @@ static       double **recordSNeII    = NULL;                 // array of stored 
 int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld, const double dt,
                        const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL], long_par *ParAttInt[PAR_NATT_INT_TOTAL],
                        const real (*Fluid_In)[FB_NXT][FB_NXT][FB_NXT],
-                       real (*Fluid_Out)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
+                       real (*Fluid_Out)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[], bool NonLeaf[],
                        const int TID, RandomNumber_t *RNG )
 {
 
@@ -115,7 +139,7 @@ int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld,
 
 // whether to check the coarse-fine boundary
    bool CheckCF = false;
-#  if ( FB_GHOST_SIZE > 0 )
+   if ( maxfbDiameter > 1 )
    for (int s=0; s<26; s++)
    {
       if ( CoarseFine[s] )
@@ -124,7 +148,18 @@ int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld,
          break;
       }
    } // for (int s=0; s<26; s++)
-#  endif
+
+// whether to check the non-leaf patch
+   bool CheckNL = false;
+   if ( maxfbDiameter > 1 )
+   for (int nbp=0; nbp<64; nbp++)
+   {
+      if ( NonLeaf[nbp] )
+      {
+         CheckNL = true;
+         break;
+      }
+   } // for (int nbp=0; nbp<64; nbp++)
 
    for (int p=0; p<NPar; p++)
    {
@@ -156,6 +191,25 @@ int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld,
                                        ( par_pos[1] < EdgeL[1] + (cell_idx[1]+0.5)*dh ),    // true  = 1 -> on the left side
                                        ( par_pos[2] < EdgeL[2] + (cell_idx[2]+0.5)*dh ) };  // false = 0 -> on the right side
 
+#     ifdef GAMER_DEBUG
+//    sanity check for the particle
+//    particle should not be in the coarse patch
+      if ( CheckCF )
+      {
+         const int CellPatchRelPos = FB_Aux_CellPatchRelPos( cell_idx );
+         if ( CellPatchRelPos != -1  &&  CoarseFine[CellPatchRelPos] )
+            Aux_Error( ERROR_INFO, "The particle in the feedback routine should not be in the coarse patch !!\n" );
+      }
+
+//    particle should not be in the non-leaf patch
+      if ( CheckNL )
+      {
+         const int PatchLocalID = FB_Aux_PatchLocalID( cell_idx );
+         if ( NonLeaf[PatchLocalID] )
+            Aux_Error( ERROR_INFO, "The particle in the feedback routine should not be in the non-leaf patch !!\n" );
+      }
+#     endif // #ifdef GAMER_DEBUG
+
 
 //    2. check the feedback condition
 
@@ -171,16 +225,7 @@ int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld,
 //    2.4 to give feedback, the particle explosion time has to be in this step;
       if ( par_SNIITime < TimeOld  ||  par_SNIITime > TimeNew )   continue; // both par_SNIITime == TimeOld and par_SNIITime ==  TimeNew are allowed
 
-//    2.5 to give feedback, the particle has to be not in a coarse patch
-      bool isInCoarsePatch = false;
-      if ( CheckCF )
-      {
-         const int CellPatchRelPos = FB_Aux_CellPatchRelPos( cell_idx );
-         if ( CellPatchRelPos != -1  &&  CoarseFine[CellPatchRelPos] )  isInCoarsePatch = true;
-      } // if ( CheckCF )
-      if ( isInCoarsePatch )   continue;
-
-//    2.6 to give feedback, the particle has to be in the range to update fluid
+//    2.5 to give feedback, the particle has to be in the range to update fluid
       if ( cell_idx[0] + (maxfbDiameter  -isOnLeftCell[0])/2 <        FB_GHOST_SIZE  ||
            cell_idx[0] - (maxfbDiameter-1+isOnLeftCell[0])/2 >= PS2 + FB_GHOST_SIZE  ||
            cell_idx[1] + (maxfbDiameter  -isOnLeftCell[1])/2 <        FB_GHOST_SIZE  ||
@@ -219,16 +264,16 @@ int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld,
                                       { (diameterMinus1+isOnLeftCell[1])/2, (diameter-isOnLeftCell[1])/2 },
                                       { (diameterMinus1+isOnLeftCell[2])/2, (diameter-isOnLeftCell[2])/2 } };
 
-//       whether any cell in the region are in the coarse patch
-         bool   touchCoarsePatch  = false;
+//       whether any cell in the region are in the forbidden patch (coarse patch and non-leaf patch)
+         bool   touchForbiddenPat = false;
 
 //       sum the total enclosed mass of the cells in the range
          double enclosedMass      = 0.0;
 
 //       loop through cells in the region
-         for (int dk=-offsets[2][0]; dk<=offsets[2][1] && !touchCoarsePatch; dk++) { const int k = cell_idx[2] + dk;   const int k_w = offsets[2][0] + dk;
-         for (int dj=-offsets[1][0]; dj<=offsets[1][1] && !touchCoarsePatch; dj++) { const int j = cell_idx[1] + dj;   const int j_w = offsets[1][0] + dj;
-         for (int di=-offsets[0][0]; di<=offsets[0][1] && !touchCoarsePatch; di++) { const int i = cell_idx[0] + di;   const int i_w = offsets[0][0] + di;
+         for (int dk=-offsets[2][0]; dk<=offsets[2][1] && !touchForbiddenPat; dk++) { const int k = cell_idx[2] + dk;   const int k_w = offsets[2][0] + dk;
+         for (int dj=-offsets[1][0]; dj<=offsets[1][1] && !touchForbiddenPat; dj++) { const int j = cell_idx[1] + dj;   const int j_w = offsets[1][0] + dj;
+         for (int di=-offsets[0][0]; di<=offsets[0][1] && !touchForbiddenPat; di++) { const int i = cell_idx[0] + di;   const int i_w = offsets[0][0] + di;
 
 //          skip cells with non-positive weighting
             if ( fbDepositWeighting[diameterMinus1][k_w][j_w][i_w] <= 0.0 )   continue;
@@ -241,14 +286,23 @@ int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld,
             {
                const int ijk[3] = { i, j, k };
                const int CellPatchRelPos = FB_Aux_CellPatchRelPos( ijk );
-               if ( CellPatchRelPos != -1  &&  CoarseFine[CellPatchRelPos] )   touchCoarsePatch = true;
+               if ( CellPatchRelPos != -1  &&  CoarseFine[CellPatchRelPos] )   touchForbiddenPat = true;
 
             } // if ( CheckCF )
 
+//          check if the cell included is in the non-leaf patch
+            if ( CheckNL )
+            {
+               const int ijk[3] = { i, j, k };
+               const int PatchLocalID = FB_Aux_PatchLocalID( ijk );
+               if ( NonLeaf[PatchLocalID] )   touchForbiddenPat = true;
+
+            } // if ( CheckNL )
+
          }}} // i,j,k
 
-//       stop expanding the region and go back to the previous one when it touch the coarse patch
-         if ( touchCoarsePatch )   break;
+//       stop expanding the region and go back to the previous one when it touches the coarse patch or non-leaf patch
+         if ( touchForbiddenPat )   break;
 
 //       store the current diameter and mass
          fbDiameter  = diameter;

@@ -1166,7 +1166,7 @@ void Aux_TakeNote()
 #     ifdef FEEDBACK
       fprintf( Note, "Parameters of Feedback\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "FB_LEVEL                       % d\n",           FB_LEVEL                                        );
+      fprintf( Note, "FB_MIN_LEVEL                   % d\n",           FB_MIN_LEVEL                                    );
       fprintf( Note, "FB_RSEED                       % d\n",           FB_RSEED                                        );
       fprintf( Note, "FB_SNE                         % d\n",           FB_SNE                                          );
       fprintf( Note, "FB_RESOLVED_SNEII              % d\n",           FB_RESOLVED_SNEII                               );

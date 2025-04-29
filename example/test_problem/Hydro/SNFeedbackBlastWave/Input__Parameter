@@ -117,7 +117,7 @@ OPT__MINIMIZE_MPI_BARRIER     0           # minimize MPI barriers to improve loa
 
 
 # feedback (FEEDBACK only)
-FB_LEVEL                     -1           # AMR level to apply feedback (must be MAX_LEVEL for now; <0=auto -> MAX_LEVEL) [-1]
+FB_MIN_LEVEL                  3           # minimum AMR level allowed to apply feedback (<0=auto -> MAX_LEVEL) [0]
 FB_RSEED                      456         # random seed [456]
 FB_SNE                        0           # supernova explosion feedback [0]
 FB_RESOLVED_SNEII             1           # Type II supernovae feedback for high enough grid and particle resolution (must add one extra PAR_NATT_FLT_USER)
