@@ -290,7 +290,6 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
 #                 if ( NCOMP_PASSIVE > 0  &&  MODEL == HYDRO )
                   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
                      if ( TVar & BIDX(v) )
-                     // TODO: Why `TVar` need to be pass as an argument, instead of using the global one? CUDA?
                         if ( PassiveVar_Floor & BIDX(v) ) CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
 
                   if ( OPT__NORMALIZE_PASSIVE )
