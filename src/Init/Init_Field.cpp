@@ -209,7 +209,7 @@ void Init_Field()
 // Parameter   :  InputLabel     : Label (i.e., name) of the new field
 //                FixUp_Flux     : whether or not to apply fix-up flux operations
 //                FixUp_Restrict : whether or not to apply fix-up restrict operations
-//                Floor          : whether or not to apply floor operations (passive scalars only)
+//                Floor          : whether or not to floor the field to 0 (passive scalars only)
 //                Norm           : whether or not to normalize the new field
 //                IntFrac        : whether or not to convert the new field to fraction form during interpolation
 //
