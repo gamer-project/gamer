@@ -239,6 +239,13 @@ FieldIdx_t AddField( const char *InputLabel, const FixUpFlux_t FixUp_Flux, const
       if (  strcmp( FieldLabel[v], InputLabel ) == 0  )
          Aux_Error( ERROR_INFO, "duplicate field label \"%s\" !!\n", InputLabel );
 
+   if ( FieldIdx < NCOMP_FLUID  &&  Floor != FLOOR_NULL )
+      Aux_Error( ERROR_INFO, "Field index (%d) with passive floor option is not a passive scalar !!\n"
+                 "        --> Set FLOOR_NULL when adding a built-in fluid field by AddField()\n", FieldIdx );
+   if ( FieldIdx >= NCOMP_FLUID  &&  Floor == FLOOR_NULL )
+      Aux_Error( ERROR_INFO, "Field index (%d) with Floor == FLOOR_NULL is a passive scalar !!\n"
+                 "        --> Set FLOOR_NO or FLOOR_YES when adding a passive scalar by AddField()\n", FieldIdx );
+
 
 // set field label
    strcpy( FieldLabel[FieldIdx], InputLabel );
@@ -252,12 +259,6 @@ FieldIdx_t AddField( const char *InputLabel, const FixUpFlux_t FixUp_Flux, const
 // set the bitwise field indices for floor operations
 // --> note that PassiveVar_Floor is written 1 for fields with FLOOR_NULL (not passive scalars)
 //     this makes Hydro_IsUnphysical work properly for non-passive scalars
-   if ( FieldIdx < NCOMP_FLUID && Floor != FLOOR_NULL )
-      Aux_Error( ERROR_INFO, "Field index (%d) with passive floor option is not a passive scalar !!\n"
-                 "        --> Set FLOOR_NULL when adding a built-in fluid field by AddField()\n", FieldIdx );
-   if ( FieldIdx >= NCOMP_FLUID && Floor == FLOOR_NULL )
-      Aux_Error( ERROR_INFO, "Field index (%d) with Floor==FLOOR_NULL is a passive scalar !!\n"
-                 "        --> Set FLOOR_NO or FLOOR_YES when adding a passive scalar by AddField()\n", FieldIdx );
    if ( Floor )            PassiveVar_Floor  |= (1L<<FieldIdx);
 
 
