@@ -136,7 +136,7 @@ Enable self-gravity.
 * #### `OPT__EXT_ACC` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
 Add external acceleration. See
-[External Acceleration/Potential](#external-accelerationpotential)
+[[ External Acceleration/Potential | Gravity#external-accelerationpotential]
 for how to specify external acceleration.
     * **Restriction:**
 Not applicable to the wave dark matter simulations
@@ -146,7 +146,7 @@ Not applicable to the wave dark matter simulations
 * #### `OPT__EXT_POT` &ensp; (0=off, 1=function, 2=table) &ensp; [0]
     * **Description:**
 Add external potential. See
-[External Acceleration/Potential](#external-accelerationpotential)
+[[ External Acceleration/Potential | Gravity#external-accelerationpotential]
 for how to specify external potential.
     * **Restriction:**
 
