@@ -42,6 +42,7 @@ Supported interpolation schemes:
 |5 | Non-conservative quadratic|
 |6 | Conservative quartic|
 |7 | Non-conservative quartic|
+|8 | Spectral |
 
 
 Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**
