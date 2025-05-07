@@ -35,7 +35,7 @@ void Init_Field()
    NDefinedField       = 0;
    FixUpVar_Flux       = 0;
    FixUpVar_Restrict   = 0;
-   PassiveVar_Floor    = 0;
+   Flag_PassiveFloor    = 0;
    PassiveNorm_NVar    = 0;
    PassiveIntFrac_NVar = 0;
 
@@ -196,7 +196,7 @@ void Init_Field()
 //                       --> The fix-up flux operations will be applied to these scalars
 //                   (4) add the new field to FixUpVar_Restrict if FixUp_Restrict==true
 //                       --> The fix-up restrict operations will be applied to these scalars
-//                   (5) add the new field to PassiveVar_Floor if Floor==true
+//                   (5) add the new field to Flag_PassiveFloor if Floor==true
 //                       --> The floor operations will be applied to these passive scalars
 //                   (6) add the new field to PassiveNorm_VarIdx[] if Norm==true
 //                       --> The sum of passive scalars in this list will be normalized to the gas density
@@ -215,7 +215,7 @@ void Init_Field()
 //
 // Return      :  (1) FieldLabel[]
 //                (2) Index of the newly added field
-//                (3) FixUpVar_Flux, FixUpVar_Restrict and PassiveVar_Floor
+//                (3) FixUpVar_Flux, FixUpVar_Restrict and Flag_PassiveFloor
 //                (4) PassiveNorm_NVar & PassiveNorm_VarIdx[]
 //                (5) PassiveIntFrac_NVar & PassiveIntFrac_VarIdx[]
 //-------------------------------------------------------------------------------------------------------
@@ -257,9 +257,9 @@ FieldIdx_t AddField( const char *InputLabel, const FixUpFlux_t FixUp_Flux, const
 
 
 // set the bitwise field indices for floor operations
-// --> note that PassiveVar_Floor is written 1 for fields with FLOOR_NULL (not passive scalars)
+// --> note that Flag_PassiveFloor is written 1 for fields with FLOOR_NULL (not passive scalars)
 //     this makes Hydro_IsUnphysical work properly for non-passive scalars
-   if ( Floor )            PassiveVar_Floor  |= (1L<<FieldIdx);
+   if ( Floor )            Flag_PassiveFloor  |= (1L<<FieldIdx);
 
 
 // set the normalization list
