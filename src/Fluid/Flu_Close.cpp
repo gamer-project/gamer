@@ -920,7 +920,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //          floor and normalize passive scalars
 #           if ( NCOMP_PASSIVE > 0 )
             for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
-               if ( PassiveVar_Floor & BIDX(v) )  Update[v] = FMAX( Update[v], TINY_NUMBER );
+               if ( Flag_PassiveFloor & BIDX(v) )  Update[v] = FMAX( Update[v], TINY_NUMBER );
 
             if ( OPT__NORMALIZE_PASSIVE )
                Hydro_NormalizePassive( Update[DENS], Update+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );

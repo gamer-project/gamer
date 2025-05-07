@@ -80,7 +80,7 @@ static void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCO
                                   const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                                   const int NGhost, const int NEle,
                                   const real MinDens, const real MinPres, const real MinEint,
-                                  const EoS_t *EoS, const long FloorVar );
+                                  const EoS_t *EoS, const long PassiveFloor );
 #ifdef MHD
 GPU_DEVICE
 void Hydro_ConFC2PriCC_MHM(       real g_PriVar[][ CUBE(FLU_NXT) ],
@@ -177,7 +177,7 @@ static void Hydro_Char2Pri( real InOut[], const real Dens, const real Pres, cons
 //                dt                 : Time interval to advance solution (for the CTU scheme)
 //                dh                 : Cell size
 //                MinDens/Pres/Eint  : Density, pressure, and internal energy floors
-//                FloorVar           : Bitwise flag to specify the passive scalars to be floored
+//                PassiveFloor       : Bitwise flag to specify the passive scalars to be floored
 //                FracPassive        : true --> convert passive scalars to mass fraction during data reconstruction
 //                NFrac              : Number of passive scalars for the option "FracPassive"
 //                FracIdx            : Target variable indices for the option "FracPassive"
@@ -195,7 +195,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh,
                                const real MinDens, const real MinPres, const real MinEint,
-                               const long FloorVar, const bool FracPassive, const int NFrac, const int FracIdx[],
+                               const long PassiveFloor, const bool FracPassive, const int NFrac, const int FracIdx[],
                                const bool JeansMinPres, const real JeansMinPres_Coeff,
                                const EoS_t *EoS )
 {
@@ -614,7 +614,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 #        if ( NCOMP_PASSIVE > 0 )
          for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
-            if ( FloorVar & BIDX(v) ) {
+            if ( PassiveFloor & BIDX(v) ) {
             fcPri[faceL][v] = FMAX( fcPri[faceL][v], TINY_NUMBER );
             fcPri[faceR][v] = FMAX( fcPri[faceR][v], TINY_NUMBER ); }
 #        endif
@@ -660,7 +660,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #     if ( FLU_SCHEME == MHM )
 //    7. advance the face-centered variables by half time-step for the MHM integrator
       Hydro_HancockPredict( fcCon, fcPri, dt, dh, g_ConVar, idx_cc, i_cc, j_cc, k_cc, g_FC_B, g_EC_Ele, NGhost, N_HF_ELE,
-                            MinDens, MinPres, MinEint, EoS, FloorVar );
+                            MinDens, MinPres, MinEint, EoS, PassiveFloor );
 #     endif // # if ( FLU_SCHEME == MHM )
 
 
@@ -710,7 +710,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh,
                                const real MinDens, const real MinPres, const real MinEint,
-                               const long FloorVar, const bool FracPassive, const int NFrac, const int FracIdx[],
+                               const long PassiveFloor, const bool FracPassive, const int NFrac, const int FracIdx[],
                                const bool JeansMinPres, const real JeansMinPres_Coeff,
                                const EoS_t *EoS )
 {
@@ -1322,7 +1322,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 #        if ( NCOMP_PASSIVE > 0 )
          for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
-            if ( FloorVar & BIDX(v) ) {
+            if ( PassiveFloor & BIDX(v) ) {
             fcPri[faceL][v] = FMAX( fcPri[faceL][v], TINY_NUMBER );
             fcPri[faceR][v] = FMAX( fcPri[faceR][v], TINY_NUMBER ); }
 #        endif
@@ -1368,7 +1368,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #     if ( FLU_SCHEME == MHM )
 //    7. advance the face-centered variables by half time-step for the MHM integrator
       Hydro_HancockPredict( fcCon, fcPri, dt, dh, g_ConVar, idx_cc, i_cc, j_cc, k_cc, g_FC_B, g_EC_Ele, NGhost, N_HF_ELE,
-                            MinDens, MinPres, MinEint, EoS, FloorVar );
+                            MinDens, MinPres, MinEint, EoS, PassiveFloor );
 #     endif // # if ( FLU_SCHEME == MHM )
 
 
@@ -2058,7 +2058,7 @@ void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_
 //                NEle              : Stride for accessing g_EC_Ele[]
 //                MinDens/Pres/Eint : Density, pressure, and internal energy floors
 //                EoS               : EoS object
-//                FloorVar          : Bitwise flag to specify the passive scalars to be floored
+//                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR], const real dt,
@@ -2068,7 +2068,7 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
                            const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                            const int NGhost, const int NEle,
                            const real MinDens, const real MinPres, const real MinEint,
-                           const EoS_t *EoS, const long FloorVar )
+                           const EoS_t *EoS, const long PassiveFloor )
 {
 
    const real dt_dh2 = (real)0.5*dt/dh;
@@ -2110,7 +2110,7 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
                                 EoS->DensEint2Pres_FuncPtr,
                                 EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
                                 EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table,
-                                PassiveVar_Floor, ERROR_INFO, UNPHY_SILENCE )  )
+                                Flag_PassiveFloor, ERROR_INFO, UNPHY_SILENCE )  )
          reset_cell = true;
 
 #     else
@@ -2152,7 +2152,7 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
 #     endif // #ifndef SRHD
 #     if ( NCOMP_PASSIVE > 0 )
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
-         if ( FloorVar & BIDX(v) )  fcCon[f][v] = FMAX( fcCon[f][v], TINY_NUMBER );
+         if ( PassiveFloor & BIDX(v) )  fcCon[f][v] = FMAX( fcCon[f][v], TINY_NUMBER );
 #     endif
    } // for (int f=0; f<6; f++)
 #  endif // #ifdef MHM_CHECK_PREDICT

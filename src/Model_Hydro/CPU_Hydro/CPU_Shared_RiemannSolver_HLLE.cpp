@@ -80,11 +80,11 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
    Hydro_IsUnphysical( UNPHY_MODE_CONS, L, NULL_REAL,
                        EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table,
-                       PassiveVar_Floor, ERROR_INFO, UNPHY_VERBOSE );
+                       Flag_PassiveFloor, ERROR_INFO, UNPHY_VERBOSE );
    Hydro_IsUnphysical( UNPHY_MODE_CONS, R, NULL_REAL,
                        EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table,
-                       PassiveVar_Floor, ERROR_INFO, UNPHY_VERBOSE );
+                       Flag_PassiveFloor, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 

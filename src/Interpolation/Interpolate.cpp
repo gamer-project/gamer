@@ -357,7 +357,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
             = Hydro_IsUnphysical( (FData_is_Prim)?UNPHY_MODE_PRIM:UNPHY_MODE_CONS, Temp, Emag,
                                   EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
-                                  PassiveVar_Floor, ERROR_INFO, UNPHY_SILENCE );
+                                  Flag_PassiveFloor, ERROR_INFO, UNPHY_SILENCE );
 
 
 //       5-3. additional check
@@ -460,7 +460,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, Cons, Emag,
                                          EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
-                                         PassiveVar_Floor, ERROR_INFO, UNPHY_VERBOSE )  )
+                                         Flag_PassiveFloor, ERROR_INFO, UNPHY_VERBOSE )  )
                   Aux_Error( ERROR_INFO, "unphysical interpolated energy in %s() !!\n", __FUNCTION__ );
 #              endif
             }
