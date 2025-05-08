@@ -155,48 +155,48 @@ Restrict the maximum phase rotation to be less than `DT__PHASE` * 2&pi; within a
 Typically ranges from 0 to 1.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[--model=ELBDM | Installation:-Option-List#--model]].
+[[--model | Installation:-Option-List#--model]]=ELBDM.
 
 <a name="DT__HYBRID_CFL"></a>
-* #### `DT__HYBRID_CFL` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [-1]
+* #### `DT__HYBRID_CFL` &ensp; (0 &#8804; input &#8804; 0.49; <0.0 &#8594; set to default) &ensp; [-1]
     * **Description:**
 CFL safety factor for the Hamilton-Jacobi equation (refer to [DT__FLUID](#DT__FLUID) CFL) .
 The default value is set to 0.4, or 0.2 if [[--gravity | Installation:-Option-List#--gravity]] is enabled.
 `DT__HYBRID_CFL` > 0.49 is unstable.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[--model=ELBDM | Installation:-Option-List#--model]] and [[--elbdm_scheme=HYBRID | Installation:-Option-List#--elbdm_scheme]].
+[[--model | Installation:-Option-List#--model]]=ELBDM and [[--elbdm_scheme | Installation:-Option-List#--elbdm_scheme]]=HYBRID.
 
 <a name="DT__HYBRID_CFL_INIT"></a>
-* #### `DT__HYBRID_CFL_INIT` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [[DT__HYBRID_CFL](#DT__HYBRID_CFL)]
+* #### `DT__HYBRID_CFL_INIT` &ensp; (0 &#8804; input &#8804; 0.49; <0.0 &#8594; set to default) &ensp; [[DT__HYBRID_CFL](#DT__HYBRID_CFL)]
     * **Description:**
 CFL safety factor for the Hamilton-Jacobi equation _at the first step_. This could be
 useful when the first step requires a much smaller timestep.
 `DT__HYBRID_CFL_INIT` > 0.49 is unstable.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[--model=ELBDM | Installation:-Option-List#--model]] and [[--elbdm_scheme=HYBRID | Installation:-Option-List#--elbdm_scheme]].
+[[--model | Installation:-Option-List#--model]]=ELBDM and [[--elbdm_scheme | Installation:-Option-List#--elbdm_scheme]]=HYBRID.
 Useless for restart.
 
 <a name="DT__HYBRID_VELOCITY"></a>
-* #### `DT__HYBRID_VELOCITY` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [-1]
+* #### `DT__HYBRID_VELOCITY` &ensp; (0 &#8804; input &#8804; 3.5; <0.0 &#8594; set to default) &ensp; [-1]
     * **Description:**
 CFL safety factor for the Hamilton-Jacobi equation (refer to [DT__FLUID](#DT__FLUID) CFL) .
 The default value is 1.
 `DT__HYBRID_VELOCITY` > 3.5 is unstable.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[--model=ELBDM | Installation:-Option-List#--model]] and [[--elbdm_scheme=HYBRID | Installation:-Option-List#--elbdm_scheme]].
+[[--model | Installation:-Option-List#--model]]=ELBDM and [[--elbdm_scheme | Installation:-Option-List#--elbdm_scheme]]=HYBRID.
 
 <a name="DT__HYBRID_VELOCITY_INIT"></a>
-* #### `DT__HYBRID_VELOCITY_INIT` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [[DT__HYBRID_VELOCITY](#DT__HYBRID_VELOCITY)]
+* #### `DT__HYBRID_VELOCITY_INIT` &ensp; (0 &#8804; input &#8804; 3.5;; <0.0 &#8594; set to default) &ensp; [[DT__HYBRID_VELOCITY](#DT__HYBRID_VELOCITY)]
     * **Description:**
 CFL safety factor for the Hamilton-Jacobi equation _at the first step_. This could be
 useful when the first step requires a much smaller timestep.
 `DT__HYBRID_VELOCITY_INIT` > 3.5 is unstable.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[--model=ELBDM | Installation:-Option-List#--model]] and [[--elbdm_scheme=HYBRID | Installation:-Option-List#--elbdm_scheme]].
+[[--model | Installation:-Option-List#--model]]=ELBDM and [[--elbdm_scheme | Installation:-Option-List#--elbdm_scheme]]=HYBRID.
 Useless for restart.
 
 <a name="OPT__DT_USER"></a>

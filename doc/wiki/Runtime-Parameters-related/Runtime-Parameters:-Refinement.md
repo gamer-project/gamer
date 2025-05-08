@@ -358,7 +358,7 @@ Additional column `Soften` is added to the denominator when evaluating energy de
 to prevent flagging in the extremely low density region.
 An example file can be found at `example/input/Input__Flag_EngyDensity`.
     * **Restriction:**
-Must compile with [[--model=ELBDM | Installation:-Option-List#--model]].
+Must compile with [[--model | Installation:-Option-List#--model]]=ELBDM.
 
 <a name="OPT__FLAG_INTERFERENCE"></a>
 * #### `OPT__FLAG_INTERFERENCE` &ensp; (0=off, 1=on) &ensp; [0]
@@ -389,7 +389,7 @@ is larger than the threshold (dimensionless):
       *Caution: If `OPT__FLAG_INTERFERENCE` is off for `ELBDM_HYBRID`, 
       the simulations will never switch to the wave scheme.*
     * **Restriction:**
-Must compile with [[--model=ELBDM | Installation:-Option-List#--model]] and [[--ELBDM_SCHEME=HYBRID | Installation:-Option-List#--elbdm_scheme]].
+Must compile with [[--model | Installation:-Option-List#--model]]=ELBDM and [[--ELBDM_SCHEME | Installation:-Option-List#--elbdm_scheme]]=HYBRID.
 
 <a name="OPT__FLAG_SPECTRAL"></a>
 * #### `OPT__FLAG_SPECTRAL` &ensp; (0=off, 1=on) &ensp; [0]
@@ -404,7 +404,7 @@ Derefinement currently not functional.
 This function checks the polynomial coefficients of order 
 (13 - [OPT__FLAG_SPECTRAL_N](#OPT__FLAG_SPECTRAL_N) + 1) to order 13.
     * **Restriction:**
-Must compile with [[--model=ELBDM | Installation:-Option-List#--model]].
+Must compile with [[--model | Installation:-Option-List#--model]]=ELBDM.
 
 OPT__FLAG_SPECTRAL_N
 <a name="OPT__FLAG_SPECTRAL_N"></a>
@@ -413,7 +413,7 @@ OPT__FLAG_SPECTRAL_N
 The number of polynomial coefficients to use for spectral refinement.
 (See [OPT__FLAG_SPECTRAL](#OPT__FLAG_SPECTRAL) for details.)
     * **Restriction:**
-Must compile with [[--model=ELBDM | Installation:-Option-List#--model]]
+Must compile with [[--model | Installation:-Option-List#--model]]=ELBDM
 and enabled [OPT__FLAG_SPECTRAL](#OPT__FLAG_SPECTRAL).
 
 <a name="OPT__FLAG_USER"></a>

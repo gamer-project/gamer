@@ -120,7 +120,7 @@ Interpolation scheme for computing the gravitational potential on the newly refi
 Enable phase interpolation (does not support MinMod-1D).
 The interpolation scheme follows `OPT__REF_FLU_INT_SCHEME`.
     * **Restriction:**
-For [[--model=ELBDM | Installation:-Option-List#--model]] only.
+For [[--model | Installation:-Option-List#--model]]=ELBDM only.
 
 <a name="INT_MONO_COEFF"></a>
 * #### `INT_MONO_COEFF` &ensp; (1.0 &#8804; input &#8804; 4.0) &ensp; [2.0]

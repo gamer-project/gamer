@@ -223,7 +223,6 @@ which matches the floating-point accuracy specified by
 [[--double | Installation:-Option-List#--double]] during compilation.
     * **Restriction:**
 
-OPT__GRAVITY_EXTRA_MASS
 <a name="OPT__GRAVITY_EXTRA_MASS"></a>
 * #### `OPT__GRAVITY_EXTRA_MASS` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**

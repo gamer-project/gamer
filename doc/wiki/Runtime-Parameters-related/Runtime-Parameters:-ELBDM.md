@@ -49,7 +49,7 @@ $\sqrt{3}\pi/8$ or $\sqrt{27}\pi/32$ (when [[--laplacian_four | Installation:-Op
     * **Restriction:**
 Only applicable when the compilation option
 [[ --wave_scheme | Installation:-Option-List#--wave_scheme ]] = `FD`.
-Ignored if `[ELBDM_TAYLOR3_AUTO](#ELBDM_TAYLOR3_AUTO)` is enable.
+Ignored if [ELBDM_TAYLOR3_AUTO](#ELBDM_TAYLOR3_AUTO) is enable.
 
 * #### `ELBDM_TAYLOR3_AUTO` &ensp; (none) &ensp; [0]
     * **Description:**
