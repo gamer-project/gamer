@@ -24,6 +24,12 @@ Default setup:
 2. Default resolution ~ 15 kpc (MAX_LEVEL = 3)
 
 
+AGN feedback:
+========================================
+1. Enable OPT__RESET_FLUID in Input__Parameter and "AGN_feedback" in Input__TestProb.
+2. To refine regions around the SMBHs, enable OPT__FLAG_USER and set MAX_LEVEL accordingly.
+
+
 Note:
 ========================================
 1. Mimic the merging cluster simulation setup of Flash provided by John ZuHone
