@@ -406,7 +406,6 @@ This function checks the polynomial coefficients of order
     * **Restriction:**
 Must compile with [[--model | Installation:-Option-List#--model]]=ELBDM.
 
-OPT__FLAG_SPECTRAL_N
 <a name="OPT__FLAG_SPECTRAL_N"></a>
 * #### `OPT__FLAG_SPECTRAL_N` &ensp; (1 &#8804; input &#8804; 14) &ensp; [2]
     * **Description:**
