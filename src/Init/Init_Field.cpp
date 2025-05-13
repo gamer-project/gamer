@@ -35,7 +35,7 @@ void Init_Field()
    NDefinedField       = 0;
    FixUpVar_Flux       = 0;
    FixUpVar_Restrict   = 0;
-   Flag_PassiveFloor    = 0;
+   Flag_PassiveFloor   = 0;
    PassiveNorm_NVar    = 0;
    PassiveIntFrac_NVar = 0;
 
