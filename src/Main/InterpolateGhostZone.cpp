@@ -1407,7 +1407,10 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
 
 // determine which variables require **monotonic** interpolation
-   bool Monotonicity_CC[NVarCC_Flu];
+   // bool Monotonicity_CC[NVarCC_Flu];
+   bool *Monotonicity_CC;
+   if ( NVarCC_Flu == 0 )   Monotonicity_CC = new bool [ 1          ];
+   else                     Monotonicity_CC = new bool [ NVarCC_Flu ];
 
    for (int v=0; v<NVarCC_Flu; v++)
    {
@@ -1814,6 +1817,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 
    NVarCC_SoFar = NVarCC_Flu;
 
+   delete [] Monotonicity_CC;
 
 // c4. interpolation on derived variables
 #  if   ( MODEL == HYDRO )

@@ -23,6 +23,7 @@ void Hypre_Solve()
    } // switch ( HYPRE_SOLVER )
 
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "%s: Iteration: %d, Residual norm: %24.16e\n", __FUNCTION__, N_iter, final_res_norm );
+   // TODO : warning message for reaching the max iter
 
 } // FUNCTION : Hypre_Solve
 
@@ -45,10 +46,13 @@ void Hypre_Solve_SStructSysPFMG( int *N_iter, real *final_res_norm )
    HYPRE_CHECK_FUNC(   HYPRE_SStructSysPFMGSetNumPostRelax( Hypre_solver, HYPRE_NPOST_RELAX )   );
 
 // do the setup
+   MPI_Barrier( MPI_COMM_WORLD );
    HYPRE_CHECK_FUNC(   HYPRE_SStructSysPFMGSetup( Hypre_solver, Hypre_A, Hypre_b, Hypre_x )   );
 
 // do the solve
+   MPI_Barrier( MPI_COMM_WORLD );
    HYPRE_CHECK_FUNC(   HYPRE_SStructSysPFMGSolve( Hypre_solver, Hypre_A, Hypre_b, Hypre_x )   );
+   MPI_Barrier( MPI_COMM_WORLD );
 
 // get some info
    HYPRE_CHECK_FUNC(   HYPRE_SStructSysPFMGGetFinalRelativeResidualNorm( Hypre_solver, final_res_norm )   );

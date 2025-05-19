@@ -23,6 +23,7 @@ static double Jeans_WaveSpeed;      // propagation speed (sound speed in hydro o
 static bool   Jeans_Stable;         // true/false --> Jeans stable/unstable
 // =======================================================================================
 
+extern int Evolve_stage;
 
 
 
@@ -470,6 +471,59 @@ static void OutputError()
 #  endif
 
 } // FUNCTION : OutputError
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Mis_UserWorkBeforeNextSubstep_JeansInstability
+// Description :  Template of user-specified work before proceeding to the next sub-step in EvolveLevel()
+//                --> After fix-up and grid refinement on lv
+//
+// Note        :  1. Invoked by EvolveLevel() using the function pointer "Mis_UserWorkBeforeNextSubstep_Ptr"
+//
+// Parameter   :  lv      : Target refinement level
+//                TimeNew : Target physical time to reach
+//                TimeOld : Physical time before update
+//                dt      : Time interval to advance solution (can be different from TimeNew-TimeOld in COMOVING)
+//-------------------------------------------------------------------------------------------------------
+void Mis_UserWorkBeforeNextSubstep_JeansInstability( const int lv, const double TimeNew, const double TimeOld, const double dt )
+{
+
+   return;
+
+   for (int r=0; r<MPI_NRank; r++)
+   {
+      if ( r == MPI_Rank )
+      {
+         Aux_Message( stdout, "\n" );
+         for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+         {
+            for (int k=0; k<PS1; k++)
+            for (int j=0; j<PS1; j++)
+            for (int i=0; i<PS1; i++)
+            {
+               Aux_Message( stdout, "STAGE %d LV %d done Rank: %d, PID: %6d, cell: (%4d %4d %4d), EdgeL: (%14.6e %14.6e %14.6e), val: %24.16e %24.16e %24.16e %24.16e %24.16e %24.16e\n",
+                                     Evolve_stage, lv, MPI_Rank, PID,
+                                     amr->patch[0][lv][PID]->cornerL[0] + i,
+                                     amr->patch[0][lv][PID]->cornerL[1] + j,
+                                     amr->patch[0][lv][PID]->cornerL[2] + k,
+                                     amr->patch[0][lv][PID]->EdgeL[0],
+                                     amr->patch[0][lv][PID]->EdgeL[1],
+                                     amr->patch[0][lv][PID]->EdgeL[2],
+                                     amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i],
+                                     amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMX][k][j][i],
+                                     amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMY][k][j][i],
+                                     amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[MOMZ][k][j][i],
+                                     amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[ENGY][k][j][i],
+                                     amr->patch[ amr->PotSg[lv] ][lv][PID]->pot[k][j][i]
+                                    );
+            }
+         }
+      }
+      MPI_Barrier( MPI_COMM_WORLD );
+   }
+
+} // FUNCTION : Mis_UserWorkBeforeNextSubstep_JeansInstability
 #endif // #if ( MODEL == HYDRO  &&  defined GRAVITY )
 
 
@@ -508,6 +562,7 @@ void Init_TestProb_Hydro_JeansInstability()
 #  ifdef SUPPORT_HDF5
    Output_HDF5_InputTest_Ptr     = LoadInputTestProb;
 #  endif
+   Mis_UserWorkBeforeNextSubstep_Ptr = Mis_UserWorkBeforeNextSubstep_JeansInstability;
 #  endif // if ( MODEL == HYDRO  &&  defined GRAVITY )
 
 

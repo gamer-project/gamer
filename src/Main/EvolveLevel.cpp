@@ -19,6 +19,7 @@ extern Timer_t *Timer_Par_2Son   [NLEVEL];
 #endif
 
 bool AutoReduceDt_Continue;
+int  Evolve_stage;
 
 
 
@@ -139,6 +140,19 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       Timer_dt[lv]->Stop();
 #     endif
 // ===============================================================================================
+
+      Evolve_stage = 1;
+      if ( Mis_UserWorkBeforeNextSubstep_Ptr != NULL )
+      {
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+            Aux_Message( stdout, "   Lv %2d: Mis_UserWorkBeforeNextSubstep %4s... ", lv, "" );
+
+//       use the same timer as the fluid solver for now
+         TIMING_FUNC(   Mis_UserWorkBeforeNextSubstep_Ptr( lv, TimeNew, TimeOld, dt_SubStep ),
+                        Timer_Flu_Advance[lv],   TIMER_ON   );
+
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      }
 
 
 //    2. fluid solver
@@ -312,6 +326,18 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 // ===============================================================================================
+      Evolve_stage = 2;
+      if ( Mis_UserWorkBeforeNextSubstep_Ptr != NULL )
+      {
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+            Aux_Message( stdout, "   Lv %2d: Mis_UserWorkBeforeNextSubstep %4s... ", lv, "" );
+
+//       use the same timer as the fluid solver for now
+         TIMING_FUNC(   Mis_UserWorkBeforeNextSubstep_Ptr( lv, TimeNew, TimeOld, dt_SubStep ),
+                        Timer_Flu_Advance[lv],   TIMER_ON   );
+
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      }
 
 
 //    3. update particles (prediction for KDK) and exchange particles
@@ -347,12 +373,21 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //    4. Poisson + gravity solver
 // ===============================================================================================
 #     ifdef GRAVITY
+   // Aux_Message( stdout, "\n" );
+   // Aux_Message( stdout, "Track flu prepare %d %24.16e %d %24.16e %s %d\n", amr->FluSg[lv], amr->FluSgTime[lv][amr->FluSg[lv]], 1-amr->FluSg[lv], amr->FluSgTime[lv][1-amr->FluSg[lv]], __FUNCTION__, __LINE__ );
+   // Aux_Message( stdout, "Track pot prepare %d %24.16e %d %24.16e %s %d\n", amr->PotSg[lv], amr->PotSgTime[lv][amr->PotSg[lv]], 1-amr->PotSg[lv], amr->PotSgTime[lv][1-amr->PotSg[lv]], __FUNCTION__, __LINE__ );
       const int SaveSg_Pot = 1 - amr->PotSg[lv];
+//      Aux_Message( stdout, "DEBUG: Rank: %d, flu Sg: %d time: %24.16e\n", MPI_Rank, amr->FluSg[lv], amr->FluSgTime[lv][amr->FluSg[lv]] );
+//      Aux_Message( stdout, "DEBUG: Rank: %d, Pot Sg: %d time: %24.16e\n", MPI_Rank, amr->PotSg[lv], amr->PotSgTime[lv][amr->PotSg[lv]] );
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "   Lv %2d: Gra_AdvanceDt, counter = %8ld ... ", lv, AdvanceCounter[lv] );
 
-      if ( lv == 0 )
+      bool FullRefinedLv = false;
+      if ( (long)NPatchTotal[lv] == NX0_TOT[0]*NX0_TOT[1]*NX0_TOT[2]/512*(1L<<lv)*(1L<<lv)*(1L<<lv) )   FullRefinedLv = true;
+
+      if ( FullRefinedLv )
+      // if ( lv == 0 )
          Gra_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, SaveSg_Pot, UsePot, true, false, false, true );
 
       else // lv > 0
@@ -418,23 +453,45 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //          --> we will do this after all other operations (e.g., star formation) if OPT__MINIMIZE_MPI_BARRIER is adopted
 //              --> assuming that all remaining operations do not need to access the potential in the buffer patches
 //              --> one must enable both STORE_POT_GHOST and PAR_IMPROVE_ACC for this purpose
+//      Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
             if ( UsePot  &&  !OPT__MINIMIZE_MPI_BARRIER )
             TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, SaveSg_Pot, POT_FOR_POISSON,
                                               _POTE, _NONE, Pot_ParaBuf, USELB_YES ),
                            Timer_GetBuf[lv][1],   TIMER_ON   );
+//      Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
          } // if ( OPT__OVERLAP_MPI ) ... else ...
+   // Aux_Message( stdout, "\n" );
+   // Aux_Message( stdout, "Track flu prepare %d %24.16e %d %24.16e %s %d\n", amr->FluSg[lv], amr->FluSgTime[lv][amr->FluSg[lv]], 1-amr->FluSg[lv], amr->FluSgTime[lv][1-amr->FluSg[lv]], __FUNCTION__, __LINE__ );
+   // Aux_Message( stdout, "Track pot prepare %d %24.16e %d %24.16e %s %d\n", amr->PotSg[lv], amr->PotSgTime[lv][amr->PotSg[lv]], 1-amr->PotSg[lv], amr->PotSgTime[lv][1-amr->PotSg[lv]], __FUNCTION__, __LINE__ );
 
          if ( UsePot )
          {
             amr->PotSg    [lv]             = SaveSg_Pot;
             amr->PotSgTime[lv][SaveSg_Pot] = TimeNew;
          }
+   // Aux_Message( stdout, "\n" );
+   // Aux_Message( stdout, "Track flu prepare %d %24.16e %d %24.16e %s %d\n", amr->FluSg[lv], amr->FluSgTime[lv][amr->FluSg[lv]], 1-amr->FluSg[lv], amr->FluSgTime[lv][1-amr->FluSg[lv]], __FUNCTION__, __LINE__ );
+   // Aux_Message( stdout, "Track pot prepare %d %24.16e %d %24.16e %s %d\n", amr->PotSg[lv], amr->PotSgTime[lv][amr->PotSg[lv]], 1-amr->PotSg[lv], amr->PotSgTime[lv][1-amr->PotSg[lv]], __FUNCTION__, __LINE__ );
 
       } // if ( lv == 0 ) ... else ...
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 #     endif // #ifdef GRAVITY
 // ===============================================================================================
+      // Aux_Message( stdout, "Evolve after gra flu prepare %d %24.16e %d %24.16e\n", amr->FluSg[lv], amr->FluSgTime[lv][amr->FluSg[lv]], 1-amr->FluSg[lv], amr->FluSgTime[lv][1-amr->FluSg[lv]] );
+      // Aux_Message( stdout, "Evolve after gra pot prepare %d %24.16e %d %24.16e\n", amr->PotSg[lv], amr->PotSgTime[lv][amr->PotSg[lv]], 1-amr->PotSg[lv], amr->PotSgTime[lv][1-amr->PotSg[lv]] );
+      Evolve_stage = 4;
+      if ( Mis_UserWorkBeforeNextSubstep_Ptr != NULL )
+      {
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+            Aux_Message( stdout, "   Lv %2d: Mis_UserWorkBeforeNextSubstep %4s... ", lv, "" );
+
+//       use the same timer as the fluid solver for now
+         TIMING_FUNC(   Mis_UserWorkBeforeNextSubstep_Ptr( lv, TimeNew, TimeOld, dt_SubStep ),
+                        Timer_Flu_Advance[lv],   TIMER_ON   );
+
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      }
 
 
 //    5. correct particles velocity and send particles to lv+1
@@ -697,6 +754,20 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       amr->NUpdateLv[lv] ++;
 
       if ( AdvanceCounter[lv] >= __LONG_MAX__ )    Aux_Message( stderr, "WARNING : AdvanceCounter overflow !!\n" );
+// ===============================================================================================
+      Evolve_stage = 10;
+      if ( Mis_UserWorkBeforeNextSubstep_Ptr != NULL )
+      {
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+            Aux_Message( stdout, "   Lv %2d: Mis_UserWorkBeforeNextSubstep %4s... ", lv, "" );
+
+//       use the same timer as the fluid solver for now
+         TIMING_FUNC(   Mis_UserWorkBeforeNextSubstep_Ptr( lv, TimeNew, TimeOld, dt_SubStep ),
+                        Timer_Flu_Advance[lv],   TIMER_ON   );
+
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      }
+// ===============================================================================================
 
 
       if ( lv != TOP_LEVEL  &&  NPatchTotal[lv+1] != 0 )
@@ -715,6 +786,20 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          MPI_Barrier( MPI_COMM_WORLD );
          Timer_Lv[lv]->Start();
 #        endif
+// ===============================================================================================
+// ===============================================================================================
+      Evolve_stage = 11;
+      if ( Mis_UserWorkBeforeNextSubstep_Ptr != NULL )
+      {
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+            Aux_Message( stdout, "   Lv %2d: Mis_UserWorkBeforeNextSubstep %4s... ", lv, "" );
+
+//       use the same timer as the fluid solver for now
+         TIMING_FUNC(   Mis_UserWorkBeforeNextSubstep_Ptr( lv, TimeNew, TimeOld, dt_SubStep ),
+                        Timer_Flu_Advance[lv],   TIMER_ON   );
+
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      }
 // ===============================================================================================
 
 
@@ -818,8 +903,24 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 // ===============================================================================================
-
       } // if ( lv != TOP_LEVEL  &&  NPatchTotal[lv+1] != 0 )
+// ===============================================================================================
+      Evolve_stage = 12;
+      if ( Mis_UserWorkBeforeNextSubstep_Ptr != NULL )
+      {
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
+            Aux_Message( stdout, "   Lv %2d: Mis_UserWorkBeforeNextSubstep %4s... ", lv, "" );
+
+//       use the same timer as the fluid solver for now
+         TIMING_FUNC(   Mis_UserWorkBeforeNextSubstep_Ptr( lv, TimeNew, TimeOld, dt_SubStep ),
+                        Timer_Flu_Advance[lv],   TIMER_ON   );
+
+         if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+      }
+// ===============================================================================================
+
+
+
 
 
 //    13. refine to higher level(s)
@@ -937,9 +1038,9 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       } // if ( lv != TOP_LEVEL  &&  AdvanceCounter[lv] % REGRID_COUNT == 0 )
 // ===============================================================================================
 
-
 //    14. user-specified operations before proceeding to the next sub-step
 // ===============================================================================================
+      Evolve_stage = 13;
       if ( Mis_UserWorkBeforeNextSubstep_Ptr != NULL )
       {
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )

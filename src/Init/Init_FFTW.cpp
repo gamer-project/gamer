@@ -501,6 +501,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
                  const bool AddExtraMass, const int lv )
 {
 
+//     Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
 // check
 // check only single field
    if ( TVar == 0  ||  TVar & (TVar-1) )
@@ -521,6 +522,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
                  local_nz, List_z_start[MPI_Rank+1] - List_z_start[MPI_Rank] );
 #  endif // GAMER_DEBUG
 
+//     Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
    const int SSize[2]   = { ( InPlacePad ? 2*(FFT_Size[0]/2+1) : FFT_Size[0] ), FFT_Size[1] };     // padded slab size in the x and y directions
    const int PSSize     = PS1*PS1;                                // patch slice size
 // const int MemUnit    = amr->NPatchComma[lv][1]*PS1/MPI_NRank;  // set arbitrarily
@@ -540,6 +542,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 
    int TRank, TRank_Guess, MemSize[MPI_NRank], idx;
 
+//     Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
 
 // 1. set memory allocation unit
    for (int r=0; r<MPI_NRank; r++)
@@ -553,6 +556,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
    }
 
 
+//     Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
 // 2. prepare the temporary send buffer and record lists
    const OptPotBC_t  PotBC_None        = BC_POT_NONE;
    const IntScheme_t IntScheme         = INT_NONE;
@@ -570,6 +574,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 
    for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
    {
+//     Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
 //    even with NSIDE_00 and GhostSize=0, we still need OPT__BC_FLU to determine whether periodic BC is adopted
 //    for depositing particle mass onto grids.
 //    also note that we do not check minimum density here since no ghost zones are required
@@ -577,6 +582,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
                          IntScheme, INT_NONE, UNIT_PATCH, NSide_None, IntPhase_No, OPT__BC_FLU, PotBC_None,
                          MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
+//     Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
 
 #     ifdef GRAVITY
 //    add extra mass source for gravity if required
@@ -602,6 +608,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 #     endif // #ifdef GRAVITY
 
 
+//     Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
 //    copy data to the send buffer
       for (int PID=PID0, LocalID=0; PID<PID0+8; PID++, LocalID++)
       {
@@ -657,10 +664,12 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
             List_NSend_SIdx[TRank] ++;
          } // for (int k=0; k<PS1; k++)
       } // for (int PID=PID0, LocalID=0; PID<PID0+8; PID++, LocalID++)
+//     Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
    } // for (int PID0=0; PID0<amr->NPatchComma[0][1]; PID0+=8)
 
    delete [] VarPatch;
 
+//     Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
 
 // 3. prepare the send buffer
    int   Send_Disp_SIdx[MPI_NRank], Recv_Disp_SIdx[MPI_NRank];
@@ -690,6 +699,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
       Recv_Disp_Var [r] = Recv_Disp_Var [r-1] + List_NRecv_Var [r-1];
    }
 
+//     Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
 // check
 #  ifdef GAMER_DEBUG
    const long NSend_Total  = Send_Disp_Var[MPI_NRank-1] + List_NSend_Var[MPI_NRank-1];
@@ -720,6 +730,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
       SendPtr_Var += List_NSend_Var[r];
    }
 
+//     Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
 
 // 4. exchange data by MPI
    MPI_Alltoallv      ( SendBuf_SIdx, List_NSend_SIdx, Send_Disp_SIdx, MPI_LONG,
@@ -729,6 +740,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
                         RecvBuf_Var,  List_NRecv_Var,  Recv_Disp_Var,  MPI_GAMER_REAL, MPI_COMM_WORLD );
 
 
+//     Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
 // 5. store the received data to the padded array "VarS" for FFTW
    const long NPSlice = (long)NX0_TOT[0]*(1L<<lv)*NX0_TOT[1]*(1L<<lv)*NRecvSlice/PSSize;  // total number of received patch slices
    long  dSIdx, Counter = 0;
@@ -748,6 +760,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
    }
 
 
+//     Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
 // free memory
    for (int r=0; r<MPI_NRank; r++)
    {
@@ -755,6 +768,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
       free( TempBuf_Var [r] );
    }
 
+   //  Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
 } // FUNCTION : Patch2Slab
 
 

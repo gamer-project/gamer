@@ -17,7 +17,7 @@ extern Timer_t *Timer_Poi_PrePot_C[NLEVEL];
 extern Timer_t *Timer_Poi_PrePot_F[NLEVEL];
 #endif
 
-
+static bool hypre_debug = false;
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -202,17 +202,26 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 #  endif
 
 
+   // Aux_Message( stdout, "\n" );
+   // Aux_Message( stdout, "Track flu prepare %d %24.16e %d %24.16e %s %d\n", amr->FluSg[lv], amr->FluSgTime[lv][amr->FluSg[lv]], 1-amr->FluSg[lv], amr->FluSgTime[lv][1-amr->FluSg[lv]], __FUNCTION__, __LINE__ );
+   // Aux_Message( stdout, "Track pot prepare %d %24.16e %d %24.16e %s %d\n", amr->PotSg[lv], amr->PotSgTime[lv][amr->PotSg[lv]], 1-amr->PotSg[lv], amr->PotSgTime[lv][1-amr->PotSg[lv]], __FUNCTION__, __LINE__ );
 //-------------------------------------------------------------------------------------------------------------
    TIMING_SYNC(   Preparation_Step( TSolver, lv, TimeNew, TimeOld, NPG[ArrayID], PID0_List, ArrayID, GlobalTree ),
                   Timer_Pre[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
 
 
+   // Aux_Message( stdout, "\n" );
+   // Aux_Message( stdout, "Track flu prepare %d %24.16e %d %24.16e %s %d\n", amr->FluSg[lv], amr->FluSgTime[lv][amr->FluSg[lv]], 1-amr->FluSg[lv], amr->FluSgTime[lv][1-amr->FluSg[lv]], __FUNCTION__, __LINE__ );
+   // Aux_Message( stdout, "Track pot prepare %d %24.16e %d %24.16e %s %d\n", amr->PotSg[lv], amr->PotSgTime[lv][amr->PotSg[lv]], 1-amr->PotSg[lv], amr->PotSgTime[lv][1-amr->PotSg[lv]], __FUNCTION__, __LINE__ );
 //-------------------------------------------------------------------------------------------------------------
    TIMING_SYNC(   Solver( TSolver, lv, TimeNew, TimeOld, NPG[ArrayID], ArrayID, dt, Poi_Coeff ),
                   Timer_Sol[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
 
+   // Aux_Message( stdout, "\n" );
+   // Aux_Message( stdout, "Track flu prepare %d %24.16e %d %24.16e %s %d\n", amr->FluSg[lv], amr->FluSgTime[lv][amr->FluSg[lv]], 1-amr->FluSg[lv], amr->FluSgTime[lv][1-amr->FluSg[lv]], __FUNCTION__, __LINE__ );
+   // Aux_Message( stdout, "Track pot prepare %d %24.16e %d %24.16e %s %d\n", amr->PotSg[lv], amr->PotSgTime[lv][amr->PotSg[lv]], 1-amr->PotSg[lv], amr->PotSgTime[lv][1-amr->PotSg[lv]], __FUNCTION__, __LINE__ );
 
    for (Disp=NPG_Max; Disp<NTotal; Disp+=NPG_Max)
    {
@@ -247,6 +256,9 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 //-------------------------------------------------------------------------------------------------------------
 
    } // for (int Disp=NPG_Max; Disp<NTotal; Disp+=NPG_Max)
+   // Aux_Message( stdout, "\n" );
+   // Aux_Message( stdout, "Track flu prepare %d %24.16e %d %24.16e %s %d\n", amr->FluSg[lv], amr->FluSgTime[lv][amr->FluSg[lv]], 1-amr->FluSg[lv], amr->FluSgTime[lv][1-amr->FluSg[lv]], __FUNCTION__, __LINE__ );
+   // Aux_Message( stdout, "Track pot prepare %d %24.16e %d %24.16e %s %d\n", amr->PotSg[lv], amr->PotSgTime[lv][amr->PotSg[lv]], 1-amr->PotSg[lv], amr->PotSgTime[lv][1-amr->PotSg[lv]], __FUNCTION__, __LINE__ );
 
 
 //-------------------------------------------------------------------------------------------------------------
@@ -261,6 +273,9 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
                   NPG[ArrayID], PID0_List+Disp-NPG_Max, ArrayID, dt ),
                   Timer_Clo[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
+   // Aux_Message( stdout, "\n" );
+   // Aux_Message( stdout, "Track flu prepare %d %24.16e %d %24.16e %s %d\n", amr->FluSg[lv], amr->FluSgTime[lv][amr->FluSg[lv]], 1-amr->FluSg[lv], amr->FluSgTime[lv][1-amr->FluSg[lv]], __FUNCTION__, __LINE__ );
+   // Aux_Message( stdout, "Track pot prepare %d %24.16e %d %24.16e %s %d\n", amr->PotSg[lv], amr->PotSgTime[lv][amr->PotSg[lv]], 1-amr->PotSg[lv], amr->PotSgTime[lv][1-amr->PotSg[lv]], __FUNCTION__, __LINE__ );
 
 
    if ( AllocateList )  delete [] PID0_List;
@@ -368,6 +383,52 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
                         NPG, PID0_List ),
                         Timer_Poi_PreFlu[lv]   );
 #        endif
+         if (hypre_debug)
+         {
+            Aux_Message( stdout, "\n" );
+            for (int TID=0; TID<NPG; TID++)
+            {
+               const int PID0 = PID0_List[TID];
+
+               for (int LocalID=0; LocalID<8; LocalID++)
+               {
+                  const int PID = PID0 + LocalID;
+                  const int N   = 8*TID + LocalID;
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
+                     const int idx = IDX321( i, j, k, PS1, PS1 );
+                     Aux_Message( stdout, "SOLVER DENS PID %6d LV %d CORNER (%4d %4d %4d) IDX %2d %2d %2d DENS %24.16e %24.16e %24.16e %24.16e\n",
+                                  PID, lv,
+                                  amr->patch[0][lv][PID]->cornerL[0],
+                                  amr->patch[0][lv][PID]->cornerL[1],
+                                  amr->patch[0][lv][PID]->cornerL[2],
+                                  i, j, k,
+                                  h_Flu_Array_G[ArrayID][N][DENS][k][j][i],
+                                  h_Flu_Array_G[ArrayID][N][MOMX][k][j][i],
+                                  h_Flu_Array_G[ArrayID][N][MOMY][k][j][i],
+                                  h_Flu_Array_G[ArrayID][N][MOMZ][k][j][i],
+                                  h_Flu_Array_G[ArrayID][N][ENGY][k][j][i]
+                                  );
+                  }
+                  for (int k=0; k<GRA_NXT; k++)
+                  for (int j=0; j<GRA_NXT; j++)
+                  for (int i=0; i<GRA_NXT; i++)
+                  {
+                     const int idx = IDX321( i, j, k, GRA_NXT, GRA_NXT );
+                     Aux_Message( stdout, "SOLVER POTE PID %6d LV %d CORNER (%4d %4d %4d) IDX %2d %2d %2d DENS %24.16e\n",
+                                  PID, lv,
+                                  amr->patch[0][lv][PID]->cornerL[0],
+                                  amr->patch[0][lv][PID]->cornerL[1],
+                                  amr->patch[0][lv][PID]->cornerL[2],
+                                  i, j, k,
+                                  h_Pot_Array_P_Out[ArrayID][N][k][j][i]
+                                  );
+                  }
+               }
+            }
+         }
       break;
 
       case POISSON_AND_GRAVITY_SOLVER :

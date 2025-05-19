@@ -19,6 +19,7 @@ void Hypre_End()
 
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
+// Hypre_Free();
 // finalize Hypre
    HYPRE_CHECK_FUNC(   HYPRE_Finalize()   );
 

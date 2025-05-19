@@ -1,7 +1,7 @@
 #include "GAMER.h"
 
 
-
+bool in_flu_corr;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flu_CorrAfterAllSync
@@ -39,6 +39,9 @@
 //-------------------------------------------------------------------------------------------------------
 void Flu_CorrAfterAllSync()
 {
+
+// TODO: DEBUG
+   return;
 
 // nothing to do if there are only base-level patches
    if ( NLEVEL == 1  ||  NPatchTotal[1] == 0 )     return;
@@ -107,6 +110,7 @@ void Flu_CorrAfterAllSync()
 
 // 3. recalculate gravitational potential
 #  ifdef GRAVITY
+   in_flu_corr = true;
    if ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT )
    for (int lv=0; lv<=MAX_LEVEL; lv++)
    {
@@ -118,7 +122,15 @@ void Flu_CorrAfterAllSync()
       if ( lv > 0 )
       Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _DENS, _NONE, Rho_ParaBuf, USELB_YES );
 
+   // Aux_Message( stdout, "\n" );
+   // Aux_Message( stdout, "Track flu prepare %d %24.16e %d %24.16e %s %d\n", amr->FluSg[lv], amr->FluSgTime[lv][amr->FluSg[lv]], 1-amr->FluSg[lv], amr->FluSgTime[lv][1-amr->FluSg[lv]], __FUNCTION__, __LINE__ );
+   // Aux_Message( stdout, "Track pot prepare %d %24.16e %d %24.16e %s %d\n", amr->PotSg[lv], amr->PotSgTime[lv][amr->PotSg[lv]], 1-amr->PotSg[lv], amr->PotSgTime[lv][1-amr->PotSg[lv]], __FUNCTION__, __LINE__ );
+//         Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
       Gra_AdvanceDt( lv, Time[lv], NULL_REAL, NULL_REAL, NULL_INT, amr->PotSg[lv], true, false, false, false, false );
+//         Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
+   // Aux_Message( stdout, "\n" );
+   // Aux_Message( stdout, "Track flu prepare %d %24.16e %d %24.16e %s %d\n", amr->FluSg[lv], amr->FluSgTime[lv][amr->FluSg[lv]], 1-amr->FluSg[lv], amr->FluSgTime[lv][1-amr->FluSg[lv]], __FUNCTION__, __LINE__ );
+   // Aux_Message( stdout, "Track pot prepare %d %24.16e %d %24.16e %s %d\n", amr->PotSg[lv], amr->PotSgTime[lv][amr->PotSg[lv]], 1-amr->PotSg[lv], amr->PotSgTime[lv][1-amr->PotSg[lv]], __FUNCTION__, __LINE__ );
 
       if ( lv > 0 )
       Buf_GetBufferData( lv, NULL_INT, NULL_INT, amr->PotSg[lv], POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES );
@@ -126,6 +138,7 @@ void Flu_CorrAfterAllSync()
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
    } // for (int lv=0; lv<=MAX_LEVEL; lv++) if ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT )
+   in_flu_corr = false;
 #  endif // #ifdef GRAVITY
 
 

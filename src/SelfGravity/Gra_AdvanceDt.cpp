@@ -8,6 +8,11 @@ extern Timer_t *Timer_GetBuf     [NLEVEL][8];
 extern Timer_t *Timer_Par_Collect[NLEVEL];
 #endif
 
+//   Aux_Message( stdout, "DEBUG: Rank: %d, %s, lv: %d, TF: %d, %ld <-> %ld\n", MPI_Rank, __FUNCTION__, lv, FullRefinedLv, (long)NPatchTotal[lv], NX0_TOT[0]*NX0_TOT[1]*NX0_TOT[2]/512*(1L<<lv)*(1L<<lv)*(1L<<lv) );
+   // Aux_Message( stdout, "\n" );
+   // Aux_Message( stdout, "Track flu prepare %d %24.16e %d %24.16e %s %d\n", amr->FluSg[lv], amr->FluSgTime[lv][amr->FluSg[lv]], 1-amr->FluSg[lv], amr->FluSgTime[lv][1-amr->FluSg[lv]], __FUNCTION__, __LINE__ );
+   // Aux_Message( stdout, "Track pot prepare %d %24.16e %d %24.16e %s %d\n", amr->PotSg[lv], amr->PotSgTime[lv][amr->PotSg[lv]], 1-amr->PotSg[lv], amr->PotSgTime[lv][1-amr->PotSg[lv]], __FUNCTION__, __LINE__ );
+//      Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
 
 
 
@@ -112,6 +117,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
    bool FullRefinedLv = false;
    if ( (long)NPatchTotal[lv] == NX0_TOT[0]*NX0_TOT[1]*NX0_TOT[2]/512*(1L<<lv)*(1L<<lv)*(1L<<lv) )   FullRefinedLv = true;
 
+
 // the base-level Poisson solver is implemented using the FFTW library (with CPUs only)
    if ( FullRefinedLv )
    {
@@ -161,7 +167,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
                                       false, false ),
                         Timer_Gra_Advance[lv],   Timing   );
 
-         amr->FluSg[0] = SaveSg_Flu;
+         amr->FluSg[lv] = SaveSg_Flu;
       } // if ( Gravity )
    } // if ( FullRefinedLv )
 
@@ -171,7 +177,11 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
       if      (  Poisson  &&  !Gravity )
       {
 #        if ( POT_SCHEME == HYPRE_POI )
+         // Buf_GetBufferData( lv-1, NULL_INT, NULL_INT,   amr->PotSg[lv-1], POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES );
+         // Buf_GetBufferData( lv-1, NULL_INT, NULL_INT, 1-amr->PotSg[lv-1], POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES );
          Hypre_SolvePoisson( SaveSg_Pot, lv, TimeNew );
+         TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES ),
+                        Timer_GetBuf[lv][1],   Timing  );
 #        else
          InvokeSolver( POISSON_SOLVER,             lv, TimeNew, TimeOld, NULL_REAL, Poi_Coeff, NULL_INT,   NULL_INT, SaveSg_Pot,
                        OverlapMPI, Overlap_Sync );
@@ -179,13 +189,25 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
       }
 
       else if ( !Poisson  &&   Gravity )
+      {
          InvokeSolver( GRAVITY_SOLVER,             lv, TimeNew, TimeOld, dt,        NULL_REAL, SaveSg_Flu, NULL_INT, NULL_INT,
                        OverlapMPI, Overlap_Sync );
-
+      }
       else if (  Poisson  &&   Gravity )
       {
 #        if ( POT_SCHEME == HYPRE_POI )
          Hypre_SolvePoisson( SaveSg_Pot, lv, TimeNew );
+         TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES ),
+                        Timer_GetBuf[lv][1],   Timing  );
+
+         amr->PotSg    [lv]             = SaveSg_Pot;
+         amr->PotSgTime[lv][SaveSg_Pot] = TimeNew;
+         // Aux_Message( stdout, "%s update pot SG\n", __FILE__ );
+         // Buf_GetBufferData( lv, NULL_INT, NULL_INT,   amr->PotSg[lv], POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES );
+         // Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, amr->PotSg[lv], DATA_GENERAL, _DENS|_POTE, _NONE, Rho_ParaBuf, USELB_YES );
+         // Buf_GetBufferData( lv, NULL_INT, NULL_INT, amr->PotSg[lv], DATA_GENERAL, _POTE, _NONE, Rho_ParaBuf, USELB_YES );
+         // Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, amr->PotSg[lv], DATA_GENERAL, _DENS|_MOMX|_MOMY|_MOMZ|_ENGY|_POTE, _NONE, Rho_ParaBuf, USELB_YES );
+
 
          InvokeSolver( GRAVITY_SOLVER,             lv, TimeNew, TimeOld, dt,        NULL_REAL, SaveSg_Flu, NULL_INT, NULL_INT,
                        OverlapMPI, Overlap_Sync );

@@ -22,6 +22,8 @@ void Hypre_Init()
 // initialize Hypre
    HYPRE_CHECK_FUNC(   HYPRE_Initialize()   );
 
+// TODO : print hypre info? check hypre info
+
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Hypre_Init

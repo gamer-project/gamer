@@ -202,10 +202,12 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
    total_local_size              = local_nx*local_ny*local_nz;
 #  else // #ifdef SERIAL
 #  if ( SUPPORT_FFTW == FFTW3 )
+//     Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
    total_local_size = fftw_mpi_local_size_3d_transposed( FFT_Size[2], local_ny, local_nx, MPI_COMM_WORLD,
                                                          &local_nz, &local_z_start, &local_ny_after_transpose,
                                                          &local_y_start_after_transpose );
 #  else
+//     Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
    rfftwnd_mpi_local_sizes( FFTW_Plan_Poi[lv], &local_nz, &local_z_start, &local_ny_after_transpose,
                             &local_y_start_after_transpose, &total_local_size );
 #  endif
@@ -257,16 +259,19 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
 
 
 // initialize RhoK as zeros for the isolated BC where the zero-padding method is adopted
+//      Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
    if ( OPT__BC_POT == BC_POT_ISOLATED )
       for (long t=0; t<total_local_size; t++)   RhoK[t] = (real)0.0;
 
 
 // rearrange data from patch to slab
+//     Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
    Patch2Slab( RhoK, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID, List_k, List_NSend, List_NRecv, List_z_start,
                local_nz, FFT_Size, NRecvSlice, PrepTime, _TOTAL_DENS, InPlacePad, ForPoisson, OPT__GRAVITY_EXTRA_MASS, lv );
 
 
 // evaluate potential by FFT
+//     Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
    if      ( OPT__BC_POT == BC_POT_PERIODIC )
       FFT_Periodic( RhoK, Poi_Coeff, local_y_start_after_transpose, local_ny_after_transpose, total_local_size, lv );
 
@@ -276,11 +281,13 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
    else
       Aux_Error( ERROR_INFO, "unsupported paramter %s = %d !!\n", "OPT__BC_POT", OPT__BC_POT );
 
+//     Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
 
 // rearrange data from slab back to patch
    Slab2Patch( RhoK, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID, List_k, List_NRecv, List_NSend,
                local_nz, FFT_Size, NRecvSlice, _POTE, InPlacePad, lv );
 
+//     Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
 
    root_fftw::fft_free( RhoK );
    delete [] SendBuf;

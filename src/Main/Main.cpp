@@ -611,6 +611,7 @@ Timer_t  Timer_OutputWalltime;
 
 
 
+extern int Evolve_stage;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  main
@@ -714,6 +715,14 @@ int main( int argc, char *argv[] )
       if ( OPT__CORR_AFTER_ALL_SYNC == CORR_AFTER_SYNC_EVERY_STEP )
       TIMING_FUNC(   Flu_CorrAfterAllSync(),          Timer_Main[6],   TIMER_ON   );
 
+      Evolve_stage = 14;
+      if ( Mis_UserWorkBeforeNextSubstep_Ptr != NULL )
+      {
+//       use the same timer as the fluid solver for now
+         Mis_UserWorkBeforeNextSubstep_Ptr( 0, NULL_REAL, NULL_REAL, NULL_REAL );
+         Mis_UserWorkBeforeNextSubstep_Ptr( 1, NULL_REAL, NULL_REAL, NULL_REAL );
+      }
+
 #     if ( MODEL == HYDRO  &&  defined MHD )
       if ( OPT__SAME_INTERFACE_B )
       {
@@ -733,6 +742,13 @@ int main( int argc, char *argv[] )
 //    3. output data and execute auxiliary functions
 //    ---------------------------------------------------------------------------------------------------
       TIMING_FUNC(   Output_DumpData( 1 ),            Timer_Main[3],   TIMER_ON   );
+      Evolve_stage = 15;
+      if ( Mis_UserWorkBeforeNextSubstep_Ptr != NULL )
+      {
+//       use the same timer as the fluid solver for now
+         Mis_UserWorkBeforeNextSubstep_Ptr( 0, NULL_REAL, NULL_REAL, NULL_REAL );
+         Mis_UserWorkBeforeNextSubstep_Ptr( 1, NULL_REAL, NULL_REAL, NULL_REAL );
+      }
 
       if ( OPT__PATCH_COUNT == 1 )
       TIMING_FUNC(   Aux_Record_PatchCount(),         Timer_Main[4],   TIMER_ON   );
@@ -765,6 +781,7 @@ int main( int argc, char *argv[] )
       TIMING_FUNC(   ELBDM_RemoveMotionCM(),          Timer_Main[4],   TIMER_ON   );
 #     endif // #if ( MODEL == ELBDM )
 //    ---------------------------------------------------------------------------------------------------
+
 
 
 //    4. perform yt inline analysis

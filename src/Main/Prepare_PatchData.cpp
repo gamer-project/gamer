@@ -509,6 +509,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    if ( NVarCC_Flu + NVarCC_Der != 0 )
    {
       const int Sg0 = amr->FluSg[lv];
+      // Aux_Message( stdout, "flu prepare %d %24.16e %d %24.16e\n", Sg0, amr->FluSgTime[lv][Sg0], 1-Sg0, amr->FluSgTime[lv][1-Sg0] );
       SetTempIntPara( lv, Sg0, PrepTime, amr->FluSgTime[lv][Sg0], amr->FluSgTime[lv][1-Sg0],
                       FluIntTime, FluSg, FluSg_IntT, FluWeighting, FluWeighting_IntT );
    }
@@ -537,6 +538,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
    if ( PrepPot )
    {
       const int Sg0 = amr->PotSg[lv];
+      // Aux_Message( stdout, "%s Rank: %d lv: %d pot prepare %d %24.16e %d %24.16e\n", __FILE__, MPI_Rank, lv, amr->PotSg[lv], amr->PotSgTime[lv][amr->PotSg[lv]], 1-amr->PotSg[lv], amr->PotSgTime[lv][1-amr->PotSg[lv]] );
       SetTempIntPara( lv, Sg0, PrepTime, amr->PotSgTime[lv][Sg0], amr->PotSgTime[lv][1-Sg0],
                       PotIntTime, PotSg, PotSg_IntT, PotWeighting, PotWeighting_IntT );
    }
