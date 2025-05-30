@@ -179,7 +179,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 #        if ( POT_SCHEME == HYPRE_POI )
          // Buf_GetBufferData( lv-1, NULL_INT, NULL_INT,   amr->PotSg[lv-1], POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES );
          // Buf_GetBufferData( lv-1, NULL_INT, NULL_INT, 1-amr->PotSg[lv-1], POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES );
-         Hypre_SolvePoisson( SaveSg_Pot, lv, TimeNew );
+         Hypre_SolvePoisson( SaveSg_Pot, lv, TimeNew, Poi_Coeff );
          TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES ),
                         Timer_GetBuf[lv][1],   Timing  );
 #        else
@@ -196,7 +196,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
       else if (  Poisson  &&   Gravity )
       {
 #        if ( POT_SCHEME == HYPRE_POI )
-         Hypre_SolvePoisson( SaveSg_Pot, lv, TimeNew );
+         Hypre_SolvePoisson( SaveSg_Pot, lv, TimeNew, Poi_Coeff );
          TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES ),
                         Timer_GetBuf[lv][1],   Timing  );
 

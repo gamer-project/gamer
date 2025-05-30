@@ -8,11 +8,11 @@ extern bool in_flu_corr;
 
 
 #ifdef SUPPORT_HYPRE
-void Hypre_FillArrays( const int lv, const int NExtend, const double TimeNew );
+void Hypre_FillArrays( const int lv, const int NExtend, const double TimeNew, const real Poi_Coeff );
 void Hypre_InitialGuess( const int lv );
 void Hypre_SetA( const int lv );
 void Hypre_SetBC( const int entry, int *stencil_indices, const int var, const int lv, const int *cornerL, const int *cornerR );
-void Hypre_Solve();
+void Hypre_Solve( const Hypre_Solver_t Solver, int *N_iter, real *final_res_norm );
 
 
 //      Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
@@ -71,7 +71,6 @@ void Hypre_PrepareSingleLevel( const int lv, const int NExtend )
    if ( OPT__BC_POT == BC_POT_PERIODIC )
    {
       int periodicity[3] = { NX0_TOT[0]*(int)(1L<<lv), NX0_TOT[1]*(int)(1L<<lv), NX0_TOT[2]*(int)(1L<<lv) };
-      // int periodicity[3] = { 0, NX0_TOT[1]*(int)(1L<<lv), NX0_TOT[2]*(int)(1L<<lv) };
       HYPRE_CHECK_FUNC(   HYPRE_SStructGridSetPeriodic( Hypre_grid, part, periodicity )   );
       // Aux_Message( stdout, "HYPRE: periodic lv %d (%d %d %d)\n", lv, periodicity[0], periodicity[1], periodicity[2] );
    }
@@ -84,9 +83,7 @@ void Hypre_PrepareSingleLevel( const int lv, const int NExtend )
 
 // set entries
    for (int e=0; e<NEntries; e++)
-   {
       HYPRE_CHECK_FUNC(   HYPRE_SStructStencilSetEntry( Hypre_stencil, e, Offsets[e], var )   );
-   }
 
    HYPRE_CHECK_FUNC(   HYPRE_SStructGraphCreate( HYPRE_MPI_COMM, Hypre_grid, &Hypre_graph )   );
 
@@ -132,6 +129,7 @@ void Hypre_Free()
 
 
 
+#if ( defined GRAVITY  &&  POT_SCHEME == HYPRE_POI )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hypre_SolvePoisson
 // Description :  Solve the poisson equation
@@ -139,7 +137,7 @@ void Hypre_Free()
 // Parameter   :  SaveSg_Pot :
 //                lv         : Target level
 //-------------------------------------------------------------------------------------------------------
-void Hypre_SolvePoisson( const int SaveSg_Pot, const int lv, const double TimeNew )
+void Hypre_SolvePoisson( const int SaveSg_Pot, const int lv, const double TimeNew, const real Poi_Coeff )
 {
 
    const int NExtend = 1;
@@ -156,11 +154,14 @@ void Hypre_SolvePoisson( const int SaveSg_Pot, const int lv, const double TimeNe
    const bool   In_time = ( amr->PotSgTime[lv][SaveSg_Pot] == TimeNew  ||  amr->PotSgTime[lv][1-SaveSg_Pot] == TimeNew );
    const double Time_tmp = amr->PotSgTime[lv][SaveSg_Pot];
    if ( !In_time )  amr->PotSgTime[lv][SaveSg_Pot] = TimeNew;
-   Hypre_FillArrays( lv, NExtend, TimeNew );
+   Hypre_FillArrays( lv, NExtend, TimeNew, Poi_Coeff );
    if ( !In_time )  amr->PotSgTime[lv][SaveSg_Pot] = Time_tmp;
 
 // setup solver and solve
-   Hypre_Solve();
+   int N_iter;
+   real final_residual;
+   Hypre_Solve( HYPRE_SOLVER, &N_iter, &final_residual );
+   Hypre_Aux_Record( "Poisson", lv, N_iter, final_residual );
 
 // collect the potential
    HYPRE_CHECK_FUNC(   HYPRE_SStructVectorGather( Hypre_x )   );
@@ -185,7 +186,6 @@ void Hypre_SolvePoisson( const int SaveSg_Pot, const int lv, const double TimeNe
       {
          const int idx = IDX321( i, j, k, PS1, PS1 );
          amr->patch[ SaveSg_Pot ][lv][PID]->pot[k][j][i] = pote[idx];
-         // if (hypre_debug)
          if (hypre_debug && ! in_flu_corr)
          {
             Aux_Message( stdout, "FILL X Rank: %d, PID: %6d, cell: (%4d %4d %4d), val: %24.16e\n",
@@ -278,24 +278,26 @@ void Hypre_SolvePoisson( const int SaveSg_Pot, const int lv, const double TimeNe
    amr->PotSgTime[lv][SaveSg_Pot] = TimeNew;
 
 } // FUNCTION : Hypre_SolvePoisson
+#endif // #if ( defined GRAVITY  &&  POT_SCHEME == HYPRE_POI )
 
 
 
-void Hypre_FillArrays( const int lv, const int NExtend, const double TimeNew )
+void Hypre_FillArrays( const int lv, const int NExtend, const double TimeNew, const real Poi_Coeff )
 {
 
-   const bool IntPhase_No       = false;
-   const bool DE_Consistency_No = false;
-   const real MinDens_No        = -1.0;
-   const real MinPres_No        = -1.0;
-   const real MinTemp_No        = -1.0;
-   const real MinEntr_No        = -1.0;
-   const int  NDim              = 3;
-   const int  NEntries          = 2*NDim + 1;
-   const int  var               = 0;
-   const int  part              = 0;
-   const real dh2               = SQR( amr->dh[lv] );
-   const real coeff             = -4.0 * M_PI * NEWTON_G * dh2;
+   const bool   IntPhase_No       = false;
+   const bool   DE_Consistency_No = false;
+   const real   MinDens_No        = -1.0;
+   const real   MinPres_No        = -1.0;
+   const real   MinTemp_No        = -1.0;
+   const real   MinEntr_No        = -1.0;
+   const int    NDim              = 3;
+   const int    NEntries          = 2*NDim + 1;
+   const int    var               = 0;
+   const int    part              = 0;
+   const double dh                = amr->dh[lv];
+   const double dh2               = SQR( dh );
+   const double coeff             = - Poi_Coeff * dh2;
 
    int stencil_indices[NEntries];
 
@@ -375,17 +377,31 @@ void Hypre_FillArrays( const int lv, const int NExtend, const double TimeNew )
       f = fopen( filename, "a" );
    }
 
+   real RhoSubtract;
+#  ifdef COMOVING
+   const bool Comoving = true;
+#  else
+   const bool Comoving = false;
+#  endif
+   if ( OPT__BC_POT == BC_POT_PERIODIC ) RhoSubtract = (real)AveDensity_Init;
+   else if ( Comoving )                  RhoSubtract = (real)1.0;
+   else                                  RhoSubtract = (real)0.0;
+
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
       // Aux_Message( stdout, "cornerL: (%6d %6d %6d)\n", amr->patch[0][lv][PID]->cornerL[0], amr->patch[0][lv][PID]->cornerL[1], amr->patch[0][lv][PID]->cornerL[2] );
-      for (int k=0; k<PS1; k++)
-      for (int j=0; j<PS1; j++)
-      for (int i=0; i<PS1; i++)
-      {
+      for (int k=0; k<PS1; k++) { const double z = amr->patch[0][lv][PID]->EdgeL[2] + (0.5+k)*dh;
+      for (int j=0; j<PS1; j++) { const double y = amr->patch[0][lv][PID]->EdgeL[1] + (0.5+j)*dh;
+      for (int i=0; i<PS1; i++) { const double x = amr->patch[0][lv][PID]->EdgeL[0] + (0.5+i)*dh;
          const int idx = IDX321( i, j, k, PS1, PS1 );
 
-         if ( OPT__BC_POT == BC_POT_PERIODIC )   dens[idx] = coeff * ( amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i] - AveDensity_Init );
-         else                                    dens[idx] = coeff *   amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i];
+         real Dens = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i] - RhoSubtract;
+
+//       add extra mass source for gravity if required
+         if ( OPT__GRAVITY_EXTRA_MASS )
+            Dens += Poi_AddExtraMassForGravity_Ptr( x, y, z, Time[lv], lv, NULL );
+
+         dens[idx] = coeff * Dens;
          pote[idx] = 0.0;
 
          // if (hypre_debug)
@@ -406,7 +422,7 @@ void Hypre_FillArrays( const int lv, const int NExtend, const double TimeNew )
                          dens[idx]
                         );
          }
-      }
+      }}}
 
       HYPRE_CHECK_FUNC(   HYPRE_SStructVectorSetBoxValues( Hypre_b, part, amr->patch[0][lv][PID]->cornerL, amr->patch[0][lv][PID]->cornerR, var, dens )   );
       HYPRE_CHECK_FUNC(   HYPRE_SStructVectorSetBoxValues( Hypre_x, part, amr->patch[0][lv][PID]->cornerL, amr->patch[0][lv][PID]->cornerR, var, pote )   );

@@ -9,20 +9,19 @@ static void Hypre_Solve_SStructSplit  ( int *N_iter, real *final_res_norm );
 
 
 
-void Hypre_Solve()
+void Hypre_Solve( const Hypre_Solver_t Solver, int *N_iter, real *final_res_norm )
 {
 
-   int N_iter;
-   real final_res_norm;
-
-   switch ( HYPRE_SOLVER )
+   switch ( Solver )
    {
-      case HYPRE_SOLVER_SSTRUCT_SYS_PFMG: Hypre_Solve_SStructSysPFMG( &N_iter, &final_res_norm );  break;
-      case HYPRE_SOLVER_SSTRUCT_SPLIT:    Hypre_Solve_SStructSplit  ( &N_iter, &final_res_norm );  break;
+      case HYPRE_SOLVER_SSTRUCT_SYS_PFMG: Hypre_Solve_SStructSysPFMG( N_iter, final_res_norm );  break;
+      case HYPRE_SOLVER_SSTRUCT_SPLIT:    Hypre_Solve_SStructSplit  ( N_iter, final_res_norm );  break;
       default: Aux_Error( ERROR_INFO, "Unknown HYPRE_SOLVER: %d !!\n", HYPRE_SOLVER );
-   } // switch ( HYPRE_SOLVER )
+   } // switch ( Solver )
 
+#  ifdef DEBUG_HYPRE
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "%s: Iteration: %d, Residual norm: %24.16e\n", __FUNCTION__, N_iter, final_res_norm );
+#  endif
    // TODO : warning message for reaching the max iter
 
 } // FUNCTION : Hypre_Solve
@@ -84,5 +83,5 @@ void Hypre_Solve_SStructSplit( int *N_iter, real *final_res_norm )
 
    HYPRE_CHECK_FUNC(   HYPRE_SStructSplitDestroy( Hypre_solver )   );
 
-} // FUNCTION : Hypre_Solve
+} // FUNCTION : Hypre_Solve_SStructSplit
 #endif // #ifdef SUPPORT_HYPRE
