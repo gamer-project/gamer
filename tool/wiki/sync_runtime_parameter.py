@@ -51,6 +51,7 @@ LINK_FILES     = [ "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters
                    "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Gravity.md",
                    "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Hydro.md",
                    "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Initial-Conditions.md",
+                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-In-Situ-Python-Analysis.md",
                    "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Interpolation.md",
                    "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-MPI-and-OpenMP.md",
                    "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Miscellaneous.md",
@@ -58,6 +59,7 @@ LINK_FILES     = [ "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters
                    "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Particles.md",
                    "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Refinement.md",
                    "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Star-Formation.md",
+                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Source-Terms.md",
                    "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Timestep.md",
                    "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Units.md"
                  ]
