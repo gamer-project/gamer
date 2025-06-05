@@ -19,6 +19,7 @@ gramfe_fftw::complex_plan_1d FFTW_Plan_ExtPsi, FFTW_Plan_ExtPsi_Inv;   // ExtPsi
 
 
 //-------------------------------------------------------------------------------------------------------
+<<<<<<< HEAD
 // Function    :  ComputePaddedTotalSize
 // Description :  Return padded total size for complex-to-real and real-to-complex 3D FFTW transforms
 //
@@ -47,6 +48,8 @@ size_t ComputeTotalSize(int* size) {
 
 
 //-------------------------------------------------------------------------------------------------------
+=======
+>>>>>>> 42faa4595 (Remove unused function ComputePaddedTotalSize() and ComputeTotalSize(). Add variable check to List_PID, List_k, TempBuf_SIdx, TempBuf_Var.)
 // Function    :  Init_FFTW
 // Description :  Create the FFTW plans
 //-------------------------------------------------------------------------------------------------------
@@ -163,18 +166,15 @@ void Init_FFTW()
    mpi_index_int local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose;
 // allocate memory for arrays in fftw3
 #  if ( SUPPORT_FFTW == FFTW3 )
-   //PS   = (real*) root_fftw::fft_malloc(ComputePaddedTotalSize(PS_FFT_Size     ) * sizeof(real));
    PS   = (real*) root_fftw::fft_malloc(fftw_mpi_local_size_3d_transposed(PS_FFT_Size[2], PS_FFT_Size[1], 2*(PS_FFT_Size[0]/2+1),
                                                                           MPI_COMM_WORLD, &local_nz, &local_z_start, &local_ny_after_transpose,
                                                                           &local_y_start_after_transpose) * sizeof(real));
 #  ifdef GRAVITY
-   //RhoK = (real*) root_fftw::fft_malloc(ComputePaddedTotalSize(Gravity_FFT_Size) * sizeof(real));
    RhoK = (real*) root_fftw::fft_malloc(fftw_mpi_local_size_3d_transposed(Gravity_FFT_Size[2], Gravity_FFT_Size[1], 2*(Gravity_FFT_Size[0]/2+1),
                                                                           MPI_COMM_WORLD, &local_nz, &local_z_start, &local_ny_after_transpose,
                                                                           &local_y_start_after_transpose) * sizeof(real));
 #  endif // # ifdef GRAVITY
 #  if ( MODEL == ELBDM )
-   //PsiK = (real*) root_fftw::fft_malloc( ComputeTotalSize      ( Psi_FFT_Size     ) * sizeof(real) * 2 );  // 2 * real for size of complex number
    PsiK = (real*) root_fftw::fft_malloc(fftw_mpi_local_size_3d_transposed(Psi_FFT_Size[2], Psi_FFT_Size[1], 2*(Psi_FFT_Size[0]/2+1),
                                                                           MPI_COMM_WORLD, &local_nz, &local_z_start, &local_ny_after_transpose,
                                                                           &local_y_start_after_transpose) * sizeof(real) * 2 ); 
@@ -373,6 +373,15 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
       TempBuf_SIdx   [r] = (long*)malloc( MemSize[r]*sizeof(long)        );
       TempBuf_Var    [r] = (real*)malloc( MemSize[r]*sizeof(real)*PSSize );
       List_NSend_SIdx[r] = 0;
+
+      if ( List_PID[r] == NULL )
+          Aux_Error( ERROR_INFO, "List_PID[%d] is NULL on Rank %d !!\n", r, MPI_Rank );
+      if ( List_k[r] == NULL )
+          Aux_Error( ERROR_INFO, "List_k[%d] is NULL on Rank %d !!\n", r, MPI_Rank );
+      if ( TempBuf_SIdx[r] == NULL )
+          Aux_Error( ERROR_INFO, "TempBuf_SIdx[%d] is NULL on Rank %d !!\n", r, MPI_Rank );
+      if ( TempBuf_Var[r] == NULL )
+          Aux_Error( ERROR_INFO, "TempBuf_Var[%d] is NULL on Rank %d !!\n", r, MPI_Rank ); 
    }
 
 
