@@ -347,7 +347,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
    const int SSize[2]   = { ( InPlacePad ? 2*(FFT_Size[0]/2+1) : FFT_Size[0] ), FFT_Size[1] };     // padded slab size in the x and y directions
    const int PSSize     = PS1*PS1;                                // patch slice size
 // const int MemUnit    = amr->NPatchComma[0][1]*PS1/MPI_NRank;   // set arbitrarily
-   const int MemUnit    = amr->NPatchComma[0][1]*PS1;             // set arbitrarily
+   const int MemUnit    = amr->NPatchComma[0][1]/MPI_NRank;       // set arbitrarily
    const int AveNz      = FFT_Size[2]/MPI_NRank + ( ( FFT_Size[2]%MPI_NRank == 0 ) ? 0 : 1 );    // average slab thickness
    const int Scale0     = amr->scale[0];
 
