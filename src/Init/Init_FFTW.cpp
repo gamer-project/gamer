@@ -19,37 +19,6 @@ gramfe_fftw::complex_plan_1d FFTW_Plan_ExtPsi, FFTW_Plan_ExtPsi_Inv;   // ExtPsi
 
 
 //-------------------------------------------------------------------------------------------------------
-<<<<<<< HEAD
-// Function    :  ComputePaddedTotalSize
-// Description :  Return padded total size for complex-to-real and real-to-complex 3D FFTW transforms
-//
-// Parameter   :  size : 3D array with size of FFT block
-//
-// Return      :  length of array that is large enough to store FFT input and output
-//-------------------------------------------------------------------------------------------------------
-size_t ComputePaddedTotalSize(int* size) {
-   return 2*((size_t)size[0]/2+1)*size[1]*size[2];
-} // FUNCTION : ComputePaddedTotalSize
-
-
-
-//-------------------------------------------------------------------------------------------------------
-// Function    :  ComputeTotalSize
-// Description :  Return total size for complex-to-complex 3D FFTW transforms
-//
-// Parameter   :  size : 3D array with size of FFT block
-//
-// Return      :  length of array that is large enough to store FFT input and output
-//-------------------------------------------------------------------------------------------------------
-size_t ComputeTotalSize(int* size) {
-   return (size_t)size[0]*size[1]*size[2];
-} // FUNCTION : ComputeTotalSize
-
-
-
-//-------------------------------------------------------------------------------------------------------
-=======
->>>>>>> 42faa4595 (Remove unused function ComputePaddedTotalSize() and ComputeTotalSize(). Add variable check to List_PID, List_k, TempBuf_SIdx, TempBuf_Var.)
 // Function    :  Init_FFTW
 // Description :  Create the FFTW plans
 //-------------------------------------------------------------------------------------------------------
