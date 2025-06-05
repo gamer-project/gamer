@@ -160,14 +160,24 @@ void Init_FFTW()
       default:                       Aux_Error( ERROR_INFO, "unrecognised FFTW startup option %d  !!\n", OPT__FFTW_STARTUP );
    } // switch ( OPT__FFTW_STARTUP )
 
+   mpi_index_int local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose;
 // allocate memory for arrays in fftw3
 #  if ( SUPPORT_FFTW == FFTW3 )
-   PS   = (real*) root_fftw::fft_malloc(ComputePaddedTotalSize(PS_FFT_Size     ) * sizeof(real));
+   //PS   = (real*) root_fftw::fft_malloc(ComputePaddedTotalSize(PS_FFT_Size     ) * sizeof(real));
+   PS   = (real*) root_fftw::fft_malloc(fftw_mpi_local_size_3d_transposed(PS_FFT_Size[2], PS_FFT_Size[1], 2*(PS_FFT_Size[0]/2+1),
+                                                                          MPI_COMM_WORLD, &local_nz, &local_z_start, &local_ny_after_transpose,
+                                                                          &local_y_start_after_transpose) * sizeof(real));
 #  ifdef GRAVITY
-   RhoK = (real*) root_fftw::fft_malloc(ComputePaddedTotalSize(Gravity_FFT_Size) * sizeof(real));
+   //RhoK = (real*) root_fftw::fft_malloc(ComputePaddedTotalSize(Gravity_FFT_Size) * sizeof(real));
+   RhoK = (real*) root_fftw::fft_malloc(fftw_mpi_local_size_3d_transposed(Gravity_FFT_Size[2], Gravity_FFT_Size[1], 2*(Gravity_FFT_Size[0]/2+1),
+                                                                          MPI_COMM_WORLD, &local_nz, &local_z_start, &local_ny_after_transpose,
+                                                                          &local_y_start_after_transpose) * sizeof(real));
 #  endif // # ifdef GRAVITY
 #  if ( MODEL == ELBDM )
-   PsiK = (real*) root_fftw::fft_malloc( ComputeTotalSize      ( Psi_FFT_Size     ) * sizeof(real) * 2 );  // 2 * real for size of complex number
+   //PsiK = (real*) root_fftw::fft_malloc( ComputeTotalSize      ( Psi_FFT_Size     ) * sizeof(real) * 2 );  // 2 * real for size of complex number
+   PsiK = (real*) root_fftw::fft_malloc(fftw_mpi_local_size_3d_transposed(Psi_FFT_Size[2], Psi_FFT_Size[1], 2*(Psi_FFT_Size[0]/2+1),
+                                                                          MPI_COMM_WORLD, &local_nz, &local_z_start, &local_ny_after_transpose,
+                                                                          &local_y_start_after_transpose) * sizeof(real) * 2 ); 
 #  endif // # if ( MODEL == ELBDM )
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
