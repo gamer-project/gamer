@@ -26,8 +26,8 @@ gramfe_fftw::complex_plan_1d FFTW_Plan_ExtPsi, FFTW_Plan_ExtPsi_Inv;   // ExtPsi
 //
 // Return      :  length of array that is large enough to store FFT input and output
 //-------------------------------------------------------------------------------------------------------
-int ComputePaddedTotalSize(int* size) {
-   return 2*(size[0]/2+1)*size[1]*size[2];
+size_t ComputePaddedTotalSize(int* size) {
+   return 2*((size_t)size[0]/2+1)*size[1]*size[2];
 } // FUNCTION : ComputePaddedTotalSize
 
 
@@ -40,8 +40,8 @@ int ComputePaddedTotalSize(int* size) {
 //
 // Return      :  length of array that is large enough to store FFT input and output
 //-------------------------------------------------------------------------------------------------------
-int ComputeTotalSize(int* size) {
-   return size[0]*size[1]*size[2];
+size_t ComputeTotalSize(int* size) {
+   return (size_t)size[0]*size[1]*size[2];
 } // FUNCTION : ComputeTotalSize
 
 
