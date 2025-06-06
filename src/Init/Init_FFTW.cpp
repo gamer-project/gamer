@@ -182,7 +182,6 @@ void Init_FFTW()
       default:                       Aux_Error( ERROR_INFO, "unrecognised FFTW startup option %d  !!\n", OPT__FFTW_STARTUP );
    } // switch ( OPT__FFTW_STARTUP )
 
-   mpi_index_int local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose;
 // allocate memory for arrays in fftw3
 #  if ( SUPPORT_FFTW == FFTW3 )
    PS   = (real*) root_fftw::fft_malloc(ComputePaddedTotalSize(PS_FFT_Size     ) * sizeof(real));
