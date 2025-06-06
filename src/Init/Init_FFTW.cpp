@@ -19,6 +19,56 @@ gramfe_fftw::complex_plan_1d FFTW_Plan_ExtPsi, FFTW_Plan_ExtPsi_Inv;   // ExtPsi
 
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  ComputePaddedTotalSize
+// Description :  Return padded total size for complex-to-real and real-to-complex 3D FFTW transforms
+//
+// Parameter   :  size : 3D array with size of FFT block
+//
+// Return      :  length of array that is large enough to store FFT input and output
+//-------------------------------------------------------------------------------------------------------
+//int ComputePaddedTotalSize(int* size) {
+//   return 2*(size[0]/2+1)*size[1]*size[2];
+//} // FUNCTION : ComputePaddedTotalSize
+size_t ComputePaddedTotalSize(int* size) {
+#  if SERIAL
+   return 2*((size_t)size[0]/2+1)*size[1]*size[2];
+#  else
+   mpi_index_int local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose;
+
+   return (size_t)fftw_mpi_local_size_3d_transposed(size[2], size[1], 2*(size[0]/2+1),
+                                                    MPI_COMM_WORLD, &local_nz, &local_z_start, &local_ny_after_transpose,
+                                                    &local_y_start_after_transpose);
+#  endif //#if SERIAL
+} // FUNCTION : ComputePaddedTotalSize
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  ComputeTotalSize
+// Description :  Return total size for complex-to-complex 3D FFTW transforms
+//
+// Parameter   :  size : 3D array with size of FFT block
+//
+// Return      :  length of array that is large enough to store FFT input and output
+//-------------------------------------------------------------------------------------------------------
+//int ComputeTotalSize(int* size) {
+//   return size[0]*size[1]*size[2];
+//} // FUNCTION : ComputeTotalSize
+size_t ComputeTotalSize(int* size) {
+#  if SERIAL
+   return (size_t)size[0]*size[1]*size[2];
+#  else
+   mpi_index_int local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose;
+
+   return (size_t)fftw_mpi_local_size_3d_transposed(size[2], size[1], 2*(size[0]/2+1),
+                                                    MPI_COMM_WORLD, &local_nz, &local_z_start, &local_ny_after_transpose,
+                                                    &local_y_start_after_transpose);
+#  endif
+} // FUNCTION : ComputeTotalSize
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  Init_FFTW
 // Description :  Create the FFTW plans
 //-------------------------------------------------------------------------------------------------------
@@ -135,18 +185,12 @@ void Init_FFTW()
    mpi_index_int local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose;
 // allocate memory for arrays in fftw3
 #  if ( SUPPORT_FFTW == FFTW3 )
-   PS   = (real*) root_fftw::fft_malloc(fftw_mpi_local_size_3d_transposed(PS_FFT_Size[2], PS_FFT_Size[1], 2*(PS_FFT_Size[0]/2+1),
-                                                                          MPI_COMM_WORLD, &local_nz, &local_z_start, &local_ny_after_transpose,
-                                                                          &local_y_start_after_transpose) * sizeof(real));
+   PS   = (real*) root_fftw::fft_malloc(ComputePaddedTotalSize(PS_FFT_Size     ) * sizeof(real));
 #  ifdef GRAVITY
-   RhoK = (real*) root_fftw::fft_malloc(fftw_mpi_local_size_3d_transposed(Gravity_FFT_Size[2], Gravity_FFT_Size[1], 2*(Gravity_FFT_Size[0]/2+1),
-                                                                          MPI_COMM_WORLD, &local_nz, &local_z_start, &local_ny_after_transpose,
-                                                                          &local_y_start_after_transpose) * sizeof(real));
+   RhoK = (real*) root_fftw::fft_malloc(ComputePaddedTotalSize(Gravity_FFT_Size) * sizeof(real));
 #  endif // # ifdef GRAVITY
 #  if ( MODEL == ELBDM )
-   PsiK = (real*) root_fftw::fft_malloc(fftw_mpi_local_size_3d_transposed(Psi_FFT_Size[2], Psi_FFT_Size[1], 2*(Psi_FFT_Size[0]/2+1),
-                                                                          MPI_COMM_WORLD, &local_nz, &local_z_start, &local_ny_after_transpose,
-                                                                          &local_y_start_after_transpose) * sizeof(real) * 2 ); 
+   PsiK = (real*) root_fftw::fft_malloc( ComputeTotalSize     ( Psi_FFT_Size   ) * sizeof(real) * 2 );  // 2 * real for size of complex number
 #  endif // # if ( MODEL == ELBDM )
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
