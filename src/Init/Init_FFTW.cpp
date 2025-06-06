@@ -54,7 +54,7 @@ size_t ComputeTotalSize(int* size) {
 #  else
    mpi_index_int local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose;
 
-   return (size_t)fftw_mpi_local_size_3d_transposed(size[2], size[1], size[0]),
+   return (size_t)fftw_mpi_local_size_3d_transposed(size[2], size[1], size[0],
                                                     MPI_COMM_WORLD, &local_nz, &local_z_start, &local_ny_after_transpose,
                                                     &local_y_start_after_transpose);
 #  endif
