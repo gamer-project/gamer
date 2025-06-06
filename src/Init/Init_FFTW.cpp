@@ -18,6 +18,7 @@ gramfe_fftw::complex_plan_1d FFTW_Plan_ExtPsi, FFTW_Plan_ExtPsi_Inv;   // ExtPsi
 
 
 
+#if ( SUPPORT_FFTW == FFTW3 )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ComputePaddedTotalSize
 // Description :  Return padded total size for complex-to-real and real-to-complex 3D FFTW transforms
@@ -65,6 +66,7 @@ size_t ComputeTotalSize( int* size )
 #  endif // #if SERIAL
 
 } // FUNCTION : ComputeTotalSize
+#endif // #if ( SUPPORT_FFTW == FFTW3 )
 
 
 
