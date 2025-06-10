@@ -32,9 +32,33 @@ void Hypre_Aux_Record( const char SolverName[], const int lv, const int iteratio
             Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
 
          FILE *File = fopen( FileName, "a" );
-         fprintf( File, "# Maximum iteration: %d\n", HYPRE_MAX_ITER );
-         fprintf( File, "# Relative tolerance: %24.16e\n", HYPRE_REL_TOL );
-         fprintf( File, "# Absolute tolerance: %24.16e\n", HYPRE_ABS_TOL );
+         fprintf( File, "# ====================================================================================================\n");
+         fprintf( File, "# Hypre package information\n" );
+         fprintf( File, "# ====================================================================================================\n");
+#        ifdef HYPRE_RELEASE_DATE
+         fprintf( File, "# HYPRE_RELEASE_DATE:    %s\n", HYPRE_RELEASE_DATE );
+#        endif
+#        ifdef HYPRE_RELEASE_NUMBER
+         fprintf( File, "# HYPRE_RELEASE_NUMBER:  %d\n", HYPRE_RELEASE_NUMBER );
+#        endif
+#        ifdef HYPRE_RELEASE_VERSION
+         fprintf( File, "# HYPRE_RELEASE_VERSION: %s\n", HYPRE_RELEASE_VERSION );
+#        endif
+#        ifdef HYPRE_DEBUG
+         fprintf( File, "# HYPRE_DEBUG:           %d\n", HYPRE_DEBUG );
+#        endif
+#        ifdef HYPRE_HAVE_MPI
+         fprintf( File, "# HYPRE_HAVE_MPI:        %d\n", HYPRE_HAVE_MPI );
+#        endif
+#        ifdef HYPRE_USING_OPENMP
+         fprintf( File, "# HYPRE_USING_OPENMP:    %d\n", HYPRE_USNIG_OPENMP );
+#        endif
+         fprintf( File, "# ====================================================================================================\n");
+         fprintf( File, "# Hypre runtime parameters\n" );
+         fprintf( File, "# ====================================================================================================\n");
+         fprintf( File, "# Maximum iteration:  %d\n",      HYPRE_MAX_ITER );
+         fprintf( File, "# Relative tolerance: %22.16e\n", HYPRE_REL_TOL );
+         fprintf( File, "# Absolute tolerance: %22.16e\n", HYPRE_ABS_TOL );
          fprintf( File, "# ====================================================================================================\n");
          fprintf( File, "#%19s  %5s  %10s  %14s", "Solver", "Lv", "Step", "Counter" );
          fprintf( File, "  %20s  %24s", "Iteration", "Residual" );
@@ -43,12 +67,12 @@ void Hypre_Aux_Record( const char SolverName[], const int lv, const int iteratio
       }
 
       FirstTime = false;
-   }
+   } // if ( FirstTime )
 
    if ( MPI_Rank == 0 )
    {
       FILE *File = fopen( FileName, "a" );
-      fprintf( File, "%20s  %5d  %10ld  %14ld  %20d  %+24.16e\n", SolverName, lv, Step, AdvanceCounter[lv], iteration, residual );
+      fprintf( File, "%20s  %5d  %10ld  %14ld  %20d  %24.16e\n", SolverName, lv, Step, AdvanceCounter[lv], iteration, residual );
       fclose( File );
    }
 
