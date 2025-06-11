@@ -304,8 +304,10 @@ void Hypre_FillArrays( const int lv, const int NExtend, const double TimeNew, co
    for (int i=0; i<NEntries; i++)  stencil_indices[i] = i;
 
 // determin if the patch group is at boundary or course-fine edge
+   int *PID0_List    = new int [ amr->NPatchComma[lv][1] / 8 ];
    int *PID0_BC_List = new int [ amr->NPatchComma[lv][1] / 8 ];
    int  NPG_BC       = 0;
+   int  NPG          = 0;
 
    for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
    {
@@ -318,9 +320,10 @@ void Hypre_FillArrays( const int lv, const int NExtend, const double TimeNew, co
             const int d     = s/2;
             const int TDir1 = (d+1) % 3;
             const int TDir2 = (d+2) % 3;
+            const int SibPID = amr->patch[0][lv][PID]->sibling[s];
 
-            if ( amr->patch[0][lv][PID]->sibling[s] >= 0 )   continue;
-            if ( amr->patch[0][lv][PID]->sibling[s] < SIB_OFFSET_NONPERIODIC  &&  OPT__BC_POT == BC_POT_PERIODIC )   continue;
+            if ( SibPID >= 0 )   continue;
+            if ( SibPID < SIB_OFFSET_NONPERIODIC  &&  OPT__BC_POT == BC_POT_PERIODIC )   continue;
 
             atBC = true;
             break;
@@ -333,6 +336,8 @@ void Hypre_FillArrays( const int lv, const int NExtend, const double TimeNew, co
          PID0_BC_List[NPG_BC] = PID0;
          NPG_BC++;
       }
+      PID0_List[NPG] = PID0;
+      NPG++;
    } // for (int PID0=0; PID0<amr->NPatchComma[lv][1] / 8; PID0+=8)
 
    real   *Matrix_Laplace = new real [NEntries*CUBE(PS1)];
@@ -341,6 +346,7 @@ void Hypre_FillArrays( const int lv, const int NExtend, const double TimeNew, co
    real   *bcBox          = new real [1*SQR(PS1)];
    real   *bcVal          = new real [SQR(PS1)];
    real  (*Pot_Array)[CUBE(PS1+2)] = NULL;
+   real  (*Dens_Array)[CUBE(PS1)]  = NULL;
 
 // fill common Laplace matrix
    for (int k=0; k<PS1; k++)
@@ -357,6 +363,13 @@ void Hypre_FillArrays( const int lv, const int NExtend, const double TimeNew, co
       Matrix_Laplace[idx+5] = -1; // i,   j,   k-1
       Matrix_Laplace[idx+6] = -1; // i,   j,   k+1
    }
+
+// prepare density with particle density
+   Dens_Array = new real [8*NPG][ CUBE(PS1) ];
+
+   Prepare_PatchData( lv, TimeNew, Dens_Array[0], NULL,
+                      0, NPG, PID0_List, _TOTAL_DENS, _NONE, OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00,
+                      IntPhase_No, OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
 // prepare boundary potential
    if ( NPG_BC > 0 )
@@ -387,15 +400,18 @@ void Hypre_FillArrays( const int lv, const int NExtend, const double TimeNew, co
    else if ( Comoving )                  RhoSubtract = (real)1.0;
    else                                  RhoSubtract = (real)0.0;
 
-   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+   for (int PG=0; PG<NPG; PG++)
+   for (int LocalID=0; LocalID<8; LocalID++)
    {
+      const int PID = PID0_List[PG] + LocalID;
       // Aux_Message( stdout, "cornerL: (%6d %6d %6d)\n", amr->patch[0][lv][PID]->cornerL[0], amr->patch[0][lv][PID]->cornerL[1], amr->patch[0][lv][PID]->cornerL[2] );
       for (int k=0; k<PS1; k++) { const double z = amr->patch[0][lv][PID]->EdgeL[2] + (0.5+k)*dh;
       for (int j=0; j<PS1; j++) { const double y = amr->patch[0][lv][PID]->EdgeL[1] + (0.5+j)*dh;
       for (int i=0; i<PS1; i++) { const double x = amr->patch[0][lv][PID]->EdgeL[0] + (0.5+i)*dh;
          const int idx = IDX321( i, j, k, PS1, PS1 );
 
-         real Dens = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i] - RhoSubtract;
+         // real Dens = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[DENS][k][j][i] - RhoSubtract;
+         real Dens = Dens_Array[8*PG+LocalID][idx] - RhoSubtract;
 
 //       add extra mass source for gravity if required
          if ( OPT__GRAVITY_EXTRA_MASS )
@@ -448,8 +464,10 @@ void Hypre_FillArrays( const int lv, const int NExtend, const double TimeNew, co
 //    remove the connection and update A due to Dirichlet boundary condition
       for (int s=0; s<6; s++)
       {
-         if ( amr->patch[0][lv][PID]->sibling[s] >= 0 )   continue;
-         if ( amr->patch[0][lv][PID]->sibling[s] < SIB_OFFSET_NONPERIODIC  &&  OPT__BC_POT == BC_POT_PERIODIC )   continue;
+         const int SibPID = amr->patch[0][lv][PID]->sibling[s];
+
+         if ( SibPID >= 0 )   continue;
+         if ( SibPID < SIB_OFFSET_NONPERIODIC  &&  OPT__BC_POT == BC_POT_PERIODIC )   continue;
 
          const int d     = s/2;
          const int TDir1 = (d+1) % 3;
@@ -566,7 +584,9 @@ void Hypre_FillArrays( const int lv, const int NExtend, const double TimeNew, co
    delete [] bcBox;
    delete [] bcVal;
    delete [] PID0_BC_List;
+   delete [] PID0_List;
    delete [] Pot_Array;
+   delete [] Dens_Array;
 
 } // FUNCITON : Hypre_FillArrays
 
