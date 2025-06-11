@@ -182,6 +182,11 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
          Hypre_SolvePoisson( SaveSg_Pot, lv, TimeNew, Poi_Coeff );
          TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES ),
                         Timer_GetBuf[lv][1],   Timing  );
+//       must call Poi_StorePotWithGhostZone AFTER collecting potential for buffer patches
+#        ifdef STORE_POT_GHOST
+         TIMING_FUNC(   Poi_StorePotWithGhostZone( lv, SaveSg_Pot, true ),
+                        Timer_Gra_Advance[lv],   Timing   );
+#        endif
 #        else
          InvokeSolver( POISSON_SOLVER,             lv, TimeNew, TimeOld, NULL_REAL, Poi_Coeff, NULL_INT,   NULL_INT, SaveSg_Pot,
                        OverlapMPI, Overlap_Sync );
@@ -197,11 +202,15 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
       {
 #        if ( POT_SCHEME == HYPRE_POI )
          Hypre_SolvePoisson( SaveSg_Pot, lv, TimeNew, Poi_Coeff );
-         TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES ),
-                        Timer_GetBuf[lv][1],   Timing  );
-
          amr->PotSg    [lv]             = SaveSg_Pot;
          amr->PotSgTime[lv][SaveSg_Pot] = TimeNew;
+         TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES ),
+                        Timer_GetBuf[lv][1],   Timing  );
+//       must call Poi_StorePotWithGhostZone AFTER collecting potential for buffer patches
+#        ifdef STORE_POT_GHOST
+         TIMING_FUNC(   Poi_StorePotWithGhostZone( lv, SaveSg_Pot, true ),
+                        Timer_Gra_Advance[lv],   Timing   );
+#        endif
          // Aux_Message( stdout, "%s update pot SG\n", __FILE__ );
          // Buf_GetBufferData( lv, NULL_INT, NULL_INT,   amr->PotSg[lv], POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES );
          // Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, amr->PotSg[lv], DATA_GENERAL, _DENS|_POTE, _NONE, Rho_ParaBuf, USELB_YES );

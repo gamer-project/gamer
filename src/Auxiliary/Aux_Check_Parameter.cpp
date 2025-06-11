@@ -1532,6 +1532,10 @@ void Aux_Check_Parameter()
 #     error : ERROR : must enable SUPPORT_HYPRE for POT_SCHEME == HYPRE_POI !!
 #  endif
 
+#  if ( POT_SCHEME == HYPRE_POI  &&  defined STORE_POT_GHOST )
+#     error : STORE_POT_GHOST is useless for POT_SCHEME == HYPRE_POI (if you really need this feature please comment out this line) !!
+#  endif
+
 #  if ( POT_GHOST_SIZE <= GRA_GHOST_SIZE )
 #     error : ERROR : POT_GHOST_SIZE <= GRA_GHOST_SIZE !!
 #  endif

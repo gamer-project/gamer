@@ -603,7 +603,7 @@ def load_arguments( sys_setting : SystemSetting ):
     parser.add_argument( "--pot_scheme", type=str, metavar="TYPE", gamer_name="POT_SCHEME",
                          default="SOR", choices=["SOR", "MG", "HYPRE_POI"],
                          depend={"gravity":True},
-                         constraint={ "HYPRE_POISSON":{"hypre":True} },
+                         constraint={ "HYPRE_POI":{"hypre":True} },
                          help="Select the Poisson solver. SOR: successive-overrelaxation (recommended), MG: multigrid. "\
                               "Must be set when <--gravity> is enabled.\n"
                        )
@@ -613,6 +613,7 @@ def load_arguments( sys_setting : SystemSetting ):
                          depend={"gravity":True},
                          help="Store GRA_GHOST_SIZE ghost-zone potential for each patch on each side. "\
                               "Recommended when PARTICLE is enabled for improving accuaracy for particles around the patch boundaries. "\
+                              "Useless for <--pot_scheme=HYPRE_POI>. "\
                               "Must be enabled for <--star_formation> + <--store_par_acc>.\n"
                        )
 
