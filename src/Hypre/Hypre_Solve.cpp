@@ -45,13 +45,10 @@ void Hypre_Solve_SStructSysPFMG( int *N_iter, real *final_res_norm )
    HYPRE_CHECK_FUNC(   HYPRE_SStructSysPFMGSetNumPostRelax( Hypre_solver, HYPRE_NPOST_RELAX )   );
 
 // do the setup
-   MPI_Barrier( MPI_COMM_WORLD );
    HYPRE_CHECK_FUNC(   HYPRE_SStructSysPFMGSetup( Hypre_solver, Hypre_A, Hypre_b, Hypre_x )   );
 
 // do the solve
-   MPI_Barrier( MPI_COMM_WORLD );
    HYPRE_CHECK_FUNC(   HYPRE_SStructSysPFMGSolve( Hypre_solver, Hypre_A, Hypre_b, Hypre_x )   );
-   MPI_Barrier( MPI_COMM_WORLD );
 
 // get some info
    HYPRE_CHECK_FUNC(   HYPRE_SStructSysPFMGGetFinalRelativeResidualNorm( Hypre_solver, final_res_norm )   );

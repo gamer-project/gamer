@@ -36,23 +36,31 @@ void Hypre_Aux_Record( const char SolverName[], const int lv, const int iteratio
          fprintf( File, "# Hypre package information\n" );
          fprintf( File, "# ====================================================================================================\n");
 #        ifdef HYPRE_RELEASE_DATE
-         fprintf( File, "# HYPRE_RELEASE_DATE:    %s\n", HYPRE_RELEASE_DATE );
+         fprintf( File, "# %-30s : %s\n", "HYPRE_RELEASE_DATE",    HYPRE_RELEASE_DATE );
 #        endif
 #        ifdef HYPRE_RELEASE_NUMBER
-         fprintf( File, "# HYPRE_RELEASE_NUMBER:  %d\n", HYPRE_RELEASE_NUMBER );
+         fprintf( File, "# %-30s : %d\n", "HYPRE_RELEASE_NUMBER",  HYPRE_RELEASE_NUMBER );
 #        endif
 #        ifdef HYPRE_RELEASE_VERSION
-         fprintf( File, "# HYPRE_RELEASE_VERSION: %s\n", HYPRE_RELEASE_VERSION );
+         fprintf( File, "# %-30s : %s\n", "HYPRE_RELEASE_VERSION", HYPRE_RELEASE_VERSION );
 #        endif
+
 #        ifdef HYPRE_DEBUG
-         fprintf( File, "# HYPRE_DEBUG:           %d\n", HYPRE_DEBUG );
+         fprintf( File, "# %-30s : %d\n", "HYPRE_DEBUG",           HYPRE_DEBUG );
+#        else
+         fprintf( File, "# %-30s : %d\n", "HYPRE_DEBUG",           0 );
 #        endif
 #        ifdef HYPRE_HAVE_MPI
-         fprintf( File, "# HYPRE_HAVE_MPI:        %d\n", HYPRE_HAVE_MPI );
+         fprintf( File, "# %-30s : %d\n", "HYPRE_HAVE_MPI",        HYPRE_HAVE_MPI );
+#        else
+         fprintf( File, "# %-30s : %d\n", "HYPRE_HAVE_MPI",        0 );
 #        endif
 #        ifdef HYPRE_USING_OPENMP
-         fprintf( File, "# HYPRE_USING_OPENMP:    %d\n", HYPRE_USNIG_OPENMP );
+         fprintf( File, "# %-30s : %d\n", "HYPRE_USING_OPENMP",    HYPRE_USING_OPENMP );
+#        else
+         fprintf( File, "# %-30s : %d\n", "HYPRE_USING_OPENMP",    0 );
 #        endif
+
          fprintf( File, "# ====================================================================================================\n");
          fprintf( File, "# Hypre runtime parameters\n" );
          fprintf( File, "# ====================================================================================================\n");
