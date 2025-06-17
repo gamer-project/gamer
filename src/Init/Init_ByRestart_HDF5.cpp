@@ -1981,6 +1981,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Par_GhostSize",           &RS.Par_GhostSize,           SID, TID, NonFatal, &RT.Par_GhostSize,            1, NonFatal );
    LoadField( "Par_GhostSizeTracer",     &RS.Par_GhostSizeTracer,     SID, TID, NonFatal, &RT.Par_GhostSizeTracer,      1, NonFatal );
    LoadField( "Par_TracerVelCorr",       &RS.Par_TracerVelCorr,       SID, TID, NonFatal, &RT.Par_TracerVelCorr,        1, NonFatal );
+   LoadField( "Opt__ParInitCheck",       &RS.Opt__ParInitCheck,       SID, TID, NonFatal, &RT.Opt__ParInitCheck,        1, NonFatal );
 #  endif
 
 // cosmology

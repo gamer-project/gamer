@@ -99,6 +99,7 @@ PAR_PREDICT_POS               1           # predict particle position during mas
 PAR_REMOVE_CELL              -1.0         # remove particles X-root-cells from the boundaries (non-periodic BC only; <0=auto) [-1.0]
 OPT__FREEZE_PAR               0           # do not update particles (except for tracers) [0]
 PAR_TR_VEL_CORR               0           # correct tracer particle velocities in regions of discontinuous flow [0]
+OPT__PAR_INIT_CHECK           1           # check particle initialization (only works for PAR_INIT != 2) [1]
 
 # cosmology (COMOVING only)
 A_INIT                        0.01        # initial scale factor

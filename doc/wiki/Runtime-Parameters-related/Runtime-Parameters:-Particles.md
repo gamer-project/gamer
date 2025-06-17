@@ -13,7 +13,8 @@ Parameters described on this page:
 [PAR_IMPROVE_ACC](#PAR_IMPROVE_ACC), &nbsp;
 [PAR_PREDICT_POS](#PAR_PREDICT_POS), &nbsp;
 [PAR_REMOVE_CELL](#PAR_REMOVE_CELL), &nbsp;
-[OPT__FREEZE_PAR](#OPT__FREEZE_PAR) &nbsp;
+[OPT__FREEZE_PAR](#OPT__FREEZE_PAR), &nbsp;
+[OPT__PAR_INIT_CHECK](#OPT__PAR_INIT_CHECK) &nbsp;
 
 
 Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**
@@ -148,6 +149,13 @@ Only applicable when adopting the isolated gravity boundary condition
     * **Description:**
 Do not update particle position and velocity (except for tracer particles).
 It can be useful for evolving fluid in a static gravitational potential of particles.
+    * **Restriction:**
+
+<a name="OPT__PAR_INIT_CHECK"></a>
+* #### `OPT__PAR_INIT_CHECK` &ensp; (0=off, 1=on) &ensp; [1]
+    * **Description:**
+Check particle initialization by calling `Par_Aux_InitCheck()` function after particle initialization (only works for [PAR_INIT](#PAR_INIT)!=`2`).
+Disable this check when particles are initialized _after_ setting grid fields, such as by `Init_User_Ptr()`.
     * **Restriction:**
 
 
