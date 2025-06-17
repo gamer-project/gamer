@@ -605,7 +605,7 @@ void Aux_Record_ClusterMerger()
          fprintf( File_User, "#%19s%20s",  "Time", "Step" );
          for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
-            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "x",                c, "y",                c, "z",                 c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "ClusterCen_x",     c, "ClusterCen_y",     c, "ClusterCen_z",      c );
             fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "BHVel_x[km/s]",    c, "BHVel_y",          c, "BHVel_z",           c );
             fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "GasVel_x",         c, "GasVel_y",         c, "GasVel_z",          c );
             fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "RelativeVel",      c, "SoundSpeed",       c, "GasDens(cgs)",      c );
