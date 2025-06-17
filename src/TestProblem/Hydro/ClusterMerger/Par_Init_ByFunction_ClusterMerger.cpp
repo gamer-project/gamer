@@ -71,7 +71,6 @@ extern double  Pdot[3];
 extern double  Edot[3];
 extern double  E_inj_exp[3];
 extern double  M_inj_exp[3];
-extern double  dt_base;
        double  E_power_inj[3];             // the injection power
 extern double  ClusterCen[3][3];
 extern double  BH_Vel[3][3];
@@ -665,7 +664,7 @@ void Aux_Record_ClusterMerger()
       M_inj_exp[c]   *= UNIT_M/Const_Msun;
    } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
-   for (int c=0; c<Merger_Coll_NumBHs; c++)   E_power_inj[c] = E_Sum[c]/(dt_base*UNIT_T);
+   for (int c=0; c<Merger_Coll_NumBHs; c++)   E_power_inj[c] = E_Sum[c]/(dTime_Base*UNIT_T);
 
 // output the properties of the cluster centers
    if ( MPI_Rank == 0 )
@@ -754,13 +753,6 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
 
    if ( CurrentMaxLv  &&  (AdjustPos  ||  AdjustVel) )
    {
-//    do not support periodic BC
-      for (int f=0; f<6; f++)
-         if ( OPT__BC_FLU[f] == BC_FLU_PERIODIC )   Aux_Error( ERROR_INFO, "do not support periodic BC (OPT__BC_FLU* = 1)!\n" );
-
-#     ifdef GRAVITY
-      if ( OPT__BC_POT == BC_POT_PERIODIC )  Aux_Error( ERROR_INFO, "do not support periodic BC (OPT__BC_POT = 1)!\n" );
-#     endif
 
       const double dis_exp = 1e-6;  // to check if the output BH positions of each calculaiton are close enough
       bool   converged     = false; // if the BH positions are close enough, then complete the calculation

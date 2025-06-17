@@ -615,9 +615,8 @@ void SetParameter()
       const bool AllocMem_Yes = true;                    // allocate memory for JetDirection
       const int  NCol         = 7;                       // total number of columns to load
       const int  Col[NCol]    = { 0, 1, 2, 3, 4, 5, 6 }; // target columns: (time, theta_1, phi_1, theta_2, phi_2, theta_3, phi_3)
-      const std::string jet_dir_file( JetDirection_file );
 
-      JetDirection_NBin = Aux_LoadTable( JetDirection, jet_dir_file.c_str(), NCol, Col, RowMajor_No, AllocMem_Yes );
+      JetDirection_NBin = Aux_LoadTable( JetDirection, JetDirection_file, NCol, Col, RowMajor_No, AllocMem_Yes );
       Time_table = JetDirection + 0*JetDirection_NBin;
       for (int d=0; d<3; d++)
       {
