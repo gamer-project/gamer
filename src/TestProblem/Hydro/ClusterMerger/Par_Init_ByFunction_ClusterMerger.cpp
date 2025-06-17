@@ -746,7 +746,8 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
    } // if ( fixBH )
 
    double pos_min[3][3], DM_Vel[3][3];   // the updated BH position and velocity
-   const bool CurrentMaxLv = (  NPatchTotal[lv] > 0  &&  ( lv == MAX_LEVEL  ||  NPatchTotal[lv+1] == 0 )  );
+   const bool    CurrentMaxLv = ( NPatchTotal[lv] > 0  &&  lv == MAX_LEVEL        ) ? true :
+                                ( NPatchTotal[lv] > 0  &&  NPatchTotal[lv+1] == 0 ) ? true : false;
 
 // initialize pos_min to be the old center
    for (int c=0; c<Merger_Coll_NumBHs; c++)   for (int d=0; d<3; d++)   pos_min[c][d] = Cen_old[c][d];

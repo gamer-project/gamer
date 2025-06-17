@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#if ( MODEL == HYDRO  &&  defined GRAVITY )
+#if ( MODEL == HYDRO  &&  defined GRAVITY  &&  defined MASSIVE_PARTICLE )
 
 
 extern int        Merger_Coll_NumBHs, Accretion_Mode;
@@ -134,7 +134,7 @@ void BH_accretion_rate( const int mode, double *Mdot_tot, double *Mdot_hot, doub
    }
 
 // cold accretion rate
-   if ( mode == 2  ||  mode == 3  &&  (mass_gas+mass_par) > 0.0 )
+   if ( ( mode == 2  ||  mode == 3 )  &&  (mass_gas+mass_par) > 0.0 )
    {
       const double t_ff = sqrt( 2*CUBE(r_acc) / NEWTON_G / (mass_gas+mass_par) );
       acc_cold = mass_coldGas / t_ff;
@@ -303,7 +303,8 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
 void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt )
 {
 
-   const bool    CurrentMaxLv = (  NPatchTotal[lv] > 0  &&  ( lv == MAX_LEVEL  ||  NPatchTotal[lv+1] == 0 )  );
+   const bool    CurrentMaxLv = ( NPatchTotal[lv] > 0  &&  lv == MAX_LEVEL        ) ? true :
+                                ( NPatchTotal[lv] > 0  &&  NPatchTotal[lv+1] == 0 ) ? true : false;
    const double  dh           = amr->dh[lv];
    const real    dv           = CUBE(dh);
 #  if ( MODEL == HYDRO  &&  !defined SRHD )
