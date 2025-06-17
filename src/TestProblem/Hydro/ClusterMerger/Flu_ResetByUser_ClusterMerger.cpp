@@ -252,9 +252,9 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
          fluid[DENS] += M_inj[c];
 
 //       transfer into BH frame
-         fluid[MOMX] -= BH_Vel[c][0]*fluid[DENS];
-         fluid[MOMY] -= BH_Vel[c][1]*fluid[DENS];
-         fluid[MOMZ] -= BH_Vel[c][2]*fluid[DENS];
+         fluid[MOMX] -= BH_Vel[c][0]*dens_old;
+         fluid[MOMY] -= BH_Vel[c][1]*dens_old;
+         fluid[MOMZ] -= BH_Vel[c][2]*dens_old;
 
 //       use a sine function to make the velocity smooth within the jet from +Jet_Vec to -Jet_Vec
          EngySin = E_inj[c]*normalize_const[c]*sin( Jet_WaveK[c]*Jet_dh );
