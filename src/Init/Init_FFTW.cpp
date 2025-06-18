@@ -360,7 +360,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 
    const int SSize[2]   = { ( InPlacePad ? 2*(FFT_Size[0]/2+1) : FFT_Size[0] ), FFT_Size[1] }; // padded slab size in the x and y directions
    const int PSSize     = PS1*PS1;                                                             // patch slice size
-   const int MemUnit    = MAX(1, amr->NPatchComma[0][1]/MPI_NRank);                            // set arbitrarily; divided by MPI_NRank so that the
+   const int MemUnit    = MAX( 1, amr->NPatchComma[0][1]/MPI_NRank );                          // set arbitrarily; divided by MPI_NRank so that the
                                                                                                // memory consumption per rank for arrays like
                                                                                                // TempBuf_Var[MPI_NRank] reduces when launching
                                                                                                // more ranks
