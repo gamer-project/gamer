@@ -213,9 +213,9 @@ GRACKLE_CMB_FLOOR             1           # map to "cmb_temperature_floor" [1]
 GRACKLE_PE_HEATING            0           # map to "photoelectric_heating" [0]
 GRACKLE_PE_HEATING_RATE       8.5e-26     # map to "photoelectric_heating_rate (in erg/cm^3/s)" [8.5e-26]
 GRACKLE_CLOUDY_TABLE          CloudyData_noUVB.h5  # "grackle_data_file"
-GRACKLE_THREE_BODY_RATE       4           # used Glover+08 rate
-GRACKLE_CIE_COOLING           1           # 0: off; 1:on
-GRACKLE_H2_OPA_APPROX         1           # H2 opacity from Ripamonti+04; 0:off, 1:Ripomonti+04
+GRACKLE_THREE_BODY_RATE       4           # map to "three_body_rate" (4=Glover+08 rate) [0]
+GRACKLE_CIE_COOLING           1           # map to "cie_cooling" (0=off, 1=on) [0]
+GRACKLE_H2_OPA_APPROX         1           # map to "h2_optical_depth_approximation" (0=off, 1=Ripomonti+04) [0]
 CHE_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU Grackle solver (<=0=auto) [-1]
 
 

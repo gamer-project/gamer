@@ -3,6 +3,7 @@
 * [[Equation of State]]
 * [[Gravity]]
 * [[Particles]]
+* [[Source Terms]]
 * [[Chemistry and Radiation]]
 * [[Star Formation]]
 * [[Feedback]]
