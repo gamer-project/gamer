@@ -11,7 +11,6 @@
 // Description :  Initialize the chemistry and radiative cooling library Grackle
 //
 // Note        :  1. Must be called AFTER Init_Load_Parameter(), Init_Unit(), and Init_OpenMP()
-//                2. COMOVING is not supported yet
 //
 // Parameter   :  None
 //
@@ -39,10 +38,6 @@ void Grackle_Init()
 
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "Grackle floating-point number (gr_float) uses %d bytes\n", sizeof(gr_float) );
 
-// comoving frame is not supported yet
-#  ifdef COMOVING
-   Aux_Error( ERROR_INFO, "SUPPORT_GRACKLE does not work with COMOVING yet !!\n" );
-#  endif
 
    if (  ( GRACKLE_PRIMORDIAL == GRACKLE_PRI_CHE_CLOUDY || GRACKLE_METAL || GRACKLE_UV )  &&
          !Aux_CheckFileExist(GRACKLE_CLOUDY_TABLE)  )
@@ -56,11 +51,16 @@ void Grackle_Init()
 // units in cgs
 // --> Che_Units is declared as a global variable since all Grackle solvers require that as well
 #  ifdef COMOVING
+// see https://grackle.readthedocs.io/en/latest/Interaction.html#comoving-coordinates and
+// https://github.com/grackle-project/grackle/issues/192
+// --> the density and length units are conversion factors from code values to cgs in proper coordinates,
+//     while the time and velocity units should remain constant, i.e., velocity_units = length_units / (a_scale * time_units)
+// --> the specific energy passed to Grackle is defined on proper coordinates, i.e., u = k_B * T / ((gamma - 1) * mu * m_p)
    Che_Units.comoving_coordinates = 1;
-   Che_Units.density_units        = NULL_REAL;  // not sure how to set the units in the comoving coordinates yet...
-   Che_Units.length_units         = NULL_REAL;  // --> see http://grackle.readthedocs.io/en/latest/Integration.html
-   Che_Units.time_units           = NULL_REAL;
-   Che_Units.velocity_units       = NULL_REAL;
+   Che_Units.density_units        = UNIT_D / CUBE(Time[0]);
+   Che_Units.length_units         = UNIT_L * Time[0];
+   Che_Units.time_units           = UNIT_T;
+   Che_Units.velocity_units       = UNIT_V;
    Che_Units.a_units              = 1.0;
    Che_Units.a_value              = Time[0];
 
