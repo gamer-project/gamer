@@ -215,7 +215,8 @@ const OptOutputPart_t
    OUTPUT_X         = 4,
    OUTPUT_Y         = 5,
    OUTPUT_Z         = 6,
-   OUTPUT_DIAG      = 7;
+   OUTPUT_DIAG      = 7,
+   OUTPUT_BOX       = 8;
 
 
 // OPT_OUTPUT_PAR_MODE options
@@ -256,10 +257,9 @@ const Check_t
 // modes of Hydro_IsUnphysical()
 typedef int IsUnphyMode_t;
 const IsUnphyMode_t
-   UNPHY_MODE_SING         = 0,  // check single field
-   UNPHY_MODE_CONS         = 1,  // check conserved variables, including passive scalars
-   UNPHY_MODE_PRIM         = 2,  // check primitive variables, including passive scalars
-   UNPHY_MODE_PASSIVE_ONLY = 3;  // only check passive scalars
+   UNPHY_MODE_CONS         = 0,  // check conserved variables, including passive scalars
+   UNPHY_MODE_PRIM         = 1,  // check primitive variables, including passive scalars
+   UNPHY_MODE_PASSIVE_ONLY = 2;  // only check passive scalars
 
 
 // verbosity levels of Hydro_IsUnphysical()
@@ -552,6 +552,13 @@ typedef int ExtremaMode_t;
 const ExtremaMode_t
    EXTREMA_MIN = 1,
    EXTREMA_MAX = 2;
+
+
+// options in LoadInputTestProb()
+typedef int LoadParaMode_t;
+const LoadParaMode_t
+   LOAD_READPARA    = 1,
+   LOAD_HDF5_OUTPUT = 2;
 
 
 // function pointers

@@ -221,12 +221,9 @@ void Init_GAMER( int *argc, char ***argv )
                     "PAR_INIT", (int)amr->Par->Init );
    }
 
-   if ( amr->Par->Init != PAR_INIT_BY_RESTART )
-   {
-      Par_SetParUID( true );
-      Par_Aux_InitCheck();
-   }
+   if ( amr->Par->Init != PAR_INIT_BY_RESTART )   Par_SetParUID( true );
 
+   if ( amr->Par->Init != PAR_INIT_BY_RESTART  &&  OPT__PAR_INIT_CHECK )    Par_Aux_InitCheck();
 #  endif // #ifdef PARTICLE
 
 

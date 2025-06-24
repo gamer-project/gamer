@@ -12,7 +12,9 @@
 void Aux_Record_PatchCount()
 {
 
-   const char FileName[] = "Record__PatchCount";
+   char FileName[2*MAX_STRING];
+   sprintf( FileName, "%s/Record__PatchCount", OUTPUT_DIR );
+
    static bool FirstTime = true;
 
    if ( MPI_Rank == 0  &&  FirstTime )

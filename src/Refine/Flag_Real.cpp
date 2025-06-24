@@ -76,7 +76,11 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #  endif // # if ( MODEL == ELBDM )
 
 #  if ( MODEL == HYDRO  &&  defined GRAVITY )
-   const real JeansCoeff_Factor       = M_PI/( SQR(FlagTable_Jeans[lv])*NEWTON_G ); // flag if dh^2 > JeansCoeff_Factor*Gamma*Pres/Dens^2
+#  ifdef COMOVING
+   const real JeansCoeff_Factor       = M_PI/( SQR(FlagTable_Jeans[lv])*NEWTON_G*Time[lv] ); // flag if dh^2 > JeansCoeff_Factor*Gamma*Pres/Dens^2
+#  else
+   const real JeansCoeff_Factor       = M_PI/( SQR(FlagTable_Jeans[lv])*NEWTON_G          );
+#  endif
 #  endif
 #  ifndef GRAVITY
    const OptPotBC_t OPT__BC_POT       = BC_POT_NONE;
@@ -433,8 +437,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                                 Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i] };
 
 #                    ifdef CHECK_UNPHYSICAL_IN_FLUID
-                     Hydro_IsUnphysical( UNPHY_MODE_CONS, Cons, NULL,
-                                         NULL_REAL, NULL_REAL, NULL_REAL,
+                     Hydro_IsUnphysical( UNPHY_MODE_CONS, Cons, NULL_REAL,
                                          EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
                                          ERROR_INFO, UNPHY_VERBOSE );
