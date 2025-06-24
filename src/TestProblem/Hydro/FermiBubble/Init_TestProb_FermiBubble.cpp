@@ -186,6 +186,95 @@ void Validate()
 
 #if ( MODEL == HYDRO )
 //-------------------------------------------------------------------------------------------------------
+// Function    :  LoadInputTestProb
+// Description :  Read problem-specific runtime parameters from Input__TestProb and store them in HDF5 snapshots (Data_*)
+//
+// Note        :  1. Invoked by SetParameter() to read parameters
+//                2. Invoked by Output_DumpData_Total_HDF5() using the function pointer Output_HDF5_InputTest_Ptr to store parameters
+//                3. If there is no problem-specific runtime parameter to load, add at least one parameter
+//                   to prevent an empty structure in HDF5_Output_t
+//                   --> Example:
+//                       LOAD_PARA( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+//
+// Parameter   :  load_mode      : Mode for loading parameters
+//                                 --> LOAD_READPARA    : Read parameters from Input__TestProb
+//                                     LOAD_HDF5_OUTPUT : Store parameters in HDF5 snapshots
+//                ReadPara       : Data structure for reading parameters (used with LOAD_READPARA)
+//                HDF5_InputTest : Data structure for storing parameters in HDF5 snapshots (used with LOAD_HDF5_OUTPUT)
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
+{
+
+#  ifndef SUPPORT_HDF5
+   if ( load_mode == LOAD_HDF5_OUTPUT )   Aux_Error( ERROR_INFO, "please turn on SUPPORT_HDF5 in the Makefile for load_mode == LOAD_HDF5_OUTPUT !!\n" );
+#  endif
+
+   if ( load_mode == LOAD_READPARA     &&  ReadPara       == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_READPARA and ReadPara == NULL !!\n" );
+   if ( load_mode == LOAD_HDF5_OUTPUT  &&  HDF5_InputTest == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_HDF5_OUTPUT and HDF5_InputTest == NULL !!\n" );
+
+// add parameters in the following format:
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
+// --> LOAD_PARA() is defined in "include/TestProb.h"
+// ****************************************************************************************************************************
+// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",         &VARIABLE,                  DEFAULT,       MIN,           MAX            );
+// ****************************************************************************************************************************
+   LOAD_PARA( load_mode, "Jet_Ambient",             &Jet_Ambient,               1,             0,             9              );
+   LOAD_PARA( load_mode, "Jet_Fire",                &Jet_Fire,                  3,             0,             3              );
+   LOAD_PARA( load_mode, "Jet_SphericalSrc",        &Jet_SphericalSrc,          false,         Useless_bool,  Useless_bool   );
+   LOAD_PARA( load_mode, "Jet_Duration",            &Jet_Duration,              NoMax_double,  0.0,           NoMax_double   );
+
+// load jet fluid parameters
+   LOAD_PARA( load_mode, "Jet_SrcVel",              &Jet_SrcVel,               -1.0,           NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Jet_SmoothVel",           &Jet_SmoothVel,             false,         Useless_bool,  Useless_bool   );
+   LOAD_PARA( load_mode, "Jet_SrcDens",             &Jet_SrcDens,              -1.0,           Eps_double,    NoMax_double   );
+   LOAD_PARA( load_mode, "Jet_SrcTemp",             &Jet_SrcTemp,              -1.0,           Eps_double,    NoMax_double   );
+   LOAD_PARA( load_mode, "gasDisk_highResRadius",   &gasDisk_highResRadius,    -1.0,           NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "gasDisk_lowRes_LEVEL",    &gasDisk_lowRes_LEVEL,     -1,             0,             NoMax_int      );
+   LOAD_PARA( load_mode, "jetSrc_lowRes_LEVEL",     &jetSrc_lowRes_LEVEL,      -1,             0,             NoMax_int      );
+#  ifdef COSMIC_RAY
+   LOAD_PARA( load_mode, "Jet_Src_CR_Engy",         &Jet_Src_CR_Engy,          -1.0,           0.0,           NoMax_double   );
+   LOAD_PARA( load_mode, "Amb_CR_Engy",             &Amb_CR_Engy,              -1.0,           0.0,           NoMax_double   );
+#  endif
+
+// load source geometry parameters
+   LOAD_PARA( load_mode, "Jet_Radius",              &Jet_Radius,               -1.0,           Eps_double,    NoMax_double   );
+   LOAD_PARA( load_mode, "Jet_HalfHeight",          &Jet_HalfHeight,           -1.0,           Eps_double,    NoMax_double   );
+   LOAD_PARA( load_mode, "Jet_HalfOpeningAngle",    &Jet_HalfOpeningAngle,     -1.0,           0.0,           90.0           );
+   LOAD_PARA( load_mode, "Jet_CenOffset_x",         &Jet_CenOffset[0],          NoDef_double,  NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Jet_CenOffset_y",         &Jet_CenOffset[1],          NoDef_double,  NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Jet_CenOffset_z",         &Jet_CenOffset[2],          NoDef_double,  NoMin_double,  NoMax_double   );
+
+// load precession parameters
+   LOAD_PARA( load_mode, "Jet_AngularVelocity",     &Jet_AngularVelocity,       NoDef_double,  0.0,           NoMax_double   );
+   LOAD_PARA( load_mode, "Jet_PrecessionAngle",     &Jet_PrecessionAngle,       NoDef_double,  NoMin_double,  90.0           );
+   LOAD_PARA( load_mode, "Jet_PrecessionAxis_x",    &Jet_PrecessionAxis[0],     NoDef_double,  NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Jet_PrecessionAxis_y",    &Jet_PrecessionAxis[1],     NoDef_double,  NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Jet_PrecessionAxis_z",    &Jet_PrecessionAxis[2],     NoDef_double,  NoMin_double,  NoMax_double   );
+
+// load uniform background parameters
+   LOAD_PARA( load_mode, "Amb_UniformDens",         &Amb_UniformDens,          -1.0,           Eps_double,    NoMax_double   );
+   LOAD_PARA( load_mode, "Amb_UniformVel_x",        &Amb_UniformVel[0],         0.0,           NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Amb_UniformVel_y",        &Amb_UniformVel[1],         0.0,           NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Amb_UniformVel_z",        &Amb_UniformVel[2],         0.0,           NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Amb_UniformTemp",         &Amb_UniformTemp,          -1.0,           Eps_double,    NoMax_double   );
+
+
+   LOAD_PARA( load_mode, "CharacteristicSpeed",     &CharacteristicSpeed,      -1.0,           NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "criticalTemp",            &criticalTemp,             -1.0,           NoMin_double,  NoMax_double   );
+
+// load Milky Way parameters
+   LOAD_PARA( load_mode, "IsothermalSlab_Center_x", &IsothermalSlab_Center[0], -1.0,           NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "IsothermalSlab_Center_y", &IsothermalSlab_Center[1], -1.0,           NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "IsothermalSlab_Center_z", &IsothermalSlab_Center[2], -1.0,           NoMin_double,  NoMax_double   );
+
+} // FUNCITON : LoadInputTestProb
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
 //
@@ -207,65 +296,11 @@ void SetParameter()
 
 
 // (1) load the problem-specific runtime parameters
+// (1-1) read parameters from Input__TestProb
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
-// (1-1) add parameters in the following format:
-// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
-// --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
-// ************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",         &VARIABLE,                  DEFAULT,       MIN,           MAX            );
-// ************************************************************************************************************************
-
-// load options
-   ReadPara->Add( "Jet_Ambient",             &Jet_Ambient,               1,             0,             9              );
-   ReadPara->Add( "Jet_Fire",                &Jet_Fire,                  3,             0,             3              );
-   ReadPara->Add( "Jet_SphericalSrc",        &Jet_SphericalSrc,          false,         Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Jet_Duration",            &Jet_Duration,              NoMax_double,  0.0,           NoMax_double   );
-
-// load jet fluid parameters
-   ReadPara->Add( "Jet_SrcVel",              &Jet_SrcVel,               -1.0,           NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Jet_SmoothVel",           &Jet_SmoothVel,             false,         Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Jet_SrcDens",             &Jet_SrcDens,              -1.0,           Eps_double,    NoMax_double   );
-   ReadPara->Add( "Jet_SrcTemp",             &Jet_SrcTemp,              -1.0,           Eps_double,    NoMax_double   );
-   ReadPara->Add( "gasDisk_highResRadius",   &gasDisk_highResRadius,    -1.0,           NoMin_double,  NoMax_double   );
-   ReadPara->Add( "gasDisk_lowRes_LEVEL",    &gasDisk_lowRes_LEVEL,     -1,             0,             NoMax_int      );
-   ReadPara->Add( "jetSrc_lowRes_LEVEL",     &jetSrc_lowRes_LEVEL,      -1,             0,             NoMax_int      );
-#  ifdef COSMIC_RAY
-   ReadPara->Add( "Jet_Src_CR_Engy",         &Jet_Src_CR_Engy,          -1.0,           0.0,           NoMax_double   );
-   ReadPara->Add( "Amb_CR_Engy",             &Amb_CR_Engy,              -1.0,           0.0,           NoMax_double   );
-#  endif
-
-// load source geometry parameters
-   ReadPara->Add( "Jet_Radius",              &Jet_Radius,               -1.0,           Eps_double,    NoMax_double   );
-   ReadPara->Add( "Jet_HalfHeight",          &Jet_HalfHeight,           -1.0,           Eps_double,    NoMax_double   );
-   ReadPara->Add( "Jet_HalfOpeningAngle",    &Jet_HalfOpeningAngle,     -1.0,           0.0,           90.0           );
-   ReadPara->Add( "Jet_CenOffset_x",         &Jet_CenOffset[0],          NoDef_double,  NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Jet_CenOffset_y",         &Jet_CenOffset[1],          NoDef_double,  NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Jet_CenOffset_z",         &Jet_CenOffset[2],          NoDef_double,  NoMin_double,  NoMax_double   );
-
-// load precession parameters
-   ReadPara->Add( "Jet_AngularVelocity",     &Jet_AngularVelocity,       NoDef_double,  0.0,           NoMax_double   );
-   ReadPara->Add( "Jet_PrecessionAngle",     &Jet_PrecessionAngle,       NoDef_double,  NoMin_double,  90.0           );
-   ReadPara->Add( "Jet_PrecessionAxis_x",    &Jet_PrecessionAxis[0],     NoDef_double,  NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Jet_PrecessionAxis_y",    &Jet_PrecessionAxis[1],     NoDef_double,  NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Jet_PrecessionAxis_z",    &Jet_PrecessionAxis[2],     NoDef_double,  NoMin_double,  NoMax_double   );
-
-// load uniform background parameters
-   ReadPara->Add( "Amb_UniformDens",         &Amb_UniformDens,          -1.0,           Eps_double,    NoMax_double   );
-   ReadPara->Add( "Amb_UniformVel_x",        &Amb_UniformVel[0],         0.0,           NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Amb_UniformVel_y",        &Amb_UniformVel[1],         0.0,           NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Amb_UniformVel_z",        &Amb_UniformVel[2],         0.0,           NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Amb_UniformTemp",         &Amb_UniformTemp,          -1.0,           Eps_double,    NoMax_double   );
-
-
-   ReadPara->Add( "CharacteristicSpeed",     &CharacteristicSpeed,      -1.0,           NoMin_double,  NoMax_double   );
-   ReadPara->Add( "criticalTemp",            &criticalTemp,             -1.0,           NoMin_double,  NoMax_double   );
-
-// load Milky Way parameters
-   ReadPara->Add( "IsothermalSlab_Center_x", &IsothermalSlab_Center[0], -1.0,           NoMin_double,  NoMax_double   );
-   ReadPara->Add( "IsothermalSlab_Center_y", &IsothermalSlab_Center[1], -1.0,           NoMin_double,  NoMax_double   );
-   ReadPara->Add( "IsothermalSlab_Center_z", &IsothermalSlab_Center[2], -1.0,           NoMin_double,  NoMax_double   );
+   LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
 
    ReadPara->Read( FileName );
 
@@ -751,14 +786,14 @@ void Interpolation_UM_IC( real x, real y, real z, real ****Pri_input, real **XYZ
    }
 
    bool Unphy = false;
-   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex000, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
-   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex001, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
-   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex010, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
-   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex100, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
-   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex011, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
-   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex110, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
-   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex101, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
-   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex111, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
+   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex000, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
+   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex001, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
+   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex010, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
+   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex100, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
+   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex011, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
+   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex110, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
+   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex101, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
+   Unphy |= Hydro_IsUnphysical( UNPHY_MODE_PRIM, Vertex111, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE );
 
    if ( Unphy )   Aux_Error( ERROR_INFO, "Idx=%d, Jdx=%d, Kdx=%d, x=%e, y=%e, z=%e is unphysical !!\n", Idx, Jdx, Kdx, x, y, z );
 
@@ -850,9 +885,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                      EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                      h_EoS_Table, NULL );
 
-      if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
-                               EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
-                               EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE ) )
+      if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr,
+                               EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                               __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE ) )
          Aux_Error( ERROR_INFO, "Unphysical cell at (%e, %e, %e)\n", x, y, z );
 
 #     if ( NCOMP_PASSIVE_USER > 0 )
@@ -874,9 +909,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
          Interpolation_UM_IC( xc, yc, zc, Pri_disk_input, XYZ, Pri, true );
 
-         if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
-                                  EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
-                                  EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE ) )
+         if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr,
+                                  EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                  __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE ) )
             Aux_Error( ERROR_INFO, "Unphysical cell at (%e, %e %e)\n", x, y, z );
 
          if ( Pri[4]/Pri[0] > criticalTemp )   Pri[0] = Pri[4] / ambientTemperature;
@@ -934,7 +969,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
             Interpolation_UM_IC( x-cloudCenter[0], y-cloudCenter[1], z-cloudCenter[2],
                                  Pri_hvc_input, XYZ, Pri_hvc_output, false );
 
-            if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri_hvc_output, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
+            if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri_hvc_output, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
                                      EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
                                      EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE ) )
                Aux_Error( ERROR_INFO, "Unphysical cell at (%e, %e %e)\n", x, y, z );
@@ -950,9 +985,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                         EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                         h_EoS_Table, NULL );
 
-         if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
-                                  EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
-                                  EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE ) )
+         if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr,
+                                  EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                  __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE ) )
             Aux_Error( ERROR_INFO, "Unphysical cell at (%e, %e %e)\n", x, y, z );
 
 #        if ( NCOMP_PASSIVE_USER > 0 )
@@ -976,9 +1011,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
          Interpolation_UM_IC( xc, yc, zc, Pri_disk_input, XYZ, Pri, true );
 
-         if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
-                                  EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
-                                  EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE ) )
+         if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr,
+                                  EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                  __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE ) )
             Aux_Error( ERROR_INFO, "Unphysical cell at (%e, %e, %e)\n", x, y, z );
 
          Hydro_Pri2Con( Pri, fluid, false, PassiveNorm_NVar, PassiveNorm_VarIdx, EoS_DensPres2Eint_CPUPtr,
@@ -1019,9 +1054,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
          Pri[3] = 0.0;
          Pri[4] = ambientDens * ambientTemperature;
 
-         if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
-                                  EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
-                                  EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE ) )
+         if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr,
+                                  EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                  __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE ) )
             Aux_Error( ERROR_INFO, "Unphysical cell at (%e, %e, %e)\n", x, y, z );
 
          Hydro_Pri2Con( Pri, fluid, false, PassiveNorm_NVar, PassiveNorm_VarIdx, EoS_DensPres2Eint_CPUPtr,
@@ -1062,9 +1097,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                      EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                      h_EoS_Table, NULL );
 
-      if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri, NULL, NULL_REAL, NULL_REAL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
-                               EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
-                               EoS_AuxArray_Int, h_EoS_Table, __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE ) )
+      if ( Hydro_IsUnphysical( UNPHY_MODE_PRIM, Pri, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr,
+                               EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                               __FILE__,  __LINE__, __FUNCTION__, UNPHY_VERBOSE ) )
          Aux_Error( ERROR_INFO, "Unphysical cell at (%e, %e, %e)\n", x, y, z );
 
 #     if ( NCOMP_PASSIVE_USER > 0 )
@@ -1481,16 +1516,19 @@ void Init_TestProb_Hydro_FermiBubble()
    SetParameter();
 
 
-   Init_Function_User_Ptr   = SetGridIC;
-   Flag_User_Ptr            = Flag_FermiBubble;
-   Flag_Region_Ptr          = Flag_Region_FermiBubble;
-   Flu_ResetByUser_Func_Ptr = Flu_ResetByUser_FermiBubble;
+   Init_Function_User_Ptr    = SetGridIC;
+   Flag_User_Ptr             = Flag_FermiBubble;
+   Flag_Region_Ptr           = Flag_Region_FermiBubble;
+   Flu_ResetByUser_Func_Ptr  = Flu_ResetByUser_FermiBubble;
 #  ifdef GRAVITY
-   Init_ExtPot_Ptr          = Init_ExtPot_IsothermalSlab;
+   Init_ExtPot_Ptr           = Init_ExtPot_IsothermalSlab;
 #  endif
 
 #  if ( NCOMP_PASSIVE_USER > 0 )
-   Init_Field_User_Ptr      = AddNewField_FermiBubble;
+   Init_Field_User_Ptr       = AddNewField_FermiBubble;
+#  endif
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_InputTest_Ptr = LoadInputTestProb;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

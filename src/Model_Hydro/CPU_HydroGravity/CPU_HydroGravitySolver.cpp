@@ -446,9 +446,9 @@ void CPU_HydroGravitySolver(
          real Cons[NCOMP_TOTAL]={0.0};
          for (int v=0; v<NCOMP_FLUID; v++)   Cons[v] = g_Flu_Array_New[P][v][idx_g0];
 
-         if ( Hydro_IsUnphysical( UNPHY_MODE_CONS, Cons, NULL, NULL_REAL, NULL_REAL, NULL_REAL,
-                                  EoS.DensEint2Pres_FuncPtr, EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr,
-                                  EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, ERROR_INFO, UNPHY_SILENCE ) )
+         if ( Hydro_IsUnphysical( UNPHY_MODE_CONS, Cons, NULL_REAL, EoS.DensEint2Pres_FuncPtr,
+                                  EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr, EoS.AuxArrayDevPtr_Flt,
+                                  EoS.AuxArrayDevPtr_Int, EoS.Table, ERROR_INFO, UNPHY_SILENCE ) )
             for (int v=0; v<NCOMP_FLUID; v++)   g_Flu_Array_New[P][v][idx_g0] = Cons_old2[v];
 #        endif
 
