@@ -14,6 +14,7 @@
   - [[--gsl | Installation:-Option-List#--gsl]] (optional for `HaloMerger_ParCloud_InitMode`=`1`)
 - Must disable
   - [[--comoving | Installation:-Option-List#--comoving]]
+  - [[--elbdm_scheme | Installation:-Option-List#--elbdm_scheme]]=`HYBRID`
 - Available options
   - [[Miscellaneous Options | Installation:-Option-List#miscellaneous-options]]
 
