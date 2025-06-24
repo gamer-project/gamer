@@ -1,0 +1,36 @@
+name: Update test problem wiki page
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'example/test_problem/*/*/README.md'
+      - 'tool/wiki/sync_test_problem_pages.py'
+
+env:
+  GIT_AUTHOR_NAME: ${{ github.actor }}
+  GIT_AUTHOR_EMAIL: ${{ secrets.MY_EMAIL }}
+
+jobs:
+  Update-all-parameters-page:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.TOKEN_FOR_WIKI }}
+      - name: run script
+        run: |
+          cd tool/wiki
+          python --version
+          python sync_test_problem_pages.py
+      - name: set git config
+        run: |
+          git config --global user.email "${{env.GIT_AUTHOR_EMAIL}}"
+          git config --global user.name "${{env.GIT_AUTHOR_NAME}}"
+      - name: make a commit and push if the file changed
+        run: |
+          ( git diff --exit-code doc/wiki/Test-Problems-related/* && git diff --exit-code doc/wiki/Test-Problems.md ) || \
+          ( git add doc/wiki/Test-Problems-related/* && git add doc/wiki/Test-Problems.md && \
+          git commit -m "[Workflow] Update test problem wiki pages" && \
+          git push )
