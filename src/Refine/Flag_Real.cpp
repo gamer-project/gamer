@@ -433,8 +433,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                   for (int i=0; i<PS1; i++)
                   {
                      real HTilde, Factor, U1, U2, U3;
-                     real Cons[NCOMP_FLUID] = { Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
-                                                Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i] };
+                     real Cons[NCOMP_TOTAL];
+
+                     for (int v=0; v<NCOMP_TOTAL; v++)   Cons[v] = Fluid[v][k][j][i];
 
 #                    ifdef CHECK_UNPHYSICAL_IN_FLUID
                      Hydro_IsUnphysical( UNPHY_MODE_CONS, Cons, NULL_REAL,

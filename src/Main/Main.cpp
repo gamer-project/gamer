@@ -291,10 +291,8 @@ EoS_DP2C_t    EoS_DensPres2CSqr_CPUPtr = NULL;
 EoS_DE2T_t    EoS_DensEint2Temp_CPUPtr = NULL;
 EoS_DT2P_t    EoS_DensTemp2Pres_CPUPtr = NULL;
 EoS_DE2S_t    EoS_DensEint2Entr_CPUPtr = NULL;
-EoS_GENE_t    EoS_General_CPUPtr       = NULL;
-#ifdef COSMIC_RAY
 EoS_CRE2CRP_t EoS_CREint2CRPres_CPUPtr = NULL;
-#endif
+EoS_GENE_t    EoS_General_CPUPtr       = NULL;
 #ifdef GPU
 EoS_GUESS_t   EoS_GuessHTilde_GPUPtr   = NULL;
 EoS_H2TEM_t   EoS_HTilde2Temp_GPUPtr   = NULL;
@@ -305,10 +303,8 @@ EoS_DP2C_t    EoS_DensPres2CSqr_GPUPtr = NULL;
 EoS_DE2T_t    EoS_DensEint2Temp_GPUPtr = NULL;
 EoS_DT2P_t    EoS_DensTemp2Pres_GPUPtr = NULL;
 EoS_DE2S_t    EoS_DensEint2Entr_GPUPtr = NULL;
-EoS_GENE_t    EoS_General_GPUPtr       = NULL;
-#ifdef COSMIC_RAY
 EoS_CRE2CRP_t EoS_CREint2CRPres_GPUPtr = NULL;
-#endif
+EoS_GENE_t    EoS_General_GPUPtr       = NULL;
 #endif
 
 // c. data structure for the CPU/GPU solvers

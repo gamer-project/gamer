@@ -41,7 +41,12 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 
 // -1. return immediately if the target level has no patches
 // =============================================================================================================
-   if ( NPatchTotal[lv] == 0 )   return HUGE_NUMBER;
+   if ( NPatchTotal[lv] == 0 ) 
+   {
+      delete [] dTime_Name;
+      delete [] dTime;
+      return HUGE_NUMBER;
+   }
 
 
 

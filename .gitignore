@@ -11,6 +11,7 @@ gamer
 GAMER_CompareData
 GAMER_ExtractUniform
 GAMER_ExtractProfile
+Project
 .vscode
 src/Makefile
 src/Makefile.log

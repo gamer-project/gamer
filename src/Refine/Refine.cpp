@@ -943,10 +943,12 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
 #           else // #ifdef DUAL_ENERGY
 
+#           ifndef SRHD
 //          apply internal energy floor
             Flu_FData[ENGY][k][j][i]
                = Hydro_CheckMinEintInEngy( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
                                            Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i], MIN_EINT, Emag );
+#           endif
 #           endif // #ifdef DUAL_ENERGY ... else ...
 #           endif // #if ( MODEL == HYDRO )
 

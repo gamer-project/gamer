@@ -93,6 +93,7 @@ const TestProbID_t
    TESTPROB_HYDRO_CR_SOUNDWAVE                 =   20,
    TESTPROB_HYDRO_CR_SHOCKTUBE                 =   21,
    TESTPROB_HYDRO_CR_DIFFUSION                 =   23,
+   TESTPROB_HYDRO_FERMI_BUBBLE                 =   24,
    TESTPROB_HYDRO_BARRED_POT                   =   51,
    TESTPROB_HYDRO_JET_ICM_WALL                 =   52,
    TESTPROB_HYDRO_CDM_LSS                      =  100,
@@ -587,14 +588,12 @@ typedef real (*EoS_DT2P_t)     ( const real Dens, const real Temp, const real Pa
 typedef real (*EoS_DE2S_t)     ( const real Dens, const real Eint, const real Passive[],
                                  const double AuxArray_Flt[], const int AuxArray_Int[],
                                  const real *const Table[EOS_NTABLE_MAX] );
-typedef void (*EoS_GENE_t)     ( const int Mode, real Out[], const real In_Flt[], const int In_Int[],
-                                 const double AuxArray_Flt[], const int AuxArray_Int[],
-                                 const real *const Table[EOS_NTABLE_MAX] );
-#ifdef COSMIC_RAY
 typedef real (*EoS_CRE2CRP_t)  ( const real E_CR,
                                  const double AuxArray_Flt[], const int AuxArray_Int[],
                                  const real *const Table[EOS_NTABLE_MAX] );
-#endif
+typedef void (*EoS_GENE_t)     ( const int Mode, real Out[], const real In_Flt[], const int In_Int[],
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
 typedef void (*ExtAcc_t)       ( real Acc[], const double x, const double y, const double z, const double Time,
                                  const double UserArray[] );
 typedef real (*ExtPot_t)       ( const double x, const double y, const double z, const double Time,

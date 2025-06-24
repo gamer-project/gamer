@@ -239,7 +239,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
    const real _LorentzFactor = real(1.0) / LorentzFactor;
    Out[0] = In[0]*_LorentzFactor;
 
-   EoS_HTilde2Temp( HTilde, &Temp, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+   EoS_HTilde2Temp( HTilde, &Temp, NULL, In+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
    Out[4] = Out[0]*Temp;
    Out[4] = Hydro_CheckMinPres( Out[4], MinPres );
@@ -1166,6 +1166,9 @@ real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const re
    Cons[2] = MomY;
    Cons[3] = MomZ;
    Cons[4] = Engy;
+#  if ( NCOMP_PASSIVE > 0 )
+   for (int v=0; v<NCOMP_PASSIVE; v++)    Cons[NCOMP_FLUID + v] = Passive[v];
+#  endif
 
    Hydro_Con2Pri( Cons, Prim, (CheckMinPres)?MinPres:-HUGE_NUMBER, false, NULL_INT, NULL,
                   NULL_BOOL, NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
@@ -1252,7 +1255,7 @@ real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const re
    real Eint;
 
 #  ifdef SRHD
-   real Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL];
+   real Prim[NCOMP_TOTAL], Cons[NCOMP_TOTAL]={(real)0.0};
    real HTilde;
 
    Cons[0] = Dens;
@@ -1400,6 +1403,9 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
    Cons[2] = MomY;
    Cons[3] = MomZ;
    Cons[4] = Engy;
+#  if ( NCOMP_PASSIVE > 0 )
+   for (int v=0; v<NCOMP_PASSIVE; v++)    Cons[NCOMP_FLUID + v] = Passive[v];
+#  endif
 
    Hydro_Con2Pri( Cons, Prim, -HUGE_NUMBER, false, NULL_INT, NULL,
                   NULL_BOOL, NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,

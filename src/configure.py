@@ -508,7 +508,7 @@ def load_arguments( sys_setting : SystemSetting ):
                          default=False,
                          depend={"model":"HYDRO"},
                          constraint={ True:{"flu_scheme":["MHM", "MHM_RP", "CTU"], "flux":["ROE", "HLLE", "HLLD"]},
-                                     False:{"flux":["EXACT", "ROE", "HLLE", "HLLC"]} },
+                                      False:{"flux":["EXACT", "ROE", "HLLE", "HLLC"]} },
                          help="Magnetohydrodynamics.\n"
                        )
 
@@ -516,15 +516,15 @@ def load_arguments( sys_setting : SystemSetting ):
                          default=False,
                          depend={"model":"HYDRO"},
                          constraint={ True:{"flu_scheme":["MHM", "MHM_RP"], "flux":["HLLE", "HLLC"],
-                                      "eos":["TAUBMATHEWS"], "dual":[NONE_STR], "mhd":False, "gravity":False} },
+                                      "eos":["TAUBMATHEWS"], "dual":[NONE_STR], "mhd":False} },
                          help="Special Relativistic Hydrodynamics.\n"
                        )
 
     parser.add_argument( "--cosmic_ray", type=str2bool, metavar="BOOLEAN", gamer_name="COSMIC_RAY",
                          default=False,
                          depend={"model":"HYDRO"},
-                         constraint={ True:{"dual":[NONE_STR], "eos":"COSMIC_RAY", "comoving":False} },
-                         help="Enable cosmic rays. Must use <--eos=COSMIC_RAY>.\n"
+                         constraint={ True:{"dual":[NONE_STR], "eos":["COSMIC_RAY", "TAUBMATHEWS"], "comoving":False} },
+                         help="Enable cosmic rays. Hydro/MHD: <--eos=COSMIC_RAY> or SRHD: <--eos=TABMATHEWS>.\n"
                        )
 
     parser.add_argument( "--eos", type=str, metavar="TYPE", gamer_name="EOS", prefix="EOS_",
@@ -906,8 +906,9 @@ def set_conditional_defaults( args ):
         args["flux"] = "HLLD" if args["mhd"] else "HLLC"
 
     if args["eos"] is None:
-        if   args["cosmic_ray"]: args["eos"] = "COSMIC_RAY"
-        elif args["srhd"]      : args["eos"] = "TAUBMATHEWS"
+        # The order does matter in this if
+        if   args["srhd"]      : args["eos"] = "TAUBMATHEWS"
+        elif args["cosmic_ray"]: args["eos"] = "COSMIC_RAY"
         else                   : args["eos"] = "GAMMA"
 
     if args["barotropic"] is None:

@@ -219,6 +219,15 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 #           ifdef MHD
             printf( " Emag=%14.7e", Emag );
 #           endif
+#           ifdef SRHD
+            const real Msqr         = SQR(Output_1Cell[MOMX]) + SQR(Output_1Cell[MOMY]) + SQR(Output_1Cell[MOMZ]);
+            const real Dsqr         = SQR(Output_1Cell[DENS]);
+            const real E_D          = Output_1Cell[ENGY] / Output_1Cell[DENS];
+            const real M_D          = SQRT( Msqr / Dsqr );
+            const real Temp         = SQRT( E_D*E_D + (real)2.0*E_D );
+            const real Discriminant = ( Temp + M_D )*( Temp - M_D ); // replace a^2-b^2 with (a+b)*(a-b) to alleviate a catastrophic cancellation
+            printf( " E^2+2*E*D-|M|^2=%14.7e", Discriminant );
+#           endif
             printf( "\n" );
          }
 #        endif

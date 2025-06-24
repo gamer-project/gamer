@@ -15,7 +15,6 @@ static void CorrectFlux( const int SonLv, const real Flux_Array[][9][NFLUX_TOTAL
                          const int NPG, const int *PID0_List, const real dt );
 #if ( MODEL == HYDRO )
 static bool Unphysical( const real Fluid[], const int CheckMode, const real Emag );
-#ifndef SRHD
 static void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                const real h_Flu_Array_F_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                                real h_Flu_Array_F_Out[][FLU_NOUT][ CUBE(PS2) ],
@@ -24,7 +23,6 @@ static void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List
                                const real h_Mag_Array_F_In[][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                const real h_Mag_Array_F_Out[][NCOMP_MAG][ PS2P1*SQR(PS2) ],
                                const real dt );
-#endif
 #ifdef MHD
 void StoreElectric( const int lv, const real h_Ele_Array[][9][NCOMP_ELE][ PS2P1*PS2 ],
                     const int NPG, const int *PID0_List, const real dt );
@@ -32,10 +30,12 @@ void CorrectElectric( const int SonLv, const real h_Ele_Array[][9][NCOMP_ELE][ P
                       const int NPG, const int *PID0_List, const real dt );
 void ResetLongB( real L[], real R[], const real FC_B, const int d );
 #endif
+#ifndef SRHD
 extern void Hydro_RiemannSolver_Roe ( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                       const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
                                       const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
                                       const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
+#endif
 extern void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                       const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
                                       const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
@@ -94,7 +94,7 @@ void Flu_Close( const int lv, const int SaveSg_Flu, const int SaveSg_Mag,
 
 // try to correct the unphysical results in h_Flu_Array_F_Out (e.g., negative density)
 // --> must be done BEFORE invoking both StoreFlux() and CorrectFlux() since CorrectUnphysical() might modify the flux array
-#  if ( MODEL == HYDRO  &&  !defined SRHD )
+#  if ( MODEL == HYDRO )
    CorrectUnphysical( lv, NPG, PID0_List, h_Flu_Array_F_In, h_Flu_Array_F_Out, h_DE_Array_F_Out, h_Flux_Array,
                       h_Mag_Array_F_In, h_Mag_Array_F_Out, dt );
 #  endif
@@ -433,6 +433,18 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
       return true;
 #  endif
 
+#  ifdef SRHD
+   const real Msqr         = SQR(Fluid[MOMX]) + SQR(Fluid[MOMY]) + SQR(Fluid[MOMZ]);
+   const real Dsqr         = SQR(Fluid[DENS]);
+   const real E_D          = Fluid[ENGY] / Fluid[DENS];
+   const real M_D          = SQRT( Msqr / Dsqr );
+   const real Temp         = SQRT( E_D*E_D + (real)2.0*E_D );
+   const real Discriminant = ( Temp + M_D )*( Temp - M_D ); // replace a^2-b^2 with (a+b)*(a-b) to alleviate a catastrophic cancellation
+
+   if ( Discriminant <= (real)0.0  ||  !Aux_IsFinite(Discriminant) )
+      return true;
+#  endif
+
 #  ifndef BAROTROPIC_EOS
    if ( CheckMode == CheckMinEtot  &&  ( Fluid[ENGY] < (real)MIN_EINT || Fluid[ENGY] != Fluid[ENGY] )  )
       return true;
@@ -484,7 +496,6 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
 
 
 
-#ifndef SRHD
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CorrectUnphysical
 // Description :  Check if any cell in the output array of Fluid solver contains unphysical results
@@ -673,6 +684,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
                   switch ( OPT__1ST_FLUX_CORR_SCHEME )
                   {
+#                    ifndef SRHD
                      case RSOLVER_1ST_ROE:
 #                       ifdef MHD
                         ResetLongB( VarL[d], VarC,    FC_B[0], d );  // reset the longitudinal B field
@@ -694,6 +706,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                         VarC[ ENGY           ] = CC_Engy;
 #                       endif
                      break;
+#                    endif
 
 #                    ifndef MHD
                      case RSOLVER_1ST_HLLC:
@@ -822,6 +835,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //                      (note that the recalculated flux does NOT include gravity even for UNSPLIT_GRAVITY --> reduce to 1st-order accuracy)
                         switch ( OPT__1ST_FLUX_CORR_SCHEME )
                         {
+#                          ifndef SRHD
                            case RSOLVER_1ST_ROE:
                               Hydro_RiemannSolver_Roe ( d, FluxL_1D, Corr1D_InOut_PtrL, Corr1D_InOut_PtrC, MIN_DENS, MIN_PRES,
                                                         EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr,
@@ -830,6 +844,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                                         EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr,
                                                         EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                            break;
+#                          endif
 
 #                          ifndef MHD
                            case RSOLVER_1ST_HLLC:
@@ -944,9 +959,11 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //          --> apply it only when AutoReduceDt_Continue is false
 //              --> otherwise AUTO_REDUCE_DT may not be triggered due to this internal energy floor
 #           else
+#           ifndef SRHD
             if ( ! AutoReduceDt_Continue  &&  OPT__LAST_RESORT_FLOOR )
                Update[ENGY] = Hydro_CheckMinEintInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
                                                         MIN_EINT, Emag_Out );
+#           endif
 #           endif
 
 
@@ -1265,7 +1282,6 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
    }
 
 } // FUNCTION : CorrectUnphysical
-#endif // #ifndef SRHD
 
 
 
