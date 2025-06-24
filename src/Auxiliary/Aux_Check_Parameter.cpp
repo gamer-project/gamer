@@ -135,13 +135,13 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "currently the check \"%s\" must work with \"%s\" !!\n",
                  "OPT__CK_REFINE", "OPT__FLAG_RHO" );
 
-   if ( OPT__CK_CONSERVATION  &&  ANGMOM_ORIGIN_X > amr->BoxEdgeR[0] )
+   if ( ANGMOM_ORIGIN_X > amr->BoxEdgeR[0] )
       Aux_Error( ERROR_INFO, "incorrect ANGMOM_ORIGIN_X = %lf (out of range [X<=%lf]) !!\n", ANGMOM_ORIGIN_X, amr->BoxEdgeR[0] );
 
-   if ( OPT__CK_CONSERVATION  &&  ANGMOM_ORIGIN_Y > amr->BoxEdgeR[1] )
+   if ( ANGMOM_ORIGIN_Y > amr->BoxEdgeR[1] )
       Aux_Error( ERROR_INFO, "incorrect ANGMOM_ORIGIN_Y = %lf (out of range [Y<=%lf]) !!\n", ANGMOM_ORIGIN_Y, amr->BoxEdgeR[1] );
 
-   if ( OPT__CK_CONSERVATION  &&  ANGMOM_ORIGIN_Z > amr->BoxEdgeR[2] )
+   if ( ANGMOM_ORIGIN_Z > amr->BoxEdgeR[2] )
       Aux_Error( ERROR_INFO, "incorrect ANGMOM_ORIGIN_Z = %lf (out of range [Z<=%lf]) !!\n", ANGMOM_ORIGIN_Z, amr->BoxEdgeR[2] );
 
    if ( OPT__RECORD_CENTER  &&  COM_CEN_X > amr->BoxSize[0] )
@@ -243,6 +243,11 @@ void Aux_Check_Parameter()
    if ( OPT__MEMORY_POOL  &&  !OPT__REUSE_MEMORY )
       Aux_Error( ERROR_INFO, "please turn on OPT__REUSE_MEMORY for OPT__MEMORY_POOL !!\n" );
 
+#  ifdef __APPLE__
+   if ( OPT__RECORD_MEMORY )
+      Aux_Message( stderr, "WARNING : memory reporting is not currently supported on macOS !!\n" );
+#  endif
+
    if ( OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_NONE  &&  OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_EVERY_STEP  &&
         OPT__CORR_AFTER_ALL_SYNC != CORR_AFTER_SYNC_BEFORE_DUMP )
       Aux_Error( ERROR_INFO, "incorrect option \"OPT__CORR_AFTER_ALL_SYNC = %d\" [0/1/2] !!\n", OPT__CORR_AFTER_ALL_SYNC );
@@ -330,6 +335,17 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "OPT__OUTPUT_ENTR does not support EOS_ISOTHERMAL !!\n" );
 #  endif
 #  endif // #if ( MODEL == HYDRO )
+
+
+   if ( strlen(OUTPUT_DIR) > MAX_STRING-1 )
+      Aux_Error( ERROR_INFO, "Length of OUTPUT_DIR (%d) should be smaller than MAX_STRING-1 (%d) !!\n",
+                 strlen(OUTPUT_DIR), MAX_STRING-1 );
+
+   if (  ! Aux_CheckFolderExist( OUTPUT_DIR )  )
+      Aux_Error( ERROR_INFO, "\"%s\" folder set by OUTPUT_DIR does not exist !!\n", OUTPUT_DIR );
+
+   if (  ! Aux_CheckPermission( OUTPUT_DIR, 2+1 )  )
+      Aux_Error( ERROR_INFO, "You do not have write and execute permissions for the \"%s\" folder set by OUTPUT_DIR !!\n", OUTPUT_DIR );
 
 
 

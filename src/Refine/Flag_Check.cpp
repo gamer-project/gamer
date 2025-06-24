@@ -42,6 +42,7 @@ static bool Check_Radial( const int i, const int j, const int k, const int lv, c
 //                ParDens       : Input array storing the particle mass density on each cell
 //                JeansCoeff    : Pi*GAMMA/(SafetyFactor^2*G), where SafetyFactor = FlagTable_Jeans[lv]
 //                                --> Flag if dh^2 > JeansCoeff*Pres/Dens^2
+//                                --> When COMOVING is on, G has been replaced by a*G, where a is the scale factor
 //                Interf_Var    : Input array storing the density and phase for the interference condition
 //                Spectral_Cond : Input variable storing the spectral refinement condition
 //

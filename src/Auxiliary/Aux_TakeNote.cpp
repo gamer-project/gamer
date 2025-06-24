@@ -4,9 +4,6 @@
 #include "CUPOT.h"
 #endif
 #include <sched.h>
-#ifdef __APPLE__
-#include <cpuid.h>
-#endif
 #include "time.h"
 
 static int get_cpuid();
@@ -25,8 +22,10 @@ void Aux_TakeNote()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_TakeNote ...\n" );
 
 
-   const char FileName[] = "Record__Note";
    FILE *Note;
+   char FileName[2*MAX_STRING];
+   sprintf( FileName, "%s/Record__Note", OUTPUT_DIR );
+
 
    if ( MPI_Rank == 0 )
    {
@@ -39,7 +38,9 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fclose( Note );
 
-      system( "cat ./Input__Note >> Record__Note" );
+      char Command[2*MAX_STRING];
+      sprintf( Command, "cat ./Input__Note >> %s/Record__Note", OUTPUT_DIR );
+      system( Command );
 
       Note = fopen( FileName, "a" );
       fprintf( Note, "***********************************************************************************\n" );
@@ -697,6 +698,7 @@ void Aux_TakeNote()
       fprintf( Note, "#define FLU_NOUT_S             % d\n",      FLU_NOUT_S            );
       fprintf( Note, "#define DER_NOUT_MAX           % d\n",      DER_NOUT_MAX          );
       fprintf( Note, "#define NFIELD_STORED_MAX      % d\n",      NFIELD_STORED_MAX     );
+      fprintf( Note, "#define NCONREF_MAX            % d\n",      NCONREF_MAX           );
       fprintf( Note, "#define NFLUX_FLUID            % d\n",      NFLUX_FLUID           );
       fprintf( Note, "#define NFLUX_PASSIVE          % d\n",      NFLUX_PASSIVE         );
 #     ifdef GRAVITY
@@ -931,9 +933,10 @@ void Aux_TakeNote()
       fprintf( Note, "Par->GhostSizeTracer           % d\n",      amr->Par->GhostSizeTracer     );
       fprintf( Note, "Par->TracerVelCorr             % d\n",      amr->Par->TracerVelCorr       );
       fprintf( Note, "OPT__FREEZE_PAR                % d\n",      OPT__FREEZE_PAR               );
+      fprintf( Note, "OPT__PAR_INIT_CHECK            % d\n",      OPT__PAR_INIT_CHECK           );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
-#     endif
+#     endif // #ifdef PARTICLE
 
 
 //    record the parameters of cosmological simulations (comoving frame)
@@ -1582,6 +1585,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_PART               % d\n",      OPT__OUTPUT_PART            );
       fprintf( Note, "OPT__OUTPUT_USER               % d\n",      OPT__OUTPUT_USER            );
       fprintf( Note, "OPT__OUTPUT_TEXT_FORMAT_FLT     %s\n",      OPT__OUTPUT_TEXT_FORMAT_FLT );
+      fprintf( Note, "OPT__OUTPUT_TEXT_LENGTH_INT    % d\n",      OPT__OUTPUT_TEXT_LENGTH_INT );
 #     ifdef PARTICLE
       fprintf( Note, "OPT__OUTPUT_PAR_MODE           % d\n",      OPT__OUTPUT_PAR_MODE        );
 #     ifdef TRACER
@@ -1640,6 +1644,7 @@ void Aux_TakeNote()
       fprintf( Note, "OUTPUT_PART_Y                  % 21.14e\n", OUTPUT_PART_Y               );
       fprintf( Note, "OUTPUT_PART_Z                  % 21.14e\n", OUTPUT_PART_Z               );
       fprintf( Note, "INIT_DUMPID                    % d\n",      INIT_DUMPID                 );
+      fprintf( Note, "OUTPUT_DIR                      %s\n",      OUTPUT_DIR                  );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
 
@@ -1695,12 +1700,9 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__CK_REFINE                 % d\n",      OPT__CK_REFINE            );
       fprintf( Note, "OPT__CK_PROPER_NESTING         % d\n",      OPT__CK_PROPER_NESTING    );
       fprintf( Note, "OPT__CK_CONSERVATION           % d\n",      OPT__CK_CONSERVATION      );
-      if ( OPT__CK_CONSERVATION )
-      {
       fprintf( Note, "   ANGMOM_ORIGIN_X             % 14.7e\n",  ANGMOM_ORIGIN_X           );
       fprintf( Note, "   ANGMOM_ORIGIN_Y             % 14.7e\n",  ANGMOM_ORIGIN_Y           );
       fprintf( Note, "   ANGMOM_ORIGIN_Z             % 14.7e\n",  ANGMOM_ORIGIN_Z           );
-      }
       fprintf( Note, "OPT__CK_NORMALIZE_PASSIVE      % d\n",      OPT__CK_NORMALIZE_PASSIVE );
       fprintf( Note, "OPT__CK_RESTRICT               % d\n",      OPT__CK_RESTRICT          );
       fprintf( Note, "OPT__CK_FINITE                 % d\n",      OPT__CK_FINITE            );
@@ -2101,23 +2103,16 @@ void Aux_TakeNote()
 // Function    :  get_cpuid
 // Description :  Get the CPU ID
 //
-// Note        :  Work on both macOS and Linux systems
+// Note        :  Works only on Linux systems; macOS is ignored
 //-------------------------------------------------------------------------------------------------------
 int get_cpuid()
 {
 
-// See https://stackoverflow.com/questions/33745364/sched-getcpu-equivalent-for-os-x
    int CPU;
 
 #  ifdef __APPLE__
-   uint32_t CPUInfo[4];
-   __cpuid_count(1, 0, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
-   if ((CPUInfo[3] & (1 << 9)) == 0) {
-      CPU = -1;  /* no APIC on chip */
-   } else {
-      CPU = (unsigned)CPUInfo[1] >> 24;
-   }
-   if (CPU < 0) CPU = 0;
+// macOS does not have an implementation of sched_getcpu that works cross-arch
+   CPU = -1;
 #  else
    CPU = sched_getcpu();
 #  endif
