@@ -1227,6 +1227,7 @@
 #  define FORMAT_ULONG     %- 21lu
 #  define FORMAT_BOOL      %- 21d
 #  define FORMAT_REAL      %- 21.14e
+#  define FORMAT_STRING    %- 21s
 #  define PRINT_RESET_PARA( name, format, reason )                                                       \
    {                                                                                                     \
       if ( MPI_Rank == 0 )                                                                               \

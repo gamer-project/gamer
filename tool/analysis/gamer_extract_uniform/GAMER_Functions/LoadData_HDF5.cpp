@@ -60,8 +60,8 @@ void LoadData_HDF5( const char *FileName )
    int    Model_RS, PatchSize_RS, NLevel_RS, NCompFluid_RS, NCompPassive_RS, Float8_RS;
    int    FormatVersion, Gravity, Particle, ExtBC_RS[6], NPatchTotal[NLEVEL], NPatchAllLv;
    int    LoadPot = 0;     // must be integer
-   char  *PassiveFieldName_Grid[NCOMP_PASSIVE]; // for format version <  2300
-   char  *FieldName_In[NCOMP_TOTAL];            // for format version >= 2300
+   char  (*PassiveFieldName_Grid)[MAX_STRING]; // for format version <  2300
+   char  (*FieldName_In)[MAX_STRING];          // for format version >= 2300
    int   *NullPtr = NULL;
 
 #  if   ( MODEL == HYDRO )
@@ -197,6 +197,7 @@ void LoadData_HDF5( const char *FileName )
 // field labels
    if ( FormatVersion >= 2300 )
    {
+      FieldName_In = new char [NCOMP_TOTAL][MAX_STRING];
       for (int v=0; v<NCOMP_TOTAL; v++)
       {
          char Key[MAX_STRING];
@@ -208,6 +209,7 @@ void LoadData_HDF5( const char *FileName )
 
    else
    {
+      PassiveFieldName_Grid = new char [NCOMP_PASSIVE][MAX_STRING];
       for (int v=0; v<NCOMP_PASSIVE; v++)
       {
          char Key[MAX_STRING];
@@ -370,6 +372,8 @@ void LoadData_HDF5( const char *FileName )
    {
       for (int v=0; v<NCOMP_TOTAL; v++)
       sprintf( FieldName[v], "%s", FieldName_In[v] );
+
+      delete [] FieldName_In;
    }
 
    else
@@ -392,6 +396,8 @@ void LoadData_HDF5( const char *FileName )
 
       for (int v=0; v<NCOMP_PASSIVE; v++)
       sprintf( FieldName[ NCOMP_FLUID + v ], "%s", PassiveFieldName_Grid[v] );
+
+      delete [] PassiveFieldName_Grid;
    }
 
 // set the names of potential and particle/total density

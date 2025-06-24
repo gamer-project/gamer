@@ -1393,11 +1393,15 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // Function    :  Output_HDF5_UserPara_HaloMerger
 // Description :  Store user-specified parameters in an HDF5 snapshot at User/UserPara
 //
-// Note        : 1. This function is only called by the root MPI rank
-//               2. Support int, uint, long, ulong, bool, float, double, and string datatypes
-//               3. HDF5_UserPara MUST store at least one parameter
-//               4. The data pointer (i.e., the second argument passed to HDF5_UserPara->Add()) MUST persist outside this function (e.g., global variables)
-//               5. Linked to the function pointer Output_HDF5_UserPara_Ptr
+// Note        :  1. This function is only called by the root MPI rank
+//                2. Support int, uint, long, ulong, bool, float, double, string, and their corresponding array types
+//                3. HDF5_UserPara MUST store at least one parameter
+//                4. The second argument passed to HDF5_UserPara->Add() can be:
+//                   a. pointer  : Support int, uint, long, ulong, bool, float, double, and string datatypes
+//                   b. variable : Support int, uint, long, ulong, bool, float, and double datatypes
+//                5. Linked to the function pointer Output_HDF5_UserPara_Ptr
+//                6. The string size MUST be `MAX_STRING`
+//                7. The memeory space of the array MUST be continuous
 //
 // Parameter   :  HDF5_UserPara : Structure storing all parameters to be written
 //
@@ -1405,6 +1409,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //-------------------------------------------------------------------------------------------------------
 void Output_HDF5_UserPara_HaloMerger( HDF5_Output_t *HDF5_UserPara )
 {
+
+   const bool Compare_Yes = true, Compare_No = false;
+   const bool   Fatal_Yes = true,   Fatal_No = false;
 
 // halo-related parameters
    if ( HaloMerger_Halo_Num > 0 )
@@ -1451,23 +1458,23 @@ void Output_HDF5_UserPara_HaloMerger( HDF5_Output_t *HDF5_UserPara )
             Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
                        "HaloMerger_Halo_InitMode", HaloMerger_Halo_InitMode );
 
-         HDF5_UserPara->Add( HaloMerger_Halo_i_CenCoordX,             &HaloMerger_Halo_CenCoord[index_halo][0] );
-         HDF5_UserPara->Add( HaloMerger_Halo_i_CenCoordY,             &HaloMerger_Halo_CenCoord[index_halo][1] );
-         HDF5_UserPara->Add( HaloMerger_Halo_i_CenCoordZ,             &HaloMerger_Halo_CenCoord[index_halo][2] );
-         HDF5_UserPara->Add( HaloMerger_Halo_i_VelocityX,             &HaloMerger_Halo_Velocity[index_halo][0] );
-         HDF5_UserPara->Add( HaloMerger_Halo_i_VelocityY,             &HaloMerger_Halo_Velocity[index_halo][1] );
-         HDF5_UserPara->Add( HaloMerger_Halo_i_VelocityZ,             &HaloMerger_Halo_Velocity[index_halo][2] );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_CenCoordX,             &HaloMerger_Halo_CenCoord[index_halo][0], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_CenCoordY,             &HaloMerger_Halo_CenCoord[index_halo][1], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_CenCoordZ,             &HaloMerger_Halo_CenCoord[index_halo][2], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_VelocityX,             &HaloMerger_Halo_Velocity[index_halo][0], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_VelocityY,             &HaloMerger_Halo_Velocity[index_halo][1], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_VelocityZ,             &HaloMerger_Halo_Velocity[index_halo][2], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
 
          if ( HaloMerger_Halo_InitMode == 1 )
          {
-         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_Filename,       HaloMerger_Halo_HALO_IC_Filename[index_halo]    );
-         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_BoxLenX,       &HaloMerger_Halo_HALO_IC_BoxLen  [index_halo][0] );
-         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_BoxLenY,       &HaloMerger_Halo_HALO_IC_BoxLen  [index_halo][1] );
-         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_BoxLenZ,       &HaloMerger_Halo_HALO_IC_BoxLen  [index_halo][2] );
-         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_NCellsX,       &HaloMerger_Halo_HALO_IC_NCells  [index_halo][0] );
-         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_NCellsY,       &HaloMerger_Halo_HALO_IC_NCells  [index_halo][1] );
-         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_NCellsZ,       &HaloMerger_Halo_HALO_IC_NCells  [index_halo][2] );
-         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_Float8,        &HaloMerger_Halo_HALO_IC_Float8  [index_halo]    );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_Filename,       HaloMerger_Halo_HALO_IC_Filename[index_halo],    0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_BoxLenX,       &HaloMerger_Halo_HALO_IC_BoxLen  [index_halo][0], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_BoxLenY,       &HaloMerger_Halo_HALO_IC_BoxLen  [index_halo][1], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_BoxLenZ,       &HaloMerger_Halo_HALO_IC_BoxLen  [index_halo][2], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_NCellsX,       &HaloMerger_Halo_HALO_IC_NCells  [index_halo][0], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_NCellsY,       &HaloMerger_Halo_HALO_IC_NCells  [index_halo][1], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_NCellsZ,       &HaloMerger_Halo_HALO_IC_NCells  [index_halo][2], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_Halo_i_HALO_IC_Float8,        &HaloMerger_Halo_HALO_IC_Float8  [index_halo],    0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
          } // if ( HaloMerger_Halo_InitMode == 1 )
          else
             Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
@@ -1519,23 +1526,23 @@ void Output_HDF5_UserPara_HaloMerger( HDF5_Output_t *HDF5_UserPara )
             Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
                        "HaloMerger_Soliton_InitMode", HaloMerger_Soliton_InitMode );
 
-         HDF5_UserPara->Add( HaloMerger_Soliton_i_CoreRadius,            &HaloMerger_Soliton_CoreRadius[index_soliton]    );
-         HDF5_UserPara->Add( HaloMerger_Soliton_i_CoreRho,               &HaloMerger_Soliton_CoreRho   [index_soliton]    );
-         HDF5_UserPara->Add( HaloMerger_Soliton_i_CenCoordX,             &HaloMerger_Soliton_CenCoord  [index_soliton][0] );
-         HDF5_UserPara->Add( HaloMerger_Soliton_i_CenCoordY,             &HaloMerger_Soliton_CenCoord  [index_soliton][1] );
-         HDF5_UserPara->Add( HaloMerger_Soliton_i_CenCoordZ,             &HaloMerger_Soliton_CenCoord  [index_soliton][2] );
-         HDF5_UserPara->Add( HaloMerger_Soliton_i_VelocityX,             &HaloMerger_Soliton_Velocity  [index_soliton][0] );
-         HDF5_UserPara->Add( HaloMerger_Soliton_i_VelocityY,             &HaloMerger_Soliton_Velocity  [index_soliton][1] );
-         HDF5_UserPara->Add( HaloMerger_Soliton_i_VelocityZ,             &HaloMerger_Soliton_Velocity  [index_soliton][2] );
+         HDF5_UserPara->Add( HaloMerger_Soliton_i_CoreRadius,            &HaloMerger_Soliton_CoreRadius[index_soliton],    0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_Soliton_i_CoreRho,               &HaloMerger_Soliton_CoreRho   [index_soliton],    0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_Soliton_i_CenCoordX,             &HaloMerger_Soliton_CenCoord  [index_soliton][0], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_Soliton_i_CenCoordY,             &HaloMerger_Soliton_CenCoord  [index_soliton][1], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_Soliton_i_CenCoordZ,             &HaloMerger_Soliton_CenCoord  [index_soliton][2], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_Soliton_i_VelocityX,             &HaloMerger_Soliton_Velocity  [index_soliton][0], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_Soliton_i_VelocityY,             &HaloMerger_Soliton_Velocity  [index_soliton][1], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_Soliton_i_VelocityZ,             &HaloMerger_Soliton_Velocity  [index_soliton][2], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
 
          if ( HaloMerger_Soliton_InitMode == 1 )
          {
-         HDF5_UserPara->Add( HaloMerger_Soliton_i_DensProf_Filename,      HaloMerger_Soliton_DensProf_Filename[index_soliton] );
-         HDF5_UserPara->Add( HaloMerger_Soliton_i_DensProf_Rescale,      &HaloMerger_Soliton_DensProf_Rescale [index_soliton] );
+         HDF5_UserPara->Add( HaloMerger_Soliton_i_DensProf_Filename,      HaloMerger_Soliton_DensProf_Filename[index_soliton], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_Soliton_i_DensProf_Rescale,      &HaloMerger_Soliton_DensProf_Rescale [index_soliton], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
          } // if ( HaloMerger_Soliton_InitMode == 1 )
          else if ( HaloMerger_Soliton_InitMode == 2 )
          {
-         HDF5_UserPara->Add( HaloMerger_Soliton_i_OuterSlope,            &HaloMerger_Soliton_OuterSlope       [index_soliton] );
+         HDF5_UserPara->Add( HaloMerger_Soliton_i_OuterSlope,            &HaloMerger_Soliton_OuterSlope       [index_soliton], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
          } // else if ( HaloMerger_Soliton_InitMode == 2 )
          else
             Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
@@ -1580,19 +1587,19 @@ void Output_HDF5_UserPara_HaloMerger( HDF5_Output_t *HDF5_UserPara )
             Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",
                        "HaloMerger_ParCloud_InitMode", HaloMerger_ParCloud_InitMode );
 
-         HDF5_UserPara->Add( HaloMerger_ParCloud_i_CenCoordX,         &HaloMerger_ParCloud_CenCoord[index_parcloud][0] );
-         HDF5_UserPara->Add( HaloMerger_ParCloud_i_CenCoordY,         &HaloMerger_ParCloud_CenCoord[index_parcloud][1] );
-         HDF5_UserPara->Add( HaloMerger_ParCloud_i_CenCoordZ,         &HaloMerger_ParCloud_CenCoord[index_parcloud][2] );
-         HDF5_UserPara->Add( HaloMerger_ParCloud_i_VelocityX,         &HaloMerger_ParCloud_Velocity[index_parcloud][0] );
-         HDF5_UserPara->Add( HaloMerger_ParCloud_i_VelocityY,         &HaloMerger_ParCloud_Velocity[index_parcloud][1] );
-         HDF5_UserPara->Add( HaloMerger_ParCloud_i_VelocityZ,         &HaloMerger_ParCloud_Velocity[index_parcloud][2] );
+         HDF5_UserPara->Add( HaloMerger_ParCloud_i_CenCoordX,         &HaloMerger_ParCloud_CenCoord[index_parcloud][0], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_ParCloud_i_CenCoordY,         &HaloMerger_ParCloud_CenCoord[index_parcloud][1], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_ParCloud_i_CenCoordZ,         &HaloMerger_ParCloud_CenCoord[index_parcloud][2], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_ParCloud_i_VelocityX,         &HaloMerger_ParCloud_Velocity[index_parcloud][0], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_ParCloud_i_VelocityY,         &HaloMerger_ParCloud_Velocity[index_parcloud][1], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_ParCloud_i_VelocityZ,         &HaloMerger_ParCloud_Velocity[index_parcloud][2], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
 
          if ( HaloMerger_ParCloud_InitMode == 1 )
          {
-         HDF5_UserPara->Add( HaloMerger_ParCloud_i_DensProf_Filename,  HaloMerger_ParCloud_DensProf_Filename[index_parcloud] );
-         HDF5_UserPara->Add( HaloMerger_ParCloud_i_DensProf_MaxR,     &HaloMerger_ParCloud_DensProf_MaxR    [index_parcloud] );
-         HDF5_UserPara->Add( HaloMerger_ParCloud_i_RSeed,             &HaloMerger_ParCloud_RSeed            [index_parcloud] );
-         HDF5_UserPara->Add( HaloMerger_ParCloud_i_NPar,              &HaloMerger_ParCloud_NPar             [index_parcloud] );
+         HDF5_UserPara->Add( HaloMerger_ParCloud_i_DensProf_Filename,  HaloMerger_ParCloud_DensProf_Filename[index_parcloud], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_ParCloud_i_DensProf_MaxR,     &HaloMerger_ParCloud_DensProf_MaxR    [index_parcloud], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_ParCloud_i_RSeed,             &HaloMerger_ParCloud_RSeed            [index_parcloud], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
+         HDF5_UserPara->Add( HaloMerger_ParCloud_i_NPar,              &HaloMerger_ParCloud_NPar             [index_parcloud], 0, NULL, Compare_No, NULL_BOOL, NULL_BOOL );
          } // if ( HaloMerger_ParCloud_InitMode == 1 )
          else
             Aux_Error( ERROR_INFO, "unsupported initialization mode (%s = %d) !!\n",

@@ -98,7 +98,8 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
    int    FormatVersion, NPatchTotal[NLEVEL], NPatchAllLv, DumpID;
    long   Step;
    double Time[NLEVEL];
-   char **FieldLabel_In=NULL, **MagLabel_In=NULL, **ParAttFltLabel_In=NULL, **ParAttIntLabel_In=NULL;
+   char  (*FieldLabel_In)[MAX_STRING]=NULL, (*MagLabel_In)[MAX_STRING]=NULL;
+   char  (*ParAttFltLabel_In)[MAX_STRING]=NULL, (*ParAttIntLabel_In)[MAX_STRING]=NULL;
    int   *NullPtr=NULL;
    int    WithPar;
 
@@ -193,7 +194,7 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
    } // if ( WithPar ) ... else ...
 
 // field and particle attribute labels
-   FieldLabel_In = new char* [NField];
+   FieldLabel_In = new char [NField][MAX_STRING];
    for (int v=0; v<NField; v++)
    {
       char Key[MAX_STRING];
@@ -201,7 +202,7 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
       LoadField( Key,                &FieldLabel_In[v],     H5_SetID_InputPara,  H5_TypeID_InputPara, Fatal,   NullPtr,         -1, NonFatal );
    }
 
-   MagLabel_In = new char* [NMag];
+   MagLabel_In = new char [NMag][MAX_STRING];
    for (int v=0; v<NMag; v++)
    {
       char Key[MAX_STRING];
@@ -209,7 +210,7 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
       LoadField( Key,                &MagLabel_In[v],       H5_SetID_InputPara,  H5_TypeID_InputPara, Fatal,   NullPtr,         -1, NonFatal );
    }
 
-   ParAttFltLabel_In = new char* [NParAttFlt];
+   ParAttFltLabel_In = new char [NParAttFlt][MAX_STRING];
    for (int v=0; v<NParAttFlt; v++)
    {
       char Key[MAX_STRING];
@@ -218,7 +219,7 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
       LoadField( Key,                &ParAttFltLabel_In[v], H5_SetID_InputPara,  H5_TypeID_InputPara, Fatal,   NullPtr,         -1, NonFatal );
    }
 
-   ParAttIntLabel_In = new char* [NParAttInt];
+   ParAttIntLabel_In = new char [NParAttInt][MAX_STRING];
    for (int v=0; v<NParAttInt; v++)
    {
       char Key[MAX_STRING];
@@ -459,12 +460,8 @@ void LoadData_HDF5( const char *FileName, AMR_t &amr, int &Format, int &NField, 
 
 
 // 5. close all HDF5 objects and free memory
-   for (int v=0; v<NField;     v++)    free(     FieldLabel_In[v] );
-   for (int v=0; v<NMag;       v++)    free(       MagLabel_In[v] );
-   for (int v=0; v<NParAttFlt; v++)    free( ParAttFltLabel_In[v] );
-   for (int v=0; v<NParAttInt; v++)    free( ParAttIntLabel_In[v] );
-   delete []     FieldLabel_In;
-   delete []       MagLabel_In;
+   delete [] FieldLabel_In;
+   delete [] MagLabel_In;
    delete [] ParAttFltLabel_In;
    delete [] ParAttIntLabel_In;
    delete [] CrList_AllLv;
