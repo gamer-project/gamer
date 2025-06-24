@@ -56,9 +56,9 @@ void Output_DumpData( const int Stage )
                DumpTime = round( int(Time[0]/OUTPUT_DT) + 1.0 )*OUTPUT_DT;
 
 //             be careful about round-off errors
-               if (   (  DumpTime <= Time[0]  )                                            ||
-                      (  Time[0] != 0.0 && fabs( (Time[0]-DumpTime)/Time[0] ) < 1.0e-8  )  ||
-                      (  Time[0] == 0.0 && fabs(  Time[0]-DumpTime          ) < 1.0e-12 )      )   DumpTime += OUTPUT_DT;
+               if (   (  DumpTime <= Time[0]  )                                             ||
+                      (  Time[0] != 0.0 && fabs( (Time[0]-DumpTime)/Time[0] ) < 1.0e-8   )  ||
+                      (  Time[0] == 0.0 && fabs(  Time[0]-DumpTime          ) < 1.0e-12  )      )  DumpTime += OUTPUT_DT;
             }
          }
          break;
@@ -71,9 +71,9 @@ void Output_DumpData( const int Stage )
                {
                   DumpTime = DumpTable[DumpTableID];
 
-                  if (   (  DumpTime >= Time[0]  )                                            ||
-                         (  Time[0] != 0.0 && fabs( (Time[0]-DumpTime)/Time[0] ) < 1.0e-8  )  ||
-                         (  Time[0] == 0.0 && fabs(  Time[0]-DumpTime          ) < 1.0e-12 )      )   break;
+                  if (   (  DumpTime >= Time[0]  )                                             ||
+                         (  Time[0] != 0.0 && fabs( (Time[0]-DumpTime)/Time[0] ) < 1.0e-8   )  ||
+                         (  Time[0] == 0.0 && fabs(  Time[0]-DumpTime          ) < 1.0e-12  )      )  break;
                }
             }
 

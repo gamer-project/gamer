@@ -33,6 +33,7 @@ static void End_FFTW_GramFE();
 
 
 
+#if ( SUPPORT_FFTW == FFTW3 )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ComputePaddedTotalSize
 // Description :  Return padded total size for complex-to-real and real-to-complex 3D FFTW transforms
@@ -41,10 +42,18 @@ static void End_FFTW_GramFE();
 //
 // Return      :  length of array that is large enough to store FFT input and output
 //-------------------------------------------------------------------------------------------------------
-int ComputePaddedTotalSize( int* size )
+size_t ComputePaddedTotalSize( int* size )
 {
 
-   return 2*(size[0]/2+1)*size[1]*size[2];
+#  ifdef SERIAL
+   return 2*( (size_t)size[0]/2 + 1 )*size[1]*size[2];
+#  else
+   mpi_index_int local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose;
+
+   return (size_t)fftw_mpi_local_size_3d_transposed( size[2], size[1], 2*(size[0]/2+1),
+                                                     MPI_COMM_WORLD, &local_nz, &local_z_start, &local_ny_after_transpose,
+                                                     &local_y_start_after_transpose);
+#  endif // #if SERIAL
 
 } // FUNCTION : ComputePaddedTotalSize
 
@@ -58,12 +67,21 @@ int ComputePaddedTotalSize( int* size )
 //
 // Return      :  length of array that is large enough to store FFT input and output
 //-------------------------------------------------------------------------------------------------------
-int ComputeTotalSize( int* size )
+size_t ComputeTotalSize( int* size )
 {
 
-   return size[0]*size[1]*size[2];
+#  ifdef SERIAL
+   return (size_t)size[0]*size[1]*size[2];
+#  else
+   mpi_index_int local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose;
+
+   return (size_t)fftw_mpi_local_size_3d_transposed( size[2], size[1], size[0],
+                                                     MPI_COMM_WORLD, &local_nz, &local_z_start, &local_ny_after_transpose,
+                                                     &local_y_start_after_transpose);
+#  endif // #if SERIAL
 
 } // FUNCTION : ComputeTotalSize
+#endif // #if ( SUPPORT_FFTW == FFTW3 )
 
 
 
@@ -87,10 +105,10 @@ void Init_FFTW( const int lv )
 
    switch ( OPT__FFTW_STARTUP )
    {
-      case FFTW_STARTUP_ESTIMATE:   StartupFlag = FFTW_ESTIMATE;  break;
-      case FFTW_STARTUP_MEASURE:    StartupFlag = FFTW_MEASURE;   break;
+      case FFTW_STARTUP_ESTIMATE:    StartupFlag = FFTW_ESTIMATE;    break;
+      case FFTW_STARTUP_MEASURE:     StartupFlag = FFTW_MEASURE;     break;
 #     if ( SUPPORT_FFTW == FFTW3 )
-      case FFTW_STARTUP_PATIENT:    StartupFlag = FFTW_PATIENT;   break;
+      case FFTW_STARTUP_PATIENT:     StartupFlag = FFTW_PATIENT;     break;
 #     endif // # if ( SUPPORT_FFTW == FFTW3 )
 
       default:                      Aux_Error( ERROR_INFO, "unrecognised FFTW startup option %d  !!\n", OPT__FFTW_STARTUP );
@@ -521,12 +539,15 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
                  local_nz, List_z_start[MPI_Rank+1] - List_z_start[MPI_Rank] );
 #  endif // GAMER_DEBUG
 
-   const int SSize[2]   = { ( InPlacePad ? 2*(FFT_Size[0]/2+1) : FFT_Size[0] ), FFT_Size[1] };     // padded slab size in the x and y directions
-   const int PSSize     = PS1*PS1;                                // patch slice size
-// const int MemUnit    = amr->NPatchComma[lv][1]*PS1/MPI_NRank;  // set arbitrarily
-   const int MemUnit    = amr->NPatchComma[lv][1]*PS1;            // set arbitrarily
-   const int AveNz      = FFT_Size[2]/MPI_NRank + ( ( FFT_Size[2]%MPI_NRank == 0 ) ? 0 : 1 );    // average slab thickness
-   const int Scale      = amr->scale[lv];
+
+   const int SSize[2]   = { ( InPlacePad ? 2*(FFT_Size[0]/2+1) : FFT_Size[0] ), FFT_Size[1] }; // padded slab size in the x and y directions
+   const int PSSize     = PS1*PS1;                                                             // patch slice size
+   const int MemUnit    = MAX( 1, amr->NPatchComma[lv][1]/MPI_NRank );                         // set arbitrarily; divided by MPI_NRank so that the
+                                                                                               // memory consumption per rank for arrays like
+                                                                                               // TempBuf_Var[MPI_NRank] reduces when launching
+                                                                                               // more ranks
+   const int AveNz      = FFT_Size[2]/MPI_NRank + ( ( FFT_Size[2]%MPI_NRank == 0 ) ? 0 : 1 );  // average slab thickness
+   const int Scale0     = amr->scale[lv];
 
    int   Cr[3];                        // corner coordinates of each patch normalized to the base-level grid size
    int   BPos_z;                       // z coordinate of each patch slice in the simulation box
@@ -550,6 +571,15 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
       TempBuf_SIdx   [r] = (long*)malloc( MemSize[r]*sizeof(long)        );
       TempBuf_Var    [r] = (real*)malloc( MemSize[r]*sizeof(real)*PSSize );
       List_NSend_SIdx[r] = 0;
+
+      if ( List_PID    [r] == NULL )
+          Aux_Error( ERROR_INFO, "List_PID[%d] is NULL on Rank %d !!\n",     r, MPI_Rank );
+      if ( List_k      [r] == NULL )
+          Aux_Error( ERROR_INFO, "List_k[%d] is NULL on Rank %d !!\n",       r, MPI_Rank );
+      if ( TempBuf_SIdx[r] == NULL )
+          Aux_Error( ERROR_INFO, "TempBuf_SIdx[%d] is NULL on Rank %d !!\n", r, MPI_Rank );
+      if ( TempBuf_Var [r] == NULL )
+          Aux_Error( ERROR_INFO, "TempBuf_Var[%d] is NULL on Rank %d !!\n",  r, MPI_Rank );
    }
 
 
@@ -628,6 +658,15 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
                List_k      [TRank]  = (int* )realloc( List_k      [TRank], MemSize[TRank]*sizeof(int)         );
                TempBuf_SIdx[TRank]  = (long*)realloc( TempBuf_SIdx[TRank], MemSize[TRank]*sizeof(long)        );
                TempBuf_Var [TRank]  = (real*)realloc( TempBuf_Var [TRank], MemSize[TRank]*sizeof(real)*PSSize );
+
+               if ( List_PID    [TRank] == NULL )
+                  Aux_Error( ERROR_INFO, "List_PID[%d] is NULL on Rank %d !!\n",     TRank, MPI_Rank );
+               if ( List_k      [TRank] == NULL )
+                  Aux_Error( ERROR_INFO, "List_k[%d] is NULL on Rank %d !!\n",       TRank, MPI_Rank );
+               if ( TempBuf_SIdx[TRank] == NULL )
+                  Aux_Error( ERROR_INFO, "TempBuf_SIdx[%d] is NULL on Rank %d !!\n", TRank, MPI_Rank );
+               if ( TempBuf_Var [TRank] == NULL )
+                  Aux_Error( ERROR_INFO, "TempBuf_Var[%d] is NULL on Rank %d !!\n",  TRank, MPI_Rank );
             }
 
 //          record list
