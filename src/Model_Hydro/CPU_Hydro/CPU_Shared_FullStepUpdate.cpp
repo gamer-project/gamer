@@ -204,8 +204,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], const real g_H
 
 //       5-1. check
 //       --> allow pressure to be zero to tolerate round-off errors
-         if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, Output_1Cell, NULL,
-                                   NULL_REAL, NULL_REAL, Emag,
+         if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, Output_1Cell, Emag,
                                    EoS->DensEint2Pres_FuncPtr,
                                    EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table,
