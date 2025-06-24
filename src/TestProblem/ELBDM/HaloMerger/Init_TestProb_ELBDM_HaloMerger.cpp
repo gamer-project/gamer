@@ -1893,7 +1893,8 @@ void Init_TestProb_ELBDM_HaloMerger()
 #  endif // ifdef MASSIVE_PARTICLES
 #  ifdef SUPPORT_HDF5
    Output_HDF5_InputTest_Ptr = LoadInputTestProb;
-   Output_HDF5_UserPara_Ptr  = Output_HDF5_UserPara_HaloMerger;
+   Output_HDF5_UserPara_Ptr  = ( HaloMerger_Halo_Num > 0  ||  HaloMerger_Soliton_Num > 0  ||  HaloMerger_ParCloud_Num > 0 )
+                               ? Output_HDF5_UserPara_HaloMerger : NULL;
 #  endif
 
 #  endif // if ( MODEL == ELBDM  &&  defined GRAVITY )
