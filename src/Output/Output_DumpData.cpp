@@ -56,9 +56,9 @@ void Output_DumpData( const int Stage )
                DumpTime = round( int(Time[0]/OUTPUT_DT) + 1.0 )*OUTPUT_DT;
 
 //             be careful about round-off errors
-               if (   (  DumpTime <= Time[0]  )                                            ||
-                      (  Time[0] != 0.0 && fabs( (Time[0]-DumpTime)/Time[0] ) < 1.0e-8  )  ||
-                      (  Time[0] == 0.0 && fabs(  Time[0]-DumpTime          ) < 1.0e-12 )      )   DumpTime += OUTPUT_DT;
+               if (   (  DumpTime <= Time[0]  )                                             ||
+                      (  Time[0] != 0.0 && fabs( (Time[0]-DumpTime)/Time[0] ) < 1.0e-8   )  ||
+                      (  Time[0] == 0.0 && fabs(  Time[0]-DumpTime          ) < 1.0e-12  )      )  DumpTime += OUTPUT_DT;
             }
          }
          break;
@@ -71,9 +71,9 @@ void Output_DumpData( const int Stage )
                {
                   DumpTime = DumpTable[DumpTableID];
 
-                  if (   (  DumpTime >= Time[0]  )                                            ||
-                         (  Time[0] != 0.0 && fabs( (Time[0]-DumpTime)/Time[0] ) < 1.0e-8  )  ||
-                         (  Time[0] == 0.0 && fabs(  Time[0]-DumpTime          ) < 1.0e-12 )      )   break;
+                  if (   (  DumpTime >= Time[0]  )                                             ||
+                         (  Time[0] != 0.0 && fabs( (Time[0]-DumpTime)/Time[0] ) < 1.0e-8   )  ||
+                         (  Time[0] == 0.0 && fabs(  Time[0]-DumpTime          ) < 1.0e-12  )      )  break;
                }
             }
 
@@ -103,9 +103,9 @@ void Output_DumpData( const int Stage )
 
 
 // set the file names for all output functions
-   char FileName_Total[MAX_STRING], FileName_Part[MAX_STRING], FileName_Temp[MAX_STRING], FileName_PS[MAX_STRING];
+   char FileName_Total[2*MAX_STRING], FileName_Part[2*MAX_STRING], FileName_Temp[2*MAX_STRING], FileName_PS[2*MAX_STRING];
 #  ifdef PARTICLE
-   char FileName_Particle[MAX_STRING];
+   char FileName_Particle[2*MAX_STRING];
 #  endif
 
    if ( OPT__OUTPUT_TOTAL )
@@ -318,7 +318,7 @@ void Output_DumpData( const int Stage )
 void Write_DumpRecord()
 {
 
-   char FileName[MAX_STRING];
+   char FileName[2*MAX_STRING];
    sprintf( FileName, "%s/Record__Dump", OUTPUT_DIR );
 
 

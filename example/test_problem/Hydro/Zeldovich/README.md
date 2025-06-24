@@ -6,7 +6,7 @@
   - [[--particle | Installation:-Option-List#--particle]]
   - [[--gsl | Installation:-Option-List#--gsl]]
   - [[--fftw | Installation:-Option-List#--fftw]]=`FFTW2`/`FFTW3`
-  - [[--dual | Installation:-Option-List#--dual]]=`DE_ENPY`
+  - [[--dual | Installation:-Option-List#--dual]]=`ENPY`
 - Must disable
 - Available options
   - [[Miscellaneous Options | Installation:-Option-List#miscellaneous-options]]

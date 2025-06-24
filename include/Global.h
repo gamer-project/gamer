@@ -86,7 +86,7 @@ extern int        OPT__UM_IC_FLOAT8;
 extern double     COM_CEN_X, COM_CEN_Y, COM_CEN_Z, COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R;
 extern int        COM_MAX_ITER;
 extern double     ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z;
-extern char       OUTPUT_DIR[MAX_STRING-100];
+extern char       OUTPUT_DIR[MAX_STRING];
 extern double     FLAG_ANGULAR_CEN_X, FLAG_ANGULAR_CEN_Y, FLAG_ANGULAR_CEN_Z;
 extern double     FLAG_RADIAL_CEN_X, FLAG_RADIAL_CEN_Y, FLAG_RADIAL_CEN_Z;
 
@@ -101,6 +101,9 @@ extern OptFluBC_t         OPT__BC_FLU[6];          // boundary conditions of flu
 extern OptLohnerForm_t    OPT__FLAG_LOHNER_FORM;
 extern OptCorrAfterSync_t OPT__CORR_AFTER_ALL_SYNC;
 extern OptTimeStepLevel_t OPT__DT_LEVEL;
+
+extern bool       ConRefInitialized;
+extern double     ConRef[1+NCONREF_MAX];
 
 
 
@@ -237,7 +240,7 @@ extern bool       FFTW3_Double_OMP_Enabled, FFTW3_Single_OMP_Enabled;
 // ============================================================================================================
 #ifdef PARTICLE
 extern double          DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
-extern bool            OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL, OPT__FREEZE_PAR, OPT__OUTPUT_PAR_MESH;
+extern bool            OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL, OPT__FREEZE_PAR, OPT__OUTPUT_PAR_MESH, OPT__PAR_INIT_CHECK;
 extern int             OPT__OUTPUT_PAR_MODE, OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
 extern double          FlagTable_ParMassCell[NLEVEL-1];
 extern ParOutputDens_t OPT__OUTPUT_PAR_DENS;
@@ -379,7 +382,7 @@ extern InterpolationHandler Int_InterpolationHandler;
 // =======================================================================================================
 #ifdef COSMIC_RAY
 extern double GAMMA_CR;
-extern bool OPT__FLAG_CRAY, OPT__FLAG_LOHNER_CRAY;
+extern bool   OPT__FLAG_CRAY, OPT__FLAG_LOHNER_CRAY;
 extern double FlagTable_CRay[NLEVEL-1];
 #endif
 

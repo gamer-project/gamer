@@ -16,7 +16,7 @@ void Aux_Record_CorrUnphy()
 {
 
    static bool FirstTime = true;
-   char FileName[MAX_STRING];
+   char FileName[2*MAX_STRING];
    sprintf( FileName, "%s/Record__NCorrUnphy", OUTPUT_DIR );
 
    long NCorrAllRank[NLEVEL];

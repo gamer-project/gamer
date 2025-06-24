@@ -111,6 +111,75 @@ void Validate()
 
 #if ( MODEL == HYDRO )
 //-------------------------------------------------------------------------------------------------------
+// Function    :  LoadInputTestProb
+// Description :  Read problem-specific runtime parameters from Input__TestProb and store them in HDF5 snapshots (Data_*)
+//
+// Note        :  1. Invoked by SetParameter() to read parameters
+//                2. Invoked by Output_DumpData_Total_HDF5() using the function pointer Output_HDF5_InputTest_Ptr to store parameters
+//                3. If there is no problem-specific runtime parameter to load, add at least one parameter
+//                   to prevent an empty structure in HDF5_Output_t
+//                   --> Example:
+//                       LOAD_PARA( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+//
+// Parameter   :  load_mode      : Mode for loading parameters
+//                                 --> LOAD_READPARA    : Read parameters from Input__TestProb
+//                                     LOAD_HDF5_OUTPUT : Store parameters in HDF5 snapshots
+//                ReadPara       : Data structure for reading parameters (used with LOAD_READPARA)
+//                HDF5_InputTest : Data structure for storing parameters in HDF5 snapshots (used with LOAD_HDF5_OUTPUT)
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
+{
+
+#  ifndef SUPPORT_HDF5
+   if ( load_mode == LOAD_HDF5_OUTPUT )   Aux_Error( ERROR_INFO, "please turn on SUPPORT_HDF5 in the Makefile for load_mode == LOAD_HDF5_OUTPUT !!\n" );
+#  endif
+
+   if ( load_mode == LOAD_READPARA     &&  ReadPara       == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_READPARA and ReadPara == NULL !!\n" );
+   if ( load_mode == LOAD_HDF5_OUTPUT  &&  HDF5_InputTest == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_HDF5_OUTPUT and HDF5_InputTest == NULL !!\n" );
+
+// add parameters in the following format:
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
+// --> LOAD_PARA() is defined in "include/TestProb.h"
+// ***************************************************************************************************************************
+// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",      &VARIABLE,              DEFAULT,       MIN,              MAX               );
+// ***************************************************************************************************************************
+   LOAD_PARA( load_mode, "Plummer_RSeed",        &Plummer_RSeed,         123,           0,                NoMax_int         );
+   LOAD_PARA( load_mode, "Plummer_Rho0",         &Plummer_Rho0,          1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Plummer_R0",           &Plummer_R0,            0.1,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Plummer_MaxR",         &Plummer_MaxR,          0.375,         Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "Plummer_Collision",    &Plummer_Collision,     false,         Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "Plummer_Collision_D",  &Plummer_Collision_D,   1.5,           NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Plummer_CenterX",      &Plummer_Center[0],     NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Plummer_CenterY",      &Plummer_Center[1],     NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Plummer_CenterZ",      &Plummer_Center[2],     NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Plummer_BulkVelX",     &Plummer_BulkVel[0],    0.0,           NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Plummer_BulkVelY",     &Plummer_BulkVel[1],    0.0,           NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Plummer_BulkVelZ",     &Plummer_BulkVel[2],    0.0,           NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Plummer_GasMFrac",     &Plummer_GasMFrac,      0.25,          Eps_double,       1.0               );
+   LOAD_PARA( load_mode, "Plummer_ExtAccMFrac",  &Plummer_ExtAccMFrac,   0.25,          0.0,              1.0               );
+   LOAD_PARA( load_mode, "Plummer_ExtPotMFrac",  &Plummer_ExtPotMFrac,   0.25,          0.0,              1.0               );
+   LOAD_PARA( load_mode, "Plummer_MassProfNBin", &Plummer_MassProfNBin,  1000,          2,                NoMax_int         );
+   LOAD_PARA( load_mode, "Plummer_AddColor",     &Plummer_AddColor,      false,         Useless_bool,     Useless_bool      );
+#  ifdef FEEDBACK
+   LOAD_PARA( load_mode, "Plummer_FB_Exp",       &Plummer_FB_Exp,        false,         Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "Plummer_FB_ExpEMin",   &Plummer_FB_ExpEMin,    1.0,           0.0,              NoMax_double      );
+   LOAD_PARA( load_mode, "Plummer_FB_ExpEMax",   &Plummer_FB_ExpEMax,    10.0,          0.0,              NoMax_double      );
+   LOAD_PARA( load_mode, "Plummer_FB_ExpMMin",   &Plummer_FB_ExpMMin,    0.0,           0.0,              1.0               );
+   LOAD_PARA( load_mode, "Plummer_FB_ExpMMax",   &Plummer_FB_ExpMMax,    1.0e-5,        0.0,              1.0               );
+   LOAD_PARA( load_mode, "Plummer_FB_Acc",       &Plummer_FB_Acc,        false,         Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "Plummer_FB_AccMMin",   &Plummer_FB_AccMMin,    0.0,           0.0,              1.0               );
+   LOAD_PARA( load_mode, "Plummer_FB_AccMMax",   &Plummer_FB_AccMMax,    1.0e-2,        0.0,              1.0               );
+   LOAD_PARA( load_mode, "Plummer_FB_Like",      &Plummer_FB_Like,       1.0e-4,        0.0,              1.0               );
+#  endif
+
+} // FUNCITON : LoadInputTestProb
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
 //
@@ -133,43 +202,11 @@ void SetParameter()
 
 
 // (1) load the problem-specific runtime parameters
+// (1-1) read parameters from Input__TestProb
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
-// (1-1) add parameters in the following format:
-// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
-// --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
-// ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",      &VARIABLE,              DEFAULT,       MIN,              MAX               );
-// ********************************************************************************************************************************
-   ReadPara->Add( "Plummer_RSeed",        &Plummer_RSeed,         123,           0,                NoMax_int         );
-   ReadPara->Add( "Plummer_Rho0",         &Plummer_Rho0,          1.0,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Plummer_R0",           &Plummer_R0,            0.1,           Eps_double,       NoMax_double      );
-   ReadPara->Add( "Plummer_MaxR",         &Plummer_MaxR,          0.375,         Eps_double,       NoMax_double      );
-   ReadPara->Add( "Plummer_Collision",    &Plummer_Collision,     false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "Plummer_Collision_D",  &Plummer_Collision_D,   1.5,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Plummer_CenterX",      &Plummer_Center[0],     NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Plummer_CenterY",      &Plummer_Center[1],     NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Plummer_CenterZ",      &Plummer_Center[2],     NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Plummer_BulkVelX",     &Plummer_BulkVel[0],    0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Plummer_BulkVelY",     &Plummer_BulkVel[1],    0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Plummer_BulkVelZ",     &Plummer_BulkVel[2],    0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Plummer_GasMFrac",     &Plummer_GasMFrac,      0.25,          Eps_double,       1.0               );
-   ReadPara->Add( "Plummer_ExtAccMFrac",  &Plummer_ExtAccMFrac,   0.25,          0.0,              1.0               );
-   ReadPara->Add( "Plummer_ExtPotMFrac",  &Plummer_ExtPotMFrac,   0.25,          0.0,              1.0               );
-   ReadPara->Add( "Plummer_MassProfNBin", &Plummer_MassProfNBin,  1000,          2,                NoMax_int         );
-   ReadPara->Add( "Plummer_AddColor",     &Plummer_AddColor,      false,         Useless_bool,     Useless_bool      );
-#  ifdef FEEDBACK
-   ReadPara->Add( "Plummer_FB_Exp",       &Plummer_FB_Exp,        false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "Plummer_FB_ExpEMin",   &Plummer_FB_ExpEMin,    1.0,           0.0,              NoMax_double      );
-   ReadPara->Add( "Plummer_FB_ExpEMax",   &Plummer_FB_ExpEMax,    10.0,          0.0,              NoMax_double      );
-   ReadPara->Add( "Plummer_FB_ExpMMin",   &Plummer_FB_ExpMMin,    0.0,           0.0,              1.0               );
-   ReadPara->Add( "Plummer_FB_ExpMMax",   &Plummer_FB_ExpMMax,    1.0e-5,        0.0,              1.0               );
-   ReadPara->Add( "Plummer_FB_Acc",       &Plummer_FB_Acc,        false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "Plummer_FB_AccMMin",   &Plummer_FB_AccMMin,    0.0,           0.0,              1.0               );
-   ReadPara->Add( "Plummer_FB_AccMMax",   &Plummer_FB_AccMMax,    1.0e-2,        0.0,              1.0               );
-   ReadPara->Add( "Plummer_FB_Like",      &Plummer_FB_Like,       1.0e-4,        0.0,              1.0               );
-#  endif
+   LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
 
    ReadPara->Read( FileName );
 
@@ -370,7 +407,7 @@ void SetParameter()
       Aux_Message( stdout, "  feedback likelihood                       = %13.7e\n", Plummer_FB_Like );
 #     endif
       Aux_Message( stdout, "=============================================================================\n" );
-   }
+   } // if ( MPI_Rank == 0 )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
@@ -526,18 +563,21 @@ void Init_TestProb_Hydro_Plummer()
    SetParameter();
 
 
-   Init_Function_User_Ptr  = SetGridIC;
-   Init_Field_User_Ptr     = AddNewField_Plummer;
+   Init_Function_User_Ptr    = SetGridIC;
+   Init_Field_User_Ptr       = AddNewField_Plummer;
 #  ifdef GRAVITY
-   Init_ExtAcc_Ptr         = Init_ExtAcc_Plummer;
+   Init_ExtAcc_Ptr           = Init_ExtAcc_Plummer;
    if ( OPT__EXT_POT == EXT_POT_FUNC )
-   Init_ExtPot_Ptr         = Init_ExtPot_Plummer;
+   Init_ExtPot_Ptr           = Init_ExtPot_Plummer;
 #  ifdef MASSIVE_PARTICLES
-   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_Plummer;
+   Par_Init_ByFunction_Ptr   = Par_Init_ByFunction_Plummer;
 #  endif
 #  endif
 #  ifdef FEEDBACK
-   FB_Init_User_Ptr        = FB_Init_Plummer;
+   FB_Init_User_Ptr          = FB_Init_Plummer;
+#  endif
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_InputTest_Ptr = LoadInputTestProb;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

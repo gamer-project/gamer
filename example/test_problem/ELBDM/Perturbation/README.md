@@ -1,7 +1,7 @@
 # `configure.py` options
 - Must enable
   - [[--model | Installation:-Option-List#--model]]=`ELBDM`
-  - [[--elbdm_scheme | Installation:-Option-List#--elbdm_scheme]]=`ELBDM_HYBRID`
+  - [[--elbdm_scheme | Installation:-Option-List#--elbdm_scheme]]=`HYBRID`
   - [[--gravity | Installation:-Option-List#--gravity]]
 - Must disable
   - [[--comoving | Installation:-Option-List#--comoving]]
@@ -25,4 +25,4 @@
 
 - Dimensionality of the problem can be set via `Perturbation_NDim` (set amplitude of plane waves in other dimensions to zero)
 
-- For reference simulation using base-level spectral method, use [[--elbdm_scheme | Installation:-Option-List#--elbdm_scheme]]=`ELBDM_WAVE` and `Input__Parameter_BaseSpectral` and `generate_make_BaseSpectral.sh`
+- For reference simulation using base-level spectral method, use [[--elbdm_scheme | Installation:-Option-List#--elbdm_scheme]]=`WAVE` and `Input__Parameter_BaseSpectral` and `generate_make_BaseSpectral.sh`

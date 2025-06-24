@@ -75,7 +75,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 
 
 // output filename
-   char FileName[NERR][MAX_STRING];
+   char FileName[NERR][2*MAX_STRING];
 
 #  if   ( MODEL == HYDRO )
    sprintf( FileName[            0], "%s/%s_Dens_%06d", OUTPUT_DIR, Prefix, DumpID );
@@ -276,7 +276,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 
       for (int v=0; v<NERR; v++)    L1_Err_Sum[v] /= Norm;
 
-      char FileName_L1[MAX_STRING];
+      char FileName_L1[2*MAX_STRING];
       sprintf( FileName_L1, "%s/Record__L1Err", OUTPUT_DIR );
       FILE *File_L1 = fopen( FileName_L1, "a" );
 

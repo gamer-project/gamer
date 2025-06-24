@@ -3,7 +3,7 @@
   - [[--model | Installation:-Option-List#--model]]=`HYDRO`
   - [[--particle | Installation:-Option-List#--particle]]
   - [[--gravity | Installation:-Option-List#--gravity]]
-  - [[--dual | Installation:-Option-List#--dual]]=`DE_ENPY`
+  - [[--dual | Installation:-Option-List#--dual]]=`ENPY`
 - Must disable
   - [[--comoving | Installation:-Option-List#--comoving]]
 - Available options

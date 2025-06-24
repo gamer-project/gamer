@@ -58,7 +58,7 @@ void Output_ExchangePatchMap( const int lv, const int xyz, const char *comment )
    }
 
 
-   char FileName[MAX_STRING];
+   char FileName[2*MAX_STRING];
    sprintf( FileName, "%s/ExchangePatchMap_%d_%d_%2s", OUTPUT_DIR, MPI_Rank, lv, Dim[1] );
    if ( comment != NULL )
    {

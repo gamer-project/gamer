@@ -1,7 +1,7 @@
 # `configure.py` options
 - Must enable
   - [[--model | Installation:-Option-List#--model]]=`ELBDM`
-  - [[--elbdm_scheme | Installation:-Option-List#--elbdm_scheme]]=`ELBDM_HYBRID`
+  - [[--elbdm_scheme | Installation:-Option-List#--elbdm_scheme]]=`HYBRID`
 - Must disable
   - [[--gravity | Installation:-Option-List#--gravity]]
   - [[--particle | Installation:-Option-List#--particle]]

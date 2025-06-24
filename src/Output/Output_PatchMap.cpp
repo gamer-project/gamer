@@ -49,7 +49,7 @@ void Output_PatchMap( const int lv, const int PID, const int TSg, const int Comp
    patch_t *Relation = amr->patch[ 0][lv][PID];
    patch_t *Data     = amr->patch[TSg][lv][PID];
 
-   char FileName[MAX_STRING];
+   char FileName[2*MAX_STRING];
    sprintf( FileName, "%s/PatchMap_r%d_lv%d_p%d_v%d", OUTPUT_DIR, MPI_Rank, lv, PID, Comp );
    if ( comment != NULL )
    {
