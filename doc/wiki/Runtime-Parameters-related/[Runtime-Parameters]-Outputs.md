@@ -49,7 +49,7 @@ See also [OPT__OUTPUT_MODE](#OPT__OUTPUT_MODE) for specifying the
 data dump frequency.
     * **Restriction:**
 `OPT__OUTPUT_TOTAL=1` is only applicable when enabling the compilation option
-[[--hdf5 | Installation:-Option-List#--hdf5]].
+[[--hdf5 | [Installation]-Option-List#--hdf5]].
 [[Data analysis with yt | Data-Analysis]] is currently only supported for
 the HDF5 snapshots of GAMER.
 
@@ -106,7 +106,7 @@ particle data.
 Map mesh attributes to tracer particles and output them in the HDF5 snapshots.
 Edit `Input__Par_Mesh` to specify the desired mesh attributes. An example file can be found at `example/input/Input__Par_Mesh`.
     * **Restriction:**
-Only applicable when enabling [[--tracer | Installation:-Option-List#--tracer]] and setting [OPT__OUTPUT_TOTAL](#OPT__OUTPUT_TOTAL) to 1.
+Only applicable when enabling [[--tracer | [Installation]-Option-List#--tracer]] and setting [OPT__OUTPUT_TOTAL](#OPT__OUTPUT_TOTAL) to 1.
 
 <a name="OPT__OUTPUT_BASEPS"></a>
 * #### `OPT__OUTPUT_BASEPS` &ensp; (0=off, 1=on) &ensp; [0]
@@ -132,7 +132,7 @@ Output the gravitational potential data on grids.
     * **Description:**
 Store the particle or total mass density on grids in
 the simulation snapshots. The particle interpolation scheme is set by
-[[PAR_INTERP | Runtime-Parameters:-Particles#PAR_INTERP ]].
+[[PAR_INTERP | [Runtime-Parameters]-Particles#PAR_INTERP ]].
     * **Restriction:**
 Only applicable when enabling [OPT__OUTPUT_TOTAL](#OPT__OUTPUT_TOTAL).
 
@@ -141,13 +141,13 @@ Only applicable when enabling [OPT__OUTPUT_TOTAL](#OPT__OUTPUT_TOTAL).
     * **Description:**
 Output the cell-centered magnetic field (**mandatory for yt analysis**).
     * **Restriction:**
-For [[--mhd | Installation:-Option-List#--mhd]] only.
+For [[--mhd | [Installation]-Option-List#--mhd]] only.
 
 <a name="OPT__OUTPUT_PRES"></a>
 * #### `OPT__OUTPUT_PRES` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
 Output the gas pressure (or gas + cosmic-ray pressure when enabling
-[[--cosmic_ray | Installation:-Option-List#--cosmic_ray]]) on grids.
+[[--cosmic_ray | [Installation]-Option-List#--cosmic_ray]]) on grids.
 Magnetic pressure is always excluded.
     * **Restriction:**
 
@@ -188,28 +188,28 @@ Output the Mach number on grids.
 Output $|\nabla \cdot B| \Delta h / |B|$, where $B$ is the magnetic field
 and $\Delta h$ is cell width.
     * **Restriction:**
-For [[--mhd | Installation:-Option-List#--mhd]] only.
+For [[--mhd | [Installation]-Option-List#--mhd]] only.
 
 <a name="OPT__OUTPUT_LORENTZ"></a>
 * #### `OPT__OUTPUT_LORENTZ` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
 Output the SRHD Lorentz factor on grids.
     * **Restriction:**
-For [[--srhd | Installation:-Option-List#--srhd]] only.
+For [[--srhd | [Installation]-Option-List#--srhd]] only.
 
 <a name="OPT__OUTPUT_3VELOCITY"></a>
 * #### `OPT__OUTPUT_3VELOCITY` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
 Output the SRHD three-velocity on grids.
     * **Restriction:**
-For [[--srhd | Installation:-Option-List#--srhd]] only.
+For [[--srhd | [Installation]-Option-List#--srhd]] only.
 
 <a name="OPT__OUTPUT_ENTHALPY"></a>
 * #### `OPT__OUTPUT_ENTHALPY` &ensp; (0=off, 1=on) &ensp; [1]
     * **Description:**
 Output the SRHD reduced enthalpy on grids.
     * **Restriction:**
-For [[--srhd | Installation:-Option-List#--srhd]] only.
+For [[--srhd | [Installation]-Option-List#--srhd]] only.
 
 <a name="OPT__OUTPUT_MODE"></a>
 * #### `OPT__OUTPUT_MODE` &ensp; (1=const step, 2=const dt, 3=dump table) &ensp; [none]
@@ -217,7 +217,7 @@ For [[--srhd | Installation:-Option-List#--srhd]] only.
 Choose the data output frequency.
         * `1`: Every [OUTPUT_STEP](#OUTPUT_STEP) root-level step
         * `2`: Every [OUTPUT_DT](#OUTPUT_DT) time interval
-        * `3`: According to the dump timetable [[Input__DumpTable | Runtime-Parameters:-Input__DumpTable]]
+        * `3`: According to the dump timetable [[Input__DumpTable | [Runtime-Parameters]-Input__DumpTable]]
     * **Restriction:**
 Must enable at least one of the output options
 [OPT__OUTPUT_TOTAL](#OPT__OUTPUT_TOTAL),

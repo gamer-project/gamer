@@ -1,5 +1,5 @@
 Timetable for dumping data when adopting
-[[OPT__OUTPUT_MODE | Runtime-Parameters:-Outputs#OPT__OUTPUT_MODE]]=3.
+[[OPT__OUTPUT_MODE | [Runtime-Parameters]-Outputs#OPT__OUTPUT_MODE]]=3.
 The following example will dump data at t=1.0, 2.3, and 3.7.
 
 ```
@@ -26,6 +26,6 @@ except in the first header line.
 * The loading routine will stop loading when detecting a line
 starting with *. All remaining lines will be ignored.
 
-* Simulation end time [[END_T | Runtime-Parameters:-General#END_T]]
+* Simulation end time [[END_T | [Runtime-Parameters]-General#END_T]]
 loaded from `Input__Parameter` will be reset to the maximum output
 time in the dump table if the latter is found to be smaller.

@@ -2,7 +2,7 @@
 ## Compilation Options
 
 Related options:
-[[--comoving | Installation:-Option-List#--comoving]] &nbsp;
+[[--comoving | [Installation]-Option-List#--comoving]] &nbsp;
 
 ## Runtime Parameters
 

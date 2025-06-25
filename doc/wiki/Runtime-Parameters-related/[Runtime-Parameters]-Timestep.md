@@ -52,7 +52,7 @@ too large time-steps on lower levels.
     * **Description:**
 Courant–Friedrichs–Lewy (CFL) safety factor for the hydrodynamic solver.
 The default value and stable regime depend on the adopted
-[[fluid scheme | Installation:-Option-List#--flu_scheme]].
+[[fluid scheme | [Installation]-Option-List#--flu_scheme]].
 See Section 2.6, Eqs. [1-2] in the [GAMER-2 code paper](https://arxiv.org/abs/1712.07070)
 for the exact formulae.
     * **Restriction:**
@@ -72,7 +72,7 @@ Using the speed of light as the maximum information propagation speed for determ
 in special relativistic hydrodynamic simulations.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[--srhd | Installation:-Option-List#--srhd]].
+[[--srhd | [Installation]-Option-List#--srhd]].
 
 <a name="DT__GRAVITY"></a>
 * #### `DT__GRAVITY` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [-1.0]
@@ -106,7 +106,7 @@ See Section 2.6, Eq. [3] in the [GAMER-2 code paper](https://arxiv.org/abs/1712.
 for the exact formula.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[--store_par_acc | Installation:-Option-List#--store_par_acc]].
+[[--store_par_acc | [Installation]-Option-List#--store_par_acc]].
 
 <a name="DT__CR_DIFFUSION"></a>
 * #### `DT__CR_DIFFUSION` &ensp; (&#8805;0.0) &ensp; [0.3]
@@ -114,7 +114,7 @@ Only applicable when adopting the compilation option
 CFL safety factor for cosmic-ray diffusion.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[--cr_diffusion | Installation:-Option-List#--cr_diffusion]].
+[[--cr_diffusion | [Installation]-Option-List#--cr_diffusion]].
 
 <a name="DT__MAX_DELTA_A"></a>
 * #### `DT__MAX_DELTA_A` &ensp; (&#8805;0.0) &ensp; [0.01]
@@ -123,7 +123,7 @@ Maximum allowed fraction of increase in the cosmic scale factor <var>a</var>.
 Specifically, it enforces &Delta;<var>a</var> &#8804; `DT__MAX_DELTA_A` &#8901; <var>a</var>.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[--comoving | Installation:-Option-List#--comoving]].
+[[--comoving | [Installation]-Option-List#--comoving]].
 
 <a name="DT__SYNC_PARENT_LV"></a>
 * #### `DT__SYNC_PARENT_LV` &ensp; (&#8805;0.0) &ensp; [0.1]
@@ -164,7 +164,7 @@ Constraints on the timesteps of adjacent levels.
 * #### `OPT__RECORD_DT` &ensp; (0=off, 1=on) &ensp; [1]
     * **Description:**
 Record the timesteps set by various constraints in the file
-[[Record__TimeStep | Simulation-Logs:-Record__TimeStep]].
+[[Record__TimeStep | [Simulation-Logs]-Record__TimeStep]].
     * **Restriction:**
 
 <a name="AUTO_REDUCE_DT"></a>
@@ -172,9 +172,9 @@ Record the timesteps set by various constraints in the file
     * **Description:**
 Automatically reduce timestep by a factor of
 [AUTO_REDUCE_DT_FACTOR](#AUTO_REDUCE_DT_FACTOR),
-[[MINMOD_COEFF | Runtime-Parameters:-Hydro#MINMOD_COEFF]] by a factor of
+[[MINMOD_COEFF | [Runtime-Parameters]-Hydro#MINMOD_COEFF]] by a factor of
 [AUTO_REDUCE_MINMOD_FACTOR](#AUTO_REDUCE_MINMOD_FACTOR), and
-[[INT_MONO_COEFF | Runtime-Parameters:-Interpolation#INT_MONO_COEFF]]
+[[INT_MONO_COEFF | [Runtime-Parameters]-Interpolation#INT_MONO_COEFF]]
 by a factor of
 [AUTO_REDUCE_INT_MONO_FACTOR](#AUTO_REDUCE_INT_MONO_FACTOR)
 when the program fails until the timestep reducing factor

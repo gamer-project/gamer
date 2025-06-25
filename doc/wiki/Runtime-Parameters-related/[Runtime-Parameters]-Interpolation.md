@@ -26,7 +26,7 @@ Parameters described on this page:
 [INT_OPP_SIGN_0TH_ORDER](#INT_OPP_SIGN_0TH_ORDER) &nbsp;
 
 Other related parameters:
-[[AUTO_REDUCE_INT_MONO_FACTOR | Runtime-Parameters:-Timestep#AUTO_REDUCE_INT_MONO_FACTOR]] &nbsp;
+[[AUTO_REDUCE_INT_MONO_FACTOR | [Runtime-Parameters]-Timestep#AUTO_REDUCE_INT_MONO_FACTOR]] &nbsp;
 
 <a name="INT_TABLE"></a>
 Supported interpolation schemes:
@@ -52,7 +52,7 @@ Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) 
 Enable temporal interpolation when preparing ghost zones.
     * **Restriction:**
 Only applicable when adopting the adaptive timestep integration
-(i.e., [[OPT__DT_LEVEL | Runtime-Parameters:-Timestep#OPT__DT_LEVEL]]=2/3).
+(i.e., [[OPT__DT_LEVEL | [Runtime-Parameters]-Timestep#OPT__DT_LEVEL]]=2/3).
 
 <a name="OPT__INT_PRIM"></a>
 * #### `OPT__INT_PRIM` &ensp; (0=off, 1=on) &ensp; [1]
@@ -78,14 +78,14 @@ Interpolation scheme for computing the fluid variables on the newly refined patc
     * **Description:**
 Interpolation scheme for preparing the ghost-zone magnetic field of the fluid solver.
     * **Restriction:**
-For [[--mhd | Installation:-Option-List#--mhd]] only.
+For [[--mhd | [Installation]-Option-List#--mhd]] only.
 
 <a name="OPT__REF_MAG_INT_SCHEME"></a>
 * #### `OPT__REF_MAG_INT_SCHEME` &ensp; (only 2, 3, 4, 6 in ["Supported interpolation schemes"](#INT_TABLE)) &ensp; [4]
     * **Description:**
 Interpolation scheme for computing the magnetic field on the newly refined patches.
     * **Restriction:**
-For [[--mhd | Installation:-Option-List#--mhd]] only.
+For [[--mhd | [Installation]-Option-List#--mhd]] only.
 
 <a name="OPT__POT_INT_SCHEME"></a>
 * #### `OPT__POT_INT_SCHEME` &ensp; (only 4 & 5 in ["Supported interpolation schemes"](#INT_TABLE)) &ensp; [4]

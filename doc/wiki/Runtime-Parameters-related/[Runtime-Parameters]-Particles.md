@@ -31,7 +31,7 @@ Initialization methods for particles.
 [[Setting IC from Files &#8212; Particles | Initial Conditions#IC-File-Particles]].
     * **Restriction:**
 It will be automatically reset to `PAR_INIT=2` when adopting
-[[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=2.
+[[OPT__INIT | [Runtime-Parameters]-Initial-Conditions#OPT__INIT]]=2.
 
 <a name="PAR_NPAR"></a>
 * #### `PAR_NPAR` &ensp; (&#8805;0) &ensp; [none]
@@ -55,13 +55,13 @@ for details.
     * **Restriction:**
 
 <a name="PAR_IC_FLOAT8"></a>
-* #### `PAR_IC_FLOAT8` &ensp; (<0: same as [[--double_par | Installation:-Option-List#--double_par]], 0=single precision, 1=double precision) &ensp; [-1]
+* #### `PAR_IC_FLOAT8` &ensp; (<0: same as [[--double_par | [Installation]-Option-List#--double_par]], 0=single precision, 1=double precision) &ensp; [-1]
     * **Description:**
 Floating-point precision of the particle initial condition file `PAR_IC`.
     * **Restriction:**
 
 <a name="PAR_IC_INT8"></a>
-* #### `PAR_IC_INT8` &ensp; (<0: same as [[--long_par | Installation:-Option-List#--long_par]], 0=32-bit integer (`int`), 1=64-bit integer (`long`)) &ensp; [-1]
+* #### `PAR_IC_INT8` &ensp; (<0: same as [[--long_par | [Installation]-Option-List#--long_par]], 0=32-bit integer (`int`), 1=64-bit integer (`long`)) &ensp; [-1]
     * **Description:**
 Integer width of the particle initial condition file `PAR_IC`.
     * **Restriction:**
@@ -121,7 +121,7 @@ and is generally not recommended.
 Improve the force accuracy for particles close to the patch boundaries.
     * **Restriction:**
 Only applicable when adopting [PAR_INTERP](#PAR_INTERP)=2/3 and
-enabling the compilation option [[--store_pot_ghost | Installation:-Option-List#--store_pot_ghost]].
+enabling the compilation option [[--store_pot_ghost | [Installation]-Option-List#--store_pot_ghost]].
 
 <a name="PAR_PREDICT_POS"></a>
 * #### `PAR_PREDICT_POS` &ensp; (0=off, 1=on) &ensp; [1]
@@ -142,7 +142,7 @@ box. The default value is 1.0 ~ 2.0 depending on the adopted particle
 interpolation scheme ([PAR_INTERP](#PAR_INTERP)).
     * **Restriction:**
 Only applicable when adopting the isolated gravity boundary condition
-(i.e., [[OPT__BC_POT | Runtime-Parameters:-Gravity#OPT__BC_POT]]=2).
+(i.e., [[OPT__BC_POT | [Runtime-Parameters]-Gravity#OPT__BC_POT]]=2).
 
 <a name="OPT__FREEZE_PAR"></a>
 * #### `OPT__FREEZE_PAR` &ensp; (0=off, 1=on) &ensp; [0]

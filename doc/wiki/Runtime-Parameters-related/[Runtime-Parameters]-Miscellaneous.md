@@ -50,59 +50,59 @@ Synchronize all MPI processes (by invoking `MPI_Barrier()`) before timing. It wi
 more accurate timing results but may also deteriorate the performance.
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--timing | Installation:-Option-List#--timing]].
+[[--timing | [Installation]-Option-List#--timing]].
 
 <a name="OPT__TIMING_BALANCE"></a>
 * #### `OPT__TIMING_BALANCE` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
 Record the maximum and minimum times consumed by various major routines among
 all MPI processes to check load balancing. The results will be recorded in the file
-[[Record__Timing | Simulation-Logs:-Record__Timing]].
+[[Record__Timing | [Simulation-Logs]-Record__Timing]].
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--timing | Installation:-Option-List#--timing]].
+[[--timing | [Installation]-Option-List#--timing]].
 
 <a name="OPT__TIMING_MPI"></a>
 * #### `OPT__TIMING_MPI` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
 Record the MPI bandwidth achieved by various MPI calls in the file
-[[Record__TimingMPI_Rank* | Simulation-Logs:-Record__TimingMPI_Rank*]].
+[[Record__TimingMPI_Rank{} | [Simulation-Logs]-Record__TimingMPI_Rank{}]].
     * **Restriction:**
 Only applicable when enabling both the compilation options
-[[--timing | Installation:-Option-List#--timing]]
+[[--timing | [Installation]-Option-List#--timing]]
 and
-[[--mpi | Installation:-Option-List#--mpi]].
+[[--mpi | [Installation]-Option-List#--mpi]].
 
 <a name="OPT__RECORD_NOTE"></a>
 * #### `OPT__RECORD_NOTE` &ensp; (0=off, 1=on) &ensp; [1]
     * **Description:**
 Record the general simulation information, such as compilation options and
 runtime parameters, in the file
-[[Record__Note | Simulation-Logs:-Record__Note]].
+[[Record__Note | [Simulation-Logs]-Record__Note]].
     * **Restriction:**
 
 <a name="OPT__RECORD_UNPHY"></a>
 * #### `OPT__RECORD_UNPHY` &ensp; (0=off, 1=on) &ensp; [1]
     * **Description:**
 Record the number of cells with unphysical results being corrected in the file
-[[Record__NCorrUnphy | Simulation-Logs:-Record__NCorrUnphy]].
+[[Record__NCorrUnphy | [Simulation-Logs]-Record__NCorrUnphy]].
     * **Restriction:**
 
 <a name="OPT__RECORD_MEMORY"></a>
 * #### `OPT__RECORD_MEMORY` &ensp; (0=off, 1=on) &ensp; [1]
     * **Description:**
 Record the total memory consumption of each MPI process in the file
-[[Record__MemInfo | Simulation-Logs:-Record__MemInfo]].
+[[Record__MemInfo | [Simulation-Logs]-Record__MemInfo]].
     * **Restriction:**
 
 <a name="OPT__RECORD_PERFORMANCE"></a>
 * #### `OPT__RECORD_PERFORMANCE` &ensp; (0=off, 1=on) &ensp; [1]
     * **Description:**
 Record the code performance in the file
-[[Record__Performance | Simulation-Logs:-Record__Performance]].
+[[Record__Performance | [Simulation-Logs]-Record__Performance]].
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--timing | Installation:-Option-List#--timing]].
+[[--timing | [Installation]-Option-List#--timing]].
 
 <a name="OPT__MANUAL_CONTROL"></a>
 * #### `OPT__MANUAL_CONTROL` &ensp; (0=off, 1=on) &ensp; [1]
@@ -117,7 +117,7 @@ for details.
 * #### `OPT__RECORD_CENTER` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
 Record the position of maximum density, minimum potential, and center of mass in the file
-[[Record__Center | Simulation-Logs:-Record__Center]].
+[[Record__Center | [Simulation-Logs]-Record__Center]].
     * **Restriction:**
 
 <a name="COM_CEN_X"></a>
@@ -184,7 +184,7 @@ Sort patches by their load-balance indices before dumping data and during restar
 to improve bitwise reproducibility, especially when restarting with the same number
 of MPI processes.
     * **Restriction:**
-Not supported by [[--mpi | Installation:-Option-List#--mpi]]=false.
+Not supported by [[--mpi | [Installation]-Option-List#--mpi]]=false.
 
 <a name="OPT__CK_REFINE"></a>
 * #### `OPT__CK_REFINE` &ensp; (0=off, 1=on) &ensp; [0]
@@ -192,7 +192,7 @@ Not supported by [[--mpi | Installation:-Option-List#--mpi]]=false.
 Check the grid refinement (deprecated).
     * **Restriction:**
 Only work with the refinement option
-[[OPT__FLAG_RHO| Runtime-Parameters:-Refinement#OPT__FLAG_RHO]].
+[[OPT__FLAG_RHO| [Runtime-Parameters]-Refinement#OPT__FLAG_RHO]].
 
 <a name="OPT__CK_PROPER_NESTING"></a>
 * #### `OPT__CK_PROPER_NESTING` &ensp; (0=off, 1=on) &ensp; [0]
@@ -204,14 +204,14 @@ Check the proper-nesting condition.
 * #### `OPT__CK_CONSERVATION` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
 Check the conservation laws. The results will be recorded in the file
-[[Record__Conservation | Simulation-Logs:-Record__Conservation]].
+[[Record__Conservation | [Simulation-Logs]-Record__Conservation]].
     * **Restriction:**
 
 <a name="OPT__CK_NORMALIZE_PASSIVE"></a>
 * #### `OPT__CK_NORMALIZE_PASSIVE` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
 Check the normalization of passive scalars. Make sure to turn on
-[[OPT__NORMALIZE_PASSIVE | Runtime-Parameters:-Hydro#OPT__NORMALIZE_PASSIVE ]].
+[[OPT__NORMALIZE_PASSIVE | [Runtime-Parameters]-Hydro#OPT__NORMALIZE_PASSIVE ]].
 Otherwise this check will likely fail.
     * **Restriction:**
 
@@ -220,8 +220,8 @@ Otherwise this check will likely fail.
     * **Description:**
 Check the data restriction (i.e., the averages of fine-grid data equal the
 coarse-grid data). Make sure to turn on both
-[[OPT__FIXUP_RESTRICT | Runtime-Parameters:-Hydro#OPT__FIXUP_RESTRICT]] and
-[[OPT__INIT_RESTRICT | Runtime-Parameters:-Initial-Conditions#OPT__INIT_RESTRICT]].
+[[OPT__FIXUP_RESTRICT | [Runtime-Parameters]-Hydro#OPT__FIXUP_RESTRICT]] and
+[[OPT__INIT_RESTRICT | [Runtime-Parameters]-Initial-Conditions#OPT__INIT_RESTRICT]].
 Otherwise this check will likely fail.
     * **Restriction:**
 
@@ -268,7 +268,7 @@ Check the particle allocation. This is used mainly for debugging purposes.
 Check the consistency of the magnetic field on the patch interfaces.
 This is used mainly for debugging purposes.
     * **Restriction:**
-For [[--mhd | Installation:-Option-List#--mhd]] only.
+For [[--mhd | [Installation]-Option-List#--mhd]] only.
 
 <a name="OPT__CK_DIVERGENCE_B"></a>
 * #### `OPT__CK_DIVERGENCE_B` &ensp; (0=off, 1=on) &ensp; [0]
@@ -276,7 +276,7 @@ For [[--mhd | Installation:-Option-List#--mhd]] only.
 Check the divergence-free constraint on the magnetic field.
 This is used mainly for debugging purposes.
     * **Restriction:**
-For [[--mhd | Installation:-Option-List#--mhd]] only.
+For [[--mhd | [Installation]-Option-List#--mhd]] only.
 
 <a name="OPT__CK_INPUT_FLUID"></a>
 * #### `OPT__CK_INPUT_FLUID` &ensp; (0=off, 1=on) &ensp; [0]

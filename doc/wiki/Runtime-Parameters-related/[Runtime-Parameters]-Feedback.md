@@ -9,11 +9,11 @@ Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) 
 
 
 <a name="FB_LEVEL"></a>
-* #### `FB_LEVEL` &ensp; (0 &#8804; input < [[--nlevel | Installation:-Option-List#--nlevel]]; <0 &#8594; set to [[MAX_LEVEL | Runtime Parameters:-Refinement#MAX_LEVEL ]]) &ensp; [-1]
+* #### `FB_LEVEL` &ensp; (0 &#8804; input < [[--nlevel | [Installation]-Option-List#--nlevel]]; <0 &#8594; set to [[MAX_LEVEL | [Runtime-Parameters]-Refinement#MAX_LEVEL ]]) &ensp; [-1]
     * **Description:**
 AMR level to apply feedback.
     * **Restriction:**
-Must be [[MAX_LEVEL | Runtime Parameters:-Refinement#MAX_LEVEL ]] for now.
+Must be [[MAX_LEVEL | [Runtime-Parameters]-Refinement#MAX_LEVEL ]] for now.
 
 <a name="FB_RSEED"></a>
 * #### `FB_RSEED` &ensp; (&#8805;0) &ensp; [456]

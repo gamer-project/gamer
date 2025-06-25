@@ -18,7 +18,7 @@ Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) 
 Simulation box length along the longest dimension of
 ([NX0_TOT_X](#NX0_TOT_X), [NX0_TOT_Y](#NX0_TOT_Y), [NX0_TOT_Z](#NX0_TOT_Z)).
 It must conform to the adopted unit system
-(see [[Unit Consistency | Runtime Parameters:-Units#unit-consistency]]).
+(see [[Unit Consistency | [Runtime-Parameters]-Units#unit-consistency]]).
     * **Restriction:**
 
 <a name="NX0_TOT_X"></a>
@@ -47,17 +47,17 @@ Must be a multiple of 16 (i.e., two patches).
 * #### `END_T` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [depend]
     * **Description:**
 Simulation end time. `END_T<0.0` is allowed only during restart
-(i.e., [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=2, for which it
+(i.e., [[OPT__INIT | [Runtime-Parameters]-Initial-Conditions#OPT__INIT]]=2, for which it
 will be reset to the value stored in the restart file) or if it will be
 reset by the adopted test problem. It must conform to the adopted unit
-system (see [[Unit Consistency | Runtime Parameters:-Units#unit-consistency]]).
+system (see [[Unit Consistency | [Runtime-Parameters]-Units#unit-consistency]]).
     * **Restriction:**
 
 <a name="END_STEP"></a>
 * #### `END_STEP` &ensp; (&#8805;0; <0 &#8594; set to default) &ensp; [depend]
     * **Description:**
 Simulation end root-level step. `END_STEP<0` is allowed only during restart
-(i.e., [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=2, for which it
+(i.e., [[OPT__INIT | [Runtime-Parameters]-Initial-Conditions#OPT__INIT]]=2, for which it
 will be reset to the value stored in the restart file) or if it will be
 reset by the adopted test problem. For `END_STEP=0`, the program will
 still construct and output the initial condition before termination.

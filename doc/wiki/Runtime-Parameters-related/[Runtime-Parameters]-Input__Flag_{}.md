@@ -1,8 +1,8 @@
 Refinement thresholds of various refinement criteria `OPT__FLAG_*`
-described in [[Runtime Parameters -- Refinement | Runtime-Parameters:-Refinement]],
+described in [[Runtime Parameters -- Refinement | [Runtime-Parameters]-Refinement]],
 where each criterion has its own input file.
 For instance, the following shows an example of the table `Input__Flag_Rho`
-used by [[OPT__FLAG_RHO | Runtime-Parameters:-Refinement#OPT__FLAG_RHO]]:
+used by [[OPT__FLAG_RHO | [Runtime-Parameters]-Refinement#OPT__FLAG_RHO]]:
 
 ```
 # Level                         Density
@@ -29,5 +29,5 @@ other than the first column.
 * Empty and comment lines (i.e., lines starting with #) are NOT allowed
 except in the first header line.
 
-* Must contain at least [[MAX_LEVEL | Runtime-Parameters:-Refinement#MAX_LEVEL]]
+* Must contain at least [[MAX_LEVEL | [Runtime-Parameters]-Refinement#MAX_LEVEL]]
 data lines excluding the header line.

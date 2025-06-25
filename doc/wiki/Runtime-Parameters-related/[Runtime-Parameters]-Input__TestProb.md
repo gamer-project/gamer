@@ -1,5 +1,5 @@
 Problem-specific runtime parameters. This file follows the same
-syntax as [[Input__Parameter | Runtime-Parameters:-Input__Parameter#file-format]]. See
+syntax as [[Input__Parameter | [Runtime-Parameters]-Input__Parameter#file-format]]. See
 `example/test_problem/*/*/Input__TestProb` for some examples.
 The following shows
 `example/test_problem/Hydro/Riemann/Input__TestProb`:

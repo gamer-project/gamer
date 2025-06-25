@@ -30,7 +30,7 @@ Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) 
 * #### `OPT__BC_POT` &ensp; (1=periodic, 2=isolated) &ensp; [none]
     * **Description:**
 Gravity boundary condition. See also
-[[Potential Outside the Isolated Boundaries | Runtime-Parameters:-Refinement#potential-outside-the-isolated-boundaries]].
+[[Potential Outside the Isolated Boundaries | [Runtime-Parameters]-Refinement#potential-outside-the-isolated-boundaries]].
     * **Restriction:**
 
 <a name="GFUNC_COEFF0"></a>
@@ -45,12 +45,12 @@ The default value depends on the particle interpolation scheme
 Only applicable to the isolated boundary condition.
 
 <a name="NEWTON_G"></a>
-* #### `NEWTON_G` &ensp; (>0.0) &ensp; [conform to the unit system set by [[OPT__UNIT | Runtime-Parameters:-Units#OPT__UNIT]]]
+* #### `NEWTON_G` &ensp; (>0.0) &ensp; [conform to the unit system set by [[OPT__UNIT | [Runtime-Parameters]-Units#OPT__UNIT]]]
     * **Description:**
 Gravitational constant.
     * **Restriction:**
-It will be overwritten by the default value when [[OPT__UNIT | Runtime-Parameters:-Units#OPT__UNIT]]
-is on; no default when [[OPT__UNIT | Runtime-Parameters:-Units#OPT__UNIT]] is off.
+It will be overwritten by the default value when [[OPT__UNIT | [Runtime-Parameters]-Units#OPT__UNIT]]
+is on; no default when [[OPT__UNIT | [Runtime-Parameters]-Units#OPT__UNIT]] is off.
 
 <a name="SOR_OMEGA"></a>
 * #### `SOR_OMEGA` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [1.69]
@@ -58,7 +58,7 @@ is on; no default when [[OPT__UNIT | Runtime-Parameters:-Units#OPT__UNIT]] is of
 Parameter of the SOR Poisson solver for optimizing the convergence rate.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[--pot_scheme | Installation:-Option-List#--pot_scheme]]=SOR.
+[[--pot_scheme | [Installation]-Option-List#--pot_scheme]]=SOR.
 
 <a name="SOR_MAX_ITER"></a>
 * #### `SOR_MAX_ITER` &ensp; (&#8805;0; <0 &#8594; set to default) &ensp; [single precision=60, double precision=110]
@@ -67,7 +67,7 @@ Maximum number of iterations in the SOR Poisson solver.
 The default value depends on the adopted floating-point accuracy (`FLOAT8`).
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[--pot_scheme | Installation:-Option-List#--pot_scheme]]=SOR.
+[[--pot_scheme | [Installation]-Option-List#--pot_scheme]]=SOR.
 
 <a name="SOR_MIN_ITER"></a>
 * #### `SOR_MIN_ITER` &ensp; (&#8805;3; <0 &#8594; set to default) &ensp; [10]
@@ -75,16 +75,16 @@ Only applicable when adopting the compilation option
 Minimum number of iterations in the SOR Poisson solver.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[--pot_scheme | Installation:-Option-List#--pot_scheme]]=SOR.
+[[--pot_scheme | [Installation]-Option-List#--pot_scheme]]=SOR.
 
 <a name="MG_MAX_ITER"></a>
 * #### `MG_MAX_ITER` &ensp; (&#8805;0; <0 &#8594; set to default) &ensp; [single precision=10, double precision=20]
     * **Description:**
 Maximum number of iterations in the multigrid Poisson solver.
-The default value depends on the adopted floating-point accuracy ([[--double | Installation:-Option-List#--double]]).
+The default value depends on the adopted floating-point accuracy ([[--double | [Installation]-Option-List#--double]]).
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[--pot_scheme | Installation:-Option-List#--pot_scheme]]=MG.
+[[--pot_scheme | [Installation]-Option-List#--pot_scheme]]=MG.
 
 <a name="MG_NPRE_SMOOTH"></a>
 * #### `MG_NPRE_SMOOTH` &ensp; (&#8805;0; <0 &#8594; set to default) &ensp; [3]
@@ -92,7 +92,7 @@ Only applicable when adopting the compilation option
 Number of pre-smoothing steps in the multigrid Poisson solver.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[--pot_scheme | Installation:-Option-List#--pot_scheme]]=MG.
+[[--pot_scheme | [Installation]-Option-List#--pot_scheme]]=MG.
 
 <a name="MG_NPOST_SMOOTH"></a>
 * #### `MG_NPOST_SMOOTH` &ensp; (&#8805;0; <0 &#8594; set to default) &ensp; [3]
@@ -100,7 +100,7 @@ Only applicable when adopting the compilation option
 Number of post-smoothing steps in the multigrid Poisson solver.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[--pot_scheme | Installation:-Option-List#--pot_scheme]]=MG.
+[[--pot_scheme | [Installation]-Option-List#--pot_scheme]]=MG.
 
 <a name="MG_TOLERATED_ERROR"></a>
 * #### `MG_TOLERATED_ERROR` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [single precision=1e-6, double precision=1e-15]
@@ -108,7 +108,7 @@ Only applicable when adopting the compilation option
 Maximum tolerable error in the multigrid Poisson solver.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[--pot_scheme | Installation:-Option-List#--pot_scheme]]=MG.
+[[--pot_scheme | [Installation]-Option-List#--pot_scheme]]=MG.
 
 <a name="OPT__GRA_P5_GRADIENT"></a>
 * #### `OPT__GRA_P5_GRADIENT` &ensp; (0=off, 1=on) &ensp; [0]
@@ -119,7 +119,7 @@ gravitational acceleration from potential.
     * **Restriction:**
 Must manually set `#define GRA_GHOST_SIZE 2` (and `#define USG_GHOST_SIZE 2`
 as well when adopting the compilation option
-[[--unsplit_gravity | Installation:-Option-List#--unsplit_gravity]])
+[[--unsplit_gravity | [Installation]-Option-List#--unsplit_gravity]])
 in the header file `Macro.h`. Unsupported for particle update.
 
 <a name="OPT__SELF_GRAVITY"></a>
@@ -136,7 +136,7 @@ Add external acceleration. See
 for how to specify external acceleration.
     * **Restriction:**
 Not applicable to the wave dark matter simulations
-([[--model | Installation:-Option-List#--model]]=ELBDM).
+([[--model | [Installation]-Option-List#--model]]=ELBDM).
 
 <a name="OPT__EXT_POT"></a>
 * #### `OPT__EXT_POT` &ensp; (0=off, 1=function, 2=table) &ensp; [0]

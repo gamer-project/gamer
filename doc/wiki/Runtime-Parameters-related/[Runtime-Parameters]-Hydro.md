@@ -50,14 +50,14 @@ For the user-specified (i.e., inflow) boundary conditions, edit
 for the cell-centered fluid variables and
 `src/Model_Hydro/MHD_BoundaryCondition_User.cpp`
 for the face-centered magnetic field, respectively,
-when [[TESTPROB_ID | Runtime Parameters:-General#TESTPROB_ID]]=0
+when [[TESTPROB_ID | [Runtime-Parameters]-General#TESTPROB_ID]]=0
 or a problem-specific function
-when [[TESTPROB_ID | Runtime Parameters:-General#TESTPROB_ID]]&#8800;0.
+when [[TESTPROB_ID | [Runtime-Parameters]-General#TESTPROB_ID]]&#8800;0.
     * **Restriction:**
 When adopting periodic conditions, they must be applied to both the -x and +x faces.
 Particles only support the periodic boundary conditions. When adopting any non-periodic
 boundary condition for fluid, particles will be removed when getting too close
-to the boundaries (see [[ PAR_REMOVE_CELL | Runtime-Parameters:-Particles#PAR_REMOVE_CELL ]] ).
+to the boundaries (see [[ PAR_REMOVE_CELL | [Runtime-Parameters]-Particles#PAR_REMOVE_CELL ]] ).
 
 <a name="OPT__BC_FLU_XP"></a>
 * #### `OPT__BC_FLU_XP` &ensp; (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode) &ensp; [none]
@@ -105,9 +105,9 @@ See the restriction on [OPT__BC_FLU_XM](#OPT__BC_FLU_XM).
 Ratio of specific heats (i.e., adiabatic index) in the ideal gas EoS.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[--eos | Installation:-Option-List#--eos]]=`GAMMA`.
+[[--eos | [Installation]-Option-List#--eos]]=`GAMMA`.
 Does not support the isothermal EoS (i.e., `GAMMA=1.0`), for which
-one should adopt [[--eos | Installation:-Option-List#--eos]]=`ISOTHERMAL`.
+one should adopt [[--eos | [Installation]-Option-List#--eos]]=`ISOTHERMAL`.
 
 <a name="MOLECULAR_WEIGHT"></a>
 * #### `MOLECULAR_WEIGHT` &ensp; (>0.0) &ensp; [0.6]
@@ -127,7 +127,7 @@ Normalization of [MOLECULAR_WEIGHT](#MOLECULAR_WEIGHT).
 Temperature in kelvin for the isothermal equation of state.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[--eos | Installation:-Option-List#--eos]]=`ISOTHERMAL`.
+[[--eos | [Installation]-Option-List#--eos]]=`ISOTHERMAL`.
 
 <a name="OPT__LR_LIMITER"></a>
 * #### `OPT__LR_LIMITER` &ensp; (-1&#8594; set to default, 0=none, 1=van Leer, 2=generalized minmod, 3=van Albada, 4=van Leer+generalized minmod, 6=central, 7=Athena) &ensp; [-1]
@@ -137,9 +137,9 @@ generalized minmod limiter can be set by [MINMOD_COEFF](#MINMOD_COEFF).
 `7=Athena` mimics the extrema-preserving limiter implemented in Athena++.
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[--flu_scheme | Installation:-Option-List#--flu_scheme]]=`MHM/MHM_RP/CTU`.
+[[--flu_scheme | [Installation]-Option-List#--flu_scheme]]=`MHM/MHM_RP/CTU`.
 `7=Athena` must work with
-[[--slope | Installation:-Option-List#--slope]]=`PPM`.
+[[--slope | [Installation]-Option-List#--slope]]=`PPM`.
 
 <a name="MINMOD_COEFF"></a>
 * #### `MINMOD_COEFF` &ensp; (1.0 &#8804; input &#8804; 2.0) &ensp; [1.5]
@@ -168,11 +168,11 @@ accuracy in space and time.
 `OPT__1ST_FLUX_CORR=2`: use dimensionally unsplit update first;
 and if it fails, switch to dimensionally split update.
 The number of cells corrected by this option will be recorded in the file
-[[Record__NCorrUnphy | Simulation-Logs:-Record__NCorrUnphy]].
+[[Record__NCorrUnphy | [Simulation-Logs]-Record__NCorrUnphy]].
     * **Restriction:**
 Only applicable when adopting the compilation option
-[[--flu_scheme | Installation:-Option-List#--flu_scheme]]=`MHM/MHM_RP/CTU`.
-[[--mhd | Installation:-Option-List#--mhd]] currently does not support `3D+1D`.
+[[--flu_scheme | [Installation]-Option-List#--flu_scheme]]=`MHM/MHM_RP/CTU`.
+[[--mhd | [Installation]-Option-List#--mhd]] currently does not support `3D+1D`.
 Be aware that this option may cause conservation errors.
 
 <a name="OPT__1ST_FLUX_CORR_SCHEME"></a>
@@ -193,7 +193,7 @@ the dual energy formalism for cells with
 and <var>&xi;</var>=`DUAL_ENERGY_SWITCH`.
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--dual | Installation:-Option-List#--dual]].
+[[--dual | [Installation]-Option-List#--dual]].
 
 <a name="OPT__SAME_INTERFACE_B"></a>
 * #### `OPT__SAME_INTERFACE_B` &ensp; (0=off, 1=on) &ensp; [0]
@@ -215,7 +215,7 @@ Correct the coarse-grid data by the fluxes on the coarse-fine boundaries.
 Correct the coarse-grid magnetic field by the electric field on the
 coarse-fine boundaries.
     * **Restriction:**
-For [[--mhd | Installation:-Option-List#--mhd]] only.
+For [[--mhd | [Installation]-Option-List#--mhd]] only.
 
 <a name="OPT__FIXUP_RESTRICT"></a>
 * #### `OPT__FIXUP_RESTRICT` &ensp; (0=off, 1=on) &ensp; [1]
@@ -233,10 +233,10 @@ is mainly for achieving [[bitwise reproducibility | Bitwise Reproducibility]].
 `OPT__CORR_AFTER_ALL_SYNC=1`: apply corrections after each root-level update.
 `OPT__CORR_AFTER_ALL_SYNC=2`: apply corrections before each data dump.
 The default depends on the compilation option
-[[--debug | Installation:-Option-List#--debug]].
+[[--debug | [Installation]-Option-List#--debug]].
     * **Restriction:**
 Must be turned on when enabling the compilation option
-[[--bitwise_reproducibility | Installation:-Option-List#--bitwise_reproducibility]].
+[[--bitwise_reproducibility | [Installation]-Option-List#--bitwise_reproducibility]].
 
 <a name="OPT__NORMALIZE_PASSIVE"></a>
 * #### `OPT__NORMALIZE_PASSIVE` &ensp; (0=off, 1=on) &ensp; [1]
@@ -289,7 +289,7 @@ for a complicated equation of state.
     * **Description:**
 Apply floor values (e.g., [MIN_DENS](#MIN_DENS) and [MIN_EINT](#MIN_EINT)) when both
 [OPT__1ST_FLUX_CORR](#OPT__1ST_FLUX_CORR) and
-[[AUTO_REDUCE_DT | Runtime Parameters:-Timestep#AUTO_REDUCE_DT]]
+[[AUTO_REDUCE_DT | [Runtime-Parameters]-Timestep#AUTO_REDUCE_DT]]
 fail. Always enable this option unless for debugging purposes.
     * **Restriction:**
 
@@ -321,10 +321,10 @@ a width equal to
 [JEANS_MIN_PRES_LEVEL](#JEANS_MIN_PRES_LEVEL).
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--gravity | Installation:-Option-List#--gravity]].
+[[--gravity | [Installation]-Option-List#--gravity]].
 
 <a name="JEANS_MIN_PRES_LEVEL"></a>
-* #### `JEANS_MIN_PRES_LEVEL` &ensp; (&#8805;0; <0 &#8594; set to default) &ensp; [ [[MAX_LEVEL | Runtime Parameters:-Refinement#MAX_LEVEL]] ]
+* #### `JEANS_MIN_PRES_LEVEL` &ensp; (&#8805;0; <0 &#8594; set to default) &ensp; [ [[MAX_LEVEL | [Runtime-Parameters]-Refinement#MAX_LEVEL]] ]
     * **Description:**
 See [JEANS_MIN_PRES](#JEANS_MIN_PRES).
     * **Restriction:**
@@ -342,7 +342,7 @@ Must be an integer.
 Effective adiabatic index of cosmic rays.
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--cosmic_ray | Installation:-Option-List#--cosmic_ray]].
+[[--cosmic_ray | [Installation]-Option-List#--cosmic_ray]].
 
 <a name="CR_DIFF_PARA"></a>
 * #### `CR_DIFF_PARA` &ensp; (&#8805;0.0) &ensp; [0.0]
@@ -350,7 +350,7 @@ Only applicable when enabling the compilation option
 Cosmic-ray diffusion coefficient parallel to the magnetic field.
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--cr_diffusion | Installation:-Option-List#--cr_diffusion]].
+[[--cr_diffusion | [Installation]-Option-List#--cr_diffusion]].
 
 <a name="CR_DIFF_PERP"></a>
 * #### `CR_DIFF_PERP` &ensp; (&#8805;0.0) &ensp; [0.0]
@@ -358,7 +358,7 @@ Only applicable when enabling the compilation option
 Cosmic-ray diffusion coefficient perpendicular to the magnetic field.
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--cr_diffusion | Installation:-Option-List#--cr_diffusion]].
+[[--cr_diffusion | [Installation]-Option-List#--cr_diffusion]].
 
 <a name="CR_DIFF_MIN_B"></a>
 * #### `CR_DIFF_MIN_B` &ensp; (none) &ensp; [0.0]
@@ -367,7 +367,7 @@ Disable cosmic-ray diffusion locally when the magnetic field amplitude is smalle
 than this threshold.
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--cr_diffusion | Installation:-Option-List#--cr_diffusion]].
+[[--cr_diffusion | [Installation]-Option-List#--cr_diffusion]].
 
 
 ## Remarks

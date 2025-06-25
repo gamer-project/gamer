@@ -38,7 +38,7 @@ Set the magnetic field from either a vector potential file named `B_IC` (see
 analytical vector potential function (see
 [[Setting IC from Functions &#8212; Magnetic Field | Initial-Conditions#IC-Func-BField]]).
     * **Restriction:**
-For [[--mhd | Installation:-Option-List#--mhd]] only.
+For [[--mhd | [Installation]-Option-List#--mhd]] only.
 
 <a name="RESTART_LOAD_NRANK"></a>
 * #### `RESTART_LOAD_NRANK` &ensp; (>0) &ensp; [1]
@@ -56,14 +56,14 @@ simulation starts over again.
     * **Restriction:**
 
 <a name="OPT__UM_IC_LEVEL"></a>
-* #### `OPT__UM_IC_LEVEL` &ensp; (0 &#8804; input < [[--nlevel | Installation:-Option-List#--nlevel]]) &ensp; [0]
+* #### `OPT__UM_IC_LEVEL` &ensp; (0 &#8804; input < [[--nlevel | [Installation]-Option-List#--nlevel]]) &ensp; [0]
     * **Description:**
 Starting AMR level in the uniform-mesh initial condition file.
 See [[Setting IC from Files &#8212; Grids | Initial-Conditions#IC-File-Grids]] for details.
     * **Restriction:**
 
 <a name="OPT__UM_IC_NLEVEL"></a>
-* #### `OPT__UM_IC_NLEVEL` &ensp; (1 &#8804; input &#8804; [[--nlevel | Installation:-Option-List#--nlevel]]-[OPT__UM_IC_LEVEL](#OPT__UM_IC_LEVEL)) &ensp; [1]
+* #### `OPT__UM_IC_NLEVEL` &ensp; (1 &#8804; input &#8804; [[--nlevel | [Installation]-Option-List#--nlevel]]-[OPT__UM_IC_LEVEL](#OPT__UM_IC_LEVEL)) &ensp; [1]
     * **Description:**
 Number of AMR levels in the uniform-mesh initial condition file.
 See [[Setting IC from Files &#8212; Grids | Initial-Conditions#IC-File-Grids]] for details.
@@ -74,8 +74,8 @@ See [[Setting IC from Files &#8212; Grids | Initial-Conditions#IC-File-Grids]] f
     * **Description:**
 Number of fluid variables stored in the uniform-mesh initial condition file.
 The default value is
-5+[[--passive | Installation:-Option-List#--passive]]
-for [[--model | Installation:-Option-List#--model]]=HYDRO.
+5+[[--passive | [Installation]-Option-List#--passive]]
+for [[--model | [Installation]-Option-List#--model]]=HYDRO.
 See [[Setting IC from Files &#8212; Grids | Initial-Conditions#IC-File-Grids]] for details.
     * **Restriction:**
 
@@ -87,7 +87,7 @@ Data format of the uniform-mesh initial condition file. See
     * **Restriction:**
 
 <a name="OPT__UM_IC_FLOAT8"></a>
-* #### `OPT__UM_IC_FLOAT8` &ensp; (<0: same as [[--double | Installation:-Option-List#--double]], 0=single precision, 1=double precision) &ensp; [-1]
+* #### `OPT__UM_IC_FLOAT8` &ensp; (<0: same as [[--double | [Installation]-Option-List#--double]], 0=single precision, 1=double precision) &ensp; [-1]
     * **Description:**
 Floating-point precision of the uniform-mesh initial condition file.
     * **Restriction:**
@@ -104,7 +104,7 @@ See [[Setting IC from Files &#8212; Grids | Initial-Conditions#IC-File-Grids]] f
 * #### `OPT__UM_IC_REFINE` &ensp; (0=off, 1=on) &ensp; [1]
     * **Description:**
 Refine the uniform-mesh initial condition data from level `OPT__UM_IC_LEVEL` to
-[[MAX_LEVEL | Runtime Parameters:-Refinement#MAX_LEVEL]] for cells satisfying the adopted
+[[MAX_LEVEL | [Runtime-Parameters]-Refinement#MAX_LEVEL]] for cells satisfying the adopted
 refinement criteria.
 See [[Setting IC from Files &#8212; Grids | Initial-Conditions#IC-File-Grids]] for details.
     * **Restriction:**
@@ -124,7 +124,7 @@ See also [[Setting IC from Files &#8212; Grids | Initial-Conditions#IC-File-Grid
     * **Description:**
 For non-leaf patches, replace fluid data by the volume-weighted average
 of their child patch data. It is similar to the option
-[[OPT__FIXUP_RESTRICT | Runtime-Parameters:-Hydro#OPT__FIXUP_RESTRICT]]
+[[OPT__FIXUP_RESTRICT | [Runtime-Parameters]-Hydro#OPT__FIXUP_RESTRICT]]
 except that it only applies to the initial condition.
     * **Restriction:**
 
@@ -149,7 +149,7 @@ machine precision for `OPT__FFTW_STARTUP != ESTIMATE`.
     * **Restriction:**
 `PATIENT` is not supported by FFTW2.
 Must use `ESTIMATE` when enabling
-[[--bitwise_reproducibility | Installation:-Option-List#--bitwise_reproducibility]].
+[[--bitwise_reproducibility | [Installation]-Option-List#--bitwise_reproducibility]].
 
 
 ## Remarks
