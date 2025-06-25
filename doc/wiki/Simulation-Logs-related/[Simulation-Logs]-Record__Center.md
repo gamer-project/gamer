@@ -23,15 +23,15 @@ Table format:
 * `MinPote`: value of the minimum gravitational potential
 * `MinPote_x/y/z`: x/y/z coordinate of the minimum gravitational potential position
 * `Final_NIter`: total number of iterations for finding the center of mass (see also
-[[COM_MAX_ITER | Runtime-Parameters:-Miscellaneous#COM_MAX_ITER]])
+[[COM_MAX_ITER | [Runtime-Parameters]-Miscellaneous#COM_MAX_ITER]])
 * `Final_dR`: distance of the center coordinates update in the last iteration for finding the center of mass (see also
-[[COM_TOLERR_R | Runtime-Parameters:-Miscellaneous#COM_TOLERR_R]])
+[[COM_TOLERR_R | [Runtime-Parameters]-Miscellaneous#COM_TOLERR_R]])
 * `CoM_x/y/z`: x/y/z coordinate of the center of mass (see also
-[[COM_CEN_X | Runtime-Parameters:-Miscellaneous#COM_CEN_X]],
-[[COM_CEN_Y | Runtime-Parameters:-Miscellaneous#COM_CEN_Y]],
-[[COM_CEN_Z | Runtime-Parameters:-Miscellaneous#COM_CEN_Z]],
-[[COM_MAX_R | Runtime-Parameters:-Miscellaneous#COM_MAX_R]],
-[[COM_MIN_RHO | Runtime-Parameters:-Miscellaneous#COM_MIN_RHO]])
+[[COM_CEN_X | [Runtime-Parameters]-Miscellaneous#COM_CEN_X]],
+[[COM_CEN_Y | [Runtime-Parameters]-Miscellaneous#COM_CEN_Y]],
+[[COM_CEN_Z | [Runtime-Parameters]-Miscellaneous#COM_CEN_Z]],
+[[COM_MAX_R | [Runtime-Parameters]-Miscellaneous#COM_MAX_R]],
+[[COM_MIN_RHO | [Runtime-Parameters]-Miscellaneous#COM_MIN_RHO]])
 
 
 <br>

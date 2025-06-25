@@ -19,7 +19,7 @@ Weighted load-imbalance factor =   8.41%
 
 Table format:
 This table follows the same format as
-[[Record__PatchCount | Simulation-Logs:-Record__PatchCount]]
+[[Record__PatchCount | [Simulation-Logs]-Record__PatchCount]]
 except that the number of patches is replaced by particles.
 
 <br>
