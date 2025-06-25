@@ -7,14 +7,14 @@ This test problem Plummer demonstrates the in situ Python analysis feature in GA
 > [!IMPORTANT]
 > This example assumes it is using libyt interactive mode. Please compile libyt in interactive mode.
   * [yt](https://yt-project.org/): the core analysis tool.
-  * [[FFTW | Installation: External Libraries#fftw]]: needed in this test problem.
-  * [[HDF5 | Installation: External Libraries#hdf5]]: this is optional since we are not going to output any data.
+  * [[FFTW | [Installation] External Libraries#fftw]]: needed in this test problem.
+  * [[HDF5 | [Installation] External Libraries#hdf5]]: this is optional since we are not going to output any data.
 
 2. Generate `Makefile` with the following options:
    ```bash
    --gravity=true --particle=true --passive=2 --mpi=true --fftw=FFTW2 --libyt=true --libyt_interactive=true
    ```
-   Also please set the paths `FFTW_PATH`, `MPI_PATH`, and `LIBYT_PATH` in [[configuration file | Installation:-Machine-Configuration-File ]].
+   Also please set the paths `FFTW_PATH`, `MPI_PATH`, and `LIBYT_PATH` in [[configuration file | [Installation]-Machine-Configuration-File ]].
 
 3. Compile the code in the `src` folder.
 
