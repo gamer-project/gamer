@@ -24,7 +24,7 @@ For example, `MPI_PATH` can be set by:
 ```
 MPI_PATH /usr/local/mpich-3.2
 ```
-Please also check out the installation of [[External Libraries | Installation:-External-Libraries]].
+Please also check out the installation of [[External Libraries | [Installation]-External-Libraries]].
 
 ### 2. Compilers
 
@@ -70,6 +70,6 @@ The GPU compute capability can be calculated by `major_verison*100 + minor_versi
 <br>
 
 ## Links
-* [[ Option List | Installation:-Option-List ]]
-* [[External Libraries | Installation:-External-Libraries ]]
+* [[ Option List | [Installation]-Option-List ]]
+* [[External Libraries | [Installation]-External-Libraries ]]
 * [[Back to the main page of Installation | Installation]]

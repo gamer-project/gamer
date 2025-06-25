@@ -62,7 +62,7 @@ to compile Grackle in double precision:
     > make precision-64
 
 When enabling OpenMP in GAMER (i.e., with the
-compile-time option [[--openmp | Installation:-Option-List#--openmp]]),
+compile-time option [[--openmp | [Installation]-Option-List#--openmp]]),
 GRACKLE must be configured with OpenMP
 support as well using
 
@@ -94,6 +94,6 @@ Set `LIBYT_PATH` to the folder that contains subfolders `include` and `lib`.
 <br>
 
 ## Links
-* [[Machine Configuration File | Installation:-Machine-Configuration-File]]
-* [[Option List | Installation:-Option-List]]
+* [[Machine Configuration File | [Installation]-Machine-Configuration-File]]
+* [[Option List | [Installation]-Option-List]]
 * [[Back to the main page of Installation | Installation]]
