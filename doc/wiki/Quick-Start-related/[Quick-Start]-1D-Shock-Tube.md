@@ -29,12 +29,12 @@ Makefile is created.
 
 > [!NOTE]
 > We have set
-[[--mpi | Installation:-Option-List#--mpi]]=false,
-[[--gpu | Installation:-Option-List#--gpu]]=false, and
-[[--openmp | Installation:-Option-List#--openmp]]=false
+[[--mpi | [Installation]-Option-List#--mpi]]=false,
+[[--gpu | [Installation]-Option-List#--gpu]]=false, and
+[[--openmp | [Installation]-Option-List#--openmp]]=false
 to run in a CPU-only mode
 without OpenMP and MPI.
-See [[Option List | Installation:-Option-List#Option-List]]
+See [[Option List | [Installation]-Option-List#Option-List]]
 for a complete list of all available options of `configure.py`.
 
 3\. Compile the code.
@@ -160,9 +160,9 @@ make -j4
 > Remember to copy the new executable to `bin/shocktube`.
 
 2\. Set the number of OpenMP threads by editing the runtime parameter
-[[OMP_NTHREAD | Runtime-Parameters:-MPI-and-OpenMP#OMP_NTHREAD]]
+[[OMP_NTHREAD | [Runtime-Parameters]-MPI-and-OpenMP#OMP_NTHREAD]]
 in the input file
-[[Input__Parameter | Runtime-Parameters:-Input__Parameter]].
+[[Input__Parameter | [Runtime-Parameters]-Input__Parameter]].
 The following example uses 4 threads.
 ```
 OMP_NTHREAD      4      # number of OpenMP threads (<=0=auto) [-1]
@@ -191,7 +191,7 @@ clean.sh  gamer  Input__Flag_Lohner  Input__Parameter  Input__TestProb  plot__hy
 
 5\. Validate the OpenMP settings by searching for the keyword "OpenMP"
 in the log file
-[[Record__Note | Simulation-Logs:-Record__Note]].
+[[Record__Note | [Simulation-Logs]-Record__Note]].
 You should see something like
 <pre>
 OpenMP Diagnosis
@@ -209,12 +209,12 @@ CPU core IDs of all OpenMP threads (tid == thread ID):
 Check the following things:
 * **The number under `NThread` is the same as the runtime
 parameter
-[[OMP_NTHREAD | Runtime-Parameters:-MPI-and-OpenMP#OMP_NTHREAD]]
+[[OMP_NTHREAD | [Runtime-Parameters]-MPI-and-OpenMP#OMP_NTHREAD]]
 you just set**
 * **Different threads use different CPU cores**
 
 6\. Check the performance. It should be about
-[[OMP_NTHREAD | Runtime-Parameters:-MPI-and-OpenMP#OMP_NTHREAD]]
+[[OMP_NTHREAD | [Runtime-Parameters]-MPI-and-OpenMP#OMP_NTHREAD]]
 times faster
 than the case without OpenMP.
 ``` bash
@@ -242,7 +242,7 @@ make -j4
 ```
 
 > [!CAUTION]
-> * Please make sure that the `GPU_COMPUTE_CAPABILITY` is set properly in your [[machine configuration file | Installation:-Machine-Configuration-File]]
+> * Please make sure that the `GPU_COMPUTE_CAPABILITY` is set properly in your [[machine configuration file | [Installation]-Machine-Configuration-File]]
 > * Remember to copy the new executable to `bin/shocktube`.
 
 2\. Remove all old log and data files, if necessary.
@@ -254,7 +254,7 @@ sh clean.sh
 
 3\. Validate the GPU settings by searching for the keyword "Device Diagnosis"
 in the log file
-[[Record__Note | Simulation-Logs:-Record__Note]].
+[[Record__Note | [Simulation-Logs]-Record__Note]].
 You should see something like
 <pre>
 Device Diagnosis
@@ -315,6 +315,6 @@ Total Processing Time : 9.417532 s
 <br>
 
 ## Links
-* [[Next demo -- 3D Blast Wave: hybrid MPI/OpenMP/GPU + yt analysis | Quick-Start:-3D-Blast-Wave]]
+* [[Next demo -- 3D Blast Wave: hybrid MPI/OpenMP/GPU + yt analysis | [Quick-Start]-3D-Blast-Wave]]
 * [[Back to the main page of Quick Start | Quick-Start]]
 

@@ -3,7 +3,7 @@ This demo will illustrate the following features:
 * HDF5 output
 * yt analysis
 
-It is recommended to first check [[Quick Start: 1D Shock Tube]].
+It is recommended to first check [[[Quick Start] 1D Shock Tube]].
 
 ***
 
@@ -62,7 +62,7 @@ Input__Flag_Lohner  Input__Parameter  Input__TestProb  README  clean.sh  gamer  
 </details>
 
 5\. Edit the input file
-[[Input__Parameter | Runtime-Parameters:-Input__Parameter]]
+[[Input__Parameter | [Runtime-Parameters]-Input__Parameter]]
 to set the total number of OpenMP threads per MPI process.
 The following example will launch 10 threads per process.
 ```
@@ -156,7 +156,7 @@ h5ls -r Data_000010
 </details>
 
 8\. Validate the OpenMP configuration by following step 5 in
-[[Quick Start: 1D Shock Tube -- CPU-only with OpenMP | Quick-Start:-1D-Shock-Tube#cpu-only-with-openmp]].
+[[[Quick Start] 1D Shock Tube -- CPU-only with OpenMP | [Quick-Start]-1D-Shock-Tube#cpu-only-with-openmp]].
 The example setup given above leads to something like
 <pre>
 OpenMP Diagnosis
@@ -176,7 +176,7 @@ CPU core IDs of all OpenMP threads (tid == thread ID):
 > Here the two MPI processes run on the same node `golub121` and all OpenMP threads use different CPU cores.
 
 9\. Validate the GPU configuration by following step 3 in
-[[Quick Start: 1D Shock Tube -- Hybrid OpenMP/GPU | Quick-Start:-1D-Shock-Tube#hybrid-openmpgpu]].
+[[[Quick Start] 1D Shock Tube -- Hybrid OpenMP/GPU | [Quick-Start]-1D-Shock-Tube#hybrid-openmpgpu]].
 Especially, make sure that the MPI processes running on the
 same node access different `GPU ID` (unless that is what you want).
 
@@ -245,5 +245,5 @@ display Data_000010_Slice_z_density.png
 <br>
 
 ## Links
-* [[Previous demo -- 1D Shock Tube: OpenMP with/without GPU acceleration | Quick Start: 1D Shock Tube ]]
+* [[Previous demo -- [1D Shock Tube] OpenMP with/without GPU acceleration | [Quick Start] 1D Shock Tube ]]
 * [[Back to the main page of Quick Start | Quick Start]]
