@@ -1,5 +1,5 @@
 Number of patches to be preallocated on each AMR level when enabling
-[[OPT__MEMORY_POOL | Runtime-Parameters:-Refinement#OPT__MEMORY_POOL]].
+[[OPT__MEMORY_POOL | [Runtime-Parameters]-Refinement#OPT__MEMORY_POOL]].
 The following example will preallocate 100, 800 and 6400 patches on
 levels 0, 1, and 2, respectively, and will not preallocate any patch
 above level 2.
@@ -23,8 +23,8 @@ patches to be preallocated must be put in the second column.
 except in the first header line.
 
 * At most
-[[MAX_LEVEL | Runtime-Parameters:-Refinement#MAX_LEVEL]]+1
+[[MAX_LEVEL | [Runtime-Parameters]-Refinement#MAX_LEVEL]]+1
 lines will be loaded. If there are fewer than
-[[MAX_LEVEL | Runtime-Parameters:-Refinement#MAX_LEVEL]]+1
+[[MAX_LEVEL | [Runtime-Parameters]-Refinement#MAX_LEVEL]]+1
 lines in the input file, no patches will be preallocated on the
 unspecified levels.

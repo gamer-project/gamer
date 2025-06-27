@@ -5,58 +5,58 @@ This page includes the following topics:
 
 
 ## Parameter List
-* [[All | Runtime-Parameters:-All]]
+* [[All | [Runtime-Parameters]-All]]
 -- List all parameters in alphabetical order
 
-* [[General | Runtime-Parameters:-General]]
+* [[General | [Runtime-Parameters]-General]]
 -- Parameters applicable to all simulations, such as simulation domain, root-level grid, simulation end time...
 
-* [[MPI and OpenMP | Runtime-Parameters:-MPI-and-OpenMP]]
+* [[MPI and OpenMP | [Runtime-Parameters]-MPI-and-OpenMP]]
 -- Number of MPI processes and OpenMP threads, load-balancing parameters
 
-* [[GPU | Runtime-Parameters:-GPU]]
+* [[GPU | [Runtime-Parameters]-GPU]]
 -- GPU IDs and optimization parameters
 
-* [[Units | Runtime-Parameters:-Units]]
+* [[Units | [Runtime-Parameters]-Units]]
 -- Unit system
 
-* [[Initial Conditions | Runtime-Parameters:-Initial-Conditions]]
+* [[Initial Conditions | [Runtime-Parameters]-Initial-Conditions]]
 -- Initialization methods, restarting simulations
 
-* [[Hydro | Runtime-Parameters:-Hydro]]
+* [[Hydro | [Runtime-Parameters]-Hydro]]
 -- Hydro solvers, physical constants, boundary conditions
 
-* [[Gravity | Runtime-Parameters:-Gravity]]
+* [[Gravity | [Runtime-Parameters]-Gravity]]
 -- Gravity solvers, physical constants, boundary conditions
 
-* [[Particles | Runtime-Parameters:-Particles]]
+* [[Particles | [Runtime-Parameters]-Particles]]
 -- Particle parameters
 
-* [[Cosmology | Runtime-Parameters:-Cosmology]]
+* [[Cosmology | [Runtime-Parameters]-Cosmology]]
 -- Cosmological parameters
 
-* [[Chemistry and Radiation | Runtime-Parameters:-Chemistry-and-Radiation]]
+* [[Chemistry and Radiation | [Runtime-Parameters]-Chemistry-and-Radiation]]
 -- GRACKLE parameters
 
-* [[Star Formation | Runtime-Parameters:-Star-Formation]]
+* [[Star Formation | [Runtime-Parameters]-Star-Formation]]
 -- Star formation parameters
 
-* [[Feedback | Runtime-Parameters:-Feedback]]
+* [[Feedback | [Runtime-Parameters]-Feedback]]
 -- Feedback parameters
 
-* [[Timestep | Runtime-Parameters:-Timestep]]
+* [[Timestep | [Runtime-Parameters]-Timestep]]
 -- Timestep criteria
 
-* [[Refinement | Runtime-Parameters:-Refinement]]
+* [[Refinement | [Runtime-Parameters]-Refinement]]
 -- Grid refinement criteria
 
-* [[Interpolation | Runtime-Parameters:-Interpolation]]
+* [[Interpolation | [Runtime-Parameters]-Interpolation]]
 -- Interpolation schemes
 
-* [[Outputs | Runtime-Parameters:-Outputs]]
+* [[Outputs | [Runtime-Parameters]-Outputs]]
 -- Data output parameters
 
-* [[Miscellaneous | Runtime-Parameters:-Miscellaneous]]
+* [[Miscellaneous | [Runtime-Parameters]-Miscellaneous]]
 -- Miscellaneous parameters such as timing options, log files, and self-checking options...
 
 
@@ -97,7 +97,7 @@ it will be reset later depending on other configurations
 * For boolean options, 0=off and 1=on.
 
 * All dimensional variables must be set consistently with the adopted unit
-system (set by [[OPT__UNIT | Runtime-Parameters:-Units#OPT__UNIT]]) unless otherwise specified.
+system (set by [[OPT__UNIT | [Runtime-Parameters]-Units#OPT__UNIT]]) unless otherwise specified.
 
 * Parameter names are case sensitive.
 
