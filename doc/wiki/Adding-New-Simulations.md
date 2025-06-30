@@ -232,7 +232,7 @@ file to store the new field index. For example,
 
     Note that some field index variables have been pre-declared in
 `include/Field.h` (e.g., `Idx_Metal` for the field `Metal` used by,
-for example, [[ GRACKLE_METAL | Runtime-Parameters:-Chemistry-and-Radiation#GRACKLE_METAL ]]).
+for example, [[ GRACKLE_METAL | [Runtime-Parameters]-Chemistry-and-Radiation#GRACKLE_METAL ]]).
 Whenever applicable, skip this step and use these pre-declared index variables
 directly.
 
@@ -394,7 +394,7 @@ The following example illustrates the procedure to add a problem-specific
     ```
 
 4. Turn on the corresponding runtime option
-[[OPT__OUTPUT_USER | Runtime-Parameters:-Outputs#OPT__OUTPUT_USER]].
+[[OPT__OUTPUT_USER | [Runtime-Parameters]-Outputs#OPT__OUTPUT_USER]].
 when running the code.
 
     ```
