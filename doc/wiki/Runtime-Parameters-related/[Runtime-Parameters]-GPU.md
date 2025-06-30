@@ -19,7 +19,7 @@ Must be smaller than the total number of GPUs in a node.
 * #### `FLU_GPU_NPGROUP` &ensp; (>0; &#8804;0 &#8594; set to default) &ensp; [depend on the GPU spec]
     * **Description:**
 Number of patch groups updated by the GPU/CPU fluid solvers at a single time.
-See also [[Performance Optimizations: GPU | Performance Optimizations:-GPU]].
+See also [[[Performance-Optimizations] GPU | [Performance-Optimizations]-GPU]].
     * **Restriction:**
 Must be a multiple of [GPU_NSTREAM](#GPU_NSTREAM).
 
@@ -27,7 +27,7 @@ Must be a multiple of [GPU_NSTREAM](#GPU_NSTREAM).
 * #### `POT_GPU_NPGROUP` &ensp; (>0; &#8804;0 &#8594; set to default) &ensp; [depend on the GPU spec]
     * **Description:**
 Number of patch groups updated by the GPU/CPU Poisson solvers at a single time.
-See also [[Performance Optimizations: GPU | Performance Optimizations:-GPU]].
+See also [[[Performance-Optimizations] GPU | [Performance-Optimizations]-GPU]].
     * **Restriction:**
 Must be a multiple of [GPU_NSTREAM](#GPU_NSTREAM).
 
@@ -35,7 +35,7 @@ Must be a multiple of [GPU_NSTREAM](#GPU_NSTREAM).
 * #### `CHE_GPU_NPGROUP` &ensp; (>0; &#8804;0 &#8594; set to default) &ensp; [depend on the GPU spec]
     * **Description:**
 Number of patch groups updated by the GPU/CPU GRACKLE solvers at a single time.
-See also [[Performance Optimizations: GPU | Performance Optimizations:-GPU]].
+See also [[[Performance-Optimizations] GPU | [Performance-Optimizations]-GPU]].
 The GPU version is currently not supported.
     * **Restriction:**
 
@@ -43,7 +43,7 @@ The GPU version is currently not supported.
 * #### `GPU_NSTREAM` &ensp; (>0; &#8804;0 &#8594; set to default) &ensp; [depend on the GPU spec]
     * **Description:**
 Number of CUDA streams for the asynchronous memory copy between CPU and GPU.
-See also [[Performance Optimizations: GPU | Performance Optimizations:-GPU]].
+See also [[[Performance-Optimizations]-GPU | [Performance-Optimizations]-GPU]].
     * **Restriction:**
 See the restrictions on [FLU_GPU_NPGROUP](#FLU_GPU_NPGROUP) and
 [POT_GPU_NPGROUP](#POT_GPU_NPGROUP).
