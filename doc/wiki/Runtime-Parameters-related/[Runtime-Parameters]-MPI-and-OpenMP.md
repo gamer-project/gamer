@@ -40,7 +40,7 @@ Only applicable when enabling the compilation option
 Weighted load imbalancing (WLI) threshold. Patches on all levels will
 be redistributed among different MPI processes when the WLI factor is
 estimated to be higher than a given threshold. See
-[[[Performance Optimizations] Load Balancing | [Performance-Optimizations]-Load-Balancing]]
+[[ [Performance Optimizations] Load Balancing | [Performance-Optimizations]-Load-Balancing]]
 for details.
     * **Restriction:**
 Only applicable when enabling the compilation option
@@ -51,7 +51,7 @@ Only applicable when enabling the compilation option
     * **Description:**
 Load balancing weight of one particle over one cell. It is used
 to improve load balancing for the simulations with particles. See
-[[[Performance Optimizations] Load Balancing | [Performance-Optimizations]-Load-Balancing]]
+[[ [Performance Optimizations] Load Balancing | [Performance-Optimizations]-Load-Balancing]]
 for details. The typical values are 1.0 ~ 2.0.
     * **Restriction:**
 Only applicable when enabling the compilation options
