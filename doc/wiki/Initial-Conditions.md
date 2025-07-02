@@ -20,11 +20,11 @@ initial condition (IC) and GAMER initialization:
 
 Set [[OPT__INIT | [Runtime-Parameters]-Initial-Conditions#OPT__INIT]]=1 and edit the following grid IC function:
 
-* [[TESTPROB_ID | [Runtime Parameters]-General#TESTPROB_ID]]=0:
+* [[TESTPROB_ID | [Runtime-Parameters]-General#TESTPROB_ID]]=0:
 edit the function `Init_Function_User()` in
 `src/Model_Hydro/Hydro_Init_ByFunction_AssignData.cpp`.
 
-* [[TESTPROB_ID | [Runtime Parameters]-General#TESTPROB_ID]]&#8800;0:
+* [[TESTPROB_ID | [Runtime-Parameters]-General#TESTPROB_ID]]&#8800;0:
 edit a problem-specific initialization function
 (usually named `SetGridIC()`). See also [[Adding New Simulations]].
 
@@ -114,11 +114,11 @@ To set the magnetic field directly,
 set [[OPT__INIT | [Runtime-Parameters]-Initial-Conditions#OPT__INIT]]=1 and [[OPT__INIT_BFIELD_BYVECPOT | [Runtime-Parameters]-Initial-Conditions#OPT__INIT_BFIELD_BYVECPOT]]=0.
 Edit the following magnetic field IC function:
 
-* [[TESTPROB_ID | [Runtime Parameters]-General#TESTPROB_ID]]=0:
+* [[TESTPROB_ID | [Runtime-Parameters]-General#TESTPROB_ID]]=0:
 edit the function `Init_Function_BField_User()` in
 `src/Model_Hydro/Hydro_Init_ByFunction_AssignData.cpp`.
 
-* [[TESTPROB_ID | [Runtime Parameters]-General#TESTPROB_ID]]&#8800;0:
+* [[TESTPROB_ID | [Runtime-Parameters]-General#TESTPROB_ID]]&#8800;0:
 edit a problem-specific initialization function
 (usually named `SetBFieldIC()`). See also [[Adding New Simulations]].
 
@@ -166,11 +166,11 @@ for the magnetic field IC function by adopting
 Set [[PAR_INIT | [Runtime-Parameters]-Particles#PAR_INIT]]=1 and edit the following
 particle IC function:
 
-* [[TESTPROB_ID | [Runtime Parameters]-General#TESTPROB_ID]]=0:
+* [[TESTPROB_ID | [Runtime-Parameters]-General#TESTPROB_ID]]=0:
 edit the function `Par_Init_ByFunction()` in
 `src/Particle/Par_Init_ByFunction.cpp`.
 
-* [[TESTPROB_ID | [Runtime Parameters]-General#TESTPROB_ID]]&#8800;0:
+* [[TESTPROB_ID | [Runtime-Parameters]-General#TESTPROB_ID]]&#8800;0:
 edit a problem-specific initialization function (e.g.,
 `Par_Init_ByFunction_Merger()` in
 `src/TestProblem/Hydro/ClusterMerger_vs_Flash/Par_Init_ByFunction_Merger.cpp`).
@@ -791,5 +791,5 @@ Other related parameters:
 <br>
 
 ## Links
-* [[Main page of Runtime Parameters | Runtime Parameters]]
+* [[Main page of Runtime Parameters | Runtime-Parameters]]
 * [[Adding New Simulations | Adding New Simulations]]
