@@ -83,7 +83,7 @@ To resume it, simply delete this file.
 
 One can put simulation notes in a text file named `Input__Note`. The content
 of this file will be automatically copied to the top of the log file
-[[Record__Note | [Simulation Logs]-Record__Note]] during code initialization. For example,
+[[Record__Note | [Simulation-Logs]-Record__Note]] during code initialization. For example,
 ```bash
 cat Input__Note
 ```

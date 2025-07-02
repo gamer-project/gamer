@@ -19,10 +19,10 @@ Related options:
 [[Runtime parameters: Hydro | [Runtime-Parameters]-Hydro]]
 
 Other related parameters:
-[[DT__FLUID | [Runtime Parameters]-Timestep#DT__FLUID]], &nbsp;
-[[DT__FLUID_INIT | [Runtime Parameters]-Timestep#DT__FLUID_INIT]], &nbsp;
-[[DT__CR_DIFFUSION | [Runtime Parameters]-Timestep#DT__CR_DIFFUSION]], &nbsp;
-[[AUTO_REDUCE_DT | [Runtime Parameters]-Timestep#AUTO_REDUCE_DT]], &nbsp;
+[[DT__FLUID | [Runtime-Parameters]-Timestep#DT__FLUID]], &nbsp;
+[[DT__FLUID_INIT | [Runtime-Parameters]-Timestep#DT__FLUID_INIT]], &nbsp;
+[[DT__CR_DIFFUSION | [Runtime-Parameters]-Timestep#DT__CR_DIFFUSION]], &nbsp;
+[[AUTO_REDUCE_DT | [Runtime-Parameters]-Timestep#AUTO_REDUCE_DT]], &nbsp;
 [[FLU_GPU_NPGROUP | [Runtime-Parameters]-GPU#FLU_GPU_NPGROUP]], &nbsp;
 [[AUTO_REDUCE_MINMOD_FACTOR | [Runtime-Parameters]-Timestep#AUTO_REDUCE_MINMOD_FACTOR ]] &nbsp;
 
@@ -34,5 +34,5 @@ Other related parameters:
 
 ## Links
 * [[Main page of Physics Modules | Physics-Modules]]
-* [[Main page of Runtime Parameters | Runtime Parameters]]
+* [[Main page of Runtime Parameters | Runtime-Parameters]]
 * [[Equation of state | Equation-of-State]]
