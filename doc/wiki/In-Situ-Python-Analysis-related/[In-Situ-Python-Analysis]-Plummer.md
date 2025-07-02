@@ -7,8 +7,8 @@ This test problem Plummer demonstrates the in situ Python analysis feature in GA
 > [!IMPORTANT]
 > This example assumes it is using libyt interactive mode. Please compile libyt in interactive mode.
   * [yt](https://yt-project.org/): the core analysis tool.
-  * [[FFTW | [Installation] External Libraries#fftw]]: needed in this test problem.
-  * [[HDF5 | [Installation] External Libraries#hdf5]]: this is optional since we are not going to output any data.
+  * [[FFTW | [Installation]-External-Libraries#fftw]]: needed in this test problem.
+  * [[HDF5 | [Installation]-External-Libraries#hdf5]]: this is optional since we are not going to output any data.
 
 2. Generate `Makefile` with the following options:
    ```bash
