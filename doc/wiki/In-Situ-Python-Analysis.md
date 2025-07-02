@@ -11,13 +11,13 @@ It enables us to explore these ongoing simulation data through accessing memory 
 ### Compilation Options
 
 libyt has the following compilation options:
-- [[--libyt | Installation:-Option-List#--libyt]]
-- [[--libyt_patchgroup | Installation:-Option-List#--libyt_patchgroup]]
-- [[--libyt_interactive | Installation:-Option-List#--libyt_interactive]]
-- [[--libyt_reload | Installation:-Option-List#--libyt_reload]]
-- [[--libyt_jupyter | Installation:-Option-List#--libyt_jupyter]]
+- [[--libyt | [Installation]-Option-List#--libyt]]
+- [[--libyt_patchgroup | [Installation]-Option-List#--libyt_patchgroup]]
+- [[--libyt_interactive | [Installation]-Option-List#--libyt_interactive]]
+- [[--libyt_reload | [Installation]-Option-List#--libyt_reload]]
+- [[--libyt_jupyter | [Installation]-Option-List#--libyt_jupyter]]
 
-Must set `LIBYT_PATH` in the [[machine configuration file | Installation:-Machine-Configuration-File#1-library-paths]]
+Must set `LIBYT_PATH` in the [[machine configuration file | [Installation]-Machine-Configuration-File#1-library-paths]]
 to the path containing the folders `include` and `lib` of `libyt`.
 
 ### Runtime Parameters
@@ -37,7 +37,7 @@ YT_FIG_BASENAME   MHD
 
 ### Quick Demos
 
-1. [[Plummer | In-Situ-Python-Analysis:-Plummer]]
+1. [[Plummer | [In-Situ-Python-Analysis]-Plummer]]
 
 ### FAQs
 
