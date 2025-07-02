@@ -637,7 +637,7 @@ Store user-specified variables in HDF5 snapshots.
 * **Function Pointer:**
    * `Output_HDF5_UserPara_Ptr`
 * **Compilation Option:**
-[[SUPPORT_HDF5 | [Installation] Simulation-Options#SUPPORT_HDF5]]
+[[SUPPORT_HDF5 | [Installation]-Option-Lists#--hdf5]]
 * **Runtime Option:**
 None
 * **Example:**
