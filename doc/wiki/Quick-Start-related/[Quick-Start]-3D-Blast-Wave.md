@@ -246,4 +246,4 @@ display Data_000010_Slice_z_density.png
 
 ## Links
 * [[Previous demo -- 1D Shock Tube: OpenMP with/without GPU acceleration | [Quick-Start]-1D-Shock-Tube ]]
-* [[Back to the main page of Quick Start | Quick Start]]
+* [[Back to the main page of Quick Start | Quick-Start]]
