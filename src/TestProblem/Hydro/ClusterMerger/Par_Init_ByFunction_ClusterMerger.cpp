@@ -71,7 +71,6 @@ extern double  Pdot[3];
 extern double  Edot[3];
 extern double  E_inj_exp[3];
 extern double  M_inj_exp[3];
-extern double  dt_base;
        double  E_power_inj[3];             // the injection power
 extern double  ClusterCen[3][3];
 extern double  BH_Vel[3][3];
@@ -600,7 +599,7 @@ void Aux_Record_ClusterMerger()
          fprintf( File_User, "#%19s%20s",  "Time", "Step" );
          for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
-            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "x",                c, "y",                c, "z",                 c );
+            fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "ClusterCen_x",     c, "ClusterCen_y",     c, "ClusterCen_z",      c );
             fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "BHVel_x[km/s]",    c, "BHVel_y",          c, "BHVel_z",           c );
             fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "GasVel_x",         c, "GasVel_y",         c, "GasVel_z",          c );
             fprintf( File_User, " %19s%1d %19s%1d %19s%1d", "RelativeVel",      c, "SoundSpeed",       c, "GasDens(cgs)",      c );
@@ -660,7 +659,7 @@ void Aux_Record_ClusterMerger()
       M_inj_exp[c]   *= UNIT_M/Const_Msun;
    } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
-   for (int c=0; c<Merger_Coll_NumBHs; c++)   E_power_inj[c] = E_Sum[c]/(dt_base*UNIT_T);
+   for (int c=0; c<Merger_Coll_NumBHs; c++)   E_power_inj[c] = E_Sum[c]/(dTime_Base*UNIT_T);
 
 // output the properties of the cluster centers
    if ( MPI_Rank == 0 )
@@ -741,20 +740,14 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
    } // if ( fixBH )
 
    double pos_min[3][3], DM_Vel[3][3];   // the updated BH position and velocity
-   const bool CurrentMaxLv = (  NPatchTotal[lv] > 0  &&  ( lv == MAX_LEVEL  ||  NPatchTotal[lv+1] == 0 )  );
+   const bool    CurrentMaxLv = ( NPatchTotal[lv] > 0  &&  lv == MAX_LEVEL        ) ? true :
+                                ( NPatchTotal[lv] > 0  &&  NPatchTotal[lv+1] == 0 ) ? true : false;
 
 // initialize pos_min to be the old center
    for (int c=0; c<Merger_Coll_NumBHs; c++)   for (int d=0; d<3; d++)   pos_min[c][d] = Cen_old[c][d];
 
    if ( CurrentMaxLv  &&  (AdjustPos  ||  AdjustVel) )
    {
-//    do not support periodic BC
-      for (int f=0; f<6; f++)
-         if ( OPT__BC_FLU[f] == BC_FLU_PERIODIC )   Aux_Error( ERROR_INFO, "do not support periodic BC (OPT__BC_FLU* = 1)!\n" );
-
-#     ifdef GRAVITY
-      if ( OPT__BC_POT == BC_POT_PERIODIC )  Aux_Error( ERROR_INFO, "do not support periodic BC (OPT__BC_POT = 1)!\n" );
-#     endif
 
       const double dis_exp = 1e-6;  // to check if the output BH positions of each calculaiton are close enough
       bool   converged     = false; // if the BH positions are close enough, then complete the calculation

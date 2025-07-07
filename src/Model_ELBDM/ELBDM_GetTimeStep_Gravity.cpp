@@ -142,7 +142,7 @@ real GetMaxPot( const int lv )
 
 
 // check
-   if ( MaxPot_AllRank == 0.0  &&  AnyCell  &&  MPI_Rank == 0 )
+   if ( MaxPot_AllRank == 0.0  &&  AnyCell_AllRank  &&  MPI_Rank == 0 )
       Aux_Error( ERROR_INFO, "MaxPot == 0.0 at lv %d !!\n", lv );
 
 

@@ -1,6 +1,6 @@
 #include "GAMER.h"
 
-#if ( MODEL == HYDRO  &&  defined GRAVITY )
+#if ( MODEL == HYDRO  &&  defined GRAVITY  &&  defined MASSIVE_PARTICLES )
 
 
 extern int        Merger_Coll_NumBHs, Accretion_Mode;
@@ -63,7 +63,6 @@ static double     normalize_const[3];                      // the exact normaliz
 // the variables that need to be recorded
        double     E_inj_exp[3] = { 0.0, 0.0, 0.0 };        // the expected amount of injected energy
        double     M_inj_exp[3] = { 0.0, 0.0, 0.0 };        // the expected amount of injected gas mass
-       double     dt_base;
 
 static bool       FirstTime = true;
 extern int        JetDirection_NBin;                       // number of bins of the jet direction table
@@ -134,7 +133,7 @@ void BH_accretion_rate( const int mode, double *Mdot_tot, double *Mdot_hot, doub
    }
 
 // cold accretion rate
-   if ( mode == 2  ||  mode == 3  &&  (mass_gas+mass_par) > 0.0 )
+   if ( ( mode == 2  ||  mode == 3 )  &&  (mass_gas+mass_par) > 0.0 )
    {
       const double t_ff = sqrt( 2*CUBE(r_acc) / NEWTON_G / (mass_gas+mass_par) );
       acc_cold = mass_coldGas / t_ff;
@@ -250,16 +249,17 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
          fluid[DENS] += M_inj[c];
 
 //       transfer into BH frame
-         fluid[MOMX] -= BH_Vel[c][0]*fluid[DENS];
-         fluid[MOMY] -= BH_Vel[c][1]*fluid[DENS];
-         fluid[MOMZ] -= BH_Vel[c][2]*fluid[DENS];
+         fluid[MOMX] -= BH_Vel[c][0]*dens_old;
+         fluid[MOMY] -= BH_Vel[c][1]*dens_old;
+         fluid[MOMZ] -= BH_Vel[c][2]*dens_old;
 
 //       use a sine function to make the velocity smooth within the jet from +Jet_Vec to -Jet_Vec
          EngySin = E_inj[c]*normalize_const[c]*sin( Jet_WaveK[c]*Jet_dh );
 
 //       the new momentum is calculated from the old density, new density, old momentum and injected energy
-         real P_SQR = SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]);
-         real P_new = sqrt( 2*fluid[DENS]*(EngySin+0.5*P_SQR/dens_old) );
+         real P_SQR    = SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]);
+         real Ekin_old = ( dens_old == 0.0 ) ? (real)0.0 : 0.5*P_SQR/dens_old;
+         real P_new    = sqrt( 2*fluid[DENS]*(EngySin + Ekin_old) );
          P_new *= SIGN( Vec_c2m[0]*Jet_Vec[c][0] + Vec_c2m[1]*Jet_Vec[c][1] + Vec_c2m[2]*Jet_Vec[c][2] );
 
          fluid[MOMX] = P_new * Jet_Vec[c][0];
@@ -303,7 +303,8 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
 void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt )
 {
 
-   const bool    CurrentMaxLv = (  NPatchTotal[lv] > 0  &&  ( lv == MAX_LEVEL  ||  NPatchTotal[lv+1] == 0 )  );
+   const bool    CurrentMaxLv = ( NPatchTotal[lv] > 0  &&  lv == MAX_LEVEL        ) ? true :
+                                ( NPatchTotal[lv] > 0  &&  NPatchTotal[lv+1] == 0 ) ? true : false;
    const double  dh           = amr->dh[lv];
    const real    dv           = CUBE(dh);
 #  if ( MODEL == HYDRO  &&  !defined SRHD )
@@ -433,14 +434,14 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
 //    variables for each rank
       int  num        [3]       =  { 0, 0, 0 };        // the number of cells inside the accretion radius
-      real gas_mass   [3]       =  { 0.0, 0.0, 0.0 };  // total gas mass inside the accretion radius
+      double gas_mass [3]       =  { 0.0, 0.0, 0.0 };  // total gas mass inside the accretion radius
       real rho        [3]       =  { 0.0, 0.0, 0.0 };  // the average density inside the accretion radius (hot gas)
-      real mass_cold  [3]       =  { 0.0, 0.0, 0.0 };  // cold gas mass (T < 5e5 K) inside the accretion radius
+      double mass_cold[3]       =  { 0.0, 0.0, 0.0 };  // cold gas mass (T < 5e5 K) inside the accretion radius
       real Cs         [3]       =  { 0.0, 0.0, 0.0 };  // the average sound speed inside the accretion radius
       real gas_mom    [3][3]    = {{ 0.0, 0.0, 0.0 },  // average gas momentum
                                    { 0.0, 0.0, 0.0 },
                                    { 0.0, 0.0, 0.0 }};
-      real ang_mom    [3][3]    = {{ 0.0, 0.0, 0.0 },  // total angular momentum inside the accretion radius
+      double ang_mom  [3][3]    = {{ 0.0, 0.0, 0.0 },  // total angular momentum inside the accretion radius
                                    { 0.0, 0.0, 0.0 },
                                    { 0.0, 0.0, 0.0 }};
       real V_cyl_exact[3]       =  { 0.0, 0.0, 0.0 };  // exact volume of jet cylinder
@@ -657,7 +658,6 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
          for (int c=0; c<Merger_Coll_NumBHs; c++)   E_inj_exp[c] += Edot[c]*dt;
          for (int c=0; c<Merger_Coll_NumBHs; c++)   M_inj_exp[c] += Mdot[c]*dt;
       } // if ( CurrentMaxLv )
-      if ( lv == 0 )   dt_base = dt;
 
 
 //    (6) perform injection
@@ -754,4 +754,4 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
 
 
-#endif // #if ( MODEL == HYDRO  &&  defined GRAVITY )
+#endif // #if ( MODEL == HYDRO  &&  defined GRAVITY  &&  defined MASSIVE_PARTICLES )

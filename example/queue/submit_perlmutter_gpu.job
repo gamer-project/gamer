@@ -1,0 +1,22 @@
+#!/bin/bash
+#SBATCH --account=YOUR_ACCOUNT_g
+#SBATCH --job-name=GAMER_GPU
+#SBATCH --qos=debug
+#SBATCH --time=0:30:00
+#SBATCH --nodes=1
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=YOUR_EMAIL
+
+########## Do NOT modify this block ##########
+#SBATCH --constraint=gpu
+#SBATCH --ntasks-per-node=4
+#SBATCH --cpus-per-task=32
+#SBATCH --gpus-per-task=1
+export OMP_PROC_BIND=spread
+export OMP_PLACES=threads
+##############################################
+
+module load gcc-native/12.3
+module list  # Record the loaded modules
+
+srun ./gamer
