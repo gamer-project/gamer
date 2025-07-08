@@ -10,9 +10,7 @@
 // =======================================================================================
        int     Merger_Coll_NumHalos;      // number of clusters
        bool    AGN_feedback;              // turn on/off (1/0) AGN feedback
-static char    Merger_File_Prof1[1000];   // profile table of cluster 1
-static char    Merger_File_Prof2[1000];   // profile table of cluster 2
-static char    Merger_File_Prof3[1000];   // profile table of cluster 3
+static char  (*Merger_File_Prof)[1000];   // profile table of clusters
        char    Merger_File_Par1 [1000];   // particle file of cluster 1
        char    Merger_File_Par2 [1000];   // particle file of cluster 2
        char    Merger_File_Par3 [1000];   // particle file of cluster 3
@@ -253,15 +251,17 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "Merger_Coll_NumHalos",    &Merger_Coll_NumHalos,     2,                  1,             3              );
    for (int c=0; c<Merger_Coll_NumHalos; c++)
    {
+      char Merger_File_Prof_name [MAX_STRING];
       char Merger_Coll_IsGas_name[MAX_STRING];
+
+      sprintf( Merger_File_Prof_name,  "Merger_File_Prof%d",  c+1 );
       sprintf( Merger_Coll_IsGas_name, "Merger_Coll_IsGas%d", c+1 );
+
+      LOAD_PARA( load_mode, Merger_File_Prof_name,   Merger_File_Prof[c],      NoDef_str,          Useless_str,   Useless_str    );
       LOAD_PARA( load_mode, Merger_Coll_IsGas_name, &Merger_Coll_IsGas[c],     true,               Useless_bool,  Useless_bool   );
    }
-   LOAD_PARA( load_mode, "Merger_File_Prof1",        Merger_File_Prof1,        NoDef_str,          Useless_str,   Useless_str    );
    LOAD_PARA( load_mode, "Merger_File_Par1",         Merger_File_Par1,         NoDef_str,          Useless_str,   Useless_str    );
-   LOAD_PARA( load_mode, "Merger_File_Prof2",        Merger_File_Prof2,        NoDef_str,          Useless_str,   Useless_str    );
    LOAD_PARA( load_mode, "Merger_File_Par2",         Merger_File_Par2,         NoDef_str,          Useless_str,   Useless_str    );
-   LOAD_PARA( load_mode, "Merger_File_Prof3",        Merger_File_Prof3,        NoDef_str,          Useless_str,   Useless_str    );
    LOAD_PARA( load_mode, "Merger_File_Par3",         Merger_File_Par3,         NoDef_str,          Useless_str,   Useless_str    );
    LOAD_PARA( load_mode, "Merger_Coll_PosX1",       &Merger_Coll_PosX1,       -1.0,                NoMin_double,  NoMax_double   );
    LOAD_PARA( load_mode, "Merger_Coll_PosY1",       &Merger_Coll_PosY1,       -1.0,                NoMin_double,  NoMax_double   );
@@ -337,6 +337,7 @@ void SetParameter()
    delete ReadPara;
 
 // (1-1-2) allocate memories
+   Merger_File_Prof  = new char [ Merger_Coll_NumHalos ][ 1000 ];
    Merger_Coll_IsGas = new bool [ Merger_Coll_NumHalos ];
 
 // (1-1-3) load the rest cluster parameters
@@ -407,9 +408,9 @@ void SetParameter()
       Merger_NBin = new int     [ Merger_Coll_NumHalos ];
 
 //    (2) load the radial profiles
-      const std::string filename1( Merger_File_Prof1 );
-      const std::string filename2( Merger_File_Prof2 );
-      const std::string filename3( Merger_File_Prof3 );
+      const std::string filename1( Merger_File_Prof[0] );
+      const std::string filename2( Merger_File_Prof[1] );
+      const std::string filename3( Merger_File_Prof[2] );
 
 //    cluster 1
       if ( Merger_Coll_IsGas[0] )
@@ -665,7 +666,7 @@ void SetParameter()
       Aux_Message( stdout, "  test problem ID           = %d\n",           TESTPROB_ID );
       Aux_Message( stdout, "  number of clusters        = %d\n",           Merger_Coll_NumHalos );
       Aux_Message( stdout, "  turn on AGN feedback      = %s\n",          (AGN_feedback)? "yes":"no" );
-      Aux_Message( stdout, "  profile file 1            = %s\n",           Merger_File_Prof1 );
+      Aux_Message( stdout, "  profile file 1            = %s\n",           Merger_File_Prof[0] );
       Aux_Message( stdout, "  particle file 1           = %s\n",           Merger_File_Par1 );
       Aux_Message( stdout, "  cluster 1 w/ gas          = %s\n",          (Merger_Coll_IsGas[0])? "yes":"no" );
       Aux_Message( stdout, "  cluster 1 x-position      = %g\n",           Merger_Coll_PosX1 );
@@ -678,7 +679,7 @@ void SetParameter()
       Aux_Message( stdout, "  cluster 1 jet radius      = %g\n",           Jet_Radius1       );
       }
       if ( Merger_Coll_NumHalos > 1 ) {
-      Aux_Message( stdout, "  profile file 2            = %s\n",           Merger_File_Prof2 );
+      Aux_Message( stdout, "  profile file 2            = %s\n",           Merger_File_Prof[1] );
       Aux_Message( stdout, "  particle file 2           = %s\n",           Merger_File_Par2 );
       Aux_Message( stdout, "  cluster 2 w/ gas          = %s\n",          (Merger_Coll_IsGas[1])? "yes":"no" );
       Aux_Message( stdout, "  cluster 2 x-position      = %g\n",           Merger_Coll_PosX2 );
@@ -692,7 +693,7 @@ void SetParameter()
       }
       } // if ( Merger_Coll_NumHalos > 1 )
       if ( Merger_Coll_NumHalos > 2 ) {
-      Aux_Message( stdout, "  profile file 3            = %s\n",           Merger_File_Prof3 );
+      Aux_Message( stdout, "  profile file 3            = %s\n",           Merger_File_Prof[2] );
       Aux_Message( stdout, "  particle file 3           = %s\n",           Merger_File_Par3 );
       Aux_Message( stdout, "  cluster 3 w/ gas          = %s\n",          (Merger_Coll_IsGas[2])? "yes":"no" );
       Aux_Message( stdout, "  cluster 3 x-position      = %g\n",           Merger_Coll_PosX3 );
@@ -977,6 +978,7 @@ void Output_HDF5_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
 void End_ClusterMerger()
 {
 
+   delete [] Merger_File_Prof;
    delete [] Merger_Coll_IsGas;
    delete [] ColorFieldsIdx;
 
