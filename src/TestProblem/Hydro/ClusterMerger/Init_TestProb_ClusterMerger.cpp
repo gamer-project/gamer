@@ -17,9 +17,7 @@ static char    Merger_File_Prof3[1000];   // profile table of cluster 3
        char    Merger_File_Par2 [1000];   // particle file of cluster 2
        char    Merger_File_Par3 [1000];   // particle file of cluster 3
 static char    JetDirection_file[1000];   // jet direction file
-       bool    Merger_Coll_IsGas1;        // (true/false) --> does cluster 1 have gas
-       bool    Merger_Coll_IsGas2;        // (true/false) --> does cluster 2 have gas
-       bool    Merger_Coll_IsGas3;        // (true/false) --> does cluster 3 have gas
+static bool   *Merger_Coll_IsGas;         // (true/false) --> does cluster have gas
        bool    Merger_Coll_UseMetals;     // (true/false) --> do the clusters have a metal field
        bool    Merger_Coll_LabelCenter;   // (true/false) --> label the particle closest to the center of each cluster
        double  Merger_Coll_PosX1;         // x-position of the first  cluster
@@ -253,9 +251,12 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
 // LOAD_PARA( load_mode, "KEY_IN_THE_FILE",         &VARIABLE,                 DEFAULT,            MIN,           MAX            );
 // ********************************************************************************************************************************
    LOAD_PARA( load_mode, "Merger_Coll_NumHalos",    &Merger_Coll_NumHalos,     2,                  1,             3              );
-   LOAD_PARA( load_mode, "Merger_Coll_IsGas1",      &Merger_Coll_IsGas1,       true,               Useless_bool,  Useless_bool   );
-   LOAD_PARA( load_mode, "Merger_Coll_IsGas2",      &Merger_Coll_IsGas2,       true,               Useless_bool,  Useless_bool   );
-   LOAD_PARA( load_mode, "Merger_Coll_IsGas3",      &Merger_Coll_IsGas3,       true,               Useless_bool,  Useless_bool   );
+   for (int c=0; c<Merger_Coll_NumHalos; c++)
+   {
+      char Merger_Coll_IsGas_name[MAX_STRING];
+      sprintf( Merger_Coll_IsGas_name, "Merger_Coll_IsGas%d", c+1 );
+      LOAD_PARA( load_mode, Merger_Coll_IsGas_name, &Merger_Coll_IsGas[c],     true,               Useless_bool,  Useless_bool   );
+   }
    LOAD_PARA( load_mode, "Merger_File_Prof1",        Merger_File_Prof1,        NoDef_str,          Useless_str,   Useless_str    );
    LOAD_PARA( load_mode, "Merger_File_Par1",         Merger_File_Par1,         NoDef_str,          Useless_str,   Useless_str    );
    LOAD_PARA( load_mode, "Merger_File_Prof2",        Merger_File_Prof2,        NoDef_str,          Useless_str,   Useless_str    );
@@ -336,6 +337,7 @@ void SetParameter()
    delete ReadPara;
 
 // (1-1-2) allocate memories
+   Merger_Coll_IsGas = new bool [ Merger_Coll_NumHalos ];
 
 // (1-1-3) load the rest cluster parameters
    ReadPara = new ReadPara_t;
@@ -410,7 +412,7 @@ void SetParameter()
       const std::string filename3( Merger_File_Prof3 );
 
 //    cluster 1
-      if ( Merger_Coll_IsGas1 )
+      if ( Merger_Coll_IsGas[0] )
       {
          if ( MPI_Rank == 0 )
          {
@@ -448,10 +450,10 @@ void SetParameter()
          MPI_Bcast( Table_P[0], Merger_NBin[0], MPI_DOUBLE, 0, MPI_COMM_WORLD );
          MPI_Bcast( Table_M[0], Merger_NBin[0], MPI_DOUBLE, 0, MPI_COMM_WORLD );
 
-      } // if ( Merger_Coll_IsGas1 )
+      } // if ( Merger_Coll_IsGas[0] )
 
 //    cluster 2
-      if ( Merger_Coll_NumHalos > 1  &&  Merger_Coll_IsGas2 )
+      if ( Merger_Coll_NumHalos > 1  &&  Merger_Coll_IsGas[1] )
       {
          if ( MPI_Rank == 0 )
          {
@@ -489,10 +491,10 @@ void SetParameter()
          MPI_Bcast( Table_P[1], Merger_NBin[1], MPI_DOUBLE, 0, MPI_COMM_WORLD );
          MPI_Bcast( Table_M[1], Merger_NBin[1], MPI_DOUBLE, 0, MPI_COMM_WORLD );
 
-      } // if ( Merger_Coll_NumHalos > 1  &&  Merger_Coll_IsGas2 )
+      } // if ( Merger_Coll_NumHalos > 1  &&  Merger_Coll_IsGas[1] )
 
 //    cluster 3
-      if ( Merger_Coll_NumHalos > 2  &&  Merger_Coll_IsGas3 )
+      if ( Merger_Coll_NumHalos > 2  &&  Merger_Coll_IsGas[2] )
       {
          if ( MPI_Rank == 0 )
          {
@@ -530,7 +532,7 @@ void SetParameter()
          MPI_Bcast( Table_P[2], Merger_NBin[2], MPI_DOUBLE, 0, MPI_COMM_WORLD );
          MPI_Bcast( Table_M[2], Merger_NBin[2], MPI_DOUBLE, 0, MPI_COMM_WORLD );
 
-      } // if ( Merger_Coll_NumHalos > 2  &&  Merger_Coll_IsGas3 )
+      } // if ( Merger_Coll_NumHalos > 2  &&  Merger_Coll_IsGas[2] )
 
 //    (2-2) initialize the BH position and velocity
       if ( fixBH )
@@ -665,7 +667,7 @@ void SetParameter()
       Aux_Message( stdout, "  turn on AGN feedback      = %s\n",          (AGN_feedback)? "yes":"no" );
       Aux_Message( stdout, "  profile file 1            = %s\n",           Merger_File_Prof1 );
       Aux_Message( stdout, "  particle file 1           = %s\n",           Merger_File_Par1 );
-      Aux_Message( stdout, "  cluster 1 w/ gas          = %s\n",          (Merger_Coll_IsGas1)? "yes":"no" );
+      Aux_Message( stdout, "  cluster 1 w/ gas          = %s\n",          (Merger_Coll_IsGas[0])? "yes":"no" );
       Aux_Message( stdout, "  cluster 1 x-position      = %g\n",           Merger_Coll_PosX1 );
       Aux_Message( stdout, "  cluster 1 y-position      = %g\n",           Merger_Coll_PosY1 );
       Aux_Message( stdout, "  cluster 1 x-velocity      = %g\n",           Merger_Coll_VelX1 );
@@ -678,7 +680,7 @@ void SetParameter()
       if ( Merger_Coll_NumHalos > 1 ) {
       Aux_Message( stdout, "  profile file 2            = %s\n",           Merger_File_Prof2 );
       Aux_Message( stdout, "  particle file 2           = %s\n",           Merger_File_Par2 );
-      Aux_Message( stdout, "  cluster 2 w/ gas          = %s\n",          (Merger_Coll_IsGas2)? "yes":"no" );
+      Aux_Message( stdout, "  cluster 2 w/ gas          = %s\n",          (Merger_Coll_IsGas[1])? "yes":"no" );
       Aux_Message( stdout, "  cluster 2 x-position      = %g\n",           Merger_Coll_PosX2 );
       Aux_Message( stdout, "  cluster 2 y-position      = %g\n",           Merger_Coll_PosY2 );
       Aux_Message( stdout, "  cluster 2 x-velocity      = %g\n",           Merger_Coll_VelX2 );
@@ -692,7 +694,7 @@ void SetParameter()
       if ( Merger_Coll_NumHalos > 2 ) {
       Aux_Message( stdout, "  profile file 3            = %s\n",           Merger_File_Prof3 );
       Aux_Message( stdout, "  particle file 3           = %s\n",           Merger_File_Par3 );
-      Aux_Message( stdout, "  cluster 3 w/ gas          = %s\n",          (Merger_Coll_IsGas3)? "yes":"no" );
+      Aux_Message( stdout, "  cluster 3 w/ gas          = %s\n",          (Merger_Coll_IsGas[2])? "yes":"no" );
       Aux_Message( stdout, "  cluster 3 x-position      = %g\n",           Merger_Coll_PosX3 );
       Aux_Message( stdout, "  cluster 3 y-position      = %g\n",           Merger_Coll_PosY3 );
       Aux_Message( stdout, "  cluster 3 x-velocity      = %g\n",           Merger_Coll_VelX3 );
@@ -768,8 +770,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   if ( !( Merger_Coll_IsGas1  ||  Merger_Coll_IsGas2  ||  Merger_Coll_IsGas3 ) )
-      return;
+   bool AnyGasHalo = false;
+   for (int c=0; c<Merger_Coll_NumHalos; c++)   AnyGasHalo |= Merger_Coll_IsGas[c];
+   if ( ! AnyGasHalo )   return;
 
    const double pos_in        [3] = { x,                 y,                 z                 };
    const double ClusterCenter1[3] = { Merger_Coll_PosX1, Merger_Coll_PosY1, amr->BoxCenter[2] };
@@ -785,7 +788,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    rmax3 = Merger_Coll_NumHalos > 2 ? Table_R[2][Merger_NBin[2]-1] : -1.0;
 
 // for each cell, we sum up the density and pressure from each halo and then calculate the weighted velocity
-   if ( Merger_Coll_IsGas1 )
+   if ( Merger_Coll_IsGas[0] )
    {
       r1    = DIST_3D_DBL( pos_in, ClusterCenter1 );
       double rr1 = r1 < rmax1 ? r1 : rmax1;
@@ -801,7 +804,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Metl1 = 0.0;
    }
 
-   if ( Merger_Coll_NumHalos > 1  &&  Merger_Coll_IsGas2 )
+   if ( Merger_Coll_NumHalos > 1  &&  Merger_Coll_IsGas[1] )
    {
       r2    = DIST_3D_DBL( pos_in, ClusterCenter2 );
       double rr2 = r2 < rmax2 ? r2 : rmax2;
@@ -817,7 +820,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Metl2 = 0.0;
    }
 
-   if ( Merger_Coll_NumHalos > 2  &&  Merger_Coll_IsGas3 )
+   if ( Merger_Coll_NumHalos > 2  &&  Merger_Coll_IsGas[2] )
    {
       r3    = DIST_3D_DBL( pos_in, ClusterCenter3 );
       double rr3 = r3 < rmax3 ? r3 : rmax3;
@@ -885,19 +888,19 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       fluid[Idx_Metal] = Metl;
    }
 
-   if ( Merger_Coll_IsGas1 )
+   if ( Merger_Coll_IsGas[0] )
    {
       if ( r1 < rmax1 )   fluid[ColorFieldsIdx[0]] = Dens1;
       else                fluid[ColorFieldsIdx[0]] = 0.0;
    }
 
-   if ( Merger_Coll_NumHalos > 1  &&  Merger_Coll_IsGas2 )
+   if ( Merger_Coll_NumHalos > 1  &&  Merger_Coll_IsGas[1] )
    {
       if ( r2 < rmax2 )   fluid[ColorFieldsIdx[1]] = Dens2;
       else                fluid[ColorFieldsIdx[1]] = 0.0;
    }
 
-   if ( Merger_Coll_NumHalos > 2  &&  Merger_Coll_IsGas3 )
+   if ( Merger_Coll_NumHalos > 2  &&  Merger_Coll_IsGas[2] )
    {
       if ( r3 < rmax3 )   fluid[ColorFieldsIdx[2]] = Dens3;
       else                fluid[ColorFieldsIdx[2]] = 0.0;
@@ -974,6 +977,7 @@ void Output_HDF5_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
 void End_ClusterMerger()
 {
 
+   delete [] Merger_Coll_IsGas;
    delete [] ColorFieldsIdx;
 
 #  ifdef SUPPORT_HDF5
@@ -982,6 +986,7 @@ void End_ClusterMerger()
       delete [] Merger_NBin;
       for (int c=0; c<Merger_Coll_NumHalos; c++)
       {
+         if ( ! Merger_Coll_IsGas[c] )   continue;
          delete [] Table_R[c];
          delete [] Table_D[c];
          delete [] Table_P[c];
