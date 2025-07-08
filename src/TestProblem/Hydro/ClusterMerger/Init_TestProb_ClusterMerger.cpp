@@ -149,12 +149,12 @@ void Aux_Record_ClusterMerger();
 #endif
 
 bool Flag_ClusterMerger( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
-int Read_Num_Points_ClusterMerger( std::string filename );
+int  Read_Num_Points_ClusterMerger( std::string filename );
 void Read_Profile_ClusterMerger( std::string filename, std::string fieldname, double field[] );
 void AddNewField_ClusterMerger();
 
-int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const double x, const double y, const double z,
-                                        const double Time, const double dt, const int lv, double AuxArray[] );
+int  Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const double x, const double y, const double z,
+                                         const double Time, const double dt, const int lv, double AuxArray[] );
 void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );
 
 extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );

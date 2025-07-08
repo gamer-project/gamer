@@ -126,7 +126,7 @@ void BH_accretion_rate( const int mode, double *Mdot_tot, double *Mdot_hot, doub
    double acc_cold = 0.0, acc_hot = 0.0;
 
 // hot accretion rate
-   if ( (mode == 1  ||  mode == 3)  &&  rho_gas > 0.0 )
+   if ( ( mode == 1  ||  mode == 3 )  &&  rho_gas > 0.0 )
    {
       acc_hot = 4.0 * M_PI * SQR(NEWTON_G) * SQR(mass_BH) * rho_gas /
                 pow( SQR(cs) + SQR(v_rel), 1.5 );
@@ -176,7 +176,7 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
                                         const double Time, const double dt, const int lv, double AuxArray[] )
 {
 
-   const double Pos[3]  = { x, y, z };
+   const double Pos[3] = { x, y, z };
 
 // (1) SMBH Accretion (note: gas depletion is currently disabled)
    double dr2[3][3], r2[3];
@@ -433,23 +433,23 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
       }
 
 //    variables for each rank
-      int  num        [3]       =  { 0, 0, 0 };        // the number of cells inside the accretion radius
-      double gas_mass [3]       =  { 0.0, 0.0, 0.0 };  // total gas mass inside the accretion radius
-      real rho        [3]       =  { 0.0, 0.0, 0.0 };  // the average density inside the accretion radius (hot gas)
-      double mass_cold[3]       =  { 0.0, 0.0, 0.0 };  // cold gas mass (T < 5e5 K) inside the accretion radius
-      real Cs         [3]       =  { 0.0, 0.0, 0.0 };  // the average sound speed inside the accretion radius
-      real gas_mom    [3][3]    = {{ 0.0, 0.0, 0.0 },  // average gas momentum
+      int    num        [3]     =  { 0, 0, 0 };        // the number of cells inside the accretion radius
+      double gas_mass   [3]     =  { 0.0, 0.0, 0.0 };  // total gas mass inside the accretion radius
+      real   rho        [3]     =  { 0.0, 0.0, 0.0 };  // the average density inside the accretion radius (hot gas)
+      double mass_cold  [3]     =  { 0.0, 0.0, 0.0 };  // cold gas mass (T < 5e5 K) inside the accretion radius
+      real   Cs         [3]     =  { 0.0, 0.0, 0.0 };  // the average sound speed inside the accretion radius
+      real   gas_mom    [3][3]  = {{ 0.0, 0.0, 0.0 },  // average gas momentum
                                    { 0.0, 0.0, 0.0 },
                                    { 0.0, 0.0, 0.0 }};
-      double ang_mom  [3][3]    = {{ 0.0, 0.0, 0.0 },  // total angular momentum inside the accretion radius
+      double ang_mom    [3][3]  = {{ 0.0, 0.0, 0.0 },  // total angular momentum inside the accretion radius
                                    { 0.0, 0.0, 0.0 },
                                    { 0.0, 0.0, 0.0 }};
-      real V_cyl_exact[3]       =  { 0.0, 0.0, 0.0 };  // exact volume of jet cylinder
-      real normalize  [3]       =  { 0.0, 0.0, 0.0 };  // for computing the correct normalization constant
-      bool if_overlap_each_rank = false;
+      real   V_cyl_exact[3]     =  { 0.0, 0.0, 0.0 };  // exact volume of jet cylinder
+      real   normalize  [3]     =  { 0.0, 0.0, 0.0 };  // for computing the correct normalization constant
+      bool   if_overlap_each_rank = false;
 
 //    variables for all ranks
-      int    num_sum[3];
+      int  num_sum[3];
       real rho_sum[3], Cs_sum[3], gas_mom_sum[3][3], gas_vel_sum[3][3], V_cyl_exact_sum[3], normalize_sum[3];
 
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
