@@ -11,9 +11,7 @@
 typedef double real_par_in;
 //typedef float  real_par_in;
 
-extern char    Merger_File_Par1[1000];
-extern char    Merger_File_Par2[1000];
-extern char    Merger_File_Par3[1000];
+extern char  (*Merger_File_Par)[1000];
 extern int     Merger_Coll_NumHalos;
 extern int     Merger_Coll_NumBHs;
 extern double  Merger_Coll_PosX1;
@@ -29,7 +27,7 @@ extern double  Merger_Coll_VelY2;
 extern double  Merger_Coll_VelX3;
 extern double  Merger_Coll_VelY3;
 extern bool    Merger_Coll_LabelCenter;
-extern long    NPar_EachCluster[3];
+extern long   *NPar_EachCluster;
 extern long    NPar_AllCluster;
 
 
@@ -189,9 +187,6 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
 // load data to the particle repository
-
-   const std::string filenames[3] = { Merger_File_Par1, Merger_File_Par2, Merger_File_Par3 };
-
    for ( int c=0; c<NCluster; c++ )
    {
 //    load data
@@ -206,7 +201,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       real_par_in *zvel  = new real_par_in [NPar_ThisRank_EachCluster[c]];
       real_par_in *ptype = new real_par_in [NPar_ThisRank_EachCluster[c]];
 
-      Read_Particles_ClusterMerger( filenames[c], Offset[c], NPar_ThisRank_EachCluster[c],
+      Read_Particles_ClusterMerger( Merger_File_Par[c], Offset[c], NPar_ThisRank_EachCluster[c],
                                     xpos, ypos, zpos, xvel, yvel, zvel, mass, ptype );
 
 #     ifndef TRACER

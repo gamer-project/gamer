@@ -11,9 +11,7 @@
        int     Merger_Coll_NumHalos;      // number of clusters
        bool    AGN_feedback;              // turn on/off (1/0) AGN feedback
 static char  (*Merger_File_Prof)[1000];   // profile table of clusters
-       char    Merger_File_Par1 [1000];   // particle file of cluster 1
-       char    Merger_File_Par2 [1000];   // particle file of cluster 2
-       char    Merger_File_Par3 [1000];   // particle file of cluster 3
+       char  (*Merger_File_Par) [1000];   // particle file of clusters
 static char    JetDirection_file[1000];   // jet direction file
 static bool   *Merger_Coll_IsGas;         // (true/false) --> does cluster have gas
        bool    Merger_Coll_UseMetals;     // (true/false) --> do the clusters have a metal field
@@ -30,8 +28,8 @@ static bool   *Merger_Coll_IsGas;         // (true/false) --> does cluster have 
        double  Merger_Coll_VelY2;         // y-velocity of the second cluster
        double  Merger_Coll_VelX3;         // x-velocity of the third  cluster
        double  Merger_Coll_VelY3;         // y-velocity of the third  cluster
-       long    NPar_EachCluster[3];       // number of particles in each cluster
-       long    NPar_AllCluster;           // number of particles in all  clusters
+       long   *NPar_EachCluster;          // number of particles in each cluster
+       long    NPar_AllCluster = 0L;      // number of particles in all  clusters
 
 static double **Table_R = NULL;           // radius      of clusters
 static double **Table_D = NULL;           // density     of clusters
@@ -252,17 +250,17 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    for (int c=0; c<Merger_Coll_NumHalos; c++)
    {
       char Merger_File_Prof_name [MAX_STRING];
+      char Merger_File_Par_name  [MAX_STRING];
       char Merger_Coll_IsGas_name[MAX_STRING];
 
       sprintf( Merger_File_Prof_name,  "Merger_File_Prof%d",  c+1 );
+      sprintf( Merger_File_Par_name,    "Merger_File_Par%d",  c+1 );
       sprintf( Merger_Coll_IsGas_name, "Merger_Coll_IsGas%d", c+1 );
 
       LOAD_PARA( load_mode, Merger_File_Prof_name,   Merger_File_Prof[c],      NoDef_str,          Useless_str,   Useless_str    );
+      LOAD_PARA( load_mode, Merger_File_Par_name,    Merger_File_Par[c],       NoDef_str,          Useless_str,   Useless_str    );
       LOAD_PARA( load_mode, Merger_Coll_IsGas_name, &Merger_Coll_IsGas[c],     true,               Useless_bool,  Useless_bool   );
    }
-   LOAD_PARA( load_mode, "Merger_File_Par1",         Merger_File_Par1,         NoDef_str,          Useless_str,   Useless_str    );
-   LOAD_PARA( load_mode, "Merger_File_Par2",         Merger_File_Par2,         NoDef_str,          Useless_str,   Useless_str    );
-   LOAD_PARA( load_mode, "Merger_File_Par3",         Merger_File_Par3,         NoDef_str,          Useless_str,   Useless_str    );
    LOAD_PARA( load_mode, "Merger_Coll_PosX1",       &Merger_Coll_PosX1,       -1.0,                NoMin_double,  NoMax_double   );
    LOAD_PARA( load_mode, "Merger_Coll_PosY1",       &Merger_Coll_PosY1,       -1.0,                NoMin_double,  NoMax_double   );
    LOAD_PARA( load_mode, "Merger_Coll_PosX2",       &Merger_Coll_PosX2,       -1.0,                NoMin_double,  NoMax_double   );
@@ -338,6 +336,7 @@ void SetParameter()
 
 // (1-1-2) allocate memories
    Merger_File_Prof  = new char [ Merger_Coll_NumHalos ][ 1000 ];
+   Merger_File_Par   = new char [ Merger_Coll_NumHalos ][ 1000 ];
    Merger_Coll_IsGas = new bool [ Merger_Coll_NumHalos ];
 
 // (1-1-3) load the rest cluster parameters
@@ -483,51 +482,27 @@ void SetParameter()
       }
 
 //    (3) determine particle number
-//    check file existence
-      if ( !Aux_CheckFileExist( Merger_File_Par1 ) )
-         Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Par1 );
-
-      if ( Merger_Coll_NumHalos > 1  &&  !Aux_CheckFileExist( Merger_File_Par2 ) )
-         Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Par2 );
-
-      if ( Merger_Coll_NumHalos > 2  &&  !Aux_CheckFileExist( Merger_File_Par3 ) )
-         Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Par3 );
-
-      const std::string pfilename1( Merger_File_Par1 );
-      const std::string pfilename2( Merger_File_Par2 );
-      const std::string pfilename3( Merger_File_Par3 );
-
-      if ( MPI_Rank == 0 )
+      NPar_EachCluster = new long [ Merger_Coll_NumHalos ];
+      for (int c=0; c<Merger_Coll_NumHalos; c++)
       {
-         NPar_EachCluster[0] = Read_Particle_Number_ClusterMerger( pfilename1 );
+//       check file existence
+         if ( !Aux_CheckFileExist( Merger_File_Par[c] ) )
+            Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Par[c] );
 
-         Aux_Message( stdout, "   Number of particles in cluster 1 = %ld\n",
-                      NPar_EachCluster[0] );
+         const std::string pfilename( Merger_File_Par[c] );
 
-         if ( Merger_Coll_NumHalos > 1 )
+         if ( MPI_Rank == 0 )
          {
-            NPar_EachCluster[1] = Read_Particle_Number_ClusterMerger( pfilename2 );
-            Aux_Message( stdout, "   Number of particles in cluster 2 = %ld\n", NPar_EachCluster[1] );
-         }
-         else
-         {
-            NPar_EachCluster[1] = 0;
-         }
+            NPar_EachCluster[c] = Read_Particle_Number_ClusterMerger( pfilename );
 
-         if ( Merger_Coll_NumHalos > 2 )
-         {
-            NPar_EachCluster[2] = Read_Particle_Number_ClusterMerger( pfilename3 );
-            Aux_Message( stdout, "   Number of particles in cluster 3 = %ld\n", NPar_EachCluster[2] );
-         }
-         else
-         {
-            NPar_EachCluster[2] = 0;
-         }
-      } // if ( MPI_Rank == 0 )
+            Aux_Message( stdout, "   Number of particles in cluster %d = %ld\n",
+                         c+1, NPar_EachCluster[c] );
+         } // if ( MPI_Rank == 0 )
 
-      MPI_Bcast( NPar_EachCluster, 3, MPI_LONG, 0, MPI_COMM_WORLD );
+         MPI_Bcast( &NPar_EachCluster[c], 1, MPI_LONG, 0, MPI_COMM_WORLD );
 
-      NPar_AllCluster = NPar_EachCluster[0] + NPar_EachCluster[1] + NPar_EachCluster[2];
+         NPar_AllCluster += NPar_EachCluster[c];
+      } // for (int c=0; c<Merger_Coll_NumHalos; c++)
 
 //    overwrite the total number of particles
       amr->Par->NPar_Active_AllRank = NPar_AllCluster;
@@ -586,7 +561,7 @@ void SetParameter()
       Aux_Message( stdout, "  number of clusters        = %d\n",           Merger_Coll_NumHalos );
       Aux_Message( stdout, "  turn on AGN feedback      = %s\n",          (AGN_feedback)? "yes":"no" );
       Aux_Message( stdout, "  profile file 1            = %s\n",           Merger_File_Prof[0] );
-      Aux_Message( stdout, "  particle file 1           = %s\n",           Merger_File_Par1 );
+      Aux_Message( stdout, "  particle file 1           = %s\n",           Merger_File_Par[0] );
       Aux_Message( stdout, "  cluster 1 w/ gas          = %s\n",          (Merger_Coll_IsGas[0])? "yes":"no" );
       Aux_Message( stdout, "  cluster 1 x-position      = %g\n",           Merger_Coll_PosX1 );
       Aux_Message( stdout, "  cluster 1 y-position      = %g\n",           Merger_Coll_PosY1 );
@@ -599,7 +574,7 @@ void SetParameter()
       }
       if ( Merger_Coll_NumHalos > 1 ) {
       Aux_Message( stdout, "  profile file 2            = %s\n",           Merger_File_Prof[1] );
-      Aux_Message( stdout, "  particle file 2           = %s\n",           Merger_File_Par2 );
+      Aux_Message( stdout, "  particle file 2           = %s\n",           Merger_File_Par[1] );
       Aux_Message( stdout, "  cluster 2 w/ gas          = %s\n",          (Merger_Coll_IsGas[1])? "yes":"no" );
       Aux_Message( stdout, "  cluster 2 x-position      = %g\n",           Merger_Coll_PosX2 );
       Aux_Message( stdout, "  cluster 2 y-position      = %g\n",           Merger_Coll_PosY2 );
@@ -613,7 +588,7 @@ void SetParameter()
       } // if ( Merger_Coll_NumHalos > 1 )
       if ( Merger_Coll_NumHalos > 2 ) {
       Aux_Message( stdout, "  profile file 3            = %s\n",           Merger_File_Prof[2] );
-      Aux_Message( stdout, "  particle file 3           = %s\n",           Merger_File_Par3 );
+      Aux_Message( stdout, "  particle file 3           = %s\n",           Merger_File_Par[2] );
       Aux_Message( stdout, "  cluster 3 w/ gas          = %s\n",          (Merger_Coll_IsGas[2])? "yes":"no" );
       Aux_Message( stdout, "  cluster 3 x-position      = %g\n",           Merger_Coll_PosX3 );
       Aux_Message( stdout, "  cluster 3 y-position      = %g\n",           Merger_Coll_PosY3 );
@@ -898,12 +873,15 @@ void End_ClusterMerger()
 {
 
    delete [] Merger_File_Prof;
+   delete [] Merger_File_Par;
    delete [] Merger_Coll_IsGas;
+
    delete [] ColorFieldsIdx;
 
 #  ifdef SUPPORT_HDF5
    if ( OPT__INIT != INIT_BY_RESTART )
    {
+      delete [] NPar_EachCluster;
       delete [] Merger_NBin;
       for (int c=0; c<Merger_Coll_NumHalos; c++)
       {
