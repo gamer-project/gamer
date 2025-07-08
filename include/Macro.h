@@ -201,7 +201,11 @@
 # endif
 
 // exactCooling source term
+# ifdef EXACT_COOLING
 #  define NCOMP_PASSIVE_BUILTIN2    1
+# else
+#  define NCOMP_PASSIVE_BUILTIN2    0
+# endif
 
 // total number of built-in scalars
 #  define NCOMP_PASSIVE_BUILTIN     ( NCOMP_PASSIVE_BUILTIN0 + NCOMP_PASSIVE_BUILTIN1 + NCOMP_PASSIVE_BUILTIN2 )
