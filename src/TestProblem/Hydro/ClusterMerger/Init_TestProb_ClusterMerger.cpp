@@ -330,6 +330,16 @@ void SetParameter()
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
+// (1-1-1) get the number of halo first
+   ReadPara->Add( "Merger_Coll_NumHalos", &Merger_Coll_NumHalos, 2, 1, 3 );
+   ReadPara->Read( FileName );
+   delete ReadPara;
+
+// (1-1-2) allocate memories
+
+// (1-1-3) load the rest cluster parameters
+   ReadPara = new ReadPara_t;
+
    LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
 
    ReadPara->Read( FileName );
