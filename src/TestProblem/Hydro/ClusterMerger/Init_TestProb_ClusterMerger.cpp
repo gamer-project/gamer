@@ -408,132 +408,51 @@ void SetParameter()
       Merger_NBin = new int     [ Merger_Coll_NumHalos ];
 
 //    (2) load the radial profiles
-      const std::string filename1( Merger_File_Prof[0] );
-      const std::string filename2( Merger_File_Prof[1] );
-      const std::string filename3( Merger_File_Prof[2] );
-
-//    cluster 1
-      if ( Merger_Coll_IsGas[0] )
+      for (int c=0; c<Merger_Coll_NumHalos; c++)
       {
+         if ( ! Merger_Coll_IsGas[c] )   continue;
+
+         const std::string filename( Merger_File_Prof[c] );
+
+         if ( !Aux_CheckFileExist( Merger_File_Prof[c] ) )
+            Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", Merger_File_Prof[c] );
+
          if ( MPI_Rank == 0 )
          {
-            Merger_NBin[0] = Read_Num_Points_ClusterMerger( filename1 );
-            Aux_Message( stdout, "num_points1 = %d\n", Merger_NBin[0] );
+            Merger_NBin[c] = Read_Num_Points_ClusterMerger( filename );
+            Aux_Message( stdout, "num_points%d = %d\n", c+1, Merger_NBin[c] );
          }
 
-         MPI_Bcast( &Merger_NBin[0], 1, MPI_INT, 0, MPI_COMM_WORLD );
+         MPI_Bcast( &Merger_NBin[c], 1, MPI_INT, 0, MPI_COMM_WORLD );
 
-         Table_R[0] = new double [Merger_NBin[0]];
-         Table_D[0] = new double [Merger_NBin[0]];
-         Table_P[0] = new double [Merger_NBin[0]];
-         Table_M[0] = new double [Merger_NBin[0]];
+         Table_R[c] = new double [ Merger_NBin[c] ];
+         Table_D[c] = new double [ Merger_NBin[c] ];
+         Table_P[c] = new double [ Merger_NBin[c] ];
+         Table_M[c] = new double [ Merger_NBin[c] ];
 
          if ( MPI_Rank == 0 )
          {
-            Read_Profile_ClusterMerger( filename1, "/fields/radius",   Table_R[0] );
-            Read_Profile_ClusterMerger( filename1, "/fields/density",  Table_D[0] );
-            Read_Profile_ClusterMerger( filename1, "/fields/pressure", Table_P[0] );
+            Read_Profile_ClusterMerger( filename, "/fields/radius",   Table_R[c] );
+            Read_Profile_ClusterMerger( filename, "/fields/density",  Table_D[c] );
+            Read_Profile_ClusterMerger( filename, "/fields/pressure", Table_P[c] );
             if ( Merger_Coll_UseMetals )
-               Read_Profile_ClusterMerger( filename1, "/fields/metallicity", Table_M[0] );
+               Read_Profile_ClusterMerger( filename, "/fields/metallicity", Table_M[c] );
             else
-               for (int i; i<Merger_NBin[0]; i++)   Table_M[0][i] = 0.0;
+               for (int i; i<Merger_NBin[c]; i++)   Table_M[c][i] = 0.0;
 //          convert to code units (assuming the input units are cgs)
-            for (int b=0; b<Merger_NBin[0]; b++)
+            for (int b=0; b<Merger_NBin[c]; b++)
             {
-               Table_R[0][b] /= UNIT_L;
-               Table_D[0][b] /= UNIT_D;
-               Table_P[0][b] /= UNIT_P;
+               Table_R[c][b] /= UNIT_L;
+               Table_D[c][b] /= UNIT_D;
+               Table_P[c][b] /= UNIT_P;
             }
          } // if ( MPI_Rank == 0 )
 
-         MPI_Bcast( Table_R[0], Merger_NBin[0], MPI_DOUBLE, 0, MPI_COMM_WORLD );
-         MPI_Bcast( Table_D[0], Merger_NBin[0], MPI_DOUBLE, 0, MPI_COMM_WORLD );
-         MPI_Bcast( Table_P[0], Merger_NBin[0], MPI_DOUBLE, 0, MPI_COMM_WORLD );
-         MPI_Bcast( Table_M[0], Merger_NBin[0], MPI_DOUBLE, 0, MPI_COMM_WORLD );
-
-      } // if ( Merger_Coll_IsGas[0] )
-
-//    cluster 2
-      if ( Merger_Coll_NumHalos > 1  &&  Merger_Coll_IsGas[1] )
-      {
-         if ( MPI_Rank == 0 )
-         {
-            Merger_NBin[1] = Read_Num_Points_ClusterMerger( filename2 );
-            Aux_Message( stdout, "num_points2 = %d\n", Merger_NBin[1] );
-         }
-
-         MPI_Bcast( &Merger_NBin[1], 1, MPI_INT, 0, MPI_COMM_WORLD );
-
-         Table_R[1] = new double [Merger_NBin[1]];
-         Table_D[1] = new double [Merger_NBin[1]];
-         Table_P[1] = new double [Merger_NBin[1]];
-         Table_M[1] = new double [Merger_NBin[1]];
-
-         if ( MPI_Rank == 0 )
-         {
-            Read_Profile_ClusterMerger( filename2, "/fields/radius",   Table_R[1] );
-            Read_Profile_ClusterMerger( filename2, "/fields/density",  Table_D[1] );
-            Read_Profile_ClusterMerger( filename2, "/fields/pressure", Table_P[1] );
-            if ( Merger_Coll_UseMetals )
-               Read_Profile_ClusterMerger( filename2, "/fields/metallicity", Table_M[1] );
-            else
-               for (int i; i<Merger_NBin[1]; i++)   Table_M[1][i] = 0.0;
-//          convert to code units (assuming the input units are cgs)
-            for (int b=0; b<Merger_NBin[1]; b++)
-            {
-               Table_R[1][b] /= UNIT_L;
-               Table_D[1][b] /= UNIT_D;
-               Table_P[1][b] /= UNIT_P;
-            }
-         } // if ( MPI_Rank == 0 )
-
-         MPI_Bcast( Table_R[1], Merger_NBin[1], MPI_DOUBLE, 0, MPI_COMM_WORLD );
-         MPI_Bcast( Table_D[1], Merger_NBin[1], MPI_DOUBLE, 0, MPI_COMM_WORLD );
-         MPI_Bcast( Table_P[1], Merger_NBin[1], MPI_DOUBLE, 0, MPI_COMM_WORLD );
-         MPI_Bcast( Table_M[1], Merger_NBin[1], MPI_DOUBLE, 0, MPI_COMM_WORLD );
-
-      } // if ( Merger_Coll_NumHalos > 1  &&  Merger_Coll_IsGas[1] )
-
-//    cluster 3
-      if ( Merger_Coll_NumHalos > 2  &&  Merger_Coll_IsGas[2] )
-      {
-         if ( MPI_Rank == 0 )
-         {
-            Merger_NBin[2] = Read_Num_Points_ClusterMerger( filename3 );
-            Aux_Message( stdout, "num_points3 = %d\n", Merger_NBin[2] );
-         }
-
-         MPI_Bcast( &Merger_NBin[2], 1, MPI_INT, 0, MPI_COMM_WORLD );
-
-         Table_R[2] = new double [Merger_NBin[2]];
-         Table_D[2] = new double [Merger_NBin[2]];
-         Table_P[2] = new double [Merger_NBin[2]];
-         Table_M[2] = new double [Merger_NBin[2]];
-
-         if ( MPI_Rank == 0 )
-         {
-            Read_Profile_ClusterMerger( filename3, "/fields/radius",   Table_R[2] );
-            Read_Profile_ClusterMerger( filename3, "/fields/density",  Table_D[2] );
-            Read_Profile_ClusterMerger( filename3, "/fields/pressure", Table_P[2] );
-            if ( Merger_Coll_UseMetals )
-               Read_Profile_ClusterMerger( filename3, "/fields/metallicity", Table_M[2] );
-            else
-               for ( int i; i<Merger_NBin[2]; i++)   Table_M[2][i] = 0.0;
-//          convert to code units (assuming the input units are cgs)
-            for (int b=0; b<Merger_NBin[2]; b++)
-            {
-               Table_R[2][b] /= UNIT_L;
-               Table_D[2][b] /= UNIT_D;
-               Table_P[2][b] /= UNIT_P;
-            }
-         } // if ( MPI_Rank == 0 )
-
-         MPI_Bcast( Table_R[2], Merger_NBin[2], MPI_DOUBLE, 0, MPI_COMM_WORLD );
-         MPI_Bcast( Table_D[2], Merger_NBin[2], MPI_DOUBLE, 0, MPI_COMM_WORLD );
-         MPI_Bcast( Table_P[2], Merger_NBin[2], MPI_DOUBLE, 0, MPI_COMM_WORLD );
-         MPI_Bcast( Table_M[2], Merger_NBin[2], MPI_DOUBLE, 0, MPI_COMM_WORLD );
-
-      } // if ( Merger_Coll_NumHalos > 2  &&  Merger_Coll_IsGas[2] )
+         MPI_Bcast( Table_R[c], Merger_NBin[c], MPI_DOUBLE, 0, MPI_COMM_WORLD );
+         MPI_Bcast( Table_D[c], Merger_NBin[c], MPI_DOUBLE, 0, MPI_COMM_WORLD );
+         MPI_Bcast( Table_P[c], Merger_NBin[c], MPI_DOUBLE, 0, MPI_COMM_WORLD );
+         MPI_Bcast( Table_M[c], Merger_NBin[c], MPI_DOUBLE, 0, MPI_COMM_WORLD );
+      } // for (int c=0; c<Merger_Coll_NumHalos; c++)
 
 //    (2-2) initialize the BH position and velocity
       if ( fixBH )
