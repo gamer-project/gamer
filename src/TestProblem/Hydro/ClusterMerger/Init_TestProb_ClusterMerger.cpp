@@ -44,9 +44,7 @@ static double **Table_M = NULL;           // metallicity of clusters
 
 static int     *Merger_NBin;              // number of radial bins of clusters
 
-static FieldIdx_t ColorField1Idx = Idx_Undefined;
-static FieldIdx_t ColorField2Idx = Idx_Undefined;
-static FieldIdx_t ColorField3Idx = Idx_Undefined;
+static FieldIdx_t *ColorFieldsIdx;        //
 
        int    Accretion_Mode;             // 1: hot mode; 2: code mode; 3: combine (hot + cold)
        double eta;                        // mass loading factor in jet feedback
@@ -381,6 +379,12 @@ void SetParameter()
    Jet_Radius2       *= Const_kpc / UNIT_L;
    Jet_Radius3       *= Const_kpc / UNIT_L;
    AdjustPeriod      *= Const_Myr / UNIT_T;
+
+   ColorFieldsIdx = new FieldIdx_t [ Merger_Coll_NumHalos ];
+   for (int c=0; c<Merger_Coll_NumHalos; c++)
+   {
+      ColorFieldsIdx[c] = Idx_Undefined;
+   }
 
    if ( OPT__INIT != INIT_BY_RESTART )
    {
@@ -873,20 +877,20 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    if ( Merger_Coll_IsGas1 )
    {
-      if ( r1 < rmax1 )   fluid[ColorField1Idx] = Dens1;
-      else                fluid[ColorField1Idx] = 0.0;
+      if ( r1 < rmax1 )   fluid[ColorFieldsIdx[0]] = Dens1;
+      else                fluid[ColorFieldsIdx[0]] = 0.0;
    }
 
    if ( Merger_Coll_NumHalos > 1  &&  Merger_Coll_IsGas2 )
    {
-      if ( r2 < rmax2 )   fluid[ColorField2Idx] = Dens2;
-      else                fluid[ColorField2Idx] = 0.0;
+      if ( r2 < rmax2 )   fluid[ColorFieldsIdx[1]] = Dens2;
+      else                fluid[ColorFieldsIdx[1]] = 0.0;
    }
 
    if ( Merger_Coll_NumHalos > 2  &&  Merger_Coll_IsGas3 )
    {
-      if ( r3 < rmax3 )   fluid[ColorField3Idx] = Dens3;
-      else                fluid[ColorField3Idx] = 0.0;
+      if ( r3 < rmax3 )   fluid[ColorFieldsIdx[2]] = Dens3;
+      else                fluid[ColorFieldsIdx[2]] = 0.0;
    }
 
 } // FUNCTION : SetGridIC
@@ -959,6 +963,8 @@ void Output_HDF5_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
 //-------------------------------------------------------------------------------------------------------
 void End_ClusterMerger()
 {
+
+   delete [] ColorFieldsIdx;
 
 #  ifdef SUPPORT_HDF5
    if ( OPT__INIT != INIT_BY_RESTART )
@@ -1166,12 +1172,16 @@ void AddNewField_ClusterMerger()
 
    if ( Merger_Coll_UseMetals )
       Idx_Metal = AddField( "Metal", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
-   if ( ColorField1Idx == Idx_Undefined )
-      ColorField1Idx = AddField( "ColorField1", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
-   if ( Merger_Coll_NumHalos > 1  &&  ColorField2Idx == Idx_Undefined )
-      ColorField2Idx = AddField( "ColorField2", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
-   if ( Merger_Coll_NumHalos > 2  &&  ColorField3Idx == Idx_Undefined )
-      ColorField3Idx = AddField( "ColorField3", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
+
+   for (int c=0; c<Merger_Coll_NumHalos; c++)
+   {
+      if ( ColorFieldsIdx[c] == Idx_Undefined )
+      {
+         char ColorField_name[MAX_STRING];
+         sprintf( ColorField_name, "ColorField%d", c );
+         ColorFieldsIdx[c] = AddField( ColorField_name, FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
+      }
+   }
 
 } // FUNCTION : AddNewField_ClusterMerger
 #endif // #if ( MODEL == HYDRO )
