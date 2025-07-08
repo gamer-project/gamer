@@ -37,24 +37,12 @@ static char    JetDirection_file[1000];   // jet direction file
        long    NPar_EachCluster[3];       // number of particles in each cluster
        long    NPar_AllCluster;           // number of particles in all  clusters
 
-static double *Table_R1 = NULL;           // radius      of cluster 1
-static double *Table_D1 = NULL;           // density     of cluster 1
-static double *Table_P1 = NULL;           // pressure    of cluster 1
-static double *Table_M1 = NULL;           // metallicity of cluster 1
+static double **Table_R = NULL;           // radius      of clusters
+static double **Table_D = NULL;           // density     of clusters
+static double **Table_P = NULL;           // pressure    of clusters
+static double **Table_M = NULL;           // metallicity of clusters
 
-static double *Table_R2 = NULL;           // radius      of cluster 2
-static double *Table_D2 = NULL;           // density     of cluster 2
-static double *Table_P2 = NULL;           // pressure    of cluster 2
-static double *Table_M2 = NULL;           // metallicity of cluster 2
-
-static double *Table_R3 = NULL;           // radius      of cluster 3
-static double *Table_D3 = NULL;           // density     of cluster 3
-static double *Table_P3 = NULL;           // pressure    of cluster 3
-static double *Table_M3 = NULL;           // metallicity of cluster 3
-
-static int     Merger_NBin1;              // number of radial bins of cluster 1
-static int     Merger_NBin2;              // number of radial bins of cluster 2
-static int     Merger_NBin3;              // number of radial bins of cluster 3
+static int     *Merger_NBin;              // number of radial bins of clusters
 
 static FieldIdx_t ColorField1Idx = Idx_Undefined;
 static FieldIdx_t ColorField2Idx = Idx_Undefined;
@@ -396,6 +384,12 @@ void SetParameter()
 
    if ( OPT__INIT != INIT_BY_RESTART )
    {
+      Table_R     = new double* [ Merger_Coll_NumHalos ];
+      Table_D     = new double* [ Merger_Coll_NumHalos ];
+      Table_P     = new double* [ Merger_Coll_NumHalos ];
+      Table_M     = new double* [ Merger_Coll_NumHalos ];
+      Merger_NBin = new int     [ Merger_Coll_NumHalos ];
+
 //    (2) load the radial profiles
       const std::string filename1( Merger_File_Prof1 );
       const std::string filename2( Merger_File_Prof2 );
@@ -406,39 +400,39 @@ void SetParameter()
       {
          if ( MPI_Rank == 0 )
          {
-            Merger_NBin1 = Read_Num_Points_ClusterMerger( filename1 );
-            Aux_Message( stdout, "num_points1 = %d\n", Merger_NBin1 );
+            Merger_NBin[0] = Read_Num_Points_ClusterMerger( filename1 );
+            Aux_Message( stdout, "num_points1 = %d\n", Merger_NBin[0] );
          }
 
-         MPI_Bcast( &Merger_NBin1, 1, MPI_INT, 0, MPI_COMM_WORLD );
+         MPI_Bcast( &Merger_NBin[0], 1, MPI_INT, 0, MPI_COMM_WORLD );
 
-         Table_R1 = new double [Merger_NBin1];
-         Table_D1 = new double [Merger_NBin1];
-         Table_P1 = new double [Merger_NBin1];
-         Table_M1 = new double [Merger_NBin1];
+         Table_R[0] = new double [Merger_NBin[0]];
+         Table_D[0] = new double [Merger_NBin[0]];
+         Table_P[0] = new double [Merger_NBin[0]];
+         Table_M[0] = new double [Merger_NBin[0]];
 
          if ( MPI_Rank == 0 )
          {
-            Read_Profile_ClusterMerger( filename1, "/fields/radius",   Table_R1 );
-            Read_Profile_ClusterMerger( filename1, "/fields/density",  Table_D1 );
-            Read_Profile_ClusterMerger( filename1, "/fields/pressure", Table_P1 );
+            Read_Profile_ClusterMerger( filename1, "/fields/radius",   Table_R[0] );
+            Read_Profile_ClusterMerger( filename1, "/fields/density",  Table_D[0] );
+            Read_Profile_ClusterMerger( filename1, "/fields/pressure", Table_P[0] );
             if ( Merger_Coll_UseMetals )
-               Read_Profile_ClusterMerger( filename1, "/fields/metallicity", Table_M1 );
+               Read_Profile_ClusterMerger( filename1, "/fields/metallicity", Table_M[0] );
             else
-               for (int i; i<Merger_NBin1; i++)   Table_M1[i] = 0.0;
+               for (int i; i<Merger_NBin[0]; i++)   Table_M[0][i] = 0.0;
 //          convert to code units (assuming the input units are cgs)
-            for (int b=0; b<Merger_NBin1; b++)
+            for (int b=0; b<Merger_NBin[0]; b++)
             {
-               Table_R1[b] /= UNIT_L;
-               Table_D1[b] /= UNIT_D;
-               Table_P1[b] /= UNIT_P;
+               Table_R[0][b] /= UNIT_L;
+               Table_D[0][b] /= UNIT_D;
+               Table_P[0][b] /= UNIT_P;
             }
          } // if ( MPI_Rank == 0 )
 
-         MPI_Bcast( Table_R1, Merger_NBin1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-         MPI_Bcast( Table_D1, Merger_NBin1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-         MPI_Bcast( Table_P1, Merger_NBin1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-         MPI_Bcast( Table_M1, Merger_NBin1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+         MPI_Bcast( Table_R[0], Merger_NBin[0], MPI_DOUBLE, 0, MPI_COMM_WORLD );
+         MPI_Bcast( Table_D[0], Merger_NBin[0], MPI_DOUBLE, 0, MPI_COMM_WORLD );
+         MPI_Bcast( Table_P[0], Merger_NBin[0], MPI_DOUBLE, 0, MPI_COMM_WORLD );
+         MPI_Bcast( Table_M[0], Merger_NBin[0], MPI_DOUBLE, 0, MPI_COMM_WORLD );
 
       } // if ( Merger_Coll_IsGas1 )
 
@@ -447,39 +441,39 @@ void SetParameter()
       {
          if ( MPI_Rank == 0 )
          {
-            Merger_NBin2 = Read_Num_Points_ClusterMerger( filename2 );
-            Aux_Message( stdout, "num_points2 = %d\n", Merger_NBin2 );
+            Merger_NBin[1] = Read_Num_Points_ClusterMerger( filename2 );
+            Aux_Message( stdout, "num_points2 = %d\n", Merger_NBin[1] );
          }
 
-         MPI_Bcast( &Merger_NBin2, 1, MPI_INT, 0, MPI_COMM_WORLD );
+         MPI_Bcast( &Merger_NBin[1], 1, MPI_INT, 0, MPI_COMM_WORLD );
 
-         Table_R2 = new double [Merger_NBin2];
-         Table_D2 = new double [Merger_NBin2];
-         Table_P2 = new double [Merger_NBin2];
-         Table_M2 = new double [Merger_NBin2];
+         Table_R[1] = new double [Merger_NBin[1]];
+         Table_D[1] = new double [Merger_NBin[1]];
+         Table_P[1] = new double [Merger_NBin[1]];
+         Table_M[1] = new double [Merger_NBin[1]];
 
          if ( MPI_Rank == 0 )
          {
-            Read_Profile_ClusterMerger( filename2, "/fields/radius",   Table_R2 );
-            Read_Profile_ClusterMerger( filename2, "/fields/density",  Table_D2 );
-            Read_Profile_ClusterMerger( filename2, "/fields/pressure", Table_P2 );
+            Read_Profile_ClusterMerger( filename2, "/fields/radius",   Table_R[1] );
+            Read_Profile_ClusterMerger( filename2, "/fields/density",  Table_D[1] );
+            Read_Profile_ClusterMerger( filename2, "/fields/pressure", Table_P[1] );
             if ( Merger_Coll_UseMetals )
-               Read_Profile_ClusterMerger( filename2, "/fields/metallicity", Table_M2 );
+               Read_Profile_ClusterMerger( filename2, "/fields/metallicity", Table_M[1] );
             else
-               for (int i; i<Merger_NBin2; i++)   Table_M2[i] = 0.0;
+               for (int i; i<Merger_NBin[1]; i++)   Table_M[1][i] = 0.0;
 //          convert to code units (assuming the input units are cgs)
-            for (int b=0; b<Merger_NBin2; b++)
+            for (int b=0; b<Merger_NBin[1]; b++)
             {
-               Table_R2[b] /= UNIT_L;
-               Table_D2[b] /= UNIT_D;
-               Table_P2[b] /= UNIT_P;
+               Table_R[1][b] /= UNIT_L;
+               Table_D[1][b] /= UNIT_D;
+               Table_P[1][b] /= UNIT_P;
             }
          } // if ( MPI_Rank == 0 )
 
-         MPI_Bcast( Table_R2, Merger_NBin2, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-         MPI_Bcast( Table_D2, Merger_NBin2, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-         MPI_Bcast( Table_P2, Merger_NBin2, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-         MPI_Bcast( Table_M2, Merger_NBin2, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+         MPI_Bcast( Table_R[1], Merger_NBin[1], MPI_DOUBLE, 0, MPI_COMM_WORLD );
+         MPI_Bcast( Table_D[1], Merger_NBin[1], MPI_DOUBLE, 0, MPI_COMM_WORLD );
+         MPI_Bcast( Table_P[1], Merger_NBin[1], MPI_DOUBLE, 0, MPI_COMM_WORLD );
+         MPI_Bcast( Table_M[1], Merger_NBin[1], MPI_DOUBLE, 0, MPI_COMM_WORLD );
 
       } // if ( Merger_Coll_NumHalos > 1  &&  Merger_Coll_IsGas2 )
 
@@ -488,39 +482,39 @@ void SetParameter()
       {
          if ( MPI_Rank == 0 )
          {
-            Merger_NBin3 = Read_Num_Points_ClusterMerger( filename3 );
-            Aux_Message( stdout, "num_points3 = %d\n", Merger_NBin3 );
+            Merger_NBin[2] = Read_Num_Points_ClusterMerger( filename3 );
+            Aux_Message( stdout, "num_points3 = %d\n", Merger_NBin[2] );
          }
 
-         MPI_Bcast( &Merger_NBin3, 1, MPI_INT, 0, MPI_COMM_WORLD );
+         MPI_Bcast( &Merger_NBin[2], 1, MPI_INT, 0, MPI_COMM_WORLD );
 
-         Table_R3 = new double [Merger_NBin3];
-         Table_D3 = new double [Merger_NBin3];
-         Table_P3 = new double [Merger_NBin3];
-         Table_M3 = new double [Merger_NBin3];
+         Table_R[2] = new double [Merger_NBin[2]];
+         Table_D[2] = new double [Merger_NBin[2]];
+         Table_P[2] = new double [Merger_NBin[2]];
+         Table_M[2] = new double [Merger_NBin[2]];
 
          if ( MPI_Rank == 0 )
          {
-            Read_Profile_ClusterMerger( filename3, "/fields/radius",   Table_R3 );
-            Read_Profile_ClusterMerger( filename3, "/fields/density",  Table_D3 );
-            Read_Profile_ClusterMerger( filename3, "/fields/pressure", Table_P3 );
+            Read_Profile_ClusterMerger( filename3, "/fields/radius",   Table_R[2] );
+            Read_Profile_ClusterMerger( filename3, "/fields/density",  Table_D[2] );
+            Read_Profile_ClusterMerger( filename3, "/fields/pressure", Table_P[2] );
             if ( Merger_Coll_UseMetals )
-               Read_Profile_ClusterMerger( filename3, "/fields/metallicity", Table_M3 );
+               Read_Profile_ClusterMerger( filename3, "/fields/metallicity", Table_M[2] );
             else
-               for ( int i; i<Merger_NBin3; i++)   Table_M3[i] = 0.0;
+               for ( int i; i<Merger_NBin[2]; i++)   Table_M[2][i] = 0.0;
 //          convert to code units (assuming the input units are cgs)
-            for (int b=0; b<Merger_NBin3; b++)
+            for (int b=0; b<Merger_NBin[2]; b++)
             {
-               Table_R3[b] /= UNIT_L;
-               Table_D3[b] /= UNIT_D;
-               Table_P3[b] /= UNIT_P;
+               Table_R[2][b] /= UNIT_L;
+               Table_D[2][b] /= UNIT_D;
+               Table_P[2][b] /= UNIT_P;
             }
          } // if ( MPI_Rank == 0 )
 
-         MPI_Bcast( Table_R3, Merger_NBin3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-         MPI_Bcast( Table_D3, Merger_NBin3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-         MPI_Bcast( Table_P3, Merger_NBin3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-         MPI_Bcast( Table_M3, Merger_NBin3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+         MPI_Bcast( Table_R[2], Merger_NBin[2], MPI_DOUBLE, 0, MPI_COMM_WORLD );
+         MPI_Bcast( Table_D[2], Merger_NBin[2], MPI_DOUBLE, 0, MPI_COMM_WORLD );
+         MPI_Bcast( Table_P[2], Merger_NBin[2], MPI_DOUBLE, 0, MPI_COMM_WORLD );
+         MPI_Bcast( Table_M[2], Merger_NBin[2], MPI_DOUBLE, 0, MPI_COMM_WORLD );
 
       } // if ( Merger_Coll_NumHalos > 2  &&  Merger_Coll_IsGas3 )
 
@@ -772,18 +766,18 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    double Metl1, Metl2, Metl3, rmax1, rmax2, rmax3;
    double Dens, MomX, MomY, MomZ, Pres, Eint, Etot, Metl;
 
-   rmax1 = Table_R1[Merger_NBin1-1];
-   rmax2 = Merger_Coll_NumHalos > 1 ? Table_R2[Merger_NBin2-1] : -1.0;
-   rmax3 = Merger_Coll_NumHalos > 2 ? Table_R3[Merger_NBin3-1] : -1.0;
+   rmax1 = Table_R[0][Merger_NBin[0]-1];
+   rmax2 = Merger_Coll_NumHalos > 1 ? Table_R[1][Merger_NBin[1]-1] : -1.0;
+   rmax3 = Merger_Coll_NumHalos > 2 ? Table_R[2][Merger_NBin[2]-1] : -1.0;
 
 // for each cell, we sum up the density and pressure from each halo and then calculate the weighted velocity
    if ( Merger_Coll_IsGas1 )
    {
       r1    = DIST_3D_DBL( pos_in, ClusterCenter1 );
       double rr1 = r1 < rmax1 ? r1 : rmax1;
-      Dens1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_D1, rr1 );
-      Pres1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_P1, rr1 );
-      Metl1 = Mis_InterpolateFromTable( Merger_NBin1, Table_R1, Table_M1, rr1 );
+      Dens1 = Mis_InterpolateFromTable( Merger_NBin[0], Table_R[0], Table_D[0], rr1 );
+      Pres1 = Mis_InterpolateFromTable( Merger_NBin[0], Table_R[0], Table_P[0], rr1 );
+      Metl1 = Mis_InterpolateFromTable( Merger_NBin[0], Table_R[0], Table_M[0], rr1 );
    }
    else
    {
@@ -797,9 +791,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    {
       r2    = DIST_3D_DBL( pos_in, ClusterCenter2 );
       double rr2 = r2 < rmax2 ? r2 : rmax2;
-      Dens2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_D2, rr2 );
-      Pres2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_P2, rr2 );
-      Metl2 = Mis_InterpolateFromTable( Merger_NBin2, Table_R2, Table_M2, rr2 );
+      Dens2 = Mis_InterpolateFromTable( Merger_NBin[1], Table_R[1], Table_D[1], rr2 );
+      Pres2 = Mis_InterpolateFromTable( Merger_NBin[1], Table_R[1], Table_P[1], rr2 );
+      Metl2 = Mis_InterpolateFromTable( Merger_NBin[1], Table_R[1], Table_M[1], rr2 );
    }
    else
    {
@@ -813,9 +807,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    {
       r3    = DIST_3D_DBL( pos_in, ClusterCenter3 );
       double rr3 = r3 < rmax3 ? r3 : rmax3;
-      Dens3 = Mis_InterpolateFromTable( Merger_NBin3, Table_R3, Table_D3, rr3 );
-      Pres3 = Mis_InterpolateFromTable( Merger_NBin3, Table_R3, Table_P3, rr3 );
-      Metl3 = Mis_InterpolateFromTable( Merger_NBin3, Table_R3, Table_M3, rr3 );
+      Dens3 = Mis_InterpolateFromTable( Merger_NBin[2], Table_R[2], Table_D[2], rr3 );
+      Pres3 = Mis_InterpolateFromTable( Merger_NBin[2], Table_R[2], Table_P[2], rr3 );
+      Metl3 = Mis_InterpolateFromTable( Merger_NBin[2], Table_R[2], Table_M[2], rr3 );
    }
    else
    {
@@ -825,17 +819,17 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Metl3 = 0.0;
    }
 
-   if ( Dens1 == NULL_REAL )   Dens1 = Table_D1[Merger_NBin1-1];
-   if ( Pres1 == NULL_REAL )   Pres1 = Table_P1[Merger_NBin1-1];
-   if ( Metl1 == NULL_REAL )   Metl1 = Table_M1[Merger_NBin1-1];
+   if ( Dens1 == NULL_REAL )   Dens1 = Table_D[0][Merger_NBin[0]-1];
+   if ( Pres1 == NULL_REAL )   Pres1 = Table_P[0][Merger_NBin[0]-1];
+   if ( Metl1 == NULL_REAL )   Metl1 = Table_M[0][Merger_NBin[0]-1];
 
-   if ( Dens2 == NULL_REAL )   Dens2 = Table_D2[Merger_NBin2-1];
-   if ( Pres2 == NULL_REAL )   Pres2 = Table_P2[Merger_NBin2-1];
-   if ( Metl2 == NULL_REAL )   Metl2 = Table_M2[Merger_NBin2-1];
+   if ( Dens2 == NULL_REAL )   Dens2 = Table_D[1][Merger_NBin[1]-1];
+   if ( Pres2 == NULL_REAL )   Pres2 = Table_P[1][Merger_NBin[1]-1];
+   if ( Metl2 == NULL_REAL )   Metl2 = Table_M[1][Merger_NBin[1]-1];
 
-   if ( Dens3 == NULL_REAL )   Dens3 = Table_D3[Merger_NBin3-1];
-   if ( Pres3 == NULL_REAL )   Pres3 = Table_P3[Merger_NBin3-1];
-   if ( Metl3 == NULL_REAL )   Metl3 = Table_M3[Merger_NBin3-1];
+   if ( Dens3 == NULL_REAL )   Dens3 = Table_D[2][Merger_NBin[2]-1];
+   if ( Pres3 == NULL_REAL )   Pres3 = Table_P[2][Merger_NBin[2]-1];
+   if ( Metl3 == NULL_REAL )   Metl3 = Table_M[2][Merger_NBin[2]-1];
 
    Dens = Dens1 + Dens2 + Dens3;
    Pres = Pres1 + Pres2 + Pres3;
@@ -966,20 +960,23 @@ void Output_HDF5_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
 void End_ClusterMerger()
 {
 
-   delete [] Table_R1;
-   delete [] Table_D1;
-   delete [] Table_P1;
-   delete [] Table_M1;
-
-   delete [] Table_R2;
-   delete [] Table_D2;
-   delete [] Table_P2;
-   delete [] Table_M2;
-
-   delete [] Table_R3;
-   delete [] Table_D3;
-   delete [] Table_P3;
-   delete [] Table_M3;
+#  ifdef SUPPORT_HDF5
+   if ( OPT__INIT != INIT_BY_RESTART )
+   {
+      delete [] Merger_NBin;
+      for (int c=0; c<Merger_Coll_NumHalos; c++)
+      {
+         delete [] Table_R[c];
+         delete [] Table_D[c];
+         delete [] Table_P[c];
+         delete [] Table_M[c];
+      }
+      delete [] Table_R;
+      delete [] Table_D;
+      delete [] Table_P;
+      delete [] Table_M;
+   }
+#  endif
 
 } // FUNCTION : End_ClusterMerger
 
