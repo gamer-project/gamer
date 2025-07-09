@@ -453,15 +453,11 @@ void SetParameter()
       Mdot_hot_BH1  = Mdot_hot_BH2  = Mdot_hot_BH3  = 0.0;
       Mdot_cold_BH1 = Mdot_cold_BH2 = Mdot_cold_BH3 = 0.0;
 
-      double ClusterCenter[Merger_Coll_NumBHs][3], CenterVel[Merger_Coll_NumBHs][3];
       for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
-         for (int d=0; d<3; d++)   ClusterCenter[c][d] = Merger_Coll_Pos[c][d];
-         for (int d=0; d<3; d++)   CenterVel    [c][d] = Merger_Coll_Vel[c][d];
-
-         for (int d=0; d<3; d++)   ClusterCen[c][d] = ClusterCenter[c][d];
-         for (int d=0; d<3; d++)   BH_Pos    [c][d] = ClusterCen   [c][d];
-         for (int d=0; d<3; d++)   BH_Vel    [c][d] = CenterVel    [c][d];
+         for (int d=0; d<3; d++)   ClusterCen[c][d] = Merger_Coll_Pos[c][d];
+         for (int d=0; d<3; d++)   BH_Pos    [c][d] = ClusterCen     [c][d];
+         for (int d=0; d<3; d++)   BH_Vel    [c][d] = Merger_Coll_Vel[c][d];
       }
 
 //    (3) determine particle number
