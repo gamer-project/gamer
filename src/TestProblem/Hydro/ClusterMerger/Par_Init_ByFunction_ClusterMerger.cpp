@@ -24,15 +24,9 @@ extern long     NPar_AllCluster;
 // variables that need to be record in Record__ClusterCenter
 // =======================================================================================
 extern double *CM_BH_Mass;
-extern double  Mdot_tot_BH1;
-extern double  Mdot_tot_BH2;
-extern double  Mdot_tot_BH3;
-extern double  Mdot_hot_BH1;
-extern double  Mdot_hot_BH2;
-extern double  Mdot_hot_BH3;
-extern double  Mdot_cold_BH1;
-extern double  Mdot_cold_BH2;
-extern double  Mdot_cold_BH3;
+extern double *CM_BH_Mdot_tot;
+extern double *CM_BH_Mdot_hot;
+extern double *CM_BH_Mdot_cold;
 
 extern double  CM_Bondi_SinkMass[3];
 extern double  CM_Bondi_SinkMomX[3];
@@ -598,10 +592,6 @@ void Aux_Record_ClusterMerger()
       FirstTime = false;
    } // if ( FirstTime )
 
-   double Mdot_tot_BH[3]  = { Mdot_tot_BH1,  Mdot_tot_BH2,  Mdot_tot_BH3  };
-   double Mdot_hot_BH[3]  = { Mdot_hot_BH1,  Mdot_hot_BH2,  Mdot_hot_BH3  };
-   double Mdot_cold_BH[3] = { Mdot_cold_BH1, Mdot_cold_BH2, Mdot_cold_BH3 };
-
 // sum over the variables and convert units
    int SinkNCell_Sum[3];
    double Mass_Sum[3], MomX_Sum[3], MomY_Sum[3], MomZ_Sum[3], MomXAbs_Sum[3], MomYAbs_Sum[3], MomZAbs_Sum[3], E_Sum[3], Ek_Sum[3], Et_Sum[3];
@@ -648,7 +638,7 @@ void Aux_Record_ClusterMerger()
          fprintf( File_User, " %20.7e %20.7e %20.7e", GasVel[c][0]*UNIT_V/(Const_km/Const_s), GasVel[c][1]*UNIT_V/(Const_km/Const_s), GasVel[c][2]*UNIT_V/(Const_km/Const_s) );
          fprintf( File_User, " %20.7e %20.7e %20.7e", RelativeVel[c]*UNIT_V/(Const_km/Const_s), SoundSpeed[c]*UNIT_V/(Const_km/Const_s), GasDens[c]*UNIT_D );
          fprintf( File_User, " %20.7e",               CM_BH_Mass[c]*UNIT_M/Const_Msun );
-         fprintf( File_User, " %20.7e %20.7e %20.7e", Mdot_tot_BH[c]*UNIT_M/UNIT_T, Mdot_hot_BH[c]*UNIT_M/UNIT_T, Mdot_cold_BH[c]*UNIT_M/UNIT_T );
+         fprintf( File_User, " %20.7e %20.7e %20.7e", CM_BH_Mdot_tot[c]*UNIT_M/UNIT_T, CM_BH_Mdot_hot[c]*UNIT_M/UNIT_T, CM_BH_Mdot_cold[c]*UNIT_M/UNIT_T );
          fprintf( File_User, " %20d",                 SinkNCell_Sum[c] );
          fprintf( File_User, " %20.7e %20.7e %20.7e", MomX_Sum[c], MomY_Sum[c], MomZ_Sum[c] );
          fprintf( File_User, " %20.7e %20.7e %20.7e", MomXAbs_Sum[c], MomYAbs_Sum[c], MomZAbs_Sum[c] );

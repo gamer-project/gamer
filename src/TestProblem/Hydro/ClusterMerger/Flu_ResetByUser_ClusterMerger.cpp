@@ -21,15 +21,9 @@ extern double     CM_Bondi_SinkEt[3];
 extern int        CM_Bondi_SinkNCell[3];
 
 extern double    *CM_BH_Mass;
-extern double     Mdot_tot_BH1;                            // the total accretion rate
-extern double     Mdot_tot_BH2;
-extern double     Mdot_tot_BH3;
-extern double     Mdot_hot_BH1;                            // the hot   accretion rate
-extern double     Mdot_hot_BH2;
-extern double     Mdot_hot_BH3;
-extern double     Mdot_cold_BH1;                           // the cold  accretion rate
-extern double     Mdot_cold_BH2;
-extern double     Mdot_cold_BH3;
+extern double    *CM_BH_Mdot_tot;                          // the total accretion rate
+extern double    *CM_BH_Mdot_hot;                          // the hot   accretion rate
+extern double    *CM_BH_Mdot_cold;                         // the cold  accretion rate
 extern double     Jet_Radius1;
 extern double     Jet_Radius2;
 extern double     Jet_Radius3;
@@ -177,8 +171,10 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
    double dr2[3][3], r2[3];
    const double V_dep = 4.0 / 3.0 * M_PI * pow( R_dep, 3.0 ); // the volume to remove gas
 // the density need to be removed
-   double D_dep[3] = { Mdot_tot_BH1*dt/V_dep, Mdot_tot_BH2*dt/V_dep, Mdot_tot_BH3*dt/V_dep };
-   int    reset    = false; // mark whether this cell is reset or not [false/true]
+   double D_dep[Merger_Coll_NumBHs];
+   for (int c=0; c<Merger_Coll_NumBHs; c++)   D_dep[c] = CM_BH_Mdot_tot[c]*dt/V_dep;
+
+   int reset = false; // mark whether this cell is reset or not [false/true]
 
    for (int c=0; c<Merger_Coll_NumBHs; c++)
    {
@@ -370,10 +366,6 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
    if ( AGN_feedback )
    {
 //    (3) set the injection parameters
-      double Mdot_tot_BH [3] = { Mdot_tot_BH1,  Mdot_tot_BH2,  Mdot_tot_BH3  };
-      double Mdot_hot_BH [3] = { Mdot_hot_BH1,  Mdot_hot_BH2,  Mdot_hot_BH3  };
-      double Mdot_cold_BH[3] = { Mdot_cold_BH1, Mdot_cold_BH2, Mdot_cold_BH3 };
-
 //    set the jet direction vector
       if ( JetDirection_case == 1 ) // fixed at x-axis
       {
@@ -590,7 +582,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
             for (int d=0; d<3; d++)  GasVel[c][d] = gas_vel_sum[c][d];
          } // if ( num_sum[c] == 0 ) ... else ...
 
-         BH_accretion_rate( Accretion_Mode, Mdot_tot_BH+c, Mdot_hot_BH+c, Mdot_cold_BH+c,
+         BH_accretion_rate( Accretion_Mode, CM_BH_Mdot_tot+c, CM_BH_Mdot_hot+c, CM_BH_Mdot_cold+c,
                             R_acc, CM_BH_Mass[c], GasDens[c], SoundSpeed[c], RelativeVel[c],
                             ColdGasMass[c], GasMass[c], ParMass[c] );
 
@@ -599,27 +591,15 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
       } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
-      Mdot_tot_BH1  = Mdot_tot_BH[0];
-      Mdot_tot_BH2  = Mdot_tot_BH[1];
-      Mdot_tot_BH3  = Mdot_tot_BH[2];
-
-      Mdot_hot_BH1  = Mdot_hot_BH[0];
-      Mdot_hot_BH2  = Mdot_hot_BH[1];
-      Mdot_hot_BH3  = Mdot_hot_BH[2];
-
-      Mdot_cold_BH1 = Mdot_cold_BH[0];
-      Mdot_cold_BH2 = Mdot_cold_BH[1];
-      Mdot_cold_BH3 = Mdot_cold_BH[2];
-
 //    update BH mass
-      for (int c=0; c<Merger_Coll_NumBHs; c++)   if ( CurrentMaxLv )   CM_BH_Mass[c] += Mdot_tot_BH[c] * dt;
+      for (int c=0; c<Merger_Coll_NumBHs; c++)   if ( CurrentMaxLv )   CM_BH_Mass[c] += CM_BH_Mdot_tot[c] * dt;
 
 //    (5) calculate the injection rate
       for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
-         Mdot[c]  = eta * Mdot_tot_BH[c];
-         Pdot[c]  = sqrt(2*eta*eps_f*(1.0-eps_m)) * Mdot_tot_BH[c] * (Const_c/UNIT_V);
-         Edot[c]  = eps_f * Mdot_tot_BH[c] * SQR(Const_c/UNIT_V);
+         Mdot[c]  = eta * CM_BH_Mdot_tot[c];
+         Pdot[c]  = sqrt(2*eta*eps_f*(1.0-eps_m)) * CM_BH_Mdot_tot[c] * (Const_c/UNIT_V);
+         Edot[c]  = eps_f * CM_BH_Mdot_tot[c] * SQR(Const_c/UNIT_V);
          V_cyl[c] = M_PI * SQR(Jet_Radius[c]) * 2 * Jet_HalfHeight[c];
 
 //       calculate the density that need to be injected

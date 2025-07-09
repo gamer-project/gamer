@@ -50,15 +50,9 @@ static FieldIdx_t *ColorFieldsIdx;        //
        int    CM_Bondi_SinkNCell[3];      // total number of finest cells within the feedback region
 
        double *CM_BH_Mass;                // black hole mass of clusters
-       double  Mdot_tot_BH1;              // the total accretion rate of BH 1
-       double  Mdot_tot_BH2;              // the total accretion rate of BH 2
-       double  Mdot_tot_BH3;              // the total accretion rate of BH 3
-       double  Mdot_hot_BH1;              // the hot   accretion rate of BH 1
-       double  Mdot_hot_BH2;              // the hot   accretion rate of BH 2
-       double  Mdot_hot_BH3;              // the hot   accretion rate of BH 3
-       double  Mdot_cold_BH1;             // the cold  accretion rate of BH 1
-       double  Mdot_cold_BH2;             // the cold  accretion rate of BH 2
-       double  Mdot_cold_BH3;             // the cold  accretion rate of BH 3
+       double *CM_BH_Mdot_tot;            // the total accretion rate of BHs
+       double *CM_BH_Mdot_hot;            // the hot   accretion rate of BHs
+       double *CM_BH_Mdot_cold;           // the cold  accretion rate of BHs
        double  Mdot[3];                   // the feedback injeciton rate of mass
        double  Pdot[3];                   // the feedback injeciton rate of momentum
        double  Edot[3];                   // the feedback injeciton rate of total energy
@@ -449,9 +443,15 @@ void SetParameter()
       Merger_Coll_NumBHs = Merger_Coll_NumHalos;
 
 //    set initial accretion rate to zero
-      Mdot_tot_BH1  = Mdot_tot_BH2  = Mdot_tot_BH3  = 0.0;
-      Mdot_hot_BH1  = Mdot_hot_BH2  = Mdot_hot_BH3  = 0.0;
-      Mdot_cold_BH1 = Mdot_cold_BH2 = Mdot_cold_BH3 = 0.0;
+      CM_BH_Mdot_tot  = new double [ Merger_Coll_NumBHs ];
+      CM_BH_Mdot_hot  = new double [ Merger_Coll_NumBHs ];
+      CM_BH_Mdot_cold = new double [ Merger_Coll_NumBHs ];
+      for (int c=0; c<Merger_Coll_NumBHs; c++)
+      {
+         CM_BH_Mdot_tot [c] = 0.0;
+         CM_BH_Mdot_hot [c] = 0.0;
+         CM_BH_Mdot_cold[c] = 0.0;
+      }
 
       for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
@@ -699,10 +699,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 void Output_HDF5_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
 {
 
-   double BH_Mdot_tot[3]  = { Mdot_tot_BH1,  Mdot_tot_BH2,  Mdot_tot_BH3  };
-   double BH_Mdot_hot[3]  = { Mdot_hot_BH1,  Mdot_hot_BH2,  Mdot_hot_BH3  };
-   double BH_Mdot_cold[3] = { Mdot_cold_BH1, Mdot_cold_BH2, Mdot_cold_BH3 };
-
    HDF5_OutUser->Add( "Merger_Coll_NumBHs", &Merger_Coll_NumBHs );
    for (int c=0; c<Merger_Coll_NumBHs; c++)
    {
@@ -722,9 +718,9 @@ void Output_HDF5_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
       sprintf( BH_Mdot_hot_name,  "BH_Mdot_hot_%d",  c );
       sprintf( BH_Mdot_cold_name, "BH_Mdot_cold_%d", c );
       HDF5_OutUser->Add( BH_Mass_name,      &CM_BH_Mass  [c] );
-      HDF5_OutUser->Add( BH_Mdot_tot_name,  &BH_Mdot_tot [c] );
-      HDF5_OutUser->Add( BH_Mdot_hot_name,  &BH_Mdot_hot [c] );
-      HDF5_OutUser->Add( BH_Mdot_cold_name, &BH_Mdot_cold[c] );
+      HDF5_OutUser->Add( BH_Mdot_tot_name,  &CM_BH_Mdot_tot [c] );
+      HDF5_OutUser->Add( BH_Mdot_hot_name,  &CM_BH_Mdot_hot [c] );
+      HDF5_OutUser->Add( BH_Mdot_cold_name, &CM_BH_Mdot_cold[c] );
    }
    HDF5_OutUser->Add( "AdjustCount", &AdjustCount );
 
@@ -754,6 +750,9 @@ void End_ClusterMerger()
    delete [] Jet_Radius;
 
    delete [] CM_BH_Mass;
+   delete [] CM_BH_Mdot_tot;
+   delete [] CM_BH_Mdot_hot;
+   delete [] CM_BH_Mdot_cold;
 
    delete [] ColorFieldsIdx;
 
@@ -1051,10 +1050,6 @@ void Init_User_ClusterMerger()
    if ( H5_TypeID_OutputUser < 0 )
       Aux_Error( ERROR_INFO, "failed to open the datatype of \"%s\" !!\n", "User/OutputUser" );
 
-   double BH_Mdot_tot [3] = { 0.0, 0.0, 0.0 };
-   double BH_Mdot_hot [3] = { 0.0, 0.0, 0.0 };
-   double BH_Mdot_cold[3] = { 0.0, 0.0, 0.0 };
-
    LoadField( "Merger_Coll_NumBHs", &Merger_Coll_NumBHs, H5_SetID_OutputUser, H5_TypeID_OutputUser );
    for (int c=0; c<Merger_Coll_NumBHs; c++)
    {
@@ -1073,28 +1068,16 @@ void Init_User_ClusterMerger()
       sprintf( BH_Mdot_tot_name,  "BH_Mdot_tot_%d",  c );
       sprintf( BH_Mdot_hot_name,  "BH_Mdot_hot_%d",  c );
       sprintf( BH_Mdot_cold_name, "BH_Mdot_cold_%d", c );
-      LoadField( BH_Mass_name,      &CM_BH_Mass  [c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
-      LoadField( BH_Mdot_tot_name,  &BH_Mdot_tot [c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
-      LoadField( BH_Mdot_hot_name,  &BH_Mdot_hot [c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
-      LoadField( BH_Mdot_cold_name, &BH_Mdot_cold[c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
+      LoadField( BH_Mass_name,      &CM_BH_Mass     [c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
+      LoadField( BH_Mdot_tot_name,  &CM_BH_Mdot_tot [c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
+      LoadField( BH_Mdot_hot_name,  &CM_BH_Mdot_hot [c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
+      LoadField( BH_Mdot_cold_name, &CM_BH_Mdot_cold[c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
    }
    LoadField( "AdjustCount", &AdjustCount, H5_SetID_OutputUser, H5_TypeID_OutputUser );
 
    H5_Status = H5Tclose( H5_TypeID_OutputUser );
    H5_Status = H5Dclose( H5_SetID_OutputUser );
    H5_Status = H5Fclose( H5_FileID );
-
-   Mdot_tot_BH1  = BH_Mdot_tot[0];
-   Mdot_tot_BH2  = BH_Mdot_tot[1];
-   Mdot_tot_BH3  = BH_Mdot_tot[2];
-
-   Mdot_hot_BH1  = BH_Mdot_hot[0];
-   Mdot_hot_BH2  = BH_Mdot_hot[1];
-   Mdot_hot_BH3  = BH_Mdot_hot[2];
-
-   Mdot_cold_BH1 = BH_Mdot_cold[0];
-   Mdot_cold_BH2 = BH_Mdot_cold[1];
-   Mdot_cold_BH3 = BH_Mdot_cold[2];
 
 #  endif // #ifdef SUPPORT_HDF5
 
