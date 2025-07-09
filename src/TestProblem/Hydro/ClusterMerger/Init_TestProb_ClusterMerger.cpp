@@ -652,98 +652,52 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    const double pos_in[3] = { x, y, z };
 
-   double r1, r2, r3, Dens1, Dens2, Dens3, Pres1, Pres2, Pres3;
-   double Metl1, Metl2, Metl3, rmax1, rmax2, rmax3;
-   double Dens, MomX, MomY, MomZ, Pres, Eint, Etot, Metl;
+   real Dens = 0.0, MomX = 0.0, MomY = 0.0, MomZ = 0.0, Pres = 0.0, Eint = 0.0, Etot = 0.0, Metl = 0.0;
 
-   rmax1 = Table_R[0][Merger_NBin[0]-1];
-   rmax2 = Merger_Coll_NumHalos > 1 ? Table_R[1][Merger_NBin[1]-1] : -1.0;
-   rmax3 = Merger_Coll_NumHalos > 2 ? Table_R[2][Merger_NBin[2]-1] : -1.0;
-
-// for each cell, we sum up the density and pressure from each halo and then calculate the weighted velocity
-   if ( Merger_Coll_IsGas[0] )
+   for (int c=0; c<Merger_Coll_NumHalos; c++)
    {
-      r1    = DIST_3D_DBL( pos_in, Merger_Coll_Pos[0] );
-      double rr1 = r1 < rmax1 ? r1 : rmax1;
-      Dens1 = Mis_InterpolateFromTable( Merger_NBin[0], Table_R[0], Table_D[0], rr1 );
-      Pres1 = Mis_InterpolateFromTable( Merger_NBin[0], Table_R[0], Table_P[0], rr1 );
-      Metl1 = Mis_InterpolateFromTable( Merger_NBin[0], Table_R[0], Table_M[0], rr1 );
-   }
-   else
-   {
-      r1    = HUGE_NUMBER;
-      Dens1 = 0.0;
-      Pres1 = 0.0;
-      Metl1 = 0.0;
-   }
+      real   dens, pres, metl;
+      double r, rr;
+      double rmax = Table_R[c][Merger_NBin[c]-1];
 
-   if ( Merger_Coll_NumHalos > 1  &&  Merger_Coll_IsGas[1] )
-   {
-      r2    = DIST_3D_DBL( pos_in, Merger_Coll_Pos[1] );
-      double rr2 = r2 < rmax2 ? r2 : rmax2;
-      Dens2 = Mis_InterpolateFromTable( Merger_NBin[1], Table_R[1], Table_D[1], rr2 );
-      Pres2 = Mis_InterpolateFromTable( Merger_NBin[1], Table_R[1], Table_P[1], rr2 );
-      Metl2 = Mis_InterpolateFromTable( Merger_NBin[1], Table_R[1], Table_M[1], rr2 );
-   }
-   else
-   {
-      r2    = HUGE_NUMBER;
-      Dens2 = 0.0;
-      Pres2 = 0.0;
-      Metl2 = 0.0;
-   }
+//    for each cell, we sum up the density and pressure from each halo and then calculate the weighted velocity
+      if ( Merger_Coll_IsGas[c] )
+      {
+         r    = DIST_3D_DBL( pos_in, Merger_Coll_Pos[c] );
+         rr   = r < rmax ? r : rmax;
+         dens = Mis_InterpolateFromTable( Merger_NBin[c], Table_R[c], Table_D[c], rr );
+         pres = Mis_InterpolateFromTable( Merger_NBin[c], Table_R[c], Table_P[c], rr );
+         metl = Mis_InterpolateFromTable( Merger_NBin[c], Table_R[c], Table_M[c], rr );
+      }
+      else
+      {
+         r    = HUGE_NUMBER;
+         dens = 0.0;
+         pres = 0.0;
+         metl = 0.0;
+      }
 
-   if ( Merger_Coll_NumHalos > 2  &&  Merger_Coll_IsGas[2] )
-   {
-      r3    = DIST_3D_DBL( pos_in, Merger_Coll_Pos[2] );
-      double rr3 = r3 < rmax3 ? r3 : rmax3;
-      Dens3 = Mis_InterpolateFromTable( Merger_NBin[2], Table_R[2], Table_D[2], rr3 );
-      Pres3 = Mis_InterpolateFromTable( Merger_NBin[2], Table_R[2], Table_P[2], rr3 );
-      Metl3 = Mis_InterpolateFromTable( Merger_NBin[2], Table_R[2], Table_M[2], rr3 );
-   }
-   else
-   {
-      r3    = HUGE_NUMBER;
-      Dens3 = 0.0;
-      Pres3 = 0.0;
-      Metl3 = 0.0;
-   }
+      if ( dens == NULL_REAL )   dens = Table_D[c][Merger_NBin[c]-1];
+      if ( pres == NULL_REAL )   pres = Table_P[c][Merger_NBin[c]-1];
+      if ( metl == NULL_REAL )   metl = Table_M[c][Merger_NBin[c]-1];
 
-   if ( Dens1 == NULL_REAL )   Dens1 = Table_D[0][Merger_NBin[0]-1];
-   if ( Pres1 == NULL_REAL )   Pres1 = Table_P[0][Merger_NBin[0]-1];
-   if ( Metl1 == NULL_REAL )   Metl1 = Table_M[0][Merger_NBin[0]-1];
+      Dens += dens;
+      Pres += pres;
 
-   if ( Dens2 == NULL_REAL )   Dens2 = Table_D[1][Merger_NBin[1]-1];
-   if ( Pres2 == NULL_REAL )   Pres2 = Table_P[1][Merger_NBin[1]-1];
-   if ( Metl2 == NULL_REAL )   Metl2 = Table_M[1][Merger_NBin[1]-1];
+      if ( r <= rmax )
+      {
+         MomX += Merger_Coll_Vel[c][0]*dens;
+         MomY += Merger_Coll_Vel[c][1]*dens;
+      }
 
-   if ( Dens3 == NULL_REAL )   Dens3 = Table_D[2][Merger_NBin[2]-1];
-   if ( Pres3 == NULL_REAL )   Pres3 = Table_P[2][Merger_NBin[2]-1];
-   if ( Metl3 == NULL_REAL )   Metl3 = Table_M[2][Merger_NBin[2]-1];
+      Metl += metl*dens;
 
-   Dens = Dens1 + Dens2 + Dens3;
-   Pres = Pres1 + Pres2 + Pres3;
-
-   MomX = 0.0;
-   MomY = 0.0;
-   MomZ = 0.0;
-   if ( r1 <= rmax1 )
-   {
-      MomX += Merger_Coll_Vel[0][0]*Dens1;
-      MomY += Merger_Coll_Vel[0][1]*Dens1;
-   }
-
-   if ( r2 <= rmax2 )
-   {
-      MomX += Merger_Coll_Vel[1][0]*Dens2;
-      MomY += Merger_Coll_Vel[1][1]*Dens2;
-   }
-
-   if ( r3 <= rmax3 )
-   {
-      MomX += Merger_Coll_Vel[2][0]*Dens3;
-      MomY += Merger_Coll_Vel[2][1]*Dens3;
-   }
+      if ( Merger_Coll_IsGas[c] )
+      {
+         if ( r < rmax )   fluid[ColorFieldsIdx[c]] = dens;
+         else              fluid[ColorFieldsIdx[c]] = 0.0;
+      }
+   } // for (int c=0; c<Merger_Coll_NumHalos; c++)
 
 // compute the total gas energy
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ); // assuming EoS requires no passive scalars
@@ -754,30 +708,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[MOMY] = MomY;
    fluid[MOMZ] = MomZ;
    fluid[ENGY] = Etot;
-
-   if ( Merger_Coll_UseMetals )
-   {
-      Metl = Metl1*Dens1 + Metl2*Dens2 + Metl3*Dens3;
-      fluid[Idx_Metal] = Metl;
-   }
-
-   if ( Merger_Coll_IsGas[0] )
-   {
-      if ( r1 < rmax1 )   fluid[ColorFieldsIdx[0]] = Dens1;
-      else                fluid[ColorFieldsIdx[0]] = 0.0;
-   }
-
-   if ( Merger_Coll_NumHalos > 1  &&  Merger_Coll_IsGas[1] )
-   {
-      if ( r2 < rmax2 )   fluid[ColorFieldsIdx[1]] = Dens2;
-      else                fluid[ColorFieldsIdx[1]] = 0.0;
-   }
-
-   if ( Merger_Coll_NumHalos > 2  &&  Merger_Coll_IsGas[2] )
-   {
-      if ( r3 < rmax3 )   fluid[ColorFieldsIdx[2]] = Dens3;
-      else                fluid[ColorFieldsIdx[2]] = 0.0;
-   }
+   if ( Merger_Coll_UseMetals )   fluid[Idx_Metal] = Metl;
 
 } // FUNCTION : SetGridIC
 #endif // #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
