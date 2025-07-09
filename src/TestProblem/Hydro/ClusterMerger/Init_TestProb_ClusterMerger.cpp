@@ -544,46 +544,20 @@ void SetParameter()
       Aux_Message( stdout, "  test problem ID           = %d\n",           TESTPROB_ID );
       Aux_Message( stdout, "  number of clusters        = %d\n",           Merger_Coll_NumHalos );
       Aux_Message( stdout, "  turn on AGN feedback      = %s\n",          (AGN_feedback)? "yes":"no" );
-      Aux_Message( stdout, "  profile file 1            = %s\n",           Merger_File_Prof[0] );
-      Aux_Message( stdout, "  particle file 1           = %s\n",           Merger_File_Par[0] );
-      Aux_Message( stdout, "  cluster 1 w/ gas          = %s\n",          (Merger_Coll_IsGas[0])? "yes":"no" );
-      Aux_Message( stdout, "  cluster 1 x-position      = %g\n",           Merger_Coll_Pos[0][0] );
-      Aux_Message( stdout, "  cluster 1 y-position      = %g\n",           Merger_Coll_Pos[0][1] );
-      Aux_Message( stdout, "  cluster 1 x-velocity      = %g\n",           Merger_Coll_Vel[0][0] );
-      Aux_Message( stdout, "  cluster 1 y-velocity      = %g\n",           Merger_Coll_Vel[0][1] );
+      for (int c=0; c<Merger_Coll_NumHalos; c++) {
+      Aux_Message( stdout, "  profile file %d            = %s\n",          c+1,  Merger_File_Prof[c] );
+      Aux_Message( stdout, "  particle file %d           = %s\n",          c+1,  Merger_File_Par[c] );
+      Aux_Message( stdout, "  cluster %d w/ gas          = %s\n",          c+1, (Merger_Coll_IsGas[c])? "yes":"no" );
+      Aux_Message( stdout, "  cluster %d x-position      = %g\n",          c+1,  Merger_Coll_Pos[c][0] );
+      Aux_Message( stdout, "  cluster %d y-position      = %g\n",          c+1,  Merger_Coll_Pos[c][1] );
+      Aux_Message( stdout, "  cluster %d x-velocity      = %g\n",          c+1,  Merger_Coll_Vel[c][0] );
+      Aux_Message( stdout, "  cluster %d y-velocity      = %g\n",          c+1,  Merger_Coll_Vel[c][1] );
       if ( AGN_feedback ) {
-      Aux_Message( stdout, "  cluster 1 BH mass         = %g\n",           CM_BH_Mass[0]     );
-      Aux_Message( stdout, "  cluster 1 jet half-height = %g\n",           Jet_HalfHeight[0] );
-      Aux_Message( stdout, "  cluster 1 jet radius      = %g\n",           Jet_Radius[0]     );
-      }
-      if ( Merger_Coll_NumHalos > 1 ) {
-      Aux_Message( stdout, "  profile file 2            = %s\n",           Merger_File_Prof[1] );
-      Aux_Message( stdout, "  particle file 2           = %s\n",           Merger_File_Par[1] );
-      Aux_Message( stdout, "  cluster 2 w/ gas          = %s\n",          (Merger_Coll_IsGas[1])? "yes":"no" );
-      Aux_Message( stdout, "  cluster 2 x-position      = %g\n",           Merger_Coll_Pos[1][0] );
-      Aux_Message( stdout, "  cluster 2 y-position      = %g\n",           Merger_Coll_Pos[1][1] );
-      Aux_Message( stdout, "  cluster 2 x-velocity      = %g\n",           Merger_Coll_Vel[1][0] );
-      Aux_Message( stdout, "  cluster 2 y-velocity      = %g\n",           Merger_Coll_Vel[1][1] );
-      if ( AGN_feedback ) {
-      Aux_Message( stdout, "  cluster 2 BH mass         = %g\n",           CM_BH_Mass[1]     );
-      Aux_Message( stdout, "  cluster 2 jet half-height = %g\n",           Jet_HalfHeight[1] );
-      Aux_Message( stdout, "  cluster 2 jet radius      = %g\n",           Jet_Radius[1]     );
-      }
-      } // if ( Merger_Coll_NumHalos > 1 )
-      if ( Merger_Coll_NumHalos > 2 ) {
-      Aux_Message( stdout, "  profile file 3            = %s\n",           Merger_File_Prof[2] );
-      Aux_Message( stdout, "  particle file 3           = %s\n",           Merger_File_Par[2] );
-      Aux_Message( stdout, "  cluster 3 w/ gas          = %s\n",          (Merger_Coll_IsGas[2])? "yes":"no" );
-      Aux_Message( stdout, "  cluster 3 x-position      = %g\n",           Merger_Coll_Pos[2][0] );
-      Aux_Message( stdout, "  cluster 3 y-position      = %g\n",           Merger_Coll_Pos[2][1] );
-      Aux_Message( stdout, "  cluster 3 x-velocity      = %g\n",           Merger_Coll_Vel[2][0] );
-      Aux_Message( stdout, "  cluster 3 y-velocity      = %g\n",           Merger_Coll_Vel[2][1] );
-      if ( AGN_feedback ) {
-      Aux_Message( stdout, "  cluster 2 BH mass         = %g\n",           CM_BH_Mass[2]     );
-      Aux_Message( stdout, "  cluster 2 jet half-height = %g\n",           Jet_HalfHeight[2] );
-      Aux_Message( stdout, "  cluster 2 jet radius      = %g\n",           Jet_Radius[2]     );
-      }
-      } // if ( Merger_Coll_NumHalos > 2 )
+      Aux_Message( stdout, "  cluster %d BH mass         = %g\n",          c+1,  CM_BH_Mass[c]     );
+      Aux_Message( stdout, "  cluster %d jet half-height = %g\n",          c+1,  Jet_HalfHeight[c] );
+      Aux_Message( stdout, "  cluster %d jet radius      = %g\n",          c+1,  Jet_Radius[c]     ); }
+      } // for (int c=0; c<Merger_Coll_NumHalos; c++)
+
       Aux_Message( stdout, "  use metals                = %s\n",          (Merger_Coll_UseMetals)? "yes":"no" );
       Aux_Message( stdout, "  label cluster centers     = %s\n",          (Merger_Coll_LabelCenter)? "yes":"no" );
       if ( AGN_feedback ) {
