@@ -27,7 +27,7 @@ extern double    *CM_BH_Mdot_cold;                         // the cold  accretio
 extern double     Jet_Radius1;
 extern double     Jet_Radius2;
 extern double     Jet_Radius3;
-extern double     Jet_Vec[3][3];                           // jet direction
+extern double   (*CM_Jet_Vec)[3];                          // jet direction
 extern double    *CM_Jet_Mdot;                             // the feedback injection rate
 extern double    *CM_Jet_Pdot;
 extern double    *CM_Jet_Edot;
@@ -223,7 +223,7 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
 
       Dis_c2m = sqrt( SQR(Vec_c2m[0]) + SQR(Vec_c2m[1]) + SQR(Vec_c2m[2]) );
 
-      Jet_dh = fabs( Jet_Vec[c][0]*Vec_c2m[0] + Jet_Vec[c][1]*Vec_c2m[1] + Jet_Vec[c][2]*Vec_c2m[2] );
+      Jet_dh = fabs( CM_Jet_Vec[c][0]*Vec_c2m[0] + CM_Jet_Vec[c][1]*Vec_c2m[1] + CM_Jet_Vec[c][2]*Vec_c2m[2] );
       Jet_dr = sqrt( SQR(Dis_c2m) - SQR(Jet_dh) );
 
       if ( Jet_dh <= Jet_HalfHeight[c]  &&  Jet_dr <= Jet_Radius[c] )
@@ -244,18 +244,18 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
          fluid[MOMY] -= BH_Vel[c][1]*dens_old;
          fluid[MOMZ] -= BH_Vel[c][2]*dens_old;
 
-//       use a sine function to make the velocity smooth within the jet from +Jet_Vec to -Jet_Vec
+//       use a sine function to make the velocity smooth within the jet from +CM_Jet_Vec to -CM_Jet_Vec
          EngySin = E_inj[c]*normalize_const[c]*sin( Jet_WaveK[c]*Jet_dh );
 
 //       the new momentum is calculated from the old density, new density, old momentum and injected energy
          real P_SQR    = SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]);
          real Ekin_old = ( dens_old == 0.0 ) ? (real)0.0 : 0.5*P_SQR/dens_old;
          real P_new    = sqrt( 2*fluid[DENS]*(EngySin + Ekin_old) );
-         P_new *= SIGN( Vec_c2m[0]*Jet_Vec[c][0] + Vec_c2m[1]*Jet_Vec[c][1] + Vec_c2m[2]*Jet_Vec[c][2] );
+         P_new *= SIGN( Vec_c2m[0]*CM_Jet_Vec[c][0] + Vec_c2m[1]*CM_Jet_Vec[c][1] + Vec_c2m[2]*CM_Jet_Vec[c][2] );
 
-         fluid[MOMX] = P_new * Jet_Vec[c][0];
-         fluid[MOMY] = P_new * Jet_Vec[c][1];
-         fluid[MOMZ] = P_new * Jet_Vec[c][2];
+         fluid[MOMX] = P_new * CM_Jet_Vec[c][0];
+         fluid[MOMY] = P_new * CM_Jet_Vec[c][1];
+         fluid[MOMZ] = P_new * CM_Jet_Vec[c][2];
 
 //       transfer back into the rest frame
          fluid[MOMX] += BH_Vel[c][0] * fluid[DENS];
@@ -371,9 +371,9 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
       {
          for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
-            Jet_Vec[c][0] = 1.0;
-            Jet_Vec[c][1] = 0.0;
-            Jet_Vec[c][2] = 0.0;
+            CM_Jet_Vec[c][0] = 1.0;
+            CM_Jet_Vec[c][1] = 0.0;
+            CM_Jet_Vec[c][2] = 0.0;
          }
       }
       else if ( JetDirection_case == 2 ) // import from table
@@ -385,9 +385,9 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
             const double theta = Mis_InterpolateFromTable( JetDirection_NBin, Time_table, Theta_table[c], Time_interpolate );
             const double phi   = Mis_InterpolateFromTable( JetDirection_NBin, Time_table, Phi_table[c],   Time_interpolate );
 
-            Jet_Vec[c][0] = cos(theta);
-            Jet_Vec[c][1] = sin(theta)*cos(phi);
-            Jet_Vec[c][2] = sin(theta)*sin(phi);
+            CM_Jet_Vec[c][0] = cos(theta);
+            CM_Jet_Vec[c][1] = sin(theta)*cos(phi);
+            CM_Jet_Vec[c][2] = sin(theta)*sin(phi);
          }
       }
       else if ( JetDirection_case == 3 ) // align with angular momentum
@@ -395,7 +395,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
          for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
             const double ang_mom_norm = sqrt( SQR(ang_mom_sum[c][0]) + SQR(ang_mom_sum[c][1]) + SQR(ang_mom_sum[c][2]) );
-            for (int d=0; d<3; d++)   Jet_Vec[c][d] = ang_mom_sum[c][d] / ang_mom_norm;
+            for (int d=0; d<3; d++)   CM_Jet_Vec[c][d] = ang_mom_sum[c][d] / ang_mom_norm;
          }
       } // if ( JetDirection_case == 1 ) ... else ...
 
@@ -499,7 +499,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
                   for (int d=0; d<3; d++)   Vec_c2m_2[d] = Pos_2[d] - ClusterCen[c][d];
                   Dis_c2m_2 = sqrt( SQR(Vec_c2m_2[0]) + SQR(Vec_c2m_2[1]) + SQR(Vec_c2m_2[2]) );
-                  Jet_dh_2 = fabs( Jet_Vec[c][0]*Vec_c2m_2[0] + Jet_Vec[c][1]*Vec_c2m_2[1] + Jet_Vec[c][2]*Vec_c2m_2[2] );
+                  Jet_dh_2 = fabs( CM_Jet_Vec[c][0]*Vec_c2m_2[0] + CM_Jet_Vec[c][1]*Vec_c2m_2[1] + CM_Jet_Vec[c][2]*Vec_c2m_2[2] );
                   Jet_dr_2 = sqrt( SQR(Dis_c2m_2) - SQR(Jet_dh_2) );
 
                   if ( Jet_dh_2 <= Jet_HalfHeight[c]  &&  Jet_dr_2 <= Jet_Radius[c] )

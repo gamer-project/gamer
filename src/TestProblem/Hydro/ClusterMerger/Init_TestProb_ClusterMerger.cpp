@@ -49,24 +49,24 @@ static FieldIdx_t *ColorFieldsIdx;        //
        double CM_Bondi_SinkEt[3];         // total injected thermal energy ...
        int    CM_Bondi_SinkNCell[3];      // total number of finest cells within the feedback region
 
-       double *CM_BH_Mass;                // black hole mass of clusters
-       double *CM_BH_Mdot_tot;            // the total accretion rate of BHs
-       double *CM_BH_Mdot_hot;            // the hot   accretion rate of BHs
-       double *CM_BH_Mdot_cold;           // the cold  accretion rate of BHs
-       double *CM_Jet_Mdot;               // the feedback injeciton rate of mass
-       double *CM_Jet_Pdot;               // the feedback injeciton rate of momentum
-       double *CM_Jet_Edot;               // the feedback injeciton rate of total energy
-       double  Jet_Vec[3][3];             // jet direction
-       double  GasVel[3][3];              // average gas velocity inside the accretion radius
-       double  SoundSpeed[3];             // average sound speed inside the accreiton radius
-       double  GasDens[3];                // average gas density inside the accreiton radius
-       double  RelativeVel[3];            // relative velocity between BH and gas for each cluster
-       double  ColdGasMass[3];            // cold gas mass inside the accretion radius
-       double  GasMass[3];                // total gas mass inside the accretion radius
-       double  ParMass[3];                // total DM mass inside the accretion radius
-       double  ClusterCen[3][3];          // the center of each cluster
-       double  BH_Pos[3][3];              // BH position of each cluster
-       double  BH_Vel[3][3];              // BH velocity of each cluster
+       double  *CM_BH_Mass;               // black hole mass of clusters
+       double  *CM_BH_Mdot_tot;           // the total accretion rate of BHs
+       double  *CM_BH_Mdot_hot;           // the hot   accretion rate of BHs
+       double  *CM_BH_Mdot_cold;          // the cold  accretion rate of BHs
+       double  *CM_Jet_Mdot;              // the feedback injeciton rate of mass
+       double  *CM_Jet_Pdot;              // the feedback injeciton rate of momentum
+       double  *CM_Jet_Edot;              // the feedback injeciton rate of total energy
+       double (*CM_Jet_Vec)[3];           // jet direction
+       double   GasVel[3][3];             // average gas velocity inside the accretion radius
+       double   SoundSpeed[3];            // average sound speed inside the accreiton radius
+       double   GasDens[3];               // average gas density inside the accreiton radius
+       double   RelativeVel[3];           // relative velocity between BH and gas for each cluster
+       double   ColdGasMass[3];           // cold gas mass inside the accretion radius
+       double   GasMass[3];               // total gas mass inside the accretion radius
+       double   ParMass[3];               // total DM mass inside the accretion radius
+       double   ClusterCen[3][3];         // the center of each cluster
+       double   BH_Pos[3][3];             // BH position of each cluster
+       double   BH_Vel[3][3];             // BH velocity of each cluster
 
        double *Jet_HalfHeight;            // half height of the cylinder-shape jet source of clusters
        double *Jet_Radius;                // radius of the cylinder-shape jet source of clusters
@@ -449,6 +449,7 @@ void SetParameter()
       CM_Jet_Mdot     = new double [ Merger_Coll_NumBHs ];
       CM_Jet_Pdot     = new double [ Merger_Coll_NumBHs ];
       CM_Jet_Edot     = new double [ Merger_Coll_NumBHs ];
+      CM_Jet_Vec      = new double [ Merger_Coll_NumBHs ][ 3 ];
 
 //    set initial accretion rate to zero
       for (int c=0; c<Merger_Coll_NumBHs; c++)
@@ -761,6 +762,7 @@ void End_ClusterMerger()
    delete [] CM_Jet_Mdot;
    delete [] CM_Jet_Pdot;
    delete [] CM_Jet_Edot;
+   delete [] CM_Jet_Vec;
 
    delete [] ColorFieldsIdx;
 
