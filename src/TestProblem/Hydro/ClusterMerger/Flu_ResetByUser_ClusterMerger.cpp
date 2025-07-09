@@ -32,9 +32,6 @@ extern double     Mdot_hot_BH3;
 extern double     Mdot_cold_BH1;                           // the cold  accretion rate
 extern double     Mdot_cold_BH2;
 extern double     Mdot_cold_BH3;
-extern double     Jet_HalfHeight1;
-extern double     Jet_HalfHeight2;
-extern double     Jet_HalfHeight3;
 extern double     Jet_Radius1;
 extern double     Jet_Radius2;
 extern double     Jet_Radius3;
@@ -54,8 +51,8 @@ extern double     BH_Pos[3][3];                            // BH position (for u
 extern double     BH_Vel[3][3];                            // BH velocity
 
 static double     Jet_WaveK[3];                            // jet wavenumber used in the sin() function to have smooth bidirectional jets
-static double     Jet_HalfHeight[3];
-static double     Jet_Radius[3];
+extern double    *Jet_HalfHeight;
+extern double    *Jet_Radius;
 static double     V_cyl[3];                                // the volume of jet source
 static double     M_inj[3], P_inj[3], E_inj[3];            // the injected density
 static double     normalize_const[3];                      // the exact normalization constant
@@ -379,13 +376,6 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
       double Mdot_hot_BH [3] = { Mdot_hot_BH1,  Mdot_hot_BH2,  Mdot_hot_BH3  };
       double Mdot_cold_BH[3] = { Mdot_cold_BH1, Mdot_cold_BH2, Mdot_cold_BH3 };
       double Bondi_MassBH[3] = { Bondi_MassBH1, Bondi_MassBH2, Bondi_MassBH3 };
-
-      Jet_HalfHeight[0] = Jet_HalfHeight1;
-      Jet_HalfHeight[1] = Jet_HalfHeight2;
-      Jet_HalfHeight[2] = Jet_HalfHeight3;
-      Jet_Radius[0]     = Jet_Radius1;
-      Jet_Radius[1]     = Jet_Radius2;
-      Jet_Radius[2]     = Jet_Radius3;
 
 //    set the jet direction vector
       if ( JetDirection_case == 1 ) // fixed at x-axis

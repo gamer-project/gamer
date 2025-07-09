@@ -71,12 +71,6 @@ static FieldIdx_t *ColorFieldsIdx;        //
        double Mdot_cold_BH1;              // the cold  accretion rate of BH 1
        double Mdot_cold_BH2;              // the cold  accretion rate of BH 2
        double Mdot_cold_BH3;              // the cold  accretion rate of BH 3
-       double Jet_HalfHeight1;            // half height of the cylinder-shape jet source of cluster 1
-       double Jet_HalfHeight2;            // half height of the cylinder-shape jet source of cluster 2
-       double Jet_HalfHeight3;            // half height of the cylinder-shape jet source of cluster 3
-       double Jet_Radius1;                // radius of the cylinder-shape jet source of cluster 1
-       double Jet_Radius2;                // radius of the cylinder-shape jet source of cluster 2
-       double Jet_Radius3;                // radius of the cylinder-shape jet source of cluster 3
        double Mdot[3];                    // the feedback injeciton rate of mass
        double Pdot[3];                    // the feedback injeciton rate of momentum
        double Edot[3];                    // the feedback injeciton rate of total energy
@@ -93,6 +87,8 @@ static FieldIdx_t *ColorFieldsIdx;        //
        double BH_Vel[3][3];               // BH velocity of each cluster
        double BH_Mass[3];                 // BH mass     of each cluster
 
+       double *Jet_HalfHeight;            // half height of the cylinder-shape jet source of clusters
+       double *Jet_Radius;                // radius of the cylinder-shape jet source of clusters
        int     JetDirection_NBin;         // number of bins of the jet direction table
 static double *JetDirection = NULL;       // jet direction[time/theta_1/phi_1/theta_2/phi_2/theta_3/phi_3]
        double *Time_table;                // the time table of jet direction
@@ -252,14 +248,20 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
       char Merger_File_Prof_name [MAX_STRING];
       char Merger_File_Par_name  [MAX_STRING];
       char Merger_Coll_IsGas_name[MAX_STRING];
+      char Jet_HalfHeight_name   [MAX_STRING];
+      char Jet_Radius_name       [MAX_STRING];
 
       sprintf( Merger_File_Prof_name,  "Merger_File_Prof%d",  c+1 );
-      sprintf( Merger_File_Par_name,    "Merger_File_Par%d",  c+1 );
+      sprintf( Merger_File_Par_name,   "Merger_File_Par%d",   c+1 );
       sprintf( Merger_Coll_IsGas_name, "Merger_Coll_IsGas%d", c+1 );
+      sprintf( Jet_HalfHeight_name,    "Jet_HalfHeight%d",    c+1 );
+      sprintf( Jet_Radius_name,        "Jet_Radius%d",        c+1 );
 
       LOAD_PARA( load_mode, Merger_File_Prof_name,   Merger_File_Prof[c],      NoDef_str,          Useless_str,   Useless_str    );
       LOAD_PARA( load_mode, Merger_File_Par_name,    Merger_File_Par[c],       NoDef_str,          Useless_str,   Useless_str    );
       LOAD_PARA( load_mode, Merger_Coll_IsGas_name, &Merger_Coll_IsGas[c],     true,               Useless_bool,  Useless_bool   );
+      LOAD_PARA( load_mode, Jet_HalfHeight_name,    &Jet_HalfHeight[c],       -1.0,                Eps_double,    NoMax_double   );
+      LOAD_PARA( load_mode, Jet_Radius_name,        &Jet_Radius[c],           -1.0,                Eps_double,    NoMax_double   );
    }
    LOAD_PARA( load_mode, "Merger_Coll_PosX1",       &Merger_Coll_PosX1,       -1.0,                NoMin_double,  NoMax_double   );
    LOAD_PARA( load_mode, "Merger_Coll_PosY1",       &Merger_Coll_PosY1,       -1.0,                NoMin_double,  NoMax_double   );
@@ -280,12 +282,6 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "Bondi_MassBH3",           &Bondi_MassBH3,           -1.0,                Eps_double,    NoMax_double   );
    LOAD_PARA( load_mode, "R_acc",                   &R_acc,                   -1.0,                NoMin_double,  NoMax_double   );
    LOAD_PARA( load_mode, "R_dep",                   &R_dep,                   -1.0,                NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Jet_HalfHeight1",         &Jet_HalfHeight1,         -1.0,                Eps_double,    NoMax_double   );
-   LOAD_PARA( load_mode, "Jet_HalfHeight2",         &Jet_HalfHeight2,         -1.0,                Eps_double,    NoMax_double   );
-   LOAD_PARA( load_mode, "Jet_HalfHeight3",         &Jet_HalfHeight3,         -1.0,                Eps_double,    NoMax_double   );
-   LOAD_PARA( load_mode, "Jet_Radius1",             &Jet_Radius1,             -1.0,                Eps_double,    NoMax_double   );
-   LOAD_PARA( load_mode, "Jet_Radius2",             &Jet_Radius2,             -1.0,                Eps_double,    NoMax_double   );
-   LOAD_PARA( load_mode, "Jet_Radius3",             &Jet_Radius3,             -1.0,                Eps_double,    NoMax_double   );
    LOAD_PARA( load_mode, "AGN_feedback",            &AGN_feedback,             false,              Useless_bool,  Useless_bool   );
    LOAD_PARA( load_mode, "Accretion_Mode",          &Accretion_Mode,           1,                  1,             3              );
    LOAD_PARA( load_mode, "eta",                     &eta,                     -1.0,                NoMin_double,  NoMax_double   );
@@ -335,9 +331,11 @@ void SetParameter()
    delete ReadPara;
 
 // (1-1-2) allocate memories
-   Merger_File_Prof  = new char [ Merger_Coll_NumHalos ][ 1000 ];
-   Merger_File_Par   = new char [ Merger_Coll_NumHalos ][ 1000 ];
-   Merger_Coll_IsGas = new bool [ Merger_Coll_NumHalos ];
+   Merger_File_Prof  = new char   [ Merger_Coll_NumHalos ][ 1000 ];
+   Merger_File_Par   = new char   [ Merger_Coll_NumHalos ][ 1000 ];
+   Merger_Coll_IsGas = new bool   [ Merger_Coll_NumHalos ];
+   Jet_HalfHeight    = new double [ Merger_Coll_NumHalos ];
+   Jet_Radius        = new double [ Merger_Coll_NumHalos ];
 
 // (1-1-3) load the rest cluster parameters
    ReadPara = new ReadPara_t;
@@ -384,12 +382,11 @@ void SetParameter()
    Bondi_MassBH3     *= Const_Msun / UNIT_M;
    R_acc             *= Const_kpc / UNIT_L;
    R_dep             *= Const_kpc / UNIT_L;
-   Jet_HalfHeight1   *= Const_kpc / UNIT_L;
-   Jet_HalfHeight2   *= Const_kpc / UNIT_L;
-   Jet_HalfHeight3   *= Const_kpc / UNIT_L;
-   Jet_Radius1       *= Const_kpc / UNIT_L;
-   Jet_Radius2       *= Const_kpc / UNIT_L;
-   Jet_Radius3       *= Const_kpc / UNIT_L;
+   for (int c=0; c<Merger_Coll_NumHalos; c++)
+   {
+      Jet_HalfHeight[c] *= Const_kpc / UNIT_L;
+      Jet_Radius[c]     *= Const_kpc / UNIT_L;
+   }
    AdjustPeriod      *= Const_Myr / UNIT_T;
 
    ColorFieldsIdx = new FieldIdx_t [ Merger_Coll_NumHalos ];
@@ -569,8 +566,8 @@ void SetParameter()
       Aux_Message( stdout, "  cluster 1 y-velocity      = %g\n",           Merger_Coll_VelY1 );
       if ( AGN_feedback ) {
       Aux_Message( stdout, "  cluster 1 BH mass         = %g\n",           Bondi_MassBH1     );
-      Aux_Message( stdout, "  cluster 1 jet half-height = %g\n",           Jet_HalfHeight1   );
-      Aux_Message( stdout, "  cluster 1 jet radius      = %g\n",           Jet_Radius1       );
+      Aux_Message( stdout, "  cluster 1 jet half-height = %g\n",           Jet_HalfHeight[0] );
+      Aux_Message( stdout, "  cluster 1 jet radius      = %g\n",           Jet_Radius[0]     );
       }
       if ( Merger_Coll_NumHalos > 1 ) {
       Aux_Message( stdout, "  profile file 2            = %s\n",           Merger_File_Prof[1] );
@@ -582,8 +579,8 @@ void SetParameter()
       Aux_Message( stdout, "  cluster 2 y-velocity      = %g\n",           Merger_Coll_VelY2 );
       if ( AGN_feedback ) {
       Aux_Message( stdout, "  cluster 2 BH mass         = %g\n",           Bondi_MassBH2     );
-      Aux_Message( stdout, "  cluster 2 jet half-height = %g\n",           Jet_HalfHeight2   );
-      Aux_Message( stdout, "  cluster 2 jet radius      = %g\n",           Jet_Radius2       );
+      Aux_Message( stdout, "  cluster 2 jet half-height = %g\n",           Jet_HalfHeight[1] );
+      Aux_Message( stdout, "  cluster 2 jet radius      = %g\n",           Jet_Radius[1]     );
       }
       } // if ( Merger_Coll_NumHalos > 1 )
       if ( Merger_Coll_NumHalos > 2 ) {
@@ -596,8 +593,8 @@ void SetParameter()
       Aux_Message( stdout, "  cluster 3 y-velocity      = %g\n",           Merger_Coll_VelY3 );
       if ( AGN_feedback ) {
       Aux_Message( stdout, "  cluster 2 BH mass         = %g\n",           Bondi_MassBH3     );
-      Aux_Message( stdout, "  cluster 2 jet half-height = %g\n",           Jet_HalfHeight3   );
-      Aux_Message( stdout, "  cluster 2 jet radius      = %g\n",           Jet_Radius3       );
+      Aux_Message( stdout, "  cluster 2 jet half-height = %g\n",           Jet_HalfHeight[2] );
+      Aux_Message( stdout, "  cluster 2 jet radius      = %g\n",           Jet_Radius[2]     );
       }
       } // if ( Merger_Coll_NumHalos > 2 )
       Aux_Message( stdout, "  use metals                = %s\n",          (Merger_Coll_UseMetals)? "yes":"no" );
@@ -622,15 +619,10 @@ void SetParameter()
       Aux_Message( stdout, "=============================================================================\n" );
 
 //    check if the accretion region is larger than the jet cylinder
-      if ( R_acc < Jet_HalfHeight1 )  Aux_Message( stderr, "WARNING : R_acc is less than Jet_HalfHeight1!!\n" );
-      if ( R_acc < Jet_Radius1 )      Aux_Message( stderr, "WARNING : R_acc is less than Jet_Radius1!!\n" );
-      if ( Merger_Coll_NumHalos > 1 ) {
-      if ( R_acc < Jet_HalfHeight2 )  Aux_Message( stderr, "WARNING : R_acc is less than Jet_HalfHeight2!!\n" );
-      if ( R_acc < Jet_Radius2 )      Aux_Message( stderr, "WARNING : R_acc is less than Jet_Radius2!!\n" );
-      }
-      if ( Merger_Coll_NumHalos > 2 ) {
-      if ( R_acc < Jet_HalfHeight3 )  Aux_Message( stderr, "WARNING : R_acc is less than Jet_HalfHeight3!!\n" );
-      if ( R_acc < Jet_Radius3 )      Aux_Message( stderr, "WARNING : R_acc is less than Jet_Radius3!!\n" );
+      for (int c=0; c<Merger_Coll_NumHalos; c++)
+      {
+         if ( R_acc < Jet_HalfHeight[c] )   Aux_Message( stderr, "WARNING : R_acc (%14.8e) is less than Jet_HalfHeight%d (%14.8e) !!\n", R_acc, c+1, Jet_HalfHeight[c] );
+         if ( R_acc < Jet_Radius    [c] )   Aux_Message( stderr, "WARNING : R_acc (%14.8e) is less than Jet_Radius%d (%14.8e) !!\n",     R_acc, c+1, Jet_Radius[c] );
       }
    } // if ( MPI_Rank == 0 )
 
@@ -875,6 +867,9 @@ void End_ClusterMerger()
    delete [] Merger_File_Prof;
    delete [] Merger_File_Par;
    delete [] Merger_Coll_IsGas;
+
+   delete [] Jet_HalfHeight;
+   delete [] Jet_Radius;
 
    delete [] ColorFieldsIdx;
 
