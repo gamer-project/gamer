@@ -49,33 +49,31 @@ static FieldIdx_t *ColorFieldsIdx;        //
        double CM_Bondi_SinkEt[3];         // total injected thermal energy ...
        int    CM_Bondi_SinkNCell[3];      // total number of finest cells within the feedback region
 
-       double Bondi_MassBH1;              // black hole mass of cluster 1
-       double Bondi_MassBH2;              // black hole mass of cluster 2
-       double Bondi_MassBH3;              // black hole mass of cluster 3
-       double Mdot_tot_BH1;               // the total accretion rate of BH 1
-       double Mdot_tot_BH2;               // the total accretion rate of BH 2
-       double Mdot_tot_BH3;               // the total accretion rate of BH 3
-       double Mdot_hot_BH1;               // the hot   accretion rate of BH 1
-       double Mdot_hot_BH2;               // the hot   accretion rate of BH 2
-       double Mdot_hot_BH3;               // the hot   accretion rate of BH 3
-       double Mdot_cold_BH1;              // the cold  accretion rate of BH 1
-       double Mdot_cold_BH2;              // the cold  accretion rate of BH 2
-       double Mdot_cold_BH3;              // the cold  accretion rate of BH 3
-       double Mdot[3];                    // the feedback injeciton rate of mass
-       double Pdot[3];                    // the feedback injeciton rate of momentum
-       double Edot[3];                    // the feedback injeciton rate of total energy
-       double Jet_Vec[3][3];              // jet direction
-       double GasVel[3][3];               // average gas velocity inside the accretion radius
-       double SoundSpeed[3];              // average sound speed inside the accreiton radius
-       double GasDens[3];                 // average gas density inside the accreiton radius
-       double RelativeVel[3];             // relative velocity between BH and gas for each cluster
-       double ColdGasMass[3];             // cold gas mass inside the accretion radius
-       double GasMass[3];                 // total gas mass inside the accretion radius
-       double ParMass[3];                 // total DM mass inside the accretion radius
-       double ClusterCen[3][3];           // the center of each cluster
-       double BH_Pos[3][3];               // BH position of each cluster
-       double BH_Vel[3][3];               // BH velocity of each cluster
-       double BH_Mass[3];                 // BH mass     of each cluster
+       double *CM_BH_Mass;                // black hole mass of clusters
+       double  Mdot_tot_BH1;              // the total accretion rate of BH 1
+       double  Mdot_tot_BH2;              // the total accretion rate of BH 2
+       double  Mdot_tot_BH3;              // the total accretion rate of BH 3
+       double  Mdot_hot_BH1;              // the hot   accretion rate of BH 1
+       double  Mdot_hot_BH2;              // the hot   accretion rate of BH 2
+       double  Mdot_hot_BH3;              // the hot   accretion rate of BH 3
+       double  Mdot_cold_BH1;             // the cold  accretion rate of BH 1
+       double  Mdot_cold_BH2;             // the cold  accretion rate of BH 2
+       double  Mdot_cold_BH3;             // the cold  accretion rate of BH 3
+       double  Mdot[3];                   // the feedback injeciton rate of mass
+       double  Pdot[3];                   // the feedback injeciton rate of momentum
+       double  Edot[3];                   // the feedback injeciton rate of total energy
+       double  Jet_Vec[3][3];             // jet direction
+       double  GasVel[3][3];              // average gas velocity inside the accretion radius
+       double  SoundSpeed[3];             // average sound speed inside the accreiton radius
+       double  GasDens[3];                // average gas density inside the accreiton radius
+       double  RelativeVel[3];            // relative velocity between BH and gas for each cluster
+       double  ColdGasMass[3];            // cold gas mass inside the accretion radius
+       double  GasMass[3];                // total gas mass inside the accretion radius
+       double  ParMass[3];                // total DM mass inside the accretion radius
+       double  ClusterCen[3][3];          // the center of each cluster
+       double  BH_Pos[3][3];              // BH position of each cluster
+       double  BH_Vel[3][3];              // BH velocity of each cluster
+       double  BH_Mass[3];                // BH mass     of each cluster
 
        double *Jet_HalfHeight;            // half height of the cylinder-shape jet source of clusters
        double *Jet_Radius;                // radius of the cylinder-shape jet source of clusters
@@ -242,6 +240,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
       char Merger_Coll_PosY_name [MAX_STRING];
       char Merger_Coll_VelX_name [MAX_STRING];
       char Merger_Coll_VelY_name [MAX_STRING];
+      char CM_BH_Mass_name       [MAX_STRING];
       char Jet_HalfHeight_name   [MAX_STRING];
       char Jet_Radius_name       [MAX_STRING];
 
@@ -252,6 +251,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
       sprintf( Merger_Coll_PosY_name,  "Merger_Coll_PosY%d",  c+1 );
       sprintf( Merger_Coll_VelX_name,  "Merger_Coll_VelX%d",  c+1 );
       sprintf( Merger_Coll_VelY_name,  "Merger_Coll_VelY%d",  c+1 );
+      sprintf( CM_BH_Mass_name,        "Bondi_MassBH%d",      c+1 );
       sprintf( Jet_HalfHeight_name,    "Jet_HalfHeight%d",    c+1 );
       sprintf( Jet_Radius_name,        "Jet_Radius%d",        c+1 );
 
@@ -262,14 +262,12 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
       LOAD_PARA( load_mode, Merger_Coll_PosY_name,  &Merger_Coll_Pos[c][1],   -1.0,                NoMin_double,  NoMax_double   );
       LOAD_PARA( load_mode, Merger_Coll_VelX_name,  &Merger_Coll_Vel[c][0],   -1.0,                NoMin_double,  NoMax_double   );
       LOAD_PARA( load_mode, Merger_Coll_VelY_name,  &Merger_Coll_Vel[c][1],   -1.0,                NoMin_double,  NoMax_double   );
+      LOAD_PARA( load_mode, CM_BH_Mass_name,        &CM_BH_Mass[c],           -1.0,                Eps_double,    NoMax_double   );
       LOAD_PARA( load_mode, Jet_HalfHeight_name,    &Jet_HalfHeight[c],       -1.0,                Eps_double,    NoMax_double   );
       LOAD_PARA( load_mode, Jet_Radius_name,        &Jet_Radius[c],           -1.0,                Eps_double,    NoMax_double   );
    }
    LOAD_PARA( load_mode, "Merger_Coll_UseMetals",   &Merger_Coll_UseMetals,    true,               Useless_bool,  Useless_bool   );
    LOAD_PARA( load_mode, "Merger_Coll_LabelCenter", &Merger_Coll_LabelCenter,  true,               Useless_bool,  Useless_bool   );
-   LOAD_PARA( load_mode, "Bondi_MassBH1",           &Bondi_MassBH1,           -1.0,                Eps_double,    NoMax_double   );
-   LOAD_PARA( load_mode, "Bondi_MassBH2",           &Bondi_MassBH2,           -1.0,                Eps_double,    NoMax_double   );
-   LOAD_PARA( load_mode, "Bondi_MassBH3",           &Bondi_MassBH3,           -1.0,                Eps_double,    NoMax_double   );
    LOAD_PARA( load_mode, "R_acc",                   &R_acc,                   -1.0,                NoMin_double,  NoMax_double   );
    LOAD_PARA( load_mode, "R_dep",                   &R_dep,                   -1.0,                NoMin_double,  NoMax_double   );
    LOAD_PARA( load_mode, "AGN_feedback",            &AGN_feedback,             false,              Useless_bool,  Useless_bool   );
@@ -329,6 +327,8 @@ void SetParameter()
    Jet_HalfHeight    = new double [ Merger_Coll_NumHalos ];
    Jet_Radius        = new double [ Merger_Coll_NumHalos ];
 
+   CM_BH_Mass        = new double [ Merger_Coll_NumHalos ];
+
 // (1-1-3) load the rest cluster parameters
    ReadPara = new ReadPara_t;
 
@@ -357,9 +357,6 @@ void SetParameter()
    }
 
 // convert to code units
-   Bondi_MassBH1     *= Const_Msun / UNIT_M;
-   Bondi_MassBH2     *= Const_Msun / UNIT_M;
-   Bondi_MassBH3     *= Const_Msun / UNIT_M;
    R_acc             *= Const_kpc / UNIT_L;
    R_dep             *= Const_kpc / UNIT_L;
    for (int c=0; c<Merger_Coll_NumHalos; c++)
@@ -368,6 +365,7 @@ void SetParameter()
       Merger_Coll_Pos[c][1] *= Const_kpc / UNIT_L;
       Merger_Coll_Vel[c][0] *= (Const_km/Const_s) / UNIT_V;
       Merger_Coll_Vel[c][1] *= (Const_km/Const_s) / UNIT_V;
+      CM_BH_Mass     [c]    *= Const_Msun / UNIT_M;
       Jet_HalfHeight [c]    *= Const_kpc / UNIT_L;
       Jet_Radius     [c]    *= Const_kpc / UNIT_L;
    }
@@ -554,7 +552,7 @@ void SetParameter()
       Aux_Message( stdout, "  cluster 1 x-velocity      = %g\n",           Merger_Coll_Vel[0][0] );
       Aux_Message( stdout, "  cluster 1 y-velocity      = %g\n",           Merger_Coll_Vel[0][1] );
       if ( AGN_feedback ) {
-      Aux_Message( stdout, "  cluster 1 BH mass         = %g\n",           Bondi_MassBH1     );
+      Aux_Message( stdout, "  cluster 1 BH mass         = %g\n",           CM_BH_Mass[0]     );
       Aux_Message( stdout, "  cluster 1 jet half-height = %g\n",           Jet_HalfHeight[0] );
       Aux_Message( stdout, "  cluster 1 jet radius      = %g\n",           Jet_Radius[0]     );
       }
@@ -567,7 +565,7 @@ void SetParameter()
       Aux_Message( stdout, "  cluster 2 x-velocity      = %g\n",           Merger_Coll_Vel[1][0] );
       Aux_Message( stdout, "  cluster 2 y-velocity      = %g\n",           Merger_Coll_Vel[1][1] );
       if ( AGN_feedback ) {
-      Aux_Message( stdout, "  cluster 2 BH mass         = %g\n",           Bondi_MassBH2     );
+      Aux_Message( stdout, "  cluster 2 BH mass         = %g\n",           CM_BH_Mass[1]     );
       Aux_Message( stdout, "  cluster 2 jet half-height = %g\n",           Jet_HalfHeight[1] );
       Aux_Message( stdout, "  cluster 2 jet radius      = %g\n",           Jet_Radius[1]     );
       }
@@ -581,7 +579,7 @@ void SetParameter()
       Aux_Message( stdout, "  cluster 3 x-velocity      = %g\n",           Merger_Coll_Vel[2][0] );
       Aux_Message( stdout, "  cluster 3 y-velocity      = %g\n",           Merger_Coll_Vel[2][1] );
       if ( AGN_feedback ) {
-      Aux_Message( stdout, "  cluster 2 BH mass         = %g\n",           Bondi_MassBH3     );
+      Aux_Message( stdout, "  cluster 2 BH mass         = %g\n",           CM_BH_Mass[2]     );
       Aux_Message( stdout, "  cluster 2 jet half-height = %g\n",           Jet_HalfHeight[2] );
       Aux_Message( stdout, "  cluster 2 jet radius      = %g\n",           Jet_Radius[2]     );
       }
@@ -732,9 +730,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 void Output_HDF5_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
 {
 
-   BH_Mass[0] = Bondi_MassBH1;
-   BH_Mass[1] = Bondi_MassBH2;
-   BH_Mass[2] = Bondi_MassBH3;
+   BH_Mass[0] = CM_BH_Mass[0];
+   BH_Mass[1] = CM_BH_Mass[1];
+   BH_Mass[2] = CM_BH_Mass[2];
 
    double BH_Mdot_tot[3]  = { Mdot_tot_BH1,  Mdot_tot_BH2,  Mdot_tot_BH3  };
    double BH_Mdot_hot[3]  = { Mdot_hot_BH1,  Mdot_hot_BH2,  Mdot_hot_BH3  };
@@ -789,6 +787,8 @@ void End_ClusterMerger()
 
    delete [] Jet_HalfHeight;
    delete [] Jet_Radius;
+
+   delete [] CM_BH_Mass;
 
    delete [] ColorFieldsIdx;
 
@@ -1119,9 +1119,9 @@ void Init_User_ClusterMerger()
    H5_Status = H5Dclose( H5_SetID_OutputUser );
    H5_Status = H5Fclose( H5_FileID );
 
-   Bondi_MassBH1 = BH_Mass[0];
-   Bondi_MassBH2 = BH_Mass[1];
-   Bondi_MassBH3 = BH_Mass[2];
+   CM_BH_Mass[0] = BH_Mass[0];
+   CM_BH_Mass[1] = BH_Mass[1];
+   CM_BH_Mass[2] = BH_Mass[2];
 
    Mdot_tot_BH1  = BH_Mdot_tot[0];
    Mdot_tot_BH2  = BH_Mdot_tot[1];

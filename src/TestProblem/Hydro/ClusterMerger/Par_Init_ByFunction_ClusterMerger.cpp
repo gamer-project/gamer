@@ -23,9 +23,7 @@ extern long     NPar_AllCluster;
 
 // variables that need to be record in Record__ClusterCenter
 // =======================================================================================
-extern double  Bondi_MassBH1;
-extern double  Bondi_MassBH2;
-extern double  Bondi_MassBH3;
+extern double *CM_BH_Mass;
 extern double  Mdot_tot_BH1;
 extern double  Mdot_tot_BH2;
 extern double  Mdot_tot_BH3;
@@ -600,7 +598,6 @@ void Aux_Record_ClusterMerger()
       FirstTime = false;
    } // if ( FirstTime )
 
-   double Bondi_MassBH[3] = { Bondi_MassBH1, Bondi_MassBH2, Bondi_MassBH3 };
    double Mdot_tot_BH[3]  = { Mdot_tot_BH1,  Mdot_tot_BH2,  Mdot_tot_BH3  };
    double Mdot_hot_BH[3]  = { Mdot_hot_BH1,  Mdot_hot_BH2,  Mdot_hot_BH3  };
    double Mdot_cold_BH[3] = { Mdot_cold_BH1, Mdot_cold_BH2, Mdot_cold_BH3 };
@@ -650,7 +647,7 @@ void Aux_Record_ClusterMerger()
          fprintf( File_User, " %20.7e %20.7e %20.7e", BH_Vel[c][0]*UNIT_V/(Const_km/Const_s), BH_Vel[c][1]*UNIT_V/(Const_km/Const_s), BH_Vel[c][2]*UNIT_V/(Const_km/Const_s) );
          fprintf( File_User, " %20.7e %20.7e %20.7e", GasVel[c][0]*UNIT_V/(Const_km/Const_s), GasVel[c][1]*UNIT_V/(Const_km/Const_s), GasVel[c][2]*UNIT_V/(Const_km/Const_s) );
          fprintf( File_User, " %20.7e %20.7e %20.7e", RelativeVel[c]*UNIT_V/(Const_km/Const_s), SoundSpeed[c]*UNIT_V/(Const_km/Const_s), GasDens[c]*UNIT_D );
-         fprintf( File_User, " %20.7e",               Bondi_MassBH[c]*UNIT_M/Const_Msun );
+         fprintf( File_User, " %20.7e",               CM_BH_Mass[c]*UNIT_M/Const_Msun );
          fprintf( File_User, " %20.7e %20.7e %20.7e", Mdot_tot_BH[c]*UNIT_M/UNIT_T, Mdot_hot_BH[c]*UNIT_M/UNIT_T, Mdot_cold_BH[c]*UNIT_M/UNIT_T );
          fprintf( File_User, " %20d",                 SinkNCell_Sum[c] );
          fprintf( File_User, " %20.7e %20.7e %20.7e", MomX_Sum[c], MomY_Sum[c], MomZ_Sum[c] );

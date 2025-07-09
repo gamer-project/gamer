@@ -20,9 +20,7 @@ extern double     CM_Bondi_SinkEk[3];
 extern double     CM_Bondi_SinkEt[3];
 extern int        CM_Bondi_SinkNCell[3];
 
-extern double     Bondi_MassBH1;
-extern double     Bondi_MassBH2;
-extern double     Bondi_MassBH3;
+extern double    *CM_BH_Mass;
 extern double     Mdot_tot_BH1;                            // the total accretion rate
 extern double     Mdot_tot_BH2;
 extern double     Mdot_tot_BH3;
@@ -332,11 +330,11 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
    double soften           = amr->dh[MAX_LEVEL];
    if ( AbsRelPos > soften )
    {
-      escape_vel = sqrt( 2 * NEWTON_G * (Bondi_MassBH1+Bondi_MassBH2) / AbsRelPos );
+      escape_vel = sqrt( 2 * NEWTON_G * (CM_BH_Mass[0]+CM_BH_Mass[1]) / AbsRelPos );
    }
    else
    {
-      escape_vel = sqrt( 2 * NEWTON_G * (Bondi_MassBH1+Bondi_MassBH2) / soften );
+      escape_vel = sqrt( 2 * NEWTON_G * (CM_BH_Mass[0]+CM_BH_Mass[1]) / soften );
    } // if ( AbsRelPos > soften ) ... else ...
 
 // merge the two BHs if they are located within R_acc, and the relative velocity is small enough
@@ -345,10 +343,10 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
       if ( AbsRelPos < R_acc  &&  AbsRelVel < 3*escape_vel )
       {
          Merger_Coll_NumBHs -= 1;
-         if ( Bondi_MassBH1 >= Bondi_MassBH2 )   merge_index = 1;   // record BH 1 merge BH 2 / BH 2 merge BH 1
+         if ( CM_BH_Mass[0] >= CM_BH_Mass[1] )   merge_index = 1;   // record BH 1 merge BH 2 / BH 2 merge BH 1
          else                                    merge_index = 2;
-         Bondi_MassBH1 += Bondi_MassBH2;
-         Bondi_MassBH2 = 0.0;
+         CM_BH_Mass[0] += CM_BH_Mass[1];
+         CM_BH_Mass[1] = 0.0;
 //       relabel the BH and DM particles being merged
          for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
          {
@@ -375,7 +373,6 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
       double Mdot_tot_BH [3] = { Mdot_tot_BH1,  Mdot_tot_BH2,  Mdot_tot_BH3  };
       double Mdot_hot_BH [3] = { Mdot_hot_BH1,  Mdot_hot_BH2,  Mdot_hot_BH3  };
       double Mdot_cold_BH[3] = { Mdot_cold_BH1, Mdot_cold_BH2, Mdot_cold_BH3 };
-      double Bondi_MassBH[3] = { Bondi_MassBH1, Bondi_MassBH2, Bondi_MassBH3 };
 
 //    set the jet direction vector
       if ( JetDirection_case == 1 ) // fixed at x-axis
@@ -594,7 +591,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
          } // if ( num_sum[c] == 0 ) ... else ...
 
          BH_accretion_rate( Accretion_Mode, Mdot_tot_BH+c, Mdot_hot_BH+c, Mdot_cold_BH+c,
-                            R_acc, Bondi_MassBH[c], GasDens[c], SoundSpeed[c], RelativeVel[c],
+                            R_acc, CM_BH_Mass[c], GasDens[c], SoundSpeed[c], RelativeVel[c],
                             ColdGasMass[c], GasMass[c], ParMass[c] );
 
          if ( V_cyl_exact_sum[c] != 0 )   normalize_const[c] = V_cyl_exact_sum[c] / normalize_sum[c];
@@ -615,10 +612,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
       Mdot_cold_BH3 = Mdot_cold_BH[2];
 
 //    update BH mass
-      for (int c=0; c<Merger_Coll_NumBHs; c++)   if ( CurrentMaxLv )   Bondi_MassBH[c] += Mdot_tot_BH[c] * dt;
-      Bondi_MassBH1 = Bondi_MassBH[0];
-      Bondi_MassBH2 = Bondi_MassBH[1];
-      Bondi_MassBH3 = Bondi_MassBH[2];
+      for (int c=0; c<Merger_Coll_NumBHs; c++)   if ( CurrentMaxLv )   CM_BH_Mass[c] += Mdot_tot_BH[c] * dt;
 
 //    (5) calculate the injection rate
       for (int c=0; c<Merger_Coll_NumBHs; c++)
