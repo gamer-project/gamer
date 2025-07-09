@@ -28,9 +28,9 @@ extern double     Jet_Radius1;
 extern double     Jet_Radius2;
 extern double     Jet_Radius3;
 extern double     Jet_Vec[3][3];                           // jet direction
-extern double     Mdot[3];                                 // the feedback injection rate
-extern double     Pdot[3];
-extern double     Edot[3];
+extern double    *CM_Jet_Mdot;                             // the feedback injection rate
+extern double    *CM_Jet_Pdot;
+extern double    *CM_Jet_Edot;
 extern double     GasVel[3][3];                            // gas velocity
 extern double     SoundSpeed[3];
 extern double     GasDens[3];
@@ -206,8 +206,8 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
    if ( if_overlap )
    {
       if ( Merger_Coll_NumBHs == 1 )   Aux_Error( ERROR_INFO, "Error: Merger_Coll_NumBHs = 1 but if_overlap = true!\n" );
-      if ( Edot[0] >= Edot[1] )   status = 0;   // only inject cluster 1
-      else                        status = 1;   // only inject cluster 2
+      if ( CM_Jet_Edot[0] >= CM_Jet_Edot[1] )   status = 0;   // only inject cluster 1
+      else                                      status = 1;   // only inject cluster 2
       n_jet = Merger_Coll_NumBHs-1;
    }
    else // if ( if_overlap )
@@ -597,30 +597,30 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 //    (5) calculate the injection rate
       for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
-         Mdot[c]  = eta * CM_BH_Mdot_tot[c];
-         Pdot[c]  = sqrt(2*eta*eps_f*(1.0-eps_m)) * CM_BH_Mdot_tot[c] * (Const_c/UNIT_V);
-         Edot[c]  = eps_f * CM_BH_Mdot_tot[c] * SQR(Const_c/UNIT_V);
+         CM_Jet_Mdot[c]  = eta * CM_BH_Mdot_tot[c];
+         CM_Jet_Pdot[c]  = sqrt(2*eta*eps_f*(1.0-eps_m)) * CM_BH_Mdot_tot[c] * (Const_c/UNIT_V);
+         CM_Jet_Edot[c]  = eps_f * CM_BH_Mdot_tot[c] * SQR(Const_c/UNIT_V);
          V_cyl[c] = M_PI * SQR(Jet_Radius[c]) * 2 * Jet_HalfHeight[c];
 
 //       calculate the density that need to be injected
          if ( CurrentMaxLv  &&  V_cyl_exact_sum[c] != 0 )
          {
-            M_inj[c] = Mdot[c] * dt / V_cyl_exact_sum[c];
-            P_inj[c] = Pdot[c] * dt / V_cyl_exact_sum[c];
-            E_inj[c] = Edot[c] * dt / V_cyl_exact_sum[c];
+            M_inj[c] = CM_Jet_Mdot[c] * dt / V_cyl_exact_sum[c];
+            P_inj[c] = CM_Jet_Pdot[c] * dt / V_cyl_exact_sum[c];
+            E_inj[c] = CM_Jet_Edot[c] * dt / V_cyl_exact_sum[c];
          }
          else
          {
-            M_inj[c] = Mdot[c] * dt / V_cyl[c];
-            P_inj[c] = Pdot[c] * dt / V_cyl[c];
-            E_inj[c] = Edot[c] * dt / V_cyl[c];
+            M_inj[c] = CM_Jet_Mdot[c] * dt / V_cyl[c];
+            P_inj[c] = CM_Jet_Pdot[c] * dt / V_cyl[c];
+            E_inj[c] = CM_Jet_Edot[c] * dt / V_cyl[c];
          } // if ( CurrentMaxLv  &&  V_cyl_exact_sum[c] != 0 ) ... else ...
       } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
       if ( CurrentMaxLv )
       {
-         for (int c=0; c<Merger_Coll_NumBHs; c++)   E_inj_exp[c] += Edot[c]*dt;
-         for (int c=0; c<Merger_Coll_NumBHs; c++)   M_inj_exp[c] += Mdot[c]*dt;
+         for (int c=0; c<Merger_Coll_NumBHs; c++)   E_inj_exp[c] += CM_Jet_Edot[c]*dt;
+         for (int c=0; c<Merger_Coll_NumBHs; c++)   M_inj_exp[c] += CM_Jet_Mdot[c]*dt;
       } // if ( CurrentMaxLv )
 
 

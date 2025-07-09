@@ -46,9 +46,9 @@ extern double  GasDens[3];
 extern double  RelativeVel[3];
 extern double  ColdGasMass[3];
 extern double  Jet_Vec[3][3];             // jet direction
-extern double  Mdot[3];                   // the feedback injection rate
-extern double  Pdot[3];
-extern double  Edot[3];
+extern double *CM_Jet_Mdot;               // the feedback injection rate
+extern double *CM_Jet_Pdot;
+extern double *CM_Jet_Edot;
 extern double  E_inj_exp[3];
 extern double  M_inj_exp[3];
        double  E_power_inj[3];             // the injection power
@@ -645,7 +645,7 @@ void Aux_Record_ClusterMerger()
          fprintf( File_User, " %20.7e %20.7e %20.7e", E_inj_exp[c], E_Sum[c], (E_Sum[c]-E_inj_exp[c])/E_inj_exp[c] );
          fprintf( File_User, " %20.7e %20.7e %20.7e", Ek_Sum[c], Et_Sum[c], E_power_inj[c] );
          fprintf( File_User, " %20.7e %20.7e %20.7e", M_inj_exp[c], Mass_Sum[c], (Mass_Sum[c]-M_inj_exp[c])/M_inj_exp[c] );
-         fprintf( File_User, " %20.7e %20.7e %20.7e", Mdot[c]*UNIT_M/UNIT_T, Pdot[c]*UNIT_M*UNIT_V/UNIT_T, Edot[c]*UNIT_E/UNIT_T );
+         fprintf( File_User, " %20.7e %20.7e %20.7e", CM_Jet_Mdot[c]*UNIT_M/UNIT_T, CM_Jet_Pdot[c]*UNIT_M*UNIT_V/UNIT_T, CM_Jet_Edot[c]*UNIT_E/UNIT_T );
          fprintf( File_User, " %20.7e %20.7e %20.7e", Jet_Vec[c][0], Jet_Vec[c][1], Jet_Vec[c][2] );
          fprintf( File_User, " %20d %20.7e",          num_par_sum[c], ColdGasMass[c]*UNIT_M/Const_Msun );
       }

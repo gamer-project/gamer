@@ -53,9 +53,9 @@ static FieldIdx_t *ColorFieldsIdx;        //
        double *CM_BH_Mdot_tot;            // the total accretion rate of BHs
        double *CM_BH_Mdot_hot;            // the hot   accretion rate of BHs
        double *CM_BH_Mdot_cold;           // the cold  accretion rate of BHs
-       double  Mdot[3];                   // the feedback injeciton rate of mass
-       double  Pdot[3];                   // the feedback injeciton rate of momentum
-       double  Edot[3];                   // the feedback injeciton rate of total energy
+       double *CM_Jet_Mdot;               // the feedback injeciton rate of mass
+       double *CM_Jet_Pdot;               // the feedback injeciton rate of momentum
+       double *CM_Jet_Edot;               // the feedback injeciton rate of total energy
        double  Jet_Vec[3][3];             // jet direction
        double  GasVel[3][3];              // average gas velocity inside the accretion radius
        double  SoundSpeed[3];             // average sound speed inside the accreiton radius
@@ -311,7 +311,7 @@ void SetParameter()
    ReadPara->Read( FileName );
    delete ReadPara;
 
-// (1-1-2) allocate memories
+// (1-1-2) allocate runtime parameter memories
    Merger_File_Prof  = new char   [ Merger_Coll_NumHalos ][ 1000 ];
    Merger_File_Par   = new char   [ Merger_Coll_NumHalos ][ 1000 ];
    Merger_Coll_IsGas = new bool   [ Merger_Coll_NumHalos ];
@@ -442,10 +442,15 @@ void SetParameter()
 //    set the number of black holes to be the same as the number of clusters initially
       Merger_Coll_NumBHs = Merger_Coll_NumHalos;
 
-//    set initial accretion rate to zero
+//    allocate BH related memories
       CM_BH_Mdot_tot  = new double [ Merger_Coll_NumBHs ];
       CM_BH_Mdot_hot  = new double [ Merger_Coll_NumBHs ];
       CM_BH_Mdot_cold = new double [ Merger_Coll_NumBHs ];
+      CM_Jet_Mdot     = new double [ Merger_Coll_NumBHs ];
+      CM_Jet_Pdot     = new double [ Merger_Coll_NumBHs ];
+      CM_Jet_Edot     = new double [ Merger_Coll_NumBHs ];
+
+//    set initial accretion rate to zero
       for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
          CM_BH_Mdot_tot [c] = 0.0;
@@ -753,6 +758,9 @@ void End_ClusterMerger()
    delete [] CM_BH_Mdot_tot;
    delete [] CM_BH_Mdot_hot;
    delete [] CM_BH_Mdot_cold;
+   delete [] CM_Jet_Mdot;
+   delete [] CM_Jet_Pdot;
+   delete [] CM_Jet_Edot;
 
    delete [] ColorFieldsIdx;
 
