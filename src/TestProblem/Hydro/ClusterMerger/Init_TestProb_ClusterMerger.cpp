@@ -73,7 +73,6 @@ static FieldIdx_t *ColorFieldsIdx;        //
        double  ClusterCen[3][3];          // the center of each cluster
        double  BH_Pos[3][3];              // BH position of each cluster
        double  BH_Vel[3][3];              // BH velocity of each cluster
-       double  BH_Mass[3];                // BH mass     of each cluster
 
        double *Jet_HalfHeight;            // half height of the cylinder-shape jet source of clusters
        double *Jet_Radius;                // radius of the cylinder-shape jet source of clusters
@@ -704,10 +703,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 void Output_HDF5_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
 {
 
-   BH_Mass[0] = CM_BH_Mass[0];
-   BH_Mass[1] = CM_BH_Mass[1];
-   BH_Mass[2] = CM_BH_Mass[2];
-
    double BH_Mdot_tot[3]  = { Mdot_tot_BH1,  Mdot_tot_BH2,  Mdot_tot_BH3  };
    double BH_Mdot_hot[3]  = { Mdot_hot_BH1,  Mdot_hot_BH2,  Mdot_hot_BH3  };
    double BH_Mdot_cold[3] = { Mdot_cold_BH1, Mdot_cold_BH2, Mdot_cold_BH3 };
@@ -730,7 +725,7 @@ void Output_HDF5_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
       sprintf( BH_Mdot_tot_name,  "BH_Mdot_tot_%d",  c );
       sprintf( BH_Mdot_hot_name,  "BH_Mdot_hot_%d",  c );
       sprintf( BH_Mdot_cold_name, "BH_Mdot_cold_%d", c );
-      HDF5_OutUser->Add( BH_Mass_name,      &BH_Mass     [c] );
+      HDF5_OutUser->Add( BH_Mass_name,      &CM_BH_Mass  [c] );
       HDF5_OutUser->Add( BH_Mdot_tot_name,  &BH_Mdot_tot [c] );
       HDF5_OutUser->Add( BH_Mdot_hot_name,  &BH_Mdot_hot [c] );
       HDF5_OutUser->Add( BH_Mdot_cold_name, &BH_Mdot_cold[c] );
@@ -1082,7 +1077,7 @@ void Init_User_ClusterMerger()
       sprintf( BH_Mdot_tot_name,  "BH_Mdot_tot_%d",  c );
       sprintf( BH_Mdot_hot_name,  "BH_Mdot_hot_%d",  c );
       sprintf( BH_Mdot_cold_name, "BH_Mdot_cold_%d", c );
-      LoadField( BH_Mass_name,      &BH_Mass     [c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
+      LoadField( BH_Mass_name,      &CM_BH_Mass  [c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
       LoadField( BH_Mdot_tot_name,  &BH_Mdot_tot [c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
       LoadField( BH_Mdot_hot_name,  &BH_Mdot_hot [c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
       LoadField( BH_Mdot_cold_name, &BH_Mdot_cold[c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
@@ -1092,10 +1087,6 @@ void Init_User_ClusterMerger()
    H5_Status = H5Tclose( H5_TypeID_OutputUser );
    H5_Status = H5Dclose( H5_SetID_OutputUser );
    H5_Status = H5Fclose( H5_FileID );
-
-   CM_BH_Mass[0] = BH_Mass[0];
-   CM_BH_Mass[1] = BH_Mass[1];
-   CM_BH_Mass[2] = BH_Mass[2];
 
    Mdot_tot_BH1  = BH_Mdot_tot[0];
    Mdot_tot_BH2  = BH_Mdot_tot[1];
