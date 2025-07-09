@@ -57,13 +57,13 @@ static FieldIdx_t *ColorFieldsIdx;        //
        double  *CM_Jet_Pdot;              // the feedback injeciton rate of momentum
        double  *CM_Jet_Edot;              // the feedback injeciton rate of total energy
        double (*CM_Jet_Vec)[3];           // jet direction
-       double   GasVel[3][3];             // average gas velocity inside the accretion radius
-       double   SoundSpeed[3];            // average sound speed inside the accreiton radius
-       double   GasDens[3];               // average gas density inside the accreiton radius
-       double   RelativeVel[3];           // relative velocity between BH and gas for each cluster
-       double   ColdGasMass[3];           // cold gas mass inside the accretion radius
-       double   GasMass[3];               // total gas mass inside the accretion radius
-       double   ParMass[3];               // total DM mass inside the accretion radius
+       double (*CM_RAcc_GasVel)[3];       // average gas velocity inside the accretion radius
+       double  *CM_RAcc_SoundSpeed;       // average sound speed inside the accreiton radius
+       double  *CM_RAcc_GasDens;          // average gas density inside the accreiton radius
+       double  *CM_RAcc_RelativeVel;      // relative velocity between BH and gas for each cluster inside the accretion radius
+       double  *CM_RAcc_ColdGasMass;      // cold gas mass inside the accretion radius
+       double  *CM_RAcc_GasMass;          // total gas mass inside the accretion radius
+       double  *CM_RAcc_ParMass;          // total DM mass inside the accretion radius
        double   ClusterCen[3][3];         // the center of each cluster
        double   BH_Pos[3][3];             // BH position of each cluster
        double   BH_Vel[3][3];             // BH velocity of each cluster
@@ -443,13 +443,20 @@ void SetParameter()
       Merger_Coll_NumBHs = Merger_Coll_NumHalos;
 
 //    allocate BH related memories
-      CM_BH_Mdot_tot  = new double [ Merger_Coll_NumBHs ];
-      CM_BH_Mdot_hot  = new double [ Merger_Coll_NumBHs ];
-      CM_BH_Mdot_cold = new double [ Merger_Coll_NumBHs ];
-      CM_Jet_Mdot     = new double [ Merger_Coll_NumBHs ];
-      CM_Jet_Pdot     = new double [ Merger_Coll_NumBHs ];
-      CM_Jet_Edot     = new double [ Merger_Coll_NumBHs ];
-      CM_Jet_Vec      = new double [ Merger_Coll_NumBHs ][ 3 ];
+      CM_BH_Mdot_tot      = new double [ Merger_Coll_NumBHs ];
+      CM_BH_Mdot_hot      = new double [ Merger_Coll_NumBHs ];
+      CM_BH_Mdot_cold     = new double [ Merger_Coll_NumBHs ];
+      CM_Jet_Mdot         = new double [ Merger_Coll_NumBHs ];
+      CM_Jet_Pdot         = new double [ Merger_Coll_NumBHs ];
+      CM_Jet_Edot         = new double [ Merger_Coll_NumBHs ];
+      CM_Jet_Vec          = new double [ Merger_Coll_NumBHs ][ 3 ];
+      CM_RAcc_GasVel      = new double [ Merger_Coll_NumBHs ][ 3 ];
+      CM_RAcc_SoundSpeed  = new double [ Merger_Coll_NumBHs ];
+      CM_RAcc_GasDens     = new double [ Merger_Coll_NumBHs ];
+      CM_RAcc_RelativeVel = new double [ Merger_Coll_NumBHs ];
+      CM_RAcc_ColdGasMass = new double [ Merger_Coll_NumBHs ];
+      CM_RAcc_GasMass     = new double [ Merger_Coll_NumBHs ];
+      CM_RAcc_ParMass     = new double [ Merger_Coll_NumBHs ];
 
 //    set initial accretion rate to zero
       for (int c=0; c<Merger_Coll_NumBHs; c++)
@@ -763,6 +770,13 @@ void End_ClusterMerger()
    delete [] CM_Jet_Pdot;
    delete [] CM_Jet_Edot;
    delete [] CM_Jet_Vec;
+   delete [] CM_RAcc_GasVel;
+   delete [] CM_RAcc_SoundSpeed;
+   delete [] CM_RAcc_GasDens;
+   delete [] CM_RAcc_RelativeVel;
+   delete [] CM_RAcc_ColdGasMass;
+   delete [] CM_RAcc_GasMass;
+   delete [] CM_RAcc_ParMass;
 
    delete [] ColorFieldsIdx;
 

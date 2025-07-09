@@ -31,13 +31,13 @@ extern double   (*CM_Jet_Vec)[3];                          // jet direction
 extern double    *CM_Jet_Mdot;                             // the feedback injection rate
 extern double    *CM_Jet_Pdot;
 extern double    *CM_Jet_Edot;
-extern double     GasVel[3][3];                            // gas velocity
-extern double     SoundSpeed[3];
-extern double     GasDens[3];
-extern double     RelativeVel[3];                          // the relative velocity between BH and gas
-extern double     ColdGasMass[3];
-extern double     GasMass[3];
-extern double     ParMass[3];
+extern double   (*CM_RAcc_GasVel)[3];                      // gas velocity
+extern double    *CM_RAcc_SoundSpeed;
+extern double    *CM_RAcc_GasDens;
+extern double    *CM_RAcc_RelativeVel;                     // the relative velocity between BH and gas
+extern double    *CM_RAcc_ColdGasMass;
+extern double    *CM_RAcc_GasMass;
+extern double    *CM_RAcc_ParMass;
 extern double     ClusterCen[3][3];
 extern double     BH_Pos[3][3];                            // BH position (for updating ClusterCen)
 extern double     BH_Vel[3][3];                            // BH velocity
@@ -518,15 +518,15 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
       for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
-         MPI_Allreduce( &num[c],         &num_sum[c],         1, MPI_INT,        MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( &gas_mass[c],    &GasMass[c],         1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( &rho[c],         &rho_sum[c],         1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( &mass_cold[c],   &ColdGasMass[c],     1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( &Cs[c],          &Cs_sum[c],          1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( gas_mom[c],       gas_mom_sum[c],     3, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( ang_mom[c],       ang_mom_sum[c],     3, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( &V_cyl_exact[c], &V_cyl_exact_sum[c], 1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( &normalize[c],   &normalize_sum[c],   1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( &num[c],         &num_sum[c],             1, MPI_INT,        MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( &gas_mass[c],    &CM_RAcc_GasMass[c],     1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( &rho[c],         &rho_sum[c],             1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( &mass_cold[c],   &CM_RAcc_ColdGasMass[c], 1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( &Cs[c],          &Cs_sum[c],              1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( gas_mom[c],       gas_mom_sum[c],         3, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( ang_mom[c],       ang_mom_sum[c],         3, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( &V_cyl_exact[c], &V_cyl_exact_sum[c],     1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( &normalize[c],   &normalize_sum[c],       1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
       } // for (int c=0; c<Merger_Coll_NumBHs; c++)
       MPI_Allreduce( &if_overlap_each_rank, &if_overlap, 1, MPI_CXX_BOOL, MPI_LOR, MPI_COMM_WORLD );
 
@@ -554,7 +554,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                   } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                } // if ( DIST_SQR_3D( patch_pos, ClusterCen[c] ) <= SQR(2*R_acc+patch_d) )
             } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-            MPI_Allreduce( &par_mass, &ParMass[c], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+            MPI_Allreduce( &par_mass, &CM_RAcc_ParMass[c], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
          }
       } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
@@ -564,10 +564,10 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
          double v = 0.0;  // the relative velocity between BH and gas
          if ( num_sum[c] == 0 )
          {
-            GasDens[c]     = 0.0;
-            SoundSpeed[c]  = 0.0;
-            RelativeVel[c] = 0.0;
-            for (int d=0; d<3; d++)  GasVel[c][d] = 0.0;
+            CM_RAcc_GasDens[c]     = 0.0;
+            CM_RAcc_SoundSpeed[c]  = 0.0;
+            CM_RAcc_RelativeVel[c] = 0.0;
+            for (int d=0; d<3; d++)  CM_RAcc_GasVel[c][d] = 0.0;
          }
          else
          {
@@ -576,15 +576,15 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
             Cs_sum[c]  /= (double)num_sum[c];
             for (int d=0; d<3; d++)   v += SQR( BH_Vel[c][d] - gas_vel_sum[c][d] );
 
-            GasDens[c]     = rho_sum[c];
-            SoundSpeed[c]  = Cs_sum[c];
-            RelativeVel[c] = sqrt(v);
-            for (int d=0; d<3; d++)  GasVel[c][d] = gas_vel_sum[c][d];
+            CM_RAcc_GasDens[c]     = rho_sum[c];
+            CM_RAcc_SoundSpeed[c]  = Cs_sum[c];
+            CM_RAcc_RelativeVel[c] = sqrt(v);
+            for (int d=0; d<3; d++)  CM_RAcc_GasVel[c][d] = gas_vel_sum[c][d];
          } // if ( num_sum[c] == 0 ) ... else ...
 
          BH_accretion_rate( Accretion_Mode, CM_BH_Mdot_tot+c, CM_BH_Mdot_hot+c, CM_BH_Mdot_cold+c,
-                            R_acc, CM_BH_Mass[c], GasDens[c], SoundSpeed[c], RelativeVel[c],
-                            ColdGasMass[c], GasMass[c], ParMass[c] );
+                            R_acc, CM_BH_Mass[c], CM_RAcc_GasDens[c], CM_RAcc_SoundSpeed[c], CM_RAcc_RelativeVel[c],
+                            CM_RAcc_ColdGasMass[c], CM_RAcc_GasMass[c], CM_RAcc_ParMass[c] );
 
          if ( V_cyl_exact_sum[c] != 0 )   normalize_const[c] = V_cyl_exact_sum[c] / normalize_sum[c];
          else                             normalize_const[c] = 0.5 * M_PI;

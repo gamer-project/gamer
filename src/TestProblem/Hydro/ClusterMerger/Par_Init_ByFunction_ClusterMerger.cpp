@@ -40,11 +40,11 @@ extern double  CM_Bondi_SinkEk[3];
 extern double  CM_Bondi_SinkEt[3];
 extern int     CM_Bondi_SinkNCell[3];
 
-extern double   GasVel[3][3];              // gas velocity
-extern double   SoundSpeed[3];
-extern double   GasDens[3];
-extern double   RelativeVel[3];
-extern double   ColdGasMass[3];
+extern double (*CM_RAcc_GasVel)[3];      // gas velocity
+extern double  *CM_RAcc_SoundSpeed;
+extern double  *CM_RAcc_GasDens;
+extern double  *CM_RAcc_RelativeVel;
+extern double  *CM_RAcc_ColdGasMass;
 extern double (*CM_Jet_Vec)[3];            // jet direction
 extern double  *CM_Jet_Mdot;               // the feedback injection rate
 extern double  *CM_Jet_Pdot;
@@ -635,8 +635,8 @@ void Aux_Record_ClusterMerger()
       {
          fprintf( File_User, " %20.7e %20.7e %20.7e", ClusterCen[c][0], ClusterCen[c][1], ClusterCen[c][2] );
          fprintf( File_User, " %20.7e %20.7e %20.7e", BH_Vel[c][0]*UNIT_V/(Const_km/Const_s), BH_Vel[c][1]*UNIT_V/(Const_km/Const_s), BH_Vel[c][2]*UNIT_V/(Const_km/Const_s) );
-         fprintf( File_User, " %20.7e %20.7e %20.7e", GasVel[c][0]*UNIT_V/(Const_km/Const_s), GasVel[c][1]*UNIT_V/(Const_km/Const_s), GasVel[c][2]*UNIT_V/(Const_km/Const_s) );
-         fprintf( File_User, " %20.7e %20.7e %20.7e", RelativeVel[c]*UNIT_V/(Const_km/Const_s), SoundSpeed[c]*UNIT_V/(Const_km/Const_s), GasDens[c]*UNIT_D );
+         fprintf( File_User, " %20.7e %20.7e %20.7e", CM_RAcc_GasVel[c][0]*UNIT_V/(Const_km/Const_s), CM_RAcc_GasVel[c][1]*UNIT_V/(Const_km/Const_s), CM_RAcc_GasVel[c][2]*UNIT_V/(Const_km/Const_s) );
+         fprintf( File_User, " %20.7e %20.7e %20.7e", CM_RAcc_RelativeVel[c]*UNIT_V/(Const_km/Const_s), CM_RAcc_SoundSpeed[c]*UNIT_V/(Const_km/Const_s), CM_RAcc_GasDens[c]*UNIT_D );
          fprintf( File_User, " %20.7e",               CM_BH_Mass[c]*UNIT_M/Const_Msun );
          fprintf( File_User, " %20.7e %20.7e %20.7e", CM_BH_Mdot_tot[c]*UNIT_M/UNIT_T, CM_BH_Mdot_hot[c]*UNIT_M/UNIT_T, CM_BH_Mdot_cold[c]*UNIT_M/UNIT_T );
          fprintf( File_User, " %20d",                 SinkNCell_Sum[c] );
@@ -647,7 +647,7 @@ void Aux_Record_ClusterMerger()
          fprintf( File_User, " %20.7e %20.7e %20.7e", M_inj_exp[c], Mass_Sum[c], (Mass_Sum[c]-M_inj_exp[c])/M_inj_exp[c] );
          fprintf( File_User, " %20.7e %20.7e %20.7e", CM_Jet_Mdot[c]*UNIT_M/UNIT_T, CM_Jet_Pdot[c]*UNIT_M*UNIT_V/UNIT_T, CM_Jet_Edot[c]*UNIT_E/UNIT_T );
          fprintf( File_User, " %20.7e %20.7e %20.7e", CM_Jet_Vec[c][0], CM_Jet_Vec[c][1], CM_Jet_Vec[c][2] );
-         fprintf( File_User, " %20d %20.7e",          num_par_sum[c], ColdGasMass[c]*UNIT_M/Const_Msun );
+         fprintf( File_User, " %20d %20.7e",          num_par_sum[c], CM_RAcc_ColdGasMass[c]*UNIT_M/Const_Msun );
       }
       fprintf( File_User, "\n" );
       fclose( File_User );
