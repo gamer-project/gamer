@@ -11,24 +11,14 @@
 typedef double real_par_in;
 //typedef float  real_par_in;
 
-extern char  (*Merger_File_Par)[1000];
-extern int     Merger_Coll_NumHalos;
-extern int     Merger_Coll_NumBHs;
-extern double  Merger_Coll_PosX1;
-extern double  Merger_Coll_PosY1;
-extern double  Merger_Coll_PosX2;
-extern double  Merger_Coll_PosY2;
-extern double  Merger_Coll_PosX3;
-extern double  Merger_Coll_PosY3;
-extern double  Merger_Coll_VelX1;
-extern double  Merger_Coll_VelY1;
-extern double  Merger_Coll_VelX2;
-extern double  Merger_Coll_VelY2;
-extern double  Merger_Coll_VelX3;
-extern double  Merger_Coll_VelY3;
-extern bool    Merger_Coll_LabelCenter;
-extern long   *NPar_EachCluster;
-extern long    NPar_AllCluster;
+extern char   (*Merger_File_Par)[1000];
+extern int      Merger_Coll_NumHalos;
+extern int      Merger_Coll_NumBHs;
+extern double (*Merger_Coll_Pos)[3];
+extern double (*Merger_Coll_Vel)[3];
+extern bool     Merger_Coll_LabelCenter;
+extern long    *NPar_EachCluster;
+extern long     NPar_AllCluster;
 
 
 // variables that need to be record in Record__ClusterCenter
@@ -284,38 +274,34 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
    real_par *ParPos[3] = { ParPosX, ParPosY, ParPosZ };
 
-   const double ClusterCenter1[3] = { Merger_Coll_PosX1, Merger_Coll_PosY1, amr->BoxCenter[2] };
-   const double ClusterCenter2[3] = { Merger_Coll_PosX2, Merger_Coll_PosY2, amr->BoxCenter[2] };
-   const double ClusterCenter3[3] = { Merger_Coll_PosX3, Merger_Coll_PosY3, amr->BoxCenter[2] };
-
    for (long p=0; p<NPar_ThisRank_EachCluster[0]; p++)
    {
       if ( ParType[p] != PTYPE_TRACER )
       {
-         ParVelX[p] += Merger_Coll_VelX1;
-         ParVelY[p] += Merger_Coll_VelY1;
+         ParVelX[p] += Merger_Coll_Vel[0][0];
+         ParVelY[p] += Merger_Coll_Vel[0][1];
       }
-      for (int d=0; d<3; d++)   ParPos[d][p] += ClusterCenter1[d];
+      for (int d=0; d<3; d++)   ParPos[d][p] += Merger_Coll_Pos[0][d];
    }
 
    for (long p=NPar_ThisRank_EachCluster[0]; p<NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p++)
    {
       if ( ParType[p] != PTYPE_TRACER )
       {
-         ParVelX[p] += Merger_Coll_VelX2;
-         ParVelY[p] += Merger_Coll_VelY2;
+         ParVelX[p] += Merger_Coll_Vel[1][0];
+         ParVelY[p] += Merger_Coll_Vel[1][1];
       }
-      for (int d=0; d<3; d++)   ParPos[d][p] += ClusterCenter2[d];
+      for (int d=0; d<3; d++)   ParPos[d][p] += Merger_Coll_Pos[1][d];
    }
 
    for (long p=NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p<NPar_ThisRank; p++)
    {
       if ( ParType[p] != PTYPE_TRACER )
       {
-         ParVelX[p] += Merger_Coll_VelX3;
-         ParVelY[p] += Merger_Coll_VelY3;
+         ParVelX[p] += Merger_Coll_Vel[2][0];
+         ParVelY[p] += Merger_Coll_Vel[2][1];
       }
-      for (int d=0; d<3; d++)   ParPos[d][p] += ClusterCenter3[d];
+      for (int d=0; d<3; d++)   ParPos[d][p] += Merger_Coll_Pos[2][d];
    }
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
@@ -326,9 +312,6 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
    {
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Labeling cluster centers ... " );
 
-      const double Centers[3][3] = {  { ClusterCenter1[0], ClusterCenter1[1], ClusterCenter1[2] },
-                                      { ClusterCenter2[0], ClusterCenter2[1], ClusterCenter2[2] },
-                                      { ClusterCenter3[0], ClusterCenter3[1], ClusterCenter3[2] }  };
       long pidx_offset = 0;
 
       for (int c=0; c<NCluster; c++)
@@ -340,9 +323,9 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 //       get the particle in this rank closest to the cluster center
          for (long p=pidx_offset; p<pidx_offset+NPar_ThisRank_EachCluster[c]; p++)
          {
-            const double r = SQR( ParPos[0][p] - Centers[c][0] ) +
-                             SQR( ParPos[1][p] - Centers[c][1] ) +
-                             SQR( ParPos[2][p] - Centers[c][2] );
+            const double r = SQR( ParPos[0][p] - Merger_Coll_Pos[c][0] ) +
+                             SQR( ParPos[1][p] - Merger_Coll_Pos[c][1] ) +
+                             SQR( ParPos[2][p] - Merger_Coll_Pos[c][2] );
             if ( r < r_min_ThisRank )
             {
                pidx_min       = p;

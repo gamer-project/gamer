@@ -8,28 +8,18 @@
 
 // problem-specific global variables
 // =======================================================================================
-       int     Merger_Coll_NumHalos;      // number of clusters
-       bool    AGN_feedback;              // turn on/off (1/0) AGN feedback
-static char  (*Merger_File_Prof)[1000];   // profile table of clusters
-       char  (*Merger_File_Par) [1000];   // particle file of clusters
-static char    JetDirection_file[1000];   // jet direction file
-static bool   *Merger_Coll_IsGas;         // (true/false) --> does cluster have gas
-       bool    Merger_Coll_UseMetals;     // (true/false) --> do the clusters have a metal field
-       bool    Merger_Coll_LabelCenter;   // (true/false) --> label the particle closest to the center of each cluster
-       double  Merger_Coll_PosX1;         // x-position of the first  cluster
-       double  Merger_Coll_PosY1;         // y-position of the first  cluster
-       double  Merger_Coll_PosX2;         // x-position of the second cluster
-       double  Merger_Coll_PosY2;         // y-position of the second cluster
-       double  Merger_Coll_PosX3;         // x-position of the third  cluster
-       double  Merger_Coll_PosY3;         // y-position of the third  cluster
-       double  Merger_Coll_VelX1;         // x-velocity of the first  cluster
-       double  Merger_Coll_VelY1;         // y-velocity of the first  cluster
-       double  Merger_Coll_VelX2;         // x-velocity of the second cluster
-       double  Merger_Coll_VelY2;         // y-velocity of the second cluster
-       double  Merger_Coll_VelX3;         // x-velocity of the third  cluster
-       double  Merger_Coll_VelY3;         // y-velocity of the third  cluster
-       long   *NPar_EachCluster;          // number of particles in each cluster
-       long    NPar_AllCluster = 0L;      // number of particles in all  clusters
+       int      Merger_Coll_NumHalos;     // number of clusters
+       bool     AGN_feedback;             // turn on/off (1/0) AGN feedback
+static char   (*Merger_File_Prof)[1000];  // profile table of clusters
+       char   (*Merger_File_Par) [1000];  // particle file of clusters
+static char     JetDirection_file[1000];  // jet direction file
+static bool    *Merger_Coll_IsGas;        // (true/false) --> does cluster have gas
+       bool     Merger_Coll_UseMetals;    // (true/false) --> do the clusters have a metal field
+       bool     Merger_Coll_LabelCenter;  // (true/false) --> label the particle closest to the center of each cluster
+       double (*Merger_Coll_Pos)[3];      // position of clusters
+       double (*Merger_Coll_Vel)[3];      // velocity of clusters
+       long    *NPar_EachCluster;         // number of particles in each cluster
+       long     NPar_AllCluster = 0L;     // number of particles in all  clusters
 
 static double **Table_R = NULL;           // radius      of clusters
 static double **Table_D = NULL;           // density     of clusters
@@ -248,33 +238,33 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
       char Merger_File_Prof_name [MAX_STRING];
       char Merger_File_Par_name  [MAX_STRING];
       char Merger_Coll_IsGas_name[MAX_STRING];
+      char Merger_Coll_PosX_name [MAX_STRING];
+      char Merger_Coll_PosY_name [MAX_STRING];
+      char Merger_Coll_VelX_name [MAX_STRING];
+      char Merger_Coll_VelY_name [MAX_STRING];
       char Jet_HalfHeight_name   [MAX_STRING];
       char Jet_Radius_name       [MAX_STRING];
 
       sprintf( Merger_File_Prof_name,  "Merger_File_Prof%d",  c+1 );
       sprintf( Merger_File_Par_name,   "Merger_File_Par%d",   c+1 );
       sprintf( Merger_Coll_IsGas_name, "Merger_Coll_IsGas%d", c+1 );
+      sprintf( Merger_Coll_PosX_name,  "Merger_Coll_PosX%d",  c+1 );
+      sprintf( Merger_Coll_PosY_name,  "Merger_Coll_PosY%d",  c+1 );
+      sprintf( Merger_Coll_VelX_name,  "Merger_Coll_VelX%d",  c+1 );
+      sprintf( Merger_Coll_VelY_name,  "Merger_Coll_VelY%d",  c+1 );
       sprintf( Jet_HalfHeight_name,    "Jet_HalfHeight%d",    c+1 );
       sprintf( Jet_Radius_name,        "Jet_Radius%d",        c+1 );
 
       LOAD_PARA( load_mode, Merger_File_Prof_name,   Merger_File_Prof[c],      NoDef_str,          Useless_str,   Useless_str    );
       LOAD_PARA( load_mode, Merger_File_Par_name,    Merger_File_Par[c],       NoDef_str,          Useless_str,   Useless_str    );
       LOAD_PARA( load_mode, Merger_Coll_IsGas_name, &Merger_Coll_IsGas[c],     true,               Useless_bool,  Useless_bool   );
+      LOAD_PARA( load_mode, Merger_Coll_PosX_name,  &Merger_Coll_Pos[c][0],   -1.0,                NoMin_double,  NoMax_double   );
+      LOAD_PARA( load_mode, Merger_Coll_PosY_name,  &Merger_Coll_Pos[c][1],   -1.0,                NoMin_double,  NoMax_double   );
+      LOAD_PARA( load_mode, Merger_Coll_VelX_name,  &Merger_Coll_Vel[c][0],   -1.0,                NoMin_double,  NoMax_double   );
+      LOAD_PARA( load_mode, Merger_Coll_VelY_name,  &Merger_Coll_Vel[c][1],   -1.0,                NoMin_double,  NoMax_double   );
       LOAD_PARA( load_mode, Jet_HalfHeight_name,    &Jet_HalfHeight[c],       -1.0,                Eps_double,    NoMax_double   );
       LOAD_PARA( load_mode, Jet_Radius_name,        &Jet_Radius[c],           -1.0,                Eps_double,    NoMax_double   );
    }
-   LOAD_PARA( load_mode, "Merger_Coll_PosX1",       &Merger_Coll_PosX1,       -1.0,                NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_PosY1",       &Merger_Coll_PosY1,       -1.0,                NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_PosX2",       &Merger_Coll_PosX2,       -1.0,                NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_PosY2",       &Merger_Coll_PosY2,       -1.0,                NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_PosX3",       &Merger_Coll_PosX3,       -1.0,                NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_PosY3",       &Merger_Coll_PosY3,       -1.0,                NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_VelX1",       &Merger_Coll_VelX1,       -1.0,                NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_VelY1",       &Merger_Coll_VelY1,       -1.0,                NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_VelX2",       &Merger_Coll_VelX2,       -1.0,                NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_VelY2",       &Merger_Coll_VelY2,       -1.0,                NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_VelX3",       &Merger_Coll_VelX3,       -1.0,                NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_VelY3",       &Merger_Coll_VelY3,       -1.0,                NoMin_double,  NoMax_double   );
    LOAD_PARA( load_mode, "Merger_Coll_UseMetals",   &Merger_Coll_UseMetals,    true,               Useless_bool,  Useless_bool   );
    LOAD_PARA( load_mode, "Merger_Coll_LabelCenter", &Merger_Coll_LabelCenter,  true,               Useless_bool,  Useless_bool   );
    LOAD_PARA( load_mode, "Bondi_MassBH1",           &Bondi_MassBH1,           -1.0,                Eps_double,    NoMax_double   );
@@ -334,6 +324,8 @@ void SetParameter()
    Merger_File_Prof  = new char   [ Merger_Coll_NumHalos ][ 1000 ];
    Merger_File_Par   = new char   [ Merger_Coll_NumHalos ][ 1000 ];
    Merger_Coll_IsGas = new bool   [ Merger_Coll_NumHalos ];
+   Merger_Coll_Pos   = new double [ Merger_Coll_NumHalos ][ 3 ];
+   Merger_Coll_Vel   = new double [ Merger_Coll_NumHalos ][ 3 ];
    Jet_HalfHeight    = new double [ Merger_Coll_NumHalos ];
    Jet_Radius        = new double [ Merger_Coll_NumHalos ];
 
@@ -365,18 +357,6 @@ void SetParameter()
    }
 
 // convert to code units
-   Merger_Coll_PosX1 *= Const_kpc / UNIT_L;
-   Merger_Coll_PosY1 *= Const_kpc / UNIT_L;
-   Merger_Coll_PosX2 *= Const_kpc / UNIT_L;
-   Merger_Coll_PosY2 *= Const_kpc / UNIT_L;
-   Merger_Coll_PosX3 *= Const_kpc / UNIT_L;
-   Merger_Coll_PosY3 *= Const_kpc / UNIT_L;
-   Merger_Coll_VelX1 *= (Const_km/Const_s) / UNIT_V;
-   Merger_Coll_VelY1 *= (Const_km/Const_s) / UNIT_V;
-   Merger_Coll_VelX2 *= (Const_km/Const_s) / UNIT_V;
-   Merger_Coll_VelY2 *= (Const_km/Const_s) / UNIT_V;
-   Merger_Coll_VelX3 *= (Const_km/Const_s) / UNIT_V;
-   Merger_Coll_VelY3 *= (Const_km/Const_s) / UNIT_V;
    Bondi_MassBH1     *= Const_Msun / UNIT_M;
    Bondi_MassBH2     *= Const_Msun / UNIT_M;
    Bondi_MassBH3     *= Const_Msun / UNIT_M;
@@ -384,8 +364,12 @@ void SetParameter()
    R_dep             *= Const_kpc / UNIT_L;
    for (int c=0; c<Merger_Coll_NumHalos; c++)
    {
-      Jet_HalfHeight[c] *= Const_kpc / UNIT_L;
-      Jet_Radius[c]     *= Const_kpc / UNIT_L;
+      Merger_Coll_Pos[c][0] *= Const_kpc / UNIT_L;
+      Merger_Coll_Pos[c][1] *= Const_kpc / UNIT_L;
+      Merger_Coll_Vel[c][0] *= (Const_km/Const_s) / UNIT_V;
+      Merger_Coll_Vel[c][1] *= (Const_km/Const_s) / UNIT_V;
+      Jet_HalfHeight [c]    *= Const_kpc / UNIT_L;
+      Jet_Radius     [c]    *= Const_kpc / UNIT_L;
    }
    AdjustPeriod      *= Const_Myr / UNIT_T;
 
@@ -450,18 +434,19 @@ void SetParameter()
          MPI_Bcast( Table_M[c], Merger_NBin[c], MPI_DOUBLE, 0, MPI_COMM_WORLD );
       } // for (int c=0; c<Merger_Coll_NumHalos; c++)
 
-//    (2-2) initialize the BH position and velocity
+//    (2-2) initialize the BH/Halo position and velocity
       if ( fixBH )
       {
-         Merger_Coll_VelX1 = 0.0;
-         Merger_Coll_VelY1 = 0.0;
+         Merger_Coll_Pos[0][0] = amr->BoxCenter[0];
+         Merger_Coll_Pos[0][1] = amr->BoxCenter[1];
+         Merger_Coll_Vel[0][0] = 0.0;
+         Merger_Coll_Vel[0][1] = 0.0;
       }
-      double ClusterCenter[3][3] = { { Merger_Coll_PosX1, Merger_Coll_PosY1, amr->BoxCenter[2] },
-                                     { Merger_Coll_PosX2, Merger_Coll_PosY2, amr->BoxCenter[2] },
-                                     { Merger_Coll_PosX3, Merger_Coll_PosY3, amr->BoxCenter[2] } };
-      double CenterVel[3][3]     = { { Merger_Coll_VelX1, Merger_Coll_VelY1, 0.0 },
-                                     { Merger_Coll_VelX2, Merger_Coll_VelY2, 0.0 },
-                                     { Merger_Coll_VelX3, Merger_Coll_VelY3, 0.0 } };
+      for (int c=0; c<Merger_Coll_NumHalos; c++)
+      {
+         Merger_Coll_Pos[c][2] = amr->BoxCenter[2];
+         Merger_Coll_Vel[c][2] = 0.0;
+      }
 
 //    set the number of black holes to be the same as the number of clusters initially
       Merger_Coll_NumBHs = Merger_Coll_NumHalos;
@@ -471,8 +456,12 @@ void SetParameter()
       Mdot_hot_BH1  = Mdot_hot_BH2  = Mdot_hot_BH3  = 0.0;
       Mdot_cold_BH1 = Mdot_cold_BH2 = Mdot_cold_BH3 = 0.0;
 
+      double ClusterCenter[Merger_Coll_NumBHs][3], CenterVel[Merger_Coll_NumBHs][3];
       for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
+         for (int d=0; d<3; d++)   ClusterCenter[c][d] = Merger_Coll_Pos[c][d];
+         for (int d=0; d<3; d++)   CenterVel    [c][d] = Merger_Coll_Vel[c][d];
+
          for (int d=0; d<3; d++)   ClusterCen[c][d] = ClusterCenter[c][d];
          for (int d=0; d<3; d++)   BH_Pos    [c][d] = ClusterCen   [c][d];
          for (int d=0; d<3; d++)   BH_Vel    [c][d] = CenterVel    [c][d];
@@ -560,10 +549,10 @@ void SetParameter()
       Aux_Message( stdout, "  profile file 1            = %s\n",           Merger_File_Prof[0] );
       Aux_Message( stdout, "  particle file 1           = %s\n",           Merger_File_Par[0] );
       Aux_Message( stdout, "  cluster 1 w/ gas          = %s\n",          (Merger_Coll_IsGas[0])? "yes":"no" );
-      Aux_Message( stdout, "  cluster 1 x-position      = %g\n",           Merger_Coll_PosX1 );
-      Aux_Message( stdout, "  cluster 1 y-position      = %g\n",           Merger_Coll_PosY1 );
-      Aux_Message( stdout, "  cluster 1 x-velocity      = %g\n",           Merger_Coll_VelX1 );
-      Aux_Message( stdout, "  cluster 1 y-velocity      = %g\n",           Merger_Coll_VelY1 );
+      Aux_Message( stdout, "  cluster 1 x-position      = %g\n",           Merger_Coll_Pos[0][0] );
+      Aux_Message( stdout, "  cluster 1 y-position      = %g\n",           Merger_Coll_Pos[0][1] );
+      Aux_Message( stdout, "  cluster 1 x-velocity      = %g\n",           Merger_Coll_Vel[0][0] );
+      Aux_Message( stdout, "  cluster 1 y-velocity      = %g\n",           Merger_Coll_Vel[0][1] );
       if ( AGN_feedback ) {
       Aux_Message( stdout, "  cluster 1 BH mass         = %g\n",           Bondi_MassBH1     );
       Aux_Message( stdout, "  cluster 1 jet half-height = %g\n",           Jet_HalfHeight[0] );
@@ -573,10 +562,10 @@ void SetParameter()
       Aux_Message( stdout, "  profile file 2            = %s\n",           Merger_File_Prof[1] );
       Aux_Message( stdout, "  particle file 2           = %s\n",           Merger_File_Par[1] );
       Aux_Message( stdout, "  cluster 2 w/ gas          = %s\n",          (Merger_Coll_IsGas[1])? "yes":"no" );
-      Aux_Message( stdout, "  cluster 2 x-position      = %g\n",           Merger_Coll_PosX2 );
-      Aux_Message( stdout, "  cluster 2 y-position      = %g\n",           Merger_Coll_PosY2 );
-      Aux_Message( stdout, "  cluster 2 x-velocity      = %g\n",           Merger_Coll_VelX2 );
-      Aux_Message( stdout, "  cluster 2 y-velocity      = %g\n",           Merger_Coll_VelY2 );
+      Aux_Message( stdout, "  cluster 2 x-position      = %g\n",           Merger_Coll_Pos[1][0] );
+      Aux_Message( stdout, "  cluster 2 y-position      = %g\n",           Merger_Coll_Pos[1][1] );
+      Aux_Message( stdout, "  cluster 2 x-velocity      = %g\n",           Merger_Coll_Vel[1][0] );
+      Aux_Message( stdout, "  cluster 2 y-velocity      = %g\n",           Merger_Coll_Vel[1][1] );
       if ( AGN_feedback ) {
       Aux_Message( stdout, "  cluster 2 BH mass         = %g\n",           Bondi_MassBH2     );
       Aux_Message( stdout, "  cluster 2 jet half-height = %g\n",           Jet_HalfHeight[1] );
@@ -587,10 +576,10 @@ void SetParameter()
       Aux_Message( stdout, "  profile file 3            = %s\n",           Merger_File_Prof[2] );
       Aux_Message( stdout, "  particle file 3           = %s\n",           Merger_File_Par[2] );
       Aux_Message( stdout, "  cluster 3 w/ gas          = %s\n",          (Merger_Coll_IsGas[2])? "yes":"no" );
-      Aux_Message( stdout, "  cluster 3 x-position      = %g\n",           Merger_Coll_PosX3 );
-      Aux_Message( stdout, "  cluster 3 y-position      = %g\n",           Merger_Coll_PosY3 );
-      Aux_Message( stdout, "  cluster 3 x-velocity      = %g\n",           Merger_Coll_VelX3 );
-      Aux_Message( stdout, "  cluster 3 y-velocity      = %g\n",           Merger_Coll_VelY3 );
+      Aux_Message( stdout, "  cluster 3 x-position      = %g\n",           Merger_Coll_Pos[2][0] );
+      Aux_Message( stdout, "  cluster 3 y-position      = %g\n",           Merger_Coll_Pos[2][1] );
+      Aux_Message( stdout, "  cluster 3 x-velocity      = %g\n",           Merger_Coll_Vel[2][0] );
+      Aux_Message( stdout, "  cluster 3 y-velocity      = %g\n",           Merger_Coll_Vel[2][1] );
       if ( AGN_feedback ) {
       Aux_Message( stdout, "  cluster 2 BH mass         = %g\n",           Bondi_MassBH3     );
       Aux_Message( stdout, "  cluster 2 jet half-height = %g\n",           Jet_HalfHeight[2] );
@@ -661,10 +650,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    for (int c=0; c<Merger_Coll_NumHalos; c++)   AnyGasHalo |= Merger_Coll_IsGas[c];
    if ( ! AnyGasHalo )   return;
 
-   const double pos_in        [3] = { x,                 y,                 z                 };
-   const double ClusterCenter1[3] = { Merger_Coll_PosX1, Merger_Coll_PosY1, amr->BoxCenter[2] };
-   const double ClusterCenter2[3] = { Merger_Coll_PosX2, Merger_Coll_PosY2, amr->BoxCenter[2] };
-   const double ClusterCenter3[3] = { Merger_Coll_PosX3, Merger_Coll_PosY3, amr->BoxCenter[2] };
+   const double pos_in[3] = { x, y, z };
 
    double r1, r2, r3, Dens1, Dens2, Dens3, Pres1, Pres2, Pres3;
    double Metl1, Metl2, Metl3, rmax1, rmax2, rmax3;
@@ -677,7 +663,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // for each cell, we sum up the density and pressure from each halo and then calculate the weighted velocity
    if ( Merger_Coll_IsGas[0] )
    {
-      r1    = DIST_3D_DBL( pos_in, ClusterCenter1 );
+      r1    = DIST_3D_DBL( pos_in, Merger_Coll_Pos[0] );
       double rr1 = r1 < rmax1 ? r1 : rmax1;
       Dens1 = Mis_InterpolateFromTable( Merger_NBin[0], Table_R[0], Table_D[0], rr1 );
       Pres1 = Mis_InterpolateFromTable( Merger_NBin[0], Table_R[0], Table_P[0], rr1 );
@@ -693,7 +679,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    if ( Merger_Coll_NumHalos > 1  &&  Merger_Coll_IsGas[1] )
    {
-      r2    = DIST_3D_DBL( pos_in, ClusterCenter2 );
+      r2    = DIST_3D_DBL( pos_in, Merger_Coll_Pos[1] );
       double rr2 = r2 < rmax2 ? r2 : rmax2;
       Dens2 = Mis_InterpolateFromTable( Merger_NBin[1], Table_R[1], Table_D[1], rr2 );
       Pres2 = Mis_InterpolateFromTable( Merger_NBin[1], Table_R[1], Table_P[1], rr2 );
@@ -709,7 +695,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    if ( Merger_Coll_NumHalos > 2  &&  Merger_Coll_IsGas[2] )
    {
-      r3    = DIST_3D_DBL( pos_in, ClusterCenter3 );
+      r3    = DIST_3D_DBL( pos_in, Merger_Coll_Pos[2] );
       double rr3 = r3 < rmax3 ? r3 : rmax3;
       Dens3 = Mis_InterpolateFromTable( Merger_NBin[2], Table_R[2], Table_D[2], rr3 );
       Pres3 = Mis_InterpolateFromTable( Merger_NBin[2], Table_R[2], Table_P[2], rr3 );
@@ -740,24 +726,24 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    MomX = 0.0;
    MomY = 0.0;
+   MomZ = 0.0;
    if ( r1 <= rmax1 )
    {
-      MomX += Merger_Coll_VelX1*Dens1;
-      MomY += Merger_Coll_VelY1*Dens1;
+      MomX += Merger_Coll_Vel[0][0]*Dens1;
+      MomY += Merger_Coll_Vel[0][1]*Dens1;
    }
 
    if ( r2 <= rmax2 )
    {
-     MomX += Merger_Coll_VelX2*Dens2;
-     MomY += Merger_Coll_VelY2*Dens2;
+      MomX += Merger_Coll_Vel[1][0]*Dens2;
+      MomY += Merger_Coll_Vel[1][1]*Dens2;
    }
 
    if ( r3 <= rmax3 )
    {
-     MomX += Merger_Coll_VelX3*Dens3;
-     MomY += Merger_Coll_VelY3*Dens3;
+      MomX += Merger_Coll_Vel[2][0]*Dens3;
+      MomY += Merger_Coll_Vel[2][1]*Dens3;
    }
-   MomZ = 0.0;
 
 // compute the total gas energy
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ); // assuming EoS requires no passive scalars
@@ -867,6 +853,8 @@ void End_ClusterMerger()
    delete [] Merger_File_Prof;
    delete [] Merger_File_Par;
    delete [] Merger_Coll_IsGas;
+   delete [] Merger_Coll_Pos;
+   delete [] Merger_Coll_Vel;
 
    delete [] Jet_HalfHeight;
    delete [] Jet_Radius;
