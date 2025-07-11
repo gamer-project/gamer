@@ -68,13 +68,13 @@ static FieldIdx_t *ColorFieldsIdx;        //
        double   BH_Pos[3][3];             // BH position of each cluster
        double   BH_Vel[3][3];             // BH velocity of each cluster
 
-       double *Jet_HalfHeight;            // half height of the cylinder-shape jet source of clusters
-       double *Jet_Radius;                // radius of the cylinder-shape jet source of clusters
-       int     JetDirection_NBin;         // number of bins of the jet direction table
-static double *JetDirection = NULL;       // jet direction[time/theta_1/phi_1/theta_2/phi_2/theta_3/phi_3]
-       double *Time_table;                // the time table of jet direction
-       double *Theta_table[3];            // the theta table of jet direction for 3 clusters
-       double *Phi_table[3];              // the phi table of jet direction for 3 clusters
+       double  *Jet_HalfHeight;           // half height of the cylinder-shape jet source of clusters
+       double  *Jet_Radius;               // radius of the cylinder-shape jet source of clusters
+       int      JetDirection_NBin;        // number of bins of the jet direction table
+static double  *JetDirection = NULL;      // jet direction[time/theta_1/phi_1/theta_2/phi_2/theta_3/phi_3]
+       double  *CM_Jet_Time_table;        // the time  table of jet direction
+       double **CM_Jet_Theta_table;       // the theta table of jet direction for clusters
+       double **CM_Jet_Phi_table;         // the phi   table of jet direction for clusters
 
        bool   AdjustBHPos;                // (true/false) --> Adjust the BH position
        bool   AdjustBHVel;                // (true/false) --> Adjust the BH velocity
@@ -505,19 +505,29 @@ void SetParameter()
 // (4) load the jet direction table
    if ( AGN_feedback  &&  JetDirection_case == 2 )
    {
-      const bool RowMajor_No  = false;                   // load data into the column-major order
-      const bool AllocMem_Yes = true;                    // allocate memory for JetDirection
-      const int  NCol         = 7;                       // total number of columns to load
-      const int  Col[NCol]    = { 0, 1, 2, 3, 4, 5, 6 }; // target columns: (time, theta_1, phi_1, theta_2, phi_2, theta_3, phi_3)
+//    allocate memories
+      CM_Jet_Theta_table = new double* [ Merger_Coll_NumBHs ];
+      CM_Jet_Phi_table   = new double* [ Merger_Coll_NumBHs ];
+
+      const bool RowMajor_No  = false;                    // load data into the column-major order
+      const bool AllocMem_Yes = true;                     // allocate memory for JetDirection
+      const int  NCol         = 1 + 2*Merger_Coll_NumBHs; // total number of columns to load
+                                                          // target columns: (time, theta_1, phi_1, ...)
+      int Col[NCol];
+      for (int c=0; c<NCol; c++)   Col[c] = c;
+
+      if ( !Aux_CheckFileExist( JetDirection_file ) )
+         Aux_Error( ERROR_INFO, "file \"%s\" does not exist !!\n", JetDirection_file );
 
       JetDirection_NBin = Aux_LoadTable( JetDirection, JetDirection_file, NCol, Col, RowMajor_No, AllocMem_Yes );
-      Time_table = JetDirection + 0*JetDirection_NBin;
-      for (int d=0; d<3; d++)
+      CM_Jet_Time_table = JetDirection + 0*JetDirection_NBin;
+      for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
-         Theta_table[d] = JetDirection+(1+2*d)*JetDirection_NBin;
-         Phi_table[d]   = JetDirection+(2+2*d)*JetDirection_NBin;
+         CM_Jet_Theta_table[c] = JetDirection+(1+2*c)*JetDirection_NBin;
+         CM_Jet_Phi_table[c]   = JetDirection+(2+2*c)*JetDirection_NBin;
       }
-      for (int b=0; b<JetDirection_NBin; b++)   Time_table[b] *= Const_Myr/UNIT_T;
+
+      for (int b=0; b<JetDirection_NBin; b++)   CM_Jet_Time_table[b] *= Const_Myr/UNIT_T;
    }
 
 
@@ -779,6 +789,12 @@ void End_ClusterMerger()
    delete [] CM_RAcc_ParMass;
 
    delete [] ColorFieldsIdx;
+
+   if ( AGN_feedback  &&  JetDirection_case == 2 )
+   {
+      delete [] CM_Jet_Theta_table;
+      delete [] CM_Jet_Phi_table;
+   }
 
 #  ifdef SUPPORT_HDF5
    if ( OPT__INIT != INIT_BY_RESTART )

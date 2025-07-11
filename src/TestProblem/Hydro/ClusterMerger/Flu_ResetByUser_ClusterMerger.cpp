@@ -55,9 +55,9 @@ static double     normalize_const[3];                      // the exact normaliz
 
 static bool       FirstTime = true;
 extern int        JetDirection_NBin;                       // number of bins of the jet direction table
-extern double    *Time_table;                              // the time table of jet direction
-extern double    *Theta_table[3];                          // the theta table of jet direction for 3 clusters
-extern double    *Phi_table[3];                            // the phi table of jet direction for 3 clusters
+extern double    *CM_Jet_Time_table;                       // the time  table of jet direction
+extern double   **CM_Jet_Theta_table;                      // the theta table of jet direction for 3 clusters
+extern double   **CM_Jet_Phi_table;                        // the phi   table of jet direction for 3 clusters
 
 extern bool       AdjustBHPos;
 extern bool       AdjustBHVel;
@@ -378,12 +378,12 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
       }
       else if ( JetDirection_case == 2 ) // import from table
       {
-         const double Time_period      = Time_table[JetDirection_NBin-1];
+         const double Time_period      = CM_Jet_Time_table[JetDirection_NBin-1];
          const double Time_interpolate = fmod( TimeNew, Time_period );
          for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
-            const double theta = Mis_InterpolateFromTable( JetDirection_NBin, Time_table, Theta_table[c], Time_interpolate );
-            const double phi   = Mis_InterpolateFromTable( JetDirection_NBin, Time_table, Phi_table[c],   Time_interpolate );
+            const double theta = Mis_InterpolateFromTable( JetDirection_NBin, CM_Jet_Time_table, CM_Jet_Theta_table[c], Time_interpolate );
+            const double phi   = Mis_InterpolateFromTable( JetDirection_NBin, CM_Jet_Time_table, CM_Jet_Phi_table[c],   Time_interpolate );
 
             CM_Jet_Vec[c][0] = cos(theta);
             CM_Jet_Vec[c][1] = sin(theta)*cos(phi);
