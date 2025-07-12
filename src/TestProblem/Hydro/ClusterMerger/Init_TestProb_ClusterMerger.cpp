@@ -410,7 +410,7 @@ void SetParameter()
             if ( Merger_Coll_UseMetals )
                Read_Profile_ClusterMerger( filename, "/fields/metallicity", Table_M[c] );
             else
-               for (int i; i<Merger_NBin[c]; i++)   Table_M[c][i] = 0.0;
+               for (int i=0; i<Merger_NBin[c]; i++)   Table_M[c][i] = 0.0;
 //          convert to code units (assuming the input units are cgs)
             for (int b=0; b<Merger_NBin[c]; b++)
             {
