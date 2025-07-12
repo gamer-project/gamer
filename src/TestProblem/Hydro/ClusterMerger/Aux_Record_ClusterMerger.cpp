@@ -10,17 +10,17 @@ extern double  *CM_BH_Mdot_tot;
 extern double  *CM_BH_Mdot_hot;
 extern double  *CM_BH_Mdot_cold;
 
-extern double   CM_Bondi_SinkMass[3];
-extern double   CM_Bondi_SinkMomX[3];
-extern double   CM_Bondi_SinkMomY[3];
-extern double   CM_Bondi_SinkMomZ[3];
-extern double   CM_Bondi_SinkMomXAbs[3];
-extern double   CM_Bondi_SinkMomYAbs[3];
-extern double   CM_Bondi_SinkMomZAbs[3];
-extern double   CM_Bondi_SinkE[3];
-extern double   CM_Bondi_SinkEk[3];
-extern double   CM_Bondi_SinkEt[3];
-extern int      CM_Bondi_SinkNCell[3];
+extern double  *CM_Bondi_SinkMass;
+extern double  *CM_Bondi_SinkMomX;
+extern double  *CM_Bondi_SinkMomY;
+extern double  *CM_Bondi_SinkMomZ;
+extern double  *CM_Bondi_SinkMomXAbs;
+extern double  *CM_Bondi_SinkMomYAbs;
+extern double  *CM_Bondi_SinkMomZAbs;
+extern double  *CM_Bondi_SinkE;
+extern double  *CM_Bondi_SinkEk;
+extern double  *CM_Bondi_SinkEt;
+extern int     *CM_Bondi_SinkNCell;
 
 extern double (*CM_RAcc_GasVel)[3];      // gas velocity
 extern double  *CM_RAcc_SoundSpeed;

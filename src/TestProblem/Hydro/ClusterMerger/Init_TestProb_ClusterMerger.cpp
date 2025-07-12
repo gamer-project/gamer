@@ -37,17 +37,17 @@ static FieldIdx_t *ColorFieldsIdx;        //
        double R_acc;                      // accretion radius: compute the accretion rate
        double R_dep;                      // radius to deplete the accreted gas
 
-       double CM_Bondi_SinkMass[3];       // total mass change             in the feedback region in one global time-step
-       double CM_Bondi_SinkMomX[3];       // total x-momentum change       ...
-       double CM_Bondi_SinkMomY[3];       // total y-momentum change       ...
-       double CM_Bondi_SinkMomZ[3];       // total z-momentum change       ...
-       double CM_Bondi_SinkMomXAbs[3];    // total |x-momentum| change     ...
-       double CM_Bondi_SinkMomYAbs[3];    // total |y-momentum| change     ...
-       double CM_Bondi_SinkMomZAbs[3];    // total |z-momentum| change     ...
-       double CM_Bondi_SinkE[3];          // total injected energy         ...
-       double CM_Bondi_SinkEk[3];         // total injected kinetic energy ...
-       double CM_Bondi_SinkEt[3];         // total injected thermal energy ...
-       int    CM_Bondi_SinkNCell[3];      // total number of finest cells within the feedback region
+       double *CM_Bondi_SinkMass;       // total mass change             in the feedback region in one global time-step
+       double *CM_Bondi_SinkMomX;       // total x-momentum change       ...
+       double *CM_Bondi_SinkMomY;       // total y-momentum change       ...
+       double *CM_Bondi_SinkMomZ;       // total z-momentum change       ...
+       double *CM_Bondi_SinkMomXAbs;    // total |x-momentum| change     ...
+       double *CM_Bondi_SinkMomYAbs;    // total |y-momentum| change     ...
+       double *CM_Bondi_SinkMomZAbs;    // total |z-momentum| change     ...
+       double *CM_Bondi_SinkE;          // total injected energy         ...
+       double *CM_Bondi_SinkEk;         // total injected kinetic energy ...
+       double *CM_Bondi_SinkEt;         // total injected thermal energy ...
+       int    *CM_Bondi_SinkNCell;      // total number of finest cells within the feedback region
 
        double  *CM_BH_Mass;               // black hole mass of clusters
        double  *CM_BH_Mdot_tot;           // the total accretion rate of BHs
@@ -462,6 +462,17 @@ void SetParameter()
       CM_RAcc_ColdGasMass   = new double [ Merger_Coll_NumBHs ];
       CM_RAcc_GasMass       = new double [ Merger_Coll_NumBHs ];
       CM_RAcc_ParMass       = new double [ Merger_Coll_NumBHs ];
+      CM_Bondi_SinkMass     = new double [ Merger_Coll_NumBHs ];
+      CM_Bondi_SinkMomX     = new double [ Merger_Coll_NumBHs ];
+      CM_Bondi_SinkMomY     = new double [ Merger_Coll_NumBHs ];
+      CM_Bondi_SinkMomZ     = new double [ Merger_Coll_NumBHs ];
+      CM_Bondi_SinkMomXAbs  = new double [ Merger_Coll_NumBHs ];
+      CM_Bondi_SinkMomYAbs  = new double [ Merger_Coll_NumBHs ];
+      CM_Bondi_SinkMomZAbs  = new double [ Merger_Coll_NumBHs ];
+      CM_Bondi_SinkE        = new double [ Merger_Coll_NumBHs ];
+      CM_Bondi_SinkEk       = new double [ Merger_Coll_NumBHs ];
+      CM_Bondi_SinkEt       = new double [ Merger_Coll_NumBHs ];
+      CM_Bondi_SinkNCell    = new int    [ Merger_Coll_NumBHs ];
 
 //    set initial values
       for (int c=0; c<Merger_Coll_NumBHs; c++)
@@ -776,6 +787,10 @@ void End_ClusterMerger()
    delete [] Jet_HalfHeight;
    delete [] Jet_Radius;
 
+   delete [] CM_Cluster_NPar_close;
+   delete [] CM_ClusterCen;
+   delete [] CM_BH_Pos;
+   delete [] CM_BH_Vel;
    delete [] CM_BH_Mass;
    delete [] CM_BH_Mdot_tot;
    delete [] CM_BH_Mdot_hot;
@@ -791,23 +806,23 @@ void End_ClusterMerger()
    delete [] CM_RAcc_ColdGasMass;
    delete [] CM_RAcc_GasMass;
    delete [] CM_RAcc_ParMass;
+   delete [] CM_Bondi_SinkMass;
+   delete [] CM_Bondi_SinkMomX;
+   delete [] CM_Bondi_SinkMomY;
+   delete [] CM_Bondi_SinkMomZ;
+   delete [] CM_Bondi_SinkMomXAbs;
+   delete [] CM_Bondi_SinkMomYAbs;
+   delete [] CM_Bondi_SinkMomZAbs;
+   delete [] CM_Bondi_SinkE;
+   delete [] CM_Bondi_SinkEk;
+   delete [] CM_Bondi_SinkEt;
+   delete [] CM_Bondi_SinkNCell;
 
    delete [] ColorFieldsIdx;
 
 #  ifdef SUPPORT_HDF5
    if ( OPT__INIT != INIT_BY_RESTART )
    {
-      if ( AGN_feedback  &&  JetDirection_case == 2 )
-      {
-         delete [] CM_Jet_Theta_table;
-         delete [] CM_Jet_Phi_table;
-      }
-
-      delete [] CM_Cluster_NPar_close;
-      delete [] CM_ClusterCen;
-      delete [] CM_BH_Pos;
-      delete [] CM_BH_Vel;
-
       delete [] NPar_EachCluster;
       delete [] Merger_NBin;
       for (int c=0; c<Merger_Coll_NumHalos; c++)
@@ -824,6 +839,12 @@ void End_ClusterMerger()
       delete [] Table_M;
    }
 #  endif
+
+   if ( AGN_feedback  &&  JetDirection_case == 2 )
+   {
+      delete [] CM_Jet_Theta_table;
+      delete [] CM_Jet_Phi_table;
+   }
 
 } // FUNCTION : End_ClusterMerger
 
@@ -1100,6 +1121,38 @@ void Init_User_ClusterMerger()
       Aux_Error( ERROR_INFO, "failed to open the datatype of \"%s\" !!\n", "User/OutputUser" );
 
    LoadField( "Merger_Coll_NumBHs", &Merger_Coll_NumBHs, H5_SetID_OutputUser, H5_TypeID_OutputUser );
+
+// allocate BH related memories
+   CM_Cluster_NPar_close = new int    [ Merger_Coll_NumBHs ];
+   CM_ClusterCen         = new double [ Merger_Coll_NumBHs ][ 3 ];
+   CM_BH_Pos             = new double [ Merger_Coll_NumBHs ][ 3 ];
+   CM_BH_Vel             = new double [ Merger_Coll_NumBHs ][ 3 ];
+   CM_BH_Mdot_tot        = new double [ Merger_Coll_NumBHs ];
+   CM_BH_Mdot_hot        = new double [ Merger_Coll_NumBHs ];
+   CM_BH_Mdot_cold       = new double [ Merger_Coll_NumBHs ];
+   CM_Jet_Mdot           = new double [ Merger_Coll_NumBHs ];
+   CM_Jet_Pdot           = new double [ Merger_Coll_NumBHs ];
+   CM_Jet_Edot           = new double [ Merger_Coll_NumBHs ];
+   CM_Jet_Vec            = new double [ Merger_Coll_NumBHs ][ 3 ];
+   CM_RAcc_GasVel        = new double [ Merger_Coll_NumBHs ][ 3 ];
+   CM_RAcc_SoundSpeed    = new double [ Merger_Coll_NumBHs ];
+   CM_RAcc_GasDens       = new double [ Merger_Coll_NumBHs ];
+   CM_RAcc_RelativeVel   = new double [ Merger_Coll_NumBHs ];
+   CM_RAcc_ColdGasMass   = new double [ Merger_Coll_NumBHs ];
+   CM_RAcc_GasMass       = new double [ Merger_Coll_NumBHs ];
+   CM_RAcc_ParMass       = new double [ Merger_Coll_NumBHs ];
+   CM_Bondi_SinkMass     = new double [ Merger_Coll_NumBHs ];
+   CM_Bondi_SinkMomX     = new double [ Merger_Coll_NumBHs ];
+   CM_Bondi_SinkMomY     = new double [ Merger_Coll_NumBHs ];
+   CM_Bondi_SinkMomZ     = new double [ Merger_Coll_NumBHs ];
+   CM_Bondi_SinkMomXAbs  = new double [ Merger_Coll_NumBHs ];
+   CM_Bondi_SinkMomYAbs  = new double [ Merger_Coll_NumBHs ];
+   CM_Bondi_SinkMomZAbs  = new double [ Merger_Coll_NumBHs ];
+   CM_Bondi_SinkE        = new double [ Merger_Coll_NumBHs ];
+   CM_Bondi_SinkEk       = new double [ Merger_Coll_NumBHs ];
+   CM_Bondi_SinkEt       = new double [ Merger_Coll_NumBHs ];
+   CM_Bondi_SinkNCell    = new int    [ Merger_Coll_NumBHs ];
+
    for (int c=0; c<Merger_Coll_NumBHs; c++)
    {
       for (int d=0; d<3; d++)

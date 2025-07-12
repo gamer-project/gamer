@@ -8,17 +8,17 @@ extern double     eta, eps_f, eps_m, R_acc, R_dep;         // parameters of jet 
 extern bool       AGN_feedback;
 extern FieldIdx_t Idx_ParHalo;
 
-extern double     CM_Bondi_SinkMass[3];
-extern double     CM_Bondi_SinkMomX[3];
-extern double     CM_Bondi_SinkMomY[3];
-extern double     CM_Bondi_SinkMomZ[3];
-extern double     CM_Bondi_SinkMomXAbs[3];
-extern double     CM_Bondi_SinkMomYAbs[3];
-extern double     CM_Bondi_SinkMomZAbs[3];
-extern double     CM_Bondi_SinkE[3];
-extern double     CM_Bondi_SinkEk[3];
-extern double     CM_Bondi_SinkEt[3];
-extern int        CM_Bondi_SinkNCell[3];
+extern double    *CM_Bondi_SinkMass;
+extern double    *CM_Bondi_SinkMomX;
+extern double    *CM_Bondi_SinkMomY;
+extern double    *CM_Bondi_SinkMomZ;
+extern double    *CM_Bondi_SinkMomXAbs;
+extern double    *CM_Bondi_SinkMomYAbs;
+extern double    *CM_Bondi_SinkMomZAbs;
+extern double    *CM_Bondi_SinkE;
+extern double    *CM_Bondi_SinkEk;
+extern double    *CM_Bondi_SinkEt;
+extern int       *CM_Bondi_SinkNCell;
 
 extern double    *CM_BH_Mass;
 extern double    *CM_BH_Mdot_tot;                          // the total accretion rate
@@ -626,10 +626,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
 //    (6) perform injection
 //    use the "static" schedule for reproducibility
-#     pragma omp parallel for private( fluid, fluid_old, x, y, z ) schedule( static ) \
-      reduction( +:CM_Bondi_SinkMass, CM_Bondi_SinkMomX, CM_Bondi_SinkMomY, CM_Bondi_SinkMomZ, \
-                   CM_Bondi_SinkMomXAbs, CM_Bondi_SinkMomYAbs, CM_Bondi_SinkMomZAbs, \
-                   CM_Bondi_SinkE, CM_Bondi_SinkEk, CM_Bondi_SinkEt, CM_Bondi_SinkNCell )
+#     pragma omp parallel for private( fluid, fluid_old, x, y, z ) schedule( static )
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {
          int Reset;
@@ -693,6 +690,8 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                   const real Eint_old = fluid_old[ENGY] - Ekin_old - Emag;
                   const real Eint_new = fluid[ENGY]     - Ekin_new - Emag;
 
+#                 pragma omp critical
+                  {
                   CM_Bondi_SinkMass   [Reset-1] += dv *     ( fluid[DENS] - fluid_old[DENS] );
                   CM_Bondi_SinkMomX   [Reset-1] += dv *     ( fluid[MOMX] - fluid_old[MOMX] );
                   CM_Bondi_SinkMomY   [Reset-1] += dv *     ( fluid[MOMY] - fluid_old[MOMY] );
@@ -704,6 +703,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                   CM_Bondi_SinkEk     [Reset-1] += dv *     ( Ekin_new    - Ekin_old        );
                   CM_Bondi_SinkEt     [Reset-1] += dv *     ( Eint_new    - Eint_old        );
                   CM_Bondi_SinkNCell  [Reset-1] ++;
+                  }
                } // if ( CurrentMaxLv )
 
 //             store the reset values
