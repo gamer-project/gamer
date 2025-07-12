@@ -89,13 +89,16 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Preparing to load data ... " );
 
    const int NCluster = Merger_Coll_NumHalos;
-   long NPar_ThisRank_EachCluster[3] = { 0, 0, 0 }, Offset[3];   // [0/1/2] --> cluster 1/2/3
+   long NPar_ThisRank_EachCluster[NCluster], Offset[NCluster];
+
+   for (int c=0; c<NCluster; c++)   NPar_ThisRank_EachCluster[c] = 0;
 
    for (int c=0; c<NCluster; c++)
    {
 //    get the number of particles loaded by each rank for each cluster
       long NPar_ThisCluster_EachRank[MPI_NRank];
 
+//    TODO: this part can be generalized
       switch (c)
       {
          case 0:
@@ -163,15 +166,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
 //    compute offsets for assigning particles
       double coffset;
-      switch ( c )
-      {
-         case 0: coffset = 0;
-                 break;
-         case 1: coffset = NPar_ThisRank_EachCluster[0];
-                 break;
-         case 2: coffset = NPar_ThisRank_EachCluster[0] + NPar_ThisRank_EachCluster[1];
-                 break;
-      } // switch ( c )
+      for (int cc=0; cc<c; cc++)   coffset += NPar_ThisRank_EachCluster[cc];
 
       for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++)
       {
@@ -227,35 +222,21 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
    real_par *ParPos[3] = { ParPosX, ParPosY, ParPosZ };
 
-   for (long p=0; p<NPar_ThisRank_EachCluster[0]; p++)
+   long pidx_start = 0L, pidx_end = 0L;
+   for (int c=0; c<NCluster; c++)
    {
-      if ( ParType[p] != PTYPE_TRACER )
+      pidx_end += NPar_ThisRank_EachCluster[c];
+      for (long p=pidx_start; p<pidx_end; p++)
       {
-         ParVelX[p] += Merger_Coll_Vel[0][0];
-         ParVelY[p] += Merger_Coll_Vel[0][1];
+         if ( ParType[p] != PTYPE_TRACER )
+         {
+            ParVelX[p] += Merger_Coll_Vel[c][0];
+            ParVelY[p] += Merger_Coll_Vel[c][1];
+         }
+         for (int d=0; d<3; d++)   ParPos[d][p] += Merger_Coll_Pos[c][d];
       }
-      for (int d=0; d<3; d++)   ParPos[d][p] += Merger_Coll_Pos[0][d];
-   }
-
-   for (long p=NPar_ThisRank_EachCluster[0]; p<NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p++)
-   {
-      if ( ParType[p] != PTYPE_TRACER )
-      {
-         ParVelX[p] += Merger_Coll_Vel[1][0];
-         ParVelY[p] += Merger_Coll_Vel[1][1];
-      }
-      for (int d=0; d<3; d++)   ParPos[d][p] += Merger_Coll_Pos[1][d];
-   }
-
-   for (long p=NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p<NPar_ThisRank; p++)
-   {
-      if ( ParType[p] != PTYPE_TRACER )
-      {
-         ParVelX[p] += Merger_Coll_Vel[2][0];
-         ParVelY[p] += Merger_Coll_Vel[2][1];
-      }
-      for (int d=0; d<3; d++)   ParPos[d][p] += Merger_Coll_Pos[2][d];
-   }
+      pidx_start = pidx_end;
+   } // for (int c=0; c<NCluster; c++)
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
