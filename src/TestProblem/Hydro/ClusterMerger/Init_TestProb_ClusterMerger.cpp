@@ -64,6 +64,7 @@ static FieldIdx_t *ColorFieldsIdx;        //
        double  *CM_RAcc_ColdGasMass;      // cold gas mass inside the accretion radius
        double  *CM_RAcc_GasMass;          // total gas mass inside the accretion radius
        double  *CM_RAcc_ParMass;          // total DM mass inside the accretion radius
+       int     *CM_Cluster_NPar_close;    // total number of particles inside the 10 times the accrection radius of each cluster
        double (*CM_ClusterCen)[3];        // the center of each cluster
        double (*CM_BH_Pos)[3];            // BH position of each cluster
        double (*CM_BH_Vel)[3];            // BH velocity of each cluster
@@ -86,7 +87,6 @@ static double  *JetDirection = NULL;      // jet direction[time/theta_1/phi_1/th
                                           //    3: align with angular momentum
        bool   fixBH;                      // fix the BH at the simulation box center and set its velocity to be zero (1 cluster only)
        int    Merger_Coll_NumBHs;         // number of BHs in the simulation
-       int    num_par_sum[3] = {0, 0, 0}; // total number of particles inside the target region of each cluster
 // =======================================================================================
 
 
@@ -444,34 +444,34 @@ void SetParameter()
       Merger_Coll_NumBHs = Merger_Coll_NumHalos;
 
 //    allocate BH related memories
-      CM_ClusterCen       = new double [ Merger_Coll_NumBHs ][ 3 ];
-      CM_BH_Pos           = new double [ Merger_Coll_NumBHs ][ 3 ];
-      CM_BH_Vel           = new double [ Merger_Coll_NumBHs ][ 3 ];
-      CM_BH_Mdot_tot      = new double [ Merger_Coll_NumBHs ];
-      CM_BH_Mdot_hot      = new double [ Merger_Coll_NumBHs ];
-      CM_BH_Mdot_cold     = new double [ Merger_Coll_NumBHs ];
-      CM_Jet_Mdot         = new double [ Merger_Coll_NumBHs ];
-      CM_Jet_Pdot         = new double [ Merger_Coll_NumBHs ];
-      CM_Jet_Edot         = new double [ Merger_Coll_NumBHs ];
-      CM_Jet_Vec          = new double [ Merger_Coll_NumBHs ][ 3 ];
-      CM_RAcc_GasVel      = new double [ Merger_Coll_NumBHs ][ 3 ];
-      CM_RAcc_SoundSpeed  = new double [ Merger_Coll_NumBHs ];
-      CM_RAcc_GasDens     = new double [ Merger_Coll_NumBHs ];
-      CM_RAcc_RelativeVel = new double [ Merger_Coll_NumBHs ];
-      CM_RAcc_ColdGasMass = new double [ Merger_Coll_NumBHs ];
-      CM_RAcc_GasMass     = new double [ Merger_Coll_NumBHs ];
-      CM_RAcc_ParMass     = new double [ Merger_Coll_NumBHs ];
+      CM_Cluster_NPar_close = new int    [ Merger_Coll_NumBHs ];
+      CM_ClusterCen         = new double [ Merger_Coll_NumBHs ][ 3 ];
+      CM_BH_Pos             = new double [ Merger_Coll_NumBHs ][ 3 ];
+      CM_BH_Vel             = new double [ Merger_Coll_NumBHs ][ 3 ];
+      CM_BH_Mdot_tot        = new double [ Merger_Coll_NumBHs ];
+      CM_BH_Mdot_hot        = new double [ Merger_Coll_NumBHs ];
+      CM_BH_Mdot_cold       = new double [ Merger_Coll_NumBHs ];
+      CM_Jet_Mdot           = new double [ Merger_Coll_NumBHs ];
+      CM_Jet_Pdot           = new double [ Merger_Coll_NumBHs ];
+      CM_Jet_Edot           = new double [ Merger_Coll_NumBHs ];
+      CM_Jet_Vec            = new double [ Merger_Coll_NumBHs ][ 3 ];
+      CM_RAcc_GasVel        = new double [ Merger_Coll_NumBHs ][ 3 ];
+      CM_RAcc_SoundSpeed    = new double [ Merger_Coll_NumBHs ];
+      CM_RAcc_GasDens       = new double [ Merger_Coll_NumBHs ];
+      CM_RAcc_RelativeVel   = new double [ Merger_Coll_NumBHs ];
+      CM_RAcc_ColdGasMass   = new double [ Merger_Coll_NumBHs ];
+      CM_RAcc_GasMass       = new double [ Merger_Coll_NumBHs ];
+      CM_RAcc_ParMass       = new double [ Merger_Coll_NumBHs ];
 
-//    set initial accretion rate to zero
+//    set initial values
       for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
          CM_BH_Mdot_tot [c] = 0.0;
          CM_BH_Mdot_hot [c] = 0.0;
          CM_BH_Mdot_cold[c] = 0.0;
-      }
 
-      for (int c=0; c<Merger_Coll_NumBHs; c++)
-      {
+         CM_Cluster_NPar_close[c] = 0;
+
          for (int d=0; d<3; d++)   CM_ClusterCen[c][d] = Merger_Coll_Pos[c][d];
          for (int d=0; d<3; d++)   CM_BH_Pos    [c][d] = CM_ClusterCen  [c][d];
          for (int d=0; d<3; d++)   CM_BH_Vel    [c][d] = Merger_Coll_Vel[c][d];
@@ -803,6 +803,7 @@ void End_ClusterMerger()
          delete [] CM_Jet_Phi_table;
       }
 
+      delete [] CM_Cluster_NPar_close;
       delete [] CM_ClusterCen;
       delete [] CM_BH_Pos;
       delete [] CM_BH_Vel;

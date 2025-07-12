@@ -22,7 +22,7 @@ extern long    *NPar_EachCluster;
 extern long     NPar_AllCluster;
 extern double   R_acc;
 extern bool     fixBH;
-extern int      num_par_sum[3];
+extern int     *CM_Cluster_NPar_close;
 // =======================================================================================
 
 #ifdef MASSIVE_PARTICLES
@@ -578,10 +578,10 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
             VelZ[c] = (real_par*)malloc( N_max[c]*sizeof(real_par) );
          }
 
-//       find the particles within the accretion radius
+//       find the particles within 10 times the accretion radius
          for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
-            num_par_sum[c] = 0;
+            CM_Cluster_NPar_close[c] = 0;
             for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
             {
                const double *EdgeL        = amr->patch[0][lv][PID]->EdgeL;
@@ -633,17 +633,17 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
          } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
 //       collect the number of target particles from each rank
-         MPI_Allreduce( num_par, num_par_sum, 3, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( num_par, CM_Cluster_NPar_close, 3, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
 
          int num_par_eachRank[3][MPI_NRank];
          int displs[3][MPI_NRank];
-         int num_par_sum_max = 0;
+         int CM_Cluster_NPar_close_max = 0;
          for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
             MPI_Allgather( &num_par[c], 1, MPI_INT, num_par_eachRank[c], 1, MPI_INT, MPI_COMM_WORLD );
             displs[c][0] = 0;
             for (int i=1; i<MPI_NRank; i++)  displs[c][i] = displs[c][i-1] + num_par_eachRank[c][i-1];
-            num_par_sum_max = MAX( num_par_sum_max, num_par_sum[c] );
+            CM_Cluster_NPar_close_max = MAX( CM_Cluster_NPar_close_max, CM_Cluster_NPar_close[c] );
          }
 
 //       collect the mass, position and velocity of target particles to the root rank
@@ -656,13 +656,13 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
          real_par **VelZ_sum = new real_par* [Merger_Coll_NumBHs];
          for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
-            ParX_sum[c] = new real_par [num_par_sum[c]];
-            ParY_sum[c] = new real_par [num_par_sum[c]];
-            ParZ_sum[c] = new real_par [num_par_sum[c]];
-            ParM_sum[c] = new real_par [num_par_sum[c]];
-            VelX_sum[c] = new real_par [num_par_sum[c]];
-            VelY_sum[c] = new real_par [num_par_sum[c]];
-            VelZ_sum[c] = new real_par [num_par_sum[c]];
+            ParX_sum[c] = new real_par [CM_Cluster_NPar_close[c]];
+            ParY_sum[c] = new real_par [CM_Cluster_NPar_close[c]];
+            ParZ_sum[c] = new real_par [CM_Cluster_NPar_close[c]];
+            ParM_sum[c] = new real_par [CM_Cluster_NPar_close[c]];
+            VelX_sum[c] = new real_par [CM_Cluster_NPar_close[c]];
+            VelY_sum[c] = new real_par [CM_Cluster_NPar_close[c]];
+            VelZ_sum[c] = new real_par [CM_Cluster_NPar_close[c]];
          }
 
          for (int c=0; c<Merger_Coll_NumBHs; c++)
@@ -687,13 +687,13 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
          if ( AdjustPos )
          {
             double  soften        = amr->dh[MAX_LEVEL];
-            double *pote_AllRank  = new double [num_par_sum_max];
-            double *pote_ThisRank = new double [num_par_sum_max];
+            double *pote_AllRank  = new double [CM_Cluster_NPar_close_max];
+            double *pote_ThisRank = new double [CM_Cluster_NPar_close_max];
             for (int c=0; c<Merger_Coll_NumBHs; c++)
             {
 //             distribute MPI jobs
-               int par_per_rank = num_par_sum[c] / MPI_NRank;
-               int remainder    = num_par_sum[c] % MPI_NRank;
+               int par_per_rank = CM_Cluster_NPar_close[c] / MPI_NRank;
+               int remainder    = CM_Cluster_NPar_close[c] % MPI_NRank;
                int start        = MPI_Rank*par_per_rank + MIN( MPI_Rank, remainder );
                int end          = start + par_per_rank + (MPI_Rank < remainder ? 1 : 0);
 
@@ -701,7 +701,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                for (int i=start; i<end; i++)
                {
                   pote_ThisRank[i-start] = 0.0;
-                  for (int j=0; j<num_par_sum[c]; j++)
+                  for (int j=0; j<CM_Cluster_NPar_close[c]; j++)
                   {
                      if ( i == j )   continue;
 
@@ -720,7 +720,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                MPI_Allgatherv( pote_ThisRank, end-start, MPI_DOUBLE, pote_AllRank, N_recv, N_disp, MPI_DOUBLE, MPI_COMM_WORLD );
 
                double Pote_min = 0.0;
-               for (int i=0; i<num_par_sum[c]; i++)
+               for (int i=0; i<CM_Cluster_NPar_close[c]; i++)
                {
                   if ( pote_AllRank[i] >= Pote_min )  continue;
                   Pote_min      = pote_AllRank[i];
@@ -740,7 +740,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
             {
                for (int d=0; d<3; d++)   DM_Vel[c][d] = 0.0;
                double ParM_Tot = 0.0;
-               for (int i=0; i<num_par_sum[c]; i++)
+               for (int i=0; i<CM_Cluster_NPar_close[c]; i++)
                {
                   DM_Vel[c][0] += VelX_sum[c][i]*ParM_sum[c][i];
                   DM_Vel[c][1] += VelY_sum[c][i]*ParM_sum[c][i];

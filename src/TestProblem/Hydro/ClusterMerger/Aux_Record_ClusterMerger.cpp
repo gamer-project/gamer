@@ -36,7 +36,7 @@ extern double   M_inj_exp[3];
 static double   E_power_inj[3];          // the injection power
 extern double   CM_ClusterCen[3][3];
 extern double   CM_BH_Vel[3][3];
-extern int      num_par_sum[3];          // total number of particles inside the target region of each cluster
+extern int     *CM_Cluster_NPar_close;   // total number of particles inside the target region of each cluster
 
 
 
@@ -148,7 +148,7 @@ void Aux_Record_ClusterMerger()
          fprintf( File_User, " %20.7e %20.7e %20.7e", M_inj_exp[c], Mass_Sum[c], (Mass_Sum[c]-M_inj_exp[c])/M_inj_exp[c] );
          fprintf( File_User, " %20.7e %20.7e %20.7e", CM_Jet_Mdot[c]*UNIT_M/UNIT_T, CM_Jet_Pdot[c]*UNIT_M*UNIT_V/UNIT_T, CM_Jet_Edot[c]*UNIT_E/UNIT_T );
          fprintf( File_User, " %20.7e %20.7e %20.7e", CM_Jet_Vec[c][0], CM_Jet_Vec[c][1], CM_Jet_Vec[c][2] );
-         fprintf( File_User, " %20d %20.7e",          num_par_sum[c], CM_RAcc_ColdGasMass[c]*UNIT_M/Const_Msun );
+         fprintf( File_User, " %20d %20.7e",          CM_Cluster_NPar_close[c], CM_RAcc_ColdGasMass[c]*UNIT_M/Const_Msun );
       }
       fprintf( File_User, "\n" );
       fclose( File_User );
