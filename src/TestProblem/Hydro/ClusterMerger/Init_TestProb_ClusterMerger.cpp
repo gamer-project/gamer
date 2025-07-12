@@ -790,15 +790,19 @@ void End_ClusterMerger()
 
    delete [] ColorFieldsIdx;
 
-   if ( AGN_feedback  &&  JetDirection_case == 2 )
-   {
-      delete [] CM_Jet_Theta_table;
-      delete [] CM_Jet_Phi_table;
-   }
-
 #  ifdef SUPPORT_HDF5
    if ( OPT__INIT != INIT_BY_RESTART )
    {
+      if ( AGN_feedback  &&  JetDirection_case == 2 )
+      {
+         delete [] CM_Jet_Theta_table;
+         delete [] CM_Jet_Phi_table;
+      }
+
+      delete [] CM_ClusterCen;
+      delete [] CM_BH_Pos;
+      delete [] CM_BH_Vel;
+
       delete [] NPar_EachCluster;
       delete [] Merger_NBin;
       for (int c=0; c<Merger_Coll_NumHalos; c++)
