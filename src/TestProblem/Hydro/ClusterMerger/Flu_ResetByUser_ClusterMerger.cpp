@@ -38,9 +38,9 @@ extern double    *CM_RAcc_RelativeVel;                     // the relative veloc
 extern double    *CM_RAcc_ColdGasMass;
 extern double    *CM_RAcc_GasMass;
 extern double    *CM_RAcc_ParMass;
-extern double     ClusterCen[3][3];
-extern double     BH_Pos[3][3];                            // BH position (for updating ClusterCen)
-extern double     BH_Vel[3][3];                            // BH velocity
+extern double   (*CM_ClusterCen)[3];
+extern double   (*CM_BH_Pos)[3];                           // BH position (for updating CM_ClusterCen)
+extern double   (*CM_BH_Vel)[3];                           // BH velocity
 
 static double     Jet_WaveK[3];                            // jet wavenumber used in the sin() function to have smooth bidirectional jets
 extern double    *Jet_HalfHeight;
@@ -178,7 +178,7 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
 
    for (int c=0; c<Merger_Coll_NumBHs; c++)
    {
-      for (int d=0; d<3; d++)   dr2[c][d] = SQR( Pos[d] - ClusterCen[c][d] );
+      for (int d=0; d<3; d++)   dr2[c][d] = SQR( Pos[d] - CM_ClusterCen[c][d] );
       r2[c] = dr2[c][0] + dr2[c][1] + dr2[c][2];
       if ( r2[c] <= SQR(R_dep) )
       {
@@ -219,7 +219,7 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
    for (int c=status; c<(n_jet+status); c++)
    {
 //    distance: jet center to mesh
-      for (int d=0; d<3; d++)   Vec_c2m[d] = Pos[d] - ClusterCen[c][d];
+      for (int d=0; d<3; d++)   Vec_c2m[d] = Pos[d] - CM_ClusterCen[c][d];
 
       Dis_c2m = sqrt( SQR(Vec_c2m[0]) + SQR(Vec_c2m[1]) + SQR(Vec_c2m[2]) );
 
@@ -240,9 +240,9 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
          fluid[DENS] += M_inj[c];
 
 //       transfer into BH frame
-         fluid[MOMX] -= BH_Vel[c][0]*dens_old;
-         fluid[MOMY] -= BH_Vel[c][1]*dens_old;
-         fluid[MOMZ] -= BH_Vel[c][2]*dens_old;
+         fluid[MOMX] -= CM_BH_Vel[c][0]*dens_old;
+         fluid[MOMY] -= CM_BH_Vel[c][1]*dens_old;
+         fluid[MOMZ] -= CM_BH_Vel[c][2]*dens_old;
 
 //       use a sine function to make the velocity smooth within the jet from +CM_Jet_Vec to -CM_Jet_Vec
          EngySin = E_inj[c]*normalize_const[c]*sin( Jet_WaveK[c]*Jet_dh );
@@ -258,9 +258,9 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
          fluid[MOMZ] = P_new * CM_Jet_Vec[c][2];
 
 //       transfer back into the rest frame
-         fluid[MOMX] += BH_Vel[c][0] * fluid[DENS];
-         fluid[MOMY] += BH_Vel[c][1] * fluid[DENS];
-         fluid[MOMZ] += BH_Vel[c][2] * fluid[DENS];
+         fluid[MOMX] += CM_BH_Vel[c][0] * fluid[DENS];
+         fluid[MOMY] += CM_BH_Vel[c][1] * fluid[DENS];
+         fluid[MOMZ] += CM_BH_Vel[c][2] * fluid[DENS];
 
          fluid[ENGY] += 0.5*( (SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ])) / fluid[DENS] -
                               (SQR(momx_old)    + SQR(momy_old)    + SQR(momz_old)   ) / dens_old );
@@ -314,12 +314,12 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
       if ( AdjustBHVel == true )   AdjustVelNow = true;
       AdjustCount += 1;
    } // if ( CurrentMaxLv  &&  AdjustCount < int(TimeNew/AdjustPeriod))
-   GetClusterCenter( lv, AdjustPosNow, AdjustVelNow, BH_Pos, ClusterCen, BH_Vel );
+   GetClusterCenter( lv, AdjustPosNow, AdjustVelNow, CM_BH_Pos, CM_ClusterCen, CM_BH_Vel );
 
 
 // (2) decide whether to merge BHs
-   double RelativeBHPos[3] = { BH_Pos[0][0]-BH_Pos[1][0], BH_Pos[0][1]-BH_Pos[1][1], BH_Pos[0][2]-BH_Pos[1][2] };
-   double RelativeBHVel[3] = { BH_Vel[0][0]-BH_Vel[1][0], BH_Vel[0][1]-BH_Vel[1][1], BH_Vel[0][2]-BH_Vel[1][2] };
+   double RelativeBHPos[3] = { CM_BH_Pos[0][0]-CM_BH_Pos[1][0], CM_BH_Pos[0][1]-CM_BH_Pos[1][1], CM_BH_Pos[0][2]-CM_BH_Pos[1][2] };
+   double RelativeBHVel[3] = { CM_BH_Vel[0][0]-CM_BH_Vel[1][0], CM_BH_Vel[0][1]-CM_BH_Vel[1][1], CM_BH_Vel[0][2]-CM_BH_Vel[1][2] };
    double AbsRelPos        = sqrt( SQR(RelativeBHPos[0]) + SQR(RelativeBHPos[1]) + SQR(RelativeBHPos[2]) );
    double AbsRelVel        = sqrt( SQR(RelativeBHVel[0]) + SQR(RelativeBHVel[1]) + SQR(RelativeBHVel[2]) );
    double escape_vel;
@@ -356,8 +356,8 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                               "BHVel1 = %14.8e, %14.8e, %14.8e; BHVel2 = %14.8e, %14.8e, %14.8e; "
                               "AbsRelPos = %14.8e, AbsRelVel = %14.8e, escape_vel = %14.8e.\n",
                       MPI_Rank, TimeNew, merge_index,
-                      BH_Pos[0][0], BH_Pos[0][1], BH_Pos[0][2], BH_Pos[1][0], BH_Pos[1][1], BH_Pos[1][2],
-                      BH_Vel[0][0], BH_Vel[0][1], BH_Vel[0][2], BH_Vel[1][0], BH_Vel[1][1], BH_Vel[1][2],
+                      CM_BH_Pos[0][0], CM_BH_Pos[0][1], CM_BH_Pos[0][2], CM_BH_Pos[1][0], CM_BH_Pos[1][1], CM_BH_Pos[1][2],
+                      CM_BH_Vel[0][0], CM_BH_Vel[0][1], CM_BH_Vel[0][2], CM_BH_Vel[1][0], CM_BH_Vel[1][1], CM_BH_Vel[1][2],
                       AbsRelPos, AbsRelVel, escape_vel );
       } // if ( AbsRelPos < R_acc  &&  AbsRelVel < 3*escape_vel )
    } // if ( Merger_Coll_NumBHs == 2 )
@@ -454,7 +454,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
             for (int c=0; c<Merger_Coll_NumBHs; c++)
             {
 //             calculate the average density, sound speed and gas velocity inside accretion radius
-               if ( SQR(x2-ClusterCen[c][0]) + SQR(y2-ClusterCen[c][1]) + SQR(z2-ClusterCen[c][2]) <= SQR(R_acc) )
+               if ( SQR(x2-CM_ClusterCen[c][0]) + SQR(y2-CM_ClusterCen[c][1]) + SQR(z2-CM_ClusterCen[c][2]) <= SQR(R_acc) )
                {
                   gas_mass[c] += fluid_acc[0]*dv;
 #                 ifdef DUAL_ENERGY
@@ -485,11 +485,11 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                      for (int d=0; d<3; d++)   gas_mom[c][d] += fluid_acc[d+1]*dv;
                      num[c] += 1;
                   } // if ( Temp <= 5e5 )
-                  double dr[3] = { x2-ClusterCen[c][0], y2-ClusterCen[c][1], z2-ClusterCen[c][2] };
+                  double dr[3] = { x2-CM_ClusterCen[c][0], y2-CM_ClusterCen[c][1], z2-CM_ClusterCen[c][2] };
                   ang_mom[c][0] += dv * ( dr[1]*fluid_acc[3] - dr[2]*fluid_acc[2] );
                   ang_mom[c][1] += dv * ( dr[2]*fluid_acc[1] - dr[0]*fluid_acc[3] );
                   ang_mom[c][2] += dv * ( dr[0]*fluid_acc[2] - dr[1]*fluid_acc[1] );
-               } // if ( SQR(x2-ClusterCen[c][0]) + SQR(y2-ClusterCen[c][1]) + SQR(z2-ClusterCen[c][2]) <= SQR(R_acc) )
+               } // if ( SQR(x2-CM_ClusterCen[c][0]) + SQR(y2-CM_ClusterCen[c][1]) + SQR(z2-CM_ClusterCen[c][2]) <= SQR(R_acc) )
 
 //             calculate the exact volume of jet cylinder and normalization
                if ( CurrentMaxLv )
@@ -497,7 +497,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                   double Jet_dr_2, Jet_dh_2, Dis_c2m_2, Vec_c2m_2[3];
                   double Pos_2[3] = {x2, y2, z2};
 
-                  for (int d=0; d<3; d++)   Vec_c2m_2[d] = Pos_2[d] - ClusterCen[c][d];
+                  for (int d=0; d<3; d++)   Vec_c2m_2[d] = Pos_2[d] - CM_ClusterCen[c][d];
                   Dis_c2m_2 = sqrt( SQR(Vec_c2m_2[0]) + SQR(Vec_c2m_2[1]) + SQR(Vec_c2m_2[2]) );
                   Jet_dh_2 = fabs( CM_Jet_Vec[c][0]*Vec_c2m_2[0] + CM_Jet_Vec[c][1]*Vec_c2m_2[1] + CM_Jet_Vec[c][2]*Vec_c2m_2[2] );
                   Jet_dr_2 = sqrt( SQR(Dis_c2m_2) - SQR(Jet_dh_2) );
@@ -542,17 +542,17 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                const double *EdgeR        = amr->patch[0][lv][PID]->EdgeR;
                const double  patch_pos[3] = { (EdgeL[0]+EdgeR[0])*0.5, (EdgeL[1]+EdgeR[1])*0.5, (EdgeL[2]+EdgeR[2])*0.5 };
                const double  patch_d      = sqrt( SQR(EdgeL[0]-EdgeR[0]) + SQR(EdgeL[1]-EdgeR[1]) + SQR(EdgeL[2]-EdgeR[2]) ) * 0.5;
-               if ( DIST_SQR_3D( patch_pos, ClusterCen[c] ) <= SQR(2*R_acc+patch_d) )
+               if ( DIST_SQR_3D( patch_pos, CM_ClusterCen[c] ) <= SQR(2*R_acc+patch_d) )
                {
                   for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                   {
                      const long ParID = amr->patch[0][lv][PID]->ParList[p];
                      const real_par ParM  = amr->Par->Mass[ParID];
                      const real_par ParPos[3] = { amr->Par->PosX[ParID], amr->Par->PosY[ParID], amr->Par->PosZ[ParID] };
-                     if ( DIST_SQR_3D( ParPos, ClusterCen[c] ) <= SQR(R_acc) )
+                     if ( DIST_SQR_3D( ParPos, CM_ClusterCen[c] ) <= SQR(R_acc) )
                         par_mass += ParM;
                   } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
-               } // if ( DIST_SQR_3D( patch_pos, ClusterCen[c] ) <= SQR(2*R_acc+patch_d) )
+               } // if ( DIST_SQR_3D( patch_pos, CM_ClusterCen[c] ) <= SQR(2*R_acc+patch_d) )
             } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
             MPI_Allreduce( &par_mass, &CM_RAcc_ParMass[c], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
          }
@@ -574,7 +574,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
             for (int d=0; d<3; d++)  gas_vel_sum[c][d] = gas_mom_sum[c][d] / rho_sum[c];
             rho_sum[c] /= ( 4.0 / 3.0 * M_PI * pow(R_acc, 3) );
             Cs_sum[c]  /= (double)num_sum[c];
-            for (int d=0; d<3; d++)   v += SQR( BH_Vel[c][d] - gas_vel_sum[c][d] );
+            for (int d=0; d<3; d++)   v += SQR( CM_BH_Vel[c][d] - gas_vel_sum[c][d] );
 
             CM_RAcc_GasDens[c]     = rho_sum[c];
             CM_RAcc_SoundSpeed[c]  = Cs_sum[c];

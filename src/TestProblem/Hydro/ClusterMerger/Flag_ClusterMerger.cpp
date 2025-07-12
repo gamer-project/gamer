@@ -5,10 +5,10 @@
 
 #if ( MODEL == HYDRO  &&  defined GRAVITY )
 
-static bool   FirstTime = true;
-extern int    Merger_Coll_NumHalos;
-extern double R_acc;                // the radius to compute the accretion rate
-extern double ClusterCen[3][3];
+static bool     FirstTime = true;
+extern int      Merger_Coll_NumHalos;
+extern double   R_acc;                // the radius to compute the accretion rate
+extern double (*CM_ClusterCen)[3];
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -40,7 +40,7 @@ bool Flag_ClusterMerger( const int i, const int j, const int k, const int lv, co
 // flag cells within the target radius, and if the radius is not resolved with a specific number (Threshold[0]) of cells
    for (int c=0; c<Merger_Coll_NumHalos; c++)
    {
-      double R_SQR = SQR(Pos[0]-ClusterCen[c][0]) + SQR(Pos[1]-ClusterCen[c][1]) + SQR(Pos[2]-ClusterCen[c][2]);
+      double R_SQR = SQR(Pos[0]-CM_ClusterCen[c][0]) + SQR(Pos[1]-CM_ClusterCen[c][1]) + SQR(Pos[2]-CM_ClusterCen[c][2]);
       if ( R_SQR <= SQR(25*R_acc)  &&  R_acc/dh <= Threshold[0] )
       {
          Flag = true;

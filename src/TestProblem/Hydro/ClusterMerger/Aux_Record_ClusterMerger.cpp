@@ -34,8 +34,8 @@ extern double  *CM_Jet_Edot;
 extern double   E_inj_exp[3];
 extern double   M_inj_exp[3];
 static double   E_power_inj[3];          // the injection power
-extern double   ClusterCen[3][3];
-extern double   BH_Vel[3][3];
+extern double   CM_ClusterCen[3][3];
+extern double   CM_BH_Vel[3][3];
 extern int      num_par_sum[3];          // total number of particles inside the target region of each cluster
 
 
@@ -134,8 +134,8 @@ void Aux_Record_ClusterMerger()
       fprintf( File_User, "%20.7e%20ld", Time[0], Step );
       for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
-         fprintf( File_User, " %20.7e %20.7e %20.7e", ClusterCen[c][0], ClusterCen[c][1], ClusterCen[c][2] );
-         fprintf( File_User, " %20.7e %20.7e %20.7e", BH_Vel[c][0]*UNIT_V/(Const_km/Const_s), BH_Vel[c][1]*UNIT_V/(Const_km/Const_s), BH_Vel[c][2]*UNIT_V/(Const_km/Const_s) );
+         fprintf( File_User, " %20.7e %20.7e %20.7e", CM_ClusterCen[c][0], CM_ClusterCen[c][1], CM_ClusterCen[c][2] );
+         fprintf( File_User, " %20.7e %20.7e %20.7e", CM_BH_Vel[c][0]*UNIT_V/(Const_km/Const_s), CM_BH_Vel[c][1]*UNIT_V/(Const_km/Const_s), CM_BH_Vel[c][2]*UNIT_V/(Const_km/Const_s) );
          fprintf( File_User, " %20.7e %20.7e %20.7e", CM_RAcc_GasVel[c][0]*UNIT_V/(Const_km/Const_s), CM_RAcc_GasVel[c][1]*UNIT_V/(Const_km/Const_s), CM_RAcc_GasVel[c][2]*UNIT_V/(Const_km/Const_s) );
          fprintf( File_User, " %20.7e %20.7e %20.7e", CM_RAcc_RelativeVel[c]*UNIT_V/(Const_km/Const_s), CM_RAcc_SoundSpeed[c]*UNIT_V/(Const_km/Const_s), CM_RAcc_GasDens[c]*UNIT_D );
          fprintf( File_User, " %20.7e",               CM_BH_Mass[c]*UNIT_M/Const_Msun );

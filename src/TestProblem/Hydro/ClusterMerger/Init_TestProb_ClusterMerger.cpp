@@ -64,9 +64,9 @@ static FieldIdx_t *ColorFieldsIdx;        //
        double  *CM_RAcc_ColdGasMass;      // cold gas mass inside the accretion radius
        double  *CM_RAcc_GasMass;          // total gas mass inside the accretion radius
        double  *CM_RAcc_ParMass;          // total DM mass inside the accretion radius
-       double   ClusterCen[3][3];         // the center of each cluster
-       double   BH_Pos[3][3];             // BH position of each cluster
-       double   BH_Vel[3][3];             // BH velocity of each cluster
+       double (*CM_ClusterCen)[3];        // the center of each cluster
+       double (*CM_BH_Pos)[3];            // BH position of each cluster
+       double (*CM_BH_Vel)[3];            // BH velocity of each cluster
 
        double  *Jet_HalfHeight;           // half height of the cylinder-shape jet source of clusters
        double  *Jet_Radius;               // radius of the cylinder-shape jet source of clusters
@@ -444,6 +444,9 @@ void SetParameter()
       Merger_Coll_NumBHs = Merger_Coll_NumHalos;
 
 //    allocate BH related memories
+      CM_ClusterCen       = new double [ Merger_Coll_NumBHs ][ 3 ];
+      CM_BH_Pos           = new double [ Merger_Coll_NumBHs ][ 3 ];
+      CM_BH_Vel           = new double [ Merger_Coll_NumBHs ][ 3 ];
       CM_BH_Mdot_tot      = new double [ Merger_Coll_NumBHs ];
       CM_BH_Mdot_hot      = new double [ Merger_Coll_NumBHs ];
       CM_BH_Mdot_cold     = new double [ Merger_Coll_NumBHs ];
@@ -469,9 +472,9 @@ void SetParameter()
 
       for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
-         for (int d=0; d<3; d++)   ClusterCen[c][d] = Merger_Coll_Pos[c][d];
-         for (int d=0; d<3; d++)   BH_Pos    [c][d] = ClusterCen     [c][d];
-         for (int d=0; d<3; d++)   BH_Vel    [c][d] = Merger_Coll_Vel[c][d];
+         for (int d=0; d<3; d++)   CM_ClusterCen[c][d] = Merger_Coll_Pos[c][d];
+         for (int d=0; d<3; d++)   CM_BH_Pos    [c][d] = CM_ClusterCen  [c][d];
+         for (int d=0; d<3; d++)   CM_BH_Vel    [c][d] = Merger_Coll_Vel[c][d];
       }
 
 //    (3) determine particle number
@@ -732,9 +735,9 @@ void Output_HDF5_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
          sprintf( BH_Pos_name,     "BH_Pos_%d_%d",     c, d );
          sprintf( ClusterCen_name, "ClusterCen_%d_%d", c, d );
          sprintf( BH_Vel_name,     "BH_Vel_%d_%d",     c, d );
-         HDF5_OutUser->Add( BH_Pos_name,     &BH_Pos[c][d]     );
-         HDF5_OutUser->Add( ClusterCen_name, &ClusterCen[c][d] );
-         HDF5_OutUser->Add( BH_Vel_name,     &BH_Vel[c][d]     );
+         HDF5_OutUser->Add( BH_Pos_name,     &CM_BH_Pos[c][d]     );
+         HDF5_OutUser->Add( ClusterCen_name, &CM_ClusterCen[c][d] );
+         HDF5_OutUser->Add( BH_Vel_name,     &CM_BH_Vel[c][d]     );
       }
       char BH_Mass_name[50], BH_Mdot_tot_name[50], BH_Mdot_hot_name[50], BH_Mdot_cold_name[50];
       sprintf( BH_Mass_name,      "BH_Mass_%d",      c );
@@ -1104,9 +1107,9 @@ void Init_User_ClusterMerger()
          sprintf( BH_Pos_name,     "BH_Pos_%d_%d",     c, d );
          sprintf( ClusterCen_name, "ClusterCen_%d_%d", c, d );
          sprintf( BH_Vel_name,     "BH_Vel_%d_%d",     c, d );
-         LoadField( BH_Pos_name,     &BH_Pos[c][d],     H5_SetID_OutputUser, H5_TypeID_OutputUser );
-         LoadField( ClusterCen_name, &ClusterCen[c][d], H5_SetID_OutputUser, H5_TypeID_OutputUser );
-         LoadField( BH_Vel_name,     &BH_Vel[c][d],     H5_SetID_OutputUser, H5_TypeID_OutputUser );
+         LoadField( BH_Pos_name,     &CM_BH_Pos[c][d],     H5_SetID_OutputUser, H5_TypeID_OutputUser );
+         LoadField( ClusterCen_name, &CM_ClusterCen[c][d], H5_SetID_OutputUser, H5_TypeID_OutputUser );
+         LoadField( BH_Vel_name,     &CM_BH_Vel[c][d],     H5_SetID_OutputUser, H5_TypeID_OutputUser );
       }
       char BH_Mass_name[50], BH_Mdot_tot_name[50], BH_Mdot_hot_name[50], BH_Mdot_cold_name[50];
       sprintf( BH_Mass_name,      "BH_Mass_%d",      c );
