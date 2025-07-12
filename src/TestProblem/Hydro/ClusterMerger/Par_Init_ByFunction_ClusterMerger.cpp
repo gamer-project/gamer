@@ -603,6 +603,8 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                   const real_par VelZ_tmp      = amr->Par->VelZ[ParID];
                   const real_par ParPos_tmp[3] = { ParX_tmp, ParY_tmp, ParZ_tmp };
 
+//                TODO: hard-coded fixed for now since we only allow two clusters to merge
+                  if ( Merger_Coll_NumHalos != 2  ||  Merger_Coll_NumBHs != 1 )
                   if ( amr->Par->AttributeInt[Idx_ParHalo][ParID] != (long_par)c )   continue;
                   if ( DIST_SQR_3D( ParPos_tmp, Cen_new_pre[c] ) > SQR(10*R_acc) )   continue;
 
