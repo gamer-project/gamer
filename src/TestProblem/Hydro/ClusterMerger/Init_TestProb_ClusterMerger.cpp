@@ -117,6 +117,8 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
 extern void (*Flu_ResetByUser_API_Ptr)( const int lv, const int FluSg, const int MagSg, const double TimeNew, const double dt );
 void Init_User_ClusterMerger();
+
+static void   AllocateBHVarArray();
 #ifdef SUPPORT_HDF5
 static herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Target,
                          const hid_t H5_TypeID_Target );
@@ -444,35 +446,7 @@ void SetParameter()
       Merger_Coll_NumBHs = Merger_Coll_NumHalos;
 
 //    allocate BH related memories
-      CM_Cluster_NPar_close = new int    [ Merger_Coll_NumBHs ];
-      CM_ClusterCen         = new double [ Merger_Coll_NumBHs ][ 3 ];
-      CM_BH_Pos             = new double [ Merger_Coll_NumBHs ][ 3 ];
-      CM_BH_Vel             = new double [ Merger_Coll_NumBHs ][ 3 ];
-      CM_BH_Mdot_tot        = new double [ Merger_Coll_NumBHs ];
-      CM_BH_Mdot_hot        = new double [ Merger_Coll_NumBHs ];
-      CM_BH_Mdot_cold       = new double [ Merger_Coll_NumBHs ];
-      CM_Jet_Mdot           = new double [ Merger_Coll_NumBHs ];
-      CM_Jet_Pdot           = new double [ Merger_Coll_NumBHs ];
-      CM_Jet_Edot           = new double [ Merger_Coll_NumBHs ];
-      CM_Jet_Vec            = new double [ Merger_Coll_NumBHs ][ 3 ];
-      CM_RAcc_GasVel        = new double [ Merger_Coll_NumBHs ][ 3 ];
-      CM_RAcc_SoundSpeed    = new double [ Merger_Coll_NumBHs ];
-      CM_RAcc_GasDens       = new double [ Merger_Coll_NumBHs ];
-      CM_RAcc_RelativeVel   = new double [ Merger_Coll_NumBHs ];
-      CM_RAcc_ColdGasMass   = new double [ Merger_Coll_NumBHs ];
-      CM_RAcc_GasMass       = new double [ Merger_Coll_NumBHs ];
-      CM_RAcc_ParMass       = new double [ Merger_Coll_NumBHs ];
-      CM_Bondi_SinkMass     = new double [ Merger_Coll_NumBHs ];
-      CM_Bondi_SinkMomX     = new double [ Merger_Coll_NumBHs ];
-      CM_Bondi_SinkMomY     = new double [ Merger_Coll_NumBHs ];
-      CM_Bondi_SinkMomZ     = new double [ Merger_Coll_NumBHs ];
-      CM_Bondi_SinkMomXAbs  = new double [ Merger_Coll_NumBHs ];
-      CM_Bondi_SinkMomYAbs  = new double [ Merger_Coll_NumBHs ];
-      CM_Bondi_SinkMomZAbs  = new double [ Merger_Coll_NumBHs ];
-      CM_Bondi_SinkE        = new double [ Merger_Coll_NumBHs ];
-      CM_Bondi_SinkEk       = new double [ Merger_Coll_NumBHs ];
-      CM_Bondi_SinkEt       = new double [ Merger_Coll_NumBHs ];
-      CM_Bondi_SinkNCell    = new int    [ Merger_Coll_NumBHs ];
+      AllocateBHVarArray();
 
 //    set initial values
       for (int c=0; c<Merger_Coll_NumBHs; c++)
@@ -1123,35 +1097,7 @@ void Init_User_ClusterMerger()
    LoadField( "Merger_Coll_NumBHs", &Merger_Coll_NumBHs, H5_SetID_OutputUser, H5_TypeID_OutputUser );
 
 // allocate BH related memories
-   CM_Cluster_NPar_close = new int    [ Merger_Coll_NumBHs ];
-   CM_ClusterCen         = new double [ Merger_Coll_NumBHs ][ 3 ];
-   CM_BH_Pos             = new double [ Merger_Coll_NumBHs ][ 3 ];
-   CM_BH_Vel             = new double [ Merger_Coll_NumBHs ][ 3 ];
-   CM_BH_Mdot_tot        = new double [ Merger_Coll_NumBHs ];
-   CM_BH_Mdot_hot        = new double [ Merger_Coll_NumBHs ];
-   CM_BH_Mdot_cold       = new double [ Merger_Coll_NumBHs ];
-   CM_Jet_Mdot           = new double [ Merger_Coll_NumBHs ];
-   CM_Jet_Pdot           = new double [ Merger_Coll_NumBHs ];
-   CM_Jet_Edot           = new double [ Merger_Coll_NumBHs ];
-   CM_Jet_Vec            = new double [ Merger_Coll_NumBHs ][ 3 ];
-   CM_RAcc_GasVel        = new double [ Merger_Coll_NumBHs ][ 3 ];
-   CM_RAcc_SoundSpeed    = new double [ Merger_Coll_NumBHs ];
-   CM_RAcc_GasDens       = new double [ Merger_Coll_NumBHs ];
-   CM_RAcc_RelativeVel   = new double [ Merger_Coll_NumBHs ];
-   CM_RAcc_ColdGasMass   = new double [ Merger_Coll_NumBHs ];
-   CM_RAcc_GasMass       = new double [ Merger_Coll_NumBHs ];
-   CM_RAcc_ParMass       = new double [ Merger_Coll_NumBHs ];
-   CM_Bondi_SinkMass     = new double [ Merger_Coll_NumBHs ];
-   CM_Bondi_SinkMomX     = new double [ Merger_Coll_NumBHs ];
-   CM_Bondi_SinkMomY     = new double [ Merger_Coll_NumBHs ];
-   CM_Bondi_SinkMomZ     = new double [ Merger_Coll_NumBHs ];
-   CM_Bondi_SinkMomXAbs  = new double [ Merger_Coll_NumBHs ];
-   CM_Bondi_SinkMomYAbs  = new double [ Merger_Coll_NumBHs ];
-   CM_Bondi_SinkMomZAbs  = new double [ Merger_Coll_NumBHs ];
-   CM_Bondi_SinkE        = new double [ Merger_Coll_NumBHs ];
-   CM_Bondi_SinkEk       = new double [ Merger_Coll_NumBHs ];
-   CM_Bondi_SinkEt       = new double [ Merger_Coll_NumBHs ];
-   CM_Bondi_SinkNCell    = new int    [ Merger_Coll_NumBHs ];
+   AllocateBHVarArray();
 
    for (int c=0; c<Merger_Coll_NumBHs; c++)
    {
@@ -1184,6 +1130,52 @@ void Init_User_ClusterMerger()
 #  endif // #ifdef SUPPORT_HDF5
 
 } // FUNCTION : Init_User_ClusterMerger
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AllocateBHVarArray
+// Description :  Allocate the array of BH variables
+//
+// Note        :  1. Merger_Coll_NumBHs must be assigned before calling this function
+//                2. Memories are freed in End_ClusterMerger()
+//-------------------------------------------------------------------------------------------------------
+void AllocateBHVarArray()
+{
+
+   if ( Merger_Coll_NumBHs < 1 )   Aux_Error( ERROR_INFO, "Merger_Coll_NumBHs < 1 !!\n" );
+
+   CM_Cluster_NPar_close = new int    [ Merger_Coll_NumBHs ];
+   CM_ClusterCen         = new double [ Merger_Coll_NumBHs ][ 3 ];
+   CM_BH_Pos             = new double [ Merger_Coll_NumBHs ][ 3 ];
+   CM_BH_Vel             = new double [ Merger_Coll_NumBHs ][ 3 ];
+   CM_BH_Mdot_tot        = new double [ Merger_Coll_NumBHs ];
+   CM_BH_Mdot_hot        = new double [ Merger_Coll_NumBHs ];
+   CM_BH_Mdot_cold       = new double [ Merger_Coll_NumBHs ];
+   CM_Jet_Mdot           = new double [ Merger_Coll_NumBHs ];
+   CM_Jet_Pdot           = new double [ Merger_Coll_NumBHs ];
+   CM_Jet_Edot           = new double [ Merger_Coll_NumBHs ];
+   CM_Jet_Vec            = new double [ Merger_Coll_NumBHs ][ 3 ];
+   CM_RAcc_GasVel        = new double [ Merger_Coll_NumBHs ][ 3 ];
+   CM_RAcc_SoundSpeed    = new double [ Merger_Coll_NumBHs ];
+   CM_RAcc_GasDens       = new double [ Merger_Coll_NumBHs ];
+   CM_RAcc_RelativeVel   = new double [ Merger_Coll_NumBHs ];
+   CM_RAcc_ColdGasMass   = new double [ Merger_Coll_NumBHs ];
+   CM_RAcc_GasMass       = new double [ Merger_Coll_NumBHs ];
+   CM_RAcc_ParMass       = new double [ Merger_Coll_NumBHs ];
+   CM_Bondi_SinkMass     = new double [ Merger_Coll_NumBHs ];
+   CM_Bondi_SinkMomX     = new double [ Merger_Coll_NumBHs ];
+   CM_Bondi_SinkMomY     = new double [ Merger_Coll_NumBHs ];
+   CM_Bondi_SinkMomZ     = new double [ Merger_Coll_NumBHs ];
+   CM_Bondi_SinkMomXAbs  = new double [ Merger_Coll_NumBHs ];
+   CM_Bondi_SinkMomYAbs  = new double [ Merger_Coll_NumBHs ];
+   CM_Bondi_SinkMomZAbs  = new double [ Merger_Coll_NumBHs ];
+   CM_Bondi_SinkE        = new double [ Merger_Coll_NumBHs ];
+   CM_Bondi_SinkEk       = new double [ Merger_Coll_NumBHs ];
+   CM_Bondi_SinkEt       = new double [ Merger_Coll_NumBHs ];
+   CM_Bondi_SinkNCell    = new int    [ Merger_Coll_NumBHs ];
+
+} // FUNCITON : AllocateBHVarArray
 
 
 
