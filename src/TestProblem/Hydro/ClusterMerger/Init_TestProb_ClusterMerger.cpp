@@ -86,6 +86,7 @@ static double  *JetDirection = NULL;      // jet direction[time/theta_1/phi_1/th
                                           //    3: align with angular momentum
        bool   fixBH;                      // fix the BH at the simulation box center and set its velocity to be zero (1 cluster only)
        int    Merger_Coll_NumBHs;         // number of BHs in the simulation
+       int    num_par_sum[3] = {0, 0, 0}; // total number of particles inside the target region of each cluster
 // =======================================================================================
 
 
