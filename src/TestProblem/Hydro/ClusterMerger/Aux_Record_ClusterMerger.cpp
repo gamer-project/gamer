@@ -67,6 +67,33 @@ void Aux_Record_ClusterMerger()
             Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
 
          FILE *File_User = fopen( FileName, "a" );
+         fprintf( File_User, "# ClusterCen_x/y/z : BH position\n" );
+         fprintf( File_User, "# BHVel_?          : BH velocity [km/s]\n" );
+         fprintf( File_User, "# GasVel_?         : Gas velocity\n" );
+         fprintf( File_User, "# RelativeVel      : \n" );
+         fprintf( File_User, "# SoundSpeed       : \n" );
+         fprintf( File_User, "# GasDens          : [cgs]\n" );
+         fprintf( File_User, "# mass_BH          : BH mass [MSun]\n" );
+         fprintf( File_User, "# Mdot_?_BH        : BH accretion rate [cgs]\n" );
+         fprintf( File_User, "# NVoidCell        : \n" );
+         fprintf( File_User, "# Mom?Inj          : [cgs]\n" );
+         fprintf( File_User, "# Mom?InjAbs       : \n" );
+         fprintf( File_User, "# EInj_exp         : [erg]\n" );
+         fprintf( File_User, "# E_Inj            : [erg]\n" );
+         fprintf( File_User, "# E_Inj_err        : \n" );
+         fprintf( File_User, "# Ek_Inj           : [erg]\n" );
+         fprintf( File_User, "# Et_Inj           : [erg]\n" );
+         fprintf( File_User, "# PowerInj         : [cgs]\n" );
+         fprintf( File_User, "# MInjexp          : [Msun]\n" );
+         fprintf( File_User, "# MassInj          : [Msun]\n" );
+         fprintf( File_User, "# M_Inj_err        : \n" );
+         fprintf( File_User, "# Mdot_Inj         : [cgs]\n" );
+         fprintf( File_User, "# Pdot_Inj         : [cgs]\n" );
+         fprintf( File_User, "# Edot_Inj         : [cgs]\n" );
+         fprintf( File_User, "# Jet_Vec_?        : Jet inject direction\n" );
+         fprintf( File_User, "# num_par_sum      : Total number of particles inside the accretion region\n" );
+         fprintf( File_User, "# ColdGasMass      : \n" );
+         fprintf( File_User, "#\n" );
          fprintf( File_User, "#%19s%20s",  "Time", "Step" );
          for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
@@ -94,8 +121,11 @@ void Aux_Record_ClusterMerger()
    } // if ( FirstTime )
 
 // sum over the variables and convert units
-   int SinkNCell_Sum[3];
-   double Mass_Sum[3], MomX_Sum[3], MomY_Sum[3], MomZ_Sum[3], MomXAbs_Sum[3], MomYAbs_Sum[3], MomZAbs_Sum[3], E_Sum[3], Ek_Sum[3], Et_Sum[3];
+   int    SinkNCell_Sum[Merger_Coll_NumBHs];
+   double Mass_Sum[Merger_Coll_NumBHs];
+   double MomX_Sum[Merger_Coll_NumBHs], MomY_Sum[Merger_Coll_NumBHs], MomZ_Sum[Merger_Coll_NumBHs];
+   double MomXAbs_Sum[Merger_Coll_NumBHs], MomYAbs_Sum[Merger_Coll_NumBHs], MomZAbs_Sum[Merger_Coll_NumBHs];
+   double E_Sum[Merger_Coll_NumBHs], Ek_Sum[Merger_Coll_NumBHs], Et_Sum[Merger_Coll_NumBHs];
 
    for (int c=0; c<Merger_Coll_NumBHs; c++)
    {
@@ -134,9 +164,9 @@ void Aux_Record_ClusterMerger()
       fprintf( File_User, "%20.7e%20ld", Time[0], Step );
       for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
-         fprintf( File_User, " %20.7e %20.7e %20.7e", CM_ClusterCen[c][0], CM_ClusterCen[c][1], CM_ClusterCen[c][2] );
-         fprintf( File_User, " %20.7e %20.7e %20.7e", CM_BH_Vel[c][0]*UNIT_V/(Const_km/Const_s), CM_BH_Vel[c][1]*UNIT_V/(Const_km/Const_s), CM_BH_Vel[c][2]*UNIT_V/(Const_km/Const_s) );
-         fprintf( File_User, " %20.7e %20.7e %20.7e", CM_RAcc_GasVel[c][0]*UNIT_V/(Const_km/Const_s), CM_RAcc_GasVel[c][1]*UNIT_V/(Const_km/Const_s), CM_RAcc_GasVel[c][2]*UNIT_V/(Const_km/Const_s) );
+         for (int d=0; d<3; d++)   fprintf( File_User, " %20.7e", CM_ClusterCen[c][d] );
+         for (int d=0; d<3; d++)   fprintf( File_User, " %20.7e", CM_BH_Vel[c][d]*UNIT_V/(Const_km/Const_s) );
+         for (int d=0; d<3; d++)   fprintf( File_User, " %20.7e", CM_RAcc_GasVel[c][d]*UNIT_V/(Const_km/Const_s) );
          fprintf( File_User, " %20.7e %20.7e %20.7e", CM_RAcc_RelativeVel[c]*UNIT_V/(Const_km/Const_s), CM_RAcc_SoundSpeed[c]*UNIT_V/(Const_km/Const_s), CM_RAcc_GasDens[c]*UNIT_D );
          fprintf( File_User, " %20.7e",               CM_BH_Mass[c]*UNIT_M/Const_Msun );
          fprintf( File_User, " %20.7e %20.7e %20.7e", CM_BH_Mdot_tot[c]*UNIT_M/UNIT_T, CM_BH_Mdot_hot[c]*UNIT_M/UNIT_T, CM_BH_Mdot_cold[c]*UNIT_M/UNIT_T );
@@ -147,7 +177,7 @@ void Aux_Record_ClusterMerger()
          fprintf( File_User, " %20.7e %20.7e %20.7e", Ek_Sum[c], Et_Sum[c], E_power_inj[c] );
          fprintf( File_User, " %20.7e %20.7e %20.7e", M_inj_exp[c], Mass_Sum[c], (Mass_Sum[c]-M_inj_exp[c])/M_inj_exp[c] );
          fprintf( File_User, " %20.7e %20.7e %20.7e", CM_Jet_Mdot[c]*UNIT_M/UNIT_T, CM_Jet_Pdot[c]*UNIT_M*UNIT_V/UNIT_T, CM_Jet_Edot[c]*UNIT_E/UNIT_T );
-         fprintf( File_User, " %20.7e %20.7e %20.7e", CM_Jet_Vec[c][0], CM_Jet_Vec[c][1], CM_Jet_Vec[c][2] );
+         for (int d=0; d<3; d++)   fprintf( File_User, " %20.7e", CM_Jet_Vec[c][d] );
          fprintf( File_User, " %20d %20.7e",          CM_Cluster_NPar_close[c], CM_RAcc_ColdGasMass[c]*UNIT_M/Const_Msun );
       }
       fprintf( File_User, "\n" );
