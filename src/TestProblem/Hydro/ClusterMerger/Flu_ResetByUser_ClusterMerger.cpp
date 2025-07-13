@@ -76,6 +76,7 @@ extern int        JetDirection_case;                       // methods for choosi
        bool       if_overlap = false;
 
 static void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][3], double Cen_new[][3], double Cen_Vel[][3] );
+static void SetJetDirection( const double TimeNew );
 
 #ifdef MHD
 extern double (*MHD_ResetByUser_VecPot_Ptr)( const double x, const double y, const double z, const double Time,
@@ -371,37 +372,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
    {
 //    (3) set the injection parameters
 //    set the jet direction vector
-      if ( JetDirection_case == 1 ) // fixed at x-axis
-      {
-         for (int c=0; c<Merger_Coll_NumBHs; c++)
-         {
-            CM_Jet_Vec[c][0] = 1.0;
-            CM_Jet_Vec[c][1] = 0.0;
-            CM_Jet_Vec[c][2] = 0.0;
-         }
-      }
-      else if ( JetDirection_case == 2 ) // import from table
-      {
-         const double Time_period      = CM_Jet_Time_table[JetDirection_NBin-1];
-         const double Time_interpolate = fmod( TimeNew, Time_period );
-         for (int c=0; c<Merger_Coll_NumBHs; c++)
-         {
-            const double theta = Mis_InterpolateFromTable( JetDirection_NBin, CM_Jet_Time_table, CM_Jet_Theta_table[c], Time_interpolate );
-            const double phi   = Mis_InterpolateFromTable( JetDirection_NBin, CM_Jet_Time_table, CM_Jet_Phi_table[c],   Time_interpolate );
-
-            CM_Jet_Vec[c][0] = cos(theta);
-            CM_Jet_Vec[c][1] = sin(theta)*cos(phi);
-            CM_Jet_Vec[c][2] = sin(theta)*sin(phi);
-         }
-      }
-      else if ( JetDirection_case == 3 ) // align with angular momentum
-      {
-         for (int c=0; c<Merger_Coll_NumBHs; c++)
-         {
-            const double ang_mom_norm = sqrt( SQR(ang_mom_sum[c][0]) + SQR(ang_mom_sum[c][1]) + SQR(ang_mom_sum[c][2]) );
-            for (int d=0; d<3; d++)   CM_Jet_Vec[c][d] = ang_mom_sum[c][d] / ang_mom_norm;
-         }
-      } // if ( JetDirection_case == 1 ) ... else ...
+      SetJetDirection( TimeNew );
 
 
 //    (4) calculate the accretion and feedback
@@ -1063,6 +1034,56 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
       for (int d=0; d<3; d++)  Cen_old[c][d] = Cen_new[c][d];
 
 } // FUNCTION : GetClusterCenter
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SetJetDirection
+// Description :  Set the jet direction
+//
+// Parameter   :  TimeNew : Current physical time (system has been updated from TimeOld to TimeNew in EvolveLevel())
+//
+// Return      :  CM_Jet_Vec (global variable)
+//-------------------------------------------------------------------------------------------------------
+void SetJetDirection( const double TimeNew )
+{
+
+   switch ( JetDirection_case )
+   {
+      case 1: // fixed at x-axis
+         for (int c=0; c<Merger_Coll_NumBHs; c++)
+         {
+            CM_Jet_Vec[c][0] = 1.0;
+            CM_Jet_Vec[c][1] = 0.0;
+            CM_Jet_Vec[c][2] = 0.0;
+         }
+         break;
+      case 2: // import from table
+         const double Time_period      = CM_Jet_Time_table[JetDirection_NBin-1];
+         const double Time_interpolate = fmod( TimeNew, Time_period );
+         for (int c=0; c<Merger_Coll_NumBHs; c++)
+         {
+            const double theta = Mis_InterpolateFromTable( JetDirection_NBin, CM_Jet_Time_table, CM_Jet_Theta_table[c], Time_interpolate );
+            const double phi   = Mis_InterpolateFromTable( JetDirection_NBin, CM_Jet_Time_table, CM_Jet_Phi_table[c],   Time_interpolate );
+
+            CM_Jet_Vec[c][0] = cos(theta);
+            CM_Jet_Vec[c][1] = sin(theta)*cos(phi);
+            CM_Jet_Vec[c][2] = sin(theta)*sin(phi);
+         }
+         break;
+      case 3: // align with angular momentum
+         for (int c=0; c<Merger_Coll_NumBHs; c++)
+         {
+            const double ang_mom_norm = sqrt( SQR(ang_mom_sum[c][0]) + SQR(ang_mom_sum[c][1]) + SQR(ang_mom_sum[c][2]) );
+            for (int d=0; d<3; d++)   CM_Jet_Vec[c][d] = ang_mom_sum[c][d] / ang_mom_norm;
+         }
+         break;
+      default:
+         Aux_Error( ERROR_INFO, "Unsupported JetDirection_case %d [1/2/3] !!\n", JetDirection_case );
+         break;
+   } // switch ( JetDirection_case )
+
+} // FUNCTION : SetJetDirection
 
 
 
