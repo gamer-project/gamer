@@ -3,34 +3,37 @@
 #if ( MODEL == HYDRO  &&  defined GRAVITY  &&  defined MASSIVE_PARTICLES )
 
 
-extern int        Merger_Coll_NumHalos, Merger_Coll_NumBHs, Accretion_Mode;
-extern double     eta, eps_f, eps_m, R_acc, R_dep;         // parameters of jet feedback
-extern bool       AGN_feedback;
-extern FieldIdx_t Idx_ParHalo;
-
-extern double    *CM_Bondi_SinkMass;
-extern double    *CM_Bondi_SinkMomX;
-extern double    *CM_Bondi_SinkMomY;
-extern double    *CM_Bondi_SinkMomZ;
-extern double    *CM_Bondi_SinkMomXAbs;
-extern double    *CM_Bondi_SinkMomYAbs;
-extern double    *CM_Bondi_SinkMomZAbs;
-extern double    *CM_Bondi_SinkE;
-extern double    *CM_Bondi_SinkEk;
-extern double    *CM_Bondi_SinkEt;
-extern int       *CM_Bondi_SinkNCell;
-
+// problem-specific global variables
+// =======================================================================================
+// (1) read from Input__TestProb
+extern int        Merger_Coll_NumHalos;
 extern double    *CM_BH_Mass;
+extern double    *Jet_HalfHeight;
+extern double    *Jet_Radius;
+
+extern bool       AGN_feedback;
+extern int        Accretion_Mode, JetDirection_case;
+extern double     eta, eps_f, eps_m, R_acc, R_dep;
+extern bool       fixBH, AdjustBHPos, AdjustBHVel;
+extern double     AdjustPeriod;
+// ---------------------------------------------------------------------------------------
+// (2) read from files
+extern int        JetDirection_NBin;                       // number of bins of the jet direction table
+extern double    *CM_Jet_Time_table;                       // the time  table of jet direction
+extern double   **CM_Jet_Theta_table;                      // the theta table of jet direction for 3 clusters
+extern double   **CM_Jet_Phi_table;                        // the phi   table of jet direction for 3 clusters
+// ---------------------------------------------------------------------------------------
+// (3) variables to record
+extern double   (*CM_ClusterCen)[3];
+extern double   (*CM_BH_Pos)[3];                           // BH position (for updating CM_ClusterCen)
+extern double   (*CM_BH_Vel)[3];                           // BH velocity
 extern double    *CM_BH_Mdot_tot;                          // the total accretion rate
 extern double    *CM_BH_Mdot_hot;                          // the hot   accretion rate
 extern double    *CM_BH_Mdot_cold;                         // the cold  accretion rate
-extern double     Jet_Radius1;
-extern double     Jet_Radius2;
-extern double     Jet_Radius3;
-extern double   (*CM_Jet_Vec)[3];                          // jet direction
 extern double    *CM_Jet_Mdot;                             // the feedback injection rate
 extern double    *CM_Jet_Pdot;
 extern double    *CM_Jet_Edot;
+extern double   (*CM_Jet_Vec)[3];                          // jet direction
 extern double   (*CM_RAcc_GasVel)[3];                      // gas velocity
 extern double    *CM_RAcc_SoundSpeed;
 extern double    *CM_RAcc_GasDens;
@@ -38,46 +41,38 @@ extern double    *CM_RAcc_RelativeVel;                     // the relative veloc
 extern double    *CM_RAcc_ColdGasMass;
 extern double    *CM_RAcc_GasMass;
 extern double    *CM_RAcc_ParMass;
-extern double   (*CM_ClusterCen)[3];
-extern double   (*CM_BH_Pos)[3];                           // BH position (for updating CM_ClusterCen)
-extern double   (*CM_BH_Vel)[3];                           // BH velocity
+extern int       *CM_Cluster_NPar_close;
+extern double    *CM_Bondi_SinkMass, *CM_Bondi_SinkMomX, *CM_Bondi_SinkMomY, *CM_Bondi_SinkMomZ;
+extern double    *CM_Bondi_SinkMomXAbs, *CM_Bondi_SinkMomYAbs, *CM_Bondi_SinkMomZAbs;
+extern double    *CM_Bondi_SinkE, *CM_Bondi_SinkEk, *CM_Bondi_SinkEt;
+extern int       *CM_Bondi_SinkNCell;
+// ---------------------------------------------------------------------------------------
+// (4) other variables
+       double     E_inj_exp[3] = { 0.0, 0.0, 0.0 };        // the expected amount of injected energy
+       double     M_inj_exp[3] = { 0.0, 0.0, 0.0 };        // the expected amount of injected gas mass
+       double     ang_mom_sum[3][3] = { { 1.0, 0.0, 0.0 },
+                                        { 1.0, 0.0, 0.0 },
+                                        { 1.0, 0.0, 0.0 } };
+extern int        AdjustCount;                             // count the number of adjustments
+extern int        Merger_Coll_NumBHs;
 
-extern double   R_acc;
-extern bool     fixBH;
-extern int     *CM_Cluster_NPar_close;
+extern FieldIdx_t Idx_ParHalo;
 
 static double     Jet_WaveK[3];                            // jet wavenumber used in the sin() function to have smooth bidirectional jets
-extern double    *Jet_HalfHeight;
-extern double    *Jet_Radius;
 static double     V_cyl[3];                                // the volume of jet source
 static double     M_inj[3], P_inj[3], E_inj[3];            // the injected density
 static double     normalize_const[3];                      // the exact normalization constant
 
-// the variables that need to be recorded
-       double     E_inj_exp[3] = { 0.0, 0.0, 0.0 };        // the expected amount of injected energy
-       double     M_inj_exp[3] = { 0.0, 0.0, 0.0 };        // the expected amount of injected gas mass
+static bool       if_overlap = false;
+static int        merge_index = 0;                         // record BH 1 merge BH 2 / BH 2 merge BH 1
 
 static bool       FirstTime = true;
-extern int        JetDirection_NBin;                       // number of bins of the jet direction table
-extern double    *CM_Jet_Time_table;                       // the time  table of jet direction
-extern double   **CM_Jet_Theta_table;                      // the theta table of jet direction for 3 clusters
-extern double   **CM_Jet_Phi_table;                        // the phi   table of jet direction for 3 clusters
+// =======================================================================================
 
-extern bool       AdjustBHPos;
-extern bool       AdjustBHVel;
-extern double     AdjustPeriod;
-extern int        AdjustCount;                             // count the number of adjustments
-extern int        JetDirection_case;                       // methods for choosing the jet direction
-       int        merge_index = 0;                         // record BH 1 merge BH 2 / BH 2 merge BH 1
 
-       double     ang_mom_sum[3][3] = { { 1.0, 0.0, 0.0 },
-                                        { 1.0, 0.0, 0.0 },
-                                        { 1.0, 0.0, 0.0 } };
-       bool       if_overlap = false;
-
-static void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][3], double Cen_new[][3], double Cen_Vel[][3] );
-static void SetJetDirection( const double TimeNew );
-
+// problem-specific function prototypes
+// =======================================================================================
+// (1) external functions
 #ifdef MHD
 extern double (*MHD_ResetByUser_VecPot_Ptr)( const double x, const double y, const double z, const double Time,
                                              const double dt, const int lv, const char Component, double AuxArray[] );
@@ -86,6 +81,11 @@ extern double (*MHD_ResetByUser_BField_Ptr)( const double x, const double y, con
                                              const double B_in, const bool UseVecPot, const real *Ax, const real *Ay,
                                              const real *Az, const int i, const int j, const int k );
 #endif
+// ---------------------------------------------------------------------------------------
+// (2) internal functions
+static void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][3], double Cen_new[][3], double Cen_Vel[][3] );
+static void SetJetDirection( const double TimeNew );
+// =======================================================================================
 
 
 
@@ -175,8 +175,7 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
 // (1) SMBH Accretion (note: gas depletion is currently disabled)
    double dr2[3][3], r2[3];
    const double V_dep = 4.0 / 3.0 * M_PI * pow( R_dep, 3.0 ); // the volume to remove gas
-// the density need to be removed
-   double D_dep[Merger_Coll_NumBHs];
+   double D_dep[Merger_Coll_NumBHs]; // the density need to be removed
    for (int c=0; c<Merger_Coll_NumBHs; c++)   D_dep[c] = CM_BH_Mdot_tot[c]*dt/V_dep;
 
    int reset = false; // mark whether this cell is reset or not [false/true]

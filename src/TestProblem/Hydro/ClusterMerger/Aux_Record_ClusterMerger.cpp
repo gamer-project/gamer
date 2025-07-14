@@ -3,6 +3,8 @@
 
 
 
+// problem-specific global variables
+// =======================================================================================
 extern int      Merger_Coll_NumBHs;
 
 extern double  *CM_BH_Mass;
@@ -22,21 +24,21 @@ extern double  *CM_Bondi_SinkEk;
 extern double  *CM_Bondi_SinkEt;
 extern int     *CM_Bondi_SinkNCell;
 
-extern double (*CM_RAcc_GasVel)[3];      // gas velocity
+extern double (*CM_RAcc_GasVel)[3];
 extern double  *CM_RAcc_SoundSpeed;
 extern double  *CM_RAcc_GasDens;
 extern double  *CM_RAcc_RelativeVel;
 extern double  *CM_RAcc_ColdGasMass;
-extern double (*CM_Jet_Vec)[3];          // jet direction
-extern double  *CM_Jet_Mdot;             // the feedback injection rate
+extern double (*CM_Jet_Vec)[3];
+extern double  *CM_Jet_Mdot;
 extern double  *CM_Jet_Pdot;
 extern double  *CM_Jet_Edot;
 extern double   E_inj_exp[3];
 extern double   M_inj_exp[3];
-static double   E_power_inj[3];          // the injection power
+static double   E_power_inj[3];
 extern double   CM_ClusterCen[3][3];
 extern double   CM_BH_Vel[3][3];
-extern int     *CM_Cluster_NPar_close;   // total number of particles inside the target region of each cluster
+extern int     *CM_Cluster_NPar_close;
 
 
 
@@ -70,29 +72,29 @@ void Aux_Record_ClusterMerger()
          fprintf( File_User, "# ClusterCen_x/y/z : BH position\n" );
          fprintf( File_User, "# BHVel_?          : BH velocity [km/s]\n" );
          fprintf( File_User, "# GasVel_?         : Gas velocity\n" );
-         fprintf( File_User, "# RelativeVel      : \n" );
-         fprintf( File_User, "# SoundSpeed       : \n" );
-         fprintf( File_User, "# GasDens          : [cgs]\n" );
+         fprintf( File_User, "# RelativeVel      : Relative velocity between BH and gas for each cluster inside the accretion radius\n" );
+         fprintf( File_User, "# SoundSpeed       : Average sound speed inside the accreiton radius\n" );
+         fprintf( File_User, "# GasDens          : Average gas density  inside the accreiton radius [cgs]\n" );
          fprintf( File_User, "# mass_BH          : BH mass [MSun]\n" );
          fprintf( File_User, "# Mdot_?_BH        : BH accretion rate [cgs]\n" );
-         fprintf( File_User, "# NVoidCell        : \n" );
-         fprintf( File_User, "# Mom?Inj          : [cgs]\n" );
-         fprintf( File_User, "# Mom?InjAbs       : \n" );
-         fprintf( File_User, "# EInj_exp         : [erg]\n" );
-         fprintf( File_User, "# E_Inj            : [erg]\n" );
-         fprintf( File_User, "# E_Inj_err        : \n" );
-         fprintf( File_User, "# Ek_Inj           : [erg]\n" );
-         fprintf( File_User, "# Et_Inj           : [erg]\n" );
-         fprintf( File_User, "# PowerInj         : [cgs]\n" );
-         fprintf( File_User, "# MInjexp          : [Msun]\n" );
-         fprintf( File_User, "# MassInj          : [Msun]\n" );
-         fprintf( File_User, "# M_Inj_err        : \n" );
-         fprintf( File_User, "# Mdot_Inj         : [cgs]\n" );
-         fprintf( File_User, "# Pdot_Inj         : [cgs]\n" );
-         fprintf( File_User, "# Edot_Inj         : [cgs]\n" );
+         fprintf( File_User, "# NVoidCell        : Total number of finest cells within the feedback region\n" );
+         fprintf( File_User, "# Mom?Inj          : Total momentum change in the feedback region [cgs]\n" );
+         fprintf( File_User, "# Mom?InjAbs       : Total |momentum| change in the feedback region\n" );
+         fprintf( File_User, "# EInj_exp         : The expected amount of injected energy in the feedback region [erg]\n" );
+         fprintf( File_User, "# E_Inj            : Total injected energy in the feedback region [erg]\n" );
+         fprintf( File_User, "# E_Inj_err        : The relative error of the total injected energy\n" );
+         fprintf( File_User, "# Ek_Inj           : Total injected kinetic energy in the feedback region [erg]\n" );
+         fprintf( File_User, "# Et_Inj           : Total injected thermal energy in the feedback region [erg]\n" );
+         fprintf( File_User, "# PowerInj         : Toral injected power in the feedback region [cgs]\n" );
+         fprintf( File_User, "# MInjexp          : The expected amount of injected gas mass in the feedback region [Msun]\n" );
+         fprintf( File_User, "# MassInj          : Total mass change in the feedback region [Msun]\n" );
+         fprintf( File_User, "# M_Inj_err        : The relative error of the total injected mass\n" );
+         fprintf( File_User, "# Mdot_Inj         : The feedback injeciton rate of mass [cgs]\n" );
+         fprintf( File_User, "# Pdot_Inj         : The feedback injeciton rate of momentum [cgs]\n" );
+         fprintf( File_User, "# Edot_Inj         : The feedback injeciton rate of total energy [cgs]\n" );
          fprintf( File_User, "# Jet_Vec_?        : Jet inject direction\n" );
          fprintf( File_User, "# num_par_sum      : Total number of particles inside the accretion region\n" );
-         fprintf( File_User, "# ColdGasMass      : \n" );
+         fprintf( File_User, "# ColdGasMass      : Cold gas mass inside the accretion radius\n" );
          fprintf( File_User, "#\n" );
          fprintf( File_User, "#%19s%20s",  "Time", "Step" );
          for (int c=0; c<Merger_Coll_NumBHs; c++)

@@ -2,13 +2,11 @@
 
 
 
-
-// #if ( MODEL == HYDRO  &&  defined GRAVITY )
+// problem-specific global variables
+// =======================================================================================
 extern int      Merger_Coll_NumHalos;
 extern double   R_acc;                // the radius to compute the accretion rate
 extern double (*CM_ClusterCen)[3];
-
-static bool     FirstTime = true;
 
 
 
@@ -30,6 +28,8 @@ static bool     FirstTime = true;
 //-------------------------------------------------------------------------------------------------------
 bool Flag_ClusterMerger( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold )
 {
+
+   static bool FirstTime = true;
 
    const double dh     = amr->dh[lv];
    const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,
@@ -60,7 +60,3 @@ bool Flag_ClusterMerger( const int i, const int j, const int k, const int lv, co
    return Flag;
 
 } // FUNCTION : Flag_ClusterMerger
-
-
-
-// #endif // #if ( MODEL == HYDRO  &&  defined GRAVITY )
