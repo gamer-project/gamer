@@ -722,7 +722,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
       return;
    } // if ( fixBH )
 
-   double pos_min[3][3], DM_Vel[3][3];   // the updated BH position and velocity
+   double pos_min[Merger_Coll_NumBHs][3], DM_Vel[Merger_Coll_NumBHs][3];   // the updated BH position and velocity
    const bool    CurrentMaxLv = ( NPatchTotal[lv] > 0  &&  lv == MAX_LEVEL        ) ? true :
                                 ( NPatchTotal[lv] > 0  &&  NPatchTotal[lv+1] == 0 ) ? true : false;
 
@@ -735,7 +735,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
       const double dis_exp = 1e-6;  // to check if the output BH positions of each calculaiton are close enough
       bool   converged     = false; // if the BH positions are close enough, then complete the calculation
       int    counter       = 0;     // how many times the calculation is performed (minimum: 2, maximum: 10)
-      double Cen_new_pre[3][3];
+      double Cen_new_pre[Merger_Coll_NumBHs][3];
 
       while ( converged == false  &&  counter <= 10 )
       {
@@ -745,7 +745,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
          int N_max[Merger_Coll_NumBHs]; // maximum particle numbers (to allocate the array size)
          for (int c=0; c<Merger_Coll_NumBHs; c++)   N_max[c] = 10000;
 
-         int      num_par[3] = {0, 0, 0};   // (each rank) number of particles inside the target region of each cluster
+         int      num_par[Merger_Coll_NumBHs];   // (each rank) number of particles inside the target region of each cluster
          real_par **ParX     = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
          real_par **ParY     = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
          real_par **ParZ     = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
@@ -767,6 +767,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
 //       find the particles within 10 times the accretion radius
          for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
+            num_par[c] = 0;
             CM_Cluster_NPar_close[c] = 0;
             for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
             {
@@ -823,8 +824,8 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
 //       collect the number of target particles from each rank
          MPI_Allreduce( num_par, CM_Cluster_NPar_close, 3, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
 
-         int num_par_eachRank[3][MPI_NRank];
-         int displs[3][MPI_NRank];
+         int num_par_eachRank[Merger_Coll_NumBHs][MPI_NRank];
+         int displs[Merger_Coll_NumBHs][MPI_NRank];
          int CM_Cluster_NPar_close_max = 0;
          for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
@@ -941,11 +942,21 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
 
 //       iterate the above calculation until the output BH positions become close enough
          counter += 1;
-         double dis[3] = {0.0, 0.0, 0.0};
+         double dis[Merger_Coll_NumBHs];
          for (int c=0; c<Merger_Coll_NumBHs; c++)
+         {
+            dis[c] = 0.0;
             for (int d=0; d<3; d++)   dis[c] += SQR( pos_min[c][d] - Cen_new_pre[c][d] );
+         }
 
-         if ( counter > 1  &&  sqrt(dis[0]) < dis_exp  &&  sqrt(dis[1]) < dis_exp )   converged = true;
+         if ( counter > 1 )
+         {
+            bool all_BH_converged = true;
+            for (int c=0; c<Merger_Coll_NumBHs; c++)
+               if ( sqrt(dis[c]) >= dis_exp )   all_BH_converged = false;
+
+            converged |= all_BH_converged;
+         }
 
          for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
