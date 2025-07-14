@@ -827,6 +827,7 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //                3. Cell-centered B field is simply obtained by averaging the half-step face-centered B field
 //
 // Parameter   :  g_ConVar_In        : Array storing the input conserved variables
+//                g_FC_B_In          : Array storing the input B field (for MHD only)
 //                g_FC_B_Half        : Array storing the input half-step face-centered B field
 //                g_Flux_Half        : Array storing the input face-centered fluxes
 //                                     --> Accessed with the stride N_HF_FLUX
