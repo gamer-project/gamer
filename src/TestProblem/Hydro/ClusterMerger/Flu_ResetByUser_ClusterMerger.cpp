@@ -61,6 +61,8 @@ extern double    *V_cyl;                                   // the volume of jet 
 extern double    *M_inj, *P_inj, *E_inj;                   // the injected density
 extern double    *normalize_const;                         // the exact normalization constant
 
+extern long_par  *CM_ClusterIdx_Cur;
+
 static bool       if_overlap = false;
 static int        merge_index = 0;                         // record BH 1 merge BH 2 / BH 2 merge BH 1
 
@@ -343,7 +345,9 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
          else                                    merge_index = 2;
          CM_BH_Mass[0] += CM_BH_Mass[1];
          CM_BH_Mass[1] = 0.0;
+
 //       relabel the BH and DM particles being merged
+         CM_ClusterIdx_Cur[1] = 0;
          for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
          {
             if ( amr->Par->AttributeInt[Idx_ParHalo][p] != (long_par)1 )   continue;
@@ -530,8 +534,8 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                {
                   for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                   {
-                     const long ParID = amr->patch[0][lv][PID]->ParList[p];
-                     const real_par ParM  = amr->Par->Mass[ParID];
+                     const long     ParID     = amr->patch[0][lv][PID]->ParList[p];
+                     const real_par ParM      = amr->Par->Mass[ParID];
                      const real_par ParPos[3] = { amr->Par->PosX[ParID], amr->Par->PosY[ParID], amr->Par->PosZ[ParID] };
                      if ( DIST_SQR_3D( ParPos, CM_ClusterCen[c] ) <= SQR(R_acc) )
                         par_mass += ParM;
@@ -801,9 +805,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
                   const real_par VelZ_tmp      = amr->Par->VelZ[ParID];
                   const real_par ParPos_tmp[3] = { ParX_tmp, ParY_tmp, ParZ_tmp };
 
-//                TODO: hard-coded fixed for now since we only allow two clusters to merge
-                  if ( Merger_Coll_NumHalos != 2  ||  Merger_Coll_NumBHs != 1 )
-                  if ( amr->Par->AttributeInt[Idx_ParHalo][ParID] != (long_par)c )   continue;
+                  if ( CM_ClusterIdx_Cur[amr->Par->AttributeInt[Idx_ParHalo][ParID]] != (long_par)c )   continue;
                   if ( DIST_SQR_3D( ParPos_tmp, Cen_new_pre[c] ) > SQR(10*R_acc) )   continue;
 
 //                record the mass, position and velocity of this particle
@@ -1014,9 +1016,9 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
       double Vel_Tmp[3] = { -__FLT_MAX__, -__FLT_MAX__, -__FLT_MAX__ };
       for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
       {
-         if ( amr->Par->Mass[p] < (real_par)0.0 )                       continue;
-         if ( amr->Par->AttributeInt[Idx_ParHalo][p] != (long_par)c )   continue;
-         if ( amr->Par->Type[p] != PTYPE_BLACK_HOLE )                   continue;
+         if ( amr->Par->Mass[p] < (real_par)0.0 )   continue;
+         if ( CM_ClusterIdx_Cur[amr->Par->AttributeInt[Idx_ParHalo][p]] != (long_par)c )   continue;
+         if ( amr->Par->Type[p] != PTYPE_BLACK_HOLE )   continue;
 
          if ( CurrentMaxLv  &&  AdjustPos )
          {

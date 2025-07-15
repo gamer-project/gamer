@@ -99,6 +99,10 @@ static double  *JetDirection = NULL;      // jet direction[time/theta_1/phi_1/th
        double  *E_inj;                    // the injected energy
        double  *normalize_const;          // the exact normalization constant
 
+#ifdef MASSIVE_PARTICLES
+       long_par *CM_ClusterIdx_Cur;       // the current cluster index
+#endif
+
 static FieldIdx_t *ColorFieldsIdx;
 #ifdef MASSIVE_PARTICLES
        FieldIdx_t  Idx_ParHalo = Idx_Undefined;
@@ -388,6 +392,9 @@ void SetParameter()
 
    ColorFieldsIdx = new FieldIdx_t [ Merger_Coll_NumHalos ];
    for (int c=0; c<Merger_Coll_NumHalos; c++)   ColorFieldsIdx[c] = Idx_Undefined;
+
+   CM_ClusterIdx_Cur = new long_par [ Merger_Coll_NumHalos ];
+   for (int c=0; c<Merger_Coll_NumHalos; c++)   CM_ClusterIdx_Cur[c] = c;
 
    if ( OPT__INIT != INIT_BY_RESTART )
    {
@@ -758,6 +765,13 @@ void Output_HDF5_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
    }
    HDF5_OutUser->Add( "AdjustCount", &AdjustCount );
 
+   for (int c=0; c<Merger_Coll_NumHalos; c++)
+   {
+      char CM_ClusterIdx_Cur_name[50];
+      sprintf( CM_ClusterIdx_Cur_name, "CM_ClusterIdx_Cur_%d", c );
+      HDF5_OutUser->Add( CM_ClusterIdx_Cur_name, &CM_ClusterIdx_Cur[c] );
+   }
+
 } // FUNCTION : Output_HDF5_User_ClusterMerger
 #endif // #ifdef SUPPORT_HDF5
 
@@ -783,6 +797,7 @@ void End_ClusterMerger()
    delete [] Jet_HalfHeight;
    delete [] Jet_Radius;
 
+   delete [] CM_ClusterIdx_Cur;
    delete [] CM_Cluster_NPar_close;
    delete [] CM_ClusterCen;
    delete [] CM_BH_Pos;
@@ -1155,6 +1170,12 @@ void Init_User_ClusterMerger()
       LoadField( BH_Mdot_cold_name, &CM_BH_Mdot_cold[c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
    }
    LoadField( "AdjustCount", &AdjustCount, H5_SetID_OutputUser, H5_TypeID_OutputUser );
+   for (int c=0; c<Merger_Coll_NumHalos; c++)
+   {
+      char CM_ClusterIdx_Cur_name[50];
+      sprintf( CM_ClusterIdx_Cur_name, "CM_ClusterIdx_Cur_%d", c );
+      LoadField( CM_ClusterIdx_Cur_name, &CM_ClusterIdx_Cur[c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
+   }
 
    H5_Status = H5Tclose( H5_TypeID_OutputUser );
    H5_Status = H5Dclose( H5_SetID_OutputUser );
