@@ -530,20 +530,22 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                const double *EdgeR        = amr->patch[0][lv][PID]->EdgeR;
                const double  patch_pos[3] = { (EdgeL[0]+EdgeR[0])*0.5, (EdgeL[1]+EdgeR[1])*0.5, (EdgeL[2]+EdgeR[2])*0.5 };
                const double  patch_d      = sqrt( SQR(EdgeL[0]-EdgeR[0]) + SQR(EdgeL[1]-EdgeR[1]) + SQR(EdgeL[2]-EdgeR[2]) ) * 0.5;
-               if ( DIST_SQR_3D( patch_pos, CM_ClusterCen[c] ) <= SQR(2*R_acc+patch_d) )
+
+               if ( DIST_SQR_3D( patch_pos, CM_ClusterCen[c] ) > SQR(2*R_acc+patch_d) )   continue;
+
+               for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                {
-                  for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
-                  {
-                     const long     ParID     = amr->patch[0][lv][PID]->ParList[p];
-                     const real_par ParM      = amr->Par->Mass[ParID];
-                     const real_par ParPos[3] = { amr->Par->PosX[ParID], amr->Par->PosY[ParID], amr->Par->PosZ[ParID] };
-                     if ( DIST_SQR_3D( ParPos, CM_ClusterCen[c] ) <= SQR(R_acc) )
-                        par_mass += ParM;
-                  } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
-               } // if ( DIST_SQR_3D( patch_pos, CM_ClusterCen[c] ) <= SQR(2*R_acc+patch_d) )
+                  const long     ParID     = amr->patch[0][lv][PID]->ParList[p];
+                  const real_par ParM      = amr->Par->Mass[ParID];
+                  const real_par ParPos[3] = { amr->Par->PosX[ParID], amr->Par->PosY[ParID], amr->Par->PosZ[ParID] };
+
+                  if ( DIST_SQR_3D( ParPos, CM_ClusterCen[c] ) > SQR(R_acc) )   continue;
+
+                  par_mass += ParM;
+               } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
             } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
             MPI_Allreduce( &par_mass, &CM_RAcc_ParMass[c], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-         }
+         } // if ( Accretion_Mode == 2  ||  Accretion_Mode == 3 )
       } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
 //    calculate the accretion rate
