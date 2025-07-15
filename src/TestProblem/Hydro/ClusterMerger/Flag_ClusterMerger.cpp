@@ -7,6 +7,7 @@
 extern int      Merger_Coll_NumHalos;
 extern double   R_acc;                // the radius to compute the accretion rate
 extern double (*CM_ClusterCen)[3];
+// =======================================================================================
 
 
 

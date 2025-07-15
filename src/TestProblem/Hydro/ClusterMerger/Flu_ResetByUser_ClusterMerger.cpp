@@ -1,8 +1,8 @@
 #include "GAMER.h"
 
+
+
 #if ( MODEL == HYDRO  &&  defined GRAVITY  &&  defined MASSIVE_PARTICLES )
-
-
 // problem-specific global variables
 // =======================================================================================
 // (1) read from Input__TestProb
