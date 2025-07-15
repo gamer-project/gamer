@@ -5,6 +5,8 @@
 // prototypes of built-in source terms
 #if ( MODEL == HYDRO )
 void Src_End_Deleptonization();
+#endif
+#ifdef EXACT_COOLING
 void Src_End_ExactCooling();
 #endif
 
@@ -35,6 +37,8 @@ void Src_End()
 #  if ( MODEL == HYDRO )
    if ( SrcTerms.Deleptonization )
       Src_End_Deleptonization();
+#  endif
+#  ifdef EXACT_COOLING
    if ( SrcTerms.ExactCooling )
       Src_End_ExactCooling();
 #  endif

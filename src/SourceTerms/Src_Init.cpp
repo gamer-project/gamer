@@ -5,6 +5,8 @@
 // prototypes of built-in source terms
 #if ( MODEL == HYDRO )
 void Src_Init_Deleptonization();
+#endif
+#ifdef EXACT_COOLING
 void Src_Init_ExactCooling();
 #endif
 
@@ -68,7 +70,7 @@ void Src_Init()
    SrcTerms.Dlep_Profile_RadiusDevPtr = NULL;
 #  endif
 
-#  if ( MODEL == HYDRO )
+#  ifdef EXACT_COOLING
    SrcTerms.EC_FuncPtr                = NULL;
    SrcTerms.EC_CPUPtr                 = NULL;
 #  ifdef GPU
@@ -107,7 +109,7 @@ void Src_Init()
 #  endif
 
 // (2) exact cooling
-#  if ( MODEL == HYDRO )
+#  ifdef EXACT_COOLING
    if ( SrcTerms.ExactCooling )
    {
       Src_Init_ExactCooling();

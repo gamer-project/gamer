@@ -1,7 +1,7 @@
 #include "CUFLU.h"
 #include "Global.h"
 
-#if ( MODEL == HYDRO )
+#ifdef EXACT_COOLING
 
 
 // external functions and GPU-related set-up
@@ -510,4 +510,4 @@ void CUAPI_MemFree_ExactCooling()
 #endif // #ifdef __CUDACC__
 
 
-#endif // #if ( MODEL == HYDRO )
+#endif // #ifdef EXACT_COOLING

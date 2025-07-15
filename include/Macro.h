@@ -934,9 +934,12 @@
 #  define SRC_NAUX_DLEP          5     // SrcTerms.Dlep_AuxArray_Flt/Int[]
 #  define SRC_DLEP_PROF_NVAR     6     // SrcTerms.Dlep_Profile_DataDevPtr[]/RadiusDevPtr[]
 #  define SRC_DLEP_PROF_NBINMAX  4000
-#  define SRC_NAUX_EC            10    // SrcTerms.EC_AuxArray_Flt/Int[]
 #else
 #  define SRC_NAUX_DLEP          0
+#endif
+#ifdef EXACT_COOLING
+#  define SRC_NAUX_EC            10    // SrcTerms.EC_AuxArray_Flt/Int[]
+#else
 #  define SRC_NAUX_EC            0
 #endif
 #  define SRC_NAUX_USER          10    // SrcTerms.User_AuxArray_Flt/Int[]

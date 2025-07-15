@@ -6,6 +6,8 @@
 #if ( MODEL == HYDRO )
 void Src_WorkBeforeMajorFunc_Deleptonization( const int lv, const double TimeNew, const double TimeOld, const double dt,
                                               double AuxArray_Flt[], int AuxArray_Int[] );
+#endif
+#ifdef EXACT_COOLING
 void Src_WorkBeforeMajorFunc_ExactCooling( const int lv, const double TimeNew, const double TimeOld, const double dt,
                                            double AuxArray_Flt[], int AuxArray_Int[] );
 #endif
@@ -44,6 +46,8 @@ void Src_WorkBeforeMajorFunc( const int lv, const double TimeNew, const double T
    if ( SrcTerms.Deleptonization )
       Src_WorkBeforeMajorFunc_Deleptonization( lv, TimeNew, TimeOld, dt,
                                                Src_Dlep_AuxArray_Flt, Src_Dlep_AuxArray_Int );
+#  endif
+#  ifdef EXACT_COOLING
 // (2) exact cooling
    if ( SrcTerms.ExactCooling )
       Src_WorkBeforeMajorFunc_ExactCooling   ( lv, TimeNew, TimeOld, dt,
