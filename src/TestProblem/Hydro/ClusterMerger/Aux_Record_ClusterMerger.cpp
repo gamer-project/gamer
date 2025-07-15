@@ -33,9 +33,8 @@ extern double (*CM_Jet_Vec)[3];
 extern double  *CM_Jet_Mdot;
 extern double  *CM_Jet_Pdot;
 extern double  *CM_Jet_Edot;
-extern double   E_inj_exp[3];
-extern double   M_inj_exp[3];
-static double   E_power_inj[3];
+extern double  *E_inj_exp;
+extern double  *M_inj_exp;
 extern double   CM_ClusterCen[3][3];
 extern double   CM_BH_Vel[3][3];
 extern int     *CM_Cluster_NPar_close;
@@ -128,6 +127,7 @@ void Aux_Record_ClusterMerger()
    double MomX_Sum[Merger_Coll_NumBHs], MomY_Sum[Merger_Coll_NumBHs], MomZ_Sum[Merger_Coll_NumBHs];
    double MomXAbs_Sum[Merger_Coll_NumBHs], MomYAbs_Sum[Merger_Coll_NumBHs], MomZAbs_Sum[Merger_Coll_NumBHs];
    double E_Sum[Merger_Coll_NumBHs], Ek_Sum[Merger_Coll_NumBHs], Et_Sum[Merger_Coll_NumBHs];
+   double E_power_inj[Merger_Coll_NumBHs];
 
    for (int c=0; c<Merger_Coll_NumBHs; c++)
    {

@@ -48,20 +48,18 @@ extern double    *CM_Bondi_SinkE, *CM_Bondi_SinkEk, *CM_Bondi_SinkEt;
 extern int       *CM_Bondi_SinkNCell;
 // ---------------------------------------------------------------------------------------
 // (4) other variables
-       double     E_inj_exp[3] = { 0.0, 0.0, 0.0 };        // the expected amount of injected energy
-       double     M_inj_exp[3] = { 0.0, 0.0, 0.0 };        // the expected amount of injected gas mass
-       double     ang_mom_sum[3][3] = { { 1.0, 0.0, 0.0 },
-                                        { 1.0, 0.0, 0.0 },
-                                        { 1.0, 0.0, 0.0 } };
+extern double    *E_inj_exp;                               // the expected amount of injected energy
+extern double    *M_inj_exp;                               // the expected amount of injected gas mass
+extern double   (*ang_mom_sum)[3];
 extern int        AdjustCount;                             // count the number of adjustments
 extern int        Merger_Coll_NumBHs;
 
 extern FieldIdx_t Idx_ParHalo;
 
-static double     Jet_WaveK[3];                            // jet wavenumber used in the sin() function to have smooth bidirectional jets
-static double     V_cyl[3];                                // the volume of jet source
-static double     M_inj[3], P_inj[3], E_inj[3];            // the injected density
-static double     normalize_const[3];                      // the exact normalization constant
+extern double    *Jet_WaveK;                               // jet wavenumber used in the sin() function to have smooth bidirectional jets
+extern double    *V_cyl;                                   // the volume of jet source
+extern double    *M_inj, *P_inj, *E_inj;                   // the injected density
+extern double    *normalize_const;                         // the exact normalization constant
 
 static bool       if_overlap = false;
 static int        merge_index = 0;                         // record BH 1 merge BH 2 / BH 2 merge BH 1
@@ -386,24 +384,37 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
       }
 
 //    variables for each rank
-      int    num        [3]     =  { 0, 0, 0 };        // the number of cells inside the accretion radius
-      double gas_mass   [3]     =  { 0.0, 0.0, 0.0 };  // total gas mass inside the accretion radius
-      real   rho        [3]     =  { 0.0, 0.0, 0.0 };  // the average density inside the accretion radius (hot gas)
-      double mass_cold  [3]     =  { 0.0, 0.0, 0.0 };  // cold gas mass (T < 5e5 K) inside the accretion radius
-      real   Cs         [3]     =  { 0.0, 0.0, 0.0 };  // the average sound speed inside the accretion radius
-      real   gas_mom    [3][3]  = {{ 0.0, 0.0, 0.0 },  // average gas momentum
-                                   { 0.0, 0.0, 0.0 },
-                                   { 0.0, 0.0, 0.0 }};
-      double ang_mom    [3][3]  = {{ 0.0, 0.0, 0.0 },  // total angular momentum inside the accretion radius
-                                   { 0.0, 0.0, 0.0 },
-                                   { 0.0, 0.0, 0.0 }};
-      real   V_cyl_exact[3]     =  { 0.0, 0.0, 0.0 };  // exact volume of jet cylinder
-      real   normalize  [3]     =  { 0.0, 0.0, 0.0 };  // for computing the correct normalization constant
-      bool   if_overlap_each_rank = false;
+      int  num        [Merger_Coll_NumBHs];     // the number of cells inside the accretion radius
+      real gas_mass   [Merger_Coll_NumBHs];     // total gas mass inside the accretion radius
+      real rho        [Merger_Coll_NumBHs];     // the average density inside the accretion radius (hot gas)
+      real mass_cold  [Merger_Coll_NumBHs];     // cold gas mass (T < 5e5 K) inside the accretion radius
+      real Cs         [Merger_Coll_NumBHs];     // the average sound speed inside the accretion radius
+      real gas_mom    [Merger_Coll_NumBHs][3];  // average gas momentum
+      real ang_mom    [Merger_Coll_NumBHs][3];  // total angular momentum inside the accretion radius
+      real V_cyl_exact[Merger_Coll_NumBHs];     // exact volume of jet cylinder
+      real normalize  [Merger_Coll_NumBHs];     // for computing the correct normalization constant
+      bool if_overlap_each_rank = false;
+      for (int c=0; c<Merger_Coll_NumBHs; c++)
+      {
+         num        [c] = 0;
+         gas_mass   [c] = 0.0;
+         rho        [c] = 0.0;
+         mass_cold  [c] = 0.0;
+         Cs         [c] = 0.0;
+         V_cyl_exact[c] = 0.0;
+         normalize  [c] = 0.0;
+         for (int d=0; d<3; d++)
+         {
+            gas_mom[c][d] = 0.0;
+            ang_mom[c][d] = 0.0;
+         }
+      }
+
 
 //    variables for all ranks
-      int  num_sum[3];
-      real rho_sum[3], Cs_sum[3], gas_mom_sum[3][3], gas_vel_sum[3][3], V_cyl_exact_sum[3], normalize_sum[3];
+      int  num_sum[Merger_Coll_NumBHs];
+      real rho_sum[Merger_Coll_NumBHs], Cs_sum[Merger_Coll_NumBHs], gas_mom_sum[Merger_Coll_NumBHs][3];
+      real gas_vel_sum[Merger_Coll_NumBHs][3], V_cyl_exact_sum[Merger_Coll_NumBHs], normalize_sum[Merger_Coll_NumBHs];
 
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {

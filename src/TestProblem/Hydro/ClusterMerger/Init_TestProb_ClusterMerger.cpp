@@ -88,6 +88,17 @@ static double  *JetDirection = NULL;      // jet direction[time/theta_1/phi_1/th
        int      AdjustCount = 0;          // count the number of adjustments
        int      Merger_Coll_NumBHs;       // number of BHs in the simulation
 
+       double  *E_inj_exp;                // the expected amount of injected energy
+       double  *M_inj_exp;                // the expected amount of injected gas mass
+       double (*ang_mom_sum)[3];
+
+       double  *Jet_WaveK;                // jet wavenumber used in the sin() function to have smooth bidirectional jets
+       double  *V_cyl;                    // the volume of jet source
+       double  *M_inj;                    // the injected density
+       double  *P_inj;                    // the injected momentum
+       double  *E_inj;                    // the injected energy
+       double  *normalize_const;          // the exact normalization constant
+
 static FieldIdx_t *ColorFieldsIdx;
 #ifdef MASSIVE_PARTICLES
        FieldIdx_t  Idx_ParHalo = Idx_Undefined;
@@ -468,6 +479,12 @@ void SetParameter()
          for (int d=0; d<3; d++)   CM_ClusterCen[c][d] = Merger_Coll_Pos[c][d];
          for (int d=0; d<3; d++)   CM_BH_Pos    [c][d] = CM_ClusterCen  [c][d];
          for (int d=0; d<3; d++)   CM_BH_Vel    [c][d] = Merger_Coll_Vel[c][d];
+
+         E_inj_exp[c] = 0.0;
+         M_inj_exp[c] = 0.0;
+         ang_mom_sum[c][0] = 1.0;
+         ang_mom_sum[c][1] = 0.0;
+         ang_mom_sum[c][2] = 0.0;
       }
 
 //    (3) determine particle number
@@ -828,6 +845,17 @@ void End_ClusterMerger()
       delete [] CM_Jet_Phi_table;
    }
 
+   delete [] Jet_WaveK;
+   delete [] V_cyl;
+   delete [] M_inj;
+   delete [] P_inj;
+   delete [] E_inj;
+   delete [] normalize_const;
+
+   delete [] E_inj_exp;
+   delete [] M_inj_exp;
+   delete [] ang_mom_sum;
+
 } // FUNCTION : End_ClusterMerger
 
 
@@ -1182,6 +1210,17 @@ void AllocateBHVarArray()
    CM_Bondi_SinkEk       = new double [ Merger_Coll_NumBHs ];
    CM_Bondi_SinkEt       = new double [ Merger_Coll_NumBHs ];
    CM_Bondi_SinkNCell    = new int    [ Merger_Coll_NumBHs ];
+
+   Jet_WaveK             = new double [ Merger_Coll_NumBHs ];
+   V_cyl                 = new double [ Merger_Coll_NumBHs ];
+   M_inj                 = new double [ Merger_Coll_NumBHs ];
+   P_inj                 = new double [ Merger_Coll_NumBHs ];
+   E_inj                 = new double [ Merger_Coll_NumBHs ];
+   normalize_const       = new double [ Merger_Coll_NumBHs ];
+
+   E_inj_exp             = new double [ Merger_Coll_NumBHs ];
+   M_inj_exp             = new double [ Merger_Coll_NumBHs ];
+   ang_mom_sum           = new double [ Merger_Coll_NumBHs ][ 3 ];
 
 } // FUNCITON : AllocateBHVarArray
 
