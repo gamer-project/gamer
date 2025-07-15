@@ -1240,6 +1240,50 @@ void AllocateBHVarArray()
    M_inj_exp             = new double [ Merger_Coll_NumBHs ];
    ang_mom_sum           = new double [ Merger_Coll_NumBHs ][ 3 ];
 
+   for (int c=0; c<Merger_Coll_NumBHs; c++)
+   {
+      CM_Cluster_NPar_close[c] = 0;
+      for (int d=0; d<3; d++)   CM_ClusterCen [c][d] = 0.0;
+      for (int d=0; d<3; d++)   CM_BH_Pos     [c][d] = 0.0;
+      for (int d=0; d<3; d++)   CM_BH_Vel     [c][d] = 0.0;
+      CM_BH_Mdot_tot       [c] = 0.0;
+      CM_BH_Mdot_hot       [c] = 0.0;
+      CM_BH_Mdot_cold      [c] = 0.0;
+      CM_Jet_Mdot          [c] = 0.0;
+      CM_Jet_Pdot          [c] = 0.0;
+      CM_Jet_Edot          [c] = 0.0;
+      for (int d=0; d<3; d++)   CM_Jet_Vec    [c][d] = 0.0;
+      for (int d=0; d<3; d++)   CM_RAcc_GasVel[c][d] = 0.0;
+      CM_RAcc_SoundSpeed   [c] = 0.0;
+      CM_RAcc_GasDens      [c] = 0.0;
+      CM_RAcc_RelativeVel  [c] = 0.0;
+      CM_RAcc_ColdGasMass  [c] = 0.0;
+      CM_RAcc_GasMass      [c] = 0.0;
+      CM_RAcc_ParMass      [c] = 0.0;
+      CM_Bondi_SinkMass    [c] = 0.0;
+      CM_Bondi_SinkMomX    [c] = 0.0;
+      CM_Bondi_SinkMomY    [c] = 0.0;
+      CM_Bondi_SinkMomZ    [c] = 0.0;
+      CM_Bondi_SinkMomXAbs [c] = 0.0;
+      CM_Bondi_SinkMomYAbs [c] = 0.0;
+      CM_Bondi_SinkMomZAbs [c] = 0.0;
+      CM_Bondi_SinkE       [c] = 0.0;
+      CM_Bondi_SinkEk      [c] = 0.0;
+      CM_Bondi_SinkEt      [c] = 0.0;
+      CM_Bondi_SinkNCell   [c] = 0;
+
+      Jet_WaveK            [c] = 0.0;
+      V_cyl                [c] = 0.0;
+      M_inj                [c] = 0.0;
+      P_inj                [c] = 0.0;
+      E_inj                [c] = 0.0;
+      normalize_const      [c] = 0.0;
+
+      E_inj_exp            [c] = 0.0;
+      M_inj_exp            [c] = 0.0;
+      for (int d=0; d<3; d++)   ang_mom_sum   [c][d] = 0.0;
+   }
+
 } // FUNCITON : AllocateBHVarArray
 
 
