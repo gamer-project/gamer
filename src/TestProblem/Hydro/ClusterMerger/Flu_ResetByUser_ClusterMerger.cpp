@@ -320,12 +320,10 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
 
 // (2) decide whether to merge BHs
-   double RelativeBHPos[3] = { CM_BH_Pos[0][0]-CM_BH_Pos[1][0], CM_BH_Pos[0][1]-CM_BH_Pos[1][1], CM_BH_Pos[0][2]-CM_BH_Pos[1][2] };
-   double RelativeBHVel[3] = { CM_BH_Vel[0][0]-CM_BH_Vel[1][0], CM_BH_Vel[0][1]-CM_BH_Vel[1][1], CM_BH_Vel[0][2]-CM_BH_Vel[1][2] };
-   double AbsRelPos        = sqrt( SQR(RelativeBHPos[0]) + SQR(RelativeBHPos[1]) + SQR(RelativeBHPos[2]) );
-   double AbsRelVel        = sqrt( SQR(RelativeBHVel[0]) + SQR(RelativeBHVel[1]) + SQR(RelativeBHVel[2]) );
+   const double AbsRelPos = DIST_3D_DBL( CM_BH_Pos[0], CM_BH_Pos[1] );
+   const double AbsRelVel = DIST_3D_DBL( CM_BH_Vel[0], CM_BH_Vel[1] );
+   const double soften    = amr->dh[MAX_LEVEL];
    double escape_vel;
-   double soften           = amr->dh[MAX_LEVEL];
    if ( AbsRelPos > soften )
    {
       escape_vel = sqrt( 2 * NEWTON_G * (CM_BH_Mass[0]+CM_BH_Mass[1]) / AbsRelPos );
@@ -373,9 +371,6 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
 
 //    (4) calculate the accretion and feedback
-      real   fluid[NCOMP_TOTAL], fluid_old[NCOMP_TOTAL], fluid_acc[NCOMP_TOTAL];
-      double x, y, z, x2, y2, z2, x02, y02, z02;
-
 //    reset to 0 since we only want to record the number of void cells **for one sub-step**
       for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
@@ -411,6 +406,8 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
       }
 
 
+      real fluid_acc[NCOMP_TOTAL];
+
 //    variables for all ranks
       int  num_sum[Merger_Coll_NumBHs];
       real rho_sum[Merger_Coll_NumBHs], Cs_sum[Merger_Coll_NumBHs], gas_mom_sum[Merger_Coll_NumBHs][3];
@@ -418,13 +415,15 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {
-         x02 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
-         y02 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
-         z02 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
+         const double x02 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
+         const double y02 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
+         const double z02 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
 
-         for (int k=0; k<PS1; k++)   { z2 = z02 + k*dh;
-         for (int j=0; j<PS1; j++)   { y2 = y02 + j*dh;
-         for (int i=0; i<PS1; i++)   { x2 = x02 + i*dh;
+         for (int k=0; k<PS1; k++)   { const double z2 = z02 + k*dh;
+         for (int j=0; j<PS1; j++)   { const double y2 = y02 + j*dh;
+         for (int i=0; i<PS1; i++)   { const double x2 = x02 + i*dh;
+
+            double Pos_2[3] = { x2, y2, z2 };
 
             for (int v=0; v<NCOMP_TOTAL; v++)   fluid_acc[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
@@ -439,7 +438,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
             for (int c=0; c<Merger_Coll_NumBHs; c++)
             {
 //             calculate the average density, sound speed and gas velocity inside accretion radius
-               if ( SQR(x2-CM_ClusterCen[c][0]) + SQR(y2-CM_ClusterCen[c][1]) + SQR(z2-CM_ClusterCen[c][2]) <= SQR(R_acc) )
+               if ( DIST_SQR_3D( Pos_2, CM_ClusterCen[c] ) <= SQR(R_acc) )
                {
                   gas_mass[c] += fluid_acc[0]*dv;
 #                 ifdef DUAL_ENERGY
@@ -470,17 +469,17 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                      for (int d=0; d<3; d++)   gas_mom[c][d] += fluid_acc[d+1]*dv;
                      num[c] += 1;
                   } // if ( Temp <= 5e5 )
-                  double dr[3] = { x2-CM_ClusterCen[c][0], y2-CM_ClusterCen[c][1], z2-CM_ClusterCen[c][2] };
+                  double dr[3];
+                  for (int d=0; d<3; d++)   dr[d] = Pos_2[d]-CM_ClusterCen[c][d];
                   ang_mom[c][0] += dv * ( dr[1]*fluid_acc[3] - dr[2]*fluid_acc[2] );
                   ang_mom[c][1] += dv * ( dr[2]*fluid_acc[1] - dr[0]*fluid_acc[3] );
                   ang_mom[c][2] += dv * ( dr[0]*fluid_acc[2] - dr[1]*fluid_acc[1] );
-               } // if ( SQR(x2-CM_ClusterCen[c][0]) + SQR(y2-CM_ClusterCen[c][1]) + SQR(z2-CM_ClusterCen[c][2]) <= SQR(R_acc) )
+               } // if ( DIST_SQR_3D( Pos_2, CM_ClusterCen[c] ) <= SQR(R_acc) )
 
 //             calculate the exact volume of jet cylinder and normalization
                if ( CurrentMaxLv )
                {
                   double Jet_dr_2, Jet_dh_2, Dis_c2m_2, Vec_c2m_2[3];
-                  double Pos_2[3] = {x2, y2, z2};
 
                   for (int d=0; d<3; d++)   Vec_c2m_2[d] = Pos_2[d] - CM_ClusterCen[c][d];
                   Dis_c2m_2 = sqrt( SQR(Vec_c2m_2[0]) + SQR(Vec_c2m_2[1]) + SQR(Vec_c2m_2[2]) );
@@ -582,10 +581,10 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 //    (5) calculate the injection rate
       for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
-         CM_Jet_Mdot[c]  = eta * CM_BH_Mdot_tot[c];
-         CM_Jet_Pdot[c]  = sqrt(2*eta*eps_f*(1.0-eps_m)) * CM_BH_Mdot_tot[c] * (Const_c/UNIT_V);
-         CM_Jet_Edot[c]  = eps_f * CM_BH_Mdot_tot[c] * SQR(Const_c/UNIT_V);
-         V_cyl[c] = M_PI * SQR(Jet_Radius[c]) * 2 * Jet_HalfHeight[c];
+         CM_Jet_Mdot[c] = eta * CM_BH_Mdot_tot[c];
+         CM_Jet_Pdot[c] = sqrt(2*eta*eps_f*(1.0-eps_m)) * CM_BH_Mdot_tot[c] * (Const_c/UNIT_V);
+         CM_Jet_Edot[c] = eps_f * CM_BH_Mdot_tot[c] * SQR(Const_c/UNIT_V);
+         V_cyl      [c] = M_PI * SQR(Jet_Radius[c]) * 2 * Jet_HalfHeight[c];
 
 //       calculate the density that need to be injected
          if ( CurrentMaxLv  &&  V_cyl_exact_sum[c] != 0 )
@@ -611,7 +610,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
 //    (6) perform injection
 //    use the "static" schedule for reproducibility
-#     pragma omp parallel for private( fluid, fluid_old, x, y, z ) schedule( static )
+#     pragma omp parallel for schedule( static )
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {
          int Reset;
@@ -619,13 +618,14 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
          const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
          const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
 
-         for (int k=0; k<PS1; k++)  {  z = z0 + k*dh;
-         for (int j=0; j<PS1; j++)  {  y = y0 + j*dh;
-         for (int i=0; i<PS1; i++)  {  x = x0 + i*dh;
+         for (int k=0; k<PS1; k++)  {  const double z = z0 + k*dh;
+         for (int j=0; j<PS1; j++)  {  const double y = y0 + j*dh;
+         for (int i=0; i<PS1; i++)  {  const double x = x0 + i*dh;
+            real fluid[NCOMP_TOTAL], fluid_old[NCOMP_TOTAL];
 
             for (int v=0; v<NCOMP_TOTAL; v++)
             {
-               fluid   [v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
+               fluid[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
 //             backup the unmodified values since we want to record the amount of sunk variables removed at the maximum level
                fluid_old[v] = fluid[v];
@@ -757,13 +757,13 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
          for (int c=0; c<Merger_Coll_NumBHs; c++)   N_max[c] = 10000;
 
          int      num_par[Merger_Coll_NumBHs];   // (each rank) number of particles inside the target region of each cluster
-         real_par **ParX     = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
-         real_par **ParY     = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
-         real_par **ParZ     = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
-         real_par **ParM     = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
-         real_par **VelX     = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
-         real_par **VelY     = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
-         real_par **VelZ     = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
+         real_par **ParX = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
+         real_par **ParY = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
+         real_par **ParZ = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
+         real_par **ParM = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
+         real_par **VelX = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
+         real_par **VelY = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
+         real_par **VelZ = (real_par**)malloc( Merger_Coll_NumBHs*sizeof(real_par*) );
          for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
             ParX[c] = (real_par*)malloc( N_max[c]*sizeof(real_par) );

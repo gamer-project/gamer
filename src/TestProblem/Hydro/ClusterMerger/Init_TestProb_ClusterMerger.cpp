@@ -387,10 +387,7 @@ void SetParameter()
    AdjustPeriod      *= Const_Myr / UNIT_T;
 
    ColorFieldsIdx = new FieldIdx_t [ Merger_Coll_NumHalos ];
-   for (int c=0; c<Merger_Coll_NumHalos; c++)
-   {
-      ColorFieldsIdx[c] = Idx_Undefined;
-   }
+   for (int c=0; c<Merger_Coll_NumHalos; c++)   ColorFieldsIdx[c] = Idx_Undefined;
 
    if ( OPT__INIT != INIT_BY_RESTART )
    {
