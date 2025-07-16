@@ -525,6 +525,9 @@ endif
 
 ifeq "$(filter -DSUPPORT_HYPRE, $(SIMU_OPTION))" "-DSUPPORT_HYPRE"
 INCLUDE += -I$(HYPRE_PATH)/include
+ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
+INCLUDE += -I$(CUDA_PATH)/include
+endif
 endif
 
 ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"

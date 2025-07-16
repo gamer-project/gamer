@@ -13,6 +13,10 @@
 #define HYPRE_MPI_COMM   NULL_INT
 #endif
 
+#ifdef GPU
+#include <cuda_runtime.h>
+#endif
+
 
 #include "HYPRE_config.h"
 #include "HYPRE_sstruct_ls.h"

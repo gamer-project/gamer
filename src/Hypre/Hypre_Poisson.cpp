@@ -44,7 +44,12 @@ void Hypre_SolvePoisson( const int SaveSg_Pot, const int lv, const double TimeNe
    HYPRE_CHECK_FUNC(   HYPRE_SStructVectorGather( Hypre_x )   );
 
 // update GAMER array
-   real *pote = new real [CUBE(PS1)];
+   real *pote;
+#  ifdef GPU
+   cudaMallocManaged( &pote, sizeof(real) * CUBE(PS1), cudaMemAttachGlobal );
+#  else
+   pote = new real [CUBE(PS1)];
+#  endif
    for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    {
       HYPRE_CHECK_FUNC(   HYPRE_SStructVectorGetBoxValues( Hypre_x, part, amr->patch[0][lv][PID]->cornerL, amr->patch[0][lv][PID]->cornerR, var, pote )   );
@@ -58,7 +63,11 @@ void Hypre_SolvePoisson( const int SaveSg_Pot, const int lv, const double TimeNe
       } // i, j, k
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
+#  ifdef GPU
+   cudaFree( pote );
+#  else
    delete [] pote;
+#  endif
 
    Hypre_Free();
 

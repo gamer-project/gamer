@@ -22,6 +22,21 @@ void Hypre_Init()
 // initialize Hypre
    HYPRE_CHECK_FUNC(   HYPRE_Initialize()   );
 
+#  ifdef GPU
+   for (int r=0; r<MPI_NRank; r++)
+   {
+      if ( MPI_Rank == r )
+      {
+         printf( "GPU Info of Rank %d\n", MPI_Rank );
+         HYPRE_PrintDeviceInfo();
+      }
+      MPI_Barrier( MPI_COMM_WORLD );
+   }
+
+   HYPRE_CHECK_FUNC(   HYPRE_SetExecutionPolicy( HYPRE_EXEC_DEVICE )   );
+   HYPRE_CHECK_FUNC(   HYPRE_SetMemoryLocation( HYPRE_MEMORY_DEVICE )   );
+#  endif
+
 // TODO : print hypre info? check hypre info
 
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

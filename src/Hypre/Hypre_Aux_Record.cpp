@@ -60,6 +60,11 @@ void Hypre_Aux_Record( const char SolverName[], const int lv, const int iteratio
 #        else
          fprintf( File, "# %-30s : %d\n", "HYPRE_USING_OPENMP",    0 );
 #        endif
+#        ifdef HYPRE_USING_CUDA
+         fprintf( File, "# %-30s : %d\n", "HYPRE_USING_CUDA",      HYPRE_USING_CUDA );
+#        else
+         fprintf( File, "# %-30s : %d\n", "HYPRE_USING_CUDA",      0 );
+#        endif
 
          fprintf( File, "# ====================================================================================================\n");
          fprintf( File, "# Hypre runtime parameters\n" );
