@@ -202,26 +202,17 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 #  endif
 
 
-   // Aux_Message( stdout, "\n" );
-   // Aux_Message( stdout, "Track flu prepare %d %24.16e %d %24.16e %s %d\n", amr->FluSg[lv], amr->FluSgTime[lv][amr->FluSg[lv]], 1-amr->FluSg[lv], amr->FluSgTime[lv][1-amr->FluSg[lv]], __FUNCTION__, __LINE__ );
-   // Aux_Message( stdout, "Track pot prepare %d %24.16e %d %24.16e %s %d\n", amr->PotSg[lv], amr->PotSgTime[lv][amr->PotSg[lv]], 1-amr->PotSg[lv], amr->PotSgTime[lv][1-amr->PotSg[lv]], __FUNCTION__, __LINE__ );
 //-------------------------------------------------------------------------------------------------------------
    TIMING_SYNC(   Preparation_Step( TSolver, lv, TimeNew, TimeOld, NPG[ArrayID], PID0_List, ArrayID, GlobalTree ),
                   Timer_Pre[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
 
 
-   // Aux_Message( stdout, "\n" );
-   // Aux_Message( stdout, "Track flu prepare %d %24.16e %d %24.16e %s %d\n", amr->FluSg[lv], amr->FluSgTime[lv][amr->FluSg[lv]], 1-amr->FluSg[lv], amr->FluSgTime[lv][1-amr->FluSg[lv]], __FUNCTION__, __LINE__ );
-   // Aux_Message( stdout, "Track pot prepare %d %24.16e %d %24.16e %s %d\n", amr->PotSg[lv], amr->PotSgTime[lv][amr->PotSg[lv]], 1-amr->PotSg[lv], amr->PotSgTime[lv][1-amr->PotSg[lv]], __FUNCTION__, __LINE__ );
 //-------------------------------------------------------------------------------------------------------------
    TIMING_SYNC(   Solver( TSolver, lv, TimeNew, TimeOld, NPG[ArrayID], ArrayID, dt, Poi_Coeff ),
                   Timer_Sol[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
 
-   // Aux_Message( stdout, "\n" );
-   // Aux_Message( stdout, "Track flu prepare %d %24.16e %d %24.16e %s %d\n", amr->FluSg[lv], amr->FluSgTime[lv][amr->FluSg[lv]], 1-amr->FluSg[lv], amr->FluSgTime[lv][1-amr->FluSg[lv]], __FUNCTION__, __LINE__ );
-   // Aux_Message( stdout, "Track pot prepare %d %24.16e %d %24.16e %s %d\n", amr->PotSg[lv], amr->PotSgTime[lv][amr->PotSg[lv]], 1-amr->PotSg[lv], amr->PotSgTime[lv][1-amr->PotSg[lv]], __FUNCTION__, __LINE__ );
 
    for (Disp=NPG_Max; Disp<NTotal; Disp+=NPG_Max)
    {
@@ -256,9 +247,6 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 //-------------------------------------------------------------------------------------------------------------
 
    } // for (int Disp=NPG_Max; Disp<NTotal; Disp+=NPG_Max)
-   // Aux_Message( stdout, "\n" );
-   // Aux_Message( stdout, "Track flu prepare %d %24.16e %d %24.16e %s %d\n", amr->FluSg[lv], amr->FluSgTime[lv][amr->FluSg[lv]], 1-amr->FluSg[lv], amr->FluSgTime[lv][1-amr->FluSg[lv]], __FUNCTION__, __LINE__ );
-   // Aux_Message( stdout, "Track pot prepare %d %24.16e %d %24.16e %s %d\n", amr->PotSg[lv], amr->PotSgTime[lv][amr->PotSg[lv]], 1-amr->PotSg[lv], amr->PotSgTime[lv][1-amr->PotSg[lv]], __FUNCTION__, __LINE__ );
 
 
 //-------------------------------------------------------------------------------------------------------------
@@ -273,9 +261,6 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
                   NPG[ArrayID], PID0_List+Disp-NPG_Max, ArrayID, dt ),
                   Timer_Clo[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
-   // Aux_Message( stdout, "\n" );
-   // Aux_Message( stdout, "Track flu prepare %d %24.16e %d %24.16e %s %d\n", amr->FluSg[lv], amr->FluSgTime[lv][amr->FluSg[lv]], 1-amr->FluSg[lv], amr->FluSgTime[lv][1-amr->FluSg[lv]], __FUNCTION__, __LINE__ );
-   // Aux_Message( stdout, "Track pot prepare %d %24.16e %d %24.16e %s %d\n", amr->PotSg[lv], amr->PotSgTime[lv][amr->PotSg[lv]], 1-amr->PotSg[lv], amr->PotSgTime[lv][1-amr->PotSg[lv]], __FUNCTION__, __LINE__ );
 
 
    if ( AllocateList )  delete [] PID0_List;

@@ -373,12 +373,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 //    4. Poisson + gravity solver
 // ===============================================================================================
 #     ifdef GRAVITY
-   // Aux_Message( stdout, "\n" );
-   // Aux_Message( stdout, "Track flu prepare %d %24.16e %d %24.16e %s %d\n", amr->FluSg[lv], amr->FluSgTime[lv][amr->FluSg[lv]], 1-amr->FluSg[lv], amr->FluSgTime[lv][1-amr->FluSg[lv]], __FUNCTION__, __LINE__ );
-   // Aux_Message( stdout, "Track pot prepare %d %24.16e %d %24.16e %s %d\n", amr->PotSg[lv], amr->PotSgTime[lv][amr->PotSg[lv]], 1-amr->PotSg[lv], amr->PotSgTime[lv][1-amr->PotSg[lv]], __FUNCTION__, __LINE__ );
       const int SaveSg_Pot = 1 - amr->PotSg[lv];
-//      Aux_Message( stdout, "DEBUG: Rank: %d, flu Sg: %d time: %24.16e\n", MPI_Rank, amr->FluSg[lv], amr->FluSgTime[lv][amr->FluSg[lv]] );
-//      Aux_Message( stdout, "DEBUG: Rank: %d, Pot Sg: %d time: %24.16e\n", MPI_Rank, amr->PotSg[lv], amr->PotSgTime[lv][amr->PotSg[lv]] );
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "   Lv %2d: Gra_AdvanceDt, counter = %8ld ... ", lv, AdvanceCounter[lv] );

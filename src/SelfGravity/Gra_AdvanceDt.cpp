@@ -8,12 +8,6 @@ extern Timer_t *Timer_GetBuf     [NLEVEL][8];
 extern Timer_t *Timer_Par_Collect[NLEVEL];
 #endif
 
-//   Aux_Message( stdout, "DEBUG: Rank: %d, %s, lv: %d, TF: %d, %ld <-> %ld\n", MPI_Rank, __FUNCTION__, lv, FullRefinedLv, (long)NPatchTotal[lv], NX0_TOT[0]*NX0_TOT[1]*NX0_TOT[2]/512*(1L<<lv)*(1L<<lv)*(1L<<lv) );
-   // Aux_Message( stdout, "\n" );
-   // Aux_Message( stdout, "Track flu prepare %d %24.16e %d %24.16e %s %d\n", amr->FluSg[lv], amr->FluSgTime[lv][amr->FluSg[lv]], 1-amr->FluSg[lv], amr->FluSgTime[lv][1-amr->FluSg[lv]], __FUNCTION__, __LINE__ );
-   // Aux_Message( stdout, "Track pot prepare %d %24.16e %d %24.16e %s %d\n", amr->PotSg[lv], amr->PotSgTime[lv][amr->PotSg[lv]], 1-amr->PotSg[lv], amr->PotSgTime[lv][1-amr->PotSg[lv]], __FUNCTION__, __LINE__ );
-//      Aux_Message( stdout, "DEBUG: %s %d\n", __FILE__, __LINE__ );
-
 
 
 //-------------------------------------------------------------------------------------------------------
