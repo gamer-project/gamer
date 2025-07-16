@@ -307,7 +307,8 @@ endif # SUPPORT_LIBYT
 # HYPRE source files (included only if "SUPPORT_HYPRE" is turned on)
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DSUPPORT_HYPRE, $(SIMU_OPTION))" "-DSUPPORT_HYPRE"
-CPU_FILE    += Hypre_Init.cpp  Hypre_End.cpp  Hypre_Main.cpp  Hypre_Solve.cpp  Hypre_Aux_Record.cpp
+CPU_FILE    += Hypre_Init.cpp  Hypre_End.cpp  Hypre_Main.cpp  Hypre_Solve.cpp  Hypre_Aux_Record.cpp \
+               Hypre_Prepare.cpp  Hypre_Poisson.cpp
 
 vpath %.cpp    Hypre
 endif # SUPPORT_HYPRE
@@ -480,6 +481,9 @@ endif
 ifeq "$(filter -DSUPPORT_HYPRE, $(SIMU_OPTION))" "-DSUPPORT_HYPRE"
 LIB += -L$(HYPRE_PATH)/lib -lHYPRE
 LIB += -Wl,-rpath=$(HYPRE_PATH)/lib
+ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
+LIB += -lcusparse -lcublas -lcurand
+endif
 endif
 
 

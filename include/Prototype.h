@@ -848,7 +848,11 @@ int FB_Aux_CellPatchRelPos( const int ijk[] );
 // Hypre
 #ifdef SUPPORT_HYPRE
 void Hypre_Init();
-void Hypre_PrepareSingleLevel( const int lv, const int NExtend );
+void Hypre_FillArrays( const int lv, const int NExtend, const double TimeNew, const real Poi_Coeff );
+void Hypre_SetA( const int lv );
+void Hypre_SetBC( const int entry, int *stencil_indices, const int var, const int lv, const int *cornerL, const int *cornerR );
+void Hypre_Solve( const Hypre_Solver_t Solver, int *N_iter, real *final_res_norm );
+void Hypre_PrepareSingleLevel( const int lv, const int NExtend, const bool Periodic[] );
 void Hypre_Free();
 #if ( defined GRAVITY  &&  POT_SCHEME == HYPRE_POI )
 void Hypre_SolvePoisson( const int SaveSg_Pot, const int lv, const double TimeNew, const real Poi_Coeff );
