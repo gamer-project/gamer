@@ -45,6 +45,15 @@ typedef float  real_che;
 #endif
 #endif // #ifdef SUPPORT_GRACKLE
 
+#ifdef SUPPORT_HYPRE
+#include "HYPRE_config.h"
+#ifdef HYPRE_SINGLE
+typedef float  real_hypre;
+#else
+typedef double real_hypre;
+#endif
+#endif // #ifdef SUPPORT_HYPRE
+
 #if ( GRAMFE_SCHEME == GRAMFE_FFT )
 #ifdef GRAMFE_FFT_FLOAT8
 typedef double gramfe_fft_float;

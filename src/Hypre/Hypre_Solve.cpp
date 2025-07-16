@@ -4,12 +4,20 @@
 
 
 #ifdef SUPPORT_HYPRE
-static void Hypre_Solve_SStructSysPFMG( int *N_iter, real *final_res_norm );
-static void Hypre_Solve_SStructSplit  ( int *N_iter, real *final_res_norm );
+static void Hypre_Solve_SStructSysPFMG( int *N_iter, real_hypre *final_res_norm );
+static void Hypre_Solve_SStructSplit  ( int *N_iter, real_hypre *final_res_norm );
 
 
 
-void Hypre_Solve( const Hypre_Solver_t Solver, int *N_iter, real *final_res_norm )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hypre_Solve
+// Description :  TBF
+//
+// Note        :  TBF
+//
+// Parameter   :  TBF
+//-------------------------------------------------------------------------------------------------------
+void Hypre_Solve( const Hypre_Solver_t Solver, int *N_iter, real_hypre *final_res_norm )
 {
 
    switch ( Solver )
@@ -28,7 +36,15 @@ void Hypre_Solve( const Hypre_Solver_t Solver, int *N_iter, real *final_res_norm
 
 
 
-void Hypre_Solve_SStructSysPFMG( int *N_iter, real *final_res_norm )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hypre_Solver_SStyuctSysPFMG
+// Description :  TBF
+//
+// Note        :  TBF
+//
+// Parameter   :  TBF
+//-------------------------------------------------------------------------------------------------------
+void Hypre_Solve_SStructSysPFMG( int *N_iter, real_hypre *final_res_norm )
 {
 
    HYPRE_CHECK_FUNC(   HYPRE_SStructSysPFMGCreate( HYPRE_MPI_COMM, &Hypre_solver )   );
@@ -61,7 +77,15 @@ void Hypre_Solve_SStructSysPFMG( int *N_iter, real *final_res_norm )
 
 
 
-void Hypre_Solve_SStructSplit( int *N_iter, real *final_res_norm )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hypre_Solve_SStructSplit
+// Description :  TBF
+//
+// Note        :  TBF
+//
+// Parameter   :  TBF
+//-------------------------------------------------------------------------------------------------------
+void Hypre_Solve_SStructSplit( int *N_iter, real_hypre *final_res_norm )
 {
 
    HYPRE_CHECK_FUNC(   HYPRE_SStructSplitCreate( HYPRE_MPI_COMM, &Hypre_solver )   );

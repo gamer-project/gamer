@@ -854,7 +854,7 @@ void Hypre_Solver( const Hypre_SolveType_t SolveType, const int lv, const double
 void Hypre_PrepareSingleLevel( const Hypre_SolveType_t, const int lv );
 void Hypre_FillArrays( const Hypre_SolveType_t SolveType, const int lv, const double TimeNew, const real Poi_Coeff,
                        const int SaveSg_Pot );
-void Hypre_Solve( const Hypre_Solver_t Solver, int *N_iter, real *final_res_norm );
+void Hypre_Solve( const Hypre_Solver_t Solver, int *N_iter, real_hypre *final_res_norm );
 void Hypre_UpdateArrays( const Hypre_SolveType_t SolveType, const int lv, const int SaveSg_Flu,
                          const int SaveSg_Mag, const int SaveSg_Pot );
 void Hypre_Free();

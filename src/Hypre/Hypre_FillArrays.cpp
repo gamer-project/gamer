@@ -92,19 +92,19 @@ void Hypre_FillArrays_Poisson( const int lv, const int NExtend, const double Tim
       NPG++;
    } // for (int PID0=0; PID0<amr->NPatchComma[lv][1] / 8; PID0+=8)
 
-   real *Matrix_Laplace, *pote, *dens, *bcBox, *bcVal;
+   real_hypre *Matrix_Laplace, *pote, *dens, *bcBox, *bcVal;
 #  ifdef GPU
-   cudaMallocManaged( &Matrix_Laplace, sizeof(real) * CUBE(PS1) * NEntries, cudaMemAttachGlobal );
-   cudaMallocManaged( &pote,           sizeof(real) * CUBE(PS1),            cudaMemAttachGlobal );
-   cudaMallocManaged( &dens,           sizeof(real) * CUBE(PS1),            cudaMemAttachGlobal );
-   cudaMallocManaged( &bcBox,          sizeof(real) * SQR(PS1)  * 1,        cudaMemAttachGlobal );
-   cudaMallocManaged( &bcVal,          sizeof(real) * SQR(PS1),             cudaMemAttachGlobal );
+   cudaMallocManaged( &Matrix_Laplace, sizeof(real_hypre) * CUBE(PS1) * NEntries, cudaMemAttachGlobal );
+   cudaMallocManaged( &pote,           sizeof(real_hypre) * CUBE(PS1),            cudaMemAttachGlobal );
+   cudaMallocManaged( &dens,           sizeof(real_hypre) * CUBE(PS1),            cudaMemAttachGlobal );
+   cudaMallocManaged( &bcBox,          sizeof(real_hypre) * SQR(PS1)  * 1,        cudaMemAttachGlobal );
+   cudaMallocManaged( &bcVal,          sizeof(real_hypre) * SQR(PS1),             cudaMemAttachGlobal );
 #  else
-   Matrix_Laplace = new real [NEntries*CUBE(PS1)];
-   pote           = new real [CUBE(PS1)];
-   dens           = new real [CUBE(PS1)];
-   bcBox          = new real [1*SQR(PS1)];
-   bcVal          = new real [SQR(PS1)];
+   Matrix_Laplace = new real_hypre [NEntries*CUBE(PS1)];
+   pote           = new real_hypre [CUBE(PS1)];
+   dens           = new real_hypre [CUBE(PS1)];
+   bcBox          = new real_hypre [1*SQR(PS1)];
+   bcVal          = new real_hypre [SQR(PS1)];
 #  endif
    real  (*Pot_Array)[CUBE(PS1+2)] = NULL;
    real  (*Dens_Array)[CUBE(PS1)]  = NULL;
@@ -138,10 +138,10 @@ void Hypre_FillArrays_Poisson( const int lv, const int NExtend, const double Tim
 #  else
    const bool Comoving = false;
 #  endif
-   real RhoSubtract;
-   if ( OPT__BC_POT == BC_POT_PERIODIC ) RhoSubtract = (real)AveDensity_Init;
-   else if ( Comoving )                  RhoSubtract = (real)1.0;
-   else                                  RhoSubtract = (real)0.0;
+   real_hypre RhoSubtract;
+   if ( OPT__BC_POT == BC_POT_PERIODIC ) RhoSubtract = (real_hypre)AveDensity_Init;
+   else if ( Comoving )                  RhoSubtract = (real_hypre)1.0;
+   else                                  RhoSubtract = (real_hypre)0.0;
 
    for (int PG=0; PG<NPG; PG++)
    for (int LocalID=0; LocalID<8; LocalID++)
@@ -153,14 +153,14 @@ void Hypre_FillArrays_Poisson( const int lv, const int NExtend, const double Tim
       for (int i=0; i<PS1; i++) { const double x = amr->patch[0][lv][PID]->EdgeL[0] + (0.5+i)*dh;
          const int idx = IDX321( i, j, k, PS1, PS1 );
 
-         real Dens = Dens_Array[8*PG+LocalID][idx] - RhoSubtract;
+         real_hypre Dens = (real_hypre)Dens_Array[8*PG+LocalID][idx] - RhoSubtract;
 
 //       add extra mass source for gravity if required
          if ( OPT__GRAVITY_EXTRA_MASS )
             Dens += Poi_AddExtraMassForGravity_Ptr( x, y, z, Time[lv], lv, NULL );
 
-         dens[idx] = coeff * Dens;
-         pote[idx] = 0.0;
+         dens[idx] = (real_hypre)coeff * Dens;
+         pote[idx] = (real_hypre)0.0;
       }}} // i, j, k
 
       HYPRE_CHECK_FUNC(   HYPRE_SStructVectorSetBoxValues( Hypre_b, part, amr->patch[0][lv][PID]->cornerL, amr->patch[0][lv][PID]->cornerR, var, dens )   );
@@ -226,9 +226,8 @@ void Hypre_FillArrays_Poisson( const int lv, const int NExtend, const double Tim
             } // switch ( d )
             const int idx_arr = idx_k*SQR(PS1+2*NExtend) + idx_j*(PS1+2*NExtend) + idx_i;
 
-            const double temp = bcVal[idx];
-            bcBox[idx]  = 0.0;
-            bcVal[idx] += Pot_Array[8*PG+LocalID][idx_arr];
+            bcBox[idx]  = (real_hypre)0.0;
+            bcVal[idx] += (real_hypre)Pot_Array[8*PG+LocalID][idx_arr];
          } // i, j, k
 
          HYPRE_CHECK_FUNC(   HYPRE_SStructVectorSetBoxValues( Hypre_b, part, cornerL_bc, cornerR_bc, var, bcVal )   );

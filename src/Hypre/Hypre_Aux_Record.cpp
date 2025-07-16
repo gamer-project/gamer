@@ -55,6 +55,11 @@ void Hypre_Aux_Record( const Hypre_SolveType_t SolveType, const int lv, const in
          fprintf( File, "# %-30s : %s\n", "HYPRE_RELEASE_VERSION", HYPRE_RELEASE_VERSION );
 #        endif
 
+#        ifdef HYPRE_SINGLE
+         fprintf( File, "# %-30s : %d\n", "HYPRE_SINGLE",          HYPRE_SINGLE );
+#        else
+         fprintf( File, "# %-30s : %d\n", "HYPRE_SINGLE",          0 );
+#        endif
 #        ifdef HYPRE_DEBUG
          fprintf( File, "# %-30s : %d\n", "HYPRE_DEBUG",           HYPRE_DEBUG );
 #        else

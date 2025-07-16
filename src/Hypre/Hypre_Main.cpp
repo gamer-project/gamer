@@ -20,7 +20,7 @@ void Hypre_Solver( const Hypre_SolveType_t SolveType, const int lv, const double
    if ( NPatchTotal[lv] == 0 )   return;
 
    int  N_iter;
-   real final_residual;
+   real_hypre final_residual;
 
 // 1. prepare single level
    Hypre_PrepareSingleLevel( SolveType, lv );
