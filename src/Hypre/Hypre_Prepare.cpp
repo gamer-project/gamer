@@ -1,19 +1,49 @@
 #include "GAMER.h"
 
 
+
 #ifdef SUPPORT_HYPRE
+static void Hypre_PrepareSingleLevel_Poisson( const int lv );
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hypre_PrepareSingleLevel
 // Description :  Prepare the single level Hypre arrays
 //
 // Parameter   :  lv       : Target level
-//                NExtend  : Number of cells to extend, mainly for Dirichlet boundary condition (NExtend = 1)
-//                Periodic : Whether the grid is periodic or not
 //-------------------------------------------------------------------------------------------------------
-// TODO: rethink if we need NExtend
-void Hypre_PrepareSingleLevel( const int lv, const int NExtend, const bool Periodic[] )
+void Hypre_PrepareSingleLevel( const Hypre_SolveType_t SolveType, const int lv )
 {
 
+   switch ( SolveType )
+   {
+#     ifdef GRAVITY
+      case HYPRE_SOLVE_TYPE_POISSON:
+         Hypre_PrepareSingleLevel_Poisson( lv );
+         break;
+#     endif
+      default :
+         Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "SolveType", SolveType );
+   } // switch ( SolveType )
+
+} // FUNCTION : Hypre_PrepareSingleLevel
+
+
+
+#ifdef GRAVITY
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hypre_PrepareSingleLevel_Poisson
+// Description :  Prepare the single level Hypre arrays
+//
+// Parameter   :  lv : Target level
+//-------------------------------------------------------------------------------------------------------
+void Hypre_PrepareSingleLevel_Poisson( const int lv )
+{
+
+   const bool Periodic[3] = { ( OPT__BC_POT == BC_POT_PERIODIC ),
+                              ( OPT__BC_POT == BC_POT_PERIODIC ),
+                              ( OPT__BC_POT == BC_POT_PERIODIC ) };
    const int NParts      = 1; // number of AMR levels
    const int NVars       = 1; // one var, potential
    const int part        = 0; // one part only, no need to iterate
@@ -92,5 +122,6 @@ void Hypre_PrepareSingleLevel( const int lv, const int NExtend, const bool Perio
    HYPRE_CHECK_FUNC(   HYPRE_SStructVectorInitialize( Hypre_x )   );
    HYPRE_CHECK_FUNC(   HYPRE_SStructVectorInitialize( Hypre_b )   );
 
-} // FUNCTION : Hypre_PrepareSingleLevel
+} // FUNCTION : Hypre_PrepareSingleLevel_Poisson
+#endif // #ifdef GRAVITY
 #endif // #ifdef SUPPORT_HYPRE

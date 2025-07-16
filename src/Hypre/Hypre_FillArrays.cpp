@@ -2,88 +2,40 @@
 
 
 
-
 #ifdef SUPPORT_HYPRE
-#if ( defined GRAVITY  &&  POT_SCHEME == HYPRE_POI )
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Hypre_SolvePoisson
-// Description :  Solve the poisson equation
-//
-// Note        :  Use GetBoxValues more efficient then GetValues
-//
-// Parameter   :  SaveSg_Pot :
-//                lv         : Target level
-//-------------------------------------------------------------------------------------------------------
-void Hypre_SolvePoisson( const int SaveSg_Pot, const int lv, const double TimeNew, const real Poi_Coeff )
+static void Hypre_FillArrays_Poisson( const int lv, const int NExtend, const double TimeNew, const real Poi_Coeff,
+                                      const int SaveSg_Pot );
+
+
+
+void Hypre_FillArrays( const Hypre_SolveType_t SolveType, const int lv, const double TimeNew, const real Poi_Coeff,
+                       const int SaveSg_Pot )
 {
 
-   const int  NExtend     = 1;
-   const int  part        = 0; // single level only, no need to iterate parts
-   const int  var         = 0; // single variable only, no need to iterate variables
-   const bool Periodic[3] = { ( OPT__BC_POT == BC_POT_PERIODIC ),
-                              ( OPT__BC_POT == BC_POT_PERIODIC ),
-                              ( OPT__BC_POT == BC_POT_PERIODIC ) };
-   int  N_iter;
-   real final_residual;
+   switch ( SolveType )
+   {
+#     ifdef GRAVITY
+      case HYPRE_SOLVE_TYPE_POISSON:
+         const int NExtend = 1;
+         Hypre_FillArrays_Poisson( lv, NExtend, TimeNew, Poi_Coeff, SaveSg_Pot );
+         break;
+#     endif
+      default :
+         Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "SolveType", SolveType );
+   } // switch ( SolveType )
 
-   if ( NPatchTotal[lv] == 0 )   return;
+} // FUNCTION : Hypre_FillArrays
 
-   Hypre_PrepareSingleLevel( lv, NExtend, Periodic );
 
-// set Hypre arrays
+
+#ifdef GRAVITY
+void Hypre_FillArrays_Poisson( const int lv, const int NExtend, const double TimeNew, const real Poi_Coeff,
+                               const int SaveSg_Pot )
+{
+
    const bool   In_time = ( amr->PotSgTime[lv][SaveSg_Pot] == TimeNew  ||  amr->PotSgTime[lv][1-SaveSg_Pot] == TimeNew );
    const double Time_tmp = amr->PotSgTime[lv][SaveSg_Pot];
    if ( !In_time )  amr->PotSgTime[lv][SaveSg_Pot] = TimeNew;
-   Hypre_FillArrays( lv, NExtend, TimeNew, Poi_Coeff );
-   if ( !In_time )  amr->PotSgTime[lv][SaveSg_Pot] = Time_tmp;
-
-// setup solver and solve
-   Hypre_Solve( HYPRE_SOLVER, &N_iter, &final_residual );
-
-// collect the potential
-   HYPRE_CHECK_FUNC(   HYPRE_SStructVectorGather( Hypre_x )   );
-
-// update GAMER array
-   real *pote;
-#  ifdef GPU
-   cudaMallocManaged( &pote, sizeof(real) * CUBE(PS1), cudaMemAttachGlobal );
-#  else
-   pote = new real [CUBE(PS1)];
-#  endif
-   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-   {
-      HYPRE_CHECK_FUNC(   HYPRE_SStructVectorGetBoxValues( Hypre_x, part, amr->patch[0][lv][PID]->cornerL, amr->patch[0][lv][PID]->cornerR, var, pote )   );
-
-      for (int k=0; k<PS1; k++)
-      for (int j=0; j<PS1; j++)
-      for (int i=0; i<PS1; i++)
-      {
-         const int idx = IDX321( i, j, k, PS1, PS1 );
-         amr->patch[ SaveSg_Pot ][lv][PID]->pot[k][j][i] = pote[idx];
-      } // i, j, k
-   } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-
-#  ifdef GPU
-   cudaFree( pote );
-#  else
-   delete [] pote;
-#  endif
-
-   Hypre_Free();
-
-// record
-   Hypre_Aux_Record( "Poisson", lv, N_iter, final_residual );
-
-// update Sg
-   amr->PotSg    [lv]             = SaveSg_Pot;
-   amr->PotSgTime[lv][SaveSg_Pot] = TimeNew;
-
-} // FUNCTION : Hypre_SolvePoisson
-
-
-
-void Hypre_FillArrays( const int lv, const int NExtend, const double TimeNew, const real Poi_Coeff )
-{
 
    const bool   IntPhase_No       = false;
    const bool   DE_Consistency_No = false;
@@ -306,6 +258,11 @@ void Hypre_FillArrays( const int lv, const int NExtend, const double TimeNew, co
    delete [] Pot_Array;
    delete [] Dens_Array;
 
-} // FUNCITON : Hypre_FillArrays
-#endif // #if ( defined GRAVITY  &&  POT_SCHEME == HYPRE_POI )
+   if ( !In_time )  amr->PotSgTime[lv][SaveSg_Pot] = Time_tmp;
+
+} // FUNCITON : Hypre_FillArrays_Poisson
+#endif // #ifdef GRAVITY
+
+
+
 #endif // #ifdef SUPPORT_HYPRE

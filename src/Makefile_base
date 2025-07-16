@@ -308,7 +308,7 @@ endif # SUPPORT_LIBYT
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DSUPPORT_HYPRE, $(SIMU_OPTION))" "-DSUPPORT_HYPRE"
 CPU_FILE    += Hypre_Init.cpp  Hypre_End.cpp  Hypre_Main.cpp  Hypre_Solve.cpp  Hypre_Aux_Record.cpp \
-               Hypre_Prepare.cpp  Hypre_Poisson.cpp
+               Hypre_Prepare.cpp  Hypre_FillArrays.cpp  Hypre_UpdateArrays.cpp
 
 vpath %.cpp    Hypre
 endif # SUPPORT_HYPRE

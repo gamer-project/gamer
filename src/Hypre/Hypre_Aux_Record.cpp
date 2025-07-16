@@ -17,12 +17,22 @@
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Hypre_Aux_Record( const char SolverName[], const int lv, const int iteration, const real residual )
+void Hypre_Aux_Record( const Hypre_SolveType_t SolveType, const int lv, const int iteration, const real residual )
 {
 
    static bool FirstTime = true;
    char FileName[2*MAX_STRING];
    sprintf( FileName, "%s/Record__Hypre", OUTPUT_DIR );
+
+   char SolveName[MAX_STRING];
+   switch ( SolveType )
+   {
+#     ifdef GRAVITY
+      case HYPRE_SOLVE_TYPE_POISSON:  sprintf( SolveName, "Poisson" );  break;
+#     endif
+      default :
+         Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "SolveType", SolveType );
+   } // switch ( SolveType )
 
    if ( FirstTime )
    {
@@ -85,7 +95,7 @@ void Hypre_Aux_Record( const char SolverName[], const int lv, const int iteratio
    if ( MPI_Rank == 0 )
    {
       FILE *File = fopen( FileName, "a" );
-      fprintf( File, "%20s  %5d  %10ld  %14ld  %20d  %24.16e\n", SolverName, lv, Step, AdvanceCounter[lv], iteration, residual );
+      fprintf( File, "%20s  %5d  %10ld  %14ld  %20d  %24.16e\n", SolveName, lv, Step, AdvanceCounter[lv], iteration, residual );
       fclose( File );
    }
 

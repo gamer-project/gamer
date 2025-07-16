@@ -564,6 +564,12 @@ const LoadParaMode_t
 
 // Hypre
 #ifdef SUPPORT_HYPRE
+// solve type
+typedef int Hypre_SolveType_t;
+const Hypre_SolveType_t
+   HYPRE_SOLVE_TYPE_POISSON = 1;
+
+// solver
 typedef int Hypre_Solver_t;
 const Hypre_Solver_t
    HYPRE_SOLVER_SSTRUCT_SYS_PFMG = 1,

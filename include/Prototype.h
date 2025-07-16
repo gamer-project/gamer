@@ -848,16 +848,17 @@ int FB_Aux_CellPatchRelPos( const int ijk[] );
 // Hypre
 #ifdef SUPPORT_HYPRE
 void Hypre_Init();
-void Hypre_FillArrays( const int lv, const int NExtend, const double TimeNew, const real Poi_Coeff );
-void Hypre_SetA( const int lv );
-void Hypre_SetBC( const int entry, int *stencil_indices, const int var, const int lv, const int *cornerL, const int *cornerR );
+void Hypre_Solver( const Hypre_SolveType_t SolveType, const int lv, const double TimeNew, const double TimeOld,
+                   const double dt_in, const double Poi_Coeff, const int SaveSg_Flu, const int SaveSg_Mag,
+                   const int SaveSg_Pot );
+void Hypre_PrepareSingleLevel( const Hypre_SolveType_t, const int lv );
+void Hypre_FillArrays( const Hypre_SolveType_t SolveType, const int lv, const double TimeNew, const real Poi_Coeff,
+                       const int SaveSg_Pot );
 void Hypre_Solve( const Hypre_Solver_t Solver, int *N_iter, real *final_res_norm );
-void Hypre_PrepareSingleLevel( const int lv, const int NExtend, const bool Periodic[] );
+void Hypre_UpdateArrays( const Hypre_SolveType_t SolveType, const int lv, const int SaveSg_Flu,
+                         const int SaveSg_Mag, const int SaveSg_Pot );
 void Hypre_Free();
-#if ( defined GRAVITY  &&  POT_SCHEME == HYPRE_POI )
-void Hypre_SolvePoisson( const int SaveSg_Pot, const int lv, const double TimeNew, const real Poi_Coeff );
-#endif
-void Hypre_Aux_Record( const char SolverName[], const int lv, const int iteration, const real residual );
+void Hypre_Aux_Record( const Hypre_SolveType_t SolveType, const int lv, const int iteration, const real residual );
 void Hypre_End();
 #endif
 

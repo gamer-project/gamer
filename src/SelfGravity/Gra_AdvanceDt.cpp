@@ -177,9 +177,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
       if      (  Poisson  &&  !Gravity )
       {
 #        if ( POT_SCHEME == HYPRE_POI )
-         // Buf_GetBufferData( lv-1, NULL_INT, NULL_INT,   amr->PotSg[lv-1], POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES );
-         // Buf_GetBufferData( lv-1, NULL_INT, NULL_INT, 1-amr->PotSg[lv-1], POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES );
-         Hypre_SolvePoisson( SaveSg_Pot, lv, TimeNew, Poi_Coeff );
+         Hypre_Solver( HYPRE_SOLVE_TYPE_POISSON, lv, TimeNew, TimeOld, dt, Poi_Coeff, SaveSg_Flu, NULL_INT, SaveSg_Pot );
          TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES ),
                         Timer_GetBuf[lv][1],   Timing  );
 //       must call Poi_StorePotWithGhostZone AFTER collecting potential for buffer patches
@@ -201,7 +199,7 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
       else if (  Poisson  &&   Gravity )
       {
 #        if ( POT_SCHEME == HYPRE_POI )
-         Hypre_SolvePoisson( SaveSg_Pot, lv, TimeNew, Poi_Coeff );
+         Hypre_Solver( HYPRE_SOLVE_TYPE_POISSON, lv, TimeNew, TimeOld, dt, Poi_Coeff, SaveSg_Flu, NULL_INT, SaveSg_Pot );
          amr->PotSg    [lv]             = SaveSg_Pot;
          amr->PotSgTime[lv][SaveSg_Pot] = TimeNew;
          TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, SaveSg_Pot, POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES ),
@@ -211,11 +209,6 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
          TIMING_FUNC(   Poi_StorePotWithGhostZone( lv, SaveSg_Pot, true ),
                         Timer_Gra_Advance[lv],   Timing   );
 #        endif
-         // Aux_Message( stdout, "%s update pot SG\n", __FILE__ );
-         // Buf_GetBufferData( lv, NULL_INT, NULL_INT,   amr->PotSg[lv], POT_FOR_POISSON, _POTE, _NONE, Pot_ParaBuf, USELB_YES );
-         // Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, amr->PotSg[lv], DATA_GENERAL, _DENS|_POTE, _NONE, Rho_ParaBuf, USELB_YES );
-         // Buf_GetBufferData( lv, NULL_INT, NULL_INT, amr->PotSg[lv], DATA_GENERAL, _POTE, _NONE, Rho_ParaBuf, USELB_YES );
-         // Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, amr->PotSg[lv], DATA_GENERAL, _DENS|_MOMX|_MOMY|_MOMZ|_ENGY|_POTE, _NONE, Rho_ParaBuf, USELB_YES );
 
 
          InvokeSolver( GRAVITY_SOLVER,             lv, TimeNew, TimeOld, dt,        NULL_REAL, SaveSg_Flu, NULL_INT, NULL_INT,
