@@ -8,14 +8,15 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Aux_Record_Center
-// Description :  Record various center coordinates
+// Function    :  Hypre_Aux_Record
+// Description :  TBF
 //
-// Note        :  1.
+// Note        :  TBF
 //
-// Parameter   :  None
-//
-// Return      :  None
+// Parameter   :  SolveType :
+//                lv        :
+//                iteration :
+//                residual  :
 //-------------------------------------------------------------------------------------------------------
 void Hypre_Aux_Record( const Hypre_SolveType_t SolveType, const int lv, const int iteration, const real residual )
 {

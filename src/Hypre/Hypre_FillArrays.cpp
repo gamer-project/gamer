@@ -8,6 +8,14 @@ static void Hypre_FillArrays_Poisson( const int lv, const int NExtend, const dou
 
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hypre_FillArrays
+// Description :  TBF
+//
+// Note        :  TBF
+//
+// Parameter   :  TBF
+//-------------------------------------------------------------------------------------------------------
 void Hypre_FillArrays( const Hypre_SolveType_t SolveType, const int lv, const double TimeNew, const real Poi_Coeff,
                        const int SaveSg_Pot )
 {
@@ -29,6 +37,14 @@ void Hypre_FillArrays( const Hypre_SolveType_t SolveType, const int lv, const do
 
 
 #ifdef GRAVITY
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hypre_FillArrays_Poisson
+// Description :  TBF
+//
+// Note        :  TBF
+//
+// Parameter   :  TBF
+//-------------------------------------------------------------------------------------------------------
 void Hypre_FillArrays_Poisson( const int lv, const int NExtend, const double TimeNew, const real Poi_Coeff,
                                const int SaveSg_Pot )
 {

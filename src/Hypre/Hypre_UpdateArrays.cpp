@@ -7,6 +7,14 @@ static void Hypre_UpdateArrays_Poisson( const int lv, const int SaveSg_Pot );
 
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hypre_UpdateArrays
+// Description :  TBF
+//
+// Note        :  TBF
+//
+// Parameter   :  TBF
+//-------------------------------------------------------------------------------------------------------
 void Hypre_UpdateArrays( const Hypre_SolveType_t SolveType, const int lv, const int SaveSg_Flu,
                          const int SaveSg_Mag, const int SaveSg_Pot )
 {

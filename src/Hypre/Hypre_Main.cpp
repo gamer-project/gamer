@@ -5,9 +5,9 @@
 #ifdef SUPPORT_HYPRE
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hypre_Solver
-// Description :
+// Description :  TBF
 //
-// Parameter   :
+// Parameter   :  TBF
 //-------------------------------------------------------------------------------------------------------
 void Hypre_Solver( const Hypre_SolveType_t SolveType, const int lv, const double TimeNew, const double TimeOld,
                    const double dt_in, const double Poi_Coeff, const int SaveSg_Flu, const int SaveSg_Mag,
