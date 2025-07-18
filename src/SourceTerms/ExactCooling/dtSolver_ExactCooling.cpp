@@ -1,6 +1,9 @@
 #include "GAMER.h"
 
 
+
+
+#ifdef EXACT_COOLING
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Mis_GetTimeStep_ExactCooling
 // Description :  Estimate the evolution time-step constrained by the ExactCooling source term
@@ -40,3 +43,4 @@ double Mis_GetTimeStep_ExactCooling( const int lv, const double dTime_dt )
    return dt_EC;
 
 } // FUNCTION : Mis_GetTimeStep_ExactCooling
+#endif // #ifdef EXACT_COOLING

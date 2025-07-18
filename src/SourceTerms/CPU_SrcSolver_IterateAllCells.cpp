@@ -112,6 +112,9 @@ void CPU_SrcSolver_IterateAllCells(
          if ( SrcTerms.Deleptonization )
             SrcTerms.Dlep_FuncPtr( fluid, B, &SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint, &EoS,
                                    SrcTerms.Dlep_AuxArrayDevPtr_Flt, SrcTerms.Dlep_AuxArrayDevPtr_Int );
+#        endif
+
+#        ifdef EXACT_COOLING
 //       (2) exact cooling
          if ( SrcTerms.ExactCooling )
             SrcTerms.EC_FuncPtr( fluid, B, &SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint, &EoS,

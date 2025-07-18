@@ -79,7 +79,7 @@ struct SrcTerms_t
 #  endif
 
 // exactCooling
-#  if ( MODEL == HYDRO )
+#  ifdef EXACT_COOLING
    SrcFunc_t EC_FuncPtr;
    SrcFunc_t EC_CPUPtr;
 #  ifdef GPU

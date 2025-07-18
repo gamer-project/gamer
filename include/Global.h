@@ -481,7 +481,7 @@ extern real       (*h_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX];
 extern real        *h_SrcDlepProf_Radius;
 #endif
 
-#if ( MODEL == HYDRO )
+#ifdef EXACT_COOLING
 extern double      *h_SrcEC_TEF_lambda;
 extern double      *h_SrcEC_TEF_alpha;
 extern double      *h_SrcEC_TEFc;

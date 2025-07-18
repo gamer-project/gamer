@@ -34,6 +34,8 @@ SET_GLOBAL( __constant__ real c_Mm[3] );
 #if ( MODEL == HYDRO )
 SET_GLOBAL( __constant__ double c_Src_Dlep_AuxArray_Flt[SRC_NAUX_DLEP] );
 SET_GLOBAL( __constant__ int    c_Src_Dlep_AuxArray_Int[SRC_NAUX_DLEP] );
+#endif
+#ifdef EXACT_COOLING
 SET_GLOBAL( __constant__ double c_Src_EC_AuxArray_Flt[SRC_NAUX_EC]     );
 SET_GLOBAL( __constant__ int    c_Src_EC_AuxArray_Int[SRC_NAUX_EC]     );
 #endif

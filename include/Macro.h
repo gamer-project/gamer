@@ -201,7 +201,11 @@
 # endif
 
 // exactCooling source term
+# ifdef EXACT_COOLING
 #  define NCOMP_PASSIVE_BUILTIN2    1
+# else
+#  define NCOMP_PASSIVE_BUILTIN2    0
+# endif
 
 // total number of built-in scalars
 #  define NCOMP_PASSIVE_BUILTIN     ( NCOMP_PASSIVE_BUILTIN0 + NCOMP_PASSIVE_BUILTIN1 + NCOMP_PASSIVE_BUILTIN2 )
@@ -314,7 +318,12 @@
 #  define PASSIVE_NEXT_IDX2   ( PASSIVE_NEXT_IDX1 )
 # endif
 
+# ifdef EXACT_COOLING
 #  define TCOOL               ( PASSIVE_NEXT_IDX2 )
+#  define PASSIVE_NEXT_IDX3   ( TCOOL - 1         )
+# else
+#  define PASSIVE_NEXT_IDX3   ( PASSIVE_NEXT_IDX2 )
+# endif
 
 #endif // #if ( NCOMP_PASSIVE > 0 )
 
@@ -352,7 +361,12 @@
 #  define FLUX_NEXT_IDX2   ( FLUX_NEXT_IDX1  )
 # endif
 
+# ifdef EXACT_COOLING
 #  define FLUX_TCOOL       ( FLUX_NEXT_IDX2  )
+#  define FLUX_NEXT_IDX3   ( FLUX_TCOOL - 1  )
+# else
+#  define FLUX_NEXT_IDX3   ( FLUX_NEXT_IDX2  )
+# endif
 
 #endif // #if ( NCOMP_PASSIVE > 0 )
 
@@ -376,7 +390,9 @@
 #  define _CRAY               ( 1L << CRAY )
 # endif
 
+# ifdef EXACT_COOLING
 #  define _TCOOL              ( 1L << TCOOL )
+# endif
 
 #endif // #if ( NCOMP_PASSIVE > 0 )
 
@@ -407,7 +423,9 @@
 #  define _FLUX_CRAY          ( 1L << FLUX_CRAY )
 # endif
 
+# ifdef EXACT_COOLING
 #  define _FLUX_TCOOL         ( 1L << FLUX_TCOOL )
+# endif
 
 #endif // #if ( NFLUX_PASSIVE > 0 )
 
@@ -916,9 +934,12 @@
 #  define SRC_NAUX_DLEP          5     // SrcTerms.Dlep_AuxArray_Flt/Int[]
 #  define SRC_DLEP_PROF_NVAR     6     // SrcTerms.Dlep_Profile_DataDevPtr[]/RadiusDevPtr[]
 #  define SRC_DLEP_PROF_NBINMAX  4000
-#  define SRC_NAUX_EC            10    // SrcTerms.EC_AuxArray_Flt/Int[]
 #else
 #  define SRC_NAUX_DLEP          0
+#endif
+#ifdef EXACT_COOLING
+#  define SRC_NAUX_EC            10    // SrcTerms.EC_AuxArray_Flt/Int[]
+#else
 #  define SRC_NAUX_EC            0
 #endif
 #  define SRC_NAUX_USER          10    // SrcTerms.User_AuxArray_Flt/Int[]

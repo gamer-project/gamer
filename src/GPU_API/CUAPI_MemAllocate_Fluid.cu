@@ -110,7 +110,7 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
    const long Flu_MemSize_S_In      = sizeof(real  )*Src_NP*FLU_NIN_S *CUBE(SRC_NXT);
    const long Flu_MemSize_S_Out     = sizeof(real  )*Src_NP*FLU_NOUT_S*CUBE(PS1);
    const long Corner_MemSize_S      = sizeof(double)*Src_NP*3;
-#  if ( MODEL == HYDRO )
+#  ifdef EXACT_COOLING
    const long EC_TEF_lambda_MemSize = sizeof(double)*SrcTerms.EC_TEF_N;
    const long EC_TEF_alpha_MemSize  = sizeof(double)*SrcTerms.EC_TEF_N;
    const long EC_TEFc_MemSize       = sizeof(double)*SrcTerms.EC_TEF_N;
@@ -208,7 +208,7 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
       TotalSize += Corner_MemSize_S;
    }
 
-#  if ( MODEL == HYDRO && defined( SRC_EXACTCOOLING ) )
+#  ifdef EXACT_COOLING
    TotalSize += EC_TEF_lambda_MemSize + EC_TEF_alpha_MemSize + EC_TEFc_MemSize;
 #  endif
 

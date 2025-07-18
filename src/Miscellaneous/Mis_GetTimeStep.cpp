@@ -239,7 +239,7 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 
 // 1.10 CRITERION TEN : ExactCooling source term ##HYDRO ONLY##
 // =============================================================================================================
-#  if ( MODEL == HYDRO )
+#  ifdef EXACT_COOLING
    if ( SrcTerms.ExactCooling )
    {
       double EC_dtCoef = SrcTerms.EC_dtCoef;

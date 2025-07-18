@@ -37,7 +37,7 @@ void Src_Close( const int lv, const int SaveSg_Flu, const real h_Flu_Array_S_Out
          memcpy( amr->patch[SaveSg_Flu][lv][PID]->fluid[0][0][0], h_Flu_Array_S_Out[N][0],
                  FLU_NOUT_S*CUBE(PS1)*sizeof(real) );
 
-#        if ( defined GAMER_DEBUG  &&  defined TCOOL )
+#        if ( defined GAMER_DEBUG  &&  defined EXACT_COOLING )
          if ( SrcTerms.ExactCooling )
          {
             for (int k=0; k<PS1; k++)

@@ -36,6 +36,10 @@ void Validate()
    Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
 #  endif
 
+#  ifndef EXACT_COOLING
+   Aux_Error( ERROR_INFO, "EXACT_COOLING must be enabled !!\n" );
+#  endif
+
 #  ifdef COMOVING
    Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
 #  endif
@@ -87,8 +91,8 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
 // ************************************************************************************************************************
 // LOAD_PARA( load_mode, "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ************************************************************************************************************************
-   LOAD_PARA( load_mode, "EC_Temp",        &EC_Temp,                  1000000.0,     Eps_double,       NoMax_double      );
-   LOAD_PARA( load_mode, "EC_Dens",        &EC_Dens,                  1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "EC_Temp",           &EC_Temp,               1000000.0,     Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "EC_Dens",           &EC_Dens,               1.0,           Eps_double,       NoMax_double      );
 
 } // FUNCITON : LoadInputTestProb
 
@@ -193,6 +197,7 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
+
    const double cl_X   = 0.7;                                      // mass-fraction of hydrogen
    const double cl_Z   = 0.018;                                    // metallicity (in Zsun)
    const double cl_mol = 1.0/(2*cl_X+0.75*(1-cl_X-cl_Z)+cl_Z*0.5); // mean (total) molecular weights
@@ -221,31 +226,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 
-#ifdef SUPPORT_HDF5
-//-------------------------------------------------------------------------------------------------------
-// Function    :  Output_HDF5_TestProb
-// Description :  Store the problem specific parameter in HDF5 outputs (Data_*)
-//
-// Note         : 1. This function only works in MPI_RANK == 0
-//                2. We support int, uint, long, ulong, bool, float, double, and string datatypes
-//                3. There MUST be at least one parameter to be stored
-//                4. The pointer of the data MUST still exist outside the function, e.g. global variables
-//
-// Parameter   :  HDF5_InputTest : the structure storing the parameters
-//
-// Return      :  None
-//-------------------------------------------------------------------------------------------------------
-void Output_HDF5_TestProb( HDF5_Output_t *HDF5_InputTest )
-{
-
-   HDF5_InputTest->Add( "EC_Temp", &EC_Temp );
-   HDF5_InputTest->Add( "EC_Dens", &EC_Dens );
-
-} // FUNCTION : Output_HDF5_TestProb
-#endif // #ifdef SUPPORT_HDF5
-
-
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  OutputExactCooling
 // Description :  Output the temperature relative error in the exact cooling problem
@@ -267,7 +247,7 @@ void Output_ExactCooling()
    {
       if ( MPI_Rank == 0 )
       {
-         if ( Aux_CheckFileExist(FileName) )
+         if ( Aux_CheckFileExist( FileName ) )
             Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
 
          FILE *File_User = fopen( FileName, "a" );
@@ -310,9 +290,10 @@ void Output_ExactCooling()
 
 // compute the analytical solution for single branch cooling function
    double Temp_anal, Tcool_anal;
-   if (sqrt(EC_Temp) >= 3.2217e-27/2.0*(GAMMA-1)*EC_Dens*cl_mol*cl_mol/cl_mole/cl_moli/Const_kB*Time[0]*UNIT_T){
+   if ( sqrt(EC_Temp) >= 3.2217e-27/2.0*(GAMMA-1)*EC_Dens*cl_mol*cl_mol/cl_mole/cl_moli/Const_kB*Time[0]*UNIT_T )
+   {
       Temp_anal = pow(sqrt(EC_Temp) - 3.2217e-27/2.0*(GAMMA-1)*EC_Dens*cl_mol*cl_mol/cl_mole/cl_moli/Const_kB*Time[0]*UNIT_T, 2.0);
-      if (Temp_anal < MIN_TEMP)   Temp_anal = MIN_TEMP;
+      if ( Temp_anal < MIN_TEMP )   Temp_anal = MIN_TEMP;
    }
    else   Temp_anal = MIN_TEMP;
 
@@ -358,14 +339,11 @@ void Init_TestProb_Hydro_ExactCooling()
    SetParameter();
 
 
-   Init_Function_User_Ptr         = SetGridIC;
-   Output_User_Ptr                = Output_ExactCooling;
+   Init_Function_User_Ptr    = SetGridIC;
+   Output_User_Ptr           = Output_ExactCooling;
 #  ifdef SUPPORT_HDF5
-   Output_HDF5_InputTest_Ptr      = LoadInputTestProb;
+   Output_HDF5_InputTest_Ptr = LoadInputTestProb;
 #  endif
-//   End_User_Ptr                   = End_ClusterMerger;
-//   Aux_Record_User_Ptr            = Aux_Record_ClusterMerger;
-
 #  endif
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
