@@ -202,20 +202,20 @@ void Init_Field()
 //                       --> The sum of passive scalars in this list will be normalized to the gas density
 //                       --> sum(passive_scalar_density) == gas_density
 //                   (7) add the new field to PassiveIntFrac_VarIdx[] if IntFrac==true
-//                       --> These passive scalars will be converted to fracion form during interpolation
+//                       --> These passive scalars will be converted to fraction form during interpolation
 //                2. One must invoke AddField() exactly NCOMP_TOTAL times to set the labels of all fields
 //                3. Invoked by Init_Field() and various test problem initializers
 //
 // Parameter   :  InputLabel     : Label (i.e., name) of the new field
 //                FixUp_Flux     : whether or not to apply fix-up flux operations
 //                FixUp_Restrict : whether or not to apply fix-up restrict operations
-//                Floor          : whether or not to floor the field to 0 (passive scalars only)
+//                Floor          : whether or not to floor the field to TINY_NUMBER (passive scalars only)
 //                Norm           : whether or not to normalize the new field
 //                IntFrac        : whether or not to convert the new field to fraction form during interpolation
 //
 // Return      :  (1) FieldLabel[]
 //                (2) Index of the newly added field
-//                (3) FixUpVar_Flux, FixUpVar_Restrict and Flag_PassiveFloor
+//                (3) FixUpVar_Flux, FixUpVar_Restrict, and Flag_PassiveFloor
 //                (4) PassiveNorm_NVar & PassiveNorm_VarIdx[]
 //                (5) PassiveIntFrac_NVar & PassiveIntFrac_VarIdx[]
 //-------------------------------------------------------------------------------------------------------
@@ -259,7 +259,7 @@ FieldIdx_t AddField( const char *InputLabel, const FixUpFlux_t FixUp_Flux, const
 // set the bitwise field indices for floor operations
 // --> note that Flag_PassiveFloor is written 1 for fields with FLOOR_NULL (not passive scalars)
 //     this makes Hydro_IsUnphysical work properly for non-passive scalars
-   if ( Floor )            Flag_PassiveFloor  |= (1L<<FieldIdx);
+   if ( Floor )            Flag_PassiveFloor |= (1L<<FieldIdx);
 
 
 // set the normalization list

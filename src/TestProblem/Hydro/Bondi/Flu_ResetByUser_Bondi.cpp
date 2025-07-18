@@ -174,7 +174,7 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const int MagSg, 
 //          floor and normalize passive scalars
 #           if ( NCOMP_PASSIVE > 0 )
             for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
-            if ( Flag_PassiveFloor & BIDX(v) )  fluid[v] = FMAX( fluid[v], TINY_NUMBER );
+               if ( Flag_PassiveFloor & BIDX(v) ) fluid[v] = FMAX( fluid[v], TINY_NUMBER );
 
             if ( OPT__NORMALIZE_PASSIVE )
                Hydro_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
