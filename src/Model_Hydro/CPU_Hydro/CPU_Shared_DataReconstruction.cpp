@@ -2110,7 +2110,7 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
                                 EoS->DensEint2Pres_FuncPtr,
                                 EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
                                 EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table,
-                                Flag_PassiveFloor, ERROR_INFO, UNPHY_SILENCE )  )
+                                PassiveFloor, ERROR_INFO, UNPHY_SILENCE )  )
          reset_cell = true;
 
 #     else
