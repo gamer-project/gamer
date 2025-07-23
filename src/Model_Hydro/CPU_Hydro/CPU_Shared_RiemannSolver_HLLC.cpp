@@ -48,6 +48,7 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 //                Flux_Out          : Array to store the output flux
 //                L/R_In            : Input left/right states (conserved variables)
 //                MinDens/Pres      : Density and pressure floors
+//                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_DensPres2CSqr : EoS routine to compute the sound speed squared
 //                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
@@ -57,7 +58,7 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const real MinDens, const real MinPres, const long PassiveFloor, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
                                const EoS_H2TEM_t EoS_HTilde2Temp,
                                const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
@@ -389,7 +390,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const real MinDens, const real MinPres, const long PassiveFloor, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
                                const EoS_H2TEM_t EoS_HTilde2Temp,
                                const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],

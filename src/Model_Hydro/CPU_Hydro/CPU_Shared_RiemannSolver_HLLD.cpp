@@ -53,6 +53,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres, const long 
 //                L_In              : Input left  state (conserved variables)
 //                R_In              : Input right state (conserved variables)
 //                MinDens/Pres      : Density and pressure floors
+//                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_DensPres2CSqr : EoS routine to compute the sound speed squared
 //                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
@@ -62,7 +63,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres, const long 
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const real MinDens, const real MinPres, const long PassiveFloor, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
                                const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] )
 {

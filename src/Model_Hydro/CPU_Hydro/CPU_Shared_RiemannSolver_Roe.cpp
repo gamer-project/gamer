@@ -32,26 +32,26 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
                      const real *const EoS_Table[EOS_NTABLE_MAX], const real* const PresIn );
 #if   ( CHECK_INTERMEDIATE == EXACT )
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                const real Dens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                                const real Dens, const real MinPres, const long PassiveFloor, const EoS_DE2P_t EoS_DensEint2Pres,
                                 const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
                                 const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
 #elif ( CHECK_INTERMEDIATE == HLLE )
 void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const real MinDens, const real MinPres, const long PassiveFloor, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
                                const EoS_H2TEM_t EoS_HTilde2Temp,
                                const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                                const real* const EoS_Table[EOS_NTABLE_MAX] );
 #elif ( CHECK_INTERMEDIATE == HLLC )
 void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const real MinDens, const real MinPres, const long PassiveFloor, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
                                const EoS_H2TEM_t EoS_HTilde2Temp,
                                const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                                const real* const EoS_Table[EOS_NTABLE_MAX] );
 #elif ( CHECK_INTERMEDIATE == HLLD )
 void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real Dens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const real Dens, const real MinPres, const long PassiveFloor, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
                                const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
 #endif
@@ -76,6 +76,7 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 //                L_In              : Input left  state (conserved variables)
 //                R_In              : Input right state (conserved variables)
 //                MinDens/Pres      : Density and pressure floors
+//                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_DensPres2CSqr : EoS routine to compute the sound speed squared
 //                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
@@ -85,7 +86,7 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                              const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                              const real MinDens, const real MinPres, const long PassiveFloor, const EoS_DE2P_t EoS_DensEint2Pres,
                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
                               const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] )
 {
@@ -641,16 +642,16 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
 #           endif
 
 #           if   ( CHECK_INTERMEDIATE == EXACT  &&  !defined MHD )
-            Hydro_RiemannSolver_Exact( 0, Flux_Out, L, R, MinDens, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr,
+            Hydro_RiemannSolver_Exact( 0, Flux_Out, L, R, MinDens, MinPres, PassiveFloor, EoS_DensEint2Pres, EoS_DensPres2CSqr,
                                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 #           elif ( CHECK_INTERMEDIATE == HLLE )
-            Hydro_RiemannSolver_HLLE ( 0, Flux_Out, L, R, MinDens, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr,
+            Hydro_RiemannSolver_HLLE ( 0, Flux_Out, L, R, MinDens, MinPres, PassiveFloor, EoS_DensEint2Pres, EoS_DensPres2CSqr,
                                        NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 #           elif ( CHECK_INTERMEDIATE == HLLC  &&  !defined MHD )
-            Hydro_RiemannSolver_HLLC ( 0, Flux_Out, L, R, MinDens, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr,
+            Hydro_RiemannSolver_HLLC ( 0, Flux_Out, L, R, MinDens, MinPres, PassiveFloor, EoS_DensEint2Pres, EoS_DensPres2CSqr,
                                        NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 #           elif ( CHECK_INTERMEDIATE == HLLD  &&  defined MHD )
-            Hydro_RiemannSolver_HLLD ( 0, Flux_Out, L, R, MinDens, MinPres, EoS_DensEint2Pres, EoS_DensPres2CSqr,
+            Hydro_RiemannSolver_HLLD ( 0, Flux_Out, L, R, MinDens, MinPres, PassiveFloor, EoS_DensEint2Pres, EoS_DensPres2CSqr,
                                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
 #           else
