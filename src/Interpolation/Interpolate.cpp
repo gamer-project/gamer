@@ -277,7 +277,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
             }
 #           endif
 
-            Hydro_Con2Pri( Cons, Temp, MIN_PRES,
+            Hydro_Con2Pri( Cons, Temp, MIN_PRES, Flag_PassiveFloor,
                            OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
                            JeansMinPres_No, NULL_REAL,
                            EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,

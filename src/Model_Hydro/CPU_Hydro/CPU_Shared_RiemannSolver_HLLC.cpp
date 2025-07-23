@@ -80,11 +80,11 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Hydro_IsUnphysical( UNPHY_MODE_CONS, L, NULL_REAL,
                        EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table,
-                       Flag_PassiveFloor, ERROR_INFO, UNPHY_VERBOSE );
+                       PassiveFloor, ERROR_INFO, UNPHY_VERBOSE );
    Hydro_IsUnphysical( UNPHY_MODE_CONS, R, NULL_REAL,
                        EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table,
-                       Flag_PassiveFloor, ERROR_INFO, UNPHY_VERBOSE );
+                       PassiveFloor, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -101,11 +101,11 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    real lV1, rV1, lV2, rV2, lV3, rV3;
    real lFactor,rFactor;
 
-   Hydro_Con2Pri( L, PL, MinPres, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
+   Hydro_Con2Pri( L, PL, MinPres, PassiveFloor, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                   (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &lFactor );
 
-   Hydro_Con2Pri( R, PR, MinPres, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
+   Hydro_Con2Pri( R, PR, MinPres, PassiveFloor, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                   (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &rFactor );
 
@@ -113,11 +113,11 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Hydro_IsUnphysical( UNPHY_MODE_PRIM, PL, NULL_REAL,
                        EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table,
-                       Flag_PassiveFloor, ERROR_INFO, UNPHY_VERBOSE );
+                       PassiveFloor, ERROR_INFO, UNPHY_VERBOSE );
    Hydro_IsUnphysical( UNPHY_MODE_PRIM, PR, NULL_REAL,
                        EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table,
-                       Flag_PassiveFloor, ERROR_INFO, UNPHY_VERBOSE );
+                       PassiveFloor, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 

@@ -528,7 +528,7 @@ void Hydro_BoundaryCondition_Diode( real *Array, const int BC_Face, const int NV
                                     const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                     const int Idx_Start[], const int Idx_End[], const int TFluVarIdxList[],
                                     const int NVar_Der, const long TDerVarList[] );
-void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
+void Hydro_Con2Pri( const real In[], real Out[], const real MinPres, const long PassiveFloor,
                     const bool FracPassive, const int NFrac, const int FracIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,

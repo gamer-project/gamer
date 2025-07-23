@@ -184,6 +184,7 @@ void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int 
 // Parameter   :  In                 : Input conserved variables
 //                Out                : Output primitive variables
 //                MinPres            : Minimum allowed pressure
+//                PassiveFloor       : Bitwise flag to specify the passive scalars to be floored
 //                FracPassive        : true --> convert passive scalars to mass fraction
 //                NFrac              : Number of passive scalars for the option "FracPassive"
 //                FracIdx            : Target variable indices for the option "FracPassive"
@@ -205,7 +206,7 @@ void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int 
 // Return      :  Out[], EintOut (optional), LorentzFactorPtr (optional)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
+void Hydro_Con2Pri( const real In[], real Out[], const real MinPres, const long PassiveFloor,
                     const bool FracPassive, const int NFrac, const int FracIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
@@ -222,7 +223,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
    Hydro_IsUnphysical( UNPHY_MODE_CONS, In, NULL_REAL,
                        EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table,
-                       Flag_PassiveFloor, ERROR_INFO, UNPHY_VERBOSE );
+                       PassiveFloor, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
    HTilde = Hydro_Con2HTilde( In, EoS_GuessHTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
@@ -827,7 +828,6 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 //                Emag              : Magnetic energy density (0.5*B^2) --> For MHD only
 //                EoS_*             : EoS parameters
 //                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
-//                                    --> Should be set to the global variable "Flag_PassiveFloor"
 //                File              : __FILE__
 //                Line              : __LINE__
 //                Function          : __FUNCTION__
@@ -1177,7 +1177,7 @@ real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const re
    Cons[3] = MomZ;
    Cons[4] = Engy;
 
-   Hydro_Con2Pri( Cons, Prim, (CheckMinPres)?MinPres:-HUGE_NUMBER, false, NULL_INT, NULL,
+   Hydro_Con2Pri( Cons, Prim, (CheckMinPres)?MinPres:-HUGE_NUMBER, PassiveFloor, false, NULL_INT, NULL,
                   NULL_BOOL, NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
    Pres = Prim[4];
@@ -1271,7 +1271,7 @@ real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const re
    Cons[3] = MomZ;
    Cons[4] = Engy;
 
-   Hydro_Con2Pri( Cons, Prim, -HUGE_NUMBER, false, NULL_INT, NULL,
+   Hydro_Con2Pri( Cons, Prim, -HUGE_NUMBER, PassiveFloor, false, NULL_INT, NULL,
                   NULL_BOOL, NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
 
@@ -1411,7 +1411,7 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
    Cons[3] = MomZ;
    Cons[4] = Engy;
 
-   Hydro_Con2Pri( Cons, Prim, -HUGE_NUMBER, false, NULL_INT, NULL,
+   Hydro_Con2Pri( Cons, Prim, -HUGE_NUMBER, PassiveFloor, false, NULL_INT, NULL,
                   NULL_BOOL, NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
    Temp  = Prim[4]/Prim[0];

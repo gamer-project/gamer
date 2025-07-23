@@ -47,7 +47,6 @@
 //                MinDens/Eint      : Density and internal energy floors
 //                DualEnergySwitch  : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
 //                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
-//                                    --> Should be set to the global variable "Flag_PassiveFloor"
 //                NormPassive       : true --> normalize passive scalars so that the sum of their mass density
 //                                             is equal to the gas mass density
 //                NNorm             : Number of passive scalars to be normalized
