@@ -7,7 +7,7 @@
 void CPU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                             const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG,
                             const real dh, const real Safety, const real MinPres,
-                            const EoS_t EoS, const MicroPhy_t MicroPhy );
+                            const long PassiveFloor, const EoS_t EoS, const MicroPhy_t MicroPhy );
 #ifdef GRAVITY
 void CPU_dtSolver_HydroGravity( real g_dt_Array[],
                                 const real g_Pot_Array[][ CUBE(GRA_NXT) ],
@@ -65,7 +65,7 @@ void CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array
    {
 #     if   ( MODEL == HYDRO )
       case DT_FLU_SOLVER:
-         CPU_dtSolver_HydroCFL( dt_Array, Flu_Array, Mag_Array, NPatchGroup, dh, Safety, MinPres, EoS, MicroPhy );
+         CPU_dtSolver_HydroCFL( dt_Array, Flu_Array, Mag_Array, NPatchGroup, dh, Safety, MinPres, Flag_PassiveFloor, EoS, MicroPhy );
       break;
 
 #     ifdef GRAVITY

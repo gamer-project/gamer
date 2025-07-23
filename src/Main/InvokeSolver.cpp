@@ -705,7 +705,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
          CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID],
                               h_Mag_Array_T[ArrayID], NULL, NULL,
                               NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID,
-                              MicroPhy, MIN_PRES, NULL_BOOL,
+                              MicroPhy, MIN_PRES, Flag_PassiveFloor, NULL_BOOL,
                               EXT_POT_NONE, EXT_ACC_NONE, NULL_REAL,
                               GPU_NSTREAM );
 #        else
@@ -723,7 +723,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
          CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], NULL,
                               NULL, h_Pot_Array_T[ArrayID], h_Corner_Array_PGT[ArrayID],
                               NPG, dh, DT__GRAVITY,
-                              MicroPhy, NULL_REAL, OPT__GRA_P5_GRADIENT,
+                              MicroPhy, NULL_REAL, Flag_PassiveFloor, OPT__GRA_P5_GRADIENT,
                               (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, TimeNew,
                               GPU_NSTREAM );
 #        else
