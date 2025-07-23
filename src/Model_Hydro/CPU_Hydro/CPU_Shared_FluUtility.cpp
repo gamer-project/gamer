@@ -14,13 +14,13 @@
 #ifdef __CUDACC__
 GPU_DEVICE
 static real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                            const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
+                            const real Passive[], const bool CheckMinPres, const real MinPres, const long PassiveFloor, const real Emag,
                             const EoS_DE2P_t EoS_DensEint2Pres, const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                             const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                             const real *const EoS_Table[EOS_NTABLE_MAX], real *EintOut );
 GPU_DEVICE
 static real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                            const bool CheckMinEint, const real MinEint, const real Emag,
+                            const bool CheckMinEint, const real MinEint, const long PassiveFloor, const real Emag,
                             const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                             const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                             const real *const EoS_Table[EOS_NTABLE_MAX] );
@@ -265,7 +265,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres, const long 
    Out[1] = In[1]*_Rho;
    Out[2] = In[2]*_Rho;
    Out[3] = In[3]*_Rho;
-   Out[4] = Hydro_Con2Pres( In[0], In[1], In[2], In[3], In[4], In+NCOMP_FLUID, CheckMinPres_Yes, MinPres, Emag,
+   Out[4] = Hydro_Con2Pres( In[0], In[1], In[2], In[3], In[4], In+NCOMP_FLUID, CheckMinPres_Yes, MinPres, PassiveFloor, Emag,
                             EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                             EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, EintOut );
 
@@ -443,6 +443,7 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive,
 //                Flux              : Array to store the output fluxes
 //                In                : Array storing the input conserved variables
 //                MinPres           : Minimum allowed pressure
+//                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Pres()
 //                EoS_Table         : EoS tables for EoS_DensEint2Pres()
@@ -454,7 +455,7 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive,
 // Return      :  Flux[]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
+void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres, const long PassiveFloor,
                      const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX], const real* const AuxArray )
 {
@@ -508,7 +509,7 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 #  else // #ifdef SRHD
 
    const real Pres = ( AuxArray == NULL ) ? Hydro_Con2Pres( InRot[0], InRot[1], InRot[2], InRot[3], InRot[4], In+NCOMP_FLUID,
-                                                            CheckMinPres_Yes, MinPres, Emag, EoS_DensEint2Pres,
+                                                            CheckMinPres_Yes, MinPres, PassiveFloor, Emag, EoS_DensEint2Pres,
                                                             NULL, NULL,
                                                             EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL )
                                           : AuxArray[0];
@@ -773,23 +774,24 @@ real Hydro_CheckMinEntr( const real InEntr, const real MinEntr )
 //                2. Input conserved instead of primitive variables
 //                3. For MHD, one must provide the magnetic energy density Emag (i.e., 0.5*B^2)
 //
-// Parameter   :  Dens     : Mass density
-//                MomX/Y/Z : Momentum density
-//                InEngy   : Energy density
-//                MinEint  : Internal energy density floor
-//                Emag     : Magnetic energy density (0.5*B^2) --> For MHD only
+// Parameter   :  Dens         : Mass density
+//                MomX/Y/Z     : Momentum density
+//                InEngy       : Energy density
+//                MinEint      : Internal energy density floor
+//                PassiveFloor : Bitwise flag to specify the passive scalars to be floored
+//                Emag         : Magnetic energy density (0.5*B^2) --> For MHD only
 //
 // Return      :  Total energy density with internal energy density greater than a given threshold
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real InEngy,
-                               const real MinEint, const real Emag )
+                               const real MinEint, const long PassiveFloor, const real Emag )
 {
 
    const bool CheckMinEint_No = false;
    real InEint, OutEint, OutEngy;
 
-   InEint  = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, InEngy, CheckMinEint_No, NULL_REAL, Emag,
+   InEint  = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, InEngy, CheckMinEint_No, NULL_REAL, PassiveFloor, Emag,
                              NULL, NULL, NULL, NULL, NULL );
    OutEint = Hydro_CheckMinEint( InEint, MinEint );
 
@@ -909,7 +911,7 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[],
 //       check internal energy (which can be zero or slightly negative if it's within machine precision)
          const real CheckMinEint_No = false;
          const real Eint = Hydro_Con2Eint( Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY],
-                                           CheckMinEint_No, NULL_REAL, Emag,
+                                           CheckMinEint_No, NULL_REAL, PassiveFloor, Emag,
                                            NULL, NULL, NULL, NULL, NULL );
 
          if ( Eint < (real)-3.0*Fields[ENGY]*MACHINE_EPSILON  ||  Eint > HUGE_NUMBER  ||  Eint != Eint )
@@ -1146,6 +1148,7 @@ bool Hydro_IsUnphysical_Single( const real Field, const char SingleFieldName[], 
 //                                        for which this option should be disabled
 //                                        --> For example: Flu_FixUp(), Flu_Close(), Hydro_Aux_Check_Negative()
 //                MinPres           : Pressure floor
+//                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //                Emag              : Magnetic energy density (0.5*B^2) --> For MHD only
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_GuessHTilde   : EoS routine to compute guessed reduced enthalpy
@@ -1160,7 +1163,7 @@ bool Hydro_IsUnphysical_Single( const real Field, const char SingleFieldName[], 
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                     const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
+                     const real Passive[], const bool CheckMinPres, const real MinPres, const long PassiveFloor, const real Emag,
                      const EoS_DE2P_t EoS_DensEint2Pres, const EoS_GUESS_t EoS_GuessHTilde,
                      const EoS_H2TEM_t EoS_HTilde2Temp, const double EoS_AuxArray_Flt[],
                      const int EoS_AuxArray_Int[], const real *const EoS_Table[EOS_NTABLE_MAX], real *EintOut )
@@ -1187,7 +1190,7 @@ real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const re
    const bool CheckMinEint_No = false;
    real Eint;
 
-   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag,
+   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, PassiveFloor, Emag,
                           NULL, NULL, NULL, NULL, NULL );
    Pres = EoS_DensEint2Pres( Dens, Eint, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
@@ -1243,6 +1246,7 @@ real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const re
 //                                  --> In some cases we actually want to check if internal energy
 //                                      becomes unphysical, for which this option should be disabled
 //                MinEint         : Internal energy floor
+//                PassiveFloor    : Bitwise flag to specify the passive scalars to be floored
 //                Emag            : Magnetic energy density (0.5*B^2) --> For MHD only
 //                EoS_GuessHTilde : EoS routine to compute guessed reduced enthalpy
 //                EoS_HTilde2Temp : EoS routine to compute temperature
@@ -1253,7 +1257,7 @@ real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const re
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                     const bool CheckMinEint, const real MinEint, const real Emag,
+                     const bool CheckMinEint, const real MinEint, const long PassiveFloor, const real Emag,
                      const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                      const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX] )
@@ -1355,6 +1359,7 @@ real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, cons
 //                                    --> In some cases we actually want to check if temperature becomes unphysical,
 //                                        for which we don't want to enable this option
 //                MinTemp           : Temperature floor
+//                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //                Emag              : Magnetic energy density (0.5*B^2) --> For MHD only
 //                EoS_DensEint2Temp : EoS routine to compute the gas temperature
 //                EoS_GuessHTilde   : EoS routine to compute guessed reduced enthalpy
@@ -1366,7 +1371,7 @@ real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, cons
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                     const real Passive[], const bool CheckMinTemp, const real MinTemp, const real Emag,
+                     const real Passive[], const bool CheckMinTemp, const real MinTemp, const long PassiveFloor, const real Emag,
                      const EoS_DE2T_t EoS_DensEint2Temp, const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                      const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX] )
@@ -1422,7 +1427,7 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
    const bool CheckMinEint_No = false;
    real Eint;
 
-   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag,
+   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, PassiveFloor, Emag,
                           NULL, NULL, NULL, NULL, NULL );
    Temp = EoS_DensEint2Temp( Dens, Eint, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 #  endif // #ifdef SRHD ... else ...
@@ -1455,6 +1460,7 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
 //                                    --> In some cases we actually want to check if entropy becomes unphysical,
 //                                        for which we don't want to enable this option
 //                MinEntr           : Entropy floor
+//                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //                Emag              : Magnetic energy density (0.5*B^2) --> For MHD only
 //                EoS_DensEint2Entr : EoS routine to compute the gas entropy
 //                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Entr()
@@ -1464,7 +1470,7 @@ real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const re
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 real Hydro_Con2Entr( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                     const real Passive[], const bool CheckMinEntr, const real MinEntr, const real Emag,
+                     const real Passive[], const bool CheckMinEntr, const real MinEntr, const long PassiveFloor, const real Emag,
                      const EoS_DE2S_t EoS_DensEint2Entr, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX] )
 {
@@ -1495,7 +1501,7 @@ real Hydro_Con2Entr( const real Dens, const real MomX, const real MomY, const re
    const bool CheckMinEint_No = false;
    real Eint, Entr;
 
-   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, Emag,
+   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, PassiveFloor, Emag,
                           NULL, NULL, NULL, NULL, NULL );
    Entr = EoS_DensEint2Entr( Dens, Eint, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 

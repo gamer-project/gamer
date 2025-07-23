@@ -27,7 +27,7 @@
 #else // #ifdef __CUDACC__
 
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
-void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
+void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres, const long PassiveFloor,
                      const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX], const real* const PresIn );
 #if   ( CHECK_INTERMEDIATE == EXACT )
@@ -159,10 +159,10 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    EmagL = _TWO*( SQR(Bx) + SQR(ByL) + SQR(BzL) );
    EmagR = _TWO*( SQR(Bx) + SQR(ByR) + SQR(BzR) );
 #  endif
-   PL    = Hydro_Con2Pres( L[0], L[1], L[2], L[3], L[4], L+NCOMP_FLUID, CheckMinPres_Yes, MinPres, EmagL,
+   PL    = Hydro_Con2Pres( L[0], L[1], L[2], L[3], L[4], L+NCOMP_FLUID, CheckMinPres_Yes, MinPres, PassiveFloor, EmagL,
                            EoS_DensEint2Pres, NULL, NULL,
                            EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
-   PR    = Hydro_Con2Pres( R[0], R[1], R[2], R[3], R[4], R+NCOMP_FLUID, CheckMinPres_Yes, MinPres, EmagR,
+   PR    = Hydro_Con2Pres( R[0], R[1], R[2], R[3], R[4], R+NCOMP_FLUID, CheckMinPres_Yes, MinPres, PassiveFloor, EmagR,
                            EoS_DensEint2Pres, NULL, NULL,
                            EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
 #  ifdef MHD
@@ -335,8 +335,8 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
 // 4. evaluate the left and right fluxes
    real Flux_L[NCOMP_TOTAL_PLUS_MAG], Flux_R[NCOMP_TOTAL_PLUS_MAG];
 
-   Hydro_Con2Flux( 0, Flux_L, L, MinPres, NULL, NULL, NULL, NULL, &PL );
-   Hydro_Con2Flux( 0, Flux_R, R, MinPres, NULL, NULL, NULL, NULL, &PR );
+   Hydro_Con2Flux( 0, Flux_L, L, MinPres, PassiveFloor, NULL, NULL, NULL, NULL, &PL );
+   Hydro_Con2Flux( 0, Flux_R, R, MinPres, PassiveFloor, NULL, NULL, NULL, NULL, &PR );
 
 // 5. return the upwind fluxes if flow is supersonic
    if ( EigenVal[0] >= ZERO )
@@ -630,7 +630,7 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
          const real Emag = NULL_REAL;
 #        endif
          I_Pres = Hydro_Con2Pres( I_States[0], I_States[1], I_States[2], I_States[3], I_States[4], Passive,
-                                  CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres, NULL, NULL,
+                                  CheckMinPres_No, NULL_REAL, PassiveFloor, Emag, EoS_DensEint2Pres, NULL, NULL,
                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
 
 //       if unphysical results occur, recalculate fluxes by a substitute Riemann solver

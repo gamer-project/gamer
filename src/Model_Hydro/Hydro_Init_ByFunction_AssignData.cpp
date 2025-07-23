@@ -365,7 +365,7 @@ void Hydro_Init_ByFunction_AssignData( const int lv )
          fluid[DENS] = FMAX( fluid[DENS], (real)MIN_DENS );
 #        ifndef SRHD
          fluid[ENGY] = Hydro_CheckMinEintInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                                 MIN_EINT, Emag );
+                                                 MIN_EINT, Flag_PassiveFloor, Emag );
 #        endif
 
 //       calculate the dual-energy variable (entropy or internal energy)

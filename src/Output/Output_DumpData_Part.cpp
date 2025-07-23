@@ -333,7 +333,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 // no need to increase Der_FieldIdx for fields not using DerField[]
    if ( OPT__OUTPUT_PRES ) {
       Pres = Hydro_Con2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
-                             CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres_CPUPtr,
+                             CheckMinPres_No, NULL_REAL, Flag_PassiveFloor, Emag, EoS_DensEint2Pres_CPUPtr,
                              EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
       fprintf( File, BlankPlusFormat_Flt, Pres );
@@ -341,7 +341,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 
    if ( OPT__OUTPUT_TEMP ) {
       Temp = Hydro_Con2Temp( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
-                             CheckMinTemp_No, NULL_REAL, Emag, EoS_DensEint2Temp_CPUPtr,
+                             CheckMinTemp_No, NULL_REAL, Flag_PassiveFloor, Emag, EoS_DensEint2Temp_CPUPtr,
                              EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       fprintf( File, BlankPlusFormat_Flt, Temp );
@@ -350,7 +350,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 #  ifndef SRHD
    if ( OPT__OUTPUT_ENTR ) {
       Entr = Hydro_Con2Entr( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
-                             CheckMinEntr_No, NULL_REAL, Emag, EoS_DensEint2Entr_CPUPtr,
+                             CheckMinEntr_No, NULL_REAL, Flag_PassiveFloor, Emag, EoS_DensEint2Entr_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       fprintf( File, BlankPlusFormat_Flt, Entr );
    }
@@ -372,7 +372,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 //    compute pressure if it is not done yet
       if ( Pres < 0.0 )
       Pres = Hydro_Con2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
-                             CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres_CPUPtr,
+                             CheckMinPres_No, NULL_REAL, Flag_PassiveFloor, Emag, EoS_DensEint2Pres_CPUPtr,
                              EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
       Cs   = SQRT(  EoS_DensPres2CSqr_CPUPtr( u[DENS], Pres, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,

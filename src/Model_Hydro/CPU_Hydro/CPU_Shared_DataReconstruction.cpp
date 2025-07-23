@@ -33,7 +33,7 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive, const i
                     const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                     const real *const EoS_Table[EOS_NTABLE_MAX], const real* const EintIn );
 #if ( FLU_SCHEME == MHM )
-void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
+void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres, const long PassiveFloor,
                      const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX], const real* const PresIn );
 #ifdef MHD
@@ -2078,10 +2078,10 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
 // calculate flux
    for (int f=0; f<6; f++)
 #     ifdef SRHD
-      Hydro_Con2Flux( f/2, Flux[f], fcCon[f], MinPres, EoS->DensEint2Pres_FuncPtr,
+      Hydro_Con2Flux( f/2, Flux[f], fcCon[f], MinPres, PassiveFloor, EoS->DensEint2Pres_FuncPtr,
                       EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, fcPri[f] );
 #     else
-      Hydro_Con2Flux( f/2, Flux[f], fcCon[f], MinPres, EoS->DensEint2Pres_FuncPtr,
+      Hydro_Con2Flux( f/2, Flux[f], fcCon[f], MinPres, PassiveFloor, EoS->DensEint2Pres_FuncPtr,
                       EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 #     endif
 
@@ -2147,7 +2147,7 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
       const real Emag = NULL_REAL;
 #     endif // MHD
       fcCon[f][4] = Hydro_CheckMinEintInEngy( fcCon[f][0], fcCon[f][1], fcCon[f][2], fcCon[f][3], fcCon[f][4],
-                                              MinEint, Emag );
+                                              MinEint, PassiveFloor, Emag );
 #     endif // #ifndef BAROTROPIC_EOS
 #     endif // #ifndef SRHD
 #     if ( NCOMP_PASSIVE > 0 )

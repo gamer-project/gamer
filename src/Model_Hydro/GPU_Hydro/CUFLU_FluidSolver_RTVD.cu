@@ -192,7 +192,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
       _rho = (real)1.0 / Fluid[0];
       vx   = _rho * Fluid[1];
       p    = Hydro_Con2Pres( Fluid[0], Fluid[1], Fluid[2], Fluid[3], Fluid[4], Passive,
-                             CheckMinPres_Yes, MinPres, NULL_REAL, EoS->DensEint2Pres_FuncPtr, NULL, NULL,
+                             CheckMinPres_Yes, MinPres, PassiveFloor, NULL_REAL, EoS->DensEint2Pres_FuncPtr, NULL, NULL,
                              EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
@@ -237,7 +237,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
 //       apply density and internal energy floors
          Fluid_half[0] = FMAX( Fluid_half[0], MinDens );
          Fluid_half[4] = Hydro_CheckMinEintInEngy( Fluid_half[0], Fluid_half[1], Fluid_half[2], Fluid_half[3], Fluid_half[4],
-                                                   MinEint, NULL_REAL );
+                                                   MinEint, PassiveFloor, NULL_REAL );
       }
 
 
@@ -251,7 +251,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
          _rho = (real)1.0 / Fluid_half[0];
          vx   = _rho * Fluid_half[1];
          p    = Hydro_Con2Pres( Fluid_half[0], Fluid_half[1], Fluid_half[2], Fluid_half[3], Fluid_half[4], Passive,
-                                CheckMinPres_Yes, MinPres, NULL_REAL, EoS->DensEint2Pres_FuncPtr, NULL, NULL,
+                                CheckMinPres_Yes, MinPres, PassiveFloor, NULL_REAL, EoS->DensEint2Pres_FuncPtr, NULL, NULL,
                                 EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 
 #        ifdef CHECK_UNPHYSICAL_IN_FLUID
@@ -339,7 +339,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
 //       apply density and internal energy floors
          Fluid[0] = FMAX( Fluid[0], MinDens );
          Fluid[4] = Hydro_CheckMinEintInEngy( Fluid[0], Fluid[1], Fluid[2], Fluid[3], Fluid[4],
-                                              MinEint, NULL_REAL );
+                                              MinEint, PassiveFloor, NULL_REAL );
 
 
 //       check negative density and energy

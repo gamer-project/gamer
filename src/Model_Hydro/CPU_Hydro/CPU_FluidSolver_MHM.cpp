@@ -915,7 +915,7 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 #     else
       const real Emag = NULL_REAL;
 #     endif
-      out_con[4] = Hydro_CheckMinEintInEngy( out_con[0], out_con[1], out_con[2], out_con[3], out_con[4], MinEint, Emag );
+      out_con[4] = Hydro_CheckMinEintInEngy( out_con[0], out_con[1], out_con[2], out_con[3], out_con[4], MinEint, PassiveFloor, Emag );
 #     endif // #ifndef BAROTROPIC_EOS
 #     endif // #ifndef SRHD
 #     if ( NCOMP_PASSIVE > 0 )

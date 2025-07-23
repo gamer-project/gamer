@@ -17,7 +17,7 @@
 #else // #ifdef __CUDACC__
 
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
-void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
+void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres, const long PassiveFloor,
                      const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX], const real* const PresIn );
 
@@ -431,10 +431,10 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    _RhoR = ONE / R[0];
    u_L   = _RhoL*L[1];
    u_R   = _RhoR*R[1];
-   P_L   = Hydro_Con2Pres( L[0], L[1], L[2], L[3], L[4], L+NCOMP_FLUID, CheckMinPres_Yes, MinPres, Emag,
+   P_L   = Hydro_Con2Pres( L[0], L[1], L[2], L[3], L[4], L+NCOMP_FLUID, CheckMinPres_Yes, MinPres, PassiveFloor, Emag,
                            EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                            EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
-   P_R   = Hydro_Con2Pres( R[0], R[1], R[2], R[3], R[4], R+NCOMP_FLUID, CheckMinPres_Yes, MinPres, Emag,
+   P_R   = Hydro_Con2Pres( R[0], R[1], R[2], R[3], R[4], R+NCOMP_FLUID, CheckMinPres_Yes, MinPres, PassiveFloor, Emag,
                            EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                            EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
    Cs_L  = SQRT(  EoS_DensPres2CSqr( L[0], P_L, L+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table )  );
@@ -590,7 +590,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    {
       const real MaxV_L = FMIN( W_L, ZERO );
 
-      Hydro_Con2Flux( 0, Flux_LR, L, MinPres, NULL, NULL, NULL, NULL, &P_L );
+      Hydro_Con2Flux( 0, Flux_LR, L, MinPres, PassiveFloor, NULL, NULL, NULL, NULL, &P_L );
 
       for (int v=0; v<NCOMP_FLUID; v++)   Flux_LR[v] -= MaxV_L*L[v];    // fluxes along the maximum wave speed
 
@@ -614,7 +614,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    {
       const real MaxV_R = FMAX( W_R, ZERO );
 
-      Hydro_Con2Flux( 0, Flux_LR, R, MinPres, NULL, NULL, NULL, NULL, &P_R );
+      Hydro_Con2Flux( 0, Flux_LR, R, MinPres, PassiveFloor, NULL, NULL, NULL, NULL, &P_R );
 
       for (int v=0; v<NCOMP_FLUID; v++)    Flux_LR[v] -= MaxV_R*R[v];   // fluxes along the maximum wave speed
 

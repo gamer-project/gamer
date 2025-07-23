@@ -208,7 +208,7 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
 #              endif
                {
                   Pres = Hydro_Con2Pres( ForEint[DENS], ForEint[MOMX], ForEint[MOMY], ForEint[MOMZ], ForEint[ENGY],
-                                         ForEint+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, Emag,
+                                         ForEint+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, Flag_PassiveFloor, Emag,
                                          EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
                                          &Eint );

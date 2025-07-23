@@ -227,7 +227,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
          _rho = (real)1.0 / ux[0][i];
          vx   = _rho * ux[1][i];
          p    = Hydro_Con2Pres( ux[0][i], ux[1][i], ux[2][i], ux[3][i], ux[4][i], Passive,
-                                CheckMinPres_Yes, MinPres, NULL_REAL, EoS->DensEint2Pres_FuncPtr, NULL, NULL,
+                                CheckMinPres_Yes, MinPres, Flag_PassiveFloor, NULL_REAL, EoS->DensEint2Pres_FuncPtr, NULL, NULL,
                                 EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 
 #        ifdef CHECK_UNPHYSICAL_IN_FLUID
@@ -275,7 +275,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
       {
          u_half[0][i] = FMAX( u_half[0][i], MinDens );
          u_half[4][i] = Hydro_CheckMinEintInEngy( u_half[0][i], u_half[1][i], u_half[2][i], u_half[3][i], u_half[4][i],
-                                                  MinEint, NULL_REAL );
+                                                  MinEint, Flag_PassiveFloor, NULL_REAL );
       }
 
 
@@ -289,7 +289,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
          _rho = (real)1.0 / u_half[0][i];
          vx   = _rho * u_half[1][i];
          p    = Hydro_Con2Pres( u_half[0][i], u_half[1][i], u_half[2][i], u_half[3][i], u_half[4][i], Passive,
-                                CheckMinPres_Yes, MinPres, NULL_REAL, EoS->DensEint2Pres_FuncPtr, NULL, NULL,
+                                CheckMinPres_Yes, MinPres, Flag_PassiveFloor, NULL_REAL, EoS->DensEint2Pres_FuncPtr, NULL, NULL,
                                 EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 
 #        ifdef CHECK_UNPHYSICAL_IN_FLUID
@@ -369,7 +369,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], const real dt, const real dx,
       {
          ux[0][i] = FMAX( ux[0][i], MinDens );
          ux[4][i] = Hydro_CheckMinEintInEngy( ux[0][i], ux[1][i], ux[2][i], ux[3][i], ux[4][i],
-                                              MinEint, NULL_REAL );
+                                              MinEint, Flag_PassiveFloor, NULL_REAL );
       }
 
 

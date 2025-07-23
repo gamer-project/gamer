@@ -453,7 +453,7 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
 
 #     else // without DUAL_ENERGY
       const real Eint = Hydro_Con2Eint( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                        NoFloor, NULL_REAL, Emag, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                        NoFloor, NULL_REAL, Flag_PassiveFloor, Emag, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                         EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       if ( Eint < (real)MIN_EINT  ||  !Aux_IsFinite(Eint) )
          return true;
@@ -464,7 +464,7 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
    {
       const real Pres = Hydro_Con2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ],
                                         Fluid[ENGY], Fluid+NCOMP_FLUID,
-                                        CheckMinPres_No, NULL_REAL, Emag,
+                                        CheckMinPres_No, NULL_REAL, Flag_PassiveFloor, Emag,
                                         EoS_DensEint2Pres_CPUPtr,
                                         EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                         EoS_AuxArray_Flt,
@@ -798,7 +798,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #              ifdef DUAL_ENERGY
                Hydro_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[DUAL],
                                     h_DE_Array_F_Out[TID][idx_out], EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2],
-                                    CorrPres_No, NULL_REAL, DUAL_ENERGY_SWITCH, Emag_Out );
+                                    CorrPres_No, NULL_REAL, Flag_PassiveFloor, DUAL_ENERGY_SWITCH, Emag_Out );
 #              endif
 
                if ( Unphysical(Update, CheckMinEint, Emag_Out) )
@@ -955,7 +955,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
             Hydro_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[DUAL],
                                  h_DE_Array_F_Out[TID][idx_out], EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2],
                                  (!AutoReduceDt_Continue && OPT__LAST_RESORT_FLOOR) ? CorrPres_Yes : CorrPres_No,
-                                 MIN_PRES, DUAL_ENERGY_SWITCH, Emag_Out );
+                                 MIN_PRES, Flag_PassiveFloor, DUAL_ENERGY_SWITCH, Emag_Out );
 
 //          apply internal energy floor if dual-energy formalism is not adopted
 //          --> apply it only when AutoReduceDt_Continue is false
@@ -963,7 +963,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #           else
             if ( ! AutoReduceDt_Continue  &&  OPT__LAST_RESORT_FLOOR )
                Update[ENGY] = Hydro_CheckMinEintInEngy( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
-                                                        MIN_EINT, Emag_Out );
+                                                        MIN_EINT, Flag_PassiveFloor, Emag_Out );
 #           endif
 
 
@@ -1042,11 +1042,11 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
                   fprintf( File, "%14.7e, %14.7e",
                            Hydro_Con2Eint( In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY],
-                                           CheckMinEint_No, NULL_REAL, Emag_In,
+                                           CheckMinEint_No, NULL_REAL, Flag_PassiveFloor, Emag_In,
                                            EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ),
                            Hydro_Con2Pres( In[DENS], In[MOMX], In[MOMY], In[MOMZ], In[ENGY], In+NCOMP_FLUID,
-                                           CheckMinPres_No, NULL_REAL, Emag_In,
+                                           CheckMinPres_No, NULL_REAL, Flag_PassiveFloor, Emag_In,
                                            EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL ) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
@@ -1069,11 +1069,11 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
                   fprintf( File, "%14.7e, %14.7e",
                            Hydro_Con2Eint( Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY],
-                                           CheckMinEint_No, NULL_REAL, Emag_Out,
+                                           CheckMinEint_No, NULL_REAL, Flag_PassiveFloor, Emag_Out,
                                            EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ),
                            Hydro_Con2Pres( Out[DENS], Out[MOMX], Out[MOMY], Out[MOMZ], Out[ENGY], Out+NCOMP_FLUID,
-                                           CheckMinPres_No, NULL_REAL, Emag_Out,
+                                           CheckMinPres_No, NULL_REAL, Flag_PassiveFloor, Emag_Out,
                                            EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL ) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
@@ -1096,11 +1096,11 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
                   fprintf( File, "%14.7e, %14.7e",
                            Hydro_Con2Eint( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY],
-                                           CheckMinEint_No, NULL_REAL, Emag_Update,
+                                           CheckMinEint_No, NULL_REAL, Flag_PassiveFloor, Emag_Update,
                                            EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ),
                            Hydro_Con2Pres( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update+NCOMP_FLUID,
-                                           CheckMinPres_No, NULL_REAL, Emag_Update,
+                                           CheckMinPres_No, NULL_REAL, Flag_PassiveFloor, Emag_Update,
                                            EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL ) );
 #                 if ( DUAL_ENERGY == DE_ENPY )
@@ -1150,7 +1150,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                    endif
 
                      fprintf( File, " %14.7e", Hydro_Con2Eint(tmp[0], tmp[1], tmp[2], tmp[3], tmp[4],
-                                                              CheckMinEint_No, NULL_REAL, Emag_tmp,
+                                                              CheckMinEint_No, NULL_REAL, Flag_PassiveFloor, Emag_tmp,
                                                               EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table) );
 #                    ifdef MHD

@@ -17,7 +17,7 @@
 #else // #ifdef __CUDACC__
 
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
-void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
+void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres, const long PassiveFloor,
                      const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX], const real* const PresIn );
 void Hydro_Con2Pri( const real In[], real Out[], const real MinPres, const long PassiveFloor,
@@ -194,8 +194,8 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 #  endif
 
 
-   Hydro_Con2Flux( 0, Flux_L, Con_L, MinPres, NULL, NULL, NULL, NULL, Pri_L+4 );
-   Hydro_Con2Flux( 0, Flux_R, Con_R, MinPres, NULL, NULL, NULL, NULL, Pri_R+4 );
+   Hydro_Con2Flux( 0, Flux_L, Con_L, MinPres, PassiveFloor, NULL, NULL, NULL, NULL, Pri_L+4 );
+   Hydro_Con2Flux( 0, Flux_R, Con_R, MinPres, PassiveFloor, NULL, NULL, NULL, NULL, Pri_R+4 );
 
 // return the upwind fluxes if flow is supersonic
    if ( Speed[0] >= ZERO )

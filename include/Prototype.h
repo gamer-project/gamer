@@ -111,23 +111,23 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 #if ( MODEL == HYDRO )
 real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                     const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
+                     const real Passive[], const bool CheckMinPres, const real MinPres, const long PassiveFloor, const real Emag,
                      const EoS_DE2P_t EoS_DensEint2Pres, const EoS_GUESS_t EoS_GuessHTilde,
                      const EoS_H2TEM_t EoS_HTilde2Temp, const double EoS_AuxArray_Flt[],
                      const int EoS_AuxArray_Int[], const real *const EoS_Table[EOS_NTABLE_MAX], real *EintOut );
 real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                     const bool CheckMinEint, const real MinEint, const real Emag,
+                     const bool CheckMinEint, const real MinEint, const long PassiveFloor, const real Emag,
                      const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                      const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX] );
 real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint, const real Emag );
 real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                     const real Passive[], const bool CheckMinTemp, const real MinTemp, const real Emag,
+                     const real Passive[], const bool CheckMinTemp, const real MinTemp, const long PassiveFloor, const real Emag,
                      const EoS_DE2T_t EoS_DensEint2Temp, const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                      const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX] );
 real Hydro_Con2Entr( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                     const real Passive[], const bool CheckMinEntr, const real MinEntr, const real Emag,
+                     const real Passive[], const bool CheckMinEntr, const real MinEntr, const long PassiveFloor, const real Emag,
                      const EoS_DE2S_t EoS_DensEint2Entr, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX] );
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
@@ -135,7 +135,7 @@ real Hydro_CheckMinEint( const real InEint, const real MinEint );
 real Hydro_CheckMinTemp( const real InTemp, const real MinTemp );
 real Hydro_CheckMinEntr( const real InEntr, const real MinEntr );
 real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real InEngy,
-                               const real MinEint, const real Emag );
+                               const real MinEint, const long PassiveFloor, const real Emag );
 bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[],
                          const real Emag, const EoS_DE2P_t EoS_DensEint2Pres,
                          const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
@@ -147,7 +147,7 @@ bool Hydro_IsUnphysical_Single( const real Field, const char SingleFieldName[], 
 #ifdef DUAL_ENERGY
 void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,
                           real &Etot, real &Dual, char &DE_Status, const real Gamma_m1, const real _Gamma_m1,
-                          const bool CheckMinPres, const real MinPres, const real DualEnergySwitch,
+                          const bool CheckMinPres, const real MinPres, const long PassiveFloor, const real DualEnergySwitch,
                           const real Emag );
 real Hydro_Con2Dual( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                      const real Emag, const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[],

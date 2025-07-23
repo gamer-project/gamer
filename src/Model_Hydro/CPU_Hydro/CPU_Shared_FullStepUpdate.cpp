@@ -137,7 +137,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //    Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
       Output_1Cell[ENGY] = Hydro_CheckMinEintInEngy( Output_1Cell[DENS], Output_1Cell[MOMX],
                                                      Output_1Cell[MOMY], Output_1Cell[MOMZ],
-                                                     Output_1Cell[ENGY], MinEint, Emag );
+                                                     Output_1Cell[ENGY], MinEint, PassiveFloor, Emag );
 #     endif // #ifdef BAROTROPIC_EOS
 
 
@@ -163,7 +163,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
       Hydro_DualEnergyFix( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
                            Output_1Cell[ENGY], Output_1Cell[DUAL], g_DE_Status[idx_out],
                            EoS->AuxArrayDevPtr_Flt[1], EoS->AuxArrayDevPtr_Flt[2], CheckMinPres_No, NULL_REAL,
-                           DualEnergySwitch, Emag );
+                           PassiveFloor, DualEnergySwitch, Emag );
 #     endif // #ifdef DUAL_ENERGY
 
 
@@ -209,7 +209,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
          {
 //          get pressure
             const real Pres = Hydro_Con2Pres( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
-                                              Output_1Cell[ENGY], Output_1Cell+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, Emag,
+                                              Output_1Cell[ENGY], Output_1Cell+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, PassiveFloor, Emag,
                                               EoS->DensEint2Pres_FuncPtr,
                                               EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
                                               EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,

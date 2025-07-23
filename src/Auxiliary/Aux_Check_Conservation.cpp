@@ -234,7 +234,7 @@ void Aux_Check_Conservation( const char *comment )
 #              endif
 #              ifndef SRHD
 //             Hydro_Con2Eint() calculates Eint for both HD and SRHD but we disable SRHD for now
-               Eint         = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Emag,
+               Eint         = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Flag_PassiveFloor, Emag,
                                               EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
                                               EoS_AuxArray_Int, h_EoS_Table );
 #              else

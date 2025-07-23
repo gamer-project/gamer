@@ -573,7 +573,7 @@ void Hydro_TGradientCorrection(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ 
 #           endif
             fc_var[f][0] = FMAX( fc_var[f][0], MinDens );
             fc_var[f][4] = Hydro_CheckMinEintInEngy( fc_var[f][0], fc_var[f][1], fc_var[f][2], fc_var[f][3], fc_var[f][4],
-                                                     MinEint, Emag );
+                                                     MinEint, PassiveFloor, Emag );
 #           if ( NCOMP_PASSIVE > 0 )
             for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
             if ( PassiveFloor & BIDX(v) )
