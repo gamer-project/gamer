@@ -85,7 +85,7 @@ static void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCO
 GPU_DEVICE
 void Hydro_ConFC2PriCC_MHM(       real g_PriVar[][ CUBE(FLU_NXT) ],
                             const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
-                            const real MinDens, const real MinPres, const real MinEint,
+                            const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor,
                             const bool FracPassive, const int NFrac, const int FracIdx[],
                             const bool JeansMinPres, const real JeansMinPres_Coeff,
                             const EoS_t *EoS );
@@ -681,7 +681,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #  if ( FLU_SCHEME == MHM  &&  defined MHD )
 // 9. store the half-step primitive variables for MHM+MHD
 //    --> must be done after the CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) ) loop since it will update g_PriVar[]
-   Hydro_ConFC2PriCC_MHM( g_PriVar, g_FC_Var, MinDens, MinPres, MinEint, FracPassive, NFrac, FracIdx,
+   Hydro_ConFC2PriCC_MHM( g_PriVar, g_FC_Var, MinDens, MinPres, MinEint, PassiveFloor, FracPassive, NFrac, FracIdx,
                           JeansMinPres, JeansMinPres_Coeff, EoS );
 
 #  endif // #if ( FLU_SCHEME == MHM  &&  defined MHD )
@@ -1387,7 +1387,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #  if ( FLU_SCHEME == MHM  &&  defined MHD )
 // 9. Store the half-step primitive variables for MHM+MHD
 //    --> must be done after the CGPU_LOOP( idx_fc, CUBE(N_FC_VAR) ) loop since it will update g_PriVar[]
-   Hydro_ConFC2PriCC_MHM( g_PriVar, g_FC_Var, MinDens, MinPres, MinEint, FracPassive, NFrac, FracIdx,
+   Hydro_ConFC2PriCC_MHM( g_PriVar, g_FC_Var, MinDens, MinPres, MinEint, PassiveFloor, FracPassive, NFrac, FracIdx,
                           JeansMinPres, JeansMinPres_Coeff, EoS );
 
 #  endif // #if ( FLU_SCHEME == MHM  &&  defined MHD )
@@ -2175,6 +2175,7 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
 //                g_FC_Var           : Array storing the face-centered conserved variables
 //                                     --> Should contain NCOMP_TOTAL_PLUS_MAG variables
 //                MinDens/Pres/Eint  : Density, pressure, and internal energy floors
+//                PassiveFloor       : Bitwise flag to specify the passive scalars to be floored
 //                FracPassive        : true --> convert passive scalars to mass fraction during data reconstruction
 //                NFrac              : Number of passive scalars for the option "FracPassive"
 //                FracIdx            : Target variable indices for the option "FracPassive"
@@ -2187,7 +2188,7 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
 GPU_DEVICE
 void Hydro_ConFC2PriCC_MHM(       real g_PriVar[][ CUBE(FLU_NXT) ],
                             const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
-                            const real MinDens, const real MinPres, const real MinEint,
+                            const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor,
                             const bool FracPassive, const int NFrac, const int FracIdx[],
                             const bool JeansMinPres, const real JeansMinPres_Coeff,
                             const EoS_t *EoS )
