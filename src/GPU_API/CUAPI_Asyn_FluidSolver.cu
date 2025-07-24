@@ -12,7 +12,7 @@ __global__ void CUFLU_FluidSolver_RTVD(
    const double g_Corner[][3],
    const real g_Pot_USG[][ CUBE(USG_NXT_F) ],
    const real dt, const real _dh, const bool StoreFlux,
-   const bool XYZ, const real MinDens, const real MinPres, const real MinEint,
+   const bool XYZ, const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor,
    const EoS_t EoS );
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 __global__
@@ -550,7 +550,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               d_Flux_Array      + UsedPatch[s],
               d_Corner_Array_F  + UsedPatch[s],
               d_Pot_Array_USG_F + UsedPatch[s],
-              dt, 1.0/dh, StoreFlux, XYZ, MinDens, MinPres, MinEint, EoS );
+              dt, 1.0/dh, StoreFlux, XYZ, MinDens, MinPres, MinEint, PassiveFloor, EoS );
 
 #        elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 
