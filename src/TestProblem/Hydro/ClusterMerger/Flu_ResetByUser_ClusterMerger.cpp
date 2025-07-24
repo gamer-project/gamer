@@ -234,11 +234,19 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
       {
          which_cluster += c+1;
 
-//       record the old momentum
-         const real momx_old = fluid[MOMX];
-         const real momy_old = fluid[MOMY];
-         const real momz_old = fluid[MOMZ];
+         const bool Check_MinEint_No = false;
+
+//       record the old fluid variables
          const real dens_old = fluid[DENS];
+#        ifdef MHD
+         const real emag_old = (real)0.5 * ( SQR(fluid[MAG_OFFSET+0]) + SQR(fluid[MAG_OFFSET+1]) + SQR(fluid[MAG_OFFSET+2]) );
+#        else
+         const real emag_old = (real)0.0;
+#        endif
+         const real eint_old = Hydro_Con2Eint( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ],
+                                               fluid[ENGY], Check_MinEint_No, NULL_REAL, emag_old,
+                                               NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                               h_EoS_Table );
 
 //       accrete mass
          fluid[DENS] += M_inj[c];
@@ -252,22 +260,31 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
          EngySin = E_inj[c]*normalize_const[c]*sin( Jet_WaveK[c]*Jet_dh );
 
 //       the new momentum is calculated from the old density, new density, old momentum and injected energy
-         real P_SQR    = SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]);
-         real Ekin_old = ( dens_old == 0.0 ) ? (real)0.0 : 0.5*P_SQR/dens_old;
-         real P_new    = sqrt( 2*fluid[DENS]*(EngySin + Ekin_old) );
-         P_new *= SIGN( Vec_c2m[0]*CM_Jet_Vec[c][0] + Vec_c2m[1]*CM_Jet_Vec[c][1] + Vec_c2m[2]*CM_Jet_Vec[c][2] );
+//       the momentum injection alters only the component along the jet direction
+         real   P_old_sqr = SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ]);
+         real   Ekin_old  = ( dens_old == 0.0 ) ? (real)0.0 : 0.5*P_old_sqr/dens_old;
+         real   P_new     = SQRT( 2*fluid[DENS]*(EngySin + Ekin_old) );
+         double JetSign   = SIGN( Vec_c2m[0]*CM_Jet_Vec[c][0] + Vec_c2m[1]*CM_Jet_Vec[c][1] + Vec_c2m[2]*CM_Jet_Vec[c][2] );
 
-         fluid[MOMX] = P_new * CM_Jet_Vec[c][0];
-         fluid[MOMY] = P_new * CM_Jet_Vec[c][1];
-         fluid[MOMZ] = P_new * CM_Jet_Vec[c][2];
+         double P_old_perp[3], P_old_para, P_new_para;
+         P_old_para    = fluid[MOMX] * CM_Jet_Vec[c][0] + fluid[MOMY] * CM_Jet_Vec[c][1] + fluid[MOMZ] * CM_Jet_Vec[c][2];
+         P_old_perp[0] = fluid[MOMX] - P_old_para * CM_Jet_Vec[c][0];
+         P_old_perp[1] = fluid[MOMY] - P_old_para * CM_Jet_Vec[c][1];
+         P_old_perp[2] = fluid[MOMZ] - P_old_para * CM_Jet_Vec[c][2];
+         P_new_para    = SQRT( SQR(P_new) - SQR(P_old_perp[0]) - SQR(P_old_perp[1]) - SQR(P_old_perp[2]) );
+         P_new_para   *= JetSign;
+
+         fluid[MOMX] = P_new_para * CM_Jet_Vec[c][0] + P_old_perp[0];
+         fluid[MOMY] = P_new_para * CM_Jet_Vec[c][1] + P_old_perp[1];
+         fluid[MOMZ] = P_new_para * CM_Jet_Vec[c][2] + P_old_perp[2];
 
 //       transfer back into the rest frame
          fluid[MOMX] += CM_BH_Vel[c][0] * fluid[DENS];
          fluid[MOMY] += CM_BH_Vel[c][1] * fluid[DENS];
          fluid[MOMZ] += CM_BH_Vel[c][2] * fluid[DENS];
 
-         fluid[ENGY] += 0.5*( (SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ])) / fluid[DENS] -
-                              (SQR(momx_old)    + SQR(momy_old)    + SQR(momz_old)   ) / dens_old );
+         fluid[ENGY]  = 0.5 * (SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ])) / fluid[DENS] +
+                              eint_old + emag_old;
       } // if ( Jet_dh <= Jet_HalfHeight[c]  &&  Jet_dr <= Jet_Radius[c] )
    } // for (int c=status; c<(n_jet+status); c++)
 
@@ -740,8 +757,8 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
    } // if ( fixBH )
 
    double pos_min[Merger_Coll_NumBHs][3], DM_Vel[Merger_Coll_NumBHs][3];   // the updated BH position and velocity
-   const bool    CurrentMaxLv = ( NPatchTotal[lv] > 0  &&  lv == MAX_LEVEL        ) ? true :
-                                ( NPatchTotal[lv] > 0  &&  NPatchTotal[lv+1] == 0 ) ? true : false;
+   const bool CurrentMaxLv = ( NPatchTotal[lv] > 0  &&  lv == MAX_LEVEL        ) ? true :
+                             ( NPatchTotal[lv] > 0  &&  NPatchTotal[lv+1] == 0 ) ? true : false;
 
 // initialize pos_min to be the old center
    for (int c=0; c<Merger_Coll_NumBHs; c++)   for (int d=0; d<3; d++)   pos_min[c][d] = Cen_old[c][d];
