@@ -2857,6 +2857,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 
 #  ifdef SUPPORT_HYPRE
    InputPara.Hypre_Solver                = HYPRE_SOLVER;
+   InputPara.Hypre_InitGuess             = HYPRE_INIT_GUESS;
    InputPara.Hypre_PrintLevel            = HYPRE_PRINT_LEVEL;
    InputPara.Hypre_EnableLogging         = HYPRE_ENABLE_LOGGING;
    InputPara.Hypre_MaxIter               = HYPRE_MAX_ITER;
@@ -3916,6 +3917,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 // Hypre
 #  ifdef SUPPORT_HYPRE
    H5Tinsert( H5_TypeID, "Hypre_Solver",            HOFFSET(InputPara_t,Hypre_Solver           ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Hypre_InitGuess",         HOFFSET(InputPara_t,Hypre_InitGuess        ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Hypre_PrintLevel",        HOFFSET(InputPara_t,Hypre_PrintLevel       ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Hypre_EnableLogging",     HOFFSET(InputPara_t,Hypre_EnableLogging    ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Hypre_MaxIter",           HOFFSET(InputPara_t,Hypre_MaxIter          ), H5T_NATIVE_INT              );

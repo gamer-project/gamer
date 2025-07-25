@@ -5,7 +5,7 @@
 #ifdef SUPPORT_HYPRE
 static void Hypre_FillArrays_Poisson( const int lv, const int NExtend, const double TimeNew, const real Poi_Coeff,
                                       const int SaveSg_Pot );
-
+#define POT_NXT_INT  ( (POT_NXT-2)*2    )    // size of the array "Pot_Int_Array"
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -148,6 +148,164 @@ void Hypre_FillArrays_Poisson( const int lv, const int NExtend, const double Tim
                       0, NPG, PID0_List, _TOTAL_DENS, _NONE, OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00,
                       IntPhase_No, OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
+   real  (*Pot_Ini_Array)[POT_NXT][POT_NXT][POT_NXT] = NULL;
+   real  (*Pot_Int_Array)[POT_NXT_INT][POT_NXT_INT][POT_NXT_INT] = NULL;
+
+   if ( HYPRE_INIT_GUESS )
+   {
+      Pot_Ini_Array = new real [8*NPG][POT_NXT][POT_NXT][POT_NXT];
+      Pot_Int_Array = new real [8*NPG][POT_NXT_INT][POT_NXT_INT][POT_NXT_INT]; // array to store the interpolated "fine-grid" potential (as the initial guess and the B.C.)
+
+      Poi_Prepare_Pot( lv, TimeNew, Pot_Ini_Array, NPG, PID0_List );
+
+#     pragma omp parallel
+      {
+         int i_start, i_start_pass, i_start_k;     // i_start_(pass,k) : record the i_start in the (pass,k) loop
+         int ip, jp, kp, im, jm, km, I, J, K, Ip, Jp, Kp, ii, jj, kk, Iter, x, y, z;
+         real Slope_x, Slope_y, Slope_z, C2_Slope[13], Residual_Total_Old, Residual_Total, Residual;
+         const real Const_8   = (real)1.0/(real)  8.0;
+         const real Const_64  = (real)1.0/(real) 64.0;
+         const real Const_512 = (real)1.0/(real)512.0;
+         const real Mp[3]     = { (real)-3.0/32.0, (real)+30.0/32.0, (real)+5.0/32.0 };
+         const real Mm[3]     = { (real)+5.0/32.0, (real)+30.0/32.0, (real)-3.0/32.0 };
+
+//       loop over all patches
+//       interpolation : Pot_Ini_Array --> Pot_Int_Array
+#        pragma omp for schedule( runtime )
+         for (int P=0; P<8*NPG; P++)
+         {
+            switch ( OPT__POT_INT_SCHEME )
+            {
+               /*
+               case INT_CENTRAL :
+               {
+                  for (int k=1; k<POT_NXT-1; k++)  {  K = (k-1)*2;   Kp = K + 1;    kp = k + 1;    km = k - 1;
+                  for (int j=1; j<POT_NXT-1; j++)  {  J = (j-1)*2;   Jp = J + 1;    jp = j + 1;    jm = j - 1;
+                  for (int i=1; i<POT_NXT-1; i++)  {  I = (i-1)*2;   Ip = I + 1;    ip = i + 1;    im = i - 1;
+
+                     Slope_x = (real)0.125 * ( Pot_Ini_Array[P][k ][j ][ip] - Pot_Ini_Array[P][k ][j ][im] );
+                     Slope_y = (real)0.125 * ( Pot_Ini_Array[P][k ][jp][i ] - Pot_Ini_Array[P][k ][jm][i ] );
+                     Slope_z = (real)0.125 * ( Pot_Ini_Array[P][kp][j ][i ] - Pot_Ini_Array[P][km][j ][i ] );
+
+                     Pot_Int_Array[P][K ][J ][I ] = Pot_Ini_Array[P][k][j][i] - Slope_z - Slope_y - Slope_x;
+                     Pot_Int_Array[P][K ][J ][Ip] = Pot_Ini_Array[P][k][j][i] - Slope_z - Slope_y + Slope_x;
+                     Pot_Int_Array[P][K ][Jp][I ] = Pot_Ini_Array[P][k][j][i] - Slope_z + Slope_y - Slope_x;
+                     Pot_Int_Array[P][K ][Jp][Ip] = Pot_Ini_Array[P][k][j][i] - Slope_z + Slope_y + Slope_x;
+                     Pot_Int_Array[P][Kp][J ][I ] = Pot_Ini_Array[P][k][j][i] + Slope_z - Slope_y - Slope_x;
+                     Pot_Int_Array[P][Kp][J ][Ip] = Pot_Ini_Array[P][k][j][i] + Slope_z - Slope_y + Slope_x;
+                     Pot_Int_Array[P][Kp][Jp][I ] = Pot_Ini_Array[P][k][j][i] + Slope_z + Slope_y - Slope_x;
+                     Pot_Int_Array[P][Kp][Jp][Ip] = Pot_Ini_Array[P][k][j][i] + Slope_z + Slope_y + Slope_x;
+
+                  }}}
+               }
+               break; // INT_CENTRAL
+               */
+
+
+               case INT_CQUAD :
+               {
+                  for (int k=1; k<POT_NXT-1; k++)  {  K = (k-1)*2;   Kp = K + 1;    kp = k + 1;    km = k - 1;
+                  for (int j=1; j<POT_NXT-1; j++)  {  J = (j-1)*2;   Jp = J + 1;    jp = j + 1;    jm = j - 1;
+                  for (int i=1; i<POT_NXT-1; i++)  {  I = (i-1)*2;   Ip = I + 1;    ip = i + 1;    im = i - 1;
+
+                     C2_Slope[ 0] = Const_8   * ( Pot_Ini_Array[P][k ][j ][ip] - Pot_Ini_Array[P][k ][j ][im] );
+                     C2_Slope[ 1] = Const_8   * ( Pot_Ini_Array[P][k ][jp][i ] - Pot_Ini_Array[P][k ][jm][i ] );
+                     C2_Slope[ 2] = Const_8   * ( Pot_Ini_Array[P][kp][j ][i ] - Pot_Ini_Array[P][km][j ][i ] );
+
+                     C2_Slope[ 3] = Const_64  * ( Pot_Ini_Array[P][km][j ][ip] - Pot_Ini_Array[P][km][j ][im] );
+                     C2_Slope[ 4] = Const_64  * ( Pot_Ini_Array[P][km][jp][i ] - Pot_Ini_Array[P][km][jm][i ] );
+                     C2_Slope[ 5] = Const_64  * ( Pot_Ini_Array[P][k ][jm][ip] - Pot_Ini_Array[P][k ][jm][im] );
+                     C2_Slope[ 6] = Const_64  * ( Pot_Ini_Array[P][k ][jp][ip] - Pot_Ini_Array[P][k ][jp][im] );
+                     C2_Slope[ 7] = Const_64  * ( Pot_Ini_Array[P][kp][j ][ip] - Pot_Ini_Array[P][kp][j ][im] );
+                     C2_Slope[ 8] = Const_64  * ( Pot_Ini_Array[P][kp][jp][i ] - Pot_Ini_Array[P][kp][jm][i ] );
+
+                     C2_Slope[ 9] = Const_512 * ( Pot_Ini_Array[P][km][jm][ip] - Pot_Ini_Array[P][km][jm][im] );
+                     C2_Slope[10] = Const_512 * ( Pot_Ini_Array[P][km][jp][ip] - Pot_Ini_Array[P][km][jp][im] );
+                     C2_Slope[11] = Const_512 * ( Pot_Ini_Array[P][kp][jm][ip] - Pot_Ini_Array[P][kp][jm][im] );
+                     C2_Slope[12] = Const_512 * ( Pot_Ini_Array[P][kp][jp][ip] - Pot_Ini_Array[P][kp][jp][im] );
+
+
+                     Pot_Int_Array[P][K ][J ][I ] = - C2_Slope[ 0] - C2_Slope[ 1] - C2_Slope[ 2] - C2_Slope[ 3]
+                                                    - C2_Slope[ 4] - C2_Slope[ 5] + C2_Slope[ 6] + C2_Slope[ 7]
+                                                    + C2_Slope[ 8] - C2_Slope[ 9] + C2_Slope[10] + C2_Slope[11]
+                                                    - C2_Slope[12] + Pot_Ini_Array[P][k][j][i];
+
+                     Pot_Int_Array[P][K ][J ][Ip] = + C2_Slope[ 0] - C2_Slope[ 1] - C2_Slope[ 2] + C2_Slope[ 3]
+                                                    - C2_Slope[ 4] + C2_Slope[ 5] - C2_Slope[ 6] - C2_Slope[ 7]
+                                                    + C2_Slope[ 8] + C2_Slope[ 9] - C2_Slope[10] - C2_Slope[11]
+                                                    + C2_Slope[12] + Pot_Ini_Array[P][k][j][i];
+
+                     Pot_Int_Array[P][K ][Jp][I ] = - C2_Slope[ 0] + C2_Slope[ 1] - C2_Slope[ 2] - C2_Slope[ 3]
+                                                    + C2_Slope[ 4] + C2_Slope[ 5] - C2_Slope[ 6] + C2_Slope[ 7]
+                                                    - C2_Slope[ 8] + C2_Slope[ 9] - C2_Slope[10] - C2_Slope[11]
+                                                    + C2_Slope[12] + Pot_Ini_Array[P][k][j][i];
+
+                     Pot_Int_Array[P][K ][Jp][Ip] = + C2_Slope[ 0] + C2_Slope[ 1] - C2_Slope[ 2] + C2_Slope[ 3]
+                                                    + C2_Slope[ 4] - C2_Slope[ 5] + C2_Slope[ 6] - C2_Slope[ 7]
+                                                    - C2_Slope[ 8] - C2_Slope[ 9] + C2_Slope[10] + C2_Slope[11]
+                                                    - C2_Slope[12] + Pot_Ini_Array[P][k][j][i];
+
+                     Pot_Int_Array[P][Kp][J ][I ] = - C2_Slope[ 0] - C2_Slope[ 1] + C2_Slope[ 2] + C2_Slope[ 3]
+                                                    + C2_Slope[ 4] - C2_Slope[ 5] + C2_Slope[ 6] - C2_Slope[ 7]
+                                                    - C2_Slope[ 8] + C2_Slope[ 9] - C2_Slope[10] - C2_Slope[11]
+                                                    + C2_Slope[12] + Pot_Ini_Array[P][k][j][i];
+
+                     Pot_Int_Array[P][Kp][J ][Ip] = + C2_Slope[ 0] - C2_Slope[ 1] + C2_Slope[ 2] - C2_Slope[ 3]
+                                                    + C2_Slope[ 4] + C2_Slope[ 5] - C2_Slope[ 6] + C2_Slope[ 7]
+                                                    - C2_Slope[ 8] - C2_Slope[ 9] + C2_Slope[10] + C2_Slope[11]
+                                                    - C2_Slope[12] + Pot_Ini_Array[P][k][j][i];
+
+                     Pot_Int_Array[P][Kp][Jp][I ] = - C2_Slope[ 0] + C2_Slope[ 1] + C2_Slope[ 2] + C2_Slope[ 3]
+                                                    - C2_Slope[ 4] + C2_Slope[ 5] - C2_Slope[ 6] - C2_Slope[ 7]
+                                                    + C2_Slope[ 8] - C2_Slope[ 9] + C2_Slope[10] + C2_Slope[11]
+                                                    - C2_Slope[12] + Pot_Ini_Array[P][k][j][i];
+
+                     Pot_Int_Array[P][Kp][Jp][Ip] = + C2_Slope[ 0] + C2_Slope[ 1] + C2_Slope[ 2] - C2_Slope[ 3]
+                                                    - C2_Slope[ 4] - C2_Slope[ 5] + C2_Slope[ 6] + C2_Slope[ 7]
+                                                    + C2_Slope[ 8] + C2_Slope[ 9] - C2_Slope[10] - C2_Slope[11]
+                                                    + C2_Slope[12] + Pot_Ini_Array[P][k][j][i];
+                  }}} // i, j, k
+               }
+               break; // INT_CQUAD
+
+
+               case INT_QUAD :
+               {
+                  for (int k=0; k<POT_NXT_INT; k++)
+                  for (int j=0; j<POT_NXT_INT; j++)
+                  for (int i=0; i<POT_NXT_INT; i++)   Pot_Int_Array[P][k][j][i] = (real)0.0;
+
+                  for (int k=1; k<POT_NXT-1; k++)  {  K = (k-1)*2;   Kp = K + 1;
+                  for (int j=1; j<POT_NXT-1; j++)  {  J = (j-1)*2;   Jp = J + 1;
+                  for (int i=1; i<POT_NXT-1; i++)  {  I = (i-1)*2;   Ip = I + 1;
+
+                     for (int dk=-1; dk<=1; dk++)  {  z = dk+1;  kk = k + dk;
+                     for (int dj=-1; dj<=1; dj++)  {  y = dj+1;  jj = j + dj;
+                     for (int di=-1; di<=1; di++)  {  x = di+1;  ii = i + di;
+
+                        Pot_Int_Array[P][K ][J ][I ] += Pot_Ini_Array[P][kk][jj][ii] * Mm[z] * Mm[y] * Mm[x];
+                        Pot_Int_Array[P][K ][J ][Ip] += Pot_Ini_Array[P][kk][jj][ii] * Mm[z] * Mm[y] * Mp[x];
+                        Pot_Int_Array[P][K ][Jp][I ] += Pot_Ini_Array[P][kk][jj][ii] * Mm[z] * Mp[y] * Mm[x];
+                        Pot_Int_Array[P][K ][Jp][Ip] += Pot_Ini_Array[P][kk][jj][ii] * Mm[z] * Mp[y] * Mp[x];
+                        Pot_Int_Array[P][Kp][J ][I ] += Pot_Ini_Array[P][kk][jj][ii] * Mp[z] * Mm[y] * Mm[x];
+                        Pot_Int_Array[P][Kp][J ][Ip] += Pot_Ini_Array[P][kk][jj][ii] * Mp[z] * Mm[y] * Mp[x];
+                        Pot_Int_Array[P][Kp][Jp][I ] += Pot_Ini_Array[P][kk][jj][ii] * Mp[z] * Mp[y] * Mm[x];
+                        Pot_Int_Array[P][Kp][Jp][Ip] += Pot_Ini_Array[P][kk][jj][ii] * Mp[z] * Mp[y] * Mp[x];
+
+                     }}}
+                  }}} // i, j, k
+               }
+               break; // INT_QUAD
+
+
+               default:
+                  Aux_Error( ERROR_INFO, "ERROR : incorrect parameter %s = %d !!\n", "OPT__POT_INT_SCHEME",  OPT__POT_INT_SCHEME);
+
+            } // switch ( OPT__POT_INT_SCHEME )
+         } // for (int P=0; P<NPatch; P++)
+      } // OpenMP parallel region
+   } // if ( HYPRE_INIT_GUESS )
+
 // fill patches
 #  ifdef COMOVING
    const bool Comoving = true;
@@ -167,7 +325,10 @@ void Hypre_FillArrays_Poisson( const int lv, const int NExtend, const double Tim
       for (int k=0; k<PS1; k++) { const double z = amr->patch[0][lv][PID]->EdgeL[2] + (0.5+k)*dh;
       for (int j=0; j<PS1; j++) { const double y = amr->patch[0][lv][PID]->EdgeL[1] + (0.5+j)*dh;
       for (int i=0; i<PS1; i++) { const double x = amr->patch[0][lv][PID]->EdgeL[0] + (0.5+i)*dh;
-         const int idx = IDX321( i, j, k, PS1, PS1 );
+         const int idx     = IDX321( i, j, k, PS1, PS1 );
+         const int idx_i   = i + (POT_NXT_INT-PS1)/2;
+         const int idx_j   = j + (POT_NXT_INT-PS1)/2;
+         const int idx_k   = k + (POT_NXT_INT-PS1)/2;
 
          real_hypre Dens = (real_hypre)Dens_Array[8*PG+LocalID][idx] - RhoSubtract;
 
@@ -176,7 +337,8 @@ void Hypre_FillArrays_Poisson( const int lv, const int NExtend, const double Tim
             Dens += Poi_AddExtraMassForGravity_Ptr( x, y, z, Time[lv], lv, NULL );
 
          dens[idx] = (real_hypre)coeff * Dens;
-         pote[idx] = (real_hypre)0.0;
+         if ( HYPRE_INIT_GUESS )   pote[idx] = (real_hypre)Pot_Int_Array[8*PG+LocalID][idx_k][idx_j][idx_i];
+         else                      pote[idx] = (real_hypre)0.0;
       }}} // i, j, k
 
       HYPRE_CHECK_FUNC(   HYPRE_SStructVectorSetBoxValues( Hypre_b, part, amr->patch[0][lv][PID]->cornerL, amr->patch[0][lv][PID]->cornerR, var, dens )   );
@@ -272,6 +434,11 @@ void Hypre_FillArrays_Poisson( const int lv, const int NExtend, const double Tim
    delete [] PID0_List;
    delete [] Pot_Array;
    delete [] Dens_Array;
+   if ( HYPRE_INIT_GUESS )
+   {
+      delete [] Pot_Ini_Array;
+      delete [] Pot_Int_Array;
+   }
 
    if ( !In_time )  amr->PotSgTime[lv][SaveSg_Pot] = Time_tmp;
 

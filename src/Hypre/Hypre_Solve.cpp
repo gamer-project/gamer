@@ -52,7 +52,8 @@ void Hypre_Solve_SStructSysPFMG( int *N_iter, real_hypre *final_res_norm )
    HYPRE_CHECK_FUNC(   HYPRE_SStructSysPFMGSetPrintLevel( Hypre_solver, HYPRE_PRINT_LEVEL )   );
    HYPRE_CHECK_FUNC(   HYPRE_SStructSysPFMGSetLogging( Hypre_solver, HYPRE_ENABLE_LOGGING )   );
 
-   HYPRE_CHECK_FUNC(   HYPRE_SStructSysPFMGSetZeroGuess( Hypre_solver )   );
+   if ( HYPRE_INIT_GUESS )   HYPRE_CHECK_FUNC(   HYPRE_SStructSysPFMGSetNonZeroGuess( Hypre_solver )   );
+   else                      HYPRE_CHECK_FUNC(   HYPRE_SStructSysPFMGSetZeroGuess( Hypre_solver )   );
 
 // Set sysPFMG parameters
    HYPRE_CHECK_FUNC(   HYPRE_SStructSysPFMGSetTol( Hypre_solver, HYPRE_REL_TOL )   );
@@ -90,7 +91,8 @@ void Hypre_Solve_SStructSplit( int *N_iter, real_hypre *final_res_norm )
 
    HYPRE_CHECK_FUNC(   HYPRE_SStructSplitCreate( HYPRE_MPI_COMM, &Hypre_solver )   );
 
-   HYPRE_CHECK_FUNC(   HYPRE_SStructSplitSetZeroGuess( Hypre_solver )   );
+   if ( HYPRE_INIT_GUESS )   HYPRE_CHECK_FUNC(   HYPRE_SStructSplitSetNonZeroGuess( Hypre_solver )   );
+   else                      HYPRE_CHECK_FUNC(   HYPRE_SStructSplitSetZeroGuess( Hypre_solver )   );
 
    HYPRE_CHECK_FUNC(   HYPRE_SStructSplitSetMaxIter( Hypre_solver, HYPRE_MAX_ITER )   );
    HYPRE_CHECK_FUNC(   HYPRE_SStructSplitSetTol( Hypre_solver, HYPRE_REL_TOL )   );
