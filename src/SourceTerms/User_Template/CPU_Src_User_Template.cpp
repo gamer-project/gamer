@@ -110,6 +110,7 @@ void Src_SetAuxArray_User_Template( double AuxArray_Flt[], int AuxArray_Int[] )
 //                TimeOld           : Physical time before update
 //                                    --> This function updates physical time from TimeOld to TimeNew
 //                MinDens/Pres/Eint : Density, pressure, and internal energy floors
+//                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //                EoS               : EoS object
 //                AuxArray_*        : Auxiliary arrays (see the Note above)
 //
@@ -120,7 +121,7 @@ static void Src_User_Template( real fluid[], const real B[],
                                const SrcTerms_t *SrcTerms, const real dt, const real dh,
                                const double x, const double y, const double z,
                                const double TimeNew, const double TimeOld,
-                               const real MinDens, const real MinPres, const real MinEint,
+                               const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor,
                                const EoS_t *EoS, const double AuxArray_Flt[], const int AuxArray_Int[] )
 {
 

@@ -658,7 +658,7 @@ void CUAPI_Asyn_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NX
                            const double h_Corner_Array[][3],
                            const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
                            const double TimeNew, const double TimeOld,
-                           const real MinDens, const real MinPres, const real MinEint,
+                           const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor,
                            const int GPU_NStream );
 void CUAPI_DiagnoseDevice();
 void CUAPI_MemAllocate();
@@ -809,7 +809,7 @@ void CPU_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)     
                     const double h_Corner_Array[][3],
                     const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
                     const double TimeNew, const double TimeOld,
-                    const real MinDens, const real MinPres, const real MinEint );
+                    const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor );
 
 
 // Grackle

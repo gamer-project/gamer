@@ -197,7 +197,7 @@ void CUSRC_SrcSolver_IterateAllCells(
    const double g_Corner_Array[][3],
    const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
    const double TimeNew, const double TimeOld,
-   const real MinDens, const real MinPres, const real MinEint, const EoS_t EoS );
+   const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor, const EoS_t EoS );
 
 
 
