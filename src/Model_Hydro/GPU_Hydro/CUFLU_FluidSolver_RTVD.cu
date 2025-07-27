@@ -36,21 +36,21 @@ static __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
 //                   Prefix "s" for pointers pointing to the "Shared" memory space
 //                b. The three-dimensional evolution is achieved by using the dimensional-split method
 //
-// Parameter   :  g_Fluid_In  : Global memory array to store the input fluid variables
-//                g_Fluid_Out : Global memory array to store the output fluid variables
-//                g_Flux      : Global memory array to store the output fluxes
-//                g_Corner    : Global memory array storing the physical corner coordinates of each patch group (USELESS CURRENTLY)
-//                g_Pot_USG   : Global memory array storing the input potential for UNSPLIT_GRAVITY (NOT SUPPORTED in RTVD)
-//                dt          : Time interval to advance solution
-//                _dh         : 1 / grid size
-//                StoreFlux   : true --> store the coarse-fine fluxes
-//                XYZ         : true  : x->y->z ( forward sweep)
-//                              false : z->y->x (backward sweep)
-//                MinDens     : Density floor
-//                MinPres     : Pressure floor
-//                MinEint     : Internal energy floor
-//                PassiveFloor: Bitwise flag to specify the passive scalars to be floored
-//                EoS         : EoS object
+// Parameter   :  g_Fluid_In   : Global memory array to store the input fluid variables
+//                g_Fluid_Out  : Global memory array to store the output fluid variables
+//                g_Flux       : Global memory array to store the output fluxes
+//                g_Corner     : Global memory array storing the physical corner coordinates of each patch group (USELESS CURRENTLY)
+//                g_Pot_USG    : Global memory array storing the input potential for UNSPLIT_GRAVITY (NOT SUPPORTED in RTVD)
+//                dt           : Time interval to advance solution
+//                _dh          : 1 / grid size
+//                StoreFlux    : true --> store the coarse-fine fluxes
+//                XYZ          : true  : x->y->z ( forward sweep)
+//                               false : z->y->x (backward sweep)
+//                MinDens      : Density floor
+//                MinPres      : Pressure floor
+//                MinEint      : Internal energy floor
+//                PassiveFloor : Bitwise flag to specify the passive scalars to be floored
+//                EoS          : EoS object
 //-------------------------------------------------------------------------------------------------------
 __global__ void CUFLU_FluidSolver_RTVD(
    real g_Fluid_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
@@ -104,27 +104,27 @@ __global__ void CUFLU_FluidSolver_RTVD(
 //                   Prefix "s" for pointers pointing to the "Shared" memory space
 //                b. The direction of the one dimensional sweep is determined by the input parameter "XYZ"
 //
-// Parameter   :  g_Fluid_In  : Global memory array to store the input fluid variables
-//                g_Fluid_Out : Global memory array to store the output fluid variables
-//                g_Flux      : Global memory array to store the output fluxes
-//                dt          : Time interval to advance solution
-//                _dh         : 1 / grid size
-//                StoreFlux   : true --> store the coarse-fine fluxes
-//                j_gap       : Number of useless grids in each side in the j direction (j may not be equal to y)
-//                k_gap       : Number of useless grids in each side in the k direction (k mya not be equal to z)
-//                s_cu        : Shared memory array storing the normal flux
-//                s_cw        : Shared memory array storing the auxiliary flux
-//                s_flux      : Shared memory array storing the final flux used to update the fluid variables
-//                s_RLflux    : Shared memory array storing the left/right-moving flux
-//                XYZ         : 0 : Update the solution in the x direction
-//                              3 : Update the solution in the y direction
-//                              6 : Update the solution in the z direction
-//                              --> This parameter is also used to determine the place to store the output fluxes
-//                MinDens     : Density floor
-//                MinPres     : Pressure floor
-//                MinEint     : Internal energy floor
-//                PassiveFloor: Bitwise flag to specify the passive scalars to be floored
-//                EoS         : EoS object
+// Parameter   :  g_Fluid_In   : Global memory array to store the input fluid variables
+//                g_Fluid_Out  : Global memory array to store the output fluid variables
+//                g_Flux       : Global memory array to store the output fluxes
+//                dt           : Time interval to advance solution
+//                _dh          : 1 / grid size
+//                StoreFlux    : true --> store the coarse-fine fluxes
+//                j_gap        : Number of useless grids in each side in the j direction (j may not be equal to y)
+//                k_gap        : Number of useless grids in each side in the k direction (k mya not be equal to z)
+//                s_cu         : Shared memory array storing the normal flux
+//                s_cw         : Shared memory array storing the auxiliary flux
+//                s_flux       : Shared memory array storing the final flux used to update the fluid variables
+//                s_RLflux     : Shared memory array storing the left/right-moving flux
+//                XYZ          : 0 : Update the solution in the x direction
+//                               3 : Update the solution in the y direction
+//                               6 : Update the solution in the z direction
+//                               --> This parameter is also used to determine the place to store the output fluxes
+//                MinDens      : Density floor
+//                MinPres      : Pressure floor
+//                MinEint      : Internal energy floor
+//                PassiveFloor : Bitwise flag to specify the passive scalars to be floored
+//                EoS          : EoS object
 //-------------------------------------------------------------------------------------------------------
 __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
                                real g_Fluid_Out[][5][ CUBE(PS2) ],

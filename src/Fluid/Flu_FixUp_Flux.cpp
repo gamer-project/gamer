@@ -289,7 +289,7 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
 //                floor and normalize the passive scalars
 #                 if ( NCOMP_PASSIVE > 0  &&  MODEL == HYDRO )
                   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
-                     if ( ( TVar & BIDX(v) )  &&  ( Flag_PassiveFloor & BIDX(v) ) )
+                     if (  ( TVar & BIDX(v) )  &&  ( Flag_PassiveFloor & BIDX(v) )  )
                         CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
 
                   if ( OPT__NORMALIZE_PASSIVE )

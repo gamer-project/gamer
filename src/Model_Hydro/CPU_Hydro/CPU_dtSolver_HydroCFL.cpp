@@ -39,16 +39,16 @@
 //                   --> CFL condition
 //                3. Arrays with a prefix "g_" are stored in the global memory of GPU
 //
-// Parameter   :  g_dt_Array  : Array to store the minimum dt in each target patch
-//                g_Flu_Array : Array storing the prepared fluid   data of each target patch
-//                g_Mag_Array : Array storing the prepared B field data of each target patch
-//                NPG         : Number of target patch groups (for CPU only)
-//                dh          : Cell size
-//                Safety      : dt safety factor
-//                MinPres     : Minimum allowed pressure
-//                PassiveFloor: Bitwise flag to specify the passive scalars to be floored
-//                EoS         : EoS object
-//                MicroPhy    : Microphysics object
+// Parameter   :  g_dt_Array   : Array to store the minimum dt in each target patch
+//                g_Flu_Array  : Array storing the prepared fluid   data of each target patch
+//                g_Mag_Array  : Array storing the prepared B field data of each target patch
+//                NPG          : Number of target patch groups (for CPU only)
+//                dh           : Cell size
+//                Safety       : dt safety factor
+//                MinPres      : Minimum allowed pressure
+//                PassiveFloor : Bitwise flag to specify the passive scalars to be floored
+//                EoS          : EoS object
+//                MicroPhy     : Microphysics object
 //
 // Return      :  g_dt_Array
 //-----------------------------------------------------------------------------------------
