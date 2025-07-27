@@ -280,6 +280,11 @@ FieldIdx_t AddField( const char *InputLabel, const FixUpFlux_t FixUp_Flux, const
                     "        --> Set NORMALIZE_NO when adding a built-in fluid field by AddField()\n",
                     FieldIdx, NCOMP_FLUID );
 
+      if ( Floor != FLOOR_YES )
+         Aux_Error( ERROR_INFO, "Field index (%d) with normalization option is not floored !!\n"
+                    "        --> Set FLOOR_YES when adding a normalized passive scalar by AddField()\n",
+                    FieldIdx );
+
       PassiveNorm_VarIdx[NormIdx] = FieldIdx - NCOMP_FLUID;
    }
 #  endif
