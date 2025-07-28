@@ -81,20 +81,20 @@ void Hydro_AddSourceTerm_HalfStep_MHM( const real g_ConVar_In[][ CUBE(FLU_NXT) ]
       real ExtraTerm = 0.0;
 #     ifdef MHD
 //    magnetic field at face center
-//       const real B_N  =                g_FC_B_In[d    ][ idx_B_N  + (f%2)*didx_B_N[d]                  ];
-//       const real B_T1 = (real)0.25 * ( g_FC_B_In[TDir1][ idx_B_T1                                      ] +
-//                                        g_FC_B_In[TDir1][ idx_B_T1 + LR*didx_B_T1[d]                    ] +
-//                                        g_FC_B_In[TDir1][ idx_B_T1                   + didx_B_T1[TDir1] ] +
-//                                        g_FC_B_In[TDir1][ idx_B_T1 + LR*didx_B_T1[d] + didx_B_T1[TDir1] ] );
-//       const real B_T2 = (real)0.25 * ( g_FC_B_In[TDir2][ idx_B_T2                                      ] +
-//                                        g_FC_B_In[TDir2][ idx_B_T2 + LR*didx_B_T2[d]                    ] +
-//                                        g_FC_B_In[TDir2][ idx_B_T2                   + didx_B_T2[TDir2] ] +
-//                                        g_FC_B_In[TDir2][ idx_B_T2 + LR*didx_B_T2[d] + didx_B_T2[TDir2] ] );
+//    const real B_N  =                g_FC_B_In[d    ][ idx_B_N  + (f%2)*didx_B_N[d]                  ];
+//    const real B_T1 = (real)0.25 * ( g_FC_B_In[TDir1][ idx_B_T1                                      ] +
+//                                     g_FC_B_In[TDir1][ idx_B_T1 + LR*didx_B_T1[d]                    ] +
+//                                     g_FC_B_In[TDir1][ idx_B_T1                   + didx_B_T1[TDir1] ] +
+//                                     g_FC_B_In[TDir1][ idx_B_T1 + LR*didx_B_T1[d] + didx_B_T1[TDir1] ] );
+//    const real B_T2 = (real)0.25 * ( g_FC_B_In[TDir2][ idx_B_T2                                      ] +
+//                                     g_FC_B_In[TDir2][ idx_B_T2 + LR*didx_B_T2[d]                    ] +
+//                                     g_FC_B_In[TDir2][ idx_B_T2                   + didx_B_T2[TDir2] ] +
+//                                     g_FC_B_In[TDir2][ idx_B_T2 + LR*didx_B_T2[d] + didx_B_T2[TDir2] ] );
 #     endif // #ifdef MHD
 
 
 //    2. update
-//       fcCon[f][DENS] += ExtraTerm;
+//    fcCon[f][DENS] += ExtraTerm;
 
    } // for (int f=0; f<6; f++)
 
@@ -133,7 +133,7 @@ void Hydro_AddSourceTerm_CCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(F
 
 #  ifdef GAMER_DEBUG
    if ( didx_in[0] != 1  ||  didx_in[1] != FLU_NXT  ||  didx_in[2] != SQR(FLU_NXT) )
-      printf( "didx_in {%d, %d, %d} != {%d, %d, %d} !\n", didx_in[0], didx_in[1], didx_in[2],
+      printf( "ERROR : didx_in {%d, %d, %d} != {%d, %d, %d} !!\n", didx_in[0], didx_in[1], didx_in[2],
               1, FLU_NXT, SQR(FLU_NXT) );
 #  endif
 
@@ -174,15 +174,15 @@ void Hydro_AddSourceTerm_CCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(F
 
 #  ifdef MHD
 // magnetic field (see the figure)
-//    const real B_xL = g_FC_B_In[0][idx_B_xL];
-//    const real B_xR = g_FC_B_In[0][idx_B_xR];
-//    const real B_yL = g_FC_B_In[1][idx_B_yL];
-//    const real B_yR = g_FC_B_In[1][idx_B_yR];
-//    const real B_zL = g_FC_B_In[2][idx_B_zL];
-//    const real B_zR = g_FC_B_In[2][idx_B_zR];
+// const real B_xL = g_FC_B_In[0][idx_B_xL];
+// const real B_xR = g_FC_B_In[0][idx_B_xR];
+// const real B_yL = g_FC_B_In[1][idx_B_yL];
+// const real B_yR = g_FC_B_In[1][idx_B_yR];
+// const real B_zL = g_FC_B_In[2][idx_B_zL];
+// const real B_zR = g_FC_B_In[2][idx_B_zR];
 #  endif
 
-// Example: cosmic ray adiabatic work done term
+// example: cosmic-ray adiabatic work
 // #  ifdef COSMIC_RAY
 // // 1. calculate the cosmic-ray pressure
 //    const real pCR_old = EoS->CREint2CRPres_FuncPtr( g_ConVar_In[CRAY][idx_in], EoS->AuxArrayDevPtr_Flt,
@@ -300,18 +300,18 @@ void Hydro_AddSourceTerm_FCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(F
 //       1. calculate extra term
          real ExtraTerm = 0.0;
 //       magnetic field at face-centered BIn_N
-//          const real BIn_N  =                g_FC_B_In[d    ][ idx_BIn_N                                        ];
-//          const real BIn_T1 = (real)0.25 * ( g_FC_B_In[TDir1][ idx_BIn_T1                                       ] +
-//                                             g_FC_B_In[TDir1][ idx_BIn_T1 - didx_in_BT1[d]                      ] +
-//                                             g_FC_B_In[TDir1][ idx_BIn_T1                  + didx_in_BT1[TDir1] ] +
-//                                             g_FC_B_In[TDir1][ idx_BIn_T1 - didx_in_BT1[d] + didx_in_BT1[TDir1] ] );
-//          const real BIn_T2 = (real)0.25 * ( g_FC_B_In[TDir2][ idx_BIn_T2                                       ] +
-//                                             g_FC_B_In[TDir2][ idx_BIn_T2 - didx_in_BT2[d]                      ] +
-//                                             g_FC_B_In[TDir2][ idx_BIn_T2                  + didx_in_BT2[TDir2] ] +
-//                                             g_FC_B_In[TDir2][ idx_BIn_T2 - didx_in_BT2[d] + didx_in_BT2[TDir2] ] );
+//       const real BIn_N  =                g_FC_B_In[d    ][ idx_BIn_N                                        ];
+//       const real BIn_T1 = (real)0.25 * ( g_FC_B_In[TDir1][ idx_BIn_T1                                       ] +
+//                                          g_FC_B_In[TDir1][ idx_BIn_T1 - didx_in_BT1[d]                      ] +
+//                                          g_FC_B_In[TDir1][ idx_BIn_T1                  + didx_in_BT1[TDir1] ] +
+//                                          g_FC_B_In[TDir1][ idx_BIn_T1 - didx_in_BT1[d] + didx_in_BT1[TDir1] ] );
+//       const real BIn_T2 = (real)0.25 * ( g_FC_B_In[TDir2][ idx_BIn_T2                                       ] +
+//                                          g_FC_B_In[TDir2][ idx_BIn_T2 - didx_in_BT2[d]                      ] +
+//                                          g_FC_B_In[TDir2][ idx_BIn_T2                  + didx_in_BT2[TDir2] ] +
+//                                          g_FC_B_In[TDir2][ idx_BIn_T2 - didx_in_BT2[d] + didx_in_BT2[TDir2] ] );
 
 //       2. update
-//          g_FC_B_Half[d][idx_half] += ExtraTerm;
+//       g_FC_B_Half[d][idx_half] += ExtraTerm;
       } // CGPU_LOOP( idx_half, N_HF_VAR_P1*SQR(N_HF_VAR) )
    } // for (int d=0; d<3; d++)
 
@@ -340,7 +340,7 @@ void Hydro_AddSourceTerm_FCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(F
 //                dt_dh         : Time interval to advance solution / cell size
 //                EoS           : EoS object
 //
-// Return      :  g_Output
+// Return      :  OutputCell
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_AddSourceTerm_CCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
@@ -428,13 +428,13 @@ void Hydro_AddSourceTerm_FCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NX
 //       ------------------------------------
 //       |                  |               |
 //       |   idx_hf         |               |
-//       |      -       -idx_out->  idx_hf  |
+//       |      -        idx_out    idx_hf  |
 //       |  didx_hf[d]      |               |
 //       |                  |               |
 //       ------------------------------------
 
 //       1. calculate extra term
-         real ExtraTerm = 0.0;
+         real ExtraTerm = (real)0.0;
 
 //       2. update
 //          g_FC_B_Out[d][idx_out] += ExtraTerm;
