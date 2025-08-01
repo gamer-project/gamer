@@ -189,7 +189,7 @@ void Hydro_AddSourceTerm_CCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(F
 //                                                     EoS->AuxArrayDevPtr_Int, EoS->Table );
 //
 //
-// // 2. compute \div V using the upwind data; reference: [2]
+// // 2. compute \div V
 //    real div_V[3];
 //
 //    for (int d=0; d<3; d++)
@@ -355,7 +355,7 @@ void Hydro_AddSourceTerm_CCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NX
 //                                                      EoS->AuxArrayDevPtr_Int, EoS->Table );
 //
 //
-// // 2. compute \div V using the upwind data; reference: [2]
+// // 2. compute \div V
 //    real div_V[3];
 //    for (int d=0; d<3; d++)
 //    {
