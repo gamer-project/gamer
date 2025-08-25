@@ -110,7 +110,8 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
 
 
    bool FullRefinedLv = false;
-   if ( (long)NPatchTotal[lv] == NX0_TOT[0]*NX0_TOT[1]*NX0_TOT[2]/512*(1L<<lv)*(1L<<lv)*(1L<<lv) )   FullRefinedLv = true;
+   const long CellFactor = (long)(1L<<lv);
+   if ( (long)NPatchTotal[lv] == NX0_TOT[0]*NX0_TOT[1]*NX0_TOT[2]/512*CUBE(CellFactor) )   FullRefinedLv = true;
 
 // the base-level Poisson solver is implemented using the FFTW library (with CPUs only)
    if ( FullRefinedLv )

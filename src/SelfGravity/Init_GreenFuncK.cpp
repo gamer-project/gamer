@@ -31,7 +31,8 @@ void Init_GreenFuncK( const int lv )
    if ( GreenFuncK_Inited[lv] )   return;
 
 // 1. get the array indices used by FFTW
-   const int FFT_Size[3] = { 2*NX0_TOT[0]*(1L<<lv), 2*NX0_TOT[1]*(1L<<lv), 2*NX0_TOT[2]*(1L<<lv) };
+   const int CellFactor = (int)(1L<<lv);
+   const int FFT_Size[3] = { 2*NX0_TOT[0]*CellFactor, 2*NX0_TOT[1]*CellFactor, 2*NX0_TOT[2]*CellFactor };
    mpi_index_int local_nx, local_ny, local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose, total_local_size;
 
 // note: total_local_size is NOT necessarily equal to local_nx*local_ny*local_nz
@@ -78,9 +79,9 @@ void Init_GreenFuncK( const int lv )
    GreenFuncK[lv] = (real*) root_fftw::fft_malloc(sizeof(real) * total_local_size);
 
    for (int k=0; k<local_nz; k++)   {  kk = k + local_z_start;
-                                       z  = ( kk <= NX0_TOT[2]*(1L<<lv) ) ? kk*dh : (FFT_Size[2]-kk)*dh;
-   for (int j=0; j<local_ny; j++)   {  y  = ( j  <= NX0_TOT[1]*(1L<<lv) ) ? j *dh : (FFT_Size[1]-j )*dh;
-   for (int i=0; i<local_nx; i++)   {  x  = ( i  <= NX0_TOT[0]*(1L<<lv) ) ? i *dh : (FFT_Size[0]-i )*dh;
+                                       z  = ( kk <= NX0_TOT[2]*CellFactor ) ? kk*dh : (FFT_Size[2]-kk)*dh;
+   for (int j=0; j<local_ny; j++)   {  y  = ( j  <= NX0_TOT[1]*CellFactor ) ? j *dh : (FFT_Size[1]-j )*dh;
+   for (int i=0; i<local_nx; i++)   {  x  = ( i  <= NX0_TOT[0]*CellFactor ) ? i *dh : (FFT_Size[0]-i )*dh;
 
       r   = sqrt( x*x + y*y + z*z );
       idx = ( (long)k*local_ny + j )*local_nx + i;

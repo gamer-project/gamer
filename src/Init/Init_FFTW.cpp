@@ -299,8 +299,10 @@ void End_FFTW_PowerSpectrum()
 void Init_FFTW_Poisson( const int StartupFlag, const int lv )
 {
 
+   const int CellFactor = (int)(1L<<lv);
+
 // determine the FFT size
-   int Gravity_FFT_Size[3] = { NX0_TOT[0]*(int)(1L<<lv), NX0_TOT[1]*(int)(1L<<lv), NX0_TOT[2]*(int)(1L<<lv) };
+   int Gravity_FFT_Size[3] = { NX0_TOT[0]*CellFactor, NX0_TOT[1]*CellFactor, NX0_TOT[2]*CellFactor };
 
 // the zero-padding method is adopted for the isolated BC
    if ( OPT__BC_POT == BC_POT_ISOLATED )
@@ -595,6 +597,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
    const real        MinEntr_No        = -1.0;
    const int         GhostSize         = 0;
    const int         NPG               = 1;
+   const long        CellFactor        = (long)(1L<<lv);
 
    real (*VarPatch)[PS1][PS1][PS1] = new real [8*NPG][PS1][PS1][PS1];
 
@@ -734,7 +737,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
    const long NSend_Total  = Send_Disp_Var[MPI_NRank-1] + List_NSend_Var[MPI_NRank-1];
    const long NRecv_Total  = Recv_Disp_Var[MPI_NRank-1] + List_NRecv_Var[MPI_NRank-1];
    const long NSend_Expect = (long)amr->NPatchComma[lv][1]*(long)CUBE(PS1);
-   const long NRecv_Expect = (long)NX0_TOT[0]*(long)(1<<lv)*(long)NX0_TOT[1]*(long)(1<<lv)*(long)NRecvSlice;
+   const long NRecv_Expect = (long)NX0_TOT[0]*CellFactor*(long)NX0_TOT[1]*CellFactor*(long)NRecvSlice;
 
    if ( NSend_Total != NSend_Expect )  Aux_Error( ERROR_INFO, "NSend_Total = %ld != expected value = %ld !!\n",
                                                   NSend_Total, NSend_Expect );
@@ -769,7 +772,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 
 
 // 5. store the received data to the padded array "VarS" for FFTW
-   const long NPSlice = (long)NX0_TOT[0]*(long)(1L<<lv)*NX0_TOT[1]*(long)(1L<<lv)*NRecvSlice/PSSize;  // total number of received patch slices
+   const long NPSlice = (long)NX0_TOT[0]*CellFactor*NX0_TOT[1]*CellFactor*NRecvSlice/PSSize;  // total number of received patch slices
    long  dSIdx, Counter = 0;
    real *VarS_Ptr = NULL;
 
@@ -887,9 +890,10 @@ void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveS
 
 
 // 1. store the evaluated data to the send buffer
+   const long  CellFactor = (long)(1L<<lv);
    const int   SSize[2]   = { ( InPlacePad ? 2*(FFT_Size[0]/2+1) : FFT_Size[0] ), FFT_Size[1] };  // padded slab size in the x and y directions
    const int   PSSize     = PS1*PS1;                                                              // patch slice size
-   const long  NPSlice    = (long)NX0_TOT[0]*(long)(1<<lv)*NX0_TOT[1]*(long)(1<<lv)*NSendSlice/PSSize;        // total number of patch slices to be sent
+   const long  NPSlice    = (long)NX0_TOT[0]*CellFactor*NX0_TOT[1]*CellFactor*NSendSlice/PSSize;  // total number of patch slices to be sent
    const real *VarS_Ptr   = NULL;
 
    long SIdx, dSIdx, Counter = 0;

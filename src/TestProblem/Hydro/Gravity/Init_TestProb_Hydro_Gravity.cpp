@@ -382,7 +382,8 @@ void Aux_Record_Gravity()
    for (int lv=0; lv<NLEVEL; lv++)
    {
       bool FullRefinedLv = false;
-      if ( (long)NPatchTotal[lv] == NX0_TOT[0]*NX0_TOT[1]*NX0_TOT[2]/512*(1L<<lv)*(1L<<lv)*(1L<<lv) )   FullRefinedLv = true;
+      const int CellFactor = (int)(1L<<lv);
+      if ( (long)NPatchTotal[lv] == NX0_TOT[0]*NX0_TOT[1]*NX0_TOT[2]/512*CUBE(CellFactor) )   FullRefinedLv = true;
 
       Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _DENS, _NONE,
                          Rho_ParaBuf, USELB_YES );
