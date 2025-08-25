@@ -547,7 +547,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
                                                                                                // TempBuf_Var[MPI_NRank] reduces when launching
                                                                                                // more ranks
    const int AveNz      = FFT_Size[2]/MPI_NRank + ( ( FFT_Size[2]%MPI_NRank == 0 ) ? 0 : 1 );  // average slab thickness
-   const int Scale0     = amr->scale[lv];
+   const int Scale      = amr->scale[lv];
 
    int   Cr[3];                        // corner coordinates of each patch normalized to the base-level grid size
    int   BPos_z;                       // z coordinate of each patch slice in the simulation box
