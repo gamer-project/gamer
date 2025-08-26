@@ -139,6 +139,15 @@ For variables with `Default/Min/Max` labeled as `Depend`, click the parameter na
 | Name                                                                                                 |         Default |             Min |             Max | Short description |
 | :---                                                                                                 |            :--- |            :--- |            :--- | :--- |
 | [[ HUBBLE0 \| Runtime-Parameters:-Cosmology#HUBBLE0 ]]                                               |            -1.0 | 2.22507386e-308 |             1.0 | dimensionless Hubble parameter (currently only for converting ELBDM_MASS to code units) |
+| [[ HYPRE_ABS_TOL \| [Runtime-Parameters]-Hypre#HYPRE_ABS_TOL ]]                                      |            -1.0 |            None |            None |  |
+| [[ HYPRE_ENABLE_LOGGING \| [Runtime-Parameters]-Hypre#HYPRE_ENABLE_LOGGING ]]                        |               1 |               0 |               1 |  |
+| [[ HYPRE_INIT_GUESS \| [Runtime-Parameters]-Hypre#HYPRE_INIT_GUESS ]]                                |               1 |            None |            None |  |
+| [[ HYPRE_MAX_ITER \| [Runtime-Parameters]-Hypre#HYPRE_MAX_ITER ]]                                    |              -1 |            None |            None |  |
+| HYPRE_NPOST_RELAX                                                                                    |               1 |            None |            None |  |
+| HYPRE_NPRE_RELAX                                                                                     |               1 |            None |            None |  |
+| [[ HYPRE_PRINT_LEVEL \| [Runtime-Parameters]-Hypre#HYPRE_PRINT_LEVEL ]]                              |               2 |               0 |            None |  |
+| [[ HYPRE_REL_TOL \| [Runtime-Parameters]-Hypre#HYPRE_REL_TOL ]]                                      |            -1.0 |            None |            None |  |
+| [[ HYPRE_SOLVER \| [Runtime-Parameters]-Hypre#HYPRE_SOLVER ]]                                        |               1 |               1 |               2 |  |
 
 # I
 | Name                                                                                                 |         Default |             Min |             Max | Short description |
