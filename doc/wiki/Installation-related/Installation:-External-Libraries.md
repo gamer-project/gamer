@@ -2,6 +2,7 @@
 * [GRACKLE](#GRACKLE)
 * [HDF5](#HDF5)
 * [LIBYT](#LIBYT)
+* [HYPRE](#HYPRE)
 
 ## FFTW
 GAMER supports both FFTW2 and FFTW3 for various calculations (e.g., the root-level Poisson solver).
@@ -90,6 +91,14 @@ Please refer to [libyt -- How to Install](https://libyt.readthedocs.io/en/latest
 
 Set `LIBYT_PATH` to the folder that contains subfolders `include` and `lib`.
 
+
+## HYPRE (`HYPRE_PATH`) <a name="HYPRE"></a>
+GAMER support to use [hypre](https://github.com/hypre-space/hypre) to Poisson equation.
+See [[ Hypre in GAMER | [Hypre]-Introduction ]] for details.
+
+Please refer to [hypre: General Information](https://hypre.readthedocs.io/en/latest/ch-misc.html).
+
+Set `HYPRE_PATH` to the folder that contains subfolders `include` and `lib`.
 
 <br>
 
