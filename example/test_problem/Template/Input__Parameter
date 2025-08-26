@@ -421,6 +421,18 @@ YT_FIG_BASENAME               Fig         # figure basename [Fig]
 YT_JUPYTER_USE_CONNECTION_FILE 0          # use user-provided connection file when using libyt Jupyter UI [0]
 
 
+# Hypre
+HYPRE_SOLVER                  1           #
+HYPRE_INIT_GUESS              1           #
+HYPRE_PRINT_LEVEL             2           #
+HYPRE_ENABLE_LOGGING          1           #
+HYPRE_MAX_ITER                100         #
+HYPRE_NPRE_RELAX              1           #
+HYPRE_NPOST_RELAX             1           #
+HYPRE_ABS_TOL                -1           #
+HYPRE_REL_TOL                -1           #
+
+
 # miscellaneous
 OPT__VERBOSE                  0           # output the simulation progress in detail [0]
 OPT__TIMING_BARRIER          -1           # synchronize before timing -> more accurate, but may slow down the run (<0=auto) [-1]
