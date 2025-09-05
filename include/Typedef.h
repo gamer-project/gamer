@@ -98,7 +98,13 @@ const TestProbID_t
    TESTPROB_HYDRO_JET_ICM_WALL                 =   52,
    TESTPROB_HYDRO_CDM_LSS                      =  100,
    TESTPROB_HYDRO_ZELDOVICH                    =  101,
+<<<<<<< HEAD
    TESTPROB_HYDRO_GRACKLE_COMOVING             =  102,
+=======
+
+   TESTPROB_HYDRO_DUST_RHO_TEMP                =  123,
+
+>>>>>>> change  Typedef.h
    TESTPROB_ELBDM_EXTPOT                       = 1000,
    TESTPROB_ELBDM_JEANS_INSTABILITY_COMOVING   = 1001,
    TESTPROB_ELBDM_JEANS_INSTABILITY_PHYSICAL   = 1002,
