@@ -25,7 +25,13 @@ __gamer_configure_autocomplete() {
     local configure_filename configure_command
     if [[ "${COMP_WORDS[0]}" == "python"* ]]; then
         configure_filename=${COMP_WORDS[1]}
-        configure_command="${COMP_WORDS[0]} ${COMP_WORDS[1]}"
+        local alias_expanded
+        alias_expanded=$(alias -- "${COMP_WORDS[0]}" 2>/dev/null | sed -E "s/^alias ${COMP_WORDS[0]}='([^']+)'/\1/")
+        if [[ -n "$alias_expanded" ]]; then
+            configure_command="${alias_expanded} ${configure_filename}"
+        else
+            configure_command="${COMP_WORDS[0]} ${COMP_WORDS[1]}"
+        fi
     else
         configure_filename=${COMP_WORDS[0]}
         configure_command="${COMP_WORDS[0]}"
