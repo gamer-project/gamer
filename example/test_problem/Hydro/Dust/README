@@ -1,0 +1,62 @@
+Compilation flags:
+========================================
+Enable : MODEL=HYDRO, SUPPORT_GRACKLE
+
+
+Simulation setup:
+========================================
+1. Units:
+   (1) External (for Input__TestProb only):
+       See the comment of each runtime variable
+
+   (2) Internal (for all other input files and internal usage):
+       [L] = kpc
+       [M] = 1.0e9 Msun
+       [T] = Myr
+    -->[V] = [L]/[T] ~ 9.8e2 km/s
+    -->[D] = [M]/[D]^3 ~ 6.8e-23 g/cm^3
+
+2. Initial Gas Temperature and Density
+   (1) This setup is used to test radiative cooling efficiency at fixed density using the Grackle cooling model
+   (2) The parameters Gas_Temp and Gas_Dens in Input__TestProb set the initial gas temperature and density, 
+       and these values follow the constant-density cooling test described in: (arXiv: https://arxiv.org/abs/2505.11734)
+
+3. Metallicity and Dust Configuration 
+   (1) The parameter Gas_MetalMassFrac in Input__TestProb sets the gas-phase metallicity (mass fraction of metals), 
+       and this value is used by the Grackle cooling routines when SUPPORT_GRACKLE is enabled
+   (2) The metallicity value is based on the variable metal_mass_fraction defined in: grackle/src/python/examples/cooling_rate.py
+   (3) The dust-to-gas mass ratio is fixed at 0.01 in the initializer
+
+4. Output and Time Step Setup
+   (1) Output mode is set to OPT__OUTPUT_MODE = 1, which corresponds to fixed-step output
+   (2) The time step is determined by the function Mis_GetTimeStep_Dust() in
+       gamer/src/TestProblem/Hydro/Dust/Init_TestProb_Hydro_Dust_Rho_Temp.cpp
+   (3) The time step formula follows Equation (11) from: Grackle paper (arXiv: https://arxiv.org/abs/1610.09591)
+
+5. Dust Cooling Modification in Grackle
+   (1) Grackle originally evolves radiative cooling over a fixed time step, which may be too large for dust, 
+       so we modified grackle/src/clib/solve_rate_cool_g.F to subcycle dust cooling with smaller internal steps.
+   (2) The dust temperature evolution follows Equations (2) and (3) from: arXiv:2505.11734
+
+
+Note:
+========================================
+1. Mimic the "constant density cooling test" from the Grackle test problem
+   --> Grackle test example: constant-density cooling (arXiv: https://arxiv.org/abs/1610.09591)
+
+2. Other references: 
+       GAMER                   : https://github.com/gamer-project/gamer
+       Grackle                 : https://github.com/grackle-project/grackle
+       yt hub                  : https://girder.hub.yt/#collection/5736481ddd9119000164acf1
+       CloudyData_UVB table    : https://github.com/grackle-project/grackle_data_files/tree/main/input (CloudyData_UVB=HM2012.h5)
+       Smith et al. 2016       : https://arxiv.org/abs/1610.09591
+       Richie et al. 2025      : https://arxiv.org/abs/2505.11734
+
+
+3. Some handy yt analysis scripts are put at "yt_script"
+
+
+First-time GRACKLE installation guide (on NTU clusters as an example):
+========================================
+Please refer to the README file at "./example/grackle/"
+Grackle setup : https://github.com/gamer-project/gamer/tree/main/example/grackle
