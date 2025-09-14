@@ -1,24 +1,20 @@
 #include "GAMER.h"
 
 // problem-specific global variables
-// =======================================================================================
-static double  Gas_Temp;               // gas temperature
-static double  Gas_Dens;               // halo atomic hydrogen number density (halo_gas_mass_density / atomic_hydrogen_mass)
-                                       // --> necessary if one wants to enable metal_cooling in Grackle
-static double  Gas_MetalMassFrac;      // disk metal mass fraction (disk_metal_mass / disk_gas_mass)
-// =======================================================================================
 grackle_field_data my_fields;
 static gr_float *my_cooling_time;
 static gr_float *my_temperature;
-// =======================================================================================
+static double  Gas_Temp;               // gas temperature
+static double  Gas_Dens;               // gas density 
+static double  Gas_MetalMassFrac;      // disk metal mass fraction (disk_metal_mass / disk_gas_mass)
+
 
 // problem-specific function prototypes
 double Mis_GetTimeStep_Dust( const int lv, const double dTime_dt )
 {
-
    int FluSg = amr->FluSg[0];
    double Dens = amr->patch[FluSg][0][0]->fluid[DENS][0][0][0];
-   double Eint = amr->patch[FluSg][0][0]->fluid[ENGY][0][0][0]; // assume no magnetic and kinetic energy
+   double Eint = amr->patch[FluSg][0][0]->fluid[ENGY][0][0][0];
 
    my_fields.density[0] = Dens;
    my_fields.internal_energy[0] = Eint / Dens;
@@ -67,7 +63,6 @@ void End_GrackleDust()
 
    my_fields.density         = NULL;
    my_fields.internal_energy = NULL;
-   // for metal_cooling = 1
    my_fields.metal_density   = NULL;
 } // FUNCTION : End_GrackleDust
 
@@ -84,7 +79,6 @@ void End_GrackleDust()
 //-------------------------------------------------------------------------------------------------------
 void Validate()
 {
-
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ...\n", TESTPROB_ID );
 
 #  if ( MODEL != HYDRO )
@@ -93,8 +87,6 @@ void Validate()
 
    if ( !OPT__UNIT )
       Aux_Error( ERROR_INFO, "OPT__UNIT must be enabled !!\n" );
-
-
 } // FUNCTION : Validate
 
 
@@ -250,20 +242,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    Passive[0] = Metal;
    Passive[1] = Dust;
 
-// if ( MPI_Rank == 0 )
-//    {
-//       Aux_Message( stdout, "=============================================================================\n" );
-//       Aux_Message( stdout, "  Metal          = %13.7e \n", Metal);
-//       Aux_Message( stdout, "  Dust           = %13.7e \n", Dust);
-//       Aux_Message( stdout, "  Metal_amu      = %13.7e amu*cm^{-3}\n", Metal * UNIT_D / ( Const_amu / CUBE(Const_cm) ) );
-//       Aux_Message( stdout, "  Dust_amu       = %13.7e amu*cm^{-3}\n", Dust * UNIT_D / ( Const_amu / CUBE(Const_cm) ) );
-//       Aux_Message( stdout, "=============================================================================\n" );
-//    }
-
    Pres = EoS_DensTemp2Pres_CPUPtr( Gas_Dens, Gas_Temp, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ); // assuming EoS requires no passive scalars
    Eint = EoS_DensPres2Eint_CPUPtr( Gas_Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );   // assuming EoS requires no passive scalars
    Etot = Hydro_ConEint2Etot( Gas_Dens, MomX, MomY, MomZ, Eint, 0.0 );    // compute the total gas energy  // do NOT include magnetic energy here
-
 
 // set the output array
    fluid[DENS] = Gas_Dens;
