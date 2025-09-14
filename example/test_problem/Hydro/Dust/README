@@ -35,8 +35,9 @@ Simulation setup:
 
 5. Dust Cooling Modification in Grackle
    (1) Grackle originally evolves radiative cooling over a fixed time step, which may be too large for dust, 
-       so we modified grackle/src/clib/solve_rate_cool_g.F to subcycle dust cooling with smaller internal steps.
-   (2) The dust temperature evolution follows Equations (2) and (3) from: arXiv:2505.11734
+       so we modified grackle/src/clib/solve_rate_cool_g.F to subcycle dust cooling with smaller internal steps, 
+       the dust temperature evolution follows Equations (2) and (3) from: arXiv:2505.11734
+   (2) For simplicity, when computing dust in Grackle we fixed the mean molecular weight (mu) to 0.62
 
 
 Note:
@@ -53,7 +54,19 @@ Note:
        Richie et al. 2025      : https://arxiv.org/abs/2505.11734
 
 
-3. Some handy yt analysis scripts are put at "yt_script"
+3. yt Analysis Scripts
+   (1) The folder `yt_script/` contains four analysis scripts:
+       - `dust_density.py`
+       - `dust_temp.py`
+       - `gas_temp.py`
+       - `metal_density.py`
+   (2) For `dust_density.py` and `gas_temp.py`, the analytic solution depends on how Grackle
+       defines the energy change rate `edot(t)`:
+       - If `edot(i) = 0`, the script will use the analytic solution **edot_0**.
+       - If `edot(i) = -k_sup * e(i,j,k) * d(i,j,k)`, the script will use the analytic solution **edot_const**.
+   (3) This choice directly affects the theoretical comparison curve, so please confirm the
+       Grackle `edot` setting before running these scripts.
+
 
 
 First-time GRACKLE installation guide (on NTU clusters as an example):
