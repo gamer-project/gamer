@@ -173,12 +173,8 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
 #  endif
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_IsUnphysical( UNPHY_MODE_SING, &L[0], "density",
-                       TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                       ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_IsUnphysical( UNPHY_MODE_SING, &R[0], "density",
-                       TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                       ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( L[0], "density", TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( R[0], "density", TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
    RhoL_sqrt       = SQRT( L[0] );
@@ -217,9 +213,7 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    Bn_star      = SQRT( Gamma_m1_mY )*Bn;
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_IsUnphysical( UNPHY_MODE_SING, &Gamma_m1_mY, "Gamma_m1-Y",
-                       (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                       ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Gamma_m1_mY, "Gamma_m1-Y", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
    if ( Bn == ZERO ) {
@@ -256,9 +250,7 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    a2 -= X;
 #  endif
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_IsUnphysical( UNPHY_MODE_SING, &a2, "a2",
-                       (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                       ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( a2, "a2", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
    a  = SQRT( a2 );
 
@@ -320,12 +312,8 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    }
    else {
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
-      Hydro_IsUnphysical( UNPHY_MODE_SING, &a2_min_Cs2, "a2_min_Cs2",
-                          (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                          ERROR_INFO, UNPHY_VERBOSE );
-      Hydro_IsUnphysical( UNPHY_MODE_SING, &Cf2_min_a2, "Cf2_min_a2",
-                          (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                          ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical_Single( a2_min_Cs2, "a2_min_Cs2", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical_Single( Cf2_min_a2, "Cf2_min_a2", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #     endif
 
       const real _Cf2_min_Cs2 = ONE/Cf2_min_Cs2;
