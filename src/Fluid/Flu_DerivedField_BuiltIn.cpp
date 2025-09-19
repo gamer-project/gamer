@@ -267,7 +267,6 @@ void Flu_DerivedField_DeltaP( real Out[], const real FluIn[], const real MagIn[]
    typedef real (*vla_out)[NCellOutZ][NCellOutY][NCellOutX];
    vla_out Out3D = ( vla_out )Out;
 
-
 // fill in the output array
    const bool CheckMinTemp_No = false;
 
@@ -297,6 +296,8 @@ void Flu_DerivedField_DeltaP( real Out[], const real FluIn[], const real MagIn[]
       for (int j=0; j<3; j++) 
       {
          int vi = i+MOMX;
+         int bi = i+MAGX;
+         int bj = j+MAGX;
          int ioff = int(j == 0);
          int joff = int(j == 1);
          int koff = int(j == 2);
@@ -304,7 +305,7 @@ void Flu_DerivedField_DeltaP( real Out[], const real FluIn[], const real MagIn[]
          vp = FluIn3D[vi][ki+koff][ji+joff][ii+ioff] / FluIn3D[DENS][ki+koff][ji+joff][ii+ioff];
          vm = FluIn3D[vi][ki-koff][ji-joff][ii-ioff] / FluIn3D[DENS][ki-koff][ji-joff][ii-ioff];
 
-         BBdV += B[i]*B[j]*( vp-vm );
+         BBdV += B[bi]*B[bj]*( vp-vm );
 
          if ( i == j ) divV += vp-vm;
    
