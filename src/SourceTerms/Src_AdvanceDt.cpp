@@ -40,4 +40,8 @@ void Src_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
    InvokeSolver( SRC_SOLVER, lv, TimeNew, TimeOld, dt, NULL_REAL, SaveSg_Flu, SaveSg_Mag, NULL_INT,
                  OverlapMPI, Overlap_Sync );
 
+#  ifdef EXACT_COOLING
+   if ( SrcTerms.ExactCooling )   IsInit_tcool[lv] = true;
+#  endif
+
 } // FUNCTION : Src_AdvanceDt
