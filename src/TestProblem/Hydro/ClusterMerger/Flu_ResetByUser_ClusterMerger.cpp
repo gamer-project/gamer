@@ -84,7 +84,7 @@ extern double (*MHD_ResetByUser_BField_Ptr)( const double x, const double y, con
 // ---------------------------------------------------------------------------------------
 // (2) internal functions
 static void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][3], double Cen_new[][3], double Cen_Vel[][3] );
-static void SetJetDirection( const double TimeNew );
+static void SetJetDirection( const double TimeNew, const int lv, const int FluSg );
 // =======================================================================================
 
 
@@ -318,7 +318,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
    const bool    CurrentMaxLv = ( NPatchTotal[lv] > 0  &&  lv == MAX_LEVEL        ) ? true :
                                 ( NPatchTotal[lv] > 0  &&  NPatchTotal[lv+1] == 0 ) ? true : false;
    const double  dh           = amr->dh[lv];
-   const real    dv           = CUBE(dh);
+   const double  dv           = CUBE(dh);
 #  if ( MODEL == HYDRO  &&  !defined SRHD )
    const real    Gamma_m1     = GAMMA - (real)1.0;
    const real   _Gamma_m1     = (real)1.0 / Gamma_m1;
@@ -388,7 +388,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
    {
 //    (3) set the injection parameters
 //    set the jet direction vector
-      SetJetDirection( TimeNew );
+      SetJetDirection( TimeNew, lv, FluSg );
 
 
 //    (4) calculate the accretion and feedback
@@ -400,15 +400,14 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
       }
 
 //    variables for each rank
-      int  num        [Merger_Coll_NumBHs];     // the number of cells inside the accretion radius
-      real gas_mass   [Merger_Coll_NumBHs];     // total gas mass inside the accretion radius
-      real rho        [Merger_Coll_NumBHs];     // the average density inside the accretion radius (hot gas)
-      real mass_cold  [Merger_Coll_NumBHs];     // cold gas mass (T < 5e5 K) inside the accretion radius
-      real Cs         [Merger_Coll_NumBHs];     // the average sound speed inside the accretion radius
-      real gas_mom    [Merger_Coll_NumBHs][3];  // average gas momentum
-      real ang_mom    [Merger_Coll_NumBHs][3];  // total angular momentum inside the accretion radius
-      real V_cyl_exact[Merger_Coll_NumBHs];     // exact volume of jet cylinder
-      real normalize  [Merger_Coll_NumBHs];     // for computing the correct normalization constant
+      int    num        [Merger_Coll_NumBHs];     // the number of cells inside the accretion radius
+      double gas_mass   [Merger_Coll_NumBHs];     // total gas mass inside the accretion radius
+      double rho        [Merger_Coll_NumBHs];     // the average density inside the accretion radius (hot gas)
+      double mass_cold  [Merger_Coll_NumBHs];     // cold gas mass (T < 5e5 K) inside the accretion radius
+      double Cs         [Merger_Coll_NumBHs];     // the average sound speed inside the accretion radius
+      double gas_mom    [Merger_Coll_NumBHs][3];  // average gas momentum
+      double V_cyl_exact[Merger_Coll_NumBHs];     // exact volume of jet cylinder
+      double normalize  [Merger_Coll_NumBHs];     // for computing the correct normalization constant
       bool if_overlap_each_rank = false;
       for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
@@ -420,19 +419,16 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
          V_cyl_exact[c] = 0.0;
          normalize  [c] = 0.0;
          for (int d=0; d<3; d++)
-         {
             gas_mom[c][d] = 0.0;
-            ang_mom[c][d] = 0.0;
-         }
       }
 
 
       real fluid_acc[NCOMP_TOTAL];
 
 //    variables for all ranks
-      int  num_sum[Merger_Coll_NumBHs];
-      real rho_sum[Merger_Coll_NumBHs], Cs_sum[Merger_Coll_NumBHs], gas_mom_sum[Merger_Coll_NumBHs][3];
-      real gas_vel_sum[Merger_Coll_NumBHs][3], V_cyl_exact_sum[Merger_Coll_NumBHs], normalize_sum[Merger_Coll_NumBHs];
+      int    num_sum[Merger_Coll_NumBHs];
+      double rho_sum[Merger_Coll_NumBHs], Cs_sum[Merger_Coll_NumBHs], gas_mom_sum[Merger_Coll_NumBHs][3];
+      double gas_vel_sum[Merger_Coll_NumBHs][3], V_cyl_exact_sum[Merger_Coll_NumBHs], normalize_sum[Merger_Coll_NumBHs];
 
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {
@@ -490,11 +486,6 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                      for (int d=0; d<3; d++)   gas_mom[c][d] += fluid_acc[d+1]*dv;
                      num[c] += 1;
                   } // if ( Temp <= 5e5 )
-                  double dr[3];
-                  for (int d=0; d<3; d++)   dr[d] = Pos_2[d]-CM_ClusterCen[c][d];
-                  ang_mom[c][0] += dv * ( dr[1]*fluid_acc[3] - dr[2]*fluid_acc[2] );
-                  ang_mom[c][1] += dv * ( dr[2]*fluid_acc[1] - dr[0]*fluid_acc[3] );
-                  ang_mom[c][2] += dv * ( dr[0]*fluid_acc[2] - dr[1]*fluid_acc[1] );
                } // if ( DIST_SQR_3D( Pos_2, CM_ClusterCen[c] ) <= SQR(R_acc) )
 
 //             calculate the exact volume of jet cylinder and normalization
@@ -523,15 +514,14 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
       for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
-         MPI_Allreduce( &num[c],         &num_sum[c],             1, MPI_INT,        MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( &gas_mass[c],    &CM_RAcc_GasMass[c],     1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( &rho[c],         &rho_sum[c],             1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( &mass_cold[c],   &CM_RAcc_ColdGasMass[c], 1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( &Cs[c],          &Cs_sum[c],              1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( gas_mom[c],       gas_mom_sum[c],         3, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( ang_mom[c],       ang_mom_sum[c],         3, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( &V_cyl_exact[c], &V_cyl_exact_sum[c],     1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
-         MPI_Allreduce( &normalize[c],   &normalize_sum[c],       1, MPI_GAMER_REAL, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( &num[c],         &num_sum[c],             1, MPI_INT,    MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( &gas_mass[c],    &CM_RAcc_GasMass[c],     1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( &rho[c],         &rho_sum[c],             1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( &mass_cold[c],   &CM_RAcc_ColdGasMass[c], 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( &Cs[c],          &Cs_sum[c],              1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( gas_mom[c],       gas_mom_sum[c],         3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( &V_cyl_exact[c], &V_cyl_exact_sum[c],     1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( &normalize[c],   &normalize_sum[c],       1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
       } // for (int c=0; c<Merger_Coll_NumBHs; c++)
       MPI_Allreduce( &if_overlap_each_rank, &if_overlap, 1, MPI_CXX_BOOL, MPI_LOR, MPI_COMM_WORLD );
 
@@ -610,7 +600,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
          V_cyl      [c] = M_PI * SQR(Jet_Radius[c]) * 2 * Jet_HalfHeight[c];
 
 //       calculate the density that need to be injected
-         if ( CurrentMaxLv  &&  V_cyl_exact_sum[c] != 0 )
+         if ( CurrentMaxLv  &&  V_cyl_exact_sum[c] != 0.0 )
          {
             M_inj[c] = CM_Jet_Mdot[c] * dt / V_cyl_exact_sum[c];
             P_inj[c] = CM_Jet_Pdot[c] * dt / V_cyl_exact_sum[c];
@@ -621,7 +611,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
             M_inj[c] = CM_Jet_Mdot[c] * dt / V_cyl[c];
             P_inj[c] = CM_Jet_Pdot[c] * dt / V_cyl[c];
             E_inj[c] = CM_Jet_Edot[c] * dt / V_cyl[c];
-         } // if ( CurrentMaxLv  &&  V_cyl_exact_sum[c] != 0 ) ... else ...
+         } // if ( CurrentMaxLv  &&  V_cyl_exact_sum[c] != 0.0 ) ... else ...
       } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
       if ( CurrentMaxLv )
@@ -1087,8 +1077,10 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
 //
 // Return      :  CM_Jet_Vec (global variable)
 //-------------------------------------------------------------------------------------------------------
-void SetJetDirection( const double TimeNew )
+void SetJetDirection( const double TimeNew, const int lv, const int FluSg )
 {
+
+   double ang_mom[Merger_Coll_NumBHs][3]; // total angular momentum inside the accretion radius
 
    switch ( JetDirection_case )
    {
@@ -1114,11 +1106,43 @@ void SetJetDirection( const double TimeNew )
          }
          break;
       case 3: // align with angular momentum
+         const double dh = amr->dh[lv];
+         const double dv = CUBE(dh);
+
+         for (int c=0; c<Merger_Coll_NumBHs; c++)
+            for (int d=0; d<3; d++)
+               ang_mom[c][d] = 0.0;
+
+         for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+         {
+            for (int k=0; k<PS1; k++)
+            for (int j=0; j<PS1; j++)
+            for (int i=0; i<PS1; i++)
+            {
+               const double pos2[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (0.5+i)*dh,
+                                        amr->patch[0][lv][PID]->EdgeL[1] + (0.5+j)*dh,
+                                        amr->patch[0][lv][PID]->EdgeL[2] + (0.5+k)*dh };
+
+               for (int c=0; c<Merger_Coll_NumBHs; c++)
+               {
+                  if ( DIST_SQR_3D( pos2, CM_ClusterCen[c] ) > SQR(R_acc) ) continue;
+
+                  double dr[3] = { pos2[0]-CM_ClusterCen[c][0], pos2[1]-CM_ClusterCen[c][1], pos2[2]-CM_ClusterCen[c][2] };
+                  ang_mom[c][0] += dv * ( dr[1]*amr->patch[FluSg][lv][PID]->fluid[3][k][j][i] - dr[2]*amr->patch[FluSg][lv][PID]->fluid[2][k][j][i] );
+                  ang_mom[c][1] += dv * ( dr[2]*amr->patch[FluSg][lv][PID]->fluid[1][k][j][i] - dr[0]*amr->patch[FluSg][lv][PID]->fluid[3][k][j][i] );
+                  ang_mom[c][2] += dv * ( dr[0]*amr->patch[FluSg][lv][PID]->fluid[2][k][j][i] - dr[1]*amr->patch[FluSg][lv][PID]->fluid[1][k][j][i] );
+               } // for (int c=0; c<Merger_Coll_NumBHs; c++)
+            } // for (int k=0; k<PS1; k++); for (int j=0; j<PS1; j++); for (int i=0; i<PS1; i++)
+         } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+
          for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
+            MPI_Allreduce( ang_mom[c], ang_mom_sum[c], 3, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+
             const double ang_mom_norm = sqrt( SQR(ang_mom_sum[c][0]) + SQR(ang_mom_sum[c][1]) + SQR(ang_mom_sum[c][2]) );
+
             for (int d=0; d<3; d++)   CM_Jet_Vec[c][d] = ang_mom_sum[c][d] / ang_mom_norm;
-         }
+         } // for (int c=0; c<Merger_Coll_NumBHs; c++)
          break;
       default:
          Aux_Error( ERROR_INFO, "Unsupported JetDirection_case %d [1/2/3] !!\n", JetDirection_case );
