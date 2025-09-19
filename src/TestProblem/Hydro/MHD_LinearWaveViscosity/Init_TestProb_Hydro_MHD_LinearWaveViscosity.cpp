@@ -304,7 +304,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Pres = P0;
 
       WaveFormV = sin( kr ) * sin( WaveW*Time );
-      Mom       = -Dens * WaveSpeed * A * WaveFormV;
+      Mom       = Dens * WaveSpeed * A * WaveFormV;
       
       switch ( MHDLinearVisc_Dir ) {
          case 0:  MomX = 0.0;                MomY = Mom/sqrt(2.0);  MomZ =  Mom/sqrt(2.0);  break;
@@ -436,7 +436,7 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
                  break;
       }
 
-   } // else if ( MHDLinearVisc_Mode == 1 )
+   } // else if ( MHDLinearVisc_Mode == 2 )
    else
       Aux_Error( ERROR_INFO, "unsupported MHDLinearVisc_Mode = %d !!\n", MHDLinearVisc_Mode );
 
