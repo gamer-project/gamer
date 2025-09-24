@@ -26,15 +26,15 @@ __gamer_configure_autocomplete() {
     if [[ "${COMP_WORDS[0]}" == "python"* ]]; then
         configure_filename=${COMP_WORDS[1]}
         local alias_expanded
-        alias_expanded=$(alias -- "${COMP_WORDS[0]}" 2>/dev/null | sed -E "s/^alias ${COMP_WORDS[0]}='([^']+)'/\1/")
-        if [[ -n "$alias_expanded" ]]; then
-            configure_command="${alias_expanded} ${configure_filename}"
+        alias_def=$(alias -- "${COMP_WORDS[0]}" 2>/dev/null)
+        if [[ -n "$alias_def" ]]; then
+            eval "configure_command=( ${alias_def#alias ${COMP_WORDS[0]}=} ${configure_filename} )"
         else
-            configure_command="${COMP_WORDS[0]} ${COMP_WORDS[1]}"
+            configure_command=( "${COMP_WORDS[0]}" "${COMP_WORDS[1]}" )
         fi
     else
         configure_filename=${COMP_WORDS[0]}
-        configure_command="${COMP_WORDS[0]}"
+        configure_command=( "${COMP_WORDS[0]}" )
     fi
 
     __gamer_check_gamer_info $configure_filename
@@ -51,7 +51,7 @@ __gamer_configure_autocomplete() {
     local sub="${COMP_WORDS[COMP_CWORD-1]}"
     local cur="${COMP_WORDS[COMP_CWORD]}"
 
-    all_options=$(${configure_command} --autocomplete_info=all)
+    all_options=$(eval ${configure_command[@]} --autocomplete_info=all)
     IFS=' ' read -r -a all_option_array <<< "${all_options}"
 
     COMPREPLY=() # NOTE: please add a space when ending the option
@@ -61,7 +61,7 @@ __gamer_configure_autocomplete() {
     do
         # --option=xx
         if [[ "$opt" == "$subsub=" && "=" == "$sub" ]]; then
-            sub_options=$(${configure_command} --autocomplete_info="$opt")
+            sub_options=$(eval ${configure_command[@]} --autocomplete_info="$opt")
             IFS=' ' read -r -a sub_option_array <<< "${sub_options}"
             for opt2 in "${sub_option_array[@]}"
             do
@@ -72,7 +72,7 @@ __gamer_configure_autocomplete() {
             break
         # --option, --option xxx, or --option=
         elif [[ "$opt" == "$sub=" ]]; then
-            sub_options=$(${configure_command} --autocomplete_info="$opt")
+            sub_options=$(eval ${configure_command[@]} --autocomplete_info="$opt")
             IFS=' ' read -r -a sub_option_array <<< "${sub_options}"
             for opt2 in "${sub_option_array[@]}"
             do
