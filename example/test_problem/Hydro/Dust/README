@@ -17,7 +17,10 @@ Simulation setup:
     -->[D] = [M]/[D]^3 ~ 6.8e-23 g/cm^3
 
 2. Initial Gas Temperature and Density
-   (1) This setup is used to test radiative cooling efficiency at fixed density using the Grackle cooling model
+   (1) This setup is used to test radiative cooling efficiency at fixed density using the Grackle cooling model.
+   If cooling is not desired, set the COOLING option to 0 in Input__Parameter to disable the cooling function.
+   If cooling is required, set COOLING = 1 in Input__Parameter and replace the original Grackle source file grackle/src/clib/solve_rate_cool_g.F with the modified version available at:
+    https://github.com/Xiang-Zhe-Wei/grackle-dust/blob/tommy_dust/src/clib/solve_rate_cool_g.F
    (2) The parameters Gas_Temp and Gas_Dens in Input__TestProb set the initial gas temperature and density, 
        and these values follow the constant-density cooling test described in: (arXiv: https://arxiv.org/abs/2505.11734)
 
