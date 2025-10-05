@@ -3,30 +3,6 @@
 #if ( defined PARTICLE  &&  defined STAR_FORMATION  &&  MODEL == HYDRO )
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  FindLocalPID
-// Description :  Find the local PID relative to PID0 wihtin a patch group + ghost zone (size given by NGhost)
-// Note        :  1. Here, we assume each patch consists of 8 patches.
-//                2. The full size of a patch group + ghost zone = CUBE(PS2+2*NGhost)
-// Parameter   :  PGi, PGj, PGk     : The cell id inside patch group
-// Return      :  The local PID relative to PID0
-//-------------------------------------------------------------------------------------------------------
-
-int FindLocalPID(int PGi, int PGj, int PGk)
-{   
-   // determine the current patch where the current cell is
-   int CellPID;
-   if      ((PGi < PS1) && (PGj < PS1) && (PGk < PS1))     CellPID = 0;
-   else if ((PGi >= PS1) && (PGj < PS1) && (PGk < PS1))    CellPID = 1;
-   else if ((PGi < PS1) && (PGj >= PS1) && (PGk < PS1))    CellPID = 2;
-   else if ((PGi < PS1) && (PGj < PS1) && (PGk >= PS1))    CellPID = 3;
-   else if ((PGi >= PS1) && (PGj >= PS1) && (PGk < PS1))   CellPID = 4;
-   else if ((PGi < PS1) && (PGj >= PS1) && (PGk >= PS1))   CellPID = 5;
-   else if ((PGi >= PS1) && (PGj < PS1) && (PGk >= PS1))   CellPID = 6;
-   else if ((PGi >= PS1) && (PGj >= PS1) && (PGk >= PS1))  CellPID = 7;
-   return CellPID;
-}
-
-//-------------------------------------------------------------------------------------------------------
 // Function    :  SF_CreateStar_SinkParticle
 // Description :  Create sink particles based on FALSH prescription
 //
@@ -237,7 +213,7 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
          PGj = pj - NGhost;
          PGk = pk - NGhost; // the cell id inside patch group
 
-         LocalPID = FindLocalPID(PGi, PGj, PGk);
+         LocalPID = 2*2*(PGk/PS1) + 2*(PGj/PS1) + (PGi/PS1);
 
          const int Disp_i = TABLE_02( LocalPID, 'x', 0, PS1 ); // the cell index within PID
          const int Disp_j = TABLE_02( LocalPID, 'y', 0, PS1 );
