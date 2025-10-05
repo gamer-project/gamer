@@ -7,18 +7,12 @@
 // Description :  Find the local PID relative to PID0 wihtin a patch group + ghost zone (size given by NGhost)
 // Note        :  1. Here, we assume each patch consists of 8 patches.
 //                2. The full size of a patch group + ghost zone = CUBE(PS2+2*NGhost)
-// Parameter   :  i, j, k           : The cell index in a patch group + ghost zone
-//                PS1               : The size of one patch
-//                NGosht            : The size of ghost zone padded around the patch group 
+// Parameter   :  PGi, PGj, PGk     : The cell id inside patch group
 // Return      :  The local PID relative to PID0
 //-------------------------------------------------------------------------------------------------------
 
-int FindLocalPID(int pi, int pj, int pk, int &PGi, int &PGj, int &PGk, int NGhost)
-{
-   PGi = pi - NGhost;
-   PGj = pj - NGhost;
-   PGk = pk - NGhost; // the cell id inside patch group
-   
+int FindLocalPID(int PGi, int PGj, int PGk)
+{   
    // determine the current patch where the current cell is
    int CellPID;
    if      ((PGi < PS1) && (PGj < PS1) && (PGk < PS1))     CellPID = 0;
@@ -239,7 +233,11 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
       for (int pj=NGhost; pj<PS2 + NGhost; pj++)
       for (int pi=NGhost; pi<PS2 + NGhost; pi++) // loop inside the patch group + ghost zone
       {  
-         LocalPID = FindLocalPID(pi, pj, pk, PGi, PGj, PGk, NGhost);
+         PGi = pi - NGhost;
+         PGj = pj - NGhost;
+         PGk = pk - NGhost; // the cell id inside patch group
+
+         LocalPID = FindLocalPID(PGi, PGj, PGk);
 
          const int Disp_i = TABLE_02( LocalPID, 'x', 0, PS1 ); // the cell index within PID
          const int Disp_j = TABLE_02( LocalPID, 'y', 0, PS1 );
