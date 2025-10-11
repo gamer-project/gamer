@@ -21,7 +21,7 @@ void CPU_FluidSolver_RTVD(
    const int NPatchGroup, const real dt, const real dh,
    const bool StoreFlux, const bool XYZ,
    const real MinDens, const real MinPres, const real MinEint,
-   const EoS_t EoS );
+   const long PassiveFloor, const EoS_t EoS );
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 void CPU_FluidSolver_MHM(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
@@ -253,7 +253,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 #     if   ( FLU_SCHEME == RTVD )
 
       CPU_FluidSolver_RTVD( h_Flu_Array_In, h_Flu_Array_Out, h_Flux_Array, h_Corner_Array, h_Pot_Array_USG,
-                            NPatchGroup, dt, dh, StoreFlux, XYZ, MinDens, MinPres, MinEint, EoS );
+                            NPatchGroup, dt, dh, StoreFlux, XYZ, MinDens, MinPres, MinEint, PassiveFloor, EoS );
 
 #     elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 
