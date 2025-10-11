@@ -258,7 +258,7 @@ FieldIdx_t AddField( const char *InputLabel, const FixUpFlux_t FixUp_Flux, const
 
 // set the bitwise field indices for floor operations
 // --> note that Flag_PassiveFloor is written 1 for fields with FLOOR_NULL (not passive scalars)
-//     this makes Hydro_IsUnphysical work properly for non-passive scalars
+//     but this value should never be used as non-passive scalars should not be affected by it
    if ( Floor )            Flag_PassiveFloor |= (1L<<FieldIdx);
 
 

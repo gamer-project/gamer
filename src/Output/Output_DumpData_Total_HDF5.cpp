@@ -3657,7 +3657,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__FixUp_Restrict",     HOFFSET(InputPara_t,Opt__FixUp_Restrict    ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "FixUpRestrict_Var",       HOFFSET(InputPara_t,FixUpRestrict_Var      ), H5T_NATIVE_LONG    );
    H5Tinsert( H5_TypeID, "Opt__CorrAfterAllSync",   HOFFSET(InputPara_t,Opt__CorrAfterAllSync  ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "PassiveFloor_Var",        HOFFSET(InputPara_t, PassiveFloor_Var      ), H5T_NATIVE_LONG    );
+   H5Tinsert( H5_TypeID, "PassiveFloor_Var",        HOFFSET(InputPara_t,PassiveFloor_Var       ), H5T_NATIVE_LONG    );
    H5Tinsert( H5_TypeID, "Opt__NormalizePassive",   HOFFSET(InputPara_t,Opt__NormalizePassive  ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "NormalizePassive_NVar",   HOFFSET(InputPara_t,NormalizePassive_NVar  ), H5T_NATIVE_INT     );
 #  if ( NCOMP_PASSIVE > 0 )
