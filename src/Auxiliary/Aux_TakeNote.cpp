@@ -1304,7 +1304,7 @@ void Aux_TakeNote()
 //    target passive scalars to NOT be applied floor operations
       fprintf( Note, "   Target fields               "                                     );
       for (int v=0; v<NCOMP_TOTAL; v++)
-      if ( ( Flag_PassiveFloor & (1L<<v) ) == 0 )
+      if ( ( PassiveFloorMask & (1L<<v) ) == 0 )
       fprintf( Note, " %s",                                       FieldLabel[v]            );
       fprintf( Note, "\n" );
 

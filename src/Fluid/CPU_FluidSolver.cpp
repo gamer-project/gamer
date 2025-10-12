@@ -191,7 +191,7 @@ static real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 //                MinDens/Pres/Eint     : Density, pressure, and internal energy floors
 //                DualEnergySwitch      : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
 //                PassiveFloor          : Bitwise flag to specify the passive scalars to be floored
-//                                        --> Should be set to the global variable "Flag_PassiveFloor"
+//                                        --> Should be set to the global variable "PassiveFloorMask"
 //                NormPassive           : true --> normalize passive scalars so that the sum of their mass density
 //                                                 is equal to the gas mass density
 //                NNorm                 : Number of passive scalars to be normalized
