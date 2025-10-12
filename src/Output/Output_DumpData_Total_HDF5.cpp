@@ -79,7 +79,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2504)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2505)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -278,6 +278,7 @@ Procedure for outputting new variables:
 //                2503 : 2025/01/17 --> output user-defined parameters in "User/UserPara" and
 //                                             Input__TestProb parameters in "Info/InputTest"
 //                2504 : 2025/04/29 --> output OPT__PAR_INIT_CHECK
+//                2505 : 2025/05/07 --> output PassiveFloor_Var
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -925,7 +926,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
 #                    endif
                      Temp = Hydro_Con2Temp( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
-                                            CheckMinTemp_No, NULL_REAL, Emag, EoS_DensEint2Temp_CPUPtr,
+                                            CheckMinTemp_No, NULL_REAL, PassiveFloorMask, Emag, EoS_DensEint2Temp_CPUPtr,
                                             EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                             EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                      FieldData[PID][k][j][i] = Temp;
@@ -951,7 +952,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
 #                    endif
                      Entr = Hydro_Con2Entr( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
-                                            CheckMinEntr_No, NULL_REAL, Emag, EoS_DensEint2Entr_CPUPtr,
+                                            CheckMinEntr_No, NULL_REAL, PassiveFloorMask, Emag, EoS_DensEint2Entr_CPUPtr,
                                             EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                      FieldData[PID][k][j][i] = Entr;
                   }
@@ -978,7 +979,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 #                    ifdef SRHD
                      real Prim[NCOMP_TOTAL];
-                     Hydro_Con2Pri( u, Prim, (real)-HUGE_NUMBER, NULL_BOOL, NULL_INT, NULL,
+                     Hydro_Con2Pri( u, Prim, (real)-HUGE_NUMBER, PassiveFloorMask, NULL_BOOL, NULL_INT, NULL,
                                     NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
                                     EoS_DensPres2Eint_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, NULL );
@@ -986,7 +987,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                      Cs2 = EoS_DensPres2CSqr_CPUPtr( Prim[0], Prim[4], NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #                    else
                      Pres = Hydro_Con2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
-                                            CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres_CPUPtr,
+                                            CheckMinPres_No, NULL_REAL, PassiveFloorMask, Emag, EoS_DensEint2Pres_CPUPtr,
                                             EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                             EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
                      Cs2  = EoS_DensPres2CSqr_CPUPtr( u[DENS], Pres, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
@@ -1100,7 +1101,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   {
                      for (int fv=0; fv<NCOMP_TOTAL; fv++)  Cons[fv] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[fv][k][j][i];
 
-                     Hydro_Con2Pri( Cons, Prim, (real)-HUGE_NUMBER, false, NULL_INT, NULL,
+                     Hydro_Con2Pri( Cons, Prim, (real)-HUGE_NUMBER, PassiveFloorMask, false, NULL_INT, NULL,
                                     NULL_BOOL, (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, &LorentzFactor );
 
@@ -1666,7 +1667,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2504;
+   KeyInfo.FormatVersion        = 2505;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2596,6 +2597,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__FixUp_Restrict     = OPT__FIXUP_RESTRICT;
    InputPara.FixUpRestrict_Var       = FixUpVar_Restrict;
    InputPara.Opt__CorrAfterAllSync   = OPT__CORR_AFTER_ALL_SYNC;
+   InputPara.PassiveFloor_Var        = PassiveFloorMask;
    InputPara.Opt__NormalizePassive   = OPT__NORMALIZE_PASSIVE;
 
    InputPara.NormalizePassive_NVar   = PassiveNorm_NVar;
@@ -3655,6 +3657,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__FixUp_Restrict",     HOFFSET(InputPara_t,Opt__FixUp_Restrict    ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "FixUpRestrict_Var",       HOFFSET(InputPara_t,FixUpRestrict_Var      ), H5T_NATIVE_LONG    );
    H5Tinsert( H5_TypeID, "Opt__CorrAfterAllSync",   HOFFSET(InputPara_t,Opt__CorrAfterAllSync  ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "PassiveFloor_Var",        HOFFSET(InputPara_t,PassiveFloor_Var       ), H5T_NATIVE_LONG    );
    H5Tinsert( H5_TypeID, "Opt__NormalizePassive",   HOFFSET(InputPara_t,Opt__NormalizePassive  ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "NormalizePassive_NVar",   HOFFSET(InputPara_t,NormalizePassive_NVar  ), H5T_NATIVE_INT     );
 #  if ( NCOMP_PASSIVE > 0 )

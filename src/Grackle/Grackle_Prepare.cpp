@@ -192,7 +192,7 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
 #           ifdef MHD
             Emag  = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
 #           endif
-            Eint  = Hydro_Con2Eint( Dens, Px, Py, Pz, Etot, CheckMinEint_Yes, MIN_EINT, Emag,
+            Eint  = Hydro_Con2Eint( Dens, Px, Py, Pz, Etot, CheckMinEint_Yes, MIN_EINT, PassiveFloorMask, Emag,
                                     NULL, NULL, NULL, NULL, NULL );
 #           endif // #ifdef DUAL_ENERGY ... else
 
