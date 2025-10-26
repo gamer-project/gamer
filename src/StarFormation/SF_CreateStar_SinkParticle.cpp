@@ -90,14 +90,6 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
 // start of OpenMP parallel region
 #  pragma omp parallel
    {
-
-// thread-private variables
-#  ifdef OPENMP
-   const int TID = omp_get_thread_num();
-#  else
-   const int TID = 0;
-#  endif
-
    real PosX, PosY, PosZ, VelX, VelY, VelZ; // position and velocity of the current test cell
    real GasDens; // gas density of the current test cell
    real GasMFracLeft; // the fraction of gas mass of the cell that will be took out by particle
