@@ -197,69 +197,30 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
          }
       }
 
-      for (int pk=NGhost; pk<PS2 + NGhost; pk++)
-      for (int pj=NGhost; pj<PS2 + NGhost; pj++)
-      for (int pi=NGhost; pi<PS2 + NGhost; pi++) // loop inside the patch group
-      {  
-         PGi = pi - NGhost;
-         PGj = pj - NGhost;
-         PGk = pk - NGhost; // the cell id inside patch group
+//    prepare local arrays for particle attributes in this patch group
+      real  *ParAtt_Local[PAR_NATT_FLT_TOTAL];
+      int    NParAllPatch   = 0; // the number of existing particles in all nearby patches
 
-         LocalPID = 2*2*(PGk/PS1) + 2*(PGj/PS1) + (PGi/PS1);
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParAtt_Local[v] = NULL; // array to store nearby particle
 
-         const int Disp_i = TABLE_02( LocalPID, 'x', 0, PS1 ); // the cell index within PID
-         const int Disp_j = TABLE_02( LocalPID, 'y', 0, PS1 );
-         const int Disp_k = TABLE_02( LocalPID, 'z', 0, PS1 );
-         const int PID = PID0 + LocalPID; // record the current PID
+      for (int t=0; t<NNearbyPatch; t++)
+      {
+         const int PPID = Nearby_PID_List[t]; // check the particle number for this patch (PPID)
+         int   NParMaxInPatch   = 0;
 
-//       skip non-leaf patches
-         if ( amr->patch[0][lv][PID]->son != -1 )  continue;
+      // check both NPar and NPar_Copy (NPar_Copy may be -1, which is fine)
+         NParMaxInPatch = MAX( NParMaxInPatch, amr->patch[0][lv][PPID]->NPar      );
+         NParMaxInPatch = MAX( NParMaxInPatch, amr->patch[0][lv][PPID]->NPar_Copy );
 
-         PosX = Corner_Array_F[0] + pi*dh;
-         PosY = Corner_Array_F[1] + pj*dh;
-         PosZ = Corner_Array_F[2] + pk*dh;
+         if (NParMaxInPatch > 0 )   NParAllPatch += NParMaxInPatch;
+      }
 
-         const int t = IDX321( pi, pj, pk, Size_Flu, Size_Flu );
-         for (int v=0; v<FLU_NIN; v++)    fluid[v] = Flu_Array_F_In[v][t];
-         VelX = fluid[MOMX]/fluid[DENS];
-         VelY = fluid[MOMY]/fluid[DENS];
-         VelZ = fluid[MOMZ]/fluid[DENS];
+      int    ExistingNPar = 0;
+      if ( NParAllPatch > 0 )
+      {
+         for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
+            if ( ParAttFltBitIdx_In & BIDX(v) )    ParAtt_Local[v] = new real [NParAllPatch];
 
-//       First density threshold:
-//       Check whether the gas density is larger than the threshold
-//       ===========================================================================================================
-         GasDens = fluid[DENS];
-         if ( GasDens <= GasDensThres )    continue;
-
-//       Proximity check + second density threshold:
-//       The gas cell should not near any existing particle
-//       We can use the distance between the gas cell and nearby particle and the relative velocity to define a 
-//       a density threshold (Clarke et al. 2017, eqn (5))
-//       ===========================================================================================================
-         bool InsideAccRadius = false;
-         bool NotPassDen      = false;
-
-         real  *ParAtt_Local[PAR_NATT_FLT_TOTAL];
-         int    NParMax   = -1;
-
-         for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParAtt_Local[v] = NULL; // array to store nearby particle
-
-         for (int t=0; t<NNearbyPatch; t++)
-         {
-            const int PPID = Nearby_PID_List[t]; // check the particle number for this patch (PPID)
-
-         // check both NPar and NPar_Copy (NPar_Copy may be -1, which is fine)
-            NParMax = MAX( NParMax, amr->patch[0][lv][PPID]->NPar      );
-            NParMax = MAX( NParMax, amr->patch[0][lv][PPID]->NPar_Copy );
-         }
-
-         if ( NParMax > 0 )
-         {
-            for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
-               if ( ParAttFltBitIdx_In & BIDX(v) )    ParAtt_Local[v] = new real [NParMax];
-         }
-
-         // iterate over all nearby patches of the target patch group
          for (int t=0; t<NNearbyPatch; t++)
          {
             const int PPID = Nearby_PID_List[t];
@@ -306,7 +267,7 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
 #                 endif
 
                   for (int p=0; p<NPar; p++)
-                     ParAtt_Local[v][p] = amr->patch[0][lv][PPID]->ParAttFlt_Copy[v][p];
+                     ParAtt_Local[v][ExistingNPar + p] = amr->patch[0][lv][PPID]->ParAttFlt_Copy[v][p];
             }}}
 
             else
@@ -321,54 +282,89 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
                for (int v=0; v<PAR_NATT_FLT_TOTAL; v++) {
                   if ( ParAttFltBitIdx_In & BIDX(v) )
                      for (int p=0; p<NPar; p++)
-                        ParAtt_Local[v][p] = amr->Par->AttributeFlt[v][ ParList[p] ];
+                        ParAtt_Local[v][ExistingNPar + p] = amr->Par->AttributeFlt[v][ ParList[p] ];
                }
             } // if ( UseParAttCopy ) ... else ...
 
-            for (int p=0; p<NPar; p++) // loop over all nearby particles
-            {
-               Par2Cell[0] = PosX - ParAtt_Local[PAR_POSX][p];
-               Par2Cell[1] = PosY - ParAtt_Local[PAR_POSY][p];
-               Par2Cell[2] = PosZ - ParAtt_Local[PAR_POSZ][p];
-               Par2CellDist = SQRT(SQR(Par2Cell[0])+SQR(Par2Cell[1])+SQR(Par2Cell[2]));
-
-               Par2CellVel[0] = VelX - ParAtt_Local[PAR_VELX][p];
-               Par2CellVel[1] = VelY - ParAtt_Local[PAR_VELY][p];
-               Par2CellVel[2] = VelZ - ParAtt_Local[PAR_VELZ][p];
-
-               NorPar2Cell[0] = Par2Cell[0]/Par2CellDist;
-               NorPar2Cell[1] = Par2Cell[1]/Par2CellDist;
-               NorPar2Cell[2] = Par2Cell[2]/Par2CellDist;
-
-               if ( Par2CellDist <= 2*AccRadius )
-               {
-                  InsideAccRadius = true;
-                  break;
-               }
-
-               if ( Par2CellVel[0] >= 0 )                       continue; 
-               if ( Par2CellVel[1] >= 0 )                       continue;
-               if ( Par2CellVel[2] >= 0 )                       continue; // the gas is moving away from the existing particle
-
-               GasDensFreeFall = SQR((1/Coeff_FreeFall)*(NorPar2Cell[0]*Par2CellVel[0] + NorPar2Cell[1]*Par2CellVel[1] + NorPar2Cell[2]*Par2CellVel[2])/Par2CellDist); // Clarke et al. 2017, eqn (5)
-               if ( GasDens < GasDensFreeFall )
-               {
-                  NotPassDen = true;
-                  break;
-               }
-            } // for (int p=0; p<NPar; p++) 
-
-            if ( InsideAccRadius )           break;
-            if ( NotPassDen )                break;
+            ExistingNPar += NPar;
          } // for (int t=0; t<NNearbyPatch; t++)
+      } // if ( NParAllPatch > 0 )
 
-         if ( NParMax > 0 )
+//    loop over all cells in the patch group
+      for (int pk=NGhost; pk<PS2 + NGhost; pk++)
+      for (int pj=NGhost; pj<PS2 + NGhost; pj++)
+      for (int pi=NGhost; pi<PS2 + NGhost; pi++)
+      {  
+         PGi = pi - NGhost;
+         PGj = pj - NGhost;
+         PGk = pk - NGhost; // the cell id inside patch group
+
+         LocalPID = 2*2*(PGk/PS1) + 2*(PGj/PS1) + (PGi/PS1);
+
+         const int Disp_i = TABLE_02( LocalPID, 'x', 0, PS1 ); // the cell index within PID
+         const int Disp_j = TABLE_02( LocalPID, 'y', 0, PS1 );
+         const int Disp_k = TABLE_02( LocalPID, 'z', 0, PS1 );
+         const int PID = PID0 + LocalPID; // record the current PID
+
+//       skip non-leaf patches
+         if ( amr->patch[0][lv][PID]->son != -1 )  continue;
+
+         PosX = Corner_Array_F[0] + pi*dh;
+         PosY = Corner_Array_F[1] + pj*dh;
+         PosZ = Corner_Array_F[2] + pk*dh;
+
+         const int t = IDX321( pi, pj, pk, Size_Flu, Size_Flu );
+         for (int v=0; v<FLU_NIN; v++)    fluid[v] = Flu_Array_F_In[v][t];
+         VelX = fluid[MOMX]/fluid[DENS];
+         VelY = fluid[MOMY]/fluid[DENS];
+         VelZ = fluid[MOMZ]/fluid[DENS];
+
+//       First density threshold:
+//       Check whether the gas density is larger than the threshold
+//       ===========================================================================================================
+         GasDens = fluid[DENS];
+         if ( GasDens <= GasDensThres )    continue;
+
+//       Proximity check + second density threshold:
+//       The gas cell should not near any existing particle
+//       We can use the distance between the gas cell and nearby particle and the relative velocity to define a 
+//       a density threshold (Clarke et al. 2017, eqn (5))
+//       ===========================================================================================================
+         bool InsideAccRadius = false;
+         bool NotPassDen      = false;
+
+         for (int p=0; p<ExistingNPar; p++) // loop over all nearby existing particles
          {
-            for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)      
+            Par2Cell[0] = PosX - ParAtt_Local[PAR_POSX][p];
+            Par2Cell[1] = PosY - ParAtt_Local[PAR_POSY][p];
+            Par2Cell[2] = PosZ - ParAtt_Local[PAR_POSZ][p];
+            Par2CellDist = SQRT(SQR(Par2Cell[0])+SQR(Par2Cell[1])+SQR(Par2Cell[2]));
+
+            Par2CellVel[0] = VelX - ParAtt_Local[PAR_VELX][p];
+            Par2CellVel[1] = VelY - ParAtt_Local[PAR_VELY][p];
+            Par2CellVel[2] = VelZ - ParAtt_Local[PAR_VELZ][p];
+
+            NorPar2Cell[0] = Par2Cell[0]/Par2CellDist;
+            NorPar2Cell[1] = Par2Cell[1]/Par2CellDist;
+            NorPar2Cell[2] = Par2Cell[2]/Par2CellDist;
+
+            if ( Par2CellDist <= 2*AccRadius )
             {
-               delete [] ParAtt_Local[v]; ParAtt_Local[v] = NULL;
+               InsideAccRadius = true;
+               break;
             }
-         }
+
+            if ( Par2CellVel[0] >= 0 )                       continue; 
+            if ( Par2CellVel[1] >= 0 )                       continue;
+            if ( Par2CellVel[2] >= 0 )                       continue; // the gas is moving away from the existing particle
+
+            GasDensFreeFall = SQR((1/Coeff_FreeFall)*(NorPar2Cell[0]*Par2CellVel[0] + NorPar2Cell[1]*Par2CellVel[1] + NorPar2Cell[2]*Par2CellVel[2])/Par2CellDist); // Clarke et al. 2017, eqn (5)
+            if ( GasDens < GasDensFreeFall )
+            {
+               NotPassDen = true;
+               break;
+            }
+         } // for (int p=0; p<ExistingNPar; p++) 
 
          if ( InsideAccRadius )               continue;
          if ( NotPassDen )                    continue;
@@ -593,6 +589,15 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
             NNewPar ++;
          } // # pragma omp critical
       } // pi, pj, pk
+
+      if ( NParAllPatch > 0 )
+      {
+         for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)      
+         {
+            delete [] ParAtt_Local[v]; ParAtt_Local[v] = NULL;
+         }
+      }
+
    } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8) #  pragma omp for schedule( static )
 
    delete [] Flu_Array_F_In;
