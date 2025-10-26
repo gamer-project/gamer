@@ -199,7 +199,7 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
 
       for (int pk=NGhost; pk<PS2 + NGhost; pk++)
       for (int pj=NGhost; pj<PS2 + NGhost; pj++)
-      for (int pi=NGhost; pi<PS2 + NGhost; pi++) // loop inside the patch group + ghost zone
+      for (int pi=NGhost; pi<PS2 + NGhost; pi++) // loop inside the patch group
       {  
          PGi = pi - NGhost;
          PGj = pj - NGhost;
@@ -509,7 +509,7 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
 
 //          Storing Ethtot and Ekintot
             Pres = Hydro_Con2Pres( ControlFluid[DENS], ControlFluid[MOMX], ControlFluid[MOMY], ControlFluid[MOMZ], ControlFluid[ENGY],
-                                   ControlFluid+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, vEmag,
+                                   ControlFluid+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, PassiveFloorMask, vEmag,
                                    EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                    EoS_AuxArray_Flt,
                                    EoS_AuxArray_Int, h_EoS_Table, NULL );
