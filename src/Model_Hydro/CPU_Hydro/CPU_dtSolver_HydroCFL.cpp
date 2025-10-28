@@ -8,12 +8,6 @@
 #ifdef __CUDACC__
 
 #include "CUFLU_Shared_FluUtility.cu"
-#ifdef CONDUCTION
-#include "CUFLU_ComputeConduction.cu"
-#endif
-#ifdef VISCOSITY
-#include "CUFLU_ComputeViscosity.cu"
-#endif
 #include "CUDA_ConstMemory.h"
 
 // parallel reduction routine
@@ -24,6 +18,13 @@
 #  include "../../GPU_Utility/CUUTI_BlockReduction_Shuffle.cu"
 #else
 #  include "../../GPU_Utility/CUUTI_BlockReduction_WarpSync.cu"
+#endif
+
+#ifdef CONDUCTION
+#include "../../Microphysics/Conduction/CUFLU_ComputeConduction.cu"
+#endif
+#ifdef VISCOSITY
+#include "../../Microphysics/Viscosity/CUFLU_ComputeViscosity.cu"
 #endif
 
 #endif // #ifdef __CUDACC__

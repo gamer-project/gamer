@@ -12,10 +12,10 @@ void Hydro_ComputeConduction( real &cond_kappa, real &cond_chi, const MicroPhy_t
 
     real _Rho  = (real)1.0 / Dens;
 
-    if ( CONDUCTION_TYPE == CONSTANT_CONDUCTION )
+    if ( MicroPhy->CondType == CONSTANT_CONDUCTION )
        // Constant conductivity
        cond_kappa = MicroPhy->CondConstCoeff;
-    else if ( CONDUCTION_TYPE == SPITZER_CONDUCTION )
+    else if ( MicroPhy->CondType == SPITZER_CONDUCTION )
        // Spitzer conductivity, dependent on T
        cond_kappa = MicroPhy->CondPrefactor*POW( (real)1.0e-7*Temp, (real)2.5 );
     cond_kappa = FMIN( cond_kappa, MicroPhy->CondMaxDiffusivity * Dens * MicroPhy->CondSpecificHeat );

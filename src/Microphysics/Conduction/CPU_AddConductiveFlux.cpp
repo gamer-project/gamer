@@ -250,7 +250,7 @@ void Hydro_AddConductiveFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                  Temp[ idx_cvar + didx_cvar[d]                    ];
             T2_slope = (  MC_limiter( MC_limiter(al,bl), MC_limiter(ar,br) )  ) * _dh;
          }
-         else if ( CONDUCTION_SATURATION )
+         else if ( MicroPhy->CondSaturation )
          {
             T1_slope = ( Temp[ idx_cvar + didx_cvar[TDir1] ] -
                          Temp[ idx_cvar                    ] ) * _dh;

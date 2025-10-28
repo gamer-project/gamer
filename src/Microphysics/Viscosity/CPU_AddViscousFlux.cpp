@@ -198,7 +198,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 #        ifdef MHD
          real B_N_mean, B_T1_mean, B_T2_mean, B_amp, B2;
 //       These are only needed if viscosity is anisotropic
-         if ( VISCOSITY_FLUX_TYPE == ANISOTROPIC_VISCOSITY )
+         if ( MicroPhy->ViscFluxType == ANISOTROPIC_VISCOSITY )
          {
             if ( g_FC_B == NULL )
             {
@@ -246,7 +246,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
          T1_slope_N = ( Vel[TDir1][ idx_cvar + didx_cvar[d] ] - Vel[TDir1][ idx_cvar ] ) * _dh;
          T2_slope_N = ( Vel[TDir2][ idx_cvar + didx_cvar[d] ] - Vel[TDir2][ idx_cvar ] ) * _dh;
 
-         if ( VISCOSITY_FLUX_TYPE == ANISOTROPIC_VISCOSITY )
+         if ( MicroPhy->ViscFluxType == ANISOTROPIC_VISCOSITY )
          {
 
 //          transverse direction 1 derivative
@@ -371,7 +371,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
          mu = 0.5*( mu_l + mu_r );
 
          real stress_N, stress_T1, stress_T2;
-         if ( VISCOSITY_FLUX_TYPE == ISOTROPIC_VISCOSITY )
+         if ( MicroPhy->ViscFluxType == ISOTROPIC_VISCOSITY )
          {
 
             stress_N  = -mu * ( 2.0*N_slope_N - two_thirds*divV );
@@ -379,7 +379,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
             stress_T2 = -mu * ( T2_slope_N );
 
          }
-         else if ( VISCOSITY_FLUX_TYPE == ANISOTROPIC_VISCOSITY )
+         else if ( MicroPhy->ViscFluxType == ANISOTROPIC_VISCOSITY )
          {
 
             real BBdV, delta_p;
@@ -387,7 +387,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
             BBdV += B_T1_mean * ( B_N_mean * T1_slope_N + B_T1_mean * T1_slope_T1 + B_T2_mean * T1_slope_T2 );
             BBdV += B_T2_mean * ( B_N_mean * T2_slope_N + B_T1_mean * T2_slope_T1 + B_T2_mean * T2_slope_T2 );
             delta_p = mu*(3.0*BBdV - divV);
-            if ( VISCOSITY_FLUX_TYPE == ANISOTROPIC_VISCOSITY && VISCOSITY_BOUNDS )
+            if ( MicroPhy->ViscFluxType == ANISOTROPIC_VISCOSITY && MicroPhy->ViscBounds )
                delta_p = FMIN( FMAX( delta_p, -B2 ), 0.5*B2 );
             stress_N  = -delta_p*(B_N_mean*B_N_mean - 1./3.);
             stress_T1 = -delta_p*B_T1_mean*B_N_mean;

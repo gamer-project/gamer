@@ -12,7 +12,7 @@ void Hydro_ComputeViscosity( real &visc_mu, real &visc_nu, const MicroPhy_t *Mic
 
     real _Rho  = (real)1.0 / Dens;
 
-    if ( VISCOSITY_TYPE == CONSTANT_VISCOSITY ) {
+    if ( MicroPhy->ViscType == CONSTANT_VISCOSITY ) {
 
         // Constant viscosity
 
@@ -29,7 +29,7 @@ void Hydro_ComputeViscosity( real &visc_mu, real &visc_nu, const MicroPhy_t *Mic
             visc_mu = MicroPhy->ViscConstCoeff;
         }
 
-    } else if ( VISCOSITY_TYPE == SPITZER_VISCOSITY ) {
+    } else if ( MicroPhy->ViscType == SPITZER_VISCOSITY ) {
 
         // Spitzer viscosity, dependent on T
 
