@@ -464,10 +464,10 @@ void UpdateVelocityByGravity( real &v1, real &v2, const int TDir1, const int TDi
                               const real dt_half, const double dh_f8, const real GraConst,
                               const real g_Pot_USG[], const double Corner_USG[], const double Time,
                               const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
-                              const double ExtAcc_AuxArray[] )
+                              const double ExtAcc_AuxArray[], const bool FreezeHydro )
 {
 
-   if ( OPT__FREEZE_HYDRO ) return;
+   if ( FreezeHydro ) return;
 
    const int didx_usg[3] = { 1, USG_NXT_F, SQR(USG_NXT_F) };
    real Acc[3] = { (real)0.0, (real)0.0, (real)0.0 };
@@ -531,13 +531,14 @@ GPU_DEVICE
 void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out,
                          const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                          const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
-                         const real dt, const real dh, const int NOut, const int NEle, const int Offset_B_In )
+                         const real dt, const real dh, const int NOut, const int NEle, const int Offset_B_In,
+			 const bool FreezeHydro )
 {
 
    const int  NOutP1      = NOut + 1;
    const int  didx_ele[3] = { 1, NEle, SQR(NEle) };
    // If are freezing hydrodynamics, don't update the magnetic field
-   const real dt_dh       = OPT__FREEZE_HYDRO ? (real)0.0 : dt / dh;
+   const real dt_dh       = FreezeHydro ? (real)0.0 : dt / dh;
 
    real *g_FC_B_Out[3] = { g_FC_Bx_Out, g_FC_By_Out, g_FC_Bz_Out };
    real dE1, dE2;
@@ -633,12 +634,12 @@ void MHD_HalfStepPrimitive( const real g_Flu_In[][ CUBE(FLU_NXT) ],
                             const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                   real g_PriVar_Out[][ CUBE(FLU_NXT) ],
                             const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                            const real dt, const real dh, const real MinDens )
+                            const real dt, const real dh, const real MinDens, const bool FreezeHydro )
 {
 
    const int  didx_flux[3] = { 1, N_HF_FLUX, SQR(N_HF_FLUX) };
    // If are freezing hydrodynamics, don't update
-   const real dt_dh2    = OPT__FREEZE_HYDRO ? (real)0.0 : (real)0.5*dt / dh;
+   const real dt_dh2    = FreezeHydro ? (real)0.0 : (real)0.5*dt / dh;
    const int  NFluVar      = NCOMP_FLUID - 1;   // density + momentum*3
 
    real dFlux[3][NFluVar], Output_1Cell[ NFluVar + NCOMP_MAG ];
@@ -863,11 +864,11 @@ void MHD_UpdateMagnetic_Half(       real fc[][NCOMP_LR],
                               const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                               const real dt, const real dh,
                               const int idx_i, const int idx_j, const int idx_k,
-                              const int NEle )
+                              const int NEle, const bool FreezeHydro )
 {
 
    // If are freezing hydrodynamics, don't update the magnetic field
-   const real dt_dh2    = OPT__FREEZE_HYDRO ? (real)0.0 : (real)0.5*dt / dh;
+   const real dt_dh2    = FreezeHydro ? (real)0.0 : (real)0.5*dt / dh;
 
    const real dt_dh2    = (real)0.5*dt/dh;
    const int  fL        = 0;
