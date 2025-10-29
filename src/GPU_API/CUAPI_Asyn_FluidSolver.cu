@@ -41,7 +41,7 @@ void CUFLU_FluidSolver_MHM(
    const bool NormPassive, const int NNorm,
    const bool FracPassive, const int NFrac,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_t EoS, const MicroPhy_t MicroPhy );
+   const EoS_t EoS, const MicroPhy_t MicroPhy, const bool FreezeHydro );
 #elif ( FLU_SCHEME == CTU )
 __global__
 void CUFLU_FluidSolver_CTU(
@@ -69,7 +69,7 @@ void CUFLU_FluidSolver_CTU(
    const bool NormPassive, const int NNorm,
    const bool FracPassive, const int NFrac,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_t EoS );
+   const EoS_t EoS, const bool FreezeHydro );
 #endif // FLU_SCHEME
 
 #elif ( MODEL == ELBDM )
@@ -258,6 +258,7 @@ extern cudaStream_t *Stream;
 //                JeansMinPres_Coeff     : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //                GPU_NStream            : Number of CUDA streams for the asynchronous memory copy
 //                UseWaveFlag            : Determine whether to use wave or phase scheme
+//                FreezeHydro            : Freeze hydrodynamic fluxes
 //-------------------------------------------------------------------------------------------------------
 void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
@@ -280,7 +281,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              const bool NormPassive, const int NNorm,
                              const bool FracPassive, const int NFrac,
                              const bool JeansMinPres, const real JeansMinPres_Coeff,
-                             const int GPU_NStream, const bool UseWaveFlag )
+                             const int GPU_NStream, const bool UseWaveFlag, const bool FreezeHydro )
 {
 
 // check
@@ -568,7 +569,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff, MinMod_MaxIter,
               Time, UsePot, ExtAcc, GPUExtAcc_Ptr, MinDens, MinPres, MinEint, MinTemp,
               DualEnergySwitch, NormPassive, NNorm, FracPassive, NFrac,
-              JeansMinPres, JeansMinPres_Coeff, EoS, MicroPhy );
+              JeansMinPres, JeansMinPres_Coeff, EoS, MicroPhy, FreezeHydro );
 
 #        elif ( FLU_SCHEME == CTU )
 
@@ -591,7 +592,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff,
               Time, UsePot, ExtAcc, GPUExtAcc_Ptr, MinDens, MinPres, MinEint,
               DualEnergySwitch, NormPassive, NNorm, FracPassive, NFrac,
-              JeansMinPres, JeansMinPres_Coeff, EoS );
+              JeansMinPres, JeansMinPres_Coeff, EoS, FreezeHydro );
 
 #        else
 

@@ -50,7 +50,7 @@ void CPU_FluidSolver_MHM(
    const bool NormPassive, const int NNorm, const int c_NormIdx[],
    const bool FracPassive, const int NFrac, const int c_FracIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_t EoS, const MicroPhy_t MicroPhy );
+   const EoS_t EoS, const MicroPhy_t MicroPhy, const bool FreezeHydro );
 #elif ( FLU_SCHEME == CTU )
 void CPU_FluidSolver_CTU(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
@@ -78,7 +78,7 @@ void CPU_FluidSolver_CTU(
    const bool NormPassive, const int NNorm, const int c_NormIdx[],
    const bool FracPassive, const int NFrac, const int c_FracIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_t EoS );
+   const EoS_t EoS, const bool FreezeHydro );
 #endif // FLU_SCHEME
 
 #elif ( MODEL == ELBDM )
@@ -261,7 +261,8 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                             NPatchGroup, dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff,
                             MinMod_MaxIter, Time, UsePot, ExtAcc, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens,
                             MinPres, MinEint, MinTemp, DualEnergySwitch, NormPassive, NNorm, NormIdx,
-                            FracPassive, NFrac, FracIdx, JeansMinPres, JeansMinPres_Coeff, EoS, MicroPhy );
+                            FracPassive, NFrac, FracIdx, JeansMinPres, JeansMinPres_Coeff, EoS, MicroPhy,
+                            OPT__FREEZE_HYDRO );
 
 #     elif ( FLU_SCHEME == CTU )
 
@@ -271,7 +272,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                             NPatchGroup, dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff, Time,
                             UsePot, ExtAcc, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens, MinPres, MinEint,
                             DualEnergySwitch, NormPassive, NNorm, NormIdx, FracPassive, NFrac, FracIdx,
-                            JeansMinPres, JeansMinPres_Coeff, EoS );
+                            JeansMinPres, JeansMinPres_Coeff, EoS, OPT_FREEZE_HYDRO );
 
 #     else
 

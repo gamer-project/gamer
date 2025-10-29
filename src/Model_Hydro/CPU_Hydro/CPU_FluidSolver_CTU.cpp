@@ -150,6 +150,7 @@ void Hydro_TGradientCorrection(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ 
 //                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //                EoS                : EoS object
+//                FreezeHydro        : Freeze hydrodynamic fluxes
 //-------------------------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __global__
@@ -178,7 +179,7 @@ void CUFLU_FluidSolver_CTU(
    const bool NormPassive, const int NNorm,
    const bool FracPassive, const int NFrac,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_t EoS )
+   const EoS_t EoS, bool FreezeHydro )
 #else
 void CPU_FluidSolver_CTU(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
@@ -207,7 +208,7 @@ void CPU_FluidSolver_CTU(
    const bool NormPassive, const int NNorm, const int c_NormIdx[],
    const bool FracPassive, const int NFrac, const int c_FracIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_t EoS )
+   const EoS_t EoS, bool FreezeHydro )
 #endif // #ifdef __CUDACC__ ... else ...
 {
 
