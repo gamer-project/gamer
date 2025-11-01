@@ -379,12 +379,13 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
          for (int vj=pj-NGhost; vj<=pj+NGhost; vj++)
          for (int vi=pi-NGhost; vi<=pi+NGhost; vi++) // loop the nearby cells, to find the cells inside the control volumne (v)
          {
-            ControlPosX = Corner_Array_F[0] + vi*dh;
-            ControlPosY = Corner_Array_F[1] + vj*dh;
-            ControlPosZ = Corner_Array_F[2] + vk*dh;
+            // ControlPosX = Corner_Array_F[0] + vi*dh;
+            // ControlPosY = Corner_Array_F[1] + vj*dh;
+            // ControlPosZ = Corner_Array_F[2] + vk*dh;
 
-            Cell2Cell = SQRT(SQR(ControlPosX - PosX)+SQR(ControlPosY - PosY)+SQR(ControlPosZ - PosZ)); // distance to the center cell
-            if ( Cell2Cell > AccRadius )                 continue; // check whether it is inside the control volume
+            // Cell2Cell = SQRT(SQR(ControlPosX - PosX)+SQR(ControlPosY - PosY)+SQR(ControlPosZ - PosZ)); // distance to the center cell
+            // if ( Cell2Cell > AccRadius )                 continue; // check whether it is inside the control volume
+            if ( SQRT(SQR(vi - pi)+SQR(vj - pj)+SQR(vk - pk)) > AccCellNum )           continue; // check whether it is inside the control volume
 
             const int vt = IDX321( vi, vj, vk, Size_Flu, Size_Flu );
             Phiijk = Pot_Array_USG_F[vt];
@@ -433,12 +434,13 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
          for (int vj=pj-NGhost; vj<=pj+NGhost; vj++)
          for (int vi=pi-NGhost; vi<=pi+NGhost; vi++) // loop the nearby cells, to find the cells inside the control volumne (v)
          {
-            ControlPosX = Corner_Array_F[0] + vi*dh;
-            ControlPosY = Corner_Array_F[1] + vj*dh;
-            ControlPosZ = Corner_Array_F[2] + vk*dh;
+            // ControlPosX = Corner_Array_F[0] + vi*dh;
+            // ControlPosY = Corner_Array_F[1] + vj*dh;
+            // ControlPosZ = Corner_Array_F[2] + vk*dh;
 
-            Cell2Cell = SQRT(SQR(ControlPosX - PosX)+SQR(ControlPosY - PosY)+SQR(ControlPosZ - PosZ)); // distance to the center cell
-            if ( Cell2Cell > AccRadius )                 continue; // check whether it is inside the control volume
+            // Cell2Cell = SQRT(SQR(ControlPosX - PosX)+SQR(ControlPosY - PosY)+SQR(ControlPosZ - PosZ)); // distance to the center cell
+            // if ( Cell2Cell > AccRadius )                 continue; // check whether it is inside the control volume
+            if ( SQRT(SQR(vi - pi)+SQR(vj - pj)+SQR(vk - pk)) > AccCellNum )           continue; // check whether it is inside the control volume
 
             const int vt = IDX321( vi, vj, vk, Size_Flu, Size_Flu );
             for (int v=0; v<FLU_NIN; v++)    ControlFluid[v] = Flu_Array_F_In[v][vt];
@@ -462,8 +464,9 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
             ControlPosY = Corner_Array_F[1] + vj*dh;
             ControlPosZ = Corner_Array_F[2] + vk*dh;
 
-            Cell2Cell = SQRT(SQR(ControlPosX - PosX)+SQR(ControlPosY - PosY)+SQR(ControlPosZ - PosZ)); // distance to the center cell
-            if ( Cell2Cell > AccRadius )                 continue; // check whether it is inside the control volume
+            // Cell2Cell = SQRT(SQR(ControlPosX - PosX)+SQR(ControlPosY - PosY)+SQR(ControlPosZ - PosZ)); // distance to the center cell
+            // if ( Cell2Cell > AccRadius )                 continue; // check whether it is inside the control volume
+            if ( SQRT(SQR(vi - pi)+SQR(vj - pj)+SQR(vk - pk)) > AccCellNum )           continue; // check whether it is inside the control volume
 
             const int vt = IDX321( vi, vj, vk, Size_Flu, Size_Flu );
             for (int v=0; v<FLU_NIN; v++)    ControlFluid[v] = Flu_Array_F_In[v][vt];
@@ -482,8 +485,10 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
                real rij = SQRT(SQR(ControlPosX - ControlPosXj)+SQR(ControlPosY - ControlPosYj)+SQR(ControlPosZ - ControlPosZj));
                if ( rij == 0.0 )                        continue;
 
-               real Cell2Cellj = SQRT(SQR(ControlPosXj - PosX)+SQR(ControlPosYj - PosY)+SQR(ControlPosZj - PosZ)); // distance to the center cell
-               if ( Cell2Cellj > AccRadius )                 continue; // check whether it is inside the control volume
+               // real Cell2Cellj = SQRT(SQR(ControlPosXj - PosX)+SQR(ControlPosYj - PosY)+SQR(ControlPosZj - PosZ)); // distance to the center cell
+               // if ( Cell2Cellj > AccRadius )                 continue; // check whether it is inside the control volume
+               if ( SQRT(SQR(vij - pi)+SQR(vjj - pj)+SQR(vkj - pk)) > AccCellNum )           continue; // check whether it is inside the control volume
+              
                const int vtj = IDX321( vij, vjj, vkj, Size_Flu, Size_Flu );
                for (int v=0; v<FLU_NIN; v++)    ControlFluidj[v] = Flu_Array_F_In[v][vtj];
 
