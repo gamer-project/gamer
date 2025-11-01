@@ -354,9 +354,9 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
                break;
             }
 
-            if ( Par2CellVel[0] >= 0 )                       continue; 
-            if ( Par2CellVel[1] >= 0 )                       continue;
-            if ( Par2CellVel[2] >= 0 )                       continue; // the gas is moving away from the existing particle
+            if ( Par2CellVel[0]/NorPar2Cell[0] >= 0 )                       continue; 
+            if ( Par2CellVel[1]/NorPar2Cell[1] >= 0 )                       continue;
+            if ( Par2CellVel[2]/NorPar2Cell[2] >= 0 )                       continue; // the gas is moving away from the existing particle
 
             GasDensFreeFall = SQR((1/Coeff_FreeFall)*(NorPar2Cell[0]*Par2CellVel[0] + NorPar2Cell[1]*Par2CellVel[1] + NorPar2Cell[2]*Par2CellVel[2])/Par2CellDist); // Clarke et al. 2017, eqn (5)
             if ( GasDens < GasDensFreeFall )
