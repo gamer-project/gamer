@@ -375,9 +375,9 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
          real Phi000 = Pot_Array_USG_F[t]; // the potential of the current cell
          real Phiijk = (real)0.0;
          bool NotMiniPot          = false;
-         for (int vk=pk-AccCellNum; vk<=pk+NGhost; vk++)
-         for (int vj=pj-NGhost; vj<=pj+NGhost; vj++)
-         for (int vi=pi-NGhost; vi<=pi+NGhost; vi++) // loop the nearby cells, to find the cells inside the control volumne (v)
+         for (int vk=pk-AccCellNum; vk<=pk+AccCellNum; vk++)
+         for (int vj=pj-AccCellNum; vj<=pj+AccCellNum; vj++)
+         for (int vi=pi-AccCellNum; vi<=pi+AccCellNum; vi++) // loop the nearby cells, to find the cells inside the control volumne (v)
          {
             // ControlPosX = Corner_Array_F[0] + vi*dh;
             // ControlPosY = Corner_Array_F[1] + vj*dh;
@@ -430,9 +430,9 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
 //       ===========================================================================================================
          // calculate bulk velocity
          real TotalMass = (real)0.0, MassVel[3] = { (real)0.0, (real)0.0, (real)0.0}, BulkVel[3]; // sum(mass_i), sum(mass_i*velocity_i), mass-weighted velocity
-         for (int vk=pk-NGhost; vk<=pk+NGhost; vk++)
-         for (int vj=pj-NGhost; vj<=pj+NGhost; vj++)
-         for (int vi=pi-NGhost; vi<=pi+NGhost; vi++) // loop the nearby cells, to find the cells inside the control volumne (v)
+         for (int vk=pk-AccCellNum; vk<=pk+AccCellNum; vk++)
+         for (int vj=pj-AccCellNum; vj<=pj+AccCellNum; vj++)
+         for (int vi=pi-AccCellNum; vi<=pi+AccCellNum; vi++) // loop the nearby cells, to find the cells inside the control volumne (v)
          {
             // ControlPosX = Corner_Array_F[0] + vi*dh;
             // ControlPosY = Corner_Array_F[1] + vj*dh;
@@ -456,9 +456,9 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
 
          // get the energy
          real Egtot = (real)0.0, Ethtot = (real)0.0, Emagtot = (real)0.0, Ekintot = (real)0.0;
-         for (int vk=pk-NGhost; vk<=pk+NGhost; vk++)
-         for (int vj=pj-NGhost; vj<=pj+NGhost; vj++)
-         for (int vi=pi-NGhost; vi<=pi+NGhost; vi++) // loop the nearby cells, to find the cells inside the control volumne (v)
+         for (int vk=pk-AccCellNum; vk<=pk+AccCellNum; vk++)
+         for (int vj=pj-AccCellNum; vj<=pj+AccCellNum; vj++)
+         for (int vi=pi-AccCellNum; vi<=pi+AccCellNum; vi++) // loop the nearby cells, to find the cells inside the control volumne (v)
          {
             // ControlPosX = Corner_Array_F[0] + vi*dh;
             // ControlPosY = Corner_Array_F[1] + vj*dh;
@@ -474,9 +474,9 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
 //          Storing Egtot
             // real ControlPosXj, ControlPosYj, ControlPosZj;
             real SelfPhiijk = (real)0.0; // self-potential
-            for (int vkj=pk-NGhost; vkj<=pk+NGhost; vkj++)
-            for (int vjj=pj-NGhost; vjj<=pj+NGhost; vjj++)
-            for (int vij=pi-NGhost; vij<=pi+NGhost; vij++) // loop the nearby cells, to find the cells inside the control volumne (v)
+            for (int vkj=pk-AccCellNum; vkj<=pk+AccCellNum; vkj++)
+            for (int vjj=pj-AccCellNum; vjj<=pj+AccCellNum; vjj++)
+            for (int vij=pi-AccCellNum; vij<=pi+AccCellNum; vij++) // loop the nearby cells, to find the cells inside the control volumne (v)
             {
                // real Cell2Cellj = SQRT(SQR(ControlPosXj - PosX)+SQR(ControlPosYj - PosY)+SQR(ControlPosZj - PosZ)); // distance to the center cell
                // if ( Cell2Cellj > AccRadius )                 continue; // check whether it is inside the control volume
