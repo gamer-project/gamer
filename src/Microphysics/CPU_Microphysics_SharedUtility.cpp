@@ -1,10 +1,27 @@
 #ifndef __CUFLU_MICROSHARED__
 #define __CUFLU_MICROSHARED__
 
-
 #include "CUFLU.h"
 
-static real minmod( const real a, const real b );
+#if defined( VISCOSITY ) || defined( CONDUCTION ) || defined( CR_DIFFUSION )
+
+//-----------------------------------------------------------------------------------------
+// Function    : minmod
+// Description : Minmod slope limiter
+//
+// Parameter   : a, b : Input slopes
+//
+// Return      : Limited slope
+//-----------------------------------------------------------------------------------------
+GPU_DEVICE
+real minmod( const real a, const real b )
+{
+
+   if      ( a > (real)0.0  &&  b > (real)0.0 )    return FMIN(a, b);
+   else if ( a < (real)0.0  &&  b < (real)0.0 )    return FMAX(a, b);
+   else                                            return (real)0.0;
+
+} // FUNCTION : minmod
 
 //-----------------------------------------------------------------------------------------
 // Function    : MC_limiter
@@ -54,23 +71,6 @@ real van_leer2( const real a, const real b, const real c, const real d )
 
 } // FUNCTION : van_leer2
 
-
-//-----------------------------------------------------------------------------------------
-// Function    : minmod
-// Description : Minmod slope limiter
-//
-// Parameter   : a, b : Input slopes
-//
-// Return      : Limited slope
-//-----------------------------------------------------------------------------------------
-GPU_DEVICE
-static real minmod( const real a, const real b )
-{
-
-   if      ( a > (real)0.0  &&  b > (real)0.0 )    return FMIN(a, b);
-   else if ( a < (real)0.0  &&  b < (real)0.0 )    return FMAX(a, b);
-   else                                            return (real)0.0;
-
-} // FUNCTION : minmod
+#endif // #if defined( VISCOSITY ) || defined( CONDUCTION ) || defined( CR_DIFFUSION )
 
 #endif // #ifndef __CUFLU_MICROSHARED__

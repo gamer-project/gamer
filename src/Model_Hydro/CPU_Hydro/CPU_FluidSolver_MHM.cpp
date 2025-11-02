@@ -137,7 +137,8 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
 void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out,
                          const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                          const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
-                         const real dt, const real dh, const int NOut, const int NEle, const int Offset_B_In );
+                         const real dt, const real dh, const int NOut, const int NEle,
+			 const int Offset_B_In, const bool FreezeHydro );
 #endif // #ifdef MHD
 
 #ifdef COSMIC_RAY
@@ -539,7 +540,8 @@ void CPU_FluidSolver_MHM(
                               EXT_POT_NONE, EXT_ACC_NONE, NULL, NULL );
 
          MHD_UpdateMagnetic( g_FC_Mag_Half_1PG[0], g_FC_Mag_Half_1PG[1], g_FC_Mag_Half_1PG[2],
-                             g_Mag_Array_In[P], g_EC_Ele_1PG, (real)0.5*dt, dh, N_HF_VAR, N_HF_ELE, 1 );
+                             g_Mag_Array_In[P], g_EC_Ele_1PG, (real)0.5*dt, dh, N_HF_VAR, N_HF_ELE,
+			     1, FreezeHydro );
 #        endif
 
 
@@ -662,7 +664,8 @@ void CPU_FluidSolver_MHM(
                                  UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray );
 
             MHD_UpdateMagnetic( g_Mag_Array_Out[P][0], g_Mag_Array_Out[P][1], g_Mag_Array_Out[P][2],
-                                g_Mag_Array_In[P], g_EC_Ele_1PG, dt, dh, PS2, N_FL_ELE, FLU_GHOST_SIZE );
+                                g_Mag_Array_In[P], g_EC_Ele_1PG, dt, dh, PS2, N_FL_ELE, FLU_GHOST_SIZE,
+				FreezeHydro );
 #           endif // #ifdef MHD
 
 

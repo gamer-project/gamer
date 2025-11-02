@@ -351,7 +351,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //       get the viscosity
 //       --> for non-constant viscosity coefficients, take the spatial average along the normal direction
 //           to get the face-centered coefficients
-         real mu_l, mu_r, mu, visc_nu, delta_p;
+         real mu_l, mu_r, mu, visc_nu;
          real dens_L, dens_R, temp_L, temp_R;
          if ( g_PriVar == NULL )
          {
