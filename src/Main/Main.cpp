@@ -38,7 +38,7 @@ double              *FlagTable_User       [NLEVEL-1];
 double              *DumpTable = NULL;
 int                  DumpTable_NDump;
 int                 *UM_IC_RefineRegion = NULL;
-long                 FixUpVar_Flux, FixUpVar_Restrict;
+long                 FixUpVar_Flux, FixUpVar_Restrict, PassiveFloorMask;
 int                  PassiveNorm_NVar, PassiveNorm_VarIdx[NCOMP_PASSIVE];
 int                  PassiveIntFrac_NVar, PassiveIntFrac_VarIdx[NCOMP_PASSIVE];
 int                  StrLen_Flt;

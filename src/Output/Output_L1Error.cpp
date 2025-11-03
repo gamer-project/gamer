@@ -404,13 +404,13 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 
    const real  Pres_Nume       = Hydro_Con2Pres( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ],
                                                  Nume[ENGY], Nume+NCOMP_FLUID,
-                                                 CheckMinPres_No, NULL_REAL, Emag_Nume,
+                                                 CheckMinPres_No, NULL_REAL, PassiveFloorMask, Emag_Nume,
                                                  EoS_DensEint2Pres_CPUPtr,
                                                  EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
    const real  Temp_Nume       = Hydro_Con2Temp( Nume[DENS], Nume[MOMX], Nume[MOMY], Nume[MOMZ],
                                                  Nume[ENGY], Nume+NCOMP_FLUID,
-                                                 CheckMinTemp_No, NULL_REAL, Emag_Nume,
+                                                 CheckMinTemp_No, NULL_REAL, PassiveFloorMask, Emag_Nume,
                                                  EoS_DensEint2Temp_CPUPtr,
                                                  EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
@@ -434,12 +434,12 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 #  if ( MODEL == HYDRO )
    const real Emag_Zero = 0.0;   // Anal[ENGY] set by AnalFunc_Flu() does NOT include magnetic energy
    const real Pres_Anal = Hydro_Con2Pres( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY],
-                                          Anal+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, Emag_Zero,
+                                          Anal+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, PassiveFloorMask, Emag_Zero,
                                           EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
    const real Temp_Anal = Hydro_Con2Temp( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY],
-                                          Anal+NCOMP_FLUID, CheckMinTemp_No, NULL_REAL, Emag_Zero,
+                                          Anal+NCOMP_FLUID, CheckMinTemp_No, NULL_REAL, PassiveFloorMask, Emag_Zero,
                                           EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
