@@ -121,7 +121,7 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                         const real dt, const real dh, const double Time, const bool UsePot,
                         const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[],
                         const real MinDens, const real MinPres, const long PassiveFloor, const EoS_t *EoS,
-                        const bool FreezeHydro );
+                        const bool FreezeHydro )
 {
 
 // check

@@ -502,7 +502,7 @@ void CPU_FluidSolver_MHM(
             for (int v=0; v<NCOMP_TOTAL; v++)  fluid[v] = g_Flu_Array_In[P][v][idx];
             Temp[idx] = Hydro_Con2Temp( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ],
                                         fluid[ENGY], fluid+NCOMP_FLUID, CheckMinTemp_Yes,
-                                        MinTemp, Emag, EoS.DensEint2Temp_FuncPtr,
+                                        MinTemp, PassiveFloor, Emag, EoS.DensEint2Temp_FuncPtr,
                                         EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr,
                                         EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table );
 #           endif
@@ -579,7 +579,8 @@ void CPU_FluidSolver_MHM(
             Hydro_DataReconstruction( NULL, g_FC_Mag_Half_1PG, g_PriVar_Half_1PG, g_FC_Var_1PG, NULL, g_Slope_PPM_1PG,
                                       NULL, Con2Pri_No, LR_Limiter, AdaptiveMinModCoeff, dt, dh,
                                       MinDens, MinPres, MinEint, MinTemp, PassiveFloor, FracPassive,
-                                      NFrac, c_FracIdx, JeansMinPres, JeansMinPres_Coeff, &EoS );
+                                      NFrac, c_FracIdx, JeansMinPres, JeansMinPres_Coeff, &EoS,
+                                      &MicroPhy );
 
 
 //       1-b. MHM: use interpolated face-centered values to calculate the half-step fluxes

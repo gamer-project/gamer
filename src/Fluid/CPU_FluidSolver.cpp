@@ -207,6 +207,7 @@ static real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 //                JeansMinPres          : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff    : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //                UseWaveFlag           : Determines whether wave or fluid solver is used for MODEL == ELBDM and ELBDM_SCHEME == ELBDM_HYBRID
+//                FreezeHydro           : Freeze hydrodynamic fluxes
 //-------------------------------------------------------------------------------------------------------
 void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
@@ -230,7 +231,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const bool NormPassive, const int NNorm, const int NormIdx[],
                       const bool FracPassive, const int NFrac, const int FracIdx[],
                       const bool JeansMinPres, const real JeansMinPres_Coeff,
-                      const bool UseWaveFlag )
+                      const bool UseWaveFlag, const bool FreezeHydro )
 {
 
 // check
@@ -264,7 +265,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                             NPatchGroup, dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff, MinMod_MaxIter, Time,
                             UsePot, ExtAcc, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens, MinPres, MinEint, MinTemp,
                             DualEnergySwitch, PassiveFloor, NormPassive, NNorm, NormIdx, FracPassive, NFrac, FracIdx,
-                            JeansMinPres, JeansMinPres_Coeff, EoS, MicroPhy, OPT__FREEZE_HYDRO );
+                            JeansMinPres, JeansMinPres_Coeff, EoS, MicroPhy, FreezeHydro );
 
 #     elif ( FLU_SCHEME == CTU )
 
@@ -274,7 +275,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                             NPatchGroup, dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff, Time,
                             UsePot, ExtAcc, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens, MinPres, MinEint,
                             DualEnergySwitch, PassiveFloor, NormPassive, NNorm, NormIdx, FracPassive, NFrac,
-                            FracIdx, JeansMinPres, JeansMinPres_Coeff, EoS, OPT_FREEZE_HYDRO );
+                            FracIdx, JeansMinPres, JeansMinPres_Coeff, EoS, FreezeHydro );
 
 #     else
 

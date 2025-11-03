@@ -286,8 +286,8 @@ void Flu_DerivedField_DeltaP( real Out[], const real FluIn[], const real MagIn[]
       B2 = 2.0*Emag;
 
       Temp = Hydro_Con2Temp( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
-                             CheckMinTemp_No, NULL_REAL, Emag, EoS_DensEint2Temp_CPUPtr,
-                             EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                             CheckMinTemp_No, NULL_REAL, PassiveFloorMask, Emag,
+                             EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
       real BBdV = 0.0, divV = 0.0;
@@ -406,9 +406,10 @@ void Flu_DerivedField_Kappa( real Out[], const real FluIn[], const real MagIn[],
 #     endif
    
       Temp = Hydro_Con2Temp( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
-                             CheckMinTemp_No, NULL_REAL, Emag, EoS_DensEint2Temp_CPUPtr,
-                             EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                             EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                             CheckMinTemp_No, NULL_REAL, PassiveFloorMask, Emag,
+                             EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr,
+                             EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                             h_EoS_Table );
 
       Hydro_ComputeConduction( kappa, chi, &MicroPhy, u[DENS], Temp );
       
