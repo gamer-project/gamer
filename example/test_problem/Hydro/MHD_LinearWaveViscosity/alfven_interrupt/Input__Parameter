@@ -15,19 +15,19 @@
 
 # simulation scale
 BOX_SIZE                      1.0         # box size along the longest side (in Mpc/h if COMOVING is adopted)
-NX0_TOT_X                     64          # number of base-level cells along x
-NX0_TOT_Y                     64          # number of base-level cells along y
-NX0_TOT_Z                     64          # number of base-level cells along z
+NX0_TOT_X                     128         # number of base-level cells along x
+NX0_TOT_Y                     128         # number of base-level cells along y
+NX0_TOT_Z                     16          # number of base-level cells along z
 OMP_NTHREAD                  -1           # number of OpenMP threads (<=0=auto) [-1] ##OPENMP ONLY##
-END_T                        -1.0         # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
+END_T                        38.72984     # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
 END_STEP                     -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
 
 
 # test problems
-TESTPROB_ID                   27          # test problem ID [0]
-                                          # 24: VelocityProfileDamping
+TESTPROB_ID                   28          # test problem ID [0]
+                                          # 28: HYDRO MHD linear wave viscosity tests (+MHD +VISCOSITY)
 
-
+					  
 # code units (in cgs)
 OPT__UNIT                     0           # specify code units -> must set exactly 3 basic units below [0] ##USELESS FOR COMOVING##
 
@@ -95,10 +95,10 @@ OPT__MINIMIZE_MPI_BARRIER     0           # minimize MPI barriers to improve loa
 
 # fluid solver in HYDRO (MODEL==HYDRO only)
 GAMMA                         1.666666666666666667 # ratio of specific heats (i.e., adiabatic index) [5.0/3.0]
-MOLECULAR_WEIGHT              1.0         # mean molecular weight -> currently only for post-processing [0.6]
+MOLECULAR_WEIGHT              0.6         # mean molecular weight -> currently only for post-processing [0.6]
 MINMOD_COEFF                  1.5         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
 MINMOD_MAX_ITER               0           # maximum number of iterations to reduce MINMOD_COEFF when data reconstruction fails (0=off) [0]
-OPT__LR_LIMITER              -1           # slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes:
+OPT__LR_LIMITER               7           # slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes:
                                           # (-1=auto, 0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod, 6=central, 7=Athena) [-1]
 OPT__1ST_FLUX_CORR           -1           # correct unphysical results (defined by MIN_DENS/PRES) by the 1st-order fluxes:
                                           # (<0=auto, 0=off, 1=3D, 2=3D+1D) [-1] ##MHM/MHM_RP/CTU ONLY##
@@ -121,17 +121,7 @@ MIN_DENS                      0.0         # minimum mass density    (must >= 0.0
 MIN_PRES                      0.0         # minimum pressure        (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
 MIN_EINT                      0.0         # minimum internal energy (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
 MIN_ENTR                      0.0         # minimum entropy         (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
-OPT__FREEZE_HYDRO             1		  # freeze hydrodynamic fluxes (but diffusive are allowed) [0] ##HYDRO ONLY##
 
-# viscosity (VISCOSITY only)
-VISCOSITY_TYPE                1           # (1=constant viscosity, 2=Spitzer viscosity) [1] ##VISCOSITY only##
-VISCOSITY_FLUX_TYPE           1           # (1=isotropic viscosity, 2=anisotropic viscosity) [1] ##VISCOSITY only, 2 is for MHD ONLY##
-VISCOSITY_COEFF_TYPE	      1
-VISCOSITY_CONSTANT_COEFF      0.01        # constant conductivity coefficient (if CONDUCTION_TYPE=1) [1.0] ##CONDUCTION only##
-VISCOSITY_SPITZER_FRAC       1.0         # fraction of Spitzer conductivity (if CONDUCTION_TYPE=2) [1.0] ##CONDUCTION only##
-VISCOSITY_COULOMB_LOG        40.0        # Coulomb logarithm in Spitzer conduction definition (if CONDUCTION_TYPE=2) [40.0] ##CONDUCTION only##
-VISCOSITY_MAX_DIFFUSIVITY   -1.0         # maximum conductive diffusivity, to prevent extremely small timestep (-1=no limit) [-1.0] ##CONDUCTION only##
-VISCOSITY_BOUNDS	      0
 
 # initialization
 OPT__INIT                     1           # initialization option: (1=FUNCTION, 2=RESTART, 3=FILE->"UM_IC")
@@ -157,7 +147,7 @@ MONO_MAX_ITER                 10          # maximum number of iterations to redu
 # data dump
 OPT__OUTPUT_TOTAL             1           # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
 OPT__OUTPUT_PART              0           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
-OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
+OPT__OUTPUT_USER              1           # output the user-specified data -> edit "Output_User.cpp" [0]
 OPT__OUTPUT_CC_MAG            1           # output **cell-centered** magnetic field (necessary for yt analysis) [1] ##MHD ONLY##
 OPT__OUTPUT_PRES              0           # output gas pressure [0] ##HYDRO ONLY##
 OPT__OUTPUT_TEMP              0           # output gas temperature [0] ##HYDRO ONLY##
@@ -165,11 +155,12 @@ OPT__OUTPUT_ENTR              0           # output gas entropy [0] ##HYDRO ONLY#
 OPT__OUTPUT_CS                0           # output sound speed [0] ##HYDRO ONLY##
 OPT__OUTPUT_DIVVEL            0           # output divergence(velocity) [0] ##HYDRO ONLY##
 OPT__OUTPUT_MACH              0           # output mach number [0] ##HYDRO ONLY##
-OPT__OUTPUT_DIVMAG            0           # output |divergence(B)*dh/|B|| [0] ##MHD ONLY##
+OPT__OUTPUT_DIVMAG            1           # output |divergence(B)*dh/|B|| [0] ##MHD ONLY##
+OPT__OUTPUT_DELTAP	      1		  # output pressure anisotropy [0] ##VISCOSITY and MHD ONLY##
 OPT__OUTPUT_USER_FIELD        0           # output user-defined derived fields [0] -> edit "Flu_DerivedField_User.cpp"
 OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
-OUTPUT_DT                     0.5         # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
+OUTPUT_DT                     6.4549722   # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
 OUTPUT_PART_X                 0.0         # x coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Y                 0.0         # y coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Z                 0.0         # z coordinate for OPT__OUTPUT_PART [-1.0]
@@ -203,4 +194,14 @@ OPT__CK_FLUX_ALLOCATE         0           # check if all flux arrays are properl
 OPT__CK_NEGATIVE              0           # check the negative values: (0=off, 1=density, 2=pressure and entropy, 3=both) [0] ##HYDRO ONLY##
 OPT__CK_MEMFREE               1.0         # check the free memory in GB (0=off, >0=threshold) [1.0]
 OPT__CK_INTERFACE_B           0           # check the consistency of patch interface B field [0] ##MHD ONLY##
-OPT__CK_DIVERGENCE_B          0           # check the divergence-free constraint on B field (0=off, 1=on, 2=on+verbose) [0] ##MHD ONLY##
+OPT__CK_DIVERGENCE_B          1           # check the divergence-free constraint on B field (0=off, 1=on, 2=on+verbose) [0] ##MHD ONLY##
+
+# viscosity (VISCOSITY only)
+VISCOSITY_TYPE                1           # (1=constant viscosity, 2=Spitzer viscosity) [1] ##VISCOSITY only##
+VISCOSITY_FLUX_TYPE           2           # (1=isotropic viscosity, 2=anisotropic viscosity) [1] ##VISCOSITY only, 2 is for MHD ONLY##
+VISCOSITY_COEFF_TYPE          1		  # Whether the coefficient (if VISCOSITY_TYPE=1) is kinematic (nu) or dynamic (mu) [1] ##VISCOSITY only##
+VISCOSITY_CONSTANT_COEFF      0.02055     # constant viscosity coefficient (if VISCOSITY_TYPE=1) [1.0] ##VISCOSITY only##
+VISCOSITY_SPITZER_FRAC        1.0         # fraction of Spitzer viscosity (if VISCOSITY_TYPE=2) [1.0] ##VISCOSITY only##
+VISCOSITY_COULOMB_LOG        40.0         # Coulomb logarithm in Spitzer viscosity definition (if VISCOSITY_TYPE=2) [40.0] ##VISCOSITY only##
+VISCOSITY_MAX_DIFFUSIVITY    -1.0         # maximum viscous diffusivity, to prevent extremely small timestep (-1=no limit) [-1.0] ##VISCOSITY only##
+VISCOSITY_BOUNDS              0		  # whether to include bounds on the pressure anisotropy from plasma instabilities ##VISCOSITY and MHD only##

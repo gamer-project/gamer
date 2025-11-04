@@ -1,0 +1,7 @@
+# problem-specific runtime parameters
+MHDLinearVisc_Mode        2              # (1/2) --> (fast magnetosonic wave/lin. pol. Alfven wave)
+MHDLinearVisc_Rho0        2.0            # background density
+MHDLinearVisc_A	      	  0.5	         # perturbation amplitude
+MHDLinearVisc_P0          0.6            # background pressure
+MHDLinearVisc_B0          0.01095445     # magnetic field strength
+MHDLinearVisc_Dir         0              # wave direction: (0/1/2/3) --> (x/y/z/diagonal)

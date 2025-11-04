@@ -71,11 +71,11 @@ void Validate()
 
 #  endif
 
-   if ( VPD_Dir == 3   &&  ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )  )
+   if ( ( VPD_Dir == 3  ||  VPD_BDir == 3 ) && ( VPD_Dir != VPD_BDir ) )
+      Aux_Error( ERROR_INFO, "If VPD_Dir = 3 or VPD_BDir = 3, both must be equal!!\n" );
+
+   if ( VPD_Dir == 3  &&  ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )  )
       Aux_Error( ERROR_INFO, "simulation domain must be cubic for VPD_Dir = %d !!\n",  VPD_Dir  );
-   
-   if ( VPD_BDir == 3  &&  ( amr->BoxSize[0] != amr->BoxSize[1] || amr->BoxSize[0] != amr->BoxSize[2] )  )
-      Aux_Error( ERROR_INFO, "simulation domain must be cubic for VPD_BDir = %d !!\n", VPD_BDir );
 
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
@@ -179,11 +179,11 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
-   VPD_WaveLength = ( VPD_Dir == 3 ) ? amr->BoxSize[0]*sqrt(3.0) : amr->BoxSize[VPD_Dir];
+   VPD_WaveLength = ( VPD_Dir == 3 ) ? amr->BoxSize[0]/sqrt(3.0) : amr->BoxSize[VPD_Dir];
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
-   const double End_T_Default    = 10.0;
+   const double End_T_Default    = 5.0;
    const long   End_Step_Default = __INT_MAX__;
 
    if ( END_STEP < 0 ) {
