@@ -1995,8 +1995,8 @@ void Aux_Check_Parameter()
 
       if ( VISCOSITY_TYPE == CONSTANT_VISCOSITY &&
            VISCOSITY_COEFF_TYPE == VISCOSITY_KINETIC_COEFF &&
-           VISCOSITY_KINETIC_COEFF > VISCOSITY_MAX_DIFFUSIVITY )
-         Aux_Message( stderr, "WARNING : VISCOSITY_CONST_COEFF is greater than VISCOSITY_MAX_DIFFUSIVITY !!\n" );
+           VISCOSITY_CONSTANT_COEFF > VISCOSITY_MAX_DIFFUSIVITY )
+         Aux_Message( stderr, "WARNING : VISCOSITY_CONSTANT_COEFF is greater than VISCOSITY_MAX_DIFFUSIVITY !!\n" );
 
       if ( DT__VISCOSITY < 0.0  ||  DT__VISCOSITY > 1.0 )
          Aux_Message( stderr, "WARNING : DT__VISCOSITY (%14.7e) is not within the normal range [0...1] !!\n", DT__VISCOSITY );

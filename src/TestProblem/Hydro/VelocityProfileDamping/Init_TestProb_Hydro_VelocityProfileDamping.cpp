@@ -257,7 +257,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    WaveK = 2.0*M_PI/VPD_WaveLength;
 #  ifdef VISCOSITY
-   Gamma = 4.0*VISCOSITY_KINETIC_COEFF*SQR(WaveK)/3.0;
+   Gamma = 4.0*VISCOSITY_CONSTANT_COEFF*SQR(WaveK)/3.0;
 #  else
    Gamma = 0.0;
 #  endif
