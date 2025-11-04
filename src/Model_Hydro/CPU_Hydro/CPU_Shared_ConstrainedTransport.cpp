@@ -28,7 +28,7 @@ void UpdateVelocityByGravity( real &v1, real &v2, const int TDir1, const int TDi
                               const real dt_half, const double dh_f8, const real GraConst,
                               const real g_Pot_USG[], const double Corner_USG[], const double Time,
                               const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
-                              const double ExtAcc_AuxArray[] );
+                              const double ExtAcc_AuxArray[], const bool FreezeHydro );
 #endif
 
 
@@ -83,6 +83,7 @@ void UpdateVelocityByGravity( real &v1, real &v2, const int TDir1, const int TDi
 //                ExtAcc          : Add external acceleration                                (for UNSPLIT_GRAVITY only)
 //                ExtAcc_Func     : Function pointer to the external acceleration routine    (for UNSPLIT_GRAVITY only)
 //                ExtAcc_AuxArray : Auxiliary array for external acceleration                (for UNSPLIT_GRAVITY only)
+//		  FreezeHydro     : Freeze hydrodynamics fluxes
 //
 // Return      :  g_EC_Ele[], g_IntEle[]
 //------------------------------------------------------------------------------------------------------
@@ -95,7 +96,7 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                           const bool DumpIntEle, real g_IntEle[][NCOMP_ELE][ PS2P1*PS2 ],
                           const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[], const double Time,
                           const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
-                          const double ExtAcc_AuxArray[] )
+                          const double ExtAcc_AuxArray[], const bool FreezeHydro )
 {
 
 // check
@@ -218,11 +219,13 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
             ijk_usg[1] = j_pri + idx_pri2usg;
             ijk_usg[2] = k_pri + idx_pri2usg;
             UpdateVelocityByGravity( V_L1, V_L2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray,
+				     FreezeHydro );
 
             ijk_usg[TDir2] ++;
             UpdateVelocityByGravity( V_R1, V_R2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray,
+				     FreezeHydro );
          } // if ( CorrHalfVel )
 #        endif // #ifdef UNSPLIT_GRAVITY
 
@@ -254,11 +257,13 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
             ijk_usg[2] = k_pri + idx_pri2usg;
             ijk_usg[TDir1] ++;
             UpdateVelocityByGravity( V_L1, V_L2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray,
+				     FreezeHydro );
 
             ijk_usg[TDir2] ++;
             UpdateVelocityByGravity( V_R1, V_R2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray,
+				     FreezeHydro );
          } // if ( CorrHalfVel )
 #        endif // #ifdef UNSPLIT_GRAVITY
 
@@ -289,11 +294,13 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
             ijk_usg[1] = j_pri + idx_pri2usg;
             ijk_usg[2] = k_pri + idx_pri2usg;
             UpdateVelocityByGravity( V_L1, V_L2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray,
+				     FreezeHydro );
 
             ijk_usg[TDir1] ++;
             UpdateVelocityByGravity( V_R1, V_R2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray,
+				     FreezeHydro );
          } // if ( CorrHalfVel )
 #        endif // #ifdef UNSPLIT_GRAVITY
 
@@ -325,11 +332,13 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
             ijk_usg[2] = k_pri + idx_pri2usg;
             ijk_usg[TDir2] ++;
             UpdateVelocityByGravity( V_L1, V_L2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray,
+				     FreezeHydro );
 
             ijk_usg[TDir1] ++;
             UpdateVelocityByGravity( V_R1, V_R2, TDir1, TDir2, ijk_usg[0], ijk_usg[1], ijk_usg[2], dt_half, dh_f8,
-                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray );
+                                     GraConst, g_Pot_USG, Corner_USG, Time, UsePot, ExtAcc, ExtAcc_Func, ExtAcc_AuxArray,
+				     FreezeHydro );
          } // if ( CorrHalfVel )
 #        endif // #ifdef UNSPLIT_GRAVITY
 
@@ -524,6 +533,7 @@ void UpdateVelocityByGravity( real &v1, real &v2, const int TDir1, const int TDi
 //                NOut        : Stride for accessing g_FC_Bx/y/z_Out[]
 //                NEle        : Stride for accessing g_EC_Ele[]
 //                Offset_B_In : Offset for accessing g_FC_B_In[]
+// 		  FreezeHydro : Freeze hydrodynamic fluxes
 //
 // Return      :  g_FC_B_Out[]
 //------------------------------------------------------------------------------------------------------
@@ -626,6 +636,7 @@ void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out
 //                dt           : Full-step time interval
 //                dh           : Cell size
 //                MinDens      : Minimum allowed density
+//                FreezeHydro  : Freeze hydrodynamic fluxes
 //
 // Return      :  g_PriVar_Out[]
 //-------------------------------------------------------------------------------------------------------
@@ -856,6 +867,7 @@ void MHD_ComputeElectric_Half(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
 //                dh          : Cell size
 //                idx_{i,j,k} : Indices for accessing g_EC_Ele[]
 //                NEle        : Stride for accessing g_EC_Ele[]
+//		  FreezeHydro : Freeze hydrodynamic fluxes
 //
 // Return      :  fc[][NCOMP_LR]
 //------------------------------------------------------------------------------------------------------

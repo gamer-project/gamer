@@ -57,11 +57,12 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                           const bool DumpIntEle, real g_IntEle[][NCOMP_ELE][ PS2P1*PS2 ],
                           const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[], const double Time,
                           const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
-                          const double ExtAcc_AuxArray[] );
+                          const double ExtAcc_AuxArray[], const bool FreezeHydro );
 void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out,
                          const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                          const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
-                         const real dt, const real dh, const int NOut, const int NEle, const int Offset_B_In );
+                         const real dt, const real dh, const int NOut, const int NEle,
+			 const int Offset_B_In, const bool FreezeHydro );
 void MHD_HalfStepPrimitive( const real g_Flu_In[][ CUBE(FLU_NXT) ],
                             const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                   real g_PriVar_Out[][ CUBE(FLU_NXT) ],
@@ -182,7 +183,7 @@ void CUFLU_FluidSolver_CTU(
    const bool NormPassive, const int NNorm,
    const bool FracPassive, const int NFrac,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_t EoS, bool FreezeHydro )
+   const EoS_t EoS, const bool FreezeHydro )
 #else
 void CPU_FluidSolver_CTU(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
@@ -212,7 +213,7 @@ void CPU_FluidSolver_CTU(
    const bool NormPassive, const int NNorm, const int c_NormIdx[],
    const bool FracPassive, const int NFrac, const int c_FracIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_t EoS, bool FreezeHydro )
+   const EoS_t EoS, const bool FreezeHydro )
 #endif // #ifdef __CUDACC__ ... else ...
 {
 
@@ -282,10 +283,11 @@ void CPU_FluidSolver_CTU(
          MHD_ComputeElectric( g_EC_Ele_1PG, g_FC_Flux_1PG, g_PriVar_1PG, N_HF_ELE, N_HF_FLUX,
                               FLU_NXT, LR_GHOST_SIZE, dt, dh, StoreElectric_No, NULL,
                               CorrHalfVel_No, NULL, NULL, NULL_REAL,
-                              EXT_POT_NONE, EXT_ACC_NONE, NULL, NULL );
+                              EXT_POT_NONE, EXT_ACC_NONE, NULL, NULL, FreezeHydro );
 
          MHD_UpdateMagnetic( g_FC_Mag_Half_1PG[0], g_FC_Mag_Half_1PG[1], g_FC_Mag_Half_1PG[2],
-                             g_Mag_Array_In[P], g_EC_Ele_1PG, (real)0.5*dt, dh, N_HF_VAR, N_HF_ELE, FLU_GHOST_SIZE-1 );
+                             g_Mag_Array_In[P], g_EC_Ele_1PG, (real)0.5*dt, dh, N_HF_VAR, N_HF_ELE,
+			     FLU_GHOST_SIZE-1, FreezeHydro );
 #        endif
 
 
@@ -325,10 +327,11 @@ void CPU_FluidSolver_CTU(
          MHD_ComputeElectric( g_EC_Ele_1PG, g_FC_Flux_1PG, g_PriVar_Half_1PG, N_FL_ELE, N_FL_FLUX,
                               N_HF_VAR, 0, dt, dh, StoreElectric, g_Ele_Array[P],
                               CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P], Time,
-                              UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray );
+                              UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray, FreezeHydro );
 
          MHD_UpdateMagnetic( g_Mag_Array_Out[P][0], g_Mag_Array_Out[P][1], g_Mag_Array_Out[P][2],
-                             g_Mag_Array_In[P], g_EC_Ele_1PG, dt, dh, PS2, N_FL_ELE, FLU_GHOST_SIZE );
+                             g_Mag_Array_In[P], g_EC_Ele_1PG, dt, dh, PS2, N_FL_ELE, FLU_GHOST_SIZE,
+			     FreezeHydro );
 #        endif
 
 
