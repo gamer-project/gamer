@@ -385,7 +385,7 @@ void InterpolationContext::ReadBinaryFile( const char* filename, double* array, 
    FILE* file = fopen( filename, "rb" );
    if ( file == NULL ) {
       Aux_Error( ERROR_INFO, "Error opening interpolation file %s !!\n"
-                 "        --> See https://github.com/gamer-project/gamer/wiki/ELBDM-Spectral-Interpolation#obtaining-interpolation-tables\n",
+                 "        --> See https://github.com/gamer-project/gamer/wiki/%5BELBDM%5D-Spectral-Interpolation#obtaining-interpolation-tables\n",
                  filename );
       return;
    }

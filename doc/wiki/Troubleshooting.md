@@ -10,7 +10,7 @@ This page covers the following topics:
    ```
    ERROR : CUDA ERROR : out of memory !!
    ```
-   * **Solution**: Reduce [[GPU_NSTREAM | Runtime-Parameters:-GPU#GPU_NSTREAM]] until the issue is resolved.
+   * **Solution**: Reduce [[GPU_NSTREAM | [Runtime-Parameters]-GPU#GPU_NSTREAM]] until the issue is resolved.
 * * *
 
 * #### Instability with MHD
