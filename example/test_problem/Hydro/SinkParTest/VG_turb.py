@@ -117,7 +117,7 @@ x = linspace(-1,1,grid)
 y = linspace(-1,1,grid)
 z = linspace(-1,1,grid)
 
-f=open("v_field.dat","w")
+f=open("Tur_Table.dat","w")
 
 for ii in range(0,grid):
 	for jj in range(0,grid):
