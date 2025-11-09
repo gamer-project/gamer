@@ -355,6 +355,12 @@
 #     else
 #     define FLU_BLOCK_SIZE_X       512      // not optimized yet
 #     endif
+#  elif ( GPU_ARCH == BLACKWELL )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
+#     endif
 #  else
 #     define FLU_BLOCK_SIZE_X       NULL_INT
 #     ifdef GPU
@@ -415,6 +421,12 @@
 #     define FLU_BLOCK_SIZE_X       512      // not optimized yet
 #     endif
 #  elif ( GPU_ARCH == HOPPER )
+#     ifdef FLOAT8
+#     define FLU_BLOCK_SIZE_X       256
+#     else
+#     define FLU_BLOCK_SIZE_X       512      // not optimized yet
+#     endif
+#  elif ( GPU_ARCH == BLACKWELL )
 #     ifdef FLOAT8
 #     define FLU_BLOCK_SIZE_X       256
 #     else
@@ -502,6 +514,13 @@
 #        define FLU_BLOCK_SIZE_Y    32    // not optimized yet
 #     endif
 
+#  elif ( GPU_ARCH == BLACKWELL )
+#     ifdef FLOAT8
+#        define FLU_BLOCK_SIZE_Y    16    // not optimized yet
+#     else
+#        define FLU_BLOCK_SIZE_Y    32    // not optimized yet
+#     endif
+
 #  else
 #        define FLU_BLOCK_SIZE_Y    NULL_INT
 #        ifdef GPU
@@ -577,7 +596,8 @@ using complex_type = typename FFT::value_type;
 
 // use shuffle reduction in the KEPLER and later GPUs
 #  if ( GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL        ||  GPU_ARCH == VOLTA  ||  \
-        GPU_ARCH == TURING  ||  GPU_ARCH == AMPERE   ||  GPU_ARCH == ADA_LOVELACE  ||  GPU_ARCH == HOPPER )
+        GPU_ARCH == TURING  ||  GPU_ARCH == AMPERE   ||  GPU_ARCH == ADA_LOVELACE  ||  GPU_ARCH == HOPPER ||  \
+        GPU_ARCH == BLACKWELL )
 #     define DT_FLU_USE_SHUFFLE
 #  endif
 
@@ -593,7 +613,7 @@ using complex_type = typename FFT::value_type;
 //     for information on warp size
 #ifdef __CUDACC__
 #if ( GPU_ARCH == FERMI   ||  GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL       ||  GPU_ARCH == PASCAL  ||  GPU_ARCH == VOLTA  ||  \
-      GPU_ARCH == TURING  ||  GPU_ARCH == AMPERE  ||  GPU_ARCH == ADA_LOVELACE  ||  GPU_ARCH == HOPPER )
+      GPU_ARCH == TURING  ||  GPU_ARCH == AMPERE  ||  GPU_ARCH == ADA_LOVELACE  ||  GPU_ARCH == HOPPER  ||  GPU_ARCH == BLACKWELL )
 // CUPOT.h will define WARP_SIZE as well
 #  ifndef WARP_SIZE
 #  define WARP_SIZE 32

@@ -417,6 +417,8 @@ void Aux_TakeNote()
       fprintf( Note, "GPU_ARCH                        ADA_LOVELACE\n" );
 #     elif ( GPU_ARCH == HOPPER )
       fprintf( Note, "GPU_ARCH                        HOPPER\n" );
+#     elif ( GPU_ARCH == BLACKWELL )
+      fprintf( Note, "GPU_ARCH                        BLACKWELL\n" );
 #     else
       fprintf( Note, "GPU_ARCH                        UNKNOWN\n" );
 #     endif
