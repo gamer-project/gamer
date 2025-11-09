@@ -101,7 +101,7 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
    real GasDensFreeFall; // gas density for a given free-fall time 
 
    real ControlPosX, ControlPosY, ControlPosZ; // position of the cells inside the control volume
-   real Cell2Cell; // distance to the center cell in the control volume
+   // real Cell2Cell; // distance to the center cell in the control volume
 
    real NeighborFluid[FLU_NIN]; // used in Converging flow Check
    real VelNeighbor[6]; // record the neighboring cell velocity [x+, x-, y+, y+, z+, z-]
@@ -358,7 +358,7 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
             if ( Par2CellVel[1]/NorPar2Cell[1] >= 0 )                       continue;
             if ( Par2CellVel[2]/NorPar2Cell[2] >= 0 )                       continue; // the gas is moving away from the existing particle
 
-            GasDensFreeFall = SQR((1/Coeff_FreeFall)*(NorPar2Cell[0]*Par2CellVel[0] + NorPar2Cell[1]*Par2CellVel[1] + NorPar2Cell[2]*Par2CellVel[2])/Par2CellDist); // Clarke et al. 2017, eqn (5)
+            GasDensFreeFall = SQR((1/Coeff_FreeFall)*(NorPar2Cell[0]*Par2CellVel[0] + NorPar2Cell[1]*Par2CellVel[1] + NorPar2Cell[2]*Par2CellVel[2])); // Clarke et al. 2017, eqn (5)
             if ( GasDens < GasDensFreeFall )
             {
                NotPassDen = true;
@@ -379,12 +379,6 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
          for (int vj=pj-AccCellNum; vj<=pj+AccCellNum; vj++)
          for (int vi=pi-AccCellNum; vi<=pi+AccCellNum; vi++) // loop the nearby cells, to find the cells inside the control volumne (v)
          {
-            // ControlPosX = Corner_Array_F[0] + vi*dh;
-            // ControlPosY = Corner_Array_F[1] + vj*dh;
-            // ControlPosZ = Corner_Array_F[2] + vk*dh;
-
-            // Cell2Cell = SQRT(SQR(ControlPosX - PosX)+SQR(ControlPosY - PosY)+SQR(ControlPosZ - PosZ)); // distance to the center cell
-            // if ( Cell2Cell > AccRadius )                 continue; // check whether it is inside the control volume
             if ( SQRT(SQR(vi - pi)+SQR(vj - pj)+SQR(vk - pk)) > AccCellNum )           continue; // check whether it is inside the control volume
 
             const int vt = IDX321( vi, vj, vk, Size_Flu, Size_Flu );
@@ -434,16 +428,11 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
          for (int vj=pj-AccCellNum; vj<=pj+AccCellNum; vj++)
          for (int vi=pi-AccCellNum; vi<=pi+AccCellNum; vi++) // loop the nearby cells, to find the cells inside the control volumne (v)
          {
-            // ControlPosX = Corner_Array_F[0] + vi*dh;
-            // ControlPosY = Corner_Array_F[1] + vj*dh;
-            // ControlPosZ = Corner_Array_F[2] + vk*dh;
-
-            // Cell2Cell = SQRT(SQR(ControlPosX - PosX)+SQR(ControlPosY - PosY)+SQR(ControlPosZ - PosZ)); // distance to the center cell
-            // if ( Cell2Cell > AccRadius )                 continue; // check whether it is inside the control volume
             if ( SQRT(SQR(vi - pi)+SQR(vj - pj)+SQR(vk - pk)) > AccCellNum )           continue; // check whether it is inside the control volume
 
             const int vt = IDX321( vi, vj, vk, Size_Flu, Size_Flu );
             for (int v=0; v<FLU_NIN; v++)    ControlFluid[v] = Flu_Array_F_In[v][vt];
+
             MassVel[0] += ControlFluid[MOMX]*dv;
             MassVel[1] += ControlFluid[MOMY]*dv;
             MassVel[2] += ControlFluid[MOMZ]*dv;
@@ -460,31 +449,18 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
          for (int vj=pj-AccCellNum; vj<=pj+AccCellNum; vj++)
          for (int vi=pi-AccCellNum; vi<=pi+AccCellNum; vi++) // loop the nearby cells, to find the cells inside the control volumne (v)
          {
-            // ControlPosX = Corner_Array_F[0] + vi*dh;
-            // ControlPosY = Corner_Array_F[1] + vj*dh;
-            // ControlPosZ = Corner_Array_F[2] + vk*dh;
-
-            // Cell2Cell = SQRT(SQR(ControlPosX - PosX)+SQR(ControlPosY - PosY)+SQR(ControlPosZ - PosZ)); // distance to the center cell
-            // if ( Cell2Cell > AccRadius )                 continue; // check whether it is inside the control volume
             if ( SQRT(SQR(vi - pi)+SQR(vj - pj)+SQR(vk - pk)) > AccCellNum )           continue; // check whether it is inside the control volume
 
             const int vt = IDX321( vi, vj, vk, Size_Flu, Size_Flu );
             for (int v=0; v<FLU_NIN; v++)    ControlFluid[v] = Flu_Array_F_In[v][vt];
 
-//          Storing Egtot
-            // real ControlPosXj, ControlPosYj, ControlPosZj;
+            // Storing Egtot
             real SelfPhiijk = (real)0.0; // self-potential
             for (int vkj=pk-AccCellNum; vkj<=pk+AccCellNum; vkj++)
             for (int vjj=pj-AccCellNum; vjj<=pj+AccCellNum; vjj++)
             for (int vij=pi-AccCellNum; vij<=pi+AccCellNum; vij++) // loop the nearby cells, to find the cells inside the control volumne (v)
             {
-               // real Cell2Cellj = SQRT(SQR(ControlPosXj - PosX)+SQR(ControlPosYj - PosY)+SQR(ControlPosZj - PosZ)); // distance to the center cell
-               // if ( Cell2Cellj > AccRadius )                 continue; // check whether it is inside the control volume
                if ( SQRT(SQR(vij - pi)+SQR(vjj - pj)+SQR(vkj - pk)) > AccCellNum )           continue; // check whether it is inside the control volume
-
-               // ControlPosXj = Corner_Array_F[0] + vij*dh;
-               // ControlPosYj = Corner_Array_F[1] + vjj*dh;
-               // ControlPosZj = Corner_Array_F[2] + vkj*dh;
 
                int rijPix = SQRT(SQR(vi - vij)+SQR(vj - vjj)+SQR(vk - vkj));
                if ( rijPix == 0 )                        continue;
@@ -529,10 +505,9 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
 
 //       Store the information of new star particles
 //       ===========================================================================================================
-#        ifdef GAMER_DEBUG
          if ( NNewPar >= MaxNewPar )
             Aux_Error( ERROR_INFO, "NNewPar (%d) >= MaxNewPar (%d) !! Please try a larger MaxNewPar.\n", NNewPar, MaxNewPar );
-#        endif
+
 #        pragma omp critical
          {
             NewParAttFlt[NNewPar][PAR_MASS]  = (GasDens - GasDensThres)*dv;
