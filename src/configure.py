@@ -948,7 +948,7 @@ def set_gpu( gpus, flags, args ):
             gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=128"
         else:
             gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=70"
-    elif 500 <= compute_capability and compute_capability <= 900:
+    elif 500 <= compute_capability and compute_capability <= 1200:
         if args["double"]:
             gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=192"
         else:
