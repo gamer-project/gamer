@@ -375,8 +375,8 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
          {
 
             stress_N  = -mu * ( 2.0*N_slope_N - two_thirds*divV );
-            stress_T1 = -mu * ( T1_slope_N );
-            stress_T2 = -mu * ( T2_slope_N );
+            stress_T1 = -mu * ( T1_slope_N + N_slope_T1 );
+            stress_T2 = -mu * ( T2_slope_N + N_slope_T2 );
 
          }
          else if ( MicroPhy->ViscFluxType == ANISOTROPIC_VISCOSITY )
