@@ -107,6 +107,12 @@
 #     else
 #        define POT_BLOCK_SIZE_Z      4      // not optimized yet
 #     endif
+#  elif ( GPU_ARCH == BLACKWELL )
+#     ifdef FLOAT8
+#        define POT_BLOCK_SIZE_Z      2      // not optimized yet
+#     else
+#        define POT_BLOCK_SIZE_Z      4      // not optimized yet
+#     endif
 #  else
 #        define POT_BLOCK_SIZE_Z      NULL_INT
 #     ifdef GPU
@@ -128,7 +134,8 @@
 // --> although strictly speaking the shuffle functions do NOT work for double precision, but experiments
 //     show that residual_sum += (float)residual, where residual_sum is double, gives acceptable accuracy
 #  if ( GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL        ||  GPU_ARCH == VOLTA  ||  \
-        GPU_ARCH == TURING  ||  GPU_ARCH == AMPERE   ||  GPU_ARCH == ADA_LOVELACE  ||  GPU_ARCH == HOPPER )
+        GPU_ARCH == TURING  ||  GPU_ARCH == AMPERE   ||  GPU_ARCH == ADA_LOVELACE  ||  GPU_ARCH == HOPPER ||  \
+        GPU_ARCH == BLACKWELL )
 #     define SOR_USE_SHUFFLE
 #  endif
 
@@ -185,7 +192,8 @@
 
 // use shuffle reduction in the KEPLER and later GPUs
 #if ( GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL  ||  GPU_ARCH == PASCAL        ||  GPU_ARCH == VOLTA  ||  \
-      GPU_ARCH == TURING  ||  GPU_ARCH == AMPERE   ||  GPU_ARCH == ADA_LOVELACE  ||  GPU_ARCH == HOPPER )
+      GPU_ARCH == TURING  ||  GPU_ARCH == AMPERE   ||  GPU_ARCH == ADA_LOVELACE  ||  GPU_ARCH == HOPPER ||  \
+      GPU_ARCH == BLACKWELL )
 #   define DT_GRA_USE_SHUFFLE
 #endif
 
@@ -195,7 +203,7 @@
 //     for information on warp size
 #ifdef __CUDACC__
 #if ( GPU_ARCH == FERMI   ||  GPU_ARCH == KEPLER  ||  GPU_ARCH == MAXWELL       ||  GPU_ARCH == PASCAL  ||  GPU_ARCH == VOLTA  ||  \
-      GPU_ARCH == TURING  ||  GPU_ARCH == AMPERE  ||  GPU_ARCH == ADA_LOVELACE  ||  GPU_ARCH == HOPPER )
+      GPU_ARCH == TURING  ||  GPU_ARCH == AMPERE  ||  GPU_ARCH == ADA_LOVELACE  ||  GPU_ARCH == HOPPER  ||  GPU_ARCH == BLACKWELL )
 // CUFLU.h will define WARP_SIZE as well
 #  ifndef WARP_SIZE
 #  define WARP_SIZE 32
