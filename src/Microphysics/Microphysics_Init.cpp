@@ -46,7 +46,7 @@ void Microphysics_Init()
    MicroPhy.CondSatWhistler = CONDUCTION_SAT_WHISTLER;
    MicroPhy.CondMue = CONDUCTION_MUE;
    if ( OPT__UNIT )
-      MicroPhy.CondSpecificHeat = Const_kB / ( MOLECULAR_WEIGHT * MU_NORM ) * (UNIT_M/UNIT_E);
+      MicroPhy.CondSpecificHeat = (real)( Const_kB / ( MOLECULAR_WEIGHT * MU_NORM ) * ( UNIT_M/UNIT_E ) );
    else
       MicroPhy.CondSpecificHeat = (real)1.0/MOLECULAR_WEIGHT;
    MicroPhy.CondPresConv = MicroPhy.CondSpecificHeat;
@@ -56,18 +56,17 @@ void Microphysics_Init()
    {
       // This calculates the prefactor for the electron MFP
       // Note that this assumes CGS units for the electron charge
-      MicroPhy.CondMFPConst = (real)0.7329037678543799 * Const_kB * Const_kB / ( UNIT_E * UNIT_E );
-      MicroPhy.CondMFPConst /= POW( Const_e / SQRT( UNIT_E*UNIT_L ), (real)4.0 ) * MicroPhy.CondCoulombLog;
-      MicroPhy.CondMFPConst *= CONDUCTION_MUE * Const_amu / UNIT_M;
+      MicroPhy.CondMFPConst = (real)( 0.7329037678543799 * Const_kB * Const_kB / ( UNIT_E * UNIT_E ) );
+      MicroPhy.CondMFPConst /= (real)POW( Const_e / SQRT( UNIT_E*UNIT_L ), 4.0 ) * MicroPhy.CondCoulombLog;
+      MicroPhy.CondMFPConst *= CONDUCTION_MUE * (real)( Const_amu / UNIT_M );
    }
 
    if ( MicroPhy.CondType == CONSTANT_CONDUCTION )
    {
       // This coefficient is in CGS (erg/s/cm/K), and we must convert it to code
       // units per K. To avoid precision errors, we do this one step at a time.
-      MicroPhy.CondConstCoeff /= UNIT_E;
-      MicroPhy.CondConstCoeff *= UNIT_L;
-      MicroPhy.CondConstCoeff *= UNIT_T;
+      MicroPhy.CondConstCoeff *= (real)( UNIT_T*UNIT_L/UNIT_E );
+
    }
    else if ( MicroPhy.CondType == SPITZER_CONDUCTION )
    {
@@ -77,9 +76,7 @@ void Microphysics_Init()
       // errors, we do this one step at a time. Still need to correct for differences
       // in mean molecular weight
       MicroPhy.CondPrefactor = (real)5818590894709.818/MicroPhy.CondCoulombLog;
-      MicroPhy.CondPrefactor /= UNIT_E;
-      MicroPhy.CondPrefactor *= UNIT_L;
-      MicroPhy.CondPrefactor *= UNIT_T;
+      MicroPhy.CondPrefactor *= (real)( UNIT_T*UNIT_L/UNIT_E );
       MicroPhy.CondPrefactor *= MicroPhy.CondSpitzerFraction;
    }
    else
@@ -106,14 +103,10 @@ void Microphysics_Init()
       // precision errors, we do this one step at a time.
       if ( MicroPhy.ViscCoeffType == VISCOSITY_KINETIC_COEFF ) {
          // This coefficient is in units of cm^2/s
-         MicroPhy.ViscConstCoeff /= UNIT_L;
-         MicroPhy.ViscConstCoeff /= UNIT_L;
-         MicroPhy.ViscConstCoeff *= UNIT_T;
+         MicroPhy.ViscConstCoeff *= (real)( UNIT_T/UNIT_L/UNIT_L );
       } else if ( MicroPhy.ViscCoeffType == VISCOSITY_DYNAMIC_COEFF ) {
          // This coefficient is in units of g/cm/s
-         MicroPhy.ViscConstCoeff /= UNIT_M;
-         MicroPhy.ViscConstCoeff *= UNIT_L;
-         MicroPhy.ViscConstCoeff *= UNIT_T;
+         MicroPhy.ViscConstCoeff *= (real)( UNIT_T*UNIT_L/UNIT_M );
       }
    }
    else if ( MicroPhy.ViscType == SPITZER_VISCOSITY )
@@ -124,9 +117,7 @@ void Microphysics_Init()
       // we do this one step at a time. Still need to correct for differences in mean
       // molecular weight
       MicroPhy.ViscPrefactor = (real)695.7010852370435/MicroPhy.ViscCoulombLog;
-      MicroPhy.ViscPrefactor /= UNIT_M;
-      MicroPhy.ViscPrefactor *= UNIT_L;
-      MicroPhy.ViscPrefactor *= UNIT_T;
+      MicroPhy.ViscPrefactor *= (real)( UNIT_T*UNIT_L/UNIT_M );
       MicroPhy.ViscPrefactor *= MicroPhy.ViscSpitzerFraction;
    }
    else
