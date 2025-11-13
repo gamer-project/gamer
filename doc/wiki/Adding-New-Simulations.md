@@ -244,7 +244,7 @@ and get the field index. For example,
     void AddNewField_NewProblem()
     {
        if ( NewFieldIdx == Idx_Undefined )
-          NewFieldIdx = AddField( "NewFieldLabel", NORMALIZE_YES, INTERP_FRAC_YES );
+          NewFieldIdx = AddField( "NewFieldLabel", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
     }
     ```
 
@@ -253,12 +253,23 @@ in the output files, and the field index `NewFieldIdx` can be used to
 access the field data (see the next step). The check `if ( NewFieldIdx == Idx_Undefined )`
 is just to avoid redundant assignments to the same field index variable.
 
-    The second parameter should be set to either `NORMALIZE_YES` or `NORMALIZE_NO`.
+    The second parameter should be set to either `FIXUP_FLUX_YES` or `FIXUP_FLUX_NO`.
+It controls whether the new field will be corrected by the fluxes across the coarse-fine boundaries
+when enabling [[ OPT__FIXUP_FLUX | Runtime-Parameters:-Hydro#OPT__FIXUP_FLUX ]].
+
+    The third parameter should be set to either `FIXUP_REST_YES` or `FIXUP_REST_NO`.
+It controls whether the new field will be corrected by the volume-weighted average of the fine-grid data
+when enabling [[ OPT__FIXUP_RESTRICT | Runtime-Parameters:-Hydro#OPT__FIXUP_RESTRICT ]].
+
+    The fourth parameter should be set to either `FLOOR_YES` or `FLOOR_NO`.
+It controls whether the new field will be floored to `TINY_NUMBER` to ensure positivity.
+
+    The fifth parameter should be set to either `NORMALIZE_YES` or `NORMALIZE_NO`.
 It controls whether the new field will be renormalized by the total gas density
 after every update when enabling
 [[ OPT__NORMALIZE_PASSIVE | Runtime-Parameters:-Hydro#OPT__NORMALIZE_PASSIVE ]].
 
-    The third parameter should be set to either `INTERP_FRAC_YES` or `INTERP_FRAC_NO`.
+    The sixth parameter should be set to either `INTERP_FRAC_YES` or `INTERP_FRAC_NO`.
 It controls whether the new field will be converted to mass fraction during interpolation
 when enabling
 [[ OPT__INT_FRAC_PASSIVE_LR | Runtime-Parameters:-Hydro#OPT__INT_FRAC_PASSIVE_LR ]].
