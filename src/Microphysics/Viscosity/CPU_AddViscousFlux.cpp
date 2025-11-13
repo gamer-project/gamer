@@ -51,7 +51,7 @@ real van_leer2( const real a, const real b, const real c, const real d );
 GPU_DEVICE
 void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                            const real g_PriVar[][ CUBE(FLU_NXT) ],
-                           const real Temp[],
+                           const real Temp[ CUBE(FLU_NXT) ],
                                  real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                            const int N_Var, const int N_Ghost, const int N_Flux, const int NSkip_N,
@@ -379,7 +379,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
             stress_T2 = -mu * ( T2_slope_N + N_slope_T2 );
 
          }
-         else if ( MicroPhy->ViscFluxType == ANISOTROPIC_VISCOSITY )
+         else // ANISOTROPIC_VISCOSITY
          {
 
 #           ifdef MHD
@@ -395,11 +395,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
             stress_T2 = -delta_p*B_T2_mean*B_N_mean;
 #           endif
 	    
-         }
-         else
-         {
-            // TODO: some error message?
-         }
+         } // if ( MicroPhy->ViscFluxType == ISOTROPIC_VISCOSITY ) ... else ...
 
 //       5. initialize flux if need
          if ( initialize )

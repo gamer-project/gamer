@@ -130,7 +130,7 @@ void Hydro_AddConductiveFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
       CGPU_LOOP( idx, flux_size_i*flux_size_j*flux_size_k )
       {
-//       1. calcualte indices
+//       1. calculate indices
 //       flux index
 //       --------------------
 //       |        |         |
@@ -257,19 +257,15 @@ void Hydro_AddConductiveFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
             T2_slope = ( Temp[ idx_cvar + didx_cvar[TDir2] ] -
                          Temp[ idx_cvar                    ] ) * _dh;
          }
-         else
-         {
-            // TODO: Add error message here?
          } // if ( MicroPhy->CondFluxType == ANISOTROPIC_CONDUCTION ) ... else if ... else ...
 
 //       3. compute conductive flux
          real gradient, gradT, Total_Flux;
 #        ifdef MHD
-         if      ( MicroPhy->CondFluxType ==   ISOTROPIC_CONDUCTION )
+         if ( MicroPhy->CondFluxType ==   ISOTROPIC_CONDUCTION )
             gradient = -N_slope;
-         else if ( MicroPhy->CondFluxType == ANISOTROPIC_CONDUCTION )
+         else // ANISOTROPIC_CONDUCTION
             gradient = -B_N_mean*( B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope );
-         // TODO: Add error message for else condition here?
 #        else
          gradient = -N_slope;
 #        endif

@@ -46,11 +46,10 @@ struct MicroPhy_t
    real CondSpitzerFraction;
    real CondPrefactor;
    real CondCoulombLog;
-   real CondDiffuseFactor;
    real CondMFPConst;
+   real CondMue;
    real CondSpecificHeat;
    real CondPresConv;
-   real CondMue;
 #  endif // #ifdef CONDUCTION
 
 #  ifdef VISCOSITY
