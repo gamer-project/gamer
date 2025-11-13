@@ -836,7 +836,7 @@ def load_arguments( sys_setting : SystemSetting ):
                          help="Enable GPU. Must set <GPU_COMPUTE_CAPABILITY> in your machine *.config file as well.\n"
                        )
 
-    parser.add_argument( "--gpu_regcount", type=int, metavar="INTEGER",
+    parser.add_argument( "--gpu_regcount_flu", type=int, metavar="INTEGER",
                          default=None,
                          depend={"gpu":True},
                          help="Set the maximum amount of registers that GPU functions can use.\n"
@@ -949,8 +949,8 @@ def set_gpu( gpus, flags, args ):
     gpu_opts["NVCCFLAG_ARCH"] = '-gencode arch=compute_%d,code=\\"compute_%d,sm_%d\\"'%(flag_num, flag_num, flag_num)
 
     # 3. Set MAXRREGCOUNT_FLU
-    if args["gpu_regcount"] is not None:
-        gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=%d"%(args["gpu_regcount"])
+    if args["gpu_regcount_flu"] is not None:
+        gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=%d"%(args["gpu_regcount_flu"])
     else:
         if 300 <= compute_capability and compute_capability <= 370:
             if args["double"]:
@@ -1104,8 +1104,8 @@ def validation( paths, depends, constraints, **kwargs ):
         success = False
 
     # C. parallelization and flags
-    if kwargs["gpu"] and kwargs["gpu_regcount"] is not None and kwargs["gpu_regcount"] <= 0:
-        LOGGER.error("<--gpu_regcount> must be a positive integer. Current: %d"%kwargs["gpu_regcount"])
+    if kwargs["gpu"] and kwargs["gpu_regcount_flu"] is not None and kwargs["gpu_regcount_flu"] <= 0:
+        LOGGER.error("<--gpu_regcount_flu> must be a positive integer. Current: %d"%kwargs["gpu_regcount_flu"])
         success = False
 
     if not success: raise BaseException( "The above vaildation failed." )
