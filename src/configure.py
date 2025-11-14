@@ -1104,9 +1104,10 @@ def validation( paths, depends, constraints, **kwargs ):
         success = False
 
     # C. parallelization and flags
-    if kwargs["gpu"] and kwargs["gpu_regcount_flu"] is not None and kwargs["gpu_regcount_flu"] <= 0:
-        LOGGER.error("<--gpu_regcount_flu> must be a positive integer. Current: %d"%kwargs["gpu_regcount_flu"])
-        success = False
+    if kwargs["gpu"]:
+        if kwargs["gpu_regcount_flu"] is not None and kwargs["gpu_regcount_flu"] <= 0:
+            LOGGER.error("<--gpu_regcount_flu> must be a positive integer. Current: %d"%kwargs["gpu_regcount_flu"])
+            success = False
 
     if not success: raise BaseException( "The above vaildation failed." )
     return
