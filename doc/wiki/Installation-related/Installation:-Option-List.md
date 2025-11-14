@@ -115,7 +115,7 @@ disabled). See the "Restriction" of each option carefully.
 | `--mpi`              | `true`, `false` | `false` | `true`: Enable load balancing using a space-filling curve (see [[MPI and OpenMP]]); `false`: Run GAMER in a serial mode, but OpenMP is still supported | May need to set `MPI_PATH` in [[configuration file \| Installation:-Machine-Configuration-File#1-Library-paths]] | <a name="--mpi"></a> `LOAD_BALANCE=HILBERT`, <a name="SERIAL"></a> `SERIAL` |
 | `--overlap_mpi`      | `true`, `false` | `false` | Overlap MPI communication with computation. | Not supported yet!!! Must enable `--mpi`. | <a name="--overlap_mpi"></a> `OVERLAP_MPI` |
 | `--gpu`              | `true`, `false` | `false` | Enable GPU acceleration | Must specify `GPU_COMPUTE_CAPABILITY` and may need to set `CUDA_PATH` in [[configuration file \| Installation:-Machine-Configuration-File#1-Library-paths]] | <a name="--gpu"></a> `GPU` |
-| `--gpu_regcount_flu` | &gt; 0          | Depend  | Set the maximum amount of registers that GPU functions can use. | Must be a positive integer. | <a name="--gpu_regcount_flu"></a> |
+| `--gpu_regcount_flu` | &gt; 0          | Depend  | Set the maximum amount of registers that GPU fluid solvers can use. | Must be a positive integer. | <a name="--gpu_regcount_flu"></a> |
 
 
 ## Miscellaneous Options

@@ -839,7 +839,7 @@ def load_arguments( sys_setting : SystemSetting ):
     parser.add_argument( "--gpu_regcount_flu", type=int, metavar="INTEGER",
                          default=None,
                          depend={"gpu":True},
-                         help="Set the maximum amount of registers that GPU functions can use.\n"
+                         help="Set the maximum amount of registers that GPU fluid solvers can use.\n"
                        )
 
     args, name_table, depends, constraints, prefix_table, suffix_table = parser.parse_args()
@@ -855,7 +855,7 @@ def load_arguments( sys_setting : SystemSetting ):
         parser.print_autocomplete( args["autocomplete_info"] )
         exit()
 
-    # 2. Conditional default arguments.
+    # 3. Conditional default arguments.
     args = set_conditional_defaults( args )
     return args, name_table, depends, constraints, prefix_table, suffix_table
 
