@@ -1087,6 +1087,9 @@ def validation( paths, depends, constraints, **kwargs ):
         if kwargs["par_attribute_int"] < 0:
             LOGGER.error("Number of particle integer attributes should not be negative. Current: %d"%kwargs["par_attribute_int"])
             success = False
+        if kwargs["store_par_acc_snapshot"] and not kwargs["store_par_acc"]:
+            LOGGER.error("<--store_par_acc> must be enabled when <--store_par_acc_snapshot> is enabled.")
+            success = False
 
     # B. Miscellaneous options
     if kwargs["nlevel"] < 1:

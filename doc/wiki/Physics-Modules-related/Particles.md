@@ -6,6 +6,7 @@ Related options:
 [[--double_par | Installation:-Option-List#--double_par]], &nbsp;
 [[--long_par | Installation:-Option-List#--long_par]], &nbsp;
 [[--store_par_acc | Installation:-Option-List#--store_par_acc]], &nbsp;
+[[--store_par_acc_snapshot | Installation:-Option-List#--store_par_acc_snapshot]], &nbsp;
 [[--star_formation | Installation:-Option-List#--star_formation]], &nbsp;
 [[--par_attribute | Installation:-Option-List#--par_attribute]] &nbsp;
 
