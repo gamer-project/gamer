@@ -520,7 +520,7 @@
 
 // number of particle attributes that we do not want to store on disk (currently time + acceleration*3)
 #  ifdef STORE_PAR_ACC_SNAPSHOT
-#   define PAR_NATT_FLT_UNSTORED  0
+#   define PAR_NATT_FLT_UNSTORED  ( 0 )
 #  else
 #   define PAR_NATT_FLT_UNSTORED  ( 1 + PAR_NATT_FLT_BUILTIN1 )
 #  endif
