@@ -692,10 +692,10 @@ void Init_NewDiskVelocity()
          NormParRadius[0] = ParRadius[0]/ ParR;
          NormParRadius[1] = ParRadius[1]/ ParR;
 
-#  ifdef STORE_PAR_ACC
+#        ifdef STORE_PAR_ACC
 //       compute radial acceleration
          V_acc = sqrt(  fabs( ParRadius[0]*ParAcc[0][p] + ParRadius[1]*ParAcc[1][p] )  );
-#  endif
+#        endif
 
 //       add velocity dispersion
          sigma   = Get_Dispersion( ParR );
