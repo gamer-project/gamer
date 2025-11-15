@@ -3,6 +3,8 @@ import sys
 
 '''
 Usage: python VG_turb.py [power law index/2] [kmin] [random seed]
+Author: S. D. Clarke
+Reference: O. Lomax et al., 2015, MNRAS, 449, 662
 '''
 
 nmodes = int(128)

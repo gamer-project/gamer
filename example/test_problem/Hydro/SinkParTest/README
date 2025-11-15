@@ -1,45 +1,35 @@
-# Sink Particle
-A new star formation criteria. 
+Compilation flags:
+========================================
+Enable : MODEL=HYDRO, EOS=EOS_USER, MHD, PARTICLE, GRAVITY, BAROTROPIC_EOS, STORE_POT_GHOST, STORE_PAR_ACC, STAR_FORMATION, FEEDBACK, PAR_NATT_INT_USER=1
 
-## Creation
-A sink particle is created only when the following checks are all passed (Federrath et al. 2010):
+Simulation setup:
+========================================
+1. Units (cgs):
+    [L] = cm
+    [M] = g
+    [T] = s
 
-1. The test cell's density is larger than the threshold controlled by `SF_CREATE_SINK_MIN_GAS_DENS`.
-2. The test cell is far away from any existing particle with a distance of two accretion radii, which is controlled by `SF_CREATE_SINK_ACC_RADIUS`.
-3. A second density threshold is checked for whether a gas cell will collapse before it reaches another particle (Clarke et al. 2017, eqn (5)).
-4. The test cell should have the minimum gravitational potential within the control volume defined by the accretion radius.
-5. The nearby six cells should converge toward the central (test) cell.
-6. The control volume is Jeans unstable with $$|E_{g, tot}| \geq 2E_{th, tot}$$.
-7. The control volume is bound with $$E_{th, tot} + E_{k, tot} + E_{mag, tot} \geq |E_{g, tot}|$$.
+2. `STAR_FORMATION` parameters:
+    `SF_CREATE_SINK_MIN_GAS_DENS`: The minimum gas density allowed to form sink particles (count/cm^3) [1.0e10]
+    `SF_CREATE_SINK_ACC_RADIUS`: The accretion radius in cells at the highest refinement level [0.5*PATCH_SIZE]
+    `SF_CREATE_SINK_MAX_NPAR_MPI`:  The maximum number of particles per MPI rank [100]
 
-Note: a check considering whether some regions inside the control volume pass the above tests simultaneously is included.
+3. `FEEDBACK` parameters:
+    `FB_ACC`: Turn on particle accretion [0]. Note that `SF_CREATE_SINK_MIN_GAS_DENS` and `SF_CREATE_SINK_ACC_RADIUS` will be used.
 
-## Accretion
-Once a sink particle is created, it can accrete gas from its surroundings in the sphere defined by `SF_CREATE_SINK_ACC_RADIUS`.
-The cells in such sphere will go through the following checks (Federrath et al. 2010):
+4. Create turbulence table
+    To generate the turbulence table (`Tur_Table.dat`, even the turbulence Mach number is set to 0), run `python VG_turb.py [power law index/2] [kmin] [random seed]`, where
+    `power law index`: It is the power law index ($\alpha$) for turbulent energy power spectrum $\propto k^{\alpha}$ and $k$ is the wave number.
+    `kmin`: It is the minimum wave number in the unit of base cell number.
+    `random seed`: A random seed in order to get different turbulence realization.
 
-1. The test cell's density is larger than the threshold controlled by `SF_CREATE_SINK_MIN_GAS_DENS`.
-2. The test cell is moving toward the central sink particle.
-3. The test cell is bound to the particle with $$|E_g| \geq E_k$$, where $$E_g$$ and $$E_k$$ are all with respect to the particle.
-4. Whether the test cell is most bound to the particle.
+    Example usage: `python VG_turb.py -2 1 0` will generate a turbulence velocity field with energy power spectrum $\propto k^{-4}$.
 
-If the above tests are all passed, then the exceeded gas mass will be accreted by the particle, and particle's velocity will be also updated to ensure momentum conservation.
+    The creation of trubulence is following O. Lomax et al., 2015, MNRAS, 449, 662.
 
-## TestProblem - SinkParTest
-A new `TestProblem` (SinkParTest) is added to test the particle creation and accretion.
-
-### New Parameters:
-`SF_CREATE_SINK_MIN_GAS_DENS`: The minimum gas density allowed to form sink particles (count/cm^3) [1.0e10]
-`SF_CREATE_SINK_ACC_RADIUS`: The accretion radius in cells at the highest refinement level [0.5*PATCH_SIZE]
-`SF_CREATE_SINK_MAX_NPAR_MPI`:  The maximum number of particles per MPI rank [100]
-`FB_ACC`: Turn on particle accretion [0]. Note that `SF_CREATE_SINK_MIN_GAS_DENS` and `SF_CREATE_SINK_ACC_RADIUS` will be used.
-
-### Before running the test
-- The test was ran on KAWAS server (ASIAA), the config file is located at `configs/kawas.config`.
-- To generate the turbulence table (`Tur_Table.dat`, even the turbulence Mach number is set to 0), run `python VG_turb.py -2 1 0`.
-- A python script (`PlotColMap.py`) can be used to plot the evolution of gas colunm density with particles overlapping on the maps.
-
-### Note
-
-1. `FB_GHOST_SIZE` = 8 is set.
-2. A custom EOS is used (`CPU_EoS_Barotropic_SinkParTest.cpp`).
+Note:
+========================================
+1. The sink particle and accretion criterias are mostly following Christoph Federrath et al., 2010, ApJ, 713, 269, with additional criteria from S. D. Clarke et al., 2017, MNRAS, 468, 2489.
+2. A custom EOS is used (`CPU_EoS_Barotropic_SinkParTest.cpp`), which descripts a barotropic EOS: $$T(\rho) = T_0 (1 + (\frac{\rho}{\rho_{ad}})^{\gamma - 1})$$, where $\rho$ is gas density, $T_0$ is the initial temperature (`ISO_TEMP`), `gamma` is the adiabatic index (`GAMMA`) and $\rho_{ad}$ is the transition density, which represents the approximate density at which the gas becomes optically thick (see Hirohiko Masunaga et al., 1998, ApJ, 495, 346, and Hirohiko Masunaga and Shu-ichiro Inutsuka, 2000, ApJ, 531, 350).
+3. A script (`PlotColMap.py`) using `yt` is provided to plot the column density projected on `ProjPlane [xy/xz]` and overplot the sink particles on the maps.
+    - Note that `tff` is the free-fall time calculated from the default parameters in `Input_TestPro`.
