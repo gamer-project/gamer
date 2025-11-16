@@ -129,9 +129,6 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
 #  pragma omp for schedule( static )
    for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
    {
-#     if ( MODEL != HYDRO )
-      const double MIN_DENS            = -1.0;  // set to an arbitrarily negative value to disable it
-#     endif
 #     ifndef MHD
       const int    OPT__MAG_INT_SCHEME = INT_NONE;
 #     endif
