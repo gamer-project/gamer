@@ -113,7 +113,7 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
 
    real   (*Flu_Array_F_In)[CUBE(Size_Flu)]                = new real [FLU_NIN][CUBE(Size_Flu)];
    real   (*Mag_Array_F_In)[Size_Flu_P1*SQR(Size_Flu)]     = new real [NCOMP_MAG][Size_Flu_P1*SQR(Size_Flu)];
-   real   (*Pot_Array_USG_F)                               = new real [CUBE(Size_Pot)];
+   real   (*Pot_Array_F)                                   = new real [CUBE(Size_Pot)];
 
    int LocalPID, delta_t, PGi, PGj, PGk;
 
@@ -152,19 +152,15 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
                         OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
                         OPT__BC_FLU, BC_POT_NONE, MinDens,    MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency );
 
-#     ifdef UNSPLIT_GRAVITY
 //    prepare the potential array
       if ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT )
-      Prepare_PatchData( lv, TimeNew, Pot_Array_USG_F, NULL,
+      Prepare_PatchData( lv, TimeNew, Pot_Array_F, NULL,
                         NGhost, NPG, &PID0, _POTE, _NONE,
                         OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
                         OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
 //    prepare the corner array
       for (int d=0; d<3; d++)    Corner_Array_F[d] = amr->patch[0][lv][PID0]->EdgeL[d] + 0.5*dh - dh*NGhost;
-
-#     endif // #ifdef UNSPLIT_GRAVITY
-
 
 //    prepare the sibling patches id for this patch group
 //    collect patch information
@@ -369,7 +365,7 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
 //       Gravitational minimum check inside the control volume:
 //       The gas cell should have the minimum gravitational potential inside the control volume
 //       ===========================================================================================================
-         real Phi000 = Pot_Array_USG_F[t]; // the potential of the current cell
+         real Phi000 = Pot_Array_F[t]; // the potential of the current cell
          real Phiijk = (real)0.0;
          bool NotMiniPot          = false;
          for (int vk=pk-AccCellNum; vk<=pk+AccCellNum; vk++)
@@ -379,7 +375,7 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
             if ( SQRT(SQR(vi - pi)+SQR(vj - pj)+SQR(vk - pk)) > AccCellNum )           continue; // check whether it is inside the control volume
 
             const int vt = IDX321( vi, vj, vk, Size_Flu, Size_Flu );
-            Phiijk = Pot_Array_USG_F[vt];
+            Phiijk = Pot_Array_F[vt];
 
             if ( Phiijk < Phi000 )
             {
@@ -538,7 +534,7 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
                   else if (NeighborID == 5) delta_t = IDX321(  0,  0, -1, Size_Flu, Size_Flu );
 
                   const int Neighbort = t + delta_t;
-                  PotNeighbor[NeighborID] = Pot_Array_USG_F[Neighbort];
+                  PotNeighbor[NeighborID] = Pot_Array_F[Neighbort];
                }
                GasAcc[0] += GraConst*(PotNeighbor[0] - PotNeighbor[1]);
                GasAcc[1] += GraConst*(PotNeighbor[2] - PotNeighbor[3]);
@@ -581,7 +577,7 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
 
    delete [] Flu_Array_F_In;
    delete [] Mag_Array_F_In;
-   delete [] Pot_Array_USG_F;
+   delete [] Pot_Array_F;
    } // end of OpenMP parallel region
 
 // Excluding the nearby particles + remove the gas from the cell
