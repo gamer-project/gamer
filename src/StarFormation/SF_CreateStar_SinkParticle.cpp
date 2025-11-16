@@ -6,8 +6,8 @@
 // Function    :  SF_CreateStar_SinkParticle
 // Description :  Create sink particles based on FALSH prescription
 //
-// Note        :  1. Ref: (1) Federrath et al. 2010
-//                        (2) Clarke et al. 2017
+// Note        :  1. Ref: (1) C. Federrath et al., 2010, ApJ, 713, 269
+//                        (2) S. D. Clarke et al., 2017, MNRAS, 468, 2489
 //                2. One must turn on STORE_POT_GHOST when adopting STORE_PAR_ACC
 //                   --> It is because, currently, this function always uses the pot_ext[] array of each patch
 //                       to calculate the gravitationally acceleration of the new star particles
