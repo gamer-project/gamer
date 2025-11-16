@@ -2693,14 +2693,17 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 
 // star formation
 #  ifdef STAR_FORMATION
-   InputPara.SF_CreateStar_Scheme       = SF_CREATE_STAR_SCHEME;
-   InputPara.SF_CreateStar_RSeed        = SF_CREATE_STAR_RSEED;
-   InputPara.SF_CreateStar_DetRandom    = SF_CREATE_STAR_DET_RANDOM;
-   InputPara.SF_CreateStar_MinLevel     = SF_CREATE_STAR_MIN_LEVEL;
-   InputPara.SF_CreateStar_MinGasDens   = SF_CREATE_STAR_MIN_GAS_DENS;
-   InputPara.SF_CreateStar_MassEff      = SF_CREATE_STAR_MASS_EFF;
-   InputPara.SF_CreateStar_MinStarMass  = SF_CREATE_STAR_MIN_STAR_MASS;
-   InputPara.SF_CreateStar_MaxStarMFrac = SF_CREATE_STAR_MAX_STAR_MFRAC;
+   InputPara.SF_CreateStar_Scheme           = SF_CREATE_STAR_SCHEME;
+   InputPara.SF_CreateStar_RSeed            = SF_CREATE_STAR_RSEED;
+   InputPara.SF_CreateStar_DetRandom        = SF_CREATE_STAR_DET_RANDOM;
+   InputPara.SF_CreateStar_MinLevel         = SF_CREATE_STAR_MIN_LEVEL;
+   InputPara.SF_CreateStar_MinGasDens       = SF_CREATE_STAR_MIN_GAS_DENS;
+   InputPara.SF_CreateStar_MassEff          = SF_CREATE_STAR_MASS_EFF;
+   InputPara.SF_CreateStar_MinStarMass      = SF_CREATE_STAR_MIN_STAR_MASS;
+   InputPara.SF_CreateStar_MaxStarMFrac     = SF_CREATE_STAR_MAX_STAR_MFRAC;
+   InputPara.SF_CreateStar_SinkMinGasDens   = SF_CREATE_SINK_MIN_GAS_DENS;
+   InputPara.SF_CreateStar_SinkAccRadius    = SF_CREATE_SINK_ACC_RADIUS;
+   InputPara.SF_CreateStar_SinkMaxNParMPI   = SF_CREATE_SINK_MAX_NPAR_MPI;
 #  endif
 
 // feedback
@@ -2708,6 +2711,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.FB_Level                = FB_LEVEL;
    InputPara.FB_RSeed                = FB_RSEED;
    InputPara.FB_SNe                  = FB_SNE;
+   InputPara.FB_Acc                  = FB_ACC;
    InputPara.FB_User                 = FB_USER;
 #  endif
 
@@ -3760,14 +3764,15 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 
 // star formation
 #  ifdef STAR_FORMATION
-   H5Tinsert( H5_TypeID, "SF_CreateStar_Scheme",       HOFFSET(InputPara_t,SF_CreateStar_Scheme       ), H5T_NATIVE_INT       );
-   H5Tinsert( H5_TypeID, "SF_CreateStar_RSeed",        HOFFSET(InputPara_t,SF_CreateStar_RSeed        ), H5T_NATIVE_INT       );
-   H5Tinsert( H5_TypeID, "SF_CreateStar_DetRandom",    HOFFSET(InputPara_t,SF_CreateStar_DetRandom    ), H5T_NATIVE_INT       );
-   H5Tinsert( H5_TypeID, "SF_CreateStar_MinLevel",     HOFFSET(InputPara_t,SF_CreateStar_MinLevel     ), H5T_NATIVE_INT       );
-   H5Tinsert( H5_TypeID, "SF_CreateStar_MinGasDens",   HOFFSET(InputPara_t,SF_CreateStar_MinGasDens   ), H5T_NATIVE_DOUBLE    );
-   H5Tinsert( H5_TypeID, "SF_CreateStar_MassEff",      HOFFSET(InputPara_t,SF_CreateStar_MassEff      ), H5T_NATIVE_DOUBLE    );
-   H5Tinsert( H5_TypeID, "SF_CreateStar_MinStarMass",  HOFFSET(InputPara_t,SF_CreateStar_MinStarMass  ), H5T_NATIVE_DOUBLE    );
-   H5Tinsert( H5_TypeID, "SF_CreateStar_MaxStarMFrac", HOFFSET(InputPara_t,SF_CreateStar_MaxStarMFrac ), H5T_NATIVE_DOUBLE    );
+   H5Tinsert( H5_TypeID, "SF_CreateStar_Scheme",       HOFFSET(InputPara_t,SF_CreateStar_Scheme               ), H5T_NATIVE_INT       );
+   H5Tinsert( H5_TypeID, "SF_CreateStar_RSeed",        HOFFSET(InputPara_t,SF_CreateStar_RSeed                ), H5T_NATIVE_INT       );
+   H5Tinsert( H5_TypeID, "SF_CreateStar_DetRandom",    HOFFSET(InputPara_t,SF_CreateStar_DetRandom            ), H5T_NATIVE_INT       );
+   H5Tinsert( H5_TypeID, "SF_CreateStar_MinLevel",     HOFFSET(InputPara_t,SF_CreateStar_MinLevel             ), H5T_NATIVE_INT       );
+   H5Tinsert( H5_TypeID, "SF_CreateStar_MinGasDens",   HOFFSET(InputPara_t,SF_CreateStar_MinGasDens           ), H5T_NATIVE_DOUBLE    );
+   H5Tinsert( H5_TypeID, "SF_CreateStar_MassEff",      HOFFSET(InputPara_t,SF_CreateStar_MassEff              ), H5T_NATIVE_DOUBLE    );
+   H5Tinsert( H5_TypeID, "SF_CreateStar_MinStarMass",  HOFFSET(InputPara_t,SF_CreateStar_MinStarMass          ), H5T_NATIVE_DOUBLE    );
+   H5Tinsert( H5_TypeID, "SF_CreateStar_MaxStarMFrac", HOFFSET(InputPara_t,SF_CreateStar_MaxStarMFrac         ), H5T_NATIVE_DOUBLE    );
+   H5Tinsert( H5_TypeID, "SF_CreateStar_SinkMinGasDens",   HOFFSET(InputPara_t,SF_CreateStar_SinkMinGasDens   ), H5T_NATIVE_DOUBLE    );
 #  endif
 
 // feedback

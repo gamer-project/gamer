@@ -273,6 +273,9 @@ double                SF_CREATE_STAR_MIN_GAS_DENS;
 double                SF_CREATE_STAR_MASS_EFF;
 double                SF_CREATE_STAR_MIN_STAR_MASS;
 double                SF_CREATE_STAR_MAX_STAR_MFRAC;
+double                SF_CREATE_SINK_MIN_GAS_DENS;
+double                SF_CREATE_SINK_ACC_RADIUS;
+int                   SF_CREATE_SINK_MAX_NPAR_MPI;
 #endif
 
 // (2-9) equation of state
@@ -333,7 +336,7 @@ char (*UserDerField_Unit )[MAX_STRING] = NULL;
 // (2-12) feedback
 #ifdef FEEDBACK
 int  FB_LEVEL, FB_RSEED;
-bool FB_SNE, FB_USER;
+bool FB_SNE, FB_ACC, FB_USER;
 bool FB_Any;
 int  FB_ParaBuf;
 #endif
