@@ -38,6 +38,9 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
 #     error : SF_CreateStar_SinkParticle() does not support COMOVING yet !!
 #  endif
 
+if ( lv != MAX_LEVEL )
+   Aux_Error( ERROR_INFO, "Sink particles should be created at MAX_LEVEL, please set SF_CREATE_STAR_MIN_LEVEL to -1.\n" );
+
 #  ifdef GAMER_DEBUG
    if ( Idx_ParCreTime == Idx_Undefined )
       Aux_Error( ERROR_INFO, "Idx_ParCreTime is undefined !!\n" );
