@@ -648,12 +648,6 @@ def load_arguments( sys_setting : SystemSetting ):
                          help="Store particle acceleration (recommended).\n"
                        )
 
-    parser.add_argument( "--store_par_acc_snapshot", type=str2bool, metavar="BOOLEAN", gamer_name="STORE_PAR_ACC_SNAPSHOT",
-                         default=False,
-                         depend={"particle":True, "store_par_acc":True},
-                         help="Store particle acceleration in snap shots (Data_******).\n"
-                       )
-
     parser.add_argument( "--star_formation", type=str2bool, metavar="BOOLEAN", gamer_name="STAR_FORMATION",
                          default=False,
                          depend={"particle":True},
@@ -1086,9 +1080,6 @@ def validation( paths, depends, constraints, **kwargs ):
             success = False
         if kwargs["par_attribute_int"] < 0:
             LOGGER.error("Number of particle integer attributes should not be negative. Current: %d"%kwargs["par_attribute_int"])
-            success = False
-        if kwargs["store_par_acc_snapshot"] and not kwargs["store_par_acc"]:
-            LOGGER.error("<--store_par_acc> must be enabled when <--store_par_acc_snapshot> is enabled.")
             success = False
 
     # B. Miscellaneous options
