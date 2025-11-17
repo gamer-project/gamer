@@ -43,6 +43,10 @@ Parameters described on this page:
 [OPT__FLAG_LOHNER_ENTR](#OPT__FLAG_LOHNER_ENTR), &nbsp;
 [OPT__FLAG_LOHNER_CRAY](#OPT__FLAG_LOHNER_CRAY), &nbsp;
 [OPT__FLAG_LOHNER_FORM](#OPT__FLAG_LOHNER_FORM), &nbsp;
+[OPT__FLAG_ENGY_DENSITY](#OPT__FLAG_ENGY_DENSITY), &nbsp;
+[OPT__FLAG_INTERFERENCE](#OPT__FLAG_INTERFERENCE), &nbsp;
+[OPT__FLAG_SPECTRAL](#OPT__FLAG_SPECTRAL), &nbsp;
+[OPT__FLAG_SPECTRAL_N](#OPT__FLAG_SPECTRAL_N), &nbsp;
 [OPT__FLAG_USER](#OPT__FLAG_USER), &nbsp;
 [OPT__FLAG_USER_NUM](#OPT__FLAG_USER_NUM), &nbsp;
 [OPT__FLAG_REGION](#OPT__FLAG_REGION), &nbsp;
@@ -342,6 +346,74 @@ for cells with gas density lower than this threshold.
       *Caution: currently all `OPT__FLAG_LOHNER_*` options share the same
 input file `Input__Flag_Lohner`.*
     * **Restriction:**
+
+<a name="OPT__FLAG_ENGY_DENSITY"></a>
+* #### `OPT__FLAG_ENGY_DENSITY` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Refinement criterion: energy density.
+Specify the refinement thresholds on different levels in the input
+file `Input__Flag_EngyDensity` with the
+[[specific format | Runtime-Parameters:-Input__Flag_*]].
+Additional column `Soften` is added to the denominator when evaluating energy density
+to prevent flagging in the extremely low density region.
+An example file can be found at `example/input/Input__Flag_EngyDensity`.
+    * **Restriction:**
+Must compile with [[--model | Installation:-Option-List#--model]]=ELBDM.
+
+<a name="OPT__FLAG_INTERFERENCE"></a>
+* #### `OPT__FLAG_INTERFERENCE` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Refinement criterion: interference.
+When this option is enabled, the code will flag if one of the following criteria's value
+is larger than the threshold (dimensionless):
+      * minimum density & quantum pressure (QP) & local extremum in density field
+      * second derivative in phase & local extremum in phase field
+
+      An example file can be found at `example/input/Input__Flag_Interference`.
+      ```
+      # Level          QP   Density   PhaseLap   OnlyAtExtrema
+      0        0.03         0        1.0               0
+      1        0.03         0        1.0               0
+      2        0.03         0        1.0               0
+      ```
+      * QP: Threshold <= 0.03 avoids spurious halos 
+      and yields good agreement with wave-only simulations
+      * Density: Threshold is defaulted to 0.0. 
+      Non-zero values can prevent refinement in low-density regions with 
+      minor oscillations but use with caution as they may cause instability.
+      * PhaseLap: Second derivative of phase field.
+      * OnlyAtExtrema: Refine only at density and phase field extrema (default: False). 
+      Can prevent refinement in regions with high quantum pressure and phase curvature 
+      without destructive interference, but use cautiously as it may cause instability.
+
+      *Caution: If `OPT__FLAG_INTERFERENCE` is off for `ELBDM_HYBRID`, 
+      the simulations will never switch to the wave scheme.*
+    * **Restriction:**
+Must compile with [[--model | Installation:-Option-List#--model]]=ELBDM and [[--ELBDM_SCHEME | Installation:-Option-List#--elbdm_scheme]]=HYBRID.
+
+<a name="OPT__FLAG_SPECTRAL"></a>
+* #### `OPT__FLAG_SPECTRAL` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Refinement criterion: spectral refinement on wave levels per patch group.
+The method checks polynomial expansion coefficients of the wave function. 
+Higher-order coefficients should decay exponentially for well-resolved regions; 
+large coefficients indicate under-resolution, triggering refinement.
+An example file can be found at `example/input/Input__Flag_Spectral`.
+Default values are 1 for all levels.
+Derefinement currently not functional.
+This function checks the polynomial coefficients of order 
+(13 - [OPT__FLAG_SPECTRAL_N](#OPT__FLAG_SPECTRAL_N) + 1) to order 13.
+    * **Restriction:**
+Must compile with [[--model | Installation:-Option-List#--model]]=ELBDM.
+
+<a name="OPT__FLAG_SPECTRAL_N"></a>
+* #### `OPT__FLAG_SPECTRAL_N` &ensp; (1 &#8804; input &#8804; 14) &ensp; [2]
+    * **Description:**
+The number of polynomial coefficients to use for spectral refinement.
+(See [OPT__FLAG_SPECTRAL](#OPT__FLAG_SPECTRAL) for details.)
+    * **Restriction:**
+Must compile with [[--model | Installation:-Option-List#--model]]=ELBDM
+and enabled [OPT__FLAG_SPECTRAL](#OPT__FLAG_SPECTRAL).
 
 <a name="OPT__FLAG_USER"></a>
 * #### `OPT__FLAG_USER` &ensp; (0=off, 1=on) &ensp; [0]

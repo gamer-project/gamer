@@ -20,6 +20,7 @@ Parameters described on this page:
 [OPT__RHO_INT_SCHEME](#OPT__RHO_INT_SCHEME), &nbsp;
 [OPT__GRA_INT_SCHEME](#OPT__GRA_INT_SCHEME), &nbsp;
 [OPT__REF_POT_INT_SCHEME](#OPT__REF_POT_INT_SCHEME), &nbsp;
+[OPT__INT_PHASE](#OPT__INT_PHASE), &nbsp;
 [INT_MONO_COEFF](#INT_MONO_COEFF), &nbsp;
 [INT_MONO_COEFF_B](#INT_MONO_COEFF_B), &nbsp;
 [MONO_MAX_ITER](#MONO_MAX_ITER), &nbsp;
@@ -41,6 +42,7 @@ Supported interpolation schemes:
 |5 | Non-conservative quadratic|
 |6 | Conservative quartic|
 |7 | Non-conservative quartic|
+|8 | Spectral |
 
 
 Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**
@@ -111,6 +113,14 @@ gravitational acceleration.
     * **Description:**
 Interpolation scheme for computing the gravitational potential on the newly refined patches.
     * **Restriction:**
+
+<a name="OPT__INT_PHASE"></a>
+* #### `OPT__INT_PHASE` &ensp; (0=off, 1=on) &ensp; [1]
+    * **Description:**
+Enable phase interpolation (does not support MinMod-1D).
+The interpolation scheme follows `OPT__REF_FLU_INT_SCHEME`.
+    * **Restriction:**
+For [[--model | Installation:-Option-List#--model]]=ELBDM only.
 
 <a name="INT_MONO_COEFF"></a>
 * #### `INT_MONO_COEFF` &ensp; (1.0 &#8804; input &#8804; 4.0) &ensp; [2.0]
