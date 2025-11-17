@@ -5,13 +5,21 @@
 *.bin
 *~
 
+# Executables and binaries
 bin/**
-src/generate_make.sh
 gamer
 GAMER_CompareData
 GAMER_ExtractUniform
 GAMER_ExtractProfile
-.vscode
+
+# Build files
+src/generate_make.sh
 src/Makefile
 src/Makefile.log
+tool/analysis/gamer_compare_data/Makefile
+tool/analysis/gamer_extract_profile/Makefile
+tool/analysis/gamer_extract_uniform/Makefile
+
+# Settings
+.vscode
 src/.local_settings
