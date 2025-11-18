@@ -189,7 +189,7 @@ void Src_WorkBeforeMajorFunc_Deleptonization( const int lv, const double TimeNew
    for (int v=0; v<SRC_DLEP_PROF_NVAR; v++)  Prof[v] = new Profile_t();
 
    Aux_ComputeProfile( Prof, Center, MaxRadius, MinBinSize, LogBin, LogBinRatio, RemoveEmptyBin,
-                       TVar, NProf, SingleLv, MaxLv, PatchType, PrepTime );
+                       TVar, NProf, SingleLv, MaxLv, PatchType, PrepTime, GetSigma );
 
 
 // check and store the number of radial bins
