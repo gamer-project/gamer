@@ -294,7 +294,11 @@ void Hydro_AddConductiveFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
          if ( MicroPhy->CondSaturation )
          {
-            real gradT      = SQRT( SQR(N_slope) + SQR(T1_slope) + SQR(T2_slope) );
+            real gradT;
+            if ( MicroPhy->CondFluxType == ANISOTROPIC_CONDUCTION )
+               gradT = ABS(gradient);
+            else // ISOTROPIC_CONDUCTION
+               gradT = SQRT( SQR(N_slope) + SQR(T1_slope) + SQR(T2_slope) );
             real Thalf      = 0.5 * ( temp_L + temp_R );
             real Dhalf      = 0.5 * ( dens_L + dens_R );
             real l_e        = MicroPhy->CondMFPConst * Thalf * Thalf / Dhalf;
