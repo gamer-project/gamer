@@ -760,12 +760,14 @@ struct InputPara_t
 #  ifdef VISCOSITY
    int    Visc_Type;
    int    Visc_FluxType;
+   int    Visc_Saturation;
    int    Visc_CoeffType;
    int    Visc_Bounds;
    double Visc_ConstCoeff;
    double Visc_MaxDiffusivity;
    double Visc_SpitzerFraction;
    double Visc_CoulombLog;
+   double Visc_Mui;
 #  endif // #ifdef VISCOSITY
 
 // initialization

@@ -53,6 +53,7 @@ struct MicroPhy_t
 #  endif // #ifdef CONDUCTION
 
 #  ifdef VISCOSITY
+   bool ViscSaturation;
    bool ViscBounds;
    int  ViscType;
    int  ViscFluxType;
@@ -63,6 +64,8 @@ struct MicroPhy_t
    real ViscSpitzerFraction;
    real ViscPrefactor;
    real ViscCoulombLog;
+   real ViscMFPConst;
+   real ViscMui;
 #  endif // #ifdef VISCOSITY
 
 }; // struct MicroPhy_t

@@ -397,6 +397,7 @@ extern double CR_DIFF_MIN_B;
 #endif
 
 #ifdef VISCOSITY
+extern bool   VISCOSITY_SATURATION;
 extern bool   VISCOSITY_BOUNDS;
 extern int    VISCOSITY_TYPE;
 extern int    VISCOSITY_FLUX_TYPE;
@@ -406,6 +407,7 @@ extern double VISCOSITY_CONSTANT_COEFF;
 extern double VISCOSITY_SPITZER_FRAC;
 extern double VISCOSITY_COULOMB_LOG;
 extern double VISCOSITY_MAX_DIFFUSIVITY;
+extern double VISCOSITY_MUI;
 extern bool   OPT__OUTPUT_DELTAP;
 #endif
 

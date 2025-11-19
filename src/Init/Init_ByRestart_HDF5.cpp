@@ -2292,27 +2292,29 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 
 // viscosity
 #  ifdef VISCOSITY
-   LoadField( "Visc_Type",               &RS.Visc_Type,               SID, TID, NonFatal, &RT.Visc_Type,               1, NonFatal );
-   LoadField( "Visc_FluxType",           &RS.Visc_FluxType,           SID, TID, NonFatal, &RT.Visc_FluxType,          1, NonFatal );
-   LoadField( "Visc_CoeffType",          &RS.Visc_CoeffType,          SID, TID, NonFatal, &RT.Visc_CoeffType,          1, NonFatal );
-   LoadField( "Visc_Bounds",             &RS.Visc_Bounds,             SID, TID, NonFatal, &RT.Visc_Bounds,            1, NonFatal );
+   LoadField( "Visc_Type",               &RS.Visc_Type,               SID, TID, NonFatal, &RT.Visc_Type,                1, NonFatal );
+   LoadField( "Visc_FluxType",           &RS.Visc_FluxType,           SID, TID, NonFatal, &RT.Visc_FluxType,            1, NonFatal );
+   LoadField( "Visc_Saturation",         &RS.Visc_Saturation,         SID, TID, NonFatal, &RT.Visc_Saturation,          1, NonFatal );
+   LoadField( "Visc_CoeffType",          &RS.Visc_CoeffType,          SID, TID, NonFatal, &RT.Visc_CoeffType,           1, NonFatal );
+   LoadField( "Visc_Bounds",             &RS.Visc_Bounds,             SID, TID, NonFatal, &RT.Visc_Bounds,              1, NonFatal );
    LoadField( "Visc_ConstCoeff",         &RS.Visc_ConstCoeff,         SID, TID, NonFatal, &RT.Visc_ConstCoeff,          1, NonFatal );
    LoadField( "Visc_MaxDiffusivity",     &RS.Visc_MaxDiffusivity,     SID, TID, NonFatal, &RT.Visc_MaxDiffusivity,      1, NonFatal );
-   LoadField( "Visc_SpitzerFraction",    &RS.Visc_SpitzerFraction,    SID, TID, NonFatal, &RT.Visc_SpitzerFraction,    1, NonFatal );
-   LoadField( "Visc_CoulombLog",         &RS.Visc_CoulombLog,         SID, TID, NonFatal, &RT.Visc_CoulombLog,        1, NonFatal );
+   LoadField( "Visc_SpitzerFraction",    &RS.Visc_SpitzerFraction,    SID, TID, NonFatal, &RT.Visc_SpitzerFraction,     1, NonFatal );
+   LoadField( "Visc_CoulombLog",         &RS.Visc_CoulombLog,         SID, TID, NonFatal, &RT.Visc_CoulombLog,          1, NonFatal );
+   LoadField( "Visc_Mui",                &RS.Visc_Mui,                SID, TID, NonFatal, &RT.Visc_Mui,                 1, NonFatal );
 #  endif
 
 // conduction
 #  ifdef CONDUCTION
-   LoadField( "Cond_Type",               &RS.Cond_Type,               SID, TID, NonFatal, &RT.Cond_Type,               1, NonFatal );
-   LoadField( "Cond_FluxType",           &RS.Cond_FluxType,           SID, TID, NonFatal, &RT.Cond_FluxType,          1, NonFatal );
-   LoadField( "Cond_Saturation",         &RS.Cond_Saturation,         SID, TID, NonFatal, &RT.Cond_Saturation,         1, NonFatal );
-   LoadField( "Cond_SatWhistler",        &RS.Cond_SatWhistler,        SID, TID, NonFatal, &RT.Cond_SatWhistler,        1, NonFatal );
+   LoadField( "Cond_Type",               &RS.Cond_Type,               SID, TID, NonFatal, &RT.Cond_Type,                1, NonFatal );
+   LoadField( "Cond_FluxType",           &RS.Cond_FluxType,           SID, TID, NonFatal, &RT.Cond_FluxType,            1, NonFatal );
+   LoadField( "Cond_Saturation",         &RS.Cond_Saturation,         SID, TID, NonFatal, &RT.Cond_Saturation,          1, NonFatal );
+   LoadField( "Cond_SatWhistler",        &RS.Cond_SatWhistler,        SID, TID, NonFatal, &RT.Cond_SatWhistler,         1, NonFatal );
    LoadField( "Cond_ConstCoeff",         &RS.Cond_ConstCoeff,         SID, TID, NonFatal, &RT.Cond_ConstCoeff,          1, NonFatal );
    LoadField( "Cond_MaxDiffusivity",     &RS.Cond_MaxDiffusivity,     SID, TID, NonFatal, &RT.Cond_MaxDiffusivity,      1, NonFatal );
-   LoadField( "Cond_SpitzerFraction",    &RS.Cond_SpitzerFraction,    SID, TID, NonFatal, &RT.Cond_SpitzerFraction,    1, NonFatal );
-   LoadField( "Cond_CoulombLog",         &RS.Cond_CoulombLog,         SID, TID, NonFatal, &RT.Cond_CoulombLog,        1, NonFatal );
-   LoadField( "Cond_Mue",                &RS.Cond_Mue,                SID, TID, NonFatal, &RT.Cond_Mue,               1, NonFatal );
+   LoadField( "Cond_SpitzerFraction",    &RS.Cond_SpitzerFraction,    SID, TID, NonFatal, &RT.Cond_SpitzerFraction,     1, NonFatal );
+   LoadField( "Cond_CoulombLog",         &RS.Cond_CoulombLog,         SID, TID, NonFatal, &RT.Cond_CoulombLog,          1, NonFatal );
+   LoadField( "Cond_Mue",                &RS.Cond_Mue,                SID, TID, NonFatal, &RT.Cond_Mue,                 1, NonFatal );
 #  endif
 
 // initialization

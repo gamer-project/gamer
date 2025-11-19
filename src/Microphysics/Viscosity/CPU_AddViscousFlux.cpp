@@ -68,7 +68,8 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
    const int  didx_cvar[3] = { 1, N_Var, SQR(N_Var) };
    const real _dh          = (real)1.0 / dh;
-   const real two_thirds   = 2./3.;
+   const real one_third    = (real)(1./3.);
+   const real two_thirds   = (real)(2./3.);
 #  ifdef MHD
    const int skip_update_T = 1;
 #  else
@@ -234,7 +235,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
          real N_slope_N, T1_slope_N, T2_slope_N;
          real N_slope_T1, T1_slope_T1, T2_slope_T1;
          real N_slope_T2, T1_slope_T2, T2_slope_T2;
-         real divV;
+         real divV, BBdV;
 
 //       face-centered velocities
          v_N  = 0.5 * ( Vel[    d][ idx_cvar                ] + Vel[    d][ idx_cvar + didx_cvar[d] ] );
@@ -313,8 +314,9 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                Vel[TDir2][ idx_cvar                - didx_cvar[TDir2] ]
             ) * _dh;
 
-//          divergence
-            divV = N_slope_N + T1_slope_T1 + T2_slope_T2;     
+            BBdV  = B_N_mean  * ( B_N_mean *  N_slope_N + B_T1_mean *  N_slope_T1 + B_T2_mean *  N_slope_T2 );
+            BBdV += B_T1_mean * ( B_N_mean * T1_slope_N + B_T1_mean * T1_slope_T1 + B_T2_mean * T1_slope_T2 );
+            BBdV += B_T2_mean * ( B_N_mean * T2_slope_N + B_T1_mean * T2_slope_T1 + B_T2_mean * T2_slope_T2 );
 
          }
          else // ISOTROPIC_VISCOSITY
@@ -322,30 +324,46 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
 //          transverse direction 1 and 2 derivatives
 
-            N_slope_T1 = 0.25 * ( Vel[    d][ idx_cvar + didx_cvar[d] + didx_cvar[TDir1] ] +
-                                  Vel[    d][ idx_cvar                + didx_cvar[TDir1] ] -
-                                  Vel[    d][ idx_cvar + didx_cvar[d] - didx_cvar[TDir1] ] - 
-                                  Vel[    d][ idx_cvar                - didx_cvar[TDir1] ] ) * _dh;
-            N_slope_T2 = 0.25 * ( Vel[    d][ idx_cvar + didx_cvar[d] + didx_cvar[TDir2] ] +
-                                  Vel[    d][ idx_cvar                + didx_cvar[TDir2] ] -
-                                  Vel[    d][ idx_cvar + didx_cvar[d] - didx_cvar[TDir2] ] - 
-                                  Vel[    d][ idx_cvar                - didx_cvar[TDir2] ] ) * _dh;
+            N_slope_T1  = 0.25 * ( Vel[    d][ idx_cvar + didx_cvar[d] + didx_cvar[TDir1] ] +
+                                   Vel[    d][ idx_cvar                + didx_cvar[TDir1] ] -
+                                   Vel[    d][ idx_cvar + didx_cvar[d] - didx_cvar[TDir1] ] -
+                                   Vel[    d][ idx_cvar                - didx_cvar[TDir1] ] ) * _dh;
 
-//          divergence
-            divV = 0.25 * ( Vel[    d][ idx_cvar                    + didx_cvar[    d] ] -
-                            Vel[    d][ idx_cvar                    - didx_cvar[    d] ] +
-                            Vel[    d][ idx_cvar + didx_cvar[    d] + didx_cvar[    d] ] -
-                            Vel[    d][ idx_cvar + didx_cvar[    d] - didx_cvar[    d] ] +
-                            Vel[TDir1][ idx_cvar                    + didx_cvar[TDir1] ] -
-                            Vel[TDir1][ idx_cvar                    - didx_cvar[TDir1] ] +
-                            Vel[TDir1][ idx_cvar + didx_cvar[    d] + didx_cvar[TDir1] ] -
-                            Vel[TDir1][ idx_cvar + didx_cvar[    d] - didx_cvar[TDir1] ] +
-                            Vel[TDir2][ idx_cvar                    + didx_cvar[TDir2] ] - 
-                            Vel[TDir2][ idx_cvar                    - didx_cvar[TDir2] ] +
-                            Vel[TDir2][ idx_cvar + didx_cvar[    d] + didx_cvar[TDir2] ] - 
-                            Vel[TDir2][ idx_cvar + didx_cvar[    d] - didx_cvar[TDir2] ] ) * _dh;
+            N_slope_T2  = 0.25 * ( Vel[    d][ idx_cvar + didx_cvar[d] + didx_cvar[TDir2] ] +
+                                   Vel[    d][ idx_cvar                + didx_cvar[TDir2] ] -
+                                   Vel[    d][ idx_cvar + didx_cvar[d] - didx_cvar[TDir2] ] -
+                                   Vel[    d][ idx_cvar                - didx_cvar[TDir2] ] ) * _dh;
+
+            T1_slope_T1 = 0.25 * ( Vel[TDir1][ idx_cvar + didx_cvar[d] + didx_cvar[TDir1] ] +
+                                   Vel[TDir1][ idx_cvar                + didx_cvar[TDir1] ] -
+                                   Vel[TDir1][ idx_cvar + didx_cvar[d] - didx_cvar[TDir1] ] -
+                                   Vel[TDir1][ idx_cvar                - didx_cvar[TDir1] ] ) * _dh;
+
+            T2_slope_T2 = 0.25 * ( Vel[TDir2][ idx_cvar + didx_cvar[d] + didx_cvar[TDir2] ] +
+                                   Vel[TDir2][ idx_cvar                + didx_cvar[TDir2] ] -
+                                   Vel[TDir2][ idx_cvar + didx_cvar[d] - didx_cvar[TDir2] ] -
+                                   Vel[TDir2][ idx_cvar                - didx_cvar[TDir2] ] ) * _dh;
+
+            if ( MicroPhy->ViscSaturation )
+            {
+
+               T1_slope_T2 = 0.25 * ( Vel[TDir1][ idx_cvar + didx_cvar[d] + didx_cvar[TDir2] ] +
+                                      Vel[TDir1][ idx_cvar                + didx_cvar[TDir2] ] -
+                                      Vel[TDir1][ idx_cvar + didx_cvar[d] - didx_cvar[TDir2] ] -
+                                      Vel[TDir1][ idx_cvar                - didx_cvar[TDir2] ] ) * _dh;
+
+               T2_slope_T1 = 0.25 * ( Vel[TDir2][ idx_cvar + didx_cvar[d] + didx_cvar[TDir1] ] +
+                                      Vel[TDir2][ idx_cvar                + didx_cvar[TDir1] ] -
+                                      Vel[TDir2][ idx_cvar + didx_cvar[d] - didx_cvar[TDir1] ] -
+                                      Vel[TDir2][ idx_cvar                - didx_cvar[TDir1] ] ) * _dh;
+
+            }
+
 
          } // if ( MicroPhy->ViscFluxType == ANISOTROPIC_VISCOSITY ) ... else ...
+
+//       divergence
+         divV = N_slope_N + T1_slope_T1 + T2_slope_T2;
 
 //       3. compute viscous flux
 //       get the viscosity
@@ -370,7 +388,41 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
          Hydro_ComputeViscosity( mu_r, visc_nu, MicroPhy, dens_R, temp_R );
          mu = 0.5*( mu_l + mu_r );
 
+         if ( MicroPhy->ViscSaturation )
+         {
+
+            real norm_pi;
+
+            if ( MicroPhy->ViscFluxType == ANISOTROPIC_VISCOSITY )
+            {
+
+               norm_pi = SQR( two_thirds * (BBdV - one_third*divV ) );
+
+            }
+            else // ISOTROPIC_VISCOSITY
+            {
+
+               norm_pi   = SQR( 2.0*N_slope_N   - two_thirds*divV );
+               norm_pi  += SQR( 2.0*T1_slope_T1 - two_thirds*divV );
+               norm_pi  += SQR( 2.0*T2_slope_T2 - two_thirds*divV );
+               norm_pi  += 2.0 * SQR( N_slope_T1 + T1_slope_N );
+               norm_pi  += 2.0 * SQR( N_slope_T2 + T2_slope_N );
+               norm_pi  += 2.0 * SQR( T1_slope_T2 + T2_slope_T1 );
+
+            }
+
+            norm_pi = SQRT( norm_pi );
+            real Thalf = 0.5 * ( temp_L + temp_R );
+            real Dhalf = 0.5 * ( dens_L + dens_R );
+            real dv    = SQRT( SQR( T1_slope_N ) + SQR( T2_slope_N ) ) * dh;
+            real l_i   = MicroPhy->ViscMFPConst * Thalf * Thalf / Dhalf;
+            real l_v   = dv / norm_pi;
+            mu /= 1.0 + 2.0 * l_i / l_v;
+
+         }
+
          real stress_N, stress_T1, stress_T2;
+
          if ( MicroPhy->ViscFluxType == ISOTROPIC_VISCOSITY )
          {
 
@@ -383,11 +435,10 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
          {
 
 #           ifdef MHD
-            real BBdV, delta_p;
-            BBdV  = B_N_mean  * ( B_N_mean *  N_slope_N + B_T1_mean *  N_slope_T1 + B_T2_mean *  N_slope_T2 );
-            BBdV += B_T1_mean * ( B_N_mean * T1_slope_N + B_T1_mean * T1_slope_T1 + B_T2_mean * T1_slope_T2 );
-            BBdV += B_T2_mean * ( B_N_mean * T2_slope_N + B_T1_mean * T2_slope_T1 + B_T2_mean * T2_slope_T2 );
+            real delta_p;
+
             delta_p = mu*(3.0*BBdV - divV);
+
             if ( MicroPhy->ViscFluxType == ANISOTROPIC_VISCOSITY && MicroPhy->ViscBounds )
                delta_p = FMIN( FMAX( delta_p, -B2 ), 0.5*B2 );
             stress_N  = -delta_p*(B_N_mean*B_N_mean - 1./3.);

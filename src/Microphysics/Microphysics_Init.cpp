@@ -96,6 +96,17 @@ void Microphysics_Init()
    MicroPhy.ViscCoulombLog = VISCOSITY_COULOMB_LOG;
    MicroPhy.ViscMaxDiffusivity = VISCOSITY_MAX_DIFFUSIVITY;
    MicroPhy.ViscBounds = VISCOSITY_BOUNDS;
+   MicroPhy.ViscSaturation = VISCOSITY_SATURATION;
+   MicroPhy.ViscMui = VISCOSITY_MUI;
+
+   if ( MicroPhy.ViscSaturation )
+   {
+      // This calculates the prefactor for the ion MFP
+      // Note that this assumes CGS units for the ion charge
+      MicroPhy.ViscMFPConst = (real)( 0.7329037678543799 * Const_kB * Const_kB / ( UNIT_E * UNIT_E ) );
+      MicroPhy.ViscMFPConst /= (real)POW( Const_e / SQRT( UNIT_E*UNIT_L ), 4.0 ) * MicroPhy.ViscCoulombLog;
+      MicroPhy.ViscMFPConst *= VISCOSITY_MUI * (real)( Const_amu / UNIT_M );
+   }
 
    if ( MicroPhy.ViscType == CONSTANT_VISCOSITY )
    {

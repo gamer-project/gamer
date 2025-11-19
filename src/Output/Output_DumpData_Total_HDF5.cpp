@@ -2858,12 +2858,14 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  ifdef VISCOSITY
    InputPara.Visc_Type               = VISCOSITY_TYPE;
    InputPara.Visc_FluxType           = VISCOSITY_FLUX_TYPE;
+   InputPara.Visc_Saturation         = VISCOSITY_SATURATION;
    InputPara.Visc_CoeffType          = VISCOSITY_COEFF_TYPE;
    InputPara.Visc_Bounds             = VISCOSITY_BOUNDS;
    InputPara.Visc_ConstCoeff         = VISCOSITY_CONSTANT_COEFF;
    InputPara.Visc_MaxDiffusivity     = VISCOSITY_MAX_DIFFUSIVITY;
    InputPara.Visc_SpitzerFraction    = VISCOSITY_SPITZER_FRAC;
    InputPara.Visc_CoulombLog         = VISCOSITY_COULOMB_LOG;
+   InputPara.Visc_Mui                = VISCOSITY_MUI;
 #  endif // #ifdef VISCOSITY
 
 // conduction
@@ -3993,12 +3995,14 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  ifdef VISCOSITY
    H5Tinsert( H5_TypeID, "Visc_Type",              HOFFSET(InputPara_t,Visc_Type              ), H5T_NATIVE_INT               );
    H5Tinsert( H5_TypeID, "Visc_FluxType",          HOFFSET(InputPara_t,Visc_FluxType          ), H5T_NATIVE_INT               );
+   H5Tinsert( H5_TypeID, "Visc_Saturation",        HOFFSET(InputPara_t,Visc_Saturation        ), H5T_NATIVE_INT               );
    H5Tinsert( H5_TypeID, "Visc_CoeffType",         HOFFSET(InputPara_t,Visc_CoeffType         ), H5T_NATIVE_INT               );
    H5Tinsert( H5_TypeID, "Visc_Bounds",            HOFFSET(InputPara_t,Visc_Bounds            ), H5T_NATIVE_INT               );
    H5Tinsert( H5_TypeID, "Visc_ConstCoeff",        HOFFSET(InputPara_t,Visc_ConstCoeff        ), H5T_NATIVE_DOUBLE            );
    H5Tinsert( H5_TypeID, "Visc_MaxDiffusivity",    HOFFSET(InputPara_t,Visc_MaxDiffusivity    ), H5T_NATIVE_DOUBLE            );
    H5Tinsert( H5_TypeID, "Visc_SpitzerFraction",   HOFFSET(InputPara_t,Visc_SpitzerFraction   ), H5T_NATIVE_DOUBLE            );
    H5Tinsert( H5_TypeID, "Visc_CoulombLog",        HOFFSET(InputPara_t,Visc_CoulombLog        ), H5T_NATIVE_DOUBLE            );
+   H5Tinsert( H5_TypeID, "Visc_Mui",               HOFFSET(InputPara_t,Visc_Mui               ), H5T_NATIVE_DOUBLE            );
 #  endif // #ifdef VISCOSITY
 
 // initialization

@@ -308,7 +308,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "CONDUCTION_SPITZER_FRAC",    &CONDUCTION_SPITZER_FRAC,         1.0,             0.0,           NoMax_double   );
    ReadPara->Add( "CONDUCTION_COULOMB_LOG",     &CONDUCTION_COULOMB_LOG,          40.0,            0.0,           NoMax_double   );
    ReadPara->Add( "CONDUCTION_MAX_DIFFUSIVITY", &CONDUCTION_MAX_DIFFUSIVITY,     -1.0,             NoMin_double,  NoMax_double   );
-   ReadPara->Add( "CONDUCTION_MUE",             &CONDUCTION_MUE,                  1.14,            0.0,           NoMax_double   );
+   ReadPara->Add( "CONDUCTION_MUE",             &CONDUCTION_MUE,                  1.14,            0.1,           NoMax_double   );
    ReadPara->Add( "CONDUCTION_SATURATION",      &CONDUCTION_SATURATION,           false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "CONDUCTION_SAT_WHISTLER",    &CONDUCTION_SAT_WHISTLER,         false,           Useless_bool,  Useless_bool   );
 #  endif
@@ -322,6 +322,8 @@ void Init_Load_Parameter()
    ReadPara->Add( "VISCOSITY_SPITZER_FRAC",     &VISCOSITY_SPITZER_FRAC,          1.0,             0.0,           NoMax_double   );
    ReadPara->Add( "VISCOSITY_COULOMB_LOG",      &VISCOSITY_COULOMB_LOG,           40.0,            0.0,           NoMax_double   );
    ReadPara->Add( "VISCOSITY_MAX_DIFFUSIVITY",  &VISCOSITY_MAX_DIFFUSIVITY,      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "VISCOSITY_MUI",              &VISCOSITY_MUI,                   1.22,            0.1,           NoMax_double   );
+   ReadPara->Add( "VISCOSITY_SATURATION",       &VISCOSITY_SATURATION,            false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "VISCOSITY_BOUNDS",           &VISCOSITY_BOUNDS,                false,           Useless_bool,  Useless_bool   );
 #  endif
 
