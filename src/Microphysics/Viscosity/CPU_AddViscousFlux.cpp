@@ -396,7 +396,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
             if ( MicroPhy->ViscFluxType == ANISOTROPIC_VISCOSITY )
             {
 
-               norm_pi = SQR( two_thirds * (BBdV - one_third*divV ) );
+               norm_pi = two_thirds * SQR( (3.0*BBdV - divV ) );
 
             }
             else // ISOTROPIC_VISCOSITY
