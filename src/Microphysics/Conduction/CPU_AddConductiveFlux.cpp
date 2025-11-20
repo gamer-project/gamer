@@ -54,7 +54,7 @@ real MC_limiter( const real a, const real b );
 GPU_DEVICE
 void Hydro_AddConductiveFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                               const real g_PriVar[][ CUBE(FLU_NXT) ],
-                              const real Temp[ CUBE(FLU_NXT) ],
+                              const real Temp[],
                                     real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                               const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                               const int N_Var, const int N_Ghost, const int N_Flux, const int NSkip_N,
