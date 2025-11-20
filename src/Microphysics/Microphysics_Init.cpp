@@ -106,6 +106,7 @@ void Microphysics_Init()
       MicroPhy.ViscMFPConst = (real)( 0.7329037678543799 * Const_kB * Const_kB / ( UNIT_E * UNIT_E ) );
       MicroPhy.ViscMFPConst /= (real)POW( Const_e / SQRT( UNIT_E*UNIT_L ), 4.0 ) * MicroPhy.ViscCoulombLog;
       MicroPhy.ViscMFPConst *= VISCOSITY_MUI * (real)( Const_amu / UNIT_M );
+      MicroPhy.ViscThermalSpeedConv = (real)( 2.0 * Const_kB / ( VISCOSITY_MUI * Const_amu ) * ( UNIT_M/UNIT_E ) );
    }
 
    if ( MicroPhy.ViscType == CONSTANT_VISCOSITY )

@@ -66,6 +66,7 @@ struct MicroPhy_t
    real ViscCoulombLog;
    real ViscMFPConst;
    real ViscMui;
+   real ViscThermalSpeedConv;
 #  endif // #ifdef VISCOSITY
 
 }; // struct MicroPhy_t

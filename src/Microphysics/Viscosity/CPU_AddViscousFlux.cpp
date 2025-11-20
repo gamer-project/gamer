@@ -414,9 +414,9 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
             norm_pi = SQRT( norm_pi );
             real Thalf = 0.5 * ( temp_L + temp_R );
             real Dhalf = 0.5 * ( dens_L + dens_R );
-            real dv    = SQRT( SQR( T1_slope_N ) + SQR( T2_slope_N ) ) * dh;
+            real v_th  = SQRT( MicroPhy->ViscThermalSpeedConv*Thalf );
             real l_i   = MicroPhy->ViscMFPConst * Thalf * Thalf / Dhalf;
-            real l_v   = dv / norm_pi;
+            real l_v   = v_th / norm_pi;
             mu /= 1.0 + 2.0 * l_i / l_v;
 
          }
