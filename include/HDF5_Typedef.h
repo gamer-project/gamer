@@ -823,6 +823,11 @@ struct InputPara_t
    int    Opt__Output_Cs;
    int    Opt__Output_DivVel;
    int    Opt__Output_Mach;
+#  if ( MODEL == ELBDM )
+   int    Opt__Output_ELBDM_Vel;
+   int    Opt__Output_ELBDM_Q_Pot;
+   int    Opt__Output_ELBDM_Q_Stress;
+#  endif
 #  ifdef MHD
    int    Opt__Output_DivMag;
 #  endif

@@ -608,6 +608,8 @@ bool   ELBDM_Flag_Interference( const int i, const int j, const int k, const rea
 real   ELBDM_UnwrapPhase( const real Phase_Ref, const real Phase_Wrapped );
 real   ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 void   ELBDM_RemoveMotionCM();
+void ELBDM_DerivedField( real ELBDMOut[], const real ELBDMIn[], int  FieldID,
+                         int direction, const int NGhost, const real dh );
 #ifdef SUPPORT_FFTW
 void   CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg );
 #endif
