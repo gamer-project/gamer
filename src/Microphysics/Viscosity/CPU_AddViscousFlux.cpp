@@ -90,8 +90,11 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
             Vel[d][idx] = g_PriVar[d+1][idx];
 
       }
-
    }
+
+#  ifdef __CUDACC__
+   __syncthreads();
+#  endif
 
    for (int d=0; d<3; d++)
    {
