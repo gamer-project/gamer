@@ -608,7 +608,8 @@ void CPU_FluidSolver_MHM(
             Hydro_DataReconstruction( g_Flu_Array_In[P], g_Mag_Array_In[P], g_PriVar_Half_1PG, g_FC_Var_1PG, g_Flux_Half_1PG, g_Slope_PPM_1PG,
                                       g_EC_Ele_1PG, Con2Pri_Yes, LR_Limiter, AdaptiveMinModCoeff, dt, dh,
                                       MinDens, MinPres, MinEint, MinTemp, PassiveFloor, FracPassive,
-                                      NFrac, c_FracIdx, JeansMinPres, JeansMinPres_Coeff, &EoS );
+                                      NFrac, c_FracIdx, JeansMinPres, JeansMinPres_Coeff, &EoS,
+                                      &MicroPhy );
 
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
 

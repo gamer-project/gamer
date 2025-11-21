@@ -413,6 +413,10 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                    EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
    }
+#  ifdef __CUDACC__
+   __syncthreads();
+#  endif
+
 #  endif
 
 // compute extra flux for MHM.
@@ -1050,6 +1054,9 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                    EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
    }
+#  endif
+#  ifdef __CUDACC__
+   __syncthreads();
 #  endif
 
 // compute extra flux for MHM.
