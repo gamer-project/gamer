@@ -1,0 +1,7 @@
+# problem-specific runtime parameters
+VPD_Rho0      1.0       # higher specific internal energy
+VPD_P0        1.0       # lower specific internal energy
+VPD_v0        1.0       # background density
+VPD_Dir	      0
+VPD_B0	      1.0
+VPD_BDir      2

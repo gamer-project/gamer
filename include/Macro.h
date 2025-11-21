@@ -489,6 +489,23 @@
 #  define _FLUX_TOTAL         (  ( 1L << NFLUX_TOTAL ) - 1L                )
 
 
+// microphysics
+
+#ifdef VISCOSITY
+#  define CONSTANT_VISCOSITY 1
+#  define SPITZER_VISCOSITY 2
+#  define VISCOSITY_KINETIC_COEFF 1
+#  define VISCOSITY_DYNAMIC_COEFF 2
+#  define ISOTROPIC_VISCOSITY 1
+#  define ANISOTROPIC_VISCOSITY 2
+#endif
+
+#ifdef CONDUCTION
+#  define CONSTANT_CONDUCTION 1
+#  define SPITZER_CONDUCTION 2
+#  define ISOTROPIC_CONDUCTION 1
+#  define ANISOTROPIC_CONDUCTION 2
+#endif
 
 // symbolic constants for particles
 #ifdef PARTICLE
@@ -875,6 +892,7 @@
 #  define SRC_NXT       ( PS1 + 2*SRC_GHOST_SIZE )                // use patch as the unit
 #  define SRC_NXT_P1    ( SRC_NXT + 1 )
 #  define DER_NXT       ( PS1 + 2*DER_GHOST_SIZE )                // use patch as the unit
+#  define DER_NXT_P1    ( DER_NXT + 1 )
 #ifdef FEEDBACK
 #  define FB_NXT        ( PS2 + 2*FB_GHOST_SIZE )                 // use patch group as the unit
 #endif

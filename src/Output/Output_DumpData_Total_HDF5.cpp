@@ -390,6 +390,20 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    if ( OPT__OUTPUT_DIVMAG )  sprintf( FieldLabelOut[DivMagDumpIdx], "%s", "DivMag" );
 #  endif
 
+#  ifdef VISCOSITY
+   const int DeltaPDumpIdx = ( OPT__OUTPUT_DELTAP ) ? NFieldStored++ : NoDump;
+   if ( DeltaPDumpIdx >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_DELTAP )  sprintf( FieldLabelOut[DeltaPDumpIdx], "%s", "DeltaP" );
+#  endif
+
+#  ifdef CONDUCTION
+   const int KappaDumpIdx = ( OPT__OUTPUT_KAPPA ) ? NFieldStored++ : NoDump;
+   if ( KappaDumpIdx >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_KAPPA )  sprintf( FieldLabelOut[KappaDumpIdx], "%s", "Kappa" );
+#  endif
+
 #  ifdef SRHD
    const int LorentzDumpIdx = ( OPT__OUTPUT_LORENTZ ) ? NFieldStored++ : NoDump;
    if ( LorentzDumpIdx >= NFIELD_STORED_MAX )
@@ -1088,6 +1102,97 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                }
 #              endif
 
+#              ifdef MHD
+#              ifdef VISCOSITY
+               else if ( v == DeltaPDumpIdx )
+               {
+         
+                  if ( VISCOSITY_FLUX_TYPE != ANISOTROPIC_VISCOSITY )
+                     Aux_Error( ERROR_INFO, "OPT__OUTPUT_DELTAP only works with ANISOTROPIC_VISCOSITY !!\n" );
+
+                  for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+                  {
+//                   prepare the input fields
+//                   --> must prepare all NCOMP_TOTAL and NCOMP_MAG fields
+                     Prepare_PatchData( lv, Time[lv], Der_FluIn[0][0], Der_MagFC[0][0], DER_GHOST_SIZE, 1, &PID0,
+                                        _TOTAL, _MAG, OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCH, NSIDE_26,
+                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
+                                        DE_Consistency_No );
+
+                     for (int LocalID=0; LocalID<8; LocalID++)
+                     {
+
+//                      convert B field from face-centered to cell-centered
+                        for (int k=0; k<DER_NXT; k++)
+                        for (int j=0; j<DER_NXT; j++)
+                        for (int i=0; i<DER_NXT; i++)
+                        {
+                           const int IdxCC = IDX321( i, j, k, DER_NXT, DER_NXT );
+                           real B_CC[NCOMP_MAG];
+
+                           MHD_GetCellCenteredBField( B_CC, Der_MagFC[LocalID][MAGX], Der_MagFC[LocalID][MAGY],
+                                                      Der_MagFC[LocalID][MAGZ], DER_NXT, DER_NXT, DER_NXT, i, j, k );
+
+                           Der_MagCC[MAGX][IdxCC] = B_CC[MAGX];
+                           Der_MagCC[MAGY][IdxCC] = B_CC[MAGY];
+                           Der_MagCC[MAGZ][IdxCC] = B_CC[MAGZ];
+                        }
+
+//                      compute and store the target derived field
+                        const int PID  = PID0 + LocalID;
+                        const int NDer = 1;
+                        Flu_DerivedField_DeltaP( FieldData[PID][0][0], Der_FluIn[LocalID][0], Der_MagCC[0],
+                                                 NDer, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, amr->dh[lv] );
+                     } // for (int LocalID=0; LocalID<8; LocalID++)
+                  } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+               } // if ( v == DeltaPDumpIdx )
+#              endif // #ifdef VISCOSITY
+#              endif // #ifdef MHD
+
+#              ifdef CONDUCTION
+               else if ( v == KappaDumpIdx )
+               {
+         
+                  for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+                  {
+//                   prepare the input fields
+//                   --> must prepare all NCOMP_TOTAL and NCOMP_MAG fields
+                     Prepare_PatchData( lv, Time[lv], Der_FluIn[0][0], Der_MagFC[0][0], DER_GHOST_SIZE, 1, &PID0,
+                                        _TOTAL, _MAG, OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCH, NSIDE_26,
+                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
+                                        DE_Consistency_No );
+
+                     for (int LocalID=0; LocalID<8; LocalID++)
+                     {
+
+#                       ifdef MHD
+//                      convert B field from face-centered to cell-centered
+                        for (int k=0; k<DER_NXT; k++)
+                        for (int j=0; j<DER_NXT; j++)
+                        for (int i=0; i<DER_NXT; i++)
+                        {
+                           const int IdxCC = IDX321( i, j, k, DER_NXT, DER_NXT );
+                           real B_CC[NCOMP_MAG];
+
+                           MHD_GetCellCenteredBField( B_CC, Der_MagFC[LocalID][MAGX], Der_MagFC[LocalID][MAGY],
+                                                      Der_MagFC[LocalID][MAGZ], DER_NXT, DER_NXT, DER_NXT, i, j, k );
+
+                           Der_MagCC[MAGX][IdxCC] = B_CC[MAGX];
+                           Der_MagCC[MAGY][IdxCC] = B_CC[MAGY];
+                           Der_MagCC[MAGZ][IdxCC] = B_CC[MAGZ];
+                        }
+#                       endif // #ifdef MHD
+
+//                      compute and store the target derived field
+                        const int PID  = PID0 + LocalID;
+                        const int NDer = 1;
+                        Flu_DerivedField_Kappa( FieldData[PID][0][0], Der_FluIn[LocalID][0], Der_MagCC[0],
+                                                NDer, DER_NXT, DER_NXT, DER_NXT, DER_GHOST_SIZE, amr->dh[lv] );
+                     } // for (int LocalID=0; LocalID<8; LocalID++)
+                  } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+               } // if ( v == KappaDumpIdx )
+#              endif // #ifdef CONDUCTION
+
 #              ifdef SRHD
                else if (  ( v >= VelDumpIdx0 && v < VelDumpIdx0+3 )  ||  v == LorentzDumpIdx )
                {
@@ -1729,6 +1834,16 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 #  else // #ifdef COSMIC_RAY
    KeyInfo.CosmicRay            = 0;
 #  endif // #ifdef COSMIC_RAY .. else ...
+#  ifdef VISCOSITY
+   KeyInfo.Viscosity            = 1;
+#  else
+   KeyInfo.Viscosity            = 0;
+#  endif
+#  ifdef CONDUCTION
+   KeyInfo.Conduction           = 1;
+#  else
+   KeyInfo.Conduction           = 0;
+#  endif
 #  endif // #if ( MODEL == HYDRO )
 
    for (int d=0; d<3; d++)
@@ -1998,6 +2113,17 @@ void FillIn_Makefile( Makefile_t &Makefile )
 #  else // #ifdef COSMIC_RAY
    Makefile.CosmicRay              = 0;
 #  endif // #ifdef COSMIC_RAY .. else ...
+
+#  ifdef VISCOSITY
+   Makefile.Viscosity              = 1;
+#  else
+   Makefile.Viscosity              = 0;
+#  endif
+#  ifdef CONDUCTION
+   Makefile.Conduction             = 1;
+#  else
+   Makefile.Conduction             = 0;
+#  endif
 
    Makefile.EoS                    = EOS;
 
@@ -2455,6 +2581,12 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  ifdef CR_DIFFUSION
    InputPara.Dt__CR_Diffusion        = DT__CR_DIFFUSION;
 #  endif
+#  ifdef VISCOSITY
+   InputPara.Dt__Viscosity           = DT__VISCOSITY;
+#  endif
+#  ifdef CONDUCTION
+   InputPara.Dt__Conduction          = DT__CONDUCTION;
+#  endif
 #  ifdef COMOVING
    InputPara.Dt__MaxDeltaA           = DT__MAX_DELTA_A;
 #  endif
@@ -2624,6 +2756,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__ResetFluid         = OPT__RESET_FLUID;
    InputPara.Opt__ResetFluidInit     = OPT__RESET_FLUID_INIT;
    InputPara.Opt__FreezeFluid        = OPT__FREEZE_FLUID;
+   InputPara.Opt__FreezeHydro        = OPT__FREEZE_HYDRO;
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    InputPara.MinDens                 = MIN_DENS;
 #  endif
@@ -2720,6 +2853,33 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.CR_Diffusion_MinB       = CR_DIFF_MIN_B;
 #  endif
 #  endif // #ifdef COSMIC_RAY
+
+// viscosity
+#  ifdef VISCOSITY
+   InputPara.Visc_Type               = VISCOSITY_TYPE;
+   InputPara.Visc_FluxType           = VISCOSITY_FLUX_TYPE;
+   InputPara.Visc_Saturation         = VISCOSITY_SATURATION;
+   InputPara.Visc_CoeffType          = VISCOSITY_COEFF_TYPE;
+   InputPara.Visc_Bounds             = VISCOSITY_BOUNDS;
+   InputPara.Visc_ConstCoeff         = VISCOSITY_CONSTANT_COEFF;
+   InputPara.Visc_MaxDiffusivity     = VISCOSITY_MAX_DIFFUSIVITY;
+   InputPara.Visc_SpitzerFraction    = VISCOSITY_SPITZER_FRAC;
+   InputPara.Visc_CoulombLog         = VISCOSITY_COULOMB_LOG;
+   InputPara.Visc_Mui                = VISCOSITY_MUI;
+#  endif // #ifdef VISCOSITY
+
+// conduction
+#  ifdef CONDUCTION
+   InputPara.Cond_Type               = CONDUCTION_TYPE;
+   InputPara.Cond_FluxType           = CONDUCTION_FLUX_TYPE;
+   InputPara.Cond_Saturation         = CONDUCTION_SATURATION;
+   InputPara.Cond_SatWhistler        = CONDUCTION_SAT_WHISTLER;
+   InputPara.Cond_ConstCoeff         = CONDUCTION_CONSTANT_COEFF;
+   InputPara.Cond_MaxDiffusivity     = CONDUCTION_MAX_DIFFUSIVITY;
+   InputPara.Cond_SpitzerFraction    = CONDUCTION_SPITZER_FRAC;
+   InputPara.Cond_CoulombLog         = CONDUCTION_COULOMB_LOG;
+   InputPara.Cond_Mue                = CONDUCTION_MUE;
+#  endif // #ifdef CONDUCTION
 
 // initialization
    InputPara.Opt__Init               = OPT__INIT;
@@ -2831,6 +2991,12 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Output_Mach            = OPT__OUTPUT_MACH;
 #  ifdef MHD
    InputPara.Opt__Output_DivMag          = OPT__OUTPUT_DIVMAG;
+#  endif
+#  ifdef VISCOSITY
+   InputPara.Opt__Output_DeltaP          = OPT__OUTPUT_DELTAP;
+#  endif
+#  ifdef CONDUCTION
+   InputPara.Opt__Output_Kappa           = OPT__OUTPUT_KAPPA;
 #  endif
 #  ifdef SRHD
    InputPara.Opt__Output_3Velocity       = OPT__OUTPUT_3VELOCITY;
@@ -3040,6 +3206,14 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "CR_Diffusion",         HOFFSET(KeyInfo_t,CR_Diffusion        ), H5T_NATIVE_INT          );
 #  endif
 
+#  ifdef VISCOSITY
+   H5Tinsert( H5_TypeID, "Viscosity",            HOFFSET(KeyInfo_t,Viscosity           ), H5T_NATIVE_INT          );
+#  endif
+
+#  ifdef CONDUCTION
+   H5Tinsert( H5_TypeID, "Conduction",           HOFFSET(KeyInfo_t,Conduction          ), H5T_NATIVE_INT          );
+#  endif
+
    H5Tinsert( H5_TypeID, "BoxSize",              HOFFSET(KeyInfo_t,BoxSize             ), H5_TypeID_Arr_3Double   );
    H5Tinsert( H5_TypeID, "Time",                 HOFFSET(KeyInfo_t,Time                ), H5_TypeID_Arr_NLvDouble );
    H5Tinsert( H5_TypeID, "CellSize",             HOFFSET(KeyInfo_t,CellSize            ), H5_TypeID_Arr_NLvDouble );
@@ -3168,6 +3342,15 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
 #  ifdef COSMIC_RAY
    H5Tinsert( H5_TypeID, "CR_Diffusion",           HOFFSET(Makefile_t,CR_Diffusion           ), H5T_NATIVE_INT );
 #  endif
+
+#  ifdef VISCOSITY
+   H5Tinsert( H5_TypeID, "Viscosity",              HOFFSET(Makefile_t,Viscosity              ), H5T_NATIVE_INT );
+#  endif
+
+#  ifdef CONDUCTION
+   H5Tinsert( H5_TypeID, "Conduction",             HOFFSET(Makefile_t,Conduction             ), H5T_NATIVE_INT );
+#  endif
+
 
 } // FUNCTION : GetCompound_Makefile
 
@@ -3514,6 +3697,12 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  ifdef CR_DIFFUSION
    H5Tinsert( H5_TypeID, "Dt__CR_Diffusion",        HOFFSET(InputPara_t,Dt__CR_Diffusion       ), H5T_NATIVE_DOUBLE  );
 #  endif
+#  ifdef VISCOSITY
+   H5Tinsert( H5_TypeID, "Dt__Viscosity",           HOFFSET(InputPara_t,Dt__Viscosity          ), H5T_NATIVE_DOUBLE  );
+#  endif
+#  ifdef CONDUCTION
+   H5Tinsert( H5_TypeID, "Dt__Conduction",          HOFFSET(InputPara_t,Dt__Conduction         ), H5T_NATIVE_DOUBLE  );
+#  endif
 #  ifdef COMOVING
    H5Tinsert( H5_TypeID, "Dt__MaxDeltaA",           HOFFSET(InputPara_t,Dt__MaxDeltaA          ), H5T_NATIVE_DOUBLE  );
 #  endif
@@ -3694,6 +3883,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__ResetFluid",         HOFFSET(InputPara_t,Opt__ResetFluid        ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__ResetFluidInit",     HOFFSET(InputPara_t,Opt__ResetFluidInit    ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__FreezeFluid",        HOFFSET(InputPara_t,Opt__FreezeFluid       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__FreezeHydro",        HOFFSET(InputPara_t,Opt__FreezeHydro       ), H5T_NATIVE_INT              );
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "MinDens",                 HOFFSET(InputPara_t,MinDens                ), H5T_NATIVE_DOUBLE           );
 #  endif
@@ -3788,6 +3978,33 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  endif
 #  endif // #ifdef COSMIC_RAY
 
+// conduction
+#  ifdef CONDUCTION
+   H5Tinsert( H5_TypeID, "Cond_Type",              HOFFSET(InputPara_t,Cond_Type              ), H5T_NATIVE_INT               );
+   H5Tinsert( H5_TypeID, "Cond_FluxType",          HOFFSET(InputPara_t,Cond_FluxType          ), H5T_NATIVE_INT               );
+   H5Tinsert( H5_TypeID, "Cond_Saturation",        HOFFSET(InputPara_t,Cond_Saturation        ), H5T_NATIVE_INT               );
+   H5Tinsert( H5_TypeID, "Cond_SatWhistler",       HOFFSET(InputPara_t,Cond_SatWhistler       ), H5T_NATIVE_INT               );
+   H5Tinsert( H5_TypeID, "Cond_ConstCoeff",        HOFFSET(InputPara_t,Cond_ConstCoeff        ), H5T_NATIVE_DOUBLE            );
+   H5Tinsert( H5_TypeID, "Cond_MaxDiffusivity",    HOFFSET(InputPara_t,Cond_MaxDiffusivity    ), H5T_NATIVE_DOUBLE            );
+   H5Tinsert( H5_TypeID, "Cond_SpitzerFraction",   HOFFSET(InputPara_t,Cond_SpitzerFraction   ), H5T_NATIVE_DOUBLE            );
+   H5Tinsert( H5_TypeID, "Cond_CoulombLog",        HOFFSET(InputPara_t,Cond_CoulombLog        ), H5T_NATIVE_DOUBLE            );
+   H5Tinsert( H5_TypeID, "Cond_Mue",               HOFFSET(InputPara_t,Cond_Mue               ), H5T_NATIVE_DOUBLE            );
+#  endif // #ifdef CONDUCTION
+
+// viscosity
+#  ifdef VISCOSITY
+   H5Tinsert( H5_TypeID, "Visc_Type",              HOFFSET(InputPara_t,Visc_Type              ), H5T_NATIVE_INT               );
+   H5Tinsert( H5_TypeID, "Visc_FluxType",          HOFFSET(InputPara_t,Visc_FluxType          ), H5T_NATIVE_INT               );
+   H5Tinsert( H5_TypeID, "Visc_Saturation",        HOFFSET(InputPara_t,Visc_Saturation        ), H5T_NATIVE_INT               );
+   H5Tinsert( H5_TypeID, "Visc_CoeffType",         HOFFSET(InputPara_t,Visc_CoeffType         ), H5T_NATIVE_INT               );
+   H5Tinsert( H5_TypeID, "Visc_Bounds",            HOFFSET(InputPara_t,Visc_Bounds            ), H5T_NATIVE_INT               );
+   H5Tinsert( H5_TypeID, "Visc_ConstCoeff",        HOFFSET(InputPara_t,Visc_ConstCoeff        ), H5T_NATIVE_DOUBLE            );
+   H5Tinsert( H5_TypeID, "Visc_MaxDiffusivity",    HOFFSET(InputPara_t,Visc_MaxDiffusivity    ), H5T_NATIVE_DOUBLE            );
+   H5Tinsert( H5_TypeID, "Visc_SpitzerFraction",   HOFFSET(InputPara_t,Visc_SpitzerFraction   ), H5T_NATIVE_DOUBLE            );
+   H5Tinsert( H5_TypeID, "Visc_CoulombLog",        HOFFSET(InputPara_t,Visc_CoulombLog        ), H5T_NATIVE_DOUBLE            );
+   H5Tinsert( H5_TypeID, "Visc_Mui",               HOFFSET(InputPara_t,Visc_Mui               ), H5T_NATIVE_DOUBLE            );
+#  endif // #ifdef VISCOSITY
+
 // initialization
    H5Tinsert( H5_TypeID, "Opt__Init",               HOFFSET(InputPara_t,Opt__Init               ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "RestartLoadNRank",        HOFFSET(InputPara_t,RestartLoadNRank        ), H5T_NATIVE_INT              );
@@ -3881,6 +4098,12 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Output_Mach",            HOFFSET(InputPara_t,Opt__Output_Mach           ), H5T_NATIVE_INT              );
 #  ifdef MHD
    H5Tinsert( H5_TypeID, "Opt__Output_DivMag",          HOFFSET(InputPara_t,Opt__Output_DivMag         ), H5T_NATIVE_INT              );
+#  endif
+#  ifdef VISCOSITY
+   H5Tinsert( H5_TypeID, "Opt__Output_DeltaP",          HOFFSET(InputPara_t,Opt__Output_DeltaP         ), H5T_NATIVE_INT              );
+#  endif
+#  ifdef CONDUCTION
+   H5Tinsert( H5_TypeID, "Opt__Output_Kappa",           HOFFSET(InputPara_t,Opt__Output_Kappa          ), H5T_NATIVE_INT              );
 #  endif
 #  ifdef SRHD
    H5Tinsert( H5_TypeID, "Opt__Output_3Velocity",       HOFFSET(InputPara_t,Opt__Output_3Velocity      ), H5T_NATIVE_INT              );

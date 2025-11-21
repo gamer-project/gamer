@@ -81,6 +81,7 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 //                EoS_DensPres2CSqr : EoS routine to compute the sound speed squared
 //                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
 //                EoS_Table         : EoS tables
+//                FreezeHydro       : Freeze hydrodynamic fluxes
 //
 // Return      :  Flux_Out[]
 //-------------------------------------------------------------------------------------------------------
@@ -88,7 +89,8 @@ GPU_DEVICE
 void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                               const real MinDens, const real MinPres, const long PassiveFloor, const EoS_DE2P_t EoS_DensEint2Pres,
                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
-                              const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] )
+                              const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX],
+                              const bool FreezeHydro )
 {
 
 // check
@@ -98,6 +100,12 @@ void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[],
    printf( "ERROR : EOS != EOS_GAMMA is NOT supported at file <%s>, line <%d>, function <%s> !!\n",
            __FILE__, __LINE__, __FUNCTION__ );
 #  endif
+
+   if ( FreezeHydro )
+   {
+      for (int v=0; v<NCOMP_TOTAL; v++)   Flux_Out[v] = 0.0;
+      return;
+   }
 
 
 // 1. reorder the input variables for different spatial directions
