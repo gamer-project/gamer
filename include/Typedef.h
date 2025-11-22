@@ -35,7 +35,7 @@ typedef int  long_par;
 #endif
 
 #ifdef SUPPORT_GRACKLE
-#include <grackle_float.h>
+#include <grackle.h>
 #if   defined GRACKLE_FLOAT_8
 typedef double real_che;
 #elif defined GRACKLE_FLOAT_4
