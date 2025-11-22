@@ -352,10 +352,14 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
          Aux_Message( stdout, "   Lv %2d: Gra_AdvanceDt, counter = %8ld ... ", lv, AdvanceCounter[lv] );
 
-      if ( lv == 0 )
+      bool FullRefinedLv = false;
+      const long CellFactor = (long)(1L<<lv);
+      if ( (long)NPatchTotal[lv] == NX0_TOT[0]*NX0_TOT[1]*NX0_TOT[2]/512*CUBE(CellFactor) )   FullRefinedLv = true;
+
+      if ( FullRefinedLv )
          Gra_AdvanceDt( lv, TimeNew, TimeOld, dt_SubStep, SaveSg_Flu, SaveSg_Pot, UsePot, true, false, false, true );
 
-      else // lv > 0
+      else // not FullRefinedLv
       {
          if ( false ) {}
          /*
@@ -430,7 +434,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
             amr->PotSgTime[lv][SaveSg_Pot] = TimeNew;
          }
 
-      } // if ( lv == 0 ) ... else ...
+      } // if ( FullRefinedLv ) ... else ...
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 #     endif // #ifdef GRAVITY

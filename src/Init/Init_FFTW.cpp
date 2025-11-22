@@ -4,15 +4,30 @@
 
 static int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Guess );
 
-root_fftw::real_plan_nd FFTW_Plan_PS;                       // PS  : plan for calculating the power spectrum
+// PS : plan for calculating the power spectrum
+root_fftw::real_plan_nd FFTW_Plan_PS;
+static void Init_FFTW_PowerSpectrum( const int StartupFlag );
+static void End_FFTW_PowerSpectrum();
+
+// Poi : plan for the self-gravity Poisson solver
 #ifdef GRAVITY
-root_fftw::real_plan_nd FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;   // Poi : plan for the self-gravity Poisson solver
+root_fftw::real_plan_nd FFTW_Plan_Poi[NLEVEL], FFTW_Plan_Poi_Inv[NLEVEL];
+static void Init_FFTW_Poisson( const int StartupFlag, const int lv );
+static void End_FFTW_Poisson();
 #endif // #ifdef GRAVITY
+
+// Psi : plan for the ELBDM spectral solver
 #if ( MODEL == ELBDM )
-root_fftw::complex_plan_nd   FFTW_Plan_Psi, FFTW_Plan_Psi_Inv;         // Psi : plan for the ELBDM spectral solver
+root_fftw::complex_plan_nd FFTW_Plan_Psi, FFTW_Plan_Psi_Inv;
+static void Init_FFTW_ELBDMSpectral( const int StartupFlag );
+static void End_FFTW_ELBDMSpectral();
+
+// ExtPsi : plan for the Gram Fourier extension solver
 #if ( WAVE_SCHEME == WAVE_GRAMFE )
-gramfe_fftw::complex_plan_1d FFTW_Plan_ExtPsi, FFTW_Plan_ExtPsi_Inv;   // ExtPsi : plan for the Gram Fourier extension solver
-#endif // #if (WAVE_SCHEME == WAVE_GRAMFE)
+gramfe_fftw::complex_plan_1d FFTW_Plan_ExtPsi, FFTW_Plan_ExtPsi_Inv;
+static void Init_FFTW_GramFE( const int StartupFlag );
+static void End_FFTW_GramFE();
+#endif // #if ( WAVE_SCHEME == WAVE_GRAMFE )
 #endif // #if ( MODEL == ELBDM )
 
 
@@ -73,102 +88,17 @@ size_t ComputeTotalSize( int* size )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Init_FFTW
 // Description :  Create the FFTW plans
+//
+// Parameter   :  lv : Target level
 //-------------------------------------------------------------------------------------------------------
-void Init_FFTW()
+void Init_FFTW( const int lv )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
+   if ( FFTW_Inited[lv] )   return;
 
-#  if ( SUPPORT_FFTW == FFTW3 )
-   FFTW3_Double_OMP_Enabled = false;
-   FFTW3_Single_OMP_Enabled = false;
-
-
-#  ifdef OPENMP
-
-#  ifndef SERIAL
-// check the level of MPI thread support
-   int MPI_Thread_Status;
-   MPI_Query_thread( &MPI_Thread_Status );
-
-// enable multithreading if possible
-   FFTW3_Double_OMP_Enabled = MPI_Thread_Status >= MPI_THREAD_FUNNELED;
-   FFTW3_Single_OMP_Enabled = FFTW3_Double_OMP_Enabled;
-#  else // # ifndef SERIAL
-
-// always enable multithreading in serial mode with openmp
-   FFTW3_Double_OMP_Enabled = true;
-   FFTW3_Single_OMP_Enabled = true;
-#  endif // # ifndef SERIAL ... # else
-
-// initialise fftw multithreading
-   if (FFTW3_Double_OMP_Enabled) {
-      FFTW3_Double_OMP_Enabled = fftw_init_threads();
-      if ( !FFTW3_Double_OMP_Enabled )    Aux_Error( ERROR_INFO, "fftw_init_threads() failed !!\n" );
-   }
-   if (FFTW3_Single_OMP_Enabled) {
-      FFTW3_Single_OMP_Enabled = fftwf_init_threads();
-      if ( !FFTW3_Single_OMP_Enabled )    Aux_Error( ERROR_INFO, "fftwf_init_threads() failed !!\n" );
-   }
-#  endif // # ifdef OPENMP
-
-// initialise fftw mpi support
-#  ifndef SERIAL
-   fftw_mpi_init();
-   fftwf_mpi_init();
-#  endif // # ifndef SERIAL
-
-// tell all subsequent fftw3 planners to use OMP_NTHREAD threads
-#  ifdef OPENMP
-   if (FFTW3_Double_OMP_Enabled) fftw_plan_with_nthreads (OMP_NTHREAD);
-   if (FFTW3_Single_OMP_Enabled) fftwf_plan_with_nthreads(OMP_NTHREAD);
-#  endif // # ifdef OPENMP
-#  endif // # if ( SUPPORT_FFTW == FFTW3 )
-
-
-
-// determine the FFT size for the power spectrum
-   int PS_FFT_Size[3]      = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
-
-// determine the FFT size for the self-gravity solver
-#  ifdef GRAVITY
-   int Gravity_FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
-
-// the zero-padding method is adopted for the isolated BC.
-   if ( OPT__BC_POT == BC_POT_ISOLATED )
-      for (int d=0; d<3; d++)    Gravity_FFT_Size[d] *= 2;
-
-// check
-   if ( MPI_Rank == 0 )
-   for (int d=0; d<3; d++)
-   {
-      if ( Gravity_FFT_Size[d] <= 0 )    Aux_Error( ERROR_INFO, "Gravity_FFT_Size[%d] = %d < 0 !!\n", d, Gravity_FFT_Size[d] );
-   }
-#  endif // #  ifdef GRAVITY
-
-// determine the FFT size for the base-level FFT wave solver
-#  if ( MODEL == ELBDM )
-   int Psi_FFT_Size[3]    = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
-#  if ( defined(SERIAL) || SUPPORT_FFTW == FFTW3 )
-   int InvPsi_FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
-#  else // # ifdef SERIAL || FFTW3
-// Note that the dimensions of the inverse transform in FFTW2,
-// which are given by the dimensions of the output of the forward transform,
-// are Ny*Nz*Nx because we are using "FFTW_TRANSPOSED_ORDER" in fftwnd_mpi().
-   int InvPsi_FFT_Size[3] = { NX0_TOT[0], NX0_TOT[2], NX0_TOT[1] };
-#  endif // # ifdef SERIAL || FFTW3 ... # else
-
-#  if ( WAVE_SCHEME == WAVE_GRAMFE )
-   int ExtPsi_FFT_Size    = GRAMFE_FLU_NXT;
-#  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
-#  endif // # if ( MODEL == ELBDM )
-   real* PS   = NULL;
-   real* RhoK = NULL;
-   real* PsiK = NULL;
-#  if ( WAVE_SCHEME == WAVE_GRAMFE )
-   gramfe_fftw::fft_complex* ExtPsiK = NULL;
-#  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
+   static bool FirstTime = true;
 
 // determine how to initialise fftw plans
    int StartupFlag;
@@ -181,73 +111,78 @@ void Init_FFTW()
       case FFTW_STARTUP_PATIENT:     StartupFlag = FFTW_PATIENT;     break;
 #     endif // # if ( SUPPORT_FFTW == FFTW3 )
 
-      default:                       Aux_Error( ERROR_INFO, "unrecognised FFTW startup option %d  !!\n", OPT__FFTW_STARTUP );
+      default:                      Aux_Error( ERROR_INFO, "unrecognised FFTW startup option %d  !!\n", OPT__FFTW_STARTUP );
    } // switch ( OPT__FFTW_STARTUP )
 
-// allocate memory for arrays in fftw3
-#  if ( SUPPORT_FFTW == FFTW3 )
-   PS   = (real*) root_fftw::fft_malloc( ComputePaddedTotalSize(PS_FFT_Size     )*sizeof(real) );
+
+   if ( FirstTime )
+   {
+#     if ( SUPPORT_FFTW == FFTW3 )
+      FFTW3_Double_OMP_Enabled = false;
+      FFTW3_Single_OMP_Enabled = false;
+
+
+#     ifdef OPENMP
+
+#     ifndef SERIAL
+//    check the level of MPI thread support
+      int MPI_Thread_Status;
+      MPI_Query_thread( &MPI_Thread_Status );
+
+//    enable multithreading if possible
+      FFTW3_Double_OMP_Enabled = MPI_Thread_Status >= MPI_THREAD_FUNNELED;
+      FFTW3_Single_OMP_Enabled = FFTW3_Double_OMP_Enabled;
+#     else // # ifndef SERIAL
+
+//    always enable multithreading in serial mode with openmp
+      FFTW3_Double_OMP_Enabled = true;
+      FFTW3_Single_OMP_Enabled = true;
+#     endif // # ifndef SERIAL ... # else
+
+//    initialise fftw multithreading
+      if ( FFTW3_Double_OMP_Enabled )
+      {
+         FFTW3_Double_OMP_Enabled = fftw_init_threads();
+         if ( !FFTW3_Double_OMP_Enabled )    Aux_Error( ERROR_INFO, "fftw_init_threads() failed !!\n" );
+      }
+      if ( FFTW3_Single_OMP_Enabled )
+      {
+         FFTW3_Single_OMP_Enabled = fftwf_init_threads();
+         if ( !FFTW3_Single_OMP_Enabled )    Aux_Error( ERROR_INFO, "fftwf_init_threads() failed !!\n" );
+      }
+#     endif // # ifdef OPENMP
+
+//    initialise fftw mpi support
+#     ifndef SERIAL
+      fftw_mpi_init();
+      fftwf_mpi_init();
+#     endif // # ifndef SERIAL
+
+//    tell all subsequent fftw3 planners to use OMP_NTHREAD threads
+#     ifdef OPENMP
+      if ( FFTW3_Double_OMP_Enabled ) fftw_plan_with_nthreads ( OMP_NTHREAD );
+      if ( FFTW3_Single_OMP_Enabled ) fftwf_plan_with_nthreads( OMP_NTHREAD );
+#     endif // # ifdef OPENMP
+#     endif // # if ( SUPPORT_FFTW == FFTW3 )
+
+      FirstTime = false;
+   } // if ( FirstTime )
+
+   if ( lv == 0 )   Init_FFTW_PowerSpectrum( StartupFlag );
+
 #  ifdef GRAVITY
-   RhoK = (real*) root_fftw::fft_malloc( ComputePaddedTotalSize(Gravity_FFT_Size)*sizeof(real) );
-#  endif // # ifdef GRAVITY
+   Init_FFTW_Poisson( StartupFlag, lv );
+#  endif
+
 #  if ( MODEL == ELBDM )
-   PsiK = (real*) root_fftw::fft_malloc( ComputeTotalSize      ( Psi_FFT_Size   )*sizeof(real)*2 );   // 2*real for size of complex number
-#  endif // # if ( MODEL == ELBDM )
+   if ( lv == 0 )   Init_FFTW_ELBDMSpectral( StartupFlag );
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
-   ExtPsiK = (gramfe_fftw::fft_complex*)   gramfe_fftw::fft_malloc( ExtPsi_FFT_Size*sizeof(gramfe_fftw::fft_complex) );
-#  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
-#  endif // # if ( SUPPORT_FFTW == FFTW3 )
+   if ( lv == 0 )   Init_FFTW_GramFE( StartupFlag );
+#  endif // #if ( WAVE_SCHEME == WAVE_GRAMFE )
+#  endif // #if ( MODEL == ELBDM )
 
-
-// create plans for power spectrum and the self-gravity solver
-   FFTW_Plan_PS      = root_fftw_create_3d_r2c_plan(PS_FFT_Size, PS, StartupFlag);
-#  ifdef GRAVITY
-   FFTW_Plan_Poi     = root_fftw_create_3d_r2c_plan(Gravity_FFT_Size, RhoK, StartupFlag);
-   FFTW_Plan_Poi_Inv = root_fftw_create_3d_c2r_plan(Gravity_FFT_Size, RhoK, StartupFlag);
-#  endif // # ifdef GRAVITY
-#  if ( MODEL == ELBDM )
-   FFTW_Plan_Psi     = root_fftw_create_3d_forward_c2c_plan ( Psi_FFT_Size,    PsiK, StartupFlag );
-   FFTW_Plan_Psi_Inv = root_fftw_create_3d_backward_c2c_plan( InvPsi_FFT_Size, PsiK, StartupFlag );
-
-#  if ( WAVE_SCHEME == WAVE_GRAMFE )
-
-// the Gram-Fourier extension planners only use one thread because OMP parallelisation evolves different patches parallely
-// From the FFTW3 documentation: https://www.fftw.org/fftw3_doc/Usage-of-Multi_002dthreaded-FFTW.html
-// "You can call fftw_plan_with_nthreads, create some plans,
-// call fftw_plan_with_nthreads again with a different argument, and create some more plans for a new number of threads."
-
-#  if ( defined(SUPPORT_FFTW3) && defined(OPENMP) )
-   if (FFTW3_Double_OMP_Enabled)  fftw_plan_with_nthreads(1);
-   if (FFTW3_Single_OMP_Enabled) fftwf_plan_with_nthreads(1);
-#  endif // # if ( defined(SUPPORT_FFTW3) && defined(OPENMP) )
-
-   FFTW_Plan_ExtPsi      = gramfe_fftw_create_1d_forward_c2c_plan ( ExtPsi_FFT_Size, ExtPsiK, StartupFlag );
-   FFTW_Plan_ExtPsi_Inv  = gramfe_fftw_create_1d_backward_c2c_plan( ExtPsi_FFT_Size, ExtPsiK, StartupFlag );
-
-// restore regular settings
-#  if ( defined(SUPPORT_FFTW3) && defined(OPENMP) )
-   if (FFTW3_Double_OMP_Enabled)  fftw_plan_with_nthreads(OMP_NTHREAD);
-   if (FFTW3_Single_OMP_Enabled) fftwf_plan_with_nthreads(OMP_NTHREAD);
-#  endif // # if ( defined(SUPPORT_FFTW3) && defined(OPENMP) )
-#  endif // #  if ( WAVE_SCHEME == WAVE_GRAMFE )
-
-#  endif // #  if ( MODEL == ELBDM )
-
-// free memory for arrays in fftw3
-#  if ( SUPPORT_FFTW == FFTW3 )
-   root_fftw::fft_free(PS);
-#  ifdef GRAVITY
-   root_fftw::fft_free(RhoK);
-#  endif // # ifdef GRAVITY
-#  if ( MODEL == ELBDM )
-   root_fftw::fft_free( PsiK );
-#  if ( WAVE_SCHEME == WAVE_GRAMFE )
-   gramfe_fftw::fft_free( ExtPsiK );
-#  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
-#  endif // # if ( MODEL == ELBDM )
-#  endif // # if ( SUPPORT_FFTW == FFTW3 )
-
+   FFTW_Inited[lv] = true;
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
@@ -264,23 +199,21 @@ void End_FFTW()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
-   root_fftw::destroy_real_plan_nd  ( FFTW_Plan_PS      );
+
+   End_FFTW_PowerSpectrum();
 
 #  ifdef GRAVITY
-   root_fftw::destroy_real_plan_nd  ( FFTW_Plan_Poi     );
-   root_fftw::destroy_real_plan_nd  ( FFTW_Plan_Poi_Inv );
-#  endif // #  ifdef GRAVITY
-
+   End_FFTW_Poisson();
+#  endif
 
 #  if ( MODEL == ELBDM )
-   root_fftw::destroy_complex_plan_nd  ( FFTW_Plan_Psi     );
-   root_fftw::destroy_complex_plan_nd  ( FFTW_Plan_Psi_Inv );
+   End_FFTW_ELBDMSpectral();
 
 #  if ( WAVE_SCHEME == WAVE_GRAMFE )
-   gramfe_fftw::destroy_complex_plan_1d  ( FFTW_Plan_ExtPsi     );
-   gramfe_fftw::destroy_complex_plan_1d  ( FFTW_Plan_ExtPsi_Inv );
+   End_FFTW_GramFE();
 #  endif // # if ( WAVE_SCHEME == WAVE_GRAMFE )
 #  endif // #if ( MODEL == ELBDM )
+
 
 #  if ( SUPPORT_FFTW == FFTW3 )
 #  ifdef OPENMP
@@ -302,6 +235,255 @@ void End_FFTW()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
 } // FUNCTION : End_FFTW
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Init_FFTW_PowerSpectrum
+// Description :  Create the FFTW plan for the power spectrum
+//
+// Parameter   :  StartupFlag : Initialize FFTW plan method
+//
+// Return      :  none
+//-------------------------------------------------------------------------------------------------------
+void Init_FFTW_PowerSpectrum( const int StartupFlag )
+{
+
+// determine the FFT size
+   int PS_FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
+
+   real* PS = NULL;
+
+// allocate memory for arrays in fftw3
+#  if ( SUPPORT_FFTW == FFTW3 )
+   PS = (real*)root_fftw::fft_malloc( ComputePaddedTotalSize( PS_FFT_Size ) * sizeof(real) );
+#  endif
+
+// create plans
+   FFTW_Plan_PS = root_fftw_create_3d_r2c_plan( PS_FFT_Size, PS, StartupFlag );
+
+// free memory for arrays in fftw3
+#  if ( SUPPORT_FFTW == FFTW3 )
+   root_fftw::fft_free( PS );
+#  endif
+
+} // FUNCITON : Init_FFTW_PowerSpectrum
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  End_FFTW_PowerSpectrum
+// Description :  Delete the FFTW plan for the power spectrum
+//
+// Return      :  none
+//-------------------------------------------------------------------------------------------------------
+void End_FFTW_PowerSpectrum()
+{
+
+   root_fftw::destroy_real_plan_nd( FFTW_Plan_PS );
+
+} // FUNCITON : End_FFTW_PowerSpectrum
+
+
+
+#ifdef GRAVITY
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Init_FFTW_Poisson
+// Description :  Create the FFTW plan for the self-gravity Poisson solver
+//
+// Parameter   :  StartupFlag : Initialize FFTW plan method
+//                lv          : Target level
+//
+// Return      :  none
+//-------------------------------------------------------------------------------------------------------
+void Init_FFTW_Poisson( const int StartupFlag, const int lv )
+{
+
+   const int CellFactor = (int)(1L<<lv);
+
+// determine the FFT size
+   int Gravity_FFT_Size[3] = { NX0_TOT[0]*CellFactor, NX0_TOT[1]*CellFactor, NX0_TOT[2]*CellFactor };
+
+// the zero-padding method is adopted for the isolated BC
+   if ( OPT__BC_POT == BC_POT_ISOLATED )
+      for (int d=0; d<3; d++)   Gravity_FFT_Size[d] *= 2;
+
+// check
+   if ( MPI_Rank == 0 )
+   for (int d=0; d<3; d++)
+   {
+      if ( Gravity_FFT_Size[d] <= 0 )   Aux_Error( ERROR_INFO, "Gravity_FFT_Size[%d] = %d < 0 !!\n", d, Gravity_FFT_Size[d] );
+   }
+
+   real* RhoK = NULL;
+
+// allocate memory for arrays in fftw3
+#  if ( SUPPORT_FFTW == FFTW3 )
+   RhoK = (real*)root_fftw::fft_malloc( ComputePaddedTotalSize( Gravity_FFT_Size ) * sizeof(real) );
+#  endif
+
+// create plans
+   FFTW_Plan_Poi[lv]     = root_fftw_create_3d_r2c_plan( Gravity_FFT_Size, RhoK, StartupFlag );
+   FFTW_Plan_Poi_Inv[lv] = root_fftw_create_3d_c2r_plan( Gravity_FFT_Size, RhoK, StartupFlag );
+
+// free memory for arrays in fftw3
+#  if ( SUPPORT_FFTW == FFTW3 )
+   root_fftw::fft_free( RhoK );
+#  endif
+
+} // FUNCTION : Init_FFTW_Poisson
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  End_FFTW_Poisson
+// Description :  Delete the FFTW plan for the self-gravity Poisson solver
+//
+// Return      :  none
+//-------------------------------------------------------------------------------------------------------
+void End_FFTW_Poisson()
+{
+
+   for (int lv=0; lv<NLEVEL; lv++)
+   {
+      if ( ! FFTW_Inited[lv] )   continue;
+
+      root_fftw::destroy_real_plan_nd( FFTW_Plan_Poi[lv]     );
+      root_fftw::destroy_real_plan_nd( FFTW_Plan_Poi_Inv[lv] );
+   }
+
+} // FUNCITON : End_FFTW_Poisson
+#endif // #ifdef GRAVITY
+
+
+
+#if ( MODEL == ELBDM )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Init_FFTW_ELBDMSpectral
+// Description :  Create the FFTW plan for the ELBDM spectral solver
+//
+// Parameter   :  StartupFlag : Initialize FFTW plan method
+//
+// Return      :  none
+//-------------------------------------------------------------------------------------------------------
+void Init_FFTW_ELBDMSpectral( const int StartupFlag )
+{
+
+// determine the FFT size
+   int Psi_FFT_Size[3]    = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
+#  if ( defined( SERIAL )  ||  SUPPORT_FFTW == FFTW3 )
+   int InvPsi_FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
+#  else // # ifdef SERIAL || FFTW3
+// Note that the dimensions of the inverse transform in FFTW2,
+// which are given by the dimensions of the output of the forward transform,
+// are Ny*Nz*Nx because we are using "FFTW_TRANSPOSED_ORDER" in fftwnd_mpi().
+   int InvPsi_FFT_Size[3] = { NX0_TOT[0], NX0_TOT[2], NX0_TOT[1] };
+#  endif // # ifdef SERIAL || FFTW3 ... else
+
+   real* PsiK = NULL;
+
+// allocate memory for arrays in fftw3
+#  if ( SUPPORT_FFTW == FFTW3 )
+   PsiK = (real*)root_fftw::fft_malloc( ComputeTotalSize( Psi_FFT_Size ) * sizeof(real) * 2 );  // 2 * real for size of complex number
+#  endif
+
+// create plans
+   FFTW_Plan_Psi     = root_fftw_create_3d_forward_c2c_plan ( Psi_FFT_Size,    PsiK, StartupFlag );
+   FFTW_Plan_Psi_Inv = root_fftw_create_3d_backward_c2c_plan( InvPsi_FFT_Size, PsiK, StartupFlag );
+
+// free memory for arrays in fftw3
+#  if ( SUPPORT_FFTW == FFTW3 )
+   root_fftw::fft_free( PsiK );
+#  endif
+
+} // FUNCTION : Init_FFTW_ELBDMSpectral
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  End_FFTW_ELBDMSpectral
+// Description :  Delete the FFTW plan for the ELBDM spectral solver
+//
+// Return      :  none
+//-------------------------------------------------------------------------------------------------------
+void End_FFTW_ELBDMSpectral()
+{
+
+   root_fftw::destroy_complex_plan_nd( FFTW_Plan_Psi     );
+   root_fftw::destroy_complex_plan_nd( FFTW_Plan_Psi_Inv );
+
+} // FUNCITON : End_FFTW_ELBDMSpectral
+
+
+
+#if ( WAVE_SCHEME == WAVE_GRAMFE )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Init_FFTW_GramFE
+// Description :  Create the FFTW plan for the Gram Fourier extension solver
+//
+// Note        :  1. The Gram-Fourier extension planners only use one thread because OMP parallelisation
+//                   evolves different patches parallely.
+//                   From the FFTW3 documentation: https://www.fftw.org/fftw3_doc/Usage-of-Multi_002dthreaded-FFTW.html
+//                   --> "You can call fftw_plan_with_nthreads, create some plans, call fftw_plan_with_nthreads
+//                        again with a different argument, and create some more plans for a new number of threads."
+//
+// Parameter   :  StartupFlag : Initialize FFTW plan method
+//
+// Return      :  none
+//-------------------------------------------------------------------------------------------------------
+void Init_FFTW_GramFE( const int StartupFlag )
+{
+
+// determine the FFT size
+   int ExtPsi_FFT_Size = GRAMFE_FLU_NXT;
+
+   gramfe_fftw::fft_complex* ExtPsiK = NULL;
+
+// allocate memory for arrays in fftw3
+#  if ( SUPPORT_FFTW == FFTW3 )
+   ExtPsiK = (gramfe_fftw::fft_complex*)gramfe_fftw::fft_malloc( ExtPsi_FFT_Size * sizeof(gramfe_fftw::fft_complex) );
+#  endif
+
+// See note 1.
+#  if ( defined( SUPPORT_FFTW3 )  &&  defined( OPENMP ) )
+   if ( FFTW3_Double_OMP_Enabled )  fftw_plan_with_nthreads( 1 );
+   if ( FFTW3_Single_OMP_Enabled ) fftwf_plan_with_nthreads( 1 );
+#  endif
+
+// create plans
+   FFTW_Plan_ExtPsi      = gramfe_fftw_create_1d_forward_c2c_plan ( ExtPsi_FFT_Size, ExtPsiK, StartupFlag );
+   FFTW_Plan_ExtPsi_Inv  = gramfe_fftw_create_1d_backward_c2c_plan( ExtPsi_FFT_Size, ExtPsiK, StartupFlag );
+
+// restore regular settings
+#  if ( defined( SUPPORT_FFTW3 )  &&  defined( OPENMP ) )
+   if ( FFTW3_Double_OMP_Enabled )  fftw_plan_with_nthreads( OMP_NTHREAD );
+   if ( FFTW3_Single_OMP_Enabled ) fftwf_plan_with_nthreads( OMP_NTHREAD );
+#  endif
+
+// free memory for arrays in fftw3
+#  if ( SUPPORT_FFTW == FFTW3 )
+   gramfe_fftw::fft_free( ExtPsiK );
+#  endif
+
+} // FUNCTION : Init_FFTW_Poisson
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  End_FFTW_GramFE
+// Description :  Delete the FFTW plan for the Gram Fourier extension solver
+//
+// Return      :  none
+//-------------------------------------------------------------------------------------------------------
+void End_FFTW_GramFE()
+{
+
+   gramfe_fftw::destroy_complex_plan_1d( FFTW_Plan_ExtPsi     );
+   gramfe_fftw::destroy_complex_plan_1d( FFTW_Plan_ExtPsi_Inv );
+
+} // FUNCITON : End_FFTW_Poisson
+#endif // #if ( WAVE_SCHEME == WAVE_GRAMFE )
+#endif // #if ( MODEL == ELBDM )
 
 
 
@@ -330,11 +512,13 @@ void End_FFTW()
 //                InPlacePad     : Whether or not to pad the array size for in-place real-to-complex FFT
 //                ForPoisson     : Preparing the density field for the Poisson solver
 //                AddExtraMass   : Adding an extra density field for computing gravitational potential (only works with ForPoisson)
+//                lv             : Target level
 //-------------------------------------------------------------------------------------------------------
 void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf_SIdx, long *RecvBuf_SIdx,
                  int **List_PID, int **List_k, long *List_NSend_Var, long *List_NRecv_Var,
                  const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
-                 const double PrepTime, const long TVar, const bool InPlacePad, const bool ForPoisson, const bool AddExtraMass )
+                 const double PrepTime, const long TVar, const bool InPlacePad, const bool ForPoisson,
+                 const bool AddExtraMass, const int lv )
 {
 
 // check
@@ -360,12 +544,12 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 
    const int SSize[2]   = { ( InPlacePad ? 2*(FFT_Size[0]/2+1) : FFT_Size[0] ), FFT_Size[1] }; // padded slab size in the x and y directions
    const int PSSize     = PS1*PS1;                                                             // patch slice size
-   const int MemUnit    = MAX( 1, amr->NPatchComma[0][1]/MPI_NRank );                          // set arbitrarily; divided by MPI_NRank so that the
+   const int MemUnit    = MAX( 1, amr->NPatchComma[lv][1]/MPI_NRank );                         // set arbitrarily; divided by MPI_NRank so that the
                                                                                                // memory consumption per rank for arrays like
                                                                                                // TempBuf_Var[MPI_NRank] reduces when launching
                                                                                                // more ranks
    const int AveNz      = FFT_Size[2]/MPI_NRank + ( ( FFT_Size[2]%MPI_NRank == 0 ) ? 0 : 1 );  // average slab thickness
-   const int Scale0     = amr->scale[0];
+   const int Scale      = amr->scale[lv];
 
    int   Cr[3];                        // corner coordinates of each patch normalized to the base-level grid size
    int   BPos_z;                       // z coordinate of each patch slice in the simulation box
@@ -413,15 +597,16 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
    const real        MinEntr_No        = -1.0;
    const int         GhostSize         = 0;
    const int         NPG               = 1;
+   const long        CellFactor        = (long)(1L<<lv);
 
    real (*VarPatch)[PS1][PS1][PS1] = new real [8*NPG][PS1][PS1][PS1];
 
-   for (int PID0=0; PID0<amr->NPatchComma[0][1]; PID0+=8)
+   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
    {
 //    even with NSIDE_00 and GhostSize=0, we still need OPT__BC_FLU to determine whether periodic BC is adopted
 //    for depositing particle mass onto grids.
 //    also note that we do not check minimum density here since no ghost zones are required
-      Prepare_PatchData( 0, PrepTime, VarPatch[0][0][0], NULL, GhostSize, NPG, &PID0, TVar, _NONE,
+      Prepare_PatchData( lv, PrepTime, VarPatch[0][0][0], NULL, GhostSize, NPG, &PID0, TVar, _NONE,
                          IntScheme, INT_NONE, UNIT_PATCH, NSide_None, IntPhase_No, OPT__BC_FLU, PotBC_None,
                          MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
 
@@ -430,20 +615,20 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 //    add extra mass source for gravity if required
       if ( ForPoisson  &&  AddExtraMass )
       {
-         const double dh = amr->dh[0];
+         const double dh = amr->dh[lv];
 
          for (int PID=PID0, LocalID=0; PID<PID0+8; PID++, LocalID++)
          {
-            const double x0 = amr->patch[0][0][PID]->EdgeL[0] + 0.5*dh;
-            const double y0 = amr->patch[0][0][PID]->EdgeL[1] + 0.5*dh;
-            const double z0 = amr->patch[0][0][PID]->EdgeL[2] + 0.5*dh;
+            const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
+            const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
+            const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
 
             double x, y, z;
 
             for (int k=0; k<PS1; k++)  {  z = z0 + k*dh;
             for (int j=0; j<PS1; j++)  {  y = y0 + j*dh;
             for (int i=0; i<PS1; i++)  {  x = x0 + i*dh;
-               VarPatch[LocalID][k][j][i] += Poi_AddExtraMassForGravity_Ptr( x, y, z, Time[0], 0, NULL );
+               VarPatch[LocalID][k][j][i] += Poi_AddExtraMassForGravity_Ptr( x, y, z, Time[lv], lv, NULL );
             }}}
          }
       }
@@ -453,7 +638,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 //    copy data to the send buffer
       for (int PID=PID0, LocalID=0; PID<PID0+8; PID++, LocalID++)
       {
-         for (int d=0; d<3; d++)    Cr[d] = amr->patch[0][0][PID]->corner[d] / Scale0;
+         for (int d=0; d<3; d++)    Cr[d] = amr->patch[0][lv][PID]->corner[d] / Scale;
 
          for (int k=0; k<PS1; k++)
          {
@@ -551,8 +736,8 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 #  ifdef GAMER_DEBUG
    const long NSend_Total  = Send_Disp_Var[MPI_NRank-1] + List_NSend_Var[MPI_NRank-1];
    const long NRecv_Total  = Recv_Disp_Var[MPI_NRank-1] + List_NRecv_Var[MPI_NRank-1];
-   const long NSend_Expect = (long)amr->NPatchComma[0][1]*(long)CUBE(PS1);
-   const long NRecv_Expect = (long)NX0_TOT[0]*(long)NX0_TOT[1]*(long)NRecvSlice;
+   const long NSend_Expect = (long)amr->NPatchComma[lv][1]*(long)CUBE(PS1);
+   const long NRecv_Expect = (long)NX0_TOT[0]*CellFactor*(long)NX0_TOT[1]*CellFactor*(long)NRecvSlice;
 
    if ( NSend_Total != NSend_Expect )  Aux_Error( ERROR_INFO, "NSend_Total = %ld != expected value = %ld !!\n",
                                                   NSend_Total, NSend_Expect );
@@ -587,7 +772,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 
 
 // 5. store the received data to the padded array "VarS" for FFTW
-   const long NPSlice = (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice/PSSize;  // total number of received patch slices
+   const long NPSlice = (long)NX0_TOT[0]*CellFactor*NX0_TOT[1]*CellFactor*NRecvSlice/PSSize;  // total number of received patch slices
    long  dSIdx, Counter = 0;
    real *VarS_Ptr = NULL;
 
@@ -670,10 +855,11 @@ int ZIndex2Rank( const int IndexZ, const int *List_z_start, const int TRank_Gues
 //                NSendSlice : Total number of z slices need to be sent to other ranks (could be zero in the isolated BC)
 //                TVar       : Target variable to be prepared
 //                InPlacePad : Whether or not to pad the array size for in-place real-to-complex FFT
+//                lv         : Target level
 //-------------------------------------------------------------------------------------------------------
 void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx,
                  int **List_PID, int **List_k, long *List_NSend, long *List_NRecv, const int local_nz, const int FFT_Size[],
-                 const int NSendSlice, const long TVar, const bool InPlacePad )
+                 const int NSendSlice, const long TVar, const bool InPlacePad, const int lv )
 {
 
 // check
@@ -704,9 +890,10 @@ void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveS
 
 
 // 1. store the evaluated data to the send buffer
+   const long  CellFactor = (long)(1L<<lv);
    const int   SSize[2]   = { ( InPlacePad ? 2*(FFT_Size[0]/2+1) : FFT_Size[0] ), FFT_Size[1] };  // padded slab size in the x and y directions
-   const int   PSSize     = PS1*PS1;                                          // patch slice size
-   const long  NPSlice    = (long)NX0_TOT[0]*NX0_TOT[1]*NSendSlice/PSSize;    // total number of patch slices to be sent
+   const int   PSSize     = PS1*PS1;                                                              // patch slice size
+   const long  NPSlice    = (long)NX0_TOT[0]*CellFactor*NX0_TOT[1]*CellFactor*NSendSlice/PSSize;  // total number of patch slices to be sent
    const real *VarS_Ptr   = NULL;
 
    long SIdx, dSIdx, Counter = 0;
@@ -754,10 +941,10 @@ void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveS
          k   = List_k  [r][t];
 
          if ( TVarIdx < NCOMP_TOTAL )
-            memcpy( amr->patch[SaveSg][0][PID]->fluid[TVarIdx][k], RecvPtr, PSSize*sizeof(real) );
+            memcpy( amr->patch[SaveSg][lv][PID]->fluid[TVarIdx][k], RecvPtr, PSSize*sizeof(real) );
 #        ifdef GRAVITY
          else if ( TVarIdx == NCOMP_TOTAL+NDERIVE ) // TVar == _POTE
-            memcpy( amr->patch[SaveSg][0][PID]->pot[k], RecvPtr, PSSize*sizeof(real) );
+            memcpy( amr->patch[SaveSg][lv][PID]->pot[k], RecvPtr, PSSize*sizeof(real) );
 #        endif
          else
             Aux_Error( ERROR_INFO, "incorrect target variable index %s = %d !!\n", "TVarIdx", TVarIdx );
