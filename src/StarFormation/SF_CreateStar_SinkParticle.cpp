@@ -57,6 +57,37 @@ bool ProximityCheck_SecondDenThres( const int ExistingNPar, real *ParAtt_Local[]
 }
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  GravMini
+// Description :  Check whether the gas cell has the minimum gravitational potential inside the control volume
+//
+// Parameter   :  pi, pj, pk   : Indices of the current cell
+//                AccCellNum   : Accretion radius in cells
+//                Pot_Array_F  : Potential array
+//                Size_Flu     : Size of the fluid array
+//                Phi000       : Potential of the current cell
+//
+// Return      :  true : The gas cell is the local minimum
+//                false: The gas cell is NOT the local minimum
+//-------------------------------------------------------------------------------------------------------
+bool GravMini( const int pi, const int pj, const int pk, const real AccCellNum, 
+               const real *Pot_Array_F, const int Size_Flu, const real Phi000 )
+{
+   for (int vk=pk-AccCellNum; vk<=pk+AccCellNum; vk++)
+   for (int vj=pj-AccCellNum; vj<=pj+AccCellNum; vj++)
+   for (int vi=pi-AccCellNum; vi<=pi+AccCellNum; vi++)
+   {
+      if ( SQRT(SQR(vi - pi)+SQR(vj - pj)+SQR(vk - pk)) > AccCellNum )           continue;
+
+      const int vt = IDX321( vi, vj, vk, Size_Flu, Size_Flu );
+      const real Phiijk = Pot_Array_F[vt];
+
+      if ( Phiijk < Phi000 )  return false;
+   }
+
+   return true;
+}
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  SF_CreateStar_SinkParticle
 // Description :  Create sink particles based on FALSH prescription
 //
@@ -385,26 +416,9 @@ if ( lv != MAX_LEVEL )
 //       Gravitational minimum check inside the control volume:
 //       The gas cell should have the minimum gravitational potential inside the control volume
 //       ===========================================================================================================
-         real Phi000 = Pot_Array_F[t]; // the potential of the current cell
-         real Phiijk = (real)0.0;
-         bool NotMiniPot          = false;
-         for (int vk=pk-AccCellNum; vk<=pk+AccCellNum; vk++)
-         for (int vj=pj-AccCellNum; vj<=pj+AccCellNum; vj++)
-         for (int vi=pi-AccCellNum; vi<=pi+AccCellNum; vi++) // loop the nearby cells, to find the cells inside the control volumne (v)
-         {
-            if ( SQRT(SQR(vi - pi)+SQR(vj - pj)+SQR(vk - pk)) > AccCellNum )           continue; // check whether it is inside the control volume
-
-            const int vt = IDX321( vi, vj, vk, Size_Flu, Size_Flu );
-            Phiijk = Pot_Array_F[vt];
-
-            if ( Phiijk < Phi000 )
-            {
-               NotMiniPot = true;
-               break;
-            }
-         } // vi, vj, vk
-
-         if ( NotMiniPot )                                   continue;
+         const real Phi000 = Pot_Array_F[t]; // the potential of the current cell
+         if ( !GravMini( pi, pj, pk, AccCellNum, Pot_Array_F, Size_Flu, Phi000 ) )
+            continue;
          
 //       Converging flow check:
 //       The gas in the nearby six cells should converge toward the central one
