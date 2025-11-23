@@ -88,6 +88,158 @@ bool GravMini( const int pi, const int pj, const int pk, const real AccCellNum,
 }
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  ConvergingFlow
+// Description :  Check whether the gas in the nearby six cells converge toward the central one
+//
+// Parameter   :  t            : Index of the current cell
+//                Size_Flu     : Size of the fluid array
+//                Flu_Array_F_In: Fluid array
+//
+// Return      :  true : The flow is converging
+//                false: The flow is NOT converging
+//-------------------------------------------------------------------------------------------------------
+bool ConvergingFlow( const int t, const int Size_Flu, const real *Flu_Array_F_In )
+{
+   const int CubeSize = CUBE(Size_Flu);
+   real NeighborFluid[FLU_NIN];
+   real VelNeighbor[6];
+   int delta_t;
+
+   for (int NeighborID=0; NeighborID<6; NeighborID++)
+   {  
+      if      (NeighborID == 0) delta_t = IDX321(  1,  0,  0, Size_Flu, Size_Flu );
+      else if (NeighborID == 1) delta_t = IDX321( -1,  0,  0, Size_Flu, Size_Flu );
+      else if (NeighborID == 2) delta_t = IDX321(  0,  1,  0, Size_Flu, Size_Flu );
+      else if (NeighborID == 3) delta_t = IDX321(  0, -1,  0, Size_Flu, Size_Flu );
+      else if (NeighborID == 4) delta_t = IDX321(  0,  0,  1, Size_Flu, Size_Flu );
+      else if (NeighborID == 5) delta_t = IDX321(  0,  0, -1, Size_Flu, Size_Flu );
+
+      const int Neighbort = t + delta_t;
+      for (int v=0; v<FLU_NIN; v++)    NeighborFluid[v] = Flu_Array_F_In[ v*CubeSize + Neighbort ];
+
+      if      ((NeighborID == 0) || (NeighborID == 1)) VelNeighbor[NeighborID] = NeighborFluid[MOMX]/NeighborFluid[DENS];
+      else if ((NeighborID == 2) || (NeighborID == 3)) VelNeighbor[NeighborID] = NeighborFluid[MOMY]/NeighborFluid[DENS];
+      else if ((NeighborID == 4) || (NeighborID == 5)) VelNeighbor[NeighborID] = NeighborFluid[MOMZ]/NeighborFluid[DENS];
+   }
+
+   if ( (VelNeighbor[0] - VelNeighbor[1]) >= 0 || 
+        (VelNeighbor[2] - VelNeighbor[3]) >= 0 || 
+        (VelNeighbor[4] - VelNeighbor[5]) >= 0 )                      
+      return false;
+
+   return true;
+}
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  JeansInstability_BoundState
+// Description :  Check for Jeans instability and bound state
+//
+// Parameter   :  pi, pj, pk      : Indices of the current cell
+//                AccCellNum      : Accretion radius in cells
+//                Flu_Array_F_In  : Fluid array (linearized)
+//                Size_Flu        : Size of the fluid array
+//                Mag_Array_F_In  : Magnetic field array (linearized)
+//                Mag_Stride      : Stride for magnetic field array
+//                dv              : Cell volume
+//                dh              : Cell size
+//
+// Return      :  true : The control volume is unstable and bound (create particle)
+//                false: Otherwise
+//-------------------------------------------------------------------------------------------------------
+bool JeansInstability_BoundState( const int pi, const int pj, const int pk, const real AccCellNum,
+                                  const real *Flu_Array_F_In, const int Size_Flu,
+                                  const real *Mag_Array_F_In, const int Mag_Stride,
+                                  const real dv, const real dh )
+{
+   const int CubeSize = CUBE(Size_Flu);
+   real ControlFluid[FLU_NIN], ControlFluidj[FLU_NIN];
+   real Pres, Cs2, vEmag=NULL_REAL;
+
+   // calculate bulk velocity
+   real TotalMass = (real)0.0, MassVel[3] = { (real)0.0, (real)0.0, (real)0.0}, BulkVel[3];
+   
+   for (int vk=pk-AccCellNum; vk<=pk+AccCellNum; vk++)
+   for (int vj=pj-AccCellNum; vj<=pj+AccCellNum; vj++)
+   for (int vi=pi-AccCellNum; vi<=pi+AccCellNum; vi++)
+   {
+      if ( SQRT(SQR(vi - pi)+SQR(vj - pj)+SQR(vk - pk)) > AccCellNum )           continue;
+
+      const int vt = IDX321( vi, vj, vk, Size_Flu, Size_Flu );
+      for (int v=0; v<FLU_NIN; v++)    ControlFluid[v] = Flu_Array_F_In[ v*CubeSize + vt ];
+
+      MassVel[0] += ControlFluid[MOMX]*dv;
+      MassVel[1] += ControlFluid[MOMY]*dv;
+      MassVel[2] += ControlFluid[MOMZ]*dv;
+      TotalMass  += ControlFluid[DENS]*dv;
+   }
+
+   BulkVel[0] = MassVel[0]/TotalMass;
+   BulkVel[1] = MassVel[1]/TotalMass;
+   BulkVel[2] = MassVel[2]/TotalMass;
+
+   // get the energy
+   real Egtot = (real)0.0, Ethtot = (real)0.0, Emagtot = (real)0.0, Ekintot = (real)0.0;
+   const bool CheckMinPres_No = false;
+
+   for (int vk=pk-AccCellNum; vk<=pk+AccCellNum; vk++)
+   for (int vj=pj-AccCellNum; vj<=pj+AccCellNum; vj++)
+   for (int vi=pi-AccCellNum; vi<=pi+AccCellNum; vi++)
+   {
+      if ( SQRT(SQR(vi - pi)+SQR(vj - pj)+SQR(vk - pk)) > AccCellNum )           continue;
+
+      const int vt = IDX321( vi, vj, vk, Size_Flu, Size_Flu );
+      for (int v=0; v<FLU_NIN; v++)    ControlFluid[v] = Flu_Array_F_In[ v*CubeSize + vt ];
+
+      // Storing Egtot
+      real SelfPhiijk = (real)0.0;
+      for (int vkj=pk-AccCellNum; vkj<=pk+AccCellNum; vkj++)
+      for (int vjj=pj-AccCellNum; vjj<=pj+AccCellNum; vjj++)
+      for (int vij=pi-AccCellNum; vij<=pi+AccCellNum; vij++)
+      {
+         if ( SQRT(SQR(vij - pi)+SQR(vjj - pj)+SQR(vkj - pk)) > AccCellNum )           continue;
+
+         int rijPix = SQRT(SQR(vi - vij)+SQR(vj - vjj)+SQR(vk - vkj));
+         if ( rijPix == 0 )                        continue;
+
+         real rij = rijPix*dh;
+         
+         const int vtj = IDX321( vij, vjj, vkj, Size_Flu, Size_Flu );
+         for (int v=0; v<FLU_NIN; v++)    ControlFluidj[v] = Flu_Array_F_In[ v*CubeSize + vtj ];
+
+         SelfPhiijk += -NEWTON_G*ControlFluidj[DENS]*dv/rij;
+      }
+
+      Egtot += 0.5*ControlFluid[DENS]*dv*SelfPhiijk;
+
+      // Storing Emagtot
+#     ifdef MHD
+      vEmag = MHD_GetCellCenteredBEnergy( Mag_Array_F_In + MAGX*Mag_Stride,
+                                          Mag_Array_F_In + MAGY*Mag_Stride,
+                                          Mag_Array_F_In + MAGZ*Mag_Stride,
+                                          Size_Flu, Size_Flu, Size_Flu, vi, vj, vk );
+      Emagtot += vEmag*dv;
+#     endif
+
+      // Storing Ethtot and Ekintot
+      Pres = Hydro_Con2Pres( ControlFluid[DENS], ControlFluid[MOMX], ControlFluid[MOMY], ControlFluid[MOMZ], ControlFluid[ENGY],
+                             ControlFluid+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, PassiveFloorMask, vEmag,
+                             EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                             EoS_AuxArray_Flt,
+                             EoS_AuxArray_Int, h_EoS_Table, NULL );
+      Cs2  = EoS_DensPres2CSqr_CPUPtr( ControlFluid[DENS], Pres, ControlFluid+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+      
+      Ethtot += 0.5*ControlFluid[DENS]*dv*Cs2;
+
+      Ekintot += 0.5*ControlFluid[DENS]*dv*( SQR(ControlFluid[MOMX]/ControlFluid[DENS] - BulkVel[0]) + SQR(ControlFluid[MOMY]/ControlFluid[DENS] - BulkVel[1]) + SQR(ControlFluid[MOMZ]/ControlFluid[DENS] - BulkVel[2]));
+   }
+
+   if ( FABS(Egtot) <= 2*Ethtot )                      return false;
+   if (( Egtot + Ethtot + Ekintot + Emagtot ) >= 0)    return false;
+
+   return true;
+}
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  SF_CreateStar_SinkParticle
 // Description :  Create sink particles based on FALSH prescription
 //
@@ -115,6 +267,7 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
 #  if ( defined STORE_PAR_ACC  &&  !defined STORE_POT_GHOST )
 #     error : STAR_FORMATION + STORE_PAR_ACC must work with STORE_POT_GHOST !!
 #  endif
+
 
 #  ifndef GRAVITY
 #     error : must turn on GRAVITY for SF_CreateStar_SinkParticle() !!
@@ -186,14 +339,7 @@ if ( lv != MAX_LEVEL )
    real fluid[FLU_NIN]; // fluid in the current test cell
 
 
-   real ControlPosX, ControlPosY, ControlPosZ; // position of the cells inside the control volume
-   // real Cell2Cell; // distance to the center cell in the control volume
 
-   real NeighborFluid[FLU_NIN]; // used in Converging flow Check
-   real VelNeighbor[6]; // record the neighboring cell velocity [x+, x-, y+, y+, z+, z-]
-
-   real ControlFluid[FLU_NIN], ControlFluidj[FLU_NIN]; // used in Jeans instability check
-   real Pres, Cs2, vEmag=NULL_REAL;
 
    real PotNeighbor[6]; // record the neighboring cell potential [x+, x-, y+, y+, z+, z-]
 
@@ -423,112 +569,16 @@ if ( lv != MAX_LEVEL )
 //       Converging flow check:
 //       The gas in the nearby six cells should converge toward the central one
 //       ===========================================================================================================
-         for (int NeighborID=0; NeighborID<6; NeighborID++)
-         {  
-            if      (NeighborID == 0) delta_t = IDX321(  1,  0,  0, Size_Flu, Size_Flu );
-            else if (NeighborID == 1) delta_t = IDX321( -1,  0,  0, Size_Flu, Size_Flu );
-            else if (NeighborID == 2) delta_t = IDX321(  0,  1,  0, Size_Flu, Size_Flu );
-            else if (NeighborID == 3) delta_t = IDX321(  0, -1,  0, Size_Flu, Size_Flu );
-            else if (NeighborID == 4) delta_t = IDX321(  0,  0,  1, Size_Flu, Size_Flu );
-            else if (NeighborID == 5) delta_t = IDX321(  0,  0, -1, Size_Flu, Size_Flu );
-
-            const int Neighbort = t + delta_t;
-            for (int v=0; v<FLU_NIN; v++)    NeighborFluid[v] = Flu_Array_F_In[v][Neighbort];
-
-            if      ((NeighborID == 0) || (NeighborID == 1)) VelNeighbor[NeighborID] = NeighborFluid[MOMX]/NeighborFluid[DENS];
-            else if ((NeighborID == 2) || (NeighborID == 3)) VelNeighbor[NeighborID] = NeighborFluid[MOMY]/NeighborFluid[DENS];
-            else if ((NeighborID == 4) || (NeighborID == 5)) VelNeighbor[NeighborID] = NeighborFluid[MOMZ]/NeighborFluid[DENS];
-         } // for (int NeighborID=0; NeighborID<6; NeighborID++)
-
-         if ( (VelNeighbor[0] - VelNeighbor[1]) >= 0 || 
-              (VelNeighbor[2] - VelNeighbor[3]) >= 0 || 
-              (VelNeighbor[4] - VelNeighbor[5]) >= 0 )                      
-              continue;
+         if ( !ConvergingFlow( t, Size_Flu, (real*)Flu_Array_F_In[0] ) )
+            continue;
 
 //       Jeans instability check + check for bound state
 //       The control volume is Jeans unstable if | Egtot | >= 2*Ethtot
 //       The control volume is bound if ( Ethtot + Ekintot + Emagtot ) >= | Egtot |
 //       ===========================================================================================================
-         // calculate bulk velocity
-         real TotalMass = (real)0.0, MassVel[3] = { (real)0.0, (real)0.0, (real)0.0}, BulkVel[3]; // sum(mass_i), sum(mass_i*velocity_i), mass-weighted velocity
-         for (int vk=pk-AccCellNum; vk<=pk+AccCellNum; vk++)
-         for (int vj=pj-AccCellNum; vj<=pj+AccCellNum; vj++)
-         for (int vi=pi-AccCellNum; vi<=pi+AccCellNum; vi++) // loop the nearby cells, to find the cells inside the control volumne (v)
-         {
-            if ( SQRT(SQR(vi - pi)+SQR(vj - pj)+SQR(vk - pk)) > AccCellNum )           continue; // check whether it is inside the control volume
-
-            const int vt = IDX321( vi, vj, vk, Size_Flu, Size_Flu );
-            for (int v=0; v<FLU_NIN; v++)    ControlFluid[v] = Flu_Array_F_In[v][vt];
-
-            MassVel[0] += ControlFluid[MOMX]*dv;
-            MassVel[1] += ControlFluid[MOMY]*dv;
-            MassVel[2] += ControlFluid[MOMZ]*dv;
-            TotalMass  += ControlFluid[DENS]*dv;
-         } // vi, vj, vk
-
-         BulkVel[0] = MassVel[0]/TotalMass;
-         BulkVel[1] = MassVel[1]/TotalMass;
-         BulkVel[2] = MassVel[2]/TotalMass; // COM velocity
-
-         // get the energy
-         real Egtot = (real)0.0, Ethtot = (real)0.0, Emagtot = (real)0.0, Ekintot = (real)0.0;
-         for (int vk=pk-AccCellNum; vk<=pk+AccCellNum; vk++)
-         for (int vj=pj-AccCellNum; vj<=pj+AccCellNum; vj++)
-         for (int vi=pi-AccCellNum; vi<=pi+AccCellNum; vi++) // loop the nearby cells, to find the cells inside the control volumne (v)
-         {
-            if ( SQRT(SQR(vi - pi)+SQR(vj - pj)+SQR(vk - pk)) > AccCellNum )           continue; // check whether it is inside the control volume
-
-            const int vt = IDX321( vi, vj, vk, Size_Flu, Size_Flu );
-            for (int v=0; v<FLU_NIN; v++)    ControlFluid[v] = Flu_Array_F_In[v][vt];
-
-            // Storing Egtot
-            real SelfPhiijk = (real)0.0; // self-potential
-            for (int vkj=pk-AccCellNum; vkj<=pk+AccCellNum; vkj++)
-            for (int vjj=pj-AccCellNum; vjj<=pj+AccCellNum; vjj++)
-            for (int vij=pi-AccCellNum; vij<=pi+AccCellNum; vij++) // loop the nearby cells, to find the cells inside the control volumne (v)
-            {
-               if ( SQRT(SQR(vij - pi)+SQR(vjj - pj)+SQR(vkj - pk)) > AccCellNum )           continue; // check whether it is inside the control volume
-
-               int rijPix = SQRT(SQR(vi - vij)+SQR(vj - vjj)+SQR(vk - vkj));
-               if ( rijPix == 0 )                        continue;
-
-               real rij = rijPix*dh;
-              
-               const int vtj = IDX321( vij, vjj, vkj, Size_Flu, Size_Flu );
-               for (int v=0; v<FLU_NIN; v++)    ControlFluidj[v] = Flu_Array_F_In[v][vtj];
-
-               SelfPhiijk += -NEWTON_G*ControlFluidj[DENS]*dv/rij; // potential
-            } // vij, vjj, vkj
-
-            Egtot += 0.5*ControlFluid[DENS]*dv*SelfPhiijk;
-
-//          Storing Emagtot
-            const bool CheckMinPres_No = false;
-
-#           ifdef MHD
-            vEmag = MHD_GetCellCenteredBEnergy( Mag_Array_F_In[MAGX],
-                                                Mag_Array_F_In[MAGY],
-                                                Mag_Array_F_In[MAGZ],
-                                                Size_Flu, Size_Flu, Size_Flu, vi, vj, vk );
-            Emagtot += vEmag*dv;
-#           endif
-
-//          Storing Ethtot and Ekintot
-            Pres = Hydro_Con2Pres( ControlFluid[DENS], ControlFluid[MOMX], ControlFluid[MOMY], ControlFluid[MOMZ], ControlFluid[ENGY],
-                                   ControlFluid+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, PassiveFloorMask, vEmag,
-                                   EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                   EoS_AuxArray_Flt,
-                                   EoS_AuxArray_Int, h_EoS_Table, NULL );
-            Cs2  = EoS_DensPres2CSqr_CPUPtr( ControlFluid[DENS], Pres, ControlFluid+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-            
-            // Cs2 = ( Const_kB*ISO_TEMP/UNIT_E ) / ( MOLECULAR_WEIGHT*Const_amu/UNIT_M );
-            Ethtot += 0.5*ControlFluid[DENS]*dv*Cs2;
-
-            Ekintot += 0.5*ControlFluid[DENS]*dv*( SQR(ControlFluid[MOMX]/ControlFluid[DENS] - BulkVel[0]) + SQR(ControlFluid[MOMY]/ControlFluid[DENS] - BulkVel[1]) + SQR(ControlFluid[MOMZ]/ControlFluid[DENS] - BulkVel[2]));
-         } // vi, vj, vk
-
-         if ( FABS(Egtot) <= 2*Ethtot )                      continue;
-         if (( Egtot + Ethtot + Ekintot + Emagtot ) >= 0)    continue;
+         if ( !JeansInstability_BoundState( pi, pj, pk, AccCellNum, (real*)Flu_Array_F_In[0], Size_Flu, 
+                                            (real*)Mag_Array_F_In, Size_Flu_P1*SQR(Size_Flu), dv, dh ) )
+            continue;
 
 //       Store the information of new star particles
 //       ===========================================================================================================
