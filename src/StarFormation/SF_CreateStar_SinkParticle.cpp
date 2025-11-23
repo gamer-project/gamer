@@ -3,6 +3,60 @@
 #if ( defined PARTICLE  &&  defined STAR_FORMATION  &&  MODEL == HYDRO )
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  ProximityCheck_SecondDenThres
+// Description :  Check whether the gas cell is close to any existing particle and satisfies the second density threshold
+//
+// Note        :  1. Ref: Clarke et al., 2017, MNRAS, 468, 2489, eqn (5)
+//
+// Parameter   :  ExistingNPar   : Number of existing particles
+//                ParAtt_Local   : Attribute of existing particles
+//                PosX/Y/Z       : Position of the gas cell
+//                VelX/Y/Z       : Velocity of the gas cell
+//                GasDens        : Density of the gas cell
+//                AccRadius      : Accretion radius
+//                Coeff_FreeFall : Coefficient for free-fall time
+//
+// Return      :  true : The gas cell passes the check
+//                false: The gas cell fails the check
+//-------------------------------------------------------------------------------------------------------
+bool ProximityCheck_SecondDenThres( const int ExistingNPar, real *ParAtt_Local[],
+                                    const real PosX, const real PosY, const real PosZ,
+                                    const real VelX, const real VelY, const real VelZ,
+                                    const real GasDens, const real AccRadius, const real Coeff_FreeFall )
+{
+   real Par2Cell[3], Par2CellDist, Par2CellVel[3];
+   real NorPar2Cell[3];
+   real GasDensFreeFall;
+
+   for (int p=0; p<ExistingNPar; p++) // loop over all nearby existing particles
+   {
+      Par2Cell[0] = PosX - ParAtt_Local[PAR_POSX][p];
+      Par2Cell[1] = PosY - ParAtt_Local[PAR_POSY][p];
+      Par2Cell[2] = PosZ - ParAtt_Local[PAR_POSZ][p];
+      Par2CellDist = SQRT(SQR(Par2Cell[0])+SQR(Par2Cell[1])+SQR(Par2Cell[2]));
+
+      if ( Par2CellDist <= 2*AccRadius )  return false;
+
+      Par2CellVel[0] = VelX - ParAtt_Local[PAR_VELX][p];
+      Par2CellVel[1] = VelY - ParAtt_Local[PAR_VELY][p];
+      Par2CellVel[2] = VelZ - ParAtt_Local[PAR_VELZ][p];
+
+      NorPar2Cell[0] = Par2Cell[0]/Par2CellDist;
+      NorPar2Cell[1] = Par2Cell[1]/Par2CellDist;
+      NorPar2Cell[2] = Par2Cell[2]/Par2CellDist;
+
+      if ( Par2CellVel[0]/NorPar2Cell[0] >= 0 )                       continue; 
+      if ( Par2CellVel[1]/NorPar2Cell[1] >= 0 )                       continue;
+      if ( Par2CellVel[2]/NorPar2Cell[2] >= 0 )                       continue; // the gas is moving away from the existing particle
+
+      GasDensFreeFall = SQR((1/Coeff_FreeFall)*(NorPar2Cell[0]*Par2CellVel[0] + NorPar2Cell[1]*Par2CellVel[1] + NorPar2Cell[2]*Par2CellVel[2])/Par2CellDist); // Clarke et al. 2017, eqn (5)
+      if ( GasDens < GasDensFreeFall )    return false;
+   } // for (int p=0; p<ExistingNPar; p++) 
+
+   return true;
+}
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  SF_CreateStar_SinkParticle
 // Description :  Create sink particles based on FALSH prescription
 //
@@ -22,6 +76,7 @@
 // Return      :  1. Particle repository will be updated
 //                2. fluid[] array of gas will be updated
 //-------------------------------------------------------------------------------------------------------
+
 void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real GasDensThres, const real AccCellNum, 
                                  const int MaxNewPar )
 {
@@ -99,9 +154,6 @@ if ( lv != MAX_LEVEL )
    real Corner_Array_F[3]; // the corner of the ghost zone
    real fluid[FLU_NIN]; // fluid in the current test cell
 
-   real Par2Cell[3], Par2CellDist, Par2CellVel[3]; // particle-cell relative position, distance, relative velocity for proximity check
-   real NorPar2Cell[3]; // normalized particle-cell relative position
-   real GasDensFreeFall; // gas density for a given free-fall time 
 
    real ControlPosX, ControlPosY, ControlPosZ; // position of the cells inside the control volume
    // real Cell2Cell; // distance to the center cell in the control volume
@@ -326,44 +378,9 @@ if ( lv != MAX_LEVEL )
 //       We can use the distance between the gas cell and nearby particle and the relative velocity to define a 
 //       a density threshold (Clarke et al. 2017, eqn (5))
 //       ===========================================================================================================
-         bool InsideAccRadius = false;
-         bool NotPassDen      = false;
-
-         for (int p=0; p<ExistingNPar; p++) // loop over all nearby existing particles
-         {
-            Par2Cell[0] = PosX - ParAtt_Local[PAR_POSX][p];
-            Par2Cell[1] = PosY - ParAtt_Local[PAR_POSY][p];
-            Par2Cell[2] = PosZ - ParAtt_Local[PAR_POSZ][p];
-            Par2CellDist = SQRT(SQR(Par2Cell[0])+SQR(Par2Cell[1])+SQR(Par2Cell[2]));
-
-            Par2CellVel[0] = VelX - ParAtt_Local[PAR_VELX][p];
-            Par2CellVel[1] = VelY - ParAtt_Local[PAR_VELY][p];
-            Par2CellVel[2] = VelZ - ParAtt_Local[PAR_VELZ][p];
-
-            NorPar2Cell[0] = Par2Cell[0]/Par2CellDist;
-            NorPar2Cell[1] = Par2Cell[1]/Par2CellDist;
-            NorPar2Cell[2] = Par2Cell[2]/Par2CellDist;
-
-            if ( Par2CellDist <= 2*AccRadius )
-            {
-               InsideAccRadius = true;
-               break;
-            }
-
-            if ( Par2CellVel[0]/NorPar2Cell[0] >= 0 )                       continue; 
-            if ( Par2CellVel[1]/NorPar2Cell[1] >= 0 )                       continue;
-            if ( Par2CellVel[2]/NorPar2Cell[2] >= 0 )                       continue; // the gas is moving away from the existing particle
-
-            GasDensFreeFall = SQR((1/Coeff_FreeFall)*(NorPar2Cell[0]*Par2CellVel[0] + NorPar2Cell[1]*Par2CellVel[1] + NorPar2Cell[2]*Par2CellVel[2])/Par2CellDist); // Clarke et al. 2017, eqn (5)
-            if ( GasDens < GasDensFreeFall )
-            {
-               NotPassDen = true;
-               break;
-            }
-         } // for (int p=0; p<ExistingNPar; p++) 
-
-         if ( InsideAccRadius )               continue;
-         if ( NotPassDen )                    continue;
+         if ( !ProximityCheck_SecondDenThres( ExistingNPar, ParAtt_Local, PosX, PosY, PosZ, VelX, VelY, VelZ, 
+                                              GasDens, AccRadius, Coeff_FreeFall ) )
+            continue;
 
 //       Gravitational minimum check inside the control volume:
 //       The gas cell should have the minimum gravitational potential inside the control volume
