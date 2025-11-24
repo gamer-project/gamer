@@ -844,7 +844,7 @@ void GetClusterCenter( int lv, bool AdjustPos, bool AdjustVel, double Cen_old[][
          } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
 //       collect the number of target particles from each rank
-         MPI_Allreduce( num_par, CM_Cluster_NPar_close, 3, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
+         MPI_Allreduce( num_par, CM_Cluster_NPar_close, Merger_Coll_NumBHs, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
 
          int num_par_eachRank[Merger_Coll_NumBHs][MPI_NRank];
          int displs[Merger_Coll_NumBHs][MPI_NRank];
