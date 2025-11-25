@@ -451,8 +451,6 @@ void CPU_FluidSolver_MHM(
 #        endif
          bool need_initialize = false;
 
-
-
 //       1. half-step prediction
 //       1-a. MHM_RP: use Riemann solver to calculate the half-step fluxes
 #        if ( FLU_SCHEME == MHM_RP )
@@ -483,7 +481,6 @@ void CPU_FluidSolver_MHM(
                                        FLU_NXT, FLU_NXT, FLU_NXT, i, j, k );
 
             for (int v=0; v<NCOMP_MAG; v++)  g_PriVar_1PG[ MAG_OFFSET + v ][idx] = CC_B[v];
-
          }
 
 #        ifdef __CUDACC__
