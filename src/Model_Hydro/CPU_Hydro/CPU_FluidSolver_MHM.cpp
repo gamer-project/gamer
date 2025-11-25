@@ -170,7 +170,6 @@ void CR_AddDiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 #ifdef CONDUCTION
 void Hydro_AddConductiveFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                               const real g_PriVar[][ CUBE(FLU_NXT) ],
-                              const real Temp[ CUBE(FLU_NXT) ],
                                     real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                               const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                               const int N_Var, const int N_Ghost, const int N_Flux, const int NSkip_N,
@@ -180,7 +179,6 @@ void Hydro_AddConductiveFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 #ifdef VISCOSITY
 void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                            const real g_PriVar[][ CUBE(FLU_NXT) ],
-                           const real Temp[],
                                  real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                            const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                            const int N_Var, const int N_Ghost, const int N_Flux, const int NSkip_N,
@@ -527,13 +525,13 @@ void CPU_FluidSolver_MHM(
 
 //       add conductive fluxes
 #        ifdef CONDUCTION
-         Hydro_AddConductiveFlux( g_Flu_Array_In[P], NULL, Temp, g_Flux_Half_1PG, g_Mag_Array_In[P], FLU_NXT, 0,
+         Hydro_AddConductiveFlux( g_Flu_Array_In[P], NULL, g_Flux_Half_1PG, g_Mag_Array_In[P], FLU_NXT, 0,
                                   N_HF_FLUX, NSkip_N, NSkip_T, 0, dh, need_initialize, &MicroPhy );
 #        endif
 
 //       add viscous fluxes
 #        ifdef VISCOSITY
-         Hydro_AddViscousFlux( g_Flu_Array_In[P], NULL, Temp, g_Flux_Half_1PG, g_Mag_Array_In[P], FLU_NXT, 0,
+         Hydro_AddViscousFlux( g_Flu_Array_In[P], NULL, g_Flux_Half_1PG, g_Mag_Array_In[P], FLU_NXT, 0,
                                N_HF_FLUX, NSkip_N, NSkip_T, 0, dh, need_initialize, &MicroPhy );
 #        endif
 
@@ -647,13 +645,13 @@ void CPU_FluidSolver_MHM(
 
 //          add conductive fluxes
 #           ifdef CONDUCTION
-            Hydro_AddConductiveFlux( NULL, g_PriVar_Half_1PG, Temp, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_HF_VAR,
+            Hydro_AddConductiveFlux( NULL, g_PriVar_Half_1PG, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_HF_VAR,
                                      OffsetPri, N_FL_FLUX, NSkip_N, NSkip_T, 0, dh, need_initialize, &MicroPhy );
 #           endif
 
 //          add viscous fluxes
 #           ifdef VISCOSITY
-            Hydro_AddViscousFlux( NULL, g_PriVar_Half_1PG, Temp, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_HF_VAR,
+            Hydro_AddViscousFlux( NULL, g_PriVar_Half_1PG, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_HF_VAR,
                                   OffsetPri, N_FL_FLUX, NSkip_N, NSkip_T, 0, dh, need_initialize, &MicroPhy );
 #           endif
 
