@@ -174,7 +174,8 @@ void Hydro_AddConductiveFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                               const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                               const int N_Var, const int N_Ghost, const int N_Flux, const int NSkip_N,
                               const int NSkip_T, const int NSkip_MHM_Half, const real dh,
-                              bool &initialize, const MicroPhy_t *MicroPhy );
+                              bool &initialize, const real MinTemp, const long PassiveFloor,
+                              const EoS_t *EoS, const MicroPhy_t *MicroPhy );
 #endif
 #ifdef VISCOSITY
 void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
@@ -183,7 +184,8 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                            const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                            const int N_Var, const int N_Ghost, const int N_Flux, const int NSkip_N,
                            const int NSkip_T, const int NSkip_MHM_Half, const real dh,
-                           bool &initialize, const MicroPhy_t *MicroPhy );
+                           bool &initialize, const real MinTemp, const long PassiveFloor,
+                           const EoS_t *EoS, const MicroPhy_t *MicroPhy );
 #endif
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -387,7 +389,6 @@ void CPU_FluidSolver_MHM(
 #  pragma omp parallel
 #  endif
    {
-
 //    loop over all patch groups
 //    --> CPU/GPU solver: use different (OpenMP threads) / (CUDA thread blocks)
 //        to work on different patch groups
@@ -406,11 +407,6 @@ void CPU_FluidSolver_MHM(
          real (*const g_FC_Flux_1PG  )[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ] = g_FC_Flux  [P];
          real (*const g_PriVar_1PG   )                      [ CUBE(FLU_NXT)     ] = g_PriVar   [P];
          real (*const g_Slope_PPM_1PG)[NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ] = g_Slope_PPM[P];
-
-#        if ( defined VISCOSITY ) || ( defined CONDUCTION )
-         const bool CheckMinTemp_Yes = true;
-         real Temp[ CUBE(FLU_NXT) ];
-#        endif
 
 #        if ( FLU_SCHEME == MHM_RP )
          real (*const g_Flux_Half_1PG)[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ] = g_FC_Flux_1PG;
@@ -461,12 +457,10 @@ void CPU_FluidSolver_MHM(
 //       1-a. MHM_RP: use Riemann solver to calculate the half-step fluxes
 #        if ( FLU_SCHEME == MHM_RP )
 
-#        if ( defined MHD ) || ( defined VISCOSITY ) || ( defined CONDUCTION )
+#        ifdef MHD
 //       1-a-1. evaluate the cell-centered B field and store in g_PriVar[]
 //              --> also copy density and compute velocity for MHD_ComputeElectric()
-#        ifdef MHD
          real CC_B[NCOMP_MAG];
-#        endif
          CGPU_LOOP( idx, CUBE(FLU_NXT) )
          {
             const int size_ij = SQR( FLU_NXT );
@@ -483,27 +477,11 @@ void CPU_FluidSolver_MHM(
             g_PriVar_1PG[2][idx] = g_Flu_Array_In[P][2][idx]*_Dens;
             g_PriVar_1PG[3][idx] = g_Flu_Array_In[P][3][idx]*_Dens;
 
-#           ifdef MHD
 //          magnetic field
             MHD_GetCellCenteredBField( CC_B, g_Mag_Array_In[P][0], g_Mag_Array_In[P][1], g_Mag_Array_In[P][2],
                                        FLU_NXT, FLU_NXT, FLU_NXT, i, j, k );
 
             for (int v=0; v<NCOMP_MAG; v++)  g_PriVar_1PG[ MAG_OFFSET + v ][idx] = CC_B[v];
-            const real Emag = 0.5*( SQR(CC_B[0]) + SQR(CC_B[1]) + SQR(CC_B[2]) );
-#           else
-            const real Emag = NULL_REAL;
-#           endif // #ifdef MHD
-
-#           if ( defined VISCOSITY ) || ( defined CONDUCTION )
-//          temperature
-            real fluid[NCOMP_TOTAL];
-            for (int v=0; v<NCOMP_TOTAL; v++)  fluid[v] = g_Flu_Array_In[P][v][idx];
-            Temp[idx] = Hydro_Con2Temp( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ],
-                                        fluid[ENGY], fluid+NCOMP_FLUID, CheckMinTemp_Yes,
-                                        MinTemp, PassiveFloor, Emag, EoS.DensEint2Temp_FuncPtr,
-                                        EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr,
-                                        EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table );
-#           endif
 
          }
 
@@ -526,13 +504,15 @@ void CPU_FluidSolver_MHM(
 //       add conductive fluxes
 #        ifdef CONDUCTION
          Hydro_AddConductiveFlux( g_Flu_Array_In[P], NULL, g_Flux_Half_1PG, g_Mag_Array_In[P], FLU_NXT, 0,
-                                  N_HF_FLUX, NSkip_N, NSkip_T, 0, dh, need_initialize, &MicroPhy );
+                                  N_HF_FLUX, NSkip_N, NSkip_T, 0, dh, need_initialize, MinTemp, PassiveFloor,
+                                  &EoS, &MicroPhy );
 #        endif
 
 //       add viscous fluxes
 #        ifdef VISCOSITY
          Hydro_AddViscousFlux( g_Flu_Array_In[P], NULL, g_Flux_Half_1PG, g_Mag_Array_In[P], FLU_NXT, 0,
-                               N_HF_FLUX, NSkip_N, NSkip_T, 0, dh, need_initialize, &MicroPhy );
+                               N_HF_FLUX, NSkip_N, NSkip_T, 0, dh, need_initialize, MinTemp, PassiveFloor,
+                               &EoS, &MicroPhy );
 #        endif
 
 //       1-a-3. evaluate electric field and update B field at the half time-step
@@ -646,13 +626,15 @@ void CPU_FluidSolver_MHM(
 //          add conductive fluxes
 #           ifdef CONDUCTION
             Hydro_AddConductiveFlux( NULL, g_PriVar_Half_1PG, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_HF_VAR,
-                                     OffsetPri, N_FL_FLUX, NSkip_N, NSkip_T, 0, dh, need_initialize, &MicroPhy );
+                                     OffsetPri, N_FL_FLUX, NSkip_N, NSkip_T, 0, dh, need_initialize, MinTemp,
+                                     PassiveFloor, &EoS, &MicroPhy );
 #           endif
 
 //          add viscous fluxes
 #           ifdef VISCOSITY
             Hydro_AddViscousFlux( NULL, g_PriVar_Half_1PG, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_HF_VAR,
-                                  OffsetPri, N_FL_FLUX, NSkip_N, NSkip_T, 0, dh, need_initialize, &MicroPhy );
+                                  OffsetPri, N_FL_FLUX, NSkip_N, NSkip_T, 0, dh, need_initialize, MinTemp,
+                                  PassiveFloor, &EoS, &MicroPhy );
 #           endif
 
             if ( StoreFlux )

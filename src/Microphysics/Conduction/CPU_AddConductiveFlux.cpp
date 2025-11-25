@@ -47,6 +47,9 @@ real MC_limiter( const real a, const real b );
 //               NSkip_MHM_Half : Skip size of g_ConVar for MHM scheme half-step only (TODO: need a better name)
 //               dh             : Cell size
 //               initialize     : initialize g_Flux to zero or not
+//               MinTemp        : Temperature floor
+//               PassiveFloor   : Bitwise flag to specify the passive scalars to be floored
+//               EoS            : Equation of state object
 //               MicroPhy       : Microphysics object
 //
 // Return      : g_Flux[], initialize
@@ -58,7 +61,8 @@ void Hydro_AddConductiveFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                               const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                               const int N_Var, const int N_Ghost, const int N_Flux, const int NSkip_N,
                               const int NSkip_T, const int NSkip_MHM_Half, const real dh,
-                              bool &initialize, const MicroPhy_t *MicroPhy )
+                              bool &initialize, const real MinTemp, const long PassiveFloor,
+                              const EoS_t *EoS, const MicroPhy_t *MicroPhy )
 {
 #  ifdef GAMER_DEBUG
    if ( g_ConVar == NULL  &&  g_PriVar == NULL )   Aux_Error( ERROR_INFO, "Both g_ConVar and g_PriVar are NULL!\n");
@@ -76,6 +80,8 @@ void Hydro_AddConductiveFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 #  else
    const int skip_update_T = 0;
 #  endif
+
+   const bool CheckMinTemp_Yes = true;
 
    for (int d=0; d<3; d++)
    {
@@ -121,6 +127,7 @@ void Hydro_AddConductiveFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                   break;
       } // switch ( d )
 
+      const int stride_fc_N[3]   = { 1, sizeB_i, sizeB_i*sizeB_j };
       const int stride_fc_BT1[3] = { 1, sizeB_k, sizeB_k*sizeB_i };
       const int stride_fc_BT2[3] = { 1, sizeB_j, sizeB_j*sizeB_k };
 #     endif
@@ -159,6 +166,7 @@ void Hydro_AddConductiveFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
          const int j_cvar   = j_flux + var_offset_j;
          const int k_cvar   = k_flux + var_offset_k;
          const int idx_cvar = IDX321( i_cvar, j_cvar, k_cvar, N_Var, N_Var );
+         const int idx_cvar_dd = idx_cvar + didx_cvar[d];
 
 #        ifdef MHD
 //       magnetic field indices
@@ -182,34 +190,49 @@ void Hydro_AddConductiveFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //       2. compute the mean magnetic field at the face-centered flux location
 #        ifdef MHD
          real B_N_mean, B_T1_mean, B_T2_mean, B_amp;
-         if ( MicroPhy->CondFluxType == ANISOTROPIC_CONDUCTION )
+         real B_N_L, B_N_R, B_T1_L, B_T1_R, B_T2_L, B_T2_R, Emag_L, Emag_R;
+         if ( g_FC_B == NULL )
          {
-            if ( g_FC_B == NULL )
-            {
-//             MHM full-step only
-               B_N_mean  = (real)0.5 * ( g_PriVar[NCOMP_TOTAL+d    ][idx_cvar] + g_PriVar[NCOMP_TOTAL+d    ][idx_cvar + didx_cvar[d]] );
-               B_T1_mean = (real)0.5 * ( g_PriVar[NCOMP_TOTAL+TDir1][idx_cvar] + g_PriVar[NCOMP_TOTAL+TDir1][idx_cvar + didx_cvar[d]] );
-               B_T2_mean = (real)0.5 * ( g_PriVar[NCOMP_TOTAL+TDir2][idx_cvar] + g_PriVar[NCOMP_TOTAL+TDir2][idx_cvar + didx_cvar[d]] );
-            }
-            else
-            {
-               B_N_mean  =              g_FC_B[    d][ idx_fc_BN                                            ];
-               B_T1_mean = (real)0.25*( g_FC_B[TDir1][ idx_fc_BT1                                           ] +
-                                        g_FC_B[TDir1][ idx_fc_BT1                    + stride_fc_BT1[TDir1] ] +
-                                        g_FC_B[TDir1][ idx_fc_BT1 - stride_fc_BT1[d]                        ] +
-                                        g_FC_B[TDir1][ idx_fc_BT1 - stride_fc_BT1[d] + stride_fc_BT1[TDir1] ]   );
-               B_T2_mean = (real)0.25*( g_FC_B[TDir2][ idx_fc_BT2                                           ] +
-                                        g_FC_B[TDir2][ idx_fc_BT2                    + stride_fc_BT2[TDir2] ] +
-                                        g_FC_B[TDir2][ idx_fc_BT2 - stride_fc_BT2[d]                        ] +
-                                        g_FC_B[TDir2][ idx_fc_BT2 - stride_fc_BT2[d] + stride_fc_BT2[TDir2] ]   );
-            } // if ( g_FC_B == NULL )
+//          MHM full-step only
+            B_N_mean  = (real)0.5 * ( g_PriVar[NCOMP_TOTAL+d    ][idx_cvar] + g_PriVar[NCOMP_TOTAL+d    ][idx_cvar + didx_cvar[d]] );
+            B_T1_mean = (real)0.5 * ( g_PriVar[NCOMP_TOTAL+TDir1][idx_cvar] + g_PriVar[NCOMP_TOTAL+TDir1][idx_cvar + didx_cvar[d]] );
+            B_T2_mean = (real)0.5 * ( g_PriVar[NCOMP_TOTAL+TDir2][idx_cvar] + g_PriVar[NCOMP_TOTAL+TDir2][idx_cvar + didx_cvar[d]] );
+            B_N_L  = g_PriVar[NCOMP_TOTAL+d    ][idx_cvar    ];
+            B_N_R  = g_PriVar[NCOMP_TOTAL+d    ][idx_cvar_dd ];
+            B_T1_L = g_PriVar[NCOMP_TOTAL+TDir1][idx_cvar    ];
+            B_T1_R = g_PriVar[NCOMP_TOTAL+TDir1][idx_cvar_dd ];
+            B_T2_L = g_PriVar[NCOMP_TOTAL+TDir2][idx_cvar    ];
+            B_T2_R = g_PriVar[NCOMP_TOTAL+TDir2][idx_cvar_dd ];
+         }
+         else
+         {
+            B_N_mean  =              g_FC_B[    d][ idx_fc_BN                                            ];
+            B_T1_mean = (real)0.25*( g_FC_B[TDir1][ idx_fc_BT1                                           ] +
+                                     g_FC_B[TDir1][ idx_fc_BT1                    + stride_fc_BT1[TDir1] ] +
+                                     g_FC_B[TDir1][ idx_fc_BT1 - stride_fc_BT1[d]                        ] +
+                                     g_FC_B[TDir1][ idx_fc_BT1 - stride_fc_BT1[d] + stride_fc_BT1[TDir1] ]   );
+            B_T2_mean = (real)0.25*( g_FC_B[TDir2][ idx_fc_BT2                                           ] +
+                                     g_FC_B[TDir2][ idx_fc_BT2                    + stride_fc_BT2[TDir2] ] +
+                                     g_FC_B[TDir2][ idx_fc_BT2 - stride_fc_BT2[d]                        ] +
+                                     g_FC_B[TDir2][ idx_fc_BT2 - stride_fc_BT2[d] + stride_fc_BT2[TDir2] ]   );
+            B_N_L  = (real)0.5*( g_FC_B[    d][ idx_fc_BN  ] + g_FC_B[    d][ idx_fc_BN  - stride_fc_N[d]  ] );
+            B_N_R  = (real)0.5*( g_FC_B[    d][ idx_fc_BN  ] + g_FC_B[    d][ idx_fc_BN  + stride_fc_N[d]  ] );
+            B_T1_L = (real)0.5*( g_FC_B[TDir1][ idx_fc_BT1 ] + g_FC_B[TDir1][ idx_fc_BT1 - stride_fc_T1[d] ] );
+            B_T1_R = (real)0.5*( g_FC_B[TDir1][ idx_fc_BT1 ] + g_FC_B[TDir1][ idx_fc_BT1 + stride_fc_T1[d] ] );
+            B_T2_L = (real)0.5*( g_FC_B[TDir2][ idx_fc_BT2 ] + g_FC_B[TDir2][ idx_fc_BT2 - stride_fc_T2[d] ] );
+            B_T2_R = (real)0.5*( g_FC_B[TDir2][ idx_fc_BT2 ] + g_FC_B[TDir2][ idx_fc_BT2 + stride_fc_T2[d] ] );
+         } // if ( g_FC_B == NULL )
 
-            B_amp      = SQRT( SQR(B_N_mean) + SQR(B_T1_mean) + SQR(B_T2_mean) );
-//          normalize magnetic field
-            B_N_mean  /= B_amp;
-            B_T1_mean /= B_amp;
-            B_T2_mean /= B_amp;
-         } // if ( MicroPhy->CondFluxType == ANISOTROPIC_CONDUCTION )
+         B_amp      = SQRT( SQR(B_N_mean) + SQR(B_T1_mean) + SQR(B_T2_mean) );
+         Emag_L    = (real)0.5*( SQR(B_N_L) + SQR(B_T1_L) + SQR(B_T2_L) );
+         Emag_R    = (real)0.5*( SQR(B_N_R) + SQR(B_T1_R) + SQR(B_T2_R) );
+//       normalize magnetic field
+         B_N_mean  /= B_amp;
+         B_T1_mean /= B_amp;
+         B_T2_mean /= B_amp;
+#        else
+         Emag_L     = NULL_REAL;
+         Emag_R     = NULL_REAL;
 #        endif // #ifdef MHD
 
 //       3. compute the mean temperature slope at the face-centered flux location
@@ -225,7 +248,7 @@ void Hydro_AddConductiveFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
          real N_slope, T1_slope, T2_slope; // normal, transverse 1, and transverse 2 direction
          real al, bl, ar, br; // temporary slope variables, see the graph above
 
-         N_slope = ( Temp[ idx_cvar + didx_cvar[d] ] - Temp[ idx_cvar ] ) * _dh;
+         N_slope = ( Temp[ idx_cvar_dd ] - Temp[ idx_cvar ] ) * _dh;
 
          if ( MicroPhy->CondFluxType == ANISOTROPIC_CONDUCTION )
          {
@@ -255,13 +278,12 @@ void Hydro_AddConductiveFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                          Temp[ idx_cvar                    ] ) * _dh;
             T2_slope = ( Temp[ idx_cvar + didx_cvar[TDir2] ] -
                          Temp[ idx_cvar                    ] ) * _dh;
-         }
-         } // if ( MicroPhy->CondFluxType == ANISOTROPIC_CONDUCTION ) ... else if ... else ...
+         } // if ( MicroPhy->CondFluxType == ANISOTROPIC_CONDUCTION ) ... else if ...
 
 //       3. compute conductive flux
          real gradient, gradT, Total_Flux;
 #        ifdef MHD
-         if ( MicroPhy->CondFluxType ==   ISOTROPIC_CONDUCTION )
+         if ( MicroPhy->CondFluxType == ISOTROPIC_CONDUCTION )
             gradient = -N_slope;
          else // ANISOTROPIC_CONDUCTION
             gradient = -B_N_mean*( B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope );
@@ -276,16 +298,46 @@ void Hydro_AddConductiveFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
          real dens_L, dens_R, temp_L, temp_R;
          if ( g_PriVar == NULL )
          {
-            dens_L = g_ConVar[DENS][ idx_cvar                ];
-            dens_R = g_ConVar[DENS][ idx_cvar + didx_cvar[d] ];
+            dens_L  = g_ConVar[DENS][ idx_cvar    ];
+            dens_R  = g_ConVar[DENS][ idx_cvar_dd ];
+            real fluid_L[NCOMP_TOTAL], fluid_R[NCOMP_TOTAL];
+            for (int v=0; v<NCOMP_TOTAL; v++)
+            {
+               fluid_L[v] = g_ConVar[v][ idx_cvar    ];
+               fluid_R[v] = g_ConVar[v][ idx_cvar_dd ];
+            }
+            temp_L = Hydro_Con2Temp( fluid_L[DENS], fluid_L[MOMX], fluid_L[MOMY], fluid_L[MOMZ],
+                                     fluid_L[ENGY], fluid_L+NCOMP_FLUID, CheckMinTemp_Yes,
+                                     MinTemp, PassiveFloor, Emag_L, EoS->DensEint2Temp_FuncPtr,
+                                     EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
+                                     EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+            temp_R = Hydro_Con2Temp( fluid_R[DENS], fluid_R[MOMX], fluid_R[MOMY], fluid_R[MOMZ],
+                                     fluid_R[ENGY], fluid_R+NCOMP_FLUID, CheckMinTemp_Yes,
+                                     MinTemp, PassiveFloor, Emag_R, EoS->DensEint2Temp_FuncPtr,
+                                     EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
+                                     EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
          }
          else
          {
-            dens_L = g_PriVar[DENS][ idx_cvar                ];
-            dens_R = g_PriVar[DENS][ idx_cvar + didx_cvar[d] ];
+            dens_L = g_PriVar[DENS][ idx_cvar    ];
+            dens_R = g_PriVar[DENS][ idx_cvar_dd ];
+            real fluid_L[NCOMP_TOTAL], fluid_R[NCOMP_TOTAL], Eint_L, Eint_R;
+            for (int v=0; v<NCOMP_TOTAL; v++)
+            {
+               fluid_L[v] = g_PriVar[v][ idx_cvar    ];
+               fluid_R[v] = g_PriVar[v][ idx_cvar_dd ];
+            }
+            Eint_L = EoS->DensPres2Eint_FuncPtr( fluid_L[DENS], fluid_L[ENGY], fluid_L+NCOMP_FLUID,
+                                                 EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+            Eint_R = EoS->DensPres2Eint_FuncPtr( fluid_R[DENS], fluid_R[ENGY], fluid_R+NCOMP_FLUID,
+                                                 EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+            temp_L = EoS->DensEint2Temp_FuncPtr( fluid_L[DENS], Eint_L, fluid_L+NCOMP_FLUID, EoS->AuxArrayDevPtr_Flt,
+                                                 EoS->AuxArrayDevPtr_Int, EoS->Table );
+            temp_R = EoS->DensEint2Temp_FuncPtr( fluid_R[DENS], Eint_R, fluid_R+NCOMP_FLUID, EoS->AuxArrayDevPtr_Flt,
+                                                 EoS->AuxArrayDevPtr_Int, EoS->Table );
+            temp_L = Hydro_CheckMinTemp( temp_L, MinTemp );
+            temp_R = Hydro_CheckMinTemp( temp_R, MinTemp );
          } // if ( g_PriVar == NULL ) ... else ...
-         temp_L = Temp[ idx_cvar                ];
-         temp_R = Temp[ idx_cvar + didx_cvar[d] ];
 
          Hydro_ComputeConduction( kappa_l, chi, MicroPhy, dens_L, temp_L );
          Hydro_ComputeConduction( kappa_r, chi, MicroPhy, dens_R, temp_R );

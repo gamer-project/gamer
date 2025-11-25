@@ -19,7 +19,7 @@
 #endif
 
 #ifdef CONDUCTION
-# include "../../Microphysics/Conduction/CUFLU_AddThermalFlux.cu"
+# include "../../Microphysics/Conduction/CUFLU_AddConductiveFlux.cu"
 #endif
 
 #ifdef VISCOSITY
@@ -98,7 +98,8 @@ void Hydro_AddConductiveFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                               const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                               const int N_Var, const int N_Ghost, const int N_Flux, const int NSkip_N,
                               const int NSkip_T, const int NSkip_MHM_Half, const real dh,
-                              bool &initialize, const MicroPhy_t *MicroPhy );
+                              bool &initialize, const real MinTemp, const long PassiveFloor,
+                              const EoS_t *EoS, const MicroPhy_t *MicroPhy );
 #endif
 #ifdef VISCOSITY
 GPU_DEVICE
@@ -108,7 +109,8 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                            const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                            const int N_Var, const int N_Ghost, const int N_Flux, const int NSkip_N,
                            const int NSkip_T, const int NSkip_MHM_Half, const real dh,
-                           bool &initialize, const MicroPhy_t *MicroPhy );
+                           bool &initialize, const real MinTemp, const long PassiveFloor,
+                           const EoS_t *EoS, const MicroPhy_t *MicroPhy );
 #endif
 #ifdef MHD
 GPU_DEVICE
@@ -421,13 +423,15 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 // add conductive fluxes
 #  ifdef CONDUCTION
    Hydro_AddConductiveFlux( g_ConVar, NULL, Temp, g_Flux, g_FC_B, FLU_NXT, NGhost,
-                            N_HF_FLUX, NSkip_N, NSkip_T, 1, dh, need_initialize, MicroPhy );
+                            N_HF_FLUX, NSkip_N, NSkip_T, 1, dh, need_initialize, MinTemp,
+                            PassiveFloor, EoS, MicroPhy );
 #  endif
 
 // add viscous fluxes
 #  ifdef VISCOSITY
    Hydro_AddViscousFlux( g_ConVar, NULL, Temp, g_Flux, g_FC_B, FLU_NXT, NGhost,
-                         N_HF_FLUX, NSkip_N, NSkip_T, 1, dh, need_initialize, MicroPhy );
+                         N_HF_FLUX, NSkip_N, NSkip_T, 1, dh, need_initialize, MinTemp,
+                         PassiveFloor, EoS, MicroPhy );
 #  endif
 
 #  ifdef MHD
@@ -1061,13 +1065,15 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 // add conductive fluxes
 #  ifdef CONDUCTION
    Hydro_AddConductiveFlux( g_ConVar, NULL, g_Flux, g_FC_B, FLU_NXT, NGhost,
-                            N_HF_FLUX, NSkip_N, NSkip_T, 1, dh, need_initialize, MicroPhy );
+                            N_HF_FLUX, NSkip_N, NSkip_T, 1, dh, need_initialize, MinTemp,
+                            PassiveFloor, EoS, MicroPhy );
 #  endif
 
 // add viscous fluxes
 #  ifdef VISCOSITY
    Hydro_AddViscousFlux( g_ConVar, NULL, g_Flux, g_FC_B, FLU_NXT, NGhost,
-                         N_HF_FLUX, NSkip_N, NSkip_T, 1, dh, need_initialize, MicroPhy );
+                         N_HF_FLUX, NSkip_N, NSkip_T, 1, dh, need_initialize, MinTemp,
+                         PassiveFloor, EoS, MicroPhy );
 #  endif
 
 #  ifdef MHD
