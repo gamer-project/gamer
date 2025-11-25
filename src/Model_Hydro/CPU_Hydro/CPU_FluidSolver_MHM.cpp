@@ -43,7 +43,7 @@
 # include "../../Microphysics/Viscosity/CUFLU_AddViscousFlux.cu"
 #endif
 #ifdef CONDUCTION
-# include "../../Microphysics/Conduction/CUFLU_AddThermalFlux.cu"
+# include "../../Microphysics/Conduction/CUFLU_AddConductiveFlux.cu"
 #endif
 
 #else // #ifdef __CUDACC__
@@ -461,6 +461,7 @@ void CPU_FluidSolver_MHM(
 //       1-a-1. evaluate the cell-centered B field and store in g_PriVar[]
 //              --> also copy density and compute velocity for MHD_ComputeElectric()
          real CC_B[NCOMP_MAG];
+
          CGPU_LOOP( idx, CUBE(FLU_NXT) )
          {
             const int size_ij = SQR( FLU_NXT );
@@ -488,7 +489,7 @@ void CPU_FluidSolver_MHM(
 #        ifdef __CUDACC__
          __syncthreads();
 #        endif
-#        endif // #if ( defined MHD ) || ( defined VISCOSITY ) || ( defined CONDUCTION )
+#        endif // #ifdef MHD
 
 
 //       1-a-2. evaluate the half-step first-order fluxes by Riemann solver
@@ -599,24 +600,6 @@ void CPU_FluidSolver_MHM(
                                CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P],
                                dt, dh, Time, UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray,
                                MinDens, MinPres, PassiveFloor, &EoS, FreezeHydro );
-
-#           if ( defined VISCOSITY ) || ( defined CONDUCTION )
-            // Need to compute temperature for thermal conduction and viscosity
-            CGPU_LOOP( idx, CUBE(FLU_NXT) )
-            {
-               real fluid[NCOMP_TOTAL], Eint;
-               for (int v=0; v<NCOMP_TOTAL; v++)  fluid[v] = g_PriVar_Half_1PG[v][idx];
-               Eint = EoS.DensPres2Eint_FuncPtr( fluid[DENS], fluid[ENGY], fluid+NCOMP_FLUID, EoS.AuxArrayDevPtr_Flt,
-                                                 EoS.AuxArrayDevPtr_Int, EoS.Table );
-               Temp[idx] = EoS.DensEint2Temp_FuncPtr( fluid[DENS], Eint, fluid+NCOMP_FLUID, EoS.AuxArrayDevPtr_Flt,
-                                                      EoS.AuxArrayDevPtr_Int, EoS.Table );
-               Temp[idx] = Hydro_CheckMinTemp( Temp[idx], MinTemp );
-            }
-
-#           ifdef __CUDACC__
-             __syncthreads();
-#           endif
-#           endif // #if ( defined VISCOSITY ) || ( defined CONDUCTION )
 
 //          add cosmic-ray fluxes
 #           ifdef CR_DIFFUSION
