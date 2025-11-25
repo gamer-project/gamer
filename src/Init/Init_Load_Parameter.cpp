@@ -507,7 +507,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__OUTPUT_TEXT_LENGTH_INT",&OPT__OUTPUT_TEXT_LENGTH_INT,     12,              0,             NoMax_int      );
 #  ifdef PARTICLE
    ReadPara->Add( "OPT__OUTPUT_PAR_MODE",        &OPT__OUTPUT_PAR_MODE,           0,               0,             2              );
-   ReadPara->Add( "OPT__OUTPUT_PAR_ACC_SNAPSHOT",&OPT__OUTPUT_PAR_ACC_SNAPSHOT,   false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__OUTPUT_PAR_ADDI_ATTR",   &OPT__OUTPUT_PAR_ADDI_ATTR,      0,               0,             3              );
 #  ifdef TRACER
    ReadPara->Add( "OPT__OUTPUT_PAR_MESH",       &OPT__OUTPUT_PAR_MESH,            true,            Useless_bool,  Useless_bool   );
 #  else

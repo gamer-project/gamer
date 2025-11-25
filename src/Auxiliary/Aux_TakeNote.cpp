@@ -1597,7 +1597,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_TEXT_LENGTH_INT    % d\n",      OPT__OUTPUT_TEXT_LENGTH_INT  );
 #     ifdef PARTICLE
       fprintf( Note, "OPT__OUTPUT_PAR_MODE           % d\n",      OPT__OUTPUT_PAR_MODE         );
-      fprintf( Note, "OPT__OUTPUT_PAR_ACC_SNAPSHOT   % d\n",      OPT__OUTPUT_PAR_ACC_SNAPSHOT );
+      fprintf( Note, "OPT__OUTPUT_PAR_ADDI_ATTR      % d\n",      OPT__OUTPUT_PAR_ADDI_ATTR    );
 #     ifdef TRACER
       fprintf( Note, "OPT__OUTPUT_PAR_MESH           % d\n",      OPT__OUTPUT_PAR_MESH         );
 #     endif
