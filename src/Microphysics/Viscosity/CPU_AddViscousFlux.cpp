@@ -20,7 +20,7 @@ void Hydro_ComputeViscosity( real &visc_mu, real &visc_nu, const MicroPhy_t *Mic
 real van_leer2( const real a, const real b, const real c, const real d );
 real compute_temperature( const real ConVar[][ CUBE(FLU_NXT) ],
                           const real PriVar[][ CUBE(FLU_NXT) ],
-                          const real   FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ]
+                          const real   FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                           const int idx, const real MinTemp,
                           const long PassiveFloor, const EoS_t *EoS );
 
@@ -37,8 +37,8 @@ real get_vel_op( const real ConVar[][ CUBE(FLU_NXT) ],
    if ( PriVar == NULL )
    {
       // conservative -> primitive
-      v_L = ConVar[comp+1][idxL] / g_ConVar[DENS][idxL];
-      v_R = ConVar[comp+1][idxR] / g_ConVar[DENS][idxR];
+      v_L = ConVar[comp+1][idxL] / ConVar[DENS][idxL];
+      v_R = ConVar[comp+1][idxR] / ConVar[DENS][idxR];
    }
    else
    {
@@ -249,6 +249,7 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
 //       2. compute jacobian matrix for velocity gradients
 
+         real N_slope_N, T1_slope_N, T2_slope_N;
          real N_slope_T1, T1_slope_T1, T2_slope_T1;
          real N_slope_T2, T1_slope_T2, T2_slope_T2;
          real divV, BBdV;
@@ -271,19 +272,19 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                get_vel_op( g_ConVar, g_PriVar,     d, idx_cvar_dd,                    idx_cvar_dd + didx_cvar[TDir1], 1 ),
                get_vel_op( g_ConVar, g_PriVar,     d, idx_cvar_dd - didx_cvar[TDir1], idx_cvar_dd,                    1 ),
                get_vel_op( g_ConVar, g_PriVar,     d, idx_cvar,                       idx_cvar    + didx_cvar[TDir1], 1 ),
-               get_vel_op( g_ConVar, g_PriVar,     d, idx_cvar    - didx_cvar[TDir1], idx_cvar,                       1 ),
+               get_vel_op( g_ConVar, g_PriVar,     d, idx_cvar    - didx_cvar[TDir1], idx_cvar,                       1 )
             ) * _dh;
             T1_slope_T1  = van_leer2(
                get_vel_op( g_ConVar, g_PriVar, TDir1, idx_cvar_dd,                    idx_cvar_dd + didx_cvar[TDir1], 1 ),
                get_vel_op( g_ConVar, g_PriVar, TDir1, idx_cvar_dd - didx_cvar[TDir1], idx_cvar_dd,                    1 ),
                get_vel_op( g_ConVar, g_PriVar, TDir1, idx_cvar,                       idx_cvar    + didx_cvar[TDir1], 1 ),
-               get_vel_op( g_ConVar, g_PriVar, TDir1, idx_cvar    - didx_cvar[TDir1], idx_cvar,                       1 ),
+               get_vel_op( g_ConVar, g_PriVar, TDir1, idx_cvar    - didx_cvar[TDir1], idx_cvar,                       1 )
             ) * _dh;
             T2_slope_T1  = van_leer2(
                get_vel_op( g_ConVar, g_PriVar, TDir2, idx_cvar_dd,                    idx_cvar_dd + didx_cvar[TDir1], 1 ),
                get_vel_op( g_ConVar, g_PriVar, TDir2, idx_cvar_dd - didx_cvar[TDir1], idx_cvar_dd,                    1 ),
                get_vel_op( g_ConVar, g_PriVar, TDir2, idx_cvar,                       idx_cvar    + didx_cvar[TDir1], 1 ),
-               get_vel_op( g_ConVar, g_PriVar, TDir2, idx_cvar    - didx_cvar[TDir1], idx_cvar,                       1 ),
+               get_vel_op( g_ConVar, g_PriVar, TDir2, idx_cvar    - didx_cvar[TDir1], idx_cvar,                       1 )
             ) * _dh;
 
 //          transverse direction 2 derivative
@@ -291,19 +292,19 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                get_vel_op( g_ConVar, g_PriVar,     d, idx_cvar_dd,                    idx_cvar_dd + didx_cvar[TDir2], 1 ),
                get_vel_op( g_ConVar, g_PriVar,     d, idx_cvar_dd - didx_cvar[TDir1], idx_cvar_dd,                    1 ),
                get_vel_op( g_ConVar, g_PriVar,     d, idx_cvar,                       idx_cvar    + didx_cvar[TDir2], 1 ),
-               get_vel_op( g_ConVar, g_PriVar,     d, idx_cvar    - didx_cvar[TDir1], idx_cvar,                       1 ),
+               get_vel_op( g_ConVar, g_PriVar,     d, idx_cvar    - didx_cvar[TDir1], idx_cvar,                       1 )
             ) * _dh;
             T1_slope_T2  = van_leer2(
                get_vel_op( g_ConVar, g_PriVar, TDir1, idx_cvar_dd,                    idx_cvar_dd + didx_cvar[TDir2], 1 ),
                get_vel_op( g_ConVar, g_PriVar, TDir1, idx_cvar_dd - didx_cvar[TDir1], idx_cvar_dd,                    1 ),
                get_vel_op( g_ConVar, g_PriVar, TDir1, idx_cvar,                       idx_cvar    + didx_cvar[TDir2], 1 ),
-               get_vel_op( g_ConVar, g_PriVar, TDir1, idx_cvar    - didx_cvar[TDir1], idx_cvar,                       1 ),
+               get_vel_op( g_ConVar, g_PriVar, TDir1, idx_cvar    - didx_cvar[TDir1], idx_cvar,                       1 )
             ) * _dh;
             T2_slope_T2  = van_leer2(
                get_vel_op( g_ConVar, g_PriVar, TDir2, idx_cvar_dd,                    idx_cvar_dd + didx_cvar[TDir2], 1 ),
                get_vel_op( g_ConVar, g_PriVar, TDir2, idx_cvar_dd - didx_cvar[TDir1], idx_cvar_dd,                    1 ),
                get_vel_op( g_ConVar, g_PriVar, TDir2, idx_cvar,                       idx_cvar    + didx_cvar[TDir2], 1 ),
-               get_vel_op( g_ConVar, g_PriVar, TDir2, idx_cvar    - didx_cvar[TDir1], idx_cvar,                       1 ),
+               get_vel_op( g_ConVar, g_PriVar, TDir2, idx_cvar    - didx_cvar[TDir1], idx_cvar,                       1 )
             ) * _dh;
 
             BBdV  = B_N_mean  * ( B_N_mean *  N_slope_N + B_T1_mean *  N_slope_T1 + B_T2_mean *  N_slope_T2 );
@@ -368,9 +369,9 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
             dens_L = g_PriVar[DENS][ idx_cvar    ];
             dens_R = g_PriVar[DENS][ idx_cvar_dd ];
          }
-         temp_L = compute_temperature( ConVar, PriVar, FC_B, idx_cvar,
+         temp_L = compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar,
                                        MinTemp, PassiveFloor, EoS );
-         temp_R = compute_temperature( ConVar, PriVar, FC_B, idx_cvar_dd,
+         temp_R = compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar_dd,
                                        MinTemp, PassiveFloor, EoS );
 
          Hydro_ComputeViscosity( mu_l, visc_nu, MicroPhy, dens_L, temp_L );

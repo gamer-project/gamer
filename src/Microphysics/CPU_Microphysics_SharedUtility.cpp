@@ -74,7 +74,7 @@ real van_leer2( const real a, const real b, const real c, const real d )
 GPU_DEVICE
 real compute_temperature( const real ConVar[][ CUBE(FLU_NXT) ],
                           const real PriVar[][ CUBE(FLU_NXT) ],
-                          const real   FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ]
+                          const real   FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                           const int idx, const real MinTemp,
                           const long PassiveFloor, const EoS_t *EoS )
 {
@@ -86,8 +86,12 @@ real compute_temperature( const real ConVar[][ CUBE(FLU_NXT) ],
    {
       real Emag;
 #ifdef MHD
+      const int size_ij = SQR( FLU_NXT );
+      const int i       = idx % FLU_NXT;
+      const int j       = idx % size_ij / FLU_NXT;
+      const int k       = idx / size_ij;
       Emag = MHD_GetCellCenteredBEnergy( FC_B[0], FC_B[1], FC_B[2], FLU_NXT, FLU_NXT, FLU_NXT,
-                                         );
+                                         i, j, k );
 #else
       Emag = NULL_REAL;
 #endif

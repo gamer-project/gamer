@@ -22,7 +22,7 @@ void Hydro_ComputeConduction( real &cond_kappa, real &cond_chi, const MicroPhy_t
 real MC_limiter( const real a, const real b );
 real compute_temperature( const real ConVar[][ CUBE(FLU_NXT) ],
                           const real PriVar[][ CUBE(FLU_NXT) ],
-                          const real   FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ]
+                          const real   FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                           const int idx, const real MinTemp,
                           const long PassiveFloor, const EoS_t *EoS );
 
@@ -232,63 +232,63 @@ void Hydro_AddConductiveFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
          real N_slope, T1_slope, T2_slope; // normal, transverse 1, and transverse 2 direction
          real al, bl, ar, br; // temporary slope variables, see the graph above
 
-         temp_L = compute_temperature( ConVar, PriVar, FC_B, idx_cvar,
+         temp_L = compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar,
                                        MinTemp, PassiveFloor, EoS );
-         temp_R = compute_temperature( ConVar, PriVar, FC_B, idx_cvar_dd,
+         temp_R = compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar_dd,
                                        MinTemp, PassiveFloor, EoS );
 
          N_slope = ( temp_R - temp_L ) * _dh;
 
          if ( MicroPhy->CondFluxType == ANISOTROPIC_CONDUCTION )
          {
-            al = compute_temperature( ConVar, PriVar, FC_B, idx_cvar,
+            al = compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar,
                                       MinTemp, PassiveFloor, EoS ) -
-                 compute_temperature( ConVar, PriVar, FC_B, idx_cvar    - didx_cvar[TDir1],
+                 compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar    - didx_cvar[TDir1],
                                       MinTemp, PassiveFloor, EoS );
-            bl = compute_temperature( ConVar, PriVar, FC_B, idx_cvar    + didx_cvar[TDir1],
+            bl = compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar    + didx_cvar[TDir1],
                                       MinTemp, PassiveFloor, EoS ) -
-                 compute_temperature( ConVar, PriVar, FC_B, idx_cvar,
+                 compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar,
                                       MinTemp, PassiveFloor, EoS );
-            ar = compute_temperature( ConVar, PriVar, FC_B, idx_cvar_dd,
+            ar = compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar_dd,
                                       MinTemp, PassiveFloor, EoS ) -
-                 compute_temperature( ConVar, PriVar, FC_B, idx_cvar_dd - didx_cvar[TDir1],
+                 compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar_dd - didx_cvar[TDir1],
                                       MinTemp, PassiveFloor, EoS );
-            br = compute_temperature( ConVar, PriVar, FC_B, idx_cvar_dd + didx_cvar[TDir1],
+            br = compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar_dd + didx_cvar[TDir1],
                                       MinTemp, PassiveFloor, EoS ) -
-                 compute_temperature( ConVar, PriVar, FC_B, idx_cvar_dd,
+                 compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar_dd,
                                       MinTemp, PassiveFloor, EoS );
             T1_slope = (  MC_limiter( MC_limiter(al,bl), MC_limiter(ar,br) )  ) * _dh;
 
-            al = compute_temperature( ConVar, PriVar, FC_B, idx_cvar,
+            al = compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar,
                                       MinTemp, PassiveFloor, EoS ) -
-                 compute_temperature( ConVar, PriVar, FC_B, idx_cvar    - didx_cvar[TDir2],
+                 compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar    - didx_cvar[TDir2],
                                       MinTemp, PassiveFloor, EoS );
-            bl = compute_temperature( ConVar, PriVar, FC_B, idx_cvar    + didx_cvar[TDir2],
+            bl = compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar    + didx_cvar[TDir2],
                                       MinTemp, PassiveFloor, EoS ) -
-                 compute_temperature( ConVar, PriVar, FC_B, idx_cvar,
+                 compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar,
                                       MinTemp, PassiveFloor, EoS );
-            ar = compute_temperature( ConVar, PriVar, FC_B, idx_cvar_dd,
+            ar = compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar_dd,
                                       MinTemp, PassiveFloor, EoS ) -
-                 compute_temperature( ConVar, PriVar, FC_B, idx_cvar_dd - didx_cvar[TDir2],
+                 compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar_dd - didx_cvar[TDir2],
                                       MinTemp, PassiveFloor, EoS );
-            br = compute_temperature( ConVar, PriVar, FC_B, idx_cvar_dd + didx_cvar[TDir2],
+            br = compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar_dd + didx_cvar[TDir2],
                                       MinTemp, PassiveFloor, EoS ) -
-                 compute_temperature( ConVar, PriVar, FC_B, idx_cvar_dd,
+                 compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar_dd,
                                       MinTemp, PassiveFloor, EoS );
             T2_slope = (  MC_limiter( MC_limiter(al,bl), MC_limiter(ar,br) )  ) * _dh;
          }
          else if ( MicroPhy->CondSaturation )
          {
             T1_slope = (
-               compute_temperature( ConVar, PriVar, FC_B, idx_cvar + didx_cvar[TDir1],
+               compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar + didx_cvar[TDir1],
                                     MinTemp, PassiveFloor, EoS ) -
-               compute_temperature( ConVar, PriVar, FC_B, idx_cvar,
+               compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar,
                                     MinTemp, PassiveFloor, EoS )
             ) * _dh;
             T2_slope = (
-               compute_temperature( ConVar, PriVar, FC_B, idx_cvar + didx_cvar[TDir2],
+               compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar + didx_cvar[TDir2],
                                     MinTemp, PassiveFloor, EoS ) -
-               compute_temperature( ConVar, PriVar, FC_B, idx_cvar,
+               compute_temperature( g_ConVar, g_PriVar, g_FC_B, idx_cvar,
                                     MinTemp, PassiveFloor, EoS )
             ) * _dh;
          } // if ( MicroPhy->CondFluxType == ANISOTROPIC_CONDUCTION ) ... else if ...
