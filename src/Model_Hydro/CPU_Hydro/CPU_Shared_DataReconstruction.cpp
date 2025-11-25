@@ -1026,41 +1026,6 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #  endif
    bool need_initialize = true; // flux array need initialize or not
 
-// calculate temperature
-#  if ( defined VISCOSITY ) || ( defined CONDUCTION )
-   const bool CheckMinTemp_Yes = true;
-   real Temp[ CUBE(FLU_NXT) ];
-   CGPU_LOOP( idx, CUBE(FLU_NXT) )
-   {
-       const int size_ij = SQR( FLU_NXT );
-       const int i       = idx % FLU_NXT;
-       const int j       = idx % size_ij / FLU_NXT;
-       const int k       = idx / size_ij;
-
-#      ifdef MHD
-       real CC_B[NCOMP_MAG];
-//     magnetic field
-       MHD_GetCellCenteredBField( CC_B, g_FC_B[0], g_FC_B[1], g_FC_B[2],
-                                  FLU_NXT, FLU_NXT, FLU_NXT, i, j, k );
-
-       const real Emag = 0.5*( SQR(CC_B[0]) + SQR(CC_B[1]) + SQR(CC_B[2]) );
-#      else
-       const real Emag = NULL_REAL;
-#      endif // #ifdef MHD
-
-       real fluid[NCOMP_TOTAL];
-       for (int v=0; v<NCOMP_TOTAL; v++)  fluid[v] = g_ConVar[v][idx];
-       Temp[idx] = Hydro_Con2Temp( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ],
-                                   fluid[ENGY], fluid+NCOMP_FLUID, CheckMinTemp_Yes,
-                                   MinTemp, Emag, EoS->DensEint2Temp_FuncPtr,
-                                   EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
-                                   EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
-   }
-#  endif
-#  ifdef __CUDACC__
-   __syncthreads();
-#  endif
-
 // compute extra flux for MHM.
 // add conductive fluxes
 #  ifdef CONDUCTION

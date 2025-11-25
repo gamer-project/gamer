@@ -71,6 +71,47 @@ real van_leer2( const real a, const real b, const real c, const real d )
 
 } // FUNCTION : van_leer2
 
+GPU_DEVICE
+real compute_temperature( const real ConVar[][ CUBE(FLU_NXT) ],
+                          const real PriVar[][ CUBE(FLU_NXT) ],
+                          const real   FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ]
+                          const int idx, const real MinTemp,
+                          const long PassiveFloor, const EoS_t *EoS )
+{
+   const bool CheckMinTemp_Yes = true;
+   real temp;
+   real fluid[NCOMP_TOTAL];
+
+   if ( PriVar == NULL )
+   {
+      real Emag;
+#ifdef MHD
+      Emag = MHD_GetCellCenteredBEnergy( FC_B[0], FC_B[1], FC_B[2], FLU_NXT, FLU_NXT, FLU_NXT,
+                                         );
+#else
+      Emag = NULL_REAL;
+#endif
+      for (int v=0; v<NCOMP_TOTAL; v++) fluid[v] = ConVar[v][idx];
+      temp = Hydro_Con2Temp( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ],
+                             fluid[ENGY], fluid+NCOMP_FLUID, CheckMinTemp_Yes,
+                             MinTemp, PassiveFloor, Emag, EoS->DensEint2Temp_FuncPtr,
+                             EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
+                             EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+   }
+   else
+   {
+      for (int v=0; v<NCOMP_TOTAL; v++) fluid[v] = PriVar[v][idx];
+      const real Eint = EoS->DensPres2Eint_FuncPtr( fluid[DENS], fluid[ENGY], fluid+NCOMP_FLUID,
+                                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
+                                                    EoS->Table );
+      temp = EoS->DensEint2Temp_FuncPtr( fluid[DENS], Eint, fluid+NCOMP_FLUID, EoS->AuxArrayDevPtr_Flt,
+                                         EoS->AuxArrayDevPtr_Int, EoS->Table );
+      temp = Hydro_CheckMinTemp( temp, MinTemp );
+   } // if ( PriVar == NULL ) ... else ...
+
+   return temp;
+} // FUNCTION : compute_temperature
+
 #endif // #if defined( VISCOSITY ) || defined( CONDUCTION ) || defined( CR_DIFFUSION )
 
 #endif // #ifndef __CUFLU_MICROSHARED__
