@@ -271,7 +271,7 @@
 
 
 // maximum number of output derived fields
-#  define DER_NOUT_MAX        10
+#  define DER_NOUT_MAX        30
 
 
 // maximum number of fields to be stored in HDF5 snapshots

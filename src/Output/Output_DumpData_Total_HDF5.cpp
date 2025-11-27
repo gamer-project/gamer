@@ -813,7 +813,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    real (*Der_FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ] = new real [Der_NP][NCOMP_TOTAL ][ CUBE(DER_NXT)            ];
    real (*Der_Out  )             [ CUBE(PS1)                ] = new real         [DER_NOUT_MAX][ CUBE(PS1)                ];
 #  if ( MODEL == ELBDM )
-   real (*Der_ELBDMIn)[NCOMP_TOTAL][ CUBE(ELBDM_DER_NXT)    ] = new real [Der_NP][NCOMP_TOTAL ][ CUBE(ELBDM_DER_NXT) ];
+   real (*Der_ELBDMIn)[NCOMP_TOTAL][ CUBE(ELBDM_DER_NXT)    ] = new real [Der_NP][NCOMP_TOTAL ][ CUBE(ELBDM_DER_NXT)      ];
 #  endif
 #  ifdef MHD
    real (*Der_MagFC)[NCOMP_MAG  ][ (DER_NXT+1)*SQR(DER_NXT) ] = new real [Der_NP][NCOMP_MAG   ][ (DER_NXT+1)*SQR(DER_NXT) ];
