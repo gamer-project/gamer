@@ -5,6 +5,9 @@
 // --> declared in "Model_ELBDM/ELBDM_RemoveMotionCM.cpp"
 #if ( MODEL == ELBDM )
 extern double ELBDM_Vcm[3];
+extern double ELBDM_MassPsi;
+extern double ELBDM_MassPsi_AErr;
+extern double ELBDM_MassPsi_RErr;
 #endif
 
 
@@ -781,6 +784,45 @@ void Aux_Check_Conservation( const char *comment )
 
 //    broadcast
       MPI_Bcast( ELBDM_Vcm, 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   }
+#  endif
+
+// calculate the ELBDM total mass for ELBDM_RescaleMassError()
+#  if ( MODEL == ELBDM )
+   if ( ELBDM_RESCALE_MASS_ERROR != ELBDM_RESCALE_MASS_ERROR_NONE )
+   {
+      if ( MPI_Rank == 0 )
+      {
+         ELBDM_MassPsi = Fluid_AllRank[0];
+      }
+//    broadcast
+      MPI_Bcast( ELBDM_MassPsi, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   }
+#  endif
+
+// calculate the ELBDM total mass absloute error for ELBDM_RescaleMassError()
+#  if ( MODEL == ELBDM )
+   if ( ELBDM_RESCALE_MASS_ERROR != ELBDM_RESCALE_MASS_ERROR_NONE )
+   {
+      if ( MPI_Rank == 0 )
+      {
+         ELBDM_MassPsi_AErr = AbsErr_Flu[0];
+      }
+//    broadcast
+      MPI_Bcast( ELBDM_MassPsi_AErr, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   }
+#  endif
+
+// calculate the ELBDM total mass relative error for ELBDM_RescaleMassError()
+#  if ( MODEL == ELBDM )
+   if ( ELBDM_RESCALE_MASS_ERROR != ELBDM_RESCALE_MASS_ERROR_NONE )
+   {
+      if ( MPI_Rank == 0 )
+      {
+         ELBDM_MassPsi_RErr = RelErr_Flu[0];
+      }
+//    broadcast
+      MPI_Bcast( ELBDM_MassPsi_RErr, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
    }
 #  endif
 
