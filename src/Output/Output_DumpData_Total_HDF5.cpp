@@ -279,6 +279,7 @@ Procedure for outputting new variables:
 //                                             Input__TestProb parameters in "Info/InputTest"
 //                2504 : 2025/04/29 --> output OPT__PAR_INIT_CHECK
 //                2505 : 2025/05/07 --> output PassiveFloor_Var
+//                2506 : 2025/12/01 --> output ELBDM_RESCALE_MASS_ERROR, ELBDM_RESCALE_MASS_STEPS
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -2580,6 +2581,8 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.ELBDM_Taylor3_Coeff     = ELBDM_TAYLOR3_COEFF;
    InputPara.ELBDM_Taylor3_Auto      = ELBDM_TAYLOR3_AUTO;
    InputPara.ELBDM_RemoveMotionCM    = ELBDM_REMOVE_MOTION_CM;
+   InputPara.ELBDM_RESCALE_MASS_ERROR= ELBDM_RESCALE_MASS_ERROR;
+   InputPara.ELBDM_RESCALE_MASS_STEPS= ELBDM_RESCALE_MASS_STEPS;
    InputPara.ELBDM_BaseSpectral      = ELBDM_BASE_SPECTRAL;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    InputPara.ELBDM_FirstWaveLevel    = ELBDM_FIRST_WAVE_LEVEL;
