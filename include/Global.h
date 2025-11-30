@@ -167,6 +167,8 @@ extern int              OPT__FLAG_SPECTRAL_N;
 extern double           FlagTable_Spectral[NLEVEL-1][2];
 
 extern ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
+extern bool             ELBDM_RESCALE_MASS_ERROR;
+extern int              ELBDM_RESCALE_MASS_STEPS;
 extern bool             ELBDM_BASE_SPECTRAL;
 
 #else
