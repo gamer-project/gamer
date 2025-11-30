@@ -1249,20 +1249,22 @@ void Aux_TakeNote()
 #     endif
       }
       else {
-      fprintf( Note, "ELBDM_MASS                     % 14.7e\n",     ELBDM_MASS             );
+      fprintf( Note, "ELBDM_MASS                     % 14.7e\n",     ELBDM_MASS              );
       }
-      fprintf( Note, "ELBDM_PLANCK_CONST             % 14.7e\n",     ELBDM_PLANCK_CONST     );
-      fprintf( Note, "ELBDM_ETA                      % 14.7e\n",     ELBDM_ETA              );
+      fprintf( Note, "ELBDM_PLANCK_CONST             % 14.7e\n",     ELBDM_PLANCK_CONST      );
+      fprintf( Note, "ELBDM_ETA                      % 14.7e\n",     ELBDM_ETA               );
 #     ifdef QUARTIC_SELF_INTERACTION
-      fprintf( Note, "ELBDM_LAMBDA                   % 14.7e\n",     ELBDM_LAMBDA           );
+      fprintf( Note, "ELBDM_LAMBDA                   % 14.7e\n",     ELBDM_LAMBDA            );
 #     endif
-      fprintf( Note, "ELBDM_TAYLOR3_COEFF            % 14.7e\n",     ELBDM_TAYLOR3_COEFF    );
-      fprintf( Note, "ELBDM_TAYLOR3_AUTO             % d\n",         ELBDM_TAYLOR3_AUTO     );
-      fprintf( Note, "ELBDM_REMOVE_MOTION_CM         % d\n",         ELBDM_REMOVE_MOTION_CM );
-      fprintf( Note, "ELBDM_BASE_SPECTRAL            % d\n",         ELBDM_BASE_SPECTRAL    );
+      fprintf( Note, "ELBDM_TAYLOR3_COEFF            % 14.7e\n",     ELBDM_TAYLOR3_COEFF     );
+      fprintf( Note, "ELBDM_TAYLOR3_AUTO             % d\n",         ELBDM_TAYLOR3_AUTO      );
+      fprintf( Note, "ELBDM_REMOVE_MOTION_CM         % d\n",         ELBDM_REMOVE_MOTION_CM  );
+      fprintf( Note, "ELBDM_RESCALE_MASS_ERROR       % d\n",         ELBDM_RESCALE_MASS_ERROR);
+      fprintf( Note, "ELBDM_RESCALE_MASS_STEPS       % d\n",         ELBDM_RESCALE_MASS_STEPS);
+      fprintf( Note, "ELBDM_BASE_SPECTRAL            % d\n",         ELBDM_BASE_SPECTRAL     );
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      fprintf( Note, "ELBDM_MATCH_PHASE              % d\n",         ELBDM_MATCH_PHASE      );
-      fprintf( Note, "ELBDM_FIRST_WAVE_LEVEL         % d\n",         ELBDM_FIRST_WAVE_LEVEL );
+      fprintf( Note, "ELBDM_MATCH_PHASE              % d\n",         ELBDM_MATCH_PHASE       );
+      fprintf( Note, "ELBDM_FIRST_WAVE_LEVEL         % d\n",         ELBDM_FIRST_WAVE_LEVEL  );
 #     endif
 
 #     else
