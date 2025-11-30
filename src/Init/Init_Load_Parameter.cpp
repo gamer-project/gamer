@@ -336,6 +336,8 @@ void Init_Load_Parameter()
    ReadPara->Add( "ELBDM_TAYLOR3_COEFF",        &ELBDM_TAYLOR3_COEFF,             1.0/6.0,         NoMin_double,  NoMax_double   );
    ReadPara->Add( "ELBDM_TAYLOR3_AUTO",         &ELBDM_TAYLOR3_AUTO,              false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "ELBDM_REMOVE_MOTION_CM",     &ELBDM_REMOVE_MOTION_CM,          ELBDM_REMOVE_MOTION_CM_NONE, 0, 2              );
+   ReadPara->Add( "ELBDM_RESCALE_MASS_ERROR",   &ELBDM_RESCALE_MASS_ERROR,        false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "ELBDM_RESCALE_MASS_STEPS",   &ELBDM_RESCALE_MASS_STEPS,        100,             1,             NoMax_int      );
    ReadPara->Add( "ELBDM_BASE_SPECTRAL",        &ELBDM_BASE_SPECTRAL,             false,           Useless_bool,  Useless_bool   );
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    ReadPara->Add( "ELBDM_MATCH_PHASE",          &ELBDM_MATCH_PHASE,               true,            Useless_bool,  Useless_bool   );

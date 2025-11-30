@@ -789,7 +789,7 @@ void Aux_Check_Conservation( const char *comment )
 
 // calculate the ELBDM total mass for ELBDM_RescaleMassError()
 #  if ( MODEL == ELBDM )
-   if ( ELBDM_RESCALE_MASS_ERROR != ELBDM_RESCALE_MASS_ERROR_NONE )
+   if ( ELBDM_RESCALE_MASS_ERROR == true )
    {
       if ( MPI_Rank == 0 )
       {
@@ -802,7 +802,7 @@ void Aux_Check_Conservation( const char *comment )
 
 // calculate the ELBDM total mass absloute error for ELBDM_RescaleMassError()
 #  if ( MODEL == ELBDM )
-   if ( ELBDM_RESCALE_MASS_ERROR != ELBDM_RESCALE_MASS_ERROR_NONE )
+   if ( ELBDM_RESCALE_MASS_ERROR == true )
    {
       if ( MPI_Rank == 0 )
       {
@@ -815,7 +815,7 @@ void Aux_Check_Conservation( const char *comment )
 
 // calculate the ELBDM total mass relative error for ELBDM_RescaleMassError()
 #  if ( MODEL == ELBDM )
-   if ( ELBDM_RESCALE_MASS_ERROR != ELBDM_RESCALE_MASS_ERROR_NONE )
+   if ( ELBDM_RESCALE_MASS_ERROR == true )
    {
       if ( MPI_Rank == 0 )
       {

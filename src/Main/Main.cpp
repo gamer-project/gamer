@@ -159,6 +159,8 @@ double               DT__HYBRID_CFL, DT__HYBRID_CFL_INIT, DT__HYBRID_VELOCITY, D
 double               ELBDM_LAMBDA;
 #endif
 ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
+bool                 ELBDM_RESCALE_MASS_ERROR;
+int                  ELBDM_RESCALE_MASS_STEPS;
 bool                 ELBDM_BASE_SPECTRAL;
 
 #else
@@ -651,6 +653,8 @@ int main( int argc, char *argv[] )
    if (  ( ELBDM_REMOVE_MOTION_CM == ELBDM_REMOVE_MOTION_CM_INIT && (OPT__INIT != INIT_BY_RESTART || OPT__RESTART_RESET) )  ||
            ELBDM_REMOVE_MOTION_CM == ELBDM_REMOVE_MOTION_CM_EVERY_STEP  )
       ELBDM_RemoveMotionCM();
+   if (  ( ELBDM_RESCALE_MASS_ERROR && (OPT__INIT != INIT_BY_RESTART || OPT__RESTART_RESET) ) && (Step % ELBDM_RESCALE_MASS_STEPS == 0) )
+      ELBDM_RescaleMassError();
 #  endif
 
 #  ifdef TIMING
@@ -746,6 +750,8 @@ int main( int argc, char *argv[] )
 
       if ( ELBDM_REMOVE_MOTION_CM == ELBDM_REMOVE_MOTION_CM_EVERY_STEP )
       TIMING_FUNC(   ELBDM_RemoveMotionCM(),          Timer_Main[4],   TIMER_ON   );
+      if ( ELBDM_RESCALE_MASS_ERROR )
+      TIMING_FUNC(   ELBDM_RescaleMassError(),          Timer_Main[4],   TIMER_ON   );
 #     endif // #if ( MODEL == ELBDM )
 //    ---------------------------------------------------------------------------------------------------
 
