@@ -173,6 +173,8 @@ void SetParameter()
    if ( Soliton_CoreRadiusAll == NoDef_double )
       Aux_Error( ERROR_INFO, "Runtime parameter \"Soliton_CoreRadiusAll\" is not set !!\n" );
 
+   if ( !OPT__UNIT && Soliton_InitMode == 2 )
+      Aux_Error( ERROR_INFO, "OPT__UNIT must be enabled for Soliton_InitMode == 2 !!\n" );
 
 // (2) set the problem-specific derived parameters
 // (2-1) allocate memory
@@ -261,7 +263,7 @@ void SetParameter()
          {
             if ( DensRef[b] >= DensCore  &&  DensRef[b+1] <= DensCore )
             {
-               CoreRadiusRef = 0.5*( RadiusRef[b] + RadiusRef[b+1] );
+               CoreRadiusRef = RadiusRef[b] + (DensCore - DensRef[b])*(RadiusRef[b+1]-RadiusRef[b])/(DensRef[b+1]-DensRef[b]);
                break;
             }
          }
@@ -307,8 +309,11 @@ void SetParameter()
       Aux_Message( stdout, "  total number of solitons                  = %d\n",     Soliton_N                  );
       Aux_Message( stdout, "  random seed for setting the center coord. = %d\n",     Soliton_RSeed              );
       Aux_Message( stdout, "  size of the soliton-free zone             = %13.7e\n", Soliton_EmptyRegion        );
-      Aux_Message( stdout, "  density profile filename                  = %s\n",     Soliton_DensProf_Filename  );
-      Aux_Message( stdout, "  number of bins of the density profile     = %d\n",     Soliton_DensProf_NBin      );
+      if (Soliton_InitMode==1)
+      {
+         Aux_Message( stdout, "  density profile filename               = %s\n",     Soliton_DensProf_Filename  );
+         Aux_Message( stdout, "  number of bins of the density profile  = %d\n",     Soliton_DensProf_NBin      );
+      }
       Aux_Message( stdout, "\n" );
       Aux_Message( stdout, "  Soliton info:\n" );
       if ( Soliton_InitMode == 1 )
@@ -324,7 +329,7 @@ void SetParameter()
       else if ( Soliton_InitMode == 2 )
       {
          Aux_Message( stdout, "  (InitMode = 2 --> use the analytical function of the density profile)\n" );
-         Aux_Message( stdout, "  %7s  %13s  %13s  %13s\n", "ID", "CoreRadius", "Center_X", "Center_Y", "Center_Z" );
+         Aux_Message( stdout, "  %7s  %13s  %13s  %13s  %13s\n", "ID", "CoreRadius", "Center_X", "Center_Y", "Center_Z" );
          for (int t=0; t<Soliton_N; t++)
          Aux_Message( stdout, "  %7d  %13.6e  %13.6e  %13.6e  %13.6e\n",
                      t, Soliton_CoreRadius[t],
@@ -363,51 +368,60 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
    double r_tar, r_ref, dens_ref, dens;
-   const double *Table_Radius  = Soliton_DensProf + 0*Soliton_DensProf_NBin;  // radius
-   const double *Table_Density = Soliton_DensProf + 1*Soliton_DensProf_NBin;  // density
 
    // initialize density as zero since there may be multiple solitons
-      fluid[DENS] = 0.0;
+   fluid[DENS] = 0.0;
 
-   // loop over all solitons to get the total density
-   for (int t=0; t<Soliton_N; t++)
+   if ( Soliton_InitMode == 1 )
    {
-      r_tar = sqrt( SQR(x-Soliton_Center[t][0]) + SQR(y-Soliton_Center[t][1]) + SQR(z-Soliton_Center[t][2]) );
-      if ( Soliton_InitMode == 1 )
+      const double *Table_Radius  = Soliton_DensProf + 0*Soliton_DensProf_NBin;  // radius
+      const double *Table_Density = Soliton_DensProf + 1*Soliton_DensProf_NBin;  // density
+
+      // loop over all solitons to get the total density
+      for (int t=0; t<Soliton_N; t++)
       {
-   //    rescale radius (target radius --> reference radius)
+         r_tar = sqrt( SQR(x-Soliton_Center[t][0]) + SQR(y-Soliton_Center[t][1]) + SQR(z-Soliton_Center[t][2]) );
+
+         // rescale radius (target radius --> reference radius)
          r_ref = r_tar / Soliton_ScaleL[t];
 
-   //    linear interpolation
+         // linear interpolation
          dens_ref = Mis_InterpolateFromTable( Soliton_DensProf_NBin, Table_Radius, Table_Density, r_ref );
 
          if ( dens_ref == NULL_REAL )
          {
-            if      ( r_ref <  Table_Radius[0] )
-               dens_ref = Table_Density[0];
+               if      ( r_ref <  Table_Radius[0] )
+                  dens_ref = Table_Density[0];
 
-            else if ( r_ref >= Table_Radius[Soliton_DensProf_NBin-1] )
-               dens_ref = Table_Density[Soliton_DensProf_NBin-1];
+               else if ( r_ref >= Table_Radius[Soliton_DensProf_NBin-1] )
+                  dens_ref = Table_Density[Soliton_DensProf_NBin-1];
 
-            else
-               Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e (min/max radius = %13.7e/%13.7e) !!\n",
-                        r_ref, Table_Radius[0], Table_Radius[Soliton_DensProf_NBin-1] );
+               else
+                  Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e (min/max radius = %13.7e/%13.7e) !!\n",
+                           r_ref, Table_Radius[0], Table_Radius[Soliton_DensProf_NBin-1] );
          }
 
-   //    rescale density (reference density --> target density) and add to the fluid array
+         // rescale density (reference density --> target density) and add to the fluid array
          fluid[DENS] += dens_ref*Soliton_ScaleD[t];
-      } // if ( Soliton_InitMode == 1 )
-      else if ( Soliton_InitMode == 2 )
+      } // for (int t=0; t<Soliton_N; t++)
+   } // if ( Soliton_InitMode == 1 )
+   else if ( Soliton_InitMode == 2 )
+   {
+      const double m22      = ELBDM_MASS*UNIT_M/(Const_eV/SQR(Const_c))/1.0e-22;
+
+      // loop over all solitons to get the total density
+      for (int t=0; t<Soliton_N; t++)
       {
-         const double m22      = ELBDM_MASS*UNIT_M/(Const_eV/SQR(Const_c))/1.0e-22;
+         r_tar = sqrt( SQR(x-Soliton_Center[t][0]) + SQR(y-Soliton_Center[t][1]) + SQR(z-Soliton_Center[t][2]) );
+
          const double rc_kpc   = Soliton_CoreRadius[t]*UNIT_L/Const_kpc;
          dens = 1.945/SQR(m22*10)/POW4(rc_kpc) / POW(1 + (POW(2.0,1.0/8.0)-1.0)*SQR(r_tar/Soliton_CoreRadius[t]), 8);   // in unit of Msun/pc^3
          dens = dens* Const_Msun/CUBE(Const_pc) / UNIT_D ;   // code unit
          fluid[DENS] += dens;
-      } // if ( Soliton_InitMode == 2 )
-      else
-         Aux_Error( ERROR_INFO, "unsupported Soliton_InitMode (%d) !!\n", Soliton_InitMode );
-   } // for (int t=0; t<Soliton_N; t++)
+      } // for (int t=0; t<Soliton_N; t++)
+   } // if ( Soliton_InitMode == 2 )
+   else
+      Aux_Error( ERROR_INFO, "unsupported Soliton_InitMode (%d) !!\n", Soliton_InitMode );
 
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
@@ -449,7 +463,7 @@ void End_Soliton()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  BC
-// Description :  Set the extenral boundary condition
+// Description :  Set the extenal boundary condition
 //
 // Note        :  1. Linked to the function pointer "BC_User_Ptr"
 //
