@@ -317,8 +317,8 @@ void Hydro_AddViscousFlux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
 //          transverse direction 1 and 2 derivatives
             N_slope_T1  = 0.5 * (
-               get_vel_op( g_ConVar, g_PriVar, d, idx_cvar + didx_cvar[TDir1], idx_cvar_dd + didx_cvar[TDir1], 0 ) -
-               get_vel_op( g_ConVar, g_PriVar, d, idx_cvar + didx_cvar[TDir1], idx_cvar_dd - didx_cvar[TDir1], 0 )
+               get_vel_op( g_ConVar, g_PriVar,     d, idx_cvar + didx_cvar[TDir1], idx_cvar_dd + didx_cvar[TDir1], 0 ) -
+               get_vel_op( g_ConVar, g_PriVar,     d, idx_cvar + didx_cvar[TDir1], idx_cvar_dd - didx_cvar[TDir1], 0 )
             ) * _dh;
             N_slope_T2  = 0.5 * (
                get_vel_op( g_ConVar, g_PriVar,     d, idx_cvar + didx_cvar[TDir2], idx_cvar_dd + didx_cvar[TDir2], 0 ) -
