@@ -2,11 +2,8 @@
 
 #if ( MODEL == ELBDM )
 
-
 // global variable to store the ELBDM total mass
 double ELBDM_MassPsi = NULL_REAL;
-
-
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ELBDM_RescaleMassError
@@ -19,7 +16,7 @@ double ELBDM_MassPsi = NULL_REAL;
 //
 // Parameter   :  None
 //
-// Return      :  amr->fluid[REAL/IMAG]
+// Return      :  amr->fluid[DENS/REAL/IMAG]
 //-------------------------------------------------------------------------------------------------------
 void ELBDM_RescaleMassError()
 {
@@ -81,7 +78,7 @@ void ELBDM_RescaleMassError()
    } // for (int lv=0; lv<NLEVEL; lv++)
 
 
-// reset ELBDM_Vcm[] to check whether it is properly recalculated by Aux_Check_Conservation()
+// reset ELBDM_MassPsi[] to check whether it is properly recalculated by Aux_Check_Conservation()
 ELBDM_MassPsi = NULL_REAL;
 
 } // FUNCTION : ELBDM_RescaleMassError
