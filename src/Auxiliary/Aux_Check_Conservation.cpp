@@ -796,33 +796,7 @@ void Aux_Check_Conservation( const char *comment )
          ELBDM_MassPsi = Fluid_AllRank[0];
       }
 //    broadcast
-      MPI_Bcast( ELBDM_MassPsi, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-   }
-#  endif
-
-// calculate the ELBDM total mass absloute error for ELBDM_RescaleMassError()
-#  if ( MODEL == ELBDM )
-   if ( ELBDM_RESCALE_MASS_ERROR == true )
-   {
-      if ( MPI_Rank == 0 )
-      {
-         ELBDM_MassPsi_AErr = AbsErr_Flu[0];
-      }
-//    broadcast
-      MPI_Bcast( ELBDM_MassPsi_AErr, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-   }
-#  endif
-
-// calculate the ELBDM total mass relative error for ELBDM_RescaleMassError()
-#  if ( MODEL == ELBDM )
-   if ( ELBDM_RESCALE_MASS_ERROR == true )
-   {
-      if ( MPI_Rank == 0 )
-      {
-         ELBDM_MassPsi_RErr = RelErr_Flu[0];
-      }
-//    broadcast
-      MPI_Bcast( ELBDM_MassPsi_RErr, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+      MPI_Bcast( &ELBDM_MassPsi, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
    }
 #  endif
 

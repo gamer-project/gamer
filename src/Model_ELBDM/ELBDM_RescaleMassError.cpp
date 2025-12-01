@@ -5,8 +5,6 @@
 
 // global variable to store the ELBDM total mass
 double ELBDM_MassPsi = NULL_REAL;
-double ELBDM_MassPsi_AErr = NULL_REAL;
-double ELBDM_MassPsi_RErr = NULL_REAL;
 
 
 
@@ -34,18 +32,6 @@ void ELBDM_RescaleMassError()
    if ( ! Aux_IsFinite(ELBDM_MassPsi) )
       Aux_Error( ERROR_INFO, "ELBDM_MassPsi = %14.7e !!\n", ELBDM_MassPsi );
 
-   if ( ELBDM_MassPsi_AErr == NULL_REAL )
-      Aux_Error( ERROR_INFO, "ELBDM_MassPsi_AErr == NULL_REAL !!\n");
-
-   if ( ! Aux_IsFinite(ELBDM_MassPsi_AErr) )
-      Aux_Error( ERROR_INFO, "ELBDM_MassPsi_AErr = %14.7e !!\n", ELBDM_MassPsi_AErr );
-
-   if ( ELBDM_MassPsi_RErr == NULL_REAL )
-      Aux_Error( ERROR_INFO, "ELBDM_MassPsi_RErr == NULL_REAL !!\n");
-
-   if ( ! Aux_IsFinite(ELBDM_MassPsi_RErr) )
-      Aux_Error( ERROR_INFO, "ELBDM_MassPsi_RErr = %14.7e !!\n", ELBDM_MassPsi_RErr );
-
 // Rescale the total ELBDM mass
    for (int lv=0; lv<NLEVEL; lv++)
    {
@@ -65,8 +51,18 @@ void ELBDM_RescaleMassError()
          for (int j=0; j<PS1; j++)  {  y = y0 + j*dh;
          for (int i=0; i<PS1; i++)  {  x = x0 + i*dh;
 
-            fluid[REAL][k][j][i] /= (1-ELBDM_MassPsi_RErr);
-            fluid[IMAG][k][j][i] /= (1-ELBDM_MassPsi_RErr);
+#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
+            if ( amr->use_wave_flag[lv] ) {
+#           endif
+               fluid[REAL][k][j][i] *= SQRT(ConRef[1]/ELBDM_MassPsi);
+               fluid[IMAG][k][j][i] *= SQRT(ConRef[1]/ELBDM_MassPsi);
+               fluid[DENS][k][j][i] = SQR(fluid[REAL][k][j][i]) + SQR(fluid[IMAG][k][j][i]);
+
+#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
+            } else {
+               fluid[DENS][k][j][i] *= (ConRef[1]/ELBDM_MassPsi);
+            }
+#           endif
 
          }}}
       } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
