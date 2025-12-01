@@ -6,8 +6,6 @@
 #if ( MODEL == ELBDM )
 extern double ELBDM_Vcm[3];
 extern double ELBDM_MassPsi;
-extern double ELBDM_MassPsi_AErr;
-extern double ELBDM_MassPsi_RErr;
 #endif
 
 

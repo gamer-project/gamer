@@ -68,20 +68,21 @@ void ELBDM_RescaleMassError()
       } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
 //    update the data on MPI buffer patches
-#     if ( amr->use_wave_flag[lv] ) {
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      if ( amr->use_wave_flag[lv] ) {
 #     endif
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _REAL|_IMAG, _NONE, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _REAL|_IMAG|_DENS, _NONE, Flu_ParaBuf, USELB_YES );
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       } else {
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _PHAS, _NONE, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _DENS, _NONE, Flu_ParaBuf, USELB_YES );
       }
+#     endif
 
    } // for (int lv=0; lv<NLEVEL; lv++)
 
 
 // reset ELBDM_Vcm[] to check whether it is properly recalculated by Aux_Check_Conservation()
 ELBDM_MassPsi = NULL_REAL;
-ELBDM_MassPsi_AErr = NULL_REAL;
-ELBDM_MassPsi_RErr = NULL_REAL;
 
 } // FUNCTION : ELBDM_RescaleMassError
 
