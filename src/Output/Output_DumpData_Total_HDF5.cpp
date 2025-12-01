@@ -2581,8 +2581,8 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.ELBDM_Taylor3_Coeff     = ELBDM_TAYLOR3_COEFF;
    InputPara.ELBDM_Taylor3_Auto      = ELBDM_TAYLOR3_AUTO;
    InputPara.ELBDM_RemoveMotionCM    = ELBDM_REMOVE_MOTION_CM;
-   InputPara.ELBDM_RESCALE_MASS_ERROR= ELBDM_RESCALE_MASS_ERROR;
-   InputPara.ELBDM_RESCALE_MASS_STEPS= ELBDM_RESCALE_MASS_STEPS;
+   InputPara.ELBDM_RescaleMassError  = ELBDM_RESCALE_MASS_ERROR;
+   InputPara.ELBDM_RescaleMassSteps  = ELBDM_RESCALE_MASS_STEPS;
    InputPara.ELBDM_BaseSpectral      = ELBDM_BASE_SPECTRAL;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    InputPara.ELBDM_FirstWaveLevel    = ELBDM_FIRST_WAVE_LEVEL;
@@ -3642,6 +3642,8 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "ELBDM_Taylor3_Coeff",     HOFFSET(InputPara_t,ELBDM_Taylor3_Coeff    ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "ELBDM_Taylor3_Auto",      HOFFSET(InputPara_t,ELBDM_Taylor3_Auto     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "ELBDM_RemoveMotionCM",    HOFFSET(InputPara_t,ELBDM_RemoveMotionCM   ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "ELBDM_RescaleMassError",  HOFFSET(InputPara_t,ELBDM_RescaleMassError ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "ELBDM_RescaleMassSteps",  HOFFSET(InputPara_t,ELBDM_RescaleMassSteps ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "ELBDM_BaseSpectral",      HOFFSET(InputPara_t,ELBDM_BaseSpectral     ), H5T_NATIVE_INT     );
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
