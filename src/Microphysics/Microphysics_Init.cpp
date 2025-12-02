@@ -34,6 +34,12 @@ void Microphysics_Init()
    MicroPhy.CR_diff_min_b      = CR_DIFF_MIN_B;
 #  endif // #ifdef CR_DIFFUSION
 
+   // This is the numerical constant prefactor for the mean free path,
+   // whether electron or ion: (3**1.5)*(k_B**2)*amu/(4*(pi**0.5)*e**4)
+   // (see Sarazin 1988, etc.). Note that this assumes CGS units for
+   // the elementary charge e
+   const double mfp_prefactor = 4.35851e-19;
+
 #  ifdef CONDUCTION
    MicroPhy.CondType = CONDUCTION_TYPE;
    MicroPhy.CondFluxType = CONDUCTION_FLUX_TYPE;
@@ -55,10 +61,8 @@ void Microphysics_Init()
    if ( MicroPhy.CondSaturation )
    {
       // This calculates the prefactor for the electron MFP
-      // Note that this assumes CGS units for the electron charge
-      MicroPhy.CondMFPConst = (real)( 0.7329037678543799 * Const_kB * Const_kB / ( UNIT_E * UNIT_E ) );
-      MicroPhy.CondMFPConst /= (real)POW( Const_e / SQRT( UNIT_E*UNIT_L ), 4.0 ) * MicroPhy.CondCoulombLog;
-      MicroPhy.CondMFPConst *= CONDUCTION_MUE * (real)( Const_amu / UNIT_M );
+      MicroPhy.CondMFPConst = (real)( mfp_prefactor * CONDUCTION_MUE / MicroPhy.CondCoulombLog );
+      MicroPhy.CondMFPConst *= (real)( UNIT_L * UNIT_L / UNIT_M );
    }
 
    if ( MicroPhy.CondType == CONSTANT_CONDUCTION )
@@ -102,10 +106,9 @@ void Microphysics_Init()
    if ( MicroPhy.ViscSaturation )
    {
       // This calculates the prefactor for the ion MFP
-      // Note that this assumes CGS units for the ion charge
-      MicroPhy.ViscMFPConst = (real)( 0.7329037678543799 * Const_kB * Const_kB / ( UNIT_E * UNIT_E ) );
-      MicroPhy.ViscMFPConst /= (real)POW( Const_e / SQRT( UNIT_E*UNIT_L ), 4.0 ) * MicroPhy.ViscCoulombLog;
-      MicroPhy.ViscMFPConst *= VISCOSITY_MUI * (real)( Const_amu / UNIT_M );
+      MicroPhy.ViscMFPConst = (real)( mfp_prefactor * CONDUCTION_MUE / MicroPhy.CondCoulombLog );
+      MicroPhy.ViscMFPConst *= (real)( UNIT_L * UNIT_L / UNIT_M );
+      // This prefactor converts temperature to thermal speed squared: v_th^2 = 2kT/m_i
       MicroPhy.ViscThermalSpeedConv = (real)( 2.0 * Const_kB / ( VISCOSITY_MUI * Const_amu ) * ( UNIT_M/UNIT_E ) );
    }
 
