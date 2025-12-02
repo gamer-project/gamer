@@ -5,6 +5,10 @@
 
 #if defined( VISCOSITY ) || defined( CONDUCTION ) || defined( CR_DIFFUSION )
 
+#ifdef __CUDACC__
+#include "../Model_Hydro/GPU_Hydro/CUFLU_Shared_FluUtility.cu"
+#endif
+
 //-----------------------------------------------------------------------------------------
 // Function    : minmod
 // Description : Minmod slope limiter
