@@ -106,7 +106,7 @@ void Microphysics_Init()
    if ( MicroPhy.ViscSaturation )
    {
       // This calculates the prefactor for the ion MFP
-      MicroPhy.ViscMFPConst = (real)( mfp_prefactor * CONDUCTION_MUE / MicroPhy.CondCoulombLog );
+      MicroPhy.ViscMFPConst = (real)( mfp_prefactor * VISCOSITY_MUI / MicroPhy.ViscCoulombLog );
       MicroPhy.ViscMFPConst *= (real)( UNIT_L * UNIT_L / UNIT_M );
       // This prefactor converts temperature to thermal speed squared: v_th^2 = 2kT/m_i
       MicroPhy.ViscThermalSpeedConv = (real)( 2.0 * Const_kB / ( VISCOSITY_MUI * Const_amu ) * ( UNIT_M/UNIT_E ) );
