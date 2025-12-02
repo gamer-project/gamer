@@ -626,7 +626,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 #     pragma omp parallel for schedule( static )
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {
-         int Reset;
+         int Reset = 0;
          const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
          const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
          const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;

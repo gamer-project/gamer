@@ -788,6 +788,26 @@ void Output_HDF5_User_ClusterMerger( HDF5_Output_t *HDF5_OutUser )
 void End_ClusterMerger()
 {
 
+#  ifdef SUPPORT_HDF5
+   if ( OPT__INIT != INIT_BY_RESTART )
+   {
+      delete [] NPar_EachCluster;
+      delete [] Merger_NBin;
+      for (int c=0; c<Merger_Coll_NumHalos; c++)
+      {
+         if ( ! Merger_Coll_IsGas[c] )   continue;
+         delete [] Table_R[c];
+         delete [] Table_D[c];
+         delete [] Table_P[c];
+         delete [] Table_M[c];
+      }
+      delete [] Table_R;
+      delete [] Table_D;
+      delete [] Table_P;
+      delete [] Table_M;
+   }
+#  endif
+
    delete [] Merger_File_Prof;
    delete [] Merger_File_Par;
    delete [] Merger_Coll_IsGas;
@@ -830,26 +850,6 @@ void End_ClusterMerger()
    delete [] CM_Bondi_SinkNCell;
 
    delete [] ColorFieldsIdx;
-
-#  ifdef SUPPORT_HDF5
-   if ( OPT__INIT != INIT_BY_RESTART )
-   {
-      delete [] NPar_EachCluster;
-      delete [] Merger_NBin;
-      for (int c=0; c<Merger_Coll_NumHalos; c++)
-      {
-         if ( ! Merger_Coll_IsGas[c] )   continue;
-         delete [] Table_R[c];
-         delete [] Table_D[c];
-         delete [] Table_P[c];
-         delete [] Table_M[c];
-      }
-      delete [] Table_R;
-      delete [] Table_D;
-      delete [] Table_P;
-      delete [] Table_M;
-   }
-#  endif
 
    if ( AGN_feedback  &&  JetDirection_case == 2 )
    {
