@@ -21,7 +21,6 @@ static double ELBDM_InitMassPsi = NULL_REAL;
 //-------------------------------------------------------------------------------------------------------
 void ELBDM_RescaleMassError()
 {
-
    if ( ELBDM_InitMassPsi == NULL_REAL )
    {
       if ( MPI_Rank == 0 )
