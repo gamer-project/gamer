@@ -3,7 +3,8 @@
 #if ( MODEL == ELBDM )
 
 // global variable to store the ELBDM total mass
-double ELBDM_MassPsi = NULL_REAL;
+       double ELBDM_MassPsi     = NULL_REAL;
+static double ELBDM_InitMassPsi = NULL_REAL;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ELBDM_RescaleMassError
@@ -21,6 +22,14 @@ double ELBDM_MassPsi = NULL_REAL;
 void ELBDM_RescaleMassError()
 {
 
+   if ( ELBDM_InitMassPsi == NULL_REAL )
+   {
+      if ( MPI_Rank == 0 )
+      {
+         ELBDM_InitMassPsi = ConRef[1];
+      }
+      MPI_Bcast( &ELBDM_InitMassPsi, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   }
 // check
 
    if ( ELBDM_MassPsi == NULL_REAL )
@@ -51,13 +60,14 @@ void ELBDM_RescaleMassError()
 #           if ( ELBDM_SCHEME == ELBDM_HYBRID )
             if ( amr->use_wave_flag[lv] ) {
 #           endif
-               fluid[REAL][k][j][i] *= SQRT(ConRef[1]/ELBDM_MassPsi);
-               fluid[IMAG][k][j][i] *= SQRT(ConRef[1]/ELBDM_MassPsi);
-               fluid[DENS][k][j][i] = SQR(fluid[REAL][k][j][i]) + SQR(fluid[IMAG][k][j][i]);
+               
+               fluid[REAL][k][j][i] *= SQRT(ELBDM_InitMassPsi/ELBDM_MassPsi);
+               fluid[IMAG][k][j][i] *= SQRT(ELBDM_InitMassPsi/ELBDM_MassPsi);
+               fluid[DENS][k][j][i]  = SQR(fluid[REAL][k][j][i]) + SQR(fluid[IMAG][k][j][i]);
 
 #           if ( ELBDM_SCHEME == ELBDM_HYBRID )
             } else {
-               fluid[DENS][k][j][i] *= (ConRef[1]/ELBDM_MassPsi);
+               fluid[DENS][k][j][i] *= (ELBDM_InitMassPsi/ELBDM_MassPsi);
             }
 #           endif
 
