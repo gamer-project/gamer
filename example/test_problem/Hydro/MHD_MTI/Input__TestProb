@@ -1,0 +1,7 @@
+# problem-specific runtime parameters
+MHD_MTI_Rho0    1.0         # scale density
+MHD_MTI_P0	1.0	    # scale pressure
+MHD_MTI_v0	1.0e-4      # velocity perturbation amplitude
+MHD_MTI_z0      3.0         # scale height
+MHD_MTI_B0      1.0e-9      # magnetic field strength
+MHD_MTI_Dir     1           # magnetic field direction

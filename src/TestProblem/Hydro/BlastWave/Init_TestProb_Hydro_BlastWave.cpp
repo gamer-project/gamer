@@ -10,7 +10,9 @@ static double Blast_Pres_Exp;       // explosion pressure
 static double Blast_Radius;         // explosion radius
 static double Blast_Center[3];      // explosion center
 #ifdef MHD
-static double Blast_BField;         // magnetic field strength along the diagonal direction
+static double Blast_BField_X;       // magnetic field strength along the x-direction
+static double Blast_BField_Y;       // magnetic field strength along the y-direction
+static double Blast_BField_Z;       // magnetic field strength along the z-direction
        double Blast_ResetB_amp;     // amplitude (for resetting magnetic field)
        double Blast_ResetB_r0;      // scale radius
        double Blast_ResetB_tmin;    // starting time
@@ -120,7 +122,9 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "Blast_Center_Y",       &Blast_Center[1],       -1.0,          NoMin_double,     amr->BoxSize[1]   );
    LOAD_PARA( load_mode, "Blast_Center_Z",       &Blast_Center[2],       -1.0,          NoMin_double,     amr->BoxSize[2]   );
 #  ifdef MHD
-   LOAD_PARA( load_mode, "Blast_BField",         &Blast_BField,           5.0e-2,       NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Blast_BField_X",       &Blast_BField_X,         0.0288675,    NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Blast_BField_Y",       &Blast_BField_Y,         0.0288675,    NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Blast_BField_Z",       &Blast_BField_Z,         0.0288675,    NoMin_double,     NoMax_double      );
    LOAD_PARA( load_mode, "Blast_ResetB_amp",     &Blast_ResetB_amp,       1.0e2,        0.0,              NoMax_double      );
    LOAD_PARA( load_mode, "Blast_ResetB_r0",      &Blast_ResetB_r0,        1.0e-2,       Eps_double,       NoMax_double      );
    LOAD_PARA( load_mode, "Blast_ResetB_tmin",    &Blast_ResetB_tmin,      1.0e-3,       0.0,              NoMax_double      );
@@ -208,7 +212,9 @@ void SetParameter()
       Aux_Message( stdout, "  explosion center          = (%13.7e, %13.7e, %13.7e)\n", Blast_Center[0], Blast_Center[1],
                                                                                        Blast_Center[2] );
 #     ifdef MHD
-      Aux_Message( stdout, "  magnetic field strength   = %13.7e\n", Blast_BField );
+      Aux_Message( stdout, "  magnetic field x-comp     = %13.7e\n", Blast_BField_X );
+      Aux_Message( stdout, "  magnetic field y-comp     = %13.7e\n", Blast_BField_Y );
+      Aux_Message( stdout, "  magnetic field z-comp     = %13.7e\n", Blast_BField_Z );
       Aux_Message( stdout, "  resetting magnetic field  = %d\n",     OPT__RESET_FLUID );
       if ( OPT__RESET_FLUID ) {
       Aux_Message( stdout, "     amplitude              = %13.7e\n", Blast_ResetB_amp );
@@ -309,9 +315,9 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
                   const int lv, double AuxArray[] )
 {
 
-   magnetic[MAGX] = Blast_BField / sqrt(3.0);
-   magnetic[MAGY] = Blast_BField / sqrt(3.0);
-   magnetic[MAGZ] = Blast_BField / sqrt(3.0);
+   magnetic[MAGX] = Blast_BField_X;
+   magnetic[MAGY] = Blast_BField_Y;
+   magnetic[MAGZ] = Blast_BField_Z;
 
 } // FUNCTION : SetBFieldIC
 #endif // #ifdef MHD

@@ -81,8 +81,8 @@
 #  if   ( FLU_SCHEME == MHM )
 
 #     define N_FC_VAR            ( PS2 + 2 )
-#    ifdef MHD
 #     define N_HF_VAR            ( N_FC_VAR )
+#    ifdef MHD
 #     define N_FL_FLUX           ( PS2 + 2 )
 //    MHM doesn't have the half-step flux actually; this is only for calculating the half-step electric field
 #     define N_HF_FLUX           ( N_FL_FLUX+2 )
@@ -626,8 +626,5 @@ using complex_type = typename FFT::value_type;
 #else
 # define CGPU_LOOP( var, niter )    for (int (var)=0;           (var)<(niter); (var)++          )
 #endif
-
-
-
 
 #endif // #ifndef __CUFLU_H__

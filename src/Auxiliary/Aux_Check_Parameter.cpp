@@ -686,6 +686,9 @@ void Aux_Check_Parameter()
    if ( OPT__FREEZE_FLUID )
       Aux_Message( stderr, "REMINDER : \"%s\" will prevent fluid variables from being updated\n", "OPT__FREEZE_FLUID" );
 
+   if ( OPT__FREEZE_HYDRO )
+      Aux_Message( stderr, "REMINDER : \"%s\" will prevent hydro fluxes from being updated\n", "OPT__FREEZE_HYDRO" );
+
    } // if ( MPI_Rank == 0 )
 
 
@@ -1897,6 +1900,120 @@ void Aux_Check_Parameter()
 
 #endif // #ifdef FEEDBACK
 
+// conduction
+// =======================================================================================
+#ifdef CONDUCTION
+
+// errors
+// ------------------------------
+#  ifndef HYDRO
+#     error : ERROR : HYDRO is required for CONDUCTION!!
+#  endif
+
+#  if ( EOS != EOS_GAMMA && EOS != EOS_COSMIC_RAY )
+#     error : ERROR : CONDUCTION must work with EOS_GAMMA/EOS_COSMIC_RAY !!
+#  endif
+
+#  ifndef MHD
+   if ( CONDUCTION_FLUX_TYPE == ANISOTROPIC_CONDUCTION )
+      Aux_Error( ERROR_INFO, "ANISOTROPIC_CONDUCTION requires MHD !!\n" );
+   if ( CONDUCTION_SAT_WHISTLER )
+      Aux_Error( ERROR_INFO, "CONDUCTION_SAT_WHISTLER requires MHD !!\n" );
+#  endif
+
+   if ( CONDUCTION_TYPE == CONSTANT_CONDUCTION && CONDUCTION_CONSTANT_COEFF <= 0.0 )
+      Aux_Error( ERROR_INFO, "CONDUCTION_CONSTANT_COEFF <= 0 !!\n" );
+
+   if ( CONDUCTION_TYPE == SPITZER_CONDUCTION && CONDUCTION_COULOMB_LOG <= 0.0 )
+      Aux_Error( ERROR_INFO, "CONDUCTION_COULOMB_LOG <= 0 !!\n" );
+
+   if ( CONDUCTION_TYPE == SPITZER_CONDUCTION && CONDUCTION_SPITZER_FRAC <= 0.0 )
+      Aux_Error( ERROR_INFO, "CONDUCTION_SPITZER_FRAC <= 0 !!\n" );
+
+   if ( CONDUCTION_MUE <= 0.0 )
+      Aux_Error( ERROR_INFO, "CONDUCTION_MUE <= 0 !!\n" );
+
+   if ( CONDUCTION_TYPE == SPITZER_CONDUCTION && !OPT__UNIT )
+      Aux_Error( ERROR_INFO, "SPITZER_CONDUCTION only works with OPT__UNIT !!\n" );
+
+   if ( CONDUCTION_TYPE == CONSTANT_CONDUCTION && CONDUCTION_SATURATION )
+      Aux_Error( ERROR_INFO, "CONDUCTION_SATURATION only works with SPITZER_CONDUCTION !!\n" );
+
+// warning
+// ------------------------------
+   if ( MPI_Rank == 0 ) {
+
+      if ( DT__CONDUCTION < 0.0  ||  DT__CONDUCTION > 1.0 )
+         Aux_Message( stderr, "WARNING : DT__CONDUCTION (%14.7e) is not within the normal range [0...1] !!\n", DT__CONDUCTION );
+
+      if ( CONDUCTION_TYPE == SPITZER_CONDUCTION &&
+           ( CONDUCTION_COULOMB_LOG < 10.0 ) || ( CONDUCTION_COULOMB_LOG > 100.0 ) )
+         Aux_Message( stderr, "WARNING : CONDUCTION_COULOMB_LOG (%14.7e) is not within the normal range [10...100] !! Please ensure this value is reasonable!\n", CONDUCTION_COULOMB_LOG );
+
+   } // if ( MPI_Rank == 0 )
+
+#endif // #ifdef CONDUCTION
+
+// viscosity
+// =======================================================================================
+#ifdef VISCOSITY
+
+// errors
+// ------------------------------
+#  ifndef HYDRO
+#     error : ERROR : HYDRO is required for VISCOSITY!!
+#  endif
+
+#  ifndef MHD
+   if ( VISCOSITY_FLUX_TYPE == ANISOTROPIC_VISCOSITY )
+      Aux_Error( ERROR_INFO, "ANISOTROPIC_VISCOSITY requires MHD !!\n" );
+#  endif
+
+#  ifdef BAROTROPIC_EOS
+   if ( VISCOSITY_TYPE == SPITZER_VISCOSITY )
+      Aux_Error( ERROR_INFO, "SPITZER_VISCOSITY does not work with BAROTROPIC_EOS !!\n" );
+#  endif
+
+   if ( VISCOSITY_TYPE == CONSTANT_VISCOSITY && VISCOSITY_CONSTANT_COEFF <= 0.0 )
+      Aux_Error( ERROR_INFO, "VISCOSITY_CONSTANT_COEFF <= 0 !!\n" );
+
+   if ( VISCOSITY_TYPE == SPITZER_VISCOSITY && VISCOSITY_COULOMB_LOG <= 0.0 )
+      Aux_Error( ERROR_INFO, "VISCOSITY_COULOMB_LOG <= 0 !!\n" );
+
+   if ( VISCOSITY_TYPE == SPITZER_VISCOSITY && VISCOSITY_SPITZER_FRAC <= 0.0)
+      Aux_Error( ERROR_INFO, "VISCOSITY_SPITZER_FRAC <= 0 !!\n" );
+
+   if ( VISCOSITY_MUI <= 0.0 )
+      Aux_Error( ERROR_INFO, "VISCOSITY_MUI <= 0 !!\n" );
+
+   if ( VISCOSITY_TYPE == SPITZER_VISCOSITY && !OPT__UNIT )
+      Aux_Error( ERROR_INFO, "SPITZER_VISCOSITY only works with OPT__UNIT !!\n" );
+
+   if ( VISCOSITY_TYPE == CONSTANT_VISCOSITY && VISCOSITY_SATURATION )
+      Aux_Error( ERROR_INFO, "VISCOSITY_SATURATION only works with SPITZER_VISCOSITY !!\n" );
+
+   if ( VISCOSITY_FLUX_TYPE != ANISOTROPIC_VISCOSITY && OPT__OUTPUT_DELTAP )
+      Aux_Error( ERROR_INFO, "OPT__OUTPUT_DELTAP only works with ANISOTROPIC_VISCOSITY !!\n" );
+
+// warning
+// ------------------------------
+   if ( MPI_Rank == 0 ) {
+
+      if ( VISCOSITY_TYPE == CONSTANT_VISCOSITY &&
+           VISCOSITY_COEFF_TYPE == VISCOSITY_KINETIC_COEFF &&
+           VISCOSITY_CONSTANT_COEFF > VISCOSITY_MAX_DIFFUSIVITY )
+         Aux_Message( stderr, "WARNING : VISCOSITY_CONSTANT_COEFF is greater than VISCOSITY_MAX_DIFFUSIVITY !!\n" );
+
+      if ( DT__VISCOSITY < 0.0  ||  DT__VISCOSITY > 1.0 )
+         Aux_Message( stderr, "WARNING : DT__VISCOSITY (%14.7e) is not within the normal range [0...1] !!\n", DT__VISCOSITY );
+
+      if ( VISCOSITY_TYPE == SPITZER_VISCOSITY &&
+           ( VISCOSITY_COULOMB_LOG < 10.0 ) || ( VISCOSITY_COULOMB_LOG > 100.0 ) )
+         Aux_Message( stderr, "WARNING : VISCOSITY_COULOMB_LOG (%14.7e) is not within the normal range [10...100] !! Please ensure this value is reasonable!\n", VISCOSITY_COULOMB_LOG );
+
+   } // if ( MPI_Rank == 0 )
+
+#endif // #ifdef VISCOSITY
 
 // cosmic-ray diffusion
 // =======================================================================================
@@ -1919,7 +2036,7 @@ void Aux_Check_Parameter()
          Aux_Message( stderr, "WARNING : DT__CR_DIFFUSION (%14.7e) is not within the normal range [0...1] !!\n", DT__CR_DIFFUSION );
    } // if ( MPI_Rank == 0 )
 
-#endif // ifdef CR_DIFFUSION
+#endif // #ifdef CR_DIFFUSION
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_Check_Parameter ... done\n" );
