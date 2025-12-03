@@ -7,7 +7,7 @@
 void CPU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                             const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG,
                             const real dh, const real Safety, const real MinPres,
-                            const EoS_t EoS, const MicroPhy_t MicroPhy );
+                            const long PassiveFloor, const EoS_t EoS, const MicroPhy_t MicroPhy );
 #ifdef GRAVITY
 void CPU_dtSolver_HydroGravity( real g_dt_Array[],
                                 const real g_Pot_Array[][ CUBE(GRA_NXT) ],
@@ -47,6 +47,7 @@ void CPU_dtSolver_HydroGravity( real g_dt_Array[],
 //                Safety       : dt safety factor
 //                MicroPhy     : Microphysics object
 //                MinPres      : Minimum allowed pressure
+//                PassiveFloor : Bitwise flag to specify the passive scalars to be floored
 //                P5_Gradient  : Use 5-points stencil to evaluate the potential gradient
 //                UsePot       : Add self-gravity and/or external potential
 //                ExtAcc       : Add external acceleration
@@ -57,7 +58,7 @@ void CPU_dtSolver_HydroGravity( real g_dt_Array[],
 void CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                    const real Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real Pot_Array[][ CUBE(GRA_NXT) ],
                    const double Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
-                   const MicroPhy_t MicroPhy, const real MinPres, const bool P5_Gradient,
+                   const MicroPhy_t MicroPhy, const real MinPres, const long PassiveFloor, const bool P5_Gradient,
                    const bool UsePot, const OptExtAcc_t ExtAcc, const double TargetTime )
 {
 
@@ -65,7 +66,7 @@ void CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array
    {
 #     if   ( MODEL == HYDRO )
       case DT_FLU_SOLVER:
-         CPU_dtSolver_HydroCFL( dt_Array, Flu_Array, Mag_Array, NPatchGroup, dh, Safety, MinPres, EoS, MicroPhy );
+         CPU_dtSolver_HydroCFL( dt_Array, Flu_Array, Mag_Array, NPatchGroup, dh, Safety, MinPres, PassiveFloor, EoS, MicroPhy );
       break;
 
 #     ifdef GRAVITY
