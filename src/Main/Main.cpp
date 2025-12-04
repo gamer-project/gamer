@@ -749,7 +749,7 @@ int main( int argc, char *argv[] )
       if ( ELBDM_REMOVE_MOTION_CM == ELBDM_REMOVE_MOTION_CM_EVERY_STEP )
       TIMING_FUNC(   ELBDM_RemoveMotionCM(),          Timer_Main[4],   TIMER_ON   );
 
-      if ( ELBDM_RESCALE_MASS_ERROR && (Step % ELBDM_RESCALE_MASS_STEPS == 0))
+      if ( ELBDM_RESCALE_MASS_ERROR  &&  Step % ELBDM_RESCALE_MASS_STEPS == 0 )
       TIMING_FUNC(   ELBDM_RescaleMassError(),        Timer_Main[4],   TIMER_ON   );
 #     endif // #if ( MODEL == ELBDM )
 //    ---------------------------------------------------------------------------------------------------
