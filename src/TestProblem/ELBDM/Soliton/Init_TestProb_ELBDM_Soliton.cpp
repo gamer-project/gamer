@@ -390,15 +390,15 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
          if ( dens_ref == NULL_REAL )
          {
-               if      ( r_ref <  Table_Radius[0] )
-                  dens_ref = Table_Density[0];
+            if  ( r_ref <  Table_Radius[0] )
+               dens_ref = Table_Density[0];
 
-               else if ( r_ref >= Table_Radius[Soliton_DensProf_NBin-1] )
-                  dens_ref = Table_Density[Soliton_DensProf_NBin-1];
+            else if ( r_ref >= Table_Radius[Soliton_DensProf_NBin-1] )
+               dens_ref = Table_Density[Soliton_DensProf_NBin-1];
 
-               else
-                  Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e (min/max radius = %13.7e/%13.7e) !!\n",
-                           r_ref, Table_Radius[0], Table_Radius[Soliton_DensProf_NBin-1] );
+            else
+               Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e (min/max radius = %13.7e/%13.7e) !!\n",
+                        r_ref, Table_Radius[0], Table_Radius[Soliton_DensProf_NBin-1] );
          }
 
          // rescale density (reference density --> target density) and add to the fluid array
@@ -463,7 +463,7 @@ void End_Soliton()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  BC
-// Description :  Set the extenal boundary condition
+// Description :  Set the external boundary condition
 //
 // Note        :  1. Linked to the function pointer "BC_User_Ptr"
 //
