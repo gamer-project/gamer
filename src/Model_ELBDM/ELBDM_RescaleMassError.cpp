@@ -40,26 +40,19 @@ void ELBDM_RescaleMassError()
 // Rescale the total ELBDM mass
    for (int lv=0; lv<NLEVEL; lv++)
    {
-      const double dh = amr->dh[lv];
-
 #     pragma omp parallel for schedule( runtime )
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {
          real (*const fluid)[PS1][PS1][PS1] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid;
-         double x, y, z, x0, y0, z0;
 
-         x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
-         y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
-         z0 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
-
-         for (int k=0; k<PS1; k++)  {  z = z0 + k*dh;
-         for (int j=0; j<PS1; j++)  {  y = y0 + j*dh;
-         for (int i=0; i<PS1; i++)  {  x = x0 + i*dh;
+         for (int k=0; k<PS1; k++)  {
+         for (int j=0; j<PS1; j++)  {
+         for (int i=0; i<PS1; i++)  {
 
 #           if ( ELBDM_SCHEME == ELBDM_HYBRID )
             if ( amr->use_wave_flag[lv] ) {
 #           endif
-               
+    
                fluid[REAL][k][j][i] *= SQRT(ELBDM_InitMassPsi/ELBDM_MassPsi);
                fluid[IMAG][k][j][i] *= SQRT(ELBDM_InitMassPsi/ELBDM_MassPsi);
                fluid[DENS][k][j][i]  = SQR(fluid[REAL][k][j][i]) + SQR(fluid[IMAG][k][j][i]);
