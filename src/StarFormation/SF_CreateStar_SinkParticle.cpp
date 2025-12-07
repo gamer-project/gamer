@@ -268,7 +268,6 @@ void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real Ga
 #     error : STAR_FORMATION + STORE_PAR_ACC must work with STORE_POT_GHOST !!
 #  endif
 
-
 #  ifndef GRAVITY
 #     error : must turn on GRAVITY for SF_CreateStar_SinkParticle() !!
 #  endif
@@ -337,9 +336,6 @@ if ( lv != MAX_LEVEL )
    real GasMFracLeft; // the fraction of gas mass of the cell that will be took out by particle
    real Corner_Array_F[3]; // the corner of the ghost zone
    real fluid[FLU_NIN]; // fluid in the current test cell
-
-
-
 
    real PotNeighbor[6]; // record the neighboring cell potential [x+, x-, y+, y+, z+, z-]
 
