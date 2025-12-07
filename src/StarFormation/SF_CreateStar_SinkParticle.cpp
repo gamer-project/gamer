@@ -91,36 +91,24 @@ bool GravMini( const int pi, const int pj, const int pk, const real AccCellNum,
 // Function    :  ConvergingFlow
 // Description :  Check whether the gas in the nearby six cells converge toward the central one
 //
-// Parameter   :  t            : Index of the current cell
-//                Size_Flu     : Size of the fluid array
-//                Flu_Array_F_In: Fluid array
+// Parameter   :  pi, pj, pk      : Indices of the current cell
+//                Size_Flu        : Size of the fluid array
+//                Flu_Array_F_In  : Fluid array (4D: [v][k][j][i])
 //
 // Return      :  true : The flow is converging
 //                false: The flow is NOT converging
 //-------------------------------------------------------------------------------------------------------
-bool ConvergingFlow( const int t, const int Size_Flu, const real *Flu_Array_F_In )
+bool ConvergingFlow( const int pi, const int pj, const int pk, const int Size_Flu, 
+                     const real (*Flu_Array_F_In)[Size_Flu][Size_Flu][Size_Flu] )
 {
-   const int CubeSize = CUBE(Size_Flu);
-   real NeighborFluid[FLU_NIN];
    real VelNeighbor[6];
-   int delta_t;
-
-   for (int NeighborID=0; NeighborID<6; NeighborID++)
-   {  
-      if      (NeighborID == 0) delta_t = IDX321(  1,  0,  0, Size_Flu, Size_Flu );
-      else if (NeighborID == 1) delta_t = IDX321( -1,  0,  0, Size_Flu, Size_Flu );
-      else if (NeighborID == 2) delta_t = IDX321(  0,  1,  0, Size_Flu, Size_Flu );
-      else if (NeighborID == 3) delta_t = IDX321(  0, -1,  0, Size_Flu, Size_Flu );
-      else if (NeighborID == 4) delta_t = IDX321(  0,  0,  1, Size_Flu, Size_Flu );
-      else if (NeighborID == 5) delta_t = IDX321(  0,  0, -1, Size_Flu, Size_Flu );
-
-      const int Neighbort = t + delta_t;
-      for (int v=0; v<FLU_NIN; v++)    NeighborFluid[v] = Flu_Array_F_In[ v*CubeSize + Neighbort ];
-
-      if      ((NeighborID == 0) || (NeighborID == 1)) VelNeighbor[NeighborID] = NeighborFluid[MOMX]/NeighborFluid[DENS];
-      else if ((NeighborID == 2) || (NeighborID == 3)) VelNeighbor[NeighborID] = NeighborFluid[MOMY]/NeighborFluid[DENS];
-      else if ((NeighborID == 4) || (NeighborID == 5)) VelNeighbor[NeighborID] = NeighborFluid[MOMZ]/NeighborFluid[DENS];
-   }
+   
+   VelNeighbor[0] = Flu_Array_F_In[MOMX][pk][pj][pi+1] / Flu_Array_F_In[DENS][pk][pj][pi+1]; // x+ (NeighborID 0)
+   VelNeighbor[1] = Flu_Array_F_In[MOMX][pk][pj][pi-1] / Flu_Array_F_In[DENS][pk][pj][pi-1]; // x- (NeighborID 1)
+   VelNeighbor[2] = Flu_Array_F_In[MOMY][pk][pj+1][pi] / Flu_Array_F_In[DENS][pk][pj+1][pi]; // y+ (NeighborID 2)
+   VelNeighbor[3] = Flu_Array_F_In[MOMY][pk][pj-1][pi] / Flu_Array_F_In[DENS][pk][pj-1][pi]; // y- (NeighborID 3)
+   VelNeighbor[4] = Flu_Array_F_In[MOMZ][pk+1][pj][pi] / Flu_Array_F_In[DENS][pk+1][pj][pi]; // z+ (NeighborID 4)
+   VelNeighbor[5] = Flu_Array_F_In[MOMZ][pk-1][pj][pi] / Flu_Array_F_In[DENS][pk-1][pj][pi]; // z- (NeighborID 5)
 
    if ( (VelNeighbor[0] - VelNeighbor[1]) >= 0 || 
         (VelNeighbor[2] - VelNeighbor[3]) >= 0 || 
@@ -136,7 +124,7 @@ bool ConvergingFlow( const int t, const int Size_Flu, const real *Flu_Array_F_In
 //
 // Parameter   :  pi, pj, pk      : Indices of the current cell
 //                AccCellNum      : Accretion radius in cells
-//                Flu_Array_F_In  : Fluid array (linearized)
+//                Flu_Array_F_In  : Fluid array (4D: [v][k][j][i])
 //                Size_Flu        : Size of the fluid array
 //                Mag_Array_F_In  : Magnetic field array (linearized)
 //                Mag_Stride      : Stride for magnetic field array
@@ -147,11 +135,10 @@ bool ConvergingFlow( const int t, const int Size_Flu, const real *Flu_Array_F_In
 //                false: Otherwise
 //-------------------------------------------------------------------------------------------------------
 bool JeansInstability_BoundState( const int pi, const int pj, const int pk, const real AccCellNum,
-                                  const real *Flu_Array_F_In, const int Size_Flu,
+                                  const int Size_Flu, const real (*Flu_Array_F_In)[Size_Flu][Size_Flu][Size_Flu],
                                   const real *Mag_Array_F_In, const int Mag_Stride,
                                   const real dv, const real dh )
 {
-   const int CubeSize = CUBE(Size_Flu);
    real ControlFluid[FLU_NIN], ControlFluidj[FLU_NIN];
    real Pres, Cs2, vEmag=NULL_REAL;
 
@@ -164,8 +151,7 @@ bool JeansInstability_BoundState( const int pi, const int pj, const int pk, cons
    {
       if ( SQRT(SQR(vi - pi)+SQR(vj - pj)+SQR(vk - pk)) > AccCellNum )           continue;
 
-      const int vt = IDX321( vi, vj, vk, Size_Flu, Size_Flu );
-      for (int v=0; v<FLU_NIN; v++)    ControlFluid[v] = Flu_Array_F_In[ v*CubeSize + vt ];
+      for (int v=0; v<FLU_NIN; v++)    ControlFluid[v] = Flu_Array_F_In[v][vk][vj][vi];
 
       MassVel[0] += ControlFluid[MOMX]*dv;
       MassVel[1] += ControlFluid[MOMY]*dv;
@@ -187,8 +173,7 @@ bool JeansInstability_BoundState( const int pi, const int pj, const int pk, cons
    {
       if ( SQRT(SQR(vi - pi)+SQR(vj - pj)+SQR(vk - pk)) > AccCellNum )           continue;
 
-      const int vt = IDX321( vi, vj, vk, Size_Flu, Size_Flu );
-      for (int v=0; v<FLU_NIN; v++)    ControlFluid[v] = Flu_Array_F_In[ v*CubeSize + vt ];
+      for (int v=0; v<FLU_NIN; v++)    ControlFluid[v] = Flu_Array_F_In[v][vk][vj][vi];
 
       // Storing Egtot
       real SelfPhiijk = (real)0.0;
@@ -203,8 +188,7 @@ bool JeansInstability_BoundState( const int pi, const int pj, const int pk, cons
 
          real rij = rijPix*dh;
          
-         const int vtj = IDX321( vij, vjj, vkj, Size_Flu, Size_Flu );
-         for (int v=0; v<FLU_NIN; v++)    ControlFluidj[v] = Flu_Array_F_In[ v*CubeSize + vtj ];
+         for (int v=0; v<FLU_NIN; v++)    ControlFluidj[v] = Flu_Array_F_In[v][vkj][vjj][vij];
 
          SelfPhiijk += -NEWTON_G*ControlFluidj[DENS]*dv/rij;
       }
@@ -339,7 +323,7 @@ if ( lv != MAX_LEVEL )
 
    real PotNeighbor[6]; // record the neighboring cell potential [x+, x-, y+, y+, z+, z-]
 
-   real   (*Flu_Array_F_In)[CUBE(Size_Flu)]                = new real [FLU_NIN][CUBE(Size_Flu)];
+   real   (*Flu_Array_F_In)[Size_Flu][Size_Flu][Size_Flu] = new real [FLU_NIN][Size_Flu][Size_Flu][Size_Flu];
    real   (*Mag_Array_F_In)[Size_Flu_P1*SQR(Size_Flu)]     = new real [NCOMP_MAG][Size_Flu_P1*SQR(Size_Flu)];
    real   (*Pot_Array_F)                                   = new real [CUBE(Size_Pot)];
 
@@ -375,7 +359,7 @@ if ( lv != MAX_LEVEL )
 #     else
       real *Mag_Array = NULL;
 #     endif
-      Prepare_PatchData( lv, TimeNew, Flu_Array_F_In[0], Mag_Array,
+      Prepare_PatchData( lv, TimeNew, (real*)Flu_Array_F_In, Mag_Array,
                         NGhost, NPG, &PID0, _TOTAL, _MAG,
                         OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
                         OPT__BC_FLU, BC_POT_NONE, MinDens,    MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency );
@@ -535,7 +519,7 @@ if ( lv != MAX_LEVEL )
          PosZ = Corner_Array_F[2] + pk*dh;
 
          const int t = IDX321( pi, pj, pk, Size_Flu, Size_Flu );
-         for (int v=0; v<FLU_NIN; v++)    fluid[v] = Flu_Array_F_In[v][t];
+         for (int v=0; v<FLU_NIN; v++)    fluid[v] = Flu_Array_F_In[v][pk][pj][pi];
          VelX = fluid[MOMX]/fluid[DENS];
          VelY = fluid[MOMY]/fluid[DENS];
          VelZ = fluid[MOMZ]/fluid[DENS];
@@ -565,14 +549,14 @@ if ( lv != MAX_LEVEL )
 //       Converging flow check:
 //       The gas in the nearby six cells should converge toward the central one
 //       ===========================================================================================================
-         if ( !ConvergingFlow( t, Size_Flu, (real*)Flu_Array_F_In[0] ) )
+         if ( !ConvergingFlow( pi, pj, pk, Size_Flu, Flu_Array_F_In ) )
             continue;
 
 //       Jeans instability check + check for bound state
 //       The control volume is Jeans unstable if | Egtot | >= 2*Ethtot
 //       The control volume is bound if ( Ethtot + Ekintot + Emagtot ) >= | Egtot |
 //       ===========================================================================================================
-         if ( !JeansInstability_BoundState( pi, pj, pk, AccCellNum, (real*)Flu_Array_F_In[0], Size_Flu, 
+         if ( !JeansInstability_BoundState( pi, pj, pk, AccCellNum, Size_Flu, Flu_Array_F_In, 
                                             (real*)Mag_Array_F_In, Size_Flu_P1*SQR(Size_Flu), dv, dh ) )
             continue;
 
