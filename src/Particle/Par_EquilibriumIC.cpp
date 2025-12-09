@@ -762,7 +762,7 @@ double Par_EquilibriumIC::getExternalPotential( const double r )
 // Note        :  1. The probability of the magnitude of the velocity with a given radius, p(v|r) \propto v^2*f(E),
 //                   where f(E) = DFunc(E) = DFunc(Psi(r)-1/2 v^2) is the distribution function
 //                2. Psi = E + 1/2 v^2 -> v = \sqrt{ 2*( Psi - E ) }
-//                3. dv = \frac{ 1 }{ \sqrt{ 2*( Psi - E )} } dE
+//                3. dv = - \frac{ 1 }{ \sqrt{ 2*( Psi - E ) } } dE
 //                4. The state E<0 is unbound, v^2 > v_{esc}^2
 //                5. E is in the range  0 <= E <= Psi(r)
 //
@@ -775,9 +775,10 @@ double Par_EquilibriumIC::getRandomSampleVelocity( const double r )
 // The relative potential at this radius
    const double Psi = -ExtendedInterpolatedTable( r, RNPoints, RArray_R, RArray_Phi );
 
-// Cumulative Probability = \int_{v}^{v_min} v^2 f(E) dv
+// Cumulative Probability = \int_{v}^{v_max} v^2 f(E) dv
 //                        = \int_{E_min}^{E} (2*(Psi-E)) f(E) \frac{ 1 }{ \sqrt{ 2*( Psi - E )} } dE
 //                        = \int_{E_min}^{E} \sqrt{ (2*(Psi-E)) } f(E) dE
+//                        where Psi - 1/2 v_max^2 = E_min
    double Probability;
 
    CumulProbaDistr_GivenRadius[0] = 0.0;
