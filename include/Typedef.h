@@ -93,6 +93,7 @@ const TestProbID_t
    TESTPROB_HYDRO_CR_SOUNDWAVE                 =   20,
    TESTPROB_HYDRO_CR_SHOCKTUBE                 =   21,
    TESTPROB_HYDRO_CR_DIFFUSION                 =   23,
+   TESTPROB_HYDRO_GRACKLE_TEST                 =   24,
    TESTPROB_HYDRO_BARRED_POT                   =   51,
    TESTPROB_HYDRO_JET_ICM_WALL                 =   52,
    TESTPROB_HYDRO_CDM_LSS                      =  100,
@@ -521,6 +522,13 @@ const GracklePriChe_t
    GRACKLE_PRI_CHE_NSPE6  = 1,
    GRACKLE_PRI_CHE_NSPE9  = 2,
    GRACKLE_PRI_CHE_NSPE12 = 3;
+
+// bitwise field indices used by Grackle
+typedef long GrackleFieldBIdx_t;
+const GrackleFieldBIdx_t
+   _GRACKLE_TEMP  = ( 1L << 0 ),
+   _GRACKLE_MU    = ( 1L << 1 ),
+   _GRACKLE_TCOOL = ( 1L << 2 );
 #endif
 
 
