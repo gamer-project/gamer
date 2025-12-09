@@ -63,7 +63,7 @@ real GetMinCoolingTime( const int lv )
       real *Grackle_TCool = new real [ CUBE(PS2) ];   // array storing ONE patch group of grackle cooling time
 
 //    get the minimum Grckle cooling time in this rank
-#     pragma omp parallel for reduction( min:MinCoolingTime ) reduction( ||:AnyCell ) schedule( runtime )
+#     pragma omp for reduction( min:MinCoolingTime ) reduction( ||:AnyCell ) schedule( runtime )
       for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
       {
 
