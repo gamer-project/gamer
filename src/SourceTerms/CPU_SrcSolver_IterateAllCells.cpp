@@ -48,7 +48,7 @@ void CUSRC_SrcSolver_IterateAllCells(
    const double g_Corner_Array[][3],
    const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
    const double TimeNew, const double TimeOld,
-   const real MinDens, const real MinPres, const real MinEint, const EoS_t EoS )
+   const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor, const EoS_t EoS )
 #else
 void CPU_SrcSolver_IterateAllCells(
    const real g_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)           ],
@@ -57,7 +57,7 @@ void CPU_SrcSolver_IterateAllCells(
    const double g_Corner_Array[][3],
    const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
    const double TimeNew, const double TimeOld,
-   const real MinDens, const real MinPres, const real MinEint, const EoS_t EoS )
+   const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor, const EoS_t EoS )
 #endif
 {
 
@@ -110,13 +110,13 @@ void CPU_SrcSolver_IterateAllCells(
 //       (1) deleptonization
 #        if ( MODEL == HYDRO )
          if ( SrcTerms.Deleptonization )
-            SrcTerms.Dlep_FuncPtr( fluid, B, &SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint, &EoS,
+            SrcTerms.Dlep_FuncPtr( fluid, B, &SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint, PassiveFloor, &EoS,
                                    SrcTerms.Dlep_AuxArrayDevPtr_Flt, SrcTerms.Dlep_AuxArrayDevPtr_Int );
 #        endif
 
 //       (2) user-defined
          if ( SrcTerms.User )
-            SrcTerms.User_FuncPtr( fluid, B, &SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint, &EoS,
+            SrcTerms.User_FuncPtr( fluid, B, &SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint, PassiveFloor, &EoS,
                                    SrcTerms.User_AuxArrayDevPtr_Flt, SrcTerms.User_AuxArrayDevPtr_Int );
 
 //       store the updated results

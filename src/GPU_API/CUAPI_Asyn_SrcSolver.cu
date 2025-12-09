@@ -13,7 +13,7 @@ void CUSRC_SrcSolver_IterateAllCells(
    const double g_Corner_Array[][3],
    const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
    const double TimeNew, const double TimeOld,
-   const real MinDens, const real MinPres, const real MinEint, const EoS_t EoS );
+   const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor, const EoS_t EoS );
 
 // device pointers
 extern real (*d_Flu_Array_S_In )[FLU_NIN_S ][ CUBE(SRC_NXT)           ];
@@ -56,6 +56,7 @@ extern cudaStream_t *Stream;
 //                TimeOld           : Physical time before update
 //                                    --> This function updates physical time from TimeOld to TimeNew
 //                MinDens/Pres/Eint : Density, pressure, and internal energy floors
+//                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //                GPU_NStream       : Number of CUDA streams for the asynchronous memory copy
 //
 // Return      :  h_Flu_Array_Out[]
@@ -66,7 +67,7 @@ void CUAPI_Asyn_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NX
                            const double h_Corner_Array[][3],
                            const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
                            const double TimeNew, const double TimeOld,
-                           const real MinDens, const real MinPres, const real MinEint,
+                           const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor,
                            const int GPU_NStream )
 {
 
@@ -161,7 +162,7 @@ void CUAPI_Asyn_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NX
                                         d_Mag_Array_S_In  + UsedPatch[s],
                                         d_Corner_Array_S  + UsedPatch[s],
                                         SrcTerms, NPatchGroup, dt, dh, TimeNew, TimeOld,
-                                        MinDens, MinPres, MinEint, EoS );
+                                        MinDens, MinPres, MinEint, PassiveFloor, EoS );
 
       CUDA_CHECK_ERROR( cudaGetLastError() );
    } // for (int s=0; s<GPU_NStream; s++)
