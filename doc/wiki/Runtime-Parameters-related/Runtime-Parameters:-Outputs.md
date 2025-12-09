@@ -100,6 +100,13 @@ This option is mainly for debugging purposes since the simulation snapshots
 particle data.
     * **Restriction:**
 
+<a name="OPT__OUTPUT_PAR_ADDI_ATTR"></a>
+* ### `OPT__OUTPUT_PAR_ADDI_ATTR` &ensp; (0=off, 1=time, 2=acc, 3=acc+time) &ensp; [0]
+    * **Description**
+Output particle addition data (time or acceleration) to snapshots (`Data_******`) file.
+    * **Restriction:**
+Only applicable when enabling [[--particle | Installation:-Option-List#--particle]] and [[--store_par_acc | Installation:-Option-List#--store_par_acc]]
+
 <a name="OPT__OUTPUT_PAR_MESH"></a>
 * #### `OPT__OUTPUT_PAR_MESH` &ensp; (0=off, 1=on) &ensp; [1]
     * **Description:**
