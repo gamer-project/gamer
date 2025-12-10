@@ -933,9 +933,10 @@ void Aux_TakeNote()
       fprintf( Note, "Par->GhostSizeTracer           % d\n",      amr->Par->GhostSizeTracer     );
       fprintf( Note, "Par->TracerVelCorr             % d\n",      amr->Par->TracerVelCorr       );
       fprintf( Note, "OPT__FREEZE_PAR                % d\n",      OPT__FREEZE_PAR               );
+      fprintf( Note, "OPT__PAR_INIT_CHECK            % d\n",      OPT__PAR_INIT_CHECK           );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
-#     endif
+#     endif // #ifdef PARTICLE
 
 
 //    record the parameters of cosmological simulations (comoving frame)
@@ -1298,6 +1299,15 @@ void Aux_TakeNote()
       fprintf( Note, "\n" ); }
 
       fprintf( Note, "OPT__CORR_AFTER_ALL_SYNC       % d\n",      OPT__CORR_AFTER_ALL_SYNC );
+      fprintf( Note, "Passive_Floor_Off              % d\n",      -1                       );
+
+//    target passive scalars to NOT be applied floor operations
+      fprintf( Note, "   Target fields               "                                     );
+      for (int v=0; v<NCOMP_TOTAL; v++)
+      if ( ( PassiveFloorMask & (1L<<v) ) == 0 )
+      fprintf( Note, " %s",                                       FieldLabel[v]            );
+      fprintf( Note, "\n" );
+
       fprintf( Note, "OPT__NORMALIZE_PASSIVE         % d\n",      OPT__NORMALIZE_PASSIVE   );
 
 //    target passive scalars to be normalized

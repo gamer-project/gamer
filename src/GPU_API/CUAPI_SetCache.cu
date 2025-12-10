@@ -18,7 +18,7 @@ __global__ void CUFLU_FluidSolver_RTVD(
    const double g_Corner[][3],
    const real g_Pot_USG[][ CUBE(USG_NXT_F) ],
    const real dt, const real _dh, const bool StoreFlux,
-   const bool XYZ, const real MinDens, const real MinPres, const real MinEint,
+   const bool XYZ, const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor,
    const EoS_t EoS );
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 __global__
@@ -44,6 +44,7 @@ void CUFLU_FluidSolver_MHM(
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch,
+   const long PassiveFloor,
    const bool NormPassive, const int NNorm,
    const bool FracPassive, const int NFrac,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
@@ -72,6 +73,7 @@ void CUFLU_FluidSolver_CTU(
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch,
+   const long PassiveFloor,
    const bool NormPassive, const int NNorm,
    const bool FracPassive, const int NFrac,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
@@ -79,8 +81,8 @@ void CUFLU_FluidSolver_CTU(
 #endif // FLU_SCHEME
 __global__ void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                                          const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
-                                         const real dh, const real Safety, const real MinPres, const EoS_t EoS,
-                                         const MicroPhy_t MicroPhy );
+                                         const real dh, const real Safety, const real MinPres,
+                                         const long PassiveFloor, const EoS_t EoS, const MicroPhy_t MicroPhy );
 #ifdef GRAVITY
 __global__
 void CUPOT_dtSolver_HydroGravity( real g_dt_Array[], const real g_Pot_Array[][ CUBE(GRA_NXT) ],
@@ -195,7 +197,7 @@ void CUSRC_SrcSolver_IterateAllCells(
    const double g_Corner_Array[][3],
    const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
    const double TimeNew, const double TimeOld,
-   const real MinDens, const real MinPres, const real MinEint, const EoS_t EoS );
+   const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor, const EoS_t EoS );
 
 
 

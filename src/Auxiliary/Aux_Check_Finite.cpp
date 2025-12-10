@@ -63,7 +63,7 @@ void Aux_Check_Finite( const int lv, const char *comment )
                const real Emag = NULL_REAL;
 #              endif
                const real Pres = Hydro_Con2Pres( Data[DENS], Data[MOMX], Data[MOMY], Data[MOMZ], Data[ENGY], Data+NCOMP_FLUID,
-                                                 false, NULL_REAL, Emag,
+                                                 false, NULL_REAL, PassiveFloorMask, Emag,
                                                  EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                  EoS_AuxArray_Flt,
                                                  EoS_AuxArray_Int, h_EoS_Table, NULL );
