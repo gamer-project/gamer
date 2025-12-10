@@ -646,39 +646,62 @@ void SetParameter()
          for (int index_halo=0; index_halo<HaloMerger_Halo_Num; index_halo++)
          {
 //           HALO_IC information
-             const long HALO_IC_NCells3D = (long)HaloMerger_Halo_HALO_IC_NCells[index_halo][0]*HaloMerger_Halo_HALO_IC_NCells[index_halo][1]*HaloMerger_Halo_HALO_IC_NCells[index_halo][2];
-             size_t load_data_size       = ( HaloMerger_Halo_HALO_IC_Float8[index_halo] ) ? sizeof(double) : sizeof(float);
-             const long HALO_IC_TotSize  = HALO_IC_NVar*HALO_IC_NCells3D*load_data_size;
+             const size_t HALO_IC_NCells3D = (size_t)HaloMerger_Halo_HALO_IC_NCells[index_halo][0] * HaloMerger_Halo_HALO_IC_NCells[index_halo][1] * HaloMerger_Halo_HALO_IC_NCells[index_halo][2];
+             const size_t HALO_IC_TotElems = (size_t)HALO_IC_NVar * HALO_IC_NCells3D;
 
-//           allocate the memory for the array to read the data
-             HaloMerger_Halo_HALO_IC_Data[index_halo] = new double [ (long)HALO_IC_NVar*HALO_IC_NCells3D ];
-             char* HALO_IC_RawData = new char [ HALO_IC_TotSize ];
+//           allocate the memory for the target array
+             HaloMerger_Halo_HALO_IC_Data[index_halo] = new double [ HALO_IC_TotElems ];
 
 //           open the file
              FILE *File = fopen( HaloMerger_Halo_HALO_IC_Filename[index_halo], "rb" );
 
+             if ( File == NULL )
+                Aux_Error( ERROR_INFO, "Failed to open HALO_IC file <%s>\n", HaloMerger_Halo_HALO_IC_Filename[index_halo] );
+
 //           check the file size
              fseek( File, 0, SEEK_END );
-             const long ExpectSize = HALO_IC_TotSize;
-             const long FileSize   = ftell( File );
+             const size_t FileSize = ftell( File );
+             fseek( File, 0, SEEK_SET );
+
+             const size_t elem_size  = ( HaloMerger_Halo_HALO_IC_Float8[index_halo] ) ? sizeof(double) : sizeof(float);
+             const size_t ExpectSize = HALO_IC_TotElems * elem_size;
+
              if ( FileSize != ExpectSize )
-                Aux_Error( ERROR_INFO, "size of the HALO_IC <%s> (%ld) != expect (%ld) !!\n", HaloMerger_Halo_HALO_IC_Filename[index_halo], FileSize, ExpectSize );
+                Aux_Error( ERROR_INFO, "size of the HALO_IC <%s> (%zu) != expect (%zu) !!\n",
+                           HaloMerger_Halo_HALO_IC_Filename[index_halo], FileSize, ExpectSize );
 
 //           load data from the file
-             fseek( File, 0, SEEK_SET );
-             fread( HALO_IC_RawData, 1, HALO_IC_TotSize, File );
+             if ( HaloMerger_Halo_HALO_IC_Float8[index_halo] )
+             {
+//              double to double: read directly from the file
+                fread( HaloMerger_Halo_HALO_IC_Data[index_halo], sizeof(double), HALO_IC_TotElems, File );
+             }
+             else
+             {
+//              float to double: process by batch
+                const size_t buffer_size = 4096;
+                float buffer[buffer_size];
 
-//           convert the raw data into double precision
-             for (long i=0; i<(long)HALO_IC_NVar*HALO_IC_NCells3D; i++)
-                HaloMerger_Halo_HALO_IC_Data[index_halo][i] = ( HaloMerger_Halo_HALO_IC_Float8[index_halo] ) ?
-                                                              (double)(*((double*)&HALO_IC_RawData[i*load_data_size])):
-                                                              (double)(*( (float*)&HALO_IC_RawData[i*load_data_size]));
+//              loop through batches
+                size_t offset         = 0;
+                size_t remaining_size = HALO_IC_TotElems;
+                while ( remaining_size > 0 )
+                {
+//                 read a small batch of floats from the file
+                   const size_t batch_size = ( remaining_size < buffer_size ) ? remaining_size : buffer_size;
+                   fread( buffer, sizeof(float), batch_size, File );
+
+//                 convert to double and fill the target array
+                   for (size_t i=0; i<batch_size; i++)
+                      HaloMerger_Halo_HALO_IC_Data[index_halo][offset + i] = (double)buffer[i];
+
+                   offset         += batch_size;
+                   remaining_size -= batch_size;
+                }
+             }
 
 //           close the file
              fclose( File );
-
-//           free the memory
-             delete [] HALO_IC_RawData;
 
 //           construct the arrays of the coordinates
              for (int d=0; d<3; d++)
