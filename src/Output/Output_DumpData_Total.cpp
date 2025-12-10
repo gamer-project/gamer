@@ -990,7 +990,7 @@ void Output_DumpData_Total( const char *FileName )
          {
             case 1:  v = PAR_TIME; break;
             default: break;
-         } // if ( v > PAR_NATT_FLT_STORED ), switch par_natt_flt_addi
+         } // if ( v > PAR_NATT_FLT_STORED ), switch OPT__OUTPUT_PAR_ADDI_ATTR
 
          for (int lv=0; lv<NLEVEL; lv++)
          for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
