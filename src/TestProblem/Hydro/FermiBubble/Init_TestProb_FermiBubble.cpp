@@ -608,7 +608,7 @@ void SetArrayDisk()
    const int NY = Ny + 2*numGhost;
    const int NZ = Nz + 2*numGhost;
 
-   if ( Step == 0 )
+   if ( OPT__INIT == 1 )
    {
       Rhoo_disk = (real***)calloc_3d_array( (size_t)NX, (size_t)NY, (size_t)NZ, sizeof(real) );
       VelX_disk = (real***)calloc_3d_array( (size_t)NX, (size_t)NY, (size_t)NZ, sizeof(real) );
@@ -690,7 +690,7 @@ void SetArrayHVC()
    const int NY = Ny+2*numGhost;
    const int NZ = Nz+2*numGhost;
 
-   if ( Step == 0 )
+   if ( OPT__INIT == 1 )
    {
       Rhoo_hvc = (real***)calloc_3d_array( (size_t)NX, (size_t)NY, (size_t)NZ, sizeof(real) );
       VelX_hvc = (real***)calloc_3d_array( (size_t)NX, (size_t)NY, (size_t)NZ, sizeof(real) );
