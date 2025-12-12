@@ -1,0 +1,37 @@
+# `configure.py` options
+- Must enable
+  - [[--model | Installation:-Option-List#--model]]=`ELBDM`
+- Must disable
+  - [[--gravity | Installation:-Option-List#--gravity]]
+  - [[--particle | Installation:-Option-List#--particle]]
+- Available options
+  - [[Miscellaneous Options | Installation:-Option-List#miscellaneous-options]]
+
+
+# Default setup
+- Evolve the Gaussian wave packet for half of box
+- Apply the analytical solution as user-defined BC
+  - Set [[OPT__BC_FLU_* | Runtime-Parameters:-Hydro#OPT__BC_FLU_XM]]=`4`
+
+
+# Note
+- Only support 1D
+  - Use `Gau_XYZ` to control the propagation direction
+
+- Also support periodic BC --> Set `Gau_PeriodicN` to add periodic images and set [[OPT__BC_FLU_* | Runtime-Parameters:-Hydro#OPT__BC_FLU_XM]]=`1`
+
+- For [[--elbdm_scheme | Installation:-Option-List#--elbdm_scheme]]=`HYBRID`
+   - When there are more than one periodic images (`Gau_PeriodicN` > `0`),
+     the analytical solution of the unwrapped phase may be wrong due to self-interference
+     after `t > 6.0*Gau_Width*ELBDM_ETA*BoxSize[Gau_XYZ]/(2*M_PI)`
+     and a lack of periodicity if the number of images is not enough
+   - The periodic BC ([[OPT__BC_FLU_* | Runtime-Parameters:-Hydro#OPT__BC_FLU_XM]]=`1`)
+     does not work for Gaussian wave packets that are
+     - travelling
+     - non-travelling but non-periodic
+   - The default setup may lead to "time-step is too small" error
+     - Try a larger Gau_Width to avoid it
+   - The default setup is without refinement and adopts the fluid scheme;
+     When setting [[MAX_LEVEL | Runtime-Parameters:-Refinement#MAX_LEVEL]]>`0`,
+     the refinement is based on [[OPT__FLAG_INTERFERENCE | Runtime-Parameters:-Refinement#OPT__FLAG_INTERFERENCE]]
+     and the refined levels adopt the wave scheme while the base level adopts the fluid scheme

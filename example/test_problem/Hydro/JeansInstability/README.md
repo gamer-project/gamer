@@ -1,0 +1,48 @@
+# `configure.py` options
+- Must enable
+  - [[--model | Installation:-Option-List#--model]]=`HYDRO`
+  - [[--gravity | Installation:-Option-List#--gravity]]
+  - [[--double | Installation:-Option-List#--double]]
+- Must disable
+  - [[--comoving | Installation:-Option-List#--comoving]]
+  - [[--particle | Installation:-Option-List#--particle]]
+- Available options
+  - [[--mhd | Installation:-Option-List#--mhd]]
+  - [[Miscellaneous Options | Installation:-Option-List#miscellaneous-options]]
+
+
+# Default setup
+- Resolution = 64^3
+- Simulation time
+  - stable -> one period
+  - unstable -> grow/decay by a factor of 50
+- Gravitational constant = `1/(4*pi)` = `0.07957747154`
+
+
+# Note
+- Support both hydro and MHD. For the latter, a fast-wave solution is adopted.
+- Support both 1D and 3D cases.
+  - set by `Jeans_Dir`
+- A simple gnuplot script `plot.gpt` is attached.
+- `Record__L1Err` records the L1 errors.
+- `Jeans_*` record the numerical and analytical solutions along the diagonal.
+- Example parameters
+  - Stable right-moving wave
+    ```
+    Jeans_Rho0        1.0            # background density
+    Jeans_Rho1        1.0e-6         # density perturbation amplitude
+    Jeans_P0          1.0e-2         # background pressure
+    Jeans_v0          0.0            # background velocity [0.0]
+    Jeans_B0          1.0e-2         # background magnetic field amplitude
+    Jeans_Sign       +1.0            # (>0/<0) --> (stable:right/left-moving wave; unstable:growing/decaying mode) [+1]
+    ```
+
+  - Unstable growing mode
+    ```
+    Jeans_Rho0        2.0            # background density
+    Jeans_Rho1        1.0e-6         # density perturbation amplitude
+    Jeans_P0          1.0e-2         # background pressure
+    Jeans_v0          0.0            # background velocity [0.0]
+    Jeans_B0          1.0e-2         # background magnetic field amplitude
+    Jeans_Sign       +1.0            # (>0/<0) --> (stable:right/left-moving wave; unstable:growing/decaying mode) [+1]
+    ```

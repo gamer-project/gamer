@@ -1,0 +1,101 @@
+# `configure.py` options
+- Must enable
+  - [[--model | Installation:-Option-List#--model]]=`HYDRO`
+  - [[--eos | Installation:-Option-List#--eos]]=`COSMIC_RAY`
+  - [[--cosmic_ray | Installation:-Option-List#--cosmic_ray]]
+  - [[--cr_diffusion | Installation:-Option-List#--cr_diffusion]]
+- Must disable
+  - [[--comoving | Installation:-Option-List#--comoving]]
+  - [[--particle | Installation:-Option-List#--particle]]
+  - [[--gravity | Installation:-Option-List#--gravity]]
+- Available options
+  - [[Miscellaneous Options | Installation:-Option-List#miscellaneous-options]]
+
+
+# Default setup
+- `CR_Diffusion_Type`=`4`     (Blastwave)
+- `CR_Diffusion_Mag_Type`=`4` (Suwa+ 2007)
+- 3D simulation
+
+
+# Note
+- The analytical solution of `CR_Diffusion_Type`=`{0,1,2,3}` must set all fluid to be fixed but cosmic rays.
+
+
+## `CR_Diffusion_Type`
+- Gaussian distribution ball (`CR_Diffusion_Type`=`0`)
+
+  - All of the fluid must be fixed, except for cosmic rays.
+
+- Step function ring         (`CR_Diffusion_Type`=`1`)
+  - All fluids must be fixed, except for cosmic rays.
+  - This test problem is a 2D simulation.
+  - The analytical solution assumes the CRs diffuse along the azimuthal direction only.
+
+- Gaussian distribution ring (`CR_Diffusion_Type`=`2`)
+  - All fluids must be fixed, except for cosmic rays.
+  - This test problem is a 2D simulation.
+  - The analytical solution assumes the CRs diffuse along the azimuthal direction only.
+
+- Gaussian distribution plane (`CR_Diffusion_Type`=`3`)
+  - All fluids must be fixed, except for cosmic rays.
+  - The analytical solution assumes the CRs diffuse along the diagonal direction.
+
+- CR driven blast wave        (`CR_Diffusion_Type`=`4`)
+  - This test problem is a 3D simulation.
+
+
+## `CR_Diffusion_Mag_Type`
+- Uniform    (`CR_Diffusion_Mag_Type`=`0`)
+  - Uniform magnetic field.
+- Circular   (`CR_Diffusion_Mag_Type`=`1`)
+  - Only works for 2D simulation
+  - For x-y plane: `B = (-y/r, x/r, 0)` where `r = sqrt(x^2+y^2)`.
+  - Using `CR_Diffusion_MagX` as amplitude.
+- Random     (`CR_Diffusion_Mag_Type`=`2`)
+  - NOT divergence free!
+  - `-1. < B_i < 1.`
+- Radial     (`CR_Diffusion_Mag_Type`=`3`)
+  - NOT divergence free!
+  - Only works for 2D simulation
+  - For x-y plane: `B = (x/r, y/r, 0)` where `r = sqrt(x^2+y^2)`.
+  - Using `CR_Diffusion_MagX` as amplitude.
+- Suwa+ 2007 (`CR_Diffusion_Mag_Type`=`4`)
+  - Follows [Suwa+ 2007, PASJ, 59, 771](https://doi.org/10.1093/pasj/59.4.771) setup
+  - Using `CR_Diffusion_MagX` as amplitude.
+
+
+## Set simulation dimensions
+The dimensions are controlled by `CR_Diffusion_G{X,Y,Z}`.
+
+For example, the 1D simulation running on the y-axis should set the following:
+```
+CR_diffusion_GX 0
+CR_diffusion_GY 1
+CR_diffusion_GZ 0
+```
+
+For example, the 2D simulation running on the x-z plane should set the following:
+```
+CR_diffusion_GX 1
+CR_diffusion_GY 0
+CR_diffusion_GZ 1
+```
+
+
+## How to fix fluid
+Not available right now.
+
+
+## `yt_L1error.py`
+- The file structure should be like:
+  <pre>
+  ./ --+-- res_0032 --+-- Data_000000
+       |              |
+       |              |-- ...
+       |
+       |-- res_0064 --+-- Data_000000
+       |              |
+       |-- ...        |-- ...
+  <\pre>
+- Uncomment or comment your simulation type and set the parameters.
