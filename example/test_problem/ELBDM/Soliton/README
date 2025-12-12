@@ -18,3 +18,4 @@ Note:
    Soliton_N > 1: soliton merger
                   --> Set Soliton_RSeed >= 0
                       Set Soliton_EmptyRegion > 0.0 (e.g., 1.0e2)
+2. Input density profile tables should use $| \psi |^2$ units. The code automatically converts this to mass density.
