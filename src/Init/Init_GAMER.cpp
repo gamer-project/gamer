@@ -203,7 +203,8 @@ void Init_GAMER( int *argc, char ***argv )
             Par_Init_ByFunction_Ptr( amr->Par->NPar_Active, amr->Par->NPar_Active_AllRank,
                                      amr->Par->Mass, amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ,
                                      amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ, amr->Par->Time,
-                                     amr->Par->Type, amr->Par->AttributeFlt, amr->Par->AttributeInt );
+                                     amr->Par->Type, amr->Par->PUid, amr->Par->AttributeFlt,
+                                     amr->Par->AttributeInt );
          else
             Aux_Error( ERROR_INFO, "Par_Init_ByFunction_Ptr == NULL for PAR_INIT = 1 !!\n" );
          break;
@@ -219,6 +220,8 @@ void Init_GAMER( int *argc, char ***argv )
          Aux_Error( ERROR_INFO, "unsupported particle initialization (%s = %d) !!\n",
                     "PAR_INIT", (int)amr->Par->Init );
    }
+
+   if ( amr->Par->Init != PAR_INIT_BY_RESTART )   Par_SetParUID( true );
 
    if ( amr->Par->Init != PAR_INIT_BY_RESTART  &&  OPT__PAR_INIT_CHECK )    Par_Aux_InitCheck();
 #  endif // #ifdef PARTICLE

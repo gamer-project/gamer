@@ -29,3 +29,5 @@ Note:
 7. Set OPT__OUTPUT_PAR_MESH = 1 to output the mesh attributes, as listed in
    Input__Par_Mesh, to tracer particles. Use the python script "check_mesh2tracer.py"
    to verify the mesh attributes recorded in the HDF5 snapshots.
+8. Use python script "track_particle.py" to track the position and velocity
+   of particles by UID or index.
