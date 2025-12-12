@@ -260,6 +260,16 @@ char                 GRACKLE_CLOUDY_TABLE[MAX_STRING];
 int                  GRACKLE_THREE_BODY_RATE;
 bool                 GRACKLE_CIE_COOLING;
 int                  GRACKLE_H2_OPA_APPROX;
+bool                 GRACKLE_USE_V_HEATING_RATE;
+bool                 GRACKLE_USE_S_HEATING_RATE;
+double               GRACKLE_HYDROGEN_MFRAC;
+bool                 OPT__UNFREEZE_GRACKLE;
+bool                 OPT__OUTPUT_GRACKLE_TEMP;
+bool                 OPT__OUTPUT_GRACKLE_MU;
+bool                 OPT__OUTPUT_GRACKLE_TCOOL;
+bool                 OPT__FLAG_COOLING_LEN;
+double               FlagTable_CoolingLen[NLEVEL-1];
+double               DT__GRACKLE_COOLING;
 int                  CHE_GPU_NPGROUP;
 #endif
 
