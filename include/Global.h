@@ -293,6 +293,9 @@ extern double                SF_CREATE_STAR_MIN_GAS_DENS;
 extern double                SF_CREATE_STAR_MASS_EFF;
 extern double                SF_CREATE_STAR_MIN_STAR_MASS;
 extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
+extern double                SF_CREATE_SINK_MIN_GAS_DENS;
+extern double                SF_CREATE_SINK_ACC_RADIUS;
+extern int                   SF_CREATE_SINK_MAX_NPAR_MPI;
 #endif
 
 
@@ -360,7 +363,7 @@ extern void (*Flu_DerivedField_User_Ptr)( real Out[], const real FluIn[], const 
 // =======================================================================================================
 #ifdef FEEDBACK
 extern int  FB_LEVEL, FB_RSEED;
-extern bool FB_SNE, FB_USER;
+extern bool FB_SNE, FB_ACC, FB_USER;
 extern bool FB_Any;
 extern int  FB_ParaBuf;
 #endif

@@ -834,6 +834,8 @@ void SF_FreeRNG();
 void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, RandomNumber_t *RNG,
                           const real GasDensThres, const real Efficiency, const real MinStarMass, const real MaxStarMFrac,
                           const bool DetRandom, const bool UseMetal );
+void SF_CreateStar_SinkParticle( const int lv, const real TimeNew, const real GasDensThres, const real AccCellNum, 
+                                 const int MaxNewPar );
 #endif
 
 
@@ -843,7 +845,11 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
                    const int SaveSg_Flu, const int SaveSg_Mag );
 void FB_Init();
 void FB_End();
-int FB_Aux_CellPatchRelPos( const int ijk[] );
+int  FB_Aux_CellPatchRelPos( const int ijk[] );
+int  FB_Accretion( const int lv, const real GasDensThres, const real AccCellNum, const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL], 
+                   long_par *ParAttInt[PAR_NATT_INT_TOTAL], real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[] );
+void FB_Init_Accretion();
+void FB_End_Accretion();
 #endif
 
 
