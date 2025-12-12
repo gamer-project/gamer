@@ -109,22 +109,32 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
                      Timer_Gra_Advance[lv],   ( Timing && lv == 0 )   );
 
 
+   bool FullRefinedLv = false;
+   const long CellFactor = (long)(1L<<lv);
+   if ( (long)NPatchTotal[lv] == NX0_TOT[0]*NX0_TOT[1]*NX0_TOT[2]/512*CUBE(CellFactor) )   FullRefinedLv = true;
+
 // the base-level Poisson solver is implemented using the FFTW library (with CPUs only)
-   if ( lv == 0 )
+   if ( FullRefinedLv )
    {
+      if ( ! FFTW_Inited[lv] )   Init_FFTW( lv );
+
+//    initialize the k-space Green's function for the isolated BC
+      if ( ! GreenFuncK_Inited[lv] )
+      if ( OPT__SELF_GRAVITY  &&  OPT__BC_POT == BC_POT_ISOLATED )    Init_GreenFuncK( lv );
+
 //    do not need to calculate the gravitational potential if self-gravity is disabled
       if ( UsePot )
       {
 #        ifdef SUPPORT_FFTW
          if ( OPT__SELF_GRAVITY )
-         TIMING_FUNC(   CPU_PoissonSolver_FFT( Poi_Coeff, SaveSg_Pot, TimeNew ),
+         TIMING_FUNC(   CPU_PoissonSolver_FFT( Poi_Coeff, SaveSg_Pot, TimeNew, lv ),
                         Timer_Gra_Advance[lv],   Timing   );
 #        endif
 
          if ( OPT__EXT_POT )
-         TIMING_FUNC(   CPU_ExtPotSolver_BaseLevel( CPUExtPot_Ptr, ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int,
-                                                    h_ExtPotTable, h_ExtPotGenePtr,
-                                                    TimeNew, OPT__SELF_GRAVITY, SaveSg_Pot ),
+         TIMING_FUNC(   CPU_ExtPotSolver_FullyRefinedLevel( CPUExtPot_Ptr, ExtPot_AuxArray_Flt, ExtPot_AuxArray_Int,
+                                                            h_ExtPotTable, h_ExtPotGenePtr,
+                                                            TimeNew, OPT__SELF_GRAVITY, SaveSg_Pot, lv ),
                         Timer_Gra_Advance[lv],   Timing   );
 
          amr->PotSg    [lv]             = SaveSg_Pot;
@@ -152,12 +162,12 @@ void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, co
                                       false, false ),
                         Timer_Gra_Advance[lv],   Timing   );
 
-         amr->FluSg[0] = SaveSg_Flu;
+         amr->FluSg[lv] = SaveSg_Flu;
       } // if ( Gravity )
-   } // if ( lv == 0 )
+   } // if ( FullRefinedLv )
 
 
-   else // lv > 0
+   else // if ( FullRefinedLv )
    {
       if      (  Poisson  &&  !Gravity )
          InvokeSolver( POISSON_SOLVER,             lv, TimeNew, TimeOld, NULL_REAL, Poi_Coeff, NULL_INT,   NULL_INT, SaveSg_Pot,
