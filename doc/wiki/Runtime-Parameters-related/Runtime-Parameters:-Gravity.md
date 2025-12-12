@@ -17,10 +17,14 @@ Parameters described on this page:
 [EXT_POT_TABLE_NPOINT_X](#EXT_POT_TABLE_NPOINT_X), &nbsp;
 [EXT_POT_TABLE_NPOINT_Y](#EXT_POT_TABLE_NPOINT_Y), &nbsp;
 [EXT_POT_TABLE_NPOINT_Z](#EXT_POT_TABLE_NPOINT_Z), &nbsp;
-[EXT_POT_TABLE_DH](#EXT_POT_TABLE_DH), &nbsp;
+[EXT_POT_TABLE_DH_X](#EXT_POT_TABLE_DH_X), &nbsp;
+[EXT_POT_TABLE_DH_Y](#EXT_POT_TABLE_DH_Y), &nbsp;
+[EXT_POT_TABLE_DH_Z](#EXT_POT_TABLE_DH_Z), &nbsp;
 [EXT_POT_TABLE_EDGEL_X](#EXT_POT_TABLE_EDGEL_X), &nbsp;
 [EXT_POT_TABLE_EDGEL_Y](#EXT_POT_TABLE_EDGEL_Y), &nbsp;
-[EXT_POT_TABLE_EDGEL_Z](#EXT_POT_TABLE_EDGEL_Z) &nbsp;
+[EXT_POT_TABLE_EDGEL_Z](#EXT_POT_TABLE_EDGEL_Z), &nbsp;
+[EXT_POT_TABLE_FLOAT8](#EXT_POT_TABLE_FLOAT8), &nbsp;
+[OPT__GRAVITY_EXTRA_MASS](#OPT__GRAVITY_EXTRA_MASS) &nbsp;
 
 
 
@@ -132,7 +136,7 @@ Enable self-gravity.
 * #### `OPT__EXT_ACC` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
 Add external acceleration. See
-[External Acceleration/Potential](#external-accelerationpotential)
+[[ External Acceleration/Potential | Gravity#external-accelerationpotential]]
 for how to specify external acceleration.
     * **Restriction:**
 Not applicable to the wave dark matter simulations
@@ -142,7 +146,7 @@ Not applicable to the wave dark matter simulations
 * #### `OPT__EXT_POT` &ensp; (0=off, 1=function, 2=table) &ensp; [0]
     * **Description:**
 Add external potential. See
-[External Acceleration/Potential](#external-accelerationpotential)
+[[ External Acceleration/Potential | Gravity#external-accelerationpotential]]
 for how to specify external potential.
     * **Restriction:**
 
@@ -170,10 +174,22 @@ See [EXT_POT_TABLE_NPOINT_X](#EXT_POT_TABLE_NPOINT_X).
 See [EXT_POT_TABLE_NPOINT_X](#EXT_POT_TABLE_NPOINT_X).
     * **Restriction:**
 
-<a name="EXT_POT_TABLE_DH"></a>
-* #### `EXT_POT_TABLE_DH` &ensp; (>0.0) &ensp; [none]
+<a name="EXT_POT_TABLE_DH_X"></a>
+* #### `EXT_POT_TABLE_DH_X` &ensp; (>0.0) &ensp; [none]
     * **Description:**
-For [OPT__EXT_POT](#OPT__EXT_POT)`=2`: spatial interval between adjacent tabular data.
+For [OPT__EXT_POT](#OPT__EXT_POT)`=2`: spatial interval along the x direction between adjacent tabular data.
+    * **Restriction:**
+
+<a name="EXT_POT_TABLE_DH_Y"></a>
+* #### `EXT_POT_TABLE_DH_Y` &ensp; (>0.0) &ensp; [none]
+    * **Description:**
+See [EXT_POT_TABLE_DH_X](#EXT_POT_TABLE_DH_X).
+    * **Restriction:**
+
+<a name="EXT_POT_TABLE_DH_Z"></a>
+* #### `EXT_POT_TABLE_DH_Z` &ensp; (>0.0) &ensp; [none]
+    * **Description:**
+See [EXT_POT_TABLE_DH_X](#EXT_POT_TABLE_DH_X).
     * **Restriction:**
 
 <a name="EXT_POT_TABLE_EDGEL_X"></a>
@@ -196,6 +212,25 @@ See [EXT_POT_TABLE_EDGEL_X](#EXT_POT_TABLE_EDGEL_X).
 * #### `EXT_POT_TABLE_EDGEL_Z` &ensp; (cover the simulation domain) &ensp; [none]
     * **Description:**
 See [EXT_POT_TABLE_EDGEL_X](#EXT_POT_TABLE_EDGEL_X).
+    * **Restriction:**
+
+<a name="EXT_POT_TABLE_FLOAT8"></a>
+* #### `EXT_POT_TABLE_FLOAT8` &ensp; (0=single precision, 1=double precision; <0 &#8594; set to default) &ensp; [-1]
+    * **Description:**
+For [OPT__EXT_POT](#OPT__EXT_POT)`=2`: floating-point accuracy of the tabular data.
+**NOT SUPPORTED YET!!** The code currently only supports the default setting, 
+which matches the floating-point accuracy specified by 
+[[--double | Installation:-Option-List#--double]] during compilation.
+    * **Restriction:**
+
+<a name="OPT__GRAVITY_EXTRA_MASS"></a>
+* #### `OPT__GRAVITY_EXTRA_MASS` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Enable extra mass in the gravity solver.
+Mass introduced here is only used for gravity (e.g., Poisson equation) and 
+is excluded from other equations (e.g., hydro/MHD/Schrödinger) and output data.
+To configure the extra mass, edit /src/SelfGravity/Poi_AddExtraMassForGravity.cpp.
+Refer to [[Initialization Function | Adding-New-Simulations#initialization-function]] for details.
     * **Restriction:**
 
 
