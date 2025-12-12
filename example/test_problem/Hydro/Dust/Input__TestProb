@@ -1,0 +1,4 @@
+# problem-specific runtime parameters
+Gas_Temp             1.0e6                   # gas temperature [K]
+Gas_Dens             1.0e-1                  # gas density [amu*cm^{-3}]
+Gas_MetalMassFrac    1.295e-3                # halo metal mass fraction (halo_metal_mass / halo_gas_mass)
