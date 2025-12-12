@@ -174,7 +174,7 @@ CPU_FILE    += CPU_ELBDMSolver_FD.cpp  CPU_ELBDMSolver_FFT.cpp  CPU_ELBDMSolver_
                CPU_ELBDMSolver_HJ.cpp  ELBDM_Init_ByFunction_AssignData.cpp  ELBDM_GetTimeStep_Fluid.cpp  ELBDM_GetTimeStep_Hybrid_CFL.cpp \
                ELBDM_Flag_EngyDensity.cpp  ELBDM_Flag_Interference.cpp  ELBDM_Flag_Spectral.cpp  ELBDM_UnwrapPhase.cpp \
                ELBDM_GetTimeStep_Phase.cpp  ELBDM_GetTimeStep_Hybrid_Velocity.cpp  ELBDM_HasWaveCounterpart.cpp  ELBDM_SetTaylor3Coeff.cpp \
-               ELBDM_GramFE_EvolutionMatrix.cpp  ELBDM_RemoveMotionCM.cpp  ELBDM_Aux_Record_Hybrid.cpp
+               ELBDM_GramFE_EvolutionMatrix.cpp  ELBDM_RemoveMotionCM.cpp  ELBDM_Aux_Record_Hybrid.cpp ELBDM_DerivedField.cpp
 
 vpath %.cu     Model_ELBDM/GPU_ELBDM
 vpath %.cpp    Model_ELBDM/CPU_ELBDM  Model_ELBDM
