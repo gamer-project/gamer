@@ -83,6 +83,15 @@ void Output_DumpData_Total( const char *FileName )
 #  ifdef PARTICLE
    long GParID_Offset = 0;                   // GParID = global particle index (==> unique for each particle)
    long NPar_EachRank[MPI_NRank];
+   int par_natt_flt_addi = 0;
+   switch ( OPT__OUTPUT_PAR_ADDI_ATTR )
+   {
+      case 0:  break;
+      case 1:  par_natt_flt_addi = 1; break;
+      case 2:  par_natt_flt_addi = 3; break;
+      case 3:  par_natt_flt_addi = 4; break;
+      default: break;
+   }
 
    MPI_Allgather( &amr->Par->NPar_Active, 1, MPI_LONG, NPar_EachRank, 1, MPI_LONG, MPI_COMM_WORLD );
 
@@ -177,7 +186,7 @@ void Output_DumpData_Total( const char *FileName )
 
       FileOffset_Particle = ExpectFileSize;  // file offset at the beginning of particle data
 
-      ExpectFileSize += (long)PAR_NATT_FLT_STORED*amr->Par->NPar_Active_AllRank*sizeof(real_par);
+      ExpectFileSize += (long)( PAR_NATT_FLT_STORED + par_natt_flt_addi )*amr->Par->NPar_Active_AllRank*sizeof(real_par);
       ExpectFileSize += (long)PAR_NATT_INT_STORED*amr->Par->NPar_Active_AllRank*sizeof(long_par);
 #     endif
 
@@ -498,7 +507,7 @@ void Output_DumpData_Total( const char *FileName )
 #     endif
 
 #     ifdef PARTICLE
-      const int    par_natt_flt_stored   = PAR_NATT_FLT_STORED;
+      const int    par_natt_flt_stored   = PAR_NATT_FLT_STORED + par_natt_flt_addi;
       const int    par_natt_flt_user     = PAR_NATT_FLT_USER;
       const int    par_natt_int_stored   = PAR_NATT_INT_STORED;
       const int    par_natt_int_user     = PAR_NATT_INT_USER;
@@ -953,11 +962,13 @@ void Output_DumpData_Total( const char *FileName )
    const long ParFltDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(real_par);
    const long ParIntDataSize1v = amr->Par->NPar_Active_AllRank*sizeof(long_par);
 
+   const int  par_natt_flt_stored = PAR_NATT_FLT_STORED + par_natt_flt_addi;
+
    long NParInBuf, ParID, FileOffset_ThisVar;
    int  NParThisPatch;
 
 // output floating-point data
-   for (int v=0; v<PAR_NATT_FLT_STORED; v++)
+   for (int v=0; v<par_natt_flt_stored; v++)
    for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
    {
       if ( MPI_Rank == TargetMPIRank )
@@ -973,6 +984,13 @@ void Output_DumpData_Total( const char *FileName )
          if ( ftell(File) != FileOffset_ThisVar )
             Aux_Error( ERROR_INFO, "size of the file <%s> = %ld != expect = %ld !!\n",
                        FileName, ftell(File), FileOffset_ThisVar );
+
+         if ( v > PAR_NATT_FLT_STORED )
+         switch ( OPT__OUTPUT_PAR_ADDI_ATTR )
+         {
+            case 1:  v = PAR_TIME; break;
+            default: break;
+         } // if ( v > PAR_NATT_FLT_STORED ), switch OPT__OUTPUT_PAR_ADDI_ATTR
 
          for (int lv=0; lv<NLEVEL; lv++)
          for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -1009,7 +1027,7 @@ void Output_DumpData_Total( const char *FileName )
       } // if ( MPI_Rank == TargetMPIRank )
 
       MPI_Barrier( MPI_COMM_WORLD );
-   } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++), for (int v=0; v<PAR_NATT_FLT_STORED; v++)
+   } // for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++), for (int v=0; v<par_natt_flt_stored; v++)
 
 // output integer data
    for (int v=0; v<PAR_NATT_INT_STORED; v++)
@@ -1020,7 +1038,7 @@ void Output_DumpData_Total( const char *FileName )
          File = fopen( FileName, "ab" );
 
 //       set file position indicator to the end of the current file and check whether it's consistent with expectation
-         FileOffset_ThisVar = FileOffset_Particle + ParFltDataSize1v*PAR_NATT_FLT_STORED + ParIntDataSize1v*v + GParID_Offset*sizeof(long_par);
+         FileOffset_ThisVar = FileOffset_Particle + ParFltDataSize1v*par_natt_flt_stored + ParIntDataSize1v*v + GParID_Offset*sizeof(long_par);
          NParInBuf          = 0;
 
          fseek( File, 0, SEEK_END );
