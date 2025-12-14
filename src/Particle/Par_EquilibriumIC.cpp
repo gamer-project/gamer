@@ -543,7 +543,9 @@ double Par_EquilibriumIC::Set_Velocity( const double x )
          break;
          }
       sum_mes += prob_dens[k] *pow(psi_per-psi[k],0.5) *delta;
-      if(k==params.Cloud_MassProfNBin-1)index_ass = params.Cloud_MassProfNBin-1;
+      if(k==params.Cloud_MassProfNBin-1){index_ass = params.Cloud_MassProfNBin-1;
+         par = (sum_mes-sum_rad)/(prob_dens[index_ass] *pow(psi_per-psi[index_ass],0.5) *delta);
+         }
    }
    psi_ass = psi[index_ass] +delta *par;
    double kim =-2*(psi_ass-psi_per);
