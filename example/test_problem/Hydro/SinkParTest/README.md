@@ -26,7 +26,17 @@ Simulation setup:
     Example usage: `python VG_turb.py -2 1 0` will generate a turbulence velocity field with energy power spectrum $\propto k^{-4}$.  
   
     The creation of trubulence is following O. Lomax et al., 2015, MNRAS, 449, 662.  
-      
+
+Description:
+========================================
+This simulation uses Boss & Bodenheimer test (BB test) to test the sink particle and accretion. BB test describes the collapse and fragmentation of a rotating core. The size and mass of the cloud is controlled by `R0` and `Core_Mass`, the angular velocity is set by `Omega0`. A m = 2 density perturbation can be add to the cloud and the strength of the perturbation is controlled by `Delta_Dens`. A density contrast of `Denss_Contrast` is used to scale the cloud density to the background density. 
+
+A magnetic field with strength of `B0` initially along `z`-axis can be added, its inclination respect to the `z`-axis can be set by `theta_B`. A turbulence field described by  `Tur_Table.dat` (see Simulation Setup for how to generate it) is added to the initial velocity field and scale to a Mach number of `Mach_num`.
+
+This simulation uses barotropic EOS, and the transition density is controlled by `rho_AD_SinkParTest` (see Note for more details).
+
+When `Delta_Dens` > 0, the cloud will collapse into to two cores rotating with each other with their own disk, the sink particles will form at the center of the disk and accrete mass from the disk.
+
 Note:
 ========================================
 1. The sink particle and accretion criterias are mostly following C. Federrath et al., 2010, ApJ, 713, 269, with additional criteria from S. D. Clarke et al., 2017, MNRAS, 468, 2489.
