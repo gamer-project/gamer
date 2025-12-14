@@ -53,6 +53,11 @@ index_list = [format(index_id,'06') for index_id in range(s_index, e_index+1)]
 if not os.path.exists(Output):
       os.mkdir(Output)
 
+TimeArr    = []
+Par1MArr   = []
+Par2MArr   = []
+GasMassArr = []
+
 for fn, index_id in zip(fns, index_list):
     try: 
         # Since some snapshots may be deleted, use "try" to skip them
@@ -86,17 +91,37 @@ for fn, index_id in zip(fns, index_list):
         north_vector  = np.array([-1., 0., 0.])
         
     img_extend = width.to('pc').value[0]/2 # the boundary for plotting
+
+    # Information for the gas
+    Time  = ds.current_time.to('kyr').value/tff
+    Gas_M = (ad["gamer", "Dens"]*ad["gamer", "cell_volume"]).to('Msun').value
     
     # Information for sink particle
-    Par_M = ad['all', 'ParMass'].to('Msun').value
-    Par_x = (ad['all', 'ParPosX'].to('pc') - c[0].to('pc')).value
-    Par_y = (ad['all', 'ParPosY'].to('pc') - c[1].to('pc')).value
-    Par_z = (ad['all', 'ParPosZ'].to('pc') - c[2].to('pc')).value
+    Par_M  = ad['all', 'ParMass'].to('Msun').value
+    Par_ID = ad['all', 'PAR_ID'].value
+    Par_x  = (ad['all', 'ParPosX'].to('pc') - c[0].to('pc')).value
+    Par_y  = (ad['all', 'ParPosY'].to('pc') - c[1].to('pc')).value
+    Par_z  = (ad['all', 'ParPosZ'].to('pc') - c[2].to('pc')).value
     
+    TimeArr.append(Time)
     if Par_M.shape[0] > 0:
         print("Particle number = ", Par_M.shape[0])
         print("Total sink mass = ", np.sum(Par_M), " M_sun")
         print("Most massive sink mass = ", np.max(Par_M), " M_sun")
+
+        M_tot = np.sum(Gas_M) + np.sum(Par_M)
+        print("Total mass = %.13e M_sun"%M_tot)
+
+        Par1MArr.append(Par_M[Par_ID==0][0])
+        Par2MArr.append(Par_M[Par_ID==1][0])
+    
+    else:
+        print("Total mass = %.13e M_sun"%np.sum(Gas_M))
+
+        Par1MArr.append(0)
+        Par2MArr.append(0)
+
+    GasMassArr.append(np.sum(Gas_M))
     
     # Projection
     Col = ProjCol(ds, c, normal_vector, north_vector, width, npixel)
@@ -127,9 +152,35 @@ for fn, index_id in zip(fns, index_list):
         ax.set_xlabel(r'z (pc)')
         ax.set_ylabel(r'x (pc)')
         
-    ax.set_title(r'%.2f $t_{ff}$'%(ds.current_time.to('kyr').value/tff))
+    ax.set_title(r'%.2f $t_{ff}$'%Time)
     
     plt.savefig('%s/Column_Density_%s_%s.png'%(Output, index_id, ProjPlane), dpi=150,bbox_inches='tight')
     plt.close()
-    
+
     print("Finished!\n")
+
+# Plot sink particle mass evolution
+fig = plt.figure(figsize=(8, 5))
+ax = fig.add_subplot(111)
+
+ax.plot(TimeArr, Par1MArr, c="r", label='Sink Particle 1')
+ax.plot(TimeArr, Par2MArr, c="g", label='Sink Particle 2')
+ax.set_xlabel(r'Time ($t_{ff}$)')
+ax.set_ylabel(r'Sink Particle Mass (M$_\odot$)')
+ax.legend()
+
+plt.savefig('./SinkMassEvo.png', dpi=150,bbox_inches='tight')
+plt.close()
+
+# Plot error in total mass
+fig = plt.figure(figsize=(8, 5))
+ax = fig.add_subplot(111)
+
+ax.plot(TimeArr, (np.array(GasMassArr) + np.array(Par1MArr) + np.array(Par2MArr) - GasMassArr[0])/GasMassArr[0], c="k")
+ax.axhline(y=0, color='k', linestyle='--')
+
+ax.set_xlabel(r'Time ($t_{ff}$)')
+ax.set_ylabel(r'$((M_{\rm{gas}} + M_{\rm{par, tot}}) - M_{\rm{gas. ini}})/M_{\rm{gas. ini}}$')
+
+plt.savefig('./MassError.png', dpi=150,bbox_inches='tight')
+plt.close()

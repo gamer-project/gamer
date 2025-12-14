@@ -41,5 +41,8 @@ Note:
 ========================================
 1. The sink particle and accretion criterias are mostly following C. Federrath et al., 2010, ApJ, 713, 269, with additional criteria from S. D. Clarke et al., 2017, MNRAS, 468, 2489.
 2. A custom EOS is used (`CPU_EoS_Barotropic_SinkParTest.cpp`), which descripts a barotropic EOS: $$T(\rho) = T_0 (1 + (\frac{\rho}{\rho_{ad}})^{\gamma - 1})$$, where $\rho$ is gas density, $T_0$ is the initial temperature (`ISO_TEMP`), `gamma` is the adiabatic index (`GAMMA`) and $\rho_{ad}$ is the transition density (`rho_AD_SinkParTest` in `Input_TestProb`), which represents the approximate density at which the gas becomes optically thick (see Hirohiko Masunaga et al., 1998, ApJ, 495, 346, and Hirohiko Masunaga and Shu-ichiro Inutsuka, 2000, ApJ, 531, 350).
-3. A script (`PlotColMap.py`) using `yt` is provided to plot the column density projected on `ProjPlane [xy/xz]` and overplot the sink particles on the maps.
+3. A script (`Analysis.py`) using `yt` is provided to conduct some analysis:
+    - It plots the column density projected on `ProjPlane [xy/xz]` and overplot the sink particles on the maps (`./ColMap/Column_Density_*.png`).
+    - The evolution of the two sink particles mass is recorded in `SinkMassEvo.png`.
+    - The evolution of mass error is recorded in `MassError.png`.
     - Note that `tff` is the free-fall time calculated from the default parameters in `Input_TestProb`.
