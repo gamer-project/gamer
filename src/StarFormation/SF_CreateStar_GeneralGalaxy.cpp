@@ -186,7 +186,7 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
 
             Pres[k][j][i] = Hydro_Con2Pres( fluid[DENS][k][j][i], fluid[MOMX][k][j][i], fluid[MOMY][k][j][i],
                                             fluid[MOMZ][k][j][i], fluid[ENGY][k][j][i], Passive,
-                                            CheckMinPres_Yes, MIN_PRES, Emag,
+                                            CheckMinPres_Yes, MIN_PRES, PassiveFloorMask, Emag,
                                             EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                             EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
                                             NULL );
