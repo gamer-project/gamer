@@ -1055,7 +1055,7 @@ void AddNewField_ClusterMerger()
 {
 
    if ( Merger_Coll_UseMetals )
-      Idx_Metal = AddField( "Metal", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
+      Idx_Metal = AddField( "Metal", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_NO, INTERP_FRAC_NO );
 
    for (int c=0; c<Merger_Coll_NumHalos; c++)
    {
@@ -1063,7 +1063,7 @@ void AddNewField_ClusterMerger()
       {
          char ColorField_name[MAX_STRING];
          sprintf( ColorField_name, "ColorField%d", c );
-         ColorFieldsIdx[c] = AddField( ColorField_name, FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
+         ColorFieldsIdx[c] = AddField( ColorField_name, FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_NO, INTERP_FRAC_NO );
       }
    }
 

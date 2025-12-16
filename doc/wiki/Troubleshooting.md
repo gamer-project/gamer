@@ -1,7 +1,7 @@
 This page covers the following topics:
 * [Running out of GPU memory](#running-out-of-gpu-memory)
 * [Instability with MHD](#instability-with-mhd)
-* [Check static arrays with AddressSanitizer (ASan)](#check-static-arrays-with-addresssanitizer-asan))
+* [Check static arrays with AddressSanitizer (ASan)](#check-static-arrays-with-addresssanitizer-asan)
 
 * * *
 
