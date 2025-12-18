@@ -27,7 +27,7 @@ bool Flag_ClusterMerger( const int i, const int j, const int k, const int lv, co
 
    // flag if the mass fraction of the scalar exceeds the given threshold
    const real Frac = Scal[k][j][i] / Rho[k][j][i];
-   bool Flag = Frac > Threshold;
+   bool Flag = Frac > Threshold[0];
 
    return Flag;
 

@@ -61,9 +61,11 @@ void Validate()
    Aux_Error( ERROR_INFO, "EOS != EOS_GAMMA !!\n" );
 #  endif
 
+#  ifdef MHD
    if ( OPT__INIT_BFIELD_BYVECPOT != INIT_MAG_BYVECPOT_FUNC )
       Aux_Error( ERROR_INFO, "Must set OPT__INIT_BFIELD_BYVECPOT != %d !!\n", INIT_MAG_BYVECPOT_FUNC );
-
+#  endif
+   
    for (int f=0; f<6; f++)
    if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
       Aux_Error( ERROR_INFO, "must adopt periodic BC (i.e., \"OPT__BC_FLU_* = 1\") !!\n" );
@@ -410,8 +412,6 @@ void CheckBField( real magnetic[], const double x, const double y, const double 
 
 } // FUNCTION : CheckBField
 
-#endif // #ifdef MHD
-
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  OutputError
@@ -433,6 +433,7 @@ static void OutputError()
    Output_L1Error( SetGridIC, CheckBField, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
 
 } // FUNCTION : OutputError
+#endif // #ifdef MHD
 #endif // #if ( MODEL == HYDRO )
 
 

@@ -39,7 +39,7 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                         const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[],
                         const real dt, const real dh, const double Time, const bool UsePot,
                         const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[],
-                        const real MinDens, const real MinPres, const long PassiveFloor, const EoS_t *EoS );
+                        const real MinDens, const real MinPres, const long PassiveFloor, const EoS_t *EoS, const bool FreezeHydro );
 void Hydro_StoreIntFlux( const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
                          const int NFlux );
@@ -275,7 +275,7 @@ void CPU_FluidSolver_CTU(
          Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_HF_FLUX, 0, 0, CorrHalfVel_No,
                             NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL,
                             EXT_POT_NONE, EXT_ACC_NONE, NULL, NULL,
-                            MinDens, MinPres, PassiveFloor, &EoS );
+                            MinDens, MinPres, PassiveFloor, &EoS, FreezeHydro );
 
 
 //       3. evaluate electric field and update B field at the half time-step
@@ -314,7 +314,7 @@ void CPU_FluidSolver_CTU(
          Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, NSkip_N, NSkip_T, CorrHalfVel,
                             g_Pot_Array_USG[P], g_Corner_Array[P], dt, dh, Time,
                             UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray,
-                            MinDens, MinPres, PassiveFloor, &EoS );
+                            MinDens, MinPres, PassiveFloor, &EoS, FreezeHydro );
 
          if ( StoreFlux )
             Hydro_StoreIntFlux( g_FC_Flux_1PG, g_Flux_Array[P], N_FL_FLUX );

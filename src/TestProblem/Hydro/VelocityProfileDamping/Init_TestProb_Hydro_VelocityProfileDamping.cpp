@@ -331,7 +331,7 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
    }
 
 } // FUNCTION : SetBFieldIC
-#endif // #ifdef MHD
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  OutputError
@@ -353,6 +353,7 @@ static void OutputError()
    Output_L1Error( SetGridIC, SetBFieldIC, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
 
 } // FUNCTION : OutputError
+#endif // #ifdef MHD
 #endif // #if ( MODEL == HYDRO )
 
 

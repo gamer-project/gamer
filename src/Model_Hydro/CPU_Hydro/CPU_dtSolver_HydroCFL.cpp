@@ -86,6 +86,8 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
 #  endif
 #  ifndef SRHD
    const bool CheckMinPres_Yes = true;
+#  endif
+#  if defined( VISCOSITY) || defined( CONDUCTION )
    const bool CheckMinTemp_Yes = true;
 #  endif
 
