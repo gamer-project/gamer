@@ -67,7 +67,7 @@ void MHD_HalfStepPrimitive( const real g_Flu_In[][ CUBE(FLU_NXT) ],
                             const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                   real g_PriVar_Out[][ CUBE(FLU_NXT) ],
                             const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                            const real dt, const real dh, const real MinDens );
+                            const real dt, const real dh, const real MinDens, const bool FreezeHydro );
 #endif // #ifdef MHD
 
 #endif // #ifdef __CUDACC__ ... else ...
@@ -299,7 +299,8 @@ void CPU_FluidSolver_CTU(
 //       5. evaluate the cell-centered primitive variables at the half time-step
 //          --> for computing CT electric field later
 #        ifdef MHD
-         MHD_HalfStepPrimitive( g_Flu_Array_In[P], g_FC_Mag_Half_1PG, g_PriVar_Half_1PG, g_FC_Flux_1PG, dt, dh, MinDens );
+         MHD_HalfStepPrimitive( g_Flu_Array_In[P], g_FC_Mag_Half_1PG, g_PriVar_Half_1PG, g_FC_Flux_1PG, dt, dh, MinDens,
+	 			FreezeHydro );
 #        endif
 
 
