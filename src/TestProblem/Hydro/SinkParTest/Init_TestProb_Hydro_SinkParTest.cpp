@@ -83,6 +83,18 @@ void Validate()
    Aux_Error( ERROR_INFO, "FEEDBACK must be enabled !!\n" );
 #  endif
 
+#  ifndef PARTICLE
+   Aux_Error( ERROR_INFO, "PARTICLE must be enabled !!\n" );
+#  endif
+
+#  ifndef MHD
+   Aux_Error( ERROR_INFO, "MHD must be enabled !!\n" );
+#  endif
+
+#  if ( EOS != EOS_USER )
+   Aux_Error( ERROR_INFO, "EOS != EOS_USER !!\n" );
+#  endif
+
 #  ifdef PARTICLE
    if ( OPT__INIT == INIT_BY_FUNCTION  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
       Aux_Error( ERROR_INFO, "please set PAR_INIT = 1 (by FUNCTION) !!\n" );
