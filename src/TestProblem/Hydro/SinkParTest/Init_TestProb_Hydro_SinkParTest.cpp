@@ -8,13 +8,13 @@
 static double     *tur_table = NULL;              // used to store turbulence (1D)
 static int        tur_table_NBin;                 // number of row in turbulence table obtained by Aux_LoadTable
 static int        tur_table_Ncol;                 // number of column in turbulence table (set by user)
-static int        *TargetCols = new int [6];    // Index of columns read from the turbulence table 
-static int        ColIdx_X;                    // Column index of x coordinate in the turbulence table
-static int        ColIdx_Y;                    // Column index of y coordinate in the turbulence table 
-static int        ColIdx_Z;                    // Column index of z coordinate in the turbulence table 
-static int        ColIdx_VelX;                 // Column index of x direction velocity in the turbulence table 
-static int        ColIdx_VelY;                 // Column index of y direction velocity in the turbulence table 
-static int        ColIdx_VelZ;                 // Column index of z direction velocity in the turbulence table 
+static int        *TargetCols = new int [6];      // Index of columns read from the turbulence table 
+static int        ColIdx_X;                       // Column index of x coordinate in the turbulence table
+static int        ColIdx_Y;                       // Column index of y coordinate in the turbulence table 
+static int        ColIdx_Z;                       // Column index of z coordinate in the turbulence table 
+static int        ColIdx_VelX;                    // Column index of x direction velocity in the turbulence table 
+static int        ColIdx_VelY;                    // Column index of y direction velocity in the turbulence table 
+static int        ColIdx_VelZ;                    // Column index of z direction velocity in the turbulence table 
 static double     *Table_X;                       // used to store the readed data
 static double     *Table_Y;
 static double     *Table_Z;
@@ -32,18 +32,22 @@ static double     Vrms;
 static double     Vrms_Scale;                     // used to rescale velocity
 static int        Total_Vrms_Count;
 
-static double     SinkParTest_Cs;                             // sound spped
-static double     SinkParTest_R0;
-static double     SinkParTest_Rho0;
-static double     SinkParTest_Omega0;
-static double     SinkParTest_Core_Mass;
-static double     SinkParTest_Delta_Dens;
-static double     SinkParTest_Dens_Contrast;
-static double     SinkParTest_B0;
-static double     SinkParTest_theta_B;
-static double     SinkParTest_Mach_num;
-double            SinkParTest_rho_AD;                      // adiabatic density thresheld
-static char       Tur_Table[MAX_STRING];
+static double     SinkParTest_R0;                 // The size of the cloud
+static double     SinkParTest_Omega0;             // The angular velocity of the cloud
+static double     SinkParTest_Core_Mass;          // The mass of the cloud
+static double     SinkParTest_Delta_Dens;         // The density of the cloud
+static double     SinkParTest_Dens_Contrast;      // The density contrast between the cloud and background
+static double     SinkParTest_B0;                 // The magnetic field
+static double     SinkParTest_theta_B;            // The angle between the magnetic field and the z-axis
+static double     SinkParTest_Mach_num;           // The Mach number of the turbulence
+static char       Tur_Table[MAX_STRING];          // The turbulence table
+static double     SinkParTest_Cs;                 // sound spped
+static double     SinkParTest_Rho0;               // The density of the cloud
+
+double            SinkParTest_rho_AD;             // The adiabatic density threshold
+
+
+
 // =======================================================================================
 
 #  if ( EOS == EOS_USER )
