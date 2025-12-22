@@ -106,11 +106,8 @@ void Validate()
 #     endif
 
       for (int f=0; f<6; f++)
-      if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC )
-         Aux_Message( stderr, "WARNING : non-periodic BC for fluid ??\n" );
-
       if ( amr->BoxSize[0] != amr->BoxSize[1]  ||  amr->BoxSize[0] != amr->BoxSize[2] )
-         Aux_Message( stderr, "WARNING : simulation domain is not cubic ??\n" );
+         Aux_Error( ERROR_INFO, "simulation domain is not cubic !!\n" );
    }
 
 
