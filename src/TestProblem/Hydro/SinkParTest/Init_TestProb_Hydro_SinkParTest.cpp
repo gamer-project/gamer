@@ -161,7 +161,7 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "R0",                &R0,                    0.0,           0.0,              NoMax_double      );
+   ReadPara->Add( "R0",                &R0,                    0.0,           0.0,              Eps_double        );
    ReadPara->Add( "Omega0",            &Omega0,                0.0,           0.0,              NoMax_double      );
    ReadPara->Add( "Core_Mass",         &Core_Mass,             0.0,           0.0,              NoMax_double      );
    ReadPara->Add( "Delta_Dens",        &Delta_Dens,            0.0,           0.0,              NoMax_double      );
