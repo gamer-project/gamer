@@ -174,7 +174,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "Omega0",               &SinkParTest_Omega0,        0.0,           NoMin_double,     NoMax_double      );
    LOAD_PARA( load_mode, "Core_Mass",            &SinkParTest_Core_Mass,     1.0,           0.0,              NoMax_double      );
    LOAD_PARA( load_mode, "Delta_Dens",           &SinkParTest_Delta_Dens,    0.1,           0.0,              NoMax_double      );
-   LOAD_PARA( load_mode, "Dens_Contrast",        &SinkParTest_Dens_Contrast, 100,           0.0,              NoMax_double      );
+   LOAD_PARA( load_mode, "Dens_Contrast",        &SinkParTest_Dens_Contrast, 1.0e2,         0.0,              NoMax_double      );
    LOAD_PARA( load_mode, "B0"     ,              &SinkParTest_B0,            0.0,           NoMin_double,     NoMax_double      );
    LOAD_PARA( load_mode, "theta_B",              &SinkParTest_theta_B,       0.0,           NoMin_double,     NoMax_double      );
    LOAD_PARA( load_mode, "Mach_num",             &SinkParTest_Mach_num,      0.0,           0.0,              NoMax_double      );
