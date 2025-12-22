@@ -181,7 +181,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "rho_AD",               &SinkParTest_rho_AD,        1e-14,         0.0,              NoMax_double      );
    LOAD_PARA( load_mode, "Tur_Table",            Tur_Table,                  NoDef_str,     Useless_str,      Useless_str       );
 
-}
+} // FUNCITON : LoadInputTestProb
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
@@ -352,19 +352,17 @@ void Load_Turbulence_SinkParTest()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
-   const double BoxSize[3]   = { amr->BoxSize[0], amr->BoxSize[1], amr->BoxSize[2] };
-   const double BoxCenter[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
-   const double dx = x - BoxCenter[0];
-   const double dy = y - BoxCenter[0];
-   const double dz = z - BoxCenter[0];
+   const double dx = x - amr->BoxCenter[0];
+   const double dy = y - amr->BoxCenter[1];
+   const double dz = z - amr->BoxCenter[2];
    const double Rs = SQRT( SQR(dx) + SQR(dy) + SQR(dz) );
 
-   double Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
-   double VelX, VelY, VelZ;
+   real Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
+   real VelX, VelY, VelZ;
 
-   int i = (int) ( ( x / BoxSize[0] ) * size );    // turbulence box index (cude)
-   int j = (int) ( ( y / BoxSize[0] ) * size );
-   int k = (int) ( ( z / BoxSize[0] ) * size );
+   int i = (int) ( ( x / amr->BoxSize[0] ) * size );    // turbulence box index (cude)
+   int j = (int) ( ( y / amr->BoxSize[1] ) * size );
+   int k = (int) ( ( z / amr->BoxSize[2] ) * size );
    int index = i * SQR(size) + j * size + k;
    if ( i < 0 || i > size   ) Aux_Error( ERROR_INFO, "index is out of bound\n,  i = %d", i  );
    if ( j < 0 || j > size   ) Aux_Error( ERROR_INFO, "index is out of bound\n,  j = %d", j  );
