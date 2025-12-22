@@ -32,17 +32,17 @@ static double     Vrms;
 static double     Vrms_Scale;                     // used to rescale velocity
 static int        Total_Vrms_Count;
 
-static double     Cs;                             // sound spped
-static double     R0;
-static double     Rho0;
-static double     Omega0;
-static double     Core_Mass;
-static double     Delta_Dens;
-static double     Dens_Contrast;
-static double     B0;
-static double     theta_B;
-static double     Mach_num;
-double            rho_AD_SinkParTest;                      // adiabatic density thresheld
+static double     SinkParTest_Cs;                             // sound spped
+static double     SinkParTest_R0;
+static double     SinkParTest_Rho0;
+static double     SinkParTest_Omega0;
+static double     SinkParTest_Core_Mass;
+static double     SinkParTest_Delta_Dens;
+static double     SinkParTest_Dens_Contrast;
+static double     SinkParTest_B0;
+static double     SinkParTest_theta_B;
+static double     SinkParTest_Mach_num;
+double            SinkParTest_rho_AD;                      // adiabatic density thresheld
 static char       Tur_Table[MAX_STRING];
 // =======================================================================================
 
@@ -161,16 +161,16 @@ void SetParameter()
 // ********************************************************************************************************************************
 // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   ReadPara->Add( "R0",                &R0,                    0.0,           0.0,              Eps_double        );
-   ReadPara->Add( "Omega0",            &Omega0,                0.0,           0.0,              NoMax_double      );
-   ReadPara->Add( "Core_Mass",         &Core_Mass,             0.0,           0.0,              NoMax_double      );
-   ReadPara->Add( "Delta_Dens",        &Delta_Dens,            0.0,           0.0,              NoMax_double      );
-   ReadPara->Add( "Dens_Contrast",     &Dens_Contrast,         0.0,           0.0,              NoMax_double      );
-   ReadPara->Add( "B0"     ,           &B0,                    0.0,           0.0,              NoMax_double      );
-   ReadPara->Add( "theta_B",           &theta_B,               0.0,           0.0,              NoMax_double      );
-   ReadPara->Add( "Mach_num",          &Mach_num,              0.0,           0.0,              NoMax_double      );
-   ReadPara->Add( "rho_AD_SinkParTest",&rho_AD_SinkParTest,    0.0,           0.0,              NoMax_double      );
-   ReadPara->Add( "Tur_Table",         Tur_Table,              NoDef_str,     Useless_str,      Useless_str       );
+   ReadPara->Add( "R0",                &SinkParTest_R0,            0.0,           0.0,              Eps_double        );
+   ReadPara->Add( "Omega0",            &SinkParTest_Omega0,        0.0,           0.0,              NoMax_double      );
+   ReadPara->Add( "Core_Mass",         &SinkParTest_Core_Mass,     0.0,           0.0,              NoMax_double      );
+   ReadPara->Add( "Delta_Dens",        &SinkParTest_Delta_Dens,    0.0,           0.0,              NoMax_double      );
+   ReadPara->Add( "Dens_Contrast",     &SinkParTest_Dens_Contrast, 0.0,           0.0,              NoMax_double      );
+   ReadPara->Add( "B0"     ,           &SinkParTest_B0,            0.0,           0.0,              NoMax_double      );
+   ReadPara->Add( "theta_B",           &SinkParTest_theta_B,       0.0,           0.0,              NoMax_double      );
+   ReadPara->Add( "Mach_num",          &SinkParTest_Mach_num,      0.0,           0.0,              NoMax_double      );
+   ReadPara->Add( "rho_AD",            &SinkParTest_rho_AD,        0.0,           0.0,              NoMax_double      );
+   ReadPara->Add( "Tur_Table",         Tur_Table,                  NoDef_str,     Useless_str,      Useless_str       );
 
    ReadPara->Read( FileName );
 
@@ -203,13 +203,13 @@ void SetParameter()
 
 // (2) set the problem-specific derived parameters
 
-   Core_Mass *= Const_Msun;
-   Cs = SQRT( ( Const_kB*ISO_TEMP/UNIT_E ) / ( MOLECULAR_WEIGHT*Const_amu/UNIT_M ));
-   R0 /= UNIT_L;
-   Rho0 = 3.0 * Core_Mass / (4.0 * M_PI * CUBE(R0));
-   Omega0 /= 1/UNIT_T;
-   rho_AD_SinkParTest /= UNIT_D;
-   theta_B = theta_B*M_PI/180; // degree to radian
+   SinkParTest_Core_Mass *= Const_Msun;
+   SinkParTest_Cs = SQRT( ( Const_kB*ISO_TEMP/UNIT_E ) / ( MOLECULAR_WEIGHT*Const_amu/UNIT_M ));
+   SinkParTest_R0 /= UNIT_L;
+   SinkParTest_Rho0 = 3.0 * SinkParTest_Core_Mass / (4.0 * M_PI * CUBE(SinkParTest_R0));
+   SinkParTest_Omega0 /= 1/UNIT_T;
+   SinkParTest_rho_AD /= UNIT_D;
+   SinkParTest_theta_B = SinkParTest_theta_B*M_PI/180; // degree to radian
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
@@ -232,16 +232,16 @@ void SetParameter()
    {
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "  test problem ID       = %d\n",             TESTPROB_ID                         );
-      Aux_Message( stdout, "  Sound speed           = %13.7e km/s\n",   Cs*UNIT_V/Const_km                   );
-      Aux_Message( stdout, "  R0                    = %13.7e cm\n",     R0*UNIT_L                            );
-      Aux_Message( stdout, "  Rho0                  = %13.7e g/cm3\n",  Rho0*UNIT_D                          );
-      Aux_Message( stdout, "  Omega0                = %13.7e /s\n",     Omega0*UNIT_T                        );
-      Aux_Message( stdout, "  Core Mass             = %13.7e M_sun\n",  Core_Mass/Const_Msun                 );
-      Aux_Message( stdout, "  B field               = %13.7e G\n",      B0                                   );
-      Aux_Message( stdout, "  B angle               = %13.7e radian\n", theta_B                              );
-      Aux_Message( stdout, "  Mach number           = %13.7e \n",       Mach_num                             );
+      Aux_Message( stdout, "  Sound speed           = %13.7e km/s\n",   SinkParTest_Cs*UNIT_V/Const_km       );
+      Aux_Message( stdout, "  R0                    = %13.7e cm\n",     SinkParTest_R0*UNIT_L                );
+      Aux_Message( stdout, "  Rho0                  = %13.7e g/cm3\n",  SinkParTest_Rho0*UNIT_D              );
+      Aux_Message( stdout, "  Omega0                = %13.7e /s\n",     SinkParTest_Omega0*UNIT_T            );
+      Aux_Message( stdout, "  Core Mass             = %13.7e M_sun\n",  SinkParTest_Core_Mass/Const_Msun     );
+      Aux_Message( stdout, "  B field               = %13.7e G\n",      SinkParTest_B0                       );
+      Aux_Message( stdout, "  B angle               = %13.7e radian\n", SinkParTest_theta_B                  );
+      Aux_Message( stdout, "  Mach number           = %13.7e \n",       SinkParTest_Mach_num                 );
       Aux_Message( stdout, "  Turbulence table      = %s\n",            Tur_Table                            );
-      Aux_Message( stdout, "  rho_AD_SinkParTest    = %13.7e g/cm3\n",  rho_AD_SinkParTest                   );
+      Aux_Message( stdout, "  rho_AD                = %13.7e g/cm3\n",  SinkParTest_rho_AD                   );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -289,7 +289,7 @@ void Load_Turbulence_SinkParTest()
    // Vrms = SQRT( ( Vx^2 + Vy^2 + Vz^2 ) / N + ( Vx + Vy + Vz / N) ^ 2 )
    Vrms = SQRT( (Total_VelX_SQR + Total_VelY_SQR + Total_VelZ_SQR) / Total_Vrms_Count - 
                 SQR( (Total_VelX + Total_VelY + Total_VelZ) / Total_Vrms_Count ) );
-   Vrms_Scale = Mach_num * Cs / Vrms;
+   Vrms_Scale = SinkParTest_Mach_num * SinkParTest_Cs / Vrms;
 } // Function : Load_Turbulence_SinkParTest
 
 //-------------------------------------------------------------------------------------------------------
@@ -337,15 +337,15 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    VelY = Vrms_Scale * ( Table_VelY[ index ] - Total_VelY / Total_Vrms_Count );
    VelZ = Vrms_Scale * ( Table_VelZ[ index ] - Total_VelZ / Total_Vrms_Count );
 
-   if ( Rs < R0 )
+   if ( Rs < SinkParTest_R0 )
    {
-      Dens = Rho0 * (1 + Delta_Dens * COS(2 * ATAN(dy/dx)));
-      VelX -= Omega0 * dy;
-      VelY += Omega0 * dx;
+      Dens = SinkParTest_Rho0 * (1 + SinkParTest_Delta_Dens * COS(2 * ATAN(dy/dx)));
+      VelX -= SinkParTest_Omega0 * dy;
+      VelY += SinkParTest_Omega0 * dx;
    }
    else
    {
-      Dens = Rho0 / Dens_Contrast;
+      Dens = SinkParTest_Rho0 / SinkParTest_Dens_Contrast;
    }
 
    Pres = EoS_DensTemp2Pres_CPUPtr( Dens, ISO_TEMP, NULL, EoS_AuxArray_Flt,
@@ -387,8 +387,8 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
                   const int lv, double AuxArray[] )
 {
    double MagX = 0.0, MagY = 0.0, MagZ = 0.0;
-   MagZ = B0*COS(theta_B)/UNIT_B;
-   MagY = B0*SIN(theta_B)/UNIT_B;
+   MagZ = SinkParTest_B0*COS(SinkParTest_theta_B)/UNIT_B;
+   MagY = SinkParTest_B0*SIN(SinkParTest_theta_B)/UNIT_B;
 
    magnetic[MAGX] = MagX;
    magnetic[MAGY] = MagY;
