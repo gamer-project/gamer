@@ -5,9 +5,6 @@
 
 // problem-specific global variables
 // =======================================================================================
-static double     *tur_table = NULL;              // used to store turbulence (1D)
-static int        tur_table_NBin;                 // number of row in turbulence table obtained by Aux_LoadTable
-static int        tur_table_Ncol;                 // number of column in turbulence table (set by user)
 static int        *TargetCols = new int [6];      // Index of columns read from the turbulence table 
 static int        ColIdx_X;                       // Column index of x coordinate in the turbulence table
 static int        ColIdx_Y;                       // Column index of y coordinate in the turbulence table 
@@ -280,7 +277,8 @@ void Load_Turbulence_SinkParTest()
    const bool RowMajor_No  = false;           // load data into the column major
    const bool AllocMem_Yes = true;            // allocate memory for ISM_Velocity_Perturbation
 
-   double *Table_VelX, *Table_VelY, *Table_VelZ;                       // used to store the readed data
+   double *Table_VelX, *Table_VelY, *Table_VelZ;     // used to store the readed data
+   double *tur_table = NULL;                         // used to store turbulence (1D)
 
    double Total_VelX = 0.0; // used to calculate Vrms
    double Total_VelY = 0.0;
@@ -288,9 +286,9 @@ void Load_Turbulence_SinkParTest()
    double Total_VelX_SQR = 0.0;
    double Total_VelY_SQR = 0.0;
    double Total_VelZ_SQR = 0.0;
-   double Vrms = 0.0;
-   double Vrms_Scale = 0.0;                     // used to rescale velocity
+   double Vrms, Vrms_Scale;                     // used to rescale velocity
    int    Total_Vrms_Count = 0;
+   int    tur_table_NBin, tur_table_Ncol;       // number of row/column in turbulence table obtained by Aux_LoadTable
 
    tur_table_NBin = Aux_LoadTable( tur_table, Tur_Table, tur_table_Ncol, TargetCols, RowMajor_No, AllocMem_Yes );
 
