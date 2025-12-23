@@ -279,8 +279,6 @@ void Load_Turbulence_SinkParTest()
 {
    const bool RowMajor_No  = false;           // load data into the column major
    const bool AllocMem_Yes = true;            // allocate memory for ISM_Velocity_Perturbation
-   const double BoxSize[3]   = { amr->BoxSize[0], amr->BoxSize[1], amr->BoxSize[2] };
-   const double BoxCenter[3] = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
 
    double *Table_VelX, *Table_VelY, *Table_VelZ;                       // used to store the readed data
 
