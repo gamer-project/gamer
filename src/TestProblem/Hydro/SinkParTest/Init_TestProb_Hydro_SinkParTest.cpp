@@ -501,10 +501,11 @@ void Init_TestProb_Hydro_SinkParTest()
 
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr            = SetGridIC;
-#  endif // #if ( MODEL == HYDRO )
 #  ifdef MHD
    Init_Function_BField_User_Ptr     = SetBFieldIC;
 #  endif
+#  endif // #if ( MODEL == HYDRO )
+
 #  ifdef PARTICLE
    Par_Init_ByFunction_Ptr           = Par_Init_ByFunction_SinkParTest; // option: PAR_INIT=1;              example: Particle/Par_Init_ByFunction.cpp
    Par_Init_Attribute_User_Ptr       = AddNewParticleAttribute_SinkParTest; // set PAR_NATT_USER;               example: TestProblem/Hydro/AGORA_IsolatedGalaxy/Init_TestProb_Hydro_AGORA_IsolatedGalaxy.cpp --> AddNewParticleAttribute()
