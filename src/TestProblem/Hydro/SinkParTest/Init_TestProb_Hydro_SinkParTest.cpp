@@ -6,9 +6,6 @@
 // problem-specific global variables
 // =======================================================================================
 static int        *TargetCols = new int [6];      // Index of columns read from the turbulence table 
-static int        ColIdx_X;                       // Column index of x coordinate in the turbulence table
-static int        ColIdx_Y;                       // Column index of y coordinate in the turbulence table 
-static int        ColIdx_Z;                       // Column index of z coordinate in the turbulence table 
 static int        ColIdx_VelX;                    // Column index of x direction velocity in the turbulence table 
 static int        ColIdx_VelY;                    // Column index of y direction velocity in the turbulence table 
 static int        ColIdx_VelZ;                    // Column index of z direction velocity in the turbulence table 
@@ -201,16 +198,12 @@ void SetParameter()
    delete ReadPara;
 
 // (1-2) set the default values
-   tur_table_Ncol = 6;
    TargetCols[0] =  0;
    TargetCols[1] =  1;
    TargetCols[2] =  2;
    TargetCols[3] =  3;
    TargetCols[4] =  4;
    TargetCols[5] =  5;
-   ColIdx_X      =  0;
-   ColIdx_Y      =  1;
-   ColIdx_Z      =  2;
    ColIdx_VelX   =  3;
    ColIdx_VelY   =  4;
    ColIdx_VelZ   =  5;
@@ -275,7 +268,7 @@ void SetParameter()
 void Load_Turbulence_SinkParTest()
 {
    const bool RowMajor_No  = false;           // load data into the column major
-   const bool AllocMem_Yes = true;            // allocate memory for ISM_Velocity_Perturbation
+   const bool AllocMem_Yes = true;            // allocate memory
 
    double *Table_VelX, *Table_VelY, *Table_VelZ;     // used to store the readed data
    double *tur_table = NULL;                         // used to store turbulence (1D)
@@ -287,10 +280,9 @@ void Load_Turbulence_SinkParTest()
    double Total_VelY_SQR = 0.0;
    double Total_VelZ_SQR = 0.0;
    double Vrms, Vrms_Scale;                     // used to rescale velocity
-   int    Total_Vrms_Count = 0;
-   int    tur_table_NBin, tur_table_Ncol;       // number of row/column in turbulence table obtained by Aux_LoadTable
+   int    tur_table_NBin;       // number of row/column in turbulence table obtained by Aux_LoadTable
 
-   tur_table_NBin = Aux_LoadTable( tur_table, Tur_Table, tur_table_Ncol, TargetCols, RowMajor_No, AllocMem_Yes );
+   tur_table_NBin = Aux_LoadTable( tur_table, Tur_Table, 6, TargetCols, RowMajor_No, AllocMem_Yes );
 
    Table_VelX  = tur_table + ColIdx_VelX * tur_table_NBin;
    Table_VelY  = tur_table + ColIdx_VelY * tur_table_NBin;
@@ -309,22 +301,22 @@ void Load_Turbulence_SinkParTest()
       Total_VelX_SQR += SQR(Table_VelX[i]);
       Total_VelY_SQR += SQR(Table_VelY[i]);
       Total_VelZ_SQR += SQR(Table_VelZ[i]);
-
-      Total_Vrms_Count ++;
    }
 
    // Vrms = SQRT( ( Vx^2 + Vy^2 + Vz^2 ) / N + ( Vx + Vy + Vz / N) ^ 2 )
-   Vrms = SQRT( (Total_VelX_SQR + Total_VelY_SQR + Total_VelZ_SQR) / Total_Vrms_Count - 
-                SQR( (Total_VelX + Total_VelY + Total_VelZ) / Total_Vrms_Count ) );
+   Vrms = SQRT( (Total_VelX_SQR + Total_VelY_SQR + Total_VelZ_SQR) / tur_table_NBin - 
+                SQR( (Total_VelX + Total_VelY + Total_VelZ) / tur_table_NBin ) );
    Vrms_Scale = SinkParTest_Mach_num * SinkParTest_Cs / Vrms;
 
    // Rescale velocity
    for ( int i = 0; i < tur_table_NBin; i++ )
    {
-      Table_Rescaled_VelX[i] = Vrms_Scale * ( Table_VelX[i] - Total_VelX / Total_Vrms_Count );
-      Table_Rescaled_VelY[i] = Vrms_Scale * ( Table_VelY[i] - Total_VelY / Total_Vrms_Count );
-      Table_Rescaled_VelZ[i] = Vrms_Scale * ( Table_VelZ[i] - Total_VelZ / Total_Vrms_Count );
+      Table_Rescaled_VelX[i] = Vrms_Scale * ( Table_VelX[i] - Total_VelX / tur_table_NBin );
+      Table_Rescaled_VelY[i] = Vrms_Scale * ( Table_VelY[i] - Total_VelY / tur_table_NBin );
+      Table_Rescaled_VelZ[i] = Vrms_Scale * ( Table_VelZ[i] - Total_VelZ / tur_table_NBin );
    }
+
+   delete [] tur_table;
 } // Function : Load_Turbulence_SinkParTest
 
 //-------------------------------------------------------------------------------------------------------
