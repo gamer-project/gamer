@@ -9,6 +9,7 @@ static int        *TargetCols = new int [6];      // Index of columns read from 
 static int        ColIdx_VelX;                    // Column index of x direction velocity in the turbulence table 
 static int        ColIdx_VelY;                    // Column index of y direction velocity in the turbulence table 
 static int        ColIdx_VelZ;                    // Column index of z direction velocity in the turbulence table 
+static int        tur_table_NBin;                 // number of row in turbulence table obtained by Aux_LoadTable
 static int        size;                           // turbulence cell number                  
 
 static double     *Table_Rescaled_VelX;           // Table recording the rescaled velocity in x direction
@@ -280,7 +281,6 @@ void Load_Turbulence_SinkParTest()
    double Total_VelY_SQR = 0.0;
    double Total_VelZ_SQR = 0.0;
    double Vrms, Vrms_Scale;                     // used to rescale velocity
-   int    tur_table_NBin;       // number of row/column in turbulence table obtained by Aux_LoadTable
 
    tur_table_NBin = Aux_LoadTable( tur_table, Tur_Table, 6, TargetCols, RowMajor_No, AllocMem_Yes );
 
