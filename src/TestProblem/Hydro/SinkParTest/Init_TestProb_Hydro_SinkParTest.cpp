@@ -210,7 +210,7 @@ void SetParameter()
    ColIdx_VelZ   =  5;
    size = 129;
 
-   if (( size - 1 < NX0_TOT_X) || ( size - 1 < NX0_TOT_Y) || ( size - 1 < NX0_TOT_Z))
+   if (( size - 1 < NX0_TOT[0]) || ( size - 1 < NX0_TOT[1]) || ( size - 1 < NX0_TOT[2]))
       Aux_Error( ERROR_INFO, "size - 1 should be smaller than half of NX0_TOT_X/Y/Z !!\n" );
 
 
