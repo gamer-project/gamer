@@ -509,11 +509,6 @@ static void EoS_General_Barotropic_SinkParTest( const int Mode, real Out[], cons
    if ( AuxArray_Int == NULL )   printf( "ERROR : AuxArray_Int == NULL in %s !!\n", __FUNCTION__ );
 #  endif // GAMER_DEBUG
 
-
-   /*
-   if ( Mode == ... )   Out[...] = ...;
-   */
-
 } // FUNCTION : EoS_General_Barotropic_SinkParTest
 
 
