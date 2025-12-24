@@ -212,13 +212,14 @@ void SetParameter()
 
 
 // (2) set the problem-specific derived parameters
-   SinkParTest_Core_Mass *= Const_Msun;
-   SinkParTest_Cs = SQRT( ( Const_kB*ISO_TEMP/UNIT_E ) / ( MOLECULAR_WEIGHT*Const_amu/UNIT_M ));
-   SinkParTest_R0 /= UNIT_L;
-   SinkParTest_Rho0 = 3.0 * SinkParTest_Core_Mass / (4.0 * M_PI * CUBE(SinkParTest_R0));
-   SinkParTest_Omega0 /= 1/UNIT_T;
-   SinkParTest_rho_AD /= UNIT_D;
-   SinkParTest_theta_B = SinkParTest_theta_B*M_PI/180; // degree to radian
+   SinkParTest_Core_Mass *= Const_Msun/UNIT_M;
+   SinkParTest_Cs         = SQRT( ( Const_kB*ISO_TEMP/UNIT_E ) / ( MOLECULAR_WEIGHT*Const_amu/UNIT_M ));
+   SinkParTest_R0         /= UNIT_L;
+   SinkParTest_Rho0       = 3.0 * SinkParTest_Core_Mass / (4.0 * M_PI * CUBE(SinkParTest_R0));
+   SinkParTest_Omega0     /= 1/UNIT_T;
+   SinkParTest_rho_AD     /= UNIT_D;
+   SinkParTest_theta_B    = SinkParTest_theta_B*M_PI/180; // degree to radian
+   SinkParTest_B0         /= UNIT_B;
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
@@ -356,10 +357,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    int j = (int) ( ( y / amr->BoxSize[1] ) * size );
    int k = (int) ( ( z / amr->BoxSize[2] ) * size );
    int index = i * SQR(size) + j * size + k;
-   if ( i < 0 || i > size   ) Aux_Error( ERROR_INFO, "index is out of bound\n,  i = %d", i  );
-   if ( j < 0 || j > size   ) Aux_Error( ERROR_INFO, "index is out of bound\n,  j = %d", j  );
-   if ( k < 0 || k > size   ) Aux_Error( ERROR_INFO, "index is out of bound\n,  k = %d", k );
-   if ( index < 0 || index > tur_table_NBin ) Aux_Error( ERROR_INFO, "index is out of bound\n, index = %d", index );
+   if ( i < 0 || i > size   ) Aux_Error( ERROR_INFO, "index is out of bound,  i = %d", i  );
+   if ( j < 0 || j > size   ) Aux_Error( ERROR_INFO, "index is out of bound,  j = %d", j  );
+   if ( k < 0 || k > size   ) Aux_Error( ERROR_INFO, "index is out of bound,  k = %d", k );
+   if ( index < 0 || index > tur_table_NBin ) Aux_Error( ERROR_INFO, "index is out of bound, index = %d", index );
 
    VelX = Table_Rescaled_VelX[ index ];
    VelY = Table_Rescaled_VelY[ index ];
@@ -415,8 +416,8 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
                   const int lv, double AuxArray[] )
 {
    double MagX = 0.0, MagY = 0.0, MagZ = 0.0;
-   MagZ = SinkParTest_B0*COS(SinkParTest_theta_B)/UNIT_B;
-   MagY = SinkParTest_B0*SIN(SinkParTest_theta_B)/UNIT_B;
+   MagZ = SinkParTest_B0*COS(SinkParTest_theta_B);
+   MagY = SinkParTest_B0*SIN(SinkParTest_theta_B);
 
    magnetic[MAGX] = MagX;
    magnetic[MAGY] = MagY;
