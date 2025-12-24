@@ -52,16 +52,12 @@ extern double SinkParTest_rho_AD;
 #ifndef __CUDACC__
 void EoS_SetAuxArray_Barotropic_SinkParTest( double AuxArray_Flt[], int AuxArray_Int[] )
 {
-
-   AuxArray_Flt[0] = GAMMA;
-   AuxArray_Flt[1] = GAMMA - 1.0;
-   AuxArray_Flt[2] = 1.0 / ( GAMMA - 1.0 );
-   AuxArray_Flt[3] = 1.0 / GAMMA;
-   AuxArray_Flt[4] = ( OPT__UNIT ) ? MOLECULAR_WEIGHT * MU_NORM / Const_kB * (UNIT_E/UNIT_M)
-                                   : MOLECULAR_WEIGHT;
-   AuxArray_Flt[5] = 1.0 / AuxArray_Flt[4];
-   AuxArray_Flt[6] = ISO_TEMP;
-   AuxArray_Flt[7] = SinkParTest_rho_AD;
+   AuxArray_Flt[0] = GAMMA - 1.0;
+   AuxArray_Flt[1] = 1.0 / ( GAMMA - 1.0 );
+   AuxArray_Flt[2] = 1.0 / (( OPT__UNIT ) ? MOLECULAR_WEIGHT * MU_NORM / Const_kB * (UNIT_E/UNIT_M)
+                                          : MOLECULAR_WEIGHT);
+   AuxArray_Flt[3] = ISO_TEMP;
+   AuxArray_Flt[4] = SinkParTest_rho_AD;
 
    if ( MPI_Rank == 0 )
    {
@@ -124,10 +120,10 @@ static real EoS_DensEint2Pres_Barotropic_SinkParTest( const real Dens, const rea
 #  endif // GAMER_DEBUG
 
 
-   const real Gamma_m1  = (real)AuxArray_Flt[1];
-   const real _m_kB     = (real)AuxArray_Flt[5];
-   const real T0        = (real)AuxArray_Flt[6];
-   const real SinkParTest_rho_AD    = (real)AuxArray_Flt[7];
+   const real Gamma_m1  = (real)AuxArray_Flt[0];
+   const real _m_kB     = (real)AuxArray_Flt[2];
+   const real T0        = (real)AuxArray_Flt[3];
+   const real SinkParTest_rho_AD    = (real)AuxArray_Flt[4];
    real Temp, Cs2, Pres;
 
    Temp = T0*( 1+ POW( Dens / SinkParTest_rho_AD, Gamma_m1 ) );
@@ -194,7 +190,7 @@ static real EoS_DensPres2Eint_Barotropic_SinkParTest( const real Dens, const rea
 #  endif // GAMER_DEBUG
 
 
-   const real _Gamma_m1 = (real)AuxArray_Flt[2];
+   const real _Gamma_m1 = (real)AuxArray_Flt[1];
    real Eint;
 
    Eint = Pres * _Gamma_m1;
@@ -259,10 +255,10 @@ static real EoS_DensPres2CSqr_Barotropic_SinkParTest( const real Dens, const rea
                        ERROR_INFO, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
-   const real Gamma_m1  = (real)AuxArray_Flt[1];
-   const real _m_kB     = (real)AuxArray_Flt[5];
-   const real T0        = (real)AuxArray_Flt[6];
-   const real SinkParTest_rho_AD    = (real)AuxArray_Flt[7];
+   const real Gamma_m1  = (real)AuxArray_Flt[0];
+   const real _m_kB     = (real)AuxArray_Flt[2];
+   const real T0        = (real)AuxArray_Flt[3];
+   const real SinkParTest_rho_AD    = (real)AuxArray_Flt[4];
    real Temp, Cs2;
 
    Temp = T0*( 1+ POW( Dens / SinkParTest_rho_AD, Gamma_m1 ) );
@@ -325,9 +321,9 @@ static real EoS_DensEint2Temp_Barotropic_SinkParTest( const real Dens, const rea
    //                     ERROR_INFO, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
-   const real Gamma_m1  = (real)AuxArray_Flt[1];
-   const real T0        = (real)AuxArray_Flt[6];
-   const real SinkParTest_rho_AD    = (real)AuxArray_Flt[7];
+   const real Gamma_m1  = (real)AuxArray_Flt[0];
+   const real T0        = (real)AuxArray_Flt[3];
+   const real SinkParTest_rho_AD    = (real)AuxArray_Flt[4];
    real Temp;
 
    Temp = T0*( 1+ POW( Dens / SinkParTest_rho_AD, Gamma_m1 ) );
@@ -388,7 +384,7 @@ static real EoS_DensTemp2Pres_Barotropic_SinkParTest( const real Dens, const rea
                        ERROR_INFO, UNPHY_VERBOSE );
 #  endif // GAMER_DEBUG
 
-   const real _m_kB     = (real)AuxArray_Flt[5];
+   const real _m_kB     = (real)AuxArray_Flt[2];
    real Cs2, Pres;
 
    Cs2  = Temp*_m_kB;
