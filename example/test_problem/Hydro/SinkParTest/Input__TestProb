@@ -1,12 +1,12 @@
 # problem-specific runtime parameters
 # The following parameters follow Hubber et al. 2018
-R0                           3.0856776e+16  # [cm]
-Omega0                       1.6e-12        # [s^-1]
-Core_Mass                    1.0            # [M_sun]
-Delta_Dens                   0.5            # m=2 density perturbation
-Dens_Contrast                100            # density contrast outside R0
-B0                           0.0            # B field strenght [G]
-theta_B                      0.0            # angle between B and z-axis [degree]
-Mach_num                     0.0            # Mach number for turbulence
-rho_AD_SinkParTest           1e-14          # transition density for Barotropic EOS [g/cm^-3]
-Tur_Table                    Tur_Table.dat  # the turbulence table
+R0                           3.0856776e+16  # The radius of the spherical cloud (in cm) [3.0e16]
+Omega0                       1.6e-12        # Angular velocity of the cloud (in s^-1) [0.0]
+Core_Mass                    1.0            # The mass of the cloud (in M_sun) [1.0]
+Delta_Dens                   0.5            # m=2 density perturbation [0.1]
+Dens_Contrast                100            # Density contrast outside R0 [100]
+B0                           0.0            # B field strenght (in G) [0.0]
+theta_B                      0.0            # Angle between B and z-axis (in degree) [0.0]
+Mach_num                     0.0            # Mach number for turbulence [0.0]
+rho_AD_SinkParTest           1e-14          # Transition density for Barotropic EOS (in g/cm^-3) [1e-14]
+Tur_Table                    Tur_Table.dat  # The turbulence table
