@@ -413,14 +413,17 @@ and `NUM_PARTICLE` is the total number of particles
 By default, `NUM_ATTRIBUTE` is equal to
 `7` + [[--par_attribute_flt | Installation:-Option-List#--par_attribute_flt]] + [[--par_attribute_int | Installation:-Option-List#--par_attribute_int]],
 corresponding to particle mass, position x/y/z, velocity x/y/z,
-type, and user-specified attributes (and in exactly this order).
+type, UID, and user-specified attributes (and in exactly this order).
 One can also use [[PAR_IC_MASS | Runtime-Parameters:-Particles#PAR_IC_MASS]] / [[PAR_IC_TYPE | Runtime-Parameters:-Particles#PAR_IC_TYPE]]
 to assign the same particle mass / type to all particles,
 in which case the file `PAR_IC` should not store particle mass / type.
+One should turn off [[PAR_IC_PUID | Runtime-Parameters:-Particles#PAR_IC_PUID]]
+to assign new particle UID to all particles when the file `PAR_IC` does not store existing particle UID.
 
 The following C++ example constructs a particle initial condition
 file with 1000 particles assuming [[PAR_IC_MASS | Runtime-Parameters:-Particles#PAR_IC_MASS]]<0,
 [[PAR_IC_TYPE | Runtime-Parameters:-Particles#PAR_IC_TYPE]]<0,
+[[PAR_IC_PUID | Runtime-Parameters:-Particles#PAR_IC_PUID]]=1,
 and [[PAR_IC_FORMAT | Runtime-Parameters:-Particles#PAR_IC_FORMAT]]=1.
 
 ```c++
@@ -466,6 +469,7 @@ int main()
       ParIC_Flt[6][p] = 7.7;   // velocity z
 
       ParIC_Int[0][p] = 1;     // type (generic massive)
+      ParIC_Int[1][p] = p+1;   // UID
    }
 
    FILE *File = fopen( "PAR_IC", "wb" );
@@ -522,6 +526,8 @@ Other related parameters:
 [[PAR_INIT | Runtime-Parameters:-Particles#PAR_INIT]], &nbsp;
 [[PAR_IC_FORMAT | Runtime-Parameters:-Particles#PAR_IC_FORMAT]], &nbsp;
 [[PAR_IC_MASS | Runtime-Parameters:-Particles#PAR_IC_MASS]], &nbsp;
+[[PAR_IC_TYPE | Runtime-Parameters:-Particles#PAR_IC_TYPE]], &nbsp;
+[[PAR_IC_PUID | Runtime-Parameters:-Particles#PAR_IC_PUID]], &nbsp;
 [[OPT__INIT_GRID_WITH_OMP | Runtime-Parameters:-MPI-and-OpenMP#OPT__INIT_GRID_WITH_OMP]] &nbsp;
 
 

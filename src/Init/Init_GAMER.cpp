@@ -221,8 +221,6 @@ void Init_GAMER( int *argc, char ***argv )
                     "PAR_INIT", (int)amr->Par->Init );
    }
 
-   if ( amr->Par->Init != PAR_INIT_BY_RESTART )   Par_SetParUID( true );
-
    if ( amr->Par->Init != PAR_INIT_BY_RESTART  &&  OPT__PAR_INIT_CHECK )    Par_Aux_InitCheck();
 #  endif // #ifdef PARTICLE
 
@@ -331,6 +329,20 @@ void Init_GAMER( int *argc, char ***argv )
 
 // user-defined initialization (after the Poisson solver)
    if ( Init_User_AfterPoisson_Ptr != NULL )    Init_User_AfterPoisson_Ptr();
+
+
+#  ifdef PARTICLE
+// assign initial particle UID AFTER all the routines possibly adding particles,
+// including Par_Init_ByFunction_Ptr(), Par_Init_ByFile(),
+//           AddParticle() in Init_ByRestart(),
+//           Par_AddParticleAfterInit() in Init_User_Ptr() and Init_User_AfterPoisson_Ptr()
+   const bool SetParUIDInitStage_Yes = true;
+   Par_SetParUID( SetParUIDInitStage_Yes );
+
+// only check here if it will not check later in Aux_Check()
+   if ( OPT__PAR_INIT_CHECK  &&  !OPT__CK_PARTICLE )
+      Par_Aux_Check_Particle( "Initial particle check after Par_SetParUID" );
+#  endif // #ifdef PARTICLE
 
 
 // initialize source-term fields (e.g., cooling time)

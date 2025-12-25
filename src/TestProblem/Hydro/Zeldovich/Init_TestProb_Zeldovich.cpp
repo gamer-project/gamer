@@ -546,7 +546,7 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
    {
       ParTime[p] = (real_par)Time[0];
       ParType[p] = PTYPE_GENERIC_MASSIVE;
-      ParPUid[p] = (long_par)-1;
+      ParPUid[p] = PPUID_TBA;
    }
 
 // free memory
