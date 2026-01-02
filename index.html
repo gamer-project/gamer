@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JS Square Dodge</title>
+    <style>
+        body { margin: 0; background: #222; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; font-family: sans-serif; overflow: hidden; }
+        canvas { border: 2px solid #fff; background: #000; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="400" height="600"></canvas>
+    <script src="game.js"></script>
+</body>
+</html>
+2. The Game Logic (JavaScript)
+Create a file named game.js in the same folder. This script handles the movement, the "enemy" spawning, and collision detection.
+
+JavaScript
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+// Game Variables
+let score = 0;
+let gameActive = true;
+
+// Player Object
+const player = {
+    x: 185,
+    y: 540,
+    size: 30,
+    speed: 7,
+    color: "#00FF00"
+};
+
+// Enemy Settings
+const enemies = [];
+const enemySpeed = 4;
+
+// Input Handling
+let keys = {};
+window.addEventListener("keydown", (e) => keys[e.code] = true);
+window.addEventListener("keyup", (e) => keys[e.code] = false);
+
+function spawnEnemy() {
+    if (Math.random() < 0.05) { // 5% chance per frame to spawn
+        enemies.push({
+            x: Math.random() * (canvas.width - 30),
+            y: -30,
+            size: 30,
+            color: "#FF0000"
+        });
+    }
+}
+
+function update() {
+    if (!gameActive) return;
+
+    // Move Player
+    if (keys["ArrowLeft"] && player.x > 0) player.x -= player.speed;
+    if (keys["ArrowRight"] && player.x < canvas.width - player.size) player.x += player.speed;
+
+    // Move Enemies
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        enemies[i].y += enemySpeed;
+
+        // Collision Detection
+        if (
+            player.x < enemies[i].x + enemies[i].size &&
+            player.x + player.size > enemies[i].x &&
+            player.y < enemies[i].y + enemies[i].size &&
+            player.y + player.size > enemies[i].y
+        ) {
+            gameActive = false;
+            alert("Game Over! Score: " + score);
+            location.reload(); // Restart game
+        }
+
+        // Remove off-screen enemies and add score
+        if (enemies[i].y > canvas.height) {
+            enemies.splice(i, 1);
+            score++;
+        }
+    }
+
+    spawnEnemy();
+}
+
+function draw() {
+    // Clear Canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw Player
+    ctx.fillStyle = player.color;
+    ctx.fillRect(player.x, player.y, player.size, player.size);
+
+    // Draw Enemies
+    ctx.fillStyle = "#FF0000";
+    for (let enemy of enemies) {
+        ctx.fillRect(enemy.x, enemy.y, enemy.size, enemy.size);
+    }
+
+    // Draw Score
+    ctx.fillStyle = "white";
+    ctx.font = "20px Arial";
+    ctx.fillText("Score: " + score, 10, 30);
+
+    requestAnimationFrame(gameLoop);
+}
+
+function gameLoop() {
+    update();
+    draw();
+}
+
+gameLoop();
