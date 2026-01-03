@@ -603,6 +603,12 @@ void Aux_TakeNote()
 
 #     ifdef MHM_CHECK_PREDICT
       fprintf( Note, "MHM_CHECK_PREDICT               ON\n" );
+#     ifndef SRHD
+      fprintf( Note, "MHM_REPREDICT_ITER_NUM         % d\n",     MHM_REPREDICT_ITER_NUM       );
+      fprintf( Note, "MHM_REPREDICT_STEPS_SAFE_FAC   % 14.7e\n", MHM_REPREDICT_STEPS_SAFE_FAC );
+      fprintf( Note, "MHM_REPREDICT_SLOPE_SAFE_FAC   % 14.7e\n", MHM_REPREDICT_SLOPE_SAFE_FAC );
+      fprintf( Note, "MHM_REPREDICT_SUBSTEPS_MAX     % d\n",     MHM_REPREDICT_SUBSTEPS_MAX   );
+#     endif // #ifndef SRHD
 #     else
       fprintf( Note, "MHM_CHECK_PREDICT               OFF\n" );
 #     endif
