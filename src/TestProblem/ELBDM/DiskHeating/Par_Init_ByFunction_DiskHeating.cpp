@@ -138,7 +138,7 @@ void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_
       ParVelY[p] = ParData1[5];
       ParVelZ[p] = ParData1[6];
       ParType[p] = (long_par)ParData1[7]; // 1=CDM halo, 2=disk
-      ParPUid[p] = (long_par)-1;
+      ParPUid[p] = PPUID_TBA;
 
 //    synchronize all particles to the physical time at the base level
       amr->Par->Time[p] = Time[0];

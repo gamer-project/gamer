@@ -84,7 +84,8 @@ void SF_CreateStar( const int lv, const real TimeNew, const real dt )
    } // switch ( SF_CREATE_STAR_SCHEME )
 
 // set new UID for the new particles
-   Par_SetParUID( false );
+   const bool SetParUIDInitStage_No = false;
+   Par_SetParUID( SetParUIDInitStage_No );
 
 } // FUNCTION : SF_CreateStar
 

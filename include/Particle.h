@@ -39,6 +39,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                ParICFormat             : Data format of the particle initialization file (1=[att][id], 2=[id][att])
 //                ParICMass               : Assign this mass to all particles for Init=3
 //                ParICType               : Assign this type to all particles for Init=3
+//                ParICPUid               : Assign particle UID from the file to all particles for Init=3
 //                Interp                  : Mass/acceleration/velocity interpolation scheme (NGP,CIC,TSC)
 //                InterpTracer            : Mass/acceleration/velocity interpolation scheme for tracers (NGP,CIC,TSC)
 //                Integ                   : Integration scheme (PAR_INTEG_EULER, PAR_INTEG_KDK)
@@ -127,6 +128,7 @@ struct Particle_t
    ParICFormat_t ParICFormat;
    double        ParICMass;
    int           ParICType;
+   bool          ParICPUid;
    ParInteg_t    Integ;
    ParInterp_t   Interp;
    TracerInteg_t IntegTracer;
@@ -137,7 +139,7 @@ struct Particle_t
    double        RemoveCell;
    int           GhostSize;
    int           GhostSizeTracer;
-   long_par      NextUID;
+   long          NextUID;
    real_par     *AttributeFlt[PAR_NATT_FLT_TOTAL];
    long_par     *AttributeInt[PAR_NATT_INT_TOTAL];
    long         *InactiveParList;
@@ -203,6 +205,7 @@ struct Particle_t
       ParICFormat         = PAR_IC_FORMAT_NONE;
       ParICMass           = -1.0;
       ParICType           = -1;
+      ParICPUid           = false;
       Interp              = PAR_INTERP_NONE;
       InterpTracer        = PAR_INTERP_NONE;
       Integ               = PAR_INTEG_NONE;
@@ -467,6 +470,10 @@ struct Particle_t
 
       if ( NewAttInt[PAR_TYPE] < (long_par)0  ||  NewAttInt[PAR_TYPE] >= (long_par)PAR_NTYPE )
          Aux_Error( ERROR_INFO, "Incorrect particle type (%ld) !!\n", (long)NewAttInt[PAR_TYPE] );
+
+      if ( ( NewAttInt[PAR_PUID] != PPUID_TBA )  &&
+           ( NewAttInt[PAR_PUID] <= (long_par)0  ||  NewAttInt[PAR_PUID] >= NextUID ) )
+         Aux_Error( ERROR_INFO, "Incorrect particle UID (%ld) !!\n", (long)NewAttInt[PAR_PUID] );
 #     endif
 
 

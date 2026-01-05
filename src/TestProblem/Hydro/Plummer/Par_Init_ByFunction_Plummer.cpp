@@ -199,7 +199,7 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
    for (long p=0; p<NPar_ThisRank; p++) {
       ParTime[p] = (real_par)Time[0];
       ParType[p] = PTYPE_GENERIC_MASSIVE;
-      ParPUid[p] = (long_par)-1;
+      ParPUid[p] = PPUID_TBA;
    }
 
 // free resource

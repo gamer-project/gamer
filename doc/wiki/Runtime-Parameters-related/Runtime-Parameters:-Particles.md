@@ -6,6 +6,7 @@ Parameters described on this page:
 [PAR_IC_INT8](#PAR_IC_INT8), &nbsp;
 [PAR_IC_MASS](#PAR_IC_MASS), &nbsp;
 [PAR_IC_TYPE](#PAR_IC_TYPE), &nbsp;
+[PAR_IC_PUID](#PAR_IC_PUID), &nbsp;
 [PAR_INTERP](#PAR_INTERP), &nbsp;
 [PAR_INTEG](#PAR_INTEG), &nbsp;
 [PAR_TR_INTERP](#PAR_TR_INTERP), &nbsp;
@@ -82,6 +83,17 @@ See also
 Assigning this particle type to all particles when adopting
 [PAR_INIT](#PAR_INIT)=3. Note that when enabling this functionality (by setting `PAR_IC_TYPE`&#8805;0),
 the particle initial condition file `PAR_IC` should not include the particle type data.
+See also
+[[Setting IC from Files &#8212; Particles | Initial Conditions#IC-File-Particles]].
+    * **Restriction:**
+
+<a name="PAR_IC_PUID"></a>
+* #### `PAR_IC_PUID` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Whether there are existing particle UID to all particles when adopting
+[PAR_INIT](#PAR_INIT)=3. Note that when the particle initial condition file `PAR_IC`
+does not include the particle UID data,
+one should turn this off and the new particle UID will be assigned internally.
 See also
 [[Setting IC from Files &#8212; Particles | Initial Conditions#IC-File-Particles]].
     * **Restriction:**

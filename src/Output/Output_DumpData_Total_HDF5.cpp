@@ -1694,6 +1694,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    KeyInfo.NMagStored           = NCOMP_MAG;
 #  ifdef PARTICLE
    KeyInfo.Par_NPar             = amr->Par->NPar_Active_AllRank;
+   KeyInfo.Par_NextUID          = amr->Par->NextUID;
    KeyInfo.Par_NAttFltStored    = PAR_NATT_FLT_STORED;
    KeyInfo.Par_NAttIntStored    = PAR_NATT_INT_STORED;
 #  ifdef FLOAT8_PAR
@@ -2403,6 +2404,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Par_ICFormat            = amr->Par->ParICFormat;
    InputPara.Par_ICMass              = amr->Par->ParICMass;
    InputPara.Par_ICType              = amr->Par->ParICType;
+   InputPara.Par_ICPUid              = amr->Par->ParICPUid;
    InputPara.Par_ICFloat8            = PAR_IC_FLOAT8;
    InputPara.Par_ICInt8              = PAR_IC_INT8;
    InputPara.Par_Interp              = amr->Par->Interp;
@@ -3028,6 +3030,7 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "NMagStored",           HOFFSET(KeyInfo_t,NMagStored          ), H5T_NATIVE_INT          );
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Par_NPar",             HOFFSET(KeyInfo_t,Par_NPar            ), H5T_NATIVE_LONG         );
+   H5Tinsert( H5_TypeID, "Par_NextUID",          HOFFSET(KeyInfo_t,Par_NextUID         ), H5T_NATIVE_LONG         );
    H5Tinsert( H5_TypeID, "Par_NAttFltStored",    HOFFSET(KeyInfo_t,Par_NAttFltStored   ), H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "Par_NAttIntStored",    HOFFSET(KeyInfo_t,Par_NAttIntStored   ), H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "Float8_Par",           HOFFSET(KeyInfo_t,Float8_Par          ), H5T_NATIVE_INT          );
@@ -3443,6 +3446,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Par_ICFormat",            HOFFSET(InputPara_t,Par_ICFormat           ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ICMass",              HOFFSET(InputPara_t,Par_ICMass             ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Par_ICType",              HOFFSET(InputPara_t,Par_ICType             ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Par_ICPUid",              HOFFSET(InputPara_t,Par_ICPUid             ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ICFloat8",            HOFFSET(InputPara_t,Par_ICFloat8           ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ICInt8",              HOFFSET(InputPara_t,Par_ICInt8             ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_Interp",              HOFFSET(InputPara_t,Par_Interp             ), H5T_NATIVE_INT     );

@@ -156,7 +156,7 @@ void Par_Init_ByFunction_HaloMerger( const long NPar_ThisRank, const long NPar_A
    {
       ParTime[p] = Time[0];
       ParType[p] = PTYPE_GENERIC_MASSIVE;
-      ParPUid[p] = (long_par)-1;
+      ParPUid[p] = PPUID_TBA;
    }
 
 // free resource

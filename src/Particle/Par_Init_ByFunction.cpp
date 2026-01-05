@@ -73,6 +73,7 @@ void Par_Init_ByFunction_Template( const long NPar_ThisRank, const long NPar_All
    {
       ParTime[p] = Time[0];
       ParType[p] = PTYPE_GENERIC_MASSIVE;
+      ParPUid[p] = PPUID_TBA;
    }
 
 
