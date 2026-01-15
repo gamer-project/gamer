@@ -1571,11 +1571,11 @@ void ReadOption( int argc, char **argv )
 
       fprintf( stdout, "NOTE : option \"GetAvePot (-g)\" is turned on automatically for \"ELBDM_GetVir (-V)\"\n" );
    }
-   if ( ELBDM_GetVir  &&  !OutputSphVel )
+   if ( OutputSphVel  &&  !ELBDM_GetVir )
    {
-      OutputSphVel = true;
+      ELBDM_GetVir = true;
 
-      fprintf( stdout, "NOTE : option \"OutputSphVel (-O)\" is turned on automatically for \"ELBDM_GetVir (-V)\"\n" );
+      fprintf( stdout, "NOTE : option \"ELBDM_GetVir (-O)\" is turned on automatically for \"OutputSphVel (-O)\" in ELBDM mode\n" );
    }
 #  endif
 
