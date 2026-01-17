@@ -2,7 +2,7 @@ import numpy as np
 import argparse
 
 '''
-Usage: python generate_TubulentVelocityField.py -n [power law index] -kmin [kmin] -seed [random seed]
+Usage: python generate_TubulentVelocityField.py -n [power law index] -kmin [kmin] -seed [random seed] -nmodes [number of modes]
 Author: Hsinhao Huang and S. D. Clarke
 Reference: O. Lomax et al., 2015, MNRAS, 449, 662
 '''
