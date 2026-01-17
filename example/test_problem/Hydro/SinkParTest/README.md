@@ -18,12 +18,12 @@ Simulation setup:
     - `FB_ACC`: Turn on particle accretion [0]. Note that `SF_CREATE_SINK_MIN_GAS_DENS` and `SF_CREATE_SINK_ACC_RADIUS` will be used.  
   
 4. Create turbulence table:  
-    To generate the turbulence table (`Tur_Table.dat`, even the turbulence Mach number is set to 0), run `python VG_turb.py [power law index/2] [kmin] [random seed]`, where  
-    - `power law index`: It is the power law index ($\alpha$) for turbulent energy power spectrum $\propto k^{\alpha}$ and $k$ is the wave number.  
-    - `kmin`: It is the minimum wave number in the unit  of base cell number.  
+    To generate the turbulence table (`Tur_Table.dat`, even the turbulence Mach number is set to 0), run `python generate_TubulentVelocityField.py -n [n] -kmin [kmin] -seed [random seed]`, where  
+    - `n`: It is the power law index for turbulent energy power spectrum $\propto k^{n}$ and $k$ is the wave number.  For Kolmogorov and Burgers turbulence, $n = -11/3$ and $-4$ respectively.  
+    - `kmin`: It is the minimum wave number in the unit of base cell number.  
     - `random seed`: A random seed in order to get different turbulence realization.  
   
-    Example usage: `python VG_turb.py -2 1 0` will generate a turbulence velocity field with energy power spectrum $\propto k^{-4}$.  
+    Example usage: `python generate_TubulentVelocityField.py -n -4 -kmin 1 -seed 0` will generate a turbulence velocity field with energy power spectrum $\propto k^{-4}$.  
   
     The creation of trubulence is following O. Lomax et al., 2015, MNRAS, 449, 662.  
 
