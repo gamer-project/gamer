@@ -401,9 +401,11 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                                                    ERROR_INFO, UNPHY_SILENCE )  )
                      Fail_ThisCell = true;
 
+#                 ifdef CHECK_E2P
                   if (  Hydro_IsUnphysical_Single( Pres, "interpolated pressure",        (real)0.0, HUGE_NUMBER,
                                                    ERROR_INFO, UNPHY_SILENCE )  )
                      Fail_ThisCell = true;
+#                 endif
                } // if ( EoS_DensPres2Eint_CPUPtr != NULL )
             } // if ( FData_is_Prim )
 
