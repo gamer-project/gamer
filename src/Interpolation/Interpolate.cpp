@@ -362,7 +362,13 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
 //       5-3. additional check
          real Eint=NULL_REAL;
+//       check the Eint --> Pres conversion for general EoS
+#        if ( EOS != EOS_GAMMA  &&  EOS != EOS_COSMIC_RAY  &&  !defined BAROTROPIC_EOS )
+#           define CHECK_E2P
+#        endif
+#        ifdef CHECK_E2P
          real Pres=NULL_REAL;
+#        endif
 
          if ( !Fail_ThisCell )
          {
@@ -384,8 +390,10 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
                   Eint = EoS_DensPres2Eint_CPUPtr( Temp[DENS], Temp[ENGY], Passive,
                                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#                 ifdef CHECK_E2P
                   Pres = EoS_DensEint2Pres_CPUPtr( Temp[DENS], Eint,       Passive,
                                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#                 endif
 
 //                internal energy cannot be negative (even within machine precision) since a pressure floor has been applied
 //                when calling Hydro_Con2Pri()
