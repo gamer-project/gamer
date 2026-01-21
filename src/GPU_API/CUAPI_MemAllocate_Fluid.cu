@@ -209,7 +209,8 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
    }
 
 #  ifdef EXACT_COOLING
-   TotalSize += EC_TEF_lambda_MemSize + EC_TEF_alpha_MemSize + EC_TEFc_MemSize;
+   if ( SrcTerms.ExactCooling )
+      TotalSize += EC_TEF_lambda_MemSize + EC_TEF_alpha_MemSize + EC_TEFc_MemSize;
 #  endif
 
    if ( MPI_Rank == 0 )

@@ -1,12 +1,12 @@
 Compilation flags:
 ========================================
 Enable : HYDRO
-Disable: PARTICLE, GRAVITY
+Disable: PARTICLE, GRAVITY, MHD
 
 
 Default setup:
 ========================================
-1. BOX_SIZE = 1kpc
+1. BOX_SIZE = 1 kpc
 2. simulation time = 100 Myr
 3. Units: in cgs
 4. Enable SRC_EXACTCOOLING
@@ -16,6 +16,6 @@ Note:
 ========================================
 1. This test problem is for testing the exact cooling scheme (reference: Farber et al. 2018)
 2. Modify the source term ExactCooling to have only one branch of the cooling function
-3. The analytical solution and simulation error will be recorded in Output__Error file when OPT__OUTPUT_USER is enabled.
+3. The analytical solution and simulation error will be recorded in the Record__CoolingErr file when OPT__OUTPUT_USER is enabled.
 4. plot_ExactCooling.py is for plotting the evolution of temperature.
 

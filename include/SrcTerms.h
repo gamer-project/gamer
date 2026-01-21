@@ -78,7 +78,7 @@ struct SrcTerms_t
    int       Dlep_Profile_NBin;
 #  endif
 
-// exactCooling
+// exact cooling
 #  ifdef EXACT_COOLING
    SrcFunc_t EC_FuncPtr;
    SrcFunc_t EC_CPUPtr;

@@ -52,7 +52,18 @@ void Validate()
 #  endif
    
    if ( ! SrcTerms.ExactCooling )   Aux_Error( ERROR_INFO, "SRC_EXACTCOOLING must be enabled !!\n" );
+#  ifdef MHD
+   Aux_Error( ERROR_INFO, "MHD must be disabled !!\n" );
+#  endif
+   
+   if ( ! SrcTerms.ExactCooling )   Aux_Error( ERROR_INFO, "SRC_EXACTCOOLING must be enabled !!\n" );
 
+// warnings
+   if ( MPI_Rank == 0 )
+   {
+      if ( !OPT__OUTPUT_USER )   Aux_Message( stderr, "WARNING : OPT__OUTPUT_USER is off !!\n" );
+   }
+   
 // warnings
    if ( MPI_Rank == 0 )
    {
