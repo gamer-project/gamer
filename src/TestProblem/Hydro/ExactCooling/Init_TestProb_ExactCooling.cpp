@@ -32,8 +32,8 @@ void Validate()
    Aux_Error( ERROR_INFO, "MODEL != HYDRO !!\n" );
 #  endif
 
-#  ifndef GRAVITY
-   Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
+#  ifdef GRAVITY
+   Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
 #  endif
 
 #  ifndef EXACT_COOLING
@@ -47,7 +47,18 @@ void Validate()
 #  ifdef PARTICLE
    Aux_Error( ERROR_INFO, "PARTICLE must be disabled !!\n" );
 #  endif
+#  ifdef MHD
+   Aux_Error( ERROR_INFO, "MHD must be disabled !!\n" );
+#  endif
+   
+   if ( ! SrcTerms.ExactCooling )   Aux_Error( ERROR_INFO, "SRC_EXACTCOOLING must be enabled !!\n" );
 
+// warnings
+   if ( MPI_Rank == 0 )
+   {
+      if ( !OPT__OUTPUT_USER )   Aux_Message( stderr, "WARNING : OPT__OUTPUT_USER is off !!\n" );
+   }
+   
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
 
 } // FUNCTION : Validate
@@ -274,17 +285,18 @@ void Output_ExactCooling()
    double Tcool_nume    = 0.0;
    int    count         = 0;
 
-   for (int k=1; k<PS1; k++) {
-   for (int j=1; j<PS1; j++) {
-   for (int i=1; i<PS1; i++) {
-      for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][0]->fluid[v][k][j][i];
+   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+   for (int k=0; k<PS1; k++) {
+   for (int j=0; j<PS1; j++) {
+   for (int i=0; i<PS1; i++) {
+      for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
       Temp_nume_tmp = Hydro_Con2Temp( fluid[0], fluid[1], fluid[2], fluid[3], fluid[4], fluid+NCOMP_FLUID,
-                                      true, MIN_TEMP, 0.0, EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr,
+                                      true, MIN_TEMP, PassiveFloorMask, 0.0, EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr,
                                       EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       Tcool_nume += 1.0/(GAMMA-1)*(Const_kB*cl_moli_mole*Temp_nume_tmp)/(fluid[0]*UNIT_D/MU_NORM*cl_mol*3.2217e-27*sqrt(Temp_nume_tmp))/Const_Myr;
       Temp_nume += Temp_nume_tmp;
       count += 1;
-   }}} // i, j, k
+   }}} // i, j, k, PID
    Temp_nume  /= count;
    Tcool_nume /= count;
 

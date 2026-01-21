@@ -81,7 +81,7 @@ void Src_Init()
    SrcTerms.EC_TEF_lambda_DevPtr      = NULL;
    SrcTerms.EC_TEF_alpha_DevPtr       = NULL;
    SrcTerms.EC_TEFc_DevPtr            = NULL;
-#  endif
+#  endif // #ifdef EXACT_COOLING
 
    SrcTerms.User_FuncPtr              = NULL;
    SrcTerms.User_CPUPtr               = NULL;
@@ -121,7 +121,7 @@ void Src_Init()
       if ( SrcTerms.EC_GPUPtr  == NULL )   Aux_Error( ERROR_INFO, "SrcTerms.EC_GPUPtr  == NULL !!\n" );
 #     endif
    }
-#  endif
+#  endif // #ifdef EXACT_COOLING
 
 // (3) user-specified source term
    if ( SrcTerms.User )
