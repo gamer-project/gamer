@@ -1,4 +1,3 @@
-#include "CUFLU.h"
 #include "Global.h"
 
 #ifdef EXACT_COOLING
@@ -7,6 +6,7 @@
 // external functions and GPU-related set-up
 #ifdef __CUDACC__
 
+#include "CUFLU.h"
 #include "CUDA_CheckError.h"
 #include "CUFLU_Shared_FluUtility.cu"
 #include "CUDA_ConstMemory.h"
@@ -35,7 +35,6 @@ void Src_SetGPUFunc_ExactCooling( SrcFunc_t & );
 #ifdef GPU
 void CUAPI_MemFree_ExactCooling();
 #endif
-static bool IsInit = false;
 void Src_WorkBeforeMajorFunc_ExactCooling( const int lv, const double TimeNew, const double TimeOld, const double dt,
                                            double AuxArray_Flt[], int AuxArray_Int[] );
 void Src_End_ExactCooling();
@@ -221,9 +220,7 @@ double TEFinv( double Y, int k, const double TEF_lambda[], const double TEF_alph
 // Function    :  Src_WorkBeforeMajorFunc_ExactCooling
 // Description :  Specify work to be done every time before calling the major source-term function
 //
-// Note        :  1. Invoked by Src_WorkBeforeMajorFunc()
-//                   --> By linking to "Src_WorkBeforeMajorFunc_EC_Ptr" in Src_Init_ExactCooling()
-//                2. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
+// Note        :  1. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  lv               : Target refinement level
 //                TimeNew          : Target physical time to reach

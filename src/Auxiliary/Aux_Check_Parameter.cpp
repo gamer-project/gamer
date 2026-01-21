@@ -1818,10 +1818,6 @@ void Aux_Check_Parameter()
 #     error : ERROR : SRC_GHOST_SIZE must be zero for now !!
 #  endif
 
-#  ifdef EXACT_COOLING
-#     error : ERROR : EXACT_COOLING does not support yet !!
-#  endif
-
 #  if ( defined( EXACT_COOLING )  &&  MODEL != HYDRO )
 #     error : ERROR : EXACT_COOLING must enable MODEL=HYDRO !!
 #  endif
