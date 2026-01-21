@@ -200,7 +200,7 @@ SF_CREATE_STAR_MAX_STAR_MFRAC 0.5         # maximum gas mass fraction allowed to
 # fluid solver in HYDRO (MODEL==HYDRO only)
 GAMMA                         1.666666667 # ratio of specific heats (i.e., adiabatic index) [5.0/3.0] ##EOS_GAMMA ONLY##
 MOLECULAR_WEIGHT              0.6         # mean molecular weight [0.6]
-MU_NORM                       1.6737352238051868e-24   # m_H value,  fully consistent with yt
+MU_NORM                       1.6737352238051868e-24   # m_H value, fully consistent with yt
 ISO_TEMP                      1.0e4       # isothermal temperature in kelvin ##EOS_ISOTHERMAL ONLY##
 MINMOD_COEFF                  1.5         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
 MINMOD_MAX_ITER               0           # maximum number of iterations to reduce MINMOD_COEFF when data reconstruction fails (0=off) [0]
@@ -321,7 +321,7 @@ INT_OPP_SIGN_0TH_ORDER        1           # switch to 0th-order interpolation if
 # data dump
 OPT__OUTPUT_TOTAL             1           # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
 OPT__OUTPUT_PART              1           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
-OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
+OPT__OUTPUT_USER              1           # output the user-specified data -> edit "Output_User.cpp" [0]
 OPT__OUTPUT_PAR_MODE          0           # output the particle data: (0=off, 1=text-file, 2=C-binary) [0] ##PARTICLE ONLY##
 OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
