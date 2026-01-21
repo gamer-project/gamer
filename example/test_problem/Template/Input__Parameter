@@ -199,7 +199,7 @@ OPT__LB_EXCHANGE_FATHER       1           # exchange all cells of all father pat
 SRC_DELEPTONIZATION           0           # deleptonization (for simulations of stellar core collapse) [0] ##HYDRO ONLY##
 SRC_EXACTCOOLING              0           # exact cooling scheme from Gaspari (2009) [0] ##HYDRO ONLY##
 SRC_EC_TEF_N                  1501        # number of points for lambda(T) sampling in LOG [1501]
-SRC_EC_SUBCYCLING             0           # perform subcycling when the cooling time step is small (0=off, 1=on) [0]
+SRC_EC_SUBCYCLING             0           # perform subcycling when the cooling time step is small [0]
 SRC_EC_DTCOEF                 0.5         # the coefficient of the cooling time step [0.5]
 SRC_USER                      0           # user-defined source terms -> edit "Src_User.cpp" [0]
 SRC_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU source-term solver (<=0=auto) [-1]

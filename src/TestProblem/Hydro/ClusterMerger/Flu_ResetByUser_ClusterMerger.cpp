@@ -244,7 +244,7 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
          const real emag_old = (real)0.0;
 #        endif
          const real eint_old = Hydro_Con2Eint( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ],
-                                               fluid[ENGY], Check_MinEint_No, NULL_REAL, emag_old,
+                                               fluid[ENGY], Check_MinEint_No, NULL_REAL, PassiveFloorMask, emag_old,
                                                NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                h_EoS_Table );
 
@@ -467,12 +467,12 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                                                               EoS_AuxArray_Int, h_EoS_Table );
 #                 else
                   const real Pres = Hydro_Con2Pres( fluid_acc[0], fluid_acc[1], fluid_acc[2], fluid_acc[3],
-                                                    fluid_acc[4], fluid_acc+NCOMP_FLUID, true, MIN_PRES, Emag,
+                                                    fluid_acc[4], fluid_acc+NCOMP_FLUID, true, MIN_PRES, PassiveFloorMask, Emag,
                                                     EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr,
                                                     EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                     h_EoS_Table, NULL );
                   const real Temp = Hydro_Con2Temp( fluid_acc[0], fluid_acc[1], fluid_acc[2], fluid_acc[3],
-                                                    fluid_acc[4], fluid_acc+NCOMP_FLUID, false, MIN_TEMP, Emag,
+                                                    fluid_acc[4], fluid_acc+NCOMP_FLUID, false, MIN_TEMP, PassiveFloorMask, Emag,
                                                     EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr,
                                                     EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                     h_EoS_Table );
@@ -662,7 +662,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
 //             apply an energy floor
                fluid[ENGY] = Hydro_CheckMinEintInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                                       (real)MIN_EINT, Emag );
+                                                       (real)MIN_EINT, PassiveFloorMask, Emag );
 
 //             calculate the dual-energy variable
 #              ifdef DUAL_ENERGY

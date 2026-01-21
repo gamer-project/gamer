@@ -51,8 +51,8 @@ double TEFinv( double Y, int k, const double TEF_lambda[], const double TEF_alph
 
 
 /********************************************************
-1. Template of a user-defined source term
-   --> Enabled by the runtime option "SRC_USER"
+1. Exact-cooling source term
+   --> Enabled by the runtime option "SRC_EXACTCOOLING"
 
 2. This file is shared by both CPU and GPU
 
@@ -81,7 +81,7 @@ double TEFinv( double Y, int k, const double TEF_lambda[], const double TEF_alph
 // Description :  Set the auxiliary arrays AuxArray_Flt/Int[]
 //
 // Note        :  1. Invoked by Src_Init_ExactCooling()
-//                2. AuxArray_Flt/Int[] have the size of SRC_NAUX_USER defined in Macro.h (default = 10)
+//                2. AuxArray_Flt/Int[] have the size of SRC_NAUX_EC defined in Macro.h (default = 10)
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  AuxArray_Flt/Int : Floating-point/Integer arrays to be filled up
@@ -97,12 +97,8 @@ void Src_SetAuxArray_ExactCooling( double AuxArray_Flt[], int AuxArray_Int[] )
    const int    TEF_int    = TEF_N-1;                // number of intervals
    const double TEF_TN     = 1.e14;                  // == Tref, must be high enough, but affects sampling resolution (Kelvin)
    const double TEF_Tmin   = MIN_TEMP;               // MIN temperature
-#  ifdef GAMER_DEBUG
    if ( TEF_Tmin <= 0.0 )
-   {
-      Aux_Error( ERROR_INFO, "TEF_Tmin invalid (can not be smaller or equal to zero)!!\n" );
-   }
-#  endif
+      Aux_Error( ERROR_INFO, "TEF_Tmin (%14.7e) <= 0.0 !!\n", TEF_Tmin );
    const double TEF_dltemp   = (log10(TEF_TN) - log10(TEF_Tmin))/TEF_int; // sampling resolution (Kelvin), LOG!
 
    const double cl_X         = 0.7;                                       // mass-fraction of hydrogen
@@ -153,6 +149,7 @@ void Src_SetAuxArray_ExactCooling( double AuxArray_Flt[], int AuxArray_Int[] )
 //                TimeOld           : Physical time before update
 //                                    --> This function updates physical time from TimeOld to TimeNew
 //                MinDens/Pres/Eint : Density, pressure, and internal energy floors
+//                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //                EoS               : EoS object
 //                AuxArray_*        : Auxiliary arrays (see the Note above)
 //
@@ -162,7 +159,7 @@ GPU_DEVICE_NOINLINE
 static void Src_ExactCooling( real fluid[], const real B[], const SrcTerms_t *SrcTerms, const real dt,
                               const real dh, const double x, const double y, const double z,
                               const double TimeNew, const double TimeOld, const real MinDens,
-                              const real MinPres, const real MinEint, const EoS_t *EoS,
+                              const real MinPres, const real MinEint, const long PassiveFloor, const EoS_t *EoS,
                               const double AuxArray_Flt[], const int AuxArray_Int[] )
 {
 
@@ -255,7 +252,7 @@ void Src_WorkBeforeMajorFunc_ExactCooling( const int lv, const double TimeNew, c
 // Function    :  Src_PassData2GPU_ExactCooling
 // Description :  Transfer data to GPU
 //
-// Note        :  1. Invoked by Src_WorkBeforeMajorFunc_ExactCooling()
+// Note        :  1. Invoked by Src_Init_ExactCooling()
 //                2. Use synchronous transfer
 //
 // Parameter   :  None
@@ -331,7 +328,7 @@ void Src_SetCPUFunc_ExactCooling( SrcFunc_t &SrcFunc_CPUPtr )
 //
 // Note        :  1. Adopt the suggested approach for CUDA version >= 5.0
 //                2. Invoked by Src_Init_ExactCooling() and, if necessary, Src_WorkBeforeMajorFunc_ExactCooling()
-//                3. SRC_NAUX_USER is defined in Macro.h
+//                3. SRC_NAUX_EC is defined in Macro.h
 //
 // Parameter   :  AuxArray_Flt/Int : Auxiliary arrays to be copied to the constant memory
 //                DevPtr_Flt/Int   : Pointers to store the addresses of constant memory arrays
@@ -339,12 +336,12 @@ void Src_SetCPUFunc_ExactCooling( SrcFunc_t &SrcFunc_CPUPtr )
 // Return      :  c_Src_EC_AuxArray_Flt[], c_Src_EC_AuxArray_Int[], DevPtr_Flt, DevPtr_Int
 //---------------------------------------------------------------------------------------------------
 void Src_SetConstMemory_ExactCooling( const double AuxArray_Flt[], const int AuxArray_Int[],
-                                       double *&DevPtr_Flt, int *&DevPtr_Int )
+                                      double *&DevPtr_Flt, int *&DevPtr_Int )
 {
 
 // copy data to constant memory
-   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_Src_EC_AuxArray_Flt, AuxArray_Flt, SRC_NAUX_USER*sizeof(double) )  );
-   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_Src_EC_AuxArray_Int, AuxArray_Int, SRC_NAUX_USER*sizeof(int   ) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_Src_EC_AuxArray_Flt, AuxArray_Flt, SRC_NAUX_EC*sizeof(double) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_Src_EC_AuxArray_Int, AuxArray_Int, SRC_NAUX_EC*sizeof(int   ) )  );
 
 // obtain the constant-memory pointers
    CUDA_CHECK_ERROR(  cudaGetSymbolAddress( (void **)&DevPtr_Flt, c_Src_EC_AuxArray_Flt )  );
@@ -356,23 +353,15 @@ void Src_SetConstMemory_ExactCooling( const double AuxArray_Flt[], const int Aux
 
 
 #ifndef __CUDACC__
-
-// function pointer
-//extern void (*Src_WorkBeforeMajorFunc_EC_Ptr)( const int lv, const double TimeNew, const double TimeOld, const double dt,
-//                                               double AuxArray_Flt[], int AuxArray_Int[] );
-//extern void (*Src_End_EC_Ptr)();
-
 //-----------------------------------------------------------------------------------------
 // Function    :  Src_Init_ExactCooling
-// Description :  Initialize a user-specified source term
+// Description :  Initialize the exact-cooling source term
 //
 // Note        :  1. Set auxiliary arrays by invoking Src_SetAuxArray_*()
 //                   --> Copy to the GPU constant memory and store the associated addresses
 //                2. Set the source-term function by invoking Src_SetCPU/GPUFunc_*()
-//                3. Set the function pointers "Src_WorkBeforeMajorFunc_EC_Ptr" and "Src_End_EC_Ptr"
-//                4. Invoked by Src_Init()
-//                   --> Enable it by linking to the function pointer "Src_Init_EC_Ptr"
-//                5. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
+//                3. Invoked by Src_Init()
+//                4. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  None
 //
@@ -415,19 +404,13 @@ void Src_Init_ExactCooling()
    h_SrcEC_TEF_alpha  = new double [SrcTerms.EC_TEF_N];
    h_SrcEC_TEFc       = new double [SrcTerms.EC_TEF_N];
 
+#  ifdef GPU
+   Src_PassData2GPU_ExactCooling();
+#  else
    SrcTerms.EC_TEF_lambda_DevPtr = h_SrcEC_TEF_lambda;
    SrcTerms.EC_TEF_alpha_DevPtr  = h_SrcEC_TEF_alpha;
    SrcTerms.EC_TEFc_DevPtr       = h_SrcEC_TEFc;
-
-
-#  ifdef GPU
-   Src_PassData2GPU_ExactCooling();
 #  endif
-
-
-// set the auxiliary functions
-//   Src_WorkBeforeMajorFunc_EC_Ptr = Src_WorkBeforeMajorFunc_ExactCooling;
-//   Src_End_EC_Ptr                 = Src_End_ExactCooling;
 
 } // FUNCTION : Src_Init_ExactCooling
 
@@ -451,10 +434,9 @@ void Cool_fct( double Dens, double Temp, double* Emis, double* Lambdat, double Z
 
 //-----------------------------------------------------------------------------------------
 // Function    :  Src_End_ExactCooling
-// Description :  Free the resources used by a user-specified source term
+// Description :  Free the resources used by the exact-cooling source term
 //
 // Note        :  1. Invoked by Src_End()
-//                   --> Enable it by linking to the function pointer "Src_End_EC_Ptr"
 //                2. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  None
@@ -469,12 +451,12 @@ void Src_End_ExactCooling()
    delete [] h_SrcEC_TEF_alpha;      h_SrcEC_TEF_alpha  = NULL;
    delete [] h_SrcEC_TEFc;           h_SrcEC_TEFc       = NULL;
 
+#  ifdef GPU
+   CUAPI_MemFree_ExactCooling();
+#  else
    SrcTerms.EC_TEF_lambda_DevPtr = NULL;
    SrcTerms.EC_TEF_alpha_DevPtr  = NULL;
    SrcTerms.EC_TEFc_DevPtr       = NULL;
-
-#  ifdef GPU
-   CUAPI_MemFree_ExactCooling();
 #  endif
 
 } // FUNCTION : Src_End_ExactCooling
@@ -505,8 +487,6 @@ void CUAPI_MemFree_ExactCooling()
    SrcTerms.EC_TEFc_DevPtr       = NULL;
 
 } // FUNCTION : CUAPI_MemFree_ExactCooling
-
-
 #endif // #ifdef __CUDACC__
 
 

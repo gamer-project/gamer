@@ -200,7 +200,7 @@
 #  define NCOMP_PASSIVE_BUILTIN1    0
 # endif
 
-// exactCooling source term
+// exact cooling source term
 # ifdef EXACT_COOLING
 #  define NCOMP_PASSIVE_BUILTIN2    1
 # else

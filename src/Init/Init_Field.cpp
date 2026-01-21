@@ -138,7 +138,7 @@ void Init_Field()
 //    corresponding symbolic constants (e.g., DUAL/CRAY) defined in Macro.h
 //    --> as we still rely on these constants (e.g., DENS, DUAL) in the fluid solvers
 #  ifdef EXACT_COOLING
-   Idx_TCool = AddField( "TCool", FIXUP_FLUX_NO, FIXUP_REST_NO, NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_TCool = AddField( "TCool", FIXUP_FLUX_NO, FIXUP_REST_NO, FLOOR_YES, NORMALIZE_NO, INTERP_FRAC_NO );
    if ( Idx_TCool != TCOOL )    Aux_Error( ERROR_INFO, "inconsistent Idx_TCool (%d != %d) !!\n", Idx_TCool, TCOOL );
 #  endif
 

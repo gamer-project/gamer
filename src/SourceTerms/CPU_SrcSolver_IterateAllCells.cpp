@@ -117,7 +117,7 @@ void CPU_SrcSolver_IterateAllCells(
 #        ifdef EXACT_COOLING
 //       (2) exact cooling
          if ( SrcTerms.ExactCooling )
-            SrcTerms.EC_FuncPtr( fluid, B, &SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint, &EoS,
+            SrcTerms.EC_FuncPtr( fluid, B, &SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint, PassiveFloor, &EoS,
                                  SrcTerms.EC_AuxArrayDevPtr_Flt, SrcTerms.EC_AuxArrayDevPtr_Int );
 #        endif
 
