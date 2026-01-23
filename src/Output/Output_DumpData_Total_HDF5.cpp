@@ -1703,6 +1703,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
    int   par_natt_flt_addi = 0;
+#  ifdef PARTICLE
    switch ( OPT__OUTPUT_PAR_ADDI_ATTR )
    {
       case 0:  break;
@@ -1711,6 +1712,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
       case 3:  par_natt_flt_addi = 4; break;
       default: break;
    }
+#  endif
 
    KeyInfo.FormatVersion        = 2505;
    KeyInfo.Model                = MODEL;
