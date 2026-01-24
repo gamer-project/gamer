@@ -105,7 +105,7 @@ void LB_Refine( const int FaLv )
    bool Send = SwitchFinerLevelsToWaveScheme;
    bool Recv;
 
-   MPI_Allreduce( &Send, &Recv, 1, MPI_C_BOOL, MPI_LOR, MPI_COMM_WORLD );
+   MPI_Allreduce( &Send, &Recv, 1, MPI_CXX_BOOL, MPI_LOR, MPI_COMM_WORLD );
 
    SwitchFinerLevelsToWaveScheme = Recv;
 #  endif
