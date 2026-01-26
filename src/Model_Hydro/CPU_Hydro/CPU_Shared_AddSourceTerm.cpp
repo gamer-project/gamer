@@ -113,13 +113,13 @@ void Hydro_AddSourceTerm_HalfStep_MHM( const real g_ConVar_In[][ CUBE(FLU_NXT) ]
 //                2. Invoked by Hydro_RiemannPredict()
 //                3. Do not update magnetic field here, please update at Hydro_AddSourceTerm_FCVar_HalfStep_MHM_RP()
 //
-// Parameter   :  g_ConVar_In : Array storing the input conserved variables
-//                g_FC_B_In   : Array storing the input face-centered magnetic field (for MHD only)
-//                OneCell     : Single-cell fluid array to store the updated cell-centered conserved variables
-//                idx_in      : Index of accessing g_ConVar_In[]
-//                didx_in     : Index increment of g_ConVar_In[]
-//                dt_dh2      : 0.5 * dt / dh
-//                EoS         : EoS object
+// Parameter   :  g_ConVar_In  : Array storing the input conserved variables
+//                g_FC_B_In    : Array storing the input face-centered magnetic field (for MHD only)
+//                OneCell      : Single-cell fluid array to store the updated cell-centered conserved variables
+//                idx_in       : Index of accessing g_ConVar_In[]
+//                didx_cvar_in : Index increment of g_ConVar_In[]
+//                dt_dh2       : 0.5 * dt / dh
+//                EoS          : EoS object
 //
 // Return      :  OneCell
 //-------------------------------------------------------------------------------------------------------
@@ -127,13 +127,13 @@ GPU_DEVICE
 void Hydro_AddSourceTerm_CCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
                                                 const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                                       real OneCell[NCOMP_TOTAL_PLUS_MAG],
-                                                const int idx_in, const int didx_in[3],
+                                                const int idx_in, const int didx_cvar_in[3],
                                                 const real dt_dh2, const EoS_t *EoS )
 {
 
 #  ifdef GAMER_DEBUG
-   if ( didx_in[0] != 1  ||  didx_in[1] != FLU_NXT  ||  didx_in[2] != SQR(FLU_NXT) )
-      printf( "ERROR : didx_in {%d, %d, %d} != {%d, %d, %d} !!\n", didx_in[0], didx_in[1], didx_in[2],
+   if ( didx_cvar_in[0] != 1  ||  didx_cvar_in[1] != FLU_NXT  ||  didx_cvar_in[2] != SQR(FLU_NXT) )
+      printf( "ERROR : didx_cvar_in {%d, %d, %d} != {%d, %d, %d} !!\n", didx_cvar_in[0], didx_cvar_in[1], didx_cvar_in[2],
               1, FLU_NXT, SQR(FLU_NXT) );
 #  endif
 
@@ -194,8 +194,8 @@ void Hydro_AddSourceTerm_CCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(F
 //
 //    for (int d=0; d<3; d++)
 //    {
-//       div_V[d] = (real)0.5 * ( g_ConVar_In[MOMX+d][idx_in + didx_in[d]] / g_ConVar_In[DENS][idx_in + didx_in[d]] -
-//                                g_ConVar_In[MOMX+d][idx_in - didx_in[d]] / g_ConVar_In[DENS][idx_in - didx_in[d]] );
+//       div_V[d] = (real)0.5 * ( g_ConVar_In[MOMX+d][idx_in + didx_cvar_in[d]] / g_ConVar_In[DENS][idx_in + didx_cvar_in[d]] -
+//                                g_ConVar_In[MOMX+d][idx_in - didx_cvar_in[d]] / g_ConVar_In[DENS][idx_in - didx_cvar_in[d]] );
 //    } // for (int d=0; d<3; d++)
 //
 //
@@ -237,9 +237,9 @@ void Hydro_AddSourceTerm_FCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(F
    if ( FLU_NXT-N_HF_VAR != 2 )   printf( "FLU_NXT(%d) - N_HF_VAR(%d) != 2 !\n", FLU_NXT, N_HF_VAR );
 #  endif
 
-   const real dt_dh2      = (real)0.5 * dt / dh;
-   const int  N_HF_VAR_P1 = N_HF_VAR + 1;
-   const int  didx_in[3]  = { 1, FLU_NXT, SQR(FLU_NXT) };
+   const real dt_dh2          = (real)0.5 * dt / dh;
+   const int  N_HF_VAR_P1     = N_HF_VAR + 1;
+   const int  didx_cvar_in[3] = { 1, FLU_NXT, SQR(FLU_NXT) };
 
    for (int d=0; d<3; d++)
    {
@@ -283,19 +283,19 @@ void Hydro_AddSourceTerm_FCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(F
          const int idx_BIn_T1 = IDX321( i_BIn, j_BIn, k_BIn, size_BIn_k, size_BIn_i );
          const int idx_BIn_T2 = IDX321( i_BIn, j_BIn, k_BIn, size_BIn_j, size_BIn_k );
 
-//       |                 |              |
-//       |      ^          |        ^     |
-//       -------4-------------------3------
-//       |      |          |        |     |
-//       |                 |              |
-//       |   idx_in        |              |
-//       |      -       -BIn_N->  idx_in  |
-//       |  didx_in[d]     |              |
-//       |                 |              |
-//       |      ^          |        ^     |
-//       -------2-------------------1------
-//       |      |          |        |     |
-//       |                 |              |
+//       |                      |              |
+//       |      ^               |        ^     |
+//       -------4------------------------3------
+//       |      |               |        |     |
+//       |                      |              |
+//       |   idx_in             |              |
+//       |      -            -BIn_N->  idx_in  |
+//       |  didx_cvar_in[d]     |              |
+//       |                      |              |
+//       |      ^               |        ^     |
+//       -------2------------------------1------
+//       |      |               |        |     |
+//       |                      |              |
 
 //       1. calculate extra term
          real ExtraTerm = 0.0;
