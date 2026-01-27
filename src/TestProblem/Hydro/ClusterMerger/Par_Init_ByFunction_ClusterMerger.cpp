@@ -108,7 +108,10 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       switch (c)
       {
          case 0:
-            NPar_ThisRank_EachCluster[0] = NPar_EachCluster[0] / MPI_NRank + ( (MPI_Rank<NPar_EachCluster[0]%MPI_NRank)?1:0 );
+            if ( NCluster == 1 )
+               NPar_ThisRank_EachCluster[0] = NPar_ThisRank;
+            else
+               NPar_ThisRank_EachCluster[0] = NPar_EachCluster[0] / MPI_NRank + ( (MPI_Rank<NPar_EachCluster[0]%MPI_NRank)?1:0 );
             break;
          case 1:
             if ( NCluster == 2 )
@@ -128,7 +131,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       for (int r=0; r<MPI_NRank; r++)   NPar_Check += NPar_ThisCluster_EachRank[r];
       if ( NPar_Check != NPar_EachCluster[c] )
          Aux_Error( ERROR_INFO, "total number of particles in cluster %d: found (%ld) != expect (%ld) !!\n",
-                    c, NPar_Check, NPar_EachCluster[c] );
+                    c+1, NPar_Check, NPar_EachCluster[c] );
 
 //    set the file offset for this rank
       Offset[c] = 0;
@@ -160,7 +163,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++)
       {
          if ( (long_par)ptype[p] == PTYPE_TRACER )
-            Aux_Error( ERROR_INFO, "Tracer particles were found in the input data for cluster %d, but TRACER is not defined!\n", c );
+            Aux_Error( ERROR_INFO, "Tracer particles were found in the input data for cluster %d, but TRACER is not defined!\n", c+1 );
       }
 #     endif
 
@@ -171,7 +174,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
          Aux_Message( stdout, "   Storing cluster %d to the particle repository ... \n", c+1 );
 
 //    compute offsets for assigning particles
-      double coffset;
+      long coffset = 0L;
       for (int cc=0; cc<c; cc++)   coffset += NPar_ThisRank_EachCluster[cc];
 
       for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++)
@@ -256,9 +259,9 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 
       for (int c=0; c<NCluster; c++)
       {
-         long   pidx_min       = -1;
-         real   pos_min[3]     = { NULL_REAL, NULL_REAL, NULL_REAL };
-         double r_min_ThisRank = __DBL_MAX__;
+         long     pidx_min       = -1;
+         real_par pos_min[3]     = { NULL_REAL, NULL_REAL, NULL_REAL };
+         double   r_min_ThisRank = __DBL_MAX__;
 
 //       get the particle in this rank closest to the cluster center
          for (long p=pidx_offset; p<pidx_offset+NPar_ThisRank_EachCluster[c]; p++)
@@ -289,7 +292,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
 //       check if one and only one particle is labeled
          MPI_Allreduce( &NFound_ThisRank, &NFound_AllRank, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
          if ( NFound_AllRank != 1 )
-            Aux_Error( ERROR_INFO, "NFound_AllRank (%d) != 1 for cluster %d !!\n", NFound_AllRank, c );
+            Aux_Error( ERROR_INFO, "NFound_AllRank (%d) != 1 for cluster %d !!\n", NFound_AllRank, c+1 );
 
 //       update the particle index offset for the next cluster
          pidx_offset += NPar_ThisRank_EachCluster[c];

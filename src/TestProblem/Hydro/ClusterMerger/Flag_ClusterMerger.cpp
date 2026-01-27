@@ -52,8 +52,8 @@ bool Flag_ClusterMerger( const int i, const int j, const int k, const int lv, co
    if ( FirstTime )
    {
       const double dh_max = amr->dh[MAX_LEVEL];
-      if ( R_acc/dh_max <= Threshold[0] )
-         Aux_Message( stderr, "WARNING : MAX_LEVEL is less than the desired refinement level set in Input__Flag_User!! dh_max = %13.7e\n", dh_max );
+      if ( R_acc/dh_max <= Threshold[0]  &&  MPI_Rank == 0 )
+         Aux_Message( stderr, "WARNING : MAX_LEVEL (%d) is less than the desired refinement level set in Input__Flag_User (R_acc = %13.7e, dh_max = %13.7e, Threshold[0] = %13.7e) !!\n", MAX_LEVEL, R_acc, dh_max, Threshold[0] );
 
       FirstTime = false;
    } // if ( FirstTime )

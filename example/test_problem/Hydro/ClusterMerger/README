@@ -32,11 +32,11 @@ AGN feedback:
 
 Cool-core destruction:
 ========================================
-Reproduce the cool-core destruction results. Shuang-Shuang Chen (arXiv:2412.13595)
+Reproduce the cool-core destruction results of Chen et al. 2026 (arXiv:2412.13595)
 0. Please contact Prof. Hsi-Yu Schive regarding the unreleased exact cooling feature.
 1. `sh download_ic_cool_core_destruction.sh`
 2. `sh setup_input_files.sh <case_number>`
-   --> For the high resolution case, please link or copy the input files from
+   --> For the high-resolution case, please link or copy the input files from
        `Input_Options/case6_highRes`. Note that `Input__Flag_User` is different from
        the default case.
 
