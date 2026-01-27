@@ -17,7 +17,7 @@ static bool    *Merger_Coll_IsGas;        // (true/false) --> does cluster have 
        double  *Jet_Radius;               // radius of the cylinder-shape jet source of clusters
 
        bool     AGN_feedback;             // turn on/off (1/0) AGN feedback
-       int      Accretion_Mode;           // 1: hot mode; 2: code mode; 3: combine (hot + cold)
+       int      Accretion_Mode;           // 1: hot mode; 2: cold mode; 3: combine (hot + cold)
        double   eta;                      // mass loading factor in jet feedback
        double   eps_f;                    // the radiative efficiency in jet feedback
        double   eps_m;                    // the fraction of total energy that goes into the thermal energy in jet feedback
@@ -366,7 +366,7 @@ void SetParameter()
    if ( Merger_Coll_NumHalos != 1  &&  fixBH )
    {
       fixBH = false;
-      Aux_Message( stdout, "WARNING! Reset fixBH to be false for multiple clusters!\n" );
+      if ( MPI_Rank == 0 )   Aux_Message( stdout, "WARNING : resetting fixBH to false for multiple clusters !!\n" );
    }
 
    if ( fixBH )
@@ -1131,7 +1131,7 @@ void Init_User_ClusterMerger()
 #  ifdef SUPPORT_HDF5
    const char FileName[] = "RESTART";
 
-   hid_t  H5_FileID, H5_SetID_OutputUser, H5_TypeID_OutputUser;
+   hid_t  H5_FileID, H5_SetID_UserPara, H5_TypeID_UserPara;
    herr_t H5_Status;
 
    H5_FileID = H5Fopen( FileName, H5F_ACC_RDONLY, H5P_DEFAULT );
@@ -1140,7 +1140,7 @@ void Init_User_ClusterMerger()
 
    H5_SetID_OutputUser  = H5Dopen( H5_FileID, "User/UserPara", H5P_DEFAULT );
    if ( H5_SetID_OutputUser < 0 )
-      Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", "User/OutputUser" );
+      Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", "User/UserPara" );
 
    H5_TypeID_OutputUser = H5Dget_type( H5_SetID_OutputUser );
    if ( H5_TypeID_OutputUser < 0 )
@@ -1205,7 +1205,7 @@ void Init_User_ClusterMerger()
 void AllocateBHVarArray()
 {
 
-   if ( Merger_Coll_NumBHs < 1 )   Aux_Error( ERROR_INFO, "Merger_Coll_NumBHs < 1 !!\n" );
+   if ( Merger_Coll_NumBHs < 1 )   Aux_Error( ERROR_INFO, "Merger_Coll_NumBHs (%d) < 1 !!\n", Merger_Coll_NumBHs );
 
    CM_Cluster_NPar_close = new int    [ Merger_Coll_NumBHs ];
    CM_ClusterCen         = new double [ Merger_Coll_NumBHs ][ 3 ];
