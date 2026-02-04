@@ -90,6 +90,7 @@ PAR_IC_FLOAT8                -1           # floating-point precision for PAR_IC 
 PAR_IC_INT8                  -1           # integer width for PAR_IC (<0: default, 0: 32-bit, 1: 64-bit) [default: same as INT8_PAR]
 PAR_IC_MASS                  -1.0         # mass of all particles for PAR_INIT==3 (<0=off) [-1.0]
 PAR_IC_TYPE                  -1           # type of all particles for PAR_INIT==3 (<0=off) [-1]
+PAR_IC_PUID                   0           # whether there are particle UID of all particles in the file for PAR_INIT==3 [0]
 PAR_INTERP                    3           # particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [2]
 PAR_INTEG                     2           # particle integration scheme: (1=Euler, 2=KDK) [2]
 PAR_TR_INTERP                 3           # tracer particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [3]

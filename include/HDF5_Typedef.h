@@ -80,6 +80,7 @@ struct KeyInfo_t
    int    NMagStored;               // NCOMP_MAG (declare it even when MHD is off)
 #  ifdef PARTICLE
    long   Par_NPar;                 // amr->Par->NPar_Active_AllRank
+   long   Par_NextUID;              // amr->Par->NextUID
    int    Par_NAttFltStored;        // PAR_NATT_FLT_STORED
    int    Par_NAttIntStored;        // PAR_NATT_INT_STORED
    int    Float8_Par;
@@ -430,6 +431,7 @@ struct InputPara_t
    int    Par_ICFormat;
    double Par_ICMass;
    int    Par_ICType;
+   int    Par_ICPUid;
    int    Par_ICFloat8;
    int    Par_ICInt8;
    int    Par_Interp;

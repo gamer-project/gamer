@@ -495,9 +495,9 @@
 
 // number of built-in particle attributes
 // floating-point: mass, position*3, velocity*3, and time
-// integer: type
+// integer: type and id
 #  define PAR_NATT_FLT_BUILTIN0   8
-#  define PAR_NATT_INT_BUILTIN0   1
+#  define PAR_NATT_INT_BUILTIN0   2
 
 // acceleration*3 when STORE_PAR_ACC is adopted
 # if ( defined STORE_PAR_ACC  &&  defined GRAVITY )
@@ -552,6 +552,7 @@
 // indices of built-in particle integer attributes in Par->AttributeInt[]
 // --> must NOT modify their values
 #  define  PAR_TYPE           0
+#  define  PAR_PUID           1
 
 // always put acceleration and time at the END of the particle attribute list
 // --> make it easier to discard them when storing data on disk (see Output_DumpData_Total(_HDF5).cpp)
@@ -586,6 +587,7 @@
 #  define _PAR_FLT_TOTAL      (  ( 1L << PAR_NATT_FLT_TOTAL ) - 1L )
 
 #  define _PAR_TYPE           ( 1L << PAR_TYPE )
+#  define _PAR_PUID           ( 1L << PAR_PUID )
 #  define _PAR_INT_TOTAL      (  ( 1L << PAR_NATT_INT_TOTAL ) - 1L )
 
 // grid fields related to particles
@@ -608,6 +610,9 @@
 #  define  PTYPE_GENERIC_MASSIVE    (long_par)1
 #  define  PTYPE_DARK_MATTER        (long_par)2
 #  define  PTYPE_STAR               (long_par)3
+
+// particle puid to be assigned
+#  define  PPUID_TBA                (long_par)-1
 
 # ifdef GRAVITY
 #  define MASSIVE_PARTICLES

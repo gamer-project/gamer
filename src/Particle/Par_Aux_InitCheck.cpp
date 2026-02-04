@@ -14,6 +14,7 @@
 //                3. Remove particles outside the active region for non-periodic B.C.
 //                4. There should be no inactive particles before calling this function
 //                5. Check particle types
+//                6. Check particle ID (which can be not assigned yet when calling this function)
 //
 // Parameter   :  None
 //-------------------------------------------------------------------------------------------------------
@@ -26,11 +27,12 @@ void Par_Aux_InitCheck()
    const real_par *Mass   =   amr->Par->Mass;
    const real_par *Pos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
    const long_par *Type   =   amr->Par->Type;
+   const long_par *PUid   =   amr->Par->PUid;
 
 
 // 1. all active particles should lie within the simulation domain
 //    --> periodicity should be taken care of in the initial condition, not here
-//    --> also check particle types here
+//    --> also check particle types and ID here
    for (long ParID=0; ParID<amr->Par->NPar_AcPlusInac; ParID++)
    {
 //    there should be no inactive particles initially
@@ -39,6 +41,10 @@ void Par_Aux_InitCheck()
 //    check particle types
       if ( Type[ParID] < (real_par)0  ||  Type[ParID] >= (real_par)PAR_NTYPE )
          Aux_Error( ERROR_INFO, "Type[%ld] = %d (accepted range: 0<=index<%d) !!\n", ParID, (int)Type[ParID], PAR_NTYPE );
+
+//    check particle ID
+      if ( PUid[ParID] != PPUID_TBA  &&  ( PUid[ParID] <= 0  ||  PUid[ParID] >= amr->Par->NextUID ) )
+         Aux_Error( ERROR_INFO, "PUid[%ld] = %ld (accepted range: 0<index<%ld) !!\n", ParID, (long)PUid[ParID], amr->Par->NextUID );
 
 //    only support tracer particles when disabling GRAVITY
 #     ifndef GRAVITY
@@ -73,7 +79,7 @@ void Par_Aux_InitCheck()
                         d, ParID, Pos[d][ParID], amr->BoxSize[d] );
          }
       }
-   }
+   } // for (long ParID=0; ParID<amr->Par->NPar_AcPlusInac; ParID++)
 
 
 // 2. remove particles outside the active region for non-periodic B.C.

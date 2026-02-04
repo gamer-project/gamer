@@ -40,7 +40,8 @@ static double Zeldovich_x_velocity_profile( const double x_Lagrangian, const dou
 void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_AllRank,
                                     real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                     real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                    long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                    long_par *ParType, long_par *ParPUid,
+                                    real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
                                     long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] );
 #endif // #ifdef PARTICLE
 #endif // #ifdef SUPPORT_GSL
@@ -439,6 +440,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //                ParVelX/Y/Z     : Particle velocity array with the size of NPar_ThisRank
 //                ParTime         : Particle time     array with the size of NPar_ThisRank
 //                ParType         : Particle type     array with the size of NPar_ThisRank
+//                ParPUid         : Particle UID      array with the size of NPar_ThisRank
 //                AllAttributeFlt : Pointer array for all particle floating-point attributes
 //                                  --> Dimension = [PAR_NATT_FLT_TOTAL][NPar_ThisRank]
 //                                  --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
@@ -447,12 +449,13 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //                                  --> Dimension = [PAR_NATT_INT_TOTAL][NPar_ThisRank]
 //                                  --> Use the attribute indices defined in Field.h to access the data
 //
-// Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttributeFlt, AllAttributeInt
+// Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, ParPUid, AllAttributeFlt, AllAttributeInt
 //-------------------------------------------------------------------------------------------------------
 void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_AllRank,
                                     real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                     real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                    long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                    long_par *ParType, long_par *ParPUid,
+                                    real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
                                     long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 {
 
@@ -543,6 +546,7 @@ void Par_Init_ByFunction_Zeldovich( const long NPar_ThisRank, const long NPar_Al
    {
       ParTime[p] = (real_par)Time[0];
       ParType[p] = PTYPE_GENERIC_MASSIVE;
+      ParPUid[p] = PPUID_TBA;
    }
 
 // free memory

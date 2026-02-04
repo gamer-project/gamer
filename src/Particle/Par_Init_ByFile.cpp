@@ -84,6 +84,7 @@ void Par_Init_ByFile_Default()
          long NParThisRank  = amr->Par->NPar_AcPlusInac;       // cannot be "const" due to MPI_Allgather()
    const bool SingleParMass = amr->Par->ParICMass >= 0.0;
    const bool SingleParType = amr->Par->ParICType >= 0;
+   const bool AbsentParPUid = amr->Par->ParICPUid == false;
 
 // determine the number of attributes to be loaded
    int NParAttFlt = PAR_NATT_FLT_TOTAL - 1;   // exclude time
@@ -93,6 +94,7 @@ void Par_Init_ByFile_Default()
 #  endif
    if ( SingleParMass )    NParAttFlt --; // exclude mass
    if ( SingleParType )    NParAttInt --; // exclude type
+   if ( AbsentParPUid )    NParAttInt --; // exclude puid
 
 
 // check
@@ -225,17 +227,37 @@ void Par_Init_ByFile_Default()
       for (int v_in=0, v_out=0; v_in<NParAttInt; v_in++, v_out++)
       {
          if ( SingleParType  &&  v_out == PAR_TYPE )  v_out ++;
+         if ( AbsentParPUid  &&  v_out == PAR_PUID )  v_out ++;
 
          amr->Par->AttributeInt[v_out][p] = ParIntData1[v_in];
       }
 
       if ( SingleParMass )    amr->Par->Mass[p] = amr->Par->ParICMass;
       if ( SingleParType )    amr->Par->Type[p] = amr->Par->ParICType;
+      if ( AbsentParPUid )    amr->Par->PUid[p] = PPUID_TBA;
 
 //    synchronize all particles to the physical time at the base level
       amr->Par->Time[p] = Time[0];
    } // for (long p=0; p<NParThisRank; p++)
 
+
+// set NextUID according to the maximum of the existing UID in the file
+   if ( !AbsentParPUid )
+   {
+      long ExpectedNextUID_ThisRank = 1L;
+      for (long p=0; p<NParThisRank; p++)
+         ExpectedNextUID_ThisRank = MAX( (long)amr->Par->AttributeInt[PAR_PUID][p]+1L, ExpectedNextUID_ThisRank );
+
+      long ExpectedNextUID_AllRank  = 1L;
+      MPI_Allreduce( &ExpectedNextUID_ThisRank, &ExpectedNextUID_AllRank, 1, MPI_LONG, MPI_MAX, MPI_COMM_WORLD );
+
+      amr->Par->NextUID = ExpectedNextUID_AllRank;
+   }
+   else
+      amr->Par->NextUID = 1L;
+
+
+// free memory
    delete [] ParFltData_ThisRank;
    delete [] ParIntData_ThisRank;
    delete [] ParFltData1;
