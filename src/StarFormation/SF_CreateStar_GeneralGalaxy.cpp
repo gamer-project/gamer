@@ -6,37 +6,26 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SF_CreateStar_AGORA
-// Description :  Create new star particles stochastically using the presription suggested by the AGORA project
+// Function    :  SF_CreateStar_GeneralGalaxy
+// Description :  Create new star particles in the general methods where ther star formation is independent
 //
-// Note        :  1. Ref: (1) Nathan Goldbaum, et al., 2015, ApJ, 814, 131 (arXiv: 1510.08458), sec. 2.4
-//                        (2) Ji-hoon Kim, et al., 2016, ApJ, 833, 202 (arXiv: 1610.03066), sec. 3.2
-//                2. One must turn on STORE_POT_GHOST when adopting STORE_PAR_ACC
+// Note        :  1. One must turn on STORE_POT_GHOST when adopting STORE_PAR_ACC
 //                   --> It is because, currently, this function always uses the pot_ext[] array of each patch
 //                       to calculate the gravitationally acceleration of the new star particles
-//                3. One must invoke Buf_GetBufferData( ..., _TOTAL, ... ) after calling this function
-//                4. Currently this function does not check whether the cell mass exceeds the Jeans mass
-//                   --> Ref: "jeanmass" in star_maker_ssn.F of Enzo
+//                2. One must invoke Buf_GetBufferData( ..., _TOTAL, ... ) after calling this function
 //
-// Parameter   :  lv           : Target refinement level
-//                TimeNew      : Current physical time (after advancing solution by dt)
-//                dt           : Time interval to advance solution
-//                               --> Currently this function does not distinguish dt and the physical time interval (dTime)
-//                               --> Does NOT support COMOVING yet
-//                RNG          : Random number generator
-//                GasDensThres : Minimum gas density for creating star particles                (--> "SF_CREATE_STAR_MIN_GAS_DENS"  )
-//                Efficiency   : Gas-to-star mass efficiency                                    (--> "SF_CREATE_STAR_MASS_EFF"      )
-//                MinStarMass  : Minimum star particle mass for the stochastical star formation (--> "SF_CREATE_STAR_MIN_STAR_MASS" )
-//                MaxStarMFrac : Maximum gas mass fraction allowed to convert to stars          (--> "SF_CREATE_STAR_MAX_STAR_MFRAC")
-//                DetRandom    : Make random numbers determinisitic                             (--> "SF_CREATE_STAR_DET_RANDOM"    )
-//                UseMetal     : Store the metal mass fraction in star particles
+// Parameter   :  lv             : Target refinement level
+//                TimeNew        : Current physical time (after advancing solution by dt)
+//                dt             : Time interval to advance solution
+//                                 --> Currently this function does not distinguish dt and the physical time interval (dTime)
+//                                 --> Does NOT support COMOVING yet
+//                RNG            : Random number generator
+//                UseMetal       : Store the metal mass fraction in star particles
 //
 // Return      :  1. Particle repository will be updated
 //                2. fluid[] array of gas will be updated
 //-------------------------------------------------------------------------------------------------------
-void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, RandomNumber_t *RNG,
-                          const real GasDensThres, const real Efficiency, const real MinStarMass, const real MaxStarMFrac,
-                          const bool DetRandom, const bool UseMetal )
+void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real dt, RandomNumber_t *RNG, const bool UseMetal )
 {
 
 // check
@@ -45,11 +34,11 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 #  endif
 
 #  ifndef GRAVITY
-#     error : must turn on GRAVITY for SF_CreateStar_AGORA() !!
+   Aux_Error( ERROR_INFO, "Must turn on GRAVITY for %s() !!\n", __FUNCTION__ );
 #  endif
 
 #  ifdef COMOVING
-#     error : SF_CreateStar_AGORA() does not support COMOVING yet !!
+   Aux_Error( ERROR_INFO, "%s() does not support COMOVING yet !!\n", __FUNCTION__ );
 #  endif
 
 #  ifdef GAMER_DEBUG
@@ -69,9 +58,6 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    const real   dv             = CUBE( dh );
    const int    FluSg          = amr->FluSg[lv];
    const int    PotSg          = amr->PotSg[lv];
-   const real   Coeff_FreeFall = SQRT( (32.0*NEWTON_G)/(3.0*M_PI) );
-   const real  _MinStarMass    = (real)1.0 / MinStarMass;
-   const real   Eff_times_dt   = Efficiency*dt;
 // const real   GraConst       = ( OPT__GRA_P5_GRADIENT ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh);
    const real   GraConst       = ( false                ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // P5 is NOT supported yet
 
@@ -88,11 +74,26 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 #  endif
 
    double x0, y0, z0, x, y, z;
-   real   GasDens, _GasDens, GasMass, _Time_FreeFall, StarMFrac, StarMass, GasMFracLeft;
+   real   GasDens, _GasDens, GasMass, StarMFrac, StarMass, GasMFracLeft;
    real   (*fluid)[PS1][PS1][PS1]      = NULL;
+   real   (*MagCC)[PS1][PS1][PS1]      = NULL;
+   real   (*Pres)[PS1][PS1]            = NULL;
+   real   (*Cs2)[PS1][PS1]             = NULL;
 #  ifdef STORE_POT_GHOST
    real   (*pot_ext)[GRA_NXT][GRA_NXT] = NULL;
 #  endif
+
+   bool NeedPres = false;
+   bool NeedCs2  = false;
+
+   if ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_DWARFGALAXY )   NeedCs2 = true;
+   if ( NeedCs2 )   NeedPres = true;
+
+#  ifdef MHD
+   if ( NeedPres )   MagCC = new real [3][PS1][PS1][PS1];
+#  endif
+   if ( NeedPres )   Pres  = new real    [PS1][PS1][PS1];
+   if ( NeedCs2  )   Cs2   = new real    [PS1][PS1][PS1];
 
    const int    MaxNewParPerPatch = CUBE(PS1);
    real_par   (*NewParAttFlt)[PAR_NATT_FLT_TOTAL] = new real_par [MaxNewParPerPatch][PAR_NATT_FLT_TOTAL];
@@ -116,7 +117,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 //    to get deterministic and different random numbers for all patches, reset the random seed of each patch according to
 //    its location and time
 //    --> patches at different time and/or AMR levels may still have the same random seeds...
-      if ( DetRandom )
+      if ( SF_CREATE_STAR_DET_RANDOM )
       {
 //       the factor "1.0e6" in the end is just to make random seeds at different times more different, especially for
 //       extremely small time-step
@@ -129,6 +130,89 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 #     ifdef STORE_POT_GHOST
       pot_ext = amr->patch[PotSg][lv][PID]->pot_ext;
 #     endif
+
+#     ifdef MHD
+//    evaluate cell-centered B field
+      if ( NeedPres )
+      {
+         real MagCC_1Cell[NCOMP_MAG];
+
+         for (int k=0; k<PS1; k++)
+         for (int j=0; j<PS1; j++)
+         for (int i=0; i<PS1; i++)
+         {
+            MHD_GetCellCenteredBFieldInPatch( MagCC_1Cell, lv, PID, i, j, k, amr->MagSg[lv] );
+
+            for (int v=0; v<NCOMP_MAG; v++)  MagCC[v][k][j][i] = MagCC_1Cell[v];
+         }
+      } // if ( NeedPres )
+#     endif // #ifdef MHD
+
+//    evaluate pressure
+      if ( NeedPres )
+      {
+         const bool CheckMinPres_Yes = true;
+
+         for (int k=0; k<PS1; k++)
+         for (int j=0; j<PS1; j++)
+         for (int i=0; i<PS1; i++)
+         {
+//          if applicable, compute pressure from the dual-energy variable to reduce the round-off errors
+#           ifdef DUAL_ENERGY
+
+#           if   ( DUAL_ENERGY == DE_ENPY )
+            Pres[k][j][i] = Hydro_DensDual2Pres( fluid[DENS][k][j][i], fluid[DUAL][k][j][i],
+                                                 EoS_AuxArray_Flt[1], CheckMinPres_Yes, MIN_PRES );
+#           elif ( DUAL_ENERGY == DE_EINT )
+#           error : DE_EINT is NOT supported yet !!
+#           endif
+
+#           else // #ifdef DUAL_ENERGY
+
+#           ifdef MHD
+            const real Emag = (real)0.5*(  SQR( MagCC[MAGX][k][j][i] )
+                                         + SQR( MagCC[MAGY][k][j][i] )
+                                         + SQR( MagCC[MAGZ][k][j][i] )  );
+#           else
+            const real Emag = NULL_REAL;
+#           endif
+
+#           if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  NCOMP_PASSIVE > 0 )
+            real Passive[NCOMP_PASSIVE];
+            for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = fluid[ NCOMP_FLUID + v ][k][j][i];
+#           else
+            const real *Passive = NULL;
+#           endif
+
+            Pres[k][j][i] = Hydro_Con2Pres( fluid[DENS][k][j][i], fluid[MOMX][k][j][i], fluid[MOMY][k][j][i],
+                                            fluid[MOMZ][k][j][i], fluid[ENGY][k][j][i], Passive,
+                                            CheckMinPres_Yes, MIN_PRES, PassiveFloorMask, Emag,
+                                            EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                            NULL );
+#           endif // #ifdef DUAL_ENERGY ... else ...
+         } // k,j,i
+      } // if ( NeedPres )
+
+//    evaluate sound speed squared
+      if ( NeedCs2 )
+      {
+         for (int k=0; k<PS1; k++)
+         for (int j=0; j<PS1; j++)
+         for (int i=0; i<PS1; i++)
+         {
+#           if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  NCOMP_PASSIVE > 0 )
+            real Passive[NCOMP_PASSIVE];
+            for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = fluid[ NCOMP_FLUID + v ][k][j][i];
+#           else
+            const real *Passive = NULL;
+#           endif
+
+            Cs2[k][j][i] = EoS_DensPres2CSqr_CPUPtr( fluid[DENS][k][j][i], Pres[k][j][i], Passive,
+                                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+         } // k,j,i
+      } // if ( NeedCs2 )
+
       x0      = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
       y0      = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
       z0      = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
@@ -139,43 +223,21 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
       for (int i=0; i<PS1; i++)
       {
 
-//       1. check the star formation criteria
-//       ===========================================================================================================
          GasDens = fluid[DENS][k][j][i];
          GasMass = GasDens*dv;
 
-//       1-1. create star particles only if the gas density exceeds the given threshold
-         if ( GasDens < GasDensThres )    continue;
+//       1. star formation criteria and star mass based on various star formation prescriptions
+//       ===========================================================================================================
 
+//       1-1. check star formation criteria
+         if ( !SF_CreateStar_Check( lv, PID, i, j, k, dh, fluid, Pres, Cs2 ) )   continue;
 
-//       1-2. estimate the gas free-fall time
-//       --> consider only the gas density under the assumption that the dark matter doesn't collapse
-         _Time_FreeFall = Coeff_FreeFall * SQRT( GasDens );
+//       1-2. get the star mass
+         StarMass = SF_CreateStar_GetStarMass( GasDens, dv, dt, RNG, TID );
+         if ( StarMass <= 0.0 )   continue;
 
-
-//       1-3. estimate the gas mass fraction to convert to stars
-         StarMFrac = Eff_times_dt*_Time_FreeFall;
-         StarMass  = GasMass*StarMFrac;
-
-
-//       1-4. stochastic star formation
-//       --> if the star particle mass (StarMass) is below the minimum mass (MinStarMass), we create a
-//           new star particle with a mass of MinStarMass and a probability of StarMass/MinStarMass
-//       --> Eq. [5] in Goldbaum et al. (2015)
-         if ( StarMass < MinStarMass )
-         {
-            const double Min = 0.0;
-            const double Max = 1.0;
-
-            double Random = RNG->GetValue( TID, Min, Max );
-
-            if ( (real)Random < StarMass*_MinStarMass )  StarMFrac = MinStarMass / GasMass;
-            else                                         continue;
-         }
-
-
-//       1-5. check the maximum gas mass fraction allowed to convert to stars
-         StarMFrac = MIN( StarMFrac, MaxStarMFrac );
+//       check the maximum gas mass fraction allowed to convert to stars
+         StarMFrac = MIN( StarMass/GasMass, SF_CREATE_STAR_MAX_STAR_MFRAC );
          StarMass  = GasMass*StarMFrac;
 
 
@@ -294,6 +356,11 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
 // free memory
+#  ifdef MHD
+   if ( NeedPres )   delete [] MagCC;
+#  endif
+   if ( NeedPres )   delete [] Pres;
+   if ( NeedCs2  )   delete [] Cs2;
    delete [] NewParAttFlt;
    delete [] NewParAttInt;
    delete [] NewParID;
@@ -304,7 +371,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 // get the total number of active particles in all MPI ranks
    MPI_Allreduce( &amr->Par->NPar_Active, &amr->Par->NPar_Active_AllRank, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD );
 
-} // FUNCTION : SF_CreateStar_AGORA
+} // FUNCTION : SF_CreateStar_GeneralGalaxy
 
 
 

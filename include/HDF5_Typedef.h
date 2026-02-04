@@ -709,6 +709,7 @@ struct InputPara_t
    int    SF_CreateStar_DetRandom;
    int    SF_CreateStar_MinLevel;
    double SF_CreateStar_MinGasDens;
+   double SF_CreateStar_MaxGasJeansL;
    double SF_CreateStar_MassEff;
    double SF_CreateStar_MinStarMass;
    double SF_CreateStar_MaxStarMFrac;
