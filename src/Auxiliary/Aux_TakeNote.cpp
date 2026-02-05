@@ -73,8 +73,8 @@ void Aux_TakeNote()
       fprintf( Note, "POT_SCHEME                      SOR\n" );
 #     elif ( POT_SCHEME == MG )
       fprintf( Note, "POT_SCHEME                      MG\n" );
-#     elif ( POT_SCHEME == NONE )
-      fprintf( Note, "POT_SCHEME                      NONE\n" );
+#     elif ( POT_SCHEME == OPTION_NONE )
+      fprintf( Note, "POT_SCHEME                      OPTION_NONE\n" );
 #     else
       fprintf( Note, "POT_SCHEME                      UNKNOWN\n" );
 #     endif
@@ -121,8 +121,8 @@ void Aux_TakeNote()
       fprintf( Note, "FLU_SCHEME                      MHM with Riemann prediction\n" );
 #     elif ( FLU_SCHEME == CTU )
       fprintf( Note, "FLU_SCHEME                      CTU\n" );
-#     elif ( FLU_SCHEME == NONE )
-      fprintf( Note, "FLU_SCHEME                      NONE\n" );
+#     elif ( FLU_SCHEME == OPTION_NONE )
+      fprintf( Note, "FLU_SCHEME                      OPTION_NONE\n" );
 #     else
       fprintf( Note, "FLU_SCHEME                      UNKNOWN\n" );
 #     endif
@@ -131,8 +131,8 @@ void Aux_TakeNote()
       fprintf( Note, "LR_SCHEME                       PLM\n" );
 #     elif ( LR_SCHEME == PPM )
       fprintf( Note, "LR_SCHEME                       PPM\n" );
-#     elif ( LR_SCHEME == NONE )
-      fprintf( Note, "LR_SCHEME                       NONE\n" );
+#     elif ( LR_SCHEME == OPTION_NONE )
+      fprintf( Note, "LR_SCHEME                       OPTION_NONE\n" );
 #     else
       fprintf( Note, "LR_SCHEME                       UNKNOWN\n" );
 #     endif
@@ -147,8 +147,8 @@ void Aux_TakeNote()
       fprintf( Note, "RSOLVER                         HLLC\n" );
 #     elif ( RSOLVER == HLLD )
       fprintf( Note, "RSOLVER                         HLLD\n" );
-#     elif ( RSOLVER == NONE )
-      fprintf( Note, "RSOLVER                         NONE\n" );
+#     elif ( RSOLVER == OPTION_NONE )
+      fprintf( Note, "RSOLVER                         OPTION_NONE\n" );
 #     else
       fprintf( Note, "RSOLVER                         UNKNOWN\n" );
 #     endif
@@ -157,8 +157,8 @@ void Aux_TakeNote()
       fprintf( Note, "DUAL_ENERGY                     DE_ENPY\n" );
 #     elif ( DUAL_ENERGY == DE_EINT )
       fprintf( Note, "DUAL_ENERGY                     DE_EINT\n" );
-#     elif ( DUAL_ENERGY == NONE )
-      fprintf( Note, "DUAL_ENERGY                     NONE\n" );
+#     elif ( DUAL_ENERGY == OPTION_NONE )
+      fprintf( Note, "DUAL_ENERGY                     OPTION_NONE\n" );
 #     else
       fprintf( Note, "DUAL_ENERGY                     UNKNOWN\n" );
 #     endif
@@ -557,7 +557,7 @@ void Aux_TakeNote()
       fprintf( Note, "CHECK_INTERMEDIATE              HLLC\n" );
 #     elif ( CHECK_INTERMEDIATE == HLLD )
       fprintf( Note, "CHECK_INTERMEDIATE              HLLD\n" );
-#     elif ( CHECK_INTERMEDIATE == NONE )
+#     elif ( CHECK_INTERMEDIATE == OPTION_NONE )
       fprintf( Note, "CHECK_INTERMEDIATE              OFF\n" );
 #     else
       fprintf( Note, "CHECK_INTERMEDIATE              UNKNOWN\n" );
@@ -571,7 +571,7 @@ void Aux_TakeNote()
       fprintf( Note, "RSOLVER_RESCUE                  HLLC\n" );
 #     elif ( RSOLVER_RESCUE == HLLD )
       fprintf( Note, "RSOLVER_RESCUE                  HLLD\n" );
-#     elif ( RSOLVER_RESCUE == NONE )
+#     elif ( RSOLVER_RESCUE == OPTION_NONE )
       fprintf( Note, "RSOLVER_RESCUE                  OFF\n" );
 #     else
       fprintf( Note, "RSOLVER_RESCUE                  UNKNOWN\n" );

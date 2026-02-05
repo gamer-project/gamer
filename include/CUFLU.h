@@ -187,7 +187,7 @@
 
 
 // switch to a different Riemann solver if the default one fails
-// --> to disable it, either comment out this line or set RSOLVER_RESCUE to NONE
+// --> to disable it, either comment out this line or set RSOLVER_RESCUE to OPTION_NONE
 // --> used by Hydro_ComputeFlux() and Hydro_RiemannPredict_Flux()
 // --> doesn't support either RSOLVER==ROE or RSOLVER_RESCUE==ROE/EXACT for now due to HLL_NO_REF_STATE/HLL_INCLUDE_ALL_WAVES
 #  define RSOLVER_RESCUE   HLLE
@@ -206,7 +206,7 @@
 
 #if ( RSOLVER_RESCUE == RSOLVER  ||  RSOLVER == ROE  ||  !defined RSOLVER )
 #  undef  RSOLVER_RESCUE
-#  define RSOLVER_RESCUE   NONE
+#  define RSOLVER_RESCUE   OPTION_NONE
 #endif
 
 
@@ -546,19 +546,25 @@
 //
 //    Volta: 700 and 720 (sm_70, sm_72),
 //
-//    Turing: 750 (sm_75), and
+//    Turing: 750 (sm_75).
 //
 //    Ampere: 800, 860 and 870 (sm_80, sm_86, sm_87).
 //
 //    Ada: 890 (sm_89).
 //
 //    Hopper: 900 (sm_90).
-#  if   ( GPU_COMPUTE_CAPABILITY != 700 && GPU_COMPUTE_CAPABILITY != 720 && GPU_COMPUTE_CAPABILITY != 750 \
-      &&  GPU_COMPUTE_CAPABILITY != 800 && GPU_COMPUTE_CAPABILITY != 860 && GPU_COMPUTE_CAPABILITY != 870 \
+//
+//    Blackwell: 1000, 1010 (Thor GPUs with CUDA12.X or below), 1030, 1100 (Thor GPUs with CUDA13.X or above), 1200 and 1210 (sm_100, sm 101, sm_103, sm_110, sm_1200 and sm_121)
+#  if   ( GPU_COMPUTE_CAPABILITY != 700  && GPU_COMPUTE_CAPABILITY != 720  && GPU_COMPUTE_CAPABILITY != 750  \
+      &&  GPU_COMPUTE_CAPABILITY != 800  && GPU_COMPUTE_CAPABILITY != 860  && GPU_COMPUTE_CAPABILITY != 870  \
       &&  GPU_COMPUTE_CAPABILITY != 890 \
-      &&  GPU_COMPUTE_CAPABILITY != 900 )
+      &&  GPU_COMPUTE_CAPABILITY != 900 \
+      &&  GPU_COMPUTE_CAPABILITY != 1000 && GPU_COMPUTE_CAPABILITY != 1030 \
+      &&  ( ( __CUDACC_VER_MAJOR__ < 13 && GPU_COMPUTE_CAPABILITY != 1010 ) || ( __CUDACC_VER_MAJOR__ >= 13 && GPU_COMPUTE_CAPABILITY != 1100 ) ) \
+      &&  GPU_COMPUTE_CAPABILITY != 1200 && GPU_COMPUTE_CAPABILITY != 1210 )
 #     error : ERROR : GPU_COMPUTE_CAPABILITY unsupported by cuFFTdx (please visit cuFFTdx website to check whether your GPU is supported and update CUFLU.h accordingly if it is) !!
 #  endif
+
 
 // number of blocks suggested by cufftdx disabled by default
 // profiling the code showed that a different number of blocks provides better performance

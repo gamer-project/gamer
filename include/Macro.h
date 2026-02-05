@@ -18,8 +18,8 @@
 #define VERSION      "gamer-2.3.dev"
 
 
-// option == NONE --> the option is turned off
-#define NONE         0
+// option == OPTION_NONE --> the option is turned off
+#define OPTION_NONE  0
 
 
 // GPU architecture
@@ -53,7 +53,7 @@
 # define GPU_ARCH ADA_LOVELACE
 #elif ( GPU_COMPUTE_CAPABILITY >= 900   &&  GPU_COMPUTE_CAPABILITY < 1000 )
 # define GPU_ARCH HOPPER
-#elif ( GPU_COMPUTE_CAPABILITY >= 1000  &&  GPU_COMPUTE_CAPABILITY < 1210 )
+#elif ( GPU_COMPUTE_CAPABILITY >= 1000  &&  GPU_COMPUTE_CAPABILITY <= 1210 )
 # define GPU_ARCH BLACKWELL
 #else
 # error : ERROR : Unknown GPU_COMPUTE_CAPABILITY !!
@@ -1255,10 +1255,10 @@
 #  undef UNSPLIT_GRAVITY
 #endif
 
-// currently we always set GPU_ARCH == NONE when GPU is off
+// currently we always set GPU_ARCH == OPTION_NONE when GPU is off
 #ifndef GPU
 #  undef  GPU_ARCH
-#  define GPU_ARCH NONE
+#  define GPU_ARCH OPTION_NONE
 #endif
 
 // currently we assume that particle acceleration is solely due to gravity
