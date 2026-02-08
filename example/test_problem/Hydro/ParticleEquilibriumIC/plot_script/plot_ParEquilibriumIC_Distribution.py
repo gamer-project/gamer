@@ -25,10 +25,12 @@ def Potential_Hernquist( r ):
     return ( -G*M0/R0 )/( 1.0+(r/R0) )
 
 def DistributionFunction_Hernquist( E ):
+    # The analytical solution is given in Eq. (4.51) of Galactic Dynamics: Second Edition, Binney & Tremaine 2008.
+    # Note that we multiply it by M0 here because the distribution function in the textbook is normalized to the total probability: $\int \int f(E) d^{3}v d^{3}x = 1$, while in our calculation, it is normalized to the total mass.
     M0   = 2*np.pi*Rho0*R0**3
     Etil = E*R0/(G*M0)
 
-    return (2**(-0.5))*(2*np.pi*(G*M0*R0)**0.5)**(-3)*((Etil**0.5)/(1-Etil)**2)*((1-2*Etil)*(8*Etil**2-8*Etil-3)+(3*np.arcsin(Etil**0.5))/(Etil*(1-Etil))**0.5)
+    return M0 * (2**(-0.5))*(2*np.pi*(G*M0*R0)**0.5)**(-3)*((Etil**0.5)/(1-Etil)**2)*((1-2*Etil)*(8*Etil**2-8*Etil-3)+(3*np.arcsin(Etil**0.5))/(Etil*(1-Etil))**0.5)
 
 # Analytical solutoins for Plummer model
 def Density_Plummer( r ):
