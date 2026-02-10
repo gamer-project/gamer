@@ -122,6 +122,8 @@ DT__PARVEL                    0.5         # dt criterion: particle velocity safe
 DT__PARVEL_MAX               -1.0         # dt criterion: maximum allowed dt from particle velocity (<0=off) [-1.0]
 DT__PARACC                    0.5         # dt criterion: particle acceleration safety factor (0=off) [0.5] ##STORE_PAR_ACC ONLY##
 DT__CR_DIFFUSION              0.3         # dt criterion: cosmic-ray diffusion CFL factor [0.3] ##CR_DIFFUSION only##
+DT__CONDUCTION                0.3         # dt criterion: conductive flux CFL factor [0.3] ##CONDUCTION only##
+DT__VISCOSITY                 0.3         # dt criterion: viscous flux CFL factor [0.3] ##VISCOSITY only##
 DT__MAX_DELTA_A               0.01        # dt criterion: maximum variation of the cosmic scale factor [0.01]
 DT__SYNC_PARENT_LV            0.1         # dt criterion: allow dt to adjust by (1.0+DT__SYNC_PARENT) in order to synchronize
                                           #               with the parent level (for OPT__DT_LEVEL==3 only) [0.1]
@@ -242,6 +244,30 @@ GAMMA_CR                      1.333333333 # effective adiabatic index of cosmic 
 CR_DIFF_PARA                  0.05        # cosmic-ray diffusion coefficients parallel/perpendicular to the
 CR_DIFF_PERP                  0.0         # magnetic field [0.0] ##CR_DIFFUSION only##
 CR_DIFF_MIN_B                 0.0         # disable diffusion locally when B field amplitude is smaller than this threshold (<=0=off) [0.0] ##CR_DIFFUSION only##
+
+
+# conduction (CONDUCTION only)
+CONDUCTION_TYPE               1           # (1=constant conduction, 2=Spitzer conduction) [1] ##CONDUCTION only##
+CONDUCTION_FLUX_TYPE          1           # (1=isotropic conduction, 2=anisotropic conduction) [1] ##CONDUCTION only, 2 is for MHD ONLY##
+CONDUCTION_CONSTANT_COEFF     1.0         # constant conductivity coefficient (if CONDUCTION_TYPE=1) [1.0] ##CONDUCTION only##
+CONDUCTION_SPITZER_FRAC       1.0         # fraction of Spitzer conductivity (if CONDUCTION_TYPE=2) [1.0] ##CONDUCTION only##
+CONDUCTION_COULOMB_LOG        40.0        # Coulomb logarithm in Spitzer conduction definition (if CONDUCTION_TYPE=2) [40.0] ##CONDUCTION only##
+CONDUCTION_MAX_DIFFUSIVITY   -1.0         # maximum conductive diffusivity, to prevent extremely small timestep (-1=no limit) [-1.0] ##CONDUCTION only##
+CONDUCTION_MUE                1.14        # mean molecular weight for free electrons [1.14] ##CONDUCTION only##
+CONDUCTION_SATURATION         1           # if set, conduction will saturate when the electron mean free path is comparable to the 
+                                          # temperature gradient length scale (Cowie & McKee 1977) [1] ##CONDUCTION only##
+CONDUCTION_SAT_WHISTLER       0           # if set, conduction will saturate due to the effect of Whistler waves () [0] ##CONDUCTION only##
+
+
+# viscosity (VISCOSITY only)
+VISCOSITY_TYPE                1           # (1=constant viscosity, 2=Spitzer viscosity) [1] ##VISCOSITY only##
+VISCOSITY_FLUX_TYPE           1           # (1=isotropic viscosity, 2=anisotropic viscosity) [1] ##VISCOSITY only, 2 is for MHD ONLY##
+VISCOSITY_COEFF_TYPE          1           # (1=isotropic viscosity, 2=anisotropic viscosity) [1] ##VISCOSITY only
+VISCOSITY_CONSTANT_COEFF      1.0         # constant viscosity coefficient (if VISCOSITY_TYPE=1) [1.0] ##VISCOSITY only##
+VISCOSITY_SPITZER_FRAC        1.0         # fraction of Spitzer viscosity (if VISCOSITY_TYPE=2) [1.0] ##VISCOSITY only##
+VISCOSITY_COULOMB_LOG         40.0        # Coulomb logarithm in Spitzer viscosity definition (if VISCOSITY_TYPE=2) [40.0] ##VISCOSITY only##
+VISCOSITY_MAX_DIFFUSIVITY    -1.0         # maximum viscous diffusivity, to prevent extremely small timestep (-1=no limit) [-1.0] ##VISCOSITY only##
+VISCOSITY_BOUNDS              0           # if set, viscosity will be bounded by firehose and mirror instabilities [0] ##VISCOSITY only##
 
 
 # fluid solver in HYDRO (MODEL==HYDRO only)

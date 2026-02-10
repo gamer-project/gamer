@@ -68,7 +68,7 @@ bool                 OPT__INT_TIME, OPT__OUTPUT_USER, OPT__OUTPUT_BASE, OPT__OUT
 bool                 OPT__OUTPUT_BASEPS, OPT__CK_REFINE, OPT__CK_PROPER_NESTING, OPT__CK_FINITE, OPT__RECORD_PERFORMANCE;
 bool                 OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT__CK_FLUX_ALLOCATE, OPT__CK_NORMALIZE_PASSIVE;
 bool                 OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
-bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__FREEZE_FLUID, OPT__RECORD_CENTER, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
+bool                 OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__FREEZE_FLUID, OPT__RECORD_CENTER, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT, OPT__FREEZE_HYDRO;
 bool                 OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 bool                 OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
 bool                 OPT__INT_FRAC_PASSIVE_LR, OPT__CK_INPUT_FLUID, OPT__SORT_PATCH_BY_LBIDX;
@@ -368,6 +368,36 @@ double DT__CR_DIFFUSION;
 double CR_DIFF_MIN_B;
 #endif
 
+// c. viscosity
+#ifdef VISCOSITY
+bool   VISCOSITY_SATURATION;
+bool   VISCOSITY_BOUNDS;
+int    VISCOSITY_TYPE;
+int    VISCOSITY_FLUX_TYPE;
+int    VISCOSITY_COEFF_TYPE;
+double DT__VISCOSITY;
+double VISCOSITY_CONSTANT_COEFF;
+double VISCOSITY_SPITZER_FRAC;
+double VISCOSITY_COULOMB_LOG;
+double VISCOSITY_MAX_DIFFUSIVITY;
+double VISCOSITY_MUI;
+bool   OPT__OUTPUT_DELTAP;
+#endif
+
+// d. conduction
+#ifdef CONDUCTION
+bool   CONDUCTION_SATURATION;
+bool   CONDUCTION_SAT_WHISTLER;
+int    CONDUCTION_TYPE;
+int    CONDUCTION_FLUX_TYPE;
+double DT__CONDUCTION;
+double CONDUCTION_CONSTANT_COEFF;
+double CONDUCTION_SPITZER_FRAC;
+double CONDUCTION_COULOMB_LOG;
+double CONDUCTION_MAX_DIFFUSIVITY;
+double CONDUCTION_MUE;
+bool   OPT__OUTPUT_KAPPA;
+#endif
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // =======================================================================================================
@@ -626,7 +656,13 @@ int main( int argc, char *argv[] )
    }
 
    if ( OPT__PATCH_COUNT > 0 )            Aux_Record_PatchCount();
-   if ( OPT__RECORD_MEMORY )              Aux_GetMemInfo();
+   if ( OPT__RECORD_MEMORY )              
+#     ifdef __APPLE__
+      Aux_Message( stderr, "WARNING : memory reporting is not currently supported on macOS !!\n" );
+#     else
+      Aux_GetMemInfo();
+#     endif
+
    if ( OPT__RECORD_USER ) {
       if ( Aux_Record_User_Ptr != NULL )  Aux_Record_User_Ptr();
       else
@@ -721,7 +757,10 @@ int main( int argc, char *argv[] )
       TIMING_FUNC(   Aux_Record_PatchCount(),         Timer_Main[4],   TIMER_ON   );
 
       if ( OPT__RECORD_MEMORY )
+#     ifndef __APPLE__
+      // memory reporting is not currently supported on macOS
       TIMING_FUNC(   Aux_GetMemInfo(),                Timer_Main[4],   TIMER_ON   );
+#     endif
 
       if ( OPT__RECORD_USER )
       TIMING_FUNC(   Aux_Record_User_Ptr(),           Timer_Main[4],   TIMER_ON   );

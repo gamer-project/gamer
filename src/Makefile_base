@@ -359,7 +359,9 @@ endif # COSMIC_RAY
 
 # microphysics source files
 # ------------------------------------------------------------------------------------
-CPU_FILE    += Microphysics_Init.cpp  Microphysics_End.cpp
+CPU_FILE    += Microphysics_Init.cpp  Microphysics_End.cpp  CPU_Microphysics_SharedUtility.cpp
+
+GPU_FILE    += CUFLU_Microphysics_SharedUtility.cu
 
 vpath %.cpp    Microphysics
 vpath %.cu     Microphysics
@@ -375,6 +377,30 @@ GPU_FILE    += CUFLU_CR_AddDiffuseFlux.cu  CUFLU_CR_ComputeDiffusivity.cu
 vpath %.cpp    Microphysics/CosmicRayDiffusion
 vpath %.cu     Microphysics/CosmicRayDiffusion
 endif # CR_DIFFUSION
+
+
+# conduction source files (included only if "CONDUCTION" is turned on)
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DCONDUCTION, $(SIMU_OPTION))" "-DCONDUCTION"
+CPU_FILE    += CPU_ComputeConduction.cpp CPU_AddConductiveFlux.cpp
+
+GPU_FILE    += CUFLU_ComputeConduction.cu CUFLU_AddConductiveFlux.cu
+
+vpath %.cpp    Microphysics/Conduction
+vpath %.cu     Microphysics/Conduction
+endif # CONDUCTION
+
+
+# viscosity source files (included only if "VISCOSITY" is turned on)
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DVISCOSITY, $(SIMU_OPTION))" "-DVISCOSITY"
+CPU_FILE    += CPU_ComputeViscosity.cpp CPU_AddViscousFlux.cpp
+
+GPU_FILE    += CUFLU_ComputeViscosity.cu CUFLU_AddViscousFlux.cu
+
+vpath %.cpp    Microphysics/Viscosity
+vpath %.cu     Microphysics/Viscosity
+endif # VISCOSITY
 
 
 # test problem source files

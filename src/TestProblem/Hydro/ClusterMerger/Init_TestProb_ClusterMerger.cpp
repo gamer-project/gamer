@@ -33,6 +33,7 @@ static char    Merger_File_Prof3[1000];   // profile table of cluster 3
        double  Merger_Coll_VelY3;         // y-velocity of the third cluster
        long    NPar_EachCluster[3];       // Number of particles in each cluster
        long    NPar_AllCluster;           // Number of particles in all clusters
+       int     Merger_Coll_RefineScalar;  // Which passive scalar field to refine on
 
 static double *Table_R1 = NULL;           // radius of cluster 1
 static double *Table_D1 = NULL;           // density of cluster 1
@@ -56,6 +57,7 @@ static int     Merger_NBin3;              // number of radial bins of cluster 3
 static FieldIdx_t ColorField1Idx = Idx_Undefined;
 static FieldIdx_t ColorField2Idx = Idx_Undefined;
 static FieldIdx_t ColorField3Idx = Idx_Undefined;
+       FieldIdx_t RefineFieldIdx = Idx_Undefined;
 
 // =======================================================================================
 
@@ -79,6 +81,7 @@ int Read_Num_Points_ClusterMerger(std::string filename);
 void Read_Profile_ClusterMerger(std::string filename, std::string fieldname,
                                 double field[]);
 void AddNewField_ClusterMerger();
+bool Flag_ClusterMerger( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 
 
 
@@ -180,34 +183,35 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
 // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
 // --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
 // --> LOAD_PARA() is defined in "include/TestProb.h"
-// ***************************************************************************************************************************
-// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",        &VARIABLE,               DEFAULT,          MIN,           MAX            );
-// ***************************************************************************************************************************
-   LOAD_PARA( load_mode, "Merger_Coll_NumHalos",   &Merger_Coll_NumHalos,   2,                1,             3              );
-   LOAD_PARA( load_mode, "Merger_Coll_IsGas1",     &Merger_Coll_IsGas1,     true,             Useless_bool,  Useless_bool   );
-   LOAD_PARA( load_mode, "Merger_Coll_IsGas2",     &Merger_Coll_IsGas2,     true,             Useless_bool,  Useless_bool   );
-   LOAD_PARA( load_mode, "Merger_Coll_IsGas3",     &Merger_Coll_IsGas3,     true,             Useless_bool,  Useless_bool   );
-   LOAD_PARA( load_mode, "Merger_File_Prof1",       Merger_File_Prof1,      NoDef_str,        Useless_str,   Useless_str    );
-   LOAD_PARA( load_mode, "Merger_File_Par1",        Merger_File_Par1,       NoDef_str,        Useless_str,   Useless_str    );
-   LOAD_PARA( load_mode, "Merger_File_Prof2",       Merger_File_Prof2,      NoDef_str,        Useless_str,   Useless_str    );
-   LOAD_PARA( load_mode, "Merger_File_Par2",        Merger_File_Par2,       NoDef_str,        Useless_str,   Useless_str    );
-   LOAD_PARA( load_mode, "Merger_File_Prof3",       Merger_File_Prof3,      NoDef_str,        Useless_str,   Useless_str    );
-   LOAD_PARA( load_mode, "Merger_File_Par3",        Merger_File_Par3,       NoDef_str,        Useless_str,   Useless_str    );
-   LOAD_PARA( load_mode, "Merger_Coll_PosX1",      &Merger_Coll_PosX1,     -1.0,              NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_PosY1",      &Merger_Coll_PosY1,     -1.0,              NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_PosX2",      &Merger_Coll_PosX2,     -1.0,              NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_PosY2",      &Merger_Coll_PosY2,     -1.0,              NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_PosX3",      &Merger_Coll_PosX3,     -1.0,              NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_PosY3",      &Merger_Coll_PosY3,     -1.0,              NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_VelX1",      &Merger_Coll_VelX1,     -1.0,              NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_VelY1",      &Merger_Coll_VelY1,     -1.0,              NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_VelX2",      &Merger_Coll_VelX2,     -1.0,              NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_VelY2",      &Merger_Coll_VelY2,     -1.0,              NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_VelX3",      &Merger_Coll_VelX3,     -1.0,              NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_VelY3",      &Merger_Coll_VelY3,     -1.0,              NoMin_double,  NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_UseMetals",  &Merger_Coll_UseMetals,  true,             Useless_bool,  Useless_bool   );
+// ********************************************************************************************************************************
+// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",          &VARIABLE,                  DEFAULT,          MIN,           MAX            );
+// ********************************************************************************************************************************
+   LOAD_PARA( load_mode, "Merger_Coll_NumHalos",     &Merger_Coll_NumHalos,      2,                1,             3              );
+   LOAD_PARA( load_mode, "Merger_Coll_IsGas1",       &Merger_Coll_IsGas1,        true,             Useless_bool,  Useless_bool   );
+   LOAD_PARA( load_mode, "Merger_Coll_IsGas2",       &Merger_Coll_IsGas2,        true,             Useless_bool,  Useless_bool   );
+   LOAD_PARA( load_mode, "Merger_Coll_IsGas3",       &Merger_Coll_IsGas3,        true,             Useless_bool,  Useless_bool   );
+   LOAD_PARA( load_mode, "Merger_File_Prof1",         Merger_File_Prof1,         NoDef_str,        Useless_str,   Useless_str    );
+   LOAD_PARA( load_mode, "Merger_File_Par1",          Merger_File_Par1,          NoDef_str,        Useless_str,   Useless_str    );
+   LOAD_PARA( load_mode, "Merger_File_Prof2",         Merger_File_Prof2,         NoDef_str,        Useless_str,   Useless_str    );
+   LOAD_PARA( load_mode, "Merger_File_Par2",          Merger_File_Par2,          NoDef_str,        Useless_str,   Useless_str    );
+   LOAD_PARA( load_mode, "Merger_File_Prof3",         Merger_File_Prof3,         NoDef_str,        Useless_str,   Useless_str    );
+   LOAD_PARA( load_mode, "Merger_File_Par3",          Merger_File_Par3,          NoDef_str,        Useless_str,   Useless_str    );
+   LOAD_PARA( load_mode, "Merger_Coll_PosX1",        &Merger_Coll_PosX1,        -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_PosY1",        &Merger_Coll_PosY1,        -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_PosX2",        &Merger_Coll_PosX2,        -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_PosY2",        &Merger_Coll_PosY2,        -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_PosX3",        &Merger_Coll_PosX3,        -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_PosY3",        &Merger_Coll_PosY3,        -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_VelX1",        &Merger_Coll_VelX1,        -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_VelY1",        &Merger_Coll_VelY1,        -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_VelX2",        &Merger_Coll_VelX2,        -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_VelY2",        &Merger_Coll_VelY2,        -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_VelX3",        &Merger_Coll_VelX3,        -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_VelY3",        &Merger_Coll_VelY3,        -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_UseMetals",    &Merger_Coll_UseMetals,     true,             Useless_bool,  Useless_bool   );
+   LOAD_PARA( load_mode, "Merger_Coll_RefineScalar", &Merger_Coll_RefineScalar,  2,                1,             3              );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 
@@ -741,6 +745,7 @@ void Init_TestProb_Hydro_ClusterMerger()
    Par_Init_ByFunction_Ptr       = Par_Init_ByFunction_ClusterMerger;
    Init_Field_User_Ptr           = AddNewField_ClusterMerger;
    Par_Init_Attribute_User_Ptr   = AddNewParticleAttribute_ClusterMerger;
+   Flag_User_Ptr                 = Flag_ClusterMerger;
 #  ifdef MHD
    Init_Function_BField_User_Ptr = SetBFieldIC;
 #  endif
@@ -836,6 +841,19 @@ void AddNewField_ClusterMerger()
       ColorField2Idx = AddField( "ColorField2", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_NO, INTERP_FRAC_NO );
    if ( Merger_Coll_NumHalos > 2 && ColorField3Idx == Idx_Undefined )
       ColorField3Idx = AddField( "ColorField3", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_NO, INTERP_FRAC_NO );
+
+   switch ( Merger_Coll_RefineScalar )
+   {
+      case 1:
+         RefineFieldIdx = ColorField1Idx;
+		 break;
+	  case 2:
+		 RefineFieldIdx = ColorField2Idx;
+		 break;
+	  case 3:
+		 RefineFieldIdx = ColorField3Idx;
+		 break;
+   }
 
 } // FUNCTION : AddNewField_ClusterMerger
 #endif

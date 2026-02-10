@@ -103,11 +103,11 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
                       const double Time, const bool UsePot, const OptExtAcc_t ExtAcc, const MicroPhy_t MicroPhy,
                       const real MinDens, const real MinPres, const real MinEint,
-                      const real DualEnergySwitch, const long PassiveFloor,
+                      const real MinTemp, const real DualEnergySwitch, const long PassiveFloor,
                       const bool NormPassive, const int NNorm, const int NormIdx[],
                       const bool FracPassive, const int NFrac, const int FracIdx[],
                       const bool JeansMinPres, const real JeansMinPres_Coeff,
-                      const bool UseWaveFlag );
+                      const bool UseWaveFlag, const bool FreezeHydro );
 void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 #if ( MODEL == HYDRO )
 real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
@@ -157,6 +157,14 @@ real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Gamma_m1,
                           const bool CheckMinPres, const real MinPres );
 #endif // #ifdef DUAL_ENERGY
 #endif // #if ( MODEL == HYDRO )
+#ifdef VISCOSITY
+void Hydro_ComputeViscosity( real &visc_mu, real &visc_nu, const MicroPhy_t *MicroPhy,
+                             const real Dens, const real Temp );
+#endif
+#ifdef CONDUCTION
+void Hydro_ComputeConduction( real &cond_kappa, real &cond_chi, const MicroPhy_t *MicroPhy,
+                              const real Dens, const real Temp );
+#endif
 #ifdef SRHD
 real Hydro_Con2HTilde( const real Con[], const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                        const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
@@ -204,6 +212,16 @@ void Flu_DerivedField_DivVel( real Out[], const real FluIn[], const real MagIn[]
 void Flu_DerivedField_Mach( real Out[], const real FluIn[], const real MagIn[], const int NFieldOut,
                             const int NCellInX, const int NCellInY, const int NCellInZ,
                             const int NGhost, const double dh );
+#ifdef VISCOSITY
+void Flu_DerivedField_DeltaP( real Out[], const real FluIn[], const real MagIn[], const int NFieldOut,
+                              const int NCellInX, const int NCellInY, const int NCellInZ,
+                              const int NGhost, const double dh );
+#endif
+#ifdef CONDUCTION
+void Flu_DerivedField_Kappa( real Out[], const real FluIn[], const real MagIn[], const int NFieldOut,
+                             const int NCellInX, const int NCellInY, const int NCellInZ,
+                             const int NGhost, const double dh );
+#endif
 #endif
 
 
@@ -313,8 +331,8 @@ void   dt_Close( const real h_dt_Array_T[], const int NPG );
 void   CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                      const real Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real Pot_Array[][ CUBE(GRA_NXT) ],
                      const double Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
-                     const MicroPhy_t MicroPhy, const real MinPres, const long PassiveFloor, const bool P5_Gradient,
-                     const bool UsePot, const OptExtAcc_t ExtAcc, const double TargetTime );
+                     const MicroPhy_t MicroPhy, const real MinPres, const real MinTemp, const long PassiveFloor,
+                     const bool P5_Gradient, const bool UsePot, const OptExtAcc_t ExtAcc, const double TargetTime );
 
 
 // MPI
@@ -639,18 +657,18 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter,
                              const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
                              const double Time, const bool UsePot, const OptExtAcc_t ExtAcc, const MicroPhy_t MicroPhy,
-                             const real MinDens, const real MinPres, const real MinEint,
+                             const real MinDens, const real MinPres, const real MinEint, const real MinTemp,
                              const real DualEnergySwitch,
                              const long PassiveFloor,
                              const bool NormPassive, const int NNorm,
                              const bool FracPassive, const int NFrac,
                              const bool JeansMinPres, const real JeansMinPres_Coeff,
-                             const int GPU_NStream, const bool UseWaveFlag );
+                             const int GPU_NStream, const bool UseWaveFlag, const bool FreezeHydro );
 void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real h_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                           const real h_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real h_Pot_Array[][ CUBE(GRA_NXT) ],
                           const double h_Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
-                          const MicroPhy_t MicroPhy, const real MinPres, const long PassiveFloor,
-                          const bool P5_Gradient, const bool UsePot,
+                          const MicroPhy_t MicroPhy, const real MinPres, const real MinTemp,
+                          const long PassiveFloor, const bool P5_Gradient, const bool UsePot,
                           const OptExtAcc_t ExtAcc, const double TargetTime, const int GPU_NStream );
 void CUAPI_Asyn_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)           ],
                                  real h_Flu_Array_Out[][FLU_NOUT_S][ CUBE(PS1)               ],
@@ -687,7 +705,7 @@ void CUAPI_Asyn_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_
                                       const real ELBDM_Lambda, const bool Poisson, const bool GraAcc,
                                       const bool SelfGravity, const OptExtPot_t ExtPot, const OptExtAcc_t ExtAcc,
                                       const double TimeNew, const double TimeOld, const real MinEint,
-                                      const int GPU_NStream, const bool UseWaveFlag );
+                                      const int GPU_NStream, const bool UseWaveFlag, const bool FreezeHydro );
 void CUAPI_SendExtPotTable2GPU( const real *h_Table );
 void CUAPI_MemFree_PoissonGravity();
 #endif // #ifdef GRAVITY

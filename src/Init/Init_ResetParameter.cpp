@@ -1164,6 +1164,22 @@ void Init_ResetParameter()
 
       PRINT_RESET_PARA( MU_NORM, FORMAT_REAL, "" );
    }
+#  ifdef CONDUCTION
+   if ( CONDUCTION_MAX_DIFFUSIVITY <= 0.0 )
+   {
+      CONDUCTION_MAX_DIFFUSIVITY = __DBL_MAX__;
+
+      PRINT_RESET_PARA( CONDUCTION_MAX_DIFFUSIVITY, FORMAT_REAL, "" );
+   }
+#  endif
+#  ifdef VISCOSITY
+   if ( VISCOSITY_MAX_DIFFUSIVITY <= 0.0 )
+   {
+      VISCOSITY_MAX_DIFFUSIVITY = __DBL_MAX__;
+
+      PRINT_RESET_PARA( VISCOSITY_MAX_DIFFUSIVITY, FORMAT_REAL, "" );
+   }
+#  endif
 #  endif
 
 

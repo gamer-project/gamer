@@ -76,7 +76,7 @@ extern bool       OPT__INT_TIME, OPT__OUTPUT_USER, OPT__OUTPUT_BASE, OPT__OUTPUT
 extern bool       OPT__OUTPUT_BASEPS, OPT__CK_REFINE, OPT__CK_PROPER_NESTING, OPT__CK_FINITE, OPT__RECORD_PERFORMANCE;
 extern bool       OPT__CK_RESTRICT, OPT__CK_PATCH_ALLOCATE, OPT__FIXUP_FLUX, OPT__CK_FLUX_ALLOCATE, OPT__CK_NORMALIZE_PASSIVE;
 extern bool       OPT__UM_IC_DOWNGRADE, OPT__UM_IC_REFINE, OPT__TIMING_MPI;
-extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__FREEZE_FLUID, OPT__RECORD_CENTER, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT;
+extern bool       OPT__CK_CONSERVATION, OPT__RESET_FLUID, OPT__FREEZE_FLUID, OPT__RECORD_CENTER, OPT__RECORD_USER, OPT__NORMALIZE_PASSIVE, AUTO_REDUCE_DT, OPT__FREEZE_HYDRO;
 extern bool       OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLAG_NEAR_BOUNDARY;
 extern bool       OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
 extern bool       OPT__INT_FRAC_PASSIVE_LR, OPT__CK_INPUT_FLUID, OPT__SORT_PATCH_BY_LBIDX;
@@ -295,7 +295,6 @@ extern double                SF_CREATE_STAR_MIN_STAR_MASS;
 extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
 #endif
 
-
 // (2-9) equation of state
 // =======================================================================================================
 #if ( MODEL == HYDRO )
@@ -397,7 +396,34 @@ extern double DT__CR_DIFFUSION;
 extern double CR_DIFF_MIN_B;
 #endif
 
+#ifdef VISCOSITY
+extern bool   VISCOSITY_SATURATION;
+extern bool   VISCOSITY_BOUNDS;
+extern int    VISCOSITY_TYPE;
+extern int    VISCOSITY_FLUX_TYPE;
+extern int    VISCOSITY_COEFF_TYPE;
+extern double DT__VISCOSITY;
+extern double VISCOSITY_CONSTANT_COEFF;
+extern double VISCOSITY_SPITZER_FRAC;
+extern double VISCOSITY_COULOMB_LOG;
+extern double VISCOSITY_MAX_DIFFUSIVITY;
+extern double VISCOSITY_MUI;
+extern bool   OPT__OUTPUT_DELTAP;
+#endif
 
+#ifdef CONDUCTION
+extern bool   CONDUCTION_SATURATION;
+extern bool   CONDUCTION_SAT_WHISTLER;
+extern int    CONDUCTION_TYPE;
+extern int    CONDUCTION_FLUX_TYPE;
+extern double DT__CONDUCTION;
+extern double CONDUCTION_CONSTANT_COEFF;
+extern double CONDUCTION_SPITZER_FRAC;
+extern double CONDUCTION_COULOMB_LOG;
+extern double CONDUCTION_MAX_DIFFUSIVITY;
+extern double CONDUCTION_MUE;
+extern bool   OPT__OUTPUT_KAPPA;
+#endif
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // ============================================================================================================

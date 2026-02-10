@@ -103,6 +103,16 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  else // #ifdef COSMIC_RAY
    const int  CosmicRay            = 0;
 #  endif // #ifdef COSMIC_RAY ... else ...
+#  ifdef VISCOSITY
+   const int  Viscosity            = 1;
+#  else
+   const int  Viscosity            = 0;
+#  endif
+#  ifdef CONDUCTION
+   const int  Conduction           = 1;
+#  else
+   const int  Conduction           = 0;
+#  endif
 #  endif // #if ( MODEL == HYDRO )
 
    KeyInfo_t KeyInfo;
@@ -238,6 +248,14 @@ void Init_ByRestart_HDF5( const char *FileName )
 
 #  ifdef COSMIC_RAY
    LoadField( "CR_Diffusion",         &KeyInfo.CR_Diffusion,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &CR_Diffusion,         -1, NonFatal );
+#  endif
+
+#  ifdef VISCOSITY
+   LoadField( "Viscosity",            &KeyInfo.Viscosity,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Viscosity,            -1, NonFatal );
+#  endif
+
+#  ifdef CONDUCTION
+   LoadField( "Conduction",           &KeyInfo.Conduction,           H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal, &Conduction,           -1, NonFatal );
 #  endif
 
    LoadField( "BoxSize",               KeyInfo.BoxSize,              H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  amr->BoxSize,          3,    Fatal );
@@ -1666,6 +1684,13 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "CR_Diffusion",           &RS.CR_Diffusion,           SID, TID, NonFatal, &RT.CR_Diffusion,           1, NonFatal );
 #  endif // #ifdef COSMIC_RAY
 
+#  ifdef VISCOSITY
+   LoadField( "Viscosity",              &RS.Viscosity,              SID, TID, NonFatal, &RT.Viscosity,              1, NonFatal );
+#  endif
+
+#  ifdef CONDUCTION
+   LoadField( "Conduction",             &RS.Conduction,             SID, TID, NonFatal, &RT.Conduction,             1, NonFatal );
+#  endif
 
 // 5. close all objects
    Status = H5Tclose( TID );
@@ -2015,6 +2040,12 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  ifdef CR_DIFFUSION
    LoadField( "Dt__CR_Diffusion",        &RS.Dt__CR_Diffusion,        SID, TID, NonFatal, &RT.Dt__CR_Diffusion,         1, NonFatal );
 #  endif
+#  ifdef VISCOSITY
+   LoadField( "Dt__Viscosity",           &RS.Dt__Viscosity,           SID, TID, NonFatal, &RT.Dt__Viscosity,          1, NonFatal );
+#  endif
+#  ifdef CONDUCTION
+   LoadField( "Dt__Conduction",          &RS.Dt__Conduction,          SID, TID, NonFatal, &RT.Dt__Conduction,          1, NonFatal );
+#  endif
 #  ifdef COMOVING
    LoadField( "Dt__MaxDeltaA",           &RS.Dt__MaxDeltaA,           SID, TID, NonFatal, &RT.Dt__MaxDeltaA,            1, NonFatal );
 #  endif
@@ -2164,6 +2195,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__ResetFluid",         &RS.Opt__ResetFluid,         SID, TID, NonFatal, &RT.Opt__ResetFluid,          1, NonFatal );
    LoadField( "Opt__ResetFluidInit",     &RS.Opt__ResetFluidInit,     SID, TID, NonFatal, &RT.Opt__ResetFluidInit,      1, NonFatal );
    LoadField( "Opt__FreezeFluid",        &RS.Opt__FreezeFluid,        SID, TID, NonFatal, &RT.Opt__FreezeFluid,         1, NonFatal );
+   LoadField( "Opt__FreezeHydro",        &RS.Opt__FreezeHydro,        SID, TID, NonFatal, &RT.Opt__FreezeHydro,         1, NonFatal );
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    LoadField( "MinDens",                 &RS.MinDens,                 SID, TID, NonFatal, &RT.MinDens,                  1, NonFatal );
 #  endif
@@ -2258,6 +2290,33 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  endif
 #  endif // #ifdef COSMIC_RAY
 
+// viscosity
+#  ifdef VISCOSITY
+   LoadField( "Visc_Type",               &RS.Visc_Type,               SID, TID, NonFatal, &RT.Visc_Type,                1, NonFatal );
+   LoadField( "Visc_FluxType",           &RS.Visc_FluxType,           SID, TID, NonFatal, &RT.Visc_FluxType,            1, NonFatal );
+   LoadField( "Visc_Saturation",         &RS.Visc_Saturation,         SID, TID, NonFatal, &RT.Visc_Saturation,          1, NonFatal );
+   LoadField( "Visc_CoeffType",          &RS.Visc_CoeffType,          SID, TID, NonFatal, &RT.Visc_CoeffType,           1, NonFatal );
+   LoadField( "Visc_Bounds",             &RS.Visc_Bounds,             SID, TID, NonFatal, &RT.Visc_Bounds,              1, NonFatal );
+   LoadField( "Visc_ConstCoeff",         &RS.Visc_ConstCoeff,         SID, TID, NonFatal, &RT.Visc_ConstCoeff,          1, NonFatal );
+   LoadField( "Visc_MaxDiffusivity",     &RS.Visc_MaxDiffusivity,     SID, TID, NonFatal, &RT.Visc_MaxDiffusivity,      1, NonFatal );
+   LoadField( "Visc_SpitzerFraction",    &RS.Visc_SpitzerFraction,    SID, TID, NonFatal, &RT.Visc_SpitzerFraction,     1, NonFatal );
+   LoadField( "Visc_CoulombLog",         &RS.Visc_CoulombLog,         SID, TID, NonFatal, &RT.Visc_CoulombLog,          1, NonFatal );
+   LoadField( "Visc_Mui",                &RS.Visc_Mui,                SID, TID, NonFatal, &RT.Visc_Mui,                 1, NonFatal );
+#  endif
+
+// conduction
+#  ifdef CONDUCTION
+   LoadField( "Cond_Type",               &RS.Cond_Type,               SID, TID, NonFatal, &RT.Cond_Type,                1, NonFatal );
+   LoadField( "Cond_FluxType",           &RS.Cond_FluxType,           SID, TID, NonFatal, &RT.Cond_FluxType,            1, NonFatal );
+   LoadField( "Cond_Saturation",         &RS.Cond_Saturation,         SID, TID, NonFatal, &RT.Cond_Saturation,          1, NonFatal );
+   LoadField( "Cond_SatWhistler",        &RS.Cond_SatWhistler,        SID, TID, NonFatal, &RT.Cond_SatWhistler,         1, NonFatal );
+   LoadField( "Cond_ConstCoeff",         &RS.Cond_ConstCoeff,         SID, TID, NonFatal, &RT.Cond_ConstCoeff,          1, NonFatal );
+   LoadField( "Cond_MaxDiffusivity",     &RS.Cond_MaxDiffusivity,     SID, TID, NonFatal, &RT.Cond_MaxDiffusivity,      1, NonFatal );
+   LoadField( "Cond_SpitzerFraction",    &RS.Cond_SpitzerFraction,    SID, TID, NonFatal, &RT.Cond_SpitzerFraction,     1, NonFatal );
+   LoadField( "Cond_CoulombLog",         &RS.Cond_CoulombLog,         SID, TID, NonFatal, &RT.Cond_CoulombLog,          1, NonFatal );
+   LoadField( "Cond_Mue",                &RS.Cond_Mue,                SID, TID, NonFatal, &RT.Cond_Mue,                 1, NonFatal );
+#  endif
+
 // initialization
    LoadField( "Opt__Init",               &RS.Opt__Init,               SID, TID, NonFatal, &RT.Opt__Init,                1, NonFatal );
    LoadField( "RestartLoadNRank",        &RS.RestartLoadNRank,        SID, TID, NonFatal, &RT.RestartLoadNRank,         1, NonFatal );
@@ -2349,6 +2408,12 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Output_Mach",            &RS.Opt__Output_Mach,            SID, TID, NonFatal, &RT.Opt__Output_Mach,            1, NonFatal );
 #  ifdef MHD
    LoadField( "Opt__Output_DivMag",          &RS.Opt__Output_DivMag,          SID, TID, NonFatal, &RT.Opt__Output_DivMag,          1, NonFatal );
+#  endif
+#  ifdef VISCOSITY
+   LoadField( "Opt__Output_DeltaP",          &RS.Opt__Output_DeltaP,          SID, TID, NonFatal, &RT.Opt__Output_DeltaP,          1, NonFatal );
+#  endif
+#  ifdef CONDUCTION
+   LoadField( "Opt__Output_Kappa",           &RS.Opt__Output_Kappa,           SID, TID, NonFatal, &RT.Opt__Output_Kappa,           1, NonFatal );
 #  endif
 #  ifdef SRHD
    LoadField( "Opt__Output_Lorentz",         &RS.Opt__Output_Lorentz,         SID, TID, NonFatal, &RT.Opt__Output_Lorentz,         1, NonFatal );

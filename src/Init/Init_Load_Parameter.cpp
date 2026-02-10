@@ -130,6 +130,12 @@ void Init_Load_Parameter()
 #  ifdef CR_DIFFUSION
    ReadPara->Add( "DT__CR_DIFFUSION",           &DT__CR_DIFFUSION,                3.0e-1,          0.0,           NoMax_double   );
 #  endif
+#  ifdef CONDUCTION
+   ReadPara->Add( "DT__CONDUCTION",             &DT__CONDUCTION,                  3.0e-1,          0.0,           NoMax_double   );
+#  endif
+#  ifdef VISCOSITY
+   ReadPara->Add( "DT__VISCOSITY",              &DT__VISCOSITY,                   3.0e-1,          0.0,           NoMax_double   );
+#  endif
 #  ifdef COMOVING
    ReadPara->Add( "DT__MAX_DELTA_A",            &DT__MAX_DELTA_A,                 0.01,            0.0,           NoMax_double   );
 #  endif
@@ -286,12 +292,40 @@ void Init_Load_Parameter()
 #  endif
 
 // microphysics
+
+// CR diffusion
 #  ifdef CR_DIFFUSION
    ReadPara->Add( "CR_DIFF_PARA",               &CR_DIFF_PARA,                    0.0,             0.0,           NoMax_double   );
    ReadPara->Add( "CR_DIFF_PERP",               &CR_DIFF_PERP,                    0.0,             0.0,           NoMax_double   );
    ReadPara->Add( "CR_DIFF_MIN_B",              &CR_DIFF_MIN_B,                   0.0,             NoMin_double,  NoMax_double   );
 #  endif
 
+// conduction
+#  ifdef CONDUCTION
+   ReadPara->Add( "CONDUCTION_TYPE",            &CONDUCTION_TYPE,                 1,               1,             2              );
+   ReadPara->Add( "CONDUCTION_FLUX_TYPE",       &CONDUCTION_FLUX_TYPE,            1,               1,             2              );
+   ReadPara->Add( "CONDUCTION_CONSTANT_COEFF",  &CONDUCTION_CONSTANT_COEFF,       1.0,             0.0,           NoMax_double   );
+   ReadPara->Add( "CONDUCTION_SPITZER_FRAC",    &CONDUCTION_SPITZER_FRAC,         1.0,             0.0,           NoMax_double   );
+   ReadPara->Add( "CONDUCTION_COULOMB_LOG",     &CONDUCTION_COULOMB_LOG,          40.0,            0.0,           NoMax_double   );
+   ReadPara->Add( "CONDUCTION_MAX_DIFFUSIVITY", &CONDUCTION_MAX_DIFFUSIVITY,     -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "CONDUCTION_MUE",             &CONDUCTION_MUE,                  1.14,            0.1,           NoMax_double   );
+   ReadPara->Add( "CONDUCTION_SATURATION",      &CONDUCTION_SATURATION,           false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "CONDUCTION_SAT_WHISTLER",    &CONDUCTION_SAT_WHISTLER,         false,           Useless_bool,  Useless_bool   );
+#  endif
+
+// viscosity
+#  ifdef VISCOSITY
+   ReadPara->Add( "VISCOSITY_TYPE",             &VISCOSITY_TYPE,                  1,               1,             2              );
+   ReadPara->Add( "VISCOSITY_FLUX_TYPE",        &VISCOSITY_FLUX_TYPE,             1,               1,             2              );
+   ReadPara->Add( "VISCOSITY_COEFF_TYPE",       &VISCOSITY_COEFF_TYPE,            1,               1,             2              );
+   ReadPara->Add( "VISCOSITY_CONSTANT_COEFF",   &VISCOSITY_CONSTANT_COEFF,        0.0,             0.0,           NoMax_double   );
+   ReadPara->Add( "VISCOSITY_SPITZER_FRAC",     &VISCOSITY_SPITZER_FRAC,          1.0,             0.0,           NoMax_double   );
+   ReadPara->Add( "VISCOSITY_COULOMB_LOG",      &VISCOSITY_COULOMB_LOG,           40.0,            0.0,           NoMax_double   );
+   ReadPara->Add( "VISCOSITY_MAX_DIFFUSIVITY",  &VISCOSITY_MAX_DIFFUSIVITY,      -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "VISCOSITY_MUI",              &VISCOSITY_MUI,                   1.22,            0.1,           NoMax_double   );
+   ReadPara->Add( "VISCOSITY_SATURATION",       &VISCOSITY_SATURATION,            false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "VISCOSITY_BOUNDS",           &VISCOSITY_BOUNDS,                false,           Useless_bool,  Useless_bool   );
+#  endif
 
 // fluid solvers in HYDRO
 #  if ( MODEL == HYDRO )
@@ -365,6 +399,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__RESET_FLUID",           &OPT__RESET_FLUID,                false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__RESET_FLUID_INIT",      &OPT__RESET_FLUID_INIT,          -1,               NoMin_int,     NoMax_int      );
    ReadPara->Add( "OPT__FREEZE_FLUID",          &OPT__FREEZE_FLUID,               false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__FREEZE_HYDRO",          &OPT__FREEZE_HYDRO,               false,           Useless_bool,  Useless_bool   );
 #  if ( MODEL == HYDRO )
    ReadPara->Add( "OPT__CHECK_PRES_AFTER_FLU",  &OPT__CHECK_PRES_AFTER_FLU,      -1,               NoMin_int,     1              );
    ReadPara->Add( "OPT__LAST_RESORT_FLOOR",     &OPT__LAST_RESORT_FLOOR,          true,            Useless_bool,  Useless_bool   );
@@ -535,6 +570,12 @@ void Init_Load_Parameter()
 #  endif
 #  ifdef MHD
    ReadPara->Add( "OPT__OUTPUT_DIVMAG",         &OPT__OUTPUT_DIVMAG,              false,           Useless_bool,  Useless_bool   );
+#  endif
+#  ifdef VISCOSITY
+   ReadPara->Add( "OPT__OUTPUT_DELTAP",         &OPT__OUTPUT_DELTAP,              false,           Useless_bool,  Useless_bool   );
+#  endif
+#  ifdef CONDUCTION
+   ReadPara->Add( "OPT__OUTPUT_KAPPA",          &OPT__OUTPUT_KAPPA,               false,           Useless_bool,  Useless_bool   );
 #  endif
 #  ifdef SRHD
    ReadPara->Add( "OPT__OUTPUT_LORENTZ",        &OPT__OUTPUT_LORENTZ,             false,           Useless_bool,  Useless_bool   );

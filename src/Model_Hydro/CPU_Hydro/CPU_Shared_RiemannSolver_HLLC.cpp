@@ -53,6 +53,7 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 //                EoS_DensPres2CSqr : EoS routine to compute the sound speed squared
 //                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
 //                EoS_Table         : EoS tables
+//                FreezeHydro       : Freeze hydrodynamic fluxes
 //
 // Return      :  Flux_Out[]
 //-------------------------------------------------------------------------------------------------------
@@ -62,8 +63,14 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
                                const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
                                const EoS_H2TEM_t EoS_HTilde2Temp,
                                const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                               const real* const EoS_Table[EOS_NTABLE_MAX] )
+                               const real* const EoS_Table[EOS_NTABLE_MAX], bool FreezeHydro )
 {
+
+   if ( FreezeHydro )
+   {
+      for (int v=0; v<NCOMP_TOTAL; v++)   Flux_Out[v] = 0.0;
+      return;
+   }
 
 // 1. reorder the input variables for different spatial directions
    real L[NCOMP_TOTAL], R[NCOMP_TOTAL];
@@ -394,8 +401,14 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
                                const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
                                const EoS_H2TEM_t EoS_HTilde2Temp,
                                const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                               const real* const EoS_Table[EOS_NTABLE_MAX] )
+                               const real* const EoS_Table[EOS_NTABLE_MAX], const bool FreezeHydro )
 {
+
+   if ( FreezeHydro )
+   {
+      for (int v=0; v<NCOMP_TOTAL; v++)   Flux_Out[v] = 0.0;
+      return;
+   }
 
 // 1. reorder the input variables for different spatial directions
    real L[NCOMP_TOTAL], R[NCOMP_TOTAL];

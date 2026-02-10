@@ -34,13 +34,15 @@
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                 const real MinDens, const real MinPres, const long PassiveFloor, const EoS_DE2P_t EoS_DensEint2Pres,
                                 const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
-                                const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
+                                const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX],
+                                const bool FreezeHydro );
 #endif
 #if ( RSOLVER == ROE    ||  RSOLVER_RESCUE == ROE   )
 void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                               const real MinDens, const real MinPres, const long PassiveFloor, const EoS_DE2P_t EoS_DensEint2Pres,
                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
-                              const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
+                              const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX],
+                              const bool FreezeHydro );
 #endif
 #if ( RSOLVER == HLLE   ||  RSOLVER_RESCUE == HLLE  )
 void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
@@ -48,7 +50,7 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
                                const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
                                const EoS_H2TEM_t EoS_HTilde2Temp,
                                const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                               const real* const EoS_Table[EOS_NTABLE_MAX] );
+                               const real* const EoS_Table[EOS_NTABLE_MAX], const bool FreezeHydro );
 #endif
 #if ( RSOLVER == HLLC   ||  RSOLVER_RESCUE == HLLC  )
 void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
@@ -56,13 +58,14 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
                                const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
                                const EoS_H2TEM_t EoS_HTilde2Temp,
                                const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                               const real* const EoS_Table[EOS_NTABLE_MAX] );
+                               const real* const EoS_Table[EOS_NTABLE_MAX], const bool FreezeHydro );
 #endif
 #if ( RSOLVER == HLLD   ||  RSOLVER_RESCUE == HLLD  )
 void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                const real MinDens, const real MinPres, const long PassiveFloor, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
-                               const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
+                               const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX],
+                               const bool FreezeHydro );
 #endif
 
 #endif // #ifdef __CUDACC__ ... else ...
@@ -108,6 +111,7 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 //                MinDens/Pres    : Density and pressure floors
 //                PassiveFloor    : Bitwise flag to specify the passive scalars to be floored
 //                EoS             : EoS object
+//                FreezeHydro     : Freeze hydrodynamic fluxes
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
@@ -116,7 +120,8 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                         const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[],
                         const real dt, const real dh, const double Time, const bool UsePot,
                         const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[],
-                        const real MinDens, const real MinPres, const long PassiveFloor, const EoS_t *EoS )
+                        const real MinDens, const real MinPres, const long PassiveFloor, const EoS_t *EoS,
+                        const bool FreezeHydro )
 {
 
 // check
@@ -285,29 +290,33 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
 #        if   ( RSOLVER == EXACT  &&  !defined MHD )
          Hydro_RiemannSolver_Exact( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
                                     EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
-                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table,
+                                    FreezeHydro );
 #        elif ( RSOLVER == ROE )
          Hydro_RiemannSolver_Roe  ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
                                     EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
-                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table,
+                                    FreezeHydro );
 #        elif ( RSOLVER == HLLE )
          Hydro_RiemannSolver_HLLE ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
                                     EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
                                     EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
-                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table,
+                                    FreezeHydro );
 #        elif ( RSOLVER == HLLC  &&  !defined MHD )
          Hydro_RiemannSolver_HLLC ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
                                     EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
                                     EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
-                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table,
+                                    FreezeHydro );
 #        elif ( RSOLVER == HLLD  &&  defined MHD )
          Hydro_RiemannSolver_HLLD ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
                                     EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
-                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table,
+                                    FreezeHydro );
 #        else
 #        error : ERROR : unsupported Riemann solver (EXACT/ROE/HLLE/HLLC/HLLD) !!
 #        endif
-
 
 //       3. switch to a different Riemann solver if the default one fails
 #        if ( RSOLVER_RESCUE != NONE )
@@ -323,25 +332,30 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
 #              if   ( RSOLVER_RESCUE == EXACT  &&  !defined MHD )
                Hydro_RiemannSolver_Exact( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
                                           EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
-                                          EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+                                          EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table,
+                                          FreezeHydro );
 #              elif ( RSOLVER_RESCUE == ROE )
                Hydro_RiemannSolver_Roe  ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
                                           EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
-                                          EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+                                          EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table,
+                                          FreezeHydro );
 #              elif ( RSOLVER_RESCUE == HLLE )
                Hydro_RiemannSolver_HLLE ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
                                           EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
                                           EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
-                                          EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+                                          EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table,
+                                          FreezeHydro );
 #              elif ( RSOLVER_RESCUE == HLLC  &&  !defined MHD )
                Hydro_RiemannSolver_HLLC ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
                                           EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
                                           EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
-                                          EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+                                          EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table,
+                                          FreezeHydro );
 #              elif ( RSOLVER_RESCUE == HLLD  &&  defined MHD )
                Hydro_RiemannSolver_HLLD ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
                                           EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
-                                          EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+                                          EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table,
+                                          FreezeHydro );
 #              else
 #              error : ERROR : unsupported Riemann solver (EXACT/ROE/HLLE/HLLC/HLLD) !!
 #              endif
@@ -360,7 +374,6 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
             } // if ( Flux_1Face[v] != Flux_1Face[v] )
          } // for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
 #        endif // #if ( RSOLVER_RESCUE != NONE )
-
 
 //       4. store the fluxes of all cells in g_FC_Flux[]
 //       --> including the magnetic components since they are required for CT
