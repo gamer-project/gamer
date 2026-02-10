@@ -1,6 +1,6 @@
 # problem-specific runtime parameters
 Cloud_Type                   NFW                  # type of density profile
-                                                  # (Table, Plummer, NFW, Burkert, Jaffe, Hernquist, Einsato)
+                                                  # (Table, Plummer, NFW, Burkert, Jaffe, Hernquist, Einasto)
 Cloud_DensityTable           NONE                 # filename of input density table (Cloud_Type == Table only)
 Cloud_CenterX                1.5                  # center coordinate x [box center]
 Cloud_CenterY                1.5                  # center coordinate y [box center]
@@ -10,7 +10,7 @@ Cloud_BulkVelY               0.0                  # bulk velocity y [0.0]
 Cloud_BulkVelZ               0.0                  # bulk velocity z [0.0]
 Cloud_Rho0                   1.0                  # scale density [1.0] (Cloud_Type != Table only)
 Cloud_R0                     0.1                  # scale radius [0.1] (Cloud_Type != Table only)
-Cloud_EinastoPowerFactor     1                    # Einasto power factor for Einasto model [1] (Cloud_Type == Einasto only)
+Cloud_EinastoPowerFactor     1.0                  # Einasto power factor for Einasto model [1.0] (Cloud_Type == Einasto only)
 Cloud_ParNum                 20000                # number of particles [1]
 Cloud_MaxR                   1.5                  # maximum radius for particles [0.375]
 Cloud_NBin                   1000                 # number of radial bins inside Cloud_MaxR in the density profile [1000]

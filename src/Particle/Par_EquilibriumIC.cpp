@@ -453,7 +453,7 @@ void Par_EquilibriumIC::constructRadialArray()
    RArray_Rho[0]                                          = 2.0*RArray_Rho[1]-RArray_Rho[2];   // where r=0
 
 // Array of Enclosed Mass, M_Enc(R) = \int_{0}^{R} Rho(r) 4\pi R^2 dR
-   RArray_M_Enc[0]                                        = 0;   // where r=0
+   RArray_M_Enc[0]                                        = 0.0;   // where r=0
    for (int i=1; i<RNPoints; i++)     RArray_M_Enc[i]     = RArray_M_Enc[i-1] + LinearDensityShellMass( RArray_R[i-1], RArray_R[i], RArray_Rho[i-1], RArray_Rho[i] );
 
 // Array of Gravitational Potential, Phi(R) = Phi(\infty) - \int_{\infty}^{R} g dR, where g = -GM/R^2
@@ -506,7 +506,7 @@ void Par_EquilibriumIC::constructEnergyArray()
 
 // check negative distribution function
    for (int i=0; i<ENPoints; i++)
-      if ( EArray_DFunc[i] < 0 )      EArray_DFunc[i]    = 0.0;
+      if ( EArray_DFunc[i] < 0.0 )      EArray_DFunc[i]  = 0.0;
 
 } // FUNCTION : constructEnergyArray
 
@@ -514,9 +514,9 @@ void Par_EquilibriumIC::constructEnergyArray()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  printArrays
-// Description :  Output the RArray and EArray to file for debugging purpose
+// Description :  Output the RArray and EArray to file for debugging purposes
 //
-// Note        :  1.
+// Note        :  1. Called by constructDistribution()
 //
 // Parameter   :  None
 //
@@ -564,7 +564,7 @@ void Par_EquilibriumIC::printArrays()
 // Function    :  constructParticles
 // Description :  Set the particle's initial conditions (IC) for a cloud that is in equilibrium state
 //
-// Note        :  1.
+// Note        :  1. Must call constructEnergyArray() in advance
 //
 // Parameter   :  Mass_AllRank : An array of all particles' masses
 //                Pos_AllRank  : An array of all particles' position vectors
@@ -600,7 +600,7 @@ void Par_EquilibriumIC::constructParticles( real_par *Mass_AllRank, real_par *Po
 //    Randomly sample the enclosed mass
       const double RandomSampleM = TotCloudMass*Random_Num_Gen->GetValue( 0, 0.0, 1.0 );
 
-//    Ramdomly sample the radius from the enclosed mass profile with linear interpolation
+//    Randomly sample the radius from the enclosed mass profile with linear interpolation
       const double RandomSampleR = Mis_InterpolateFromTable( RNPoints, RArray_M_Enc, RArray_R, RandomSampleM );
 
 //    Randomly set the position vector with a given radius
@@ -619,7 +619,7 @@ void Par_EquilibriumIC::constructParticles( real_par *Mass_AllRank, real_par *Po
 
 //    Check periodicity
       for (int d=0; d<3; d++)
-         if ( OPT__BC_FLU[d*2] == BC_FLU_PERIODIC )   Pos_AllRank[d][p] = FMOD( Pos_AllRank[d][p]+(real_par)amr->BoxSize[d], (real_par)amr->BoxSize[d] );
+         if ( OPT__BC_FLU[d*2] == BC_FLU_PERIODIC )   Pos_AllRank[d][p] = fmod( (double)Pos_AllRank[d][p]+amr->BoxSize[d], amr->BoxSize[d] );
 
    } // for (long p=Par_Idx0; p<Par_Idx0+Cloud_Par_Num; p++)
 
@@ -665,7 +665,8 @@ double Par_EquilibriumIC::getDensity( const double r )
 // Function    :  getAnalEnclosedMass
 // Description :  Calculate the enclosed mass of this cloud within radius r
 //
-// Note        :  1. Get the enclosed mass from the analytical enclosed mass profile
+// Note        :  1. Get the enclosed mass from the analytical enclosed mass profile if available;
+//                   otherwise, use numerical integration with GSL
 //
 // Parameter   :  r : radius
 //
@@ -758,7 +759,7 @@ double Par_EquilibriumIC::getExternalPotential( const double r )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  getRandomSampleVelocity
-// Description :  Get the ramdomly sampled magnitude of the velocity of a particle at radius r from the distribution function
+// Description :  Get the randomly sampled magnitude of the velocity of a particle at radius r from the distribution function
 //
 // Note        :  1. The probability of the magnitude of the velocity with a given radius, p(v|r) \propto v^2*f(E),
 //                   where f(E) = DFunc(E) = DFunc(Psi(r)-1/2 v^2) is the distribution function
@@ -820,7 +821,7 @@ double Par_EquilibriumIC::getRandomSampleVelocity( const double r )
 double Par_EquilibriumIC::getIntegratedDistributionFunction( const double E )
 {
    const int    N_intervals = MIN( (int)ceil(E/EArray_dE), 1000 );
-   const double dPsi     = E/N_intervals;
+   const double dPsi        = E/N_intervals;
 
    double dRho_dPsi = 0.0;
    double integral  = 0.0;
@@ -885,14 +886,14 @@ void Par_EquilibriumIC::getRandomVector_GivenLength( const double Length, double
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ExtendedInterpolatedTable
-// Description :  Get the interpolated value even x is out of range
+// Description :  Get the interpolated value even if x is out of range
 //
-// Note        :  1. If the x is in the range of Table_x, it call Mis_InterpolateFromTable
-//                2. If the x is out of the range of Table_x, it return the values at end points
+// Note        :  1. If x is in the range of Table_x, it calls Mis_InterpolateFromTable()
+//                2. If x falls outside the range of Table_x, it returns the value at the nearest end point
 //
 // Parameter   :  x       : Position to get the interpolation
 //                N       : Number of bins in the Table
-//                Table_x : Table of values to be input
+//                Table_x : Position array for interpolation
 //                Table_y : Table of values to be interpolated
 //
 // Return      :  Interpolated value
@@ -908,7 +909,7 @@ double ExtendedInterpolatedTable( const double x, const int N, const double Tabl
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  LinearDensityShellMass
-// Description :  Get the shell mass between to radii according to a linear density profile
+// Description :  Get the shell mass between two radii according to a linear density profile
 //
 // Note        :  1. Assume the density profile \rho(r) is linear between two end points, r0 and r1:
 //                   \rho(r) = \rho_0 + (\frac{(\rho_1-\rho_0)}{r_1-r_0})(r-r_0)
@@ -939,7 +940,7 @@ double LinearDensityShellMass( const double r0, const double r1, const double rh
 // Function    :  UserDefAnlaytical_ExtPot
 // Description :  User-defined analytical external potential formula
 //
-// Note        :  1. As an example, there is a Plummer potential with hardcoded parameters
+// Note        :  1. As an example, a Plummer potential with hard-coded parameters is provided
 //
 // Parameter   :  r : radius
 //

@@ -14,14 +14,14 @@ static double   ParEqmIC_SmallGas;                                // negligibly 
        char   (*ParEqmIC_Cloud_Type)[MAX_STRING]          = NULL; // type of each cloud
        double  *ParEqmIC_Cloud_Rho0                       = NULL; // scale density of each cloud
        double  *ParEqmIC_Cloud_R0                         = NULL; // scale radius of each cloud
-       double  *ParEqmIC_Cloud_EinastoPowerFactor         = NULL; // Einato power factor of each cloud
+       double  *ParEqmIC_Cloud_EinastoPowerFactor         = NULL; // Einasto power factor of each cloud
        char   (*ParEqmIC_Cloud_DensityTable)[MAX_STRING]  = NULL; // input density profile table of each cloud
        long    *ParEqmIC_Cloud_ParNum                     = NULL; // number of particles of each cloud
        double  *ParEqmIC_Cloud_MaxR                       = NULL; // maximum radius of each cloud
-       int     *ParEqmIC_Cloud_NBin                       = NULL; // number of bins inside Cloud_MaxR in density profile of each cloud
+       int     *ParEqmIC_Cloud_NBin                       = NULL; // number of bins inside Cloud_MaxR in the density profile of each cloud
        int     *ParEqmIC_Cloud_RSeed                      = NULL; // random seed for particles of each cloud
        int     *ParEqmIC_Cloud_AddExtPotAnaly             = NULL; // whether adding analytical external potential for each cloud
-       int     *ParEqmIC_Cloud_AddExtPotTable             = NULL; // whether adding table external potential for each cloud
+       int     *ParEqmIC_Cloud_AddExtPotTable             = NULL; // whether adding external potential table for each cloud
        char   (*ParEqmIC_Cloud_ExtPotTable)[MAX_STRING]   = NULL; // input external potential table of each cloud
 // =======================================================================================
 
@@ -259,16 +259,16 @@ void SetParameter()
 
       // (2-2) Warn against small Cloud_R0
       if ( MPI_Rank == 0  &&  ParEqmIC_Cloud_R0[i] < amr->dh[MAX_LEVEL] )
-         Aux_Message( stdout, "WARNING : scale length R0 = %f of cloud_%d is smaller than highest spatial resolution %f!\n", i+1, ParEqmIC_Cloud_R0[i], amr->dh[MAX_LEVEL] );
+         Aux_Message( stdout, "WARNING : scale length R0 = %f of cloud_%d is smaller than the highest spatial resolution %f!\n", ParEqmIC_Cloud_R0[i], i+1, amr->dh[MAX_LEVEL] );
 
       // (2-3) Check Cloud_Type
-      if ( !( strcmp( ParEqmIC_Cloud_Type[i], "Plummer"   ) == 0  ||
-              strcmp( ParEqmIC_Cloud_Type[i], "NFW"       ) == 0  ||
-              strcmp( ParEqmIC_Cloud_Type[i], "Burkert"   ) == 0  ||
-              strcmp( ParEqmIC_Cloud_Type[i], "Jaffe"     ) == 0  ||
-              strcmp( ParEqmIC_Cloud_Type[i], "Hernquist" ) == 0  ||
-              strcmp( ParEqmIC_Cloud_Type[i], "Einasto"   ) == 0  ||
-              strcmp( ParEqmIC_Cloud_Type[i], "Table"     ) == 0 ) )
+      if (  strcmp( ParEqmIC_Cloud_Type[i], "Plummer"   ) != 0  &&
+            strcmp( ParEqmIC_Cloud_Type[i], "NFW"       ) != 0  &&
+            strcmp( ParEqmIC_Cloud_Type[i], "Burkert"   ) != 0  &&
+            strcmp( ParEqmIC_Cloud_Type[i], "Jaffe"     ) != 0  &&
+            strcmp( ParEqmIC_Cloud_Type[i], "Hernquist" ) != 0  &&
+            strcmp( ParEqmIC_Cloud_Type[i], "Einasto"   ) != 0  &&
+            strcmp( ParEqmIC_Cloud_Type[i], "Table"     ) != 0  )
          Aux_Error( ERROR_INFO, "Incorrect ParEqmIC_Cloud_Type = %s for cloud_%d !!\n", ParEqmIC_Cloud_Type[i], i+1 );
 
       // (2-4) Check Cloud_DensityTable

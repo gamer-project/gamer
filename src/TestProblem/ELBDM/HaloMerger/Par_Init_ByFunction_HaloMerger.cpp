@@ -100,7 +100,7 @@ void Par_Init_ByFunction_HaloMerger( const long NPar_ThisRank, const long NPar_A
          Cloud_Constructor.setCenterAndBulkVel( HaloMerger_ParCloud_CenCoord[index_parcloud][0], HaloMerger_ParCloud_CenCoord[index_parcloud][1], HaloMerger_ParCloud_CenCoord[index_parcloud][2],
                                                 HaloMerger_ParCloud_Velocity[index_parcloud][0], HaloMerger_ParCloud_Velocity[index_parcloud][1], HaloMerger_ParCloud_Velocity[index_parcloud][2] );
 
-         Cloud_Constructor.setParticleParameters( HaloMerger_ParCloud_NPar[index_parcloud], HaloMerger_ParCloud_DensProf_MaxR[index_parcloud], 5000, HaloMerger_ParCloud_RSeed[index_parcloud] ); // where the number of bins is hard-coded as 5000 for now since the results are not sensitive to it
+         Cloud_Constructor.setParticleParameters( HaloMerger_ParCloud_NPar[index_parcloud], HaloMerger_ParCloud_DensProf_MaxR[index_parcloud], 5000, HaloMerger_ParCloud_RSeed[index_parcloud] ); // the number of bins is hard-coded as 5000 for now since the results are insensitive to it
 
          Cloud_Constructor.setDensProfTableFilename( HaloMerger_ParCloud_DensProf_Filename[index_parcloud] );
 
