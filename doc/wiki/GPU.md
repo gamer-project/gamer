@@ -18,6 +18,7 @@ according to the GPU architecture on your system in the [[configuration file | I
 
 Related options:
 [[--gpu | Installation:-Option-List#--gpu]], &nbsp;
+[[--gpu_regcount_flu | Installation:-Option-List#--gpu_regcount_flu]] &nbsp;
 
 
 ## Runtime Parameters

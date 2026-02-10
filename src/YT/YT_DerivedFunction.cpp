@@ -259,8 +259,9 @@ void Temperature_DerivedFunc( const int list_len, const long *list_gid, const ch
 
 //       get temperature
          ((real *) data_array[lid].data_ptr)[idx] = Hydro_Con2Temp( Data[DENS][idx], Data[MOMX][idx], Data[MOMY][idx], Data[MOMZ][idx], Data[ENGY][idx],
-                                                                    Passive, false, NULL_REAL, Emag,
-                                                                    EoS_DensEint2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                                                                    Passive, false, NULL_REAL, PassiveFloorMask, Emag,
+                                                                    EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       }}} // i, j, k
     } // for (int lid=0; lid<list_len; lid++)
 

@@ -100,7 +100,8 @@ void Flu_ResetByUser( const int lv, const int FluSg, const double TTime )
 
 //          floor and normalize passive scalars
 #           if ( NCOMP_PASSIVE > 0 )
-            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = FMAX( fluid[v], TINY_NUMBER );
+            for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+               if ( PassiveFloorMask & BIDX(v) )  fluid[v] = FMAX( fluid[v], TINY_NUMBER );
 
             if ( OPT__NORMALIZE_PASSIVE )
                CPU_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );

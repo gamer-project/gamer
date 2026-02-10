@@ -1,6 +1,6 @@
 **GAMER** is a **G**PU-accelerated **A**daptive **ME**sh **R**efinement
-code for astrophysics. It features extremely high performance and
-parallel scalability and supports a rich set of physics modules.
+code for astrophysics. It features high computational performance and
+strong parallel scalability, and supports a rich set of physics modules.
 
 ***
 
@@ -10,19 +10,22 @@ parallel scalability and supports a rich set of physics modules.
 * [Magnetohydrodynamics](https://iopscience.iop.org/article/10.3847/1538-4365/aac49e/meta)
 * [Special relativistic hydrodynamics](https://academic.oup.com/mnras/article/504/3/3298/6224873)
 * Self-gravity and external gravity
-* Particles
+* Particles and tracers
 * Chemistry and radiative processes with [GRACKLE](http://grackle.readthedocs.io/en/latest/index.html)
 * General equation of state
+* Passively advected scalars
+* Star formation
 * [Cosmic rays with anisotropic diffusion](https://iopscience.iop.org/article/10.3847/1538-4357/ad50c5#apjad50c5app2)
-* Fuzzy (Wave) dark matter: [Nature Physics paper](http://www.nature.com/nphys/journal/v10/n7/covers/index.html), [code paper](https://arxiv.org/abs/2411.17288)
+* Fuzzy dark matter (FDM): [Nature Physics paper](http://www.nature.com/nphys/journal/v10/n7/covers/index.html), [code paper](https://arxiv.org/abs/2411.17288)
 
 ### Other Features
 * Adaptive mesh refinement
 * Adaptive timestep
-* Hybrid MPI/OpenMP/GPU parallelization (also support a CPU-only mode)
+* Hybrid MPI/OpenMP/GPU parallelization (also supports a CPU-only mode)
 * Load balancing with Hilbert space-filling curve
 * Bitwise reproducibility
-* [HDF5](https://support.hdfgroup.org/HDF5) output
+* Simple compilation using `configure.py` and machine files
+* [HDF5](https://www.hdfgroup.org/solutions/hdf5/) output
 * Data analysis with [yt](http://yt-project.org)
 * In situ Python analysis with [libyt](https://github.com/yt-project/libyt)
 * Source-term interface
@@ -37,6 +40,7 @@ parallel scalability and supports a rich set of physics modules.
 * Mailing list: [GAMER Google Group](https://groups.google.com/forum/#!forum/gamer-amr)
 * Live chat: [GAMER Slack](https://join.slack.com/t/gamer-project/shared_invite/enQtNTUwMDA5ODAwMTMzLTc3ZWY2MWE2YTlmMDI0MTQ4M2JjOTg2NmU4OWVkOGY1ZTI3MmY5NjUxOTk1ZjM5ZjNjOGViMGY3ZGExMDdiYzU)
 * Code papers:
+[GAMER-1](https://iopscience.iop.org/article/10.1088/0067-0049/186/2/457),
 [GAMER-2](https://academic.oup.com/mnras/article/481/4/4815/5106358) <a name="CODE_PAPER"></a>,
 [GAMER-MHD](http://iopscience.iop.org/article/10.3847/1538-4365/aac49e/meta) <a name="MHD_PAPER"></a> ,
 [GAMER-SR](https://academic.oup.com/mnras/article/504/3/3298/6224873) <a name="SR_PAPER"></a>,

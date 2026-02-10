@@ -39,15 +39,16 @@
 //                   --> CFL condition
 //                3. Arrays with a prefix "g_" are stored in the global memory of GPU
 //
-// Parameter   :  g_dt_Array  : Array to store the minimum dt in each target patch
-//                g_Flu_Array : Array storing the prepared fluid   data of each target patch
-//                g_Mag_Array : Array storing the prepared B field data of each target patch
-//                NPG         : Number of target patch groups (for CPU only)
-//                dh          : Cell size
-//                Safety      : dt safety factor
-//                MinPres     : Minimum allowed pressure
-//                EoS         : EoS object
-//                MicroPhy    : Microphysics object
+// Parameter   :  g_dt_Array   : Array to store the minimum dt in each target patch
+//                g_Flu_Array  : Array storing the prepared fluid   data of each target patch
+//                g_Mag_Array  : Array storing the prepared B field data of each target patch
+//                NPG          : Number of target patch groups (for CPU only)
+//                dh           : Cell size
+//                Safety       : dt safety factor
+//                MinPres      : Minimum allowed pressure
+//                PassiveFloor : Bitwise flag to specify the passive scalars to be floored
+//                EoS          : EoS object
+//                MicroPhy     : Microphysics object
 //
 // Return      :  g_dt_Array
 //-----------------------------------------------------------------------------------------
@@ -55,13 +56,13 @@
 __global__
 void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
-                              const real dh, const real Safety, const real MinPres, const EoS_t EoS,
-                              const MicroPhy_t MicroPhy )
+                              const real dh, const real Safety, const real MinPres,
+                              const long PassiveFloor, const EoS_t EoS, const MicroPhy_t MicroPhy )
 #else
 void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                               const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const int NPG,
-                              const real dh, const real Safety, const real MinPres, const EoS_t EoS,
-                              const MicroPhy_t MicroPhy )
+                              const real dh, const real Safety, const real MinPres,
+                              const long PassiveFloor, const EoS_t EoS, const MicroPhy_t MicroPhy )
 #endif
 {
 
@@ -94,7 +95,7 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
 #        ifdef SRHD
          real Pri[FLU_NIN_T], LorentzFactor, U_Max, Us_Max, LorentzFactor_Max, LorentzFactor_s_Max, Us, Rho;
 
-         Hydro_Con2Pri( fluid, Pri, MinPres, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
+         Hydro_Con2Pri( fluid, Pri, MinPres, PassiveFloor, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                         (real)NULL_REAL, EoS.DensEint2Pres_FuncPtr, EoS.DensPres2Eint_FuncPtr,
                         EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr,
                         EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL, &LorentzFactor );
@@ -129,7 +130,7 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
          Vy   = FABS( fluid[MOMY] )*_Rho;
          Vz   = FABS( fluid[MOMZ] )*_Rho;
          Pres = Hydro_Con2Pres( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], fluid+NCOMP_FLUID,
-                                CheckMinPres_Yes, MinPres, Emag,
+                                CheckMinPres_Yes, MinPres, PassiveFloor, Emag,
                                 EoS.DensEint2Pres_FuncPtr, EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr,
                                 EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL );
          a2   = EoS.DensPres2CSqr_FuncPtr( fluid[DENS], Pres, fluid+NCOMP_FLUID, EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int,

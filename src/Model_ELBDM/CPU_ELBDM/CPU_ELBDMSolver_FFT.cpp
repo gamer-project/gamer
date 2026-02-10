@@ -220,7 +220,8 @@ void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg
 
 
 // advance wave function by exp( -i*dt*k^2/(2*ELBDM_ETA) ) in the k-space using FFT
-   Psi_Advance_FFT( PsiR, PsiI, local_y_start_after_transpose, local_ny_after_transpose, total_local_size, dt );
+   if ( !OPT__FREEZE_FLUID )  // skip both the FFT and the advancement for OPT__FREEZE_FLUID
+      Psi_Advance_FFT( PsiR, PsiI, local_y_start_after_transpose, local_ny_after_transpose, total_local_size, dt );
 
 
 // rearrange data from slab back to patch
