@@ -11,7 +11,7 @@ OPT__FREEZE_FLUID    1
 
 Note:
 ========================================
-1. You can put many clouds of particles in the HYDRO mode,and observe their evolution through gravity.
+1. You can put many clouds of particles in the HYDRO mode, and observe their evolution through gravity.
    To assign the number of clouds, input the desired number in the variable "ParEqmIC_NumCloud" in "Init_TestProb".
    And input the file names of physical parameters in "Input__TestProb" for each cloud respectively.
 
@@ -34,4 +34,4 @@ Note:
    For example, replace Input__TestProb with Input_TestProb_Double will allow you to construct two clouds of particles.
    For details, you may check Input__TestProb for further instructions.
 
-5. To generate example density or external potential tables, you may use the python files in "tool/table_maker/".
+5. To generate example density or external potential tables, you may use the python scripts in "gamer/tool/table_maker/".

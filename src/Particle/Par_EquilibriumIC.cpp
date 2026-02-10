@@ -37,7 +37,7 @@ struct mass_integrand_params_Table  { int NBin;        double* Table_R;   double
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_EquilibriumIC
-// Description :  Constructor of the class Par_Equilibrium
+// Description :  Constructor of the class Par_EquilibriumIC
 //
 // Note        :  1. Cloud_Type is determined during the construction
 //
@@ -62,7 +62,7 @@ Par_EquilibriumIC::Par_EquilibriumIC( const char* Cloud_Type )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ~Par_EquilibriumIC
-// Description :  Destructor of the class Par_Equilibrium
+// Description :  Destructor of the class Par_EquilibriumIC
 //
 // Note        :  1. Memory is free here
 //
@@ -113,7 +113,7 @@ Par_EquilibriumIC::~Par_EquilibriumIC()
 //                BulkVel_Y : y component of the bulk velocity
 //                BulkVel_Z : z component of the bulk velocity
 //
-// Return      :  None
+// Return      :  Cloud_Center[], Cloud_BulkVel[]
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::setCenterAndBulkVel( const double Center_X, const double Center_Y, const double Center_Z,
                                              const double BulkVel_X, const double BulkVel_Y, const double BulkVel_Z )
@@ -140,7 +140,7 @@ void Par_EquilibriumIC::setCenterAndBulkVel( const double Center_X, const double
 // Parameter   :  Rho0 : scale density in the density profile
 //                R0   : scale radius in the density profile
 //
-// Return      :  None
+// Return      :  Cloud_Rho0, Cloud_R0
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::setModelParameters( const double Rho0, const double R0 )
 {
@@ -159,7 +159,7 @@ void Par_EquilibriumIC::setModelParameters( const double Rho0, const double R0 )
 //
 // Parameter   :  EinastoPowerFactor : the power factor in the Einasto density profile
 //
-// Return      :  None
+// Return      :  Cloud_Einasto_Power_Factor
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::setEinastoPowerFactor( const double EinastoPowerFactor )
 {
@@ -173,11 +173,11 @@ void Par_EquilibriumIC::setEinastoPowerFactor( const double EinastoPowerFactor )
 // Function    :  setDensProfTableFilename
 // Description :  Set the filename for the density profile table from input parameters outside
 //
-// Note        :  1. The file has two columns, the first is the radius and the second is the density
+// Note        :  1. The file has two columns: the first is the radius and the second is the density
 //
 // Parameter   :  DensProfTableFilename : filename for the density profile table
 //
-// Return      :  None
+// Return      :  DensProf_Table_Name
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::setDensProfTableFilename( const char* DensProfTableFilename )
 {
@@ -193,12 +193,12 @@ void Par_EquilibriumIC::setDensProfTableFilename( const char* DensProfTableFilen
 //
 // Note        :  1.
 //
-// Parameter   :  ParNum      : Number of particles of the particle cloud
-//                MaxR        : Maximum radius for the scattered particles in this cloud
-//                NBin        : Number of bins of radial profiles inside the MaxR
-//                RSeed       : Random seed for setting the particle position and velocity
+// Parameter   :  ParNum : Number of particles of the particle cloud
+//                MaxR   : Maximum radius for the scattered particles in this cloud
+//                NBin   : Number of bins of radial profiles inside the MaxR
+//                RSeed  : Random seed for setting the particle position and velocity
 //
-// Return      :  None
+// Return      :  Cloud_Par_Num, Cloud_MaxR, Cloud_NBin, Cloud_RSeed
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::setParticleParameters( const long ParNum, const double MaxR, const int NBin, const int RSeed )
 {
@@ -207,7 +207,7 @@ void Par_EquilibriumIC::setParticleParameters( const long ParNum, const double M
    Cloud_NBin     = NBin;
    Cloud_RSeed    = RSeed;
 
-   if ( Cloud_Par_Num < 1 )   Aux_Error( ERROR_INFO, "Cloud_Par_Num = %d is less than 1 !!\n", Cloud_Par_Num );
+   if ( Cloud_Par_Num < 1 )   Aux_Error( ERROR_INFO, "Cloud_Par_Num = %ld is less than 1 !!\n", Cloud_Par_Num );
    if ( Cloud_MaxR <= 0.0 )   Aux_Error( ERROR_INFO, "Cloud_MaxR = % 14.7e is not positive !!\n", Cloud_MaxR );
    if ( Cloud_NBin < 1    )   Aux_Error( ERROR_INFO, "Cloud_NBin = %d is less than 1 !!\n", Cloud_NBin       );
 
@@ -219,16 +219,16 @@ void Par_EquilibriumIC::setParticleParameters( const long ParNum, const double M
 // Function    :  setExtPotParameters
 // Description :  Set the parametes related to the external potential from input parameters outside
 //
-// Note        :  1. It supports adding either anlytical external potential or external potential from table
-//                2. The analytical external potential can be set at getExternalPotential
-//                3. The external potential table has two columns, the first is the radius and the second is the potential
+// Note        :  1. It supports adding either analytical external potential or external potential from a table
+//                2. The analytical external potential can be set via getExternalPotential()
+//                3. The external potential table has two columns: the first is the radius and the second is the potential
 //                4. AddExtPot_Analytical and AddExtPot_Table in Par_EquilibriumIC cannot both be turned on
 //
-// Parameter   :  AddingExternalPotential_Analytical  : Whether adding the analytical external potential
-//                AddingExternalPotential_Table       : Whether adding the external potential from table
-//                ExtPotTableFilename                 : Filename for the external potential table
+// Parameter   :  AddingExternalPotential_Analytical : Whether adding an analytical external potential
+//                AddingExternalPotential_Table      : Whether adding an external potential from a table
+//                ExtPotTableFilename                : Filename for the external potential table
 //
-// Return      :  None
+// Return      :  AddExtPot_Analytical, AddExtPot_Table, ExtPot_Table_Name
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::setExtPotParameters( const int AddingExternalPotential_Analytical, const int AddingExternalPotential_Table, const char* ExtPotTableFilename )
 {
@@ -248,11 +248,11 @@ void Par_EquilibriumIC::setExtPotParameters( const int AddingExternalPotential_A
 // Function    :  loadInputDensProfTable
 // Description :  Load the density profile from the input table
 //
-// Note        :  1.
+// Note        :  1. Called by constructDistribution()
 //
 // Parameter   :  None
 //
-// Return      :  InputTable_DensProf_Radius, InputTable_DensProf_Density
+// Return      :  InputTable_DensProf_Radius, InputTable_DensProf_Density, InputTable_DensProf_NBin
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::loadInputDensProfTable()
 {
@@ -264,7 +264,7 @@ void Par_EquilibriumIC::loadInputDensProfTable()
    const int NRowR = Aux_LoadTable( InputTable_DensProf_Radius,  DensProf_Table_Name, 1, Col_R, true, true );
    const int NRowD = Aux_LoadTable( InputTable_DensProf_Density, DensProf_Table_Name, 1, Col_D, true, true );
 
-// Check the number of rows are consistent
+// Check the number of rows is consistent
    if ( NRowR != NRowD )
       Aux_Error( ERROR_INFO, "The number of rows of density (%d) is not equal to the number of rows of radii (%d) in density table %s !!\n",
                              NRowD, NRowR, DensProf_Table_Name );
@@ -302,7 +302,7 @@ void Par_EquilibriumIC::loadInputDensProfTable()
 
       InputTable_NBins_InsideMaxR += 1;
    }
-   if ( Cloud_NBin < InputTable_NBins_InsideMaxR )
+   if ( Cloud_NBin < InputTable_NBins_InsideMaxR  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : Cloud_NBin = %d is smaller than the number of bins (= %d) inside Cloud_MaxR (= %14.7e) in input density table \"%s\" !!\n",
                            Cloud_NBin, InputTable_NBins_InsideMaxR, Cloud_MaxR, DensProf_Table_Name );
 
@@ -319,11 +319,11 @@ void Par_EquilibriumIC::loadInputDensProfTable()
 // Function    :  loadInputExtPotTable
 // Description :  Load the external potential profile from the input table
 //
-// Note        :  1.
+// Note        :  1. Called by constructDistribution()
 //
 // Parameter   :  None
 //
-// Return      :  InputTable_ExtPot_Radius, InputTable_ExtPot_Potential
+// Return      :  InputTable_ExtPot_Radius, InputTable_ExtPot_Potential, InputTable_ExtPot_NBin
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::loadInputExtPotTable()
 {
@@ -335,7 +335,7 @@ void Par_EquilibriumIC::loadInputExtPotTable()
    const int NRowR = Aux_LoadTable( InputTable_ExtPot_Radius,    ExtPot_Table_Name, 1, Col_R, true, true );
    const int NRowP = Aux_LoadTable( InputTable_ExtPot_Potential, ExtPot_Table_Name, 1, Col_P, true, true );
 
-// Check the number of rows are consistent
+// Check the number of rows is consistent
    if ( NRowR != NRowP )
       Aux_Error( ERROR_INFO, "The number of rows of potential (%d) is not equal to the number of rows of radii (%d) in ExtPot table %s !!\n",
                              NRowP, NRowR, ExtPot_Table_Name );
@@ -378,10 +378,10 @@ void Par_EquilibriumIC::loadInputExtPotTable()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  constructDistribution
-// Description :  Initialization after reading input parameter and before constructing the cloud
+// Description :  Initialization after reading input parameters and before constructing the clouds
 //
 // Note        :  1. Set the random number generator
-//                2. Construct the radial arrays of physical quantities, including radius, mass, density, gravitational potential
+//                2. Construct the radial arrays of physical quantities, including radius, mass, density, and gravitational potential
 //                3. Construct the distribution function in the energy space
 //
 // Parameter   :  None
@@ -432,9 +432,9 @@ void Par_EquilibriumIC::constructDistribution()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  constructRadialArray
-// Description :  Construct the arrays of the various radial functions
+// Description :  Construct the arrays of various radial functions
 //
-// Note        :  1.
+// Note        :  1. Called by constructDistribution()
 //
 // Parameter   :  None
 //
@@ -477,8 +477,9 @@ void Par_EquilibriumIC::constructRadialArray()
 // Function    :  constructEnergyArray
 // Description :  Construct the energy-space arrays for the distribution function
 //
-// Note        :  1. Solve the ergodic distribution function from the density profile using the Eddington inversion
-//                2. Reference: Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Chapter 4.3 -- Chapter 4.3.1
+// Note        :  1. Called by constructDistribution()
+//                2. Solve the ergodic distribution function from the density profile using the Eddington inversion
+//                3. Reference: Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Chapter 4.3 -- Chapter 4.3.1
 //                              Eddingtion A. S., 1916, MNRAS, doi:10.1093/mnras/76.7.572
 //
 // Parameter   :  None

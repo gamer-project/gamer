@@ -140,6 +140,11 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
 // ******************************************************************************************************************************
    LOAD_PARA( load_mode, "ParEqmIC_SmallGas",       &ParEqmIC_SmallGas,     1e-3,          0.,               NoMax_double      );
    LOAD_PARA( load_mode, "ParEqmIC_NumCloud",       &ParEqmIC_NumCloud,     1,             1,                NoMax_int         );
+   for (int i=0; i<ParEqmIC_NumCloud; i++) {
+   char ParEqmIC_Cloud_ParaFilename_i[MAX_STRING];
+   sprintf( ParEqmIC_Cloud_ParaFilename_i, "ParEqmIC_Cloud_ParaFilename_%d", i+1 );
+   LOAD_PARA( load_mode, ParEqmIC_Cloud_ParaFilename_i,   ParEqmIC_Cloud_ParaFilenames[i],   NoDef_str,     Useless_str,   Useless_str    );
+   }  
 
 } // FUNCITON : LoadInputTestProb
 
