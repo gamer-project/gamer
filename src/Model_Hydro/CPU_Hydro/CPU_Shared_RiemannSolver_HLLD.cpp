@@ -17,10 +17,10 @@
 #else // #ifdef __CUDACC__
 
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
-void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
+void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres, const long PassiveFloor,
                      const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX], const real* const PresIn );
-void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
+void Hydro_Con2Pri( const real In[], real Out[], const real MinPres, const long PassiveFloor,
                     const bool FracPassive, const int NFrac, const int FracIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
@@ -53,6 +53,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 //                L_In              : Input left  state (conserved variables)
 //                R_In              : Input right state (conserved variables)
 //                MinDens/Pres      : Density and pressure floors
+//                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_DensPres2CSqr : EoS routine to compute the sound speed squared
 //                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
@@ -62,7 +63,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const real MinDens, const real MinPres, const long PassiveFloor, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
                                const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] )
 {
@@ -110,9 +111,9 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
               Con_L[IdxBx], Con_R[IdxBx], XYZ, __FILE__, __LINE__, __FUNCTION__ );
 #  endif
 
-   Hydro_Con2Pri( Con_L, Pri_L, MinPres, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
+   Hydro_Con2Pri( Con_L, Pri_L, MinPres, PassiveFloor, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
                   EoS_DensEint2Pres, NULL, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
-   Hydro_Con2Pri( Con_R, Pri_R, MinPres, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
+   Hydro_Con2Pri( Con_R, Pri_R, MinPres, PassiveFloor, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
                   EoS_DensEint2Pres, NULL, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
 
    real tmp_1, tmp_2, crit, crit_Bx;
@@ -193,8 +194,8 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
 #  endif
 
 
-   Hydro_Con2Flux( 0, Flux_L, Con_L, MinPres, NULL, NULL, NULL, NULL, Pri_L+4 );
-   Hydro_Con2Flux( 0, Flux_R, Con_R, MinPres, NULL, NULL, NULL, NULL, Pri_R+4 );
+   Hydro_Con2Flux( 0, Flux_L, Con_L, MinPres, PassiveFloor, NULL, NULL, NULL, NULL, Pri_L+4 );
+   Hydro_Con2Flux( 0, Flux_R, Con_R, MinPres, PassiveFloor, NULL, NULL, NULL, NULL, Pri_R+4 );
 
 // return the upwind fluxes if flow is supersonic
    if ( Speed[0] >= ZERO )
@@ -231,12 +232,8 @@ void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[]
    sqrt_RhoRst    = SQRT( Con_Rst[0] );
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_IsUnphysical( UNPHY_MODE_SING, &Con_Lst[0], "Con_Lst[0]",
-                       (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                       ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_IsUnphysical( UNPHY_MODE_SING, &Con_Rst[0], "Con_Rst[0]",
-                       (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                       ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Con_Lst[0], "Con_Lst[0]", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Con_Rst[0], "Con_Rst[0]", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
    tmp_1          = FABS( Bx );

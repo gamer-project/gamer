@@ -3,7 +3,7 @@ This test problem Plummer demonstrates the in situ Python analysis feature in GA
 ***
 
 1. Install the required packages for this demo.
-  * [libyt and yt_libyt](https://yt-project.github.io/libyt/HowToInstall.html#how-to-install): the in situ analysis library and its yt frontend.
+  * [libyt and yt_libyt](https://libyt.readthedocs.io/en/latest/how-to-install/how-to-install.html): the in situ analysis library and its yt frontend.
 > [!IMPORTANT]
 > This example assumes it is using libyt interactive mode. Please compile libyt in interactive mode.
   * [yt](https://yt-project.org/): the core analysis tool.
