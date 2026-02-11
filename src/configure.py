@@ -836,6 +836,12 @@ def load_arguments( sys_setting : SystemSetting ):
                          help="Enable GPU. Must set <GPU_COMPUTE_CAPABILITY> in your machine *.config file as well.\n"
                        )
 
+    parser.add_argument( "--gpu_regcount_flu", type=int, metavar="INTEGER",
+                         default=None,
+                         depend={"gpu":True},
+                         help="Set the maximum amount of registers that GPU fluid solvers can use.\n"
+                       )
+
     args, name_table, depends, constraints, prefix_table, suffix_table = parser.parse_args()
     args = vars( args )
 
@@ -849,7 +855,7 @@ def load_arguments( sys_setting : SystemSetting ):
         parser.print_autocomplete( args["autocomplete_info"] )
         exit()
 
-    # 2. Conditional default arguments.
+    # 3. Conditional default arguments.
     args = set_conditional_defaults( args )
     return args, name_table, depends, constraints, prefix_table, suffix_table
 
@@ -943,16 +949,19 @@ def set_gpu( gpus, flags, args ):
     gpu_opts["NVCCFLAG_ARCH"] = '-gencode arch=compute_%d,code=\\"compute_%d,sm_%d\\"'%(flag_num, flag_num, flag_num)
 
     # 3. Set MAXRREGCOUNT_FLU
-    if 300 <= compute_capability and compute_capability <= 370:
-        if args["double"]:
-            gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=128"
-        else:
-            gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=70"
-    elif 500 <= compute_capability and compute_capability <= 900:
-        if args["double"]:
-            gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=192"
-        else:
-            gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=128"
+    if args["gpu_regcount_flu"] is not None:
+        gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=%d"%(args["gpu_regcount_flu"])
+    else:
+        if 300 <= compute_capability and compute_capability <= 370:
+            if args["double"]:
+                gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=128"
+            else:
+                gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=70"
+        elif 500 <= compute_capability and compute_capability <= 900:
+            if args["double"]:
+                gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=192"
+            else:
+                gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=128"
     return gpu_opts
 
 def set_sims( name_table, prefix_table, suffix_table, depends, **kwargs ):
@@ -1093,6 +1102,12 @@ def validation( paths, depends, constraints, **kwargs ):
     if kwargs["rng"] != "RNG_CPP11" and sys.platform == "darwin":
         LOGGER.error("<--rng=RNG_CPP11> is required for macOS.")
         success = False
+
+    # C. parallelization and flags
+    if kwargs["gpu"]:
+        if kwargs["gpu_regcount_flu"] is not None and kwargs["gpu_regcount_flu"] <= 0:
+            LOGGER.error("<--gpu_regcount_flu> must be a positive integer. Current: %d"%kwargs["gpu_regcount_flu"])
+            success = False
 
     if not success: raise BaseException( "The above vaildation failed." )
     return

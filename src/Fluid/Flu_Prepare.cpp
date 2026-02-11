@@ -211,7 +211,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
             if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, fluid, Emag,
                                       EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                       EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
-                                      ERROR_INFO, UNPHY_VERBOSE )  )
+                                      PassiveFloorMask, ERROR_INFO, UNPHY_VERBOSE )  )
                CheckFailed = true;
 
 //          generic
