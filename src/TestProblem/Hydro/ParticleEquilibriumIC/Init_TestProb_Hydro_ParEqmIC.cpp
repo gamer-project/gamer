@@ -437,7 +437,6 @@ void Init_TestProb_Hydro_ParEqmIC()
 
    Init_Function_User_Ptr    = SetGridIC;
    End_User_Ptr              = End_ParEqmIC;
-   Init_Function_User_Ptr    = SetGridIC;
 #  ifdef MASSIVE_PARTICLES
    Par_Init_ByFunction_Ptr   = Par_Init_ByFunction_ParEqmIC;
 #  endif
