@@ -290,8 +290,269 @@ See also
 [[ Add Problem-specific Grid Fields and Particle Attributes | Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes ]] for adding user-defined particle attributes.
 
 GAMER has a built-in routine for constructing a particle initial condition in equilibrium
-(e.g., Plummer, NFW, tabular). Please refer to the test problem `Hydro/ParticleEquilibriumIC`
-for its usage.
+(e.g., Plummer, NFW, tabular). Here are the steps to use it:
+
+1. Step 1: Include the header in the test problem source code file:
+
+   ```C++
+   #include "Par_EquilibriumIC.h"
+   ```
+
+2. Step 2: Declare a constructor object of class `Par_EquilibriumIC` inside `Par_Init_ByFunction()`:
+
+   ```C++
+   Par_EquilibriumIC( const char* Cloud_Type );
+   ```
+
+   - Parameters
+
+      - `Cloud_Type` : `char*`
+
+        Type of this particle cloud.
+        Supported types include "Table", "Plummer", "NFW", "Burkert", "Jaffe", "Hernquist", and "Einasto".
+
+   - Example Usage
+
+      `Par_EquilibriumIC Cloud_Constructor( "Plummer" );` creates a cloud of the Plummer model.
+
+3. Step 3: Set the parameters for the constructor object by calling the following functions:
+
+   a. Set the parameters related to the construction of the particle cloud
+
+     ```C++
+     setParticleParameters( const long ParNum, const double MaxR, const int NBin, const int RSeed )
+     ```
+
+     - Parameters
+
+        - `ParNum` : `long`
+
+          Number of particles of the particle cloud.
+
+        - `MaxR` : `double`
+
+          Maximum radius for the scattered particles in this cloud.
+
+        - `NBin` : `int`
+
+          Number of bins of radial profiles inside the `MaxR`.
+
+        - `RSeed` : `int`
+
+          Random seed for setting the particle position and velocity.
+
+     - Notes
+
+        - These parameters are mandatory in all cases.
+
+     - Example Usage
+
+       `Cloud_Constructor.setParticleParameters( 1000000, 10.0, 1024, 123 );` sets the number of particles as `1000000`, the maximum radius as `10.0` (in code units), the number of bins as `1024`, and the random seed as `123`.
+
+   b. Set the filename for the density profile table
+
+     ```C++
+     setDensProfTableFilename( const char* DensProfTableFilename )
+     ```
+
+     - Parameters
+
+       - `DensProfTableFilename` : `char*`
+
+         Filename for the density profile table.
+
+     - Notes
+
+       - Required only for `Cloud_Type == "Table"`; useless for other types.
+
+     - Example Usage
+
+       `Cloud_Constructor.setDensProfTableFilename( "MyDensityProfile" );` sets the density profile to follow the table "MyDensityProfile".
+
+   c. Set the parameters for the analytical models
+
+     ```C++
+     setModelParameters( const double Rho0, const double R0 )
+     ```
+
+     - Parameters
+
+       - `Rho0` : `double`
+
+         Scale density in the density profile.
+
+       - `R0` : `double`
+
+         Scale radius in the density profile.
+
+     - Notes
+
+       - The scale density and scale radius are general but may have different names in different models. Please check the definition in `AnalyticalDensProf_*` in `src/Particle/Par_EquilibriumIC.cpp` for details.
+
+       - Required only for `Cloud_Type != "Table"`; useless for `Cloud_Type == "Table"`.
+
+     - Example Usage:
+
+       `Cloud_Constructor.setModelParameters( 1.0, 0.1 );` sets the scale density as `1.0` and scale radius as `0.1` in code units.
+
+   d. Set the power factor in the Einasto model
+
+     ```C++
+     setEinastoPowerFactor( const double EinastoPowerFactor )
+     ```
+
+     - Parameters
+
+       - `EinastoPowerFactor` : `double`
+
+         The power factor in the Einasto density profile.
+
+     - Notes
+
+       - Required only for `Cloud_Type == "Einasto"`; useless for other types.
+
+       - Please refer to `AnalyticalDensProf_Einasto()` in `src/Particle/Par_EquilibriumIC.cpp` for details.
+
+     - Example Usage
+
+       `Cloud_Constructor.setEinastoPowerFactor( 1.0 );` sets the Einasto power factor to `1.0`.
+
+   e. Set the parameters to add the external potential during the construction
+
+     ```C++
+     setExtPotParameters( const int AddingExternalPotential_Analytical, const int Addin gExternalPotential_Table, const char* ExtPotTableFilename )
+     ```
+
+     - Parameters
+
+       - `AddingExternalPotential_Analytical` : `int`
+
+         Whether adding an analytical external potential (0=off, 1=on);
+         Currently, the users must define their analytical functions hard-coded in
+
+         ```C++
+         double UserDefAnalaytical_ExtPot( const double r )
+         ```
+         inside `src/Particle/Par_EquilibriumIC.cpp`.
+
+       - `AddingExternalPotential_Table` : `int`
+
+         Whether adding an external potential from a table (0=off, 1=on);
+         The users have to provide an external potenial table as a runtime input file.
+
+       - `ExtPotTableFilename` : `char*`
+
+         Filename for the external potential table. Required for `AddingExternalPotential_Table`; Useless for `AddingExternalPotential_Analytical`.
+
+     - Notes
+
+       - This is optional. The default is off if this function is not called.
+
+       - This functionality is different and independent from adding external potential in the simulations.
+
+       - `AddingExternalPotential_Analytical` and `AddingExternalPotential_Table` cannot be both on.
+
+     - Example Usage
+
+       `Cloud_Constructor.setExtPotParameters( 0, 1, "MyExtPotTable" );` sets the external potential from the table "MyExtPotTable".
+
+   f. Set the cloud center and bulk velocity in the simulations
+
+     ```C++
+     setCenterAndBulkVel( const double Center_X, const double Center_Y, const double Center_Z, const double BulkVel_X, const double BulkVel_Y, const double BulkVel_Z )
+     ```
+
+     - Parameters
+
+       - `Center_X` : `double`
+
+          x coordinate of the center
+
+       - `Center_Y` : `double`
+
+          y coordinate of the center
+
+       - `Center_Z` : `double`
+
+          z coordinate of the center
+
+       - `BulkVel_X` : `double`
+
+          x component of the bulk velocity
+
+       - `BulkVel_Y` : `double`
+
+          y component of the bulk velocity
+
+       - `BulkVel_Z` : `double`
+
+          z component of the bulk velocity
+
+     - Notes
+
+       - Required for `constructParticles()`, as this only shifts the positions and velocities of all the particles and does not affect the internal distribution.
+
+     - Example Usage
+
+       `Cloud_Constructor.setCenterAndBulkVel( 1.0, 2.0, 3.0, 0.1, 0.2, 0.3 );` sets the cloud to be located at `[1.0, 2.0, 3.0]` and with a bulk velocity of `[0.1, 0.2, 0.3]` in code units.
+
+4. Step 4: Call the construction function to calculate the radial profiles and distribution function for this cloud:
+
+   ```C++
+   constructDistribution()
+   ```
+
+   - Notes
+
+      - One must have called `set*()` in advance (as in the previous step).
+
+      - This should be called before `constructParticles()`.
+
+   - Example Usage
+
+      `Cloud_Constructor.constructDistribution();`
+
+5. Step 5: Call the following function to set the particle initial conditions for a cloud that is in an equilibrium state:
+
+   ```C++
+   constructParticles( real_par *Mass_AllRank, real_par *Pos_AllRank[3], real_par *Vel_AllRank[3], const long Par_Idx0 )
+   ```
+
+   - Parameters
+
+      - `Mass_AllRank` : `real_par*`
+
+         An array of all particles' masses to be set.
+
+      - `Pos_AllRank` : `real_par*`
+
+         An array of all particles' position vectors to be set.
+
+      - `Vel_AllRank` : `real_par*`
+
+         An array of all particles' velocity vectors to be set.
+
+      - `Par_Idx0` : `long`
+
+         Starting index of particles in this cloud.
+
+   - Notes
+
+      - One must have called `constructDistribution()` in advance (as in the previous step).
+
+   - Example Usage
+
+      `Cloud_Constructor.constructParticles( ParFltData_AllRank[PAR_MASS], ParFltData_AllRank+PAR_POSX, ParFltData_AllRank+PAR_VELX, Par_Idx0 );` sets the particles' attributes in `Par_Init_ByFunction()`.
+
+6. After the particles are constructed, one can access the object’s following attributes to check the numerical results:
+
+   - `Cloud_Constructor.TotCloudMass` is the total enclosed mass within the maximum radius of this cloud.
+
+   - `Cloud_Constructor.ParticleMass` is the particle mass as the total enclosed mass divided by the number of particles in the cloud.
+
+   - `Cloud_Constructor.TotCloudMassError` is the total enclosed mass relative error compared to the analytical expectation.
+
+For pratical examples, please refer to the test problems `Hydro/ParticleEquilibriumIC` and `ELBDM/HaloMerger`.
 
 
 ## Setting IC from Files
