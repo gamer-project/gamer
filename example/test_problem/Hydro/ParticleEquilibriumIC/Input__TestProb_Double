@@ -1,5 +1,5 @@
 # problem-specific runtime parameters
-ParEqmIC_SmallGas                1e-3                     # negligible uniform background gas density
-ParEqmIC_NumCloud                2                        # total number of clouds of particles
+ParEqmIC_SmallGas                1e-3                     # negligible uniform background gas density [1e-3]
+ParEqmIC_NumCloud                2                        # total number of clouds of particles [1]
 ParEqmIC_Cloud_ParaFilename_1    Input__ParEqmIC_Double1  # input filename for paramters of cloud_1
 ParEqmIC_Cloud_ParaFilename_2    Input__ParEqmIC_Double2  # input filename for paramters of cloud_2

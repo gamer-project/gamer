@@ -8,7 +8,7 @@
 
 static double ExtendedInterpolatedTable   ( const double x, const int N, const double Table_x[], const double Table_y[] );
 static double LinearDensityShellMass      ( const double r0, const double r1, const double rho0, const double rho1 );
-static double UserDefAnlaytical_ExtPot    ( const double r );
+static double UserDefAnalaytical_ExtPot   ( const double r );
 
 static double AnalyticalDensProf_Plummer  ( const double r, const double R0, const double Rho0 );
 static double AnalyticalMassProf_Plummer  ( const double r, const double R0, const double Rho0 );
@@ -29,7 +29,7 @@ static double AnalyticalDensProf_Einasto  ( const double r, const double R0, con
 static double MassIntegrand_Einasto       ( const double r, void* parameters );
 static double MassIntegrand_Table         ( const double r, void* parameters );
 
-// Parameters for the intergration of mass profile
+// Parameters for the integration of mass profile
 struct mass_integrand_params_Einasto{ double Cloud_R0; double Cloud_Rho0; double Cloud_Einasto_Power_Factor; };
 struct mass_integrand_params_Table  { int NBin;        double* Table_R;   double* Table_D;                   };
 
@@ -126,6 +126,9 @@ void Par_EquilibriumIC::setCenterAndBulkVel( const double Center_X, const double
    Cloud_BulkVel[1] = BulkVel_Y;
    Cloud_BulkVel[2] = BulkVel_Z;
 
+// set the action flag
+   hasSetCenterAndBulkVel = true;
+
 } // FUNCTION : setCenterAndBulkVel
 
 
@@ -137,8 +140,8 @@ void Par_EquilibriumIC::setCenterAndBulkVel( const double Center_X, const double
 // Note        :  1. The scale density and scale radius are general but may have different names in
 //                   different models. Check the definition in AnalyticalDensProf_* for details
 //
-// Parameter   :  Rho0 : scale density in the density profile
-//                R0   : scale radius in the density profile
+// Parameter   :  Rho0 : Scale density in the density profile
+//                R0   : Scale radius in the density profile
 //
 // Return      :  Cloud_Rho0, Cloud_R0
 //-------------------------------------------------------------------------------------------------------
@@ -146,6 +149,13 @@ void Par_EquilibriumIC::setModelParameters( const double Rho0, const double R0 )
 {
    Cloud_Rho0 = Rho0;
    Cloud_R0   = R0;
+
+// check
+   if ( Cloud_Rho0 <= 0.0 )   Aux_Error( ERROR_INFO, "Cloud_Rho0 = % 14.7e is not positive !!\n", Cloud_Rho0 );
+   if ( Cloud_R0   <= 0.0 )   Aux_Error( ERROR_INFO, "Cloud_R0 = % 14.7e is not positive !!\n",   Cloud_R0   );
+
+// set the action flag
+   hasSetModelParameters = true;
 
 } // FUNCTION : setModelParameters
 
@@ -157,13 +167,19 @@ void Par_EquilibriumIC::setModelParameters( const double Rho0, const double R0 )
 //
 // Note        :  1. See AnalyticalDensProf_Einasto for details
 //
-// Parameter   :  EinastoPowerFactor : the power factor in the Einasto density profile
+// Parameter   :  EinastoPowerFactor : The power factor in the Einasto density profile
 //
 // Return      :  Cloud_Einasto_Power_Factor
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::setEinastoPowerFactor( const double EinastoPowerFactor )
 {
    Cloud_Einasto_Power_Factor = EinastoPowerFactor;
+
+// check
+   if ( Cloud_Einasto_Power_Factor <= 0.0 )   Aux_Error( ERROR_INFO, "Cloud_Einasto_Power_Factor = % 14.7e is not positive !!\n", Cloud_Einasto_Power_Factor );
+
+// set the action flag
+   hasSetEinastoPowerFactor = true;
 
 } // FUNCTION : setEinastoPowerFactor
 
@@ -175,13 +191,16 @@ void Par_EquilibriumIC::setEinastoPowerFactor( const double EinastoPowerFactor )
 //
 // Note        :  1. The file has two columns: the first is the radius and the second is the density
 //
-// Parameter   :  DensProfTableFilename : filename for the density profile table
+// Parameter   :  DensProfTableFilename : Filename for the density profile table
 //
 // Return      :  DensProf_Table_Name
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::setDensProfTableFilename( const char* DensProfTableFilename )
 {
    strcpy( DensProf_Table_Name, DensProfTableFilename );
+
+// set the action flag
+   hasSetDensProfTableFilename = true;
 
 } // FUNCTION : setDensProfTableFilename
 
@@ -207,9 +226,13 @@ void Par_EquilibriumIC::setParticleParameters( const long ParNum, const double M
    Cloud_NBin     = NBin;
    Cloud_RSeed    = RSeed;
 
-   if ( Cloud_Par_Num < 1 )   Aux_Error( ERROR_INFO, "Cloud_Par_Num = %ld is less than 1 !!\n", Cloud_Par_Num );
-   if ( Cloud_MaxR <= 0.0 )   Aux_Error( ERROR_INFO, "Cloud_MaxR = % 14.7e is not positive !!\n", Cloud_MaxR );
-   if ( Cloud_NBin < 1    )   Aux_Error( ERROR_INFO, "Cloud_NBin = %d is less than 1 !!\n", Cloud_NBin       );
+// check
+   if ( Cloud_Par_Num < 1 )   Aux_Error( ERROR_INFO, "Cloud_Par_Num = %ld is less than 1 !!\n",   Cloud_Par_Num );
+   if ( Cloud_MaxR <= 0.0 )   Aux_Error( ERROR_INFO, "Cloud_MaxR = % 14.7e is not positive !!\n", Cloud_MaxR    );
+   if ( Cloud_NBin < 1    )   Aux_Error( ERROR_INFO, "Cloud_NBin = %d is less than 1 !!\n",       Cloud_NBin    );
+
+// set the action flag
+   hasSetParticleParameters = true;
 
 } // FUNCTION : setParticleParameters
 
@@ -217,11 +240,11 @@ void Par_EquilibriumIC::setParticleParameters( const long ParNum, const double M
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  setExtPotParameters
-// Description :  Set the parametes related to the external potential from input parameters outside
+// Description :  Set the parameters related to the external potential from input parameters outside
 //
-// Note        :  1. It supports adding either analytical external potential or external potential from a table
+// Note        :  1. It supports adding either an analytical external potential or an external potential from a table
 //                2. The analytical external potential can be set via getExternalPotential()
-//                3. The external potential table has two columns: the first is the radius and the second is the potential
+//                3. The external potential table has two columns: the first is the radius, and the second is the potential
 //                4. AddExtPot_Analytical and AddExtPot_Table in Par_EquilibriumIC cannot both be turned on
 //
 // Parameter   :  AddingExternalPotential_Analytical : Whether adding an analytical external potential
@@ -235,10 +258,14 @@ void Par_EquilibriumIC::setExtPotParameters( const int AddingExternalPotential_A
    AddExtPot_Analytical = AddingExternalPotential_Analytical;
    AddExtPot_Table      = AddingExternalPotential_Table;
 
+   if ( AddExtPot_Table )   strcpy( ExtPot_Table_Name, ExtPotTableFilename );
+
+// check
    if ( AddExtPot_Analytical  &&  AddExtPot_Table )
       Aux_Error( ERROR_INFO, "AddExtPot_Analytical and AddExtPot_Table in Par_EquilibriumIC cannot both be turned on !!\n" );
 
-   if ( AddExtPot_Table )   strcpy( ExtPot_Table_Name, ExtPotTableFilename );
+// set the action flag
+   hasSetExtPotParameters = true;
 
 } // FUNCTION : setExtPotParameters
 
@@ -256,6 +283,14 @@ void Par_EquilibriumIC::setExtPotParameters( const int AddingExternalPotential_A
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::loadInputDensProfTable()
 {
+// verify the status of the action
+   if ( !hasSetDensProfTableFilename )
+      Aux_Error( ERROR_INFO, "Must call setDensProfTableFilename() before loadInputDensProfTable() in Par_EquilibriumIC !!\n" );
+
+   if ( !hasSetParticleParameters )
+      Aux_Error( ERROR_INFO, "Must call setParticleParameters() before loadInputDensProfTable() in Par_EquilibriumIC !!\n" );
+
+// start
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading Density Profile Table: \"%s\" ...\n", DensProf_Table_Name );
 
    const int Col_R[1] = {0};   // target column: radius
@@ -264,37 +299,40 @@ void Par_EquilibriumIC::loadInputDensProfTable()
    const int NRowR = Aux_LoadTable( InputTable_DensProf_Radius,  DensProf_Table_Name, 1, Col_R, true, true );
    const int NRowD = Aux_LoadTable( InputTable_DensProf_Density, DensProf_Table_Name, 1, Col_D, true, true );
 
-// Check the number of rows is consistent
+// check the number of rows is consistent
    if ( NRowR != NRowD )
       Aux_Error( ERROR_INFO, "The number of rows of density (%d) is not equal to the number of rows of radii (%d) in density table %s !!\n",
                              NRowD, NRowR, DensProf_Table_Name );
    else
       InputTable_DensProf_NBin = NRowR;
 
-// Check maximum radius in the density table must be larger than Cloud_MaxR
+// check the maximum radius in the density table must be larger than Cloud_MaxR
    if ( InputTable_DensProf_Radius[InputTable_DensProf_NBin-1] < Cloud_MaxR )
       Aux_Error( ERROR_INFO, "Maximum radius (%14.7e) in density table %s is smaller then Cloud_MaxR (%14.7e) !!\n",
                              InputTable_DensProf_Radius[InputTable_DensProf_NBin-1], DensProf_Table_Name, Cloud_MaxR );
 
-// Check minimum radius in the density table must be smaller than Cloud_MaxR
+// check the minimum radius in the density table must be smaller than Cloud_MaxR
    if ( InputTable_DensProf_Radius[0] > Cloud_MaxR )
       Aux_Error( ERROR_INFO, "Minimum radius (%14.7e) in density table %s is larger then Cloud_MaxR (%14.7e) !!\n",
                              InputTable_DensProf_Radius[0], DensProf_Table_Name, Cloud_MaxR );
 
-// Check the properties of values in the density table
+// check the properties of values in the density table
    for (int i=1; i<InputTable_DensProf_NBin; i++)
    {
       if ( InputTable_DensProf_Radius[i] <= InputTable_DensProf_Radius[i-1] )
-         Aux_Error( ERROR_INFO, "Radii in density table \"%s\" are not strictly increasing !!\n", DensProf_Table_Name );
+         Aux_Error( ERROR_INFO, "Radii in density table \"%s\" are not strictly increasing (r[%ld] = %14.7e, r[%ld] = %14.7e) !!\n",
+                    DensProf_Table_Name, i-1, InputTable_DensProf_Radius[i-1], i, InputTable_DensProf_Radius[i] );
 
       if ( InputTable_DensProf_Density[i] < 0.0 )
-         Aux_Error( ERROR_INFO, "Densities in density table \"%s\" have negative value !!\n", DensProf_Table_Name );
+         Aux_Error( ERROR_INFO, "Densities in density table \"%s\" have negative value (Dens[%ld] = %14.7e) !!\n",
+                    DensProf_Table_Name, i, InputTable_DensProf_Density[i] );
 
       if ( InputTable_DensProf_Density[i] > InputTable_DensProf_Density[i-1] )
-         Aux_Error( ERROR_INFO, "Densities in density table \"%s\" are not monotonically decreasing !!\n", DensProf_Table_Name );
+         Aux_Error( ERROR_INFO, "Densities in density table \"%s\" are not monotonically decreasing (Dens[%ld] = %14.7e, Dens[%ld] = %14.7e) !!\n",
+                    DensProf_Table_Name, i-1, InputTable_DensProf_Density[i-1], i, InputTable_DensProf_Density[i] );
    }
 
-// Check Cloud_NBin must be larger than the number of bins inside Cloud_MaxR in the density table
+// check Cloud_NBin must be larger than the number of bins inside Cloud_MaxR in the density table
    int InputTable_NBins_InsideMaxR = 0;
    for (int i=0; i<InputTable_DensProf_NBin; i++)
    {
@@ -306,10 +344,14 @@ void Par_EquilibriumIC::loadInputDensProfTable()
       Aux_Message( stderr, "WARNING : Cloud_NBin = %d is smaller than the number of bins (= %d) inside Cloud_MaxR (= %14.7e) in input density table \"%s\" !!\n",
                            Cloud_NBin, InputTable_NBins_InsideMaxR, Cloud_MaxR, DensProf_Table_Name );
 
-// Reset the maximum radius of RArray according to the density table
+// reset the maximum radius of RArray according to the density table
    RArray_MaxR = MIN( RArray_MaxR, InputTable_DensProf_Radius[InputTable_DensProf_NBin-1] );
 
+// end
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading Density Profile Table: \"%s\" ... done\n", DensProf_Table_Name );
+
+// set the action flag
+   hasLoadedInputDensProfTable = true;
 
 } // FUNCTION : loadInputDensProfTable
 
@@ -327,6 +369,14 @@ void Par_EquilibriumIC::loadInputDensProfTable()
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::loadInputExtPotTable()
 {
+// verify the status of the action
+   if ( !hasSetExtPotParameters )
+      Aux_Error( ERROR_INFO, "Must call setExtPotParameters() before loadInputExtPotTable() in Par_EquilibriumIC !!\n" );
+
+   if ( !hasSetParticleParameters )
+      Aux_Error( ERROR_INFO, "Must call setParticleParameters() before loadInputExtPotTable() in Par_EquilibriumIC !!\n" );
+
+// start
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading ExtPot Profile Table: %s ...\n", ExtPot_Table_Name );
 
    const int Col_R[1] = {0};   // target column: radius
@@ -335,42 +385,49 @@ void Par_EquilibriumIC::loadInputExtPotTable()
    const int NRowR = Aux_LoadTable( InputTable_ExtPot_Radius,    ExtPot_Table_Name, 1, Col_R, true, true );
    const int NRowP = Aux_LoadTable( InputTable_ExtPot_Potential, ExtPot_Table_Name, 1, Col_P, true, true );
 
-// Check the number of rows is consistent
+// check the number of rows is consistent
    if ( NRowR != NRowP )
       Aux_Error( ERROR_INFO, "The number of rows of potential (%d) is not equal to the number of rows of radii (%d) in ExtPot table %s !!\n",
                              NRowP, NRowR, ExtPot_Table_Name );
    else
       InputTable_ExtPot_NBin = NRowR;
 
-// Check maximum radius in the external potential table must be larger than Cloud_MaxR
+// check the maximum radius in the external potential table must be larger than Cloud_MaxR
    if ( InputTable_ExtPot_Radius[InputTable_ExtPot_NBin-1] < Cloud_MaxR )
       Aux_Error( ERROR_INFO, "Maximum radius (%14.7e) in external potential table %s is smaller then Cloud_MaxR (%14.7e) !!\n",
                              InputTable_ExtPot_Radius[InputTable_ExtPot_NBin-1], ExtPot_Table_Name, Cloud_MaxR );
 
-// Check minimum radius in the external potential table must be smaller than Cloud_MaxR
+// check the minimum radius in the external potential table must be smaller than Cloud_MaxR
    if ( InputTable_ExtPot_Radius[0] > Cloud_MaxR )
       Aux_Error( ERROR_INFO, "Minimum radius (%14.7e) in external potential table %s is larger then Cloud_MaxR (%14.7e) !!\n",
                              InputTable_ExtPot_Radius[0], ExtPot_Table_Name, Cloud_MaxR );
 
-// Check the properties of values in the external potential table
+// check the properties of values in the external potential table
    for (int i=1; i<InputTable_ExtPot_NBin; i++)
    {
       if ( InputTable_ExtPot_Radius[i] <= InputTable_ExtPot_Radius[i-1] )
-         Aux_Error( ERROR_INFO, "Radii in external potential table \"%s\" are not strictly increasing !!\n", ExtPot_Table_Name );
+         Aux_Error( ERROR_INFO, "Radii in external potential table \"%s\" are not strictly increasing (r[%ld] = %14.7e, r[%ld] = %14.7e) !!\n",
+                    ExtPot_Table_Name, i-1, InputTable_ExtPot_Radius[i-1], i, InputTable_ExtPot_Radius[i] );
 
-      // The potential at r=infinity is assumed to be zero
+//    the potential at r=infinity is assumed to be zero
       if ( InputTable_ExtPot_Potential[i] > 0.0 )
-         Aux_Error( ERROR_INFO, "Potential in external potential table \"%s\" have postive value !!\n", ExtPot_Table_Name );
+         Aux_Error( ERROR_INFO, "Potential in external potential table \"%s\" have postive value (Pot[%ld] = %14.7e) !!\n",
+                    ExtPot_Table_Name, i, InputTable_ExtPot_Potential[i] );
 
-      // Assume there is no outward force
+//    assume there is no outward force
       if ( InputTable_ExtPot_Potential[i] < InputTable_ExtPot_Potential[i-1] )
-         Aux_Error( ERROR_INFO, "Potential in external potential table \"%s\" are not monotonically increasing !!\n", ExtPot_Table_Name );
+         Aux_Error( ERROR_INFO, "Potential in external potential table \"%s\" are not monotonically increasing (Pot[%ld] = %14.7e, Pot[%ld] = %14.7e) !!\n",
+                    ExtPot_Table_Name, i-1, InputTable_ExtPot_Potential[i-1], i, InputTable_ExtPot_Potential[i] );
    }
 
-// Reset the maximum radius of RArray according to the external potential table
+// reset the maximum radius of RArray according to the external potential table
    RArray_MaxR = MIN( RArray_MaxR, InputTable_ExtPot_Radius[InputTable_ExtPot_NBin-1] );
 
+// end
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading ExtPot Profile Table: \"%s\" ... done\n", ExtPot_Table_Name );
+
+// set the action flag
+   hasLoadedInputExtPotTable = true;
 
 } // FUNCTION : loadInputExtPotTable
 
@@ -390,16 +447,27 @@ void Par_EquilibriumIC::loadInputExtPotTable()
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::constructDistribution()
 {
+// verify the status of the action
+   if ( !hasSetParticleParameters )
+      Aux_Error( ERROR_INFO, "Must call setParticleParameters() before constructDistribution() in Par_EquilibriumIC !!\n" );
+
+   if ( Cloud_Model != CLOUD_MODEL_TABLE  &&  !hasSetModelParameters )
+      Aux_Error( ERROR_INFO, "Must call setModelParameters() before constructDistribution() in Par_EquilibriumIC !!\n" );
+
+   if ( Cloud_Model == CLOUD_MODEL_EINASTO  &&  !hasSetEinastoPowerFactor )
+      Aux_Error( ERROR_INFO, "Must call setEinastoPowerFactor() before constructDistribution() in Par_EquilibriumIC !!\n" );
+
+// start
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "Constructing the distribution in Par_EquilibriumIC ...\n" );
 
-// Maximum radius for the profiles to calculate the distribution function, should be much larger than the Cloud_MaxR
+// maximum radius for the profiles to calculate the distribution function, should be much larger than the Cloud_MaxR
    RArray_MaxR = 1.0e3*Cloud_MaxR;
 
-// Load the input density table
+// load the input density table
    if ( Cloud_Model == CLOUD_MODEL_TABLE )   loadInputDensProfTable();
    if ( AddExtPot_Table )                    loadInputExtPotTable();
 
-// Construct RArray
+// construct RArray
    RNPoints         = MIN( 10000000, MAX( 1000, (int)ceil( Cloud_NBin*(RArray_MaxR/Cloud_MaxR)+1 ) ) ); // within a reasonable range, try to keep roughly the same Cloud_NBin inside Cloud_MaxR
    RLastIdx         = RNPoints-1;
    RArray_R         = new double [RNPoints];
@@ -410,7 +478,7 @@ void Par_EquilibriumIC::constructDistribution()
 
    constructRadialArray();
 
-// Construct EArray
+// construct EArray
    ENPoints         = MIN( 10000000, MAX( 1000, (int)ceil( 2*(RArray_Phi[0]/RArray_Phi[RLastIdx])+1 ) ) ); // within a reasonable range, estimated by the potential difference at the center
    ELastIdx         = ENPoints-1;
    EArray_DFunc     = new double [ENPoints];
@@ -420,11 +488,15 @@ void Par_EquilibriumIC::constructDistribution()
    constructEnergyArray();
 
 #  ifdef GAMER_DEBUG
-// Output the arrays for debugging
+// output the arrays for debugging
    printArrays();
 #  endif // #ifdef GAMER_DEBUG
 
+// end
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "Constructing the distribution in Par_EquilibriumIC ... done\n" );
+
+// set the action flag
+   hasConstructedDistribution = true;
 
 } // FUNCTION : constructDistribution
 
@@ -442,32 +514,35 @@ void Par_EquilibriumIC::constructDistribution()
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::constructRadialArray()
 {
-// Interval of radial bins
+// interval of radial bins
    RArray_dR = RArray_MaxR/(RNPoints-1);
 
-// Array of Radius, R
+// array of Radius, R
    for (int i=0; i<RNPoints; i++)     RArray_R[i]         = RArray_dR*i;
 
-// Array of Density, Rho(R)
+// array of Density, Rho(R)
    for (int i=1; i<RNPoints; i++)     RArray_Rho[i]       = getDensity( RArray_R[i] );
    RArray_Rho[0]                                          = 2.0*RArray_Rho[1]-RArray_Rho[2];   // where r=0
 
-// Array of Enclosed Mass, M_Enc(R) = \int_{0}^{R} Rho(r) 4\pi R^2 dR
+// array of Enclosed Mass, M_Enc(R) = \int_{0}^{R} Rho(r) 4\pi R^2 dR
    RArray_M_Enc[0]                                        = 0.0;   // where r=0
    for (int i=1; i<RNPoints; i++)     RArray_M_Enc[i]     = RArray_M_Enc[i-1] + LinearDensityShellMass( RArray_R[i-1], RArray_R[i], RArray_Rho[i-1], RArray_Rho[i] );
 
-// Array of Gravitational Potential, Phi(R) = Phi(\infty) - \int_{\infty}^{R} g dR, where g = -GM/R^2
+// array of Gravitational Potential, Phi(R) = Phi(\infty) - \int_{\infty}^{R} g dR, where g = -GM/R^2
    RArray_Phi[RLastIdx]                                   = -NEWTON_G*RArray_M_Enc[RLastIdx]/RArray_R[RLastIdx];
    for (int i=RLastIdx-1; i>0; i--)   RArray_Phi[i]       = RArray_Phi[i+1] + -NEWTON_G*0.5*(RArray_M_Enc[i]/SQR( RArray_R[i] ) + RArray_M_Enc[i+1]/SQR( RArray_R[i+1] ))*RArray_dR;
    RArray_Phi[0]                                          = RArray_Phi[1]   + -NEWTON_G*0.5*(RArray_M_Enc[1]/SQR( RArray_R[1] ))*RArray_dR;
 
-// Adding External Potentil
+// add External Potential
    for (int i=0; i<RNPoints; i++)     RArray_Phi[i]      += getExternalPotential( RArray_R[i] );
 
-// Array of dRho/dPsi, dRho/dPsi = -(dRho/dPhi), where Psi = -Phi
+// array of dRho/dPsi, dRho/dPsi = -(dRho/dPhi), where Psi = -Phi
    RArray_dRho_dPsi[0]                                    = -(RArray_Rho[1]        - RArray_Rho[0]         )/(RArray_Phi[1]        - RArray_Phi[0]         );
    for (int i=1; i<RNPoints-1; i++)   RArray_dRho_dPsi[i] = -(RArray_Rho[i+1]      - RArray_Rho[i-1]       )/(RArray_Phi[i+1]      - RArray_Phi[i-1]       );
    RArray_dRho_dPsi[RLastIdx]                             = -(RArray_Rho[RLastIdx] - RArray_Rho[RLastIdx-1])/(RArray_Phi[RLastIdx] - RArray_Phi[RLastIdx-1]);
+
+// set the action flag
+   hasConstructedRadialArray = true;
 
 } // FUNCTION : constructRadialArray
 
@@ -479,8 +554,8 @@ void Par_EquilibriumIC::constructRadialArray()
 //
 // Note        :  1. Called by constructDistribution()
 //                2. Solve the ergodic distribution function from the density profile using the Eddington inversion
-//                3. Reference: Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Chapter 4.3 -- Chapter 4.3.1
-//                              Eddingtion A. S., 1916, MNRAS, doi:10.1093/mnras/76.7.572
+//                3. References: Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Chapter 4.3 -- Chapter 4.3.1
+//                               Eddingtion A. S., 1916, MNRAS, doi:10.1093/mnras/76.7.572
 //
 // Parameter   :  None
 //
@@ -488,25 +563,32 @@ void Par_EquilibriumIC::constructRadialArray()
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::constructEnergyArray()
 {
+// verify the status of the action
+   if ( !hasConstructedRadialArray )
+      Aux_Error( ERROR_INFO, "Must call constructRadialArray() before constructEnergyArray() in Par_EquilibriumIC !!\n" );
+
 // Ralative Energy (Binding Energy) E ranges from Psi_Min to Psi_Max, where Psi = -Phi is the Relative Potential
    EArray_MinE = 0.0;
    EArray_MaxE = -RArray_Phi[0];
    EArray_dE   = (EArray_MaxE-EArray_MinE)/(ENPoints-1);
 
-// Array of Relative Energy (Binding Energy), E = -(Phi + 1/2 v^2) = Psi - 1/2 v^2 = 1/2 ( v_{esc}^2 - v^2 ). See Eq.(4.41) in Binney & Tremaine 2008, Galactic Dynamics
+// array of Relative Energy (Binding Energy), E = -(Phi + 1/2 v^2) = Psi - 1/2 v^2 = 1/2 ( v_{esc}^2 - v^2 ). See Eq.(4.41) in Binney & Tremaine 2008, Galactic Dynamics
    for (int i=0; i<ENPoints; i++)     EArray_E[i]        = EArray_MinE + i*EArray_dE;
 
-// Array of Integrated Distribution Function, IntDFunc(E) = \frac{1}{\sqrt{8}\pi^2} \int_{0}^{E} (\frac{ 1 }{ \sqrt{E-Psi} }) (\frac{ dRho }{ dPsi }) dPsi. See Eq.(4.46a) in Binney & Tremaine 2008, Galactic Dynamics
+// array of Integrated Distribution Function, IntDFunc(E) = \frac{1}{\sqrt{8}\pi^2} \int_{0}^{E} (\frac{ 1 }{ \sqrt{E-Psi} }) (\frac{ dRho }{ dPsi }) dPsi. See Eq.(4.46a) in Binney & Tremaine 2008, Galactic Dynamics
    for (int i=0; i<ENPoints; i++)     EArray_IntDFunc[i] = getIntegratedDistributionFunction( EArray_E[i] );
 
-// Array of Distribution Function, DFunc(E) = f(E) = d/dE IntDFunc(E), which is the Eddington's formula Eq.(4.46a) in Binney & Tremaine 2008, Galactic Dynamics
+// array of Distribution Function, DFunc(E) = f(E) = d/dE IntDFunc(E), which is the Eddington's formula Eq.(4.46a) in Binney & Tremaine 2008, Galactic Dynamics
    EArray_DFunc[0]                                       = (EArray_IntDFunc[1]        - EArray_IntDFunc[0]         )/EArray_dE;
    for (int i=1; i<ENPoints-1; i++)   EArray_DFunc[i]    = (EArray_IntDFunc[i+1]      - EArray_IntDFunc[i-1]       )/(2.0*EArray_dE);
    EArray_DFunc[ELastIdx]                                = (EArray_IntDFunc[ELastIdx] - EArray_IntDFunc[ELastIdx-1])/EArray_dE;
 
-// check negative distribution function
+// check the negative distribution function
    for (int i=0; i<ENPoints; i++)
-      if ( EArray_DFunc[i] < 0.0 )      EArray_DFunc[i]  = 0.0;
+      if ( EArray_DFunc[i] < 0.0 )    EArray_DFunc[i]    = 0.0;
+
+// set the action flag
+   hasConstructedEnergyArray = true;
 
 } // FUNCTION : constructEnergyArray
 
@@ -524,8 +606,14 @@ void Par_EquilibriumIC::constructEnergyArray()
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::printArrays()
 {
+// verify the status of the action
+   if ( !hasConstructedRadialArray  ||  !hasConstructedEnergyArray )
+      Aux_Error( ERROR_INFO, "Must call constructRadialArray() and constructEnergyArray() before printArrays() in Par_EquilibriumIC !!\n" );
+
    if ( MPI_Rank == 0 )
    {
+//    index to distinguish different clouds
+//    declared as static so that it increases when the constructor is called multiple times
       static int Cloud_ID = 1;
 
 //    RArray
@@ -562,9 +650,9 @@ void Par_EquilibriumIC::printArrays()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  constructParticles
-// Description :  Set the particle's initial conditions (IC) for a cloud that is in equilibrium state
+// Description :  Set the particle's initial conditions (IC) for a cloud that is in an equilibrium state
 //
-// Note        :  1. Must call constructEnergyArray() in advance
+// Note        :  1. Must call constructedDistribution() in advance
 //
 // Parameter   :  Mass_AllRank : An array of all particles' masses
 //                Pos_AllRank  : An array of all particles' position vectors
@@ -577,15 +665,23 @@ void Par_EquilibriumIC::printArrays()
 //-------------------------------------------------------------------------------------------------------
 void Par_EquilibriumIC::constructParticles( real_par *Mass_AllRank, real_par *Pos_AllRank[3], real_par *Vel_AllRank[3], const long Par_Idx0 )
 {
+// verify the status of the action
+   if ( !hasConstructedDistribution )
+      Aux_Error( ERROR_INFO, "Must call constructedDistribution() before constructParticles() in Par_EquilibriumIC !!\n" );
+
+   if ( !hasSetCenterAndBulkVel )
+      Aux_Error( ERROR_INFO, "Must call setCenterAndBulkVel() before constructParticles() in Par_EquilibriumIC !!\n" );
+
+// start
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "Constructing the particles in Par_EquilibriumIC ...\n" );
 
-// Determine the total enclosed mass within the maximum radius
+// determine the total enclosed mass within the maximum radius
    const double TotCloudMass_Analytical = getAnalEnclosedMass( Cloud_MaxR );
    TotCloudMass                         = ExtendedInterpolatedTable( Cloud_MaxR, RNPoints, RArray_R, RArray_M_Enc );
    ParticleMass                         = TotCloudMass/Cloud_Par_Num;
    TotCloudMassError                    = ( TotCloudMass - TotCloudMass_Analytical )/TotCloudMass_Analytical;
 
-// Set random number generator
+// set the random number generator
    Random_Num_Gen = new RandomNumber_t( 1 );
    Random_Num_Gen->SetSeed( 0, Cloud_RSeed );
 
@@ -594,30 +690,30 @@ void Par_EquilibriumIC::constructParticles( real_par *Mass_AllRank, real_par *Po
 
    CumulProbaDistr_GivenRadius = new double [ENPoints];
 
-// Set particle attributes
+// loop through each particle in the cloud
    for (long p=Par_Idx0; p<Par_Idx0+Cloud_Par_Num; p++)
    {
-//    Randomly sample the enclosed mass
+//    randomly sample the enclosed mass
       const double RandomSampleM = TotCloudMass*Random_Num_Gen->GetValue( 0, 0.0, 1.0 );
 
-//    Randomly sample the radius from the enclosed mass profile with linear interpolation
+//    randomly sample the radius from the enclosed mass profile with linear interpolation
       const double RandomSampleR = Mis_InterpolateFromTable( RNPoints, RArray_M_Enc, RArray_R, RandomSampleM );
 
-//    Randomly set the position vector with a given radius
+//    randomly set the position vector with a given radius
       getRandomVector_GivenLength( RandomSampleR, RandomVectorR );
 
-//    Randomly sample the velocity magnitude from the distribution function
+//    randomly sample the velocity magnitude from the distribution function
       const double RandomSampleV = getRandomSampleVelocity( RandomSampleR );
 
-//    Randomly set the velocity vector with the given magnitude
+//    randomly set the velocity vector with the given magnitude
       getRandomVector_GivenLength( RandomSampleV, RandomVectorV );
 
-//    Set particle attributes
+//    set the particle attributes
       Mass_AllRank[p] = ParticleMass;
       for (int d=0; d<3; d++)   Pos_AllRank[d][p] = Cloud_Center[d]  + RandomVectorR[d];
       for (int d=0; d<3; d++)   Vel_AllRank[d][p] = Cloud_BulkVel[d] + RandomVectorV[d];
 
-//    Check periodicity
+//    check the periodicity
       for (int d=0; d<3; d++)
          if ( OPT__BC_FLU[d*2] == BC_FLU_PERIODIC )   Pos_AllRank[d][p] = fmod( (double)Pos_AllRank[d][p]+amr->BoxSize[d], amr->BoxSize[d] );
 
@@ -625,7 +721,11 @@ void Par_EquilibriumIC::constructParticles( real_par *Mass_AllRank, real_par *Po
 
    delete [] CumulProbaDistr_GivenRadius;
 
+// end
    if ( MPI_Rank == 0 )   Aux_Message( stdout, "Constructing the particles in Par_EquilibriumIC ... done\n" );
+
+// set the action flag
+   hasConstructedParticles = true;
 
 } // FUNCTION : constructParticles
 
@@ -638,9 +738,9 @@ void Par_EquilibriumIC::constructParticles( real_par *Mass_AllRank, real_par *Po
 // Note        :  1. For CLOUD_MODEL_TABLE, the density is interpolated from the input density profile table
 //                2. For other models, the density is from the analytical density profile
 //
-// Parameter   :  r : radius
+// Parameter   :  r    : Radius
 //
-// Return      :  Density of this cloud at radius r
+// Return      :  dens : Density of this cloud at radius r
 //-------------------------------------------------------------------------------------------------------
 double Par_EquilibriumIC::getDensity( const double r )
 {
@@ -668,9 +768,9 @@ double Par_EquilibriumIC::getDensity( const double r )
 // Note        :  1. Get the enclosed mass from the analytical enclosed mass profile if available;
 //                   otherwise, use numerical integration with GSL
 //
-// Parameter   :  r : radius
+// Parameter   :  r             : Radius
 //
-// Return      :  Enclosed mass of this cloud within radius r
+// Return      :  enclosed_mass : Enclosed mass of this cloud within radius r
 //-------------------------------------------------------------------------------------------------------
 double Par_EquilibriumIC::getAnalEnclosedMass( const double r )
 {
@@ -690,7 +790,7 @@ double Par_EquilibriumIC::getAnalEnclosedMass( const double r )
 #     ifdef SUPPORT_GSL
       double abs_error;
 
-//    Arguments for the gsl integration
+//    arguments for the gsl integration
       const double lower_limit = 0.0;
       const double upper_limit = r;
       const double abs_err_lim = 1.0e-4;
@@ -702,11 +802,11 @@ double Par_EquilibriumIC::getAnalEnclosedMass( const double r )
 
       gsl_function F;
 
-//    Parameters for the integrand
+//    parameters for the integrand
       struct mass_integrand_params_Einasto integrand_params_Einasto = { Cloud_R0, Cloud_Rho0, Cloud_Einasto_Power_Factor };
       struct mass_integrand_params_Table   integrand_params_Table   = { InputTable_DensProf_NBin, InputTable_DensProf_Radius, InputTable_DensProf_Density };
 
-//    Integrand for the integration
+//    integrand for the integration
       if      ( Cloud_Model == CLOUD_MODEL_EINASTO )
       {
          F.function = &MassIntegrand_Einasto;
@@ -720,7 +820,7 @@ double Par_EquilibriumIC::getAnalEnclosedMass( const double r )
       else
          Aux_Error( ERROR_INFO, "Unsupported Cloud_Model = %d !!\n", Cloud_Model );
 
-//    Integration
+//    integration
       gsl_integration_qag( &F, lower_limit, upper_limit, abs_err_lim, rel_err_lim, integ_size, integ_rule, w, &enclosed_mass, &abs_error );
 
       gsl_integration_workspace_free( w );
@@ -739,16 +839,16 @@ double Par_EquilibriumIC::getAnalEnclosedMass( const double r )
 //
 // Note        :  1. Get the external potential from table interpolation or the analytical potential profile
 //
-// Parameter   :  r : radius
+// Parameter   :  r       : Radius
 //
-// Return      :  external potential at radius r
+// Return      :  ext_pot : External potential at radius r
 //-------------------------------------------------------------------------------------------------------
 double Par_EquilibriumIC::getExternalPotential( const double r )
 {
    double ext_pot;
 
    if      ( AddExtPot_Table      )   ext_pot = ExtendedInterpolatedTable( r, InputTable_ExtPot_NBin, InputTable_ExtPot_Radius, InputTable_ExtPot_Potential );
-   else if ( AddExtPot_Analytical )   ext_pot = UserDefAnlaytical_ExtPot( r );
+   else if ( AddExtPot_Analytical )   ext_pot = UserDefAnalaytical_ExtPot( r );
    else                               ext_pot = 0.0;
 
    return ext_pot;
@@ -768,13 +868,13 @@ double Par_EquilibriumIC::getExternalPotential( const double r )
 //                4. The state E<0 is unbound, v^2 > v_{esc}^2
 //                5. E is in the range  0 <= E <= Psi(r)
 //
-// Parameter   :  r : radius
+// Parameter   :  r                    : Radius
 //
-// Return      :  Magnitude of velocity for a particle at radius r
+// Return      :  RandomSampleVelocity : Magnitude of velocity for a particle at radius r
 //-------------------------------------------------------------------------------------------------------
 double Par_EquilibriumIC::getRandomSampleVelocity( const double r )
 {
-// The relative potential at this radius
+// the relative potential at this radius
    const double Psi = -ExtendedInterpolatedTable( r, RNPoints, RArray_R, RArray_Phi );
 
 // Cumulative Probability = \int_{v}^{v_max} v^2 f(E) dv
@@ -810,7 +910,7 @@ double Par_EquilibriumIC::getRandomSampleVelocity( const double r )
 // Function    :  getIntegratedDistributionFunction
 // Description :  Get the integrated distribution function
 //
-// Note        :  1. The integrated deistribution function
+// Note        :  1. The integrated distribution function
 //                   = \frac{1}{\sqrt{8}\pi^2} \int_{0}^{\mathcal{E}} \frac{ 1 }{ \sqrt{ \mathcal{E} -\Psi } } \frac{ d\rho }{ d\Psi } d\Psi
 //                   = \frac{1}{\sqrt{8}\pi^2} \int_{0}^{\mathcal{E}} -2 \frac{ d\rho }{ d\Psi } d\sqrt{ \mathcal{E} -\Psi } }
 //
@@ -836,10 +936,10 @@ double Par_EquilibriumIC::getIntegratedDistributionFunction( const double E )
       }
       else
       {
-         // dRho_dPsi is extrapolated with a power law for low Psi
+//       dRho_dPsi is extrapolated with a power law for low Psi
          double power_extrapolated = log( RArray_dRho_dPsi[RLastIdx-1]/RArray_dRho_dPsi[RLastIdx] )/log( (-RArray_Phi[RLastIdx-1])/(-RArray_Phi[RLastIdx]) );
 
-         // to avoid the slope of distribution function become negative when the power of Psi is less then 1/2
+//       to avoid the slope of the distribution function becoming negative when the power of Psi is less than 1/2
          power_extrapolated = ( power_extrapolated < 0.5 ) ? 0.5 : power_extrapolated;
 
          const double dRho_dPsi_Extrapolated = RArray_dRho_dPsi[RLastIdx]*pow( Psi/(-RArray_Phi[RLastIdx]), power_extrapolated );
@@ -889,7 +989,7 @@ void Par_EquilibriumIC::getRandomVector_GivenLength( const double Length, double
 // Description :  Get the interpolated value even if x is out of range
 //
 // Note        :  1. If x is in the range of Table_x, it calls Mis_InterpolateFromTable()
-//                2. If x falls outside the range of Table_x, it returns the value at the nearest end point
+//                2. If x falls outside the range of Table_x, it returns the value at the nearest endpoint
 //
 // Parameter   :  x       : Position to get the interpolation
 //                N       : Number of bins in the Table
@@ -911,9 +1011,9 @@ double ExtendedInterpolatedTable( const double x, const int N, const double Tabl
 // Function    :  LinearDensityShellMass
 // Description :  Get the shell mass between two radii according to a linear density profile
 //
-// Note        :  1. Assume the density profile \rho(r) is linear between two end points, r0 and r1:
+// Note        :  1. Assume the density profile \rho(r) is linear between two endpoints, r0 and r1:
 //                   \rho(r) = \rho_0 + (\frac{(\rho_1-\rho_0)}{r_1-r_0})(r-r_0)
-//                   Then, the integrated shell mass between the two end points is
+//                   Then, the integrated shell mass between the two endpoints is
 //                   M_{shell} = \int_{r_0}^{r_1} \rho(r) 4\pi r^2 dr
 //                             = 4\pi r_0^2 \Delta r   [ \frac{1}{2} \rho_0 + \frac{1}{2} \rho_1 ] +
 //                               4\pi r_0   \Delta r^2 [ \frac{1}{3} \rho_0 + \frac{2}{3} \rho_1 ] +
@@ -937,23 +1037,23 @@ double LinearDensityShellMass( const double r0, const double r1, const double rh
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  UserDefAnlaytical_ExtPot
+// Function    :  UserDefAnalaytical_ExtPot
 // Description :  User-defined analytical external potential formula
 //
 // Note        :  1. As an example, a Plummer potential with hard-coded parameters is provided
 //
-// Parameter   :  r : radius
+// Parameter   :  r : Radius
 //
-// Return      :  external potential at radius r
+// Return      :  External potential at radius r
 //-------------------------------------------------------------------------------------------------------
-double UserDefAnlaytical_ExtPot( const double r )
+double UserDefAnalaytical_ExtPot( const double r )
 {
 // DEFINE YOUR FUNCTION HERE !!!
 /*
    return -NEWTON_G*M/r;
 */
 
-// Or use one of the built-in models
+// or use one of the built-in models
 /*
    return AnalyticalPoteProf_NFW( r, 0.1, 1.0 );
    return AnalyticalPoteProf_Jaffe( r, 0.1, 1.0 );
@@ -962,7 +1062,7 @@ double UserDefAnlaytical_ExtPot( const double r )
 
    return AnalyticalPoteProf_Plummer( r, 0.05, 80.0 );
 
-} // FUNCTION : UserDefAnlaytical_ExtPot
+} // FUNCTION : UserDefAnalaytical_ExtPot
 
 
 
@@ -971,13 +1071,14 @@ double UserDefAnlaytical_ExtPot( const double r )
 // Description :  Analytical density profile of the Plummer model
 //
 // Note        :  1. \rho(r) = \rho_0 ( 1 + (\frac{r}{a})^2 )^{-5/2}
-//                2. Reference: Plummer H. C., MNRAS, 1991, doi:10.1093/mnras/71.5.460
+//                2. References: Plummer H. C., MNRAS, 1991, doi:10.1093/mnras/71.5.460
+//                               Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.44b)
 //
-// Parameter   :  r    : input radius
+// Parameter   :  r    : Input radius
 //                R0   : Plummer scale radius, a
 //                Rho0 : Plummer scale density, \rho_0
 //
-// Return      :  density at the given radius
+// Return      :  Density at the given radius
 //-------------------------------------------------------------------------------------------------------
 double AnalyticalDensProf_Plummer( const double r, const double R0, const double Rho0 )
 {
@@ -997,11 +1098,11 @@ double AnalyticalDensProf_Plummer( const double r, const double R0, const double
 //                        = \frac{4\pi}{3} a^3 \rho_0 \frac{ r^3 }{ (r^2 + a^2)^{3/2} }
 //                2. Reference: Plummer H. C., MNRAS, 1991, doi:10.1093/mnras/71.5.460
 //
-// Parameter   :  r    : input radius
+// Parameter   :  r    : Input radius
 //                R0   : Plummer scale radius, a
 //                Rho0 : Plummer scale density, \rho_0
 //
-// Return      :  enclosed mass at the given radius
+// Return      :  Enclosed mass at the given radius
 //-------------------------------------------------------------------------------------------------------
 double AnalyticalMassProf_Plummer( const double r, const double R0, const double Rho0 )
 {
@@ -1019,12 +1120,14 @@ double AnalyticalMassProf_Plummer( const double r, const double R0, const double
 //
 // Note        :  1. \Phi(r) = \frac{ -G*M_0 }{ ( r^2 + a^2 )^{1/2} },
 //                    where M_0 = \frac{4\pi}{3} a^3 \rho_0
+//                2. References: Plummer H. C., MNRAS, 1991, doi:10.1093/mnras/71.5.460
+//                               Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.44a)
 //
-// Parameter   :  r    : input radius
+// Parameter   :  r    : Input radius
 //                R0   : Plummer scale radius, a
 //                Rho0 : Plummer scale density, \rho_0
 //
-// Return      :  gravitational potential at the given radius
+// Return      :  Gravitational potential at the given radius
 //-------------------------------------------------------------------------------------------------------
 double AnalyticalPoteProf_Plummer( const double r, const double R0, const double Rho0  )
 {
@@ -1039,14 +1142,15 @@ double AnalyticalPoteProf_Plummer( const double r, const double R0, const double
 // Description :  Analytical density profile of the NFW model
 //
 // Note        :  1. \rho(r) = \rho_s \frac{1}{ ( \frac{r}{r_s} ) ( 1 + \frac{r}{r_s} )^2 }
-//                2. Reference: Navarro J.~F., Frenk C.~S., White S.~D.~M., 1996, ApJ, doi:10.1086/177173
-//                              Li P. et al., 2020, ApJS, doi:10.3847/1538-4365/ab700e
+//                2. References: Navarro J.~F., Frenk C.~S., White S.~D.~M., 1996, ApJ, doi:10.1086/177173
+//                               Li P. et al., 2020, ApJS, doi:10.3847/1538-4365/ab700e
+//                               Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.64)
 //
-// Parameter   :  r    : input radius
+// Parameter   :  r    : Input radius
 //                R0   : NFW scale radius, r_s
 //                Rho0 : NFW scale density, \rho_s
 //
-// Return      :  density at the given radius
+// Return      :  Density at the given radius
 //-------------------------------------------------------------------------------------------------------
 double AnalyticalDensProf_NFW( const double r, const double R0, const double Rho0 )
 {
@@ -1063,15 +1167,15 @@ double AnalyticalDensProf_NFW( const double r, const double R0, const double Rho
 // Description :  Analytical enclosed mass profile of the NFW model
 //
 // Note        :  1. M(r) = 4\pi \rho_s r_s^3 [ \ln( \frac{ r_s + r }{ r_s } ) - \frac{ r }{ r_s + r } ]
-//                2. Reference: Navarro J.~F., Frenk C.~S., White S.~D.~M., 1996, ApJ, doi:10.1086/177173
-//                              Li P. et al., 2020, ApJS, doi:10.3847/1538-4365/ab700e
-//                              Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.66)
+//                2. References: Navarro J.~F., Frenk C.~S., White S.~D.~M., 1996, ApJ, doi:10.1086/177173
+//                               Li P. et al., 2020, ApJS, doi:10.3847/1538-4365/ab700e
+//                               Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.66)
 //
-// Parameter   :  r    : input radius
+// Parameter   :  r    : Input radius
 //                R0   : NFW scale radius, r_s
 //                Rho0 : NFW scale density, \rho_s
 //
-// Return      :  enclosed mass at the given radius
+// Return      :  Enclosed mass at the given radius
 //-------------------------------------------------------------------------------------------------------
 double AnalyticalMassProf_NFW( const double r, const double R0, const double Rho0 )
 {
@@ -1090,11 +1194,11 @@ double AnalyticalMassProf_NFW( const double r, const double R0, const double Rho
 // Note        :  1. \Phi(r) = -4\pi G\rho_s r_s^2 \frac{\ln(1+r/r_s)}{r/r_s}
 //                2. Reference: Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.67)
 //
-// Parameter   :  r    : input radius
+// Parameter   :  r    : Input radius
 //                R0   : NFW scale radius, r_s
 //                Rho0 : NFW scale density, \rho_s
 //
-// Return      :  gravitational potential at the given radius
+// Return      :  Gravitational potential at the given radius
 //-------------------------------------------------------------------------------------------------------
 double AnalyticalPoteProf_NFW( const double r, const double R0, const double Rho0  )
 {
@@ -1111,14 +1215,14 @@ double AnalyticalPoteProf_NFW( const double r, const double R0, const double Rho
 // Description :  Analytical density profile of the Burkert model
 //
 // Note        :  1. \rho(r) = \rho_s \frac{1}{ ( 1 + \frac{r}{r_s} ) ( 1 + (\frac{r}{r_s})^2 ) }
-//                2. Reference: Burkert A., 1995, ApJL, doi:10.1086/309560
-//                              Li P. et al., 2020, ApJS, doi:10.3847/1538-4365/ab700e
+//                2. References: Burkert A., 1995, ApJL, doi:10.1086/309560
+//                               Li P. et al., 2020, ApJS, doi:10.3847/1538-4365/ab700e
 //
-// Parameter   :  r    : input radius
-//                R0   : Plummer scale radius, a
-//                Rho0 : Plummer scale density, \rho_0
+// Parameter   :  r    : Input radius
+//                R0   : Burkert scale radius, a
+//                Rho0 : Burkert scale density, \rho_0
 //
-// Return      :  density at the given radius
+// Return      :  Density at the given radius
 //-------------------------------------------------------------------------------------------------------
 double AnalyticalDensProf_Burkert( const double r, const double R0, const double Rho0 )
 {
@@ -1135,14 +1239,14 @@ double AnalyticalDensProf_Burkert( const double r, const double R0, const double
 // Description :  Analytical enclosed mass profile of the Burkert model
 //
 // Note        :  1. M(r) = 2\pi \rho_s r_s^3 [ \frac{1}{2}\ln( 1 + (\frac{r}{r_s})^2 ) + \ln( 1 + \frac{r}{r_s} ) - \arctan( \frac{r}{r_s} ) ]
-//                2. Reference: Burkert A., 1995, ApJL, doi:10.1086/309560
-//                              Li P. et al., 2020, ApJS, doi:10.3847/1538-4365/ab700e
+//                2. References: Burkert A., 1995, ApJL, doi:10.1086/309560
+//                               Li P. et al., 2020, ApJS, doi:10.3847/1538-4365/ab700e
 //
-// Parameter   :  r    : input radius
+// Parameter   :  r    : Input radius
 //                R0   : Burkert scale radius, r_s
 //                Rho0 : Burkert scale density, \rho_s
 //
-// Return      :  enclosed mass at the given radius
+// Return      :  Enclosed mass at the given radius
 //-------------------------------------------------------------------------------------------------------
 double AnalyticalMassProf_Burkert( const double r, const double R0, const double Rho0 )
 {
@@ -1160,20 +1264,21 @@ double AnalyticalMassProf_Burkert( const double r, const double R0, const double
 //
 // Note        :  1. \rho(r) = \frac{ \rho_0 }{ 4\pi } \frac{ r_J^4 }{ r^2 (r_J + r)^2}
 //                           = \frac{ \rho_0 }{ 4\pi } \frac{1}{ ( \frac{r}{r_J} )^2 ( 1 + \frac{r}{r_J} )^2 }
-//                2. Reference: Jaffe W., 1983, MNRAS, doi:10.1093/mnras/202.4.995
-//                              Ciotti L. and Ziaee Lorzad A., 2018, MNRAS, doi:10.1093/mnras/stx2771
+//                2. References: Jaffe W., 1983, MNRAS, doi:10.1093/mnras/202.4.995
+//                               Ciotti L. and Ziaee Lorzad A., 2018, MNRAS, doi:10.1093/mnras/stx2771
+//                               Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.64)
 //
-// Parameter   :  r    : input radius
+// Parameter   :  r    : Input radius
 //                R0   : Jaffe scale radius, r_J
 //                Rho0 : Jaffe scale density, \rho_0
 //
-// Return      :  density at the given radius
+// Return      :  Density at the given radius
 //-------------------------------------------------------------------------------------------------------
 double AnalyticalDensProf_Jaffe( const double r, const double R0, const double Rho0 )
 {
    const double x = r/R0;
 
-   return Rho0/( 4.0*M_PI*SQR(x)*SQR(1.0+x) ); // return Rho0/(x*(1.0+x)); //previous one
+   return Rho0/( 4.0*M_PI*SQR(x)*SQR(1.0+x) );
 
 } // FUNCTION : AnalyticalDensProf_Jaffe
 
@@ -1183,17 +1288,17 @@ double AnalyticalDensProf_Jaffe( const double r, const double R0, const double R
 // Function    :  AnalyticalMassProf_Jaffe
 // Description :  Analytical enclosed mass profile of the Jaffe model
 //
-// Note        :  1. M(r) = M_J \frac{ r }{ r_J + r }
-//                   ,where M_J = \rho_0*r_J^3 is the total mass
-//                2. Reference: Jaffe W., 1983, MNRAS, doi:10.1093/mnras/202.4.995
-//                              Ciotti L. and Ziaee Lorzad A., 2018, MNRAS, doi:10.1093/mnras/stx2771
-//                              Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.66)
+// Note        :  1. M(r) = M_J \frac{ r }{ r_J + r },
+//                   where M_J = \rho_0*r_J^3 is the total mass
+//                2. References: Jaffe W., 1983, MNRAS, doi:10.1093/mnras/202.4.995
+//                               Ciotti L. and Ziaee Lorzad A., 2018, MNRAS, doi:10.1093/mnras/stx2771
+//                               Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.66)
 //
-// Parameter   :  r    : input radius
+// Parameter   :  r    : Input radius
 //                R0   : Jaffe scale radius, r_J
 //                Rho0 : Jaffe scale density, \rho_0
 //
-// Return      :  enclosed mass at the given radius
+// Return      :  Enclosed mass at the given radius
 //-------------------------------------------------------------------------------------------------------
 double AnalyticalMassProf_Jaffe( const double r, const double R0, const double Rho0 )
 {
@@ -1212,11 +1317,11 @@ double AnalyticalMassProf_Jaffe( const double r, const double R0, const double R
 // Note        :  1. \Phi(r) = -G\rho_0 r_J^2 \ln(1+r_J/r)
 //                2. Reference: Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.67)
 //
-// Parameter   :  r    : input radius
+// Parameter   :  r    : Input radius
 //                R0   : Jaffe scale radius, r_J
 //                Rho0 : Jaffe scale density, \rho_0
 //
-// Return      :  gravitational potential at the given radius
+// Return      :  Gravitational potential at the given radius
 //-------------------------------------------------------------------------------------------------------
 double AnalyticalPoteProf_Jaffe( const double r, const double R0, const double Rho0  )
 {
@@ -1232,13 +1337,14 @@ double AnalyticalPoteProf_Jaffe( const double r, const double R0, const double R
 //
 // Note        :  1. \rho(r) = \rho_0 \frac{ a^4 }{ r (r+a)^3 }
 //                           = \rho_0 \frac{1}{ \frac{r}{a} ( 1+\frac{r}{a} )^3 }
-//                2. Reference: Hernquist L., 1990, ApJ, doi:10.1086/168845
+//                2. References: Hernquist L., 1990, ApJ, doi:10.1086/168845
+//                               Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.64)
 //
-// Parameter   :  r    : input radius
+// Parameter   :  r    : Input radius
 //                R0   : Hernquist scale radius, a
 //                Rho0 : Hernquist scale density, \rho_0
 //
-// Return      :  density at the given radius
+// Return      :  Density at the given radius
 //-------------------------------------------------------------------------------------------------------
 double AnalyticalDensProf_Hernquist( const double r, const double R0, const double Rho0 )
 {
@@ -1254,16 +1360,16 @@ double AnalyticalDensProf_Hernquist( const double r, const double R0, const doub
 // Function    :  AnalyticalMassProf_Hernquist
 // Description :  Analytical enclosed mass profile of the Hernquist model
 //
-// Note        :  1. M(r) = M_0 \frac{ r^2 }{ (r+a)^2 }
-//                   ,where M_0 = 2\pi*\rho_0*a^3 is the total mass
-//                2. Reference: Hernquist L., 1990, ApJ, doi:10.1086/168845
-//                              Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.66)
+// Note        :  1. M(r) = M_0 \frac{ r^2 }{ (r+a)^2 },
+//                   where M_0 = 2\pi*\rho_0*a^3 is the total mass
+//                2. References: Hernquist L., 1990, ApJ, doi:10.1086/168845
+//                               Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.66)
 //
-// Parameter   :  r    : input radius
+// Parameter   :  r    : Input radius
 //                R0   : Hernquist scale radius, a
 //                Rho0 : Hernquist scale density, \rho_0
 //
-// Return      :  enclosed mass at the given radius
+// Return      :  Enclosed mass at the given radius
 //-------------------------------------------------------------------------------------------------------
 double AnalyticalMassProf_Hernquist( const double r, const double R0, const double Rho0 )
 {
@@ -1282,11 +1388,11 @@ double AnalyticalMassProf_Hernquist( const double r, const double R0, const doub
 // Note        :  1. \Phi(r) = -4\pi G\rho_0 a^2 \frac{1}{2(1+r/a)}
 //                2. Reference: Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.67)
 //
-// Parameter   :  r    : input radius
+// Parameter   :  r    : Input radius
 //                R0   : Hernquist scale radius, a
 //                Rho0 : Hernquist scale density, \rho_0
 //
-// Return      :  gravitational potential at the given radius
+// Return      :  Gravitational potential at the given radius
 //-------------------------------------------------------------------------------------------------------
 double AnalyticalPoteProf_Hernquist( const double r, const double R0, const double Rho0  )
 {
@@ -1305,15 +1411,15 @@ double AnalyticalPoteProf_Hernquist( const double r, const double R0, const doub
 // Note        :  1. \rho(r) = \rho_s    \exp{ -d_n [ (\frac{r}{r_s})^{1/n}    - 1 ] }, where r_s is the radius at which contains half of the total mass
 //                           = \rho_{-2} \exp{ -2n  [ (\frac{r}{r_{-2}})^{1/n} - 1 ] }, where r_{-2} is the radius at which \rho(r) \propto r^{-2}
 //                           = \rho_0    \exp{ -[ (\frac{r}{h})^{1/n} ] }
-//                2. Reference: Einasto J., 1965, TrAlm
-//                              Retana-Montenegro E. et al., 2012, A&A, doi:10.1051/0004-6361/201118543
+//                2. References: Einasto J., 1965, TrAlm
+//                               Retana-Montenegro E. et al., 2012, A&A, doi:10.1051/0004-6361/201118543
 //
-// Parameter   :  r                    : input radius
+// Parameter   :  r                    : Input radius
 //                R0                   : Einasto scale radius, h = \frac{r_s}{d_n^n} = \frac{r_{-2}}{(2n)^n}
 //                Rho0                 : Einasto central density, \rho_0 = \rho_s\exp{d_n} = \rho_{-2}\exp{2n}
 //                Einasto_Power_Factor : Einasto power factor, 1/n
 //
-// Return      :  density at the given radius
+// Return      :  Density at the given radius
 //-------------------------------------------------------------------------------------------------------
 double AnalyticalDensProf_Einasto( const double r, const double R0, const double Rho0, const double Einasto_Power_Factor )
 {
@@ -1331,10 +1437,10 @@ double AnalyticalDensProf_Einasto( const double r, const double R0, const double
 //
 // Note        :  integrand = 4*\pi*r^2*\rho(r)
 //
-// Parameter   :  r          : input radius
-//                parameters : parameters for the model
+// Parameter   :  r          : Input radius
+//                parameters : Parameters for the model
 //
-// Return      :  integrand of mass at the given radius
+// Return      :  Integrand of mass at the given radius
 //-------------------------------------------------------------------------------------------------------
 double MassIntegrand_Einasto( const double r, void* parameters )
 {
@@ -1357,10 +1463,10 @@ double MassIntegrand_Einasto( const double r, void* parameters )
 //
 // Note        :  integrand = 4*\pi*r^2*\rho(r)
 //
-// Parameter   :  r          : input radius
-//                parameters : parameters for the model
+// Parameter   :  r          : Input radius
+//                parameters : Parameters for the model
 //
-// Return      :  integrand of mass at the given radius
+// Return      :  Integrand of mass at the given radius
 //-------------------------------------------------------------------------------------------------------
 double MassIntegrand_Table( const double r, void* parameters )
 {

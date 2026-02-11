@@ -136,15 +136,15 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
 // --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
 // --> LOAD_PARA() is defined in "include/TestProb.h"
 // ******************************************************************************************************************************
-// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",         &VARIABLE,              DEFAULT,       MIN,              MAX               );
+// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",              &VARIABLE,                          DEFAULT,       MIN,           MAX               );
 // ******************************************************************************************************************************
-   LOAD_PARA( load_mode, "ParEqmIC_SmallGas",       &ParEqmIC_SmallGas,     1e-3,          0.,               NoMax_double      );
-   LOAD_PARA( load_mode, "ParEqmIC_NumCloud",       &ParEqmIC_NumCloud,     1,             1,                NoMax_int         );
+   LOAD_PARA( load_mode, "ParEqmIC_SmallGas",            &ParEqmIC_SmallGas,                 1e-3,          0.,            NoMax_double      );
+   LOAD_PARA( load_mode, "ParEqmIC_NumCloud",            &ParEqmIC_NumCloud,                 1,             1,             NoMax_int         );
    for (int i=0; i<ParEqmIC_NumCloud; i++) {
    char ParEqmIC_Cloud_ParaFilename_i[MAX_STRING];
    sprintf( ParEqmIC_Cloud_ParaFilename_i, "ParEqmIC_Cloud_ParaFilename_%d", i+1 );
-   LOAD_PARA( load_mode, ParEqmIC_Cloud_ParaFilename_i,   ParEqmIC_Cloud_ParaFilenames[i],   NoDef_str,     Useless_str,   Useless_str    );
-   }  
+   LOAD_PARA( load_mode, ParEqmIC_Cloud_ParaFilename_i,   ParEqmIC_Cloud_ParaFilenames[i],   NoDef_str,     Useless_str,   Useless_str       );
+   }
 
 } // FUNCITON : LoadInputTestProb
 
@@ -174,21 +174,17 @@ void SetParameter()
 // (1) load the problem-specific runtime parameters
 // (1-1) read parameters from Input__TestProb
    const char* FileName = "Input__TestProb";
+
+// load the number of clouds first
    ReadPara_t *ReadPara = new ReadPara_t;
-
-   LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
-
+   ReadPara->Add( "ParEqmIC_NumCloud", &ParEqmIC_NumCloud, 1, 1, NoMax_int );
    ReadPara->Read( FileName );
+   delete ReadPara;
 
+// load the remaining parameters
    ParEqmIC_Cloud_ParaFilenames = new char [ParEqmIC_NumCloud][MAX_STRING];
-
-   char ParEqmIC_Cloud_ParaFilename_i[MAX_STRING];
-   for (int i=0; i<ParEqmIC_NumCloud; i++)
-   {
-      sprintf( ParEqmIC_Cloud_ParaFilename_i, "ParEqmIC_Cloud_ParaFilename_%d", i+1 );
-      ReadPara->Add( ParEqmIC_Cloud_ParaFilename_i, ParEqmIC_Cloud_ParaFilenames[i], NoDef_str, Useless_str, Useless_str );
-   }
-
+   ReadPara = new ReadPara_t;
+   LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
    ReadPara->Read( FileName );
 
    delete ReadPara;
@@ -221,15 +217,15 @@ void SetParameter()
    {
       if ( MPI_Rank == 0 )   Aux_Message( stdout, "Reading the input ParEqmIC cloud parameters file for cloud_%d: %s\n", i+1, ParEqmIC_Cloud_ParaFilenames[i] );
 
-      // (2-1) load the problem-specific runtime parameters
+//    (2-1) load the problem-specific runtime parameters
       ReadPara_t *ReadPara  = new ReadPara_t;
 
-      // (2-1-1) add parameters in the following format:
-      // --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
-      // --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
-      // ********************************************************************************************************************************
-      // ReadPara->Add( "KEY_IN_THE_FILE",         &VARIABLE,                               DEFAULT,       MIN,              MAX               );
-      // ********************************************************************************************************************************
+//    (2-1-1) add parameters in the following format:
+//    --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+//    --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
+//    ********************************************************************************************************************************
+//    ReadPara->Add( "KEY_IN_THE_FILE",            &VARIABLE,                               DEFAULT,       MIN,              MAX               );
+//    ********************************************************************************************************************************
       ReadPara->Add( "Cloud_CenterX",              &ParEqmIC_Cloud_Center[i][0],            NoDef_double,  NoMin_double,     NoMax_double      );
       ReadPara->Add( "Cloud_CenterY",              &ParEqmIC_Cloud_Center[i][1],            NoDef_double,  NoMin_double,     NoMax_double      );
       ReadPara->Add( "Cloud_CenterZ",              &ParEqmIC_Cloud_Center[i][2],            NoDef_double,  NoMin_double,     NoMax_double      );
@@ -253,15 +249,15 @@ void SetParameter()
 
       delete ReadPara;
 
-      // (2-1-2) set the default values
+//    (2-1-2) set the default values
       for (int d=0; d<3; d++)
          if ( ParEqmIC_Cloud_Center[i][d] == NoDef_double )  ParEqmIC_Cloud_Center[i][d] = amr->BoxCenter[d];
 
-      // (2-2) Warn against small Cloud_R0
+//    (2-2) warn against small Cloud_R0
       if ( MPI_Rank == 0  &&  ParEqmIC_Cloud_R0[i] < amr->dh[MAX_LEVEL] )
          Aux_Message( stdout, "WARNING : scale length R0 = %f of cloud_%d is smaller than the highest spatial resolution %f!\n", ParEqmIC_Cloud_R0[i], i+1, amr->dh[MAX_LEVEL] );
 
-      // (2-3) Check Cloud_Type
+//    (2-3) check Cloud_Type
       if (  strcmp( ParEqmIC_Cloud_Type[i], "Plummer"   ) != 0  &&
             strcmp( ParEqmIC_Cloud_Type[i], "NFW"       ) != 0  &&
             strcmp( ParEqmIC_Cloud_Type[i], "Burkert"   ) != 0  &&
@@ -271,11 +267,11 @@ void SetParameter()
             strcmp( ParEqmIC_Cloud_Type[i], "Table"     ) != 0  )
          Aux_Error( ERROR_INFO, "Incorrect ParEqmIC_Cloud_Type = %s for cloud_%d !!\n", ParEqmIC_Cloud_Type[i], i+1 );
 
-      // (2-4) Check Cloud_DensityTable
+//    (2-4) check Cloud_DensityTable
       if ( strcmp( ParEqmIC_Cloud_Type[i], "Table" ) == 0  &&  !Aux_CheckFileExist( ParEqmIC_Cloud_DensityTable[i] ) )
          Aux_Error( ERROR_INFO, "ParEqmIC_Cloud_DensityTable %s for cloud_%d cannot be found !!\n", ParEqmIC_Cloud_DensityTable[i], i+1 );
 
-      // (2-5) Check Cloud_ExtPotTable
+//    (2-5) check Cloud_ExtPotTable
       if ( ParEqmIC_Cloud_AddExtPotTable[i]  &&  !Aux_CheckFileExist( ParEqmIC_Cloud_ExtPotTable[i] ) )
          Aux_Error( ERROR_INFO, "ParEqmIC_Cloud_ExtPotTable %s for cloud_%d cannot be found !!\n", ParEqmIC_Cloud_ExtPotTable[i], i+1 );
 
@@ -285,7 +281,7 @@ void SetParameter()
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
    const long   End_Step_Default = __INT_MAX__;
-   const double End_T_Default    = 10;
+   const double End_T_Default    = 10.0;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
@@ -375,9 +371,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[MOMX] = 0;
    fluid[MOMY] = 0;
    fluid[MOMZ] = 0;
-#  ifdef GRAVITY
    fluid[ENGY] = ParEqmIC_SmallGas;
-#  endif
 
 // just set all passive scalars as zero
    for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  fluid[v] = 0.0;

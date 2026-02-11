@@ -2,25 +2,28 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Model
-MODEL = 1 # 0=Table, 1=Plummer, 2=NFW, 3=Burkert, 4=Jaffe, 5=Hernquist, 6=Einasto
-ID    = 1
+MODEL = 5   # 0=Table, 1=Plummer, 2=NFW, 3=Burkert, 4=Jaffe, 5=Hernquist, 6=Einasto
+ID    = 1   # index of the cloud
 
 
-# Parameters for analytical model
-G    = 1.0
-R0   = 1.0
-Rho0 = 1.0/(2*np.pi)
+# Parameters for the analytical model
+G    = 1.0  # gravitational constant
+Rho0 = 1.0  # scale density
+R0   = 0.1  # scale radius
 
 
-# Analytical solutoins for Hernquist model
+# Analytical solutions for the Hernquist model
 def Density_Hernquist( r ):
+    # Reference: Hernquist L., 1990, ApJ, doi:10.1086/168845
     return Rho0/( ( r/R0 )*( 1.0+(r/R0) )**3 )
 
 def EnclosedMass_Hernquist( r ):
+    # Reference: Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.66)
     M0 = 2*np.pi*Rho0*R0**3
     return M0*( r**2 )/( r+R0 )**2
 
 def Potential_Hernquist( r ):
+    # Reference: Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.67)
     M0 = 2*np.pi*Rho0*R0**3
     return ( -G*M0/R0 )/( 1.0+(r/R0) )
 
@@ -34,17 +37,22 @@ def DistributionFunction_Hernquist( E ):
 
 # Analytical solutoins for Plummer model
 def Density_Plummer( r ):
+    # Reference: Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.44b)
     return Rho0/( 1.0+(r/R0)**2 )**(2.5)
 
 def EnclosedMass_Plummer( r ):
+    # Reference: Plummer H. C., MNRAS, 1991, doi:10.1093/mnras/71.5.460
     M0 = 4.0/3.0*np.pi*Rho0*R0**3
     return M0*( r**3 )/( r**2 + R0**2 )**(1.5)
 
 def Potential_Plummer( r ):
+    # Reference: Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(2.44a)
     M0 = 4.0/3.0*np.pi*Rho0*R0**3
     return -G*M0/( r**2 + R0**2 )**0.5
 
 def DistributionFunction_Plummer( E ):
+    # References: Binney J. & Tremaine S., 2008, Galactic Dynamics (2nd ed.), Eq(4.83)
+    #             Wikipedia, https://en.wikipedia.org/wiki/Plummer_model
     M0 = 4.0/3.0*np.pi*Rho0*R0**3
     return (24.0*np.sqrt(2.0))/(7.0*np.pi**3)*(R0**2/((G**5)*(M0**4)))*(E**3.5)
 

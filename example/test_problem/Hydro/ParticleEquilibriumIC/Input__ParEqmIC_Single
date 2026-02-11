@@ -1,5 +1,5 @@
 # problem-specific runtime parameters
-Cloud_Type                   NFW                  # type of density profile
+Cloud_Type                   Hernquist            # type of density profile
                                                   # (Table, Plummer, NFW, Burkert, Jaffe, Hernquist, Einasto)
 Cloud_DensityTable           NONE                 # filename of input density table (Cloud_Type == Table only)
 Cloud_CenterX                1.5                  # center coordinate x [box center]

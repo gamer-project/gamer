@@ -27,7 +27,7 @@ class Par_EquilibriumIC
       Par_EquilibriumIC( const char* Cloud_Type );
       virtual ~Par_EquilibriumIC();
 
-//    Set the parameters from input
+//    interface functions to set the parameters from input
       void   setCenterAndBulkVel     ( const double Center_X, const double Center_Y, const double Center_Z,
                                        const double BulkVel_X, const double BulkVel_Y, const double BulkVel_Z );
       void   setModelParameters      ( const double Rho0, const double R0 );
@@ -37,17 +37,17 @@ class Par_EquilibriumIC
       void   setExtPotParameters     ( const int AddingExternalPotential_Analytical,
                                        const int AddingExternalPotential_Table, const char* ExtPotTableFilename );
 
-//    Main construction process
+//    main construction process functions to be called
       void   constructDistribution();
       void   constructParticles( real_par *Mass_AllRank, real_par *Pos_AllRank[3], real_par *Vel_AllRank[3], const long Par_Idx );
 
-//    Results to be returned
+//    results to be returned
       double TotCloudMass                    = -1;
       double ParticleMass                    = -1;
       double TotCloudMassError               = -1;
 
    private:
-//    Parameters for the cloud
+//    parameters for the cloud
       int    Cloud_Model                     = -1;
       double Cloud_Center[3]                 = { -1, -1, -1 };
       double Cloud_BulkVel[3]                = {  0,  0,  0 };
@@ -63,7 +63,7 @@ class Par_EquilibriumIC
       int    AddExtPot_Table                 =  0;
       char   ExtPot_Table_Name[MAX_STRING];
 
-//    Functions to get the physical quantities
+//    functions to get the physical quantities
       double getDensity                       ( const double r );
       double getAnalEnclosedMass              ( const double r );
       double getExternalPotential             ( const double r );
@@ -71,19 +71,19 @@ class Par_EquilibriumIC
       double getIntegratedDistributionFunction( const double E );
       void   getRandomVector_GivenLength      ( const double Length, double RandomVector[3] );
 
-//    Input table of density profile
+//    input table of density profile
       void    loadInputDensProfTable();
       int     InputTable_DensProf_NBin    = -1;
       double *InputTable_DensProf_Radius  = NULL;
       double *InputTable_DensProf_Density = NULL;
 
-//    Input table of external potential
+//    input table of external potential
       void    loadInputExtPotTable();
       int     InputTable_ExtPot_NBin      = -1;
       double *InputTable_ExtPot_Radius    = NULL;
       double *InputTable_ExtPot_Potential = NULL;
 
-//    Arrays of radial distribution of properties of the cloud
+//    arrays of radial distribution of properties of the cloud
       void    constructRadialArray();
       int     RNPoints         = -1;
       int     RLastIdx         = -1;
@@ -95,7 +95,7 @@ class Par_EquilibriumIC
       double *RArray_dRho_dPsi = NULL;
       double *RArray_Phi       = NULL;
 
-//    Arrays in energy space
+//    arrays in energy space
       void    constructEnergyArray();
       int     ENPoints        = -1;
       int     ELastIdx        = -1;
@@ -106,14 +106,28 @@ class Par_EquilibriumIC
       double *EArray_DFunc    = NULL;
       double *EArray_IntDFunc = NULL;
 
-//    Output the arrays
+//    output the arrays
       void    printArrays();
 
-//    Cumulative probability distribution at given radius
+//    cumulative probability distribution at the given radius
       double *CumulProbaDistr_GivenRadius = NULL;
 
-//    Random number generator
+//    random number generator
       RandomNumber_t *Random_Num_Gen;
+
+//    flags to record the action status of function calls
+      bool    hasSetCenterAndBulkVel      = false;
+      bool    hasSetModelParameters       = false;
+      bool    hasSetEinastoPowerFactor    = false;
+      bool    hasSetDensProfTableFilename = false;
+      bool    hasSetParticleParameters    = false;
+      bool    hasSetExtPotParameters      = false;
+      bool    hasLoadedInputDensProfTable = false;
+      bool    hasLoadedInputExtPotTable   = false;
+      bool    hasConstructedRadialArray   = false;
+      bool    hasConstructedEnergyArray   = false;
+      bool    hasConstructedDistribution  = false;
+      bool    hasConstructedParticles     = false;
 
 }; // class Par_EquilibriumIC
 

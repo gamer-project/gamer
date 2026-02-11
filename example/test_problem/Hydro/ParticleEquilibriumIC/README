@@ -26,7 +26,7 @@ Note:
    - Einasto
    - Table
    If you want to initialize a model with a given tabular density profile, use the option "Table" and input
-   your file name in "Cloud_DensityTable" in your physical parameter files; otherwise input "NONE".
+   your file name in "Cloud_DensityTable" in your physical parameter files.
 
 3. Sometimes the spatial resolution is not high enough for some models like Jaffe. Please increase MAX_LEVEL in "Input__Parameter".
 

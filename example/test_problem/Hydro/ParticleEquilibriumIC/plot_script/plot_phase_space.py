@@ -35,32 +35,34 @@ yt.enable_parallelism()
 ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
 for ds in ts.piter():
 
-    p = yt.ParticlePhasePlot( ds, "particle_velocity_x", "particle_velocity_y", ["particle_mass"] )
+    for direction in ['y', 'z']:
+        p = yt.ParticlePhasePlot( ds, "particle_velocity_x", "particle_velocity_"+direction, ["particle_mass"] )
 
-    # setting for the figure
-    p.set_unit( 'particle_velocity_x', 'code_length/code_time' )
-    p.set_unit( 'particle_velocity_y', 'code_length/code_time' )
-    p.set_unit( 'particle_mass',       'code_mass'             )
-    p.set_log(  'particle_mass',       True                    )
-    p.set_xlim( -1.0, 1.0 )
-    p.set_ylim( -1.0, 1.0 )
-    p.set_zlim( 'particle_mass', 1.0e-8, 1.0e-3 )
-    p.set_cmap( 'particle_mass', 'viridis'      )
+        # setting for the figure
+        p.set_unit( 'particle_velocity_x',          'code_length/code_time' )
+        p.set_unit( 'particle_velocity_'+direction, 'code_length/code_time' )
+        p.set_unit( 'particle_mass',                'code_mass'             )
+        p.set_log(  'particle_mass',                True                    )
+        p.set_xlim( -1.0, 1.0 )
+        p.set_ylim( -1.0, 1.0 )
+        p.set_zlim( 'particle_mass', 1.0e-7, 1.0e-5 )
+        p.set_cmap( 'particle_mass', 'viridis'      )
 
-    # save the figure
-    p.save( 'fig_%s_PhasePlotXY.png'%(ds), mpl_kwargs={'dpi':dpi} )
+        # save the figure
+        p.save( 'fig_%s_PhasePlotV%sVx.png'%(ds,direction), mpl_kwargs={'dpi':dpi} )
 
-    p = yt.ParticlePhasePlot( ds, "particle_velocity_x", "particle_velocity_z", ["particle_mass"] )
+    for direction in ['x', 'y', 'z']:
+        p = yt.ParticlePhasePlot( ds, "particle_position_x", "particle_velocity_"+direction, ["particle_mass"] )
 
-    # setting for the figure
-    p.set_unit( 'particle_velocity_x', 'code_length/code_time' )
-    p.set_unit( 'particle_velocity_z', 'code_length/code_time' )
-    p.set_unit( 'particle_mass',       'code_mass'             )
-    p.set_log(  'particle_mass',       True                    )
-    p.set_xlim( -1.0, 1.0 )
-    p.set_ylim( -1.0, 1.0 )
-    p.set_zlim( 'particle_mass', 1.0e-8, 1.0e-3 )
-    p.set_cmap( 'particle_mass', 'viridis'      )
+        # setting for the figure
+        p.set_unit( 'particle_position_x',          'code_length'           )
+        p.set_unit( 'particle_velocity_'+direction, 'code_length/code_time' )
+        p.set_unit( 'particle_mass',                'code_mass'             )
+        p.set_log(  'particle_mass',                True                    )
+        p.set_xlim(  0.0, 3.0 )
+        p.set_ylim( -1.0, 1.0 )
+        p.set_zlim( 'particle_mass', 1.0e-7, 1.0e-5 )
+        p.set_cmap( 'particle_mass', 'viridis'      )
 
-    # save the figure
-    p.save( 'fig_%s_PhasePlotXZ.png'%(ds), mpl_kwargs={'dpi':dpi} )
+        # save the figure
+        p.save( 'fig_%s_PhasePlotV%sX.png'%(ds,direction), mpl_kwargs={'dpi':dpi} )
