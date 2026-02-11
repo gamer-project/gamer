@@ -140,6 +140,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
    int  ArrayID      = 0;     // array index to load and store data ( 0 or 1 )
    int  NPG[2];               // number of patch groups to be updated at a time
    int  NTotal;               // total number of patch groups to be updated
+   int  NTotalRankMax;        // total number of patch groups to be updated among all the ranks
    int  Disp;                 // index displacement in PID0_List
 
    if ( OverlapMPI )
@@ -195,6 +196,8 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
    NPG[ArrayID] = ( NPG_Max < NTotal ) ? NPG_Max : NTotal;
 
+   MPI_Allreduce( &NTotal, &NTotalRankMax, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
+
 
 // evaluate time evolution matrix (once per level per timestep)
 #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
@@ -248,6 +251,91 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
    } // for (int Disp=NPG_Max; Disp<NTotal; Disp+=NPG_Max)
 
+
+#if ( defined TIMING_SOLVER  &&  defined TIMING )
+   // Make up for the iteration mismatch between ranks
+   if ( (NTotal + NPG_Max - 1)/NPG_Max < (NTotalRankMax + NPG_Max -1)/NPG_Max ) // iteration mismatch between this rank and rank with maximum iterations >= 1
+   {
+      for (int DispMakeup=((NTotal == 0) ? NPG_Max : (((NTotal + NPG_Max - 1)/NPG_Max)*NPG_Max)); DispMakeup<NTotalRankMax; DispMakeup+=NPG_Max) // if NTotal is 0 only this rank, the number of make up iterations need to be equal to the number of iterations on rank with NTotalRankMax, which starts with Disp = NPG_Max
+      {
+
+         TIMING_SYNC(   {
+                           switch ( TSolver )
+                           {
+#                             ifdef GRAVITY
+                              case POISSON_SOLVER :
+                                 if ( OPT__SELF_GRAVITY )
+                                 TIMING_SYNC(   {},
+                                                Timer_Poi_PreRho[lv]   );
+
+                                 if ( OPT__SELF_GRAVITY )
+                                 TIMING_SYNC(   {},
+                                                Timer_Poi_PrePot_C[lv]   );
+
+//                               use the same timer "Timer_Poi_PreRho" as Poi_Prepare_Rho()
+                                 if ( OPT__EXT_POT )
+                                 TIMING_SYNC(   {},
+                                                Timer_Poi_PreRho[lv]   );
+                              break;
+
+                              case GRAVITY_SOLVER :
+                                 TIMING_SYNC(   {},
+                                                Timer_Poi_PreFlu[lv]   );
+
+                                 if ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT )
+                                 TIMING_SYNC(   {},
+                                                Timer_Poi_PrePot_F[lv]   );
+
+//                               use the same timer "Timer_Poi_PreFlu" as Gra_Prepare_Flu()
+                                 if ( OPT__EXT_ACC )
+                                 TIMING_SYNC(   {},
+                                                Timer_Poi_PreFlu[lv]   );
+
+#                                ifdef UNSPLIT_GRAVITY
+//                               use the same timer "Timer_Poi_PreFlu" as Gra_Prepare_Flu()
+                                 TIMING_SYNC(   {},
+                                                Timer_Poi_PreFlu[lv]   );
+#                                endif
+                              break;
+
+                              case POISSON_AND_GRAVITY_SOLVER :
+                                 if ( OPT__SELF_GRAVITY )
+                                 TIMING_SYNC(   {},
+                                                Timer_Poi_PreRho[lv]   );
+
+                                 if ( OPT__SELF_GRAVITY )
+                                 TIMING_SYNC(   {},
+                                                Timer_Poi_PrePot_C[lv]   );
+
+                                 TIMING_SYNC(   {},
+                                                Timer_Poi_PreFlu[lv]   );
+
+//                               use the same timer "Timer_Poi_PreFlu" as Gra_Prepare_Flu()
+                                 if ( OPT__EXT_POT  ||  OPT__EXT_ACC )
+                                 TIMING_SYNC(   {},
+                                                Timer_Poi_PreFlu[lv]   );
+
+#                                ifdef UNSPLIT_GRAVITY
+//                               use the same timer "Timer_Poi_PreFlu" as Gra_Prepare_Flu()
+                                 TIMING_SYNC(   {},
+                                                Timer_Poi_PreFlu[lv]   );
+#                                endif
+                              break;
+#                             endif // #ifdef GARVITY
+                           } // switch ( TSolver )
+                        },
+                        Timer_Pre[lv][TSolver]  );
+
+
+         TIMING_SYNC(   {},
+                        Timer_Pre[lv][TSolver]  );
+
+
+         TIMING_SYNC(   {},
+                        Timer_Pre[lv][TSolver]  );
+      }
+   } // if ( (NTotal + NPG_Max - 1)/NPG_Max < (NTotalRankMax + NPG_Max -1)/NPG_Max )
+#endif
 
 //-------------------------------------------------------------------------------------------------------------
 #  ifdef GPU
