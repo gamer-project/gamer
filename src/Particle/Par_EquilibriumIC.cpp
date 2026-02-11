@@ -8,7 +8,7 @@
 
 static double ExtendedInterpolatedTable   ( const double x, const int N, const double Table_x[], const double Table_y[] );
 static double LinearDensityShellMass      ( const double r0, const double r1, const double rho0, const double rho1 );
-static double UserDefAnalaytical_ExtPot   ( const double r );
+static double UserDefAnalytical_ExtPot    ( const double r );
 
 static double AnalyticalDensProf_Plummer  ( const double r, const double R0, const double Rho0 );
 static double AnalyticalMassProf_Plummer  ( const double r, const double R0, const double Rho0 );
@@ -848,7 +848,7 @@ double Par_EquilibriumIC::getExternalPotential( const double r )
    double ext_pot;
 
    if      ( AddExtPot_Table      )   ext_pot = ExtendedInterpolatedTable( r, InputTable_ExtPot_NBin, InputTable_ExtPot_Radius, InputTable_ExtPot_Potential );
-   else if ( AddExtPot_Analytical )   ext_pot = UserDefAnalaytical_ExtPot( r );
+   else if ( AddExtPot_Analytical )   ext_pot = UserDefAnalytical_ExtPot( r );
    else                               ext_pot = 0.0;
 
    return ext_pot;
@@ -1037,7 +1037,7 @@ double LinearDensityShellMass( const double r0, const double r1, const double rh
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  UserDefAnalaytical_ExtPot
+// Function    :  UserDefAnalytical_ExtPot
 // Description :  User-defined analytical external potential formula
 //
 // Note        :  1. As an example, a Plummer potential with hard-coded parameters is provided
@@ -1046,7 +1046,7 @@ double LinearDensityShellMass( const double r0, const double r1, const double rh
 //
 // Return      :  External potential at radius r
 //-------------------------------------------------------------------------------------------------------
-double UserDefAnalaytical_ExtPot( const double r )
+double UserDefAnalytical_ExtPot( const double r )
 {
 // DEFINE YOUR FUNCTION HERE !!!
 /*
@@ -1062,7 +1062,7 @@ double UserDefAnalaytical_ExtPot( const double r )
 
    return AnalyticalPoteProf_Plummer( r, 0.05, 80.0 );
 
-} // FUNCTION : UserDefAnalaytical_ExtPot
+} // FUNCTION : UserDefAnalytical_ExtPot
 
 
 
