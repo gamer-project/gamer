@@ -18,7 +18,7 @@
 //                   (i.e., those depend on the input runtime parameters, e.g., amr->dh[]/BoxSize[]/BoxScale[])
 //                4. This function also converts all input parameters to the code units if necessary
 //                   --> Only for those not in code units when loading from the input parameter files
-//                       (e.g., SF_CREATE_STAR_MIN_GAS_DENS & SF_CREATE_STAR_MIN_STAR_MASS)
+//                       (e.g., SF_CREATE_STAR_MIN_GAS_DENS & SF_CREATE_STAR_MIN_STAR_MASS & SF_CREATE_SINK_MIN_GAS_DENS)
 //-------------------------------------------------------------------------------------------------------
 void Init_ResetParameter()
 {
@@ -1249,6 +1249,11 @@ void Init_ResetParameter()
    SF_CREATE_STAR_MIN_GAS_DENS *= Const_mH / UNIT_D;
 
    PRINT_RESET_PARA( SF_CREATE_STAR_MIN_GAS_DENS, FORMAT_REAL, "to be consistent with the code units" );
+
+// SF_CREATE_SINK_MIN_GAS_DENS: count/cm^3 --> mass density in code units
+   SF_CREATE_SINK_MIN_GAS_DENS *= MOLECULAR_WEIGHT*Const_mH / UNIT_D;
+
+   PRINT_RESET_PARA( SF_CREATE_SINK_MIN_GAS_DENS, FORMAT_REAL, "to be consistent with the code units" );
 
 
 // SF_CREATE_STAR_MIN_STAR_MASS: Msun --> code units
