@@ -63,12 +63,12 @@ T Mis_InterpolateFromTable( const int N, const T Table_x[], const T Table_y[], c
 //                   --> Otherwise the function returns NULL_REAL
 //                3. Currently the function only supports linear interpolation
 //                4. Overloaded with different types
-//                5. Explicit template instantiation is put in the end of this file
-//                6. See the unit tests in the bottom of this file for example usage
+//                5. Explicit template instantiation is put at the end of this file
+//                6. See the unit tests at the bottom of this file for example usage
 //
-// Parameter   :  N_x      : Number of elements in the interpolation tables Table_x
+// Parameter   :  N_x      : Number of elements in the interpolation table Table_x
 //                           --> Must be >= 2
-//                N_y      : Number of elements in the interpolation tables Table_y
+//                N_y      : Number of elements in the interpolation table Table_y
 //                           --> Must be >= 2
 //                Table_x  : Interpolation table x, size = N_x
 //                Table_y  : Interpolation table y, size = N_y
@@ -127,14 +127,14 @@ T Mis_InterpolateFrom2DTable( const int N_x, const int N_y,
 //                   --> Otherwise the function returns NULL_REAL
 //                3. Currently the function only supports linear interpolation
 //                4. Overloaded with different types
-//                5. Explicit template instantiation is put in the end of this file
-//                6. See the unit tests in the bottom of this file for example usage
+//                5. Explicit template instantiation is put at the end of this file
+//                6. See the unit tests at the bottom of this file for example usage
 //
-// Parameter   :  N_x      : Number of elements in the interpolation tables Table_x
+// Parameter   :  N_x      : Number of elements in the interpolation table Table_x
 //                           --> Must be >= 2
-//                N_y      : Number of elements in the interpolation tables Table_y
+//                N_y      : Number of elements in the interpolation table Table_y
 //                           --> Must be >= 2
-//                N_z      : Number of elements in the interpolation tables Table_z
+//                N_z      : Number of elements in the interpolation table Table_z
 //                           --> Must be >= 2
 //                Table_x  : Interpolation table x, size = N_x
 //                Table_y  : Interpolation table y, size = N_y
@@ -202,8 +202,8 @@ T Mis_InterpolateFrom3DTable( const int N_x, const int N_y, const int N_z,
 //                   --> Otherwise the OutsideMethod is used
 //                3. Currently the function only supports linear interpolation
 //                4. Overloaded with different types
-//                5. Explicit template instantiation is put in the end of this file
-//                6. See the unit tests in the bottom of this file for example usage
+//                5. Explicit template instantiation is put at the end of this file
+//                6. See the unit tests at the bottom of this file for example usage
 //
 // Parameter   :  nDim          : Number of dimensions of the Table_f
 //                N_x           : Number of elements in the interpolation tables of each dimension Table_x[d]
@@ -291,8 +291,8 @@ T Mis_InterpolateFrom_nDim_Table( const int nDim, const int N_x[], T const* cons
 //                   Since IdxL is given, the corresponding corners will be used anyway.
 //                3. Currently the function only supports linear interpolation
 //                4. Overloaded with different types
-//                5. Explicit template instantiation is put in the end of this file
-//                6. See the unit tests in the bottom of this file for example usage
+//                5. Explicit template instantiation is put at the end of this file
+//                6. See the unit tests at the bottom of this file for example usage
 //
 // Parameter   :  nDim     : Number of dimensions of the Table_f
 //                N_x      : Number of elements in the interpolation tables of each dimension Table_x[d]

@@ -1278,7 +1278,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       double Real_halo = 0.0;
       double Imag_halo = 0.0;
 
-//    get the wave function of the halo
+//    get the wavefunction of the halo
       switch ( HaloMerger_Halo_InitMode )
       {
 //       read the value interpolated from the HALO_IC data
@@ -1339,12 +1339,12 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // (3) set the solitons
    for (int index_soliton=0; index_soliton<HaloMerger_Soliton_Num; index_soliton++)
    {
-//    density and wave function of each soliton
+//    density and wavefunction of each soliton
       double Dens_soliton = 0.0;
       double Real_soliton = 0.0;
       double Imag_soliton = 0.0;
 
-//    get the density and wave function of the soliton
+//    get the density and wavefunction of the soliton
       switch ( HaloMerger_Soliton_InitMode )
       {
 //       read from the density profile table
@@ -1813,7 +1813,7 @@ void HaloMerger_Add_Velocity( double *RealPart, double *ImagPart,
    const double Real_New = Real_Old * cos(Phase) - Imag_Old * sin(Phase);
    const double Imag_New = Real_Old * sin(Phase) + Imag_Old * cos(Phase);
 
-// return the updated wave function
+// return the updated wavefunction
    *RealPart = Real_New;
    *ImagPart = Imag_New;
 

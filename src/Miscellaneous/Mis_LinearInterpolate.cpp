@@ -9,7 +9,7 @@
 //
 // Note        :  1. Assume xL <= x <= xR; Otherwise, it is an extrapolation
 //                2. Overloaded with different types
-//                3. Explicit template instantiation is put in the end of this file
+//                3. Explicit template instantiation is put at the end of this file
 //
 // Parameter   :  x       : Target point x coordinate at which to evaluate the interpolated value
 //                xL      : Left corner x coordinate
@@ -43,7 +43,7 @@ T Mis_LinearInterpolate( const T x, const T xL, const T xR, const T f_xL, const 
 //                2. Perform linear interpolation by multiplying weighting
 //                3. Reference: https://en.wikipedia.org/wiki/Bilinear_interpolation
 //                3. Overloaded with different types
-//                4. Explicit template instantiation is put in the end of this file
+//                4. Explicit template instantiation is put at the end of this file
 //
 // Parameter   :  x       : Target point x coordinate at which to evaluate the interpolated value
 //                y       : Target point y coordinate at which to evaluate the interpolated value
@@ -101,7 +101,7 @@ T Mis_BilinearInterpolate( const T x, const T y,
 //                2. Perform linear interpolation by multiplying weighting
 //                3. Reference: https://en.wikipedia.org/wiki/Trilinear_interpolation
 //                4. Overloaded with different types
-//                5. Explicit template instantiation is put in the end of this file
+//                5. Explicit template instantiation is put at the end of this file
 //
 // Parameter   :  x          : Target point x coordinate at which to evaluate the interpolated value
 //                y          : Target point y coordinate at which to evaluate the interpolated value
@@ -177,7 +177,7 @@ T Mis_TrilinearInterpolate( const T x, const T y, const T z,
 // Note        :  1. Assume xL[d] <= x[d] <= xR[d] for d from 0 to nDim-1; Otherwise, it is an extrapolation
 //                2. Perform linear interpolation in each dimension recursively
 //                3. Overloaded with different types
-//                4. Explicit template instantiation is put in the end of this file
+//                4. Explicit template instantiation is put at the end of this file
 //
 // Parameter   :  nDim     : Number of dimensions
 //                x        : Target point \vec{x} at which to evaluate the interpolated value
