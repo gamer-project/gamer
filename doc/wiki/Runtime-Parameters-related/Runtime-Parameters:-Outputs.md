@@ -5,6 +5,7 @@ Parameters described on this page:
 [OPT__OUTPUT_TEXT_LENGTH_INT](#OPT__OUTPUT_TEXT_LENGTH_INT), &nbsp;
 [OPT__OUTPUT_USER](#OPT__OUTPUT_USER), &nbsp;
 [OPT__OUTPUT_PAR_MODE](#OPT__OUTPUT_PAR_MODE), &nbsp;
+[OPT__OUTPUT_PAR_ADDI_ATTR](#OPT__OUTPUT_PAR_ADDI_ATTR), &nbsp;
 [OPT__OUTPUT_PAR_MESH](#OPT__OUTPUT_PAR_MESH), &nbsp;
 [OPT__OUTPUT_BASEPS](#OPT__OUTPUT_BASEPS), &nbsp;
 [OPT__OUTPUT_BASE](#OPT__OUTPUT_BASE), &nbsp;
@@ -99,6 +100,13 @@ This option is mainly for debugging purposes since the simulation snapshots
 (with the option [OPT__OUTPUT_TOTAL](#OPT__OUTPUT_TOTAL)) already store
 particle data.
     * **Restriction:**
+
+<a name="OPT__OUTPUT_PAR_ADDI_ATTR"></a>
+* #### `OPT__OUTPUT_PAR_ADDI_ATTR` &ensp; (0=off, 1=time, 2=acc, 3=acc+time) &ensp; [0]
+    * **Description**
+Output particle addition data (time or acceleration) to snapshots (`Data_******`) file.
+    * **Restriction:**
+Only applicable when enabling [[--particle | Installation:-Option-List#--particle]] and [[--store_par_acc | Installation:-Option-List#--store_par_acc]]
 
 <a name="OPT__OUTPUT_PAR_MESH"></a>
 * #### `OPT__OUTPUT_PAR_MESH` &ensp; (0=off, 1=on) &ensp; [1]

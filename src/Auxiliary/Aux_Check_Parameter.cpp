@@ -347,6 +347,10 @@ void Aux_Check_Parameter()
    if (  ! Aux_CheckPermission( OUTPUT_DIR, 2+1 )  )
       Aux_Error( ERROR_INFO, "You do not have write and execute permissions for the \"%s\" folder set by OUTPUT_DIR !!\n", OUTPUT_DIR );
 
+#  if ( defined PARTICLE && defined STORE_PAR_ACC )
+   if ( OPT__OUTPUT_PAR_ADDI_ATTR != 0 )
+      Aux_Error( ERROR_INFO, "must enable PARTICLE and STORE_PAR_ACC for OPT__OUTPUT_PAR_ADDI_ATTR option != 0");
+#  endif
 
 
 // general warnings

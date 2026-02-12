@@ -1345,6 +1345,15 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    long  GParID_Offset[NLEVEL];  // GParID = global particle index (==> unique for each particle)
    long  NParLv_AllRank[NLEVEL];
    long  MaxNPar1Lv, NParInBuf, ParID;
+   int   par_natt_flt_addi = 0;
+   switch ( OPT__OUTPUT_PAR_ADDI_ATTR )
+   {
+      case 0:  break;
+      case 1:  par_natt_flt_addi = 1; break;
+      case 2:  par_natt_flt_addi = 3; break;
+      case 3:  par_natt_flt_addi = 4; break;
+      default: break;
+   }
 
 // prepare particle attributes mapped from mesh quantities
    if ( OPT__OUTPUT_PAR_MESH )   Par_Output_TracerParticle_Mesh();
@@ -1391,9 +1400,19 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       if ( H5_GroupID_Particle < 0 )   Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "Particle" );
 
 //    create the datasets of all particle attributes
-      for (int v=0; v<PAR_NATT_FLT_STORED+Par_NAtt_Mesh; v++)
+      for (int v=0; v<PAR_NATT_FLT_STORED+par_natt_flt_addi+Par_NAtt_Mesh; v++)
       {
-         char *ParLabel = ( v < PAR_NATT_FLT_STORED ) ? ParAttFltLabel[v] : amr->Par->Mesh_Attr_Label[v - PAR_NATT_FLT_STORED];
+         char *ParLabel;
+         if ( v < PAR_NATT_FLT_STORED )
+            ParLabel =  ParAttFltLabel[v];
+         else if ( v >= PAR_NATT_FLT_STORED && v < PAR_NATT_FLT_STORED + par_natt_flt_addi )
+            switch ( OPT__OUTPUT_PAR_ADDI_ATTR )
+            {
+               case 1:  ParLabel =  ParAttFltLabel[PAR_TIME]; break;
+               default: ParLabel =  ParAttFltLabel[v];        break;
+            }
+         else
+            ParLabel = amr->Par->Mesh_Attr_Label[v - PAR_NATT_FLT_STORED - par_natt_flt_addi];
 
          H5_SetID_ParFltData = H5Dcreate( H5_GroupID_Particle, ParLabel, H5T_GAMER_REAL_PAR, H5_SpaceID_ParData,
                                           H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
@@ -1449,7 +1468,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 //       output one particle floating-point attribute at one level in one rank at a time
 //       --> skip the last PAR_NATT_FLT_UNSTORED floating-point attributes since we do not want to store them on disk
-         for (int v=0; v<PAR_NATT_FLT_STORED+Par_NAtt_Mesh; v++)
+         for (int v=0; v<PAR_NATT_FLT_STORED+par_natt_flt_addi+Par_NAtt_Mesh; v++)
          {
 //          6-3-3. collect particle data from all patches at the current target level
             NParInBuf = 0;
@@ -1464,14 +1483,31 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   Aux_Error( ERROR_INFO, "lv %d, NParInBuf (%ld) >= NPar_Lv (%ld) !!\n", lv, NParInBuf, amr->Par->NPar_Lv[lv] );
 #              endif
 
-               ParFltBuf1v1Lv[ NParInBuf ++ ] = ( v < PAR_NATT_FLT_STORED )
-                                              ? amr->Par->AttributeFlt[v]                      [ParID]
-                                              : amr->Par->Mesh_Attr   [v - PAR_NATT_FLT_STORED][ParID];
+               if      ( v < PAR_NATT_FLT_STORED )
+                  ParFltBuf1v1Lv[ NParInBuf ++ ] = amr->Par->AttributeFlt[v][ParID];
+               else if ( v >= PAR_NATT_FLT_STORED && v < PAR_NATT_FLT_STORED + par_natt_flt_addi )
+                  switch ( OPT__OUTPUT_PAR_ADDI_ATTR )
+                  {
+                     case 1:  ParFltBuf1v1Lv[ NParInBuf ++ ] = amr->Par->AttributeFlt[PAR_TIME][ParID]; break;
+                     default: ParFltBuf1v1Lv[ NParInBuf ++ ] = amr->Par->AttributeFlt[v]       [ParID]; break;
+                  }
+               else
+                  ParFltBuf1v1Lv[ NParInBuf ++ ] = amr->Par->Mesh_Attr[v - PAR_NATT_FLT_STORED - par_natt_flt_addi][ParID];
             }
 
 
 //          6-3-4. write data to disk
-            char *ParLabel = ( v < PAR_NATT_FLT_STORED ) ? ParAttFltLabel[v] : amr->Par->Mesh_Attr_Label[v - PAR_NATT_FLT_STORED];
+            char *ParLabel;
+            if ( v <  PAR_NATT_FLT_STORED )
+               ParLabel = ParAttFltLabel[v];
+            else if ( v >= PAR_NATT_FLT_STORED && v < PAR_NATT_FLT_STORED + par_natt_flt_addi )
+               switch ( OPT__OUTPUT_PAR_ADDI_ATTR )
+               {
+                  case 1:  ParLabel = ParAttFltLabel[PAR_TIME]; break;
+                  default: ParLabel = ParAttFltLabel[v];        break;
+               }
+            else
+               ParLabel = amr->Par->Mesh_Attr_Label[v - PAR_NATT_FLT_STORED - par_natt_flt_addi];
 
             H5_SetID_ParFltData = H5Dopen( H5_GroupID_Particle, ParLabel, H5P_DEFAULT );
 
@@ -1666,6 +1702,17 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 {
 
    const time_t CalTime = time( NULL );   // calendar time
+   int   par_natt_flt_addi = 0;
+#  ifdef PARTICLE
+   switch ( OPT__OUTPUT_PAR_ADDI_ATTR )
+   {
+      case 0:  break;
+      case 1:  par_natt_flt_addi = 1; break;
+      case 2:  par_natt_flt_addi = 3; break;
+      case 3:  par_natt_flt_addi = 4; break;
+      default: break;
+   }
+#  endif
 
    KeyInfo.FormatVersion        = 2505;
    KeyInfo.Model                = MODEL;
@@ -1695,7 +1742,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    KeyInfo.NMagStored           = NCOMP_MAG;
 #  ifdef PARTICLE
    KeyInfo.Par_NPar             = amr->Par->NPar_Active_AllRank;
-   KeyInfo.Par_NAttFltStored    = PAR_NATT_FLT_STORED;
+   KeyInfo.Par_NAttFltStored    = PAR_NATT_FLT_STORED + par_natt_flt_addi;
    KeyInfo.Par_NAttIntStored    = PAR_NATT_INT_STORED;
 #  ifdef FLOAT8_PAR
    KeyInfo.Float8_Par           = 1;
@@ -2179,7 +2226,16 @@ void FillIn_SymConst( SymConst_t &SymConst )
 
 
 #  ifdef PARTICLE
-   SymConst.Par_NAttFltStored    = PAR_NATT_FLT_STORED;
+   int   par_natt_flt_addi = 0;
+   switch ( OPT__OUTPUT_PAR_ADDI_ATTR )
+   {
+      case 0:  break;
+      case 1:  par_natt_flt_addi = 1; break;
+      case 2:  par_natt_flt_addi = 3; break;
+      case 3:  par_natt_flt_addi = 4; break;
+      default: break;
+   }
+   SymConst.Par_NAttFltStored    = PAR_NATT_FLT_STORED + par_natt_flt_addi;
    SymConst.Par_NAttIntStored    = PAR_NATT_INT_STORED;
    SymConst.Par_NType            = PAR_NTYPE;
 #  ifdef GRAVITY

@@ -384,6 +384,8 @@ OPT__OUTPUT_TEXT_FORMAT_FLT   %24.16e     # string format of floating-point vari
 OPT__OUTPUT_TEXT_LENGTH_INT   12          # string length of integer variables in output text files [12]
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
 OPT__OUTPUT_PAR_MODE          0           # output the particle data: (0=off, 1=text-file, 2=C-binary) [0] ##PARTICLE ONLY##
+OPT__OUTPUT_PAR_ADDI_ATTR     0           # output particle additional attributes(time, acceleration...etc) to snapshots. ##STORE_PAR_ACC ONLY##
+                                          # (0=off, 1=time, 2=acc, 3=time+acc) [0]
 OPT__OUTPUT_PAR_MESH          1           # output the attributes of tracer particles mapped from mesh quantities -> edit "Input__Par_Mesh" [1] ##PARTICLE ONLY##
 OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
 OPT__OUTPUT_BASE              0           # only output the base-level data [0] ##OPT__OUTPUT_PART ONLY##
