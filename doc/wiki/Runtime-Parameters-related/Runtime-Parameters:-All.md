@@ -287,6 +287,9 @@ For variables with `Default/Min/Max` labeled as `Depend`, click the parameter na
 | [[ OPT__OUTPUT_CS \| Runtime-Parameters:-Outputs#OPT__OUTPUT_CS ]]                                   |               0 |            None |            None | output sound speed [0] ##HYDRO ONLY## |
 | [[ OPT__OUTPUT_DIVMAG \| Runtime-Parameters:-Outputs#OPT__OUTPUT_DIVMAG ]]                           |               0 |            None |            None | output |divergence(B)*dh/|B|| [0] ##MHD ONLY## |
 | [[ OPT__OUTPUT_DIVVEL \| Runtime-Parameters:-Outputs#OPT__OUTPUT_DIVVEL ]]                           |               0 |            None |            None | output divergence(velocity) [0] ##HYDRO ONLY## |
+| OPT__OUTPUT_ELBDM_Q_POT                                                                              |               0 |            None |            None | output ELBDM quantum potential potential [0] ##ELBDM ONLY## |
+| OPT__OUTPUT_ELBDM_Q_STRESS                                                                           |               0 |            None |            None | output ELBDM quantum stress tensor [0] ##ELBDM ONLY## |
+| OPT__OUTPUT_ELBDM_VEL                                                                                |               0 |            None |            None | output ELBDM velocity [0] ##ELBDM ONLY## |
 | [[ OPT__OUTPUT_ENTHALPY \| Runtime-Parameters:-Outputs#OPT__OUTPUT_ENTHALPY ]]                       |               1 |            None |            None | output reduced enthalpy [1] ##SRHD ONLY## |
 | [[ OPT__OUTPUT_ENTR \| Runtime-Parameters:-Outputs#OPT__OUTPUT_ENTR ]]                               |               0 |            None |            None | output gas entropy [0] ##HYDRO ONLY## |
 | [[ OPT__OUTPUT_LORENTZ \| Runtime-Parameters:-Outputs#OPT__OUTPUT_LORENTZ ]]                         |               0 |            None |            None | output Lorentz factor [0] ##SRHD ONLY## |

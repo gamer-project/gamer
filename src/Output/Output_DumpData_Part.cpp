@@ -2,7 +2,7 @@
 
 static void WriteFile( FILE *File, const int lv, const int PID, const int i, const int j, const int k,
                        const int ii, const int jj, const int kk, const real (*DerField)[ CUBE(PS1) ] );
-static void GetDerivedField( real (*Der_FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
+static void GetDerivedField( real *Der_In,
                              real (*Der_Out  )             [ CUBE(PS1)                ],
                              real (*Der_MagFC)[NCOMP_MAG  ][ (DER_NXT+1)*SQR(DER_NXT) ],
                              real (*Der_MagCC)             [ CUBE(DER_NXT)            ],
@@ -121,7 +121,9 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
    real (*Der_MagFC)[NCOMP_MAG  ][ (DER_NXT+1)*SQR(DER_NXT) ] = NULL;
    real (*Der_MagCC)             [ CUBE(DER_NXT)            ] = NULL;
 #  endif
-
+#  if ( MODEL == ELBDM )
+   real (*Der_ELBDMIn)[NCOMP_TOTAL][ CUBE(ELBDM_DER_NXT)    ] = new real [Der_NP][NCOMP_TOTAL ][ CUBE(ELBDM_DER_NXT)      ];
+#  endif
 
    for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
    {
@@ -171,6 +173,28 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
             if ( OPT__OUTPUT_ENTHALPY )
                                        fprintf( File, " %*s", StrLen_Flt, "Reduced enthalpy" );
 #           endif
+#           if ( MODEL == ELBDM )
+            if (OPT__OUTPUT_ELBDM_VEL)
+            {
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Bulk Velocity X" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Bulk Velocity Y" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Bulk Velocity Z" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Thermal Velocity X" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Thermal Velocity Y" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Thermal Velocity Z" );
+            }
+            if (OPT__OUTPUT_ELBDM_Q_POT)
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Potential" );
+            if (OPT__OUTPUT_ELBDM_Q_STRESS)
+            {
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Stress XX" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Stress YY" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Stress ZZ" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Stress XY" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Stress YZ" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Stress XZ" );
+            }
+#           endif
             if ( OPT__OUTPUT_USER_FIELD ) {
                for (int v=0; v<UserDerField_Num; v++)
                                        fprintf( File, " %*s", StrLen_Flt, UserDerField_Label[v] );
@@ -203,7 +227,11 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
                      if ( Corner[0] == Corner[1]  &&  Corner[0] == Corner[2] )
                      {
 //                      compute the derived fields
-                        GetDerivedField( Der_FluIn, Der_Out, Der_MagFC, Der_MagCC, lv, PID, Der_PrepFluIn );
+#                       if ( MODEL == ELBDM )
+                        GetDerivedField( Der_ELBDMIn[0][0], Der_Out, Der_MagFC, Der_MagCC, lv, PID, Der_PrepFluIn );
+#                       else
+                        GetDerivedField( Der_FluIn[0][0], Der_Out, Der_MagFC, Der_MagCC, lv, PID, Der_PrepFluIn );
+#                       endif
                         Der_PrepFluIn = false;
 
 //                      write data
@@ -225,7 +253,11 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
                      if (  !Check_z  ||  ( EdgeL[2]<=z && EdgeR[2]>z )  )
                      {
 //                      compute the derived fields
-                        GetDerivedField( Der_FluIn, Der_Out, Der_MagFC, Der_MagCC, lv, PID, Der_PrepFluIn );
+#                       if ( MODEL == ELBDM )
+                        GetDerivedField( Der_ELBDMIn[0][0], Der_Out, Der_MagFC, Der_MagCC, lv, PID, Der_PrepFluIn );
+#                       else
+                        GetDerivedField( Der_FluIn[0][0], Der_Out, Der_MagFC, Der_MagCC, lv, PID, Der_PrepFluIn );
+#                       endif
                         Der_PrepFluIn = false;
 
 //                      write data
@@ -263,6 +295,9 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 #  ifdef MHD
    delete [] Der_MagFC;
    delete [] Der_MagCC;
+#  endif
+#  if ( MODEL == ELBDM )
+   delete [] Der_ELBDMIn;
 #  endif
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d)           ... done\n", __FUNCTION__, DumpID );
@@ -413,6 +448,19 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
       fprintf( File, BlankPlusFormat_Flt, HTilde );
    }
 #  endif
+#  if ( MODEL == ELBDM )
+   if ( OPT__OUTPUT_ELBDM_VEL ) {
+      for (int v=0; v<6; v++)
+      fprintf( File, BlankPlusFormat_Flt, DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
+   }
+   if ( OPT__OUTPUT_ELBDM_Q_POT ) {
+      fprintf( File, BlankPlusFormat_Flt, DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
+   }
+   if ( OPT__OUTPUT_ELBDM_Q_STRESS ) {
+      for (int v=0; v<6; v++)
+      fprintf( File, BlankPlusFormat_Flt, DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
+   }
+#  endif
 
    if ( OPT__OUTPUT_USER_FIELD ) {
       for (int v=0; v<UserDerField_Num; v++)
@@ -443,7 +491,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 //
 // Return      :  FluIn[], Out[], MagFC[] (MagCC[] is not useful outside this function)
 //-------------------------------------------------------------------------------------------------------
-void GetDerivedField( real (*FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
+void GetDerivedField( real *Der_In,
                       real (*Out  )             [ CUBE(PS1)                ],
                       real (*MagFC)[NCOMP_MAG  ][ (DER_NXT+1)*SQR(DER_NXT) ],
                       real (*MagCC)             [ CUBE(DER_NXT)            ],
@@ -453,6 +501,13 @@ void GetDerivedField( real (*FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
    const double dh      = amr->dh[lv];
    const int    LocalID = PID % 8;
 
+// 1D arrays -> 3D arrays
+#  if ( MODEL == ELBDM )
+   typedef real (*der_in)[NCOMP_TOTAL][CUBE(ELBDM_DER_NXT)];
+#  else
+   typedef real (*der_in)[NCOMP_TOTAL][CUBE(DER_NXT)];
+#  endif
+   der_in FluIn = (der_in) Der_In;
 
 // prepare the input arrays
    if ( PrepFluIn )
@@ -469,6 +524,12 @@ void GetDerivedField( real (*FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
       const int  OPT__MAG_INT_SCHEME = INT_NONE;
 #     endif
 
+#     if ( MODEL == ELBDM )
+      Prepare_PatchData( lv, Time[lv], FluIn[0][0], NULL, ELBDM_DER_GHOST_SIZE, 1, &PID0,
+                                    _TOTAL, _NONE, OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26,
+                                    IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
+                                    DE_Consistency_No );
+#     endif
 //    always prepare all fields
       Prepare_PatchData( lv, Time[lv], FluIn[0][0], MagFC[0][0], DER_GHOST_SIZE, 1, &PID0,
                          _TOTAL, _MAG, OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCH, NSIDE_26,
@@ -527,6 +588,48 @@ void GetDerivedField( real (*FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
       OutFieldIdx += NFieldOut;
    }
 #  endif // #if ( MODEL == HYDRO )
+
+#  if ( MODEL == ELBDM )
+   if ( OPT__OUTPUT_ELBDM_VEL )
+   {
+      const int NFieldOut = 6;
+      if ( OutFieldIdx + NFieldOut > DER_NOUT_MAX )
+         Aux_Error( ERROR_INFO, "OutFieldIdx (%d) + NFieldOut (%d) > DER_NOUT_MAX (%d) !!\n",
+                    OutFieldIdx, NFieldOut, DER_NOUT_MAX );
+      for (int v = 0; v<6; v++)
+      {
+         const int fv = v/3;
+         const int vv = v%3;
+         ELBDM_DerivedField( Out[OutFieldIdx], FluIn[LocalID][0],
+                             fv, vv, ELBDM_DER_GHOST_SIZE, dh );
+         OutFieldIdx += 1;
+      }
+   }
+   if ( OPT__OUTPUT_ELBDM_Q_POT )
+   {
+      const int NFieldOut = 1;
+      if ( OutFieldIdx + NFieldOut > DER_NOUT_MAX )
+         Aux_Error( ERROR_INFO, "OutFieldIdx (%d) + NFieldOut (%d) > DER_NOUT_MAX (%d) !!\n",
+                    OutFieldIdx, NFieldOut, DER_NOUT_MAX );
+      ELBDM_DerivedField( Out[OutFieldIdx], FluIn[LocalID][0],
+                          2, 0, ELBDM_DER_GHOST_SIZE, dh);
+      OutFieldIdx += NFieldOut;
+   }
+   if ( OPT__OUTPUT_ELBDM_Q_STRESS )
+   {
+      const int NFieldOut = 6;
+      if ( OutFieldIdx + NFieldOut > DER_NOUT_MAX )
+         Aux_Error( ERROR_INFO, "OutFieldIdx (%d) + NFieldOut (%d) > DER_NOUT_MAX (%d) !!\n",
+                    OutFieldIdx, NFieldOut, DER_NOUT_MAX );
+      for (int v = 0; v<6; v++)
+      {
+         const int vv = v;;
+         ELBDM_DerivedField( Out[OutFieldIdx], FluIn[LocalID][0],
+                             3, vv, ELBDM_DER_GHOST_SIZE, dh );
+         OutFieldIdx += 1;
+      }
+   }
+#  endif // #if ( MODEL == ELBDM )
 
    if ( OPT__OUTPUT_USER_FIELD )
    {

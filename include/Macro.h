@@ -271,7 +271,7 @@
 
 
 // maximum number of output derived fields
-#  define DER_NOUT_MAX        10
+#  define DER_NOUT_MAX        30
 
 
 // maximum number of fields to be stored in HDF5 snapshots
@@ -831,7 +831,7 @@
 
 // number of ghost zones for computing derived fields
 #        define DER_GHOST_SIZE      1
-
+#        define ELBDM_DER_GHOST_SIZE  2
 
 // number of ghost zones for feedback
 // --> can be changed manually
@@ -875,6 +875,9 @@
 #  define SRC_NXT       ( PS1 + 2*SRC_GHOST_SIZE )                // use patch as the unit
 #  define SRC_NXT_P1    ( SRC_NXT + 1 )
 #  define DER_NXT       ( PS1 + 2*DER_GHOST_SIZE )                // use patch as the unit
+#if ( MODEL == ELBDM )
+#  define ELBDM_DER_NXT ( PS1 + 2*ELBDM_DER_GHOST_SIZE )          // use patch as the unit
+#endif
 #ifdef FEEDBACK
 #  define FB_NXT        ( PS2 + 2*FB_GHOST_SIZE )                 // use patch group as the unit
 #endif
