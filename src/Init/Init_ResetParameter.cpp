@@ -632,7 +632,7 @@ void Init_ResetParameter()
    }
 
 
-// turn off "OPT__OVERLAP_MPI" if (1) OVERLAP_MPI=ff, (2) SERIAL=on, (3) LOAD_BALANCE=off,
+// turn off "OPT__OVERLAP_MPI" if (1) OVERLAP_MPI=off, (2) SERIAL=on, (3) LOAD_BALANCE=off,
 //                                (4) OPENMP=off, (5) MPI thread support=MPI_THREAD_SINGLE
 #  ifndef OVERLAP_MPI
    if ( OPT__OVERLAP_MPI )

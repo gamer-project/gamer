@@ -28,6 +28,8 @@ Parameters described on this page:
 [MIN_DENS](#MIN_DENS), &nbsp;
 [MIN_PRES](#MIN_PRES), &nbsp;
 [MIN_EINT](#MIN_EINT), &nbsp;
+[MIN_TEMP](#MIN_TEMP), &nbsp;
+[MIN_ENTR](#MIN_ENTR), &nbsp;
 [OPT__CHECK_PRES_AFTER_FLU](#OPT__CHECK_PRES_AFTER_FLU), &nbsp;
 [OPT__LAST_RESORT_FLOOR](#OPT__LAST_RESORT_FLOOR), &nbsp;
 [JEANS_MIN_PRES](#JEANS_MIN_PRES), &nbsp;
@@ -309,6 +311,18 @@ Gas pressure floor.
 * #### `MIN_EINT` &ensp; (&#8805;0.0) &ensp; [0.0]
     * **Description:**
 Gas internal energy density floor.
+    * **Restriction:**
+
+<a name="MIN_TEMP"></a>
+* #### `MIN_TEMP` &ensp; (&#8805;0.0) &ensp; [0.0]
+    * **Description:**
+Gas temperature floor in K.
+    * **Restriction:**
+
+<a name="MIN_ENTR"></a>
+* #### `MIN_ENTR` &ensp; (&#8805;0.0) &ensp; [0.0]
+    * **Description:**
+Gas entropy floor.
     * **Restriction:**
 
 <a name="JEANS_MIN_PRES"></a>
