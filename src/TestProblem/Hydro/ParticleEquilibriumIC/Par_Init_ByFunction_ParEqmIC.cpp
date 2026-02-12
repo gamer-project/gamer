@@ -3,7 +3,25 @@
 
 #ifdef MASSIVE_PARTICLES
 
-static RandomNumber_t *RNG = NULL;
+extern int      ParEqmIC_NumCloud;
+extern char   (*ParEqmIC_Cloud_ParaFilenames)[MAX_STRING];
+
+extern double (*ParEqmIC_Cloud_Center)[3];
+extern double (*ParEqmIC_Cloud_BulkVel)[3];
+extern char   (*ParEqmIC_Cloud_Type)[MAX_STRING];
+extern double  *ParEqmIC_Cloud_Rho0;
+extern double  *ParEqmIC_Cloud_R0;
+extern double  *ParEqmIC_Cloud_EinastoPowerFactor;
+extern char   (*ParEqmIC_Cloud_DensityTable)[MAX_STRING];
+extern long    *ParEqmIC_Cloud_ParNum;
+extern double  *ParEqmIC_Cloud_MaxR;
+extern int     *ParEqmIC_Cloud_NBin;
+extern int     *ParEqmIC_Cloud_RSeed;
+extern int     *ParEqmIC_Cloud_AddExtPotAnaly;
+extern int     *ParEqmIC_Cloud_AddExtPotTable;
+extern char   (*ParEqmIC_Cloud_ExtPotTable)[MAX_STRING];
+
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -41,7 +59,6 @@ static RandomNumber_t *RNG = NULL;
 //
 // Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttributeFlt, AllAttributeInt
 //-------------------------------------------------------------------------------------------------------
-
 void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_AllRank,
                                    real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                    real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
@@ -59,12 +76,9 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
    for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   ParIntData_AllRank[v] = NULL;
 
 
-// define the particle IC constructor
-   Par_EquilibriumIC Filename_Loader;
-
-
 // only the master rank will construct the initial condition
-   if ( MPI_Rank == 0 ) {
+   if ( MPI_Rank == 0 )
+   {
 
 //    allocate memory for particle attribute arrays
       ParFltData_AllRank[PAR_MASS] = new real_par [NPar_AllRank];
@@ -75,30 +89,67 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
       ParFltData_AllRank[PAR_VELY] = new real_par [NPar_AllRank];
       ParFltData_AllRank[PAR_VELZ] = new real_par [NPar_AllRank];
 
-//    input filenames as parameters into Filename_Loader
-      Filename_Loader.Read_Filenames( "Input__TestProb" );
       long Par_Idx0 = 0;
 
-      for (int k=0; k<Filename_Loader.filenames.Cloud_Num; k++) {
+      for (int i=0; i<ParEqmIC_NumCloud; i++)
+      {
 
-//       initialize Par_EquilibriumIC for each cloud
-         Par_EquilibriumIC Cloud_Constructor;
-         Cloud_Constructor.Load_Physical_Params( Filename_Loader.filenames, k, NPar_AllRank );
-         Cloud_Constructor.Init();
-
-//       check whether the particle number of each cloud is reasonable
-         if ( (Par_Idx0 + Cloud_Constructor.params.Cloud_Par_Num) > NPar_AllRank ) {
+//       check whether the particle number of each particle cloud is reasonable
+         if ( (Par_Idx0 + ParEqmIC_Cloud_ParNum[i]) > NPar_AllRank )
+         {
             Aux_Error( ERROR_INFO, "particle number doesn't match (%ld + %ld = %ld > %ld) !!\n",
-                        Par_Idx0, Cloud_Constructor.params.Cloud_Par_Num, Par_Idx0+Cloud_Constructor.params.Cloud_Par_Num, NPar_AllRank );
+                       Par_Idx0, ParEqmIC_Cloud_ParNum[i], Par_Idx0+ParEqmIC_Cloud_ParNum[i], NPar_AllRank );
          }
 
+//       initialize Par_EquilibriumIC for each particle cloud
+         Par_EquilibriumIC Cloud_Constructor( ParEqmIC_Cloud_Type[i] );
+
+//       set the parameters for each particle cloud
+         Cloud_Constructor.setCenterAndBulkVel( ParEqmIC_Cloud_Center [i][0], ParEqmIC_Cloud_Center [i][1], ParEqmIC_Cloud_Center [i][2],
+                                                ParEqmIC_Cloud_BulkVel[i][0], ParEqmIC_Cloud_BulkVel[i][1], ParEqmIC_Cloud_BulkVel[i][2] );
+
+         Cloud_Constructor.setParticleParameters( ParEqmIC_Cloud_ParNum[i], ParEqmIC_Cloud_MaxR[i], ParEqmIC_Cloud_NBin[i], ParEqmIC_Cloud_RSeed[i] );
+
+         if ( strcmp( ParEqmIC_Cloud_Type[i], "Table" ) == 0 )
+         {
+            Cloud_Constructor.setDensProfTableFilename( ParEqmIC_Cloud_DensityTable[i] );
+         }
+         else
+         {
+            Cloud_Constructor.setModelParameters( ParEqmIC_Cloud_Rho0[i], ParEqmIC_Cloud_R0[i] );
+         }
+
+         if ( strcmp( ParEqmIC_Cloud_Type[i], "Einasto" ) == 0 )
+         {
+            Cloud_Constructor.setEinastoPowerFactor( ParEqmIC_Cloud_EinastoPowerFactor[i] );
+         }
+
+         if ( ParEqmIC_Cloud_AddExtPotAnaly[i]  ||  ParEqmIC_Cloud_AddExtPotTable[i] )
+         {
+            Cloud_Constructor.setExtPotParameters( ParEqmIC_Cloud_AddExtPotAnaly[i], ParEqmIC_Cloud_AddExtPotTable[i], ParEqmIC_Cloud_ExtPotTable[i] );
+         }
+
+//       construct the distribution for the particle cloud
+         Cloud_Constructor.constructDistribution();
+
 //       set an equilibrium initial condition for each cloud
-         Cloud_Constructor.Par_SetEquilibriumIC( ParFltData_AllRank[PAR_MASS], ParFltData_AllRank+PAR_POSX, ParFltData_AllRank+PAR_VELX, Par_Idx0 );
+         Cloud_Constructor.constructParticles( ParFltData_AllRank[PAR_MASS], ParFltData_AllRank+PAR_POSX, ParFltData_AllRank+PAR_VELX, Par_Idx0 );
 
-//       update the particle index offset for the next cloud
-         Par_Idx0 += Cloud_Constructor.params.Cloud_Par_Num;
+         Aux_Message( stdout, "   Total enclosed mass within MaxR    = % 13.7e\n",  Cloud_Constructor.TotCloudMass      );
+         Aux_Message( stdout, "   Particle mass                      = % 13.7e\n",  Cloud_Constructor.ParticleMass      );
+         Aux_Message( stdout, "   Total enclosed mass relative error = % 13.7e\n",  Cloud_Constructor.TotCloudMassError );
 
-      } // for (int k=0; k<Filename_Loader.filenames.Cloud_Num; k++)
+//       update the particle index offset for the next particle cloud
+         Par_Idx0 += ParEqmIC_Cloud_ParNum[i];
+
+      } // for (int i=0; i<ParEqmIC_CloudNum; i++)
+
+//    check whether the total particle number is reasonable
+      if ( Par_Idx0 != NPar_AllRank )
+      {
+         Aux_Error( ERROR_INFO, "total particle number doesn't match (total = %ld != NPar_AllRank = %ld) !!\n", Par_Idx0, NPar_AllRank );
+      }
+
    } // if ( MPI_Rank == 0 )
 
 
@@ -107,9 +158,9 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
                             ParFltData_AllRank, ParIntData_AllRank, AllAttributeFlt, AllAttributeInt );
 
 
-// synchronize all particles to the physical time on the base level
-// and assign particle type
-   for (long p=0; p<NPar_ThisRank; p++) {
+// synchronize all particles to the physical time on the base level and assign particle type
+   for (long p=0; p<NPar_ThisRank; p++)
+   {
       ParTime[p] = Time[0];
       ParType[p] = PTYPE_GENERIC_MASSIVE;
    }
@@ -118,7 +169,6 @@ void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_All
 // free resource
    if ( MPI_Rank == 0 )
    {
-      delete RNG;
       for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   delete [] ParFltData_AllRank[v];
       for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   delete [] ParIntData_AllRank[v];
    }
