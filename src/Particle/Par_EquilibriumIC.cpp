@@ -659,6 +659,7 @@ void Par_EquilibriumIC::printArrays()
 //                   TODO: Support parallel construction
 //                   The particle count for each rank needs to be passed as an argument to this function
 //                   Different ranks need different random seeds to construct their own particles within the same cloud
+//                   One possible way to ensure reproducibility is to set per-particle seeds based on the particle indices
 //
 // Parameter   :  Mass_AllRank : An array of all particles' masses
 //                Pos_AllRank  : An array of all particles' position vectors
