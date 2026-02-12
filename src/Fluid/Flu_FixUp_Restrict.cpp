@@ -441,7 +441,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                                         MIN_EINT, PassiveFloorMask, Emag );
 #        endif // #ifdef DUAL_ENERGY ... else ...
       } // i,j,k
-#     endif // #if ( MODEL == HYDRO )
+#     endif // #if ( MODEL == HYDRO  &&  !defined SRHD )
 
 
 //    rescale real and imaginary parts to get the correct density in ELBDM

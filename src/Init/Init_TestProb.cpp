@@ -26,6 +26,7 @@ void Init_TestProb_Hydro_BarredPot();
 void Init_TestProb_Hydro_ParticleTest();
 void Init_TestProb_Hydro_CDM_LSS();
 void Init_TestProb_Hydro_Zeldovich();
+void Init_TestProb_Hydro_ExactCooling();
 void Init_TestProb_Hydro_EnergyPowerSpectrum();
 void Init_TestProb_Hydro_CR_SoundWave();
 void Init_TestProb_Hydro_CR_ShockTube();
@@ -92,6 +93,7 @@ void Init_TestProb()
       case TESTPROB_HYDRO_PARTICLE_TEST :                Init_TestProb_Hydro_ParticleTest();                break;
       case TESTPROB_HYDRO_CDM_LSS :                      Init_TestProb_Hydro_CDM_LSS();                     break;
       case TESTPROB_HYDRO_ZELDOVICH :                    Init_TestProb_Hydro_Zeldovich();                   break;
+      case TESTPROB_HYDRO_EXACTCOOLING :                 Init_TestProb_Hydro_ExactCooling();                break;
       case TESTPROB_HYDRO_ENERGY_POWER_SPECTRUM :        Init_TestProb_Hydro_EnergyPowerSpectrum();         break;
       case TESTPROB_HYDRO_CR_SOUNDWAVE :                 Init_TestProb_Hydro_CR_SoundWave();                break;
       case TESTPROB_HYDRO_CR_SHOCKTUBE :                 Init_TestProb_Hydro_CR_ShockTube();                break;

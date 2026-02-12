@@ -1,5 +1,6 @@
 #include "GAMER.h"
 
+extern double Mis_GetTimeStep_ExactCooling( const int lv, const double dTime_dt );
 
 
 
@@ -233,6 +234,25 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
    }
 
    sprintf( dTime_Name[NdTime++], "%s", "Hybrid_Vel" );
+#  endif
+
+
+// 1.10 CRITERION TEN : ExactCooling source term ##HYDRO ONLY##
+// =============================================================================================================
+#  ifdef EXACT_COOLING
+   if ( SrcTerms.ExactCooling )
+   {
+      double EC_dtCoef = SrcTerms.EC_dtCoef;
+      if ( SrcTerms.EC_subcycling )
+      {
+         EC_dtCoef = HUGE_NUMBER;
+#        ifdef GAMER_DEBUG
+         Aux_Message( stderr, "WARNING : Resetting EC_dtCoef to be HUGE_NUMBER when subcycling is enabled.\n" );
+#        endif
+      }
+      dTime[NdTime] = EC_dtCoef * dTime_dt * Mis_GetTimeStep_ExactCooling( lv, dTime_dt );
+      sprintf( dTime_Name[NdTime++], "%s", "ExactCooling" );
+   }
 #  endif
 
 

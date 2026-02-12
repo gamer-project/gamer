@@ -175,6 +175,7 @@ struct Makefile_t
    int CosmicRay;
    int EoS;
    int BarotropicEoS;
+   int ExactCooling;
 
 #  elif ( MODEL == ELBDM )
    int ELBDMScheme;
@@ -683,6 +684,12 @@ struct InputPara_t
    int    Src_Deleptonization;
    int    Src_User;
    int    Src_GPU_NPGroup;
+   int    Src_ExactCooling;
+#  ifdef EXACT_COOLING
+   int    Src_EC_TEF_N;
+   int    Src_EC_subcycling;
+   double Src_EC_dtCoef;
+#  endif
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE

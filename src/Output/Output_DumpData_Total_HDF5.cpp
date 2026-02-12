@@ -79,7 +79,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2505)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2506)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -279,6 +279,7 @@ Procedure for outputting new variables:
 //                                             Input__TestProb parameters in "Info/InputTest"
 //                2504 : 2025/04/29 --> output OPT__PAR_INIT_CHECK
 //                2505 : 2025/05/07 --> output PassiveFloor_Var
+//                2506 : 2026/01/17 --> output exact-cooling parameters
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1667,7 +1668,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2505;
+   KeyInfo.FormatVersion        = 2506;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2005,6 +2006,12 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.BarotropicEoS          = 1;
 #  else
    Makefile.BarotropicEoS          = 0;
+#  endif
+
+#  ifdef EXACT_COOLING
+   Makefile.ExactCooling           = 1;
+#  else
+   Makefile.ExactCooling           = 0;
 #  endif
 
 
@@ -2671,6 +2678,12 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 // source terms
    InputPara.Src_Deleptonization     = SrcTerms.Deleptonization;
    InputPara.Src_User                = SrcTerms.User;
+   InputPara.Src_ExactCooling        = SrcTerms.ExactCooling;
+#  ifdef EXACT_COOLING
+   InputPara.Src_EC_TEF_N            = SrcTerms.EC_TEF_N;
+   InputPara.Src_EC_subcycling       = SrcTerms.EC_subcycling;
+   InputPara.Src_EC_dtCoef           = SrcTerms.EC_dtCoef;
+#  endif
    InputPara.Src_GPU_NPGroup         = SRC_GPU_NPGROUP;
 
 // Grackle
@@ -3141,6 +3154,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "CosmicRay",              HOFFSET(Makefile_t,CosmicRay              ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "EoS",                    HOFFSET(Makefile_t,EoS                    ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "BarotropicEoS",          HOFFSET(Makefile_t,BarotropicEoS          ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "ExactCooling",           HOFFSET(Makefile_t,ExactCooling           ), H5T_NATIVE_INT );
 
 #  elif ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "ELBDMScheme",            HOFFSET(Makefile_t,ELBDMScheme            ), H5T_NATIVE_INT );
@@ -3739,6 +3753,12 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Src_Deleptonization",     HOFFSET(InputPara_t,Src_Deleptonization    ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Src_User",                HOFFSET(InputPara_t,Src_User               ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Src_GPU_NPGroup",         HOFFSET(InputPara_t,Src_GPU_NPGroup        ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Src_ExactCooling",        HOFFSET(InputPara_t,Src_ExactCooling       ), H5T_NATIVE_INT              );
+#  ifdef EXACT_COOLING
+   H5Tinsert( H5_TypeID, "Src_EC_TEF_N",            HOFFSET(InputPara_t,Src_EC_TEF_N           ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Src_EC_subcycling",       HOFFSET(InputPara_t,Src_EC_subcycling      ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Src_EC_dtCoef",           HOFFSET(InputPara_t,Src_EC_dtCoef          ), H5T_NATIVE_DOUBLE           );
+#  endif
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE

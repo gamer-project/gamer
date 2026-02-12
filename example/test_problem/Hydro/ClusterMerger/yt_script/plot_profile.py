@@ -31,8 +31,8 @@ f.subplots_adjust( wspace=0.5 )
 [ f.axes[t].set_xscale( 'log', nonpositive='clip' ) for t in range(0,4,1) ]
 [ f.axes[t].set_yscale( 'log', nonpositive='clip' ) for t in range(0,4,1) ]
 [ f.axes[t].set_xlim( 5.0e+0, 2.0e+3 ) for t in range(0,4,1) ]
-ax[1][0].set_xlabel( '$r\ [\mathrm{kpc}]$', fontsize=16 )
-ax[1][1].set_xlabel( '$r\ [\mathrm{kpc}]$', fontsize=16 )
+ax[1][0].set_xlabel( r'$r\ [\mathrm{kpc}]$', fontsize=16 )
+ax[1][1].set_xlabel( r'$r\ [\mathrm{kpc}]$', fontsize=16 )
 for i in range(0,2):
    for j in range(0,2):
       ax[j][i].xaxis.set_minor_locator( plt.LogLocator(base=10.0, subs=[2.0,5.0,8.0]) )
@@ -114,28 +114,28 @@ ax[0][0].plot( radius_gamer, dens_gamer, 'b-', lw=1, label='GAMER' )
 #ax[0][0].plot( radius_flash, dens_flash, 'r-', lw=1, label='FLASH' )
 
 ax[0][0].set_ylim( 1.0e-5, 2.0e-2 )
-ax[0][0].set_ylabel( '$n_e\ [\mathrm{cm^{-3}}]$', fontsize=16 )
+ax[0][0].set_ylabel( r'$n_e\ [\mathrm{cm^{-3}}]$', fontsize=16 )
 
 # gas temperature
 ax[1][0].plot( radius_gamer, temp_gamer, 'b-', lw=1, label='GAMER' )
 #ax[1][0].plot( radius_flash, temp_flash, 'r-', lw=1, label='FLASH' )
 
 ax[1][0].set_ylim( 5.0e+0, 2.0e+1 )
-ax[1][0].set_ylabel( '$T\ [\mathrm{keV}]$', fontsize=16 )
+ax[1][0].set_ylabel( r'$T\ [\mathrm{keV}]$', fontsize=16 )
 
 # entropy
 ax[0][1].plot( radius_gamer, entr_gamer, 'b-', lw=1, label='GAMER' )
 #ax[0][1].plot( radius_flash, entr_flash, 'r-', lw=1, label='FLASH' )
 
 ax[0][1].set_ylim( 1.0e+2, 1.0e+4 )
-ax[0][1].set_ylabel( '$S \ [\mathrm{keV\ cm^2}]$', fontsize=16 )
+ax[0][1].set_ylabel( r'$S \ [\mathrm{keV\ cm^2}]$', fontsize=16 )
 
 # dark matter mass density
 ax[1][1].plot( radius_gamer, pden_gamer, 'b-', lw=1, label='GAMER' )
 #ax[1][1].plot( radius_flash, pden_flash, 'r-', lw=1, label='FLASH' )
 
 ax[1][1].set_ylim( 5.0e+3, 1.0e+8 )
-ax[1][1].set_ylabel( '$\\rho_{\mathrm{DM}}\ [\mathrm{M_{\odot}\ kpc^{-3}}]$', fontsize=16 )
+ax[1][1].set_ylabel( r'$\rho_{\mathrm{DM}}\ [\mathrm{M_{\odot}\ kpc^{-3}}]$', fontsize=16 )
 
 # legend
 ax[0][0].legend( loc='lower left', numpoints=1, labelspacing=0.2, fontsize=13, handletextpad=0.5,

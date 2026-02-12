@@ -314,6 +314,13 @@ void Aux_TakeNote()
 
 #     endif // #ifdef PARTICLE
 
+//    e. option in source term
+#     ifdef EXACT_COOLING
+      fprintf( Note, "EXACT_COOLING                   ON\n" );
+#     else
+      fprintf( Note, "EXACT_COOLING                   OFF\n" );
+#     endif
+
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
 
@@ -1113,6 +1120,13 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "SRC_ANY                        % d\n",      SrcTerms.Any              );
       fprintf( Note, "SRC_DELEPTONIZATION            % d\n",      SrcTerms.Deleptonization  );
+      fprintf( Note, "SRC_EXACTCOOLING               % d\n",      SrcTerms.ExactCooling     );
+#     ifdef EXACT_COOLING
+      if ( SrcTerms.ExactCooling ) {
+      fprintf( Note, "SRC_EC_TEF_N                   % d\n",      SrcTerms.EC_TEF_N         );
+      fprintf( Note, "SRC_EC_SUBCYCLING              % d\n",      SrcTerms.EC_subcycling    );
+      fprintf( Note, "SRC_EC_DTCOEF                  % 14.7e\n",  SrcTerms.EC_dtCoef        ); }
+#     endif
       fprintf( Note, "SRC_USER                       % d\n",      SrcTerms.User             );
       fprintf( Note, "SRC_GPU_NPGROUP                % d\n",      SRC_GPU_NPGROUP           );
       fprintf( Note, "***********************************************************************************\n" );

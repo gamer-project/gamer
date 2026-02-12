@@ -24,6 +24,23 @@ Default setup:
 2. Default resolution ~ 15 kpc (MAX_LEVEL = 3)
 
 
+AGN feedback:
+========================================
+1. Enable OPT__RESET_FLUID in Input__Parameter and "AGN_feedback" in Input__TestProb.
+2. To refine regions around the SMBHs, enable OPT__FLAG_USER and set MAX_LEVEL accordingly.
+
+
+Cool-core destruction:
+========================================
+Reproduce the cool-core destruction results of Chen et al. 2026 (arXiv:2412.13595)
+0. Please contact Prof. Hsi-Yu Schive regarding the unreleased exact cooling feature.
+1. `sh download_ic_cool_core_destruction.sh`
+2. `sh setup_input_files.sh <case_number>`
+   --> For the high-resolution case, please link or copy the input files from
+       `Input_Options/case6_highRes`. Note that `Input__Flag_User` is different from
+       the default case.
+
+
 Note:
 ========================================
 1. Mimic the merging cluster simulation setup of Flash provided by John ZuHone
@@ -40,8 +57,9 @@ Note:
        (3) [Optional] Update SciPy to version >= 1.13.0
        (4) python -m pip install .
        (5) Go back to the gamer_cluster_ics.py script and run with "python gamer_cluster_ics.py"
-4. No need to set PAR_NPAR in Input__Parameter since it will be reset automatically.
-5. Some handy yt analysis scripts and a notebook are put in "yt_script"
+4. Run the script `setup_input_files.sh` to link the input files
+5. No need to set PAR_NPAR in Input__Parameter since it will be reset automatically.
+6. Some handy yt analysis scripts and a notebook are put in "yt_script"
    --> For example, to generate the slice plots, one can
        (1) cd yt_script
        (2) Edit "idx_start" and "idx_end" in plot_slice-z.py

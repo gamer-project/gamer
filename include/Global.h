@@ -339,6 +339,10 @@ extern SrcTerms_t SrcTerms;
 #if ( MODEL == HYDRO )
 extern double     Src_Dlep_AuxArray_Flt[SRC_NAUX_DLEP];
 extern int        Src_Dlep_AuxArray_Int[SRC_NAUX_DLEP];
+extern double     Src_EC_AuxArray_Flt[SRC_NAUX_EC];
+extern int        Src_EC_AuxArray_Int[SRC_NAUX_EC];
+// flag for checking whether the tcool field is initialized
+extern bool       IsInit_tcool[NLEVEL];
 #endif
 extern double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
 extern int        Src_User_AuxArray_Int[SRC_NAUX_USER];
@@ -396,7 +400,6 @@ extern double CR_DIFF_PERP;
 extern double DT__CR_DIFFUSION;
 extern double CR_DIFF_MIN_B;
 #endif
-
 
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
@@ -476,6 +479,12 @@ extern double     (*h_Corner_Array_S[2])[3];
 #if ( MODEL == HYDRO )
 extern real       (*h_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX];
 extern real        *h_SrcDlepProf_Radius;
+#endif
+
+#ifdef EXACT_COOLING
+extern double      *h_SrcEC_TEF_lambda;
+extern double      *h_SrcEC_TEF_alpha;
+extern double      *h_SrcEC_TEFc;
 #endif
 
 

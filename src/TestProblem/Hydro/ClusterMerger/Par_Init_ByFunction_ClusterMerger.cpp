@@ -1,48 +1,43 @@
 #include "GAMER.h"
-
-#ifdef SUPPORT_HDF5
-#include "hdf5.h"
-#endif
-
 #include <string>
+
+
 
 // floating-point type in the input particle file
 typedef double real_par_in;
 //typedef float  real_par_in;
 
-extern char    Merger_File_Par1[1000];
-extern char    Merger_File_Par2[1000];
-extern char    Merger_File_Par3[1000];
-extern int     Merger_Coll_NumHalos;
-extern double  Merger_Coll_PosX1;
-extern double  Merger_Coll_PosY1;
-extern double  Merger_Coll_PosX2;
-extern double  Merger_Coll_PosY2;
-extern double  Merger_Coll_PosX3;
-extern double  Merger_Coll_PosY3;
-extern double  Merger_Coll_VelX1;
-extern double  Merger_Coll_VelY1;
-extern double  Merger_Coll_VelX2;
-extern double  Merger_Coll_VelY2;
-extern double  Merger_Coll_VelX3;
-extern double  Merger_Coll_VelY3;
-extern long    NPar_EachCluster[3];
-extern long    NPar_AllCluster;
+
+// problem-specific global variables
+// =======================================================================================
+extern char       (*Merger_File_Par)[1000];
+extern int          Merger_Coll_NumHalos;
+extern double     (*Merger_Coll_Pos)[3];
+extern double     (*Merger_Coll_Vel)[3];
+extern bool         Merger_Coll_LabelCenter;
+extern long        *NPar_EachCluster;
+#ifdef MASSIVE_PARTICLES
+extern FieldIdx_t   Idx_ParHalo;
+#endif
+// =======================================================================================
+
+
+// problem-specific function prototypes
+// =======================================================================================
+#ifdef MASSIVE_PARTICLES
+#ifdef SUPPORT_HDF5
+static void Read_Particles_ClusterMerger( std::string filename, long offset, long num,
+                                          real_par_in xpos[], real_par_in ypos[],
+                                          real_par_in zpos[], real_par_in xvel[],
+                                          real_par_in yvel[], real_par_in zvel[],
+                                          real_par_in mass[], real_par_in ptype[] );
+#endif
+#endif
+// =======================================================================================
+
 
 
 #ifdef MASSIVE_PARTICLES
-
-extern FieldIdx_t Idx_ParHalo;
-
-void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
-                                  real_par_in xpos[], real_par_in ypos[],
-                                  real_par_in zpos[], real_par_in xvel[],
-                                  real_par_in yvel[], real_par_in zvel[],
-                                  real_par_in mass[], real_par_in ptype[]);
-
-
-
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Init_ByFunction_ClusterMerger
 // Description :  Initialize all particle attributes for the merging cluster test
@@ -92,61 +87,65 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
                                         long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 {
 
-#ifdef SUPPORT_HDF5
+#  ifdef SUPPORT_HDF5
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
-   // prepare to load data
+// prepare to load data
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Preparing to load data ... " );
 
    const int NCluster = Merger_Coll_NumHalos;
-   long NPar_ThisRank_EachCluster[3]={0,0,0}, Offset[3];   // [0/1/2] --> cluster 1/2/3
+   long NPar_ThisRank_EachCluster[NCluster], Offset[NCluster];
+
+   for (int c=0; c<NCluster; c++)   NPar_ThisRank_EachCluster[c] = 0;
 
    for (int c=0; c<NCluster; c++)
    {
-      // get the number of particles loaded by each rank for each cluster
+//    get the number of particles loaded by each rank for each cluster
       long NPar_ThisCluster_EachRank[MPI_NRank];
 
-      switch (c) {
-      case 0:
-         NPar_ThisRank_EachCluster[0] = NPar_EachCluster[0] / MPI_NRank + ( (MPI_Rank<NPar_EachCluster[0]%MPI_NRank)?1:0 );
-         break;
-      case 1:
-         if (NCluster == 2)
-            NPar_ThisRank_EachCluster[1] = NPar_ThisRank - NPar_ThisRank_EachCluster[0];
-         else
-            NPar_ThisRank_EachCluster[1] = NPar_EachCluster[1] / MPI_NRank + ( (MPI_Rank<NPar_EachCluster[1]%MPI_NRank)?1:0 );
-         break;
-      case 2:
-         NPar_ThisRank_EachCluster[2] = NPar_ThisRank - NPar_ThisRank_EachCluster[0] - NPar_ThisRank_EachCluster[1];
-         break;
-      }
+//    TODO: this part can be generalized
+      switch (c)
+      {
+         case 0:
+            if ( NCluster == 1 )
+               NPar_ThisRank_EachCluster[0] = NPar_ThisRank;
+            else
+               NPar_ThisRank_EachCluster[0] = NPar_EachCluster[0] / MPI_NRank + ( (MPI_Rank<NPar_EachCluster[0]%MPI_NRank)?1:0 );
+            break;
+         case 1:
+            if ( NCluster == 2 )
+               NPar_ThisRank_EachCluster[1] = NPar_ThisRank - NPar_ThisRank_EachCluster[0];
+            else
+               NPar_ThisRank_EachCluster[1] = NPar_EachCluster[1] / MPI_NRank + ( (MPI_Rank<NPar_EachCluster[1]%MPI_NRank)?1:0 );
+            break;
+         case 2:
+            NPar_ThisRank_EachCluster[2] = NPar_ThisRank - NPar_ThisRank_EachCluster[0] - NPar_ThisRank_EachCluster[1];
+            break;
+      } // switch (c)
 
       MPI_Allgather( &NPar_ThisRank_EachCluster[c], 1, MPI_LONG, NPar_ThisCluster_EachRank, 1, MPI_LONG, MPI_COMM_WORLD );
 
-      // check if the total number of particles is correct
+//    check if the total number of particles is correct
       long NPar_Check = 0;
-      for (int r=0; r<MPI_NRank; r++)
-         NPar_Check += NPar_ThisCluster_EachRank[r];
+      for (int r=0; r<MPI_NRank; r++)   NPar_Check += NPar_ThisCluster_EachRank[r];
       if ( NPar_Check != NPar_EachCluster[c] )
          Aux_Error( ERROR_INFO, "total number of particles in cluster %d: found (%ld) != expect (%ld) !!\n",
-                    c, NPar_Check, NPar_EachCluster[c] );
+                    c+1, NPar_Check, NPar_EachCluster[c] );
 
-      // set the file offset for this rank
+//    set the file offset for this rank
       Offset[c] = 0;
       for (int r=0; r<MPI_Rank; r++)
          Offset[c] = Offset[c] + NPar_ThisCluster_EachRank[r];
-   }
+   } // for (int c=0; c<NCluster; c++)
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
-   // load data to the particle repository
-   const std::string filenames[3] = { Merger_File_Par1, Merger_File_Par2, Merger_File_Par3 };
-
+// load data to the particle repository
    for ( int c=0; c<NCluster; c++ )
    {
-      // load data
-      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading cluster %d ...\n", c+1 );
+//    load data
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading cluster %d ... \n", c+1 );
 
       real_par_in *mass  = new real_par_in [NPar_ThisRank_EachCluster[c]];
       real_par_in *xpos  = new real_par_in [NPar_ThisRank_EachCluster[c]];
@@ -157,76 +156,62 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       real_par_in *zvel  = new real_par_in [NPar_ThisRank_EachCluster[c]];
       real_par_in *ptype = new real_par_in [NPar_ThisRank_EachCluster[c]];
 
-      Read_Particles_ClusterMerger( filenames[c], Offset[c], NPar_ThisRank_EachCluster[c],
+      Read_Particles_ClusterMerger( Merger_File_Par[c], Offset[c], NPar_ThisRank_EachCluster[c],
                                     xpos, ypos, zpos, xvel, yvel, zvel, mass, ptype );
 
 #     ifndef TRACER
-      for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++) {
+      for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++)
+      {
          if ( (long_par)ptype[p] == PTYPE_TRACER )
-            Aux_Error( ERROR_INFO,
-"Tracer particles were found in the input data for cluster %d, but TRACER is not defined!\n",
-                       c );
+            Aux_Error( ERROR_INFO, "Tracer particles were found in the input data for cluster %d, but TRACER is not defined!\n", c+1 );
       }
 #     endif
 
-      if ( MPI_Rank == 0 ) Aux_Message( stdout, "done\n" );
+      if ( MPI_Rank == 0 )   Aux_Message( stdout, "done\n" );
 
-      // store data to the particle repository
+//    store data to the particle repository
       if ( MPI_Rank == 0 )
-         Aux_Message( stdout, "   Storing cluster %d to the particle repository ...\n", c+1 );
+         Aux_Message( stdout, "   Storing cluster %d to the particle repository ... \n", c+1 );
 
-      // compute offsets for assigning particles
-      double coffset;
-      switch (c) {
-      case 0:
-         coffset = 0;
-         break;
-      case 1:
-         coffset = NPar_ThisRank_EachCluster[0];
-         break;
-      case 2:
-         coffset = NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1];
-         break;
-      }
+//    compute offsets for assigning particles
+      long coffset = 0L;
+      for (int cc=0; cc<c; cc++)   coffset += NPar_ThisRank_EachCluster[cc];
 
       for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++)
       {
-         // particle index offset
+//       particle index offset
          const long pp = p + coffset;
 
-         // set the particle type
+//       set the particle type
          ParType[pp] = long_par( ptype[p] );
 
-         // --> convert to code unit before storing to the particle repository to avoid floating-point overflow
-         // --> we have assumed that the loaded data are in cgs
-
+//       --> convert to code unit before storing to the particle repository to avoid floating-point overflow
+//       --> we have assumed that the loaded data are in cgs
          ParPosX[pp] = real_par( xpos[p] / UNIT_L );
          ParPosY[pp] = real_par( ypos[p] / UNIT_L );
          ParPosZ[pp] = real_par( zpos[p] / UNIT_L );
 
          if ( (long_par)ptype[p] == PTYPE_TRACER ) {
-            // tracer particles have zero mass
-            // and their velocities will be set by
-            // the grid later
+//          tracer particles have zero mass and their velocities will be set by the grid later
             ParMass[pp] = (real_par)0.0;
             ParVelX[pp] = (real_par)0.0;
             ParVelY[pp] = (real_par)0.0;
             ParVelX[pp] = (real_par)0.0;
-         } else {
-            // for massive particles get their mass
-            // and velocity
+         }
+         else
+         {
+//          for massive particles get their mass and velocity
             ParMass[pp] = real_par( mass[p] / UNIT_M );
             ParVelX[pp] = real_par( xvel[p] / UNIT_V );
             ParVelY[pp] = real_par( yvel[p] / UNIT_V );
             ParVelZ[pp] = real_par( zvel[p] / UNIT_V );
          }
 
-         // synchronize all particles to the physical time at the base level
+//       synchronize all particles to the physical time at the base level
          ParTime[pp] = (real_par)Time[0];
 
-         // set tag for each cluster
+//       set tag for each cluster
          AllAttributeInt[Idx_ParHalo][pp] = (long_par)c;
-
       } // for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++)
 
       delete [] mass;
@@ -237,61 +222,106 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
       delete [] yvel;
       delete [] zvel;
       delete [] ptype;
-
    } // for (int c=0; c<NCluster; c++)
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
-   // shift center (assuming the center of loaded particles = [0,0,0])
+// shift center (assuming the center of loaded particles = [0,0,0])
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Shifting particle center and adding bulk velocity ... " );
 
    real_par *ParPos[3] = { ParPosX, ParPosY, ParPosZ };
 
-   const double ClusterCenter1[3]
-      = { Merger_Coll_PosX1, Merger_Coll_PosY1, amr->BoxCenter[2] };
-   const double ClusterCenter2[3]
-      = { Merger_Coll_PosX2, Merger_Coll_PosY2, amr->BoxCenter[2] };
-   const double ClusterCenter3[3]
-      = { Merger_Coll_PosX3, Merger_Coll_PosY3, amr->BoxCenter[2] };
-
-   for (long p=0; p<NPar_ThisRank_EachCluster[0]; p++) {
-      if ( ParType[p] != PTYPE_TRACER ) {
-         ParVelX[p] += Merger_Coll_VelX1;
-         ParVelY[p] += Merger_Coll_VelY1;
+   long pidx_start = 0L, pidx_end = 0L;
+   for (int c=0; c<NCluster; c++)
+   {
+      pidx_end += NPar_ThisRank_EachCluster[c];
+      for (long p=pidx_start; p<pidx_end; p++)
+      {
+         if ( ParType[p] != PTYPE_TRACER )
+         {
+            ParVelX[p] += Merger_Coll_Vel[c][0];
+            ParVelY[p] += Merger_Coll_Vel[c][1];
+         }
+         for (int d=0; d<3; d++)   ParPos[d][p] += Merger_Coll_Pos[c][d];
       }
-      for (int d=0; d<3; d++)
-         ParPos[d][p] += ClusterCenter1[d];
-   }
-
-   for (long p=NPar_ThisRank_EachCluster[0]; p<NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p++) {
-      if ( ParType[p] != PTYPE_TRACER ) {
-         ParVelX[p] += Merger_Coll_VelX2;
-         ParVelY[p] += Merger_Coll_VelY2;
-      }
-      for (int d=0; d<3; d++)
-         ParPos[d][p] += ClusterCenter2[d];
-   }
-
-   for (long p=NPar_ThisRank_EachCluster[0]+NPar_ThisRank_EachCluster[1]; p<NPar_ThisRank; p++) {
-      if ( ParType[p] != PTYPE_TRACER ) {
-         ParVelX[p] += Merger_Coll_VelX3;
-         ParVelY[p] += Merger_Coll_VelY3;
-      }
-      for (int d=0; d<3; d++)
-         ParPos[d][p] += ClusterCenter3[d];
-   }
+      pidx_start = pidx_end;
+   } // for (int c=0; c<NCluster; c++)
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
+
+// label cluster centers
+   if ( Merger_Coll_LabelCenter )
+   {
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Labeling cluster centers ... " );
+
+      long pidx_offset = 0;
+
+      for (int c=0; c<NCluster; c++)
+      {
+         long     pidx_min       = -1;
+         real_par pos_min[3]     = { NULL_REAL, NULL_REAL, NULL_REAL };
+         double   r_min_ThisRank = __DBL_MAX__;
+
+//       get the particle in this rank closest to the cluster center
+         for (long p=pidx_offset; p<pidx_offset+NPar_ThisRank_EachCluster[c]; p++)
+         {
+            const double r = SQR( ParPos[0][p] - Merger_Coll_Pos[c][0] ) +
+                             SQR( ParPos[1][p] - Merger_Coll_Pos[c][1] ) +
+                             SQR( ParPos[2][p] - Merger_Coll_Pos[c][2] );
+            if ( r < r_min_ThisRank )
+            {
+               pidx_min       = p;
+               r_min_ThisRank = r;
+               pos_min[0]     = ParPos[0][p];
+               pos_min[1]     = ParPos[1][p];
+               pos_min[2]     = ParPos[2][p];
+            }
+         } // for (long p=pidx_offset; p<pidx_offset+NPar_ThisRank_EachCluster[c]; p++)
+
+//       collect data among all ranks
+         double r_min_AllRank;
+         int    NFound_ThisRank=0, NFound_AllRank;
+         MPI_Allreduce( &r_min_ThisRank, &r_min_AllRank, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD );
+         if ( r_min_ThisRank == r_min_AllRank )
+         {
+            ParType[pidx_min] = PTYPE_BLACK_HOLE;
+            NFound_ThisRank = 1;
+         }
+
+//       check if one and only one particle is labeled
+         MPI_Allreduce( &NFound_ThisRank, &NFound_AllRank, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
+         if ( NFound_AllRank != 1 )
+            Aux_Error( ERROR_INFO, "NFound_AllRank (%d) != 1 for cluster %d !!\n", NFound_AllRank, c+1 );
+
+//       update the particle index offset for the next cluster
+         pidx_offset += NPar_ThisRank_EachCluster[c];
+      } // for (int c=0; c<NCluster; c++)
+
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+   } // if ( Merger_Coll_LabelCenter )
+
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-#endif // #ifdef SUPPORT_HDF5
+#  endif // #ifdef SUPPORT_HDF5
 
 } // FUNCTION : Par_Init_ByFunction_ClusterMerger
 
 
 
+
 #ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Read_Particles_ClusterMerger
+// Description :  TBF
+//
+// Note        :  TBF
+//
+// Parameter   :  TBF
+//
+// Return      :  TBF
+//-------------------------------------------------------------------------------------------------------
 void Read_Particles_ClusterMerger( std::string filename, long offset, long num,
                                    real_par_in xpos[], real_par_in ypos[],
                                    real_par_in zpos[], real_par_in xvel[],
@@ -337,168 +367,127 @@ void Read_Particles_ClusterMerger( std::string filename, long offset, long num,
    status   = H5Dread( dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
                        H5P_DEFAULT, xpos );
 
-   if (status < 0) {
-      Aux_Message(stderr, "Could not read particle x-position!!\n");
-   }
+   if ( status < 0 )   Aux_Message( stderr, "Could not read particle x-position!!\n" );
 
-   H5Sclose(memspace);
-   H5Sclose(dataspace);
-   dataspace = H5Dget_space(dataset);
+   H5Sclose( memspace );
+   H5Sclose( dataspace );
+   dataspace = H5Dget_space( dataset );
 
    start[1] = 1;
 
-   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start,
-                                 stride, count, NULL);
-   memspace = H5Screate_simple(1, dims1d, NULL);
-   status = H5Sselect_hyperslab(memspace, H5S_SELECT_SET, start1d,
-                                 stride1d, count1d, NULL);
-   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
-                     H5P_DEFAULT, ypos);
+   status   = H5Sselect_hyperslab( dataspace, H5S_SELECT_SET, start, stride, count, NULL );
+   memspace = H5Screate_simple( 1, dims1d, NULL );
+   status   = H5Sselect_hyperslab( memspace, H5S_SELECT_SET, start1d, stride1d, count1d, NULL );
+   status   = H5Dread( dataset, H5T_NATIVE_DOUBLE, memspace, dataspace, H5P_DEFAULT, ypos );
 
-   if (status < 0) {
-      Aux_Message(stderr, "Could not read particle y-position!!\n");
-   }
+   if ( status < 0 )   Aux_Message( stderr, "Could not read particle y-position!!\n" );
 
-   H5Sclose(memspace);
-   H5Sclose(dataspace);
-   dataspace = H5Dget_space(dataset);
+   H5Sclose( memspace );
+   H5Sclose( dataspace );
+   dataspace = H5Dget_space( dataset );
 
    start[1] = 2;
 
-   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start,
-                                 stride, count, NULL);
-   memspace = H5Screate_simple(1, dims1d, NULL);
-   status = H5Sselect_hyperslab(memspace, H5S_SELECT_SET, start1d,
-                                 stride1d, count1d, NULL);
-   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
-                     H5P_DEFAULT, zpos);
+   status   = H5Sselect_hyperslab( dataspace, H5S_SELECT_SET, start, stride, count, NULL );
+   memspace = H5Screate_simple( 1, dims1d, NULL );
+   status   = H5Sselect_hyperslab( memspace, H5S_SELECT_SET, start1d, stride1d, count1d, NULL );
+   status   = H5Dread( dataset, H5T_NATIVE_DOUBLE, memspace, dataspace, H5P_DEFAULT, zpos );
 
-   if (status < 0) {
-      Aux_Message(stderr, "Could not read particle z-position!!\n");
-   }
+   if ( status < 0 )   Aux_Message( stderr, "Could not read particle z-position!!\n" );
 
-   H5Sclose(memspace);
-   H5Sclose(dataspace);
-   H5Dclose(dataset);
+   H5Sclose( memspace );
+   H5Sclose( dataspace );
+   H5Dclose( dataset );
 
-   dataset   = H5Dopen(file_id, "particle_velocity", H5P_DEFAULT);
-
-   dataspace = H5Dget_space(dataset);
+   dataset   = H5Dopen( file_id, "particle_velocity", H5P_DEFAULT );
+   dataspace = H5Dget_space( dataset );
 
    start[1] = 0;
 
-   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start,
-                                 stride, count, NULL);
-   memspace = H5Screate_simple(1, dims1d, NULL);
-   status = H5Sselect_hyperslab(memspace, H5S_SELECT_SET, start1d,
-                                 stride1d, count1d, NULL);
-   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
-                     H5P_DEFAULT, xvel);
+   status   = H5Sselect_hyperslab( dataspace, H5S_SELECT_SET, start, stride, count, NULL );
+   memspace = H5Screate_simple( 1, dims1d, NULL );
+   status   = H5Sselect_hyperslab( memspace, H5S_SELECT_SET, start1d, stride1d, count1d, NULL );
+   status   = H5Dread( dataset, H5T_NATIVE_DOUBLE, memspace, dataspace, H5P_DEFAULT, xvel );
 
-   if (status < 0) {
-      Aux_Message(stderr, "Could not read particle x-velocity!!\n");
-   }
+   if ( status < 0 )   Aux_Message( stderr, "Could not read particle x-velocity!!\n" );
 
-   H5Sclose(memspace);
-   H5Sclose(dataspace);
+   H5Sclose( memspace );
+   H5Sclose( dataspace );
 
-   dataspace = H5Dget_space(dataset);
+   dataspace = H5Dget_space( dataset );
 
    start[1] = 1;
 
-   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start,
-                                 stride, count, NULL);
-   memspace = H5Screate_simple(1, dims1d, NULL);
-   status = H5Sselect_hyperslab(memspace, H5S_SELECT_SET, start1d,
-                                 stride1d, count1d, NULL);
-   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
-                     H5P_DEFAULT, yvel);
+   status   = H5Sselect_hyperslab( dataspace, H5S_SELECT_SET, start, stride, count, NULL );
+   memspace = H5Screate_simple( 1, dims1d, NULL );
+   status   = H5Sselect_hyperslab( memspace, H5S_SELECT_SET, start1d, stride1d, count1d, NULL );
+   status   = H5Dread( dataset, H5T_NATIVE_DOUBLE, memspace, dataspace, H5P_DEFAULT, yvel );
 
-   if (status < 0) {
-      Aux_Message(stderr, "Could not read particle y-velocity!!\n");
-   }
+   if ( status < 0 )   Aux_Message( stderr, "Could not read particle y-velocity!!\n" );
 
-   H5Sclose(memspace);
-   H5Sclose(dataspace);
+   H5Sclose( memspace );
+   H5Sclose( dataspace );
 
-   dataspace = H5Dget_space(dataset);
+   dataspace = H5Dget_space( dataset );
 
    start[1] = 2;
 
-   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start,
-                                 stride, count, NULL);
-   memspace = H5Screate_simple(1, dims1d, NULL);
-   status = H5Sselect_hyperslab(memspace, H5S_SELECT_SET, start1d,
-                                 stride1d, count1d, NULL);
-   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
-                     H5P_DEFAULT, zvel);
+   status   = H5Sselect_hyperslab( dataspace, H5S_SELECT_SET, start, stride, count, NULL );
+   memspace = H5Screate_simple( 1, dims1d, NULL );
+   status   = H5Sselect_hyperslab( memspace, H5S_SELECT_SET, start1d, stride1d, count1d, NULL );
+   status   = H5Dread( dataset, H5T_NATIVE_DOUBLE, memspace, dataspace, H5P_DEFAULT, zvel );
 
-   if (status < 0) {
-      Aux_Message(stderr, "Could not read particle z-velocity!!\n");
-   }
+   if ( status < 0 )   Aux_Message( stderr, "Could not read particle z-velocity!!\n" );
 
-   H5Sclose(memspace);
-   H5Sclose(dataspace);
-   H5Dclose(dataset);
+   H5Sclose( memspace );
+   H5Sclose( dataspace );
+   H5Dclose( dataset );
 
-   dataset   = H5Dopen(file_id, "particle_mass", H5P_DEFAULT);
+   dataset   = H5Dopen( file_id, "particle_mass", H5P_DEFAULT );
 
-   dataspace = H5Dget_space(dataset);
+   dataspace = H5Dget_space( dataset );
 
    start1d[0] = (hsize_t)offset;
-   start0[0] = 0;
+   start0[0]  = 0;
 
-   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start1d,
-                                 stride1d, count1d, NULL);
-   rank      = H5Sget_simple_extent_dims(dataspace, dims1d, maxdims1d);
-   memspace = H5Screate_simple(1, dims1d, NULL);
-   status = H5Sselect_hyperslab(memspace, H5S_SELECT_SET, start0,
-                                 stride1d, count1d, NULL);
-   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
-                     H5P_DEFAULT, mass);
+   status   = H5Sselect_hyperslab( dataspace, H5S_SELECT_SET, start1d, stride1d, count1d, NULL );
+   rank     = H5Sget_simple_extent_dims( dataspace, dims1d, maxdims1d );
+   memspace = H5Screate_simple( 1, dims1d, NULL );
+   status   = H5Sselect_hyperslab( memspace, H5S_SELECT_SET, start0, stride1d, count1d, NULL );
+   status   = H5Dread( dataset, H5T_NATIVE_DOUBLE, memspace, dataspace, H5P_DEFAULT, mass );
 
-   if (status < 0) {
-      Aux_Message( stderr, "Could not read particle mass!!\n");
-   }
+   if ( status < 0 )   Aux_Message( stderr, "Could not read particle mass!!\n" );
 
-   H5Sclose(memspace);
-   H5Sclose(dataspace);
-   H5Dclose(dataset);
+   H5Sclose( memspace );
+   H5Sclose( dataspace );
+   H5Dclose( dataset );
 
-   dataset   = H5Dopen(file_id, "particle_type", H5P_DEFAULT);
+   dataset   = H5Dopen( file_id, "particle_type", H5P_DEFAULT );
 
-   dataspace = H5Dget_space(dataset);
+   dataspace = H5Dget_space( dataset );
 
    start1d[0] = (hsize_t)offset;
-   start0[0] = 0;
+   start0[0]  = 0;
 
-   status = H5Sselect_hyperslab(dataspace, H5S_SELECT_SET, start1d,
-                                 stride1d, count1d, NULL);
-   rank      = H5Sget_simple_extent_dims(dataspace, dims1d, maxdims1d);
-   memspace = H5Screate_simple(1, dims1d, NULL);
-   status = H5Sselect_hyperslab(memspace, H5S_SELECT_SET, start0,
-                                 stride1d, count1d, NULL);
-   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, memspace, dataspace,
-                     H5P_DEFAULT, ptype);
+   status   = H5Sselect_hyperslab( dataspace, H5S_SELECT_SET, start1d, stride1d, count1d, NULL );
+   rank     = H5Sget_simple_extent_dims( dataspace, dims1d, maxdims1d );
+   memspace = H5Screate_simple( 1, dims1d, NULL );
+   status   = H5Sselect_hyperslab( memspace, H5S_SELECT_SET, start0, stride1d, count1d, NULL );
+   status   = H5Dread( dataset, H5T_NATIVE_DOUBLE, memspace, dataspace, H5P_DEFAULT, ptype );
 
-   if (status < 0) {
-      Aux_Message( stderr, "Could not read particle type!!\n");
-   }
+   if ( status < 0 )   Aux_Message( stderr, "Could not read particle type!!\n" );
 
-   H5Sclose(memspace);
-   H5Sclose(dataspace);
-   H5Dclose(dataset);
+   H5Sclose( memspace );
+   H5Sclose( dataspace );
+   H5Dclose( dataset );
 
-   H5Fclose(file_id);
+   H5Fclose( file_id );
 
    return;
 
 } // FUNCTION : Read_Particles_ClusterMerger
-
 #endif // #ifdef SUPPORT_HDF5
+
+
+
 #endif // #ifdef MASSIVE_PARTICLES
-
-
-
-
-

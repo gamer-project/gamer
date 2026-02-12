@@ -1,0 +1,61 @@
+# problem-specific runtime parameters
+Merger_Coll_NumHalos    2                        # number of halos
+
+# parameters for cluster 1
+Merger_File_Prof1       profile1_gamer.h5        # profile table of cluster 1
+Merger_File_Par1        1to3_b0.0_gamerp_1.h5    # particle file of cluster 1
+Merger_Coll_PosX1       6000.0                   # X-center   of cluster 1 in kpc
+Merger_Coll_PosY1       7500.0                   # Y-center   of cluster 1 in kpc
+Merger_Coll_VelX1       375.0                    # X-velocity of cluster 1 in km/s
+Merger_Coll_VelY1       0.0                      # Y-velocity of cluster 1 in km/s
+Merger_Coll_IsGas1      1                        # If cluster 1 should have gas and not have DM only
+Bondi_MassBH1           7.1e10                   # black hole mass (in Msun)
+Jet_HalfHeight1         2.0                      # jet 1: half height of the cylinder-shape jet source (in kpc)
+Jet_Radius1             2.5                      # jet 1: radius of the cylinder-shape jet source (in kpc)
+
+# parameters for cluster 2
+Merger_File_Prof2       profile2_gamer.h5        # profile table of cluster 2
+Merger_File_Par2        1to3_b0.0_gamerp_2.h5    # particle file of cluster 2
+Merger_Coll_PosX2       9000.0                   # X-center   of cluster 2 in kpc
+Merger_Coll_PosY2       7500.0                   # Y-center   of cluster 2 in kpc
+Merger_Coll_VelX2       -1125.0000000000002      # X-velocity of cluster 2 in km/s
+Merger_Coll_VelY2       0.0                      # Y-velocity of cluster 2 in km/s
+Merger_Coll_IsGas2      1                        # If cluster 2 should have gas and not have DM only
+Bondi_MassBH2           1.5e10                   # black hole mass (in Msun)
+Jet_HalfHeight2         2.0                      # jet 2: half height of the cylinder-shape jet source (in kpc)
+Jet_Radius2             2.5                      # jet 2: radius of the cylinder-shape jet source (in kpc)
+
+# parameters for cluster 3 (disabled for this example)
+Merger_File_Prof3       none                     # profile table of cluster 3
+Merger_File_Par3        none                     # particle file of cluster 3
+Merger_Coll_PosX3       0                        # X-center   of cluster 3 in kpc
+Merger_Coll_PosY3       0.0                      # Y-center   of cluster 3 in kpc
+Merger_Coll_VelX3       0.0                      # X-velocity of cluster 3 in km/s
+Merger_Coll_VelY3       0.0                      # Y-velocity of cluster 3 in km/s
+Merger_Coll_IsGas3      0                        # If cluster 3 should have gas and not have DM only
+Bondi_MassBH3           3.4e8                    # black hole mass (in Msun)
+Jet_HalfHeight3         2.0                      # jet 3: half height of the cylinder-shape jet source (in kpc)
+Jet_Radius3             2.5                      # jet 3: radius of the cylinder-shape jet source (in kpc)
+
+# parameters of AGN jet feedback
+AGN_feedback            0                        # turn on/off (1/0) AGN feedback
+Accretion_Mode          3                        # 1: hot mode; 2: cold mode; 3: combine (hot + cold)
+eta                     1.0                      # mass loading factor in jet feedback
+eps_f                   0.11                     # the radiative efficiency in jet feedback
+eps_m                   0.0                      # the fraction of total energy that goes into the thermal
+                                                 # energy in jet feedback
+R_acc                   4.0                      # accretion radius: compute the accretion rate (in kpc)
+R_dep                   4.0                      # radius to deplete the accreted gas (in kpc)
+JetDirection_case       1                        # Methods for choosing the jet direction:
+                                                 #    1: Fixed at x-axis
+                                                 #    2: Import from table (generate JetDirection_file)
+                                                 #    3: Align with angular momentum
+JetDirection_file       JetDirection.txt         # File containing the jet direction as a function of time
+
+# other parameters
+Merger_Coll_UseMetals   0                        # look for a metal field in the profile files [1]
+Merger_Coll_LabelCenter 1                        # label the particle closest to the center of each cluster [1]
+AdjustBHPos             1                        # (true/false) --> Adjust the BH position
+AdjustBHVel             0                        # (true/false) --> Adjust the BH velocity
+AdjustPeriod            10.0                     # the time interval of adjustment (in Myr)
+fixBH                   0                        # fix the BH at the simulation box center and set its velocity to be zero (1 cluster only)
