@@ -653,6 +653,12 @@ void Par_EquilibriumIC::printArrays()
 // Description :  Set the particle's initial conditions (IC) for a cloud that is in an equilibrium state
 //
 // Note        :  1. Must call constructedDistribution() in advance
+//                2. Limitation: Particle construction is not parallelized
+//                   This function assumes that only the root rank constructs all particles to be scattered later
+//
+//                   TODO: Support parallel construction
+//                   The particle count for each rank needs to be passed as an argument to this function
+//                   Different ranks need different random seeds to construct their own particles within the same cloud
 //
 // Parameter   :  Mass_AllRank : An array of all particles' masses
 //                Pos_AllRank  : An array of all particles' position vectors

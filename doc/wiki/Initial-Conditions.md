@@ -540,9 +540,12 @@ GAMER has a built-in routine for constructing a particle initial condition in eq
 
       - One must have called `constructDistribution()` in advance (as in the previous step).
 
+      - Note that this function is not parallelized currently. One can only call it by the root rank and scatter the constructed particles to other ranks later.
+
    - Example Usage
 
-      `Cloud_Constructor.constructParticles( ParFltData_AllRank[PAR_MASS], ParFltData_AllRank+PAR_POSX, ParFltData_AllRank+PAR_VELX, Par_Idx0 );` sets the particles' attributes in `Par_Init_ByFunction()`.
+      `Cloud_Constructor.constructParticles( ParMass, ParPosX, ParVelX, (long)0 );` sets the particles' attributes in `Par_Init_ByFunction()` in a serial case.
+      For parallelized simulations, please see `src/TestProblem/Hydro/ParticleEquilibriumIC/Par_Init_ByFunction_ParEqmIC.cpp` for instructions on how to construct all particles by one rank and scatter them out.
 
 6. After the particles are constructed, one can access the object’s following attributes to check the numerical results:
 
