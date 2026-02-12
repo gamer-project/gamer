@@ -320,15 +320,15 @@ void Par_EquilibriumIC::loadInputDensProfTable()
    for (int i=1; i<InputTable_DensProf_NBin; i++)
    {
       if ( InputTable_DensProf_Radius[i] <= InputTable_DensProf_Radius[i-1] )
-         Aux_Error( ERROR_INFO, "Radii in density table \"%s\" are not strictly increasing (r[%ld] = %14.7e, r[%ld] = %14.7e) !!\n",
+         Aux_Error( ERROR_INFO, "Radii in density table \"%s\" are not strictly increasing (r[%d] = %14.7e, r[%d] = %14.7e) !!\n",
                     DensProf_Table_Name, i-1, InputTable_DensProf_Radius[i-1], i, InputTable_DensProf_Radius[i] );
 
       if ( InputTable_DensProf_Density[i] < 0.0 )
-         Aux_Error( ERROR_INFO, "Densities in density table \"%s\" have negative value (Dens[%ld] = %14.7e) !!\n",
+         Aux_Error( ERROR_INFO, "Densities in density table \"%s\" have negative value (Dens[%d] = %14.7e) !!\n",
                     DensProf_Table_Name, i, InputTable_DensProf_Density[i] );
 
       if ( InputTable_DensProf_Density[i] > InputTable_DensProf_Density[i-1] )
-         Aux_Error( ERROR_INFO, "Densities in density table \"%s\" are not monotonically decreasing (Dens[%ld] = %14.7e, Dens[%ld] = %14.7e) !!\n",
+         Aux_Error( ERROR_INFO, "Densities in density table \"%s\" are not monotonically decreasing (Dens[%d] = %14.7e, Dens[%d] = %14.7e) !!\n",
                     DensProf_Table_Name, i-1, InputTable_DensProf_Density[i-1], i, InputTable_DensProf_Density[i] );
    }
 
@@ -406,17 +406,17 @@ void Par_EquilibriumIC::loadInputExtPotTable()
    for (int i=1; i<InputTable_ExtPot_NBin; i++)
    {
       if ( InputTable_ExtPot_Radius[i] <= InputTable_ExtPot_Radius[i-1] )
-         Aux_Error( ERROR_INFO, "Radii in external potential table \"%s\" are not strictly increasing (r[%ld] = %14.7e, r[%ld] = %14.7e) !!\n",
+         Aux_Error( ERROR_INFO, "Radii in external potential table \"%s\" are not strictly increasing (r[%d] = %14.7e, r[%d] = %14.7e) !!\n",
                     ExtPot_Table_Name, i-1, InputTable_ExtPot_Radius[i-1], i, InputTable_ExtPot_Radius[i] );
 
 //    the potential at r=infinity is assumed to be zero
       if ( InputTable_ExtPot_Potential[i] > 0.0 )
-         Aux_Error( ERROR_INFO, "Potential in external potential table \"%s\" have postive value (Pot[%ld] = %14.7e) !!\n",
+         Aux_Error( ERROR_INFO, "Potential in external potential table \"%s\" have postive value (Pot[%d] = %14.7e) !!\n",
                     ExtPot_Table_Name, i, InputTable_ExtPot_Potential[i] );
 
 //    assume there is no outward force
       if ( InputTable_ExtPot_Potential[i] < InputTable_ExtPot_Potential[i-1] )
-         Aux_Error( ERROR_INFO, "Potential in external potential table \"%s\" are not monotonically increasing (Pot[%ld] = %14.7e, Pot[%ld] = %14.7e) !!\n",
+         Aux_Error( ERROR_INFO, "Potential in external potential table \"%s\" are not monotonically increasing (Pot[%d] = %14.7e, Pot[%d] = %14.7e) !!\n",
                     ExtPot_Table_Name, i-1, InputTable_ExtPot_Potential[i-1], i, InputTable_ExtPot_Potential[i] );
    }
 

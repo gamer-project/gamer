@@ -442,7 +442,7 @@ GAMER has a built-in routine for constructing a particle initial condition in eq
 
        - `ExtPotTableFilename` : `char*`
 
-         Filename for the external potential table. Required for `AddingExternalPotential_Table`; Useless for `AddingExternalPotential_Analytical`.
+         Filename for the external potential table. Required for `AddingExternalPotential_Table`; useless for `AddingExternalPotential_Analytical`.
 
      - Notes
 
