@@ -1167,10 +1167,26 @@ void Aux_TakeNote()
 #     ifdef FEEDBACK
       fprintf( Note, "Parameters of Feedback\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "FB_LEVEL                       % d\n",      FB_LEVEL                );
-      fprintf( Note, "FB_RSEED                       % d\n",      FB_RSEED                );
-      fprintf( Note, "FB_SNE                         % d\n",      FB_SNE                  );
-      fprintf( Note, "FB_USER                        % d\n",      FB_USER                 );
+      fprintf( Note, "FB_MIN_LEVEL                   % d\n",           FB_MIN_LEVEL                                    );
+      fprintf( Note, "FB_RSEED                       % d\n",           FB_RSEED                                        );
+      fprintf( Note, "FB_SNE                         % d\n",           FB_SNE                                          );
+      fprintf( Note, "FB_RESOLVED_SNEII              % d\n",           FB_RESOLVED_SNEII                               );
+      fprintf( Note, "FB_USER                        % d\n",           FB_USER                                         );
+      if ( FB_RESOLVED_SNEII ) {
+      fprintf( Note, "FB_RESOLVED_SNEII_N_PER_MASS   % 14.7e\n",       FB_RESOLVED_SNEII_N_PER_MASS                    );
+      fprintf( Note, "                              =% 14.7e /Msun\n", FB_RESOLVED_SNEII_N_PER_MASS*Const_Msun/UNIT_M  );
+      fprintf( Note, "FB_RESOLVED_SNEII_DELAY_TIME   % 14.7e\n",       FB_RESOLVED_SNEII_DELAY_TIME                    );
+      fprintf( Note, "                              =% 14.7e Myr\n",   FB_RESOLVED_SNEII_DELAY_TIME*UNIT_T/Const_Myr   );
+      fprintf( Note, "FB_RESOLVED_SNEII_EJECT_ENGY   % 14.7e\n",       FB_RESOLVED_SNEII_EJECT_ENGY                    );
+      fprintf( Note, "                              =% 14.7e erg\n",   FB_RESOLVED_SNEII_EJECT_ENGY*UNIT_E             );
+      fprintf( Note, "FB_RESOLVED_SNEII_EJECT_MASS   % 14.7e\n",       FB_RESOLVED_SNEII_EJECT_MASS                    );
+      fprintf( Note, "                              =% 14.7e Msun\n",  FB_RESOLVED_SNEII_EJECT_MASS*UNIT_M/Const_Msun  );
+      fprintf( Note, "FB_RESOLVED_SNEII_EJECT_METAL  % 14.7e\n",       FB_RESOLVED_SNEII_EJECT_METAL                   );
+      fprintf( Note, "                              =% 14.7e Msun\n",  FB_RESOLVED_SNEII_EJECT_METAL*UNIT_M/Const_Msun );
+      fprintf( Note, "FB_RESOLVED_SNEII_MIN_M_GAS    % 14.7e\n",       FB_RESOLVED_SNEII_MIN_M_GAS                     );
+      fprintf( Note, "                              =% 14.7e Msun\n",  FB_RESOLVED_SNEII_MIN_M_GAS*UNIT_M/Const_Msun   );
+      fprintf( Note, "FB_RESOLVED_SNEII_RECORD       % d\n",           FB_RESOLVED_SNEII_RECORD                        );
+      }
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
 #     endif // #ifdef FEEDBACK

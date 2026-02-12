@@ -58,6 +58,11 @@ void Par_Init_Attribute()
    Idx_ParCreTime = AddParticleAttributeFlt( "ParCreTime" );
 #  endif
 
+#  ifdef FEEDBACK
+   if ( FB_RESOLVED_SNEII  &&  Idx_ParSNIITime == Idx_Undefined )
+   Idx_ParSNIITime = AddParticleAttributeFlt( "ParSNIITime" );
+#  endif
+
 
 // 3. add user-defined attributes
    if ( Par_Init_Attribute_User_Ptr != NULL )   Par_Init_Attribute_User_Ptr();

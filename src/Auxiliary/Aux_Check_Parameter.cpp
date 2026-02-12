@@ -1876,7 +1876,9 @@ void Aux_Check_Parameter()
 #     error : FEEDBACK must work with PARTICLE !!
 #  endif
 
-   if ( FB_LEVEL != MAX_LEVEL )  Aux_Error( ERROR_INFO, "FB_LEVEL (%d) != MAX_LEVEL (%d) !!\n", FB_LEVEL, MAX_LEVEL );
+   if ( FB_MIN_LEVEL > MAX_LEVEL )
+      Aux_Message( stderr, "WARNING : FB_MIN_LEVEL (%d) > MAX_LEVEL (%d) --> no feedback will be applied !!\n",
+                   FB_MIN_LEVEL, MAX_LEVEL );
 
    for (int d=0; d<3; d++)
    {
@@ -1888,6 +1890,10 @@ void Aux_Check_Parameter()
 
    if ( FB_ParaBuf > PATCH_SIZE )
       Aux_Error( ERROR_INFO, "FB_ParaBuf (%d) > PATCH_SIZE (%d) !!\n", FB_ParaBuf, PATCH_SIZE );
+
+   if ( FB_RESOLVED_SNEII  &&  PAR_NATT_FLT_USER < 1 )
+      Aux_Error( ERROR_INFO, "FB_RESOLVED_SNEII needs one user-defined particle attribute, but PAR_NATT_FLT_USER = %d !!\n",
+                 PAR_NATT_FLT_USER );
 
 // warning
 // ------------------------------

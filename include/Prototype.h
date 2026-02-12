@@ -844,6 +844,7 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 void FB_Init();
 void FB_End();
 int FB_Aux_CellPatchRelPos( const int ijk[] );
+int FB_Aux_PatchLocalID( const int ijk[] );
 #endif
 
 

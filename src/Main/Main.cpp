@@ -332,10 +332,17 @@ char (*UserDerField_Unit )[MAX_STRING] = NULL;
 
 // (2-12) feedback
 #ifdef FEEDBACK
-int  FB_LEVEL, FB_RSEED;
-bool FB_SNE, FB_USER;
-bool FB_Any;
-int  FB_ParaBuf;
+int    FB_MIN_LEVEL, FB_RSEED;
+bool   FB_SNE, FB_RESOLVED_SNEII, FB_USER;
+bool   FB_Any;
+int    FB_ParaBuf;
+double FB_RESOLVED_SNEII_N_PER_MASS;
+double FB_RESOLVED_SNEII_DELAY_TIME;
+double FB_RESOLVED_SNEII_EJECT_ENGY;
+double FB_RESOLVED_SNEII_EJECT_MASS;
+double FB_RESOLVED_SNEII_EJECT_METAL;
+double FB_RESOLVED_SNEII_MIN_M_GAS;
+bool   FB_RESOLVED_SNEII_RECORD;
 #endif
 
 // (2-13) spectral interpolation

@@ -2242,10 +2242,18 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 
 // feedback
 #  ifdef FEEDBACK
-   LoadField( "FB_Level",                &RS.FB_Level,                SID, TID, NonFatal, &RT.FB_Level,                 1, NonFatal );
-   LoadField( "FB_RSeed",                &RS.FB_RSeed,                SID, TID, NonFatal, &RT.FB_RSeed,                 1, NonFatal );
-   LoadField( "FB_SNe",                  &RS.FB_SNe,                  SID, TID, NonFatal, &RT.FB_SNe,                   1, NonFatal );
-   LoadField( "FB_User",                 &RS.FB_User,                 SID, TID, NonFatal, &RT.FB_User,                  1, NonFatal );
+   LoadField( "FB_MinLevel",                 &RS.FB_MinLevel,                 SID, TID, NonFatal, &RT.FB_MinLevel,                 1, NonFatal );
+   LoadField( "FB_RSeed",                    &RS.FB_RSeed,                    SID, TID, NonFatal, &RT.FB_RSeed,                    1, NonFatal );
+   LoadField( "FB_SNe",                      &RS.FB_SNe,                      SID, TID, NonFatal, &RT.FB_SNe,                      1, NonFatal );
+   LoadField( "FB_ResolvedSNeII",            &RS.FB_ResolvedSNeII,            SID, TID, NonFatal, &RT.FB_ResolvedSNeII,            1, NonFatal );
+   LoadField( "FB_User",                     &RS.FB_User,                     SID, TID, NonFatal, &RT.FB_User,                     1, NonFatal );
+   LoadField( "FB_ResolvedSNeII_NPerMass",   &RS.FB_ResolvedSNeII_NPerMass,   SID, TID, NonFatal, &RT.FB_ResolvedSNeII_NPerMass,   1, NonFatal );
+   LoadField( "FB_ResolvedSNeII_DelayTime",  &RS.FB_ResolvedSNeII_DelayTime,  SID, TID, NonFatal, &RT.FB_ResolvedSNeII_DelayTime,  1, NonFatal );
+   LoadField( "FB_ResolvedSNeII_EjectEngy",  &RS.FB_ResolvedSNeII_EjectEngy,  SID, TID, NonFatal, &RT.FB_ResolvedSNeII_EjectEngy,  1, NonFatal );
+   LoadField( "FB_ResolvedSNeII_EjectMass",  &RS.FB_ResolvedSNeII_EjectMass,  SID, TID, NonFatal, &RT.FB_ResolvedSNeII_EjectMass,  1, NonFatal );
+   LoadField( "FB_ResolvedSNeII_EjectMetal", &RS.FB_ResolvedSNeII_EjectMetal, SID, TID, NonFatal, &RT.FB_ResolvedSNeII_EjectMetal, 1, NonFatal );
+   LoadField( "FB_ResolvedSNeII_MinMGas",    &RS.FB_ResolvedSNeII_MinMGas,    SID, TID, NonFatal, &RT.FB_ResolvedSNeII_MinMGas,    1, NonFatal );
+   LoadField( "FB_ResolvedSNeII_Record",     &RS.FB_ResolvedSNeII_Record,     SID, TID, NonFatal, &RT.FB_ResolvedSNeII_Record,     1, NonFatal );
 #  endif
 
 // cosmic rays

@@ -716,10 +716,18 @@ struct InputPara_t
 
 // feedback
 #  ifdef FEEDBACK
-   int   FB_Level;
-   int   FB_RSeed;
-   int   FB_SNe;
-   int   FB_User;
+   int    FB_MinLevel;
+   int    FB_RSeed;
+   int    FB_SNe;
+   int    FB_ResolvedSNeII;
+   int    FB_User;
+   double FB_ResolvedSNeII_NPerMass;
+   double FB_ResolvedSNeII_DelayTime;
+   double FB_ResolvedSNeII_EjectEngy;
+   double FB_ResolvedSNeII_EjectMass;
+   double FB_ResolvedSNeII_EjectMetal;
+   double FB_ResolvedSNeII_MinMGas;
+   int    FB_ResolvedSNeII_Record;
 #  endif
 
 // cosmic ray

@@ -6,6 +6,7 @@
 
 // prototypes of built-in feedbacks
 void FB_Init_SNe();
+void FB_Init_Resolved_SNeII();
 
 
 // user-specified feedback to be set by a test problem initializer
@@ -38,14 +39,16 @@ void FB_Init()
 
 
 // check if at least one feedback is activated
-   FB_Any = ( FB_SNE || FB_USER );
+   FB_Any = ( FB_SNE  ||  FB_RESOLVED_SNEII  ||  FB_USER );
 
    if ( ! FB_Any  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : all feedback options (e.g., FB_SNE) are inactivated for FEEDBACK !!\n" );
 
 
 // call the initialization routines of different feedbacks
-   if ( FB_SNE )  FB_Init_SNe();
+   if ( FB_SNE )             FB_Init_SNe();
+
+   if ( FB_RESOLVED_SNEII )  FB_Init_Resolved_SNeII();
 
    if ( FB_USER )
    {

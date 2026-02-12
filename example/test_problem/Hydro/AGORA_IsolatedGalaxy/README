@@ -42,6 +42,10 @@ Note:
 3. The low-resolution initial condition files from "sh download_ic_low_res.sh" are the same initial conditions used
    in the "AgoraGalaxy" test problem of Enzo
 4. Some handy yt analysis scripts are put at "yt_script"
+5. Supernovae feedback (with compilation option `FEEDBACK` enabled) is not officially supported for now
+   - The default star particle masses are too large to use `FB_RESOLVED_SNEII` physically
+   - Vaslues of `FB_RESOLVED_SNEII_N_PER_MASS` and `FB_RESOLVED_SNEII_DELAY_TIME` are unphysical
+     and are only for testing the implementation of SN event rate (with `plot_SN_feedback_rate.py`)
 
 
 First-time GRACKLE installation guide (on NTU clusters as an example):
