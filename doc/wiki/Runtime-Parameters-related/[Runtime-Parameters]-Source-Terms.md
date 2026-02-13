@@ -11,7 +11,7 @@ Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) 
 Deleptonization (for simulations of stellar core collapse).
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--model | Installation:-Option-List#--model]]=HYDRO.
+[[--model | [Installation]-Option-List#--model]]=HYDRO.
 
 <a name="SRC_USER"></a>
 * #### `SRC_USER` &ensp; (0=off, 1=on) &ensp; [0]

@@ -50,9 +50,9 @@ Please refer to the header of the table.
 
 Note:
 * `AngMom*` is computed with the origin set by
-[[ ANGMOM_ORIGIN_X | Runtime-Parameters:-Miscellaneous#ANGMOM_ORIGIN_X ]],
-[[ ANGMOM_ORIGIN_Y | Runtime-Parameters:-Miscellaneous#ANGMOM_ORIGIN_Y ]], and
-[[ ANGMOM_ORIGIN_Z | Runtime-Parameters:-Miscellaneous#ANGMOM_ORIGIN_Z ]].
+[[ ANGMOM_ORIGIN_X | [Runtime-Parameters]-Miscellaneous#ANGMOM_ORIGIN_X ]],
+[[ ANGMOM_ORIGIN_Y | [Runtime-Parameters]-Miscellaneous#ANGMOM_ORIGIN_Y ]], and
+[[ ANGMOM_ORIGIN_Z | [Runtime-Parameters]-Miscellaneous#ANGMOM_ORIGIN_Z ]].
 
 <br>
 

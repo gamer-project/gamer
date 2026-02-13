@@ -214,21 +214,21 @@ Check the conservation laws. The results will be recorded in the file
 * #### `ANGMOM_ORIGIN_X` &ensp; (within the simulation domain; < 0.0 -> BoxCenter) &ensp; [-1.0]
     * **Description:**
 x coordinate of the origin for angular momentum in the file
-[[Record__Conservation | Simulation-Logs:-Record__Conservation]].
+[[Record__Conservation | [Simulation-Logs]-Record__Conservation]].
     * **Restriction:**
 
 <a name="ANGMOM_ORIGIN_Y"></a>
 * #### `ANGMOM_ORIGIN_Y` &ensp; (within the simulation domain; < 0.0 -> BoxCenter) &ensp; [-1.0]
     * **Description:**
 y coordinate of the origin for angular momentum in the file
-[[Record__Conservation | Simulation-Logs:-Record__Conservation]].
+[[Record__Conservation | [Simulation-Logs]-Record__Conservation]].
     * **Restriction:**
 
 <a name="ANGMOM_ORIGIN_Z"></a>
 * #### `ANGMOM_ORIGIN_Z` &ensp; (within the simulation domain; < 0.0 -> BoxCenter) &ensp; [-1.0]
     * **Description:**
 z coordinate of the origin for angular momentum in the file
-[[Record__Conservation | Simulation-Logs:-Record__Conservation]].
+[[Record__Conservation | [Simulation-Logs]-Record__Conservation]].
     * **Restriction:**
 
 <a name="OPT__CK_NORMALIZE_PASSIVE"></a>

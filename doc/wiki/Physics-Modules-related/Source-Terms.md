@@ -7,10 +7,10 @@ Related options:
 
 
 ## Runtime Parameters
-[[Runtime parameters: Source Terms | Runtime-Parameters:-Source-Terms]]
+[[Runtime parameters: Source Terms | [Runtime-Parameters]-Source-Terms]]
 
 Other related parameters:
-[[SRC_GPU_NPGROUP | Runtime-Parameters:-GPU#SRC_GPU_NPGROUP]] &nbsp;
+[[SRC_GPU_NPGROUP | [Runtime-Parameters]-GPU#SRC_GPU_NPGROUP]] &nbsp;
 
 
 ## Remarks

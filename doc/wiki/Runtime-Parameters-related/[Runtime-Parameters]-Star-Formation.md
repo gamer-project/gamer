@@ -20,7 +20,7 @@ and Sec.2.4 in [Goldbaum et al. 2015](https://iopscience.iop.org/article/10.1088
 for the AGORA star formation scheme.
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--star_formation | Installation:-Option-List#--star_formation]].
+[[--star_formation | [Installation]-Option-List#--star_formation]].
 
 <a name="SF_CREATE_STAR_RSEED"></a>
 * #### `SF_CREATE_STAR_RSEED` &ensp; (&#8805;0) &ensp; [123]
@@ -28,24 +28,24 @@ Only applicable when enabling the compilation option
 Random seed used by star formation.
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--star_formation | Installation:-Option-List#--star_formation]].
+[[--star_formation | [Installation]-Option-List#--star_formation]].
 
 <a name="SF_CREATE_STAR_DET_RANDOM"></a>
-* #### `SF_CREATE_STAR_DET_RANDOM` &ensp; (0=off, 1=on; <0 &#8594; set by [[--bitwise_reproducibility | Installation:-Option-List#--bitwise_reproducibility]]) &ensp; [-1]
+* #### `SF_CREATE_STAR_DET_RANDOM` &ensp; (0=off, 1=on; <0 &#8594; set by [[--bitwise_reproducibility | [Installation]-Option-List#--bitwise_reproducibility]]) &ensp; [-1]
     * **Description:**
 Make random numbers deterministic (i.e., independent of OpenMP and MPI).
 Needed for the [[bitwise reproducibility | Bitwise Reproducibility]].
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--star_formation | Installation:-Option-List#--star_formation]].
+[[--star_formation | [Installation]-Option-List#--star_formation]].
 
 <a name="SF_CREATE_STAR_MIN_LEVEL"></a>
-* #### `SF_CREATE_STAR_MIN_LEVEL` &ensp; (&#8805;0; <0 &#8594; [[MAX_LEVEL | Runtime Parameters:-Refinement#MAX_LEVEL]]) &ensp; [0]
+* #### `SF_CREATE_STAR_MIN_LEVEL` &ensp; (&#8805;0; <0 &#8594; [[MAX_LEVEL | [Runtime Parameters]-Refinement#MAX_LEVEL]]) &ensp; [0]
     * **Description:**
 Minimum AMR level allowed to form stars.
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--star_formation | Installation:-Option-List#--star_formation]].
+[[--star_formation | [Installation]-Option-List#--star_formation]].
 
 <a name="SF_CREATE_STAR_MIN_GAS_DENS"></a>
 * #### `SF_CREATE_STAR_MIN_GAS_DENS` &ensp; (&#8805;0.0) &ensp; [1.0e1]
@@ -57,7 +57,7 @@ and it will be converted internally to the gas mass density
 as $m_H\times$ HI count/cm^3 (i.e., assuming the gas is composed of only HI and the mean molecular weight $\mu=1$).
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--star_formation | Installation:-Option-List#--star_formation]].
+[[--star_formation | [Installation]-Option-List#--star_formation]].
 
 <a name="SF_CREATE_STAR_MASS_EFF"></a>
 * #### `SF_CREATE_STAR_MASS_EFF` &ensp; (0.0 < input &#8804; 1.0) &ensp; [1.0e-2]
@@ -66,7 +66,7 @@ Gas-to-star mass conversion efficiency.
 See the $\epsilon_*$ in Eq.(4) in [Kim et al. 2016](https://iopscience.iop.org/article/10.3847/1538-4357/833/2/202).
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--star_formation | Installation:-Option-List#--star_formation]].
+[[--star_formation | [Installation]-Option-List#--star_formation]].
 
 <a name="SF_CREATE_STAR_MIN_STAR_MASS"></a>
 * #### `SF_CREATE_STAR_MIN_STAR_MASS` &ensp; (&#8805;0.0) &ensp; [0.0]
@@ -76,7 +76,7 @@ See the $m_{\rm sf}$ in Eq.(5) in [Goldbaum et al. 2015](https://iopscience.iop.
 Note that the input value should always be in units of Msun.
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--star_formation | Installation:-Option-List#--star_formation]].
+[[--star_formation | [Installation]-Option-List#--star_formation]].
 
 <a name="SF_CREATE_STAR_MAX_STAR_MFRAC"></a>
 * #### `SF_CREATE_STAR_MAX_STAR_MFRAC` &ensp; (0.0 < input &#8804; 1.0) &ensp; [0.5]
@@ -84,7 +84,7 @@ Only applicable when enabling the compilation option
 Maximum gas mass fraction in a cell allowed to convert to the mass of the star per substep.
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[--star_formation | Installation:-Option-List#--star_formation]].
+[[--star_formation | [Installation]-Option-List#--star_formation]].
 
 
 
