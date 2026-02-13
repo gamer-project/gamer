@@ -3,7 +3,7 @@ This demo will illustrate the following features:
 * HDF5 output
 * yt analysis
 
-It is recommended to first check [[[Quick-Start]-1D-Shock-Tube]].
+It is recommended to first check [[ [Quick Start] 1D Shock Tube | [Quick-Start]-1D-Shock-Tube]].
 
 ***
 
