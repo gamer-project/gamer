@@ -247,7 +247,11 @@ void SetParameter()
       GrackleTest_CoolingRate = 0.0;   PRINT_RESET_PARA( GrackleTest_CoolingRate, FORMAT_REAL, "for GRACKLE_USE_V_HEATING_RATE disabled" );
    }
 
-   if ( GrackleTest_DefaultTestMode == 1 )
+   if ( GrackleTest_DefaultTestMode == 0 )
+   {
+//    keep the user's input
+   }
+   else if ( GrackleTest_DefaultTestMode == 1 )
    {
       GrackleTest_MassDensity_Min = 1.0e-29;   PRINT_RESET_PARA( GrackleTest_MassDensity_Min, FORMAT_REAL, "for GrackleTest_DefaultTestMode == 1" );
       GrackleTest_MassDensity_Max = 1.0e-21;   PRINT_RESET_PARA( GrackleTest_MassDensity_Max, FORMAT_REAL, "for GrackleTest_DefaultTestMode == 1" );
