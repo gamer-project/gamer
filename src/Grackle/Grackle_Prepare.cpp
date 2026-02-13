@@ -125,7 +125,22 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
 #  else
    const bool CheckMinEint_Yes = true;
 #  endif
+
    const double dh = amr->dh[lv];
+
+// Floor value for the mass density of each species applied by Grackle
+// --> See ceiling_species_g() in grackle/src/clib/solve_rate_cool_g.F
+//     and the definition of tiny in grackle/src/include/grackle_fortran_types.def
+// --> Note this value is a quantity with **code density units UNIT_D**
+   const real_che Grackle_tiny = 1.0e-20;
+
+// Minimum of total density for the Grackle solver
+// --> When the total density is too low (close to Grackle_tiny),
+//     the species floor value in Grackle will be a significant mass fraction
+// --> The factor here is decided such that the species with low mass fraction
+//     remains negligible after being applied the Grackle_tiny floor
+// --> Note that to maintain accuracy, this should have a physically small density
+   const real_che Che_MinDens  = 1.0e+04 * Grackle_tiny;
 
    real_che *Ptr_Dens0         = h_Che_Array + CheIdx_Dens        *Size1v;
    real_che *Ptr_sEint0        = h_Che_Array + CheIdx_sEint       *Size1v;
@@ -164,6 +179,7 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    real_che *Ptr_HeI=NULL, *Ptr_HeII=NULL, *Ptr_HeIII=NULL, *Ptr_HM=NULL, *Ptr_H2I=NULL, *Ptr_H2II=NULL;
    real_che *Ptr_DI=NULL, *Ptr_DII=NULL, *Ptr_HDI=NULL, *Ptr_Metal=NULL;
    real_che *Ptr_vHeatingRate=NULL, *Ptr_sHeatingRate=NULL;
+   real_che  Ratio_FloorDens;
 
 #  pragma omp for schedule( static )
    for (int TID=0; TID<NPG; TID++)
@@ -236,42 +252,59 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
             Eint -= *( fluid[CRAY][0][0] + idx_p );
 #           endif
 
+//          set the ratio to the density floor
+            if ( Dens < Che_MinDens )
+            {
+//             when the density is too low, we will pre-floor the total density as Che_MinDens
+//             while keeping the fraction of each species fixed
+//             such that the mass fraction of the species being floored in Grackle is
+//             less than "Grackle_tiny/Che_MinDens"
+               Ratio_FloorDens = Che_MinDens/Dens;
+
+               Aux_Message( stderr, "\nWARNING : density = %16.8e is too low and will be scaled to %16.8e as the input to the Grackle solver !!\n",
+                                    Dens, Che_MinDens );
+            }
+            else
+            {
+               Ratio_FloorDens = 1.0;
+            }
+
 //          mandatory fields
-            Ptr_Dens [idx_pg] = Dens;
+            Ptr_Dens [idx_pg] = Dens * Ratio_FloorDens;
             Ptr_sEint[idx_pg] = Eint / Dens;
-            Ptr_Ent  [idx_pg] = Etot - Eint; // non-thermal energy density
+            Ptr_Ent  [idx_pg] = (Etot - Eint) * Ratio_FloorDens; // non-thermal energy density
 
 //          6-species network
             if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
-            Ptr_e    [idx_pg] = *( fluid[Idx_e    ][0][0] + idx_p ) * MassRatio_pe;
-            Ptr_HI   [idx_pg] = *( fluid[Idx_HI   ][0][0] + idx_p );
-            Ptr_HII  [idx_pg] = *( fluid[Idx_HII  ][0][0] + idx_p );
-            Ptr_HeI  [idx_pg] = *( fluid[Idx_HeI  ][0][0] + idx_p );
-            Ptr_HeII [idx_pg] = *( fluid[Idx_HeII ][0][0] + idx_p );
-            Ptr_HeIII[idx_pg] = *( fluid[Idx_HeIII][0][0] + idx_p );
+            Ptr_e    [idx_pg] = *( fluid[Idx_e    ][0][0] + idx_p ) * Ratio_FloorDens * MassRatio_pe;
+            Ptr_HI   [idx_pg] = *( fluid[Idx_HI   ][0][0] + idx_p ) * Ratio_FloorDens;
+            Ptr_HII  [idx_pg] = *( fluid[Idx_HII  ][0][0] + idx_p ) * Ratio_FloorDens;
+            Ptr_HeI  [idx_pg] = *( fluid[Idx_HeI  ][0][0] + idx_p ) * Ratio_FloorDens;
+            Ptr_HeII [idx_pg] = *( fluid[Idx_HeII ][0][0] + idx_p ) * Ratio_FloorDens;
+            Ptr_HeIII[idx_pg] = *( fluid[Idx_HeIII][0][0] + idx_p ) * Ratio_FloorDens;
             }
 
 //          9-species network
             if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9 ) {
-            Ptr_HM   [idx_pg] = *( fluid[Idx_HM   ][0][0] + idx_p );
-            Ptr_H2I  [idx_pg] = *( fluid[Idx_H2I  ][0][0] + idx_p );
-            Ptr_H2II [idx_pg] = *( fluid[Idx_H2II ][0][0] + idx_p );
+            Ptr_HM   [idx_pg] = *( fluid[Idx_HM   ][0][0] + idx_p ) * Ratio_FloorDens;
+            Ptr_H2I  [idx_pg] = *( fluid[Idx_H2I  ][0][0] + idx_p ) * Ratio_FloorDens;
+            Ptr_H2II [idx_pg] = *( fluid[Idx_H2II ][0][0] + idx_p ) * Ratio_FloorDens;
             }
 
 //          12-species network
             if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE12 ) {
-            Ptr_DI   [idx_pg] = *( fluid[Idx_DI   ][0][0] + idx_p );
-            Ptr_DII  [idx_pg] = *( fluid[Idx_DII  ][0][0] + idx_p );
-            Ptr_HDI  [idx_pg] = *( fluid[Idx_HDI  ][0][0] + idx_p );
+            Ptr_DI   [idx_pg] = *( fluid[Idx_DI   ][0][0] + idx_p ) * Ratio_FloorDens;
+            Ptr_DII  [idx_pg] = *( fluid[Idx_DII  ][0][0] + idx_p ) * Ratio_FloorDens;
+            Ptr_HDI  [idx_pg] = *( fluid[Idx_HDI  ][0][0] + idx_p ) * Ratio_FloorDens;
             }
 
 //          metallicity for metal cooling
             if ( GRACKLE_METAL )
-            Ptr_Metal[idx_pg] = *( fluid[Idx_Metal][0][0] + idx_p );
+            Ptr_Metal[idx_pg] = *( fluid[Idx_Metal][0][0] + idx_p ) * Ratio_FloorDens;
 
 //          user-provided array of volumetric heating rates
             if ( GRACKLE_USE_V_HEATING_RATE ) {
-            const double n_H = Dens * UNIT_D * GRACKLE_HYDROGEN_MFRAC / Const_mH; // hydrogen number density in units of cm^-3
+            const double n_H = Ptr_Dens[idx_pg] * UNIT_D * GRACKLE_HYDROGEN_MFRAC / Const_mH; // hydrogen number density in units of cm^-3
             Ptr_vHeatingRate[idx_pg] = Grackle_vHeatingRate_User_Ptr( x0+i*dh, y0+j*dh, z0+k*dh, Time[lv], n_H );
             }
 
