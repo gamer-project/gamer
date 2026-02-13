@@ -93,7 +93,7 @@ void CUAPI_SetMemSize( int &GPU_NStream, int &Flu_GPU_NPGroup, int &Pot_GPU_NPGr
 #        else
 #           error : ERROR : UNKNOWN MODEL !!
 #        endif // MODEL
-      } // if ( DeviceProp.deviceOverlap )
+      } // if ( gpuOverlap )
 
       else
          GPU_NStream = 1;

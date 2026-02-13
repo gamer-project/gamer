@@ -19,6 +19,7 @@
 
 
 // option == OPTION_NONE --> the option is turned off
+// (we have renamed NONE to OPTION_NONE to ensure compatibility with cuFFTDx's .hpp files)
 #define OPTION_NONE  0
 
 
