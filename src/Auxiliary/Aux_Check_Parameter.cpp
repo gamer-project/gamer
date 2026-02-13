@@ -729,17 +729,17 @@ void Aux_Check_Parameter()
 #  endif
 
 #  ifdef MHD
-#   if ( RSOLVER != NONE  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLD )
+#   if ( RSOLVER != OPTION_NONE  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLD )
 #     error : ERROR : unsupported Riemann solver for MHD (ROE/HLLE/HLLD) !!
 #   endif
-#   if ( RSOLVER_RESCUE != NONE  &&  RSOLVER_RESCUE != ROE  &&  RSOLVER_RESCUE != HLLE  &&  RSOLVER_RESCUE != HLLD )
+#   if ( RSOLVER_RESCUE != OPTION_NONE  &&  RSOLVER_RESCUE != ROE  &&  RSOLVER_RESCUE != HLLE  &&  RSOLVER_RESCUE != HLLD )
 #     error : ERROR : unsupported RSOLVER_RESCUE for MHD (ROE/HLLE/HLLD) !!
 #   endif
 #  else
-#   if ( RSOLVER != NONE  &&  RSOLVER != EXACT  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLC )
+#   if ( RSOLVER != OPTION_NONE  &&  RSOLVER != EXACT  &&  RSOLVER != ROE  &&  RSOLVER != HLLE  &&  RSOLVER != HLLC )
 #     error : ERROR : unsupported Riemann solver (EXACT/ROE/HLLE/HLLC) !!
 #   endif
-#   if ( RSOLVER_RESCUE != NONE  &&  RSOLVER_RESCUE != EXACT  &&  RSOLVER_RESCUE != ROE  &&  RSOLVER_RESCUE != HLLE  &&  RSOLVER_RESCUE != HLLC )
+#   if ( RSOLVER_RESCUE != OPTION_NONE  &&  RSOLVER_RESCUE != EXACT  &&  RSOLVER_RESCUE != ROE  &&  RSOLVER_RESCUE != HLLE  &&  RSOLVER_RESCUE != HLLC )
 #     error : ERROR : unsupported RSOLVER_RESCUE (EXACT/ROE/HLLE/HLLC) !!
 #   endif
 #  endif // MHD
