@@ -112,7 +112,7 @@ for ds in ts.piter():
         pz.set_zlim( field, zlim[field][0], zlim[field][1] )
 
         pz.annotate_text( (0.1,0.9),
-                          "min  = {: >11.3e}\nmax = {: >11.3e}".format(ad[field].min(),ad[field].max()),
+                          "max = {: >11.3e}\nmin  = {: >11.3e}".format(ad[field].max(),ad[field].min()),
                           coord_system='axis', text_args={"color": "grey"} )
 
         pz.annotate_timestamp( time_unit='Myr', corner='upper_right' )
