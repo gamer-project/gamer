@@ -1145,6 +1145,8 @@ void Aux_TakeNote()
       fprintf( Note, "GRACKLE_H2_OPA_APPROX          % d\n",      GRACKLE_H2_OPA_APPROX      );
       fprintf( Note, "GRACKLE_USE_V_HEATING_RATE     % d\n",      GRACKLE_USE_V_HEATING_RATE );
       fprintf( Note, "GRACKLE_USE_S_HEATING_RATE     % d\n",      GRACKLE_USE_S_HEATING_RATE );
+      fprintf( Note, "GRACKLE_USE_TEMP_FLOOR         % d\n",      GRACKLE_USE_TEMP_FLOOR     );
+      fprintf( Note, "GRACKLE_TEMP_FLOOR_SCALAR      % 14.7e\n",  GRACKLE_TEMP_FLOOR_SCALAR  );
       fprintf( Note, "GRACKLE_HYDROGEN_MFRAC         % 14.7e\n",  GRACKLE_HYDROGEN_MFRAC     );
       fprintf( Note, "OPT__UNFREEZE_GRACKLE          % d\n",      OPT__UNFREEZE_GRACKLE      );
       fprintf( Note, "CHE_GPU_NPGROUP                % d\n",      CHE_GPU_NPGROUP            ); }

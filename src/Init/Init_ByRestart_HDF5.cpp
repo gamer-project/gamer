@@ -2233,6 +2233,8 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Grackle_H2_OpaApprox",    &RS.Grackle_H2_OpaApprox,    SID, TID, NonFatal, &RT.Grackle_H2_OpaApprox,     1, NonFatal );
    LoadField( "Grackle_UseVHeatingRate", &RS.Grackle_UseVHeatingRate, SID, TID, NonFatal, &RT.Grackle_UseVHeatingRate,  1, NonFatal );
    LoadField( "Grackle_UseSHeatingRate", &RS.Grackle_UseSHeatingRate, SID, TID, NonFatal, &RT.Grackle_UseSHeatingRate,  1, NonFatal );
+   LoadField( "Grackle_UseTempFloor",    &RS.Grackle_UseTempFloor,    SID, TID, NonFatal, &RT.Grackle_UseTempFloor,     1, NonFatal );
+   LoadField( "Grackle_TempFloorScalar", &RS.Grackle_TempFloorScalar, SID, TID, NonFatal, &RT.Grackle_TempFloorScalar,  1, NonFatal );
    LoadField( "Grackle_HydrogenMFrac",   &RS.Grackle_HydrogenMFrac,   SID, TID, NonFatal, &RT.Grackle_HydrogenMFrac,    1, NonFatal );
    LoadField( "Opt__UnfreezeGrackle",    &RS.Opt__UnfreezeGrackle,    SID, TID, NonFatal, &RT.Opt__UnfreezeGrackle,     1, NonFatal );
    LoadField( "Che_GPU_NPGroup",         &RS.Che_GPU_NPGroup,         SID, TID, NonFatal, &RT.Che_GPU_NPGroup,          1, NonFatal );

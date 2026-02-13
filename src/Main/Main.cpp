@@ -262,6 +262,8 @@ bool                 GRACKLE_CIE_COOLING;
 int                  GRACKLE_H2_OPA_APPROX;
 bool                 GRACKLE_USE_V_HEATING_RATE;
 bool                 GRACKLE_USE_S_HEATING_RATE;
+int                  GRACKLE_USE_TEMP_FLOOR;
+double               GRACKLE_TEMP_FLOOR_SCALAR;
 double               GRACKLE_HYDROGEN_MFRAC;
 bool                 OPT__UNFREEZE_GRACKLE;
 bool                 OPT__OUTPUT_GRACKLE_TEMP;

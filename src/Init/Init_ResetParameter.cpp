@@ -1195,6 +1195,17 @@ void Init_ResetParameter()
    }
 
 
+// Grackle options
+#  ifdef SUPPORT_GRACKLE
+   if ( GRACKLE_USE_TEMP_FLOOR != 1 )
+   {
+      GRACKLE_TEMP_FLOOR_SCALAR = 0.0;
+
+      PRINT_RESET_PARA( GRACKLE_TEMP_FLOOR_SCALAR, FORMAT_REAL, "since GRACKLE_USE_TEMP_FLOOR != 1" );
+   }
+#  endif // #ifdef SUPPORT_GRACKLE
+
+
 // star-formation options
 #  ifdef STAR_FORMATION
    if ( SF_CREATE_STAR_MIN_LEVEL < 0 )

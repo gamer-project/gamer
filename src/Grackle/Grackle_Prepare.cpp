@@ -24,16 +24,19 @@ extern int CheIdx_HDI;
 extern int CheIdx_Metal;
 extern int CheIdx_vHeatingRate;
 extern int CheIdx_sHeatingRate;
+extern int CheIdx_tempFloor;
 
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
 static real_che Grackle_vHeatingRate_User_Template( const double x, const double y, const double z, const double Time, const double n_H );
 static real_che Grackle_sHeatingRate_User_Template( const double x, const double y, const double z, const double Time );
+static real_che Grackle_tempFloor_Default( const double x, const double y, const double z, const double Time, const real_che Dens_Gas, const real_che sEint_Gas );
 
 
 // these function pointers must be set by a test problem initializer
 real_che (*Grackle_vHeatingRate_User_Ptr)( const double x, const double y, const double z, const double Time, const double n_H ) = NULL;
 real_che (*Grackle_sHeatingRate_User_Ptr)( const double x, const double y, const double z, const double Time )                   = NULL;
+real_che (*Grackle_tempFloor_User_Ptr)( const double x, const double y, const double z, const double Time, const real_che Dens_Gas, const real_che sEint_Gas ) = Grackle_tempFloor_Default;
 
 
 
@@ -114,6 +117,13 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
       if ( CheIdx_sHeatingRate == Idx_Undefined )
          Aux_Error( ERROR_INFO, "CheIdx_sHeatingRate is undefined for \"GRACKLE_USE_S_HEATING_RATE\" !!\n" );
    }
+
+   if ( GRACKLE_USE_TEMP_FLOOR == 2 ) {
+      if ( Grackle_tempFloor_User_Ptr == NULL )
+         Aux_Error( ERROR_INFO, "Grackle_tempFloor_User_Ptr == NULL !!\n" );
+      if ( CheIdx_tempFloor == Idx_Undefined )
+         Aux_Error( ERROR_INFO, "CheIdx_tempFloor is undefined for \"GRACKLE_USE_TEMP_FLOOR == 2\" !!\n" );
+   }
 #  endif // #ifdef GAMER_DEBUG
 
 
@@ -160,6 +170,7 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    real_che *Ptr_Metal0        = h_Che_Array + CheIdx_Metal       *Size1v;
    real_che *Ptr_vHeatingRate0 = h_Che_Array + CheIdx_vHeatingRate*Size1v;
    real_che *Ptr_sHeatingRate0 = h_Che_Array + CheIdx_sHeatingRate*Size1v;
+   real_che *Ptr_tempFloor0    = h_Che_Array + CheIdx_tempFloor   *Size1v;
 
 
 #  pragma omp parallel
@@ -178,7 +189,7 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    real_che *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ent=NULL, *Ptr_e=NULL, *Ptr_HI=NULL, *Ptr_HII=NULL;
    real_che *Ptr_HeI=NULL, *Ptr_HeII=NULL, *Ptr_HeIII=NULL, *Ptr_HM=NULL, *Ptr_H2I=NULL, *Ptr_H2II=NULL;
    real_che *Ptr_DI=NULL, *Ptr_DII=NULL, *Ptr_HDI=NULL, *Ptr_Metal=NULL;
-   real_che *Ptr_vHeatingRate=NULL, *Ptr_sHeatingRate=NULL;
+   real_che *Ptr_vHeatingRate=NULL, *Ptr_sHeatingRate=NULL, *Ptr_tempFloor=NULL;
    real_che  Ratio_FloorDens;
 
 #  pragma omp for schedule( static )
@@ -206,6 +217,7 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
       Ptr_Metal        = Ptr_Metal0        + offset;
       Ptr_vHeatingRate = Ptr_vHeatingRate0 + offset;
       Ptr_sHeatingRate = Ptr_sHeatingRate0 + offset;
+      Ptr_tempFloor    = Ptr_tempFloor0    + offset;
 
       for (int LocalID=0; LocalID<8; LocalID++)
       {
@@ -312,6 +324,10 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
             if ( GRACKLE_USE_S_HEATING_RATE )
             Ptr_sHeatingRate[idx_pg] = Grackle_sHeatingRate_User_Ptr( x0+i*dh, y0+j*dh, z0+k*dh, Time[lv] );
 
+//          user-provided array of temperature floor
+            if ( GRACKLE_USE_TEMP_FLOOR == 2 )
+            Ptr_tempFloor[idx_pg] = Grackle_tempFloor_User_Ptr( x0+i*dh, y0+j*dh, z0+k*dh, Time[lv], Ptr_Dens[idx_pg], Ptr_sEint[idx_pg] );
+
             idx_p  ++;
             idx_pg ++;
          } // i,j,k
@@ -357,6 +373,9 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
 
    if ( GRACKLE_USE_S_HEATING_RATE )
    Che_FieldData->specific_heating_rate   = Ptr_sHeatingRate0;
+
+   if ( GRACKLE_USE_TEMP_FLOOR == 2 )
+   Che_FieldData->temperature_floor       = Ptr_tempFloor0;
 
 } // FUNCTION : Grackle_Prepare
 
@@ -422,6 +441,33 @@ real_che Grackle_sHeatingRate_User_Template( const double x, const double y, con
    return specific_heating_rate;
 
 } // FUNCTION : Grackle_sHeatingRate_User_Template
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Grackle_tempFloor_Default
+// Description :  Default function to set Grackle's temperature floor
+//
+// Note        :  1. Invoked by Grackle_Prepare() using the function pointer
+//                   "Grackle_tempFloor_User_Ptr", which must be set by a test problem initializer
+//                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+//                   --> Please ensure that everything here is thread-safe
+//                3. Returned temperature should be in units of K
+//
+// Parameter   :  x/y/z     : Target physical coordinates
+//                Time      : Target physical time
+//                Dens_Gas  : Gas density, in code units
+//                sEint_Gas : Gas specific internal energy, in code units
+//
+// Return      :  temperature_floor
+//-------------------------------------------------------------------------------------------------------
+real_che Grackle_tempFloor_Default( const double x, const double y, const double z, const double Time, const real_che Dens_Gas, const real_che sEint_Gas )
+{
+   const real_che temperature_floor = 0.0;
+
+   return temperature_floor;
+
+} // FUNCTION : Grackle_tempFloor_Default
 
 
 

@@ -14,6 +14,8 @@ Parameters described on this page:
 [GRACKLE_H2_OPA_APPROX](#GRACKLE_H2_OPA_APPROX) &nbsp;
 [GRACKLE_USE_V_HEATING_RATE](#GRACKLE_USE_V_HEATING_RATE) &nbsp;
 [GRACKLE_USE_S_HEATING_RATE](#GRACKLE_USE_S_HEATING_RATE) &nbsp;
+[GRACKLE_USE_TEMP_FLOOR](#GRACKLE_USE_TEMP_FLOOR) &nbsp;
+[GRACKLE_TEMP_FLOOR_SCALAR](#GRACKLE_TEMP_FLOOR_SCALAR) &nbsp;
 [GRACKLE_HYDROGEN_MFRAC](#GRACKLE_HYDROGEN_MFRAC) &nbsp;
 [OPT__UNFREEZE_GRACKLE](#OPT__UNFREEZE_GRACKLE) &nbsp;
 
@@ -118,6 +120,21 @@ Map to the ["use_volumetric_heating_rate" runtime parameter in GRACKLE](https://
     * **Description:**
 Map to the ["use_specific_heating_rate" runtime parameter in GRACKLE](https://grackle.readthedocs.io/en/latest/Parameters.html#c.use_specific_heating_rate).
     * **Restriction:**
+
+<a name="GRACKLE_USE_TEMP_FLOOR"></a>
+* #### `GRACKLE_USE_TEMP_FLOOR` &ensp; (0=off, 1=single value, 2=array of values) &ensp; [0]
+    * **Description:**
+Map to the ["use_temperature_floor" runtime parameter in GRACKLE](https://grackle.readthedocs.io/en/latest/Parameters.html#c.use_temperature_floor).
+For `GRACKLE_USE_TEMP_FLOOR == 1`, set [GRACKLE_TEMP_FLOOR_SCALAR](#GRACKLE_TEMP_FLOOR_SCALAR) as the single value.
+For `GRACKLE_USE_TEMP_FLOOR == 2`, define your function in the test problem and link it to `Grackle_tempFloor_User_Ptr` to set the array of values.
+    * **Restriction:**
+
+<a name="GRACKLE_TEMP_FLOOR_SCALAR"></a>
+* #### `GRACKLE_TEMP_FLOOR_SCALAR` &ensp; (&#8805;0.0) &ensp; [0.0]
+    * **Description:**
+Map to the ["temperature_floor_scalar" runtime parameter in GRACKLE](https://grackle.readthedocs.io/en/latest/Parameters.html#c.temperature_floor_scalar).
+    * **Restriction:**
+It is used only when [GRACKLE_USE_TEMP_FLOOR](#GRACKLE_USE_TEMP_FLOOR)==1.
 
 <a name="GRACKLE_HYDROGEN_MFRAC"></a>
 * #### `GRACKLE_PE_HEATING_RATE` &ensp; (&#8805;0.0) &ensp; [0.76]

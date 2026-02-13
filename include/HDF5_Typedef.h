@@ -707,6 +707,8 @@ struct InputPara_t
    int    Grackle_H2_OpaApprox;
    int    Grackle_UseVHeatingRate;
    int    Grackle_UseSHeatingRate;
+   int    Grackle_UseTempFloor;
+   double Grackle_TempFloorScalar;
    double Grackle_HydrogenMFrac;
    int    Opt__UnfreezeGrackle;
    int    Che_GPU_NPGroup;

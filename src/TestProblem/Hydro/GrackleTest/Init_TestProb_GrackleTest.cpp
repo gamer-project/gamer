@@ -554,6 +554,38 @@ real_che Grackle_vHeatingRate_GrackleTest( const double x, const double y, const
    return volumetric_heating_rate_r - volumetric_cooling_rate_r;
 
 } // FUNCTION : Grackle_vHeatingRate_GrackleTest
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Grackle_tempFloor_GrackleTest
+// Description :  Function to set Grackle's temperature floor for GrackleTest
+//
+// Note        :  1. Invoked by Grackle_Prepare() using the function pointer
+//                   "Grackle_tempFloor_User_Ptr", which must be set by a test problem initializer
+//                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+//                   --> Please ensure that everything here is thread-safe
+//                3. Returned temperature should be in units of K
+//
+// Parameter   :  x/y/z     : Target physical coordinates
+//                Time      : Target physical time
+//                Dens_Gas  : Gas density, in code units
+//                sEint_Gas : Gas specific internal energy, in code units
+//
+// Return      :  temperature_floor
+//-------------------------------------------------------------------------------------------------------
+real_che Grackle_tempFloor_GrackleTest( const double x, const double y, const double z, const double Time, const real_che Dens_Gas, const real_che sEint_Gas )
+{
+   const double  Dens_Gas_cgs =  Dens_Gas * UNIT_D;      // convert the unit to g cm^-3
+   const double sEint_Gas_cgs = sEint_Gas * SQR(UNIT_V); // convert the unit to cm^2 s^-2
+
+// arbitrary example:
+// set a 1e10 K temperature floor to disable evolution for the high-density and high-temperature gases
+   const real_che temperature_floor = ( Dens_Gas_cgs > 1.0e-24  &&  sEint_Gas_cgs > 2.0e+12 ) ? 1.0e10 : 0.0;
+
+   return temperature_floor;
+
+} // FUNCTION : Grackle_tempFloor_GrackleTest
 #endif // #if ( MODEL == HYDRO  &&  defined SUPPORT_GRACKLE )
 
 
@@ -586,6 +618,7 @@ void Init_TestProb_Hydro_GrackleTest()
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr            = SetGridIC;
    Grackle_vHeatingRate_User_Ptr     = Grackle_vHeatingRate_GrackleTest;
+   Grackle_tempFloor_User_Ptr        = Grackle_tempFloor_GrackleTest;
 #  ifdef SUPPORT_HDF5
    Output_HDF5_InputTest_Ptr         = LoadInputTestProb;
 #  endif

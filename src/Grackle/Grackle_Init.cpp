@@ -101,6 +101,8 @@ void Grackle_Init()
    grackle_data->h2_optical_depth_approximation = GRACKLE_H2_OPA_APPROX;
    grackle_data->use_volumetric_heating_rate    = GRACKLE_USE_V_HEATING_RATE;
    grackle_data->use_specific_heating_rate      = GRACKLE_USE_S_HEATING_RATE;
+   grackle_data->use_temperature_floor          = GRACKLE_USE_TEMP_FLOOR;
+   grackle_data->temperature_floor_scalar       = GRACKLE_TEMP_FLOOR_SCALAR;
 // hydrogen mass fraction is only set when it is in non-equilibrium mode
 // because the tables for tabulated mode were created assuming hydrogen mass fraction of about 0.716
 // see https://grackle.readthedocs.io/en/latest/Parameters.html#c.HydrogenFractionByMass

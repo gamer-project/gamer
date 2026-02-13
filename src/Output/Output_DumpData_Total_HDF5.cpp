@@ -279,7 +279,8 @@ Procedure for outputting new variables:
 //                                             Input__TestProb parameters in "Info/InputTest"
 //                2504 : 2025/04/29 --> output OPT__PAR_INIT_CHECK
 //                2505 : 2025/05/07 --> output PassiveFloor_Var
-//                2506 : 2025/12/07 --> output GRACKLE_USE_V_HEATING_RATE, GRACKLE_USE_S_HEATING_RATE,
+//                2506 : 2026/02/13 --> output GRACKLE_USE_V_HEATING_RATE, GRACKLE_USE_S_HEATING_RATE,
+//                                             GRACKLE_USE_TEMP_FLOOR, GRACKLE_TEMP_FLOOR_SCALAR
 //                                             GRACKLE_HYDROGEN_MFRAC, OPT__UNFREEZE_GRACKLE,
 //                                             OPT__OUTPUT_GRACKLE_TEMP, OPT__OUTPUT_GRACKLE_MU, OPT__OUTPUT_GRACKLE_TCOOL,
 //                                             DT__GRACKLE_COOLING, OPT__FLAG_COOLING_LEN, FlagTable_CoolingLen
@@ -2778,6 +2779,8 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Grackle_H2_OpaApprox    = GRACKLE_H2_OPA_APPROX;
    InputPara.Grackle_UseVHeatingRate = GRACKLE_USE_V_HEATING_RATE;
    InputPara.Grackle_UseSHeatingRate = GRACKLE_USE_S_HEATING_RATE;
+   InputPara.Grackle_UseTempFloor    = GRACKLE_USE_TEMP_FLOOR;
+   InputPara.Grackle_TempFloorScalar = GRACKLE_TEMP_FLOOR_SCALAR;
    InputPara.Grackle_HydrogenMFrac   = GRACKLE_HYDROGEN_MFRAC;
    InputPara.Opt__UnfreezeGrackle    = OPT__UNFREEZE_GRACKLE;
    InputPara.Che_GPU_NPGroup         = CHE_GPU_NPGROUP;
@@ -3863,6 +3866,8 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Grackle_H2_OpaApprox",    HOFFSET(InputPara_t,Grackle_H2_OpaApprox   ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Grackle_UseVHeatingRate", HOFFSET(InputPara_t,Grackle_UseVHeatingRate), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Grackle_UseSHeatingRate", HOFFSET(InputPara_t,Grackle_UseSHeatingRate), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Grackle_UseTempFloor",    HOFFSET(InputPara_t,Grackle_UseTempFloor   ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Grackle_TempFloorScalar", HOFFSET(InputPara_t,Grackle_TempFloorScalar), H5T_NATIVE_DOUBLE           );
    H5Tinsert( H5_TypeID, "Grackle_HydrogenMFrac",   HOFFSET(InputPara_t,Grackle_HydrogenMFrac  ), H5T_NATIVE_DOUBLE           );
    H5Tinsert( H5_TypeID, "Opt__UnfreezeGrackle",    HOFFSET(InputPara_t,Opt__UnfreezeGrackle   ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Che_GPU_NPGroup",         HOFFSET(InputPara_t,Che_GPU_NPGroup        ), H5T_NATIVE_INT              );

@@ -25,6 +25,7 @@ int CheIdx_HDI          = Idx_Undefined;
 int CheIdx_Metal        = Idx_Undefined;
 int CheIdx_vHeatingRate = Idx_Undefined;
 int CheIdx_sHeatingRate = Idx_Undefined;
+int CheIdx_tempFloor    = Idx_Undefined;
 
 
 
@@ -83,6 +84,9 @@ void Init_MemAllocate_Grackle( const int Che_NPG )
 
    if ( GRACKLE_USE_S_HEATING_RATE )
    CheIdx_sHeatingRate = Che_NField ++;
+
+   if ( GRACKLE_USE_TEMP_FLOOR == 2 )
+   CheIdx_tempFloor    = Che_NField ++;
 
 
 // allocate the input/output array for the Grackle solver

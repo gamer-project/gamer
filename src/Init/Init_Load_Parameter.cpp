@@ -261,6 +261,8 @@ void Init_Load_Parameter()
    ReadPara->Add( "GRACKLE_H2_OPA_APPROX",      &GRACKLE_H2_OPA_APPROX,           0,               0,             1              );
    ReadPara->Add( "GRACKLE_USE_V_HEATING_RATE", &GRACKLE_USE_V_HEATING_RATE,      false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "GRACKLE_USE_S_HEATING_RATE", &GRACKLE_USE_S_HEATING_RATE,      false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "GRACKLE_USE_TEMP_FLOOR",     &GRACKLE_USE_TEMP_FLOOR,          0,               0,             2              );
+   ReadPara->Add( "GRACKLE_TEMP_FLOOR_SCALAR",  &GRACKLE_TEMP_FLOOR_SCALAR,       0.0,             0.0,           NoMax_double   );
    ReadPara->Add( "GRACKLE_HYDROGEN_MFRAC",     &GRACKLE_HYDROGEN_MFRAC,          0.76,            0.0,           1.0            );
    ReadPara->Add( "OPT__UNFREEZE_GRACKLE",      &OPT__UNFREEZE_GRACKLE,           false,           Useless_bool,  Useless_bool   );
 // do not check CHE_GPU_NPGROUP since it may be reset by either Init_ResetParameter() or CUAPI_SetMemSize()

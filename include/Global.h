@@ -280,6 +280,8 @@ extern bool            GRACKLE_CIE_COOLING;
 extern int             GRACKLE_H2_OPA_APPROX;
 extern bool            GRACKLE_USE_V_HEATING_RATE;
 extern bool            GRACKLE_USE_S_HEATING_RATE;
+extern int             GRACKLE_USE_TEMP_FLOOR;
+extern double          GRACKLE_TEMP_FLOOR_SCALAR;
 extern double          GRACKLE_HYDROGEN_MFRAC;
 extern bool            OPT__UNFREEZE_GRACKLE;
 extern bool            OPT__OUTPUT_GRACKLE_TEMP;
