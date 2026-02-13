@@ -3,7 +3,7 @@ Compilation flags:
 Enable  : MODEL=ELBDM, GRAVITY, PARTICLE, STORE_PAR_ACC, SUPPORT_HDF5,
           SUPPORT_GSL (optional, only useful for thin disk)
 
-Disable : COMOVING
+Disable : COMOVING, ELBDM_SCHEME=ELBDM_HYBRID
 
 
 Note:

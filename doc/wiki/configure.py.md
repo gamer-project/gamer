@@ -140,7 +140,7 @@ Edit the section "source files" in the `Makefile_base` to add new source files.
 > [!IMPORTANT]
 > All flags must be set in `flags`; otherwise, they will be interpreted as library paths.
 
-3. Add `NEW_FLAG -new_flag` in your [[machine configuration file | Installation:-Machine-Configuration-File]] `configs/YOUR.config`.
+3. Add `NEW_FLAG -new_flag` in your [[machine configuration file | [Installation]-Machine-Configuration-File]] `configs/YOUR.config`.
 
    ```
    # 2. Compiler flags

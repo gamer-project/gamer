@@ -388,14 +388,22 @@ void Init_ResetParameter()
 #  elif ( MODEL == ELBDM )
    if ( OPT__FLU_INT_SCHEME == INT_DEFAULT )
    {
+#     ifdef SUPPORT_SPECTRAL_INT
+      OPT__FLU_INT_SCHEME = INT_SPECTRAL;
+#     else
       OPT__FLU_INT_SCHEME = INT_CQUAR;
+#     endif
 
       PRINT_RESET_PARA( OPT__FLU_INT_SCHEME, FORMAT_INT, "" );
    }
 
    if ( OPT__REF_FLU_INT_SCHEME == INT_DEFAULT )
    {
+#     ifdef SUPPORT_SPECTRAL_INT
+      OPT__REF_FLU_INT_SCHEME = INT_SPECTRAL;
+#     else
       OPT__REF_FLU_INT_SCHEME = INT_CQUAR;
+#     endif
 
       PRINT_RESET_PARA( OPT__REF_FLU_INT_SCHEME, FORMAT_INT, "" );
    }
@@ -811,28 +819,25 @@ void Init_ResetParameter()
 
 
 // set default value for the origin of angular momentum
-   if ( OPT__CK_CONSERVATION )
+   if ( ANGMOM_ORIGIN_X < 0.0 )
    {
-      if ( ANGMOM_ORIGIN_X < 0.0 )
-      {
-         ANGMOM_ORIGIN_X = amr->BoxCenter[0];
+      ANGMOM_ORIGIN_X = amr->BoxCenter[0];
 
-         PRINT_RESET_PARA( ANGMOM_ORIGIN_X, FORMAT_REAL, "" );
-      }
+      PRINT_RESET_PARA( ANGMOM_ORIGIN_X, FORMAT_REAL, "" );
+   }
 
-      if ( ANGMOM_ORIGIN_Y < 0.0 )
-      {
-         ANGMOM_ORIGIN_Y = amr->BoxCenter[1];
+   if ( ANGMOM_ORIGIN_Y < 0.0 )
+   {
+      ANGMOM_ORIGIN_Y = amr->BoxCenter[1];
 
-         PRINT_RESET_PARA( ANGMOM_ORIGIN_Y, FORMAT_REAL, "" );
-      }
+      PRINT_RESET_PARA( ANGMOM_ORIGIN_Y, FORMAT_REAL, "" );
+   }
 
-      if ( ANGMOM_ORIGIN_Z < 0.0 )
-      {
-         ANGMOM_ORIGIN_Z = amr->BoxCenter[2];
+   if ( ANGMOM_ORIGIN_Z < 0.0 )
+   {
+      ANGMOM_ORIGIN_Z = amr->BoxCenter[2];
 
-         PRINT_RESET_PARA( ANGMOM_ORIGIN_Z, FORMAT_REAL, "" );
-      }
+      PRINT_RESET_PARA( ANGMOM_ORIGIN_Z, FORMAT_REAL, "" );
    }
 
 // set default value for OPT__RECORD_CENTER

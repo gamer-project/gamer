@@ -111,6 +111,74 @@ void Validate()
 
 #if ( MODEL == HYDRO  &&  defined CR_DIFFUSION )
 //-------------------------------------------------------------------------------------------------------
+// Function    :  LoadInputTestProb
+// Description :  Read problem-specific runtime parameters from Input__TestProb and store them in HDF5 snapshots (Data_*)
+//
+// Note        :  1. Invoked by SetParameter() to read parameters
+//                2. Invoked by Output_DumpData_Total_HDF5() using the function pointer Output_HDF5_InputTest_Ptr to store parameters
+//                3. If there is no problem-specific runtime parameter to load, add at least one parameter
+//                   to prevent an empty structure in HDF5_Output_t
+//                   --> Example:
+//                       LOAD_PARA( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+//
+// Parameter   :  load_mode      : Mode for loading parameters
+//                                 --> LOAD_READPARA    : Read parameters from Input__TestProb
+//                                     LOAD_HDF5_OUTPUT : Store parameters in HDF5 snapshots
+//                ReadPara       : Data structure for reading parameters (used with LOAD_READPARA)
+//                HDF5_InputTest : Data structure for storing parameters in HDF5 snapshots (used with LOAD_HDF5_OUTPUT)
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
+{
+
+#  ifndef SUPPORT_HDF5
+   if ( load_mode == LOAD_HDF5_OUTPUT )   Aux_Error( ERROR_INFO, "please turn on SUPPORT_HDF5 in the Makefile for load_mode == LOAD_HDF5_OUTPUT !!\n" );
+#  endif
+
+   if ( load_mode == LOAD_READPARA     &&  ReadPara       == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_READPARA and ReadPara == NULL !!\n" );
+   if ( load_mode == LOAD_HDF5_OUTPUT  &&  HDF5_InputTest == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_HDF5_OUTPUT and HDF5_InputTest == NULL !!\n" );
+
+// add parameters in the following format:
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
+// --> LOAD_PARA() is defined in "include/TestProb.h"
+// *****************************************************************************************************************************************
+// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",           &VARIABLE,                       DEFAULT,       MIN,              MAX               );
+// *****************************************************************************************************************************************
+   LOAD_PARA( load_mode, "CR_Diffusion_CenterX",      &CR_Diffusion_CenterX,          -1.0,           NoMin_double,     amr->BoxSize[0]   );
+   LOAD_PARA( load_mode, "CR_Diffusion_CenterY",      &CR_Diffusion_CenterY,          -1.0,           NoMin_double,     amr->BoxSize[1]   );
+   LOAD_PARA( load_mode, "CR_Diffusion_CenterZ",      &CR_Diffusion_CenterZ,          -1.0,           NoMin_double,     amr->BoxSize[2]   );
+   LOAD_PARA( load_mode, "CR_Diffusion_Vx",           &CR_Diffusion_Vx,                0.0,           NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "CR_Diffusion_Vy",           &CR_Diffusion_Vy,                0.0,           NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "CR_Diffusion_Vz",           &CR_Diffusion_Vz,                0.0,           NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "CR_Diffusion_Rho0",         &CR_Diffusion_Rho0,              1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "CR_Diffusion_PGas0",        &CR_Diffusion_PGas0,             1.0,           Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "CR_Diffusion_E0_CR",        &CR_Diffusion_E0_CR,             0.1,           0.0,              NoMax_double      );
+   LOAD_PARA( load_mode, "CR_Diffusion_BG_CR",        &CR_Diffusion_BG_CR,             0.1,           0.0,              NoMax_double      );
+   LOAD_PARA( load_mode, "CR_Diffusion_R02_CR",       &CR_Diffusion_R02_CR,            0.05,          0.0,              NoMax_double      );
+   LOAD_PARA( load_mode, "CR_Diffusion_Type",         &CR_Diffusion_Type,              0,             0,                4                 );
+   LOAD_PARA( load_mode, "CR_Diffusion_Mag_Type",     &CR_Diffusion_Mag_Type,          0,             0,                4                 );
+   LOAD_PARA( load_mode, "CR_Diffusion_MagX",         &CR_Diffusion_MagX,              0.0,           NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "CR_Diffusion_MagY",         &CR_Diffusion_MagY,              0.0,           NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "CR_Diffusion_MagZ",         &CR_Diffusion_MagZ,              0.0,           NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "CR_Diffusion_Seed",         &CR_Diffusion_Seed,              0,             NoMin_int,        NoMax_int         );
+   LOAD_PARA( load_mode, "CR_Diffusion_R_In",         &CR_Diffusion_R_In,              0.5,           0.0,              NoMax_double      );
+   LOAD_PARA( load_mode, "CR_Diffusion_R_Out",        &CR_Diffusion_R_Out,             0.7,           0.0,              NoMax_double      );
+   LOAD_PARA( load_mode, "CR_Diffusion_CenterR",      &CR_Diffusion_CenterR,           0.6,           0.0,              NoMax_double      );
+   LOAD_PARA( load_mode, "CR_Diffusion_delR",         &CR_Diffusion_delR,              0.05,          0.0,              NoMax_double      );
+   LOAD_PARA( load_mode, "CR_Diffusion_delPhi",       &CR_Diffusion_delPhi,            0.5,           0.0,              NoMax_double      );
+   LOAD_PARA( load_mode, "CR_Diffusion_R0_CR",        &CR_Diffusion_R0_CR,             0.02,          0.0,              NoMax_double      );
+   LOAD_PARA( load_mode, "CR_Diffusion_R0_B",         &CR_Diffusion_R0_B,              1.0,           0.0,              NoMax_double      );
+   LOAD_PARA( load_mode, "CR_Diffusion_GX",           &CR_Diffusion_GX,                0,             0,                1                 );
+   LOAD_PARA( load_mode, "CR_Diffusion_GY",           &CR_Diffusion_GY,                0,             0,                1                 );
+   LOAD_PARA( load_mode, "CR_Diffusion_GZ",           &CR_Diffusion_GZ,                0,             0,                1                 );
+
+} // FUNCITON : LoadInputTestProb
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
 //
@@ -132,42 +200,11 @@ void SetParameter()
 
 
 // (1) load the problem-specific runtime parameters
+// (1-1) read parameters from Input__TestProb
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
-// (1-1) add parameters in the following format:
-// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
-// --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
-// ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",           &VARIABLE,                       DEFAULT,       MIN,              MAX         );
-// ********************************************************************************************************************************
-   ReadPara->Add( "CR_Diffusion_CenterX",      &CR_Diffusion_CenterX,          -1.0,           NoMin_double,     amr->BoxSize[0]);
-   ReadPara->Add( "CR_Diffusion_CenterY",      &CR_Diffusion_CenterY,          -1.0,           NoMin_double,     amr->BoxSize[1]);
-   ReadPara->Add( "CR_Diffusion_CenterZ",      &CR_Diffusion_CenterZ,          -1.0,           NoMin_double,     amr->BoxSize[2]);
-   ReadPara->Add( "CR_Diffusion_Vx",           &CR_Diffusion_Vx,                0.0,           NoMin_double,     NoMax_double);
-   ReadPara->Add( "CR_Diffusion_Vy",           &CR_Diffusion_Vy,                0.0,           NoMin_double,     NoMax_double);
-   ReadPara->Add( "CR_Diffusion_Vz",           &CR_Diffusion_Vz,                0.0,           NoMin_double,     NoMax_double);
-   ReadPara->Add( "CR_Diffusion_Rho0",         &CR_Diffusion_Rho0,              1.0,           Eps_double,       NoMax_double);
-   ReadPara->Add( "CR_Diffusion_PGas0",        &CR_Diffusion_PGas0,             1.0,           Eps_double,       NoMax_double);
-   ReadPara->Add( "CR_Diffusion_E0_CR",        &CR_Diffusion_E0_CR,             0.1,           0.0,              NoMax_double);
-   ReadPara->Add( "CR_Diffusion_BG_CR",        &CR_Diffusion_BG_CR,             0.1,           0.0,              NoMax_double);
-   ReadPara->Add( "CR_Diffusion_R02_CR",       &CR_Diffusion_R02_CR,            0.05,          0.0,              NoMax_double);
-   ReadPara->Add( "CR_Diffusion_Type",         &CR_Diffusion_Type,              0,             0,                4);
-   ReadPara->Add( "CR_Diffusion_Mag_Type",     &CR_Diffusion_Mag_Type,          0,             0,                4);
-   ReadPara->Add( "CR_Diffusion_MagX",         &CR_Diffusion_MagX,              0.0,           NoMin_double,     NoMax_double);
-   ReadPara->Add( "CR_Diffusion_MagY",         &CR_Diffusion_MagY,              0.0,           NoMin_double,     NoMax_double);
-   ReadPara->Add( "CR_Diffusion_MagZ",         &CR_Diffusion_MagZ,              0.0,           NoMin_double,     NoMax_double);
-   ReadPara->Add( "CR_Diffusion_Seed",         &CR_Diffusion_Seed,              0,             NoMin_int,        NoMax_int);
-   ReadPara->Add( "CR_Diffusion_R_In",         &CR_Diffusion_R_In,              0.5,           0.0,              NoMax_double);
-   ReadPara->Add( "CR_Diffusion_R_Out",        &CR_Diffusion_R_Out,             0.7,           0.0,              NoMax_double);
-   ReadPara->Add( "CR_Diffusion_CenterR",      &CR_Diffusion_CenterR,           0.6,           0.0,              NoMax_double);
-   ReadPara->Add( "CR_Diffusion_delR",         &CR_Diffusion_delR,              0.05,          0.0,              NoMax_double);
-   ReadPara->Add( "CR_Diffusion_delPhi",       &CR_Diffusion_delPhi,            0.5,           0.0,              NoMax_double);
-   ReadPara->Add( "CR_Diffusion_R0_CR",        &CR_Diffusion_R0_CR,             0.02,          0.0,              NoMax_double);
-   ReadPara->Add( "CR_Diffusion_R0_B",         &CR_Diffusion_R0_B,              1.0,           0.0,              NoMax_double);
-   ReadPara->Add( "CR_Diffusion_GX",           &CR_Diffusion_GX,                0,             0,                1);
-   ReadPara->Add( "CR_Diffusion_GY",           &CR_Diffusion_GY,                0,             0,                1);
-   ReadPara->Add( "CR_Diffusion_GZ",           &CR_Diffusion_GZ,                0,             0,                1);
+   LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
 
    ReadPara->Read( FileName );
 
@@ -372,7 +409,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
               D2 = y - CR_Diffusion_CenterY - CR_Diffusion_Vy*Time;
               D3 = z - CR_Diffusion_CenterZ - CR_Diffusion_Vz*Time;
               break;
-   } // switch (CR_Diffusion_Space)
+   } // switch ( CR_Diffusion_Space )
 
    if ( CR_Diffusion_Type == 0 )
    {
@@ -498,7 +535,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
       else
       {
-         if (r > CR_Diffusion_R_In  &&  r < CR_Diffusion_R_Out && FABS(phi) < M_PI/12.) {
+         if ( r > CR_Diffusion_R_In  &&  r < CR_Diffusion_R_Out && FABS(phi) < M_PI/12. ) {
             CRay = erfc( (phi - M_PI/12.) * r / D ) + erfc( (phi + M_PI/12.) * r / D );
          } else {
             CRay = 0.0;
@@ -522,7 +559,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    {
       if ( CR_Diffusion_Space == 0 )   Aux_Error( ERROR_INFO, "At least one of the CR_Diffusion_G{X,Y,Z} should not be zero.\n" );
       double r;
-      switch (CR_Diffusion_Dim)
+      switch ( CR_Diffusion_Dim )
       {
          case 1: r = D1;
                  if ( magD1 == 0.0  ||  magD2 != 0.0  ||  magD3 != 0.0 )
@@ -539,7 +576,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                     Aux_Error( ERROR_INFO, "The magnetic field must align to the diagonal direction (%d,%d,%d).\n",
                                CR_Diffusion_GX, CR_Diffusion_GY, CR_Diffusion_GZ );
                  break;
-      } // switch (CR_Diffusion_Dim)
+      } // switch ( CR_Diffusion_Dim )
 
       const double fr = 1.0 + 4.0 * CR_Diffusion_R02_CR * CR_DIFF_PARA * Time;
       CRay *= EXP( -CR_Diffusion_R02_CR * r * r / fr ) / SQRT(fr);
@@ -606,7 +643,7 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
       case 3: D1 = pos[0];        D2 = pos[1] * _one; D3 = 0.0;           break;
       case 5: D1 = pos[0] * _one; D2 = 0.0;           D3 = pos[2];        break;
       case 6: D1 = 0.0;           D2 = pos[1];        D3 = pos[2] * _one; break;
-   } // switch (CR_Diffusion_Space)
+   } // switch ( CR_Diffusion_Space )
 
    if      ( CR_Diffusion_Mag_Type == 0 )
    {
@@ -749,6 +786,9 @@ void Init_TestProb_Hydro_CR_Diffusion()
    Init_Function_BField_User_Ptr = SetBFieldIC;
 #  endif
    Output_User_Ptr               = OutputError;
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_InputTest_Ptr     = LoadInputTestProb;
+#  endif
 #  endif // #if ( MODEL == HYDRO  &&  defined CR_DIFFUSION )
 
 

@@ -15,11 +15,12 @@
 // ########################
 
 // current version
-#define VERSION      "gamer-2.1.1.dev"
+#define VERSION      "gamer-2.3.dev"
 
 
-// option == NONE --> the option is turned off
-#define NONE         0
+// option == OPTION_NONE --> the option is turned off
+// (we have renamed NONE to OPTION_NONE to ensure compatibility with cuFFTDx's .hpp files)
+#define OPTION_NONE  0
 
 
 // GPU architecture
@@ -32,26 +33,29 @@
 #define AMPERE       7
 #define ADA_LOVELACE 8
 #define HOPPER       9
+#define BLACKWELL    10
 
 #ifdef GPU
-#if   ( GPU_COMPUTE_CAPABILITY >= 200  &&  GPU_COMPUTE_CAPABILITY < 300 )
+#if   ( GPU_COMPUTE_CAPABILITY >= 200   &&  GPU_COMPUTE_CAPABILITY < 300 )
 # define GPU_ARCH FERMI
-#elif ( GPU_COMPUTE_CAPABILITY >= 300  &&  GPU_COMPUTE_CAPABILITY < 500 )
+#elif ( GPU_COMPUTE_CAPABILITY >= 300   &&  GPU_COMPUTE_CAPABILITY < 500 )
 # define GPU_ARCH KEPLER
-#elif ( GPU_COMPUTE_CAPABILITY >= 500  &&  GPU_COMPUTE_CAPABILITY < 600 )
+#elif ( GPU_COMPUTE_CAPABILITY >= 500   &&  GPU_COMPUTE_CAPABILITY < 600 )
 # define GPU_ARCH MAXWELL
-#elif ( GPU_COMPUTE_CAPABILITY >= 600  &&  GPU_COMPUTE_CAPABILITY < 700 )
+#elif ( GPU_COMPUTE_CAPABILITY >= 600   &&  GPU_COMPUTE_CAPABILITY < 700 )
 # define GPU_ARCH PASCAL
-#elif ( GPU_COMPUTE_CAPABILITY >= 700  &&  GPU_COMPUTE_CAPABILITY < 750 )
+#elif ( GPU_COMPUTE_CAPABILITY >= 700   &&  GPU_COMPUTE_CAPABILITY < 750 )
 # define GPU_ARCH VOLTA
-#elif ( GPU_COMPUTE_CAPABILITY >= 750  &&  GPU_COMPUTE_CAPABILITY < 800 )
+#elif ( GPU_COMPUTE_CAPABILITY >= 750   &&  GPU_COMPUTE_CAPABILITY < 800 )
 # define GPU_ARCH TURING
-#elif ( GPU_COMPUTE_CAPABILITY >= 800  &&  GPU_COMPUTE_CAPABILITY < 890 )
+#elif ( GPU_COMPUTE_CAPABILITY >= 800   &&  GPU_COMPUTE_CAPABILITY < 890 )
 # define GPU_ARCH AMPERE
-#elif ( GPU_COMPUTE_CAPABILITY >= 890  &&  GPU_COMPUTE_CAPABILITY < 900 )
+#elif ( GPU_COMPUTE_CAPABILITY >= 890   &&  GPU_COMPUTE_CAPABILITY < 900 )
 # define GPU_ARCH ADA_LOVELACE
-#elif ( GPU_COMPUTE_CAPABILITY >= 900  &&  GPU_COMPUTE_CAPABILITY < 1000 )
+#elif ( GPU_COMPUTE_CAPABILITY >= 900   &&  GPU_COMPUTE_CAPABILITY < 1000 )
 # define GPU_ARCH HOPPER
+#elif ( GPU_COMPUTE_CAPABILITY >= 1000  &&  GPU_COMPUTE_CAPABILITY <= 1210 )
+# define GPU_ARCH BLACKWELL
 #else
 # error : ERROR : Unknown GPU_COMPUTE_CAPABILITY !!
 #endif // GPU_COMPUTE_CAPABILITY
@@ -213,13 +217,22 @@
 // total number of passive scalars
 #  define NCOMP_PASSIVE       ( NCOMP_PASSIVE_USER + NCOMP_PASSIVE_BUILTIN )
 
+#if   ( MODEL == HYDRO )
 // assuming all passive scalars have the corresponding fluxes
 #  define NFLUX_PASSIVE       NCOMP_PASSIVE
+#elif ( MODEL == ELBDM )
+// assuming no flux for the passive scalars
+#  define NFLUX_PASSIVE       0
+#endif // MODEL
 
 
 // total number of variables in each cell and in the flux array including both active and passive variables
 #  define NCOMP_TOTAL         ( NCOMP_FLUID + NCOMP_PASSIVE )
 #  define NFLUX_TOTAL         ( NFLUX_FLUID + NFLUX_PASSIVE )
+
+
+// maximum number of reference values stored in ConRef[]
+#  define NCONREF_MAX         60
 
 
 // number of input/output fluid variables in the fluid solver
@@ -1243,10 +1256,10 @@
 #  undef UNSPLIT_GRAVITY
 #endif
 
-// currently we always set GPU_ARCH == NONE when GPU is off
+// currently we always set GPU_ARCH == OPTION_NONE when GPU is off
 #ifndef GPU
 #  undef  GPU_ARCH
-#  define GPU_ARCH NONE
+#  define GPU_ARCH OPTION_NONE
 #endif
 
 // currently we assume that particle acceleration is solely due to gravity

@@ -73,8 +73,8 @@ void Aux_TakeNote()
       fprintf( Note, "POT_SCHEME                      SOR\n" );
 #     elif ( POT_SCHEME == MG )
       fprintf( Note, "POT_SCHEME                      MG\n" );
-#     elif ( POT_SCHEME == NONE )
-      fprintf( Note, "POT_SCHEME                      NONE\n" );
+#     elif ( POT_SCHEME == OPTION_NONE )
+      fprintf( Note, "POT_SCHEME                      OPTION_NONE\n" );
 #     else
       fprintf( Note, "POT_SCHEME                      UNKNOWN\n" );
 #     endif
@@ -121,8 +121,8 @@ void Aux_TakeNote()
       fprintf( Note, "FLU_SCHEME                      MHM with Riemann prediction\n" );
 #     elif ( FLU_SCHEME == CTU )
       fprintf( Note, "FLU_SCHEME                      CTU\n" );
-#     elif ( FLU_SCHEME == NONE )
-      fprintf( Note, "FLU_SCHEME                      NONE\n" );
+#     elif ( FLU_SCHEME == OPTION_NONE )
+      fprintf( Note, "FLU_SCHEME                      OPTION_NONE\n" );
 #     else
       fprintf( Note, "FLU_SCHEME                      UNKNOWN\n" );
 #     endif
@@ -131,8 +131,8 @@ void Aux_TakeNote()
       fprintf( Note, "LR_SCHEME                       PLM\n" );
 #     elif ( LR_SCHEME == PPM )
       fprintf( Note, "LR_SCHEME                       PPM\n" );
-#     elif ( LR_SCHEME == NONE )
-      fprintf( Note, "LR_SCHEME                       NONE\n" );
+#     elif ( LR_SCHEME == OPTION_NONE )
+      fprintf( Note, "LR_SCHEME                       OPTION_NONE\n" );
 #     else
       fprintf( Note, "LR_SCHEME                       UNKNOWN\n" );
 #     endif
@@ -147,8 +147,8 @@ void Aux_TakeNote()
       fprintf( Note, "RSOLVER                         HLLC\n" );
 #     elif ( RSOLVER == HLLD )
       fprintf( Note, "RSOLVER                         HLLD\n" );
-#     elif ( RSOLVER == NONE )
-      fprintf( Note, "RSOLVER                         NONE\n" );
+#     elif ( RSOLVER == OPTION_NONE )
+      fprintf( Note, "RSOLVER                         OPTION_NONE\n" );
 #     else
       fprintf( Note, "RSOLVER                         UNKNOWN\n" );
 #     endif
@@ -157,8 +157,8 @@ void Aux_TakeNote()
       fprintf( Note, "DUAL_ENERGY                     DE_ENPY\n" );
 #     elif ( DUAL_ENERGY == DE_EINT )
       fprintf( Note, "DUAL_ENERGY                     DE_EINT\n" );
-#     elif ( DUAL_ENERGY == NONE )
-      fprintf( Note, "DUAL_ENERGY                     NONE\n" );
+#     elif ( DUAL_ENERGY == OPTION_NONE )
+      fprintf( Note, "DUAL_ENERGY                     OPTION_NONE\n" );
 #     else
       fprintf( Note, "DUAL_ENERGY                     UNKNOWN\n" );
 #     endif
@@ -417,6 +417,8 @@ void Aux_TakeNote()
       fprintf( Note, "GPU_ARCH                        ADA_LOVELACE\n" );
 #     elif ( GPU_ARCH == HOPPER )
       fprintf( Note, "GPU_ARCH                        HOPPER\n" );
+#     elif ( GPU_ARCH == BLACKWELL )
+      fprintf( Note, "GPU_ARCH                        BLACKWELL\n" );
 #     else
       fprintf( Note, "GPU_ARCH                        UNKNOWN\n" );
 #     endif
@@ -555,7 +557,7 @@ void Aux_TakeNote()
       fprintf( Note, "CHECK_INTERMEDIATE              HLLC\n" );
 #     elif ( CHECK_INTERMEDIATE == HLLD )
       fprintf( Note, "CHECK_INTERMEDIATE              HLLD\n" );
-#     elif ( CHECK_INTERMEDIATE == NONE )
+#     elif ( CHECK_INTERMEDIATE == OPTION_NONE )
       fprintf( Note, "CHECK_INTERMEDIATE              OFF\n" );
 #     else
       fprintf( Note, "CHECK_INTERMEDIATE              UNKNOWN\n" );
@@ -569,7 +571,7 @@ void Aux_TakeNote()
       fprintf( Note, "RSOLVER_RESCUE                  HLLC\n" );
 #     elif ( RSOLVER_RESCUE == HLLD )
       fprintf( Note, "RSOLVER_RESCUE                  HLLD\n" );
-#     elif ( RSOLVER_RESCUE == NONE )
+#     elif ( RSOLVER_RESCUE == OPTION_NONE )
       fprintf( Note, "RSOLVER_RESCUE                  OFF\n" );
 #     else
       fprintf( Note, "RSOLVER_RESCUE                  UNKNOWN\n" );
@@ -698,6 +700,7 @@ void Aux_TakeNote()
       fprintf( Note, "#define FLU_NOUT_S             % d\n",      FLU_NOUT_S            );
       fprintf( Note, "#define DER_NOUT_MAX           % d\n",      DER_NOUT_MAX          );
       fprintf( Note, "#define NFIELD_STORED_MAX      % d\n",      NFIELD_STORED_MAX     );
+      fprintf( Note, "#define NCONREF_MAX            % d\n",      NCONREF_MAX           );
       fprintf( Note, "#define NFLUX_FLUID            % d\n",      NFLUX_FLUID           );
       fprintf( Note, "#define NFLUX_PASSIVE          % d\n",      NFLUX_PASSIVE         );
 #     ifdef GRAVITY
@@ -932,9 +935,10 @@ void Aux_TakeNote()
       fprintf( Note, "Par->GhostSizeTracer           % d\n",      amr->Par->GhostSizeTracer     );
       fprintf( Note, "Par->TracerVelCorr             % d\n",      amr->Par->TracerVelCorr       );
       fprintf( Note, "OPT__FREEZE_PAR                % d\n",      OPT__FREEZE_PAR               );
+      fprintf( Note, "OPT__PAR_INIT_CHECK            % d\n",      OPT__PAR_INIT_CHECK           );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
-#     endif
+#     endif // #ifdef PARTICLE
 
 
 //    record the parameters of cosmological simulations (comoving frame)
@@ -1297,6 +1301,15 @@ void Aux_TakeNote()
       fprintf( Note, "\n" ); }
 
       fprintf( Note, "OPT__CORR_AFTER_ALL_SYNC       % d\n",      OPT__CORR_AFTER_ALL_SYNC );
+      fprintf( Note, "Passive_Floor_Off              % d\n",      -1                       );
+
+//    target passive scalars to NOT be applied floor operations
+      fprintf( Note, "   Target fields               "                                     );
+      for (int v=0; v<NCOMP_TOTAL; v++)
+      if ( ( PassiveFloorMask & (1L<<v) ) == 0 )
+      fprintf( Note, " %s",                                       FieldLabel[v]            );
+      fprintf( Note, "\n" );
+
       fprintf( Note, "OPT__NORMALIZE_PASSIVE         % d\n",      OPT__NORMALIZE_PASSIVE   );
 
 //    target passive scalars to be normalized
@@ -1698,12 +1711,9 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__CK_REFINE                 % d\n",      OPT__CK_REFINE            );
       fprintf( Note, "OPT__CK_PROPER_NESTING         % d\n",      OPT__CK_PROPER_NESTING    );
       fprintf( Note, "OPT__CK_CONSERVATION           % d\n",      OPT__CK_CONSERVATION      );
-      if ( OPT__CK_CONSERVATION )
-      {
       fprintf( Note, "   ANGMOM_ORIGIN_X             % 14.7e\n",  ANGMOM_ORIGIN_X           );
       fprintf( Note, "   ANGMOM_ORIGIN_Y             % 14.7e\n",  ANGMOM_ORIGIN_Y           );
       fprintf( Note, "   ANGMOM_ORIGIN_Z             % 14.7e\n",  ANGMOM_ORIGIN_Z           );
-      }
       fprintf( Note, "OPT__CK_NORMALIZE_PASSIVE      % d\n",      OPT__CK_NORMALIZE_PASSIVE );
       fprintf( Note, "OPT__CK_RESTRICT               % d\n",      OPT__CK_RESTRICT          );
       fprintf( Note, "OPT__CK_FINITE                 % d\n",      OPT__CK_FINITE            );

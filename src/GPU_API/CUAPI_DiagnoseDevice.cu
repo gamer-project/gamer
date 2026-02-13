@@ -53,6 +53,7 @@ void CUAPI_DiagnoseDevice()
    else if ( DeviceProp.major == 8  &&  DeviceProp.minor == 6 )  NCorePerMP = 128;
    else if ( DeviceProp.major == 8  &&  DeviceProp.minor == 9 )  NCorePerMP = 128;
    else if ( DeviceProp.major == 9 )                             NCorePerMP = 128;
+   else if ( DeviceProp.major == 12 &&  DeviceProp.minor == 0 )  NCorePerMP = 128;
    else
       fprintf( stderr, "WARNING : unable to determine the number of cores per multiprocessor for version %d.%d ...\n",
                DeviceProp.major, DeviceProp.minor );
@@ -86,6 +87,9 @@ void CUAPI_DiagnoseDevice()
 
          Aux_GetCPUInfo( FileName );
 
+         int clockRate; // in unit of kHz
+         CUDA_CHECK_ERROR(  cudaDeviceGetAttribute(&clockRate, cudaDevAttrClockRate, GetDeviceID)  );
+
          fprintf( Note, "\n" );
          fprintf( Note, "GPU Info :\n" );
          fprintf( Note, "Number of GPUs                          : %d\n"     , DeviceCount );
@@ -95,7 +99,7 @@ void CUAPI_DiagnoseDevice()
          fprintf( Note, "CUDA Runtime Version                    : %d.%d\n"  , RuntimeVersion/1000, RuntimeVersion%100 );
          fprintf( Note, "CUDA Major Revision Number              : %d\n"     , DeviceProp.major );
          fprintf( Note, "CUDA Minor Revision Number              : %d\n"     , DeviceProp.minor );
-         fprintf( Note, "Clock Rate                              : %f GHz\n" , DeviceProp.clockRate/1.0e6 );
+         fprintf( Note, "Clock Rate                              : %f GHz\n" , clockRate/1.0e6 );
          fprintf( Note, "Global Memory Size                      : %ld MB\n" , (long)DeviceProp.totalGlobalMem/1024/1024 );
          fprintf( Note, "Constant Memory Size                    : %ld KB\n" , (long)DeviceProp.totalConstMem/1024 );
          fprintf( Note, "Shared Memory Size per Block            : %ld KB\n" , (long)DeviceProp.sharedMemPerBlock/1024 );

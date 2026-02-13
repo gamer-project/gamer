@@ -29,8 +29,8 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
    yt_param_yt param_yt;
 
    param_yt.frontend                = "gamer";           // simulation frontend
-   if ( strcmp(YT_FIG_BASENAME, "") != 0 )
-       param_yt.fig_basename = YT_FIG_BASENAME;          // figure base name, use default if not set (default=Fig%09d)
+   if ( strcmp( YT_FIG_BASENAME, "" ) != 0 )
+      param_yt.fig_basename = YT_FIG_BASENAME;           // figure base name, use default if not set (default=Fig%09d)
 
    param_yt.length_unit             = UNIT_L;            // units are in cgs
    param_yt.mass_unit               = UNIT_M;
@@ -58,7 +58,7 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
 #  ifdef PARTICLE
    yt_par_type par_type_list[1];
    par_type_list[0].par_type = "io";
-   par_type_list[0].num_attr = PAR_NATT_FLT_TOTAL;
+   par_type_list[0].num_attr = PAR_NATT_FLT_TOTAL + PAR_NATT_INT_TOTAL;
 
    param_yt.num_par_types = 1;
    param_yt.par_type_list = par_type_list;
@@ -96,7 +96,7 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
 #  else
    const int mhd = 0;
 #  endif
-   if (yt_set_UserParameterInt("mhd", 1, &mhd) != YT_SUCCESS)  Aux_Error( ERROR_INFO, "yt_set_UserParameterInt() set mhd failed !!\n" );
+   if ( yt_set_UserParameterInt( "mhd", 1, &mhd ) != YT_SUCCESS )  Aux_Error( ERROR_INFO, "yt_set_UserParameterInt() set mhd failed !!\n" );
 
 #  if   ( MODEL == HYDRO )
    const double gamma = (double) GAMMA;
@@ -112,12 +112,12 @@ void YT_SetParameter( const int NPatchAllLv, const int NField, const int NPatchL
    const double mu    = NULL_REAL;
    const int    srhd  = 0;
 #  endif // MODEL
-   if ( yt_set_UserParameterDouble("gamma",    1, &gamma   ) != YT_SUCCESS )   Aux_Error( ERROR_INFO, "yt_set_UserParameterDouble() set %s failed !!\n", "GAMMA" );
-   if ( yt_set_UserParameterDouble("mu",       1, &mu      ) != YT_SUCCESS )   Aux_Error( ERROR_INFO, "yt_set_UserParameterDouble() set %s failed !!\n", "MOLECULAR_WEIGHT" );
-   if ( yt_set_UserParameterInt   ("srhd",     1, &srhd    ) != YT_SUCCESS )   Aux_Error( ERROR_INFO, "yt_set_UserParameterInt() set %s failed !!\n", "SRHD" );
+   if ( yt_set_UserParameterDouble( "gamma",    1, &gamma    ) != YT_SUCCESS )   Aux_Error( ERROR_INFO, "yt_set_UserParameterDouble() set %s failed !!\n", "GAMMA" );
+   if ( yt_set_UserParameterDouble( "mu",       1, &mu       ) != YT_SUCCESS )   Aux_Error( ERROR_INFO, "yt_set_UserParameterDouble() set %s failed !!\n", "MOLECULAR_WEIGHT" );
+   if ( yt_set_UserParameterInt   ( "srhd",     1, &srhd     ) != YT_SUCCESS )   Aux_Error( ERROR_INFO, "yt_set_UserParameterInt() set %s failed !!\n", "SRHD" );
 
    const int opt_unit = OPT__UNIT;
-   if ( yt_set_UserParameterInt   ("opt_unit", 1, &opt_unit) != YT_SUCCESS )   Aux_Error( ERROR_INFO, "yt_set_UserParameterInt() set %s failed !!\n", "OPT__UNIT" );
+   if ( yt_set_UserParameterInt   ( "opt_unit", 1, &opt_unit ) != YT_SUCCESS )   Aux_Error( ERROR_INFO, "yt_set_UserParameterInt() set %s failed !!\n", "OPT__UNIT" );
 
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

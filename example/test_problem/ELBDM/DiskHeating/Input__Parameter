@@ -25,7 +25,7 @@ END_STEP                     -1           # end step (<0=auto -> must be set by 
 
 # test problems
 TESTPROB_ID                  1013         # test problem ID [0]
-                                          # 1003: ELBDM soliton merger (+GRAVITY)
+                                          # 1013: ELBDM Disk Heating (+GRAVITY)
 
 # code units (in cgs)
 OPT__UNIT                     1           # specify code units -> must set exactly 3 basic units below [0] ##USELESS FOR COMOVING##

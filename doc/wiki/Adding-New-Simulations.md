@@ -23,6 +23,7 @@ Mandatory steps are marked by &#x1F4CC;.
    *  [External Potential](#external-potential)
    *  [Equation of State](#equation-of-state)
    *  [Feedback](#feedback)
+   *  [HDF5 Output](#hdf5-output)
 7. [Add Problem-specific Validators](#vii-add-problem-specific-validators)
 8. [Store Problem-specific Input Files](#viii-store-problem-specific-input-files)
 
@@ -95,7 +96,7 @@ For details see
 
 2. Magnetic field IC &#8212; choose one of the following two methods
 (only necessary when enabling
-[[--mhd | Installation:-Option-List#--mhd]]):
+[[--mhd | [Installation]-Option-List#--mhd]]):
 
     * Specify the magnetic field IC by editing the function `SetBFieldIC()`
 or specify the vector potential IC by editing a function linking to the function pointer
@@ -108,7 +109,7 @@ uniform-mesh binary file. For details see
 
 3. Particles IC &#8212; choose one of the following two methods
 (only necessary when enabling
-[[--particle | Installation:-Option-List#--particle]]):
+[[--particle | [Installation]-Option-List#--particle]]):
 
     * Specify a particle initialization function.
         1. Define the function `Par_Init_ByFunction_NewProblem()`.
@@ -156,24 +157,17 @@ problem source file.
     static char   var_str[MAX_STRING];
     ```
 
-2. Edit the function `SetParameter()` to load these parameters.
+2. Edit the function `LoadInputTestProb()` to load these parameters.
 
     ```C++
-       const char FileName[] = "Input__TestProb";
-       ReadPara_t *ReadPara  = new ReadPara_t;
-
     // add parameters in the following format:
-    // *************************************************************************************************
-    // ReadPara->Add( "KEY_IN_THE_FILE",   &VARIABLE,     DEFAULT,       MIN,            MAX          );
-    // *************************************************************************************************
-       ReadPara->Add( "var_bool",          &var_bool,     true,          Useless_bool,   Useless_bool );
-       ReadPara->Add( "var_double",        &var_double,   1.0,           Eps_double,     NoMax_double );
-       ReadPara->Add( "var_int",           &var_int,      2,             0,              5            );
-       ReadPara->Add( "var_str",            var_str,      Useless_str,   Useless_str,    Useless_str  );
-
-       ReadPara->Read( FileName );
-
-       delete ReadPara;
+    // ********************************************************************************************************
+    // LOAD_PARA( load_mode, "KEY_IN_THE_FILE",   &VARIABLE,     DEFAULT,       MIN,            MAX          );
+    // ********************************************************************************************************
+       LOAD_PARA( load_mode, "var_bool",          &var_bool,     true,          Useless_bool,   Useless_bool );
+       LOAD_PARA( load_mode, "var_double",        &var_double,   1.0,           Eps_double,     NoMax_double );
+       LOAD_PARA( load_mode, "var_int",           &var_int,      2,             0,              5            );
+       LOAD_PARA( load_mode, "var_str",            var_str,      Useless_str,   Useless_str,    Useless_str  );
     ```
 
 > [!CAUTION]
@@ -181,6 +175,13 @@ problem source file.
 >
 > Some handy constants (e.g., `Useless_bool`, `Eps_double`, `NoMin_int`, ...)
 are defined in `include/ReadPara.h`. See [[Adding Parameters | Adding-Parameters]] for details.
+
+> [!CAUTION]
+> There should be at least one variable to store. Otherwise, please store a global constant.
+> ```c++
+>    LOAD_PARA( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+> ```
+> See `src/TestProblem/Hydro/CDM_LSS/Init_TestProb_Hydro_CDM_LSS.cpp` for an example.
 
 3. [Optional] Edit `SetParameter()` to make a note of the values adopted
 during the runtime.
@@ -199,7 +200,7 @@ during the runtime.
     ```
 
 4. Add these parameters to the input file `Input__TestProb`
-(see [[Input__TestProb | Runtime-Parameters:-Input__TestProb]]
+(see [[Input__TestProb | [Runtime-Parameters]-Input__TestProb]]
 for the file format).
 This file must be put in the same directory as the executable `gamer`
 when running the code.
@@ -219,7 +220,7 @@ when running the code.
 
 It takes 4 small steps to add a new grid field:
 
-1. Set [[ --passive | Installation:-Option-List#--passive]]
+1. Set [[ --passive | [Installation]-Option-List#--passive]]
 to `N` (for `N` new fields) when generating the Makefile.
 
 2. Declare a global integer variable on the top of the problem source
@@ -231,7 +232,7 @@ file to store the new field index. For example,
 
     Note that some field index variables have been pre-declared in
 `include/Field.h` (e.g., `Idx_Metal` for the field `Metal` used by,
-for example, [[ GRACKLE_METAL | Runtime-Parameters:-Chemistry-and-Radiation#GRACKLE_METAL ]]).
+for example, [[ GRACKLE_METAL | [Runtime-Parameters]-Chemistry-and-Radiation#GRACKLE_METAL ]]).
 Whenever applicable, skip this step and use these pre-declared index variables
 directly.
 
@@ -243,7 +244,7 @@ and get the field index. For example,
     void AddNewField_NewProblem()
     {
        if ( NewFieldIdx == Idx_Undefined )
-          NewFieldIdx = AddField( "NewFieldLabel", NORMALIZE_YES, INTERP_FRAC_YES );
+          NewFieldIdx = AddField( "NewFieldLabel", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
     }
     ```
 
@@ -252,15 +253,26 @@ in the output files, and the field index `NewFieldIdx` can be used to
 access the field data (see the next step). The check `if ( NewFieldIdx == Idx_Undefined )`
 is just to avoid redundant assignments to the same field index variable.
 
-    The second parameter should be set to either `NORMALIZE_YES` or `NORMALIZE_NO`.
+    The second parameter should be set to either `FIXUP_FLUX_YES` or `FIXUP_FLUX_NO`.
+It controls whether the new field will be corrected by the fluxes across the coarse-fine boundaries
+when enabling [[ OPT__FIXUP_FLUX | Runtime-Parameters:-Hydro#OPT__FIXUP_FLUX ]].
+
+    The third parameter should be set to either `FIXUP_REST_YES` or `FIXUP_REST_NO`.
+It controls whether the new field will be corrected by the volume-weighted average of the fine-grid data
+when enabling [[ OPT__FIXUP_RESTRICT | Runtime-Parameters:-Hydro#OPT__FIXUP_RESTRICT ]].
+
+    The fourth parameter should be set to either `FLOOR_YES` or `FLOOR_NO`.
+It controls whether the new field will be floored to `TINY_NUMBER` to ensure positivity.
+
+    The fifth parameter should be set to either `NORMALIZE_YES` or `NORMALIZE_NO`.
 It controls whether the new field will be renormalized by the total gas density
 after every update when enabling
-[[ OPT__NORMALIZE_PASSIVE | Runtime-Parameters:-Hydro#OPT__NORMALIZE_PASSIVE ]].
+[[ OPT__NORMALIZE_PASSIVE | [Runtime-Parameters]-Hydro#OPT__NORMALIZE_PASSIVE ]].
 
-    The third parameter should be set to either `INTERP_FRAC_YES` or `INTERP_FRAC_NO`.
+    The sixth parameter should be set to either `INTERP_FRAC_YES` or `INTERP_FRAC_NO`.
 It controls whether the new field will be converted to mass fraction during interpolation
 when enabling
-[[ OPT__INT_FRAC_PASSIVE_LR | Runtime-Parameters:-Hydro#OPT__INT_FRAC_PASSIVE_LR ]].
+[[ OPT__INT_FRAC_PASSIVE_LR | [Runtime-Parameters]-Hydro#OPT__INT_FRAC_PASSIVE_LR ]].
 
     One must also set the function pointer `Init_Field_User_Ptr` in the problem
 initialization function `Init_TestProb_Hydro_NewProblem()`.
@@ -271,7 +283,7 @@ initialization function `Init_TestProb_Hydro_NewProblem()`.
 
 > [!NOTE]
 > The built-in field `Metal` with the field index `Idx_Metal`
-will be added automatically when enabling [[ GRACKLE_METAL | Runtime-Parameters:-Chemistry-and-Radiation#GRACKLE_METAL ]].
+will be added automatically when enabling [[ GRACKLE_METAL | [Runtime-Parameters]-Chemistry-and-Radiation#GRACKLE_METAL ]].
 
 4. Assign initial values to the new field in `SetGridIC()` using the corresponding
 field index. For example,
@@ -293,8 +305,8 @@ field index. For example,
 Adding a new particle attribute is very similar to adding a new grid field.
 So we only highlight the differences in each of the 4 steps above.
 
-1. Set [[ --par_attribute_flt | Installation:-Option-List#--par_attribute_flt ]] and
-[[ --par_attribute_int | Installation:-Option-List#--par_attribute_int ]]
+1. Set [[ --par_attribute_flt | [Installation]-Option-List#--par_attribute_flt ]] and
+[[ --par_attribute_int | [Installation]-Option-List#--par_attribute_int ]]
 instead when generating the Makefile.
 
 2. Declare a global integer variable on the top of the problem source
@@ -382,7 +394,7 @@ The following example illustrates the procedure to add a problem-specific
     ```
 
 4. Turn on the corresponding runtime option
-[[OPT__OUTPUT_USER | Runtime-Parameters:-Outputs#OPT__OUTPUT_USER]].
+[[OPT__OUTPUT_USER | [Runtime-Parameters]-Outputs#OPT__OUTPUT_USER]].
 when running the code.
 
     ```
@@ -403,7 +415,7 @@ Provide a custom routine for [[Setting IC from Files - Grids | Initial-Condition
 * **Function Pointer:**
 `Init_ByFile_User_Ptr`
 * **Runtime Option:**
-[[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=3
+[[OPT__INIT | [Runtime-Parameters]-Initial-Conditions#OPT__INIT]]=3
 * **Example:**
 `src/Init/Init_ByFile.cpp` &#8594; `Init_ByFile_Default()`
 
@@ -415,7 +427,7 @@ Provide a custom routine for [[Setting IC from Files - Particles | Initial-Condi
 * **Function Pointer:**
 `Par_Init_ByFile_User_Ptr`
 * **Runtime Option:**
-[[PAR_INIT | Runtime-Parameters:-Particles#PAR_INIT]]=3
+[[PAR_INIT | [Runtime-Parameters]-Particles#PAR_INIT]]=3
 * **Example:**
 `src/Particle/Par_Init_ByFile.cpp` &#8594; `Par_Init_ByFile_Default()`
 ### Work Before Output
@@ -436,14 +448,14 @@ None
 ### Refinement Criteria
 * **Description:**
 Add user-specified refinement criteria. See
-[[OPT__FLAG_USER | Runtime-Parameters:-Refinement#OPT__FLAG_USER]]
+[[OPT__FLAG_USER | [Runtime-Parameters]-Refinement#OPT__FLAG_USER]]
 for details.
 * **Prototype:**
 `bool Flag_NewProblem( const int, const int, const int, const int, const int, const double );`
 * **Function Pointer:**
 `Flag_User_Ptr`
 * **Runtime Option:**
-[[OPT__FLAG_USER | Runtime-Parameters:-Refinement#OPT__FLAG_USER]]
+[[OPT__FLAG_USER | [Runtime-Parameters]-Refinement#OPT__FLAG_USER]]
 * **Example:**
 `src/Refine/Flag_User.cpp`
 
@@ -467,7 +479,7 @@ Add user-specified timestep constraints.
 * **Function Pointer:**
 `Mis_GetTimeStep_User_Ptr`
 * **Runtime Option:**
-[[OPT__DT_USER | Runtime-Parameters:-Timestep#OPT__DT_USER]]
+[[OPT__DT_USER | [Runtime-Parameters]-Timestep#OPT__DT_USER]]
 * **Example:**
 `src/Miscellaneous/Mis_GetTimeStep_User.cpp`
 
@@ -480,7 +492,7 @@ Add user-specified (i.e., inflow) boundary conditions.
 `BC_User_Ptr` for the cell-centered fluid variables and
 `BC_BField_User_Ptr` for the face-centered magnetic field
 * **Runtime Option:**
-[[OPT__BC_FLU_* | Runtime-Parameters:-Hydro#OPT__BC_FLU_XM]] = 4
+[[OPT__BC_FLU_* | [Runtime-Parameters]-Hydro#OPT__BC_FLU_XM]] = 4
 * **Example:**
 `src/TestProblem/ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp`
 &#8594; `BC()`
@@ -498,7 +510,7 @@ Using the vector potential is recommended since it reduces the divergence-free e
 Note that one still needs to define `MHD_ResetByUser_BField_Ptr` when using the vector potential
 (see the example below).
 * **Restriction:**
-  * [[INIT_SUBSAMPLING_NCELL | Runtime-Parameters:-Initial-Conditions#INIT_SUBSAMPLING_NCELL]] has no effect on resetting the initial magnetic field.
+  * [[INIT_SUBSAMPLING_NCELL | [Runtime-Parameters]-Initial-Conditions#INIT_SUBSAMPLING_NCELL]] has no effect on resetting the initial magnetic field.
   * To ensure that the reset magnetic field satisfies the divergence-free condition to the machine precision,
 one must (i) use the vector potential and (ii) ensure that the reset fields do not touch any coarse-fine
 AMR interfaces. Supporting resetting a divergence-free magnetic field across coarse-fine AMR interfaces
@@ -513,7 +525,7 @@ will be implemented in the future.
 * **Function Pointer:**
 `Flu_ResetByUser_Func_Ptr`, `MHD_ResetByUser_BField_Ptr`, `MHD_ResetByUser_VecPot_Ptr`
 * **Runtime Option:**
-[[OPT__RESET_FLUID | Runtime-Parameters:-Hydro#OPT__RESET_FLUID]], [[OPT__RESET_FLUID_INIT | Runtime-Parameters:-Hydro#OPT__RESET_FLUID_INIT]]
+[[OPT__RESET_FLUID | [Runtime-Parameters]-Hydro#OPT__RESET_FLUID]], [[OPT__RESET_FLUID_INIT | [Runtime-Parameters]-Hydro#OPT__RESET_FLUID_INIT]]
 * **Example:**
 `src/Fluid/Flu_ResetByUser.cpp`, `src/Model_Hydro/MHD_ResetByUser.cpp`, `src/TestProblem/Hydro/BlastWave/MHD_ResetByUser_BlastWave.cpp`
 
@@ -525,7 +537,7 @@ Perform user-specified simulation diagnostics.
 * **Function Pointer:**
 `Aux_Record_User_Ptr`
 * **Runtime Option:**
-[[OPT__RECORD_USER | Runtime-Parameters:-Miscellaneous#OPT__RECORD_USER]]
+[[OPT__RECORD_USER | [Runtime-Parameters]-Miscellaneous#OPT__RECORD_USER]]
 * **Example:**
 `src/Auxiliary/Aux_Record_User.cpp`
 
@@ -570,7 +582,7 @@ for details.
 * **Function Pointer:**
    * `Init_ExtAcc_Ptr`
 * **Runtime Option:**
-[[OPT__EXT_ACC | Runtime-Parameters:-Gravity#OPT__EXT_ACC]]
+[[OPT__EXT_ACC | [Runtime-Parameters]-Gravity#OPT__EXT_ACC]]
 * **Example:**
    * `src/TestProblem/Hydro/Plummer/Init_TestProb_Hydro_Plummer.cpp`
    * `src/TestProblem/Hydro/Plummer/ExtAcc_Plummer.cpp`
@@ -586,7 +598,7 @@ for details.
 * **Function Pointer:**
    * `Init_ExtPot_Ptr`
 * **Runtime Option:**
-[[OPT__EXT_POT | Runtime-Parameters:-Gravity#OPT__EXT_POT]]
+[[OPT__EXT_POT | [Runtime-Parameters]-Gravity#OPT__EXT_POT]]
 * **Example:**
    * `src/TestProblem/Hydro/Plummer/Init_TestProb_Hydro_Plummer.cpp`
    * `src/TestProblem/Hydro/Plummer/ExtPot_Plummer.cpp`
@@ -600,22 +612,36 @@ Add a user-specified equation of state. See [[here | equation-of-state]] for det
    * `EoS_Init_Ptr`
    * `Eos_End_Ptr`
 * **Compilation Option:**
-[[--eos | Installation:-Option-List#--eos]]
+[[--eos | [Installation]-Option-List#--eos]]
 * **Example:**
    * `src/EoS/User_Template`
    * `src/EoS/Gamma`
 
 ### Feedback
 * **Description:**
-Add a user-specified feedback. See [[FB_USER | Runtime-Parameters:-Feedback#FB_USER]] for details.
+Add a user-specified feedback. See [[FB_USER | [Runtime-Parameters]-Feedback#FB_USER]] for details.
 * **Function Pointer:**
    * `FB_Init_User_Ptr`
 * **Compilation Option:**
-[[--feedback | Installation:-Option-List#--feedback]]
+[[--feedback | [Installation]-Option-List#--feedback]]
 * **Runtime Option:**
-[[FB_USER | Runtime-Parameters:-Feedback#FB_USER]]
+[[FB_USER | [Runtime-Parameters]-Feedback#FB_USER]]
 * **Example:**
    * `src/TestProblem/Hydro/Plummer/FB_Plummer.cpp`
+
+### HDF5 Output
+* **Description:**
+Store user-specified variables in HDF5 snapshots.
+* **Prototype:**
+   * `void Output_HDF5_UserPara_NewProblem( HDF5_Output_t *HDF5_UserPara );`
+* **Function Pointer:**
+   * `Output_HDF5_UserPara_Ptr`
+* **Compilation Option:**
+[[--hdf5 | [Installation]-Option-List#--hdf5]]
+* **Runtime Option:**
+None
+* **Example:**
+   * `Output/Output_DumData_Total_HDF5.cpp` --> `Output_HDF5_UserPara_Template()`
 
 
 ## VII. Add Problem-specific Validators
@@ -676,7 +702,6 @@ and other relevant files such as README and analysis scripts.
 3. Edit `README` to help conduct this test problem.
 
 4. Add analysis scripts (if any).
-
 
 <br>
 

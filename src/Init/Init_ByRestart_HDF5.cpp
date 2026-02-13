@@ -263,6 +263,12 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "GitBranch",            &KeyInfo.GitBranch,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal,  EXPAND_AND_QUOTE(GIT_BRANCH), 1, NonFatal );
    LoadField( "GitCommit",            &KeyInfo.GitCommit,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal,  EXPAND_AND_QUOTE(GIT_COMMIT), 1, NonFatal );
 
+   if ( KeyInfo.FormatVersion >= 2502 )
+   {
+   LoadField( "ConRef",                ConRef,                       H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   ConRefInitialized = true;
+   }
+
 
 // 1-4. close all objects
    H5_Status = H5Tclose( H5_TypeID_KeyInfo );
@@ -1867,6 +1873,8 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
 
    LoadField( "NFieldStoredMax",      &RS.NFieldStoredMax,      SID, TID, NonFatal, &RT.NFieldStoredMax,       1, NonFatal );
 
+   LoadField( "NConRefMax",           &RS.NConRefMax,           SID, TID, NonFatal, &RT.NConRefMax,            1, NonFatal );
+
 
 // 5. close all objects
    Status = H5Tclose( TID );
@@ -1973,6 +1981,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Par_GhostSize",           &RS.Par_GhostSize,           SID, TID, NonFatal, &RT.Par_GhostSize,            1, NonFatal );
    LoadField( "Par_GhostSizeTracer",     &RS.Par_GhostSizeTracer,     SID, TID, NonFatal, &RT.Par_GhostSizeTracer,      1, NonFatal );
    LoadField( "Par_TracerVelCorr",       &RS.Par_TracerVelCorr,       SID, TID, NonFatal, &RT.Par_TracerVelCorr,        1, NonFatal );
+   LoadField( "Opt__ParInitCheck",       &RS.Opt__ParInitCheck,       SID, TID, NonFatal, &RT.Opt__ParInitCheck,        1, NonFatal );
 #  endif
 
 // cosmology
@@ -2144,6 +2153,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__FixUp_Restrict",     &RS.Opt__FixUp_Restrict,     SID, TID, NonFatal, &RT.Opt__FixUp_Restrict,      1, NonFatal );
    LoadField( "FixUpRestrict_Var",       &RS.FixUpRestrict_Var,       SID, TID, NonFatal, &RT.FixUpRestrict_Var,        1, NonFatal );
    LoadField( "Opt__CorrAfterAllSync",   &RS.Opt__CorrAfterAllSync,   SID, TID, NonFatal, &RT.Opt__CorrAfterAllSync,    1, NonFatal );
+   LoadField( "PassiveFloor_Var",        &RS.PassiveFloor_Var,        SID, TID, NonFatal, &RT.PassiveFloor_Var,         1, NonFatal );
    LoadField( "Opt__NormalizePassive",   &RS.Opt__NormalizePassive,   SID, TID, NonFatal, &RT.Opt__NormalizePassive,    1, NonFatal );
    LoadField( "NormalizePassive_NVar",   &RS.NormalizePassive_NVar,   SID, TID, NonFatal, &RT.NormalizePassive_NVar,    1, NonFatal );
    LoadField( "NormalizePassive_VarIdx",  RS.NormalizePassive_VarIdx, SID, TID, NonFatal,  RT.NormalizePassive_VarIdx, NP, NonFatal );

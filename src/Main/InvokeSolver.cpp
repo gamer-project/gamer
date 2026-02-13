@@ -545,10 +545,15 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  endif
 
 #  if ( MODEL == HYDRO  &&  defined GRAVITY )
+#  ifdef COMOVING
    const real JeansMinPres_Coeff = ( JEANS_MIN_PRES ) ?
-                                   NEWTON_G*SQR(JEANS_MIN_PRES_NCELL*amr->dh[JEANS_MIN_PRES_LEVEL])/(GAMMA*M_PI) : NULL_REAL;
+                                   TimeOld*NEWTON_G*SQR(JEANS_MIN_PRES_NCELL*amr->dh[JEANS_MIN_PRES_LEVEL])/(GAMMA*M_PI) : NULL_REAL;
 #  else
-   const real JEANS_MIN_PRES     = false;
+   const real JeansMinPres_Coeff = ( JEANS_MIN_PRES ) ?
+                                           NEWTON_G*SQR(JEANS_MIN_PRES_NCELL*amr->dh[JEANS_MIN_PRES_LEVEL])/(GAMMA*M_PI) : NULL_REAL;
+#  endif
+#  else
+   const bool JEANS_MIN_PRES     = false;
    const real JeansMinPres_Coeff = NULL_REAL;
 #  endif
 
@@ -574,7 +579,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  OPT__LR_LIMITER, MINMOD_COEFF, MINMOD_MAX_ITER,
                                  ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
                                  TimeOld, (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, MicroPhy,
-                                 MIN_DENS, MIN_PRES, MIN_EINT, DUAL_ENERGY_SWITCH,
+                                 MIN_DENS, MIN_PRES, MIN_EINT, DUAL_ENERGY_SWITCH, PassiveFloorMask,
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar,
                                  OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar,
                                  JEANS_MIN_PRES, JeansMinPres_Coeff,
@@ -591,7 +596,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  OPT__LR_LIMITER, MINMOD_COEFF, MINMOD_MAX_ITER,
                                  ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
                                  TimeOld, (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, MicroPhy,
-                                 MIN_DENS, MIN_PRES, MIN_EINT, DUAL_ENERGY_SWITCH,
+                                 MIN_DENS, MIN_PRES, MIN_EINT, DUAL_ENERGY_SWITCH, PassiveFloorMask,
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, PassiveNorm_VarIdx,
                                  OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
                                  JEANS_MIN_PRES, JeansMinPres_Coeff, UseWaveFlag );
@@ -700,14 +705,14 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
          CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID],
                               h_Mag_Array_T[ArrayID], NULL, NULL,
                               NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID,
-                              MicroPhy, MIN_PRES, NULL_BOOL,
+                              MicroPhy, MIN_PRES, PassiveFloorMask, NULL_BOOL,
                               EXT_POT_NONE, EXT_ACC_NONE, NULL_REAL,
                               GPU_NSTREAM );
 #        else
          CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID],
                               h_Mag_Array_T[ArrayID], NULL, NULL,
                               NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID,
-                              MicroPhy, MIN_PRES, NULL_BOOL,
+                              MicroPhy, MIN_PRES, PassiveFloorMask, NULL_BOOL,
                               EXT_POT_NONE, EXT_ACC_NONE, NULL_REAL );
 #        endif
       break;
@@ -718,14 +723,14 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
          CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], NULL,
                               NULL, h_Pot_Array_T[ArrayID], h_Corner_Array_PGT[ArrayID],
                               NPG, dh, DT__GRAVITY,
-                              MicroPhy, NULL_REAL, OPT__GRA_P5_GRADIENT,
+                              MicroPhy, NULL_REAL, PassiveFloorMask, OPT__GRA_P5_GRADIENT,
                               (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, TimeNew,
                               GPU_NSTREAM );
 #        else
          CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], NULL,
                               NULL, h_Pot_Array_T[ArrayID], h_Corner_Array_PGT[ArrayID],
                               NPG, dh, DT__GRAVITY,
-                              MicroPhy, NULL_REAL, OPT__GRA_P5_GRADIENT,
+                              MicroPhy, NULL_REAL, PassiveFloorMask, OPT__GRA_P5_GRADIENT,
                               (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, TimeNew );
 #        endif
       break;
@@ -748,14 +753,14 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                h_Flu_Array_S_Out[ArrayID],
                                h_Mag_Array_S_In [ArrayID],
                                h_Corner_Array_S [ArrayID],
-                               SrcTerms, NPG, dt, dh, TimeNew, TimeOld, MIN_DENS, MIN_PRES, MIN_EINT,
+                               SrcTerms, NPG, dt, dh, TimeNew, TimeOld, MIN_DENS, MIN_PRES, MIN_EINT, PassiveFloorMask,
                                GPU_NSTREAM );
 #        else
          CPU_SrcSolver       ( h_Flu_Array_S_In [ArrayID],
                                h_Flu_Array_S_Out[ArrayID],
                                h_Mag_Array_S_In [ArrayID],
                                h_Corner_Array_S [ArrayID],
-                               SrcTerms, NPG, dt, dh, TimeNew, TimeOld, MIN_DENS, MIN_PRES, MIN_EINT );
+                               SrcTerms, NPG, dt, dh, TimeNew, TimeOld, MIN_DENS, MIN_PRES, MIN_EINT, PassiveFloorMask );
 #        endif
       break;
 

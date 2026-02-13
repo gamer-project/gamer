@@ -1,0 +1,92 @@
+{
+    "tasks": [
+        {
+            "label": "build-GAMER",
+            "type": "shell",
+            "command": "sh build.sh",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/.vscode"
+            },
+            "detail": "After you configure the Makefile, run this task to build the project."
+        },
+        {
+            "label": "config-GAMER",
+            "type": "shell",
+            "command": "sh config.sh",
+            "options": {
+                "cwd": "${workspaceFolder}/.vscode"
+            },
+            "detail": "Run configure.py with generate_make.sh in the working directory.",
+            "problemMatcher": []
+        },
+        {
+            "label": "clean-work-dir",
+            "type": "shell",
+            "command": "sh clean_work_dir.sh",
+            "options": {
+                "cwd": "${workspaceFolder}/.vscode"
+            },
+            "detail": "Clean the working directory with clean.sh.",
+            "problemMatcher": []
+        },
+        {
+            "label": "set-working-bin",
+            "type": "shell",
+            "command": "sh",
+            "args": [
+                "set_bin_working.sh",
+                "${input:bin-working}"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/.vscode"
+            },
+            "detail": "Choose the working directory for the binary files.",
+            "problemMatcher": []
+        },
+        {
+            "label": "updated_mac_launch",
+            "type": "shell",
+            "command": "sh",
+            "args": [
+                "updated_mac_launch.sh",
+                "${input:lldb-mi_path}"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/.vscode"
+            },
+            "detail": "Update launch.json with the path to your lldb-mi executable for mac user.",
+            "problemMatcher": []
+        },
+        {
+            "label": "config-and-build",
+            "dependsOn": [
+                "config-GAMER",
+                "build-GAMER"
+            ],
+            "dependsOrder": "sequence",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Run config-GAMER and build-GAMER.",
+            "problemMatcher": []
+        }
+    ],
+    "inputs": [
+        {
+            "id": "bin-working",
+            "type": "promptString",
+            "description": "Enter the working directory under bin/."
+        },
+        {
+            "id": "lldb-mi_path",
+            "type": "promptString",
+            "description": "Enter the path to your lldb-mi executable."
+        }
+    ],
+    "version": "2.0.0"
+}
