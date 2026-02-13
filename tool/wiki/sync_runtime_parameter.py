@@ -2,7 +2,7 @@
 """
 ## What it can do
 
-Automatically update `doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-All.md`
+Automatically update `doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-All.md`
 when any of the following files are changed, updated, or pushed:
 - `tool/wiki/sync_runtime_parameter.py`
 - `src/Init/Init_Load_Parameter.cpp`
@@ -15,7 +15,7 @@ when any of the following files are changed, updated, or pushed:
 2. Execution:
    If changes are detected, the workflow runs the script `tool/wiki/sync_runtime_parameter.py`.
 3. Update:
-   The script updates `doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-All.md` by creating
+   The script updates `doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-All.md` by creating
    a new commit with the message: `[Workflow] Update all parameters wiki page`.
 
 ## Script Algorithm
@@ -43,25 +43,25 @@ from string import ascii_uppercase as auc
 #====================================================================================================
 ALL_PARAM_FILE = "../../example/input/Input__Parameter"
 PARAM_CPP_FILE = "../../src/Init/Init_Load_Parameter.cpp"
-LINK_FILES     = [ "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Chemistry-and-Radiation.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Cosmology.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Feedback.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-GPU.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-General.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Gravity.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Hydro.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Initial-Conditions.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Interpolation.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-MPI-and-OpenMP.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Miscellaneous.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Outputs.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Particles.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Refinement.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Star-Formation.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Timestep.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Units.md"
+LINK_FILES     = [ "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Chemistry-and-Radiation.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Cosmology.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Feedback.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-GPU.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-General.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Gravity.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Hydro.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Initial-Conditions.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Interpolation.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-MPI-and-OpenMP.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Miscellaneous.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Outputs.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Particles.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Refinement.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Star-Formation.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Timestep.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Units.md"
                  ]
-OUT_MD         = "Runtime-Parameters:-All.md"
+OUT_MD         = "[Runtime-Parameters]-All.md"
 REPLACE_DICT   = { "NoMin_double":"None", "NoMax_double":"None", "NoDef_double":"None",
                    "NoMin_int":"None", "NoMax_int":"None",
                    "NoMin_long":"None", "NoMax_long":"None",

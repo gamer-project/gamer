@@ -3,10 +3,10 @@
 To enable GPU:
 1. Generate the `Makefile` and recompile the code (see [[Installation]] for details)
     1. Set
-[[GPU_COMPUTE_CAPABILITY | Installation:-Machine-Configuration-File#4-GPU-compute-capability]]
-according to the GPU architecture on your system in the [[configuration file | Installation:-Machine-Configuration-File]]
+[[GPU_COMPUTE_CAPABILITY | [Installation]-Machine-Configuration-File#4-GPU-compute-capability]]
+according to the GPU architecture on your system in the [[configuration file | [Installation]-Machine-Configuration-File]]
     2. Generate `Makefile` with
-[[--gpu | Installation:-Option-List#--gpu]]=`true`
+[[--gpu | [Installation]-Option-List#--gpu]]=`true`
     3. Recompile the code with `make clean; make`
 
 2. [Query the GPUs on your system](#query-gpus) [optional]
@@ -17,12 +17,12 @@ according to the GPU architecture on your system in the [[configuration file | I
 ## Compilation Options
 
 Related options:
-[[--gpu | Installation:-Option-List#--gpu]], &nbsp;
-[[--gpu_regcount_flu | Installation:-Option-List#--gpu_regcount_flu]] &nbsp;
+[[--gpu | [Installation]-Option-List#--gpu]], &nbsp;
+[[--gpu_regcount_flu | [Installation]-Option-List#--gpu_regcount_flu]] &nbsp;
 
 
 ## Runtime Parameters
-[[Runtime parameters: GPU | Runtime-Parameters:-GPU]]
+[[[Runtime parameters] GPU | [Runtime-Parameters]-GPU]]
 
 Other related parameters: none
 
@@ -69,7 +69,7 @@ and there are currently two running jobs using GPU ID 0 and 1, respectively.
 
 On a node with <var>N</var><sub>GPU</sub>, each GPU has a unique
 ID in the range 0 to <var>N</var><sub>GPU</sub>-1. GAMER uses the runtime
-parameter [[OPT__GPUID_SELECT | Runtime-Parameters:-GPU#OPT__GPUID_SELECT]] to set the GPU ID
+parameter [[OPT__GPUID_SELECT | [Runtime-Parameters]-GPU#OPT__GPUID_SELECT]] to set the GPU ID
 associated with each MPI process.
 
 * `OPT__GPUID_SELECT = -2`: set by CUDA runtime. Typically, this
