@@ -1,6 +1,6 @@
 Parameters described on this page:
 [SRC_DELEPTONIZATION](#SRC_DELEPTONIZATION), &nbsp;
-[SRC_USER](#SRC_USER), &nbsp;
+[SRC_USER](#SRC_USER) &nbsp;
 
 
 Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**

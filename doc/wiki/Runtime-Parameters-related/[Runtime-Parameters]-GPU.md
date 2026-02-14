@@ -35,7 +35,7 @@ Must be a multiple of [GPU_NSTREAM](#GPU_NSTREAM).
 <a name="SRC_GPU_NPGROUP"></a>
 * #### `SRC_GPU_NPGROUP` &ensp; (>0; &#8804;0 &#8594; set to default) &ensp; [depend on the GPU spec]
     * **Description:**
-Number of patch groups updated by the CPU/GPU source-term solvers at a single time.
+Number of patch groups updated by the GPU/CPU source-term solvers at a single time.
 See also [[[Performance-Optimizations] GPU | [Performance-Optimizations]-GPU]].
     * **Restriction:**
 Must be a multiple of [GPU_NSTREAM](#GPU_NSTREAM).

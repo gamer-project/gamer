@@ -51,7 +51,7 @@ Only applicable when enabling the compilation option
 * #### `SF_CREATE_STAR_MIN_GAS_DENS` &ensp; (&#8805;0.0) &ensp; [1.0e1]
     * **Description:**
 Minimum gas density allowed to form stars.
-See the $\rho_{\rm gas,\ thres}$ in Eq.(4) in [Kim et al. 2016](https://iopscience.iop.org/article/10.3847/1538-4357/833/2/202).
+See $\rho_{\rm gas,\ thres}$ in Eq.(4) in [Kim et al. 2016](https://iopscience.iop.org/article/10.3847/1538-4357/833/2/202).
 Note that the input value should always be in units of HI count/cm^3,
 and it will be converted internally to the gas mass density
 as $m_H\times$ HI count/cm^3 (i.e., assuming the gas is composed of only HI and the mean molecular weight $\mu=1$).
@@ -63,7 +63,7 @@ Only applicable when enabling the compilation option
 * #### `SF_CREATE_STAR_MASS_EFF` &ensp; (0.0 < input &#8804; 1.0) &ensp; [1.0e-2]
     * **Description:**
 Gas-to-star mass conversion efficiency.
-See the $\epsilon_*$ in Eq.(4) in [Kim et al. 2016](https://iopscience.iop.org/article/10.3847/1538-4357/833/2/202).
+See $\epsilon_*$ in Eq.(4) in [Kim et al. 2016](https://iopscience.iop.org/article/10.3847/1538-4357/833/2/202).
     * **Restriction:**
 Only applicable when enabling the compilation option
 [[--star_formation | [Installation]-Option-List#--star_formation]].
@@ -72,7 +72,7 @@ Only applicable when enabling the compilation option
 * #### `SF_CREATE_STAR_MIN_STAR_MASS` &ensp; (&#8805;0.0) &ensp; [0.0]
     * **Description:**
 Minimum star particle mass for the stochastical star formation.
-See the $m_{\rm sf}$ in Eq.(5) in [Goldbaum et al. 2015](https://iopscience.iop.org/article/10.1088/0004-637X/814/2/131).
+See $m_{\rm sf}$ in Eq.(5) in [Goldbaum et al. 2015](https://iopscience.iop.org/article/10.1088/0004-637X/814/2/131).
 Note that the input value should always be in units of Msun.
     * **Restriction:**
 Only applicable when enabling the compilation option
@@ -81,7 +81,7 @@ Only applicable when enabling the compilation option
 <a name="SF_CREATE_STAR_MAX_STAR_MFRAC"></a>
 * #### `SF_CREATE_STAR_MAX_STAR_MFRAC` &ensp; (0.0 < input &#8804; 1.0) &ensp; [0.5]
     * **Description:**
-Maximum gas mass fraction in a cell allowed to convert to the mass of the star per substep.
+Maximum gas mass fraction in a cell allowed to be converted to stellar mass per substep.
     * **Restriction:**
 Only applicable when enabling the compilation option
 [[--star_formation | [Installation]-Option-List#--star_formation]].

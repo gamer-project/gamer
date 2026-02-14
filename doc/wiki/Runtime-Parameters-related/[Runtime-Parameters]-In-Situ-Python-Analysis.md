@@ -1,7 +1,7 @@
 Parameters described on this page:
 [YT_SCRIPT](#YT_SCRIPT), &nbsp;
 [YT_VERBOSE](#YT_VERBOSE), &nbsp;
-[YT_FIG_BASENAME](#YT_FIG_BASENAME) &nbsp;
+[YT_FIG_BASENAME](#YT_FIG_BASENAME), &nbsp;
 [YT_JUPYTER_USE_CONNECTION_FILE](#YT_JUPYTER_USE_CONNECTION_FILE) &nbsp;
 
 
