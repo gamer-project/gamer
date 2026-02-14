@@ -624,7 +624,6 @@ Add user-specified source terms. See [[here | source-terms]] for details.
 * **Function Pointer:**
    * `Src_Init_User_Ptr`
 * **Runtime Option:**
-[[SRC_DELEPTONIZATION | [Runtime-Parameters]-Source-Terms#SRC_DELEPTONIZATION]]
 [[SRC_USER | [Runtime-Parameters]-Source-Terms#SRC_USER]]
 * **Example:**
    * `src/SourceTerms/User_Template`
