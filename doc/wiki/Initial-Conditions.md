@@ -776,7 +776,7 @@ Related options:
 
 
 ## Runtime Parameters
-[[[Runtime parameters] Initial Conditions | [Runtime-Parameters]-Initial-Conditions]]
+[[ [Runtime parameters] Initial Conditions | [Runtime-Parameters]-Initial-Conditions ]]
 
 Other related parameters:
 [[PAR_INIT | [Runtime-Parameters]-Particles#PAR_INIT]], &nbsp;

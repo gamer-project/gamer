@@ -22,7 +22,7 @@ Related options:
 
 
 ## Runtime Parameters
-[[[Runtime parameters] GPU | [Runtime-Parameters]-GPU]]
+[[ [Runtime parameters] GPU | [Runtime-Parameters]-GPU ]]
 
 Other related parameters: none
 

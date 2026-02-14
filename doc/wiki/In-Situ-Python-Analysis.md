@@ -21,7 +21,7 @@ Must set `LIBYT_PATH` in the [[machine configuration file | [Installation]-Machi
 to the path containing the folders `include` and `lib` of `libyt`.
 
 ### Runtime Parameters
-[[Runtime parameters: In Situ Python Analysis | [Runtime-Parameters]-In-Situ-Python-Analysis]]
+[[ [Runtime parameters] In Situ Python Analysis | [Runtime-Parameters]-In-Situ-Python-Analysis ]]
 
 For example, `Input__Parameter` with the following lines will read the Python script `inline_script.py`,
 set log level to information only, and set the figure basename to `MHD`.

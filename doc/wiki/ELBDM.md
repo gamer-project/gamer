@@ -17,7 +17,7 @@ Related options:
 
 
 ## Runtime Parameters
-[[Runtime parameters: ELBDM | [Runtime-Parameters]-ELBDM]]
+[[ [Runtime parameters] ELBDM | [Runtime-Parameters]-ELBDM ]]
 
 Other related parameters:
 TBF.

@@ -9,7 +9,7 @@ Related options:
 
 
 ## Runtime Parameters
-[[[Runtime parameters] Gravity | [Runtime-Parameters]-Gravity]]
+[[ [Runtime parameters] Gravity | [Runtime-Parameters]-Gravity ]]
 
 Other related parameters:
 [[DT__GRAVITY | [Runtime-Parameters]-Timestep#DT__GRAVITY]], &nbsp;
