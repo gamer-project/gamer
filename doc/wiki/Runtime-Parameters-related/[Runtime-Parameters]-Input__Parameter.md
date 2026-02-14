@@ -35,6 +35,9 @@ This page includes the following topics:
 * [[Cosmology | [Runtime-Parameters]-Cosmology]]
 -- Cosmological parameters
 
+* [[Source Terms | [Runtime-Parameters]-Source-Terms]]
+-- Source terms parameters
+
 * [[Chemistry and Radiation | [Runtime-Parameters]-Chemistry-and-Radiation]]
 -- GRACKLE parameters
 
@@ -55,6 +58,9 @@ This page includes the following topics:
 
 * [[Outputs | [Runtime-Parameters]-Outputs]]
 -- Data output parameters
+
+* [[In Situ Python Analysis | [Runtime-Parameters]-In-Situ-Python-Analysis]]
+-- In situ analysis parameters for libyt
 
 * [[Miscellaneous | [Runtime-Parameters]-Miscellaneous]]
 -- Miscellaneous parameters such as timing options, log files, and self-checking options...

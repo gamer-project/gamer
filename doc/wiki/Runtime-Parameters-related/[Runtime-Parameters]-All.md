@@ -16,9 +16,9 @@ For variables with `Default/Min/Max` labeled as `Depend`, click the parameter na
 # A
 | Name                                                                                                 |         Default |             Min |             Max | Short description |
 | :---                                                                                                 |            :--- |            :--- |            :--- | :--- |
-| ANGMOM_ORIGIN_X                                                                                      |            -1.0 |            None |            None | x coordinate of the origin for angular momentum (<0=auto -> BoxCenter) [-1.0] |
-| ANGMOM_ORIGIN_Y                                                                                      |            -1.0 |            None |            None | y coordinate of the origin for angular momentum (<0=auto -> BoxCenter) [-1.0] |
-| ANGMOM_ORIGIN_Z                                                                                      |            -1.0 |            None |            None | z coordinate of the origin for angular momentum (<0=auto -> BoxCenter) [-1.0] |
+| [[ ANGMOM_ORIGIN_X \| [Runtime-Parameters]-Miscellaneous#ANGMOM_ORIGIN_X ]]                          |            -1.0 |            None |            None | x coordinate of the origin for angular momentum (<0=auto -> BoxCenter) [-1.0] |
+| [[ ANGMOM_ORIGIN_Y \| [Runtime-Parameters]-Miscellaneous#ANGMOM_ORIGIN_Y ]]                          |            -1.0 |            None |            None | y coordinate of the origin for angular momentum (<0=auto -> BoxCenter) [-1.0] |
+| [[ ANGMOM_ORIGIN_Z \| [Runtime-Parameters]-Miscellaneous#ANGMOM_ORIGIN_Z ]]                          |            -1.0 |            None |            None | z coordinate of the origin for angular momentum (<0=auto -> BoxCenter) [-1.0] |
 | [[ AUTO_REDUCE_DT \| [Runtime-Parameters]-Timestep#AUTO_REDUCE_DT ]]                                 |               1 |            None |            None | reduce dt automatically when the program fails (for OPT__DT_LEVEL==3 only) [1] |
 | [[ AUTO_REDUCE_DT_FACTOR \| [Runtime-Parameters]-Timestep#AUTO_REDUCE_DT_FACTOR ]]                   |             1.0 | 2.22507386e-308 |             1.0 | reduce dt by a factor of AUTO_REDUCE_DT_FACTOR when the program fails [1.0] |
 | [[ AUTO_REDUCE_DT_FACTOR_MIN \| [Runtime-Parameters]-Timestep#AUTO_REDUCE_DT_FACTOR_MIN ]]           |             0.1 |             0.0 |             1.0 | minimum allowed AUTO_REDUCE_DT_FACTOR after consecutive failures [0.1] |
@@ -122,16 +122,16 @@ For variables with `Default/Min/Max` labeled as `Depend`, click the parameter na
 | [[ GFUNC_COEFF0 \| [Runtime-Parameters]-Gravity#GFUNC_COEFF0 ]]                                      |            -1.0 |            None |            None | Green's function coefficient at the origin for the isolated BC (<0=auto) [-1.0] |
 | [[ GPU_NSTREAM \| [Runtime-Parameters]-GPU#GPU_NSTREAM ]]                                            |              -1 |            None |            None | number of CUDA streams for the asynchronous memory copy in GPU (<=0=auto) [-1] |
 | [[ GRACKLE_ACTIVATE \| [Runtime-Parameters]-Chemistry-and-Radiation#GRACKLE_ACTIVATE ]]              |               1 |            None |            None | enable Grackle [1] |
-| GRACKLE_CIE_COOLING                                                                                  |               0 |            None |            None | 0: off; 1:on |
+| [[ GRACKLE_CIE_COOLING \| [Runtime-Parameters]-Chemistry-and-Radiation#GRACKLE_CIE_COOLING ]]        |               0 |            None |            None | map to "cie_cooling" (0=off, 1=on) [0] |
 | [[ GRACKLE_CLOUDY_TABLE \| [Runtime-Parameters]-Chemistry-and-Radiation#GRACKLE_CLOUDY_TABLE ]]      |            None |            None |            None | "grackle_data_file" |
 | [[ GRACKLE_CMB_FLOOR \| [Runtime-Parameters]-Chemistry-and-Radiation#GRACKLE_CMB_FLOOR ]]            |               1 |            None |            None | map to "cmb_temperature_floor" [1] |
 | [[ GRACKLE_COOLING \| [Runtime-Parameters]-Chemistry-and-Radiation#GRACKLE_COOLING ]]                |               1 |            None |            None | map to "with_radiative_cooling" [1] |
-| GRACKLE_H2_OPA_APPROX                                                                                |               0 |               0 |               1 | H2 opacity from Ripamonti+04; 0:off, 1:Ripomonti+04 |
+| [[ GRACKLE_H2_OPA_APPROX \| [Runtime-Parameters]-Chemistry-and-Radiation#GRACKLE_H2_OPA_APPROX ]]    |               0 |               0 |               1 | map to "h2_optical_depth_approximation" (0=off, 1=Ripomonti+04) [0] |
 | [[ GRACKLE_METAL \| [Runtime-Parameters]-Chemistry-and-Radiation#GRACKLE_METAL ]]                    |               0 |            None |            None | map to "metal_cooling" (must increase NCOMP_PASSIVE_USER by 1) [0] |
 | [[ GRACKLE_PE_HEATING \| [Runtime-Parameters]-Chemistry-and-Radiation#GRACKLE_PE_HEATING ]]          |               0 |            None |            None | map to "photoelectric_heating" [0] |
-| [[ GRACKLE_PE_HEATING_RATE \| [Runtime-Parameters]-Chemistry-and-Radiation#GRACKLE_PE_HEATING_RATE ]]|         8.5e-26 |             0.0 |            None | map to "photoelectric_heating_rate (in erg/cm^3/s)" [8.5e-26] |
+| [[ GRACKLE_PE_HEATING_RATE \| [Runtime-Parameters]-Chemistry-and-Radiation#GRACKLE_PE_HEATING_RATE ]] |         8.5e-26 |             0.0 |            None | map to "photoelectric_heating_rate (in erg/cm^3/s)" [8.5e-26] |
 | [[ GRACKLE_PRIMORDIAL \| [Runtime-Parameters]-Chemistry-and-Radiation#GRACKLE_PRIMORDIAL ]]          |               0 |               0 |               3 | map to "primordial_chemistry" (0=Cloudy, 1/2/3=6-/9-/12-species) [0] (must increase NCOMP_PASSIVE_USER by 6/9/12, respectively) |
-| GRACKLE_THREE_BODY_RATE                                                                              |               0 |               0 |               5 | used Glover+08 rate |
+| [[ GRACKLE_THREE_BODY_RATE \| [Runtime-Parameters]-Chemistry-and-Radiation#GRACKLE_THREE_BODY_RATE ]] |               0 |               0 |               5 | map to "three_body_rate" (4=Glover+08 rate) [0] |
 | [[ GRACKLE_UV \| [Runtime-Parameters]-Chemistry-and-Radiation#GRACKLE_UV ]]                          |               0 |            None |            None | map to "UVbackground" [0] |
 | [[ GRACKLE_VERBOSE \| [Runtime-Parameters]-Chemistry-and-Radiation#GRACKLE_VERBOSE ]]                |               1 |            None |            None | map to "grackle_verbose" [1] |
 
@@ -155,7 +155,7 @@ For variables with `Default/Min/Max` labeled as `Depend`, click the parameter na
 | :---                                                                                                 |            :--- |            :--- |            :--- | :--- |
 | [[ JEANS_MIN_PRES \| [Runtime-Parameters]-Hydro#JEANS_MIN_PRES ]]                                    |               0 |            None |            None | minimum pressure estimated from the Jeans length [0] ##HYDRO/MHD and GRAVITY ONLY## |
 | [[ JEANS_MIN_PRES_LEVEL \| [Runtime-Parameters]-Hydro#JEANS_MIN_PRES_LEVEL ]]                        |              -1 |            None |        NLEVEL-1 | for JEANS_MIN_PRES; ensure Jeans length is resolved by JEANS_MIN_PRES_NCELL*dh[JEANS_MIN_PRES_LEVEL] (<0=auto -> MAX_LEVEL) [-1] |
-| [[ JEANS_MIN_PRES_NCELL \| [Runtime-Parameters]-Hydro#JEANS_MIN_PRES_NCELL ]]                       |               4 |               1 |            None | for JEANS_MIN_PRES; see JEANS_MIN_PRES_LEVEL [4] |
+| [[ JEANS_MIN_PRES_NCELL \| [Runtime-Parameters]-Hydro#JEANS_MIN_PRES_NCELL ]]                        |               4 |               1 |            None | for JEANS_MIN_PRES; see JEANS_MIN_PRES_LEVEL [4] |
 
 # L
 | Name                                                                                                 |         Default |             Min |             Max | Short description |
@@ -274,7 +274,7 @@ For variables with `Default/Min/Max` labeled as `Depend`, click the parameter na
 | OPT__LB_EXCHANGE_FATHER                                                                              |          Depend |          Depend |          Depend | exchange all cells of all father patches during load balancing (must enable for hybrid scheme + MPI) [0 usually, 1 for ELBDM_HYBRID] ## ELBDM_HYBRID ONLY### |
 | [[ OPT__LR_LIMITER \| [Runtime-Parameters]-Hydro#OPT__LR_LIMITER ]]                                  | LR_LIMITER_DEFAULT |              -1 |               7 | slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes: (-1=auto, 0=none, 1=vanLeer, 2=generalized MinMod, 3=vanAlbada, 4=vanLeer+generalized MinMod, 6=central, 7=Athena) [-1] |
 | [[ OPT__MAG_INT_SCHEME \| [Runtime-Parameters]-Interpolation#OPT__MAG_INT_SCHEME ]]                  |       INT_CQUAD |            None |            None | ghost-zone magnetic field for the MHD solver (2,3,4,6 only) [4] |
-| [[ OPT__MANUAL_CONTROL \| [Runtime-Parameters]Miscellaneous#OPT__MANUAL_CONTROL ]]                   |               1 |            None |            None | support manually dump data, stop run, or pause run during the runtime (by generating the file DUMP_GAMER_DUMP, STOP_GAMER_STOP, PAUSE_GAMER_PAUSE, respectively) [1] |
+| [[ OPT__MANUAL_CONTROL \| [Runtime-Parameters]-Miscellaneous#OPT__MANUAL_CONTROL ]]                  |               1 |            None |            None | support manually dump data, stop run, or pause run during the runtime (by generating the file DUMP_GAMER_DUMP, STOP_GAMER_STOP, PAUSE_GAMER_PAUSE, respectively) [1] |
 | [[ OPT__MEMORY_POOL \| [Runtime-Parameters]-Refinement#OPT__MEMORY_POOL ]]                           |               0 |            None |            None | preallocate patches for OPT__REUSE_MEMORY=1/2 (Input__MemoryPool) [0] |
 | [[ OPT__MINIMIZE_MPI_BARRIER \| [Runtime-Parameters]-MPI-and-OpenMP#OPT__MINIMIZE_MPI_BARRIER ]]     |               0 |            None |            None | minimize MPI barriers to improve load balance, especially with particles [0] (STORE_POT_GHOST, PAR_IMPROVE_ACC=1, OPT__TIMING_BARRIER=0 only; recommend AUTO_REDUCE_DT=0) |
 | [[ OPT__NORMALIZE_PASSIVE \| [Runtime-Parameters]-Hydro#OPT__NORMALIZE_PASSIVE ]]                    |               1 |            None |            None | ensure "sum(passive_scalar_density) == gas_density" [1] |
@@ -384,10 +384,10 @@ For variables with `Default/Min/Max` labeled as `Depend`, click the parameter na
 | :---                                                                                                 |            :--- |            :--- |            :--- | :--- |
 | [[ SF_CREATE_STAR_DET_RANDOM \| [Runtime-Parameters]-Star-Formation#SF_CREATE_STAR_DET_RANDOM ]]     |              -1 |            None |            None | make random numbers deterministic (i.e., independent of OpenMP and MPI, <0=auto) [-1] |
 | [[ SF_CREATE_STAR_MASS_EFF \| [Runtime-Parameters]-Star-Formation#SF_CREATE_STAR_MASS_EFF ]]         |          1.0e-2 | 2.22507386e-308 |             1.0 | Gas-to-star mass conversion efficiency [1.0e-2] |
-| [[ SF_CREATE_STAR_MAX_STAR_MFRAC \| [Runtime-Parameters]-Star-Formation#SF_CREATE_STAR_MAX_STAR_MFRAC ]]|             0.5 | 2.22507386e-308 |             1.0 | maximum gas mass fraction allowed to convert to stars per substep [0.5] |
-| SF_CREATE_STAR_MIN_GAS_DENS                                                                          |           1.0e1 |             0.0 |            None | minimum gas density allowed to form stars (in HI count/cm^3) [1.0e1] |
+| [[ SF_CREATE_STAR_MAX_STAR_MFRAC \| [Runtime-Parameters]-Star-Formation#SF_CREATE_STAR_MAX_STAR_MFRAC ]] |             0.5 | 2.22507386e-308 |             1.0 | maximum gas mass fraction allowed to convert to stars per substep [0.5] |
+| [[ SF_CREATE_STAR_MIN_GAS_DENS \| [Runtime-Parameters]-Star-Formation#SF_CREATE_STAR_MIN_GAS_DENS ]] |           1.0e1 |             0.0 |            None | minimum gas density allowed to form stars (in HI count/cm^3) [1.0e1] |
 | [[ SF_CREATE_STAR_MIN_LEVEL \| [Runtime-Parameters]-Star-Formation#SF_CREATE_STAR_MIN_LEVEL ]]       |               0 |            None |       TOP_LEVEL | minimum AMR level allowed to form stars (<0=auto -> MAX_LEVEL) [0] |
-| [[ SF_CREATE_STAR_MIN_STAR_MASS \| [Runtime-Parameters]-Star-Formation#SF_CREATE_STAR_MIN_STAR_MASS ]]|             0.0 |             0.0 |            None | minimum star particle mass for the stochastical star formation (in Msun) [0.0] |
+| [[ SF_CREATE_STAR_MIN_STAR_MASS \| [Runtime-Parameters]-Star-Formation#SF_CREATE_STAR_MIN_STAR_MASS ]] |             0.0 |             0.0 |            None | minimum star particle mass for the stochastical star formation (in Msun) [0.0] |
 | [[ SF_CREATE_STAR_RSEED \| [Runtime-Parameters]-Star-Formation#SF_CREATE_STAR_RSEED ]]               |             123 |               0 |            None | random seed [123] |
 | [[ SF_CREATE_STAR_SCHEME \| [Runtime-Parameters]-Star-Formation#SF_CREATE_STAR_SCHEME ]]             |               0 |               0 |               1 | star formation schemes (0=off, 1=AGORA) [0] |
 | [[ SOR_MAX_ITER \| [Runtime-Parameters]-Gravity#SOR_MAX_ITER ]]                                      |              -1 |            None |            None | maximum number of iterations in SOR: (<0=auto) [-1] |
@@ -397,9 +397,9 @@ For variables with `Default/Min/Max` labeled as `Depend`, click the parameter na
 | SPEC_INT_TABLE_PATH                                                                                  |            None |            None |            None | path to tables for spectral interpolation ##ELBDM & SUPPORT_SPECTRAL_INT ONLY## |
 | SPEC_INT_VORTEX_THRESHOLD                                                                            |             0.1 |             0.0 |            None | vortex detection threshold for SPEC_INT_XY_INSTEAD_DEPHA [0.1] ##ELBDM & SUPPORT_SPECTRAL_INT ONLY## |
 | SPEC_INT_XY_INSTEAD_DEPHA                                                                            |               1 |            None |            None | interpolate x and y (real and imaginary parts in current implementation) around vortices instead of density and phase for the spectral interpolation, which has the advantage of being well-defined across vortices [1] ##ELBDM & SUPPORT_SPECTRAL_INT ONLY## |
-| SRC_DELEPTONIZATION                                                                                  |               0 |            None |            None | deleptonization (for simulations of stellar core collapse) [0] ##HYDRO ONLY## |
-| SRC_GPU_NPGROUP                                                                                      |              -1 |            None |            None | number of patch groups sent into the CPU/GPU source-term solver (<=0=auto) [-1] |
-| SRC_USER                                                                                             |               0 |            None |            None | user-defined source terms -> edit "Src_User.cpp" [0] |
+| [[ SRC_DELEPTONIZATION \| [Runtime-Parameters]-Source-Terms#SRC_DELEPTONIZATION ]]                   |               0 |            None |            None | deleptonization (for simulations of stellar core collapse) [0] ##HYDRO ONLY## |
+| [[ SRC_GPU_NPGROUP \| [Runtime-Parameters]-GPU#SRC_GPU_NPGROUP ]]                                    |              -1 |            None |            None | number of patch groups sent into the CPU/GPU source-term solver (<=0=auto) [-1] |
+| [[ SRC_USER \| [Runtime-Parameters]-Source-Terms#SRC_USER ]]                                         |               0 |            None |            None | user-defined source terms -> edit "Src_User.cpp" [0] |
 
 # T
 | Name                                                                                                 |         Default |             Min |             Max | Short description |
@@ -418,10 +418,10 @@ For variables with `Default/Min/Max` labeled as `Depend`, click the parameter na
 # Y
 | Name                                                                                                 |         Default |             Min |             Max | Short description |
 | :---                                                                                                 |            :--- |            :--- |            :--- | :--- |
-| YT_FIG_BASENAME                                                                                      |            None |            None |            None | figure basename [Fig] |
-| YT_JUPYTER_USE_CONNECTION_FILE                                                                       |               0 |            None |            None | use user-provided connection file when using libyt Jupyter UI [0] |
-| YT_SCRIPT                                                                                            |            None |            None |            None | yt inline analysis script (do not include the ".py" file extension) |
-| YT_VERBOSE                                                                                           |               1 |               0 |               3 | verbose level of yt (0=off, 1=info, 2=warning, 3=debug) [1] |
+| [[ YT_FIG_BASENAME \| [Runtime-Parameters]-In-Situ-Python-Analysis#YT_FIG_BASENAME ]]                |            None |            None |            None | figure basename [Fig] |
+| [[ YT_JUPYTER_USE_CONNECTION_FILE \| [Runtime-Parameters]-In-Situ-Python-Analysis#YT_JUPYTER_USE_CONNECTION_FILE ]] |               0 |            None |            None | use user-provided connection file when using libyt Jupyter UI [0] |
+| [[ YT_SCRIPT \| [Runtime-Parameters]-In-Situ-Python-Analysis#YT_SCRIPT ]]                            |            None |            None |            None | yt inline analysis script (do not include the ".py" file extension) |
+| [[ YT_VERBOSE \| [Runtime-Parameters]-In-Situ-Python-Analysis#YT_VERBOSE ]]                          |               1 |               0 |               3 | verbose level of yt (0=off, 1=info, 2=warning, 3=debug) [1] |
 
 
 ## Remarks
