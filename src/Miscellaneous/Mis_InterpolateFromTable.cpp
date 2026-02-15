@@ -177,14 +177,14 @@ T Mis_InterpolateFrom3DTable( const int N_x, const int N_y, const int N_z,
                                    Table_x[IdxL_x], Table_x[IdxL_x+1],
                                    Table_y[IdxL_y], Table_y[IdxL_y+1],
                                    Table_z[IdxL_z], Table_z[IdxL_z+1],
-                                   Table_f[IDX321( IdxL_x,   IdxL_y,   IdxL_z,   N_x, N_y )],
-                                   Table_f[IDX321( IdxL_x+1, IdxL_y,   IdxL_z,   N_x, N_y )],
-                                   Table_f[IDX321( IdxL_x,   IdxL_y+1, IdxL_z,   N_x, N_y )],
-                                   Table_f[IDX321( IdxL_x+1, IdxL_y+1, IdxL_z,   N_x, N_y )],
-                                   Table_f[IDX321( IdxL_x,   IdxL_y,   IdxL_z+1, N_x, N_y )],
-                                   Table_f[IDX321( IdxL_x+1, IdxL_y,   IdxL_z+1, N_x, N_y )],
-                                   Table_f[IDX321( IdxL_x,   IdxL_y+1, IdxL_z+1, N_x, N_y )],
-                                   Table_f[IDX321( IdxL_x+1, IdxL_y+1, IdxL_z+1, N_x, N_y )] );
+                                   Table_f[IDX321( IdxL_x,   IdxL_y,   IdxL_z,   (long)N_x, (long)N_y )],
+                                   Table_f[IDX321( IdxL_x+1, IdxL_y,   IdxL_z,   (long)N_x, (long)N_y )],
+                                   Table_f[IDX321( IdxL_x,   IdxL_y+1, IdxL_z,   (long)N_x, (long)N_y )],
+                                   Table_f[IDX321( IdxL_x+1, IdxL_y+1, IdxL_z,   (long)N_x, (long)N_y )],
+                                   Table_f[IDX321( IdxL_x,   IdxL_y,   IdxL_z+1, (long)N_x, (long)N_y )],
+                                   Table_f[IDX321( IdxL_x+1, IdxL_y,   IdxL_z+1, (long)N_x, (long)N_y )],
+                                   Table_f[IDX321( IdxL_x,   IdxL_y+1, IdxL_z+1, (long)N_x, (long)N_y )],
+                                   Table_f[IDX321( IdxL_x+1, IdxL_y+1, IdxL_z+1, (long)N_x, (long)N_y )] );
 
    return f;
 
@@ -230,19 +230,19 @@ T Mis_InterpolateFrom_nDim_Table( const int nDim, const int N_x[], T const* cons
 
 // initial check
 #  ifdef GAMER_DEBUG
-   if ( nDim <= 0 )        Aux_Error( ERROR_INFO, "nDim <=0 !!\n" );
+   if ( nDim <= 0 )        Aux_Error( ERROR_INFO, "nDim (%d) <=0 !!\n", nDim );
    if ( N_x == NULL )      Aux_Error( ERROR_INFO, "N_x == NULL !!\n" );
    if ( Table_x == NULL )  Aux_Error( ERROR_INFO, "Table_x == NULL !!\n" );
    if ( Table_f == NULL )  Aux_Error( ERROR_INFO, "Table_f == NULL !!\n" );
    if ( x == NULL )        Aux_Error( ERROR_INFO, "x == NULL !!\n" );
    for (int d=0; d<nDim; d++)
    {
-      if ( N_x[d] <= 1 )          Aux_Error( ERROR_INFO, "N_x[%d] <= 1 !!\n", d );
+      if ( N_x[d] <= 1 )          Aux_Error( ERROR_INFO, "N_x[%d] (%d) <= 1 !!\n", d, N_x[d] );
       if ( Table_x[d] == NULL )   Aux_Error( ERROR_INFO, "Table_x[%d] == NULL !!\n", d );
       for (int i=0; i<N_x[d]-1; i++)
       {
          if ( Table_x[d][i] >= Table_x[d][i+1] )
-            Aux_Error( ERROR_INFO, "Table_x[%d][%d] >= Table_x[%d][%d] !!\n", d, i, d, i+1 );
+            Aux_Error( ERROR_INFO, "Table_x[%d][%d] (%16.8e) >= Table_x[%d][%d] (%16.8e) !!\n", d, i, Table_x[d][i], d, i+1, Table_x[d][i+1] );
       }
    }
 #  endif
@@ -260,7 +260,7 @@ T Mis_InterpolateFrom_nDim_Table( const int nDim, const int N_x[], T const* cons
          if      ( OutsideMethod == 0 )  ReturnNull = true;
          else if ( OutsideMethod == 1 )  IdxL[d] = ( x[d] < Table_x[d][0] ) ? -1 : N_x[d]-1; // set it to invalid index for boundary extension
          else if ( OutsideMethod == 2 )  IdxL[d] = ( x[d] < Table_x[d][0] ) ?  0 : N_x[d]-2; // set it to the boundary index for two-point extrapolation
-         else                            Aux_Error( ERROR_INFO, "Unknown OutsideMethod !!\n" );
+         else                            Aux_Error( ERROR_INFO, "Unknown OutsideMethod = %d !!\n", OutsideMethod );
       }
    }
 
@@ -317,7 +317,7 @@ T Mis_InterpolateFrom_nDim_Table_withIdxL( const int nDim, const int N_x[], T co
 
 // initial check
 #  ifdef GAMER_DEBUG
-   if ( nDim <= 0 )        Aux_Error( ERROR_INFO, "nDim <=0 !!\n" );
+   if ( nDim <= 0 )        Aux_Error( ERROR_INFO, "nDim (%d) <=0 !!\n", nDim );
    if ( N_x == NULL )      Aux_Error( ERROR_INFO, "N_x == NULL !!\n" );
    if ( Table_x == NULL )  Aux_Error( ERROR_INFO, "Table_x == NULL !!\n" );
    if ( Table_f == NULL )  Aux_Error( ERROR_INFO, "Table_f == NULL !!\n" );
@@ -325,12 +325,12 @@ T Mis_InterpolateFrom_nDim_Table_withIdxL( const int nDim, const int N_x[], T co
    if ( IdxL == NULL )     Aux_Error( ERROR_INFO, "IdxL == NULL !!\n" );
    for (int d=0; d<nDim; d++)
    {
-      if ( N_x[d] <= 1 )          Aux_Error( ERROR_INFO, "N_x[%d] <= 1 !!\n", d );
+      if ( N_x[d] <= 1 )          Aux_Error( ERROR_INFO, "N_x[%d] (%d) <= 1 !!\n", d, N_x[d] );
       if ( Table_x[d] == NULL )   Aux_Error( ERROR_INFO, "Table_x[%d] == NULL !!\n", d );
       for (int i=0; i<N_x[d]-1; i++)
       {
          if ( Table_x[d][i] >= Table_x[d][i+1] )
-            Aux_Error( ERROR_INFO, "Table_x[%d][%d] >= Table_x[%d][%d] !!\n", d, i, d, i+1 );
+            Aux_Error( ERROR_INFO, "Table_x[%d][%d] (%16.8e) >= Table_x[%d][%d] (%16.8e) !!\n", d, i, Table_x[d][i], d, i+1, Table_x[d][i+1] );
       }
    }
 #  endif
@@ -364,7 +364,7 @@ T Mis_InterpolateFrom_nDim_Table_withIdxL( const int nDim, const int N_x[], T co
    T *fC = new T [Ncorners];
    for (int i=0; i<Ncorners; i++)
    {
-      const int Idx_f_corner = GetIdx_corner_nDim_Table( i, nDim, N_x, IdxL );
+      const long Idx_f_corner = GetIdx_corner_nDim_Table( i, nDim, N_x, IdxL );
       fC[i] = Table_f[ Idx_f_corner ];
    }
 
@@ -463,12 +463,12 @@ long GetIdx_corner_nDim_Table( const int Idx_corner_local, const int nDim, const
 
 // initial check
 #  ifdef GAMER_DEBUG
-   if ( nDim <= 0 )        Aux_Error( ERROR_INFO, "nDim <=0 !!\n" );
+   if ( nDim <= 0 )        Aux_Error( ERROR_INFO, "nDim (%d) <=0 !!\n", nDim );
    if ( N_x == NULL )      Aux_Error( ERROR_INFO, "N_x == NULL !!\n" );
    if ( IdxL == NULL )     Aux_Error( ERROR_INFO, "IdxL == NULL !!\n" );
    for (int d=0; d<nDim; d++)
-      if ( N_x[d] <= 1 )   Aux_Error( ERROR_INFO, "N_x[%d] <= 1 !!\n", d );
-   if ( Idx_corner_local < 0  ||  Idx_corner_local >= ( 1L << nDim )
+      if ( N_x[d] <= 1 )   Aux_Error( ERROR_INFO, "N_x[%d] (%d) <= 1 !!\n", d, N_x[d] );
+   if ( Idx_corner_local < 0  ||  Idx_corner_local >= ( 1L << nDim ) )
       Aux_Error( ERROR_INFO, "Idx_corner_local=%d is outside of the range !!\n", Idx_corner_local );
 #  endif
 
@@ -479,9 +479,9 @@ long GetIdx_corner_nDim_Table( const int Idx_corner_local, const int nDim, const
    {
       Idx_corner_inTable *= N_x[d];
 
-      if      ( IdxL[d] <  0        )   Idx_corner_inTable += 0;        // index of the left  boundary, no matter what LorR
-      else if ( IdxL[d] >= N_x[d]-1 )   Idx_corner_inTable += N_x[d]-1; // index of the right boundary, no matter what LorR
-      else                              Idx_corner_inTable += IdxL[d] + (bool)( Idx_corner_local & ( 1<< d ) ); // for right corner, +1 to get IdxR
+      if      ( IdxL[d] <  0        )   Idx_corner_inTable += 0;        // index of the left  boundary
+      else if ( IdxL[d] >= N_x[d]-1 )   Idx_corner_inTable += N_x[d]-1; // index of the right boundary
+      else                              Idx_corner_inTable += IdxL[d] + (bool)( Idx_corner_local & ( 1 << d ) ); // for right corner, +1 to get IdxR
    }
 
    return Idx_corner_inTable;

@@ -23,7 +23,7 @@ template <typename T>
 T Mis_LinearInterpolate( const T x, const T xL, const T xR, const T f_xL, const T f_xR )
 {
 #  ifdef GAMER_DEBUG
-   if ( xL >= xR )   Aux_Error( ERROR_INFO, "xL >= xR !!\n" );
+   if ( xL >= xR )   Aux_Error( ERROR_INFO, "xL (%16.8e) >= xR (%16.8e) !!\n", xL, xR );
 #  endif
 
    const T f_x = f_xL + ( f_xR - f_xL )/( xR - xL )*( x - xL );
@@ -64,8 +64,8 @@ T Mis_BilinearInterpolate( const T x, const T y,
                            const T f_xL_yL, const T f_xR_yL, const T f_xL_yR, const T f_xR_yR )
 {
 #  ifdef GAMER_DEBUG
-   if ( xL >= xR )   Aux_Error( ERROR_INFO, "xL >= xR !!\n" );
-   if ( yL >= yR )   Aux_Error( ERROR_INFO, "yL >= yR !!\n" );
+   if ( xL >= xR )   Aux_Error( ERROR_INFO, "xL (%16.8e) >= xR (%16.8e) !!\n", xL, xR );
+   if ( yL >= yR )   Aux_Error( ERROR_INFO, "yL (%16.8e) >= yR (%16.8e) !!\n", yL, yR );
 #  endif
 
    const T weight_xR  = ( x  - xL )/( xR - xL );
@@ -130,9 +130,9 @@ T Mis_TrilinearInterpolate( const T x, const T y, const T z,
                             const T f_xL_yL_zR, const T f_xR_yL_zR, const T f_xL_yR_zR, const T f_xR_yR_zR )
 {
 #  ifdef GAMER_DEBUG
-   if ( xL >= xR )   Aux_Error( ERROR_INFO, "xL >= xR !!\n" );
-   if ( yL >= yR )   Aux_Error( ERROR_INFO, "yL >= yR !!\n" );
-   if ( zL >= zR )   Aux_Error( ERROR_INFO, "zL >= zR !!\n" );
+   if ( xL >= xR )   Aux_Error( ERROR_INFO, "xL (%16.8e) >= xR (%16.8e) !!\n", xL, xR );
+   if ( yL >= yR )   Aux_Error( ERROR_INFO, "yL (%16.8e) >= yR (%16.8e) !!\n", yL, yR );
+   if ( zL >= zR )   Aux_Error( ERROR_INFO, "zL (%16.8e) >= zR (%16.8e) !!\n", zL, zR );
 #  endif
 
    const T weight_xR  = ( x  - xL )/( xR - xL );
@@ -216,7 +216,7 @@ T Mis_MultilinearInterpolate( const int nDim, const T x[], const T xL[], const T
    if ( fC == NULL )   Aux_Error( ERROR_INFO, "fC == NULL !!\n" );
    if ( x  == NULL )   Aux_Error( ERROR_INFO, "xT == NULL !!\n" );
    for (int d=0; d<nDim; d++)
-      if ( xL[d] >= xR[d] )   Aux_Error( ERROR_INFO, "xL >= xR in d=%d !!\n", d );
+      if ( xL[d] >= xR[d] )   Aux_Error( ERROR_INFO, "xL (%16.8e) >= xR (%16.8e) in d=%d !!\n", xL, xR, d );
 #  endif
 
 // end of the recursion
@@ -233,7 +233,7 @@ T Mis_MultilinearInterpolate( const int nDim, const T x[], const T xL[], const T
                                       fC[0], fC[1], fC[2], fC[3], fC[4], fC[5], fC[6], fC[7] );
 
 // interpolation for the next lower dimension
-   const int NCorner_LowerDim = (int)POW( 2, nDim-1 );
+   const int NCorner_LowerDim = ( 1 << ( nDim-1 ) );
    T *fC_LowerDim = new T [NCorner_LowerDim];
 
    for (int i=0; i<NCorner_LowerDim; i++)
@@ -262,7 +262,7 @@ T Mis_MultilinearInterpolate( const int nDim, const T x[], const T xL[], const T
 int UnitTest_Mis_LinearInterpolate()
 {
 
-// Test 1. Mis_LinearInterpolate
+// Test 1. Mis_LinearInterpolate, double-precision
    double Result_1 = Mis_LinearInterpolate( 2.5, 2.0, 3.0, 4.0, -2.0 );
    double Answer_1 = 1.0;
    if ( MPI_Rank == 0 )
@@ -270,7 +270,7 @@ int UnitTest_Mis_LinearInterpolate()
    else                                                              Aux_Message( stdout, "Pass in %s Test 1 !!\n", __FUNCTION__ );
 
 
-// Test 2. Mis_BilinearInterpolate
+// Test 2. Mis_BilinearInterpolate, double-precision
 // f(x,y) = x^2 + y^2
    double Result_2 = Mis_BilinearInterpolate( 2.5, 1.5,
                                              -2.0, 4.0, 0.0, 5.0,
@@ -281,18 +281,18 @@ int UnitTest_Mis_LinearInterpolate()
    else                                                              Aux_Message( stdout, "Pass in %s Test 2 !!\n", __FUNCTION__ );
 
 
-// Test 3. Mis_TrilinearInterpolate
+// Test 3. Mis_TrilinearInterpolate, single-precision
 // f(x,y,z) = 2 * x^3 + 3 * y^2 - z
-   double Result_3 = Mis_TrilinearInterpolate( 2.1, 6.2, 8.3,
-                                               1.0, 4.0, 4.0, 7.0, 7.0, 9.0,
-                                               43.0, 169.0, 142.0, 268.0, 41.0, 167.0, 140.0, 266.0 );
-   double Answer_3 = 160.5;
+   float Result_3 = Mis_TrilinearInterpolate( 2.1, 6.2, 8.3,
+                                              1.0, 4.0, 4.0, 7.0, 7.0, 9.0,
+                                              43.0, 169.0, 142.0, 268.0, 41.0, 167.0, 140.0, 266.0 );
+   float Answer_3 = 160.5;
    if ( MPI_Rank == 0 )
    if ( !Mis_CompareRealValue( Result_3, Answer_3, NULL, false ) )   Aux_Message( stdout, "Fail in %s Test 3 !!\n", __FUNCTION__ );
    else                                                              Aux_Message( stdout, "Pass in %s Test 3 !!\n", __FUNCTION__ );
 
 
-// Test 4. Mis_MultilinearInterpolate for 1D
+// Test 4. Mis_MultilinearInterpolate for 1D, single-precision
    float  x_4[1] = { 2.5 };
    float xL_4[1] = { 2.0 };
    float xR_4[1] = { 3.0 };
@@ -305,7 +305,7 @@ int UnitTest_Mis_LinearInterpolate()
    else                                                              Aux_Message( stdout, "Pass in %s Test 4 !!\n", __FUNCTION__ );
 
 
-// Test 5. Mis_MultilinearInterpolate for 2D
+// Test 5. Mis_MultilinearInterpolate for 2D, single-precision
 // f(x,y) = x^2 + y^2
    float  x_5[2] = {  2.5, 1.5 };
    float xL_5[2] = { -2.0, 0.0 };
@@ -319,7 +319,7 @@ int UnitTest_Mis_LinearInterpolate()
    else                                                              Aux_Message( stdout, "Pass in %s Test 5 !!\n", __FUNCTION__ );
 
 
-// Test 6. Mis_MultilinearInterpolate for 3D
+// Test 6. Mis_MultilinearInterpolate for 3D, double-precision
 // f(x,y,z) = 2 * x^3 + 3 * y^2 - z
    double  x_6[3] = { 2.1, 6.2, 8.3 };
    double xL_6[3] = { 1.0, 4.0, 7.0 };
@@ -331,6 +331,23 @@ int UnitTest_Mis_LinearInterpolate()
    if ( MPI_Rank == 0 )
    if ( !Mis_CompareRealValue( Result_6, Answer_6, NULL, false ) )   Aux_Message( stdout, "Fail in %s Test 6 !!\n", __FUNCTION__ );
    else                                                              Aux_Message( stdout, "Pass in %s Test 6 !!\n", __FUNCTION__ );
+
+
+// Test 7. Mis_MultilinearInterpolate for 4D, double-precision
+// f(w,x,y,z) = 2 * w^3 - 5 * x^2 + 3 * y^2 - z
+   double  x_7[ 4] = { 2.1, -1.4, 6.2, 8.3 };
+   double xL_7[ 4] = { 1.0, -2.0, 4.0, 7.0 };
+   double xR_7[ 4] = { 4.0, -1.0, 7.0, 9.0 };
+   double fC_7[16] = {  23.0, 149.0,  38.0, 164.0,
+                       122.0, 248.0, 137.0, 263.0,
+                        21.0, 147.0,  36.0, 162.0,
+                       120.0, 246.0, 135.0, 261.0 };
+
+   double Result_7 = Mis_MultilinearInterpolate( 4, x_7, xL_7, xR_7, fC_7 );
+   double Answer_7 = 149.5;
+   if ( MPI_Rank == 0 )
+   if ( !Mis_CompareRealValue( Result_7, Answer_7, NULL, false ) )   Aux_Message( stdout, "Fail in %s Test 7 !!\n", __FUNCTION__ );
+   else                                                              Aux_Message( stdout, "Pass in %s Test 7 !!\n", __FUNCTION__ );
 
 
    return 0;
