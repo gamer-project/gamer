@@ -7,17 +7,17 @@
 // Description :  Return the interpolated value of f=f(x) for a given point x in 1-dimensional grid
 //                with the coordinates and values at the 2 corners provided
 //
-// Note        :  1. Assume xL <= x <= xR; Otherwise, it is an extrapolation
+// Note        :  1. Assume xL <= x <= xR; otherwise, it is an extrapolation
 //                2. Overloaded with different types
 //                3. Explicit template instantiation is put at the end of this file
 //
-// Parameter   :  x       : Target point x coordinate at which to evaluate the interpolated value
-//                xL      : Left corner x coordinate
-//                xR      : Right corner x coordinate
-//                f_xL    : Value of f( xL )
-//                f_xR    : Value of f( xR )
+// Parameter   :  x    : Target point x coordinate at which to evaluate the interpolated value
+//                xL   : Left corner x coordinate
+//                xR   : Right corner x coordinate
+//                f_xL : Value of f( xL )
+//                f_xR : Value of f( xR )
 //
-// Return      :  f_x     : Interpolated value f( x )
+// Return      :  f_x : Interpolated value f( x )
 //-------------------------------------------------------------------------------------------------------
 template <typename T>
 T Mis_LinearInterpolate( const T x, const T xL, const T xR, const T f_xL, const T f_xR )
@@ -171,7 +171,7 @@ T Mis_TrilinearInterpolate( const T x, const T y, const T z,
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Mis_MultilinearInterpolate
 // Description :  Return the interpolated value of f=f(\vec{x}) for a given point
-//                \vec{x} = (x_0, x_1, ..., x_{n-1}) on a n-dimensional rectilinear grid
+//                \vec{x} = (x_0, x_1, ..., x_{nDim-1}) on a n-dimensional rectilinear grid
 //                with the coordinates and values at the 2^n corners provided
 //
 // Note        :  1. Assume xL[d] <= x[d] <= xR[d] for d from 0 to nDim-1; Otherwise, it is an extrapolation
@@ -257,7 +257,7 @@ T Mis_MultilinearInterpolate( const int nDim, const T x[], const T xL[], const T
 //
 // Parameter   :
 //
-// Return      :  0     : All the tests finish
+// Return      :  0 : All the tests finish
 //-------------------------------------------------------------------------------------------------------
 int UnitTest_Mis_LinearInterpolate()
 {

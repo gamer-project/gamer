@@ -706,7 +706,7 @@ void SetParameter()
 //           construct the arrays of the coordinates
              for (int d=0; d<3; d++)
              {
-                HaloMerger_Halo_HALO_IC_Coords[index_halo][d] = new double[HaloMerger_Halo_HALO_IC_NCells[index_halo][d]];
+                HaloMerger_Halo_HALO_IC_Coords[index_halo][d] = new double [HaloMerger_Halo_HALO_IC_NCells[index_halo][d]];
 
                 for (int i=0; i<HaloMerger_Halo_HALO_IC_NCells[index_halo][d]; i++)
                    HaloMerger_Halo_HALO_IC_Coords[index_halo][d][i] = HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][d] + (i + 0.5)*HaloMerger_Halo_HALO_IC_dh[index_halo][d];
