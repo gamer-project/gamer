@@ -1,6 +1,7 @@
 Parameters described on this page:
 [GRACKLE_ACTIVATE](#GRACKLE_ACTIVATE), &nbsp;
 [GRACKLE_VERBOSE](#GRACKLE_VERBOSE), &nbsp;
+[GRACKLE_REDSHIFT](#GRACKLE_REDSHIFT), &nbsp;
 [GRACKLE_COOLING](#GRACKLE_COOLING), &nbsp;
 [GRACKLE_PRIMORDIAL](#GRACKLE_PRIMORDIAL), &nbsp;
 [GRACKLE_METAL](#GRACKLE_METAL), &nbsp;
@@ -35,6 +36,15 @@ Only applicable when enabling the compilation option
     * **Description:**
 Map to the ["grackle_verbose" option in GRACKLE](https://grackle.readthedocs.io/en/latest/Interaction.html#enabling-output).
     * **Restriction:**
+
+<a name="GRACKLE_REDSHIFT"></a>
+* #### `GRACKLE_REDSHIFT` &ensp; (&#8805;0.0) &ensp; [0.0]
+    * **Description:**
+The redshift `z` to set ["a_value" in GRACKLE](https://grackle.readthedocs.io/en/latest/Interaction.html#c.a_value) for the redshift-dependent chemistry and cooling terms,
+where `a_value` is the cosmological expansion scale factor <var>a = 1/(1+z)</var>.
+    * **Restriction:**
+This only works when the compilation option [[--comoving | [Installation]-Option-List#--comoving]] is disabled.
+For cosmological simulations with comoving coordinates, "a_value" changes according to the evolution.
 
 <a name="GRACKLE_COOLING"></a>
 * #### `GRACKLE_COOLING` &ensp; (0=off, 1=on) &ensp; [1]

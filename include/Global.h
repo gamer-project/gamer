@@ -267,6 +267,9 @@ extern bool            YT_JUPYTER_USE_CONNECTION_FILE;
 #ifdef SUPPORT_GRACKLE
 extern bool            GRACKLE_ACTIVATE;
 extern bool            GRACKLE_VERBOSE;
+#ifndef COMOVING
+extern double          GRACKLE_REDSHIFT;
+#endif
 extern bool            GRACKLE_COOLING;
 extern GracklePriChe_t GRACKLE_PRIMORDIAL;
 extern bool            GRACKLE_METAL;

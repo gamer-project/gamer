@@ -112,6 +112,7 @@ OPT__MINIMIZE_MPI_BARRIER     0           # minimize MPI barriers to improve loa
 # Grackle library for chemistry and radiative cooling (SUPPORT_GRACKLE only)
 GRACKLE_ACTIVATE              1           # enable Grackle [1]
 GRACKLE_VERBOSE               1           # map to "grackle_verbose" [1]
+GRACKLE_REDSHIFT              0.0         # redshift to set "a_value" for the redshift-dependent chemistry and cooling terms (non-COMOVING only) [0.0]
 GRACKLE_COOLING               1           # map to "with_radiative_cooling" [1]
 GRACKLE_PRIMORDIAL            3           # map to "primordial_chemistry" (0=Cloudy, 1/2/3=6-/9-/12-species) (must increase NCOMP_PASSIVE_USER by 6/9/12, respectively) [0]
 GRACKLE_METAL                 1           # map to "metal_cooling" (must increase NCOMP_PASSIVE_USER by 1) [0]

@@ -2220,6 +2220,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  ifdef SUPPORT_GRACKLE
    LoadField( "Grackle_Activate",        &RS.Grackle_Activate,        SID, TID, NonFatal, &RT.Grackle_Activate,         1, NonFatal );
    LoadField( "Grackle_Verbose",         &RS.Grackle_Verbose,         SID, TID, NonFatal, &RT.Grackle_Verbose,          1, NonFatal );
+#  ifndef COMOVING
+   LoadField( "Grackle_Redshift",        &RS.Grackle_Redshift,        SID, TID, NonFatal, &RT.Grackle_Redshift,         1, NonFatal );
+#  endif
    LoadField( "Grackle_Cooling",         &RS.Grackle_Cooling,         SID, TID, NonFatal, &RT.Grackle_Cooling,          1, NonFatal );
    LoadField( "Grackle_Primordial",      &RS.Grackle_Primordial,      SID, TID, NonFatal, &RT.Grackle_Primordial,       1, NonFatal );
    LoadField( "Grackle_Metal",           &RS.Grackle_Metal,           SID, TID, NonFatal, &RT.Grackle_Metal,            1, NonFatal );

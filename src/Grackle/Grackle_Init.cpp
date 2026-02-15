@@ -71,7 +71,7 @@ void Grackle_Init()
    Che_Units.time_units           = UNIT_T;
    Che_Units.velocity_units       = UNIT_V;
    Che_Units.a_units              = 1.0;
-   Che_Units.a_value              = 1.0;
+   Che_Units.a_value              = 1.0 / (1.0 + GRACKLE_REDSHIFT) / Che_Units.a_units; // see https://grackle.readthedocs.io/en/latest/Interaction.html#c.a_value
 #  endif
 
 

@@ -248,6 +248,9 @@ void Init_Load_Parameter()
 #  ifdef SUPPORT_GRACKLE
    ReadPara->Add( "GRACKLE_ACTIVATE",           &GRACKLE_ACTIVATE,                true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "GRACKLE_VERBOSE",            &GRACKLE_VERBOSE,                 true,            Useless_bool,  Useless_bool   );
+#  ifndef COMOVING
+   ReadPara->Add( "GRACKLE_REDSHIFT",           &GRACKLE_REDSHIFT,                0.0,             0.0,           NoMax_double   );
+#  endif
    ReadPara->Add( "GRACKLE_COOLING",            &GRACKLE_COOLING,                 true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "GRACKLE_PRIMORDIAL",         &GRACKLE_PRIMORDIAL,              0,               0,             3              );
    ReadPara->Add( "GRACKLE_METAL",              &GRACKLE_METAL,                   false,           Useless_bool,  Useless_bool   );

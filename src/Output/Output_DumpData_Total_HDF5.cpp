@@ -279,8 +279,9 @@ Procedure for outputting new variables:
 //                                             Input__TestProb parameters in "Info/InputTest"
 //                2504 : 2025/04/29 --> output OPT__PAR_INIT_CHECK
 //                2505 : 2025/05/07 --> output PassiveFloor_Var
-//                2506 : 2026/02/13 --> output GRACKLE_USE_V_HEATING_RATE, GRACKLE_USE_S_HEATING_RATE,
-//                                             GRACKLE_USE_TEMP_FLOOR, GRACKLE_TEMP_FLOOR_SCALAR
+//                2506 : 2026/02/15 --> output GRACKLE_USE_V_HEATING_RATE, GRACKLE_USE_S_HEATING_RATE,
+//                                             GRACKLE_USE_TEMP_FLOOR, GRACKLE_TEMP_FLOOR_SCALAR,
+//                                             GRACKLE_REDSHIFT,
 //                                             GRACKLE_HYDROGEN_MFRAC, OPT__UNFREEZE_GRACKLE,
 //                                             OPT__OUTPUT_GRACKLE_TEMP, OPT__OUTPUT_GRACKLE_MU, OPT__OUTPUT_GRACKLE_TCOOL,
 //                                             DT__GRACKLE_COOLING, OPT__FLAG_COOLING_LEN, FlagTable_CoolingLen
@@ -2766,6 +2767,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  ifdef SUPPORT_GRACKLE
    InputPara.Grackle_Activate        = GRACKLE_ACTIVATE;
    InputPara.Grackle_Verbose         = GRACKLE_VERBOSE;
+#  ifndef COMOVING
+   InputPara.Grackle_Redshift        = GRACKLE_REDSHIFT;
+#  endif
    InputPara.Grackle_Cooling         = GRACKLE_COOLING;
    InputPara.Grackle_Primordial      = GRACKLE_PRIMORDIAL;
    InputPara.Grackle_Metal           = GRACKLE_METAL;
@@ -3853,6 +3857,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  ifdef SUPPORT_GRACKLE
    H5Tinsert( H5_TypeID, "Grackle_Activate",        HOFFSET(InputPara_t,Grackle_Activate       ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Grackle_Verbose",         HOFFSET(InputPara_t,Grackle_Verbose        ), H5T_NATIVE_INT              );
+#  ifndef COMOVING
+   H5Tinsert( H5_TypeID, "Grackle_Redshift",        HOFFSET(InputPara_t,Grackle_Redshift       ), H5T_NATIVE_DOUBLE           );
+#  endif
    H5Tinsert( H5_TypeID, "Grackle_Cooling",         HOFFSET(InputPara_t,Grackle_Cooling        ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Grackle_Primordial",      HOFFSET(InputPara_t,Grackle_Primordial     ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Grackle_Metal",           HOFFSET(InputPara_t,Grackle_Metal          ), H5T_NATIVE_INT              );

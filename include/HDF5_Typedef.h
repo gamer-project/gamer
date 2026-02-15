@@ -694,6 +694,9 @@ struct InputPara_t
 #  ifdef SUPPORT_GRACKLE
    int    Grackle_Activate;
    int    Grackle_Verbose;
+#  ifndef COMOVING
+   double Grackle_Redshift;
+#  endif
    int    Grackle_Cooling;
    int    Grackle_Primordial;
    int    Grackle_Metal;

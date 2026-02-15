@@ -1134,6 +1134,9 @@ void Aux_TakeNote()
       fprintf( Note, "GRACKLE_ACTIVATE               % d\n",      GRACKLE_ACTIVATE           );
       if ( GRACKLE_ACTIVATE ) {
       fprintf( Note, "GRACKLE_VERBOSE                % d\n",      GRACKLE_VERBOSE            );
+#     ifndef COMOVING
+      fprintf( Note, "GRACKLE_REDSHIFT               % 14.7e\n",  GRACKLE_REDSHIFT           );
+#     endif
       fprintf( Note, "GRACKLE_COOLING                % d\n",      GRACKLE_COOLING            );
       fprintf( Note, "GRACKLE_PRIMORDIAL             % d\n",      GRACKLE_PRIMORDIAL         );
       fprintf( Note, "GRACKLE_METAL                  % d\n",      GRACKLE_METAL              );

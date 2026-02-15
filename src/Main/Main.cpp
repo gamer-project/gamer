@@ -249,6 +249,9 @@ bool                 YT_JUPYTER_USE_CONNECTION_FILE;
 #ifdef SUPPORT_GRACKLE
 bool                 GRACKLE_ACTIVATE;
 bool                 GRACKLE_VERBOSE;
+#ifndef COMOVING
+double               GRACKLE_REDSHIFT;
+#endif
 bool                 GRACKLE_COOLING;
 GracklePriChe_t      GRACKLE_PRIMORDIAL;
 bool                 GRACKLE_METAL;
