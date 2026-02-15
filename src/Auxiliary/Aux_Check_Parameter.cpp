@@ -1107,6 +1107,31 @@ void Aux_Check_Parameter()
 #  endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == CTU )
 
 
+// check for MHM
+// ------------------------------
+#  if ( FLU_SCHEME == MHM )
+
+#  ifdef MHM_CHECK_PREDICT
+#  ifndef SRHD
+
+   if ( MHM_REPREDICT_ITER_NUM < 1 )
+      Aux_Error( ERROR_INFO, "MHM_REPREDICT_ITER_NUM should be >= 1 for MHM_CHECK_PREDICT !!\n" );
+
+   if ( MHM_REPREDICT_STEPS_SAFE_FAC <= 0 )
+      Aux_Error( ERROR_INFO, "MHM_REPREDICT_STEPS_SAFE_FAC should be > 0 for MHM_CHECK_PREDICT !!\n" );
+
+   if ( MHM_REPREDICT_SUBSTEPS_MAX < 1 )
+      Aux_Error( ERROR_INFO, "MHM_REPREDICT_SUBSTEPS_MAX should be >= 1 for MHM_CHECK_PREDICT !!\n" );
+
+   if ( MHM_REPREDICT_SLOPE_SAFE_FAC <= 0  ||  MHM_REPREDICT_SLOPE_SAFE_FAC >= 1 )
+      Aux_Error( ERROR_INFO, "MHM_REPREDICT_SLOPE_SAFE_FAC should be > 0 and < 1 for MHM_CHECK_PREDICT !!\n" );
+
+#  endif // #ifndef SRHD
+#  endif // #ifdef MHM_CHECK_PREDICT
+
+#  endif // #if ( FLU_SCHEME == MHM )
+
+
 // check for MHM_RP
 // ------------------------------
 #  if ( FLU_SCHEME == MHM_RP )
