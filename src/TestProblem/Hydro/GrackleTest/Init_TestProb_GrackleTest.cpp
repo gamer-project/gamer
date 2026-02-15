@@ -95,9 +95,6 @@ void Validate()
    if ( !OPT__OUTPUT_GRACKLE_TCOOL )
       Aux_Error( ERROR_INFO, "OPT__OUTPUT_GRACKLE_TCOOL must be enabled for this test !!\n" );
 
-   if ( END_STEP != 0  &&  END_T != 0.0  &&  !GRACKLE_COOLING )
-      Aux_Error( ERROR_INFO, "GRACKLE_COOLING must be enabled for time evolution in this test !!\n" );
-
 
    if ( MPI_Rank == 0 )
    {
@@ -153,7 +150,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
 // ********************************************************************************************************************************
 // LOAD_PARA( load_mode, "KEY_IN_THE_FILE",             &VARIABLE,                          DEFAULT,       MIN,              MAX               );
 // ********************************************************************************************************************************
-   LOAD_PARA( load_mode, "GrackleTest_DefaultTestMode", &GrackleTest_DefaultTestMode,       0,             0,                3                 );
+   LOAD_PARA( load_mode, "GrackleTest_DefaultTestMode", &GrackleTest_DefaultTestMode,       0,             0,                4                 );
    LOAD_PARA( load_mode, "GrackleTest_MassDensity_Min", &GrackleTest_MassDensity_Min,       1.0e-29,       Eps_double,       NoMax_double      );
    LOAD_PARA( load_mode, "GrackleTest_MassDensity_Max", &GrackleTest_MassDensity_Max,       1.0e-21,       Eps_double,       NoMax_double      );
    LOAD_PARA( load_mode, "GrackleTest_TempOverMMW_Min", &GrackleTest_TempOverMMW_Min,       1.0e+00,       Eps_double,       NoMax_double      );
@@ -303,6 +300,51 @@ void SetParameter()
       GrackleTest_HeatingRate     = 1.0e-24;   PRINT_RESET_PARA( GrackleTest_HeatingRate,     FORMAT_REAL, "for GrackleTest_DefaultTestMode == 3" );
       GrackleTest_CoolingRate     = 1.6e-20;   PRINT_RESET_PARA( GrackleTest_CoolingRate,     FORMAT_REAL, "for GrackleTest_DefaultTestMode == 3" );
    }
+   else if ( GrackleTest_DefaultTestMode == 4 )
+   {
+
+#     ifdef COMOVING
+      Aux_Error( ERROR_INFO, "COMOVING must be disabled for GrackleTest_DefaultTestMode = %d !!\n",
+                 GrackleTest_DefaultTestMode );
+#     endif
+
+      if ( END_STEP != 0 )
+      {
+         END_STEP = 0;
+         PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
+      }
+
+      if ( GRACKLE_PRIMORDIAL != GRACKLE_PRI_CHE_CLOUDY )
+         Aux_Error( ERROR_INFO, "GRACKLE_PRIMORDIAL must be 0 for GrackleTest_DefaultTestMode = %d !!\n",
+                    GrackleTest_DefaultTestMode );
+
+      if ( GRACKLE_METAL != 0 )
+         Aux_Error( ERROR_INFO, "GRACKLE_METAL must be 0 for GrackleTest_DefaultTestMode = %d !!\n",
+                    GrackleTest_DefaultTestMode );
+
+      if ( GRACKLE_COOLING != 0 )
+         Aux_Error( ERROR_INFO, "GRACKLE_COOLING must be 0 for GrackleTest_DefaultTestMode = %d !!\n",
+                    GrackleTest_DefaultTestMode );
+
+      if ( GRACKLE_UV != 1 )
+         Aux_Error( ERROR_INFO, "GRACKLE_UV must be 1 for GrackleTest_DefaultTestMode = %d !!\n",
+                    GrackleTest_DefaultTestMode );
+
+      if ( GRACKLE_CMB_FLOOR != 0 )
+         Aux_Error( ERROR_INFO, "GRACKLE_CMB_FLOOR must be 0 for GrackleTest_DefaultTestMode = %d !!\n",
+                    GrackleTest_DefaultTestMode );
+
+      if ( GRACKLE_PE_HEATING != 0 )
+         Aux_Error( ERROR_INFO, "GRACKLE_PE_HEATING must be 0 for GrackleTest_DefaultTestMode = %d !!\n",
+                    GrackleTest_DefaultTestMode );
+
+      GrackleTest_MassDensity_Min = 1.0e-29;   PRINT_RESET_PARA( GrackleTest_MassDensity_Min, FORMAT_REAL, "for GrackleTest_DefaultTestMode == 4" );
+      GrackleTest_MassDensity_Max = 1.0e-21;   PRINT_RESET_PARA( GrackleTest_MassDensity_Max, FORMAT_REAL, "for GrackleTest_DefaultTestMode == 4" );
+      GrackleTest_TempOverMMW_Min = 1.0e+00;   PRINT_RESET_PARA( GrackleTest_TempOverMMW_Min, FORMAT_REAL, "for GrackleTest_DefaultTestMode == 4" );
+      GrackleTest_TempOverMMW_Max = 1.0e+08;   PRINT_RESET_PARA( GrackleTest_TempOverMMW_Max, FORMAT_REAL, "for GrackleTest_DefaultTestMode == 4" );
+      GrackleTest_HeatingRate     = 0.0;       PRINT_RESET_PARA( GrackleTest_HeatingRate,     FORMAT_REAL, "for GrackleTest_DefaultTestMode == 4" );
+      GrackleTest_CoolingRate     = 0.0;       PRINT_RESET_PARA( GrackleTest_CoolingRate,     FORMAT_REAL, "for GrackleTest_DefaultTestMode == 4" );
+   }
    else
    {
       Aux_Error( ERROR_INFO, "Unknown GrackleTest_DefaultTestMode = %d !!\n", GrackleTest_DefaultTestMode );
@@ -358,6 +400,10 @@ void SetParameter()
       END_T = End_T_Default;
       PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
    }
+
+   if ( END_STEP != 0  &&  END_T != 0.0  &&  !GRACKLE_COOLING )
+      Aux_Error( ERROR_INFO, "GRACKLE_COOLING must be enabled for time evolution (END_STEP = %ld, END_T = %14.7e) in this test !!\n",
+                 END_STEP, END_T );
 
 
 // (4) make a note

@@ -89,6 +89,16 @@ Note:
       - `GrackleTest_CoolingRate` = 1.6e-20 erg cm^-3 s^-1 n_H^-2
       --> To see the time evolution and spatial distribution of temperature for the given
           user-provided one heating and one cooling 2D Gaussian distributions (as a demo)
+   - 4:
+      - The density range is from 1.0e-29 g cm^-3 to 1.0e-21 g cm^-3
+      - The T/mu range is from 1 K to 1e8 K
+      - `GRACKLE_REDSHIFT` is expected to be adjusted
+      - `GRACKLE_METAL` should be 0
+      - `GRACKLE_PRIMORDIAL` should be 0
+      - `GRACKLE_UV` should be 1
+      - `GRACKLE_CLOUDY_TABLE` should be `CloudyData_UVB=HM2012.h5`
+      - `GRACKLE_COOLING`, `GRACKLE_CMB_FLOOR`, `GRACKLE_PE_HEATING` should all be 0
+      --> To test the redshift-dependent UV background
 
 6. The evolution of fluid
    - The fluid is not evolved by hydrodynamics (`OPT__FREEZE_FLUID`)
