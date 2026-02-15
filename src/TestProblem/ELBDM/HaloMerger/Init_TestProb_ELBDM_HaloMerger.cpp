@@ -679,8 +679,8 @@ void SetParameter()
              else
              {
 //              float to double: process by batch
-                const size_t buffer_size = 4096;
-                float buffer[buffer_size];
+                const size_t buffer_size = 1024 * 1024;  // about 4 MB once, supposed to achieve a balance between file I/O efficiency and memory usage
+                float *buffer = new float [buffer_size];
 
 //              loop through batches
                 size_t offset         = 0;
@@ -698,6 +698,8 @@ void SetParameter()
                    offset         += batch_size;
                    remaining_size -= batch_size;
                 }
+
+                delete [] buffer;
              }
 
 //           close the file
