@@ -11,7 +11,7 @@ Related options:
 
 
 ## Runtime Parameters
-[[[Runtime parameters] Particles | [Runtime-Parameters]-Particles]]
+[[ [Runtime parameters] Particles | [Runtime-Parameters]-Particles ]]
 
 Other related parameters:
 [[DT__PARVEL | [Runtime-Parameters]-Timestep#DT__PARVEL]], &nbsp;

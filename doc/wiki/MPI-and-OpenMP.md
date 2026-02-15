@@ -39,7 +39,7 @@ Related options:
 
 
 ## Runtime Parameters
-[[[Runtime parameters] MPI and OpenMP | [Runtime-Parameters]-MPI-and-OpenMP]]
+[[ [Runtime parameters] MPI and OpenMP | [Runtime-Parameters]-MPI-and-OpenMP ]]
 
 Other related parameters: none
 

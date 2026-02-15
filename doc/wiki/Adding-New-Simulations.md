@@ -22,6 +22,7 @@ Mandatory steps are marked by &#x1F4CC;.
    *  [External Acceleration](#external-acceleration)
    *  [External Potential](#external-potential)
    *  [Equation of State](#equation-of-state)
+   *  [Source Terms](#source-terms)
    *  [Feedback](#feedback)
    *  [HDF5 Output](#hdf5-output)
 7. [Add Problem-specific Validators](#vii-add-problem-specific-validators)
@@ -616,6 +617,16 @@ Add a user-specified equation of state. See [[here | equation-of-state]] for det
 * **Example:**
    * `src/EoS/User_Template`
    * `src/EoS/Gamma`
+
+### Source Terms
+* **Description:**
+Add user-specified source terms. See [[here | source-terms]] for details.
+* **Function Pointer:**
+   * `Src_Init_User_Ptr`
+* **Runtime Option:**
+[[SRC_USER | [Runtime-Parameters]-Source-Terms#SRC_USER]]
+* **Example:**
+   * `src/SourceTerms/User_Template`
 
 ### Feedback
 * **Description:**

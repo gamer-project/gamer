@@ -5,7 +5,7 @@ Related options:
 [[--grackle | [Installation]-Option-List#--grackle]] &nbsp;
 
 ## Runtime Parameters
-[[[Runtime parameters] Chemistry and Radiation | [Runtime-Parameters]-Chemistry-and-Radiation]]
+[[ [Runtime parameters] Chemistry and Radiation | [Runtime-Parameters]-Chemistry-and-Radiation ]]
 
 Other related parameters:
 [[CHE_GPU_NPGROUP | [Runtime-Parameters]-GPU#CHE_GPU_NPGROUP]] &nbsp;

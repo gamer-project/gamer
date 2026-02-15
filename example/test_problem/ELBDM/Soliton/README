@@ -18,3 +18,5 @@ Note:
    Soliton_N > 1: soliton merger
                   --> Set Soliton_RSeed >= 0
                       Set Soliton_EmptyRegion > 0.0 (e.g., 1.0e2)
+2. The input density profile table should adopt units where 4 \pi G = m_FDM = \hbar = 1.
+   It will then be converted automatically to the code units.

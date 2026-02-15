@@ -2,6 +2,7 @@ Parameters described on this page:
 [OPT__GPUID_SELECT](#OPT__GPUID_SELECT), &nbsp;
 [FLU_GPU_NPGROUP](#FLU_GPU_NPGROUP), &nbsp;
 [POT_GPU_NPGROUP](#POT_GPU_NPGROUP), &nbsp;
+[SRC_GPU_NPGROUP](#SRC_GPU_NPGROUP), &nbsp;
 [CHE_GPU_NPGROUP](#CHE_GPU_NPGROUP), &nbsp;
 [GPU_NSTREAM](#GPU_NSTREAM) &nbsp;
 
@@ -27,6 +28,14 @@ Must be a multiple of [GPU_NSTREAM](#GPU_NSTREAM).
 * #### `POT_GPU_NPGROUP` &ensp; (>0; &#8804;0 &#8594; set to default) &ensp; [depend on the GPU spec]
     * **Description:**
 Number of patch groups updated by the GPU/CPU Poisson solvers at a single time.
+See also [[[Performance-Optimizations] GPU | [Performance-Optimizations]-GPU]].
+    * **Restriction:**
+Must be a multiple of [GPU_NSTREAM](#GPU_NSTREAM).
+
+<a name="SRC_GPU_NPGROUP"></a>
+* #### `SRC_GPU_NPGROUP` &ensp; (>0; &#8804;0 &#8594; set to default) &ensp; [depend on the GPU spec]
+    * **Description:**
+Number of patch groups updated by the GPU/CPU source-term solvers at a single time.
 See also [[[Performance-Optimizations] GPU | [Performance-Optimizations]-GPU]].
     * **Restriction:**
 Must be a multiple of [GPU_NSTREAM](#GPU_NSTREAM).

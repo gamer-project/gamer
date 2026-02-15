@@ -8,7 +8,7 @@ Related options:
 
 
 ## Runtime Parameters
-[[[Runtime parameters] Star Formation | [Runtime-Parameters]-Star-Formation]]
+[[ [Runtime parameters] Star Formation | [Runtime-Parameters]-Star-Formation ]]
 
 Other related parameters:
 
