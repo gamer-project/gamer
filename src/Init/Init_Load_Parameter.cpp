@@ -130,6 +130,9 @@ void Init_Load_Parameter()
 #  ifdef CR_DIFFUSION
    ReadPara->Add( "DT__CR_DIFFUSION",           &DT__CR_DIFFUSION,                3.0e-1,          0.0,           NoMax_double   );
 #  endif
+#  ifdef SUPPORT_GRACKLE
+   ReadPara->Add( "DT__GRACKLE_COOLING",        &DT__GRACKLE_COOLING,            -1.0,             NoMin_double,  NoMax_double   );
+#  endif
 #  ifdef COMOVING
    ReadPara->Add( "DT__MAX_DELTA_A",            &DT__MAX_DELTA_A,                 0.01,            0.0,           NoMax_double   );
 #  endif
@@ -165,6 +168,9 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__FLAG_JEANS",            &OPT__FLAG_JEANS,                 false,           Useless_bool,  Useless_bool   );
 #  ifdef SRHD
    ReadPara->Add( "OPT__FLAG_LRTZ_GRADIENT",    &OPT__FLAG_LRTZ_GRADIENT,         false,           Useless_bool,  Useless_bool   );
+#  endif
+#  ifdef SUPPORT_GRACKLE
+   ReadPara->Add( "OPT__FLAG_COOLING_LEN",      &OPT__FLAG_COOLING_LEN,           false,           Useless_bool,  Useless_bool   );
 #  endif
 #  ifdef MHD
    ReadPara->Add( "OPT__FLAG_CURRENT",          &OPT__FLAG_CURRENT,               false,           Useless_bool,  Useless_bool   );
@@ -242,6 +248,9 @@ void Init_Load_Parameter()
 #  ifdef SUPPORT_GRACKLE
    ReadPara->Add( "GRACKLE_ACTIVATE",           &GRACKLE_ACTIVATE,                true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "GRACKLE_VERBOSE",            &GRACKLE_VERBOSE,                 true,            Useless_bool,  Useless_bool   );
+#  ifndef COMOVING
+   ReadPara->Add( "GRACKLE_REDSHIFT",           &GRACKLE_REDSHIFT,                0.0,             0.0,           NoMax_double   );
+#  endif
    ReadPara->Add( "GRACKLE_COOLING",            &GRACKLE_COOLING,                 true,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "GRACKLE_PRIMORDIAL",         &GRACKLE_PRIMORDIAL,              0,               0,             3              );
    ReadPara->Add( "GRACKLE_METAL",              &GRACKLE_METAL,                   false,           Useless_bool,  Useless_bool   );
@@ -253,6 +262,12 @@ void Init_Load_Parameter()
    ReadPara->Add( "GRACKLE_THREE_BODY_RATE",    &GRACKLE_THREE_BODY_RATE,         0,               0,             5              );
    ReadPara->Add( "GRACKLE_CIE_COOLING",        &GRACKLE_CIE_COOLING,             false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "GRACKLE_H2_OPA_APPROX",      &GRACKLE_H2_OPA_APPROX,           0,               0,             1              );
+   ReadPara->Add( "GRACKLE_USE_V_HEATING_RATE", &GRACKLE_USE_V_HEATING_RATE,      false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "GRACKLE_USE_S_HEATING_RATE", &GRACKLE_USE_S_HEATING_RATE,      false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "GRACKLE_USE_TEMP_FLOOR",     &GRACKLE_USE_TEMP_FLOOR,          0,               0,             2              );
+   ReadPara->Add( "GRACKLE_TEMP_FLOOR_SCALAR",  &GRACKLE_TEMP_FLOOR_SCALAR,       0.0,             0.0,           NoMax_double   );
+   ReadPara->Add( "GRACKLE_HYDROGEN_MFRAC",     &GRACKLE_HYDROGEN_MFRAC,          0.76,            0.0,           1.0            );
+   ReadPara->Add( "OPT__UNFREEZE_GRACKLE",      &OPT__UNFREEZE_GRACKLE,           false,           Useless_bool,  Useless_bool   );
 // do not check CHE_GPU_NPGROUP since it may be reset by either Init_ResetParameter() or CUAPI_SetMemSize()
    ReadPara->Add( "CHE_GPU_NPGROUP",            &CHE_GPU_NPGROUP,                -1,               NoMin_int,     NoMax_int      );
 #  endif
@@ -532,7 +547,6 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__OUTPUT_CS",             &OPT__OUTPUT_CS,                  false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_DIVVEL",         &OPT__OUTPUT_DIVVEL,              false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_MACH",           &OPT__OUTPUT_MACH,                false,           Useless_bool,  Useless_bool   );
-#  endif
 #  ifdef MHD
    ReadPara->Add( "OPT__OUTPUT_DIVMAG",         &OPT__OUTPUT_DIVMAG,              false,           Useless_bool,  Useless_bool   );
 #  endif
@@ -541,6 +555,12 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__OUTPUT_3VELOCITY",      &OPT__OUTPUT_3VELOCITY,           false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_ENTHALPY",       &OPT__OUTPUT_ENTHALPY,            true,            Useless_bool,  Useless_bool   );
 #  endif
+#  ifdef SUPPORT_GRACKLE
+   ReadPara->Add( "OPT__OUTPUT_GRACKLE_TEMP",   &OPT__OUTPUT_GRACKLE_TEMP,        false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__OUTPUT_GRACKLE_MU",     &OPT__OUTPUT_GRACKLE_MU,          false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__OUTPUT_GRACKLE_TCOOL",  &OPT__OUTPUT_GRACKLE_TCOOL,       false,           Useless_bool,  Useless_bool   );
+#  endif
+#  endif // #if ( MODEL == HYDRO )
    ReadPara->Add( "OPT__OUTPUT_USER_FIELD",     &OPT__OUTPUT_USER_FIELD,          false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_MODE",           &OPT__OUTPUT_MODE,               -1,               1,             3              );
    ReadPara->Add( "OPT__OUTPUT_RESTART",        &OPT__OUTPUT_RESTART,             false,           Useless_bool,  Useless_bool   );
