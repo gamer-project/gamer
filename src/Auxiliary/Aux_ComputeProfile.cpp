@@ -11,11 +11,12 @@ extern void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, 
 // Description :  Compute the average radial profile of target field(s)
 //
 // Note        :  1. Results will be stored in the input "Prof" object
-//                   --> Prof->Radius[]: Radial coordinate at each bin
-//                       Prof->Data  []: Profile data at each bin
-//                       Prof->Weight[]: Total weighting at each bin
-//                       Prof->NCell []: Number of cells at each bin
-//                       Prof->NBin    : Total number of bins
+//                   --> Prof->Radius    []: Radial coordinate at each bin
+//                       Prof->Data      []: Profile data at each bin
+//                       Prof->Data_Sigma[]: Standard deviation of profile data at each bin
+//                       Prof->Weight    []: Total weighting at each bin
+//                       Prof->NCell     []: Number of cells at each bin
+//                       Prof->NBin        : Total number of bins
 //                   --> See the "Profile_t" structure defined in "include/Profile.h" for details
 //                   --> These arrays will be free'd when deleting "Prof"
 //                2. The exact maximum radius adopted may be slightly larger than the input "r_max"
@@ -44,7 +45,7 @@ extern void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, 
 //                              --> Right edge of log bin n = dr_min*LogBinRatio^n
 //                RemoveEmpty : true  --> remove empty bins from the data
 //                              false --> these empty bins will still be in the profile arrays with
-//                                        Data[empty_bin]=Weight[empty_bin]=NCell[empty_bin]=0
+//                                        Data[empty_bin]=Data_Sigma[empty_bin]=Weight[empty_bin]=NCell[empty_bin]=0
 //                TVarBitIdx  : Bitwise indices of target variables for computing the profiles
 //                              --> Supported indices (defined in Macro.h):
 //                                     HYDRO        : _DENS, _MOMX, _MOMY, _MOMZ, _ENGY, _VELX, _VELY, _VELZ, _VELR,
@@ -63,6 +64,8 @@ extern void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, 
 //                                  (i.e., MinLv ~ MaxLv) and non-leaf patches only on MaxLv
 //                PrepTimeIn  : Target physical time to prepare data
 //                              --> If PrepTimeIn<0, turn off temporal interpolation and always use the most recent data
+//                GetSigma    : true  --> compute the standard deviation of profile data
+//                              false --> set Data_Sigma=0
 //
 // Example     :  const double      Center[3]      = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
 //                const double      MaxRadius      = 0.5*amr->BoxSize[0];
@@ -76,12 +79,13 @@ extern void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, 
 //                const int         MaxLv          = MAX_LEVEL;
 //                const PatchType_t PatchType      = PATCH_LEAF_PLUS_MAXNONLEAF;
 //                const double      PrepTime       = -1.0;
+//                const bool        GetSigma       = false;
 //
 //                Profile_t Prof_Dens, Prof_Pres;
 //                Profile_t *Prof[] = { &Prof_Dens, &Prof_Pres };
 //
 //                Aux_ComputeProfile( Prof, Center, MaxRadius, MinBinSize, LogBin, LogBinRatio, RemoveEmptyBin,
-//                                    TVar, NProf, MinLv, MaxLv, PatchType, PrepTime );
+//                                    TVar, NProf, MinLv, MaxLv, PatchType, PrepTime, GetSigma );
 //
 //                if ( MPI_Rank == 0 )
 //                {
@@ -90,10 +94,10 @@ extern void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, 
 //                      char Filename[MAX_STRING];
 //                      sprintf( Filename, "Profile%d.txt", p );
 //                      FILE *File = fopen( Filename, "w" );
-//                      fprintf( File, "#%19s  %21s  %21s  %10s\n", "Radius", "Data", "Weight", "Cells" );
+//                      fprintf( File, "#%19s  %21s  %21s  %21s  %10s\n", "Radius", "Data", "Data_Sigma", "Weight", "Cells" );
 //                      for (int b=0; b<Prof[p]->NBin; b++)
-//                         fprintf( File, "%20.14e  %21.14e  %21.14e  %10ld\n",
-//                                  Prof[p]->Radius[b], Prof[p]->Data[b], Prof[p]->Weight[b], Prof[p]->NCell[b] );
+//                         fprintf( File, "%20.14e  %21.14e  %21.14e  %21.14e  %10ld\n",
+//                                  Prof[p]->Radius[b], Prof[p]->Data[b], Prof[p]->Data_Sigma[b], Prof[p]->Weight[b], Prof[p]->NCell[b] );
 //                      fclose( File );
 //                   }
 //                }
@@ -103,7 +107,7 @@ extern void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, 
 void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double r_max_input, const double dr_min,
                          const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const long TVarBitIdx[],
                          const int NProf, const int MinLv, const int MaxLv, const PatchType_t PatchType,
-                         const double PrepTimeIn )
+                         const double PrepTimeIn, const bool GetSigma )
 {
 
 // check
@@ -213,21 +217,23 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
    const int NT = 1;
 #  endif
 
-   double ***OMP_Data=NULL, ***OMP_Weight=NULL;
+   double ***OMP_Data=NULL, ***OMP_Data_Sigma=NULL, ***OMP_Weight=NULL;
    long   ***OMP_NCell=NULL;
 
-   Aux_AllocateArray3D( OMP_Data,   NProf, NT, Prof[0]->NBin );
-   Aux_AllocateArray3D( OMP_Weight, NProf, NT, Prof[0]->NBin );
-   Aux_AllocateArray3D( OMP_NCell,  NProf, NT, Prof[0]->NBin );
+   Aux_AllocateArray3D( OMP_Data,       NProf, NT, Prof[0]->NBin );
+   Aux_AllocateArray3D( OMP_Data_Sigma, NProf, NT, Prof[0]->NBin );
+   Aux_AllocateArray3D( OMP_Weight,     NProf, NT, Prof[0]->NBin );
+   Aux_AllocateArray3D( OMP_NCell,      NProf, NT, Prof[0]->NBin );
 
 // initialize profile arrays
    for (int p=0; p<NProf; p++)
    for (int t=0; t<NT; t++)
    for (int b=0; b<Prof[0]->NBin; b++)
    {
-      OMP_Data  [p][t][b] = 0.0;
-      OMP_Weight[p][t][b] = 0.0;
-      OMP_NCell [p][t][b] = 0;
+      OMP_Data      [p][t][b] = 0.0;
+      OMP_Data_Sigma[p][t][b] = 0.0;
+      OMP_Weight    [p][t][b] = 0.0;
+      OMP_NCell     [p][t][b] = 0;
    }
 
    real (*Patch_Data)[8][PS1][PS1][PS1] = new real [NT][8][PS1][PS1][PS1];  // field data of each cell
@@ -538,6 +544,9 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                      OMP_Data  [p][TID][bin] += Patch_Data[TID][LocalID][k][j][i]*Weight;
                      OMP_Weight[p][TID][bin] += Weight;
                      OMP_NCell [p][TID][bin] ++;
+                     if ( GetSigma )
+                        OMP_Data_Sigma[p][TID][bin] += SQR( Patch_Data[TID][LocalID][k][j][i] )*Weight;
+
                   } // i,j,k
                } // for (int LocalID=0; LocalID<8; LocalID++)
             } // for (int p=0; p<NProf; p++)
@@ -563,9 +572,12 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
    {
       for (int b=0; b<Prof[0]->NBin; b++)
       {
-         Prof[p]->Data  [b]  = OMP_Data  [p][0][b];
-         Prof[p]->Weight[b]  = OMP_Weight[p][0][b];
-         Prof[p]->NCell [b]  = OMP_NCell [p][0][b];
+         Prof[p]->Data  [b] = OMP_Data  [p][0][b];
+         Prof[p]->Weight[b] = OMP_Weight[p][0][b];
+         Prof[p]->NCell [b] = OMP_NCell [p][0][b];
+         if ( GetSigma )
+            Prof[p]->Data_Sigma[b] = OMP_Data_Sigma[p][0][b];
+
       }
 
       for (int t=1; t<NT; t++)
@@ -574,12 +586,15 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
          Prof[p]->Data  [b] += OMP_Data  [p][t][b];
          Prof[p]->Weight[b] += OMP_Weight[p][t][b];
          Prof[p]->NCell [b] += OMP_NCell [p][t][b];
+         if ( GetSigma )
+            Prof[p]->Data_Sigma[b] += OMP_Data_Sigma[p][t][b];
       }
    }
 
 
 // free per-thread arrays
    Aux_DeallocateArray3D( OMP_Data );
+   Aux_DeallocateArray3D( OMP_Data_Sigma );
    Aux_DeallocateArray3D( OMP_Weight );
    Aux_DeallocateArray3D( OMP_NCell );
 
@@ -593,16 +608,21 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
    {
       if ( MPI_Rank == 0 )
       {
-         MPI_Reduce( MPI_IN_PLACE,    Prof[p]->Data,   Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-         MPI_Reduce( MPI_IN_PLACE,    Prof[p]->Weight, Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-         MPI_Reduce( MPI_IN_PLACE,    Prof[p]->NCell , Prof[p]->NBin, MPI_LONG,   MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( MPI_IN_PLACE,        Prof[p]->Data,       Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( MPI_IN_PLACE,        Prof[p]->Weight,     Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( MPI_IN_PLACE,        Prof[p]->NCell,      Prof[p]->NBin, MPI_LONG,   MPI_SUM, 0, MPI_COMM_WORLD );
+         if ( GetSigma )
+            MPI_Reduce( MPI_IN_PLACE,     Prof[p]->Data_Sigma, Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+
       }
 
       else
       {
-         MPI_Reduce( Prof[p]->Data,   NULL,            Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-         MPI_Reduce( Prof[p]->Weight, NULL,            Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-         MPI_Reduce( Prof[p]->NCell,  NULL,            Prof[p]->NBin, MPI_LONG,   MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( Prof[p]->Data,          NULL,             Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( Prof[p]->Weight,        NULL,             Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+         MPI_Reduce( Prof[p]->NCell,         NULL,             Prof[p]->NBin, MPI_LONG,   MPI_SUM, 0, MPI_COMM_WORLD );
+         if ( GetSigma )
+            MPI_Reduce( Prof[p]->Data_Sigma, NULL,             Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
       }
    }
 #  endif
@@ -615,7 +635,18 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
       for (int b=0; b<Prof[0]->NBin; b++)
       {
 //       skip empty bins since both their data and weight are zero
-         if ( Prof[p]->NCell[b] > 0L )    Prof[p]->Data[b] /= Prof[p]->Weight[b];
+         if ( Prof[p]->NCell[b] > 0L )
+         {
+            Prof[p]->Data      [b] /= Prof[p]->Weight[b];
+            Prof[p]->Data_Sigma[b]  = ( GetSigma )
+                                    ? Prof[p]->Data_Sigma[b]/Prof[p]->Weight[b] - SQR( Prof[p]->Data[b] )
+                                    : 0.0;
+
+            if ( Prof[p]->Data_Sigma[b] < 0.0 )
+               Aux_Error( ERROR_INFO, "Prof[%d]->Data_Sigma[%d] = %14.7e < 0.0 !!\n", p, b, Prof[p]->Data_Sigma[b] );
+            else
+               Prof[p]->Data_Sigma[b] = sqrt( Prof[p]->Data_Sigma[b] );
+         }
       }
    }
 
@@ -623,9 +654,10 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 // broadcast data to all ranks
    for (int p=0; p<NProf; p++)
    {
-      MPI_Bcast( Prof[p]->Data,   Prof[p]->NBin, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-      MPI_Bcast( Prof[p]->Weight, Prof[p]->NBin, MPI_DOUBLE, 0, MPI_COMM_WORLD );
-      MPI_Bcast( Prof[p]->NCell,  Prof[p]->NBin, MPI_LONG,   0, MPI_COMM_WORLD );
+      MPI_Bcast( Prof[p]->Data,       Prof[p]->NBin, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+      MPI_Bcast( Prof[p]->Data_Sigma, Prof[p]->NBin, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+      MPI_Bcast( Prof[p]->Weight,     Prof[p]->NBin, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+      MPI_Bcast( Prof[p]->NCell,      Prof[p]->NBin, MPI_LONG,   0, MPI_COMM_WORLD );
    }
 
 
@@ -650,10 +682,11 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 
             for (int p=0; p<NProf; p++)
             {
-               Prof[p]->Radius[b_up_ms] = Prof[p]->Radius[b_up];
-               Prof[p]->Data  [b_up_ms] = Prof[p]->Data  [b_up];
-               Prof[p]->Weight[b_up_ms] = Prof[p]->Weight[b_up];
-               Prof[p]->NCell [b_up_ms] = Prof[p]->NCell [b_up];
+               Prof[p]->Radius    [b_up_ms] = Prof[p]->Radius    [b_up];
+               Prof[p]->Data      [b_up_ms] = Prof[p]->Data      [b_up];
+               Prof[p]->Data_Sigma[b_up_ms] = Prof[p]->Data_Sigma[b_up];
+               Prof[p]->Weight    [b_up_ms] = Prof[p]->Weight    [b_up];
+               Prof[p]->NCell     [b_up_ms] = Prof[p]->NCell     [b_up];
             }
          }
 
