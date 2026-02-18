@@ -73,6 +73,10 @@ void Validate()
    Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
 #  endif
 
+#  if ( NCOMP_PASSIVE != 13 )
+   Aux_Error( ERROR_INFO, "NCOMP_PASSIVE must be 13 !!\n" );
+#  endif
+
    if ( !OPT__UNIT )
       Aux_Error( ERROR_INFO, "OPT__UNIT must be enabled for this test !!\n" );
 
@@ -209,7 +213,7 @@ void SetParameter()
    delete ReadPara;
 
 // (1-2) set the default values
-   if ( ! GRACKLE_METAL )
+   if ( !GRACKLE_METAL )
    {
       GrackleTest_MFrac_Metal = 0.0;   PRINT_RESET_PARA( GrackleTest_MFrac_Metal, FORMAT_REAL, "for GRACKLE_METAL disabled" );
    }
@@ -244,6 +248,7 @@ void SetParameter()
       GrackleTest_CoolingRate = 0.0;   PRINT_RESET_PARA( GrackleTest_CoolingRate, FORMAT_REAL, "for GRACKLE_USE_V_HEATING_RATE disabled" );
    }
 
+// note that we cannot reset the global GRACKLE_* parameters here since they have been used in Grackle_Init()
    if ( GrackleTest_DefaultTestMode == 0 )
    {
 //    keep the user's input
@@ -272,23 +277,23 @@ void SetParameter()
          Aux_Error( ERROR_INFO, "GRACKLE_PRIMORDIAL must be 0 for GrackleTest_DefaultTestMode = %d !!\n",
                     GrackleTest_DefaultTestMode );
 
-      if ( GRACKLE_COOLING != 1 )
+      if ( !GRACKLE_COOLING )
          Aux_Error( ERROR_INFO, "GRACKLE_COOLING must be 1 for GrackleTest_DefaultTestMode = %d !!\n",
                     GrackleTest_DefaultTestMode );
 
-      if ( GRACKLE_USE_V_HEATING_RATE != 1 )
+      if ( !GRACKLE_USE_V_HEATING_RATE )
          Aux_Error( ERROR_INFO, "GRACKLE_USE_V_HEATING_RATE must be 1 for GrackleTest_DefaultTestMode = %d !!\n",
                     GrackleTest_DefaultTestMode );
 
-      if ( GRACKLE_UV != 0 )
+      if ( GRACKLE_UV )
          Aux_Error( ERROR_INFO, "GRACKLE_UV must be 0 for GrackleTest_DefaultTestMode = %d !!\n",
                     GrackleTest_DefaultTestMode );
 
-      if ( GRACKLE_CMB_FLOOR != 0 )
+      if ( GRACKLE_CMB_FLOOR )
          Aux_Error( ERROR_INFO, "GRACKLE_CMB_FLOOR must be 0 for GrackleTest_DefaultTestMode = %d !!\n",
                     GrackleTest_DefaultTestMode );
 
-      if ( GRACKLE_PE_HEATING != 0 )
+      if ( GRACKLE_PE_HEATING )
          Aux_Error( ERROR_INFO, "GRACKLE_PE_HEATING must be 0 for GrackleTest_DefaultTestMode = %d !!\n",
                     GrackleTest_DefaultTestMode );
 
@@ -318,23 +323,23 @@ void SetParameter()
          Aux_Error( ERROR_INFO, "GRACKLE_PRIMORDIAL must be 0 for GrackleTest_DefaultTestMode = %d !!\n",
                     GrackleTest_DefaultTestMode );
 
-      if ( GRACKLE_METAL != 0 )
+      if ( GRACKLE_METAL )
          Aux_Error( ERROR_INFO, "GRACKLE_METAL must be 0 for GrackleTest_DefaultTestMode = %d !!\n",
                     GrackleTest_DefaultTestMode );
 
-      if ( GRACKLE_COOLING != 0 )
+      if ( GRACKLE_COOLING )
          Aux_Error( ERROR_INFO, "GRACKLE_COOLING must be 0 for GrackleTest_DefaultTestMode = %d !!\n",
                     GrackleTest_DefaultTestMode );
 
-      if ( GRACKLE_UV != 1 )
+      if ( !GRACKLE_UV )
          Aux_Error( ERROR_INFO, "GRACKLE_UV must be 1 for GrackleTest_DefaultTestMode = %d !!\n",
                     GrackleTest_DefaultTestMode );
 
-      if ( GRACKLE_CMB_FLOOR != 0 )
+      if ( GRACKLE_CMB_FLOOR )
          Aux_Error( ERROR_INFO, "GRACKLE_CMB_FLOOR must be 0 for GrackleTest_DefaultTestMode = %d !!\n",
                     GrackleTest_DefaultTestMode );
 
-      if ( GRACKLE_PE_HEATING != 0 )
+      if ( GRACKLE_PE_HEATING )
          Aux_Error( ERROR_INFO, "GRACKLE_PE_HEATING must be 0 for GrackleTest_DefaultTestMode = %d !!\n",
                     GrackleTest_DefaultTestMode );
 
@@ -525,37 +530,66 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 // set passive scalars
 // 6-species network
-   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 )
-   {
-      fluid[Idx_e    ] = Dens * GrackleTest_MFrac_e;
-      fluid[Idx_HI   ] = Dens * GrackleTest_MFrac_HI;
-      fluid[Idx_HII  ] = Dens * GrackleTest_MFrac_HII;
-      fluid[Idx_HeI  ] = Dens * GrackleTest_MFrac_HeI;
-      fluid[Idx_HeII ] = Dens * GrackleTest_MFrac_HeII;
-      fluid[Idx_HeIII] = Dens * GrackleTest_MFrac_HeIII;
-   }
+   fluid[Idx_e    ] = Dens * GrackleTest_MFrac_e;
+   fluid[Idx_HI   ] = Dens * GrackleTest_MFrac_HI;
+   fluid[Idx_HII  ] = Dens * GrackleTest_MFrac_HII;
+   fluid[Idx_HeI  ] = Dens * GrackleTest_MFrac_HeI;
+   fluid[Idx_HeII ] = Dens * GrackleTest_MFrac_HeII;
+   fluid[Idx_HeIII] = Dens * GrackleTest_MFrac_HeIII;
 
 // 9-species network
-   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9 )
-   {
-      fluid[Idx_HM   ] = Dens * GrackleTest_MFrac_HM;
-      fluid[Idx_H2I  ] = Dens * GrackleTest_MFrac_H2I;
-      fluid[Idx_H2II ] = Dens * GrackleTest_MFrac_H2II;
-   }
+   fluid[Idx_HM   ] = Dens * GrackleTest_MFrac_HM;
+   fluid[Idx_H2I  ] = Dens * GrackleTest_MFrac_H2I;
+   fluid[Idx_H2II ] = Dens * GrackleTest_MFrac_H2II;
 
 // 12-species network
-   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE12 )
-   {
-      fluid[Idx_DI   ] = Dens * GrackleTest_MFrac_DI;
-      fluid[Idx_DII  ] = Dens * GrackleTest_MFrac_DII;
-      fluid[Idx_HDI  ] = Dens * GrackleTest_MFrac_HDI;
-   }
+   fluid[Idx_DI   ] = Dens * GrackleTest_MFrac_DI;
+   fluid[Idx_DII  ] = Dens * GrackleTest_MFrac_DII;
+   fluid[Idx_HDI  ] = Dens * GrackleTest_MFrac_HDI;
 
 // metallicity for metal cooling
-   if ( GRACKLE_METAL )
-      fluid[Idx_Metal] = Dens * GrackleTest_MFrac_Metal;
+   fluid[Idx_Metal] = Dens * GrackleTest_MFrac_Metal;
 
 } // FUNCTION : SetGridIC
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  AddNewField_GrackleTest
+// Description :  Add the problem-specific grid fields
+//
+// Note        :  1. Ref: https://github.com/gamer-project/gamer/wiki/Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes
+//                2. Invoke AddField() for each of the problem-specific field:
+//                   --> Field label sent to AddField() will be used as the output name of the field
+//                   --> Field index returned by AddField() can be used to access the field data
+//                3. Pre-declared field indices are put in Field.h
+//
+// Parameter   :  None
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void AddNewField_GrackleTest()
+{
+
+// add these fields only if it has not been done
+// --> since Grackle may already add these fields automatically when GRACKLE_PRIMORDIAL or GRACKLE_METAL is enabled
+//     in Init/Init_Field.cpp
+// --> also note that "Idx_*" has been predefined in Field.h
+   if ( Idx_e     == Idx_Undefined )   AddField( "Electron", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_HI    == Idx_Undefined )   AddField( "HI",       FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_HII   == Idx_Undefined )   AddField( "HII",      FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_HeI   == Idx_Undefined )   AddField( "HeI",      FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_HeII  == Idx_Undefined )   AddField( "HeII",     FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_HeIII == Idx_Undefined )   AddField( "HeIII",    FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_HM    == Idx_Undefined )   AddField( "HM",       FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_H2I   == Idx_Undefined )   AddField( "H2I",      FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_H2II  == Idx_Undefined )   AddField( "H2II",     FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_DI    == Idx_Undefined )   AddField( "DI",       FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_DII   == Idx_Undefined )   AddField( "DII",      FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_HDI   == Idx_Undefined )   AddField( "HDI",      FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_Metal == Idx_Undefined )   AddField( "Metal",    FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, (GRACKLE_PRIMORDIAL==GRACKLE_PRI_CHE_CLOUDY)?NORMALIZE_NO:NORMALIZE_YES, INTERP_FRAC_YES );
+
+} // FUNCTION : AddNewField_GrackleTest
 
 
 
@@ -663,6 +697,7 @@ void Init_TestProb_Hydro_GrackleTest()
 
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr            = SetGridIC;
+   Init_Field_User_Ptr               = AddNewField_GrackleTest;
    Grackle_vHeatingRate_User_Ptr     = Grackle_vHeatingRate_GrackleTest;
    Grackle_tempFloor_User_Ptr        = Grackle_tempFloor_GrackleTest;
 #  ifdef SUPPORT_HDF5
