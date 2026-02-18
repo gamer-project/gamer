@@ -288,6 +288,23 @@ template <typename T> void  Mis_Idx1D2Idx3D( const int Size[], const T Idx1D, in
 template <typename U, typename T> U Mis_BinarySearch( const T Array[], U Min, U Max, const T Key );
 template <typename U, typename T> U Mis_BinarySearch_Real( const T Array[], U Min, U Max, const T Key );
 template <typename T> T     Mis_InterpolateFromTable( const int N, const T Table_x[], const T Table_y[], const T x );
+template <typename T> T     Mis_InterpolateFrom2DTable( const int N_x, const int N_y,
+                                                        const T Table_x[], const T Table_y[], const T Table_f[],
+                                                        const T x, const T y );
+template <typename T> T     Mis_InterpolateFrom3DTable( const int N_x, const int N_y, const int N_z,
+                                                        const T Table_x[], const T Table_y[], const T Table_z[], const T Table_f[],
+                                                        const T x, const T y, const T z );
+template <typename T> T     Mis_InterpolateFrom_nDim_Table( const int nDim, const int N_x[], T const* const* Table_x, const T Table_f[], const T x[], const int OutsideMethod );
+template <typename T> T     Mis_InterpolateFrom_nDim_Table_withIdxL( const int nDim, const int N_x[], T const* const* Table_x, const T Table_f[], const T x[], const int IdxL[] );
+template <typename T> T     Mis_LinearInterpolate( const T x, const T xL, const T xR, const T f_xL, const T f_xR );
+template <typename T> T     Mis_BilinearInterpolate( const T x, const T y,
+                                                     const T xL, const T xR, const T yL, const T yR,
+                                                     const T f_xL_yL, const T f_xR_yL, const T f_xL_yR, const T f_xR_yR );
+template <typename T> T     Mis_TrilinearInterpolate( const T x, const T y, const T z,
+                                                      const T xL, const T xR, const T yL, const T yR, const T zL, const T zR,
+                                                      const T f_xL_yL_zL, const T f_xR_yL_zL, const T f_xL_yR_zL, const T f_xR_yR_zL,
+                                                      const T f_xL_yL_zR, const T f_xR_yL_zR, const T f_xL_yR_zR, const T f_xR_yR_zR );
+template <typename T> T     Mis_MultilinearInterpolate( const int nDim, const T x[], const T xL[], const T xR[], const T fC[] );
 template <typename T> ulong Mis_Idx3D2Idx1D( const int Size[], const int Idx3D[] );
 template <typename U, typename T> void  Mis_Heapsort( const U N, T Array[], U IdxTable[] );
 template <typename T> int   Mis_Matching_char( const int N, const T Array[], const int M, const T Key[], char Match[] );
