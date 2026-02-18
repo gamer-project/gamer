@@ -55,8 +55,8 @@ Note:
    - No variation in the z direction
 
 3. The chemical composition
-   - During the compilation, one must set `NCOMP_PASSIVE_USER` (`--passive` in `generate_make.sh`)
-     to the total number of chemical species (e.g., 13 for metal + 12 primordial species)
+   - During the compilation, one must set `NCOMP_PASSIVE_USER = 13` (`--passive` in `generate_make.sh`)
+     to the total number of chemical species (for metal + 12 primordial species)
    - One must turn on the corresponding `GRACKLE_METAL` and `GRACKLE_PRIMORDIAL` in `Input__Parameter`
    - The mass fraction of each species can be set by `GrackleTest_MFrac_*` in `Input__TestProb`
    - Currently, the mass fractions are assumed to be spatially uniform initially
@@ -68,6 +68,8 @@ Note:
    - Edit `Grackle_vHeatingRate_GrackleTest()` to set the distribution
 
 5. The default test mode can be set by `GrackleTest_DefaultTestMode` in `Input__TestProb`
+   and then all the remaining `GrackleTest_*` parameters in `Input__TestProb` will be decided and reset automatically
+   (the parameters in `Input__Parameter` still need to be adjusted manually)
    - 0:
       --> Non-default, one can choose the parameters freely
    - 1:
