@@ -136,6 +136,8 @@ void Psi_Advance_FFT( real *PsiR, real *PsiI, const int j_start, const int dj, c
 void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg )
 {
 
+   const int lv = 0;
+
 // determine the FFT size
    const int FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
 
@@ -199,9 +201,9 @@ void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg
 
    real *PsiR         = (real*)root_fftw::fft_malloc( sizeof(real)*total_local_size ); // array storing real and imaginary parts of wave function
    real *PsiI         = (real*)root_fftw::fft_malloc( sizeof(real)*total_local_size );
-   real *SendBuf      = new real [ (long)amr->NPatchComma[0][1]*CUBE(PS1) ];           // MPI send buffer
+   real *SendBuf      = new real [ (long)amr->NPatchComma[lv][1]*CUBE(PS1) ];          // MPI send buffer
    real *RecvBuf      = new real [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];           // MPI recv buffer
-   long *SendBuf_SIdx = new long [ (long)amr->NPatchComma[0][1]*PS1 ];                 // MPI send buffer for 1D coordinate in slab
+   long *SendBuf_SIdx = new long [ (long)amr->NPatchComma[lv][1]*PS1 ];                // MPI send buffer for 1D coordinate in slab
    long *RecvBuf_SIdx = new long [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice/SQR(PS1) ];  // MPI recv buffer for 1D coordinate in slab
 
    int  *List_PID_R  [MPI_NRank];   // PID of each patch slice sent to each rank for the real part
@@ -214,9 +216,9 @@ void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg
 
 // rearrange data from patch to slab
    Patch2Slab( PsiR, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID_R, List_k_R, List_NSend, List_NRecv, List_z_start,
-               local_nz, FFT_Size, NRecvSlice, PrepTime, _REAL, InPlacePad_No, ForPoisson_No, false );
+               local_nz, FFT_Size, NRecvSlice, PrepTime, _REAL, InPlacePad_No, ForPoisson_No, false, lv );
    Patch2Slab( PsiI, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID_I, List_k_I, List_NSend, List_NRecv, List_z_start,
-               local_nz, FFT_Size, NRecvSlice, PrepTime, _IMAG, InPlacePad_No, ForPoisson_No, false );
+               local_nz, FFT_Size, NRecvSlice, PrepTime, _IMAG, InPlacePad_No, ForPoisson_No, false, lv );
 
 
 // advance wave function by exp( -i*dt*k^2/(2*ELBDM_ETA) ) in the k-space using FFT
@@ -226,23 +228,23 @@ void CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg
 
 // rearrange data from slab back to patch
    Slab2Patch( PsiR, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID_R, List_k_R, List_NRecv, List_NSend,
-               local_nz, FFT_Size, NRecvSlice, _REAL, InPlacePad_No );
+               local_nz, FFT_Size, NRecvSlice, _REAL, InPlacePad_No, lv );
    Slab2Patch( PsiI, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID_I, List_k_I, List_NRecv, List_NSend,
-               local_nz, FFT_Size, NRecvSlice, _IMAG, InPlacePad_No );
+               local_nz, FFT_Size, NRecvSlice, _IMAG, InPlacePad_No, lv );
 
 
 // update density according to the updated wave function
 #  pragma omp parallel for schedule( runtime )
-   for (int PID=0; PID<amr->NPatchComma[0][1]; PID++)
+   for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    for (int k=0; k<PS1; k++)
    for (int j=0; j<PS1; j++)
    for (int i=0; i<PS1; i++)
    {
-      const real NewReal = amr->patch[SaveSg][0][PID]->fluid[REAL][k][j][i];
-      const real NewImag = amr->patch[SaveSg][0][PID]->fluid[IMAG][k][j][i];
+      const real NewReal = amr->patch[SaveSg][lv][PID]->fluid[REAL][k][j][i];
+      const real NewImag = amr->patch[SaveSg][lv][PID]->fluid[IMAG][k][j][i];
       const real NewDens = SQR( NewReal ) + SQR( NewImag );
 
-      amr->patch[SaveSg][0][PID]->fluid[DENS][k][j][i] = NewDens;
+      amr->patch[SaveSg][lv][PID]->fluid[DENS][k][j][i] = NewDens;
    } // PID,i,j,k
 
 

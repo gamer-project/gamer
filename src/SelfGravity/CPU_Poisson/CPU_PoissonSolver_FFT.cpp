@@ -2,10 +2,10 @@
 
 #if ( defined GRAVITY  &&  defined SUPPORT_FFTW )
 
-static void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const int dj, const long RhoK_Size );
-static void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const long RhoK_Size );
+static void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const int dj, const long RhoK_Size, const int lv );
+static void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const long RhoK_Size, const int lv );
 
-extern root_fftw::real_plan_nd FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
+extern root_fftw::real_plan_nd FFTW_Plan_Poi[NLEVEL], FFTW_Plan_Poi_Inv[NLEVEL];
 
 
 
@@ -22,21 +22,23 @@ extern root_fftw::real_plan_nd FFTW_Plan_Poi, FFTW_Plan_Poi_Inv;
 //                j_start   : Starting j index
 //                dj        : Size of array in the j (y) direction after the forward FFT
 //                RhoK_Size : Size of the array "RhoK"
+//                lv        : Target level
 //-------------------------------------------------------------------------------------------------------
-void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const int dj, const long RhoK_Size )
+void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const int dj, const long RhoK_Size, const int lv )
 {
 
-   const int Nx        = NX0_TOT[0];
-   const int Ny        = NX0_TOT[1];
-   const int Nz        = NX0_TOT[2];
-   const int Nx_Padded = Nx/2 + 1;
-   const real dh       = amr->dh[0];
+   const int  CellFactor = (int)(1L<<lv);
+   const int  Nx         = NX0_TOT[0]*CellFactor;
+   const int  Ny         = NX0_TOT[1]*CellFactor;
+   const int  Nz         = NX0_TOT[2]*CellFactor;
+   const int  Nx_Padded  = Nx/2 + 1;
+   const real dh         = amr->dh[lv];
    real Deno;
    gamer_fftw::fft_complex *cdata;
 
 
 // forward FFT
-   root_fftw_r2c( FFTW_Plan_Poi, RhoK );
+   root_fftw_r2c( FFTW_Plan_Poi[lv], RhoK );
 
 // the data are now complex, so typecast a pointer
    cdata = (gamer_fftw::fft_complex*) RhoK;
@@ -102,7 +104,7 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 
 
 // backward FFT
-   root_fftw_c2r( FFTW_Plan_Poi_Inv, RhoK );
+   root_fftw_c2r( FFTW_Plan_Poi_Inv[lv], RhoK );
 
 // normalization
    const real norm = dh*dh / ( (real)Nx*Ny*Nz );
@@ -124,8 +126,9 @@ void FFT_Periodic( real *RhoK, const real Poi_Coeff, const int j_start, const in
 // Parameter   :  RhoK      : Array storing the input density and output potential
 //                Poi_Coeff : Coefficient in front of density in the Poisson equation (4*Pi*Newton_G*a)
 //                RhoK_Size : Size of the array "RhoK"
+//                lv        : Target level
 //-------------------------------------------------------------------------------------------------------
-void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const long RhoK_Size )
+void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const long RhoK_Size, const int lv )
 {
 
    gamer_fftw::fft_complex *RhoK_cplx   = (gamer_fftw::fft_complex *)RhoK;
@@ -134,7 +137,7 @@ void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const l
 
 
 // forward FFT
-   root_fftw_r2c( FFTW_Plan_Poi, RhoK );
+   root_fftw_r2c( FFTW_Plan_Poi[lv], RhoK );
 
 
 // multiply density and Green's function in the k space
@@ -151,7 +154,7 @@ void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const l
 
 
 // backward FFT
-   root_fftw_c2r( FFTW_Plan_Poi_Inv, RhoK );
+   root_fftw_c2r( FFTW_Plan_Poi_Inv[lv], RhoK );
 
 // effect of "4*PI*NEWTON_G" has been included in gFuncK, but the scale factor in the comoving frame hasn't
 #  ifdef COMOVING
@@ -173,12 +176,16 @@ void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const l
 // Parameter   :  Poi_Coeff : Coefficient in front of the RHS in the Poisson eq.
 //                SaveSg    : Sandglass to store the updated data
 //                PrepTime  : Physical time for preparing the density field
+//                lv        : Target level
 //-------------------------------------------------------------------------------------------------------
-void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double PrepTime )
+void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double PrepTime, const int lv )
 {
 
+   const int  CellFactor   =  (int)(1L<<lv);
+   const long CellFactor_l = (long)(1L<<lv);
+
 // determine the FFT size (the zero-padding method is adopted for the isolated BC)
-   int FFT_Size[3] = { NX0_TOT[0], NX0_TOT[1], NX0_TOT[2] };
+   int FFT_Size[3] = { NX0_TOT[0]*CellFactor, NX0_TOT[1]*CellFactor, NX0_TOT[2]*CellFactor };
 
    if ( OPT__BC_POT == BC_POT_ISOLATED )
       for (int d=0; d<3; d++)    FFT_Size[d] *= 2;
@@ -203,7 +210,7 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
                                                          &local_nz, &local_z_start, &local_ny_after_transpose,
                                                          &local_y_start_after_transpose );
 #  else
-   rfftwnd_mpi_local_sizes( FFTW_Plan_Poi, &local_nz, &local_z_start, &local_ny_after_transpose,
+   rfftwnd_mpi_local_sizes( FFTW_Plan_Poi[lv], &local_nz, &local_z_start, &local_ny_after_transpose,
                             &local_y_start_after_transpose, &total_local_size );
 #  endif
 #  endif // #ifdef SERIAL ... else ...
@@ -237,13 +244,13 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
 
 
 // allocate memory (properly taking into account the zero-padding regions, where no data need to be exchanged)
-   const int NRecvSlice = MIN( List_z_start[MPI_Rank]+local_nz, NX0_TOT[2] ) - MIN( List_z_start[MPI_Rank], NX0_TOT[2] );
+   const int NRecvSlice = MIN( List_z_start[MPI_Rank]+local_nz, NX0_TOT[2]*CellFactor ) - MIN( List_z_start[MPI_Rank], NX0_TOT[2]*CellFactor );
 
-   real *RhoK         = (real*)root_fftw::fft_malloc( sizeof(real)*total_local_size ); // array storing both density and potential
-   real *SendBuf      = new real [ (long)amr->NPatchComma[0][1]*CUBE(PS1) ];           // MPI send buffer for density and potential
-   real *RecvBuf      = new real [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];           // MPI recv buffer for density and potentia
-   long *SendBuf_SIdx = new long [ (long)amr->NPatchComma[0][1]*PS1 ];                 // MPI send buffer for 1D coordinate in slab
-   long *RecvBuf_SIdx = new long [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice/SQR(PS1) ];  // MPI recv buffer for 1D coordinate in slab
+   real *RhoK         = (real*)root_fftw::fft_malloc( sizeof(real)*total_local_size );                          // array storing both density and potential
+   real *SendBuf      = new real [ (long)amr->NPatchComma[lv][1]*CUBE(PS1) ];                                   // MPI send buffer for density and potential
+   real *RecvBuf      = new real [ (long)NX0_TOT[0]*CellFactor_l*NX0_TOT[1]*CellFactor_l*NRecvSlice ];          // MPI recv buffer for density and potentia
+   long *SendBuf_SIdx = new long [ (long)amr->NPatchComma[lv][1]*PS1 ];                                         // MPI send buffer for 1D coordinate in slab
+   long *RecvBuf_SIdx = new long [ (long)NX0_TOT[0]*CellFactor_l*NX0_TOT[1]*CellFactor_l*NRecvSlice/SQR(PS1) ]; // MPI recv buffer for 1D coordinate in slab
 
    int  *List_PID    [MPI_NRank];   // PID of each patch slice sent to each rank
    int  *List_k      [MPI_NRank];   // local z coordinate of each patch slice sent to each rank
@@ -260,15 +267,15 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
 
 // rearrange data from patch to slab
    Patch2Slab( RhoK, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID, List_k, List_NSend, List_NRecv, List_z_start,
-               local_nz, FFT_Size, NRecvSlice, PrepTime, _TOTAL_DENS, InPlacePad, ForPoisson, OPT__GRAVITY_EXTRA_MASS );
+               local_nz, FFT_Size, NRecvSlice, PrepTime, _TOTAL_DENS, InPlacePad, ForPoisson, OPT__GRAVITY_EXTRA_MASS, lv );
 
 
 // evaluate potential by FFT
    if      ( OPT__BC_POT == BC_POT_PERIODIC )
-      FFT_Periodic( RhoK, Poi_Coeff, local_y_start_after_transpose, local_ny_after_transpose, total_local_size );
+      FFT_Periodic( RhoK, Poi_Coeff, local_y_start_after_transpose, local_ny_after_transpose, total_local_size, lv );
 
    else if ( OPT__BC_POT == BC_POT_ISOLATED )
-      FFT_Isolated( RhoK, GreenFuncK, Poi_Coeff, total_local_size );
+      FFT_Isolated( RhoK, GreenFuncK[lv], Poi_Coeff, total_local_size, lv );
 
    else
       Aux_Error( ERROR_INFO, "unsupported paramter %s = %d !!\n", "OPT__BC_POT", OPT__BC_POT );
@@ -276,7 +283,7 @@ void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double
 
 // rearrange data from slab back to patch
    Slab2Patch( RhoK, RecvBuf, SendBuf, SaveSg, RecvBuf_SIdx, List_PID, List_k, List_NRecv, List_NSend,
-               local_nz, FFT_Size, NRecvSlice, _POTE, InPlacePad );
+               local_nz, FFT_Size, NRecvSlice, _POTE, InPlacePad, lv );
 
 
    root_fftw::fft_free( RhoK );
