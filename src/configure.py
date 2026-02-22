@@ -687,7 +687,7 @@ def load_arguments( sys_setting : SystemSetting ):
     # A.5 grackle
     parser.add_argument( "--grackle", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_GRACKLE",
                          default=False,
-                         constraint={ True:{"model":"HYDRO", "eos":["GAMMA", "COSMIC_RAY"], "comoving":False} },
+                         constraint={ True:{"model":"HYDRO", "eos":["GAMMA", "COSMIC_RAY"]} },
                          help="Enable Grackle, a chemistry and radiative cooling library. "\
                               "Must set <--passive> according to the primordial chemistry network set by GRACKLE_PRIMORDIAL. "\
                               "Please enable OpenMP when compiling Grackle (by 'make omp-on').\n"

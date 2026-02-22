@@ -101,6 +101,8 @@ void Init_Field()
 
 // 2. add other predefined fields
 #  ifdef SUPPORT_GRACKLE
+// The masses of electron and deuterium are ignored in normalization in Grackle
+// --> see the subroutine make_consistent_g in solve_rate_cool_g.F in the Grackle source code
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
    Idx_e       = AddField( "Electron", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
    Idx_HI      = AddField( "HI",       FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );

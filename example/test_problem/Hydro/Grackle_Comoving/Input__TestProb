@@ -1,0 +1,3 @@
+# problem-specific runtime parameters
+GrackleComoving_InitialTemperature 1e8        # initial temperature (set to a 1e8K to draw a cooling function of T<1e8K)
+GrackleComoving_InitialMetallicity 1.295e-2   # assuming solar metallicity
