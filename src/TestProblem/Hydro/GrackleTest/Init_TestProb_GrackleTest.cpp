@@ -498,26 +498,26 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // compute the gas log density     by linear interpolation in x-direction
    const double logDens = GrackleTest_logDens_Min +
                           GrackleTest_logDens_Range*( x / amr->BoxSize[0] );
-   const double Dens    = pow( 10, logDens );
+   const real   Dens    = pow( 10, logDens );
 
 // compute the gas log temperature by linear interpolation in y-direction
    const double logTemp = GrackleTest_logTemp_Min +
                           GrackleTest_logTemp_Range*( y / amr->BoxSize[1] );
-   const double Temp    = pow( 10, logTemp );
+   const real   Temp    = pow( 10, logTemp );
 
 // compute the gas pressure
-   const double Pres = EoS_DensTemp2Pres_CPUPtr( Dens, Temp, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+   const real   Pres = EoS_DensTemp2Pres_CPUPtr( Dens, Temp, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                  h_EoS_Table ); // assuming EoS requires no passive scalars
 
 // assume no momentum
-   const double MomX = 0.0;
-   const double MomY = 0.0;
-   const double MomZ = 0.0;
+   const real   MomX = 0.0;
+   const real   MomY = 0.0;
+   const real   MomZ = 0.0;
 
 // compute the total gas energy
-   const double Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
-                                                 EoS_AuxArray_Int, h_EoS_Table );   // assuming EoS requires no passive scalars
-   const double Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 );     // do NOT include magnetic energy here
+   const real   Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt,
+                                                 EoS_AuxArray_Int, h_EoS_Table );         // assuming EoS requires no passive scalars
+   const real   Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, (real)0.0 );     // do NOT include magnetic energy here
 
 
 // set the output array
@@ -530,25 +530,25 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 // set passive scalars
 // 6-species network
-   fluid[Idx_e    ] = Dens * GrackleTest_MFrac_e;
-   fluid[Idx_HI   ] = Dens * GrackleTest_MFrac_HI;
-   fluid[Idx_HII  ] = Dens * GrackleTest_MFrac_HII;
-   fluid[Idx_HeI  ] = Dens * GrackleTest_MFrac_HeI;
-   fluid[Idx_HeII ] = Dens * GrackleTest_MFrac_HeII;
-   fluid[Idx_HeIII] = Dens * GrackleTest_MFrac_HeIII;
+   fluid[Idx_e    ] = Dens * (real)GrackleTest_MFrac_e;
+   fluid[Idx_HI   ] = Dens * (real)GrackleTest_MFrac_HI;
+   fluid[Idx_HII  ] = Dens * (real)GrackleTest_MFrac_HII;
+   fluid[Idx_HeI  ] = Dens * (real)GrackleTest_MFrac_HeI;
+   fluid[Idx_HeII ] = Dens * (real)GrackleTest_MFrac_HeII;
+   fluid[Idx_HeIII] = Dens * (real)GrackleTest_MFrac_HeIII;
 
 // 9-species network
-   fluid[Idx_HM   ] = Dens * GrackleTest_MFrac_HM;
-   fluid[Idx_H2I  ] = Dens * GrackleTest_MFrac_H2I;
-   fluid[Idx_H2II ] = Dens * GrackleTest_MFrac_H2II;
+   fluid[Idx_HM   ] = Dens * (real)GrackleTest_MFrac_HM;
+   fluid[Idx_H2I  ] = Dens * (real)GrackleTest_MFrac_H2I;
+   fluid[Idx_H2II ] = Dens * (real)GrackleTest_MFrac_H2II;
 
 // 12-species network
-   fluid[Idx_DI   ] = Dens * GrackleTest_MFrac_DI;
-   fluid[Idx_DII  ] = Dens * GrackleTest_MFrac_DII;
-   fluid[Idx_HDI  ] = Dens * GrackleTest_MFrac_HDI;
+   fluid[Idx_DI   ] = Dens * (real)GrackleTest_MFrac_DI;
+   fluid[Idx_DII  ] = Dens * (real)GrackleTest_MFrac_DII;
+   fluid[Idx_HDI  ] = Dens * (real)GrackleTest_MFrac_HDI;
 
 // metallicity for metal cooling
-   fluid[Idx_Metal] = Dens * GrackleTest_MFrac_Metal;
+   fluid[Idx_Metal] = Dens * (real)GrackleTest_MFrac_Metal;
 
 } // FUNCTION : SetGridIC
 
