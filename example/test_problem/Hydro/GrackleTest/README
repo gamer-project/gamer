@@ -45,12 +45,12 @@ Default setup:
 
 Note:
 ========================================
-1. Test the functionality and the interface to the Grackle library
+1. Test the functionality of and interface to the Grackle library
 
 2. The initial conditions of varying phases
-   - In the x direction, linearly varying log( mass density )
+   - In the x direction, linearly varying log10( mass density )
                          from `GrackleTest_MassDensity_Min` to `GrackleTest_MassDensity_Max`
-   - In the y direction, linearly varying log( temperature / mean molecular weight )
+   - In the y direction, linearly varying log10( temperature / mean molecular weight )
                          from `GrackleTest_TempOverMMW_Min to `GrackleTest_TempOverMMW_Max`
    - No variation in the z direction
 
@@ -71,19 +71,20 @@ Note:
    and then all the remaining `GrackleTest_*` parameters in `Input__TestProb` will be decided and reset automatically
    (the parameters in `Input__Parameter` still need to be adjusted manually)
    - 0:
-      --> Non-default, one can choose the parameters freely
+      --> Non-default, where one manually sets all the remaining `GrackleTest_*` parameters in `Input__TestProb`
    - 1:
       - The density range is from 1.0e-29 g cm^-3 to 1.0e-21 g cm^-3
       - The T/mu range is from 1 K to 1e8 K
-      --> To see the cooling rates across the phase diagram
+      --> To see the cooling rates across the gas phase diagram
    - 2:
       - The density is uniformly 1.0e-24 g cm^-3
       - The T/mu is uniformly 1e4 K
-      --> To see the time evolution of temperature and composition for a given initial phase
+      --> To see the time evolution of temperature and chemical composition of a given initial phase
    - 3:
       - The density is uniformly 1.0e-28 g cm^-3
       - The T/mu is uniformly 1e6 K
       - The metal mass fraction is 0 (will be set automatically, regardless of `GRACKLE_METAL`)
+      - `MAX_LEVEL` should be larger than zero to trigger the refinement by the cooling length
       - `GRACKLE_PRIMORDIAL` should be 0
       - `GRACKLE_UV`, `GRACKLE_CMB_FLOOR`, `GRACKLE_PE_HEATING` should all be 0
       - `GRACKLE_USE_V_HEATING_RATE` should be 1
@@ -99,12 +100,14 @@ Note:
       - `GRACKLE_PRIMORDIAL` should be 0
       - `GRACKLE_UV` should be 1
       - `GRACKLE_CLOUDY_TABLE` should be `CloudyData_UVB=HM2012.h5`
-      - `GRACKLE_COOLING`, `GRACKLE_CMB_FLOOR`, `GRACKLE_PE_HEATING` should all be 0
-      --> To test the redshift-dependent UV background
-
+      - `GRACKLE_COOLING`, `GRACKLE_CMB_FLOOR`, `GRACKLE_PE_HEATING`, `GRACKLE_USE_V_HEATING_RATE` should all be 0
+      - The script `plot_grackle_analytical_cooling_rate.py` computes the expected cooling rates across the gas phase 
+        diagram for the given Grackle parameters, which can be compared with the simulation results
+      --> To test the redshift-dependent UV background in non-comoving grids
+      
 6. The evolution of fluid
    - The fluid is not evolved by hydrodynamics (`OPT__FREEZE_FLUID`)
-   - But it is evolved by Grackle solver (`OPT__UNFREEZE_GRACKLE`)
+   - But its radiative processes are evolved by Grackle (`OPT__UNFREEZE_GRACKLE = 1`)
 
 7. The default time step is set to min( 0.25x the minimum cooling time, 0.1 Myr )
    - Set `DT__GRACKLE_COOLING` and `DT__MAX` to change it
