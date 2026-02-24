@@ -479,20 +479,20 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 // check
 #  ifdef GAMER_DEBUG
-   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6   &&  Idx_e     == Idx_Undefined )   Aux_Error( ERROR_INFO, "Idx_e is undefined !!\n" );
-   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6   &&  Idx_HI    == Idx_Undefined )   Aux_Error( ERROR_INFO, "Idx_HI is undefined !!\n" );
-   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6   &&  Idx_HII   == Idx_Undefined )   Aux_Error( ERROR_INFO, "Idx_HII is undefined !!\n" );
-   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6   &&  Idx_HeI   == Idx_Undefined )   Aux_Error( ERROR_INFO, "Idx_HeI is undefined !!\n" );
-   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6   &&  Idx_HeII  == Idx_Undefined )   Aux_Error( ERROR_INFO, "Idx_HeII is undefined !!\n" );
-   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6   &&  Idx_HeIII == Idx_Undefined )   Aux_Error( ERROR_INFO, "Idx_HeIII is undefined !!\n" );
-   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9   &&  Idx_HM    == Idx_Undefined )   Aux_Error( ERROR_INFO, "Idx_HM is undefined !!\n" );
-   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9   &&  Idx_H2I   == Idx_Undefined )   Aux_Error( ERROR_INFO, "Idx_H2I is undefined !!\n" );
-   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9   &&  Idx_H2II  == Idx_Undefined )   Aux_Error( ERROR_INFO, "Idx_H2II is undefined !!\n" );
-   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE12  &&  Idx_DI    == Idx_Undefined )   Aux_Error( ERROR_INFO, "Idx_DI is undefined !!\n" );
-   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE12  &&  Idx_DII   == Idx_Undefined )   Aux_Error( ERROR_INFO, "Idx_DII is undefined !!\n" );
-   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE12  &&  Idx_HDI   == Idx_Undefined )   Aux_Error( ERROR_INFO, "Idx_HDI is undefined !!\n" );
-   if ( GRACKLE_METAL                                 &&  Idx_Metal == Idx_Undefined )   Aux_Error( ERROR_INFO, "Idx_Metal is undefined !!\n" );
-   if ( EoS_DensTemp2Pres_CPUPtr == NULL )                                               Aux_Error( ERROR_INFO, "EoS_DensTemp2Pres_CPUPtr == NULL !!\n" );
+   if ( Idx_e     == Idx_Undefined )         Aux_Error( ERROR_INFO, "Idx_e is undefined !!\n" );
+   if ( Idx_HI    == Idx_Undefined )         Aux_Error( ERROR_INFO, "Idx_HI is undefined !!\n" );
+   if ( Idx_HII   == Idx_Undefined )         Aux_Error( ERROR_INFO, "Idx_HII is undefined !!\n" );
+   if ( Idx_HeI   == Idx_Undefined )         Aux_Error( ERROR_INFO, "Idx_HeI is undefined !!\n" );
+   if ( Idx_HeII  == Idx_Undefined )         Aux_Error( ERROR_INFO, "Idx_HeII is undefined !!\n" );
+   if ( Idx_HeIII == Idx_Undefined )         Aux_Error( ERROR_INFO, "Idx_HeIII is undefined !!\n" );
+   if ( Idx_HM    == Idx_Undefined )         Aux_Error( ERROR_INFO, "Idx_HM is undefined !!\n" );
+   if ( Idx_H2I   == Idx_Undefined )         Aux_Error( ERROR_INFO, "Idx_H2I is undefined !!\n" );
+   if ( Idx_H2II  == Idx_Undefined )         Aux_Error( ERROR_INFO, "Idx_H2II is undefined !!\n" );
+   if ( Idx_DI    == Idx_Undefined )         Aux_Error( ERROR_INFO, "Idx_DI is undefined !!\n" );
+   if ( Idx_DII   == Idx_Undefined )         Aux_Error( ERROR_INFO, "Idx_DII is undefined !!\n" );
+   if ( Idx_HDI   == Idx_Undefined )         Aux_Error( ERROR_INFO, "Idx_HDI is undefined !!\n" );
+   if ( Idx_Metal == Idx_Undefined )         Aux_Error( ERROR_INFO, "Idx_Metal is undefined !!\n" );
+   if ( EoS_DensTemp2Pres_CPUPtr == NULL )   Aux_Error( ERROR_INFO, "EoS_DensTemp2Pres_CPUPtr == NULL !!\n" );
 #  endif
 
 // compute the gas log density     by linear interpolation in x-direction
@@ -575,19 +575,19 @@ void AddNewField_GrackleTest()
 // --> since Grackle may already add these fields automatically when GRACKLE_PRIMORDIAL or GRACKLE_METAL is enabled
 //     in Init/Init_Field.cpp
 // --> also note that "Idx_*" has been predefined in Field.h
-   if ( Idx_e     == Idx_Undefined )   AddField( "Electron", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
-   if ( Idx_HI    == Idx_Undefined )   AddField( "HI",       FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
-   if ( Idx_HII   == Idx_Undefined )   AddField( "HII",      FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
-   if ( Idx_HeI   == Idx_Undefined )   AddField( "HeI",      FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
-   if ( Idx_HeII  == Idx_Undefined )   AddField( "HeII",     FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
-   if ( Idx_HeIII == Idx_Undefined )   AddField( "HeIII",    FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
-   if ( Idx_HM    == Idx_Undefined )   AddField( "HM",       FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
-   if ( Idx_H2I   == Idx_Undefined )   AddField( "H2I",      FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
-   if ( Idx_H2II  == Idx_Undefined )   AddField( "H2II",     FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
-   if ( Idx_DI    == Idx_Undefined )   AddField( "DI",       FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
-   if ( Idx_DII   == Idx_Undefined )   AddField( "DII",      FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
-   if ( Idx_HDI   == Idx_Undefined )   AddField( "HDI",      FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
-   if ( Idx_Metal == Idx_Undefined )   AddField( "Metal",    FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, (GRACKLE_PRIMORDIAL==GRACKLE_PRI_CHE_CLOUDY)?NORMALIZE_NO:NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_e     == Idx_Undefined )   Idx_e     = AddField( "Electron", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_HI    == Idx_Undefined )   Idx_HI    = AddField( "HI",       FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_HII   == Idx_Undefined )   Idx_HII   = AddField( "HII",      FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_HeI   == Idx_Undefined )   Idx_HeI   = AddField( "HeI",      FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_HeII  == Idx_Undefined )   Idx_HeII  = AddField( "HeII",     FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_HeIII == Idx_Undefined )   Idx_HeIII = AddField( "HeIII",    FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_HM    == Idx_Undefined )   Idx_HM    = AddField( "HM",       FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_H2I   == Idx_Undefined )   Idx_H2I   = AddField( "H2I",      FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_H2II  == Idx_Undefined )   Idx_H2II  = AddField( "H2II",     FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_DI    == Idx_Undefined )   Idx_DI    = AddField( "DI",       FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_DII   == Idx_Undefined )   Idx_DII   = AddField( "DII",      FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_HDI   == Idx_Undefined )   Idx_HDI   = AddField( "HDI",      FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+   if ( Idx_Metal == Idx_Undefined )   Idx_Metal = AddField( "Metal",    FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, (GRACKLE_PRIMORDIAL==GRACKLE_PRI_CHE_CLOUDY)?NORMALIZE_NO:NORMALIZE_YES, INTERP_FRAC_YES );
 
 } // FUNCTION : AddNewField_GrackleTest
 
