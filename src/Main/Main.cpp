@@ -697,6 +697,9 @@ int main( int argc, char *argv[] )
       if ( OPT__CORR_AFTER_ALL_SYNC == CORR_AFTER_SYNC_EVERY_STEP )
       TIMING_FUNC(   Flu_CorrAfterAllSync(),          Timer_Main[6],   TIMER_ON   );
 
+//    it may be unnecessary to call `MHD_SameInterfaceB()` here, since we already call it every sub-step
+//    in EvolveLevel() after the fluid solver (unless something other than the fluid solver can also introduce
+//    inconsistencies in the B field, such as fix-up operations?).
 #     if ( MODEL == HYDRO  &&  defined MHD )
       if ( OPT__SAME_INTERFACE_B == SAME_INTERFACE_B_YES )
       {
