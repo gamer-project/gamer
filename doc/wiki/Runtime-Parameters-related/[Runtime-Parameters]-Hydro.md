@@ -202,6 +202,7 @@ Only applicable when enabling the compilation option
 Ensure adjacent patches on the same level have exactly the same magnetic field
 on their shared interfaces (including round-off errors).
 This option is mainly for debugging purposes.
+This option is enabled by default when [MINMOD_MAX_ITER](#MINMOD_MAX_ITER) is enabled.
     * **Restriction:**
 
 <a name="OPT__FIXUP_FLUX"></a>
