@@ -12,6 +12,8 @@
 // external functions
 #ifdef __CUDACC__
 
+#include "CUFLU_Shared_AddSourceTerm.cu"
+
 #if ( NCOMP_PASSIVE > 0 )
 # include "CUFLU_Shared_FluUtility.cu"
 #endif
@@ -20,7 +22,15 @@
 # include "CUFLU_Shared_DualEnergy.cu"
 #endif
 
-#endif // #ifdef __CUDACC__
+#else // #ifdef __CUDACC__
+
+#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
+void Hydro_AddSourceTerm_CCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
+                                         real OutCell[], const int idx_hf, const int didx_hf[3],
+                                         const real dt_dh, const EoS_t *EoS );
+#endif
+
+#endif // #ifdef __CUDACC__ ... else ...
 
 
 
@@ -35,6 +45,7 @@
 //                   return instantly unless Iteration==MinMod_MaxIter
 //
 // Parameter   :  g_Input           : Array storing the input fluid data
+//                g_Half_Pri        : Array storing the half-step primitive fluid data
 //                g_Output          : Array to store the updated fluid data
 //                g_DE_Status       : Array to store the dual-energy status
 //                g_FC_B            : Array storing the updated face-centered B field
@@ -61,14 +72,18 @@
 //                MinMod_MaxIter    : Maximum number of iterations to reduce the min-mod coefficient (i.e., MINMOD_MAX_ITER)
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
-                           const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                           const real dt, const real dh, const real MinDens, const real MinEint, const real DualEnergySwitch,
+void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], const real g_Half_Pri[][ CUBE(FLU_NXT) ],
+                           real g_Output[][ CUBE(PS2) ], char g_DE_Status[], const real g_FC_B[][ PS2P1*SQR(PS2) ],
+                           const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ], const real dt,
+                           const real dh, const real MinDens, const real MinEint, const real DualEnergySwitch,
                            const long PassiveFloor, const bool NormPassive, const int NNorm, const int NormIdx[],
                            const EoS_t *EoS, int *s_FullStepFailure, const int Iteration, const int MinMod_MaxIter )
 {
 
    const int  didx_flux[3]    = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
+#  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
+   const int  didx_hf  [3]    = { 1, N_HF_VAR,  SQR(N_HF_VAR)  };
+#  endif
    const real dt_dh           = dt/dh;
 #  if ( defined DUAL_ENERGY  ||  defined CHECK_UNPHYSICAL_IN_FLUID )
    const bool CheckMinPres_No = false;
@@ -96,6 +111,13 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 #     endif
       const int idx_flux = IDX321( i_flux, j_flux, k_flux, N_FL_FLUX, N_FL_FLUX );
 
+#     if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
+      const int i_hf     = i_out + (N_HF_VAR-PS2)/2;
+      const int j_hf     = j_out + (N_HF_VAR-PS2)/2;
+      const int k_hf     = k_out + (N_HF_VAR-PS2)/2;
+      const int idx_hf   = IDX321( i_hf, j_hf, k_hf, N_HF_VAR, N_HF_VAR );
+#     endif
+
       const int i_in     = i_out + FLU_GHOST_SIZE;
       const int j_in     = j_out + FLU_GHOST_SIZE;
       const int k_in     = k_out + FLU_GHOST_SIZE;
@@ -115,6 +137,10 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 
       for (int v=0; v<NCOMP_TOTAL; v++)
          Output_1Cell[v] = g_Input[v][idx_in] - dt_dh*( dFlux[0][v] + dFlux[1][v] + dFlux[2][v] );
+
+#     if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
+      Hydro_AddSourceTerm_CCVar_FullStep( g_Half_Pri, Output_1Cell, idx_hf, didx_hf, dt_dh, EoS );
+#     endif
 
 
 //    compute magnetic energy for later usage
