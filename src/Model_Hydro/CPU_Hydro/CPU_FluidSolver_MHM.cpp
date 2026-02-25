@@ -51,7 +51,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh,
                                const real MinDens, const real MinPres, const real MinEint,
-                               const bool FracPassive, const int NFrac, const int FracIdx[],
+                               const long PassiveFloor, const bool FracPassive, const int NFrac, const int FracIdx[],
                                const bool JeansMinPres, const real JeansMinPres_Coeff,
                                const EoS_t *EoS );
 void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
@@ -60,30 +60,30 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                         const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[],
                         const real dt, const real dh, const double Time, const bool UsePot,
                         const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[],
-                        const real MinDens, const real MinPres, const EoS_t *EoS );
+                        const real MinDens, const real MinPres, const long PassiveFloor, const EoS_t *EoS );
 void Hydro_StoreIntFlux( const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
                          const int NFlux );
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                           const real dt, const real dh, const real MinDens, const real MinEint,
-                           const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
+                           const real dt, const real dh, const real MinDens, const real MinEint, const real DualEnergySwitch,
+                           const long PassiveFloor, const bool NormPassive, const int NNorm, const int NormIdx[],
                            const EoS_t *EoS, int *s_FullStepFailure, const int Iteration, const int MinMod_MaxIter );
 #if ( RSOLVER == EXACT  ||  RSOLVER_RESCUE == EXACT )
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                                const real MinDens, const real MinPres, const long PassiveFloor, const EoS_DE2P_t EoS_DensEint2Pres,
                                 const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
                                 const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
 #endif
 #if ( RSOLVER == ROE    ||  RSOLVER_RESCUE == ROE   )
 void Hydro_RiemannSolver_Roe( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                              const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                              const real MinDens, const real MinPres, const long PassiveFloor, const EoS_DE2P_t EoS_DensEint2Pres,
                               const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
                               const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
 #endif
 #if ( RSOLVER == HLLE   ||  RSOLVER_RESCUE == HLLE  )
 void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const real MinDens, const real MinPres, const long PassiveFloor, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
                                const EoS_H2TEM_t EoS_HTilde2Temp,
                                const double EoS_AuxArray_Flt[],
@@ -91,7 +91,7 @@ void Hydro_RiemannSolver_HLLE( const int XYZ, real Flux_Out[], const real L_In[]
 #endif
 #if ( RSOLVER == HLLC   ||  RSOLVER_RESCUE == HLLC  )
 void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const real MinDens, const real MinPres, const long PassiveFloor, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
                                const EoS_H2TEM_t EoS_HTilde2Temp,
                                const double EoS_AuxArray_Flt[],
@@ -99,12 +99,12 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 #endif
 #if ( RSOLVER == HLLD   ||  RSOLVER_RESCUE == HLLD  )
 void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const real MinDens, const real MinPres, const long PassiveFloor, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
                                const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
 #endif
 #if ( FLU_SCHEME == MHM_RP )
-void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
+void Hydro_Con2Pri( const real In[], real Out[], const real MinPres, const long PassiveFloor,
                     const bool FracPassive, const int NFrac, const int FracIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
@@ -163,7 +163,7 @@ static void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                                              real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                        const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                                        const real g_CC_B[][ CUBE(FLU_NXT) ],
-                                       const real MinDens, const real MinPres,
+                                       const real MinDens, const real MinPres, const long PassiveFloor,
                                        const EoS_t *EoS );
 GPU_DEVICE
 static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
@@ -172,7 +172,7 @@ static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
                                         real g_PriVar_Half[][ CUBE(FLU_NXT) ],
                                   const real dt, const real dh,
                                   const real MinDens, const real MinPres, const real MinEint,
-                                  const bool FracPassive, const int NFrac, const int FracIdx[],
+                                  const long PassiveFloor, const bool FracPassive, const int NFrac, const int FracIdx[],
                                   const bool JeansMinPres, const real JeansMinPres_Coeff,
                                   const EoS_t *EoS );
 #endif
@@ -235,6 +235,7 @@ static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 //                                         CUDA_ConstMemory.h and does not need to be passed as a function argument
 //                MinDens/Pres/Eint  : Density, pressure, and internal energy floors
 //                DualEnergySwitch   : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
+//                PassiveFloor       : Bitwise flag to specify the passive scalars to be floored
 //                NormPassive        : true --> normalize passive scalars so that the sum of their mass density
 //                                              is equal to the gas mass density
 //                NNorm              : Number of passive scalars to be normalized
@@ -283,6 +284,7 @@ void CUFLU_FluidSolver_MHM(
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch,
+   const long PassiveFloor,
    const bool NormPassive, const int NNorm,
    const bool FracPassive, const int NFrac,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
@@ -312,6 +314,7 @@ void CPU_FluidSolver_MHM(
    const double c_ExtAcc_AuxArray[],
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch,
+   const long PassiveFloor,
    const bool NormPassive, const int NNorm, const int c_NormIdx[],
    const bool FracPassive, const int NFrac, const int c_FracIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff,
@@ -435,7 +438,7 @@ void CPU_FluidSolver_MHM(
 //       1-a-2. evaluate the half-step first-order fluxes by Riemann solver
 //       hydrodynamic fluxes
          Hydro_RiemannPredict_Flux( g_Flu_Array_In[P], g_Flux_Half_1PG, g_Mag_Array_In[P], g_PriVar_1PG+MAG_OFFSET,
-                                    MinDens, MinPres, &EoS );
+                                    MinDens, MinPres, PassiveFloor, &EoS );
 
 //       add cosmic-ray fluxes
 #        ifdef CR_DIFFUSION
@@ -457,7 +460,7 @@ void CPU_FluidSolver_MHM(
 
 //       1-a-4. evaluate the half-step solutions
          Hydro_RiemannPredict( g_Flu_Array_In[P], g_FC_Mag_Half_1PG, g_Flux_Half_1PG, g_PriVar_Half_1PG,
-                               dt, dh, MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
+                               dt, dh, MinDens, MinPres, MinEint, PassiveFloor, FracPassive, NFrac, c_FracIdx,
                                JeansMinPres, JeansMinPres_Coeff, &EoS );
 
 
@@ -483,7 +486,7 @@ void CPU_FluidSolver_MHM(
 //                 --> note that g_PriVar_Half_1PG[] returned by Hydro_RiemannPredict() stores the primitive variables
             Hydro_DataReconstruction( NULL, g_FC_Mag_Half_1PG, g_PriVar_Half_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
                                       NULL, Con2Pri_No, LR_Limiter, AdaptiveMinModCoeff, dt, dh,
-                                      MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
+                                      MinDens, MinPres, MinEint, PassiveFloor, FracPassive, NFrac, c_FracIdx,
                                       JeansMinPres, JeansMinPres_Coeff, &EoS );
 
 
@@ -511,7 +514,7 @@ void CPU_FluidSolver_MHM(
 //          evaluate the face-centered values by data reconstruction
             Hydro_DataReconstruction( g_Flu_Array_In[P], g_Mag_Array_In[P], g_PriVar_Half_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
                                       g_EC_Ele_1PG, Con2Pri_Yes, LR_Limiter, AdaptiveMinModCoeff, dt, dh,
-                                      MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
+                                      MinDens, MinPres, MinEint, PassiveFloor, FracPassive, NFrac, c_FracIdx,
                                       JeansMinPres, JeansMinPres_Coeff, &EoS );
 
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
@@ -530,7 +533,7 @@ void CPU_FluidSolver_MHM(
             Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, NSkip_N, NSkip_T,
                                CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P],
                                dt, dh, Time, UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray,
-                               MinDens, MinPres, &EoS );
+                               MinDens, MinPres, PassiveFloor, &EoS );
 
 //          add cosmic-ray fluxes
 #           ifdef CR_DIFFUSION
@@ -565,7 +568,8 @@ void CPU_FluidSolver_MHM(
 //          4. full-step evolution
             Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P], g_Mag_Array_Out[P],
                                   g_FC_Flux_1PG, dt, dh, MinDens, MinEint, DualEnergySwitch,
-                                  NormPassive, NNorm, c_NormIdx, &EoS, &s_FullStepFailure, Iteration, MinMod_MaxIter );
+                                  PassiveFloor, NormPassive, NNorm, c_NormIdx, &EoS, &s_FullStepFailure,
+                                  Iteration, MinMod_MaxIter );
 
 //          add the cosmic-ray source term of adiabatic work
 #           ifdef COSMIC_RAY
@@ -605,6 +609,7 @@ void CPU_FluidSolver_MHM(
 //                g_CC_B       : Array storing the input cell-centered magnetic field (for MHD only)
 //                               --> Accessed with a stride FLU_NXT
 //                MinDens/Pres : Density and pressure floors
+//                PassiveFloor : Bitwise flag to specify the passive scalars to be floored
 //                EoS          : EoS object
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
@@ -612,7 +617,7 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                                       real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                 const real g_FC_B[][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                                 const real g_CC_B[][ CUBE(FLU_NXT) ],
-                                const real MinDens, const real MinPres,
+                                const real MinDens, const real MinPres, const long PassiveFloor,
                                 const EoS_t *EoS )
 {
 
@@ -703,25 +708,25 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 
 //       invoke the Riemann solver
 #        if   ( RSOLVER == EXACT  &&  !defined MHD )
-         Hydro_RiemannSolver_Exact( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
+         Hydro_RiemannSolver_Exact( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
                                     EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
                                     EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
 #        elif ( RSOLVER == ROE )
-         Hydro_RiemannSolver_Roe  ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
+         Hydro_RiemannSolver_Roe  ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
                                     EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
                                     EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
 #        elif ( RSOLVER == HLLE )
-         Hydro_RiemannSolver_HLLE ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
+         Hydro_RiemannSolver_HLLE ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
                                     EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
                                     EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
                                     EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
 #        elif ( RSOLVER == HLLC  &&  !defined MHD )
-         Hydro_RiemannSolver_HLLC ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
+         Hydro_RiemannSolver_HLLC ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
                                     EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
                                     EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
                                     EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
 #        elif ( RSOLVER == HLLD  &&  defined MHD )
-         Hydro_RiemannSolver_HLLD ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
+         Hydro_RiemannSolver_HLLD ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
                                     EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
                                     EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
 #        else
@@ -729,7 +734,7 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 #        endif
 
 //       switch to a different Riemann solver if the default one fails
-#        if ( RSOLVER_RESCUE != NONE )
+#        if ( RSOLVER_RESCUE != OPTION_NONE )
          for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
          {
 //          only check NaN for now
@@ -740,25 +745,25 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 #              endif
 
 #              if   ( RSOLVER_RESCUE == EXACT  &&  !defined MHD )
-               Hydro_RiemannSolver_Exact( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
+               Hydro_RiemannSolver_Exact( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
                                           EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
                                           EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
 #              elif ( RSOLVER_RESCUE == ROE )
-               Hydro_RiemannSolver_Roe  ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
+               Hydro_RiemannSolver_Roe  ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
                                           EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
                                           EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
 #              elif ( RSOLVER_RESCUE == HLLE )
-               Hydro_RiemannSolver_HLLE ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
+               Hydro_RiemannSolver_HLLE ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
                                           EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
                                           EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
                                           EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
 #              elif ( RSOLVER_RESCUE == HLLC  &&  !defined MHD )
-               Hydro_RiemannSolver_HLLC ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
+               Hydro_RiemannSolver_HLLC ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
                                           EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
                                           EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
                                           EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
 #              elif ( RSOLVER_RESCUE == HLLD  &&  defined MHD )
-               Hydro_RiemannSolver_HLLD ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres,
+               Hydro_RiemannSolver_HLLD ( d, Flux_1Face, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
                                           EoS->DensEint2Pres_FuncPtr, EoS->DensPres2CSqr_FuncPtr,
                                           EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
 #              else
@@ -778,7 +783,7 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                break;
             } // if ( Flux_1Face[v] != Flux_1Face[v] )
          } // for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
-#        endif // #if ( RSOLVER_RESCUE != NONE )
+#        endif // #if ( RSOLVER_RESCUE != OPTION_NONE )
 
 //       store the results in g_Flux_Half[]
          for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_Flux_Half[d][v][idx_flux] = Flux_1Face[v];
@@ -814,6 +819,7 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //                dt                 : Time interval to advance solution
 //                dh                 : Cell size
 //                MinDens/Pres/Eint  : Density, pressure, and internal energy floors
+//                PassiveFloor       : Bitwise flag to specify the passive scalars to be floored
 //                FracPassive        : true --> convert passive scalars to mass fraction during data reconstruction
 //                NFrac              : Number of passive scalars for the option "FracPassive"
 //                FracIdx            : Target variable indices for the option "FracPassive"
@@ -828,7 +834,7 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
                                  real g_PriVar_Half[][ CUBE(FLU_NXT) ],
                            const real dt, const real dh,
                            const real MinDens, const real MinPres, const real MinEint,
-                           const bool FracPassive, const int NFrac, const int FracIdx[],
+                           const long PassiveFloor, const bool FracPassive, const int NFrac, const int FracIdx[],
                            const bool JeansMinPres, const real JeansMinPres_Coeff,
                            const EoS_t *EoS )
 {
@@ -909,16 +915,18 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 #     else
       const real Emag = NULL_REAL;
 #     endif
-      out_con[4] = Hydro_CheckMinEintInEngy( out_con[0], out_con[1], out_con[2], out_con[3], out_con[4], MinEint, Emag );
+      out_con[4] = Hydro_CheckMinEintInEngy( out_con[0], out_con[1], out_con[2], out_con[3], out_con[4], MinEint, PassiveFloor, Emag );
 #     endif // #ifndef BAROTROPIC_EOS
 #     endif // #ifndef SRHD
 #     if ( NCOMP_PASSIVE > 0 )
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+      if ( PassiveFloor & BIDX(v) )
       out_con[v] = FMAX( out_con[v], TINY_NUMBER );
 #     endif
 
 //    conserved --> primitive variables
-      Hydro_Con2Pri( out_con, out_pri, MinPres, FracPassive, NFrac, FracIdx, JeansMinPres, JeansMinPres_Coeff,
+      Hydro_Con2Pri( out_con, out_pri, MinPres, PassiveFloor,
+                     FracPassive, NFrac, FracIdx, JeansMinPres, JeansMinPres_Coeff,
                      EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr,
                      EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
                      EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,

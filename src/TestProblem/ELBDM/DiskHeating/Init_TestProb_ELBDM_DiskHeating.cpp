@@ -87,6 +87,10 @@ void Validate()
    Aux_Error( ERROR_INFO, "PARTICLE must be enabled !!\n" );
 #  endif
 
+#  ifndef STORE_PAR_ACC
+   Aux_Error( ERROR_INFO, "STORE_PAR_ACC must be enabled !!\n" );
+#  endif
+
 #  ifdef COMOVING
    Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
 #  endif
@@ -663,7 +667,9 @@ void Init_NewDiskVelocity()
    long_par *ParType   =   amr->Par->Type;
    real_par *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
    real_par *ParVel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
+#  ifdef STORE_PAR_ACC
    real_par *ParAcc[3] = { amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ };
+#  endif
 
    real ParRadius[2];
    real NormParRadius[2];
@@ -686,8 +692,10 @@ void Init_NewDiskVelocity()
          NormParRadius[0] = ParRadius[0]/ ParR;
          NormParRadius[1] = ParRadius[1]/ ParR;
 
+#        ifdef STORE_PAR_ACC
 //       compute radial acceleration
          V_acc = sqrt(  fabs( ParRadius[0]*ParAcc[0][p] + ParRadius[1]*ParAcc[1][p] )  );
+#        endif
 
 //       add velocity dispersion
          sigma   = Get_Dispersion( ParR );

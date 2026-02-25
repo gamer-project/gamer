@@ -397,14 +397,22 @@ void Init_ResetParameter()
 #  elif ( MODEL == ELBDM )
    if ( OPT__FLU_INT_SCHEME == INT_DEFAULT )
    {
+#     ifdef SUPPORT_SPECTRAL_INT
+      OPT__FLU_INT_SCHEME = INT_SPECTRAL;
+#     else
       OPT__FLU_INT_SCHEME = INT_CQUAR;
+#     endif
 
       PRINT_RESET_PARA( OPT__FLU_INT_SCHEME, FORMAT_INT, "" );
    }
 
    if ( OPT__REF_FLU_INT_SCHEME == INT_DEFAULT )
    {
+#     ifdef SUPPORT_SPECTRAL_INT
+      OPT__REF_FLU_INT_SCHEME = INT_SPECTRAL;
+#     else
       OPT__REF_FLU_INT_SCHEME = INT_CQUAR;
+#     endif
 
       PRINT_RESET_PARA( OPT__REF_FLU_INT_SCHEME, FORMAT_INT, "" );
    }

@@ -357,7 +357,7 @@ void AddNewField_PlaneWave()
 {
 
    if ( PWave_Idx_WrappedPhase == Idx_Undefined )
-      PWave_Idx_WrappedPhase = AddField( "WrappedPhase", FIXUP_FLUX_NO, FIXUP_REST_NO, NORMALIZE_NO, INTERP_FRAC_NO );
+      PWave_Idx_WrappedPhase = AddField( "WrappedPhase", FIXUP_FLUX_NO, FIXUP_REST_NO, FLOOR_NO, NORMALIZE_NO, INTERP_FRAC_NO );
 
 } // FUNCTION : AddNewField_PlaneWave
 
@@ -439,7 +439,7 @@ void OutputError()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  BC
-// Description :  Set the extenral boundary condition to the analytical solution
+// Description :  Set the external boundary condition to the analytical solution
 //
 // Note        :  1. Linked to the function pointer "BC_User_Ptr"
 //
