@@ -325,7 +325,7 @@ void Init_ResetParameter()
 
 
 #  ifdef MHD
-   if ( OPT__SAME_INTERFACE_B < 0 )
+   if ( OPT__SAME_INTERFACE_B == SAME_INTERFACE_B_DEFAULT )
    {
       OPT__SAME_INTERFACE_B = ( MINMOD_MAX_ITER > 0 ) ? SAME_INTERFACE_B_YES : SAME_INTERFACE_B_NO;
 

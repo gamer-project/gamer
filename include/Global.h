@@ -133,7 +133,7 @@ extern bool             OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC
 extern bool             OPT__OUTPUT_DIVMAG;
 extern int              OPT__CK_DIVERGENCE_B;
 extern double           UNIT_B;
-extern int              OPT__SAME_INTERFACE_B;
+extern SameInterfaceB_t OPT__SAME_INTERFACE_B;
 
 extern OptInitMagByVecPot_t OPT__INIT_BFIELD_BYVECPOT;
 #endif

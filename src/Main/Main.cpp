@@ -123,7 +123,7 @@ bool                 OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC_MA
 bool                 OPT__OUTPUT_DIVMAG;
 int                  OPT__CK_DIVERGENCE_B;
 double               UNIT_B;
-int                  OPT__SAME_INTERFACE_B;
+SameInterfaceB_t     OPT__SAME_INTERFACE_B;
 
 OptInitMagByVecPot_t OPT__INIT_BFIELD_BYVECPOT;
 #endif

@@ -17,6 +17,18 @@
 //                4. Always use the B field on the +x/+y/+z sides to overwrite that on the -x/-y/-z sides
 //                5. Mainly for debugging purposes since this consistency should already be guaranteed
 //                   even when disabling OPT__SAME_INTERFACE_B
+//                6. The following two approaches are equivalent. We currently adopt approach (1).
+//                   --> (1) Iterate over both real and buffer patches. In this case, there is no need to call
+//                           Buf_GetBufferData() afterward to exchange buffer-patch data.
+//                       (2) Iterate over real patches only. In this case, we must call Buf_GetBufferData()
+//                           afterward to exchange Flu_ParaBuf buffer-patch data for both the magnetic field and energy
+//                7. Possible optimizations:
+//                   --> (1) When calling MHD_SameInterfaceB() in EvolveLevel(), iterate over real patches only,
+//                           since Buf_GetBufferData() is always called in EvolveLevel() anyway.
+//                       (2) Related to the above, when calling Buf_GetBufferData() before MHD_SameInterfaceB()
+//                           in EvolveLevel(), we could exchange only 0 instead of Flu_ParaBuf data for the
+//                           magnetic field and skip exchanging the energy, since buffer patches do not need to be
+//                           updated inside MHD_SameInterfaceB() here.
 //
 // Parameter   :  lv : AMR level
 //
@@ -35,14 +47,17 @@ void MHD_SameInterfaceB( const int lv )
    const int FluSg = amr->FluSg[lv];
    const int MagSg = amr->MagSg[lv];
 
-// iterate over all real and buffer patches
-#  pragma omp parallel for schedule( runtime )
-   for (int PID=0; PID<amr->num[lv]; PID++)
-   {
+// start of OpenMP parallel region
+#  pragma omp parallel
+   {  
       real ***Emag_old = NULL;
 
       Aux_AllocateArray3D( Emag_old, 3, PS1, PS1 );
 
+// iterate over all real and buffer patches
+#  pragma omp for schedule( runtime )
+   for (int PID=0; PID<amr->num[lv]; PID++)
+   {
 //    use the B field on the +x/+y/+z sides to overwrite that on the -x/-y/-z sides
 //    --> skip s=1/3/5
       for (int s=0; s<6; s+=2)
@@ -88,9 +103,11 @@ void MHD_SameInterfaceB( const int lv )
             amr->patch[FluSg][lv][PID]->fluid[ENGY][kk][jj][ii] += (Emag - Emag_old[d][j][i]);
          }
       } // for (int s=0; s<6; s+=2)
-
-      Aux_DeallocateArray3D( Emag_old );
    } // for (int PID=0; PID<amr->num[lv]; PID++)
+
+   Aux_DeallocateArray3D( Emag_old );
+
+   } // end of OpenMP parallel region
 
 } // FUNCTION : MHD_SameInterfaceB
 

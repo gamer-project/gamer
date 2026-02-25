@@ -570,8 +570,9 @@ const LoadParaMode_t
 // whether to enforce consistency of magnetic field at the patch interface
 typedef int SameInterfaceB_t;
 const SameInterfaceB_t
-   SAME_INTERFACE_B_NO  = 0,
-   SAME_INTERFACE_B_YES = 1;
+   SAME_INTERFACE_B_DEFAULT = -1,
+   SAME_INTERFACE_B_NO      = 0,
+   SAME_INTERFACE_B_YES     = 1;
 
 
 // function pointers
