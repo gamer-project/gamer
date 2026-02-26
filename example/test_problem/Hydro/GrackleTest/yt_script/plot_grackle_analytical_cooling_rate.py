@@ -14,7 +14,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 grackle_path          = "../CloudyData_UVB=HM2012.h5"
 z_now                 = 3.0              # Redshift
 output_mode           = int(2)           # [0] lists all groups and datasets of "CloudyData_UVB=HM2012.h5"
-                                         # [1] computes cooling and heating rates for specified (z, nH, T) using interpolation 
+                                         # [1] computes cooling and heating rates for specified (z, nH, T) using interpolation
                                          # [2] output cooling and heating rates for a grid of (z, nH, T) values and saves to a new HDF5 file
 nH_now                = 1e-3             # Hydrogen density (cm^-3); for option [1]
 T_now                 = 1e4              # Temperature (K); for option [1]
