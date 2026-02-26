@@ -148,10 +148,10 @@ if (output_mode == 2):
     ax.set_ylabel(r'$T/\mu$ [K]', fontsize=font_size)
 
     # 3. Longer and thicker ticks pointing inward
-    ax.tick_params(axis='both', which='major', direction='in', length=10, width=2, 
-                top=True, right=True, labelsize=font_size)
-    ax.tick_params(axis='both', which='minor', direction='in', length=5, width=1.5, 
-                top=True, right=True)
+    ax.tick_params(axis='both', which='major', direction='in', length=10, width=2,
+                   top=True, right=True, labelsize=font_size)
+    ax.tick_params(axis='both', which='minor', direction='in', length=5, width=1.5,
+                   top=True, right=True)
 
     # 4. Updated Colorbar Logic (Fixed Height)
     # 'shrink=0.82' matches the height of a square set_box_aspect(1) frame
