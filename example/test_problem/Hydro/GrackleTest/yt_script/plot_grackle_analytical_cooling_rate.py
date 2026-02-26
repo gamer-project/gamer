@@ -12,7 +12,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 # -------------------------------------------------------------------------
 # user-specified parameters
 grackle_path          = "../CloudyData_UVB=HM2012.h5"
-z_now                 = 3.0              # Redshift
+z_now                 = 0.0              # Redshift
 output_mode           = int(2)           # [0] lists all groups and datasets of "CloudyData_UVB=HM2012.h5"
                                          # [1] computes cooling and heating rates for specified (z, nH, T) using interpolation
                                          # [2] output cooling and heating rates for a grid of (z, nH, T) values and saves to a new HDF5 file
@@ -65,6 +65,7 @@ def get_grackle_rates(file_path, z_target, nh_target, t_target):
 
         points = np.dstack((log_nh, z_safe, t_safe))
         return cool_interp(points), heat_interp(points)
+
 def calculate_cooling_time(nH, T, lambda_net_norm):
     # Constants (CGS)
     kB = 1.3806e-16
@@ -154,10 +155,16 @@ if (output_mode == 2):
                    top=True, right=True)
 
     # 4. Updated Colorbar Logic (Fixed Height)
+<<<<<<< HEAD
     # 'shrink=0.82' matches the height of a square set_box_aspect(1) frame
     cbar = fig.colorbar(im, ax=ax, shrink=0.82, pad=0.03)
     cbar.set_label(r'Grackle Cooling Rate $\left( \frac{\text{erg}}{\text{cm}^3 \cdot \text{s}} \right)$',
                    fontsize=font_size, labelpad=15)
+=======
+    cbar = fig.colorbar(im, ax=ax, shrink=1.0, pad=0.03) 
+    cbar.set_label(r'Grackle Cooling Rate $\left( \frac{\text{erg}}{\text{cm}^3 \cdot \text{s}} \right)$', 
+                fontsize=font_size, labelpad=15)
+>>>>>>> de5558cf3 (minor changes to plot_grackle_analytical_cooling_rate.py)
 
     # Formatting colorbar ticks
     tick_locs = [-1e-24, -1e-25, -1e-26, -1e-27, -1e-28, -1e-29, 0, 1e-29, 1e-28, 1e-27, 1e-26, 1e-25, 1e-24]
