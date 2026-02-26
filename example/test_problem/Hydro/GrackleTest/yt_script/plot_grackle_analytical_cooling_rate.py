@@ -155,15 +155,15 @@ if (output_mode == 2):
 
     # 4. Updated Colorbar Logic (Fixed Height)
     # 'shrink=0.82' matches the height of a square set_box_aspect(1) frame
-    cbar = fig.colorbar(im, ax=ax, shrink=0.82, pad=0.03) 
-    cbar.set_label(r'Grackle Cooling Rate $\left( \frac{\text{erg}}{\text{cm}^3 \cdot \text{s}} \right)$', 
-                fontsize=font_size, labelpad=15)
+    cbar = fig.colorbar(im, ax=ax, shrink=0.82, pad=0.03)
+    cbar.set_label(r'Grackle Cooling Rate $\left( \frac{\text{erg}}{\text{cm}^3 \cdot \text{s}} \right)$',
+                   fontsize=font_size, labelpad=15)
 
     # Formatting colorbar ticks
     tick_locs = [-1e-24, -1e-25, -1e-26, -1e-27, -1e-28, -1e-29, 0, 1e-29, 1e-28, 1e-27, 1e-26, 1e-25, 1e-24]
-    tick_labels = [r'$-10^{-24}$', r'$-10^{-25}$', r'$-10^{-26}$', r'$-10^{-27}$', r'$-10^{-28}$', r'$-10^{-29}$', 
-                '0', 
-                r'$10^{-29}$', r'$10^{-28}$', r'$10^{-27}$', r'$10^{-26}$', r'$10^{-25}$', r'$10^{-24}$']
+    tick_labels = [r'$-10^{-24}$', r'$-10^{-25}$', r'$-10^{-26}$', r'$-10^{-27}$', r'$-10^{-28}$', r'$-10^{-29}$',
+                   '0',
+                   r'$10^{-29}$', r'$10^{-28}$', r'$10^{-27}$', r'$10^{-26}$', r'$10^{-25}$', r'$10^{-24}$']
 
     cbar.set_ticks(tick_locs)
     cbar.set_ticklabels(tick_labels, fontsize=font_size)
