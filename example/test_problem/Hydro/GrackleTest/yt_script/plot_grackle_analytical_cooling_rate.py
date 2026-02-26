@@ -63,8 +63,8 @@ def get_grackle_rates(file_path, z_target, nh_target, t_target):
         z_safe = np.clip(z_target, grids[1].min(), grids[1].max())
         t_safe = np.clip(t_target, grids[2].min(), grids[2].max())
 
-        point = np.array([log_nh, z_safe, t_safe])
-        return cool_interp(point), heat_interp(point)
+        points = np.dstack((log_nh, z_safe, t_safe))
+        return cool_interp(points), heat_interp(points)
 def calculate_cooling_time(nH, T, lambda_net_norm):
     # Constants (CGS)
     kB = 1.3806e-16
