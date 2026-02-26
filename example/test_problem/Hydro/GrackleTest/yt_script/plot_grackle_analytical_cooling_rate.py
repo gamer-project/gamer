@@ -48,7 +48,7 @@ def get_grackle_rates(file_path, z_target, nh_target, t_target):
             grids[i] = grids[i][sort_idx]
             cool_data = np.take(cool_data, sort_idx, axis=i)
             heat_data = np.take(heat_data, sort_idx, axis=i)
-            
+
             mask = np.concatenate(([True], np.diff(grids[i]) > 0))
             grids[i] = grids[i][mask]
             cool_data = np.compress(mask, cool_data, axis=i)
