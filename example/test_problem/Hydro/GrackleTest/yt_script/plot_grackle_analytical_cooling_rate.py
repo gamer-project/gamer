@@ -118,19 +118,11 @@ if (output_mode == 2):
     net_rates = np.zeros_like(RHO)
 
     print("Calculating heating/cooling rates on grid")
-    for i in range(len(t_mu_range)):
-        for j in range(len(rho_range)):
-            nh_val = RHO[i, j] / (mp / X_h)
-            t_val = TMU[i, j] 
-            
-            try:
-                # We use the global function here
-                cool, heat = get_grackle_rates(grackle_path, z_now, nh_val, t_val)
-                # Results are log10; convert to linear if they are log
-                # Based on your previous successful run, they were linear
-                net_rates[i, j] = (heat[0] - cool[0]) * (nh_val**2)
-            except Exception as e:
-                net_rates[i, j] = 0.0
+    nh_val     = RHO / (mp / X_h)
+    t_val      = TMU
+    z_val      = z_now*np.ones_like(nh_val)
+    cool, heat = get_grackle_rates(grackle_path, z_val, nh_val, t_val)
+    net_rates  = (heat - cool) * (nh_val**2)
 
     print("Start plotting")
     # --- Refined Plotting ---
