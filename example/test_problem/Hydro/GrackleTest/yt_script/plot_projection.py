@@ -123,7 +123,7 @@ for ds in ts.piter():
         dens_ratio = ad["density"].max() / ad["density"].min()
         temp_ratio = ad["grackle_T_over_mu"].max() / ad["grackle_T_over_mu"].min()
         dataset_is_uniform = (dens_ratio <= 5.0) or (temp_ratio <= 5.0)
-        
+
         pz._setup_plots()
         if not dataset_is_uniform: # secondary axis labels and ticks for gas properties
             # 1. grab the actual data limits and plot limits
