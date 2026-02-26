@@ -155,16 +155,9 @@ if (output_mode == 2):
                    top=True, right=True)
 
     # 4. Updated Colorbar Logic (Fixed Height)
-<<<<<<< HEAD
-    # 'shrink=0.82' matches the height of a square set_box_aspect(1) frame
-    cbar = fig.colorbar(im, ax=ax, shrink=0.82, pad=0.03)
-    cbar.set_label(r'Grackle Cooling Rate $\left( \frac{\text{erg}}{\text{cm}^3 \cdot \text{s}} \right)$',
+    cbar = fig.colorbar(im, ax=ax, shrink=1.0, pad=0.03)
+    cbar.set_label(r'Grackle Cooling Rate $\left( \frac{\mathrm{erg}}{\mathrm{cm}^3 \cdot \mathrm{s}} \right)$',
                    fontsize=font_size, labelpad=15)
-=======
-    cbar = fig.colorbar(im, ax=ax, shrink=1.0, pad=0.03) 
-    cbar.set_label(r'Grackle Cooling Rate $\left( \frac{\text{erg}}{\text{cm}^3 \cdot \text{s}} \right)$', 
-                fontsize=font_size, labelpad=15)
->>>>>>> de5558cf3 (minor changes to plot_grackle_analytical_cooling_rate.py)
 
     # Formatting colorbar ticks
     tick_locs = [-1e-24, -1e-25, -1e-26, -1e-27, -1e-28, -1e-29, 0, 1e-29, 1e-28, 1e-27, 1e-26, 1e-25, 1e-24]
