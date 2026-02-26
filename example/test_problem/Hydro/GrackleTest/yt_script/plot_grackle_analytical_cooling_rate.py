@@ -101,13 +101,13 @@ if (output_mode == 1):
         cooling_rate, heating_rate = get_grackle_rates(grackle_path, z_target=z_now, nh_target=nH_now, t_target=T_now)
         print("-" * 45)
         print(f"Metal-Free Gas Rates (z={z_now}, nH={nH_now:.2e}, T={T_now:.2e}K):")
-        print(f"  Cooling Rate (Λ/n_H²): {cooling_rate[0]:.2e} erg*cm^3/s")
-        print(f"  Heating Rate (Γ/n_H²): {heating_rate[0]:.2e} erg*cm^3/s")
-        print(f"  Net: {'Heating' if heating_rate[0] > cooling_rate[0] else 'Cooling'}")
+        print(f"  Cooling Rate (Λ/n_H²): {cooling_rate[0,0]:.2e} erg*cm^3/s")
+        print(f"  Heating Rate (Γ/n_H²): {heating_rate[0,0]:.2e} erg*cm^3/s")
+        print(f"  Net: {'Heating' if heating_rate[0,0] > cooling_rate[0,0] else 'Cooling'}")
         print("-" * 45)
     except Exception as e:
         print(f"Error: {e}")
-    net_rate = abs(heating_rate[0] - cooling_rate[0])
+    net_rate = abs(heating_rate[0,0] - cooling_rate[0,0])
     t_cool_myr = calculate_cooling_time(nH_now, T_now, net_rate)
     print(f"Cooling Timescale: {t_cool_myr:.2e} Myr")
 
