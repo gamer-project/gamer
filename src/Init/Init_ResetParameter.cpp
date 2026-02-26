@@ -324,6 +324,15 @@ void Init_ResetParameter()
 #  endif
 
 
+#  ifdef MHD
+   if ( OPT__SAME_INTERFACE_B == SAME_INTERFACE_B_DEFAULT )
+   {
+      OPT__SAME_INTERFACE_B = ( MINMOD_MAX_ITER > 0 ) ? SAME_INTERFACE_B_YES : SAME_INTERFACE_B_NO;
+
+      PRINT_RESET_PARA( OPT__SAME_INTERFACE_B, FORMAT_INT, "" );
+   }
+#  endif
+
 // text format parameters
 // --> The current strategy is to read the integer in between % and . to determine the string length.
 //     For example, the format %20.16e will give a length of 20. However, if only checking the string after %,

@@ -303,6 +303,18 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
       } // if ( OPT__OVERLAP_MPI ) ... else ...
 
+#     if ( MODEL == HYDRO  &&  defined MHD )
+      if ( OPT__SAME_INTERFACE_B == SAME_INTERFACE_B_YES )
+      {
+         TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, SaveSg_Mag, NULL_INT, DATA_GENERAL,
+                                           _ENGY, _MAG, Flu_ParaBuf, USELB_YES  ),
+                        Timer_GetBuf[lv][0],   TIMER_ON   );
+
+         TIMING_FUNC(   MHD_SameInterfaceB( lv, SaveSg_Flu, SaveSg_Mag ),
+                        Timer_Flu_Advance[lv],   TIMER_ON   );
+      } // if ( OPT__SAME_INTERFACE_B == SAME_INTERFACE_B_YES )
+#     endif // #if ( MODEL == HYDRO  &&  defined MHD )
+
       amr->FluSg    [lv]             = SaveSg_Flu;
       amr->FluSgTime[lv][SaveSg_Flu] = TimeNew;
 #     ifdef MHD

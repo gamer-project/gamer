@@ -320,7 +320,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "DUAL_ENERGY_SWITCH",         &DUAL_ENERGY_SWITCH,              2.0e-2,          0.0,           NoMax_double   );
 #  endif
 #  ifdef MHD
-   ReadPara->Add( "OPT__SAME_INTERFACE_B",      &OPT__SAME_INTERFACE_B,           false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__SAME_INTERFACE_B",      &OPT__SAME_INTERFACE_B,          -1,                      -1,     1              );
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 
