@@ -2494,7 +2494,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #     ifdef SRHD
       RS.FlagTable_LrtzGradient[lv]    = -1.0;
 #     endif
-#     ifdef SRHD
+#     ifdef SUPPORT_GRACKLE
       RS.FlagTable_CoolingLen  [lv]    = -1.0;
 #     endif
 
