@@ -32,9 +32,9 @@ def get_grackle_rates(file_path, z_target, nh_target, t_target):
     with h5py.File(file_path, 'r') as f:
         ds_cool = f['CoolingRates/Primordial/Cooling']
         ds_heat = f['CoolingRates/Primordial/Heating']
-        
+
         # Extract Grids
-        nh_grid = ds_cool.attrs['Parameter1'][:] 
+        nh_grid = ds_cool.attrs['Parameter1'][:]
         z_grid  = ds_cool.attrs['Parameter2'][:]
         t_grid  = ds_cool.attrs['Temperature'][:]
 
