@@ -138,8 +138,8 @@ if (output_mode == 2):
     im = ax.pcolormesh(RHO, TMU, net_rates, norm=norm, cmap='bwr', shading='auto')
 
     # 2. Add black dashed line for net rate of zero
-    ax.contour(RHO, TMU, net_rates, levels=[0], colors='black', 
-            linestyles='dashed', linewidths=1.5)
+    ax.contour(RHO, TMU, net_rates, levels=[0], colors='black',
+               linestyles='dashed', linewidths=1.5)
 
     # Formatting Axes
     ax.set_xscale('log')
