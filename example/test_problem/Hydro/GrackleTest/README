@@ -120,6 +120,9 @@ Note:
 10. Some handy yt analysis scripts are put at "yt_script"
    - `plot_projection.py`: to plot the spatial distribution of gas quantities
    - `plot_time_evolution.py`: to plot the time evolution of gas quantities
+   - `yt.toml` defines the units, aliases, and the plot configuration for the fields
+      - It should be placed in the same directory as the plotting scripts when executed
+      - See https://yt-project.org/docs/dev/reference/configuratin.html for the reference
 
 11. CloudyData_UVB table
    - Source: https://github.com/grackle-project/grackle_data_files/tree/main/input
