@@ -127,10 +127,10 @@ for ds in ts.piter():
         pz._setup_plots()
         if not dataset_is_uniform: # secondary axis labels and ticks for gas properties
             # 1. grab the actual data limits and plot limits
-            dens_min   = ad["density"].min().in_units("g/cm**3").v # .v gets the raw float value
-            dens_max   = ad["density"].max().in_units("g/cm**3").v
-            t_mu_min   = ad["grackle_T_over_mu"].min().in_units("K").v
-            t_mu_max   = ad["grackle_T_over_mu"].max().in_units("K").v
+            dens_min   = ds.parameters['GrackleTest_MassDensity_Min'] * ds.units.code_density.get_conversion_factor(ds.units.code_density.get_cgs_equivalent())[0]
+            dens_max   = ds.parameters['GrackleTest_MassDensity_Max'] * ds.units.code_density.get_conversion_factor(ds.units.code_density.get_cgs_equivalent())[0]
+            t_mu_min   = ds.parameters['GrackleTest_TempOverMMW_Min'] * ds.units.code_temperature.get_conversion_factor(ds.units.code_temperature.get_cgs_equivalent())[0]
+            t_mu_max   = ds.parameters['GrackleTest_TempOverMMW_Max'] * ds.units.code_temperature.get_conversion_factor(ds.units.code_temperature.get_cgs_equivalent())[0]
             plot_axes  = pz.plots[field].axes
             xmin, xmax = plot_axes.get_xlim()
             ymin, ymax = plot_axes.get_ylim()
