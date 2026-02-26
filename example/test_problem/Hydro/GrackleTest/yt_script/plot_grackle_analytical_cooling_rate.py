@@ -92,7 +92,7 @@ def calculate_cooling_time(nH, T, lambda_net_norm):
 # -------------------------------------------------------------------------
 if (output_mode == 0):
     with h5py.File(grackle_path, 'r') as f:
-        f.visit(print) 
+        f.visit(print)
 
 
 # -------------------------------------------------------------------------
