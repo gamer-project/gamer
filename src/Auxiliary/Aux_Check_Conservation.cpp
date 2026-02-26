@@ -5,6 +5,7 @@
 // --> declared in "Model_ELBDM/ELBDM_RemoveMotionCM.cpp"
 #if ( MODEL == ELBDM )
 extern double ELBDM_Vcm[3];
+extern double ELBDM_MassPsi;
 #endif
 
 
@@ -781,6 +782,19 @@ void Aux_Check_Conservation( const char *comment )
 
 //    broadcast
       MPI_Bcast( ELBDM_Vcm, 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   }
+#  endif
+
+// calculate the ELBDM total mass for ELBDM_RescaleMassError.cpp
+#  if ( MODEL == ELBDM )
+   if ( ELBDM_RESCALE_MASS_ERROR == true )
+   {
+      if ( MPI_Rank == 0 )
+      {
+         ELBDM_MassPsi     = Fluid_AllRank[0];
+      }
+//    broadcast
+      MPI_Bcast( &ELBDM_MassPsi,     1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
    }
 #  endif
 
