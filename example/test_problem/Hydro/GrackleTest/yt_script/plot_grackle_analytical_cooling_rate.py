@@ -176,13 +176,13 @@ if (output_mode == 2):
         spine.set_linewidth(2.0)
 
     # 6. Text annotations
-    ax.text(0.03, 0.97, 
-            f'max = {net_rates.max():.3e} erg/(cm$^3 \cdot$ s)\nmin = {net_rates.min():.3e} erg/(cm$^3 \cdot$ s)', 
-            transform=ax.transAxes, ha='left', va='top', 
+    ax.text(0.03, 0.97,
+            f'max = {net_rates.max():.3e} erg/(cm$^3 \cdot$ s)\nmin = {net_rates.min():.3e} erg/(cm$^3 \cdot$ s)',
+            transform=ax.transAxes, ha='left', va='top',
             fontsize=font_size*0.9, color='black', fontweight='bold')
 
-    ax.text(0.97, 0.97, rf'$\mathbf{{z = {z_now:.2f}}}$', 
-            transform=ax.transAxes, ha='right', va='top', 
+    ax.text(0.97, 0.97, rf'$\mathbf{{z = {z_now:.2f}}}$',
+            transform=ax.transAxes, ha='right', va='top',
             fontsize=font_size, color='black', fontweight='bold')
 
     plt.savefig(f"grackle_phase_plot_z={z_now}.png", dpi=300, bbox_inches='tight')
