@@ -49,7 +49,7 @@ void MHD_SameInterfaceB( const int lv )
 
 // start of OpenMP parallel region
 #  pragma omp parallel
-   {  
+   {
       real ***Emag_old = NULL;
 
       Aux_AllocateArray3D( Emag_old, 3, PS1, PS1 );
