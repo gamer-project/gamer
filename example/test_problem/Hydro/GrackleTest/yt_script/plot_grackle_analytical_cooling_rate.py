@@ -68,23 +68,23 @@ def get_grackle_rates(file_path, z_target, nh_target, t_target):
 def calculate_cooling_time(nH, T, lambda_net_norm):
     # Constants (CGS)
     kB = 1.3806e-16
+    mp = 1.6726e-24
     yr_to_sec = 3.154e7
-    
-    # Assumptions for fully ionized primordial (metal-free) gas at 10^4K
+
+    # Assumptions for metal-free ionized gas at 10^4K
     # Mean molecular weight mu ~ 0.6
     mu = 0.6
-    # Total number density of all species (H, He, e-)
-    n_tot = nH / (mu * X_h) 
-    
+    n_tot = nH / mu
+
     # Internal Energy (erg/cm^3)
     energy_density = 1.5 * n_tot * kB * T
-    
+
     # Volumetric Cooling Rate (erg/cm^3/s); lambda_net_norm is |Heating - Cooling|
     vol_cooling_rate = lambda_net_norm * (nH**2)
-    
+
     if vol_cooling_rate == 0:
         return np.inf
-        
+
     t_sec = energy_density / vol_cooling_rate
     return t_sec / (yr_to_sec * 1e6) # Convert to Myr
 
