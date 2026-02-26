@@ -310,7 +310,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                                            _ENGY, _MAG, Flu_ParaBuf, USELB_YES  ),
                         Timer_GetBuf[lv][0],   TIMER_ON   );
 
-         TIMING_FUNC(   MHD_SameInterfaceB( lv ),
+         TIMING_FUNC(   MHD_SameInterfaceB( lv, SaveSg_Flu, SaveSg_Mag ),
                         Timer_Flu_Advance[lv],   TIMER_ON   );
 
          TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, SaveSg_Mag, NULL_INT, DATA_GENERAL,

@@ -707,7 +707,8 @@ int main( int argc, char *argv[] )
             Aux_Message( stdout, "   MHD_SameInterfaceB                       ... " );
 
          for (int lv=0; lv<NLEVEL; lv++)
-         TIMING_FUNC(   MHD_SameInterfaceB( lv ),     Timer_Main[6],   TIMER_ON   );
+         TIMING_FUNC(   MHD_SameInterfaceB( lv, amr->FluSg[lv], amr->MagSg[lv] ),
+                        Timer_Main[6],   TIMER_ON   );
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
             Aux_Message( stdout, "done\n" );

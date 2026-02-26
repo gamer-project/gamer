@@ -30,11 +30,13 @@
 //                           magnetic field and skip exchanging the energy, since buffer patches do not need to be
 //                           updated inside MHD_SameInterfaceB() here.
 //
-// Parameter   :  lv : AMR level
+// Parameter   :  lv    : AMR level
+//                FluSg : Sandglass to access/store the fluid   data
+//                MagSg : Sandglass to access/store the B field data
 //
 // Return      :  Longitudinal B field on the interfaces between sibling patches
 //-------------------------------------------------------------------------------------------------------
-void MHD_SameInterfaceB( const int lv )
+void MHD_SameInterfaceB( const int lv, const int FluSg, const int MagSg )
 {
 
 // check
@@ -42,10 +44,6 @@ void MHD_SameInterfaceB( const int lv )
    if ( lv < 0  ||  lv > TOP_LEVEL )
       Aux_Error( ERROR_INFO, "incorrect lv = %d !!\n", lv );
 #  endif
-
-
-   const int FluSg = amr->FluSg[lv];
-   const int MagSg = amr->MagSg[lv];
 
 // start of OpenMP parallel region
 #  pragma omp parallel

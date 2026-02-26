@@ -247,7 +247,7 @@ void Init_GAMER( int *argc, char ***argv )
 // ensure B field consistency on the shared interfaces between sibling patches
 #  if ( MODEL == HYDRO  &&  defined MHD )
    if ( OPT__SAME_INTERFACE_B == SAME_INTERFACE_B_YES )
-   for (int lv=0; lv<NLEVEL; lv++)  MHD_SameInterfaceB( lv );
+   for (int lv=0; lv<NLEVEL; lv++)  MHD_SameInterfaceB( lv, amr->FluSg[lv], amr->MagSg[lv] );
 #  endif
 
 
