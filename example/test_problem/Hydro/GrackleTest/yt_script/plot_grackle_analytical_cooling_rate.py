@@ -2,7 +2,7 @@ import h5py
 import numpy as np
 import matplotlib
 # Use 'Agg' backend to avoid PuTTY X11 errors
-matplotlib.use('Agg') 
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from scipy.interpolate import RegularGridInterpolator
