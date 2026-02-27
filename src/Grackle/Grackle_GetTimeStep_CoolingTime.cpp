@@ -103,11 +103,11 @@ real GetMinCoolingTime( const int lv )
    bool AnyCell_AllRank;
 
    MPI_Allreduce( &MinCoolingTime, &MinCoolingTime_AllRank, 1, MPI_GAMER_REAL, MPI_MIN,    MPI_COMM_WORLD );
-   MPI_Reduce(    &AnyCell,        &AnyCell_AllRank,        1, MPI_C_BOOL,     MPI_LOR, 0, MPI_COMM_WORLD );
+   MPI_Reduce(    &AnyCell,        &AnyCell_AllRank,        1, MPI_CXX_BOOL,   MPI_LOR, 0, MPI_COMM_WORLD );
 
 
 // check
-   if ( MinCoolingTime_AllRank == INFINITY  &&  AnyCell_AllRank  &&  MPI_Rank == 0 )
+   if ( MPI_Rank == 0  &&  MinCoolingTime_AllRank == INFINITY  &&  AnyCell_AllRank )
       Aux_Error( ERROR_INFO, "MinCoolingTime == INFINITY at lv %d !!\n", lv );
 
 
