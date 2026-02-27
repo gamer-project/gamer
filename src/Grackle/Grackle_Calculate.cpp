@@ -2,6 +2,10 @@
 
 #ifdef SUPPORT_GRACKLE
 
+#ifdef OPENMP
+#include <atomic>
+#endif
+
 
 // global variables borrowing from h_Che_Array[]
 // --> declared in Init_MemAllocate_Grackle.cpp
@@ -21,6 +25,13 @@ extern int CheIdx_sEint;
 //                   --> to be consistent with the usage of the output
 //                4. This function can be invoked by
 //                   e.g., Output_DumpData_*(), Flag_Real() and Grackle_GetTimeStep_CoolingTime()
+//                5. Do not invoke this function by multiple OpenMP threads
+//                   (1) Nested parallelization
+//                       --> OpenMP parallelization is already implemented in
+//                           Grackle_Prepare() and inside Grackle's API functions
+//                   (2) Data race
+//                       --> Che_FieldData is globally shared and not safe to be changed
+//                           in Grackle_Prepare() and in this function by multiple threads concurrently
 //
 // Parameter   :  Out          : Output array, array size = NFieldOut*(NPG*PS2*PS2*PS2)
 //                TFields      : Target fields to be calculated:
@@ -50,6 +61,14 @@ void Grackle_Calculate( real Out[], const GrackleFieldBIdx_t TFields,
    const int IdxOut_tcool     = ( TFields & _GRACKLE_TCOOL ) ? NFieldOut++ : IdxOut_Undefined;
 
    if ( NFieldOut == 0 )   return;
+
+
+#  ifdef OPENMP
+// check there is no multithreading
+   static std::atomic_flag hasOneRunningThread = ATOMIC_FLAG_INIT;
+   if ( hasOneRunningThread.test_and_set( std::memory_order_acquire ) )
+      Aux_Error( ERROR_INFO, "%s() is invoked concurrently by multiple threads !!\n", __FUNCTION__ );
+#  endif
 
 
 // 2. allocate and prepare the input array for the Grackle solver
@@ -145,6 +164,12 @@ void Grackle_Calculate( real Out[], const GrackleFieldBIdx_t TFields,
 
    if ( IdxOut_tcool != IdxOut_Undefined )
       delete [] gr_fields_cooling_time;
+
+
+#  ifdef OPENMP
+// clear the flag
+   hasOneRunningThread.clear( std::memory_order_release );
+#  endif
 
 
 } // FUNCTION : Grackle_Calculate

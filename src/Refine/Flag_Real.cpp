@@ -294,7 +294,12 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 #        ifdef SUPPORT_GRACKLE
          if ( OPT__FLAG_COOLING_LEN )
+         {
+//          Grackle_Calculate() involves shared variable and is not thread-safe
+//          use critical directive to avoid thread racing
+#           pragma omp critical
             Grackle_Calculate( Grackle_TCool, _GRACKLE_TCOOL, lv, NPG, &PID0 );
+         }
 #        endif
 
 //       loop over all local patches within the same patch group

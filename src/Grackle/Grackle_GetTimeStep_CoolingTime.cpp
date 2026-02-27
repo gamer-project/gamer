@@ -46,6 +46,7 @@ double Grackle_GetTimeStep_CoolingTime( const int lv )
 // Description :  Get the minimum Grackle cooling time at the target level among all MPI ranks
 //
 // Note        :  1. Invoked by Grackle_GetTimeStep_CoolingTime()
+//                2. OpenMP parallelization should be performed within Grackle, not here
 //
 // Parameter   :  lv : Target refinement level
 //
@@ -57,45 +58,39 @@ real GetMinCoolingTime( const int lv )
    real   MinCoolingTime = INFINITY;
    bool   AnyCell        = false;
 
-#  pragma omp parallel
+   real *Grackle_TCool = new real [ CUBE(PS2) ];   // array storing ONE patch group of grackle cooling time
+
+// get the minimum Grckle cooling time in this rank
+   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
    {
 
-      real *Grackle_TCool = new real [ CUBE(PS2) ];   // array storing ONE patch group of grackle cooling time
+//    calculate the Grackle cooling time
+      Grackle_Calculate( Grackle_TCool, _GRACKLE_TCOOL, lv, 1, &PID0 );
 
-//    get the minimum Grckle cooling time in this rank
-#     pragma omp for reduction( min:MinCoolingTime ) reduction( ||:AnyCell ) schedule( runtime )
-      for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+      for (int LocalID=0; LocalID<8; LocalID++)
       {
+         const int PID = PID0 + LocalID;
 
-//       calculate the Grackle cooling time
-         Grackle_Calculate( Grackle_TCool, _GRACKLE_TCOOL, lv, 1, &PID0 );
+//       if OPT__FIXUP_RESTRICT is enabled, skip all non-leaf patches
+//       becausethey are later overwritten by the refined patches
+//       note that this leads to the timestep being "inf" when a level is completely refined
+         if ( OPT__FIXUP_RESTRICT  &&  amr->patch[0][lv][PID]->son != -1 )    continue;
 
-         for (int LocalID=0; LocalID<8; LocalID++)
+         AnyCell = true;
+
+//       calculate the minimum
+         for (int k=0; k<PS1; k++)
+         for (int j=0; j<PS1; j++)
+         for (int i=0; i<PS1; i++)
          {
-            const int PID = PID0 + LocalID;
+//          remember to take the absolute value for the cooling time, which could be negative or positive
+            MinCoolingTime = MIN( MinCoolingTime,
+                                  FABS( Grackle_TCool[ (LocalID*CUBE(PS1) + k*SQR(PS1) + j*PS1 + i) ] ) );
+         } // k,j,i
+      } // for (int LocalID=0; LocalID<8; LocalID++)
+   } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
 
-//          if OPT__FIXUP_RESTRICT is enabled, skip all non-leaf patches
-//          becausethey are later overwritten by the refined patches
-//          note that this leads to the timestep being "inf" when a level is completely refined
-            if ( OPT__FIXUP_RESTRICT  &&  amr->patch[0][lv][PID]->son != -1 )    continue;
-
-            AnyCell = true;
-
-//          calculate the minimum
-            for (int k=0; k<PS1; k++)
-            for (int j=0; j<PS1; j++)
-            for (int i=0; i<PS1; i++)
-            {
-               // remember to take the absolute value for the cooling time, which could be negative or positive
-               MinCoolingTime = MIN( MinCoolingTime,
-                                     FABS( Grackle_TCool[ (LocalID*CUBE(PS1) + k*SQR(PS1) + j*PS1 + i) ] ) );
-            } // k,j,i
-         } // for (int LocalID=0; LocalID<8; LocalID++)
-      } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
-
-      delete [] Grackle_TCool;
-
-   } // OpenMP parallel region
+   delete [] Grackle_TCool;
 
 
 // get the minimum Grackle cooling time in all ranks
