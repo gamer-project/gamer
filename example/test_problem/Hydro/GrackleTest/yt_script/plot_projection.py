@@ -106,7 +106,7 @@ for ds in ts.piter():
         if ds.parameters["Grackle_Metal"] == 0 and field == 'metal_density':
             continue
 
-        # Projection weighted by 1 -> get the average
+        # projection weighted by 1 -> get the average
         pz = yt.ProjectionPlot( ds, 'z', field, weight_field=('index','ones'), center='c', data_source=ad )
         pz.set_axes_unit( 'kpc' )
         pz.set_zlim( field, zlim[field][0], zlim[field][1] )
@@ -116,9 +116,68 @@ for ds in ts.piter():
                           coord_system='axis', text_args={"color": "grey"} )
 
         pz.annotate_timestamp( time_unit='Myr', corner='upper_right' )
-
-        pz.save( 'fig_%s_Projection_z_%s.png'%(ds, field), mpl_kwargs={'dpi':150} )
-
         if field == 'grackle_cooling_length' or field == 'grackle_cooling_length_over_dh':
             pz.annotate_grids()
-            pz.save( 'fig_%s_Projection_z_%s_withgrids.png'%(ds, field), mpl_kwargs={'dpi':150} )
+
+        # gas IC is uniform if either density and temperature vary by less than a factor of 5
+        dens_ratio = ad["density"].max() / ad["density"].min()
+        temp_ratio = ad["grackle_T_over_mu"].max() / ad["grackle_T_over_mu"].min()
+        dataset_is_uniform = (dens_ratio <= 5.0) or (temp_ratio <= 5.0)
+
+        pz._setup_plots()
+        if not dataset_is_uniform: # secondary axis labels and ticks for gas properties
+            # 1. grab the actual data limits and plot limits
+            dens_min   = ds.parameters['GrackleTest_MassDensity_Min'] * ds.units.code_density.get_conversion_factor(ds.units.code_density.get_cgs_equivalent())[0]
+            dens_max   = ds.parameters['GrackleTest_MassDensity_Max'] * ds.units.code_density.get_conversion_factor(ds.units.code_density.get_cgs_equivalent())[0]
+            t_mu_min   = ds.parameters['GrackleTest_TempOverMMW_Min'] * ds.units.code_temperature.get_conversion_factor(ds.units.code_temperature.get_cgs_equivalent())[0]
+            t_mu_max   = ds.parameters['GrackleTest_TempOverMMW_Max'] * ds.units.code_temperature.get_conversion_factor(ds.units.code_temperature.get_cgs_equivalent())[0]
+            plot_axes  = pz.plots[field].axes
+            xmin, xmax = plot_axes.get_xlim()
+            ymin, ymax = plot_axes.get_ylim()
+
+            # 2. axis mapping functions
+            def kpc_to_logdens(x):
+                return np.log10(dens_min) + (x - xmin) * (np.log10(dens_max) - np.log10(dens_min)) / (xmax - xmin)
+            def logdens_to_kpc(x):
+                return xmin + (x - np.log10(dens_min)) * (xmax - xmin) / (np.log10(dens_max) - np.log10(dens_min))
+            def kpc_to_logT(y):
+                return np.log10(t_mu_min) + (y - ymin) * (np.log10(t_mu_max) - np.log10(t_mu_min)) / (ymax - ymin)
+            def logT_to_kpc(y):
+                return ymin + (y - np.log10(t_mu_min)) * (ymax - ymin) / (np.log10(t_mu_max) - np.log10(t_mu_min))
+
+            # 3. apply changes to secondary axes
+            ax_top     = plot_axes.secondary_xaxis('top', functions=(kpc_to_logdens, logdens_to_kpc))
+            ax_right   = plot_axes.secondary_yaxis('right', functions=(kpc_to_logT, logT_to_kpc))
+
+            # 3-1. grab the full font objects from the primary axis
+            primary_label_font = plot_axes.xaxis.get_label().get_fontproperties()
+            primary_tick_font  = plot_axes.xaxis.get_ticklabels()[0].get_fontproperties()
+
+            # 3-2. style top x-axis (gas density)
+            ax_top.set_xlabel(r'$\log_{10} (\rho_{\mathrm{gas}} \ [\mathrm{g/cm^3}])$', labelpad=12)
+            ax_top.xaxis.get_label().set_fontproperties(primary_label_font) # Force exact font match
+            ax_top.tick_params(axis='x', direction='out', which='both')
+            for label in ax_top.get_xticklabels():
+                label.set_fontproperties(primary_tick_font)
+
+            # 3-3. style right y-axis (T/mu)
+            ax_right.set_ylabel(r'$\log_{10} (T/\mu \ [\mathrm{K}])$', labelpad=12)
+            ax_right.yaxis.get_label().set_fontproperties(primary_label_font) # Force exact font match
+            ax_right.tick_params(axis='y', direction='out', which='both')
+            for label in ax_right.get_yticklabels():
+                label.set_fontproperties(primary_tick_font)
+
+            # 3-4. sync the math font
+            ax_top.xaxis.get_label().set_math_fontfamily(plot_axes.xaxis.label.get_math_fontfamily())
+            ax_right.yaxis.get_label().set_math_fontfamily(plot_axes.xaxis.label.get_math_fontfamily())
+
+            # 4. shift colorbar rightwards for secondary y-axis and save images
+            colorbar_axes = pz.plots[field].cb.ax
+            pos           = colorbar_axes.get_position()
+            new_pos       = [pos.x0 + 0.08, pos.y0, pos.width, pos.height]
+            colorbar_axes.set_position(new_pos)
+            fig           = pz.plots[field].figure
+            #fig           = plot_axes.get_figure()
+            fig.savefig('fig_%s_Projection_z_%s.png' % (ds, field), dpi=150, bbox_inches='tight')
+        else:
+            pz.save( 'fig_%s_Projection_z_%s.png'%(ds, field), mpl_kwargs={'dpi':150} )
