@@ -56,7 +56,7 @@ void MHD_SameInterfaceB( const int lv, const int FluSg, const int MagSg )
 #  pragma omp for schedule( runtime )
    for (int PID=0; PID<amr->num[lv]; PID++)
    {
-//    use the B field on the +x/+y/+z sides to overwrite that on the -x/-y/-z sides
+//    always use the B field on the -x/-y/-z sides to overwrite that on the +x/+y/+z sides
 //    --> skip s=1/3/5
       for (int s=0; s<6; s+=2)
       {
