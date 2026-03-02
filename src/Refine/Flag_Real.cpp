@@ -192,6 +192,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       real (*Pres)[PS1][PS1]             = NULL;
       real (*Cs2)[PS1][PS1]              = NULL;
       real (*Lrtz)[PS1][PS1]             = NULL;
+      real (*LCool)[PS1][PS1]            = NULL;
       real (*ParCount)[PS1][PS1]         = NULL;   // declare as **real** to be consistent with Par_MassAssignment()
       real (*ParDens )[PS1][PS1]         = NULL;
       real *Lohner_Var                   = NULL;   // array storing the variables for Lohner
@@ -200,6 +201,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       real *Interf_Var                   = NULL;   // array storing the density and phase for the interference criterion
       real *Spectral_Var                 = NULL;   // array storing a patch group of real and imaginary parts for the spectral criterion
       real  Spectral_Cond                = 0.0;    // variable storing the magnitude of the largest coefficient for the spectral criterion
+      real *Grackle_TCool                = NULL;   // array storing a patch group of grackle cooling time
 
       int  i_start, i_end, j_start, j_end, k_start, k_end, SibID, SibPID, PID;
       bool ProperNesting, NextPatch;
@@ -212,12 +214,19 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       if ( OPT__FLAG_JEANS )           NeedPres = true;
       if ( OPT__FLAG_JEANS )           NeedCs2  = true;
 #     endif
+#     ifdef SUPPORT_GRACKLE
+      if ( OPT__FLAG_COOLING_LEN )     NeedCs2  = true;
+#     endif
+      if ( NeedCs2 )                   NeedPres = true;
 
 #     ifdef MHD
       if ( OPT__FLAG_CURRENT || NeedPres )   MagCC    = new real [3][PS1][PS1][PS1];
 #     endif
 #     ifdef SRHD
       if ( OPT__FLAG_LRTZ_GRADIENT )         Lrtz     = new real    [PS1][PS1][PS1];
+#     endif
+#     ifdef SUPPORT_GRACKLE
+      if ( OPT__FLAG_COOLING_LEN )           LCool    = new real    [PS1][PS1][PS1];
 #     endif
       if ( OPT__FLAG_VORTICITY )             Vel      = new real [3][PS1][PS1][PS1];
       if ( NeedPres )                        Pres     = new real    [PS1][PS1][PS1];
@@ -245,6 +254,11 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
          Lohner_Ave   = new real [ 3*Lohner_NVar*CUBE(Lohner_NAve)   ]; // 3: X/Y/Z of 1 patch
          Lohner_Slope = new real [ 3*Lohner_NVar*CUBE(Lohner_NSlope) ]; // 3: X/Y/Z of 1 patch
       }
+
+#     ifdef SUPPORT_GRACKLE
+      if ( OPT__FLAG_COOLING_LEN )
+         Grackle_TCool = new real [ CUBE(PS2) ];   // prepare one patch group
+#     endif
 
 
 //    loop over all REAL patches (the buffer patches will be flagged only due to the FlagBuf
@@ -276,6 +290,16 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
             Prepare_PatchData( lv, Time[lv], Interf_Var, NULL, Interf_NGhost, NPG, &PID0, _DENS|_PHAS, _NONE,
                                Interf_IntScheme, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
                                MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
+#        endif
+
+#        ifdef SUPPORT_GRACKLE
+         if ( OPT__FLAG_COOLING_LEN )
+         {
+//          Grackle_Calculate() involves shared variables and is not thread-safe
+//          use critical directive to avoid thread racing
+#           pragma omp critical
+            Grackle_Calculate( Grackle_TCool, _GRACKLE_TCOOL, lv, NPG, &PID0 );
+         }
 #        endif
 
 //       loop over all local patches within the same patch group
@@ -454,6 +478,22 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                   } // i,j,k
                } // if ( OPT__FLAG_LRTZ_GRADIENT )
 #              endif // #ifdef SRHD
+
+#              ifdef SUPPORT_GRACKLE
+//             evaluate cooling length
+               if ( OPT__FLAG_COOLING_LEN )
+               {
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
+                     const real TCool = Grackle_TCool[ (LocalID*CUBE(PS1) + k*SQR(PS1) + j*PS1 + i) ];
+//                   positive cooling time returned by Grackle corresponds to heating, and vice versa
+//                   cooling length is defined as (|cooling time| x sound speed) and only for cooling
+                     LCool[k][j][i] = ( TCool < (real)0.0 ) ? ( FABS( TCool ) * SQRT( Cs2[k][j][i] ) ) : HUGE_NUMBER;
+                  } // k,j,i
+               } // if ( OPT__FLAG_COOLING_LEN )
+#              endif // #ifdef SUPPORT_GRACKLE
 #              endif // #if ( MODEL == HYDRO )
 
 
@@ -578,7 +618,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #                 endif
 
 //                check if the target cell satisfies the refinement criteria (useless pointers are always == NULL)
-                  if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, MagCC, Vel, Pres, Lrtz,
+                  if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, MagCC, Vel, Pres, Lrtz, LCool,
                                                         Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope, Lohner_NVar,
                                                         ParCount, ParDens, JeansCoeff, Interf_Var+LocalID*Interf_Stride, Spectral_Cond )  )
                   {
@@ -710,6 +750,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       delete [] Pres;
       delete [] Cs2;
       delete [] Lrtz;
+      delete [] LCool;
       delete [] ParCount;
       delete [] ParDens;
       delete [] Lohner_Var;
@@ -717,6 +758,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       delete [] Lohner_Slope;
       delete [] Interf_Var;
       delete [] Spectral_Var;
+      delete [] Grackle_TCool;
 
    } // OpenMP parallel region
 

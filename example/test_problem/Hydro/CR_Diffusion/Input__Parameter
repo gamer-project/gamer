@@ -153,18 +153,25 @@ OPT__MINIMIZE_MPI_BARRIER     1           # minimize MPI barriers to improve loa
 # Grackle library for chemistry and radiative cooling (SUPPORT_GRACKLE only)
 GRACKLE_ACTIVATE              1           # enable Grackle [1]
 GRACKLE_VERBOSE               1           # map to "grackle_verbose" [1]
-GRACKLE_COOLING               1           # ...    "with_radiative_cooling" [1]
-GRACKLE_PRIMORDIAL            0           # ...    "primordial_chemistry" (0=Cloudy, 1/2/3=6-/9-/12-species) [0]
-                                          #        (must increase NCOMP_PASSIVE_USER by 6/9/12, respectively)
-GRACKLE_METAL                 0           # ...    "metal_cooling" (must increase NCOMP_PASSIVE_USER by 1) [0]
-GRACKLE_UV                    0           # ...    "UVbackground" [0]
-GRACKLE_CMB_FLOOR             1           # ...    "cmb_temperature_floor" [1]
-GRACKLE_PE_HEATING            0           # ...    "photoelectric_heating" [0]
-GRACKLE_PE_HEATING_RATE       8.5e-26     # ...    "photoelectric_heating_rate (in erg/cm^3/s)" [8.5e-26]
+GRACKLE_REDSHIFT              0.0         # redshift to set "a_value" for the redshift-dependent chemistry and cooling terms (non-COMOVING only) [0.0]
+GRACKLE_COOLING               1           # map to "with_radiative_cooling" [1]
+GRACKLE_PRIMORDIAL            0           # map to "primordial_chemistry" (0=Cloudy, 1/2/3=6-/9-/12-species) [0]
+                                          # map to (must increase NCOMP_PASSIVE_USER by 6/9/12, respectively)
+GRACKLE_METAL                 0           # map to "metal_cooling" (must increase NCOMP_PASSIVE_USER by 1) [0]
+GRACKLE_UV                    0           # map to "UVbackground" [0]
+GRACKLE_CMB_FLOOR             1           # map to "cmb_temperature_floor" [1]
+GRACKLE_PE_HEATING            0           # map to "photoelectric_heating" [0]
+GRACKLE_PE_HEATING_RATE       8.5e-26     # map to "photoelectric_heating_rate" (in erg/cm^3/s/n_H) [8.5e-26]
 GRACKLE_CLOUDY_TABLE          CloudyData_noUVB.h5  # "grackle_data_file"
-GRACKLE_THREE_BODY_RATE       4           # used Glover+08 rate
-GRACKLE_CIE_COOLING           1           # 0: off; 1:on
-GRACKLE_H2_OPA_APPROX         1           # H2 opacity from Ripamonti+04; 0:off, 1:Ripomonti+04
+GRACKLE_THREE_BODY_RATE       0           # map to "three_body_rate" (0=Abel+02, 1=Palla+83, 2=Cohen+83, 3=Flower+07, 4=Glover+08, 5=Forrey+13) [0]
+GRACKLE_CIE_COOLING           0           # map to "cie_cooling" [0]
+GRACKLE_H2_OPA_APPROX         0           # map to "h2_optical_depth_approximation" (0=off, 1=Ripomonti+04) [0]
+GRACKLE_USE_V_HEATING_RATE    0           # map to "use_volumetric_heating_rate" [0]
+GRACKLE_USE_S_HEATING_RATE    0           # map to "use_specific_heating_rate" [0]
+GRACKLE_USE_TEMP_FLOOR        0           # map to "use_temperature_floor" (0=off, 1=single value, 2=array of values) (in Kelvin) [0]
+GRACKLE_TEMP_FLOOR_SCALAR     0.0         # map to "temperature_floor_scalar" (for GRACKLE_USE_TEMP_FLOOR==1) [0.0]
+GRACKLE_HYDROGEN_MFRAC        0.76        # map to "HydrogenFractionByMass" (NOT set to Grackle when GRACKLE_PRIMORDIAL==0) [0.76]
+OPT__UNFREEZE_GRACKLE         0           # allow the evolution by Grackle solver when the fluid is frozen (for OPT__FREEZE_FLUID==1 only) [0]
 CHE_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU Grackle solver (<=0=auto) [-1]
 
 

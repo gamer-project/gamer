@@ -1,6 +1,7 @@
 Parameters described on this page:
 [GRACKLE_ACTIVATE](#GRACKLE_ACTIVATE), &nbsp;
 [GRACKLE_VERBOSE](#GRACKLE_VERBOSE), &nbsp;
+[GRACKLE_REDSHIFT](#GRACKLE_REDSHIFT), &nbsp;
 [GRACKLE_COOLING](#GRACKLE_COOLING), &nbsp;
 [GRACKLE_PRIMORDIAL](#GRACKLE_PRIMORDIAL), &nbsp;
 [GRACKLE_METAL](#GRACKLE_METAL), &nbsp;
@@ -11,7 +12,13 @@ Parameters described on this page:
 [GRACKLE_CLOUDY_TABLE](#GRACKLE_CLOUDY_TABLE), &nbsp;
 [GRACKLE_THREE_BODY_RATE](#GRACKLE_THREE_BODY_RATE), &nbsp;
 [GRACKLE_CIE_COOLING](#GRACKLE_CIE_COOLING), &nbsp;
-[GRACKLE_H2_OPA_APPROX](#GRACKLE_H2_OPA_APPROX) &nbsp;
+[GRACKLE_H2_OPA_APPROX](#GRACKLE_H2_OPA_APPROX), &nbsp;
+[GRACKLE_USE_V_HEATING_RATE](#GRACKLE_USE_V_HEATING_RATE), &nbsp;
+[GRACKLE_USE_S_HEATING_RATE](#GRACKLE_USE_S_HEATING_RATE), &nbsp;
+[GRACKLE_USE_TEMP_FLOOR](#GRACKLE_USE_TEMP_FLOOR), &nbsp;
+[GRACKLE_TEMP_FLOOR_SCALAR](#GRACKLE_TEMP_FLOOR_SCALAR), &nbsp;
+[GRACKLE_HYDROGEN_MFRAC](#GRACKLE_HYDROGEN_MFRAC), &nbsp;
+[OPT__UNFREEZE_GRACKLE](#OPT__UNFREEZE_GRACKLE) &nbsp;
 
 
 Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**
@@ -30,6 +37,15 @@ Only applicable when enabling the compilation option
 Map to the ["grackle_verbose" option in GRACKLE](https://grackle.readthedocs.io/en/latest/Interaction.html#enabling-output).
     * **Restriction:**
 
+<a name="GRACKLE_REDSHIFT"></a>
+* #### `GRACKLE_REDSHIFT` &ensp; (&#8805;0.0) &ensp; [0.0]
+    * **Description:**
+The redshift `z` to set ["a_value" in GRACKLE](https://grackle.readthedocs.io/en/latest/Interaction.html#c.a_value) for the redshift-dependent chemistry and cooling terms,
+where `a_value` is the cosmological expansion scale factor <var>a = 1/(1+z)</var>.
+    * **Restriction:**
+This only works when the compilation option [[--comoving | [Installation]-Option-List#--comoving]] is disabled.
+For cosmological simulations with comoving coordinates, "a_value" changes according to the evolution.
+
 <a name="GRACKLE_COOLING"></a>
 * #### `GRACKLE_COOLING` &ensp; (0=off, 1=on) &ensp; [1]
     * **Description:**
@@ -42,7 +58,7 @@ Map to the ["with_radiative_cooling" runtime parameter in GRACKLE](https://grack
 Map to the ["primordial_chemistry" runtime parameter in GRACKLE](https://grackle.readthedocs.io/en/latest/Parameters.html#c.primordial_chemistry).
 One must increase
 [[--passive | [Installation]-Option-List#--passive]]
-by 3, 6, or 9 for GRACKLE_PRIMORDIAL=1, 2, or 3, respectively.
+by 6, 9, or 12 for GRACKLE_PRIMORDIAL=1, 2, or 3, respectively.
     * **Restriction:**
 
 <a name="GRACKLE_METAL"></a>
@@ -76,7 +92,7 @@ Map to the ["photoelectric_heating" runtime parameter in GRACKLE](https://grackl
     * **Description:**
 Map to the ["photoelectric_heating_rate" runtime parameter in GRACKLE](https://grackle.readthedocs.io/en/latest/Parameters.html#c.photoelectric_heating_rate).
 Note that the input value should always be in units of
-<var>erg</var>&#8287;<var>cm</var><sup>-3</sup>&#8287;<var>s</var><sup>-1</sup>.
+<var>erg</var>&#8287;<var>cm</var><sup>-3</sup>&#8287;<var>s</var><sup>-1</sup>&#8287;<var>n</var><sub>H</sub><sup>-1</sup>.
     * **Restriction:**
 
 <a name="GRACKLE_CLOUDY_TABLE"></a>
@@ -101,6 +117,51 @@ Map to the ["cie_cooling" runtime parameter in GRACKLE](https://grackle.readthed
 * #### `GRACKLE_H2_OPA_APPROX` &ensp; (0=off, 1=Ripomonti+04) &ensp; [0]
     * **Description:**
 Map to the ["h2_optical_depth_approximation" runtime parameter in GRACKLE](https://grackle.readthedocs.io/en/latest/Parameters.html#c.h2_optical_depth_approximation).
+    * **Restriction:**
+
+<a name="GRACKLE_USE_V_HEATING_RATE"></a>
+* #### `GRACKLE_USE_V_HEATING_RATE` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Map to the ["use_volumetric_heating_rate" runtime parameter in GRACKLE](https://grackle.readthedocs.io/en/latest/Parameters.html#c.use_volumetric_heating_rate).
+    * **Restriction:**
+
+<a name="GRACKLE_USE_S_HEATING_RATE"></a>
+* #### `GRACKLE_USE_S_HEATING_RATE` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Map to the ["use_specific_heating_rate" runtime parameter in GRACKLE](https://grackle.readthedocs.io/en/latest/Parameters.html#c.use_specific_heating_rate).
+    * **Restriction:**
+
+<a name="GRACKLE_USE_TEMP_FLOOR"></a>
+* #### `GRACKLE_USE_TEMP_FLOOR` &ensp; (0=off, 1=single value, 2=array of values) &ensp; [0]
+    * **Description:**
+Map to the ["use_temperature_floor" runtime parameter in GRACKLE](https://grackle.readthedocs.io/en/latest/Parameters.html#c.use_temperature_floor).
+For `GRACKLE_USE_TEMP_FLOOR == 1`, set [GRACKLE_TEMP_FLOOR_SCALAR](#GRACKLE_TEMP_FLOOR_SCALAR) as the single value.
+For `GRACKLE_USE_TEMP_FLOOR == 2`, define your function in the test problem and link it to `Grackle_tempFloor_User_Ptr` to set the array of values.
+    * **Restriction:**
+
+<a name="GRACKLE_TEMP_FLOOR_SCALAR"></a>
+* #### `GRACKLE_TEMP_FLOOR_SCALAR` &ensp; (&#8805;0.0) &ensp; [0.0]
+    * **Description:**
+Map to the ["temperature_floor_scalar" runtime parameter in GRACKLE](https://grackle.readthedocs.io/en/latest/Parameters.html#c.temperature_floor_scalar).
+    * **Restriction:**
+It is used only when [GRACKLE_USE_TEMP_FLOOR](#GRACKLE_USE_TEMP_FLOOR)==1.
+
+<a name="GRACKLE_HYDROGEN_MFRAC"></a>
+* #### `GRACKLE_HYDROGEN_MFRAC` &ensp; (&#8805;0.0) &ensp; [0.76]
+    * **Description:**
+Map to the ["HydrogenFractionByMass" runtime parameter in GRACKLE](https://grackle.readthedocs.io/en/latest/Parameters.html#c.HydrogenFractionByMass).
+Note that the input value will only set to Grackle when it is in non-equilibrium mode [GRACKLE_PRIMORDIAL](#GRACKLE_PRIMORDIAL)>0,
+because the tables for tabulated mode were created assuming hydrogen mass fraction of about 0.716.
+See the Grackle document for the details.
+When in tabulated mode ([GRACKLE_PRIMORDIAL](#GRACKLE_PRIMORDIAL)==0), this value may still be used elsewhere in GAMER and
+it may be different from HydrogenFractionByMass inside Grackle.
+    * **Restriction:**
+
+<a name="OPT__UNFREEZE_GRACKLE"></a>
+* #### `OPT__UNFREEZE_GRACKLE` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Allow the evolution by Grackle solver when the fluid is frozen
+(for [[OPT__FREEZE_FLUID | [Runtime-Parameters]-Hydro#OPT__FREEZE_FLUID]]==1 only).
     * **Restriction:**
 
 

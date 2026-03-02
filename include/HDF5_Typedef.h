@@ -479,6 +479,9 @@ struct InputPara_t
 #  ifdef CR_DIFFUSION
    double Dt__CR_Diffusion;
 #  endif
+#  ifdef SUPPORT_GRACKLE
+   double Dt__GrackleCooling;
+#  endif
 #  ifdef COMOVING
    double Dt__MaxDeltaA;
 #  endif
@@ -526,6 +529,9 @@ struct InputPara_t
 #  endif
 #  ifdef SRHD
    int    Opt__Flag_LrtzGradient;
+#  endif
+#  ifdef SUPPORT_GRACKLE
+   int    Opt__Flag_CoolingLen;
 #  endif
 #  ifdef COSMIC_RAY
    int    Opt__Flag_CRay;
@@ -688,6 +694,9 @@ struct InputPara_t
 #  ifdef SUPPORT_GRACKLE
    int    Grackle_Activate;
    int    Grackle_Verbose;
+#  ifndef COMOVING
+   double Grackle_Redshift;
+#  endif
    int    Grackle_Cooling;
    int    Grackle_Primordial;
    int    Grackle_Metal;
@@ -699,6 +708,12 @@ struct InputPara_t
    int    Grackle_ThreeBodyRate;
    int    Grackle_CIE_Cooling;
    int    Grackle_H2_OpaApprox;
+   int    Grackle_UseVHeatingRate;
+   int    Grackle_UseSHeatingRate;
+   int    Grackle_UseTempFloor;
+   double Grackle_TempFloorScalar;
+   double Grackle_HydrogenMFrac;
+   int    Opt__UnfreezeGrackle;
    int    Che_GPU_NPGroup;
 #  endif
 
@@ -831,6 +846,11 @@ struct InputPara_t
    int    Opt__Output_3Velocity;
    int    Opt__Output_Enthalpy;
 #  endif
+#  ifdef SUPPORT_GRACKLE
+   int    Opt__Output_GrackleTemp;
+   int    Opt__Output_GrackleMu;
+   int    Opt__Output_GrackleTCool;
+#  endif
 #  endif // #if ( MODEL == HYDRO )
    int    Opt__Output_UserField;
    int    Opt__Output_Mode;
@@ -912,6 +932,9 @@ struct InputPara_t
 #  endif
 #  ifdef SRHD
    double FlagTable_LrtzGradient[NLEVEL-1];
+#  endif
+#  ifdef SUPPORT_GRACKLE
+   double FlagTable_CoolingLen  [NLEVEL-1];
 #  endif
 #  ifdef COSMIC_RAY
    double FlagTable_CRay        [NLEVEL-1];

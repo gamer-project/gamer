@@ -249,6 +249,9 @@ bool                 YT_JUPYTER_USE_CONNECTION_FILE;
 #ifdef SUPPORT_GRACKLE
 bool                 GRACKLE_ACTIVATE;
 bool                 GRACKLE_VERBOSE;
+#ifndef COMOVING
+double               GRACKLE_REDSHIFT;
+#endif
 bool                 GRACKLE_COOLING;
 GracklePriChe_t      GRACKLE_PRIMORDIAL;
 bool                 GRACKLE_METAL;
@@ -260,6 +263,18 @@ char                 GRACKLE_CLOUDY_TABLE[MAX_STRING];
 int                  GRACKLE_THREE_BODY_RATE;
 bool                 GRACKLE_CIE_COOLING;
 int                  GRACKLE_H2_OPA_APPROX;
+bool                 GRACKLE_USE_V_HEATING_RATE;
+bool                 GRACKLE_USE_S_HEATING_RATE;
+int                  GRACKLE_USE_TEMP_FLOOR;
+double               GRACKLE_TEMP_FLOOR_SCALAR;
+double               GRACKLE_HYDROGEN_MFRAC;
+bool                 OPT__UNFREEZE_GRACKLE;
+bool                 OPT__OUTPUT_GRACKLE_TEMP;
+bool                 OPT__OUTPUT_GRACKLE_MU;
+bool                 OPT__OUTPUT_GRACKLE_TCOOL;
+bool                 OPT__FLAG_COOLING_LEN;
+double               FlagTable_CoolingLen[NLEVEL-1];
+double               DT__GRACKLE_COOLING;
 int                  CHE_GPU_NPGROUP;
 #endif
 

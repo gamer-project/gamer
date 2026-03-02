@@ -1,0 +1,137 @@
+Compilation flags:
+========================================
+Enable : MODEL=HYDRO, SUPPORT_GRACKLE
+Disable: COMOVING, PARTICLE, GRAVITY
+
+
+Default setup:
+========================================
+1. Units:
+   (1) External (for Input__TestProb only):
+       See the comment of each runtime variable
+
+   (2) Internal (for all other input files and internal usage):
+       [L] = kpc
+       [M] = 1.0e9 Msun
+       [T] = Myr
+    -->[V] = [L]/[T] ~ 9.8e2 km/s
+    -->[D] = [M]/[L]^3 ~ 6.8e-23 g/cm^3
+
+2. BOX_SIZE                  8.0 kpc
+   NX0_TOT_X                 128
+   NX0_TOT_Y                 128
+   NX0_TOT_Z                 32
+
+3. MAX_LEVEL                 0
+   OPT__FLAG_COOLING_LEN     1
+   REGRID_COUNT              1
+
+4. DT__MAX                   1.00 Myr
+   DT__GRACKLE_COOLING       0.25
+
+5. GRACKLE_ACTIVATE          1
+   OPT__FREEZE_FLUID         1
+   OPT__UNFREEZE_GRACKLE     1
+
+6. OPT__OUTPUT_TEMP          1
+   OPT__OUTPUT_GRACKLE_TEMP  1
+   OPT__OUTPUT_GRACKLE_MU    1
+   OPT__OUTPUT_GRACKLE_TCOOL 1
+   OUTPUT_STEP               1
+
+7. END_STEP                  10   Steps
+   END_T                     10.0 Myr or 10 * DT__GRACKLE_COOLING * cooling time
+
+
+Note:
+========================================
+1. Test the functionality of and interface to the Grackle library
+
+2. The initial conditions of varying phases
+   - In the x direction, linearly varying log10( mass density )
+                         from `GrackleTest_MassDensity_Min` to `GrackleTest_MassDensity_Max`
+   - In the y direction, linearly varying log10( temperature / mean molecular weight )
+                         from `GrackleTest_TempOverMMW_Min` to `GrackleTest_TempOverMMW_Max`
+   - No variation in the z direction
+
+3. The chemical composition
+   - During the compilation, one must set `NCOMP_PASSIVE_USER = 13` (`--passive` in `generate_make.sh`)
+     to the total number of chemical species (for metal + 12 primordial species)
+   - One must turn on the corresponding `GRACKLE_METAL` and `GRACKLE_PRIMORDIAL` in `Input__Parameter`
+   - The mass fraction of each species can be set by `GrackleTest_MFrac_*` in `Input__TestProb`
+   - Currently, the mass fractions are assumed to be spatially uniform initially
+     --> Modify SetGridIC() if they are not
+
+4. The user-provided heating and cooling
+   - Turn on `GRACKLE_USE_V_HEATING_RATE` in `Input__Parameter`
+   - Set `GrackleTest_HeatingRate` and `GrackleTest_CoolingRate` in `Input__TestProb`
+   - Edit `Grackle_vHeatingRate_GrackleTest()` to set the distribution
+
+5. The default test mode can be set by `GrackleTest_DefaultTestMode` in `Input__TestProb`
+   and then all the remaining `GrackleTest_*` parameters in `Input__TestProb` will be decided and reset automatically
+   (the parameters in `Input__Parameter` still need to be adjusted manually)
+   - 0:
+      --> Non-default, where one manually sets all the remaining `GrackleTest_*` parameters in `Input__TestProb`
+   - 1:
+      - The density range is from 1.0e-29 g cm^-3 to 1.0e-21 g cm^-3
+      - The T/mu range is from 1 K to 1e8 K
+      --> To see the cooling rates across the gas phase diagram
+   - 2:
+      - The density is uniformly 1.0e-24 g cm^-3
+      - The T/mu is uniformly 1e4 K
+      --> To see the time evolution of temperature and chemical composition of a given initial phase
+   - 3:
+      - The density is uniformly 1.0e-28 g cm^-3
+      - The T/mu is uniformly 1e6 K
+      - The metal mass fraction is 0 (will be set automatically, regardless of `GRACKLE_METAL`)
+      - `MAX_LEVEL` should be larger than zero to trigger the refinement by the cooling length
+      - `GRACKLE_PRIMORDIAL` should be 0
+      - `GRACKLE_UV`, `GRACKLE_CMB_FLOOR`, `GRACKLE_PE_HEATING` should all be 0
+      - `GRACKLE_USE_V_HEATING_RATE` should be 1
+      - `GrackleTest_HeatingRate` = 1.0e-24 erg cm^-3 s^-1 n_H^-1 (will be set automatically)
+      - `GrackleTest_CoolingRate` = 1.6e-20 erg cm^-3 s^-1 n_H^-2 (will be set automatically)
+      --> To see the time evolution and spatial distribution of temperature for the given
+          user-provided one heating and one cooling 2D Gaussian distributions (as a demo)
+   - 4:
+      - The density range is from 1.0e-29 g cm^-3 to 1.0e-21 g cm^-3
+      - The T/mu range is from 1 K to 1e8 K
+      - `GRACKLE_REDSHIFT` is expected to be adjusted
+      - `GRACKLE_METAL` should be 0
+      - `GRACKLE_PRIMORDIAL` should be 0
+      - `GRACKLE_UV` should be 1
+      - `GRACKLE_CLOUDY_TABLE` should be `CloudyData_UVB=HM2012.h5`
+      - `GRACKLE_COOLING`, `GRACKLE_CMB_FLOOR`, `GRACKLE_PE_HEATING`, `GRACKLE_USE_V_HEATING_RATE` should all be 0
+      - The script `plot_grackle_analytical_cooling_rate.py` computes the expected cooling rates across the gas phase
+        diagram for the given Grackle parameters, which can be compared with the simulation results
+      --> To test the redshift-dependent UV background in non-comoving grids
+
+6. The evolution of fluid
+   - The fluid is not evolved by hydrodynamics (`OPT__FREEZE_FLUID`)
+   - But its radiative processes are evolved by Grackle (`OPT__UNFREEZE_GRACKLE = 1`)
+
+7. The default time step is set to min( 0.25x the minimum cooling time, 0.1 Myr )
+   - Set `DT__GRACKLE_COOLING` and `DT__MAX` to change it
+
+8. Output the Grackle-calculated fields in the snapshots for analysis
+   - Turn on `OPT__OUTPUT_GRACKLE_TEMP`, `OPT__OUTPUT_GRACKLE_MU`, and `OPT__OUTPUT_GRACKLE_TCOOL`
+
+9. Refine the grids by the cooling length (= cooling time x sound speed)
+   - Turn on `OPT__FLAG_COOLING_LEN`
+   - Set the criteria in `Input__Flag_CoolingLen`
+   - Set the target `MAX_LEVEL`
+
+10. Some handy yt analysis scripts are put at "yt_script"
+   - `plot_projection.py`: to plot the spatial distribution of gas quantities
+   - `plot_time_evolution.py`: to plot the time evolution of gas quantities
+   - `yt.toml` defines the units, aliases, and the plot configuration for the fields
+      - It should be placed in the same directory as the plotting scripts when executed
+      - See https://yt-project.org/docs/dev/reference/configuration.html for the reference
+
+11. CloudyData_UVB table
+   - Source: https://github.com/grackle-project/grackle_data_files/tree/main/input
+   - The default table `CloudyData_UVB=HM2012.h5` can be downloaded by `sh download_CloudyData_UVB.sh`
+
+
+First-time GRACKLE installation guide (on NTU clusters as an example):
+========================================
+Please refer to the README file at "./example/grackle/"

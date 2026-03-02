@@ -2015,6 +2015,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  ifdef CR_DIFFUSION
    LoadField( "Dt__CR_Diffusion",        &RS.Dt__CR_Diffusion,        SID, TID, NonFatal, &RT.Dt__CR_Diffusion,         1, NonFatal );
 #  endif
+#  ifdef SUPPORT_GRACKLE
+   LoadField( "Dt__GrackleCooling",      &RS.Dt__GrackleCooling,      SID, TID, NonFatal, &RT.Dt__GrackleCooling,       1, NonFatal );
+#  endif
 #  ifdef COMOVING
    LoadField( "Dt__MaxDeltaA",           &RS.Dt__MaxDeltaA,           SID, TID, NonFatal, &RT.Dt__MaxDeltaA,            1, NonFatal );
 #  endif
@@ -2054,6 +2057,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  endif
 #  ifdef SRHD
    LoadField( "Opt__Flag_LrtzGradient",  &RS.Opt__Flag_LrtzGradient,  SID, TID, NonFatal, &RT.Opt__Flag_LrtzGradient,   1, NonFatal );
+#  endif
+#  ifdef SUPPORT_GRACKLE
+   LoadField( "Opt__Flag_CoolingLen",    &RS.Opt__Flag_CoolingLen,    SID, TID, NonFatal, &RT.Opt__Flag_CoolingLen,     1, NonFatal );
 #  endif
 #  ifdef COSMIC_RAY
    LoadField( "Opt__Flag_CRay",          &RS.Opt__Flag_CRay,          SID, TID, NonFatal, &RT.Opt__Flag_CRay,           1, NonFatal );
@@ -2214,6 +2220,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  ifdef SUPPORT_GRACKLE
    LoadField( "Grackle_Activate",        &RS.Grackle_Activate,        SID, TID, NonFatal, &RT.Grackle_Activate,         1, NonFatal );
    LoadField( "Grackle_Verbose",         &RS.Grackle_Verbose,         SID, TID, NonFatal, &RT.Grackle_Verbose,          1, NonFatal );
+#  ifndef COMOVING
+   LoadField( "Grackle_Redshift",        &RS.Grackle_Redshift,        SID, TID, NonFatal, &RT.Grackle_Redshift,         1, NonFatal );
+#  endif
    LoadField( "Grackle_Cooling",         &RS.Grackle_Cooling,         SID, TID, NonFatal, &RT.Grackle_Cooling,          1, NonFatal );
    LoadField( "Grackle_Primordial",      &RS.Grackle_Primordial,      SID, TID, NonFatal, &RT.Grackle_Primordial,       1, NonFatal );
    LoadField( "Grackle_Metal",           &RS.Grackle_Metal,           SID, TID, NonFatal, &RT.Grackle_Metal,            1, NonFatal );
@@ -2225,6 +2234,12 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Grackle_ThreeBodyRate",   &RS.Grackle_ThreeBodyRate,   SID, TID, NonFatal, &RT.Grackle_ThreeBodyRate,    1, NonFatal );
    LoadField( "Grackle_CIE_Cooling",     &RS.Grackle_CIE_Cooling,     SID, TID, NonFatal, &RT.Grackle_CIE_Cooling,      1, NonFatal );
    LoadField( "Grackle_H2_OpaApprox",    &RS.Grackle_H2_OpaApprox,    SID, TID, NonFatal, &RT.Grackle_H2_OpaApprox,     1, NonFatal );
+   LoadField( "Grackle_UseVHeatingRate", &RS.Grackle_UseVHeatingRate, SID, TID, NonFatal, &RT.Grackle_UseVHeatingRate,  1, NonFatal );
+   LoadField( "Grackle_UseSHeatingRate", &RS.Grackle_UseSHeatingRate, SID, TID, NonFatal, &RT.Grackle_UseSHeatingRate,  1, NonFatal );
+   LoadField( "Grackle_UseTempFloor",    &RS.Grackle_UseTempFloor,    SID, TID, NonFatal, &RT.Grackle_UseTempFloor,     1, NonFatal );
+   LoadField( "Grackle_TempFloorScalar", &RS.Grackle_TempFloorScalar, SID, TID, NonFatal, &RT.Grackle_TempFloorScalar,  1, NonFatal );
+   LoadField( "Grackle_HydrogenMFrac",   &RS.Grackle_HydrogenMFrac,   SID, TID, NonFatal, &RT.Grackle_HydrogenMFrac,    1, NonFatal );
+   LoadField( "Opt__UnfreezeGrackle",    &RS.Opt__UnfreezeGrackle,    SID, TID, NonFatal, &RT.Opt__UnfreezeGrackle,     1, NonFatal );
    LoadField( "Che_GPU_NPGroup",         &RS.Che_GPU_NPGroup,         SID, TID, NonFatal, &RT.Che_GPU_NPGroup,          1, NonFatal );
 #  endif
 
@@ -2355,6 +2370,11 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Output_3Velocity",       &RS.Opt__Output_3Velocity,       SID, TID, NonFatal, &RT.Opt__Output_3Velocity,       1, NonFatal );
    LoadField( "Opt__Output_Enthalpy",        &RS.Opt__Output_Enthalpy,        SID, TID, NonFatal, &RT.Opt__Output_Enthalpy,        1, NonFatal );
 #  endif
+#  ifdef SUPPORT_GRACKLE
+   LoadField( "Opt__Output_GrackleTemp",     &RS.Opt__Output_GrackleTemp,     SID, TID, NonFatal, &RT.Opt__Output_GrackleTemp,     1, NonFatal );
+   LoadField( "Opt__Output_GrackleMu",       &RS.Opt__Output_GrackleMu,       SID, TID, NonFatal, &RT.Opt__Output_GrackleMu,       1, NonFatal );
+   LoadField( "Opt__Output_GrackleTCool",    &RS.Opt__Output_GrackleTCool,    SID, TID, NonFatal, &RT.Opt__Output_GrackleTCool,    1, NonFatal );
+#  endif
 #  endif // #if ( MODEL == HYDRO )
    LoadField( "Opt__Output_UserField",       &RS.Opt__Output_UserField,       SID, TID, NonFatal, &RT.Opt__Output_UserField,       1, NonFatal );
 #  ifdef PARTICLE
@@ -2474,6 +2494,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #     ifdef SRHD
       RS.FlagTable_LrtzGradient[lv]    = -1.0;
 #     endif
+#     ifdef SUPPORT_GRACKLE
+      RS.FlagTable_CoolingLen  [lv]    = -1.0;
+#     endif
 
 #     elif ( MODEL == ELBDM )
       for (int t=0; t<2; t++) {
@@ -2571,6 +2594,11 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  ifdef SRHD
    if ( OPT__FLAG_LRTZ_GRADIENT )
    LoadField( "FlagTable_LrtzGradient",   RS.FlagTable_LrtzGradient,  SID, TID, NonFatal,  RT.FlagTable_LrtzGradient,  N1, NonFatal );
+#  endif
+
+#  ifdef SUPPORT_GRACKLE
+   if ( OPT__FLAG_COOLING_LEN )
+   LoadField( "FlagTable_CoolingLen",     RS.FlagTable_CoolingLen,    SID, TID, NonFatal,  RT.FlagTable_CoolingLen,    N1, NonFatal );
 #  endif
 
 #  elif ( MODEL == ELBDM )

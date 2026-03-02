@@ -236,6 +236,20 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 #  endif
 
 
+// 1.10 CRITERION TEN : Grackle cooling time
+// =============================================================================================================
+#  ifdef SUPPORT_GRACKLE
+   if ( DT__GRACKLE_COOLING >= 0.0 )
+   {
+      dTime[NdTime] = dTime_dt * Grackle_GetTimeStep_CoolingTime( lv );
+      sprintf( dTime_Name[NdTime++], "%s", "Grackle_TCool" );
+
+//    when fluid is freezed, disable this criterion by resetting it to a huge value
+      if ( OPT__FREEZE_FLUID  &&  ! OPT__UNFREEZE_GRACKLE )   dTime[NdTime-1] = HUGE_NUMBER;
+   }
+#  endif
+
+
 
 // 2. get the minimum time-step from all criteria
 // =============================================================================================================

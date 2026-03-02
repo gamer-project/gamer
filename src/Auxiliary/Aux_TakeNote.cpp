@@ -982,6 +982,9 @@ void Aux_TakeNote()
 #     ifdef CR_DIFFUSION
       fprintf( Note, "DT__CR_DIFFUSION               % 14.7e\n",  DT__CR_DIFFUSION            );
 #     endif
+#     ifdef SUPPORT_GRACKLE
+      fprintf( Note, "DT__GRACKLE_COOLING            % 14.7e\n",  DT__GRACKLE_COOLING         );
+#     endif
 #     ifdef COMOVING
       fprintf( Note, "DT__MAX_DELTA_A                % 14.7e\n",  DT__MAX_DELTA_A             );
 #     endif
@@ -1023,6 +1026,9 @@ void Aux_TakeNote()
 #     endif
 #     ifdef SRHD
       fprintf( Note, "OPT__FLAG_LRTZ_GRADIENT        % d\n",      OPT__FLAG_LRTZ_GRADIENT   );
+#     endif
+#     ifdef SUPPORT_GRACKLE
+      fprintf( Note, "OPT__FLAG_COOLING_LEN          % d\n",      OPT__FLAG_COOLING_LEN     );
 #     endif
 #     endif
 #     if ( MODEL == ELBDM )
@@ -1125,21 +1131,30 @@ void Aux_TakeNote()
 #     ifdef SUPPORT_GRACKLE
       fprintf( Note, "Parameters of Grackle\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "GRACKLE_ACTIVATE               % d\n",      GRACKLE_ACTIVATE        );
+      fprintf( Note, "GRACKLE_ACTIVATE               % d\n",      GRACKLE_ACTIVATE           );
       if ( GRACKLE_ACTIVATE ) {
-      fprintf( Note, "GRACKLE_VERBOSE                % d\n",      GRACKLE_VERBOSE         );
-      fprintf( Note, "GRACKLE_COOLING                % d\n",      GRACKLE_COOLING         );
-      fprintf( Note, "GRACKLE_PRIMORDIAL             % d\n",      GRACKLE_PRIMORDIAL      );
-      fprintf( Note, "GRACKLE_METAL                  % d\n",      GRACKLE_METAL           );
-      fprintf( Note, "GRACKLE_UV                     % d\n",      GRACKLE_UV              );
-      fprintf( Note, "GRACKLE_CMB_FLOOR              % d\n",      GRACKLE_CMB_FLOOR       );
-      fprintf( Note, "GRACKLE_PE_HEATING             % d\n",      GRACKLE_PE_HEATING      );
-      fprintf( Note, "GRACKLE_PE_HEATING_RATE        % 14.7e\n",  GRACKLE_PE_HEATING_RATE );
-      fprintf( Note, "GRACKLE_CLOUDY_TABLE            %s\n",      GRACKLE_CLOUDY_TABLE    );
-      fprintf( Note, "GRACKLE_THREE_BODY_RATE        % d\n",      GRACKLE_THREE_BODY_RATE );
-      fprintf( Note, "GRACKLE_CIE_COOLING            % d\n",      GRACKLE_CIE_COOLING     );
-      fprintf( Note, "GRACKLE_H2_OPA_APPROX          % d\n",      GRACKLE_H2_OPA_APPROX   );
-      fprintf( Note, "CHE_GPU_NPGROUP                % d\n",      CHE_GPU_NPGROUP         ); }
+      fprintf( Note, "GRACKLE_VERBOSE                % d\n",      GRACKLE_VERBOSE            );
+#     ifndef COMOVING
+      fprintf( Note, "GRACKLE_REDSHIFT               % 14.7e\n",  GRACKLE_REDSHIFT           );
+#     endif
+      fprintf( Note, "GRACKLE_COOLING                % d\n",      GRACKLE_COOLING            );
+      fprintf( Note, "GRACKLE_PRIMORDIAL             % d\n",      GRACKLE_PRIMORDIAL         );
+      fprintf( Note, "GRACKLE_METAL                  % d\n",      GRACKLE_METAL              );
+      fprintf( Note, "GRACKLE_UV                     % d\n",      GRACKLE_UV                 );
+      fprintf( Note, "GRACKLE_CMB_FLOOR              % d\n",      GRACKLE_CMB_FLOOR          );
+      fprintf( Note, "GRACKLE_PE_HEATING             % d\n",      GRACKLE_PE_HEATING         );
+      fprintf( Note, "GRACKLE_PE_HEATING_RATE        % 14.7e\n",  GRACKLE_PE_HEATING_RATE    );
+      fprintf( Note, "GRACKLE_CLOUDY_TABLE            %s\n",      GRACKLE_CLOUDY_TABLE       );
+      fprintf( Note, "GRACKLE_THREE_BODY_RATE        % d\n",      GRACKLE_THREE_BODY_RATE    );
+      fprintf( Note, "GRACKLE_CIE_COOLING            % d\n",      GRACKLE_CIE_COOLING        );
+      fprintf( Note, "GRACKLE_H2_OPA_APPROX          % d\n",      GRACKLE_H2_OPA_APPROX      );
+      fprintf( Note, "GRACKLE_USE_V_HEATING_RATE     % d\n",      GRACKLE_USE_V_HEATING_RATE );
+      fprintf( Note, "GRACKLE_USE_S_HEATING_RATE     % d\n",      GRACKLE_USE_S_HEATING_RATE );
+      fprintf( Note, "GRACKLE_USE_TEMP_FLOOR         % d\n",      GRACKLE_USE_TEMP_FLOOR     );
+      fprintf( Note, "GRACKLE_TEMP_FLOOR_SCALAR      % 14.7e\n",  GRACKLE_TEMP_FLOOR_SCALAR  );
+      fprintf( Note, "GRACKLE_HYDROGEN_MFRAC         % 14.7e\n",  GRACKLE_HYDROGEN_MFRAC     );
+      fprintf( Note, "OPT__UNFREEZE_GRACKLE          % d\n",      OPT__UNFREEZE_GRACKLE      );
+      fprintf( Note, "CHE_GPU_NPGROUP                % d\n",      CHE_GPU_NPGROUP            ); }
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
 #     endif // #ifdef SUPPORT_GRACKLE
@@ -1621,7 +1636,6 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_CS                 % d\n",      OPT__OUTPUT_CS              );
       fprintf( Note, "OPT__OUTPUT_DIVVEL             % d\n",      OPT__OUTPUT_DIVVEL          );
       fprintf( Note, "OPT__OUTPUT_MACH               % d\n",      OPT__OUTPUT_MACH            );
-#     endif
 #     ifdef MHD
       fprintf( Note, "OPT__OUTPUT_DIVMAG             % d\n",      OPT__OUTPUT_DIVMAG          );
 #     endif
@@ -1630,6 +1644,12 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_3VELOCITY          % d\n",      OPT__OUTPUT_3VELOCITY       );
       fprintf( Note, "OPT__OUTPUT_LORENTZ            % d\n",      OPT__OUTPUT_LORENTZ         );
       fprintf( Note, "OPT__OUTPUT_ENTHALPY           % d\n",      OPT__OUTPUT_ENTHALPY        );
+#     endif
+#     ifdef SUPPORT_GRACKLE
+      fprintf( Note, "OPT__OUTPUT_GRACKLE_TEMP       % d\n",      OPT__OUTPUT_GRACKLE_TEMP    );
+      fprintf( Note, "OPT__OUTPUT_GRACKLE_MU         % d\n",      OPT__OUTPUT_GRACKLE_MU      );
+      fprintf( Note, "OPT__OUTPUT_GRACKLE_TCOOL      % d\n",      OPT__OUTPUT_GRACKLE_TCOOL   );
+#     endif
 #     endif
 
 //    user-defined derived fields
@@ -1829,6 +1849,18 @@ void Aux_TakeNote()
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "  Level   Lorentz Factor Gradient\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%26.7e\n", lv, FlagTable_LrtzGradient[lv] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+#     endif
+
+#     ifdef SUPPORT_GRACKLE
+      if ( OPT__FLAG_COOLING_LEN )
+      {
+         fprintf( Note, "Flag Criterion (Cooling Length over Cell Size in HYDRO+GRACKLE)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level         l_cool / dh\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_CoolingLen[lv] );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }

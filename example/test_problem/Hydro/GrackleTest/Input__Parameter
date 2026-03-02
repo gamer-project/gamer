@@ -13,24 +13,18 @@
 
 
 # simulation scale
-BOX_SIZE                      1.31072e3   # box size along the longest side (in Mpc/h if COMOVING is adopted)
+BOX_SIZE                      8.0         # box size along the longest side (in Mpc/h if COMOVING is adopted)
 NX0_TOT_X                     128         # number of base-level cells along x
 NX0_TOT_Y                     128         # number of base-level cells along y
-NX0_TOT_Z                     128         # number of base-level cells along z
+NX0_TOT_Z                     32          # number of base-level cells along z
 OMP_NTHREAD                  -1           # number of OpenMP threads (<=0=auto) [-1] ##OPENMP ONLY##
 END_T                        -1.0         # end physical time (<0=auto -> must be set by test problems or restart) [-1.0]
 END_STEP                     -1           # end step (<0=auto -> must be set by test problems or restart) [-1]
 
 
 # test problems
-TESTPROB_ID                   5           # test problem ID [0]
-                                          #    0: none
-                                          #    1: HYDRO blast wave
-                                          #    2: HYDRO acoustic wave
-                                          #    3: HYDRO Bondi accretion (+GRAVITY)
-                                          #    4: HYDRO cluster merger vs. Flash (+GRAVITY)
-                                          #    5: HYDRO AGORA isolated galaxy (+GRAVITY)
-                                          # 1000: ELBDM external potential (+GRAVITY)
+TESTPROB_ID                   24          # test problem ID [0]
+                                          #   24: HYDRO Grackle Test (+SUPPORT_GRACKLE)
 
 
 # code units (in cgs)
@@ -43,32 +37,24 @@ UNIT_D                       -1.0               # mass density unit  (<=0 -> set
 
 
 # boundary conditions
-OPT__BC_FLU_XM                2           # fluid boundary condition at the -x face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
-OPT__BC_FLU_XP                2           # fluid boundary condition at the +x face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
-OPT__BC_FLU_YM                2           # fluid boundary condition at the -y face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
-OPT__BC_FLU_YP                2           # fluid boundary condition at the +y face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
-OPT__BC_FLU_ZM                2           # fluid boundary condition at the -z face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
-OPT__BC_FLU_ZP                2           # fluid boundary condition at the +z face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
-OPT__BC_POT                   2           # gravity boundary condition: (1=periodic, 2=isolated)
-
-
-# particle (PARTICLE only)
-PAR_NPAR                      212500      # total number of particles (must be set for PAR_INIT == 1/3)
-PAR_INIT                      1           # initialization option for particles: (1=FUNCTION, 2=RESTART, 3=FILE->"PAR_IC")
-PAR_INTERP                    2           # particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [2]
-PAR_INTEG                     2           # particle integration scheme: (1=Euler, 2=KDK) [2]
-PAR_IMPROVE_ACC               1           # improve force accuracy at patch boundaries [1] ##STORE_POT_GHOST and PAR_INTERP=2/3 ONLY##
-PAR_PREDICT_POS               1           # predict particle position during mass assignment [1]
-PAR_REMOVE_CELL              -1.0         # remove particles X-root-cells from the boundaries (non-periodic BC only; <0=auto) [-1.0]
+OPT__BC_FLU_XM                1           # fluid boundary condition at the -x face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
+OPT__BC_FLU_XP                1           # fluid boundary condition at the +x face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
+OPT__BC_FLU_YM                1           # fluid boundary condition at the -y face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
+OPT__BC_FLU_YP                1           # fluid boundary condition at the +y face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
+OPT__BC_FLU_ZM                1           # fluid boundary condition at the -z face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
+OPT__BC_FLU_ZP                1           # fluid boundary condition at the +z face: (1=periodic, 2=outflow, 3=reflecting, 4=user, 5=diode)
+OPT__BC_POT                   1           # gravity boundary condition: (1=periodic, 2=isolated)
 
 
 # time-step
+DT__MAX                       1.0         # dt criterion: maximum allowed dt (<0=off) [-1.0]
 DT__FLUID                     0.5         # dt criterion: fluid solver CFL factor (<0=auto) [-1.0]
 DT__FLUID_INIT               -1.0         # dt criterion: DT__FLUID at the first step (<0=auto) [-1.0]
 DT__GRAVITY                   0.35355     # dt criterion: gravity solver safety factor (<0=auto) [-1.0]
 DT__PARVEL                    0.5         # dt criterion: particle velocity safety factor [0.5]
 DT__PARVEL_MAX               -1.0         # dt criterion: maximum allowed dt from particle velocity (<0=off) [-1.0]
 DT__PARACC                    0.0         # dt criterion: particle acceleration safety factor (0=off) [0.5] ##STORE_PAR_ACC ONLY##
+DT__GRACKLE_COOLING           0.25        # dt criterion: factor for Grackle cooling time (<0=off) [-1.0] ##SUPPORT_GRACKLE only##
 DT__SYNC_PARENT_LV            0.05        # dt criterion: allow dt to adjust by (1.0+DT__SYNC_PARENT) in order to synchronize
                                           #               with the parent level (for OPT__DT_LEVEL==3 only) [0.1]
 DT__SYNC_CHILDREN_LV          0.1         # dt criterion: allow dt to adjust by (1.0-DT__SYNC_CHILDREN) in order to synchronize
@@ -86,27 +72,28 @@ AUTO_REDUCE_INT_MONO_MIN      1.0e-2      # minimum allowed INT_MONO_COEFF(_B) a
 
 
 # grid refinement (examples of Input__Flag_XXX tables are put at "example/input/")
-REGRID_COUNT                  4           # refine every REGRID_COUNT sub-step [4]
+REGRID_COUNT                  1           # refine every REGRID_COUNT sub-step [4]
 FLAG_BUFFER_SIZE             -1           # number of buffer cells for the flag operation (0~PATCH_SIZE; <0=auto -> PATCH_SIZE) [-1]
 FLAG_BUFFER_SIZE_MAXM1_LV     2           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-1 (<0=auto -> REGRID_COUNT) [-1]
 FLAG_BUFFER_SIZE_MAXM2_LV    -1           # FLAG_BUFFER_SIZE at the level MAX_LEVEL-2 (<0=auto) [-1]
-MAX_LEVEL                     7           # maximum refinement level (0~NLEVEL-1) [NLEVEL-1]
-OPT__FLAG_RHO                 1           # flag: density (Input__Flag_Rho) [0]
+MAX_LEVEL                     0           # maximum refinement level (0~NLEVEL-1) [NLEVEL-1]
+OPT__FLAG_RHO                 0           # flag: density (Input__Flag_Rho) [0]
 OPT__FLAG_RHO_GRADIENT        0           # flag: density gradient (Input__Flag_RhoGradient) [0]
 OPT__FLAG_PRES_GRADIENT       0           # flag: pressure gradient (Input__Flag_PresGradient) [0] ##HYDRO ONLY##
 OPT__FLAG_VORTICITY           0           # flag: vorticity (Input__Flag_Vorticity) [0] ##HYDRO ONLY##
-OPT__FLAG_JEANS               1           # flag: Jeans length (Input__Flag_Jeans) [0] ##HYDRO ONLY##
+OPT__FLAG_JEANS               0           # flag: Jeans length (Input__Flag_Jeans) [0] ##HYDRO ONLY##
+OPT__FLAG_COOLING_LEN         1           # flag: cooling length (Input__Flag_CoolingLen) [0] ##HYDRO+SUPPORT_GRACKLE ONLY##
 OPT__FLAG_LOHNER_DENS         0           # flag: Lohner for mass density   (Input__Flag_Lohner) [0] ##BOTH HYDRO AND ELBDM##
 OPT__FLAG_LOHNER_ENGY         0           # flag: Lohner for energy density (Input__Flag_Lohner) [0] ##HYDRO ONLY##
 OPT__FLAG_LOHNER_PRES         0           # flag: Lohner for pressure       (Input__Flag_Lohner) [0] ##HYDRO ONLY##
 OPT__FLAG_LOHNER_TEMP         0           # flag: Lohner for temperature    (Input__Flag_Lohner) [0] ##HYDRO ONLY##
 OPT__FLAG_LOHNER_ENTR         0           # flag: Lohner for entropy        (Input__Flag_Lohner) [0] ##HYDRO ONLY##
 OPT__FLAG_LOHNER_FORM         2           # form of Lohner: (1=FLASH-1, 2=FLASH-2, 3=form-invariant-1, 4=form-invariant-2) [2]
-OPT__FLAG_USER                1           # flag: user-defined (Input__Flag_User) -> edit "Flag_User.cpp" [0]
+OPT__FLAG_USER                0           # flag: user-defined (Input__Flag_User) -> edit "Flag_User.cpp" [0]
 OPT__FLAG_REGION              0           # flag: specify the regions **allowed** to be refined -> edit "Flag_Region.cpp" [0]
 OPT__FLAG_NPAR_PATCH          0           # flag: # of particles per patch (Input__Flag_NParPatch): (0=off, 1=itself, 2=itself+siblings) [0]
 OPT__FLAG_NPAR_CELL           0           # flag: # of particles per cell  (Input__Flag_NParCell) [0]
-OPT__FLAG_PAR_MASS_CELL       1           # flag: total particle mass per cell (Input__Flag_ParMassCell) [0]
+OPT__FLAG_PAR_MASS_CELL       0           # flag: total particle mass per cell (Input__Flag_ParMassCell) [0]
 OPT__NO_FLAG_NEAR_BOUNDARY    0           # flag: disallow refinement near the boundaries [0]
 OPT__PATCH_COUNT              1           # record the # of patches   at each level: (0=off, 1=every step, 2=every sub-step) [1]
 OPT__PARTICLE_COUNT           1           # record the # of particles at each level: (0=off, 1=every step, 2=every sub-step) [1]
@@ -127,7 +114,7 @@ GRACKLE_ACTIVATE              1           # enable Grackle [1]
 GRACKLE_VERBOSE               1           # map to "grackle_verbose" [1]
 GRACKLE_REDSHIFT              0.0         # redshift to set "a_value" for the redshift-dependent chemistry and cooling terms (non-COMOVING only) [0.0]
 GRACKLE_COOLING               1           # map to "with_radiative_cooling" [1]
-GRACKLE_PRIMORDIAL            0           # map to "primordial_chemistry" (0=Cloudy, 1/2/3=6-/9-/12-species) [0]
+GRACKLE_PRIMORDIAL            3           # map to "primordial_chemistry" (0=Cloudy, 1/2/3=6-/9-/12-species) (must increase NCOMP_PASSIVE_USER by 6/9/12, respectively) [0]
 GRACKLE_METAL                 1           # map to "metal_cooling" (must increase NCOMP_PASSIVE_USER by 1) [0]
 GRACKLE_UV                    1           # map to "UVbackground" [0]
 GRACKLE_CMB_FLOOR             1           # map to "cmb_temperature_floor" [1]
@@ -142,19 +129,8 @@ GRACKLE_USE_S_HEATING_RATE    0           # map to "use_specific_heating_rate" [
 GRACKLE_USE_TEMP_FLOOR        0           # map to "use_temperature_floor" (0=off, 1=single value, 2=array of values) (in Kelvin) [0]
 GRACKLE_TEMP_FLOOR_SCALAR     0.0         # map to "temperature_floor_scalar" (for GRACKLE_USE_TEMP_FLOOR==1) [0.0]
 GRACKLE_HYDROGEN_MFRAC        0.76        # map to "HydrogenFractionByMass" (NOT set to Grackle when GRACKLE_PRIMORDIAL==0) [0.76]
-OPT__UNFREEZE_GRACKLE         0           # allow the evolution by Grackle solver when the fluid is frozen (for OPT__FREEZE_FLUID==1 only) [0]
+OPT__UNFREEZE_GRACKLE         1           # allow the evolution by Grackle solver when the fluid is frozen (for OPT__FREEZE_FLUID==1 only) [0]
 CHE_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU Grackle solver (<=0=auto) [-1]
-
-
-# star formation (STAR_FORMATION only)
-SF_CREATE_STAR_SCHEME         1           # star formation schemes (0=off, 1=AGORA) [0]
-SF_CREATE_STAR_RSEED          123         # random seed [123]
-SF_CREATE_STAR_DET_RANDOM    -1           # make random numbers deterministic (i.e., independent of OpenMP and MPI, <0=auto) [-1]
-SF_CREATE_STAR_MIN_LEVEL     -1           # minimum AMR level allowed to form stars (<0=auto -> MAX_LEVEL) [0]
-SF_CREATE_STAR_MIN_GAS_DENS   5.0e0       # minimum gas density allowed to form stars (in HI count/cm^3) [1.0e1]
-SF_CREATE_STAR_MASS_EFF       1.0e-2      # Gas-to-star mass conversion efficiency [1.0e-2]
-SF_CREATE_STAR_MIN_STAR_MASS  3.2e4       # minimum star particle mass for the stochastical star formation (in Msun) [0.0]
-SF_CREATE_STAR_MAX_STAR_MFRAC 0.5         # maximum gas mass fraction allowed to convert to stars per substep [0.5]
 
 
 # fluid solver in HYDRO (MODEL==HYDRO only)
@@ -178,26 +154,16 @@ OPT__FIXUP_RESTRICT           1           # correct coarse grids by averaging th
 OPT__CORR_AFTER_ALL_SYNC     -1           # apply various corrections after all levels are synchronized (see "Flu_CorrAfterAllSync"):
                                           # (-1=auto, 0=off, 1=every step, 2=before dump) [-1]
 OPT__NORMALIZE_PASSIVE        0           # ensure "sum(passive_scalar_density) == gas_density" [1]
+OPT__RESET_FLUID              0           # reset fluid variables after each update -> edit "Flu_ResetByUser.cpp" [0]
+OPT__FREEZE_FLUID             1           # do not evolve fluid at all [0]
 MIN_DENS                      0.0         # minimum mass density    (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##
-MIN_PRES                      1.0e-15     # minimum pressure        (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
-MIN_EINT                      1.0e-15     # minimum internal energy (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
+MIN_PRES                      0.0         # minimum pressure        (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
+MIN_EINT                      0.0         # minimum internal energy (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
 MIN_ENTR                      0.0         # minimum entropy         (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
 JEANS_MIN_PRES                1           # minimum pressure estimated from the Jeans length [0] ##HYDRO/MHD and GRAVITY ONLY##
 JEANS_MIN_PRES_LEVEL         -1           # for JEANS_MIN_PRES; ensure Jeans length is resolved by JEANS_MIN_PRES_NCELL*dh[JEANS_MIN_PRES_LEVEL]
                                           # (<0=auto -> MAX_LEVEL) [-1]
 JEANS_MIN_PRES_NCELL          4           # for JEANS_MIN_PRES; see JEANS_MIN_PRES_LEVEL [4]
-
-
-# gravity solvers in all models
-NEWTON_G                      1.0         # gravitational constant (will be overwritten if OPT__UNIT or COMOVING is on)
-SOR_OMEGA                    -1.0         # over-relaxation parameter in SOR: (<0=auto) [-1.0]
-SOR_MAX_ITER                 -1           # maximum number of iterations in SOR: (<0=auto) [-1]
-SOR_MIN_ITER                 -1           # minimum number of iterations in SOR: (<0=auto) [-1]
-POT_GPU_NPGROUP              -1           # number of patch groups sent into the GPU Poisson solver (<=0=auto) [-1]
-OPT__GRA_P5_GRADIENT          0           # 5-points gradient in the Gravity solver (must have GRA/USG_GHOST_SIZE_G>=2) [0]
-OPT__SELF_GRAVITY             1           # add self-gravity [1]
-OPT__EXT_ACC                  0           # add external acceleration (0=off, 1=function, 2=table) [0] ##HYDRO ONLY##
-OPT__EXT_POT                  0           # add external potential    (0=off, 1=function, 2=table) [0]
 
 
 # initialization
@@ -221,30 +187,32 @@ MONO_MAX_ITER                 10          # maximum number of iterations to redu
 
 # data dump
 OPT__OUTPUT_TOTAL             1           # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
-OPT__OUTPUT_PART              0           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag, 8=entire box) [0]
+OPT__OUTPUT_PART              1           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag, 8=entire box) [0]
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
 OPT__OUTPUT_PAR_MODE          0           # output the particle data: (0=off, 1=text-file, 2=C-binary) [0] ##PARTICLE ONLY##
 OPT__OUTPUT_POT               1           # output gravitational potential [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_PAR_DENS          1           # output the particle or total mass density on grids:
                                           # (0=off, 1=particle mass density, 2=total mass density) [1] ##OPT__OUTPUT_TOTAL ONLY##
-OPT__OUTPUT_PRES              0           # output gas pressure [0] ##HYDRO ONLY##
-OPT__OUTPUT_TEMP              0           # output gas temperature [0] ##HYDRO ONLY##
+OPT__OUTPUT_PRES              1           # output gas pressure [0] ##HYDRO ONLY##
+OPT__OUTPUT_TEMP              1           # output gas temperature [0] ##HYDRO ONLY##
 OPT__OUTPUT_ENTR              0           # output gas entropy [0] ##HYDRO ONLY##
-OPT__OUTPUT_CS                0           # output sound speed [0] ##HYDRO ONLY##
+OPT__OUTPUT_CS                1           # output sound speed [0] ##HYDRO ONLY##
 OPT__OUTPUT_DIVVEL            0           # output divergence(velocity) [0] ##HYDRO ONLY##
 OPT__OUTPUT_MACH              0           # output mach number [0] ##HYDRO ONLY##
 OPT__OUTPUT_DIVMAG            0           # output |divergence(B)*dh/|B|| [0] ##MHD ONLY##
 OPT__OUTPUT_LORENTZ           0           # output Lorentz factor [0] ##SRHD ONLY##
 OPT__OUTPUT_3VELOCITY         0           # output 3-velocities [0] ##SRHD ONLY##
+OPT__OUTPUT_GRACKLE_TEMP      1           # output the temperature calculated by Grackle [0] ##SUPPORT_GRACKLE only##
+OPT__OUTPUT_GRACKLE_MU        1           # output the mean molecular weight calculated by Grackle [0] ##SUPPORT_GRACKLE only##
+OPT__OUTPUT_GRACKLE_TCOOL     1           # output the cooling time calculated by Grackle [0] ##SUPPORT_GRACKLE only##
 OPT__OUTPUT_USER_FIELD        0           # output user-defined derived fields [0] -> edit "Flu_DerivedField_User.cpp"
-OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
-OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
-OUTPUT_DT                     1.0e1       # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
+OPT__OUTPUT_MODE              1           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
+OUTPUT_STEP                   1           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
+OUTPUT_DT                     1.0         # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
 OUTPUT_PART_X                -1.0         # x coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Y                -1.0         # y coordinate for OPT__OUTPUT_PART [-1.0]
-OUTPUT_PART_Z                -1.0         # z coordinate for OPT__OUTPUT_PART [-1.0]
+OUTPUT_PART_Z                 1.0         # z coordinate for OPT__OUTPUT_PART [-1.0]
 INIT_DUMPID                  -1           # set the first dump ID (<0=auto) [-1]
-OUTPUT_DIR                    .           # set the output directory [.]
 
 
 # miscellaneous

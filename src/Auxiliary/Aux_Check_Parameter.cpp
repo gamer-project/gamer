@@ -310,8 +310,13 @@ void Aux_Check_Parameter()
    {
       int NDerField = UserDerField_Num;
 #     if ( MODEL == HYDRO )
-      if ( OPT__OUTPUT_DIVVEL )  NDerField ++;
-      if ( OPT__OUTPUT_MACH   )  NDerField ++;
+      if ( OPT__OUTPUT_DIVVEL        )  NDerField ++;
+      if ( OPT__OUTPUT_MACH          )  NDerField ++;
+#     ifdef SUPPORT_GRACKLE
+      if ( OPT__OUTPUT_GRACKLE_TEMP  )  NDerField ++;
+      if ( OPT__OUTPUT_GRACKLE_MU    )  NDerField ++;
+      if ( OPT__OUTPUT_GRACKLE_TCOOL )  NDerField ++;
+#     endif
 #     endif
 
       if ( NDerField > DER_NOUT_MAX )
@@ -427,6 +432,9 @@ void Aux_Check_Parameter()
 #  endif
 #  ifdef SRHD
    Flag |= OPT__FLAG_LRTZ_GRADIENT;
+#  endif
+#  ifdef SUPPORT_GRACKLE
+   Flag |= OPT__FLAG_COOLING_LEN;
 #  endif
 #  ifdef COSMIC_RAY
    Flag |= OPT__FLAG_CRAY;
@@ -1793,6 +1801,24 @@ void Aux_Check_Parameter()
 #     error : ERROR : SUPPORT_GRACKLE must work with EOS_GAMMA/EOS_COSMIC_RAY !!
 #  endif
 
+   if ( OPT__OUTPUT_GRACKLE_TEMP  &&  ! GRACKLE_ACTIVATE )
+      Aux_Error( ERROR_INFO, "OPT__OUTPUT_GRACKLE_TEMP requires the option GRACKLE_ACTIVATE !!\n");
+
+   if ( OPT__OUTPUT_GRACKLE_MU  &&  ! GRACKLE_ACTIVATE )
+      Aux_Error( ERROR_INFO, "OPT__OUTPUT_GRACKLE_MU requires the option GRACKLE_ACTIVATE !!\n");
+
+   if ( OPT__OUTPUT_GRACKLE_TCOOL  &&  ! GRACKLE_ACTIVATE )
+      Aux_Error( ERROR_INFO, "OPT__OUTPUT_GRACKLE_TCOOL requires the option GRACKLE_ACTIVATE !!\n");
+
+   if ( OPT__FLAG_COOLING_LEN  &&  ! GRACKLE_ACTIVATE )
+      Aux_Error( ERROR_INFO, "OPT__FLAG_COOLING_LEN requires the option GRACKLE_ACTIVATE !!\n");
+
+   if ( DT__GRACKLE_COOLING >= 0.0  &&  ! GRACKLE_ACTIVATE )
+      Aux_Error( ERROR_INFO, "DT__GRACKLE_COOLING requires the option GRACKLE_ACTIVATE !!\n");
+
+   if ( OPT__UNFREEZE_GRACKLE  &&  ! GRACKLE_ACTIVATE )
+      Aux_Error( ERROR_INFO, "OPT__UNFREEZE_GRACKLE requires the option GRACKLE_ACTIVATE !!\n");
+
 // warning
 // ------------------------------
    if ( MPI_Rank == 0 ) {
@@ -1802,6 +1828,25 @@ void Aux_Check_Parameter()
 
    if ( GRACKLE_PRIMORDIAL > 0 )
       Aux_Message( stderr, "WARNING : adiabatic index gamma is currently fixed to %13.7e for Grackle !!\n", GAMMA );
+
+   if ( OPT__UNFREEZE_GRACKLE  &&  ! OPT__FREEZE_FLUID )
+      Aux_Message( stderr, "WARNING : OPT__UNFREEZE_GRACKLE is useless when OPT__FREEZE_FLUID is off !!\n" );
+
+   if ( OPT__UNFREEZE_GRACKLE  &&  OPT__FREEZE_FLUID )
+      Aux_Message( stderr, "REMINDER : OPT__UNFREEZE_GRACKLE will allow fluid variables to be updated by Grackle solver even with OPT__FREEZE_FLUID enabled !!\n" );
+
+   if ( OPT__OUTPUT_GRACKLE_TEMP  &&  OPT__OUTPUT_TEMP )
+   {
+      Aux_Message( stderr, "WARNING : temperature field calculated by Grackle is named \"GrackleTemp\"\n"   );
+      Aux_Message( stderr, "          and it is different from the default temperature field \"Temp\" !!\n" );
+   }
+
+   if ( GRACKLE_PRIMORDIAL == GRACKLE_PRI_CHE_CLOUDY )
+   {
+      Aux_Message( stderr, "WARNING : For GRACKLE_PRIMORDIAL == %d, GRACKLE_HYDROGEN_MFRAC = %13.7e is only used outside Grackle\n",
+                           GRACKLE_PRI_CHE_CLOUDY, GRACKLE_HYDROGEN_MFRAC );
+      Aux_Message( stderr, "          and it can be different from HydrogenFractionByMass determined by and used inside Grackle !!\n" );
+   }
 
    } // if ( MPI_Rank == 0 )
 
