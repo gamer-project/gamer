@@ -147,7 +147,7 @@ Map to the ["temperature_floor_scalar" runtime parameter in GRACKLE](https://gra
 It is used only when [GRACKLE_USE_TEMP_FLOOR](#GRACKLE_USE_TEMP_FLOOR)==1.
 
 <a name="GRACKLE_HYDROGEN_MFRAC"></a>
-* #### `GRACKLE_PE_HEATING_RATE` &ensp; (&#8805;0.0) &ensp; [0.76]
+* #### `GRACKLE_HYDROGEN_MFRAC` &ensp; (&#8805;0.0) &ensp; [0.76]
     * **Description:**
 Map to the ["HydrogenFractionByMass" runtime parameter in GRACKLE](https://grackle.readthedocs.io/en/latest/Parameters.html#c.HydrogenFractionByMass).
 Note that the input value will only set to Grackle when it is in non-equilibrium mode [GRACKLE_PRIMORDIAL](#GRACKLE_PRIMORDIAL)>0,

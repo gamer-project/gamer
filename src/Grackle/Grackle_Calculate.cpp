@@ -47,13 +47,18 @@ void Grackle_Calculate( real Out[], const GrackleFieldBIdx_t TFields,
                         const int lv, const int NPG, const int *PID0_List )
 {
 
-// 0. nothing to do if there is no target patch group
+// 0. Grackle must be enabled
+   if ( !GRACKLE_ACTIVATE )
+      Aux_Error( ERROR_INFO, "%s() requires GRACKLE_ACTIVATE enabled !!\n", __FUNCTION__ );
+
+
+// 1. nothing to do if there is no target patch group
    if ( NPG == 0 )   return;
 
    const int Size1v = NPG * CUBE(PS2); // size of one field
 
 
-// 1. check the number of output fields
+// 2. check the number of output fields
    int NFieldOut = 0;
    const int IdxOut_Undefined = -1;
    const int IdxOut_temp      = ( TFields & _GRACKLE_TEMP  ) ? NFieldOut++ : IdxOut_Undefined;
@@ -64,20 +69,20 @@ void Grackle_Calculate( real Out[], const GrackleFieldBIdx_t TFields,
 
 
 #  ifdef OPENMP
-// check there is no multithreading
+// 3. check there is no multithreading
    static std::atomic_flag hasOneRunningThread = ATOMIC_FLAG_INIT;
    if ( hasOneRunningThread.test_and_set( std::memory_order_acquire ) )
       Aux_Error( ERROR_INFO, "%s() is invoked concurrently by multiple threads !!\n", __FUNCTION__ );
 #  endif
 
 
-// 2. allocate and prepare the input array for the Grackle solver
+// 4. allocate and prepare the input array for the Grackle solver
    real_che *gr_fields_input = new real_che[ (long)Che_NField*(long)Size1v ];
 
    Grackle_Prepare( lv, gr_fields_input, NPG, PID0_List );
 
 
-// 3. allocate the output array for the Grackle solver
+// 5. allocate the output array for the Grackle solver
    real_che *gr_fields_temperature  = NULL;
    real_che *gr_fields_gamma        = NULL;
    real_che *gr_fields_cooling_time = NULL;
@@ -95,7 +100,7 @@ void Grackle_Calculate( real Out[], const GrackleFieldBIdx_t TFields,
    vla_out Out1D = ( vla_out )Out;
 
 
-// 4. set grid_dimension, grid_start, and grid_end
+// 6. set grid_dimension, grid_start, and grid_end
    const int OptFac = 16;  // optimization factor
    if ( SQR(PS2)%OptFac != 0 )   Aux_Error( ERROR_INFO, "SQR(PS2) %% OptFac != 0 !!\n" );
 
@@ -110,7 +115,7 @@ void Grackle_Calculate( real Out[], const GrackleFieldBIdx_t TFields,
    }
 
 
-// 5. invoke Grackle
+// 7. invoke Grackle
 // --> note that we use the OpenMP implementation in Grackle directly, which applies the parallelization to the first two
 //     dimensiones of the input grid
 // --> this approach is found to be much more efficient than parallelizing different patches or patch groups here
@@ -133,7 +138,7 @@ void Grackle_Calculate( real Out[], const GrackleFieldBIdx_t TFields,
    }
 
 
-// 6. fill in the output array
+// 8. fill in the output array
    const real_che *gr_fields_sEint  = gr_fields_input + CheIdx_sEint*Size1v;
    const real_che temperature_units = (real_che) get_temperature_units( &Che_Units );
 
@@ -145,7 +150,10 @@ void Grackle_Calculate( real Out[], const GrackleFieldBIdx_t TFields,
 
 //    mean molecular weight
       if ( IdxOut_mu != IdxOut_Undefined )
-         Out1D[IdxOut_mu][i]    = (real) ( gr_fields_temperature[i] / ( gr_fields_sEint[i] * temperature_units * (gr_fields_gamma[i] - (real_che)1.) ) );
+      {
+         const real_che denom   = gr_fields_sEint[i] * temperature_units * ( gr_fields_gamma[i] - (real_che)1.0 );
+         Out1D[IdxOut_mu][i]    = (real)( ( denom > (real_che)0.0 ) ? ( gr_fields_temperature[i] / denom ) : (real_che)0.0 );
+      }
 
 //    cooling time
       if ( IdxOut_tcool != IdxOut_Undefined )
@@ -153,7 +161,7 @@ void Grackle_Calculate( real Out[], const GrackleFieldBIdx_t TFields,
    }
 
 
-// 7. free memory
+// 9. free memory
    delete [] gr_fields_input;
 
    if ( IdxOut_temp != IdxOut_Undefined  ||  IdxOut_mu != IdxOut_Undefined )
@@ -167,7 +175,7 @@ void Grackle_Calculate( real Out[], const GrackleFieldBIdx_t TFields,
 
 
 #  ifdef OPENMP
-// clear the flag
+// 10. clear the flag
    hasOneRunningThread.clear( std::memory_order_release );
 #  endif
 

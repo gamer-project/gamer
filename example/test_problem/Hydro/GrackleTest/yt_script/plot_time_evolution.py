@@ -30,6 +30,9 @@ idx_end   = args.idx_end
 didx      = args.didx
 prefix    = args.prefix
 
+if didx <= 0 or idx_end < idx_start:
+    raise ValueError( 'Invalid input: idx_start = %d, idx_end = %d, didx = %d !!'%(idx_start, idx_end, didx) )
+
 
 yt.enable_parallelism()
 

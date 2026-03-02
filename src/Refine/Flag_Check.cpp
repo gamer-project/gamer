@@ -188,6 +188,10 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #  if ( MODEL == HYDRO  &&  defined SUPPORT_GRACKLE )
    if ( OPT__FLAG_COOLING_LEN )
    {
+#     ifdef GAMER_DEBUG
+      if ( LCool == NULL )   Aux_Error( ERROR_INFO, "LCool == NULL !!\n" );
+#     endif
+
       Flag |= (  amr->dh[lv]*FlagTable_CoolingLen[lv] > LCool[k][j][i]  );
       if ( Flag )    return Flag;
    }

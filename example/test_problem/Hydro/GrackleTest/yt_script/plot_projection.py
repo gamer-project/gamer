@@ -29,6 +29,9 @@ idx_end   = args.idx_end
 didx      = args.didx
 prefix    = args.prefix
 
+if didx <= 0 or idx_end < idx_start:
+    raise ValueError( 'Invalid input: idx_start = %d, idx_end = %d, didx = %d !!'%(idx_start, idx_end, didx) )
+
 
 yt.enable_parallelism()
 
@@ -65,6 +68,17 @@ zlim = {
 
 
 def set_derived_fields( ds ):
+
+    # check
+    if not ds.parameters["Opt__Output_GrackleTemp"]:
+        raise ValueError( 'OPT__OUTPUT_GRACKLE_TEMP must be enabled !!' )
+
+    if not ds.parameters["Opt__Output_GrackleMu"]:
+        raise ValueError( 'OPT__OUTPUT_GRACKLE_MU must be enabled !!' )
+
+    if not ds.parameters["Opt__Output_GrackleTCool"]:
+        raise ValueError( 'OPT__OUTPUT_GRACKLE_TCOOL must be enabled !!' )
+
 
     def _grackle_T_over_mu( field, data ):
         return data['grackle_temperature'] / data['grackle_mu']

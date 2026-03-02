@@ -397,7 +397,7 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
 //
 // Return      :  volumetric_heating_rate
 //-------------------------------------------------------------------------------------------------------
-real_che Grackle_vHeatingRate_User_Template( const double x, const double y, const double z, const double Time, const double n_H )
+static real_che Grackle_vHeatingRate_User_Template( const double x, const double y, const double z, const double Time, const double n_H )
 {
 
    const double   Center[3]                 = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
@@ -428,7 +428,7 @@ real_che Grackle_vHeatingRate_User_Template( const double x, const double y, con
 //
 // Return      :  specific_heating_rate
 //-------------------------------------------------------------------------------------------------------
-real_che Grackle_sHeatingRate_User_Template( const double x, const double y, const double z, const double Time )
+static real_che Grackle_sHeatingRate_User_Template( const double x, const double y, const double z, const double Time )
 {
 
    const double   Center[3]                 = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
@@ -461,7 +461,7 @@ real_che Grackle_sHeatingRate_User_Template( const double x, const double y, con
 //
 // Return      :  temperature_floor
 //-------------------------------------------------------------------------------------------------------
-real_che Grackle_tempFloor_Default( const double x, const double y, const double z, const double Time, const real_che Dens_Gas, const real_che sEint_Gas )
+static real_che Grackle_tempFloor_Default( const double x, const double y, const double z, const double Time, const real_che Dens_Gas, const real_che sEint_Gas )
 {
    const real_che temperature_floor = 0.0;
 

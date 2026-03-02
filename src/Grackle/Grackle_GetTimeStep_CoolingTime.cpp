@@ -84,8 +84,12 @@ real GetMinCoolingTime( const int lv )
          for (int i=0; i<PS1; i++)
          {
 //          remember to take the absolute value for the cooling time, which could be negative or positive
-            MinCoolingTime = MIN( MinCoolingTime,
-                                  FABS( Grackle_TCool[ (LocalID*CUBE(PS1) + k*SQR(PS1) + j*PS1 + i) ] ) );
+            const real AbsTCool = FABS( Grackle_TCool[ (LocalID*CUBE(PS1) + k*SQR(PS1) + j*PS1 + i) ] );
+
+            if ( !Aux_IsFinite( AbsTCool ) )   continue;
+
+            MinCoolingTime = MIN( MinCoolingTime, AbsTCool );
+
          } // k,j,i
       } // for (int LocalID=0; LocalID<8; LocalID++)
    } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)

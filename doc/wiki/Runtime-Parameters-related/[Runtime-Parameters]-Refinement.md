@@ -237,7 +237,7 @@ cooling length <var>L</var><sub>cool</sub> satisfies
 where <var>t</var><sub>cool</sub> is the cooling time (currently calculated by Grackle), <var>c</var><sub>s</sub> is sound speed of gas, &Delta;&xi;<sub>l</sub> is the cell width along &xi; on level <var>l</var>, and <var>N</var><sub>l</sub> is the refinement threshold on level <var>l</var>.
 Specify the refinement
 thresholds on different levels in the input file `Input__Flag_CoolingLen`
-with the [[specific format | [Runtime-Parameters]-Input__Flag_*]].
+with the [[specific format | [Runtime-Parameters]-Input__Flag_{}]].
 An example file can be found at `example/input/Input__Flag_CoolingLen`.
 Recommended values: &#8805;1.
     * **Restriction:**

@@ -51,7 +51,7 @@ Note:
    - In the x direction, linearly varying log10( mass density )
                          from `GrackleTest_MassDensity_Min` to `GrackleTest_MassDensity_Max`
    - In the y direction, linearly varying log10( temperature / mean molecular weight )
-                         from `GrackleTest_TempOverMMW_Min to `GrackleTest_TempOverMMW_Max`
+                         from `GrackleTest_TempOverMMW_Min` to `GrackleTest_TempOverMMW_Max`
    - No variation in the z direction
 
 3. The chemical composition
@@ -101,10 +101,10 @@ Note:
       - `GRACKLE_UV` should be 1
       - `GRACKLE_CLOUDY_TABLE` should be `CloudyData_UVB=HM2012.h5`
       - `GRACKLE_COOLING`, `GRACKLE_CMB_FLOOR`, `GRACKLE_PE_HEATING`, `GRACKLE_USE_V_HEATING_RATE` should all be 0
-      - The script `plot_grackle_analytical_cooling_rate.py` computes the expected cooling rates across the gas phase 
+      - The script `plot_grackle_analytical_cooling_rate.py` computes the expected cooling rates across the gas phase
         diagram for the given Grackle parameters, which can be compared with the simulation results
       --> To test the redshift-dependent UV background in non-comoving grids
-      
+
 6. The evolution of fluid
    - The fluid is not evolved by hydrodynamics (`OPT__FREEZE_FLUID`)
    - But its radiative processes are evolved by Grackle (`OPT__UNFREEZE_GRACKLE = 1`)
@@ -117,7 +117,7 @@ Note:
 
 9. Refine the grids by the cooling length (= cooling time x sound speed)
    - Turn on `OPT__FLAG_COOLING_LEN`
-   - Set the critera in `Input__Flag_CoolingLen`
+   - Set the criteria in `Input__Flag_CoolingLen`
    - Set the target `MAX_LEVEL`
 
 10. Some handy yt analysis scripts are put at "yt_script"
@@ -125,7 +125,7 @@ Note:
    - `plot_time_evolution.py`: to plot the time evolution of gas quantities
    - `yt.toml` defines the units, aliases, and the plot configuration for the fields
       - It should be placed in the same directory as the plotting scripts when executed
-      - See https://yt-project.org/docs/dev/reference/configuratin.html for the reference
+      - See https://yt-project.org/docs/dev/reference/configuration.html for the reference
 
 11. CloudyData_UVB table
    - Source: https://github.com/grackle-project/grackle_data_files/tree/main/input

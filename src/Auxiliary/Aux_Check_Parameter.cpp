@@ -1816,6 +1816,9 @@ void Aux_Check_Parameter()
    if ( DT__GRACKLE_COOLING >= 0.0  &&  ! GRACKLE_ACTIVATE )
       Aux_Error( ERROR_INFO, "DT__GRACKLE_COOLING requires the option GRACKLE_ACTIVATE !!\n");
 
+   if ( OPT__UNFREEZE_GRACKLE  &&  ! GRACKLE_ACTIVATE )
+      Aux_Error( ERROR_INFO, "OPT__UNFREEZE_GRACKLE requires the option GRACKLE_ACTIVATE !!\n");
+
 // warning
 // ------------------------------
    if ( MPI_Rank == 0 ) {
