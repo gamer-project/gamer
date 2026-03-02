@@ -295,7 +295,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #        ifdef SUPPORT_GRACKLE
          if ( OPT__FLAG_COOLING_LEN )
          {
-//          Grackle_Calculate() involves shared variable and is not thread-safe
+//          Grackle_Calculate() involves shared variables and is not thread-safe
 //          use critical directive to avoid thread racing
 #           pragma omp critical
             Grackle_Calculate( Grackle_TCool, _GRACKLE_TCOOL, lv, NPG, &PID0 );
@@ -488,7 +488,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                   for (int i=0; i<PS1; i++)
                   {
                      const real TCool = Grackle_TCool[ (LocalID*CUBE(PS1) + k*SQR(PS1) + j*PS1 + i) ];
-//                   positive cooling time returned by Grackle means it is heating
+//                   positive cooling time returned by Grackle corresponds to heating, and vice versa
 //                   cooling length is defined as (|cooling time| x sound speed) and only for cooling
                      LCool[k][j][i] = ( TCool < (real)0.0 ) ? ( FABS( TCool ) * SQRT( Cs2[k][j][i] ) ) : HUGE_NUMBER;
                   } // k,j,i

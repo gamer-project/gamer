@@ -495,12 +495,12 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    if ( EoS_DensTemp2Pres_CPUPtr == NULL )   Aux_Error( ERROR_INFO, "EoS_DensTemp2Pres_CPUPtr == NULL !!\n" );
 #  endif
 
-// compute the gas log density     by linear interpolation in x-direction
+// compute the gas log10 density     by linear interpolation in x-direction
    const double logDens = GrackleTest_logDens_Min +
                           GrackleTest_logDens_Range*( x / amr->BoxSize[0] );
    const real   Dens    = pow( 10, logDens );
 
-// compute the gas log temperature by linear interpolation in y-direction
+// compute the gas log10 temperature by linear interpolation in y-direction
    const double logTemp = GrackleTest_logTemp_Min +
                           GrackleTest_logTemp_Range*( y / amr->BoxSize[1] );
    const real   Temp    = pow( 10, logTemp );
@@ -571,7 +571,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 void AddNewField_GrackleTest()
 {
 
-// add these fields only if it has not been done
+// add these fields only if they have not been initialized yet
 // --> since Grackle may already add these fields automatically when GRACKLE_PRIMORDIAL or GRACKLE_METAL is enabled
 //     in Init/Init_Field.cpp
 // --> also note that "Idx_*" has been predefined in Field.h
@@ -660,7 +660,7 @@ real_che Grackle_tempFloor_GrackleTest( const double x, const double y, const do
    const double sEint_Gas_cgs = sEint_Gas * SQR(UNIT_V); // convert the unit to cm^2 s^-2
 
 // arbitrary example:
-// set a 1e10 K temperature floor to disable evolution for the high-density and high-temperature gases
+// set a 1e10 K temperature floor to disable evolution for the high-density and high-temperature gas
    const real_che temperature_floor = ( Dens_Gas_cgs > 1.0e-24  &&  sEint_Gas_cgs > 2.0e+12 ) ? 1.0e10 : 0.0;
 
    return temperature_floor;

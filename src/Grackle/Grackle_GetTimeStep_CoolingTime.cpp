@@ -60,7 +60,7 @@ real GetMinCoolingTime( const int lv )
 
    real *Grackle_TCool = new real [ CUBE(PS2) ];   // array storing ONE patch group of grackle cooling time
 
-// get the minimum Grckle cooling time in this rank
+// get the minimum Grackle cooling time in this rank
    for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
    {
 
@@ -72,7 +72,7 @@ real GetMinCoolingTime( const int lv )
          const int PID = PID0 + LocalID;
 
 //       if OPT__FIXUP_RESTRICT is enabled, skip all non-leaf patches
-//       becausethey are later overwritten by the refined patches
+//       because they are later overwritten by the refined patches
 //       note that this leads to the timestep being "inf" when a level is completely refined
          if ( OPT__FIXUP_RESTRICT  &&  amr->patch[0][lv][PID]->son != -1 )    continue;
 
