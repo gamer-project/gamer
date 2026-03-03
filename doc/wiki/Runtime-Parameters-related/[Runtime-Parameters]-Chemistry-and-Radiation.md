@@ -150,7 +150,7 @@ It is used only when [GRACKLE_USE_TEMP_FLOOR](#GRACKLE_USE_TEMP_FLOOR)==1.
 * #### `GRACKLE_HYDROGEN_MFRAC` &ensp; (&#8805;0.0) &ensp; [0.76]
     * **Description:**
 Map to the ["HydrogenFractionByMass" runtime parameter in GRACKLE](https://grackle.readthedocs.io/en/latest/Parameters.html#c.HydrogenFractionByMass).
-Note that the input value will only set to Grackle when it is in non-equilibrium mode [GRACKLE_PRIMORDIAL](#GRACKLE_PRIMORDIAL)>0,
+Note that the input value will only be passed to Grackle when it is in the non-equilibrium mode [GRACKLE_PRIMORDIAL](`#GRACKLE_PRIMORDIAL`)>0,
 because the tables for tabulated mode were created assuming hydrogen mass fraction of about 0.716.
 See the Grackle document for the details.
 When in tabulated mode ([GRACKLE_PRIMORDIAL](#GRACKLE_PRIMORDIAL)==0), this value may still be used elsewhere in GAMER and

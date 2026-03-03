@@ -175,7 +175,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "GrackleTest_HeatingRate",     &GrackleTest_HeatingRate,           0.0,           0.0,              NoMax_double      );
    LOAD_PARA( load_mode, "GrackleTest_CoolingRate",     &GrackleTest_CoolingRate,           0.0,           0.0,              NoMax_double      );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

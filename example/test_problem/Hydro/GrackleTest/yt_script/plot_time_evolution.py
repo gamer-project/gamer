@@ -66,38 +66,50 @@ gr_temperature_min = np.array([])
 # collect the results
 for ds in ts.piter():
 
+    # check
+    if not ds.parameters["Opt__Output_GrackleTemp"]:
+        raise ValueError( 'OPT__OUTPUT_GRACKLE_TEMP must be enabled !!' )
+
+    if not ds.parameters["Opt__Output_GrackleMu"]:
+        raise ValueError( 'OPT__OUTPUT_GRACKLE_MU must be enabled !!' )
+
+    if not ds.parameters["Opt__Output_GrackleTCool"]:
+        raise ValueError( 'OPT__OUTPUT_GRACKLE_TCOOL must be enabled !!' )
+
+    ad = ds.all_data()
+
     time                 = np.append( time              , ds.current_time.in_units('Myr').d )
-    density              = np.append( density           , np.average(ds.all_data()['density'            ].in_units('g/cm**3').d) )
+    density              = np.append( density           , np.average(ad['density'            ].in_units('g/cm**3').d) )
 
     if ds.parameters['Grackle_Metal'] == 1:
-        metal_density    = np.append( metal_density     , np.average(ds.all_data()['metal_density'      ].in_units('g/cm**3').d) )
+        metal_density    = np.append( metal_density     , np.average(ad['metal_density'      ].in_units('g/cm**3').d) )
 
     if ds.parameters['Grackle_Primordial'] >= 1:
-        electron_density = np.append( electron_density  , np.average(ds.all_data()['electron_density'   ].in_units('g/cm**3').d) )
-        HI_density       = np.append( HI_density        , np.average(ds.all_data()['HI_density'         ].in_units('g/cm**3').d) )
-        HII_density      = np.append( HII_density       , np.average(ds.all_data()['HII_density'        ].in_units('g/cm**3').d) )
-        HeI_density      = np.append( HeI_density       , np.average(ds.all_data()['HeI_density'        ].in_units('g/cm**3').d) )
-        HeII_density     = np.append( HeII_density      , np.average(ds.all_data()['HeII_density'       ].in_units('g/cm**3').d) )
-        HeIII_density    = np.append( HeIII_density     , np.average(ds.all_data()['HeIII_density'      ].in_units('g/cm**3').d) )
+        electron_density = np.append( electron_density  , np.average(ad['electron_density'   ].in_units('g/cm**3').d) )
+        HI_density       = np.append( HI_density        , np.average(ad['HI_density'         ].in_units('g/cm**3').d) )
+        HII_density      = np.append( HII_density       , np.average(ad['HII_density'        ].in_units('g/cm**3').d) )
+        HeI_density      = np.append( HeI_density       , np.average(ad['HeI_density'        ].in_units('g/cm**3').d) )
+        HeII_density     = np.append( HeII_density      , np.average(ad['HeII_density'       ].in_units('g/cm**3').d) )
+        HeIII_density    = np.append( HeIII_density     , np.average(ad['HeIII_density'      ].in_units('g/cm**3').d) )
 
     if ds.parameters['Grackle_Primordial'] >= 2:
-        HM_density       = np.append( HM_density        , np.average(ds.all_data()['HM_density'         ].in_units('g/cm**3').d) )
-        H2I_density      = np.append( H2I_density       , np.average(ds.all_data()['H2I_density'        ].in_units('g/cm**3').d) )
-        H2II_density     = np.append( H2II_density      , np.average(ds.all_data()['H2II_density'       ].in_units('g/cm**3').d) )
+        HM_density       = np.append( HM_density        , np.average(ad['HM_density'         ].in_units('g/cm**3').d) )
+        H2I_density      = np.append( H2I_density       , np.average(ad['H2I_density'        ].in_units('g/cm**3').d) )
+        H2II_density     = np.append( H2II_density      , np.average(ad['H2II_density'       ].in_units('g/cm**3').d) )
 
     if ds.parameters['Grackle_Primordial'] >= 3:
-        DI_density       = np.append( DI_density        , np.average(ds.all_data()['DI_density'         ].in_units('g/cm**3').d) )
-        DII_density      = np.append( DII_density       , np.average(ds.all_data()['DII_density'        ].in_units('g/cm**3').d) )
-        HDI_density      = np.append( HDI_density       , np.average(ds.all_data()['HDI_density'        ].in_units('g/cm**3').d) )
+        DI_density       = np.append( DI_density        , np.average(ad['DI_density'         ].in_units('g/cm**3').d) )
+        DII_density      = np.append( DII_density       , np.average(ad['DII_density'        ].in_units('g/cm**3').d) )
+        HDI_density      = np.append( HDI_density       , np.average(ad['HDI_density'        ].in_units('g/cm**3').d) )
 
-    temperature          = np.append( temperature       , np.average(ds.all_data()['temperature'        ].in_units('K').d)       )
-    gr_temperature       = np.append( gr_temperature    , np.average(ds.all_data()['grackle_temperature'].in_units('K').d)       )
-    gr_mu                = np.append( gr_mu             , np.average(ds.all_data()['grackle_mu'         ].d)                     )
+    temperature          = np.append( temperature       , np.average(ad['temperature'        ].in_units('K').d)       )
+    gr_temperature       = np.append( gr_temperature    , np.average(ad['grackle_temperature'].in_units('K').d)       )
+    gr_mu                = np.append( gr_mu             , np.average(ad['grackle_mu'         ].d)                     )
 
-    temperature_max      = np.append( temperature_max   , np.max(    ds.all_data()['temperature'        ].in_units('K').d)       )
-    temperature_min      = np.append( temperature_min   , np.min(    ds.all_data()['temperature'        ].in_units('K').d)       )
-    gr_temperature_max   = np.append( gr_temperature_max, np.max(    ds.all_data()['grackle_temperature'].in_units('K').d)       )
-    gr_temperature_min   = np.append( gr_temperature_min, np.min(    ds.all_data()['grackle_temperature'].in_units('K').d)       )
+    temperature_max      = np.append( temperature_max   , np.max(    ad['temperature'        ].in_units('K').d)       )
+    temperature_min      = np.append( temperature_min   , np.min(    ad['temperature'        ].in_units('K').d)       )
+    gr_temperature_max   = np.append( gr_temperature_max, np.max(    ad['grackle_temperature'].in_units('K').d)       )
+    gr_temperature_min   = np.append( gr_temperature_min, np.min(    ad['grackle_temperature'].in_units('K').d)       )
 
 
 # plot the results
@@ -140,7 +152,7 @@ if ds.parameters['Grackle_Primordial'] >= 1:
     ax[1].plot( time,  HII_density,       'r--', label='HII'   )
     ax[1].plot( time,  HeI_density,       'b-',  label='HeI'   )
     ax[1].plot( time,  HeII_density,      'b--', label='HeII'  )
-    ax[1].plot( time,  HeIII_density,     'b-.', label='HEIII' )
+    ax[1].plot( time,  HeIII_density,     'b-.', label='HeIII' )
 
 if ds.parameters['Grackle_Primordial'] >= 2:
     ax[1].plot( time,  HM_density,        'r:',  label='HM'    )
