@@ -34,8 +34,6 @@ if didx <= 0 or idx_end < idx_start:
     raise ValueError( 'Invalid input: idx_start = %d, idx_end = %d, didx = %d !!'%(idx_start, idx_end, didx) )
 
 
-yt.enable_parallelism()
-
 ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
 
 
