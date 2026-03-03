@@ -1981,6 +1981,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Par_GhostSize",           &RS.Par_GhostSize,           SID, TID, NonFatal, &RT.Par_GhostSize,            1, NonFatal );
    LoadField( "Par_GhostSizeTracer",     &RS.Par_GhostSizeTracer,     SID, TID, NonFatal, &RT.Par_GhostSizeTracer,      1, NonFatal );
    LoadField( "Par_TracerVelCorr",       &RS.Par_TracerVelCorr,       SID, TID, NonFatal, &RT.Par_TracerVelCorr,        1, NonFatal );
+   LoadField( "Opt__ParInitCheck",       &RS.Opt__ParInitCheck,       SID, TID, NonFatal, &RT.Opt__ParInitCheck,        1, NonFatal );
 #  endif
 
 // cosmology
@@ -2152,6 +2153,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__FixUp_Restrict",     &RS.Opt__FixUp_Restrict,     SID, TID, NonFatal, &RT.Opt__FixUp_Restrict,      1, NonFatal );
    LoadField( "FixUpRestrict_Var",       &RS.FixUpRestrict_Var,       SID, TID, NonFatal, &RT.FixUpRestrict_Var,        1, NonFatal );
    LoadField( "Opt__CorrAfterAllSync",   &RS.Opt__CorrAfterAllSync,   SID, TID, NonFatal, &RT.Opt__CorrAfterAllSync,    1, NonFatal );
+   LoadField( "PassiveFloor_Var",        &RS.PassiveFloor_Var,        SID, TID, NonFatal, &RT.PassiveFloor_Var,         1, NonFatal );
    LoadField( "Opt__NormalizePassive",   &RS.Opt__NormalizePassive,   SID, TID, NonFatal, &RT.Opt__NormalizePassive,    1, NonFatal );
    LoadField( "NormalizePassive_NVar",   &RS.NormalizePassive_NVar,   SID, TID, NonFatal, &RT.NormalizePassive_NVar,    1, NonFatal );
    LoadField( "NormalizePassive_VarIdx",  RS.NormalizePassive_VarIdx, SID, TID, NonFatal,  RT.NormalizePassive_VarIdx, NP, NonFatal );

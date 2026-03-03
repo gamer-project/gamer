@@ -192,12 +192,12 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
          const real Pres = ( magnetic == NULL ) ?
                            NULL_REAL :
                            Hydro_Con2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
-                                           CheckMinPres_No, NULL_REAL, Emag,
+                                           CheckMinPres_No, NULL_REAL, PassiveFloorMask, Emag,
                                            EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 #        else
          const real Pres = Hydro_Con2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
-                                           CheckMinPres_No, NULL_REAL, NULL_REAL,
+                                           CheckMinPres_No, NULL_REAL, PassiveFloorMask, NULL_REAL,
                                            EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 #        endif
