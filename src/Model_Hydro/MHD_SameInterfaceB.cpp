@@ -14,7 +14,7 @@
 // Note        :  1. Applied to both real and buffer patches
 //                2. Invoked by Init_GAMER() and Main()
 //                3. Controlled by the runtime option OPT__SAME_INTERFACE_B
-//                4. Always use the B field on the +x/+y/+z sides to overwrite that on the -x/-y/-z sides
+//                4. Always use the B field on the -x/-y/-z sides to overwrite that on the +x/+y/+z sides
 //                5. Mainly for debugging purposes since this consistency should already be guaranteed
 //                   even when disabling OPT__SAME_INTERFACE_B
 //                6. The following two approaches are equivalent. We currently adopt approach (1).
@@ -84,6 +84,9 @@ void MHD_SameInterfaceB( const int lv, const int FluSg, const int MagSg )
             Emag_old[d][j][i] = MHD_GetCellCenteredBEnergyInPatch( lv, PID, ii, jj, kk, MagSg );
          }
 
+//       use MHD_CopyPatchInterfaceBField( lv, SibPID, s+1, MagSg ) to update PID rather than
+//       using MHD_CopyPatchInterfaceBField( lv, PID, s, MagSg ) to update SibPID
+//       --> this is to avoid an OpenMP race condition; otherwise, multiple threads may update the same SibPID simultaneously
          MHD_CopyPatchInterfaceBField( lv, SibPID, s+1, MagSg );
 
          for (int j=0; j<PS1; j++)
