@@ -385,7 +385,8 @@ void FindFather( const int lv, const int Mode );
 void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc );
 bool Flag_Check( const int lv, const int PID, const int i, const int j, const int k, const real dv,
                  const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real MagCC[][PS1][PS1][PS1],
-                 const real Vel[][PS1][PS1][PS1], const real Pres[][PS1][PS1],  const real Lrtz[][PS1][PS1],
+                 const real Vel[][PS1][PS1][PS1], const real Pres[][PS1][PS1], const real Lrtz[][PS1][PS1],
+                 const real LCool[][PS1][PS1],
                  const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
                  const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff,
                  const real *Interf_Var, const real Spectral_Cond );
@@ -831,16 +832,18 @@ void CPU_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)     
 
 // Grackle
 #ifdef SUPPORT_GRACKLE
-void Grackle_Init();
-void Grackle_Init_FieldData();
-void Grackle_End();
-void Init_MemAllocate_Grackle( const int Che_NPG );
-void End_MemFree_Grackle();
-void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const int *PID0_List );
-void Grackle_Close( const int lv, const int SaveSg, const real_che h_Che_Array[], const int NPG, const int *PID0_List );
-void Grackle_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
-                        const bool OverlapMPI, const bool Overlap_Sync );
-void CPU_GrackleSolver( grackle_field_data *Che_FieldData, code_units Che_Units, const int NPatchGroup, const real dt );
+void   Grackle_Init();
+void   Grackle_Init_FieldData();
+void   Grackle_End();
+void   Init_MemAllocate_Grackle( const int Che_NPG );
+void   End_MemFree_Grackle();
+void   Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const int *PID0_List );
+void   Grackle_Close( const int lv, const int SaveSg, const real_che h_Che_Array[], const int NPG, const int *PID0_List );
+void   Grackle_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
+                          const bool OverlapMPI, const bool Overlap_Sync );
+void   CPU_GrackleSolver( grackle_field_data *Che_FieldData, code_units Che_Units, const int NPatchGroup, const real dt );
+void   Grackle_Calculate( real Out[], const GrackleFieldBIdx_t TFields, const int lv, const int NPG, const int *PID0_List );
+double Grackle_GetTimeStep_CoolingTime( const int lv );
 #endif // #ifdef SUPPORT_GRACKLE
 
 

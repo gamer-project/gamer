@@ -102,7 +102,12 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
 
 // reset the time-step actually adopted to zero for OPT__FREEZE_FLUID
-   const double dt = ( OPT__FREEZE_FLUID ) ? 0.0 : dt_in;
+#  ifdef SUPPORT_GRACKLE
+   const bool   UnFreeze = ( TSolver == GRACKLE_SOLVER  &&  OPT__UNFREEZE_GRACKLE );
+#  else
+   const bool   UnFreeze = false;
+#  endif
+   const double dt = ( OPT__FREEZE_FLUID  &&  ! UnFreeze ) ? 0.0 : dt_in;
 
 
 // set the maximum number of patch groups to be updated at a time

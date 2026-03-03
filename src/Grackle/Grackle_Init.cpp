@@ -71,7 +71,7 @@ void Grackle_Init()
    Che_Units.time_units           = UNIT_T;
    Che_Units.velocity_units       = UNIT_V;
    Che_Units.a_units              = 1.0;
-   Che_Units.a_value              = 1.0;
+   Che_Units.a_value              = 1.0 / (1.0 + GRACKLE_REDSHIFT) / Che_Units.a_units; // see https://grackle.readthedocs.io/en/latest/Interaction.html#c.a_value
 #  endif
 
 
@@ -99,6 +99,15 @@ void Grackle_Init()
    grackle_data->three_body_rate                = GRACKLE_THREE_BODY_RATE;
    grackle_data->cie_cooling                    = GRACKLE_CIE_COOLING;
    grackle_data->h2_optical_depth_approximation = GRACKLE_H2_OPA_APPROX;
+   grackle_data->use_volumetric_heating_rate    = GRACKLE_USE_V_HEATING_RATE;
+   grackle_data->use_specific_heating_rate      = GRACKLE_USE_S_HEATING_RATE;
+   grackle_data->use_temperature_floor          = GRACKLE_USE_TEMP_FLOOR;
+   grackle_data->temperature_floor_scalar       = GRACKLE_TEMP_FLOOR_SCALAR;
+// hydrogen mass fraction is only set when it is in the non-equilibrium mode
+// because the tables for tabulated mode were created assuming hydrogen mass fraction of about 0.716
+// see https://grackle.readthedocs.io/en/latest/Parameters.html#c.HydrogenFractionByMass
+   if ( GRACKLE_PRIMORDIAL != GRACKLE_PRI_CHE_CLOUDY )
+   grackle_data->HydrogenFractionByMass         = GRACKLE_HYDROGEN_MFRAC;
 
 #  ifdef OPENMP
 // currently we adopt the OpenMP implementation in Grackle directly, which applies the parallelization to

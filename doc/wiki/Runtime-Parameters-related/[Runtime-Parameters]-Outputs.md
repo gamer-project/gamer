@@ -21,6 +21,9 @@ Parameters described on this page:
 [OPT__OUTPUT_LORENTZ](#OPT__OUTPUT_LORENTZ), &nbsp;
 [OPT__OUTPUT_3VELOCITY](#OPT__OUTPUT_3VELOCITY), &nbsp;
 [OPT__OUTPUT_ENTHALPY](#OPT__OUTPUT_ENTHALPY), &nbsp;
+[OPT__OUTPUT_GRACKLE_TEMP](#OPT__OUTPUT_GRACKLE_TEMP), &nbsp;
+[OPT__OUTPUT_GRACKLE_MU](#OPT__OUTPUT_GRACKLE_MU), &nbsp;
+[OPT__OUTPUT_GRACKLE_TCOOL](#OPT__OUTPUT_GRACKLE_TCOOL), &nbsp;
 [OPT__OUTPUT_USER_FIELD](#OPT__OUTPUT_USER_FIELD), &nbsp;
 [OPT__OUTPUT_MODE](#OPT__OUTPUT_MODE), &nbsp;
 [OPT__OUTPUT_RESTART](#OPT__OUTPUT_RESTART), &nbsp;
@@ -210,6 +213,27 @@ For [[--srhd | [Installation]-Option-List#--srhd]] only.
 Output the SRHD reduced enthalpy on grids.
     * **Restriction:**
 For [[--srhd | [Installation]-Option-List#--srhd]] only.
+
+<a name="OPT__OUTPUT_GRACKLE_TEMP"></a>
+* #### `OPT__OUTPUT_GRACKLE_TEMP` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Output the temperature calculated by Grackle.
+    * **Restriction:**
+For [[--grackle | [Installation]-Option-List#--grackle]] only.
+
+<a name="OPT__OUTPUT_GRACKLE_MU"></a>
+* #### `OPT__OUTPUT_GRACKLE_MU` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Output the mean molecular weight calculated by Grackle.
+    * **Restriction:**
+For [[--grackle | [Installation]-Option-List#--grackle]] only.
+
+<a name="OPT__OUTPUT_GRACKLE_TCOOL"></a>
+* #### `OPT__OUTPUT_GRACKLE_TCOOL` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Output the cooling time calculated by Grackle.
+    * **Restriction:**
+For [[--grackle | [Installation]-Option-List#--grackle]] only.
 
 <a name="OPT__OUTPUT_MODE"></a>
 * #### `OPT__OUTPUT_MODE` &ensp; (1=const step, 2=const dt, 3=dump table) &ensp; [none]
