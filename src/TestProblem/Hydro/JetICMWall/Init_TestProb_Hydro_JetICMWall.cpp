@@ -497,4 +497,4 @@ void Init_TestProb_Hydro_JetICMWall()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_TestProb_SRHydro_JetICMWall
+} // FUNCTION : Init_TestProb_Hydro_JetICMWall

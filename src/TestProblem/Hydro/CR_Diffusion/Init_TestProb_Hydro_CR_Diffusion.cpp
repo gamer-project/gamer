@@ -485,7 +485,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //       We basically apply a rotation matrix to rotate the magnetic field to (1, 0, 0) direction, so the simulation will match the solution above.
 //       C = A \cross B, where A and B are the unit vectors.
 //       sin = abs(C), cos = A \dot B
-//       R = I + v + v**2 / (1+cos), **NOTICE**: this would be invalad when cos = -1.
+//       R = I + v + v**2 / (1+cos), **NOTICE**: this would be invalid when cos = -1.
 //           [    1 - (C_2**2 + C_3**2) / (1+cos) | -C_3 +         (C_1*C_2) / (1+cos) |  C_2 +         (C_1*C_3) / (1+cos) ]
 //       R = [  C_3 +         (C_1*C_2) / (1+cos) | 1    - (C_3**2 + C_1**2) / (1+cos) | -C_1 +         (C_2*C_3) / (1+cos) ]
 //           [ -C_2 +         (C_1*C_3) / (1+cos) |  C_1 +         (C_2*C_3) / (1+cos) |    1 - (C_1**2 + C_2**2) / (1+cos) ]

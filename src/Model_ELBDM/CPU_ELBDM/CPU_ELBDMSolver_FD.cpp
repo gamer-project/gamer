@@ -306,7 +306,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], real Flux_Array[][NFLUX_TOTAL][ SQ
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  TrasposeXY
+// Function    :  TransposeXY
 // Description :  Transpose the x and y directions
 //
 // Parameter   :  u : Input wave function (density, real, imaginary)
@@ -334,12 +334,12 @@ void TransposeXY( real u[][ CUBE(FLU_NXT) ] )
 
    delete [] u_xy;
 
-} // FUNCTION : TrasposeXY
+} // FUNCTION : TransposeXY
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  TrasposeXZ
+// Function    :  TransposeXZ
 // Description :  Transpose the x and z directions
 //
 // Parameter   :  u : Input wave function (density, real, imaginary)
@@ -371,7 +371,7 @@ void TransposeXZ( real u[][ CUBE(FLU_NXT) ] )
       Idx1 = to1D(k,j,k);
    } // j,k
 
-} // FUNCTION : TrasposeXZ
+} // FUNCTION : TransposeXZ
 
 
 
