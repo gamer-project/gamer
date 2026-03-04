@@ -287,7 +287,7 @@ void CPU_AdvanceX( real u[][ CUBE(FLU_NXT) ], real Flux_Array[][NFLUX_TOTAL][ SQ
          Idx2 ++;
       }
 
-//    4.3. save the fluxes across all patch boundaries (remeber to put the coefficient "1/(2*Eta*dh)" back)
+//    4.3. save the fluxes across all patch boundaries (remember to put the coefficient "1/(2*Eta*dh)" back)
       if ( StoreFlux )
       if (  ( j>=FLU_GHOST_SIZE && j<FLU_NXT-FLU_GHOST_SIZE )  &&  ( k>=FLU_GHOST_SIZE && k<FLU_NXT-FLU_GHOST_SIZE )  )
       {

@@ -372,7 +372,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                      const double r   = sqrt( r2 );
                      const int    bin = ( LogBin ) ? (  (r<dr_min) ? 0 : int( log(r/dr_min)/log(LogBinRatio) ) + 1  )
                                                    : int( r/dr_min );
-//                   prevent from round-off errors
+//                   prevent round-off errors
                      if ( bin >= Prof[0]->NBin )   Patch_Bin[TID][LocalID][k][j][i] = CellSkip;
                      else                          Patch_Bin[TID][LocalID][k][j][i] = bin;
 

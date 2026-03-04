@@ -152,7 +152,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "Jet_PrecessAngle",   &Jet_PrecessAngle,  0.0,           0.0,            NoMax_double );
    LOAD_PARA( load_mode, "Jet_PrecessPeriod",  &Jet_PrecessPeriod, 0.0,           0.0,            NoMax_double );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

@@ -130,7 +130,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "MHDLinear_Sign",    &MHDLinear_Sign,         1.0,          NoMin_double,     NoMax_double      );
    LOAD_PARA( load_mode, "MHDLinear_Phase0",  &MHDLinear_Phase0,       0.0,          NoMin_double,     NoMax_double      );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

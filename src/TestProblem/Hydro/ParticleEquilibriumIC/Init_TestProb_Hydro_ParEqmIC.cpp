@@ -146,7 +146,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, ParEqmIC_Cloud_ParaFilename_i,   ParEqmIC_Cloud_ParaFilenames[i],   NoDef_str,     Useless_str,   Useless_str       );
    }
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 
