@@ -1,3 +1,3 @@
 TBF.
 
-- [[ Update Wiki | Contribute:-Update-Wiki ]]
+- [[ Update Wiki | [Contribute]-Update-Wiki ]]
