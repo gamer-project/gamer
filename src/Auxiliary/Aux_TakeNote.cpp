@@ -1299,6 +1299,15 @@ void Aux_TakeNote()
       fprintf( Note, "\n" ); }
 
       fprintf( Note, "OPT__CORR_AFTER_ALL_SYNC       % d\n",      OPT__CORR_AFTER_ALL_SYNC );
+      fprintf( Note, "Passive_Floor_Off              % d\n",      -1                       );
+
+//    target passive scalars to NOT be applied floor operations
+      fprintf( Note, "   Target fields               "                                     );
+      for (int v=0; v<NCOMP_TOTAL; v++)
+      if ( ( PassiveFloorMask & (1L<<v) ) == 0 )
+      fprintf( Note, " %s",                                       FieldLabel[v]            );
+      fprintf( Note, "\n" );
+
       fprintf( Note, "OPT__NORMALIZE_PASSIVE         % d\n",      OPT__NORMALIZE_PASSIVE   );
 
 //    target passive scalars to be normalized

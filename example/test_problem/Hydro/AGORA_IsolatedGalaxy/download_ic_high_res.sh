@@ -8,8 +8,8 @@ FILE_SHA256_2="8715f1b39e90a7296ec2adcd442fa13a3d45d2ad021c6fa2fae9e4ab7a4700b2"
 
 
 # file download
-curl https://hub.yt/api/v1/item/${FILE_ID1}/download -o "${LOCAL_FILENAME1}.tar.gz"
-curl https://hub.yt/api/v1/item/${FILE_ID2}/download -o "${LOCAL_FILENAME2}"
+curl -L https://hub.yt/api/v1/item/${FILE_ID1}/download -o "${LOCAL_FILENAME1}.tar.gz"
+curl -L https://hub.yt/api/v1/item/${FILE_ID2}/download -o "${LOCAL_FILENAME2}"
 
 # compare sha256sum
 ! [ `sha256sum ${LOCAL_FILENAME1}.tar.gz | awk '{print $1}'` = "${FILE_SHA256_1}" ] && echo "File broken: ${LOCAL_FILENAME1}.tar.gz"

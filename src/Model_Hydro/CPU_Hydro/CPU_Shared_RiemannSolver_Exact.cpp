@@ -18,7 +18,7 @@
 
 #else // #ifdef __CUDACC__
 
-void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
+void Hydro_Con2Pri( const real In[], real Out[], const real MinPres, const long PassiveFloor,
                     const bool FracPassive, const int NFrac, const int FracIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
@@ -51,6 +51,7 @@ GPU_DEVICE static void Set_Flux( real flux[], const real val[], const real Gamma
 //                Flux_Out          : Output array to store the average flux along t axis
 //                L/R_In            : Input left/right states (conserved variables)
 //                MinDens/Pres      : Density and pressure floors
+//                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_DensPres2CSqr : EoS routine to compute the sound speed squared
 //                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
@@ -60,7 +61,7 @@ GPU_DEVICE static void Set_Flux( real flux[], const real val[], const real Gamma
 //------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                                const real MinDens, const real MinPres, const long PassiveFloor, const EoS_DE2P_t EoS_DensEint2Pres,
                                 const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
                                 const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] )
 {
@@ -90,9 +91,9 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
    real L[NCOMP_TOTAL], R[NCOMP_TOTAL], Temp;
 
 // convert conserved variables to primitive variables
-   Hydro_Con2Pri( L_In, L, MinPres, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
+   Hydro_Con2Pri( L_In, L, MinPres, PassiveFloor, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
                   EoS_DensEint2Pres, NULL, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
-   Hydro_Con2Pri( R_In, R, MinPres, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
+   Hydro_Con2Pri( R_In, R, MinPres, PassiveFloor, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
                   EoS_DensEint2Pres, NULL, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
 
 

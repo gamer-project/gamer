@@ -50,7 +50,7 @@ extern int       *BaseP;                              // table recording the IDs
 extern int        Flu_ParaBuf;                        // number of parallel buffers to exchange all fluid
                                                       // variables for the fluid solver and fluid refinement
 
-extern long       FixUpVar_Flux, FixUpVar_Restrict;
+extern long       FixUpVar_Flux, FixUpVar_Restrict, PassiveFloorMask;
 extern int        PassiveNorm_NVar, PassiveNorm_VarIdx[NCOMP_PASSIVE];
 extern int        PassiveIntFrac_NVar, PassiveIntFrac_VarIdx[NCOMP_PASSIVE];
 

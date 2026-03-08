@@ -491,6 +491,12 @@ const FixUpRestrict_t
    FIXUP_REST_NO  = 0,
    FIXUP_REST_YES = 1;
 
+typedef int FloorPassive_t;
+const FloorPassive_t
+   FLOOR_NULL = -1,
+   FLOOR_NO   =  0,
+   FLOOR_YES  =  1;
+
 typedef int NormPassive_t;
 const NormPassive_t
    NORMALIZE_NO  = 0,
