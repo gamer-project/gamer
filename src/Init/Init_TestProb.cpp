@@ -4,6 +4,8 @@
 // ******************************************************************
 // add the new test problem function prototypes here
 // ******************************************************************
+void Init_TestProb_Hydro_Dust_Rho_Temp();
+
 void Init_TestProb_Hydro_BlastWave();
 void Init_TestProb_Hydro_AcousticWave();
 void Init_TestProb_Hydro_Bondi();
@@ -69,6 +71,8 @@ void Init_TestProb()
    switch ( TESTPROB_ID )
    {
       case TESTPROB_NONE :                                                                                  break;
+
+      case TESTPROB_HYDRO_DUST_RHO_TEMP :                Init_TestProb_Hydro_Dust_Rho_Temp();               break;
 
       case TESTPROB_HYDRO_BLAST_WAVE :                   Init_TestProb_Hydro_BlastWave();                   break;
       case TESTPROB_HYDRO_ACOUSTIC_WAVE :                Init_TestProb_Hydro_AcousticWave();                break;
