@@ -4,8 +4,9 @@
 #ifdef SUPPORT_GRACKLE
 
 // whether gr_check_consistency() is defined
-// --> it is introduced in the version 3.3.1-dev of
-//     the Grackle library to perform some consistency checks
+// --> it is introduced in the version 3.4 of
+//     the Grackle library to perform some consistency checks,
+//     see https://grackle.readthedocs.io/en/latest/Reference.html#c.gr_check_consistency
 // --> set it to 0 to disable the check if an older version is being used
 #define HAVE_GR_CHECK_CONSISTENCY 1
 
