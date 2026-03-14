@@ -14,6 +14,7 @@ Z_NOW        = 0.0                         # Redshift
 NH_NOW       = 1.0e-3                      # Hydrogen density (cm^-3)
 T_NOW        = 1.0e4                       # Temperature (K)
 X_H          = 0.716                       # Hydrogen mass fraction for HM2012
+MU           = 0.6                         # Mean molecular weight with assumptions for fully ionized primordial (metal-free) gas at 10^4K
 RHO_RANGE    = np.logspace(-29, -21, 100)  # Denisty axis range (g/cm^3)
 T_MU_RANGE   = np.logspace(  0,   8, 100)  # Temperature/mu axis range (K)
 
@@ -72,12 +73,8 @@ def calculate_cooling_time(nH, T, lambda_net_norm):
     yr_to_sec  = 3.154e7
     Myr_to_sec = 1.0e6 * yr_to_sec
 
-    # Assumptions for fully ionized primordial (metal-free) gas at 10^4K
-    # Mean molecular weight mu ~ 0.6
-    mu = 0.6
-
     # Total number density of all species (H, He, e-)
-    n_tot = nH / (mu * X_H)
+    n_tot = nH / (MU * X_H)
 
     # Internal Energy (erg/cm^3)
     energy_density = 1.5 * n_tot * kB * T
@@ -132,7 +129,7 @@ def print_one_point(cooling_rate, heating_rate, net_rate, t_cool_Myr):
 # -------------------------------------------------------------------------
 # Output cooling and heating rates for a grid of (z, nH, T) values to a png file
 def output_grid():
-    plot_grid(*calculate_grid())
+    plot_grid(Z_NOW, *calculate_grid())
 
 
 def calculate_grid(grackle_path=GRACKLE_PATH, z_now=Z_NOW, rho_range=RHO_RANGE, t_mu_range=T_MU_RANGE):
@@ -143,7 +140,7 @@ def calculate_grid(grackle_path=GRACKLE_PATH, z_now=Z_NOW, rho_range=RHO_RANGE, 
     # Calculate heating/cooling rates on grid
     mp         = 1.6726e-24       # Proton mass (g)
     nh_val     = grid_rho / (mp / X_H)
-    t_val      = grid_t_mu
+    t_val      = grid_t_mu * MU
     z_val      = z_now*np.ones_like(nh_val)
     cool, heat = get_grackle_rates(grackle_path, z_val, nh_val, t_val)
     net_rates  = (heat - cool) * (nh_val**2)
@@ -151,7 +148,7 @@ def calculate_grid(grackle_path=GRACKLE_PATH, z_now=Z_NOW, rho_range=RHO_RANGE, 
     return grid_rho, grid_t_mu, net_rates
 
 
-def plot_grid(grid_rho, grid_t_mu, net_rates):
+def plot_grid(z_now, grid_rho, grid_t_mu, net_rates):
     # Create the figure
     fig, ax = plt.subplots(figsize=(10, 8))
 
@@ -208,12 +205,12 @@ def plot_grid(grid_rho, grid_t_mu, net_rates):
             f'max = {net_rates.max():.3e} erg/(cm$^3 \cdot$ s)\nmin = {net_rates.min():.3e} erg/(cm$^3 \cdot$ s)',
             transform=ax.transAxes, ha='left', va='top',
             fontsize=font_size*0.9, color='black', fontweight='bold')
-    ax.text(0.97, 0.97, rf'$\mathbf{{z = {Z_NOW:.2f}}}$',
+    ax.text(0.97, 0.97, rf'$\mathbf{{z = {z_now:.2f}}}$',
             transform=ax.transAxes, ha='right', va='top',
             fontsize=font_size, color='black', fontweight='bold')
 
     # Save
-    plt.savefig(f"grackle_phase_plot_z={Z_NOW}.png", dpi=300, bbox_inches='tight')
+    plt.savefig(f"grackle_phase_plot_z={z_now}.png", dpi=300, bbox_inches='tight')
 
 
 # -------------------------------------------------------------------------
