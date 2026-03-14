@@ -186,10 +186,11 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
 #        ifdef MASSIVE_PARTICLES
          if ( WeightingDensityField & _PAR_DENS  ||  WeightingDensityField & _TOTAL_DENS )
          {
-            Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, _PAR_TYPE, PredictPos, Time[lv],
+            Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, _PAR_TYPE, PredictPos,
+                                          amr->FluSgTime[lv][ amr->FluSg[lv] ],
                                           SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
 
-            Prepare_PatchData_InitParticleDensityArray( lv, Time[lv] );
+            Prepare_PatchData_InitParticleDensityArray( lv, amr->FluSgTime[lv][ amr->FluSg[lv] ] );
          }
 #        endif
 
@@ -204,7 +205,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
 //          get the weighting density on grids
             if ( UsePrepare )
             {
-               Prepare_PatchData( lv, Time[lv], WeightingDensity[0][0][0], NULL, 0, NPG, PID0_List+Disp, WeightingDensityField, _NONE,
+               Prepare_PatchData( lv, amr->FluSgTime[lv][ amr->FluSg[lv] ], WeightingDensity[0][0][0], NULL, 0, NPG, PID0_List+Disp, WeightingDensityField, _NONE,
                                   INT_NONE, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                                   MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
             }

@@ -324,6 +324,15 @@ void Init_ResetParameter()
 #  endif
 
 
+#  ifdef MHD
+   if ( OPT__SAME_INTERFACE_B == SAME_INTERFACE_B_DEFAULT )
+   {
+      OPT__SAME_INTERFACE_B = ( MINMOD_MAX_ITER > 0 ) ? SAME_INTERFACE_B_YES : SAME_INTERFACE_B_NO;
+
+      PRINT_RESET_PARA( OPT__SAME_INTERFACE_B, FORMAT_INT, "" );
+   }
+#  endif
+
 // text format parameters
 // --> The current strategy is to read the integer in between % and . to determine the string length.
 //     For example, the format %20.16e will give a length of 20. However, if only checking the string after %,
@@ -388,14 +397,22 @@ void Init_ResetParameter()
 #  elif ( MODEL == ELBDM )
    if ( OPT__FLU_INT_SCHEME == INT_DEFAULT )
    {
+#     ifdef SUPPORT_SPECTRAL_INT
+      OPT__FLU_INT_SCHEME = INT_SPECTRAL;
+#     else
       OPT__FLU_INT_SCHEME = INT_CQUAR;
+#     endif
 
       PRINT_RESET_PARA( OPT__FLU_INT_SCHEME, FORMAT_INT, "" );
    }
 
    if ( OPT__REF_FLU_INT_SCHEME == INT_DEFAULT )
    {
+#     ifdef SUPPORT_SPECTRAL_INT
+      OPT__REF_FLU_INT_SCHEME = INT_SPECTRAL;
+#     else
       OPT__REF_FLU_INT_SCHEME = INT_CQUAR;
+#     endif
 
       PRINT_RESET_PARA( OPT__REF_FLU_INT_SCHEME, FORMAT_INT, "" );
    }

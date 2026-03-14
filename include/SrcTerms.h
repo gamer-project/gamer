@@ -14,7 +14,7 @@ typedef void (*SrcFunc_t)( real fluid[], const real B[],
                            const SrcTerms_t *SrcTerms, const real dt, const real dh,
                            const double x, const double y, const double z,
                            const double TimeNew, const double TimeOld,
-                           const real MinDens, const real MinPres, const real MinEint,
+                           const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor,
                            const EoS_t *EoS, const double AuxArray_Flt[], const int AuxArray_Int[] );
 
 

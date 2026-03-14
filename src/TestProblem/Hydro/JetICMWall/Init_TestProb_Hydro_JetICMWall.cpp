@@ -437,16 +437,16 @@ void AddNewField_JetICMWall()
 
   if ( JetFieldIdx == Idx_Undefined )
     JetFieldIdx = AddField( "JetField", FIXUP_FLUX_YES, FIXUP_REST_YES,
-                            NORMALIZE_YES, INTERP_FRAC_NO );
+                            FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_NO );
   if ( ICMFieldIdx == Idx_Undefined )
     ICMFieldIdx = AddField( "ICMField", FIXUP_FLUX_YES, FIXUP_REST_YES,
-                            NORMALIZE_YES, INTERP_FRAC_NO );
+                            FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_NO );
   if ( LobeFieldIdx == Idx_Undefined )
     LobeFieldIdx = AddField( "LobeField", FIXUP_FLUX_YES, FIXUP_REST_YES,
-                             NORMALIZE_YES, INTERP_FRAC_NO );
+                            FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_NO );
   if ( IntFieldIdx == Idx_Undefined )
     IntFieldIdx = AddField( "IntField", FIXUP_FLUX_YES, FIXUP_REST_YES,
-                            NORMALIZE_YES, INTERP_FRAC_NO );
+                            FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_NO );
 
 } // FUNCTION : AddNewField_JetICMWall
 #endif // #if ( MODEL == HYDRO )

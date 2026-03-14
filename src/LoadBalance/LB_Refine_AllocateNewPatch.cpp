@@ -1109,14 +1109,14 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       Hydro_DualEnergyFix( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
                            FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i], FData_Flu[DUAL][k][j][i],
                            dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], CheckMinPres_Yes, MIN_PRES,
-                           UseDual2FixEngy, Emag );
+                           PassiveFloorMask, UseDual2FixEngy, Emag );
 
 #     else // #ifdef DUAL_ENERGY
 
 //    apply internal energy floor
       FData_Flu[ENGY][k][j][i]
          = Hydro_CheckMinEintInEngy( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
-                                     FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i], MIN_EINT, Emag );
+                                     FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i], MIN_EINT, PassiveFloorMask, Emag );
 #     endif // #ifdef DUAL_ENERGY ... else ...
 #     endif // #if ( MODEL == HYDRO )
 

@@ -65,9 +65,7 @@ void EoS_SetAuxArray_Isothermal( double AuxArray_Flt[], int AuxArray_Int[] )
 
 #  ifdef GAMER_DEBUG
    real Cs2 = (real)AuxArray_Flt[0];
-   Hydro_IsUnphysical( UNPHY_MODE_SING, &Cs2, "sound speed squared",
-                       TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                       ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Cs2, "sound speed squared", TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 } // FUNCTION : EoS_SetAuxArray_Isothermal
@@ -111,9 +109,7 @@ static real EoS_DensEint2Pres_Isothermal( const real Dens, const real Eint, cons
 #  ifdef GAMER_DEBUG
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
-   Hydro_IsUnphysical( UNPHY_MODE_SING, &Dens, "input density",
-                       TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                       ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Dens, "input density", TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -148,9 +144,7 @@ static real EoS_DensPres2Eint_Isothermal( const real Dens, const real Pres, cons
 
 // check
 #  ifdef GAMER_DEBUG
-   Hydro_IsUnphysical( UNPHY_MODE_SING, &Pres, "input pressure",
-                       (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                       ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Pres, "input pressure", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -259,9 +253,7 @@ static real EoS_DensTemp2Pres_Isothermal( const real Dens, const real Temp, cons
 #  ifdef GAMER_DEBUG
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
-   Hydro_IsUnphysical( UNPHY_MODE_SING, &Dens, "input density",
-                       TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                       ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( Dens, "input density", TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 

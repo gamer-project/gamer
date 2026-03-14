@@ -10,7 +10,7 @@ void CPU_SrcSolver_IterateAllCells(
    const double g_Corner_Array[][3],
    const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
    const double TimeNew, const double TimeOld,
-   const real MinDens, const real MinPres, const real MinEint, const EoS_t EoS );
+   const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor, const EoS_t EoS );
 
 
 
@@ -38,6 +38,7 @@ void CPU_SrcSolver_IterateAllCells(
 //                TimeOld           : Physical time before update
 //                                    --> This function updates physical time from TimeOld to TimeNew
 //                MinDens/Pres/Eint : Density, pressure, and internal energy floors
+//                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //-------------------------------------------------------------------------------------------------------
 void CPU_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)           ],
                           real h_Flu_Array_Out[][FLU_NOUT_S][ CUBE(PS1)               ],
@@ -45,7 +46,7 @@ void CPU_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)     
                     const double h_Corner_Array[][3],
                     const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
                     const double TimeNew, const double TimeOld,
-                    const real MinDens, const real MinPres, const real MinEint )
+                    const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor )
 {
 
 // check
@@ -67,7 +68,7 @@ void CPU_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)     
 
    CPU_SrcSolver_IterateAllCells( h_Flu_Array_In, h_Flu_Array_Out, h_Mag_Array_In, h_Corner_Array,
                                   SrcTerms, NPatchGroup, dt, dh, TimeNew, TimeOld,
-                                  MinDens, MinPres, MinEint, EoS );
+                                  MinDens, MinPres, MinEint, PassiveFloor, EoS );
 
 } // FUNCTION : CPU_SrcSolver
 

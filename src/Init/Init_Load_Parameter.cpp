@@ -90,6 +90,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "PAR_REMOVE_CELL",            &amr->Par->RemoveCell,           -1.0,              NoMin_double,  NoMax_double   );
    ReadPara->Add( "OPT__FREEZE_PAR",            &OPT__FREEZE_PAR,                 false,            Useless_bool,  Useless_bool   );
    ReadPara->Add( "PAR_TR_VEL_CORR",            &amr->Par->TracerVelCorr,         false,            Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__PAR_INIT_CHECK",        &OPT__PAR_INIT_CHECK,             true,             Useless_bool,  Useless_bool   );
 #  endif // #ifdef PARTICLE
 
 
@@ -319,7 +320,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "DUAL_ENERGY_SWITCH",         &DUAL_ENERGY_SWITCH,              2.0e-2,          0.0,           NoMax_double   );
 #  endif
 #  ifdef MHD
-   ReadPara->Add( "OPT__SAME_INTERFACE_B",      &OPT__SAME_INTERFACE_B,           false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__SAME_INTERFACE_B",      &OPT__SAME_INTERFACE_B,          -1,                      -1,     1              );
 #  endif
 #  endif // #if ( MODEL == HYDRO )
 

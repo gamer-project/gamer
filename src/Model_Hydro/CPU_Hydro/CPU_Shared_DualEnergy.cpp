@@ -53,6 +53,7 @@ static real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Ga
 //                                   --> In some cases we actually want to check if pressure becomes unphysical,
 //                                       for which we don't want to enable this option
 //                MinPres          : Minimum allowed pressure
+//                PassiveFloor     : Bitwise flag to specify the passive scalars to be floored
 //                DualEnergySwitch : if ( Eint/(Ekin+Emag) < DualEnergySwitch ) ==> correct Eint and Etot
 //                                   else                                       ==> correct Dual
 //                Emag             : Magnetic energy density (0.5*B^2) --> for MHD only
@@ -62,7 +63,7 @@ static real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Ga
 GPU_DEVICE
 void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,
                           real &Etot, real &Dual, char &DE_Status, const real Gamma_m1, const real _Gamma_m1,
-                          const bool CheckMinPres, const real MinPres, const real DualEnergySwitch,
+                          const bool CheckMinPres, const real MinPres, const long PassiveFloor, const real DualEnergySwitch,
                           const real Emag )
 {
 
@@ -78,7 +79,7 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 // --> Enth (i.e., non-thermal energy) includes both kinetic and magnetic energies
    real Enth, Eint, Pres;
 
-   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Emag,
+   Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, PassiveFloor, Emag,
                           NULL, NULL, NULL, NULL, NULL );
    Enth = Etot - Eint;
 
@@ -138,12 +139,14 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Pres()
 //                EoS_Table         : EoS tables
+//                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //
 // Return      :  Dual
 //-------------------------------------------------------------------------------------------------------
 real Hydro_Con2Dual( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                      const real Emag, const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[],
-                     const int EoS_AuxArray_Int[], const real *const EoS_Table[EOS_NTABLE_MAX] )
+                     const int EoS_AuxArray_Int[], const real *const EoS_Table[EOS_NTABLE_MAX],
+                     const long PassiveFloor )
 {
 
 // currently this function does NOT apply pressure floor when calling Hydro_Con2Pres()
@@ -153,7 +156,7 @@ real Hydro_Con2Dual( const real Dens, const real MomX, const real MomY, const re
 
 // calculate pressure and convert it to the dual-energy variable
 // --> note that DE_ENPY only works with EOS_GAMMA, which does not involve passive scalars
-   Pres = Hydro_Con2Pres( Dens, MomX, MomY, MomZ, Engy, NULL, CheckMinPres_No, NULL_REAL, Emag,
+   Pres = Hydro_Con2Pres( Dens, MomX, MomY, MomZ, Engy, NULL, CheckMinPres_No, NULL_REAL, PassiveFloor, Emag,
                           EoS_DensEint2Pres, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                           EoS_Table, NULL );
    Dual = Hydro_DensPres2Dual( Dens, Pres, EoS_AuxArray_Flt[1] );
