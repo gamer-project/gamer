@@ -133,7 +133,7 @@ for ds in ts.piter():
         if field == 'grackle_cooling_length' or field == 'grackle_cooling_length_over_dh':
             pz.annotate_grids()
 
-        # gas IC is uniform if either density and temperature vary by less than a factor of 5
+        # gas IC is uniform if either density or temperature vary by less than a factor of 5
         dens_ratio = ad["density"].max() / ad["density"].min()
         temp_ratio = ad["grackle_T_over_mu"].max() / ad["grackle_T_over_mu"].min()
         dataset_is_uniform = (dens_ratio <= 5.0) or (temp_ratio <= 5.0)
