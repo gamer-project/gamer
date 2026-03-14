@@ -10,7 +10,7 @@ from scipy.interpolate import RegularGridInterpolator
 # -------------------------------------------------------------------------
 # Set user-specified parameters
 GRACKLE_PATH = "../CloudyData_UVB=HM2012.h5"
-Z_NOW        = 3.0                         # Redshift
+Z_NOW        = 0.0                         # Redshift
 NH_NOW       = 1.0e-3                      # Hydrogen density (cm^-3)
 T_NOW        = 1.0e4                       # Temperature (K)
 X_H          = 0.716                       # Hydrogen mass fraction for HM2012
