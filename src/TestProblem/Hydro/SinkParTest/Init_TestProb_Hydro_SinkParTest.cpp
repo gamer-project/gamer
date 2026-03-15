@@ -5,10 +5,6 @@
 
 // problem-specific global variables
 // =======================================================================================
-static int        *TargetCols = new int [6];      // Index of columns read from the turbulence table 
-static int        ColIdx_VelX;                    // Column index of x direction velocity in the turbulence table 
-static int        ColIdx_VelY;                    // Column index of y direction velocity in the turbulence table 
-static int        ColIdx_VelZ;                    // Column index of z direction velocity in the turbulence table 
 static int        tur_table_NBin;                 // number of row in turbulence table obtained by Aux_LoadTable
 static int        size;                           // turbulence cell number                  
 
@@ -168,6 +164,71 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
 } // FUNCITON : LoadInputTestProb
 
 //-------------------------------------------------------------------------------------------------------
+// Function    :  Load_Turbulence_SinkParTest
+// Description : load turbulence and calculate Vrms_Scale
+// Note        :
+// Parameter   :
+// Return      :
+//-------------------------------------------------------------------------------------------------------
+void Load_Turbulence_SinkParTest()
+{
+   const bool RowMajor_No  = false;           // load data into the column major
+   const bool AllocMem_Yes = true;            // allocate memory
+   
+   int TargetCols[6] = {0, 1, 2, 3, 4, 5};
+   const int ColIdx_VelX = 3;
+   const int ColIdx_VelY = 4;
+   const int ColIdx_VelZ = 5;
+
+   double *Table_VelX, *Table_VelY, *Table_VelZ;     // used to store the readed data
+   double *tur_table = NULL;                         // used to store turbulence (1D)
+
+   double Total_VelX = 0.0; // used to calculate Vrms
+   double Total_VelY = 0.0;
+   double Total_VelZ = 0.0;
+   double Total_VelX_SQR = 0.0;
+   double Total_VelY_SQR = 0.0;
+   double Total_VelZ_SQR = 0.0;
+   double Vrms, Vrms_Scale;                     // used to rescale velocity
+
+   tur_table_NBin = Aux_LoadTable( tur_table, Tur_Table, 6, TargetCols, RowMajor_No, AllocMem_Yes );
+
+   Table_VelX  = tur_table + ColIdx_VelX * tur_table_NBin;
+   Table_VelY  = tur_table + ColIdx_VelY * tur_table_NBin;
+   Table_VelZ  = tur_table + ColIdx_VelZ * tur_table_NBin;
+
+   Table_Rescaled_VelX = new double [tur_table_NBin];
+   Table_Rescaled_VelY = new double [tur_table_NBin];
+   Table_Rescaled_VelZ = new double [tur_table_NBin];
+
+   for ( int i = 0; i < tur_table_NBin; i++ )
+   {
+      Total_VelX += Table_VelX[i];
+      Total_VelY += Table_VelY[i];
+      Total_VelZ += Table_VelZ[i];
+
+      Total_VelX_SQR += SQR(Table_VelX[i]);
+      Total_VelY_SQR += SQR(Table_VelY[i]);
+      Total_VelZ_SQR += SQR(Table_VelZ[i]);
+   }
+
+   // Vrms = SQRT( ( Vx^2 + Vy^2 + Vz^2 ) / N + ( Vx + Vy + Vz / N) ^ 2 )
+   Vrms = SQRT( (Total_VelX_SQR + Total_VelY_SQR + Total_VelZ_SQR) / tur_table_NBin - 
+                SQR( (Total_VelX + Total_VelY + Total_VelZ) / tur_table_NBin ) );
+   Vrms_Scale = SinkParTest_Mach_num * SinkParTest_Cs / Vrms;
+
+   // Rescale velocity
+   for ( int i = 0; i < tur_table_NBin; i++ )
+   {
+      Table_Rescaled_VelX[i] = Vrms_Scale * ( Table_VelX[i] - Total_VelX / tur_table_NBin );
+      Table_Rescaled_VelY[i] = Vrms_Scale * ( Table_VelY[i] - Total_VelY / tur_table_NBin );
+      Table_Rescaled_VelZ[i] = Vrms_Scale * ( Table_VelZ[i] - Total_VelZ / tur_table_NBin );
+   }
+
+   delete [] tur_table;
+} // Function : Load_Turbulence_SinkParTest
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
 //
@@ -198,17 +259,11 @@ void SetParameter()
 
    delete ReadPara;
 
-// (1-2) set the default values
-   TargetCols[0] =  0;
-   TargetCols[1] =  1;
-   TargetCols[2] =  2;
-   TargetCols[3] =  3;
-   TargetCols[4] =  4;
-   TargetCols[5] =  5;
-   ColIdx_VelX   =  3;
-   ColIdx_VelY   =  4;
-   ColIdx_VelZ   =  5;
+   // (1-2) set the default values
    size = 129;
+
+   // Load the turbulence field if not restarting
+   if ( OPT__INIT != INIT_BY_RESTART ) Load_Turbulence_SinkParTest();
 
    if (( size - 1 < NX0_TOT[0]) || ( size - 1 < NX0_TOT[1]) || ( size - 1 < NX0_TOT[2]))
       Aux_Error( ERROR_INFO, "size - 1 should be smaller than half of NX0_TOT_X/Y/Z !!\n" );
@@ -264,66 +319,6 @@ void SetParameter()
 } // FUNCTION : SetParameter
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Load_Turbulence_SinkParTest
-// Description : load turbulence and calculate Vrms_Scale
-// Note        :
-// Parameter   :
-// Return      :
-//-------------------------------------------------------------------------------------------------------
-void Load_Turbulence_SinkParTest()
-{
-   const bool RowMajor_No  = false;           // load data into the column major
-   const bool AllocMem_Yes = true;            // allocate memory
-
-   double *Table_VelX, *Table_VelY, *Table_VelZ;     // used to store the readed data
-   double *tur_table = NULL;                         // used to store turbulence (1D)
-
-   double Total_VelX = 0.0; // used to calculate Vrms
-   double Total_VelY = 0.0;
-   double Total_VelZ = 0.0;
-   double Total_VelX_SQR = 0.0;
-   double Total_VelY_SQR = 0.0;
-   double Total_VelZ_SQR = 0.0;
-   double Vrms, Vrms_Scale;                     // used to rescale velocity
-
-   tur_table_NBin = Aux_LoadTable( tur_table, Tur_Table, 6, TargetCols, RowMajor_No, AllocMem_Yes );
-
-   Table_VelX  = tur_table + ColIdx_VelX * tur_table_NBin;
-   Table_VelY  = tur_table + ColIdx_VelY * tur_table_NBin;
-   Table_VelZ  = tur_table + ColIdx_VelZ * tur_table_NBin;
-
-   Table_Rescaled_VelX = tur_table + ColIdx_VelX * tur_table_NBin;
-   Table_Rescaled_VelY = tur_table + ColIdx_VelY * tur_table_NBin;
-   Table_Rescaled_VelZ = tur_table + ColIdx_VelZ * tur_table_NBin;
-
-   for ( int i = 0; i < tur_table_NBin; i++ )
-   {
-      Total_VelX += Table_VelX[i];
-      Total_VelY += Table_VelY[i];
-      Total_VelZ += Table_VelZ[i];
-
-      Total_VelX_SQR += SQR(Table_VelX[i]);
-      Total_VelY_SQR += SQR(Table_VelY[i]);
-      Total_VelZ_SQR += SQR(Table_VelZ[i]);
-   }
-
-   // Vrms = SQRT( ( Vx^2 + Vy^2 + Vz^2 ) / N + ( Vx + Vy + Vz / N) ^ 2 )
-   Vrms = SQRT( (Total_VelX_SQR + Total_VelY_SQR + Total_VelZ_SQR) / tur_table_NBin - 
-                SQR( (Total_VelX + Total_VelY + Total_VelZ) / tur_table_NBin ) );
-   Vrms_Scale = SinkParTest_Mach_num * SinkParTest_Cs / Vrms;
-
-   // Rescale velocity
-   for ( int i = 0; i < tur_table_NBin; i++ )
-   {
-      Table_Rescaled_VelX[i] = Vrms_Scale * ( Table_VelX[i] - Total_VelX / tur_table_NBin );
-      Table_Rescaled_VelY[i] = Vrms_Scale * ( Table_VelY[i] - Total_VelY / tur_table_NBin );
-      Table_Rescaled_VelZ[i] = Vrms_Scale * ( Table_VelZ[i] - Total_VelZ / tur_table_NBin );
-   }
-
-   delete [] tur_table;
-} // Function : Load_Turbulence_SinkParTest
-
-//-------------------------------------------------------------------------------------------------------
 // Function    :  SetGridIC
 // Description :  Set the problem-specific initial condition on grids
 //
@@ -352,9 +347,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    real Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
    real VelX, VelY, VelZ;
-
-   // Load the turbulence field if not restarting
-   if ( OPT__INIT != INIT_BY_RESTART ) Load_Turbulence_SinkParTest();
 
    int i = (int) ( ( x / amr->BoxSize[0] ) * size );    // turbulence box index (cude)
    int j = (int) ( ( y / amr->BoxSize[1] ) * size );
