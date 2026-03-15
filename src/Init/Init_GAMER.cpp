@@ -203,7 +203,8 @@ void Init_GAMER( int *argc, char ***argv )
             Par_Init_ByFunction_Ptr( amr->Par->NPar_Active, amr->Par->NPar_Active_AllRank,
                                      amr->Par->Mass, amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ,
                                      amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ, amr->Par->Time,
-                                     amr->Par->Type, amr->Par->AttributeFlt, amr->Par->AttributeInt );
+                                     amr->Par->Type, amr->Par->PUid, amr->Par->AttributeFlt,
+                                     amr->Par->AttributeInt );
          else
             Aux_Error( ERROR_INFO, "Par_Init_ByFunction_Ptr == NULL for PAR_INIT = 1 !!\n" );
          break;
@@ -328,6 +329,20 @@ void Init_GAMER( int *argc, char ***argv )
 
 // user-defined initialization (after the Poisson solver)
    if ( Init_User_AfterPoisson_Ptr != NULL )    Init_User_AfterPoisson_Ptr();
+
+
+#  ifdef PARTICLE
+// assign initial particle UID AFTER all the routines possibly adding particles,
+// including Par_Init_ByFunction_Ptr(), Par_Init_ByFile(),
+//           AddParticle() in Init_ByRestart(),
+//           Par_AddParticleAfterInit() in Init_User_Ptr() and Init_User_AfterPoisson_Ptr()
+   const bool SetParUIDInitStage_Yes = true;
+   Par_SetParUID( SetParUIDInitStage_Yes );
+
+// only check here if it will not check later in Aux_Check()
+   if ( OPT__PAR_INIT_CHECK  &&  !OPT__CK_PARTICLE )
+      Par_Aux_Check_Particle( "Initial particle check after Par_SetParUID" );
+#  endif // #ifdef PARTICLE
 
 
 // initialize source-term fields (e.g., cooling time)
