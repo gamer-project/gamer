@@ -261,6 +261,14 @@
 // check unphysical results in the MHM half-step prediction
 #if ( FLU_SCHEME == MHM )
 #  define MHM_CHECK_PREDICT
+#ifdef MHM_CHECK_PREDICT
+#ifndef SRHD
+#  define MHM_REPREDICT_ITER_NUM                2
+#  define MHM_REPREDICT_STEPS_SAFE_FAC  (real)0.4
+#  define MHM_REPREDICT_SLOPE_SAFE_FAC  (real)0.9
+#  define MHM_REPREDICT_SUBSTEPS_MAX            4
+#endif
+#endif
 #endif
 
 
