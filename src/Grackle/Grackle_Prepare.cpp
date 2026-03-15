@@ -22,7 +22,21 @@ extern int CheIdx_DI;
 extern int CheIdx_DII;
 extern int CheIdx_HDI;
 extern int CheIdx_Metal;
+extern int CheIdx_vHeatingRate;
+extern int CheIdx_sHeatingRate;
+extern int CheIdx_tempFloor;
 
+
+// declare as static so that other functions cannot invoke it directly and must use the function pointer
+static real_che Grackle_vHeatingRate_User_Template( const double x, const double y, const double z, const double Time, const double n_H );
+static real_che Grackle_sHeatingRate_User_Template( const double x, const double y, const double z, const double Time );
+static real_che Grackle_tempFloor_Default( const double x, const double y, const double z, const double Time, const real_che Dens_Gas, const real_che sEint_Gas );
+
+
+// these function pointers must be set by a test problem initializer
+real_che (*Grackle_vHeatingRate_User_Ptr)( const double x, const double y, const double z, const double Time, const double n_H ) = NULL;
+real_che (*Grackle_sHeatingRate_User_Ptr)( const double x, const double y, const double z, const double Time )                   = NULL;
+real_che (*Grackle_tempFloor_User_Ptr)( const double x, const double y, const double z, const double Time, const real_che Dens_Gas, const real_che sEint_Gas ) = Grackle_tempFloor_Default;
 
 
 
@@ -89,6 +103,27 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
       if (  Idx_Metal == Idx_Undefined  ||  CheIdx_Metal == Idx_Undefined  )
          Aux_Error( ERROR_INFO, "[Che]Idx_Metal is undefined for \"GRACKLE_METAL\" !!\n" );
    }
+
+   if ( GRACKLE_USE_V_HEATING_RATE ) {
+      if ( Grackle_vHeatingRate_User_Ptr == NULL )
+         Aux_Error( ERROR_INFO, "Grackle_vHeatingRate_User_Ptr == NULL !!\n" );
+      if ( CheIdx_vHeatingRate == Idx_Undefined )
+         Aux_Error( ERROR_INFO, "CheIdx_vHeatingRate is undefined for \"GRACKLE_USE_V_HEATING_RATE\" !!\n" );
+   }
+
+   if ( GRACKLE_USE_S_HEATING_RATE ) {
+      if ( Grackle_sHeatingRate_User_Ptr == NULL )
+         Aux_Error( ERROR_INFO, "Grackle_sHeatingRate_User_Ptr == NULL !!\n" );
+      if ( CheIdx_sHeatingRate == Idx_Undefined )
+         Aux_Error( ERROR_INFO, "CheIdx_sHeatingRate is undefined for \"GRACKLE_USE_S_HEATING_RATE\" !!\n" );
+   }
+
+   if ( GRACKLE_USE_TEMP_FLOOR == 2 ) {
+      if ( Grackle_tempFloor_User_Ptr == NULL )
+         Aux_Error( ERROR_INFO, "Grackle_tempFloor_User_Ptr == NULL !!\n" );
+      if ( CheIdx_tempFloor == Idx_Undefined )
+         Aux_Error( ERROR_INFO, "CheIdx_tempFloor is undefined for \"GRACKLE_USE_TEMP_FLOOR == 2\" !!\n" );
+   }
 #  endif // #ifdef GAMER_DEBUG
 
 
@@ -101,22 +136,41 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    const bool CheckMinEint_Yes = true;
 #  endif
 
-   real_che *Ptr_Dens0  = h_Che_Array + CheIdx_Dens *Size1v;
-   real_che *Ptr_sEint0 = h_Che_Array + CheIdx_sEint*Size1v;
-   real_che *Ptr_Ent0   = h_Che_Array + CheIdx_Ent  *Size1v;
-   real_che *Ptr_e0     = h_Che_Array + CheIdx_e    *Size1v;
-   real_che *Ptr_HI0    = h_Che_Array + CheIdx_HI   *Size1v;
-   real_che *Ptr_HII0   = h_Che_Array + CheIdx_HII  *Size1v;
-   real_che *Ptr_HeI0   = h_Che_Array + CheIdx_HeI  *Size1v;
-   real_che *Ptr_HeII0  = h_Che_Array + CheIdx_HeII *Size1v;
-   real_che *Ptr_HeIII0 = h_Che_Array + CheIdx_HeIII*Size1v;
-   real_che *Ptr_HM0    = h_Che_Array + CheIdx_HM   *Size1v;
-   real_che *Ptr_H2I0   = h_Che_Array + CheIdx_H2I  *Size1v;
-   real_che *Ptr_H2II0  = h_Che_Array + CheIdx_H2II *Size1v;
-   real_che *Ptr_DI0    = h_Che_Array + CheIdx_DI   *Size1v;
-   real_che *Ptr_DII0   = h_Che_Array + CheIdx_DII  *Size1v;
-   real_che *Ptr_HDI0   = h_Che_Array + CheIdx_HDI  *Size1v;
-   real_che *Ptr_Metal0 = h_Che_Array + CheIdx_Metal*Size1v;
+   const double dh = amr->dh[lv];
+
+// Floor value for the mass density of each species applied by Grackle
+// --> See ceiling_species_g() in grackle/src/clib/solve_rate_cool_g.F
+//     and the definition of tiny in grackle/src/include/grackle_fortran_types.def
+// --> Note this value is a quantity with **code density units UNIT_D**
+   const real_che Grackle_tiny = 1.0e-20;
+
+// Minimum of total density for the Grackle solver
+// --> When the total density is too low (close to Grackle_tiny),
+//     the species floor value in Grackle will be a significant mass fraction
+// --> The factor here is decided such that the species with low mass fraction
+//     remains negligible after being applied the Grackle_tiny floor
+// --> Note that to maintain accuracy, this should have a physically small density
+   const real_che Che_MinDens  = 1.0e+04 * Grackle_tiny;
+
+   real_che *Ptr_Dens0         = h_Che_Array + CheIdx_Dens        *Size1v;
+   real_che *Ptr_sEint0        = h_Che_Array + CheIdx_sEint       *Size1v;
+   real_che *Ptr_Ent0          = h_Che_Array + CheIdx_Ent         *Size1v;
+   real_che *Ptr_e0            = h_Che_Array + CheIdx_e           *Size1v;
+   real_che *Ptr_HI0           = h_Che_Array + CheIdx_HI          *Size1v;
+   real_che *Ptr_HII0          = h_Che_Array + CheIdx_HII         *Size1v;
+   real_che *Ptr_HeI0          = h_Che_Array + CheIdx_HeI         *Size1v;
+   real_che *Ptr_HeII0         = h_Che_Array + CheIdx_HeII        *Size1v;
+   real_che *Ptr_HeIII0        = h_Che_Array + CheIdx_HeIII       *Size1v;
+   real_che *Ptr_HM0           = h_Che_Array + CheIdx_HM          *Size1v;
+   real_che *Ptr_H2I0          = h_Che_Array + CheIdx_H2I         *Size1v;
+   real_che *Ptr_H2II0         = h_Che_Array + CheIdx_H2II        *Size1v;
+   real_che *Ptr_DI0           = h_Che_Array + CheIdx_DI          *Size1v;
+   real_che *Ptr_DII0          = h_Che_Array + CheIdx_DII         *Size1v;
+   real_che *Ptr_HDI0          = h_Che_Array + CheIdx_HDI         *Size1v;
+   real_che *Ptr_Metal0        = h_Che_Array + CheIdx_Metal       *Size1v;
+   real_che *Ptr_vHeatingRate0 = h_Che_Array + CheIdx_vHeatingRate*Size1v;
+   real_che *Ptr_sHeatingRate0 = h_Che_Array + CheIdx_sHeatingRate*Size1v;
+   real_che *Ptr_tempFloor0    = h_Che_Array + CheIdx_tempFloor   *Size1v;
 
 
 #  pragma omp parallel
@@ -135,36 +189,45 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    real_che *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ent=NULL, *Ptr_e=NULL, *Ptr_HI=NULL, *Ptr_HII=NULL;
    real_che *Ptr_HeI=NULL, *Ptr_HeII=NULL, *Ptr_HeIII=NULL, *Ptr_HM=NULL, *Ptr_H2I=NULL, *Ptr_H2II=NULL;
    real_che *Ptr_DI=NULL, *Ptr_DII=NULL, *Ptr_HDI=NULL, *Ptr_Metal=NULL;
+   real_che *Ptr_vHeatingRate=NULL, *Ptr_sHeatingRate=NULL, *Ptr_tempFloor=NULL;
+   real_che  Ratio_FloorDens;
 
 #  pragma omp for schedule( static )
    for (int TID=0; TID<NPG; TID++)
    {
-      PID0      = PID0_List[TID];
-      idx_pg    = 0;
-      offset    = TID*Size1pg;
+      PID0   = PID0_List[TID];
+      idx_pg = 0;
+      offset = TID*Size1pg;
 
-      Ptr_Dens  = Ptr_Dens0  + offset;
-      Ptr_sEint = Ptr_sEint0 + offset;
-      Ptr_Ent   = Ptr_Ent0   + offset;
-      Ptr_e     = Ptr_e0     + offset;
-      Ptr_HI    = Ptr_HI0    + offset;
-      Ptr_HII   = Ptr_HII0   + offset;
-      Ptr_HeI   = Ptr_HeI0   + offset;
-      Ptr_HeII  = Ptr_HeII0  + offset;
-      Ptr_HeIII = Ptr_HeIII0 + offset;
-      Ptr_HM    = Ptr_HM0    + offset;
-      Ptr_H2I   = Ptr_H2I0   + offset;
-      Ptr_H2II  = Ptr_H2II0  + offset;
-      Ptr_DI    = Ptr_DI0    + offset;
-      Ptr_DII   = Ptr_DII0   + offset;
-      Ptr_HDI   = Ptr_HDI0   + offset;
-      Ptr_Metal = Ptr_Metal0 + offset;
+      Ptr_Dens         = Ptr_Dens0         + offset;
+      Ptr_sEint        = Ptr_sEint0        + offset;
+      Ptr_Ent          = Ptr_Ent0          + offset;
+      Ptr_e            = Ptr_e0            + offset;
+      Ptr_HI           = Ptr_HI0           + offset;
+      Ptr_HII          = Ptr_HII0          + offset;
+      Ptr_HeI          = Ptr_HeI0          + offset;
+      Ptr_HeII         = Ptr_HeII0         + offset;
+      Ptr_HeIII        = Ptr_HeIII0        + offset;
+      Ptr_HM           = Ptr_HM0           + offset;
+      Ptr_H2I          = Ptr_H2I0          + offset;
+      Ptr_H2II         = Ptr_H2II0         + offset;
+      Ptr_DI           = Ptr_DI0           + offset;
+      Ptr_DII          = Ptr_DII0          + offset;
+      Ptr_HDI          = Ptr_HDI0          + offset;
+      Ptr_Metal        = Ptr_Metal0        + offset;
+      Ptr_vHeatingRate = Ptr_vHeatingRate0 + offset;
+      Ptr_sHeatingRate = Ptr_sHeatingRate0 + offset;
+      Ptr_tempFloor    = Ptr_tempFloor0    + offset;
 
       for (int LocalID=0; LocalID<8; LocalID++)
       {
          PID   = PID0 + LocalID;
          idx_p = 0;
          fluid = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid;
+
+         const double x0  = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
+         const double y0  = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
+         const double z0  = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
 
          for (int k=0; k<PS1; k++)
          for (int j=0; j<PS1; j++)
@@ -201,38 +264,69 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
             Eint -= *( fluid[CRAY][0][0] + idx_p );
 #           endif
 
+//          set the ratio to the density floor
+            if ( Dens < Che_MinDens )
+            {
+//             when the density is too low, we will pre-floor the total density as Che_MinDens
+//             while keeping the fraction of each species fixed
+//             such that the mass fraction of the species being floored in Grackle is
+//             less than "Grackle_tiny/Che_MinDens"
+               Ratio_FloorDens = Che_MinDens/Dens;
+
+               Aux_Message( stderr, "\nWARNING : density = %16.8e is too low and will be scaled to %16.8e as the input to the Grackle solver !!\n",
+                                    Dens, Che_MinDens );
+            }
+            else
+            {
+               Ratio_FloorDens = 1.0;
+            }
+
 //          mandatory fields
-            Ptr_Dens [idx_pg] = Dens;
+            Ptr_Dens [idx_pg] = Dens * Ratio_FloorDens;
             Ptr_sEint[idx_pg] = Eint / Dens;
-            Ptr_Ent  [idx_pg] = Etot - Eint; // non-thermal energy density
+            Ptr_Ent  [idx_pg] = (Etot - Eint) * Ratio_FloorDens; // non-thermal energy density
 
 //          6-species network
             if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
-            Ptr_e    [idx_pg] = *( fluid[Idx_e    ][0][0] + idx_p ) * MassRatio_pe;
-            Ptr_HI   [idx_pg] = *( fluid[Idx_HI   ][0][0] + idx_p );
-            Ptr_HII  [idx_pg] = *( fluid[Idx_HII  ][0][0] + idx_p );
-            Ptr_HeI  [idx_pg] = *( fluid[Idx_HeI  ][0][0] + idx_p );
-            Ptr_HeII [idx_pg] = *( fluid[Idx_HeII ][0][0] + idx_p );
-            Ptr_HeIII[idx_pg] = *( fluid[Idx_HeIII][0][0] + idx_p );
+            Ptr_e    [idx_pg] = *( fluid[Idx_e    ][0][0] + idx_p ) * Ratio_FloorDens * MassRatio_pe;
+            Ptr_HI   [idx_pg] = *( fluid[Idx_HI   ][0][0] + idx_p ) * Ratio_FloorDens;
+            Ptr_HII  [idx_pg] = *( fluid[Idx_HII  ][0][0] + idx_p ) * Ratio_FloorDens;
+            Ptr_HeI  [idx_pg] = *( fluid[Idx_HeI  ][0][0] + idx_p ) * Ratio_FloorDens;
+            Ptr_HeII [idx_pg] = *( fluid[Idx_HeII ][0][0] + idx_p ) * Ratio_FloorDens;
+            Ptr_HeIII[idx_pg] = *( fluid[Idx_HeIII][0][0] + idx_p ) * Ratio_FloorDens;
             }
 
 //          9-species network
             if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9 ) {
-            Ptr_HM   [idx_pg] = *( fluid[Idx_HM   ][0][0] + idx_p );
-            Ptr_H2I  [idx_pg] = *( fluid[Idx_H2I  ][0][0] + idx_p );
-            Ptr_H2II [idx_pg] = *( fluid[Idx_H2II ][0][0] + idx_p );
+            Ptr_HM   [idx_pg] = *( fluid[Idx_HM   ][0][0] + idx_p ) * Ratio_FloorDens;
+            Ptr_H2I  [idx_pg] = *( fluid[Idx_H2I  ][0][0] + idx_p ) * Ratio_FloorDens;
+            Ptr_H2II [idx_pg] = *( fluid[Idx_H2II ][0][0] + idx_p ) * Ratio_FloorDens;
             }
 
 //          12-species network
             if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE12 ) {
-            Ptr_DI   [idx_pg] = *( fluid[Idx_DI   ][0][0] + idx_p );
-            Ptr_DII  [idx_pg] = *( fluid[Idx_DII  ][0][0] + idx_p );
-            Ptr_HDI  [idx_pg] = *( fluid[Idx_HDI  ][0][0] + idx_p );
+            Ptr_DI   [idx_pg] = *( fluid[Idx_DI   ][0][0] + idx_p ) * Ratio_FloorDens;
+            Ptr_DII  [idx_pg] = *( fluid[Idx_DII  ][0][0] + idx_p ) * Ratio_FloorDens;
+            Ptr_HDI  [idx_pg] = *( fluid[Idx_HDI  ][0][0] + idx_p ) * Ratio_FloorDens;
             }
 
 //          metallicity for metal cooling
             if ( GRACKLE_METAL )
-            Ptr_Metal[idx_pg] = *( fluid[Idx_Metal][0][0] + idx_p );
+            Ptr_Metal[idx_pg] = *( fluid[Idx_Metal][0][0] + idx_p ) * Ratio_FloorDens;
+
+//          user-provided array of volumetric heating rates
+            if ( GRACKLE_USE_V_HEATING_RATE ) {
+            const double n_H = Ptr_Dens[idx_pg] * UNIT_D * GRACKLE_HYDROGEN_MFRAC / Const_mH; // hydrogen number density in units of cm^-3
+            Ptr_vHeatingRate[idx_pg] = Grackle_vHeatingRate_User_Ptr( x0+i*dh, y0+j*dh, z0+k*dh, Time[lv], n_H );
+            }
+
+//          user-provided array of specific heating rates
+            if ( GRACKLE_USE_S_HEATING_RATE )
+            Ptr_sHeatingRate[idx_pg] = Grackle_sHeatingRate_User_Ptr( x0+i*dh, y0+j*dh, z0+k*dh, Time[lv] );
+
+//          user-provided array of temperature floor
+            if ( GRACKLE_USE_TEMP_FLOOR == 2 )
+            Ptr_tempFloor[idx_pg] = Grackle_tempFloor_User_Ptr( x0+i*dh, y0+j*dh, z0+k*dh, Time[lv], Ptr_Dens[idx_pg], Ptr_sEint[idx_pg] );
 
             idx_p  ++;
             idx_pg ++;
@@ -274,7 +368,106 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    if ( GRACKLE_METAL )
    Che_FieldData->metal_density   = Ptr_Metal0;
 
+   if ( GRACKLE_USE_V_HEATING_RATE )
+   Che_FieldData->volumetric_heating_rate = Ptr_vHeatingRate0;
+
+   if ( GRACKLE_USE_S_HEATING_RATE )
+   Che_FieldData->specific_heating_rate   = Ptr_sHeatingRate0;
+
+   if ( GRACKLE_USE_TEMP_FLOOR == 2 )
+   Che_FieldData->temperature_floor       = Ptr_tempFloor0;
+
 } // FUNCTION : Grackle_Prepare
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Grackle_vHeatingRate_User_Template
+// Description :  Function template to set Grackle's volumetric heating rate
+//
+// Note        :  1. Invoked by Grackle_Prepare() using the function pointer
+//                   "Grackle_vHeatingRate_User_Ptr", which must be set by a test problem initializer
+//                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+//                   --> Please ensure that everything here is thread-safe
+//                3. Returned rate should be in the unit of erg s^-1 cm^-3
+//
+// Parameter   :  x/y/z    : Target physical coordinates
+//                Time     : Target physical time
+//                n_H      : Hydrogen number density, should be in the unit of cm^-3
+//
+// Return      :  volumetric_heating_rate
+//-------------------------------------------------------------------------------------------------------
+static real_che Grackle_vHeatingRate_User_Template( const double x, const double y, const double z, const double Time, const double n_H )
+{
+
+   const double   Center[3]                 = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
+   const double   radius_to_center          = sqrt( SQR(x-Center[0]) + SQR(y-Center[1]) );
+   const double   ScaleLength               = 0.125*amr->BoxSize[0];
+   const double   R_core                    = 0.125*amr->BoxSize[0];
+   const double   volumetric_heating_rate_0 = n_H * GRACKLE_PE_HEATING_RATE; // GRACKLE_PE_HEATING_RATE is in units of erg cm^-3 s^-1 n_H^-1
+   const real_che volumetric_heating_rate   = volumetric_heating_rate_0 * exp( (R_core - MAX(radius_to_center, R_core)) / ScaleLength );
+
+   return volumetric_heating_rate;
+
+} // FUNCTION : Grackle_vHeatingRate_User_Template
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Grackle_sHeatingRate_User_Template
+// Description :  Function template to set Grackle's specific heating rate
+//
+// Note        :  1. Invoked by Grackle_Prepare() using the function pointer
+//                   "Grackle_sHeatingRate_User_Ptr", which must be set by a test problem initializer
+//                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+//                   --> Please ensure that everything here is thread-safe
+//                3. Returned rate should be in the units of erg s^-1 g^-1
+//
+// Parameter   :  x/y/z    : Target physical coordinates
+//                Time     : Target physical time
+//
+// Return      :  specific_heating_rate
+//-------------------------------------------------------------------------------------------------------
+static real_che Grackle_sHeatingRate_User_Template( const double x, const double y, const double z, const double Time )
+{
+
+   const double   Center[3]                 = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
+   const double   radius_to_center          = sqrt( SQR(x-Center[0]) + SQR(y-Center[1]) );
+   const double   ScaleLength               = 0.125*amr->BoxSize[0];
+   const double   R_core                    = 0.125*amr->BoxSize[0];
+   const double   specific_heating_rate_0   = GRACKLE_PE_HEATING_RATE * GRACKLE_HYDROGEN_MFRAC / Const_mH; // GRACKLE_PE_HEATING_RATE is in units of erg cm^-3 s^-1 n_H^-1
+   const real_che specific_heating_rate     = specific_heating_rate_0 * exp( (R_core - MAX(radius_to_center, R_core)) / ScaleLength );
+
+   return specific_heating_rate;
+
+} // FUNCTION : Grackle_sHeatingRate_User_Template
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Grackle_tempFloor_Default
+// Description :  Default function to set Grackle's temperature floor
+//
+// Note        :  1. Invoked by Grackle_Prepare() using the function pointer
+//                   "Grackle_tempFloor_User_Ptr", which must be set by a test problem initializer
+//                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+//                   --> Please ensure that everything here is thread-safe
+//                3. Returned temperature should be in units of K
+//
+// Parameter   :  x/y/z     : Target physical coordinates
+//                Time      : Target physical time
+//                Dens_Gas  : Gas density, in code units
+//                sEint_Gas : Gas specific internal energy, in code units
+//
+// Return      :  temperature_floor
+//-------------------------------------------------------------------------------------------------------
+static real_che Grackle_tempFloor_Default( const double x, const double y, const double z, const double Time, const real_che Dens_Gas, const real_che sEint_Gas )
+{
+   const real_che temperature_floor = 0.0;
+
+   return temperature_floor;
+
+} // FUNCTION : Grackle_tempFloor_Default
 
 
 
