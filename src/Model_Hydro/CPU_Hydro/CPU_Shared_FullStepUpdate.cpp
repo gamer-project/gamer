@@ -160,6 +160,12 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //    we no longer apply density and pressure floors here since we want to enable 1st-order-flux correction for that
 //    Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
 
+//    we do not apply the dual-energy fix to the energy
+//    when the density is negative or Ekin >= 2*Etot (could be caused by an extremely low density)
+//    --> such that the unphysical energy can be caught by the checks in Flu_Close()->CorrectUnphysical()
+      const real Ekin          = (real)0.5*( SQR(Output_1Cell[MOMX]) + SQR(Output_1Cell[MOMY]) + SQR(Output_1Cell[MOMZ]) )/Output_1Cell[DENS];
+      const real maxKinOverTot = (real)2.0;
+      if ( Output_1Cell[DENS] > (real)0.0  &&  Output_1Cell[ENGY]*maxKinOverTot > Ekin )
       Hydro_DualEnergyFix( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
                            Output_1Cell[ENGY], Output_1Cell[DUAL], g_DE_Status[idx_out],
                            EoS->AuxArrayDevPtr_Flt[1], EoS->AuxArrayDevPtr_Flt[2], CheckMinPres_No, NULL_REAL,
