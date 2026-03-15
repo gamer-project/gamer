@@ -464,16 +464,27 @@ if ( lv != MAX_LEVEL )
             if ( UseParAttCopy ) {
                for (int v=0; v<PAR_NATT_FLT_TOTAL; v++) {
                   if ( ParAttFltBitIdx_In & BIDX(v) ) {
-
 #                 ifdef DEBUG_PARTICLE
-                  if ( NPar > 0  &&  amr->patch[0][lv][PPID]->ParAtt_Copy[v] == NULL )
-                     Aux_Error( ERROR_INFO, "ParAtt_Copy == NULL for NPar (%d) > 0 (lv %d, PPID %d, v %d) !!\n",
-                                 NPar, lv, PPID, v );
+                     if ( NPar > 0  &&  amr->patch[0][lv][PPID]->ParAttFlt_Copy[v] == NULL )
+                        Aux_Error( ERROR_INFO, "ParAttFlt_Copy == NULL for NPar (%d) > 0 (lv %d, PPID %d, v %d) !!\n",
+                                    NPar, lv, PPID, v );
 #                 endif
+                  }
+               }
 
-                  for (int p=0; p<NPar; p++)
-                     ParAtt_Local[v][ExistingNPar + p] = amr->patch[0][lv][PPID]->ParAttFlt_Copy[v][p];
-            }}}
+               int NStar = 0;
+               for (int p=0; p<NPar; p++) {
+                  if ( amr->patch[0][lv][PPID]->ParAttInt_Copy[PAR_TYPE][p] == PTYPE_STAR ) {
+                     for (int v=0; v<PAR_NATT_FLT_TOTAL; v++) {
+                        if ( ParAttFltBitIdx_In & BIDX(v) ) {
+                           ParAtt_Local[v][ExistingNPar + NStar] = amr->patch[0][lv][PPID]->ParAttFlt_Copy[v][p];
+                        }
+                     }
+                     NStar ++;
+                  }
+               }
+               ExistingNPar += NStar;
+            }
 
             else
 #           endif // #ifdef LOAD_BALANCE
@@ -484,14 +495,19 @@ if ( lv != MAX_LEVEL )
                               NPar, lv, PPID );
 #              endif
 
-               for (int v=0; v<PAR_NATT_FLT_TOTAL; v++) {
-                  if ( ParAttFltBitIdx_In & BIDX(v) )
-                     for (int p=0; p<NPar; p++)
-                        ParAtt_Local[v][ExistingNPar + p] = amr->Par->AttributeFlt[v][ ParList[p] ];
+               int NStar = 0;
+               for (int p=0; p<NPar; p++) {
+                  if ( amr->Par->AttributeInt[PAR_TYPE][ ParList[p] ] == PTYPE_STAR ) {
+                     for (int v=0; v<PAR_NATT_FLT_TOTAL; v++) {
+                        if ( ParAttFltBitIdx_In & BIDX(v) ) {
+                           ParAtt_Local[v][ExistingNPar + NStar] = amr->Par->AttributeFlt[v][ ParList[p] ];
+                        }
+                     }
+                     NStar ++;
+                  }
                }
+               ExistingNPar += NStar;
             } // if ( UseParAttCopy ) ... else ...
-
-            ExistingNPar += NPar;
          } // for (int t=0; t<NNearbyPatch; t++)
       } // if ( NParAllPatch > 0 )
 
