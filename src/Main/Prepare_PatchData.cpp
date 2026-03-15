@@ -761,7 +761,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                 endif
                   Data1PG_CC_Ptr[Idx1] = Hydro_Con2Pres( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                          FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                         (MinPres>=(real)0.0), MinPres, Emag,
+                                                         (MinPres>=(real)0.0), MinPres, PassiveFloorMask, Emag,
                                                          EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                          EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                          h_EoS_Table, NULL );
@@ -779,7 +779,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         FluWeighting     *Data1PG_CC_Ptr[Idx1]
                       + FluWeighting_IntT*Hydro_Con2Pres( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                           FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                          (MinPres>=(real)0.0), MinPres, Emag,
+                                                          (MinPres>=(real)0.0), MinPres, PassiveFloorMask, Emag,
                                                           EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                           EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                           h_EoS_Table, NULL );
@@ -808,7 +808,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                 endif
                   Data1PG_CC_Ptr[Idx1] = Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                          FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                         (MinTemp>=(real)0.0), MinTemp, Emag,
+                                                         (MinTemp>=(real)0.0), MinTemp, PassiveFloorMask, Emag,
                                                          EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
@@ -825,7 +825,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         FluWeighting     *Data1PG_CC_Ptr[Idx1]
                       + FluWeighting_IntT*Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                           FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                          (MinTemp>=(real)0.0), MinTemp, Emag,
+                                                          (MinTemp>=(real)0.0), MinTemp, PassiveFloorMask, Emag,
                                                           EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                   }
@@ -853,7 +853,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                 endif
                   Data1PG_CC_Ptr[Idx1] = Hydro_Con2Entr( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                          FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                         (MinEntr>=(real)0.0), MinEntr, Emag,
+                                                         (MinEntr>=(real)0.0), MinEntr, PassiveFloorMask, Emag,
                                                          EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                          h_EoS_Table );
 
@@ -870,7 +870,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         FluWeighting     *Data1PG_CC_Ptr[Idx1]
                       + FluWeighting_IntT*Hydro_Con2Entr( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                           FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                          (MinEntr>=(real)0.0), MinEntr, Emag,
+                                                          (MinEntr>=(real)0.0), MinEntr, PassiveFloorMask, Emag,
                                                           EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                           h_EoS_Table );
                   }
@@ -900,7 +900,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   const bool CheckMinEint_No = false; // floor value is not supported for now
                   Data1PG_CC_Ptr[Idx1] = Hydro_Con2Eint( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                          FluidForEoS[MOMZ], FluidForEoS[ENGY],
-                                                         CheckMinEint_No, NULL_REAL, Emag,
+                                                         CheckMinEint_No, NULL_REAL, PassiveFloorMask, Emag,
                                                          EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
@@ -917,7 +917,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         FluWeighting     *Data1PG_CC_Ptr[Idx1]
                       + FluWeighting_IntT*Hydro_Con2Eint( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                           FluidForEoS[MOMZ], FluidForEoS[ENGY],
-                                                          CheckMinEint_No, NULL_REAL, Emag,
+                                                          CheckMinEint_No, NULL_REAL, PassiveFloorMask, Emag,
                                                           EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                   }
@@ -1213,7 +1213,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                       endif
                         Data1PG_CC_Ptr[Idx1] = Hydro_Con2Pres( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                                FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                               (MinPres>=(real)0.0), MinPres, Emag,
+                                                               (MinPres>=(real)0.0), MinPres, PassiveFloorMask, Emag,
                                                                EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                                EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                                h_EoS_Table, NULL );
@@ -1231,7 +1231,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                               FluWeighting     *Data1PG_CC_Ptr[Idx1]
                             + FluWeighting_IntT*Hydro_Con2Pres( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                                 FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                                (MinPres>=(real)0.0), MinPres, Emag,
+                                                                (MinPres>=(real)0.0), MinPres, PassiveFloorMask, Emag,
                                                                 EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                                 EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                                 h_EoS_Table, NULL );
@@ -1260,7 +1260,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                       endif
                         Data1PG_CC_Ptr[Idx1] = Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                                FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                               (MinTemp>=(real)0.0), MinTemp, Emag,
+                                                               (MinTemp>=(real)0.0), MinTemp, PassiveFloorMask, Emag,
                                                                EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                                EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
@@ -1277,7 +1277,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                               FluWeighting     *Data1PG_CC_Ptr[Idx1]
                             + FluWeighting_IntT*Hydro_Con2Temp( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                                 FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                                (MinTemp>=(real)0.0), MinTemp, Emag,
+                                                                (MinTemp>=(real)0.0), MinTemp, PassiveFloorMask, Emag,
                                                                 EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                                 EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                         }
@@ -1305,7 +1305,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
 #                       endif
                         Data1PG_CC_Ptr[Idx1] = Hydro_Con2Entr( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                                FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                               (MinEntr>=(real)0.0), MinEntr, Emag,
+                                                               (MinEntr>=(real)0.0), MinEntr, PassiveFloorMask, Emag,
                                                                EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                                h_EoS_Table );
 
@@ -1322,7 +1322,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                               FluWeighting     *Data1PG_CC_Ptr[Idx1]
                             + FluWeighting_IntT*Hydro_Con2Entr( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                                 FluidForEoS[MOMZ], FluidForEoS[ENGY], FluidForEoS+NCOMP_FLUID,
-                                                                (MinEntr>=(real)0.0), MinEntr, Emag,
+                                                                (MinEntr>=(real)0.0), MinEntr, PassiveFloorMask, Emag,
                                                                 EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                                 h_EoS_Table );
                         }
@@ -1352,7 +1352,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         const bool CheckMinEint_No = false; // floor value is not supported for now
                         Data1PG_CC_Ptr[Idx1] = Hydro_Con2Eint( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                                FluidForEoS[MOMZ], FluidForEoS[ENGY],
-                                                               CheckMinEint_No, NULL_REAL, Emag,
+                                                               CheckMinEint_No, NULL_REAL, PassiveFloorMask, Emag,
                                                                EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                                EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
@@ -1369,7 +1369,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                               FluWeighting     *Data1PG_CC_Ptr[Idx1]
                             + FluWeighting_IntT*Hydro_Con2Eint( FluidForEoS[DENS], FluidForEoS[MOMX], FluidForEoS[MOMY],
                                                                 FluidForEoS[MOMZ], FluidForEoS[ENGY],
-                                                                CheckMinEint_No, NULL_REAL, Emag,
+                                                                CheckMinEint_No, NULL_REAL, PassiveFloorMask, Emag,
                                                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                                 EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                         }

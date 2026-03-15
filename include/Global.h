@@ -50,7 +50,7 @@ extern int       *BaseP;                              // table recording the IDs
 extern int        Flu_ParaBuf;                        // number of parallel buffers to exchange all fluid
                                                       // variables for the fluid solver and fluid refinement
 
-extern long       FixUpVar_Flux, FixUpVar_Restrict;
+extern long       FixUpVar_Flux, FixUpVar_Restrict, PassiveFloorMask;
 extern int        PassiveNorm_NVar, PassiveNorm_VarIdx[NCOMP_PASSIVE];
 extern int        PassiveIntFrac_NVar, PassiveIntFrac_VarIdx[NCOMP_PASSIVE];
 
@@ -133,7 +133,7 @@ extern bool             OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC
 extern bool             OPT__OUTPUT_DIVMAG;
 extern int              OPT__CK_DIVERGENCE_B;
 extern double           UNIT_B;
-extern bool             OPT__SAME_INTERFACE_B;
+extern SameInterfaceB_t OPT__SAME_INTERFACE_B;
 
 extern OptInitMagByVecPot_t OPT__INIT_BFIELD_BYVECPOT;
 #endif

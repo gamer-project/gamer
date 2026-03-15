@@ -1,19 +1,19 @@
 ## Compilation Options
 
 Related options:
-[[--gravity | Installation:-Option-List#--gravity]], &nbsp;
-[[--pot_scheme | Installation:-Option-List#--pot_scheme]], &nbsp;
-[[--store_pot_ghost | Installation:-Option-List#--store_pot_ghost]], &nbsp;
-[[--unsplit_gravity | Installation:-Option-List#--unsplit_gravity]], &nbsp;
-[[--comoving | Installation:-Option-List#--comoving]] &nbsp;
+[[--gravity | [Installation]-Option-List#--gravity]], &nbsp;
+[[--pot_scheme | [Installation]-Option-List#--pot_scheme]], &nbsp;
+[[--store_pot_ghost | [Installation]-Option-List#--store_pot_ghost]], &nbsp;
+[[--unsplit_gravity | [Installation]-Option-List#--unsplit_gravity]], &nbsp;
+[[--comoving | [Installation]-Option-List#--comoving]] &nbsp;
 
 
 ## Runtime Parameters
-[[Runtime parameters: Gravity | Runtime-Parameters:-Gravity]]
+[[ [Runtime parameters] Gravity | [Runtime-Parameters]-Gravity ]]
 
 Other related parameters:
-[[DT__GRAVITY | Runtime-Parameters:-Timestep#DT__GRAVITY]], &nbsp;
-[[POT_GPU_NPGROUP | Runtime-Parameters:-GPU#POT_GPU_NPGROUP]] &nbsp;
+[[DT__GRAVITY | [Runtime-Parameters]-Timestep#DT__GRAVITY]], &nbsp;
+[[POT_GPU_NPGROUP | [Runtime-Parameters]-GPU#POT_GPU_NPGROUP]] &nbsp;
 
 
 ## Remarks
@@ -28,7 +28,7 @@ function. Get familiar with the general procedure of
 first and be aware that adding external acceleration/potential takes a few extra steps
 in order to utilize GPUs.
 
-1. Enable [[OPT__EXT_ACC | Runtime-Parameters:-Gravity#OPT__EXT_ACC]].
+1. Enable [[OPT__EXT_ACC | [Runtime-Parameters]-Gravity#OPT__EXT_ACC]].
 2. Go to your new test problem folder and copy the built-in point-mass acceleration
 routine as a template:
    ```
@@ -61,18 +61,18 @@ routine as a template:
       ```
 
 Adding external potential can be done in a very similar way.
-Enable [[OPT__EXT_POT | Runtime-Parameters:-Gravity#OPT__EXT_POT]]`=1` and then follow the procedure
+Enable [[OPT__EXT_POT | [Runtime-Parameters]-Gravity#OPT__EXT_POT]]`=1` and then follow the procedure
 above and replace `Acc` by `Pot`. A point-mass example can be found
 at `src/SelfGravity/CPU_Poisson/CPU_ExtPot_PointMass.cpp`.
 
 **Caution: wave dark matter simulations
-(i.e., [[--model | Installation:-Option-List#--model]]=ELBDM)
+(i.e., [[--model | [Installation]-Option-List#--model]]=ELBDM)
 does not support external acceleration. Just use external potential.**
 
 #### Using Table:
 
 External potential can also be set via interpolating a table loaded from disk.
-Set [[OPT__EXT_POT | Runtime-Parameters:-Gravity#OPT__EXT_POT]]`=2` and all `EXT_POT_TABLE_*` parameters.
+Set [[OPT__EXT_POT | [Runtime-Parameters]-Gravity#OPT__EXT_POT]]`=2` and all `EXT_POT_TABLE_*` parameters.
 The following C++ example creates such a table with a point-mass potential.
 
 ```C++

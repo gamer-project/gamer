@@ -29,7 +29,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh,
                                const real MinDens, const real MinPres, const real MinEint,
-                               const bool FracPassive, const int NFrac, const int FracIdx[],
+                               const long PassiveFloor, const bool FracPassive, const int NFrac, const int FracIdx[],
                                const bool JeansMinPres, const real JeansMinPres_Coeff,
                                const EoS_t *EoS );
 void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
@@ -38,14 +38,14 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
                         const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[],
                         const real dt, const real dh, const double Time, const bool UsePot,
                         const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[],
-                        const real MinDens, const real MinPres, const EoS_t *EoS );
+                        const real MinDens, const real MinPres, const long PassiveFloor, const EoS_t *EoS );
 void Hydro_StoreIntFlux( const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
                          const int NFlux );
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                           const real dt, const real dh, const real MinDens, const real MinEint,
-                           const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
+                           const real dt, const real dh, const real MinDens, const real MinEint, const real DualEnergySwitch,
+                           const long PassiveFloor, const bool NormPassive, const int NNorm, const int NormIdx[],
                            const EoS_t *EoS, int *s_FullStepFailure, const int Iteration, const int MinMod_MaxIter );
 #ifdef MHD
 void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
@@ -79,7 +79,8 @@ void Hydro_TGradientCorrection(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ 
                                 const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                 const real g_EC_Ele   [][ CUBE(N_EC_ELE) ],
                                 const real g_PriVar   [][ CUBE(FLU_NXT) ],
-                                const real dt, const real dh, const real MinDens, const real MinEint );
+                                const real dt, const real dh, const real MinDens, const real MinEint,
+                                const long PassiveFloor );
 
 
 
@@ -127,6 +128,7 @@ void Hydro_TGradientCorrection(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ 
 //                                         CUDA_ConstMemory.h and does not need to be passed as a function argument
 //                MinDens/Pres/Eint  : Density, pressure, and internal energy floors
 //                DualEnergySwitch   : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
+//                PassiveFloor       : Bitwise flag to specify the passive scalars to be floored
 //                NormPassive        : true --> normalize passive scalars so that the sum of their mass density
 //                                              is equal to the gas mass density
 //                NNorm              : Number of passive scalars to be normalized
@@ -174,6 +176,7 @@ void CUFLU_FluidSolver_CTU(
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch,
+   const long PassiveFloor,
    const bool NormPassive, const int NNorm,
    const bool FracPassive, const int NFrac,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
@@ -203,6 +206,7 @@ void CPU_FluidSolver_CTU(
    const double c_ExtAcc_AuxArray[],
    const real MinDens, const real MinPres, const real MinEint,
    const real DualEnergySwitch,
+   const long PassiveFloor,
    const bool NormPassive, const int NNorm, const int c_NormIdx[],
    const bool FracPassive, const int NFrac, const int c_FracIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff,
@@ -260,7 +264,7 @@ void CPU_FluidSolver_CTU(
 //       1. evaluate the face-centered values at the half time-step
          Hydro_DataReconstruction( g_Flu_Array_In[P], g_Mag_Array_In[P], g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
                                    NULL, Con2Pri_Yes, LR_Limiter, MinMod_Coeff, dt, dh,
-                                   MinDens, MinPres, MinEint, FracPassive, NFrac, c_FracIdx,
+                                   MinDens, MinPres, MinEint, PassiveFloor, FracPassive, NFrac, c_FracIdx,
                                    JeansMinPres, JeansMinPres_Coeff, &EoS );
 
 
@@ -268,7 +272,7 @@ void CPU_FluidSolver_CTU(
          Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_HF_FLUX, 0, 0, CorrHalfVel_No,
                             NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL,
                             EXT_POT_NONE, EXT_ACC_NONE, NULL, NULL,
-                            MinDens, MinPres, &EoS );
+                            MinDens, MinPres, PassiveFloor, &EoS );
 
 
 //       3. evaluate electric field and update B field at the half time-step
@@ -285,7 +289,7 @@ void CPU_FluidSolver_CTU(
 
 //       4. correct the face-centered variables by the transverse flux gradients
          Hydro_TGradientCorrection( g_FC_Var_1PG, g_FC_Flux_1PG, g_Mag_Array_In[P], g_FC_Mag_Half_1PG, g_EC_Ele_1PG, g_PriVar_1PG,
-                                    dt, dh, MinDens, MinEint );
+                                    dt, dh, MinDens, MinEint, PassiveFloor );
 
 
 //       5. evaluate the cell-centered primitive variables at the half time-step
@@ -306,7 +310,7 @@ void CPU_FluidSolver_CTU(
          Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, NSkip_N, NSkip_T, CorrHalfVel,
                             g_Pot_Array_USG[P], g_Corner_Array[P], dt, dh, Time,
                             UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray,
-                            MinDens, MinPres, &EoS );
+                            MinDens, MinPres, PassiveFloor, &EoS );
 
          if ( StoreFlux )
             Hydro_StoreIntFlux( g_FC_Flux_1PG, g_Flux_Array[P], N_FL_FLUX );
@@ -330,7 +334,7 @@ void CPU_FluidSolver_CTU(
 //          --> CTU does not support reducing the min-mod coefficient
          Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P], g_Mag_Array_Out[P],
                                g_FC_Flux_1PG, dt, dh, MinDens, MinEint, DualEnergySwitch,
-                               NormPassive, NNorm, c_NormIdx, &EoS, NULL, NULL_INT, NULL_INT );
+                               PassiveFloor, NormPassive, NNorm, c_NormIdx, &EoS, NULL, NULL_INT, NULL_INT );
 
       } // loop over all patch groups
    } // OpenMP parallel region
@@ -358,6 +362,7 @@ void CPU_FluidSolver_CTU(
 //                dt           : Time interval to advance solution
 //                dh           : Cell size
 //                MinDens/Eint : Density and internal energy floors
+//                PassiveFloor : Bitwise flag to specify the passive scalars to be floored
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_TGradientCorrection(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)  ],
@@ -366,7 +371,8 @@ void Hydro_TGradientCorrection(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ 
                                 const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                 const real g_EC_Ele   [][ CUBE(N_EC_ELE) ],
                                 const real g_PriVar   [][ CUBE(FLU_NXT) ],
-                                const real dt, const real dh, const real MinDens, const real MinEint )
+                                const real dt, const real dh, const real MinDens, const real MinEint,
+                                const long PassiveFloor )
 {
 
    const int  didx_flux[3]   = { 1, N_HF_FLUX, SQR(N_HF_FLUX) };
@@ -567,9 +573,10 @@ void Hydro_TGradientCorrection(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ 
 #           endif
             fc_var[f][0] = FMAX( fc_var[f][0], MinDens );
             fc_var[f][4] = Hydro_CheckMinEintInEngy( fc_var[f][0], fc_var[f][1], fc_var[f][2], fc_var[f][3], fc_var[f][4],
-                                                     MinEint, Emag );
+                                                     MinEint, PassiveFloor, Emag );
 #           if ( NCOMP_PASSIVE > 0 )
             for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+            if ( PassiveFloor & BIDX(v) )
             fc_var[f][v] = FMAX( fc_var[f][v], TINY_NUMBER );
 #           endif
          }

@@ -17,7 +17,7 @@
 #else // #ifdef __CUDACC__
 
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
-void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres,
+void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres, const long PassiveFloor,
                      const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX], const real* const PresIn );
 
@@ -48,6 +48,7 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 //                Flux_Out          : Array to store the output flux
 //                L/R_In            : Input left/right states (conserved variables)
 //                MinDens/Pres      : Density and pressure floors
+//                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_DensPres2CSqr : EoS routine to compute the sound speed squared
 //                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
@@ -57,7 +58,7 @@ void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real Min
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const real MinDens, const real MinPres, const long PassiveFloor, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
                                const EoS_H2TEM_t EoS_HTilde2Temp,
                                const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
@@ -80,11 +81,11 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Hydro_IsUnphysical( UNPHY_MODE_CONS, L, NULL_REAL,
                        EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table,
-                       ERROR_INFO, UNPHY_VERBOSE );
+                       PassiveFloor, ERROR_INFO, UNPHY_VERBOSE );
    Hydro_IsUnphysical( UNPHY_MODE_CONS, R, NULL_REAL,
                        EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table,
-                       ERROR_INFO, UNPHY_VERBOSE );
+                       PassiveFloor, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -101,11 +102,11 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    real lV1, rV1, lV2, rV2, lV3, rV3;
    real lFactor,rFactor;
 
-   Hydro_Con2Pri( L, PL, MinPres, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
+   Hydro_Con2Pri( L, PL, MinPres, PassiveFloor, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                   (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &lFactor );
 
-   Hydro_Con2Pri( R, PR, MinPres, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
+   Hydro_Con2Pri( R, PR, MinPres, PassiveFloor, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
                   (real)NULL_REAL, NULL, NULL, EoS_GuessHTilde, EoS_HTilde2Temp,
                   EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &rFactor );
 
@@ -113,11 +114,11 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    Hydro_IsUnphysical( UNPHY_MODE_PRIM, PL, NULL_REAL,
                        EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table,
-                       ERROR_INFO, UNPHY_VERBOSE );
+                       PassiveFloor, ERROR_INFO, UNPHY_VERBOSE );
    Hydro_IsUnphysical( UNPHY_MODE_PRIM, PR, NULL_REAL,
                        EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table,
-                       ERROR_INFO, UNPHY_VERBOSE );
+                       PassiveFloor, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 
@@ -389,7 +390,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                               const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                               const real MinDens, const real MinPres, const long PassiveFloor, const EoS_DE2P_t EoS_DensEint2Pres,
                                const EoS_DP2C_t EoS_DensPres2CSqr, const EoS_GUESS_t EoS_GuessHTilde,
                                const EoS_H2TEM_t EoS_HTilde2Temp,
                                const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
@@ -430,10 +431,10 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    _RhoR = ONE / R[0];
    u_L   = _RhoL*L[1];
    u_R   = _RhoR*R[1];
-   P_L   = Hydro_Con2Pres( L[0], L[1], L[2], L[3], L[4], L+NCOMP_FLUID, CheckMinPres_Yes, MinPres, Emag,
+   P_L   = Hydro_Con2Pres( L[0], L[1], L[2], L[3], L[4], L+NCOMP_FLUID, CheckMinPres_Yes, MinPres, PassiveFloor, Emag,
                            EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                            EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
-   P_R   = Hydro_Con2Pres( R[0], R[1], R[2], R[3], R[4], R+NCOMP_FLUID, CheckMinPres_Yes, MinPres, Emag,
+   P_R   = Hydro_Con2Pres( R[0], R[1], R[2], R[3], R[4], R+NCOMP_FLUID, CheckMinPres_Yes, MinPres, PassiveFloor, Emag,
                            EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                            EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
    Cs_L  = SQRT(  EoS_DensPres2CSqr( L[0], P_L, L+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table )  );
@@ -589,7 +590,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    {
       const real MaxV_L = FMIN( W_L, ZERO );
 
-      Hydro_Con2Flux( 0, Flux_LR, L, MinPres, NULL, NULL, NULL, NULL, &P_L );
+      Hydro_Con2Flux( 0, Flux_LR, L, MinPres, PassiveFloor, NULL, NULL, NULL, NULL, &P_L );
 
       for (int v=0; v<NCOMP_FLUID; v++)   Flux_LR[v] -= MaxV_L*L[v];    // fluxes along the maximum wave speed
 
@@ -613,7 +614,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
    {
       const real MaxV_R = FMAX( W_R, ZERO );
 
-      Hydro_Con2Flux( 0, Flux_LR, R, MinPres, NULL, NULL, NULL, NULL, &P_R );
+      Hydro_Con2Flux( 0, Flux_LR, R, MinPres, PassiveFloor, NULL, NULL, NULL, NULL, &P_R );
 
       for (int v=0; v<NCOMP_FLUID; v++)    Flux_LR[v] -= MaxV_R*R[v];   // fluxes along the maximum wave speed
 

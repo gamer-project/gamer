@@ -226,14 +226,14 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Ghos
       if ( PrepVz   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMZ] / BVal[DENS];
       if ( PrepPres )   Array3D[ v2 ++ ][k][j][i] = Hydro_Con2Pres( BVal[DENS], BVal[MOMX], BVal[MOMY],
                                                                     BVal[MOMZ], BVal[ENGY], BVal+NCOMP_FLUID,
-                                                                    CheckMinPres_Yes, MIN_PRES, Emag,
+                                                                    CheckMinPres_Yes, MIN_PRES, PassiveFloorMask, Emag,
                                                                     EoS_DensEint2Pres_CPUPtr,
                                                                     EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                                     EoS_AuxArray_Flt,
                                                                     EoS_AuxArray_Int, h_EoS_Table, NULL );
       if ( PrepTemp )   Array3D[ v2 ++ ][k][j][i] = Hydro_Con2Temp( BVal[DENS], BVal[MOMX], BVal[MOMY],
                                                                     BVal[MOMZ], BVal[ENGY], BVal+NCOMP_FLUID,
-                                                                    CheckMinTemp_Yes, MIN_TEMP, Emag,
+                                                                    CheckMinTemp_Yes, MIN_TEMP, PassiveFloorMask, Emag,
                                                                     EoS_DensEint2Temp_CPUPtr,
                                                                     EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                                     EoS_AuxArray_Flt,

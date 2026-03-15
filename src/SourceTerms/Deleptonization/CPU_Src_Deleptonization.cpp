@@ -106,6 +106,7 @@ void Src_SetAuxArray_Deleptonization( double AuxArray_Flt[], int AuxArray_Int[] 
 //                TimeOld           : Physical time before update
 //                                    --> This function updates physical time from TimeOld to TimeNew
 //                MinDens/Pres/Eint : Density, pressure, and internal energy floors
+//                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //                EoS               : EoS object
 //                AuxArray_*        : Auxiliary arrays (see the Note above)
 //
@@ -116,7 +117,7 @@ static void Src_Deleptonization( real fluid[], const real B[],
                                  const SrcTerms_t *SrcTerms, const real dt, const real dh,
                                  const double x, const double y, const double z,
                                  const double TimeNew, const double TimeOld,
-                                 const real MinDens, const real MinPres, const real MinEint,
+                                 const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor,
                                  const EoS_t *EoS, const double AuxArray_Flt[], const int AuxArray_Int[] )
 {
 
@@ -183,12 +184,13 @@ void Src_WorkBeforeMajorFunc_Deleptonization( const int lv, const double TimeNew
    const int         MaxLv          = -1;
    const PatchType_t PatchType      = PATCH_LEAF;
    const double      PrepTime       = TimeNew;
+   const bool        GetSigma_No    = false;
 
    Profile_t *Prof[SRC_DLEP_PROF_NVAR];
    for (int v=0; v<SRC_DLEP_PROF_NVAR; v++)  Prof[v] = new Profile_t();
 
    Aux_ComputeProfile( Prof, Center, MaxRadius, MinBinSize, LogBin, LogBinRatio, RemoveEmptyBin,
-                       TVar, NProf, SingleLv, MaxLv, PatchType, PrepTime );
+                       TVar, NProf, SingleLv, MaxLv, PatchType, PrepTime, GetSigma_No );
 
 
 // check and store the number of radial bins
