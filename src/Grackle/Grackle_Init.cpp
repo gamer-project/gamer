@@ -99,6 +99,9 @@ void Grackle_Init()
    grackle_data->three_body_rate                = GRACKLE_THREE_BODY_RATE;
    grackle_data->cie_cooling                    = GRACKLE_CIE_COOLING;
    grackle_data->h2_optical_depth_approximation = GRACKLE_H2_OPA_APPROX;
+// ============================================================
+   grackle_data->use_dust_density_field  = 1;
+// ============================================================
 
 #  ifdef OPENMP
 // currently we adopt the OpenMP implementation in Grackle directly, which applies the parallelization to

@@ -24,7 +24,9 @@ int CheIdx_DII   = Idx_Undefined;
 int CheIdx_HDI   = Idx_Undefined;
 int CheIdx_Metal = Idx_Undefined;
 
-
+// ============================================================
+int CheIdx_Dust  = Idx_Undefined;
+// ============================================================
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -76,6 +78,9 @@ void Init_MemAllocate_Grackle( const int Che_NPG )
    if ( GRACKLE_METAL )
    CheIdx_Metal = Che_NField ++;
 
+// ============================================================
+   CheIdx_Dust = Che_NField ++;
+// ============================================================
 
 // allocate the input/output array for the Grackle solver
    for (int t=0; t<2; t++)
