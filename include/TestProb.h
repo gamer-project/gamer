@@ -10,7 +10,14 @@
 #else
 struct HDF5_Output_t
 {
-   void Add( const char NewKey[], void* NewPtr )
+   template <typename T>
+   void Add( const char NewKey[], T* NewPtr, const int Dim, int *Len, const bool Compare,
+             const bool Fatal_Nonexist, const bool Fatal_Compr )
+   {
+   }
+   template <typename T>
+   void Add( const char NewKey[], const T KeyVal, const int Dim, int *Len, const bool Compare,
+             const bool Fatal_Nonexist, const bool Fatal_Compr )
    {
    }
 };
@@ -18,12 +25,12 @@ struct HDF5_Output_t
 
 
 // common macro
-#  define LOAD_PARA( load_mode, para_name, para_ptr, ... )                                                                \
-   {                                                                                                                      \
-      if      ( load_mode == LOAD_HDF5_OUTPUT )    HDF5_InputTest->Add( para_name, para_ptr );                            \
-      else if ( load_mode == LOAD_READPARA    )    ReadPara->Add( para_name, para_ptr, __VA_ARGS__ );                     \
-      else                                         Aux_Error( ERROR_INFO, "unsupported load_mode (%d) !!\n", load_mode ); \
-   }
+#define LOAD_PARA( load_mode, para_name, para_ptr, ... )                                                                  \
+ {                                                                                                                        \
+    if      ( load_mode == LOAD_HDF5_OUTPUT )    HDF5_InputTest->Add( para_name, para_ptr, 0, NULL, false, false, false );\
+    else if ( load_mode == LOAD_READPARA    )    ReadPara->Add( para_name, para_ptr, __VA_ARGS__ );                       \
+    else                                         Aux_Error( ERROR_INFO, "unsupported load_mode (%d) !!\n", load_mode );   \
+ }
 
 
 // common function prototypes
