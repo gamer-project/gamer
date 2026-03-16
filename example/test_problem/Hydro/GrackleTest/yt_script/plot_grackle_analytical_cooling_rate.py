@@ -27,11 +27,11 @@ def get_grackle_rates_and_mmw(file_path, z_target, nh_target, t_target):
         ds_heat = f['CoolingRates/Primordial/Heating']
         ds_mmw  = f['CoolingRates/Primordial/MMW']
 
-        # Extract grids (shared across these datasets)
+        # Extract grids
         nh_grid   = ds_cool.attrs['Parameter1'][:]
         z_grid    = ds_cool.attrs['Parameter2'][:]
         t_grid    = ds_cool.attrs['Temperature'][:]
-        
+
         cool_data = ds_cool[:]
         heat_data = ds_heat[:]
         mmw_data  = ds_mmw[:]
@@ -39,27 +39,29 @@ def get_grackle_rates_and_mmw(file_path, z_target, nh_target, t_target):
         grids = [nh_grid, z_grid, t_grid]
         data_list = [cool_data, heat_data, mmw_data]
 
-        # Sort and clean grids and data simultaneously
+        # Sort and clean grids and data
         for i in range(len(grids)):
+            # Sort grids
             sort_idx = np.argsort(grids[i])
             grids[i] = grids[i][sort_idx]
             for j in range(len(data_list)):
                 data_list[j] = np.take(data_list[j], sort_idx, axis=i)
 
+            # Remove redundant grids
             mask = np.concatenate(([True], np.diff(grids[i]) > 0))
             grids[i] = grids[i][mask]
             for j in range(len(data_list)):
                 data_list[j] = np.compress(mask, data_list[j], axis=i)
 
-        # Create interpolators for all three
+        # Create interpolators
         cool_interp = RegularGridInterpolator(tuple(grids), data_list[0])
         heat_interp = RegularGridInterpolator(tuple(grids), data_list[1])
         mmw_interp  = RegularGridInterpolator(tuple(grids), data_list[2])
 
         # Bounds clipping
         log_nh = np.clip(np.log10(nh_target), grids[0].min(), grids[0].max())
-        z_safe = np.clip(z_target, grids[1].min(), grids[1].max())
-        t_safe = np.clip(t_target, grids[2].min(), grids[2].max())
+        z_safe = np.clip(           z_target, grids[1].min(), grids[1].max())
+        t_safe = np.clip(           t_target, grids[2].min(), grids[2].max())
         points = np.dstack((log_nh, z_safe, t_safe))
 
         return cool_interp(points), heat_interp(points), mmw_interp(points)
@@ -109,36 +111,20 @@ def output_one_point():
     print_one_point(*calculate_one_point())
 
 
-
-def calculate_one_point(grackle_path=GRACKLE_PATH, z_now=Z_NOW, nH_now=NH_NOW, T_now=T_NOW):
-    # Retrieve all 3 values from interpolations directly from grackle tables
-    cool_rate, heat_rate, mu_val = get_grackle_rates(grackle_path, z_now, nH_now, T_now)
-    # Extract scalar values from the interpolation arrays
-    c_rate = cool_rate[0,0]
-    h_rate = heat_rate[0,0]
-    m_val  = mu_val[0,0]
-    # Use the MU returned by Grackle instead of the hardcoded 0.6 global
-    net_rate = abs(h_rate - c_rate)
-    # Calculate cooling time using the table's MU
-    t_cool_Myr = calculate_cooling_time(nH_now, T_now, net_rate, mu_val=m_val)
-    return c_rate, h_rate, net_rate, t_cool_Myr, m_val
-
-
 def calculate_one_point(grackle_path=GRACKLE_PATH, z_now=Z_NOW, nH_now=NH_NOW, T_now=T_NOW):
     cooling_rate, heating_rate, mmw = get_grackle_rates_and_mmw(grackle_path, z_target=z_now, nh_target=nH_now, t_target=T_now)
-    # Use the MU returned by Grackle instead of the hardcoded 0.6 global
     net_rate   = abs(heating_rate[0,0] - cooling_rate[0,0])
-    # Pass mmw[0,0] to the cooling time calculation for 100% consistency
-    t_cool_Myr = calculate_cooling_time(nH_now, T_now, net_rate, mu_val=mmw[0,0])
-    return cooling_rate, heating_rate, net_rate, t_cool_Myr
+    t_cool_Myr = calculate_cooling_time(nH_now, T_now, net_rate, mmw[0,0])
+    return cooling_rate, heating_rate, net_rate, mmw, t_cool_Myr
 
 
-def print_one_point(cooling_rate, heating_rate, net_rate, t_cool_Myr):
+def print_one_point(cooling_rate, heating_rate, net_rate, mmw, t_cool_Myr):
     print("-" * 55)
     print(f"  Cooling Rate (Λ/n_H²): {cooling_rate[0,0]:.2e} erg*cm^3/s")
     print(f"  Heating Rate (Γ/n_H²): {heating_rate[0,0]:.2e} erg*cm^3/s")
     print(f"  Net                  : {'Heating' if heating_rate[0,0] > cooling_rate[0,0] else 'Cooling'}")
     print(f"  Timescale            : {t_cool_Myr:.2e} Myr")
+    print(f"  Mean Molecular Weight: {mmw[0,0]:.2e}")
     print("-" * 55)
     print("")
 
@@ -153,22 +139,22 @@ def calculate_grid(grackle_path=GRACKLE_PATH, z_now=Z_NOW, rho_range=RHO_RANGE, 
     # Create the grid
     grid_rho, grid_t_mu = np.meshgrid(rho_range, t_mu_range)
 
-    # Calculate heating/cooling rates on grid 
+    # Calculate heating/cooling rates on grid
     mp     = 1.6726e-24           # Proton mass (g)
     nh_val = grid_rho / (mp / X_H)
     z_val  = z_now * np.ones_like(nh_val)
 
-    # (1) Use a reasonable guess for MU to get an initial Temperature
-    mu_guess = 0.6 
+    # Use a reasonable guess for MU to get an initial Temperature
+    mu_guess = 0.6
     t_guess  = grid_t_mu * mu_guess
-    
-    # (2) Get actual MMW from the table for these conditions
+
+    # Get actual MMW from the table for these conditions
     _, _, mu_actual = get_grackle_rates_and_mmw(grackle_path, z_val, nh_val, t_guess)
-    
-    # (3) Use the self-consistent MU to find true T and Rates
+
+    # Use the self-consistent MMW to find true T and Rates
     t_actual = grid_t_mu * mu_actual
     cool, heat, _ = get_grackle_rates_and_mmw(grackle_path, z_val, nh_val, t_actual)
-    
+
     net_rates = (heat - cool) * (nh_val**2)
     return grid_rho, grid_t_mu, net_rates
 
