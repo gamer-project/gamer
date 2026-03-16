@@ -27,7 +27,9 @@ int CheIdx_vHeatingRate = Idx_Undefined;
 int CheIdx_sHeatingRate = Idx_Undefined;
 int CheIdx_tempFloor    = Idx_Undefined;
 
-
+// ============================================================
+int CheIdx_Dust  = Idx_Undefined;
+// ============================================================
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -88,6 +90,8 @@ void Init_MemAllocate_Grackle( const int Che_NPG )
    if ( GRACKLE_USE_TEMP_FLOOR == 2 )
    CheIdx_tempFloor    = Che_NField ++;
 
+   if ( GRACKLE_DUST )
+   CheIdx_Dust = Che_NField ++;
 
 // allocate the input/output array for the Grackle solver
    for (int t=0; t<2; t++)

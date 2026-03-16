@@ -67,6 +67,8 @@ void Grackle_Init_FieldData()
    Che_FieldData->volumetric_heating_rate = NULL;
    Che_FieldData->specific_heating_rate   = NULL;
    Che_FieldData->temperature_floor       = NULL;
+   Che_FieldData->dust_density            = NULL;
+
 
 // fields not supported yet
    Che_FieldData->x_velocity              = NULL;

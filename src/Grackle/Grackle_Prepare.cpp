@@ -26,6 +26,9 @@ extern int CheIdx_vHeatingRate;
 extern int CheIdx_sHeatingRate;
 extern int CheIdx_tempFloor;
 
+// ============================================================
+extern int CheIdx_Dust;
+// ============================================================
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
 static real_che Grackle_vHeatingRate_User_Template( const double x, const double y, const double z, const double Time, const double n_H );
@@ -142,6 +145,14 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    Che_Units.a_units              = 1.0;
    Che_Units.a_value              = Time[lv];
 #  endif
+// ============================================================
+      // if (  Idx_Dust  == Idx_Undefined  ||  CheIdx_Dust  == Idx_Undefined  )
+         // Aux_Error( ERROR_INFO, "[Che]Idx_Dust is undefined for \"GRACKLE_Dust\" !!\n" );
+// ============================================================
+#  endif // #ifdef GAMER_DEBUG
+
+   // Aux_Message( stdout, "  Idx_Metal_Grackle_Prepare            = No. %d \n",    Idx_Metal  );
+   // Aux_Message( stdout, "  Idx_Dust_Grackle_Prepare             = No. %d \n",    Idx_Dust  );
 
    const int  Size1pg             = CUBE(PS2);
    const int  Size1v              = NPG*Size1pg;
@@ -188,6 +199,11 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    real_che *Ptr_sHeatingRate0 = h_Che_Array + CheIdx_sHeatingRate*Size1v;
    real_che *Ptr_tempFloor0    = h_Che_Array + CheIdx_tempFloor   *Size1v;
 
+// ============================================================
+   real_che *Ptr_Dust0  = h_Che_Array + CheIdx_Dust *Size1v;
+// ============================================================
+
+
 
 #  pragma omp parallel
    {
@@ -206,7 +222,7 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    real_che *Ptr_HeI=NULL, *Ptr_HeII=NULL, *Ptr_HeIII=NULL, *Ptr_HM=NULL, *Ptr_H2I=NULL, *Ptr_H2II=NULL;
    real_che *Ptr_DI=NULL, *Ptr_DII=NULL, *Ptr_HDI=NULL, *Ptr_Metal=NULL;
    real_che *Ptr_vHeatingRate=NULL, *Ptr_sHeatingRate=NULL, *Ptr_tempFloor=NULL;
-   real_che  Ratio_FloorDens;
+   real_che  Ratio_FloorDens, *Ptr_Dust=NULL;;
 
 #  pragma omp for schedule( static )
    for (int TID=0; TID<NPG; TID++)
@@ -234,6 +250,31 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
       Ptr_vHeatingRate = Ptr_vHeatingRate0 + offset;
       Ptr_sHeatingRate = Ptr_sHeatingRate0 + offset;
       Ptr_tempFloor    = Ptr_tempFloor0    + offset;
+   
+#  pragma omp for schedule( static )
+   for (int TID=0; TID<NPG; TID++)
+   {
+      PID0      = PID0_List[TID];
+      idx_pg    = 0;
+      offset    = TID*Size1pg;
+
+      Ptr_Dens  = Ptr_Dens0  + offset;
+      Ptr_sEint = Ptr_sEint0 + offset;
+      Ptr_Ent   = Ptr_Ent0   + offset;
+      Ptr_e     = Ptr_e0     + offset;
+      Ptr_HI    = Ptr_HI0    + offset;
+      Ptr_HII   = Ptr_HII0   + offset;
+      Ptr_HeI   = Ptr_HeI0   + offset;
+      Ptr_HeII  = Ptr_HeII0  + offset;
+      Ptr_HeIII = Ptr_HeIII0 + offset;
+      Ptr_HM    = Ptr_HM0    + offset;
+      Ptr_H2I   = Ptr_H2I0   + offset;
+      Ptr_H2II  = Ptr_H2II0  + offset;
+      Ptr_DI    = Ptr_DI0    + offset;
+      Ptr_DII   = Ptr_DII0   + offset;
+      Ptr_HDI   = Ptr_HDI0   + offset;
+      Ptr_Metal = Ptr_Metal0 + offset;
+      Ptr_Dust  = Ptr_Dust0  + offset;
 
       for (int LocalID=0; LocalID<8; LocalID++)
       {
@@ -353,6 +394,10 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
             if ( GRACKLE_USE_TEMP_FLOOR == 2 )
             Ptr_tempFloor[idx_pg] = Grackle_tempFloor_User_Ptr( x0+i*dh, y0+j*dh, z0+k*dh, Time[lv], Ptr_Dens[idx_pg], Ptr_sEint[idx_pg] );
 
+// ============================================================
+            Ptr_Dust[idx_pg] = *( fluid[Idx_Dust][0][0] + idx_p );
+// ============================================================
+
             idx_p  ++;
             idx_pg ++;
          } // i,j,k
@@ -401,6 +446,9 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
 
    if ( GRACKLE_USE_TEMP_FLOOR == 2 )
    Che_FieldData->temperature_floor       = Ptr_tempFloor0;
+
+   if ( GRACKLE_DUST )
+   Che_FieldData->dust_density    = Ptr_Dust0;
 
 } // FUNCTION : Grackle_Prepare
 
