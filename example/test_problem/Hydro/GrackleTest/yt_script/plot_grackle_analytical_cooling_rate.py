@@ -144,14 +144,18 @@ def calculate_grid(grackle_path=GRACKLE_PATH, z_now=Z_NOW, rho_range=RHO_RANGE, 
     nh_val = grid_rho / (mp / X_H)
     z_val  = z_now * np.ones_like(nh_val)
 
-    # Use a reasonable guess for MU to get an initial Temperature
-    mu_guess = 0.6
-    t_guess  = grid_t_mu * mu_guess
+    # Solve T = (T/mu) * mu(T) iteratively
+    mu_initial_guess = 0.6
+    max_iterations   = 8
+    mu_actual = np.full_like(grid_t_mu, mu_initial_guess, dtype=float)
+    for _ in range(max_iterations):
+        t_actual = grid_t_mu * mu_actual
+        _, _, mu_new = get_grackle_rates_and_mmw(grackle_path, z_val, nh_val, t_actual)
+        if np.allclose(mu_new, mu_actual, rtol=1e-4, atol=1e-6):
+            mu_actual = mu_new
+            break
+        mu_actual = mu_new
 
-    # Get actual MMW from the table for these conditions
-    _, _, mu_actual = get_grackle_rates_and_mmw(grackle_path, z_val, nh_val, t_guess)
-
-    # Use the self-consistent MMW to find true T and Rates
     t_actual = grid_t_mu * mu_actual
     cool, heat, _ = get_grackle_rates_and_mmw(grackle_path, z_val, nh_val, t_actual)
 
