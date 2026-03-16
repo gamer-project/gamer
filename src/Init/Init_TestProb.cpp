@@ -30,6 +30,12 @@ void Init_TestProb_Hydro_EnergyPowerSpectrum();
 void Init_TestProb_Hydro_CR_SoundWave();
 void Init_TestProb_Hydro_CR_ShockTube();
 void Init_TestProb_Hydro_CR_Diffusion();
+void Init_TestProb_Hydro_ConductionStepFunction();
+void Init_TestProb_Hydro_ConductionRing();
+void Init_TestProb_Hydro_MHD_MTI();
+void Init_TestProb_Hydro_VelocityProfileDamping();
+void Init_TestProb_Hydro_MHD_LinearWaveViscosity();
+void Init_TestProb_Hydro_MHD_CPAW();
 
 void Init_TestProb_ELBDM_ExtPot();
 void Init_TestProb_ELBDM_JeansInstabilityComoving();
@@ -96,6 +102,12 @@ void Init_TestProb()
       case TESTPROB_HYDRO_CR_SOUNDWAVE :                 Init_TestProb_Hydro_CR_SoundWave();                break;
       case TESTPROB_HYDRO_CR_SHOCKTUBE :                 Init_TestProb_Hydro_CR_ShockTube();                break;
       case TESTPROB_HYDRO_CR_DIFFUSION :                 Init_TestProb_Hydro_CR_Diffusion();                break;
+      case TESTPROB_HYDRO_CONDUCTION_STEP_FUNCTION :     Init_TestProb_Hydro_ConductionStepFunction();      break;
+      case TESTPROB_HYDRO_CONDUCTION_RING :              Init_TestProb_Hydro_ConductionRing();              break;
+      case TESTPROB_HYDRO_MHD_MTI:                       Init_TestProb_Hydro_MHD_MTI();                     break;
+      case TESTPROB_HYDRO_VELOCITY_PROFILE_DAMPING :     Init_TestProb_Hydro_VelocityProfileDamping();      break;
+      case TESTPROB_HYDRO_MHD_LINEAR_WAVE_VISCOSITY :    Init_TestProb_Hydro_MHD_LinearWaveViscosity();     break;
+      case TESTPROB_HYDRO_MHD_CPAW :                     Init_TestProb_Hydro_MHD_CPAW();                    break;
 
       case TESTPROB_ELBDM_EXTPOT :                       Init_TestProb_ELBDM_ExtPot();                      break;
       case TESTPROB_ELBDM_JEANS_INSTABILITY_COMOVING :   Init_TestProb_ELBDM_JeansInstabilityComoving();    break;

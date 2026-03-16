@@ -24,21 +24,22 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const real g_FC_B     [][ SQR(FLU_NXT)*FLU_NXT_P1 ],
                                      real g_PriVar   [][ CUBE(FLU_NXT) ],
                                      real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
+                                     real g_Flux     [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                      real g_Slope_PPM[][NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ],
                                      real g_EC_Ele   [][ CUBE(N_EC_ELE) ],
                                const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh,
-                               const real MinDens, const real MinPres, const real MinEint,
+                               const real MinDens, const real MinPres, const real MinEint, const real MinTemp,
                                const long PassiveFloor, const bool FracPassive, const int NFrac, const int FracIdx[],
                                const bool JeansMinPres, const real JeansMinPres_Coeff,
-                               const EoS_t *EoS );
+                               const EoS_t *EoS, const MicroPhy_t *MicroPhy );
 void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                               real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                         const int NFlux, const int NSkip_N, const int NSkip_T,
                         const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[],
                         const real dt, const real dh, const double Time, const bool UsePot,
                         const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func, const double ExtAcc_AuxArray[],
-                        const real MinDens, const real MinPres, const long PassiveFloor, const EoS_t *EoS );
+                        const real MinDens, const real MinPres, const long PassiveFloor, const EoS_t *EoS, const bool FreezeHydro );
 void Hydro_StoreIntFlux( const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
                          const int NFlux );
@@ -56,16 +57,17 @@ void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                           const bool DumpIntEle, real g_IntEle[][NCOMP_ELE][ PS2P1*PS2 ],
                           const bool CorrHalfVel, const real g_Pot_USG[], const double g_Corner[], const double Time,
                           const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
-                          const double ExtAcc_AuxArray[] );
+                          const double ExtAcc_AuxArray[], const bool FreezeHydro );
 void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out,
                          const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                          const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
-                         const real dt, const real dh, const int NOut, const int NEle, const int Offset_B_In );
+                         const real dt, const real dh, const int NOut, const int NEle,
+			 const int Offset_B_In, const bool FreezeHydro );
 void MHD_HalfStepPrimitive( const real g_Flu_In[][ CUBE(FLU_NXT) ],
                             const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                   real g_PriVar_Out[][ CUBE(FLU_NXT) ],
                             const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                            const real dt, const real dh, const real MinDens );
+                            const real dt, const real dh, const real MinDens, const bool FreezeHydro );
 #endif // #ifdef MHD
 
 #endif // #ifdef __CUDACC__ ... else ...
@@ -151,6 +153,7 @@ void Hydro_TGradientCorrection(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ 
 //                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //                EoS                : EoS object
+//                FreezeHydro        : Freeze hydrodynamic fluxes
 //-------------------------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __global__
@@ -180,7 +183,7 @@ void CUFLU_FluidSolver_CTU(
    const bool NormPassive, const int NNorm,
    const bool FracPassive, const int NFrac,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_t EoS )
+   const EoS_t EoS, const bool FreezeHydro )
 #else
 void CPU_FluidSolver_CTU(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
@@ -210,7 +213,7 @@ void CPU_FluidSolver_CTU(
    const bool NormPassive, const int NNorm, const int c_NormIdx[],
    const bool FracPassive, const int NFrac, const int c_FracIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_t EoS )
+   const EoS_t EoS, const bool FreezeHydro )
 #endif // #ifdef __CUDACC__ ... else ...
 {
 
@@ -262,17 +265,17 @@ void CPU_FluidSolver_CTU(
 
 
 //       1. evaluate the face-centered values at the half time-step
-         Hydro_DataReconstruction( g_Flu_Array_In[P], g_Mag_Array_In[P], g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
-                                   NULL, Con2Pri_Yes, LR_Limiter, MinMod_Coeff, dt, dh,
-                                   MinDens, MinPres, MinEint, PassiveFloor, FracPassive, NFrac, c_FracIdx,
-                                   JeansMinPres, JeansMinPres_Coeff, &EoS );
+         Hydro_DataReconstruction( g_Flu_Array_In[P], g_Mag_Array_In[P], g_PriVar_1PG, g_FC_Var_1PG, NULL,
+                                   g_Slope_PPM_1PG, NULL, Con2Pri_Yes, LR_Limiter, MinMod_Coeff, dt, dh,
+                                   MinDens, MinPres, MinEint, NULL_REAL, PassiveFloor, FracPassive, NFrac,
+                                   c_FracIdx, JeansMinPres, JeansMinPres_Coeff, &EoS, NULL );
 
 
 //       2. evaluate the face-centered half-step fluxes by solving the Riemann problem
          Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_HF_FLUX, 0, 0, CorrHalfVel_No,
                             NULL, NULL, NULL_REAL, NULL_REAL, NULL_REAL,
                             EXT_POT_NONE, EXT_ACC_NONE, NULL, NULL,
-                            MinDens, MinPres, PassiveFloor, &EoS );
+                            MinDens, MinPres, PassiveFloor, &EoS, FreezeHydro );
 
 
 //       3. evaluate electric field and update B field at the half time-step
@@ -280,10 +283,11 @@ void CPU_FluidSolver_CTU(
          MHD_ComputeElectric( g_EC_Ele_1PG, g_FC_Flux_1PG, g_PriVar_1PG, N_HF_ELE, N_HF_FLUX,
                               FLU_NXT, LR_GHOST_SIZE, dt, dh, StoreElectric_No, NULL,
                               CorrHalfVel_No, NULL, NULL, NULL_REAL,
-                              EXT_POT_NONE, EXT_ACC_NONE, NULL, NULL );
+                              EXT_POT_NONE, EXT_ACC_NONE, NULL, NULL, FreezeHydro );
 
          MHD_UpdateMagnetic( g_FC_Mag_Half_1PG[0], g_FC_Mag_Half_1PG[1], g_FC_Mag_Half_1PG[2],
-                             g_Mag_Array_In[P], g_EC_Ele_1PG, (real)0.5*dt, dh, N_HF_VAR, N_HF_ELE, FLU_GHOST_SIZE-1 );
+                             g_Mag_Array_In[P], g_EC_Ele_1PG, (real)0.5*dt, dh, N_HF_VAR, N_HF_ELE,
+			     FLU_GHOST_SIZE-1, FreezeHydro );
 #        endif
 
 
@@ -295,7 +299,8 @@ void CPU_FluidSolver_CTU(
 //       5. evaluate the cell-centered primitive variables at the half time-step
 //          --> for computing CT electric field later
 #        ifdef MHD
-         MHD_HalfStepPrimitive( g_Flu_Array_In[P], g_FC_Mag_Half_1PG, g_PriVar_Half_1PG, g_FC_Flux_1PG, dt, dh, MinDens );
+         MHD_HalfStepPrimitive( g_Flu_Array_In[P], g_FC_Mag_Half_1PG, g_PriVar_Half_1PG, g_FC_Flux_1PG, dt, dh, MinDens,
+	 			FreezeHydro );
 #        endif
 
 
@@ -310,7 +315,7 @@ void CPU_FluidSolver_CTU(
          Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_FL_FLUX, NSkip_N, NSkip_T, CorrHalfVel,
                             g_Pot_Array_USG[P], g_Corner_Array[P], dt, dh, Time,
                             UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray,
-                            MinDens, MinPres, PassiveFloor, &EoS );
+                            MinDens, MinPres, PassiveFloor, &EoS, FreezeHydro );
 
          if ( StoreFlux )
             Hydro_StoreIntFlux( g_FC_Flux_1PG, g_Flux_Array[P], N_FL_FLUX );
@@ -323,10 +328,11 @@ void CPU_FluidSolver_CTU(
          MHD_ComputeElectric( g_EC_Ele_1PG, g_FC_Flux_1PG, g_PriVar_Half_1PG, N_FL_ELE, N_FL_FLUX,
                               N_HF_VAR, 0, dt, dh, StoreElectric, g_Ele_Array[P],
                               CorrHalfVel, g_Pot_Array_USG[P], g_Corner_Array[P], Time,
-                              UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray );
+                              UsePot, ExtAcc, ExtAcc_Func, c_ExtAcc_AuxArray, FreezeHydro );
 
          MHD_UpdateMagnetic( g_Mag_Array_Out[P][0], g_Mag_Array_Out[P][1], g_Mag_Array_Out[P][2],
-                             g_Mag_Array_In[P], g_EC_Ele_1PG, dt, dh, PS2, N_FL_ELE, FLU_GHOST_SIZE );
+                             g_Mag_Array_In[P], g_EC_Ele_1PG, dt, dh, PS2, N_FL_ELE, FLU_GHOST_SIZE,
+			     FreezeHydro );
 #        endif
 
 

@@ -45,13 +45,13 @@ void CPU_FluidSolver_MHM(
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter, const double Time,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const double c_ExtAcc_AuxArray[],
-   const real MinDens, const real MinPres, const real MinEint,
+   const real MinDens, const real MinPres, const real MinEint, const real MinTemp,
    const real DualEnergySwitch,
    const long PassiveFloor,
    const bool NormPassive, const int NNorm, const int c_NormIdx[],
    const bool FracPassive, const int NFrac, const int c_FracIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_t EoS, const MicroPhy_t MicroPhy );
+   const EoS_t EoS, const MicroPhy_t MicroPhy, const bool FreezeHydro );
 #elif ( FLU_SCHEME == CTU )
 void CPU_FluidSolver_CTU(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
@@ -80,7 +80,7 @@ void CPU_FluidSolver_CTU(
    const bool NormPassive, const int NNorm, const int c_NormIdx[],
    const bool FracPassive, const int NFrac, const int c_FracIdx[],
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_t EoS );
+   const EoS_t EoS, const bool FreezeHydro );
 #endif // FLU_SCHEME
 
 #elif ( MODEL == ELBDM )
@@ -188,7 +188,8 @@ static real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 //                UsePot                : Add self-gravity and/or external potential (for UNSPLIT_GRAVITY only)
 //                ExtAcc                : Add external acceleration                  (for UNSPLIT_GRAVITY only)
 //                MicroPhy              : Microphysics object
-//                MinDens/Pres/Eint     : Density, pressure, and internal energy floors
+//                MinDens/Pres          : Density and pressure floors
+//                MinEint/Temp          : Internal energy and temperature floors
 //                DualEnergySwitch      : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
 //                PassiveFloor          : Bitwise flag to specify the passive scalars to be floored
 //                                        --> Should be set to the global variable "PassiveFloorMask"
@@ -206,6 +207,7 @@ static real (*h_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ] = NULL;
 //                JeansMinPres          : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff    : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //                UseWaveFlag           : Determines whether wave or fluid solver is used for MODEL == ELBDM and ELBDM_SCHEME == ELBDM_HYBRID
+//                FreezeHydro           : Freeze hydrodynamic fluxes
 //-------------------------------------------------------------------------------------------------------
 void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       real h_Flu_Array_Out[][FLU_NOUT][ CUBE(PS2) ],
@@ -224,12 +226,12 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const bool XYZ, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter,
                       const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
                       const double Time, const bool UsePot, const OptExtAcc_t ExtAcc, const MicroPhy_t MicroPhy,
-                      const real MinDens, const real MinPres, const real MinEint,
+                      const real MinDens, const real MinPres, const real MinEint, const real MinTemp,
                       const real DualEnergySwitch, const long PassiveFloor,
                       const bool NormPassive, const int NNorm, const int NormIdx[],
                       const bool FracPassive, const int NFrac, const int FracIdx[],
                       const bool JeansMinPres, const real JeansMinPres_Coeff,
-                      const bool UseWaveFlag )
+                      const bool UseWaveFlag, const bool FreezeHydro )
 {
 
 // check
@@ -261,9 +263,9 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                             h_DE_Array_Out, h_Flux_Array, h_Ele_Array, h_Corner_Array, h_Pot_Array_USG,
                             h_PriVar, h_Slope_PPM, h_FC_Var, h_FC_Flux, h_FC_Mag_Half, h_EC_Ele,
                             NPatchGroup, dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff, MinMod_MaxIter, Time,
-                            UsePot, ExtAcc, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens, MinPres, MinEint,
+                            UsePot, ExtAcc, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens, MinPres, MinEint, MinTemp,
                             DualEnergySwitch, PassiveFloor, NormPassive, NNorm, NormIdx, FracPassive, NFrac, FracIdx,
-                            JeansMinPres, JeansMinPres_Coeff, EoS, MicroPhy );
+                            JeansMinPres, JeansMinPres_Coeff, EoS, MicroPhy, FreezeHydro );
 
 #     elif ( FLU_SCHEME == CTU )
 
@@ -272,8 +274,8 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                             h_PriVar, h_Slope_PPM, h_FC_Var, h_FC_Flux, h_FC_Mag_Half, h_EC_Ele,
                             NPatchGroup, dt, dh, StoreFlux, StoreElectric, LR_Limiter, MinMod_Coeff, Time,
                             UsePot, ExtAcc, CPUExtAcc_Ptr, ExtAcc_AuxArray, MinDens, MinPres, MinEint,
-                            DualEnergySwitch, PassiveFloor, NormPassive, NNorm, NormIdx, FracPassive, NFrac, FracIdx,
-                            JeansMinPres, JeansMinPres_Coeff, EoS );
+                            DualEnergySwitch, PassiveFloor, NormPassive, NNorm, NormIdx, FracPassive, NFrac,
+                            FracIdx, JeansMinPres, JeansMinPres_Coeff, EoS, FreezeHydro );
 
 #     else
 
