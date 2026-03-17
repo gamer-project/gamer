@@ -332,7 +332,7 @@ void Init_GAMER( int *argc, char ***argv )
 
 
 #  ifdef PARTICLE
-// assign initial particle UID AFTER all the routines possibly adding particles,
+// assign initial particle UIDs AFTER all routines that possibly add particles,
 // including Par_Init_ByFunction_Ptr(), Par_Init_ByFile(),
 //           AddParticle() in Init_ByRestart(),
 //           Par_AddParticleAfterInit() in Init_User_Ptr() and Init_User_AfterPoisson_Ptr()

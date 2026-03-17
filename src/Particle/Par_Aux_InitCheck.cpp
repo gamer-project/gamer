@@ -14,7 +14,7 @@
 //                3. Remove particles outside the active region for non-periodic B.C.
 //                4. There should be no inactive particles before calling this function
 //                5. Check particle types
-//                6. Check particle ID (which can be not assigned yet when calling this function)
+//                6. Check particle ID (which might not be assigned yet when calling this function)
 //
 // Parameter   :  None
 //-------------------------------------------------------------------------------------------------------

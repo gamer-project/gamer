@@ -90,10 +90,9 @@ See also
 <a name="PAR_IC_PUID"></a>
 * #### `PAR_IC_PUID` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
-Whether there are existing particle UID to all particles when adopting
-[PAR_INIT](#PAR_INIT)=3. Note that when the particle initial condition file `PAR_IC`
+Check whether all existing particles have UIDs assigned when [PAR_INIT](#PAR_INIT)=3 is used. Note that when the particle initial condition file `PAR_IC`
 does not include the particle UID data,
-one should turn this off and the new particle UID will be assigned internally.
+one should turn this off and the new particle UIDs will be assigned internally.
 See also
 [[Setting IC from Files &#8212; Particles | Initial Conditions#IC-File-Particles]].
     * **Restriction:**
@@ -176,10 +175,10 @@ Disable this check when particles are initialized _after_ setting grid fields, s
 ### Particle UID
 The valid particle UID should be in `[1, number of particles]`. If there is
 a new particle created during the simulation, please assign the particle
-UID to `-1` then call `Par_SetUID(false)` to assign UID after all creations
+UID to `-1` and then call `Par_SetUID(false)` to assign UID after all creations
 are done in a single routine.
 
-The particle UID is assigned by the following two situations:
+The particle UID is assigned in only the following two situations:
 1. Initialization
 
    The particle UID is assigned after `Par_Init_ByFunction_Ptr()` or `Par_Init_ByFile()`.

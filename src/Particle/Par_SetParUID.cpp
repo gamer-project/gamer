@@ -11,8 +11,8 @@
 // Description :  Set the particle unique UID
 //
 // Note        :  1. Invoked by Init_GAMER() and SF_CreateStar()
-//                2. The new particle UID should be initialized as PPUID_TBA
-//                3. Currently, the new particles UID are given by the sorted position
+//                2. New particle UIDs should be initialized as PPUID_TBA
+//                3. Currently, new particle UIDs are assigned by the sorted particle position
 //
 // Paramter    :  init : Initialization stage or not
 //-------------------------------------------------------------------------------------------------------
@@ -33,7 +33,7 @@ void Par_SetParUID( const bool init )
    long *NewParIDList = new long [NPar_ThisRank];
    for (long p=0; p<NPar_ThisRank; p++)
    {
-      if ( amr->Par->PUid[p] > (long_par)0  &&  amr->Par->PUid[p] < amr->Par->NextUID )   continue;  // exclude particles that already have valid UID
+      if ( amr->Par->PUid[p] > (long_par)0  &&  amr->Par->PUid[p] < amr->Par->NextUID )   continue;  // exclude particles that already have valid UIDs
 
       if ( amr->Par->PUid[p] != PPUID_TBA )
          Aux_Error( ERROR_INFO, "New particle before ParUID assignment has an invalid PUid[%ld] = %ld != %ld !!\n", p, (long)amr->Par->PUid[p], (long)PPUID_TBA );

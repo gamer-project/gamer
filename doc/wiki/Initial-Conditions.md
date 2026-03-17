@@ -682,7 +682,7 @@ One can also use [[PAR_IC_MASS | [Runtime-Parameters]-Particles#PAR_IC_MASS]] / 
 to assign the same particle mass / type to all particles,
 in which case the file `PAR_IC` should not store particle mass / type.
 One should turn off [[PAR_IC_PUID | Runtime-Parameters:-Particles#PAR_IC_PUID]]
-to assign new particle UID to all particles when the file `PAR_IC` does not store existing particle UID.
+to assign new particle UIDs to all particles when the `PAR_IC` file does not store existing UIDs.
 
 The following C++ example constructs a particle initial condition
 file with 1000 particles assuming [[PAR_IC_MASS | [Runtime-Parameters]-Particles#PAR_IC_MASS]]<0,
