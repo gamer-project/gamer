@@ -92,7 +92,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
 // ***************************************************************************************************************************
    LOAD_PARA( load_mode, "SelSimHalo_Filename",   SelSimHalo_Filename,   NoDef_str,     Useless_str,      Useless_str       );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

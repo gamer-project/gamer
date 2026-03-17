@@ -1089,8 +1089,8 @@ void Init_ByRestart_HDF5( const char *FileName )
 // Function    :  LoadField
 // Description :  Load a single field from the input compound dataset
 //
-// Note        :  1. This function works for arbitary datatype (int, float, char, 1D array ...)
-//                2. Memory must be allocated for FieldPtr in advance with sufficent size (except for "char *")
+// Note        :  1. This function works for an arbitrary data type (int, float, char, 1D array ...)
+//                2. Sufficient memory must be allocated for FieldPtr in advance with (except for "char *")
 //                3. For loading a string, which has (type(FieldPtr) = (char *)), the memory must be freed
 //                   manually by calling free()
 //                4. It can also compare the loaded variables (FieldPtr) with the reference values (ComprPtr)
