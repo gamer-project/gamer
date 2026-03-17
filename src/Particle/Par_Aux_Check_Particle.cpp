@@ -159,7 +159,7 @@ void Par_Aux_Check_Particle( const char *comment )
 //
 // Note        :  None
 //
-// Parameter   :  PassAll : Pass all the checkes or not
+// Parameter   :  PassAll : Pass all the checks or not
 //                PassOne : Pass this check or not
 //                comment : You can put the location where this function is invoked in this string
 //                lv      : Target refinement level
@@ -202,12 +202,12 @@ void Check_FindHomePatch( int &PassAll, int &PassOne, const char *comment, const
 //
 // Note        :  None
 //
-// Parameter   :  PassAll       : Pass all the checkes or not
+// Parameter   :  PassAll       : Pass all the checks or not
 //                PassOne       : Pass this check or not
 //                comment       : You can put the location where this function is invoked in this string
 //                lv            : Target refinement level
 //                PID           : Target patch ID
-//                NParThisPatch : Number of particle in target patch
+//                NParThisPatch : Number of particles in target patch
 //-------------------------------------------------------------------------------------------------------
 void Check_InLeafPatch( int &PassAll, int &PassOne, const char *comment, const int lv, const int PID,
                         const int NParThisPatch )
@@ -237,7 +237,7 @@ void Check_InLeafPatch( int &PassAll, int &PassOne, const char *comment, const i
 //
 // Note        :  None
 //
-// Parameter   :  PassAll    : Pass all the checkes or not
+// Parameter   :  PassAll    : Pass all the checks or not
 //                PassOne    : Pass this check or not
 //                comment    : You can put the location where this function is invoked in this string
 //                NParInLeaf : Number of particles in leaf patches
@@ -271,7 +271,7 @@ void Check_NActive( int &PassAll, int &PassOne, const char *comment, const long 
 //
 // Note        :  None
 //
-// Parameter   :  PassAll : Pass all the checkes or not
+// Parameter   :  PassAll : Pass all the checks or not
 //                PassOne : Pass this check or not
 //                comment : You can put the location where this function is invoked in this string
 //                lv      : Target refinement level
@@ -310,7 +310,7 @@ void Check_InactiveMass( int &PassAll, int &PassOne, const char *comment, const 
 //
 // Note        :  None
 //
-// Parameter   :  PassAll : Pass all the checkes or not
+// Parameter   :  PassAll : Pass all the checks or not
 //                PassOne : Pass this check or not
 //                comment : You can put the location where this function is invoked in this string
 //                lv      : Target refinement level
@@ -346,7 +346,7 @@ void Check_OneHomePatch( int &PassAll, int &PassOne, const char *comment, const 
 //
 // Note        :  1. Must be executed after Check_OneHomePatch
 //
-// Parameter   :  PassAll : Pass all the checkes or not
+// Parameter   :  PassAll : Pass all the checks or not
 //                PassOne : Pass this check or not
 //                comment : You can put the location where this function is invoked in this string
 //                ParHome : Array of particle has home or not
@@ -381,7 +381,7 @@ void Check_ActiveHome( int &PassAll, int &PassOne, const char *comment, const bo
 //
 // Note        :  None
 //
-// Parameter   :  PassAll : Pass all the checkes or not
+// Parameter   :  PassAll : Pass all the checks or not
 //                PassOne : Pass this check or not
 //                comment : You can put the location where this function is invoked in this string
 //-------------------------------------------------------------------------------------------------------
@@ -412,7 +412,7 @@ void Check_NPar_AcPlusInac( int &PassAll, int &PassOne, const char *comment )
 //
 // Note        :  None
 //
-// Parameter   :  PassAll                    : Pass all the checkes or not
+// Parameter   :  PassAll                    : Pass all the checks or not
 //                PassOne                    : Pass this check or not
 //                comment                    : You can put the location where this function is invoked in this string
 //                NPar_Active_AllRank_Expect : Expected number of active particles
@@ -443,7 +443,7 @@ void Check_NPar_Active_AllRank( int &PassAll, int &PassOne, const char *comment,
 //
 // Note        :  None
 //
-// Parameter   :  PassAll  : Pass all the checkes or not
+// Parameter   :  PassAll  : Pass all the checks or not
 //                PassOne  : Pass this check or not
 //                comment  : You can put the location where this function is invoked in this string
 //-------------------------------------------------------------------------------------------------------
@@ -476,7 +476,7 @@ void Check_NPar_Lv_Sum( int &PassAll, int &PassOne, const char *comment )
 //
 // Note        :  None
 //
-// Parameter   :  PassAll  : Pass all the checkes or not
+// Parameter   :  PassAll  : Pass all the checks or not
 //                PassOne  : Pass this check or not
 //                comment  : You can put the location where this function is invoked in this string
 //-------------------------------------------------------------------------------------------------------
@@ -510,7 +510,7 @@ void Check_NPar_Copy( int &PassAll, int &PassOne, const char *comment )
 //
 // Note        :  None
 //
-// Parameter   :  PassAll : Pass all the checkes or not
+// Parameter   :  PassAll : Pass all the checks or not
 //                PassOne : Pass this check or not
 //                comment : You can put the location where this function is invoked in this string
 //                lv      : Target refinement level
@@ -570,7 +570,7 @@ void Check_ValidType( int &PassAll, int &PassOne, const char *comment, const int
 //
 // Note        :  None
 //
-// Parameter   :  PassAll  : Pass all the checkes or not
+// Parameter   :  PassAll  : Pass all the checks or not
 //                PassOne  : Pass this check or not
 //                comment  : You can put the location where this function is invoked in this string
 //-------------------------------------------------------------------------------------------------------
@@ -603,11 +603,11 @@ void Check_ValidUID( int &PassAll, int &PassOne, const char *comment )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Check_UniqueUID
-// Description :  Check if particle has unique UID
+// Description :  Check if particles have unique UIDs
 //
 // Note        :  None
 //
-// Parameter   :  PassAll      : Pass all the checkes or not
+// Parameter   :  PassAll      : Pass all the checks or not
 //                PassOne      : Pass this check or not
 //                comment      : You can put the location where this function is invoked in this string
 //                Par_CountUID : Array of the counted number of each particle UID
