@@ -1272,7 +1272,7 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "\"%s\" does NOT support \"%s\" !!\n", "ELBDM_REMOVE_MOTION_CM", "BITWISE_REPRODUCIBILITY" );
 #  endif
 
-   if ( ELBDM_RESCALE_MASS_ERROR == true  &&  !OPT__CK_CONSERVATION )
+   if ( ELBDM_RESCALE_MASS_ERROR  &&  !OPT__CK_CONSERVATION )
       Aux_Error( ERROR_INFO, "\"%s\" must work with \"%s\" !!\n", "ELBDM_RESCALE_MASS_ERROR", "OPT__CK_CONSERVATION" );
 
    for (int f=0; f<6; f++)

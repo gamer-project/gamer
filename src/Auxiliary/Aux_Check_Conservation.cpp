@@ -785,16 +785,14 @@ void Aux_Check_Conservation( const char *comment )
    }
 #  endif
 
-// calculate the ELBDM total mass for ELBDM_RescaleMassError.cpp
+// record the ELBDM total mass for ELBDM_RescaleMassError.cpp
 #  if ( MODEL == ELBDM )
-   if ( ELBDM_RESCALE_MASS_ERROR == true )
+   if ( ELBDM_RESCALE_MASS_ERROR )
    {
-      if ( MPI_Rank == 0 )
-      {
-         ELBDM_MassPsi     = Fluid_AllRank[0];
-      }
+      if ( MPI_Rank == 0 ) ELBDM_MassPsi = Fluid_AllRank[0];
+
 //    broadcast
-      MPI_Bcast( &ELBDM_MassPsi,     1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+      MPI_Bcast( &ELBDM_MassPsi, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
    }
 #  endif
 

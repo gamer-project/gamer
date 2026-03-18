@@ -2,9 +2,12 @@
 
 #if ( MODEL == ELBDM )
 
-// global variable to store the ELBDM total mass
+// global variables to store the ELBDM total mass
        double ELBDM_MassPsi     = NULL_REAL;
 static double ELBDM_InitMassPsi = NULL_REAL;
+
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ELBDM_RescaleMassError
@@ -21,23 +24,23 @@ static double ELBDM_InitMassPsi = NULL_REAL;
 //-------------------------------------------------------------------------------------------------------
 void ELBDM_RescaleMassError()
 {
+
    if ( ELBDM_InitMassPsi == NULL_REAL )
    {
-      if ( MPI_Rank == 0 )
-      {
-         ELBDM_InitMassPsi = ConRef[1];
-      }
+      if ( MPI_Rank == 0 ) ELBDM_InitMassPsi = ConRef[1];
+
       MPI_Bcast( &ELBDM_InitMassPsi, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
    }
-// check
 
+// check
    if ( ELBDM_MassPsi == NULL_REAL )
       Aux_Error( ERROR_INFO, "ELBDM_MassPsi == NULL_REAL !!\n");
 
    if ( ! Aux_IsFinite(ELBDM_MassPsi) )
       Aux_Error( ERROR_INFO, "ELBDM_MassPsi = %14.7e !!\n", ELBDM_MassPsi );
 
-// Rescale the total ELBDM mass
+
+// rescale the wave function
    for (int lv=0; lv<NLEVEL; lv++)
    {
 #     pragma omp parallel for schedule( runtime )
@@ -73,7 +76,7 @@ void ELBDM_RescaleMassError()
       Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _REAL|_IMAG|_DENS, _NONE, Flu_ParaBuf, USELB_YES );
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       } else {
-      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _DENS, _NONE, Flu_ParaBuf, USELB_YES );
+      Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _DENS,             _NONE, Flu_ParaBuf, USELB_YES );
       }
 #     endif
 
@@ -81,7 +84,7 @@ void ELBDM_RescaleMassError()
 
 
 // reset ELBDM_MassPsi[] to check whether it is properly recalculated by Aux_Check_Conservation()
-ELBDM_MassPsi = NULL_REAL;
+   ELBDM_MassPsi = NULL_REAL;
 
 } // FUNCTION : ELBDM_RescaleMassError
 
