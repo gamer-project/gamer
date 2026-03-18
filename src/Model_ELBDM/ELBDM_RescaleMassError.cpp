@@ -11,7 +11,7 @@ static double ELBDM_InitMassPsi = NULL_REAL;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ELBDM_RescaleMassError
-// Description :  Remove the mass error created bo floating numerical error, only for base level.
+// Description :  Rescale the wave function to compensate for mass errors (presumably caused by floating-point round-off errors), only tested in base-level-only simulations.
 //
 // Note        :  1. Work with the option ELBDM_RESCALE_MASS_ERROR
 //                   --> Must also enable OPT__CK_CONSERVATION since it relies on Aux_Check_Conservation()
@@ -39,8 +39,9 @@ void ELBDM_RescaleMassError()
    if ( ! Aux_IsFinite(ELBDM_MassPsi) )
       Aux_Error( ERROR_INFO, "ELBDM_MassPsi = %14.7e !!\n", ELBDM_MassPsi );
 
-
 // rescale the wave function
+   const real RescaleDens     = ELBDM_InitMassPsi / ELBDM_MassPsi;
+   const real RescaleWaveFunc = SQRT( RescaleDens );
    for (int lv=0; lv<NLEVEL; lv++)
    {
 #     pragma omp parallel for schedule( runtime )
@@ -56,13 +57,13 @@ void ELBDM_RescaleMassError()
             if ( amr->use_wave_flag[lv] ) {
 #           endif
     
-               fluid[REAL][k][j][i] *= SQRT(ELBDM_InitMassPsi/ELBDM_MassPsi);
-               fluid[IMAG][k][j][i] *= SQRT(ELBDM_InitMassPsi/ELBDM_MassPsi);
+               fluid[REAL][k][j][i] *= RescaleWaveFunc;
+               fluid[IMAG][k][j][i] *= RescaleWaveFunc;
                fluid[DENS][k][j][i]  = SQR(fluid[REAL][k][j][i]) + SQR(fluid[IMAG][k][j][i]);
 
 #           if ( ELBDM_SCHEME == ELBDM_HYBRID )
             } else {
-               fluid[DENS][k][j][i] *= (ELBDM_InitMassPsi/ELBDM_MassPsi);
+               fluid[DENS][k][j][i] *= RescaleDens;
             }
 #           endif
 
