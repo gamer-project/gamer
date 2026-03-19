@@ -13,12 +13,12 @@ parser.add_argument("-d", type=int, required=True, help="Index step")
 args = parser.parse_args()
 
 # Constants
-Const_cm = 1.0
-Const_amu = 1.660539040e-24  
-UNIT_L = 3.08567758149e21    
-UNIT_M = 1.9885e42           
-UNIT_D = UNIT_M / UNIT_L**3  
-UNIT_T = 3.15569252e13
+Const_cm  = 1.0
+Const_amu = 1.660539040e-24
+UNIT_L    = 3.08567758149e21
+UNIT_M    = 1.9885e42
+UNIT_D    = UNIT_M / UNIT_L**3
+UNIT_T    = 3.15569252e13
 
 
 # Configuration: output filenames
