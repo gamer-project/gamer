@@ -31,7 +31,7 @@ temp_all = []
 time_all = []
 
 for idx in range(args.s, args.e + 1, args.d):
-    file_path = os.path.join(prefix, f'Data_{idx:06d}')
+    file_path = os.path.join(prefix, 'Data_%06d'%idx)
     if not os.path.isfile(file_path):
         continue
     with h5py.File(file_path, "r") as f:

@@ -125,6 +125,7 @@ void Grackle_Init()
    if ( GRACKLE_PRIMORDIAL != GRACKLE_PRI_CHE_CLOUDY )
    grackle_data->HydrogenFractionByMass         = GRACKLE_HYDROGEN_MFRAC;
    grackle_data->use_dust_density_field  = 1;
+   grackle_data->use_dust_density_field          = GRACKLE_DUST;
 
 #  ifdef OPENMP
 // currently we adopt the OpenMP implementation in Grackle directly, which applies the parallelization to

@@ -15,12 +15,12 @@ args = parser.parse_args()
 
 
 # Constants
-Const_cm   = 1.0
-Const_amu  = 1.660539040e-24  
-UNIT_L     = 3.08567758149e21 
-UNIT_M     = 1.9885e42        
-UNIT_D     = UNIT_M / UNIT_L**3 
-UNIT_T     = 3.15569252e13
+Const_cm  = 1.0
+Const_amu = 1.660539040e-24
+UNIT_L    = 3.08567758149e21
+UNIT_M    = 1.9885e42
+UNIT_D    = UNIT_M / UNIT_L**3
+UNIT_T    = 3.15569252e13
 
 # Configuration: output filenames
 fileout  = "fig__MetalDensity_plot"
@@ -37,7 +37,7 @@ density_all = []
 time_all = []
 
 for idx in range(args.s, args.e + 1, args.d):
-    file_path = os.path.join(prefix, f'Data_{idx:06d}')
+    file_path = os.path.join(prefix, 'Data_%06d'%idx)
     if not os.path.isfile(file_path):
         continue
     with h5py.File(file_path, "r") as f:

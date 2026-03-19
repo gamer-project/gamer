@@ -23,9 +23,7 @@ extern int CheIdx_DII;
 extern int CheIdx_HDI;
 extern int CheIdx_Metal;
 
-// ============================================================
 extern int CheIdx_Dust;
-// ============================================================
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -67,11 +65,8 @@ void Grackle_Close( const int lv, const int SaveSg, const real_che h_Che_Array[]
    const real_che *Ptr_DI0    = h_Che_Array + CheIdx_DI   *Size1v;
    const real_che *Ptr_DII0   = h_Che_Array + CheIdx_DII  *Size1v;
    const real_che *Ptr_HDI0   = h_Che_Array + CheIdx_HDI  *Size1v;
-
-// ============================================================
    const real_che *Ptr_Metal0 = h_Che_Array + CheIdx_Metal*Size1v;
    const real_che *Ptr_Dust0  = h_Che_Array + CheIdx_Dust *Size1v;
-// ============================================================
 
 
 #  pragma omp parallel
@@ -89,10 +84,7 @@ void Grackle_Close( const int lv, const int SaveSg, const real_che h_Che_Array[]
    const real_che *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ent=NULL, *Ptr_e=NULL, *Ptr_HI=NULL, *Ptr_HII=NULL;
    const real_che *Ptr_HeI=NULL, *Ptr_HeII=NULL, *Ptr_HeIII=NULL, *Ptr_HM=NULL, *Ptr_H2I=NULL, *Ptr_H2II=NULL;
    const real_che *Ptr_DI=NULL, *Ptr_DII=NULL, *Ptr_HDI=NULL;
-// ============================================================
-   const real_che *Ptr_Metal=NULL;
-   const real_che *Ptr_Dust=NULL;
-// ============================================================
+   const real_che *Ptr_Metal=NULL, *Ptr_Dust=NULL;
 
 #  pragma omp for schedule( static )
    for (int TID=0; TID<NPG; TID++)
@@ -116,10 +108,8 @@ void Grackle_Close( const int lv, const int SaveSg, const real_che h_Che_Array[]
       Ptr_DI    = Ptr_DI0    + offset;
       Ptr_DII   = Ptr_DII0   + offset;
       Ptr_HDI   = Ptr_HDI0   + offset;
-// ============================================================
       Ptr_Metal = Ptr_Metal0 + offset;
       Ptr_Dust  = Ptr_Dust0  + offset;
-// ============================================================
 
 
       for (int LocalID=0; LocalID<8; LocalID++)
@@ -184,10 +174,11 @@ void Grackle_Close( const int lv, const int SaveSg, const real_che h_Che_Array[]
             *( fluid[Idx_HDI  ][0][0] + idx_p ) = Ptr_HDI  [idx_pg] * DensRatio_FluChe;
             }
 
-// ============================================================
+            if ( GRACKLE_METAL )
             *( fluid[Idx_Metal][0][0] + idx_p ) = Ptr_Metal [idx_pg];
+            
+            if ( GRACKLE_DUST )
             *( fluid[Idx_Dust ][0][0] + idx_p ) = Ptr_Dust  [idx_pg];
-// ============================================================
 
             idx_p  ++;
             idx_pg ++;

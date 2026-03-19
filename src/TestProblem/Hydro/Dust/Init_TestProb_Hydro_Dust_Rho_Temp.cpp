@@ -4,9 +4,9 @@
 grackle_field_data my_fields;
 static gr_float *my_cooling_time;
 static gr_float *my_temperature;
-static double  Gas_Temp;               // gas temperature
-static double  Gas_Dens;               // gas density 
-static double  Gas_MetalMassFrac;      // disk metal mass fraction (disk_metal_mass / disk_gas_mass)
+static double  Gas_Temp;               // gas temperature [K]
+static double  Gas_Dens;               // gas density [amu*cm^{-3}]
+static double  Gas_MetalMassFrac;      // gas metal mass fraction (gas_metal_mass / gas_total_mass)
 
 
 // problem-specific function prototypes
@@ -20,11 +20,11 @@ double Mis_GetTimeStep_Dust( const int lv, const double dTime_dt )
    my_fields.internal_energy[0] = Eint / Dens;
 
    // metal
-   my_fields.metal_density[0] = amr->patch[FluSg][0][0]->fluid[Idx_Metal][0][0][0] ;
-   Che_Units.density_units        = UNIT_D;
-   Che_Units.length_units         = UNIT_L;
-   Che_Units.time_units           = UNIT_T;
-   Che_Units.velocity_units       = UNIT_V;
+   my_fields.metal_density[0] = amr->patch[FluSg][0][0]->fluid[Idx_Metal][0][0][0];
+   Che_Units.density_units  = UNIT_D;
+   Che_Units.length_units   = UNIT_L;
+   Che_Units.time_units     = UNIT_T;
+   Che_Units.velocity_units = UNIT_V;
 
    // Calculate cooling time.
    if (calculate_cooling_time(&Che_Units, &my_fields, my_cooling_time) == 0) {
