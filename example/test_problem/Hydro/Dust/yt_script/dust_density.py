@@ -15,10 +15,10 @@ args = parser.parse_args()
 
 # Constants
 Const_cm  = 1.0
-Const_amu = 1.660539040e-24   
-UNIT_L    = 3.08567758149e21 
-UNIT_M    = 1.9885e42         
-UNIT_D    = UNIT_M / UNIT_L**3 
+Const_amu = 1.660539040e-24
+UNIT_L    = 3.08567758149e21
+UNIT_M    = 1.9885e42
+UNIT_D    = UNIT_M / UNIT_L**3
 UNIT_T    = 3.15569252e13
 a_um      = 0.1
 omega     = 2.5
