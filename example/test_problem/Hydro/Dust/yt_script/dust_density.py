@@ -70,7 +70,7 @@ def drho_dt(t, dust_rho):
 density_all = []
 time_all = []
 for idx in range(args.s, args.e+1, args.d):
-    fpath = os.path.join(prefix, f'Data_{idx:06d}')
+    fpath = os.path.join(prefix, 'Data_%06d'%idx)
     if not os.path.isfile(fpath):
         continue
     with h5py.File(fpath, "r") as f:
