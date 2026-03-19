@@ -64,7 +64,7 @@ def tsp_e(e_t):
 def drho_dt(t, dust_rho):
     e_t = internal_energy(e_phys, k, t)
     tsp = tsp_e(e_t)
-    return -3.0 / tsp * dust_rho 
+    return -3.0 / tsp * dust_rho
 
 # Load data
 density_all = []
