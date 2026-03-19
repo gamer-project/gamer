@@ -46,7 +46,7 @@ e_phys = e_code * UNIT_E
 
 
 # Configuration: output filenames
-fileout  = "fig__DustDensity_plot" 
+fileout  = "fig__DustDensity_plot"
 fig_name = "Dust Density v.s Time"
 prefix   = '../'
 
