@@ -22,10 +22,7 @@ extern int CheIdx_DI;
 extern int CheIdx_DII;
 extern int CheIdx_HDI;
 extern int CheIdx_Metal;
-
-// ============================================================
 extern int CheIdx_Dust;
-// ============================================================
 
 
 
@@ -93,10 +90,10 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
          Aux_Error( ERROR_INFO, "[Che]Idx_Metal is undefined for \"GRACKLE_METAL\" !!\n" );
    }
 
-// ============================================================
-      // if (  Idx_Dust  == Idx_Undefined  ||  CheIdx_Dust  == Idx_Undefined  )
-         // Aux_Error( ERROR_INFO, "[Che]Idx_Dust is undefined for \"GRACKLE_Dust\" !!\n" );
-// ============================================================
+   if ( GRACKLE_DUST ) {
+      if (  Idx_Dust  == Idx_Undefined  ||  CheIdx_Dust  == Idx_Undefined  )
+         Aux_Error( ERROR_INFO, "[Che]Idx_Dust is undefined for \"GRACKLE_DUST\" !!\n" );
+   }
 #  endif // #ifdef GAMER_DEBUG
 
    // Aux_Message( stdout, "  Idx_Metal_Grackle_Prepare            = No. %d \n",    Idx_Metal  );
@@ -127,12 +124,7 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    real_che *Ptr_DII0   = h_Che_Array + CheIdx_DII  *Size1v;
    real_che *Ptr_HDI0   = h_Che_Array + CheIdx_HDI  *Size1v;
    real_che *Ptr_Metal0 = h_Che_Array + CheIdx_Metal*Size1v;
-
-// ============================================================
    real_che *Ptr_Dust0  = h_Che_Array + CheIdx_Dust *Size1v;
-// ============================================================
-
-
 
 #  pragma omp parallel
    {
@@ -149,7 +141,7 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
 
    real_che *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ent=NULL, *Ptr_e=NULL, *Ptr_HI=NULL, *Ptr_HII=NULL;
    real_che *Ptr_HeI=NULL, *Ptr_HeII=NULL, *Ptr_HeIII=NULL, *Ptr_HM=NULL, *Ptr_H2I=NULL, *Ptr_H2II=NULL;
-   real_che *Ptr_DI=NULL, *Ptr_DII=NULL, *Ptr_HDI=NULL, *Ptr_Metal=NULL;
+   real_che *Ptr_DI=NULL, *Ptr_DII=NULL, *Ptr_HDI=NULL, *Ptr_Metal=NULL, *Ptr_Dust=NULL;
 // ============================================================
    real_che *Ptr_Dust=NULL;
 // ============================================================
@@ -176,9 +168,7 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
       Ptr_DII   = Ptr_DII0   + offset;
       Ptr_HDI   = Ptr_HDI0   + offset;
       Ptr_Metal = Ptr_Metal0 + offset;
-// ============================================================
       Ptr_Dust  = Ptr_Dust0  + offset;
-// ============================================================
 
       for (int LocalID=0; LocalID<8; LocalID++)
       {
@@ -254,9 +244,9 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
             if ( GRACKLE_METAL )
             Ptr_Metal[idx_pg] = *( fluid[Idx_Metal][0][0] + idx_p );
 
-// ============================================================
+//          use dust density field
+            if ( GRACKLE_DUST )
             Ptr_Dust[idx_pg] = *( fluid[Idx_Dust][0][0] + idx_p );
-// ============================================================
 
             idx_p  ++;
             idx_pg ++;
@@ -298,10 +288,8 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    if ( GRACKLE_METAL )
    Che_FieldData->metal_density   = Ptr_Metal0;
 
-
-// ============================================================
+   if ( GRACKLE_DUST )
    Che_FieldData->dust_density    = Ptr_Dust0;
-// ============================================================
 
 } // FUNCTION : Grackle_Prepare
 

@@ -36,7 +36,7 @@ dpi = 150
 gas_density_all = []
 time_all = []
 for idx in range(args.s, args.e+1, args.d):
-    f = h5py.File(os.path.join(prefix, 'Data_%06d' % idx))
+    f = h5py.File(os.path.join(prefix, 'Data_%06d' % idx), "r")
     gas_density = f["GridData"]["Dens"][0][0][0][0] * UNIT_D / (Const_amu / Const_cm**3)
     time = f["Info"]["KeyInfo"]["Time"][0]
     gas_density_all.append(gas_density)

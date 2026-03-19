@@ -21,11 +21,11 @@ Simulation setup:
    If cooling is not desired, set the `GRACKLE_COOLING` option to 0 in Input__Parameter to disable the cooling function.
    If cooling is required, set `GRACKLE_COOLING` = 1 in Input__Parameter and replace the original Grackle source file grackle/src/clib/solve_rate_cool_g.F with the modified version available at:
     https://github.com/Xiang-Zhe-Wei/grackle-dust/blob/tommy_dust/src/clib/solve_rate_cool_g.F
-   (2) The parameters Gas_Temp and Gas_Dens in Input__TestProb set the initial gas temperature and density, 
+   (2) The parameters Gas_Temp and Gas_Dens in Input__TestProb set the initial gas temperature and density,
        and these values follow the constant-density cooling test described in: (arXiv: https://arxiv.org/abs/2505.11734)
 
-3. Metallicity and Dust Configuration 
-   (1) The parameter `Gas_MetalMassFrac` in Input__TestProb sets the gas-phase metallicity (mass fraction of metals), 
+3. Metallicity and Dust Configuration
+   (1) The parameter `Gas_MetalMassFrac` in Input__TestProb sets the gas-phase metallicity (mass fraction of metals),
        and this value is used by the Grackle cooling routines when SUPPORT_GRACKLE is enabled
    (2) The metallicity value is based on the variable metal_mass_fraction defined in: grackle/src/python/examples/cooling_rate.py
    (3) The dust-to-gas mass ratio is fixed at 0.01 in the initializer
@@ -37,8 +37,8 @@ Simulation setup:
    (3) The time step formula follows Equation (11) from: Grackle paper (arXiv: https://arxiv.org/abs/1610.09591)
 
 5. Dust Cooling Modification in Grackle
-   (1) Grackle originally evolves radiative cooling over a fixed time step, which may be too large for dust, 
-       so we modified `grackle/src/clib/solve_rate_cool_g.F`to subcycle dust cooling with smaller internal steps, 
+   (1) Grackle originally evolves radiative cooling over a fixed time step, which may be too large for dust,
+       so we modified `grackle/src/clib/solve_rate_cool_g.F` to subcycle dust cooling with smaller internal steps,
        the dust temperature evolution follows Equations (2) and (3) from: arXiv:2505.11734
    (2) For simplicity, when computing dust in Grackle we fixed the mean molecular weight (mu) to 0.62
 
@@ -48,7 +48,7 @@ Note:
 1. Mimic the "constant density cooling test" from the Grackle test problem
    --> Grackle test example: constant-density cooling (arXiv: https://arxiv.org/abs/1610.09591)
 
-2. Other references: 
+2. Other references:
        GAMER                   : https://github.com/gamer-project/gamer
        Grackle                 : https://github.com/grackle-project/grackle
        yt hub                  : https://girder.hub.yt/#collection/5736481ddd9119000164acf1
