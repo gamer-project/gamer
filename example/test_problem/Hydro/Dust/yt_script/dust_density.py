@@ -24,13 +24,13 @@ a_um      = 0.1
 omega     = 2.5
 
 # physical constants
-gamma   = 5.0/3.0
-mu      = 0.62
-m_H     = 1.6735575e-24   
-k_B     = 1.380649e-16    
-amu_in_g= 1.66054e-24    
-Gyr_in_s= 3.154e16
-Myr_in_s= Gyr_in_s / 1e3
+gamma    = 5.0/3.0
+mu       = 0.62
+m_H      = 1.6735575e-24
+k_B      = 1.380649e-16
+amu_in_g = 1.66054e-24
+Gyr_in_s = 3.154e16
+Myr_in_s = Gyr_in_s / 1e3
 
 # initial conditions
 dust_rho0 = 0.01
