@@ -6,8 +6,8 @@
 
 
 //-----------------------------------------------------------------------------------------
-// Function    :  CPU_ExtPotSolver_BaseLevel
-// Description :  Add external potential on the base level
+// Function    :  CPU_ExtPotSolver_FullyRefinedLevel
+// Description :  Add external potential on the fully refined level
 //
 // Note        :  1. External potential is specified by the input function Func()
 //                2. Set PotIsInit to false if the base-level potential has not been initialized
@@ -23,12 +23,13 @@
 //                                   --> true : **add** to the original data
 //                                       false: **overwrite** the original data
 //                SaveSg           : Sandglass to store the updated potential
+//                lv               : Target level
 //
 // Return      :  amr->patch->pot[]
 //-----------------------------------------------------------------------------------------
-void CPU_ExtPotSolver_BaseLevel( const ExtPot_t Func, const double AuxArray_Flt[], const int AuxArray_Int[],
-                                 const real Table[], void **GenePtr,
-                                 const double Time, const bool PotIsInit, const int SaveSg )
+void CPU_ExtPotSolver_FullyRefinedLevel( const ExtPot_t Func, const double AuxArray_Flt[], const int AuxArray_Int[],
+                                         const real Table[], void **GenePtr,
+                                         const double Time, const bool PotIsInit, const int SaveSg, const int lv )
 {
 
 // check
@@ -50,7 +51,6 @@ void CPU_ExtPotSolver_BaseLevel( const ExtPot_t Func, const double AuxArray_Flt[
 #  endif
 
 
-   const int    lv   = 0;
    const double dh   = amr->dh[lv];
    const double dh_2 = 0.5*dh;
 
@@ -79,7 +79,7 @@ void CPU_ExtPotSolver_BaseLevel( const ExtPot_t Func, const double AuxArray_Flt[
       } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
    } // end of OpenMP parallel region
 
-} // FUNCTION : CPU_ExtPotSolver_BaseLevel
+} // FUNCTION : CPU_ExtPotSolver_FullyRefinedLevel
 
 
 

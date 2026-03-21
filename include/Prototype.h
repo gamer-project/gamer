@@ -260,14 +260,15 @@ void Init_ByRestart_HDF5( const char *FileName );
 #endif
 #ifdef SUPPORT_FFTW
 void End_FFTW();
-void Init_FFTW();
+void Init_FFTW( const int lv );
 void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf_SIdx, long *RecvBuf_SIdx,
                  int **List_PID, int **List_k, long *List_NSend_Var, long *List_NRecv_Var,
                  const int *List_z_start, const int local_nz, const int FFT_Size[], const int NRecvSlice,
-                 const double PrepTime, const long TVar, const bool InPlacePad, const bool ForPoisson, const bool AddExtraMass );
+                 const double PrepTime, const long TVar, const bool InPlacePad, const bool ForPoisson,
+                 const bool AddExtraMass, const int lv );
 void Slab2Patch( const real *VarS, real *SendBuf, real *RecvBuf, const int SaveSg, const long *List_SIdx,
                  int **List_PID, int **List_k, long *List_NSend, long *List_NRecv, const int local_nz, const int FFT_Size[],
-                 const int NSendSlice, const long TVar, const bool InPlacePad );
+                 const int NSendSlice, const long TVar, const bool InPlacePad, const int lv );
 #endif // #ifdef SUPPORT_FFTW
 void Microphysics_Init();
 void Microphysics_End();
@@ -422,12 +423,12 @@ void CPU_PoissonGravitySolver( const real h_Rho_Array    [][RHO_NXT][RHO_NXT][RH
                                const bool SelfGravity, const OptExtPot_t ExtPot, const OptExtAcc_t ExtAcc,
                                const double TimeNew, const double TimeOld, const real MinEint,
                                const bool UseWaveFlag );
-void CPU_ExtPotSolver_BaseLevel( const ExtPot_t Func, const double AuxArray_Flt[], const int AuxArray_Int[],
-                                 const real Table[], void **GenePtr,
-                                 const double Time, const bool PotIsInit, const int SaveSg );
+void CPU_ExtPotSolver_FullyRefinedLevel( const ExtPot_t Func, const double AuxArray_Flt[], const int AuxArray_Int[],
+                                         const real Table[], void **GenePtr,
+                                         const double Time, const bool PotIsInit, const int SaveSg, const int lv );
 #ifdef SUPPORT_FFTW
-void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double PrepTime );
-void Init_GreenFuncK();
+void CPU_PoissonSolver_FFT( const real Poi_Coeff, const int SaveSg, const double PrepTime, const int lv );
+void Init_GreenFuncK( const int lv );
 #endif
 void End_MemFree_PoissonGravity();
 void Gra_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt,
