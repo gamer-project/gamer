@@ -505,7 +505,7 @@ void Aux_Check_Conservation( const char *comment )
       if ( ! ConRefInitialized )
       {
          if ( NStoredConRef_noTime > NCONREF_MAX )
-            Aux_Error( ERROR_INFO, "exceed NCOMREF_MAX (%d) !!\n", NCONREF_MAX );
+            Aux_Error( ERROR_INFO, "exceed NCONREF_MAX (%d) !!\n", NCONREF_MAX );
 
          for (int v=0; v<1+NCONREF_MAX; v++)   ConRef[v] = NULL_REAL;
 
