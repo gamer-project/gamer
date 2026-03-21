@@ -49,7 +49,7 @@ PAR_IC_FORMAT                 1           # data format of PAR_IC: (1=[attribute
 PAR_IC_FLOAT8                 0           # floating-point precision for PAR_IC (<0: default, 0: single, 1: double) [default: same as FLOAT8_PAR]
 PAR_IC_INT8                  -1           # integer width for PAR_IC (<0: default, 0: 32-bit, 1: 64-bit) [default: same as INT8_PAR]
 PAR_IC_MASS                  -1.0         # mass of all particles for PAR_INIT==3 (<0=off) [-1.0]
-PAR_IC_TYPE                  -1           # type of all particles for PAR_INIT==3 (<0=off) [-1]
+PAR_IC_TYPE                   2           # type of all particles for PAR_INIT==3 (<0=off) [-1]
 PAR_INTERP                    3           # particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [2]
 PAR_INTEG                     2           # particle integration scheme: (1=Euler, 2=KDK) [2]
 PAR_TR_INTERP                 3           # tracer particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [3]
@@ -62,9 +62,9 @@ PAR_TR_VEL_CORR               0           # correct tracer particle velocities i
 
 
 # cosmology (COMOVING only)
-A_INIT                        0.00990099009900990099  # initial scale factor
-OMEGA_M0                      0.315823                # omega matter at the present time (consistent with GADGET-2 input hdf5 file)
-HUBBLE0                       0.6732117               # dimensionless Hubble parameter (currently only for converting ELBDM_MASS to code units)
+A_INIT                        0.04        # initial scale factor
+OMEGA_M0                      0.3111      # omega matter at the present time (consistent with GADGET-2 input hdf5 file)
+HUBBLE0                       0.6766      # dimensionless Hubble parameter (currently only for converting ELBDM_MASS to code units)
 
 
 # time-step
