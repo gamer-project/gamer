@@ -712,6 +712,9 @@ struct InputPara_t
    double SF_CreateStar_MassEff;
    double SF_CreateStar_MinStarMass;
    double SF_CreateStar_MaxStarMFrac;
+   double SF_CreateStar_SinkMinGasDens;
+   double SF_CreateStar_SinkAccRadius;
+   int    SF_CreateStar_SinkMaxNParMPI;
 #  endif
 
 // feedback
@@ -719,6 +722,7 @@ struct InputPara_t
    int   FB_Level;
    int   FB_RSeed;
    int   FB_SNe;
+   int   FB_Acc;
    int   FB_User;
 #  endif
 
