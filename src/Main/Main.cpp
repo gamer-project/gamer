@@ -251,6 +251,7 @@ bool                 GRACKLE_ACTIVATE;
 bool                 GRACKLE_VERBOSE;
 bool                 GRACKLE_COOLING;
 GracklePriChe_t      GRACKLE_PRIMORDIAL;
+bool                 GRACKLE_DUST;
 bool                 GRACKLE_METAL;
 bool                 GRACKLE_UV;
 bool                 GRACKLE_CMB_FLOOR;
