@@ -23,10 +23,7 @@ int CheIdx_DI    = Idx_Undefined;
 int CheIdx_DII   = Idx_Undefined;
 int CheIdx_HDI   = Idx_Undefined;
 int CheIdx_Metal = Idx_Undefined;
-
-// ============================================================
 int CheIdx_Dust  = Idx_Undefined;
-// ============================================================
 
 
 //-------------------------------------------------------------------------------------------------------

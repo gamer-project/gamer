@@ -9,7 +9,22 @@ static double  Gas_Dens;               // gas density [amu*cm^{-3}]
 static double  Gas_MetalMassFrac;      // gas metal mass fraction (gas_metal_mass / gas_total_mass)
 
 
-// problem-specific function prototypes
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Mis_GetTimeStep_Dust
+// Description :  Estimate the user-defined timestep from the cooling time of a
+//                reference cell in the dust test problem.
+//
+// Note        :  1. This function computes the cooling time using Grackle .
+//                2. The reference cell is currently fixed at patch[0] on level 0,
+//                   with cell index [0][0][0].
+//                3. The returned timestep is a user-defined multiple of the absolute cooling time.
+//                4. The input arguments "lv" and "dTime_dt" are currently unused.
+//
+// Parameter   :  lv          : Refinement level (unused here)
+//                dTime_dt    : Default timestep (unused here)
+//
+// Return      :  User-defined timestep based on the cooling time
+//-------------------------------------------------------------------------------------------------------
 double Mis_GetTimeStep_Dust( const int lv, const double dTime_dt )
 {
    int FluSg = amr->FluSg[0];

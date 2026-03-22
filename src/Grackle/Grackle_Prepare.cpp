@@ -96,9 +96,6 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    }
 #  endif // #ifdef GAMER_DEBUG
 
-   // Aux_Message( stdout, "  Idx_Metal_Grackle_Prepare            = No. %d \n",    Idx_Metal  );
-   // Aux_Message( stdout, "  Idx_Dust_Grackle_Prepare             = No. %d \n",    Idx_Dust  );
-
    const int  Size1pg          = CUBE(PS2);
    const int  Size1v           = NPG*Size1pg;
    const real MassRatio_pe    = Const_mp / Const_me;
@@ -142,9 +139,8 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    real_che *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ent=NULL, *Ptr_e=NULL, *Ptr_HI=NULL, *Ptr_HII=NULL;
    real_che *Ptr_HeI=NULL, *Ptr_HeII=NULL, *Ptr_HeIII=NULL, *Ptr_HM=NULL, *Ptr_H2I=NULL, *Ptr_H2II=NULL;
    real_che *Ptr_DI=NULL, *Ptr_DII=NULL, *Ptr_HDI=NULL, *Ptr_Metal=NULL, *Ptr_Dust=NULL;
-// ============================================================
    real_che *Ptr_Dust=NULL;
-// ============================================================
+
 #  pragma omp for schedule( static )
    for (int TID=0; TID<NPG; TID++)
    {
