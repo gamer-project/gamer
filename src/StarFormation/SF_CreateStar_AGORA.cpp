@@ -17,6 +17,8 @@
 //                3. One must invoke Buf_GetBufferData( ..., _TOTAL, ... ) after calling this function
 //                4. Currently this function does not check whether the cell mass exceeds the Jeans mass
 //                   --> Ref: "jeanmass" in star_maker_ssn.F of Enzo
+//                5. The new particle UID should be initialized as -1. The UID will be given later in SF_CreateStar()
+//                   routine
 //
 // Parameter   :  lv           : Target refinement level
 //                TimeNew      : Current physical time (after advancing solution by dt)
@@ -205,6 +207,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          NewParAttFlt[NNewPar][PAR_VELZ] = fluid[MOMZ][k][j][i]*_GasDens;
          NewParAttFlt[NNewPar][PAR_TIME] = TimeNew;
          NewParAttInt[NNewPar][PAR_TYPE] = PTYPE_STAR;
+         NewParAttInt[NNewPar][PAR_PUID] = PPUID_TBA;
 
 //       particle acceleration
 #        ifdef STORE_PAR_ACC
@@ -299,7 +302,6 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    delete [] NewParID;
 
    } // end of OpenMP parallel region
-
 
 // get the total number of active particles in all MPI ranks
    MPI_Allreduce( &amr->Par->NPar_Active, &amr->Par->NPar_Active_AllRank, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD );
