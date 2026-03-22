@@ -269,6 +269,7 @@ extern bool            GRACKLE_ACTIVATE;
 extern bool            GRACKLE_VERBOSE;
 extern bool            GRACKLE_COOLING;
 extern GracklePriChe_t GRACKLE_PRIMORDIAL;
+extern bool            GRACKLE_DUST;
 extern bool            GRACKLE_METAL;
 extern bool            GRACKLE_UV;
 extern bool            GRACKLE_CMB_FLOOR;
