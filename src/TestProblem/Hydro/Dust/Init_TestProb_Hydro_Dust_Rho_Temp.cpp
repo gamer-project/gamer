@@ -96,6 +96,24 @@ void Validate()
 {
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ...\n", TESTPROB_ID );
 
+#  ifndef SUPPORT_GRACKLE
+   Aux_Error( ERROR_INFO, "SUPPORT_GRACKLE must be enabled in Makefile !!\n" );
+#  endif
+
+   if ( !GRACKLE_ACTIVATE )
+      Aux_Error( ERROR_INFO, "GRACKLE_ACTIVATE must be enabled in input__parameter !!\n" );
+
+   if ( NCOMP_PASSIVE < 2 )
+      Aux_Error( ERROR_INFO, "NCOMP_PASSIVE (currently %d) must be >= 2 (for Metal & Dust) !!\n", NCOMP_PASSIVE );
+
+#  ifdef SUPPORT_GRACKLE
+   if ( !GRACKLE_METAL )
+      Aux_Error( ERROR_INFO, "GRACKLE_METAL must be enabled for metal cooling !!\n" );
+
+   if ( !GRACKLE_DUST )
+      Aux_Error( ERROR_INFO, "GRACKLE_DUST must be enabled for dust-gas coupling !!\n" );
+#  endif
+
 #  if ( MODEL != HYDRO )
    Aux_Error( ERROR_INFO, "MODEL != HYDRO !!\n" );
 #  endif
