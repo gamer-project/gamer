@@ -23,13 +23,10 @@ int CheIdx_DI           = Idx_Undefined;
 int CheIdx_DII          = Idx_Undefined;
 int CheIdx_HDI          = Idx_Undefined;
 int CheIdx_Metal        = Idx_Undefined;
+int CheIdx_Dust         = Idx_Undefined;
 int CheIdx_vHeatingRate = Idx_Undefined;
 int CheIdx_sHeatingRate = Idx_Undefined;
 int CheIdx_tempFloor    = Idx_Undefined;
-
-// ============================================================
-int CheIdx_Dust  = Idx_Undefined;
-// ============================================================
 
 
 //-------------------------------------------------------------------------------------------------------

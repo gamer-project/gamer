@@ -152,12 +152,9 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    }
 #  endif // #ifdef GAMER_DEBUG
 
-   // Aux_Message( stdout, "  Idx_Metal_Grackle_Prepare            = No. %d \n",    Idx_Metal  );
-   // Aux_Message( stdout, "  Idx_Dust_Grackle_Prepare             = No. %d \n",    Idx_Dust  );
-
-   const int  Size1pg             = CUBE(PS2);
-   const int  Size1v              = NPG*Size1pg;
-   const real MassRatio_pe        = Const_mp / Const_me;
+   const int  Size1pg          = CUBE(PS2);
+   const int  Size1v           = NPG*Size1pg;
+   const real MassRatio_pe    = Const_mp / Const_me;
 #  ifdef DUAL_ENERGY
    const bool CheckMinPres_No     = false;
 #  else
@@ -234,37 +231,9 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
 
    real_che *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ent=NULL, *Ptr_e=NULL, *Ptr_HI=NULL, *Ptr_HII=NULL;
    real_che *Ptr_HeI=NULL, *Ptr_HeII=NULL, *Ptr_HeIII=NULL, *Ptr_HM=NULL, *Ptr_H2I=NULL, *Ptr_H2II=NULL;
-   real_che *Ptr_DI=NULL, *Ptr_DII=NULL, *Ptr_HDI=NULL, *Ptr_Metal=NULL;
-   real_che *Ptr_vHeatingRate=NULL, *Ptr_sHeatingRate=NULL, *Ptr_tempFloor=NULL;
-   real_che  Ratio_FloorDens, *Ptr_Dust=NULL;;
+   real_che *Ptr_DI=NULL, *Ptr_DII=NULL, *Ptr_HDI=NULL, *Ptr_Metal=NULL, *Ptr_Dust=NULL;
+   real_che *Ptr_Dust=NULL;
 
-#  pragma omp for schedule( static )
-   for (int TID=0; TID<NPG; TID++)
-   {
-      PID0   = PID0_List[TID];
-      idx_pg = 0;
-      offset = TID*Size1pg;
-
-      Ptr_Dens         = Ptr_Dens0         + offset;
-      Ptr_sEint        = Ptr_sEint0        + offset;
-      Ptr_Ent          = Ptr_Ent0          + offset;
-      Ptr_e            = Ptr_e0            + offset;
-      Ptr_HI           = Ptr_HI0           + offset;
-      Ptr_HII          = Ptr_HII0          + offset;
-      Ptr_HeI          = Ptr_HeI0          + offset;
-      Ptr_HeII         = Ptr_HeII0         + offset;
-      Ptr_HeIII        = Ptr_HeIII0        + offset;
-      Ptr_HM           = Ptr_HM0           + offset;
-      Ptr_H2I          = Ptr_H2I0          + offset;
-      Ptr_H2II         = Ptr_H2II0         + offset;
-      Ptr_DI           = Ptr_DI0           + offset;
-      Ptr_DII          = Ptr_DII0          + offset;
-      Ptr_HDI          = Ptr_HDI0          + offset;
-      Ptr_Metal        = Ptr_Metal0        + offset;
-      Ptr_vHeatingRate = Ptr_vHeatingRate0 + offset;
-      Ptr_sHeatingRate = Ptr_sHeatingRate0 + offset;
-      Ptr_tempFloor    = Ptr_tempFloor0    + offset;
-   
 #  pragma omp for schedule( static )
    for (int TID=0; TID<NPG; TID++)
    {

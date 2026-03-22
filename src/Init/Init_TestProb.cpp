@@ -74,7 +74,6 @@ void Init_TestProb()
    {
       case TESTPROB_NONE :                                                                                  break;
 
-      case TESTPROB_HYDRO_DUST_RHO_TEMP :                Init_TestProb_Hydro_Dust_Rho_Temp();               break;
 
       case TESTPROB_HYDRO_BLAST_WAVE :                   Init_TestProb_Hydro_BlastWave();                   break;
       case TESTPROB_HYDRO_ACOUSTIC_WAVE :                Init_TestProb_Hydro_AcousticWave();                break;
@@ -104,6 +103,7 @@ void Init_TestProb()
       case TESTPROB_HYDRO_CR_SHOCKTUBE :                 Init_TestProb_Hydro_CR_ShockTube();                break;
       case TESTPROB_HYDRO_CR_DIFFUSION :                 Init_TestProb_Hydro_CR_Diffusion();                break;
       case TESTPROB_HYDRO_GRACKLE_TEST :                 Init_TestProb_Hydro_GrackleTest();                 break;
+      case TESTPROB_HYDRO_DUST_RHO_TEMP :                Init_TestProb_Hydro_Dust_Rho_Temp();               break;
 
       case TESTPROB_ELBDM_EXTPOT :                       Init_TestProb_ELBDM_ExtPot();                      break;
       case TESTPROB_ELBDM_JEANS_INSTABILITY_COMOVING :   Init_TestProb_ELBDM_JeansInstabilityComoving();    break;
