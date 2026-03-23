@@ -129,7 +129,7 @@ for ds in ts.piter():
                           "max = {: >11.3e}\nmin  = {: >11.3e}".format(ad[field].max(),ad[field].min()),
                           coord_system='axis', text_args={"color": "grey"} )
 
-        pz.annotate_timestamp( time_unit='Myr', corner='upper_right' )
+        pz.annotate_timestamp( time_unit='Myr', corner='upper_right', text_args={"color": "grey"} )
         if field == 'grackle_cooling_length' or field == 'grackle_cooling_length_over_dh':
             pz.annotate_grids()
 

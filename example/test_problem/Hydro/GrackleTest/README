@@ -87,6 +87,7 @@ Note:
       - `MAX_LEVEL` should be larger than zero to trigger the refinement by the cooling length
       - `GRACKLE_PRIMORDIAL` should be 0
       - `GRACKLE_UV`, `GRACKLE_CMB_FLOOR`, `GRACKLE_PE_HEATING` should all be 0
+      - `GRACKLE_COOLING` should be 1
       - `GRACKLE_USE_V_HEATING_RATE` should be 1
       - `GrackleTest_HeatingRate` = 1.0e-24 erg cm^-3 s^-1 n_H^-1 (will be set automatically)
       - `GrackleTest_CoolingRate` = 1.6e-20 erg cm^-3 s^-1 n_H^-2 (will be set automatically)
