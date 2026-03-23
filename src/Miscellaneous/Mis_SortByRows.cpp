@@ -21,7 +21,7 @@ static void SortByRows( T const* const* Array, long *IdxTable, const long NSort,
 //                   long IdxTable[NSort];
 //
 //                   Mis_SortByRows( Array, IdxTable, NSort, SortOrder, NOrder );
-//                   // => SortIdxTable becomes { 2, 0, 4, 6, 5, 3, 1 };
+//                   // => IdxTable[] becomes { 2, 0, 4, 6, 5, 3, 1 };
 //
 //                2. It serves as a gate function between the local function SortByRows() and external functions.
 //                   --> It's sole purpose is to initialize IdxTable[]

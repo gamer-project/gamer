@@ -6,7 +6,7 @@ The machine configuration file is located under `configs`. It specifies the libr
 ## Set Up the Machine Configuration File
 
 To set up your machine configuration file, go to `configs` and make a copy of `template.config` to modify:
-    
+
 ```bash
 cd configs
 cp template.config your_machine.config

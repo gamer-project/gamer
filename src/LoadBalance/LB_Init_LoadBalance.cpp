@@ -789,7 +789,7 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAttFlt_Old, long_par 
       for (int d=0; d<3; d++)    Cr0[d] -= Cr0[d]%PGScale; // currently this line has no effect
 
 //    6.1 allocate patches
-//    father patch is still unkown ...
+//    father patch is still unknown ...
       amr->pnew( lv, Cr0[0],        Cr0[1],        Cr0[2],        -1, true, true, true );
       amr->pnew( lv, Cr0[0]+PScale, Cr0[1],        Cr0[2],        -1, true, true, true );
       amr->pnew( lv, Cr0[0],        Cr0[1]+PScale, Cr0[2],        -1, true, true, true );

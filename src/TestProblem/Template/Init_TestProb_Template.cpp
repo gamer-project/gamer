@@ -112,7 +112,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "var_int",           &var_int,               2,             0,                5                 );
    LOAD_PARA( load_mode, "var_str",            var_str,               NoDef_str,     Useless_str,      Useless_str       );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 
