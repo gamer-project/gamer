@@ -110,7 +110,11 @@ void Grackle_Init()
 #  endif
 
 #  if ( MODEL == HYDRO )
-   grackle_data->Gamma                      = GAMMA;
+grackle_data->omp_nthreads                   = OMP_NTHREAD;
+#  endif
+
+#  if ( MODEL == HYDRO )
+grackle_data->Gamma                          = GAMMA;
 #  endif
 
 

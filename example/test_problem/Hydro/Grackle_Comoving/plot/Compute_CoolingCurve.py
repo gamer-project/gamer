@@ -17,7 +17,7 @@ nden          = data[:,3] # cm^-3
 mu            = data[:,4] # mean molecular weight
 temp          = data[:,5] # K
 eden          = data[:,6] # erg/cm^3
-lcool_grackle = data[:,7] # erg/cm^3/s (cooling rate computed by Grackle)
+lcool_grackle = data[:,7] # erg*cm^3/s (cooling rate computed by Grackle)
 
 
 # reconstruct the cooling rate from Record__GrackleComoving
