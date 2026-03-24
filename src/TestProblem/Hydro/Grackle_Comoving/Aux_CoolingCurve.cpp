@@ -45,7 +45,7 @@ void Aux_CoolingCurve( const double z_value, const double T_min, const double T_
    double rho_mean0 = OMEGA_M0 * rho_crit0;
 
 
-// no verbose output
+// no verbose output from this function to avoid overwriting the grackle output of the main program
    grackle_verbose = 0;
 
 
@@ -78,7 +78,7 @@ void Aux_CoolingCurve( const double z_value, const double T_min, const double T_
    my_fields.HeI_density  [0] = 0.0;
    my_fields.HeII_density [0] = 0.0;
    my_fields.HeIII_density[0] = (1.0 - grackle_data->HydrogenFractionByMass) * (1.0 - GrackleComoving_InitialMetallicity) * my_fields.density[0];
-   my_fields.e_density    [0] = (my_fields.HII_density[0] + my_fields.HeII_density[0] / 4.0 + 2.0 * my_fields.HeIII_density[0] / 4.0) * Const_me / Const_mp;
+   my_fields.e_density    [0] = (my_fields.HII_density[0] + my_fields.HeII_density[0] / 4.0 + 2.0 * my_fields.HeIII_density[0] / 4.0);
    }
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9 ) {
    my_fields.HM_density   [0] = 0.0;
@@ -107,7 +107,6 @@ void Aux_CoolingCurve( const double z_value, const double T_min, const double T_
    fprintf(fp, "#%30s%30s\n", "Temperature [K]", "CoolingRate [erg cm^3 s^-1]");
 
 
-// copy buffer for checking convergence
    double buf_density;
    double buf_HI_density, buf_HII_density, buf_HeI_density, buf_HeII_density, buf_HeIII_density, buf_e_density;
    double buf_HM_density, buf_H2I_density, buf_H2II_density;
@@ -124,7 +123,8 @@ void Aux_CoolingCurve( const double z_value, const double T_min, const double T_
       int iter = 0;
       while( true )
       {
-//       Copy the fields to check for convergence.
+//       copy the fields to check if it has reached chemical equilibrium at the target temperature
+//       --> the equilibrium cooling curve obtained here can be used to verify the simulation output when GRACKLE_PRIMORDIAL = 0
          buf_density       = my_fields.density      [0];
          if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
          buf_HI_density    = my_fields.HI_density   [0];
@@ -153,12 +153,15 @@ void Aux_CoolingCurve( const double z_value, const double T_min, const double T_
          double dt = fabs(0.1 * my_cooling_time[0]);
 
 
-//       Evolve the chemistry. cooling is disabled by with_radiative_cooling = 0
+//       Evolve the chemistry with fixed internal_energy.
+//       --> with_radiative_cooling is set to 0, and thus the internal energy will not be updated by the chemistry solver
          if ( solve_chemistry(&my_units, &my_fields, dt) == 0 )
             Aux_Error( ERROR_INFO, "Error in solve_chemistry.\n");
 
 
-//       reset the internal energy
+//       Calculate temperature using the updated chemical abundances to check consistency among temperature, mu, gamma, and internal energy.
+//       --> 1) update the internal energy to the target temperature using the updated gamma and mu
+//           2) calculate the temperature using the updated internal energy and chemical abundances
          if ( calculate_temperature(&my_units, &my_fields, my_temperature) == 0 )
             Aux_Error( ERROR_INFO, "Error in calculate_temperature.\n");
 
@@ -216,6 +219,8 @@ void Aux_CoolingCurve( const double z_value, const double T_min, const double T_
    }
 
    fclose(fp);
+
+   grackle_verbose = ( MPI_Rank == 0 ) ? GRACKLE_VERBOSE : 0; 
 
    return;
 }
