@@ -106,15 +106,11 @@ void Grackle_Init()
 // --> this approach is found to be more efficient
 // --> therefore, we should enable OpenMP for Grackle and disable OpenMP in CPU_GrackleSolver()
 //     to avoid the nested parallelization
-   grackle_data->omp_nthreads               = OMP_NTHREAD;
+   grackle_data->omp_nthreads                   = OMP_NTHREAD;
 #  endif
 
 #  if ( MODEL == HYDRO )
-grackle_data->omp_nthreads                   = OMP_NTHREAD;
-#  endif
-
-#  if ( MODEL == HYDRO )
-grackle_data->Gamma                          = GAMMA;
+   grackle_data->Gamma                          = GAMMA;
 #  endif
 
 
