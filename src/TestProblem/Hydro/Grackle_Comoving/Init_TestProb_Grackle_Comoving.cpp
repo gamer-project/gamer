@@ -173,12 +173,12 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 {
    double Dens, MomX, MomY, MomZ, Eint, Etot;
 
-   const double mu                = 4 / (8 - 5 * (1 - grackle_data->HydrogenFractionByMass));      // fully ionized gas
+   const double mu                = 4.0 / (8.0 - 5.0 * (1.0 - grackle_data->HydrogenFractionByMass));      // fully ionized primordial gas (H + He only)
    const double temperature_units = get_temperature_units(&Che_Units);                             // set temperature units
 
 // convert GracleComoving_InitialTemperature to comoving internal energy assuming mu above
-// --> the mean molecular weight can be different from MOLECULAR_WEIGHT
-//     the temperature in this test problem can be different the temperature field output by OUT__OUTPUT_TEMP
+// --> the mean molecular weight mu can be different from MOLECULAR_WEIGHT
+// --> as a result, the temperature in this test problem can be different from the temperature field output by OUT__OUTPUT_TEMP
    const double u = GrackleComoving_InitialTemperature / (mu * (GAMMA - 1.) * temperature_units) * SQR(Time);
 
 
@@ -450,7 +450,7 @@ void End_GrackleComoving()
       Aux_Message( stdout, "==========================================\n");
       Aux_Message( stdout, "Generating cooling rate tables ...\n");
       for ( double z=floor(1.0/END_T-1.0); z<=(1.0/A_INIT-1.0); z+=1.0 )
-         Aux_CoolingCurve( z, 4, 8, 0.02);
+         Aux_CoolingCurve( z, 4.0, 8.0, 0.02 );
       Aux_Message( stdout, "Generating cooling rate tables ... done\n");
       Aux_Message( stdout, "==========================================\n");
    }
@@ -576,7 +576,7 @@ double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
    if ( calculate_cooling_time( &Che_Units, &my_fields, my_cooling_time ) == 0 )
       Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
 
-   dt_user_phy = FMIN(dt_user_phy, 0.01 * fabs(my_cooling_time[0]));
+   dt_user_phy = fmin(dt_user_phy, 0.01 * fabs(my_cooling_time[0]));
 
 
 // recalculate cooling time with 10% lower internal energy
@@ -586,7 +586,7 @@ double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
    if ( calculate_cooling_time( &Che_Units, &my_fields, my_cooling_time ) == 0 )
       Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
 
-   dt_user_phy = FMIN(dt_user_phy, 0.01 * fabs(my_cooling_time[0]));
+   dt_user_phy = fmin(dt_user_phy, 0.01 * fabs(my_cooling_time[0]));
 
 
 // convert the time-step size to comoving coordinates
