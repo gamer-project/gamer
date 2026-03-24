@@ -27,9 +27,10 @@ void Grackle_AdvanceDt( const int lv, const double TimeNew, const double TimeOld
                         const bool OverlapMPI, const bool Overlap_Sync )
 {
 #  ifdef COMOVING
-// convert dt from the comoving time interval to the physical time interval
+// convert dt from the comoving time interval to the physical time interval (2nd order)
 // --> see Equation (15) of Schive, Tsai, & Chiueh (2010)
-   const double dt_grackle = dt * SQR(TimeOld);
+// --> it could be improved further by mimicking Miscellaneous/Mis_dTime2dt.cpp for the given TimeOld and TimeNew.
+   const double dt_grackle = 2.0*dt*SQR(TimeOld*TimeNew)/( SQR(TimeOld) + SQR(TimeNew) );
 #  else
    const double dt_grackle = dt;
 #  endif
