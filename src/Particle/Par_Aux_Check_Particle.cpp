@@ -623,14 +623,14 @@ void Check_UniqueUID( int &PassAll, int &PassOne, const char *comment, int *Par_
       const long uid = amr->Par->PUid[p];
       Par_CountUID[uid]++;
 
-      if ( Par_CountUID[uid] <= 1 )   continue;
+      if ( Par_CountUID[uid] == 1 )   continue;
 
       if ( PassAll )
          Aux_Message( stderr, "\"%s\" : <%s> FAILED at Time = %13.7e, Step = %ld !!\n",
                       comment, __FUNCTION__, Time[0], Step );
 
       if ( PassOne )
-         Aux_Message( stderr, "Check 13: %4s  %10s  %10s  %10s\n", "Rank", "ParUID", "Number", "NextUID" );
+         Aux_Message( stderr, "Check 13: %4s  %10s  %10s  %10s\n", "Rank", "ParUID", "Count", "NextUID" );
 
       Aux_Message( stderr, "Check 13: %4d  %10ld  %10d  %10ld\n", MPI_Rank, uid, Par_CountUID[uid], amr->Par->NextUID );
 

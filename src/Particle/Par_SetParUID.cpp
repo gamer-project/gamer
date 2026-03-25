@@ -27,7 +27,7 @@ void Par_SetParUID( const bool init )
    if ( init  &&  MPI_Rank == 0 )   Aux_Message( stdout, "Par_SetParID (init) ...\n" );
 
    if ( amr->Par->NextUID < 1L )
-      Aux_Error( ERROR_INFO, "amr->Par->NextUID(%ld) is invalid !!\n", amr->Par->NextUID );
+      Aux_Error( ERROR_INFO, "amr->Par->NextUID (%ld) < 1 !!\n", amr->Par->NextUID );
 
    long NNewPar_ThisRank = 0L, NNewPar_AllRank;
 
@@ -38,7 +38,8 @@ void Par_SetParUID( const bool init )
       if ( amr->Par->PUid[p] > (long_par)0  &&  amr->Par->PUid[p] < amr->Par->NextUID )   continue;  // exclude particles that already have valid UIDs
 
       if ( amr->Par->PUid[p] != PPUID_TBA )
-         Aux_Error( ERROR_INFO, "New particle before ParUID assignment has an invalid PUid[%ld] = %ld != %ld !!\n", p, (long)amr->Par->PUid[p], (long)PPUID_TBA );
+         Aux_Error( ERROR_INFO, "New particle before UID assignment has an invalid PUid[%ld] = %ld != %ld !!\n",
+                    p, (long)amr->Par->PUid[p], (long)PPUID_TBA );
 
       if ( amr->Par->Mass[p] < (real_par)0.0 )   continue;   // exclude inactive particles
 
@@ -54,17 +55,17 @@ void Par_SetParUID( const bool init )
       if ( init  &&  MPI_Rank == 0 )   Aux_Message( stdout, "Par_SetParID (init) ... done\n" );
       return;
    }
-   if ( NNewPar_AllRank <  0L )
-      Aux_Error( ERROR_INFO, "NNewPar_AllRank(%ld) is negative !!\n", NNewPar_AllRank );
+   if ( NNewPar_AllRank < 0L )
+      Aux_Error( ERROR_INFO, "NNewPar_AllRank (%ld) is negative !!\n", NNewPar_AllRank );
 
 // check whether the next UID will overflow
-   if ( amr->Par->NextUID >= ( (sizeof(long_par) == sizeof(int)) ? __INT_MAX__ : __LONG_MAX__ ) - NNewPar_AllRank )
-      Aux_Error( ERROR_INFO, "amr->Par->PUid = amr->Par->NextUID(%ld) + NNewPar_AllRank(%ld) will overflow !!\n", amr->Par->NextUID, NNewPar_AllRank );
+   if ( amr->Par->NextUID > ( (sizeof(long_par) == sizeof(int)) ? __INT_MAX__ : __LONG_MAX__ ) - NNewPar_AllRank )
+      Aux_Error( ERROR_INFO, "amr->Par->PUid = amr->Par->NextUID (%ld) + NNewPar_AllRank (%ld) - 1 will overflow !!\n", amr->Par->NextUID, NNewPar_AllRank );
 
 // safety check for the type conversion from long to int
    int NNewPar_ThisRank_int = NNewPar_ThisRank;
    if ( NNewPar_ThisRank_int != NNewPar_ThisRank )
-      Aux_Error( ERROR_INFO, "NNewPar_ThisRank_int(%d) != NNewPar_ThisRank(%ld) !!\n", NNewPar_ThisRank_int, NNewPar_ThisRank );
+      Aux_Error( ERROR_INFO, "NNewPar_ThisRank_int (%d) != NNewPar_ThisRank (%ld) !!\n", NNewPar_ThisRank_int, NNewPar_ThisRank );
 
 // calculate displacement
    MPI_Allgather( &NNewPar_ThisRank_int, 1, MPI_INT, NSend, 1, MPI_INT, MPI_COMM_WORLD );
@@ -79,7 +80,7 @@ void Par_SetParUID( const bool init )
 
    for (int d=0; d<3; d++)
    {
-      NewParPos_AllRank[d]  = new real_par [NNewPar_AllRank];
+      NewParPos_AllRank [d]  = new real_par [NNewPar_AllRank];
       NewParPos_ThisRank[d] = new real_par [NNewPar_ThisRank];
    }
 
@@ -124,7 +125,7 @@ void Par_SetParUID( const bool init )
    delete [] NewParPUid_ThisRank;
    for (int d=0; d<3; d++)
    {
-      delete [] NewParPos_AllRank[d];
+      delete [] NewParPos_AllRank [d];
       delete [] NewParPos_ThisRank[d];
    }
 
