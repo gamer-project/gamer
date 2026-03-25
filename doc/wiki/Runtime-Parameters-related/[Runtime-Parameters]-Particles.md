@@ -90,9 +90,8 @@ See also
 <a name="PAR_IC_PUID"></a>
 * #### `PAR_IC_PUID` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
-Check whether all existing particles have UIDs assigned when [PAR_INIT](#PAR_INIT)=3 is used. Note that when the particle initial condition file `PAR_IC`
-does not include the particle UID data,
-one should turn this off and the new particle UIDs will be assigned internally.
+Flag indicating whether the particle initial condition file `PAR_IC` contains UID information.
+If this option is disabled, new particle UIDs will be assigned automatically.
 See also
 [[Setting IC from Files &#8212; Particles | Initial Conditions#IC-File-Particles]].
     * **Restriction:**
@@ -173,32 +172,31 @@ Disable this check when particles are initialized _after_ setting grid fields, s
 ## Remarks
 
 ### Particle UID
-The valid particle UID should be in `[1, number of particles]`. If there is
-a new particle created during the simulation, please assign the particle
-UID to `-1` and then call `Par_SetUID(false)` to assign UID after all creations
-are done in a single routine.
+Valid particle UIDs should lie within `[1, number of particles]`. If new particles are created
+during the simulation, please assign their UIDs to `PPUID_TBA`, and then call `Par_SetUID()`
+to assign UIDs after all particle creation within the same routine is complete.
 
-The particle UID is assigned in only the following two situations:
+The particle UID is assigned only in the following two situations:
 1. Initialization
 
-   The particle UID is assigned after `Par_Init_ByFunction_Ptr()` or `Par_Init_ByFile()`.
-   First, we collect the UID of particles from all ranks to a single array.
-   Second, we assign the particle UID by the array index plus one.
+   Particle UIDs are assigned after `Par_Init_ByFunction_Ptr()` or `Par_Init_ByFile()`.
+   First, we collect the particle UIDs from all ranks into a single array.
+   Second, we assign the particle UIDs according to the array index plus one.
    Finally, send the particle UIDs back to all ranks.
 2. During simulation
 
-   The particle UID should be assigned _after_ all the creations are done
-   in a single routine (e.g. star formation).
-   First, we collect the UID and position of new particles from all ranks
-   to a single array.
-   Second, we sort the particles by their position.
-   Third, assign the particle UID by the array index plus `NextUID`.
+   Particle UIDs should be assigned _after_ all the particle creation within a
+   single routine is complete (e.g. star formation).
+   First, we collect the UIDs and positions of new particles from all ranks
+   into a single array.
+   Second, we sort the particles by their positions.
+   Third, assign the particle UIDs according to the array index plus `NextUID`.
    Finally, send the new particle UIDs back to all ranks.
 
    Example: `src/StarFormation/SF_CreateStar.cpp` and `src/StarFormation/SF_CreateStar_AGORA.cpp`
 
 > [!CAUTION]
-> If the particle positions are exactly the same (which should unlikely happen), the UID is decremented by the following order:
+> If the particle positions are exactly the same (which should unlikely happen), the UID is determined by the following order:
 > 1. The rank number (`MPI_Rank`) from 0 to `MPI_NRank-1`.
 > 2. The index of particle array in each rank.
 

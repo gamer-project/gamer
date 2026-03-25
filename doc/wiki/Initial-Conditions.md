@@ -257,7 +257,7 @@ void Par_Init_ByFunction( const long NPar_ThisRank, const long NPar_AllRank,
    {
       ParTime[p] = Time[0];
       ParType[p] = PTYPE_GENERIC_MASSIVE;
-      ParPUid[p] = (long_par)-1;
+      ParPUid[p] = PPUID_TBA;
    }
 
 // set other particle attributes randomly
@@ -677,12 +677,12 @@ and `NUM_PARTICLE` is the total number of particles
 By default, `NUM_ATTRIBUTE` is equal to
 `7` + [[--par_attribute_flt | [Installation]-Option-List#--par_attribute_flt]] + [[--par_attribute_int | [Installation]-Option-List#--par_attribute_int]],
 corresponding to particle mass, position x/y/z, velocity x/y/z,
-type, UID, and user-specified attributes (and in exactly this order).
+user-specified floating-point attributes, type, UID, and user-specified integer attributes (and in exactly this order).
 One can also use [[PAR_IC_MASS | [Runtime-Parameters]-Particles#PAR_IC_MASS]] / [[PAR_IC_TYPE | [Runtime-Parameters]-Particles#PAR_IC_TYPE]]
 to assign the same particle mass / type to all particles,
 in which case the file `PAR_IC` should not store particle mass / type.
 One should turn off [[PAR_IC_PUID | Runtime-Parameters:-Particles#PAR_IC_PUID]]
-to assign new particle UIDs to all particles when the `PAR_IC` file does not store existing UIDs.
+to automatically assign new particle UIDs to all particles when the `PAR_IC` file does not contain UID information.
 
 The following C++ example constructs a particle initial condition
 file with 1000 particles assuming [[PAR_IC_MASS | [Runtime-Parameters]-Particles#PAR_IC_MASS]]<0,
@@ -733,7 +733,7 @@ int main()
       ParIC_Flt[6][p] = 7.7;   // velocity z
 
       ParIC_Int[0][p] = 1;     // type (generic massive)
-      ParIC_Int[1][p] = p+1;   // UID
+      ParIC_Int[1][p] = p+1;                        // UID (starting from 1)
    }
 
    FILE *File = fopen( "PAR_IC", "wb" );
