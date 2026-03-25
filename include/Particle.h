@@ -56,7 +56,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                GhostSizeTracer         : Number of ghost zones required for the interpolation scheme of tracer  particles
 //                NextUID                 : Next new particle UID over all MPI ranks. The UID starts from 1.
 //                AttributeFlt            : Pointer arrays to different particle floating-point attributes (Mass, Pos, Vel, ...)
-//                AttributeInt            : Pointer arrays to different particle integer        attributes (Type)
+//                AttributeInt            : Pointer arrays to different particle integer        attributes (Type, PUid)
 //                InactiveParList         : List of inactive particle IDs
 //                Mesh_Attr               : Pointer arrays to different mesh quantities mapped onto tracer particles
 //                Mesh_Attr_Num           : Number of mesh quantities mapped onto tracer particles

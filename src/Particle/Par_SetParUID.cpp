@@ -11,8 +11,10 @@
 // Description :  Set the particle unique UID
 //
 // Note        :  1. Invoked by Init_GAMER() and SF_CreateStar()
-//                2. New particle UIDs should be initialized as PPUID_TBA
-//                3. Currently, new particle UIDs are assigned by the sorted particle position
+//                2. New particle UIDs should be initialized to PPUID_TBA before calling this routine
+//                   --> This routine only assigns UIDs to particles with UID==PPUID_TBA; other particles are skipped
+//                3. Particle UIDs are assigned according to the sorted particle position
+//                   --> Ensure reproducibility
 //
 // Paramter    :  init : Initialization stage or not
 //-------------------------------------------------------------------------------------------------------
@@ -29,7 +31,7 @@ void Par_SetParUID( const bool init )
 
    long NNewPar_ThisRank = 0L, NNewPar_AllRank;
 
-// calculate number of new particles
+// calculate the number of new particles
    long *NewParIDList = new long [NPar_ThisRank];
    for (long p=0; p<NPar_ThisRank; p++)
    {
@@ -126,7 +128,7 @@ void Par_SetParUID( const bool init )
       delete [] NewParPos_ThisRank[d];
    }
 
-// update the next UID to all ranks
+// update the next UID on all ranks
    amr->Par->NextUID += NNewPar_AllRank;
 
    if ( init  &&  MPI_Rank == 0 )   Aux_Message( stdout, "Par_SetParID (init) ... done\n" );

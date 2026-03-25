@@ -155,7 +155,7 @@ void Par_Aux_Check_Particle( const char *comment )
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Check_FindHomePatch
-// Description :  Check if the particle reside in its home patch
+// Description :  Check if the particle resides in its home patch
 //
 // Note        :  None
 //
@@ -198,7 +198,7 @@ void Check_FindHomePatch( int &PassAll, int &PassOne, const char *comment, const
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Check_InLeafPatch
-// Description :  Check if the particle reside in the leaf patches
+// Description :  Check if the particle resides in the leaf patch
 //
 // Note        :  None
 //
@@ -207,7 +207,7 @@ void Check_FindHomePatch( int &PassAll, int &PassOne, const char *comment, const
 //                comment       : You can put the location where this function is invoked in this string
 //                lv            : Target refinement level
 //                PID           : Target patch ID
-//                NParThisPatch : Number of particles in target patch
+//                NParThisPatch : Number of particles in the target patch
 //-------------------------------------------------------------------------------------------------------
 void Check_InLeafPatch( int &PassAll, int &PassOne, const char *comment, const int lv, const int PID,
                         const int NParThisPatch )
@@ -266,8 +266,8 @@ void Check_NActive( int &PassAll, int &PassOne, const char *comment, const long 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Check_InactiveMass
-// Description :  Check if the inactive particle has negative mass
+// Function    :  Check_InactiveParticle
+// Description :  Check if amr->patch[0][lv][PID]->ParList[] contains any inactive particle
 //
 // Note        :  None
 //
@@ -316,7 +316,7 @@ void Check_InactiveMass( int &PassAll, int &PassOne, const char *comment, const 
 //                lv      : Target refinement level
 //                PID     : Target patch ID
 //                ParID   : Target particle ID
-//                ParHome : Array of particle has home or not
+//                ParHome : Array indicating whether each particle has a home patch
 //-------------------------------------------------------------------------------------------------------
 void Check_OneHomePatch( int &PassAll, int &PassOne, const char *comment, const int lv, const int PID,
                          const int ParID, bool *ParHome )
@@ -342,14 +342,14 @@ void Check_OneHomePatch( int &PassAll, int &PassOne, const char *comment, const 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Check_ActiveHome
-// Description :  Check if the active particle has only one home patch
+// Description :  Check if the active particle has a home patch
 //
-// Note        :  1. Must be executed after Check_OneHomePatch
+// Note        :  1. Must be executed after Check_OneHomePatch()
 //
 // Parameter   :  PassAll : Pass all the checks or not
 //                PassOne : Pass this check or not
 //                comment : You can put the location where this function is invoked in this string
-//                ParHome : Array of particle has home or not
+//                ParHome : Array indicating whether each particle has a home patch
 //-------------------------------------------------------------------------------------------------------
 void Check_ActiveHome( int &PassAll, int &PassOne, const char *comment, const bool *ParHome )
 {

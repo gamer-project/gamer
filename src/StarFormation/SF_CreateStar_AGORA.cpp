@@ -17,8 +17,7 @@
 //                3. One must invoke Buf_GetBufferData( ..., _TOTAL, ... ) after calling this function
 //                4. Currently this function does not check whether the cell mass exceeds the Jeans mass
 //                   --> Ref: "jeanmass" in star_maker_ssn.F of Enzo
-//                5. The new particle UID should be initialized as -1. The UID will be given later in SF_CreateStar()
-//                   routine
+//                5. The new particle UID should be initialized as PPUID_TBA. The actual UID will be assigned later in SF_CreateStar()
 //
 // Parameter   :  lv           : Target refinement level
 //                TimeNew      : Current physical time (after advancing solution by dt)

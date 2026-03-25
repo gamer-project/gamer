@@ -332,14 +332,13 @@ void Init_GAMER( int *argc, char ***argv )
 
 
 #  ifdef PARTICLE
-// assign initial particle UIDs AFTER all routines that possibly add particles,
-// including Par_Init_ByFunction_Ptr(), Par_Init_ByFile(),
-//           AddParticle() in Init_ByRestart(),
+// assign initial particle UIDs AFTER all routines that may add particles,
+// including Par_Init_ByFunction_Ptr(), Par_Init_ByFile(), AddParticle() in Init_ByRestart(), and
 //           Par_AddParticleAfterInit() in Init_User_Ptr() and Init_User_AfterPoisson_Ptr()
    const bool SetParUIDInitStage_Yes = true;
    Par_SetParUID( SetParUIDInitStage_Yes );
 
-// only check here if it will not check later in Aux_Check()
+// only perform this check here if it will not be checked later in Aux_Check()
    if ( OPT__PAR_INIT_CHECK  &&  !OPT__CK_PARTICLE )
       Par_Aux_Check_Particle( "Initial particle check after Par_SetParUID" );
 #  endif // #ifdef PARTICLE
