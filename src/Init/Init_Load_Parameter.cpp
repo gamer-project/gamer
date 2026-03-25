@@ -260,7 +260,7 @@ void Init_Load_Parameter()
 
 // star formation
 #  ifdef STAR_FORMATION
-   ReadPara->Add( "SF_CREATE_STAR_SCHEME",         &SF_CREATE_STAR_SCHEME,         0,              0,             1              );
+   ReadPara->Add( "SF_CREATE_STAR_SCHEME",         &SF_CREATE_STAR_SCHEME,         0,              0,             2              );
    ReadPara->Add( "SF_CREATE_STAR_RSEED",          &SF_CREATE_STAR_RSEED,          123,            0,             NoMax_int      );
 // do not check SF_CREATE_STAR_DET_RANDOM since its default depends on the makefile option BITWISE_REPRODUCIBILITY
    ReadPara->Add( "SF_CREATE_STAR_DET_RANDOM",     &SF_CREATE_STAR_DET_RANDOM,    -1,              NoMin_int,     NoMax_int      );
@@ -269,6 +269,9 @@ void Init_Load_Parameter()
    ReadPara->Add( "SF_CREATE_STAR_MASS_EFF",       &SF_CREATE_STAR_MASS_EFF,       1.0e-2,         Eps_double,    1.0            );
    ReadPara->Add( "SF_CREATE_STAR_MIN_STAR_MASS",  &SF_CREATE_STAR_MIN_STAR_MASS,  0.0,            0.0,           NoMax_double   );
    ReadPara->Add( "SF_CREATE_STAR_MAX_STAR_MFRAC", &SF_CREATE_STAR_MAX_STAR_MFRAC, 0.5,            Eps_double,    1.0            );
+   ReadPara->Add( "SF_CREATE_SINK_MIN_GAS_DENS",   &SF_CREATE_SINK_MIN_GAS_DENS,   1.0e10,         0.0,           NoMax_double   );
+   ReadPara->Add( "SF_CREATE_SINK_ACC_RADIUS",     &SF_CREATE_SINK_ACC_RADIUS,     0.5*PS1,        0.0,           0.5*PS1        );
+   ReadPara->Add( "SF_CREATE_SINK_MAX_NPAR_MPI",   &SF_CREATE_SINK_MAX_NPAR_MPI,   1000,           10,            NoMax_int      );
 #  endif
 
 
@@ -277,6 +280,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "FB_LEVEL",                   &FB_LEVEL,                       -1,               NoMin_int,     TOP_LEVEL      );
    ReadPara->Add( "FB_RSEED",                   &FB_RSEED,                        456,             0,             NoMax_int      );
    ReadPara->Add( "FB_SNE",                     &FB_SNE,                          false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "FB_ACC",                     &FB_ACC,                          false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "FB_USER",                    &FB_USER,                         false,           Useless_bool,  Useless_bool   );
 #  endif
 
