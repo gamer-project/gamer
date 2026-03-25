@@ -606,6 +606,8 @@ struct InputPara_t
    double ELBDM_Taylor3_Coeff;
    int    ELBDM_Taylor3_Auto;
    int    ELBDM_RemoveMotionCM;
+   int    ELBDM_RescaleMassError;
+   int    ELBDM_RescaleMassSteps;
    int    ELBDM_BaseSpectral;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    int    ELBDM_FirstWaveLevel;
