@@ -132,7 +132,7 @@ class particle():
 # Main
 #====================================================================================================
 # load the command-line parameters
-parser = argparse.ArgumentParser( description='Plot the particles position and velocity by UID and array index' )
+parser = argparse.ArgumentParser( description='Plot the particle positions and velocities by particle UIDs and array indices' )
 
 parser.add_argument( '-s', action='store', required=True,  type=int, dest='idx_start',
                      help='first data index' )
@@ -141,7 +141,7 @@ parser.add_argument( '-e', action='store', required=True,  type=int, dest='idx_e
 parser.add_argument( '-u', action='store', required=True, dest='uids', type=int, nargs='+',
                      help='UID of particles' )
 parser.add_argument( '-t', action='store_true', required=False, dest='use_hdf5',
-                     help='Use Data_* to analysis (slower)' )
+                     help='Use Data_* for analysis (slower)' )
 parser.add_argument( '-d', action='store', required=False, type=int, dest='didx',
                      help='delta data index [%(default)d]', default=1 )
 parser.add_argument( '-i', action='store', required=False, type=str, dest='prefix',
