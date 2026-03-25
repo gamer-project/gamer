@@ -11,7 +11,8 @@ static double ELBDM_InitMassPsi = NULL_REAL;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  ELBDM_RescaleMassError
-// Description :  Rescale the wave function to compensate for mass errors (presumably caused by floating-point round-off errors), only tested in base-level-only simulations.
+// Description :  Rescale the wave function to compensate for mass errors (presumably caused by floating-point round-off errors);
+//                currently only tested for base-level-only simulations.
 //
 // Note        :  1. Work with the option ELBDM_RESCALE_MASS_ERROR
 //                   --> Must also enable OPT__CK_CONSERVATION since it relies on Aux_Check_Conservation()
@@ -56,7 +57,7 @@ void ELBDM_RescaleMassError()
 #           if ( ELBDM_SCHEME == ELBDM_HYBRID )
             if ( amr->use_wave_flag[lv] ) {
 #           endif
-    
+
                fluid[REAL][k][j][i] *= RescaleWaveFunc;
                fluid[IMAG][k][j][i] *= RescaleWaveFunc;
                fluid[DENS][k][j][i]  = SQR(fluid[REAL][k][j][i]) + SQR(fluid[IMAG][k][j][i]);
