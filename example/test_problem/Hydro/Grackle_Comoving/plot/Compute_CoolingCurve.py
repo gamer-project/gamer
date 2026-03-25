@@ -13,7 +13,7 @@ data = np.loadtxt('../Record__GrackleComoving', skiprows=9)
 # data columns
 a_scale       = data[:,0] # scale factor
 dt            = data[:,2] # sec
-nden          = data[:,3] # cm^-3
+nden          = data[:,3] # total number density in cm^-3
 mu            = data[:,4] # mean molecular weight
 temp          = data[:,5] # K
 eden          = data[:,6] # erg/cm^3

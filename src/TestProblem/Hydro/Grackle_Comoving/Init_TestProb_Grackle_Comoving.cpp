@@ -74,6 +74,49 @@ void Validate()
 
 #if ( MODEL == HYDRO  &&  defined SUPPORT_GRACKLE  &&  defined COMOVING )
 //-------------------------------------------------------------------------------------------------------
+// Function    :  LoadInputTestProb
+// Description :  Read problem-specific runtime parameters from Input__TestProb and store them in HDF5 snapshots (Data_*)
+//
+// Note        :  1. Invoked by SetParameter() to read parameters
+//                2. Invoked by Output_DumpData_Total_HDF5() using the function pointer Output_HDF5_InputTest_Ptr to store parameters
+//                3. If there is no problem-specific runtime parameter to load, add at least one parameter
+//                   to prevent an empty structure in HDF5_Output_t
+//                   --> Example:
+//                       LOAD_PARA( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+//
+// Parameter   :  load_mode      : Mode for loading parameters
+//                                 --> LOAD_READPARA    : Read parameters from Input__TestProb
+//                                     LOAD_HDF5_OUTPUT : Store parameters in HDF5 snapshots
+//                ReadPara       : Data structure for reading parameters (used with LOAD_READPARA)
+//                HDF5_InputTest : Data structure for storing parameters in HDF5 snapshots (used with LOAD_HDF5_OUTPUT)
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
+{
+
+#  ifndef SUPPORT_HDF5
+   if ( load_mode == LOAD_HDF5_OUTPUT )   Aux_Error( ERROR_INFO, "please turn on SUPPORT_HDF5 in the Makefile for load_mode == LOAD_HDF5_OUTPUT !!\n" );
+#  endif
+
+   if ( load_mode == LOAD_READPARA     &&  ReadPara       == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_READPARA and ReadPara == NULL !!\n" );
+   if ( load_mode == LOAD_HDF5_OUTPUT  &&  HDF5_InputTest == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_HDF5_OUTPUT and HDF5_InputTest == NULL !!\n" );
+
+// add parameters in the following format:
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
+// --> LOAD_PARA() is defined in "include/TestProb.h"
+// *********************************************************************************************************************************************
+// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",                    &VARIABLE,                            DEFAULT,      MIN,          MAX          );
+// *********************************************************************************************************************************************
+   LOAD_PARA( load_mode, "GrackleComoving_InitialTemperature", &GrackleComoving_InitialTemperature,  -1.0,         Eps_double,   NoMax_double );
+   LOAD_PARA( load_mode, "GrackleComoving_InitialMetallicity", &GrackleComoving_InitialMetallicity,   0.0,         0.0,          1.0          );
+
+} // FUNCITON : LoadInputTestProb
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
 //
@@ -95,17 +138,11 @@ void SetParameter()
 
 
 // (1) load the problem-specific runtime parameters
+// (1-1) read parameters from Input__TestProb
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
-// (1-1) add parameters in the following format:
-// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
-// --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
-// **************************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",                    &VARIABLE,                             DEFAULT,     MIN,          MAX          );
-// **************************************************************************************************************************************
-   ReadPara->Add( "GrackleComoving_InitialTemperature", &GrackleComoving_InitialTemperature,  -1.0,         Eps_double,   NoMax_double );
-   ReadPara->Add( "GrackleComoving_InitialMetallicity", &GrackleComoving_InitialMetallicity,   0.0,         0.0,          1.0          );
+   LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
 
    ReadPara->Read( FileName );
 
@@ -177,8 +214,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double temperature_units = get_temperature_units(&Che_Units);                             // set temperature units
 
 // convert GracleComoving_InitialTemperature to comoving internal energy assuming mu above
-// --> the mean molecular weight mu can be different from MOLECULAR_WEIGHT
-// --> as a result, the temperature in this test problem can be different from the temperature field output by OUT__OUTPUT_TEMP
+// --> 1) the mean molecular weight mu can be different from MOLECULAR_WEIGHT
+// -->    as a result, the temperature in this test problem can be different from the temperature field output by OUT__OUTPUT_TEMP
+// --> 2) GAMMA can in general differ from the value returned by calculate_gamma()
+// -->    we may want to integrate calculate_gamma() in the EOS module in the future
    const double u = GrackleComoving_InitialTemperature / (mu * (GAMMA - 1.) * temperature_units) * SQR(Time);
 
 
@@ -252,11 +291,11 @@ void Aux_Record_GrackleComoving()
          fprintf( File_User, "# a_scale              : scale factor\n");
          fprintf( File_User, "# Step                 : current step\n");
          fprintf( File_User, "# dt [s]               : physical time-step size in sec\n");
-         fprintf( File_User, "# n [1/cc]             : Hydrogen number density in physical cm^-3\n");
+         fprintf( File_User, "# n [1/cc]             : total number density in physical cm^-3\n");
          fprintf( File_User, "# mu                   : mean molecular weight\n");
          fprintf( File_User, "# Temp [K]             : temperature in Kelvin\n");
          fprintf( File_User, "# Edens [erg cm^-3]    : internal energy density in physical erg cm^-3\n");
-         fprintf( File_User, "# Lcool[erg cm^3 s^-1] : cooling rate in physical erg cm^-3 s^-1\n");
+         fprintf( File_User, "# Lcool[erg cm^3 s^-1] : cooling rate in physical erg cm^3 s^-1\n");
          fprintf( File_User, "#%13s%14s%3s%22s%22s%22s%22s%22s%22s",  "a_scale", "Step", "", "dt [s]", "n [1/cc]", "mu", "Temp [K]", "Edens [erg cm^-3]", "Lcool[erg cm^3 s^-1]" );
          fprintf( File_User, "\n" );
 
@@ -342,7 +381,7 @@ void Aux_Record_GrackleComoving()
       const double dt_SubStep        = Mis_dTime2dt( Time[0], dTime_Base ) * SQR(Time[0]) * UNIT_T;                                 // physical time-step size
       const double temperature_units = get_temperature_units(&Che_Units);                                                           // grackle temperature unit
       const double mu                = my_temperature[0] / (my_fields.internal_energy[0] * (my_gamma[0] - 1.) * temperature_units); // mean molecular weight
-      const double n                 = Dens / CUBE(Time[0]) * UNIT_D / mu / Const_mp;                                               // Hydrogen number density
+      const double n                 = Dens / CUBE(Time[0]) * UNIT_D / mu / Const_mp;                                               // total number density
       const double Edens             = Eint * UNIT_P / SQR(Time[0]) / CUBE(Time[0]);                                                // internal energy density
       const double Temp              = my_temperature[0];                                                                           // temperature
       const double Lcool             = Edens / fabs(my_cooling_time[0] * UNIT_T) / n / n;                                           // cooling rate obtained from grackle
@@ -391,41 +430,39 @@ void Init_GrackleComoving()
    my_fields.grid_start     = new int [3];
    my_fields.grid_end       = new int [3];
    for (int i=0; i<3; i++) {
-      my_fields.grid_dimension[i] = 1; // the active dimension not including ghost zones.
+      my_fields.grid_dimension[i] = field_size; // the active dimension not including ghost zones.
       my_fields.grid_start    [i] = 0;
-      my_fields.grid_end      [i] = 0;
+      my_fields.grid_end      [i] = field_size - 1;
    }
-   my_fields.grid_dimension[0] = field_size;
-   my_fields.grid_end[0]       = field_size - 1;
    my_fields.grid_dx           = 0.0; // used only for H2 self-shielding approximation
 
-   my_fields.density         = new gr_float [field_size];
-   my_fields.internal_energy = new gr_float [field_size];
+   my_fields.density         = new gr_float [CUBE(field_size)];
+   my_fields.internal_energy = new gr_float [CUBE(field_size)];
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
-   my_fields.HI_density      = new gr_float [field_size];
-   my_fields.HII_density     = new gr_float [field_size];
-   my_fields.HeI_density     = new gr_float [field_size];
-   my_fields.HeII_density    = new gr_float [field_size];
-   my_fields.HeIII_density   = new gr_float [field_size];
-   my_fields.e_density       = new gr_float [field_size];
+   my_fields.HI_density      = new gr_float [CUBE(field_size)];
+   my_fields.HII_density     = new gr_float [CUBE(field_size)];
+   my_fields.HeI_density     = new gr_float [CUBE(field_size)];
+   my_fields.HeII_density    = new gr_float [CUBE(field_size)];
+   my_fields.HeIII_density   = new gr_float [CUBE(field_size)];
+   my_fields.e_density       = new gr_float [CUBE(field_size)];
    }
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9 ) {
-   my_fields.HM_density      = new gr_float [field_size];
-   my_fields.H2I_density     = new gr_float [field_size];
-   my_fields.H2II_density    = new gr_float [field_size];
+   my_fields.HM_density      = new gr_float [CUBE(field_size)];
+   my_fields.H2I_density     = new gr_float [CUBE(field_size)];
+   my_fields.H2II_density    = new gr_float [CUBE(field_size)];
    }
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE12 ) {
-   my_fields.DI_density      = new gr_float [field_size];
-   my_fields.DII_density     = new gr_float [field_size];
-   my_fields.HDI_density     = new gr_float [field_size];
+   my_fields.DI_density      = new gr_float [CUBE(field_size)];
+   my_fields.DII_density     = new gr_float [CUBE(field_size)];
+   my_fields.HDI_density     = new gr_float [CUBE(field_size)];
    }
    if ( GRACKLE_METAL ) {
-   my_fields.metal_density   = new gr_float [field_size];
+   my_fields.metal_density   = new gr_float [CUBE(field_size)];
    }
 
-   my_temperature            = new gr_float [field_size];
-   my_gamma                  = new gr_float [field_size];
-   my_cooling_time           = new gr_float [field_size];
+   my_temperature            = new gr_float [CUBE(field_size)];
+   my_gamma                  = new gr_float [CUBE(field_size)];
+   my_cooling_time           = new gr_float [CUBE(field_size)];
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
@@ -514,13 +551,13 @@ double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
 
    double dt_user_phy = HUGE_NUMBER;
 
-   int    FluSg = amr->FluSg[0];
-   double Dens  = amr->patch[FluSg][0][0]->fluid[DENS][0][0][0];
-   double Eint  = amr->patch[FluSg][0][0]->fluid[ENGY][0][0][0]; // assume no magnetic and kinetic energy
+   int    FluSg = amr->FluSg[lv];
+   double Dens  = amr->patch[FluSg][lv][0]->fluid[DENS][0][0][0];
+   double Eint  = amr->patch[FluSg][lv][0]->fluid[ENGY][0][0][0]; // assume no magnetic and kinetic energy
 
 // use the dual-energy variable to calculate the internal energy if applicable
 #  ifdef DUAL_ENERGY
-   double Dual = amr->patch[FluSg][0][0]->fluid[DUAL][0][0][0];
+   double Dual = amr->patch[FluSg][lv][0]->fluid[DUAL][0][0][0];
 
 #  if   ( DUAL_ENERGY == DE_ENPY )
    const bool CheckMinPres_No  = false;
@@ -539,28 +576,28 @@ double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
    my_fields.internal_energy[0] = Eint / Dens / SQR(Time[lv]);
 
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
-      my_fields.e_density    [0] = amr->patch[FluSg][0][0]->fluid[Idx_e    ][0][0][0] * MassRatio_pe;
-      my_fields.HI_density   [0] = amr->patch[FluSg][0][0]->fluid[Idx_HI   ][0][0][0];
-      my_fields.HII_density  [0] = amr->patch[FluSg][0][0]->fluid[Idx_HII  ][0][0][0];
-      my_fields.HeI_density  [0] = amr->patch[FluSg][0][0]->fluid[Idx_HeI  ][0][0][0];
-      my_fields.HeII_density [0] = amr->patch[FluSg][0][0]->fluid[Idx_HeII ][0][0][0];
-      my_fields.HeIII_density[0] = amr->patch[FluSg][0][0]->fluid[Idx_HeIII][0][0][0];
+      my_fields.e_density    [0] = amr->patch[FluSg][lv][0]->fluid[Idx_e    ][0][0][0] * MassRatio_pe;
+      my_fields.HI_density   [0] = amr->patch[FluSg][lv][0]->fluid[Idx_HI   ][0][0][0];
+      my_fields.HII_density  [0] = amr->patch[FluSg][lv][0]->fluid[Idx_HII  ][0][0][0];
+      my_fields.HeI_density  [0] = amr->patch[FluSg][lv][0]->fluid[Idx_HeI  ][0][0][0];
+      my_fields.HeII_density [0] = amr->patch[FluSg][lv][0]->fluid[Idx_HeII ][0][0][0];
+      my_fields.HeIII_density[0] = amr->patch[FluSg][lv][0]->fluid[Idx_HeIII][0][0][0];
    }
 
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9 ) {
-      my_fields.HM_density   [0] = amr->patch[FluSg][0][0]->fluid[Idx_HM   ][0][0][0];
-      my_fields.H2I_density  [0] = amr->patch[FluSg][0][0]->fluid[Idx_H2I  ][0][0][0];
-      my_fields.H2II_density [0] = amr->patch[FluSg][0][0]->fluid[Idx_H2II ][0][0][0];
+      my_fields.HM_density   [0] = amr->patch[FluSg][lv][0]->fluid[Idx_HM   ][0][0][0];
+      my_fields.H2I_density  [0] = amr->patch[FluSg][lv][0]->fluid[Idx_H2I  ][0][0][0];
+      my_fields.H2II_density [0] = amr->patch[FluSg][lv][0]->fluid[Idx_H2II ][0][0][0];
    }
 
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE12 ) {
-      my_fields.DI_density   [0] = amr->patch[FluSg][0][0]->fluid[Idx_DI   ][0][0][0];
-      my_fields.DII_density  [0] = amr->patch[FluSg][0][0]->fluid[Idx_DII  ][0][0][0];
-      my_fields.HDI_density  [0] = amr->patch[FluSg][0][0]->fluid[Idx_HDI  ][0][0][0];
+      my_fields.DI_density   [0] = amr->patch[FluSg][lv][0]->fluid[Idx_DI   ][0][0][0];
+      my_fields.DII_density  [0] = amr->patch[FluSg][lv][0]->fluid[Idx_DII  ][0][0][0];
+      my_fields.HDI_density  [0] = amr->patch[FluSg][lv][0]->fluid[Idx_HDI  ][0][0][0];
    }
 
    if ( GRACKLE_METAL ) {
-      my_fields.metal_density[0] = amr->patch[FluSg][0][0]->fluid[Idx_Metal][0][0][0];
+      my_fields.metal_density[0] = amr->patch[FluSg][lv][0]->fluid[Idx_Metal][0][0][0];
    }
 
    Che_Units.comoving_coordinates = 1;
