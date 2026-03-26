@@ -79,7 +79,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2506)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2507)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -279,7 +279,8 @@ Procedure for outputting new variables:
 //                                             Input__TestProb parameters in "Info/InputTest"
 //                2504 : 2025/04/29 --> output OPT__PAR_INIT_CHECK
 //                2505 : 2025/05/07 --> output PassiveFloor_Var
-//                2506 : 2026/02/15 --> output GRACKLE_USE_V_HEATING_RATE, GRACKLE_USE_S_HEATING_RATE,
+//                2506 : 2025/12/01 --> output ELBDM_RESCALE_MASS_ERROR, ELBDM_RESCALE_MASS_STEPS
+//                2507 : 2026/02/15 --> output GRACKLE_USE_V_HEATING_RATE, GRACKLE_USE_S_HEATING_RATE,
 //                                             GRACKLE_USE_TEMP_FLOOR, GRACKLE_TEMP_FLOOR_SCALAR,
 //                                             GRACKLE_REDSHIFT,
 //                                             GRACKLE_HYDROGEN_MFRAC, OPT__UNFREEZE_GRACKLE,
@@ -1751,7 +1752,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2506;
+   KeyInfo.FormatVersion        = 2507;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2670,6 +2671,8 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.ELBDM_Taylor3_Coeff     = ELBDM_TAYLOR3_COEFF;
    InputPara.ELBDM_Taylor3_Auto      = ELBDM_TAYLOR3_AUTO;
    InputPara.ELBDM_RemoveMotionCM    = ELBDM_REMOVE_MOTION_CM;
+   InputPara.ELBDM_RescaleMassError  = ELBDM_RESCALE_MASS_ERROR;
+   InputPara.ELBDM_RescaleMassSteps  = ELBDM_RESCALE_MASS_STEPS;
    InputPara.ELBDM_BaseSpectral      = ELBDM_BASE_SPECTRAL;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    InputPara.ELBDM_FirstWaveLevel    = ELBDM_FIRST_WAVE_LEVEL;
@@ -3752,6 +3755,8 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "ELBDM_Taylor3_Coeff",     HOFFSET(InputPara_t,ELBDM_Taylor3_Coeff    ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "ELBDM_Taylor3_Auto",      HOFFSET(InputPara_t,ELBDM_Taylor3_Auto     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "ELBDM_RemoveMotionCM",    HOFFSET(InputPara_t,ELBDM_RemoveMotionCM   ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "ELBDM_RescaleMassError",  HOFFSET(InputPara_t,ELBDM_RescaleMassError ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "ELBDM_RescaleMassSteps",  HOFFSET(InputPara_t,ELBDM_RescaleMassSteps ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "ELBDM_BaseSpectral",      HOFFSET(InputPara_t,ELBDM_BaseSpectral     ), H5T_NATIVE_INT     );
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
