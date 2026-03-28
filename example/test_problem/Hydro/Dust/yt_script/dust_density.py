@@ -7,9 +7,6 @@ import os
 
 # load the command-line parameters
 parser = argparse.ArgumentParser(description="Dust dust_dens evolution plotter")
-parser.add_argument("-s", type=int, required=True, help="Starting index")
-parser.add_argument("-e", type=int, required=True, help="Ending index")
-parser.add_argument("-d", type=int, required=True, help="Index step")
 parser.add_argument("-option", type=str, required=True, choices=["edot_0", "edot_const"], help="Analytic option")
 args = parser.parse_args()
 
@@ -67,28 +64,21 @@ def drho_dt(t, dust_rho):
     return -3.0 / tsp * dust_rho
 
 # Load data
-dust_dens = []
-time = []
-for idx in range(args.s, args.e+1, args.d):
-    # fpath = os.path.join(prefix, 'Data_%06d'%idx)
-    # if not os.path.isfile(fpath):
-    #     continue
+f = h5py.File('../Data_%06d'%(0), 'r')
+UNIT_D  = f['Info']['InputPara']['Unit_D']
+BoxSize = f['Info']['InputPara']['BoxSize']
+table = np.loadtxt("../Record__Conservation")
+time      = table[:, 0]
+dust_dens = table[:,47] * UNIT_D / (Const_amu / Const_cm**3) / BoxSize**3
 
-    f = h5py.File('../Data_%06d'%(args.s), 'r')
-    UNIT_D  = f['Info']['InputPara']['Unit_D']
-    BoxSize = f['Info']['InputPara']['BoxSize']
-    table = np.loadtxt("../Record__Conservation")
-    time      = table[:, 0]
-    dust_dens = table[:,47] * UNIT_D / (Const_amu / Const_cm**3) / BoxSize**3
+# sorting 
+sort_idx = np.argsort(time)
+time = time[sort_idx]
+dust_dens = dust_dens[sort_idx]
 
-    # sorting 
-    sort_idx = np.argsort(time)
-    time = time[sort_idx]
-    dust_dens = dust_dens[sort_idx]
-
-    # remove duplicates
-    time, uniq_idx = np.unique(time, return_index=True)
-    dust_dens = dust_dens[uniq_idx]
+# remove duplicates
+time, uniq_idx = np.unique(time, return_index=True)
+dust_dens = dust_dens[uniq_idx]
 
 # Plot
 f, ax = plt.subplots(1, 1)
