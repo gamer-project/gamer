@@ -6,7 +6,7 @@ from scipy.integrate import solve_ivp
 import os
 
 # load the command-line parameters
-parser = argparse.ArgumentParser(description="Dust density evolution plotter")
+parser = argparse.ArgumentParser(description="Dust dust_dens evolution plotter")
 parser.add_argument("-s", type=int, required=True, help="Starting index")
 parser.add_argument("-e", type=int, required=True, help="Ending index")
 parser.add_argument("-d", type=int, required=True, help="Index step")
@@ -67,20 +67,28 @@ def drho_dt(t, dust_rho):
     return -3.0 / tsp * dust_rho
 
 # Load data
-density_all = []
-time_all = []
+dust_dens = []
+time = []
 for idx in range(args.s, args.e+1, args.d):
-    fpath = os.path.join(prefix, 'Data_%06d'%idx)
-    if not os.path.isfile(fpath):
-        continue
-    with h5py.File(fpath, "r") as f:
-        density = f["GridData"]["Dust"][0][0][0][0] * UNIT_D / (Const_amu / Const_cm**3)
-        time    = f["Info"]["KeyInfo"]["Time"][0]
-        density_all.append(density)
-        time_all.append(time)
+    # fpath = os.path.join(prefix, 'Data_%06d'%idx)
+    # if not os.path.isfile(fpath):
+    #     continue
 
-time_all = np.array(time_all)
-density_all = np.array(density_all)
+    f = h5py.File('../Data_%06d'%(args.s), 'r')
+    UNIT_D  = f['Info']['InputPara']['Unit_D']
+    BoxSize = f['Info']['InputPara']['BoxSize']
+    table = np.loadtxt("../Record__Conservation")
+    time      = table[:, 0]
+    dust_dens = table[:,47] * UNIT_D / (Const_amu / Const_cm**3) / BoxSize**3
+
+    # sorting 
+    sort_idx = np.argsort(time)
+    time = time[sort_idx]
+    dust_dens = dust_dens[sort_idx]
+
+    # remove duplicates
+    time, uniq_idx = np.unique(time, return_index=True)
+    dust_dens = dust_dens[uniq_idx]
 
 # Plot
 f, ax = plt.subplots(1, 1)
@@ -88,7 +96,7 @@ f.subplots_adjust(wspace=0.4)
 
 ax.set_xlabel("$\\mathrm{t\\ [Myr]}$", fontsize="large")
 ax.set_title(fig_name)
-ax.plot(time_all, density_all, 'ro', lw=1, mec='none', ms=5.0, label='Numerical')
+ax.plot(time, dust_dens, 'ro', lw=1, mec='none', ms=5.0, label='Numerical')
 
 # Analytic solution
 rho_analytic = None
@@ -98,12 +106,12 @@ if args.option == "edot_0":
     const_2 = (10**6.3 / T0)**omega
     tsp     = const_1 * (const_2 + 1.0)
     tsp_myr = tsp / Myr_in_s
-    rho_analytic = dust_rho0 * np.exp((-3/tsp_myr) * time_all)
-    ax.plot(time_all, rho_analytic, 'b-', lw=1.5, label="Analytic")
+    rho_analytic = dust_rho0 * np.exp((-3/tsp_myr) * time)
+    ax.plot(time, rho_analytic, 'b-', lw=1.5, label="Analytic")
 
 elif args.option == "edot_const":
-    t_span = (0, time_all[-1]*Myr_in_s)
-    t_eval = time_all * Myr_in_s
+    t_span = (0, time[-1]*Myr_in_s)
+    t_eval = time * Myr_in_s
     sol = solve_ivp(drho_dt, t_span, [dust_rho0], t_eval=t_eval)
     rho_analytic = sol.y[0]
     ax.plot(sol.t / Myr_in_s, sol.y[0], 'b-', label="Analytic")
@@ -112,8 +120,8 @@ elif args.option == "edot_const":
 ax.set_yscale('log')
 ax.set_xlim(1.0e-1, 20)
 ax.yaxis.set_minor_locator(plt.LogLocator(base=10.0, subs=[2.0,5.0,8.0]))
-ax.set_ylabel('$\\mathrm{Dust\ density\ [amu/cm^3]}$', fontsize='large')
+ax.set_ylabel('$\\mathrm{Dust\ dust_dens\ [amu/cm^3]}$', fontsize='large')
 ax.legend()
 
 plt.savefig(fileout + ".png", bbox_inches='tight', pad_inches=0.05, dpi=150)
-# plt.show()
+plt.show()
