@@ -1472,22 +1472,8 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
             if ( H5_Status < 0 )
                Aux_Error( ERROR_INFO, "failed to load a particle floating-point attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
          }
-         for (int v=0; v<PAR_NATT_INT_STORED; v++)
-         {
-            if ( v == PAR_TYPE )   continue;        // already loaded in floating-point attribute loop above
 
-            if ( v == PAR_PUID  &&  !isPUIDStored ) // not load if there is no stored PUID
-            {
-               for (int p=0; p<NParThisPatch; p++)   ParIntBuf[PAR_PUID][p] = PPUID_TBA;
-               continue;
-            }
-
-//          using ParIntBuf[v] here is safe since it's NOT called when NParThisPatch == 0
-            H5_Status = H5Dread( H5_SetID_ParIntData[v], H5T_GAMER_LONG_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,
-                                 ParIntBuf[v] );
-            if ( H5_Status < 0 )
-               Aux_Error( ERROR_INFO, "failed to load a particle integer attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
-         }
+         for (int p=0; p<NParThisPatch; p++)   ParIntBuf[PAR_PUID][p] = PPUID_TBA;
       } // if ( FormatVersion < 2500 )
       else
       {
