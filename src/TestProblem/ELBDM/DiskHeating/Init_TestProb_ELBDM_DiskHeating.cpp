@@ -518,7 +518,7 @@ void Init_NewDiskRestart()
 //          label
             Type_AllRank[p] = (long_par)ParData1[7]; // 1=CDM halo, 2=disk
 //          puid
-            PUid_AllRank[p] = PPUID_TBA;
+            PUid_AllRank[p] = PUID_TBA;
 
 //          position
             Pos_AllRank[0][p] = ParData1[1];
@@ -581,7 +581,7 @@ void Init_NewDiskRestart()
 //          label
             Type_AllRank[p] = (long_par)3;      // use 3 to represent thin disk particles
 //          puid
-            PUid_AllRank[p] = PPUID_TBA;
+            PUid_AllRank[p] = PUID_TBA;
 
 //          position: statisfying surface density Sigma=Disk_Mass/(2*pi*Disk_R**2)*exp(-R/Disk_R)
             Ran  = RNG->GetValue( 0, 0.0, 1.0 );

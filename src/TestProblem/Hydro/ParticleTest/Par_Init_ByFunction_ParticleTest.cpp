@@ -117,7 +117,7 @@ void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar
 
 //          set the particle type to be generic massive
             ParIntData_AllRank[PAR_TYPE][p] = PTYPE_GENERIC_MASSIVE;
-            ParIntData_AllRank[PAR_PUID][p] = PPUID_TBA;
+            ParIntData_AllRank[PAR_PUID][p] = PUID_TBA;
 
             p++;
          }
@@ -152,7 +152,7 @@ void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar
 
 //          set the particle type to be tracer
             ParIntData_AllRank[PAR_TYPE][p] = PTYPE_TRACER;
-            ParIntData_AllRank[PAR_PUID][p] = PPUID_TBA;
+            ParIntData_AllRank[PAR_PUID][p] = PUID_TBA;
 
             p++;
          }

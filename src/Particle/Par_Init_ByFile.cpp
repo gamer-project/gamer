@@ -234,7 +234,7 @@ void Par_Init_ByFile_Default()
 
       if ( SingleParMass )    amr->Par->Mass[p] = amr->Par->ParICMass;
       if ( SingleParType )    amr->Par->Type[p] = amr->Par->ParICType;
-      if ( AbsentParPUid )    amr->Par->PUid[p] = PPUID_TBA;
+      if ( AbsentParPUid )    amr->Par->PUid[p] = PUID_TBA;
 
 //    synchronize all particles to the physical time at the base level
       amr->Par->Time[p] = Time[0];

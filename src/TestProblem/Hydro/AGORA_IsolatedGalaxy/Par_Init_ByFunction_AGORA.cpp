@@ -181,7 +181,7 @@ void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRan
 //###REVISE: distinguish different particle types
       ParType[p] = PTYPE_GENERIC_MASSIVE;
 
-      ParPUid[p] = PPUID_TBA;
+      ParPUid[p] = PUID_TBA;
    }
 
    delete [] ParFltData_MyRank;

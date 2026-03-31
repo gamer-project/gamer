@@ -471,7 +471,7 @@ struct Particle_t
       if ( NewAttInt[PAR_TYPE] < (long_par)0  ||  NewAttInt[PAR_TYPE] >= (long_par)PAR_NTYPE )
          Aux_Error( ERROR_INFO, "Incorrect particle type (%ld) !!\n", (long)NewAttInt[PAR_TYPE] );
 
-      if ( ( NewAttInt[PAR_PUID] != PPUID_TBA )  &&
+      if ( ( NewAttInt[PAR_PUID] != PUID_TBA )  &&
            ( NewAttInt[PAR_PUID] <= (long_par)0  ||  NewAttInt[PAR_PUID] >= NextUID ) )
          Aux_Error( ERROR_INFO, "Incorrect particle UID (%ld) !!\n", (long)NewAttInt[PAR_PUID] );
 #     endif

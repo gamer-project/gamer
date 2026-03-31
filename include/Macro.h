@@ -616,7 +616,7 @@
 #  define  PTYPE_STAR               (long_par)3
 
 // particle puid to be assigned
-#  define  PPUID_TBA                (long_par)-1
+#  define  PUID_TBA                 (long_par)-1
 
 # ifdef GRAVITY
 #  define MASSIVE_PARTICLES

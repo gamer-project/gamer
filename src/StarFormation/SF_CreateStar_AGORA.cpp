@@ -17,7 +17,7 @@
 //                3. One must invoke Buf_GetBufferData( ..., _TOTAL, ... ) after calling this function
 //                4. Currently this function does not check whether the cell mass exceeds the Jeans mass
 //                   --> Ref: "jeanmass" in star_maker_ssn.F of Enzo
-//                5. The new particle UID should be initialized as PPUID_TBA. The actual UID will be assigned later in SF_CreateStar()
+//                5. The new particle UID should be initialized as PUID_TBA. The actual UID will be assigned later in SF_CreateStar()
 //
 // Parameter   :  lv           : Target refinement level
 //                TimeNew      : Current physical time (after advancing solution by dt)
@@ -206,7 +206,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          NewParAttFlt[NNewPar][PAR_VELZ] = fluid[MOMZ][k][j][i]*_GasDens;
          NewParAttFlt[NNewPar][PAR_TIME] = TimeNew;
          NewParAttInt[NNewPar][PAR_TYPE] = PTYPE_STAR;
-         NewParAttInt[NNewPar][PAR_PUID] = PPUID_TBA;
+         NewParAttInt[NNewPar][PAR_PUID] = PUID_TBA;
 
 //       particle acceleration
 #        ifdef STORE_PAR_ACC

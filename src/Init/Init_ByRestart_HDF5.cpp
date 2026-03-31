@@ -1473,7 +1473,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
                Aux_Error( ERROR_INFO, "failed to load a particle floating-point attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
          }
 
-         for (int p=0; p<NParThisPatch; p++)   ParIntBuf[PAR_PUID][p] = PPUID_TBA;
+         for (int p=0; p<NParThisPatch; p++)   ParIntBuf[PAR_PUID][p] = PUID_TBA;
       } // if ( FormatVersion < 2500 )
       else
       {
@@ -1489,7 +1489,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
          {
             if ( v == PAR_PUID  &&  !isPUIDStored ) // not load if there is no stored PUID
             {
-               for (int p=0; p<NParThisPatch; p++)   ParIntBuf[PAR_PUID][p] = PPUID_TBA;
+               for (int p=0; p<NParThisPatch; p++)   ParIntBuf[PAR_PUID][p] = PUID_TBA;
                continue;
             }
 
