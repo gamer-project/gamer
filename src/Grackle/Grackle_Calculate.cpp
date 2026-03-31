@@ -101,7 +101,7 @@ void Grackle_Calculate( real Out[], const GrackleFieldBIdx_t TFields,
 
 
 // 6. set grid_dimension, grid_start, and grid_end
-   const int OptFac = 16;  // optimization factor
+   const int OptFac = 16;  // optimization factor // TODO: this value requires further optimization for NPG==1
    if ( SQR(PS2)%OptFac != 0 )   Aux_Error( ERROR_INFO, "SQR(PS2) %% OptFac != 0 !!\n" );
 
    Che_FieldData->grid_dimension[0] = PS2*OptFac;
@@ -150,10 +150,7 @@ void Grackle_Calculate( real Out[], const GrackleFieldBIdx_t TFields,
 
 //    mean molecular weight
       if ( IdxOut_mu != IdxOut_Undefined )
-      {
-         const real_che denom   = gr_fields_sEint[i] * temperature_units * ( gr_fields_gamma[i] - (real_che)1.0 );
-         Out1D[IdxOut_mu][i]    = (real)( ( denom > (real_che)0.0 ) ? ( gr_fields_temperature[i] / denom ) : (real_che)0.0 );
-      }
+         Out1D[IdxOut_mu][i]    = (real) ( gr_fields_temperature[i] / ( gr_fields_sEint[i] * temperature_units * (gr_fields_gamma[i] - (real_che)1.0) ) );
 
 //    cooling time
       if ( IdxOut_tcool != IdxOut_Undefined )

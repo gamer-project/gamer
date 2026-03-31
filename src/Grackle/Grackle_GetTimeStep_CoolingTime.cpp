@@ -33,7 +33,14 @@ double Grackle_GetTimeStep_CoolingTime( const int lv )
    const real   MinCoolingTime = GetMinCoolingTime( lv );
 
 // get the time-step
-   const double dt = DT__GRACKLE_COOLING * MinCoolingTime;
+   const double dt_phy = DT__GRACKLE_COOLING * MinCoolingTime;
+
+#  ifdef COMOVING
+// convert the time-step size to comoving coordinates
+   const double dt = dt_phy / SQR(Time[lv]);
+#  else
+   const double dt = dt_phy;
+#  endif
 
    return dt;
 
@@ -85,8 +92,6 @@ real GetMinCoolingTime( const int lv )
          {
 //          remember to take the absolute value for the cooling time, which could be negative or positive
             const real AbsTCool = FABS( Grackle_TCool[ (LocalID*CUBE(PS1) + k*SQR(PS1) + j*PS1 + i) ] );
-
-            if ( !Aux_IsFinite( AbsTCool ) )   continue;
 
             MinCoolingTime = FMIN( MinCoolingTime, AbsTCool );
 

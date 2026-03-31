@@ -1804,23 +1804,26 @@ void Aux_Check_Parameter()
 #     error : ERROR : SUPPORT_GRACKLE must work with EOS_GAMMA/EOS_COSMIC_RAY !!
 #  endif
 
-   if ( OPT__OUTPUT_GRACKLE_TEMP  &&  ! GRACKLE_ACTIVATE )
-      Aux_Error( ERROR_INFO, "OPT__OUTPUT_GRACKLE_TEMP requires the option GRACKLE_ACTIVATE !!\n");
+   if ( ! GRACKLE_ACTIVATE )
+   {
+      if ( OPT__OUTPUT_GRACKLE_TEMP )
+         Aux_Error( ERROR_INFO, "OPT__OUTPUT_GRACKLE_TEMP requires the option GRACKLE_ACTIVATE !!\n");
 
-   if ( OPT__OUTPUT_GRACKLE_MU  &&  ! GRACKLE_ACTIVATE )
-      Aux_Error( ERROR_INFO, "OPT__OUTPUT_GRACKLE_MU requires the option GRACKLE_ACTIVATE !!\n");
+      if ( OPT__OUTPUT_GRACKLE_MU )
+         Aux_Error( ERROR_INFO, "OPT__OUTPUT_GRACKLE_MU requires the option GRACKLE_ACTIVATE !!\n");
 
-   if ( OPT__OUTPUT_GRACKLE_TCOOL  &&  ! GRACKLE_ACTIVATE )
-      Aux_Error( ERROR_INFO, "OPT__OUTPUT_GRACKLE_TCOOL requires the option GRACKLE_ACTIVATE !!\n");
+      if ( OPT__OUTPUT_GRACKLE_TCOOL )
+         Aux_Error( ERROR_INFO, "OPT__OUTPUT_GRACKLE_TCOOL requires the option GRACKLE_ACTIVATE !!\n");
 
-   if ( OPT__FLAG_COOLING_LEN  &&  ! GRACKLE_ACTIVATE )
-      Aux_Error( ERROR_INFO, "OPT__FLAG_COOLING_LEN requires the option GRACKLE_ACTIVATE !!\n");
+      if ( OPT__FLAG_COOLING_LEN )
+         Aux_Error( ERROR_INFO, "OPT__FLAG_COOLING_LEN requires the option GRACKLE_ACTIVATE !!\n");
 
-   if ( DT__GRACKLE_COOLING >= 0.0  &&  ! GRACKLE_ACTIVATE )
-      Aux_Error( ERROR_INFO, "DT__GRACKLE_COOLING requires the option GRACKLE_ACTIVATE !!\n");
+      if ( DT__GRACKLE_COOLING >= 0.0 )
+         Aux_Error( ERROR_INFO, "DT__GRACKLE_COOLING requires the option GRACKLE_ACTIVATE !!\n");
 
-   if ( OPT__UNFREEZE_GRACKLE  &&  ! GRACKLE_ACTIVATE )
-      Aux_Error( ERROR_INFO, "OPT__UNFREEZE_GRACKLE requires the option GRACKLE_ACTIVATE !!\n");
+      if ( OPT__UNFREEZE_GRACKLE )
+         Aux_Error( ERROR_INFO, "OPT__UNFREEZE_GRACKLE requires the option GRACKLE_ACTIVATE !!\n");
+   }
 
 // warning
 // ------------------------------

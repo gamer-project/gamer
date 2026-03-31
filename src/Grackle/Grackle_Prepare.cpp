@@ -127,6 +127,11 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
 #  endif // #ifdef GAMER_DEBUG
 
 
+   if ( NPG > CHE_GPU_NPGROUP )
+      Aux_Error( ERROR_INFO, "NPG (%d) exceeds the memory allocation of CHE_GPU_NPGROUP (%d) for h_Che_Array !!\n",
+                 NPG, CHE_GPU_NPGROUP );
+
+
    const int  Size1pg          = CUBE(PS2);
    const int  Size1v           = NPG*Size1pg;
    const real MassRatio_pe    = Const_mp / Const_me;
@@ -270,7 +275,7 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
 //             when the density is too low, we will pre-floor the total density as Che_MinDens
 //             while keeping the fraction of each species fixed
 //             such that the mass fraction of the species being floored in Grackle is
-//             less than "Grackle_tiny/Che_MinDens"
+//             equal to "Grackle_tiny/Che_MinDens"
                Ratio_FloorDens = Che_MinDens/Dens;
 
                Aux_Message( stderr, "\nWARNING : density = %16.8e is too low and will be scaled to %16.8e as the input to the Grackle solver !!\n",
