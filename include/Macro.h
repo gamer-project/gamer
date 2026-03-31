@@ -615,7 +615,7 @@
 #  define  PTYPE_DARK_MATTER        (long_par)2
 #  define  PTYPE_STAR               (long_par)3
 
-// particle puid to be assigned
+// particle uid to be assigned
 #  define  PUID_TBA                 (long_par)-1
 
 # ifdef GRAVITY

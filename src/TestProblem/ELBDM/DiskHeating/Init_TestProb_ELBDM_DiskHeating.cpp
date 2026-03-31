@@ -517,7 +517,7 @@ void Init_NewDiskRestart()
             Mass_AllRank[p] = ParData1[0];
 //          label
             Type_AllRank[p] = (long_par)ParData1[7]; // 1=CDM halo, 2=disk
-//          puid
+//          particle uid
             PUid_AllRank[p] = PUID_TBA;
 
 //          position
@@ -580,7 +580,7 @@ void Init_NewDiskRestart()
             Mass_AllRank[p] = ParM;
 //          label
             Type_AllRank[p] = (long_par)3;      // use 3 to represent thin disk particles
-//          puid
+//          particle uid
             PUid_AllRank[p] = PUID_TBA;
 
 //          position: statisfying surface density Sigma=Disk_Mass/(2*pi*Disk_R**2)*exp(-R/Disk_R)

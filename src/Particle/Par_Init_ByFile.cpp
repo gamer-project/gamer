@@ -94,7 +94,7 @@ void Par_Init_ByFile_Default()
 #  endif
    if ( SingleParMass )    NParAttFlt --; // exclude mass
    if ( SingleParType )    NParAttInt --; // exclude type
-   if ( AbsentParPUid )    NParAttInt --; // exclude puid
+   if ( AbsentParPUid )    NParAttInt --; // exclude particle uid
 
 
 // check
