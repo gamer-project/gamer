@@ -115,8 +115,8 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
    bool Der_PrepOutPG;
 
    real (*Der_FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ] = new real [Der_NP][NCOMP_TOTAL ][ CUBE(DER_NXT)            ];
-   real (*Der_Out  )             [ CUBE(PS1)                ] = new real         [DER_NOUT_MAX][ CUBE(PS1)                ];
-   real (*Der_Out_1PG  )         [ CUBE(PS2)                ] = new real         [DER_NOUT_MAX][ CUBE(PS2)                ];
+real (*Der_Out)               [ CUBE(PS1)                ] = new real         [DER_NOUT_MAX][ CUBE(PS1)                ];
+   real (*Der_Out_1PG)           [ CUBE(PS2)                ] = new real         [DER_NOUT_MAX][ CUBE(PS2)                ];
 #  ifdef MHD
    real (*Der_MagFC)[NCOMP_MAG  ][ (DER_NXT+1)*SQR(DER_NXT) ] = new real [Der_NP][NCOMP_MAG   ][ (DER_NXT+1)*SQR(DER_NXT) ];
    real (*Der_MagCC)             [ CUBE(DER_NXT)            ] = new real         [NCOMP_MAG   ][ CUBE(DER_NXT)            ];
@@ -461,8 +461,8 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 //                3. Called by Output_DumpData_Part()
 //
 // Parameter   :  FluIn     : Array to store the input fluid data for the derived field functions
-//                Out       : Array to store the output derived fields
-//                Out_1PG   : Array to store the output derived fields, in one patch group
+//                Out       : Array to store the output derived fields of one patch
+//                Out_1PG   : Array to store the output derived fields of one patch group
 //                MagFC     : Array to store the temporary face-centered B field
 //                MagCC     : Array to store the input cell-centered B field for the derived field functions
 //                lv        : Target refinement level
@@ -568,7 +568,7 @@ void GetDerivedField( real (*FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
          Aux_Error( ERROR_INFO, "OutFieldIdx (%d) + NFieldOut (%d) > DER_NOUT_MAX (%d) !!\n",
                     OutFieldIdx, NFieldOut, DER_NOUT_MAX );
 
-//    Grackle_Calculate has to prepare the field with one patch group each time
+//    Grackle_Calculate() prepares the field one patch group at a time
       const int PID0 = PID - LocalID;
       if ( PrepOutPG )   Grackle_Calculate( Out_1PG[OutFieldIdx], _GRACKLE_TEMP, lv, 1, &PID0 );
 
@@ -587,7 +587,7 @@ void GetDerivedField( real (*FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
          Aux_Error( ERROR_INFO, "OutFieldIdx (%d) + NFieldOut (%d) > DER_NOUT_MAX (%d) !!\n",
                     OutFieldIdx, NFieldOut, DER_NOUT_MAX );
 
-//    Grackle_Calculate has to prepare the field with one patch group each time
+//    Grackle_Calculate prepares the field one patch group at a time
       const int PID0 = PID - LocalID;
       if ( PrepOutPG )   Grackle_Calculate( Out_1PG[OutFieldIdx], _GRACKLE_MU, lv, 1, &PID0 );
 
@@ -606,7 +606,7 @@ void GetDerivedField( real (*FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
          Aux_Error( ERROR_INFO, "OutFieldIdx (%d) + NFieldOut (%d) > DER_NOUT_MAX (%d) !!\n",
                     OutFieldIdx, NFieldOut, DER_NOUT_MAX );
 
-//    Grackle_Calculate has to prepare the field with one patch group each time
+//    Grackle_Calculate prepares the field one patch group at a time
       const int PID0 = PID - LocalID;
       if ( PrepOutPG )   Grackle_Calculate( Out_1PG[OutFieldIdx], _GRACKLE_TCOOL, lv, 1, &PID0 );
 

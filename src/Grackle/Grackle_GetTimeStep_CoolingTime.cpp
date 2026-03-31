@@ -20,7 +20,7 @@ static real GetMinCoolingTime( const int lv );
 //                2. Time-step is set to restrict the cooling process
 //                   --> dt = DT__GRACKLE_COOLING * Min(CoolingTime)
 //                3. This is usually for the purpose of outputting data for analysis;
-//                   Inside the Grackle solver, subcycling time-steps will be adopted for the correctness of evolution
+//                   inside the Grackle solver, subcycling time-steps are adopted to ensure correct evolution
 //
 // Parameter   :  lv : Target refinement level
 //
@@ -55,8 +55,8 @@ double Grackle_GetTimeStep_CoolingTime( const int lv )
 real GetMinCoolingTime( const int lv )
 {
 
-   real   MinCoolingTime = INFINITY;
-   bool   AnyCell        = false;
+   real  MinCoolingTime = INFINITY;
+   bool  AnyCell        = false;
 
    real *Grackle_TCool = new real [ CUBE(PS2) ];   // array storing ONE patch group of grackle cooling time
 
@@ -73,7 +73,7 @@ real GetMinCoolingTime( const int lv )
 
 //       if OPT__FIXUP_RESTRICT is enabled, skip all non-leaf patches
 //       because they are later overwritten by the refined patches
-//       note that this leads to the timestep being "inf" when a level is completely refined
+//       --> note that this leads to the timestep being "inf" when a level is completely refined
          if ( OPT__FIXUP_RESTRICT  &&  amr->patch[0][lv][PID]->son != -1 )    continue;
 
          AnyCell = true;
@@ -88,7 +88,7 @@ real GetMinCoolingTime( const int lv )
 
             if ( !Aux_IsFinite( AbsTCool ) )   continue;
 
-            MinCoolingTime = MIN( MinCoolingTime, AbsTCool );
+            MinCoolingTime = FMIN( MinCoolingTime, AbsTCool );
 
          } // k,j,i
       } // for (int LocalID=0; LocalID<8; LocalID++)

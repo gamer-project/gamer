@@ -278,7 +278,7 @@ bool                 OPT__FLAG_COOLING_LEN;
 double               FlagTable_CoolingLen[NLEVEL-1];
 double               DT__GRACKLE_COOLING;
 int                  CHE_GPU_NPGROUP;
-#endif
+#endif // #ifdef SUPPORT_GRACKLE
 
 // (2-8) star formation
 #ifdef STAR_FORMATION

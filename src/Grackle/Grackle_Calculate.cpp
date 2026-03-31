@@ -17,12 +17,12 @@ extern int CheIdx_sEint;
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Grackle_Calculate
-// Description :  Calculate the fields by calling Grackle's API functions
+// Description :  Calculate various fields using the Grackle API
 //
 // Note        :  1. Ref: https://grackle.readthedocs.io/en/latest/Interaction.html#calling-the-available-functions
 //                2. Currently, the fields have to be calculated in units of patch group
 //                3. The output field data type is "real" instead of "real_che"
-//                   --> to be consistent with the usage of the output
+//                   --> To be consistent with the output usage
 //                4. This function can be invoked by
 //                   e.g., Output_DumpData_*(), Flag_Real() and Grackle_GetTimeStep_CoolingTime()
 //                5. Do not invoke this function by multiple OpenMP threads
@@ -30,16 +30,16 @@ extern int CheIdx_sEint;
 //                       --> OpenMP parallelization is already implemented in
 //                           Grackle_Prepare() and inside Grackle's API functions
 //                   (2) Data race
-//                       --> Che_FieldData is globally shared and not safe to be changed
-//                           in Grackle_Prepare() and in this function by multiple threads concurrently
+//                       --> Che_FieldData[] is globally shared and thus not thread-safe for concurrent modification
+//                           in Grackle_Prepare() or this function
 //
-// Parameter   :  Out          : Output array, array size = NFieldOut*(NPG*PS2*PS2*PS2)
-//                TFields      : Target fields to be calculated:
-//                               _GRACKLE_TEMP, _GRACKLE_MU, _GRACKLE_TCOOL
-//                               --> defined in include/Typedef.h
-//                lv           : Target refinement level
-//                NPG          : Number of patch groups calculated at a time
-//                PID0_List    : List recording the patch indices with LocalID==0 to be calculated
+// Parameter   :  Out       : Output array; array size = NFieldOut*(NPG*PS2*PS2*PS2)
+//                TFields   : Target fields to be calculated:
+//                            _GRACKLE_TEMP, _GRACKLE_MU, _GRACKLE_TCOOL
+//                            --> Defined in include/Typedef.h
+//                lv        : Target refinement level
+//                NPG       : Number of patch groups calculated at a time
+//                PID0_List : List recording the patch indices with LocalID==0 to be calculated
 //
 // Return      :  Out[]
 //-------------------------------------------------------------------------------------------------------
@@ -77,7 +77,7 @@ void Grackle_Calculate( real Out[], const GrackleFieldBIdx_t TFields,
 
 
 // 4. allocate and prepare the input array for the Grackle solver
-   real_che *gr_fields_input = new real_che[ (long)Che_NField*(long)Size1v ];
+   real_che *gr_fields_input = new real_che [ (long)Che_NField*(long)Size1v ];
 
    Grackle_Prepare( lv, gr_fields_input, NPG, PID0_List );
 
@@ -88,13 +88,13 @@ void Grackle_Calculate( real Out[], const GrackleFieldBIdx_t TFields,
    real_che *gr_fields_cooling_time = NULL;
 
    if ( IdxOut_temp != IdxOut_Undefined  ||  IdxOut_mu != IdxOut_Undefined )
-      gr_fields_temperature  = new real_che[Size1v];
+      gr_fields_temperature  = new real_che [Size1v];
 
    if ( IdxOut_mu != IdxOut_Undefined )
-      gr_fields_gamma        = new real_che[Size1v];
+      gr_fields_gamma        = new real_che [Size1v];
 
    if ( IdxOut_tcool != IdxOut_Undefined )
-      gr_fields_cooling_time = new real_che[Size1v];
+      gr_fields_cooling_time = new real_che [Size1v];
 
    typedef real (*vla_out)[Size1v];
    vla_out Out1D = ( vla_out )Out;
@@ -163,15 +163,9 @@ void Grackle_Calculate( real Out[], const GrackleFieldBIdx_t TFields,
 
 // 9. free memory
    delete [] gr_fields_input;
-
-   if ( IdxOut_temp != IdxOut_Undefined  ||  IdxOut_mu != IdxOut_Undefined )
-      delete [] gr_fields_temperature;
-
-   if ( IdxOut_mu != IdxOut_Undefined )
-      delete [] gr_fields_gamma;
-
-   if ( IdxOut_tcool != IdxOut_Undefined )
-      delete [] gr_fields_cooling_time;
+   delete [] gr_fields_temperature;
+   delete [] gr_fields_gamma;
+   delete [] gr_fields_cooling_time;
 
 
 #  ifdef OPENMP

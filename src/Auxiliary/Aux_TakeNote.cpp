@@ -1652,7 +1652,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_GRACKLE_MU         % d\n",      OPT__OUTPUT_GRACKLE_MU      );
       fprintf( Note, "OPT__OUTPUT_GRACKLE_TCOOL      % d\n",      OPT__OUTPUT_GRACKLE_TCOOL   );
 #     endif
-#     endif
+#     endif // #if ( MODEL == HYDRO )
 
 //    user-defined derived fields
       if ( OPT__OUTPUT_USER_FIELD ) {

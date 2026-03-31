@@ -601,18 +601,18 @@ void AddNewField_GrackleTest()
 //                   "Grackle_vHeatingRate_User_Ptr", which must be set by a test problem initializer
 //                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
 //                   --> Please ensure that everything here is thread-safe
-//                3. Returned rate should be in the unit of erg s^-1 cm^-3
+//                3. Returned rate should be in unit of erg s^-1 cm^-3
 //
-// Parameter   :  x/y/z    : Target physical coordinates
-//                Time     : Target physical time
-//                n_H      : Hydrogen number density, should be in the unit of cm^-3
+// Parameter   :  x/y/z : Target physical coordinates
+//                Time  : Target physical time
+//                n_H   : Hydrogen number density in units of cm^-3
 //
 // Return      :  volumetric_heating_rate
 //-------------------------------------------------------------------------------------------------------
 real_che Grackle_vHeatingRate_GrackleTest( const double x, const double y, const double z, const double Time, const double n_H )
 {
-   const double   volumetric_heating_rate_0 =       n_H * GrackleTest_HeatingRate; // GrackleTest_HeatingRate is in the unit of erg cm^-3 s^-1 n_H^-1
-   const double   volumetric_cooling_rate_0 = n_H * n_H * GrackleTest_CoolingRate; // GrackleTest_CoolingRate is in the unit of erg cm^-3 s^-1 n_H^-2
+   const double   volumetric_heating_rate_0 =       n_H * GrackleTest_HeatingRate; // GrackleTest_HeatingRate has units of erg cm^-3 s^-1 n_H^-1
+   const double   volumetric_cooling_rate_0 = n_H * n_H * GrackleTest_CoolingRate; // GrackleTest_CoolingRate has units of erg cm^-3 s^-1 n_H^-2
 
 // assume uniform distribution if it is not specified
    if ( GrackleTest_DefaultTestMode != 3 )
@@ -649,8 +649,8 @@ real_che Grackle_vHeatingRate_GrackleTest( const double x, const double y, const
 //
 // Parameter   :  x/y/z     : Target physical coordinates
 //                Time      : Target physical time
-//                Dens_Gas  : Gas density, in code units
-//                sEint_Gas : Gas specific internal energy, in code units
+//                Dens_Gas  : Gas density in code units
+//                sEint_Gas : Gas specific internal energy in code units
 //
 // Return      :  temperature_floor
 //-------------------------------------------------------------------------------------------------------
@@ -696,12 +696,12 @@ void Init_TestProb_Hydro_GrackleTest()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr            = SetGridIC;
-   Init_Field_User_Ptr               = AddNewField_GrackleTest;
-   Grackle_vHeatingRate_User_Ptr     = Grackle_vHeatingRate_GrackleTest;
-   Grackle_tempFloor_User_Ptr        = Grackle_tempFloor_GrackleTest;
+   Init_Function_User_Ptr        = SetGridIC;
+   Init_Field_User_Ptr           = AddNewField_GrackleTest;
+   Grackle_vHeatingRate_User_Ptr = Grackle_vHeatingRate_GrackleTest;
+   Grackle_tempFloor_User_Ptr    = Grackle_tempFloor_GrackleTest;
 #  ifdef SUPPORT_HDF5
-   Output_HDF5_InputTest_Ptr         = LoadInputTestProb;
+   Output_HDF5_InputTest_Ptr     = LoadInputTestProb;
 #  endif
 #  endif // #if ( MODEL == HYDRO  &&  defined SUPPORT_GRACKLE )
 

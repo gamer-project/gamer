@@ -389,11 +389,11 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
 //                   "Grackle_vHeatingRate_User_Ptr", which must be set by a test problem initializer
 //                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
 //                   --> Please ensure that everything here is thread-safe
-//                3. Returned rate should be in the unit of erg s^-1 cm^-3
+//                3. Returned rate should be in unit of erg s^-1 cm^-3
 //
-// Parameter   :  x/y/z    : Target physical coordinates
-//                Time     : Target physical time
-//                n_H      : Hydrogen number density, should be in the unit of cm^-3
+// Parameter   :  x/y/z : Target physical coordinates
+//                Time  : Target physical time
+//                n_H   : Hydrogen number density in units of cm^-3
 //
 // Return      :  volumetric_heating_rate
 //-------------------------------------------------------------------------------------------------------
@@ -421,10 +421,10 @@ static real_che Grackle_vHeatingRate_User_Template( const double x, const double
 //                   "Grackle_sHeatingRate_User_Ptr", which must be set by a test problem initializer
 //                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
 //                   --> Please ensure that everything here is thread-safe
-//                3. Returned rate should be in the units of erg s^-1 g^-1
+//                3. Returned rate should be in units of erg s^-1 g^-1
 //
-// Parameter   :  x/y/z    : Target physical coordinates
-//                Time     : Target physical time
+// Parameter   :  x/y/z : Target physical coordinates
+//                Time  : Target physical time
 //
 // Return      :  specific_heating_rate
 //-------------------------------------------------------------------------------------------------------
@@ -449,15 +449,15 @@ static real_che Grackle_sHeatingRate_User_Template( const double x, const double
 // Description :  Default function to set Grackle's temperature floor
 //
 // Note        :  1. Invoked by Grackle_Prepare() using the function pointer
-//                   "Grackle_tempFloor_User_Ptr", which must be set by a test problem initializer
+//                   "Grackle_tempFloor_User_Ptr", which can be reset by a test problem initializer
 //                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
 //                   --> Please ensure that everything here is thread-safe
 //                3. Returned temperature should be in units of K
 //
 // Parameter   :  x/y/z     : Target physical coordinates
 //                Time      : Target physical time
-//                Dens_Gas  : Gas density, in code units
-//                sEint_Gas : Gas specific internal energy, in code units
+//                Dens_Gas  : Gas density (in code units)
+//                sEint_Gas : Gas specific internal energy (in code units)
 //
 // Return      :  temperature_floor
 //-------------------------------------------------------------------------------------------------------

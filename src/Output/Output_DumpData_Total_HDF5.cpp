@@ -800,7 +800,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    const int Der_NP = 8;
 
    real (*Der_FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ] = new real [Der_NP][NCOMP_TOTAL ][ CUBE(DER_NXT)            ];
-   real (*Der_Out  )             [ CUBE(PS1)                ] = new real         [DER_NOUT_MAX][ CUBE(PS1)                ];
+   real (*Der_Out)               [ CUBE(PS1)                ] = new real         [DER_NOUT_MAX][ CUBE(PS1)                ];
    real (*Der_Out_1PG)           [ CUBE(PS2)                ] = new real         [DER_NOUT_MAX][ CUBE(PS2)                ];
 #  ifdef MHD
    real (*Der_MagFC)[NCOMP_MAG  ][ (DER_NXT+1)*SQR(DER_NXT) ] = new real [Der_NP][NCOMP_MAG   ][ (DER_NXT+1)*SQR(DER_NXT) ];
@@ -1209,7 +1209,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //                   store the target derived field patch by patch in a patch group
                      for (int LocalID=0; LocalID<8; LocalID++)
                      {
-                        const int PID  = PID0 + LocalID;
+                        const int PID = PID0 + LocalID;
                         const real *Der_Out_1P = Der_Out_1PG[0] + LocalID*CUBE(PS1);
 //                      copy data of one patch from Der_Out_1P[] to FieldData[]
                         memcpy( FieldData[PID], Der_Out_1P, FieldSizeOnePatch );

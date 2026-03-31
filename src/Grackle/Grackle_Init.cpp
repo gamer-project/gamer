@@ -121,7 +121,7 @@ void Grackle_Init()
    grackle_data->temperature_floor_scalar       = GRACKLE_TEMP_FLOOR_SCALAR;
 // hydrogen mass fraction is only set when it is in the non-equilibrium mode
 // because the tables for tabulated mode were created assuming hydrogen mass fraction of about 0.716
-// see https://grackle.readthedocs.io/en/latest/Parameters.html#c.HydrogenFractionByMass
+// --> see https://grackle.readthedocs.io/en/latest/Parameters.html#c.HydrogenFractionByMass
    if ( GRACKLE_PRIMORDIAL != GRACKLE_PRI_CHE_CLOUDY )
    grackle_data->HydrogenFractionByMass         = GRACKLE_HYDROGEN_MFRAC;
 
