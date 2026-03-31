@@ -724,15 +724,15 @@ int main()
    for (int p=0; p<NUM_PARTICLE; p++)
    {
 //    replace the following lines by your particle initial condition
-      ParIC_Flt[0][p] = 1.1;   // mass
-      ParIC_Flt[1][p] = 2.2;   // position x
-      ParIC_Flt[2][p] = 3.3;   // position y
-      ParIC_Flt[3][p] = 4.4;   // position z
-      ParIC_Flt[4][p] = 5.5;   // velocity x
-      ParIC_Flt[5][p] = 6.6;   // velocity y
-      ParIC_Flt[6][p] = 7.7;   // velocity z
+      ParIC_Flt[0][p] = 1.1;                        // mass
+      ParIC_Flt[1][p] = 2.2;                        // position x
+      ParIC_Flt[2][p] = 3.3;                        // position y
+      ParIC_Flt[3][p] = 4.4;                        // position z
+      ParIC_Flt[4][p] = 5.5;                        // velocity x
+      ParIC_Flt[5][p] = 6.6;                        // velocity y
+      ParIC_Flt[6][p] = 7.7;                        // velocity z
 
-      ParIC_Int[0][p] = 1;     // type (generic massive)
+      ParIC_Int[0][p] = PTYPE_GENERIC_MASSIVE;      // type (generic massive)
       ParIC_Int[1][p] = p+1;                        // UID (starting from 1)
    }
 
