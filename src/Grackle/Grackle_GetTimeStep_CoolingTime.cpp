@@ -53,7 +53,7 @@ double Grackle_GetTimeStep_CoolingTime( const int lv )
 // Description :  Get the minimum Grackle cooling time at the target level among all MPI ranks
 //
 // Note        :  1. Invoked by Grackle_GetTimeStep_CoolingTime()
-//                2. OpenMP parallelization should be performed within Grackle, not here
+//                2. OpenMP parallelization should be performed within Grackle, not outside of Grackle_Calculate()
 //
 // Parameter   :  lv : Target refinement level
 //
@@ -65,40 +65,57 @@ real GetMinCoolingTime( const int lv )
    real  MinCoolingTime = INFINITY;
    bool  AnyCell        = false;
 
-   real *Grackle_TCool = new real [ CUBE(PS2) ];   // array storing ONE patch group of grackle cooling time
+   const int NTotal  = amr->NPatchComma[lv][1]/8;          // total number of patch groups to calculate the cooling time
+   const int NPG_Max = CHE_GPU_NPGROUP;                    // maximum number of patch groups to calculate the cooling time at a time
+
+   int  *PID0_List = new int [NTotal];                     // list recording the patch indices with LocalID==0 to calculate the cooling time
+   for (int t=0; t<NTotal; t++)  PID0_List[t] = 8*t;
+
+   real *Grackle_TCool = new real [ CUBE(PS2)*NPG_Max ];   // array storing NPG_Max patch groups of grackle cooling time
 
 // get the minimum Grackle cooling time in this rank
-   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+   for (int Disp=0; Disp<NTotal; Disp+=NPG_Max)
    {
+      const int NPG = ( NPG_Max < NTotal-Disp ) ? NPG_Max : NTotal-Disp; // number of patch groups to calculate the cooling time at a time
 
 //    calculate the Grackle cooling time
-      Grackle_Calculate( Grackle_TCool, _GRACKLE_TCOOL, lv, 1, &PID0 );
+      Grackle_Calculate( Grackle_TCool, _GRACKLE_TCOOL, lv, NPG, PID0_List+Disp );
 
-      for (int LocalID=0; LocalID<8; LocalID++)
+//    loop over NPG patch groups to find the minimum with OpenMP parallelization
+#     pragma omp parallel for reduction( min:MinCoolingTime ) reduction( ||:AnyCell ) schedule( runtime )
+      for (int TID=0; TID<NPG; TID++)
       {
-         const int PID = PID0 + LocalID;
+         const int PID0 = (PID0_List+Disp)[TID];
 
-//       if OPT__FIXUP_RESTRICT is enabled, skip all non-leaf patches
-//       because they are later overwritten by the refined patches
-//       --> note that this leads to the timestep being "inf" when a level is completely refined
-         if ( OPT__FIXUP_RESTRICT  &&  amr->patch[0][lv][PID]->son != -1 )    continue;
-
-         AnyCell = true;
-
-//       calculate the minimum
-         for (int k=0; k<PS1; k++)
-         for (int j=0; j<PS1; j++)
-         for (int i=0; i<PS1; i++)
+//       loop over 8 patches in the patch group
+         for (int LocalID=0; LocalID<8; LocalID++)
          {
-//          remember to take the absolute value for the cooling time, which could be negative or positive
-            const real AbsTCool = FABS( Grackle_TCool[ (LocalID*CUBE(PS1) + k*SQR(PS1) + j*PS1 + i) ] );
+            const int PID = PID0  + LocalID;
+            const int N   = TID*8 + LocalID;
 
-            MinCoolingTime = FMIN( MinCoolingTime, AbsTCool );
+//          if OPT__FIXUP_RESTRICT is enabled, skip all non-leaf patches
+//          because they are later overwritten by the refined patches
+//          --> note that this leads to the timestep being "inf" when a level is completely refined
+            if ( OPT__FIXUP_RESTRICT  &&  amr->patch[0][lv][PID]->son != -1 )    continue;
 
-         } // k,j,i
-      } // for (int LocalID=0; LocalID<8; LocalID++)
-   } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+            AnyCell = true;
 
+//          calculate the minimum
+            for (int k=0; k<PS1; k++)
+            for (int j=0; j<PS1; j++)
+            for (int i=0; i<PS1; i++)
+            {
+//             remember to take the absolute value for the cooling time, which could be negative or positive
+               const real AbsTCool = FABS( Grackle_TCool[ (N*CUBE(PS1) + k*SQR(PS1) + j*PS1 + i) ] );
+
+               MinCoolingTime = FMIN( MinCoolingTime, AbsTCool );
+
+            } // k,j,i
+         } // for (int LocalID=0; LocalID<8; LocalID++)
+      } // for (int TID=0; TID<NPG; TID++)
+   } // for (int Disp=0; Disp<NTotal; Disp+=NPG_Max)
+
+   delete [] PID0_List;
    delete [] Grackle_TCool;
 
 
