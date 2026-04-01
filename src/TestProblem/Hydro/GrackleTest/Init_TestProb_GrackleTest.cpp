@@ -575,6 +575,8 @@ void AddNewField_GrackleTest()
 // --> since Grackle may already add these fields automatically when GRACKLE_PRIMORDIAL or GRACKLE_METAL is enabled
 //     in Init/Init_Field.cpp
 // --> also note that "Idx_*" has been predefined in Field.h
+// --> the purpose of adding these fields here when they were not added in Init/Init_Field.cpp is to
+//     fix the total number of passive fields (NCOM_PASSIVE) to 13, regardless of GRACKLE_PRIMORDIAL and GRACKLE_METAL
    if ( Idx_e     == Idx_Undefined )   Idx_e     = AddField( "Electron", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
    if ( Idx_HI    == Idx_Undefined )   Idx_HI    = AddField( "HI",       FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
    if ( Idx_HII   == Idx_Undefined )   Idx_HII   = AddField( "HII",      FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );

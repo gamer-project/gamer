@@ -92,7 +92,7 @@ Note:
       - `GrackleTest_HeatingRate` = 1.0e-24 erg cm^-3 s^-1 n_H^-1 (will be set automatically)
       - `GrackleTest_CoolingRate` = 1.6e-20 erg cm^-3 s^-1 n_H^-2 (will be set automatically)
       --> To see the time evolution and spatial distribution of temperature for the given
-          user-provided one heating and one cooling 2D Gaussian distributions (as a demo)
+          heating and cooling sources, each modeled as a 2D Gaussian distribution
    - 4:
       - The density range is from 1.0e-29 g cm^-3 to 1.0e-21 g cm^-3
       - The T/mu range is from 1 K to 1e8 K

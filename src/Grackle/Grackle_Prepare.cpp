@@ -275,7 +275,7 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
 //             when the density is too low, we will pre-floor the total density as Che_MinDens
 //             while keeping the fraction of each species fixed
 //             such that the mass fraction of the species being floored in Grackle is
-//             equal to "Grackle_tiny/Che_MinDens"
+//             equal to "Grackle_tiny/Che_MinDens", which is the maximum allowed value
                Ratio_FloorDens = Che_MinDens/Dens;
 
                Aux_Message( stderr, "\nWARNING : density = %16.8e is too low and will be scaled to %16.8e as the input to the Grackle solver !!\n",
@@ -283,6 +283,9 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
             }
             else
             {
+//             when the density is higher than or equal to Che_MinDens,
+//             the mass fraction of the species being floored in Grackle is "Grackle_tiny/Dens",
+//             which is always less than or equal to "Grackle_tiny/Che_MinDens"
                Ratio_FloorDens = 1.0;
             }
 

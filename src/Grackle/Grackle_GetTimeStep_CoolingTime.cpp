@@ -100,7 +100,7 @@ real GetMinCoolingTime( const int lv )
 
             AnyCell = true;
 
-//          calculate the minimum
+//          loop over cells in the patch
             for (int k=0; k<PS1; k++)
             for (int j=0; j<PS1; j++)
             for (int i=0; i<PS1; i++)
@@ -108,6 +108,8 @@ real GetMinCoolingTime( const int lv )
 //             remember to take the absolute value for the cooling time, which could be negative or positive
                const real AbsTCool = FABS( Grackle_TCool[ (N*CUBE(PS1) + k*SQR(PS1) + j*PS1 + i) ] );
 
+//             take the minimum
+//             --> it is fine if Grackle returns an abnormally NaN cooling time; FMIN will not return it
                MinCoolingTime = FMIN( MinCoolingTime, AbsTCool );
 
             } // k,j,i

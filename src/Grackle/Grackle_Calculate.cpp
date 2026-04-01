@@ -142,8 +142,28 @@ void Grackle_Calculate( real Out[], const GrackleFieldBIdx_t TFields,
    const real_che *gr_fields_sEint  = gr_fields_input + CheIdx_sEint*Size1v;
    const real_che temperature_units = (real_che) get_temperature_units( &Che_Units );
 
+#  ifdef GAMER_DEBUG
+   if ( IdxOut_mu != IdxOut_Undefined  &&  temperature_units <= 0.0 )
+      Aux_Error( ERROR_INFO, "Unphysical temperature_units returned by Grackle = %14.7e !!\n", temperature_units );
+#  endif // #ifdef GAMER_DEBUG
+
    for (int i=0; i<Size1v; i++)
    {
+//    check
+#     ifdef GAMER_DEBUG
+      if ( ( IdxOut_temp != IdxOut_Undefined  ||  IdxOut_mu != IdxOut_Undefined )  &&  gr_fields_temperature[i] <= 0.0 )
+         Aux_Error( ERROR_INFO, "Unphysical temperature returned by Grackle = %14.7e !!\n", gr_fields_temperature[i] );
+
+      if ( IdxOut_mu != IdxOut_Undefined  &&  gr_fields_gamma[i] <= 1.0 )
+         Aux_Error( ERROR_INFO, "Unphysical gamma returned by Grackle = %14.7e !!\n", gr_fields_gamma[i] );
+
+      if ( IdxOut_mu != IdxOut_Undefined  &&  gr_fields_sEint[i] <= 0.0 )
+         Aux_Error( ERROR_INFO, "Unphysical sEint = %14.7e !!\n", gr_fields_sEint[i] );
+
+      if ( IdxOut_tcool != IdxOut_Undefined  &&  gr_fields_cooling_time[i] != gr_fields_cooling_time[i] )
+         Aux_Error( ERROR_INFO, "Unphysical cooling time returned by Grackle = %14.7e !!\n", gr_fields_cooling_time[i] );
+#     endif // #ifdef GAMER_DEBUG
+
 //    temperature
       if ( IdxOut_temp != IdxOut_Undefined )
          Out1D[IdxOut_temp][i]  = (real) gr_fields_temperature[i];
