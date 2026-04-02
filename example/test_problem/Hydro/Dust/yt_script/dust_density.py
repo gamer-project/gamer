@@ -22,7 +22,7 @@ omega     = 2.5
 
 # physical constants
 gamma    = 5.0/3.0
-mu       = 0.62
+mu       = 0.6
 m_H      = 1.6735575e-24
 k_B      = 1.380649e-16
 amu_in_g = 1.66054e-24

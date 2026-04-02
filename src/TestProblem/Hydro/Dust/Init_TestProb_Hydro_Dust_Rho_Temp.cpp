@@ -42,13 +42,17 @@ double Mis_GetTimeStep_Dust( const int lv, const double dTime_dt )
    Che_Units.velocity_units = UNIT_V;
 
    // Calculate cooling time.
-   if (calculate_cooling_time(&Che_Units, &my_fields, my_cooling_time) == 0) {
+   if (calculate_cooling_time(&Che_Units, &my_fields, my_cooling_time) == 0)
+   {
      Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n");
    }
 
    double dTime_user = (0.1 * fabs(my_cooling_time[0])) * 1.0;
-   Aux_Message( stdout, "  cooling_time   = %.15E,",    fabs(my_cooling_time[0])  );
-   Aux_Message( stdout, "  dTime_user   = %.15E \n",    dTime_user  );
+   if ( MPI_Rank == 0 )
+   {
+       Aux_Message( stdout, "  cooling_time   = %.15E,",    fabs(my_cooling_time[0])  );
+       Aux_Message( stdout, "  dTime_user   = %.15E \n",    dTime_user  );
+   }
    return dTime_user;
 
 } // FUNCTION : Mis_GetTimeStep_Dust
@@ -314,7 +318,7 @@ void AddNewField_DUST()
    if ( Idx_Metal == Idx_Undefined )
       Idx_Metal = AddField( "Metal", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_YES );
    if ( Idx_Dust == Idx_Undefined )
-      Idx_Dust = AddField( "Dust", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_YES );
+      Idx_Dust  = AddField( "Dust",  FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_YES );
 } // FUNCTION : AddNewField_DUST
 
 

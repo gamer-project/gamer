@@ -232,7 +232,6 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    real_che *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ent=NULL, *Ptr_e=NULL, *Ptr_HI=NULL, *Ptr_HII=NULL;
    real_che *Ptr_HeI=NULL, *Ptr_HeII=NULL, *Ptr_HeIII=NULL, *Ptr_HM=NULL, *Ptr_H2I=NULL, *Ptr_H2II=NULL;
    real_che *Ptr_DI=NULL, *Ptr_DII=NULL, *Ptr_HDI=NULL, *Ptr_Metal=NULL, *Ptr_Dust=NULL;
-   real_che *Ptr_Dust=NULL;
 
 #  pragma omp for schedule( static )
    for (int TID=0; TID<NPG; TID++)
