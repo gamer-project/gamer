@@ -1089,8 +1089,8 @@ void Init_ByRestart_HDF5( const char *FileName )
 // Function    :  LoadField
 // Description :  Load a single field from the input compound dataset
 //
-// Note        :  1. This function works for arbitary datatype (int, float, char, 1D array ...)
-//                2. Memory must be allocated for FieldPtr in advance with sufficent size (except for "char *")
+// Note        :  1. This function works for an arbitrary data type (int, float, char, 1D array ...)
+//                2. Sufficient memory must be allocated for FieldPtr in advance with (except for "char *")
 //                3. For loading a string, which has (type(FieldPtr) = (char *)), the memory must be freed
 //                   manually by calling free()
 //                4. It can also compare the loaded variables (FieldPtr) with the reference values (ComprPtr)
@@ -2134,6 +2134,8 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "ELBDM_Taylor3_Coeff",     &RS.ELBDM_Taylor3_Coeff,     SID, TID, NonFatal, &RT.ELBDM_Taylor3_Coeff,      1, NonFatal );
    LoadField( "ELBDM_Taylor3_Auto",      &RS.ELBDM_Taylor3_Auto,      SID, TID, NonFatal, &RT.ELBDM_Taylor3_Auto,       1, NonFatal );
    LoadField( "ELBDM_RemoveMotionCM",    &RS.ELBDM_RemoveMotionCM,    SID, TID, NonFatal, &RT.ELBDM_RemoveMotionCM,     1, NonFatal );
+   LoadField( "ELBDM_RescaleMassError",  &RS.ELBDM_RescaleMassError,  SID, TID, NonFatal, &RT.ELBDM_RescaleMassError,   1, NonFatal );
+   LoadField( "ELBDM_RescaleMassSteps",  &RS.ELBDM_RescaleMassSteps,  SID, TID, NonFatal, &RT.ELBDM_RescaleMassSteps,   1, NonFatal );
    LoadField( "ELBDM_BaseSpectral",      &RS.ELBDM_BaseSpectral,      SID, TID, NonFatal, &RT.ELBDM_BaseSpectral,       1, NonFatal );
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
 // ELBDM_FIRST_WAVE_LEVEL currently cannot be changed upon restart because the code cannot robustly handle the conversion

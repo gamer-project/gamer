@@ -957,7 +957,7 @@ def set_gpu( gpus, flags, args ):
                 gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=128"
             else:
                 gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=70"
-        elif 500 <= compute_capability and compute_capability <= 900:
+        elif 500 <= compute_capability and compute_capability <= 1210:
             if args["double"]:
                 gpu_opts["MAXRREGCOUNT_FLU"] = "--maxrregcount=192"
             else:
@@ -1031,7 +1031,7 @@ def validation( paths, depends, constraints, **kwargs ):
             if kwargs[opt] != opt_val: continue         # not the value to be checked
             for check_opt, check_val in check.items():
                 if type(check_val) != type([]): check_val = [check_val]   # transform to list
-                if kwargs[check_opt] in check_val: continue     # satisify the validation
+                if kwargs[check_opt] in check_val: continue     # satisfy the validation
 
                 val_str = ", ".join(str(x) for x in check_val)
                 LOGGER.error("The option <--%s=%s> requires <--%s> to be set to [%s]. Current: <--%s=%s>."%(opt, str(kwargs[opt]), check_opt, val_str, check_opt, kwargs[check_opt]))

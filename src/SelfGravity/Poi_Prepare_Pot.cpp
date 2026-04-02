@@ -139,7 +139,7 @@ void Poi_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_In
 
 #  pragma omp parallel
    {
-//    CPot : store the coarse-grid potential for interpoaltion
+//    CPot : store the coarse-grid potential for interpolation
       real (*CPot)[CWidth][CWidth] = new real [CWidth][CWidth][CWidth];
 
       double x0, y0, z0, x, y, z;

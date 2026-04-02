@@ -331,8 +331,8 @@ FieldIdx_t AddField( const char *InputLabel, const FixUpFlux_t FixUp_Flux, const
 //                Check      : Whether or not to terminate the program if the target field cannot be found
 //                             --> Accepted options: CHECK_ON / CHECK_OFF
 //
-// Return      :  Sucess: index of the target field
-//                Failed: Idx_Undefined
+// Return      :  Success: index of the target field
+//                Failed : Idx_Undefined
 //-------------------------------------------------------------------------------------------------------
 FieldIdx_t GetFieldIndex( const char *InputLabel, const Check_t Check )
 {

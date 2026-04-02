@@ -133,7 +133,7 @@ extern bool             OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC
 extern bool             OPT__OUTPUT_DIVMAG;
 extern int              OPT__CK_DIVERGENCE_B;
 extern double           UNIT_B;
-extern bool             OPT__SAME_INTERFACE_B;
+extern SameInterfaceB_t OPT__SAME_INTERFACE_B;
 
 extern OptInitMagByVecPot_t OPT__INIT_BFIELD_BYVECPOT;
 #endif
@@ -167,6 +167,8 @@ extern int              OPT__FLAG_SPECTRAL_N;
 extern double           FlagTable_Spectral[NLEVEL-1][2];
 
 extern ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
+extern bool             ELBDM_RESCALE_MASS_ERROR;
+extern int              ELBDM_RESCALE_MASS_STEPS;
 extern bool             ELBDM_BASE_SPECTRAL;
 
 #else
