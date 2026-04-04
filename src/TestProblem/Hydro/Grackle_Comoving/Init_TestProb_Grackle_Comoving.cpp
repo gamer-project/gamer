@@ -208,6 +208,7 @@ void SetParameter()
 void SetGridIC( real fluid[], const double x, const double y, const double z, const double Time,
                 const int lv, double AuxArray[] )
 {
+
    double Dens, MomX, MomY, MomZ, Eint, Etot;
 
    const double mu                = 4.0 / (8.0 - 5.0 * (1.0 - grackle_data->HydrogenFractionByMass));      // fully ionized primordial gas (H + He only)
@@ -238,11 +239,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // --> assuming fully ionized gas
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
    fluid[Idx_HI   ] = 0.0;
-   fluid[Idx_HII  ] = grackle_data->HydrogenFractionByMass * (1.0 - GrackleComoving_InitialMetallicity) * Dens;
+   fluid[Idx_HII  ] = grackle_data->HydrogenFractionByMass * ( 1.0 - GrackleComoving_InitialMetallicity ) * Dens;
    fluid[Idx_HeI  ] = 0.0;
    fluid[Idx_HeII ] = 0.0;
-   fluid[Idx_HeIII] = (1.0 - grackle_data->HydrogenFractionByMass) * (1.0 - GrackleComoving_InitialMetallicity) * Dens;
-   fluid[Idx_e    ] = (fluid[Idx_HII] + fluid[Idx_HeII] / 4.0 + 2.0 * fluid[Idx_HeIII] / 4.0) * Const_me / Const_mp;
+   fluid[Idx_HeIII] = ( 1.0 - grackle_data->HydrogenFractionByMass ) * ( 1.0 - GrackleComoving_InitialMetallicity ) * Dens;
+   fluid[Idx_e    ] = ( fluid[Idx_HII] + fluid[Idx_HeII] / 4.0 + 2.0 * fluid[Idx_HeIII] / 4.0 ) * Const_me / Const_mp;
    }
 // 9-species network
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9 ) {
@@ -318,8 +319,8 @@ void Aux_Record_GrackleComoving()
       double Dual = amr->patch[FluSg][0][0]->fluid[DUAL][0][0][0];
 
 #     if   ( DUAL_ENERGY == DE_ENPY )
-      const bool CheckMinPres_No  = false;
-      double     Pres             = Hydro_DensDual2Pres( Dens, Dual, EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
+      const bool CheckMinPres_No = false;
+      double     Pres            = Hydro_DensDual2Pres( Dens, Dual, EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
 //    EOS_GAMMA does not involve passive scalars
       Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #     elif ( DUAL_ENERGY == DE_EINT )
@@ -367,24 +368,24 @@ void Aux_Record_GrackleComoving()
       Che_Units.a_value              = Time[0];
 
 //    calculate cooling time
-      if ( calculate_cooling_time( &Che_Units, &my_fields, my_cooling_time ) == 0 )
+      if ( calculate_cooling_time(&Che_Units, &my_fields, my_cooling_time) == 0 )
          Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
 
 //    calculate temperature
-      if ( calculate_temperature( &Che_Units, &my_fields, my_temperature ) == 0 )
+      if ( calculate_temperature(&Che_Units, &my_fields, my_temperature) == 0 )
          Aux_Error( ERROR_INFO, "Error in calculate_temperature.\n" );
 
 //    calculate gamma
-      if ( calculate_gamma( &Che_Units, &my_fields, my_gamma ) == 0 )
+      if ( calculate_gamma(&Che_Units, &my_fields, my_gamma) == 0 )
          Aux_Error( ERROR_INFO, "Error in calculate_gamma.\n" );
 
-      const double dt_SubStep        = Mis_dTime2dt( Time[0], dTime_Base ) * SQR(Time[0]) * UNIT_T;                                 // physical time-step size
-      const double temperature_units = get_temperature_units(&Che_Units);                                                           // grackle temperature unit
-      const double mu                = my_temperature[0] / (my_fields.internal_energy[0] * (my_gamma[0] - 1.) * temperature_units); // mean molecular weight
-      const double n                 = Dens / CUBE(Time[0]) * UNIT_D / mu / Const_mp;                                               // total number density
-      const double Edens             = Eint * UNIT_P / SQR(Time[0]) / CUBE(Time[0]);                                                // internal energy density
-      const double Temp              = my_temperature[0];                                                                           // temperature
-      const double Lcool             = Edens / fabs(my_cooling_time[0] * UNIT_T) / n / n;                                           // cooling rate obtained from grackle
+      const double dt_SubStep        = Mis_dTime2dt( Time[0], dTime_Base ) * SQR(Time[0]) * UNIT_T;                                   // physical time-step size
+      const double temperature_units = get_temperature_units( &Che_Units );                                                           // grackle temperature unit
+      const double mu                = my_temperature[0] / ( my_fields.internal_energy[0] * (my_gamma[0] - 1.) * temperature_units ); // mean molecular weight
+      const double n                 = Dens / CUBE(Time[0]) * UNIT_D / mu / Const_mp;                                                 // total number density
+      const double Edens             = Eint * UNIT_P / SQR(Time[0]) / CUBE(Time[0]);                                                  // internal energy density
+      const double Temp              = my_temperature[0];                                                                             // temperature
+      const double Lcool             = Edens / fabs( my_cooling_time[0] * UNIT_T ) / n / n;                                           // cooling rate obtained from grackle
 
       fprintf( File_User, "%14.7e%14ld%3s%22.7e%22.7e%22.7e%22.7e%22.7e%22.7e", Time[0], Step, "", dt_SubStep, n, mu, Temp, Edens, Lcool );
       fprintf( File_User, "\n" );
@@ -425,49 +426,49 @@ void Init_GrackleComoving()
 // set grid dimension and size
 // grid_start and grid_end are used to ignore ghost zones
    const int field_size = 1;
-   my_fields.grid_rank = 3;
-   my_fields.grid_dimension = new int [3];
-   my_fields.grid_start     = new int [3];
-   my_fields.grid_end       = new int [3];
+   my_fields.grid_rank         = 3;
+   my_fields.grid_dimension    = new int [3];
+   my_fields.grid_start        = new int [3];
+   my_fields.grid_end          = new int [3];
    for (int i=0; i<3; i++) {
-      my_fields.grid_dimension[i] = field_size; // the active dimension not including ghost zones.
-      my_fields.grid_start    [i] = 0;
-      my_fields.grid_end      [i] = field_size - 1;
+   my_fields.grid_dimension[i] = field_size; // the active dimension not including ghost zones.
+   my_fields.grid_start    [i] = 0;
+   my_fields.grid_end      [i] = field_size - 1;
    }
    my_fields.grid_dx           = 0.0; // used only for H2 self-shielding approximation
 
-   my_fields.density         = new gr_float [CUBE(field_size)];
-   my_fields.internal_energy = new gr_float [CUBE(field_size)];
+   my_fields.density           = new gr_float [CUBE(field_size)];
+   my_fields.internal_energy   = new gr_float [CUBE(field_size)];
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
-   my_fields.HI_density      = new gr_float [CUBE(field_size)];
-   my_fields.HII_density     = new gr_float [CUBE(field_size)];
-   my_fields.HeI_density     = new gr_float [CUBE(field_size)];
-   my_fields.HeII_density    = new gr_float [CUBE(field_size)];
-   my_fields.HeIII_density   = new gr_float [CUBE(field_size)];
-   my_fields.e_density       = new gr_float [CUBE(field_size)];
+   my_fields.HI_density        = new gr_float [CUBE(field_size)];
+   my_fields.HII_density       = new gr_float [CUBE(field_size)];
+   my_fields.HeI_density       = new gr_float [CUBE(field_size)];
+   my_fields.HeII_density      = new gr_float [CUBE(field_size)];
+   my_fields.HeIII_density     = new gr_float [CUBE(field_size)];
+   my_fields.e_density         = new gr_float [CUBE(field_size)];
    }
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9 ) {
-   my_fields.HM_density      = new gr_float [CUBE(field_size)];
-   my_fields.H2I_density     = new gr_float [CUBE(field_size)];
-   my_fields.H2II_density    = new gr_float [CUBE(field_size)];
+   my_fields.HM_density        = new gr_float [CUBE(field_size)];
+   my_fields.H2I_density       = new gr_float [CUBE(field_size)];
+   my_fields.H2II_density      = new gr_float [CUBE(field_size)];
    }
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE12 ) {
-   my_fields.DI_density      = new gr_float [CUBE(field_size)];
-   my_fields.DII_density     = new gr_float [CUBE(field_size)];
-   my_fields.HDI_density     = new gr_float [CUBE(field_size)];
+   my_fields.DI_density        = new gr_float [CUBE(field_size)];
+   my_fields.DII_density       = new gr_float [CUBE(field_size)];
+   my_fields.HDI_density       = new gr_float [CUBE(field_size)];
    }
    if ( GRACKLE_METAL ) {
-   my_fields.metal_density   = new gr_float [CUBE(field_size)];
+   my_fields.metal_density     = new gr_float [CUBE(field_size)];
    }
 
-   my_temperature            = new gr_float [CUBE(field_size)];
-   my_gamma                  = new gr_float [CUBE(field_size)];
-   my_cooling_time           = new gr_float [CUBE(field_size)];
+   my_temperature              = new gr_float [CUBE(field_size)];
+   my_gamma                    = new gr_float [CUBE(field_size)];
+   my_cooling_time             = new gr_float [CUBE(field_size)];
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-}
+} // FUNCTION : Init_GrackleComoving
 
 
 
@@ -481,7 +482,8 @@ void Init_GrackleComoving()
 //-------------------------------------------------------------------------------------------------------
 void End_GrackleComoving()
 {
-   // generate cooling rate table for comparison
+
+// generate cooling rate table for comparison
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "==========================================\n");
@@ -523,13 +525,14 @@ void End_GrackleComoving()
    delete [] my_temperature;               my_temperature            = NULL;
    delete [] my_gamma;                     my_gamma                  = NULL;
    delete [] my_cooling_time;              my_cooling_time           = NULL;
+
 } // FUNCTION : End_GrackleComoving
 
 
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Mis_GetTimeStep_GrackleComoving
-// Description :  returns 0.01 * cooling time
+// Description :  Returns 0.01 * cooling time
 //
 // Note        :  1. This function should be applied to both physical and comoving coordinates and always
 //                   return the evolution time-step (dt) actually used in various solvers
@@ -610,20 +613,20 @@ double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
 
 
 // calculate cooling time
-   if ( calculate_cooling_time( &Che_Units, &my_fields, my_cooling_time ) == 0 )
+   if ( calculate_cooling_time(&Che_Units, &my_fields, my_cooling_time) == 0 )
       Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
 
-   dt_user_phy = fmin(dt_user_phy, 0.01 * fabs(my_cooling_time[0]));
+   dt_user_phy = fmin( dt_user_phy, 0.01 * fabs(my_cooling_time[0]) );
 
 
 // recalculate cooling time with 10% lower internal energy
 // --> to avoid overestimating the time-step size when the cooling time gets shorter as the temperature decreases
    my_fields.internal_energy[0] *= 0.9;
 
-   if ( calculate_cooling_time( &Che_Units, &my_fields, my_cooling_time ) == 0 )
+   if ( calculate_cooling_time(&Che_Units, &my_fields, my_cooling_time) == 0 )
       Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
 
-   dt_user_phy = fmin(dt_user_phy, 0.01 * fabs(my_cooling_time[0]));
+   dt_user_phy = fmin( dt_user_phy, 0.01 * fabs(my_cooling_time[0]) );
 
 
 // convert the time-step size to comoving coordinates

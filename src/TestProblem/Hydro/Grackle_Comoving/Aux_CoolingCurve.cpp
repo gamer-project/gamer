@@ -24,6 +24,7 @@ extern gr_float           *my_cooling_time;
 
 
 
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Aux_CoolingCurve
 // Description :  Create a cooling table at the specified redshift on the proper coordinate
@@ -39,10 +40,10 @@ extern gr_float           *my_cooling_time;
 //-------------------------------------------------------------------------------------------------------
 void Aux_CoolingCurve( const double z_value, const double T_min, const double T_max, const double dT )
 {
-   double a_value = 1.0 / (1.0 + z_value);
 
-   double rho_crit0 = 3.0 * pow(100.0 * HUBBLE0 * 1e5 / Const_Mpc, 2) / (8.0 * M_PI * Const_NewtonG);
-   double rho_mean0 = OMEGA_M0 * rho_crit0;
+   const double a_value   = 1.0 / ( 1.0 + z_value );
+   const double rho_crit0 = 3.0 * pow( 100.0 * HUBBLE0 * 1e5 / Const_Mpc, 2.0 ) / ( 8.0 * M_PI * Const_NewtonG );
+   const double rho_mean0 = OMEGA_M0 * rho_crit0;
 
 
 // no verbose output from this function to avoid overwriting the grackle output of the main program
@@ -52,33 +53,33 @@ void Aux_CoolingCurve( const double z_value, const double T_min, const double T_
 // First, set up the units system.
 // These are conversions from code units to cgs.
    code_units my_units;
-   my_units.comoving_coordinates = 0;                           // proper coordinate
-   my_units.density_units        = rho_mean0 * pow(a_value, -3);
+   my_units.comoving_coordinates = 0;                             // proper coordinate
+   my_units.density_units        = rho_mean0 * pow( a_value, -3 );
    my_units.length_units         = Const_Mpc;
    my_units.time_units           = Const_Mpc / 1e5;
-   my_units.a_units              = 1;                           // units for the expansion factor
+   my_units.a_units              = 1;                             // units for the expansion factor
    my_units.a_value              = a_value;
    set_velocity_units(&my_units);
 
-   grackle_data->with_radiative_cooling = 0; // turn off cooling for this function
+   grackle_data->with_radiative_cooling = 0;                      // turn off cooling for this function
 
 
 // initialize the chemistry object.
    if ( initialize_chemistry_data(&my_units) == 0 )
-      Aux_Error( ERROR_INFO, "Error in initialize_chemistry_data.\n");
+      Aux_Error( ERROR_INFO, "Error in initialize_chemistry_data.\n" );
 
 
 // set temperature units
-   double temperature_units   = get_temperature_units(&my_units);
+   double temperature_units   = get_temperature_units( &my_units );
 
    my_fields.density      [0] = 1.0;
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
    my_fields.HI_density   [0] = 0.0;
-   my_fields.HII_density  [0] = grackle_data->HydrogenFractionByMass * (1.0 - GrackleComoving_InitialMetallicity) * my_fields.density[0];
+   my_fields.HII_density  [0] = grackle_data->HydrogenFractionByMass * ( 1.0 - GrackleComoving_InitialMetallicity ) * my_fields.density[0];
    my_fields.HeI_density  [0] = 0.0;
    my_fields.HeII_density [0] = 0.0;
-   my_fields.HeIII_density[0] = (1.0 - grackle_data->HydrogenFractionByMass) * (1.0 - GrackleComoving_InitialMetallicity) * my_fields.density[0];
-   my_fields.e_density    [0] = (my_fields.HII_density[0] + my_fields.HeII_density[0] / 4.0 + 2.0 * my_fields.HeIII_density[0] / 4.0);
+   my_fields.HeIII_density[0] = ( 1.0 - grackle_data->HydrogenFractionByMass ) * ( 1.0 - GrackleComoving_InitialMetallicity ) * my_fields.density[0];
+   my_fields.e_density    [0] = my_fields.HII_density[0] + my_fields.HeII_density[0] / 4.0 + 2.0 * my_fields.HeIII_density[0] / 4.0;
    }
    if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9 ) {
    my_fields.HM_density   [0] = 0.0;
@@ -100,11 +101,11 @@ void Aux_CoolingCurve( const double z_value, const double T_min, const double T_
    *********************************************************************/
 
    char ofname[30];
-   sprintf(ofname, "coolingrate_z%1.1f.dat", z_value);
+   sprintf( ofname, "coolingrate_z%1.1f.dat", z_value );
    FILE *fp;
-   fp = fopen(ofname, "w");
+   fp = fopen( ofname, "w" );
 
-   fprintf(fp, "#%30s%30s\n", "Temperature [K]", "CoolingRate [erg cm^3 s^-1]");
+   fprintf( fp, "#%30s%30s\n", "Temperature [K]", "CoolingRate [erg cm^3 s^-1]" );
 
 
    double buf_density;
@@ -118,7 +119,7 @@ void Aux_CoolingCurve( const double z_value, const double T_min, const double T_
 //    initial guess for the internal energy
       double mu_init    = 1.0;
       double gamma_init = 5.0/3.0;
-      my_fields.internal_energy[0] = pow(10.0, logT) / (mu_init * (gamma_init - 1.) * temperature_units);
+      my_fields.internal_energy[0] = pow(10.0, logT) / ( mu_init * (gamma_init - 1.) * temperature_units );
 
       int iter = 0;
       while( true )
@@ -148,32 +149,32 @@ void Aux_CoolingCurve( const double z_value, const double T_min, const double T_
 
 //       Calculate cooling time.
          if ( calculate_cooling_time(&my_units, &my_fields, my_cooling_time) == 0 )
-            Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n");
+            Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
 
-         double dt = fabs(0.1 * my_cooling_time[0]);
+         double dt = fabs( 0.1 * my_cooling_time[0] );
 
 
 //       Evolve the chemistry with fixed internal_energy.
 //       --> with_radiative_cooling is set to 0, and thus the internal energy will not be updated by the chemistry solver
          if ( solve_chemistry(&my_units, &my_fields, dt) == 0 )
-            Aux_Error( ERROR_INFO, "Error in solve_chemistry.\n");
+            Aux_Error( ERROR_INFO, "Error in solve_chemistry.\n" );
 
 
 //       Calculate temperature using the updated chemical abundances to check consistency among temperature, mu, gamma, and internal energy.
 //       --> 1) update the internal energy to the target temperature using the updated gamma and mu
 //           2) calculate the temperature using the updated internal energy and chemical abundances
          if ( calculate_temperature(&my_units, &my_fields, my_temperature) == 0 )
-            Aux_Error( ERROR_INFO, "Error in calculate_temperature.\n");
+            Aux_Error( ERROR_INFO, "Error in calculate_temperature.\n" );
 
          if ( calculate_gamma(&my_units, &my_fields, my_gamma) == 0 )
             Aux_Error( ERROR_INFO, "Error in calculate_gamma.\n");
 
 
-         double mu                    = my_temperature[0] / (my_fields.internal_energy[0] * (my_gamma[0] - 1.) * temperature_units);
-         my_fields.internal_energy[0] = pow(10.0, logT) / (mu * (my_gamma[0] - 1.) * temperature_units);
+         double mu                    = my_temperature[0] / ( my_fields.internal_energy[0] * (my_gamma[0] - 1.) * temperature_units );
+         my_fields.internal_energy[0] = pow( 10.0, logT ) / ( mu * (my_gamma[0] - 1.) * temperature_units );
 
          if ( calculate_temperature(&my_units, &my_fields, my_temperature) == 0 )
-            Aux_Error( ERROR_INFO, "Error in calculate_temperature.\n");
+            Aux_Error( ERROR_INFO, "Error in calculate_temperature.\n" );
 
 
 //       check convergence
@@ -196,7 +197,7 @@ void Aux_CoolingCurve( const double z_value, const double T_min, const double T_
             diff = fmax(diff, fabs(my_fields.DII_density  [0] - buf_DII_density  ) / my_fields.DII_density  [0]);
             diff = fmax(diff, fabs(my_fields.HDI_density  [0] - buf_HDI_density  ) / my_fields.HDI_density  [0]);
          }
-         diff = fmax(diff, fabs(my_temperature         [0] - pow(10.0, logT)  ) / my_temperature         [0]);
+            diff = fmax(diff, fabs(my_temperature         [0] - pow(10.0, logT)  ) / my_temperature         [0]);
 
          iter++;
 
@@ -207,21 +208,24 @@ void Aux_CoolingCurve( const double z_value, const double T_min, const double T_
 
 //    Calculate cooling time.
       if ( calculate_cooling_time(&my_units, &my_fields, my_cooling_time) == 0 )
-         Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n");
+         Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
 
 
-      double mu    = my_temperature[0] / (my_fields.internal_energy[0] * (my_gamma[0] - 1.) * temperature_units);
+      double mu    = my_temperature[0] / ( my_fields.internal_energy[0] * (my_gamma[0] - 1.) * temperature_units );
       double nden  = my_fields.density[0] / mu / Const_mp * my_units.density_units;
       double eden  = my_fields.density[0] * my_fields.internal_energy[0] * my_units.density_units * my_units.velocity_units * my_units.velocity_units;
-      double lcool = eden / fabs(my_cooling_time[0] * my_units.time_units) / nden / nden;
+      double lcool = eden / fabs( my_cooling_time[0] * my_units.time_units ) / nden / nden;
 
-      fprintf(fp, " %30.8e%30.8e\n", my_temperature[0], lcool);
+      fprintf( fp, " %30.8e%30.8e\n", my_temperature[0], lcool );
    }
 
-   fclose(fp);
+   fclose( fp );
 
-   grackle_verbose = ( MPI_Rank == 0 ) ? GRACKLE_VERBOSE : 0; 
+   grackle_verbose = ( MPI_Rank == 0 ) ? GRACKLE_VERBOSE : 0;
 
    return;
-}
+} // FUNCTION : Aux_CoolingCurve
+
+
+
 #endif // SUPPORT_GRACKLE
