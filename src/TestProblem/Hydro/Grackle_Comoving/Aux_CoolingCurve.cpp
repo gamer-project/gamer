@@ -59,7 +59,7 @@ void Aux_CoolingCurve( const double z_value, const double T_min, const double T_
    my_units.time_units           = Const_Mpc / 1e5;
    my_units.a_units              = 1;                             // units for the expansion factor
    my_units.a_value              = a_value;
-   set_velocity_units(&my_units);
+   set_velocity_units( &my_units );
 
    grackle_data->with_radiative_cooling = 0;                      // turn off cooling for this function
 

@@ -307,20 +307,26 @@ void Aux_Record_GrackleComoving()
    }
 
 // user-specified info
-   if ( MPI_Rank == 0 )
+   double temperature_units = HUGE_NUMBER;
+   double mu                = HUGE_NUMBER;
+   double n                 = HUGE_NUMBER;
+   double Edens             = HUGE_NUMBER;
+   double Temp              = HUGE_NUMBER;
+   double Lcool             = HUGE_NUMBER;
+
+   if ( amr->NPatchComma[0][1] > 0 )
    {
-      FILE  *File_User = fopen( FileName, "a" );
-      int    FluSg     = amr->FluSg[0];
-      double Dens      = amr->patch[FluSg][0][0]->fluid[DENS][0][0][0];
-      double Eint      = amr->patch[FluSg][0][0]->fluid[ENGY][0][0][0]; // assume no magnetic and kinetic energy
+      int    FluSg = amr->FluSg[0];
+      double Dens  = amr->patch[FluSg][0][0]->fluid[DENS][0][0][0];
+      double Eint  = amr->patch[FluSg][0][0]->fluid[ENGY][0][0][0];  // assume no magnetic and kinetic energy
 
 //    use the dual-energy variable to calculate the internal energy if applicable
 #     ifdef DUAL_ENERGY
-      double Dual = amr->patch[FluSg][0][0]->fluid[DUAL][0][0][0];
+      double Dual  = amr->patch[FluSg][0][0]->fluid[DUAL][0][0][0];
 
 #     if   ( DUAL_ENERGY == DE_ENPY )
       const bool CheckMinPres_No = false;
-      double     Pres            = Hydro_DensDual2Pres( Dens, Dual, EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
+      double Pres  = Hydro_DensDual2Pres( Dens, Dual, EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
 //    EOS_GAMMA does not involve passive scalars
       Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #     elif ( DUAL_ENERGY == DE_EINT )
@@ -379,14 +385,27 @@ void Aux_Record_GrackleComoving()
       if ( calculate_gamma(&Che_Units, &my_fields, my_gamma) == 0 )
          Aux_Error( ERROR_INFO, "Error in calculate_gamma.\n" );
 
-      const double dt_SubStep        = Mis_dTime2dt( Time[0], dTime_Base ) * SQR(Time[0]) * UNIT_T;                                   // physical time-step size
-      const double temperature_units = get_temperature_units( &Che_Units );                                                           // grackle temperature unit
-      const double mu                = my_temperature[0] / ( my_fields.internal_energy[0] * (my_gamma[0] - 1.) * temperature_units ); // mean molecular weight
-      const double n                 = Dens / CUBE(Time[0]) * UNIT_D / mu / Const_mp;                                                 // total number density
-      const double Edens             = Eint * UNIT_P / SQR(Time[0]) / CUBE(Time[0]);                                                  // internal energy density
-      const double Temp              = my_temperature[0];                                                                             // temperature
-      const double Lcool             = Edens / fabs( my_cooling_time[0] * UNIT_T ) / n / n;                                           // cooling rate obtained from grackle
+      temperature_units = get_temperature_units( &Che_Units );                                                           // grackle temperature unit
+      mu                = my_temperature[0] / ( my_fields.internal_energy[0] * (my_gamma[0] - 1.) * temperature_units ); // mean molecular weight
+      n                 = Dens / CUBE(Time[0]) * UNIT_D / mu / Const_mp;                                                 // total number density
+      Edens             = Eint * UNIT_P / SQR(Time[0]) / CUBE(Time[0]);                                                  // internal energy density
+      Temp              = my_temperature[0];                                                                             // temperature
+      Lcool             = Edens / fabs( my_cooling_time[0] * UNIT_T ) / n / n;                                           // cooling rate obtained from grackle
+   } // if ( amr->NPatchComma[0][1] > 0 )
 
+#  ifndef SERIAL
+   MPI_Allreduce( MPI_IN_PLACE, &mu,    1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD );
+   MPI_Allreduce( MPI_IN_PLACE, &n,     1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD );
+   MPI_Allreduce( MPI_IN_PLACE, &Edens, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD );
+   MPI_Allreduce( MPI_IN_PLACE, &Temp,  1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD );
+   MPI_Allreduce( MPI_IN_PLACE, &Lcool, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD );
+#  endif
+
+   if ( MPI_Rank == 0 )
+   {
+      const double dt_SubStep = Mis_dTime2dt( Time[0], dTime_Base ) * SQR(Time[0]) * UNIT_T; // physical time-step size
+
+      FILE  *File_User = fopen( FileName, "a" );
       fprintf( File_User, "%14.7e%14ld%3s%22.7e%22.7e%22.7e%22.7e%22.7e%22.7e", Time[0], Step, "", dt_SubStep, n, mu, Temp, Edens, Lcool );
       fprintf( File_User, "\n" );
 
@@ -554,79 +573,86 @@ double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
 
    double dt_user_phy = HUGE_NUMBER;
 
-   int    FluSg = amr->FluSg[lv];
-   double Dens  = amr->patch[FluSg][lv][0]->fluid[DENS][0][0][0];
-   double Eint  = amr->patch[FluSg][lv][0]->fluid[ENGY][0][0][0]; // assume no magnetic and kinetic energy
+   if ( amr->NPatchComma[lv][1] > 0 )
+   {
+      int    FluSg = amr->FluSg[lv];
+      double Dens  = amr->patch[FluSg][lv][0]->fluid[DENS][0][0][0];
+      double Eint  = amr->patch[FluSg][lv][0]->fluid[ENGY][0][0][0]; // assume no magnetic and kinetic energy
 
-// use the dual-energy variable to calculate the internal energy if applicable
-#  ifdef DUAL_ENERGY
-   double Dual = amr->patch[FluSg][lv][0]->fluid[DUAL][0][0][0];
+//    use the dual-energy variable to calculate the internal energy if applicable
+#     ifdef DUAL_ENERGY
+      double Dual = amr->patch[FluSg][lv][0]->fluid[DUAL][0][0][0];
 
-#  if   ( DUAL_ENERGY == DE_ENPY )
-   const bool CheckMinPres_No  = false;
-   double     Pres             = Hydro_DensDual2Pres( Dens, Dual, EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
-// EOS_GAMMA does not involve passive scalars
-   Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-#  elif ( DUAL_ENERGY == DE_EINT )
-#  error : DE_EINT is NOT supported yet !!
+#     if   ( DUAL_ENERGY == DE_ENPY )
+      const bool CheckMinPres_No  = false;
+      double     Pres             = Hydro_DensDual2Pres( Dens, Dual, EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
+//    EOS_GAMMA does not involve passive scalars
+      Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#     elif ( DUAL_ENERGY == DE_EINT )
+#     error : DE_EINT is NOT supported yet !!
+#     endif
+
+#     endif // #ifdef DUAL_ENERGY
+
+      const double MassRatio_pe = Const_mp / Const_me;
+
+      my_fields.density        [0] = Dens;
+      my_fields.internal_energy[0] = Eint / Dens / SQR(Time[lv]);
+
+      if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
+         my_fields.e_density    [0] = amr->patch[FluSg][lv][0]->fluid[Idx_e    ][0][0][0] * MassRatio_pe;
+         my_fields.HI_density   [0] = amr->patch[FluSg][lv][0]->fluid[Idx_HI   ][0][0][0];
+         my_fields.HII_density  [0] = amr->patch[FluSg][lv][0]->fluid[Idx_HII  ][0][0][0];
+         my_fields.HeI_density  [0] = amr->patch[FluSg][lv][0]->fluid[Idx_HeI  ][0][0][0];
+         my_fields.HeII_density [0] = amr->patch[FluSg][lv][0]->fluid[Idx_HeII ][0][0][0];
+         my_fields.HeIII_density[0] = amr->patch[FluSg][lv][0]->fluid[Idx_HeIII][0][0][0];
+      }
+
+      if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9 ) {
+         my_fields.HM_density   [0] = amr->patch[FluSg][lv][0]->fluid[Idx_HM   ][0][0][0];
+         my_fields.H2I_density  [0] = amr->patch[FluSg][lv][0]->fluid[Idx_H2I  ][0][0][0];
+         my_fields.H2II_density [0] = amr->patch[FluSg][lv][0]->fluid[Idx_H2II ][0][0][0];
+      }
+
+      if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE12 ) {
+         my_fields.DI_density   [0] = amr->patch[FluSg][lv][0]->fluid[Idx_DI   ][0][0][0];
+         my_fields.DII_density  [0] = amr->patch[FluSg][lv][0]->fluid[Idx_DII  ][0][0][0];
+         my_fields.HDI_density  [0] = amr->patch[FluSg][lv][0]->fluid[Idx_HDI  ][0][0][0];
+      }
+
+      if ( GRACKLE_METAL ) {
+         my_fields.metal_density[0] = amr->patch[FluSg][lv][0]->fluid[Idx_Metal][0][0][0];
+      }
+
+      Che_Units.comoving_coordinates = 1;
+      Che_Units.density_units        = UNIT_D / CUBE(Time[lv]);
+      Che_Units.length_units         = UNIT_L * Time[lv];
+      Che_Units.time_units           = UNIT_T;
+      Che_Units.velocity_units       = UNIT_V;
+      Che_Units.a_units              = 1.0;
+      Che_Units.a_value              = Time[lv];
+
+
+//    calculate cooling time
+      if ( calculate_cooling_time(&Che_Units, &my_fields, my_cooling_time) == 0 )
+         Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
+
+      dt_user_phy = fmin( dt_user_phy, 0.01 * fabs(my_cooling_time[0]) );
+
+
+//    recalculate cooling time with 10% lower internal energy
+//    --> to avoid overestimating the time-step size when the cooling time gets shorter as the temperature decreases
+      my_fields.internal_energy[0] *= 0.9;
+
+      if ( calculate_cooling_time(&Che_Units, &my_fields, my_cooling_time) == 0 )
+         Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
+
+      dt_user_phy = fmin( dt_user_phy, 0.01 * fabs(my_cooling_time[0]) );
+   } // if ( amr->NPatchComma[lv][1] > 0 )
+
+#  ifndef SERIAL
+   MPI_Allreduce( MPI_IN_PLACE, &dt_user_phy, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD );
 #  endif
-
-#  endif // #ifdef DUAL_ENERGY
-
-   const double MassRatio_pe = Const_mp / Const_me;
-
-   my_fields.density        [0] = Dens;
-   my_fields.internal_energy[0] = Eint / Dens / SQR(Time[lv]);
-
-   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
-      my_fields.e_density    [0] = amr->patch[FluSg][lv][0]->fluid[Idx_e    ][0][0][0] * MassRatio_pe;
-      my_fields.HI_density   [0] = amr->patch[FluSg][lv][0]->fluid[Idx_HI   ][0][0][0];
-      my_fields.HII_density  [0] = amr->patch[FluSg][lv][0]->fluid[Idx_HII  ][0][0][0];
-      my_fields.HeI_density  [0] = amr->patch[FluSg][lv][0]->fluid[Idx_HeI  ][0][0][0];
-      my_fields.HeII_density [0] = amr->patch[FluSg][lv][0]->fluid[Idx_HeII ][0][0][0];
-      my_fields.HeIII_density[0] = amr->patch[FluSg][lv][0]->fluid[Idx_HeIII][0][0][0];
-   }
-
-   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9 ) {
-      my_fields.HM_density   [0] = amr->patch[FluSg][lv][0]->fluid[Idx_HM   ][0][0][0];
-      my_fields.H2I_density  [0] = amr->patch[FluSg][lv][0]->fluid[Idx_H2I  ][0][0][0];
-      my_fields.H2II_density [0] = amr->patch[FluSg][lv][0]->fluid[Idx_H2II ][0][0][0];
-   }
-
-   if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE12 ) {
-      my_fields.DI_density   [0] = amr->patch[FluSg][lv][0]->fluid[Idx_DI   ][0][0][0];
-      my_fields.DII_density  [0] = amr->patch[FluSg][lv][0]->fluid[Idx_DII  ][0][0][0];
-      my_fields.HDI_density  [0] = amr->patch[FluSg][lv][0]->fluid[Idx_HDI  ][0][0][0];
-   }
-
-   if ( GRACKLE_METAL ) {
-      my_fields.metal_density[0] = amr->patch[FluSg][lv][0]->fluid[Idx_Metal][0][0][0];
-   }
-
-   Che_Units.comoving_coordinates = 1;
-   Che_Units.density_units        = UNIT_D / CUBE(Time[lv]);
-   Che_Units.length_units         = UNIT_L * Time[lv];
-   Che_Units.time_units           = UNIT_T;
-   Che_Units.velocity_units       = UNIT_V;
-   Che_Units.a_units              = 1.0;
-   Che_Units.a_value              = Time[lv];
-
-
-// calculate cooling time
-   if ( calculate_cooling_time(&Che_Units, &my_fields, my_cooling_time) == 0 )
-      Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
-
-   dt_user_phy = fmin( dt_user_phy, 0.01 * fabs(my_cooling_time[0]) );
-
-
-// recalculate cooling time with 10% lower internal energy
-// --> to avoid overestimating the time-step size when the cooling time gets shorter as the temperature decreases
-   my_fields.internal_energy[0] *= 0.9;
-
-   if ( calculate_cooling_time(&Che_Units, &my_fields, my_cooling_time) == 0 )
-      Aux_Error( ERROR_INFO, "Error in calculate_cooling_time.\n" );
-
-   dt_user_phy = fmin( dt_user_phy, 0.01 * fabs(my_cooling_time[0]) );
 
 
 // convert the time-step size to comoving coordinates
