@@ -25,8 +25,12 @@ void Grackle_End()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-   delete grackle_data;
-   grackle_data = NULL;
+   delete [] Che_FieldData->grid_dimension;
+   delete [] Che_FieldData->grid_start;
+   delete [] Che_FieldData->grid_end;
+
+   delete Che_FieldData;   Che_FieldData = NULL;   // Che_FieldData is allocated in Grackle_Init_FieldData.cpp
+   delete grackle_data;    grackle_data  = NULL;   // grackle_data is allocated in Grackle_Init.cpp
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
