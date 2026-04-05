@@ -22,7 +22,6 @@ extern int CheIdx_DI;
 extern int CheIdx_DII;
 extern int CheIdx_HDI;
 extern int CheIdx_Metal;
-
 extern int CheIdx_Dust;
 
 

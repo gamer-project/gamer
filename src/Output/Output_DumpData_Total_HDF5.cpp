@@ -2775,8 +2775,8 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  endif
    InputPara.Grackle_Cooling         = GRACKLE_COOLING;
    InputPara.Grackle_Primordial      = GRACKLE_PRIMORDIAL;
-   InputPara.Grackle_Dust            = GRACKLE_DUST;
    InputPara.Grackle_Metal           = GRACKLE_METAL;
+   InputPara.Grackle_Dust            = GRACKLE_DUST;
    InputPara.Grackle_UV              = GRACKLE_UV;
    InputPara.Grackle_CMB_Floor       = GRACKLE_CMB_FLOOR;
    InputPara.Grackle_PE_Heating      = GRACKLE_PE_HEATING;

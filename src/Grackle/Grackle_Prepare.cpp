@@ -22,10 +22,10 @@ extern int CheIdx_DI;
 extern int CheIdx_DII;
 extern int CheIdx_HDI;
 extern int CheIdx_Metal;
+extern int CheIdx_Dust;
 extern int CheIdx_vHeatingRate;
 extern int CheIdx_sHeatingRate;
 extern int CheIdx_tempFloor;
-extern int CheIdx_Dust;
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
 static real_che Grackle_vHeatingRate_User_Template( const double x, const double y, const double z, const double Time, const double n_H );
@@ -105,6 +105,11 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
          Aux_Error( ERROR_INFO, "[Che]Idx_Metal is undefined for \"GRACKLE_METAL\" !!\n" );
    }
 
+      if ( GRACKLE_DUST ) {
+      if (  Idx_Dust  == Idx_Undefined  ||  CheIdx_Dust  == Idx_Undefined  )
+         Aux_Error( ERROR_INFO, "[Che]Idx_Dust is undefined for \"GRACKLE_DUST\" !!\n" );
+   }
+
    if ( GRACKLE_USE_V_HEATING_RATE ) {
       if ( Grackle_vHeatingRate_User_Ptr == NULL )
          Aux_Error( ERROR_INFO, "Grackle_vHeatingRate_User_Ptr == NULL !!\n" );
@@ -142,19 +147,11 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    Che_Units.a_units              = 1.0;
    Che_Units.a_value              = Time[lv];
 #  endif
-// ============================================================
-      // if (  Idx_Dust  == Idx_Undefined  ||  CheIdx_Dust  == Idx_Undefined  )
-         // Aux_Error( ERROR_INFO, "[Che]Idx_Dust is undefined for \"GRACKLE_Dust\" !!\n" );
-// ============================================================
-   if ( GRACKLE_DUST ) {
-      if (  Idx_Dust  == Idx_Undefined  ||  CheIdx_Dust  == Idx_Undefined  )
-         Aux_Error( ERROR_INFO, "[Che]Idx_Dust is undefined for \"GRACKLE_DUST\" !!\n" );
-   }
 #  endif // #ifdef GAMER_DEBUG
 
-   const int  Size1pg          = CUBE(PS2);
-   const int  Size1v           = NPG*Size1pg;
-   const real MassRatio_pe    = Const_mp / Const_me;
+   const int  Size1pg             = CUBE(PS2);
+   const int  Size1v              = NPG*Size1pg;
+   const real MassRatio_pe        = Const_mp / Const_me;
 #  ifdef DUAL_ENERGY
    const bool CheckMinPres_No     = false;
 #  else
@@ -193,28 +190,11 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    real_che *Ptr_DII0          = h_Che_Array + CheIdx_DII         *Size1v;
    real_che *Ptr_HDI0          = h_Che_Array + CheIdx_HDI         *Size1v;
    real_che *Ptr_Metal0        = h_Che_Array + CheIdx_Metal       *Size1v;
+   real_che *Ptr_Dust0         = h_Che_Array + CheIdx_Dust        *Size1v;
    real_che *Ptr_vHeatingRate0 = h_Che_Array + CheIdx_vHeatingRate*Size1v;
    real_che *Ptr_sHeatingRate0 = h_Che_Array + CheIdx_sHeatingRate*Size1v;
    real_che *Ptr_tempFloor0    = h_Che_Array + CheIdx_tempFloor   *Size1v;
 
-
-   real_che *Ptr_Dens0  = h_Che_Array + CheIdx_Dens *Size1v;
-   real_che *Ptr_sEint0 = h_Che_Array + CheIdx_sEint*Size1v;
-   real_che *Ptr_Ent0   = h_Che_Array + CheIdx_Ent  *Size1v;
-   real_che *Ptr_e0     = h_Che_Array + CheIdx_e    *Size1v;
-   real_che *Ptr_HI0    = h_Che_Array + CheIdx_HI   *Size1v;
-   real_che *Ptr_HII0   = h_Che_Array + CheIdx_HII  *Size1v;
-   real_che *Ptr_HeI0   = h_Che_Array + CheIdx_HeI  *Size1v;
-   real_che *Ptr_HeII0  = h_Che_Array + CheIdx_HeII *Size1v;
-   real_che *Ptr_HeIII0 = h_Che_Array + CheIdx_HeIII*Size1v;
-   real_che *Ptr_HM0    = h_Che_Array + CheIdx_HM   *Size1v;
-   real_che *Ptr_H2I0   = h_Che_Array + CheIdx_H2I  *Size1v;
-   real_che *Ptr_H2II0  = h_Che_Array + CheIdx_H2II *Size1v;
-   real_che *Ptr_DI0    = h_Che_Array + CheIdx_DI   *Size1v;
-   real_che *Ptr_DII0   = h_Che_Array + CheIdx_DII  *Size1v;
-   real_che *Ptr_HDI0   = h_Che_Array + CheIdx_HDI  *Size1v;
-   real_che *Ptr_Metal0 = h_Che_Array + CheIdx_Metal*Size1v;
-   real_che *Ptr_Dust0  = h_Che_Array + CheIdx_Dust *Size1v;
 
 #  pragma omp parallel
    {
@@ -232,31 +212,36 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    real_che *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ent=NULL, *Ptr_e=NULL, *Ptr_HI=NULL, *Ptr_HII=NULL;
    real_che *Ptr_HeI=NULL, *Ptr_HeII=NULL, *Ptr_HeIII=NULL, *Ptr_HM=NULL, *Ptr_H2I=NULL, *Ptr_H2II=NULL;
    real_che *Ptr_DI=NULL, *Ptr_DII=NULL, *Ptr_HDI=NULL, *Ptr_Metal=NULL, *Ptr_Dust=NULL;
+   real_che *Ptr_vHeatingRate=NULL, *Ptr_sHeatingRate=NULL, *Ptr_tempFloor=NULL;
+   real_che  Ratio_FloorDens;
 
 #  pragma omp for schedule( static )
    for (int TID=0; TID<NPG; TID++)
    {
-      PID0      = PID0_List[TID];
-      idx_pg    = 0;
-      offset    = TID*Size1pg;
+      PID0   = PID0_List[TID];
+      idx_pg = 0;
+      offset = TID*Size1pg;
 
-      Ptr_Dens  = Ptr_Dens0  + offset;
-      Ptr_sEint = Ptr_sEint0 + offset;
-      Ptr_Ent   = Ptr_Ent0   + offset;
-      Ptr_e     = Ptr_e0     + offset;
-      Ptr_HI    = Ptr_HI0    + offset;
-      Ptr_HII   = Ptr_HII0   + offset;
-      Ptr_HeI   = Ptr_HeI0   + offset;
-      Ptr_HeII  = Ptr_HeII0  + offset;
-      Ptr_HeIII = Ptr_HeIII0 + offset;
-      Ptr_HM    = Ptr_HM0    + offset;
-      Ptr_H2I   = Ptr_H2I0   + offset;
-      Ptr_H2II  = Ptr_H2II0  + offset;
-      Ptr_DI    = Ptr_DI0    + offset;
-      Ptr_DII   = Ptr_DII0   + offset;
-      Ptr_HDI   = Ptr_HDI0   + offset;
-      Ptr_Metal = Ptr_Metal0 + offset;
-      Ptr_Dust  = Ptr_Dust0  + offset;
+      Ptr_Dens         = Ptr_Dens0         + offset;
+      Ptr_sEint        = Ptr_sEint0        + offset;
+      Ptr_Ent          = Ptr_Ent0          + offset;
+      Ptr_e            = Ptr_e0            + offset;
+      Ptr_HI           = Ptr_HI0           + offset;
+      Ptr_HII          = Ptr_HII0          + offset;
+      Ptr_HeI          = Ptr_HeI0          + offset;
+      Ptr_HeII         = Ptr_HeII0         + offset;
+      Ptr_HeIII        = Ptr_HeIII0        + offset;
+      Ptr_HM           = Ptr_HM0           + offset;
+      Ptr_H2I          = Ptr_H2I0          + offset;
+      Ptr_H2II         = Ptr_H2II0         + offset;
+      Ptr_DI           = Ptr_DI0           + offset;
+      Ptr_DII          = Ptr_DII0          + offset;
+      Ptr_HDI          = Ptr_HDI0          + offset;
+      Ptr_Metal        = Ptr_Metal0        + offset;
+      Ptr_Dust         = Ptr_Dust0         + offset;
+      Ptr_vHeatingRate = Ptr_vHeatingRate0 + offset;
+      Ptr_sHeatingRate = Ptr_sHeatingRate0 + offset;
+      Ptr_tempFloor    = Ptr_tempFloor0    + offset;
 
       for (int LocalID=0; LocalID<8; LocalID++)
       {
@@ -362,6 +347,10 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
             if ( GRACKLE_METAL )
             Ptr_Metal[idx_pg] = *( fluid[Idx_Metal][0][0] + idx_p ) * Ratio_FloorDens;
 
+//          use dust density field
+            if ( GRACKLE_DUST )
+            Ptr_Dust[idx_pg] = *( fluid[Idx_Dust][0][0] + idx_p );
+
 //          user-provided array of volumetric heating rates
             if ( GRACKLE_USE_V_HEATING_RATE ) {
             const double n_H = Ptr_Dens[idx_pg] * UNIT_D * GRACKLE_HYDROGEN_MFRAC / Const_mH; // hydrogen number density in units of cm^-3
@@ -375,10 +364,6 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
 //          user-provided array of temperature floor
             if ( GRACKLE_USE_TEMP_FLOOR == 2 )
             Ptr_tempFloor[idx_pg] = Grackle_tempFloor_User_Ptr( x0+i*dh, y0+j*dh, z0+k*dh, Time[lv], Ptr_Dens[idx_pg], Ptr_sEint[idx_pg] );
-
-//          use dust density field
-            if ( GRACKLE_DUST )
-            Ptr_Dust[idx_pg] = *( fluid[Idx_Dust][0][0] + idx_p );
 
             idx_p  ++;
             idx_pg ++;
@@ -420,6 +405,9 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    if ( GRACKLE_METAL )
    Che_FieldData->metal_density   = Ptr_Metal0;
 
+   if ( GRACKLE_DUST )
+   Che_FieldData->dust_density    = Ptr_Dust0;
+
    if ( GRACKLE_USE_V_HEATING_RATE )
    Che_FieldData->volumetric_heating_rate = Ptr_vHeatingRate0;
 
@@ -428,9 +416,6 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
 
    if ( GRACKLE_USE_TEMP_FLOOR == 2 )
    Che_FieldData->temperature_floor       = Ptr_tempFloor0;
-
-   if ( GRACKLE_DUST )
-   Che_FieldData->dust_density    = Ptr_Dust0;
 
 } // FUNCTION : Grackle_Prepare
 

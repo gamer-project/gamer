@@ -256,8 +256,8 @@ double               GRACKLE_REDSHIFT;
 #endif
 bool                 GRACKLE_COOLING;
 GracklePriChe_t      GRACKLE_PRIMORDIAL;
-bool                 GRACKLE_DUST;
 bool                 GRACKLE_METAL;
+bool                 GRACKLE_DUST;
 bool                 GRACKLE_UV;
 bool                 GRACKLE_CMB_FLOOR;
 bool                 GRACKLE_PE_HEATING;

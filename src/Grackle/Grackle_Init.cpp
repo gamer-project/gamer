@@ -107,6 +107,7 @@ void Grackle_Init()
    grackle_data->with_radiative_cooling         = GRACKLE_COOLING;
    grackle_data->primordial_chemistry           = GRACKLE_PRIMORDIAL;
    grackle_data->metal_cooling                  = GRACKLE_METAL;
+   grackle_data->use_dust_density_field         = GRACKLE_DUST;
    grackle_data->UVbackground                   = GRACKLE_UV;
    grackle_data->cmb_temperature_floor          = GRACKLE_CMB_FLOOR;
    grackle_data->photoelectric_heating          = GRACKLE_PE_HEATING;
@@ -124,8 +125,6 @@ void Grackle_Init()
 // --> see https://grackle.readthedocs.io/en/latest/Parameters.html#c.HydrogenFractionByMass
    if ( GRACKLE_PRIMORDIAL != GRACKLE_PRI_CHE_CLOUDY )
    grackle_data->HydrogenFractionByMass         = GRACKLE_HYDROGEN_MFRAC;
-   grackle_data->use_dust_density_field  = 1;
-   grackle_data->use_dust_density_field          = GRACKLE_DUST;
 
 #  ifdef OPENMP
 // currently we adopt the OpenMP implementation in Grackle directly, which applies the parallelization to

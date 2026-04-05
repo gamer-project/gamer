@@ -78,6 +78,9 @@ void Init_MemAllocate_Grackle( const int Che_NPG )
    if ( GRACKLE_METAL )
    CheIdx_Metal = Che_NField ++;
 
+   if ( GRACKLE_DUST )
+   CheIdx_Dust = Che_NField ++;
+
    if ( GRACKLE_USE_V_HEATING_RATE )
    CheIdx_vHeatingRate = Che_NField ++;
 
@@ -87,8 +90,6 @@ void Init_MemAllocate_Grackle( const int Che_NPG )
    if ( GRACKLE_USE_TEMP_FLOOR == 2 )
    CheIdx_tempFloor    = Che_NField ++;
 
-   if ( GRACKLE_DUST )
-   CheIdx_Dust = Che_NField ++;
 
 // allocate the input/output array for the Grackle solver
    for (int t=0; t<2; t++)
