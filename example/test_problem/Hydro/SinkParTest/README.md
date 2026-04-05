@@ -29,20 +29,26 @@ Simulation setup:
 
 Description:
 ========================================
-This simulation uses Boss & Bodenheimer test (BB test) to test the sink particle and accretion. BB test describes the collapse and fragmentation of a rotating core. The size and mass of the cloud is controlled by `R0` and `Core_Mass`, the angular velocity is set by `Omega0`. A m = 2 density perturbation can be add to the cloud and the strength of the perturbation is controlled by `Delta_Dens`. A density contrast of `Denss_Contrast` is used to scale the cloud density to the background density. 
+This simulation uses Boss & Bodenheimer test (BB test) to test the sink particle and accretion. BB test describes the collapse and fragmentation of a rotating core. The size and mass of the cloud is controlled by `SinkParTest_R0` and `SinkParTest_Core_Mass`, the angular velocity is set by `SinkParTest_Omega0`. A m = 2 density perturbation can be add to the cloud and the strength of the perturbation is controlled by `SinkParTest_Delta_Dens` ($A$):
 
-A magnetic field with strength of `B0` initially along `z`-axis can be added, its inclination respect to the `z`-axis can be set by `theta_B`. A turbulence field described by  `Tur_Table.dat` (see Simulation Setup for how to generate it) is added to the initial velocity field and scale to a Mach number of `Mach_num`.
+$$\rho = \rho_0 (1 + A \cos(m\phi))$$
 
-This simulation uses barotropic EOS, and the transition density is controlled by `rho_AD` (see Note for more details).
+where $\rho_0$ is the initial density and $\phi$ is the azimuthal angle.
 
-When `Delta_Dens` > 0, the cloud will collapse into to two cores rotating with each other with their own disk, the sink particles will form at the center of the disk and accrete mass from the disk.
+A density contrast of `SinkParTest_Denss_Contrast` is used to scale the cloud density to the background density. 
+
+A magnetic field with strength of `SinkParTest_B0` initially along `z`-axis can be added, its inclination respect to the `z`-axis can be set by `SinkParTest_theta_B`. A turbulence field described by  `Tur_Table.dat` (see Simulation Setup for how to generate it) is added to the initial velocity field and scale to a Mach number of `SinkParTest_Mach_num`.
+
+This simulation uses barotropic EOS, and the transition density is controlled by `SinkParTest_rho_AD` (see Note for more details).
+
+When `SinkParTest_Delta_Dens` > 0, the cloud will collapse into to two cores rotating with each other with their own disk, the sink particles will form at the center of the disk and accrete mass from the disk.
 
 The default parameters are following D.A. Hubber et al., 2018, MNRAS 473, 1603–1632.
 
 Note:
 ========================================
 1. The sink particle and accretion criterias are mostly following C. Federrath et al., 2010, ApJ, 713, 269, with additional criteria from S. D. Clarke et al., 2017, MNRAS, 468, 2489.
-2. A custom EOS is used (`CPU_EoS_Barotropic_SinkParTest.cpp`), which descripts a barotropic EOS: $$T(\rho) = T_0 (1 + (\frac{\rho}{\rho_{ad}})^{\gamma - 1})$$, where $\rho$ is gas density, $T_0$ is the initial temperature (`ISO_TEMP`), `gamma` is the adiabatic index (`GAMMA`) and $\rho_{ad}$ is the transition density (`rho_AD_SinkParTest` in `Input_TestProb`), which represents the approximate density at which the gas becomes optically thick (see Hirohiko Masunaga et al., 1998, ApJ, 495, 346, and Hirohiko Masunaga and Shu-ichiro Inutsuka, 2000, ApJ, 531, 350).
+2. A custom EOS is used (`CPU_EoS_Barotropic_SinkParTest.cpp`), which descripts a barotropic EOS: $$T(\rho) = T_0 (1 + (\frac{\rho}{\rho_{ad}})^{\gamma - 1})$$, where $\rho$ is gas density, $T_0$ is the initial temperature (`SinkParTest_Iso_Temp`), `gamma` is the adiabatic index (`GAMMA`) and $\rho_{ad}$ is the transition density (`SinkParTest_rho_AD`), which represents the approximate density at which the gas becomes optically thick (see Hirohiko Masunaga et al., 1998, ApJ, 495, 346, and Hirohiko Masunaga and Shu-ichiro Inutsuka, 2000, ApJ, 531, 350).
 3. A script (`Analysis.py`) using `yt` is provided to conduct some analysis:
     - It plots the column density projected on `ProjPlane [xy/xz]` and overplot the sink particles on the maps (`./ColMap/Column_Density_*.png`).
     - The evolution of the two sink particles mass is recorded in `SinkMassEvo.png`.
