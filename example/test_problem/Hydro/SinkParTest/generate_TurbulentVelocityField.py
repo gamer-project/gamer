@@ -3,7 +3,6 @@ import argparse
 
 '''
 Usage: python generate_TubulentVelocityField.py -n [power law index] -kmin [kmin] -seed [random seed] -nmodes [number of modes]
-Author: Hsinhao Huang and S. D. Clarke
 Reference: O. Lomax et al., 2015, MNRAS, 449, 662
 '''
 
@@ -22,7 +21,7 @@ parser.add_argument( '-nmodes', action='store', required=False, type=int, dest='
 args=parser.parse_args()
 
 # set the input parameters
-n          = args.n/2   # this is the power law index of |\hat{v}_k|, the AMPLTUDE of the k-space velocity field
+vel_n      = args.n/2   # the power law index of |\hat{v}_k|, the AMPLTUDE of the k-space velocity field
 kmin       = args.kmin  # minimum of k
 seed       = args.seed  # random seed
 nmodes     = args.nmodes
@@ -50,13 +49,13 @@ for i in range(0, grid**3):
     sampledRandomNumbers_Randoms[1,].ravel()[i] = np.random.random() if getRandoms[i] else 0
     sampledRandomNumbers_Randoms[2,].ravel()[i] = np.random.random() if getRandoms[i] else 0
 
-# compute the amplitudes, a power law spectrum of the form A(k) = A0 * k**n
+# compute the amplitudes, a power law spectrum of the form A(k) = A0 * k**vel_n
 A0           = 1
 A            = np.zeros((3,grid,grid,grid)) # initialize A
 highK        = (k >= kmin)                  # high-k filter
-A[0,][highK] = A0 * sampledRandomNumbers_Normals[0,][highK] * k[highK]**n
-A[1,][highK] = A0 * sampledRandomNumbers_Normals[1,][highK] * k[highK]**n
-A[2,][highK] = A0 * sampledRandomNumbers_Normals[2,][highK] * k[highK]**n
+A[0,][highK] = A0 * sampledRandomNumbers_Normals[0,][highK] * k[highK]**vel_n
+A[1,][highK] = A0 * sampledRandomNumbers_Normals[1,][highK] * k[highK]**vel_n
+A[2,][highK] = A0 * sampledRandomNumbers_Normals[2,][highK] * k[highK]**vel_n
 
 # compute the phases
 phase        = 2 * np.pi * sampledRandomNumbers_Randoms
