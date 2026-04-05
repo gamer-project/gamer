@@ -127,6 +127,11 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    }
 #  endif // #ifdef GAMER_DEBUG
 
+   if ( NPG > CHE_GPU_NPGROUP )
+      Aux_Error( ERROR_INFO, "NPG (%d) exceeds the memory allocation of CHE_GPU_NPGROUP (%d) for h_Che_Array !!\n",
+                 NPG, CHE_GPU_NPGROUP );
+
+
 #  ifdef COMOVING
 // update grackle units
    Che_Units.comoving_coordinates = 1;
@@ -137,11 +142,6 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    Che_Units.a_units              = 1.0;
    Che_Units.a_value              = Time[lv];
 #  endif
-
-   if ( NPG > CHE_GPU_NPGROUP )
-      Aux_Error( ERROR_INFO, "NPG (%d) exceeds the memory allocation of CHE_GPU_NPGROUP (%d) for h_Che_Array !!\n",
-                 NPG, CHE_GPU_NPGROUP );
-
 
    const int  Size1pg             = CUBE(PS2);
    const int  Size1v              = NPG*Size1pg;
