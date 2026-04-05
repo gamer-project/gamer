@@ -29,13 +29,13 @@ Simulation setup:
 
 Description:
 ========================================
-This simulation uses Boss & Bodenheimer test (BB test) to test the sink particle and accretion. BB test describes the collapse and fragmentation of a rotating core. The size and mass of the cloud is controlled by `SinkParTest_R0` and `SinkParTest_Core_Mass`, the angular velocity is set by `SinkParTest_Omega0`. A m = 2 density perturbation can be add to the cloud and the strength of the perturbation is controlled by `SinkParTest_Delta_Dens` ($A$):
+This simulation uses Boss & Bodenheimer test (BB test) to test the sink particle and accretion. BB test describes the collapse and fragmentation of a rotating core. The size and mass of the cloud is controlled by `SinkParTest_R0` and `SinkParTest_Core_Mass`, the angular velocity is set by `SinkParTest_Omega0`. A m = 2 density perturbation can be add to the cloud and the strength of the perturbation is controlled by `SinkParTest_Delta_Dens` ($\Delta_{\rm Dens}$):
 
-$$\rho = \rho_0 (1 + A \cos(m\phi))$$
+$$\rho = \rho_0 (1 + \Delta_{\rm Dens} \cos(m\phi))$$
 
-where $\rho_0$ is the initial density and $\phi$ is the azimuthal angle.
+where $\rho_0$ is the initial cloud density calculated from `SinkParTest_Core_Mass` and `SinkParTest_R0`, and $\phi$ is the azimuthal angle.
 
-A density contrast of `SinkParTest_Denss_Contrast` is used to scale the cloud density to the background density. 
+A density contrast of `SinkParTest_Dens_Contrast` ($\rho_0/\rho_{\rm bg}$) is used to scale the cloud density to the background density. 
 
 A magnetic field with strength of `SinkParTest_B0` initially along `z`-axis can be added, its inclination respect to the `z`-axis can be set by `SinkParTest_theta_B`. A turbulence field described by  `Tur_Table.dat` (see Simulation Setup for how to generate it) is added to the initial velocity field and scale to a Mach number of `SinkParTest_Mach_num`.
 
@@ -43,7 +43,7 @@ This simulation uses barotropic EOS, and the transition density is controlled by
 
 When `SinkParTest_Delta_Dens` > 0, the cloud will collapse into to two cores rotating with each other with their own disk, the sink particles will form at the center of the disk and accrete mass from the disk.
 
-The default parameters are following D.A. Hubber et al., 2018, MNRAS 473, 1603–1632.
+The default parameters are following Section 6.12 of D.A. Hubber et al., 2018, MNRAS 473, 1603–1632.
 
 Note:
 ========================================
