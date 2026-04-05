@@ -14,7 +14,7 @@
 
 #include "GAMER.h"
 
-#ifdef SUPPORT_GRACKLE
+#if ( MODEL == HYDRO  &&  defined SUPPORT_GRACKLE  &&  defined COMOVING )
 // specific global variables declared in Init_TestProb_Grackle_Comoving.cpp
 extern double              GrackleComoving_InitialMetallicity;
 extern grackle_field_data  my_fields;
@@ -228,4 +228,4 @@ void Aux_CoolingCurve( const double z_value, const double T_min, const double T_
 
 
 
-#endif // SUPPORT_GRACKLE
+#endif // #if ( MODEL == HYDRO  &&  defined SUPPORT_GRACKLE  &&  defined COMOVING )
