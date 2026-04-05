@@ -475,6 +475,19 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
    }
 #  endif // #ifndef BAROTROPIC_EOS
 
+#  ifndef SRHD
+   if ( OPT__UNIT )
+   {
+//    check whether the speed is larger than the speed of light
+      if ( SQR(Fluid[MOMX]) + SQR(Fluid[MOMY]) + SQR(Fluid[MOMZ]) >= SQR(Fluid[DENS]*Const_c/UNIT_V) )
+         return true;
+
+//    check whether the total energy is larger than the relativistic rest-mass energy
+      if ( Fluid[ENGY] >= Fluid[DENS] * SQR(Const_c/UNIT_V) )
+         return true;
+   }
+#  endif // #ifndef SRHD
+
 
 // if all checks above pass, return false
 // =================================================
