@@ -6,7 +6,7 @@
 
 #if ( MODEL == HYDRO )
 
-extern double SinkParTest_rho_AD;
+extern double SinkParTest_rho_AD, SinkParTest_Iso_Temp;
 
 
 /********************************************************
@@ -56,12 +56,12 @@ void EoS_SetAuxArray_Barotropic_SinkParTest( double AuxArray_Flt[], int AuxArray
    AuxArray_Flt[1] = 1.0 / ( GAMMA - 1.0 );
    AuxArray_Flt[2] = 1.0 / (( OPT__UNIT ) ? MOLECULAR_WEIGHT * MU_NORM / Const_kB * (UNIT_E/UNIT_M)
                                           : MOLECULAR_WEIGHT);
-   AuxArray_Flt[3] = ISO_TEMP;
+   AuxArray_Flt[3] = SinkParTest_Iso_Temp;
    AuxArray_Flt[4] = SinkParTest_rho_AD;
 
    if ( MPI_Rank == 0 )
    {
-      Aux_Message( stdout, "   Background temperature       = %13.7e K\n"    ,    ISO_TEMP      );
+      Aux_Message( stdout, "   Background temperature       = %13.7e K\n"    ,    SinkParTest_Iso_Temp      );
       Aux_Message( stdout, "   Adiabatic density            = %13.7e g/cm3\n",    SinkParTest_rho_AD*UNIT_D );
    }
 

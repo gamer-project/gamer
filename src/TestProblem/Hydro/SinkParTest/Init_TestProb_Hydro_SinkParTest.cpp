@@ -24,6 +24,7 @@ static char       Tur_Table[MAX_STRING];          // The turbulence table
 static double     SinkParTest_Cs;                 // sound spped
 static double     SinkParTest_Rho0;               // The density of the cloud
 
+double            SinkParTest_Iso_Temp;           // The isothermal temperature
 double            SinkParTest_rho_AD;             // The adiabatic density threshold
 
 
@@ -158,7 +159,8 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "B0"     ,              &SinkParTest_B0,            0.0,           NoMin_double,     NoMax_double      );
    LOAD_PARA( load_mode, "theta_B",              &SinkParTest_theta_B,       0.0,           NoMin_double,     NoMax_double      );
    LOAD_PARA( load_mode, "Mach_num",             &SinkParTest_Mach_num,      0.0,           0.0,              NoMax_double      );
-   LOAD_PARA( load_mode, "rho_AD",               &SinkParTest_rho_AD,        1e-14,         0.0,              NoMax_double      );
+   LOAD_PARA( load_mode, "Iso_Temp",             &SinkParTest_Iso_Temp,      10.0,          Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "rho_AD",               &SinkParTest_rho_AD,        1e-14,         Eps_double,       NoMax_double      );
    LOAD_PARA( load_mode, "Tur_Table",            Tur_Table,                  NoDef_str,     Useless_str,      Useless_str       );
 
 } // FUNCITON : LoadInputTestProb
@@ -309,6 +311,7 @@ void SetParameter()
       Aux_Message( stdout, "  B angle               = %13.7e radian\n", SinkParTest_theta_B                  );
       Aux_Message( stdout, "  Mach number           = %13.7e \n",       SinkParTest_Mach_num                 );
       Aux_Message( stdout, "  Turbulence table      = %s\n",            Tur_Table                            );
+      Aux_Message( stdout, "  Iso_Temp              = %13.7e K\n",      SinkParTest_Iso_Temp                 );
       Aux_Message( stdout, "  rho_AD                = %13.7e g/cm3\n",  SinkParTest_rho_AD                   );
       Aux_Message( stdout, "=============================================================================\n" );
    }
