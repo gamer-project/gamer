@@ -33,9 +33,11 @@ This simulation uses Boss & Bodenheimer test (BB test) to test the sink particle
 
 A magnetic field with strength of `B0` initially along `z`-axis can be added, its inclination respect to the `z`-axis can be set by `theta_B`. A turbulence field described by  `Tur_Table.dat` (see Simulation Setup for how to generate it) is added to the initial velocity field and scale to a Mach number of `Mach_num`.
 
-This simulation uses barotropic EOS, and the transition density is controlled by `rho_AD_SinkParTest` (see Note for more details).
+This simulation uses barotropic EOS, and the transition density is controlled by `rho_AD` (see Note for more details).
 
 When `Delta_Dens` > 0, the cloud will collapse into to two cores rotating with each other with their own disk, the sink particles will form at the center of the disk and accrete mass from the disk.
+
+The default parameters are following D.A. Hubber et al., 2018, MNRAS 473, 1603–1632.
 
 Note:
 ========================================
