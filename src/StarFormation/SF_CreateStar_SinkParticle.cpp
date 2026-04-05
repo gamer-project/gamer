@@ -381,7 +381,6 @@ void SF_CreateStar_SinkParticle(const int lv, const real TimeNew,
     real GasMFracLeft; // the fraction of gas mass of the cell that will be took
                        // out by particle
     real Corner_Array_F[3]; // the corner of the ghost zone
-    real fluid[NSinkVar];   // fluid in the current test cell
 
     real PotNeighbor[6]; // record the neighboring cell potential [x+, x-, y+,
                          // y+, z+, z-]
@@ -625,16 +624,14 @@ void SF_CreateStar_SinkParticle(const int lv, const real TimeNew,
             PosZ = Corner_Array_F[2] + pk * dh;
 
             const int t = IDX321(pi, pj, pk, Size_Flu, Size_Flu);
-            for (int v = 0; v < NSinkVar; v++)
-              fluid[v] = Flu_Array_F_In[v][pk][pj][pi];
-            VelX = fluid[SINK_VELX];
-            VelY = fluid[SINK_VELY];
-            VelZ = fluid[SINK_VELZ];
+            VelX = Flu_Array_F_In[SINK_VELX][pk][pj][pi]; 
+            VelY = Flu_Array_F_In[SINK_VELY][pk][pj][pi];
+            VelZ = Flu_Array_F_In[SINK_VELZ][pk][pj][pi];
 
             //       First density threshold:
             //       Check whether the gas density is larger than the threshold
             //       ===========================================================================================================
-            GasDens = fluid[SINK_DENS];
+            GasDens = Flu_Array_F_In[SINK_DENS][pk][pj][pi];
             if (GasDens <= GasDensThres)
               continue;
 
