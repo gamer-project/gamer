@@ -149,19 +149,19 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
 // --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
 // --> LOAD_PARA() is defined in "include/TestProb.h"
 // ***************************************************************************************************************************
-// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",      &VARIABLE,                  DEFAULT,       MIN,              MAX               );
+// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",                  &VARIABLE,                  DEFAULT,       MIN,              MAX               );
 // ***************************************************************************************************************************
-   LOAD_PARA( load_mode, "R0",                   &SinkParTest_R0,            3.0e16,        Eps_double,       NoMax_double      );
-   LOAD_PARA( load_mode, "Omega0",               &SinkParTest_Omega0,        0.0,           NoMin_double,     NoMax_double      );
-   LOAD_PARA( load_mode, "Core_Mass",            &SinkParTest_Core_Mass,     1.0,           0.0,              NoMax_double      );
-   LOAD_PARA( load_mode, "Delta_Dens",           &SinkParTest_Delta_Dens,    0.1,           0.0,              NoMax_double      );
-   LOAD_PARA( load_mode, "Dens_Contrast",        &SinkParTest_Dens_Contrast, 1.0e2,         0.0,              NoMax_double      );
-   LOAD_PARA( load_mode, "B0"     ,              &SinkParTest_B0,            0.0,           NoMin_double,     NoMax_double      );
-   LOAD_PARA( load_mode, "theta_B",              &SinkParTest_theta_B,       0.0,           NoMin_double,     NoMax_double      );
-   LOAD_PARA( load_mode, "Mach_num",             &SinkParTest_Mach_num,      0.0,           0.0,              NoMax_double      );
-   LOAD_PARA( load_mode, "Iso_Temp",             &SinkParTest_Iso_Temp,      10.0,          Eps_double,       NoMax_double      );
-   LOAD_PARA( load_mode, "rho_AD",               &SinkParTest_rho_AD,        1e-14,         Eps_double,       NoMax_double      );
-   LOAD_PARA( load_mode, "Tur_Table",            Tur_Table,                  NoDef_str,     Useless_str,      Useless_str       );
+   LOAD_PARA( load_mode, "SinkParTest_R0",                   &SinkParTest_R0,            3.0e16,        Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "SinkParTest_Omega0",               &SinkParTest_Omega0,        0.0,           NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "SinkParTest_Core_Mass",            &SinkParTest_Core_Mass,     1.0,           0.0,              NoMax_double      );
+   LOAD_PARA( load_mode, "SinkParTest_Delta_Dens",           &SinkParTest_Delta_Dens,    0.1,           0.0,              NoMax_double      );
+   LOAD_PARA( load_mode, "SinkParTest_Dens_Contrast",        &SinkParTest_Dens_Contrast, 1.0e2,         0.0,              NoMax_double      );
+   LOAD_PARA( load_mode, "SinkParTest_B0"     ,              &SinkParTest_B0,            0.0,           NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "SinkParTest_theta_B",              &SinkParTest_theta_B,       0.0,           NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "SinkParTest_Mach_num",             &SinkParTest_Mach_num,      0.0,           0.0,              NoMax_double      );
+   LOAD_PARA( load_mode, "SinkParTest_Iso_Temp",             &SinkParTest_Iso_Temp,      10.0,          Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "SinkParTest_rho_AD",               &SinkParTest_rho_AD,        1e-14,         Eps_double,       NoMax_double      );
+   LOAD_PARA( load_mode, "SinkParTest_Tur_Table",            Tur_Table,                  NoDef_str,     Useless_str,      Useless_str       );
 
 } // FUNCITON : LoadInputTestProb
 
