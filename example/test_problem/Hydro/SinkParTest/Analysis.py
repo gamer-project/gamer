@@ -52,10 +52,10 @@ print( '-------------------------------------------------------------------' )
 print( ' '.join(map(str, sys.argv)) )
 print( '-------------------------------------------------------------------\n' )
 
-def ProjCol(ds, c, normal_vector, north_vector, width, npixel):
+def ProjCol(ds, c, normal_vector, north_vector, box_size, npixel):
     field = ('gamer', 'Dens')
     print("Projecting Dens...")
-    Col = yt.off_axis_projection(ds, center=c,  normal_vector=normal_vector, north_vector=north_vector, width=width,
+    Col = yt.off_axis_projection(ds, center=c,  normal_vector=normal_vector, north_vector=north_vector, box_size=box_size,
                           resolution=npixel, item=field, 
                           no_ghost=False).to('g/cm**2').value
     Col /= mu*mp.value
@@ -72,13 +72,8 @@ e_index   = args.e_index
 npixel    = args.npixel
 ProjPlane = args.ProjPlane
 Output    = "./ColMap"
+img_limt  = 0.01 # pc, final image scale centered on the box center
 
-# Initial cloud parameters (from Input_TestProb)
-R0        = 3.0856776e+16 # cm
-Core_Mass = 1.0 # M_sun
-mu        = 2.3 # molecular mass
-
-fns = ['Data_{}'.format(format(index_id,'06')) for index_id in range(s_index, e_index+1)]
 index_list = [format(index_id,'06') for index_id in range(s_index, e_index+1)]
 
 if not os.path.exists(Output):
@@ -89,7 +84,10 @@ Par1MArr   = []
 Par2MArr   = []
 GasMassArr = []
 
-for fn, index_id in zip(fns, index_list):
+for index_id in index_list:
+
+    fn = 'Data_{}'.format(index_id)
+
     try: 
         # Since some snapshots may be deleted, use "try" to skip them
         ds = yt.load(fn)
@@ -101,19 +99,20 @@ for fn, index_id in zip(fns, index_list):
     print("Current snapshot = %s"%fn)
     print('Simulation time = %.2f kyr'%(ds.current_time.to('kyr')))
 
+    # Initial cloud parameters
+    R0        = ds.parameters['SinkParTest_R0'] # cm
+    Core_Mass = ds.parameters['SinkParTest_Core_Mass'] # g
+    mu        = ds.parameters['MolecularWeight']
+
     # Get the free-fall time
-    tff = free_fall_time(R0*u.cm, Core_Mass*solar_mass)
-    
-    # Read the box dimensions
-    box_size_lxy = ds.domain_right_edge.value[0] # cm, for x and y
-    box_size_lz  = ds.domain_right_edge.value[2] # cm, for z
+    tff = free_fall_time(R0*u.cm, Core_Mass*u.g)
     
     # Projection box size and center
-    width = ([box_size_lxy, box_size_lxy, box_size_lxy]*u.cm)
+    box_size = ds.domain_width.to("cm") # cm, for x, y and z
     c = ds.domain_center.value*u.cm
     
     print("Center = ", c.to("pc"))
-    print("Box size for projection = ", width.to("pc"))
+    print("Box size for projection = ", box_size.to("pc"))
     
     # Set normal and north (up) vector
     if ProjPlane == 'xy':
@@ -128,7 +127,7 @@ for fn, index_id in zip(fns, index_list):
         normal_vector = np.array([1., 0., 0.])
         north_vector  = np.array([0., 0., 1.])
         
-    img_extend = width.to('pc').value[0]/2 # the boundary for plotting
+    img_extend = box_size.to('pc').value[0]/2 # the boundary for plotting
 
     # Information for the gas
     Time  = ds.current_time.to('kyr').value/tff
@@ -162,7 +161,7 @@ for fn, index_id in zip(fns, index_list):
     GasMassArr.append(np.sum(Gas_M))
     
     # Projection
-    Col = ProjCol(ds, c, normal_vector, north_vector, width, npixel)
+    Col = ProjCol(ds, c, normal_vector, north_vector, box_size, npixel)
     
     # Plotting
     fig = plt.figure(figsize=(8, 8))
@@ -171,7 +170,6 @@ for fn, index_id in zip(fns, index_list):
     im = ax.imshow(Col, origin='lower', cmap='gist_heat', norm=colors.LogNorm(vmin=1e21, vmax=1e27), 
                  extent=[-img_extend, img_extend, -img_extend, img_extend])
     
-    img_limt = 0.01
     ax.set_xlim(-img_limt, img_limt)
     ax.set_ylim(-img_limt, img_limt)
 
@@ -184,8 +182,7 @@ for fn, index_id in zip(fns, index_list):
 
     cbar = fig.colorbar(im, ax=ax, shrink=0.8, aspect=30)
     cbar.set_label(r'Column number density (cm$^{-2}$)', fontsize=13)
-
-    if ProjPlane == 'xy':
+jPlane == 'xy':
         ax.set_xlabel(r'x (pc)')
         ax.set_ylabel(r'y (pc)')
     elif ProjPlane == 'xz':
