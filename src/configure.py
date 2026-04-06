@@ -37,7 +37,9 @@ PRINT_WIDTH = 100
 
 GAMER_CONFIG_DIR     = os.path.join("..", "configs")
 GAMER_MAKE_BASE      = "Makefile_base"
-GAMER_MAKE_OUT       = "Makefile"
+#GAMER_MAKE_OUT       = "Makefile"
+#GAMER_MAKE_OUT       = "Makefile_psidm"
+GAMER_MAKE_OUT       = "Makefile_plummer"
 GAMER_LOCAL_SETTING  = ".local_settings"
 GAMER_GLOBAL_SETTING = os.path.expanduser("~/.config/gamer/global_settings")
 GAMER_DESCRIPTION    = "Prepare a customized Makefile for GAMER.\n"\
