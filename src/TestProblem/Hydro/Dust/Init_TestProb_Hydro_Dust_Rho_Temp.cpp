@@ -1,7 +1,7 @@
 #include "GAMER.h"
 
 // problem-specific global variables
-grackle_field_data my_fields;
+static grackle_field_data my_fields;
 static gr_float *my_cooling_time;
 static gr_float *my_temperature;
 static double  Gas_Temp;               // gas temperature [K]

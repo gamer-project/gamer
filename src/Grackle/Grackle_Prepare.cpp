@@ -105,7 +105,7 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
          Aux_Error( ERROR_INFO, "[Che]Idx_Metal is undefined for \"GRACKLE_METAL\" !!\n" );
    }
 
-      if ( GRACKLE_DUST ) {
+   if ( GRACKLE_DUST ) {
       if (  Idx_Dust  == Idx_Undefined  ||  CheIdx_Dust  == Idx_Undefined  )
          Aux_Error( ERROR_INFO, "[Che]Idx_Dust is undefined for \"GRACKLE_DUST\" !!\n" );
    }
@@ -147,7 +147,6 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    Che_Units.a_units              = 1.0;
    Che_Units.a_value              = Time[lv];
 #  endif
-#  endif // #ifdef GAMER_DEBUG
 
    const int  Size1pg             = CUBE(PS2);
    const int  Size1v              = NPG*Size1pg;
