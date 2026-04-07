@@ -12,7 +12,7 @@ DELTA=1
 
 EDOTMODE=edot_0    # or edot_const
 
-python metal_density.py -s $START -e $END -d $DELTA
-python dust_density.py  -option $EDOTMODE
-python gas_density.py   -s $START -e $END -d $DELTA
-python gas_temp.py      -s $START -e $END -d $DELTA -option $EDOTMODE
+python3 metal_density.py -s $START -e $END -d $DELTA
+python3 dust_density.py  -option $EDOTMODE
+python3 gas_density.py   -s $START -e $END -d $DELTA
+python3 gas_temp.py      -s $START -e $END -d $DELTA -option $EDOTMODE
