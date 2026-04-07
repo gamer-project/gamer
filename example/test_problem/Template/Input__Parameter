@@ -212,6 +212,7 @@ GRACKLE_REDSHIFT              0.0         # redshift to set "a_value" for the re
 GRACKLE_COOLING               1           # map to "with_radiative_cooling" [1]
 GRACKLE_PRIMORDIAL            0           # map to "primordial_chemistry" (0=Cloudy, 1/2/3=6-/9-/12-species) (must increase NCOMP_PASSIVE_USER by 6/9/12, respectively) [0]
 GRACKLE_METAL                 0           # map to "metal_cooling" (must increase NCOMP_PASSIVE_USER by 1) [0]
+GRACKLE_DUST                  1           # map to "use_dust_density_field" (must increase NCOMP_PASSIVE_USER by 1) [0]
 GRACKLE_UV                    0           # map to "UVbackground" [0]
 GRACKLE_CMB_FLOOR             1           # map to "cmb_temperature_floor" [1]
 GRACKLE_PE_HEATING            0           # map to "photoelectric_heating" [0]
