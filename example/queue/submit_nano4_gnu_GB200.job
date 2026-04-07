@@ -27,5 +27,6 @@ module load prun/2.2 gnu14/14.2.0 hwloc/2.12.0 ucx/1.19.0 libfabric/1.18.0 openm
 export UCX_PROTO_ENABLE=n
 export UCX_WARN_UNUSED_ENV_VARS=n
 
+###Warning: MPI rank and OpenMP thread configuration is not fully optimized. The current setting is only for testing purposes###
 mpirun --mca pml ucx --mca btl ^ofi -map-by ppr:17:numa:pe=4 --report-bindings ./gamer 1>>$LOG_FILE 2>&1
 echo "=============================================================" 1>>$LOG_FILE 2>&1
