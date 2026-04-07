@@ -71,3 +71,4 @@ ax.legend()
 
 # Save outputs
 plt.savefig(fileout + ".png", bbox_inches='tight', pad_inches=0.05, dpi=dpi)
+# plt.show()

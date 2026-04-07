@@ -20,7 +20,7 @@ Simulation setup:
    (1) This setup is used to test radiative cooling efficiency at fixed density using the Grackle cooling model.
    If cooling is not desired, set the `GRACKLE_COOLING` option to 0 in Input__Parameter to disable the cooling function.
    If cooling is required, set `GRACKLE_COOLING` = 1 in Input__Parameter and replace the original Grackle source file grackle/src/clib/solve_rate_cool_g.F with the modified version available at:
-    https://github.com/Xiang-Zhe-Wei/grackle-dust/blob/dust_splitting/src/clib/solve_rate_cool_g.F
+    https://github.com/Xiang-Zhe-Wei/grackle-dust/blob/dust_sputtering/src/clib/solve_rate_cool_g.F
    (2) The parameters Gas_Temp and Gas_Dens in Input__TestProb set the initial gas temperature and density,
        and these values follow the constant-density cooling test described in: (arXiv: https://arxiv.org/abs/2505.11734)
 
@@ -51,7 +51,7 @@ Simulation setup:
    | self-consistent        | Production simulations, physically self-consistent | No         |
    | dust-sputtering-test   | Validating dust sputtering analytical solution only | Yes        |
 
-   WARNING: In the `dust_splitting` branch, the line
+   WARNING: In the `dust_sputtering` branch, the line
             `edot(i) = -k_sup * e(i,j,k) * d(i,j,k)`
             overwrites the gas internal energy rate to isolate dust sputtering from other
             cooling/heating effects. This is intended only for verifying 
@@ -94,7 +94,7 @@ Note:
        - If `edot(i) = -k_sup * e(i,j,k) * d(i,j,k)`, the script will use the analytic solution **edot_const**.
    (3) This choice directly affects the theoretical comparison curve, so please confirm the
        Grackle `edot` setting before running these scripts.
-       --> Use grackle-dust branch `dust_splitting` for edot_0 or edot_const analytic solution.
+       --> Use grackle-dust branch `dust_sputtering` for edot_0 or edot_const analytic solution.
 
 
 

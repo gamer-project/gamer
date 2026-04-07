@@ -114,4 +114,4 @@ ax.set_ylabel('$\\mathrm{Dust\ dust_dens\ [amu/cm^3]}$', fontsize='large')
 ax.legend()
 
 plt.savefig(fileout + ".png", bbox_inches='tight', pad_inches=0.05, dpi=150)
-plt.show()
+# plt.show()
