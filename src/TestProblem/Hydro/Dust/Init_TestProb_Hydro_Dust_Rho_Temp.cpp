@@ -50,8 +50,8 @@ double Mis_GetTimeStep_Dust( const int lv, const double dTime_dt )
    double dTime_user = (0.1 * fabs(my_cooling_time[0])) * 1.0;
    if ( MPI_Rank == 0 )
    {
-       Aux_Message( stdout, "  cooling_time   = %.15E,",    fabs(my_cooling_time[0])  );
-       Aux_Message( stdout, "  dTime_user   = %.15E \n",    dTime_user  );
+       Aux_Message( stdout, "  cooling_time = %.15E,", fabs(my_cooling_time[0]) );
+       Aux_Message( stdout, "  dTime_user = %.15E\n", dTime_user );
    }
    return dTime_user;
 
