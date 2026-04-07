@@ -42,6 +42,31 @@ Simulation setup:
        the dust temperature evolution follows Equations (2) and (3) from: arXiv:2505.11734
    (2) For simplicity, when computing dust in Grackle we fixed the mean molecular weight (mu) to 0.62
 
+6. grackle-dust Branch Selection
+   Two branches are available in grackle-dust (https://github.com/Xiang-Zhe-Wei/grackle-dust),
+   corresponding to different use cases:
+
+   | Branch                 | Use Case                                       | edot overwrite |
+   |------------------------|------------------------------------------------|----------------|
+   | self-consistent        | Production simulations, physically self-consistent | No         |
+   | dust-sputtering-test   | Validating dust sputtering analytical solution only | Yes        |
+
+   WARNING: In the `tommy_dust` branch, the line
+            `edot(i) = -k_sup * e(i,j,k) * d(i,j,k)`
+            overwrites the gas internal energy rate to isolate dust sputtering from other
+            cooling/heating effects. This is intended only for verifying 
+            behavior against the analytical solution, and must NOT be used for production runs.
+
+   (1) For production simulations (self-consistent):
+       cd /path/to/grackle-dust
+       git checkout self-consistent
+
+   (2) For dust sputtering analytical solution test:
+       cd /path/to/grackle-dust
+       git checkout dust-sputtering-test
+
+       In this mode, the evolution of gas internal energy can be selectively controlled as: edot(i) = 0 or edot(i) = -k_sup * e(i,j,k) * d(i,j,k)
+
 
 Note:
 ========================================
@@ -69,6 +94,7 @@ Note:
        - If `edot(i) = -k_sup * e(i,j,k) * d(i,j,k)`, the script will use the analytic solution **edot_const**.
    (3) This choice directly affects the theoretical comparison curve, so please confirm the
        Grackle `edot` setting before running these scripts.
+       --> Use grackle-dust branch `tommy_dust` for edot_0 or edot_const analytic solution.
 
 
 
