@@ -33,7 +33,7 @@ Simulation setup:
 4. Output and Time Step Setup
    (1) Output mode is set to `OPT__OUTPUT_MODE` = 1, which corresponds to fixed-step output
    (2) The time step is determined by the function Mis_GetTimeStep_Dust() in
-       `gamer/src/TestProblem/Hydro/Dust/Init_TestProb_Hydro_Dust_Rho_Temp.cpp`
+       `gamer/src/TestProblem/Hydro/Dust_Sputtering/Init_TestProb_Hydro_Dust_Sputtering.cpp`
    (3) The time step formula follows Equation (11) from: Grackle paper (arXiv: https://arxiv.org/abs/1610.09591)
 
 5. Dust Cooling Modification in Grackle
