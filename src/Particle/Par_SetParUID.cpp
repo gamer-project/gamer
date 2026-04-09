@@ -80,7 +80,7 @@ void Par_SetParUID( const bool init )
 
    for (int d=0; d<3; d++)
    {
-      NewParPos_AllRank [d]  = new real_par [NNewPar_AllRank];
+      NewParPos_AllRank [d] = new real_par [NNewPar_AllRank];
       NewParPos_ThisRank[d] = new real_par [NNewPar_ThisRank];
    }
 
