@@ -20,16 +20,16 @@ Default setup:
 
 Note:
 ========================================
-1. The initial conditions is a distribution of varying mass density and temperature
+1. The initial conditions consist of a distribution of varying gas mass density and temperature
    - Linearly varying log( mass density ) in the x direction
    - Linearly varying log( temperature ) in the y direction
    - No variation in the z direction
 
-2. Both the fluid and the particles are freezed and
-   the fluid is reset to the initial condition every step by default to keep a constant environment
-   - One can also set OPT__RESET_FLUID = 0 to see how the fluid decreases and is converted into stars
+2. Both the fluid and particles are frozen, and
+   the fluid is reset to the initial conditions at every step by default to keep a constant environment
+   - One can also set OPT__RESET_FLUID = 0 to observe how the gas is depleted and converted into stars
 
-3. This is to test the star formation conditions that star should only form at the allowed region
+3. This test is designed to verify that star formation occurs only in the allowed regions:
    - SF_CREATE_STAR_SCHEME = 1 -> the minimum gas density (SF_CREATE_STAR_MIN_GAS_DENS)
    - SF_CREATE_STAR_SCHEME = 2 -> the maximum gas Jeans length (SF_CREATE_STAR_MAX_GAS_JEANSL)
 

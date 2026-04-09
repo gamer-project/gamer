@@ -423,12 +423,12 @@ void Init_TestProb_Hydro_StarFormationThreshold()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr            = SetGridIC;
-   Par_Init_ByFunction_Ptr           = Par_Init_ByFunction_StarFormationThreshold;
-   Flu_ResetByUser_Func_Ptr          = Flu_ResetByUser_StarFormationThreshold;
-   Mis_GetTimeStep_User_Ptr          = Mis_GetTimeStep_StarFormationThreshold;
+   Init_Function_User_Ptr    = SetGridIC;
+   Par_Init_ByFunction_Ptr   = Par_Init_ByFunction_StarFormationThreshold;
+   Flu_ResetByUser_Func_Ptr  = Flu_ResetByUser_StarFormationThreshold;
+   Mis_GetTimeStep_User_Ptr  = Mis_GetTimeStep_StarFormationThreshold;
 #  ifdef SUPPORT_HDF5
-   Output_HDF5_InputTest_Ptr         = LoadInputTestProb;
+   Output_HDF5_InputTest_Ptr = LoadInputTestProb;
 #  endif
 #  endif // #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 

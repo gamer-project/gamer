@@ -7,20 +7,20 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SF_CreateStar_GeneralGalaxy
-// Description :  Create new star particles in the general methods where ther star formation is independent
+// Description :  Create new star particles using general methods where star formation is independent
 //
 // Note        :  1. One must turn on STORE_POT_GHOST when adopting STORE_PAR_ACC
 //                   --> It is because, currently, this function always uses the pot_ext[] array of each patch
 //                       to calculate the gravitationally acceleration of the new star particles
 //                2. One must invoke Buf_GetBufferData( ..., _TOTAL, ... ) after calling this function
 //
-// Parameter   :  lv             : Target refinement level
-//                TimeNew        : Current physical time (after advancing solution by dt)
-//                dt             : Time interval to advance solution
-//                                 --> Currently this function does not distinguish dt and the physical time interval (dTime)
-//                                 --> Does NOT support COMOVING yet
-//                RNG            : Random number generator
-//                UseMetal       : Store the metal mass fraction in star particles
+// Parameter   :  lv       : Target refinement level
+//                TimeNew  : Current physical time (after advancing solution by dt)
+//                dt       : Time interval to advance solution
+//                           --> Currently this function does not distinguish dt and the physical time interval (dTime)
+//                           --> Does NOT support COMOVING yet
+//                RNG      : Random number generator
+//                UseMetal : Store the metal mass fraction in star particles
 //
 // Return      :  1. Particle repository will be updated
 //                2. fluid[] array of gas will be updated
@@ -76,7 +76,9 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
    double x0, y0, z0, x, y, z;
    real   GasDens, _GasDens, GasMass, StarMFrac, StarMass, GasMFracLeft;
    real   (*fluid)[PS1][PS1][PS1]      = NULL;
+#  ifdef MHD
    real   (*MagCC)[PS1][PS1][PS1]      = NULL;
+#  endif
    real   (*Pres)[PS1][PS1]            = NULL;
    real   (*Cs2)[PS1][PS1]             = NULL;
 #  ifdef STORE_POT_GHOST
@@ -90,10 +92,10 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
    if ( NeedCs2 )   NeedPres = true;
 
 #  ifdef MHD
-   if ( NeedPres )   MagCC = new real [3][PS1][PS1][PS1];
+   if ( NeedPres )   MagCC = new real [NCOMP_MAG][PS1][PS1][PS1];
 #  endif
-   if ( NeedPres )   Pres  = new real    [PS1][PS1][PS1];
-   if ( NeedCs2  )   Cs2   = new real    [PS1][PS1][PS1];
+   if ( NeedPres )   Pres  = new real            [PS1][PS1][PS1];
+   if ( NeedCs2  )   Cs2   = new real            [PS1][PS1][PS1];
 
    const int    MaxNewParPerPatch = CUBE(PS1);
    real_par   (*NewParAttFlt)[PAR_NATT_FLT_TOTAL] = new real_par [MaxNewParPerPatch][PAR_NATT_FLT_TOTAL];
@@ -237,7 +239,7 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
          if ( StarMass <= 0.0 )   continue;
 
 //       check the maximum gas mass fraction allowed to convert to stars
-         StarMFrac = MIN( StarMass/GasMass, SF_CREATE_STAR_MAX_STAR_MFRAC );
+         StarMFrac = FMIN( StarMass/GasMass, SF_CREATE_STAR_MAX_STAR_MFRAC );
          StarMass  = GasMass*StarMFrac;
 
 
@@ -357,10 +359,10 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
 
 // free memory
 #  ifdef MHD
-   if ( NeedPres )   delete [] MagCC;
+   delete [] MagCC;
 #  endif
-   if ( NeedPres )   delete [] Pres;
-   if ( NeedCs2  )   delete [] Cs2;
+   delete [] Pres;
+   delete [] Cs2;
    delete [] NewParAttFlt;
    delete [] NewParAttInt;
    delete [] NewParID;

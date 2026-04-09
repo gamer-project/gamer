@@ -1,4 +1,3 @@
-
 #include "GAMER.h"
 
 #if ( defined PARTICLE  &&  defined STAR_FORMATION  &&  MODEL == HYDRO )
@@ -10,11 +9,12 @@ static bool SF_CreateStar_Check_GasJeansLength( const real GasDensity, const rea
 
 
 
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SF_CreateStar_Check
 // Description :  Check if the target cell (i,j,k) satisfies the star formation criteria
 //
-// Note        :  1. Useless input arrays are set to NULL (e.g, Pot[] if GRAVITY is off)
+// Note        :  1. Useless input arrays are set to NULL (e.g., Pot[] if GRAVITY is off)
 //
 // Parameter   :  lv            : Target refinement level
 //                PID           : Target patch ID
@@ -24,8 +24,8 @@ static bool SF_CreateStar_Check_GasJeansLength( const real GasDensity, const rea
 //                Pres          : Input pressure array
 //                Cs2           : Input squared sound speed array
 //
-// Return      :  "true"  if all  of the star formation criteria is satisfied
-//                "false" if none of the star formation criteria is satisfied
+// Return      :  "true"  if the specified star formation criteria are satisfied
+//                "false" otherwise
 //-------------------------------------------------------------------------------------------------------
 bool SF_CreateStar_Check( const int lv, const int PID, const int i, const int j, const int k, const double dh,
                           const real fluid[][PS1][PS1][PS1], const real Pres[][PS1][PS1], const real Cs2[][PS1][PS1] )
@@ -70,15 +70,15 @@ bool SF_CreateStar_Check( const int lv, const int PID, const int i, const int j,
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SF_CreateStar_Check_GasDensity
-// Description :  Check if the gas desnity exceeds the given threshold
+// Description :  Check if the gas density exceeds the given threshold
 //
 // Note        :  1.
 //
 // Parameter   :  GasDensity : Gas density
 //                Threshold  : Threshold for the star formation
 //
-// Return      :  "true"  if the gas density is larger           than the given threshold
-//                "false" if the gas density is equal or smaller than the given threshold
+// Return      :  "true"  if the gas density is larger than or equal to the given threshold
+//                "false" otherwise
 //-------------------------------------------------------------------------------------------------------
 bool SF_CreateStar_Check_GasDensity( const real GasDensity, const real Threshold )
 {
@@ -103,16 +103,16 @@ bool SF_CreateStar_Check_GasDensity( const real GasDensity, const real Threshold
 //                GasCs2     : Gas squared sound speed
 //                Threshold  : Threshold for the star formation
 //
-// Return      :  "true"  if the gas Jeans length is smaller         than the given threshold
-//                "false" if the gas Jeans length is equal or larger than the given threshold
+// Return      :  "true"  if the gas Jeans length is smaller than or equal to the given threshold
+//                "false" otherwise
 //-------------------------------------------------------------------------------------------------------
 bool SF_CreateStar_Check_GasJeansLength( const real GasDensity, const real GasCs2, const real Threshold )
 {
    bool AllowSF = false;
 
-   real GasJeansL = SQRT( ( M_PI * GasCs2 ) / ( NEWTON_G * GasDensity ) );
+   const real GasJeansL2 = ( M_PI * GasCs2 ) / ( NEWTON_G * GasDensity );
 
-   if ( GasJeansL <= Threshold )    AllowSF = true;
+   if ( GasJeansL2 <= SQR(Threshold) )    AllowSF = true;
 
    return AllowSF;
 
