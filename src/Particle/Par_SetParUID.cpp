@@ -134,8 +134,6 @@ void Par_SetParUID( const bool init )
 
    if ( init  &&  MPI_Rank == 0 )   Aux_Message( stdout, "Par_SetParID (init) ... done\n" );
 
-   MPI_Barrier( MPI_COMM_WORLD );
-
 } // FUNCTION : Par_SetParUID
 
 
