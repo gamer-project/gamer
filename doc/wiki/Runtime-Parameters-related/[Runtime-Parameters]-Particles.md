@@ -171,7 +171,7 @@ Disable this check when particles are initialized _after_ setting grid fields, s
 
 ## Remarks
 
-### Particle UID
+### Particle UID (`PUID`)
 Valid particle UIDs should lie within `[1, number of particles]`. If new particles are created
 during the simulation, please assign their UIDs to `PUID_TBA`, and then call `Par_SetUID()`
 to assign UIDs after all particle creation within the same routine is complete.
@@ -187,18 +187,17 @@ The particle UID is assigned only in the following two situations:
 
    Particle UIDs should be assigned _after_ all the particle creation within a
    single routine is complete (e.g. star formation).
-   First, we collect the UIDs and positions of new particles from all ranks
+   First, we collect the PUIDs and positions of new particles from all ranks
    into a single array.
    Second, we sort the particles by their positions.
-   Third, assign the particle UIDs according to the array index plus `NextUID`.
+   Third, assign the particle UIDs according to the array index plus `NextPUID`.
    Finally, send the new particle UIDs back to all ranks.
 
    Example: `src/StarFormation/SF_CreateStar.cpp` and `src/StarFormation/SF_CreateStar_AGORA.cpp`
 
 > [!CAUTION]
-> If the particle positions are exactly the same (which should unlikely happen), the UID is determined by the following order:
-> 1. The rank number (`MPI_Rank`) from 0 to `MPI_NRank-1`.
-> 2. The index of particle array in each rank.
+> If the particle positions are exactly the same (which should unlikely happen), the particle UID is determined by the sorting algorithm.
+> Please check the implmentation in `Miscellaneous/Mis_SortByRows.cpp` and `Mis_Heapsort.cpp`
 
 <br>
 
