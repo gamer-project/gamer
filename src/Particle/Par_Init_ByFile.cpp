@@ -39,8 +39,8 @@ void (*Par_Init_ByFile_User_Ptr)() = Par_Init_ByFile_Default;
 //                       in which case PAR_IC should exclude particle mass
 //                   --> The type of all particles can be set to PAR_IC_TYPE instead (by having PAR_IC_TYPE>=0),
 //                       in which case PAR_IC should exclude particle type
-//                   --> The UID of all particles can be excluded from PAR_IC by setting PAR_IC_PUID=0,
-//                       in which case UID will be assigned automatically
+//                   --> The PUID of all particles can be excluded from PAR_IC by setting PAR_IC_PUID=0,
+//                       in which case PUID will be assigned automatically
 //                   --> No need to provide particle acceleration and time
 //                8. For LOAD_BALANCE, the number of particles in each rank must be set in advance
 //                   --> Currently it's set by Init_Parallelization()
@@ -244,20 +244,20 @@ void Par_Init_ByFile_Default()
    } // for (long p=0; p<NParThisRank; p++)
 
 
-// set NextUID according to the maximum of the existing UID in the file
+// set NextPUID according to the maximum of the existing PUID in the file
    if ( !AbsentParPUid )
    {
-      long ExpectedNextUID_ThisRank = 1L;
+      long ExpectedNextPUID_ThisRank = 1L;
       for (long p=0; p<NParThisRank; p++)
-         ExpectedNextUID_ThisRank = MAX( (long)amr->Par->AttributeInt[PAR_PUID][p]+1L, ExpectedNextUID_ThisRank );
+         ExpectedNextPUID_ThisRank = MAX( (long)amr->Par->AttributeInt[PAR_PUID][p]+1L, ExpectedNextPUID_ThisRank );
 
-      long ExpectedNextUID_AllRank  = 1L;
-      MPI_Allreduce( &ExpectedNextUID_ThisRank, &ExpectedNextUID_AllRank, 1, MPI_LONG, MPI_MAX, MPI_COMM_WORLD );
+      long ExpectedNextPUID_AllRank  = 1L;
+      MPI_Allreduce( &ExpectedNextPUID_ThisRank, &ExpectedNextPUID_AllRank, 1, MPI_LONG, MPI_MAX, MPI_COMM_WORLD );
 
-      amr->Par->NextUID = ExpectedNextUID_AllRank;
+      amr->Par->NextPUID = ExpectedNextPUID_AllRank;
    }
    else
-      amr->Par->NextUID = 1L;
+      amr->Par->NextPUID = 1L;
 
 
 // free memory

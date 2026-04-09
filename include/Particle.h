@@ -54,7 +54,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                                          (for non-periodic BC only)
 //                GhostSize               : Number of ghost zones required for the interpolation scheme of massive particles
 //                GhostSizeTracer         : Number of ghost zones required for the interpolation scheme of tracer  particles
-//                NextUID                 : Next new particle UID over all MPI ranks. The UID starts from 1.
+//                NextPUID                : Next new particle UID over all MPI ranks. The UID starts from 1.
 //                AttributeFlt            : Pointer arrays to different particle floating-point attributes (Mass, Pos, Vel, ...)
 //                AttributeInt            : Pointer arrays to different particle integer        attributes (Type, PUid)
 //                InactiveParList         : List of inactive particle IDs
@@ -139,7 +139,7 @@ struct Particle_t
    double        RemoveCell;
    int           GhostSize;
    int           GhostSizeTracer;
-   long          NextUID;
+   long          NextPUID;
    real_par     *AttributeFlt[PAR_NATT_FLT_TOTAL];
    long_par     *AttributeInt[PAR_NATT_INT_TOTAL];
    long         *InactiveParList;
@@ -216,7 +216,7 @@ struct Particle_t
       RemoveCell          = -999.9;
       GhostSize           = -1;
       GhostSizeTracer     = -1;
-      NextUID             = 1;
+      NextPUID            = 1;
 
       for (int lv=0; lv<NLEVEL; lv++)  NPar_Lv[lv] = 0;
 
@@ -472,7 +472,7 @@ struct Particle_t
          Aux_Error( ERROR_INFO, "Incorrect particle type (%ld) !!\n", (long)NewAttInt[PAR_TYPE] );
 
       if ( ( NewAttInt[PAR_PUID] != PUID_TBA )  &&
-           ( NewAttInt[PAR_PUID] <= (long_par)0  ||  NewAttInt[PAR_PUID] >= NextUID ) )
+           ( NewAttInt[PAR_PUID] <= (long_par)0  ||  NewAttInt[PAR_PUID] >= NextPUID ) )
          Aux_Error( ERROR_INFO, "Incorrect particle UID (%ld) !!\n", (long)NewAttInt[PAR_PUID] );
 #     endif
 

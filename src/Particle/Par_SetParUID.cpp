@@ -12,7 +12,7 @@
 //
 // Note        :  1. Invoked by Init_GAMER() and SF_CreateStar()
 //                2. New particle UIDs should be initialized to PUID_TBA before calling this routine
-//                   --> This routine only assigns UIDs to particles with UID==PUID_TBA; other particles are skipped
+//                   --> This routine only assigns PUIDs to particles with PUID==PUID_TBA; other particles are skipped
 //                3. Particle UIDs are assigned according to the sorted particle position
 //                   --> Ensure reproducibility
 //-------------------------------------------------------------------------------------------------------
@@ -22,8 +22,8 @@ void Par_SetParUID()
    long NPar_ThisRank = amr->Par->NPar_AcPlusInac;
    int  NSend[MPI_NRank], SendDisp[MPI_NRank];
 
-   if ( amr->Par->NextUID < 1L )
-      Aux_Error( ERROR_INFO, "amr->Par->NextUID (%ld) < 1 !!\n", amr->Par->NextUID );
+   if ( amr->Par->NextPUID < 1L )
+      Aux_Error( ERROR_INFO, "amr->Par->NextPUID (%ld) < 1 !!\n", amr->Par->NextPUID );
 
    long NNewPar_ThisRank = 0L, NNewPar_AllRank;
 
@@ -31,7 +31,7 @@ void Par_SetParUID()
    long *NewParIDList = new long [NPar_ThisRank];
    for (long p=0; p<NPar_ThisRank; p++)
    {
-      if ( amr->Par->PUid[p] > (long_par)0  &&  amr->Par->PUid[p] < amr->Par->NextUID )   continue;  // exclude particles that already have valid UIDs
+      if ( amr->Par->PUid[p] > (long_par)0  &&  amr->Par->PUid[p] < amr->Par->NextPUID )   continue;  // exclude particles that already have valid PUIDs
 
       if ( amr->Par->PUid[p] != PUID_TBA )
          Aux_Error( ERROR_INFO, "New particle before UID assignment has an invalid PUid[%ld] = %ld != %ld !!\n",
@@ -53,9 +53,9 @@ void Par_SetParUID()
    if ( NNewPar_AllRank < 0L )
       Aux_Error( ERROR_INFO, "NNewPar_AllRank (%ld) is negative !!\n", NNewPar_AllRank );
 
-// check whether the next UID will overflow
-   if ( amr->Par->NextUID > ( (sizeof(long_par) == sizeof(int)) ? __INT_MAX__ : __LONG_MAX__ ) - NNewPar_AllRank )
-      Aux_Error( ERROR_INFO, "amr->Par->PUid = amr->Par->NextUID (%ld) + NNewPar_AllRank (%ld) - 1 will overflow !!\n", amr->Par->NextUID, NNewPar_AllRank );
+// check whether the next PUID will overflow
+   if ( amr->Par->NextPUID > ( (sizeof(long_par) == sizeof(int)) ? __INT_MAX__ : __LONG_MAX__ ) - NNewPar_AllRank )
+      Aux_Error( ERROR_INFO, "amr->Par->PUid = amr->Par->NextPUID (%ld) + NNewPar_AllRank (%ld) - 1 will overflow !!\n", amr->Par->NextPUID, NNewPar_AllRank );
 
 // safety check for the type conversion from long to int
    int NNewPar_ThisRank_int = NNewPar_ThisRank;
@@ -95,13 +95,13 @@ void Par_SetParUID()
                    0, MPI_COMM_WORLD );
    }
 
-// get sorted position and assign UID
+// get sorted position and assign PUID
    if ( MPI_Rank == 0 )
    {
       long *Sort_IdxTable = new long [NNewPar_AllRank];
       const int Sort_Order[3] = { 0, 1, 2 };
       Mis_SortByRows( NewParPos_AllRank, Sort_IdxTable, NNewPar_AllRank, Sort_Order, 3 );
-      for (long p=0; p<NNewPar_AllRank; p++) NewParPUid_AllRank[ Sort_IdxTable[p] ] = (long_par)( p + amr->Par->NextUID );
+      for (long p=0; p<NNewPar_AllRank; p++) NewParPUid_AllRank[ Sort_IdxTable[p] ] = (long_par)( p + amr->Par->NextPUID );
       delete [] Sort_IdxTable;
    }
 
@@ -124,8 +124,8 @@ void Par_SetParUID()
       delete [] NewParPos_ThisRank[d];
    }
 
-// update the next UID on all ranks
-   amr->Par->NextUID += NNewPar_AllRank;
+// update the next PUID on all ranks
+   amr->Par->NextPUID += NNewPar_AllRank;
 
 } // FUNCTION : Par_SetParUID
 

@@ -173,8 +173,8 @@ Disable this check when particles are initialized _after_ setting grid fields, s
 
 ### Particle UID (`PUID`)
 Valid particle UIDs should lie within `[1, number of particles]`. If new particles are created
-during the simulation, please assign their UIDs to `PUID_TBA`, and then call `Par_SetUID()`
-to assign UIDs after all particle creation within the same routine is complete.
+during the simulation, please assign their PUIDs to `PUID_TBA`, and then call `Par_SetParUID()`
+to assign PUIDs after all particle creation within the same routine is complete.
 
 The particle UID is assigned only in the following two situations:
 1. Initialization

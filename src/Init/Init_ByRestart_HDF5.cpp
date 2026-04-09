@@ -220,7 +220,7 @@ void Init_ByRestart_HDF5( const char *FileName )
    const bool isPUIDStored = KeyInfo.FormatVersion >= 2508;
    if ( ReenablePar ) {
       KeyInfo.Par_NPar          = 0;
-      KeyInfo.Par_NextUID       = 1;
+      KeyInfo.Par_NextPUID      = 1;
       KeyInfo.Par_NAttFltStored = 0;
       KeyInfo.Par_NAttIntStored = 0;
    }
@@ -229,9 +229,9 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "Par_NPar",             &KeyInfo.Par_NPar,             H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
 
    if ( isPUIDStored )
-   LoadField( "Par_NextUID",          &KeyInfo.Par_NextUID,          H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "Par_NextPUID",         &KeyInfo.Par_NextPUID,         H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
    else
-      KeyInfo.Par_NextUID = 1L;
+      KeyInfo.Par_NextPUID = 1L;
 
    if ( KeyInfo.FormatVersion >= 2300 )
    LoadField( "Par_NAttFltStored",    &KeyInfo.Par_NAttFltStored,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttFltStored,     1,    Fatal );
@@ -296,7 +296,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 
 #  ifdef PARTICLE
    amr->Par->NPar_Active_AllRank = KeyInfo.Par_NPar;
-   amr->Par->NextUID             = KeyInfo.Par_NextUID;
+   amr->Par->NextPUID            = KeyInfo.Par_NextPUID;
 #  endif
 
 // 1-5-2. parameters reset only when OPT__RESTART_RESET is disabled

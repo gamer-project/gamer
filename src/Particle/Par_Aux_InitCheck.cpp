@@ -43,8 +43,8 @@ void Par_Aux_InitCheck()
          Aux_Error( ERROR_INFO, "Type[%ld] = %d (accepted range: 0<=index<%d) !!\n", ParID, (int)Type[ParID], PAR_NTYPE );
 
 //    check particle ID
-      if ( PUid[ParID] != PUID_TBA  &&  ( PUid[ParID] <= 0  ||  PUid[ParID] >= amr->Par->NextUID ) )
-         Aux_Error( ERROR_INFO, "PUid[%ld] = %ld (accepted range: 0<index<%ld) !!\n", ParID, (long)PUid[ParID], amr->Par->NextUID );
+      if ( PUid[ParID] != PUID_TBA  &&  ( PUid[ParID] <= 0  ||  PUid[ParID] >= amr->Par->NextPUID ) )
+         Aux_Error( ERROR_INFO, "PUid[%ld] = %ld (accepted range: 0<index<%ld) !!\n", ParID, (long)PUid[ParID], amr->Par->NextPUID );
 
 //    only support tracer particles when disabling GRAVITY
 #     ifndef GRAVITY

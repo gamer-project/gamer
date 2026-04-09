@@ -20,8 +20,8 @@ static void Check_NPar_Lv_Sum        ( int &PassAll, int &PassOne, const char *c
 static void Check_NPar_Copy          ( int &PassAll, int &PassOne, const char *comment );
 static void Check_ValidType          ( int &PassAll, int &PassOne, const char *comment, const int lv,
                                        const int PID, const long ParID );
-static void Check_ValidUID           ( int &PassAll, int &PassOne, const char *comment );
-static void Check_UniqueUID          ( int &PassAll, int &PassOne, const char *comment, int *Par_CountUID );
+static void Check_ValidPUID          ( int &PassAll, int &PassOne, const char *comment );
+static void Check_UniquePUID         ( int &PassAll, int &PassOne, const char *comment, int *Par_CountPUID );
 
 
 
@@ -58,7 +58,7 @@ void Par_Aux_Check_Particle( const char *comment )
    long    ParID, NPar_Active_AllRank_Expect;
    double *EdgeL, *EdgeR;
    int     PassCheck[NCheck];
-   int    *Par_CountUID = new int [amr->Par->NextUID];
+   int    *Par_CountPUID = new int [amr->Par->NextPUID];
 
 
 // initialize the check list
@@ -66,7 +66,7 @@ void Par_Aux_Check_Particle( const char *comment )
 
    for (int t=0; t<NCheck; t++)  PassCheck[t] = true;
 
-   for (long uid=0; uid<amr->Par->NextUID; uid++)   Par_CountUID[uid] = 0;
+   for (long uid=0; uid<amr->Par->NextPUID; uid++)   Par_CountPUID[uid] = 0;
 
 
 // get the total number of active particles
@@ -126,14 +126,14 @@ void Par_Aux_Check_Particle( const char *comment )
 
          Check_NPar_Lv_Sum( PassAll, PassCheck[8], comment );
 
-         Check_ValidUID( PassAll, PassCheck[11], comment );
+         Check_ValidPUID( PassAll, PassCheck[11], comment );
 
-         Check_UniqueUID( PassAll, PassCheck[12], comment, Par_CountUID );
+         Check_UniquePUID( PassAll, PassCheck[12], comment, Par_CountPUID );
       } // if ( MPI_Rank == TargetRank )
 
-      MPI_Bcast(  Par_CountUID, amr->Par->NextUID, MPI_INT, TargetRank, MPI_COMM_WORLD );
-      MPI_Bcast( &PassAll,      1,                 MPI_INT, TargetRank, MPI_COMM_WORLD );
-      MPI_Bcast(  PassCheck,    NCheck,            MPI_INT, TargetRank, MPI_COMM_WORLD );
+      MPI_Bcast(  Par_CountPUID, amr->Par->NextPUID, MPI_INT, TargetRank, MPI_COMM_WORLD );
+      MPI_Bcast( &PassAll,       1,                  MPI_INT, TargetRank, MPI_COMM_WORLD );
+      MPI_Bcast(  PassCheck,     NCheck,             MPI_INT, TargetRank, MPI_COMM_WORLD );
 
       MPI_Barrier( MPI_COMM_WORLD );
 
@@ -147,7 +147,7 @@ void Par_Aux_Check_Particle( const char *comment )
 
 
    delete [] ParHome;
-   delete [] Par_CountUID;
+   delete [] Par_CountPUID;
 
 } // FUNCTION : Par_Aux_Check_Particle
 
@@ -565,8 +565,8 @@ void Check_ValidType( int &PassAll, int &PassOne, const char *comment, const int
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Check_ValidUID
-// Description :  Check if particle has valid UID
+// Function    :  Check_ValidPUID
+// Description :  Check if particle has valid PUID
 //
 // Note        :  None
 //
@@ -574,14 +574,14 @@ void Check_ValidType( int &PassAll, int &PassOne, const char *comment, const int
 //                PassOne  : Pass this check or not
 //                comment  : You can put the location where this function is invoked in this string
 //-------------------------------------------------------------------------------------------------------
-void Check_ValidUID( int &PassAll, int &PassOne, const char *comment )
+void Check_ValidPUID( int &PassAll, int &PassOne, const char *comment )
 {
 
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
    {
-      if ( amr->Par->PUid[p] > (long_par)0  &&  amr->Par->PUid[p] < amr->Par->NextUID )  continue;
+      if ( amr->Par->PUid[p] > (long_par)0  &&  amr->Par->PUid[p] < amr->Par->NextPUID )  continue;
 
-//    exclude inactive particles, which could have been skipped during UID assignment
+//    exclude inactive particles, which could have been skipped during PUID assignment
       if ( amr->Par->Mass[p] < (real_par)0.0 )   continue;
 
       if ( PassAll )
@@ -589,56 +589,56 @@ void Check_ValidUID( int &PassAll, int &PassOne, const char *comment )
                       comment, __FUNCTION__, Time[0], Step );
 
       if ( PassOne )
-         Aux_Message( stderr, "Check 12: %4s  %10s  %10s  %10s\n", "Rank", "ParID", "PUid", "NextUID" );
+         Aux_Message( stderr, "Check 12: %4s  %10s  %10s  %10s\n", "Rank", "ParID", "PUid", "NextPUID" );
 
-      Aux_Message( stderr, "Check 12: %4d  %10ld  %10ld  %10ld\n", MPI_Rank, p, (long)amr->Par->PUid[p], amr->Par->NextUID );
+      Aux_Message( stderr, "Check 12: %4d  %10ld  %10ld  %10ld\n", MPI_Rank, p, (long)amr->Par->PUid[p], amr->Par->NextPUID );
 
       PassAll = false;
       PassOne = false;
    } // for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
 
-} // FUNCTION : Check_ValidUID
+} // FUNCTION : Check_ValidPUID
 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Check_UniqueUID
-// Description :  Check if particles have unique UIDs
+// Function    :  Check_UniquePUID
+// Description :  Check if particles have unique PUIDs
 //
 // Note        :  None
 //
-// Parameter   :  PassAll      : Pass all the checks or not
-//                PassOne      : Pass this check or not
-//                comment      : You can put the location where this function is invoked in this string
-//                Par_CountUID : Array of the counted number of each particle UID
+// Parameter   :  PassAll       : Pass all the checks or not
+//                PassOne       : Pass this check or not
+//                comment       : You can put the location where this function is invoked in this string
+//                Par_CountPUID : Array of the counted number of each particle UID
 //-------------------------------------------------------------------------------------------------------
-void Check_UniqueUID( int &PassAll, int &PassOne, const char *comment, int *Par_CountUID )
+void Check_UniquePUID( int &PassAll, int &PassOne, const char *comment, int *Par_CountPUID )
 {
 
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
    {
-//    exclude inactive particles, which could have duplicated UIDs
+//    exclude inactive particles, which could have duplicated PUIDs
       if ( amr->Par->Mass[p] < (real_par)0.0 )   continue;
 
       const long uid = amr->Par->PUid[p];
-      Par_CountUID[uid]++;
+      Par_CountPUID[uid]++;
 
-      if ( Par_CountUID[uid] == 1 )   continue;
+      if ( Par_CountPUID[uid] == 1 )   continue;
 
       if ( PassAll )
          Aux_Message( stderr, "\"%s\" : <%s> FAILED at Time = %13.7e, Step = %ld !!\n",
                       comment, __FUNCTION__, Time[0], Step );
 
       if ( PassOne )
-         Aux_Message( stderr, "Check 13: %4s  %10s  %10s  %10s\n", "Rank", "ParUID", "Count", "NextUID" );
+         Aux_Message( stderr, "Check 13: %4s  %10s  %10s  %10s\n", "Rank", "ParUID", "Count", "NextPUID" );
 
-      Aux_Message( stderr, "Check 13: %4d  %10ld  %10d  %10ld\n", MPI_Rank, uid, Par_CountUID[uid], amr->Par->NextUID );
+      Aux_Message( stderr, "Check 13: %4d  %10ld  %10d  %10ld\n", MPI_Rank, uid, Par_CountPUID[uid], amr->Par->NextPUID );
 
       PassAll = false;
       PassOne = false;
    } // for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
 
-} // FUNCTION : Check_UniqueUID
+} // FUNCTION : Check_UniquePUID
 
 
 
