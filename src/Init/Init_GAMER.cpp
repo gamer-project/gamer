@@ -335,8 +335,11 @@ void Init_GAMER( int *argc, char ***argv )
 // assign initial particle UIDs AFTER all routines that may add particles,
 // including Par_Init_ByFunction_Ptr(), Par_Init_ByFile(), AddParticle() in Init_ByRestart(), and
 //           Par_AddParticleAfterInit() in Init_User_Ptr() and Init_User_AfterPoisson_Ptr()
-   const bool SetParUIDInitStage_Yes = true;
-   Par_SetParUID( SetParUIDInitStage_Yes );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Par_SetParID (init)" );
+
+   Par_SetParUID();
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Par_SetParID (init)" );
 
 // only perform this check here if it will not be checked later in Aux_Check()
    if ( OPT__PAR_INIT_CHECK  &&  !OPT__CK_PARTICLE )

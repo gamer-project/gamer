@@ -15,16 +15,12 @@
 //                   --> This routine only assigns UIDs to particles with UID==PUID_TBA; other particles are skipped
 //                3. Particle UIDs are assigned according to the sorted particle position
 //                   --> Ensure reproducibility
-//
-// Paramter    :  init : Initialization stage or not
 //-------------------------------------------------------------------------------------------------------
-void Par_SetParUID( const bool init )
+void Par_SetParUID()
 {
 
    long NPar_ThisRank = amr->Par->NPar_AcPlusInac;
    int  NSend[MPI_NRank], SendDisp[MPI_NRank];
-
-   if ( init  &&  MPI_Rank == 0 )   Aux_Message( stdout, "Par_SetParID (init) ...\n" );
 
    if ( amr->Par->NextUID < 1L )
       Aux_Error( ERROR_INFO, "amr->Par->NextUID (%ld) < 1 !!\n", amr->Par->NextUID );
@@ -52,7 +48,6 @@ void Par_SetParUID( const bool init )
    if ( NNewPar_AllRank == 0L )
    {
       delete [] NewParIDList;
-      if ( init  &&  MPI_Rank == 0 )   Aux_Message( stdout, "Par_SetParID (init) ... done\n" );
       return;
    }
    if ( NNewPar_AllRank < 0L )
@@ -131,8 +126,6 @@ void Par_SetParUID( const bool init )
 
 // update the next UID on all ranks
    amr->Par->NextUID += NNewPar_AllRank;
-
-   if ( init  &&  MPI_Rank == 0 )   Aux_Message( stdout, "Par_SetParID (init) ... done\n" );
 
 } // FUNCTION : Par_SetParUID
 
