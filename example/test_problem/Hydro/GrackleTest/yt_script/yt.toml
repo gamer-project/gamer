@@ -1,0 +1,201 @@
+[fields.gamer.GrackleTemp]
+aliases = ["grackle_temperature"]
+units = "code_temperature"
+display_name = "Grackle Temperature"
+
+[fields.gamer.GrackleMu]
+aliases = ["grackle_mu"]
+units = "dimensionless"
+display_name = "Grackle Mean Molecular Weight"
+
+[fields.gamer.GrackleTCool]
+aliases = ["grackle_cooling_time"]
+units = "code_time"
+display_name = "Grackle Cooling Time"
+
+[fields.gamer.Metal]
+aliases = ["metal_density"]
+units = "code_density"
+display_name = "Metal Mass Density"
+
+[fields.gamer.Electron]
+aliases = ["electron_density"]
+units = "code_density"
+display_name = "Electron Mass Density"
+
+[fields.gamer.HI]
+aliases = ["HI_density"]
+units = "code_density"
+display_name = "HI Mass Density"
+
+[fields.gamer.HII]
+aliases = ["HII_density"]
+units = "code_density"
+display_name = "HII Mass Density"
+
+[fields.gamer.HeI]
+aliases = ["HeI_density"]
+units = "code_density"
+display_name = "HeI Mass Density"
+
+[fields.gamer.HeII]
+aliases = ["HeII_density"]
+units = "code_density"
+display_name = "HeII Mass Density"
+
+[fields.gamer.HeIII]
+aliases = ["HeIII_density"]
+units = "code_density"
+display_name = "HeIII Mass Density"
+
+[fields.gamer.HM]
+aliases = ["HM_density"]
+units = "code_density"
+display_name = "HM Mass Density"
+
+[fields.gamer.H2I]
+aliases = ["H2I_density"]
+units = "code_density"
+display_name = "H2I Mass Density"
+
+[fields.gamer.H2II]
+aliases = ["H2II_density"]
+units = "code_density"
+display_name = "H2II Mass Density"
+
+[fields.gamer.DI]
+aliases = ["DI_density"]
+units = "code_density"
+display_name = "DI Mass Density"
+
+[fields.gamer.DII]
+aliases = ["DII_density"]
+units = "code_density"
+display_name = "DII Mass Density"
+
+[fields.gamer.HDI]
+aliases = ["HDI_density"]
+units = "code_density"
+display_name = "HDI Mass Density"
+
+[plot.gas.density]
+cmap = "viridis"
+log = true
+units = "g/cm**3"
+
+[plot.gas.metal_density]
+cmap = "viridis"
+log = true
+units = "g/cm**3"
+
+[plot.gas.HI_density]
+cmap = "viridis"
+log = true
+units = "g/cm**3"
+
+[plot.gas.HII_density]
+cmap = "viridis"
+log = true
+units = "g/cm**3"
+
+[plot.gas.HeI_density]
+cmap = "viridis"
+log = true
+units = "g/cm**3"
+
+[plot.gas.HeII_density]
+cmap = "viridis"
+log = true
+units = "g/cm**3"
+
+[plot.gas.HeIII_density]
+cmap = "viridis"
+log = true
+units = "g/cm**3"
+
+[plot.gas.electron_density]
+cmap = "viridis"
+log = true
+units = "g/cm**3"
+
+[plot.gas.H2I_density]
+cmap = "viridis"
+log = true
+units = "g/cm**3"
+
+[plot.gas.H2II_density]
+cmap = "viridis"
+log = true
+units = "g/cm**3"
+
+[plot.gas.HM_density]
+cmap = "viridis"
+log = true
+units = "g/cm**3"
+
+[plot.gas.DI_density]
+cmap = "viridis"
+log = true
+units = "g/cm**3"
+
+[plot.gas.DII_density]
+cmap = "viridis"
+log = true
+units = "g/cm**3"
+
+[plot.gas.HDI_density]
+cmap = "viridis"
+log = true
+units = "g/cm**3"
+
+[plot.gas.temperature]
+cmap = "magma"
+log = true
+units = "K"
+
+[plot.gas.grackle_temperature]
+cmap = "magma"
+log = true
+units = "K"
+
+[plot.gas.grackle_T_over_mu]
+cmap = "magma"
+log = true
+units = "K"
+
+[plot.gas.thermal_energy_density]
+cmap = "magma"
+log = true
+units = "erg/cm**3"
+
+[plot.gas.sound_speed]
+cmap = "magma"
+log = true
+units = "cm/s"
+
+[plot.gas.grackle_mu]
+cmap = "cividis"
+log = false
+units = "dimensionless"
+
+[plot.gas.grackle_cooling_rate]
+cmap = "bwr"
+log = true
+linthresh=1.0e-29
+units = "erg/cm**3/s"
+
+[plot.gas.grackle_cooling_strength]
+cmap = "bwr"
+log = true
+linthresh=1.0e-3
+units = "Myr**-1"
+
+[plot.gas.grackle_cooling_length]
+cmap = "Blues_r"
+log = true
+units = "kpc"
+
+[plot.gas.grackle_cooling_length_over_dh]
+cmap = "PiYG"
+log = true
+units = "dimensionless"

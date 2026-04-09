@@ -30,27 +30,25 @@ void Init_ResetParameter()
 #  ifdef OPENMP
    if ( OMP_NTHREAD <= 0 )
    {
-      int  NCPU_Node, NNode_PBS, NNode_SLURM;
+      int  NCPU_PBS, NNode_SLURM;
       FILE *fp;
 
 //    determine if the PBS/SLURM software is used
-      fp = popen( "echo ${PBS_NUM_NODES:-0}", "r" );
-      fscanf( fp, "%d", &NNode_PBS );
+      fp = popen( "echo ${PBS_NP:-0}", "r" );
+      fscanf( fp, "%d", &NCPU_PBS );
 
       fp = popen( "echo ${SLURM_JOB_NUM_NODES:-0}", "r" );
       fscanf( fp, "%d", &NNode_SLURM );
 
 //    set up the number of OpenMP threads
-      if ( NNode_PBS ) // PBS system
+      if ( NCPU_PBS ) // PBS system
       {
-         fp = popen( "echo $PBS_NUM_PPN", "r" );
-         fscanf( fp, "%d", &NCPU_Node );
-
-         OMP_NTHREAD = NCPU_Node * NNode_PBS / MPI_NRank;
+         OMP_NTHREAD = NCPU_PBS / MPI_NRank;
       }
 
       else if ( NNode_SLURM ) // SLURM system
       {
+         int NCPU_Node;
          fp = popen( "echo $SLURM_CPUS_ON_NODE", "r" );
          fscanf( fp, "%d", &NCPU_Node );
 
@@ -323,6 +321,15 @@ void Init_ResetParameter()
    if ( OPT__FIXUP_ELECTRIC )    amr->WithElectric = true;
 #  endif
 
+
+#  ifdef MHD
+   if ( OPT__SAME_INTERFACE_B == SAME_INTERFACE_B_DEFAULT )
+   {
+      OPT__SAME_INTERFACE_B = ( MINMOD_MAX_ITER > 0 ) ? SAME_INTERFACE_B_YES : SAME_INTERFACE_B_NO;
+
+      PRINT_RESET_PARA( OPT__SAME_INTERFACE_B, FORMAT_INT, "" );
+   }
+#  endif
 
 // text format parameters
 // --> The current strategy is to read the integer in between % and . to determine the string length.
@@ -1201,6 +1208,17 @@ void Init_ResetParameter()
 
       PRINT_RESET_PARA( FLAG_BUFFER_SIZE_MAXM2_LV, FORMAT_INT, "" );
    }
+
+
+// Grackle options
+#  ifdef SUPPORT_GRACKLE
+   if ( GRACKLE_USE_TEMP_FLOOR != 1 )
+   {
+      GRACKLE_TEMP_FLOOR_SCALAR = 0.0;
+
+      PRINT_RESET_PARA( GRACKLE_TEMP_FLOOR_SCALAR, FORMAT_REAL, "since GRACKLE_USE_TEMP_FLOOR != 1" );
+   }
+#  endif // #ifdef SUPPORT_GRACKLE
 
 
 // star-formation options

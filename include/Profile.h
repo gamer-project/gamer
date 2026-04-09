@@ -20,6 +20,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                Allocated   : Whether or not member arrays such as Radius[] have been allocated
 //                Radius      : Radial coordinate at each bin
 //                Data        : Profile data at each bin
+//                Data_Sigma  : Standard deviation of profile data at each bin
 //                Weight      : Total weighting at each bin
 //                NCell       : Number of cells at each bin
 //
@@ -42,6 +43,7 @@ struct Profile_t
 
    double *Radius;
    double *Data;
+   double *Data_Sigma;
    double *Weight;
    long   *NCell;
 
@@ -57,12 +59,13 @@ struct Profile_t
    Profile_t()
    {
 
-      NBin      = -1;
-      Allocated = false;
-      Radius    = NULL;
-      Data      = NULL;
-      Weight    = NULL;
-      NCell     = NULL;
+      NBin       = -1;
+      Allocated  = false;
+      Radius     = NULL;
+      Data       = NULL;
+      Data_Sigma = NULL;
+      Weight     = NULL;
+      NCell      = NULL;
 
    } // METHOD : Profile_t
 
@@ -92,7 +95,7 @@ struct Profile_t
    //
    // Parameter   :  None
    //
-   // Return      :  Radius[], Data[], Weight[], NCell[], Allocated
+   // Return      :  Radius[], Data[], Data_Sigma[], Weight[], NCell[], Allocated
    //===================================================================================
    void AllocateMemory()
    {
@@ -103,10 +106,11 @@ struct Profile_t
 //    --> allows the same Profile_t object to be reused without the need to manually free memory first
       if ( Allocated )  FreeMemory();
 
-      Radius = new double [NBin];
-      Data   = new double [NBin];
-      Weight = new double [NBin];
-      NCell  = new long   [NBin];
+      Radius     = new double [NBin];
+      Data       = new double [NBin];
+      Data_Sigma = new double [NBin];
+      Weight     = new double [NBin];
+      NCell      = new long   [NBin];
 
       Allocated = true;
 
@@ -122,15 +126,16 @@ struct Profile_t
    //
    // Parameter   :  None
    //
-   // Return      :  Radius[], Data[], Weight[], NCell[]
+   // Return      :  Radius[], Data[], Data_Sigma[], Weight[], NCell[]
    //===================================================================================
    void FreeMemory()
    {
 
-      delete [] Radius;    Radius = NULL;
-      delete [] Data;      Data   = NULL;
-      delete [] Weight;    Weight = NULL;
-      delete [] NCell;     NCell  = NULL;
+      delete [] Radius;     Radius     = NULL;
+      delete [] Data;       Data       = NULL;
+      delete [] Data_Sigma; Data_Sigma = NULL;
+      delete [] Weight;     Weight     = NULL;
+      delete [] NCell;      NCell      = NULL;
 
       Allocated = false;
 

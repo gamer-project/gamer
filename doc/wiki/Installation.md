@@ -13,7 +13,7 @@
 > [!NOTE]
 > If you want to set the default machine configuration file for all GAMER copies under your user account, use the `--global` option instead of `--local`.
 You can still override the global setting for individual GAMER copies using the `--local` option.
-Furthermore, you can override the default setting by passing the [[--machine | [Installation]-Option-List#--machine]]=`your_machine` when executing `configure.py`. 
+Furthermore, you can override the default setting by passing the [[--machine | [Installation]-Option-List#--machine]]=`your_machine` when executing `configure.py`.
 
 3. Go to the source directory
 

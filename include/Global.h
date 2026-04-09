@@ -133,7 +133,7 @@ extern bool             OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC
 extern bool             OPT__OUTPUT_DIVMAG;
 extern int              OPT__CK_DIVERGENCE_B;
 extern double           UNIT_B;
-extern bool             OPT__SAME_INTERFACE_B;
+extern SameInterfaceB_t OPT__SAME_INTERFACE_B;
 
 extern OptInitMagByVecPot_t OPT__INIT_BFIELD_BYVECPOT;
 #endif
@@ -167,6 +167,8 @@ extern int              OPT__FLAG_SPECTRAL_N;
 extern double           FlagTable_Spectral[NLEVEL-1][2];
 
 extern ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
+extern bool             ELBDM_RESCALE_MASS_ERROR;
+extern int              ELBDM_RESCALE_MASS_STEPS;
 extern bool             ELBDM_BASE_SPECTRAL;
 
 #else
@@ -267,6 +269,9 @@ extern bool            YT_JUPYTER_USE_CONNECTION_FILE;
 #ifdef SUPPORT_GRACKLE
 extern bool            GRACKLE_ACTIVATE;
 extern bool            GRACKLE_VERBOSE;
+#ifndef COMOVING
+extern double          GRACKLE_REDSHIFT;
+#endif
 extern bool            GRACKLE_COOLING;
 extern GracklePriChe_t GRACKLE_PRIMORDIAL;
 extern bool            GRACKLE_METAL;
@@ -278,6 +283,18 @@ extern char            GRACKLE_CLOUDY_TABLE[MAX_STRING];
 extern int             GRACKLE_THREE_BODY_RATE;
 extern bool            GRACKLE_CIE_COOLING;
 extern int             GRACKLE_H2_OPA_APPROX;
+extern bool            GRACKLE_USE_V_HEATING_RATE;
+extern bool            GRACKLE_USE_S_HEATING_RATE;
+extern int             GRACKLE_USE_TEMP_FLOOR;
+extern double          GRACKLE_TEMP_FLOOR_SCALAR;
+extern double          GRACKLE_HYDROGEN_MFRAC;
+extern bool            OPT__UNFREEZE_GRACKLE;
+extern bool            OPT__OUTPUT_GRACKLE_TEMP;
+extern bool            OPT__OUTPUT_GRACKLE_MU;
+extern bool            OPT__OUTPUT_GRACKLE_TCOOL;
+extern bool            OPT__FLAG_COOLING_LEN;
+extern double          FlagTable_CoolingLen[NLEVEL-1];
+extern double          DT__GRACKLE_COOLING;
 extern int             CHE_GPU_NPGROUP;
 #endif
 

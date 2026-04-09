@@ -64,13 +64,14 @@ void Grackle_Init_FieldData()
    Che_FieldData->DII_density             = NULL;
    Che_FieldData->HDI_density             = NULL;
    Che_FieldData->metal_density           = NULL;
+   Che_FieldData->volumetric_heating_rate = NULL;
+   Che_FieldData->specific_heating_rate   = NULL;
+   Che_FieldData->temperature_floor       = NULL;
 
 // fields not supported yet
    Che_FieldData->x_velocity              = NULL;
    Che_FieldData->y_velocity              = NULL;
    Che_FieldData->z_velocity              = NULL;
-   Che_FieldData->volumetric_heating_rate = NULL;
-   Che_FieldData->specific_heating_rate   = NULL;
    Che_FieldData->RT_HI_ionization_rate   = NULL;
    Che_FieldData->RT_HeI_ionization_rate  = NULL;
    Che_FieldData->RT_HeII_ionization_rate = NULL;

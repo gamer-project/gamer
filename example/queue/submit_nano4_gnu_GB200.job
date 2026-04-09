@@ -1,0 +1,32 @@
+#!/bin/bash
+
+###############################################
+#       ARM64-GNU MPI job script example      #
+###############################################
+
+#SBATCH --account=ACCOUNT                                   # (-A) Account/project number
+#SBATCH --job-name=gamer_ELBDM_isolated_halo                # (-J) Job name
+#SBATCH --partition=gb200-rack1                             # (-p) Specific slurm partition
+#SBATCH --nodes=1                                           # (-N) Maximum number of nodes to be allocated
+#SBATCH --ntasks-per-node=34                                # Maximum number of tasks on each node
+#SBATCH --cpus-per-task=4                                   # (-c) Number of cores per MPI task
+#SBATCH --gres=gpu:4                                        # number of GPUs per node
+#SBATCH --mem=1680000M                                      # Memory limit per compute node for the job. Do not use with mem-per-cpu flag.
+#SBATCH --time=02:00:00                                     # (-t) Wall time limit (days-hrs:min:sec)
+##SBATCH -o log
+##SBATCH -e job.%j.err
+##SBATCH --mail-type=BEGIN,END,FAIL                         # Mail events (NONE, BEGIN, END, FAIL, ALL)
+##SBATCH --mail-user=EMAIL_ADDRESS                          # Where to send mail.  Set this to your email address
+
+LOG_FILE=log
+
+module purge
+module use /home/d07222009/module
+module load prun/2.2 gnu14/14.2.0 hwloc/2.12.0 ucx/1.19.0 libfabric/1.18.0 openmpi5/5.0.7 ohpc gsl/2.8 fftw3/3.3.1.0 hdf5/2.1.1_serial
+
+export UCX_PROTO_ENABLE=n
+export UCX_WARN_UNUSED_ENV_VARS=n
+
+###Warning: MPI rank and OpenMP thread configuration is not fully optimized. The current setting is only for testing purposes###
+mpirun --mca pml ucx --mca btl ^ofi -map-by ppr:17:numa:pe=4 --report-bindings ./gamer 1>>$LOG_FILE 2>&1
+echo "=============================================================" 1>>$LOG_FILE 2>&1

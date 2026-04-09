@@ -562,7 +562,7 @@ void Hydro_RiemannSolver_HLLC( const int XYZ, real Flux_Out[], const real L_In[]
 // 3. evaluate the star-region velocity (V_S) and pressure (P_S)
    real temp1_L, temp1_R, temp2, V_S, P_S;
 
-// do not use u_L-W_L and u_R-W_R to prevent from large round-off errors when Cs<<u~W
+// do not use u_L-W_L and u_R-W_R to prevent large round-off errors when Cs<<u~W
 // ==> temp1_L ~ temp1_R ~ 0.0 ==> temp2 = inf
 #  if   ( HLLC_WAVESPEED == HLL_WAVESPEED_ROE )
    temp1_L = L[0]*(  (EVal_min<u_L-Cs_L) ? (u_L-EVal_min) : (+Cs_L)  );

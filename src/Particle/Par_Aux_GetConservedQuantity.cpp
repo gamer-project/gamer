@@ -259,7 +259,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &CoMX_Total, doubl
                      {
                         idx[d] = int( ( Pos[d][ParID] - amr->patch[0][lv][PID]->EdgeL[d] )*_dh );
 
-//                      prevent from round-off errors (especially for NGP and TSC)
+//                      prevent round-off errors (especially for NGP and TSC)
                         if ( idx[d] < 0 )
                         {
 #                          ifdef DEBUG_PARTICLE
@@ -312,7 +312,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &CoMX_Total, doubl
                         idxLR[1][d]  = idxLR[0][d] + 1;
                         dr      [d] -= (double)idxLR[0][d];
 
-//                      prevent from round-off errors
+//                      prevent round-off errors
 //                      (CIC should be clear of this issue unless round-off errors are comparable to dh)
                         if ( idxLR[0][d] < 0 )
                         {
@@ -377,7 +377,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &CoMX_Total, doubl
                         idxLCR[2][d]  = idxLCR[1][d] + 1;
                         dr       [d] -= (double)idxLCR[1][d];
 
-//                      prevent from round-off errors (especially for NGP and TSC)
+//                      prevent round-off errors (especially for NGP and TSC)
                         if ( idxLCR[0][d] < 0 )
                         {
 #                          ifdef DEBUG_PARTICLE
