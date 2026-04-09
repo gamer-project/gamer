@@ -507,7 +507,7 @@ endif
 ifeq "$(filter -DGPU, $(SIMU_OPTION))" "-DGPU"
    ifeq "$(filter -DWAVE_SCHEME=WAVE_GRAMFE, $(SIMU_OPTION))" "-DWAVE_SCHEME=WAVE_GRAMFE"
       ifeq "$(filter -DGRAMFE_SCHEME=GRAMFE_FFT, $(SIMU_OPTION))" "-DGRAMFE_SCHEME=GRAMFE_FFT"
-         INCLUDE += -I$(CUFFTDX_PATH)/include
+         INCLUDE += -I$(CUFFTDX_PATH)/include -I$(CUFFTDX_PATH)/external/cutlass/include
       endif
    endif
 endif

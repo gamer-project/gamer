@@ -232,7 +232,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  BC
-// Description :  Set the extenral boundary condition to the analytical solution
+// Description :  Set the external boundary condition to the analytical solution
 //
 // Note        :  1. Linked to the function pointer "BC_User_Ptr"
 //
