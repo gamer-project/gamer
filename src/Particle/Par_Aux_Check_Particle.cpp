@@ -4,22 +4,22 @@
 
 
 static void Check_FindHomePatch      ( int &PassAll, int &PassOne, const char *comment, const int lv,
-                                       const int PID, const int ParID, const double *EdgeL, const double *EdgeR,
+                                       const int PID, const long ParID, const double *EdgeL, const double *EdgeR,
                                        const real_par *ParPos[] );
 static void Check_InLeafPatch        ( int &PassAll, int &PassOne, const char *comment, const int lv,
                                        const int PID, const int NParThisPatch );
 static void Check_NActive            ( int &PassAll, int &PassOne, const char *comment, const long NParInLeaf );
 static void Check_InactiveMass       ( int &PassAll, int &PassOne, const char *comment, const int lv,
-                                       const int PID, const int ParID, const real_par *ParPos[] );
+                                       const int PID, const long ParID, const real_par *ParPos[] );
 static void Check_OneHomePatch       ( int &PassAll, int &PassOne, const char *comment, const int lv,
-                                       const int PID, const int ParID, bool *ParHome );
+                                       const int PID, const long ParID, bool *ParHome );
 static void Check_ActiveHome         ( int &PassAll, int &PassOne, const char *comment, const bool *ParHome );
 static void Check_NPar_AcPlusInac    ( int &PassAll, int &PassOne, const char *comment );
 static void Check_NPar_Active_AllRank( int &PassAll, int &PassOne, const char *comment, const long NPar_Active_AllRank_Expect );
 static void Check_NPar_Lv_Sum        ( int &PassAll, int &PassOne, const char *comment );
 static void Check_NPar_Copy          ( int &PassAll, int &PassOne, const char *comment );
 static void Check_ValidType          ( int &PassAll, int &PassOne, const char *comment, const int lv,
-                                       const int PID, const int ParID );
+                                       const int PID, const long ParID );
 static void Check_ValidUID           ( int &PassAll, int &PassOne, const char *comment );
 static void Check_UniqueUID          ( int &PassAll, int &PassOne, const char *comment, int *Par_CountUID );
 
@@ -170,7 +170,7 @@ void Par_Aux_Check_Particle( const char *comment )
 //                ParPos  : Particle postion
 //-------------------------------------------------------------------------------------------------------
 void Check_FindHomePatch( int &PassAll, int &PassOne, const char *comment, const int lv, const int PID,
-                          const int ParID, const double *EdgeL, const double *EdgeR, const real_par *ParPos[] )
+                          const long ParID, const double *EdgeL, const double *EdgeR, const real_par *ParPos[] )
 {
 
    for (int d=0; d<3; d++)
@@ -280,7 +280,7 @@ void Check_NActive( int &PassAll, int &PassOne, const char *comment, const long 
 //                ParPos  : Particle postion
 //-------------------------------------------------------------------------------------------------------
 void Check_InactiveMass( int &PassAll, int &PassOne, const char *comment, const int lv, const int PID,
-                         const int ParID, const real_par *ParPos[] )
+                         const long ParID, const real_par *ParPos[] )
 {
 
    if ( amr->Par->Mass[ParID] >= 0.0 )   return;
@@ -319,7 +319,7 @@ void Check_InactiveMass( int &PassAll, int &PassOne, const char *comment, const 
 //                ParHome : Array indicating whether each particle has a home patch
 //-------------------------------------------------------------------------------------------------------
 void Check_OneHomePatch( int &PassAll, int &PassOne, const char *comment, const int lv, const int PID,
-                         const int ParID, bool *ParHome )
+                         const long ParID, bool *ParHome )
 {
 
    if ( ParHome[ParID] == false ) { ParHome[ParID] = true; return; }
@@ -517,7 +517,7 @@ void Check_NPar_Copy( int &PassAll, int &PassOne, const char *comment )
 //                PID     : Target patch ID
 //                ParID   : Target particle ID
 //-------------------------------------------------------------------------------------------------------
-void Check_ValidType( int &PassAll, int &PassOne, const char *comment, const int lv, const int PID, const int ParID )
+void Check_ValidType( int &PassAll, int &PassOne, const char *comment, const int lv, const int PID, const long ParID )
 {
 
    bool CheckTypePass = true;
