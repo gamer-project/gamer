@@ -4,7 +4,7 @@
 
 
 static void Check_FindHomePatch      ( int &PassAll, int &PassOne, const char *comment, const int lv,
-                                       const int PID, const int ParID, double *EdgeL, double *EdgeR,
+                                       const int PID, const int ParID, const double *EdgeL, const double *EdgeR,
                                        const real_par *ParPos[] );
 static void Check_InLeafPatch        ( int &PassAll, int &PassOne, const char *comment, const int lv,
                                        const int PID, const int NParThisPatch );
@@ -170,7 +170,7 @@ void Par_Aux_Check_Particle( const char *comment )
 //                ParPos  : Particle postion
 //-------------------------------------------------------------------------------------------------------
 void Check_FindHomePatch( int &PassAll, int &PassOne, const char *comment, const int lv, const int PID,
-                          const int ParID, double *EdgeL, double *EdgeR, const real_par *ParPos[] )
+                          const int ParID, const double *EdgeL, const double *EdgeR, const real_par *ParPos[] )
 {
 
    for (int d=0; d<3; d++)
