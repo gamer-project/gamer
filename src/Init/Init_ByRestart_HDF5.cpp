@@ -806,7 +806,11 @@ void Init_ByRestart_HDF5( const char *FileName )
             }
             for (int v=0; v<PAR_NATT_INT_STORED; v++)
             {
-               if ( v == PAR_PUID  &&  !isPUIDStored )   continue;
+               if ( v == PAR_PUID  &&  !isPUIDStored )
+               {
+                  H5_SetID_ParIntData[v] = H5I_INVALID_HID;
+                  continue;
+               }
 
                H5_SetID_ParIntData[v] = H5Dopen( H5_GroupID_Particle, ParAttIntName[v], H5P_DEFAULT );
                if ( H5_SetID_ParIntData[v] < 0 )   Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", ParAttIntName[v] );
