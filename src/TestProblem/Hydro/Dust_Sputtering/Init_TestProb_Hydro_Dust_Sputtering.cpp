@@ -323,7 +323,7 @@ void AddNewField_DUST()
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_TestProb_Hydro_Dust_Sputtering.cpp
+// Function    :  Init_TestProb_Hydro_Dust_Sputtering
 // Description :  Test problem initializer
 //
 // Note        :  None
@@ -332,7 +332,7 @@ void AddNewField_DUST()
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_Hydro_Dust_Sputtering.cpp()
+void Init_TestProb_Hydro_Dust_Sputtering()
 {
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
@@ -379,4 +379,4 @@ void Init_TestProb_Hydro_Dust_Sputtering.cpp()
 #  endif // if ( MODEL == HYDRO )
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
-} // FUNCTION : Init_TestProb_Hydro_Dust_Sputtering.cpp
+} // FUNCTION : Init_TestProb_Hydro_Dust_Sputtering
