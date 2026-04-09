@@ -65,7 +65,7 @@ void Par_Init_ByFile()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCITON : Par_Init_ByFile
+} // FUNCTION : Par_Init_ByFile
 
 
 

@@ -196,7 +196,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "HaloMerger_ExtPot_UniDenSph_VelocityY", &HaloMerger_ExtPot_UniDenSph_VelocityY,      0.0,              NoMin_double,  NoMax_double     );
    LOAD_PARA( load_mode, "HaloMerger_ExtPot_UniDenSph_VelocityZ", &HaloMerger_ExtPot_UniDenSph_VelocityZ,      0.0,              NoMin_double,  NoMax_double     );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 
@@ -589,7 +589,7 @@ void SetParameter()
                HaloMerger_Halo_HALO_IC_Range_EdgeL[index_halo][d] = HaloMerger_Halo_CenCoord[index_halo][d] - 0.5*HaloMerger_Halo_HALO_IC_BoxLen[index_halo][d];
                HaloMerger_Halo_HALO_IC_Range_EdgeR[index_halo][d] = HaloMerger_Halo_CenCoord[index_halo][d] + 0.5*HaloMerger_Halo_HALO_IC_BoxLen[index_halo][d];
 
-//             check wheter the HALO_IC dh are the same along different directions
+//             check whether the HALO_IC dh are the same along different directions
                for (int d2=0; d2<d; d2++)
                   if ( ! Mis_CompareRealValue( HaloMerger_Halo_HALO_IC_dh[index_halo][d], HaloMerger_Halo_HALO_IC_dh[index_halo][d2], NULL, false )  )
                      if ( MPI_Rank == 0 )

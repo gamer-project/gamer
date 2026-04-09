@@ -34,6 +34,7 @@ static bool Check_Radial( const int i, const int j, const int k, const int lv, c
 //                Vel           : Input velocity array
 //                Pres          : Input pressure array
 //                Lrtz          : Input Lorentz factor array
+//                LCool         : Input cooling length array
 //                Lohner_Ave    : Input array storing the averages for the Lohner error estimator
 //                Lohner_Slope  : Input array storing the slopes for the Lohner error estimator
 //                Lohner_NVar   : Number of variables stored in Lohner_Ave and Lohner_Slope
@@ -52,6 +53,7 @@ static bool Check_Radial( const int i, const int j, const int k, const int lv, c
 bool Flag_Check( const int lv, const int PID, const int i, const int j, const int k, const real dv,
                  const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real MagCC[][PS1][PS1][PS1],
                  const real Vel[][PS1][PS1][PS1], const real Pres[][PS1][PS1], const real Lrtz[][PS1][PS1],
+                 const real LCool[][PS1][PS1],
                  const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
                  const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff,
                  const real *Interf_Var, const real Spectral_Cond )
@@ -176,6 +178,21 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
    if ( OPT__FLAG_LRTZ_GRADIENT )
    {
       Flag |= Check_Gradient( i, j, k, &Lrtz[0][0][0], FlagTable_LrtzGradient[lv] );
+      if ( Flag )    return Flag;
+   }
+#  endif
+
+
+// check cooling length
+// ===========================================================================================
+#  if ( MODEL == HYDRO  &&  defined SUPPORT_GRACKLE )
+   if ( OPT__FLAG_COOLING_LEN )
+   {
+#     ifdef GAMER_DEBUG
+      if ( LCool == NULL )   Aux_Error( ERROR_INFO, "LCool == NULL !!\n" );
+#     endif
+
+      Flag |= (  amr->dh[lv]*FlagTable_CoolingLen[lv] > LCool[k][j][i]  );
       if ( Flag )    return Flag;
    }
 #  endif

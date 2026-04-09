@@ -104,7 +104,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "Perturbation_BgAmp",        &Perturbation_BgAmplitude,   NoDef_double,  NoMin_double,     NoMax_double         );
    LOAD_PARA( load_mode, "Perturbation_NDim",         &Perturbation_NDim,          3,             1,                3                    );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

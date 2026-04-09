@@ -196,7 +196,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "AGORA_DiskMetalMassFrac", &AGORA_DiskMetalMassFrac,  0.0,           0.0,              1.0               );
    LOAD_PARA( load_mode, "AGORA_HaloMetalMassFrac", &AGORA_HaloMetalMassFrac,  0.0,           0.0,              1.0               );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

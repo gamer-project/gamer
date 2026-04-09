@@ -137,7 +137,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "BarredPot_fullBS"  ,   &BarredPot_fullBS,      0.1 ,          Eps_double,       NoMax_double      );
    LOAD_PARA( load_mode, "BarredPot_initT"   ,   &BarredPot_initT,       1.0e4,         Eps_double,       NoMax_double      );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

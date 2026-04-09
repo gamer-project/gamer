@@ -159,6 +159,8 @@ double               DT__HYBRID_CFL, DT__HYBRID_CFL_INIT, DT__HYBRID_VELOCITY, D
 double               ELBDM_LAMBDA;
 #endif
 ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
+bool                 ELBDM_RESCALE_MASS_ERROR;
+int                  ELBDM_RESCALE_MASS_STEPS;
 bool                 ELBDM_BASE_SPECTRAL;
 
 #else
@@ -249,6 +251,9 @@ bool                 YT_JUPYTER_USE_CONNECTION_FILE;
 #ifdef SUPPORT_GRACKLE
 bool                 GRACKLE_ACTIVATE;
 bool                 GRACKLE_VERBOSE;
+#ifndef COMOVING
+double               GRACKLE_REDSHIFT;
+#endif
 bool                 GRACKLE_COOLING;
 GracklePriChe_t      GRACKLE_PRIMORDIAL;
 bool                 GRACKLE_METAL;
@@ -260,8 +265,20 @@ char                 GRACKLE_CLOUDY_TABLE[MAX_STRING];
 int                  GRACKLE_THREE_BODY_RATE;
 bool                 GRACKLE_CIE_COOLING;
 int                  GRACKLE_H2_OPA_APPROX;
+bool                 GRACKLE_USE_V_HEATING_RATE;
+bool                 GRACKLE_USE_S_HEATING_RATE;
+int                  GRACKLE_USE_TEMP_FLOOR;
+double               GRACKLE_TEMP_FLOOR_SCALAR;
+double               GRACKLE_HYDROGEN_MFRAC;
+bool                 OPT__UNFREEZE_GRACKLE;
+bool                 OPT__OUTPUT_GRACKLE_TEMP;
+bool                 OPT__OUTPUT_GRACKLE_MU;
+bool                 OPT__OUTPUT_GRACKLE_TCOOL;
+bool                 OPT__FLAG_COOLING_LEN;
+double               FlagTable_CoolingLen[NLEVEL-1];
+double               DT__GRACKLE_COOLING;
 int                  CHE_GPU_NPGROUP;
-#endif
+#endif // #ifdef SUPPORT_GRACKLE
 
 // (2-8) star formation
 #ifdef STAR_FORMATION
@@ -750,6 +767,9 @@ int main( int argc, char *argv[] )
 
       if ( ELBDM_REMOVE_MOTION_CM == ELBDM_REMOVE_MOTION_CM_EVERY_STEP )
       TIMING_FUNC(   ELBDM_RemoveMotionCM(),          Timer_Main[4],   TIMER_ON   );
+
+      if ( ELBDM_RESCALE_MASS_ERROR  &&  Step % ELBDM_RESCALE_MASS_STEPS == 0 )
+      TIMING_FUNC(   ELBDM_RescaleMassError(),        Timer_Main[4],   TIMER_ON   );
 #     endif // #if ( MODEL == ELBDM )
 //    ---------------------------------------------------------------------------------------------------
 
