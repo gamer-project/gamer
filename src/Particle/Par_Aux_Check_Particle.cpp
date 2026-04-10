@@ -10,7 +10,7 @@ static void Check_InLeafPatch        ( int &PassAll, int &PassOne, const char *c
                                        const int PID, const int NParThisPatch );
 static void Check_NActive            ( int &PassAll, int &PassOne, const char *comment, const long NParInLeaf );
 static void Check_InactiveMass       ( int &PassAll, int &PassOne, const char *comment, const int lv,
-                                       const int PID, const long ParID, const real_par *ParPos[] );
+                                       const int PID, const long ParID );
 static void Check_OneHomePatch       ( int &PassAll, int &PassOne, const char *comment, const int lv,
                                        const int PID, const long ParID, bool *ParHome );
 static void Check_ActiveHome         ( int &PassAll, int &PassOne, const char *comment, const bool *ParHome );
@@ -101,7 +101,7 @@ void Par_Aux_Check_Particle( const char *comment )
 
                   Check_FindHomePatch( PassAll, PassCheck[0], comment, lv, PID, ParID, EdgeL, EdgeR, ParPos );
 
-                  Check_InactiveMass( PassAll, PassCheck[3], comment, lv, PID, ParID, ParPos );
+                  Check_InactiveMass( PassAll, PassCheck[3], comment, lv, PID, ParID );
 
                   Check_ValidType( PassAll, PassCheck[10], comment, lv, PID, ParID );
 
@@ -277,10 +277,9 @@ void Check_NActive( int &PassAll, int &PassOne, const char *comment, const long 
 //                lv      : Target refinement level
 //                PID     : Target patch ID
 //                ParID   : Target particle ID
-//                ParPos  : Particle postion
 //-------------------------------------------------------------------------------------------------------
 void Check_InactiveMass( int &PassAll, int &PassOne, const char *comment, const int lv, const int PID,
-                         const long ParID, const real_par *ParPos[] )
+                         const long ParID )
 {
 
    if ( amr->Par->Mass[ParID] >= 0.0 )   return;
@@ -294,8 +293,8 @@ void Check_InactiveMass( int &PassAll, int &PassOne, const char *comment, const 
                    "Rank", "Lv", "PID", "ParID", "PosX", "PosY", "PosZ", "Mass"  );
 
    Aux_Message( stderr, "Check 4: %4d  %2d  %7d  %10ld  %20.13e  %20.13e  %20.13e  %20.13e\n",
-                MPI_Rank, lv, PID, ParID, ParPos[0][ParID], ParPos[1][ParID], ParPos[2][ParID],
-                amr->Par->Mass[ParID] );
+                MPI_Rank, lv, PID, ParID, amr->Par->PosX[ParID], amr->Par->PosY[ParID],
+                amr->Par->PosZ[ParID], amr->Par->Mass[ParID] );
 
    PassAll = false;
    PassOne = false;
