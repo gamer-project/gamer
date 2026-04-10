@@ -27,8 +27,8 @@ class particle():
         self.vy_idx = []
         self.vz_idx = []
 
-    def set_idx( self, ds, hdf5=True ):
-        if hdf5:
+    def set_idx( self, ds, text=True ):
+        if not text:
             dd = ds.all_data()
             par_uid  = dd['ParPUid']
             self.idx = np.where(par_uid == self.UID)[0][0]
@@ -37,8 +37,8 @@ class particle():
             print(np.where(par_uid == self.UID))
             self.idx = np.where(par_uid == self.UID)[0][0]
 
-    def append_particle_attributes( self, ds, hdf5=True ):
-        if hdf5:
+    def append_particle_attributes( self, ds, text=True ):
+        if not text:
             dd = ds.all_data()
             time     = ds.current_time
             posx     = dd['ParPosX']
@@ -140,8 +140,8 @@ parser.add_argument( '-e', action='store', required=True,  type=int, dest='idx_e
                      help='last data index' )
 parser.add_argument( '-u', action='store', required=True, dest='uids', type=int, nargs='+',
                      help='UID of particles' )
-parser.add_argument( '-t', action='store_true', required=False, dest='use_hdf5',
-                     help='Use Data_* for analysis (slower)' )
+parser.add_argument( '-t', action='store_true', required=False, dest='use_text',
+                     help='Use `Particle_*.txt` for analysis (faster)' )
 parser.add_argument( '-d', action='store', required=False, type=int, dest='didx',
                      help='delta data index [%(default)d]', default=1 )
 parser.add_argument( '-i', action='store', required=False, type=str, dest='prefix',
@@ -160,20 +160,20 @@ idx_end   = args.idx_end
 didx      = args.didx
 prefix    = args.prefix
 check_UID = args.uids
-use_hdf5  = args.use_hdf5
+use_text  = args.use_text
 
 pars = [ particle(UID) for UID in check_UID ]
 for i in range(idx_start, idx_end+1, didx):
-    if use_hdf5:
+    if not use_text:
         ds = yt.load( "%s/Data_%06d"%(prefix, i) )
     else:
         print("Loading: %06d"%i)
         ds = np.loadtxt( "%s/Particle_%06d.txt"%(prefix, i) )
 
     for p in pars:
-        if i == 0: p.set_idx( ds, use_hdf5 )
+        if i == 0: p.set_idx( ds, use_text )
 
-        p.append_particle_attributes( ds, use_hdf5 )
+        p.append_particle_attributes( ds, use_text )
 
 for p in pars:
     p.plot_particle()
