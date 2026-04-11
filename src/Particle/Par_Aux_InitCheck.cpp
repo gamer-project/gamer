@@ -32,7 +32,7 @@ void Par_Aux_InitCheck()
 
 // 1. all active particles should lie within the simulation domain
 //    --> periodicity should be taken care of in the initial condition, not here
-//    --> also check particle types and ID here
+//    --> also check particle types and UID here
    for (long ParID=0; ParID<amr->Par->NPar_AcPlusInac; ParID++)
    {
 //    there should be no inactive particles initially
@@ -42,7 +42,14 @@ void Par_Aux_InitCheck()
       if ( Type[ParID] < (real_par)0  ||  Type[ParID] >= (real_par)PAR_NTYPE )
          Aux_Error( ERROR_INFO, "Type[%ld] = %d (accepted range: 0<=index<%d) !!\n", ParID, (int)Type[ParID], PAR_NTYPE );
 
-//    check particle ID
+//    check particle UID
+//    a particle here can be initialized via PAR_INIT_BY_FUNCTION or PAR_INIT_BY_FILE
+//    --> if the particle UID is loaded by Par_Init_ByFile(),
+//        it must lie within [1, NextPUID-1]
+//    --> if it is not loaded from a file,
+//        the initialized particle should not be assigned a new UID beforehand
+//        and must have particle UID == PUID_TBA,
+//        so that Par_SetParUID() can be invoked to assign it properly
       if ( PUid[ParID] != PUID_TBA  &&  ( PUid[ParID] <= 0  ||  PUid[ParID] >= amr->Par->NextPUID ) )
          Aux_Error( ERROR_INFO, "PUid[%ld] = %ld (accepted range: 0<index<%ld) !!\n", ParID, (long)PUid[ParID], amr->Par->NextPUID );
 

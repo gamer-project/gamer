@@ -471,6 +471,14 @@ struct Particle_t
       if ( NewAttInt[PAR_TYPE] < (long_par)0  ||  NewAttInt[PAR_TYPE] >= (long_par)PAR_NTYPE )
          Aux_Error( ERROR_INFO, "Incorrect particle type (%ld) !!\n", (long)NewAttInt[PAR_TYPE] );
 
+//    check whether the particle UID is valid
+//    a particle here can be either newly created or pre-existing
+//    --> newly created: must have particle UID == PUID_TBA
+//                       since Par_SetParUID() has not yet assigned it;
+//                       UID will not be decided here; the particle is added to the list 
+//                       as PUID_TBA and assigned a proper UID later in Par_SetParUID()
+//    --> pre-existing : the particle UID must have been assigned by Par_SetParUID() and
+//                       lie within [1, NextPUID-1]
       if ( ( NewAttInt[PAR_PUID] != PUID_TBA )  &&
            ( NewAttInt[PAR_PUID] <= (long_par)0  ||  NewAttInt[PAR_PUID] >= NextPUID ) )
          Aux_Error( ERROR_INFO, "Incorrect particle UID (%ld) !!\n", (long)NewAttInt[PAR_PUID] );
