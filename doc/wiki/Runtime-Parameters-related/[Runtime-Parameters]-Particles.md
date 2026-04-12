@@ -174,18 +174,18 @@ Disable this check when particles are initialized _after_ setting grid fields, s
 ### Particle UID (`PUID`)
 Valid particle UIDs should lie within `[1, number of particles]`.
 
-The particle UID assignment occurs during either initialization or on-the-fly creation 
-in simulation (e.g., star formation). The particle UIDs can be inherited from `PAR_IC` 
-(when `PAR_INIT=3` and `PAR_IC_PUID` is enabled) or from a restart file. Except for 
-these, the particle UIDs should be assigned internally via `Par_SetParUID()` in all 
+The particle UID assignment occurs during either initialization or on-the-fly creation
+in simulation (e.g., star formation). The particle UIDs can be inherited from `PAR_IC`
+(when `PAR_INIT=3` and `PAR_IC_PUID` is enabled) or from a restart file. Except for
+these, the particle UIDs should be assigned internally via `Par_SetParUID()` in all
 other cases (e.g., `PAR_INIT=1`).
 
-To ensure uniqueness and reproducibility, all particle UIDs should be assigned by 
-`Par_SetParUID()` globally, rather than decided by individual MPI ranks. The particle 
-UID must be first marked as `PUID_TBA` when the particle is created (e.g., in 
-`Par_Init_ByFunction_Ptr()`, `Par_Init_ByFile()`, 
-`src/StarFormation/SF_CreateStar_AGORA.cpp`) before invoking `Par_SetParUID()` (e.g., at 
-the end of `Init_GAMER()` and `SF_CreateStar()`). And `Par_SetParUID()` should be 
+To ensure uniqueness and reproducibility, all particle UIDs should be assigned by
+`Par_SetParUID()` globally, rather than decided by individual MPI ranks. The particle
+UID must be first marked as `PUID_TBA` when the particle is created (e.g., in
+`Par_Init_ByFunction_Ptr()`, `Par_Init_ByFile()`,
+`src/StarFormation/SF_CreateStar_AGORA.cpp`) before invoking `Par_SetParUID()` (e.g., at
+the end of `Init_GAMER()` and `SF_CreateStar()`). And `Par_SetParUID()` should be
 invoked _after_ all the particle creation within a single routine is complete.
 
 The assignment procedure of `Par_SetParUID()` follows:

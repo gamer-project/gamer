@@ -475,7 +475,7 @@ struct Particle_t
 //    a particle here can be either newly created or pre-existing
 //    --> newly created: must have particle UID == PUID_TBA
 //                       since Par_SetParUID() has not yet assigned it;
-//                       UID will not be decided here; the particle is added to the list 
+//                       UID will not be decided here; the particle is added to the list
 //                       as PUID_TBA and assigned a proper UID later in Par_SetParUID()
 //    --> pre-existing : the particle UID must have been assigned by Par_SetParUID() and
 //                       lie within [1, NextPUID-1]
