@@ -55,6 +55,9 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                GhostSize               : Number of ghost zones required for the interpolation scheme of massive particles
 //                GhostSizeTracer         : Number of ghost zones required for the interpolation scheme of tracer  particles
 //                NextPUID                : Next new particle UID over all MPI ranks. The UID starts from 1.
+//                                          --> Some compilers initialize unassigned variables to 0.
+//                                              If a user forgets to assign `PUID` to `PUID_TBA`, we can easily detect incorrect behavior by checking if `PUID < 1`.
+//                                              Although we do have `Check_UniquePUID()` to verify uniqueness, it is not as efficient as this simple check.
 //                AttributeFlt            : Pointer arrays to different particle floating-point attributes (Mass, Pos, Vel, ...)
 //                AttributeInt            : Pointer arrays to different particle integer        attributes (Type, PUid)
 //                InactiveParList         : List of inactive particle IDs
