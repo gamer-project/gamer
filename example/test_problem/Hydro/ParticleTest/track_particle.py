@@ -144,7 +144,7 @@ parser.add_argument( '-t', action='store_true', required=False, dest='use_text',
                      help='Use `Particle_*.txt` for analysis (faster)' )
 parser.add_argument( '-d', action='store', required=False, type=int, dest='didx',
                      help='delta data index [%(default)d]', default=1 )
-parser.add_argument( '-i', action='store', required=False, type=str, dest='prefix',
+parser.add_argument( '-p', action='store', required=False, type=str, dest='prefix',
                      help='data path prefix [%(default)s]', default='./' )
 
 args = parser.parse_args()
