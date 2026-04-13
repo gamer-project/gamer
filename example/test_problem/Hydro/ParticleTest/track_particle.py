@@ -10,32 +10,32 @@ import sys
 # Class
 #====================================================================================================
 class particle():
-    def __init__( self, UID ):
-        self.UID    = UID
-        self.idx    = 0
-        self.t      = []
-        self.x_UID  = []
-        self.y_UID  = []
-        self.z_UID  = []
-        self.vx_UID = []
-        self.vy_UID = []
-        self.vz_UID = []
-        self.x_idx  = []
-        self.y_idx  = []
-        self.z_idx  = []
-        self.vx_idx = []
-        self.vy_idx = []
-        self.vz_idx = []
+    def __init__( self, PUID ):
+        self.PUID    = PUID
+        self.idx     = 0
+        self.t       = []
+        self.x_PUID  = []
+        self.y_PUID  = []
+        self.z_PUID  = []
+        self.vx_PUID = []
+        self.vy_PUID = []
+        self.vz_PUID = []
+        self.x_idx   = []
+        self.y_idx   = []
+        self.z_idx   = []
+        self.vx_idx  = []
+        self.vy_idx  = []
+        self.vz_idx  = []
 
     def set_idx( self, ds, text=True ):
         if not text:
             dd = ds.all_data()
             par_uid  = dd['ParPUid']
-            self.idx = np.where(par_uid == self.UID)[0][0]
+            self.idx = np.where(par_uid == self.PUID)[0][0]
         else:
             par_uid  = ds[:, 12]
-            print(np.where(par_uid == self.UID))
-            self.idx = np.where(par_uid == self.UID)[0][0]
+            print(np.where(par_uid == self.PUID))
+            self.idx = np.where(par_uid == self.PUID)[0][0]
 
     def append_particle_attributes( self, ds, text=True ):
         if not text:
@@ -62,12 +62,12 @@ class particle():
             par_uid  = ds[:, 12]
             self.t.append(time)
 
-        self.x_UID.append(posx[par_uid == self.UID])
-        self.y_UID.append(posy[par_uid == self.UID])
-        self.z_UID.append(posz[par_uid == self.UID])
-        self.vx_UID.append(velx[par_uid == self.UID])
-        self.vy_UID.append(vely[par_uid == self.UID])
-        self.vz_UID.append(velz[par_uid == self.UID])
+        self.x_PUID.append(posx[par_uid == self.PUID])
+        self.y_PUID.append(posy[par_uid == self.PUID])
+        self.z_PUID.append(posz[par_uid == self.PUID])
+        self.vx_PUID.append(velx[par_uid == self.PUID])
+        self.vy_PUID.append(vely[par_uid == self.PUID])
+        self.vz_PUID.append(velz[par_uid == self.PUID])
         self.x_idx.append(posx[self.idx])
         self.y_idx.append(posy[self.idx])
         self.z_idx.append(posz[self.idx])
@@ -76,36 +76,36 @@ class particle():
         self.vz_idx.append(velz[self.idx])
 
     def plot_particle( self ):
-        lw_UID = 10
-        lw_idx = 5
+        lw_PUID = 10
+        lw_idx  = 5
         fig, ax = plt.subplots( 2, 3, sharex='col', figsize=(15, 10) )
         plt.subplots_adjust( hspace=0.1 )
 
-        ax[0, 0].plot( self.t, self.x_UID,  label="UID %05d"%(self.UID), linewidth=lw_UID )
-        ax[0, 0].plot( self.t, self.x_idx,  label="idx %05d"%(self.idx), linewidth=lw_idx )
+        ax[0, 0].plot( self.t, self.x_PUID,  label="PUID %05d"%(self.PUID), linewidth=lw_PUID )
+        ax[0, 0].plot( self.t, self.x_idx,   label=" idx %05d"%(self.idx),  linewidth=lw_idx  )
         ax[0, 0].set( ylim=[0, 1] )
         ax[0, 0].tick_params( which="both", direction="in" )
 
-        ax[0, 1].plot( self.t, self.y_UID,  label="UID %05d"%(self.UID), linewidth=lw_UID )
-        ax[0, 1].plot( self.t, self.y_idx,  label="idx %05d"%(self.idx), linewidth=lw_idx )
+        ax[0, 1].plot( self.t, self.y_PUID,  label="PUID %05d"%(self.PUID), linewidth=lw_PUID )
+        ax[0, 1].plot( self.t, self.y_idx,   label=" idx %05d"%(self.idx),  linewidth=lw_idx  )
         ax[0, 1].set( ylim=[0, 1] )
         ax[0, 1].tick_params( which="both", direction="in" )
 
-        ax[0, 2].plot( self.t, self.z_UID,  label="UID %05d"%(self.UID), linewidth=lw_UID )
-        ax[0, 2].plot( self.t, self.z_idx,  label="idx %05d"%(self.idx), linewidth=lw_idx )
+        ax[0, 2].plot( self.t, self.z_PUID,  label="PUID %05d"%(self.PUID), linewidth=lw_PUID )
+        ax[0, 2].plot( self.t, self.z_idx,   label=" idx %05d"%(self.idx),  linewidth=lw_idx  )
         ax[0, 2].set( ylim=[0, 1] )
         ax[0, 2].tick_params( which="both", direction="in" )
 
-        ax[1, 0].plot( self.t, self.vx_UID, label="UID %05d"%(self.UID), linewidth=lw_UID )
-        ax[1, 0].plot( self.t, self.vx_idx, label="idx %05d"%(self.idx), linewidth=lw_idx )
+        ax[1, 0].plot( self.t, self.vx_PUID, label="PUID %05d"%(self.PUID), linewidth=lw_PUID )
+        ax[1, 0].plot( self.t, self.vx_idx,  label=" idx %05d"%(self.idx),  linewidth=lw_idx  )
         ax[1, 0].tick_params( which="both", direction="in" )
 
-        ax[1, 1].plot( self.t, self.vy_UID, label="UID %05d"%(self.UID), linewidth=lw_UID )
-        ax[1, 1].plot( self.t, self.vy_idx, label="idx %05d"%(self.idx), linewidth=lw_idx )
+        ax[1, 1].plot( self.t, self.vy_PUID, label="PUID %05d"%(self.PUID), linewidth=lw_PUID )
+        ax[1, 1].plot( self.t, self.vy_idx,  label=" idx %05d"%(self.idx),  linewidth=lw_idx  )
         ax[1, 1].tick_params( which="both", direction="in" )
 
-        ax[1, 2].plot( self.t, self.vz_UID, label="UID %05d"%(self.UID), linewidth=lw_UID )
-        ax[1, 2].plot( self.t, self.vz_idx, label="idx %05d"%(self.idx), linewidth=lw_idx )
+        ax[1, 2].plot( self.t, self.vz_PUID, label="PUID %05d"%(self.PUID), linewidth=lw_PUID )
+        ax[1, 2].plot( self.t, self.vz_idx,  label=" idx %05d"%(self.idx),  linewidth=lw_idx  )
         ax[1, 2].tick_params( which="both", direction="in" )
 
         ax[1, 2].legend()
@@ -121,8 +121,8 @@ class particle():
         ax[0, 0].set(ylabel="pos")
         ax[1, 0].set(ylabel="vel")
 
-        plt.suptitle( "Particle %05d"%self.UID )
-        plt.savefig( "particle_%05d.png"%self.UID )
+        plt.suptitle( "Particle %05d"%self.PUID )
+        plt.savefig( "particle_%05d.png"%self.PUID )
         # plt.show()
         plt.close()
         return
@@ -139,7 +139,7 @@ parser.add_argument( '-s', action='store', required=True,  type=int, dest='idx_s
 parser.add_argument( '-e', action='store', required=True,  type=int, dest='idx_end',
                      help='last data index' )
 parser.add_argument( '-u', action='store', required=True, dest='uids', type=int, nargs='+',
-                     help='UID of particles' )
+                     help='PUID of particles' )
 parser.add_argument( '-t', action='store_true', required=False, dest='use_text',
                      help='Use `Particle_*.txt` for analysis (faster)' )
 parser.add_argument( '-d', action='store', required=False, type=int, dest='didx',
@@ -155,14 +155,14 @@ print( '-------------------------------------------------------------------' )
 print( ' '.join(map(str, sys.argv)) )
 print( '-------------------------------------------------------------------\n' )
 
-idx_start = args.idx_start
-idx_end   = args.idx_end
-didx      = args.didx
-prefix    = args.prefix
-check_UID = args.uids
-use_text  = args.use_text
+idx_start  = args.idx_start
+idx_end    = args.idx_end
+didx       = args.didx
+prefix     = args.prefix
+check_PUID = args.uids
+use_text   = args.use_text
 
-pars = [ particle(UID) for UID in check_UID ]
+pars = [ particle(PUID) for PUID in check_PUID ]
 for i in range(idx_start, idx_end+1, didx):
     if not use_text:
         ds = yt.load( "%s/Data_%06d"%(prefix, i) )
