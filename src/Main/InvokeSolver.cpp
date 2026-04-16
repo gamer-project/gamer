@@ -145,6 +145,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
    int  ArrayID      = 0;     // array index to load and store data ( 0 or 1 )
    int  NPG[2];               // number of patch groups to be updated at a time
    int  NTotal;               // total number of patch groups to be updated
+   int  NTotal_Max;           // maximum NTotal among all ranks
    int  Disp;                 // index displacement in PID0_List
 
    if ( OverlapMPI )
@@ -200,6 +201,8 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
    NPG[ArrayID] = ( NPG_Max < NTotal ) ? NPG_Max : NTotal;
 
+   MPI_Allreduce( &NTotal, &NTotal_Max, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
+
 
 // evaluate time evolution matrix (once per level per timestep)
 #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
@@ -219,11 +222,16 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 //-------------------------------------------------------------------------------------------------------------
 
 
-   for (Disp=NPG_Max; Disp<NTotal; Disp+=NPG_Max)
+// use NTotal_Max rather than NTotal in the loop termination criterion below so that all ranks execute the same number of iterations
+// --> avoid potential MPI deadlocks caused by TIMING_SYNC + OPT__TIMING_BARRIER when different ranks have different numbers of patches
+   for (Disp=NPG_Max; Disp<NTotal_Max; Disp+=NPG_Max)
    {
 
-      ArrayID      = 1 - ArrayID;
-      NPG[ArrayID] = ( NPG_Max < NTotal-Disp ) ? NPG_Max : NTotal-Disp;
+      ArrayID = 1 - ArrayID;
+
+      const int NPG_Remained = NTotal - Disp; 
+      NPG[ArrayID] = ( NPG_Remained > NPG_Max ) ? NPG_Max :
+                     ( NPG_Remained > 0 )       ? NPG_Remained : 0;
 
 
 //-------------------------------------------------------------------------------------------------------------
@@ -305,6 +313,10 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld, const int NPG,
                        const int *PID0_List, const int ArrayID, LB_GlobalTree* GlobalTree )
 {
+
+// skip if there are no target patches
+   if ( NPG == 0 )   return;
+
 
 #  ifndef UNSPLIT_GRAVITY
    real (*h_Pot_Array_USG_F[2])[ CUBE(USG_NXT_F) ]                    = { NULL, NULL };
@@ -462,6 +474,10 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld,
              const int NPG, const int ArrayID, const double dt, const double Poi_Coeff )
 {
+
+// skip if there are no target patches
+   if ( NPG == 0 )   return;
+
 
    const double dh = amr->dh[lv];
 
@@ -806,6 +822,10 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, const int SaveSg_Mag, const int SaveSg_Pot,
                    const int NPG, const int *PID0_List, const int ArrayID, const double dt )
 {
+
+// skip if there are no target patches
+   if ( NPG == 0 )   return;
+
 
 #  ifndef DUAL_ENERGY
    char (*h_DE_Array_F_Out [2])[ CUBE(PS2) ]                          = { NULL, NULL };
