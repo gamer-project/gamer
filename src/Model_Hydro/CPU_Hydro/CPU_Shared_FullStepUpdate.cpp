@@ -46,6 +46,7 @@
 //                dh                : Cell size
 //                MinDens/Eint      : Density and internal energy floors
 //                DualEnergySwitch  : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
+//                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //                NormPassive       : true --> normalize passive scalars so that the sum of their mass density
 //                                             is equal to the gas mass density
 //                NNorm             : Number of passive scalars to be normalized
@@ -62,8 +63,8 @@
 GPU_DEVICE
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                           const real dt, const real dh, const real MinDens, const real MinEint,
-                           const real DualEnergySwitch, const bool NormPassive, const int NNorm, const int NormIdx[],
+                           const real dt, const real dh, const real MinDens, const real MinEint, const real DualEnergySwitch,
+                           const long PassiveFloor, const bool NormPassive, const int NNorm, const int NormIdx[],
                            const EoS_t *EoS, int *s_FullStepFailure, const int Iteration, const int MinMod_MaxIter )
 {
 
@@ -136,13 +137,14 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //    Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
       Output_1Cell[ENGY] = Hydro_CheckMinEintInEngy( Output_1Cell[DENS], Output_1Cell[MOMX],
                                                      Output_1Cell[MOMY], Output_1Cell[MOMZ],
-                                                     Output_1Cell[ENGY], MinEint, Emag );
+                                                     Output_1Cell[ENGY], MinEint, PassiveFloor, Emag );
 #     endif // #ifdef BAROTROPIC_EOS
 
 
 //    2. floor and normalize passive scalars
 #     if ( NCOMP_PASSIVE > 0 )
-      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  Output_1Cell[v] = FMAX( Output_1Cell[v], TINY_NUMBER );
+      for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+         if ( PassiveFloor & BIDX(v) )  Output_1Cell[v] = FMAX( Output_1Cell[v], TINY_NUMBER );
 
       if ( NormPassive )
          Hydro_NormalizePassive( Output_1Cell[DENS], Output_1Cell+NCOMP_FLUID, NNorm, NormIdx );
@@ -158,10 +160,45 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //    we no longer apply density and pressure floors here since we want to enable 1st-order-flux correction for that
 //    Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
 
+//    we do not apply the dual-energy fix to the energy
+//    when the density is negative or Ekin >= 2*Etot (could be caused by an extremely low density)
+//    --> such that the unphysical energy can be caught by the checks in Flu_Close()->CorrectUnphysical()
+//
+//    note that ( i) Passing "Etot*2 > Ekin" for the dual-energy fix implies "Etot > 0"
+//              (ii) "Ekin >= 2*Etot" means "Eint <= -Etot" and "Eint <= -1/2*Ekin",
+//                    in other words, Eint has a large negative value compared to Etot and Ekin
+//
+//    for example, assume the typical input fluid before the hydro solver has
+//          (Dens = 1.00, MomX = 1.00, MomY = 1.00, MomZ = 1.00, Etot = 2.00) --> (Ekin = 1.50, Eint = 0.50):
+//
+//    (a) it is okay to apply the dual-energy fix when the output fluid has
+//          (Dens = 0.10, MomX = 0.10, MomY = 0.10, MomZ = 0.10, Etot = 0.16) --> (Ekin = 0.15, Eint = 0.01),
+//        where Eint/Ekin = 1./15. is assumed to be lower than DualEnergySwitch
+//
+//    (b) it is also okay to apply the dual-energy fix when the output fluid has a slightly negative Eint, such as
+//          (Dens = 0.10, MomX = 0.10, MomY = 0.10, MomZ = 0.10, Etot = 0.12) --> (Ekin = 0.15, Eint = -0.03)
+//
+//    in these cases, Etot will be fixed to physically correct Etot' = Ekin + (internal energy from DUAL)
+//
+//    however,
+//    (c) if the output density is very low,
+//        the total energy updated by the dual-energy fix may increase significantly, for example,
+//          (Dens = 0.05, MomX = 0.10, MomY = 0.10, MomZ = 0.10, Etot = 0.15) --> (Ekin = 0.30, Eint = -0.15).
+//        in this case, the dual-energy-fixed Etot' = Ekin + (internal energy from DUAL) will become at least 2x
+//
+//    (d) it is worse if the output fluid has an even lower density while momentum remains finite,
+//          (Dens = 1e-3, MomX = 0.10, MomY = 0.10, MomZ = 0.10, Etot = 0.15) --> (Ekin = 15.0, Eint = -14.85),
+//        the dual-energy-fixed Etot' will be unphysically large due to the large kinetic energy
+//        in this case, Etot' and Eint' are all positive and may pass the unphysical check
+//
+//    in these cases, we should leave the negative Eint to be handled by Flu_Close()
+      const real Ekin          = (real)0.5*( SQR(Output_1Cell[MOMX]) + SQR(Output_1Cell[MOMY]) + SQR(Output_1Cell[MOMZ]) )/Output_1Cell[DENS];
+      const real maxKinOverTot = (real)2.0;
+      if ( Output_1Cell[DENS] > (real)0.0  &&  Output_1Cell[ENGY]*maxKinOverTot > Ekin )
       Hydro_DualEnergyFix( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
                            Output_1Cell[ENGY], Output_1Cell[DUAL], g_DE_Status[idx_out],
                            EoS->AuxArrayDevPtr_Flt[1], EoS->AuxArrayDevPtr_Flt[2], CheckMinPres_No, NULL_REAL,
-                           DualEnergySwitch, Emag );
+                           PassiveFloor, DualEnergySwitch, Emag );
 #     endif // #ifdef DUAL_ENERGY
 
 
@@ -178,12 +215,11 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 
 //       5-1. check
 //       --> allow pressure to be zero to tolerate round-off errors
-         if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, Output_1Cell, NULL,
-                                   NULL_REAL, NULL_REAL, Emag,
+         if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, Output_1Cell, Emag,
                                    EoS->DensEint2Pres_FuncPtr,
                                    EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table,
-                                   ERROR_INFO, UNPHY_SILENCE )  )
+                                   PassiveFloor, ERROR_INFO, UNPHY_SILENCE )  )
          {
 #           ifdef __CUDACC__  // GPU
 //          use atomicExch_block() on Pascal (or later) GPUs to avoid inter-block synchronization for better performance
@@ -208,7 +244,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
          {
 //          get pressure
             const real Pres = Hydro_Con2Pres( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
-                                              Output_1Cell[ENGY], Output_1Cell+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, Emag,
+                                              Output_1Cell[ENGY], Output_1Cell+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, PassiveFloor, Emag,
                                               EoS->DensEint2Pres_FuncPtr,
                                               EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
                                               EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,

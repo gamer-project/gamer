@@ -22,7 +22,7 @@ static __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
                                       const int j_gap, const int k_gap, real s_cu[][5][FLU_NXT],
                                       real s_cw[][5][FLU_NXT], real s_flux[][5][FLU_NXT], real s_RLflux[][5][FLU_NXT],
                                       const bool FinalOut, const int XYZ,
-                                      const real MinDens, const real MinPres, const real MinEint,
+                                      const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor,
                                       const EoS_t *EoS );
 
 
@@ -36,20 +36,21 @@ static __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
 //                   Prefix "s" for pointers pointing to the "Shared" memory space
 //                b. The three-dimensional evolution is achieved by using the dimensional-split method
 //
-// Parameter   :  g_Fluid_In  : Global memory array to store the input fluid variables
-//                g_Fluid_Out : Global memory array to store the output fluid variables
-//                g_Flux      : Global memory array to store the output fluxes
-//                g_Corner    : Global memory array storing the physical corner coordinates of each patch group (USELESS CURRENTLY)
-//                g_Pot_USG   : Global memory array storing the input potential for UNSPLIT_GRAVITY (NOT SUPPORTED in RTVD)
-//                dt          : Time interval to advance solution
-//                _dh         : 1 / grid size
-//                StoreFlux   : true --> store the coarse-fine fluxes
-//                XYZ         : true  : x->y->z ( forward sweep)
-//                              false : z->y->x (backward sweep)
-//                MinDens     : Density floor
-//                MinPres     : Pressure floor
-//                MinEint     : Internal energy floor
-//                EoS         : EoS object
+// Parameter   :  g_Fluid_In   : Global memory array to store the input fluid variables
+//                g_Fluid_Out  : Global memory array to store the output fluid variables
+//                g_Flux       : Global memory array to store the output fluxes
+//                g_Corner     : Global memory array storing the physical corner coordinates of each patch group (USELESS CURRENTLY)
+//                g_Pot_USG    : Global memory array storing the input potential for UNSPLIT_GRAVITY (NOT SUPPORTED in RTVD)
+//                dt           : Time interval to advance solution
+//                _dh          : 1 / grid size
+//                StoreFlux    : true --> store the coarse-fine fluxes
+//                XYZ          : true  : x->y->z ( forward sweep)
+//                               false : z->y->x (backward sweep)
+//                MinDens      : Density floor
+//                MinPres      : Pressure floor
+//                MinEint      : Internal energy floor
+//                PassiveFloor : Bitwise flag to specify the passive scalars to be floored
+//                EoS          : EoS object
 //-------------------------------------------------------------------------------------------------------
 __global__ void CUFLU_FluidSolver_RTVD(
    real g_Fluid_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
@@ -58,7 +59,7 @@ __global__ void CUFLU_FluidSolver_RTVD(
    const double g_Corner[][3],
    const real g_Pot_USG[][ CUBE(USG_NXT_F) ],
    const real dt, const real _dh, const bool StoreFlux,
-   const bool XYZ, const real MinDens, const real MinPres, const real MinEint,
+   const bool XYZ, const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor,
    const EoS_t EoS )
 {
 
@@ -70,25 +71,25 @@ __global__ void CUFLU_FluidSolver_RTVD(
    if ( XYZ )
    {
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, StoreFlux,              0,              0,
-                     s_cu, s_cw, s_flux, s_RLflux, false, 0, MinDens, MinPres, MinEint, &EoS );
+                     s_cu, s_cw, s_flux, s_RLflux, false, 0, MinDens, MinPres, MinEint, PassiveFloor, &EoS );
 
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, StoreFlux, FLU_GHOST_SIZE,              0,
-                     s_cu, s_cw, s_flux, s_RLflux, false, 3, MinDens, MinPres, MinEint, &EoS );
+                     s_cu, s_cw, s_flux, s_RLflux, false, 3, MinDens, MinPres, MinEint, PassiveFloor, &EoS );
 
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, StoreFlux, FLU_GHOST_SIZE, FLU_GHOST_SIZE,
-                     s_cu, s_cw, s_flux, s_RLflux,  true, 6, MinDens, MinPres, MinEint, &EoS );
+                     s_cu, s_cw, s_flux, s_RLflux,  true, 6, MinDens, MinPres, MinEint, PassiveFloor, &EoS );
    }
 
    else
    {
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, StoreFlux,              0,              0,
-                     s_cu, s_cw, s_flux, s_RLflux, false, 6, MinDens, MinPres, MinEint, &EoS );
+                     s_cu, s_cw, s_flux, s_RLflux, false, 6, MinDens, MinPres, MinEint, PassiveFloor, &EoS );
 
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, StoreFlux,              0, FLU_GHOST_SIZE,
-                     s_cu, s_cw, s_flux, s_RLflux, false, 3, MinDens, MinPres, MinEint, &EoS );
+                     s_cu, s_cw, s_flux, s_RLflux, false, 3, MinDens, MinPres, MinEint, PassiveFloor, &EoS );
 
       CUFLU_Advance( g_Fluid_In, g_Fluid_Out, g_Flux, dt, _dh, StoreFlux, FLU_GHOST_SIZE, FLU_GHOST_SIZE,
-                     s_cu, s_cw, s_flux, s_RLflux,  true, 0, MinDens, MinPres, MinEint, &EoS );
+                     s_cu, s_cw, s_flux, s_RLflux,  true, 0, MinDens, MinPres, MinEint, PassiveFloor, &EoS );
    }
 
 } // FUNCTION : CUFLU_FluidSolver_RTVD
@@ -103,26 +104,27 @@ __global__ void CUFLU_FluidSolver_RTVD(
 //                   Prefix "s" for pointers pointing to the "Shared" memory space
 //                b. The direction of the one dimensional sweep is determined by the input parameter "XYZ"
 //
-// Parameter   :  g_Fluid_In  : Global memory array to store the input fluid variables
-//                g_Fluid_Out : Global memory array to store the output fluid variables
-//                g_Flux      : Global memory array to store the output fluxes
-//                dt          : Time interval to advance solution
-//                _dh         : 1 / grid size
-//                StoreFlux   : true --> store the coarse-fine fluxes
-//                j_gap       : Number of useless grids in each side in the j direction (j may not be equal to y)
-//                k_gap       : Number of useless grids in each side in the k direction (k mya not be equal to z)
-//                s_cu        : Shared memory array storing the normal flux
-//                s_cw        : Shared memory array storing the auxiliary flux
-//                s_flux      : Shared memory array storing the final flux used to update the fluid variables
-//                s_RLflux    : Shared memory array storing the left/right-moving flux
-//                XYZ         : 0 : Update the solution in the x direction
-//                              3 : Update the solution in the y direction
-//                              6 : Update the solution in the z direction
-//                              --> This parameter is also used to determine the place to store the output fluxes
-//                MinDens     : Density floor
-//                MinPres     : Pressure floor
-//                MinEint     : Internal energy floor
-//                EoS         : EoS object
+// Parameter   :  g_Fluid_In   : Global memory array to store the input fluid variables
+//                g_Fluid_Out  : Global memory array to store the output fluid variables
+//                g_Flux       : Global memory array to store the output fluxes
+//                dt           : Time interval to advance solution
+//                _dh          : 1 / grid size
+//                StoreFlux    : true --> store the coarse-fine fluxes
+//                j_gap        : Number of useless grids in each side in the j direction (j may not be equal to y)
+//                k_gap        : Number of useless grids in each side in the k direction (k mya not be equal to z)
+//                s_cu         : Shared memory array storing the normal flux
+//                s_cw         : Shared memory array storing the auxiliary flux
+//                s_flux       : Shared memory array storing the final flux used to update the fluid variables
+//                s_RLflux     : Shared memory array storing the left/right-moving flux
+//                XYZ          : 0 : Update the solution in the x direction
+//                               3 : Update the solution in the y direction
+//                               6 : Update the solution in the z direction
+//                               --> This parameter is also used to determine the place to store the output fluxes
+//                MinDens      : Density floor
+//                MinPres      : Pressure floor
+//                MinEint      : Internal energy floor
+//                PassiveFloor : Bitwise flag to specify the passive scalars to be floored
+//                EoS          : EoS object
 //-------------------------------------------------------------------------------------------------------
 __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
                                real g_Fluid_Out[][5][ CUBE(PS2) ],
@@ -131,7 +133,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
                                const int j_gap, const int k_gap, real s_cu[][5][FLU_NXT],
                                real s_cw[][5][FLU_NXT], real s_flux[][5][FLU_NXT], real s_RLflux[][5][FLU_NXT],
                                const bool FinalOut, const int XYZ,
-                               const real MinDens, const real MinPres, const real MinEint,
+                               const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor,
                                const EoS_t *EoS )
 {
 
@@ -192,16 +194,12 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
       _rho = (real)1.0 / Fluid[0];
       vx   = _rho * Fluid[1];
       p    = Hydro_Con2Pres( Fluid[0], Fluid[1], Fluid[2], Fluid[3], Fluid[4], Passive,
-                             CheckMinPres_Yes, MinPres, NULL_REAL, EoS->DensEint2Pres_FuncPtr, NULL, NULL,
+                             CheckMinPres_Yes, MinPres, PassiveFloor, NULL_REAL, EoS->DensEint2Pres_FuncPtr, NULL, NULL,
                              EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
-      Hydro_IsUnphysical( UNPHY_MODE_SING, &p,        "pressure",
-                          (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                          ERROR_INFO, UNPHY_VERBOSE );
-      Hydro_IsUnphysical( UNPHY_MODE_SING, &Fluid[0], "density",
-                          TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                          ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical_Single( p,        "pressure", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical_Single( Fluid[0], "density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #     endif
       c    = FABS( vx ) + SQRT(  EoS->DensPres2CSqr_FuncPtr( Fluid[0], p, Passive, EoS->AuxArrayDevPtr_Flt,
                                                              EoS->AuxArrayDevPtr_Int, EoS->Table )  );
@@ -241,7 +239,7 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
 //       apply density and internal energy floors
          Fluid_half[0] = FMAX( Fluid_half[0], MinDens );
          Fluid_half[4] = Hydro_CheckMinEintInEngy( Fluid_half[0], Fluid_half[1], Fluid_half[2], Fluid_half[3], Fluid_half[4],
-                                                   MinEint, NULL_REAL );
+                                                   MinEint, PassiveFloor, NULL_REAL );
       }
 
 
@@ -255,16 +253,12 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
          _rho = (real)1.0 / Fluid_half[0];
          vx   = _rho * Fluid_half[1];
          p    = Hydro_Con2Pres( Fluid_half[0], Fluid_half[1], Fluid_half[2], Fluid_half[3], Fluid_half[4], Passive,
-                                CheckMinPres_Yes, MinPres, NULL_REAL, EoS->DensEint2Pres_FuncPtr, NULL, NULL,
+                                CheckMinPres_Yes, MinPres, PassiveFloor, NULL_REAL, EoS->DensEint2Pres_FuncPtr, NULL, NULL,
                                 EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
 
 #        ifdef CHECK_UNPHYSICAL_IN_FLUID
-         Hydro_IsUnphysical( UNPHY_MODE_SING, &p,             "pressure",
-                             (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                             ERROR_INFO, UNPHY_VERBOSE );
-         Hydro_IsUnphysical( UNPHY_MODE_SING, &Fluid_half[0], "density",
-                             TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                             ERROR_INFO, UNPHY_VERBOSE );
+         Hydro_IsUnphysical_Single( p,             "pressure", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+         Hydro_IsUnphysical_Single( Fluid_half[0], "density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #        endif
 
          c    = FABS( vx ) + SQRT(  EoS->DensPres2CSqr_FuncPtr( Fluid_half[0], p, Passive, EoS->AuxArrayDevPtr_Flt,
@@ -347,17 +341,13 @@ __device__ void CUFLU_Advance( real g_Fluid_In [][5][ CUBE(FLU_NXT) ],
 //       apply density and internal energy floors
          Fluid[0] = FMAX( Fluid[0], MinDens );
          Fluid[4] = Hydro_CheckMinEintInEngy( Fluid[0], Fluid[1], Fluid[2], Fluid[3], Fluid[4],
-                                              MinEint, NULL_REAL );
+                                              MinEint, PassiveFloor, NULL_REAL );
 
 
 //       check negative density and energy
 #        ifdef CHECK_UNPHYSICAL_IN_FLUID
-         Hydro_IsUnphysical( UNPHY_MODE_SING, &Fluid[4], "energy",
-                             TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                             ERROR_INFO, UNPHY_VERBOSE );
-         Hydro_IsUnphysical( UNPHY_MODE_SING, &Fluid[0], "density",
-                             TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                             ERROR_INFO, UNPHY_VERBOSE );
+         Hydro_IsUnphysical_Single( Fluid[4], "energy",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+         Hydro_IsUnphysical_Single( Fluid[0], "density", TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #        endif
 
 

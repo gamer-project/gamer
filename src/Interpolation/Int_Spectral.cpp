@@ -385,7 +385,7 @@ void InterpolationContext::ReadBinaryFile( const char* filename, double* array, 
    FILE* file = fopen( filename, "rb" );
    if ( file == NULL ) {
       Aux_Error( ERROR_INFO, "Error opening interpolation file %s !!\n"
-                 "        --> See https://github.com/gamer-project/gamer/wiki/ELBDM-Spectral-Interpolation#obtaining-interpolation-tables\n",
+                 "        --> See https://github.com/gamer-project/gamer/wiki/%5BELBDM%5D-Spectral-Interpolation#obtaining-interpolation-tables\n",
                  filename );
       return;
    }
@@ -921,7 +921,7 @@ void InterpolationHandler::AddInterpolationContext( size_t nInput, size_t nGhost
 {
 
 // ensure thread safety when adding new interpolation contexts
-// only one thread in OMP enviroment may add a new interpolation context
+// only one thread in OMP environment may add a new interpolation context
 #  pragma omp critical
    if ( contexts.find(nInput) == contexts.end() ) {
 //    for small N <= 32 pick precomputed interpolation with cost of N^2

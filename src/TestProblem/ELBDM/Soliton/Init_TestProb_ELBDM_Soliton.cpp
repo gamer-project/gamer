@@ -11,6 +11,7 @@ static double   Soliton_CoreRadiusAll;                   // core radius for all 
                                                          //    (<=0.0 --> hard coding each soliton)
 static double   Soliton_EmptyRegion;                     // soliton-free region from the boundary
                                                          //    (useful only when Soliton_RSeed>=0)
+static int      Soliton_InitMode;                        // soliton density initialization mode (1=table, 2=analytical function)
 static char     Soliton_DensProf_Filename[MAX_STRING];   // filename of the reference soliton density profile
 
 static int      Soliton_DensProf_NBin;                   // number of radial bins of the soliton density profile
@@ -20,7 +21,7 @@ static double (*Soliton_Center)[3] = NULL;               // center coordinates o
 static double  *Soliton_ScaleL     = NULL;               // L/D: length/density scale factors of each soliton
                                                          //      (defined as the ratio between the core radii/peak
                                                          //      density of the target and reference soliton profiles)
-static double  *Soliton_ScaleD     = NULL;
+static double  *Soliton_ScaleD     = NULL;               // (for Soliton_InitMode==1 only)
 // =======================================================================================
 
 static void BC( real Array[], const int ArraySize[], real fluid[], const int NVar_Flu,
@@ -85,6 +86,53 @@ void Validate()
 
 #if ( MODEL == ELBDM  &&  defined GRAVITY )
 //-------------------------------------------------------------------------------------------------------
+// Function    :  LoadInputTestProb
+// Description :  Read problem-specific runtime parameters from Input__TestProb and store them in HDF5 snapshots (Data_*)
+//
+// Note        :  1. Invoked by SetParameter() to read parameters
+//                2. Invoked by Output_DumpData_Total_HDF5() using the function pointer Output_HDF5_InputTest_Ptr to store parameters
+//                3. If there is no problem-specific runtime parameter to load, add at least one parameter
+//                   to prevent an empty structure in HDF5_Output_t
+//                   --> Example:
+//                       LOAD_PARA( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+//
+// Parameter   :  load_mode      : Mode for loading parameters
+//                                 --> LOAD_READPARA    : Read parameters from Input__TestProb
+//                                     LOAD_HDF5_OUTPUT : Store parameters in HDF5 snapshots
+//                ReadPara       : Data structure for reading parameters (used with LOAD_READPARA)
+//                HDF5_InputTest : Data structure for storing parameters in HDF5 snapshots (used with LOAD_HDF5_OUTPUT)
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
+{
+
+#  ifndef SUPPORT_HDF5
+   if ( load_mode == LOAD_HDF5_OUTPUT )   Aux_Error( ERROR_INFO, "please turn on SUPPORT_HDF5 in the Makefile for load_mode == LOAD_HDF5_OUTPUT !!\n" );
+#  endif
+
+   if ( load_mode == LOAD_READPARA     &&  ReadPara       == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_READPARA and ReadPara == NULL !!\n" );
+   if ( load_mode == LOAD_HDF5_OUTPUT  &&  HDF5_InputTest == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_HDF5_OUTPUT and HDF5_InputTest == NULL !!\n" );
+
+// add parameters in the following format:
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
+// --> LOAD_PARA() is defined in "include/TestProb.h"
+// *************************************************************************************************************************************
+// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",           &VARIABLE,                   DEFAULT,       MIN,              MAX               );
+// *************************************************************************************************************************************
+   LOAD_PARA( load_mode, "Soliton_N",                 &Soliton_N,                 -1,             1,                NoMax_int         );
+   LOAD_PARA( load_mode, "Soliton_RSeed",             &Soliton_RSeed,              0,             NoMin_int,        NoMax_int         );
+   LOAD_PARA( load_mode, "Soliton_CoreRadiusAll",     &Soliton_CoreRadiusAll,      NoDef_double,  NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Soliton_EmptyRegion",       &Soliton_EmptyRegion,        0.0,           NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "Soliton_InitMode",          &Soliton_InitMode,           1,             1,                2                 );
+   LOAD_PARA( load_mode, "Soliton_DensProf_Filename",  Soliton_DensProf_Filename,  NoDef_str,     Useless_str,      Useless_str       );
+
+} // FUNCTION : LoadInputTestProb
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
 //
@@ -106,20 +154,11 @@ void SetParameter()
 
 
 // (1) load the problem-specific runtime parameters
+// (1-1) read parameters from Input__TestProb
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
-// (1-1) add parameters in the following format:
-// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
-// --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
-// ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",           &VARIABLE,                   DEFAULT,       MIN,              MAX               );
-// ********************************************************************************************************************************
-   ReadPara->Add( "Soliton_N",                 &Soliton_N,                 -1,             1,                NoMax_int         );
-   ReadPara->Add( "Soliton_RSeed",             &Soliton_RSeed,              0,             NoMin_int,        NoMax_int         );
-   ReadPara->Add( "Soliton_CoreRadiusAll",     &Soliton_CoreRadiusAll,      NoDef_double,  NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Soliton_EmptyRegion",       &Soliton_EmptyRegion,        0.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "Soliton_DensProf_Filename",  Soliton_DensProf_Filename,  NoDef_str,     Useless_str,      Useless_str       );
+   LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
 
    ReadPara->Read( FileName );
 
@@ -133,6 +172,9 @@ void SetParameter()
 
    if ( Soliton_CoreRadiusAll == NoDef_double )
       Aux_Error( ERROR_INFO, "Runtime parameter \"Soliton_CoreRadiusAll\" is not set !!\n" );
+
+   if ( !OPT__UNIT  &&  Soliton_InitMode == 2 )
+      Aux_Error( ERROR_INFO, "OPT__UNIT must be enabled for Soliton_InitMode == 2 !!\n" );
 
 
 // (2) set the problem-specific derived parameters
@@ -194,40 +236,53 @@ void SetParameter()
 // (3) load the reference soliton density profile and evaluate the scale factors
    if ( OPT__INIT != INIT_BY_RESTART )
    {
-//    load the reference profile
-      const bool RowMajor_No  = false;    // load data into the column-major order
-      const bool AllocMem_Yes = true;     // allocate memory for Soliton_DensProf
-      const int  NCol         = 2;        // total number of columns to load
-      const int  Col[NCol]    = {0, 1};   // target columns: (radius, density)
-
-      Soliton_DensProf_NBin = Aux_LoadTable( Soliton_DensProf, Soliton_DensProf_Filename, NCol, Col, RowMajor_No, AllocMem_Yes );
-
-
-//    get the core radius of the reference profile
-      const double *RadiusRef = Soliton_DensProf + 0*Soliton_DensProf_NBin;
-      const double *DensRef   = Soliton_DensProf + 1*Soliton_DensProf_NBin;
-      const double  DensCore  = 0.5*DensRef[0];   // define core radius as the half-density radius
-
-      double CoreRadiusRef = NULL_REAL;
-
-      for (int b=1; b<Soliton_DensProf_NBin-1; b++)
+      if ( Soliton_InitMode == 1 )
       {
-         if ( DensRef[b] >= DensCore  &&  DensRef[b+1] <= DensCore )
+   //    load the reference profile
+         const bool RowMajor_No  = false;    // load data into the column-major order
+         const bool AllocMem_Yes = true;     // allocate memory for Soliton_DensProf
+         const int  NCol         = 2;        // total number of columns to load
+         const int  Col[NCol]    = {0, 1};   // target columns: (radius, density)
+
+         Soliton_DensProf_NBin = Aux_LoadTable( Soliton_DensProf, Soliton_DensProf_Filename, NCol, Col, RowMajor_No, AllocMem_Yes );
+
+
+   //    get the core radius of the reference profile
+         const double *RadiusRef = Soliton_DensProf + 0*Soliton_DensProf_NBin;
+         const double *DensRef   = Soliton_DensProf + 1*Soliton_DensProf_NBin;
+         const double  DensCore  = 0.5*DensRef[0];   // define core radius as the half-density radius
+
+         double CoreRadiusRef = NULL_REAL;
+
+         for (int b=1; b<Soliton_DensProf_NBin-1; b++)
          {
-            CoreRadiusRef = 0.5*( RadiusRef[b] + RadiusRef[b+1] );
-            break;
+            if ( DensRef[b] >= DensCore  &&  DensRef[b+1] <= DensCore )
+            {
+               CoreRadiusRef = RadiusRef[b] + ( DensCore - DensRef[b] )*( RadiusRef[b+1] - RadiusRef[b] )/( DensRef[b+1] - DensRef[b] );
+               break;
+            }
          }
-      }
 
-      if ( CoreRadiusRef == NULL_REAL )
-         Aux_Error( ERROR_INFO, "cannot determine the reference core radius !!\n" );
+         if ( CoreRadiusRef == NULL_REAL )
+            Aux_Error( ERROR_INFO, "cannot determine the reference core radius !!\n" );
 
 
-//    evaluate the scale factors of each soliton
-      for (int t=0; t<Soliton_N; t++)
+   //    evaluate the scale factors of each soliton
+         for (int t=0; t<Soliton_N; t++)
+         {
+            Soliton_ScaleL[t] = Soliton_CoreRadius[t] / CoreRadiusRef;
+            Soliton_ScaleD[t] = 1.0 / ( 4.0*M_PI*NEWTON_G*SQR(ELBDM_ETA)*POW4(Soliton_ScaleL[t]) );
+         }
+      } // if ( Soliton_InitMode == 1 )
+
+      else if ( Soliton_InitMode == 2 )
       {
-         Soliton_ScaleL[t] = Soliton_CoreRadius[t] / CoreRadiusRef;
-         Soliton_ScaleD[t] = 1.0 / ( 4.0*M_PI*NEWTON_G*SQR(ELBDM_ETA)*POW4(Soliton_ScaleL[t]) );
+//       useless
+         for (int t=0; t<Soliton_N; t++)
+         {
+            Soliton_ScaleL[t] = -1.0;
+            Soliton_ScaleD[t] = -1.0;
+         }
       }
    } // if ( OPT__INIT != INIT_BY_RESTART )
 
@@ -256,8 +311,10 @@ void SetParameter()
       Aux_Message( stdout, "  total number of solitons                  = %d\n",     Soliton_N                  );
       Aux_Message( stdout, "  random seed for setting the center coord. = %d\n",     Soliton_RSeed              );
       Aux_Message( stdout, "  size of the soliton-free zone             = %13.7e\n", Soliton_EmptyRegion        );
+      Aux_Message( stdout, "  soliton density initialization mode       = %d\n",     Soliton_InitMode           );
+      if ( Soliton_InitMode == 1 ) {
       Aux_Message( stdout, "  density profile filename                  = %s\n",     Soliton_DensProf_Filename  );
-      Aux_Message( stdout, "  number of bins of the density profile     = %d\n",     Soliton_DensProf_NBin      );
+      Aux_Message( stdout, "  number of bins of the density profile     = %d\n",     Soliton_DensProf_NBin      ); }
       Aux_Message( stdout, "\n" );
       Aux_Message( stdout, "  Soliton info:\n" );
       Aux_Message( stdout, "  %7s  %13s  %13s  %13s  %13s  %13s  %13s\n",
@@ -297,42 +354,64 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                 const int lv, double AuxArray[] )
 {
 
-   const double *Table_Radius  = Soliton_DensProf + 0*Soliton_DensProf_NBin;  // radius
-   const double *Table_Density = Soliton_DensProf + 1*Soliton_DensProf_NBin;  // density
-
-   double r_tar, r_ref, dens_ref;
-
+   double r_tar, r_ref, dens_ref, dens;
 
 // initialize density as zero since there may be multiple solitons
    fluid[DENS] = 0.0;
 
-// loop over all solitons to get the total density
-   for (int t=0; t<Soliton_N; t++)
+   if ( Soliton_InitMode == 1 )
    {
-      r_tar = sqrt( SQR(x-Soliton_Center[t][0]) + SQR(y-Soliton_Center[t][1]) + SQR(z-Soliton_Center[t][2]) );
+      const double *Table_Radius  = Soliton_DensProf + 0*Soliton_DensProf_NBin;  // radius
+      const double *Table_Density = Soliton_DensProf + 1*Soliton_DensProf_NBin;  // density
 
-//    rescale radius (target radius --> reference radius)
-      r_ref = r_tar / Soliton_ScaleL[t];
-
-//    linear interpolation
-      dens_ref = Mis_InterpolateFromTable( Soliton_DensProf_NBin, Table_Radius, Table_Density, r_ref );
-
-      if ( dens_ref == NULL_REAL )
+//    loop over all solitons to get the total density
+      for (int t=0; t<Soliton_N; t++)
       {
-         if      ( r_ref <  Table_Radius[0] )
-            dens_ref = Table_Density[0];
+         r_tar = sqrt( SQR(x-Soliton_Center[t][0]) + SQR(y-Soliton_Center[t][1]) + SQR(z-Soliton_Center[t][2]) );
 
-         else if ( r_ref >= Table_Radius[Soliton_DensProf_NBin-1] )
-            dens_ref = Table_Density[Soliton_DensProf_NBin-1];
+//       rescale radius (target radius --> reference radius)
+         r_ref = r_tar / Soliton_ScaleL[t];
 
-         else
-            Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e (min/max radius = %13.7e/%13.7e) !!\n",
-                       r_ref, Table_Radius[0], Table_Radius[Soliton_DensProf_NBin-1] );
-      }
+//       linear interpolation
+         dens_ref = Mis_InterpolateFromTable( Soliton_DensProf_NBin, Table_Radius, Table_Density, r_ref );
 
-//    rescale density (reference density --> target density) and add to the fluid array
-      fluid[DENS] += dens_ref*Soliton_ScaleD[t];
-   } // for (int t=0; t<Soliton_N; t++)
+         if ( dens_ref == NULL_REAL )
+         {
+            if  ( r_ref <  Table_Radius[0] )
+               dens_ref = Table_Density[0];
+
+            else if ( r_ref >= Table_Radius[Soliton_DensProf_NBin-1] )
+               dens_ref = Table_Density[Soliton_DensProf_NBin-1];
+
+            else
+               Aux_Error( ERROR_INFO, "interpolation failed at radius %13.7e (min/max radius = %13.7e/%13.7e) !!\n",
+                        r_ref, Table_Radius[0], Table_Radius[Soliton_DensProf_NBin-1] );
+         }
+
+//       rescale density (reference density --> target density) and add to the fluid array
+         fluid[DENS] += dens_ref*Soliton_ScaleD[t];
+      } // for (int t=0; t<Soliton_N; t++)
+   } // if ( Soliton_InitMode == 1 )
+
+   else if ( Soliton_InitMode == 2 )
+   {
+      const double m22 = ELBDM_MASS*UNIT_M/(Const_eV/SQR(Const_c))/1.0e-22;
+
+//    loop over all solitons to get the total density
+      for (int t=0; t<Soliton_N; t++)
+      {
+         r_tar = sqrt( SQR(x-Soliton_Center[t][0]) + SQR(y-Soliton_Center[t][1]) + SQR(z-Soliton_Center[t][2]) );
+
+         const double rc_kpc = Soliton_CoreRadius[t]*UNIT_L/Const_kpc;
+         dens  = 1.945/SQR(m22*10.0)/POW4(rc_kpc) / POW( 1.0 + (POW(2.0,1.0/8.0)-1.0)*SQR(r_tar/Soliton_CoreRadius[t]), 8.0 ); // in Msun/pc^3
+         dens *= Const_Msun/CUBE(Const_pc)/UNIT_D; // convert to code unit
+
+         fluid[DENS] += dens;
+      } // for (int t=0; t<Soliton_N; t++)
+   } // if ( Soliton_InitMode == 2 )
+
+   else
+      Aux_Error( ERROR_INFO, "unsupported Soliton_InitMode (%d) !!\n", Soliton_InitMode );
 
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
@@ -374,7 +453,7 @@ void End_Soliton()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  BC
-// Description :  Set the extenral boundary condition
+// Description :  Set the external boundary condition
 //
 // Note        :  1. Linked to the function pointer "BC_User_Ptr"
 //
@@ -441,9 +520,12 @@ void Init_TestProb_ELBDM_Soliton()
    SetParameter();
 
 
-   Init_Function_User_Ptr = SetGridIC;
-   BC_User_Ptr            = BC;
-   End_User_Ptr           = End_Soliton;
+   Init_Function_User_Ptr    = SetGridIC;
+   BC_User_Ptr               = BC;
+   End_User_Ptr              = End_Soliton;
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_InputTest_Ptr = LoadInputTestProb;
+#  endif
 #  endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
 

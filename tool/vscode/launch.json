@@ -1,0 +1,40 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug GAMER",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/${input:bin-working}/gamer",
+            "args": [],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}/bin/${input:bin-working}/",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "miDebuggerPath": "/usr/bin/gdb",
+            "miDebuggerArgs": "-quiet",
+            "logging": {
+                "engineLogging": false
+            },
+            "internalConsoleOptions": "openOnSessionStart",
+            "preLaunchTask": "clean-work-dir",
+            "visualizerFile": "${workspaceFolder}/.vscode/gamercpp.natvis",
+            "showDisplayString": true
+        }
+    ],
+    "inputs": [
+        {
+            "id": "bin-working",
+            "type": "promptString",
+            "description": "Enter the working directory under bin/."
+        }
+    ]
+}
