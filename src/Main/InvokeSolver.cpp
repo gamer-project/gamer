@@ -314,10 +314,6 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
                        const int *PID0_List, const int ArrayID, LB_GlobalTree* GlobalTree )
 {
 
-// skip if there are no target patches
-   if ( NPG == 0 )   return;
-
-
 #  ifndef UNSPLIT_GRAVITY
    real (*h_Pot_Array_USG_F[2])[ CUBE(USG_NXT_F) ]                    = { NULL, NULL };
 #  endif
@@ -474,10 +470,6 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
 void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const double TimeOld,
              const int NPG, const int ArrayID, const double dt, const double Poi_Coeff )
 {
-
-// skip if there are no target patches
-   if ( NPG == 0 )   return;
-
 
    const double dh = amr->dh[lv];
 
@@ -822,10 +814,6 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 void Closing_Step( const Solver_t TSolver, const int lv, const int SaveSg_Flu, const int SaveSg_Mag, const int SaveSg_Pot,
                    const int NPG, const int *PID0_List, const int ArrayID, const double dt )
 {
-
-// skip if there are no target patches
-   if ( NPG == 0 )   return;
-
 
 #  ifndef DUAL_ENERGY
    char (*h_DE_Array_F_Out [2])[ CUBE(PS2) ]                          = { NULL, NULL };
