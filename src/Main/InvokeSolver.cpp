@@ -229,7 +229,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
       ArrayID = 1 - ArrayID;
 
-      const int NPG_Remained = NTotal - Disp; 
+      const int NPG_Remained = NTotal - Disp;
       NPG[ArrayID] = ( NPG_Remained > NPG_Max ) ? NPG_Max :
                      ( NPG_Remained > 0 )       ? NPG_Remained : 0;
 
@@ -259,7 +259,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
                      Timer_Clo[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
 
-   } // for (int Disp=NPG_Max; Disp<NTotal; Disp+=NPG_Max)
+   } // for (int Disp=NPG_Max; Disp<NTotal_Max; Disp+=NPG_Max)
 
 
 //-------------------------------------------------------------------------------------------------------------
