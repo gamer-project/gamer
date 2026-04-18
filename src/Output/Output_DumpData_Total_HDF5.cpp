@@ -79,7 +79,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2507)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2508)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -286,6 +286,7 @@ Procedure for outputting new variables:
 //                                             GRACKLE_HYDROGEN_MFRAC, OPT__UNFREEZE_GRACKLE,
 //                                             OPT__OUTPUT_GRACKLE_TEMP, OPT__OUTPUT_GRACKLE_MU, OPT__OUTPUT_GRACKLE_TCOOL,
 //                                             DT__GRACKLE_COOLING, OPT__FLAG_COOLING_LEN, FlagTable_CoolingLen
+//                2508 : 2026/04/18 --> output OPT__FLAG_PAR_TARGET
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1752,7 +1753,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2507;
+   KeyInfo.FormatVersion        = 2508;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2622,6 +2623,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Flag_NParPatch     = OPT__FLAG_NPAR_PATCH;
    InputPara.Opt__Flag_NParCell      = OPT__FLAG_NPAR_CELL;
    InputPara.Opt__Flag_ParMassCell   = OPT__FLAG_PAR_MASS_CELL;
+   InputPara.Opt__Flag_ParTarget     = OPT__FLAG_PAR_TARGET;
 #  endif
    InputPara.Opt__NoFlagNearBoundary = OPT__NO_FLAG_NEAR_BOUNDARY;
    InputPara.Opt__PatchCount         = OPT__PATCH_COUNT;
@@ -3706,6 +3708,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Flag_NParPatch",     HOFFSET(InputPara_t,Opt__Flag_NParPatch    ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_NParCell",      HOFFSET(InputPara_t,Opt__Flag_NParCell     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_ParMassCell",   HOFFSET(InputPara_t,Opt__Flag_ParMassCell  ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__Flag_ParTarget",     HOFFSET(InputPara_t,Opt__Flag_ParTarget    ), H5T_NATIVE_INT     );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__NoFlagNearBoundary", HOFFSET(InputPara_t,Opt__NoFlagNearBoundary), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__PatchCount",         HOFFSET(InputPara_t,Opt__PatchCount        ), H5T_NATIVE_INT     );

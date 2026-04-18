@@ -2091,6 +2091,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Flag_NParPatch",     &RS.Opt__Flag_NParPatch,     SID, TID, NonFatal, &RT.Opt__Flag_NParPatch,      1, NonFatal );
    LoadField( "Opt__Flag_NParCell",      &RS.Opt__Flag_NParCell,      SID, TID, NonFatal, &RT.Opt__Flag_NParCell,       1, NonFatal );
    LoadField( "Opt__Flag_ParMassCell",   &RS.Opt__Flag_ParMassCell,   SID, TID, NonFatal, &RT.Opt__Flag_ParMassCell,    1, NonFatal );
+   LoadField( "Opt__Flag_ParTarget",     &RS.Opt__Flag_ParTarget,     SID, TID, NonFatal, &RT.Opt__Flag_ParTarget,      1, NonFatal );
 #  endif
    LoadField( "Opt__NoFlagNearBoundary", &RS.Opt__NoFlagNearBoundary, SID, TID, NonFatal, &RT.Opt__NoFlagNearBoundary,  1, NonFatal );
    LoadField( "Opt__PatchCount",         &RS.Opt__PatchCount,         SID, TID, NonFatal, &RT.Opt__PatchCount,          1, NonFatal );

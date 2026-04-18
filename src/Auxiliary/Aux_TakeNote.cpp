@@ -1075,6 +1075,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_NPAR_PATCH           % d\n",      OPT__FLAG_NPAR_PATCH      );
       fprintf( Note, "OPT__FLAG_NPAR_CELL            % d\n",      OPT__FLAG_NPAR_CELL       );
       fprintf( Note, "OPT__FLAG_PAR_MASS_CELL        % d\n",      OPT__FLAG_PAR_MASS_CELL   );
+      fprintf( Note, "OPT__FLAG_PAR_TARGET           % d\n",      OPT__FLAG_PAR_TARGET      );
 #     endif
 #     ifdef COSMIC_RAY
       fprintf( Note, "OPT__FLAG_CRAY                 % d\n",      OPT__FLAG_CRAY            );

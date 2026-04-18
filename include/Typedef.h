@@ -405,6 +405,13 @@ const ParOutputDens_t
    PAR_OUTPUT_DENS_PAR_ONLY = 1,
    PAR_OUTPUT_DENS_TOTAL    = 2;
 
+typedef int ParFlag_t;
+const ParFlag_t
+   PAR_FLAG_NONE = 0,
+   PAR_FLAG_MUST = 1,
+   PAR_FLAG_CAN  = 2,
+   PAR_FLAG_BOTH = 3;
+
 typedef int ParPass2Son_t;
 const ParPass2Son_t
    PAR_PASS2SON_GENERAL = 1,

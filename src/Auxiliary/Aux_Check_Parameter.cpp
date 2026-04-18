@@ -452,6 +452,7 @@ void Aux_Check_Parameter()
    Flag |= OPT__FLAG_NPAR_PATCH;
    Flag |= OPT__FLAG_NPAR_CELL;
    Flag |= OPT__FLAG_PAR_MASS_CELL;
+   Flag |= OPT__FLAG_PAR_TARGET;
 #  endif
 
    if ( !Flag )
