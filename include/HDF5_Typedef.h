@@ -427,6 +427,7 @@ struct InputPara_t
 // particle
 #  ifdef PARTICLE
    int    Par_Init;
+   int    Par_FlagInit;
    int    Par_ICFormat;
    double Par_ICMass;
    int    Par_ICType;

@@ -919,6 +919,7 @@ void Aux_TakeNote()
 #     endif
       fprintf( Note, "Par->NPar_Active_AllRank       % ld\n",     amr->Par->NPar_Active_AllRank );
       fprintf( Note, "Par->Init                      % d\n",      amr->Par->Init                );
+      fprintf( Note, "Par->FlagInit                  % d\n",      amr->Par->FlagInit            );
       fprintf( Note, "Par->ParICFormat               % d\n",      amr->Par->ParICFormat         );
       fprintf( Note, "PAR_IC_FLOAT8                  % d\n",      PAR_IC_FLOAT8                 );
       fprintf( Note, "PAR_IC_INT8                    % d\n",      PAR_IC_INT8                   );

@@ -36,6 +36,10 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                NPar_Inactive           : Total number of inactive particles in this MPI rank
 //                NPar_Lv                 : Total number of active particles at each level in this MPI rank
 //                Init                    : Initialization methods (1/2/3 --> call function/restart/load from file)
+//                FlagInit                : Assign this refinement flag to all particles for Init=1/3
+//                                          --> Set to PFLAG_MANUAL (defined in Macro.h) to disable this behavior, in which case
+//                                              the refinement flag must be set manually by a particle initializer (for Init=1)
+//                                              or loaded from the PAR_IC file (for Init=3)
 //                ParICFormat             : Data format of the particle initialization file (1=[att][id], 2=[id][att])
 //                ParICMass               : Assign this mass to all particles for Init=3
 //                ParICType               : Assign this type to all particles for Init=3
@@ -123,6 +127,7 @@ struct Particle_t
    long          NPar_Inactive;
    long          NPar_Lv[NLEVEL];
    ParInit_t     Init;
+   int           FlagInit;
    ParICFormat_t ParICFormat;
    double        ParICMass;
    int           ParICType;
@@ -198,6 +203,7 @@ struct Particle_t
       NPar_Active_AllRank = -1;
       NPar_AcPlusInac     = -1;
       Init                = PAR_INIT_NONE;
+      FlagInit            = PFLAG_NO;
       ParICFormat         = PAR_IC_FORMAT_NONE;
       ParICMass           = -1.0;
       ParICType           = -1;

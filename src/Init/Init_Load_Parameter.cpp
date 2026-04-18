@@ -75,6 +75,7 @@ void Init_Load_Parameter()
 // do no check PAR_NPAR since it may be reset by restart
    ReadPara->Add( "PAR_NPAR",                   &amr->Par->NPar_Active_AllRank,  -1L,               NoMin_long,    NoMax_long     );
    ReadPara->Add( "PAR_INIT",                   &amr->Par->Init,                 -1,                1,             3              );
+   ReadPara->Add( "PAR_FLAG_INIT",              &amr->Par->FlagInit,         (int)PFLAG_NO,         NoMin_int,     NoMax_int      );
    ReadPara->Add( "PAR_IC_FORMAT",              &amr->Par->ParICFormat,      PAR_IC_FORMAT_ATT_ID,  1,             2              );
    ReadPara->Add( "PAR_IC_FLOAT8",              &PAR_IC_FLOAT8,                  -1,                NoMin_int,     1              );
    ReadPara->Add( "PAR_IC_INT8",                &PAR_IC_INT8,                    -1,                NoMin_int,     1              );
