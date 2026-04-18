@@ -372,21 +372,21 @@ is larger than the threshold (dimensionless):
       An example file can be found at `example/input/Input__Flag_Interference`.
       ```
       # Level          QP   Density   PhaseLap   OnlyAtExtrema
-      0        0.03         0        1.0               0
-      1        0.03         0        1.0               0
-      2        0.03         0        1.0               0
+            0        0.03         0        1.0               0
+            1        0.03         0        1.0               0
+            2        0.03         0        1.0               0
       ```
-      * QP: Threshold <= 0.03 avoids spurious halos 
+      * QP: Threshold <= 0.03 avoids spurious halos
       and yields good agreement with wave-only simulations
-      * Density: Threshold is defaulted to 0.0. 
-      Non-zero values can prevent refinement in low-density regions with 
+      * Density: Threshold is defaulted to 0.0.
+      Non-zero values can prevent refinement in low-density regions with
       minor oscillations but use with caution as they may cause instability.
       * PhaseLap: Second derivative of phase field.
-      * OnlyAtExtrema: Refine only at density and phase field extrema (default: False). 
-      Can prevent refinement in regions with high quantum pressure and phase curvature 
+      * OnlyAtExtrema: Refine only at density and phase field extrema (default: False).
+      Can prevent refinement in regions with high quantum pressure and phase curvature
       without destructive interference, but use cautiously as it may cause instability.
 
-      *Caution: If `OPT__FLAG_INTERFERENCE` is off for `ELBDM_HYBRID`, 
+      *Caution: If `OPT__FLAG_INTERFERENCE` is off for `ELBDM_HYBRID`,
       the simulations will never switch to the wave scheme.*
     * **Restriction:**
 Must compile with [[--model | Installation:-Option-List#--model]]=ELBDM and [[--ELBDM_SCHEME | Installation:-Option-List#--elbdm_scheme]]=HYBRID.
@@ -395,13 +395,13 @@ Must compile with [[--model | Installation:-Option-List#--model]]=ELBDM and [[--
 * #### `OPT__FLAG_SPECTRAL` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
 Refinement criterion: spectral refinement on wave levels per patch group.
-The method checks polynomial expansion coefficients of the wave function. 
-Higher-order coefficients should decay exponentially for well-resolved regions; 
+The method checks polynomial expansion coefficients of the wave function.
+Higher-order coefficients should decay exponentially for well-resolved regions;
 large coefficients indicate under-resolution, triggering refinement.
 An example file can be found at `example/input/Input__Flag_Spectral`.
 Default values are 1 for all levels.
 Derefinement currently not functional.
-This function checks the polynomial coefficients of order 
+This function checks the polynomial coefficients of order
 (13 - [OPT__FLAG_SPECTRAL_N](#OPT__FLAG_SPECTRAL_N) + 1) to order 13.
     * **Restriction:**
 Must compile with [[--model | Installation:-Option-List#--model]]=ELBDM.

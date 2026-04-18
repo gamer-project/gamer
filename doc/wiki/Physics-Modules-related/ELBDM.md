@@ -9,7 +9,7 @@ Related options:
 [[--laplacian_four | Installation:-Option-List#--laplacian_four]], &nbsp;
 [[--gramfe_scheme | Installation:-Option-List#--gramfe_scheme]], &nbsp;
 [[--hybrid_scheme | Installation:-Option-List#--hybrid_scheme]], &nbsp;
-[[--self_interaction | Installation:-Option-List#--self_interaction]], &nbsp;
+[[--self_interaction | Installation:-Option-List#--self_interaction]] &nbsp;
 
 
 ## Runtime Parameters
@@ -26,7 +26,7 @@ Other related parameters:
 [[ DT__HYBRID_CFL | Runtime-Parameters:-Timestep#DT__HYBRID_CFL]], &nbsp;
 [[ DT__HYBRID_CFL_INIT | Runtime-Parameters:-Timestep#DT__HYBRID_CFL_INIT]], &nbsp;
 [[ DT__HYBRID_VELOCITY | Runtime-Parameters:-Timestep#DT__HYBRID_VELOCITY]], &nbsp;
-[[ DT__HYBRID_VELOCITY_INIT | Runtime-Parameters:-Timestep#DT__HYBRID_VELOCITY_INIT]], &nbsp;
+[[ DT__HYBRID_VELOCITY_INIT | Runtime-Parameters:-Timestep#DT__HYBRID_VELOCITY_INIT]] &nbsp;
 
 ## Remarks
 

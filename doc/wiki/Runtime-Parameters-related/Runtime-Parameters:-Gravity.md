@@ -218,8 +218,8 @@ See [EXT_POT_TABLE_EDGEL_X](#EXT_POT_TABLE_EDGEL_X).
 * #### `EXT_POT_TABLE_FLOAT8` &ensp; (0=single precision, 1=double precision; <0 &#8594; set to default) &ensp; [-1]
     * **Description:**
 For [OPT__EXT_POT](#OPT__EXT_POT)`=2`: floating-point accuracy of the tabular data.
-**NOT SUPPORTED YET!!** The code currently only supports the default setting, 
-which matches the floating-point accuracy specified by 
+**NOT SUPPORTED YET!!** The code currently only supports the default setting,
+which matches the floating-point accuracy specified by
 [[--double | Installation:-Option-List#--double]] during compilation.
     * **Restriction:**
 
@@ -227,10 +227,9 @@ which matches the floating-point accuracy specified by
 * #### `OPT__GRAVITY_EXTRA_MASS` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
 Enable extra mass in the gravity solver.
-Mass introduced here is only used for gravity (e.g., Poisson equation) and 
+Mass introduced here is only used for gravity (e.g., Poisson equation) and
 is excluded from other equations (e.g., hydro/MHD/Schrödinger) and output data.
-To configure the extra mass, edit /src/SelfGravity/Poi_AddExtraMassForGravity.cpp.
-Refer to [[Initialization Function | Adding-New-Simulations#initialization-function]] for details.
+Refer to [[Extra Mass | Gravity#extra-mass]] for details.
     * **Restriction:**
 
 

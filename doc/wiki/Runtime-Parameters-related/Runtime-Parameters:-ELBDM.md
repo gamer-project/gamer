@@ -18,14 +18,14 @@ Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) 
 
 <a name="ELBDM_MASS"></a>
 * #### `ELBDM_MASS` &ensp; (>0) &ensp; [none]
-    * **Description:** 
+    * **Description:**
 Particle mass in ev/c^2.
-(Input unit is fixed even when OPT__UNIT or COMOVING is on)
+(Input unit is fixed even when [[OPT__UNIT | Runtime-Parameters:-Units#OPT__UNIT]] or [[--comoving | Installation:-Option-List#--comoving]] is on)
     * **Restriction:**
 
 <a name="ELBDM_PLANCK_CONST"></a>
 * #### `ELBDM_PLANCK_CONST` &ensp; (>0) &ensp; [conform to the unit system set by [[OPT__UNIT | Runtime-Parameters:-Units#OPT__UNIT]] or [[--comoving | Installation:-Option-List#--comoving]]]
-    * **Description:** 
+    * **Description:**
 Reduced planck constant in g.cm^2/s^2.
     * **Restriction:**
 It will be overwritten by the default value when [[OPT__UNIT | Runtime-Parameters:-Units#OPT__UNIT]] or [[--comoving | Installation:-Option-List#--comoving]]
@@ -37,6 +37,7 @@ is on; no default when [[OPT__UNIT | Runtime-Parameters:-Units#OPT__UNIT]] and
     * **Description:**
 Quartic self-interaction coefficient in ELBDM.
     * **Restriction:**
+[[--self_interaction | Installation:-Option-List#--self_interaction ]] must be enabled during compilation.
 
 <a name="ELBDM_TAYLOR3_COEFF"></a>
 * #### `ELBDM_TAYLOR3_COEFF` &ensp; (&#8805;0.125) &ensp; [1.0/6.0]
@@ -48,9 +49,10 @@ Values &#8804; 1/6 become unstable if
 $\sqrt{3}\pi/8$ or $\sqrt{27}\pi/32$ (when [[--laplacian_four | Installation:-Option-List#--laplacian_four]] is enabled).
     * **Restriction:**
 Only applicable when the compilation option
-[[ --wave_scheme | Installation:-Option-List#--wave_scheme ]] = `FD`.
+[[ --wave_scheme | Installation:-Option-List#--wave_scheme ]]=`FD`.
 Ignored if [ELBDM_TAYLOR3_AUTO](#ELBDM_TAYLOR3_AUTO) is enable.
 
+<a name="ELBDM_TAYLOR3_AUTO"></a>
 * #### `ELBDM_TAYLOR3_AUTO` &ensp; (none) &ensp; [0]
     * **Description:**
 If this parameter is set to 1, the code will automatically determine the coefficient
@@ -67,16 +69,16 @@ Remove the motion of center-of-mass.
 Only applicable when enabled
 [[ OPT__CK_CONSERVATION | Runtime-Parameters:-Miscellaneous#OPT__CK_CONSERVATION ]].
 Not supported when
-[[ --bitwise_reproducibility | Installation:-Option-List#--bitwise_reproducibility ]] = true.
+[[ --bitwise_reproducibility | Installation:-Option-List#--bitwise_reproducibility ]]=true.
 
 <a name="ELBDM_BASE_SPECTRAL"></a>
 * #### `ELBDM_BASE_SPECTRAL` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
 Adopt the spectral method to evolve base-level wave function.
     * **Restriction:**
-Requires [[--fftw | Installation:-Option-List#--fftw]] = FFTW2/FFTW
+Requires [[--fftw | Installation:-Option-List#--fftw]]=FFTW2/FFTW3
 and periodic boundary conditions for all directions:
-[[OPT__BC_FLU | Runtime-Parameters:-Hydro#OPT__BC_FLU_XM]] = 1.
+[[OPT__BC_FLU | Runtime-Parameters:-Hydro#OPT__BC_FLU_XM]]=1.
 
 <a name="ELBDM_MATCH_PHASE"></a>
 * #### `ELBDM_MATCH_PHASE` &ensp; (0=off, 1=on) &ensp; [1]
@@ -84,7 +86,7 @@ and periodic boundary conditions for all directions:
 Match child phases with father phases during data restriction.
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[ --elbdm_scheme | Installation:-Option-List#--elbdm_scheme]] = `HYBRID`.
+[[ --elbdm_scheme | Installation:-Option-List#--elbdm_scheme]]=`HYBRID`.
 Requires [[ OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LEVEL ]]
 &#8805; [ELBDM_FIRST_WAVE_LEVEL](#ELBDM_FIRST_WAVE_LEVEL).
 
@@ -94,7 +96,7 @@ Requires [[ OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC
 Level at which to switch to the wave solver.
     * **Restriction:**
 Only applicable when enabling the compilation option
-[[ --elbdm_scheme | Installation:-Option-List#--elbdm_scheme]] = `HYBRID`.
+[[ --elbdm_scheme | Installation:-Option-List#--elbdm_scheme]]=`HYBRID`.
 
 <a name="OPT__RES_PHASE"></a>
 * #### `OPT__RES_PHASE` &ensp; (0=off, 1=on) &ensp; [0]
@@ -112,7 +114,7 @@ Table download script is available at
     * **Restriction:**
 Only applicable when the enabling compilation option
 [[ --spectral_interpolation | Installation:-Option-List#--spectral_interpolation]]
-and [[ Interpolation schemes | Runtime-Parameters:-Interpolation##INT_TABLE]] = 8.
+and [[ Interpolation schemes | Runtime-Parameters:-Interpolation##INT_TABLE]]=8.
 
 <a name="SPEC_INT_XY_INSTEAD_DEPHA"></a>
 * #### `SPEC_INT_XY_INSTEAD_DEPHA` &ensp; (0=off, 1=on) &ensp; [1]
@@ -123,7 +125,7 @@ which has the advantage of being well-defined across vortices
     * **Restriction:**
 Only applicable when the enabling compilation option
 [[ --spectral_interpolation | Installation:-Option-List#--spectral_interpolation]]
-and [[ Interpolation schemes | Runtime-Parameters:-Interpolation##INT_TABLE]] = 8.
+and [[ Interpolation schemes | Runtime-Parameters:-Interpolation##INT_TABLE]]=8.
 
 <a name="SPEC_INT_VORTEX_THRESHOLD"></a>
 * #### `SPEC_INT_VORTEX_THRESHOLD` &ensp; (&#8805;0) &ensp; [0.1]
@@ -133,7 +135,7 @@ triggered when Lap(S) * dx**2 > threshold, indicating a significant phase jump.
     * **Restriction:**
 Only applicable when the enabling compilation option
 [[ --spectral_interpolation | Installation:-Option-List#--spectral_interpolation]]
-and [[ Interpolation schemes | Runtime-Parameters:-Interpolation##INT_TABLE]] = 8.
+and [[ Interpolation schemes | Runtime-Parameters:-Interpolation##INT_TABLE]]=8.
 
 <a name="SPEC_INT_GHOST_BOUNDARY"></a>
 * #### `SPEC_INT_GHOST_BOUNDARY` &ensp; (&#8805;1) &ensp; [4]
@@ -142,7 +144,7 @@ Ghost boundary size for spectral interpolation.
     * **Restriction:**
 Only applicable when the enabling compilation option
 [[ --spectral_interpolation | Installation:-Option-List#--spectral_interpolation]]
-and [[ Interpolation schemes | Runtime-Parameters:-Interpolation##INT_TABLE]] = 8.
+and [[ Interpolation schemes | Runtime-Parameters:-Interpolation##INT_TABLE]]=8.
 
 ## Remarks
 

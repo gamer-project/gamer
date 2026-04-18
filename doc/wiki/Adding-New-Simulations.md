@@ -21,6 +21,7 @@ Mandatory steps are marked by &#x1F4CC;.
    *  [Finalize Function](#finalize-function)
    *  [External Acceleration](#external-acceleration)
    *  [External Potential](#external-potential)
+   *  [Extra Mass for Gravity](#extra-mass-for-gravity)
    *  [Equation of State](#equation-of-state)
    *  [Feedback](#feedback)
    *  [HDF5 Output](#hdf5-output)
@@ -593,6 +594,22 @@ for details.
    * `src/TestProblem/Hydro/Plummer/ExtPot_Plummer.cpp`
    * `src/SelfGravity/CPU_Poisson/CPU_ExtPot_PointMass.cpp`
    * `src/SelfGravity/CPU_Poisson/CPU_ExtPot_Tabular.cpp`
+
+### Extra Mass for Gravity
+* **Description:**
+Add extra mass for gravity. See
+[[Extra Mass | Gravity#extra-mass]]
+for details.
+* **Prototype:**
+   * `real Poi_AddExtraMassForGravity_Template( const double x, const double y, const double z, const double Time,
+                                          const int lv, double AuxArray[] )`
+* **Function Pointer:**
+   * `Poi_AddExtraMassForGravity_Ptr`
+* **Runtime Option:**
+[[OPT__GRAVITY_EXTRA_MASS | Runtime-Parameters:-Gravity#OPT__GRAVITY_EXTRA_MASS]]
+* **Example:**
+   * `src/SelfGravity/Poi_AddExtraMassForGravity.cpp`
+
 
 ### Equation of State
 * **Description:**
