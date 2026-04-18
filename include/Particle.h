@@ -54,7 +54,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                GhostSize               : Number of ghost zones required for the interpolation scheme of massive particles
 //                GhostSizeTracer         : Number of ghost zones required for the interpolation scheme of tracer  particles
 //                AttributeFlt            : Pointer arrays to different particle floating-point attributes (Mass, Pos, Vel, ...)
-//                AttributeInt            : Pointer arrays to different particle integer        attributes (Type)
+//                AttributeInt            : Pointer arrays to different particle integer        attributes (Type, Flag)
 //                InactiveParList         : List of inactive particle IDs
 //                Mesh_Attr               : Pointer arrays to different mesh quantities mapped onto tracer particles
 //                Mesh_Attr_Num           : Number of mesh quantities mapped onto tracer particles
@@ -100,8 +100,9 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                Pos                     : Particle position
 //                Vel                     : Particle velocity
 //                Time                    : Particle physical time
-//                Type                    : Particle type (e.g., tracer, generic, dark matter, star)
 //                Acc                     : Particle acceleration (only when STORE_PAR_ACC is on)
+//                Type                    : Particle type (e.g., tracer, generic, dark matter, star)
+//                Flag                    : Particle refinement flag
 //
 // Method      :  Particle_t        : Constructor
 //               ~Particle_t        : Destructor
@@ -180,6 +181,7 @@ struct Particle_t
    real_par     *AccZ;
 #  endif
    long_par     *Type;
+   long_par     *Flag;
 
 
    //===================================================================================
@@ -258,12 +260,13 @@ struct Particle_t
       VelY = NULL;
       VelZ = NULL;
       Time = NULL;
-      Type = NULL;
 #     ifdef STORE_PAR_ACC
       AccX = NULL;
       AccY = NULL;
       AccZ = NULL;
 #     endif
+      Type = NULL;
+      Flag = NULL;
 
    } // METHOD : Particle_t
 
@@ -415,6 +418,7 @@ struct Particle_t
       AccZ = AttributeFlt[PAR_ACCZ];
 #     endif
       Type = AttributeInt[PAR_TYPE];
+      Flag = AttributeInt[PAR_FLAG];
 
    } // METHOD : InitRepo
 
@@ -503,6 +507,7 @@ struct Particle_t
             AccZ = AttributeFlt[PAR_ACCZ];
 #           endif
             Type = AttributeInt[PAR_TYPE];
+            Flag = AttributeInt[PAR_FLAG];
          }
 
          ParID = NPar_AcPlusInac;
