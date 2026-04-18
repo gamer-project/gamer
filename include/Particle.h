@@ -3,6 +3,8 @@
 
 
 
+#include "Macro.h"
+
 #ifndef PARTICLE
 #  error : ERROR : PARTICLE is not defined !!
 #endif
@@ -425,6 +427,12 @@ struct Particle_t
 #     endif
       Type = AttributeInt[PAR_TYPE];
       Flag = AttributeInt[PAR_FLAG];
+
+//    initialize some arrays
+      for (long p=0; p<NPar_Input; p++)
+      {
+         Flag[p] = PFLAG_TBA;
+      }
 
    } // METHOD : InitRepo
 

@@ -26,6 +26,7 @@ void Par_Aux_InitCheck()
    const real_par *Mass   =   amr->Par->Mass;
    const real_par *Pos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
    const long_par *Type   =   amr->Par->Type;
+   const long_par *Flag   =   amr->Par->Flag;
 
 
 // 1. all active particles should lie within the simulation domain
@@ -39,6 +40,10 @@ void Par_Aux_InitCheck()
 //    check particle types
       if ( Type[ParID] < (real_par)0  ||  Type[ParID] >= (real_par)PAR_NTYPE )
          Aux_Error( ERROR_INFO, "Type[%ld] = %d (accepted range: 0<=index<%d) !!\n", ParID, (int)Type[ParID], PAR_NTYPE );
+
+//    check particle flags
+      if ( Flag[ParID] == PFLAG_TBA )
+         Aux_Error( ERROR_INFO, "Flag[%ld] = %d (PFLAG_TBA) !!\n", ParID, (int)Flag[ParID] );
 
 //    only support tracer particles when disabling GRAVITY
 #     ifndef GRAVITY

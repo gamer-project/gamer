@@ -618,6 +618,7 @@
 // particle refinement flags
 #  define  PFLAG_NO                 (long_par)0
 #  define  PFLAG_MANUAL             (long_par)9999
+#  define  PFLAG_TBA                (long_par)1234
 
 # ifdef GRAVITY
 #  define MASSIVE_PARTICLES
