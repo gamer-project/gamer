@@ -769,6 +769,7 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
                             const bool UseTracers, real_par ParAttr[], const bool CorrectVelocity );
 void Par_Init_Attribute_Mesh();
 void Par_Output_TracerParticle_Mesh();
+void Par_SetFlag( const int Flag );
 FieldIdx_t AddParticleAttributeFlt( const char *InputLabel );
 FieldIdx_t AddParticleAttributeInt( const char *InputLabel );
 FieldIdx_t GetParticleAttributeFltIndex( const char *InputLabel, const Check_t Check );
