@@ -17,60 +17,18 @@ from matplotlib import pyplot as plt
 
 plt.rcParams["font.size"] = 16
 
+import sys
+sys.dont_write_bytecode = True
 
-### helper function
-def comp_dens(ParX, ParY, Center, Dens_Bg, BoxSize):
-    # use the formulae in SetGridIC() from the ParticleTest test problem
-    # to compute the density at these particles' locations
-    Radius = np.hypot(ParX - Center[0], ParY - Center[1])
-
-    return Dens_Bg * (1.0 + 5.0 * Radius / BoxSize)
-
-
-def comp_pres(ParX, ParY, Center, Pres_Bg, BoxSize):
-    # use the formulae in SetGridIC() from the ParticleTest test problem
-    # to compute the pressure at these particles' locations
-    Radius = np.hypot(ParX - Center[0], ParY - Center[1])
-
-    return Pres_Bg * (1.0 + 5.0 * Radius / BoxSize)
-
-
-def comp_velx(ParX, ParY, Center, Ang_Freq):
-    # use the formulae in SetGridIC() from the ParticleTest test problem
-    # to compute the velocity in the x direction at these particles' locations
-    Radius    = np.hypot(ParX - Center[0], ParY - Center[1])
-    Sin_Theta = (ParY - Center[1]) / Radius
-    Velocity  = Ang_Freq * Radius
-
-    return -1.0 * Velocity * Sin_Theta
+import tracer_utilties as tutils
 
 
 ### retrieve runtime parameters in Input__Parameter and Input__TestProb
-regex_num = r"\s*([-+]?\d+\.?\d*[eE]?[-+]?\d*)"
-
-param = dict()
-
-# Input__Parameter
-with open("Input__Parameter", "r") as f:
-    param_in = f.read()
-
-    key_list = "BOX_SIZE",
-    for key in key_list:
-        value = re.findall(key + regex_num, param_in)
-
-        # assume the value is a float
-        param[key] = float(value[0])
-
-# Input__TestProb
-with open("Input__TestProb", "r") as f:
-    param_in = f.read()
-
-    key_list = "ParTest_Dens_Bg", "ParTest_Pres_Bg", "ParTest_Ang_Freq"
-    for key in key_list:
-        value = re.findall(key + regex_num, param_in)
-
-        # assume the value is a float
-        param[key] = float(value[0])
+KeysInputParameter = ["BOX_SIZE"]
+KeysInputTestProb  = ["ParTest_Dens_Bg", "ParTest_Pres_Bg", "ParTest_Ang_Freq"]
+param_InputParameter = tutils.LoadValueFromInputFile("Input__Parameter", KeysInputParameter)
+param_InputTestProb  = tutils.LoadValueFromInputFile("Input__TestProb",  KeysInputTestProb)
+param = {**param_InputParameter, **param_InputTestProb}
 
 
 ### load data
@@ -120,9 +78,9 @@ Center_Bg  = 0.25 * param["BOX_SIZE"], 0.25 * param["BOX_SIZE"]
 Center_Mom = 0.50 * param["BOX_SIZE"], 0.50 * param["BOX_SIZE"]
 
 Radius   = np.hypot(ParPosX_tracer - Center_Bg[0], ParPosY_tracer - Center_Bg[1])
-Dens_ref = comp_dens(ParPosX_tracer, ParPosY_tracer, Center_Bg,  param["ParTest_Dens_Bg"], param["BOX_SIZE"])
-Pres_ref = comp_pres(ParPosX_tracer, ParPosY_tracer, Center_Bg,  param["ParTest_Pres_Bg"], param["BOX_SIZE"])
-VelX_ref = comp_velx(ParPosX_tracer, ParPosY_tracer, Center_Mom, param["ParTest_Ang_Freq"])
+Dens_ref = tutils.AnalyticalDens(ParPosX_tracer, ParPosY_tracer, Center_Bg,  param["ParTest_Dens_Bg"], param["BOX_SIZE"])
+Pres_ref = tutils.AnalyticalPres(ParPosX_tracer, ParPosY_tracer, Center_Bg,  param["ParTest_Pres_Bg"], param["BOX_SIZE"])
+VelX_ref = tutils.AnalyticalVelX(ParPosX_tracer, ParPosY_tracer, Center_Mom, param["ParTest_Ang_Freq"])
 
 # create a data set and sort the data based on the x-coordinate position
 dataset = zip(Radius, MeshDens_tracer, Dens_ref, MeshPres_tracer, Pres_ref, MeshVelX_tracer, VelX_ref)
