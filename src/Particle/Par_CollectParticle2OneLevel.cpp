@@ -42,7 +42,7 @@ bool Particle_Collected = false;
 //                6. Invoked by Gra_AdvanceDt(), Flag_Real(), Output_DumpData_Total(), Output_DumpData_Total_HDF(),
 //                   and Flu_CorrAfterAllSync()
 //                7. When turning on SibBufPatch in LOAD_BALANCE, this function (which will call
-//                   Par_LB_CollectParticle2OneLevel) will also collect particles for sibling-buffer patchesat FaLv
+//                   Par_LB_CollectParticle2OneLevel) will also collect particles for sibling-buffer patches at FaLv
 //                   --> Moreover, if FaSibBufPatch is also on, it will also collect particles for
 //                       father-sibling-buffer patches at FaLv-1 (if FaLv > 0)
 //                       --> Useful for constructing the density field at FaLv for the Poisson solver at FaLv
