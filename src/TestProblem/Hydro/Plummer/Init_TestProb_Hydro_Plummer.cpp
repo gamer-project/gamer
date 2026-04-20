@@ -175,7 +175,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "Plummer_FB_Like",      &Plummer_FB_Like,       1.0e-4,        0.0,              1.0               );
 #  endif
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 
@@ -529,8 +529,8 @@ void AddNewField_Plummer()
 
    if ( Plummer_AddColor )
    {
-      Plummer_Idx_Cloud0 = AddField( "Cloud0", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_YES, INTERP_FRAC_YES );
-      Plummer_Idx_Cloud1 = AddField( "Cloud1", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+      Plummer_Idx_Cloud0 = AddField( "Cloud0", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
+      Plummer_Idx_Cloud1 = AddField( "Cloud1", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_YES );
    }
 
 } // FUNCTION : AddNewField_Plummer

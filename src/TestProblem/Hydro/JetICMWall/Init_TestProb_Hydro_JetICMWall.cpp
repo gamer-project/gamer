@@ -152,7 +152,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "Jet_PrecessAngle",   &Jet_PrecessAngle,  0.0,           0.0,            NoMax_double );
    LOAD_PARA( load_mode, "Jet_PrecessPeriod",  &Jet_PrecessPeriod, 0.0,           0.0,            NoMax_double );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 
@@ -437,16 +437,16 @@ void AddNewField_JetICMWall()
 
   if ( JetFieldIdx == Idx_Undefined )
     JetFieldIdx = AddField( "JetField", FIXUP_FLUX_YES, FIXUP_REST_YES,
-                            NORMALIZE_YES, INTERP_FRAC_NO );
+                            FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_NO );
   if ( ICMFieldIdx == Idx_Undefined )
     ICMFieldIdx = AddField( "ICMField", FIXUP_FLUX_YES, FIXUP_REST_YES,
-                            NORMALIZE_YES, INTERP_FRAC_NO );
+                            FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_NO );
   if ( LobeFieldIdx == Idx_Undefined )
     LobeFieldIdx = AddField( "LobeField", FIXUP_FLUX_YES, FIXUP_REST_YES,
-                             NORMALIZE_YES, INTERP_FRAC_NO );
+                            FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_NO );
   if ( IntFieldIdx == Idx_Undefined )
     IntFieldIdx = AddField( "IntField", FIXUP_FLUX_YES, FIXUP_REST_YES,
-                            NORMALIZE_YES, INTERP_FRAC_NO );
+                            FLOOR_YES, NORMALIZE_YES, INTERP_FRAC_NO );
 
 } // FUNCTION : AddNewField_JetICMWall
 #endif // #if ( MODEL == HYDRO )
@@ -497,4 +497,4 @@ void Init_TestProb_Hydro_JetICMWall()
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_TestProb_SRHydro_JetICMWall
+} // FUNCTION : Init_TestProb_Hydro_JetICMWall

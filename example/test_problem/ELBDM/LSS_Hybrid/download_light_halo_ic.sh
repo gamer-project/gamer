@@ -8,7 +8,7 @@ FILE_SHA256="89e1626405e38e3bd756167e3c06719f193456aa8e7d210ddfd13246df0e1a91"
 rm UM_IC*
 
 # 2. download
-curl https://hub.yt/api/v1/item/${FILE_ID}/download -o "${LOCAL_FILENAME}"
+curl -L https://hub.yt/api/v1/item/${FILE_ID}/download -o "${LOCAL_FILENAME}"
 
 # 3. compare sha256sum
 ! [ `sha256sum ${LOCAL_FILENAME} | awk '{print $1}'` = "${FILE_SHA256}" ] && echo "File broken: ${LOCAL_FILENAME}"

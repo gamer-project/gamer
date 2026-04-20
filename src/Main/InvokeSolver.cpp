@@ -102,7 +102,12 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
 
 // reset the time-step actually adopted to zero for OPT__FREEZE_FLUID
-   const double dt = ( OPT__FREEZE_FLUID ) ? 0.0 : dt_in;
+#  ifdef SUPPORT_GRACKLE
+   const bool   UnFreeze = ( TSolver == GRACKLE_SOLVER  &&  OPT__UNFREEZE_GRACKLE );
+#  else
+   const bool   UnFreeze = false;
+#  endif
+   const double dt = ( OPT__FREEZE_FLUID  &&  ! UnFreeze ) ? 0.0 : dt_in;
 
 
 // set the maximum number of patch groups to be updated at a time
@@ -140,6 +145,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
    int  ArrayID      = 0;     // array index to load and store data ( 0 or 1 )
    int  NPG[2];               // number of patch groups to be updated at a time
    int  NTotal;               // total number of patch groups to be updated
+   int  NTotal_Max;           // maximum NTotal among all ranks
    int  Disp;                 // index displacement in PID0_List
 
    if ( OverlapMPI )
@@ -195,6 +201,8 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
    NPG[ArrayID] = ( NPG_Max < NTotal ) ? NPG_Max : NTotal;
 
+   MPI_Allreduce( &NTotal, &NTotal_Max, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
+
 
 // evaluate time evolution matrix (once per level per timestep)
 #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
@@ -214,11 +222,16 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 //-------------------------------------------------------------------------------------------------------------
 
 
-   for (Disp=NPG_Max; Disp<NTotal; Disp+=NPG_Max)
+// use NTotal_Max rather than NTotal in the loop termination criterion below so that all ranks execute the same number of iterations
+// --> avoid potential MPI deadlocks caused by TIMING_SYNC + OPT__TIMING_BARRIER when different ranks have different numbers of patches
+   for (Disp=NPG_Max; Disp<NTotal_Max; Disp+=NPG_Max)
    {
 
-      ArrayID      = 1 - ArrayID;
-      NPG[ArrayID] = ( NPG_Max < NTotal-Disp ) ? NPG_Max : NTotal-Disp;
+      ArrayID = 1 - ArrayID;
+
+      const int NPG_Remained = NTotal - Disp;
+      NPG[ArrayID] = ( NPG_Remained > NPG_Max ) ? NPG_Max :
+                     ( NPG_Remained > 0 )       ? NPG_Remained : 0;
 
 
 //-------------------------------------------------------------------------------------------------------------
@@ -246,7 +259,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
                      Timer_Clo[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
 
-   } // for (int Disp=NPG_Max; Disp<NTotal; Disp+=NPG_Max)
+   } // for (int Disp=NPG_Max; Disp<NTotal_Max; Disp+=NPG_Max)
 
 
 //-------------------------------------------------------------------------------------------------------------
@@ -553,7 +566,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                            NEWTON_G*SQR(JEANS_MIN_PRES_NCELL*amr->dh[JEANS_MIN_PRES_LEVEL])/(GAMMA*M_PI) : NULL_REAL;
 #  endif
 #  else
-   const real JEANS_MIN_PRES     = false;
+   const bool JEANS_MIN_PRES     = false;
    const real JeansMinPres_Coeff = NULL_REAL;
 #  endif
 
@@ -579,7 +592,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  OPT__LR_LIMITER, MINMOD_COEFF, MINMOD_MAX_ITER,
                                  ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
                                  TimeOld, (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, MicroPhy,
-                                 MIN_DENS, MIN_PRES, MIN_EINT, DUAL_ENERGY_SWITCH,
+                                 MIN_DENS, MIN_PRES, MIN_EINT, DUAL_ENERGY_SWITCH, PassiveFloorMask,
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar,
                                  OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar,
                                  JEANS_MIN_PRES, JeansMinPres_Coeff,
@@ -596,7 +609,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  OPT__LR_LIMITER, MINMOD_COEFF, MINMOD_MAX_ITER,
                                  ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
                                  TimeOld, (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, MicroPhy,
-                                 MIN_DENS, MIN_PRES, MIN_EINT, DUAL_ENERGY_SWITCH,
+                                 MIN_DENS, MIN_PRES, MIN_EINT, DUAL_ENERGY_SWITCH, PassiveFloorMask,
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, PassiveNorm_VarIdx,
                                  OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
                                  JEANS_MIN_PRES, JeansMinPres_Coeff, UseWaveFlag );
@@ -705,14 +718,14 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
          CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID],
                               h_Mag_Array_T[ArrayID], NULL, NULL,
                               NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID,
-                              MicroPhy, MIN_PRES, NULL_BOOL,
+                              MicroPhy, MIN_PRES, PassiveFloorMask, NULL_BOOL,
                               EXT_POT_NONE, EXT_ACC_NONE, NULL_REAL,
                               GPU_NSTREAM );
 #        else
          CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID],
                               h_Mag_Array_T[ArrayID], NULL, NULL,
                               NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID,
-                              MicroPhy, MIN_PRES, NULL_BOOL,
+                              MicroPhy, MIN_PRES, PassiveFloorMask, NULL_BOOL,
                               EXT_POT_NONE, EXT_ACC_NONE, NULL_REAL );
 #        endif
       break;
@@ -723,14 +736,14 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
          CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], NULL,
                               NULL, h_Pot_Array_T[ArrayID], h_Corner_Array_PGT[ArrayID],
                               NPG, dh, DT__GRAVITY,
-                              MicroPhy, NULL_REAL, OPT__GRA_P5_GRADIENT,
+                              MicroPhy, NULL_REAL, PassiveFloorMask, OPT__GRA_P5_GRADIENT,
                               (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, TimeNew,
                               GPU_NSTREAM );
 #        else
          CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], NULL,
                               NULL, h_Pot_Array_T[ArrayID], h_Corner_Array_PGT[ArrayID],
                               NPG, dh, DT__GRAVITY,
-                              MicroPhy, NULL_REAL, OPT__GRA_P5_GRADIENT,
+                              MicroPhy, NULL_REAL, PassiveFloorMask, OPT__GRA_P5_GRADIENT,
                               (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, TimeNew );
 #        endif
       break;
@@ -753,14 +766,14 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                h_Flu_Array_S_Out[ArrayID],
                                h_Mag_Array_S_In [ArrayID],
                                h_Corner_Array_S [ArrayID],
-                               SrcTerms, NPG, dt, dh, TimeNew, TimeOld, MIN_DENS, MIN_PRES, MIN_EINT,
+                               SrcTerms, NPG, dt, dh, TimeNew, TimeOld, MIN_DENS, MIN_PRES, MIN_EINT, PassiveFloorMask,
                                GPU_NSTREAM );
 #        else
          CPU_SrcSolver       ( h_Flu_Array_S_In [ArrayID],
                                h_Flu_Array_S_Out[ArrayID],
                                h_Mag_Array_S_In [ArrayID],
                                h_Corner_Array_S [ArrayID],
-                               SrcTerms, NPG, dt, dh, TimeNew, TimeOld, MIN_DENS, MIN_PRES, MIN_EINT );
+                               SrcTerms, NPG, dt, dh, TimeNew, TimeOld, MIN_DENS, MIN_PRES, MIN_EINT, PassiveFloorMask );
 #        endif
       break;
 

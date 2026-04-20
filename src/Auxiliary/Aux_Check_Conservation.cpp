@@ -5,6 +5,7 @@
 // --> declared in "Model_ELBDM/ELBDM_RemoveMotionCM.cpp"
 #if ( MODEL == ELBDM )
 extern double ELBDM_Vcm[3];
+extern double ELBDM_MassPsi;
 #endif
 
 
@@ -234,7 +235,7 @@ void Aux_Check_Conservation( const char *comment )
 #              endif
 #              ifndef SRHD
 //             Hydro_Con2Eint() calculates Eint for both HD and SRHD but we disable SRHD for now
-               Eint         = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, Emag,
+               Eint         = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, PassiveFloorMask, Emag,
                                               EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt,
                                               EoS_AuxArray_Int, h_EoS_Table );
 #              else
@@ -253,7 +254,7 @@ void Aux_Check_Conservation( const char *comment )
                Cons[3]      = MomZ;
                Cons[4]      = Etot;
                for ( int v = NCOMP_FLUID; v < NCOMP_TOTAL; v++ ) Cons[v] = 0.0;
-               Hydro_Con2Pri( Cons, Prim, (real)-HUGE_NUMBER, NULL_BOOL, NULL_INT, NULL,
+               Hydro_Con2Pri( Cons, Prim, (real)-HUGE_NUMBER, PassiveFloorMask, NULL_BOOL, NULL_INT, NULL,
                               NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
                               EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, &Lrtz );
                HTilde       = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
@@ -505,7 +506,7 @@ void Aux_Check_Conservation( const char *comment )
       if ( ! ConRefInitialized )
       {
          if ( NStoredConRef_noTime > NCONREF_MAX )
-            Aux_Error( ERROR_INFO, "exceed NCOMREF_MAX (%d) !!\n", NCONREF_MAX );
+            Aux_Error( ERROR_INFO, "exceed NCONREF_MAX (%d) !!\n", NCONREF_MAX );
 
          for (int v=0; v<1+NCONREF_MAX; v++)   ConRef[v] = NULL_REAL;
 
@@ -781,6 +782,17 @@ void Aux_Check_Conservation( const char *comment )
 
 //    broadcast
       MPI_Bcast( ELBDM_Vcm, 3, MPI_DOUBLE, 0, MPI_COMM_WORLD );
+   }
+#  endif
+
+// record the ELBDM total mass for ELBDM_RescaleMassError.cpp
+#  if ( MODEL == ELBDM )
+   if ( ELBDM_RESCALE_MASS_ERROR )
+   {
+      if ( MPI_Rank == 0 ) ELBDM_MassPsi = Fluid_AllRank[0];
+
+//    broadcast
+      MPI_Bcast( &ELBDM_MassPsi, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD );
    }
 #  endif
 

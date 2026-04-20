@@ -41,7 +41,7 @@ int  Aux_CountRow( const char *FileName );
 void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double r_max_input, const double dr_min,
                          const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const long TVarBitIdx[],
                          const int NProf, const int MinLv, const int MaxLv, const PatchType_t PatchType,
-                         const double PrepTimeIn );
+                         const double PrepTimeIn, const bool GetSigma );
 void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int MinLv, const int MaxLv,
                       const PatchType_t PatchType );
 void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double Center_ref[], const double MaxR, const double MinWD,
@@ -103,7 +103,7 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
                       const real ELBDM_Eta, real ELBDM_Taylor3_Coeff, const bool ELBDM_Taylor3_Auto,
                       const double Time, const bool UsePot, const OptExtAcc_t ExtAcc, const MicroPhy_t MicroPhy,
                       const real MinDens, const real MinPres, const real MinEint,
-                      const real DualEnergySwitch,
+                      const real DualEnergySwitch, const long PassiveFloor,
                       const bool NormPassive, const int NNorm, const int NormIdx[],
                       const bool FracPassive, const int NFrac, const int FracIdx[],
                       const bool JeansMinPres, const real JeansMinPres_Coeff,
@@ -111,23 +111,23 @@ void CPU_FluidSolver( real h_Flu_Array_In[][FLU_NIN][ CUBE(FLU_NXT) ],
 void Hydro_NormalizePassive( const real GasDens, real Passive[], const int NNorm, const int NormIdx[] );
 #if ( MODEL == HYDRO )
 real Hydro_Con2Pres( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                     const real Passive[], const bool CheckMinPres, const real MinPres, const real Emag,
+                     const real Passive[], const bool CheckMinPres, const real MinPres, const long PassiveFloor, const real Emag,
                      const EoS_DE2P_t EoS_DensEint2Pres, const EoS_GUESS_t EoS_GuessHTilde,
                      const EoS_H2TEM_t EoS_HTilde2Temp, const double EoS_AuxArray_Flt[],
                      const int EoS_AuxArray_Int[], const real *const EoS_Table[EOS_NTABLE_MAX], real *EintOut );
 real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                     const bool CheckMinEint, const real MinEint, const real Emag,
+                     const bool CheckMinEint, const real MinEint, const long PassiveFloor, const real Emag,
                      const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                      const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX] );
 real Hydro_ConEint2Etot( const real Dens, const real MomX, const real MomY, const real MomZ, const real Eint, const real Emag );
 real Hydro_Con2Temp( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                     const real Passive[], const bool CheckMinTemp, const real MinTemp, const real Emag,
+                     const real Passive[], const bool CheckMinTemp, const real MinTemp, const long PassiveFloor, const real Emag,
                      const EoS_DE2T_t EoS_DensEint2Temp, const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                      const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX] );
 real Hydro_Con2Entr( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                     const real Passive[], const bool CheckMinEntr, const real MinEntr, const real Emag,
+                     const real Passive[], const bool CheckMinEntr, const real MinEntr, const long PassiveFloor, const real Emag,
                      const EoS_DE2S_t EoS_DensEint2Entr, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX] );
 real Hydro_CheckMinPres( const real InPres, const real MinPres );
@@ -135,23 +135,23 @@ real Hydro_CheckMinEint( const real InEint, const real MinEint );
 real Hydro_CheckMinTemp( const real InTemp, const real MinTemp );
 real Hydro_CheckMinEntr( const real InEntr, const real MinEntr );
 real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY, const real MomZ, const real InEngy,
-                               const real MinEint, const real Emag );
+                               const real MinEint, const long PassiveFloor, const real Emag );
 bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[],
                          const real Emag, const EoS_DE2P_t EoS_DensEint2Pres,
                          const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                          const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
-                         const real *const EoS_Table[EOS_NTABLE_MAX],
+                         const real *const EoS_Table[EOS_NTABLE_MAX], const long PassiveFloor,
                          const char File[], const int Line, const char Function[], const IsUnphVerb_t Verbose );
 bool Hydro_IsUnphysical_Single( const real Field, const char SingleFieldName[], const real Min, const real Max,
                                 const char File[], const int Line, const char Function[], const IsUnphVerb_t Verbose );
 #ifdef DUAL_ENERGY
 void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,
                           real &Etot, real &Dual, char &DE_Status, const real Gamma_m1, const real _Gamma_m1,
-                          const bool CheckMinPres, const real MinPres, const real DualEnergySwitch,
+                          const bool CheckMinPres, const real MinPres, const long PassiveFloor, const real DualEnergySwitch,
                           const real Emag );
 real Hydro_Con2Dual( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
                      const real Emag, const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[],
-                     const int EoS_AuxArray_Int[], const real *const EoS_Table[EOS_NTABLE_MAX] );
+                     const int EoS_AuxArray_Int[], const real *const EoS_Table[EOS_NTABLE_MAX], const long PassiveFloor );
 real Hydro_DensPres2Dual( const real Dens, const real Pres, const real Gamma_m1 );
 real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Gamma_m1,
                           const bool CheckMinPres, const real MinPres );
@@ -250,7 +250,7 @@ void Init_ByFile();
 void Init_UniformGrid( const int lv, const bool FindHomePatchForPar );
 void Init_Field();
 FieldIdx_t AddField( const char *InputLabel, const FixUpFlux_t FixUp_Flux, const FixUpRestrict_t FixUp_Restrict,
-                     const NormPassive_t Norm, const IntFracPassive_t IntFrac );
+                     const FloorPassive_t Floor, const NormPassive_t Norm, const IntFracPassive_t IntFrac );
 FieldIdx_t GetFieldIndex( const char *InputLabel, const Check_t Check );
 #ifdef OPENMP
 void Init_OpenMP();
@@ -288,6 +288,23 @@ template <typename T> void  Mis_Idx1D2Idx3D( const int Size[], const T Idx1D, in
 template <typename U, typename T> U Mis_BinarySearch( const T Array[], U Min, U Max, const T Key );
 template <typename U, typename T> U Mis_BinarySearch_Real( const T Array[], U Min, U Max, const T Key );
 template <typename T> T     Mis_InterpolateFromTable( const int N, const T Table_x[], const T Table_y[], const T x );
+template <typename T> T     Mis_InterpolateFrom2DTable( const int N_x, const int N_y,
+                                                        const T Table_x[], const T Table_y[], const T Table_f[],
+                                                        const T x, const T y );
+template <typename T> T     Mis_InterpolateFrom3DTable( const int N_x, const int N_y, const int N_z,
+                                                        const T Table_x[], const T Table_y[], const T Table_z[], const T Table_f[],
+                                                        const T x, const T y, const T z );
+template <typename T> T     Mis_InterpolateFrom_nDim_Table( const int nDim, const int N_x[], T const* const* Table_x, const T Table_f[], const T x[], const int OutsideMethod );
+template <typename T> T     Mis_InterpolateFrom_nDim_Table_withIdxL( const int nDim, const int N_x[], T const* const* Table_x, const T Table_f[], const T x[], const int IdxL[] );
+template <typename T> T     Mis_LinearInterpolate( const T x, const T xL, const T xR, const T f_xL, const T f_xR );
+template <typename T> T     Mis_BilinearInterpolate( const T x, const T y,
+                                                     const T xL, const T xR, const T yL, const T yR,
+                                                     const T f_xL_yL, const T f_xR_yL, const T f_xL_yR, const T f_xR_yR );
+template <typename T> T     Mis_TrilinearInterpolate( const T x, const T y, const T z,
+                                                      const T xL, const T xR, const T yL, const T yR, const T zL, const T zR,
+                                                      const T f_xL_yL_zL, const T f_xR_yL_zL, const T f_xL_yR_zL, const T f_xR_yR_zL,
+                                                      const T f_xL_yL_zR, const T f_xR_yL_zR, const T f_xL_yR_zR, const T f_xR_yR_zR );
+template <typename T> T     Mis_MultilinearInterpolate( const int nDim, const T x[], const T xL[], const T xR[], const T fC[] );
 template <typename T> ulong Mis_Idx3D2Idx1D( const int Size[], const int Idx3D[] );
 template <typename U, typename T> void  Mis_Heapsort( const U N, T Array[], U IdxTable[] );
 template <typename T> int   Mis_Matching_char( const int N, const T Array[], const int M, const T Key[], char Match[] );
@@ -313,7 +330,7 @@ void   dt_Close( const real h_dt_Array_T[], const int NPG );
 void   CPU_dtSolver( const Solver_t TSolver, real dt_Array[], const real Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                      const real Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real Pot_Array[][ CUBE(GRA_NXT) ],
                      const double Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
-                     const MicroPhy_t MicroPhy, const real MinPres, const bool P5_Gradient,
+                     const MicroPhy_t MicroPhy, const real MinPres, const long PassiveFloor, const bool P5_Gradient,
                      const bool UsePot, const OptExtAcc_t ExtAcc, const double TargetTime );
 
 
@@ -368,7 +385,8 @@ void FindFather( const int lv, const int Mode );
 void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc );
 bool Flag_Check( const int lv, const int PID, const int i, const int j, const int k, const real dv,
                  const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real MagCC[][PS1][PS1][PS1],
-                 const real Vel[][PS1][PS1][PS1], const real Pres[][PS1][PS1],  const real Lrtz[][PS1][PS1],
+                 const real Vel[][PS1][PS1][PS1], const real Pres[][PS1][PS1], const real Lrtz[][PS1][PS1],
+                 const real LCool[][PS1][PS1],
                  const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
                  const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff,
                  const real *Interf_Var, const real Spectral_Cond );
@@ -528,7 +546,7 @@ void Hydro_BoundaryCondition_Diode( real *Array, const int BC_Face, const int NV
                                     const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
                                     const int Idx_Start[], const int Idx_End[], const int TFluVarIdxList[],
                                     const int NVar_Der, const long TDerVarList[] );
-void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
+void Hydro_Con2Pri( const real In[], real Out[], const real MinPres, const long PassiveFloor,
                     const bool FracPassive, const int NFrac, const int FracIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
@@ -557,7 +575,7 @@ void MHD_AllocateElectricArray( const int lv );
 void MHD_Aux_Check_InterfaceB( const char *comment );
 void MHD_Aux_Check_DivergenceB( const bool Verbose, const char *comment );
 void MHD_FixUp_Electric( const int lv );
-void MHD_SameInterfaceB( const int lv );
+void MHD_SameInterfaceB( const int lv, const int FluSg, const int MagSg );
 void MHD_CopyPatchInterfaceBField( const int lv, const int PID, const int SibID, const int MagSg );
 void MHD_BoundaryCondition_Outflow( real **Array, const int BC_Face, const int NVar, const int GhostSize,
                                     const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
@@ -608,6 +626,7 @@ bool   ELBDM_Flag_Interference( const int i, const int j, const int k, const rea
 real   ELBDM_UnwrapPhase( const real Phase_Ref, const real Phase_Wrapped );
 real   ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 void   ELBDM_RemoveMotionCM();
+void   ELBDM_RescaleMassError();
 #ifdef SUPPORT_FFTW
 void   CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg );
 #endif
@@ -641,6 +660,7 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
                              const double Time, const bool UsePot, const OptExtAcc_t ExtAcc, const MicroPhy_t MicroPhy,
                              const real MinDens, const real MinPres, const real MinEint,
                              const real DualEnergySwitch,
+                             const long PassiveFloor,
                              const bool NormPassive, const int NNorm,
                              const bool FracPassive, const int NFrac,
                              const bool JeansMinPres, const real JeansMinPres_Coeff,
@@ -648,7 +668,8 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
 void CUAPI_Asyn_dtSolver( const Solver_t TSolver, real h_dt_Array[], const real h_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                           const real h_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ], const real h_Pot_Array[][ CUBE(GRA_NXT) ],
                           const double h_Corner_Array[][3], const int NPatchGroup, const real dh, const real Safety,
-                          const MicroPhy_t MicroPhy, const real MinPres, const bool P5_Gradient, const bool UsePot,
+                          const MicroPhy_t MicroPhy, const real MinPres, const long PassiveFloor,
+                          const bool P5_Gradient, const bool UsePot,
                           const OptExtAcc_t ExtAcc, const double TargetTime, const int GPU_NStream );
 void CUAPI_Asyn_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)           ],
                                  real h_Flu_Array_Out[][FLU_NOUT_S][ CUBE(PS1)               ],
@@ -656,7 +677,7 @@ void CUAPI_Asyn_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NX
                            const double h_Corner_Array[][3],
                            const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
                            const double TimeNew, const double TimeOld,
-                           const real MinDens, const real MinPres, const real MinEint,
+                           const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor,
                            const int GPU_NStream );
 void CUAPI_DiagnoseDevice();
 void CUAPI_MemAllocate();
@@ -807,21 +828,23 @@ void CPU_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)     
                     const double h_Corner_Array[][3],
                     const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
                     const double TimeNew, const double TimeOld,
-                    const real MinDens, const real MinPres, const real MinEint );
+                    const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor );
 
 
 // Grackle
 #ifdef SUPPORT_GRACKLE
-void Grackle_Init();
-void Grackle_Init_FieldData();
-void Grackle_End();
-void Init_MemAllocate_Grackle( const int Che_NPG );
-void End_MemFree_Grackle();
-void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const int *PID0_List );
-void Grackle_Close( const int lv, const int SaveSg, const real_che h_Che_Array[], const int NPG, const int *PID0_List );
-void Grackle_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
-                        const bool OverlapMPI, const bool Overlap_Sync );
-void CPU_GrackleSolver( grackle_field_data *Che_FieldData, code_units Che_Units, const int NPatchGroup, const real dt );
+void   Grackle_Init();
+void   Grackle_Init_FieldData();
+void   Grackle_End();
+void   Init_MemAllocate_Grackle( const int Che_NPG );
+void   End_MemFree_Grackle();
+void   Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const int *PID0_List );
+void   Grackle_Close( const int lv, const int SaveSg, const real_che h_Che_Array[], const int NPG, const int *PID0_List );
+void   Grackle_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
+                          const bool OverlapMPI, const bool Overlap_Sync );
+void   CPU_GrackleSolver( grackle_field_data *Che_FieldData, code_units Che_Units, const int NPatchGroup, const real dt );
+void   Grackle_Calculate( real Out[], const GrackleFieldBIdx_t TFields, const int lv, const int NPG, const int *PID0_List );
+double Grackle_GetTimeStep_CoolingTime( const int lv );
 #endif // #ifdef SUPPORT_GRACKLE
 
 

@@ -35,7 +35,7 @@ typedef int  long_par;
 #endif
 
 #ifdef SUPPORT_GRACKLE
-#include <grackle_float.h>
+#include <grackle.h>
 #if   defined GRACKLE_FLOAT_8
 typedef double real_che;
 #elif defined GRACKLE_FLOAT_4
@@ -93,10 +93,12 @@ const TestProbID_t
    TESTPROB_HYDRO_CR_SOUNDWAVE                 =   20,
    TESTPROB_HYDRO_CR_SHOCKTUBE                 =   21,
    TESTPROB_HYDRO_CR_DIFFUSION                 =   23,
+   TESTPROB_HYDRO_GRACKLE_TEST                 =   24,
    TESTPROB_HYDRO_BARRED_POT                   =   51,
    TESTPROB_HYDRO_JET_ICM_WALL                 =   52,
    TESTPROB_HYDRO_CDM_LSS                      =  100,
    TESTPROB_HYDRO_ZELDOVICH                    =  101,
+   TESTPROB_HYDRO_GRACKLE_COMOVING             =  102,
    TESTPROB_ELBDM_EXTPOT                       = 1000,
    TESTPROB_ELBDM_JEANS_INSTABILITY_COMOVING   = 1001,
    TESTPROB_ELBDM_JEANS_INSTABILITY_PHYSICAL   = 1002,
@@ -491,6 +493,12 @@ const FixUpRestrict_t
    FIXUP_REST_NO  = 0,
    FIXUP_REST_YES = 1;
 
+typedef int FloorPassive_t;
+const FloorPassive_t
+   FLOOR_NULL = -1,
+   FLOOR_NO   =  0,
+   FLOOR_YES  =  1;
+
 typedef int NormPassive_t;
 const NormPassive_t
    NORMALIZE_NO  = 0,
@@ -515,6 +523,13 @@ const GracklePriChe_t
    GRACKLE_PRI_CHE_NSPE6  = 1,
    GRACKLE_PRI_CHE_NSPE9  = 2,
    GRACKLE_PRI_CHE_NSPE12 = 3;
+
+// bitwise field indices used by Grackle
+typedef long GrackleFieldBIdx_t;
+const GrackleFieldBIdx_t
+   _GRACKLE_TEMP  = ( 1L << 0 ),
+   _GRACKLE_MU    = ( 1L << 1 ),
+   _GRACKLE_TCOOL = ( 1L << 2 );
 #endif
 
 
@@ -559,6 +574,14 @@ typedef int LoadParaMode_t;
 const LoadParaMode_t
    LOAD_READPARA    = 1,
    LOAD_HDF5_OUTPUT = 2;
+
+
+// whether to enforce consistency of magnetic field at the patch interface
+typedef int SameInterfaceB_t;
+const SameInterfaceB_t
+   SAME_INTERFACE_B_DEFAULT = -1,
+   SAME_INTERFACE_B_NO      = 0,
+   SAME_INTERFACE_B_YES     = 1;
 
 
 // function pointers

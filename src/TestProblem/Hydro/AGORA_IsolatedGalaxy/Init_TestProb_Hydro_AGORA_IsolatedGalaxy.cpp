@@ -195,7 +195,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "AGORA_DiskMetalMassFrac", &AGORA_DiskMetalMassFrac,  0.0,           0.0,              1.0               );
    LOAD_PARA( load_mode, "AGORA_HaloMetalMassFrac", &AGORA_HaloMetalMassFrac,  0.0,           0.0,              1.0               );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 
@@ -505,7 +505,7 @@ void AddNewField_AGORA()
 // --> since Grackle may already add this field automatically when GRACKLE_METAL is enabled
 // --> also note that "Idx_Metal" has been predefined in Field.h
    if ( AGORA_UseMetal  &&  Idx_Metal == Idx_Undefined )
-      Idx_Metal = AddField( "Metal", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_YES );
+      Idx_Metal = AddField( "Metal", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_NO, INTERP_FRAC_YES );
 
 } // FUNCTION : AddNewField_AGORA
 

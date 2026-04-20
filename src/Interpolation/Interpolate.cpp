@@ -277,7 +277,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
             }
 #           endif
 
-            Hydro_Con2Pri( Cons, Temp, MIN_PRES,
+            Hydro_Con2Pri( Cons, Temp, MIN_PRES, PassiveFloorMask,
                            OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
                            JeansMinPres_No, NULL_REAL,
                            EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
@@ -348,7 +348,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
          if ( !FData_is_Prim )
             Hydro_DualEnergyFix( Temp[DENS], Temp[MOMX], Temp[MOMY], Temp[MOMZ], Temp[ENGY], Temp[DUAL],
                                  dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2],
-                                 CheckMinPres_No, NULL_REAL, UseDual2FixEngy, Emag );
+                                 CheckMinPres_No, NULL_REAL, PassiveFloorMask, UseDual2FixEngy, Emag );
 #        endif
 
 
@@ -357,11 +357,18 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
             = Hydro_IsUnphysical( (FData_is_Prim)?UNPHY_MODE_PRIM:UNPHY_MODE_CONS, Temp, Emag,
                                   EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
-                                  ERROR_INFO, UNPHY_SILENCE );
+                                  PassiveFloorMask, ERROR_INFO, UNPHY_SILENCE );
 
 
 //       5-3. additional check
          real Eint=NULL_REAL;
+//       check the Eint --> Pres conversion for general EoS
+#        if ( EOS != EOS_GAMMA  &&  EOS != EOS_COSMIC_RAY  &&  !defined BAROTROPIC_EOS )
+#           define CHECK_E2P
+#        endif
+#        ifdef CHECK_E2P
+         real Pres=NULL_REAL;
+#        endif
 
          if ( !Fail_ThisCell )
          {
@@ -383,12 +390,22 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
                   Eint = EoS_DensPres2Eint_CPUPtr( Temp[DENS], Temp[ENGY], Passive,
                                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#                 ifdef CHECK_E2P
+                  Pres = EoS_DensEint2Pres_CPUPtr( Temp[DENS], Eint,       Passive,
+                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#                 endif
 
 //                internal energy cannot be negative (even within machine precision) since a pressure floor has been applied
 //                when calling Hydro_Con2Pri()
                   if (  Hydro_IsUnphysical_Single( Eint, "interpolated internal energy", (real)0.0, HUGE_NUMBER,
                                                    ERROR_INFO, UNPHY_SILENCE )  )
                      Fail_ThisCell = true;
+
+#                 ifdef CHECK_E2P
+                  if (  Hydro_IsUnphysical_Single( Pres, "interpolated pressure",        (real)0.0, HUGE_NUMBER,
+                                                   ERROR_INFO, UNPHY_SILENCE )  )
+                     Fail_ThisCell = true;
+#                 endif
                } // if ( EoS_DensPres2Eint_CPUPtr != NULL )
             } // if ( FData_is_Prim )
 
@@ -431,7 +448,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                else {
                   const real CheckMinPres_No = false;
                   const real Pres = Hydro_Con2Pres( Temp[DENS], Temp[MOMX], Temp[MOMY], Temp[MOMZ], Temp[ENGY], Temp+NCOMP_FLUID,
-                                                    CheckMinPres_No, NULL_REAL, Emag,
+                                                    CheckMinPres_No, NULL_REAL, PassiveFloorMask, Emag,
                                                     EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, &Eint );
                   Aux_Message( stderr, "Eint=%14.7e, Pres=%14.7e\n", Eint, Pres );
@@ -460,7 +477,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, Cons, Emag,
                                          EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
-                                         ERROR_INFO, UNPHY_VERBOSE )  )
+                                         PassiveFloorMask, ERROR_INFO, UNPHY_VERBOSE )  )
                   Aux_Error( ERROR_INFO, "unphysical interpolated energy in %s() !!\n", __FUNCTION__ );
 #              endif
             }

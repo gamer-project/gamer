@@ -136,7 +136,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "BarredPot_fullBS"  ,   &BarredPot_fullBS,      0.1 ,          Eps_double,       NoMax_double      );
    LOAD_PARA( load_mode, "BarredPot_initT"   ,   &BarredPot_initT,       1.0e4,         Eps_double,       NoMax_double      );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 
@@ -375,7 +375,7 @@ void AddNewField_BarredPot()
 // --> since Grackle may already add this field automatically when GRACKLE_METAL is enabled
 // --> also note that "Idx_Metal" has been predefined in Field.h
    if ( Idx_Metal == Idx_Undefined )
-      Idx_Metal = AddField( "Metal", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_YES );
+      Idx_Metal = AddField( "Metal", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_NO, INTERP_FRAC_YES );
 
 
 } // FUNCTION : AddNewField_BarredPot
