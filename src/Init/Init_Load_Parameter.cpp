@@ -469,7 +469,7 @@ void Init_Load_Parameter()
 #  elif ( SUPPORT_FFTW == FFTW3 ) // #  if ( SUPPORT_FFTW == FFTW2 )
    ReadPara->Add( "OPT__FFTW_STARTUP",     &OPT__FFTW_STARTUP, FFTW_STARTUP_DEFAULT, FFTW_STARTUP_DEFAULT, FFTW_STARTUP_PATIENT );
 #  else  // # if ( SUPPORT_FFTW == FFTW2 ) ... # else
-#  error : ERROR : Unsupported FFTW version for OPT__FFTW_STARTUP
+#  error : ERROR : unsupported FFTW version for OPT__FFTW_STARTUP
 #  endif // #  if ( SUPPORT_FFTW == FFTW2 ) ... # else
 #  endif // # ifdef SUPPORT_FFTW
 

@@ -1432,7 +1432,7 @@ void Aux_Check_Parameter()
 #  endif
 
 #  else // GRAMFE_SCHEME
-#  error : ERROR : Unsupported GRAMFE_SCHEME !!
+#  error : ERROR : unsupported GRAMFE_SCHEME !!
 #  endif // GRAMFE_SCHEME
 
 #  else // WAVE_SCHEME
