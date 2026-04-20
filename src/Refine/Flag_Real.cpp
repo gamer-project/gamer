@@ -318,7 +318,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
          {
             PID = PID0 + LocalID;
 
-//          check the proper-nesting condition
+//          skip this patch if any of the pre-checks below fail
+//          pre-check 1. proper-nesting condition
             ProperNesting = true;
 
             for (int sib=0; sib<26; sib++)
@@ -349,409 +350,416 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                }
             }
 
-
 //          do flag check only if 26 siblings all exist (proper-nesting constraint)
-            if ( ProperNesting )
+            if ( ! ProperNesting )  continue;
+
+
+//          pre-check 2. particle flag
+//          if ( OPT__FLAG_PAR_TARGET == PAR_FLAG_CAN  ||  OPT__FLAG_PAR_TARGET == PAR_FLAG_BOTH )
+//             if ( ! Par_Flag_CanRefine() )    continue;
+
+
+//          precompute various quantities for the selected flag checks
+            NextPatch = false;
+            Fluid     = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid;
+#           ifdef GRAVITY
+            Pot       = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot;
+#           endif
+
+
+#           if ( MODEL == HYDRO )
+#           ifdef MHD
+//          evaluate cell-centered B field
+            if ( OPT__FLAG_CURRENT || NeedPres )
             {
-               NextPatch = false;
-               Fluid     = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid;
-#              ifdef GRAVITY
-               Pot       = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot;
+               real MagCC_1Cell[NCOMP_MAG];
+
+               for (int k=0; k<PS1; k++)
+               for (int j=0; j<PS1; j++)
+               for (int i=0; i<PS1; i++)
+               {
+                  MHD_GetCellCenteredBFieldInPatch( MagCC_1Cell, lv, PID, i, j, k, amr->MagSg[lv] );
+
+                  for (int v=0; v<NCOMP_MAG; v++)  MagCC[v][k][j][i] = MagCC_1Cell[v];
+               }
+            } // if ( OPT__FLAG_CURRENT || NeedPres )
+#           endif // #ifdef MHD
+
+
+//          evaluate velocity
+            if ( OPT__FLAG_VORTICITY )
+            {
+               for (int k=0; k<PS1; k++)
+               for (int j=0; j<PS1; j++)
+               for (int i=0; i<PS1; i++)
+               {
+                  const real _Dens = (real)1.0 / Fluid[DENS][k][j][i];
+
+                  Vel[0][k][j][i] = Fluid[MOMX][k][j][i]*_Dens;
+                  Vel[1][k][j][i] = Fluid[MOMY][k][j][i]*_Dens;
+                  Vel[2][k][j][i] = Fluid[MOMZ][k][j][i]*_Dens;
+               }
+            } // if ( OPT__FLAG_VORTICITY )
+
+
+//          evaluate pressure
+            if ( NeedPres )
+            {
+               const bool CheckMinPres_Yes = true;
+
+               for (int k=0; k<PS1; k++)
+               for (int j=0; j<PS1; j++)
+               for (int i=0; i<PS1; i++)
+               {
+//                if applicable, compute pressure from the dual-energy variable to reduce the round-off errors
+#                 ifdef DUAL_ENERGY
+
+#                 if   ( DUAL_ENERGY == DE_ENPY )
+                  Pres[k][j][i] = Hydro_DensDual2Pres( Fluid[DENS][k][j][i], Fluid[DUAL][k][j][i],
+                                                       EoS_AuxArray_Flt[1], CheckMinPres_Yes, MIN_PRES );
+#                 elif ( DUAL_ENERGY == DE_EINT )
+#                 error : DE_EINT is NOT supported yet !!
+#                 endif
+
+#                 else // #ifdef DUAL_ENERGY
+
+#                 ifdef MHD
+                  const real Emag = (real)0.5*(  SQR( MagCC[MAGX][k][j][i] )
+                                               + SQR( MagCC[MAGY][k][j][i] )
+                                               + SQR( MagCC[MAGZ][k][j][i] )  );
+#                 else
+                  const real Emag = NULL_REAL;
+#                 endif
+#                 if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  NCOMP_PASSIVE > 0 )
+                  real Passive[NCOMP_PASSIVE];
+                  for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Fluid[ NCOMP_FLUID + v ][k][j][i];
+#                 else
+                  const real *Passive = NULL;
+#                 endif
+
+                  Pres[k][j][i] = Hydro_Con2Pres( Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
+                                                  Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i], Passive,
+                                                  CheckMinPres_Yes, MIN_PRES, PassiveFloorMask, Emag,
+                                                  EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                  EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                                  NULL );
+#                 endif // #ifdef DUAL_ENERGY ... else ...
+               } // k,j,i
+            } // if ( NeedPres )
+
+
+//          evaluate sound speed squared
+            if ( NeedCs2 )
+            {
+               for (int k=0; k<PS1; k++)
+               for (int j=0; j<PS1; j++)
+               for (int i=0; i<PS1; i++)
+               {
+#                 if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  NCOMP_PASSIVE > 0 )
+                  real Passive[NCOMP_PASSIVE];
+                  for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Fluid[ NCOMP_FLUID + v ][k][j][i];
+#                 else
+                  const real *Passive = NULL;
+#                 endif
+
+                  Cs2[k][j][i] = EoS_DensPres2CSqr_CPUPtr( Fluid[DENS][k][j][i], Pres[k][j][i], Passive,
+                                                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+               } // k,j,i
+            } // if ( NeedCs2 )
+
+
+#           ifdef SRHD
+//          evaluate Lorentz factor
+            if ( OPT__FLAG_LRTZ_GRADIENT )
+            {
+               for (int k=0; k<PS1; k++)
+               for (int j=0; j<PS1; j++)
+               for (int i=0; i<PS1; i++)
+               {
+                  real HTilde, Factor, U1, U2, U3;
+                  real Cons[NCOMP_FLUID] = { Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
+                                             Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i] };
+
+#                 ifdef CHECK_UNPHYSICAL_IN_FLUID
+                  Hydro_IsUnphysical( UNPHY_MODE_CONS, Cons, NULL_REAL,
+                                      EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                      EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                      PassiveFloorMask, ERROR_INFO, UNPHY_VERBOSE );
+#                 endif
+
+                  HTilde = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                             EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                  Factor = Cons[0]*((real)1.0 + HTilde);
+                  U1     = Cons[1]/Factor;
+                  U2     = Cons[2]/Factor;
+                  U3     = Cons[3]/Factor;
+
+                  Lrtz[k][j][i] = SQRT( (real)1.0 + SQR(U1) + SQR(U2) + SQR(U3) );
+               } // i,j,k
+            } // if ( OPT__FLAG_LRTZ_GRADIENT )
+#           endif // #ifdef SRHD
+
+
+#           ifdef SUPPORT_GRACKLE
+//          evaluate cooling length
+            if ( OPT__FLAG_COOLING_LEN )
+            {
+               for (int k=0; k<PS1; k++)
+               for (int j=0; j<PS1; j++)
+               for (int i=0; i<PS1; i++)
+               {
+                  const real TCool = Grackle_TCool[ (LocalID*CUBE(PS1) + k*SQR(PS1) + j*PS1 + i) ];
+//                positive cooling time returned by Grackle corresponds to heating, and vice versa
+//                --> cooling length is defined as (|cooling time| x sound speed) and is only applied to cooling
+                  LCool[k][j][i] = ( TCool < (real)0.0 ) ? ( FABS(TCool) * SQRT(Cs2[k][j][i]) ) : HUGE_NUMBER;
+               } // k,j,i
+            } // if ( OPT__FLAG_COOLING_LEN )
+#           endif // #ifdef SUPPORT_GRACKLE
+#           endif // #if ( MODEL == HYDRO )
+
+
+//          evaluate the averages and slopes along x/y/z for Lohner
+            if ( Lohner_NVar > 0 )
+               Prepare_for_Lohner( OPT__FLAG_LOHNER_FORM, Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope,
+                                   Lohner_NVar );
+
+
+//          count the number of particles and/or particle mass density on each cell
+#           ifdef PARTICLE
+            if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_PAR_MASS_CELL )
+            {
+               long      *ParList = NULL;
+               int        NParThisPatch;
+               bool       UseInputMassPos;
+               real_par **InputMassPos = NULL;
+               long_par **InputType    = NULL;
+
+//             determine the number of particles and the particle list
+               if ( amr->patch[0][lv][PID]->son == -1 )
+               {
+                  NParThisPatch   = amr->patch[0][lv][PID]->NPar;
+                  ParList         = amr->patch[0][lv][PID]->ParList;
+                  UseInputMassPos = false;
+                  InputMassPos    = NULL;
+                  InputType       = NULL;
+
+#                 ifdef DEBUG_PARTICLE
+                  if ( amr->patch[0][lv][PID]->NPar_Copy != -1 )
+                     Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar_Copy = %d != -1 !!\n",
+                                lv, PID, amr->patch[0][lv][PID]->NPar_Copy );
+#                 endif
+               }
+
+               else
+               {
+                  NParThisPatch   = amr->patch[0][lv][PID]->NPar_Copy;
+#                 ifdef LOAD_BALANCE
+                  ParList         = NULL;
+                  UseInputMassPos = true;
+                  InputMassPos    = amr->patch[0][lv][PID]->ParAttFlt_Copy;
+                  InputType       = amr->patch[0][lv][PID]->ParAttInt_Copy;
+#                 else
+                  ParList         = amr->patch[0][lv][PID]->ParList_Copy;
+                  UseInputMassPos = false;
+                  InputMassPos    = NULL;
+                  InputType       = NULL;
+#                 endif
+
+#                 ifdef DEBUG_PARTICLE
+                  if ( amr->patch[0][lv][PID]->NPar != 0 )
+                     Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar = %d != 0 !!\n",
+                                lv, PID, amr->patch[0][lv][PID]->NPar );
+#                 endif
+               }
+
+#              ifdef DEBUG_PARTICLE
+               if ( NParThisPatch < 0 )
+                  Aux_Error( ERROR_INFO, "NPar (%d) has not been calculated (lv %d, PID %d) !!\n",
+                             NParThisPatch, lv, PID );
+
+               if ( NParThisPatch > 0 )
+               {
+                  if ( UseInputMassPos )
+                  {
+                     if ( InputMassPos[PAR_MASS] == NULL  ||  InputMassPos[PAR_POSX] == NULL  ||
+                          InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL )
+                        Aux_Error( ERROR_INFO, "InputMassPos[0/1/2/3] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
+                                   NParThisPatch, lv, PID );
+                     if ( InputType[PAR_TYPE] == NULL )
+                        Aux_Error( ERROR_INFO, "InputType[0] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
+                                   NParThisPatch, lv, PID );
+                  }
+
+                  else if ( ParList == NULL )
+                  Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
+                             NParThisPatch, lv, PID );
+               }
 #              endif
 
+//             deposit particle mass onto grids
+//             --> for OPT__FLAG_NPAR_CELL, set UnitDens_Yes
+//             --> for OPT__FLAG_PAR_MASS_CELL, set UnitDens_No and note that Par_MassAssignment() returns
+//                 **density** instead of mass
+//                 --> must multiply with the cell volume before checking the particle **mass** refinement criterion
+               if ( OPT__FLAG_NPAR_CELL )
+               Par_MassAssignment( ParList, NParThisPatch, PAR_INTERP_NGP, ParCount[0][0], PS1,
+                                   amr->patch[0][lv][PID]->EdgeL, amr->dh[lv], PredictPos_No, NULL_REAL,
+                                   InitZero_Yes, Periodic_No, NULL, UnitDens_Yes, CheckFarAway_No,
+                                   UseInputMassPos, InputMassPos, InputType );
 
-#              if ( MODEL == HYDRO )
-#              ifdef MHD
-//             evaluate cell-centered B field
-               if ( OPT__FLAG_CURRENT || NeedPres )
+               if ( OPT__FLAG_PAR_MASS_CELL )
+               Par_MassAssignment( ParList, NParThisPatch, PAR_INTERP_NGP, ParDens [0][0], PS1,
+                                   amr->patch[0][lv][PID]->EdgeL, amr->dh[lv], PredictPos_No, NULL_REAL,
+                                   InitZero_Yes, Periodic_No, NULL, UnitDens_No,  CheckFarAway_No,
+                                   UseInputMassPos, InputMassPos, InputType );
+            } // if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_PAR_MASS_CELL )
+#           endif // #ifdef PARTICLE
+
+
+//          loop over all cells within the target patch
+            for (int k=0; k<PS1; k++)  {  if ( NextPatch )  break;
+                                          k_start = ( k - FlagBuf < 0    ) ? 0 : 1;
+                                          k_end   = ( k + FlagBuf >= PS1 ) ? 2 : 1;
+
+            for (int j=0; j<PS1; j++)  {  if ( NextPatch )  break;
+                                          j_start = ( j - FlagBuf < 0    ) ? 0 : 1;
+                                          j_end   = ( j + FlagBuf >= PS1 ) ? 2 : 1;
+
+            for (int i=0; i<PS1; i++)  {  if ( NextPatch )  break;
+                                          i_start = ( i - FlagBuf < 0    ) ? 0 : 1;
+                                          i_end   = ( i + FlagBuf >= PS1 ) ? 2 : 1;
+
+//             retrieve the adiabatic index for Jeans length refinement criterion
+#              if ( MODEL == HYDRO  &&  defined GRAVITY )
+               const real JeansCoeff = ( OPT__FLAG_JEANS )
+                                     ? JeansCoeff_Factor * Cs2[k][j][i] * Fluid[DENS][k][j][i] / Pres[k][j][i]
+                                     : NULL_REAL;
+#              else
+               const real JeansCoeff = NULL_REAL;
+#              endif
+
+//             check if the target cell satisfies the refinement criteria (useless pointers are always == NULL)
+               if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, MagCC, Vel, Pres, Lrtz, LCool,
+                                                     Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope, Lohner_NVar,
+                                                     ParCount, ParDens, JeansCoeff, Interf_Var+LocalID*Interf_Stride, Spectral_Cond )  )
                {
-                  real MagCC_1Cell[NCOMP_MAG];
+//                flag itself
+                  amr->patch[0][lv][PID]->flag = true;
 
-                  for (int k=0; k<PS1; k++)
-                  for (int j=0; j<PS1; j++)
-                  for (int i=0; i<PS1; i++)
+//                flag sibling patches according to the size of FlagBuf
+                  for (int kk=k_start; kk<=k_end; kk++)
+                  for (int jj=j_start; jj<=j_end; jj++)
+                  for (int ii=i_start; ii<=i_end; ii++)
                   {
-                     MHD_GetCellCenteredBFieldInPatch( MagCC_1Cell, lv, PID, i, j, k, amr->MagSg[lv] );
+                     SibID = SibID_Array[kk][jj][ii];
 
-                     for (int v=0; v<NCOMP_MAG; v++)  MagCC[v][k][j][i] = MagCC_1Cell[v];
-                  }
-               } // if ( OPT__FLAG_CURRENT || NeedPres )
-#              endif // #ifdef MHD
-
-
-//             evaluate velocity
-               if ( OPT__FLAG_VORTICITY )
-               {
-                  for (int k=0; k<PS1; k++)
-                  for (int j=0; j<PS1; j++)
-                  for (int i=0; i<PS1; i++)
-                  {
-                     const real _Dens = (real)1.0 / Fluid[DENS][k][j][i];
-
-                     Vel[0][k][j][i] = Fluid[MOMX][k][j][i]*_Dens;
-                     Vel[1][k][j][i] = Fluid[MOMY][k][j][i]*_Dens;
-                     Vel[2][k][j][i] = Fluid[MOMZ][k][j][i]*_Dens;
-                  }
-               } // if ( OPT__FLAG_VORTICITY )
-
-
-//             evaluate pressure
-               if ( NeedPres )
-               {
-                  const bool CheckMinPres_Yes = true;
-
-                  for (int k=0; k<PS1; k++)
-                  for (int j=0; j<PS1; j++)
-                  for (int i=0; i<PS1; i++)
-                  {
-//                   if applicable, compute pressure from the dual-energy variable to reduce the round-off errors
-#                    ifdef DUAL_ENERGY
-
-#                    if   ( DUAL_ENERGY == DE_ENPY )
-                     Pres[k][j][i] = Hydro_DensDual2Pres( Fluid[DENS][k][j][i], Fluid[DUAL][k][j][i],
-                                                          EoS_AuxArray_Flt[1], CheckMinPres_Yes, MIN_PRES );
-#                    elif ( DUAL_ENERGY == DE_EINT )
-#                    error : DE_EINT is NOT supported yet !!
-#                    endif
-
-#                    else // #ifdef DUAL_ENERGY
-
-#                    ifdef MHD
-                     const real Emag = (real)0.5*(  SQR( MagCC[MAGX][k][j][i] )
-                                                  + SQR( MagCC[MAGY][k][j][i] )
-                                                  + SQR( MagCC[MAGZ][k][j][i] )  );
-#                    else
-                     const real Emag = NULL_REAL;
-#                    endif
-#                    if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  NCOMP_PASSIVE > 0 )
-                     real Passive[NCOMP_PASSIVE];
-                     for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Fluid[ NCOMP_FLUID + v ][k][j][i];
-#                    else
-                     const real *Passive = NULL;
-#                    endif
-
-                     Pres[k][j][i] = Hydro_Con2Pres( Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
-                                                     Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i], Passive,
-                                                     CheckMinPres_Yes, MIN_PRES, PassiveFloorMask, Emag,
-                                                     EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
-                                                     NULL );
-#                    endif // #ifdef DUAL_ENERGY ... else ...
-                  } // k,j,i
-               } // if ( NeedPres )
-
-//             evaluate sound speed squared
-               if ( NeedCs2 )
-               {
-                  for (int k=0; k<PS1; k++)
-                  for (int j=0; j<PS1; j++)
-                  for (int i=0; i<PS1; i++)
-                  {
-#                    if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  NCOMP_PASSIVE > 0 )
-                     real Passive[NCOMP_PASSIVE];
-                     for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Fluid[ NCOMP_FLUID + v ][k][j][i];
-#                    else
-                     const real *Passive = NULL;
-#                    endif
-
-                     Cs2[k][j][i] = EoS_DensPres2CSqr_CPUPtr( Fluid[DENS][k][j][i], Pres[k][j][i], Passive,
-                                                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-                  } // k,j,i
-               } // if ( NeedCs2 )
-
-#              ifdef SRHD
-//             evaluate Lorentz factor
-               if ( OPT__FLAG_LRTZ_GRADIENT )
-               {
-                  for (int k=0; k<PS1; k++)
-                  for (int j=0; j<PS1; j++)
-                  for (int i=0; i<PS1; i++)
-                  {
-                     real HTilde, Factor, U1, U2, U3;
-                     real Cons[NCOMP_FLUID] = { Fluid[DENS][k][j][i], Fluid[MOMX][k][j][i], Fluid[MOMY][k][j][i],
-                                                Fluid[MOMZ][k][j][i], Fluid[ENGY][k][j][i] };
-
-#                    ifdef CHECK_UNPHYSICAL_IN_FLUID
-                     Hydro_IsUnphysical( UNPHY_MODE_CONS, Cons, NULL_REAL,
-                                         EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                         EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
-                                         PassiveFloorMask, ERROR_INFO, UNPHY_VERBOSE );
-#                    endif
-
-                     HTilde = Hydro_Con2HTilde( Cons, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                                EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-                     Factor = Cons[0]*((real)1.0 + HTilde);
-                     U1     = Cons[1]/Factor;
-                     U2     = Cons[2]/Factor;
-                     U3     = Cons[3]/Factor;
-
-                     Lrtz[k][j][i] = SQRT( (real)1.0 + SQR(U1) + SQR(U2) + SQR(U3) );
-                  } // i,j,k
-               } // if ( OPT__FLAG_LRTZ_GRADIENT )
-#              endif // #ifdef SRHD
-
-#              ifdef SUPPORT_GRACKLE
-//             evaluate cooling length
-               if ( OPT__FLAG_COOLING_LEN )
-               {
-                  for (int k=0; k<PS1; k++)
-                  for (int j=0; j<PS1; j++)
-                  for (int i=0; i<PS1; i++)
-                  {
-                     const real TCool = Grackle_TCool[ (LocalID*CUBE(PS1) + k*SQR(PS1) + j*PS1 + i) ];
-//                   positive cooling time returned by Grackle corresponds to heating, and vice versa
-//                   --> cooling length is defined as (|cooling time| x sound speed) and is only applied to cooling
-                     LCool[k][j][i] = ( TCool < (real)0.0 ) ? ( FABS(TCool) * SQRT(Cs2[k][j][i]) ) : HUGE_NUMBER;
-                  } // k,j,i
-               } // if ( OPT__FLAG_COOLING_LEN )
-#              endif // #ifdef SUPPORT_GRACKLE
-#              endif // #if ( MODEL == HYDRO )
-
-
-//             evaluate the averages and slopes along x/y/z for Lohner
-               if ( Lohner_NVar > 0 )
-                  Prepare_for_Lohner( OPT__FLAG_LOHNER_FORM, Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope,
-                                      Lohner_NVar );
-
-
-//             count the number of particles and/or particle mass density on each cell
-#              ifdef PARTICLE
-               if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_PAR_MASS_CELL )
-               {
-                  long      *ParList = NULL;
-                  int        NParThisPatch;
-                  bool       UseInputMassPos;
-                  real_par **InputMassPos = NULL;
-                  long_par **InputType    = NULL;
-
-//                determine the number of particles and the particle list
-                  if ( amr->patch[0][lv][PID]->son == -1 )
-                  {
-                     NParThisPatch   = amr->patch[0][lv][PID]->NPar;
-                     ParList         = amr->patch[0][lv][PID]->ParList;
-                     UseInputMassPos = false;
-                     InputMassPos    = NULL;
-                     InputType       = NULL;
-
-#                    ifdef DEBUG_PARTICLE
-                     if ( amr->patch[0][lv][PID]->NPar_Copy != -1 )
-                        Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar_Copy = %d != -1 !!\n",
-                                   lv, PID, amr->patch[0][lv][PID]->NPar_Copy );
-#                    endif
-                  }
-
-                  else
-                  {
-                     NParThisPatch   = amr->patch[0][lv][PID]->NPar_Copy;
-#                    ifdef LOAD_BALANCE
-                     ParList         = NULL;
-                     UseInputMassPos = true;
-                     InputMassPos    = amr->patch[0][lv][PID]->ParAttFlt_Copy;
-                     InputType       = amr->patch[0][lv][PID]->ParAttInt_Copy;
-#                    else
-                     ParList         = amr->patch[0][lv][PID]->ParList_Copy;
-                     UseInputMassPos = false;
-                     InputMassPos    = NULL;
-                     InputType       = NULL;
-#                    endif
-
-#                    ifdef DEBUG_PARTICLE
-                     if ( amr->patch[0][lv][PID]->NPar != 0 )
-                        Aux_Error( ERROR_INFO, "lv %d, PID %d, NPar = %d != 0 !!\n",
-                                   lv, PID, amr->patch[0][lv][PID]->NPar );
-#                    endif
-                  }
-
-#                 ifdef DEBUG_PARTICLE
-                  if ( NParThisPatch < 0 )
-                     Aux_Error( ERROR_INFO, "NPar (%d) has not been calculated (lv %d, PID %d) !!\n",
-                                NParThisPatch, lv, PID );
-
-                  if ( NParThisPatch > 0 )
-                  {
-                     if ( UseInputMassPos )
+                     if ( SibID != 999 )
                      {
-                        if ( InputMassPos[PAR_MASS] == NULL  ||  InputMassPos[PAR_POSX] == NULL  ||
-                             InputMassPos[PAR_POSY] == NULL  ||  InputMassPos[PAR_POSZ] == NULL )
-                           Aux_Error( ERROR_INFO, "InputMassPos[0/1/2/3] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
-                                      NParThisPatch, lv, PID );
-                        if ( InputType[PAR_TYPE] == NULL )
-                           Aux_Error( ERROR_INFO, "InputType[0] == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
-                                      NParThisPatch, lv, PID );
+                        SibPID = amr->patch[0][lv][PID]->sibling[SibID];
+
+#                       ifdef GAMER_DEBUG
+                        if ( SibPID == -1 )
+                           Aux_Error( ERROR_INFO, "SibPID == -1 --> proper-nesting check failed !!\n" );
+
+                        if ( SibPID <= SIB_OFFSET_NONPERIODIC  &&  OPT__NO_FLAG_NEAR_BOUNDARY )
+                           Aux_Error( ERROR_INFO, "SibPID (%d) <= %d when OPT__NO_FLAG_NEAR_BOUNDARY is on !!\n",
+                                      SibPID, SIB_OFFSET_NONPERIODIC );
+#                       endif
+
+//                      note that we can have SibPID <= SIB_OFFSET_NONPERIODIC when OPT__NO_FLAG_NEAR_BOUNDARY == false
+                        if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
+
+//                      switch_to_wave_flag should be consistent with the flag buffer
+#                       if ( ELBDM_SCHEME == ELBDM_HYBRID )
+                        if ( amr->patch[0][lv][PID]->switch_to_wave_flag  &&  SibPID >= 0 )
+                           amr->patch[0][lv][SibPID]->switch_to_wave_flag = true;
+#                       endif
+                     } // if ( SibID != 999 )
+                  } // ii,jj,kk
+
+//                for FlagBuf == PS1, once a cell is flagged, all 26 siblings will be flagged
+                  if ( FlagBuf == PS1 )   NextPatch = true;
+
+               } // check flag
+            }}} // k, j, i
+
+
+//          flag based on the number particles per patch (which doesn't need to go through all cells one-by-one)
+#           ifdef PARTICLE
+            if ( lv < MAX_LEVEL  &&  OPT__FLAG_NPAR_PATCH != 0 )
+            {
+               const int NParFlag = FlagTable_NParPatch[lv];
+               int NParThisPatch;
+
+               if ( amr->patch[0][lv][PID]->son == -1 )  NParThisPatch = amr->patch[0][lv][PID]->NPar;
+               else                                      NParThisPatch = amr->patch[0][lv][PID]->NPar_Copy;
+
+#              ifdef DEBUG_PARTICLE
+               if ( NParThisPatch < 0 )
+                  Aux_Error( ERROR_INFO, "NPar (%d) has not been calculated (lv %d, PID %d) !!\n",
+                             NParThisPatch, lv, PID );
+#              endif
+
+               if ( NParThisPatch > NParFlag )
+               {
+//                flag itself
+                  amr->patch[0][lv][PID]->flag = true;
+
+//                flag all siblings for OPT__FLAG_NPAR_PATCH == 2
+                  if ( OPT__FLAG_NPAR_PATCH == 2 )
+                  {
+                     for (int s=0; s<26; s++)
+                     {
+                        SibPID = amr->patch[0][lv][PID]->sibling[s];
+
+#                       ifdef DEBUG_PARTICLE
+                        if ( SibPID == -1 )
+                           Aux_Error( ERROR_INFO, "SibPID == -1 --> proper-nesting check failed !!\n" );
+
+                        if ( SibPID <= SIB_OFFSET_NONPERIODIC  &&  OPT__NO_FLAG_NEAR_BOUNDARY )
+                           Aux_Error( ERROR_INFO, "SibPID (%d) <= %d when OPT__NO_FLAG_NEAR_BOUNDARY is on !!\n",
+                                      SibPID, SIB_OFFSET_NONPERIODIC );
+#                       endif
+
+//                      note that we can have SibPID <= SIB_OFFSET_NONPERIODIC when OPT__NO_FLAG_NEAR_BOUNDARY == false
+                        if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
                      }
-
-                     else if ( ParList == NULL )
-                     Aux_Error( ERROR_INFO, "ParList == NULL for NPar (%d) > 0 (lv %d, PID %d) !!\n",
-                                NParThisPatch, lv, PID );
                   }
+               } // if ( NParThisPatch > NParFlag )
+            } // if ( OPT__FLAG_NPAR_PATCH != 0 )
+#           endif // #ifdef PARTICLE
+
+
+//          check the derefinement criterion of Lohner if required
+//          --> do it separately from all other refinement criteria since it
+//              (a) does not flag sibling patches and
+//              (b) only applies to patches with sons but have been marked for derefinement
+//          --> it can suppress derefinement (by having derefinement thresholds lower than refinement thresholds)
+            if ( Lohner_NVar > 0  &&  FlagTable_Lohner[lv][1] < FlagTable_Lohner[lv][0]  &&
+                 !amr->patch[0][lv][PID]->flag  &&  amr->patch[0][lv][PID]->son != -1 )
+            {
+               bool Skip = false;
+
+               for (int k=0; k<PS1; k++)  {  if ( Skip )  break;
+               for (int j=0; j<PS1; j++)  {  if ( Skip )  break;
+               for (int i=0; i<PS1; i++)  {  if ( Skip )  break;
+
+//                check Lohner only if density is greater than the minimum threshold
+#                 ifdef DENS
+                  if ( Fluid[DENS][k][j][i] >= FlagTable_Lohner[lv][4] )
 #                 endif
-
-//                deposit particle mass onto grids
-//                --> for OPT__FLAG_NPAR_CELL, set UnitDens_Yes
-//                --> for OPT__FLAG_PAR_MASS_CELL, set UnitDens_No and note that Par_MassAssignment() returns
-//                    **density** instead of mass
-//                    --> must multiply with the cell volume before checking the particle **mass** refinement criterion
-                  if ( OPT__FLAG_NPAR_CELL )
-                  Par_MassAssignment( ParList, NParThisPatch, PAR_INTERP_NGP, ParCount[0][0], PS1,
-                                      amr->patch[0][lv][PID]->EdgeL, amr->dh[lv], PredictPos_No, NULL_REAL,
-                                      InitZero_Yes, Periodic_No, NULL, UnitDens_Yes, CheckFarAway_No,
-                                      UseInputMassPos, InputMassPos, InputType );
-
-                  if ( OPT__FLAG_PAR_MASS_CELL )
-                  Par_MassAssignment( ParList, NParThisPatch, PAR_INTERP_NGP, ParDens [0][0], PS1,
-                                      amr->patch[0][lv][PID]->EdgeL, amr->dh[lv], PredictPos_No, NULL_REAL,
-                                      InitZero_Yes, Periodic_No, NULL, UnitDens_No,  CheckFarAway_No,
-                                      UseInputMassPos, InputMassPos, InputType );
-               } // if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_PAR_MASS_CELL )
-#              endif // #ifdef PARTICLE
-
-
-//             loop over all cells within the target patch
-               for (int k=0; k<PS1; k++)  {  if ( NextPatch )  break;
-                                             k_start = ( k - FlagBuf < 0    ) ? 0 : 1;
-                                             k_end   = ( k + FlagBuf >= PS1 ) ? 2 : 1;
-
-               for (int j=0; j<PS1; j++)  {  if ( NextPatch )  break;
-                                             j_start = ( j - FlagBuf < 0    ) ? 0 : 1;
-                                             j_end   = ( j + FlagBuf >= PS1 ) ? 2 : 1;
-
-               for (int i=0; i<PS1; i++)  {  if ( NextPatch )  break;
-                                             i_start = ( i - FlagBuf < 0    ) ? 0 : 1;
-                                             i_end   = ( i + FlagBuf >= PS1 ) ? 2 : 1;
-
-//                retrieve the adiabatic index for Jeans length refinement criterion
-#                 if ( MODEL == HYDRO  &&  defined GRAVITY )
-                  const real JeansCoeff = ( OPT__FLAG_JEANS )
-                                        ? JeansCoeff_Factor * Cs2[k][j][i] * Fluid[DENS][k][j][i] / Pres[k][j][i]
-                                        : NULL_REAL;
-#                 else
-                  const real JeansCoeff = NULL_REAL;
-#                 endif
-
-//                check if the target cell satisfies the refinement criteria (useless pointers are always == NULL)
-                  if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, MagCC, Vel, Pres, Lrtz, LCool,
-                                                        Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope, Lohner_NVar,
-                                                        ParCount, ParDens, JeansCoeff, Interf_Var+LocalID*Interf_Stride, Spectral_Cond )  )
+                  if (  Flag_Lohner( i, j, k, OPT__FLAG_LOHNER_FORM,
+                                     Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope, Lohner_NVar,
+                                     FlagTable_Lohner[lv][1], FlagTable_Lohner[lv][2], FlagTable_Lohner[lv][3] )  )
                   {
 //                   flag itself
                      amr->patch[0][lv][PID]->flag = true;
 
-//                   flag sibling patches according to the size of FlagBuf
-                     for (int kk=k_start; kk<=k_end; kk++)
-                     for (int jj=j_start; jj<=j_end; jj++)
-                     for (int ii=i_start; ii<=i_end; ii++)
-                     {
-                        SibID = SibID_Array[kk][jj][ii];
-
-                        if ( SibID != 999 )
-                        {
-                           SibPID = amr->patch[0][lv][PID]->sibling[SibID];
-
-#                          ifdef GAMER_DEBUG
-                           if ( SibPID == -1 )
-                              Aux_Error( ERROR_INFO, "SibPID == -1 --> proper-nesting check failed !!\n" );
-
-                           if ( SibPID <= SIB_OFFSET_NONPERIODIC  &&  OPT__NO_FLAG_NEAR_BOUNDARY )
-                              Aux_Error( ERROR_INFO, "SibPID (%d) <= %d when OPT__NO_FLAG_NEAR_BOUNDARY is on !!\n",
-                                         SibPID, SIB_OFFSET_NONPERIODIC );
-#                          endif
-
-//                         note that we can have SibPID <= SIB_OFFSET_NONPERIODIC when OPT__NO_FLAG_NEAR_BOUNDARY == false
-                           if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
-
-//                         switch_to_wave_flag should be consistent with the flag buffer
-#                          if ( ELBDM_SCHEME == ELBDM_HYBRID )
-                           if ( amr->patch[0][lv][PID]->switch_to_wave_flag  &&  SibPID >= 0 )
-                              amr->patch[0][lv][SibPID]->switch_to_wave_flag = true;
-#                          endif
-                        } // if ( SibID != 999 )
-                     } // ii,jj,kk
-
-//                   for FlagBuf == PS1, once a cell is flagged, all 26 siblings will be flagged
-                     if ( FlagBuf == PS1 )   NextPatch = true;
-
-                  } // check flag
-               }}} // k, j, i
-
-
-//             flag based on the number particles per patch (which doesn't need to go through all cells one-by-one)
-#              ifdef PARTICLE
-               if ( lv < MAX_LEVEL  &&  OPT__FLAG_NPAR_PATCH != 0 )
-               {
-                  const int NParFlag = FlagTable_NParPatch[lv];
-                  int NParThisPatch;
-
-                  if ( amr->patch[0][lv][PID]->son == -1 )  NParThisPatch = amr->patch[0][lv][PID]->NPar;
-                  else                                      NParThisPatch = amr->patch[0][lv][PID]->NPar_Copy;
-
-#                 ifdef DEBUG_PARTICLE
-                  if ( NParThisPatch < 0 )
-                     Aux_Error( ERROR_INFO, "NPar (%d) has not been calculated (lv %d, PID %d) !!\n",
-                                NParThisPatch, lv, PID );
-#                 endif
-
-                  if ( NParThisPatch > NParFlag )
-                  {
-//                   flag itself
-                     amr->patch[0][lv][PID]->flag = true;
-
-//                   flag all siblings for OPT__FLAG_NPAR_PATCH == 2
-                     if ( OPT__FLAG_NPAR_PATCH == 2 )
-                     {
-                        for (int s=0; s<26; s++)
-                        {
-                           SibPID = amr->patch[0][lv][PID]->sibling[s];
-
-#                          ifdef DEBUG_PARTICLE
-                           if ( SibPID == -1 )
-                              Aux_Error( ERROR_INFO, "SibPID == -1 --> proper-nesting check failed !!\n" );
-
-                           if ( SibPID <= SIB_OFFSET_NONPERIODIC  &&  OPT__NO_FLAG_NEAR_BOUNDARY )
-                              Aux_Error( ERROR_INFO, "SibPID (%d) <= %d when OPT__NO_FLAG_NEAR_BOUNDARY is on !!\n",
-                                         SibPID, SIB_OFFSET_NONPERIODIC );
-#                          endif
-
-//                         note that we can have SibPID <= SIB_OFFSET_NONPERIODIC when OPT__NO_FLAG_NEAR_BOUNDARY == false
-                           if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
-                        }
-                     }
-                  } // if ( NParThisPatch > NParFlag )
-               } // if ( OPT__FLAG_NPAR_PATCH != 0 )
-#              endif // #ifdef PARTICLE
-
-
-//             check the derefinement criterion of Lohner if required
-//             --> do it separately from all other refinement criteria since it
-//                 (a) does not flag sibling patches and
-//                 (b) only applies to patches with sons but have been marked for derefinement
-//             --> it can suppress derefinement (by having derefinement thresholds lower than refinement thresholds)
-               if ( Lohner_NVar > 0  &&  FlagTable_Lohner[lv][1] < FlagTable_Lohner[lv][0]  &&
-                    !amr->patch[0][lv][PID]->flag  &&  amr->patch[0][lv][PID]->son != -1 )
-               {
-                  bool Skip = false;
-
-                  for (int k=0; k<PS1; k++)  {  if ( Skip )  break;
-                  for (int j=0; j<PS1; j++)  {  if ( Skip )  break;
-                  for (int i=0; i<PS1; i++)  {  if ( Skip )  break;
-
-//                   check Lohner only if density is greater than the minimum threshold
-#                    ifdef DENS
-                     if ( Fluid[DENS][k][j][i] >= FlagTable_Lohner[lv][4] )
-#                    endif
-                     if (  Flag_Lohner( i, j, k, OPT__FLAG_LOHNER_FORM,
-                                        Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope, Lohner_NVar,
-                                        FlagTable_Lohner[lv][1], FlagTable_Lohner[lv][2], FlagTable_Lohner[lv][3] )  )
-                     {
-//                      flag itself
-                        amr->patch[0][lv][PID]->flag = true;
-
-//                      skip all remaining cells
-                        Skip = true;
-                     }
-                  }}} // i,j,k
-               } // if ( ... )
-
-            } // if ( ProperNesting )
+//                   skip all remaining cells
+                     Skip = true;
+                  }
+               }}} // i,j,k
+            } // if ( Lohner_NVar > 0 ... )
          } // for (int LocalID=0; LocalID<8; LocalID++)
       } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
 

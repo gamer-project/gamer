@@ -203,7 +203,7 @@ void Par_CollectParticle2OneLevel_FreeMemory( const int FaLv, const bool SibBufP
 {
 
 // skip if Par_CollectParticle2OneLevel() has not been called
-   if ( !Particle_Collected )    return;
+   if ( ! Particle_Collected )   return;
 
 
 // check
