@@ -21,6 +21,7 @@ Mandatory steps are marked by &#x1F4CC;.
    *  [Finalize Function](#finalize-function)
    *  [External Acceleration](#external-acceleration)
    *  [External Potential](#external-potential)
+   *  [Extra Mass for Gravity](#extra-mass-for-gravity)
    *  [Equation of State](#equation-of-state)
    *  [Source Terms](#source-terms)
    *  [Feedback](#feedback)
@@ -254,13 +255,13 @@ in the output files, and the field index `NewFieldIdx` can be used to
 access the field data (see the next step). The check `if ( NewFieldIdx == Idx_Undefined )`
 is just to avoid redundant assignments to the same field index variable.
 
-    The second parameter should be set to either `FIXUP_FLUX_YES` or `FIXUP_FLUX_NO`.
+    Tfuld be set to either `FIXUP_FLUX_YES` or `FIXUP_FLUX_NO`.
 It controls whether the new field will be corrected by the fluxes across the coarse-fine boundaries
-when enabling [[ OPT__FIXUP_FLUX | Runtime-Parameters:-Hydro#OPT__FIXUP_FLUX ]].
+when enabling [[ OPT__FIXUP_FLUX | [Runtime-Parameters]-Hydro#OPT__FIXUP_FLUX ]].
 
     The third parameter should be set to either `FIXUP_REST_YES` or `FIXUP_REST_NO`.
 It controls whether the new field will be corrected by the volume-weighted average of the fine-grid data
-when enabling [[ OPT__FIXUP_RESTRICT | Runtime-Parameters:-Hydro#OPT__FIXUP_RESTRICT ]].
+when enabling [[ OPT__FIXUP_RESTRICT | [Runtime-Parameters]-Hydro#OPT__FIXUP_RESTRICT ]].
 
     The fourth parameter should be set to either `FLOOR_YES` or `FLOOR_NO`.
 It controls whether the new field will be floored to `TINY_NUMBER` to ensure positivity.
@@ -605,6 +606,22 @@ for details.
    * `src/TestProblem/Hydro/Plummer/ExtPot_Plummer.cpp`
    * `src/SelfGravity/CPU_Poisson/CPU_ExtPot_PointMass.cpp`
    * `src/SelfGravity/CPU_Poisson/CPU_ExtPot_Tabular.cpp`
+
+### Extra Mass for Gravity
+* **Description:**
+Add extra mass for gravity. See
+[[Extra Mass | Gravity#extra-mass]]
+for details.
+* **Prototype:**
+   * `real Poi_AddExtraMassForGravity_Template( const double x, const double y, const double z, const double Time,
+                                          const int lv, double AuxArray[] )`
+* **Function Pointer:**
+   * `Poi_AddExtraMassForGravity_Ptr`
+* **Runtime Option:**
+[[OPT__GRAVITY_EXTRA_MASS | [Runtime-Parameters]-Gravity#OPT__GRAVITY_EXTRA_MASS]]
+* **Example:**
+   * `src/SelfGravity/Poi_AddExtraMassForGravity.cpp`
+
 
 ### Equation of State
 * **Description:**
