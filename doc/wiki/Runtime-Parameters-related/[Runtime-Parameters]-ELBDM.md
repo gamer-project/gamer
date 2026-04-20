@@ -16,6 +16,8 @@ Parameters described on this page:
 [ELBDM_BASE_SPECTRAL](#ELBDM_BASE_SPECTRAL), &nbsp;
 [ELBDM_MATCH_PHASE](#ELBDM_MATCH_PHASE), &nbsp;
 [ELBDM_FIRST_WAVE_LEVEL](#ELBDM_FIRST_WAVE_LEVEL), &nbsp;
+[ELBDM_RESCALE_MASS_ERROR](#ELBDM_RESCALE_MASS_ERROR), &nbsp;
+[ELBDM_RESCALE_MASS_STEPS](#ELBDM_RESCALE_MASS_STEPS), &nbsp;
 [OPT__RES_PHASE](#OPT__RES_PHASE), &nbsp;
 [SPEC_INT_TABLE_PATH](#SPEC_INT_TABLE_PATH), &nbsp;
 [SPEC_INT_XY_INSTEAD_DEPHA](#SPEC_INT_XY_INSTEAD_DEPHA), &nbsp;
@@ -105,6 +107,21 @@ Level at which to switch to the wave solver.
     * **Restriction:**
 Only applicable when enabling the compilation option
 [[ --elbdm_scheme | [Installation]-Option-List#--elbdm_scheme]]=`HYBRID`.
+
+<a name="ELBDM_RESCALE_MASS_ERROR"></a>
+* #### `ELBDM_RESCALE_MASS_ERROR` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Rescale total ELBDM mass to its initial value every [ELBDM_RESCALE_MASS_STEPS](#ELBDM_RESCALE_MASS_STEPS) of steps.
+    * **Restriction:**
+Only applicable when enabled
+[[ OPT__CK_CONSERVATION | [Runtime-Parameters]-Miscellaneous#OPT__CK_CONSERVATION ]].
+
+<a name="ELBDM_RESCALE_MASS_STEPS"></a>
+* #### `ELBDM_RESCALE_MASS_STEPS` &ensp; (&#8805;1) &ensp; [100]
+    * **Description:**
+Number of steps between two mass rescaling when [ELBDM_RESCALE_MASS_ERROR](#ELBDM_RESCALE_MASS_ERROR) is on.
+    * **Restriction:**
+Only applicable when [ELBDM_RESCALE_MASS_ERROR](#ELBDM_RESCALE_MASS_ERROR)=1.
 
 <a name="OPT__RES_PHASE"></a>
 * #### `OPT__RES_PHASE` &ensp; (0=off, 1=on) &ensp; [0]
