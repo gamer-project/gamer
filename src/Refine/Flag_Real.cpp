@@ -776,8 +776,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 // free memory allocated by Par_CollectParticle2OneLevel()
 #  ifdef PARTICLE
-   if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_PAR_MASS_CELL  ||  OPT__FLAG_NPAR_PATCH != 0 )
-      Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch_No, FaSibBufPatch_No );
+   Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch_No, FaSibBufPatch_No );
 #  endif
 
 

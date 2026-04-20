@@ -202,16 +202,15 @@ void Par_CollectParticle2OneLevel( const int FaLv, const long FltAttBitIdx, cons
 void Par_CollectParticle2OneLevel_FreeMemory( const int FaLv, const bool SibBufPatch, const bool FaSibBufPatch )
 {
 
+// skip if Par_CollectParticle2OneLevel() has not been called
+   if ( !Particle_Collected )    return;
+
+
 // check
 #  ifdef OPENMP
    const int TID = omp_get_thread_num();
    if ( TID != 0 )   Aux_Error( ERROR_INFO, "only the master thread is allowed to call %s() (thread ID %d) !!\n", __FUNCTION__, TID );
 #  endif
-
-
-// set this flag to false to indicate that Par_CollectParticle2OneLevel() has NOT been called
-// --> must be set before invoking the load-balance alternative routine Par_LB_CollectParticle2OneLevel_FreeMemory()
-   Particle_Collected = false;
 
 
 // call the parallel version instead
@@ -234,6 +233,10 @@ void Par_CollectParticle2OneLevel_FreeMemory( const int FaLv, const bool SibBufP
    }
 
 #  endif // #ifdef LOAD_BALANCE ... else ...
+
+
+// mark that Par_CollectParticle2OneLevel() has completed
+   Particle_Collected = false;
 
 } // FUNCTION : Par_CollectParticle2OneLevel_FreeMemory
 
