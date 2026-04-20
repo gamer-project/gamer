@@ -116,7 +116,7 @@ Restriction on phase. (i.e., the averages of fine-grid data equal the coarse-gri
 * #### `SPEC_INT_TABLE_PATH` &ensp; (none) &ensp; [none]
     * **Description:**
 Path to the table of the spectral interpolation.
-See [[ ELBDM Spectral Interpolation | ELBDM-Spectral-Interpolation]] for details.
+See [[ ELBDM Spectral Interpolation | [ELBDM]-Spectral-Interpolation]] for details.
 Table download script is available at
 `example/test_problem/ELBDM/LSS_Hybrid/download_spectral_interpolation_tables.sh`.
     * **Restriction:**
