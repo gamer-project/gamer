@@ -175,7 +175,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       ColParIntAtt |= _PAR_TYPE;
    }
 
-   if ( OPT__FLAG_PAR_TARGET ) {
+   if ( OPT__FLAG_PAR_TARGET != PAR_FLAG_NONE ) {
       ColParIntAtt |= _PAR_FLAG;
    }
 
@@ -355,8 +355,12 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 //          pre-check 2. particle flag
-//          if ( OPT__FLAG_PAR_TARGET == PAR_FLAG_CAN  ||  OPT__FLAG_PAR_TARGET == PAR_FLAG_BOTH )
-//             if ( ! Par_Flag_CanRefine() )    continue;
+#           ifdef PARTICLE
+            if ( OPT__FLAG_PAR_TARGET == PAR_FLAG_CAN  ||  OPT__FLAG_PAR_TARGET == PAR_FLAG_BOTH ) {
+               if (  ! Par_Flag_TargetParticle( lv, PID, PAR_FLAG_CAN )  )
+                  continue;
+            }
+#           endif
 
 
 //          precompute various quantities for the selected flag checks
@@ -684,8 +688,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
             }}} // k, j, i
 
 
-//          flag based on the number particles per patch (which doesn't need to go through all cells one-by-one)
 #           ifdef PARTICLE
+//          flag based on the number particles per patch (which doesn't need to go through all cells one-by-one)
             if ( lv < MAX_LEVEL  &&  OPT__FLAG_NPAR_PATCH != 0 )
             {
                const int NParFlag = FlagTable_NParPatch[lv];
@@ -727,6 +731,15 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                   }
                } // if ( NParThisPatch > NParFlag )
             } // if ( OPT__FLAG_NPAR_PATCH != 0 )
+
+
+//          check if this patch contains any particles flagged for refinement
+            if (  ! amr->patch[0][lv][PID]->flag  &&
+                 ( OPT__FLAG_PAR_TARGET == PAR_FLAG_MUST || OPT__FLAG_PAR_TARGET == PAR_FLAG_BOTH )  )
+            {
+               if (  Par_Flag_TargetParticle( lv, PID, PAR_FLAG_MUST )  )
+                  amr->patch[0][lv][PID]->flag = true;
+            }
 #           endif // #ifdef PARTICLE
 
 
