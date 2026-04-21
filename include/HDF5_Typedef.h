@@ -565,6 +565,7 @@ struct InputPara_t
    int    Opt__Flag_NParCell;
    int    Opt__Flag_ParMassCell;
    int    Opt__Flag_ParTarget;
+   int    Opt__Flag_ParTargetSib;
 #  endif
    int    Opt__NoFlagNearBoundary;
    int    Opt__PatchCount;

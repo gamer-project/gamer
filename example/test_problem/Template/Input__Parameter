@@ -185,6 +185,7 @@ OPT__FLAG_NPAR_PATCH          0           # flag: # of particles per patch (Inpu
 OPT__FLAG_NPAR_CELL           0           # flag: # of particles per cell  (Input__Flag_NParCell) [0]
 OPT__FLAG_PAR_MASS_CELL       0           # flag: total particle mass per cell (Input__Flag_ParMassCell) [0]
 OPT__FLAG_PAR_TARGET          0           # flag: target particles (0=off, 1=must refine, 2=can refine, 3=must+can refine) [0]
+OPT__FLAG_PAR_TARGET_SIB      1           # flag: sibling patches of must-refine particles in OPT__FLAG_PAR_TARGET [1]
 OPT__NO_FLAG_NEAR_BOUNDARY    0           # flag: disallow refinement near the boundaries [0]
 OPT__PATCH_COUNT              1           # record the # of patches   at each level: (0=off, 1=every step, 2=every sub-step) [1]
 OPT__PARTICLE_COUNT           1           # record the # of particles at each level: (0=off, 1=every step, 2=every sub-step) [1]

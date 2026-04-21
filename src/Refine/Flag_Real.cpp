@@ -734,12 +734,36 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 //          check if this patch contains any particles flagged for refinement
-            if (  ! amr->patch[0][lv][PID]->flag  &&
-                 ( OPT__FLAG_PAR_TARGET == PAR_FLAG_MUST || OPT__FLAG_PAR_TARGET == PAR_FLAG_BOTH )  )
+            if (  ( OPT__FLAG_PAR_TARGET == PAR_FLAG_MUST || OPT__FLAG_PAR_TARGET == PAR_FLAG_BOTH )  &&
+                  ( ! amr->patch[0][lv][PID]->flag || OPT__FLAG_PAR_TARGET_SIB )  &&
+                  lv < MAX_LEVEL  )
             {
                if (  Par_Flag_TargetParticle( lv, PID, PAR_FLAG_MUST )  )
+               {
                   amr->patch[0][lv][PID]->flag = true;
-            }
+
+//                flag all siblings for OPT__FLAG_PAR_TARGET_SIB
+                  if ( OPT__FLAG_PAR_TARGET_SIB )
+                  {
+                     for (int s=0; s<26; s++)
+                     {
+                        SibPID = amr->patch[0][lv][PID]->sibling[s];
+
+#                       ifdef DEBUG_PARTICLE
+                        if ( SibPID == -1 )
+                           Aux_Error( ERROR_INFO, "SibPID == -1 --> proper-nesting check failed !!\n" );
+
+                        if ( SibPID <= SIB_OFFSET_NONPERIODIC  &&  OPT__NO_FLAG_NEAR_BOUNDARY )
+                           Aux_Error( ERROR_INFO, "SibPID (%d) <= %d when OPT__NO_FLAG_NEAR_BOUNDARY is on !!\n",
+                                      SibPID, SIB_OFFSET_NONPERIODIC );
+#                       endif
+
+//                      note that we can have SibPID <= SIB_OFFSET_NONPERIODIC when OPT__NO_FLAG_NEAR_BOUNDARY == false
+                        if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
+                     }
+                  }
+               } // if (  Par_Flag_TargetParticle( lv, PID, PAR_FLAG_MUST )  )
+            } // if (  ( ! amr->patch[0][lv][PID]->flag || OPT__FLAG_PAR_TARGET_SIB )  && ... )
 #           endif // #ifdef PARTICLE
 
 
