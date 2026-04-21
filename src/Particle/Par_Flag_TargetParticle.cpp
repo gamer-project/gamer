@@ -25,7 +25,11 @@
 //                       particles within a patch. In other words, even if the cell containing particles with PAR_FLAG < 0
 //                       and the cell satisfying a real refinement criterion (e.g., OPT__FLAG_RHO) are different, this patch will
 //                       still be refined. This simplifies the implementation and promote refinement.
-//                4. Par_CollectParticle2OneLevel() must be called before this routine
+//                4. When OPT__FLAG_PAR_TARGET == PAR_FLAG_BOTH, a patch cannot be refined if it contains no particles with PAR_FLAG < 0,
+//                   even if it contains particles with PAR_FLAG > 0.
+//                   --> This is consistent with the current implementation of refinement pre-checks. For example, a patch cannot be refined
+//                       if it fails the OPT__FLAG_REGION pre-check, even if it satisfies the OPT__FLAG_RHO criterion.
+//                5. Par_CollectParticle2OneLevel() must be called before this routine
 //
 // Parameter   :  FaLv     : Target refinement level for flagging
 //                PID      : Target patch ID
