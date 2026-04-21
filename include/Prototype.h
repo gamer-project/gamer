@@ -770,7 +770,7 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
 void Par_Init_Attribute_Mesh();
 void Par_Output_TracerParticle_Mesh();
 void Par_SetFlag( const int Flag );
-bool Par_Flag_TargetParticle( const int FaLv, const int PID, const ParFlag_t FlagMode );
+bool Par_Flag_TargetParticle( const int lv, const int PID, const ParFlag_t FlagMode );
 FieldIdx_t AddParticleAttributeFlt( const char *InputLabel );
 FieldIdx_t AddParticleAttributeInt( const char *InputLabel );
 FieldIdx_t GetParticleAttributeFltIndex( const char *InputLabel, const Check_t Check );
