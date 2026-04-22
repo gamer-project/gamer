@@ -318,49 +318,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
          {
             PID = PID0 + LocalID;
 
-//          skip this patch if any of the pre-checks below fail
-//          pre-check 1. proper-nesting condition
-            ProperNesting = true;
-
-            for (int sib=0; sib<26; sib++)
-            {
-//             do not check if sibling[]<-1 to allow for refinement around boundaries
-//             --> not considering OPT__NO_FLAG_NEAR_BOUNDARY yet
-               if ( amr->patch[0][lv][PID]->sibling[sib] == -1 )
-               {
-                  ProperNesting = false;
-                  break;
-               }
-            }
-
-//          check further if refinement around boundaries is forbidden
-            if ( OPT__NO_FLAG_NEAR_BOUNDARY  &&  ProperNesting )
-            {
-               for (int d=0; d<3; d++)
-               {
-                  int CornerL = amr->patch[0][lv][PID]->corner[d];
-                  int CornerR = CornerL + Mis_Cell2Scale( PS1, lv );
-
-                  if ( CornerL <= 0                + NoRefineBoundaryRegion  ||
-                       CornerR >= amr->BoxScale[d] - NoRefineBoundaryRegion    )
-                  {
-                     ProperNesting = false;
-                     break;
-                  }
-               }
-            }
-
-//          do flag check only if 26 siblings all exist (proper-nesting constraint)
-            if ( ! ProperNesting )  continue;
-
-
-//          pre-check 2. particle flag
-#           ifdef PARTICLE
-            if ( OPT__FLAG_PAR_TARGET == PAR_FLAG_CAN  ||  OPT__FLAG_PAR_TARGET == PAR_FLAG_BOTH ) {
-               if (  ! Par_Flag_TargetParticle( lv, PID, PAR_FLAG_CAN )  )
-                  continue;
-            }
-#           endif
+//          skip this patch if any refinement pre-check fails
+            if (  ! Flag_Precheck( lv, PID, NoRefineBoundaryRegion )  )    continue;
 
 
 //          precompute various quantities for the selected flag checks

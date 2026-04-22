@@ -4,7 +4,7 @@ static bool Check_Gradient( const int i, const int j, const int k, const real In
 static bool Check_Curl( const int i, const int j, const int k,
                         const real vx[][PS1][PS1], const real vy[][PS1][PS1], const real vz[][PS1][PS1],
                         const double Threshold );
-static bool Check_Angular_Max( const int i, const int j, const int k, const int lv, const int PID,
+       bool Check_Angular_Max( const int i, const int j, const int k, const int lv, const int PID,
                                const double CenX, const double CenY, const double CenZ,
                                const double AngRes_Max, const double AngRes_Max_R );
 static bool Check_Angular_Min( const int i, const int j, const int k, const int lv, const int PID,
@@ -64,7 +64,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 // *******************************************************************************************
 // refinement flags must be checked in the following order
-// 1. no-refinement criteria --> exclude patches outside the regions allowed for refinement
+// 1. no-refinement criteria --> exclude patches not allowed for refinement
 // 2. OPT__FLAG_INTERFERENCE --> ensure amr->patch[0][lv][PID]->switch_to_wave_flag is set correctly
 // 3. refinement criteria
 // *******************************************************************************************
@@ -74,25 +74,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 // 1. no-refinement criteria
 // *****************************
 
-// check whether the input cell is within the regions allowed to be refined
-// ===========================================================================================
-   if ( OPT__FLAG_REGION )
-   {
-      if ( Flag_Region_Ptr == NULL )   Aux_Error( ERROR_INFO, "Flag_Region_Ptr == NULL for OPT__FLAG_REGION !!\n" );
-
-      if (  !Flag_Region_Ptr( i, j, k, lv, PID )  )    return false;
-   }
-
-
-// check maximum angular resolution
-// ===========================================================================================
-   if ( OPT__FLAG_ANGULAR )
-   {
-      bool Within = Check_Angular_Max( i, j, k, lv, PID, FLAG_ANGULAR_CEN_X, FLAG_ANGULAR_CEN_Y,
-                                       FLAG_ANGULAR_CEN_Z, FlagTable_Angular[lv][0],
-                                       FlagTable_Angular[lv][2] );
-      if ( ! Within )   return false;
-   }
+// defined in Flag_Precheck() and called in Flag_Real()
 
 
 
@@ -474,6 +456,7 @@ bool Check_Curl( const int i, const int j, const int k,
 // Description :  Check if dh/R at cell (i,j,k) is smaller than the maximum angular resolution
 //
 // Note        :  1. Enabled by the runtime option "OPT__FLAG_ANGULAR"
+//                2. Invoked by Flag_Precheck()
 //
 // Parameter   :  i,j,k        : Target cell indices in the patch amr->patch[0][lv][PID]
 //                lv           : Refinement level of the target patch

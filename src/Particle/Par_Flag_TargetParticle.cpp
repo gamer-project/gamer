@@ -12,19 +12,12 @@
 // Note        :  1. Invoked by Flag_Real()
 //                2. Support two modes controlled by FlagMode:
 //                     PAR_FLAG_MUST: patches containing particles with PAR_FLAG > 0 *must* be refined to level +PAR_FLAG
+//                                    --> similar to other refinement criteria (e.g., OPT__FLAG_RHO)
+//                                    --> called by Flag_Real()
 //                     PAR_FLAG_CAN : patches containing particles with PAR_FLAG < 0 *can*  be refined to level -PAR_FLAG
-//                3. Additional notes on PAR_FLAG_CAN:
-//                   --> This behaves similarly to other refinement pre-checks (e.g., proper-nesting condition, OPT__FLAG_REGION, OPT__FLAG_ANGULAR).
-//                       Even if a patch passes this pre-check, it must still satisfy at least one real refinement criterion
-//                       (e.g., OPT__FLAG_RHO or PAR_FLAG_MUST) to trigger refinement.
-//                   --> A patch cannot be refined if it contains no particles with PAR_FLAG < 0 (except due to flag buffers),
-//                       regardless of other refinement pre-checks. Therefore, a patch is allowed to be refined only if it passes
-//                       all pre-checks *simultanesouly*.
-//                       --> This is consistent with the current implementation of OPT__FLAG_REGION and OPT__FLAG_ANGULAR.
-//                   --> Unlike OPT__FLAG_REGION and OPT__FLAG_ANGULAR, this pre-check does not consider the spatial distribution of
-//                       particles within a patch. In other words, even if the cell containing particles with PAR_FLAG < 0
-//                       and the cell satisfying a real refinement criterion (e.g., OPT__FLAG_RHO) are different, this patch will
-//                       still be refined. This simplifies the implementation and promote refinement.
+//                                    --> similar to other refinement pre-checks (e.g., OPT__FLAG_REGION)
+//                                    --> called by Flag_Precheck()
+//                3. Also see the notes in Flag_Precheck()
 //                4. When OPT__FLAG_PAR_TARGET == PAR_FLAG_BOTH, a patch cannot be refined if it contains no particles with PAR_FLAG < 0,
 //                   even if it contains particles with PAR_FLAG > 0.
 //                   --> This is consistent with the current implementation of refinement pre-checks. For example, a patch cannot be refined

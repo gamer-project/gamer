@@ -390,6 +390,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
                  const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
                  const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff,
                  const real *Interf_Var, const real Spectral_Cond );
+bool Flag_Precheck( const int lv, const int PID, const int NoRefineBnd );
 bool Flag_Lohner( const int i, const int j, const int k, const OptLohnerForm_t Form, const real *Var1D, const real *Ave1D,
                   const real *Slope1D, const int NVar, const double Threshold, const double Filter, const double Soften );
 void Refine( const int lv, const UseLBFunc_t UseLBFunc );
