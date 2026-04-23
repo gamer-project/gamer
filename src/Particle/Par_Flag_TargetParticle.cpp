@@ -76,8 +76,12 @@ bool Par_Flag_TargetParticle( const int lv, const int PID, const FlagParTarget_t
 
    for (int p=0; p<NPar; p++)
    {
-      if ( UseCopy )    Flag = amr->patch[0][lv][PID]->ParAttInt_Copy[PAR_FLAG][p];
-      else              Flag = amr->Par->Flag[ ParList[p] ];
+#     ifdef LOAD_BALANCE
+      if ( UseCopy )
+         Flag = amr->patch[0][lv][PID]->ParAttInt_Copy[PAR_FLAG][p];
+      else
+#     endif
+         Flag = amr->Par->Flag[ ParList[p] ];
 
 //    return immediately if the patch satisfies the refinement checks
       if      ( FlagMode == FLAG_PAR_MUST ) {
