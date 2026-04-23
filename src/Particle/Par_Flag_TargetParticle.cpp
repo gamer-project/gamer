@@ -11,14 +11,14 @@
 //
 // Note        :  1. Invoked by Flag_Real()
 //                2. Support two modes controlled by FlagMode:
-//                     PAR_FLAG_MUST: patches containing particles with PAR_FLAG > 0 *must* be refined to level +PAR_FLAG
+//                     FLAG_PAR_MUST: patches containing particles with PAR_FLAG > 0 *must* be refined to level +PAR_FLAG
 //                                    --> similar to other refinement criteria (e.g., OPT__FLAG_RHO)
 //                                    --> called by Flag_Real()
-//                     PAR_FLAG_CAN : patches containing particles with PAR_FLAG < 0 *can*  be refined to level -PAR_FLAG
+//                     FLAG_PAR_CAN : patches containing particles with PAR_FLAG < 0 *can*  be refined to level -PAR_FLAG
 //                                    --> similar to other refinement pre-checks (e.g., OPT__FLAG_REGION)
 //                                    --> called by Flag_Precheck()
 //                3. Also see the notes in Flag_Precheck()
-//                4. When OPT__FLAG_PAR_TARGET == PAR_FLAG_BOTH, a patch cannot be refined if it contains no particles with PAR_FLAG < 0,
+//                4. When OPT__FLAG_PAR_TARGET == FLAG_PAR_BOTH, a patch cannot be refined if it contains no particles with PAR_FLAG < 0,
 //                   even if it contains particles with PAR_FLAG > 0.
 //                   --> This is consistent with the current implementation of refinement pre-checks. For example, a patch cannot be refined
 //                       if it fails the OPT__FLAG_REGION pre-check, even if it satisfies the OPT__FLAG_RHO criterion.
@@ -29,10 +29,10 @@
 //                FlagMode : See the "Note" section above
 //
 // Return      :  true  : The target patch contains particles flagged for refinement
-//                        (i.e., lv < PAR_FLAG for PAR_FLAG_MUST or lv < -PAR_FLAG for PAR_FLAG_CAN)
+//                        (i.e., lv < PAR_FLAG for FLAG_PAR_MUST or lv < -PAR_FLAG for FLAG_PAR_CAN)
 //                false : Otherwise
 //-------------------------------------------------------------------------------------------------------
-bool Par_Flag_TargetParticle( const int lv, const int PID, const ParFlag_t FlagMode )
+bool Par_Flag_TargetParticle( const int lv, const int PID, const FlagParTarget_t FlagMode )
 {
 
 // checks
@@ -43,7 +43,7 @@ bool Par_Flag_TargetParticle( const int lv, const int PID, const ParFlag_t FlagM
    if ( PID < 0  ||  PID >= amr->num[lv] )
       Aux_Error( ERROR_INFO, "incorrect PID = %d (amr->num[%d] = %d) !!\n", PID, lv, amr->num[lv] );
 
-   if ( FlagMode != PAR_FLAG_MUST  &&  FlagMode != PAR_FLAG_CAN )
+   if ( FlagMode != FLAG_PAR_MUST  &&  FlagMode != FLAG_PAR_CAN )
       Aux_Error( ERROR_INFO, "incorrect FlagMode = %d !!\n", FlagMode );
 #  endif
 
@@ -80,11 +80,11 @@ bool Par_Flag_TargetParticle( const int lv, const int PID, const ParFlag_t FlagM
       else              Flag = amr->Par->Flag[ ParList[p] ];
 
 //    return immediately if the patch satisfies the refinement checks
-      if      ( FlagMode == PAR_FLAG_MUST ) {
+      if      ( FlagMode == FLAG_PAR_MUST ) {
          if ( Flag > 0  &&  lv < +Flag )   return true;
       }
 
-      else if ( FlagMode == PAR_FLAG_CAN ) {
+      else if ( FlagMode == FLAG_PAR_CAN ) {
          if ( Flag < 0  &&  lv < -Flag )   return true;
       }
 

@@ -175,7 +175,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       ColParIntAtt |= _PAR_TYPE;
    }
 
-   if ( OPT__FLAG_PAR_TARGET != PAR_FLAG_NONE ) {
+   if ( OPT__FLAG_PAR_TARGET != FLAG_PAR_NONE ) {
       ColParIntAtt |= _PAR_FLAG;
    }
 
@@ -693,11 +693,11 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 //          check if this patch contains any particles flagged for refinement
-            if (  ( OPT__FLAG_PAR_TARGET == PAR_FLAG_MUST || OPT__FLAG_PAR_TARGET == PAR_FLAG_BOTH )  &&
+            if (  ( OPT__FLAG_PAR_TARGET == FLAG_PAR_MUST || OPT__FLAG_PAR_TARGET == FLAG_PAR_BOTH )  &&
                   ( ! amr->patch[0][lv][PID]->flag || OPT__FLAG_PAR_TARGET_SIB )  &&
                   lv < MAX_LEVEL  )
             {
-               if (  Par_Flag_TargetParticle( lv, PID, PAR_FLAG_MUST )  )
+               if (  Par_Flag_TargetParticle( lv, PID, FLAG_PAR_MUST )  )
                {
                   amr->patch[0][lv][PID]->flag = true;
 
@@ -721,7 +721,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                         if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
                      }
                   }
-               } // if (  Par_Flag_TargetParticle( lv, PID, PAR_FLAG_MUST )  )
+               } // if (  Par_Flag_TargetParticle( lv, PID, FLAG_PAR_MUST )  )
             } // if (  ( ! amr->patch[0][lv][PID]->flag || OPT__FLAG_PAR_TARGET_SIB )  && ... )
 #           endif // #ifdef PARTICLE
 

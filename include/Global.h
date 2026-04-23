@@ -247,7 +247,7 @@ extern bool            OPT__FLAG_PAR_TARGET_SIB;
 extern int             OPT__OUTPUT_PAR_MODE, OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
 extern double          FlagTable_ParMassCell[NLEVEL-1];
 extern ParOutputDens_t OPT__OUTPUT_PAR_DENS;
-extern ParFlag_t       OPT__FLAG_PAR_TARGET;
+extern FlagParTarget_t OPT__FLAG_PAR_TARGET;
 extern int             PAR_IC_FLOAT8;
 extern int             PAR_IC_INT8;
 #endif

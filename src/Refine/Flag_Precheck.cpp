@@ -15,7 +15,7 @@ bool Check_Angular_Max( const int i, const int j, const int k, const int lv, con
 // Note        :  1. Called by Flag_Real()
 //                2. Currently implemented pre-checks: proper-nesting condition, target particles, OPT__FLAG_REGION, OPT__FLAG_ANGULAR
 //                3. Even if a patch passes all pre-checks, it must still satisfy at least one real refinement criterion
-//                   (e.g., OPT__FLAG_RHO or PAR_FLAG_MUST) to trigger refinement
+//                   (e.g., OPT__FLAG_RHO or FLAG_PAR_MUST) to trigger refinement
 //                4. A patch is allowed to be refined only if it passes all pre-checks *simultanesouly*
 //
 // Parameter   :  lv          : Target refinement level for flagging
@@ -66,9 +66,9 @@ bool Flag_Precheck( const int lv, const int PID, const int NoRefineBnd )
 // pre-check 2. particle flag
 // ===========================================================================================
 #  ifdef PARTICLE
-   if ( OPT__FLAG_PAR_TARGET == PAR_FLAG_CAN  ||  OPT__FLAG_PAR_TARGET == PAR_FLAG_BOTH )
+   if ( OPT__FLAG_PAR_TARGET == FLAG_PAR_CAN  ||  OPT__FLAG_PAR_TARGET == FLAG_PAR_BOTH )
    {
-      if (  ! Par_Flag_TargetParticle( lv, PID, PAR_FLAG_CAN )  )
+      if (  ! Par_Flag_TargetParticle( lv, PID, FLAG_PAR_CAN )  )
          return false;
    }
 #  endif

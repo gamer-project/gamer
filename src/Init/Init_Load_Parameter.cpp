@@ -211,7 +211,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__FLAG_NPAR_PATCH",       &OPT__FLAG_NPAR_PATCH,            0,               0,             2              );
    ReadPara->Add( "OPT__FLAG_NPAR_CELL",        &OPT__FLAG_NPAR_CELL,             false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_PAR_MASS_CELL",    &OPT__FLAG_PAR_MASS_CELL,         false,           Useless_bool,  Useless_bool   );
-   ReadPara->Add( "OPT__FLAG_PAR_TARGET",       &OPT__FLAG_PAR_TARGET,            PAR_FLAG_NONE,   0,             3              );
+   ReadPara->Add( "OPT__FLAG_PAR_TARGET",       &OPT__FLAG_PAR_TARGET,            FLAG_PAR_NONE,   0,             3              );
    ReadPara->Add( "OPT__FLAG_PAR_TARGET_SIB",   &OPT__FLAG_PAR_TARGET_SIB,        true,            Useless_bool,  Useless_bool   );
 #  endif
    ReadPara->Add( "OPT__NO_FLAG_NEAR_BOUNDARY", &OPT__NO_FLAG_NEAR_BOUNDARY,      false,           Useless_bool,  Useless_bool   );

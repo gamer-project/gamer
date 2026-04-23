@@ -235,7 +235,7 @@ bool                 OPT__FLAG_PAR_TARGET_SIB;
 int                  OPT__OUTPUT_PAR_MODE, OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, PAR_IC_FLOAT8, PAR_IC_INT8, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
 double               FlagTable_ParMassCell[NLEVEL-1];
 ParOutputDens_t      OPT__OUTPUT_PAR_DENS;
-ParFlag_t            OPT__FLAG_PAR_TARGET;
+FlagParTarget_t      OPT__FLAG_PAR_TARGET;
 #endif
 
 // (2-6) yt inline analysis
