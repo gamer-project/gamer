@@ -6,8 +6,44 @@ Disable: COMOVING
 
 Default setup:
 ========================================
+1. PAR_FLAG_INIT must be 9999 to manually assign particle flags
+2. OPT__FREEZE_FLUID must be 1 for this test
+3. Gravity is disabled by DT__PARACC = 0 and OPT__SELF_GRAVITY = 0
+4. MAX_LEVEL = 2
+5. Periodic boundary conditions
+6. OPT__FLAG_RHO is reset automatically:
+      1: OPT__FLAG_PAR_TARGET == FLAG_PAR_CAN or FLAG_PAR_NONE
+      0: OPT__FLAG_PAR_TARGET == FLAG_PAR_MUST or FLAG_PAR_BOTH
+7. PAR_NPAR is reset automatically:
+      5: OPT__FLAG_PAR_TARGET == FLAG_PAR_BOTH
+      3: otherwise
+8. Gas density varies linearly from ParFlag_DensL at the left boundary to ParFlag_DensR at the right boundary
 
 
 Note:
 ========================================
-1.
+1. Objective: Demonstrate grid refinement under different particle-flagging modes controlled by OPT__FLAG_PAR_TARGET.
+   Common setup: Three particles move along +x with different particle flags (PAR_FLAG).
+
+2. Particle-flagging modes:
+   OPT__FLAG_PAR_TARGET = 0: Display grid refinement determined solely by gas density.
+      - Disable particle-based refinement flag.
+      - Enable OPT__FLAG_RHO.
+
+   OPT__FLAG_PAR_TARGET = 1: Illustrate grid refinement determined by must-refine particles (i.e., PAR_FLAG > 0 ).
+      - From bottom to top, particles 0, 1, and 2 have PAR_FLAG = +ParFlag_MinLv, +ParFlag_MaxLv, and 0, respectively.
+      - Disable OPT__FLAG_RHO.
+
+   OPT__FLAG_PAR_TARGET = 2: Illustrate grid refinement determined by can-refine particles (i.e., PAR_FLAG < 0 ) and gas density.
+      - From bottom to top, particles 0, 1, and 2 have PAR_FLAG = -ParFlag_MinLv, -ParFlag_MaxLv, and 0, respectively.
+      - Enable OPT__FLAG_RHO.
+
+   OPT__FLAG_PAR_TARGET = 3: Illustrate grid refinement determined by both must-refined and can-refine particles.
+      - Similar to OPT__FLAG_PAR_TARGET = 1, except that two additional particles with PAR_FLAG = -ParFlag_MaxLv are placed around
+        particle 1 to allow refinement.
+      - By contrast, particle 0, even with PAR_FLAG = +ParFlag_MinLv, will not trigger refinement since there are no nearby
+        *can-refine* particles with PAR_FLAG < 0.
+      - Disable OPT__FLAG_RHO.
+
+3. Use the python script "plot_gas_par.py" to plot gas density, particles, and grid structure.
+   Use the bash script "make_movie.sh" to combine PNG images into a movie with ffmpeg.
