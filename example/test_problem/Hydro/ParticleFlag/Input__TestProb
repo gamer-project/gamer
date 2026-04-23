@@ -1,0 +1,5 @@
+# problem-specific runtime parameters
+ParFlag_MinLv        1              # minimum refinement level [1]
+ParFlag_MaxLv        2              # maximum refinement level [2]
+ParFlag_DensL        1.0e0          # gas density at the box left  edge [1.0e0]
+ParFlag_DensR        1.0e2          # ...                    right ...  [1.0e2]
