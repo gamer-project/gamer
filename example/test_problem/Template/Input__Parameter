@@ -43,11 +43,13 @@ TESTPROB_ID                   0           # test problem ID [0]
                                           #   15: HYDRO MHD linear wave (+MHD)
                                           #   16: HYDRO Jeans instability (+GRAVITY) [+MHD]
                                           #   17: HYDRO particle in equilibrium (+GRAVITY & PARTICLE)
+                                          #   18: HYDRO particle general test (+TRACER & PARTICLE)
                                           #   19: HYDRO energy power spectrum
                                           #   20: HYDRO MHD Cosmic Ray Soundwave
                                           #   21: HYDRO MHD Cosmic Ray Shocktube
                                           #   23: HYDRO MHD Cosmic Ray Diffusion
                                           #   24: HYDRO Grackle Test (+SUPPORT_GRACKLE)
+                                          #   25: HYDRO particle flag (+GRAVITY & PARTICLE)
                                           #  100: HYDRO CDM cosmological simulation (+GRAVITY & COMOVING & PARTICLE)
                                           #  101: HYDRO Zeldovich pancake collapse (+GRAVITY & COMOVING & PARTICLE)
                                           #  102: HYDRO Grackle comoving (+GRAVITY & COMOVING & GRACKLE )
@@ -63,6 +65,7 @@ TESTPROB_ID                   0           # test problem ID [0]
                                           # 1009: ELBDM large-scale structure simulation (+GRAVITY, +COMOVING)
                                           # 1010: ELBDM plane wave
                                           # 1011: ELBDM small wave perturbations on homogeneous background
+
 
 # code units (in cgs)
 OPT__UNIT                     0           # specify code units -> must set exactly 3 basic units below [0] ##USELESS FOR COMOVING##
@@ -97,12 +100,13 @@ PAR_INTERP                    3           # particle interpolation scheme: (1=NG
 PAR_INTEG                     2           # particle integration scheme: (1=Euler, 2=KDK) [2]
 PAR_TR_INTERP                 3           # tracer particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [3]
 PAR_TR_INTEG                  2           # tracer particle integration scheme: (1=Euler, 2=RK2) [2]
+PAR_TR_VEL_CORR               0           # correct tracer particle velocities in regions of discontinuous flow [0]
 PAR_IMPROVE_ACC               1           # improve force accuracy at patch boundaries [1] ##STORE_POT_GHOST and PAR_INTERP=2/3 ONLY##
 PAR_PREDICT_POS               1           # predict particle position during mass assignment [1]
 PAR_REMOVE_CELL              -1.0         # remove particles X-root-cells from the boundaries (non-periodic BC only; <0=auto) [-1.0]
 OPT__FREEZE_PAR               0           # do not update particles (except for tracers) [0]
-PAR_TR_VEL_CORR               0           # correct tracer particle velocities in regions of discontinuous flow [0]
 OPT__PAR_INIT_CHECK           1           # check particle initialization (only works for PAR_INIT != 2) [1]
+
 
 # cosmology (COMOVING only)
 A_INIT                        0.01        # initial scale factor
@@ -287,6 +291,7 @@ ELBDM_BASE_SPECTRAL           0           # adopt the spectral method to evolve 
 ELBDM_MATCH_PHASE             1           # match child phases with father phases during data restriction [1] ##ELBDM_HYBRID ONLY##
 ELBDM_FIRST_WAVE_LEVEL       -1           # level at which to switch to the wave solver (must >=1) [-1] ##ELBDM_HYBRID ONLY##
 
+
 # fluid solvers in all models
 FLU_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU fluid solver (<=0=auto) [-1]
 GPU_NSTREAM                  -1           # number of CUDA streams for the asynchronous memory copy in GPU (<=0=auto) [-1]
@@ -366,6 +371,7 @@ OPT__INIT_GRID_WITH_OMP       1           # enable OpenMP when assigning the ini
 OPT__GPUID_SELECT            -1           # GPU ID selection mode: (-3=Laohu, -2=CUDA, -1=MPI rank, >=0=input) [-1]
 INIT_SUBSAMPLING_NCELL        0           # perform sub-sampling during initialization: (0=off, >0=# of sub-sampling cells) [0]
 OPT__FFTW_STARTUP            -1           # initialise fftw plans: (-1=auto, 0=ESTIMATE, 1=MEASURE, 2=PATIENT (only FFTW3)) [-1]
+
 
 # interpolation schemes: (-1=auto, 1=MinMod-3D, 2=MinMod-1D, 3=vanLeer, 4=CQuad, 5=Quad, 6=CQuar, 7=Quar, 8=Spectral (##ELBDM & SUPPORT_SPECTRAL_INT ONLY##))
 OPT__INT_TIME                 1           # perform "temporal" interpolation for OPT__DT_LEVEL == 2/3 [1]
