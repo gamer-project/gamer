@@ -16,7 +16,7 @@ SIMU_OPTION += -DMODEL=HYDRO
 #SIMU_OPTION += -DFLOAT8
 
 # double precision for particle floating-point attributes
-#SIMU_OPTION += -DFLOAT8_PAR
+SIMU_OPTION += -DFLOAT8_PAR
 
 # long integer for particle integer attributes
 SIMU_OPTION += -DINT8_PAR
