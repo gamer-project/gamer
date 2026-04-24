@@ -26,7 +26,7 @@ particle_catalog = RandomCatalog(csize=npar) # overwritten by the actual values 
 particle_catalog['Mass'] = mass
 particle_catalog['Position'] = pos
 
-# create a mesh object 
+# create a mesh object
 # ref: https://nbodykit.readthedocs.io/en/latest/api/_autosummary/nbodykit.base.catalog.html#nbodykit.base.catalog.CatalogSource.to_mesh
 mesh = particle_catalog.to_mesh(Nmesh=Nmesh, BoxSize=boxsize)
 

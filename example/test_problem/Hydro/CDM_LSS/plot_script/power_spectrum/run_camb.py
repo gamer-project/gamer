@@ -36,7 +36,7 @@ class Cosmo:
     elif cosmology == "Planck18":
       self.H0 = 67.66
       self.ombh2 = 0.02242
-      self.omch2 = 0.11933  
+      self.omch2 = 0.11933
       self.As = 2.105e-9    # sigma8 = 0.8102
       self.ns = 0.9665
     else:
