@@ -286,7 +286,7 @@ Procedure for outputting new variables:
 //                                             GRACKLE_HYDROGEN_MFRAC, OPT__UNFREEZE_GRACKLE,
 //                                             OPT__OUTPUT_GRACKLE_TEMP, OPT__OUTPUT_GRACKLE_MU, OPT__OUTPUT_GRACKLE_TCOOL,
 //                                             DT__GRACKLE_COOLING, OPT__FLAG_COOLING_LEN, FlagTable_CoolingLen
-//                2508 : 2026/04/18 --> output OPT__FLAG_PAR_TARGET, OPT__FLAG_PAR_TARGET_SIB, Par->FlagInit
+//                2508 : 2026/04/18 --> output OPT__FLAG_PAR_TARGET, OPT__FLAG_PAR_TARGET_SIB, Par->FlagInit, particle integer attribute PAR_FLAG
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
