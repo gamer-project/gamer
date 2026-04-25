@@ -35,6 +35,8 @@ Parameters described on this page:
 [OPT__FLAG_NPAR_PATCH](#OPT__FLAG_NPAR_PATCH), &nbsp;
 [OPT__FLAG_NPAR_CELL](#OPT__FLAG_NPAR_CELL), &nbsp;
 [OPT__FLAG_PAR_MASS_CELL](#OPT__FLAG_PAR_MASS_CELL), &nbsp;
+[OPT__FLAG_PAR_TARGET](#OPT__FLAG_PAR_TARGET), &nbsp;
+[OPT__FLAG_PAR_TARGET_SIB](#OPT__FLAG_PAR_TARGET_SIB), &nbsp;
 [OPT__NO_FLAG_NEAR_BOUNDARY](#OPT__NO_FLAG_NEAR_BOUNDARY), &nbsp;
 [OPT__PATCH_COUNT](#OPT__PATCH_COUNT), &nbsp;
 [OPT__PARTICLE_COUNT](#OPT__PARTICLE_COUNT), &nbsp;
@@ -469,6 +471,25 @@ Specify the refinement thresholds on different levels in the input file
 `Input__Flag_ParMassCell` with the [[specific format | [Runtime-Parameters]-Input__Flag_{}]].
 An example file can be found at `example/input/Input__Flag_ParMassCell`.
     * **Restriction:**
+
+<a name="OPT__FLAG_PAR_TARGET"></a>
+* #### `OPT__FLAG_PAR_TARGET` &ensp; (0=off, 1=must refine, 2=can refine, 3=must+can refine) &ensp; [0]
+    * **Description:**
+Refinement criterion: target particles. \
+`OPT__FLAG_PAR_TARGET = 0`: Disable this criterion. \
+`OPT__FLAG_PAR_TARGET = 1`: Patches containing particles with the integer attribute `PAR_FLAG > 0` _must_ be refined to level `PAR_FLAG`. This behaves similarly to other refinement criteria such as [OPT__FLAG_RHO](#OPT__FLAG_RHO). \
+`OPT__FLAG_PAR_TARGET = 2`: Patches containing particles with the integer attribute `PAR_FLAG < 0` _can_ be refined to level `|PAR_FLAG|`. In other words, such patches will be refined if they satisfy at least one refinement criterion. This behaves similarly to other refinement pre-checks such as [OPT__FLAG_REGION](#OPT__FLAG_REGION). \
+`OPT__FLAG_PAR_TARGET = 3`: Enable both `OPT__FLAG_PAR_TARGET = 1` and `OPT__FLAG_PAR_TARGET = 2`.
+
+      For a demonstration, see the `ParticleFlag` test problem.
+    * **Restriction:**
+
+<a name="OPT__FLAG_PAR_TARGET_SIB"></a>
+* #### `OPT__FLAG_PAR_TARGET_SIB` &ensp; (0=off, 1=on) &ensp; [1]
+    * **Description:**
+Also refine all sibling patches of patches containing must-refine particles.
+    * **Restriction:**
+Only applicable when [OPT__FLAG_PAR_TARGET](#OPT__FLAG_PAR_TARGET) is set to `1` or `3`.
 
 <a name="OPT__NO_FLAG_NEAR_BOUNDARY"></a>
 * #### `OPT__NO_FLAG_NEAR_BOUNDARY` &ensp; (0=off, 1=on) &ensp; [0]

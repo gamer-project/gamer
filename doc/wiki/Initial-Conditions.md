@@ -201,6 +201,11 @@ The built-in particle types (defined in `include/Macro.h`) include
 For `PTYPE_TRACER`, one must also enable the compilation option
 [[--tracer | [Installation]-Option-List#--tracer]].
 
+When [[PAR_FLAG_INIT | [Runtime-Parameters]-Particles#PAR_FLAG_INIT]]=9999,
+particle refinement flags must be assigned manually by setting `AllAttributeInt[PAR_FLAG]`.
+For a concrete example, see
+`src/TestProblem/Hydro/ParticleTest/Par_Init_ByFunction_ParticleTest.cpp`.
+
 The following example shows `Par_Init_ByFunction()` in
 `src/Particle/Par_Init_ByFunction.cpp`:
 
@@ -674,9 +679,11 @@ By default, `NUM_ATTRIBUTE` is equal to
 `7` + [[--par_attribute_flt | [Installation]-Option-List#--par_attribute_flt]] + [[--par_attribute_int | [Installation]-Option-List#--par_attribute_int]],
 corresponding to particle mass, position x/y/z, velocity x/y/z,
 type, and user-specified attributes (and in exactly this order).
-One can also use [[PAR_IC_MASS | [Runtime-Parameters]-Particles#PAR_IC_MASS]] / [[PAR_IC_TYPE | [Runtime-Parameters]-Particles#PAR_IC_TYPE]]
-to assign the same particle mass / type to all particles,
-in which case the file `PAR_IC` should not store particle mass / type.
+One can also use [[PAR_IC_MASS | [Runtime-Parameters]-Particles#PAR_IC_MASS]]
+ / [[PAR_IC_TYPE | [Runtime-Parameters]-Particles#PAR_IC_TYPE]]
+ / [[PAR_FLAG_INIT | [Runtime-Parameters]-Particles#PAR_FLAG_INIT]] $\ne 9999$
+to assign the same particle mass / type / refinement flag to all particles,
+in which case the file `PAR_IC` should not store particle mass / type / refinement flag.
 
 The following C++ example constructs a particle initial condition
 file with 1000 particles assuming [[PAR_IC_MASS | [Runtime-Parameters]-Particles#PAR_IC_MASS]]<0,
