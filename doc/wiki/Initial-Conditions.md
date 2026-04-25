@@ -204,7 +204,7 @@ For `PTYPE_TRACER`, one must also enable the compilation option
 When [[PAR_FLAG_INIT | [Runtime-Parameters]-Particles#PAR_FLAG_INIT]]=9999,
 particle refinement flags must be assigned manually by setting `AllAttributeInt[PAR_FLAG]`.
 For a concrete example, see
-`src/TestProblem/Hydro/ParticleTest/Par_Init_ByFunction_ParticleTest.cpp`.
+`src/TestProblem/Hydro/ParticleFlag/Par_Init_ByFunction_ParFlag.cpp`.
 
 The following example shows `Par_Init_ByFunction()` in
 `src/Particle/Par_Init_ByFunction.cpp`:
