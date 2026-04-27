@@ -238,7 +238,7 @@ static void AddNewField_ELBDM_UniformGranule( void )
 {
 
 #  if ( NCOMP_PASSIVE_USER > 0 )
-   Idx_Dens0 = AddField( "Dens0", FIXUP_FLUX_NO, FIXUP_REST_NO, NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_Dens0 = AddField( "Dens0", FIXUP_FLUX_NO, FIXUP_REST_NO, FLOOR_NO, NORMALIZE_NO, INTERP_FRAC_NO );
 #  endif
 
 } // FUNCTION : AddNewField_ELBDM_UniformGranule
