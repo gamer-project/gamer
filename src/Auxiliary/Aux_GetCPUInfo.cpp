@@ -1,4 +1,6 @@
 #include "GAMER.h"
+#include <algorithm>
+#include <vector>
 
 
 
@@ -24,7 +26,8 @@ void Aux_GetCPUInfo( const char *FileName )
    size_t len = 0;
    char String[2][MAX_STRING];
    char Trash[MAX_STRING];
-   int SocketNow = -1, SocketPrevious = -1;
+   int SocketNow;
+   std::vector<int> SocketList;
    int CorePerSocket = 0, NSocket = 0;
    bool GotFirstCPUInfo = false;
 
@@ -47,12 +50,15 @@ void Aux_GetCPUInfo( const char *FileName )
       if (  strcmp( String[0], "physical" ) == 0  &&  strcmp( String[1], "id" ) == 0 )
       {
          sscanf( line, "%s%s%s%d", String[0], String[1], Trash, &SocketNow );
-         if ( SocketNow != SocketPrevious )
-         {
-            SocketPrevious = SocketNow;
-            NSocket++;
-         }
+         SocketList.push_back(SocketNow);
       }
+      // Required for std::unique to work
+      std::sort(SocketList.begin(), SocketList.end());
+      // Moves unique elements to front, returns iterator to new end
+      auto last = std::unique(SocketList.begin(), SocketList.end());
+      // Remove trailing duplicates
+      SocketList.erase(last, SocketList.end());
+      NSocket = SocketList.size();
 
       if ( GotFirstCPUInfo )   continue;
 
