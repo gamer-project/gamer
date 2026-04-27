@@ -302,7 +302,7 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
             {
                LB_Index2Corner( lv, LB_Idx, Cr, CHECK_ON );
 
-//             father patch is still unkown, data array is not allocated yet
+//             father patch is still unknown, data array is not allocated yet
                amr->pnew( lv, Cr[0],        Cr[1],        Cr[2],        -1, false, false, false );
                amr->pnew( lv, Cr[0]+PScale, Cr[1],        Cr[2],        -1, false, false, false );
                amr->pnew( lv, Cr[0],        Cr[1]+PScale, Cr[2],        -1, false, false, false );
@@ -328,7 +328,7 @@ void LB_AllocateBufferPatch_Sibling( const int lv )
                   Cr[1] = PGScale*( -1 + Cr1D%(NPG_Padded[0]*NPG_Padded[1])/NPG_Padded[0] );
                   Cr[2] = PGScale*( -1 + Cr1D/(NPG_Padded[0]*NPG_Padded[1])               );
 
-//                father patch is still unkown, data array is not allocated yet
+//                father patch is still unknown, data array is not allocated yet
                   amr->pnew( lv, Cr[0],        Cr[1],        Cr[2],        -1, false, false, false );
                   amr->pnew( lv, Cr[0]+PScale, Cr[1],        Cr[2],        -1, false, false, false );
                   amr->pnew( lv, Cr[0],        Cr[1]+PScale, Cr[2],        -1, false, false, false );

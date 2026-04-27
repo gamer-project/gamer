@@ -378,7 +378,7 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                      const double r   = sqrt( r2 );
                      const int    bin = ( LogBin ) ? (  (r<dr_min) ? 0 : int( log(r/dr_min)/log(LogBinRatio) ) + 1  )
                                                    : int( r/dr_min );
-//                   prevent from round-off errors
+//                   prevent round-off errors
                      if ( bin >= Prof[0]->NBin )   Patch_Bin[TID][LocalID][k][j][i] = CellSkip;
                      else                          Patch_Bin[TID][LocalID][k][j][i] = bin;
 
@@ -541,11 +541,11 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 //                   update the profile
                      const int bin = Patch_Bin[TID][LocalID][k][j][i];
 
-                     OMP_Data  [p][TID][bin] += Patch_Data[TID][LocalID][k][j][i]*Weight;
-                     OMP_Weight[p][TID][bin] += Weight;
-                     OMP_NCell [p][TID][bin] ++;
+                     OMP_Data      [p][TID][bin] += Patch_Data[TID][LocalID][k][j][i]*Weight;
+                     OMP_Weight    [p][TID][bin] += Weight;
+                     OMP_NCell     [p][TID][bin] ++;
                      if ( GetSigma )
-                        OMP_Data_Sigma[p][TID][bin] += SQR( Patch_Data[TID][LocalID][k][j][i] )*Weight;
+                     OMP_Data_Sigma[p][TID][bin] += SQR( Patch_Data[TID][LocalID][k][j][i] )*Weight;
 
                   } // i,j,k
                } // for (int LocalID=0; LocalID<8; LocalID++)
@@ -572,22 +572,22 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
    {
       for (int b=0; b<Prof[0]->NBin; b++)
       {
-         Prof[p]->Data  [b] = OMP_Data  [p][0][b];
-         Prof[p]->Weight[b] = OMP_Weight[p][0][b];
-         Prof[p]->NCell [b] = OMP_NCell [p][0][b];
+         Prof[p]->Data      [b] = OMP_Data      [p][0][b];
+         Prof[p]->Weight    [b] = OMP_Weight    [p][0][b];
+         Prof[p]->NCell     [b] = OMP_NCell     [p][0][b];
          if ( GetSigma )
-            Prof[p]->Data_Sigma[b] = OMP_Data_Sigma[p][0][b];
+         Prof[p]->Data_Sigma[b] = OMP_Data_Sigma[p][0][b];
 
       }
 
       for (int t=1; t<NT; t++)
       for (int b=0; b<Prof[0]->NBin; b++)
       {
-         Prof[p]->Data  [b] += OMP_Data  [p][t][b];
-         Prof[p]->Weight[b] += OMP_Weight[p][t][b];
-         Prof[p]->NCell [b] += OMP_NCell [p][t][b];
+         Prof[p]->Data      [b] += OMP_Data      [p][t][b];
+         Prof[p]->Weight    [b] += OMP_Weight    [p][t][b];
+         Prof[p]->NCell     [b] += OMP_NCell     [p][t][b];
          if ( GetSigma )
-            Prof[p]->Data_Sigma[b] += OMP_Data_Sigma[p][t][b];
+         Prof[p]->Data_Sigma[b] += OMP_Data_Sigma[p][t][b];
       }
    }
 
@@ -606,24 +606,11 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
 #  ifndef SERIAL
    for (int p=0; p<NProf; p++)
    {
-      if ( MPI_Rank == 0 )
-      {
-         MPI_Reduce( MPI_IN_PLACE,        Prof[p]->Data,       Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-         MPI_Reduce( MPI_IN_PLACE,        Prof[p]->Weight,     Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-         MPI_Reduce( MPI_IN_PLACE,        Prof[p]->NCell,      Prof[p]->NBin, MPI_LONG,   MPI_SUM, 0, MPI_COMM_WORLD );
-         if ( GetSigma )
-            MPI_Reduce( MPI_IN_PLACE,     Prof[p]->Data_Sigma, Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-
-      }
-
-      else
-      {
-         MPI_Reduce( Prof[p]->Data,          NULL,             Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-         MPI_Reduce( Prof[p]->Weight,        NULL,             Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-         MPI_Reduce( Prof[p]->NCell,         NULL,             Prof[p]->NBin, MPI_LONG,   MPI_SUM, 0, MPI_COMM_WORLD );
-         if ( GetSigma )
-            MPI_Reduce( Prof[p]->Data_Sigma, NULL,             Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
-      }
+      MPI_Reduce( (MPI_Rank==0)?MPI_IN_PLACE:Prof[p]->Data,       Prof[p]->Data,       Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+      MPI_Reduce( (MPI_Rank==0)?MPI_IN_PLACE:Prof[p]->Weight,     Prof[p]->Weight,     Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
+      MPI_Reduce( (MPI_Rank==0)?MPI_IN_PLACE:Prof[p]->NCell,      Prof[p]->NCell,      Prof[p]->NBin, MPI_LONG,   MPI_SUM, 0, MPI_COMM_WORLD );
+      if ( GetSigma )
+      MPI_Reduce( (MPI_Rank==0)?MPI_IN_PLACE:Prof[p]->Data_Sigma, Prof[p]->Data_Sigma, Prof[p]->NBin, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
    }
 #  endif
 

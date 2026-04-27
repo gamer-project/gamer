@@ -18,7 +18,7 @@
 
 #else // #ifdef __CUDACC__
 
-void Hydro_Con2Pri( const real In[], real Out[], const real MinPres,
+void Hydro_Con2Pri( const real In[], real Out[], const real MinPres, const long PassiveFloor,
                     const bool FracPassive, const int NFrac, const int FracIdx[],
                     const bool JeansMinPres, const real JeansMinPres_Coeff,
                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint,
@@ -51,6 +51,7 @@ GPU_DEVICE static void Set_Flux( real flux[], const real val[], const real Gamma
 //                Flux_Out          : Output array to store the average flux along t axis
 //                L/R_In            : Input left/right states (conserved variables)
 //                MinDens/Pres      : Density and pressure floors
+//                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_DensPres2CSqr : EoS routine to compute the sound speed squared
 //                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
@@ -60,7 +61,7 @@ GPU_DEVICE static void Set_Flux( real flux[], const real val[], const real Gamma
 //------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
-                                const real MinDens, const real MinPres, const EoS_DE2P_t EoS_DensEint2Pres,
+                                const real MinDens, const real MinPres, const long PassiveFloor, const EoS_DE2P_t EoS_DensEint2Pres,
                                 const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
                                 const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] )
 {
@@ -90,9 +91,9 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
    real L[NCOMP_TOTAL], R[NCOMP_TOTAL], Temp;
 
 // convert conserved variables to primitive variables
-   Hydro_Con2Pri( L_In, L, MinPres, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
+   Hydro_Con2Pri( L_In, L, MinPres, PassiveFloor, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
                   EoS_DensEint2Pres, NULL, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
-   Hydro_Con2Pri( R_In, R, MinPres, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
+   Hydro_Con2Pri( R_In, R, MinPres, PassiveFloor, FracPassive_No, NULL_INT, NULL, JeansMinPres_No, NULL_REAL,
                   EoS_DensEint2Pres, NULL, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, NULL );
 
 
@@ -210,18 +211,10 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
       L_star[0] = L[0]*POW( L_star[4]/L[4], (real)1.0/Gamma );    // solution of density
 
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
-      Hydro_IsUnphysical( UNPHY_MODE_SING, &L[4],      "pressure",
-                          (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                          ERROR_INFO, UNPHY_VERBOSE );
-      Hydro_IsUnphysical( UNPHY_MODE_SING, &L[0],      "density",
-                          TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                          ERROR_INFO, UNPHY_VERBOSE );
-      Hydro_IsUnphysical( UNPHY_MODE_SING, &L_star[4], "pressure",
-                          (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                          ERROR_INFO, UNPHY_VERBOSE );
-      Hydro_IsUnphysical( UNPHY_MODE_SING, &L_star[0], "density",
-                          TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                          ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical_Single( L[4],      "pressure", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical_Single( L[0],      "density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical_Single( L_star[4], "pressure", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical_Single( L_star[0], "density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #     endif
 
       real a_L    = SQRT( Gamma * L[4] / L[0] );                  // sound speed of left region
@@ -247,18 +240,10 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
       R_star[0] = R[0]*POW( R_star[4]/R[4], (real)1.0/Gamma ); // solution of density
 
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
-      Hydro_IsUnphysical( UNPHY_MODE_SING, &R[4],      "pressure",
-                          (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                          ERROR_INFO, UNPHY_VERBOSE );
-      Hydro_IsUnphysical( UNPHY_MODE_SING, &R[0],      "density",
-                          TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                          ERROR_INFO, UNPHY_VERBOSE );
-      Hydro_IsUnphysical( UNPHY_MODE_SING, &R_star[4], "pressure",
-                          (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                          ERROR_INFO, UNPHY_VERBOSE );
-      Hydro_IsUnphysical( UNPHY_MODE_SING, &R_star[0], "density",
-                          TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                          ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical_Single( R[4],      "pressure", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical_Single( R[0],      "density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical_Single( R_star[4], "pressure", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical_Single( R_star[0], "density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #     endif
 
       real a_R    = SQRT( Gamma * R[4] / R[0] ); // sound speed of right region
@@ -278,18 +263,10 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
    eival[3] = L_star[1];
 
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   Hydro_IsUnphysical( UNPHY_MODE_SING, &R[4], "pressure",
-                       (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                       ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_IsUnphysical( UNPHY_MODE_SING, &R[0], "density",
-                       TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                       ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_IsUnphysical( UNPHY_MODE_SING, &L[4], "pressure",
-                       (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                       ERROR_INFO, UNPHY_VERBOSE );
-   Hydro_IsUnphysical( UNPHY_MODE_SING, &L[0], "density",
-                       TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                       ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( R[4], "pressure", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( R[0], "density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( L[4], "pressure", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+   Hydro_IsUnphysical_Single( L[0], "density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
    if ( L[4] < L_star[4] ) // left shock
@@ -297,9 +274,7 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
       Temp = (real)0.5/Gamma*( Gamma_p1*L_star[4]/L[4] + Gamma_m1 );
 
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
-      Hydro_IsUnphysical( UNPHY_MODE_SING, &Temp, "value",
-                          (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                          ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical_Single( Temp, "value", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #     endif
 
       eival[0] = L[1] - SQRT( Gamma*L[4]/L[0] )*SQRT( Temp );
@@ -312,9 +287,7 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
       Temp = (real)0.5/Gamma*( Gamma_p1*R_star[4]/R[4] + Gamma_m1 );
 
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
-      Hydro_IsUnphysical( UNPHY_MODE_SING, &Temp, "value",
-                          (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                          ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical_Single( Temp, "value", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #     endif
 
       eival[4] = R[1] + SQRT( Gamma*R[4]/R[0] )*SQRT( Temp );
@@ -400,9 +373,7 @@ real Solve_f( const real rho, const real p, const real p_star, const real Gamma 
       Temp   = A/(p_star+B);
 
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
-      Hydro_IsUnphysical( UNPHY_MODE_SING, &Temp, "value",
-                          (real)0.0, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                          ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical_Single( Temp, "value", (real)0.0, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #     endif
 
       f = (p_star-p)*SQRT( Temp );
@@ -411,12 +382,8 @@ real Solve_f( const real rho, const real p, const real p_star, const real Gamma 
    else
    {
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
-      Hydro_IsUnphysical( UNPHY_MODE_SING, &p,   "pressure",
-                          (real)0.0,   HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                          ERROR_INFO, UNPHY_VERBOSE );
-      Hydro_IsUnphysical( UNPHY_MODE_SING, &rho, "density",
-                          TINY_NUMBER, HUGE_NUMBER, NULL_REAL, NULL, NULL, NULL, NULL, NULL, NULL,
-                          ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical_Single( p,   "pressure", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
+      Hydro_IsUnphysical_Single( rho, "density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
 #     endif
 
       real a = SQRT( Gamma*p/rho );
