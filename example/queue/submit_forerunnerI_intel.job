@@ -27,6 +27,5 @@ module load intel/2024_01_46 oneapi_2024/fftw/3.3.10 oneapi_2024/gsl/2.8.0 oneap
 module list 1>>$LOG_FILE 2>&1
 
 # See: https://docs.open-mpi.org/en/v5.0.x/man-openmpi/man1/mpirun.1.html#the-map-by-option
-# There are 8 NUMA nodes on each node, 4 per socket
-mpirun -map-by ppr:2:numa:pe=7 --report-bindings ./gamer 1>>$LOG_FILE 2>&1
+mpirun -map-by ppr:16:node:pe=7 --report-bindings ./gamer 1>>$LOG_FILE 2>&1
 echo "=============================================================" >> $LOG_FILE

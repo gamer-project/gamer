@@ -105,7 +105,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "ELBDM_ExtPot_Cen_Y",   &ELBDM_ExtPot_Cen[1],   -1.0,          NoMin_double,     NoMax_double      );
    LOAD_PARA( load_mode, "ELBDM_ExtPot_Cen_Z",   &ELBDM_ExtPot_Cen[2],   -1.0,          NoMin_double,     NoMax_double      );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 
@@ -232,7 +232,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  BC
-// Description :  Set the extenral boundary condition to the analytical solution
+// Description :  Set the external boundary condition to the analytical solution
 //
 // Note        :  1. Linked to the function pointer "BC_User_Ptr"
 //

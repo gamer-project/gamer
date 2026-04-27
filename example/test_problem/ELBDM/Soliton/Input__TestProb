@@ -5,4 +5,5 @@ Soliton_CoreRadiusAll       1.0e1    # core radius for ALL solitons (in code uni
 Soliton_EmptyRegion         0.0      # soliton-free region [0.0]
                                      # -> solitons only reside in [Soliton_EmptyRegion : BOX_SIZE-Soliton_EmptyRegion]
                                      # -> useful only when Soliton_RSeed >= 0
-Soliton_DensProf_Filename   SolitonDensityProfile_Lambda0.0    # filename of the input soliton density profile
+Soliton_InitMode            1        # soliton density initialization mode (1=table, 2=analytical) [1]
+Soliton_DensProf_Filename   SolitonDensityProfile_Lambda0.0    # filename of the input soliton density profile table

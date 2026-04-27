@@ -3,6 +3,14 @@
 
 #ifdef SUPPORT_GRACKLE
 
+// whether gr_check_consistency() is defined
+// --> it is introduced in the version 3.4 of
+//     the Grackle library to perform some consistency checks,
+//     see https://grackle.readthedocs.io/en/latest/Reference.html#c.gr_check_consistency
+// --> set it to 0 to disable the check if an older version is being used
+#define HAVE_GR_CHECK_CONSISTENCY 1
+
+
 
 
 
@@ -29,6 +37,14 @@ void Grackle_Init()
 
 // check
 // errors
+#  if ( HAVE_GR_CHECK_CONSISTENCY )
+   if ( gr_check_consistency() != GR_SUCCESS )
+      Aux_Error( ERROR_INFO, "Error occurs in gr_check_consistency() in %s !!\n", __FUNCTION__ );
+#  else
+   if ( MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : Checking with the Grackle function \"gr_check_consistency()\" is not enabled in %s !!\n", __FUNCTION__ );
+#  endif
+
    if ( typeid(real_che) != typeid(gr_float) )
       Aux_Error( ERROR_INFO, "inconsistent floating-point type: GAMER (real_che) = %d, Grackle (gr_float) = %d !!\n",
                  sizeof(real_che), sizeof(gr_float) );

@@ -166,7 +166,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "GasTemp_Init",      &GasTemp_Init,           100.0,        0.0,              NoMax_double      );
    LOAD_PARA( load_mode, "NPar_X",            &NPar_X,                 NX0_TOT[0],   0,                NoMax_int         );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

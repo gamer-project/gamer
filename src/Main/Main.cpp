@@ -123,7 +123,7 @@ bool                 OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC_MA
 bool                 OPT__OUTPUT_DIVMAG;
 int                  OPT__CK_DIVERGENCE_B;
 double               UNIT_B;
-bool                 OPT__SAME_INTERFACE_B;
+SameInterfaceB_t     OPT__SAME_INTERFACE_B;
 
 OptInitMagByVecPot_t OPT__INIT_BFIELD_BYVECPOT;
 #endif
@@ -159,6 +159,8 @@ double               DT__HYBRID_CFL, DT__HYBRID_CFL_INIT, DT__HYBRID_VELOCITY, D
 double               ELBDM_LAMBDA;
 #endif
 ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
+bool                 ELBDM_RESCALE_MASS_ERROR;
+int                  ELBDM_RESCALE_MASS_STEPS;
 bool                 ELBDM_BASE_SPECTRAL;
 
 #else
@@ -697,14 +699,18 @@ int main( int argc, char *argv[] )
       if ( OPT__CORR_AFTER_ALL_SYNC == CORR_AFTER_SYNC_EVERY_STEP )
       TIMING_FUNC(   Flu_CorrAfterAllSync(),          Timer_Main[6],   TIMER_ON   );
 
+//    it may be unnecessary to call `MHD_SameInterfaceB()` here, since we already call it every sub-step
+//    in EvolveLevel() after the fluid solver (unless something other than the fluid solver can also introduce
+//    inconsistencies in the B field, such as fix-up operations?).
 #     if ( MODEL == HYDRO  &&  defined MHD )
-      if ( OPT__SAME_INTERFACE_B )
+      if ( OPT__SAME_INTERFACE_B == SAME_INTERFACE_B_YES )
       {
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
             Aux_Message( stdout, "   MHD_SameInterfaceB                       ... " );
 
          for (int lv=0; lv<NLEVEL; lv++)
-         TIMING_FUNC(   MHD_SameInterfaceB( lv ),     Timer_Main[6],   TIMER_ON   );
+         TIMING_FUNC(   MHD_SameInterfaceB( lv, amr->FluSg[lv], amr->MagSg[lv] ),
+                        Timer_Main[6],   TIMER_ON   );
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
             Aux_Message( stdout, "done\n" );
@@ -746,6 +752,9 @@ int main( int argc, char *argv[] )
 
       if ( ELBDM_REMOVE_MOTION_CM == ELBDM_REMOVE_MOTION_CM_EVERY_STEP )
       TIMING_FUNC(   ELBDM_RemoveMotionCM(),          Timer_Main[4],   TIMER_ON   );
+
+      if ( ELBDM_RESCALE_MASS_ERROR  &&  Step % ELBDM_RESCALE_MASS_STEPS == 0 )
+      TIMING_FUNC(   ELBDM_RescaleMassError(),        Timer_Main[4],   TIMER_ON   );
 #     endif // #if ( MODEL == ELBDM )
 //    ---------------------------------------------------------------------------------------------------
 

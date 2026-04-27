@@ -149,7 +149,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "Jeans_RealAmp0",    &Jeans_RealAmp0,       -1.0,           Eps_double,       NoMax_double      );
    LOAD_PARA( load_mode, "Jeans_Phase0",      &Jeans_Phase0,          0.0,           NoMin_double,     NoMax_double      );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

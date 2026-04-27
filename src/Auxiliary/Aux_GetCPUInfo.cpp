@@ -22,7 +22,11 @@ void Aux_GetCPUInfo( const char *FileName )
    FILE *Note = fopen( FileName, "a" );
    char *line = NULL;
    size_t len = 0;
-   char String[2][100];
+   char String[2][MAX_STRING];
+   char Trash[MAX_STRING];
+   int SocketNow = -1, SocketPrevious = -1;
+   int CorePerSocket = 0, NSocket = 0;
+   bool GotFirstCPUInfo = false;
 
 
 // 1. get the CPU info
@@ -39,6 +43,18 @@ void Aux_GetCPUInfo( const char *FileName )
    while ( getline(&line, &len, CPUInfo) != -1 )
    {
       sscanf( line, "%s%s", String[0], String[1] );
+
+      if (  strcmp( String[0], "physical" ) == 0  &&  strcmp( String[1], "id" ) == 0 )
+      {
+         sscanf( line, "%s%s%s%d", String[0], String[1], Trash, &SocketNow );
+         if ( SocketNow != SocketPrevious )
+         {
+            SocketPrevious = SocketNow;
+            NSocket++;
+         }
+      }
+
+      if ( GotFirstCPUInfo )   continue;
 
       if (  strcmp( String[0], "model" ) == 0  &&  strcmp( String[1], "name" ) == 0  )
       {
@@ -62,7 +78,8 @@ void Aux_GetCPUInfo( const char *FileName )
       {
          memcpy( line, "CPU Cores", 9 );
          fprintf( Note, "%s", line );
-         break;
+         sscanf( line, "%s%s%s%d", String[0], String[1], Trash, &CorePerSocket );
+         GotFirstCPUInfo = true;
       }
    }
 
@@ -71,6 +88,10 @@ void Aux_GetCPUInfo( const char *FileName )
       free( line );
       line = NULL;
    }
+
+   fprintf( Note, "%-16s: %d\n", "Socket(s)", NSocket );
+// assuming the CPUs in the node are the same
+   fprintf( Note, "%-16s: %d\n", "Core(s) per Node", CorePerSocket*NSocket );
 
    fclose( CPUInfo );
 
