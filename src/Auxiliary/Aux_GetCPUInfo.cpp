@@ -52,12 +52,14 @@ void Aux_GetCPUInfo( const char *FileName )
          sscanf( line, "%s%s%s%d", String[0], String[1], Trash, &SocketNow );
          SocketList.push_back(SocketNow);
       }
-      // Required for std::unique to work
+
+   // do sorting because std::unique removes consecutive duplicating elements
       std::sort(SocketList.begin(), SocketList.end());
-      // Moves unique elements to front, returns iterator to new end
+   // moves unique elements to front, returns iterator to new end
       auto last = std::unique(SocketList.begin(), SocketList.end());
-      // Remove trailing duplicates
+   // remove trailing duplicates from last to end
       SocketList.erase(last, SocketList.end());
+   // obtain ultimate list size
       NSocket = SocketList.size();
 
       if ( GotFirstCPUInfo )   continue;
