@@ -107,7 +107,7 @@ class parameter():
         for file_name in file_dict:
             search_pattern = "[%s](#%s)"%(self.name, self.name)
             if search_pattern in file_dict[file_name]:
-                self.link_name = "[[ %s \\| %s#%s ]]"%(self.name, file_name, self.name)
+                self.link_name = "[%s](%s#%s)"%(self.name, file_name, self.name)
                 return True
         return False
 
@@ -184,7 +184,7 @@ with open( OUT_MD, 'w' ) as f:
     f.write( '\n' )
     f.write( 'The workflow is triggered when changes are pushed to any of the following files:\n' )
     f.write( '- `src/Init/Init_Load_Parameter.cpp`\n' )
-    f.write( '- `example/input/Input__Paramter`\n' )
+    f.write( '- `example/input/Input__Parameter`\n' )
     f.write( '- `tool/wiki/sync_runtime_parameter.py`\n' )
     f.write( '\n' )
     f.write( 'For variables with `Default/Min/Max` labeled as `Depend`, click the parameter names for more details.\n' )
@@ -215,4 +215,4 @@ with open( OUT_MD, 'w' ) as f:
     f.write( '<br>\n' )
     f.write( '\n' )
     f.write( '## Links\n' )
-    f.write( '* [[Main page of Runtime Parameters | Runtime Parameters]]\n' )
+    f.write( '* [Main page of Runtime Parameters](Runtime-Parameters)\n' )
