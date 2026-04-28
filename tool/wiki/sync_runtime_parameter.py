@@ -35,7 +35,7 @@ when any of the following files are changed, updated, or pushed:
 #====================================================================================================
 import re
 from string import ascii_uppercase as auc
-
+from urllib.parse import quote
 
 
 #====================================================================================================
@@ -107,7 +107,8 @@ class parameter():
         for file_name in file_dict:
             search_pattern = "[%s](#%s)"%(self.name, self.name)
             if search_pattern in file_dict[file_name]:
-                self.link_name = "[%s](%s#%s)"%(self.name, file_name, self.name)
+                file_name_url = quote( file_name )
+                self.link_name = "[%s](%s#%s)"%(self.name, file_name_url, self.name)
                 return True
         return False
 
@@ -200,7 +201,9 @@ with open( OUT_MD, 'w' ) as f:
         if start_char != key[0]:
             start_char = key[0]
             f.write( '\n' )
+            f.write( '<a name="%s"></a>\n'%(start_char) )
             f.write( "# %s\n"%(start_char) )
+            f.write( '\n' )
             f.write( param_str_format%("Name", "Default", "Min", "Max", "Short description") )
             f.write( param_str_format%(":---", ":---", ":---", ":---", ":---") )
 
@@ -215,4 +218,4 @@ with open( OUT_MD, 'w' ) as f:
     f.write( '<br>\n' )
     f.write( '\n' )
     f.write( '## Links\n' )
-    f.write( '* [Main page of Runtime Parameters](Runtime-Parameters)\n' )
+    f.write( '* [[Main page of Runtime Parameters | Runtime Parameters]]\n' )
