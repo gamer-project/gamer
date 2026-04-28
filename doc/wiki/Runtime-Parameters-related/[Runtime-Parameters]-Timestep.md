@@ -18,6 +18,7 @@ Parameters described on this page:
 [DT__PARVEL](#DT__PARVEL), &nbsp;
 [DT__PARVEL_MAX](#DT__PARVEL_MAX), &nbsp;
 [DT__PARACC](#DT__PARACC), &nbsp;
+[DT__GRACKLE_COOLING](#DT__GRACKLE_COOLING), &nbsp;
 [DT__CR_DIFFUSION](#DT__CR_DIFFUSION), &nbsp;
 [DT__MAX_DELTA_A](#DT__MAX_DELTA_A), &nbsp;
 [DT__SYNC_PARENT_LV](#DT__SYNC_PARENT_LV), &nbsp;
@@ -107,6 +108,14 @@ for the exact formula.
     * **Restriction:**
 Only applicable when adopting the compilation option
 [[--store_par_acc | [Installation]-Option-List#--store_par_acc]].
+
+<a name="DT__GRACKLE_COOLING"></a>
+* #### `DT__GRACKLE_COOLING` &ensp; (&#8805;0.0; <0.0 &#8594; off) &ensp; [-1.0]
+    * **Description:**
+Factor for Grackle cooling time.
+    * **Restriction:**
+Only applicable when adopting the compilation option
+[[--grackle | [Installation]-Option-List#--grackle]].
 
 <a name="DT__CR_DIFFUSION"></a>
 * #### `DT__CR_DIFFUSION` &ensp; (&#8805;0.0) &ensp; [0.3]

@@ -34,6 +34,7 @@ Parameters described on this page:
 [OPT__FLAG_LRTZ_GRADIENT](#OPT__FLAG_LRTZ_GRADIENT), &nbsp;
 [OPT__FLAG_VORTICITY](#OPT__FLAG_VORTICITY), &nbsp;
 [OPT__FLAG_JEANS](#OPT__FLAG_JEANS), &nbsp;
+[OPT__FLAG_COOLING_LEN](#OPT__FLAG_COOLING_LEN), &nbsp;
 [OPT__FLAG_CURRENT](#OPT__FLAG_CURRENT), &nbsp;
 [OPT__FLAG_CRAY](#OPT__FLAG_CRAY), &nbsp;
 [OPT__FLAG_LOHNER_DENS](#OPT__FLAG_LOHNER_DENS), &nbsp;
@@ -224,6 +225,23 @@ with the [[specific format | [Runtime-Parameters]-Input__Flag_{}]].
 An example file can be found at `example/input/Input__Flag_Jeans`.
 Recommended values: &#8805;4.
     * **Restriction:**
+
+<a name="OPT__FLAG_COOLING_LEN"></a>
+* #### `OPT__FLAG_COOLING_LEN` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Refinement criterion: gas cooling length. It ensures that the cooling length
+is resolved by at least <var>N</var> cells. Specifically, a cell
+on level <var>l</var> will be flagged for refinement if its estimated
+cooling length <var>L</var><sub>cool</sub> satisfies
+<var>L</var><sub>cool</sub>&#8287;&#8801;<var>t</var><sub>cool</sub><var>c</var><sub>s</sub>&#8287;&#8287;<&#8287;<var>N</var><sub>l</sub>&Delta;&xi;<sub>l</sub>,
+where <var>t</var><sub>cool</sub> is the cooling time (currently calculated by Grackle), <var>c</var><sub>s</sub> is sound speed of gas, &Delta;&xi;<sub>l</sub> is the cell width along &xi; on level <var>l</var>, and <var>N</var><sub>l</sub> is the refinement threshold on level <var>l</var>.
+Specify the refinement
+thresholds on different levels in the input file `Input__Flag_CoolingLen`
+with the [[specific format | [Runtime-Parameters]-Input__Flag_{}]].
+An example file can be found at `example/input/Input__Flag_CoolingLen`.
+Recommended values: &#8805;1.
+    * **Restriction:**
+Must compile with [[--grackle | [Installation]-Option-List#--grackle]].
 
 <a name="OPT__FLAG_CURRENT"></a>
 * #### `OPT__FLAG_CURRENT` &ensp; (0=off, 1=on) &ensp; [0]

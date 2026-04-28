@@ -102,7 +102,12 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
 
 // reset the time-step actually adopted to zero for OPT__FREEZE_FLUID
-   const double dt = ( OPT__FREEZE_FLUID ) ? 0.0 : dt_in;
+#  ifdef SUPPORT_GRACKLE
+   const bool   UnFreeze = ( TSolver == GRACKLE_SOLVER  &&  OPT__UNFREEZE_GRACKLE );
+#  else
+   const bool   UnFreeze = false;
+#  endif
+   const double dt = ( OPT__FREEZE_FLUID  &&  ! UnFreeze ) ? 0.0 : dt_in;
 
 
 // set the maximum number of patch groups to be updated at a time
@@ -140,6 +145,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
    int  ArrayID      = 0;     // array index to load and store data ( 0 or 1 )
    int  NPG[2];               // number of patch groups to be updated at a time
    int  NTotal;               // total number of patch groups to be updated
+   int  NTotal_Max;           // maximum NTotal among all ranks
    int  Disp;                 // index displacement in PID0_List
 
    if ( OverlapMPI )
@@ -195,6 +201,8 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 
    NPG[ArrayID] = ( NPG_Max < NTotal ) ? NPG_Max : NTotal;
 
+   MPI_Allreduce( &NTotal, &NTotal_Max, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD );
+
 
 // evaluate time evolution matrix (once per level per timestep)
 #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
@@ -214,11 +222,16 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
 //-------------------------------------------------------------------------------------------------------------
 
 
-   for (Disp=NPG_Max; Disp<NTotal; Disp+=NPG_Max)
+// use NTotal_Max rather than NTotal in the loop termination criterion below so that all ranks execute the same number of iterations
+// --> avoid potential MPI deadlocks caused by TIMING_SYNC + OPT__TIMING_BARRIER when different ranks have different numbers of patches
+   for (Disp=NPG_Max; Disp<NTotal_Max; Disp+=NPG_Max)
    {
 
-      ArrayID      = 1 - ArrayID;
-      NPG[ArrayID] = ( NPG_Max < NTotal-Disp ) ? NPG_Max : NTotal-Disp;
+      ArrayID = 1 - ArrayID;
+
+      const int NPG_Remained = NTotal - Disp;
+      NPG[ArrayID] = ( NPG_Remained > NPG_Max ) ? NPG_Max :
+                     ( NPG_Remained > 0 )       ? NPG_Remained : 0;
 
 
 //-------------------------------------------------------------------------------------------------------------
@@ -246,7 +259,7 @@ void InvokeSolver( const Solver_t TSolver, const int lv, const double TimeNew, c
                      Timer_Clo[lv][TSolver]  );
 //-------------------------------------------------------------------------------------------------------------
 
-   } // for (int Disp=NPG_Max; Disp<NTotal; Disp+=NPG_Max)
+   } // for (int Disp=NPG_Max; Disp<NTotal_Max; Disp+=NPG_Max)
 
 
 //-------------------------------------------------------------------------------------------------------------
