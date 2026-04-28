@@ -53,15 +53,6 @@ void Aux_GetCPUInfo( const char *FileName )
          SocketList.push_back(SocketNow);
       }
 
-   // do sorting because std::unique removes consecutive duplicating elements
-      std::sort(SocketList.begin(), SocketList.end());
-   // moves unique elements to front, returns iterator to new end
-      auto last = std::unique(SocketList.begin(), SocketList.end());
-   // remove trailing duplicates from last to end
-      SocketList.erase(last, SocketList.end());
-   // obtain ultimate list size
-      NSocket = SocketList.size();
-
       if ( GotFirstCPUInfo )   continue;
 
       if (  strcmp( String[0], "model" ) == 0  &&  strcmp( String[1], "name" ) == 0  )
@@ -90,6 +81,15 @@ void Aux_GetCPUInfo( const char *FileName )
          GotFirstCPUInfo = true;
       }
    }
+
+// do sorting because std::unique removes consecutive duplicating elements
+   std::sort(SocketList.begin(), SocketList.end());
+// moves unique elements to front, returns iterator to new end
+   auto last = std::unique(SocketList.begin(), SocketList.end());
+// remove trailing duplicates from last to end
+   SocketList.erase(last, SocketList.end());
+// obtain ultimate list size
+   NSocket = SocketList.size();
 
    if ( line != NULL )
    {
