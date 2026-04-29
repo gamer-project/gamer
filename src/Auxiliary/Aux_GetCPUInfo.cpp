@@ -84,7 +84,7 @@ void Aux_GetCPUInfo( const char *FileName )
       }
    }
 
-   for (const auto& masked: SocketMask)
+   for ( const auto& masked: SocketMask )
    {
       if ( masked ) NSocket ++;
    }
