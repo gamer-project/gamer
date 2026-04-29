@@ -25,6 +25,9 @@ static void Check_SymConst ( const char *FileName, const int FormatVersion );
 static void Check_InputPara( const char *FileName, const int FormatVersion );
 static void ResetParameter( const char *FileName, double *EndT, long *EndStep );
 
+#ifdef PARTICLE
+static bool isPUIDStored;
+#endif
 
 
 
@@ -217,7 +220,7 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "AdvanceCounter",        KeyInfo.AdvanceCounter,       H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
 
 #  ifdef PARTICLE
-   const bool isPUIDStored = KeyInfo.FormatVersion >= 2508;
+   isPUIDStored = KeyInfo.FormatVersion >= 2508;
    if ( ReenablePar ) {
       KeyInfo.Par_NPar          = 0;
       KeyInfo.Par_NextPUID      = 1;
@@ -237,7 +240,7 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "Par_NAttFltStored",    &KeyInfo.Par_NAttFltStored,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttFltStored,     1,    Fatal );
    else
    LoadField( "Par_NAttFltStored",    &KeyInfo.Par_NAttFltStored,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttFltStored,     1, NonFatal );
-   if ( KeyInfo.FormatVersion >= 2500  &&  isPUIDStored )
+   if ( isPUIDStored )
    LoadField( "Par_NAttIntStored",    &KeyInfo.Par_NAttIntStored,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttIntStored,     1,    Fatal );
    else
    LoadField( "Par_NAttIntStored",    &KeyInfo.Par_NAttIntStored,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttIntStored,     1, NonFatal );
@@ -1449,8 +1452,6 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
       H5_MemID_ParData = H5Screate_simple( 1, H5_MemDims_ParData, NULL );
       if ( H5_MemID_ParData < 0 )   Aux_Error( ERROR_INFO, "failed to create the space \"%s\" !!\n", "H5_MemID_ParData" );
 
-      const bool isPUIDStored = FormatVersion >= 2508;
-
 //    load particle data from disk
       if ( FormatVersion < 2500 )
       {
@@ -1803,12 +1804,11 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
 #  endif // #ifdef GRAVITY
 
 #  ifdef PARTICLE
-   const bool isPUIDStored = FormatVersion >= 2508;
    if ( FormatVersion >= 2300 )
    LoadField( "Par_NAttFltStored",    &RS.Par_NAttFltStored,    SID, TID, NonFatal, &RT.Par_NAttFltStored,     1,    Fatal );
    else
    LoadField( "Par_NAttFltStored",    &RS.Par_NAttFltStored,    SID, TID, NonFatal, &RT.Par_NAttFltStored,     1, NonFatal );
-   if ( FormatVersion >= 2500  &&  isPUIDStored )
+   if ( isPUIDStored )
    LoadField( "Par_NAttIntStored",    &RS.Par_NAttIntStored,    SID, TID, NonFatal, &RT.Par_NAttIntStored,     1,    Fatal );
    else
    LoadField( "Par_NAttIntStored",    &RS.Par_NAttIntStored,    SID, TID, NonFatal, &RT.Par_NAttIntStored,     1, NonFatal );
