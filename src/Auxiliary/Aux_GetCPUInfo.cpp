@@ -50,7 +50,7 @@ void Aux_GetCPUInfo( const char *FileName )
       {
          sscanf( line, "%s%s%s%d", String[0], String[1], Trash, &SocketNow );
          if ( (SocketNow + 1) > SocketMask.size() )
-            SocketMask.resize(SocketNow+1, false);
+            SocketMask.resize( SocketNow+1, false );
          if ( !SocketMask[SocketNow] )
             SocketMask[SocketNow] = true;
       }
