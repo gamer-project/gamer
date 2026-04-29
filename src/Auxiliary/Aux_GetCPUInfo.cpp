@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include <algorithm>
 #include <vector>
 
 
@@ -27,7 +26,7 @@ void Aux_GetCPUInfo( const char *FileName )
    char String[2][MAX_STRING];
    char Trash[MAX_STRING];
    int SocketNow;
-   std::vector<int> SocketList;
+   std::vector<bool> SocketMask = {false};
    int CorePerSocket = 0, NSocket = 0;
    bool GotFirstCPUInfo = false;
 
@@ -50,7 +49,10 @@ void Aux_GetCPUInfo( const char *FileName )
       if (  strcmp( String[0], "physical" ) == 0  &&  strcmp( String[1], "id" ) == 0 )
       {
          sscanf( line, "%s%s%s%d", String[0], String[1], Trash, &SocketNow );
-         SocketList.push_back(SocketNow);
+         if ( (SocketNow + 1) > SocketMask.size() )
+            SocketMask.resize(SocketNow+1, false);
+         if ( !SocketMask[SocketNow] )
+            SocketMask[SocketNow] = true;
       }
 
       if ( GotFirstCPUInfo )   continue;
@@ -82,14 +84,10 @@ void Aux_GetCPUInfo( const char *FileName )
       }
    }
 
-// do sorting because std::unique removes consecutive duplicating elements
-   std::sort(SocketList.begin(), SocketList.end());
-// moves unique elements to front, returns iterator to new end
-   auto last = std::unique(SocketList.begin(), SocketList.end());
-// remove trailing duplicates from last to end
-   SocketList.erase(last, SocketList.end());
-// obtain ultimate list size
-   NSocket = SocketList.size();
+   for (const auto& masked: SocketMask)
+   {
+      if ( masked ) NSocket ++;
+   }
 
    if ( line != NULL )
    {
