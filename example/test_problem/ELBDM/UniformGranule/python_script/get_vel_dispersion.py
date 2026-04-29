@@ -123,7 +123,7 @@ for ds in ts.piter():
    sigma_qp = ((sigma_square_qp[0] + sigma_square_qp[1] + sigma_square_qp[2])/3.)**0.5
    sigma_total = (sigma_bk**2+sigma_qp**2)**0.5
 
-   d = 0.35*2*np.pi*hbar/(ma*sigma_total)
+   d = 0.35*2*np.pi*fac/sigma_total
 
    print('\nDumpID = %06d, time = %13.7e\n'%(idx, time) +
          'average density = %13.7e\n'%(np.mean(dens)) +
