@@ -1,4 +1,5 @@
 #include "GAMER.h"
+#include <vector>
 
 
 
@@ -24,7 +25,8 @@ void Aux_GetCPUInfo( const char *FileName )
    size_t len = 0;
    char String[2][MAX_STRING];
    char Trash[MAX_STRING];
-   int SocketNow = -1, SocketPrevious = -1;
+   int SocketNow;
+   std::vector<bool> SocketMask = {false};
    int CorePerSocket = 0, NSocket = 0;
    bool GotFirstCPUInfo = false;
 
@@ -47,11 +49,10 @@ void Aux_GetCPUInfo( const char *FileName )
       if (  strcmp( String[0], "physical" ) == 0  &&  strcmp( String[1], "id" ) == 0 )
       {
          sscanf( line, "%s%s%s%d", String[0], String[1], Trash, &SocketNow );
-         if ( SocketNow != SocketPrevious )
-         {
-            SocketPrevious = SocketNow;
-            NSocket++;
-         }
+         if ( (SocketNow + 1) > SocketMask.size() )
+            SocketMask.resize( SocketNow+1, false );
+         if ( !SocketMask[SocketNow] )
+            SocketMask[SocketNow] = true;
       }
 
       if ( GotFirstCPUInfo )   continue;
@@ -81,6 +82,11 @@ void Aux_GetCPUInfo( const char *FileName )
          sscanf( line, "%s%s%s%d", String[0], String[1], Trash, &CorePerSocket );
          GotFirstCPUInfo = true;
       }
+   }
+
+   for ( const auto& masked: SocketMask )
+   {
+      if ( masked ) NSocket ++;
    }
 
    if ( line != NULL )
