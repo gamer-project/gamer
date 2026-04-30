@@ -51,8 +51,7 @@ void Aux_GetCPUInfo( const char *FileName )
          sscanf( line, "%s%s%s%d", String[0], String[1], Trash, &SocketNow );
          if ( (SocketNow + 1) > SocketMask.size() )
             SocketMask.resize( SocketNow+1, false );
-         if ( !SocketMask[SocketNow] )
-            SocketMask[SocketNow] = true;
+         SocketMask[SocketNow] = true;
       }
 
       if ( GotFirstCPUInfo )   continue;
@@ -82,11 +81,11 @@ void Aux_GetCPUInfo( const char *FileName )
          sscanf( line, "%s%s%s%d", String[0], String[1], Trash, &CorePerSocket );
          GotFirstCPUInfo = true;
       }
-   }
+   } // while ( getline(&line, &len, CPUInfo) != -1 )
 
    for ( const auto& masked: SocketMask )
    {
-      if ( masked ) NSocket ++;
+      if ( masked )  NSocket ++;
    }
 
    if ( line != NULL )
@@ -96,7 +95,7 @@ void Aux_GetCPUInfo( const char *FileName )
    }
 
    fprintf( Note, "%-16s: %d\n", "Socket(s)", NSocket );
-// assuming the CPUs in the node are the same
+// assuming all CPUs in the node are identical
    fprintf( Note, "%-16s: %d\n", "Core(s) per Node", CorePerSocket*NSocket );
 
    fclose( CPUInfo );
