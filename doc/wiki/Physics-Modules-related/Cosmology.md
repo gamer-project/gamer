@@ -13,7 +13,7 @@ none
 
 ## Remarks
 
-### [[Units in Cosmological Simulations | [Runtime-Parameters]-Units#units-in-cosmological-simulations]]
+### [[Units in Cosmological Simulations | Units#units-in-cosmological-simulations]]
 
 
 <br>

@@ -14,7 +14,7 @@ Related options:
 ## Remarks
 
 ### Unit Consistency
-When enabling units (i.e., [[OPT__UNIT | [Runtime-Parameters]-Units#OPT__UNIT]])=1), all input values
+When enabling units (i.e., [[OPT__UNIT | [Runtime-Parameters]-Units#OPT__UNIT]]=1), all input values
 (e.g., runtime parameters, refinement thresholds, and initial conditions)
 must be set consistently with the adopted unit system unless otherwise
 specified. All input physical constants (e.g.,
