@@ -5,28 +5,24 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Par_Init_ByFile
-// Description :  Initialize particle attributes from a file
+// Function    :  Par_Init_ByFunction_DiskHeating
+// Description :  User-specified function to initialize particle attributes
 //
-// Note        :  1. Invoked by Init_GAMER()
+// Note        :  1. Invoked by Init_GAMER() using the function pointer "Par_Init_ByFunction_Ptr"
+//                   --> This function pointer may be reset by various test problem initializers, in which case
+//                       this funtion will become useless
 //                2. Periodicity should be taken care of in this function
-//                   --> No particles should lie outside the simulation box even for the periodic BC
-//                3. Particles lying outside the active region will be removed later by Par_Aux_InitCheck()
-//                   if non-periodic B.C. is adopted
-//                4. Particles loaded here are only temporarily stored in this rank
-//                   --> They will be redistributed when calling Par_FindHomePatch_UniformGrid()
+//                   --> No particles should lie outside the simulation box when the periodic BC is adopted
+//                   --> However, if the non-periodic BC is adopted, particles are allowed to lie outside the box
+//                       (more specifically, outside the "active" region defined by amr->Par->RemoveCell)
+//                       in this function. They will later be removed automatically when calling Par_Aux_InitCheck()
+//                       in Init_GAMER().
+//                3. Particles set by this function are only temporarily stored in this MPI rank
+//                   --> They will later be redistributed when calling Par_FindHomePatch_UniformGrid()
 //                       and LB_Init_LoadBalance()
-//                   --> So there is no constraint on which particles should be set by this function
-//                5. Currently the target file name is fixed to "PAR_IC"
-//                6. The data format of the PAR_IC file is controlled by the runtime parameter "PAR_IC_FORMAT"
-//                   --> PAR_IC_FORMAT_ATT_ID: [particle attribute][particle id] in a row-major order
-//                       PAR_IC_FORMAT_ID_ATT: [particle id][particle attribute] in a row-major order
-//                7  Currently it only loads particle mass, position x/y/z, and velocity x/y/z
-//                   (and must be in the same order of PAR_MASS, PAR_POSX/Y/Z, and PAR_VELX/Y/Z)
-//                   --> The mass of all particles can be set to PAR_IC_MASS instead (by having PAR_IC_MASS>=0.0)
-//                       --> In this case, the PAR_IC file should exclude the partice mass data
-//                8. For LOAD_BALANCE, the number of particles in each rank must be set in advance
-//                   --> Currently it's set by Init_Parallelization()
+//                   --> Therefore, there is no constraint on which particles should be set by this function
+//                4. The initialization of the PUID routine has been separated into amr->Par->InitRepo()
+//                   --> If needed, you can still modify PUID through the AllAttributeInt array
 //
 // Parameter   :  NPar_ThisRank   : Number of particles to be set by this MPI rank
 //                NPar_AllRank    : Total Number of particles in all MPI ranks
@@ -35,7 +31,6 @@
 //                ParVelX/Y/Z     : Particle velocity array with the size of NPar_ThisRank
 //                ParTime         : Particle time     array with the size of NPar_ThisRank
 //                ParType         : Particle type     array with the size of NPar_ThisRank
-//                ParPUid         : Particle UID      array with the size of NPar_ThisRank
 //                AllAttributeFlt : Pointer array for all particle floating-point attributes
 //                                --> Dimension = [PAR_NATT_FLT_TOTAL][NPar_ThisRank]
 //                                --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
@@ -44,12 +39,12 @@
 //                                --> Dimension = [PAR_NATT_INT_TOTAL][NPar_ThisRank]
 //                                --> Use the attribute indices defined in Field.h to access the data
 //
-// Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, ParPUid, AllAttributeFlt, AllAttributeInt
+// Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttributeFlt, AllAttributeInt
 //-------------------------------------------------------------------------------------------------------
 void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_AllRank,
                                       real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                       real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                      long_par *ParType, long_par *ParPUid,
+                                      long_par *ParType,
                                       real_par *AllAttribute[PAR_NATT_FLT_TOTAL],
                                       long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 {
@@ -138,7 +133,6 @@ void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_
       ParVelY[p] = ParData1[5];
       ParVelZ[p] = ParData1[6];
       ParType[p] = (long_par)ParData1[7]; // 1=CDM halo, 2=disk
-      ParPUid[p] = PUID_TBA;
 
 //    synchronize all particles to the physical time at the base level
       amr->Par->Time[p] = Time[0];
