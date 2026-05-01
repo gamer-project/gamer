@@ -10,6 +10,7 @@ HaloMerger_Soliton_1_VelocityY          0.5
 HaloMerger_Soliton_1_VelocityZ          0.0
 HaloMerger_Soliton_1_DensProf_Filename  SolitonDensityProfile_Lambda0.0    # filename of the density profile table for the 1st soliton (HaloMerger_Soliton_InitMode == 1 only)
 HaloMerger_Soliton_1_DensProf_Rescale   1                                  # whether to scale the density profile table for the 1st soliton (HaloMerger_Soliton_InitMode == 1 only) [1]
+HaloMerger_Soliton_1_DensProf_PhyConst  1.0                                # value of the dimensional constant 4*pi*G*(ELBDM_MASS/hbar)^2 in the units of density profile (HaloMerger_Soliton_InitMode == 1 only) (<=0.0=same as in the simulation units) [-1]
 HaloMerger_Soliton_1_OuterSlope        -8.0                                # outer slope of the analytical density profile of the 1st soliton (HaloMerger_Soliton_InitMode == 2 only) [-8.0]
 # 2nd soliton
 HaloMerger_Soliton_2_CoreRadius        -1.0
@@ -22,4 +23,5 @@ HaloMerger_Soliton_2_VelocityY         -0.5
 HaloMerger_Soliton_2_VelocityZ          0.0
 HaloMerger_Soliton_2_DensProf_Filename  SolitonDensityProfile
 HaloMerger_Soliton_2_DensProf_Rescale   0
+HaloMerger_Soliton_2_DensProf_PhyConst -1.0
 HaloMerger_Soliton_2_OuterSlope        -8.0
