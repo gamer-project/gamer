@@ -43,7 +43,7 @@ static double   *HaloMerger_Soliton_OuterSlope                      = NULL; // o
 static char    (*HaloMerger_Soliton_DensProf_Filename)[MAX_STRING]  = NULL; // filename of the density profile table of each soliton
 static int      *HaloMerger_Soliton_DensProf_NBin                   = NULL; // number of bins of the density profile table
 static bool     *HaloMerger_Soliton_DensProf_Rescale                = NULL; // whether to scale the density profile table of each soliton
-static double   *HaloMerger_Soliton_DensProf_PhyConst               = NULL; // value of the dimensional constant 4*pi*G*(ELBDM_MASS/hbar)^2 in the units of density profile
+static double   *HaloMerger_Soliton_DensProf_PhyConst               = NULL; // value of the dimensional constant 4*pi*G*(ELBDM_MASS/hbar)^2 in the units of the density profile table
 static double   *HaloMerger_Soliton_DensProf_ScaleC                 = NULL; // ratio between the values of 4*pi*G*(ELBDM_MASS/hbar)^2 in the units of the simulation and input table
 static double   *HaloMerger_Soliton_DensProf_ScaleL                 = NULL; // L/D: length/density scale factors of each soliton
 static double   *HaloMerger_Soliton_DensProf_ScaleD                 = NULL; //      (defined as the ratio between the core radii/peak
@@ -390,7 +390,7 @@ void SetParameter()
 
       char HaloMerger_Soliton_i_DensProf_Filename[MAX_STRING]; // filename of the density profile table for the i-th soliton (HaloMerger_Soliton_InitMode == 1 only)
       char HaloMerger_Soliton_i_DensProf_Rescale[MAX_STRING];  // whether to scale the density profile table for the i-th soliton (HaloMerger_Soliton_InitMode == 1 only)
-      char HaloMerger_Soliton_i_DensProf_PhyConst[MAX_STRING]; // value of the dimensional constant 4*pi*G*(ELBDM_MASS/hbar)^2 in the units of density profile for the i-th soliton (HaloMerger_Soliton_InitMode == 1 only) (<=0.0=same as in the simulation units)
+      char HaloMerger_Soliton_i_DensProf_PhyConst[MAX_STRING]; // value of the dimensional constant 4*pi*G*(ELBDM_MASS/hbar)^2 in the units of the density profile table for the i-th soliton (HaloMerger_Soliton_InitMode == 1 only) (<=0.0=assume simulation units)
 
       char HaloMerger_Soliton_i_OuterSlope[MAX_STRING];        // outer slope of the analytical density profile of the i-th soliton (HaloMerger_Soliton_InitMode == 2 only)
 
@@ -813,7 +813,7 @@ void SetParameter()
             {
 //             check the units of table are consistent with the simulation
                if ( ! Mis_CompareRealValue( HaloMerger_Soliton_DensProf_PhyConst[index_soliton], 4.0*M_PI*NEWTON_G*SQR(ELBDM_ETA), NULL, false ) )
-                  Aux_Error( ERROR_INFO, "HaloMerger_Soliton_%d_DensProf_PhyConst (%13.6e) in input table is not consistent with the value of 4.0*M_PI*NEWTON_G*SQR(ELBDM_ETA) = %13.6e in simulation units !!\n",
+                  Aux_Error( ERROR_INFO, "HaloMerger_Soliton_%d_DensProf_PhyConst (%13.6e) in the input table is inconsistent with the value of 4.0*M_PI*NEWTON_G*SQR(ELBDM_ETA) = %13.6e in simulation units !!\n",
                              index_soliton_input, HaloMerger_Soliton_DensProf_PhyConst[index_soliton], 4.0*M_PI*NEWTON_G*SQR(ELBDM_ETA) );
 
 //             overwrite the peak density and core radius from the table
