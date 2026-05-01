@@ -1,0 +1,20 @@
+# problem-specific runtime parameters
+ComputeCorrelation      1                        # compute correlation function (must set OPT__RECORD_USER=1) [0]
+ReComputeCorrelation    0                        # use the simulation time of RESTART as initial time for computing time correlation; only available for RESTART [0]
+FilePath_corr           ./Record__Correlation    # output path for correlation function text files
+MinLv_corr              0                        # do statistics from MinLv to MaxLv [0]
+MaxLv_corr              0                        # do statistics from MinLv to MaxLv [MAX_LEVEL]
+StepInitial_corr        0                        # inital step for recording correlation function [0]
+StepInterval_corr       1                        # interval for recording correlation function (only for OutputCorrelationMode=0) [1]
+StepEnd_corr            200                      # end step for recording correlation function (only for OutputCorrelationMode=0) [NoMax_int]
+
+# parameters for correlation function profile (only useful when ComputeCorrelation=1)
+RadiusMax_corr          0.04                     # maximum radius of correlation profile [0.5*BoxSize]
+dr_min_corr             0.00234224               # minimum bin size [1e-2*0.5*BoxSize]
+LogBin_corr             1                        # use log bin [0]
+LogBinRatio_corr        1.1940617521534918       # ratio of adjacent log bins [2]
+RemoveEmpty_corr        0                        # remove 0 sample bins; false: Data[empty_bin]=Weight[empty_bin]=NCell[empty_bin]=0 [0]
+
+# parameters for initial density profile (only useful when ComputeCorrelation=1)
+dr_min_prof             0.00058556               # minimum bin size [0.25*dr_min_corr]
+
