@@ -4,6 +4,8 @@ extern void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, 
                             bool &IntTime, int &Sg, int &Sg_IntT, real &Weighting, real &Weighting_IntT );
 
 
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  InterpolateMeanAndStd
 // Description :  Interpolate the initial density for a given radius
@@ -22,30 +24,38 @@ extern void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, 
 //
 // Return      :  mean_inter, std_inter
 //-------------------------------------------------------------------------------------------------------
-void InterpolateMeanAndStd(real *mean_inter, real *std_inter, const Profile_t *prof_init[], const int NProf, const int bin_index, const double r)
+void InterpolateMeanAndStd( real *mean_inter, real *std_inter, const Profile_t *prof_init[],
+                            const int NProf, const int bin_index, const double r )
 {
+
    double delta_r, x;
+
    if ( r > prof_init[0]->Radius[bin_index] )
    {
       int bin_index_right = bin_index+1;
       delta_r             = prof_init[0]->Radius[bin_index_right] - prof_init[0]->Radius[bin_index];
       x                   = (r - prof_init[0]->Radius[bin_index]) / delta_r;
+
 //    check x
-      if (x<(real)(0.0))
-         Aux_Error( ERROR_INFO, "x (%14.7e) < 0.0 !! index = %d ; r = %14.7e ; left-hand point = %14.7e ; right-hand point = %14.7e \n", x , bin_index, r, prof_init[0]->Radius[bin_index], prof_init[0]->Radius[bin_index_right] );
-      else if (x>(real)(1.0))
-         Aux_Error( ERROR_INFO, "x (%14.7e) > 1.0 !! index = %d ; r = %14.7e ; left-hand point = %14.7e ; right-hand point = %14.7e \n", x , bin_index, r, prof_init[0]->Radius[bin_index], prof_init[0]->Radius[bin_index_right] );
+      if ( x < (real)(0.0) )
+         Aux_Error( ERROR_INFO, "x (%14.7e) < 0.0 !! index = %d, r = %14.7e, left-hand point = %14.7e, right-hand point = %14.7e\n",
+                    x , bin_index, r, prof_init[0]->Radius[bin_index], prof_init[0]->Radius[bin_index_right] );
+      else if ( x > (real)(1.0) )
+         Aux_Error( ERROR_INFO, "x (%14.7e) > 1.0 !! index = %d, r = %14.7e, left-hand point = %14.7e, right-hand point = %14.7e\n",
+                    x , bin_index, r, prof_init[0]->Radius[bin_index], prof_init[0]->Radius[bin_index_right] );
+
 //    interpolate
       for  (int i=0; i<NProf; i++)
       {
          mean_inter[i] = prof_init[i]->Data      [bin_index]*(real)(1.-x) + prof_init[i]->Data      [bin_index_right]*(real)x;
          std_inter[i]  = prof_init[i]->Data_Sigma[bin_index]*(real)(1.-x) + prof_init[i]->Data_Sigma[bin_index_right]*(real)x;
       }
-   }
+   } // if ( r > prof_init[0]->Radius[bin_index] )
+
    else
    {
 //    no left hand side bin, no interpolation
-      if (bin_index==0)
+      if ( bin_index == 0 )
       {
          for (int i=0; i<NProf; i++)
          {
@@ -53,25 +63,31 @@ void InterpolateMeanAndStd(real *mean_inter, real *std_inter, const Profile_t *p
             std_inter[i]  = prof_init[i]->Data_Sigma[bin_index];
          }
       }
+
       else
       {
          int bin_index_left  = bin_index-1;
          delta_r             = prof_init[0]->Radius[bin_index] - prof_init[0]->Radius[bin_index_left];
-         x                   = (r - prof_init[0]->Radius[bin_index_left]) / delta_r;
+         x                   = ( r - prof_init[0]->Radius[bin_index_left] ) / delta_r;
+
 //       check x
-         if (x<(real)(0.0))
-            Aux_Error( ERROR_INFO, "x (%14.7e) < 0.0 !! index = %d ; r = %14.7e ; left-hand point = %14.7e ; right-hand point = %14.7e \n", x , bin_index, r, prof_init[0]->Radius[bin_index_left], prof_init[0]->Radius[bin_index] );
-         else if (x>(real)(1.0))
-            Aux_Error( ERROR_INFO, "x (%14.7e) > 1.0 !! index = %d ; r = %14.7e ; left-hand point = %14.7e ; right-hand point = %14.7e \n", x , bin_index, r, prof_init[0]->Radius[bin_index_left], prof_init[0]->Radius[bin_index] );
+         if ( x < (real)(0.0) )
+            Aux_Error( ERROR_INFO, "x (%14.7e) < 0.0 !! index = %d, r = %14.7e, left-hand point = %14.7e, right-hand point = %14.7e\n",
+                        x , bin_index, r, prof_init[0]->Radius[bin_index_left], prof_init[0]->Radius[bin_index] );
+         else if ( x > (real)(1.0) )
+            Aux_Error( ERROR_INFO, "x (%14.7e) > 1.0 !! index = %d, r = %14.7e, left-hand point = %14.7e, right-hand point = %14.7e\n",
+                       x , bin_index, r, prof_init[0]->Radius[bin_index_left], prof_init[0]->Radius[bin_index] );
+
 //       interpolate
-         for  (int i=0; i<NProf; i++)
+         for (int i=0; i<NProf; i++)
          {
             mean_inter[i] = prof_init[i]->Data      [bin_index_left]*(real)(1.-x) + prof_init[i]->Data      [bin_index]*(real)x;
             std_inter[i]  = prof_init[i]->Data_Sigma[bin_index_left]*(real)(1.-x) + prof_init[i]->Data_Sigma[bin_index]*(real)x;
          }
-      }
-   }
+      } // if ( bin_index == 0 ) ... else ...
+   } // if ( r > prof_init[0]->Radius[bin_index] ) ... else ...
 }
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -162,7 +178,7 @@ void InterpolateMeanAndStd(real *mean_inter, real *std_inter, const Profile_t *p
 void Aux_ComputeCorrelation( Profile_t *Correlation[], const Profile_t *prof_init[], const double Center[],
                              const double r_max_input, const double dr_min, const bool LogBin, const double LogBinRatio,
                              const bool RemoveEmpty, const long TVarBitIdx[], const int NProf, const int MinLv, const int MaxLv,
-                             const PatchType_t PatchType, const double PrepTime, const double dr_min_prof)
+                             const PatchType_t PatchType, const double PrepTime, const double dr_min_prof )
 {
 
 // check
@@ -189,12 +205,17 @@ void Aux_ComputeCorrelation( Profile_t *Correlation[], const Profile_t *prof_ini
         PatchType != PATCH_BOTH  &&  PatchType != PATCH_LEAF_PLUS_MAXNONLEAF )
       Aux_Error( ERROR_INFO, "incorrect PatchType (%d) !!\n", PatchType );
 #  endif
+
    if ( NProf != NCOMP_PASSIVE )
-      Aux_Error( ERROR_INFO, "NProf(%d) != NCOMP_PASSIVE(%d) !! Currently only support NProf = NCOMP_PASSIVE for computing correlation !!\n", NProf, NCOMP_PASSIVE );
+      Aux_Error( ERROR_INFO, "NProf(%d) != NCOMP_PASSIVE(%d) !! Currently only support NProf = NCOMP_PASSIVE for computing correlation !!\n",
+                 NProf, NCOMP_PASSIVE );
+
    if ( TVarBitIdx[0] != _DENS )
-      Aux_Error( ERROR_INFO, "TVarBitIdx[0](%ld) != _DENS(%ld) !! Currently only support TVarBitIdx[0] = _DENS for computing correlation !!\n", TVarBitIdx[0], _DENS );
+      Aux_Error( ERROR_INFO, "TVarBitIdx[0](%ld) != _DENS(%ld) !! Currently only support TVarBitIdx[0] = _DENS for computing correlation !!\n",
+                 TVarBitIdx[0], _DENS );
+
 #  if ( MODEL == HYDRO )
-      Aux_Error( ERROR_INFO, "Does not support HDRDO for computing correlation function yet!!\n" );
+      Aux_Error( ERROR_INFO, "Does not support HDRDO for computing correlation function yet !!\n" );
 #  endif
 
 
@@ -219,9 +240,10 @@ void Aux_ComputeCorrelation( Profile_t *Correlation[], const Profile_t *prof_ini
       if ( TVarBitIdx[p] & _POTE )   InclPot = true;
 #  endif
 
+
 // check whether phase field is accessed in hybrid scheme
 // currently computing the profile of the phase field is not supported
-#  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
+#  if ( MODEL == ELBDM  &&  ELBDM_SCHEME == ELBDM_HYBRID )
    bool UsePhaseStub = false;
    for (int p=0; p<NProf; p++)
       if ( TVarBitIdx[p] & _PHAS ||  TVarBitIdx[p] & _STUB ) UsePhaseStub = true;
@@ -230,7 +252,8 @@ void Aux_ComputeCorrelation( Profile_t *Correlation[], const Profile_t *prof_ini
       for (int lv=MinLv; lv<=MaxLv; lv++)
          if ( !amr->use_wave_flag[lv] )
             Aux_Error( ERROR_INFO, "Retrieving PHAS and STUB to compute profile in hybrid scheme is not supported !!\n" );
-#  endif // #  if ( MODEL == ELBDM && ELBDM_SCHEME == ELBDM_HYBRID)
+#  endif // #  if ( MODEL == ELBDM  &&  ELBDM_SCHEME == ELBDM_HYBRID)
+
 
 // initialize the profile objects
    for (int p=0; p<NProf; p++)
@@ -250,7 +273,9 @@ void Aux_ComputeCorrelation( Profile_t *Correlation[], const Profile_t *prof_ini
          Correlation[p]->MaxRadius = dr_min*Correlation[p]->NBin;
       }
 
-      if ( Correlation[p]->MaxRadius > prof_init[p]->MaxRadius )  Aux_Error( ERROR_INFO, "Correlation[%d]->MaxRadius ( %14.7e ) > Profile[%d]->MaxRadius ( %14.7e ) !!\n", p, Correlation[p]->MaxRadius, p, prof_init[p]->MaxRadius );
+      if ( Correlation[p]->MaxRadius > prof_init[p]->MaxRadius )
+         Aux_Error( ERROR_INFO, "Correlation[%d]->MaxRadius ( %14.7e ) > Profile[%d]->MaxRadius ( %14.7e ) !!\n",
+                    p, Correlation[p]->MaxRadius, p, prof_init[p]->MaxRadius );
 
 
 //    record profile parameters
