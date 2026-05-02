@@ -14,7 +14,7 @@ parser.add_argument( '-e', action='store', required=True,  type=int, dest='idx_e
 parser.add_argument( '-d', action='store', required=False, type=int, dest='didx',
                      help='delta data index [%(default)d]', default=1 )
 parser.add_argument( '-m', action='store', required=False, type=str, dest='method',
-                     help='gradient method', default='yt' )
+                     help='gradient method (yt, numpy, fft)', default='yt' )
 
 args=parser.parse_args()
 
@@ -24,7 +24,7 @@ didx        = args.didx
 method      = args.method
 
 if not (method == 'yt' or method == 'numpy' or method == 'fft'):
-   print('Unknown method!!')
+   print('Unknown method (-m %s)!!'%method)
    sys.exit(1)
 
 # print command-line parameters
