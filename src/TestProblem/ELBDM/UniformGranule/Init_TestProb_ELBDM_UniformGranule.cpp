@@ -84,8 +84,10 @@ void Validate()
          Aux_Error( ERROR_INFO, "must set periodic BC for fluid --> reset OPT__BC_FLU[%d] to 1 !!\n", direction );
    }
 
+#  ifdef GRAVITY
    if ( OPT__BC_POT != BC_POT_PERIODIC )
       Aux_Error( ERROR_INFO, "must set periodic BC for gravity --> reset OPT__BC_POT to 1 !!\n" );
+#  endif
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Validating test problem %d ... done\n", TESTPROB_ID );
@@ -95,6 +97,61 @@ void Validate()
 
 
 #if ( MODEL == ELBDM  &&  defined GRAVITY )
+//-------------------------------------------------------------------------------------------------------
+// Function    :  LoadInputTestProb
+// Description :  Read problem-specific runtime parameters from Input__TestProb and store them in HDF5 snapshots (Data_*)
+//
+// Note        :  1. Invoked by SetParameter() to read parameters
+//                2. Invoked by Output_DumpData_Total_HDF5() using the function pointer Output_HDF5_InputTest_Ptr to store parameters
+//                3. If there is no problem-specific runtime parameter to load, add at least one parameter
+//                   to prevent an empty structure in HDF5_Output_t
+//                   --> Example:
+//                       LOAD_PARA( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+//
+// Parameter   :  load_mode      : Mode for loading parameters
+//                                 --> LOAD_READPARA    : Read parameters from Input__TestProb
+//                                     LOAD_HDF5_OUTPUT : Store parameters in HDF5 snapshots
+//                ReadPara       : Data structure for reading parameters (used with LOAD_READPARA)
+//                HDF5_InputTest : Data structure for storing parameters in HDF5 snapshots (used with LOAD_HDF5_OUTPUT)
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
+{
+
+#  ifndef SUPPORT_HDF5
+   if ( load_mode == LOAD_HDF5_OUTPUT )   Aux_Error( ERROR_INFO, "please turn on SUPPORT_HDF5 in the Makefile for load_mode == LOAD_HDF5_OUTPUT !!\n" );
+#  endif
+
+   if ( load_mode == LOAD_READPARA     &&  ReadPara       == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_READPARA and ReadPara == NULL !!\n" );
+   if ( load_mode == LOAD_HDF5_OUTPUT  &&  HDF5_InputTest == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_HDF5_OUTPUT and HDF5_InputTest == NULL !!\n" );
+
+// add parameters in the following format:
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
+// --> LOAD_PARA() is defined in "include/TestProb.h"
+// *************************************************************************************************************************************
+// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",           &VARIABLE,                    DEFAULT,       MIN,              MAX               );
+// *************************************************************************************************************************************
+   LOAD_PARA( load_mode, "ComputeCorrelation",        &ComputeCorrelation,          false,         Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "ReComputeCorrelation",      &ReComputeCorrelation,        false,         Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "FilePath_corr",             FilePath_corr,                Useless_str,   Useless_str,      Useless_str       );
+   LOAD_PARA( load_mode, "MinLv_corr",                &MinLv_corr,                  0,             0,                MAX_LEVEL         );
+   LOAD_PARA( load_mode, "MaxLv_corr",                &MaxLv_corr,                  MAX_LEVEL,     0,                MAX_LEVEL         );
+   LOAD_PARA( load_mode, "StepInitial_corr",          &StepInitial_corr,            0,             0,                NoMax_int         );
+   LOAD_PARA( load_mode, "StepInterval_corr",         &StepInterval_corr,           1,             1,                NoMax_int         );
+   LOAD_PARA( load_mode, "StepEnd_corr",              &StepEnd_corr,                NoMax_int,     0,                NoMax_int         );
+   LOAD_PARA( load_mode, "RadiusMax_corr",            &RadiusMax_corr,              Eps_double,    NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "dr_min_corr",               &dr_min_corr,                 Eps_double,    NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "LogBin_corr",               &LogBin_corr,                 false,         Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "LogBinRatio_corr",          &LogBinRatio_corr,            1.0,           NoMin_double,     NoMax_double      );
+   LOAD_PARA( load_mode, "RemoveEmpty_corr",          &RemoveEmpty_corr,            false,         Useless_bool,     Useless_bool      );
+   LOAD_PARA( load_mode, "dr_min_prof",               &dr_min_prof,                 Eps_double,    NoMin_double,     NoMax_double      );
+
+} // FUNCTION : LoadInputTestProb
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -121,26 +178,7 @@ void SetParameter()
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
-// (1-1) add parameters in the following format:
-// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
-// --> some handy constants (e.g., Useless_bool, Eps_double, NoMin_int, ...) are defined in "include/ReadPara.h"
-// ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",          &VARIABLE,                DEFAULT,       MIN,              MAX               );
-// ********************************************************************************************************************************
-   ReadPara->Add( "ComputeCorrelation",       &ComputeCorrelation,      false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "ReComputeCorrelation",     &ReComputeCorrelation,    false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "FilePath_corr",            FilePath_corr,            Useless_str,   Useless_str,      Useless_str       );
-   ReadPara->Add( "MinLv_corr",               &MinLv_corr,              0,             0,                MAX_LEVEL         );
-   ReadPara->Add( "MaxLv_corr",               &MaxLv_corr,              MAX_LEVEL,     0,                MAX_LEVEL         );
-   ReadPara->Add( "StepInitial_corr",         &StepInitial_corr,        0,             0,                NoMax_int         );
-   ReadPara->Add( "StepInterval_corr",        &StepInterval_corr,       1,             1,                NoMax_int         );
-   ReadPara->Add( "StepEnd_corr",             &StepEnd_corr,            NoMax_int,     0,                NoMax_int         );
-   ReadPara->Add( "RadiusMax_corr",           &RadiusMax_corr,          Eps_double,    NoMin_double,     NoMax_double      );
-   ReadPara->Add( "dr_min_corr",              &dr_min_corr,             Eps_double,    NoMin_double,     NoMax_double      );
-   ReadPara->Add( "LogBin_corr",              &LogBin_corr,             false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "LogBinRatio_corr",         &LogBinRatio_corr,        1.0,           NoMin_double,     NoMax_double      );
-   ReadPara->Add( "RemoveEmpty_corr",         &RemoveEmpty_corr,        false,         Useless_bool,     Useless_bool      );
-   ReadPara->Add( "dr_min_prof",              &dr_min_prof,             Eps_double,    NoMin_double,     NoMax_double      );
+   LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
 
    ReadPara->Read( FileName );
 
@@ -357,7 +395,6 @@ static void Init_User_ELBDM_UniformGranule( void )
 #  endif // #if ( NCOMP_PASSIVE_USER > 0 )
 
 } // FUNCTION : Init_User_ELBDM_UniformGranule
-#endif // #if ( MODEL == ELBDM  && defined GRAVITY )
 
 
 
@@ -414,6 +451,7 @@ void End_UniformGranule()
    Correlation_Dens  = NULL;
 
 } // FUNCTION : End_UniformGranule
+#endif // #if ( MODEL == ELBDM  && defined GRAVITY )
 
 
 
@@ -437,15 +475,18 @@ void Init_TestProb_ELBDM_UniformGranule()
    Validate();
 
 
-#  if ( MODEL == ELBDM )
+#  if ( MODEL == ELBDM  &&  defined GRAVITY )
 // set the problem-specific runtime parameters
    SetParameter();
 
-   Init_Field_User_Ptr = AddNewField_ELBDM_UniformGranule;
-   Init_User_Ptr       = Init_User_ELBDM_UniformGranule;
-   Aux_Record_User_Ptr = Do_CF;
-   End_User_Ptr        = End_UniformGranule;
-#  endif // #if ( MODEL == ELBDM )
+   Init_Field_User_Ptr       = AddNewField_ELBDM_UniformGranule;
+   Init_User_Ptr             = Init_User_ELBDM_UniformGranule;
+   Aux_Record_User_Ptr       = Do_CF;
+   End_User_Ptr              = End_UniformGranule;
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_InputTest_Ptr = LoadInputTestProb;
+#  endif
+#  endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
