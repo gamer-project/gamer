@@ -451,7 +451,7 @@ void End_UniformGranule()
    Correlation_Dens  = NULL;
 
 } // FUNCTION : End_UniformGranule
-#endif // #if ( MODEL == ELBDM  && defined GRAVITY )
+#endif // #if ( MODEL == ELBDM  &&  defined GRAVITY )
 
 
 
