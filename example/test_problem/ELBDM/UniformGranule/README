@@ -1,0 +1,32 @@
+Compilation flags:
+========================================
+Enable  : MODEL=ELBDM, GRAVITY, SUPPORT_HDF5, NCOMP_PASSIVE_USER=1
+Disable : COMOVING
+
+
+Default setup:
+=======================================
+0. Copy "generate_make.sh" to the directory "src/", execute "sh generate_make.sh" to generate "Makefile,"
+   and then execute "make clean" and "make -j 4" to generate the executable "gamer"
+
+1. Code units
+   (1) UNIT_L = kpc
+   (2) UNIT_V = km/s
+   (3) UNIT_M = 1.0e10 Msun
+
+2. ELBDM_MASS              3.0e-19
+   ELBDM_TAYLOR3_AUTO      0
+   ELBDM_BASE_SPECTRAL     1
+
+3. OPT__BC_FLU_*           1  (periodic)
+   OPT__BC_POT             1  (periodic)
+
+4. To enable ComputeCorrelation in Input_TestProb,
+   one must turn on OPT__RECORD_USER in Input__Parameter.
+
+Default UM_IC info:
+=======================================
+BoxSize                 =  0.08 kpc
+dimension               =  256^3
+average density         =  0.25e10 Msun/kpc^3
+1-D velocity dispersion =  6.0 km/s (the actual computed dispersion ~5.75 km/s)
