@@ -252,7 +252,7 @@ void Aux_ComputeCorrelation( Profile_t *Correlation[], const Profile_t *prof_ini
       for (int lv=MinLv; lv<=MaxLv; lv++)
          if ( !amr->use_wave_flag[lv] )
             Aux_Error( ERROR_INFO, "Retrieving PHAS and STUB to compute profile in hybrid scheme is not supported !!\n" );
-#  endif // #  if ( MODEL == ELBDM  &&  ELBDM_SCHEME == ELBDM_HYBRID)
+#  endif // #if ( MODEL == ELBDM  &&  ELBDM_SCHEME == ELBDM_HYBRID )
 
 
 // initialize the profile objects
