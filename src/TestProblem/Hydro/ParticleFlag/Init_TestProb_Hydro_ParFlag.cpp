@@ -286,9 +286,12 @@ void Init_TestProb_Hydro_ParFlag()
    SetParameter();
 
 
-   Init_Function_User_Ptr  = SetGridIC;
+   Init_Function_User_Ptr    = SetGridIC;
 #  ifdef PARTICLE
-   Par_Init_ByFunction_Ptr = Par_Init_ByFunction_ParFlag;
+   Par_Init_ByFunction_Ptr   = Par_Init_ByFunction_ParFlag;
+#  endif
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_InputTest_Ptr = LoadInputTestProb;
 #  endif
 #  endif // if ( MODEL == HYDRO  &&  defined PARTICLE )
 
