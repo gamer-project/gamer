@@ -1,14 +1,3 @@
-This page describes various timestep constraints. See also Sections 2.1 and 2.6 in the
-[GAMER-2 code paper](https://arxiv.org/abs/1712.07070).
-
-
-## Compilation Options
-
-Related options: none
-
-
-## Runtime Parameters
-
 Parameters described on this page:
 [DT__MAX](#DT__MAX), &nbsp;
 [DT__FLUID](#DT__FLUID), &nbsp;
@@ -34,10 +23,8 @@ Parameters described on this page:
 [AUTO_REDUCE_INT_MONO_FACTOR](#AUTO_REDUCE_INT_MONO_FACTOR), &nbsp;
 [AUTO_REDUCE_INT_MONO_MIN](#AUTO_REDUCE_INT_MONO_MIN) &nbsp;
 
-
 Other related parameters:
-[[]] &nbsp;
-
+none
 
 Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**
 
@@ -240,3 +227,4 @@ Must enable [AUTO_REDUCE_DT](#AUTO_REDUCE_DT).
 
 ## Links
 * [[Main page of Runtime Parameters | Runtime-Parameters]]
+* [[Main page of Timestep | Timestep]]
