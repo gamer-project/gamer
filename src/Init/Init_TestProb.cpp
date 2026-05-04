@@ -26,10 +26,12 @@ void Init_TestProb_Hydro_BarredPot();
 void Init_TestProb_Hydro_ParticleTest();
 void Init_TestProb_Hydro_CDM_LSS();
 void Init_TestProb_Hydro_Zeldovich();
+void Init_TestProb_Hydro_Grackle_Comoving();
 void Init_TestProb_Hydro_EnergyPowerSpectrum();
 void Init_TestProb_Hydro_CR_SoundWave();
 void Init_TestProb_Hydro_CR_ShockTube();
 void Init_TestProb_Hydro_CR_Diffusion();
+void Init_TestProb_Hydro_GrackleTest();
 
 void Init_TestProb_ELBDM_ExtPot();
 void Init_TestProb_ELBDM_JeansInstabilityComoving();
@@ -44,6 +46,8 @@ void Init_TestProb_ELBDM_LSS();
 void Init_TestProb_ELBDM_PlaneWave();
 void Init_TestProb_ELBDM_Perturbation();
 void Init_TestProb_ELBDM_HaloMerger();
+void Init_TestProb_ELBDM_DiskHeating();
+void Init_TestProb_ELBDM_UniformGranule();
 
 
 
@@ -91,10 +95,12 @@ void Init_TestProb()
       case TESTPROB_HYDRO_PARTICLE_TEST :                Init_TestProb_Hydro_ParticleTest();                break;
       case TESTPROB_HYDRO_CDM_LSS :                      Init_TestProb_Hydro_CDM_LSS();                     break;
       case TESTPROB_HYDRO_ZELDOVICH :                    Init_TestProb_Hydro_Zeldovich();                   break;
+      case TESTPROB_HYDRO_GRACKLE_COMOVING :             Init_TestProb_Hydro_Grackle_Comoving();            break;
       case TESTPROB_HYDRO_ENERGY_POWER_SPECTRUM :        Init_TestProb_Hydro_EnergyPowerSpectrum();         break;
       case TESTPROB_HYDRO_CR_SOUNDWAVE :                 Init_TestProb_Hydro_CR_SoundWave();                break;
       case TESTPROB_HYDRO_CR_SHOCKTUBE :                 Init_TestProb_Hydro_CR_ShockTube();                break;
       case TESTPROB_HYDRO_CR_DIFFUSION :                 Init_TestProb_Hydro_CR_Diffusion();                break;
+      case TESTPROB_HYDRO_GRACKLE_TEST :                 Init_TestProb_Hydro_GrackleTest();                 break;
 
       case TESTPROB_ELBDM_EXTPOT :                       Init_TestProb_ELBDM_ExtPot();                      break;
       case TESTPROB_ELBDM_JEANS_INSTABILITY_COMOVING :   Init_TestProb_ELBDM_JeansInstabilityComoving();    break;
@@ -109,6 +115,8 @@ void Init_TestProb()
       case TESTPROB_ELBDM_PLANE_WAVE :                   Init_TestProb_ELBDM_PlaneWave();                   break;
       case TESTPROB_ELBDM_PERTURBATION :                 Init_TestProb_ELBDM_Perturbation();                break;
       case TESTPROB_ELBDM_HALO_MERGER :                  Init_TestProb_ELBDM_HaloMerger();                  break;
+      case TESTPROB_ELBDM_DISK_HEATING :                 Init_TestProb_ELBDM_DiskHeating();                 break;
+      case TESTPROB_ELBDM_UNIFORM_GRANULE :              Init_TestProb_ELBDM_UniformGranule();              break;
 
       default: Aux_Error( ERROR_INFO, "unsupported TESTPROB_ID (%d) !!\n", TESTPROB_ID );
    } // switch( TESTPROB_ID )

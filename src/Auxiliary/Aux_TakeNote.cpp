@@ -4,9 +4,6 @@
 #include "CUPOT.h"
 #endif
 #include <sched.h>
-#ifdef __APPLE__
-#include <cpuid.h>
-#endif
 #include "time.h"
 
 static int get_cpuid();
@@ -25,8 +22,10 @@ void Aux_TakeNote()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_TakeNote ...\n" );
 
 
-   const char FileName[] = "Record__Note";
    FILE *Note;
+   char FileName[2*MAX_STRING];
+   sprintf( FileName, "%s/Record__Note", OUTPUT_DIR );
+
 
    if ( MPI_Rank == 0 )
    {
@@ -39,7 +38,9 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fclose( Note );
 
-      system( "cat ./Input__Note >> Record__Note" );
+      char Command[2*MAX_STRING];
+      sprintf( Command, "cat ./Input__Note >> %s/Record__Note", OUTPUT_DIR );
+      system( Command );
 
       Note = fopen( FileName, "a" );
       fprintf( Note, "***********************************************************************************\n" );
@@ -72,8 +73,8 @@ void Aux_TakeNote()
       fprintf( Note, "POT_SCHEME                      SOR\n" );
 #     elif ( POT_SCHEME == MG )
       fprintf( Note, "POT_SCHEME                      MG\n" );
-#     elif ( POT_SCHEME == NONE )
-      fprintf( Note, "POT_SCHEME                      NONE\n" );
+#     elif ( POT_SCHEME == OPTION_NONE )
+      fprintf( Note, "POT_SCHEME                      OPTION_NONE\n" );
 #     else
       fprintf( Note, "POT_SCHEME                      UNKNOWN\n" );
 #     endif
@@ -120,8 +121,8 @@ void Aux_TakeNote()
       fprintf( Note, "FLU_SCHEME                      MHM with Riemann prediction\n" );
 #     elif ( FLU_SCHEME == CTU )
       fprintf( Note, "FLU_SCHEME                      CTU\n" );
-#     elif ( FLU_SCHEME == NONE )
-      fprintf( Note, "FLU_SCHEME                      NONE\n" );
+#     elif ( FLU_SCHEME == OPTION_NONE )
+      fprintf( Note, "FLU_SCHEME                      OPTION_NONE\n" );
 #     else
       fprintf( Note, "FLU_SCHEME                      UNKNOWN\n" );
 #     endif
@@ -130,8 +131,8 @@ void Aux_TakeNote()
       fprintf( Note, "LR_SCHEME                       PLM\n" );
 #     elif ( LR_SCHEME == PPM )
       fprintf( Note, "LR_SCHEME                       PPM\n" );
-#     elif ( LR_SCHEME == NONE )
-      fprintf( Note, "LR_SCHEME                       NONE\n" );
+#     elif ( LR_SCHEME == OPTION_NONE )
+      fprintf( Note, "LR_SCHEME                       OPTION_NONE\n" );
 #     else
       fprintf( Note, "LR_SCHEME                       UNKNOWN\n" );
 #     endif
@@ -146,8 +147,8 @@ void Aux_TakeNote()
       fprintf( Note, "RSOLVER                         HLLC\n" );
 #     elif ( RSOLVER == HLLD )
       fprintf( Note, "RSOLVER                         HLLD\n" );
-#     elif ( RSOLVER == NONE )
-      fprintf( Note, "RSOLVER                         NONE\n" );
+#     elif ( RSOLVER == OPTION_NONE )
+      fprintf( Note, "RSOLVER                         OPTION_NONE\n" );
 #     else
       fprintf( Note, "RSOLVER                         UNKNOWN\n" );
 #     endif
@@ -156,8 +157,8 @@ void Aux_TakeNote()
       fprintf( Note, "DUAL_ENERGY                     DE_ENPY\n" );
 #     elif ( DUAL_ENERGY == DE_EINT )
       fprintf( Note, "DUAL_ENERGY                     DE_EINT\n" );
-#     elif ( DUAL_ENERGY == NONE )
-      fprintf( Note, "DUAL_ENERGY                     NONE\n" );
+#     elif ( DUAL_ENERGY == OPTION_NONE )
+      fprintf( Note, "DUAL_ENERGY                     OPTION_NONE\n" );
 #     else
       fprintf( Note, "DUAL_ENERGY                     UNKNOWN\n" );
 #     endif
@@ -363,6 +364,12 @@ void Aux_TakeNote()
       fprintf( Note, "FLOAT8_PAR                      OFF\n" );
 #     endif
 
+#     ifdef INT8_PAR
+      fprintf( Note, "INT8_PAR                        ON\n" );
+#     else
+      fprintf( Note, "INT8_PAR                        OFF\n" );
+#     endif
+
 #     ifdef SERIAL
       fprintf( Note, "SERIAL                          ON\n" );
 #     else
@@ -406,6 +413,12 @@ void Aux_TakeNote()
       fprintf( Note, "GPU_ARCH                        TURING\n" );
 #     elif ( GPU_ARCH == AMPERE )
       fprintf( Note, "GPU_ARCH                        AMPERE\n" );
+#     elif ( GPU_ARCH == ADA_LOVELACE )
+      fprintf( Note, "GPU_ARCH                        ADA_LOVELACE\n" );
+#     elif ( GPU_ARCH == HOPPER )
+      fprintf( Note, "GPU_ARCH                        HOPPER\n" );
+#     elif ( GPU_ARCH == BLACKWELL )
+      fprintf( Note, "GPU_ARCH                        BLACKWELL\n" );
 #     else
       fprintf( Note, "GPU_ARCH                        UNKNOWN\n" );
 #     endif
@@ -544,7 +557,7 @@ void Aux_TakeNote()
       fprintf( Note, "CHECK_INTERMEDIATE              HLLC\n" );
 #     elif ( CHECK_INTERMEDIATE == HLLD )
       fprintf( Note, "CHECK_INTERMEDIATE              HLLD\n" );
-#     elif ( CHECK_INTERMEDIATE == NONE )
+#     elif ( CHECK_INTERMEDIATE == OPTION_NONE )
       fprintf( Note, "CHECK_INTERMEDIATE              OFF\n" );
 #     else
       fprintf( Note, "CHECK_INTERMEDIATE              UNKNOWN\n" );
@@ -558,7 +571,7 @@ void Aux_TakeNote()
       fprintf( Note, "RSOLVER_RESCUE                  HLLC\n" );
 #     elif ( RSOLVER_RESCUE == HLLD )
       fprintf( Note, "RSOLVER_RESCUE                  HLLD\n" );
-#     elif ( RSOLVER_RESCUE == NONE )
+#     elif ( RSOLVER_RESCUE == OPTION_NONE )
       fprintf( Note, "RSOLVER_RESCUE                  OFF\n" );
 #     else
       fprintf( Note, "RSOLVER_RESCUE                  UNKNOWN\n" );
@@ -687,6 +700,7 @@ void Aux_TakeNote()
       fprintf( Note, "#define FLU_NOUT_S             % d\n",      FLU_NOUT_S            );
       fprintf( Note, "#define DER_NOUT_MAX           % d\n",      DER_NOUT_MAX          );
       fprintf( Note, "#define NFIELD_STORED_MAX      % d\n",      NFIELD_STORED_MAX     );
+      fprintf( Note, "#define NCONREF_MAX            % d\n",      NCONREF_MAX           );
       fprintf( Note, "#define NFLUX_FLUID            % d\n",      NFLUX_FLUID           );
       fprintf( Note, "#define NFLUX_PASSIVE          % d\n",      NFLUX_PASSIVE         );
 #     ifdef GRAVITY
@@ -782,9 +796,12 @@ void Aux_TakeNote()
       fprintf( Note, "#define SRC_BLOCK_SIZE         % d\n",      SRC_BLOCK_SIZE        );
 #     endif // #ifdef GPU
 #     ifdef PARTICLE
-      fprintf( Note, "#define PAR_NATT_TOTAL         % d\n",      PAR_NATT_TOTAL        );
-      fprintf( Note, "#define PAR_NATT_USER          % d\n",      PAR_NATT_USER         );
-      fprintf( Note, "#define PAR_NATT_STORED        % d\n",      PAR_NATT_STORED       );
+      fprintf( Note, "#define PAR_NATT_FLT_TOTAL     % d\n",      PAR_NATT_FLT_TOTAL    );
+      fprintf( Note, "#define PAR_NATT_FLT_USER      % d\n",      PAR_NATT_FLT_USER     );
+      fprintf( Note, "#define PAR_NATT_FLT_STORED    % d\n",      PAR_NATT_FLT_STORED   );
+      fprintf( Note, "#define PAR_NATT_INT_TOTAL     % d\n",      PAR_NATT_INT_TOTAL    );
+      fprintf( Note, "#define PAR_NATT_INT_USER      % d\n",      PAR_NATT_INT_USER     );
+      fprintf( Note, "#define PAR_NATT_INT_STORED    % d\n",      PAR_NATT_INT_STORED   );
       fprintf( Note, "#define PAR_NTYPE              % d\n",      PAR_NTYPE             );
 #     endif
       fprintf( Note, "#define MAX_STRING             % d\n",      MAX_STRING            );
@@ -904,6 +921,7 @@ void Aux_TakeNote()
       fprintf( Note, "Par->Init                      % d\n",      amr->Par->Init                );
       fprintf( Note, "Par->ParICFormat               % d\n",      amr->Par->ParICFormat         );
       fprintf( Note, "PAR_IC_FLOAT8                  % d\n",      PAR_IC_FLOAT8                 );
+      fprintf( Note, "PAR_IC_INT8                    % d\n",      PAR_IC_INT8                   );
       fprintf( Note, "Par->ParICMass                 % 14.7e\n",  amr->Par->ParICMass           );
       fprintf( Note, "Par->ParICType                 % d\n",      amr->Par->ParICType           );
       fprintf( Note, "Par->Interp                    % d\n",      amr->Par->Interp              );
@@ -917,9 +935,10 @@ void Aux_TakeNote()
       fprintf( Note, "Par->GhostSizeTracer           % d\n",      amr->Par->GhostSizeTracer     );
       fprintf( Note, "Par->TracerVelCorr             % d\n",      amr->Par->TracerVelCorr       );
       fprintf( Note, "OPT__FREEZE_PAR                % d\n",      OPT__FREEZE_PAR               );
+      fprintf( Note, "OPT__PAR_INIT_CHECK            % d\n",      OPT__PAR_INIT_CHECK           );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
-#     endif
+#     endif // #ifdef PARTICLE
 
 
 //    record the parameters of cosmological simulations (comoving frame)
@@ -963,6 +982,9 @@ void Aux_TakeNote()
 #     ifdef CR_DIFFUSION
       fprintf( Note, "DT__CR_DIFFUSION               % 14.7e\n",  DT__CR_DIFFUSION            );
 #     endif
+#     ifdef SUPPORT_GRACKLE
+      fprintf( Note, "DT__GRACKLE_COOLING            % 14.7e\n",  DT__GRACKLE_COOLING         );
+#     endif
 #     ifdef COMOVING
       fprintf( Note, "DT__MAX_DELTA_A                % 14.7e\n",  DT__MAX_DELTA_A             );
 #     endif
@@ -1005,10 +1027,14 @@ void Aux_TakeNote()
 #     ifdef SRHD
       fprintf( Note, "OPT__FLAG_LRTZ_GRADIENT        % d\n",      OPT__FLAG_LRTZ_GRADIENT   );
 #     endif
+#     ifdef SUPPORT_GRACKLE
+      fprintf( Note, "OPT__FLAG_COOLING_LEN          % d\n",      OPT__FLAG_COOLING_LEN     );
+#     endif
 #     endif
 #     if ( MODEL == ELBDM )
       fprintf( Note, "OPT__FLAG_ENGY_DENSITY         % d\n",      OPT__FLAG_ENGY_DENSITY    );
       fprintf( Note, "OPT__FLAG_SPECTRAL             % d\n",      OPT__FLAG_SPECTRAL        );
+      fprintf( Note, "OPT__FLAG_SPECTRAL_N           % d\n",      OPT__FLAG_SPECTRAL_N      );
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       fprintf( Note, "OPT__FLAG_INTERFERENCE         % d\n",      OPT__FLAG_INTERFERENCE    );
 #     endif
@@ -1031,6 +1057,20 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_USER                 % d\n",      OPT__FLAG_USER            );
       fprintf( Note, "OPT__FLAG_USER_NUM             % d\n",      OPT__FLAG_USER_NUM        );
       fprintf( Note, "OPT__FLAG_REGION               % d\n",      OPT__FLAG_REGION          );
+      fprintf( Note, "OPT__FLAG_ANGULAR              % d\n",      OPT__FLAG_ANGULAR         );
+      if ( OPT__FLAG_ANGULAR )
+      {
+      fprintf( Note, "   FLAG_ANGULAR_CEN_X          % 14.7e\n",  FLAG_ANGULAR_CEN_X        );
+      fprintf( Note, "   FLAG_ANGULAR_CEN_Y          % 14.7e\n",  FLAG_ANGULAR_CEN_Y        );
+      fprintf( Note, "   FLAG_ANGULAR_CEN_Z          % 14.7e\n",  FLAG_ANGULAR_CEN_Z        );
+      }
+      fprintf( Note, "OPT__FLAG_RADIAL               % d\n",      OPT__FLAG_RADIAL          );
+      if ( OPT__FLAG_RADIAL )
+      {
+      fprintf( Note, "   FLAG_RADIAL_CEN_X           % 14.7e\n",  FLAG_RADIAL_CEN_X         );
+      fprintf( Note, "   FLAG_RADIAL_CEN_Y           % 14.7e\n",  FLAG_RADIAL_CEN_Y         );
+      fprintf( Note, "   FLAG_RADIAL_CEN_Z           % 14.7e\n",  FLAG_RADIAL_CEN_Z         );
+      }
 #     ifdef PARTICLE
       fprintf( Note, "OPT__FLAG_NPAR_PATCH           % d\n",      OPT__FLAG_NPAR_PATCH      );
       fprintf( Note, "OPT__FLAG_NPAR_CELL            % d\n",      OPT__FLAG_NPAR_CELL       );
@@ -1091,21 +1131,30 @@ void Aux_TakeNote()
 #     ifdef SUPPORT_GRACKLE
       fprintf( Note, "Parameters of Grackle\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "GRACKLE_ACTIVATE               % d\n",      GRACKLE_ACTIVATE        );
+      fprintf( Note, "GRACKLE_ACTIVATE               % d\n",      GRACKLE_ACTIVATE           );
       if ( GRACKLE_ACTIVATE ) {
-      fprintf( Note, "GRACKLE_VERBOSE                % d\n",      GRACKLE_VERBOSE         );
-      fprintf( Note, "GRACKLE_COOLING                % d\n",      GRACKLE_COOLING         );
-      fprintf( Note, "GRACKLE_PRIMORDIAL             % d\n",      GRACKLE_PRIMORDIAL      );
-      fprintf( Note, "GRACKLE_METAL                  % d\n",      GRACKLE_METAL           );
-      fprintf( Note, "GRACKLE_UV                     % d\n",      GRACKLE_UV              );
-      fprintf( Note, "GRACKLE_CMB_FLOOR              % d\n",      GRACKLE_CMB_FLOOR       );
-      fprintf( Note, "GRACKLE_PE_HEATING             % d\n",      GRACKLE_PE_HEATING      );
-      fprintf( Note, "GRACKLE_PE_HEATING_RATE        % 14.7e\n",  GRACKLE_PE_HEATING_RATE );
-      fprintf( Note, "GRACKLE_CLOUDY_TABLE            %s\n",      GRACKLE_CLOUDY_TABLE    );
-      fprintf( Note, "GRACKLE_THREE_BODY_RATE        % d\n",      GRACKLE_THREE_BODY_RATE );
-      fprintf( Note, "GRACKLE_CIE_COOLING            % d\n",      GRACKLE_CIE_COOLING     );
-      fprintf( Note, "GRACKLE_H2_OPA_APPROX          % d\n",      GRACKLE_H2_OPA_APPROX   );
-      fprintf( Note, "CHE_GPU_NPGROUP                % d\n",      CHE_GPU_NPGROUP         ); }
+      fprintf( Note, "GRACKLE_VERBOSE                % d\n",      GRACKLE_VERBOSE            );
+#     ifndef COMOVING
+      fprintf( Note, "GRACKLE_REDSHIFT               % 14.7e\n",  GRACKLE_REDSHIFT           );
+#     endif
+      fprintf( Note, "GRACKLE_COOLING                % d\n",      GRACKLE_COOLING            );
+      fprintf( Note, "GRACKLE_PRIMORDIAL             % d\n",      GRACKLE_PRIMORDIAL         );
+      fprintf( Note, "GRACKLE_METAL                  % d\n",      GRACKLE_METAL              );
+      fprintf( Note, "GRACKLE_UV                     % d\n",      GRACKLE_UV                 );
+      fprintf( Note, "GRACKLE_CMB_FLOOR              % d\n",      GRACKLE_CMB_FLOOR          );
+      fprintf( Note, "GRACKLE_PE_HEATING             % d\n",      GRACKLE_PE_HEATING         );
+      fprintf( Note, "GRACKLE_PE_HEATING_RATE        % 14.7e\n",  GRACKLE_PE_HEATING_RATE    );
+      fprintf( Note, "GRACKLE_CLOUDY_TABLE            %s\n",      GRACKLE_CLOUDY_TABLE       );
+      fprintf( Note, "GRACKLE_THREE_BODY_RATE        % d\n",      GRACKLE_THREE_BODY_RATE    );
+      fprintf( Note, "GRACKLE_CIE_COOLING            % d\n",      GRACKLE_CIE_COOLING        );
+      fprintf( Note, "GRACKLE_H2_OPA_APPROX          % d\n",      GRACKLE_H2_OPA_APPROX      );
+      fprintf( Note, "GRACKLE_USE_V_HEATING_RATE     % d\n",      GRACKLE_USE_V_HEATING_RATE );
+      fprintf( Note, "GRACKLE_USE_S_HEATING_RATE     % d\n",      GRACKLE_USE_S_HEATING_RATE );
+      fprintf( Note, "GRACKLE_USE_TEMP_FLOOR         % d\n",      GRACKLE_USE_TEMP_FLOOR     );
+      fprintf( Note, "GRACKLE_TEMP_FLOOR_SCALAR      % 14.7e\n",  GRACKLE_TEMP_FLOOR_SCALAR  );
+      fprintf( Note, "GRACKLE_HYDROGEN_MFRAC         % 14.7e\n",  GRACKLE_HYDROGEN_MFRAC     );
+      fprintf( Note, "OPT__UNFREEZE_GRACKLE          % d\n",      OPT__UNFREEZE_GRACKLE      );
+      fprintf( Note, "CHE_GPU_NPGROUP                % d\n",      CHE_GPU_NPGROUP            ); }
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
 #     endif // #ifdef SUPPORT_GRACKLE
@@ -1215,20 +1264,22 @@ void Aux_TakeNote()
 #     endif
       }
       else {
-      fprintf( Note, "ELBDM_MASS                     % 14.7e\n",     ELBDM_MASS             );
+      fprintf( Note, "ELBDM_MASS                     % 14.7e\n",     ELBDM_MASS              );
       }
-      fprintf( Note, "ELBDM_PLANCK_CONST             % 14.7e\n",     ELBDM_PLANCK_CONST     );
-      fprintf( Note, "ELBDM_ETA                      % 14.7e\n",     ELBDM_ETA              );
+      fprintf( Note, "ELBDM_PLANCK_CONST             % 14.7e\n",     ELBDM_PLANCK_CONST      );
+      fprintf( Note, "ELBDM_ETA                      % 14.7e\n",     ELBDM_ETA               );
 #     ifdef QUARTIC_SELF_INTERACTION
-      fprintf( Note, "ELBDM_LAMBDA                   % 14.7e\n",     ELBDM_LAMBDA           );
+      fprintf( Note, "ELBDM_LAMBDA                   % 14.7e\n",     ELBDM_LAMBDA            );
 #     endif
-      fprintf( Note, "ELBDM_TAYLOR3_COEFF            % 14.7e\n",     ELBDM_TAYLOR3_COEFF    );
-      fprintf( Note, "ELBDM_TAYLOR3_AUTO             % d\n",         ELBDM_TAYLOR3_AUTO     );
-      fprintf( Note, "ELBDM_REMOVE_MOTION_CM         % d\n",         ELBDM_REMOVE_MOTION_CM );
-      fprintf( Note, "ELBDM_BASE_SPECTRAL            % d\n",         ELBDM_BASE_SPECTRAL    );
+      fprintf( Note, "ELBDM_TAYLOR3_COEFF            % 14.7e\n",     ELBDM_TAYLOR3_COEFF     );
+      fprintf( Note, "ELBDM_TAYLOR3_AUTO             % d\n",         ELBDM_TAYLOR3_AUTO      );
+      fprintf( Note, "ELBDM_REMOVE_MOTION_CM         % d\n",         ELBDM_REMOVE_MOTION_CM  );
+      fprintf( Note, "ELBDM_RESCALE_MASS_ERROR       % d\n",         ELBDM_RESCALE_MASS_ERROR);
+      fprintf( Note, "ELBDM_RESCALE_MASS_STEPS       % d\n",         ELBDM_RESCALE_MASS_STEPS);
+      fprintf( Note, "ELBDM_BASE_SPECTRAL            % d\n",         ELBDM_BASE_SPECTRAL     );
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      fprintf( Note, "ELBDM_MATCH_PHASE              % d\n",         ELBDM_MATCH_PHASE      );
-      fprintf( Note, "ELBDM_FIRST_WAVE_LEVEL         % d\n",         ELBDM_FIRST_WAVE_LEVEL );
+      fprintf( Note, "ELBDM_MATCH_PHASE              % d\n",         ELBDM_MATCH_PHASE       );
+      fprintf( Note, "ELBDM_FIRST_WAVE_LEVEL         % d\n",         ELBDM_FIRST_WAVE_LEVEL  );
 #     endif
 
 #     else
@@ -1267,6 +1318,15 @@ void Aux_TakeNote()
       fprintf( Note, "\n" ); }
 
       fprintf( Note, "OPT__CORR_AFTER_ALL_SYNC       % d\n",      OPT__CORR_AFTER_ALL_SYNC );
+      fprintf( Note, "Passive_Floor_Off              % d\n",      -1                       );
+
+//    target passive scalars to NOT be applied floor operations
+      fprintf( Note, "   Target fields               "                                     );
+      for (int v=0; v<NCOMP_TOTAL; v++)
+      if ( ( PassiveFloorMask & (1L<<v) ) == 0 )
+      fprintf( Note, " %s",                                       FieldLabel[v]            );
+      fprintf( Note, "\n" );
+
       fprintf( Note, "OPT__NORMALIZE_PASSIVE         % d\n",      OPT__NORMALIZE_PASSIVE   );
 
 //    target passive scalars to be normalized
@@ -1535,10 +1595,11 @@ void Aux_TakeNote()
       fprintf( Note, "MONO_MAX_ITER                  % d\n",      MONO_MAX_ITER                 );
       fprintf( Note, "INT_OPP_SIGN_0TH_ORDER         % d\n",      INT_OPP_SIGN_0TH_ORDER        );
 #     ifdef SUPPORT_SPECTRAL_INT
-      fprintf( Note, "SPEC_INT_TABLE_PATH             %s\n",      SPEC_INT_TABLE_PATH           );
+      fprintf( Note, "SPEC_INT_TABLE_PATH            %s\n",       SPEC_INT_TABLE_PATH           );
+      fprintf( Note, "SPEC_INT_GHOST_BOUNDARY        % d\n",      SPEC_INT_GHOST_BOUNDARY       );
 #     if ( MODEL == ELBDM )
       fprintf( Note, "SPEC_INT_XY_INSTEAD_DEPHA      % d\n",      SPEC_INT_XY_INSTEAD_DEPHA     );
-      fprintf( Note, "SPEC_INT_WAVELENGTH_MAGNIFIER  % 14.7e\n",  SPEC_INT_WAVELENGTH_MAGNIFIER );
+      fprintf( Note, "SPEC_INT_VORTEX_THRESHOLD      % 14.7e\n",  SPEC_INT_VORTEX_THRESHOLD     );
 #     endif
 #     endif // #ifdef SUPPORT_SPECTRAL_INT
       fprintf( Note, "***********************************************************************************\n" );
@@ -1552,8 +1613,12 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_PART               % d\n",      OPT__OUTPUT_PART            );
       fprintf( Note, "OPT__OUTPUT_USER               % d\n",      OPT__OUTPUT_USER            );
       fprintf( Note, "OPT__OUTPUT_TEXT_FORMAT_FLT     %s\n",      OPT__OUTPUT_TEXT_FORMAT_FLT );
+      fprintf( Note, "OPT__OUTPUT_TEXT_LENGTH_INT    % d\n",      OPT__OUTPUT_TEXT_LENGTH_INT );
 #     ifdef PARTICLE
       fprintf( Note, "OPT__OUTPUT_PAR_MODE           % d\n",      OPT__OUTPUT_PAR_MODE        );
+#     ifdef TRACER
+      fprintf( Note, "OPT__OUTPUT_PAR_MESH           % d\n",      OPT__OUTPUT_PAR_MESH        );
+#     endif
 #     endif
       fprintf( Note, "OPT__OUTPUT_BASEPS             % d\n",      OPT__OUTPUT_BASEPS          );
       fprintf( Note, "OPT__OUTPUT_BASE               % d\n",      OPT__OUTPUT_BASE            );
@@ -1573,7 +1638,6 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_CS                 % d\n",      OPT__OUTPUT_CS              );
       fprintf( Note, "OPT__OUTPUT_DIVVEL             % d\n",      OPT__OUTPUT_DIVVEL          );
       fprintf( Note, "OPT__OUTPUT_MACH               % d\n",      OPT__OUTPUT_MACH            );
-#     endif
 #     ifdef MHD
       fprintf( Note, "OPT__OUTPUT_DIVMAG             % d\n",      OPT__OUTPUT_DIVMAG          );
 #     endif
@@ -1583,6 +1647,12 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_LORENTZ            % d\n",      OPT__OUTPUT_LORENTZ         );
       fprintf( Note, "OPT__OUTPUT_ENTHALPY           % d\n",      OPT__OUTPUT_ENTHALPY        );
 #     endif
+#     ifdef SUPPORT_GRACKLE
+      fprintf( Note, "OPT__OUTPUT_GRACKLE_TEMP       % d\n",      OPT__OUTPUT_GRACKLE_TEMP    );
+      fprintf( Note, "OPT__OUTPUT_GRACKLE_MU         % d\n",      OPT__OUTPUT_GRACKLE_MU      );
+      fprintf( Note, "OPT__OUTPUT_GRACKLE_TCOOL      % d\n",      OPT__OUTPUT_GRACKLE_TCOOL   );
+#     endif
+#     endif // #if ( MODEL == HYDRO )
 
 //    user-defined derived fields
       if ( OPT__OUTPUT_USER_FIELD ) {
@@ -1607,6 +1677,7 @@ void Aux_TakeNote()
       fprintf( Note, "OUTPUT_PART_Y                  % 21.14e\n", OUTPUT_PART_Y               );
       fprintf( Note, "OUTPUT_PART_Z                  % 21.14e\n", OUTPUT_PART_Z               );
       fprintf( Note, "INIT_DUMPID                    % d\n",      INIT_DUMPID                 );
+      fprintf( Note, "OUTPUT_DIR                      %s\n",      OUTPUT_DIR                  );
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
 
@@ -1662,12 +1733,9 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__CK_REFINE                 % d\n",      OPT__CK_REFINE            );
       fprintf( Note, "OPT__CK_PROPER_NESTING         % d\n",      OPT__CK_PROPER_NESTING    );
       fprintf( Note, "OPT__CK_CONSERVATION           % d\n",      OPT__CK_CONSERVATION      );
-      if ( OPT__CK_CONSERVATION )
-      {
       fprintf( Note, "   ANGMOM_ORIGIN_X             % 14.7e\n",  ANGMOM_ORIGIN_X           );
       fprintf( Note, "   ANGMOM_ORIGIN_Y             % 14.7e\n",  ANGMOM_ORIGIN_Y           );
       fprintf( Note, "   ANGMOM_ORIGIN_Z             % 14.7e\n",  ANGMOM_ORIGIN_Z           );
-      }
       fprintf( Note, "OPT__CK_NORMALIZE_PASSIVE      % d\n",      OPT__CK_NORMALIZE_PASSIVE );
       fprintf( Note, "OPT__CK_RESTRICT               % d\n",      OPT__CK_RESTRICT          );
       fprintf( Note, "OPT__CK_FINITE                 % d\n",      OPT__CK_FINITE            );
@@ -1708,6 +1776,29 @@ void Aux_TakeNote()
          for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_RhoGradient[lv] );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n" );
+      }
+
+      if ( OPT__FLAG_ANGULAR )
+      {
+         fprintf( Note, "Flag Criterion (Angular Resolution)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level          AngRes_Max          AngRes_Min        AngRes_Max_R\n");
+         for (int lv=0; lv<MAX_LEVEL; lv++)
+            fprintf( Note, "%7d%20.7e%20.7e%20.7e\n", lv, FlagTable_Angular[lv][0], FlagTable_Angular[lv][1],
+                     FlagTable_Angular[lv][2] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+
+      if ( OPT__FLAG_RADIAL )
+      {
+         fprintf( Note, "Flag Criterion (Radial Resolution)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level          Refine_Rad\n");
+         for (int lv=0; lv<MAX_LEVEL; lv++)
+            fprintf( Note, "%7d%20.7e\n", lv, FlagTable_Radial[lv] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
       }
 
 #     if   ( MODEL == HYDRO )
@@ -1765,6 +1856,18 @@ void Aux_TakeNote()
       }
 #     endif
 
+#     ifdef SUPPORT_GRACKLE
+      if ( OPT__FLAG_COOLING_LEN )
+      {
+         fprintf( Note, "Flag Criterion (Cooling Length over Cell Size in HYDRO+GRACKLE)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level         l_cool / dh\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_CoolingLen[lv] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+#     endif
+
 #     ifdef COSMIC_RAY
       if ( OPT__FLAG_CRAY )
       {
@@ -1792,7 +1895,7 @@ void Aux_TakeNote()
 
       if ( OPT__FLAG_SPECTRAL )
       {
-         fprintf( Note, "Flag Criterion (Spectral)\n" );
+         fprintf( Note, "Flag Criterion (Spectral with N = %d coefficients)\n", OPT__FLAG_SPECTRAL_N );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "  Level     Refinement     Derefinement\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)
@@ -2045,23 +2148,16 @@ void Aux_TakeNote()
 // Function    :  get_cpuid
 // Description :  Get the CPU ID
 //
-// Note        :  Work on both macOS and Linux systems
+// Note        :  Works only on Linux systems; macOS is ignored
 //-------------------------------------------------------------------------------------------------------
 int get_cpuid()
 {
 
-// See https://stackoverflow.com/questions/33745364/sched-getcpu-equivalent-for-os-x
    int CPU;
 
 #  ifdef __APPLE__
-   uint32_t CPUInfo[4];
-   __cpuid_count(1, 0, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
-   if ((CPUInfo[3] & (1 << 9)) == 0) {
-      CPU = -1;  /* no APIC on chip */
-   } else {
-      CPU = (unsigned)CPUInfo[1] >> 24;
-   }
-   if (CPU < 0) CPU = 0;
+// macOS does not have an implementation of sched_getcpu that works cross-arch
+   CPU = -1;
 #  else
    CPU = sched_getcpu();
 #  endif

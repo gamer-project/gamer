@@ -69,7 +69,7 @@ do for [ID=ID_START:ID_END:ID_DELTA] {
    set yrange [1.0e-3:2.0e1]
 
    plot sprintf( '%s/Diag_%06d', FILE_SIMU, ID ) \
-        u (abs($4-CENTER)*3**0.5):16 w p pt 6 lc 6 tit 'Simulation' \
+        u (abs($4-CENTER)*3**0.5):17 w p pt 6 lc 6 tit 'Simulation' \
        ,FILE_BONDI u 2:7 w l lc -1 tit 'Analytical'
 
 
@@ -79,7 +79,7 @@ do for [ID=ID_START:ID_END:ID_DELTA] {
    set yrange [1.0e-2:1.0e3]
 
    plot sprintf( '%s/Diag_%06d', FILE_SIMU, ID ) \
-        u (abs($4-CENTER)*3**0.5):13 w p pt 6 lc 6 tit 'Simulation' \
+        u (abs($4-CENTER)*3**0.5):14 w p pt 6 lc 6 tit 'Simulation' \
        ,FILE_BONDI u 2:( ($6/$7)**2.0*$4/GAMMA ) w l lc -1 tit 'Analytical'
 
 

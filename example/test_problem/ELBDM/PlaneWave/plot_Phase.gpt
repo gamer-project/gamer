@@ -50,7 +50,7 @@ print "Start plotting ..."
 do for [ID=START_ID:END_ID:DELTA_ID] {
 
 #  set the input and output filenames
-   FILE_IN_PHASE = sprintf( '%s_Passive00_%06d', FILE_IN_PREFIX, ID, FILE_IN_SUFFIX )
+   FILE_IN_WRAPPEDPHASE = sprintf( '%s_Passive00_%06d', FILE_IN_PREFIX, ID, FILE_IN_SUFFIX )
 
    if ( GPVAL_TERM ne 'x11' ) { set output sprintf( '%s_%06d.%s', FILE_OUT_PREFIX, ID, FILE_OUT_EXT ) }
 
@@ -69,8 +69,8 @@ do for [ID=START_ID:END_ID:DELTA_ID] {
 
 #  plot
 
-   plot FILE_IN_PHASE  u ($1):($2) w p pt 6 lc 4 title 'Simulation Phase' \
-       ,FILE_IN_PHASE  u ($1):($3) w l      lc 8 title 'Analytical Phase'
+   plot FILE_IN_WRAPPEDPHASE  u ($1):($2) smooth unique w p pt 6 lc 4 title 'Simulation Wrapped Phase' \
+       ,FILE_IN_WRAPPEDPHASE  u ($1):($3) smooth unique w l      lc 8 title 'Analytical Wrapped Phase'
 
 
    if ( GPVAL_TERM eq 'x11' ) { if ( PAUSE <= 0.0 ) { pause mouse }   else { pause PAUSE } };

@@ -115,7 +115,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
    const real   MinTemp_No        = -1.0;
    const real   MinEntr_No        = -1.0;
    const bool   DE_Consistency_No = false;
-#  ifdef PARTICLE
+#  ifdef MASSIVE_PARTICLES
    const bool   TimingSendPar_No  = false;
    const bool   JustCountNPar_No  = false;
 #  ifdef LOAD_BALANCE
@@ -127,7 +127,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
    const bool   SibBufPatch       = NULL_BOOL;
    const bool   FaSibBufPatch     = NULL_BOOL;
 #  endif
-#  endif // #ifdef PARTICLE
+#  endif // #ifdef MASSIVE_PARTICLES
 
 // initialize the referenced center in the first iteration as the input Center_ref
    const double MaxR2             = SQR( MaxR );
@@ -183,13 +183,14 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
          for (int t=0; t<NTotal; t++)  PID0_List[t] = 8*t;
 
 //       initialize the particle density array (rho_ext) and collect particles to the target level
-#        ifdef PARTICLE
+#        ifdef MASSIVE_PARTICLES
          if ( WeightingDensityField & _PAR_DENS  ||  WeightingDensityField & _TOTAL_DENS )
          {
-            Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos, Time[lv],
+            Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, _PAR_TYPE, PredictPos,
+                                          amr->FluSgTime[lv][ amr->FluSg[lv] ],
                                           SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
 
-            Prepare_PatchData_InitParticleDensityArray( lv, Time[lv] );
+            Prepare_PatchData_InitParticleDensityArray( lv, amr->FluSgTime[lv][ amr->FluSg[lv] ] );
          }
 #        endif
 
@@ -204,7 +205,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
 //          get the weighting density on grids
             if ( UsePrepare )
             {
-               Prepare_PatchData( lv, Time[lv], WeightingDensity[0][0][0], NULL, 0, NPG, PID0_List+Disp, WeightingDensityField, _NONE,
+               Prepare_PatchData( lv, amr->FluSgTime[lv][ amr->FluSg[lv] ], WeightingDensity[0][0][0], NULL, 0, NPG, PID0_List+Disp, WeightingDensityField, _NONE,
                                   INT_NONE, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
                                   MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
             }
@@ -283,7 +284,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
          } // for (int Disp=0; Disp<NTotal; Disp+=NPG_Max)
 
 //       free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
-#        ifdef PARTICLE
+#        ifdef MASSIVE_PARTICLES
          if ( WeightingDensityField & _PAR_DENS  ||  WeightingDensityField & _TOTAL_DENS )
          {
             Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );

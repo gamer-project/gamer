@@ -20,8 +20,9 @@
 void Aux_Record_Performance( const double ElapsedTime )
 {
 
-   const char FileName[] = "Record__Performance";
    static bool FirstTime = true;
+   char FileName[2*MAX_STRING];
+   sprintf( FileName, "%s/Record__Performance", OUTPUT_DIR );
 
 
 // get the total number of active particles in each rank

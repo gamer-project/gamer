@@ -51,9 +51,15 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                                          the velocity gradient is large
 //                RemoveCell              : remove particles RemoveCell-base-level-cells away from the boundary
 //                                          (for non-periodic BC only)
-//                GhostSize               : Number of ghost zones required for interpolation scheme
-//                Attribute               : Pointer arrays to different particle attributes (Mass, Pos, Vel, ...)
+//                GhostSize               : Number of ghost zones required for the interpolation scheme of massive particles
+//                GhostSizeTracer         : Number of ghost zones required for the interpolation scheme of tracer  particles
+//                AttributeFlt            : Pointer arrays to different particle floating-point attributes (Mass, Pos, Vel, ...)
+//                AttributeInt            : Pointer arrays to different particle integer        attributes (Type)
 //                InactiveParList         : List of inactive particle IDs
+//                Mesh_Attr               : Pointer arrays to different mesh quantities mapped onto tracer particles
+//                Mesh_Attr_Num           : Number of mesh quantities mapped onto tracer particles
+//                Mesh_Attr_Idx           : Field indices of mesh quantities mapped onto tracer particles
+//                Mesh_Attr_Label         : Field labels of mesh quantities mapped onto tracer particles
 //                R2B_Real_NPatchTotal    : see R2B_Buff_NPatchTotal
 //                R2B_Real_NPatchEachRank : see R2B_Buff_NPatchEachRank
 //                R2B_Real_PIDList        : see R2B_Buff_PIDList
@@ -129,8 +135,13 @@ struct Particle_t
    double        RemoveCell;
    int           GhostSize;
    int           GhostSizeTracer;
-   real_par     *Attribute[PAR_NATT_TOTAL];
+   real_par     *AttributeFlt[PAR_NATT_FLT_TOTAL];
+   long_par     *AttributeInt[PAR_NATT_INT_TOTAL];
    long         *InactiveParList;
+   real_par    **Mesh_Attr;
+   int           Mesh_Attr_Num;
+   long         *Mesh_Attr_Idx;
+   char        **Mesh_Attr_Label;
 
 #  ifdef LOAD_BALANCE
    int           R2B_Real_NPatchTotal   [NLEVEL][2];
@@ -163,12 +174,12 @@ struct Particle_t
    real_par     *VelY;
    real_par     *VelZ;
    real_par     *Time;
-   real_par     *Type;
 #  ifdef STORE_PAR_ACC
    real_par     *AccX;
    real_par     *AccY;
    real_par     *AccZ;
 #  endif
+   long_par     *Type;
 
 
    //===================================================================================
@@ -201,9 +212,15 @@ struct Particle_t
 
       for (int lv=0; lv<NLEVEL; lv++)  NPar_Lv[lv] = 0;
 
-      for (int v=0; v<PAR_NATT_TOTAL; v++)   Attribute[v] = NULL;
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   AttributeFlt[v] = NULL;
+
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   AttributeInt[v] = NULL;
 
       InactiveParList = NULL;
+      Mesh_Attr       = NULL;
+      Mesh_Attr_Num   = 0;
+      Mesh_Attr_Idx   = NULL;
+      Mesh_Attr_Label = NULL;
 
 #     ifdef LOAD_BALANCE
       for (int lv=0; lv<NLEVEL; lv++)
@@ -261,10 +278,23 @@ struct Particle_t
    ~Particle_t()
    {
 
-      for (int v=0; v<PAR_NATT_TOTAL; v++)
-         if ( Attribute[v] != NULL )   free( Attribute[v] );
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
+         if ( AttributeFlt[v] != NULL )   free( AttributeFlt[v] );
+
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
+         if ( AttributeInt[v] != NULL )   free( AttributeInt[v] );
 
       if ( InactiveParList != NULL )   free( InactiveParList );
+
+      for (int v=0; v<Mesh_Attr_Num; v++)
+      {
+         if ( Mesh_Attr[v]       != NULL )   free( Mesh_Attr[v] );
+         if ( Mesh_Attr_Label[v] != NULL )   free( Mesh_Attr_Label[v] );
+      }
+
+      if ( Mesh_Attr       != NULL )   free( Mesh_Attr );
+      if ( Mesh_Attr_Idx   != NULL )   free( Mesh_Attr_Idx );
+      if ( Mesh_Attr_Label != NULL )   free( Mesh_Attr_Label );
 
 #     ifdef LOAD_BALANCE
       for (int lv=0; lv<NLEVEL; lv++)
@@ -320,10 +350,15 @@ struct Particle_t
 
 //    allocate arrays (use malloc so that realloc can be used later to resize the array)
 //    --> free memory first since other functions (e.g., LB_Init_LoadBalance()) will call InitRepo() again
-      for (int v=0; v<PAR_NATT_TOTAL; v++)
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
       {
-         if ( Attribute[v] != NULL )   free( Attribute[v] );
-         Attribute[v] = (real_par*)malloc( ParListSize*sizeof(real_par) );
+         if ( AttributeFlt[v] != NULL )   free( AttributeFlt[v] );
+         AttributeFlt[v] = (real_par*)malloc( ParListSize*sizeof(real_par) );
+      }
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)
+      {
+         if ( AttributeInt[v] != NULL )   free( AttributeInt[v] );
+         AttributeInt[v] = (long_par*)malloc( ParListSize*sizeof(long_par) );
       }
 
       if ( InactiveParList != NULL )   free( InactiveParList );
@@ -366,20 +401,20 @@ struct Particle_t
 #     endif // #ifdef LOAD_BALANCE
 
 //    set pointers
-      Mass = Attribute[PAR_MASS];
-      PosX = Attribute[PAR_POSX];
-      PosY = Attribute[PAR_POSY];
-      PosZ = Attribute[PAR_POSZ];
-      VelX = Attribute[PAR_VELX];
-      VelY = Attribute[PAR_VELY];
-      VelZ = Attribute[PAR_VELZ];
-      Time = Attribute[PAR_TIME];
-      Type = Attribute[PAR_TYPE];
+      Mass = AttributeFlt[PAR_MASS];
+      PosX = AttributeFlt[PAR_POSX];
+      PosY = AttributeFlt[PAR_POSY];
+      PosZ = AttributeFlt[PAR_POSZ];
+      VelX = AttributeFlt[PAR_VELX];
+      VelY = AttributeFlt[PAR_VELY];
+      VelZ = AttributeFlt[PAR_VELZ];
+      Time = AttributeFlt[PAR_TIME];
 #     ifdef STORE_PAR_ACC
-      AccX = Attribute[PAR_ACCX];
-      AccY = Attribute[PAR_ACCY];
-      AccZ = Attribute[PAR_ACCZ];
+      AccX = AttributeFlt[PAR_ACCX];
+      AccY = AttributeFlt[PAR_ACCY];
+      AccZ = AttributeFlt[PAR_ACCZ];
 #     endif
+      Type = AttributeInt[PAR_TYPE];
 
    } // METHOD : InitRepo
 
@@ -398,30 +433,33 @@ struct Particle_t
    //                4. Note that the global variable "AveDensity_Init" will NOT be recalculated
    //                   automatically here
    //
-   // Parameter   :  NewAtt : Array storing the attributes of new particles
+   // Parameter   :  NewAttFlt : Array storing the floating-point attributes of new particles
+   //                NewAttInt : Array storing the integer        attributes of new particles
    //
    // Return      :  Index of the new particle (ParID)
    //===================================================================================
-   long AddOneParticle( const real_par *NewAtt )
+   long AddOneParticle( const real_par *NewAttFlt, const long_par *NewAttInt )
    {
 
 //    check
 #     ifdef DEBUG_PARTICLE
       if ( NPar_AcPlusInac < 0 ) Aux_Error( ERROR_INFO, "NPar_AcPlusInac (%ld) < 0 !!\n", NPar_AcPlusInac );
 
-      if ( NewAtt == NULL )   Aux_Error( ERROR_INFO, "NewAtt == NULL !!\n" );
+      if ( NewAttFlt == NULL )   Aux_Error( ERROR_INFO, "NewAttFlt == NULL !!\n" );
 
-      if ( NewAtt[PAR_MASS] < (real_par)0.0 )
-         Aux_Error( ERROR_INFO, "Adding an inactive particle (mass = %21.14e) !!\n", NewAtt[PAR_MASS] );
+      if ( NewAttInt == NULL )   Aux_Error( ERROR_INFO, "NewAttInt == NULL !!\n" );
 
-      if ( NewAtt[PAR_POSX] != NewAtt[PAR_POSX] ||
-           NewAtt[PAR_POSY] != NewAtt[PAR_POSY] ||
-           NewAtt[PAR_POSZ] != NewAtt[PAR_POSZ]   )
+      if ( NewAttFlt[PAR_MASS] < (real_par)0.0 )
+         Aux_Error( ERROR_INFO, "Adding an inactive particle (mass = %21.14e) !!\n", NewAttFlt[PAR_MASS] );
+
+      if ( NewAttFlt[PAR_POSX] != NewAttFlt[PAR_POSX] ||
+           NewAttFlt[PAR_POSY] != NewAttFlt[PAR_POSY] ||
+           NewAttFlt[PAR_POSZ] != NewAttFlt[PAR_POSZ]   )
          Aux_Error( ERROR_INFO, "Adding a particle with strange position (%21.14e, %21.14e, %21.14e) !!\n",
-                    NewAtt[PAR_POSX], NewAtt[PAR_POSY], NewAtt[PAR_POSZ] );
+                    NewAttFlt[PAR_POSX], NewAttFlt[PAR_POSY], NewAttFlt[PAR_POSZ] );
 
-      if ( NewAtt[PAR_TYPE] < (real_par)0  ||  NewAtt[PAR_TYPE] >= (real_par)PAR_NTYPE )
-         Aux_Error( ERROR_INFO, "Incorrect particle type (%d) !!\n", (int)NewAtt[PAR_TYPE] );
+      if ( NewAttInt[PAR_TYPE] < (long_par)0  ||  NewAttInt[PAR_TYPE] >= (long_par)PAR_NTYPE )
+         Aux_Error( ERROR_INFO, "Incorrect particle type (%ld) !!\n", (long)NewAttInt[PAR_TYPE] );
 #     endif
 
 
@@ -448,22 +486,23 @@ struct Particle_t
          {
             ParListSize = (int)ceil( PARLIST_GROWTH_FACTOR*(ParListSize+1) );
 
-            for (int v=0; v<PAR_NATT_TOTAL; v++)   Attribute[v] = (real_par*)realloc( Attribute[v], ParListSize*sizeof(real_par) );
+            for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   AttributeFlt[v] = (real_par*)realloc( AttributeFlt[v], ParListSize*sizeof(real_par) );
+            for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   AttributeInt[v] = (long_par*)realloc( AttributeInt[v], ParListSize*sizeof(long_par) );
 
-            Mass = Attribute[PAR_MASS];
-            PosX = Attribute[PAR_POSX];
-            PosY = Attribute[PAR_POSY];
-            PosZ = Attribute[PAR_POSZ];
-            VelX = Attribute[PAR_VELX];
-            VelY = Attribute[PAR_VELY];
-            VelZ = Attribute[PAR_VELZ];
-            Time = Attribute[PAR_TIME];
-            Type = Attribute[PAR_TYPE];
+            Mass = AttributeFlt[PAR_MASS];
+            PosX = AttributeFlt[PAR_POSX];
+            PosY = AttributeFlt[PAR_POSY];
+            PosZ = AttributeFlt[PAR_POSZ];
+            VelX = AttributeFlt[PAR_VELX];
+            VelY = AttributeFlt[PAR_VELY];
+            VelZ = AttributeFlt[PAR_VELZ];
+            Time = AttributeFlt[PAR_TIME];
 #           ifdef STORE_PAR_ACC
-            AccX = Attribute[PAR_ACCX];
-            AccY = Attribute[PAR_ACCY];
-            AccZ = Attribute[PAR_ACCZ];
+            AccX = AttributeFlt[PAR_ACCX];
+            AccY = AttributeFlt[PAR_ACCY];
+            AccZ = AttributeFlt[PAR_ACCZ];
 #           endif
+            Type = AttributeInt[PAR_TYPE];
          }
 
          ParID = NPar_AcPlusInac;
@@ -472,7 +511,8 @@ struct Particle_t
 
 
 //    2. record the data of new particles
-      for (int v=0; v<PAR_NATT_TOTAL; v++)   Attribute[v][ParID] = NewAtt[v];
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   AttributeFlt[v][ParID] = NewAttFlt[v];
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   AttributeInt[v][ParID] = NewAttInt[v];
 
 
 //    3. update the total number of active particles (assuming all new particles are active)

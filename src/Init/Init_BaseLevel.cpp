@@ -54,7 +54,7 @@ void Init_BaseLevel()
 // find the base-level home patches of all particles
 #  ifdef PARTICLE
    const bool OldParOnly_Yes = true;
-   Par_FindHomePatch_UniformGrid( 0, OldParOnly_Yes, NULL_INT, NULL );
+   Par_FindHomePatch_UniformGrid( 0, OldParOnly_Yes, NULL_INT, NULL, NULL );
 #  endif
 
 } // FUNCTION : Init_BaseLevel

@@ -427,7 +427,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[DUAL][k][j][i],
                               dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], CheckMinPres_Yes, MIN_PRES,
-                              UseDual2FixEngy, Emag );
+                              PassiveFloorMask, UseDual2FixEngy, Emag );
 
 #        else // #ifdef DUAL_ENERGY
 
@@ -438,7 +438,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                                         amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMY][k][j][i],
                                         amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
                                         amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
-                                        MIN_EINT, Emag );
+                                        MIN_EINT, PassiveFloorMask, Emag );
 #        endif // #ifdef DUAL_ENERGY ... else ...
       } // i,j,k
 #     endif // #if ( MODEL == HYDRO )

@@ -14,3 +14,4 @@ GAMER_ExtractProfile
 .vscode
 src/Makefile
 src/Makefile.log
+src/.local_settings

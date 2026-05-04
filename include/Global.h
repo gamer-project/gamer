@@ -32,6 +32,8 @@ extern double     dTime_Base;                         // physical time interval 
 extern double     FlagTable_Rho        [NLEVEL-1];    // refinement criterion of density
 extern double     FlagTable_RhoGradient[NLEVEL-1];    // refinement criterion of density gradient
 extern double     FlagTable_Lohner     [NLEVEL-1][5]; // refinement criterion based on Lohner's error estimator
+extern double     FlagTable_Angular    [NLEVEL-1][3]; // refinement criterion based on angular resolution
+extern double     FlagTable_Radial     [NLEVEL-1];    // refinement criterion based on radial resolution
 extern double    *FlagTable_User       [NLEVEL-1];    // user-defined refinement criterion
 extern double    *DumpTable;                          // dump table recording the physical times to output data
 extern int        DumpTable_NDump;                    // number of data dumps in the dump table
@@ -48,7 +50,7 @@ extern int       *BaseP;                              // table recording the IDs
 extern int        Flu_ParaBuf;                        // number of parallel buffers to exchange all fluid
                                                       // variables for the fluid solver and fluid refinement
 
-extern long       FixUpVar_Flux, FixUpVar_Restrict;
+extern long       FixUpVar_Flux, FixUpVar_Restrict, PassiveFloorMask;
 extern int        PassiveNorm_NVar, PassiveNorm_VarIdx[NCOMP_PASSIVE];
 extern int        PassiveIntFrac_NVar, PassiveIntFrac_VarIdx[NCOMP_PASSIVE];
 
@@ -66,7 +68,7 @@ extern int        INIT_DUMPID, INIT_SUBSAMPLING_NCELL, OPT__TIMING_BARRIER, OPT_
 extern double     OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z, AUTO_REDUCE_DT_FACTOR, AUTO_REDUCE_DT_FACTOR_MIN;
 extern double     AUTO_REDUCE_INT_MONO_FACTOR, AUTO_REDUCE_INT_MONO_MIN;
 extern double     OPT__CK_MEMFREE, INT_MONO_COEFF, UNIT_L, UNIT_M, UNIT_T, UNIT_V, UNIT_D, UNIT_E, UNIT_P;
-extern bool       OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_USER, OPT__FLAG_LOHNER_DENS, OPT__FLAG_REGION;
+extern bool       OPT__FLAG_RHO, OPT__FLAG_RHO_GRADIENT, OPT__FLAG_USER, OPT__FLAG_LOHNER_DENS, OPT__FLAG_REGION, OPT__FLAG_ANGULAR, OPT__FLAG_RADIAL;
 extern int        OPT__FLAG_USER_NUM, MONO_MAX_ITER, OPT__RESET_FLUID_INIT;
 extern bool       OPT__DT_USER, OPT__RECORD_DT, OPT__RECORD_MEMORY, OPT__MEMORY_POOL, OPT__RESTART_RESET;
 extern bool       OPT__FIXUP_RESTRICT, OPT__INIT_RESTRICT, OPT__VERBOSE, OPT__MANUAL_CONTROL, OPT__UNIT;
@@ -79,10 +81,14 @@ extern bool       OPT__OPTIMIZE_AGGRESSIVE, OPT__INIT_GRID_WITH_OMP, OPT__NO_FLA
 extern bool       OPT__RECORD_NOTE, OPT__RECORD_UNPHY, INT_OPP_SIGN_0TH_ORDER;
 extern bool       OPT__INT_FRAC_PASSIVE_LR, OPT__CK_INPUT_FLUID, OPT__SORT_PATCH_BY_LBIDX;
 extern char       OPT__OUTPUT_TEXT_FORMAT_FLT[MAX_STRING];
+extern int        OPT__OUTPUT_TEXT_LENGTH_INT;
 extern int        OPT__UM_IC_FLOAT8;
 extern double     COM_CEN_X, COM_CEN_Y, COM_CEN_Z, COM_MAX_R, COM_MIN_RHO, COM_TOLERR_R;
 extern int        COM_MAX_ITER;
 extern double     ANGMOM_ORIGIN_X, ANGMOM_ORIGIN_Y, ANGMOM_ORIGIN_Z;
+extern char       OUTPUT_DIR[MAX_STRING];
+extern double     FLAG_ANGULAR_CEN_X, FLAG_ANGULAR_CEN_Y, FLAG_ANGULAR_CEN_Z;
+extern double     FLAG_RADIAL_CEN_X, FLAG_RADIAL_CEN_Y, FLAG_RADIAL_CEN_Z;
 
 extern UM_IC_Format_t     OPT__UM_IC_FORMAT;
 extern TestProbID_t       TESTPROB_ID;
@@ -95,6 +101,9 @@ extern OptFluBC_t         OPT__BC_FLU[6];          // boundary conditions of flu
 extern OptLohnerForm_t    OPT__FLAG_LOHNER_FORM;
 extern OptCorrAfterSync_t OPT__CORR_AFTER_ALL_SYNC;
 extern OptTimeStepLevel_t OPT__DT_LEVEL;
+
+extern bool       ConRefInitialized;
+extern double     ConRef[1+NCONREF_MAX];
 
 
 
@@ -124,7 +133,7 @@ extern bool             OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC
 extern bool             OPT__OUTPUT_DIVMAG;
 extern int              OPT__CK_DIVERGENCE_B;
 extern double           UNIT_B;
-extern bool             OPT__SAME_INTERFACE_B;
+extern SameInterfaceB_t OPT__SAME_INTERFACE_B;
 
 extern OptInitMagByVecPot_t OPT__INIT_BFIELD_BYVECPOT;
 #endif
@@ -154,9 +163,12 @@ extern int              ELBDM_FIRST_WAVE_LEVEL;
 #endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 
 extern bool             OPT__FLAG_SPECTRAL;
+extern int              OPT__FLAG_SPECTRAL_N;
 extern double           FlagTable_Spectral[NLEVEL-1][2];
 
 extern ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
+extern bool             ELBDM_RESCALE_MASS_ERROR;
+extern int              ELBDM_RESCALE_MASS_STEPS;
 extern bool             ELBDM_BASE_SPECTRAL;
 
 #else
@@ -230,11 +242,12 @@ extern bool       FFTW3_Double_OMP_Enabled, FFTW3_Single_OMP_Enabled;
 // ============================================================================================================
 #ifdef PARTICLE
 extern double          DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
-extern bool            OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL, OPT__FREEZE_PAR;
+extern bool            OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL, OPT__FREEZE_PAR, OPT__OUTPUT_PAR_MESH, OPT__PAR_INIT_CHECK;
 extern int             OPT__OUTPUT_PAR_MODE, OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
 extern double          FlagTable_ParMassCell[NLEVEL-1];
 extern ParOutputDens_t OPT__OUTPUT_PAR_DENS;
 extern int             PAR_IC_FLOAT8;
+extern int             PAR_IC_INT8;
 #endif
 
 
@@ -256,6 +269,9 @@ extern bool            YT_JUPYTER_USE_CONNECTION_FILE;
 #ifdef SUPPORT_GRACKLE
 extern bool            GRACKLE_ACTIVATE;
 extern bool            GRACKLE_VERBOSE;
+#ifndef COMOVING
+extern double          GRACKLE_REDSHIFT;
+#endif
 extern bool            GRACKLE_COOLING;
 extern GracklePriChe_t GRACKLE_PRIMORDIAL;
 extern bool            GRACKLE_METAL;
@@ -267,6 +283,18 @@ extern char            GRACKLE_CLOUDY_TABLE[MAX_STRING];
 extern int             GRACKLE_THREE_BODY_RATE;
 extern bool            GRACKLE_CIE_COOLING;
 extern int             GRACKLE_H2_OPA_APPROX;
+extern bool            GRACKLE_USE_V_HEATING_RATE;
+extern bool            GRACKLE_USE_S_HEATING_RATE;
+extern int             GRACKLE_USE_TEMP_FLOOR;
+extern double          GRACKLE_TEMP_FLOOR_SCALAR;
+extern double          GRACKLE_HYDROGEN_MFRAC;
+extern bool            OPT__UNFREEZE_GRACKLE;
+extern bool            OPT__OUTPUT_GRACKLE_TEMP;
+extern bool            OPT__OUTPUT_GRACKLE_MU;
+extern bool            OPT__OUTPUT_GRACKLE_TCOOL;
+extern bool            OPT__FLAG_COOLING_LEN;
+extern double          FlagTable_CoolingLen[NLEVEL-1];
+extern double          DT__GRACKLE_COOLING;
 extern int             CHE_GPU_NPGROUP;
 #endif
 
@@ -357,9 +385,10 @@ extern int  FB_ParaBuf;
 // (2-13) spectral interpolation
 #ifdef SUPPORT_SPECTRAL_INT
 extern char   SPEC_INT_TABLE_PATH[MAX_STRING];
+extern int    SPEC_INT_GHOST_BOUNDARY;
 #if ( MODEL == ELBDM )
 extern bool   SPEC_INT_XY_INSTEAD_DEPHA;
-extern double SPEC_INT_WAVELENGTH_MAGNIFIER;
+extern double SPEC_INT_VORTEX_THRESHOLD;
 #endif
 class InterpolationHandler;
 extern InterpolationHandler Int_InterpolationHandler;
@@ -370,7 +399,7 @@ extern InterpolationHandler Int_InterpolationHandler;
 // =======================================================================================================
 #ifdef COSMIC_RAY
 extern double GAMMA_CR;
-extern bool OPT__FLAG_CRAY, OPT__FLAG_LOHNER_CRAY;
+extern bool   OPT__FLAG_CRAY, OPT__FLAG_LOHNER_CRAY;
 extern double FlagTable_CRay[NLEVEL-1];
 #endif
 
@@ -434,7 +463,7 @@ extern real       (*h_Flu_Array_USG_G [2])[GRA_NIN-1][PS1][PS1][PS1];
 #endif // #ifdef GRAVITY
 
 #ifdef SUPPORT_GRACKLE
-extern real       (*h_Che_Array[2]);
+extern real_che   (*h_Che_Array[2]);
 // do not declare Grackle variables for CUDA source files since they do not include <grackle.h>
 #ifndef __CUDACC__
 extern grackle_field_data *Che_FieldData;

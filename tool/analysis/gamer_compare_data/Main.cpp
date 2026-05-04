@@ -6,12 +6,13 @@
 static AMR_t        amr1, amr2;
 static char        *FileName_In1=NULL, *FileName_In2=NULL, *FileName_Out=NULL;
 static bool         UseCorner=false, MaxErrOnly=false;
-static int          NField1=-1, NField2=-1, NMag1=-1, NMag2=-1, NParAtt1=-1, NParAtt2=-1, Format1=-1, Format2=-1;
+static int          NField1=-1, NField2=-1, NMag1=-1, NMag2=-1, NParAttFlt1=-1, NParAttFlt2=-1, NParAttInt1=-1, NParAttInt2=-1, Format1=-1, Format2=-1;
 static long         NPar1=-1, NPar2=-1;
 static double       TolErr=__FLT_MIN__;
-static real_par   **ParData1=NULL, **ParData2=NULL;
-static char  (*FieldLabel1)[MAX_STRING]=NULL, (*MagLabel1)[MAX_STRING]=NULL, (*ParAttLabel1)[MAX_STRING]=NULL;
-static char  (*FieldLabel2)[MAX_STRING]=NULL, (*MagLabel2)[MAX_STRING]=NULL, (*ParAttLabel2)[MAX_STRING]=NULL;
+static real_par   **ParFltData1=NULL, **ParFltData2=NULL;
+static long_par   **ParIntData1=NULL, **ParIntData2=NULL;
+static char  (*FieldLabel1)[MAX_STRING]=NULL, (*MagLabel1)[MAX_STRING]=NULL, (*ParAttFltLabel1)[MAX_STRING]=NULL, (*ParAttIntLabel1)[MAX_STRING]=NULL;
+static char  (*FieldLabel2)[MAX_STRING]=NULL, (*MagLabel2)[MAX_STRING]=NULL, (*ParAttFltLabel2)[MAX_STRING]=NULL, (*ParAttIntLabel2)[MAX_STRING]=NULL;
 
 
 
@@ -425,22 +426,38 @@ int CompareParticleData()
 
    if ( NPar1 > 0 )
    {
-      if ( NParAtt1 != NParAtt2 )
-         Aux_Error( ERROR_INFO, "inconsistent numbers of particle attributes (%d vs %d) !!\n", NParAtt1, NParAtt2 );
+      if ( NParAttFlt1 != NParAttFlt2 )
+         Aux_Error( ERROR_INFO, "inconsistent numbers of particle floating-point attributes (%d vs %d) !!\n", NParAttFlt1, NParAttFlt2 );
 
-      if ( ParData1 == NULL  ||  ParData2 == NULL )
-         Aux_Error( ERROR_INFO, "particle arrays have not been allocated yet !!\n" );
+      if ( NParAttInt1 != NParAttInt2 )
+         Aux_Error( ERROR_INFO, "inconsistent numbers of particle integer attributes (%d vs %d) !!\n", NParAttInt1, NParAttInt2 );
+
+      if (  NParAttFlt1 != 0  &&  ( ParFltData1 == NULL || ParFltData2 == NULL )  )
+         Aux_Error( ERROR_INFO, "particle floating-point arrays have not been allocated yet !!\n" );
+
+      if (  NParAttInt1 != 0  &&  ( ParIntData1 == NULL || ParIntData2 == NULL )  )
+         Aux_Error( ERROR_INFO, "particle integer arrays have not been allocated yet !!\n" );
 
       if ( Format1 == 2  &&  Format2 == 2 )
       {
-         for (int v=0; v<NParAtt1; v++)
+         for (int v=0; v<NParAttFlt1; v++)
          {
-            if ( ParAttLabel1 == NULL  ||  ParAttLabel2 == NULL )
-               Aux_Error( ERROR_INFO, "ParAttLabel[%d] == NULL !!\n", v );
+            if ( ParAttFltLabel1 == NULL  ||  ParAttFltLabel2 == NULL )
+               Aux_Error( ERROR_INFO, "ParAttFltLabel[%d] == NULL !!\n", v );
 
-            if (  strcmp( ParAttLabel1[v], ParAttLabel2[v] )  )
-               Aux_Error( ERROR_INFO, "inconsistent particle attribute labels ([%d]: \"%s\" vs \"%s\") !!\n",
-                          v, ParAttLabel1[v], ParAttLabel2[v] );
+            if (  strcmp( ParAttFltLabel1[v], ParAttFltLabel2[v] )  )
+               Aux_Error( ERROR_INFO, "inconsistent particle floating-point attribute labels ([%d]: \"%s\" vs \"%s\") !!\n",
+                          v, ParAttFltLabel1[v], ParAttFltLabel2[v] );
+         }
+
+         for (int v=0; v<NParAttInt1; v++)
+         {
+            if ( ParAttIntLabel1 == NULL  ||  ParAttIntLabel2 == NULL )
+               Aux_Error( ERROR_INFO, "ParAttIntLabel[%d] == NULL !!\n", v );
+
+            if (  strcmp( ParAttIntLabel1[v], ParAttIntLabel2[v] )  )
+               Aux_Error( ERROR_INFO, "inconsistent particle integer attribute labels ([%d]: \"%s\" vs \"%s\") !!\n",
+                          v, ParAttIntLabel1[v], ParAttIntLabel2[v] );
          }
       } // if ( Format1 == 2  &&  Format2 == 2 )
    } // if ( NPar1 > 0 )
@@ -453,21 +470,26 @@ int CompareParticleData()
 // do not call SortParticle() if NPar==0 since ParDataX[0/1/2][] is ill-defined
    if ( NPar1 > 0 )
    {
-      SortParticle( NPar1, ParData1[1], ParData1[2], ParData1[3], ParData1[4], IdxTable1 );
-      SortParticle( NPar2, ParData2[1], ParData2[2], ParData2[3], ParData2[4], IdxTable2 );
+      SortParticle( NPar1, ParFltData1[1], ParFltData1[2], ParFltData1[3], ParFltData1[4], IdxTable1 );
+      SortParticle( NPar2, ParFltData2[1], ParFltData2[2], ParFltData2[3], ParFltData2[4], IdxTable2 );
    }
 
 
 // compare data
    double     AbsErr, RelErr;
+   long       AbsIntErr;
    long       ParID1, ParID2;
-   real_par   Data1, Data2;
+   real_par   FltData1, FltData2;
+   long_par   IntData1, IntData2;
    bool       ErrorDetected = false;
 
-   double     MaxErrPar_Data[NParAtt1][4];
-   long       MaxErrPar_Info[NParAtt1][3];
+   double     MaxFltErrPar_Data[NParAttFlt1][4];
+   long       MaxFltErrPar_Info[NParAttFlt1][3];
+   long       MaxIntErrPar_Data[NParAttInt1][3];
+   long       MaxIntErrPar_Info[NParAttInt1][3];
 
-   for (int v=0; v<NParAtt1; v++)   MaxErrPar_Data[v][3] = -__FLT_MIN__;
+   for (int v=0; v<NParAttFlt1; v++)   MaxFltErrPar_Data[v][3] = -__FLT_MIN__;
+   for (int v=0; v<NParAttInt1; v++)   MaxIntErrPar_Data[v][2] = -0L;
 
    FILE *File = fopen( FileName_Out, "a" );
 
@@ -476,58 +498,113 @@ int CompareParticleData()
 
    if ( Format1 == 2  &&  Format2 == 2 )
    {
-      fprintf( File, "# Attribute list:\n" );
-      for (int v=0; v<NParAtt1; v++)   fprintf( File, "# [%4d]: %s\n", v, ParAttLabel1[v] );
+      fprintf( File, "# Floating-point attribute list:\n" );
+      for (int v=0; v<NParAttFlt1; v++)   fprintf( File, "# [%4d]: %s\n", v, ParAttFltLabel1[v] );
       fprintf( File, "\n" );
    }
 
    fprintf( File, "# %12s  %12s  %4s  %14s  %14s  %14s  %14s\n",
                   "ParID1", "ParID2", "Att", "Data1", "Data2", "AbsErr", "RelErr" );
 
-   for (int v=0; v<NParAtt1; v++)
+   for (int v=0; v<NParAttFlt1; v++)
    for (long p=0; p<NPar1; p++)
    {
-      ParID1 = IdxTable1[p];
-      ParID2 = IdxTable2[p];
-      Data1  = ParData1[v][ParID1];
-      Data2  = ParData2[v][ParID2];
+      ParID1   = IdxTable1[p];
+      ParID2   = IdxTable2[p];
+      FltData1 = ParFltData1[v][ParID1];
+      FltData2 = ParFltData2[v][ParID2];
 
-      AbsErr = Data1 - Data2;
-      RelErr = AbsErr / ( 0.5*(Data1+Data2) );
+      AbsErr = FltData1 - FltData2;
+      RelErr = AbsErr / ( 0.5*(FltData1+FltData2) );
 
-      if ( Data1 == 0.0  &&  Data2 == 0.0 )  continue;
+      if ( FltData1 == 0.0  &&  FltData2 == 0.0 )  continue;
 
       if ( fabs(RelErr) >= TolErr  ||  !isfinite(RelErr) )
       {
          ErrorDetected = true;
 
          if ( MaxErrOnly ) {
-            if ( fabs(RelErr) > fabs(MaxErrPar_Data[v][3]) ) {
-               MaxErrPar_Info[v][0] = ParID1;
-               MaxErrPar_Info[v][1] = ParID2;
-               MaxErrPar_Info[v][2] = v;
+            if ( fabs(RelErr) > fabs(MaxFltErrPar_Data[v][3]) ) {
+               MaxFltErrPar_Info[v][0] = ParID1;
+               MaxFltErrPar_Info[v][1] = ParID2;
+               MaxFltErrPar_Info[v][2] = v;
 
-               MaxErrPar_Data[v][0] = Data1;
-               MaxErrPar_Data[v][1] = Data2;
-               MaxErrPar_Data[v][2] = AbsErr;
-               MaxErrPar_Data[v][3] = RelErr;
+               MaxFltErrPar_Data[v][0] = FltData1;
+               MaxFltErrPar_Data[v][1] = FltData2;
+               MaxFltErrPar_Data[v][2] = AbsErr;
+               MaxFltErrPar_Data[v][3] = RelErr;
             }
          }
 
          else
             fprintf( File, "  %12ld  %12ld  %4d  %14.7e  %14.7e  %14.7e  %14.7e\n",
-                     ParID1, ParID2, v, Data1, Data2, AbsErr, RelErr );
+                     ParID1, ParID2, v, FltData1, FltData2, AbsErr, RelErr );
       }
    }
 
 // output the maximum errors
    if ( MaxErrOnly )
    {
-      for (int v=0; v<NParAtt1; v++)
-         if ( MaxErrPar_Data[v][3] != -__FLT_MIN__ )
+      for (int v=0; v<NParAttFlt1; v++)
+         if ( MaxFltErrPar_Data[v][3] != -__FLT_MIN__ )
             fprintf( File, "  %12ld  %12ld  %4d  %14.7e  %14.7e  %14.7e  %14.7e\n",
-                     MaxErrPar_Info[v][0], MaxErrPar_Info[v][1], (int)MaxErrPar_Info[v][2],
-                     MaxErrPar_Data[v][0], MaxErrPar_Data[v][1], MaxErrPar_Data[v][2], MaxErrPar_Data[v][3] );
+                     MaxFltErrPar_Info[v][0], MaxFltErrPar_Info[v][1], (int)MaxFltErrPar_Info[v][2],
+                     MaxFltErrPar_Data[v][0], MaxFltErrPar_Data[v][1], MaxFltErrPar_Data[v][2], MaxFltErrPar_Data[v][3] );
+   }
+
+   fprintf( File, "\n\n" );
+   fprintf( File, "#=============================================================================================================\n" );
+
+   if ( Format1 == 2  &&  Format2 == 2 )
+   {
+      fprintf( File, "# Integer attribute list:\n" );
+      for (int v=0; v<NParAttInt1; v++)   fprintf( File, "# [%4d]: %s\n", v, ParAttIntLabel1[v] );
+      fprintf( File, "\n" );
+   }
+
+   fprintf( File, "# %12s  %12s  %4s  %14s  %14s  %14s\n",
+                  "ParID1", "ParID2", "Att", "Data1", "Data2", "AbsErr" );
+
+   for (int v=0; v<NParAttInt1; v++)
+   for (long p=0; p<NPar1; p++)
+   {
+      ParID1   = IdxTable1[p];
+      ParID2   = IdxTable2[p];
+      IntData1 = ParIntData1[v][ParID1];
+      IntData2 = ParIntData2[v][ParID2];
+
+      AbsIntErr = long(IntData1 - IntData2);
+
+      if ( AbsIntErr != 0L )
+      {
+         ErrorDetected = true;
+
+         if ( MaxErrOnly ) {
+            if ( labs(AbsIntErr) > labs(MaxIntErrPar_Data[v][2]) ) {
+               MaxIntErrPar_Info[v][0] = ParID1;
+               MaxIntErrPar_Info[v][1] = ParID2;
+               MaxIntErrPar_Info[v][2] = v;
+
+               MaxIntErrPar_Data[v][0] = (long)IntData1;
+               MaxIntErrPar_Data[v][1] = (long)IntData2;
+               MaxIntErrPar_Data[v][2] = AbsIntErr;
+            }
+         }
+
+         else
+            fprintf( File, "  %12ld  %12ld  %4d  %14ld  %14ld  %14ld\n",
+                     ParID1, ParID2, v, (long)IntData1, (long)IntData2, AbsIntErr );
+      }
+   }
+
+// output the maximum errors
+   if ( MaxErrOnly )
+   {
+      for (int v=0; v<NParAttInt1; v++)
+         if ( MaxIntErrPar_Data[v][2] != -0L )
+            fprintf( File, "  %12ld  %12ld  %4d  %14ld  %14ld  %14ld\n",
+                     MaxIntErrPar_Info[v][0], MaxIntErrPar_Info[v][1], (int)MaxIntErrPar_Info[v][2],
+                     MaxIntErrPar_Data[v][0], MaxIntErrPar_Data[v][1], MaxIntErrPar_Data[v][2] );
    }
 
    fclose( File );
@@ -555,15 +632,19 @@ void FreeMemory()
    Aux_Message( stdout, "%s ... ", __FUNCTION__ );
 
 
-   Aux_DeallocateArray2D<real_par>( ParData1 );
-   Aux_DeallocateArray2D<real_par>( ParData2 );
+   Aux_DeallocateArray2D<real_par>( ParFltData1 );
+   Aux_DeallocateArray2D<real_par>( ParFltData2 );
+   Aux_DeallocateArray2D<long_par>( ParIntData1 );
+   Aux_DeallocateArray2D<long_par>( ParIntData2 );
 
    delete [] FieldLabel1;
    delete [] FieldLabel2;
    delete [] MagLabel1;
    delete [] MagLabel2;
-   delete [] ParAttLabel1;
-   delete [] ParAttLabel2;
+   delete [] ParAttFltLabel1;
+   delete [] ParAttFltLabel2;
+   delete [] ParAttIntLabel1;
+   delete [] ParAttIntLabel2;
 
 
    Aux_Message( stdout, "done\n" );
@@ -583,10 +664,10 @@ int main( int argc, char ** argv )
 
    CheckParameter();
 
-   LoadData( FileName_In1, amr1, Format1, NField1, NMag1, NParAtt1, NPar1, ParData1,
-             FieldLabel1, MagLabel1, ParAttLabel1 );
-   LoadData( FileName_In2, amr2, Format2, NField2, NMag2, NParAtt2, NPar2, ParData2,
-             FieldLabel2, MagLabel2, ParAttLabel2 );
+   LoadData( FileName_In1, amr1, Format1, NField1, NMag1, NParAttFlt1, NParAttInt1, NPar1,
+             ParFltData1, ParIntData1, FieldLabel1, MagLabel1, ParAttFltLabel1, ParAttIntLabel1 );
+   LoadData( FileName_In2, amr2, Format2, NField2, NMag2, NParAttFlt2, NParAttInt2, NPar2,
+             ParFltData2, ParIntData2, FieldLabel2, MagLabel2, ParAttFltLabel2, ParAttIntLabel2 );
 
    int ErrorDetected = false;
 

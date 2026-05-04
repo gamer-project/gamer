@@ -34,8 +34,8 @@ void Output_Flux( const int lv, const int PID, const int Sib, const char *commen
 
    patch_t *Relation  = amr->patch[0][lv][PID];
 
-   char FileName[100];
-   sprintf( FileName, "Flux_r%d_lv%d_p%d%c%c", MPI_Rank, lv, PID, 45-2*(Sib%2), 120+Sib/2 );
+   char FileName[2*MAX_STRING];
+   sprintf( FileName, "%s/Flux_r%d_lv%d_p%d%c%c", OUTPUT_DIR, MPI_Rank, lv, PID, 45-2*(Sib%2), 120+Sib/2 );
    if ( comment != NULL )
    {
       strcat( FileName, "_" );

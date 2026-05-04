@@ -14,3 +14,14 @@ Default setup:
 Note:
 ========================================
 1. Only support 1D --> Use "PWave_XYZ" to control the propagation direction
+2. A passive field named 'WrappedPhase' is output in the data
+3. There are plotting scripts provided
+   a. For ELBDM_SCHEME = ELBDM_WAVE: plot_Phase.gpt and plot_WaveFunc.gpt
+   b. For ELBDM_SCHEME = ELBDM_HYBRID: plot_Phase_hybrid.gpt and plot_WaveFunc_hybrid.gpt
+4. Support using the analytical-solution BC (OPT__BC_FLU_* = 4) and it must be used when:
+   a. PWave_NWavelength is not a integer
+   b. Using the hybrid scheme to run the case of travelling wave and there are only fluid levels at the boundary
+5. For ELBDM_SCHEME = ELBDM_HYBRID
+   a. the default setup is without refinement and adopts the fluid scheme;
+      When setting MAX_LEVEL > 0, the refinement is based on OPT__FLAG_INTERFERENCE
+      and the refined levels adopt the wave scheme while the base level adopts the fluid scheme

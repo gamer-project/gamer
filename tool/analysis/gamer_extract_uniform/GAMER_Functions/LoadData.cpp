@@ -11,8 +11,9 @@ static void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, boo
 static void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadPot, int *NX0_Tot,
                                        double &BoxSize, double &Gamma, double &ELBDM_Eta, double &ELBDM_Mass,
                                        const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
-                                       const long HeaderOffset_Parameter, bool &LoadPar, int &LoadParDens, int &NParVarOut,
-                                       double &H0, bool &WithUnit, double &Unit_L, double &Unit_M, double &Unit_T, double &Unit_V,
+                                       const long HeaderOffset_Parameter, bool &LoadPar, int &LoadParDens,
+                                       int &NParFltVarOut, int &NParIntVarOut, double &H0, bool &WithUnit,
+                                       double &Unit_L, double &Unit_M, double &Unit_T, double &Unit_V,
                                        double &Unit_D, double &Unit_E, double &Unit_P, double &Mu, bool &Comoving );
 static void CompareVar( const char *VarName, const bool   RestartVar, const bool   RuntimeVar, const bool Fatal );
 static void CompareVar( const char *VarName, const int    RestartVar, const int    RuntimeVar, const bool Fatal );
@@ -186,7 +187,7 @@ void LoadData()
 // b. load all simulation parameters
 // =================================================================================================
    bool   DataOrder_xyzv, OutputPar;
-   int    NParVarOut;
+   int    NParFltVarOut, NParIntVarOut;
    double BoxSize;
 #  if ( MODEL != ELBDM )
    double ELBDM_ETA, ELBDM_MASS;
@@ -198,7 +199,8 @@ void LoadData()
                                   HeaderOffset_Makefile, HeaderOffset_Constant, HeaderOffset_Parameter, Comoving );
       OutputPar     = false;
       OutputParDens = 0;
-      NParVarOut    = -1;
+      NParFltVarOut = -1;
+      NParIntVarOut = -1;
 
       WithUnit      = false;
       H0 = Unit_L = Unit_M = Unit_T = Unit_V = Unit_D = Unit_E = Unit_P = MU = WRONG;
@@ -208,7 +210,7 @@ void LoadData()
    {
       Load_Parameter_After_2000( File, FormatVersion, OutputPot, NX0_TOT, BoxSize, GAMMA, ELBDM_ETA, ELBDM_MASS,
                                  HeaderOffset_Makefile, HeaderOffset_Constant, HeaderOffset_Parameter,
-                                 OutputPar, OutputParDens, NParVarOut,
+                                 OutputPar, OutputParDens, NParFltVarOut, NParIntVarOut,
                                  H0, WithUnit, Unit_L, Unit_M, Unit_T, Unit_V, Unit_D, Unit_E, Unit_P, MU, Comoving );
       DataOrder_xyzv = false;
    }
@@ -285,7 +287,8 @@ void LoadData()
          ExpectSize   += ParInfoSize;
       }
 
-      ExpectSize += (long)NParVarOut*NPar*sizeof(real);
+      ExpectSize += (long)NParFltVarOut*NPar*sizeof(real_par);
+      ExpectSize += (long)NParIntVarOut*NPar*sizeof(long_par);
    }
 
    fseek( File, 0, SEEK_END );
@@ -836,7 +839,8 @@ void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, bool &Data
 //                HeaderOffset_X : Offsets of different headers
 //                LoadPar        : Whether or not the RESTART file stores the particle data
 //                LoadParDens    : Whether or not the RESTART file stores the particle density on grids
-//                NParVarOut     : Number of particles attributes stored (for checking the file size only)
+//                NParFltVarOut  : Number of particle floating-point attributes stored (for checking the file size only)
+//                NParIntVarOut  : Number of particle integer        attributes stored (for checking the file size only)
 //                H0             : Dimensionless Hubble parameter
 //                WithUnit       : true --> restart file stores the code units
 //                Unit_*         : Code units
@@ -849,8 +853,9 @@ void Load_Parameter_Before_2000( FILE *File, const int FormatVersion, bool &Data
 void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadPot, int *NX0_Tot,
                                 double &BoxSize, double &Gamma, double &ELBDM_Eta, double &ELBDM_Mass,
                                 const long HeaderOffset_Makefile, const long HeaderOffset_Constant,
-                                const long HeaderOffset_Parameter, bool &LoadPar, int &LoadParDens, int &NParVarOut,
-                                double &H0, bool &WithUnit, double &Unit_L, double &Unit_M, double &Unit_T, double &Unit_V,
+                                const long HeaderOffset_Parameter, bool &LoadPar, int &LoadParDens,
+                                int &NParFltVarOut, int &NParIntVarOut, double &H0, bool &WithUnit,
+                                double &Unit_L, double &Unit_M, double &Unit_T, double &Unit_V,
                                 double &Unit_D, double &Unit_E, double &Unit_P, double &Mu, bool &Comoving )
 {
 
@@ -910,7 +915,8 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
    bool   use_psolver_10to14;
    int    ncomp_fluid, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
    int    flu_block_size_x, flu_block_size_y, pot_block_size_x, pot_block_size_z, gra_block_size_z;
-   int    par_nvar, par_npassive;
+   int    par_nvar_flt, par_npassive_flt;
+   int    par_nvar_int, par_npassive_int;
    double min_value, max_error;
 
    fseek( File, HeaderOffset_Constant, SEEK_SET );
@@ -934,14 +940,18 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
    fread( &pot_block_size_x,           sizeof(int),                     1,             File );
    fread( &pot_block_size_z,           sizeof(int),                     1,             File );
    fread( &gra_block_size_z,           sizeof(int),                     1,             File );
-   fread( &par_nvar,                   sizeof(int),                     1,             File );
-   fread( &par_npassive,               sizeof(int),                     1,             File );
+   fread( &par_nvar_flt,               sizeof(int),                     1,             File );
+   fread( &par_npassive_flt,           sizeof(int),                     1,             File );
+   fread( &par_nvar_int,               sizeof(int),                     1,             File );
+   fread( &par_npassive_int,           sizeof(int),                     1,             File );
 
 // reset parameters
    if ( !particle )
    {
-      par_nvar     = WRONG;
-      par_npassive = WRONG;
+      par_nvar_flt     = WRONG;
+      par_npassive_flt = WRONG;
+      par_nvar_int     = WRONG;
+      par_npassive_int = WRONG;
    }
 
 
@@ -1119,11 +1129,27 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, bool &LoadP
 
    if ( LoadPar )
    {
-      if ( FormatVersion > 2131 )   NParVarOut = par_nvar;           // after version 2131, par_nvar = PAR_NATT_STORED
-      else                          NParVarOut = 7 + par_npassive;   // mass, position x/y/z, velocity x/y/z, and passive variables
+      if ( FormatVersion >= 2300 )
+      {
+         NParFltVarOut = par_nvar_flt;           // after version 2300, par_nvar_flt = PAR_NATT_FLT_STORED
+         NParIntVarOut = par_nvar_int;           // after version 2300, par_nvar_int = PAR_NATT_INT_STORED
+      }
+      else if ( FormatVersion > 2131 )
+      {
+         NParFltVarOut = par_nvar_flt;           // after version 2131, par_nvar_flt = PAR_NATT_STORED
+         NParIntVarOut = 0;
+      }
+      else
+      {
+         NParFltVarOut = 7 + par_npassive_flt;   // mass, position x/y/z, velocity x/y/z, and passive variables
+         NParIntVarOut = 0;
+      }
    }
    else
-                                    NParVarOut = -1;
+   {
+      NParFltVarOut = -1;
+      NParIntVarOut = -1;
+   }
 
 } // FUNCTION : Load_Parameter_After_2000
 

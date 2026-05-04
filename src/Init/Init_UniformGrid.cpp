@@ -110,7 +110,7 @@ void Init_UniformGrid( const int lv, const bool FindHomePatchForPar )
    if ( FindHomePatchForPar )
    {
       const bool OldParOnly_Yes = true;
-      Par_FindHomePatch_UniformGrid( lv, OldParOnly_Yes, NULL_INT, NULL );
+      Par_FindHomePatch_UniformGrid( lv, OldParOnly_Yes, NULL_INT, NULL, NULL );
    }
 #  endif
 

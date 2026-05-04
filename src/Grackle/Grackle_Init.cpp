@@ -3,6 +3,14 @@
 
 #ifdef SUPPORT_GRACKLE
 
+// whether gr_check_consistency() is defined
+// --> it is introduced in the version 3.4 of
+//     the Grackle library to perform some consistency checks,
+//     see https://grackle.readthedocs.io/en/latest/Reference.html#c.gr_check_consistency
+// --> set it to 0 to disable the check if an older version is being used
+#define HAVE_GR_CHECK_CONSISTENCY 1
+
+
 
 
 
@@ -11,7 +19,6 @@
 // Description :  Initialize the chemistry and radiative cooling library Grackle
 //
 // Note        :  1. Must be called AFTER Init_Load_Parameter(), Init_Unit(), and Init_OpenMP()
-//                2. COMOVING is not supported yet
 //
 // Parameter   :  None
 //
@@ -28,17 +35,25 @@ void Grackle_Init()
 
 
 // check
-// floating-point type (don't know how to validate it yet...)
-   /*
-   if ( typeid(real) != typeid(gr_float) )
-      Aux_Error( ERROR_INFO, "inconsistent floating-point type (GAMER: %d, Grackle: %d) !!\n",
-                 sizeof(real), sizeof(gr_float) );
-                 */
-
-// comoving frame is not supported yet
-#  ifdef COMOVING
-   Aux_Error( ERROR_INFO, "SUPPORT_GRACKLE does not work with COMOVING yet !!\n" );
+// errors
+#  if ( HAVE_GR_CHECK_CONSISTENCY )
+   if ( gr_check_consistency() != GR_SUCCESS )
+      Aux_Error( ERROR_INFO, "Error occurs in gr_check_consistency() in %s !!\n", __FUNCTION__ );
+#  else
+   if ( MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : Checking with the Grackle function \"gr_check_consistency()\" is not enabled in %s !!\n", __FUNCTION__ );
 #  endif
+
+   if ( typeid(real_che) != typeid(gr_float) )
+      Aux_Error( ERROR_INFO, "inconsistent floating-point type: GAMER (real_che) = %d, Grackle (gr_float) = %d !!\n",
+                 sizeof(real_che), sizeof(gr_float) );
+
+// warnings
+   if ( MPI_Rank == 0  &&  sizeof(gr_float) != 8 )
+       Aux_Message( stderr, "WARNING : Grackle recommends using double precision (GRACKLE_FLOAT_8) !!\n" );
+
+   if ( MPI_Rank == 0 )   Aux_Message( stdout, "Grackle floating-point number (gr_float) uses %d bytes\n", sizeof(gr_float) );
+
 
    if (  ( GRACKLE_PRIMORDIAL == GRACKLE_PRI_CHE_CLOUDY || GRACKLE_METAL || GRACKLE_UV )  &&
          !Aux_CheckFileExist(GRACKLE_CLOUDY_TABLE)  )
@@ -52,11 +67,16 @@ void Grackle_Init()
 // units in cgs
 // --> Che_Units is declared as a global variable since all Grackle solvers require that as well
 #  ifdef COMOVING
+// see https://grackle.readthedocs.io/en/latest/Interaction.html#comoving-coordinates and
+// https://github.com/grackle-project/grackle/issues/192
+// --> the density and length units are conversion factors from code values to cgs in proper coordinates,
+//     while the time and velocity units should remain constant, i.e., velocity_units = length_units / (a_scale * time_units)
+// --> the specific energy passed to Grackle is defined on proper coordinates, i.e., u = k_B * T / ((gamma - 1) * mu * m_p)
    Che_Units.comoving_coordinates = 1;
-   Che_Units.density_units        = NULL_REAL;  // not sure how to set the units in the comoving coordinates yet...
-   Che_Units.length_units         = NULL_REAL;  // --> see http://grackle.readthedocs.io/en/latest/Integration.html
-   Che_Units.time_units           = NULL_REAL;
-   Che_Units.velocity_units       = NULL_REAL;
+   Che_Units.density_units        = UNIT_D / CUBE(Time[0]);
+   Che_Units.length_units         = UNIT_L * Time[0];
+   Che_Units.time_units           = UNIT_T;
+   Che_Units.velocity_units       = UNIT_V;
    Che_Units.a_units              = 1.0;
    Che_Units.a_value              = Time[0];
 
@@ -67,7 +87,7 @@ void Grackle_Init()
    Che_Units.time_units           = UNIT_T;
    Che_Units.velocity_units       = UNIT_V;
    Che_Units.a_units              = 1.0;
-   Che_Units.a_value              = 1.0;
+   Che_Units.a_value              = 1.0 / (1.0 + GRACKLE_REDSHIFT) / Che_Units.a_units; // see https://grackle.readthedocs.io/en/latest/Interaction.html#c.a_value
 #  endif
 
 
@@ -79,7 +99,7 @@ void Grackle_Init()
   chemistry_data *Che_Data = new chemistry_data;
 
   if ( set_default_chemistry_parameters(Che_Data) == 0 )
-    Aux_Error( ERROR_INFO, "set_default_chemistry_parameters() failed !!\n" );
+     Aux_Error( ERROR_INFO, "set_default_chemistry_parameters() failed !!\n" );
 
 
 // set chemistry by accessing "grackle_data"
@@ -95,6 +115,15 @@ void Grackle_Init()
    grackle_data->three_body_rate                = GRACKLE_THREE_BODY_RATE;
    grackle_data->cie_cooling                    = GRACKLE_CIE_COOLING;
    grackle_data->h2_optical_depth_approximation = GRACKLE_H2_OPA_APPROX;
+   grackle_data->use_volumetric_heating_rate    = GRACKLE_USE_V_HEATING_RATE;
+   grackle_data->use_specific_heating_rate      = GRACKLE_USE_S_HEATING_RATE;
+   grackle_data->use_temperature_floor          = GRACKLE_USE_TEMP_FLOOR;
+   grackle_data->temperature_floor_scalar       = GRACKLE_TEMP_FLOOR_SCALAR;
+// hydrogen mass fraction is only set when it is in the non-equilibrium mode
+// because the tables for tabulated mode were created assuming hydrogen mass fraction of about 0.716
+// --> see https://grackle.readthedocs.io/en/latest/Parameters.html#c.HydrogenFractionByMass
+   if ( GRACKLE_PRIMORDIAL != GRACKLE_PRI_CHE_CLOUDY )
+   grackle_data->HydrogenFractionByMass         = GRACKLE_HYDROGEN_MFRAC;
 
 #  ifdef OPENMP
 // currently we adopt the OpenMP implementation in Grackle directly, which applies the parallelization to
@@ -102,17 +131,17 @@ void Grackle_Init()
 // --> this approach is found to be more efficient
 // --> therefore, we should enable OpenMP for Grackle and disable OpenMP in CPU_GrackleSolver()
 //     to avoid the nested parallelization
-   grackle_data->omp_nthreads               = OMP_NTHREAD;
+   grackle_data->omp_nthreads                   = OMP_NTHREAD;
 #  endif
 
 #  if ( MODEL == HYDRO )
-   grackle_data->Gamma                      = GAMMA;
+   grackle_data->Gamma                          = GAMMA;
 #  endif
 
 
 // initialize the chemistry object
    if ( initialize_chemistry_data(&Che_Units) == 0 )
-     Aux_Error( ERROR_INFO, "initialize_chemistry_data() failed !!\n" );
+      Aux_Error( ERROR_INFO, "initialize_chemistry_data() failed !!\n" );
 
 
 // initialize the "grackle_field_data" object of Grackle

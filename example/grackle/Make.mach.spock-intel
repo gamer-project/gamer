@@ -1,0 +1,97 @@
+#=======================================================================
+#
+# FILE:        Make.mach.spock-intel
+#
+# DESCRIPTION: Makefile for the calab-ntu Spock GPU cluster with Intel
+#              compiler and OpenMP support
+#
+# AUTHOR:      Hsi-Yu Schive (modified by Guan-Ming Su, Barry T. Chiang,
+#              and Chun-Yen Chen)
+#
+# DATE:        April 1, 2016 (August 28, 2024)
+#=======================================================================
+
+MACH_TEXT  = Spock Intel
+MACH_VALID = 0
+MACH_FILE  = Make.mach.spock-intel
+
+#-----------------------------------------------------------------------
+# Install paths (local variables)
+#-----------------------------------------------------------------------
+
+LOCAL_HDF5_INSTALL = /software/hdf5/1.10.6-intel-2023.1.0
+LOCAL_FC_INSTALL   = /software/intel/oneapi/compiler/latest/linux/compiler/lib/intel64
+
+#-----------------------------------------------------------------------
+# Compiler settings
+#-----------------------------------------------------------------------
+
+MACH_CPP       = icpc # C preprocessor command
+
+# Compilers
+MACH_CC_NOMPI  = icc # C compiler
+MACH_CXX_NOMPI = icpc # C++ compiler
+MACH_FC_NOMPI  = ifort # Fortran 77
+MACH_F90_NOMPI = ifort # Fortran 90
+MACH_LD_NOMPI  = icpc # Linker
+MACH_LIBTOOL   = libtool
+
+#-----------------------------------------------------------------------
+# Machine-dependent defines
+#-----------------------------------------------------------------------
+
+# Note: When compiling against HDF5 version 1.8 or greater, you need to
+# compile HDF5 with --with-default-api-version=v16, or specify with
+# -DH5_USE_16_API.
+
+MACH_DEFINES   = -DLINUX -DH5_USE_16_API
+
+#-----------------------------------------------------------------------
+# Compiler flag settings
+#-----------------------------------------------------------------------
+
+MACH_OMPFLAGS = -fopenmp # OpenMP flags
+MACH_CPPFLAGS = -P -traditional # C preprocessor flags
+MACH_CFLAGS   = -mp1 -prec_div -fp_port -align # C compiler flags
+MACH_CXXFLAGS = -mp1 -prec_div -fp_port -align # C++ compiler flags
+MACH_FFLAGS   = # Fortran 77 compiler flags
+MACH_F90FLAGS = -mp1 -prec_div -fp_port -align #-save -zero # Fortran 90 compiler flags
+MACH_LDFLAGS  = #-lifcore -lifport -lpthread -ldl # Linker flags
+
+#-----------------------------------------------------------------------
+# Optimization flags
+#-----------------------------------------------------------------------
+
+MACH_OPT_WARN        = # Flags for verbose compiler warnings
+MACH_OPT_DEBUG       = -g -O0 # Flags for debugging
+MACH_OPT_HIGH        = -O2 # Flags for high conservative optimization
+MACH_OPT_AGGRESSIVE  = -O3 #-Mfptrap -Mflushz -fastsse -Mdaz -Mnontemporal -Mnofprelaxed -Mvect=altcode,assoc,prefetch -Kieee # Flags for aggressive optimization
+
+#-----------------------------------------------------------------------
+# Includes
+#-----------------------------------------------------------------------
+
+LOCAL_INCLUDES_HDF5   = -I$(LOCAL_HDF5_INSTALL)/include # HDF5 includes
+MACH_INCLUDES         = $(LOCAL_INCLUDES_HDF5)
+
+#-----------------------------------------------------------------------
+# Libraries
+#-----------------------------------------------------------------------
+
+LOCAL_LIBS_HDF5   = -L$(LOCAL_HDF5_INSTALL)/lib -lhdf5 # HDF5 libraries
+LOCAL_LIBS_MACH   = -L$(LOCAL_FC_INSTALL) -lm -lifcore -lifport # Machine-dependent libraries
+
+MACH_LIBS         = $(LOCAL_LIBS_HDF5) $(LOCAL_LIBS_MACH)
+
+#-----------------------------------------------------------------------
+# Installation
+#-----------------------------------------------------------------------
+
+# if $(HOME)/local does not exist, mkdir before `make install`
+
+### Use this when make omp-on is set
+MACH_INSTALL_PREFIX = <local_grackle_directory>/grackle_spock_double_omp
+### Use this when make omp-off is set
+#MACH_INSTALL_PREFIX = <local_grackle_directory>/grackle_spock_double_no_omp
+MACH_INSTALL_LIB_DIR =
+MACH_INSTALL_INCLUDE_DIR =

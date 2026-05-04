@@ -52,7 +52,7 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
          real_par *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
          real_par *ParVel[3] = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
          real_par *ParTime   = amr->Par->Time;
-   const real_par *ParType   = amr->Par->Type;
+   const long_par *ParType   = amr->Par->Type;
 
 
 // get the maximum number of particles in a single patch
@@ -104,7 +104,7 @@ void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double 
       if ( !GotYou )    continue;
 
 
-//    2. prepare the velocity data for the patch group with particles (need NSIDE_26 for ParGhost>0 )
+//    2. prepare the velocity data for the patch group with particles (need NSIDE_26 for ParGhost>0)
       Prepare_PatchData( lv, TimeNew, VelX, NULL, ParGhost, 1, &PID0, _VELX, _NONE,
                          OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No,
                          OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );

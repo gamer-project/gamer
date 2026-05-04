@@ -20,8 +20,10 @@
 void Aux_Record_Center()
 {
 
-   const char FileName[] = "Record__Center";
    static bool FirstTime = true;
+   char FileName[2*MAX_STRING];
+   sprintf( FileName, "%s/Record__Center", OUTPUT_DIR );
+
 
 // 1. Maximum fluid density in HYDRO/ELBDM
    Extrema_t Max_Dens;

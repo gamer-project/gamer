@@ -115,7 +115,7 @@ void BC_User_Template( real Array[], const int ArraySize[], real fluid[], const 
 //                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                Time           : Current physical time
 //                dh             : Cell size
-//                Corner         : Physcial coordinates at the center of the cell (0,0,0) --> Array[0]
+//                Corner         : Physical coordinates at the center of the cell (0,0,0) --> Array[0]
 //                TVar           : Target variables to be prepared --> only used for preparing the derived variables
 //                lv             : Refinement level
 //
@@ -226,14 +226,14 @@ void Flu_BoundaryCondition_User( real *Array, const int NVar_Flu, const int Ghos
       if ( PrepVz   )   Array3D[ v2 ++ ][k][j][i] = BVal[MOMZ] / BVal[DENS];
       if ( PrepPres )   Array3D[ v2 ++ ][k][j][i] = Hydro_Con2Pres( BVal[DENS], BVal[MOMX], BVal[MOMY],
                                                                     BVal[MOMZ], BVal[ENGY], BVal+NCOMP_FLUID,
-                                                                    CheckMinPres_Yes, MIN_PRES, Emag,
+                                                                    CheckMinPres_Yes, MIN_PRES, PassiveFloorMask, Emag,
                                                                     EoS_DensEint2Pres_CPUPtr,
                                                                     EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                                     EoS_AuxArray_Flt,
                                                                     EoS_AuxArray_Int, h_EoS_Table, NULL );
       if ( PrepTemp )   Array3D[ v2 ++ ][k][j][i] = Hydro_Con2Temp( BVal[DENS], BVal[MOMX], BVal[MOMY],
                                                                     BVal[MOMZ], BVal[ENGY], BVal+NCOMP_FLUID,
-                                                                    CheckMinTemp_Yes, MIN_TEMP, Emag,
+                                                                    CheckMinTemp_Yes, MIN_TEMP, PassiveFloorMask, Emag,
                                                                     EoS_DensEint2Temp_CPUPtr,
                                                                     EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                                     EoS_AuxArray_Flt,

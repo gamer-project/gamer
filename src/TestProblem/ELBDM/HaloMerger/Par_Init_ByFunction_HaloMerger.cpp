@@ -31,107 +31,105 @@ extern long    *HaloMerger_ParCloud_NPar;
 //                       and LB_Init_LoadBalance()
 //                   --> Therefore, there is no constraint on which particles should be set by this function
 //
-// Parameter   :  NPar_ThisRank : Number of particles to be set by this MPI rank
-//                NPar_AllRank  : Total Number of particles in all MPI ranks
-//                ParMass       : Particle mass     array with the size of NPar_ThisRank
-//                ParPosX/Y/Z   : Particle position array with the size of NPar_ThisRank
-//                ParVelX/Y/Z   : Particle velocity array with the size of NPar_ThisRank
-//                ParTime       : Particle time     array with the size of NPar_ThisRank
-//                ParType       : Particle type     array with the size of NPar_ThisRank
-//                AllAttribute  : Pointer array for all particle attributes
-//                                --> Dimension = [PAR_NATT_TOTAL][NPar_ThisRank]
+// Parameter   :  NPar_ThisRank   : Number of particles to be set by this MPI rank
+//                NPar_AllRank    : Total Number of particles in all MPI ranks
+//                ParMass         : Particle mass     array with the size of NPar_ThisRank
+//                ParPosX/Y/Z     : Particle position array with the size of NPar_ThisRank
+//                ParVelX/Y/Z     : Particle velocity array with the size of NPar_ThisRank
+//                ParTime         : Particle time     array with the size of NPar_ThisRank
+//                ParType         : Particle type     array with the size of NPar_ThisRank
+//                AllAttributeFlt : Pointer array for all particle floating-point attributes
+//                                --> Dimension = [PAR_NATT_FLT_TOTAL][NPar_ThisRank]
 //                                --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
 //                                    to access the data
+//                AllAttributeInt : Pointer array for all particle integer attributes
+//                                --> Dimension = [PAR_NATT_INT_TOTAL][NPar_ThisRank]
+//                                --> Use the attribute indices defined in Field.h to access the data
 //
-// Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttribute
+// Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttributeFlt, AllAttributeInt
 //-------------------------------------------------------------------------------------------------------
 void Par_Init_ByFunction_HaloMerger( const long NPar_ThisRank, const long NPar_AllRank,
-                                     real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                     real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                     real *ParType, real *AllAttribute[PAR_NATT_TOTAL] )
+                                     real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                     real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                     long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                     long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 {
 
-   // This function is only for HaloMerger_ParCloud_InitMode == 1
+// This function is only for HaloMerger_ParCloud_InitMode == 1
    if ( HaloMerger_ParCloud_Num == 0  ||  HaloMerger_ParCloud_InitMode != 1 )  return;
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
 // define the particle attribute arrays
-   real *ParData_AllRank[PAR_NATT_TOTAL];
-   for (int v=0; v<PAR_NATT_TOTAL; v++)   ParData_AllRank[v] = NULL;
+   real_par *ParFltData_AllRank[PAR_NATT_FLT_TOTAL];
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParFltData_AllRank[v] = NULL;
+   long_par *ParIntData_AllRank[PAR_NATT_INT_TOTAL];
+   for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   ParIntData_AllRank[v] = NULL;
+
 
 // only the master rank will construct the initial condition
    if ( MPI_Rank == 0 )
    {
 
    // allocate memory for particle attribute arrays
-      ParData_AllRank[PAR_MASS] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_POSX] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_POSY] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_POSZ] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_VELX] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_VELY] = new real [NPar_AllRank];
-      ParData_AllRank[PAR_VELZ] = new real [NPar_AllRank];
+      ParFltData_AllRank[PAR_MASS] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSX] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSY] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSZ] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELX] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELY] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELZ] = new real_par [NPar_AllRank];
 
       long Par_Idx0 = 0;
 
       for (int index_parcloud=0; index_parcloud<HaloMerger_ParCloud_Num; index_parcloud++)
       {
-         // initialize Par_EquilibriumIC for each particle cloud
-         Par_EquilibriumIC Cloud_Constructor;
 
-         Cloud_Constructor.params.Cloud_Center                = new double[3];
-         Cloud_Constructor.params.Cloud_BulkVel               = new double[3];
-
-         // set the parameters for each particle cloud
-         strcpy( Cloud_Constructor.params.Cloud_Type,           "Table" );
-         strcpy( Cloud_Constructor.params.Density_Table_Name,   HaloMerger_ParCloud_DensProf_Filename[index_parcloud] );
-         Cloud_Constructor.params.Cloud_Center[0]             = HaloMerger_ParCloud_CenCoord[index_parcloud][0];
-         Cloud_Constructor.params.Cloud_Center[1]             = HaloMerger_ParCloud_CenCoord[index_parcloud][1];
-         Cloud_Constructor.params.Cloud_Center[2]             = HaloMerger_ParCloud_CenCoord[index_parcloud][2];
-         Cloud_Constructor.params.Cloud_BulkVel[0]            = HaloMerger_ParCloud_Velocity[index_parcloud][0];
-         Cloud_Constructor.params.Cloud_BulkVel[1]            = HaloMerger_ParCloud_Velocity[index_parcloud][1];
-         Cloud_Constructor.params.Cloud_BulkVel[2]            = HaloMerger_ParCloud_Velocity[index_parcloud][2];
-         Cloud_Constructor.params.Cloud_MaxR                  = HaloMerger_ParCloud_DensProf_MaxR[index_parcloud];
-         Cloud_Constructor.params.Cloud_RSeed                 = HaloMerger_ParCloud_RSeed[index_parcloud];
-         Cloud_Constructor.params.Cloud_Par_Num               = HaloMerger_ParCloud_NPar[index_parcloud];
-         Cloud_Constructor.params.Cloud_R0                    = 1.0;  // will have no effect as long as the value is positive
-         Cloud_Constructor.params.AddExtPot                   = 0;    // no external potential
-
-         // initialize the particle cloud
-         Cloud_Constructor.Init();
-
-         // check whether the particle number of each particle cloud is reasonable
-         if ( (Par_Idx0 + Cloud_Constructor.params.Cloud_Par_Num) > NPar_AllRank )
+//       check whether the particle number of each particle cloud is reasonable
+         if ( (Par_Idx0 + HaloMerger_ParCloud_NPar[index_parcloud]) > NPar_AllRank )
          {
             Aux_Error( ERROR_INFO, "particle number doesn't match (%ld + %ld = %ld > %ld) !!\n",
-                        Par_Idx0, Cloud_Constructor.params.Cloud_Par_Num, Par_Idx0+Cloud_Constructor.params.Cloud_Par_Num, NPar_AllRank );
+                        Par_Idx0, HaloMerger_ParCloud_NPar[index_parcloud], Par_Idx0+HaloMerger_ParCloud_NPar[index_parcloud], NPar_AllRank );
          }
 
-         // set an equilibrium initial condition for each particle cloud
-         Cloud_Constructor.Par_SetEquilibriumIC( ParData_AllRank[PAR_MASS], ParData_AllRank+PAR_POSX, ParData_AllRank+PAR_VELX, Par_Idx0 );
+//       initialize Par_EquilibriumIC for each particle cloud
+         Par_EquilibriumIC Cloud_Constructor( "Table" );
 
-         // reset the given coordinate and velocity if there is only one particle
-         if ( Cloud_Constructor.params.Cloud_Par_Num == 1 )
+//       set the parameters for each particle cloud
+         Cloud_Constructor.setCenterAndBulkVel( HaloMerger_ParCloud_CenCoord[index_parcloud][0], HaloMerger_ParCloud_CenCoord[index_parcloud][1], HaloMerger_ParCloud_CenCoord[index_parcloud][2],
+                                                HaloMerger_ParCloud_Velocity[index_parcloud][0], HaloMerger_ParCloud_Velocity[index_parcloud][1], HaloMerger_ParCloud_Velocity[index_parcloud][2] );
+
+         Cloud_Constructor.setParticleParameters( HaloMerger_ParCloud_NPar[index_parcloud], HaloMerger_ParCloud_DensProf_MaxR[index_parcloud], 5000, HaloMerger_ParCloud_RSeed[index_parcloud] ); // the number of bins is hard-coded as 5000 for now since the results are insensitive to it
+
+         Cloud_Constructor.setDensProfTableFilename( HaloMerger_ParCloud_DensProf_Filename[index_parcloud] );
+
+//       construct the distribution for the particle cloud
+         Cloud_Constructor.constructDistribution();
+
+//       set an equilibrium initial condition for each cloud
+         Cloud_Constructor.constructParticles( ParFltData_AllRank[PAR_MASS], ParFltData_AllRank+PAR_POSX, ParFltData_AllRank+PAR_VELX, Par_Idx0 );
+
+         Aux_Message( stdout, "   Total enclosed mass within MaxR    = % 13.7e\n",  Cloud_Constructor.TotCloudMass      );
+         Aux_Message( stdout, "   Particle mass                      = % 13.7e\n",  Cloud_Constructor.ParticleMass      );
+         Aux_Message( stdout, "   Total enclosed mass relative error = % 13.7e\n",  Cloud_Constructor.TotCloudMassError );
+
+//       reset the given coordinate and velocity if there is only one particle
+         if ( HaloMerger_ParCloud_NPar[index_parcloud] == 1 )
          {
             for (int d=0; d<3; d++)
             {
-               ParData_AllRank[PAR_POSX+d][Par_Idx0] = Cloud_Constructor.params.Cloud_Center[d];
-               ParData_AllRank[PAR_VELX+d][Par_Idx0] = Cloud_Constructor.params.Cloud_BulkVel[d];
+               ParFltData_AllRank[PAR_POSX+d][Par_Idx0] = HaloMerger_ParCloud_CenCoord[index_parcloud][d];
+               ParFltData_AllRank[PAR_VELX+d][Par_Idx0] = HaloMerger_ParCloud_Velocity[index_parcloud][d];
             }
          }
 
-         // update the particle index offset for the next particle cloud
-         Par_Idx0 += Cloud_Constructor.params.Cloud_Par_Num;
-
-         // free the memory
-         delete [] Cloud_Constructor.params.Cloud_Center ;
-         delete [] Cloud_Constructor.params.Cloud_BulkVel;
+//       update the particle index offset for the next particle cloud
+         Par_Idx0 += HaloMerger_ParCloud_NPar[index_parcloud];
 
       } // for (int index_parcloud=0; index_parcloud<HaloMerger_ParCloud_Num; index_parcloud++)
 
-      // check whether the total particle number is reasonable
+//    check whether the total particle number is reasonable
       if ( Par_Idx0 != NPar_AllRank )
       {
          Aux_Error( ERROR_INFO, "total particle number doesn't match (total = %ld != NPar_AllRank = %ld) !!\n", Par_Idx0, NPar_AllRank );
@@ -139,8 +137,11 @@ void Par_Init_ByFunction_HaloMerger( const long NPar_ThisRank, const long NPar_A
 
    } // if ( MPI_Rank == 0 )
 
+
 // send particle attributes from the master rank to all ranks
-   Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, ParData_AllRank, AllAttribute );
+   Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, _NONE,
+                            ParFltData_AllRank, ParIntData_AllRank, AllAttributeFlt, AllAttributeInt );
+
 
 // synchronize all particles to the physical time on the base level and assign particle type
    for (long p=0; p<NPar_ThisRank; p++)
@@ -149,10 +150,12 @@ void Par_Init_ByFunction_HaloMerger( const long NPar_ThisRank, const long NPar_A
       ParType[p] = PTYPE_GENERIC_MASSIVE;
    }
 
+
 // free resource
    if ( MPI_Rank == 0 )
    {
-      for (int v=0; v<PAR_NATT_TOTAL; v++)   delete [] ParData_AllRank[v];
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   delete [] ParFltData_AllRank[v];
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   delete [] ParIntData_AllRank[v];
    }
 
 

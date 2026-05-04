@@ -163,6 +163,7 @@ void FFT_Isolated( real *RhoK, const real *gFuncK, const real Poi_Coeff, const l
 } // FUNCTION : FFT_Isolated
 
 
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  CPU_PoissonSolver_FFT
 // Description :  Evaluate the base-level potential by FFT

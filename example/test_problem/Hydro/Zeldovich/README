@@ -1,7 +1,7 @@
 Compilation flags:
 ========================================
 Enable : MODEL=HYDRO, GRAVITY, COMOVING, PARTICLE, SUPPORT_GSL, SUPPORT_FFTW, DUAL_ENERGY
-Configure.py: python configure.py --model=HYDRO --gravity=true --comoving=true --particle=true --gsl=true --fftw=FFTW2 --dual=DE_ENPY
+Configure.py: python configure.py --model=HYDRO --gravity=true --comoving=true --particle=true --gsl=true --fftw=FFTW2 --dual=ENPY
 
 
 Default setup:
@@ -14,7 +14,7 @@ Default setup:
    NX0_TOT_X/Y/Z           128/32/32
    OPT__BC_*               1
    MAX_LEVEL               0
-   GPU_NSTREAM             8 or 4                    # necessary while DDUAL_ENERGY is enabled
+   GPU_NSTREAM            -1
    OPT__FLAG_RHO           1
    OPT__OUTPUT_PART        4
    OPT__OUTPUT_BASEPS      0

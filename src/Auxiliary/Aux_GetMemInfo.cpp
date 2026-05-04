@@ -17,16 +17,23 @@
 void Aux_GetMemInfo()
 {
 
-   const char FileName_Record[] = "Record__MemInfo";
-   const int  PID               = getpid();
-   const int  NInfo             = 4;   // number of memory information to be recorded (VmSize/Peak, VmRSS/HWM)
+// memory reporting is not currently supported on macOS
+#  ifdef __APPLE__
+   return;
+#  endif
+
+
+   const int PID   = getpid();
+   const int NInfo = 4; // number of memory information to be recorded (VmSize/Peak, VmRSS/HWM)
 
    static bool FirstTime=true;
-   char   FileName_Status[MAX_STRING], Useless[NInfo][MAX_STRING], *line=NULL;
+   char   FileName_Record[2*MAX_STRING], FileName_Status[MAX_STRING], Useless[NInfo][MAX_STRING], *line=NULL;
    char   VmSize[MAX_STRING], VmPeak[MAX_STRING], VmRSS[MAX_STRING], VmHWM[MAX_STRING];
    bool   GetVmSize=false, GetVmPeak=false, GetVmRSS=false, GetVmHWM=false;
    double Vm_double[NInfo], Vm_max[NInfo], Vm_sum[NInfo];
    size_t len=0;
+
+   sprintf( FileName_Record, "%s/Record__MemInfo", OUTPUT_DIR );
 
 
 // 1. read memory information from the file "FileName_Status"

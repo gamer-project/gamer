@@ -55,7 +55,7 @@ void End_MemFree_Fluid()
       delete [] h_IsCompletelyRefined[t];  h_IsCompletelyRefined[t] = NULL;
 #     endif
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      delete [] h_HasWaveCounterpart [t]; h_HasWaveCounterpart [t] = NULL;
+      delete [] h_HasWaveCounterpart [t];  h_HasWaveCounterpart [t] = NULL;
 #     endif
    } // for (int t=0; t<2; t++)
 

@@ -9,6 +9,18 @@ typedef double real;
 typedef float  real;
 #endif
 
+#ifdef FLOAT8_PAR
+typedef double real_par;
+#else
+typedef float  real_par;
+#endif
+
+#ifdef INT8_PAR
+typedef long long_par;
+#else
+typedef int  long_par;
+#endif
+
 
 // models
 #define HYDRO              1

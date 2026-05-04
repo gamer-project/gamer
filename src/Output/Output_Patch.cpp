@@ -59,8 +59,8 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
    real    (*pot)[PS1][PS1]           = amr->patch[PotSg][lv][PID]->pot;
 #  endif
 
-   char FileName[100];
-   sprintf( FileName, "Patch_r%d_lv%d_p%d", MPI_Rank, lv, PID );
+   char FileName[2*MAX_STRING];
+   sprintf( FileName, "%s/Patch_r%d_lv%d_p%d", OUTPUT_DIR, MPI_Rank, lv, PID );
    if ( comment != NULL )
    {
       strcat( FileName, "_" );
@@ -192,12 +192,12 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
          const real Pres = ( magnetic == NULL ) ?
                            NULL_REAL :
                            Hydro_Con2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
-                                           CheckMinPres_No, NULL_REAL, Emag,
+                                           CheckMinPres_No, NULL_REAL, PassiveFloorMask, Emag,
                                            EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 #        else
          const real Pres = Hydro_Con2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
-                                           CheckMinPres_No, NULL_REAL, NULL_REAL,
+                                           CheckMinPres_No, NULL_REAL, PassiveFloorMask, NULL_REAL,
                                            EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 #        endif
@@ -296,7 +296,8 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
    fprintf( File, "===================\n" );
    fprintf( File, "\n" );
    fprintf( File, "%5s  %10s", "No.", "ParID" );
-   for (int v=0; v<PAR_NATT_TOTAL; v++)   fprintf( File, " %*s", StrLen_Flt, ParAttLabel[v] );
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   fprintf( File, " %*s", StrLen_Flt, ParAttFltLabel[v] );
+   for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   fprintf( File, " %*s", StrLen_Flt, ParAttIntLabel[v] );
    fprintf( File, "\n" );
 
    for (int p=0; p<Relation->NPar; p++)
@@ -304,7 +305,12 @@ void Output_Patch( const int lv, const int PID, const int FluSg, const int MagSg
       ParID = Relation->ParList[p];
 
       fprintf( File, "%5d  %10ld", p, ParID );
-      for (int v=0; v<PAR_NATT_TOTAL; v++)   fprintf( File, BlankPlusFormat_Flt, amr->Par->Attribute[v][ParID] );
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   fprintf( File, BlankPlusFormat_Flt, amr->Par->AttributeFlt[v][ParID] );
+#     ifdef INT8_PAR
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   fprintf( File, " %*ld",  StrLen_Flt, amr->Par->AttributeInt[v][ParID] );
+#     else
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   fprintf( File, " %*d",  StrLen_Flt, amr->Par->AttributeInt[v][ParID] );
+#     endif
 
       fprintf( File, "\n" );
    }

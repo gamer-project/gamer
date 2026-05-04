@@ -2,5 +2,5 @@
 
 PYTHON=python3
 
-${PYTHON} configure.py --machine=eureka_intel --hdf5=true --gpu=true --mpi=true \
-                       --model=HYDRO --mhd=true
+${PYTHON} configure.py --hdf5=true --gpu=true --mpi=true \
+                       --model=HYDRO --mhd=true "$@"

@@ -6,6 +6,7 @@
 
 // specific global variables declared in Init_TestProb_Hydro_Bondi.cpp
 // =======================================================================================
+extern double Bondi_MassBH;
 extern double Bondi_SinkMass;
 extern double Bondi_SinkMomX;
 extern double Bondi_SinkMomY;
@@ -36,7 +37,8 @@ extern int    Bondi_SinkNCell;
 void Record_Bondi()
 {
 
-   const char FileName[] = "Record__BondiAccretionRate";
+   char FileName[2*MAX_STRING];
+   sprintf( FileName, "%s/Record__BondiAccretionRate", OUTPUT_DIR );
 
    static bool   FirstTime = true;
    static double Time0, dTime;
@@ -49,10 +51,10 @@ void Record_Bondi()
          if ( Aux_CheckFileExist(FileName) )    Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
 
          FILE *File_User = fopen( FileName, "a" );
-         fprintf( File_User, "#%9s%16s%20s%20s%20s%20s%20s%20s%20s%20s%20s%20s%20s%20s\n",
+         fprintf( File_User, "#%9s%16s%20s%20s%20s%20s%20s%20s%20s%20s%20s%20s%20s%20s%20s\n",
                   "Step", "Time [yr]", "NVoidCell", "Mass [Msun]", "Time [yr]", "dM/dt [Msun/yr]",
                   "MomX [g*cm/s]", "MomY [g*cm/s]", "MomZ [g*cm/s]", "MomXAbs [g*cm/s]", "MomYAbs [g*cm/s]", "MomZAbs [g*cm/s]",
-                  "Ek [erg]", "Et [erg]" );
+                  "Ek [erg]", "Et [erg]", "BHMass [Msun]" );
          fclose( File_User );
       }
 
@@ -69,7 +71,7 @@ void Record_Bondi()
 
 
 //    get the total amount of sunk variables
-      double Mass_Sum, MomX_Sum, MomY_Sum, MomZ_Sum, MomXAbs_Sum, MomYAbs_Sum, MomZAbs_Sum, Ek_Sum, Et_Sum;
+      double Mass_Sum, MomX_Sum, MomY_Sum, MomZ_Sum, MomXAbs_Sum, MomYAbs_Sum, MomZAbs_Sum, Ek_Sum, Et_Sum, Mass_BH;
 
       MPI_Reduce( &Bondi_SinkMass,    &Mass_Sum,    1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
       MPI_Reduce( &Bondi_SinkMomX,    &MomX_Sum,    1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD );
@@ -90,6 +92,7 @@ void Record_Bondi()
       MomZAbs_Sum *= UNIT_M*UNIT_L/UNIT_T;
       Ek_Sum      *= UNIT_E;
       Et_Sum      *= UNIT_E;
+      Mass_BH      = Bondi_MassBH*UNIT_M/Const_Msun;
 
       if ( MPI_Rank == 0 )
       {
@@ -98,9 +101,9 @@ void Record_Bondi()
          dTime *= UNIT_T/Const_yr;
 
          FILE *File_User = fopen( FileName, "a" );
-         fprintf( File_User, "%10ld%16.7e%20d%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e\n",
+         fprintf( File_User, "%10ld%16.7e%20d%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e%20.7e\n",
                   Step, Time[0]*UNIT_T/Const_yr, SinkNCell_Sum, Mass_Sum, dTime, Mass_Sum/dTime,
-                  MomX_Sum, MomY_Sum, MomZ_Sum, MomXAbs_Sum, MomYAbs_Sum, MomZAbs_Sum, Ek_Sum, Et_Sum );
+                  MomX_Sum, MomY_Sum, MomZ_Sum, MomXAbs_Sum, MomYAbs_Sum, MomZAbs_Sum, Ek_Sum, Et_Sum, Mass_BH );
          fclose( File_User );
       }
    } // if ( FirstTime ) ... else ...

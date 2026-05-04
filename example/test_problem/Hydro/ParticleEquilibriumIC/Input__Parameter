@@ -14,7 +14,7 @@
 
 
 # simulation scale
-BOX_SIZE                      3         # box size along the longest side (in Mpc/h if COMOVING is adopted)
+BOX_SIZE                      3           # box size along the longest side (in Mpc/h if COMOVING is adopted)
 NX0_TOT_X                     64          # number of base-level cells along x
 NX0_TOT_Y                     64          # number of base-level cells along y
 NX0_TOT_Z                     64          # number of base-level cells along z
@@ -49,7 +49,7 @@ GFUNC_COEFF0                 -1.0         # Green's function coefficient at the 
 
 
 # particle (PARTICLE only)
-PAR_NPAR                      20000      # total number of particles (must be set for PAR_INIT==1/3; must be an integer)
+PAR_NPAR                      20000       # total number of particles (must be set for PAR_INIT==1/3; must be an integer)
 PAR_INIT                      1           # initialization option for particles: (1=FUNCTION, 2=RESTART, 3=FILE->"PAR_IC")
 PAR_INTERP                    3           # particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [2]
 PAR_INTEG                     2           # particle integration scheme: (1=Euler, 2=KDK) [2]
@@ -209,7 +209,7 @@ INT_OPP_SIGN_0TH_ORDER        1           # switch to 0th-order interpolation if
 
 # data dump
 OPT__OUTPUT_TOTAL             1           # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
-OPT__OUTPUT_PART              0           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
+OPT__OUTPUT_PART              0           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag, 8=entire box) [0]
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
 OPT__OUTPUT_PAR_MODE          1           # output the particle data: (0=off, 1=text-file, 2=C-binary) [0] ##PARTICLE ONLY##
 OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
@@ -224,6 +224,7 @@ OUTPUT_PART_X                -1.0         # x coordinate for OPT__OUTPUT_PART [-
 OUTPUT_PART_Y                -1.0         # y coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Z                -1.0         # z coordinate for OPT__OUTPUT_PART [-1.0]
 INIT_DUMPID                  -1           # set the first dump ID (<0=auto) [-1]
+OUTPUT_DIR                    .           # set the output directory [.]
 
 
 # miscellaneous

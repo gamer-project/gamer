@@ -226,9 +226,9 @@ void Aux_ResetTimer()
 void Aux_Record_Timing()
 {
 
-   const char FileName[] = "Record__Timing";
-
    FILE *File = NULL;
+   char FileName[2*MAX_STRING];
+   sprintf( FileName, "%s/Record__Timing", OUTPUT_DIR );
 
    const char Comment_LB[][4] = { "Max", "Min", "Ave" };
    const int  NLB             = 8;
@@ -986,9 +986,10 @@ void Timing__Solver( const char FileName[] )
 void Aux_AccumulatedTiming( const double TotalT, double InitT, double OtherT )
 {
 
-   const char FileName[]      = "Record__Timing";
    const char Comment_LB[][4] = { "Max", "Min", "Ave" };
    const int  NNewTimer       = 2;
+   char FileName[2*MAX_STRING];
+   sprintf( FileName, "%s/Record__Timing", OUTPUT_DIR );
 
    double dt_P, Flu_P, Gra_P, Src_P, Che_P, SF_P, FB_P, FixUp_P, Flag_P, Refine_P, Sum_P, MPI_Grid_P;
    double Aux_P, Corr_P, Output_P, LB_P, Par_P, MPI_Par_P, libyt_P, Init_P, Other_P;

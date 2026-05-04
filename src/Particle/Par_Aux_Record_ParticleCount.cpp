@@ -15,8 +15,9 @@
 void Par_Aux_Record_ParticleCount()
 {
 
-   const char FileName[] = "Record__ParticleCount";
    static bool FirstTime = true;
+   char FileName[2*MAX_STRING];
+   sprintf( FileName, "%s/Record__ParticleCount", OUTPUT_DIR );
 
    if ( MPI_Rank == 0  &&  FirstTime )
    {

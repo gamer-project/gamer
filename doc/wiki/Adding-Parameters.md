@@ -4,7 +4,10 @@ Mandatory steps are marked by &#x1F4CC;.
 
 1. &#x1F4CC; Add new global variables to both `src/GAMER/Main.cpp` and `include/Global.h`
 
-2.  &#x1F4CC; Edit `src/Init/Init_Load_Parameter.cpp` to load new parameters
+> [!IMPORTANT]
+> The length of the string variable must be `MAX_STRING`.
+
+2. &#x1F4CC; Edit `src/Init/Init_Load_Parameter.cpp` to load new parameters
 
 3. Add notes in `src/Auxiliary/Aux_TakeNote.cpp` [optional but recommended]
 

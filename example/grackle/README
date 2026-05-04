@@ -1,0 +1,15 @@
+First-time GRACKLE installation guide (on calab-ntu gpu-clusters as an example):
+========================================
+1. First download the source code by executing "git clone https://github.com/grackle-project/grackle"
+2. Next navigate to "cd grackle". The required UVB interpolation tables can be downloaded via "git submodule update --init"
+3. Next navigate to "./configure; cd src/clib"
+4. Copy into the config files "Make.mach.eureka-intel" or "Make.mach.spock-intel" (from the directory "<your_gamer_directory>/example/grackle/") and change the prefix: "MACH_INSTALL_PREFIX = <your_grackle_directory>/grackle_spock_double_omp" in "Make.mach.spock-intel" to the path you wish to install the package
+5. Next execute "make clean; make machine-spock-intel" or "make clean; make machine-eureka-intel"
+6. Next execute "make precision-64" (double precision is recommended for GRACKLE) and "make omp-on" (GAMER does utilize OpenMP)
+7. Next execute "make show-config" to verify "CONFIG_PRECISION: 64" and "CONFIG_OMP: on"
+8. Next execute "make save-config-gamer" (save this GAMER-spock specific config setting) and "make load-config-gamer" (load this GAMER-spock specific config setting)
+9. Lastly for code compilation, execute "make -j 4; make install"
+10. To compile the corresponding gamer executable:
+    (1) Add the path "GRACKLE_PATH    <your_grackle_directory>/grackle_spock_double_omp" to "<your_gamer_directory>/configs/spock_intel.config"
+    (2) Copy "generate_make.sh" from the AGORA test problem and change "--machine=spock_intel" in that file, and then execute "sh generate_make.sh"
+    (3) Generate a gamer executable via "make clean; make -j 4"

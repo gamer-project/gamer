@@ -62,12 +62,17 @@ static FieldIdx_t ColorField3Idx = Idx_Undefined;
 
 // problem-specific function prototypes
 #ifdef MASSIVE_PARTICLES
+FieldIdx_t Idx_ParHalo = Idx_Undefined;
+
+void AddNewParticleAttribute_ClusterMerger();
+
 long Read_Particle_Number_ClusterMerger(std::string filename);
 void Par_Init_ByFunction_ClusterMerger(const long NPar_ThisRank,
                                        const long NPar_AllRank,
                                        real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                        real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                       real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL]);
+                                       long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                       long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] );
 #endif
 
 int Read_Num_Points_ClusterMerger(std::string filename);
@@ -113,6 +118,11 @@ void Validate()
    Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
 #  endif
 
+#  ifdef PARTICLE
+   if ( PAR_NATT_INT_USER != 1 )
+      Aux_Error( ERROR_INFO, "PAR_NATT_INT_USER must be set to 1 in the Makefile !!");
+#  endif
+
    if ( !OPT__UNIT )
       Aux_Error( ERROR_INFO, "OPT__UNIT must be enabled !!\n" );
 
@@ -138,6 +148,70 @@ void Validate()
 
 #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 //-------------------------------------------------------------------------------------------------------
+// Function    :  LoadInputTestProb
+// Description :  Read problem-specific runtime parameters from Input__TestProb and store them in HDF5 snapshots (Data_*)
+//
+// Note        :  1. Invoked by SetParameter() to read parameters
+//                2. Invoked by Output_DumpData_Total_HDF5() using the function pointer Output_HDF5_InputTest_Ptr to store parameters
+//                3. If there is no problem-specific runtime parameter to load, add at least one parameter
+//                   to prevent an empty structure in HDF5_Output_t
+//                   --> Example:
+//                       LOAD_PARA( load_mode, "TestProb_ID", &TESTPROB_ID, TESTPROB_ID, TESTPROB_ID, TESTPROB_ID );
+//
+// Parameter   :  load_mode      : Mode for loading parameters
+//                                 --> LOAD_READPARA    : Read parameters from Input__TestProb
+//                                     LOAD_HDF5_OUTPUT : Store parameters in HDF5 snapshots
+//                ReadPara       : Data structure for reading parameters (used with LOAD_READPARA)
+//                HDF5_InputTest : Data structure for storing parameters in HDF5 snapshots (used with LOAD_HDF5_OUTPUT)
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest )
+{
+
+#  ifndef SUPPORT_HDF5
+   if ( load_mode == LOAD_HDF5_OUTPUT )   Aux_Error( ERROR_INFO, "please turn on SUPPORT_HDF5 in the Makefile for load_mode == LOAD_HDF5_OUTPUT !!\n" );
+#  endif
+
+   if ( load_mode == LOAD_READPARA     &&  ReadPara       == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_READPARA and ReadPara == NULL !!\n" );
+   if ( load_mode == LOAD_HDF5_OUTPUT  &&  HDF5_InputTest == NULL )   Aux_Error( ERROR_INFO, "load_mode == LOAD_HDF5_OUTPUT and HDF5_InputTest == NULL !!\n" );
+
+// add parameters in the following format:
+// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
+// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
+// --> LOAD_PARA() is defined in "include/TestProb.h"
+// ***************************************************************************************************************************
+// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",        &VARIABLE,               DEFAULT,          MIN,           MAX            );
+// ***************************************************************************************************************************
+   LOAD_PARA( load_mode, "Merger_Coll_NumHalos",   &Merger_Coll_NumHalos,   2,                1,             3              );
+   LOAD_PARA( load_mode, "Merger_Coll_IsGas1",     &Merger_Coll_IsGas1,     true,             Useless_bool,  Useless_bool   );
+   LOAD_PARA( load_mode, "Merger_Coll_IsGas2",     &Merger_Coll_IsGas2,     true,             Useless_bool,  Useless_bool   );
+   LOAD_PARA( load_mode, "Merger_Coll_IsGas3",     &Merger_Coll_IsGas3,     true,             Useless_bool,  Useless_bool   );
+   LOAD_PARA( load_mode, "Merger_File_Prof1",       Merger_File_Prof1,      NoDef_str,        Useless_str,   Useless_str    );
+   LOAD_PARA( load_mode, "Merger_File_Par1",        Merger_File_Par1,       NoDef_str,        Useless_str,   Useless_str    );
+   LOAD_PARA( load_mode, "Merger_File_Prof2",       Merger_File_Prof2,      NoDef_str,        Useless_str,   Useless_str    );
+   LOAD_PARA( load_mode, "Merger_File_Par2",        Merger_File_Par2,       NoDef_str,        Useless_str,   Useless_str    );
+   LOAD_PARA( load_mode, "Merger_File_Prof3",       Merger_File_Prof3,      NoDef_str,        Useless_str,   Useless_str    );
+   LOAD_PARA( load_mode, "Merger_File_Par3",        Merger_File_Par3,       NoDef_str,        Useless_str,   Useless_str    );
+   LOAD_PARA( load_mode, "Merger_Coll_PosX1",      &Merger_Coll_PosX1,     -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_PosY1",      &Merger_Coll_PosY1,     -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_PosX2",      &Merger_Coll_PosX2,     -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_PosY2",      &Merger_Coll_PosY2,     -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_PosX3",      &Merger_Coll_PosX3,     -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_PosY3",      &Merger_Coll_PosY3,     -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_VelX1",      &Merger_Coll_VelX1,     -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_VelY1",      &Merger_Coll_VelY1,     -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_VelX2",      &Merger_Coll_VelX2,     -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_VelY2",      &Merger_Coll_VelY2,     -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_VelX3",      &Merger_Coll_VelX3,     -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_VelY3",      &Merger_Coll_VelY3,     -1.0,              NoMin_double,  NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_UseMetals",  &Merger_Coll_UseMetals,  true,             Useless_bool,  Useless_bool   );
+
+} // FUNCTION : LoadInputTestProb
+
+
+
+//-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
 //
@@ -160,38 +234,11 @@ void SetParameter()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ...\n" );
 
 // (1) load the problem-specific runtime parameters
+// (1-1) read parameters from Input__TestProb
    const char FileName[] = "Input__TestProb";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
-// add parameters in the following format:
-// --> note that VARIABLE, DEFAULT, MIN, and MAX must have the same data type
-// --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
-// ********************************************************************************************************************************
-// ReadPara->Add( "KEY_IN_THE_FILE",        &VARIABLE,               DEFAULT,          MIN,           MAX            );
-// ********************************************************************************************************************************
-   ReadPara->Add( "Merger_Coll_NumHalos",   &Merger_Coll_NumHalos,   2,                1,             3              );
-   ReadPara->Add( "Merger_Coll_IsGas1",     &Merger_Coll_IsGas1,     true,             Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Merger_Coll_IsGas2",     &Merger_Coll_IsGas2,     true,             Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Merger_Coll_IsGas3",     &Merger_Coll_IsGas3,     true,             Useless_bool,  Useless_bool   );
-   ReadPara->Add( "Merger_File_Prof1",       Merger_File_Prof1,      NoDef_str,        Useless_str,   Useless_str    );
-   ReadPara->Add( "Merger_File_Par1",        Merger_File_Par1,       NoDef_str,        Useless_str,   Useless_str    );
-   ReadPara->Add( "Merger_File_Prof2",       Merger_File_Prof2,      NoDef_str,        Useless_str,   Useless_str    );
-   ReadPara->Add( "Merger_File_Par2",        Merger_File_Par2,       NoDef_str,        Useless_str,   Useless_str    );
-   ReadPara->Add( "Merger_File_Prof3",       Merger_File_Prof3,      NoDef_str,        Useless_str,   Useless_str    );
-   ReadPara->Add( "Merger_File_Par3",        Merger_File_Par3,       NoDef_str,        Useless_str,   Useless_str    );
-   ReadPara->Add( "Merger_Coll_PosX1",      &Merger_Coll_PosX1,     -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_PosY1",      &Merger_Coll_PosY1,     -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_PosX2",      &Merger_Coll_PosX2,     -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_PosY2",      &Merger_Coll_PosY2,     -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_PosX3",      &Merger_Coll_PosX3,     -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_PosY3",      &Merger_Coll_PosY3,     -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_VelX1",      &Merger_Coll_VelX1,     -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_VelY1",      &Merger_Coll_VelY1,     -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_VelX2",      &Merger_Coll_VelX2,     -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_VelY2",      &Merger_Coll_VelY2,     -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_VelX3",      &Merger_Coll_VelX3,     -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_VelY3",      &Merger_Coll_VelY3,     -1.0,              NoMin_double,  NoMax_double   );
-   ReadPara->Add( "Merger_Coll_UseMetals",  &Merger_Coll_UseMetals,  true,             Useless_bool,  Useless_bool   );
+   LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
 
    ReadPara->Read( FileName );
 
@@ -614,8 +661,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    }
 
 } // FUNCTION : SetGridIC
-
 #endif // #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -646,8 +693,9 @@ void End_ClusterMerger()
 
 } // FUNCTION : End_ClusterMerger
 
-#ifdef MHD
 
+
+#ifdef MHD
 void SetBFieldIC( real magnetic[], const double x, const double y, const double z, const double Time,
                   const int lv, double AuxArray[] )
 {
@@ -658,8 +706,8 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
    return;
 
 } // FUNCTION : SetBFieldIC
-
 #endif // #ifdef MHD
+
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -688,23 +736,28 @@ void Init_TestProb_Hydro_ClusterMerger()
 
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr         = SetGridIC;
-   End_User_Ptr                   = End_ClusterMerger;
-   Par_Init_ByFunction_Ptr        = Par_Init_ByFunction_ClusterMerger;
-   Init_Field_User_Ptr            = AddNewField_ClusterMerger;
-   //Par_Init_Attribute_User_Ptr    = AddNewParticleAttribute_ClusterMerger;
+   Init_Function_User_Ptr        = SetGridIC;
+   End_User_Ptr                  = End_ClusterMerger;
+   Par_Init_ByFunction_Ptr       = Par_Init_ByFunction_ClusterMerger;
+   Init_Field_User_Ptr           = AddNewField_ClusterMerger;
+   Par_Init_Attribute_User_Ptr   = AddNewParticleAttribute_ClusterMerger;
 #  ifdef MHD
-   Init_Function_BField_User_Ptr  = SetBFieldIC;
+   Init_Function_BField_User_Ptr = SetBFieldIC;
+#  endif
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_InputTest_Ptr     = LoadInputTestProb;
 #  endif
 #  endif // if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
+
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_TestProb_Hydro_ClusterMerger
 
-#ifdef SUPPORT_HDF5
 
-int Read_Num_Points_ClusterMerger(std::string filename)
+
+#ifdef SUPPORT_HDF5
+int Read_Num_Points_ClusterMerger( std::string filename )
 {
 
    hid_t   file_id, dataset, dataspace;
@@ -713,39 +766,40 @@ int Read_Num_Points_ClusterMerger(std::string filename)
 
    int rank;
 
-   file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+   file_id   = H5Fopen( filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT );
+   dataset   = H5Dopen( file_id, "/fields/radius", H5P_DEFAULT );
+   dataspace = H5Dget_space( dataset );
+   rank      = H5Sget_simple_extent_dims( dataspace, dims, maxdims );
 
-   dataset   = H5Dopen(file_id, "/fields/radius", H5P_DEFAULT);
-   dataspace = H5Dget_space(dataset);
-   rank      = H5Sget_simple_extent_dims(dataspace, dims, maxdims);
-
-   H5Fclose(file_id);
+   H5Fclose( file_id );
 
    return (int)dims[0];
 
 } // FUNCTION : Read_Num_Points_ClusterMerger
 
-void Read_Profile_ClusterMerger(std::string filename, std::string fieldname,
-                                double field[])
+
+
+void Read_Profile_ClusterMerger( std::string filename, std::string fieldname, double field[] )
 {
 
-   hid_t   file_id, dataset;
-   herr_t  status;
+   hid_t  file_id, dataset;
+   herr_t status;
 
-   file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+   file_id = H5Fopen( filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT );
+   dataset = H5Dopen( file_id, fieldname.c_str(), H5P_DEFAULT );
+   status  = H5Dread( dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
+                      H5S_ALL, H5P_DEFAULT, field );
+   H5Dclose( dataset );
 
-   dataset = H5Dopen(file_id, fieldname.c_str(), H5P_DEFAULT);
-   status = H5Dread(dataset, H5T_NATIVE_DOUBLE, H5S_ALL,
-                     H5S_ALL, H5P_DEFAULT, field);
-   H5Dclose(dataset);
-
-   H5Fclose(file_id);
+   H5Fclose( file_id );
 
    return;
 
 } // FUNCTION : Read_Profile_ClusterMerger
 
-long Read_Particle_Number_ClusterMerger(std::string filename)
+
+
+long Read_Particle_Number_ClusterMerger( std::string filename )
 {
 
    hid_t   file_id, dataset, dataspace;
@@ -754,35 +808,46 @@ long Read_Particle_Number_ClusterMerger(std::string filename)
 
    int rank;
 
-   file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+   file_id   = H5Fopen( filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT );
+   dataset   = H5Dopen( file_id, "particle_mass", H5P_DEFAULT );
+   dataspace = H5Dget_space( dataset );
+   rank      = H5Sget_simple_extent_dims( dataspace, dims, maxdims );
 
-   dataset   = H5Dopen(file_id, "particle_mass", H5P_DEFAULT);
-   dataspace = H5Dget_space(dataset);
-   rank      = H5Sget_simple_extent_dims(dataspace, dims, maxdims);
-
-   H5Sclose(dataspace);
-   H5Dclose(dataset);
-   H5Fclose(file_id);
+   H5Sclose( dataspace );
+   H5Dclose( dataset );
+   H5Fclose( file_id );
 
    return (long)dims[0];
 
 } // FUNCTION : Read_Particle_Number_ClusterMerger
-
 #endif // #ifdef SUPPORT_HDF5
+
+
 
 #if ( MODEL == HYDRO )
 void AddNewField_ClusterMerger()
 {
 
    if ( Merger_Coll_UseMetals )
-      Idx_Metal = AddField( "Metal", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
+      Idx_Metal = AddField( "Metal", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_NO, INTERP_FRAC_NO );
    if ( ColorField1Idx == Idx_Undefined )
-      ColorField1Idx = AddField( "ColorField1", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
+      ColorField1Idx = AddField( "ColorField1", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_NO, INTERP_FRAC_NO );
    if ( Merger_Coll_NumHalos > 1 && ColorField2Idx == Idx_Undefined )
-      ColorField2Idx = AddField( "ColorField2", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
+      ColorField2Idx = AddField( "ColorField2", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_NO, INTERP_FRAC_NO );
    if ( Merger_Coll_NumHalos > 2 && ColorField3Idx == Idx_Undefined )
-      ColorField3Idx = AddField( "ColorField3", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_NO );
+      ColorField3Idx = AddField( "ColorField3", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_NO, INTERP_FRAC_NO );
 
-}
+} // FUNCTION : AddNewField_ClusterMerger
+#endif
 
+
+
+#ifdef MASSIVE_PARTICLES
+void AddNewParticleAttribute_ClusterMerger()
+{
+
+  if ( Idx_ParHalo == Idx_Undefined )
+    Idx_ParHalo = AddParticleAttributeInt( "ParHalo" );
+
+} // FUNCTION : AddNewParticleAttribute_ClusterMerger
 #endif

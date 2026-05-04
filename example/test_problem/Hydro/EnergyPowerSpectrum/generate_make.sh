@@ -2,4 +2,4 @@
 
 PYTHON=python3
 
-${PYTHON} configure.py --machine=eureka_intel --fftw=FFTW3 --model=HYDRO --eos=GAMMA --mpi=true
+${PYTHON} configure.py --fftw=FFTW3 --model=HYDRO --eos=GAMMA --mpi=true "$@"

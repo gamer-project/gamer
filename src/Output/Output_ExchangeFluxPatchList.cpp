@@ -22,12 +22,12 @@ void Output_ExchangeFluxPatchList( const int option, const int lv, const char *c
       Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "lv", lv );
 
 
-   char FileName[100];
+   char FileName[2*MAX_STRING];
    switch ( option )
    {
-      case 0:  sprintf( FileName, "SendFluxPatchList_%d_%d",     MPI_Rank, lv );
+      case 0:  sprintf( FileName, "%s/SendFluxPatchList_%d_%d", OUTPUT_DIR, MPI_Rank, lv );
                break;
-      case 1:  sprintf( FileName, "RecvFluxPatchList_%d_%d",     MPI_Rank, lv );
+      case 1:  sprintf( FileName, "%s/RecvFluxPatchList_%d_%d", OUTPUT_DIR, MPI_Rank, lv );
                break;
    }
 

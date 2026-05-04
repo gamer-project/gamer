@@ -28,9 +28,10 @@
 double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double AutoReduceDtCoeff )
 {
 
-   const char  FileName[] = "Record__TimeStep";
    static bool FirstTime  = true;
    const int   NdTimeMax  = 20;
+   char FileName[2*MAX_STRING];
+   sprintf( FileName, "%s/Record__TimeStep", OUTPUT_DIR );
 
    char  (*dTime_Name)[MAX_STRING] = new char   [NdTimeMax][MAX_STRING];
    double *dTime                   = new double [NdTimeMax];
@@ -232,6 +233,20 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
    }
 
    sprintf( dTime_Name[NdTime++], "%s", "Hybrid_Vel" );
+#  endif
+
+
+// 1.10 CRITERION TEN : Grackle cooling time
+// =============================================================================================================
+#  ifdef SUPPORT_GRACKLE
+   if ( DT__GRACKLE_COOLING >= 0.0 )
+   {
+      dTime[NdTime] = dTime_dt * Grackle_GetTimeStep_CoolingTime( lv );
+      sprintf( dTime_Name[NdTime++], "%s", "Grackle_TCool" );
+
+//    when fluid is freezed, disable this criterion by resetting it to a huge value
+      if ( OPT__FREEZE_FLUID  &&  ! OPT__UNFREEZE_GRACKLE )   dTime[NdTime-1] = HUGE_NUMBER;
+   }
 #  endif
 
 

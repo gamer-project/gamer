@@ -23,8 +23,9 @@ void (*Aux_Record_User_Ptr)() = NULL;
 void Aux_Record_User_Template()
 {
 
-   const char FileName[] = "Record__User";
    static bool FirstTime = true;
+   char FileName[2*MAX_STRING];
+   sprintf( FileName, "%s/Record__User", OUTPUT_DIR );
 
    if ( FirstTime )
    {

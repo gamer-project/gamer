@@ -188,6 +188,12 @@ void Init_GAMER( int *argc, char ***argv )
 #  endif
 
 
+// initialize variables for dumping particle attributes mapped from mesh quantities
+#  ifdef PARTICLE
+   if ( OPT__OUTPUT_PAR_MESH )   Par_Init_Attribute_Mesh();
+#  endif
+
+
 // initialize particles
 #  ifdef PARTICLE
    switch ( amr->Par->Init )
@@ -197,7 +203,7 @@ void Init_GAMER( int *argc, char ***argv )
             Par_Init_ByFunction_Ptr( amr->Par->NPar_Active, amr->Par->NPar_Active_AllRank,
                                      amr->Par->Mass, amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ,
                                      amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ, amr->Par->Time,
-                                     amr->Par->Type, amr->Par->Attribute );
+                                     amr->Par->Type, amr->Par->AttributeFlt, amr->Par->AttributeInt );
          else
             Aux_Error( ERROR_INFO, "Par_Init_ByFunction_Ptr == NULL for PAR_INIT = 1 !!\n" );
          break;
@@ -214,7 +220,7 @@ void Init_GAMER( int *argc, char ***argv )
                     "PAR_INIT", (int)amr->Par->Init );
    }
 
-   if ( amr->Par->Init != PAR_INIT_BY_RESTART )    Par_Aux_InitCheck();
+   if ( amr->Par->Init != PAR_INIT_BY_RESTART  &&  OPT__PAR_INIT_CHECK )    Par_Aux_InitCheck();
 #  endif // #ifdef PARTICLE
 
 
@@ -240,8 +246,8 @@ void Init_GAMER( int *argc, char ***argv )
 
 // ensure B field consistency on the shared interfaces between sibling patches
 #  if ( MODEL == HYDRO  &&  defined MHD )
-   if ( OPT__SAME_INTERFACE_B )
-   for (int lv=0; lv<NLEVEL; lv++)  MHD_SameInterfaceB( lv );
+   if ( OPT__SAME_INTERFACE_B == SAME_INTERFACE_B_YES )
+   for (int lv=0; lv<NLEVEL; lv++)  MHD_SameInterfaceB( lv, amr->FluSg[lv], amr->MagSg[lv] );
 #  endif
 
 

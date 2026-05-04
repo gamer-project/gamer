@@ -15,22 +15,25 @@
 //                   --> One typical usage is to add new particles after restarting from a simulation
 //                       snapshot
 //
-// Parameter   :  NNewPar   : Number of new particles to be added
-//                NewParAtt : Pointer array storing the data of new particle attributes
-//                            --> Format: real_par *NewParAtt[PAR_NATT_TOTAL]
-//                            --> Must be deallocated manually after invoking this function
+// Parameter   :  NNewPar      : Number of new particles to be added
+//                NewParAttFlt : Pointer array storing the data of new particle floating-point attributes
+//                               --> Format: real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL]
+//                               --> Must be deallocated manually after invoking this function
+//                NewParAttInt : Pointer array storing the data of new particle integer attributes
+//                               --> Format: long_par *NewParAttInt[PAR_NATT_INT_TOTAL]
+//                               --> Must be deallocated manually after invoking this function
 //
 // Return      :  1. amr->Par
 //                2. NPar, ParListSize, and ParList[] of all real patches on lv
 //-------------------------------------------------------------------------------------------------------
-void Par_AddParticleAfterInit( const long NNewPar, real_par *NewParAtt[PAR_NATT_TOTAL] )
+void Par_AddParticleAfterInit( const long NNewPar, real_par *NewParAttFlt[PAR_NATT_FLT_TOTAL], long_par *NewParAttInt[PAR_NATT_INT_TOTAL] )
 {
 
    const bool OldParOnly_No    = false;
    const bool TimingSendPar_No = false;
 
 // add new particles to the base level first
-   Par_FindHomePatch_UniformGrid( 0, OldParOnly_No, NNewPar, NewParAtt );
+   Par_FindHomePatch_UniformGrid( 0, OldParOnly_No, NNewPar, NewParAttFlt, NewParAttInt );
 
 
 // send particles to their home leaf patches

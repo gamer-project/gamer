@@ -18,9 +18,9 @@ bool (*Flag_Region_Ptr)( const int i, const int j, const int k, const int lv, co
 //                   which must be set by a test problem initializer
 //                2. Enabled by the runtime option "OPT__FLAG_REGION"
 //
-// Parameter   :  i,j,k       : Indices of the target element in the patch ptr[0][lv][PID]
-//                lv          : Refinement level of the target patch
-//                PID         : ID of the target patch
+// Parameter   :  i,j,k : Target cell indices in the patch amr->patch[0][lv][PID]
+//                lv    : Refinement level of the target patch
+//                PID   : ID of the target patch
 //
 // Return      :  "true/false"  if the input cell "is/is not" within the region allowed for refinement
 //-------------------------------------------------------------------------------------------------------

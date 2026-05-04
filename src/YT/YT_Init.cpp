@@ -32,11 +32,11 @@ void YT_Init( int argc, char *argv[] )
    param_libyt.script  = YT_SCRIPT;
 
 // YT check data or not interface turned off (default=true)
-#ifdef GAMER_DEBUG
+#  ifdef GAMER_DEBUG
    param_libyt.check_data = true;
-#else
+#  else
    param_libyt.check_data = false;
-#endif
+#  endif
 
 // initialize libyt
    if ( yt_initialize( argc, argv, &param_libyt ) != YT_SUCCESS )    Aux_Error( ERROR_INFO, "yt_initialize() failed !!\n" );

@@ -5,14 +5,14 @@ To download the code, you will need to install
 (if not installed yet) and then type
 
 ```bash
-> git clone https://github.com/gamer-project/gamer
+git clone https://github.com/gamer-project/gamer
 ```
 
 By default, you will be using the development version after `git clone`.
 If you would like to switch to the stable version, type
 
 ```bash
-> git checkout stable
+git checkout stable
 ```
 
 If you have downloaded the code previously and want to update
@@ -21,25 +21,22 @@ one of the following commands.
 
 ```bash
 # for the development version
-> git pull origin master
+git pull origin main
 
 # for the stable version
-> git pull origin stable
+git pull origin stable
 ```
 
 See [guides.github.com](https://guides.github.com/) for guides to git and GitHub.
 
-### Caution
-
-To validate whether the downloaded code correctly retains the symbolic links
+> [!CAUTION]
+> To validate whether the downloaded code correctly retains the symbolic links
 used by GAMER, try
-
-```bash
+> ```bash
 > ls -l gamer/src/SelfGravity/GPU_Gravity/
-```
-
-Correct: `CUPOT_ExternalAcc.cu -> ../CPU_Gravity/CPU_ExternalAcc.cpp` <br/>
-Incorrect: `CUPOT_ExternalAcc.cu`
-
-Try updating `git` if you get incorrect results. Adding either `--config core.symlinks=true`
+> ```
+> Correct: `CUPOT_ExternalAcc.cu -> ../CPU_Gravity/CPU_ExternalAcc.cpp` <br/>
+> Incorrect: `CUPOT_ExternalAcc.cu`
+>
+> Try updating `git` if you get incorrect results. Adding either `--config core.symlinks=true`
 or `--config core.symlinks=false` to your `git clone` command may also help.

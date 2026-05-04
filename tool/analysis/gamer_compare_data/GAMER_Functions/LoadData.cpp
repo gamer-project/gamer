@@ -7,7 +7,8 @@
 static void CompareVar( const char *VarName, const int RestartVar, const int RuntimeVar, const bool Fatal );
 static void Load_Parameter_After_2000( FILE *File, const int FormatVersion, const long HeaderOffset_Makefile,
                                        const long HeaderOffset_Constant, const long HeaderOffset_Parameter,
-                                       int *NX0_Tot, bool &WithPar, int &NField, int &NMag, int &NParAtt );
+                                       int *NX0_Tot, bool &WithPar, int &NField, int &NMag, int &NParAttFlt,
+                                       int &NParAttInt );
 
 
 
@@ -16,33 +17,37 @@ static void Load_Parameter_After_2000( FILE *File, const int FormatVersion, cons
 // Function    :  LoadData
 // Description :  Load the input data from the binary file "FileName"
 //
-// Note        :  1. *Label[MAX_STRING] and ParData[] will be allocated here and must be deallocated manually
+// Note        :  1. *Label[MAX_STRING], ParFltData[], and ParIntData[] will be allocated here and must be deallocated manually
 //
-// Parameter   :  FileName    : Name of the input file
-//                amr         : Target AMR_t pointer
-//                Format      : 1/2 --> C-binary/HDF5
-//                NField      : Number of cell-centered fields stored in the file
-//                NMag        : Number of face-centered magnetic components stored in the file
-//                NParAtt     : Number of particle attributes stored in the file
-//                NPar        : NUmber of particles
-//                ParData     : Particle data array (allocated here --> must be dallocated manually later)
-//                FieldLabel  : Labels of cell-centered fields
-//                MagLabel    : Labels of face-centered magnetic components
-//                ParAttLabel : Labels of particle attributes
+// Parameter   :  FileName       : Name of the input file
+//                amr            : Target AMR_t pointer
+//                Format         : 1/2 --> C-binary/HDF5
+//                NField         : Number of cell-centered fields stored in the file
+//                NMag           : Number of face-centered magnetic components stored in the file
+//                NParAttFlt     : Number of particle floating-point attributes stored in the file
+//                NParAttInt     : Number of particle integer        attributes stored in the file
+//                NPar           : NUmber of particles
+//                ParFltData     : Particle floating-point data array (allocated here --> must be dallocated manually later)
+//                ParIntData     : Particle integer        data array (allocated here --> must be dallocated manually later)
+//                FieldLabel     : Labels of cell-centered fields
+//                MagLabel       : Labels of face-centered magnetic components
+//                ParAttFltLabel : Labels of particle floating-point attributes
+//                ParAttIntLabel : Labels of particle integer        attributes
 //
-// Return      :  amr, Format, NField, NMag, NParAtt, NPar, ParData
-//                FieldLabel, MagLabel, ParAttLabel (for HDF5 only)
+// Return      :  amr, Format, NField, NMag, NParAttFlt, NParAttInt, NPar, ParFltData, ParIntData
+//                FieldLabel, MagLabel, ParAttFltLabel, ParAttIntLabel (for HDF5 only)
 //-------------------------------------------------------------------------------------------------------
-void LoadData( const char *FileName, AMR_t &amr, int &Format, int &NField, int &NMag, int &NParAtt, long &NPar, real_par **&ParData,
-               char (*&FieldLabel)[MAX_STRING], char (*&MagLabel)[MAX_STRING], char (*&ParAttLabel)[MAX_STRING] )
+void LoadData( const char *FileName, AMR_t &amr, int &Format, int &NField, int &NMag, int &NParAttFlt, int &NParAttInt,
+               long &NPar, real_par **&ParFltData, long_par **&ParIntData, char (*&FieldLabel)[MAX_STRING],
+               char (*&MagLabel)[MAX_STRING], char (*&ParAttFltLabel)[MAX_STRING], char (*&ParAttIntLabel)[MAX_STRING] )
 {
 
 // load the HDF5 data
 #  ifdef SUPPORT_HDF5
    if (  Aux_CheckFileExist(FileName)  &&  H5Fis_hdf5(FileName)  )
    {
-      LoadData_HDF5( FileName, amr, Format, NField, NMag, NParAtt, NPar, ParData,
-                     FieldLabel, MagLabel, ParAttLabel );
+      LoadData_HDF5( FileName, amr, Format, NField, NMag, NParAttFlt, NParAttInt, NPar,
+                     ParFltData, ParIntData, FieldLabel, MagLabel, ParAttFltLabel, ParAttIntLabel );
       return;
    }
 #  endif
@@ -146,7 +151,8 @@ void LoadData( const char *FileName, AMR_t &amr, int &Format, int &NField, int &
 // =================================================================================================
    bool WithPar;
    Load_Parameter_After_2000( File, FormatVersion, HeaderOffset_Makefile, HeaderOffset_Constant,
-                              HeaderOffset_Parameter, amr.nx0_tot, WithPar, NField, NMag, NParAtt );
+                              HeaderOffset_Parameter, amr.nx0_tot, WithPar, NField, NMag, NParAttFlt,
+                              NParAttInt );
 
 
 // c. load the simulation information
@@ -200,9 +206,9 @@ void LoadData( const char *FileName, AMR_t &amr, int &Format, int &NField, int &
    for (int lv=0; lv<NLEVEL; lv++)
    {
       DataSize[lv]  = 0;
-      DataSize[lv] += NPatchTotal[lv]*4*sizeof(int);        // 4 = corner(3) + son(1)
-      DataSize[lv] += NDataPatch_Total[lv]*PatchDataSize;
-      ExpectSize   += DataSize[lv];
+      DataSize[lv] += (long)NPatchTotal[lv]*4*sizeof(int);        // 4 = corner(3) + son(1)
+      DataSize[lv] += (long)NDataPatch_Total[lv]*PatchDataSize;
+      ExpectSize   += (long)DataSize[lv];
    }
 
    if ( WithPar )
@@ -216,7 +222,8 @@ void LoadData( const char *FileName, AMR_t &amr, int &Format, int &NField, int &
          ExpectSize   += ParInfoSize;
       }
 
-      ExpectSize += (long)NParAtt*NPar*sizeof(real_par);
+      ExpectSize += (long)NParAttFlt*NPar*sizeof(real_par);
+      ExpectSize += (long)NParAttInt*NPar*sizeof(long_par);
    }
 
    fseek( File, 0, SEEK_END );
@@ -225,6 +232,10 @@ void LoadData( const char *FileName, AMR_t &amr, int &Format, int &NField, int &
    if ( InputSize != ExpectSize )
       Aux_Error( ERROR_INFO, "size of the file <%s> is incorrect --> input = %ld <-> expect = %ld !!\n",
                  FileName, InputSize, ExpectSize );
+
+#  if ( (defined FLOAT8 && !defined FLOAT8_PAR) || (!defined FLOAT8 && defined FLOAT8_PAR) )
+   if ( WithPar  &&  FormatVersion < 2300 )   Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for C-binary snapshots for versions < 2300 !!\n" );
+#  endif
 
    Aux_Message( stdout, "      Verifying the size of the RESTART file ... passed\n" );
    Aux_Message( stdout, "   Loading simulation information ... done\n" );
@@ -274,16 +285,24 @@ void LoadData( const char *FileName, AMR_t &amr, int &Format, int &NField, int &
 // load particles
    if ( NPar > 0 )
    {
-      const long ParDataSize1v = NPar*sizeof(real_par);
+      const long ParFltDataSize1v = NPar*sizeof(real_par);
+      const long ParIntDataSize1v = NPar*sizeof(long_par);
 
-      Aux_AllocateArray2D<real_par>( ParData, NParAtt, NPar );
+      Aux_AllocateArray2D<real_par>( ParFltData, NParAttFlt, NPar );
+      Aux_AllocateArray2D<long_par>( ParIntData, NParAttInt, NPar );
 
       File = fopen( FileName, "rb" );
 
-      for (int v=0; v<NParAtt; v++)
+      for (int v=0; v<NParAttFlt; v++)
       {
-         fseek( File, FileOffset_Particle + v*ParDataSize1v, SEEK_SET );
-         fread( ParData[v], sizeof(real_par), NPar, File );
+         fseek( File, FileOffset_Particle + v*ParFltDataSize1v, SEEK_SET );
+         fread( ParFltData[v], sizeof(real_par), NPar, File );
+      }
+
+      for (int v=0; v<NParAttInt; v++)
+      {
+         fseek( File, FileOffset_Particle + NParAttFlt*ParFltDataSize1v + v*ParIntDataSize1v, SEEK_SET );
+         fread( ParIntData[v], sizeof(long_par), NPar, File );
       }
 
       fclose( File );
@@ -305,7 +324,8 @@ void LoadData( const char *FileName, AMR_t &amr, int &Format, int &NField, int &
    Aux_Message( stdout, "   NField      = %d\n",  NField      );
    Aux_Message( stdout, "   NMag        = %d\n",  NMag        );
    if ( WithPar ) {
-   Aux_Message( stdout, "   NParAtt     = %d\n",  NParAtt     );
+   Aux_Message( stdout, "   NParAttFlt  = %d\n",  NParAttFlt  );
+   Aux_Message( stdout, "   NParAttInt  = %d\n",  NParAttInt  );
    Aux_Message( stdout, "   NPar        = %ld\n", NPar        ); }
    for (int lv=0; lv<NLEVEL; lv++)
    Aux_Message( stdout, "   NPatch[%2d] = %d\n",  lv, amr.num[lv] );
@@ -332,13 +352,15 @@ void LoadData( const char *FileName, AMR_t &amr, int &Format, int &NField, int &
 //                WithPar        : Whether or not the RESTART file stores particles
 //                NField         : Number of cell-centered fields stored in the file
 //                NMag           : Number of face-centered magnetic components stored in the file
-//                NParAtt        : Number of particle attributes stored in the file
+//                NParAttFlt     : Number of particle floating-point attributes stored in the file
+//                NParAttInt     : Number of particle integer        attributes stored in the file
 //
-// Return      :  NX0_Tot, WithPar, NField, NMag, NParAtt
+// Return      :  NX0_Tot, WithPar, NField, NMag, NParAttFlt, NParAttInt
 //-------------------------------------------------------------------------------------------------------
 void Load_Parameter_After_2000( FILE *File, const int FormatVersion, const long HeaderOffset_Makefile,
                                 const long HeaderOffset_Constant, const long HeaderOffset_Parameter,
-                                int *NX0_Tot, bool &WithPar, int &NField, int &NMag, int &NParAtt )
+                                int *NX0_Tot, bool &WithPar, int &NField, int &NMag, int &NParAttFlt,
+                                int &NParAttInt )
 {
 
    Aux_Message( stdout, "   Loading simulation parameters ...\n" );
@@ -398,7 +420,8 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, const long 
    bool   use_psolver_10to14;
    int    ncomp_fluid, patch_size, flu_ghost_size, pot_ghost_size, gra_ghost_size, check_intermediate;
    int    flu_block_size_x, flu_block_size_y, pot_block_size_x, pot_block_size_z, gra_block_size_z;
-   int    par_nvar, par_npassive;
+   int    par_nvar_flt, par_npassive_flt;
+   int    par_nvar_int, par_npassive_int;
    double min_value, max_error;
 
    fseek( File, HeaderOffset_Constant, SEEK_SET );
@@ -423,8 +446,10 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, const long 
    fread( &pot_block_size_z,           sizeof(int),                     1,             File );
    fread( &gra_block_size_z,           sizeof(int),                     1,             File );
    if ( particle ) {
-   fread( &par_nvar,                   sizeof(int),                     1,             File );
-   fread( &par_npassive,               sizeof(int),                     1,             File ); }
+   fread( &par_nvar_flt,               sizeof(int),                     1,             File );
+   fread( &par_npassive_flt,           sizeof(int),                     1,             File );
+   fread( &par_nvar_int,               sizeof(int),                     1,             File );
+   fread( &par_npassive_int,           sizeof(int),                     1,             File ); }
 
 
 
@@ -554,10 +579,6 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, const long 
       Aux_Error( ERROR_INFO, "%s : RESTART file (%s) != runtime (%s) !!\n", "FLOAT8", "ON", "OFF" );
 #  endif
 
-#  if ( (defined FLOAT8 && !defined FLOAT8_PAR) || (!defined FLOAT8 && defined FLOAT8_PAR) )
-   if ( particle )   Aux_Error( ERROR_INFO, "Must adopt FLOAT8_PAR=FLOAT8 for C-binary snapshots !!\n" );
-#  endif
-
    CompareVar( "MODEL",      model,      MODEL,      Fatal );
    CompareVar( "NLEVEL",     nlevel,     NLEVEL,     Fatal );
    CompareVar( "PATCH_SIZE", patch_size, PATCH_SIZE, Fatal );
@@ -579,11 +600,27 @@ void Load_Parameter_After_2000( FILE *File, const int FormatVersion, const long 
 
    if ( WithPar )
    {
-      if ( FormatVersion > 2131 )   NParAtt = par_nvar;           // after version 2131, par_nvar = PAR_NATT_STORED
-      else                          NParAtt = 7 + par_npassive;   // mass, position x/y/z, velocity x/y/z, and passive variables
+      if ( FormatVersion >= 2300 )
+      {
+         NParAttFlt = par_nvar_flt;           // after version 2300, par_nvar_flt = PAR_NATT_FLT_STORED
+         NParAttInt = par_nvar_int;           // after version 2300, par_nvar_int = PAR_NATT_INT_STORED
+      }
+      else if ( FormatVersion > 2131 )
+      {
+         NParAttFlt = par_nvar_flt;           // after version 2131, par_nvar_flt = PAR_NATT_STORED
+         NParAttInt = 0;
+      }
+      else
+      {
+         NParAttFlt = 7 + par_npassive_flt;   // mass, position x/y/z, velocity x/y/z, and passive variables
+         NParAttInt = 0;
+      }
    }
    else
-                                    NParAtt = 0;
+   {
+         NParAttFlt = 0;
+         NParAttInt = 0;
+   }
 
 } // FUNCTION : Load_Parameter_After_2000
 

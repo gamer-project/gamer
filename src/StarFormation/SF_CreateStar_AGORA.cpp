@@ -95,8 +95,9 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 #  endif
 
    const int    MaxNewParPerPatch = CUBE(PS1);
-   real_par   (*NewParAtt)[PAR_NATT_TOTAL] = new real_par [MaxNewParPerPatch][PAR_NATT_TOTAL];
-   long        *NewParID                   = new long     [MaxNewParPerPatch];
+   real_par   (*NewParAttFlt)[PAR_NATT_FLT_TOTAL] = new real_par [MaxNewParPerPatch][PAR_NATT_FLT_TOTAL];
+   long_par   (*NewParAttInt)[PAR_NATT_INT_TOTAL] = new long_par [MaxNewParPerPatch][PAR_NATT_INT_TOTAL];
+   long        *NewParID                          = new long     [MaxNewParPerPatch];
 
    int NNewPar;
 
@@ -195,15 +196,15 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          y        = y0 + j*dh;
          z        = z0 + k*dh;
 
-         NewParAtt[NNewPar][PAR_MASS] = StarMass;
-         NewParAtt[NNewPar][PAR_POSX] = x;
-         NewParAtt[NNewPar][PAR_POSY] = y;
-         NewParAtt[NNewPar][PAR_POSZ] = z;
-         NewParAtt[NNewPar][PAR_VELX] = fluid[MOMX][k][j][i]*_GasDens;
-         NewParAtt[NNewPar][PAR_VELY] = fluid[MOMY][k][j][i]*_GasDens;
-         NewParAtt[NNewPar][PAR_VELZ] = fluid[MOMZ][k][j][i]*_GasDens;
-         NewParAtt[NNewPar][PAR_TIME] = TimeNew;
-         NewParAtt[NNewPar][PAR_TYPE] = PTYPE_STAR;
+         NewParAttFlt[NNewPar][PAR_MASS] = StarMass;
+         NewParAttFlt[NNewPar][PAR_POSX] = x;
+         NewParAttFlt[NNewPar][PAR_POSY] = y;
+         NewParAttFlt[NNewPar][PAR_POSZ] = z;
+         NewParAttFlt[NNewPar][PAR_VELX] = fluid[MOMX][k][j][i]*_GasDens;
+         NewParAttFlt[NNewPar][PAR_VELY] = fluid[MOMY][k][j][i]*_GasDens;
+         NewParAttFlt[NNewPar][PAR_VELZ] = fluid[MOMZ][k][j][i]*_GasDens;
+         NewParAttFlt[NNewPar][PAR_TIME] = TimeNew;
+         NewParAttInt[NNewPar][PAR_TYPE] = PTYPE_STAR;
 
 //       particle acceleration
 #        ifdef STORE_PAR_ACC
@@ -233,18 +234,18 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
             GasAcc[2] += GraConst*( pot_zp - pot_zm );
          }
 
-         NewParAtt[NNewPar][PAR_ACCX] = GasAcc[0];
-         NewParAtt[NNewPar][PAR_ACCY] = GasAcc[1];
-         NewParAtt[NNewPar][PAR_ACCZ] = GasAcc[2];
+         NewParAttFlt[NNewPar][PAR_ACCX] = GasAcc[0];
+         NewParAttFlt[NNewPar][PAR_ACCY] = GasAcc[1];
+         NewParAttFlt[NNewPar][PAR_ACCZ] = GasAcc[2];
 #        endif // ifdef STORE_PAR_ACC
 
 
 //       2-2. extrinsic attributes
 //       note that we store the metal mass **fraction** instead of density in particles
          if ( UseMetal )
-         NewParAtt[NNewPar][Idx_ParMetalFrac] = fluid[Idx_Metal][k][j][i] * _GasDens;
+         NewParAttFlt[NNewPar][Idx_ParMetalFrac] = fluid[Idx_Metal][k][j][i] * _GasDens;
 
-         NewParAtt[NNewPar][Idx_ParCreTime  ] = TimeNew;
+         NewParAttFlt[NNewPar][Idx_ParCreTime  ] = TimeNew;
 
          NNewPar ++;
 
@@ -271,11 +272,11 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
       {
 //       4-1. add particles to the particle repository
          for (int p=0; p<NNewPar; p++)
-            NewParID[p] = amr->Par->AddOneParticle( NewParAtt[p] );
+            NewParID[p] = amr->Par->AddOneParticle( NewParAttFlt[p], NewParAttInt[p] );
 
 
 //       4-2. add particles to the patch
-         const real_par *PType = amr->Par->Type;
+         const long_par *PType = amr->Par->Type;
 #        ifdef DEBUG_PARTICLE
 //       do not set ParPos too early since pointers to the particle repository (e.g., amr->Par->PosX)
 //       may change after calling amr->Par->AddOneParticle()
@@ -293,7 +294,8 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
 // free memory
-   delete [] NewParAtt;
+   delete [] NewParAttFlt;
+   delete [] NewParAttInt;
    delete [] NewParID;
 
    } // end of OpenMP parallel region

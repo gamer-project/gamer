@@ -208,7 +208,7 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
 #              endif
                {
                   Pres = Hydro_Con2Pres( ForEint[DENS], ForEint[MOMX], ForEint[MOMY], ForEint[MOMZ], ForEint[ENGY],
-                                         ForEint+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, Emag,
+                                         ForEint+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, PassiveFloorMask, Emag,
                                          EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
                                          &Eint );
@@ -242,10 +242,10 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
 
 #              if   ( MODEL == HYDRO )
 #              ifdef SRHD
-               if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, CorrVal, NULL, NULL_REAL, NULL_REAL, NULL_REAL,
+               if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, CorrVal, NULL_REAL,
                                          EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
-                                         ERROR_INFO, UNPHY_VERBOSE )  )
+                                         PassiveFloorMask, ERROR_INFO, UNPHY_VERBOSE )  )
 #              else
                if ( CorrVal[DENS] <= MIN_DENS
 #                   ifndef BAROTROPIC_EOS
@@ -289,7 +289,8 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
 //                floor and normalize the passive scalars
 #                 if ( NCOMP_PASSIVE > 0  &&  MODEL == HYDRO )
                   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
-                     if ( TVar & BIDX(v) )   CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
+                     if (  ( TVar & BIDX(v) )  &&  ( PassiveFloorMask & BIDX(v) )  )
+                        CorrVal[v] = FMAX( CorrVal[v], TINY_NUMBER );
 
                   if ( OPT__NORMALIZE_PASSIVE )
                      Hydro_NormalizePassive( CorrVal[DENS], CorrVal+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );

@@ -43,31 +43,37 @@ static void   RanVec_FixRadius( const double r, double RanVec[] );
 //                       and LB_Init_LoadBalance()
 //                   --> Therefore, there is no constraint on which particles should be set by this function
 //
-// Parameter   :  NPar_ThisRank : Number of particles to be set by this MPI rank
-//                NPar_AllRank  : Total Number of particles in all MPI ranks
-//                ParMass       : Particle mass     array with the size of NPar_ThisRank
-//                ParPosX/Y/Z   : Particle position array with the size of NPar_ThisRank
-//                ParVelX/Y/Z   : Particle velocity array with the size of NPar_ThisRank
-//                ParTime       : Particle time     array with the size of NPar_ThisRank
-//                ParType       : Particle type     array with the size of NPar_ThisRank
-//                AllAttribute  : Pointer array for all particle attributes
-//                                --> Dimension = [PAR_NATT_TOTAL][NPar_ThisRank]
-//                                --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
-//                                    to access the data
+// Parameter   :  NPar_ThisRank   : Number of particles to be set by this MPI rank
+//                NPar_AllRank    : Total Number of particles in all MPI ranks
+//                ParMass         : Particle mass     array with the size of NPar_ThisRank
+//                ParPosX/Y/Z     : Particle position array with the size of NPar_ThisRank
+//                ParVelX/Y/Z     : Particle velocity array with the size of NPar_ThisRank
+//                ParTime         : Particle time     array with the size of NPar_ThisRank
+//                ParType         : Particle type     array with the size of NPar_ThisRank
+//                AllAttributeFlt : Pointer array for all particle floating-point attributes
+//                                  --> Dimension = [PAR_NATT_FLT_TOTAL][NPar_ThisRank]
+//                                  --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
+//                                      to access the data
+//                AllAttributeInt : Pointer array for all particle integer attributes
+//                                  --> Dimension = [PAR_NATT_INT_TOTAL][NPar_ThisRank]
+//                                  --> Use the attribute indices defined in Field.h to access the data
 //
-// Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttribute
+// Return      :  ParMass, ParPosX/Y/Z, ParVelX/Y/Z, ParTime, ParType, AllAttributeFlt, AllAttributeInt
 //-------------------------------------------------------------------------------------------------------
 void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllRank,
                                   real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                   real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                  real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] )
+                                  long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                  long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
-   real_par *ParData_AllRank[PAR_NATT_TOTAL];
-   for (int v=0; v<PAR_NATT_TOTAL; v++)   ParData_AllRank[v] = NULL;
+   real_par *ParFltData_AllRank[PAR_NATT_FLT_TOTAL];
+   for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   ParFltData_AllRank[v] = NULL;
+   long_par *ParIntData_AllRank[PAR_NATT_INT_TOTAL];
+   for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   ParIntData_AllRank[v] = NULL;
 
 // only the master rank will construct the initial condition
    if ( MPI_Rank == 0 )
@@ -81,13 +87,13 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
       double  TotM, ParM, dr, RanM, RanR, EstM, ErrM, ErrM_Max=-1.0, RanVec[3];
       double  Vmax, RanV, RanProb, Prob;
 
-      ParData_AllRank[PAR_MASS] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_POSX] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_POSY] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_POSZ] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_VELX] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_VELY] = new real_par [NPar_AllRank];
-      ParData_AllRank[PAR_VELZ] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_MASS] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSX] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSY] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_POSZ] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELX] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELY] = new real_par [NPar_AllRank];
+      ParFltData_AllRank[PAR_VELZ] = new real_par [NPar_AllRank];
 
 
 //    initialize the random number generator
@@ -122,7 +128,7 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
       for (long p=0; p<NPar_AllRank; p++)
       {
 //       mass
-         ParData_AllRank[PAR_MASS][p] = ParM;
+         ParFltData_AllRank[PAR_MASS][p] = ParM;
 
 
 //       position
@@ -137,17 +143,17 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 
 //       randomly set the position vector with a given radius
          RanVec_FixRadius( RanR, RanVec );
-         for (int d=0; d<3; d++)    ParData_AllRank[PAR_POSX+d][p] = real_par(RanVec[d] + Plummer_Center[d]);
+         for (int d=0; d<3; d++)    ParFltData_AllRank[PAR_POSX+d][p] = real_par(RanVec[d] + Plummer_Center[d]);
 
 //       set position offset for the Plummer collision test
          if ( Plummer_Collision )
-         for (int d=0; d<3; d++)    ParData_AllRank[PAR_POSX+d][p] += real_par(Coll_Offset*( (p<NPar_AllRank/2)?-1.0:+1.0 ));
+         for (int d=0; d<3; d++)    ParFltData_AllRank[PAR_POSX+d][p] += real_par(Coll_Offset*( (p<NPar_AllRank/2)?-1.0:+1.0 ));
 
 //       check periodicity
          for (int d=0; d<3; d++)
          {
             if ( OPT__BC_FLU[d*2] == BC_FLU_PERIODIC )
-               ParData_AllRank[PAR_POSX+d][p] = FMOD( ParData_AllRank[PAR_POSX+d][p]+(real_par)amr->BoxSize[d], (real_par)amr->BoxSize[d] );
+               ParFltData_AllRank[PAR_POSX+d][p] = FMOD( ParFltData_AllRank[PAR_POSX+d][p]+(real_par)amr->BoxSize[d], (real_par)amr->BoxSize[d] );
          }
 
 
@@ -166,7 +172,7 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
 
 //       randomly set the velocity vector with the given amplitude (RanV*Vmax)
          RanVec_FixRadius( RanV*Vmax, RanVec );
-         for (int d=0; d<3; d++)    ParData_AllRank[PAR_VELX+d][p] = real_par(RanVec[d] + Plummer_BulkVel[d]);
+         for (int d=0; d<3; d++)    ParFltData_AllRank[PAR_VELX+d][p] = real_par(RanVec[d] + Plummer_BulkVel[d]);
 
       } // for (long p=0; p<NPar_AllRank; p++)
 
@@ -183,7 +189,8 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
    } // if ( MPI_Rank == 0 )
 
 // send particle attributes from the master rank to all ranks
-   Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, ParData_AllRank, AllAttribute );
+   Par_ScatterParticleData( NPar_ThisRank, NPar_AllRank, _PAR_MASS|_PAR_POS|_PAR_VEL, _NONE,
+                            ParFltData_AllRank, ParIntData_AllRank, AllAttributeFlt, AllAttributeInt );
 
 // synchronize all particles to the physical time on the base level,
 // set generic particle type
@@ -196,7 +203,8 @@ void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllR
    if ( MPI_Rank == 0 )
    {
       delete RNG;
-      for (int v=0; v<PAR_NATT_TOTAL; v++)   delete [] ParData_AllRank[v];
+      for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   delete [] ParFltData_AllRank[v];
+      for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   delete [] ParIntData_AllRank[v];
    }
 
 

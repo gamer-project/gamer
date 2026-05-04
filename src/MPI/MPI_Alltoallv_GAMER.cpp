@@ -18,7 +18,7 @@
 //                Recv_NCount:   Number of elements to be received by each rank from other ranks in RecvBuf; length equals MPI_NRank
 //                Recv_NDisp:    Displacement indicating the stride where the received data (from other ranks) starts in RecvdBuf for each rank;
 //                               length equals MPI_NRank
-//                Recv_Datatype: Received data type for MPI (MPI_GAMER_REAL/MPI_GAMER_REAL_PAR)
+//                Recv_Datatype: Received data type for MPI (MPI_GAMER_REAL/MPI_GAMER_REAL_PAR/MPI_GAMER_LONG_PAR)
 //                comm:          MPI communicator
 //
 // Return      :  RecvBuf
@@ -37,7 +37,7 @@ void MPI_Alltoallv_GAMER( T *SendBuf, long *Send_NCount, long *Send_NDisp, MPI_D
 
    bool use_mpi_gamer_flag = false;
    if (  ( Send_NDisp[MPI_NRank-1] > __INT_MAX__ ) || ( Recv_NDisp[MPI_NRank-1] > __INT_MAX__ )  )    use_mpi_gamer_flag = true;
-   MPI_Allreduce( MPI_IN_PLACE, &use_mpi_gamer_flag , 1, MPI_C_BOOL, MPI_LOR, MPI_COMM_WORLD );
+   MPI_Allreduce( MPI_IN_PLACE, &use_mpi_gamer_flag , 1, MPI_CXX_BOOL, MPI_LOR, MPI_COMM_WORLD );
 
    if ( use_mpi_gamer_flag )
    {

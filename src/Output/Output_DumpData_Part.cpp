@@ -4,9 +4,10 @@ static void WriteFile( FILE *File, const int lv, const int PID, const int i, con
                        const int ii, const int jj, const int kk, const real (*DerField)[ CUBE(PS1) ] );
 static void GetDerivedField( real (*Der_FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
                              real (*Der_Out  )             [ CUBE(PS1)                ],
+                             real (*Der_Out_1PG)           [ CUBE(PS2)                ],
                              real (*Der_MagFC)[NCOMP_MAG  ][ (DER_NXT+1)*SQR(DER_NXT) ],
                              real (*Der_MagCC)             [ CUBE(DER_NXT)            ],
-                             const int lv, const int PID, const bool PrepFluIn );
+                             const int lv, const int PID, const bool PrepFluIn, const bool PrepOutPG );
 
 
 
@@ -25,6 +26,7 @@ static void GetDerivedField( real (*Der_FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)      
 //                           OUTPUT_Y    : y  line
 //                           OUTPUT_Z    : z  line
 //                           OUTPUT_DIAG : diagonal along (+1,+1,+1)
+//                           OUTPUT_BOX  : entire box
 //
 //                BaseOnly : Only output the base-level data
 //
@@ -42,9 +44,10 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 
 
 // check the input parameters
-   if ( Part != OUTPUT_XY  &&  Part != OUTPUT_YZ  &&  Part != OUTPUT_XZ  &&
-        Part != OUTPUT_X   &&  Part != OUTPUT_Y   &&  Part != OUTPUT_Z   &&  Part != OUTPUT_DIAG )
-      Aux_Error( ERROR_INFO, "unsupported option \"Part = %d\" [0 ~ 6] !!\n", Part );
+   if ( Part != OUTPUT_XY    &&  Part != OUTPUT_YZ  &&  Part != OUTPUT_XZ  &&
+        Part != OUTPUT_X     &&  Part != OUTPUT_Y   &&  Part != OUTPUT_Z   &&
+        Part != OUTPUT_DIAG  &&  Part != OUTPUT_BOX )
+      Aux_Error( ERROR_INFO, "unsupported option \"Part = %d\" [0 ~ 8] !!\n", Part );
 
    if (  ( Part == OUTPUT_YZ  ||  Part == OUTPUT_Y  ||  Part == OUTPUT_Z )  &&
          ( x < 0.0  ||  x >= amr->BoxSize[0] )  )
@@ -93,14 +96,15 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 
    switch ( Part )
    {
-      case OUTPUT_XY :                                      Check_z = true;   break;
-      case OUTPUT_YZ :  Check_x = true;                                       break;
-      case OUTPUT_XZ :                    Check_y = true;                     break;
-      case OUTPUT_X  :                    Check_y = true;   Check_z = true;   break;
-      case OUTPUT_Y  :  Check_x = true;                     Check_z = true;   break;
-      case OUTPUT_Z  :  Check_x = true;   Check_y = true;                     break;
+      case OUTPUT_XY   :                                      Check_z = true;   break;
+      case OUTPUT_YZ   :  Check_x = true;                                       break;
+      case OUTPUT_XZ   :                    Check_y = true;                     break;
+      case OUTPUT_X    :                    Check_y = true;   Check_z = true;   break;
+      case OUTPUT_Y    :  Check_x = true;                     Check_z = true;   break;
+      case OUTPUT_Z    :  Check_x = true;   Check_y = true;                     break;
 
       case OUTPUT_DIAG :
+      case OUTPUT_BOX  :
       case OUTPUT_PART_NONE : break; // do nothing
    }
 
@@ -108,9 +112,11 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 // for the derived fields
    const int Der_NP = 8;
    bool Der_PrepFluIn;
+   bool Der_PrepOutPG;
 
    real (*Der_FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ] = new real [Der_NP][NCOMP_TOTAL ][ CUBE(DER_NXT)            ];
-   real (*Der_Out  )             [ CUBE(PS1)                ] = new real         [DER_NOUT_MAX][ CUBE(PS1)                ];
+real (*Der_Out)               [ CUBE(PS1)                ] = new real         [DER_NOUT_MAX][ CUBE(PS1)                ];
+   real (*Der_Out_1PG)           [ CUBE(PS2)                ] = new real         [DER_NOUT_MAX][ CUBE(PS2)                ];
 #  ifdef MHD
    real (*Der_MagFC)[NCOMP_MAG  ][ (DER_NXT+1)*SQR(DER_NXT) ] = new real [Der_NP][NCOMP_MAG   ][ (DER_NXT+1)*SQR(DER_NXT) ];
    real (*Der_MagCC)             [ CUBE(DER_NXT)            ] = new real         [NCOMP_MAG   ][ CUBE(DER_NXT)            ];
@@ -168,6 +174,14 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
             if ( OPT__OUTPUT_ENTHALPY )
                                        fprintf( File, " %*s", StrLen_Flt, "Reduced enthalpy" );
 #           endif
+#           ifdef SUPPORT_GRACKLE
+            if ( OPT__OUTPUT_GRACKLE_TEMP )
+                                       fprintf( File, " %*s", StrLen_Flt, "Grackle temperature" );
+            if ( OPT__OUTPUT_GRACKLE_MU )
+                                       fprintf( File, " %*s", StrLen_Flt, "Grackle mu" );
+            if ( OPT__OUTPUT_GRACKLE_TCOOL )
+                                       fprintf( File, " %*s", StrLen_Flt, "Grackle cooling time" );
+#           endif
             if ( OPT__OUTPUT_USER_FIELD ) {
                for (int v=0; v<UserDerField_Num; v++)
                                        fprintf( File, " %*s", StrLen_Flt, UserDerField_Label[v] );
@@ -186,6 +200,7 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
             for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
             {
                if ( PID % 8 == 0 )  Der_PrepFluIn = true;
+               if ( PID % 8 == 0 )  Der_PrepOutPG = true;
 
 //             output the patch data only if it has no son (if the option "BaseOnly" is turned off)
                if ( amr->patch[0][lv][PID]->son == -1  ||  BaseOnly )
@@ -200,8 +215,9 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
                      if ( Corner[0] == Corner[1]  &&  Corner[0] == Corner[2] )
                      {
 //                      compute the derived fields
-                        GetDerivedField( Der_FluIn, Der_Out, Der_MagFC, Der_MagCC, lv, PID, Der_PrepFluIn );
+                        GetDerivedField( Der_FluIn, Der_Out, Der_Out_1PG, Der_MagFC, Der_MagCC, lv, PID, Der_PrepFluIn, Der_PrepOutPG );
                         Der_PrepFluIn = false;
+                        Der_PrepOutPG = false;
 
 //                      write data
                         for (int k=0; k<PS1; k++)
@@ -222,8 +238,9 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
                      if (  !Check_z  ||  ( EdgeL[2]<=z && EdgeR[2]>z )  )
                      {
 //                      compute the derived fields
-                        GetDerivedField( Der_FluIn, Der_Out, Der_MagFC, Der_MagCC, lv, PID, Der_PrepFluIn );
+                        GetDerivedField( Der_FluIn, Der_Out, Der_Out_1PG, Der_MagFC, Der_MagCC, lv, PID, Der_PrepFluIn, Der_PrepOutPG );
                         Der_PrepFluIn = false;
+                        Der_PrepOutPG = false;
 
 //                      write data
 //                      --> check whether the cell is within the target range
@@ -241,7 +258,7 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
                         }}}
                      } // if patch corner is within the target range
 
-                  } // if ( Part == OUTPUT_DIAG ... else ... )
+                  } // if ( Part == OUTPUT_DIAG ) ... else ...
                } // if ( amr->patch[0][lv][PID]->son == -1 )
             } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
          } // for (int lv=0; lv<NLv; lv++)
@@ -257,6 +274,7 @@ void Output_DumpData_Part( const OptOutputPart_t Part, const bool BaseOnly, cons
 
    delete [] Der_FluIn;
    delete [] Der_Out;
+   delete [] Der_Out_1PG;
 #  ifdef MHD
    delete [] Der_MagFC;
    delete [] Der_MagCC;
@@ -330,7 +348,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 // no need to increase Der_FieldIdx for fields not using DerField[]
    if ( OPT__OUTPUT_PRES ) {
       Pres = Hydro_Con2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
-                             CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres_CPUPtr,
+                             CheckMinPres_No, NULL_REAL, PassiveFloorMask, Emag, EoS_DensEint2Pres_CPUPtr,
                              EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
       fprintf( File, BlankPlusFormat_Flt, Pres );
@@ -338,7 +356,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 
    if ( OPT__OUTPUT_TEMP ) {
       Temp = Hydro_Con2Temp( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
-                             CheckMinTemp_No, NULL_REAL, Emag, EoS_DensEint2Temp_CPUPtr,
+                             CheckMinTemp_No, NULL_REAL, PassiveFloorMask, Emag, EoS_DensEint2Temp_CPUPtr,
                              EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       fprintf( File, BlankPlusFormat_Flt, Temp );
@@ -347,7 +365,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 #  ifndef SRHD
    if ( OPT__OUTPUT_ENTR ) {
       Entr = Hydro_Con2Entr( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
-                             CheckMinEntr_No, NULL_REAL, Emag, EoS_DensEint2Entr_CPUPtr,
+                             CheckMinEntr_No, NULL_REAL, PassiveFloorMask, Emag, EoS_DensEint2Entr_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       fprintf( File, BlankPlusFormat_Flt, Entr );
    }
@@ -356,7 +374,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 #  ifdef SRHD
    real Prim[NCOMP_TOTAL], LorentzFactor=-1.0, HTilde=-1.0;
    if ( OPT__OUTPUT_CS || OPT__OUTPUT_LORENTZ || OPT__OUTPUT_3VELOCITY )
-      Hydro_Con2Pri( u, Prim, (real)-HUGE_NUMBER, NULL_BOOL, NULL_INT, NULL,
+      Hydro_Con2Pri( u, Prim, (real)-HUGE_NUMBER, PassiveFloorMask, NULL_BOOL, NULL_INT, NULL,
                      NULL_BOOL, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
                      EoS_DensPres2Eint_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                      EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL, &LorentzFactor );
@@ -369,7 +387,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 //    compute pressure if it is not done yet
       if ( Pres < 0.0 )
       Pres = Hydro_Con2Pres( u[DENS], u[MOMX], u[MOMY], u[MOMZ], u[ENGY], u+NCOMP_FLUID,
-                             CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres_CPUPtr,
+                             CheckMinPres_No, NULL_REAL, PassiveFloorMask, Emag, EoS_DensEint2Pres_CPUPtr,
                              EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
       Cs   = SQRT(  EoS_DensPres2CSqr_CPUPtr( u[DENS], Pres, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
@@ -411,6 +429,18 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
    }
 #  endif
 
+#  ifdef SUPPORT_GRACKLE
+   if ( OPT__OUTPUT_GRACKLE_TEMP )
+      fprintf( File, BlankPlusFormat_Flt, DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
+
+   if ( OPT__OUTPUT_GRACKLE_MU )
+      fprintf( File, BlankPlusFormat_Flt, DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
+
+   if ( OPT__OUTPUT_GRACKLE_TCOOL )
+      fprintf( File, BlankPlusFormat_Flt, DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
+
+#  endif
+
    if ( OPT__OUTPUT_USER_FIELD ) {
       for (int v=0; v<UserDerField_Num; v++)
       fprintf( File, BlankPlusFormat_Flt, DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
@@ -427,24 +457,29 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 // Description :  Compute the derived fields
 //
 // Note        :  1. FluIn[] and MagFC[] will be filled in only if "PrepFluIn == true"
-//                2. Called by Output_DumpData_Part()
+//                2. Out_1PG[] will be filled in only if "PrepOutPG == true"
+//                3. Called by Output_DumpData_Part()
 //
 // Parameter   :  FluIn     : Array to store the input fluid data for the derived field functions
-//                Out       : Array to store the output derived fields
+//                Out       : Array to store the output derived fields of one patch
+//                Out_1PG   : Array to store the output derived fields of one patch group
 //                MagFC     : Array to store the temporary face-centered B field
 //                MagCC     : Array to store the input cell-centered B field for the derived field functions
 //                lv        : Target refinement level
 //                PID       : Target patch ID
 //                PrepFluIn : Whether to fill in FluIn[] and MagCC[]
 //                            --> To prepare patches within the same patch group just once
+//                PrepOutPG : Whether to fill in Out_1PG[]
+//                            --> To prepare patches within the same patch group just once
 //
-// Return      :  FluIn[], Out[], MagFC[] (MagCC[] is not useful outside this function)
+// Return      :  FluIn[], Out[], Out_1PG[], MagFC[] (MagCC[] is not useful outside this function)
 //-------------------------------------------------------------------------------------------------------
 void GetDerivedField( real (*FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
                       real (*Out  )             [ CUBE(PS1)                ],
+                      real (*Out_1PG)           [ CUBE(PS2)                ],
                       real (*MagFC)[NCOMP_MAG  ][ (DER_NXT+1)*SQR(DER_NXT) ],
                       real (*MagCC)             [ CUBE(DER_NXT)            ],
-                      const int lv, const int PID, const bool PrepFluIn )
+                      const int lv, const int PID, const bool PrepFluIn, const bool PrepOutPG )
 {
 
    const double dh      = amr->dh[lv];
@@ -523,6 +558,65 @@ void GetDerivedField( real (*FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
 
       OutFieldIdx += NFieldOut;
    }
+
+#  ifdef SUPPORT_GRACKLE
+   if ( OPT__OUTPUT_GRACKLE_TEMP )
+   {
+      const int NFieldOut = 1;
+
+      if ( OutFieldIdx + NFieldOut > DER_NOUT_MAX )
+         Aux_Error( ERROR_INFO, "OutFieldIdx (%d) + NFieldOut (%d) > DER_NOUT_MAX (%d) !!\n",
+                    OutFieldIdx, NFieldOut, DER_NOUT_MAX );
+
+//    Grackle_Calculate() prepares the field one patch group at a time
+      const int PID0 = PID - LocalID;
+      if ( PrepOutPG )   Grackle_Calculate( Out_1PG[OutFieldIdx], _GRACKLE_TEMP, lv, 1, &PID0 );
+
+//    copy the corresponding patch from the already calculated patch group
+      const real *Out_1P = Out_1PG[OutFieldIdx] + LocalID*CUBE(PS1);
+      memcpy( Out[OutFieldIdx], Out_1P, sizeof(real)*CUBE(PS1) );
+
+      OutFieldIdx += NFieldOut;
+   }
+
+   if ( OPT__OUTPUT_GRACKLE_MU )
+   {
+      const int NFieldOut = 1;
+
+      if ( OutFieldIdx + NFieldOut > DER_NOUT_MAX )
+         Aux_Error( ERROR_INFO, "OutFieldIdx (%d) + NFieldOut (%d) > DER_NOUT_MAX (%d) !!\n",
+                    OutFieldIdx, NFieldOut, DER_NOUT_MAX );
+
+//    Grackle_Calculate prepares the field one patch group at a time
+      const int PID0 = PID - LocalID;
+      if ( PrepOutPG )   Grackle_Calculate( Out_1PG[OutFieldIdx], _GRACKLE_MU, lv, 1, &PID0 );
+
+//    copy the corresponding one patch from the already calculated patch group
+      const real *Out_1P = Out_1PG[OutFieldIdx] + LocalID*CUBE(PS1);
+      memcpy( Out[OutFieldIdx], Out_1P, sizeof(real)*CUBE(PS1) );
+
+      OutFieldIdx += NFieldOut;
+   }
+
+   if ( OPT__OUTPUT_GRACKLE_TCOOL )
+   {
+      const int NFieldOut = 1;
+
+      if ( OutFieldIdx + NFieldOut > DER_NOUT_MAX )
+         Aux_Error( ERROR_INFO, "OutFieldIdx (%d) + NFieldOut (%d) > DER_NOUT_MAX (%d) !!\n",
+                    OutFieldIdx, NFieldOut, DER_NOUT_MAX );
+
+//    Grackle_Calculate prepares the field one patch group at a time
+      const int PID0 = PID - LocalID;
+      if ( PrepOutPG )   Grackle_Calculate( Out_1PG[OutFieldIdx], _GRACKLE_TCOOL, lv, 1, &PID0 );
+
+//    copy the corresponding one patch from the already calculated patch group
+      const real *Out_1P = Out_1PG[OutFieldIdx] + LocalID*CUBE(PS1);
+      memcpy( Out[OutFieldIdx], Out_1P, sizeof(real)*CUBE(PS1) );
+
+      OutFieldIdx += NFieldOut;
+   }
+#  endif // #ifdef SUPPORT_GRACKLE
 #  endif // #if ( MODEL == HYDRO )
 
    if ( OPT__OUTPUT_USER_FIELD )

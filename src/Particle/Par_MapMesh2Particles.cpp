@@ -24,7 +24,9 @@
 //                AttrSize3D      : Number of cells on side of input grid
 //                Attr            : The input grid of values for the variable to be mapped
 //                NPar            : The number of particles belonging to this patch
-//                ParList         : The list of particles on this patch
+//                InterpParPos    : The positions of the NPar particles on this patch
+//                ParType         : The types of the NPar particles on this patch
+//                ParList         : The list of particle IDs on this patch
 //                UseTracers      : Whether to map to only tracer particles or only active particles
 //                ParAttr         : The array to store the mapped particle attribute
 //                CorrectVelocity : If true, particle velocities will be corrected in regions of
@@ -35,7 +37,7 @@
 void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
                             const double _dh, const int AttrSize3D, const real *Attr,
                             const int NPar, real_par *InterpParPos[3],
-                            const real_par ParType[], const long ParList[],
+                            const long_par ParType[], const long ParList[],
                             const bool UseTracers, real_par ParAttr[], const bool CorrectVelocity )
 {
 
@@ -73,7 +75,7 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
          {
             idx[d] = int( ( InterpParPos[d][p] - EdgeL[d] )*_dh );
 
-//          prevent from round-off errors (especially for NGP and TSC)
+//          prevent round-off errors (especially for NGP and TSC)
             if ( idx[d] < 0 )
             {
 #              ifdef DEBUG_PARTICLE
@@ -116,7 +118,7 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
             idxLR[0][d] = int( dr[d] );
             idxLR[1][d] = idxLR[0][d] + 1;
 
-//          prevent from round-off errors
+//          prevent round-off errors
 //          (CIC should be clear of this issue unless round-off errors are comparable to dh)
             if ( idxLR[0][d] < 0 )
             {
@@ -175,7 +177,7 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
             idxLCR[0][d] = idxLCR[1][d] - 1;
             idxLCR[2][d] = idxLCR[1][d] + 1;
 
-//          prevent from round-off errors (especially for NGP and TSC)
+//          prevent round-off errors (especially for NGP and TSC)
             if ( idxLCR[0][d] < 0 )
             {
 #              ifdef DEBUG_PARTICLE
@@ -235,7 +237,7 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
          {
             idx[d] = int( (double)( InterpParPos[d][p] - (real_par)EdgeL[d] )*_dh );
 
-//          prevent from round-off errors (especially for NGP and TSC)
+//          prevent round-off errors (especially for NGP and TSC)
             if ( idx[d] < 1 )
             {
 #              ifdef DEBUG_PARTICLE

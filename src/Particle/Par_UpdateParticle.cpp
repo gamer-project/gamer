@@ -87,7 +87,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
    real_par *ParAcc[3]       = { amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ };
 #  endif
    real_par *ParTime         = amr->Par->Time;
-   const real_par *ParType   = amr->Par->Type;
+   const long_par *ParType   = amr->Par->Type;
 
 // determine PotSg for STORE_POT_GHOST
 #  ifdef STORE_POT_GHOST
@@ -375,7 +375,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                {
                   idx[d] = int( ( ParPos[d][ParID] - amr->patch[0][lv][PID]->EdgeL[d] )*_dh );
 
-//                prevent from round-off errors (especially for NGP and TSC)
+//                prevent round-off errors (especially for NGP and TSC)
                   if ( idx[d] < 0 )
                   {
 #                    ifdef DEBUG_PARTICLE
@@ -432,7 +432,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                   idxLR[0][d] = int( dr[d] );
                   idxLR[1][d] = idxLR[0][d] + 1;
 
-//                prevent from round-off errors
+//                prevent round-off errors
 //                (CIC should be clear of this issue unless round-off errors are comparable to dh)
                   if ( idxLR[0][d] < 0 )
                   {
@@ -506,7 +506,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                   idxLCR[0][d] = idxLCR[1][d] - 1;
                   idxLCR[2][d] = idxLCR[1][d] + 1;
 
-//                prevent from round-off errors (especially for NGP and TSC)
+//                prevent round-off errors (especially for NGP and TSC)
                   if ( idxLCR[0][d] < 0 )
                   {
 #                    ifdef DEBUG_PARTICLE

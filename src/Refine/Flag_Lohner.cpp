@@ -41,7 +41,7 @@ bool Flag_Lohner( const int i, const int j, const int k, const OptLohnerForm_t F
       Aux_Error( ERROR_INFO, "incorrect index (i,j,k) = (%d,%d,%d) !!\n", i, j, k );
 
 #  if ( ELBDM_SCHEME == ELBDM_WAVE )
-   if ( NVar != 2 )  Aux_Error( ERROR_INFO, "NVar (%d) != 2 in ELBDM !!\n", NVar );
+   if ( NVar != 2 )  Aux_Error( ERROR_INFO, "NVar (%d) != 2 when ELBDM_SCHEME == ELBDM_WAVE !!\n", NVar );
 #  endif
 #  endif // #ifdef GAMER_DEBUG
 

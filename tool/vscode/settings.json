@@ -1,0 +1,11 @@
+{
+    "C_Cpp.formatting": "disabled",
+    "files.associations": {
+        "Input__*": "ini",
+        "Record__*": "markdown"
+    },
+    "[cpp]": {
+        "editor.detectIndentation": false,
+        "editor.tabSize": 3
+    }
+}

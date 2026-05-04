@@ -12,6 +12,8 @@
 
 #Load module
 module purge
-module load gcc/8.3.0 cuda/10.0 openmpi/3.1.4 fftw/2.1.5 hdf5-parallel/1.8.21
+module load gcc/8.3.0 cuda/10.0 openmpi/3.1.4 fftw/3.3.8 hdf5-parallel/1.8.21 # GeForce RTX 2080 Ti (CUDA 10, g01 and g02)
+#module load gcc/8.3.0 cuda/11.6 openmpi/3.1.4 fftw/3.3.8 hdf5-parallel/1.8.21 # RTX A4000 and GeForce RTX 3080 (CUDA 11, g03 and g04)
+
 
 mpirun -np 2 -map-by ppr:1:socket:pe=18 --report-bindings ./gamer 1>>log 2>&1

@@ -1,0 +1,31 @@
+# center of the halo (only useful when AddFixedHalo=1 or (AddParWhenRestart=1 and AddParWhenRestartByFile=0))
+CenX                    7.9770907e-02          # center of the halo
+CenY                    7.9854590e-02          # center of the halo
+CenZ                    8.0858787e-02          # center of the halo
+
+# parameters for background fixed halo (disabled in this example)
+AddFixedHalo            0                      # add a fixed halo [0] ## must set OPT__INIT=1 and OPT__FREEZE_FLUID=1 ##
+HaloUseTable            0                      # use density table for the fixed halo [0] ## AddFixedHalo=1 ONLY##
+
+# parameters for analytical function ---------- HaloUseTable=0 ONLY -----------------------------------------
+# soliton parameters
+#m_22                                          # m_22 of the analytical halo [0.4]
+#CoreRadius                                    # core radius (in kpc) [1.0]
+# alpha-beta-gamma density profile parameters
+#Rho_0                                         # halo rho_0 (in 1.0e+10 Msun*kpc^-3) [1.0]
+#Rs                                            # halo Rs (in kpc) [1.0]
+#Alpha                                         # dimensionless [1.0]
+#Beta                                          # dimensionless [1.0]
+#Gamma                                         # dimensionless [1.0]
+
+# density profile table parameters ------------ HaloUseTable=1 ONLY ---------------------------------------------
+DensTableFile           DensTableExample       # density table name, radius should be in kpc and density should be in g/cm^3
+
+# parameters for new disk (disabled in this example)
+AddParWhenRestart       0                      # add a new disk to an existing snapshot [0] ## must set OPT__INIT=2 and OPT__RESTART_RESET=1 ##
+AddParWhenRestartByFile 0                      # 0=add a thin disk (must enable SUPPORT_GSL), 1=add new disk via DiskHeatingParticleIC [1] ## AddParWhenRestart = 1 ONLY ##
+AddParWhenRestartNPar   10000000               # total particles of new disk [0] ## AddParWhenRestart = 1 ONLY ##
+NewDisk_RSeed           1002                   # random seed for setting thin disk particle position and velocity [1002] ## AddParWhenRestartByFile = 0 ONLY ##
+Disk_Mass               0.00139812             # thin disk total mass (code unit) [1.0] ## AddParWhenRestartByFile = 0 ONLY ##
+Disk_R                  0.0020865              # thin disk scale radius (code unit) [1.0] ## AddParWhenRestartByFile = 0 ONLY ##
+DispTableFile           DispTableExample       # velocity dispersion table filename, radius should be in kpc and dispersion should be in km/s ## AddParWhenRestartByFile = 0 ONLY ##

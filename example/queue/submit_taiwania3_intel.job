@@ -1,8 +1,8 @@
+#!/bin/bash
+
 ###############################################
 #       Intel MPI job script example          #
 ###############################################
-
-#!/bin/bash
 
 #SBATCH --account=ACCOUNT                               # (-A) Account/project number
 #SBATCH --job-name=JOB_NAME                             # (-J) Job name
@@ -13,20 +13,20 @@
 #SBATCH --cpus-per-task=14                              # (-c) Number of cores per MPI task
 #SBATCH --mem=162400M                                   # Memory limit per compute node for the job. Do not use with mem-per-cpu flag.
 #SBATCH --time=00:30:00                                 # (-t) Wall time limit (days-hrs:min:sec)
-##SBATCH -o log_taiwania_III
+##SBATCH -o log
 ##SBATCH -e job.%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL                      # Mail events (NONE, BEGIN, END, FAIL, ALL)
 #SBATCH --mail-user=EMAIL_ACCOUNT                       # Where to send mail.  Set this to your email address
 #SBATCH --exclude=cpn[3001-3120,3241-3360]              # Exclude large-memory nodes
 
-LOG_FILE=log_taiwania_III_intel_2018
+LOG_FILE=log
 
 module purge
-module load compiler/intel/2018u4 IntelMPI/2018u4
-module list >> LOG_FILE
-export LD_LIBRARY_PATH="FFTW_PATH/lib:$LD_LIBRARY_PATH"
-export UCX_TLS="ud,dc,shm,self"
+module use /home/d07222009/module_CALAB
+module load intel/2024 intel_2024/fftw/3.3.10 intel_2024/gsl/2.8.0 intel_2024/hdf5/1.14.4 intel_2024/openmpi/5.0.5 intel_2024/openucx/1.18.0
+module list 1>>$LOG_FILE 2>&1
 
-mpiexec.hydra -bootstrap slurm -n $SLURM_NTASKS ./gamer >> $LOG_FILE 2>&1
-#mpirun -map-by ppr:2:socket:pe=14 -print-rank-map ./gamer 1>>$LOG_FILE 2>&1
-echo "=============================================================" >> $LOG_FILE
+# See: https://docs.open-mpi.org/en/v5.0.x/man-openmpi/man1/mpirun.1.html#the-map-by-option
+# There are 2 NUMA nodes on each node, 1 per socket
+mpirun -map-by ppr:2:numa:pe=14 --report-bindings ./gamer 1>>$LOG_FILE 2>&1
+echo "=============================================================" 1>>$LOG_FILE 2>&1

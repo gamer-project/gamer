@@ -98,8 +98,9 @@ double LB_EstimateLoadImbalance()
 //    4. write to the file "Record__LoadBalance"
       if ( OPT__RECORD_LOAD_BALANCE )
       {
-         const char FileName[] = "Record__LoadBalance";
          static bool FirstTime = true;
+         char FileName[2*MAX_STRING];
+         sprintf( FileName, "%s/Record__LoadBalance", OUTPUT_DIR );
 
          if ( FirstTime )
          {

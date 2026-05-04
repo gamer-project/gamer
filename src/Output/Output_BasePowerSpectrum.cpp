@@ -123,7 +123,7 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
 #  endif
 
    if ( TVar == _TOTAL_DENS ) {
-      Par_CollectParticle2OneLevel( 0, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ|_PAR_TYPE, PredictPos, Time[0],
+      Par_CollectParticle2OneLevel( 0, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, _PAR_TYPE, PredictPos, Time[0],
                                     SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
 
       Prepare_PatchData_InitParticleDensityArray( 0, Time[0] );
