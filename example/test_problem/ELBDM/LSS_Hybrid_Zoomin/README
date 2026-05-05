@@ -19,7 +19,7 @@ Default setup:
        Input__Flag_Spectral     = example/input/Input__Flag_Spectral
        Input__Flag_Interference = example/input/Input__Flag_Interference
 
-3. OPT__FLAG_REGION        1			   # Enable zoom-in simulation
+3. OPT__FLAG_REGION        1                       # Enable zoom-in simulation
 
 
 Note:

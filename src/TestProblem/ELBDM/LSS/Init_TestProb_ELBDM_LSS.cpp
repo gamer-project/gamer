@@ -164,7 +164,7 @@ void SetParameter()
 //    Allocate ZoomIn_Table
       ZoomIn_Table = new real* [ZoomIn_NCol];
       for (int i=0; i<ZoomIn_NCol; i++)
-	ZoomIn_Table[i] = new real [ZoomIn_NRow];
+      ZoomIn_Table[i] = new real [ZoomIn_NRow];
 
 //    load Zoom-in Lagrangian Box Volumne at different redshifts and check Error
       File_zoom = fopen( FileNameZoomIn, "r" );
@@ -177,29 +177,29 @@ void SetParameter()
             Aux_Error( ERROR_INFO, "incorrect reading at zoom-in table at line %d of the file <%s> !!\n", s+1, FileNameZoomIn );
 
          sscanf( input_line, "%f%f%f%f%f%f%f",
-		 &ZoomIn_Table[ZOOM_A][s],
-		 &ZoomIn_Table[ZOOM_LX][s], &ZoomIn_Table[ZOOM_LX + 1][s], &ZoomIn_Table[ZOOM_LX + 2][s],
-		 &ZoomIn_Table[ZOOM_CX][s], &ZoomIn_Table[ZOOM_CX + 1][s], &ZoomIn_Table[ZOOM_CX + 2][s] );
+                 &ZoomIn_Table[ZOOM_A][s],
+                 &ZoomIn_Table[ZOOM_LX][s], &ZoomIn_Table[ZOOM_LX + 1][s], &ZoomIn_Table[ZOOM_LX + 2][s],
+                 &ZoomIn_Table[ZOOM_CX][s], &ZoomIn_Table[ZOOM_CX + 1][s], &ZoomIn_Table[ZOOM_CX + 2][s] );
 
          if ( s < 1 ) continue;
 
          if ( ZoomIn_Table[ZOOM_A][s-1] < ZoomIn_Table[ZOOM_A][s] )
             Aux_Error( ERROR_INFO, "Current a=%f is greater than the previous a=%f. Scale factors are not listed in descending order in %s!!\n",
-		       ZoomIn_Table[ZOOM_A][s], ZoomIn_Table[ZOOM_A][s-1], FileNameZoomIn );
+                       ZoomIn_Table[ZOOM_A][s], ZoomIn_Table[ZOOM_A][s-1], FileNameZoomIn );
 
-	 for (int XYZ=0; XYZ<3; XYZ++)
-	 {
+         for (int XYZ=0; XYZ<3; XYZ++)
+         {
             if ( ZoomIn_Table[ZOOM_CX + XYZ][s-1] - ZoomIn_Table[ZOOM_LX + XYZ][s-1]/2 < ZoomIn_Table[ZOOM_CX + XYZ][s] - ZoomIn_Table[ZOOM_LX + XYZ][s]/2 ||
-		 ZoomIn_Table[ZOOM_CX + XYZ][s-1] + ZoomIn_Table[ZOOM_LX + XYZ][s-1]/2 > ZoomIn_Table[ZOOM_CX + XYZ][s] + ZoomIn_Table[ZOOM_LX + XYZ][s]/2 )
-	       Aux_Error( ERROR_INFO, "Zoom-in box at a = %.2f with LX=%.2f LY=%.2f LZ=%.2f CenterX=%.2f CenterY=%.2f CenterZ=%.2f " \
-			  "is outside of the Zoom-in box at earlier a = %.2f with LX=%.2f LY=%.2f LZ=%.2f CenterX=%.2f CenterY=%.2f CenterZ=%.2f !!\n",
-			  ZoomIn_Table[ZOOM_A][s-1],
-			  ZoomIn_Table[ZOOM_LX][s-1], ZoomIn_Table[ZOOM_LX + 1][s-1], ZoomIn_Table[ZOOM_LX + 2][s-1],
-			  ZoomIn_Table[ZOOM_CX][s-1], ZoomIn_Table[ZOOM_CX + 1][s-1], ZoomIn_Table[ZOOM_CX + 2][s-1],
-			  ZoomIn_Table[ZOOM_A][s],
-			  ZoomIn_Table[ZOOM_LX][s],   ZoomIn_Table[ZOOM_LX + 1][s],   ZoomIn_Table[ZOOM_LX + 2][s],
-			  ZoomIn_Table[ZOOM_CX][s],   ZoomIn_Table[ZOOM_CX + 1][s],   ZoomIn_Table[ZOOM_CX + 2][s] );
-	 } // for (int XYZ=0; XYZ<3; XYZ++)
+                 ZoomIn_Table[ZOOM_CX + XYZ][s-1] + ZoomIn_Table[ZOOM_LX + XYZ][s-1]/2 > ZoomIn_Table[ZOOM_CX + XYZ][s] + ZoomIn_Table[ZOOM_LX + XYZ][s]/2 )
+               Aux_Error( ERROR_INFO, "Zoom-in box at a = %.2f with LX=%.2f LY=%.2f LZ=%.2f CenterX=%.2f CenterY=%.2f CenterZ=%.2f " \
+                          "is outside of the Zoom-in box at earlier a = %.2f with LX=%.2f LY=%.2f LZ=%.2f CenterX=%.2f CenterY=%.2f CenterZ=%.2f !!\n",
+                          ZoomIn_Table[ZOOM_A][s-1],
+                          ZoomIn_Table[ZOOM_LX][s-1], ZoomIn_Table[ZOOM_LX + 1][s-1], ZoomIn_Table[ZOOM_LX + 2][s-1],
+                          ZoomIn_Table[ZOOM_CX][s-1], ZoomIn_Table[ZOOM_CX + 1][s-1], ZoomIn_Table[ZOOM_CX + 2][s-1],
+                          ZoomIn_Table[ZOOM_A][s],
+                          ZoomIn_Table[ZOOM_LX][s],   ZoomIn_Table[ZOOM_LX + 1][s],   ZoomIn_Table[ZOOM_LX + 2][s],
+                          ZoomIn_Table[ZOOM_CX][s],   ZoomIn_Table[ZOOM_CX + 1][s],   ZoomIn_Table[ZOOM_CX + 2][s] );
+         } // for (int XYZ=0; XYZ<3; XYZ++)
       } // for (int s=0; s<ZoomIn_NRow; s++)
 
       fclose( File_zoom );
@@ -236,9 +236,9 @@ void SetParameter()
 
          for (int i=0; i<ZoomIn_NRow; i++)
             Aux_Message( stdout, "%23.14e %23.14e %23.14e %23.14e %23.14e %23.14e %23.14e \n",
-			 ZoomIn_Table[ZOOM_A][i],
-			 ZoomIn_Table[ZOOM_LX][i], ZoomIn_Table[ZOOM_LX + 1][i], ZoomIn_Table[ZOOM_LX + 2][i],
-			 ZoomIn_Table[ZOOM_CX][i], ZoomIn_Table[ZOOM_CX + 1][i], ZoomIn_Table[ZOOM_CX + 2][i] );
+                         ZoomIn_Table[ZOOM_A][i],
+                         ZoomIn_Table[ZOOM_LX][i], ZoomIn_Table[ZOOM_LX + 1][i], ZoomIn_Table[ZOOM_LX + 2][i],
+                         ZoomIn_Table[ZOOM_CX][i], ZoomIn_Table[ZOOM_CX + 1][i], ZoomIn_Table[ZOOM_CX + 2][i] );
       }
       Aux_Message( stdout, "=============================================================================\n" );
    }
@@ -291,7 +291,7 @@ bool Flag_Region_LSS( const int i, const int j, const int k, const int lv, const
    {
 
       const double Pos_i = ( Pos[XYZ] - ZoomIn_Table[ZOOM_CX + XYZ][zoom_idx] >  0.5*amr->BoxSize[XYZ] ) ? Pos[XYZ] - amr->BoxSize[XYZ] :
-	                   ( Pos[XYZ] - ZoomIn_Table[ZOOM_CX + XYZ][zoom_idx] < -0.5*amr->BoxSize[XYZ] ) ? Pos[XYZ] + amr->BoxSize[XYZ] : Pos[XYZ];
+                           ( Pos[XYZ] - ZoomIn_Table[ZOOM_CX + XYZ][zoom_idx] < -0.5*amr->BoxSize[XYZ] ) ? Pos[XYZ] + amr->BoxSize[XYZ] : Pos[XYZ];
       const double dR    = Pos_i - ZoomIn_Table[ZOOM_CX + XYZ][zoom_idx];
       Within            &= ( abs(dR) < ZoomIn_Table[ZOOM_LX + XYZ][zoom_idx]/2 );
 
