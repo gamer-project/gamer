@@ -28,16 +28,19 @@ void (*Par_Init_ByFile_User_Ptr)() = Par_Init_ByFile_Default;
 //                6. The data format of the PAR_IC file is controlled by the runtime parameter "PAR_IC_FORMAT"
 //                   --> PAR_IC_FORMAT_ATT_ID: [particle attribute][particle id] in a row-major order
 //                       PAR_IC_FORMAT_ID_ATT: [particle id][particle attribute] in a row-major order
-//                7  Load the following attributes with the specified order:
+//                7.  Load the following attributes with the specified order:
 //
-//                      mass, position x/y/z, velocity x/y/z, type,
+//                      mass, position x/y/z, velocity x/y/z,
 //                      [, creation time (when enabling STAR_FORMATION)]
-//                      [, user-specified attributes (when PAR_NATT_FLT_USER>0 or PAR_NATT_INT_USER>0)]
-//
+//                      [, user-specified floating-point attributes (when PAR_NATT_FLT_USER>0]
+//                      , type, PUID
+//                      [, user-specified integer attributes (when PAR_NATT_INT_USER>0)]
 //                   --> The mass of all particles can be set to PAR_IC_MASS instead (by having PAR_IC_MASS>=0.0),
-//                       in which case PAR_IC should exclude partice mass
+//                       in which case PAR_IC should exclude particle mass
 //                   --> The type of all particles can be set to PAR_IC_TYPE instead (by having PAR_IC_TYPE>=0),
-//                       in which case PAR_IC should exclude partice type
+//                       in which case PAR_IC should exclude particle type
+//                   --> The PUID of all particles can be excluded from PAR_IC by setting PAR_IC_PUID=0,
+//                       in which case PUID will be assigned automatically
 //                   --> No need to provide particle acceleration and time
 //                8. For LOAD_BALANCE, the number of particles in each rank must be set in advance
 //                   --> Currently it's set by Init_Parallelization()
@@ -84,6 +87,7 @@ void Par_Init_ByFile_Default()
          long NParThisRank  = amr->Par->NPar_AcPlusInac;       // cannot be "const" due to MPI_Allgather()
    const bool SingleParMass = amr->Par->ParICMass >= 0.0;
    const bool SingleParType = amr->Par->ParICType >= 0;
+   const bool AbsentParPUid = amr->Par->ParICPUid == false;
 
 // determine the number of attributes to be loaded
    int NParAttFlt = PAR_NATT_FLT_TOTAL - 1;   // exclude time
@@ -93,6 +97,7 @@ void Par_Init_ByFile_Default()
 #  endif
    if ( SingleParMass )    NParAttFlt --; // exclude mass
    if ( SingleParType )    NParAttInt --; // exclude type
+   if ( AbsentParPUid )    NParAttInt --; // exclude particle uid
 
 
 // check
@@ -225,17 +230,37 @@ void Par_Init_ByFile_Default()
       for (int v_in=0, v_out=0; v_in<NParAttInt; v_in++, v_out++)
       {
          if ( SingleParType  &&  v_out == PAR_TYPE )  v_out ++;
+         if ( AbsentParPUid  &&  v_out == PAR_PUID )  v_out ++;
 
          amr->Par->AttributeInt[v_out][p] = ParIntData1[v_in];
       }
 
       if ( SingleParMass )    amr->Par->Mass[p] = amr->Par->ParICMass;
       if ( SingleParType )    amr->Par->Type[p] = amr->Par->ParICType;
+      if ( AbsentParPUid )    amr->Par->PUid[p] = PUID_TBA;
 
 //    synchronize all particles to the physical time at the base level
       amr->Par->Time[p] = Time[0];
    } // for (long p=0; p<NParThisRank; p++)
 
+
+// set NextPUID according to the maximum of the existing PUID in the file
+   if ( !AbsentParPUid )
+   {
+      long ExpectedNextPUID_ThisRank = 1L;
+      for (long p=0; p<NParThisRank; p++)
+         ExpectedNextPUID_ThisRank = MAX( (long)amr->Par->AttributeInt[PAR_PUID][p]+1L, ExpectedNextPUID_ThisRank );
+
+      long ExpectedNextPUID_AllRank  = 1L;
+      MPI_Allreduce( &ExpectedNextPUID_ThisRank, &ExpectedNextPUID_AllRank, 1, MPI_LONG, MPI_MAX, MPI_COMM_WORLD );
+
+      amr->Par->NextPUID = ExpectedNextPUID_AllRank;
+   }
+   else
+      amr->Par->NextPUID = 1L;
+
+
+// free memory
    delete [] ParFltData_ThisRank;
    delete [] ParIntData_ThisRank;
    delete [] ParFltData1;

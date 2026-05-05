@@ -6,6 +6,7 @@ Parameters described on this page:
 [PAR_IC_INT8](#PAR_IC_INT8), &nbsp;
 [PAR_IC_MASS](#PAR_IC_MASS), &nbsp;
 [PAR_IC_TYPE](#PAR_IC_TYPE), &nbsp;
+[PAR_IC_PUID](#PAR_IC_PUID), &nbsp;
 [PAR_INTERP](#PAR_INTERP), &nbsp;
 [PAR_INTEG](#PAR_INTEG), &nbsp;
 [PAR_TR_INTERP](#PAR_TR_INTERP), &nbsp;
@@ -86,6 +87,15 @@ See also
 [[Setting IC from Files &#8212; Particles | Initial Conditions#IC-File-Particles]].
     * **Restriction:**
 
+<a name="PAR_IC_PUID"></a>
+* #### `PAR_IC_PUID` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Flag indicating whether the particle initial condition file `PAR_IC` contains UID information.
+If this option is disabled, new particle UIDs will be assigned automatically.
+See also
+[[Setting IC from Files &#8212; Particles | Initial Conditions#IC-File-Particles]].
+    * **Restriction:**
+
 <a name="PAR_INTERP"></a>
 * #### `PAR_INTERP` &ensp; (1=NGP, 2=CIC, 3=TSC) &ensp; [2]
     * **Description:**
@@ -161,6 +171,34 @@ Disable this check when particles are initialized _after_ setting grid fields, s
 
 ## Remarks
 
+### Particle UID (`PUID`)
+Valid particle UIDs should lie within `[1, number of particles]`.
+
+The particle UID assignment occurs during either initialization or on-the-fly creation
+in simulation (e.g., star formation). The particle UIDs can be inherited from `PAR_IC`
+(when `PAR_INIT=3` and `PAR_IC_PUID` is enabled) or from a restart file. Except for
+these, the particle UIDs should be assigned internally via `Par_SetParUID()` in all
+other cases (e.g., `PAR_INIT=1`).
+
+To ensure uniqueness and reproducibility, all particle UIDs should be assigned by
+`Par_SetParUID()` globally, rather than decided by individual MPI ranks. The particle
+UID must be first marked as `PUID_TBA` when the particle is created (e.g., in
+`Par_Init_ByFunction_Ptr()`, `Par_Init_ByFile()`,
+`src/StarFormation/SF_CreateStar_AGORA.cpp`) before invoking `Par_SetParUID()` (e.g., at
+the end of `Init_GAMER()` and `SF_CreateStar()`). And `Par_SetParUID()` should be
+invoked _after_ all the particle creation within a single routine is complete.
+
+The assignment procedure of `Par_SetParUID()` follows:
+
+   First, we collect the PUIDs and positions of new particles from all ranks
+   into a single array.
+   Second, we sort the particles by their positions.
+   Third, assign the particle UIDs according to the array index plus `NextPUID`.
+   Finally, send the new particle UIDs back to all ranks.
+
+> [!CAUTION]
+> If the particle positions are exactly the same (which should unlikely happen), the particle UID is determined by the sorting algorithm.
+> Please check the implmentation in `Miscellaneous/Mis_SortByRows.cpp` and `Mis_Heapsort.cpp`
 
 <br>
 

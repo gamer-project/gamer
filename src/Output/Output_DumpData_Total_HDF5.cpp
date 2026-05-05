@@ -79,7 +79,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2507)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2508)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -286,6 +286,7 @@ Procedure for outputting new variables:
 //                                             GRACKLE_HYDROGEN_MFRAC, OPT__UNFREEZE_GRACKLE,
 //                                             OPT__OUTPUT_GRACKLE_TEMP, OPT__OUTPUT_GRACKLE_MU, OPT__OUTPUT_GRACKLE_TCOOL,
 //                                             DT__GRACKLE_COOLING, OPT__FLAG_COOLING_LEN, FlagTable_CoolingLen
+//                2508 : 2026/03/26 --> output Particle unique id
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1752,7 +1753,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2507;
+   KeyInfo.FormatVersion        = 2508;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -1780,6 +1781,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    KeyInfo.NMagStored           = NCOMP_MAG;
 #  ifdef PARTICLE
    KeyInfo.Par_NPar             = amr->Par->NPar_Active_AllRank;
+   KeyInfo.Par_NextPUID         = amr->Par->NextPUID;
    KeyInfo.Par_NAttFltStored    = PAR_NATT_FLT_STORED;
    KeyInfo.Par_NAttIntStored    = PAR_NATT_INT_STORED;
 #  ifdef FLOAT8_PAR
@@ -2489,6 +2491,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Par_ICFormat            = amr->Par->ParICFormat;
    InputPara.Par_ICMass              = amr->Par->ParICMass;
    InputPara.Par_ICType              = amr->Par->ParICType;
+   InputPara.Par_ICPUid              = amr->Par->ParICPUid;
    InputPara.Par_ICFloat8            = PAR_IC_FLOAT8;
    InputPara.Par_ICInt8              = PAR_IC_INT8;
    InputPara.Par_Interp              = amr->Par->Interp;
@@ -3140,6 +3143,7 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "NMagStored",           HOFFSET(KeyInfo_t,NMagStored          ), H5T_NATIVE_INT          );
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Par_NPar",             HOFFSET(KeyInfo_t,Par_NPar            ), H5T_NATIVE_LONG         );
+   H5Tinsert( H5_TypeID, "Par_NextPUID",         HOFFSET(KeyInfo_t,Par_NextPUID        ), H5T_NATIVE_LONG         );
    H5Tinsert( H5_TypeID, "Par_NAttFltStored",    HOFFSET(KeyInfo_t,Par_NAttFltStored   ), H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "Par_NAttIntStored",    HOFFSET(KeyInfo_t,Par_NAttIntStored   ), H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "Float8_Par",           HOFFSET(KeyInfo_t,Float8_Par          ), H5T_NATIVE_INT          );
@@ -3555,6 +3559,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Par_ICFormat",            HOFFSET(InputPara_t,Par_ICFormat           ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ICMass",              HOFFSET(InputPara_t,Par_ICMass             ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Par_ICType",              HOFFSET(InputPara_t,Par_ICType             ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Par_ICPUid",              HOFFSET(InputPara_t,Par_ICPUid             ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ICFloat8",            HOFFSET(InputPara_t,Par_ICFloat8           ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ICInt8",              HOFFSET(InputPara_t,Par_ICInt8             ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_Interp",              HOFFSET(InputPara_t,Par_Interp             ), H5T_NATIVE_INT     );

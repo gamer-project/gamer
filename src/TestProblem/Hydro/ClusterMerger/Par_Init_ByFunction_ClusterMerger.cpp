@@ -61,7 +61,9 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
 //                   --> They will later be redistributed when calling Par_FindHomePatch_UniformGrid()
 //                       and LB_Init_LoadBalance()
 //                   --> Therefore, there is no constraint on which particles should be set by this function
-//                4. File format: plain C binary in the format [Number of particles][Particle attributes]
+//                4. The initialization of the PUID routine has been separated into amr->Par->InitRepo()
+//                   --> If needed, you can still modify PUID through the AllAttributeInt array
+//                5. File format: plain C binary in the format [Number of particles][Particle attributes]
 //                   --> [Particle 0][Attribute 0], [Particle 0][Attribute 1], ...
 //                   --> Note that it's different from the internal data format in the particle repository,
 //                       which is [Particle attributes][Number of particles]
@@ -88,7 +90,8 @@ void Read_Particles_ClusterMerger(std::string filename, long offset, long num,
 void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPar_AllRank,
                                         real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                         real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                        long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                        long_par *ParType,
+                                        real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
                                         long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 {
 
@@ -224,8 +227,8 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
          // synchronize all particles to the physical time at the base level
          ParTime[pp] = (real_par)Time[0];
 
-         // set tag for each cluster
-         AllAttributeInt[Idx_ParHalo][pp] = (long_par)c;
+	 // set tag for each cluster
+	 AllAttributeInt[Idx_ParHalo][pp] = (long_par)c;
 
       } // for (long p=0; p<NPar_ThisRank_EachCluster[c]; p++)
 
