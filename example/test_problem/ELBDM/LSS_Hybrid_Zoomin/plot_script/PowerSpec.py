@@ -1,6 +1,6 @@
 #######################################
 
-# Computation of Power spectrum within a target halo.
+# Computation of power spectrum within a target halo.
 # Run Compute_profile.py to call these functions.
 
 #######################################
@@ -9,8 +9,8 @@ import yt
 import numpy as np
 import csv
 
-rfac  = 10 # the enclosed box has length of 2 * rfac * rc
-rmfac = 2 # density within rmfac * rc is zeroed
+rfac  = 10  # the enclosed box has length of 2 * rfac * rc
+rmfac = 2   # density within rmfac * rc is zeroed
 lv    = 7
 
 def corezero( x, y, z, rho, r_min, center ):
@@ -132,6 +132,6 @@ def Compute_PowerSpectrum( ds, center, rc, halo_id, path_data ):
 
     with open( '%s/powerspec_within_halo/%s_%d_powerspectrum_within_halo'%(path_data,ds,halo_id) , 'w' ) as file:
         writer = csv.writer( file, delimiter='\t' )
-        writer.writerow( [f"{'#wavenumber(2pi/kpc)':<22}", f"{'powerspec':<15}"] )
+        writer.writerow( [f"{'#wavenumber (2pi/kpc)':<22}", f"{'powerspec':<15}"] )
         for i in range( len(k) ):
             writer.writerow( [f"{k[i].d:<22.8f}", f"{pknorm[i]:<15.8f}"] )

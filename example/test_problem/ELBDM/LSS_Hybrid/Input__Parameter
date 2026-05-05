@@ -42,9 +42,9 @@ OPT__BC_POT                   1           # gravity boundary condition: (1=perio
 
 
 # cosmology (COMOVING only)
-A_INIT                        9.900990099e-3    # initial scale factor
-OMEGA_M0                      0.3158230904284232      # omega matter at the present time
-HUBBLE0                       0.6732117      # dimensionless Hubble parameter (currently only for converting ELBDM_MASS to code units)
+A_INIT                        9.900990099e-3       # initial scale factor
+OMEGA_M0                      0.3158230904284232   # omega matter at the present time
+HUBBLE0                       0.6732117            # dimensionless Hubble parameter (currently only for converting ELBDM_MASS to code units)
 
 
 # time-step

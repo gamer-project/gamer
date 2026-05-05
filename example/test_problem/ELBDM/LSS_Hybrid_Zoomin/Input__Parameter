@@ -42,9 +42,9 @@ OPT__BC_POT                   1           # gravity boundary condition: (1=perio
 
 
 # cosmology (COMOVING only)
-A_INIT                        9.900990099e-3          # initial scale factor
-OMEGA_M0                      0.3158230904284232      # omega matter at the present time
-HUBBLE0                       0.6732117               # dimensionless Hubble parameter (currently only for converting ELBDM_MASS to code units)
+A_INIT                        9.900990099e-3       # initial scale factor
+OMEGA_M0                      0.3158230904284232   # omega matter at the present time
+HUBBLE0                       0.6732117            # dimensionless Hubble parameter (currently only for converting ELBDM_MASS to code units)
 
 
 # time-step
@@ -87,6 +87,7 @@ OPT__FLAG_LOHNER_FORM         1           # form of Lohner: (1=FLASH-1, 2=FLASH-
 OPT__FLAG_ENGY_DENSITY        0           # flag: energy density (Input_Flag_EngyDensity) [0] ##ELBDM ONLY##
 OPT__FLAG_INTERFERENCE        1           # flag: interference level (Input__Flag_Interference) [0] ##ELBDM ONLY##
 OPT__FLAG_SPECTRAL            1           # flag: spectral refinement (Input__Flag_Spectral) [0] ##ELBDM ONLY##
+OPT__FLAG_SPECTRAL_N          2           # number of pol. coefficients to use for spectral refinement [2] ##ELBDM ONLY##
 OPT__FLAG_USER                0           # flag: user-defined (Input__Flag_User) -> edit "Flag_User.cpp" [0]
 OPT__FLAG_REGION              1           # flag: specify the regions **allowed** to be refined -> edit "Flag_Region.cpp" [0]
 OPT__FLAG_NPAR_PATCH          0           # flag: # of particles per patch (Input__Flag_NParPatch): (0=off, 1=itself, 2=itself+siblings) [0]
@@ -172,16 +173,16 @@ OPT__GRA_INT_SCHEME           4           # ghost-zone potential for the gravity
 OPT__REF_POT_INT_SCHEME       4           # newly allocated potential during grid refinement [4]
 INT_MONO_COEFF                2.0         # coefficient for ensuring the interpolation monotonicity (1.0~4.0) [2.0]
 SPEC_INT_TABLE_PATH           ./          # path to tables for spectral interpolation ##ELBDM & SUPPORT_SPECTRAL_INT ONLY##
-SPEC_INT_XY_INSTEAD_DEPHA     1           # interpolate x = density^0.5*cos( phase/SPEC_INT_WAVELENGTH_MAGNIFIER ),
-                                          #             y = density^0.5*sin( phase/SPEC_INT_WAVELENGTH_MAGNIFIER ) instead of density and phase
-                                          # for the spectral interpolation, which has the advantage of being well-defined across vortices [1]
-SPEC_INT_WAVELENGTH_MAGNIFIER 1.0e2       # stretching factor of wavelength for SPEC_INT_XY_INSTEAD_DEPHA
-                                          # --> for SPEC_INT_WAVELENGTH_MAGNIFIER=1, x=real part and y=imaginary part [1.0e2]
+SPEC_INT_XY_INSTEAD_DEPHA     1           # interpolate x and y (real and imaginary parts in current implementation)
+                                          # around vortices instead of density and phase for the spectral interpolation,
+                                          # which has the advantage of being well-defined across vortices [1] ##ELBDM & SUPPORT_SPECTRAL_INT ONLY##
+SPEC_INT_VORTEX_THRESHOLD     0.1         # vortex detection threshold for SPEC_INT_XY_INSTEAD_DEPHA [0.1] ##ELBDM & SUPPORT_SPECTRAL_INT ONLY##
+SPEC_INT_GHOST_BOUNDARY       4           # ghost boundary size for spectral interpolation [4] ##ELBDM & SUPPORT_SPECTRAL_INT ONLY##
 
 
 # data dump
 OPT__OUTPUT_TOTAL             1           # output the simulation snapshot: (0=off, 1=HDF5, 2=C-binary) [1]
-OPT__OUTPUT_PART              0           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag) [0]
+OPT__OUTPUT_PART              0           # output a single line or slice: (0=off, 1=xy, 2=yz, 3=xz, 4=x, 5=y, 6=z, 7=diag, 8=entire box) [0]
 OPT__OUTPUT_USER              0           # output the user-specified data -> edit "Output_User.cpp" [0]
 OPT__OUTPUT_PAR_MODE          0           # output the particle data: (0=off, 1=text-file, 2=C-binary) [0] ##PARTICLE ONLY##
 OPT__OUTPUT_BASEPS            0           # output the base-level power spectrum [0]
@@ -196,6 +197,7 @@ OUTPUT_PART_X                -1.0         # x coordinate for OPT__OUTPUT_PART [-
 OUTPUT_PART_Y                -1.0         # y coordinate for OPT__OUTPUT_PART [-1.0]
 OUTPUT_PART_Z                -1.0         # z coordinate for OPT__OUTPUT_PART [-1.0]
 INIT_DUMPID                  -1           # set the first dump ID (<0=auto) [-1]
+OUTPUT_DIR                    .           # set the output directory [.]
 
 
 # miscellaneous
