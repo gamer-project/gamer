@@ -1,9 +1,9 @@
 #######################################
 
-# Computation of Velocity Dispersion.
+# Computation of velocity dispersion.
 # Run Compute_profile.py to call these functions.
 
-# carefully adjust rmax_for_vd to avoid exceeeding memory limit
+# carefully adjust rmax_for_vd to avoid exceeding memory limit
 #######################################
 import os
 import yt
@@ -112,6 +112,6 @@ def Compute_VelocityDispersion( ds, center, halo_id, path_data ):
 
     with open( '%s/prof_veldisp/%s_%d_veldisp_haloRestFrame'%(path_data,ds,halo_id) , 'w' ) as file:
         writer = csv.writer( file, delimiter='\t' )
-        writer.writerow( [f"{'#radius(ckpc)':<15}", f"{'VelDisp(km/s)':<15}"] )
+        writer.writerow( [f"{'#radius (ckpc)':<15}", f"{'VelDisp (km/s)':<15}"] )
         for i in range( len(dr) ):
             writer.writerow( [f"{dr[i]:<15.8f}", f"{sigma[i]:<15.8f}"] )

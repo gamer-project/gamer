@@ -105,20 +105,20 @@ def compute_profile( ds, center, _halo_radius, halo_id, path_data ):
 
     with open( '%s/prof_dens/%s_%d_profile_data'%(path_data,ds,halo_id) , 'w' ) as file:
         writer = csv.writer( file, delimiter='\t' )
-        writer.writerow( [f"{'#radius(ckpc)':<15}", f"{'density(Msun/ckpc**3)':<15}"] )
+        writer.writerow( [f"{'#radius (ckpc)':<15}", f"{'density (Msun/ckpc**3)':<15}"] )
         for i in range( len(radius) ):
             writer.writerow( [f"{radius[i]:<15.8f}", f"{density[i]:<15.8f}"] )
 #            writer.writerow( [radius[i], density[i]] )
 
     with open( '%s/prof_mass/%s_%d_mass_accumulate'%(path_data,ds,halo_id) , 'w' ) as file:
         writer = csv.writer( file, delimiter='\t' )
-        writer.writerow( [f"{'#radius(ckpc)':<15}", f"{'mass(Msun)':<15}"] )
+        writer.writerow( [f"{'#radius (ckpc)':<15}", f"{'mass (Msun)':<15}"] )
         for i in range( len(radius) ):
             writer.writerow( [f"{radius[i]:<15.8f}", f"{mass_accumulate[i]:<15.8f}"] )
 
     with open( '%s/prof_circular_vel/%s_%d_circular_velocity'%(path_data,ds,halo_id) , 'w' ) as file:
         writer = csv.writer( file, delimiter='\t' )
-        writer.writerow( [f"{'#radius(ckpc)':<15}", f"{'Vcir(km/s)':<15}"] )
+        writer.writerow( [f"{'#radius (ckpc)':<15}", f"{'Vcir (km/s)':<15}"] )
         for i in range( len(radius) ):
             writer.writerow( [f"{radius[i]:<15.8f}", f"{circular_velocity[i]:<15.8f}"] )
 
@@ -185,20 +185,20 @@ def compute_profile( ds, center, _halo_radius, halo_id, path_data ):
         if not file_exists:
             writer.writerow( [f"{'#snap':<6}",
                               f"{'halo_id':<8}",
-                              f"{'m[eV]':<8}",
-                              f"{'x[cMpc/h]':<11}",
-                              f"{'y[cMpc/h]':<11}",
-                              f"{'z[cMpc/h]':<11}",
+                              f"{'m [eV]':<8}",
+                              f"{'x [cMpc/h]':<11}",
+                              f"{'y [cMpc/h]':<11}",
+                              f"{'z [cMpc/h]':<11}",
                               f"{'redshift':<11}",
-                              f"{'r_vir[kpc]':<13}",
-                              f"{'Mvir[Msub]':<13}",
-                              f"{'rho_max[Msun/kpc**3]':<20}",
-                              f"{'r_c1[kpc]':<13}",
-                              f"{'r_c2[kpc]':<13}",
-                              f"{'r_c3[kpc]':<13}",
-                              f"{'M_c1[Msun]':<13}",
-                              f"{'M_c2[Msun]':<13}",
-                              f"{'M_c3[Msun]':<13}"
+                              f"{'r_vir [kpc]':<13}",
+                              f"{'Mvir [Msub]':<13}",
+                              f"{'rho_max [Msun/kpc**3]':<20}",
+                              f"{'r_c1 [kpc]':<13}",
+                              f"{'r_c2 [kpc]':<13}",
+                              f"{'r_c3 [kpc]':<13}",
+                              f"{'M_c1 [Msun]':<13}",
+                              f"{'M_c2 [Msun]':<13}",
+                              f"{'M_c3 [Msun]':<13}"
                              ] )
         # write data
         writer.writerow( [
