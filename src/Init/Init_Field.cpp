@@ -129,6 +129,9 @@ void Init_Field()
    if ( GRACKLE_METAL )
    Idx_Metal   = AddField( "Metal",    FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES,
                         (GRACKLE_PRIMORDIAL==GRACKLE_PRI_CHE_CLOUDY)?NORMALIZE_NO:NORMALIZE_YES, INTERP_FRAC_YES );
+
+   if ( GRACKLE_DUST )
+   Idx_Dust    = AddField( "Dust",     FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_NO,  INTERP_FRAC_YES );
 #  endif // #ifdef SUPPORT_GRACKLE
 
 

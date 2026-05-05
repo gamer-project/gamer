@@ -702,6 +702,7 @@ struct InputPara_t
    int    Grackle_Cooling;
    int    Grackle_Primordial;
    int    Grackle_Metal;
+   int    Grackle_Dust;
    int    Grackle_UV;
    int    Grackle_CMB_Floor;
    int    Grackle_PE_Heating;

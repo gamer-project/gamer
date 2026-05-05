@@ -2228,6 +2228,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Grackle_Cooling",         &RS.Grackle_Cooling,         SID, TID, NonFatal, &RT.Grackle_Cooling,          1, NonFatal );
    LoadField( "Grackle_Primordial",      &RS.Grackle_Primordial,      SID, TID, NonFatal, &RT.Grackle_Primordial,       1, NonFatal );
    LoadField( "Grackle_Metal",           &RS.Grackle_Metal,           SID, TID, NonFatal, &RT.Grackle_Metal,            1, NonFatal );
+   LoadField( "Grackle_Dust",            &RS.Grackle_Dust,            SID, TID, NonFatal, &RT.Grackle_Dust,             1, NonFatal );
    LoadField( "Grackle_UV",              &RS.Grackle_UV,              SID, TID, NonFatal, &RT.Grackle_UV,               1, NonFatal );
    LoadField( "Grackle_CMB_Floor",       &RS.Grackle_CMB_Floor,       SID, TID, NonFatal, &RT.Grackle_CMB_Floor,        1, NonFatal );
    LoadField( "Grackle_PE_Heating",      &RS.Grackle_PE_Heating,      SID, TID, NonFatal, &RT.Grackle_PE_Heating,       1, NonFatal );
