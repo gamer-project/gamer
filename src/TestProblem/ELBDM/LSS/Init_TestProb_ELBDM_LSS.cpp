@@ -5,12 +5,13 @@
 #define ZOOM_LX 1  // id of LX in ZoomIn_Table
 #define ZOOM_CX 4  // id of CenterX in ZoomIn_Table
 
+
 // problem-specific global variables
 // =======================================================================================
 static int      LSS_InitMode;          // initialization mode: 1=density-only, 2=real and imaginary parts or phase and density
 static int      ZoomIn_MaxLvOutside;   // maximum refinement level outside of the zoom-in box
 static int      ZoomIn_NRow;           // number of rows of the zoom-in table
-static int      ZoomIn_NCol = 7;       // number of columns of the zoom-in table
+const  int      ZoomIn_NCol = 7;       // number of columns of the zoom-in table
 static double **ZoomIn_Table;          // arrays of the table of scale factor, length, and center in xyz-axis
 // =======================================================================================
 
@@ -147,70 +148,44 @@ void SetParameter()
 
    delete ReadPara;
 
-// (1-2) load the zoom-in table
+// (1-2) load the zoom-in Lagrangian box volume at different redshifts
    if ( OPT__FLAG_REGION )
    {
+//    general checks
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
       if ( ELBDM_FIRST_WAVE_LEVEL > ZoomIn_MaxLvOutside )
-         Aux_Error( ERROR_INFO, " it is required to set ELBDM_FIRST_WAVE_LEVEL <= ZoomIn_MaxLvOutside for zoom-in simulation !!\n" );
-#     endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         Aux_Error( ERROR_INFO, "ELBDM_FIRST_WAVE_LEVEL (%d) > ZoomIn_MaxLvOutside (%d) for a zoom-in simulation !!\n",
+                    ELBDM_FIRST_WAVE_LEVEL, ZoomIn_MaxLvOutside );
+#     endif
 
-      if ( !Aux_CheckFileExist( FileNameZoomIn ) )
+      if (  ! Aux_CheckFileExist( FileNameZoomIn )  )
          Aux_Error( ERROR_INFO, "%s does not exist !!\n", FileNameZoomIn );
 
-      char *input_line = NULL;
-      size_t len = 0;
-      int n;
-      FILE *File_zoom;
-      File_zoom = fopen( FileNameZoomIn, "r" );
+//    load the table
+      ZoomIn_NRow = Aux_CountRow( FileNameZoomIn );
+      if ( ZoomIn_NRow <= 0 )    Aux_Error( ERROR_INFO, "ZoomIn_NRow (%d) <= 0 !!\n", ZoomIn_NRow );
 
-//    get the number of rows in Input__ZoominBox
-      ZoomIn_NRow = -1;
-      while ( getline( &input_line, &len, File_zoom ) != -1 ) ++ZoomIn_NRow;
-      fclose( File_zoom );
+      Aux_AllocateArray2D( ZoomIn_Table, ZoomIn_NCol, ZoomIn_NRow );
 
-//    Allocate ZoomIn_Table
-      ZoomIn_Table = new double* [ZoomIn_NCol];
-      for (int i=0; i<ZoomIn_NCol; i++)
-      ZoomIn_Table[i] = new double [ZoomIn_NRow];
+      const bool RowMajor_No      = false;            // load data into the column-major order
+      const bool AllocMem_No      = false;            // allocate memory for ZoomIn_Table
+      const int  Col[ZoomIn_NCol] = {0,1,2,3,4,5,6};  // target columns: (scale factor, size, center)
+      Aux_LoadTable( ZoomIn_Table[0], FileNameZoomIn, ZoomIn_NCol, Col, RowMajor_No, AllocMem_No );
 
-//    load Zoom-in Lagrangian Box Volumne at different redshifts and check Error
-      File_zoom = fopen( FileNameZoomIn, "r" );
-      getline( &input_line, &len, File_zoom ); //   skip the header
-
-      for (int s=0; s<ZoomIn_NRow; s++)
+//    check the loaded table
+      for (int s=1; s<ZoomIn_NRow; s++)
       {
-         n = getline( &input_line, &len, File_zoom );
-         if ( n <= 1 )
-            Aux_Error( ERROR_INFO, "incorrect reading at zoom-in table at line %d of the file <%s> !!\n", s+1, FileNameZoomIn );
-
-         sscanf( input_line, "%lf%lf%lf%lf%lf%lf%lf",
-                 &ZoomIn_Table[ZOOM_A][s],
-                 &ZoomIn_Table[ZOOM_LX][s], &ZoomIn_Table[ZOOM_LX + 1][s], &ZoomIn_Table[ZOOM_LX + 2][s],
-                 &ZoomIn_Table[ZOOM_CX][s], &ZoomIn_Table[ZOOM_CX + 1][s], &ZoomIn_Table[ZOOM_CX + 2][s] );
-
-         if ( s < 1 ) continue;
-
          if ( ZoomIn_Table[ZOOM_A][s-1] < ZoomIn_Table[ZOOM_A][s] )
-            Aux_Error( ERROR_INFO, "Current a=%lf is greater than the previous a=%lf. Scale factors are not listed in descending order in %s!!\n",
+            Aux_Error( ERROR_INFO, "current a=%13.7e is greater than the previous a=%13.7e. Scale factors are not listed in descending order in %s !!\n",
                        ZoomIn_Table[ZOOM_A][s], ZoomIn_Table[ZOOM_A][s-1], FileNameZoomIn );
 
-         for (int XYZ=0; XYZ<3; XYZ++)
-         {
-            if ( ZoomIn_Table[ZOOM_CX + XYZ][s-1] - ZoomIn_Table[ZOOM_LX + XYZ][s-1]/2 < ZoomIn_Table[ZOOM_CX + XYZ][s] - ZoomIn_Table[ZOOM_LX + XYZ][s]/2 ||
-                 ZoomIn_Table[ZOOM_CX + XYZ][s-1] + ZoomIn_Table[ZOOM_LX + XYZ][s-1]/2 > ZoomIn_Table[ZOOM_CX + XYZ][s] + ZoomIn_Table[ZOOM_LX + XYZ][s]/2 )
-               Aux_Error( ERROR_INFO, "Zoom-in box at a = %.2lf with LX=%.2lf LY=%.2lf LZ=%.2lf CenterX=%.2lf CenterY=%.2lf CenterZ=%.2lf " \
-                          "is outside of the Zoom-in box at earlier a = %.2lf with LX=%.2lf LY=%.2lf LZ=%.2lf CenterX=%.2lf CenterY=%.2lf CenterZ=%.2lf !!\n",
-                          ZoomIn_Table[ZOOM_A][s-1],
-                          ZoomIn_Table[ZOOM_LX][s-1], ZoomIn_Table[ZOOM_LX + 1][s-1], ZoomIn_Table[ZOOM_LX + 2][s-1],
-                          ZoomIn_Table[ZOOM_CX][s-1], ZoomIn_Table[ZOOM_CX + 1][s-1], ZoomIn_Table[ZOOM_CX + 2][s-1],
-                          ZoomIn_Table[ZOOM_A][s],
-                          ZoomIn_Table[ZOOM_LX][s],   ZoomIn_Table[ZOOM_LX + 1][s],   ZoomIn_Table[ZOOM_LX + 2][s],
-                          ZoomIn_Table[ZOOM_CX][s],   ZoomIn_Table[ZOOM_CX + 1][s],   ZoomIn_Table[ZOOM_CX + 2][s] );
+         for (int XYZ=0; XYZ<3; XYZ++) {
+            if ( ZoomIn_Table[ZOOM_LX+XYZ][s-1] > ZoomIn_Table[ZOOM_LX+XYZ][s] )
+               Aux_Error( ERROR_INFO, "zoom-in box at a=%13.7e (L=%13.7e) is larger than that at earlier a=%13.7e (L=%13.7e) along direction %d !!\n",
+                          ZoomIn_Table[ZOOM_A][s-1], ZoomIn_Table[ZOOM_LX+XYZ][s-1],
+                          ZoomIn_Table[ZOOM_A][s  ], ZoomIn_Table[ZOOM_LX+XYZ][s  ], XYZ );
          } // for (int XYZ=0; XYZ<3; XYZ++)
       } // for (int s=0; s<ZoomIn_NRow; s++)
-
-      fclose( File_zoom );
    } // if ( OPT__FLAG_REGION )
 
 // (1-3) set the default values
@@ -431,8 +406,7 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
 void End_Region_LSS()
 {
 
-   for (int i=0; i<ZoomIn_NCol; i++)   delete [] ZoomIn_Table[i];
-   delete [] ZoomIn_Table;
+   Aux_DeallocateArray2D( ZoomIn_Table );
 
 } // FUNCTION : End_Region_LSS
 #endif // #if ( MODEL == ELBDM )
