@@ -25,6 +25,10 @@ static void Check_SymConst ( const char *FileName, const int FormatVersion );
 static void Check_InputPara( const char *FileName, const int FormatVersion );
 static void ResetParameter( const char *FileName, double *EndT, long *EndStep );
 
+#ifdef PARTICLE
+static bool isPFlagStored;
+#endif
+
 
 
 
@@ -163,8 +167,11 @@ void Init_ByRestart_HDF5( const char *FileName )
       if ( KeyInfo.FormatVersion < 2473 )
          Aux_Error( ERROR_INFO, "unsupported data format version for SRHD (only support version >= 2473) !!\n" );
 #     endif
-
    }
+
+#  ifdef PARTICLE
+   isPFlagStored = KeyInfo.FormatVersion >= 2508;
+#  endif
 
    MPI_Barrier( MPI_COMM_WORLD );
 
@@ -229,7 +236,7 @@ void Init_ByRestart_HDF5( const char *FileName )
    LoadField( "Par_NAttFltStored",    &KeyInfo.Par_NAttFltStored,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttFltStored,     1,    Fatal );
    else
    LoadField( "Par_NAttFltStored",    &KeyInfo.Par_NAttFltStored,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttFltStored,     1, NonFatal );
-   if ( KeyInfo.FormatVersion >= 2500 )
+   if ( isPFlagStored )
    LoadField( "Par_NAttIntStored",    &KeyInfo.Par_NAttIntStored,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttIntStored,     1,    Fatal );
    else
    LoadField( "Par_NAttIntStored",    &KeyInfo.Par_NAttIntStored,    H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal, &Par_NAttIntStored,     1, NonFatal );
@@ -797,6 +804,13 @@ void Init_ByRestart_HDF5( const char *FileName )
             }
             for (int v=0; v<PAR_NATT_INT_STORED; v++)
             {
+//             skip particle flags if not stored
+               if ( v == PAR_FLAG  &&  ! isPFlagStored )
+               {
+                  H5_SetID_ParIntData[v] = H5I_INVALID_HID;
+                  continue;
+               }
+
                H5_SetID_ParIntData[v] = H5Dopen( H5_GroupID_Particle, ParAttIntName[v], H5P_DEFAULT );
                if ( H5_SetID_ParIntData[v] < 0 )   Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", ParAttIntName[v] );
             }
@@ -903,7 +917,13 @@ void Init_ByRestart_HDF5( const char *FileName )
 #        ifdef PARTICLE
          if ( ! ReenablePar ) {
             for (int v=0; v<PAR_NATT_FLT_STORED; v++)  H5_Status = H5Dclose( H5_SetID_ParFltData[v] );
-            for (int v=0; v<PAR_NATT_INT_STORED; v++)  H5_Status = H5Dclose( H5_SetID_ParIntData[v] );
+            for (int v=0; v<PAR_NATT_INT_STORED; v++)
+            {
+//             skip particle flags if not stored
+               if ( v == PAR_FLAG  &&  ! isPFlagStored )    continue;
+
+               H5_Status = H5Dclose( H5_SetID_ParIntData[v] );
+            }
             H5_Status = H5Gclose( H5_GroupID_Particle );
          }
 #        endif
@@ -1454,6 +1474,9 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
             if ( H5_Status < 0 )
                Aux_Error( ERROR_INFO, "failed to load a particle floating-point attribute (lv %d, GID %d, v %d) !!\n", lv, GID, v );
          }
+
+//       always initialize to PFLAG_NO since particle flags are unavailable
+         for (int p=0; p<NParThisPatch; p++)    ParIntBuf[PAR_FLAG][p] = PFLAG_NO;
       } // if ( FormatVersion < 2500 )
       else
       {
@@ -1467,6 +1490,13 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
          }
          for (int v=0; v<PAR_NATT_INT_STORED; v++)
          {
+//          if particle flags are not stored, initialize to PFLAG_NO instead of loading
+            if ( v == PAR_FLAG  &&  ! isPFlagStored )
+            {
+               for (int p=0; p<NParThisPatch; p++)    ParIntBuf[PAR_FLAG][p] = PFLAG_NO;
+               continue;
+            }
+
 //          using ParIntBuf[v] here is safe since it's NOT called when NParThisPatch == 0
             H5_Status = H5Dread( H5_SetID_ParIntData[v], H5T_GAMER_LONG_PAR, H5_MemID_ParData, H5_SpaceID_ParData, H5P_DEFAULT,
                                  ParIntBuf[v] );
@@ -1777,7 +1807,7 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "Par_NAttFltStored",    &RS.Par_NAttFltStored,    SID, TID, NonFatal, &RT.Par_NAttFltStored,     1,    Fatal );
    else
    LoadField( "Par_NAttFltStored",    &RS.Par_NAttFltStored,    SID, TID, NonFatal, &RT.Par_NAttFltStored,     1, NonFatal );
-   if ( FormatVersion >= 2500 )
+   if ( isPFlagStored )
    LoadField( "Par_NAttIntStored",    &RS.Par_NAttIntStored,    SID, TID, NonFatal, &RT.Par_NAttIntStored,     1,    Fatal );
    else
    LoadField( "Par_NAttIntStored",    &RS.Par_NAttIntStored,    SID, TID, NonFatal, &RT.Par_NAttIntStored,     1, NonFatal );
@@ -1966,6 +1996,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 // particle
 #  ifdef PARTICLE
    LoadField( "Par_Init",                &RS.Par_Init,                SID, TID, NonFatal, &RT.Par_Init,                 1, NonFatal );
+   LoadField( "Par_FlagInit",            &RS.Par_FlagInit,            SID, TID, NonFatal, &RT.Par_FlagInit,             1, NonFatal );
    LoadField( "Par_ICFormat",            &RS.Par_ICFormat,            SID, TID, NonFatal, &RT.Par_ICFormat,             1, NonFatal );
    LoadField( "Par_ICMass",              &RS.Par_ICMass,              SID, TID, NonFatal, &RT.Par_ICMass,               1, NonFatal );
    LoadField( "Par_ICType",              &RS.Par_ICType,              SID, TID, NonFatal, &RT.Par_ICType,               1, NonFatal );
@@ -2091,6 +2122,8 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Flag_NParPatch",     &RS.Opt__Flag_NParPatch,     SID, TID, NonFatal, &RT.Opt__Flag_NParPatch,      1, NonFatal );
    LoadField( "Opt__Flag_NParCell",      &RS.Opt__Flag_NParCell,      SID, TID, NonFatal, &RT.Opt__Flag_NParCell,       1, NonFatal );
    LoadField( "Opt__Flag_ParMassCell",   &RS.Opt__Flag_ParMassCell,   SID, TID, NonFatal, &RT.Opt__Flag_ParMassCell,    1, NonFatal );
+   LoadField( "Opt__Flag_ParTarget",     &RS.Opt__Flag_ParTarget,     SID, TID, NonFatal, &RT.Opt__Flag_ParTarget,      1, NonFatal );
+   LoadField( "Opt__Flag_ParTargetSib",  &RS.Opt__Flag_ParTargetSib,  SID, TID, NonFatal, &RT.Opt__Flag_ParTargetSib,   1, NonFatal );
 #  endif
    LoadField( "Opt__NoFlagNearBoundary", &RS.Opt__NoFlagNearBoundary, SID, TID, NonFatal, &RT.Opt__NoFlagNearBoundary,  1, NonFatal );
    LoadField( "Opt__PatchCount",         &RS.Opt__PatchCount,         SID, TID, NonFatal, &RT.Opt__PatchCount,          1, NonFatal );

@@ -427,6 +427,7 @@ struct InputPara_t
 // particle
 #  ifdef PARTICLE
    int    Par_Init;
+   int    Par_FlagInit;
    int    Par_ICFormat;
    double Par_ICMass;
    int    Par_ICType;
@@ -563,6 +564,8 @@ struct InputPara_t
    int    Opt__Flag_NParPatch;
    int    Opt__Flag_NParCell;
    int    Opt__Flag_ParMassCell;
+   int    Opt__Flag_ParTarget;
+   int    Opt__Flag_ParTargetSib;
 #  endif
    int    Opt__NoFlagNearBoundary;
    int    Opt__PatchCount;

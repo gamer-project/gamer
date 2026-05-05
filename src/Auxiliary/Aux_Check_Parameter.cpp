@@ -452,6 +452,7 @@ void Aux_Check_Parameter()
    Flag |= OPT__FLAG_NPAR_PATCH;
    Flag |= OPT__FLAG_NPAR_CELL;
    Flag |= OPT__FLAG_PAR_MASS_CELL;
+   Flag |= OPT__FLAG_PAR_TARGET;
 #  endif
 
    if ( !Flag )
@@ -1431,7 +1432,7 @@ void Aux_Check_Parameter()
 #  endif
 
 #  else // GRAMFE_SCHEME
-#  error : ERROR : Unsupported GRAMFE_SCHEME !!
+#  error : ERROR : unsupported GRAMFE_SCHEME !!
 #  endif // GRAMFE_SCHEME
 
 #  else // WAVE_SCHEME

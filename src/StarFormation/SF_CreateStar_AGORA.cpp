@@ -205,6 +205,7 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          NewParAttFlt[NNewPar][PAR_VELZ] = fluid[MOMZ][k][j][i]*_GasDens;
          NewParAttFlt[NNewPar][PAR_TIME] = TimeNew;
          NewParAttInt[NNewPar][PAR_TYPE] = PTYPE_STAR;
+         NewParAttInt[NNewPar][PAR_FLAG] = PFLAG_NO;
 
 //       particle acceleration
 #        ifdef STORE_PAR_ACC

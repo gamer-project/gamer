@@ -390,6 +390,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
                  const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
                  const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff,
                  const real *Interf_Var, const real Spectral_Cond );
+bool Flag_Precheck( const int lv, const int PID, const int NoRefineBnd );
 bool Flag_Lohner( const int i, const int j, const int k, const OptLohnerForm_t Form, const real *Var1D, const real *Ave1D,
                   const real *Slope1D, const int NVar, const double Threshold, const double Filter, const double Soften );
 void Refine( const int lv, const UseLBFunc_t UseLBFunc );
@@ -769,6 +770,8 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
                             const bool UseTracers, real_par ParAttr[], const bool CorrectVelocity );
 void Par_Init_Attribute_Mesh();
 void Par_Output_TracerParticle_Mesh();
+void Par_SetFlag( const int Flag );
+bool Par_Flag_TargetParticle( const int lv, const int PID, const FlagParTarget_t FlagMode );
 FieldIdx_t AddParticleAttributeFlt( const char *InputLabel );
 FieldIdx_t AddParticleAttributeInt( const char *InputLabel );
 FieldIdx_t GetParticleAttributeFltIndex( const char *InputLabel, const Check_t Check );

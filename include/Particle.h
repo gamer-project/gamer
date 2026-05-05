@@ -3,6 +3,8 @@
 
 
 
+#include "Macro.h"
+
 #ifndef PARTICLE
 #  error : ERROR : PARTICLE is not defined !!
 #endif
@@ -36,6 +38,10 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                NPar_Inactive           : Total number of inactive particles in this MPI rank
 //                NPar_Lv                 : Total number of active particles at each level in this MPI rank
 //                Init                    : Initialization methods (1/2/3 --> call function/restart/load from file)
+//                FlagInit                : Assign this refinement flag to all particles for Init=1/3
+//                                          --> Set to PFLAG_MANUAL (defined in Macro.h) to disable this behavior, in which case
+//                                              the refinement flag must be set manually by a particle initializer (for Init=1)
+//                                              or loaded from the PAR_IC file (for Init=3)
 //                ParICFormat             : Data format of the particle initialization file (1=[att][id], 2=[id][att])
 //                ParICMass               : Assign this mass to all particles for Init=3
 //                ParICType               : Assign this type to all particles for Init=3
@@ -54,7 +60,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                GhostSize               : Number of ghost zones required for the interpolation scheme of massive particles
 //                GhostSizeTracer         : Number of ghost zones required for the interpolation scheme of tracer  particles
 //                AttributeFlt            : Pointer arrays to different particle floating-point attributes (Mass, Pos, Vel, ...)
-//                AttributeInt            : Pointer arrays to different particle integer        attributes (Type)
+//                AttributeInt            : Pointer arrays to different particle integer        attributes (Type, Flag)
 //                InactiveParList         : List of inactive particle IDs
 //                Mesh_Attr               : Pointer arrays to different mesh quantities mapped onto tracer particles
 //                Mesh_Attr_Num           : Number of mesh quantities mapped onto tracer particles
@@ -100,8 +106,9 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                Pos                     : Particle position
 //                Vel                     : Particle velocity
 //                Time                    : Particle physical time
-//                Type                    : Particle type (e.g., tracer, generic, dark matter, star)
 //                Acc                     : Particle acceleration (only when STORE_PAR_ACC is on)
+//                Type                    : Particle type (e.g., tracer, generic, dark matter, star)
+//                Flag                    : Particle refinement flag
 //
 // Method      :  Particle_t        : Constructor
 //               ~Particle_t        : Destructor
@@ -122,6 +129,7 @@ struct Particle_t
    long          NPar_Inactive;
    long          NPar_Lv[NLEVEL];
    ParInit_t     Init;
+   int           FlagInit;
    ParICFormat_t ParICFormat;
    double        ParICMass;
    int           ParICType;
@@ -180,6 +188,7 @@ struct Particle_t
    real_par     *AccZ;
 #  endif
    long_par     *Type;
+   long_par     *Flag;
 
 
    //===================================================================================
@@ -196,6 +205,7 @@ struct Particle_t
       NPar_Active_AllRank = -1;
       NPar_AcPlusInac     = -1;
       Init                = PAR_INIT_NONE;
+      FlagInit            = PFLAG_NO;
       ParICFormat         = PAR_IC_FORMAT_NONE;
       ParICMass           = -1.0;
       ParICType           = -1;
@@ -258,12 +268,13 @@ struct Particle_t
       VelY = NULL;
       VelZ = NULL;
       Time = NULL;
-      Type = NULL;
 #     ifdef STORE_PAR_ACC
       AccX = NULL;
       AccY = NULL;
       AccZ = NULL;
 #     endif
+      Type = NULL;
+      Flag = NULL;
 
    } // METHOD : Particle_t
 
@@ -415,6 +426,13 @@ struct Particle_t
       AccZ = AttributeFlt[PAR_ACCZ];
 #     endif
       Type = AttributeInt[PAR_TYPE];
+      Flag = AttributeInt[PAR_FLAG];
+
+//    initialize some arrays
+      for (long p=0; p<NPar_Input; p++)
+      {
+         Flag[p] = PFLAG_TBA;
+      }
 
    } // METHOD : InitRepo
 
@@ -503,6 +521,7 @@ struct Particle_t
             AccZ = AttributeFlt[PAR_ACCZ];
 #           endif
             Type = AttributeInt[PAR_TYPE];
+            Flag = AttributeInt[PAR_FLAG];
          }
 
          ParID = NPar_AcPlusInac;
