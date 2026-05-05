@@ -438,6 +438,8 @@ void Init_TestProb_ELBDM_LSS()
 // set the problem-specific runtime parameters
    SetParameter();
 
+
+// enable problem-specific functions
    Init_ByFile_User_Ptr      = Init_ByFile_ELBDM_LSS;
    Flag_Region_Ptr           = Flag_Region_LSS;
    End_User_Ptr              = End_Region_LSS;
@@ -445,6 +447,7 @@ void Init_TestProb_ELBDM_LSS()
    Output_HDF5_InputTest_Ptr = LoadInputTestProb;
 #  endif
 #  endif // #if ( MODEL == ELBDM )
+
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
