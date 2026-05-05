@@ -12,7 +12,7 @@ static int      LSS_InitMode;          // initialization mode: 1=density-only, 2
 static int      ZoomIn_MaxLvOutside;   // maximum refinement level outside of the zoom-in box
 static int      ZoomIn_NRow;           // number of rows of the zoom-in table
 const  int      ZoomIn_NCol = 7;       // number of columns of the zoom-in table
-static double **ZoomIn_Table;          // arrays of the table of scale factor, length, and center in xyz-axis
+static double **ZoomIn_Table = NULL;   // arrays of the table of scale factor, length, and center in xyz-axis
 // =======================================================================================
 
 
@@ -139,7 +139,6 @@ void SetParameter()
 // (1) load the problem-specific runtime parameters
 // (1-1) read parameters from Input__TestProb
    const char FileName[] = "Input__TestProb";
-   const char FileNameZoomIn[] = "Input__ZoominBox";
    ReadPara_t *ReadPara  = new ReadPara_t;
 
    LoadInputTestProb( LOAD_READPARA, ReadPara, NULL );
@@ -149,6 +148,8 @@ void SetParameter()
    delete ReadPara;
 
 // (1-2) load the zoom-in Lagrangian box volume at different redshifts
+   const char FileNameZoomIn[] = "Input__ZoominBox";
+
    if ( OPT__FLAG_REGION )
    {
 //    general checks
@@ -245,16 +246,16 @@ void SetParameter()
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Flag_Region_LSS
-// Description :  Template for checking if the element (i,j,k) of the input patch is within
+// Description :  Check if the element (i,j,k) of the input patch is within
 //                the regions allowed to be refined
 //
 // Note        :  1. Invoked by Flag_Check() using the function pointer "Flag_Region_Ptr",
 //                   which must be set by a test problem initializer
 //                2. Enabled by the runtime option "OPT__FLAG_REGION"
 //
-// Parameter   :  i,j,k       : Indices of the target element in the patch ptr[0][lv][PID]
-//                lv          : Refinement level of the target patch
-//                PID         : ID of the target patch
+// Parameter   :  i,j,k : Target cell indices in the patch amr->patch[0][lv][PID]
+//                lv    : Refinement level of the target patch
+//                PID   : ID of the target patch
 //
 // Return      :  "true/false"  if the input cell "is/is not" within the region allowed for refinement
 //-------------------------------------------------------------------------------------------------------
@@ -274,20 +275,20 @@ bool Flag_Region_LSS( const int i, const int j, const int k, const int lv, const
    int zoom_idx;
    for (int s=0; s<ZoomIn_NRow; s++)
    {
-      if ( Time[0] <= ZoomIn_Table[ZOOM_A][s] )   continue;
-      zoom_idx = s;
-      break;
+      if ( Time[0] > ZoomIn_Table[ZOOM_A][s] )
+      {
+         zoom_idx = s;
+         break;
+      }
    } // for (int s=0; s<ZoomIn_NRow; s++)
 
 // periodic BC checks
    for (int XYZ=0; XYZ<3; XYZ++)
    {
-
-      const double Pos_i = ( Pos[XYZ] - ZoomIn_Table[ZOOM_CX + XYZ][zoom_idx] >  0.5*amr->BoxSize[XYZ] ) ? Pos[XYZ] - amr->BoxSize[XYZ] :
-                           ( Pos[XYZ] - ZoomIn_Table[ZOOM_CX + XYZ][zoom_idx] < -0.5*amr->BoxSize[XYZ] ) ? Pos[XYZ] + amr->BoxSize[XYZ] : Pos[XYZ];
-      const double dR    = Pos_i - ZoomIn_Table[ZOOM_CX + XYZ][zoom_idx];
-      Within            &= ( abs(dR) < ZoomIn_Table[ZOOM_LX + XYZ][zoom_idx]/2 );
-
+      const double Pos_i = ( Pos[XYZ] - ZoomIn_Table[ZOOM_CX+XYZ][zoom_idx] >  0.5*amr->BoxSize[XYZ] ) ? Pos[XYZ] - amr->BoxSize[XYZ] :
+                           ( Pos[XYZ] - ZoomIn_Table[ZOOM_CX+XYZ][zoom_idx] < -0.5*amr->BoxSize[XYZ] ) ? Pos[XYZ] + amr->BoxSize[XYZ] : Pos[XYZ];
+      const double dR    = Pos_i - ZoomIn_Table[ZOOM_CX+XYZ][zoom_idx];
+      Within            &= ( fabs(dR) < 0.5*ZoomIn_Table[ZOOM_LX+XYZ][zoom_idx] );
    } // for (int XYZ=0; XYZ<3; XYZ++)
 
    return Within;
@@ -448,7 +449,3 @@ void Init_TestProb_ELBDM_LSS()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
 } // FUNCTION : Init_TestProb_ELBDM_LSS
-
-#undef ZOOM_A
-#undef ZOOM_LX
-#undef ZOOM_CX
