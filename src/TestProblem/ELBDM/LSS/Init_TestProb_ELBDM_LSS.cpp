@@ -1,10 +1,18 @@
 #include "GAMER.h"
 
 
+#define ZOOM_A  0  // id of scale factor in ZoomIn_Table
+#define ZOOM_LX 1  // id of LX in ZoomIn_Table
+#define ZOOM_CX 4  // id of CenterX in ZoomIn_Table
+
 
 // problem-specific global variables
 // =======================================================================================
-static int LSS_InitMode;   // initialization mode: 1=density-only, 2=real and imaginary parts or phase and density
+static int      LSS_InitMode;          // initialization mode: 1=density-only, 2=real and imaginary parts or phase and density
+static int      ZoomIn_MaxLvOutside;   // maximum refinement level outside of the zoom-in box
+static int      ZoomIn_NRow;           // number of rows of the zoom-in table
+const  int      ZoomIn_NCol = 7;       // number of columns of the zoom-in table
+static double **ZoomIn_Table = NULL;   // arrays of the table of scale factor, length, and center in xyz-axis
 // =======================================================================================
 
 
@@ -92,9 +100,16 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
 // --> some handy constants (e.g., NoMin_int, Eps_float, ...) are defined in "include/ReadPara.h"
 // --> LOAD_PARA() is defined in "include/TestProb.h"
 // ************************************************************************************************************************
-// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",   &VARIABLE,              DEFAULT,       MIN,              MAX               );
+// LOAD_PARA( load_mode, "KEY_IN_THE_FILE",     &VARIABLE,              DEFAULT,                MIN,              MAX               );
 // ************************************************************************************************************************
-   LOAD_PARA( load_mode, "LSS_InitMode",      &LSS_InitMode,          1,             1,                2                 );
+   LOAD_PARA( load_mode, "LSS_InitMode",        &LSS_InitMode,          1,                      1,                2                 );
+   if ( OPT__FLAG_REGION ) {
+#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
+   LOAD_PARA( load_mode, "ZoomIn_MaxLvOutside", &ZoomIn_MaxLvOutside,   ELBDM_FIRST_WAVE_LEVEL, 0,                MAX_LEVEL         );
+#  else
+   LOAD_PARA( load_mode, "ZoomIn_MaxLvOutside", &ZoomIn_MaxLvOutside,   0,                      0,                MAX_LEVEL         );
+#  endif
+   }
 
 } // FUNCTION : LoadInputTestProb
 
@@ -132,9 +147,51 @@ void SetParameter()
 
    delete ReadPara;
 
-// (1-2) set the default values
+// (1-2) load the zoom-in Lagrangian box volume at different redshifts
+   const char FileNameZoomIn[] = "Input__ZoominBox";
 
-// (1-3) check the runtime parameters
+   if ( OPT__FLAG_REGION )
+   {
+//    general checks
+#     if ( ELBDM_SCHEME == ELBDM_HYBRID )
+      if ( ELBDM_FIRST_WAVE_LEVEL > ZoomIn_MaxLvOutside )
+         Aux_Error( ERROR_INFO, "ELBDM_FIRST_WAVE_LEVEL (%d) > ZoomIn_MaxLvOutside (%d) for a zoom-in simulation !!\n",
+                    ELBDM_FIRST_WAVE_LEVEL, ZoomIn_MaxLvOutside );
+#     endif
+
+      if (  ! Aux_CheckFileExist( FileNameZoomIn )  )
+         Aux_Error( ERROR_INFO, "%s does not exist !!\n", FileNameZoomIn );
+
+//    load the table
+      ZoomIn_NRow = Aux_CountRow( FileNameZoomIn );
+      if ( ZoomIn_NRow <= 0 )    Aux_Error( ERROR_INFO, "ZoomIn_NRow (%d) <= 0 !!\n", ZoomIn_NRow );
+
+      Aux_AllocateArray2D( ZoomIn_Table, ZoomIn_NCol, ZoomIn_NRow );
+
+      const bool RowMajor_No      = false;            // load data into the column-major order
+      const bool AllocMem_No      = false;            // allocate memory for ZoomIn_Table
+      const int  Col[ZoomIn_NCol] = {0,1,2,3,4,5,6};  // target columns: (scale factor, size, center)
+      Aux_LoadTable( ZoomIn_Table[0], FileNameZoomIn, ZoomIn_NCol, Col, RowMajor_No, AllocMem_No );
+
+//    check the loaded table
+      for (int s=1; s<ZoomIn_NRow; s++)
+      {
+         if ( ZoomIn_Table[ZOOM_A][s-1] < ZoomIn_Table[ZOOM_A][s] )
+            Aux_Error( ERROR_INFO, "current a=%13.7e is greater than the previous a=%13.7e. Scale factors are not listed in descending order in %s !!\n",
+                       ZoomIn_Table[ZOOM_A][s], ZoomIn_Table[ZOOM_A][s-1], FileNameZoomIn );
+
+         for (int XYZ=0; XYZ<3; XYZ++) {
+            if ( ZoomIn_Table[ZOOM_LX+XYZ][s-1] > ZoomIn_Table[ZOOM_LX+XYZ][s] )
+               Aux_Error( ERROR_INFO, "zoom-in box at a=%13.7e (L=%13.7e) is larger than that at earlier a=%13.7e (L=%13.7e) along direction %d !!\n",
+                          ZoomIn_Table[ZOOM_A][s-1], ZoomIn_Table[ZOOM_LX+XYZ][s-1],
+                          ZoomIn_Table[ZOOM_A][s  ], ZoomIn_Table[ZOOM_LX+XYZ][s  ], XYZ );
+         } // for (int XYZ=0; XYZ<3; XYZ++)
+      } // for (int s=0; s<ZoomIn_NRow; s++)
+   } // if ( OPT__FLAG_REGION )
+
+// (1-3) set the default values
+
+// (1-4) check the runtime parameters
 
 
 // (2) set the problem-specific derived parameters
@@ -162,6 +219,21 @@ void SetParameter()
       Aux_Message( stdout, "=============================================================================\n" );
       Aux_Message( stdout, "  test problem ID     = %d\n", TESTPROB_ID  );
       Aux_Message( stdout, "  initialization mode = %d\n", LSS_InitMode );
+      if ( OPT__FLAG_REGION )
+      {
+         Aux_Message( stdout, "  Zoom-in parameters:\n" );
+         Aux_Message( stdout, "     ZoomIn_MaxLvOutside = %d\n", ZoomIn_MaxLvOutside );
+         Aux_Message( stdout, "     Table               = %s\n", FileNameZoomIn      );
+         Aux_Message( stdout, "#%22s %23s %23s %23s %23s %23s %23s\n",
+                      "ScaleFactor", "LX (UNIT_L)", "LY (UNIT_L)", "LZ (UNIT_L)",
+                      "CenterX (UNIT_L)", "CenterY (UNIT_L)", "CenterZ (UNIT_L)" );
+
+         for (int i=0; i<ZoomIn_NRow; i++)
+            Aux_Message( stdout, "%23.14e %23.14e %23.14e %23.14e %23.14e %23.14e %23.14e \n",
+                         ZoomIn_Table[ZOOM_A][i],
+                         ZoomIn_Table[ZOOM_LX][i], ZoomIn_Table[ZOOM_LX+1][i], ZoomIn_Table[ZOOM_LX+2][i],
+                         ZoomIn_Table[ZOOM_CX][i], ZoomIn_Table[ZOOM_CX+1][i], ZoomIn_Table[ZOOM_CX+2][i] );
+      }
       Aux_Message( stdout, "=============================================================================\n" );
    }
 
@@ -169,6 +241,59 @@ void SetParameter()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Setting runtime parameters ... done\n" );
 
 } // FUNCTION : SetParameter
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Flag_Region_LSS
+// Description :  Check if the element (i,j,k) of the input patch is within
+//                the regions allowed to be refined
+//
+// Note        :  1. Invoked by Flag_Check() using the function pointer "Flag_Region_Ptr",
+//                   which must be set by a test problem initializer
+//                2. Enabled by the runtime option "OPT__FLAG_REGION"
+//
+// Parameter   :  i,j,k : Target cell indices in the patch amr->patch[0][lv][PID]
+//                lv    : Refinement level of the target patch
+//                PID   : ID of the target patch
+//
+// Return      :  "true/false"  if the input cell "is/is not" within the region allowed for refinement
+//-------------------------------------------------------------------------------------------------------
+bool Flag_Region_LSS( const int i, const int j, const int k, const int lv, const int PID )
+{
+
+   if ( lv < ZoomIn_MaxLvOutside )   return true; // restrict the maximum refinement level outside the zoom-in box
+
+   const double dh     = amr->dh[lv];                                         // cell size
+   const double Pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (i+0.5)*dh,     // x,y,z position
+                           amr->patch[0][lv][PID]->EdgeL[1] + (j+0.5)*dh,
+                           amr->patch[0][lv][PID]->EdgeL[2] + (k+0.5)*dh  };
+
+   bool Within = true;
+
+// get the index of ZoomIn_Table that can collect the zoom-in box's volume and center based on the current simulation time
+   int zoom_idx;
+   for (int s=0; s<ZoomIn_NRow; s++)
+   {
+      if ( Time[0] > ZoomIn_Table[ZOOM_A][s] )
+      {
+         zoom_idx = s;
+         break;
+      }
+   } // for (int s=0; s<ZoomIn_NRow; s++)
+
+// periodic BC checks
+   for (int XYZ=0; XYZ<3; XYZ++)
+   {
+      const double Pos_i = ( Pos[XYZ] - ZoomIn_Table[ZOOM_CX+XYZ][zoom_idx] >  0.5*amr->BoxSize[XYZ] ) ? Pos[XYZ] - amr->BoxSize[XYZ] :
+                           ( Pos[XYZ] - ZoomIn_Table[ZOOM_CX+XYZ][zoom_idx] < -0.5*amr->BoxSize[XYZ] ) ? Pos[XYZ] + amr->BoxSize[XYZ] : Pos[XYZ];
+      const double dR    = Pos_i - ZoomIn_Table[ZOOM_CX+XYZ][zoom_idx];
+      Within            &= ( fabs(dR) < 0.5*ZoomIn_Table[ZOOM_LX+XYZ][zoom_idx] );
+   } // for (int XYZ=0; XYZ<3; XYZ++)
+
+   return Within;
+
+} // FUNCTION : Flag_Region_LSS
 
 
 
@@ -268,6 +393,23 @@ void Init_ByFile_ELBDM_LSS( real fluid_out[], const real fluid_in[], const int n
 #  endif
 
 } // FUNCTION : Init_ByFile_ELBDM_LSS
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  End_Region_LSS
+// Description :  Free memory before terminating the program
+//
+// Note        :  1. Linked to the function pointer "End_User_Ptr" to replace "End_User()"
+//
+// Parameter   :  None
+//-------------------------------------------------------------------------------------------------------
+void End_Region_LSS()
+{
+
+   Aux_DeallocateArray2D( ZoomIn_Table );
+
+} // FUNCTION : End_Region_LSS
 #endif // #if ( MODEL == ELBDM )
 
 
@@ -297,7 +439,10 @@ void Init_TestProb_ELBDM_LSS()
    SetParameter();
 
 
+// enable problem-specific functions
    Init_ByFile_User_Ptr      = Init_ByFile_ELBDM_LSS;
+   Flag_Region_Ptr           = Flag_Region_LSS;
+   End_User_Ptr              = End_Region_LSS;
 #  ifdef SUPPORT_HDF5
    Output_HDF5_InputTest_Ptr = LoadInputTestProb;
 #  endif

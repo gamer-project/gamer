@@ -1,0 +1,4 @@
+# problem-specific runtime parameters
+LSS_InitMode         2       # initialization mode: (1=density-only with constant phase, 2=real and imaginary parts or density and phase) [1]
+ZoomIn_MaxLvOutside  3       # maximum refinement level outside the zoom-in box (for OPT__FLAG_REGION only)
+                             # --> require ELBDM_FIRST_WAVE_LEVEL <= ZoomIn_MaxLvOutside [ELBDM_FIRST_WAVE_LEVEL]
