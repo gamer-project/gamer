@@ -2,6 +2,7 @@ Compilation flags:
 ========================================
 Enable : MODEL=HYDRO, GRAVITY, PARTICLE, FEEDBACK
 Disable: COMOVING
+Optional: SUPPORT_GRACKLE
 
 
 Default setup:
@@ -41,7 +42,9 @@ Note:
    - To compare the default results, use the input files provided in `ForBlastWave/` to run `Hydro/BlastWave` test problem
    - Set `ejected_mass` = 0.0 to only deposit energy
 3. The self-gravity is off (`OPT__SELF_GRAVITY=0`); The compilatin option GRAVITY is enabled only to have a star particle
-4. With `FB_RESOLVED_SNEII_MIN_M_GAS` > 0.0, the feedback may be applied to more than one surrounding cells
+4. To include the radiative cooling effect of gas, one can enable the compilation option SUPPORT_GRACKLE (`--grackle=true`)
+   and turn on `GRACKLE_COOLING` in `Input__Parameter`
+5. With `FB_RESOLVED_SNEII_MIN_M_GAS` > 0.0, the feedback may be applied to more than one surrounding cells
    The feedback radius depends on the enclosed gas mass, `FB_GHOST_SIZE`, and the distance to the coarse-fine boundary
    To test the non-local feedback, one can set the following parameters:
    - In Input__TestProb
@@ -56,6 +59,6 @@ Note:
      - `MAX_LEVEL`                   = 4
      - `OPT__FLAG_USER`              = 1   (to refine grids of level 4)
      - `FLAG_BUFFER_SIZE_MAXM1_LV`   = 0   (to let the particle be on level 3)
-5. Plot scripts are attached:
+6. Plot scripts are attached:
    - `plot_diag.gpt` to plot the density along the diagonal line for the blast wave profile
    - `plot_slice_gas.py` to plot the slices of density, temperature, and metal density and to check the amount of deposited energy and metal
