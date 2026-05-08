@@ -211,16 +211,10 @@ void SetParameter()
    SNBlast_Eint_Bg      = EoS_DensPres2Eint_CPUPtr( SNBlast_Dens_Bg, SNBlast_Pres_Bg, NULL,
                                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ); // assuming EoS requires no passive scalars
 
-   const double ExpEngy = FB_RESOLVED_SNEII_EJECT_ENGY;
-   const double ExpDens = SNBlast_Dens_Bg + FB_RESOLVED_SNEII_EJECT_MASS/CUBE(amr->dh[MAX_LEVEL]);
-   const double ExpEint = SNBlast_Eint_Bg + ExpEngy/CUBE(amr->dh[MAX_LEVEL]);
-   const double ExpPres = EoS_DensEint2Pres_CPUPtr( ExpDens, ExpEint, NULL,
-                                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ); // assuming EoS requires no passive scalars
-
 
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
-   const double End_T_Default    = MAX( 10.0*FB_RESOLVED_SNEII_DELAY_TIME, 10.0*Const_Myr/UNIT_T );
+   const double End_T_Default    = 100.0*Const_Myr/UNIT_T;
    const long   End_Step_Default = __INT_MAX__;
 
    if ( END_STEP < 0 ) {
@@ -246,9 +240,6 @@ void SetParameter()
       Aux_Message( stdout, "  background pressure       = %13.7e\n",                    SNBlast_Pres_Bg          );
       Aux_Message( stdout, "  background energy density = %13.7e\n",                    SNBlast_Eint_Bg          );
       Aux_Message( stdout, "  background metal fraction = %13.7e\n",                    SNBlast_MetalMassFrac_Bg );
-      Aux_Message( stdout, "  SN explosion energy       = %13.7e\n",                    ExpEngy                  );
-      Aux_Message( stdout, "                            = %13.7e erg\n",                ExpEngy*UNIT_E           );
-      Aux_Message( stdout, "  SN explosion pressure     = %13.7e\n",                    ExpPres                  );
       Aux_Message( stdout, "  SN initial mass           = %13.7e\n",                    SNBlast_ParMass          );
       Aux_Message( stdout, "  SN initial center         = (%13.7e, %13.7e, %13.7e)\n",  SNBlast_ParCenter[0],
                                                                                         SNBlast_ParCenter[1],

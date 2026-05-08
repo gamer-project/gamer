@@ -69,7 +69,7 @@ void Par_Init_ByFunction_SNFeedbackBlastWave( const long NPar_ThisRank, const lo
       ParType[p] = PTYPE_STAR;
 
 #     ifdef FEEDBACK
-      AllAttributeFlt[Idx_ParSNIITime][p]  = (real_par)Time[0] + (real_par)FB_RESOLVED_SNEII_DELAY_TIME;
+      AllAttributeInt[Idx_ParSNIINxtE][p]  = 1*FB_SNII_NXTE_SEPDIGIT + 0;
 #     endif
 
       AllAttributeFlt[Idx_ParMetalFrac][p] = (real_par)SNBlast_ParMetalMassFrac;

@@ -942,6 +942,9 @@
 #if ( defined FEEDBACK  &&  FB_GHOST_SIZE > 0 )
 #  define FB_SEP_FLUOUT
 #endif
+#ifdef FEEDBACK
+#  define FB_SNII_NXTE_SEPDIGIT   10000
+#endif
 
 
 // precision for FFT in GRAMFE_FFT and matrix multiplication in GRAMFE_MATMUL

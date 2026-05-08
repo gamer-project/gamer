@@ -381,10 +381,6 @@ extern bool   FB_SNE, FB_RESOLVED_SNEII, FB_USER;
 extern bool   FB_Any;
 extern int    FB_ParaBuf;
 extern double FB_RESOLVED_SNEII_N_PER_MASS;
-extern double FB_RESOLVED_SNEII_DELAY_TIME;
-extern double FB_RESOLVED_SNEII_EJECT_ENGY;
-extern double FB_RESOLVED_SNEII_EJECT_MASS;
-extern double FB_RESOLVED_SNEII_EJECT_METAL;
 extern double FB_RESOLVED_SNEII_MIN_M_GAS;
 extern bool   FB_RESOLVED_SNEII_RECORD;
 #endif

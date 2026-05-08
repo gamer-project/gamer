@@ -80,7 +80,7 @@ void Par_Init_ByFunction_Template( const long NPar_ThisRank, const long NPar_All
 
 #  ifdef FEEDBACK
    if ( FB_RESOLVED_SNEII )
-   for (int p=0; p<NPar_ThisRank; p++)    AllAttributeFlt[Idx_ParSNIITime][p] = INFINITY;
+   for (int p=0; p<NPar_ThisRank; p++)    AllAttributeInt[Idx_ParSNIINxtE][p] = 0;
 #  endif
 
 

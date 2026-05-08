@@ -295,10 +295,6 @@ void Init_Load_Parameter()
    ReadPara->Add( "FB_RESOLVED_SNEII",             &FB_RESOLVED_SNEII,             false,          Useless_bool,  Useless_bool   );
    ReadPara->Add( "FB_USER",                       &FB_USER,                       false,          Useless_bool,  Useless_bool   );
    ReadPara->Add( "FB_RESOLVED_SNEII_N_PER_MASS",  &FB_RESOLVED_SNEII_N_PER_MASS,  1.0e-2,         0.0,           NoMax_double   );
-   ReadPara->Add( "FB_RESOLVED_SNEII_DELAY_TIME",  &FB_RESOLVED_SNEII_DELAY_TIME,  10.0,           0.0,           NoMax_double   );
-   ReadPara->Add( "FB_RESOLVED_SNEII_EJECT_ENGY",  &FB_RESOLVED_SNEII_EJECT_ENGY,  1.0e51,         0.0,           NoMax_double   );
-   ReadPara->Add( "FB_RESOLVED_SNEII_EJECT_MASS",  &FB_RESOLVED_SNEII_EJECT_MASS,  0.0,            0.0,           NoMax_double   );
-   ReadPara->Add( "FB_RESOLVED_SNEII_EJECT_METAL", &FB_RESOLVED_SNEII_EJECT_METAL, 0.0,            0.0,           NoMax_double   );
    ReadPara->Add( "FB_RESOLVED_SNEII_MIN_M_GAS",   &FB_RESOLVED_SNEII_MIN_M_GAS,   0.0,            0.0,           NoMax_double   );
    ReadPara->Add( "FB_RESOLVED_SNEII_RECORD",      &FB_RESOLVED_SNEII_RECORD,      false,          Useless_bool,  Useless_bool   );
 #  endif

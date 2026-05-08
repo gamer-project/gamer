@@ -5,10 +5,6 @@ Parameters described on this page:
 [FB_RESOLVED_SNEII](#FB_RESOLVED_SNEII), &nbsp;
 [FB_USER](#FB_USER) &nbsp;
 [FB_RESOLVED_SNEII_N_PER_MASS](#FB_RESOLVED_SNEII_N_PER_MASS), &nbsp;
-[FB_RESOLVED_SNEII_DELAY_TIME](#FB_RESOLVED_SNEII_DELAY_TIME), &nbsp;
-[FB_RESOLVED_SNEII_EJECT_ENGY](#FB_RESOLVED_SNEII_EJECT_ENGY), &nbsp;
-[FB_RESOLVED_SNEII_EJECT_MASS](#FB_RESOLVED_SNEII_EJECT_MASS), &nbsp;
-[FB_RESOLVED_SNEII_EJECT_METAL](#FB_RESOLVED_SNEII_EJECT_METAL), &nbsp;
 [FB_RESOLVED_SNEII_MIN_M_GAS](#FB_RESOLVED_SNEII_MIN_M_GAS), &nbsp;
 [FB_RESOLVED_SNEII_RECORD](#FB_RESOLVED_SNEII_RECORD), &nbsp;
 
@@ -43,12 +39,17 @@ When a star particle forms, it would be sampled to contain a SNII progenitor sto
 with a probability of star particle mass times
 number of SNII per stellar masses ([[FB_RESOLVED_SNEII_N_PER_MASS | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII_N_PER_MASS ]]).
 The selected particle for supernova will then explode when the age of the star particle reaches
-the fixed explosion delay time ([[FB_RESOLVED_SNEII_DELAY_TIME | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII_DELAY_TIME ]]).
+the given explosion time.
 When the supernova explodes, it will uniformly inject
-the given amount of thermal energy ([[FB_RESOLVED_SNEII_EJECT_ENGY | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII_EJECT_ENGY ]]),
-mass ([[FB_RESOLVED_SNEII_EJECT_MASS | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII_EJECT_MASS ]]), and
-metal ([[FB_RESOLVED_SNEII_EJECT_METAL | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII_EJECT_METAL ]])
+the given amount of thermal energy, mass, and metal
 into fluid of the surrounding cells where the particle is located.
+The explosion delay time of SNeII after star formation, the ejected internal energy of each SNeII explosion,
+the ejected total mass of each SNeII explosion, and the ejected metal mass of each SNeII explosion should be set in
+`FeedbackYieldTable_Resolved_SNeII_*`.
+Note that the input value should always be in units of Myr for explosion time,
+in units of erg for energy, and in nits of Msun for mass.
+The actual amount of the ejected metal will not be greater than the ejected total mass.
+The actual amount of the ejected mass will not be greater than the mass of the particle.
 The number of cells to apply feedback will increase from one until the enclosed mass exceeds the given
 minimum gas mass ([[FB_RESOLVED_SNEII_MIN_M_GAS | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII_MIN_M_GAS ]]), or
 the diameter equals `FB_GHOST_SIZE+1`, or the region crosses the coarse-fine boundary.
@@ -74,42 +75,6 @@ Note that the input value should always be in units of 1/Msun.
     * **Restriction:**
 Only for [[FB_RESOLVED_SNEII | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII ]].
 Its value times the maximum star particle mass cannot be greater than one.
-
-<a name="FB_RESOLVED_SNEII_DELAY_TIME"></a>
-* #### `FB_RESOLVED_SNEII_DELAY_TIME` &ensp; (&#8805;0.0) &ensp; [10.0]
-    * **Description:**
-Explosion delay time of SNeII after star formation.
-Note that the input value should always be in units of Myr.
-    * **Restriction:**
-Only for [[FB_RESOLVED_SNEII | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII ]].
-
-<a name="FB_RESOLVED_SNEII_EJECT_ENGY"></a>
-* #### `FB_RESOLVED_SNEII_EJECT_ENGY` &ensp; (&#8805;0.0) &ensp; [1.0e51]
-    * **Description:**
-Ejected internal energy of each SNeII explosion.
-Note that the input value should always be in units of erg.
-    * **Restriction:**
-Only for [[FB_RESOLVED_SNEII | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII ]].
-
-<a name="FB_RESOLVED_SNEII_EJECT_MASS"></a>
-* #### `FB_RESOLVED_SNEII_EJECT_MASS` &ensp; (&#8805;0.0) &ensp; [0.0]
-    * **Description:**
-Ejected total mass of each SNeII explosion.
-Note that the input value should always be in units of Msun.
-The actual amount of the ejected mass will not be greater than the mass of the particle.
-    * **Restriction:**
-Only for [[FB_RESOLVED_SNEII | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII ]].
-
-<a name="FB_RESOLVED_SNEII_EJECT_METAL"></a>
-* #### `FB_RESOLVED_SNEII_EJECT_METAL` &ensp; (&#8805;0.0) &ensp; [0.0]
-    * **Description:**
-Ejected metal mass of each SNeII explosion.
-Note that the input value should always be in units of Msun.
-The actual amount of the ejected metal will not be greater than
-[[FB_RESOLVED_SNEII_EJECT_MASS | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII_EJECT_MASS ]]
-and the metal mass of the particle.
-    * **Restriction:**
-Only for [[FB_RESOLVED_SNEII | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII ]].
 
 <a name="FB_RESOLVED_SNEII_MIN_M_GAS"></a>
 * #### `FB_RESOLVED_SNEII_MIN_M_GAS` &ensp; (&#8805;0.0) &ensp; [0.0]

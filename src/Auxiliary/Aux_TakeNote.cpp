@@ -1192,14 +1192,6 @@ void Aux_TakeNote()
       if ( FB_RESOLVED_SNEII ) {
       fprintf( Note, "FB_RESOLVED_SNEII_N_PER_MASS   % 14.7e\n",       FB_RESOLVED_SNEII_N_PER_MASS                    );
       fprintf( Note, "                              =% 14.7e /Msun\n", FB_RESOLVED_SNEII_N_PER_MASS*Const_Msun/UNIT_M  );
-      fprintf( Note, "FB_RESOLVED_SNEII_DELAY_TIME   % 14.7e\n",       FB_RESOLVED_SNEII_DELAY_TIME                    );
-      fprintf( Note, "                              =% 14.7e Myr\n",   FB_RESOLVED_SNEII_DELAY_TIME*UNIT_T/Const_Myr   );
-      fprintf( Note, "FB_RESOLVED_SNEII_EJECT_ENGY   % 14.7e\n",       FB_RESOLVED_SNEII_EJECT_ENGY                    );
-      fprintf( Note, "                              =% 14.7e erg\n",   FB_RESOLVED_SNEII_EJECT_ENGY*UNIT_E             );
-      fprintf( Note, "FB_RESOLVED_SNEII_EJECT_MASS   % 14.7e\n",       FB_RESOLVED_SNEII_EJECT_MASS                    );
-      fprintf( Note, "                              =% 14.7e Msun\n",  FB_RESOLVED_SNEII_EJECT_MASS*UNIT_M/Const_Msun  );
-      fprintf( Note, "FB_RESOLVED_SNEII_EJECT_METAL  % 14.7e\n",       FB_RESOLVED_SNEII_EJECT_METAL                   );
-      fprintf( Note, "                              =% 14.7e Msun\n",  FB_RESOLVED_SNEII_EJECT_METAL*UNIT_M/Const_Msun );
       fprintf( Note, "FB_RESOLVED_SNEII_MIN_M_GAS    % 14.7e\n",       FB_RESOLVED_SNEII_MIN_M_GAS                     );
       fprintf( Note, "                              =% 14.7e Msun\n",  FB_RESOLVED_SNEII_MIN_M_GAS*UNIT_M/Const_Msun   );
       fprintf( Note, "FB_RESOLVED_SNEII_RECORD       % d\n",           FB_RESOLVED_SNEII_RECORD                        );

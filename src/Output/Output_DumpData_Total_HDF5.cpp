@@ -286,8 +286,7 @@ Procedure for outputting new variables:
 //                                             GRACKLE_HYDROGEN_MFRAC, OPT__UNFREEZE_GRACKLE,
 //                                             OPT__OUTPUT_GRACKLE_TEMP, OPT__OUTPUT_GRACKLE_MU, OPT__OUTPUT_GRACKLE_TCOOL,
 //                                             DT__GRACKLE_COOLING, OPT__FLAG_COOLING_LEN, FlagTable_CoolingLen
-//                2508 : 2026/05/08 --> output FB_RESOLVED_SNEII, FB_RESOLVED_SNEII_N_PER_MASS, FB_RESOLVED_SNEII_DELAY_TIME,
-//                                             FB_RESOLVED_SNEII_EJECT_ENGY, FB_RESOLVED_SNEII_EJECT_MASS, FB_RESOLVED_SNEII_EJECT_METAL,
+//                2508 : 2026/05/08 --> output FB_RESOLVED_SNEII, FB_RESOLVED_SNEII_N_PER_MASS,
 //                                             FB_RESOLVED_SNEII_MIN_M_GAS, FB_RESOLVED_SNEII_RECORD
 //                                      replace FB_LEVEL by FB_MIN_LEVEL
 //-------------------------------------------------------------------------------------------------------
@@ -2817,10 +2816,6 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.FB_ResolvedSNeII            = FB_RESOLVED_SNEII;
    InputPara.FB_User                     = FB_USER;
    InputPara.FB_ResolvedSNeII_NPerMass   = FB_RESOLVED_SNEII_N_PER_MASS;
-   InputPara.FB_ResolvedSNeII_DelayTime  = FB_RESOLVED_SNEII_DELAY_TIME;
-   InputPara.FB_ResolvedSNeII_EjectEngy  = FB_RESOLVED_SNEII_EJECT_ENGY;
-   InputPara.FB_ResolvedSNeII_EjectMass  = FB_RESOLVED_SNEII_EJECT_MASS;
-   InputPara.FB_ResolvedSNeII_EjectMetal = FB_RESOLVED_SNEII_EJECT_METAL;
    InputPara.FB_ResolvedSNeII_MinMGas    = FB_RESOLVED_SNEII_MIN_M_GAS;
    InputPara.FB_ResolvedSNeII_Record     = FB_RESOLVED_SNEII_RECORD;
 #  endif

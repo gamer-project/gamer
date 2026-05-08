@@ -66,8 +66,8 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
       Aux_Error( ERROR_INFO, "Idx_ParCreTime is undefined !!\n" );
 
 #  ifdef FEEDBACK
-   if ( FB_RESOLVED_SNEII  &&  Idx_ParSNIITime == Idx_Undefined )
-      Aux_Error( ERROR_INFO, "Idx_ParSNIITime is undefined for FB_RESOLVED_SNEII !!\n" );
+   if ( FB_RESOLVED_SNEII  &&  Idx_ParSNIINxtE == Idx_Undefined )
+      Aux_Error( ERROR_INFO, "Idx_ParSNIINxtE is undefined for FB_RESOLVED_SNEII !!\n" );
 #  endif // #ifdef FEEDBACK
 #  endif // #ifdef GAMER_DEBUG
 
@@ -268,25 +268,20 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 //          --> There will be at most one SNII per particle
 //          --> Each star particle has either one SN progenitor (only one explosion) or no SN progenitor (never explodes),
 //              sampled stochastically with a probability P = StarMass*FB_RESOLVED_SNEII_N_PER_MASS
-//          --> The explosion will occur when the age of the star = FB_RESOLVED_SNEII_DELAY_TIME or INFINITY, respectively
+//          --> The explosion will occur when the age of the star = the lifetime of SN progenitor
 //          Ref: Sec. 2.6 of Chia-Yu Hu, et al., 2023, ApJ, 950, 132 (https://doi.org/10.3847/1538-4357/accf9e)
-
-            if ( StarMass*FB_RESOLVED_SNEII_N_PER_MASS > 1.0 )
-               Aux_Error( ERROR_INFO, "StarMass = %14.8e > 1/FB_RESOLVED_SNEII_N_PER_MASS = %14.8e, but there can be only one SN per particle !!\n",
-                          StarMass, 1.0/FB_RESOLVED_SNEII_N_PER_MASS );
 
             const double Min = 0.0;
             const double Max = 1.0;
 
             double Random = FB_RNG->GetValue( TID, Min, Max );
 
-            real_par SNII_Time;
-            if ( (real)Random >= StarMass*FB_RESOLVED_SNEII_N_PER_MASS )
-               SNII_Time = INFINITY;
-            else
-               SNII_Time = TimeNew + FB_RESOLVED_SNEII_DELAY_TIME;
+            const int    flooredN_SNeII = (int)floor(StarMass*FB_RESOLVED_SNEII_N_PER_MASS);
+            const double fractnlN_SNeII = StarMass*FB_RESOLVED_SNEII_N_PER_MASS - flooredN_SNeII;
 
-            NewParAttFlt[NNewPar][Idx_ParSNIITime] = SNII_Time;
+            const long_par SNII_NxtE = ( flooredN_SNeII + (1-( Random >= fractnlN_SNeII )) ) * FB_SNII_NXTE_SEPDIGIT;
+
+            NewParAttInt[NNewPar][Idx_ParSNIINxtE] = SNII_NxtE;
          }
 #        endif // #ifdef FEEDBACK
 
@@ -342,7 +337,6 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
    delete [] NewParID;
 
    } // end of OpenMP parallel region
-
 
 // get the total number of active particles in all MPI ranks
    MPI_Allreduce( &amr->Par->NPar_Active, &amr->Par->NPar_Active_AllRank, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD );

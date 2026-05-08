@@ -59,8 +59,8 @@ void Par_Init_Attribute()
 #  endif
 
 #  ifdef FEEDBACK
-   if ( FB_RESOLVED_SNEII  &&  Idx_ParSNIITime == Idx_Undefined )
-   Idx_ParSNIITime = AddParticleAttributeFlt( "ParSNIITime" );
+   if ( FB_RESOLVED_SNEII  &&  Idx_ParSNIINxtE == Idx_Undefined )
+   Idx_ParSNIINxtE = AddParticleAttributeInt( "ParSNIINxtE" );
 #  endif
 
 

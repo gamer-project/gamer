@@ -6,10 +6,17 @@
 static const int      maxfbDiameter  =   FB_GHOST_SIZE + 1;  // maximum diameter to apply feedback, constraint by ghost zone size
 static       real  ***fbDepositWeighting[FB_GHOST_SIZE + 1]; // array of weighting for each feedback diameter
 
-static const int      nVarRecSNeII   = 23;                   // number of variables to be record for each SNII
-static const int      maxNumRecSNeII = 100;                  // maximum  number of recorded SNeII in each OpenMP thread
+static const int      nVarRecSNeII   = 26;                   // number of variables to be record for each SNII
+static const int      maxNumRecSNeII = 100;                  // maximum number of recorded SNeII in each OpenMP thread
 static       int     *numRecSNeII    = NULL;                 // number of recorded SNeII in each OpenMP thread
 static       double **recordSNeII    = NULL;                 // array of stored variables to record the SNeII info
+
+static       int      minNumSNeIIPerSPar;                    // minimum number of SNeII per stellar particle
+static       int      maxNumSNeIIPerSPar;                    // maximum number of SNeII per stellar particle
+static       double **Table_SNII_Lifetime    = NULL;         // table of the stellar lifetime of each SNII progenitor
+static       double **Table_SNII_EjectEnergy = NULL;         // table of the energy ejected by each SNII event
+static       double **Table_SNII_EjectMass   = NULL;         // table of the mass ejected by each SNII event
+static       double **Table_SNII_EjectMetal  = NULL;         // table of the metal ejected by each SNII event
 
 
 
@@ -77,9 +84,8 @@ static       double **recordSNeII    = NULL;                 // array of stored 
 //                    so there will be at most one SNII per particle
 //                    Whether a star particle has a SNII progenitor and when will it explode
 //                    are already determined when the star formed
-//                    --> Please add the attribute ParSNIITime in the star formation scheme accordingly
+//                    --> Please add the attribute ParSNIINxtE in the star formation scheme accordingly
 //                        (e.g. in StarFormation/SF_CreateStar_AGORA.cpp)
-//                    --> After the explosion, its ParSNIITime will be set as negative so it will not explode again
 //                12. This feedback method assumes the grid resolution is sufficiently high
 //                    to resolve the Sedov phase blast wave caused by the supernova explosion
 //                    --> Thermal energy (along with the mass and metal from SN explosion) is
@@ -180,7 +186,10 @@ int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld,
 #     else
       const real_par par_creTime   =   0.0;
 #     endif
-      const real_par par_SNIITime  =   ParAttFlt[ Idx_ParSNIITime][par_idx];                // SNII explosion time of particle
+      const long_par par_SNIINxtE  =   ParAttInt[ Idx_ParSNIINxtE][par_idx];                // next SNII explosion
+      const long_par par_SNII_idx  =   par_SNIINxtE%FB_SNII_NXTE_SEPDIGIT;                  // SNII explosion index
+      const long_par par_nSNII     =   par_SNIINxtE/FB_SNII_NXTE_SEPDIGIT;                  // total number of SNeII for this particle
+
       const real_par par_metalMass = ( UseMetal ) ?
                                        ParAttFlt[Idx_ParMetalFrac][par_idx]*par_mass : 0.0; // metal fraction of particle
 
@@ -222,8 +231,12 @@ int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld,
 //    2.3 to give feedback, the particle mass has to be positive
       if ( par_mass <= 0.0 )                                      continue;
 
-//    2.4 to give feedback, the particle explosion time has to be in this step;
-      if ( par_SNIITime < TimeOld  ||  par_SNIITime > TimeNew )   continue; // both par_SNIITime == TimeOld and par_SNIITime ==  TimeNew are allowed
+//    2.4 to give feedback, the particle explosion time has to be in this step
+      if ( par_nSNII <= 0 )   continue;
+
+      if ( par_nSNII < minNumSNeIIPerSPar  ||  par_nSNII > maxNumSNeIIPerSPar )
+         Aux_Error( ERROR_INFO, "Particle p=%d (mass = %14.8e) has a number of SNe = %14.8e not in the supported range [%14d, %14d] !!\n",
+                    p, par_mass, par_nSNII, minNumSNeIIPerSPar, maxNumSNeIIPerSPar );
 
 //    2.5 to give feedback, the particle has to be in the range to update fluid
       if ( cell_idx[0] + (maxfbDiameter  -isOnLeftCell[0])/2 <        FB_GHOST_SIZE  ||
@@ -236,15 +249,50 @@ int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld,
 
 //    3. calculate the feedback
 
+      const int par_SNIITableIdx = par_nSNII - minNumSNeIIPerSPar;
+
+      int      SNII_AccumulatedNumber = 0;
+      real_par SNII_AccumulatedEnergy = 0.0;
+      real_par SNII_AccumulatedMass   = 0.0;
+      real_par SNII_AccumulatedMetal  = 0.0;
+      real_par par_SNIITime_first     = TimeOld;
+      real_par par_SNIITime_last      = TimeNew;
+
+      for (int iSNII=par_SNII_idx; iSNII<par_nSNII; iSNII++)
+      {
+         const real_par SNII_LifeTime = Table_SNII_Lifetime[par_SNIITableIdx][iSNII];
+
+//       SNII explosion time
+#        ifdef COMOVING
+         const real_par SNII_Time     = par_creTime +
+                                        SNII_LifeTime / SQR(par_creTime) * sqrt( OMEGA_M0*pow( par_creTime, 3 ) + (1.0-OMEGA_M0)*pow( par_creTime, 6 ) );
+         const real_par SNII_cosmo_a  = SNII_Time;
+#        else
+         const real_par SNII_Time     = par_creTime + SNII_LifeTime;
+         const real_par SNII_cosmo_a  = 1.0;
+#        endif
+
+         if ( SNII_Time > TimeNew )   break;
+//       Note that those with SNIITime < TimeOld, which failed to explode for some reasons, are also included
+
+         if ( iSNII == par_SNII_idx )   par_SNIITime_first = SNII_Time; // record the Time for the first explosion
+         par_SNIITime_last = SNII_Time;                                 // record the Time for the last explosion
+         SNII_AccumulatedEnergy  += Table_SNII_EjectEnergy[par_SNIITableIdx][iSNII] * SQR(SNII_cosmo_a);
+         SNII_AccumulatedMass    += Table_SNII_EjectMass  [par_SNIITableIdx][iSNII];
+         SNII_AccumulatedMetal   += Table_SNII_EjectMetal [par_SNIITableIdx][iSNII];
+         SNII_AccumulatedNumber  += 1;
+      } // for (int iSNII=par_SNII_idx; iSNII<par_nSNII; iSNII++)
+
+      if ( SNII_AccumulatedNumber <= 0 )   continue;
+
 //    3.1 energy feedback
-      real SNII_DepositedEnergy = FB_RESOLVED_SNEII_EJECT_ENGY;
+      real SNII_DepositedEnergy = SNII_AccumulatedEnergy;
 
 //    3.2 mass feedback
-      real SNII_DepositedMass   = MIN( par_mass, FB_RESOLVED_SNEII_EJECT_MASS );                   // particle mass cannot be less than zero
+      real SNII_DepositedMass   = MIN( par_mass, SNII_AccumulatedMass );            // particle mass cannot be less than zero
 
 //    3.3 metal feedback
-      real SNII_DepositedMetal  = MIN( par_metalMass,
-                                       MIN( FB_RESOLVED_SNEII_EJECT_METAL, SNII_DepositedMass ) ); // ejected metal mass cannot be larger than ejected total mass
+      real SNII_DepositedMetal  = MIN( SNII_AccumulatedMetal, SNII_DepositedMass ); // ejected metal mass cannot be larger than ejected total mass
 
 //    3.4 region to apply feedback
       int    fbDiameter  = 0;        // diameter of the region to apply feedback
@@ -336,13 +384,16 @@ int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld,
          int nVar = 0;
          recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = TimeOld;
          recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = TimeNew;
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_SNIITime;
+         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_SNIITime_first;
+         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_SNIITime_last;
+         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = SNII_AccumulatedNumber;
          recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = SNII_DepositedEnergy;
          recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = SNII_DepositedMass;
          recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = SNII_DepositedMetal;
          recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = fbDiameter*dh;
          recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = fbFluidMass;
          recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_idx;
+         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_SNIINxtE;
          recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_mass;
          recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_pos[0];
          recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_pos[1];
@@ -367,10 +418,10 @@ int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld,
 //    5. update
 
 //    5.1 update the particle
-      ParAttFlt[Idx_ParSNIITime ][par_idx] *= -1;                // negative ParSNIITime will be recoreded and indicates the SN has exploded
+      ParAttInt[Idx_ParSNIINxtE ][par_idx] += (long_par)SNII_AccumulatedNumber;
       ParAttFlt[PAR_MASS        ][par_idx] -= (real_par)SNII_DepositedMass;
       if ( UseMetal )
-      ParAttFlt[Idx_ParMetalFrac][par_idx]  = (par_metalMass - (real_par)SNII_DepositedMetal)/ParAttFlt[PAR_MASS][par_idx];
+      ParAttFlt[Idx_ParMetalFrac][par_idx]  = (par_metalMass - MIN(par_metalMass, (real_par)SNII_DepositedMetal))/ParAttFlt[PAR_MASS][par_idx];
 
 //    5.2 update the fluid
       const int fbDiameterMinus1 = fbDiameter-1;
@@ -434,6 +485,21 @@ void FB_End_Resolved_SNeII()
 {
 
 // free memory
+   for (int N_SNeII=minNumSNeIIPerSPar; N_SNeII<maxNumSNeIIPerSPar+1; N_SNeII++)
+   {
+      const int TableIdx = N_SNeII - minNumSNeIIPerSPar;
+      delete [] Table_SNII_Lifetime   [TableIdx];
+      delete [] Table_SNII_EjectEnergy[TableIdx];
+      delete [] Table_SNII_EjectMass  [TableIdx];
+      delete [] Table_SNII_EjectMetal [TableIdx];
+   }
+
+   delete [] Table_SNII_Lifetime;
+   delete [] Table_SNII_EjectEnergy;
+   delete [] Table_SNII_EjectMass;
+   delete [] Table_SNII_EjectMetal;
+
+
    for (int diameter=1; diameter<=maxfbDiameter; diameter++)
       Aux_DeallocateArray3D( fbDepositWeighting[diameter-1] );
 
@@ -464,8 +530,77 @@ void FB_Init_Resolved_SNeII()
 {
 
 // check
-   if ( Idx_ParSNIITime == Idx_Undefined )
-      Aux_Error( ERROR_INFO, "Idx_ParSNIITime is undefined !!\n" );
+   if ( Idx_ParSNIINxtE == Idx_Undefined )
+      Aux_Error( ERROR_INFO, "Idx_ParSNIINxtE is undefined !!\n" );
+
+#  ifdef STAR_FORMATION
+   minNumSNeIIPerSPar = MAX( (int)floor(SF_CREATE_STAR_MIN_STAR_MASS*FB_RESOLVED_SNEII_N_PER_MASS), 1 );
+   maxNumSNeIIPerSPar = MIN( (int) ceil(SF_CREATE_STAR_MIN_STAR_MASS*FB_RESOLVED_SNEII_N_PER_MASS), FB_SNII_NXTE_SEPDIGIT );
+#  else
+   minNumSNeIIPerSPar = 1;
+   maxNumSNeIIPerSPar = 1;
+#  endif
+
+// set the tables
+   Table_SNII_Lifetime    = new double* [maxNumSNeIIPerSPar+1-minNumSNeIIPerSPar];
+   Table_SNII_EjectEnergy = new double* [maxNumSNeIIPerSPar+1-minNumSNeIIPerSPar];
+   Table_SNII_EjectMass   = new double* [maxNumSNeIIPerSPar+1-minNumSNeIIPerSPar];
+   Table_SNII_EjectMetal  = new double* [maxNumSNeIIPerSPar+1-minNumSNeIIPerSPar];
+
+   for (int N_SNeII=minNumSNeIIPerSPar; N_SNeII<maxNumSNeIIPerSPar+1; N_SNeII++)
+   {
+      const int TableIdx = N_SNeII - minNumSNeIIPerSPar;
+
+//    set the filename
+      char FeedbackYieldTable_FileName[MAX_STRING];
+      sprintf( FeedbackYieldTable_FileName, "FeedbackYieldTable_Resolved_SNeII_N%06d", N_SNeII );
+      if ( !Aux_CheckFileExist(FeedbackYieldTable_FileName) )
+         Aux_Error( ERROR_INFO, "Table File \"%s\" does not exist !!\n", FeedbackYieldTable_FileName );
+
+      if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading Feedback Yield Table: \"%s\" ...\n", FeedbackYieldTable_FileName );
+
+      const int Col_Lifetime   [1] = {0};   // target column: lifetime
+      const int Col_EjectMass  [1] = {2};   // target column: eject mass
+      const int Col_EjectMetal [1] = {3};   // target column: eject metal
+      const int Col_EjectEnergy[1] = {4};   // target column: eject energy
+
+      const int NRowLifetime    = Aux_LoadTable( Table_SNII_Lifetime   [TableIdx], FeedbackYieldTable_FileName, 1, Col_Lifetime,    true, true );
+      const int NRowEjectMass   = Aux_LoadTable( Table_SNII_EjectMass  [TableIdx], FeedbackYieldTable_FileName, 1, Col_EjectMass,   true, true );
+      const int NRowEjectMetal  = Aux_LoadTable( Table_SNII_EjectMetal [TableIdx], FeedbackYieldTable_FileName, 1, Col_EjectMetal,  true, true );
+      const int NRowEjectEnergy = Aux_LoadTable( Table_SNII_EjectEnergy[TableIdx], FeedbackYieldTable_FileName, 1, Col_EjectEnergy, true, true );
+
+//    check the number of rows are consistent
+      if ( NRowLifetime != N_SNeII  ||  NRowEjectMass != N_SNeII  ||  NRowEjectMetal != N_SNeII  ||  NRowEjectEnergy != N_SNeII )
+         Aux_Error( ERROR_INFO, "The number of rows (%d, %d, %d, %d) of the table \"%s\" is not equal to the expected number of SNeII (%d) !!\n",
+                                NRowLifetime, NRowEjectMass, NRowEjectMetal, NRowEjectEnergy, FeedbackYieldTable_FileName, N_SNeII );
+
+      for (int i=0; i<N_SNeII; i++)
+      {
+//       check the properties of values in the table
+         if ( i >= 1  &&  Table_SNII_Lifetime[TableIdx][i] < Table_SNII_Lifetime[TableIdx][i-1] )
+            Aux_Error( ERROR_INFO, "Lifetimes in table \"%s\" are not monotonically increasing !!\n", FeedbackYieldTable_FileName );
+
+         if ( Table_SNII_Lifetime[TableIdx][i] < 0.0 )
+            Aux_Error( ERROR_INFO, "Lifetimes in table \"%s\" have negative value !!\n", FeedbackYieldTable_FileName );
+
+         if ( Table_SNII_EjectMass[TableIdx][i] < 0.0 )
+            Aux_Error( ERROR_INFO, "Ejected masses in table \"%s\" have negative value !!\n", FeedbackYieldTable_FileName );
+
+         if ( Table_SNII_EjectMetal[TableIdx][i] < 0.0 )
+            Aux_Error( ERROR_INFO, "Ejected matals in table \"%s\" have negative value !!\n", FeedbackYieldTable_FileName );
+
+         if ( Table_SNII_EjectEnergy[TableIdx][i] < 0.0 )
+            Aux_Error( ERROR_INFO, "Ejected energy in table \"%s\" have negative value !!\n", FeedbackYieldTable_FileName );
+
+//       convert to the code units
+         Table_SNII_Lifetime   [TableIdx][i] *= Const_Myr  / UNIT_T; // Myr  --> code units
+         Table_SNII_EjectMass  [TableIdx][i] *= Const_Msun / UNIT_M; // Msun --> code units
+         Table_SNII_EjectMetal [TableIdx][i] *= Const_Msun / UNIT_M; // Msun --> code units
+         Table_SNII_EjectEnergy[TableIdx][i] /= UNIT_E;              // erg  --> code units
+      }
+
+      if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading Feedback Yield Table: \"%s\" ... done\n", FeedbackYieldTable_FileName );
+   } // for (int N_SNeII=minNumSNeIIPerSPar; N_SNeII<maxNumSNeIIPerSPar+1; N_SNeII++)
 
 
 // set the corresponding weighting distribution for each case of feedback region diameter
@@ -557,10 +692,10 @@ void Record_FB_Resolved_SNeII( const int lv )
          {
             fprintf( File, "#%5s%6s%6s%16s%16s",
                      "Rank", "TID", "lv", "TimeOld", "TimeNew" );
+            fprintf( File, "%16s%16s%16s%16s%16s%16s%16s%16s",
+                     "SNII_Time_first", "SNII_Time_last", "SNII_AccumNum", "SNII_Energy", "SNII_Mass", "SNII_Metal", "FB_Diameter", "FB_Flu_Mass" );
             fprintf( File, "%16s%16s%16s%16s%16s%16s",
-                     "SNII_Time", "SNII_Energy", "SNII_Mass", "SNII_Metal", "FB_Diameter", "FB_Flu_Mass" );
-            fprintf( File, "%16s%16s%16s%16s%16s",
-                     "Par_ID", "Par_Mass", "Par_PosX", "Par_PosY", "Par_PosZ" );
+                     "Par_ID", "Par_NxtE", "Par_Mass", "Par_PosX", "Par_PosY", "Par_PosZ" );
             fprintf( File, "%16s%16s%16s%16s",
                      "Par_VelX", "Par_VelY", "Par_VelZ", "Par_MetalMass" );
             fprintf( File, "%16s%16s%16s%16s%16s%16s\n",
