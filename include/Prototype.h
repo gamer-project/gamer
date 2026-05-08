@@ -41,7 +41,7 @@ int  Aux_CountRow( const char *FileName );
 void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double r_max_input, const double dr_min,
                          const bool LogBin, const double LogBinRatio, const bool RemoveEmpty, const long TVarBitIdx[],
                          const int NProf, const int MinLv, const int MaxLv, const PatchType_t PatchType,
-                         const double PrepTimeIn );
+                         const double PrepTimeIn, const bool GetSigma );
 void Aux_FindExtrema( Extrema_t *Extrema, const ExtremaMode_t Mode, const int MinLv, const int MaxLv,
                       const PatchType_t PatchType );
 void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double Center_ref[], const double MaxR, const double MinWD,
@@ -288,6 +288,23 @@ template <typename T> void  Mis_Idx1D2Idx3D( const int Size[], const T Idx1D, in
 template <typename U, typename T> U Mis_BinarySearch( const T Array[], U Min, U Max, const T Key );
 template <typename U, typename T> U Mis_BinarySearch_Real( const T Array[], U Min, U Max, const T Key );
 template <typename T> T     Mis_InterpolateFromTable( const int N, const T Table_x[], const T Table_y[], const T x );
+template <typename T> T     Mis_InterpolateFrom2DTable( const int N_x, const int N_y,
+                                                        const T Table_x[], const T Table_y[], const T Table_f[],
+                                                        const T x, const T y );
+template <typename T> T     Mis_InterpolateFrom3DTable( const int N_x, const int N_y, const int N_z,
+                                                        const T Table_x[], const T Table_y[], const T Table_z[], const T Table_f[],
+                                                        const T x, const T y, const T z );
+template <typename T> T     Mis_InterpolateFrom_nDim_Table( const int nDim, const int N_x[], T const* const* Table_x, const T Table_f[], const T x[], const int OutsideMethod );
+template <typename T> T     Mis_InterpolateFrom_nDim_Table_withIdxL( const int nDim, const int N_x[], T const* const* Table_x, const T Table_f[], const T x[], const int IdxL[] );
+template <typename T> T     Mis_LinearInterpolate( const T x, const T xL, const T xR, const T f_xL, const T f_xR );
+template <typename T> T     Mis_BilinearInterpolate( const T x, const T y,
+                                                     const T xL, const T xR, const T yL, const T yR,
+                                                     const T f_xL_yL, const T f_xR_yL, const T f_xL_yR, const T f_xR_yR );
+template <typename T> T     Mis_TrilinearInterpolate( const T x, const T y, const T z,
+                                                      const T xL, const T xR, const T yL, const T yR, const T zL, const T zR,
+                                                      const T f_xL_yL_zL, const T f_xR_yL_zL, const T f_xL_yR_zL, const T f_xR_yR_zL,
+                                                      const T f_xL_yL_zR, const T f_xR_yL_zR, const T f_xL_yR_zR, const T f_xR_yR_zR );
+template <typename T> T     Mis_MultilinearInterpolate( const int nDim, const T x[], const T xL[], const T xR[], const T fC[] );
 template <typename T> ulong Mis_Idx3D2Idx1D( const int Size[], const int Idx3D[] );
 template <typename U, typename T> void  Mis_Heapsort( const U N, T Array[], U IdxTable[] );
 template <typename T> int   Mis_Matching_char( const int N, const T Array[], const int M, const T Key[], char Match[] );
@@ -368,7 +385,8 @@ void FindFather( const int lv, const int Mode );
 void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc );
 bool Flag_Check( const int lv, const int PID, const int i, const int j, const int k, const real dv,
                  const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real MagCC[][PS1][PS1][PS1],
-                 const real Vel[][PS1][PS1][PS1], const real Pres[][PS1][PS1],  const real Lrtz[][PS1][PS1],
+                 const real Vel[][PS1][PS1][PS1], const real Pres[][PS1][PS1], const real Lrtz[][PS1][PS1],
+                 const real LCool[][PS1][PS1],
                  const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
                  const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff,
                  const real *Interf_Var, const real Spectral_Cond );
@@ -557,7 +575,7 @@ void MHD_AllocateElectricArray( const int lv );
 void MHD_Aux_Check_InterfaceB( const char *comment );
 void MHD_Aux_Check_DivergenceB( const bool Verbose, const char *comment );
 void MHD_FixUp_Electric( const int lv );
-void MHD_SameInterfaceB( const int lv );
+void MHD_SameInterfaceB( const int lv, const int FluSg, const int MagSg );
 void MHD_CopyPatchInterfaceBField( const int lv, const int PID, const int SibID, const int MagSg );
 void MHD_BoundaryCondition_Outflow( real **Array, const int BC_Face, const int NVar, const int GhostSize,
                                     const int ArraySizeX, const int ArraySizeY, const int ArraySizeZ,
@@ -608,6 +626,7 @@ bool   ELBDM_Flag_Interference( const int i, const int j, const int k, const rea
 real   ELBDM_UnwrapPhase( const real Phase_Ref, const real Phase_Wrapped );
 real   ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 void   ELBDM_RemoveMotionCM();
+void   ELBDM_RescaleMassError();
 #ifdef SUPPORT_FFTW
 void   CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg );
 #endif
@@ -814,16 +833,18 @@ void CPU_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)     
 
 // Grackle
 #ifdef SUPPORT_GRACKLE
-void Grackle_Init();
-void Grackle_Init_FieldData();
-void Grackle_End();
-void Init_MemAllocate_Grackle( const int Che_NPG );
-void End_MemFree_Grackle();
-void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const int *PID0_List );
-void Grackle_Close( const int lv, const int SaveSg, const real_che h_Che_Array[], const int NPG, const int *PID0_List );
-void Grackle_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
-                        const bool OverlapMPI, const bool Overlap_Sync );
-void CPU_GrackleSolver( grackle_field_data *Che_FieldData, code_units Che_Units, const int NPatchGroup, const real dt );
+void   Grackle_Init();
+void   Grackle_Init_FieldData();
+void   Grackle_End();
+void   Init_MemAllocate_Grackle( const int Che_NPG );
+void   End_MemFree_Grackle();
+void   Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const int *PID0_List );
+void   Grackle_Close( const int lv, const int SaveSg, const real_che h_Che_Array[], const int NPG, const int *PID0_List );
+void   Grackle_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, const double dt, const int SaveSg,
+                          const bool OverlapMPI, const bool Overlap_Sync );
+void   CPU_GrackleSolver( grackle_field_data *Che_FieldData, code_units Che_Units, const int NPatchGroup, const real dt );
+void   Grackle_Calculate( real Out[], const GrackleFieldBIdx_t TFields, const int lv, const int NPG, const int *PID0_List );
+double Grackle_GetTimeStep_CoolingTime( const int lv );
 #endif // #ifdef SUPPORT_GRACKLE
 
 

@@ -6,23 +6,26 @@
 // global variables for accessing h_Che_Array[]
 // --> also used by Grackle_Prepare.cpp and Grackle_Close.cpp
 // --> they are not declared in "Global.h" simply because they are only used by a few Grackle routines
-int Che_NField   = NULL_INT;
-int CheIdx_Dens  = Idx_Undefined;
-int CheIdx_sEint = Idx_Undefined;
-int CheIdx_Ent   = Idx_Undefined;
-int CheIdx_e     = Idx_Undefined;
-int CheIdx_HI    = Idx_Undefined;
-int CheIdx_HII   = Idx_Undefined;
-int CheIdx_HeI   = Idx_Undefined;
-int CheIdx_HeII  = Idx_Undefined;
-int CheIdx_HeIII = Idx_Undefined;
-int CheIdx_HM    = Idx_Undefined;
-int CheIdx_H2I   = Idx_Undefined;
-int CheIdx_H2II  = Idx_Undefined;
-int CheIdx_DI    = Idx_Undefined;
-int CheIdx_DII   = Idx_Undefined;
-int CheIdx_HDI   = Idx_Undefined;
-int CheIdx_Metal = Idx_Undefined;
+int Che_NField          = NULL_INT;
+int CheIdx_Dens         = Idx_Undefined;
+int CheIdx_sEint        = Idx_Undefined;
+int CheIdx_Ent          = Idx_Undefined;
+int CheIdx_e            = Idx_Undefined;
+int CheIdx_HI           = Idx_Undefined;
+int CheIdx_HII          = Idx_Undefined;
+int CheIdx_HeI          = Idx_Undefined;
+int CheIdx_HeII         = Idx_Undefined;
+int CheIdx_HeIII        = Idx_Undefined;
+int CheIdx_HM           = Idx_Undefined;
+int CheIdx_H2I          = Idx_Undefined;
+int CheIdx_H2II         = Idx_Undefined;
+int CheIdx_DI           = Idx_Undefined;
+int CheIdx_DII          = Idx_Undefined;
+int CheIdx_HDI          = Idx_Undefined;
+int CheIdx_Metal        = Idx_Undefined;
+int CheIdx_vHeatingRate = Idx_Undefined;
+int CheIdx_sHeatingRate = Idx_Undefined;
+int CheIdx_tempFloor    = Idx_Undefined;
 
 
 
@@ -75,6 +78,15 @@ void Init_MemAllocate_Grackle( const int Che_NPG )
 
    if ( GRACKLE_METAL )
    CheIdx_Metal = Che_NField ++;
+
+   if ( GRACKLE_USE_V_HEATING_RATE )
+   CheIdx_vHeatingRate = Che_NField ++;
+
+   if ( GRACKLE_USE_S_HEATING_RATE )
+   CheIdx_sHeatingRate = Che_NField ++;
+
+   if ( GRACKLE_USE_TEMP_FLOOR == 2 )
+   CheIdx_tempFloor    = Che_NField ++;
 
 
 // allocate the input/output array for the Grackle solver

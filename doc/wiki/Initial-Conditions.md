@@ -18,13 +18,13 @@ initial condition (IC) and GAMER initialization:
 <a name="IC-Func-Grids"></a>
 ### Grids
 
-Set [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=1 and edit the following grid IC function:
+Set [[OPT__INIT | [Runtime-Parameters]-Initial-Conditions#OPT__INIT]]=1 and edit the following grid IC function:
 
-* [[TESTPROB_ID | Runtime Parameters:-General#TESTPROB_ID]]=0:
+* [[TESTPROB_ID | [Runtime-Parameters]-General#TESTPROB_ID]]=0:
 edit the function `Init_Function_User()` in
 `src/Model_Hydro/Hydro_Init_ByFunction_AssignData.cpp`.
 
-* [[TESTPROB_ID | Runtime Parameters:-General#TESTPROB_ID]]&#8800;0:
+* [[TESTPROB_ID | [Runtime-Parameters]-General#TESTPROB_ID]]&#8800;0:
 edit a problem-specific initialization function
 (usually named `SetGridIC()`). See also [[Adding New Simulations]].
 
@@ -93,13 +93,13 @@ See also
 [[ Add Problem-specific Grid Fields and Particle Attributes | Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes ]] for adding user-defined fluid fields.
 
 > [!CAUTION]
-> When enabling [[--openmp | Installation:-Option-List#--openmp]],
+> When enabling [[--openmp | [Installation]-Option-List#--openmp]],
 the grid IC function must be **thread-safe** since it will be invoked by
 multiple threads in parallel.
 >
 > One can disable OpenMP parallelization
 for the grid IC function by adopting
-[[OPT__INIT_GRID_WITH_OMP| Runtime-Parameters:-MPI-and-OpenMP#OPT__INIT_GRID_WITH_OMP]]=0.
+[[OPT__INIT_GRID_WITH_OMP| [Runtime-Parameters]-MPI-and-OpenMP#OPT__INIT_GRID_WITH_OMP]]=0.
 
 
 <a name="IC-Func-BField"></a>
@@ -111,14 +111,14 @@ divergence-free magnetic field automatically. We describe the two approaches
 separately in the following.
 
 To set the magnetic field directly,
-set [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=1 and [[OPT__INIT_BFIELD_BYVECPOT | Runtime-Parameters:-Initial-Conditions#OPT__INIT_BFIELD_BYVECPOT]]=0.
+set [[OPT__INIT | [Runtime-Parameters]-Initial-Conditions#OPT__INIT]]=1 and [[OPT__INIT_BFIELD_BYVECPOT | [Runtime-Parameters]-Initial-Conditions#OPT__INIT_BFIELD_BYVECPOT]]=0.
 Edit the following magnetic field IC function:
 
-* [[TESTPROB_ID | Runtime Parameters:-General#TESTPROB_ID]]=0:
+* [[TESTPROB_ID | [Runtime-Parameters]-General#TESTPROB_ID]]=0:
 edit the function `Init_Function_BField_User()` in
 `src/Model_Hydro/Hydro_Init_ByFunction_AssignData.cpp`.
 
-* [[TESTPROB_ID | Runtime Parameters:-General#TESTPROB_ID]]&#8800;0:
+* [[TESTPROB_ID | [Runtime-Parameters]-General#TESTPROB_ID]]&#8800;0:
 edit a problem-specific initialization function
 (usually named `SetBFieldIC()`). See also [[Adding New Simulations]].
 
@@ -136,7 +136,7 @@ variable `magnetic[]` at a given location `x/y/z` and time `Time`, where
 accessible by the keys `MAGX`, `MAGY`, `MAGZ`.
 
 To set the vector potential,
-set [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=1 and [[OPT__INIT_BFIELD_BYVECPOT | Runtime-Parameters:-Initial-Conditions#OPT__INIT_BFIELD_BYVECPOT]]=2.
+set [[OPT__INIT | [Runtime-Parameters]-Initial-Conditions#OPT__INIT]]=1 and [[OPT__INIT_BFIELD_BYVECPOT | [Runtime-Parameters]-Initial-Conditions#OPT__INIT_BFIELD_BYVECPOT]]=2.
 Then edit a problem-specific initialization function linked to the function pointer
 `Init_BField_ByVecPot_User_Ptr`, which has the following prototype:
 
@@ -151,26 +151,26 @@ It should return the vector potential at a given location `x/y/z` and time `Time
 **Example: `Init_BField_ByVecPot_User_Template()` in `src/Model_Hydro/MHD_Init_BField_ByVecPot_Function.cpp`.**
 
 > [!CAUTION]
-> When enabling [[--openmp | Installation:-Option-List#--openmp]],
+> When enabling [[--openmp | [Installation]-Option-List#--openmp]],
 the magnetic field or the vector potential IC function must be **thread-safe** since it will be invoked by
 multiple threads in parallel.
 >
 > One can disable OpenMP parallelization
 for the magnetic field IC function by adopting
-[[OPT__INIT_GRID_WITH_OMP| Runtime-Parameters:-MPI-and-OpenMP#OPT__INIT_GRID_WITH_OMP]]=0.
+[[OPT__INIT_GRID_WITH_OMP| [Runtime-Parameters]-MPI-and-OpenMP#OPT__INIT_GRID_WITH_OMP]]=0.
 
 
 <a name="IC-Func-Particles"></a>
 ### Particles
 
-Set [[PAR_INIT | Runtime-Parameters:-Particles#PAR_INIT]]=1 and edit the following
+Set [[PAR_INIT | [Runtime-Parameters]-Particles#PAR_INIT]]=1 and edit the following
 particle IC function:
 
-* [[TESTPROB_ID | Runtime Parameters:-General#TESTPROB_ID]]=0:
+* [[TESTPROB_ID | [Runtime-Parameters]-General#TESTPROB_ID]]=0:
 edit the function `Par_Init_ByFunction()` in
 `src/Particle/Par_Init_ByFunction.cpp`.
 
-* [[TESTPROB_ID | Runtime Parameters:-General#TESTPROB_ID]]&#8800;0:
+* [[TESTPROB_ID | [Runtime-Parameters]-General#TESTPROB_ID]]&#8800;0:
 edit a problem-specific initialization function (e.g.,
 `Par_Init_ByFunction_Merger()` in
 `src/TestProblem/Hydro/ClusterMerger_vs_Flash/Par_Init_ByFunction_Merger.cpp`).
@@ -199,7 +199,7 @@ particles**.
 The built-in particle types (defined in `include/Macro.h`) include
 `PTYPE_TRACER`, `PTYPE_GENERIC_MASSIVE`, `PTYPE_DARK_MATTER`, and `PTYPE_STAR`.
 For `PTYPE_TRACER`, one must also enable the compilation option
-[[--tracer | Installation:-Option-List#--tracer]].
+[[--tracer | [Installation]-Option-List#--tracer]].
 
 The following example shows `Par_Init_ByFunction()` in
 `src/Particle/Par_Init_ByFunction.cpp`:
@@ -290,41 +290,305 @@ See also
 [[ Add Problem-specific Grid Fields and Particle Attributes | Adding-New-Simulations#v-add-problem-specific-grid-fields-and-particle-attributes ]] for adding user-defined particle attributes.
 
 GAMER has a built-in routine for constructing a particle initial condition in equilibrium
-(e.g., Plummer, NFW, tabular). Please refer to the test problem `Hydro/ParticleEquilibriumIC`
-for its usage.
+(e.g., Plummer, NFW, tabular). Here are the steps to use it:
+
+1. Step 1: Include the header in the test problem source code file:
+
+   ```C++
+   #include "Par_EquilibriumIC.h"
+   ```
+
+2. Step 2: Declare a constructor object of class `Par_EquilibriumIC` inside `Par_Init_ByFunction()`:
+
+   ```C++
+   Par_EquilibriumIC( const char* Cloud_Type );
+   ```
+
+   - Parameters
+
+      - `Cloud_Type` : `char*`
+
+        Type of this particle cloud.
+        Supported types include "Table", "Plummer", "NFW", "Burkert", "Jaffe", "Hernquist", and "Einasto".
+
+   - Example Usage
+
+      `Par_EquilibriumIC Cloud_Constructor( "Plummer" );` creates a cloud of the Plummer model.
+
+3. Step 3: Set the parameters for the constructor object by calling the following functions:
+
+   a. Set the parameters related to the construction of the particle cloud
+
+     ```C++
+     setParticleParameters( const long ParNum, const double MaxR, const int NBin, const int RSeed )
+     ```
+
+     - Parameters
+
+        - `ParNum` : `long`
+
+          Number of particles of the particle cloud.
+
+        - `MaxR` : `double`
+
+          Maximum radius for the scattered particles in this cloud.
+
+        - `NBin` : `int`
+
+          Number of bins of radial profiles inside the `MaxR`.
+
+        - `RSeed` : `int`
+
+          Random seed for setting the particle position and velocity.
+
+     - Notes
+
+        - These parameters are mandatory in all cases.
+
+     - Example Usage
+
+       `Cloud_Constructor.setParticleParameters( 1000000, 10.0, 1024, 123 );` sets the number of particles as `1000000`, the maximum radius as `10.0` (in code units), the number of bins as `1024`, and the random seed as `123`.
+
+   b. Set the filename for the density profile table
+
+     ```C++
+     setDensProfTableFilename( const char* DensProfTableFilename )
+     ```
+
+     - Parameters
+
+       - `DensProfTableFilename` : `char*`
+
+         Filename for the density profile table.
+
+     - Notes
+
+       - Required only for `Cloud_Type == "Table"`; useless for other types.
+
+     - Example Usage
+
+       `Cloud_Constructor.setDensProfTableFilename( "MyDensityProfile" );` sets the density profile to follow the table "MyDensityProfile".
+
+   c. Set the parameters for the analytical models
+
+     ```C++
+     setModelParameters( const double Rho0, const double R0 )
+     ```
+
+     - Parameters
+
+       - `Rho0` : `double`
+
+         Scale density in the density profile.
+
+       - `R0` : `double`
+
+         Scale radius in the density profile.
+
+     - Notes
+
+       - The scale density and scale radius are general but may have different names in different models. Please check the definition in `AnalyticalDensProf_*` in `src/Particle/Par_EquilibriumIC.cpp` for details.
+
+       - Required only for `Cloud_Type != "Table"`; useless for `Cloud_Type == "Table"`.
+
+     - Example Usage:
+
+       `Cloud_Constructor.setModelParameters( 1.0, 0.1 );` sets the scale density as `1.0` and scale radius as `0.1` in code units.
+
+   d. Set the power factor in the Einasto model
+
+     ```C++
+     setEinastoPowerFactor( const double EinastoPowerFactor )
+     ```
+
+     - Parameters
+
+       - `EinastoPowerFactor` : `double`
+
+         The power factor in the Einasto density profile.
+
+     - Notes
+
+       - Required only for `Cloud_Type == "Einasto"`; useless for other types.
+
+       - Please refer to `AnalyticalDensProf_Einasto()` in `src/Particle/Par_EquilibriumIC.cpp` for details.
+
+     - Example Usage
+
+       `Cloud_Constructor.setEinastoPowerFactor( 1.0 );` sets the Einasto power factor to `1.0`.
+
+   e. Set the parameters to add the external potential during the construction
+
+     ```C++
+     setExtPotParameters( const int AddingExternalPotential_Analytical, const int Addin gExternalPotential_Table, const char* ExtPotTableFilename )
+     ```
+
+     - Parameters
+
+       - `AddingExternalPotential_Analytical` : `int`
+
+         Whether adding an analytical external potential (0=off, 1=on);
+         Currently, the users must define their analytical functions hard-coded in
+
+         ```C++
+         double UserDefAnalaytical_ExtPot( const double r )
+         ```
+         inside `src/Particle/Par_EquilibriumIC.cpp`.
+
+       - `AddingExternalPotential_Table` : `int`
+
+         Whether adding an external potential from a table (0=off, 1=on);
+         The users have to provide an external potenial table as a runtime input file.
+
+       - `ExtPotTableFilename` : `char*`
+
+         Filename for the external potential table. Required for `AddingExternalPotential_Table`; useless for `AddingExternalPotential_Analytical`.
+
+     - Notes
+
+       - This is optional. The default is off if this function is not called.
+
+       - This functionality is different and independent from adding external potential in the simulations.
+
+       - `AddingExternalPotential_Analytical` and `AddingExternalPotential_Table` cannot be both on.
+
+     - Example Usage
+
+       `Cloud_Constructor.setExtPotParameters( 0, 1, "MyExtPotTable" );` sets the external potential from the table "MyExtPotTable".
+
+   f. Set the cloud center and bulk velocity in the simulations
+
+     ```C++
+     setCenterAndBulkVel( const double Center_X, const double Center_Y, const double Center_Z, const double BulkVel_X, const double BulkVel_Y, const double BulkVel_Z )
+     ```
+
+     - Parameters
+
+       - `Center_X` : `double`
+
+          x coordinate of the center
+
+       - `Center_Y` : `double`
+
+          y coordinate of the center
+
+       - `Center_Z` : `double`
+
+          z coordinate of the center
+
+       - `BulkVel_X` : `double`
+
+          x component of the bulk velocity
+
+       - `BulkVel_Y` : `double`
+
+          y component of the bulk velocity
+
+       - `BulkVel_Z` : `double`
+
+          z component of the bulk velocity
+
+     - Notes
+
+       - Required for `constructParticles()`, as this only shifts the positions and velocities of all the particles and does not affect the internal distribution.
+
+     - Example Usage
+
+       `Cloud_Constructor.setCenterAndBulkVel( 1.0, 2.0, 3.0, 0.1, 0.2, 0.3 );` sets the cloud to be located at `[1.0, 2.0, 3.0]` and with a bulk velocity of `[0.1, 0.2, 0.3]` in code units.
+
+4. Step 4: Call the construction function to calculate the radial profiles and distribution function for this cloud:
+
+   ```C++
+   constructDistribution()
+   ```
+
+   - Notes
+
+      - One must have called `set*()` in advance (as in the previous step).
+
+      - This should be called before `constructParticles()`.
+
+   - Example Usage
+
+      `Cloud_Constructor.constructDistribution();`
+
+5. Step 5: Call the following function to set the particle initial conditions for a cloud that is in an equilibrium state:
+
+   ```C++
+   constructParticles( real_par *Mass_AllRank, real_par *Pos_AllRank[3], real_par *Vel_AllRank[3], const long Par_Idx0 )
+   ```
+
+   - Parameters
+
+      - `Mass_AllRank` : `real_par*`
+
+         An array of all particles' masses to be set.
+
+      - `Pos_AllRank` : `real_par*`
+
+         An array of all particles' position vectors to be set.
+
+      - `Vel_AllRank` : `real_par*`
+
+         An array of all particles' velocity vectors to be set.
+
+      - `Par_Idx0` : `long`
+
+         Starting index of particles in this cloud.
+
+   - Notes
+
+      - One must have called `constructDistribution()` in advance (as in the previous step).
+
+      - Note that this function is not parallelized currently. One can only call it by the root rank and scatter the constructed particles to other ranks later.
+
+   - Example Usage
+
+      `Cloud_Constructor.constructParticles( ParMass, ParPosX, ParVelX, (long)0 );` sets the particles' attributes in `Par_Init_ByFunction()` in a serial case.
+      For parallelized simulations, please see `src/TestProblem/Hydro/ParticleEquilibriumIC/Par_Init_ByFunction_ParEqmIC.cpp` for instructions on how to construct all particles by one rank and scatter them out.
+
+6. After the particles are constructed, one can access the object’s following attributes to check the numerical results:
+
+   - `Cloud_Constructor.TotCloudMass` is the total enclosed mass within the maximum radius of this cloud.
+
+   - `Cloud_Constructor.ParticleMass` is the particle mass as the total enclosed mass divided by the number of particles in the cloud.
+
+   - `Cloud_Constructor.TotCloudMassError` is the total enclosed mass relative error compared to the analytical expectation.
+
+For pratical examples, please refer to the test problems `Hydro/ParticleEquilibriumIC` and `ELBDM/HaloMerger`.
 
 
 ## Setting IC from Files
 
 <a name="IC-File-Grids"></a>
 ### Grids
-Set [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=3 to load the grid initial condition from a
+Set [[OPT__INIT | [Runtime-Parameters]-Initial-Conditions#OPT__INIT]]=3 to load the grid initial condition from a
 uniform-mesh binary file named **`UM_IC`**. This file will be used to provide the
 initial grid data of the entire computational domain _fully refined_
-to the AMR level [[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LEVEL]]
-(but see also [[OPT__UM_IC_DOWNGRADE | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_DOWNGRADE]] and
-[[OPT__UM_IC_REFINE | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_REFINE]] described below). The dimension of
+to the AMR level [[OPT__UM_IC_LEVEL | [Runtime-Parameters]-Initial-Conditions#OPT__UM_IC_LEVEL]]
+(but see also [[OPT__UM_IC_DOWNGRADE | [Runtime-Parameters]-Initial-Conditions#OPT__UM_IC_DOWNGRADE]] and
+[[OPT__UM_IC_REFINE | [Runtime-Parameters]-Initial-Conditions#OPT__UM_IC_REFINE]] described below). The dimension of
 this uniform-mesh file (assuming a row-major array) can be either
-`[NFIELD][NZ][NY][NX]` (for [[OPT__UM_IC_FORMAT | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_FORMAT]]=1) or
-`[NZ][NY][NX][NFIELD]` (for [[OPT__UM_IC_FORMAT | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_FORMAT]]=2), where
-`NFIELD` is the number of fluid fields set by [[OPT__UM_IC_NVAR | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_NVAR]]
+`[NFIELD][NZ][NY][NX]` (for [[OPT__UM_IC_FORMAT | [Runtime-Parameters]-Initial-Conditions#OPT__UM_IC_FORMAT]]=1) or
+`[NZ][NY][NX][NFIELD]` (for [[OPT__UM_IC_FORMAT | [Runtime-Parameters]-Initial-Conditions#OPT__UM_IC_FORMAT]]=2), where
+`NFIELD` is the number of fluid fields set by [[OPT__UM_IC_NVAR | [Runtime-Parameters]-Initial-Conditions#OPT__UM_IC_NVAR]]
 and `NX/Y/Z` are the grid dimensions (i.e., number of cells) along the x/y/z
 directions, respectively. Since `UM_IC` should store the initial condition of
-a uniform mesh corresponding to level [[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LEVEL]],
+a uniform mesh corresponding to level [[OPT__UM_IC_LEVEL | [Runtime-Parameters]-Initial-Conditions#OPT__UM_IC_LEVEL]],
 one must ensure that
 
-* `NX`=[[NX0_TOT_X | Runtime-Parameters:-General#NX0_TOT_X]]*2^[[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LEVEL]]
-* `NY`=[[NX0_TOT_Y | Runtime-Parameters:-General#NX0_TOT_Y]]*2^[[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LEVEL]]
-* `NZ`=[[NX0_TOT_Z | Runtime-Parameters:-General#NX0_TOT_Z]]*2^[[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LEVEL]]
+* `NX`=[[NX0_TOT_X | [Runtime-Parameters]-General#NX0_TOT_X]]*2^[[OPT__UM_IC_LEVEL | [Runtime-Parameters]-Initial-Conditions#OPT__UM_IC_LEVEL]]
+* `NY`=[[NX0_TOT_Y | [Runtime-Parameters]-General#NX0_TOT_Y]]*2^[[OPT__UM_IC_LEVEL | [Runtime-Parameters]-Initial-Conditions#OPT__UM_IC_LEVEL]]
+* `NZ`=[[NX0_TOT_Z | [Runtime-Parameters]-General#NX0_TOT_Z]]*2^[[OPT__UM_IC_LEVEL | [Runtime-Parameters]-Initial-Conditions#OPT__UM_IC_LEVEL]]
 
 For example, for `NX0_TOT_X=16`, `NX0_TOT_Y=32`, `NX0_TOT_Z=48`, `OPT__UM_IC_LEVEL=1`, and
 `NCOMP_PASSIVE_USER=0`, `UM_IC` should have the dimension
 `[5+0][48*2^1][32*2^1][16*2^1]=[5][96][64][32]`
-for [[OPT__UM_IC_FORMAT | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_FORMAT]]=1 or
-`[96][64][32][5]` for [[OPT__UM_IC_FORMAT | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_FORMAT]]=2,
+for [[OPT__UM_IC_FORMAT | [Runtime-Parameters]-Initial-Conditions#OPT__UM_IC_FORMAT]]=1 or
+`[96][64][32][5]` for [[OPT__UM_IC_FORMAT | [Runtime-Parameters]-Initial-Conditions#OPT__UM_IC_FORMAT]]=2,
 assuming the array indices are row-major. The following C++ example
 sets up a static and uniform gas with mass density of 1
-and total energy density of 2 (assuming [[OPT__UM_IC_FORMAT | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_FORMAT]]=1).
+and total energy density of 2 (assuming [[OPT__UM_IC_FORMAT | [Runtime-Parameters]-Initial-Conditions#OPT__UM_IC_FORMAT]]=1).
 
 ```c++
 #include <cstdio>
@@ -358,13 +622,13 @@ int main()
 ```
 
 The entire computational domain will always be first fully refined to the
-AMR level [[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LEVEL]]. After that, if
-[[OPT__UM_IC_DOWNGRADE | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_DOWNGRADE]] is enabled, the initialization
-routine will remove grids on levels 1 &#8212; [[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LEVEL]]
+AMR level [[OPT__UM_IC_LEVEL | [Runtime-Parameters]-Initial-Conditions#OPT__UM_IC_LEVEL]]. After that, if
+[[OPT__UM_IC_DOWNGRADE | [Runtime-Parameters]-Initial-Conditions#OPT__UM_IC_DOWNGRADE]] is enabled, the initialization
+routine will remove grids on levels 1 &#8212; [[OPT__UM_IC_LEVEL | [Runtime-Parameters]-Initial-Conditions#OPT__UM_IC_LEVEL]]
 that do not satisfy any refinement criterion.
-Also, if [[OPT__UM_IC_REFINE | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_REFINE]] is enabled, the initialization
-routine will add grids to levels [[OPT__UM_IC_LEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LEVEL]]+1 &#8212;
-[[ MAX_LEVEL | Runtime-Parameters:-Refinement#MAX_LEVEL]]
+Also, if [[OPT__UM_IC_REFINE | [Runtime-Parameters]-Initial-Conditions#OPT__UM_IC_REFINE]] is enabled, the initialization
+routine will add grids to levels [[OPT__UM_IC_LEVEL | [Runtime-Parameters]-Initial-Conditions#OPT__UM_IC_LEVEL]]+1 &#8212;
+[[ MAX_LEVEL | [Runtime-Parameters]-Refinement#MAX_LEVEL]]
 in the regions satisfying any refinement criterion.
 
 A custom routine for assigning data to each cell from the loaded data
@@ -372,22 +636,22 @@ can be specified using the function pointer
 [[Init_ByFile_User_Ptr | Adding-New-Simulations#initial-condition-from-files---grids]].
 
 The initial condition file `UM_IC` can be loaded concurrently by multiple
-MPI processes using [[OPT__UM_IC_LOAD_NRANK | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_LOAD_NRANK]].
+MPI processes using [[OPT__UM_IC_LOAD_NRANK | [Runtime-Parameters]-Initial-Conditions#OPT__UM_IC_LOAD_NRANK]].
 
-To support AMR data in `UM_IC`, set [[OPT__UM_IC_NLEVEL | Runtime-Parameters:-Initial-Conditions#OPT__UM_IC_NLEVEL]]>1 and
+To support AMR data in `UM_IC`, set [[OPT__UM_IC_NLEVEL | [Runtime-Parameters]-Initial-Conditions#OPT__UM_IC_NLEVEL]]>1 and
 edit the input table `Input__UM_IC_RefineRegion`. See `example/input/Input__UM_IC_RefineRegion`
 and the example code `tool/inits/create_UM_IC.cpp` for details.
 
 > [!CAUTION]
-> [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=3 does not fully support
+> [[OPT__INIT | [Runtime-Parameters]-Initial-Conditions#OPT__INIT]]=3 does not fully support
 user-defined passively advected scalars (i.e.,
-[[--passive | Installation:-Option-List#--passive]]>0) yet.
+[[--passive | [Installation]-Option-List#--passive]]>0) yet.
 [[Ask developers for help | Home#need-helps]] if needed.
 
 
 <a name="IC-File-BField"></a>
 ### Magnetic Field
-Set [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=1 and [[OPT__INIT_BFIELD_BYVECPOT | Runtime-Parameters:-Initial-Conditions#OPT__INIT_BFIELD_BYVECPOT]]=1
+Set [[OPT__INIT | [Runtime-Parameters]-Initial-Conditions#OPT__INIT]]=1 and [[OPT__INIT_BFIELD_BYVECPOT | [Runtime-Parameters]-Initial-Conditions#OPT__INIT_BFIELD_BYVECPOT]]=1
 to load the vector potential IC from a uniform-mesh HDF5 file
 named **`B_IC`**. The built-in routines will construct a corresponding
 divergence-free magnetic field automatically.
@@ -398,26 +662,26 @@ divergence-free magnetic field automatically.
 <a name="IC-File-Particles"></a>
 ### Particles
 
-Set [[PAR_INIT | Runtime-Parameters:-Particles#PAR_INIT]]=3 to load the particle initial condition
+Set [[PAR_INIT | [Runtime-Parameters]-Particles#PAR_INIT]]=3 to load the particle initial condition
 from a binary file named **`PAR_IC`**. The dimension of this file (assuming a
 row-major array) can be either
-`[NUM_ATTRIBUTE][NUM_PARTICLE]` (for [[PAR_IC_FORMAT | Runtime-Parameters:-Particles#PAR_IC_FORMAT]]=1) or
-`[NUM_PARTICLE][NUM_ATTRIBUTE]` (for [[PAR_IC_FORMAT | Runtime-Parameters:-Particles#PAR_IC_FORMAT]]=2), where
+`[NUM_ATTRIBUTE][NUM_PARTICLE]` (for [[PAR_IC_FORMAT | [Runtime-Parameters]-Particles#PAR_IC_FORMAT]]=1) or
+`[NUM_PARTICLE][NUM_ATTRIBUTE]` (for [[PAR_IC_FORMAT | [Runtime-Parameters]-Particles#PAR_IC_FORMAT]]=2), where
 `NUM_ATTRIBUTE` is the number of particle attributes to be loaded
 and `NUM_PARTICLE` is the total number of particles
-(i.e., [[PAR_NPAR | Runtime-Parameters:-Particles#PAR_NPAR]]).
+(i.e., [[PAR_NPAR | [Runtime-Parameters]-Particles#PAR_NPAR]]).
 By default, `NUM_ATTRIBUTE` is equal to
-`7` + [[--par_attribute_flt | Installation:-Option-List#--par_attribute_flt]] + [[--par_attribute_int | Installation:-Option-List#--par_attribute_int]],
+`7` + [[--par_attribute_flt | [Installation]-Option-List#--par_attribute_flt]] + [[--par_attribute_int | [Installation]-Option-List#--par_attribute_int]],
 corresponding to particle mass, position x/y/z, velocity x/y/z,
 type, and user-specified attributes (and in exactly this order).
-One can also use [[PAR_IC_MASS | Runtime-Parameters:-Particles#PAR_IC_MASS]] / [[PAR_IC_TYPE | Runtime-Parameters:-Particles#PAR_IC_TYPE]]
+One can also use [[PAR_IC_MASS | [Runtime-Parameters]-Particles#PAR_IC_MASS]] / [[PAR_IC_TYPE | [Runtime-Parameters]-Particles#PAR_IC_TYPE]]
 to assign the same particle mass / type to all particles,
 in which case the file `PAR_IC` should not store particle mass / type.
 
 The following C++ example constructs a particle initial condition
-file with 1000 particles assuming [[PAR_IC_MASS | Runtime-Parameters:-Particles#PAR_IC_MASS]]<0,
-[[PAR_IC_TYPE | Runtime-Parameters:-Particles#PAR_IC_TYPE]]<0,
-and [[PAR_IC_FORMAT | Runtime-Parameters:-Particles#PAR_IC_FORMAT]]=1.
+file with 1000 particles assuming [[PAR_IC_MASS | [Runtime-Parameters]-Particles#PAR_IC_MASS]]<0,
+[[PAR_IC_TYPE | [Runtime-Parameters]-Particles#PAR_IC_TYPE]]<0,
+and [[PAR_IC_FORMAT | [Runtime-Parameters]-Particles#PAR_IC_FORMAT]]=1.
 
 ```c++
 #include <cstdio>
@@ -491,14 +755,14 @@ int main()
 The built-in particle types (defined in `include/Macro.h`) include
 `PTYPE_TRACER=0`, `PTYPE_GENERIC_MASSIVE=1`, `PTYPE_DARK_MATTER=2`, and `PTYPE_STAR=3`.
 For `PTYPE_TRACER`, one must also enable the compilation option
-[[--tracer | Installation:-Option-List#--tracer]].
+[[--tracer | [Installation]-Option-List#--tracer]].
 
 A custom routine for assigning particle attributes from the loaded data
 can be specified using the function pointer
 [[Par_Init_ByFile_User_Ptr | Adding-New-Simulations#initial-condition-from-files---particles]].
 
-Note that it is not required to adopt [[OPT__INIT | Runtime-Parameters:-Initial-Conditions#OPT__INIT]]=3 and
-[[PAR_INIT | Runtime-Parameters:-Particles#PAR_INIT]]=3 at the same time. In other words,
+Note that it is not required to adopt [[OPT__INIT | [Runtime-Parameters]-Initial-Conditions#OPT__INIT]]=3 and
+[[PAR_INIT | [Runtime-Parameters]-Particles#PAR_INIT]]=3 at the same time. In other words,
 it is perfectly fine to set the grid initial condition from an analytical
 function and load the particle initial condition from a file (and vice versa).
 
@@ -506,19 +770,19 @@ function and load the particle initial condition from a file (and vice versa).
 ## Compilation Options
 
 Related options:
-[[--passive | Installation:-Option-List#--passive]], &nbsp;
-[[--par_attribute_flt | Installation:-Option-List#--par_attribute_flt]] &nbsp;
-[[--par_attribute_int | Installation:-Option-List#--par_attribute_int]] &nbsp;
+[[--passive | [Installation]-Option-List#--passive]], &nbsp;
+[[--par_attribute_flt | [Installation]-Option-List#--par_attribute_flt]] &nbsp;
+[[--par_attribute_int | [Installation]-Option-List#--par_attribute_int]] &nbsp;
 
 
 ## Runtime Parameters
-[[Runtime parameters: Initial Conditions | Runtime-Parameters:-Initial-Conditions]]
+[[ [Runtime parameters] Initial Conditions | [Runtime-Parameters]-Initial-Conditions ]]
 
 Other related parameters:
-[[PAR_INIT | Runtime-Parameters:-Particles#PAR_INIT]], &nbsp;
-[[PAR_IC_FORMAT | Runtime-Parameters:-Particles#PAR_IC_FORMAT]], &nbsp;
-[[PAR_IC_MASS | Runtime-Parameters:-Particles#PAR_IC_MASS]], &nbsp;
-[[OPT__INIT_GRID_WITH_OMP | Runtime-Parameters:-MPI-and-OpenMP#OPT__INIT_GRID_WITH_OMP]] &nbsp;
+[[PAR_INIT | [Runtime-Parameters]-Particles#PAR_INIT]], &nbsp;
+[[PAR_IC_FORMAT | [Runtime-Parameters]-Particles#PAR_IC_FORMAT]], &nbsp;
+[[PAR_IC_MASS | [Runtime-Parameters]-Particles#PAR_IC_MASS]], &nbsp;
+[[OPT__INIT_GRID_WITH_OMP | [Runtime-Parameters]-MPI-and-OpenMP#OPT__INIT_GRID_WITH_OMP]] &nbsp;
 
 
 ## Remarks
@@ -527,5 +791,5 @@ Other related parameters:
 <br>
 
 ## Links
-* [[Main page of Runtime Parameters | Runtime Parameters]]
-* [[Adding New Simulations | Adding New Simulations]]
+* [[Main page of Runtime Parameters | Runtime-Parameters]]
+* [[Adding New Simulations | Adding-New-Simulations]]

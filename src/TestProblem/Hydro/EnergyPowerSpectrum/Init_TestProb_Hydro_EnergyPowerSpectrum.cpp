@@ -109,7 +109,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
 // ************************************************************************************************************************
    LOAD_PARA( load_mode, "Energy_GauWidth",   &Energy_GauWidth,          0.01,       Eps_double,       NoMax_double      );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

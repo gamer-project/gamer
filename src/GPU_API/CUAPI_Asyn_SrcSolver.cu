@@ -40,7 +40,7 @@ extern cudaStream_t *Stream;
 //                **  will return before the execution in GPU is complete  **
 //                ***********************************************************
 //
-// Note        :  1. Use streams for the asychronous memory copy between device and host
+// Note        :  1. Use streams for the asynchronous memory copy between device and host
 //                2. Prefix "d" : for pointers pointing to the "Device" memory space
 //                   Prefix "h" : for pointers pointing to the "Host"   memory space
 //

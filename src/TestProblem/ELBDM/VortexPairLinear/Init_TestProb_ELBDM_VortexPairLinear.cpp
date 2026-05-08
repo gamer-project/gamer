@@ -116,7 +116,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "VorPairLin_ky",        &VorPairLin_ky,         1.0,           1.0,              NoMax_double      );
    LOAD_PARA( load_mode, "VorPairLin_kz",        &VorPairLin_kz,         1.0,           1.0,              NoMax_double      );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 
