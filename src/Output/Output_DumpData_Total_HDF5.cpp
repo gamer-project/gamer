@@ -79,7 +79,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2507)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2508)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -286,6 +286,9 @@ Procedure for outputting new variables:
 //                                             GRACKLE_HYDROGEN_MFRAC, OPT__UNFREEZE_GRACKLE,
 //                                             OPT__OUTPUT_GRACKLE_TEMP, OPT__OUTPUT_GRACKLE_MU, OPT__OUTPUT_GRACKLE_TCOOL,
 //                                             DT__GRACKLE_COOLING, OPT__FLAG_COOLING_LEN, FlagTable_CoolingLen
+//                2508 : 2026/05/08 --> output FB_RESOLVED_SNEII, FB_RESOLVED_SNEII_N_PER_MASS,
+//                                             FB_RESOLVED_SNEII_MIN_M_GAS, FB_RESOLVED_SNEII_RECORD
+//                                      replace FB_LEVEL by FB_MIN_LEVEL
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1752,7 +1755,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2507;
+   KeyInfo.FormatVersion        = 2508;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2807,10 +2810,14 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 
 // feedback
 #  ifdef FEEDBACK
-   InputPara.FB_Level                = FB_LEVEL;
-   InputPara.FB_RSeed                = FB_RSEED;
-   InputPara.FB_SNe                  = FB_SNE;
-   InputPara.FB_User                 = FB_USER;
+   InputPara.FB_MinLevel                 = FB_MIN_LEVEL;
+   InputPara.FB_RSeed                    = FB_RSEED;
+   InputPara.FB_SNe                      = FB_SNE;
+   InputPara.FB_ResolvedSNeII            = FB_RESOLVED_SNEII;
+   InputPara.FB_User                     = FB_USER;
+   InputPara.FB_ResolvedSNeII_NPerMass   = FB_RESOLVED_SNEII_N_PER_MASS;
+   InputPara.FB_ResolvedSNeII_MinMGas    = FB_RESOLVED_SNEII_MIN_M_GAS;
+   InputPara.FB_ResolvedSNeII_Record     = FB_RESOLVED_SNEII_RECORD;
 #  endif
 
 // cosmic ray
@@ -3899,10 +3906,18 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 
 // feedback
 #  ifdef FEEDBACK
-   H5Tinsert( H5_TypeID, "FB_Level",                HOFFSET(InputPara_t,FB_Level               ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "FB_RSeed",                HOFFSET(InputPara_t,FB_RSeed               ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "FB_SNe",                  HOFFSET(InputPara_t,FB_SNe                 ), H5T_NATIVE_INT              );
-   H5Tinsert( H5_TypeID, "FB_User",                 HOFFSET(InputPara_t,FB_User                ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "FB_MinLevel",                 HOFFSET(InputPara_t,FB_MinLevel                 ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "FB_RSeed",                    HOFFSET(InputPara_t,FB_RSeed                    ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "FB_SNe",                      HOFFSET(InputPara_t,FB_SNe                      ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "FB_ResolvedSNeII",            HOFFSET(InputPara_t,FB_ResolvedSNeII            ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "FB_User",                     HOFFSET(InputPara_t,FB_User                     ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "FB_ResolvedSNeII_NPerMass",   HOFFSET(InputPara_t,FB_ResolvedSNeII_NPerMass   ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "FB_ResolvedSNeII_DelayTime",  HOFFSET(InputPara_t,FB_ResolvedSNeII_DelayTime  ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "FB_ResolvedSNeII_EjectEngy",  HOFFSET(InputPara_t,FB_ResolvedSNeII_EjectEngy  ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "FB_ResolvedSNeII_EjectMass",  HOFFSET(InputPara_t,FB_ResolvedSNeII_EjectMass  ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "FB_ResolvedSNeII_EjectMetal", HOFFSET(InputPara_t,FB_ResolvedSNeII_EjectMetal ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "FB_ResolvedSNeII_MinMGas",    HOFFSET(InputPara_t,FB_ResolvedSNeII_MinMGas    ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "FB_ResolvedSNeII_Record",     HOFFSET(InputPara_t,FB_ResolvedSNeII_Record     ), H5T_NATIVE_INT     );
 #  endif
 
 // cosmic ray

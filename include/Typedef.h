@@ -94,6 +94,7 @@ const TestProbID_t
    TESTPROB_HYDRO_CR_SHOCKTUBE                 =   21,
    TESTPROB_HYDRO_CR_DIFFUSION                 =   23,
    TESTPROB_HYDRO_GRACKLE_TEST                 =   24,
+   TESTPROB_HYDRO_SN_FEEDBACK_BLAST_WAVE       =   26,
    TESTPROB_HYDRO_BARRED_POT                   =   51,
    TESTPROB_HYDRO_JET_ICM_WALL                 =   52,
    TESTPROB_HYDRO_CDM_LSS                      =  100,

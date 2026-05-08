@@ -32,7 +32,10 @@ extern double Plummer_FB_Like;
 //                   ALL particles, including those too far away to affect the target region
 //                5. No need to worry about the periodic boundary condition here
 //                   --> Particle positions have been remapped in FB_AdvanceDt()
-//                6. CoarseFine[] records the coarse-fine boundaries along the 26 sibling directions, defined as
+//                6. Non-local feedback should not cross the boundary to either a coarser or a finer level
+//                   to provide complete feedback and avoid inconsistency between levels
+//                   --> Use CoarseFine[] and NonLeaf[] to check whether the cells are in the coarse patches and non-leaf patches, respectively.
+//                   (a) CoarseFine[] records the coarse-fine boundaries along the 26 sibling directions, defined as
 //                            24  13  25
 //                            15  05  17     z+1 plane
 //                            22  12  23
@@ -44,6 +47,26 @@ extern double Plummer_FB_Like;
 //                   ^        20  11  21
 //                   |        14  04  16     z-1 plane
 //                   --->x    18  10  19
+//                   (b) NonLeaf[] records the non-leaf patches among the 64 local patches, defined as
+//                          62  46  47  63
+//                          51  30  31  55
+//                          50  28  29  54   z=3 plane
+//                          60  44  45  61
+//
+//                          37  22  23  39
+//                          11  05  07  15
+//                          10  03  06  14   z=2 plane
+//                          33  18  19  35
+//
+//                          36  20  21  38
+//                          09  02  04  13
+//                          08  00  01  12   z=1 plane
+//                          32  16  17  34
+//
+//                   y      58  42  43  59
+//                   ^      49  25  27  53
+//                   |      48  24  26  52   z=0 plane
+//                   --->x  56  40  41  57
 //                7. Invoked by FB_AdvanceDt()
 //                8. Must NOT change particle positions
 //                9. Since Fluid[] stores both the input and output data, the order of particles may affect the
@@ -73,6 +96,7 @@ extern double Plummer_FB_Like;
 //                             --> Right edge is given by EdgeL[]+FB_NXT*dh
 //                dh         : Cell size of Fluid[]
 //                CoarseFine : Coarse-fine boundaries along the 26 sibling directions
+//                NonLeaf    : Non-leaf patches among the 64 patches of the Fluid array
 //                TID        : Thread ID
 //                RNG        : Random number generator
 //                             --> Random number can be obtained by "RNG->GetValue( TID, Min, Max )",
@@ -82,7 +106,7 @@ extern double Plummer_FB_Like;
 //-------------------------------------------------------------------------------------------------------
 int FB_Plummer( const int lv, const double TimeNew, const double TimeOld, const double dt,
                 const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL], long_par *ParAttInt[PAR_NATT_INT_TOTAL],
-                real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
+                real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[], bool NonLeaf[],
                 const int TID, RandomNumber_t *RNG )
 {
 
@@ -107,14 +131,20 @@ int FB_Plummer( const int lv, const double TimeNew, const double TimeOld, const 
       Aux_Error( ERROR_INFO, "FB_GHOST_SIZE (%d) < MaxR (%d) for Plummer_FB_Acc !!\n", FB_GHOST_SIZE, MaxR );
 
    bool CheckCF = false;
-#  if ( FB_GHOST_SIZE > 0 )
    for (int s=0; s<26; s++) {
       if ( CoarseFine[s] ) {
          CheckCF = true;
          break;
       }
    }
-#  endif
+
+   bool CheckNL = false;
+   for (int nbp=0; nbp<64; nbp++) {
+      if ( NonLeaf[nbp] ) {
+         CheckNL = true;
+         break;
+      }
+   }
 
    for (int t=0; t<NPar; t++)
    {
@@ -123,6 +153,26 @@ int FB_Plummer( const int lv, const double TimeNew, const double TimeOld, const 
 
       int idx[3];
       for (int d=0; d<3; d++)    idx[d] = (int)floor( ( xyz[d] - EdgeL[d] )*_dh );
+
+
+#     ifdef GAMER_DEBUG
+//    sanity check for the particle
+//    particle should not be in the coarse patch
+      if ( CheckCF )
+      {
+         const int CellPatchRelPos = FB_Aux_CellPatchRelPos( idx );
+         if ( CellPatchRelPos != -1  &&  CoarseFine[CellPatchRelPos] )
+            Aux_Error( ERROR_INFO, "The particle in the feedback routine should not be in the coarse patch !!\n" );
+      }
+
+//    particle should not be in the non-leaf patch
+      if ( CheckNL )
+      {
+         const int PatchLocalID = FB_Aux_PatchLocalID( idx );
+         if ( NonLeaf[PatchLocalID] )
+            Aux_Error( ERROR_INFO, "The particle in the feedback routine should not be in the non-leaf patch !!\n" );
+      }
+#     endif // #ifdef GAMER_DEBUG
 
 
 //    skip particles too close to coarse-fine boundaries
@@ -140,6 +190,21 @@ int FB_Plummer( const int lv, const double TimeNew, const double TimeOld, const 
             if ( CellPatchRelPos != -1  &&  CoarseFine[CellPatchRelPos] )  Skip = true;   // cell is in a coarse patch
 
          }}}
+      }
+
+      if ( CheckNL )
+      {
+//       only need to check the 27 extreme cases
+         int ijk[3];
+         for (int dk=-1; dk<=1; dk++)  {  if ( Skip )  break;  ijk[2] = idx[2] + dk*MaxR;
+         for (int dj=-1; dj<=1; dj++)  {  if ( Skip )  break;  ijk[1] = idx[1] + dj*MaxR;
+         for (int di=-1; di<=1; di++)  {  if ( Skip )  break;  ijk[0] = idx[0] + di*MaxR;
+
+            const int PatchLocalID = FB_Aux_PatchLocalID( ijk );
+            if ( NonLeaf[PatchLocalID] )  Skip = true;   // cell is in a non-leaf patch
+
+         }}}
+
       }
 
 
