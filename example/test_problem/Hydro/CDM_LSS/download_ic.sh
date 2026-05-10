@@ -1,11 +1,12 @@
 #!/bin/bash
+# produced by MUSIC with GAMER plug-in (MUSIC commit 6248d133ab20aa84c9cb3b843a8e021a3119be70)
 
 LOCAL_FILENAME="PAR_IC"
-FILE_ID="677c92db999605c485c8de69"
-FILE_SHA256="46e27324953bcd7b4eecaecd395b6cf6ccbf662e65a12c935b3823abd8119be3"
+FILE_ID="69e9d7524a11f772ce54c597"
+FILE_SHA256="1c06000f3ae1d889434ec4d2f28fcb502dd73493eb28e0ebca2e54d072128afb"
 
 # 1. download
-curl -L https://hub.yt/api/v1/item/${FILE_ID}/download -o ${LOCAL_FILENAME}
+curl -L https://girder.hub.yt/api/v1/file/${FILE_ID}/download -o ${LOCAL_FILENAME}
 
 # 2. compare sha256sum
 ! [ `sha256sum ${LOCAL_FILENAME} | awk '{print $1}'` = "${FILE_SHA256}" ] && echo "File broken: ${LOCAL_FILENAME}"
