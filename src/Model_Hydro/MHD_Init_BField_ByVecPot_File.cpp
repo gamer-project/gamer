@@ -18,6 +18,9 @@ void VecPot_ReadField( hid_t mag_file_id, const int ibegin, const int jbegin,
                        const int kend, double Ax[], double Ay[], double Az[] );
 #endif
 
+
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  MHD_Init_BField_ByVecPot_File
 // Description :  Use the input uniform-mesh array stored in the file "B_Filename"
@@ -26,12 +29,15 @@ void VecPot_ReadField( hid_t mag_file_id, const int ibegin, const int jbegin,
 //
 // Note        :
 //
-// Parameter   :  B_lv         : Target AMR level
+// Parameter   :  B_lv : Target AMR level
 //
 // Return      :  amr->patch->magnetic
 //-------------------------------------------------------------------------------------------------------
 void MHD_Init_BField_ByVecPot_File( const int B_lv )
 {
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading the magnetic field from the input file ...\n" );
+
 
 #  ifndef MHD
    Aux_Error( ERROR_INFO, "MHD must be enabled !!\n" );
@@ -41,11 +47,10 @@ void MHD_Init_BField_ByVecPot_File( const int B_lv )
    Aux_Error( ERROR_INFO, "SUPPORT_HDF5 must be set to load a vector potential from a file !!\n" );
 #  endif
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading the magnetic field from the input file ...\n" );
 
    const char B_Filename[] = "B_IC";
 
-   const double dh       = amr->dh[B_lv];
+   const double dh         = amr->dh[B_lv];
 
    double *Axf, *Ayf, *Azf;
 
@@ -83,7 +88,6 @@ void MHD_Init_BField_ByVecPot_File( const int B_lv )
      nAx = dims[0];
      nAy = dims[1];
      nAz = dims[2];
-
    }
 
 #  endif
@@ -285,9 +289,12 @@ void MHD_Init_BField_ByVecPot_File( const int B_lv )
    delete [] Aycoord;
    delete [] Azcoord;
 
+
    if ( MPI_Rank == 0 ) Aux_Message( stdout, "   Loading the magnetic field from the input file ... done\n" );
 
 } // FUNCTION : MHD_Init_BField_ByVecPot_File
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  VecPot_Interp
@@ -304,15 +311,15 @@ void MHD_Init_BField_ByVecPot_File( const int B_lv )
 // Return      :  vector potential component on AMR grid at (xx, yy, zz)
 //-------------------------------------------------------------------------------------------------------
 double VecPot_Interp( const double field[], const double xx, const double yy,
-                                const double zz, const int fdims[], const int fbegin[] )
+                      const double zz, const int fdims[], const int fbegin[] )
 {
 
-   // Indices into the coordinate vectors
+// Indices into the coordinate vectors
    const int ii = (int)((xx-Axmin)/Adx);
    const int jj = (int)((yy-Aymin)/Ady);
    const int kk = (int)((zz-Azmin)/Adz);
 
-   // Indices into the local vector potential patch
+// Indices into the local vector potential patch
    const int ib = ii - fbegin[0];
    const int jb = jj - fbegin[1];
    const int kb = kk - fbegin[2];
@@ -335,6 +342,8 @@ double VecPot_Interp( const double field[], const double xx, const double yy,
    return pot;
 
 } // FUNCTION : VecPot_Interp
+
+
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  TSC_Weight
@@ -363,8 +372,17 @@ double TSC_Weight( const double x )
 
 } // FUNCTION : TSC_Weight
 
-#ifdef SUPPORT_HDF5
 
+
+#ifdef SUPPORT_HDF5
+//-------------------------------------------------------------------------------------------------------
+// Function    :  VecPot_ReadField 
+// Description :  Read vector potential from a file 
+//
+// Parameter   :
+//
+// Return      :
+//-------------------------------------------------------------------------------------------------------
 void VecPot_ReadField( hid_t mag_file_id, const int ibegin, const int jbegin,
                        const int kbegin, const int iend, const int jend,
                        const int kend, double Ax[], double Ay[], double Az[] )
@@ -437,5 +455,4 @@ void VecPot_ReadField( hid_t mag_file_id, const int ibegin, const int jbegin,
    return;
 
 } // FUNCTION : VecPot_ReadField
-
 #endif // #ifdef SUPPORT_HDF5

@@ -278,6 +278,7 @@ static real EoS_DensEint2Temp_GammaCR( const real Dens, const real Eint, const r
 } // FUNCTION : EoS_DensEint2Temp_GammaCR
 
 
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  EoS_DensTemp2Pres_GammaCR
 // Description :  Convert gas mass density and temperature to total pressure
