@@ -99,6 +99,7 @@ void EoS_Init()
 #  ifdef COSMIC_RAY
    EoS.CREint2CRPres_FuncPtr   = EoS_CREint2CRPres_GPUPtr;
    EoS.GasPres2GasEint_FuncPtr = EoS_GasPres2GasEint_GPUPtr;
+   EoS.GasEint2GasPres_FuncPtr = EoS_GasEint2GasPres_GPUPtr;
 #  endif
 
    CUAPI_SetConstMemory_EoS();
@@ -118,11 +119,12 @@ void EoS_Init()
 #  ifdef COSMIC_RAY
    EoS.CREint2CRPres_FuncPtr   = EoS_CREint2CRPres_CPUPtr;
    EoS.GasPres2GasEint_FuncPtr = EoS_GasPres2GasEint_CPUPtr;
+   EoS.GasEint2GasPres_FuncPtr = EoS_GasEint2GasPres_CPUPtr;
 #  endif
 
-   EoS.AuxArrayDevPtr_Flt    = EoS_AuxArray_Flt;
-   EoS.AuxArrayDevPtr_Int    = EoS_AuxArray_Int;
-   EoS.Table                 = h_EoS_Table;
+   EoS.AuxArrayDevPtr_Flt      = EoS_AuxArray_Flt;
+   EoS.AuxArrayDevPtr_Int      = EoS_AuxArray_Int;
+   EoS.Table                   = h_EoS_Table;
 #  endif // #ifdef GPU ... else ...
 
 

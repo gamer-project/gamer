@@ -312,6 +312,7 @@ EoS_GENE_t    EoS_General_CPUPtr         = NULL;
 EoS_CRE2CRP_t EoS_CREint2CRPres_CPUPtr   = NULL;
 #ifdef COSMIC_RAY
 EoS_GP2GE_t   EoS_GasPres2GasEint_CPUPtr = NULL;
+EoS_GE2GP_t   EoS_GasEint2GasPres_CPUPtr = NULL;
 #endif
 #ifdef GPU
 EoS_GUESS_t   EoS_GuessHTilde_GPUPtr     = NULL;
@@ -327,6 +328,7 @@ EoS_GENE_t    EoS_General_GPUPtr         = NULL;
 EoS_CRE2CRP_t EoS_CREint2CRPres_GPUPtr   = NULL;
 #ifdef COSMIC_RAY
 EoS_GP2GE_t   EoS_GasPres2GasEint_GPUPtr = NULL;
+EoS_GE2GP_t   EoS_GasEint2GasPres_GPUPtr = NULL;
 #endif
 #endif
 
