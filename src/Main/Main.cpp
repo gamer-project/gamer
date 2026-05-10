@@ -299,29 +299,35 @@ double EoS_AuxArray_Flt[EOS_NAUX_MAX];
 int    EoS_AuxArray_Int[EOS_NAUX_MAX];
 
 // b. function pointers
-EoS_GUESS_t   EoS_GuessHTilde_CPUPtr   = NULL;
-EoS_H2TEM_t   EoS_HTilde2Temp_CPUPtr   = NULL;
-EoS_TEM2H_t   EoS_Temp2HTilde_CPUPtr   = NULL;
-EoS_DE2P_t    EoS_DensEint2Pres_CPUPtr = NULL;
-EoS_DP2E_t    EoS_DensPres2Eint_CPUPtr = NULL;
-EoS_DP2C_t    EoS_DensPres2CSqr_CPUPtr = NULL;
-EoS_DE2T_t    EoS_DensEint2Temp_CPUPtr = NULL;
-EoS_DT2P_t    EoS_DensTemp2Pres_CPUPtr = NULL;
-EoS_DE2S_t    EoS_DensEint2Entr_CPUPtr = NULL;
-EoS_GENE_t    EoS_General_CPUPtr       = NULL;
-EoS_CRE2CRP_t EoS_CREint2CRPres_CPUPtr = NULL;
+EoS_GUESS_t   EoS_GuessHTilde_CPUPtr     = NULL;
+EoS_H2TEM_t   EoS_HTilde2Temp_CPUPtr     = NULL;
+EoS_TEM2H_t   EoS_Temp2HTilde_CPUPtr     = NULL;
+EoS_DE2P_t    EoS_DensEint2Pres_CPUPtr   = NULL;
+EoS_DP2E_t    EoS_DensPres2Eint_CPUPtr   = NULL;
+EoS_DP2C_t    EoS_DensPres2CSqr_CPUPtr   = NULL;
+EoS_DE2T_t    EoS_DensEint2Temp_CPUPtr   = NULL;
+EoS_DT2P_t    EoS_DensTemp2Pres_CPUPtr   = NULL;
+EoS_DE2S_t    EoS_DensEint2Entr_CPUPtr   = NULL;
+EoS_GENE_t    EoS_General_CPUPtr         = NULL;
+EoS_CRE2CRP_t EoS_CREint2CRPres_CPUPtr   = NULL;
+#ifdef COSMIC_RAY
+EoS_GP2GE_t   EoS_GasPres2GasEint_CPUPtr = NULL;
+#endif
 #ifdef GPU
-EoS_GUESS_t   EoS_GuessHTilde_GPUPtr   = NULL;
-EoS_H2TEM_t   EoS_HTilde2Temp_GPUPtr   = NULL;
-EoS_TEM2H_t   EoS_Temp2HTilde_GPUPtr   = NULL;
-EoS_DE2P_t    EoS_DensEint2Pres_GPUPtr = NULL;
-EoS_DP2E_t    EoS_DensPres2Eint_GPUPtr = NULL;
-EoS_DP2C_t    EoS_DensPres2CSqr_GPUPtr = NULL;
-EoS_DE2T_t    EoS_DensEint2Temp_GPUPtr = NULL;
-EoS_DT2P_t    EoS_DensTemp2Pres_GPUPtr = NULL;
-EoS_DE2S_t    EoS_DensEint2Entr_GPUPtr = NULL;
-EoS_GENE_t    EoS_General_GPUPtr       = NULL;
-EoS_CRE2CRP_t EoS_CREint2CRPres_GPUPtr = NULL;
+EoS_GUESS_t   EoS_GuessHTilde_GPUPtr     = NULL;
+EoS_H2TEM_t   EoS_HTilde2Temp_GPUPtr     = NULL;
+EoS_TEM2H_t   EoS_Temp2HTilde_GPUPtr     = NULL;
+EoS_DE2P_t    EoS_DensEint2Pres_GPUPtr   = NULL;
+EoS_DP2E_t    EoS_DensPres2Eint_GPUPtr   = NULL;
+EoS_DP2C_t    EoS_DensPres2CSqr_GPUPtr   = NULL;
+EoS_DE2T_t    EoS_DensEint2Temp_GPUPtr   = NULL;
+EoS_DT2P_t    EoS_DensTemp2Pres_GPUPtr   = NULL;
+EoS_DE2S_t    EoS_DensEint2Entr_GPUPtr   = NULL;
+EoS_GENE_t    EoS_General_GPUPtr         = NULL;
+EoS_CRE2CRP_t EoS_CREint2CRPres_GPUPtr   = NULL;
+#ifdef COSMIC_RAY
+EoS_GP2GE_t   EoS_GasPres2GasEint_GPUPtr = NULL;
+#endif
 #endif
 
 // c. data structure for the CPU/GPU solvers

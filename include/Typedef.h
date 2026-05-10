@@ -618,6 +618,9 @@ typedef void (*EoS_GENE_t)     ( const int Mode, real Out[], const real In_Flt[]
 typedef real (*EoS_CRE2CRP_t)  ( const real E_CR,
                                  const double AuxArray_Flt[], const int AuxArray_Int[],
                                  const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_GP2GE_t)    ( const real Pres_Gas,
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
 typedef void (*ExtAcc_t)       ( real Acc[], const double x, const double y, const double z, const double Time,
                                  const double UserArray[] );
 typedef real (*ExtPot_t)       ( const double x, const double y, const double z, const double Time,

@@ -77,7 +77,7 @@ void EoS_SetAuxArray_GammaCR( double AuxArray_Flt[], int AuxArray_Int[] )
 
    AuxArray_Flt[0] = GAMMA;
    AuxArray_Flt[1] = GAMMA - 1.0;
-   AuxArray_Flt[2] = 1.0 / ( GAMMA - 1.0);
+   AuxArray_Flt[2] = 1.0 / ( GAMMA - 1.0 );
    AuxArray_Flt[3] = 1.0 / GAMMA;
    AuxArray_Flt[4] = GAMMA_CR;
    AuxArray_Flt[5] = GAMMA_CR - 1.0;
@@ -101,6 +101,7 @@ void EoS_SetAuxArray_GammaCR( double AuxArray_Flt[], int AuxArray_Int[] )
 //     (6) EoS_DensEint2Entr_* [OPTIONAL]
 //     (7) EoS_General_*       [OPTIONAL]
 //     (8) EoS_CREint2CRPres_*
+//     (9) EoS_GasPres2GasEint_*
 // =============================================
 
 //-------------------------------------------------------------------------------------------------------
@@ -441,6 +442,42 @@ static real EoS_CREint2CRPres_GammaCR( const real E_CR,
 
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  EoS_GasPres2GasEint_GammaCR
+// Description :  Convert gas pressure to gas internal energy density
+//
+// Note        :  1. Internal energy density here is per unit volume instead of per unit mass
+//                2. See EoS_SetAuxArray_GammaCR() for the values stored in AuxArray_Flt/Int[]
+//
+// Parameter   :  Pres_Gas   : Gas pressure
+//                AuxArray_* : Auxiliary arrays (see the Note above)
+//
+// Return      :  Gas internal energy density
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE_NOINLINE
+static real EoS_GasPres2GasEint_GammaCR( const real Pres_Gas,
+                                         const double AuxArray_Flt[], const int AuxArray_Int[],
+                                         const real *const Table[EOS_NTABLE_MAX] )
+{
+
+// check
+#  ifdef GAMER_DEBUG
+   if ( Pres_Gas < (real)0.0 )
+      printf( "ERROR : invalid input gas pressure (%13.7e) in %s() !!\n", Pres_Gas, __FUNCTION__ );
+#  endif // GAMER_DEBUG
+
+
+   const real _Gamma_m1 = (real)AuxArray_Flt[2];
+   real Eint_Gas;
+
+   Eint_Gas = _Gamma_m1*Pres_Gas;
+
+   return Eint_Gas;
+
+} // FUNCTION : EoS_GasPres2GasEint_GammaCR
+
+
+
 // =============================================
 // III. Set EoS initialization functions
 // =============================================
@@ -451,14 +488,15 @@ static real EoS_CREint2CRPres_GammaCR( const real E_CR,
 #  define FUNC_SPACE            static
 #endif
 
-FUNC_SPACE EoS_DE2P_t    EoS_DensEint2Pres_Ptr = EoS_DensEint2Pres_GammaCR;
-FUNC_SPACE EoS_DP2E_t    EoS_DensPres2Eint_Ptr = EoS_DensPres2Eint_GammaCR;
-FUNC_SPACE EoS_DP2C_t    EoS_DensPres2CSqr_Ptr = EoS_DensPres2CSqr_GammaCR;
-FUNC_SPACE EoS_DE2T_t    EoS_DensEint2Temp_Ptr = EoS_DensEint2Temp_GammaCR;
-FUNC_SPACE EoS_DT2P_t    EoS_DensTemp2Pres_Ptr = EoS_DensTemp2Pres_GammaCR;
-FUNC_SPACE EoS_DE2S_t    EoS_DensEint2Entr_Ptr = EoS_DensEint2Entr_GammaCR;
-FUNC_SPACE EoS_GENE_t    EoS_General_Ptr       = EoS_General_GammaCR;
-FUNC_SPACE EoS_CRE2CRP_t EoS_CREint2CRPres_Ptr = EoS_CREint2CRPres_GammaCR;
+FUNC_SPACE EoS_DE2P_t      EoS_DensEint2Pres_Ptr   = EoS_DensEint2Pres_GammaCR;
+FUNC_SPACE EoS_DP2E_t      EoS_DensPres2Eint_Ptr   = EoS_DensPres2Eint_GammaCR;
+FUNC_SPACE EoS_DP2C_t      EoS_DensPres2CSqr_Ptr   = EoS_DensPres2CSqr_GammaCR;
+FUNC_SPACE EoS_DE2T_t      EoS_DensEint2Temp_Ptr   = EoS_DensEint2Temp_GammaCR;
+FUNC_SPACE EoS_DT2P_t      EoS_DensTemp2Pres_Ptr   = EoS_DensTemp2Pres_GammaCR;
+FUNC_SPACE EoS_DE2S_t      EoS_DensEint2Entr_Ptr   = EoS_DensEint2Entr_GammaCR;
+FUNC_SPACE EoS_GENE_t      EoS_General_Ptr         = EoS_General_GammaCR;
+FUNC_SPACE EoS_CRE2CRP_t   EoS_CREint2CRPres_Ptr   = EoS_CREint2CRPres_GammaCR;
+FUNC_SPACE EoS_GP2GE_t     EoS_GasPres2GasEint_Ptr = EoS_GasPres2GasEint_GammaCR;
 
 //-----------------------------------------------------------------------------------------
 // Function    :  EoS_SetCPU/GPUFunc_GammaCR
@@ -473,19 +511,21 @@ FUNC_SPACE EoS_CRE2CRP_t EoS_CREint2CRPres_Ptr = EoS_CREint2CRPres_GammaCR;
 //
 //                3. Call-by-reference
 //
-// Parameter   :  EoS_DensEint2Pres_CPU/GPUPtr : CPU/GPU function pointers to be set
-//                EoS_DensPres2Eint_CPU/GPUPtr : ...
-//                EoS_DensPres2CSqr_CPU/GPUPtr : ...
-//                EoS_DensEint2Temp_CPU/GPUPtr : ...
-//                EoS_DensTemp2Pres_CPU/GPUPtr : ...
-//                EoS_DensEint2Entr_CPU/GPUPtr : ...
-//                EoS_General_CPU/GPUPtr       : ...
-//                EoS_CREint2CRPres_CPU/GPUPtr : ...
+// Parameter   :  EoS_DensEint2Pres_CPU/GPUPtr   : CPU/GPU function pointers to be set
+//                EoS_DensPres2Eint_CPU/GPUPtr   : ...
+//                EoS_DensPres2CSqr_CPU/GPUPtr   : ...
+//                EoS_DensEint2Temp_CPU/GPUPtr   : ...
+//                EoS_DensTemp2Pres_CPU/GPUPtr   : ...
+//                EoS_DensEint2Entr_CPU/GPUPtr   : ...
+//                EoS_General_CPU/GPUPtr         : ...
+//                EoS_CREint2CRPres_CPU/GPUPtr   : ...
+//                EoS_GasPres2GasEint_CPU/GPUPtr : ...
 //
 // Return      :  EoS_DensEint2Pres_CPU/GPUPtr, EoS_DensPres2Eint_CPU/GPUPtr,
 //                EoS_DensPres2CSqr_CPU/GPUPtr, EoS_DensEint2Temp_CPU/GPUPtr,
 //                EoS_DensTemp2Pres_CPU/GPUPtr, EoS_DensEint2Entr_CPU/GPUPtr,
-//                EoS_General_CPU/GPUPtr, EoS_CREint2CRPres_CPU/GPUPtr
+//                EoS_General_CPU/GPUPtr, EoS_CREint2CRPres_CPU/GPUPtr,
+//                EoS_GasPres2GasEint_CPU/GPUPtr
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __host__
@@ -496,16 +536,18 @@ void EoS_SetGPUFunc_GammaCR( EoS_DE2P_t    &EoS_DensEint2Pres_GPUPtr,
                              EoS_DT2P_t    &EoS_DensTemp2Pres_GPUPtr,
                              EoS_DE2S_t    &EoS_DensEint2Entr_GPUPtr,
                              EoS_GENE_t    &EoS_General_GPUPtr,
-                             EoS_CRE2CRP_t &EoS_CREint2CRPres_GPUPtr )
+                             EoS_CRE2CRP_t &EoS_CREint2CRPres_GPUPtr,
+                             EoS_GP2GE_t   &EoS_GasPres2GasEint_GPUPtr )
 {
-   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensEint2Pres_GPUPtr, EoS_DensEint2Pres_Ptr, sizeof(EoS_DE2P_t   ) )  );
-   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensPres2Eint_GPUPtr, EoS_DensPres2Eint_Ptr, sizeof(EoS_DP2E_t   ) )  );
-   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensPres2CSqr_GPUPtr, EoS_DensPres2CSqr_Ptr, sizeof(EoS_DP2C_t   ) )  );
-   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensEint2Temp_GPUPtr, EoS_DensEint2Temp_Ptr, sizeof(EoS_DE2T_t   ) )  );
-   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensTemp2Pres_GPUPtr, EoS_DensTemp2Pres_Ptr, sizeof(EoS_DT2P_t   ) )  );
-   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensEint2Entr_GPUPtr, EoS_DensEint2Entr_Ptr, sizeof(EoS_DE2S_t   ) )  );
-   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_General_GPUPtr,       EoS_General_Ptr,       sizeof(EoS_GENE_t   ) )  );
-   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_CREint2CRPres_GPUPtr, EoS_CREint2CRPres_Ptr, sizeof(EoS_CRE2CRP_t) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensEint2Pres_GPUPtr,   EoS_DensEint2Pres_Ptr,   sizeof(EoS_DE2P_t   ) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensPres2Eint_GPUPtr,   EoS_DensPres2Eint_Ptr,   sizeof(EoS_DP2E_t   ) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensPres2CSqr_GPUPtr,   EoS_DensPres2CSqr_Ptr,   sizeof(EoS_DP2C_t   ) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensEint2Temp_GPUPtr,   EoS_DensEint2Temp_Ptr,   sizeof(EoS_DE2T_t   ) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensTemp2Pres_GPUPtr,   EoS_DensTemp2Pres_Ptr,   sizeof(EoS_DT2P_t   ) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_DensEint2Entr_GPUPtr,   EoS_DensEint2Entr_Ptr,   sizeof(EoS_DE2S_t   ) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_General_GPUPtr,         EoS_General_Ptr,         sizeof(EoS_GENE_t   ) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_CREint2CRPres_GPUPtr,   EoS_CREint2CRPres_Ptr,   sizeof(EoS_CRE2CRP_t) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &EoS_GasPres2GasEint_GPUPtr, EoS_GasPres2GasEint_Ptr, sizeof(EoS_GP2GE_t  ) )  );
 }
 
 #else // #ifdef __CUDACC__
@@ -517,16 +559,18 @@ void EoS_SetCPUFunc_GammaCR( EoS_DE2P_t    &EoS_DensEint2Pres_CPUPtr,
                              EoS_DT2P_t    &EoS_DensTemp2Pres_CPUPtr,
                              EoS_DE2S_t    &EoS_DensEint2Entr_CPUPtr,
                              EoS_GENE_t    &EoS_General_CPUPtr,
-                             EoS_CRE2CRP_t &EoS_CREint2CRPres_CPUPtr )
+                             EoS_CRE2CRP_t &EoS_CREint2CRPres_CPUPtr,
+                             EoS_GP2GE_t   &EoS_GasPres2GasEint_CPUPtr )
 {
-   EoS_DensEint2Pres_CPUPtr = EoS_DensEint2Pres_Ptr;
-   EoS_DensPres2Eint_CPUPtr = EoS_DensPres2Eint_Ptr;
-   EoS_DensPres2CSqr_CPUPtr = EoS_DensPres2CSqr_Ptr;
-   EoS_DensEint2Temp_CPUPtr = EoS_DensEint2Temp_Ptr;
-   EoS_DensTemp2Pres_CPUPtr = EoS_DensTemp2Pres_Ptr;
-   EoS_DensEint2Entr_CPUPtr = EoS_DensEint2Entr_Ptr;
-   EoS_General_CPUPtr       = EoS_General_Ptr;
-   EoS_CREint2CRPres_CPUPtr = EoS_CREint2CRPres_Ptr;
+   EoS_DensEint2Pres_CPUPtr   = EoS_DensEint2Pres_Ptr;
+   EoS_DensPres2Eint_CPUPtr   = EoS_DensPres2Eint_Ptr;
+   EoS_DensPres2CSqr_CPUPtr   = EoS_DensPres2CSqr_Ptr;
+   EoS_DensEint2Temp_CPUPtr   = EoS_DensEint2Temp_Ptr;
+   EoS_DensTemp2Pres_CPUPtr   = EoS_DensTemp2Pres_Ptr;
+   EoS_DensEint2Entr_CPUPtr   = EoS_DensEint2Entr_Ptr;
+   EoS_General_CPUPtr         = EoS_General_Ptr;
+   EoS_CREint2CRPres_CPUPtr   = EoS_CREint2CRPres_Ptr;
+   EoS_GasPres2GasEint_CPUPtr = EoS_GasPres2GasEint_Ptr;
 }
 
 #endif // #ifdef __CUDACC__ ... else ...
@@ -537,9 +581,9 @@ void EoS_SetCPUFunc_GammaCR( EoS_DE2P_t    &EoS_DensEint2Pres_CPUPtr,
 
 // local function prototypes
 void EoS_SetAuxArray_GammaCR( double [] , int []);
-void EoS_SetCPUFunc_GammaCR( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t &, EoS_DE2T_t &, EoS_DT2P_t &, EoS_DE2S_t &, EoS_GENE_t &, EoS_CRE2CRP_t & );
+void EoS_SetCPUFunc_GammaCR( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t &, EoS_DE2T_t &, EoS_DT2P_t &, EoS_DE2S_t &, EoS_GENE_t &, EoS_CRE2CRP_t &, EoS_GP2GE_t & );
 #ifdef GPU
-void EoS_SetGPUFunc_GammaCR( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t &, EoS_DE2T_t &, EoS_DT2P_t &, EoS_DE2S_t &, EoS_GENE_t &, EoS_CRE2CRP_t & );
+void EoS_SetGPUFunc_GammaCR( EoS_DE2P_t &, EoS_DP2E_t &, EoS_DP2C_t &, EoS_DE2T_t &, EoS_DT2P_t &, EoS_DE2S_t &, EoS_GENE_t &, EoS_CRE2CRP_t &, EoS_GP2GE_t & );
 #endif
 
 //-----------------------------------------------------------------------------------------
@@ -564,12 +608,14 @@ void EoS_Init_GammaCR()
    EoS_SetCPUFunc_GammaCR( EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
                            EoS_DensPres2CSqr_CPUPtr, EoS_DensEint2Temp_CPUPtr,
                            EoS_DensTemp2Pres_CPUPtr, EoS_DensEint2Entr_CPUPtr,
-                           EoS_General_CPUPtr, EoS_CREint2CRPres_CPUPtr );
+                           EoS_General_CPUPtr, EoS_CREint2CRPres_CPUPtr,
+                           EoS_GasPres2GasEint_CPUPtr );
 #  ifdef GPU
    EoS_SetGPUFunc_GammaCR( EoS_DensEint2Pres_GPUPtr, EoS_DensPres2Eint_GPUPtr,
                            EoS_DensPres2CSqr_GPUPtr, EoS_DensEint2Temp_GPUPtr,
                            EoS_DensTemp2Pres_GPUPtr, EoS_DensEint2Entr_GPUPtr,
-                           EoS_General_GPUPtr, EoS_CREint2CRPres_GPUPtr );
+                           EoS_General_GPUPtr, EoS_CREint2CRPres_GPUPtr,
+                           EoS_GasPres2GasEint_GPUPtr );
 #  endif
 
 } // FUNCTION : EoS_Init_GammaCR

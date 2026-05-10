@@ -46,6 +46,7 @@ struct EoS_t
    EoS_GENE_t    General_FuncPtr;
 #  ifdef COSMIC_RAY
    EoS_CRE2CRP_t CREint2CRPres_FuncPtr;
+   EoS_GP2GE_t   GasPres2GasEint_FuncPtr;
 #  endif
 
 // table pointers

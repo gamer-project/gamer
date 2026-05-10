@@ -86,36 +86,38 @@ void EoS_Init()
 
 // store relevant variables in the object "EoS" for the CPU/GPU solvers
 #  ifdef GPU
-   EoS.DensEint2Pres_FuncPtr = EoS_DensEint2Pres_GPUPtr;
-   EoS.DensPres2Eint_FuncPtr = EoS_DensPres2Eint_GPUPtr;
-   EoS.DensPres2CSqr_FuncPtr = EoS_DensPres2CSqr_GPUPtr;
-   EoS.DensEint2Temp_FuncPtr = EoS_DensEint2Temp_GPUPtr;
-   EoS.DensTemp2Pres_FuncPtr = EoS_DensTemp2Pres_GPUPtr;
-   EoS.DensEint2Entr_FuncPtr = EoS_DensEint2Entr_GPUPtr;
-   EoS.GuessHTilde_FuncPtr   = EoS_GuessHTilde_GPUPtr;
-   EoS.HTilde2Temp_FuncPtr   = EoS_HTilde2Temp_GPUPtr;
-   EoS.Temp2HTilde_FuncPtr   = EoS_Temp2HTilde_GPUPtr;
-   EoS.General_FuncPtr       = EoS_General_GPUPtr;
+   EoS.DensEint2Pres_FuncPtr   = EoS_DensEint2Pres_GPUPtr;
+   EoS.DensPres2Eint_FuncPtr   = EoS_DensPres2Eint_GPUPtr;
+   EoS.DensPres2CSqr_FuncPtr   = EoS_DensPres2CSqr_GPUPtr;
+   EoS.DensEint2Temp_FuncPtr   = EoS_DensEint2Temp_GPUPtr;
+   EoS.DensTemp2Pres_FuncPtr   = EoS_DensTemp2Pres_GPUPtr;
+   EoS.DensEint2Entr_FuncPtr   = EoS_DensEint2Entr_GPUPtr;
+   EoS.GuessHTilde_FuncPtr     = EoS_GuessHTilde_GPUPtr;
+   EoS.HTilde2Temp_FuncPtr     = EoS_HTilde2Temp_GPUPtr;
+   EoS.Temp2HTilde_FuncPtr     = EoS_Temp2HTilde_GPUPtr;
+   EoS.General_FuncPtr         = EoS_General_GPUPtr;
 #  ifdef COSMIC_RAY
-   EoS.CREint2CRPres_FuncPtr = EoS_CREint2CRPres_GPUPtr;
+   EoS.CREint2CRPres_FuncPtr   = EoS_CREint2CRPres_GPUPtr;
+   EoS.GasPres2GasEint_FuncPtr = EoS_GasPres2GasEint_GPUPtr;
 #  endif
 
    CUAPI_SetConstMemory_EoS();
 
 #  else
 
-   EoS.DensEint2Pres_FuncPtr = EoS_DensEint2Pres_CPUPtr;
-   EoS.DensPres2Eint_FuncPtr = EoS_DensPres2Eint_CPUPtr;
-   EoS.DensPres2CSqr_FuncPtr = EoS_DensPres2CSqr_CPUPtr;
-   EoS.DensEint2Temp_FuncPtr = EoS_DensEint2Temp_CPUPtr;
-   EoS.DensTemp2Pres_FuncPtr = EoS_DensTemp2Pres_CPUPtr;
-   EoS.DensEint2Entr_FuncPtr = EoS_DensEint2Entr_CPUPtr;
-   EoS.GuessHTilde_FuncPtr   = EoS_GuessHTilde_CPUPtr;
-   EoS.HTilde2Temp_FuncPtr   = EoS_HTilde2Temp_CPUPtr;
-   EoS.Temp2HTilde_FuncPtr   = EoS_Temp2HTilde_CPUPtr;
-   EoS.General_FuncPtr       = EoS_General_CPUPtr;
+   EoS.DensEint2Pres_FuncPtr   = EoS_DensEint2Pres_CPUPtr;
+   EoS.DensPres2Eint_FuncPtr   = EoS_DensPres2Eint_CPUPtr;
+   EoS.DensPres2CSqr_FuncPtr   = EoS_DensPres2CSqr_CPUPtr;
+   EoS.DensEint2Temp_FuncPtr   = EoS_DensEint2Temp_CPUPtr;
+   EoS.DensTemp2Pres_FuncPtr   = EoS_DensTemp2Pres_CPUPtr;
+   EoS.DensEint2Entr_FuncPtr   = EoS_DensEint2Entr_CPUPtr;
+   EoS.GuessHTilde_FuncPtr     = EoS_GuessHTilde_CPUPtr;
+   EoS.HTilde2Temp_FuncPtr     = EoS_HTilde2Temp_CPUPtr;
+   EoS.Temp2HTilde_FuncPtr     = EoS_Temp2HTilde_CPUPtr;
+   EoS.General_FuncPtr         = EoS_General_CPUPtr;
 #  ifdef COSMIC_RAY
-   EoS.CREint2CRPres_FuncPtr = EoS_CREint2CRPres_CPUPtr;
+   EoS.CREint2CRPres_FuncPtr   = EoS_CREint2CRPres_CPUPtr;
+   EoS.GasPres2GasEint_FuncPtr = EoS_GasPres2GasEint_CPUPtr;
 #  endif
 
    EoS.AuxArrayDevPtr_Flt    = EoS_AuxArray_Flt;

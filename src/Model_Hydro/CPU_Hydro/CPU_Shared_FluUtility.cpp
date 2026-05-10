@@ -1311,6 +1311,7 @@ real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const re
 // Parameter   :  Dens     : Mass density
 //                MomX/Y/Z : Momentum density
 //                Eint     : Internal energy density
+//                           --> Must include cosmic-ray energy when enabling COSMIC_RAY
 //                Emag     : Magnetic energy density (0.5*B^2) --> For MHD only
 //
 // Return      :  Total energy density (including the magnetic energy density for MHD)
