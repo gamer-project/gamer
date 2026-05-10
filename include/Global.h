@@ -328,9 +328,7 @@ extern EoS_DE2T_t    EoS_DensEint2Temp_CPUPtr;
 extern EoS_DT2P_t    EoS_DensTemp2Pres_CPUPtr;
 extern EoS_DE2S_t    EoS_DensEint2Entr_CPUPtr;
 extern EoS_GENE_t    EoS_General_CPUPtr;
-#ifdef COSMIC_RAY
 extern EoS_CRE2CRP_t EoS_CREint2CRPres_CPUPtr;
-#endif
 #ifdef GPU
 extern EoS_GUESS_t   EoS_GuessHTilde_GPUPtr;
 extern EoS_H2TEM_t   EoS_HTilde2Temp_GPUPtr;
@@ -342,9 +340,7 @@ extern EoS_DE2T_t    EoS_DensEint2Temp_GPUPtr;
 extern EoS_DT2P_t    EoS_DensTemp2Pres_GPUPtr;
 extern EoS_DE2S_t    EoS_DensEint2Entr_GPUPtr;
 extern EoS_GENE_t    EoS_General_GPUPtr;
-#ifdef COSMIC_RAY
 extern EoS_CRE2CRP_t EoS_CREint2CRPres_GPUPtr;
-#endif
 #endif
 extern EoS_t EoS;
 #endif // HYDRO
