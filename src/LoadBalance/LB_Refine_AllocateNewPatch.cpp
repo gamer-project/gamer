@@ -1106,9 +1106,12 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
       const real UseDual2FixEngy  = HUGE_NUMBER;
       char dummy;    // we do not record the dual-energy status here
 
+      real Passive[NCOMP_PASSIVE];
+      for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = FData_Flu[ NCOMP_FLUID + v ][k][j][i];
+
       Hydro_DualEnergyFix( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
                            FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i], FData_Flu[DUAL][k][j][i],
-                           dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], CheckMinPres_Yes, MIN_PRES,
+                           Passive, dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], CheckMinPres_Yes, MIN_PRES,
                            PassiveFloorMask, UseDual2FixEngy, Emag );
 
 #     else // #ifdef DUAL_ENERGY

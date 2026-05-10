@@ -936,8 +936,11 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             const real UseDual2FixEngy  = HUGE_NUMBER;
             char dummy;    // we do not record the dual-energy status here
 
+            real Passive[NCOMP_PASSIVE];
+            for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Flu_FData[ NCOMP_FLUID + v ][k][j][i];
+
             Hydro_DualEnergyFix( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
-                                 Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i], Flu_FData[DUAL][k][j][i],
+                                 Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i], Flu_FData[DUAL][k][j][i], Passive,
                                  dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], CheckMinPres_Yes, MIN_PRES,
                                  PassiveFloorMask, UseDual2FixEngy, Emag );
 
