@@ -762,8 +762,8 @@ void Aux_Check_Parameter()
 #     error : ERROR : unsupported dual-energy formalism (DE_ENPY only, DE_EINT is not supported yet) !!
 #   endif
 
-#   if ( DUAL_ENERGY == DE_ENPY  &&  EOS != EOS_GAMMA )
-#     error : ERROR : DUAL_ENERGY=DE_ENPY only supports EOS_GAMMA !!
+#   if (  DUAL_ENERGY == DE_ENPY  &&  ( EOS != EOS_GAMMA && EOS != EOS_COSMIC_RAY )  )
+#     error : ERROR : DUAL_ENERGY=DE_ENPY only supports EOS_GAMMA/EOS_COSMIC_RAY !!
 #   endif
 #  endif // #ifdef DUAL_ENERGY
 
@@ -835,10 +835,6 @@ void Aux_Check_Parameter()
 
 #   if ( EOS != EOS_COSMIC_RAY )
 #     error : ERROR : COSMIC_RAY must use EOS_COSMIC_RAY !!
-#   endif
-
-#   ifdef DUAL_ENERGY
-#     error : ERROR : DUAL_ENERGY is not supported for COSMIC_RAY !!
 #   endif
 
 #   ifdef COMOVING
