@@ -65,9 +65,16 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
          {
             for (int v=0; v<NCOMP_TOTAL; v++)   Fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
-#           if ( DUAL_ENERGY == DE_ENPY )
+#           ifdef DUAL_ENERGY
+
+#           if   ( DUAL_ENERGY == DE_ENPY )
             Pres = Hydro_DensDual2Pres( Fluid[DENS], Fluid[DUAL], EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
-#           else
+#           elif ( DUAL_ENERGY == DE_EINT )
+#           error : DE_EINT is NOT supported yet !!
+#           endif // DUAL_ENERGY == DE_ENPY/DE_EINT
+
+#           else // #ifdef DUAL_ENERGY
+
 #           ifdef MHD
             const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
 #           else
@@ -77,7 +84,11 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
                                    CheckMinPres_No, NULL_REAL, PassiveFloorMask, Emag,
                                    EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
-#           endif // DUAL_ENERGY
+//          exclude cosmic-ray pressure
+#           ifdef COSMIC_RAY
+            Pres -= EoS_CREint2CRPres_CPUPtr( Fluid[CRAY], EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );;
+#           endif
+#           endif // #ifdef DUAL_ENERGY ... else ...
 
             if ( Mode == 1  ||  Mode == 3 )
             {

@@ -135,6 +135,7 @@ void Grackle_Close( const int lv, const int SaveSg, const real_che h_Che_Array[]
 //          update the dual-energy variable to be consistent with the updated gas pressure
 //          --> must exclude cosmic-ray pressure
 #           ifdef DUAL_ENERGY
+
 #           if   ( DUAL_ENERGY == DE_ENPY )
 #           if   ( EOS == EOS_GAMMA )
 //          EOS_GAMMA does not involve passive scalars
@@ -150,6 +151,7 @@ void Grackle_Close( const int lv, const int SaveSg, const real_che h_Che_Array[]
 #           elif ( DUAL_ENERGY == DE_EINT )
 #           error : DE_EINT is NOT supported yet !!
 #           endif
+
 #           endif // #ifdef DUAL_ENERGY
 
 //          update all chemical species

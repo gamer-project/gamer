@@ -285,6 +285,7 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
 #           ifdef COSMIC_RAY
             Eint -= *( fluid[CRAY][0][0] + idx_p );
 #           endif
+
 #           endif // #ifdef DUAL_ENERGY ... else ...
 
 //          set the ratio to the density floor
