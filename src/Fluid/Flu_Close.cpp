@@ -452,6 +452,7 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
          return true;
 
 #     else // without DUAL_ENERGY
+//###NOTE: Eint currently includes cosmic-ray energy; consider excluding it for a more stringent check
       const real Eint = Hydro_Con2Eint( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
                                         NoFloor, NULL_REAL, PassiveFloorMask, Emag, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                         EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
