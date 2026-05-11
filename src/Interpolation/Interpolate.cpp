@@ -363,7 +363,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 //       5-3. additional check
          real Eint=NULL_REAL;
 //       check the Eint --> Pres conversion for general EoS
-#        if ( EOS != EOS_GAMMA  &&  EOS != EOS_COSMIC_RAY  &&  !defined BAROTROPIC_EOS )
+#        if ( EOS != EOS_GAMMA  &&  !defined BAROTROPIC_EOS )
 #           define CHECK_E2P
 #        endif
 #        ifdef CHECK_E2P
