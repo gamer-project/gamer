@@ -614,6 +614,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                              i_end   = ( i + FlagBuf >= PS1 ) ? 2 : 1;
 
 //                retrieve the adiabatic index for Jeans length refinement criterion
+//###REVISE: support cosmic rays
 #                 if ( MODEL == HYDRO  &&  defined GRAVITY )
                   const real JeansCoeff = ( OPT__FLAG_JEANS )
                                         ? JeansCoeff_Factor * Cs2[k][j][i] * Fluid[DENS][k][j][i] / Pres[k][j][i]

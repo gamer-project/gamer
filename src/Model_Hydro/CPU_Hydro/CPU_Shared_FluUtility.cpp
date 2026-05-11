@@ -271,6 +271,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres, const long 
 
 // pressure floor required to resolve the Jeans length
 // --> note that currently we do not modify the dual-energy variable (e.g., entropy) accordingly
+//###REVISE: support cosmic rays
    if ( JeansMinPres )
    {
       const real Pres0 = Out[4];

@@ -265,7 +265,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
   double Eint,Etot,MomX,MomY,MomZ;
   double Metal=NULL_REAL;
 
-  if (Rad <= 11.5 && fabs(dz) <= 0.2)
+  if ( Rad <= 11.5  &&  fabs(dz) <= 0.2 )
   {
 
      GasDens = 0.2735*exp(-Rad/4.8)*1/SQR(cosh(dz/0.13))*(Const_Msun/CUBE(Const_pc))/(UNIT_M/CUBE(UNIT_L));
@@ -280,8 +280,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
      MomZ  = 0.0;
 
      Metal = GasDens*1.0e-2;
-
   }
+
   else
   {
      GasDens = 1.0e-6*(Const_Msun/CUBE(Const_pc))/(UNIT_M/CUBE(UNIT_L));
@@ -293,21 +293,19 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
      MomZ  = 0.0;
 
      Metal = GasDens*1.0e-8;
-
   }
 
 
-#  if ( EOS == EOS_ISOTHERMAL )
-
+#  if   ( EOS == EOS_ISOTHERMAL )
    GasPres = EoS_DensEint2Pres_CPUPtr( GasDens, 1.0,     NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, NULL );
    Eint    = EoS_DensPres2Eint_CPUPtr( GasDens, GasPres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, NULL );
    Etot    = Hydro_ConEint2Etot( GasDens, MomX, MomY, MomZ, Eint, 0.0 );
-
-#  else
-
+#  elif ( EOS == EOS_GAMMA )
    Eint    = EoS_DensPres2Eint_CPUPtr( GasDens, GasPres, NULL, EoS_AuxArray_Flt,
                                        EoS_AuxArray_Int, h_EoS_Table );    // assuming EoS requires no passive scalars
    Etot    = Hydro_ConEint2Etot( GasDens, MomX, MomY, MomZ, Eint, 0.0 );   // do NOT include magnetic energy here
+#  else
+#  error : ERROR : unsupported EOS !!
 #  endif
 
 
@@ -317,7 +315,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
   fluid[MOMZ] = MomZ;
   fluid[ENGY] = Etot;
   fluid[Idx_Metal] = Metal;
-
 
 } // FUNCTION : SetGridIC
 

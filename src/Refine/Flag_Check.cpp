@@ -232,6 +232,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 
 // check Jeans length
+//###REVISE: support cosmic rays
 // ===========================================================================================
 #  if ( MODEL == HYDRO  &&  defined GRAVITY )
    if ( OPT__FLAG_JEANS )

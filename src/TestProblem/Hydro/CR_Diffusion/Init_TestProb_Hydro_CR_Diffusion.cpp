@@ -601,7 +601,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    P_cr = EoS_CREint2CRPres_CPUPtr( CRay, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    Pres = Pres + P_cr;
 
-// set the output array of passive scaler
+// set the output array of passive scalars before calling EoS_DensPres2Eint_CPUPtr()
    fluid[CRAY] = CRay;
 
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, fluid+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
