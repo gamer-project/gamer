@@ -329,6 +329,7 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
 #                 endif
                   CorrVal[ENGY] = Hydro_ConEint2Etot( CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], Eint, Emag );
 #                 if   ( DUAL_ENERGY == DE_ENPY )
+//                note that Pres has excluded cosmic-ray pressure
                   CorrVal[DUAL] = Hydro_DensPres2Dual( CorrVal[DENS], Pres, EoS_AuxArray_Flt[1] );
 #                 elif ( DUAL_ENERGY == DE_EINT )
 #                 error : DE_EINT is NOT supported yet !!
