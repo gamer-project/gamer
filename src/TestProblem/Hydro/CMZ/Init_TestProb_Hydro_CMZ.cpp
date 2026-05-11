@@ -305,7 +305,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
                                        EoS_AuxArray_Int, h_EoS_Table );    // assuming EoS requires no passive scalars
    Etot    = Hydro_ConEint2Etot( GasDens, MomX, MomY, MomZ, Eint, 0.0 );   // do NOT include magnetic energy here
 #  else
-#  error : ERROR : unsupported EOS !!
+   Aux_Error( ERROR_INFO, "unsupported EoS (%d) !!", EOS );
 #  endif
 
 
