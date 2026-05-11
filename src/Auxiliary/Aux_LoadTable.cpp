@@ -68,7 +68,7 @@ int Aux_LoadTable( T *&Data, const char *FileName, const int NCol_Target, const 
 //    --> must check NCheck < 0 as well since EOF is negative
       if ( NCol_Check <= 0  ||  FirstItem[0] == COMMENT_SYM )    continue;
 
-//    loop over all tokens seperated by the delimiter characters
+//    loop over all tokens separated by the delimiter characters
       NthCol     = 0;
       NCol_Match = 0;
       while (  NthCol <= TCol[NCol_Target-1]  &&  ( Token = (NthCol==0)?strtok(Line,DELIMITER):strtok(NULL,DELIMITER) ) != NULL  )

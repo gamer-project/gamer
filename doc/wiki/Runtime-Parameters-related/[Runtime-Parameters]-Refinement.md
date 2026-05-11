@@ -1,26 +1,3 @@
-## Enabling AMR
-
-It only takes three steps to enable AMR:
-
-* Set [MAX_LEVEL](#MAX_LEVEL)
-* Turn on at least one of the refinement criteria `OPT__FLAG_*`
-* Edit the corresponding input file(s)
-[[Input__Flag_{} | [Runtime-Parameters]-Input__Flag_{}]]
-to specify the refinement thresholds
-
-See the descriptions of various refinement criteria `OPT__FLAG_*`
-given on this page for details.
-
-
-## Compilation Options
-
-Related options:
-[[--nlevel | [Installation]-Option-List#--nlevel]], &nbsp;
-[[--max_patch | [Installation]-Option-List#--max_patch]] &nbsp;
-
-
-## Runtime Parameters
-
 Parameters described on this page:
 [REGRID_COUNT](#REGRID_COUNT), &nbsp;
 [REFINE_NLEVEL](#REFINE_NLEVEL), &nbsp;
@@ -34,6 +11,7 @@ Parameters described on this page:
 [OPT__FLAG_LRTZ_GRADIENT](#OPT__FLAG_LRTZ_GRADIENT), &nbsp;
 [OPT__FLAG_VORTICITY](#OPT__FLAG_VORTICITY), &nbsp;
 [OPT__FLAG_JEANS](#OPT__FLAG_JEANS), &nbsp;
+[OPT__FLAG_COOLING_LEN](#OPT__FLAG_COOLING_LEN), &nbsp;
 [OPT__FLAG_CURRENT](#OPT__FLAG_CURRENT), &nbsp;
 [OPT__FLAG_CRAY](#OPT__FLAG_CRAY), &nbsp;
 [OPT__FLAG_LOHNER_DENS](#OPT__FLAG_LOHNER_DENS), &nbsp;
@@ -224,6 +202,23 @@ with the [[specific format | [Runtime-Parameters]-Input__Flag_{}]].
 An example file can be found at `example/input/Input__Flag_Jeans`.
 Recommended values: &#8805;4.
     * **Restriction:**
+
+<a name="OPT__FLAG_COOLING_LEN"></a>
+* #### `OPT__FLAG_COOLING_LEN` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Refinement criterion: gas cooling length. It ensures that the cooling length
+is resolved by at least <var>N</var> cells. Specifically, a cell
+on level <var>l</var> will be flagged for refinement if its estimated
+cooling length <var>L</var><sub>cool</sub> satisfies
+<var>L</var><sub>cool</sub>&#8287;&#8801;<var>t</var><sub>cool</sub><var>c</var><sub>s</sub>&#8287;&#8287;<&#8287;<var>N</var><sub>l</sub>&Delta;&xi;<sub>l</sub>,
+where <var>t</var><sub>cool</sub> is the cooling time (currently calculated by Grackle), <var>c</var><sub>s</sub> is sound speed of gas, &Delta;&xi;<sub>l</sub> is the cell width along &xi; on level <var>l</var>, and <var>N</var><sub>l</sub> is the refinement threshold on level <var>l</var>.
+Specify the refinement
+thresholds on different levels in the input file `Input__Flag_CoolingLen`
+with the [[specific format | [Runtime-Parameters]-Input__Flag_{}]].
+An example file can be found at `example/input/Input__Flag_CoolingLen`.
+Recommended values: &#8805;1.
+    * **Restriction:**
+Must compile with [[--grackle | [Installation]-Option-List#--grackle]].
 
 <a name="OPT__FLAG_CURRENT"></a>
 * #### `OPT__FLAG_CURRENT` &ensp; (0=off, 1=on) &ensp; [0]
@@ -521,14 +516,9 @@ Only applicable when adopting [OPT__REUSE_MEMORY](#OPT__REUSE_MEMORY)=1/2.
 
 ## Remarks
 
-### Potential outside the isolated boundaries
-When adopting the isolated boundary conditions for gravity (i.e.,
-[[OPT__BC_POT | [Runtime-Parameters]-Gravity#OPT__BC_POT]]=2), the ghost zones of
-gravitational potential outside the simulation domain are currently
-filled out by extrapolation.
-
 
 <br>
 
 ## Links
 * [[Main page of Runtime Parameters | Runtime Parameters]]
+* [[Main page of Refinement | Refinement]]

@@ -1,14 +1,3 @@
-This page describes the supported interpolation schemes for (i) grid refinement
-and (ii) preparing the ghost zones around any coarse-fine boundaries.
-
-
-## Compilation Options
-
-Related options: None
-
-
-## Runtime Parameters
-
 Parameters described on this page:
 [OPT__INT_TIME](#OPT__INT_TIME), &nbsp;
 [OPT__INT_PRIM](#OPT__INT_PRIM), &nbsp;
@@ -151,3 +140,4 @@ velocity in low-density valleys.
 
 ## Links
 * [[Main page of Runtime Parameters | Runtime Parameters]]
+* [[Main page of Refinement | Refinement]]

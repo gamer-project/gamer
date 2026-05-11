@@ -473,7 +473,7 @@ long ParPos2LBIdx( const int lv, const real_par ParPos[] )
    {
       Cr[d] = (int)floor(  ( (double)ParPos[d] - amr->BoxEdgeL[d] )*_PatchPhySize  )*PatchScale;
 
-//    check the home patch corner carefully to prevent from any issue resulting from round-off errors
+//    check the home patch corner carefully to prevent any issue resulting from round-off errors
 //    --> make sure to adopt the same procedure of calculating the patch left/right edges as Patch.h
       PatchEdgeL = (double)( Cr[d]              )*dh_min;
       PatchEdgeR = (double)( Cr[d] + PatchScale )*dh_min;

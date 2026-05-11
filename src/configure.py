@@ -687,7 +687,7 @@ def load_arguments( sys_setting : SystemSetting ):
     # A.5 grackle
     parser.add_argument( "--grackle", type=str2bool, metavar="BOOLEAN", gamer_name="SUPPORT_GRACKLE",
                          default=False,
-                         constraint={ True:{"model":"HYDRO", "eos":["GAMMA", "COSMIC_RAY"], "comoving":False} },
+                         constraint={ True:{"model":"HYDRO", "eos":["GAMMA", "COSMIC_RAY"]} },
                          help="Enable Grackle, a chemistry and radiative cooling library. "\
                               "Must set <--passive> according to the primordial chemistry network set by GRACKLE_PRIMORDIAL. "\
                               "Please enable OpenMP when compiling Grackle (by 'make omp-on').\n"
@@ -1031,7 +1031,7 @@ def validation( paths, depends, constraints, **kwargs ):
             if kwargs[opt] != opt_val: continue         # not the value to be checked
             for check_opt, check_val in check.items():
                 if type(check_val) != type([]): check_val = [check_val]   # transform to list
-                if kwargs[check_opt] in check_val: continue     # satisify the validation
+                if kwargs[check_opt] in check_val: continue     # satisfy the validation
 
                 val_str = ", ".join(str(x) for x in check_val)
                 LOGGER.error("The option <--%s=%s> requires <--%s> to be set to [%s]. Current: <--%s=%s>."%(opt, str(kwargs[opt]), check_opt, val_str, check_opt, kwargs[check_opt]))

@@ -126,7 +126,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "PWave_XYZ",         &PWave_XYZ,             0,             0,                3                 );
    LOAD_PARA( load_mode, "PWave_LSR",         &PWave_LSR,             1,             NoMin_int,        NoMax_int         );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

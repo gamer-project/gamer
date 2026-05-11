@@ -202,8 +202,8 @@ FieldIdx_t AddParticleAttributeInt( const char *InputLabel )
 //                Check      : Whether or not to terminate the program if the target attribute cannot be found
 //                             --> Accepted options: CHECK_ON / CHECK_OFF
 //
-// Return      :  Sucess: index of the target attribute
-//                Failed: Idx_Undefined
+// Return      :  Success: index of the target attribute
+//                Failed : Idx_Undefined
 //-------------------------------------------------------------------------------------------------------
 FieldIdx_t GetParticleAttributeFltIndex( const char *InputLabel, const Check_t Check )
 {
@@ -239,8 +239,8 @@ FieldIdx_t GetParticleAttributeFltIndex( const char *InputLabel, const Check_t C
 //                Check      : Whether or not to terminate the program if the target attribute cannot be found
 //                             --> Accepted options: CHECK_ON / CHECK_OFF
 //
-// Return      :  Sucess: index of the target attribute
-//                Failed: Idx_Undefined
+// Return      :  Success: index of the target attribute
+//                Failed : Idx_Undefined
 //-------------------------------------------------------------------------------------------------------
 FieldIdx_t GetParticleAttributeIntIndex( const char *InputLabel, const Check_t Check )
 {

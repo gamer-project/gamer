@@ -120,6 +120,11 @@ extern int  (*FB_User_Ptr)( const int lv, const double TimeNew, const double Tim
                             real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
                             const int TID, RandomNumber_t *RNG );
 #endif
+#ifdef SUPPORT_GRACKLE
+extern real_che (*Grackle_vHeatingRate_User_Ptr)( const double x, const double y, const double z, const double Time, const double n_H );
+extern real_che (*Grackle_sHeatingRate_User_Ptr)( const double x, const double y, const double z, const double Time );
+extern real_che (*Grackle_tempFloor_User_Ptr)( const double x, const double y, const double z, const double Time, const real_che Dens_Gas, const real_che sEint_Gas );
+#endif
 
 
 

@@ -119,7 +119,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "Gau_XYZ",           &Gau_XYZ,               0,             0,                2                 );
    LOAD_PARA( load_mode, "Gau_PeriodicN",     &Gau_PeriodicN,         0,             0,                NoMax_int         );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

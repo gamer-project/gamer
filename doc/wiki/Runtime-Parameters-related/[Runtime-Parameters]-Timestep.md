@@ -1,14 +1,3 @@
-This page describes various timestep constraints. See also Sections 2.1 and 2.6 in the
-[GAMER-2 code paper](https://arxiv.org/abs/1712.07070).
-
-
-## Compilation Options
-
-Related options: none
-
-
-## Runtime Parameters
-
 Parameters described on this page:
 [DT__MAX](#DT__MAX), &nbsp;
 [DT__FLUID](#DT__FLUID), &nbsp;
@@ -18,6 +7,7 @@ Parameters described on this page:
 [DT__PARVEL](#DT__PARVEL), &nbsp;
 [DT__PARVEL_MAX](#DT__PARVEL_MAX), &nbsp;
 [DT__PARACC](#DT__PARACC), &nbsp;
+[DT__GRACKLE_COOLING](#DT__GRACKLE_COOLING), &nbsp;
 [DT__CR_DIFFUSION](#DT__CR_DIFFUSION), &nbsp;
 [DT__MAX_DELTA_A](#DT__MAX_DELTA_A), &nbsp;
 [DT__SYNC_PARENT_LV](#DT__SYNC_PARENT_LV), &nbsp;
@@ -33,10 +23,8 @@ Parameters described on this page:
 [AUTO_REDUCE_INT_MONO_FACTOR](#AUTO_REDUCE_INT_MONO_FACTOR), &nbsp;
 [AUTO_REDUCE_INT_MONO_MIN](#AUTO_REDUCE_INT_MONO_MIN) &nbsp;
 
-
 Other related parameters:
-[[]] &nbsp;
-
+none
 
 Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**
 
@@ -107,6 +95,14 @@ for the exact formula.
     * **Restriction:**
 Only applicable when adopting the compilation option
 [[--store_par_acc | [Installation]-Option-List#--store_par_acc]].
+
+<a name="DT__GRACKLE_COOLING"></a>
+* #### `DT__GRACKLE_COOLING` &ensp; (&#8805;0.0; <0.0 &#8594; off) &ensp; [-1.0]
+    * **Description:**
+Factor for Grackle cooling time.
+    * **Restriction:**
+Only applicable when adopting the compilation option
+[[--grackle | [Installation]-Option-List#--grackle]].
 
 <a name="DT__CR_DIFFUSION"></a>
 * #### `DT__CR_DIFFUSION` &ensp; (&#8805;0.0) &ensp; [0.3]
@@ -231,3 +227,4 @@ Must enable [AUTO_REDUCE_DT](#AUTO_REDUCE_DT).
 
 ## Links
 * [[Main page of Runtime Parameters | Runtime-Parameters]]
+* [[Main page of Timestep | Timestep]]

@@ -56,7 +56,7 @@ extern Timer_t *Timer_Par_MPI[NLEVEL][6];
 //                IntAttBitIdx  : Bitwise indices of the target particle integer attributes (e.g., _PAR_TYPE)
 //                                --> A user-defined attribute with an integer index IntAttIntIdx returned by
 //                                    AddParticleAttributeInt() can be converted to a bitwise index by BIDX(IntAttIntIdx)
-//                PredictPos    : Predict particle position, which is useful for particle mass assignement
+//                PredictPos    : Predict particle position, which is useful for particle mass assignment
 //                                --> We send particle position **after** prediction so that we don't have to
 //                                    send particle velocity
 //                TargetTime    : Target time for predicting the particle position

@@ -1,11 +1,3 @@
-
-## Compilation Options
-
-Related options:
-[[--comoving | [Installation]-Option-List#--comoving]] &nbsp;
-
-## Runtime Parameters
-
 Parameters described on this page:
 [A_INIT](#A_INIT), &nbsp;
 [OMEGA_M0](#OMEGA_M0), &nbsp;
@@ -44,3 +36,4 @@ Dimensionless Hubble constant.
 
 ## Links
 * [[Main page of Runtime Parameters | Runtime Parameters]]
+* [[Main page of Cosmology | Cosmology]]
