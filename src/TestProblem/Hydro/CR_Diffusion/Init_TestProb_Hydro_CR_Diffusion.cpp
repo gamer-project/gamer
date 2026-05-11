@@ -342,6 +342,11 @@ void SetParameter()
 //                   --> It will be calculated automatically
 //                4. For MHD, do NOT add magnetic energy (i.e., 0.5*B^2) to fluid[ENGY] here
 //                   --> It will be added automatically later
+//                5. When cosmic rays are enabled:
+//                   --> Store the cosmic-ray energy in fluid[CRAY]
+//                   --> Include the cosmic-ray energy fluid[CRAY] in the total energy fluid[ENGY] as well
+//                   --> Be aware that EoS routines, such as EoS_DensPres2Eint_CPUPtr() and Hydro_ConEint2Etot(),
+//                       always operate on the *total (gas + cosmic rays)* pressure/internal energy
 //
 // Parameter   :  fluid    : Fluid field to be initialized
 //                x/y/z    : Physical coordinates
