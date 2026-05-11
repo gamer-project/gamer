@@ -39,7 +39,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                ParICFormat             : Data format of the particle initialization file (1=[att][id], 2=[id][att])
 //                ParICMass               : Assign this mass to all particles for Init=3
 //                ParICType               : Assign this type to all particles for Init=3
-//                ParICPUid               : Assign particle UID from the file to all particles for Init=3
+//                ParICPUID               : Assign particle UID from the file to all particles for Init=3
 //                Interp                  : Mass/acceleration/velocity interpolation scheme (NGP,CIC,TSC)
 //                InterpTracer            : Mass/acceleration/velocity interpolation scheme for tracers (NGP,CIC,TSC)
 //                Integ                   : Integration scheme (PAR_INTEG_EULER, PAR_INTEG_KDK)
@@ -59,7 +59,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                                              If a user forgets to assign `PUID` to `PUID_TBA`, we can easily detect incorrect behavior by checking if `PUID < 1`.
 //                                              Although we do have `Check_UniquePUID()` to verify uniqueness, it is not as efficient as this simple check.
 //                AttributeFlt            : Pointer arrays to different particle floating-point attributes (Mass, Pos, Vel, ...)
-//                AttributeInt            : Pointer arrays to different particle integer        attributes (Type, PUid)
+//                AttributeInt            : Pointer arrays to different particle integer        attributes (Type, PUID)
 //                InactiveParList         : List of inactive particle IDs
 //                Mesh_Attr               : Pointer arrays to different mesh quantities mapped onto tracer particles
 //                Mesh_Attr_Num           : Number of mesh quantities mapped onto tracer particles
@@ -107,7 +107,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                Time                    : Particle physical time
 //                Acc                     : Particle acceleration (only when STORE_PAR_ACC is on)
 //                Type                    : Particle type (e.g., tracer, generic, dark matter, star)
-//                PUid                    : Particle UID
+//                PUID                    : Particle UID
 //
 // Method      :  Particle_t        : Constructor
 //               ~Particle_t        : Destructor
@@ -131,7 +131,7 @@ struct Particle_t
    ParICFormat_t ParICFormat;
    double        ParICMass;
    int           ParICType;
-   bool          ParICPUid;
+   bool          ParICPUID;
    ParInteg_t    Integ;
    ParInterp_t   Interp;
    TracerInteg_t IntegTracer;
@@ -188,7 +188,7 @@ struct Particle_t
    real_par     *AccZ;
 #  endif
    long_par     *Type;
-   long_par     *PUid;
+   long_par     *PUID;
 
 
    //===================================================================================
@@ -208,7 +208,7 @@ struct Particle_t
       ParICFormat         = PAR_IC_FORMAT_NONE;
       ParICMass           = -1.0;
       ParICType           = -1;
-      ParICPUid           = false;
+      ParICPUID           = false;
       Interp              = PAR_INTERP_NONE;
       InterpTracer        = PAR_INTERP_NONE;
       Integ               = PAR_INTEG_NONE;
@@ -275,7 +275,7 @@ struct Particle_t
       AccZ = NULL;
 #     endif
       Type = NULL;
-      PUid = NULL;
+      PUID = NULL;
 
    } // METHOD : Particle_t
 
@@ -428,12 +428,12 @@ struct Particle_t
       AccZ = AttributeFlt[PAR_ACCZ];
 #     endif
       Type = AttributeInt[PAR_TYPE];
-      PUid = AttributeInt[PAR_PUID];
+      PUID = AttributeInt[PAR_PUID];
 
 //    initialize some arrays
       for (long p=0; p<NPar_Input; p++)
       {
-         PUid[p] = PUID_TBA;
+         PUID[p] = PUID_TBA;
       }
 
    } // METHOD : InitRepo
@@ -535,7 +535,7 @@ struct Particle_t
             AccZ = AttributeFlt[PAR_ACCZ];
 #           endif
             Type = AttributeInt[PAR_TYPE];
-            PUid = AttributeInt[PAR_PUID];
+            PUID = AttributeInt[PAR_PUID];
          }
 
          ParID = NPar_AcPlusInac;

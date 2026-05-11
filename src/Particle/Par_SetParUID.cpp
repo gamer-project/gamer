@@ -8,7 +8,7 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_SetParUID
-// Description :  Set the particle unique UID
+// Description :  Set the particle UID
 //
 // Note        :  1. Invoked by Init_GAMER() and SF_CreateStar()
 //                2. New particle UIDs should be initialized to PUID_TBA before calling this routine
@@ -28,18 +28,18 @@ void Par_SetParUID()
    long NNewPar_ThisRank = 0L, NNewPar_AllRank;
 
 // calculate the number of new particles
-   long *NewParIDList = new long [NPar_ThisRank];
+   long *NewParUIDList = new long [NPar_ThisRank];
    for (long p=0; p<NPar_ThisRank; p++)
    {
-      if ( amr->Par->PUid[p] > (long_par)0  &&  amr->Par->PUid[p] < amr->Par->NextPUID )   continue;  // exclude particles that already have valid PUIDs
+      if ( amr->Par->PUID[p] > (long_par)0  &&  amr->Par->PUID[p] < amr->Par->NextPUID )   continue;  // exclude particles that already have valid PUIDs
 
-      if ( amr->Par->PUid[p] != PUID_TBA )
-         Aux_Error( ERROR_INFO, "New particle before UID assignment has an invalid PUid[%ld] = %ld != %ld !!\n",
-                    p, (long)amr->Par->PUid[p], (long)PUID_TBA );
+      if ( amr->Par->PUID[p] != PUID_TBA )
+         Aux_Error( ERROR_INFO, "New particle before UID assignment has an invalid PUID[%ld] = %ld != %ld !!\n",
+                    p, (long)amr->Par->PUID[p], (long)PUID_TBA );
 
       if ( amr->Par->Mass[p] < (real_par)0.0 )   continue;   // exclude inactive particles
 
-      NewParIDList[NNewPar_ThisRank] = p;
+      NewParUIDList[NNewPar_ThisRank] = p;
       NNewPar_ThisRank += 1L;
    }
    MPI_Allreduce( &NNewPar_ThisRank, &NNewPar_AllRank, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD );
@@ -47,7 +47,7 @@ void Par_SetParUID()
 // check the number of new particles
    if ( NNewPar_AllRank == 0L )
    {
-      delete [] NewParIDList;
+      delete [] NewParUIDList;
       return;
    }
    if ( NNewPar_AllRank < 0L )
@@ -55,7 +55,7 @@ void Par_SetParUID()
 
 // check whether the next PUID will overflow
    if ( amr->Par->NextPUID > ( (sizeof(long_par) == sizeof(int)) ? __INT_MAX__ : __LONG_MAX__ ) - NNewPar_AllRank )
-      Aux_Error( ERROR_INFO, "amr->Par->PUid = amr->Par->NextPUID (%ld) + NNewPar_AllRank (%ld) - 1 will overflow !!\n", amr->Par->NextPUID, NNewPar_AllRank );
+      Aux_Error( ERROR_INFO, "amr->Par->PUID = amr->Par->NextPUID (%ld) + NNewPar_AllRank (%ld) - 1 will overflow !!\n", amr->Par->NextPUID, NNewPar_AllRank );
 
 // safety check for the type conversion from long to int
    int NNewPar_ThisRank_int = NNewPar_ThisRank;
@@ -68,8 +68,8 @@ void Par_SetParUID()
    for (int r=1; r<MPI_NRank; r++)  SendDisp[r] = SendDisp[r-1] + NSend[r-1];
 
 // allocate memory
-   long_par *NewParPUid_AllRank  = new long_par [NNewPar_AllRank];
-   long_par *NewParPUid_ThisRank = new long_par [NNewPar_ThisRank];
+   long_par *NewParUID_AllRank  = new long_par [NNewPar_AllRank];
+   long_par *NewParUID_ThisRank = new long_par [NNewPar_ThisRank];
    real_par *NewParPos_AllRank [3];
    real_par *NewParPos_ThisRank[3];
 
@@ -82,9 +82,9 @@ void Par_SetParUID()
 // collect new particle position in this rank
    for (long p=0; p<NNewPar_ThisRank; p++)
    {
-      NewParPos_ThisRank[0][p] = amr->Par->PosX[NewParIDList[p]];
-      NewParPos_ThisRank[1][p] = amr->Par->PosY[NewParIDList[p]];
-      NewParPos_ThisRank[2][p] = amr->Par->PosZ[NewParIDList[p]];
+      NewParPos_ThisRank[0][p] = amr->Par->PosX[NewParUIDList[p]];
+      NewParPos_ThisRank[1][p] = amr->Par->PosY[NewParUIDList[p]];
+      NewParPos_ThisRank[2][p] = amr->Par->PosZ[NewParUIDList[p]];
    }
 
 // gather particle position from all ranks
@@ -101,23 +101,23 @@ void Par_SetParUID()
       long *Sort_IdxTable = new long [NNewPar_AllRank];
       const int Sort_Order[3] = { 0, 1, 2 };
       Mis_SortByRows( NewParPos_AllRank, Sort_IdxTable, NNewPar_AllRank, Sort_Order, 3 );
-      for (long p=0; p<NNewPar_AllRank; p++) NewParPUid_AllRank[ Sort_IdxTable[p] ] = (long_par)( p + amr->Par->NextPUID );
+      for (long p=0; p<NNewPar_AllRank; p++) NewParUID_AllRank[ Sort_IdxTable[p] ] = (long_par)( p + amr->Par->NextPUID );
       delete [] Sort_IdxTable;
    }
 
 // scatter particle UID to all ranks
-   MPI_Scatterv( NewParPUid_AllRank,  NSend, SendDisp,      MPI_GAMER_LONG_PAR,
-                 NewParPUid_ThisRank, NNewPar_ThisRank_int, MPI_GAMER_LONG_PAR,
+   MPI_Scatterv( NewParUID_AllRank,  NSend, SendDisp,      MPI_GAMER_LONG_PAR,
+                 NewParUID_ThisRank, NNewPar_ThisRank_int, MPI_GAMER_LONG_PAR,
                  0, MPI_COMM_WORLD );
 
 // set new particle UID in this rank
    for (long p=0; p<NNewPar_ThisRank; p++)
-      amr->Par->PUid[NewParIDList[p]] = NewParPUid_ThisRank[p];
+      amr->Par->PUID[NewParUIDList[p]] = NewParUID_ThisRank[p];
 
 // free memory
-   delete [] NewParIDList;
-   delete [] NewParPUid_AllRank;
-   delete [] NewParPUid_ThisRank;
+   delete [] NewParUIDList;
+   delete [] NewParUID_AllRank;
+   delete [] NewParUID_ThisRank;
    for (int d=0; d<3; d++)
    {
       delete [] NewParPos_AllRank [d];

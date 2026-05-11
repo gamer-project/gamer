@@ -4,22 +4,22 @@
 
 
 static void Check_FindHomePatch      ( int &PassAll, int &PassOne, const char *comment, const int lv,
-                                       const int PID, const long ParID, const double *EdgeL, const double *EdgeR,
+                                       const int PID, const long ParUID, const double *EdgeL, const double *EdgeR,
                                        const real_par *ParPos[] );
 static void Check_InLeafPatch        ( int &PassAll, int &PassOne, const char *comment, const int lv,
                                        const int PID, const int NParThisPatch );
 static void Check_NActive            ( int &PassAll, int &PassOne, const char *comment, const long NParInLeaf );
 static void Check_InactiveMass       ( int &PassAll, int &PassOne, const char *comment, const int lv,
-                                       const int PID, const long ParID );
+                                       const int PID, const long ParUID );
 static void Check_OneHomePatch       ( int &PassAll, int &PassOne, const char *comment, const int lv,
-                                       const int PID, const long ParID, bool *ParHome );
+                                       const int PID, const long ParUID, bool *ParHome );
 static void Check_ActiveHome         ( int &PassAll, int &PassOne, const char *comment, const bool *ParHome );
 static void Check_NPar_AcPlusInac    ( int &PassAll, int &PassOne, const char *comment );
 static void Check_NPar_Active_AllRank( int &PassAll, int &PassOne, const char *comment, const long NPar_Active_AllRank_Expect );
 static void Check_NPar_Lv_Sum        ( int &PassAll, int &PassOne, const char *comment );
 static void Check_NPar_Copy          ( int &PassAll, int &PassOne, const char *comment );
 static void Check_ValidType          ( int &PassAll, int &PassOne, const char *comment, const int lv,
-                                       const int PID, const long ParID );
+                                       const int PID, const long ParUID );
 static void Check_ValidPUID          ( int &PassAll, int &PassOne, const char *comment );
 static void Check_UniquePUID         ( int &PassAll, int &PassOne, const char *comment, int *Par_CountPUID );
 
@@ -55,7 +55,7 @@ void Par_Aux_Check_Particle( const char *comment )
    long    NParInLeaf = 0;
    bool   *ParHome    = new bool [amr->Par->NPar_AcPlusInac];  // true/false --> particle has home/is homeless
    int     NParThisPatch;
-   long    ParID, NPar_Active_AllRank_Expect;
+   long    ParUID, NPar_Active_AllRank_Expect;
    double *EdgeL, *EdgeR;
    int     PassCheck[NCheck];
    int    *Par_CountPUID = new int [amr->Par->NextPUID];
@@ -95,15 +95,15 @@ void Par_Aux_Check_Particle( const char *comment )
 
                for (int p=0; p<NParThisPatch; p++)
                {
-                  ParID = amr->patch[0][lv][PID]->ParList[p];
+                  ParUID = amr->patch[0][lv][PID]->ParList[p];
 
-                  Check_OneHomePatch( PassAll, PassCheck[4], comment, lv, PID, ParID, ParHome );
+                  Check_OneHomePatch( PassAll, PassCheck[4], comment, lv, PID, ParUID, ParHome );
 
-                  Check_FindHomePatch( PassAll, PassCheck[0], comment, lv, PID, ParID, EdgeL, EdgeR, ParPos );
+                  Check_FindHomePatch( PassAll, PassCheck[0], comment, lv, PID, ParUID, EdgeL, EdgeR, ParPos );
 
-                  Check_InactiveMass( PassAll, PassCheck[3], comment, lv, PID, ParID );
+                  Check_InactiveMass( PassAll, PassCheck[3], comment, lv, PID, ParUID );
 
-                  Check_ValidType( PassAll, PassCheck[10], comment, lv, PID, ParID );
+                  Check_ValidType( PassAll, PassCheck[10], comment, lv, PID, ParUID );
 
                } // for (int p=0; p<NParThisPatch; p++)
             } // if ( amr->patch[0][lv][PID]->son == -1 )
@@ -164,18 +164,18 @@ void Par_Aux_Check_Particle( const char *comment )
 //                comment : You can put the location where this function is invoked in this string
 //                lv      : Target refinement level
 //                PID     : Target patch ID
-//                ParID   : Target particle ID
+//                ParUID  : Target particle UID
 //                EdgeL   : Target patch left edges
 //                EdgeR   : Target patch right edges
 //                ParPos  : Particle postion
 //-------------------------------------------------------------------------------------------------------
 void Check_FindHomePatch( int &PassAll, int &PassOne, const char *comment, const int lv, const int PID,
-                          const long ParID, const double *EdgeL, const double *EdgeR, const real_par *ParPos[] )
+                          const long ParUID, const double *EdgeL, const double *EdgeR, const real_par *ParPos[] )
 {
 
    for (int d=0; d<3; d++)
    {
-      if ( ParPos[d][ParID] >= EdgeL[d]  &&  ParPos[d][ParID] < EdgeR[d] )   continue;
+      if ( ParPos[d][ParUID] >= EdgeL[d]  &&  ParPos[d][ParUID] < EdgeR[d] )   continue;
 
       if ( PassAll )
          Aux_Message( stderr, "\"%s\" : <%s> FAILED at Time = %13.7e, Step = %ld !!\n",
@@ -183,10 +183,10 @@ void Check_FindHomePatch( int &PassAll, int &PassOne, const char *comment, const
 
       if ( PassOne )
          Aux_Message( stderr, "Check 1: %4s  %2s  %7s  %10s  %3s  %20s  %20s  %20s\n",
-                      "Rank", "Lv", "PID", "ParID", "Dim", "EdgeL", "EdgeR", "ParPos"  );
+                      "Rank", "Lv", "PID", "ParUID", "Dim", "EdgeL", "EdgeR", "ParPos"  );
 
       Aux_Message( stderr, "Check 1: %4d  %2d  %7d  %10ld  %3d  %20.13e  %20.13e  %20.13e\n",
-                   MPI_Rank, lv, PID, ParID, d, EdgeL[d], EdgeR[d], ParPos[d][ParID] );
+                   MPI_Rank, lv, PID, ParUID, d, EdgeL[d], EdgeR[d], ParPos[d][ParUID] );
 
       PassAll = false;
       PassOne = false;
@@ -276,13 +276,13 @@ void Check_NActive( int &PassAll, int &PassOne, const char *comment, const long 
 //                comment : You can put the location where this function is invoked in this string
 //                lv      : Target refinement level
 //                PID     : Target patch ID
-//                ParID   : Target particle ID
+//                ParUID  : Target particle UID
 //-------------------------------------------------------------------------------------------------------
 void Check_InactiveMass( int &PassAll, int &PassOne, const char *comment, const int lv, const int PID,
-                         const long ParID )
+                         const long ParUID )
 {
 
-   if ( amr->Par->Mass[ParID] >= 0.0 )   return;
+   if ( amr->Par->Mass[ParUID] >= 0.0 )   return;
 
    if ( PassAll )
       Aux_Message( stderr, "\"%s\" : <%s> FAILED at Time = %13.7e, Step = %ld !!\n",
@@ -290,11 +290,11 @@ void Check_InactiveMass( int &PassAll, int &PassOne, const char *comment, const 
 
    if ( PassOne )
       Aux_Message( stderr, "Check 4: %4s  %2s  %7s  %10s  %20s  %20s  %20s  %20s\n",
-                   "Rank", "Lv", "PID", "ParID", "PosX", "PosY", "PosZ", "Mass"  );
+                   "Rank", "Lv", "PID", "ParUID", "PosX", "PosY", "PosZ", "Mass"  );
 
    Aux_Message( stderr, "Check 4: %4d  %2d  %7d  %10ld  %20.13e  %20.13e  %20.13e  %20.13e\n",
-                MPI_Rank, lv, PID, ParID, amr->Par->PosX[ParID], amr->Par->PosY[ParID],
-                amr->Par->PosZ[ParID], amr->Par->Mass[ParID] );
+                MPI_Rank, lv, PID, ParUID, amr->Par->PosX[ParUID], amr->Par->PosY[ParUID],
+                amr->Par->PosZ[ParUID], amr->Par->Mass[ParUID] );
 
    PassAll = false;
    PassOne = false;
@@ -314,23 +314,23 @@ void Check_InactiveMass( int &PassAll, int &PassOne, const char *comment, const 
 //                comment : You can put the location where this function is invoked in this string
 //                lv      : Target refinement level
 //                PID     : Target patch ID
-//                ParID   : Target particle ID
+//                ParUID  : Target particle UID
 //                ParHome : Array indicating whether each particle has a home patch
 //-------------------------------------------------------------------------------------------------------
 void Check_OneHomePatch( int &PassAll, int &PassOne, const char *comment, const int lv, const int PID,
-                         const long ParID, bool *ParHome )
+                         const long ParUID, bool *ParHome )
 {
 
-   if ( ParHome[ParID] == false ) { ParHome[ParID] = true; return; }
+   if ( ParHome[ParUID] == false ) { ParHome[ParUID] = true; return; }
 
    if ( PassAll )
       Aux_Message( stderr, "\"%s\" : <%s> FAILED at Time = %13.7e, Step = %ld !!\n",
                    comment, __FUNCTION__, Time[lv], Step );
 
    if ( PassOne )
-      Aux_Message( stderr, "Check 5: %4s  %2s  %7s  %10s\n", "Rank", "Lv", "PID", "ParID" );
+      Aux_Message( stderr, "Check 5: %4s  %2s  %7s  %10s\n", "Rank", "Lv", "PID", "ParUID" );
 
-   Aux_Message( stderr, "Check 5: %4d  %2d  %7d  %10ld\n", MPI_Rank, lv, PID, ParID );
+   Aux_Message( stderr, "Check 5: %4d  %2d  %7d  %10ld\n", MPI_Rank, lv, PID, ParUID );
 
    PassAll = false;
    PassOne = false;
@@ -362,7 +362,7 @@ void Check_ActiveHome( int &PassAll, int &PassOne, const char *comment, const bo
                       comment, __FUNCTION__, Time[0], Step );
 
       if ( PassOne )
-         Aux_Message( stderr, "Check 6: %4s  %10s\n", "Rank", "ParID" );
+         Aux_Message( stderr, "Check 6: %4s  %10s\n", "Rank", "ParIdx" );
 
       Aux_Message( stderr, "Check 6: %4d  %10ld\n", MPI_Rank, p );
 
@@ -514,32 +514,32 @@ void Check_NPar_Copy( int &PassAll, int &PassOne, const char *comment )
 //                comment : You can put the location where this function is invoked in this string
 //                lv      : Target refinement level
 //                PID     : Target patch ID
-//                ParID   : Target particle ID
+//                ParUID  : Target particle UID
 //-------------------------------------------------------------------------------------------------------
-void Check_ValidType( int &PassAll, int &PassOne, const char *comment, const int lv, const int PID, const long ParID )
+void Check_ValidType( int &PassAll, int &PassOne, const char *comment, const int lv, const int PID, const long ParUID )
 {
 
    bool CheckTypePass = true;
 
 // particle types must be recognizable
-   if ( amr->Par->Type[ParID] < (long_par)0  ||  amr->Par->Type[ParID] >= (long_par)PAR_NTYPE )
+   if ( amr->Par->Type[ParUID] < (long_par)0  ||  amr->Par->Type[ParUID] >= (long_par)PAR_NTYPE )
       CheckTypePass = false;
 
 // only support tracer particles when disabling GRAVITY
 #  ifndef GRAVITY
-   if ( amr->Par->Type[ParID] != PTYPE_TRACER )
+   if ( amr->Par->Type[ParUID] != PTYPE_TRACER )
       CheckTypePass = false;
 #  endif
 
 // must enable TRACER for tracer particles
 #  ifndef TRACER
-   if ( amr->Par->Type[ParID] == PTYPE_TRACER )
+   if ( amr->Par->Type[ParUID] == PTYPE_TRACER )
       CheckTypePass = false;
 #  endif
 
 // tracer particles must be massless
 #  ifdef TRACER
-   if ( amr->Par->Type[ParID] == PTYPE_TRACER  &&  amr->Par->Mass[ParID] != (real_par)0.0 )
+   if ( amr->Par->Type[ParUID] == PTYPE_TRACER  &&  amr->Par->Mass[ParUID] != (real_par)0.0 )
       CheckTypePass = false;
 #  endif
 
@@ -551,10 +551,10 @@ void Check_ValidType( int &PassAll, int &PassOne, const char *comment, const int
 
    if ( PassOne )
       Aux_Message( stderr, "Check 11: %4s  %2s  %7s  %10s  %10s  %20s\n",
-                   "Rank", "Lv", "PID", "ParID", "Type", "Mass" );
+                   "Rank", "Lv", "PID", "ParUID", "Type", "Mass" );
 
    Aux_Message( stderr, "Check 11: %4d  %2d  %7d  %10ld  %10d  %20.13e\n",
-                MPI_Rank, lv, PID, ParID, (int)amr->Par->Type[ParID], amr->Par->Mass[ParID] );
+                MPI_Rank, lv, PID, ParUID, (int)amr->Par->Type[ParUID], amr->Par->Mass[ParUID] );
 
    PassAll = false;
    PassOne = false;
@@ -578,7 +578,7 @@ void Check_ValidPUID( int &PassAll, int &PassOne, const char *comment )
 
    for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
    {
-      if ( amr->Par->PUid[p] > (long_par)0  &&  amr->Par->PUid[p] < amr->Par->NextPUID )  continue;
+      if ( amr->Par->PUID[p] > (long_par)0  &&  amr->Par->PUID[p] < amr->Par->NextPUID )  continue;
 
 //    exclude inactive particles, which could have been skipped during PUID assignment
       if ( amr->Par->Mass[p] < (real_par)0.0 )   continue;
@@ -588,9 +588,9 @@ void Check_ValidPUID( int &PassAll, int &PassOne, const char *comment )
                       comment, __FUNCTION__, Time[0], Step );
 
       if ( PassOne )
-         Aux_Message( stderr, "Check 12: %4s  %10s  %10s  %10s\n", "Rank", "ParID", "PUid", "NextPUID" );
+         Aux_Message( stderr, "Check 12: %4s  %10s  %10s  %10s\n", "Rank", "ParIdx", "PUID", "NextPUID" );
 
-      Aux_Message( stderr, "Check 12: %4d  %10ld  %10ld  %10ld\n", MPI_Rank, p, (long)amr->Par->PUid[p], amr->Par->NextPUID );
+      Aux_Message( stderr, "Check 12: %4d  %10ld  %10ld  %10ld\n", MPI_Rank, p, (long)amr->Par->PUID[p], amr->Par->NextPUID );
 
       PassAll = false;
       PassOne = false;
@@ -619,10 +619,10 @@ void Check_UniquePUID( int &PassAll, int &PassOne, const char *comment, int *Par
 //    exclude inactive particles, which could have duplicated PUIDs
       if ( amr->Par->Mass[p] < (real_par)0.0 )   continue;
 
-      const long uid = amr->Par->PUid[p];
-      Par_CountPUID[uid]++;
+      const long puid = amr->Par->PUID[p];
+      Par_CountPUID[puid]++;
 
-      if ( Par_CountPUID[uid] == 1 )   continue;
+      if ( Par_CountPUID[puid] == 1 )   continue;
 
       if ( PassAll )
          Aux_Message( stderr, "\"%s\" : <%s> FAILED at Time = %13.7e, Step = %ld !!\n",
@@ -631,7 +631,7 @@ void Check_UniquePUID( int &PassAll, int &PassOne, const char *comment, int *Par
       if ( PassOne )
          Aux_Message( stderr, "Check 13: %4s  %10s  %10s  %10s\n", "Rank", "ParUID", "Count", "NextPUID" );
 
-      Aux_Message( stderr, "Check 13: %4d  %10ld  %10d  %10ld\n", MPI_Rank, uid, Par_CountPUID[uid], amr->Par->NextPUID );
+      Aux_Message( stderr, "Check 13: %4d  %10ld  %10d  %10ld\n", MPI_Rank, puid, Par_CountPUID[puid], amr->Par->NextPUID );
 
       PassAll = false;
       PassOne = false;

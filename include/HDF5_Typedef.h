@@ -431,7 +431,7 @@ struct InputPara_t
    int    Par_ICFormat;
    double Par_ICMass;
    int    Par_ICType;
-   int    Par_ICPUid;
+   int    Par_ICPUID;
    int    Par_ICFloat8;
    int    Par_ICInt8;
    int    Par_Interp;
