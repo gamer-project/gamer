@@ -47,6 +47,7 @@ void Init_TestProb_ELBDM_PlaneWave();
 void Init_TestProb_ELBDM_Perturbation();
 void Init_TestProb_ELBDM_HaloMerger();
 void Init_TestProb_ELBDM_DiskHeating();
+void Init_TestProb_ELBDM_UniformGranule();
 
 
 
@@ -115,6 +116,7 @@ void Init_TestProb()
       case TESTPROB_ELBDM_PERTURBATION :                 Init_TestProb_ELBDM_Perturbation();                break;
       case TESTPROB_ELBDM_HALO_MERGER :                  Init_TestProb_ELBDM_HaloMerger();                  break;
       case TESTPROB_ELBDM_DISK_HEATING :                 Init_TestProb_ELBDM_DiskHeating();                 break;
+      case TESTPROB_ELBDM_UNIFORM_GRANULE :              Init_TestProb_ELBDM_UniformGranule();              break;
 
       default: Aux_Error( ERROR_INFO, "unsupported TESTPROB_ID (%d) !!\n", TESTPROB_ID );
    } // switch( TESTPROB_ID )

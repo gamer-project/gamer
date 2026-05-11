@@ -690,11 +690,14 @@ void Init_TestProb_Hydro_Grackle_Comoving()
    SetParameter();
 
 // set the function pointers of various problem-specific routines
-   Init_Function_User_Ptr   = SetGridIC;
-   Aux_Record_User_Ptr      = Aux_Record_GrackleComoving;
-   Init_User_Ptr            = Init_GrackleComoving;
-   End_User_Ptr             = End_GrackleComoving;
-   Mis_GetTimeStep_User_Ptr = Mis_GetTimeStep_GrackleComoving;
+   Init_Function_User_Ptr    = SetGridIC;
+   Aux_Record_User_Ptr       = Aux_Record_GrackleComoving;
+   Init_User_Ptr             = Init_GrackleComoving;
+   End_User_Ptr              = End_GrackleComoving;
+   Mis_GetTimeStep_User_Ptr  = Mis_GetTimeStep_GrackleComoving;
+#  ifdef SUPPORT_HDF5
+   Output_HDF5_InputTest_Ptr = LoadInputTestProb;
+#  endif
 #  endif // #if ( MODEL == HYDRO  &&  defined SUPPORT_GRACKLE  &&  defined COMOVING )
 
 
