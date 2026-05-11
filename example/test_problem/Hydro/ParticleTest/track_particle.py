@@ -46,7 +46,7 @@ class particle():
     def set_idx( self, ds, text=True ):
         if not text:
             dd = ds.all_data()
-            par_uid  = dd['ParPUid']
+            par_uid  = dd['ParPUID']
             self.idx = np.where(par_uid == self.PUID)[0][0]
         else:
             par_uid  = ds[:, 12]
@@ -67,7 +67,7 @@ class particle():
             MeshPres = dd['MeshPres']
             MeshVelX = dd['MeshVelX']
             par_type = dd['ParType']
-            par_uid  = dd['ParPUid']
+            par_uid  = dd['ParPUID']
             self.t.append(time)
         else:
             time     = ds[0, 10]
