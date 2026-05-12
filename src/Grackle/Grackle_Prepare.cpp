@@ -270,7 +270,7 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
 
 #           elif ( DUAL_ENERGY == DE_EINT )
 #           error : DE_EINT is NOT supported yet !!
-#           endif // DUAL_ENERGY = DE_ENPY/DE_EINT
+#           endif // DUAL_ENERGY == DE_ENPY/DE_EINT
 
 #           else // #ifdef DUAL_ENERGY
 
