@@ -1974,7 +1974,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          const real Emag = NULL_REAL;
 #        endif
 
-         for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = (IntData_CC + v*FSize3D_CC)[t];
+         for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = (IntData_CC + (NCOMP_FLUID+v)*FSize3D_CC)[t];
 
 //       here we ALWAYS use the dual-energy variable to correct the total energy density
 //       --> we achieve that by setting the dual-energy switch to an extremely larger number and ignore
