@@ -77,6 +77,15 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
                           const real Emag )
 {
 
+// check
+#  ifdef GAMER_DEBUG
+#  ifdef COSMIC_RAY
+   if ( Passive == NULL )
+      printf( "ERROR : Passive == NULL for COSMIC_RAY at file <%s>, line <%d>, function <%s> !!\n", ERROR_INFO );
+#  endif
+#  endif // GAMER_DEBUG
+
+
    const bool CheckMinPres_No = false;
    const bool CheckMinEint_No = false;
 
@@ -167,6 +176,15 @@ real Hydro_Con2Dual( const real Dens, const real MomX, const real MomY, const re
                      const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX], const long PassiveFloor )
 {
+
+// check
+#  ifdef GAMER_DEBUG
+#  ifdef COSMIC_RAY
+   if ( Passive == NULL )
+      printf( "ERROR : Passive == NULL for COSMIC_RAY at file <%s>, line <%d>, function <%s> !!\n", ERROR_INFO );
+#  endif
+#  endif // GAMER_DEBUG
+
 
 // currently this function does NOT apply pressure floor when calling Hydro_Con2Pres()
    const bool CheckMinPres_No = false;
