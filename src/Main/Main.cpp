@@ -309,7 +309,7 @@ EoS_DE2T_t    EoS_DensEint2Temp_CPUPtr   = NULL;
 EoS_DT2P_t    EoS_DensTemp2Pres_CPUPtr   = NULL;
 EoS_DE2S_t    EoS_DensEint2Entr_CPUPtr   = NULL;
 EoS_GENE_t    EoS_General_CPUPtr         = NULL;
-EoS_CRE2CRP_t EoS_CREint2CRPres_CPUPtr   = NULL;
+EoS_CRE2CRP_t EoS_CREint2CRPres_CPUPtr   = NULL;   // declare for Hydro_Con2Dual() even when COSMIC_RAY is disabled
 #ifdef COSMIC_RAY
 EoS_GP2GE_t   EoS_GasPres2GasEint_CPUPtr = NULL;
 EoS_GE2GP_t   EoS_GasEint2GasPres_CPUPtr = NULL;
@@ -325,7 +325,7 @@ EoS_DE2T_t    EoS_DensEint2Temp_GPUPtr   = NULL;
 EoS_DT2P_t    EoS_DensTemp2Pres_GPUPtr   = NULL;
 EoS_DE2S_t    EoS_DensEint2Entr_GPUPtr   = NULL;
 EoS_GENE_t    EoS_General_GPUPtr         = NULL;
-EoS_CRE2CRP_t EoS_CREint2CRPres_GPUPtr   = NULL;
+EoS_CRE2CRP_t EoS_CREint2CRPres_GPUPtr   = NULL;   // declare for Hydro_Con2Dual() even when COSMIC_RAY is disable
 #ifdef COSMIC_RAY
 EoS_GP2GE_t   EoS_GasPres2GasEint_GPUPtr = NULL;
 EoS_GE2GP_t   EoS_GasEint2GasPres_GPUPtr = NULL;

@@ -252,8 +252,9 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
             Dens  = *( fluid[DENS][0][0] + idx_p );
             Etot  = *( fluid[ENGY][0][0] + idx_p );
 
-//          use the dual-energy variable to calculate the internal energy if applicable
+//          compute gas internal energy density
 //          --> must exclude cosmic-ray energy to be consistent with Grackle (e.g., Grackle may use gas internal energy to infer temperature)
+//          --> use the dual-energy variable if applicable
 #           ifdef DUAL_ENERGY
 
 #           if   ( DUAL_ENERGY == DE_ENPY )
@@ -282,6 +283,7 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
 #           endif
             Eint  = Hydro_Con2Eint( Dens, Px, Py, Pz, Etot, CheckMinEint_Yes, MIN_EINT, PassiveFloorMask, Emag,
                                     NULL, NULL, NULL, NULL, NULL );
+//          exclude cosmic-ray energy since Hydro_Con2Eint() returns gas+cosmic-ray energies
 #           ifdef COSMIC_RAY
             Eint -= *( fluid[CRAY][0][0] + idx_p );
 #           endif
