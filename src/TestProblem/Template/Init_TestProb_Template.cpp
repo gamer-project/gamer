@@ -211,8 +211,8 @@ void SetParameter()
 //                   --> Be aware that EoS routines, such as EoS_DensPres2Eint_CPUPtr() and Hydro_ConEint2Etot(),
 //                       always operate on the *total (gas + cosmic rays)* pressure/internal energy
 //                6. Be aware that EoS routines generally require passive scalars
-//                   --> For example, EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ),
-//                       where the passive-scalar array is set to NULL, only works for simple EoS models such as EOS_GAMMA and doesn't work
+//                   --> For example, the passive-scalar array Passive[] must be properly filled when calling
+//                       EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table )
 //                       for more general EoS models such as EOS_COSMIC_RAY
 //
 // Parameter   :  fluid    : Fluid field to be initialized

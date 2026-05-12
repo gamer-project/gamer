@@ -210,6 +210,10 @@ void SetParameter()
 //                   --> Include the cosmic-ray energy fluid[CRAY] in the total energy fluid[ENGY] as well
 //                   --> Be aware that EoS routines, such as EoS_DensPres2Eint_CPUPtr() and Hydro_ConEint2Etot(),
 //                       always operate on the *total (gas + cosmic rays)* pressure/internal energy
+//                6. Be aware that EoS routines generally require passive scalars
+//                   --> For example, the passive-scalar array Passive[] must be properly filled when calling
+//                       EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table )
+//                       for more general EoS models such as EOS_COSMIC_RAY
 //
 // Parameter   :  fluid    : Fluid field to be initialized
 //                x/y/z    : Physical coordinates
