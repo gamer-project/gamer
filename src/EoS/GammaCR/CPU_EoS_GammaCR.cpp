@@ -128,6 +128,7 @@ static real EoS_DensEint2Pres_GammaCR( const real Dens, const real Eint, const r
 
 // check
 #  ifdef GAMER_DEBUG
+   if ( Passive      == NULL )   printf( "ERROR : Passive == NULL in %s !!\n", __FUNCTION__ );
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
    Hydro_IsUnphysical_Single( Dens, "input density",         TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
@@ -171,6 +172,7 @@ static real EoS_DensPres2Eint_GammaCR( const real Dens, const real Pres, const r
 
 // check
 #  ifdef GAMER_DEBUG
+   if ( Passive      == NULL )   printf( "ERROR : Passive == NULL in %s !!\n", __FUNCTION__ );
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
    Hydro_IsUnphysical_Single( Dens, "input density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
@@ -214,6 +216,7 @@ static real EoS_DensPres2CSqr_GammaCR( const real Dens, const real Pres, const r
 
 // check
 #  ifdef GAMER_DEBUG
+   if ( Passive      == NULL )   printf( "ERROR : Passive == NULL in %s !!\n", __FUNCTION__ );
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
    Hydro_IsUnphysical_Single( Dens, "input density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
@@ -260,6 +263,7 @@ static real EoS_DensEint2Temp_GammaCR( const real Dens, const real Eint, const r
 
 // check
 #  ifdef GAMER_DEBUG
+   if ( Passive      == NULL )   printf( "ERROR : Passive == NULL in %s !!\n", __FUNCTION__ );
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
    Hydro_IsUnphysical_Single( Dens, "input density",         TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
@@ -304,6 +308,7 @@ static real EoS_DensTemp2Pres_GammaCR( const real Dens, const real Temp, const r
 
 // check
 #  ifdef GAMER_DEBUG
+   if ( Passive      == NULL )   printf( "ERROR : Passive == NULL in %s !!\n", __FUNCTION__ );
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
    Hydro_IsUnphysical_Single( Dens, "input density",     TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
@@ -347,6 +352,7 @@ static real EoS_DensEint2Entr_GammaCR( const real Dens, const real Eint, const r
 
 // check
 #  ifdef GAMER_DEBUG
+   if ( Passive      == NULL )   printf( "ERROR : Passive == NULL in %s !!\n", __FUNCTION__ );
    if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
 
    Hydro_IsUnphysical_Single( Dens, "input density",         TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_VERBOSE );
@@ -416,6 +422,8 @@ static real EoS_CREint2CRPres_GammaCR( const real E_CR,
 
 // check
 #  ifdef GAMER_DEBUG
+   if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
+
    if ( E_CR < (real)0.0 )
       printf( "ERROR : invalid input cosmic-ray energy density (%13.7e) in %s() !!\n", E_CR, __FUNCTION__ );
 #  endif // GAMER_DEBUG
@@ -463,6 +471,8 @@ static real EoS_GasPres2GasEint_GammaCR( const real Pres_Gas,
 
 // check
 #  ifdef GAMER_DEBUG
+   if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
+
    if ( Pres_Gas < (real)0.0 )
       printf( "ERROR : invalid input gas pressure (%13.7e) in %s() !!\n", Pres_Gas, __FUNCTION__ );
 #  endif // GAMER_DEBUG
@@ -499,6 +509,8 @@ static real EoS_GasEint2GasPres_GammaCR( const real Eint_Gas,
 
 // check
 #  ifdef GAMER_DEBUG
+   if ( AuxArray_Flt == NULL )   printf( "ERROR : AuxArray_Flt == NULL in %s !!\n", __FUNCTION__ );
+
    if ( Eint_Gas < (real)0.0 )
       printf( "ERROR : invalid input gas internal energy density (%13.7e) in %s() !!\n", Eint_Gas, __FUNCTION__ );
 #  endif // GAMER_DEBUG
