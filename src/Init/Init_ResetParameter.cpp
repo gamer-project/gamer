@@ -1140,16 +1140,16 @@ void Init_ResetParameter()
 #  if ( MODEL == HYDRO )
    if ( OPT__CHECK_PRES_AFTER_FLU < 0 )
    {
-      if ( EOS == EOS_NUCLEAR  ||  EOS == EOS_TABULAR )
+      if ( EOS == EOS_GAMMA  ||  EOS == EOS_ISOTHERMAL )
       {
-         OPT__CHECK_PRES_AFTER_FLU = 1;
+         OPT__CHECK_PRES_AFTER_FLU = 0;
 
          PRINT_RESET_PARA( OPT__CHECK_PRES_AFTER_FLU, FORMAT_INT, "" );
       }
 
       else
       {
-         OPT__CHECK_PRES_AFTER_FLU = 0;
+         OPT__CHECK_PRES_AFTER_FLU = 1;
 
          PRINT_RESET_PARA( OPT__CHECK_PRES_AFTER_FLU, FORMAT_INT, "" );
       }
