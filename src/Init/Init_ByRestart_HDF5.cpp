@@ -61,8 +61,6 @@ void Init_ByRestart_HDF5( const char *FileName )
 // 1. load the simulation info
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "   Loading simulation information ...\n" );
 
-   const bool    Fatal             = true;
-   const bool NonFatal             = false;
    const bool NotAllocate          = false;
    const bool Load_RS_Yes          = true;
 
