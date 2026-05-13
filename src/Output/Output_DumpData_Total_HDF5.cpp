@@ -2819,7 +2819,7 @@ void FillIn_HDF5_InputPara( HDF5_Output_t *HDF5_InputPara, const int NFieldStore
    HDF5_InputPara->Add( "Grackle_CMB_Floor",      &GRACKLE_CMB_FLOOR,       0, NULL, Compare_Yes, Fatal_No, Fatal_No );
    HDF5_InputPara->Add( "Grackle_PE_Heating",     &GRACKLE_PE_HEATING,      0, NULL, Compare_Yes, Fatal_No, Fatal_No );
    HDF5_InputPara->Add( "Grackle_PE_HeatingRate", &GRACKLE_PE_HEATING_RATE, 0, NULL, Compare_Yes, Fatal_No, Fatal_No );
-   HDF5_InputPara->Add( "Grackle_CloudyTable",    &GRACKLE_CLOUDY_TABLE,    0, NULL, Compare_Yes, Fatal_No, Fatal_No );
+   HDF5_InputPara->Add( "Grackle_CloudyTable",     GRACKLE_CLOUDY_TABLE,    0, NULL, Compare_Yes, Fatal_No, Fatal_No );
    HDF5_InputPara->Add( "Grackle_ThreeBodyRate",  &GRACKLE_THREE_BODY_RATE, 0, NULL, Compare_Yes, Fatal_No, Fatal_No );
    HDF5_InputPara->Add( "Grackle_CIE_Cooling",    &GRACKLE_CIE_COOLING,     0, NULL, Compare_Yes, Fatal_No, Fatal_No );
    HDF5_InputPara->Add( "Grackle_H2_OpaApprox",   &GRACKLE_H2_OPA_APPROX,   0, NULL, Compare_Yes, Fatal_No, Fatal_No );

@@ -245,7 +245,7 @@ struct HDF5_Output_t
       }
 
 //    copy field from the pointer
-      Ptr[NField] = new char [ (int)ArrSize[NField] * (int)TypeSize[NField] ];
+      Ptr[NField] = new char [ ArrSize[NField] * TypeSize[NField] ];
       memcpy( Ptr[NField], NewPtr, ArrSize[NField] * TypeSize[NField] );
 
       TotalSize += ArrSize[NField] * TypeSize[NField];
@@ -307,7 +307,7 @@ struct HDF5_Output_t
       ArrLen          [NField] = NULL;
 
 //    copy field value
-      Ptr[NField] = new T [ (int)ArrSize[NField] ];
+      Ptr[NField] = new T [ ArrSize[NField] ];
       memcpy( Ptr[NField], &KeyVal, ArrSize[NField] * TypeSize[NField] );
 
       TotalSize += ArrSize[NField] * TypeSize[NField];
@@ -433,9 +433,9 @@ struct HDF5_Output_t
       {
          if ( Type[i] == TYPE_BOOL ) // bool is stored as int
          {
-            int *temp = new int [ (int)ArrSize[i] ];
+            int *temp = new int [ ArrSize[i] ];
 
-            for (int j=0; j<(int)ArrSize[i]; j++)
+            for (size_t j=0; j<ArrSize[i]; j++)
                temp[j] = ( *((bool *)(Ptr[i])+j) ) ? 1 : 0;
 
             memcpy( dataset+offset, temp, ArrSize[i] * TypeSize[i] );
@@ -571,7 +571,7 @@ struct HDF5_Output_t
 
 //    comparison
       char KeyNameWithIdx[MAX_STRING];
-      for (int offset=0; offset<(int)ArrSize[FieldIdx]; offset++)
+      for (size_t offset=0; offset<ArrSize[FieldIdx]; offset++)
       {
          if ( offset*TypeSize[FieldIdx] >= MinSize )
          {
@@ -593,12 +593,12 @@ struct HDF5_Output_t
          } // if ( offset*TypeSize[FieldIdx] >= MinSize )
 
          sprintf( KeyNameWithIdx, "%s", KeyName );
-         int skip = (int)ArrSize[FieldIdx];
+         size_t skip = ArrSize[FieldIdx];
          for (int d=0; d<ArrDim[FieldIdx]; d++)
          {
             skip /= ArrLen[FieldIdx][d];
-            int idx = (offset / skip) % ArrLen[FieldIdx][d];
-            snprintf( KeyNameWithIdx+strlen(KeyNameWithIdx), sizeof(KeyNameWithIdx)-strlen(KeyNameWithIdx), "[%d]", idx );
+            size_t idx = (offset / skip) % ArrLen[FieldIdx][d];
+            snprintf( KeyNameWithIdx+strlen(KeyNameWithIdx), sizeof(KeyNameWithIdx)-strlen(KeyNameWithIdx), "[%zu]", idx );
          }
 
 #        define COMPARE_NON_STRING_TYPE( field_name, format, fatal_compare, RS_Val, RT_Val )          \
