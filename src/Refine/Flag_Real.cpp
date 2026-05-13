@@ -384,7 +384,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                } // if ( OPT__FLAG_VORTICITY )
 
 
-//             evaluate pressure (including cosmic-ray pressure)
+//             evaluate pressure (including cosmic-ray pressure as required by EoS_DensPres2CSqr_CPUPtr() for NeedCs)
                if ( NeedPres )
                {
                   const bool CheckMinPres_Yes = true;
@@ -614,7 +614,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                              i_end   = ( i + FlagBuf >= PS1 ) ? 2 : 1;
 
 //                retrieve the adiabatic index for Jeans length refinement criterion
-//###REVISE: support cosmic rays
+//###REVISE: support general EoS (e.g., cosmic rays) and magnetic field
 #                 if ( MODEL == HYDRO  &&  defined GRAVITY )
                   const real JeansCoeff = ( OPT__FLAG_JEANS )
                                         ? JeansCoeff_Factor * Cs2[k][j][i] * Fluid[DENS][k][j][i] / Pres[k][j][i]
