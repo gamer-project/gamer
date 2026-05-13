@@ -37,12 +37,21 @@ PAUSE           = -1.0  # <= 0.0 --> mouse
  set size square
 #set xrange [3.0e-2:1e2]
 
+# density
 #v=7
 #set yrange [5.0e-1:2.0e4]
 
-v=12
-set yrange [1.0e-9:2.0e2]
+# entropy
+#v=12
+#set yrange [1.0e-9:2.0e-1]
 
+# pressure
+#v=14
+#set yrange [1.0e-9:1.0e2]
+
+# temperature
+v=15
+set yrange [1.0e-3:1.0e4]
 
 
 # set the output file extension automatically
