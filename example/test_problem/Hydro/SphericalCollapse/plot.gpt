@@ -53,6 +53,10 @@ PAUSE           = -1.0  # <= 0.0 --> mouse
 v=15
 set yrange [1.0e-3:1.0e4]
 
+# Mach number
+#v=16
+#set yrange [5.0e-4:1.0e3]
+
 
 # set the output file extension automatically
 # -----------------------------------------------------------
@@ -92,7 +96,8 @@ do for [ID=START_ID:END_ID:DELTA_ID] {
 
 
 #  plot
-   plot FILE_IN  u (abs($4-0.5)):(column(v)) w p pt 6 lc 7 notit
+   plot FILE_IN u (abs($4-0.5)):(column(v)) w p pt 6 lc 7 tit 'Target gas field' \
+       ,FILE_IN u (abs($4-0.5)):17          w p pt 5 lc 6 tit 'Dual-energy status'
 
 
    if ( GPVAL_TERM eq 'x11' ) { if ( PAUSE <= 0.0 ) { pause mouse }   else { pause PAUSE } };
