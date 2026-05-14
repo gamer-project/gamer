@@ -182,6 +182,10 @@ real (*Der_Out)               [ CUBE(PS1)                ] = new real         [D
             if ( OPT__OUTPUT_GRACKLE_TCOOL )
                                        fprintf( File, " %*s", StrLen_Flt, "Grackle cooling time" );
 #           endif
+#           ifdef DUAL_ENERGY
+            if ( OPT__OUTPUT_DUAL )
+                                       fprintf( File, " %*s", StrLen_Flt, "Dual-energy status" );
+#           endif
             if ( OPT__OUTPUT_USER_FIELD ) {
                for (int v=0; v<UserDerField_Num; v++)
                                        fprintf( File, " %*s", StrLen_Flt, UserDerField_Label[v] );
@@ -438,7 +442,15 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 
    if ( OPT__OUTPUT_GRACKLE_TCOOL )
       fprintf( File, BlankPlusFormat_Flt, DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
+#  endif
 
+#  ifdef DUAL_ENERGY
+   if ( OPT__OUTPUT_DUAL ) {
+//    convert the single character to real for simplicity
+      const char de_status_char = amr->patch[0][lv][PID]->de_status[k][j][i];
+      const real de_status_real = (real)( de_status_char - '0' );
+      fprintf( File, BlankPlusFormat_Flt, de_status_real );
+   }
 #  endif
 
    if ( OPT__OUTPUT_USER_FIELD ) {

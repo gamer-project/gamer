@@ -812,6 +812,15 @@ struct patch_t
       if ( de_status == NULL )
       {
          de_status = new char [PS1][PS1][PS1];
+
+//       without this initialization, data output by OPT__OUTPUT_DUAL may remain uninitialized for cells
+//       that have not been updated by the fluid/gravity solvers
+//       --> however, it does not affect the simulations, since this variable is always used after being
+//           updated by the fluid/gravity solvers
+         for (int k=0; k<PS1; k++)
+         for (int j=0; j<PS1; j++)
+         for (int i=0; i<PS1; i++)
+            de_status[k][j][i] = DE_UPDATED_BY_NONE;
       }
 
    } // METHOD : snew

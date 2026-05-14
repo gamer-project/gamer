@@ -98,6 +98,7 @@
 #define DE_UPDATED_BY_DUAL       ('1')
 #define DE_UPDATED_BY_MIN_PRES   ('2')
 #define DE_UPDATED_BY_ETOT_GRA   ('3')
+#define DE_UPDATED_BY_NONE       ('4')
 #endif
 
 
