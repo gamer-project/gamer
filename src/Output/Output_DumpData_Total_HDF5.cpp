@@ -329,7 +329,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
          Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
       sprintf( FieldLabelOut[ FluDumpIdx ], "%s", FieldLabel[v] );
    }
-   const int NCompStore  = NCOMP_TOTAL - NCompFluSkip;
+   const int NCompStore = NCOMP_TOTAL - NCompFluSkip;
 
 #  ifdef GRAVITY
    const int PotDumpIdx = ( OPT__OUTPUT_POT ) ? NFieldStored++ : NoDump;
@@ -360,35 +360,35 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #  endif
 
 #  if ( MODEL == HYDRO )
-   const int PresDumpIdx   = ( OPT__OUTPUT_PRES ) ? NFieldStored++ : NoDump;
+   const int PresDumpIdx = ( OPT__OUTPUT_PRES ) ? NFieldStored++ : NoDump;
    if ( PresDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_PRES   )  sprintf( FieldLabelOut[PresDumpIdx  ], "%s", "Pres"   );
+   if ( OPT__OUTPUT_PRES )    sprintf( FieldLabelOut[PresDumpIdx  ], "%s", "Pres" );
 
-   const int TempDumpIdx   = ( OPT__OUTPUT_TEMP ) ? NFieldStored++ : NoDump;
+   const int TempDumpIdx = ( OPT__OUTPUT_TEMP ) ? NFieldStored++ : NoDump;
    if ( TempDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_TEMP   )  sprintf( FieldLabelOut[TempDumpIdx  ], "%s", "Temp"   );
+   if ( OPT__OUTPUT_TEMP )    sprintf( FieldLabelOut[TempDumpIdx], "%s", "Temp" );
 
-   const int EntrDumpIdx   = ( OPT__OUTPUT_ENTR ) ? NFieldStored++ : NoDump;
+   const int EntrDumpIdx = ( OPT__OUTPUT_ENTR ) ? NFieldStored++ : NoDump;
    if ( EntrDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_ENTR   )  sprintf( FieldLabelOut[EntrDumpIdx  ], "%s", "Entr"   );
+   if ( OPT__OUTPUT_ENTR )    sprintf( FieldLabelOut[EntrDumpIdx], "%s", "Entr" );
 
-   const int CsDumpIdx     = ( OPT__OUTPUT_CS ) ? NFieldStored++ : NoDump;
+   const int CsDumpIdx = ( OPT__OUTPUT_CS ) ? NFieldStored++ : NoDump;
    if ( CsDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_CS     )  sprintf( FieldLabelOut[CsDumpIdx    ], "%s", "Cs"     );
+   if ( OPT__OUTPUT_CS )   sprintf( FieldLabelOut[CsDumpIdx], "%s", "Cs" );
 
    const int DivVelDumpIdx = ( OPT__OUTPUT_DIVVEL ) ? NFieldStored++ : NoDump;
    if ( DivVelDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
    if ( OPT__OUTPUT_DIVVEL )  sprintf( FieldLabelOut[DivVelDumpIdx], "%s", "DivVel" );
 
-   const int MachDumpIdx   = ( OPT__OUTPUT_MACH ) ? NFieldStored++ : NoDump;
+   const int MachDumpIdx = ( OPT__OUTPUT_MACH ) ? NFieldStored++ : NoDump;
    if ( MachDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_MACH   )  sprintf( FieldLabelOut[MachDumpIdx  ], "%s", "Mach"   );
+   if ( OPT__OUTPUT_MACH )    sprintf( FieldLabelOut[MachDumpIdx], "%s", "Mach" );
 
 #  ifdef MHD
    const int DivMagDumpIdx = ( OPT__OUTPUT_DIVMAG ) ? NFieldStored++ : NoDump;
@@ -401,7 +401,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    const int LorentzDumpIdx = ( OPT__OUTPUT_LORENTZ ) ? NFieldStored++ : NoDump;
    if ( LorentzDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_LORENTZ )  sprintf( FieldLabelOut[LorentzDumpIdx], "%s", "Lrtz" );
+   if ( OPT__OUTPUT_LORENTZ )    sprintf( FieldLabelOut[LorentzDumpIdx], "%s", "Lrtz" );
 
    const int VelDumpIdx0 = ( OPT__OUTPUT_3VELOCITY ) ? NFieldStored : NoDump;
    if ( VelDumpIdx0+2 >= NFIELD_STORED_MAX )
@@ -417,7 +417,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    const int EnthalpyDumpIdx = ( OPT__OUTPUT_ENTHALPY ) ? NFieldStored++ : NoDump;
    if ( EnthalpyDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_ENTHALPY )  sprintf( FieldLabelOut[EnthalpyDumpIdx], "%s", "Enth" );
+   if ( OPT__OUTPUT_ENTHALPY )   sprintf( FieldLabelOut[EnthalpyDumpIdx], "%s", "Enth" );
 #  endif // #ifdef SRHD
 
 #  ifdef SUPPORT_GRACKLE
@@ -429,13 +429,20 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    const int GrackleMuDumpIdx = ( OPT__OUTPUT_GRACKLE_MU ) ? NFieldStored++ : NoDump;
    if ( GrackleMuDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_GRACKLE_MU )  sprintf( FieldLabelOut[GrackleMuDumpIdx], "%s", "GrackleMu" );
+   if ( OPT__OUTPUT_GRACKLE_MU )    sprintf( FieldLabelOut[GrackleMuDumpIdx], "%s", "GrackleMu" );
 
    const int GrackleTCoolDumpIdx = ( OPT__OUTPUT_GRACKLE_TCOOL ) ? NFieldStored++ : NoDump;
    if ( GrackleTCoolDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_GRACKLE_TCOOL )  sprintf( FieldLabelOut[GrackleTCoolDumpIdx], "%s", "GrackleTCool" );
-#  endif // ifdef SUPPORT_GRACKLE
+   if ( OPT__OUTPUT_GRACKLE_TCOOL )    sprintf( FieldLabelOut[GrackleTCoolDumpIdx], "%s", "GrackleTCool" );
+#  endif // #ifdef SUPPORT_GRACKLE
+
+#  ifdef DUAL_ENERGY
+   const int DualStatusDumpIdx = ( OPT__OUTPUT_DUAL ) ? NFieldStored++ : NoDump;
+   if ( DualStatusDumpIdx >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_DUAL )    sprintf( FieldLabelOut[DualStatusDumpIdx], "%s", "DualStatus" );
+#  endif
 #  endif // if ( MODEL == HYDRO )
 
    const int UserDumpIdx0 = ( OPT__OUTPUT_USER_FIELD ) ? NFieldStored : NoDump;
@@ -1218,9 +1225,27 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                } // if ( v == GrackleTCoolDumpIdx )
 #              endif // #ifdef SUPPORT_GRACKLE
+
+//             d-14. dual-energy status
+#              ifdef DUAL_ENERGY
+               else if ( v == DualStatusDumpIdx )
+               {
+                  for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
+//                   convert the single character to real for simplicity
+                     const char de_status_char = amr->patch[0][lv][PID]->de_status[k][j][i];
+                     const real de_status_real = (real)( de_status_char - '0' );
+
+                     FieldData[PID][k][j][i] = de_status_real;
+                  }
+               } // if ( v == DualStatusDumpIdx )
+#              endif // #ifdef DUAL_ENERGY
 #              endif // #if ( MODEL == HYDRO )
 
-//             d-14. user-defined derived fields
+//             d-15. user-defined derived fields
 //             the following check also works for OPT__OUTPUT_USER_FIELD==false since UserDerField_Num is initialized as 0
                else if ( v >= UserDumpIdx0  &&  v < UserDumpIdx0 + UserDerField_Num )
                {

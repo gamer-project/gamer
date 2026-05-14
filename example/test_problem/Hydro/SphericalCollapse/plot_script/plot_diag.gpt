@@ -8,7 +8,7 @@ reset
 
 # target files
 # -----------------------------------------------------------
-FILE_IN_PREFIX  = 'Diag'
+FILE_IN_PREFIX  = '../Diag'
 FILE_IN_SUFFIX  = ''
 FILE_OUT_PREFIX = 'Fig__SC_DENS'
 START_ID        = 0
@@ -84,7 +84,7 @@ do for [ID=START_ID:END_ID:DELTA_ID] {
 
 
 #  load the physical time
-   DUMP_TABLE   = './Record__Dump'
+   DUMP_TABLE   = '../Record__Dump'
    NHEADER      = 1
    LOAD_TIME    = sprintf( "awk '{if(NR==%d+%d) {print $2}}' %s", NHEADER, ID+1, DUMP_TABLE  )
    TIME         = system( LOAD_TIME )*1.0    # *1.0 --> convert string to number
