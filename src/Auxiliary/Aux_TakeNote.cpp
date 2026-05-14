@@ -1652,6 +1652,9 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_GRACKLE_MU         % d\n",      OPT__OUTPUT_GRACKLE_MU      );
       fprintf( Note, "OPT__OUTPUT_GRACKLE_TCOOL      % d\n",      OPT__OUTPUT_GRACKLE_TCOOL   );
 #     endif
+#     ifdef DUAL_ENERGY
+      fprintf( Note, "OPT__OUTPUT_DUAL               % d\n",      OPT__OUTPUT_DUAL            );
+#     endif
 #     endif // #if ( MODEL == HYDRO )
 
 //    user-defined derived fields

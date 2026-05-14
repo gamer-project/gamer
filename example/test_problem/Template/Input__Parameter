@@ -416,6 +416,7 @@ OPT__OUTPUT_ENTHALPY          1           # output reduced enthalpy [1] ##SRHD O
 OPT__OUTPUT_GRACKLE_TEMP      0           # output the temperature calculated by Grackle [0] ##SUPPORT_GRACKLE only##
 OPT__OUTPUT_GRACKLE_MU        0           # output the mean molecular weight calculated by Grackle [0] ##SUPPORT_GRACKLE only##
 OPT__OUTPUT_GRACKLE_TCOOL     0           # output the cooling time calculated by Grackle [0] ##SUPPORT_GRACKLE only##
+OPT__OUTPUT_DUAL              0           # output dual-energy status (see DE_UPDATED_BY_* in Macro.h) [0] ##DUAL_ENERGY ONLY##
 OPT__OUTPUT_USER_FIELD        0           # output user-defined derived fields [0] -> edit "Flu_DerivedField_User.cpp"
 OPT__OUTPUT_MODE              1           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
 OPT__OUTPUT_RESTART           0           # output data immediately after restart [0]

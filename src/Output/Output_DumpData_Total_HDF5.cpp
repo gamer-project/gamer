@@ -79,7 +79,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2507)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2508)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -286,6 +286,7 @@ Procedure for outputting new variables:
 //                                             GRACKLE_HYDROGEN_MFRAC, OPT__UNFREEZE_GRACKLE,
 //                                             OPT__OUTPUT_GRACKLE_TEMP, OPT__OUTPUT_GRACKLE_MU, OPT__OUTPUT_GRACKLE_TCOOL,
 //                                             DT__GRACKLE_COOLING, OPT__FLAG_COOLING_LEN, FlagTable_CoolingLen
+//                2508 : 2026/05/14 --> support OPT__OUTPUT_DUAL
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1752,7 +1753,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2507;
+   KeyInfo.FormatVersion        = 2508;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2944,6 +2945,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Output_GrackleMu       = OPT__OUTPUT_GRACKLE_MU;
    InputPara.Opt__Output_GrackleTCool    = OPT__OUTPUT_GRACKLE_TCOOL;
 #  endif
+#  ifdef DUAL_ENERGY
+   InputPara.Opt__Output_Dual            = OPT__OUTPUT_DUAL;
+#  endif
 #  endif // #if ( MODEL == HYDRO )
    InputPara.Opt__Output_UserField       = OPT__OUTPUT_USER_FIELD;
    InputPara.Opt__Output_Mode            = OPT__OUTPUT_MODE;
@@ -4018,6 +4022,9 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Output_GrackleTemp",     HOFFSET(InputPara_t,Opt__Output_GrackleTemp    ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_GrackleMu",       HOFFSET(InputPara_t,Opt__Output_GrackleMu      ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_GrackleTCool",    HOFFSET(InputPara_t,Opt__Output_GrackleTCool   ), H5T_NATIVE_INT              );
+#  endif
+#  ifdef DUAL_ENERGY
+   H5Tinsert( H5_TypeID, "Opt__Output_Dual",            HOFFSET(InputPara_t,Opt__Output_Dual           ), H5T_NATIVE_INT              );
 #  endif
 #  endif // #if ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Opt__Output_UserField",       HOFFSET(InputPara_t,Opt__Output_UserField      ), H5T_NATIVE_INT              );

@@ -853,6 +853,9 @@ struct InputPara_t
    int    Opt__Output_GrackleMu;
    int    Opt__Output_GrackleTCool;
 #  endif
+#  ifdef DUAL_ENERGY
+   int    Opt__Output_Dual;
+#  endif
 #  endif // #if ( MODEL == HYDRO )
    int    Opt__Output_UserField;
    int    Opt__Output_Mode;

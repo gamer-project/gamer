@@ -125,6 +125,7 @@ extern int              MINMOD_MAX_ITER;
 extern double           MIN_DENS, MIN_PRES, MIN_EINT, MIN_TEMP, MIN_ENTR;
 #ifdef DUAL_ENERGY
 extern double           DUAL_ENERGY_SWITCH;
+extern bool             OPT__OUTPUT_DUAL;
 #endif
 #ifdef MHD
 extern double           FlagTable_Current[NLEVEL-1], INT_MONO_COEFF_B;

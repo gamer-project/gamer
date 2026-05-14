@@ -562,6 +562,9 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__OUTPUT_GRACKLE_MU",     &OPT__OUTPUT_GRACKLE_MU,          false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_GRACKLE_TCOOL",  &OPT__OUTPUT_GRACKLE_TCOOL,       false,           Useless_bool,  Useless_bool   );
 #  endif
+#  ifdef DUAL_ENERGY
+   ReadPara->Add( "OPT__OUTPUT_DUAL",           &OPT__OUTPUT_DUAL,                false,           Useless_bool,  Useless_bool   );
+#  endif
 #  endif // #if ( MODEL == HYDRO )
    ReadPara->Add( "OPT__OUTPUT_USER_FIELD",     &OPT__OUTPUT_USER_FIELD,          false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_MODE",           &OPT__OUTPUT_MODE,               -1,               1,             3              );
