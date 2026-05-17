@@ -813,7 +813,7 @@ struct patch_t
       {
          de_status = new char [PS1][PS1][PS1];
 
-//       without this initialization, data output by OPT__OUTPUT_DUAL may remain uninitialized for cells
+//       without this initialization, data output by OPT__OUTPUT_DUAL_STATUS may remain uninitialized for cells
 //       that have not been updated by the fluid/gravity solvers
 //       --> however, it does not affect the simulations, since this variable is always used after being
 //           updated by the fluid/gravity solvers

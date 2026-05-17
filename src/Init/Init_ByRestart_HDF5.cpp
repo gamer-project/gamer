@@ -2378,7 +2378,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Output_GrackleTCool",    &RS.Opt__Output_GrackleTCool,    SID, TID, NonFatal, &RT.Opt__Output_GrackleTCool,    1, NonFatal );
 #  endif
 #  ifdef DUAL_ENERGY
-   LoadField( "Opt__Output_Dual",            &RS.Opt__Output_Dual,            SID, TID, NonFatal, &RT.Opt__Output_Dual,            1, NonFatal );
+   LoadField( "Opt__Output_Dual_Status",     &RS.Opt__Output_Dual_Status,     SID, TID, NonFatal, &RT.Opt__Output_Dual_Status,     1, NonFatal );
 #  endif
 #  endif // #if ( MODEL == HYDRO )
    LoadField( "Opt__Output_UserField",       &RS.Opt__Output_UserField,       SID, TID, NonFatal, &RT.Opt__Output_UserField,       1, NonFatal );

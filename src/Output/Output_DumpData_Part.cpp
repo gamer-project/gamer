@@ -183,7 +183,7 @@ real (*Der_Out)               [ CUBE(PS1)                ] = new real         [D
                                        fprintf( File, " %*s", StrLen_Flt, "Grackle cooling time" );
 #           endif
 #           ifdef DUAL_ENERGY
-            if ( OPT__OUTPUT_DUAL )
+            if ( OPT__OUTPUT_DUAL_STATUS )
                                        fprintf( File, " %*s", StrLen_Flt, "Dual-energy status" );
 #           endif
             if ( OPT__OUTPUT_USER_FIELD ) {
@@ -445,7 +445,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 #  endif
 
 #  ifdef DUAL_ENERGY
-   if ( OPT__OUTPUT_DUAL ) {
+   if ( OPT__OUTPUT_DUAL_STATUS ) {
 //    convert the single character to real for simplicity
       const char de_status_char = amr->patch[0][lv][PID]->de_status[k][j][i];
       const real de_status_real = (real)( de_status_char - '0' );

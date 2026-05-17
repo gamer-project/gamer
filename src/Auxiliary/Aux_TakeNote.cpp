@@ -1653,7 +1653,7 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_GRACKLE_TCOOL      % d\n",      OPT__OUTPUT_GRACKLE_TCOOL   );
 #     endif
 #     ifdef DUAL_ENERGY
-      fprintf( Note, "OPT__OUTPUT_DUAL               % d\n",      OPT__OUTPUT_DUAL            );
+      fprintf( Note, "OPT__OUTPUT_DUAL_STATUS        % d\n",      OPT__OUTPUT_DUAL_STATUS     );
 #     endif
 #     endif // #if ( MODEL == HYDRO )
 

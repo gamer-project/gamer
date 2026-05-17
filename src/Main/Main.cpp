@@ -115,7 +115,7 @@ int                  MINMOD_MAX_ITER;
 double               MIN_DENS, MIN_PRES, MIN_EINT, MIN_TEMP, MIN_ENTR;
 #ifdef DUAL_ENERGY
 double               DUAL_ENERGY_SWITCH;
-bool                 OPT__OUTPUT_DUAL;
+bool                 OPT__OUTPUT_DUAL_STATUS;
 #endif
 #ifdef MHD
 double               FlagTable_Current[NLEVEL-1], INT_MONO_COEFF_B;

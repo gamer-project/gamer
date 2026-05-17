@@ -286,7 +286,7 @@ Procedure for outputting new variables:
 //                                             GRACKLE_HYDROGEN_MFRAC, OPT__UNFREEZE_GRACKLE,
 //                                             OPT__OUTPUT_GRACKLE_TEMP, OPT__OUTPUT_GRACKLE_MU, OPT__OUTPUT_GRACKLE_TCOOL,
 //                                             DT__GRACKLE_COOLING, OPT__FLAG_COOLING_LEN, FlagTable_CoolingLen
-//                2508 : 2026/05/14 --> support OPT__OUTPUT_DUAL
+//                2508 : 2026/05/14 --> support OPT__OUTPUT_DUAL_STATUS
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -438,10 +438,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #  endif // #ifdef SUPPORT_GRACKLE
 
 #  ifdef DUAL_ENERGY
-   const int DualStatusDumpIdx = ( OPT__OUTPUT_DUAL ) ? NFieldStored++ : NoDump;
+   const int DualStatusDumpIdx = ( OPT__OUTPUT_DUAL_STATUS ) ? NFieldStored++ : NoDump;
    if ( DualStatusDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_DUAL )    sprintf( FieldLabelOut[DualStatusDumpIdx], "%s", "DualStatus" );
+   if ( OPT__OUTPUT_DUAL_STATUS )   sprintf( FieldLabelOut[DualStatusDumpIdx], "%s", "DualStatus" );
 #  endif
 #  endif // if ( MODEL == HYDRO )
 
@@ -2971,7 +2971,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Output_GrackleTCool    = OPT__OUTPUT_GRACKLE_TCOOL;
 #  endif
 #  ifdef DUAL_ENERGY
-   InputPara.Opt__Output_Dual            = OPT__OUTPUT_DUAL;
+   InputPara.Opt__Output_Dual_Status     = OPT__OUTPUT_DUAL_STATUS;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
    InputPara.Opt__Output_UserField       = OPT__OUTPUT_USER_FIELD;
@@ -4049,7 +4049,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Output_GrackleTCool",    HOFFSET(InputPara_t,Opt__Output_GrackleTCool   ), H5T_NATIVE_INT              );
 #  endif
 #  ifdef DUAL_ENERGY
-   H5Tinsert( H5_TypeID, "Opt__Output_Dual",            HOFFSET(InputPara_t,Opt__Output_Dual           ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Dual_Status",     HOFFSET(InputPara_t,Opt__Output_Dual_Status    ), H5T_NATIVE_INT              );
 #  endif
 #  endif // #if ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Opt__Output_UserField",       HOFFSET(InputPara_t,Opt__Output_UserField      ), H5T_NATIVE_INT              );
