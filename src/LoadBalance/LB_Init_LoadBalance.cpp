@@ -403,14 +403,14 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAttFlt_Old, long_par 
 
    for (int r=0; r<MPI_NRank; r++)
    {
-      Send_NCount_Patch  [r] = 0;
+      Send_NCount_Patch     [r] = 0;
 #     ifdef PARTICLE
       Send_NCount_ParFltData[r] = 0L;
       Send_NCount_ParIntData[r] = 0L;
 #     endif
    }
-   Send_NDisp_Patch  [0] = 0;
-   Recv_NDisp_Patch  [0] = 0;
+   Send_NDisp_Patch     [0] = 0;
+   Recv_NDisp_Patch     [0] = 0;
 #  ifdef PARTICLE
    Send_NDisp_ParFltData[0] = 0L;
    Recv_NDisp_ParFltData[0] = 0L;
@@ -424,7 +424,7 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAttFlt_Old, long_par 
       LB_Idx = amr->patch[0][lv][PID]->LB_Idx;
       TRank  = LB_Index2Rank( lv, LB_Idx, CHECK_ON );
 
-      Send_NCount_Patch  [TRank] ++;
+      Send_NCount_Patch     [TRank] ++;
 #     ifdef PARTICLE
       Send_NCount_ParFltData[TRank] += (long)amr->patch[0][lv][PID]->NPar;
       Send_NCount_ParIntData[TRank] += (long)amr->patch[0][lv][PID]->NPar;
@@ -439,7 +439,7 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAttFlt_Old, long_par 
 #  endif
 
 // 1.2 receive count
-   MPI_Alltoall( Send_NCount_Patch,   1, MPI_INT,  Recv_NCount_Patch,   1, MPI_INT,  MPI_COMM_WORLD );
+   MPI_Alltoall( Send_NCount_Patch,      1, MPI_INT,  Recv_NCount_Patch,      1, MPI_INT,  MPI_COMM_WORLD );
 #  ifdef PARTICLE
    MPI_Alltoall( Send_NCount_ParFltData, 1, MPI_LONG, Recv_NCount_ParFltData, 1, MPI_LONG, MPI_COMM_WORLD );
    MPI_Alltoall( Send_NCount_ParIntData, 1, MPI_LONG, Recv_NCount_ParIntData, 1, MPI_LONG, MPI_COMM_WORLD );
@@ -448,8 +448,8 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAttFlt_Old, long_par 
 // 1.3 send/recv displacement
    for (int r=1; r<MPI_NRank; r++)
    {
-      Send_NDisp_Patch  [r] = Send_NDisp_Patch  [r-1] + Send_NCount_Patch  [r-1];
-      Recv_NDisp_Patch  [r] = Recv_NDisp_Patch  [r-1] + Recv_NCount_Patch  [r-1];
+      Send_NDisp_Patch     [r] = Send_NDisp_Patch     [r-1] + Send_NCount_Patch     [r-1];
+      Recv_NDisp_Patch     [r] = Recv_NDisp_Patch     [r-1] + Recv_NCount_Patch     [r-1];
 #     ifdef PARTICLE
       Send_NDisp_ParFltData[r] = Send_NDisp_ParFltData[r-1] + Send_NCount_ParFltData[r-1];
       Recv_NDisp_ParFltData[r] = Recv_NDisp_ParFltData[r-1] + Recv_NCount_ParFltData[r-1];
@@ -480,8 +480,8 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAttFlt_Old, long_par 
    }
 
 // 1.5 total number of patches (and particle data) to be sent and received
-   NSend_Total_Patch   = Send_NDisp_Patch  [ MPI_NRank-1 ] + Send_NCount_Patch  [ MPI_NRank-1 ];
-   NRecv_Total_Patch   = Recv_NDisp_Patch  [ MPI_NRank-1 ] + Recv_NCount_Patch  [ MPI_NRank-1 ];
+   NSend_Total_Patch      = Send_NDisp_Patch     [ MPI_NRank-1 ] + Send_NCount_Patch     [ MPI_NRank-1 ];
+   NRecv_Total_Patch      = Recv_NDisp_Patch     [ MPI_NRank-1 ] + Recv_NCount_Patch     [ MPI_NRank-1 ];
 #  ifdef PARTICLE
    NSend_Total_ParFltData = Send_NDisp_ParFltData[ MPI_NRank-1 ] + Send_NCount_ParFltData[ MPI_NRank-1 ];
    NRecv_Total_ParFltData = Recv_NDisp_ParFltData[ MPI_NRank-1 ] + Recv_NCount_ParFltData[ MPI_NRank-1 ];
@@ -545,7 +545,7 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAttFlt_Old, long_par 
 
    for (int r=0; r<MPI_NRank; r++)
    {
-      NDone_Patch  [r] = 0;
+      NDone_Patch     [r] = 0;
 #     ifdef PARTICLE
       NDone_ParFltData[r] = 0L;
       NDone_ParIntData[r] = 0L;
@@ -616,7 +616,7 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAttFlt_Old, long_par 
       }
 #     endif // #ifdef PARTICLE
 
-      NDone_Patch  [TRank] ++;
+      NDone_Patch     [TRank] ++;
 #     ifdef PARTICLE
       NDone_ParFltData[TRank] += (long)amr->patch[0][lv][PID]->NPar*(long)PAR_NATT_FLT_TOTAL;
       NDone_ParIntData[TRank] += (long)amr->patch[0][lv][PID]->NPar*(long)PAR_NATT_INT_TOTAL;
