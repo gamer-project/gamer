@@ -507,9 +507,9 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAttFlt_Old, long_par 
 
 // 2. prepare the MPI send buffers
 // ==========================================================================================
+   const int  FluSg              = amr->FluSg[lv];
    const long SendDataSizeFlu1v  = NSend_Total_Patch*FluSize1v;
    const long RecvDataSizeFlu1v  = NRecv_Total_Patch*FluSize1v;
-   const int  FluSg              = amr->FluSg[lv];
 #  ifdef GRAVITY
    const int  PotSg              = amr->PotSg[lv];
 #  ifdef STORE_POT_GHOST
@@ -523,21 +523,21 @@ void LB_RedistributeRealPatch( const int lv, real_par **ParAttFlt_Old, long_par 
    const long RecvDataSizeMag1v  = NRecv_Total_Patch*MagSize1v;
 #  endif
 
-   real     *SendPtr         = NULL;
-   real_par *SendPtr_ParFlt  = NULL;
-   long_par *SendPtr_ParInt  = NULL;
-   long     *SendBuf_LBIdx   = new long [ NSend_Total_Patch ];
-   real     *SendBuf_Flu     = ( SendGridData ) ? new real [ SendDataSizeFlu1v*NCOMP_TOTAL ] : NULL;
+   real     *SendPtr            = NULL;
+   long     *SendBuf_LBIdx      = new long [ NSend_Total_Patch ];
+   real     *SendBuf_Flu        = ( SendGridData ) ? new real [ SendDataSizeFlu1v*NCOMP_TOTAL ] : NULL;
 #  ifdef GRAVITY
-   real     *SendBuf_Pot     = ( SendGridData ) ? new real [ SendDataSizeFlu1v ]             : NULL;
+   real     *SendBuf_Pot        = ( SendGridData ) ? new real [ SendDataSizeFlu1v ]             : NULL;
 #  ifdef STORE_POT_GHOST
-   real     *SendBuf_PotExt  = ( SendGridData ) ? new real [ SendDataSizePotExt ]            : NULL;
+   real     *SendBuf_PotExt     = ( SendGridData ) ? new real [ SendDataSizePotExt ]            : NULL;
 #  endif
 #  endif // GRAVITY
 #  ifdef MHD
-   real     *SendBuf_Mag     = ( SendGridData ) ? new real [ SendDataSizeMag1v*NCOMP_MAG ]   : NULL;
+   real     *SendBuf_Mag        = ( SendGridData ) ? new real [ SendDataSizeMag1v*NCOMP_MAG ]   : NULL;
 #  endif
 #  ifdef PARTICLE
+   real_par *SendPtr_ParFlt     = NULL;
+   long_par *SendPtr_ParInt     = NULL;
    real_par *SendBuf_ParFltData = new real_par [ NSend_Total_ParFltData ];
    long_par *SendBuf_ParIntData = new long_par [ NSend_Total_ParIntData ];
    int      *SendBuf_NPar       = new int      [ NSend_Total_Patch ];
