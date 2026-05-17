@@ -48,7 +48,7 @@ for ds in ts.piter():
 
    sz.set_log(  field[1], False )
    sz.set_cmap( field[1], 'algae' )
-   sz.set_zlim( field[1], 0.0, 4.0 )
+   sz.set_zlim( field[1], 0.0, 5.0 )
 #  sz.set_unit( field[1], 'code_mass/code_length**3' )
 
 #  sz.set_axes_unit( 'code_length' )

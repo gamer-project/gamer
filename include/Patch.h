@@ -35,7 +35,7 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                      --> Currently it is used for Par->ImproveAcc and SF_CreateStar_AGORA() only
 //                                      --> Currently it's useless for buffer patches
 //                de_status           : Assigned to (DE_UPDATED_BY_NONE / DE_UPDATED_BY_ETOT / DE_UPDATED_BY_DUAL /
-//                                                   DE_UPDATED_BY_MIN_PRES / DE_UPDATED_BY_ETOT_GRA)
+//                                                   DE_UPDATED_BY_MIN_PRES / DE_UPDATED_BY_ETOT_GRA / DE_UPDATED_BY_REFINE)
 //                                      to indicate whether each cell is updated by the total energy, dual energy variable,
 //                                      or minimum allowed pressure
 //                                      --> DE_UPDATED_BY_XXX are defined in Macro.h
