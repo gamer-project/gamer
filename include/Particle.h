@@ -354,7 +354,7 @@ struct Particle_t
    //                   --> Assuming no inactive particles (i.e., NPar_Inactive = 0)
    //                2. For LOAD_BALANCE, some lists recording the information for exchanging
    //                   particles between different ranks are also allocated here
-   //                3. Initialize PUID to be PUID_TBA
+   //                3. Initialize built-in integer attributes (e.g., Type, PUID, Flag)
    //
    // Parameter   :  NPar_Input : Total number of active particles
    //                NRank      : Total number of MPI ranks
@@ -442,9 +442,10 @@ struct Particle_t
       PUID = AttributeInt[PAR_PUID];
       Flag = AttributeInt[PAR_FLAG];
 
-//    initialize some arrays
+//    initialize built-in integer attributes
       for (long p=0; p<NPar_Input; p++)
       {
+         Type[p] = PTYPE_TBA;
          PUID[p] = PUID_TBA;
          Flag[p] = PFLAG_TBA;
       }

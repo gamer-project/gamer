@@ -611,7 +611,8 @@
 // number of particle types (default: 4)
 #  define  PAR_NTYPE                4
 
-// particle type indices (must be in the range 0<=index<PAR_NTYPE)
+// particle type indices (must be in the range 0<=index<PAR_NTYPE except for PTYPE_TBA)
+#  define  PTYPE_TBA                (long_par)-1
 #  define  PTYPE_TRACER             (long_par)0
 #  define  PTYPE_GENERIC_MASSIVE    (long_par)1
 #  define  PTYPE_DARK_MATTER        (long_par)2

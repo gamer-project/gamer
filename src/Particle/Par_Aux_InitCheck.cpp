@@ -40,7 +40,7 @@ void Par_Aux_InitCheck()
       if ( Mass[ParIdx] < 0.0 )   Aux_Error( ERROR_INFO, "Mass[%ld] = %14.7e < 0.0 !!\n", ParIdx, Mass[ParIdx] );
 
 //    check particle types
-      if ( Type[ParIdx] < (real_par)0  ||  Type[ParIdx] >= (real_par)PAR_NTYPE )
+      if ( Type[ParIdx] < 0  ||  Type[ParIdx] >= PAR_NTYPE )
          Aux_Error( ERROR_INFO, "Type[%ld] = %d (accepted range: 0<=index<%d) !!\n", ParIdx, (int)Type[ParIdx], PAR_NTYPE );
 
 //    check particle UID
