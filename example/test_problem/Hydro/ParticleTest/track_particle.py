@@ -77,9 +77,9 @@ class particle():
             velx     = ds[:, 4]
             vely     = ds[:, 5]
             velz     = ds[:, 6]
-            MeshDens = [0.0 for _ in time]
-            MeshPres = [0.0 for _ in time]
-            MeshVelX = [0.0 for _ in time]
+            MeshDens = np.zeros_like( posx )
+            MeshPres = np.zeros_like( posx )
+            MeshVelX = np.zeros_like( posx )
             par_type = ds[:, 11]
             par_uid  = ds[:, 12]
             self.t.append(time)
