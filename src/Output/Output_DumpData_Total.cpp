@@ -16,7 +16,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total (FormatVersion = 2220)
+// Function    :  Output_DumpData_Total (FormatVersion = 2310)
 // Description :  Output all simulation data in the binary form, which can be used as a restart file
 //
 // Note        :  1. This output format is deprecated and is mainly used for debugging only
@@ -39,6 +39,7 @@ Procedure for outputting new variables:
 //                2210 : 2019/06/07 --> support MHD
 //                2220 : 2020/08/25 --> output EOS
 //                2300 : 2024/08/25 --> output particle integer attributes
+//                2310 : 2026/03/26 --> output particle unique id
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total( const char *FileName )
 {
@@ -184,7 +185,7 @@ void Output_DumpData_Total( const char *FileName )
 
 //    a. output the information of data format
 //    =================================================================================================
-      const long FormatVersion = 2300;
+      const long FormatVersion = 2310;
       const long CheckCode     = 123456789;
 
       fseek( File, HeaderOffset_Format, SEEK_SET );

@@ -768,6 +768,7 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
                             const int NPar, real_par *InterpParPos[3],
                             const long_par ParType[], const long ParList[],
                             const bool UseTracers, real_par ParAttr[], const bool CorrectVelocity );
+void Par_SetParUID();
 void Par_Init_Attribute_Mesh();
 void Par_Output_TracerParticle_Mesh();
 void Par_SetFlag( const int Flag );

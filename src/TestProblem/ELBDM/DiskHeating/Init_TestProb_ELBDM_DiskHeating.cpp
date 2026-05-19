@@ -47,7 +47,8 @@ static int     DispTable_Nbin;            // number of bins of velocity dispersi
 void Par_Init_ByFunction_DiskHeating( const long NPar_ThisRank, const long NPar_AllRank,
                                       real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                       real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                      long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                      long_par *ParType,
+                                      real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
                                       long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] );
 static void Init_NewDiskRestart();
 static void Init_NewDiskVelocity();
@@ -460,6 +461,7 @@ void Init_NewDiskRestart()
    real_par *Pos_AllRank[3] = { NewParAttFlt[PAR_POSX], NewParAttFlt[PAR_POSY], NewParAttFlt[PAR_POSZ] };
    real_par *Vel_AllRank[3] = { NewParAttFlt[PAR_VELX], NewParAttFlt[PAR_VELY], NewParAttFlt[PAR_VELZ] };
    long_par *Type_AllRank   =   NewParAttInt[PAR_TYPE];
+   long_par *PUID_AllRank   =   NewParAttInt[PAR_PUID];
    long_par *Flag_AllRank   =   NewParAttInt[PAR_FLAG];
 
    if ( AddParWhenRestartByFile ) // add new disk via DiskHeatingParticleIC
@@ -516,6 +518,8 @@ void Init_NewDiskRestart()
             Mass_AllRank[p] = ParData1[0];
 //          label
             Type_AllRank[p] = (long_par)ParData1[7]; // 1=CDM halo, 2=disk
+//          particle uid
+            PUID_AllRank[p] = PUID_TBA;
 //          refinement flag
             Flag_AllRank[p] = PFLAG_NO;
 
@@ -579,6 +583,8 @@ void Init_NewDiskRestart()
             Mass_AllRank[p] = ParM;
 //          label
             Type_AllRank[p] = (long_par)3;      // use 3 to represent thin disk particles
+//          particle uid
+            PUID_AllRank[p] = PUID_TBA;
 //          refinement flag
             Flag_AllRank[p] = PFLAG_NO;
 

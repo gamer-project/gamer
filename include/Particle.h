@@ -45,6 +45,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                ParICFormat             : Data format of the particle initialization file (1=[att][id], 2=[id][att])
 //                ParICMass               : Assign this mass to all particles for Init=3
 //                ParICType               : Assign this type to all particles for Init=3
+//                ParICPUID               : Assign particle UID from the file to all particles for Init=3
 //                Interp                  : Mass/acceleration/velocity interpolation scheme (NGP,CIC,TSC)
 //                InterpTracer            : Mass/acceleration/velocity interpolation scheme for tracers (NGP,CIC,TSC)
 //                Integ                   : Integration scheme (PAR_INTEG_EULER, PAR_INTEG_KDK)
@@ -59,8 +60,12 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                                          (for non-periodic BC only)
 //                GhostSize               : Number of ghost zones required for the interpolation scheme of massive particles
 //                GhostSizeTracer         : Number of ghost zones required for the interpolation scheme of tracer  particles
+//                NextPUID                : Next new particle UID over all MPI ranks. The UID starts from 1.
+//                                          --> Some compilers initialize unassigned variables to 0.
+//                                              If a user forgets to assign `PUID` to `PUID_TBA`, we can easily detect incorrect behavior by checking if `PUID < 1`.
+//                                              Although we do have `Check_UniquePUID()` to verify uniqueness, it is not as efficient as this simple check.
 //                AttributeFlt            : Pointer arrays to different particle floating-point attributes (Mass, Pos, Vel, ...)
-//                AttributeInt            : Pointer arrays to different particle integer        attributes (Type, Flag)
+//                AttributeInt            : Pointer arrays to different particle integer        attributes (Type, PUID, Flag)
 //                InactiveParList         : List of inactive particle IDs
 //                Mesh_Attr               : Pointer arrays to different mesh quantities mapped onto tracer particles
 //                Mesh_Attr_Num           : Number of mesh quantities mapped onto tracer particles
@@ -108,6 +113,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                Time                    : Particle physical time
 //                Acc                     : Particle acceleration (only when STORE_PAR_ACC is on)
 //                Type                    : Particle type (e.g., tracer, generic, dark matter, star)
+//                PUID                    : Particle UID
 //                Flag                    : Particle refinement flag
 //
 // Method      :  Particle_t        : Constructor
@@ -133,6 +139,7 @@ struct Particle_t
    ParICFormat_t ParICFormat;
    double        ParICMass;
    int           ParICType;
+   bool          ParICPUID;
    ParInteg_t    Integ;
    ParInterp_t   Interp;
    TracerInteg_t IntegTracer;
@@ -143,6 +150,7 @@ struct Particle_t
    double        RemoveCell;
    int           GhostSize;
    int           GhostSizeTracer;
+   long          NextPUID;
    real_par     *AttributeFlt[PAR_NATT_FLT_TOTAL];
    long_par     *AttributeInt[PAR_NATT_INT_TOTAL];
    long         *InactiveParList;
@@ -188,6 +196,7 @@ struct Particle_t
    real_par     *AccZ;
 #  endif
    long_par     *Type;
+   long_par     *PUID;
    long_par     *Flag;
 
 
@@ -209,6 +218,7 @@ struct Particle_t
       ParICFormat         = PAR_IC_FORMAT_NONE;
       ParICMass           = -1.0;
       ParICType           = -1;
+      ParICPUID           = false;
       Interp              = PAR_INTERP_NONE;
       InterpTracer        = PAR_INTERP_NONE;
       Integ               = PAR_INTEG_NONE;
@@ -219,6 +229,7 @@ struct Particle_t
       RemoveCell          = -999.9;
       GhostSize           = -1;
       GhostSizeTracer     = -1;
+      NextPUID            = 1;
 
       for (int lv=0; lv<NLEVEL; lv++)  NPar_Lv[lv] = 0;
 
@@ -274,6 +285,7 @@ struct Particle_t
       AccZ = NULL;
 #     endif
       Type = NULL;
+      PUID = NULL;
       Flag = NULL;
 
    } // METHOD : Particle_t
@@ -342,6 +354,7 @@ struct Particle_t
    //                   --> Assuming no inactive particles (i.e., NPar_Inactive = 0)
    //                2. For LOAD_BALANCE, some lists recording the information for exchanging
    //                   particles between different ranks are also allocated here
+   //                3. Initialize PUID to be PUID_TBA
    //
    // Parameter   :  NPar_Input : Total number of active particles
    //                NRank      : Total number of MPI ranks
@@ -426,11 +439,13 @@ struct Particle_t
       AccZ = AttributeFlt[PAR_ACCZ];
 #     endif
       Type = AttributeInt[PAR_TYPE];
+      PUID = AttributeInt[PAR_PUID];
       Flag = AttributeInt[PAR_FLAG];
 
 //    initialize some arrays
       for (long p=0; p<NPar_Input; p++)
       {
+         PUID[p] = PUID_TBA;
          Flag[p] = PFLAG_TBA;
       }
 
@@ -478,6 +493,18 @@ struct Particle_t
 
       if ( NewAttInt[PAR_TYPE] < (long_par)0  ||  NewAttInt[PAR_TYPE] >= (long_par)PAR_NTYPE )
          Aux_Error( ERROR_INFO, "Incorrect particle type (%ld) !!\n", (long)NewAttInt[PAR_TYPE] );
+
+//    check whether the particle UID is valid
+//    a particle here can be either newly created or pre-existing
+//    --> newly created: must have particle UID == PUID_TBA
+//                       since Par_SetParUID() has not yet assigned it;
+//                       UID will not be decided here; the particle is added to the list
+//                       as PUID_TBA and assigned a proper UID later in Par_SetParUID()
+//    --> pre-existing : the particle UID must have been assigned by Par_SetParUID() and
+//                       lie within [1, NextPUID-1]
+      if ( ( NewAttInt[PAR_PUID] != PUID_TBA )  &&
+           ( NewAttInt[PAR_PUID] <= (long_par)0  ||  NewAttInt[PAR_PUID] >= NextPUID ) )
+         Aux_Error( ERROR_INFO, "Incorrect particle UID (%ld) !!\n", (long)NewAttInt[PAR_PUID] );
 #     endif
 
 
@@ -521,6 +548,7 @@ struct Particle_t
             AccZ = AttributeFlt[PAR_ACCZ];
 #           endif
             Type = AttributeInt[PAR_TYPE];
+            PUID = AttributeInt[PAR_PUID];
             Flag = AttributeInt[PAR_FLAG];
          }
 

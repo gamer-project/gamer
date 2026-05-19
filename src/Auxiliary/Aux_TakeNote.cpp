@@ -925,6 +925,7 @@ void Aux_TakeNote()
       fprintf( Note, "PAR_IC_INT8                    % d\n",      PAR_IC_INT8                   );
       fprintf( Note, "Par->ParICMass                 % 14.7e\n",  amr->Par->ParICMass           );
       fprintf( Note, "Par->ParICType                 % d\n",      amr->Par->ParICType           );
+      fprintf( Note, "Par->ParICPUID                 % d\n",      amr->Par->ParICPUID           );
       fprintf( Note, "Par->Interp                    % d\n",      amr->Par->Interp              );
       fprintf( Note, "Par->Integ                     % d\n",      amr->Par->Integ               );
       fprintf( Note, "Par->GhostSize                 % d\n",      amr->Par->GhostSize           );

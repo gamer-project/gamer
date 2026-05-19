@@ -33,13 +33,15 @@ void (*Par_Init_ByFile_User_Ptr)() = Par_Init_ByFile_Default;
 //                      mass, position x/y/z, velocity x/y/z,
 //                      [, creation time (when enabling STAR_FORMATION)]
 //                      [, user-specified floating-point attributes (when PAR_NATT_FLT_USER>0]
-//                      , type, flag
+//                      , type, PUID, flag
 //                      [, user-specified integer attributes (when PAR_NATT_INT_USER>0)]
 //
 //                   --> The mass of all particles can be set to PAR_IC_MASS instead (by having PAR_IC_MASS >= 0.0),
 //                       in which case PAR_IC should exclude particle mass
 //                   --> The type of all particles can be set to PAR_IC_TYPE instead (by having PAR_IC_TYPE >= 0),
 //                       in which case PAR_IC should exclude particle type
+//                   --> The PUID of all particles can be excluded from PAR_IC by setting PAR_IC_PUID = 0,
+//                       in which case PUID will be assigned automatically
 //                   --> The flag of all particles can be set to PAR_FLAG_INIT instead (by having PAR_FLAG_INIT != PFLAG_MANUAL),
 //                       in which case PAR_IC should exclude particle flag
 //                   --> No need to provide particle acceleration and time
@@ -88,6 +90,7 @@ void Par_Init_ByFile_Default()
          long NParThisRank  = amr->Par->NPar_AcPlusInac;       // cannot be "const" due to MPI_Allgather()
    const bool SingleParMass = amr->Par->ParICMass >= 0.0;
    const bool SingleParType = amr->Par->ParICType >= 0;
+   const bool AbsentParPUID = amr->Par->ParICPUID == false;
    const bool SingleParFlag = amr->Par->FlagInit != PFLAG_MANUAL;
 
 // determine the number of attributes to be loaded
@@ -98,6 +101,7 @@ void Par_Init_ByFile_Default()
 #  endif
    if ( SingleParMass )    NParAttFlt --; // exclude mass
    if ( SingleParType )    NParAttInt --; // exclude type
+   if ( AbsentParPUID )    NParAttInt --; // exclude particle UID
    if ( SingleParFlag )    NParAttInt --; // exclude flag
 
 
@@ -231,6 +235,7 @@ void Par_Init_ByFile_Default()
       for (int v_in=0, v_out=0; v_in<NParAttInt; v_in++, v_out++)
       {
          if ( SingleParType  &&  v_out == PAR_TYPE )  v_out ++;
+         if ( AbsentParPUID  &&  v_out == PAR_PUID )  v_out ++;
          if ( SingleParFlag  &&  v_out == PAR_FLAG )  v_out ++;
 
          amr->Par->AttributeInt[v_out][p] = ParIntData1[v_in];
@@ -238,11 +243,28 @@ void Par_Init_ByFile_Default()
 
       if ( SingleParMass )    amr->Par->Mass[p] = amr->Par->ParICMass;
       if ( SingleParType )    amr->Par->Type[p] = amr->Par->ParICType;
-      if ( SingleParFlag )    amr->Par->Flag[p] = PFLAG_TBA;   // just for clarity; already initialized to PFLAG_TBA in amr->Par->InitRepo()
+      if ( AbsentParPUID )    amr->Par->PUID[p] = PUID_TBA;    // just for clarity; already initialized to PUID_TBA/PFLAG_TBA in amr->Par->InitRepo()
+      if ( SingleParFlag )    amr->Par->Flag[p] = PFLAG_TBA;   // ...
 
 //    synchronize all particles to the physical time at the base level
       amr->Par->Time[p] = Time[0];
    } // for (long p=0; p<NParThisRank; p++)
+
+
+// set NextPUID according to the maximum of the existing PUID in the file
+   if ( !AbsentParPUID )
+   {
+      long ExpectedNextPUID_ThisRank = 1L;
+      for (long p=0; p<NParThisRank; p++)
+         ExpectedNextPUID_ThisRank = MAX( (long)amr->Par->AttributeInt[PAR_PUID][p]+1L, ExpectedNextPUID_ThisRank );
+
+      long ExpectedNextPUID_AllRank  = 1L;
+      MPI_Allreduce( &ExpectedNextPUID_ThisRank, &ExpectedNextPUID_AllRank, 1, MPI_LONG, MPI_MAX, MPI_COMM_WORLD );
+
+      amr->Par->NextPUID = ExpectedNextPUID_AllRank;
+   }
+   else
+      amr->Par->NextPUID = 1L;
 
 
 // free memory
