@@ -16,6 +16,7 @@ static RandomNumber_t *RNG = NULL;
 //                2. Allocate NT thread-safe random number generators the first time this function is called,
 //                   where NT is the number of OpenMP threads
 //                   --> Must be freed by calling SF_FreeRNG() manually
+//                3. Assign UIDs to new particles at the end of this routine
 //
 // Parameter   :  lv      : Target refinement level
 //                TimeNew : Current physical time (after advancing solution by dt)
@@ -81,6 +82,9 @@ void SF_CreateStar( const int lv, const real TimeNew, const real dt )
       default :
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "SF_CREATE_STAR_SCHEME", SF_CREATE_STAR_SCHEME );
    } // switch ( SF_CREATE_STAR_SCHEME )
+
+// assign UIDs for new particles
+   Par_SetParUID();
 
 } // FUNCTION : SF_CreateStar
 
