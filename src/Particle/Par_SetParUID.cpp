@@ -54,8 +54,9 @@ void Par_SetParUID()
       Aux_Error( ERROR_INFO, "NNewPar_AllRank (%ld) is negative !!\n", NNewPar_AllRank );
 
 // check whether the next PUID will overflow
-   if ( amr->Par->NextPUID > ( (sizeof(long_par) == sizeof(int)) ? __INT_MAX__ : __LONG_MAX__ ) - NNewPar_AllRank )
-      Aux_Error( ERROR_INFO, "amr->Par->PUID = amr->Par->NextPUID (%ld) + NNewPar_AllRank (%ld) - 1 will overflow !!\n", amr->Par->NextPUID, NNewPar_AllRank );
+   if ( amr->Par->NextPUID + NNewPar_AllRank - 1 > (sizeof(long_par) == sizeof(int)) ? __INT_MAX__ : __LONG_MAX__ )
+      Aux_Error( ERROR_INFO, "amr->Par->PUID = amr->Par->NextPUID (%ld) + NNewPar_AllRank (%ld) - 1 will overflow !!\n",
+                 amr->Par->NextPUID, NNewPar_AllRank );
 
 // safety check for the type conversion from long to int
    int NNewPar_ThisRank_int = NNewPar_ThisRank;

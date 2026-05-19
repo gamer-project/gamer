@@ -9,7 +9,7 @@ static void Check_FindHomePatch      ( int &PassAll, int &PassOne, const char *c
 static void Check_InLeafPatch        ( int &PassAll, int &PassOne, const char *comment, const int lv,
                                        const int PID, const int NParThisPatch );
 static void Check_NActive            ( int &PassAll, int &PassOne, const char *comment, const long NParInLeaf );
-static void Check_InactiveMass       ( int &PassAll, int &PassOne, const char *comment, const int lv,
+static void Check_Inactive           ( int &PassAll, int &PassOne, const char *comment, const int lv,
                                        const int PID, const long ParUID );
 static void Check_OneHomePatch       ( int &PassAll, int &PassOne, const char *comment, const int lv,
                                        const int PID, const long ParUID, bool *ParHome );
@@ -101,7 +101,7 @@ void Par_Aux_Check_Particle( const char *comment )
 
                   Check_FindHomePatch( PassAll, PassCheck[0], comment, lv, PID, ParUID, EdgeL, EdgeR, ParPos );
 
-                  Check_InactiveMass( PassAll, PassCheck[3], comment, lv, PID, ParUID );
+                  Check_Inactive( PassAll, PassCheck[3], comment, lv, PID, ParUID );
 
                   Check_ValidType( PassAll, PassCheck[10], comment, lv, PID, ParUID );
 
@@ -266,7 +266,7 @@ void Check_NActive( int &PassAll, int &PassOne, const char *comment, const long 
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Check_InactiveParticle
+// Function    :  Check_Inactive
 // Description :  Check if amr->patch[0][lv][PID]->ParList[] contains any inactive particle
 //
 // Note        :  None
@@ -278,8 +278,8 @@ void Check_NActive( int &PassAll, int &PassOne, const char *comment, const long 
 //                PID     : Target patch ID
 //                ParUID  : Target particle UID
 //-------------------------------------------------------------------------------------------------------
-void Check_InactiveMass( int &PassAll, int &PassOne, const char *comment, const int lv, const int PID,
-                         const long ParUID )
+void Check_Inactive( int &PassAll, int &PassOne, const char *comment, const int lv, const int PID,
+                     const long ParUID )
 {
 
    if ( amr->Par->Mass[ParUID] >= 0.0 )   return;
@@ -299,7 +299,7 @@ void Check_InactiveMass( int &PassAll, int &PassOne, const char *comment, const 
    PassAll = false;
    PassOne = false;
 
-} // FUNCTION : Check_InactiveMass
+} // FUNCTION : Check_Inactive
 
 
 

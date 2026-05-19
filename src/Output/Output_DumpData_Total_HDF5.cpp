@@ -286,7 +286,7 @@ Procedure for outputting new variables:
 //                                             GRACKLE_HYDROGEN_MFRAC, OPT__UNFREEZE_GRACKLE,
 //                                             OPT__OUTPUT_GRACKLE_TEMP, OPT__OUTPUT_GRACKLE_MU, OPT__OUTPUT_GRACKLE_TCOOL,
 //                                             DT__GRACKLE_COOLING, OPT__FLAG_COOLING_LEN, FlagTable_CoolingLen
-//                2508 : 2026/03/26 --> output Particle unique id
+//                2508 : 2026/03/26 --> output particle unique id
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {

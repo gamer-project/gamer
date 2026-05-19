@@ -148,7 +148,7 @@ void Init_ByRestart()
 
 #     ifdef PARTICLE
       if ( FormatVersion < 2310 )
-         Aux_Error( ERROR_INFO, "unsupported data format version for particle UID (only support version >= 2310)!!\n" );
+         Aux_Error( ERROR_INFO, "unsupported data format version for particle UID (only support version >= 2310) !!\n" );
 #     endif
    }
    MPI_Barrier( MPI_COMM_WORLD );
