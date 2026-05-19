@@ -55,8 +55,8 @@ void Par_Aux_InitCheck()
          Aux_Error( ERROR_INFO, "PUID[%ld] = %ld (accepted range: 0<index<%ld) !!\n", ParIdx, (long)PUID[ParIdx], amr->Par->NextPUID );
 
 //    check particle flags
-      if ( Flag[ParID] == PFLAG_TBA )
-         Aux_Error( ERROR_INFO, "Flag[%ld] = %d (PFLAG_TBA) !!\n", ParID, (int)Flag[ParID] );
+      if ( Flag[ParIdx] == PFLAG_TBA )
+         Aux_Error( ERROR_INFO, "Flag[%ld] = %d (PFLAG_TBA) !!\n", ParIdx, (int)Flag[ParIdx] );
 
 //    only support tracer particles when disabling GRAVITY
 #     ifndef GRAVITY
