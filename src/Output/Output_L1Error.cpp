@@ -386,7 +386,7 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
    AnalFunc_Mag( Anal+NCOMP_TOTAL, x, y, z, Time[0], lv, NULL );
 #  endif
 
-// get pressure and temperature
+// get pressure, temperature, and dual energy
 #  if ( MODEL == HYDRO )
    const real Emag_Zero = 0.0;   // Anal[ENGY] set by AnalFunc_Flu() does NOT include magnetic energy
    const real Pres_Anal = Hydro_Con2Pres( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY],
@@ -401,6 +401,9 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 
    Anal[ENGY    ] = Pres_Anal;
    Anal[NBASIC+0] = Temp_Anal;
+#  ifdef DUAL_ENERGY
+   Anal[DUAL    ] = Hydro_DensPres2Dual( Anal[DENS], Pres_Anal, EoS_AuxArray_Flt[1] );
+#  endif
 #  endif
 
 // convert real and imaginary part to phase for wave patches in hybrid scheme
