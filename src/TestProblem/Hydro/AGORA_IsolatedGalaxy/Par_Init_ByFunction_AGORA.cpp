@@ -29,7 +29,9 @@ extern bool AGORA_UseMetal;
 //                   --> They will later be redistributed when calling Par_FindHomePatch_UniformGrid()
 //                       and LB_Init_LoadBalance()
 //                   --> Therefore, there is no constraint on which particles should be set by this function
-//                4. Input particle IC text file format: (x, y, z, vx, vy, vz, mass)
+//                4. The initialization of the PUID routine has been separated into amr->Par->InitRepo()
+//                   --> If needed, you can still modify PUID through the AllAttributeInt array
+//                5. Input particle IC text file format: (x, y, z, vx, vy, vz, mass)
 //
 // Parameter   :  NPar_ThisRank   : Number of particles to be set by this MPI rank
 //                NPar_AllRank    : Total Number of particles in all MPI ranks
@@ -51,7 +53,8 @@ extern bool AGORA_UseMetal;
 void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRank,
                                 real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                 real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                long_par *ParType,
+                                real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
                                 long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 {
 

@@ -53,7 +53,7 @@ Note:
 
    4. The simulation uses the fluid solver on levels 0 - 3 and switches to the wave solver in regions of interference on level 4.
       The corresponding runtime parameter "ELBDM_FIRST_WAVE_LEVEL" is set to 4.
-   
+
       The resolution for the first level using the wave solver is 2.8 Mpc/h /(64*2^4) ~ 2.75 kpc/h (comoving) with these settings.
       This resolution has shown to be a good compromise for the starting resolution of the wave solver.
       Note that increasing "ELBDM_FIRST_WAVE_LEVEL" will affect performance since it will likely lead to overrefinement. However, it should increase the accuracy of the hybrid scheme.
