@@ -401,10 +401,15 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 
    Anal[ENGY    ] = Pres_Anal;
    Anal[NBASIC+0] = Temp_Anal;
+
 #  ifdef DUAL_ENERGY
-   Anal[DUAL    ] = Hydro_DensPres2Dual( Anal[DENS], Pres_Anal, EoS_AuxArray_Flt[1] );
+   real Pgas_Anal = Pres_Anal;
+#  ifdef COSMIC_RAY
+   Pgas_Anal     -= EoS_CREint2CRPres_CPUPtr( Anal[CRAY], EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #  endif
-#  endif
+   Anal[DUAL    ] = Hydro_DensPres2Dual( Anal[DENS], Pgas_Anal, EoS_AuxArray_Flt[1] );
+#  endif // #ifdef DUAL_ENERGY
+#  endif // #if ( MODEL == HYDRO )
 
 // convert real and imaginary part to phase for wave patches in hybrid scheme
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
