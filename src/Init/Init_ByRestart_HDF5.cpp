@@ -167,6 +167,10 @@ void Init_ByRestart_HDF5( const char *FileName )
 #  endif
    GetFieldData( "NPatch",        H5_SetID_KeyInfo, H5_TypeID_KeyInfo, &NPatchTotal[0],        NotAllocate );
 
+#  ifdef PARTICLE
+   GetFieldData( "Par_NPar",      H5_SetID_KeyInfo, H5_TypeID_KeyInfo, &amr->Par->NPar_Active_AllRank, NotAllocate );
+#  endif
+
 // overwrite the current ConRef
    if ( FormatVersion_RS >= 2502 )
    {
