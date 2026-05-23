@@ -120,7 +120,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "CR_Acoustic_Phase",    &CR_Acoustic_Phase,         0.0,           NoMin_double,     NoMax_double      );
    LOAD_PARA( load_mode, "CR_Acoustic_Dir",      &CR_Acoustic_Dir,           0,             0,                3                 );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

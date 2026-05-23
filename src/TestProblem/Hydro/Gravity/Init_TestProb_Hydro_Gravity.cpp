@@ -130,7 +130,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "Gra_NIterPerf",     &Gra_NIterPerf,         0,             0,                NoMax_int         );
    LOAD_PARA( load_mode, "Gra_PerfExcRoot",   &Gra_PerfExcRoot,       false,         Useless_bool,     Useless_bool      );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

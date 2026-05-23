@@ -115,11 +115,14 @@ static FieldIdx_t *ColorFieldsIdx;
 // (1) external functions
 #ifdef MASSIVE_PARTICLES
 void AddNewParticleAttribute_ClusterMerger();
-void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPar_AllRank,
-                                        real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
-                                        real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                        long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
-                                        long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] );
+long Read_Particle_Number_ClusterMerger(std::string filename);
+void Par_Init_ByFunction_ClusterMerger(const long NPar_ThisRank,
+                                       const long NPar_AllRank,
+                                       real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                       real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                       long_par *ParType,
+                                       real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                       long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] );
 #endif
 
 void Aux_Record_ClusterMerger();
@@ -301,7 +304,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "JetDirection_file",        JetDirection_file,        "JetDirection.txt", Useless_str,   Useless_str    );
    LOAD_PARA( load_mode, "fixBH",                   &fixBH,                    false,              Useless_bool,  Useless_bool   );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 
