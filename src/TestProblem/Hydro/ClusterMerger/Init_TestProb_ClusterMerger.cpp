@@ -7,8 +7,8 @@
 // =======================================================================================
 // (1) read from Input__TestProb
        int      Merger_Coll_NumHalos;     // number of clusters
-static char   (*Merger_File_Prof)[1000];  // profile table of clusters
-       char   (*Merger_File_Par) [1000];  // particle file of clusters
+static char   (*Merger_File_Prof)[ MAX_STRING ];  // profile table of clusters
+       char   (*Merger_File_Par) [ MAX_STRING ];  // particle file of clusters
 static bool    *Merger_Coll_IsGas;        // (true/false) --> does cluster have gas
        double (*Merger_Coll_Pos)[3];      // position of clusters
        double (*Merger_Coll_Vel)[3];      // velocity of clusters
@@ -28,7 +28,7 @@ static bool    *Merger_Coll_IsGas;        // (true/false) --> does cluster have 
                                           //    2: import from table (generate JetDirection.txt)
                                           //    3: align with angular momentum
 
-static char     JetDirection_file[1000];  // jet direction file
+static char     JetDirection_file[MAX_STRING];  // jet direction file
 
        bool     Merger_Coll_UseMetals;    // (true/false) --> do the clusters have a metal field
        bool     Merger_Coll_LabelCenter;  // (true/false) --> label the particle closest to the center of each cluster
@@ -341,8 +341,8 @@ void SetParameter()
    delete ReadPara;
 
 // (1-1-2) allocate runtime parameter memories
-   Merger_File_Prof  = new char   [ Merger_Coll_NumHalos ][ 1000 ];
-   Merger_File_Par   = new char   [ Merger_Coll_NumHalos ][ 1000 ];
+   Merger_File_Prof  = new char   [ Merger_Coll_NumHalos ][ MAX_STRING ];
+   Merger_File_Par   = new char   [ Merger_Coll_NumHalos ][ MAX_STRING ];
    Merger_Coll_IsGas = new bool   [ Merger_Coll_NumHalos ];
    Merger_Coll_Pos   = new double [ Merger_Coll_NumHalos ][ 3 ];
    Merger_Coll_Vel   = new double [ Merger_Coll_NumHalos ][ 3 ];
