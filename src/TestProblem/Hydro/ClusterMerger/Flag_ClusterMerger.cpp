@@ -4,7 +4,7 @@
 
 // problem-specific global variables
 // =======================================================================================
-extern int      Merger_Coll_NumHalos;
+extern int      Merger_Coll_NumBHs;
 extern double   R_acc;                // the radius to compute the accretion rate
 extern double (*CM_ClusterCen)[3];
 // =======================================================================================
@@ -40,14 +40,14 @@ bool Flag_ClusterMerger( const int i, const int j, const int k, const int lv, co
    bool Flag = false;
 
 // flag cells within the target radius, and if the radius is not resolved with a specific number (Threshold[0]) of cells
-   for (int c=0; c<Merger_Coll_NumHalos; c++)
+   for (int c=0; c<Merger_Coll_NumBHs; c++)
    {
       if ( DIST_SQR_3D( Pos, CM_ClusterCen[c] ) <= SQR(25*R_acc)  &&  R_acc/dh <= Threshold[0] )
       {
          Flag = true;
          return Flag;
       } // if ( R_SQR <= SQR(25*R_acc)  &&  R_acc/dh <= Threshold[0] )
-   } // for (int c=0; c<Merger_Coll_NumHalos; c++)
+   } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
    if ( FirstTime )
    {
