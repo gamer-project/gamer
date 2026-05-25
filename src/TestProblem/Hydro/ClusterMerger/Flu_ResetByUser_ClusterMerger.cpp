@@ -204,23 +204,23 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
    double Jet_dr, Jet_dh;
    double Dis_c2m, Vec_c2m[3];
    real   EngySin;
-   int    status, n_jet;
+   int    status_overlap, n_jet;
    int    which_cluster = 0;
 
    if ( if_overlap )
    {
       if ( Merger_Coll_NumBHs == 1 )   Aux_Error( ERROR_INFO, "Error: Merger_Coll_NumBHs = 1 but if_overlap = true!\n" );
-      if ( CM_Jet_Edot[0] >= CM_Jet_Edot[1] )   status = 0;   // only inject cluster 1
-      else                                      status = 1;   // only inject cluster 2
+      if ( CM_Jet_Edot[0] >= CM_Jet_Edot[1] )   status_overlap = 0;   // only inject cluster 1
+      else                                      status_overlap = 1;   // only inject cluster 2
       n_jet = Merger_Coll_NumBHs-1;
    }
    else // if ( if_overlap )
    {
-      status = 0;
+      status_overlap = 0;
       n_jet  = Merger_Coll_NumBHs;
    } // if ( if_overlap ) ...  else ...
 
-   for (int c=status; c<(n_jet+status); c++)
+   for (int c=status_overlap; c<(n_jet+status_overlap); c++)
    {
 //    distance: jet center to mesh
       for (int d=0; d<3; d++)   Vec_c2m[d] = Pos[d] - CM_ClusterCen[c][d];
@@ -281,7 +281,7 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
          fluid[ENGY]  = (real)0.5 * (SQR(fluid[MOMX]) + SQR(fluid[MOMY]) + SQR(fluid[MOMZ])) / fluid[DENS] +
                               eint_old + Emag;
       } // if ( Jet_dh <= Jet_HalfHeight[c]  &&  Jet_dr <= Jet_Radius[c] )
-   } // for (int c=status; c<(n_jet+status); c++)
+   } // for (int c=status_overlap; c<(n_jet+status_overlap); c++)
 
    if ( which_cluster >= 3 )   Aux_Error( ERROR_INFO, "Error: which_cluster >= 3!\n" );
 
@@ -313,10 +313,6 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
    const bool    CurrentMaxLv = ( NPatchTotal[lv] > 0  &&  ( lv == MAX_LEVEL || NPatchTotal[lv+1] == 0 ) );
    const double  dh           = amr->dh[lv];
    const double  dv           = CUBE(dh);
-#  if ( MODEL == HYDRO  &&  !defined SRHD )
-   const real    Gamma_m1     = GAMMA - (real)1.0;
-   const real   _Gamma_m1     = (real)1.0 / Gamma_m1;
-#  endif
 
 // (1) get the BH position and velocity and adjust them if needed
    bool AdjustPosNow = false;
@@ -469,15 +465,17 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                                                     EoS_HTilde2Temp_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                                                     h_EoS_Table );
 #                 endif
-                  if ( Temp <= 5e5 )   mass_cold[c] += fluid_acc[DENS]*dv;
+                  const double cold_temp_thresh = 5e5;
+                  if ( Temp <= cold_temp_thresh )   mass_cold[c] += fluid_acc[DENS]*dv;
                   else
                   {
                      rho[c] += fluid_acc[DENS]*dv;
+                     // NOTE: currently, the average sound speed is computed without applying any weighting.
                      Cs[c] += sqrt( EoS_DensPres2CSqr_CPUPtr( fluid_acc[DENS], Pres, NULL, EoS_AuxArray_Flt,
                                     EoS_AuxArray_Int, h_EoS_Table ) );
                      for (int d=0; d<3; d++)   gas_mom[c][d] += fluid_acc[d+MOMX]*dv;
                      num[c] += 1;
-                  } // if ( Temp <= 5e5 )
+                  } // if ( Temp <= cold_temp_thresh )
                } // if ( DIST_SQR_3D( Pos_2, CM_ClusterCen[c] ) <= SQR(R_acc) )
 
 //             calculate the exact volume of jet cylinder and normalization
