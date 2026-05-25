@@ -79,7 +79,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2510)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2511)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -288,6 +288,7 @@ Procedure for outputting new variables:
 //                                             DT__GRACKLE_COOLING, OPT__FLAG_COOLING_LEN, FlagTable_CoolingLen
 //                2508 : 2026/03/26 --> output particle unique id
 //                2510 : 2026/05/14 --> support OPT__OUTPUT_DUAL_STATUS
+//                2511 : 2026/05/25 --> output DUAL_ENERGY_PREDICT 
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1779,7 +1780,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2510;
+   KeyInfo.FormatVersion        = 2511;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2397,6 +2398,11 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.MHM_CheckPredict     = 1;
 #  else
    SymConst.MHM_CheckPredict     = 0;
+#  endif
+#  ifdef DUAL_ENERGY_PREDICT
+   SymConst.DualEnergyPredict    = 1;
+#  else
+   SymConst.DualEnergyPredict    = 0;
 #  endif
    SymConst.EoSNAuxMax           = EOS_NAUX_MAX;
    SymConst.EoSNTableMax         = EOS_NTABLE_MAX;
@@ -3427,6 +3433,7 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "EulerY",               HOFFSET(SymConst_t,EulerY              ), H5T_NATIVE_INT    );
 #  endif
    H5Tinsert( H5_TypeID, "MHM_CheckPredict",     HOFFSET(SymConst_t,MHM_CheckPredict    ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "DualEnergyPredict",    HOFFSET(SymConst_t,DualEnergyPredict   ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "EoSNAuxMax",           HOFFSET(SymConst_t,EoSNAuxMax          ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "EoSNTableMax",         HOFFSET(SymConst_t,EoSNTableMax        ), H5T_NATIVE_INT    );
 

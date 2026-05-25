@@ -758,6 +758,10 @@ void Aux_Check_Parameter()
 #     error : RTVD does NOT support DUAL_ENERGY !!
 #   endif
 
+#   if (  defined DUAL_ENERGY_PREDICT  &&  ( FLU_SCHEME != MHM && FLU_SCHEME != MHM_RP )  )
+#     error : DUAL_ENERGY_PREDICT only supports FLU_SCHEME = MHM/MHM_RP !!
+#   endif
+
 #   if ( DUAL_ENERGY != DE_ENPY )
 #     error : ERROR : unsupported dual-energy formalism (DE_ENPY only, DE_EINT is not supported yet) !!
 #   endif

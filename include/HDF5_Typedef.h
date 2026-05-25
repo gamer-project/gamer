@@ -325,6 +325,7 @@ struct SymConst_t
    int    EulerY;
 #  endif
    int    MHM_CheckPredict;
+   int    DualEnergyPredict;
    int    EoSNAuxMax;
    int    EoSNTableMax;
 

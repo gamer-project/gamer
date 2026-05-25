@@ -609,6 +609,12 @@ void Aux_TakeNote()
       fprintf( Note, "MHM_CHECK_PREDICT               OFF\n" );
 #     endif
 
+#     ifdef DUAL_ENERGY_PREDICT
+      fprintf( Note, "DUAL_ENERGY_PREDICT             ON\n" );
+#     else
+      fprintf( Note, "DUAL_ENERGY_PREDICT             OFF\n" );
+#     endif
+
 #     elif ( MODEL == ELBDM )
 
 #     if ( WAVE_SCHEME == WAVE_GRAMFE )
