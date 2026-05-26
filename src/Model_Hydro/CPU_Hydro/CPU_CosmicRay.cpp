@@ -6,29 +6,29 @@
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    : CR_AdiabaticWork_HalfStep_MHM_RP
+// Function    :  CR_AdiabaticWork_HalfStep_MHM_RP
 //
-// Description : Add the adiabatic work term to update the cosmic-ray energy for the half-step solution of MHM_RP
+// Description :  Add the adiabatic work term to update the cosmic-ray energy for the half-step solution of MHM_RP
 //
-// Note        : 1. MHM should not use this function
-//               2. Work w/ and w/o MHD
-//               3. Invoked by Hydro_RiemannPredict()
+// Note        :  1. MHM should not use this function
+//                2. Work w/ and w/o MHD
+//                3. Invoked by Hydro_RiemannPredict()
 //
-// Reference   : [1] Yang et al., ApJ 761, 185 (2012); doi:10.1088/0004-637X/761/2/185
-//               [2] A simple dual implementation to track pressure accurately, S. Li, Astronum Proceeding, 385, 273 (2007)
+// Reference   :  [1] Yang et al., ApJ 761, 185 (2012); doi:10.1088/0004-637X/761/2/185
+//                [2] A simple dual implementation to track pressure accurately, S. Li, Astronum Proceeding, 385, 273 (2007)
 //
-// Parameter   : OneCell     : Single-cell fluid array to store the updated cell-centered cosmic-ray energy
-//               g_ConVar_In : Array storing the input conserved variables
-//               g_Flux_Half : Array storing the input face-centered fluxes
-//                             --> Accessed with the stride didx_flux
-//               idx_in      : Index of accessing g_ConVar_In[]
-//               didx_in     : Index increment of g_ConVar_In[]
-//               idx_flux    : Index of accessing g_flux_Half[]
-//               didx_flux   : Index increment of g_Flux_Half[]
-//               dt_dh2      : 0.5 * dt / dh
-//               EoS         : EoS object
+// Parameter   :  OneCell     : Single-cell fluid array to store the updated cell-centered cosmic-ray energy
+//                g_ConVar_In : Array storing the input conserved variables
+//                g_Flux_Half : Array storing the input face-centered fluxes
+//                              --> Accessed with the stride didx_flux
+//                idx_in      : Index of accessing g_ConVar_In[]
+//                didx_in     : Index increment of g_ConVar_In[]
+//                idx_flux    : Index of accessing g_flux_Half[]
+//                didx_flux   : Index increment of g_Flux_Half[]
+//                dt_dh2      : 0.5 * dt / dh
+//                EoS         : EoS object
 //
-// Return      : OneCell[CRAY]
+// Return      :  OneCell[CRAY]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void CR_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PLUS_MAG],
@@ -76,31 +76,31 @@ void CR_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PLUS_MAG],
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    : CR_AdiabaticWork_FullStep
+// Function    :  CR_AdiabaticWork_FullStep
 //
-// Description : Add the adiabatic work term to update the cosmic-ray energy for the full-step solution of MHM_RP/MHM
+// Description :  Add the adiabatic work term to update the cosmic-ray energy for the full-step solution of MHM_RP/MHM
 //
-// Note        : 1. Shared by both MHM and MHM_RP (but it hasn't been tested for MHM yet)
-//               2. Work w/ and w/o MHD
-//               3. Invoked by CPU/CUFLU_FluidSolver_MHM()
+// Note        :  1. Shared by both MHM and MHM_RP (but it hasn't been tested for MHM yet)
+//                2. Work w/ and w/o MHD
+//                3. Invoked by CPU/CUFLU_FluidSolver_MHM()
 //
-// Reference   : [1] Yang et al., ApJ 761, 185 (2012); doi:10.1088/0004-637X/761/2/185
-//               [2] A simple dual implementation to track pressure accurately, S. Li, Astronum Proceeding, 385, 273 (2007)
+// Reference   :  [1] Yang et al., ApJ 761, 185 (2012); doi:10.1088/0004-637X/761/2/185
+//                [2] A simple dual implementation to track pressure accurately, S. Li, Astronum Proceeding, 385, 273 (2007)
 //
-// Parameter   : g_PriVar_Half : Array storing the input cell-centered primitive variables
-//                               --> Accessed with the stride N_HF_VAR
-//                               --> Although its actually allocated size is FLU_NXT^3 since it points to g_PriVar_1PG[]
-//               g_Output      : Array to store the updated fluid data
-//               g_Flux        : Array storing the input face-centered fluxes
-//                               --> Accessed with the array stride N_FL_FLUX even thought its actually
-//                                   allocated size is N_FC_FLUX^3
-//               g_FC_Var      : Array storing the input face-centered conserved variables
-//                               --> Accessed with the array stride N_FC_VAR^3
-//               dt            : Time interval to advance solution
-//               dh            : Cell size
-//               EoS           : EoS object
+// Parameter   :  g_PriVar_Half : Array storing the input cell-centered primitive variables
+//                                --> Accessed with the stride N_HF_VAR
+//                                --> Although its actually allocated size is FLU_NXT^3 since it points to g_PriVar_1PG[]
+//                g_Output      : Array to store the updated fluid data
+//                g_Flux        : Array storing the input face-centered fluxes
+//                                --> Accessed with the array stride N_FL_FLUX even thought its actually
+//                                    allocated size is N_FC_FLUX^3
+//                g_FC_Var      : Array storing the input face-centered conserved variables
+//                                --> Accessed with the array stride N_FC_VAR^3
+//                dt            : Time interval to advance solution
+//                dh            : Cell size
+//                EoS           : EoS object
 //
-// Return      : g_Output[CRAY][]
+// Return      :  g_Output[CRAY][]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void CR_AdiabaticWork_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
