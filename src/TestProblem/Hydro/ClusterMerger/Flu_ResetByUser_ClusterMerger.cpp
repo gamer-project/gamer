@@ -64,9 +64,7 @@ extern double    *normalize_const;                         // the exact normaliz
 extern long_par  *CM_ClusterIdx_Cur;
 
 static bool       if_overlap = false;
-static int        merge_index = 0;                         // record BH 1 merge BH 2 / BH 2 merge BH 1
 
-static bool       FirstTime = true;
 // =======================================================================================
 
 
@@ -163,8 +161,9 @@ void BH_accretion_rate( const int mode, double *Mdot_tot, double *Mdot_hot, doub
 //                lv       : Target refinement level
 //                AuxArray : Auxiliary array
 //
-// Return      :  true  : This cell has been reset
-//                false : This cell has not been reset
+// Return      :  0 : This cell has not been reset
+//                1 : This cell has been reset by cluster 1
+//                2 : This cell has been reset by cluster 2
 //-------------------------------------------------------------------------------------------------------
 int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const double x, const double y, const double z,
                                         const double Time, const double dt, const int lv, double AuxArray[] )
@@ -175,12 +174,9 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
 // (1) SMBH Accretion
    const double V_dep = 4.0 / 3.0 * M_PI * CUBE( R_dep ); // the volume to remove gas
    double D_dep[Merger_Coll_NumBHs]; // the density need to be removed
-   for (int c=0; c<Merger_Coll_NumBHs; c++)   D_dep[c] = CM_BH_Mdot_tot[c]*dt/V_dep;
-
-   int reset = false; // mark whether this cell is reset or not [false/true]
-
    for (int c=0; c<Merger_Coll_NumBHs; c++)
    {
+      D_dep[c] = CM_BH_Mdot_tot[c]*dt/V_dep;
       double r2 = 0.0;
       for (int d=0; d<3; d++)   r2 += SQR( Pos[d] - CM_ClusterCen[c][d] );
       if ( r2 <= SQR(R_dep) )
@@ -195,7 +191,6 @@ int Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const d
          fluid[MOMY] *= DepRatio;
          fluid[MOMZ] *= DepRatio;
          fluid[ENGY] *= DepRatio;
-         reset = true;
       } // if ( r2[c] <= SQR(R_dep) )
    } // for (int c=0; c<Merger_Coll_NumBHs; c++)
 
@@ -345,6 +340,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 // merge the two BHs if they are located within R_acc, and the relative velocity is small enough
       if ( AbsRelPos < R_acc  &&  AbsRelVel < 3*escape_vel )
       {
+         static int        merge_index = 0;                         // record BH 1 merge BH 2 / BH 2 merge BH 1
          Merger_Coll_NumBHs -= 1;
          if ( CM_BH_Mass[0] >= CM_BH_Mass[1] )   merge_index = 1;   // record BH 1 merge BH 2 / BH 2 merge BH 1
          else                                    merge_index = 2;
@@ -726,8 +722,7 @@ void GetClusterCenter( const int lv, const bool AdjustPos, const bool AdjustVel,
    {
       for (int d=0; d<3; d++)   Cen_new[0][d] = amr->BoxCenter[d];
       for (int d=0; d<3; d++)   Cen_Vel[0][d] = 0.0;
-
-      for (int d=0; d<3; d++)  Cen_old[0][d] = Cen_new[0][d];
+      for (int d=0; d<3; d++)   Cen_old[0][d] = Cen_new[0][d];
 
       return;
    } // if ( fixBH )
@@ -1103,15 +1098,15 @@ void SetJetDirection( const double TimeNew, const int lv, const int FluSg )
             for (int j=0; j<PS1; j++)
             for (int i=0; i<PS1; i++)
             {
-               const double pos2[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (0.5+i)*dh,
+               const double pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (0.5+i)*dh,
                                         amr->patch[0][lv][PID]->EdgeL[1] + (0.5+j)*dh,
                                         amr->patch[0][lv][PID]->EdgeL[2] + (0.5+k)*dh };
 
                for (int c=0; c<Merger_Coll_NumBHs; c++)
                {
-                  if ( DIST_SQR_3D( pos2, CM_ClusterCen[c] ) > SQR(R_acc) ) continue;
+                  if ( DIST_SQR_3D( pos, CM_ClusterCen[c] ) > SQR(R_acc) ) continue;
 
-                  double dr[3] = { pos2[0]-CM_ClusterCen[c][0], pos2[1]-CM_ClusterCen[c][1], pos2[2]-CM_ClusterCen[c][2] };
+                  double dr[3] = { pos[0]-CM_ClusterCen[c][0], pos[1]-CM_ClusterCen[c][1], pos[2]-CM_ClusterCen[c][2] };
                   ang_mom[c][0] += dv * ( dr[1]*amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i] - dr[2]*amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i] );
                   ang_mom[c][1] += dv * ( dr[2]*amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i] - dr[0]*amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i] );
                   ang_mom[c][2] += dv * ( dr[0]*amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i] - dr[1]*amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i] );

@@ -1,4 +1,4 @@
-#include "Global.h"
+#include "CUFLU.h"
 
 #ifdef EXACT_COOLING
 
@@ -6,7 +6,7 @@
 // external functions and GPU-related set-up
 #ifdef __CUDACC__
 
-#include "CUFLU.h"
+#include "Global.h"
 #include "CUDA_CheckError.h"
 #include "CUFLU_Shared_FluUtility.cu"
 #include "CUDA_ConstMemory.h"

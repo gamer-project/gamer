@@ -1098,7 +1098,6 @@ void AddNewParticleAttribute_ClusterMerger()
       Idx_ParHalo = AddParticleAttributeInt( "ParHalo" );
 
 } // FUNCTION : AddNewParticleAttribute_ClusterMerger
-#endif // #ifdef MASSIVE_PARTICLES
 
 
 
@@ -1177,16 +1176,12 @@ void Init_User_ClusterMerger()
       LoadField( BH_Mdot_cold_name, &CM_BH_Mdot_cold[c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
    }
    LoadField( "AdjustCount", &AdjustCount, H5_SetID_OutputUser, H5_TypeID_OutputUser );
-#  ifdef MASSIVE_PARTICLES
-#  ifdef MASSIVE_PARTICLES
    for (int c=0; c<Merger_Coll_NumHalos; c++)
    {
       char CM_ClusterIdx_Cur_name[50];
       sprintf( CM_ClusterIdx_Cur_name, "CM_ClusterIdx_Cur_%d", c );
       LoadField( CM_ClusterIdx_Cur_name, &CM_ClusterIdx_Cur[c], H5_SetID_OutputUser, H5_TypeID_OutputUser );
    }
-#  endif
-#  endif
 
    H5_Status = H5Tclose( H5_TypeID_OutputUser );
    H5_Status = H5Dclose( H5_SetID_OutputUser );
@@ -1296,6 +1291,7 @@ void AllocateBHVarArray()
    }
 
 } // FUNCITON : AllocateBHVarArray
+#endif // #ifdef MASSIVE_PARTICLES
 
 
 
