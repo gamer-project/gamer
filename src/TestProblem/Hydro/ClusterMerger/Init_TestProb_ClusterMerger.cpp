@@ -60,13 +60,13 @@ static double  *JetDirection = NULL;      // jet direction[time/theta_1/phi_1/th
        double  *CM_BH_Mdot_tot;           // the total accretion rate of BHs
        double  *CM_BH_Mdot_hot;           // the hot   accretion rate of BHs
        double  *CM_BH_Mdot_cold;          // the cold  accretion rate of BHs
-       double  *CM_Jet_Mdot;              // the feedback injeciton rate of mass
-       double  *CM_Jet_Pdot;              // the feedback injeciton rate of momentum
-       double  *CM_Jet_Edot;              // the feedback injeciton rate of total energy
+       double  *CM_Jet_Mdot;              // the feedback injection rate of mass
+       double  *CM_Jet_Pdot;              // the feedback injection rate of momentum
+       double  *CM_Jet_Edot;              // the feedback injection rate of total energy
        double (*CM_Jet_Vec)[3];           // jet direction
        double (*CM_RAcc_GasVel)[3];       // average gas velocity inside the accretion radius
-       double  *CM_RAcc_SoundSpeed;       // average sound speed  inside the accreiton radius
-       double  *CM_RAcc_GasDens;          // average gas density  inside the accreiton radius
+       double  *CM_RAcc_SoundSpeed;       // average sound speed  inside the accretion radius
+       double  *CM_RAcc_GasDens;          // average gas density  inside the accretion radius
        double  *CM_RAcc_RelativeVel;      // relative velocity between BH and gas for each cluster inside the accretion radius
        double  *CM_RAcc_ColdGasMass;      // cold gas mass        inside the accretion radius
        double  *CM_RAcc_GasMass;          // total gas mass       inside the accretion radius
@@ -862,6 +862,7 @@ void End_ClusterMerger()
    {
       delete [] CM_Jet_Theta_table;
       delete [] CM_Jet_Phi_table;
+      delete [] JetDirection;
    }
 
    delete [] Jet_WaveK;

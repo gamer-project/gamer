@@ -416,15 +416,15 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {
-         const double x02 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
-         const double y02 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
-         const double z02 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
+         const double x0 = amr->patch[0][lv][PID]->EdgeL[0] + 0.5*dh;
+         const double y0 = amr->patch[0][lv][PID]->EdgeL[1] + 0.5*dh;
+         const double z0 = amr->patch[0][lv][PID]->EdgeL[2] + 0.5*dh;
 
-         for (int k=0; k<PS1; k++)   { const double z2 = z02 + k*dh;
-         for (int j=0; j<PS1; j++)   { const double y2 = y02 + j*dh;
-         for (int i=0; i<PS1; i++)   { const double x2 = x02 + i*dh;
+         for (int k=0; k<PS1; k++)   { const double z = z0 + k*dh;
+         for (int j=0; j<PS1; j++)   { const double y = y0 + j*dh;
+         for (int i=0; i<PS1; i++)   { const double x = x0 + i*dh;
 
-            const double Pos_2[3] = { x2, y2, z2 };
+            const double Pos[3] = { x, y, z };
 
             for (int v=0; v<NCOMP_TOTAL; v++)   fluid_acc[v] = amr->patch[FluSg][lv][PID]->fluid[v][k][j][i];
 
@@ -439,7 +439,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
             for (int c=0; c<Merger_Coll_NumBHs; c++)
             {
 //             calculate the average density, sound speed and gas velocity inside accretion radius
-               if ( DIST_SQR_3D( Pos_2, CM_ClusterCen[c] ) <= SQR(R_acc) )
+               if ( DIST_SQR_3D( Pos, CM_ClusterCen[c] ) <= SQR(R_acc) )
                {
                   gas_mass[c] += fluid_acc[0]*dv;
 #                 ifdef DUAL_ENERGY
@@ -472,14 +472,14 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                      for (int d=0; d<3; d++)   gas_mom[c][d] += fluid_acc[d+MOMX]*dv;
                      num[c] += 1;
                   } // if ( Temp <= cold_temp_thresh )
-               } // if ( DIST_SQR_3D( Pos_2, CM_ClusterCen[c] ) <= SQR(R_acc) )
+               } // if ( DIST_SQR_3D( Pos, CM_ClusterCen[c] ) <= SQR(R_acc) )
 
 //             calculate the exact volume of jet cylinder and normalization
                if ( CurrentMaxLv )
                {
                   double Jet_dr_2, Jet_dh_2, Dis_c2m_2, Vec_c2m_2[3];
 
-                  for (int d=0; d<3; d++)   Vec_c2m_2[d] = Pos_2[d] - CM_ClusterCen[c][d];
+                  for (int d=0; d<3; d++)   Vec_c2m_2[d] = Pos[d] - CM_ClusterCen[c][d];
                   Dis_c2m_2 = sqrt( SQR(Vec_c2m_2[0]) + SQR(Vec_c2m_2[1]) + SQR(Vec_c2m_2[2]) );
                   Jet_dh_2 = fabs( CM_Jet_Vec[c][0]*Vec_c2m_2[0] + CM_Jet_Vec[c][1]*Vec_c2m_2[1] + CM_Jet_Vec[c][2]*Vec_c2m_2[2] );
                   Jet_dr_2 = sqrt( SQR(Dis_c2m_2) - SQR(Jet_dh_2) );
@@ -1099,17 +1099,18 @@ void SetJetDirection( const double TimeNew, const int lv, const int FluSg )
             for (int i=0; i<PS1; i++)
             {
                const double pos[3] = { amr->patch[0][lv][PID]->EdgeL[0] + (0.5+i)*dh,
-                                        amr->patch[0][lv][PID]->EdgeL[1] + (0.5+j)*dh,
-                                        amr->patch[0][lv][PID]->EdgeL[2] + (0.5+k)*dh };
+                                       amr->patch[0][lv][PID]->EdgeL[1] + (0.5+j)*dh,
+                                       amr->patch[0][lv][PID]->EdgeL[2] + (0.5+k)*dh };
 
                for (int c=0; c<Merger_Coll_NumBHs; c++)
                {
-                  if ( DIST_SQR_3D( pos, CM_ClusterCen[c] ) > SQR(R_acc) ) continue;
-
-                  double dr[3] = { pos[0]-CM_ClusterCen[c][0], pos[1]-CM_ClusterCen[c][1], pos[2]-CM_ClusterCen[c][2] };
-                  ang_mom[c][0] += dv * ( dr[1]*amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i] - dr[2]*amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i] );
-                  ang_mom[c][1] += dv * ( dr[2]*amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i] - dr[0]*amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i] );
-                  ang_mom[c][2] += dv * ( dr[0]*amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i] - dr[1]*amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i] );
+                  if ( DIST_SQR_3D( pos, CM_ClusterCen[c] ) <= SQR(R_acc) )
+                  {
+                     double dr[3] = { pos[0]-CM_ClusterCen[c][0], pos[1]-CM_ClusterCen[c][1], pos[2]-CM_ClusterCen[c][2] };
+                     ang_mom[c][0] += dv * ( dr[1]*amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i] - dr[2]*amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i] );
+                     ang_mom[c][1] += dv * ( dr[2]*amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i] - dr[0]*amr->patch[FluSg][lv][PID]->fluid[MOMZ][k][j][i] );
+                     ang_mom[c][2] += dv * ( dr[0]*amr->patch[FluSg][lv][PID]->fluid[MOMY][k][j][i] - dr[1]*amr->patch[FluSg][lv][PID]->fluid[MOMX][k][j][i] );
+                  }
                } // for (int c=0; c<Merger_Coll_NumBHs; c++)
             } // for (int k=0; k<PS1; k++); for (int j=0; j<PS1; j++); for (int i=0; i<PS1; i++)
          } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)

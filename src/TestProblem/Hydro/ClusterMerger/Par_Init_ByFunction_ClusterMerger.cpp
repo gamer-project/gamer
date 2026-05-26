@@ -1,6 +1,7 @@
 #include "GAMER.h"
 #include <string>
 
+#ifdef MASSIVE_PARTICLES
 
 
 // floating-point type in the input particle file
@@ -16,15 +17,12 @@ extern double     (*Merger_Coll_Pos)[3];
 extern double     (*Merger_Coll_Vel)[3];
 extern bool         Merger_Coll_LabelCenter;
 extern long        *NPar_EachCluster;
-#ifdef MASSIVE_PARTICLES
 extern FieldIdx_t   Idx_ParHalo;
-#endif
 // =======================================================================================
 
 
 // problem-specific function prototypes
 // =======================================================================================
-#ifdef MASSIVE_PARTICLES
 #ifdef SUPPORT_HDF5
 static void Read_Particles_ClusterMerger( std::string filename, long offset, long num,
                                           real_par_in xpos[], real_par_in ypos[],
@@ -32,12 +30,10 @@ static void Read_Particles_ClusterMerger( std::string filename, long offset, lon
                                           real_par_in yvel[], real_par_in zvel[],
                                           real_par_in mass[], real_par_in ptype[] );
 #endif
-#endif
 // =======================================================================================
 
 
 
-#ifdef MASSIVE_PARTICLES
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Par_Init_ByFunction_ClusterMerger
 // Description :  Initialize all particle attributes for the merging cluster test
