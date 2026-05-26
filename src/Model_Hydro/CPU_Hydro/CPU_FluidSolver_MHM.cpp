@@ -172,6 +172,7 @@ static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
                                         real g_PriVar_Half[][ CUBE(FLU_NXT) ],
                                   const real dt, const real dh,
                                   const real MinDens, const real MinPres, const real MinEint,
+                                  const real DualEnergySwitch,
                                   const long PassiveFloor, const bool FracPassive, const int NFrac, const int FracIdx[],
                                   const bool JeansMinPres, const real JeansMinPres_Coeff,
                                   const EoS_t *EoS );
@@ -460,7 +461,8 @@ void CPU_FluidSolver_MHM(
 
 //       1-a-4. evaluate the half-step solutions
          Hydro_RiemannPredict( g_Flu_Array_In[P], g_FC_Mag_Half_1PG, g_Flux_Half_1PG, g_PriVar_Half_1PG,
-                               dt, dh, MinDens, MinPres, MinEint, PassiveFloor, FracPassive, NFrac, c_FracIdx,
+                               dt, dh, MinDens, MinPres, MinEint, DualEnergySwitch,
+                               PassiveFloor, FracPassive, NFrac, c_FracIdx,
                                JeansMinPres, JeansMinPres_Coeff, &EoS );
 
 
@@ -819,6 +821,7 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //                dt                 : Time interval to advance solution
 //                dh                 : Cell size
 //                MinDens/Pres/Eint  : Density, pressure, and internal energy floors
+//                DualEnergySwitch   : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
 //                PassiveFloor       : Bitwise flag to specify the passive scalars to be floored
 //                FracPassive        : true --> convert passive scalars to mass fraction during data reconstruction
 //                NFrac              : Number of passive scalars for the option "FracPassive"
@@ -834,6 +837,7 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
                                  real g_PriVar_Half[][ CUBE(FLU_NXT) ],
                            const real dt, const real dh,
                            const real MinDens, const real MinPres, const real MinEint,
+                           const real DualEnergySwitch,
                            const long PassiveFloor, const bool FracPassive, const int NFrac, const int FracIdx[],
                            const bool JeansMinPres, const real JeansMinPres_Coeff,
                            const EoS_t *EoS )
@@ -922,6 +926,16 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
       if ( PassiveFloor & BIDX(v) )
       out_con[v] = FMAX( out_con[v], TINY_NUMBER );
+#     endif
+
+//    apply dual-energy check
+#     ifdef DUAL_ENERGY_PREDICT
+      const bool CheckMinPres_No = false;
+      char dummy;
+      Hydro_DualEnergyFix( out_con[DENS], out_con[MOMX], out_con[MOMY], out_con[MOMZ],
+                           out_con[ENGY], out_con[DUAL], out_con+NCOMP_FLUID, dummy,
+                           EoS->AuxArrayDevPtr_Flt[1], EoS->AuxArrayDevPtr_Flt[2], CheckMinPres_No, NULL_REAL,
+                           PassiveFloor, DualEnergySwitch, Emag );
 #     endif
 
 //    conserved --> primitive variables
