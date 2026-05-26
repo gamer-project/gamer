@@ -5,6 +5,9 @@
 
 
 // floating-point type in the input particle file
+// this is defined as double because we use H5T_NATIVE_DOUBLE
+// to read in the particle data from the input files which is a
+// always in double-precision
 typedef double real_par_in;
 //typedef float  real_par_in;
 

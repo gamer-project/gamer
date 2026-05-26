@@ -45,6 +45,7 @@ eps_f                   0.11                     # the radiative efficiency in j
 eps_m                   0.0                      # the fraction of total energy that goes into the thermal
                                                  # energy in jet feedback
 R_acc                   4.0                      # accretion radius: compute the accretion rate (in kpc)
+                                                 # also determines if two black holes should be merged
 R_dep                   4.0                      # radius to deplete the accreted gas (in kpc)
 JetDirection_case       1                        # Methods for choosing the jet direction:
                                                  #    1: Fixed at x-axis

@@ -21,7 +21,8 @@ static bool    *Merger_Coll_IsGas;        // (true/false) --> does cluster have 
        double   eta;                      // mass loading factor in jet feedback
        double   eps_f;                    // the radiative efficiency in jet feedback
        double   eps_m;                    // the fraction of total energy that goes into the thermal energy in jet feedback
-       double   R_acc;                    // accretion radius: compute the accretion rate
+       double   R_acc;                    // accretion radius: compute the accretion rate, and determine if two black holes
+                                          // should be merged
        double   R_dep;                    // radius to deplete the accreted gas
        int      JetDirection_case;        // methods for choosing the jet direction
                                           //    1: fixed at x-axis;
@@ -469,30 +470,11 @@ void SetParameter()
       }
 
 //    set the number of black holes to be the same as the number of clusters initially
+//    the number of black holes will decrease if they merge
       Merger_Coll_NumBHs = Merger_Coll_NumHalos;
 
-//    allocate BH related memories
+//    allocate BH-related arrays
       AllocateBHVarArray();
-
-//    set initial values
-      for (int c=0; c<Merger_Coll_NumBHs; c++)
-      {
-         CM_BH_Mdot_tot [c] = 0.0;
-         CM_BH_Mdot_hot [c] = 0.0;
-         CM_BH_Mdot_cold[c] = 0.0;
-
-         CM_Cluster_NPar_close[c] = 0;
-
-         for (int d=0; d<3; d++)   CM_ClusterCen[c][d] = Merger_Coll_Pos[c][d];
-         for (int d=0; d<3; d++)   CM_BH_Pos    [c][d] = CM_ClusterCen  [c][d];
-         for (int d=0; d<3; d++)   CM_BH_Vel    [c][d] = Merger_Coll_Vel[c][d];
-
-         E_inj_exp[c] = 0.0;
-         M_inj_exp[c] = 0.0;
-         ang_mom_sum[c][0] = 1.0;
-         ang_mom_sum[c][1] = 0.0;
-         ang_mom_sum[c][2] = 0.0;
-      }
 
 //    (3) determine particle number
       NPar_EachCluster = new long [ Merger_Coll_NumHalos ];
