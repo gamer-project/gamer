@@ -14,7 +14,7 @@ typedef double real_par_in;
 
 // problem-specific global variables
 // =======================================================================================
-extern char       (*Merger_File_Par)[1000];
+extern char       (*Merger_File_Par)[ MAX_STRING ];
 extern int          Merger_Coll_NumHalos;
 extern double     (*Merger_Coll_Pos)[3];
 extern double     (*Merger_Coll_Vel)[3];
@@ -44,7 +44,7 @@ static void Read_Particles_ClusterMerger( std::string filename, long offset, lon
 //
 // Note        :  1. Invoked by Init_GAMER() using the function pointer "Par_Init_ByFunction_Ptr"
 //                   --> This function pointer may be reset by various test problem initializers, in which case
-//                       this funtion will become useless
+//                       this function will become useless
 //                2. Periodicity should be taken care of in this function
 //                   --> No particles should lie outside the simulation box when the periodic BC is adopted
 //                   --> However, if the non-periodic BC is adopted, particles are allowed to lie outside the box

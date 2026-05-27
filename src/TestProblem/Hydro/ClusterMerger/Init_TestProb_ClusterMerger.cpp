@@ -6,15 +6,15 @@
 // problem-specific global variables
 // =======================================================================================
 // (1) read from Input__TestProb
-       int      Merger_Coll_NumHalos;     // number of clusters
-static char   (*Merger_File_Prof)[ MAX_STRING ];  // profile table of clusters
-       char   (*Merger_File_Par) [ MAX_STRING ];  // particle file of clusters
-static bool    *Merger_Coll_IsGas;        // (true/false) --> does cluster have gas
-       double (*Merger_Coll_Pos)[3];      // position of clusters
-       double (*Merger_Coll_Vel)[3];      // velocity of clusters
-       double  *CM_BH_Mass;               // black hole mass of clusters
-       double  *Jet_HalfHeight;           // half height of the cylinder-shape jet source of clusters
-       double  *Jet_Radius;               // radius of the cylinder-shape jet source of clusters
+       int      Merger_Coll_NumHalos;                   // number of clusters
+static char   (*Merger_File_Prof)[ MAX_STRING ] = NULL; // profile table of clusters
+       char   (*Merger_File_Par) [ MAX_STRING ] = NULL; // particle file of clusters
+static bool    *Merger_Coll_IsGas = NULL;               // (true/false) --> does cluster have gas
+       double (*Merger_Coll_Pos)[3] = NULL;             // position of clusters
+       double (*Merger_Coll_Vel)[3] = NULL;             // velocity of clusters
+       double  *CM_BH_Mass = NULL;                      // black hole mass of clusters
+       double  *Jet_HalfHeight = NULL;                  // half height of the cylinder-shape jet source of clusters
+       double  *Jet_Radius = NULL;                      // radius of the cylinder-shape jet source of clusters
 
        bool     AGN_feedback;             // turn on/off (1/0) AGN feedback
        int      Accretion_Mode;           // 1: hot mode; 2: cold mode; 3: combine (hot + cold)
@@ -29,7 +29,7 @@ static bool    *Merger_Coll_IsGas;        // (true/false) --> does cluster have 
                                           //    2: import from table (generate JetDirection.txt)
                                           //    3: align with angular momentum
 
-static char     JetDirection_file[MAX_STRING];  // jet direction file
+static char     JetDirection_file[ MAX_STRING ];  // jet direction file
 
        bool     Merger_Coll_UseMetals;    // (true/false) --> do the clusters have a metal field
        bool     Merger_Coll_LabelCenter;  // (true/false) --> label the particle closest to the center of each cluster
@@ -39,69 +39,69 @@ static char     JetDirection_file[MAX_STRING];  // jet direction file
        bool     fixBH;                    // fix the BH at the simulation box center and set its velocity to be zero (1 cluster only)
 // ---------------------------------------------------------------------------------------
 // (2) read from files
-static int     *Merger_NBin;              // number of radial bins of clusters
+static int     *Merger_NBin = NULL;       // number of radial bins of clusters
 static double **Table_R = NULL;           // radius      of clusters
 static double **Table_D = NULL;           // density     of clusters
 static double **Table_P = NULL;           // pressure    of clusters
 static double **Table_M = NULL;           // metallicity of clusters
 
-       long    *NPar_EachCluster;         // number of particles in each cluster
+       long    *NPar_EachCluster = NULL;  // number of particles in each cluster
        long     NPar_AllCluster = 0L;     // number of particles in all  clusters
 
-       int      JetDirection_NBin;        // number of bins of the jet direction table
-static double  *JetDirection = NULL;      // jet direction[time/theta_1/phi_1/theta_2/phi_2/theta_3/phi_3]
-       double  *CM_Jet_Time_table;        // the time  table of jet direction
-       double **CM_Jet_Theta_table;       // the theta table of jet direction for clusters
-       double **CM_Jet_Phi_table;         // the phi   table of jet direction for clusters
+       int      JetDirection_NBin;         // number of bins of the jet direction table
+static double  *JetDirection = NULL;       // jet direction[time/theta_1/phi_1/theta_2/phi_2/theta_3/phi_3]
+       double  *CM_Jet_Time_table = NULL;  // the time  table of jet direction
+       double **CM_Jet_Theta_table = NULL; // the theta table of jet direction for clusters
+       double **CM_Jet_Phi_table = NULL;   // the phi   table of jet direction for clusters
 // ---------------------------------------------------------------------------------------
 // (3) variables to record
-       double (*CM_ClusterCen)[3];        // the center  of each cluster
-       double (*CM_BH_Pos)[3];            // BH position of each cluster
-       double (*CM_BH_Vel)[3];            // BH velocity of each cluster
-       double  *CM_BH_Mdot_tot;           // the total accretion rate of BHs
-       double  *CM_BH_Mdot_hot;           // the hot   accretion rate of BHs
-       double  *CM_BH_Mdot_cold;          // the cold  accretion rate of BHs
-       double  *CM_Jet_Mdot;              // the feedback injection rate of mass
-       double  *CM_Jet_Pdot;              // the feedback injection rate of momentum
-       double  *CM_Jet_Edot;              // the feedback injection rate of total energy
-       double (*CM_Jet_Vec)[3];           // jet direction
-       double (*CM_RAcc_GasVel)[3];       // average gas velocity inside the accretion radius
-       double  *CM_RAcc_SoundSpeed;       // average sound speed  inside the accretion radius
-       double  *CM_RAcc_GasDens;          // average gas density  inside the accretion radius
-       double  *CM_RAcc_RelativeVel;      // relative velocity between BH and gas for each cluster inside the accretion radius
-       double  *CM_RAcc_ColdGasMass;      // cold gas mass        inside the accretion radius
-       double  *CM_RAcc_GasMass;          // total gas mass       inside the accretion radius
-       double  *CM_RAcc_ParMass;          // total DM mass        inside the accretion radius
-       int     *CM_Cluster_NPar_close;    // total number of particles inside the 10 times the accrection radius of each cluster
-       double  *CM_Bondi_SinkMass;        // total mass change             in the feedback region in one global time-step
-       double  *CM_Bondi_SinkMomX;        // total x-momentum change       ...
-       double  *CM_Bondi_SinkMomY;        // total y-momentum change       ...
-       double  *CM_Bondi_SinkMomZ;        // total z-momentum change       ...
-       double  *CM_Bondi_SinkMomXAbs;     // total |x-momentum| change     ...
-       double  *CM_Bondi_SinkMomYAbs;     // total |y-momentum| change     ...
-       double  *CM_Bondi_SinkMomZAbs;     // total |z-momentum| change     ...
-       double  *CM_Bondi_SinkE;           // total injected energy         ...
-       double  *CM_Bondi_SinkEk;          // total injected kinetic energy ...
-       double  *CM_Bondi_SinkEt;          // total injected thermal energy ...
-       int     *CM_Bondi_SinkNCell;       // total number of finest cells within the feedback region
+       double (*CM_ClusterCen)[3] = NULL;     // the center  of each cluster
+       double (*CM_BH_Pos)[3] = NULL;         // BH position of each cluster
+       double (*CM_BH_Vel)[3] = NULL;         // BH velocity of each cluster
+       double  *CM_BH_Mdot_tot = NULL;        // the total accretion rate of BHs
+       double  *CM_BH_Mdot_hot = NULL;        // the hot   accretion rate of BHs
+       double  *CM_BH_Mdot_cold = NULL;       // the cold  accretion rate of BHs
+       double  *CM_Jet_Mdot = NULL;           // the feedback injection rate of mass
+       double  *CM_Jet_Pdot = NULL;           // the feedback injection rate of momentum
+       double  *CM_Jet_Edot = NULL;           // the feedback injection rate of total energy
+       double (*CM_Jet_Vec)[3] = NULL;        // jet direction
+       double (*CM_RAcc_GasVel)[3] = NULL;    // average gas velocity inside the accretion radius
+       double  *CM_RAcc_SoundSpeed = NULL;    // average sound speed  inside the accretion radius
+       double  *CM_RAcc_GasDens = NULL;       // average gas density  inside the accretion radius
+       double  *CM_RAcc_RelativeVel = NULL;   // relative velocity between BH and gas for each cluster inside the accretion radius
+       double  *CM_RAcc_ColdGasMass = NULL;   // cold gas mass  inside the accretion radius
+       double  *CM_RAcc_GasMass = NULL;       // total gas mass inside the accretion radius
+       double  *CM_RAcc_ParMass = NULL;       // total DM mass  inside the accretion radius
+       int     *CM_Cluster_NPar_close = NULL; // total number of particles inside the 10 times the accrection radius of each cluster
+       double  *CM_Bondi_SinkMass = NULL;     // total mass change             in the feedback region in one global time-step
+       double  *CM_Bondi_SinkMomX = NULL;     // total x-momentum change       ...
+       double  *CM_Bondi_SinkMomY = NULL;     // total y-momentum change       ...
+       double  *CM_Bondi_SinkMomZ = NULL;     // total z-momentum change       ...
+       double  *CM_Bondi_SinkMomXAbs = NULL;  // total |x-momentum| change     ...
+       double  *CM_Bondi_SinkMomYAbs = NULL;  // total |y-momentum| change     ...
+       double  *CM_Bondi_SinkMomZAbs = NULL;  // total |z-momentum| change     ...
+       double  *CM_Bondi_SinkE = NULL;        // total injected energy         ...
+       double  *CM_Bondi_SinkEk = NULL;       // total injected kinetic energy ...
+       double  *CM_Bondi_SinkEt = NULL;       // total injected thermal energy ...
+       int     *CM_Bondi_SinkNCell = NULL;    // total number of finest cells within the feedback region
 // ---------------------------------------------------------------------------------------
 // (4) other variables
        int      AdjustCount = 0;          // count the number of adjustments
        int      Merger_Coll_NumBHs;       // number of BHs in the simulation
 
-       double  *E_inj_exp;                // the expected amount of injected energy
-       double  *M_inj_exp;                // the expected amount of injected gas mass
-       double (*ang_mom_sum)[3];
+       double  *E_inj_exp = NULL;         // the expected amount of injected energy
+       double  *M_inj_exp = NULL;         // the expected amount of injected gas mass
+       double (*ang_mom_sum)[3] = NULL;   // the sum of the angular momentum inside the accretion radius
 
-       double  *Jet_WaveK;                // jet wavenumber used in the sin() function to have smooth bidirectional jets
-       double  *V_cyl;                    // the volume of jet source
-       double  *M_inj;                    // the injected density
-       double  *P_inj;                    // the injected momentum
-       double  *E_inj;                    // the injected energy
-       double  *normalize_const;          // the exact normalization constant
+       double  *Jet_WaveK = NULL;         // jet wavenumber used in the sin() function to have smooth bidirectional jets
+       double  *V_cyl = NULL;             // the volume of jet source
+       double  *M_inj = NULL;             // the injected density
+       double  *P_inj = NULL;             // the injected momentum (currently not used)
+       double  *E_inj = NULL;             // the injected energy
+       double  *normalize_const = NULL;   // the exact normalization constant
 
 #ifdef MASSIVE_PARTICLES
-       long_par *CM_ClusterIdx_Cur;       // the current cluster index
+       long_par *CM_ClusterIdx_Cur = NULL; // the current cluster index
 #endif
 
 static FieldIdx_t *ColorFieldsIdx;
