@@ -268,7 +268,7 @@
 // --> does not support CTU
 #ifdef DUAL_ENERGY
 #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
-#  define DUAL_ENERGY_PREDICT
+//#  define DUAL_ENERGY_PREDICT
 #endif
 #endif // #ifdef DUAL_ENERGY
 
