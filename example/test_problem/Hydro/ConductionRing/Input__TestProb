@@ -1,0 +1,6 @@
+# problem-specific runtime parameters
+Ring_U         10           # background specific internal energy
+Ring_R1	       0.5          # inner radius of ring
+Ring_R2	       0.7          # outer radius of ring
+Ring_Rho       1.0          # background density
+Ring_Angle    15.0          # half-angle of region in ring where temperature is higher

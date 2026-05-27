@@ -408,7 +408,7 @@ void Preparation_Step( const Solver_t TSolver, const int lv, const double TimeNe
                         Timer_Poi_PreFlu[lv]   );
 #        endif
       break;
-#     endif // #ifdef GARVITY
+#     endif // #ifdef GRAVITY
 
 #     ifdef SUPPORT_GRACKLE
       case GRACKLE_SOLVER :
@@ -506,6 +506,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  if ( MODEL != HYDRO )
    const double MIN_PRES = NULL_REAL;
    const double MIN_EINT = NULL_REAL;
+   const double MIN_TEMP = NULL_REAL;
 #  endif
 
 #  ifndef DUAL_ENERGY
@@ -592,11 +593,11 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  OPT__LR_LIMITER, MINMOD_COEFF, MINMOD_MAX_ITER,
                                  ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
                                  TimeOld, (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, MicroPhy,
-                                 MIN_DENS, MIN_PRES, MIN_EINT, DUAL_ENERGY_SWITCH, PassiveFloorMask,
-                                 OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar,
+                                 MIN_DENS, MIN_PRES, MIN_EINT, MIN_TEMP, DUAL_ENERGY_SWITCH,
+                                 PassiveFloorMask, OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar,
                                  OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar,
                                  JEANS_MIN_PRES, JeansMinPres_Coeff,
-                                 GPU_NSTREAM, UseWaveFlag );
+                                 GPU_NSTREAM, UseWaveFlag, OPT__FREEZE_HYDRO );
 #        else
          CPU_FluidSolver       ( h_Flu_Array_F_In[ArrayID], h_Flu_Array_F_Out[ArrayID],
                                  h_Mag_Array_F_In[ArrayID], h_Mag_Array_F_Out[ArrayID],
@@ -609,10 +610,10 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                  OPT__LR_LIMITER, MINMOD_COEFF, MINMOD_MAX_ITER,
                                  ELBDM_ETA, ELBDM_TAYLOR3_COEFF, ELBDM_TAYLOR3_AUTO,
                                  TimeOld, (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, MicroPhy,
-                                 MIN_DENS, MIN_PRES, MIN_EINT, DUAL_ENERGY_SWITCH, PassiveFloorMask,
+                                 MIN_DENS, MIN_PRES, MIN_EINT, MIN_TEMP, DUAL_ENERGY_SWITCH, PassiveFloorMask,
                                  OPT__NORMALIZE_PASSIVE, PassiveNorm_NVar, PassiveNorm_VarIdx,
                                  OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
-                                 JEANS_MIN_PRES, JeansMinPres_Coeff, UseWaveFlag );
+                                 JEANS_MIN_PRES, JeansMinPres_Coeff, UseWaveFlag, OPT__FREEZE_HYDRO );
 #        endif
       break;
 
@@ -630,7 +631,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           NULL_BOOL, ELBDM_ETA, NULL_REAL, POISSON_ON, GRAVITY_OFF,
                                           OPT__SELF_GRAVITY, OPT__EXT_POT, OPT__EXT_ACC,
                                           TimeNew, TimeOld, NULL_REAL,
-                                          GPU_NSTREAM, UseWaveFlag );
+                                          GPU_NSTREAM, UseWaveFlag, OPT__FREEZE_HYDRO );
 #        else
          CPU_PoissonGravitySolver       ( h_Rho_Array_P[ArrayID], h_Pot_Array_P_In[ArrayID],
                                           h_Pot_Array_P_Out[ArrayID], NULL, h_Corner_Array_PGT[ArrayID],
@@ -640,7 +641,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           MG_TOLERATED_ERROR, Poi_Coeff, OPT__POT_INT_SCHEME,
                                           NULL_BOOL, ELBDM_ETA, NULL_REAL, POISSON_ON, GRAVITY_OFF,
                                           OPT__SELF_GRAVITY, OPT__EXT_POT, OPT__EXT_ACC,
-                                          TimeNew, TimeOld, NULL_REAL, UseWaveFlag );
+                                          TimeNew, TimeOld, NULL_REAL, UseWaveFlag, OPT__FREEZE_HYDRO );
 #        endif
       break;
 
@@ -658,7 +659,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           OPT__GRA_P5_GRADIENT, ELBDM_ETA, ELBDM_LAMBDA, POISSON_OFF, GRAVITY_ON,
                                           OPT__SELF_GRAVITY, OPT__EXT_POT, OPT__EXT_ACC,
                                           TimeNew, TimeOld, MIN_EINT,
-                                          GPU_NSTREAM, UseWaveFlag );
+                                          GPU_NSTREAM, UseWaveFlag, OPT__FREEZE_HYDRO );
 #        else
          CPU_PoissonGravitySolver       ( NULL, NULL,
                                           h_Pot_Array_P_Out[ArrayID], h_Flu_Array_G[ArrayID], h_Corner_Array_PGT[ArrayID],
@@ -669,7 +670,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           NULL_REAL, NULL_REAL, (IntScheme_t)NULL_INT,
                                           OPT__GRA_P5_GRADIENT, ELBDM_ETA, ELBDM_LAMBDA, POISSON_OFF, GRAVITY_ON,
                                           OPT__SELF_GRAVITY, OPT__EXT_POT, OPT__EXT_ACC,
-                                          TimeNew, TimeOld, MIN_EINT, UseWaveFlag );
+                                          TimeNew, TimeOld, MIN_EINT, UseWaveFlag, OPT__FREEZE_HYDRO );
 #        endif
       break;
 
@@ -687,7 +688,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           OPT__GRA_P5_GRADIENT, ELBDM_ETA, ELBDM_LAMBDA, POISSON_ON, GRAVITY_ON,
                                           OPT__SELF_GRAVITY, OPT__EXT_POT, OPT__EXT_ACC,
                                           TimeNew, TimeOld, MIN_EINT,
-                                          GPU_NSTREAM, UseWaveFlag );
+                                          GPU_NSTREAM, UseWaveFlag, OPT__FREEZE_HYDRO );
 #        else
          CPU_PoissonGravitySolver       ( h_Rho_Array_P[ArrayID], h_Pot_Array_P_In[ArrayID],
                                           h_Pot_Array_P_Out[ArrayID], h_Flu_Array_G[ArrayID], h_Corner_Array_PGT[ArrayID],
@@ -698,7 +699,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
                                           MG_TOLERATED_ERROR, Poi_Coeff, OPT__POT_INT_SCHEME,
                                           OPT__GRA_P5_GRADIENT, ELBDM_ETA, ELBDM_LAMBDA, POISSON_ON, GRAVITY_ON,
                                           OPT__SELF_GRAVITY, OPT__EXT_POT, OPT__EXT_ACC,
-                                          TimeNew, TimeOld, MIN_EINT, UseWaveFlag );
+                                          TimeNew, TimeOld, MIN_EINT, UseWaveFlag, OPT__FREEZE_HYDRO );
 #        endif
       break;
 #     endif // #ifdef GRAVITY
@@ -718,14 +719,14 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
          CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID],
                               h_Mag_Array_T[ArrayID], NULL, NULL,
                               NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID,
-                              MicroPhy, MIN_PRES, PassiveFloorMask, NULL_BOOL,
-                              EXT_POT_NONE, EXT_ACC_NONE, NULL_REAL,
+                              MicroPhy, MIN_PRES, MIN_TEMP, PassiveFloorMask,
+                              NULL_BOOL, EXT_POT_NONE, EXT_ACC_NONE, NULL_REAL,
                               GPU_NSTREAM );
 #        else
          CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], h_Flu_Array_T[ArrayID],
                               h_Mag_Array_T[ArrayID], NULL, NULL,
                               NPG, dh, (Step==0)?DT__FLUID_INIT:DT__FLUID,
-                              MicroPhy, MIN_PRES, PassiveFloorMask, NULL_BOOL,
+                              MicroPhy, MIN_PRES, MIN_TEMP, PassiveFloorMask, NULL_BOOL,
                               EXT_POT_NONE, EXT_ACC_NONE, NULL_REAL );
 #        endif
       break;
@@ -736,14 +737,14 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
          CUAPI_Asyn_dtSolver( TSolver, h_dt_Array_T[ArrayID], NULL,
                               NULL, h_Pot_Array_T[ArrayID], h_Corner_Array_PGT[ArrayID],
                               NPG, dh, DT__GRAVITY,
-                              MicroPhy, NULL_REAL, PassiveFloorMask, OPT__GRA_P5_GRADIENT,
+                              MicroPhy, NULL_REAL, NULL_REAL, PassiveFloorMask, OPT__GRA_P5_GRADIENT,
                               (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, TimeNew,
                               GPU_NSTREAM );
 #        else
          CPU_dtSolver       ( TSolver, h_dt_Array_T[ArrayID], NULL,
                               NULL, h_Pot_Array_T[ArrayID], h_Corner_Array_PGT[ArrayID],
                               NPG, dh, DT__GRAVITY,
-                              MicroPhy, NULL_REAL, PassiveFloorMask, OPT__GRA_P5_GRADIENT,
+                              MicroPhy, NULL_REAL, NULL_REAL, PassiveFloorMask, OPT__GRA_P5_GRADIENT,
                               (OPT__SELF_GRAVITY || OPT__EXT_POT), OPT__EXT_ACC, TimeNew );
 #        endif
       break;

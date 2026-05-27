@@ -1,0 +1,5 @@
+# problem-specific runtime parameters
+CSF_U1        1000.0       # higher specific internal energy
+CSF_U2        2000.0       # lower specific internal energy
+CSF_Rho       1.0          # background density
+CSF_Bangle    45.0	   # angle between magnetic field and temperature gradient 

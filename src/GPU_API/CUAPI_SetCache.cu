@@ -42,13 +42,13 @@ void CUFLU_FluidSolver_MHM(
    const bool StoreFlux, const bool StoreElectric,
    const LR_Limiter_t LR_Limiter, const real MinMod_Coeff, const int MinMod_MaxIter, const double Time,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
-   const real MinDens, const real MinPres, const real MinEint,
+   const real MinDens, const real MinPres, const real MinEint, const real MinTemp,
    const real DualEnergySwitch,
    const long PassiveFloor,
    const bool NormPassive, const int NNorm,
    const bool FracPassive, const int NFrac,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_t EoS, const MicroPhy_t MicroPhy );
+   const EoS_t EoS, const MicroPhy_t MicroPhy, const bool FreezeHydro );
 #elif ( FLU_SCHEME == CTU )
 __global__
 void CUFLU_FluidSolver_CTU(
@@ -77,11 +77,11 @@ void CUFLU_FluidSolver_CTU(
    const bool NormPassive, const int NNorm,
    const bool FracPassive, const int NFrac,
    const bool JeansMinPres, const real JeansMinPres_Coeff,
-   const EoS_t EoS );
+   const EoS_t EoS, const bool FreezeHydro );
 #endif // FLU_SCHEME
 __global__ void CUFLU_dtSolver_HydroCFL( real g_dt_Array[], const real g_Flu_Array[][FLU_NIN_T][ CUBE(PS1) ],
                                          const real g_Mag_Array[][NCOMP_MAG][ PS1P1*SQR(PS1) ],
-                                         const real dh, const real Safety, const real MinPres,
+                                         const real dh, const real Safety, const real MinPres, const real MinTemp,
                                          const long PassiveFloor, const EoS_t EoS, const MicroPhy_t MicroPhy );
 #ifdef GRAVITY
 __global__
@@ -173,7 +173,7 @@ void CUPOT_HydroGravitySolver(
    const real   g_Emag_Array   [][ CUBE(PS1) ],
    const real dt, const real dh, const bool P5_Gradient,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
-   const double TimeNew, const double TimeOld, const real MinEint );
+   const double TimeNew, const double TimeOld, const real MinEint, const bool FreezeHydro );
 
 #elif ( MODEL == ELBDM )
 __global__

@@ -66,7 +66,7 @@ const double Const_GeV           = 1.0e9*Const_eV;
 const double Const_kB            = 1.38064852e-16;          // Boltzmann constant in erg/K
 const double Const_kB_eV         = 8.6173303e-5;            // Boltzmann constant in eV/K
 const double Const_NA            = 6.022140857e23;          // Avogadro constant (in 1/mole)
-
+const double Const_e             = 4.803204673e-10;         // elementary charge in esu
 
 
 #endif  // #ifndef __PHYSICAL_CONSTANT_H__

@@ -56,6 +56,7 @@ GPU_DEVICE static void Set_Flux( real flux[], const real val[], const real Gamma
 //                EoS_DensPres2CSqr : EoS routine to compute the sound speed squared
 //                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
 //                EoS_Table         : EoS tables
+//                FreezeHydro       : Freeze hydrodynamic fluxes
 //
 // Return      :  Flux_Out[]
 //------------------------------------------------------------------------------------------------------
@@ -63,7 +64,8 @@ GPU_DEVICE
 void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[], const real R_In[],
                                 const real MinDens, const real MinPres, const long PassiveFloor, const EoS_DE2P_t EoS_DensEint2Pres,
                                 const EoS_DP2C_t EoS_DensPres2CSqr, const double EoS_AuxArray_Flt[],
-                                const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] )
+                                const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX],
+                                const bool FreezeHydro )
 {
 
 // check
@@ -79,6 +81,11 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
 #  endif
 #  endif // #ifdef GAMER_DEBUG
 
+   if ( FreezeHydro )
+   {
+      for (int v=0; v<NCOMP_TOTAL; v++)   Flux_Out[v] = 0.0;
+      return;
+   }
 
    const real Gamma           = EoS_AuxArray_Flt[0];  // only support constant-gamma EoS (i.e., EOS_GAMMA)
    const real Gamma_m1        = EoS_AuxArray_Flt[1];
@@ -297,30 +304,36 @@ void Hydro_RiemannSolver_Exact( const int XYZ, real Flux_Out[], const real L_In[
 
 
 // evaluate the average fluxes along the t axis
-   if (  FABS( eival[1] ) < MAX_ERROR  ) // contact wave is zero
+   if ( OPT__FREEZE_HYDRO ) 
    {
-      Flux_Out[0] = (real)0.0;
-      Flux_Out[1] = L_star[4];
-      Flux_Out[2] = (real)0.0;
-      Flux_Out[3] = (real)0.0;
-      Flux_Out[4] = (real)0.0;
+      for (int v=0; v<NCOMP_FLUID; v++)   Flux_Out[v] = (real)0.0;
    }
-
    else
    {
-      if ( eival[1] > (real)0.0 )
+      if (  FABS( eival[1] ) < MAX_ERROR  ) // contact wave is zero
       {
-         if ( eival[0] > (real)0.0 )   Set_Flux( Flux_Out, L,      Gamma );
-         else                          Set_Flux( Flux_Out, L_star, Gamma );
+         Flux_Out[0] = (real)0.0;
+         Flux_Out[1] = L_star[4];
+         Flux_Out[2] = (real)0.0;
+         Flux_Out[3] = (real)0.0;
+         Flux_Out[4] = (real)0.0;
       }
 
       else
       {
-         if ( eival[4] < (real)0.0 )   Set_Flux( Flux_Out, R,      Gamma );
-         else                          Set_Flux( Flux_Out, R_star, Gamma );
+         if ( eival[1] > (real)0.0 )
+         {
+            if ( eival[0] > (real)0.0 )   Set_Flux( Flux_Out, L,      Gamma );
+            else                          Set_Flux( Flux_Out, L_star, Gamma );
+         }
+
+         else
+         {
+            if ( eival[4] < (real)0.0 )   Set_Flux( Flux_Out, R,      Gamma );
+            else                          Set_Flux( Flux_Out, R_star, Gamma );
+         }
       }
    }
-
 
 // evaluate the fluxes for passive scalars
 // --> note that L_In and R_In are mass density instead of mass fraction for passive scalars
