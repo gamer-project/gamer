@@ -98,7 +98,8 @@ extern void (*End_ExtPot_Ptr)();
 extern void (*Par_Init_ByFunction_Ptr)( const long NPar_ThisRank, const long NPar_AllRank,
                                         real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                         real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                        long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                        long_par *ParType,
+                                        real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
                                         long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] );
 extern void (*Par_Init_ByFile_User_Ptr)();
 extern void (*Par_Init_Attribute_User_Ptr)();
@@ -119,6 +120,11 @@ extern int  (*FB_User_Ptr)( const int lv, const double TimeNew, const double Tim
                             const int NPar, const long *ParSortID, real_par *ParAttFlt[PAR_NATT_FLT_TOTAL], long_par *ParAttInt[PAR_NATT_INT_TOTAL],
                             real (*Fluid)[FB_NXT][FB_NXT][FB_NXT], const double EdgeL[], const double dh, bool CoarseFine[],
                             const int TID, RandomNumber_t *RNG );
+#endif
+#ifdef SUPPORT_GRACKLE
+extern real_che (*Grackle_vHeatingRate_User_Ptr)( const double x, const double y, const double z, const double Time, const double n_H );
+extern real_che (*Grackle_sHeatingRate_User_Ptr)( const double x, const double y, const double z, const double Time );
+extern real_che (*Grackle_tempFloor_User_Ptr)( const double x, const double y, const double z, const double Time, const real_che Dens_Gas, const real_che sEint_Gas );
 #endif
 
 

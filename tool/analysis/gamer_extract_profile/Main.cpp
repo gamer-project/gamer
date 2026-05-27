@@ -282,8 +282,9 @@ void GetRMS()
    double x, x1, x2, y, y1, y2, z, z1, z2;   // (x,y,z) : relative coordinates to the vector "Center"
    real   pass[NCOMP_PASSIVE];
 
+   typedef real (*vla)[NIn][ArraySize][ArraySize][ArraySize];
    real *Field1D = new real [NPG*8*NIn*ArraySize*ArraySize*ArraySize];
-   real (*Field)[NIn][ArraySize][ArraySize][ArraySize] = ( real(*)[NIn][ArraySize][ArraySize][ArraySize] )Field1D;
+   vla Field = ( vla )Field1D;
 
 
 // determine the target variables
@@ -547,8 +548,9 @@ void ShellAverage()
    double x, x1, x2, y, y1, y2, z, z1, z2;   // (x,y,z) : relative coordinates to the vector "Center"
    real   pass[NCOMP_PASSIVE];
 
+   typedef real (*vla)[NIn][ArraySize][ArraySize][ArraySize];
    real *Field1D = new real [NPG*8*NIn*ArraySize*ArraySize*ArraySize];
-   real (*Field)[NIn][ArraySize][ArraySize][ArraySize] = ( real(*)[NIn][ArraySize][ArraySize][ArraySize] )Field1D;
+   vla Field = ( vla )Field1D;
 
 
 // determine the target variables

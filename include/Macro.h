@@ -18,8 +18,9 @@
 #define VERSION      "gamer-2.3.dev"
 
 
-// option == NONE --> the option is turned off
-#define NONE         0
+// option == OPTION_NONE --> the option is turned off
+// (we have renamed NONE to OPTION_NONE to ensure compatibility with cuFFTDx's .hpp files)
+#define OPTION_NONE  0
 
 
 // GPU architecture
@@ -32,26 +33,29 @@
 #define AMPERE       7
 #define ADA_LOVELACE 8
 #define HOPPER       9
+#define BLACKWELL    10
 
 #ifdef GPU
-#if   ( GPU_COMPUTE_CAPABILITY >= 200  &&  GPU_COMPUTE_CAPABILITY < 300 )
+#if   ( GPU_COMPUTE_CAPABILITY >= 200   &&  GPU_COMPUTE_CAPABILITY < 300 )
 # define GPU_ARCH FERMI
-#elif ( GPU_COMPUTE_CAPABILITY >= 300  &&  GPU_COMPUTE_CAPABILITY < 500 )
+#elif ( GPU_COMPUTE_CAPABILITY >= 300   &&  GPU_COMPUTE_CAPABILITY < 500 )
 # define GPU_ARCH KEPLER
-#elif ( GPU_COMPUTE_CAPABILITY >= 500  &&  GPU_COMPUTE_CAPABILITY < 600 )
+#elif ( GPU_COMPUTE_CAPABILITY >= 500   &&  GPU_COMPUTE_CAPABILITY < 600 )
 # define GPU_ARCH MAXWELL
-#elif ( GPU_COMPUTE_CAPABILITY >= 600  &&  GPU_COMPUTE_CAPABILITY < 700 )
+#elif ( GPU_COMPUTE_CAPABILITY >= 600   &&  GPU_COMPUTE_CAPABILITY < 700 )
 # define GPU_ARCH PASCAL
-#elif ( GPU_COMPUTE_CAPABILITY >= 700  &&  GPU_COMPUTE_CAPABILITY < 750 )
+#elif ( GPU_COMPUTE_CAPABILITY >= 700   &&  GPU_COMPUTE_CAPABILITY < 750 )
 # define GPU_ARCH VOLTA
-#elif ( GPU_COMPUTE_CAPABILITY >= 750  &&  GPU_COMPUTE_CAPABILITY < 800 )
+#elif ( GPU_COMPUTE_CAPABILITY >= 750   &&  GPU_COMPUTE_CAPABILITY < 800 )
 # define GPU_ARCH TURING
-#elif ( GPU_COMPUTE_CAPABILITY >= 800  &&  GPU_COMPUTE_CAPABILITY < 890 )
+#elif ( GPU_COMPUTE_CAPABILITY >= 800   &&  GPU_COMPUTE_CAPABILITY < 890 )
 # define GPU_ARCH AMPERE
-#elif ( GPU_COMPUTE_CAPABILITY >= 890  &&  GPU_COMPUTE_CAPABILITY < 900 )
+#elif ( GPU_COMPUTE_CAPABILITY >= 890   &&  GPU_COMPUTE_CAPABILITY < 900 )
 # define GPU_ARCH ADA_LOVELACE
-#elif ( GPU_COMPUTE_CAPABILITY >= 900  &&  GPU_COMPUTE_CAPABILITY < 1000 )
+#elif ( GPU_COMPUTE_CAPABILITY >= 900   &&  GPU_COMPUTE_CAPABILITY < 1000 )
 # define GPU_ARCH HOPPER
+#elif ( GPU_COMPUTE_CAPABILITY >= 1000  &&  GPU_COMPUTE_CAPABILITY <= 1210 )
+# define GPU_ARCH BLACKWELL
 #else
 # error : ERROR : Unknown GPU_COMPUTE_CAPABILITY !!
 #endif // GPU_COMPUTE_CAPABILITY
@@ -512,9 +516,9 @@
 
 // number of built-in particle attributes
 // floating-point: mass, position*3, velocity*3, and time
-// integer: type
+// integer: type and uid
 #  define PAR_NATT_FLT_BUILTIN0   8
-#  define PAR_NATT_INT_BUILTIN0   1
+#  define PAR_NATT_INT_BUILTIN0   2
 
 // acceleration*3 when STORE_PAR_ACC is adopted
 # if ( defined STORE_PAR_ACC  &&  defined GRAVITY )
@@ -569,6 +573,7 @@
 // indices of built-in particle integer attributes in Par->AttributeInt[]
 // --> must NOT modify their values
 #  define  PAR_TYPE           0
+#  define  PAR_PUID           1
 
 // always put acceleration and time at the END of the particle attribute list
 // --> make it easier to discard them when storing data on disk (see Output_DumpData_Total(_HDF5).cpp)
@@ -603,6 +608,7 @@
 #  define _PAR_FLT_TOTAL      (  ( 1L << PAR_NATT_FLT_TOTAL ) - 1L )
 
 #  define _PAR_TYPE           ( 1L << PAR_TYPE )
+#  define _PAR_PUID           ( 1L << PAR_PUID )
 #  define _PAR_INT_TOTAL      (  ( 1L << PAR_NATT_INT_TOTAL ) - 1L )
 
 // grid fields related to particles
@@ -625,6 +631,9 @@
 #  define  PTYPE_GENERIC_MASSIVE    (long_par)1
 #  define  PTYPE_DARK_MATTER        (long_par)2
 #  define  PTYPE_STAR               (long_par)3
+
+// particle uid to be assigned
+#  define  PUID_TBA                 (long_par)-1
 
 # ifdef GRAVITY
 #  define MASSIVE_PARTICLES
@@ -1270,10 +1279,10 @@
 #  undef UNSPLIT_GRAVITY
 #endif
 
-// currently we always set GPU_ARCH == NONE when GPU is off
+// currently we always set GPU_ARCH == OPTION_NONE when GPU is off
 #ifndef GPU
 #  undef  GPU_ARCH
-#  define GPU_ARCH NONE
+#  define GPU_ARCH OPTION_NONE
 #endif
 
 // currently we assume that particle acceleration is solely due to gravity

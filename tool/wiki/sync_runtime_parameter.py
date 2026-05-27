@@ -2,7 +2,7 @@
 """
 ## What it can do
 
-Automatically update `doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-All.md`
+Automatically update `doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-All.md`
 when any of the following files are changed, updated, or pushed:
 - `tool/wiki/sync_runtime_parameter.py`
 - `src/Init/Init_Load_Parameter.cpp`
@@ -15,7 +15,7 @@ when any of the following files are changed, updated, or pushed:
 2. Execution:
    If changes are detected, the workflow runs the script `tool/wiki/sync_runtime_parameter.py`.
 3. Update:
-   The script updates `doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-All.md` by creating
+   The script updates `doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-All.md` by creating
    a new commit with the message: `[Workflow] Update all parameters wiki page`.
 
 ## Script Algorithm
@@ -35,7 +35,7 @@ when any of the following files are changed, updated, or pushed:
 #====================================================================================================
 import re
 from string import ascii_uppercase as auc
-
+from urllib.parse import quote
 
 
 #====================================================================================================
@@ -43,25 +43,27 @@ from string import ascii_uppercase as auc
 #====================================================================================================
 ALL_PARAM_FILE = "../../example/input/Input__Parameter"
 PARAM_CPP_FILE = "../../src/Init/Init_Load_Parameter.cpp"
-LINK_FILES     = [ "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Chemistry-and-Radiation.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Cosmology.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Feedback.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-GPU.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-General.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Gravity.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Hydro.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Initial-Conditions.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Interpolation.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-MPI-and-OpenMP.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Miscellaneous.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Outputs.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Particles.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Refinement.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Star-Formation.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Timestep.md",
-                   "../../doc/wiki/Runtime-Parameters-related/Runtime-Parameters:-Units.md"
+LINK_FILES     = [ "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Chemistry-and-Radiation.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Cosmology.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Feedback.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-GPU.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-General.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Gravity.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Hydro.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Initial-Conditions.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Interpolation.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-In-Situ-Python-Analysis.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-MPI-and-OpenMP.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Miscellaneous.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Outputs.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Particles.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Refinement.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Star-Formation.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Source-Terms.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Timestep.md",
+                   "../../doc/wiki/Runtime-Parameters-related/[Runtime-Parameters]-Units.md"
                  ]
-OUT_MD         = "Runtime-Parameters:-All.md"
+OUT_MD         = "[Runtime-Parameters]-All.md"
 REPLACE_DICT   = { "NoMin_double":"None", "NoMax_double":"None", "NoDef_double":"None",
                    "NoMin_int":"None", "NoMax_int":"None",
                    "NoMin_long":"None", "NoMax_long":"None",
@@ -105,7 +107,8 @@ class parameter():
         for file_name in file_dict:
             search_pattern = "[%s](#%s)"%(self.name, self.name)
             if search_pattern in file_dict[file_name]:
-                self.link_name = "[[ %s \\| %s#%s ]]"%(self.name, file_name, self.name)
+                file_name_url = quote( file_name )
+                self.link_name = "[%s](%s#%s)"%(self.name, file_name_url, self.name)
                 return True
         return False
 
@@ -174,6 +177,12 @@ for p in params:
 # output the markdown file
 with open( OUT_MD, 'w' ) as f:
     param_str_format = '| %-100s | %15s | %15s | %15s | %s |\n'
+    params_sorted_key = sorted( params.keys() )
+    indices = []
+    for key in params_sorted_key:
+        c = key[0].upper()
+        if len(indices) == 0 or indices[-1] != c:
+            indices.append( c )
 
     f.write( '> [!CAUTION]\n' )
     f.write( '> Please do not edit this file (page) manually, since the workflow will overwrite your changes.\n' )
@@ -182,23 +191,24 @@ with open( OUT_MD, 'w' ) as f:
     f.write( '\n' )
     f.write( 'The workflow is triggered when changes are pushed to any of the following files:\n' )
     f.write( '- `src/Init/Init_Load_Parameter.cpp`\n' )
-    f.write( '- `example/input/Input__Paramter`\n' )
+    f.write( '- `example/input/Input__Parameter`\n' )
     f.write( '- `tool/wiki/sync_runtime_parameter.py`\n' )
     f.write( '\n' )
     f.write( 'For variables with `Default/Min/Max` labeled as `Depend`, click the parameter names for more details.\n' )
     f.write( '\n' )
     f.write( '# Index\n' )
-    f.write( ', '.join( ['[%s](#%s)'%(i, i) for i in auc] ) )
+    f.write( ', '.join( ['[%s](#%s)'%(i, i) if i in indices else i for i in auc] ) )
     f.write( '\n' )
 
     start_char = ''
-    params_sorted_key = sorted( params.keys() )
     for key in params_sorted_key:
         # add alphabet title
         if start_char != key[0]:
             start_char = key[0]
             f.write( '\n' )
+            f.write( '<a name="%s"></a>\n'%(start_char) )
             f.write( "# %s\n"%(start_char) )
+            f.write( '\n' )
             f.write( param_str_format%("Name", "Default", "Min", "Max", "Short description") )
             f.write( param_str_format%(":---", ":---", ":---", ":---", ":---") )
 

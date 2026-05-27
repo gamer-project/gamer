@@ -95,7 +95,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
 // ***********************************************************************************************************************
    LOAD_PARA( load_mode, "CDM_LSS_TestProb_ID", &TESTPROB_ID,           TESTPROB_ID,   TESTPROB_ID,      TESTPROB_ID    );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

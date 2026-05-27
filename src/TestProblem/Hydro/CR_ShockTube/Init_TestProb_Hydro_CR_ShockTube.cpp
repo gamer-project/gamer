@@ -103,7 +103,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "CR_Shocktube_PresCR_L", &CR_Shocktube_PresCR_L,     0.0,           0.0,              NoMax_double      );
    LOAD_PARA( load_mode, "CR_Shocktube_Dir",      &CR_Shocktube_Dir,          0,             0,                2                 );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

@@ -42,7 +42,7 @@ bool Aux_CheckFolderExist( const char *FolderName )
    struct stat Buf;
 
    if ( stat(FolderName, &Buf) != 0 )    return false; // not exist
-   else if ( !(Buf.st_mode & S_IFDIR) )  return false; // not a directoy
+   else if ( !(Buf.st_mode & S_IFDIR) )  return false; // not a directory
 
    return true;
 

@@ -56,12 +56,7 @@ void End_MemFree()
 #  endif
 
 #  ifdef SUPPORT_GRACKLE
-   if ( GRACKLE_ACTIVATE )
-   {
-      End_MemFree_Grackle();
-
-      delete Che_FieldData;   Che_FieldData = NULL;
-   }
+   if ( GRACKLE_ACTIVATE )    End_MemFree_Grackle();
 #  endif
 
 

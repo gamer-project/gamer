@@ -4,7 +4,7 @@ This guide provides step-by-step instructions for setting up and using Visual St
 
 ### Prerequisites
 
-- **Quick Start**: Follow the [[Quick Start | Quick-Start]] guide to download GAMER and complete at least one [[demo | Quick-Start:-1D-Shock-Tube]].
+- **Quick Start**: Follow the [[Quick Start | Quick-Start]] guide to download GAMER and complete at least one [[demo | [Quick-Start]-1D-Shock-Tube]].
 - **Visual Studio Code**: Download and install VS Code from [https://code.visualstudio.com/](https://code.visualstudio.com/).
 - **C/C++ Extension**: Install the "C/C++" extension from the VS Code Marketplace.
 

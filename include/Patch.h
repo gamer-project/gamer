@@ -945,7 +945,7 @@ struct patch_t
                        Comment, ParID, NParTot );
       }
 
-      if ( NPar_Lv == NULL)   Aux_Error( ERROR_INFO, "NPar_Lv == NULL !!\n" );
+      if ( NPar_Lv == NULL )   Aux_Error( ERROR_INFO, "NPar_Lv == NULL !!\n" );
 #     endif // #ifdef DEBUG_PARTICLE
 
 

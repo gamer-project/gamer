@@ -42,7 +42,8 @@ static FieldIdx_t Plummer_Idx_Cloud1 = Idx_Undefined;
 void Par_Init_ByFunction_Plummer( const long NPar_ThisRank, const long NPar_AllRank,
                                   real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                   real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                  long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                  long_par *ParType,
+                                  real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
                                   long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] );
 #endif
 void Init_ExtAcc_Plummer();
@@ -175,7 +176,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "Plummer_FB_Like",      &Plummer_FB_Like,       1.0e-4,        0.0,              1.0               );
 #  endif
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 
