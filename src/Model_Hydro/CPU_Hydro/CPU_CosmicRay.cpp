@@ -1,3 +1,8 @@
+#ifndef __CUFLU_COSMICRAY__
+#define __CUFLU_COSMICRAY__
+
+
+
 #include "CUFLU.h"
 
 #ifdef COSMIC_RAY
@@ -82,15 +87,15 @@ void CR_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PLUS_MAG],
 //
 // Note        :  1. Shared by both MHM and MHM_RP (but it hasn't been tested for MHM yet)
 //                2. Work w/ and w/o MHD
-//                3. Invoked by CPU/CUFLU_FluidSolver_MHM()
+//                3. Invoked by Hydro_FullStepUpdate()
 //
 // Reference   :  [1] Yang et al., ApJ 761, 185 (2012); doi:10.1088/0004-637X/761/2/185
 //                [2] A simple dual implementation to track pressure accurately, S. Li, Astronum Proceeding, 385, 273 (2007)
 //
-// Parameter   :  g_PriVar_Half : Array storing the input cell-centered primitive variables
+// Parameter   :  Ecr           : Cosmic-ray energy to be updated (call-by-reference)
+//                g_PriVar_Half : Array storing the input cell-centered primitive variables
 //                                --> Accessed with the stride N_HF_VAR
 //                                --> Although its actually allocated size is FLU_NXT^3 since it points to g_PriVar_1PG[]
-//                g_Output      : Array to store the updated fluid data
 //                g_Flux        : Array storing the input face-centered fluxes
 //                                --> Accessed with the array stride N_FL_FLUX even thought its actually
 //                                    allocated size is N_FC_FLUX^3
@@ -99,25 +104,24 @@ void CR_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PLUS_MAG],
 //                dt            : Time interval to advance solution
 //                dh            : Cell size
 //                EoS           : EoS object
+//                idx_out       : Array index associated with Ecr
 //
-// Return      :  g_Output[CRAY][]
+// Return      :  Ecr
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void CR_AdiabaticWork_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
-                                      real g_Output[][ CUBE(PS2) ],
+void CR_AdiabaticWork_FullStep( real &Ecr,
+                                const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
                                 const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                 const real g_FC_Var[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
-                                const real dt, const real dh, const EoS_t *EoS )
+                                const real dt, const real dh, const EoS_t *EoS, const int idx_out )
 {
 
-   const int didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
-   const int didx_fc[3]   = { 1, N_FC_VAR,  SQR(N_FC_VAR)  };
-   const real dt_dh       = dt/dh;
+   const int  size_ij      = SQR(PS2);
+   const int  didx_flux[3] = { 1, N_FL_FLUX, SQR(N_FL_FLUX) };
+   const int  didx_fc[3]   = { 1, N_FC_VAR,  SQR(N_FC_VAR)  };
+   const real dt_dh        = dt/dh;
 
-   real div_V[3];
-
-   const int size_ij = SQR(PS2);
-   CGPU_LOOP( idx_out, CUBE(PS2) )
+// CGPU_LOOP( idx_out, CUBE(PS2) )
    {
 //    index of the output array
       const int i_out    = idx_out % PS2;
@@ -156,6 +160,8 @@ void CR_AdiabaticWork_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 
 
 //    2. compute \div V using the upwind data; reference: [2]
+      real div_V[3];
+
       for (int d=0; d<3; d++)
       {
          const int faceL = 2*d;
@@ -180,16 +186,16 @@ void CR_AdiabaticWork_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
 
 
 //    3. update the cosmic-ray energy
-      g_Output[CRAY][idx_out] -= pCR_half*dt_dh*( div_V[0] + div_V[1] + div_V[2] );
+      Ecr -= pCR_half*dt_dh*( div_V[0] + div_V[1] + div_V[2] );
 
    } // CGPU_LOOP( idx_out, CUBE(PS2) )
-
-#  ifdef __CUDACC__
-   __syncthreads();
-#  endif
 
 } // FUNCTION : CR_AdiabaticWork_FullStep
 
 
 
 #endif // #ifdef COSMIC_RAY
+
+
+
+#endif // #ifndef __CUFLU_COSMICRAY__
