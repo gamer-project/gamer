@@ -784,7 +784,8 @@ void GetClusterCenter( const int lv, const bool AdjustPos, const bool AdjustVel,
             VelZ[c] = (real_par*)malloc( N_max[c]*sizeof(real_par) );
          }
 
-//       find the particles within 10 times the accretion radius
+//       find the particles within "search_factor" times the accretion radius
+         const double search_factor = 10.0;
          for (int c=0; c<Merger_Coll_NumBHs; c++)
          {
             num_par[c] = 0;
@@ -796,7 +797,7 @@ void GetClusterCenter( const int lv, const bool AdjustPos, const bool AdjustVel,
                const double  patch_pos[3] = { (EdgeL[0]+EdgeR[0])*0.5, (EdgeL[1]+EdgeR[1])*0.5, (EdgeL[2]+EdgeR[2])*0.5 };
                const double  patch_d      = DIST_3D_DBL( EdgeL, EdgeR ) * 0.5;
 
-               if ( DIST_SQR_3D( patch_pos, Cen_new_pre[c] ) > SQR(10*R_acc+patch_d) )   continue;
+               if ( DIST_SQR_3D( patch_pos, Cen_new_pre[c] ) > SQR(search_factor*R_acc+patch_d) )   continue;
 
                for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)
                {
@@ -813,7 +814,7 @@ void GetClusterCenter( const int lv, const bool AdjustPos, const bool AdjustVel,
                   // Only proceed if the BH belongs to this halo and we are
                   // within 10 times the accretion radius
                   if ( CM_ClusterIdx_Cur[amr->Par->AttributeInt[Idx_ParHalo][ParID]] != (long_par)c )   continue;
-                  if ( DIST_SQR_3D( ParPos_tmp, Cen_new_pre[c] ) > SQR(10*R_acc) )   continue;
+                  if ( DIST_SQR_3D( ParPos_tmp, Cen_new_pre[c] ) > SQR(search_factor*R_acc) )   continue;
 
 //                record the mass, position and velocity of this particle
                   ParX[c][num_par[c]] = ParX_tmp;
