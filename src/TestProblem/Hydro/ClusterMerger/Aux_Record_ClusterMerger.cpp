@@ -69,17 +69,17 @@ void Aux_Record_ClusterMerger()
             Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
 
          FILE *File_User = fopen( FileName, "a" );
-         fprintf( File_User, "# ClusterCen_x/y/z : BH position\n" );
+         fprintf( File_User, "# ClusterCen_x/y/z : BH position [code length]\n" );
          fprintf( File_User, "# BHVel_?          : BH velocity [km/s]\n" );
-         fprintf( File_User, "# GasVel_?         : Gas velocity\n" );
-         fprintf( File_User, "# RelativeVel      : Relative velocity between BH and gas for each cluster inside the accretion radius\n" );
-         fprintf( File_User, "# SoundSpeed       : Average sound speed inside the accreiton radius\n" );
-         fprintf( File_User, "# GasDens          : Average gas density inside the accreiton radius [cgs]\n" );
+         fprintf( File_User, "# GasVel_?         : Gas velocity [km/s]\n" );
+         fprintf( File_User, "# RelativeVel      : Relative velocity between BH and gas for each cluster inside the accretion radius [km/s]\n" );
+         fprintf( File_User, "# SoundSpeed       : Average sound speed inside the accretion radius [km/s]\n" );
+         fprintf( File_User, "# GasDens          : Average gas density inside the accretion radius [cgs]\n" );
          fprintf( File_User, "# mass_BH          : BH mass [MSun]\n" );
          fprintf( File_User, "# Mdot_?_BH        : BH accretion rate [cgs]\n" );
          fprintf( File_User, "# NVoidCell        : Total number of finest cells within the feedback region\n" );
          fprintf( File_User, "# Mom?Inj          : Total momentum change in the feedback region [cgs]\n" );
-         fprintf( File_User, "# Mom?InjAbs       : Total |momentum| change in the feedback region\n" );
+         fprintf( File_User, "# Mom?InjAbs       : Total |momentum| change in the feedback region [cgs]\n" );
          fprintf( File_User, "# EInj_exp         : The expected amount of injected energy in the feedback region [erg]\n" );
          fprintf( File_User, "# E_Inj            : Total injected energy in the feedback region [erg]\n" );
          fprintf( File_User, "# E_Inj_err        : The relative error of the total injected energy\n" );
@@ -89,9 +89,9 @@ void Aux_Record_ClusterMerger()
          fprintf( File_User, "# MInjexp          : The expected amount of injected gas mass in the feedback region [Msun]\n" );
          fprintf( File_User, "# MassInj          : Total mass change in the feedback region [Msun]\n" );
          fprintf( File_User, "# M_Inj_err        : The relative error of the total injected mass\n" );
-         fprintf( File_User, "# Mdot_Inj         : The feedback injeciton rate of mass [cgs]\n" );
-         fprintf( File_User, "# Pdot_Inj         : The feedback injeciton rate of momentum [cgs]\n" );
-         fprintf( File_User, "# Edot_Inj         : The feedback injeciton rate of total energy [cgs]\n" );
+         fprintf( File_User, "# Mdot_Inj         : The feedback injection rate of mass [cgs]\n" );
+         fprintf( File_User, "# Pdot_Inj         : The feedback injection rate of momentum [cgs]\n" );
+         fprintf( File_User, "# Edot_Inj         : The feedback injection rate of total energy [cgs]\n" );
          fprintf( File_User, "# Jet_Vec_?        : Jet inject direction\n" );
          fprintf( File_User, "# num_par_sum      : Total number of particles inside the accretion region\n" );
          fprintf( File_User, "# ColdGasMass      : Cold gas mass inside the accretion radius [Msun]\n" );

@@ -50,7 +50,6 @@ extern int       *CM_Bondi_SinkNCell;
 // (4) other variables
 extern double    *E_inj_exp;                               // the expected amount of injected energy
 extern double    *M_inj_exp;                               // the expected amount of injected gas mass
-extern double   (*ang_mom_sum)[3];
 extern int        AdjustCount;                             // count the number of adjustments
 extern int        Merger_Coll_NumBHs;
 
@@ -711,8 +710,11 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 // Description :  Get the cluster centers
 //
 // Note        :  1. Must enable Merger_Coll_LabelCenter
+//                2. This routine will only change the cluster centers and velocities if
+//                   AdjustPos and AdjustVel (see below) are true and the level is the
+//                   maximum level currently refined.
 //
-// Parameter   :  lv        : Refeinement level to search on
+// Parameter   :  lv        : Refinement level to search on
 //                AdjustPos : If true, adjust the positions of the BHs
 //                AdjustVel : If true, adjust the velocities of the BHs
 //                Cen_old   : Old BH position array with the shape of [Merger_Coll_NumBHs][3]
@@ -740,6 +742,9 @@ void GetClusterCenter( const int lv, const bool AdjustPos, const bool AdjustVel,
 // initialize pos_min to be the old center
    for (int c=0; c<Merger_Coll_NumBHs; c++)   for (int d=0; d<3; d++)   pos_min[c][d] = Cen_old[c][d];
 
+// Only get the cluster centers and velocities if we are required to adjust them, and if
+// this is the maximum level currently refined. Otherwise, this routine skips to the end
+// of the function.
    if ( CurrentMaxLv  &&  (AdjustPos  ||  AdjustVel) )
    {
 
@@ -749,6 +754,9 @@ void GetClusterCenter( const int lv, const bool AdjustPos, const bool AdjustVel,
       const int max_counter = 10;    // The maximum number of calculations allow to find the center
       double Cen_new_pre[Merger_Coll_NumBHs][3];
 
+//    ###OPTIMIZATION: This loop could be optimized by applying the convergence check to each
+//    cluster separately to avoid redundant work. Currently, the check is performed on both
+//    clusters until both are converged.
       while ( converged == false  &&  counter <= max_counter )
       {
          for (int c=0; c<Merger_Coll_NumBHs; c++)
@@ -1070,7 +1078,8 @@ void GetClusterCenter( const int lv, const bool AdjustPos, const bool AdjustVel,
 void SetJetDirection( const double TimeNew, const int lv, const int FluSg )
 {
 
-   double ang_mom[Merger_Coll_NumBHs][3]; // total angular momentum inside the accretion radius
+   // angular momentum inside the accretion radius, per rank and total
+   double ang_mom[Merger_Coll_NumBHs][3], ang_mom_sum[Merger_Coll_NumBHs][3];
 
    switch ( JetDirection_case )
    {

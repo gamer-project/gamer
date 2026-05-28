@@ -92,7 +92,6 @@ static double  *JetDirection = NULL;       // jet direction[time/theta_1/phi_1/t
 
        double  *E_inj_exp = NULL;         // the expected amount of injected energy
        double  *M_inj_exp = NULL;         // the expected amount of injected gas mass
-       double (*ang_mom_sum)[3] = NULL;   // the sum of the angular momentum inside the accretion radius
 
        double  *Jet_WaveK = NULL;         // jet wavenumber used in the sin() function to have smooth bidirectional jets
        double  *V_cyl = NULL;             // the volume of jet source
@@ -859,7 +858,6 @@ void End_ClusterMerger()
 
    delete [] E_inj_exp;
    delete [] M_inj_exp;
-   delete [] ang_mom_sum;
 
 } // FUNCTION : End_ClusterMerger
 
@@ -1230,7 +1228,6 @@ void AllocateBHVarArray()
 
    E_inj_exp             = new double [ Merger_Coll_NumBHs ];
    M_inj_exp             = new double [ Merger_Coll_NumBHs ];
-   ang_mom_sum           = new double [ Merger_Coll_NumBHs ][ 3 ];
 
    for (int c=0; c<Merger_Coll_NumBHs; c++)
    {
@@ -1273,7 +1270,6 @@ void AllocateBHVarArray()
 
       E_inj_exp            [c] = 0.0;
       M_inj_exp            [c] = 0.0;
-      for (int d=0; d<3; d++)   ang_mom_sum   [c][d] = 0.0;
    }
 
 } // FUNCITON : AllocateBHVarArray
