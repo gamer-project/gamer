@@ -10,9 +10,9 @@
 static char   (*Merger_File_Prof)[ MAX_STRING ] = NULL; // profile table of clusters
        char   (*Merger_File_Par) [ MAX_STRING ] = NULL; // particle file of clusters
 static bool    *Merger_Coll_IsGas = NULL;               // (true/false) --> does cluster have gas
-       double (*Merger_Coll_Pos)[3] = NULL;             // position of clusters
-       double (*Merger_Coll_Vel)[3] = NULL;             // velocity of clusters
-       double  *CM_BH_Mass = NULL;                      // black hole mass of clusters
+       double (*Merger_Coll_Pos)[3] = NULL;             // initial position of clusters
+       double (*Merger_Coll_Vel)[3] = NULL;             // initial velocity of clusters
+       double  *CM_BH_Mass = NULL;                      // initial black hole mass of clusters
        double  *Jet_HalfHeight = NULL;                  // half height of the cylinder-shape jet source of clusters
        double  *Jet_Radius = NULL;                      // radius of the cylinder-shape jet source of clusters
 
@@ -55,9 +55,10 @@ static double  *JetDirection = NULL;       // jet direction[time/theta_1/phi_1/t
        double **CM_Jet_Phi_table = NULL;   // the phi   table of jet direction for clusters
 // ---------------------------------------------------------------------------------------
 // (3) variables to record
-       double (*CM_ClusterCen)[3] = NULL;     // the center  of each cluster
-       double (*CM_BH_Pos)[3] = NULL;         // BH position of each cluster
-       double (*CM_BH_Vel)[3] = NULL;         // BH velocity of each cluster
+       double (*CM_ClusterCen)[3] = NULL;     // variable to store the center of each cluster (potential minimum)
+                                              // in the current implementation, this will always be equal to CM_BH_Pos
+       double (*CM_BH_Pos)[3] = NULL;         // current BH position of each cluster
+       double (*CM_BH_Vel)[3] = NULL;         // current BH velocity of each cluster
        double  *CM_BH_Mdot_tot = NULL;        // the total accretion rate of BHs
        double  *CM_BH_Mdot_hot = NULL;        // the hot   accretion rate of BHs
        double  *CM_BH_Mdot_cold = NULL;       // the cold  accretion rate of BHs
@@ -101,7 +102,7 @@ static double  *JetDirection = NULL;       // jet direction[time/theta_1/phi_1/t
        double  *normalize_const = NULL;   // the exact normalization constant
 
 #ifdef MASSIVE_PARTICLES
-       long_par *CM_ClusterIdx_Cur = NULL; // the current cluster index
+       long_par *CM_ClusterIdx_Cur = NULL; // the current cluster index for the BHs
 #endif
 
 static FieldIdx_t *ColorFieldsIdx;
@@ -397,6 +398,8 @@ void SetParameter()
    ColorFieldsIdx = new FieldIdx_t [ Merger_Coll_NumHalos ];
    for (int c=0; c<Merger_Coll_NumHalos; c++)   ColorFieldsIdx[c] = Idx_Undefined;
 
+// Assign each BH the index of the halo it belongs to. This index will
+// change if the BHs merge
    CM_ClusterIdx_Cur = new long_par [ Merger_Coll_NumHalos ];
    for (int c=0; c<Merger_Coll_NumHalos; c++)   CM_ClusterIdx_Cur[c] = c;
 

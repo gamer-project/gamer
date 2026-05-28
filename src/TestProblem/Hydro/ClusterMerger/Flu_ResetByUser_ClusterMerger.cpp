@@ -61,9 +61,11 @@ extern double    *V_cyl;                                   // the volume of jet 
 extern double    *M_inj, *P_inj, *E_inj;                   // the injected density
 extern double    *normalize_const;                         // the exact normalization constant
 
-extern long_par  *CM_ClusterIdx_Cur;
+extern long_par  *CM_ClusterIdx_Cur;                       // array to keep track of which cluster the black hole
+                                                           // particles belong to
 
-static bool       if_overlap = false;
+static bool       if_overlap = false;                      // variable to keep track if the jet injection regions
+                                                           // are overlapping
 
 // =======================================================================================
 
@@ -352,7 +354,8 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
          CM_BH_Mass[1] = 0.0;
 
 //       relabel the BH and DM particles being merged
-         CM_ClusterIdx_Cur[1] = 0;
+//       NOTE: this assumes that BHs are only supported in a binary merger
+         CM_ClusterIdx_Cur[1] = 0; // The BH from cluster 1 now belongs to cluster 0
          for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
          {
             if ( amr->Par->AttributeInt[Idx_ParHalo][p] == (long_par)1  &&
@@ -396,7 +399,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
       double gas_mom_hot[Merger_Coll_NumBHs][3];  // average hot gas momentum
       double V_cyl_exact[Merger_Coll_NumBHs];     // exact volume of jet cylinder
       double normalize  [Merger_Coll_NumBHs];     // for computing the correct normalization constant
-      bool if_overlap_each_rank = false;
+      bool if_overlap_each_rank = false;          // check for jet injection site overlap on current MPI rank
       for (int c=0; c<Merger_Coll_NumBHs; c++)
       {
          num_hot    [c] = 0;
@@ -799,6 +802,8 @@ void GetClusterCenter( const int lv, const bool AdjustPos, const bool AdjustVel,
                   const real_par VelZ_tmp      = amr->Par->VelZ[ParID];
                   const real_par ParPos_tmp[3] = { ParX_tmp, ParY_tmp, ParZ_tmp };
 
+                  // Only proceed if the BH belongs to this halo and we are
+                  // within 10 times the accretion radius
                   if ( CM_ClusterIdx_Cur[amr->Par->AttributeInt[Idx_ParHalo][ParID]] != (long_par)c )   continue;
                   if ( DIST_SQR_3D( ParPos_tmp, Cen_new_pre[c] ) > SQR(10*R_acc) )   continue;
 
@@ -1009,6 +1014,7 @@ void GetClusterCenter( const int lv, const bool AdjustPos, const bool AdjustVel,
       double Vel_Tmp[3] = { -__FLT_MAX__, -__FLT_MAX__, -__FLT_MAX__ };
       for (long p=0; p<amr->Par->NPar_AcPlusInac; p++)
       {
+
          if ( amr->Par->Mass[p] < (real_par)0.0 )   continue;
          if ( CM_ClusterIdx_Cur[amr->Par->AttributeInt[Idx_ParHalo][p]] != (long_par)c )   continue;
          if ( amr->Par->Type[p] != PTYPE_BLACK_HOLE )   continue;
