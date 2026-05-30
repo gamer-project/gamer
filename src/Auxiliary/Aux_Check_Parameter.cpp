@@ -298,7 +298,11 @@ void Aux_Check_Parameter()
 #  ifdef SUPPORT_FFTW
    if ( OPT__FFTW_STARTUP != FFTW_STARTUP_ESTIMATE )
       Aux_Error( ERROR_INFO, "must set OPT__FFTW_STARTUP=0 (FFTW_STARTUP_ESTIMATE) for BITWISE_REPRODUCIBILITY !!\n" );
+
+#  if ( SUPPORT_FFTW == FFTW3  &&  defined SERIAL )
+      Aux_Message( stderr, "WARNING : SUPPORT_FFTW=FFTW3 + SERIAL may break BITWISE_REPRODUCIBILITY !!\n" );
 #  endif
+#  endif // #ifdef SUPPORT_FFTW
 #  endif // #ifdef BITWISE_REPRODUCIBILITY
 
 #  if ( !defined SERIAL  &&  !defined LOAD_BALANCE )
