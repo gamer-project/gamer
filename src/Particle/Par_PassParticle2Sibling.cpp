@@ -43,7 +43,7 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
    const double dh_min           = amr->dh[TOP_LEVEL];
    const double BoxEdge[3]       = { (NX0_TOT[0]*(1<<TOP_LEVEL))*dh_min,
                                      (NX0_TOT[1]*(1<<TOP_LEVEL))*dh_min,
-                                     (NX0_TOT[2]*(1<<TOP_LEVEL))*dh_min }; // prevent from the round-off error problem
+                                     (NX0_TOT[2]*(1<<TOP_LEVEL))*dh_min }; // prevent the round-off error problem
 // ParPos should NOT be used after calling Par_LB_ExchangeParticleBetweenPatch() since amr->Par->AttributeFlt may be reallocated
    real_par *ParPos[3]           = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
    const long_par *PType = amr->Par->Type;
@@ -114,7 +114,7 @@ void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar )
                {
                   ParPos[d][ParID] = ParPos[d][ParID] + BoxEdge[d];
 
-//                prevent from the round-off error problem
+//                prevent the round-off error problem
                   if ( ParPos[d][ParID] == BoxEdge[d] )
                   {
                      ijk[d]           = 1;
@@ -428,7 +428,7 @@ bool Par_WithinActiveRegion( const real_par x, const real_par y, const real_par 
 
    return true;
 
-} // FUCNTION Par_WithinActiveRegion
+} // FUNCTION Par_WithinActiveRegion
 
 
 

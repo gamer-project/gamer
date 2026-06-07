@@ -13,6 +13,7 @@
 //                   --> It is because, currently, this function always uses the pot_ext[] array of each patch
 //                       to calculate the gravitationally acceleration of the new star particles
 //                2. One must invoke Buf_GetBufferData( ..., _TOTAL, ... ) after calling this function
+//                3. The new particle UID should be initialized as PUID_TBA. The actual PUID will be assigned later in SF_CreateStar()
 //
 // Parameter   :  lv       : Target refinement level
 //                TimeNew  : Current physical time (after advancing solution by dt)
@@ -269,6 +270,7 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
          NewParAttFlt[NNewPar][PAR_VELZ] = fluid[MOMZ][k][j][i]*_GasDens;
          NewParAttFlt[NNewPar][PAR_TIME] = TimeNew;
          NewParAttInt[NNewPar][PAR_TYPE] = PTYPE_STAR;
+         NewParAttInt[NNewPar][PAR_PUID] = PUID_TBA;
 
 //       particle acceleration
 #        ifdef STORE_PAR_ACC
@@ -368,7 +370,6 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
    delete [] NewParID;
 
    } // end of OpenMP parallel region
-
 
 // get the total number of active particles in all MPI ranks
    MPI_Allreduce( &amr->Par->NPar_Active, &amr->Par->NPar_Active_AllRank, 1, MPI_LONG, MPI_SUM, MPI_COMM_WORLD );

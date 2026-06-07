@@ -246,8 +246,8 @@ void Init_GAMER( int *argc, char ***argv )
 
 // ensure B field consistency on the shared interfaces between sibling patches
 #  if ( MODEL == HYDRO  &&  defined MHD )
-   if ( OPT__SAME_INTERFACE_B )
-   for (int lv=0; lv<NLEVEL; lv++)  MHD_SameInterfaceB( lv );
+   if ( OPT__SAME_INTERFACE_B == SAME_INTERFACE_B_YES )
+   for (int lv=0; lv<NLEVEL; lv++)  MHD_SameInterfaceB( lv, amr->FluSg[lv], amr->MagSg[lv] );
 #  endif
 
 
@@ -328,6 +328,22 @@ void Init_GAMER( int *argc, char ***argv )
 
 // user-defined initialization (after the Poisson solver)
    if ( Init_User_AfterPoisson_Ptr != NULL )    Init_User_AfterPoisson_Ptr();
+
+
+#  ifdef PARTICLE
+// assign initial particle UIDs AFTER all routines that may add particles,
+// including Par_Init_ByFunction_Ptr(), Par_Init_ByFile(), AddParticle() in Init_ByRestart(), and
+//           Par_AddParticleAfterInit() in Init_User_Ptr() and Init_User_AfterPoisson_Ptr()
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Par_SetParID (init)" );
+
+   Par_SetParUID();
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Par_SetParID (init)" );
+
+// only perform this check here if it will not be checked later in Aux_Check()
+   if ( OPT__PAR_INIT_CHECK  &&  !OPT__CK_PARTICLE )
+      Par_Aux_Check_Particle( "Initial particle check after Par_SetParUID" );
+#  endif // #ifdef PARTICLE
 
 
 // initialize source-term fields (e.g., cooling time)

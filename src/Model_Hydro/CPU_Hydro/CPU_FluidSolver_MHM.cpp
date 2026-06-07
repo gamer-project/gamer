@@ -734,7 +734,7 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 #        endif
 
 //       switch to a different Riemann solver if the default one fails
-#        if ( RSOLVER_RESCUE != NONE )
+#        if ( RSOLVER_RESCUE != OPTION_NONE )
          for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
          {
 //          only check NaN for now
@@ -783,7 +783,7 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                break;
             } // if ( Flux_1Face[v] != Flux_1Face[v] )
          } // for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
-#        endif // #if ( RSOLVER_RESCUE != NONE )
+#        endif // #if ( RSOLVER_RESCUE != OPTION_NONE )
 
 //       store the results in g_Flux_Half[]
          for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)   g_Flux_Half[d][v][idx_flux] = Flux_1Face[v];
