@@ -153,7 +153,7 @@ void Hydro_TGradientCorrection(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ 
 //                EoS                : EoS object
 //-------------------------------------------------------------------------------------------------------
 #ifdef __CUDACC__
-#ifndef MHD
+#if !defined MHD  &&  !defined FLOAT8
 // scalar slope limiter (component-wise; no CHAR_RECONSTRUCTION needed)
 GPU_DEVICE
 real Hydro_LimitSlope_Scalar( const real vL, const real vC, const real vR,
@@ -234,13 +234,12 @@ void CUFLU_DR_FCVar(
                                     { 0.0,       0.0, 0.0, 1.0,       0.0 },
                                     { 1.0, NULL_REAL, 0.0, 0.0, NULL_REAL } };
 
-   for (int k_fc = 0; k_fc < N_FC_VAR; k_fc++)
+// sliding-window prologue: load all 5 slabs for k_fc=0 before entering the loop
    {
-//    cooperatively load 5 z-slabs into shared memory, computing Con2Pri inline from g_Flu_Array_In
-      const int k_cc = k_fc + NGhost;
+      const int k_cc_0 = NGhost;
       for (int slab = 0; slab < 5; slab++)
       {
-         const int k_slab = k_cc - 2 + slab;
+         const int k_slab = k_cc_0 - 2 + slab;
          CGPU_LOOP( idx_xy, NIn2 )
          {
             real ConVar[NCOMP_TOTAL], PriVar_tmp[NCOMP_LR];
@@ -255,7 +254,20 @@ void CUFLU_DR_FCVar(
                s_PriVar[slab][v][idx_xy] = PriVar_tmp[v];
          }
       }
-      __syncthreads();
+   }
+   __syncthreads();
+
+// ring-buffer base: physical slot for logical slab 0 (k_cc-2)
+   int base = 0;
+
+   for (int k_fc = 0; k_fc < N_FC_VAR; k_fc++)
+   {
+//    map logical slab indices 0-4 to physical ring slots
+      const int rs0 = base;
+      const int rs1 = (base + 1 < 5) ? base + 1 : base - 4;
+      const int rs2 = (base + 2 < 5) ? base + 2 : base - 3;
+      const int rs3 = (base + 3 < 5) ? base + 3 : base - 2;
+      const int rs4 = (base + 4 < 5) ? base + 4 : base - 1;
 
 //    process all (i_fc, j_fc) in this k-plane
       CGPU_LOOP( idx_ij, N_FC_VAR2 )
@@ -269,7 +281,7 @@ void CUFLU_DR_FCVar(
 
          real cc_C_ncomp[NCOMP_LR], fcCon[6][NCOMP_LR], fcPri[6][NCOMP_LR], dfc[NCOMP_LR], dfc6[NCOMP_LR];
 
-         for (int v = 0; v < NCOMP_LR; v++)   cc_C_ncomp[v] = s_PriVar[2][v][xy_C];
+         for (int v = 0; v < NCOMP_LR; v++)   cc_C_ncomp[v] = s_PriVar[rs2][v][xy_C];
 
          Hydro_GetEigenSystem( cc_C_ncomp, EigenVal, LEigenVec, REigenVec, &EoS );
 
@@ -278,9 +290,9 @@ void CUFLU_DR_FCVar(
             const int faceL      = 2*d;
             const int faceR      = faceL + 1;
 
-//          slab/xy indices for +-1 neighbors; z-dir uses slabs 1/3, x/y-dir uses center slab 2
-            const int slab_L = (d == 2) ? 1 : 2;
-            const int slab_R = (d == 2) ? 3 : 2;
+//          slab/xy indices for +-1 neighbors; z-dir uses ring slots rs1/rs3, x/y uses rs2
+            const int slab_L = (d == 2) ? rs1 : rs2;
+            const int slab_R = (d == 2) ? rs3 : rs2;
             const int  xy_L  = (d == 0) ? xy_C - 1     : (d == 1) ? xy_C - NIn   : xy_C;
             const int  xy_R  = (d == 0) ? xy_C + 1     : (d == 1) ? xy_C + NIn   : xy_C;
             const int  xy_LL = (d == 0) ? xy_C - 2     : (d == 1) ? xy_C - 2*NIn : -1;
@@ -300,13 +312,13 @@ void CUFLU_DR_FCVar(
                if ( LR_Limiter == LR_LIMITER_ATHENA )
                {
 //                all +-1 and +-2 neighbors from shmem (5-slab window covers k_cc-2..k_cc+2)
-                  const real cc_LL = (d < 2) ? s_PriVar[2    ][v][xy_LL]
-                                             : s_PriVar[0    ][v][xy_C  ];
+                  const real cc_LL = (d < 2) ? s_PriVar[rs2][v][xy_LL]
+                                             : s_PriVar[rs0][v][xy_C  ];
                   const real cc_L  = s_PriVar[slab_L][v][xy_L];
                   const real cc_C  = cc_C_ncomp[v];
                   const real cc_R  = s_PriVar[slab_R][v][xy_R];
-                  const real cc_RR = (d < 2) ? s_PriVar[2    ][v][xy_RR]
-                                             : s_PriVar[4    ][v][xy_C  ];
+                  const real cc_RR = (d < 2) ? s_PriVar[rs2][v][xy_RR]
+                                             : s_PriVar[rs4][v][xy_C  ];
 
                   real tmp, rho, cc_abs_max;
                   real d_L, d_R, dd_L, dd_C, dd_R;
@@ -370,12 +382,12 @@ void CUFLU_DR_FCVar(
                   const real cc_R_val = s_PriVar[slab_R][v][xy_R];
                   const real cc_C_val = cc_C_ncomp[v];
 //                +-2 cell values for slope stencil at C-1 and C+1
-                  const real cc_LL_val = (d == 0) ? s_PriVar[2][v][xy_C - 2    ]
-                                       : (d == 1) ? s_PriVar[2][v][xy_C - 2*NIn]
-                                       :            s_PriVar[0][v][xy_C        ];
-                  const real cc_RR_val = (d == 0) ? s_PriVar[2][v][xy_C + 2    ]
-                                       : (d == 1) ? s_PriVar[2][v][xy_C + 2*NIn]
-                                       :            s_PriVar[4][v][xy_C        ];
+                  const real cc_LL_val = (d == 0) ? s_PriVar[rs2][v][xy_C - 2    ]
+                                       : (d == 1) ? s_PriVar[rs2][v][xy_C - 2*NIn]
+                                       :            s_PriVar[rs0][v][xy_C        ];
+                  const real cc_RR_val = (d == 0) ? s_PriVar[rs2][v][xy_C + 2    ]
+                                       : (d == 1) ? s_PriVar[rs2][v][xy_C + 2*NIn]
+                                       :            s_PriVar[rs4][v][xy_C        ];
                   const real dcc_L = Hydro_LimitSlope_Scalar( cc_LL_val, cc_L_val, cc_C_val, LR_Limiter, MinMod_Coeff );
                   const real dcc_C = Hydro_LimitSlope_Scalar( cc_L_val,  cc_C_val, cc_R_val, LR_Limiter, MinMod_Coeff );
                   const real dcc_R = Hydro_LimitSlope_Scalar( cc_C_val,  cc_R_val, cc_RR_val, LR_Limiter, MinMod_Coeff );
@@ -557,10 +569,33 @@ void CUFLU_DR_FCVar(
             g_FC_Var_1PG[f][v][idx_fc_out] = fcCon[f][v];
 
       } // CGPU_LOOP( idx_ij, N_FC_VAR2 )
+
+      __syncthreads(); // ensure all reads of s_PriVar[rs0] (cc_LL, d=2) finish before overwriting it
+
+//    sliding window: load the next "+2" slab into the slot being evicted (rs0),
+//    then advance base so rs0 becomes rs4 for the next iteration
+      if ( k_fc < N_FC_VAR - 1 )
+      {
+         const int k_new = k_fc + NGhost + 3;  // = (k_fc+1) + NGhost + 2
+         CGPU_LOOP( idx_xy, NIn2 )
+         {
+            real ConVar[NCOMP_TOTAL], PriVar_tmp[NCOMP_LR];
+            for (int v = 0; v < NCOMP_TOTAL; v++)
+               ConVar[v] = g_Flu_Array_In_1PG[v][ k_new*NIn2 + idx_xy ];
+            Hydro_Con2Pri( ConVar, PriVar_tmp, MinPres, PassiveFloor, FracPassive, NFrac, c_FracIdx,
+                           JeansMinPres, JeansMinPres_Coeff,
+                           EoS.DensEint2Pres_FuncPtr, EoS.DensPres2Eint_FuncPtr,
+                           EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr,
+                           EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL, NULL );
+            for (int v = 0; v < NCOMP_LR; v++)
+               s_PriVar[base][v][idx_xy] = PriVar_tmp[v];
+         }
+         base = (base + 1 < 5) ? base + 1 : 0;
+      }
       __syncthreads();
    } // for (int k_fc=0; k_fc<N_FC_VAR; k_fc++)
 }
-#endif // #ifndef MHD
+#endif // #if !defined MHD  &&  !defined FLOAT8
 #endif // __CUDACC__
 
 #ifdef __CUDACC__
@@ -630,10 +665,10 @@ void CPU_FluidSolver_CTU(
 #  else
    const bool CorrHalfVel          = false;
 #  endif
-#  if !( defined __CUDACC__  &&  !defined MHD )
+#  if !( defined __CUDACC__  &&  !defined MHD  &&  !defined FLOAT8 )
    const bool CorrHalfVel_No       = false;
 #  endif
-#  if !( defined __CUDACC__  &&  !defined MHD )
+#  if !( defined __CUDACC__  &&  !defined MHD  &&  !defined FLOAT8 )
    const bool Con2Pri_Yes          = true;
 #  endif
 #  ifdef MHD
@@ -663,10 +698,10 @@ void CPU_FluidSolver_CTU(
 //          --> necessary because different patch groups are computed by different OpenMP threads or CUDA blocks in parallel
          real (*const g_FC_Var_1PG   )[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ] = g_FC_Var   [P];
          real (*const g_FC_Flux_1PG  )[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ] = g_FC_Flux  [P];
-#        if !( defined __CUDACC__  &&  !defined MHD )
+#        if !( defined __CUDACC__  &&  !defined MHD  &&  !defined FLOAT8 )
          real (*const g_PriVar_1PG   )                      [ CUBE(FLU_NXT)     ] = g_PriVar   [P];
 #        endif
-#        if !( defined __CUDACC__  &&  !defined MHD )
+#        if !( defined __CUDACC__  &&  !defined MHD  &&  !defined FLOAT8 )
          real (*const g_Slope_PPM_1PG)[NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ] = g_Slope_PPM[P];
 #        endif
 
@@ -674,7 +709,7 @@ void CPU_FluidSolver_CTU(
          real (*const g_FC_Mag_Half_1PG)[ FLU_NXT_P1*SQR(FLU_NXT) ] = g_FC_Mag_Half[P];
          real (*const g_EC_Ele_1PG     )[ CUBE(N_EC_ELE)          ] = g_EC_Ele     [P];
          real (*const g_PriVar_Half_1PG)[ CUBE(FLU_NXT) ]           = g_PriVar_1PG;
-#        elif !defined __CUDACC__
+#        elif !( defined __CUDACC__  &&  !defined FLOAT8 )
          real (*const g_FC_Mag_Half_1PG)[ FLU_NXT_P1*SQR(FLU_NXT) ] = NULL;
          real (*const g_EC_Ele_1PG     )[ CUBE(N_EC_ELE)          ] = NULL;
 #        endif
@@ -682,8 +717,8 @@ void CPU_FluidSolver_CTU(
 
 //       1. evaluate the face-centered values at the half time-step
 //          GPU non-MHD: CUFLU_DR_FCVar has already filled g_FC_Var; skip here
-//          CPU or GPU+MHD: full inline
-#        if !( defined __CUDACC__  &&  !defined MHD )
+//          CPU or GPU+MHD or GPU+FLOAT8: full inline
+#        if !( defined __CUDACC__  &&  !defined MHD  &&  !defined FLOAT8 )
          Hydro_DataReconstruction( g_Flu_Array_In[P], g_Mag_Array_In[P], g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
                                    NULL, Con2Pri_Yes, LR_Limiter, MinMod_Coeff, dt, dh,
                                    MinDens, MinPres, MinEint, PassiveFloor, FracPassive, NFrac, c_FracIdx,
@@ -691,9 +726,9 @@ void CPU_FluidSolver_CTU(
 #        endif
 
 
-//       2-4. GPU non-MHD: k-slab pipeline — half-step Riemanns into shmem ping-pong buffers,
+//       2-4. GPU non-MHD non-FLOAT8: k-slab pipeline — half-step Riemanns into shmem ping-pong buffers,
 //            inline TGrad from shmem; eliminates ~50 MB DRAM roundtrip of g_FC_Flux_1PG[half-step]
-#        if ( defined __CUDACC__  &&  !defined MHD )
+#        if ( defined __CUDACC__  &&  !defined MHD  &&  !defined FLOAT8 )
          {
             const int  N_FC_VAR2  = SQR(N_FC_VAR);
             const real dt_dh2     = (real)0.5*dt/dh;
@@ -926,7 +961,7 @@ void CPU_FluidSolver_CTU(
 
          } // k-slab block
 
-#        else // !( defined __CUDACC__  &&  !defined MHD ): CPU or MHD — standard path
+#        else // !( defined __CUDACC__  &&  !defined MHD  &&  !defined FLOAT8 ): CPU, MHD, or FLOAT8 — standard path
 
 //       2. evaluate the face-centered half-step fluxes by solving the Riemann problem
          Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_HF_FLUX, 0, 0, CorrHalfVel_No,
@@ -951,7 +986,7 @@ void CPU_FluidSolver_CTU(
          Hydro_TGradientCorrection( g_FC_Var_1PG, g_FC_Flux_1PG, g_Mag_Array_In[P], g_FC_Mag_Half_1PG, g_EC_Ele_1PG, g_PriVar_1PG,
                                     dt, dh, MinDens, MinEint, PassiveFloor );
 
-#        endif // #if ( defined __CUDACC__  &&  !defined MHD )
+#        endif // #if ( defined __CUDACC__  &&  !defined MHD  &&  !defined FLOAT8 )
 
 
 //       5. evaluate the cell-centered primitive variables at the half time-step
