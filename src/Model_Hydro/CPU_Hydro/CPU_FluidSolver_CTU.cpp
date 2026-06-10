@@ -42,9 +42,10 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
 void Hydro_StoreIntFlux( const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
                          const int NFlux );
-void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
-                           const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                           const real dt, const real dh, const real MinDens, const real MinEint, const real DualEnergySwitch,
+void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], const real g_Half_Pri[][ CUBE(FLU_NXT) ],
+                           real g_Output[][ CUBE(PS2) ], char g_DE_Status[], const real g_FC_B[][ PS2P1*SQR(PS2) ],
+                           const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ], const real dt,
+                           const real dh, const real MinDens, const real MinEint, const real DualEnergySwitch,
                            const long PassiveFloor, const bool NormPassive, const int NNorm, const int NormIdx[],
                            const EoS_t *EoS, int *s_FullStepFailure, const int Iteration, const int MinMod_MaxIter );
 #ifdef MHD
@@ -258,6 +259,7 @@ void CPU_FluidSolver_CTU(
 #        else
          real (*const g_FC_Mag_Half_1PG)[ FLU_NXT_P1*SQR(FLU_NXT) ] = NULL;
          real (*const g_EC_Ele_1PG     )[ CUBE(N_EC_ELE)          ] = NULL;
+         real (*const g_PriVar_Half_1PG)[ CUBE(FLU_NXT) ]           = NULL;
 #        endif
 
 
@@ -332,8 +334,8 @@ void CPU_FluidSolver_CTU(
 
 //       8. full-step evolution of the fluid data
 //          --> CTU does not support reducing the min-mod coefficient
-         Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P], g_Mag_Array_Out[P],
-                               g_FC_Flux_1PG, dt, dh, MinDens, MinEint, DualEnergySwitch,
+         Hydro_FullStepUpdate( g_Flu_Array_In[P], g_PriVar_Half_1PG, g_Flu_Array_Out[P], g_DE_Array_Out[P],
+                               g_Mag_Array_Out[P], g_FC_Flux_1PG, dt, dh, MinDens, MinEint, DualEnergySwitch,
                                PassiveFloor, NormPassive, NNorm, c_NormIdx, &EoS, NULL, NULL_INT, NULL_INT );
 
       } // loop over all patch groups
