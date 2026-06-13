@@ -44,6 +44,11 @@ GAMER_DESCRIPTION    = "Prepare a customized Makefile for GAMER.\n"\
                        "Default values are marked by '*'.\n"\
                        "Use -lh to show a detailed help message.\n"
 GAMER_EPILOG         = "2023 Computational Astrophysics Lab, NTU. All rights reserved.\n"
+GAMER_TOOL_PATHS     = [
+                         os.path.join("..", "tool", "analysis", "gamer_compare_data"),
+                         os.path.join("..", "tool", "analysis", "gamer_extract_uniform"),
+                         os.path.join("..", "tool", "analysis", "gamer_extract_profile"),
+                       ]
 
 LOGGER     = logging.getLogger()
 LOG_FORMAT = "%(asctime)s %(levelname)-8s: %(message)s"
@@ -453,6 +458,12 @@ def load_arguments( sys_setting : SystemSetting ):
     parser.add_argument( "--verbose_make", type=str2bool, metavar="BOOLEAN",
                          default=False,
                          help="Output detailed compilation commands.\n"
+                       )
+
+    # generate Makefile for tools
+    parser.add_argument( "--tools", type=str2bool, metavar="BOOLEAN",
+                         default=False,
+                         help="Generate Makefile for the analysis tools.\n"
                        )
 
     # A. options of diffierent physical models
@@ -1183,7 +1194,7 @@ if __name__ == "__main__":
     # 5.5 Set the GPU
     gpu_setup = set_gpu( gpus, flags, args )
 
-    # 6. Create Makefile
+    # 6. Create Makefile for GAMER
     # 6.1 Read
     with open( GAMER_MAKE_BASE, "r" ) as make_base:
         makefile = make_base.read()
@@ -1227,5 +1238,33 @@ if __name__ == "__main__":
 
     LOGGER.info("========================================")
     LOGGER.info("%s is created."%GAMER_MAKE_OUT)
+
+    # 7. Create Makefile for tools
+    if args['tools']:
+        all_key_vals = { **sims, **paths, **compiles, **gpu_setup }
+        for tool_path in GAMER_TOOL_PATHS:
+            tool_make_base = os.path.join( tool_path, GAMER_MAKE_BASE )
+            tool_make_out  = os.path.join( tool_path, GAMER_MAKE_OUT )
+
+            # 7.1 Read
+            with open( tool_make_base, "r" ) as make_base:
+                makefile = make_base.read()
+
+            # 7.2 Replace
+            for key, val in all_key_vals.items():
+                makefile, num = re.subn(r"@@@%s@@@"%key, val, makefile)
+                if num > 0: LOGGER.debug("%-25s : %s"%(key, val))
+
+            for key in re.findall(r"@@@(.+?)@@@", makefile):
+                makefile, num = re.subn(r"@@@%s@@@"%key, "", makefile)
+                if num == 0: raise BaseException("The string @@@%s@@@ is not replaced correctly."%key)
+                LOGGER.warning("@@@%s@@@ is replaced to '' since the value is not given or the related option is disabled."%key)
+
+            # 7.3 Write
+            with open( tool_make_out, "w") as make_out:
+                make_out.write( command + makefile )
+
+            LOGGER.info("%s is created."%tool_make_out)
+
     if args["verbose_make"]: LOGGER.info("%s is in verbose mode."%GAMER_MAKE_OUT)
     LOGGER.info("========================================")

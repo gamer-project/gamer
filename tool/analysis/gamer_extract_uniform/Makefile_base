@@ -7,45 +7,9 @@ EXECUTABLE  = GAMER_ExtractUniform
 
 
 
-# siimulation options
+# simulation options
 #######################################################################################################
-# model: HYDRO/MHD/ELBDM
-SIMU_OPTION += -DMODEL=HYDRO
-
-# double precision
-#SIMU_OPTION += -DFLOAT8
-
-# double precision for particle floating-point attributes
-#SIMU_OPTION += -DFLOAT8_PAR
-
-# long integer for particle integer attributes
-SIMU_OPTION += -DINT8_PAR
-
-# enable OpenMP parallelization
-SIMU_OPTION += -DOPENMP
-
-# debug mode
-#SIMU_OPTION += -DGAMER_DEBUG
-
-# support HDF5 format
-SIMU_OPTION += -DSUPPORT_HDF5
-
-# serial version (no MPI is required)
-#SIMU_OPTION += -DSERIAL
-
-
-
-# siimulation parameters
-#######################################################################################################
-NLEVEL        = 10        # level : 0 ~ NLEVEL-1
-NCOMP_PASSIVE = 0         # number of passive scalars
-MAX_PATCH     = 1000000   # the maximum number of patches in each level
-
-NLEVEL        := $(strip $(NLEVEL))
-NCOMP_PASSIVE := $(strip $(NCOMP_PASSIVE))
-MAX_PATCH     := $(strip $(MAX_PATCH))
-
-SIMU_PARA = -DNLEVEL=$(NLEVEL) -DMAX_PATCH=$(MAX_PATCH) -DNCOMP_PASSIVE=$(NCOMP_PASSIVE)
+SIMU_OPTION := @@@SIMU_OPTION@@@
 
 
 
@@ -75,21 +39,11 @@ vpath %.cpp ./ GAMER_Functions GAMER_Functions/Interpolation
 
 # rules and targets
 #######################################################################################################
-HDF5_PATH := /software/hdf5/default
-MPI_PATH  := /software/openmpi/default
-#MPI_PATH  := /opt/mpi/openmpi/1.6.0-intel
-#MPI_PATH  := /usr/local/mpi/openmpi-1.8.4-intel-15.0
-#HDF5_PATH := /projects/ncsa/grav/softwares/miniconda2
+HDF5_PATH := @@@HDF5_PATH@@@
+MPI_PATH  := @@@MPI_PATH@@@
 
-
-ifeq "$(findstring SERIAL, $(SIMU_OPTION))" ""
-CXX   := $(MPI_PATH)/bin/mpicxx
-else
-CXX   := icpc
-endif
-
-CFLAG := -O3 -w1
-#CFLAG := -O3 -Wall
+CXX   := @@@CXX@@@
+CFLAG := @@@CXXFLAG@@@
 
 ifeq "$(findstring GAMER_DEBUG, $(SIMU_OPTION))" "GAMER_DEBUG"
 CFLAG += -g
@@ -119,7 +73,7 @@ OBJ 	 := $(patsubst %.cpp, $(OBJ_PATH)/%.o, $(SOURCE))
 
 
 $(OBJ_PATH)/%.o : %.cpp
-	$(CXX) $(CFLAG) $(SIMU_PARA) $(SIMU_OPTION) $(INCLUDE) -o $@ -c $<
+	$(CXX) $(CFLAG) $(SIMU_OPTION) $(INCLUDE) -o $@ -c $<
 
 $(EXECUTABLE): $(OBJ)
 	$(CXX) $(CFLAG) -o $@ $^ $(LIB)
