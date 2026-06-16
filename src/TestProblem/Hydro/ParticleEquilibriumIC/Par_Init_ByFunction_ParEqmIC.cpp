@@ -41,6 +41,8 @@ extern char   (*ParEqmIC_Cloud_ExtPotTable)[MAX_STRING];
 //                   --> They will later be redistributed when calling Par_FindHomePatch_UniformGrid()
 //                       and LB_Init_LoadBalance()
 //                   --> Therefore, there is no constraint on which particles should be set by this function
+//                4. The initialization of the PUID routine has been separated into amr->Par->InitRepo()
+//                   --> If needed, you can still modify PUID through the AllAttributeInt array
 //
 // Parameter   :  NPar_ThisRank   : Number of particles to be set by this MPI rank
 //                NPar_AllRank    : Total Number of particles in all MPI ranks
@@ -48,7 +50,7 @@ extern char   (*ParEqmIC_Cloud_ExtPotTable)[MAX_STRING];
 //                ParPosX/Y/Z     : Particle position array with the size of NPar_ThisRank
 //                ParVelX/Y/Z     : Particle velocity array with the size of NPar_ThisRank
 //                ParTime         : Particle time     array with the size of NPar_ThisRank
-//                ParType         : Particle type     array with the size of NPar_ThisRan
+//                ParType         : Particle type     array with the size of NPar_ThisRank
 //                AllAttributeFlt : Pointer array for all particle floating-point attributes
 //                                  --> Dimension = [PAR_NATT_FLT_TOTAL][NPar_ThisRank]
 //                                  --> Use the attribute indices defined in Field.h (e.g., Idx_ParCreTime)
@@ -62,7 +64,8 @@ extern char   (*ParEqmIC_Cloud_ExtPotTable)[MAX_STRING];
 void Par_Init_ByFunction_ParEqmIC( const long NPar_ThisRank, const long NPar_AllRank,
                                    real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                    real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                   long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                   long_par *ParType,
+                                   real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
                                    long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 {
 

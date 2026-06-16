@@ -182,7 +182,8 @@ The particle IC function has the following prototype:
 void Par_Init_ByFunction( const long NPar_ThisRank, const long NPar_AllRank,
                           real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                           real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                          long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                          long_par *ParType,
+                          real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
                           long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 ```
 It should set the particle IC in the arrays `ParMass`, `ParPosX/Y/Z`,
@@ -244,7 +245,8 @@ The following example shows `Par_Init_ByFunction()` in
 void Par_Init_ByFunction( const long NPar_ThisRank, const long NPar_AllRank,
                           real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                           real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                          long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                          long_par *ParType,
+                          real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
                           long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] )
 {
 
@@ -673,14 +675,17 @@ and `NUM_PARTICLE` is the total number of particles
 By default, `NUM_ATTRIBUTE` is equal to
 `7` + [[--par_attribute_flt | [Installation]-Option-List#--par_attribute_flt]] + [[--par_attribute_int | [Installation]-Option-List#--par_attribute_int]],
 corresponding to particle mass, position x/y/z, velocity x/y/z,
-type, and user-specified attributes (and in exactly this order).
+user-specified floating-point attributes, type, UID, and user-specified integer attributes (and in exactly this order).
 One can also use [[PAR_IC_MASS | [Runtime-Parameters]-Particles#PAR_IC_MASS]] / [[PAR_IC_TYPE | [Runtime-Parameters]-Particles#PAR_IC_TYPE]]
 to assign the same particle mass / type to all particles,
 in which case the file `PAR_IC` should not store particle mass / type.
+One should turn off [[PAR_IC_PUID | Runtime-Parameters:-Particles#PAR_IC_PUID]]
+to automatically assign new particle UIDs to all particles when the `PAR_IC` file does not contain UID information.
 
 The following C++ example constructs a particle initial condition
 file with 1000 particles assuming [[PAR_IC_MASS | [Runtime-Parameters]-Particles#PAR_IC_MASS]]<0,
 [[PAR_IC_TYPE | [Runtime-Parameters]-Particles#PAR_IC_TYPE]]<0,
+[[PAR_IC_PUID | [Runtime-Parameters]-Particles#PAR_IC_PUID]]=1,
 and [[PAR_IC_FORMAT | [Runtime-Parameters]-Particles#PAR_IC_FORMAT]]=1.
 
 ```c++
@@ -717,15 +722,16 @@ int main()
    for (int p=0; p<NUM_PARTICLE; p++)
    {
 //    replace the following lines by your particle initial condition
-      ParIC_Flt[0][p] = 1.1;   // mass
-      ParIC_Flt[1][p] = 2.2;   // position x
-      ParIC_Flt[2][p] = 3.3;   // position y
-      ParIC_Flt[3][p] = 4.4;   // position z
-      ParIC_Flt[4][p] = 5.5;   // velocity x
-      ParIC_Flt[5][p] = 6.6;   // velocity y
-      ParIC_Flt[6][p] = 7.7;   // velocity z
+      ParIC_Flt[0][p] = 1.1;                        // mass
+      ParIC_Flt[1][p] = 2.2;                        // position x
+      ParIC_Flt[2][p] = 3.3;                        // position y
+      ParIC_Flt[3][p] = 4.4;                        // position z
+      ParIC_Flt[4][p] = 5.5;                        // velocity x
+      ParIC_Flt[5][p] = 6.6;                        // velocity y
+      ParIC_Flt[6][p] = 7.7;                        // velocity z
 
-      ParIC_Int[0][p] = 1;     // type (generic massive)
+      ParIC_Int[0][p] = PTYPE_GENERIC_MASSIVE;      // type (generic massive)
+      ParIC_Int[1][p] = p+1;                        // UID (starting from 1)
    }
 
    FILE *File = fopen( "PAR_IC", "wb" );
@@ -781,6 +787,8 @@ Related options:
 Other related parameters:
 [[PAR_INIT | [Runtime-Parameters]-Particles#PAR_INIT]], &nbsp;
 [[PAR_IC_FORMAT | [Runtime-Parameters]-Particles#PAR_IC_FORMAT]], &nbsp;
+[[PAR_IC_TYPE | [Runtime-Parameters]-Particles#PAR_IC_TYPE]], &nbsp;
+[[PAR_IC_PUID | [Runtime-Parameters]-Particles#PAR_IC_PUID]], &nbsp;
 [[PAR_IC_MASS | [Runtime-Parameters]-Particles#PAR_IC_MASS]], &nbsp;
 [[OPT__INIT_GRID_WITH_OMP | [Runtime-Parameters]-MPI-and-OpenMP#OPT__INIT_GRID_WITH_OMP]] &nbsp;
 
