@@ -25,13 +25,13 @@ bool ProximityCheck_SecondDenThres(const int ExistingNPar, real *ParAtt_Local[],
                                    const real PosZ, const real VelX,
                                    const real VelY, const real VelZ,
                                    const real GasDens, const real AccRadius,
-                                   const real Coeff_FreeFall) {
+                                   const real Coeff_FreeFall) 
+{
   real Par2Cell[3], Par2CellDist, Par2CellVel[3];
   real NorPar2Cell[3];
   real GasDensFreeFall;
 
-  for (int p = 0; p < ExistingNPar;
-       p++) // loop over all nearby existing particles
+  for (int p = 0; p < ExistingNPar; p++) // loop over all nearby existing particles
   {
     Par2Cell[0] = PosX - ParAtt_Local[PAR_POSX][p];
     Par2Cell[1] = PosY - ParAtt_Local[PAR_POSY][p];
@@ -82,8 +82,8 @@ bool ProximityCheck_SecondDenThres(const int ExistingNPar, real *ParAtt_Local[],
 // Return      :  true : The gas cell is the local minimum
 //                false: The gas cell is NOT the local minimum
 //-------------------------------------------------------------------------------------------------------
-bool GravMini(const int pi, const int pj, const int pk, const real AccCellNum,
-              const real *Pot_Array_F, const int Size_Flu, const real Phi000) {
+bool GravMini(const int pi, const int pj, const int pk, const real AccCellNum, const real *Pot_Array_F, const int Size_Flu, const real Phi000) 
+{
   for (int vk = pk - AccCellNum; vk <= pk + AccCellNum; vk++)
     for (int vj = pj - AccCellNum; vj <= pj + AccCellNum; vj++)
       for (int vi = pi - AccCellNum; vi <= pi + AccCellNum; vi++) {
@@ -112,24 +112,17 @@ bool GravMini(const int pi, const int pj, const int pk, const real AccCellNum,
 // Return      :  true : The flow is converging
 //                false: The flow is NOT converging
 //-------------------------------------------------------------------------------------------------------
-bool ConvergingFlow(
-    const int pi, const int pj, const int pk, const int Size_Flu,
-    const real (*Flu_Array_F_In)[Size_Flu][Size_Flu][Size_Flu]) {
+bool ConvergingFlow(const int pi, const int pj, const int pk, const int Size_Flu, const real (*Flu_Array_F_In)[Size_Flu][Size_Flu][Size_Flu] ) 
+{
   const int SINK_VELX = 1, SINK_VELY = 2, SINK_VELZ = 3;
   real VelNeighbor[6];
 
-  VelNeighbor[0] =
-      Flu_Array_F_In[SINK_VELX][pk][pj][pi + 1]; // x+ (NeighborID 0)
-  VelNeighbor[1] =
-      Flu_Array_F_In[SINK_VELX][pk][pj][pi - 1]; // x- (NeighborID 1)
-  VelNeighbor[2] =
-      Flu_Array_F_In[SINK_VELY][pk][pj + 1][pi]; // y+ (NeighborID 2)
-  VelNeighbor[3] =
-      Flu_Array_F_In[SINK_VELY][pk][pj - 1][pi]; // y- (NeighborID 3)
-  VelNeighbor[4] =
-      Flu_Array_F_In[SINK_VELZ][pk + 1][pj][pi]; // z+ (NeighborID 4)
-  VelNeighbor[5] =
-      Flu_Array_F_In[SINK_VELZ][pk - 1][pj][pi]; // z- (NeighborID 5)
+  VelNeighbor[0] = Flu_Array_F_In[SINK_VELX][pk][pj][pi + 1]; // x+ (NeighborID 0)
+  VelNeighbor[1] = Flu_Array_F_In[SINK_VELX][pk][pj][pi - 1]; // x- (NeighborID 1)
+  VelNeighbor[2] = Flu_Array_F_In[SINK_VELY][pk][pj + 1][pi]; // y+ (NeighborID 2)
+  VelNeighbor[3] = Flu_Array_F_In[SINK_VELY][pk][pj - 1][pi]; // y- (NeighborID 3)
+  VelNeighbor[4] = Flu_Array_F_In[SINK_VELZ][pk + 1][pj][pi]; // z+ (NeighborID 4)
+  VelNeighbor[5] = Flu_Array_F_In[SINK_VELZ][pk - 1][pj][pi]; // z- (NeighborID 5)
 
   if ((VelNeighbor[0] - VelNeighbor[1]) >= 0 ||
       (VelNeighbor[2] - VelNeighbor[3]) >= 0 ||
@@ -152,25 +145,18 @@ bool ConvergingFlow(
 //                dv              : Cell volume
 //                dh              : Cell size
 //
-// Return      :  true : The control volume is unstable and bound (create
-// particle)
+// Return      :  true : The control volume is unstable and bound (create particle)
 //                false: Otherwise
 //-------------------------------------------------------------------------------------------------------
-bool JeansInstability_BoundState(
-    const int pi, const int pj, const int pk, const real AccCellNum,
-    const int Size_Flu,
-    const real (*Flu_Array_F_In)[Size_Flu][Size_Flu][Size_Flu],
-    const real *Mag_Array_F_In, const int Mag_Stride, const real dv,
-    const real dh) {
+bool JeansInstability_BoundState(const int pi, const int pj, const int pk, const real AccCellNum, const int Size_Flu, const real (*Flu_Array_F_In)[Size_Flu][Size_Flu][Size_Flu], const real *Mag_Array_F_In, const int Mag_Stride, const real dv, const real dh) 
+{
   const int NSinkVar = 5;
-  const int SINK_DENS = 0, SINK_VELX = 1, SINK_VELY = 2, SINK_VELZ = 3,
-            SINK_EINT = 4;
+  const int SINK_DENS = 0, SINK_VELX = 1, SINK_VELY = 2, SINK_VELZ = 3, SINK_EINT = 4;
   real ControlFluid[NSinkVar], ControlFluidj[NSinkVar];
   real Pres, Cs2, vEmag = NULL_REAL;
 
   // calculate bulk velocity
-  real TotalMass = (real)0.0, MassVel[3] = {(real)0.0, (real)0.0, (real)0.0},
-       BulkVel[3];
+  real TotalMass = (real)0.0, MassVel[3] = {(real)0.0, (real)0.0, (real)0.0}, BulkVel[3];
 
   for (int vk = pk - AccCellNum; vk <= pk + AccCellNum; vk++)
     for (int vj = pj - AccCellNum; vj <= pj + AccCellNum; vj++)
@@ -192,8 +178,7 @@ bool JeansInstability_BoundState(
   BulkVel[2] = MassVel[2] / TotalMass;
 
   // get the energy
-  real Egtot = (real)0.0, Ethtot = (real)0.0, Emagtot = (real)0.0,
-       Ekintot = (real)0.0;
+  real Egtot = (real)0.0, Ethtot = (real)0.0, Emagtot = (real)0.0, Ekintot = (real)0.0;
   const bool CheckMinPres_No = false;
 
   for (int vk = pk - AccCellNum; vk <= pk + AccCellNum; vk++)
@@ -210,8 +195,7 @@ bool JeansInstability_BoundState(
         for (int vkj = pk - AccCellNum; vkj <= pk + AccCellNum; vkj++)
           for (int vjj = pj - AccCellNum; vjj <= pj + AccCellNum; vjj++)
             for (int vij = pi - AccCellNum; vij <= pi + AccCellNum; vij++) {
-              if (SQRT(SQR(vij - pi) + SQR(vjj - pj) + SQR(vkj - pk)) >
-                  AccCellNum)
+              if (SQRT(SQR(vij - pi) + SQR(vjj - pj) + SQR(vkj - pk)) > AccCellNum)
                 continue;
 
               int rijPix = SQRT(SQR(vi - vij) + SQR(vj - vjj) + SQR(vk - vkj));
@@ -313,9 +297,6 @@ void SF_CreateStar_SinkParticle(const int lv, const real TimeNew,
 #ifdef GAMER_DEBUG
   if (Idx_ParCreTime == Idx_Undefined)
     Aux_Error(ERROR_INFO, "Idx_ParCreTime is undefined !!\n");
-
-  if (Idx_ParID == Idx_Undefined)
-    Aux_Error(ERROR_INFO, "Idx_ParID is undefined !!\n");
 #endif // #ifdef GAMER_DEBUG
 
   // constant parameters
@@ -337,17 +318,11 @@ void SF_CreateStar_SinkParticle(const int lv, const real TimeNew,
                                 : -1.0 / (2.0 * dh); // P5 is NOT supported yet
 
   int NNewPar = 0; // number of new particle
-  real(*RemovalFlu)[5] =
-      new real[MaxNewPar][5]; // information used to remove gas from the cell
-  long (*RemovalPos)[4] =
-      new long[MaxNewPar][4]; // some IDs used to remove gas from the cell
-  real_par(*NewParAttFlt)[PAR_NATT_FLT_TOTAL] =
-      new real_par[MaxNewPar]
-                  [PAR_NATT_FLT_TOTAL]; // attribute of the new particles
-  long_par(*NewParAttInt)[PAR_NATT_INT_TOTAL] =
-      new long_par[MaxNewPar][PAR_NATT_INT_TOTAL];
-  long *NewParRepo =
-      new long[MaxNewPar]; // particle respository that will be added
+  real(*RemovalFlu)[5] = new real[MaxNewPar][5]; // information used to remove gas from the cell
+  long (*RemovalPos)[4] = new long[MaxNewPar][4]; // some IDs used to remove gas from the cell
+  real_par(*NewParAttFlt)[PAR_NATT_FLT_TOTAL] = new real_par[MaxNewPar][PAR_NATT_FLT_TOTAL]; // attribute of the new particles
+  long_par(*NewParAttInt)[PAR_NATT_INT_TOTAL] = new long_par[MaxNewPar][PAR_NATT_INT_TOTAL];
+  long *NewParRepo = new long[MaxNewPar]; // particle respository that will be added
   long *NewParPID = new long[MaxNewPar]; // PID where the particle is formed
 
   // Some check
@@ -375,20 +350,15 @@ void SF_CreateStar_SinkParticle(const int lv, const real TimeNew,
     const int NSinkVar = 5;
     const int SINK_DENS = 0, SINK_VELX = 1, SINK_VELY = 2, SINK_VELZ = 3,
               SINK_EINT = 4;
-    real PosX, PosY, PosZ, VelX, VelY,
-        VelZ;          // position and velocity of the current test cell
+    real PosX, PosY, PosZ, VelX, VelY, VelZ; // position and velocity of the current test cell
     real GasDens;      // gas density of the current test cell
-    real GasMFracLeft; // the fraction of gas mass of the cell that will be took
-                       // out by particle
+    real GasMFracLeft; // the fraction of gas mass of the cell that will be took out by particle
     real Corner_Array_F[3]; // the corner of the ghost zone
 
-    real PotNeighbor[6]; // record the neighboring cell potential [x+, x-, y+,
-                         // y+, z+, z-]
+    real PotNeighbor[6]; // record the neighboring cell potential [x+, x-, y+, y+, z+, z-]
 
-    real(*Flu_Array_F_In)[Size_Flu][Size_Flu][Size_Flu] =
-        new real[NSinkVar][Size_Flu][Size_Flu][Size_Flu];
-    real(*Mag_Array_F_In)[Size_Flu_P1 * SQR(Size_Flu)] =
-        new real[NCOMP_MAG][Size_Flu_P1 * SQR(Size_Flu)];
+    real(*Flu_Array_F_In)[Size_Flu][Size_Flu][Size_Flu] = new real[NSinkVar][Size_Flu][Size_Flu][Size_Flu];
+    real(*Mag_Array_F_In)[Size_Flu_P1 * SQR(Size_Flu)]  = new real[NCOMP_MAG][Size_Flu_P1 * SQR(Size_Flu)];
     real(*Pot_Array_F) = new real[CUBE(Size_Pot)];
 
     int LocalPID, delta_t, PGi, PGj, PGk;
@@ -399,12 +369,9 @@ void SF_CreateStar_SinkParticle(const int lv, const real TimeNew,
     TABLE_GetSibPID_Delta(NSibPID_Delta, SibPID_Delta);
 
 // loop over all real patch groups
-// use static schedule to ensure bitwise reproducibility when running with the
-// same numbers of OpenMP threads and MPI ranks
-// --> bitwise reproducibility will still break when running with different
-// numbers of OpenMP threads and/or MPI ranks
-//     unless both BITWISE_REPRODUCIBILITY and SF_CREATE_STAR_DET_RANDOM are
-//     enabled
+// use static schedule to ensure bitwise reproducibility when running with the same numbers of OpenMP threads and MPI ranks
+// --> bitwise reproducibility will still break when running with different numbers of OpenMP threads and/or MPI ranks
+//     unless both BITWISE_REPRODUCIBILITY and SF_CREATE_STAR_DET_RANDOM are enabled
 #pragma omp for schedule(static)
     for (int PID0 = 0; PID0 < amr->NPatchComma[lv][1]; PID0 += 8) {
 #ifndef MHD
@@ -448,8 +415,7 @@ void SF_CreateStar_SinkParticle(const int lv, const real TimeNew,
 
       //    prepare the sibling patches id for this patch group
       //    collect patch information
-      const int NNearbyPatchMax = 64; // maximum number of neaby patches of a
-                                      // patch group (including 8 local patches)
+      const int NNearbyPatchMax = 64; // maximum number of neaby patches of a patch group (including 8 local patches)
       int Nearby_PID_List[NNearbyPatchMax], NNearbyPatch, SibPID0_List[26];
 
       //    get nearby patches
@@ -462,14 +428,11 @@ void SF_CreateStar_SinkParticle(const int lv, const real TimeNew,
       //    sibling patches
       TABLE_GetSibPID_Based(lv, PID0, SibPID0_List);
 
-      // ###OPTIMIZATION: skip sibling patches if the maximum feedback radius is
-      // zero
+      // ###OPTIMIZATION: skip sibling patches if the maximum feedback radius is zero
       for (int s = 0; s < 26; s++) {
-        const int SibPID0 =
-            SibPID0_List[s]; // first target patch in the sibling patch group
+        const int SibPID0 = SibPID0_List[s]; // first target patch in the sibling patch group
 
-        //       only consider leaf patches on FB_LEVEL (including both real and
-        //       buffer patches)
+        // only consider leaf patches on FB_LEVEL (including both real and buffer patches)
         if (SibPID0 >= 0)
           for (int c = 0; c < NSibPID_Delta[s]; c++) {
             const int SibPID = SibPID0 + SibPID_Delta[s][c];
@@ -479,21 +442,18 @@ void SF_CreateStar_SinkParticle(const int lv, const real TimeNew,
 
       //    prepare local arrays for particle attributes in this patch group
       real *ParAtt_Local[PAR_NATT_FLT_TOTAL];
-      int NParAllPatch =
-          0; // the number of existing particles in all nearby patches
+      int NParAllPatch = 0; // the number of existing particles in all nearby patches
 
       for (int v = 0; v < PAR_NATT_FLT_TOTAL; v++)
         ParAtt_Local[v] = NULL; // array to store nearby particle
 
       for (int t = 0; t < NNearbyPatch; t++) {
-        const int PPID = Nearby_PID_List[t]; // check the particle number for
-                                             // this patch (PPID)
+        const int PPID = Nearby_PID_List[t]; // check the particle number for this patch (PPID)
         int NParMaxInPatch = 0;
 
         // check both NPar and NPar_Copy (NPar_Copy may be -1, which is fine)
         NParMaxInPatch = MAX(NParMaxInPatch, amr->patch[0][lv][PPID]->NPar);
-        NParMaxInPatch =
-            MAX(NParMaxInPatch, amr->patch[0][lv][PPID]->NPar_Copy);
+        NParMaxInPatch = MAX(NParMaxInPatch, amr->patch[0][lv][PPID]->NPar_Copy);
 
         if (NParMaxInPatch > 0)
           NParAllPatch += NParMaxInPatch;
@@ -511,10 +471,8 @@ void SF_CreateStar_SinkParticle(const int lv, const real TimeNew,
           int NPar;
           bool UseParAttCopy;
 
-          //          the check "son == -1" is actually useless for now since we
-          //          fix LEVEL == MAX_LEVEL
-          if (amr->patch[0][lv][PPID]->son == -1 &&
-              PPID < amr->NPatchComma[lv][1]) {
+          // the check "son == -1" is actually useless for now since we fix LEVEL == MAX_LEVEL
+          if (amr->patch[0][lv][PPID]->son == -1 && PPID < amr->NPatchComma[lv][1]) {
             NPar = amr->patch[0][lv][PPID]->NPar;
             ParList = amr->patch[0][lv][PPID]->ParList;
             UseParAttCopy = false;
@@ -527,8 +485,7 @@ void SF_CreateStar_SinkParticle(const int lv, const real TimeNew,
           }
 
           else {
-            //             note that amr->patch[0][lv][PPID]->NPar>0 is still
-            //             possible
+            // note that amr->patch[0][lv][PPID]->NPar>0 is still possible
             NPar = amr->patch[0][lv][PPID]->NPar_Copy;
 #ifdef LOAD_BALANCE
             ParList = NULL;
@@ -557,12 +514,10 @@ void SF_CreateStar_SinkParticle(const int lv, const real TimeNew,
 
             int NStar = 0;
             for (int p = 0; p < NPar; p++) {
-              if (amr->patch[0][lv][PPID]->ParAttInt_Copy[PAR_TYPE][p] ==
-                  PTYPE_STAR) {
+              if (amr->patch[0][lv][PPID]->ParAttInt_Copy[PAR_TYPE][p] == PTYPE_STAR) {
                 for (int v = 0; v < PAR_NATT_FLT_TOTAL; v++) {
                   if (ParAttFltBitIdx_In & BIDX(v)) {
-                    ParAtt_Local[v][ExistingNPar + NStar] =
-                        amr->patch[0][lv][PPID]->ParAttFlt_Copy[v][p];
+                    ParAtt_Local[v][ExistingNPar + NStar] = amr->patch[0][lv][PPID]->ParAttFlt_Copy[v][p];
                   }
                 }
                 NStar++;
@@ -609,8 +564,7 @@ void SF_CreateStar_SinkParticle(const int lv, const real TimeNew,
 
             LocalPID = 2 * 2 * (PGk / PS1) + 2 * (PGj / PS1) + (PGi / PS1);
 
-            const int Disp_i =
-                TABLE_02(LocalPID, 'x', 0, PS1); // the cell index within PID
+            const int Disp_i = TABLE_02(LocalPID, 'x', 0, PS1); // the cell index within PID
             const int Disp_j = TABLE_02(LocalPID, 'y', 0, PS1);
             const int Disp_k = TABLE_02(LocalPID, 'z', 0, PS1);
             const int PID = PID0 + LocalPID; // record the current PID
@@ -650,10 +604,8 @@ void SF_CreateStar_SinkParticle(const int lv, const real TimeNew,
             //       The gas cell should have the minimum gravitational
             //       potential inside the control volume
             //       ===========================================================================================================
-            const real Phi000 =
-                Pot_Array_F[t]; // the potential of the current cell
-            if (!GravMini(pi, pj, pk, AccCellNum, Pot_Array_F, Size_Flu,
-                          Phi000))
+            const real Phi000 = Pot_Array_F[t]; // the potential of the current cell
+            if (!GravMini(pi, pj, pk, AccCellNum, Pot_Array_F, Size_Flu, Phi000))
               continue;
 
             //       Converging flow check:
@@ -693,8 +645,7 @@ void SF_CreateStar_SinkParticle(const int lv, const real TimeNew,
               NewParAttFlt[NNewPar][PAR_VELZ] = VelZ;
               NewParAttFlt[NNewPar][PAR_TIME] = TimeNew;
               NewParAttInt[NNewPar][PAR_TYPE] = PTYPE_STAR;
-              NewParAttInt[NNewPar][Idx_ParID] =
-                  -1; // initialize the value to be -1
+              NewParAttInt[NNewPar][PAR_PUID] = PUID_TBA;
 
 //       particle acceleration
 #ifdef STORE_PAR_ACC
@@ -702,8 +653,7 @@ void SF_CreateStar_SinkParticle(const int lv, const real TimeNew,
 
               //       external acceleration
               if (OPT__EXT_ACC)
-                CPUExtAcc_Ptr(GasAcc, PosX, PosY, PosZ, TimeNew,
-                              ExtAcc_AuxArray);
+                CPUExtAcc_Ptr(GasAcc, PosX, PosY, PosZ, TimeNew, ExtAcc_AuxArray);
 
               //       self-gravity and external potential
               if (OPT__SELF_GRAVITY || OPT__EXT_POT) {
@@ -772,8 +722,7 @@ void SF_CreateStar_SinkParticle(const int lv, const real TimeNew,
   // ===========================================================================================================
   MPI_Barrier(MPI_COMM_WORLD);
 
-  int *GatherNNewPar =
-      new int[MPI_NRank]; // the number of candidates for each rank
+  int *GatherNNewPar = new int[MPI_NRank]; // the number of candidates for each rank
   MPI_Allgather(&NNewPar, 1, MPI_INT, GatherNNewPar, 1, MPI_INT,
                 MPI_COMM_WORLD);
 
@@ -781,8 +730,7 @@ void SF_CreateStar_SinkParticle(const int lv, const real TimeNew,
   int *RecvRemovalFluSize = new int[MPI_NRank];
   for (int rank = 0; rank < MPI_NRank; rank++) {
     TotalNNewPar += GatherNNewPar[rank];
-    RecvRemovalFluSize[rank] =
-        5 * GatherNNewPar[rank]; // receive "count" for each MPI rank
+    RecvRemovalFluSize[rank] = 5 * GatherNNewPar[rank]; // receive "count" for each MPI rank
   }
 
   int *disp = new int[MPI_NRank];
@@ -791,22 +739,16 @@ void SF_CreateStar_SinkParticle(const int lv, const real TimeNew,
     disp[rank] = disp[rank - 1] + RecvRemovalFluSize[rank - 1];
 
   int SendRemovalFluSize = NNewPar * 5; // send "count" for the current MPI rank
-  real(*GatherRemovalFlu)[5] =
-      new real[TotalNNewPar][5]; // the array containing all the candidates +
-                                 // their information
+  real(*GatherRemovalFlu)[5] = new real[TotalNNewPar][5]; // the array containing all the candidates + their information
 
   MPI_Allgatherv(RemovalFlu[0], SendRemovalFluSize, MPI_GAMER_REAL,
                  GatherRemovalFlu[0], RecvRemovalFluSize, disp, MPI_GAMER_REAL,
                  MPI_COMM_WORLD);
 
   long *SelNewParPID = new long[TotalNNewPar]; // PID of the selected paritcles
-  long *SelNewParID = new long[TotalNNewPar]; // ID (in the current rank) of the
-                                              // selected paritcles
-  real DeltaXPar2Par, DeltaYPar2Par, DeltaZPar2Par,
-      DistPar2Par; // calculate the distance between the two candidated
-                   // particles
-  int SelNNewPar =
-      0; // the number of selected particles after the following check
+  long *SelNewParID = new long[TotalNNewPar]; // ID (in the current rank) of the selected paritcles
+  real DeltaXPar2Par, DeltaYPar2Par, DeltaZPar2Par, DistPar2Par; // calculate the distance between the two candidated particles
+  int SelNNewPar = 0; // the number of selected particles after the following check
   for (int pi = 0; pi < NNewPar; pi++) {
     bool CreateHere = true;
     for (int pj = 0; pj < TotalNNewPar; pj++) {
@@ -847,35 +789,14 @@ void SF_CreateStar_SinkParticle(const int lv, const real TimeNew,
   delete[] disp;
   delete[] GatherRemovalFlu;
 
-  // Give the selected particles ID
-  // ===========================================================================================================
-  MPI_Barrier(MPI_COMM_WORLD);
-
-  long NParAllRank = amr->Par->NPar_Active_AllRank;
-  ; // Total number of active particles summed up over all MPI ranks
-  int *GatherNSelPar =
-      new int[MPI_NRank]; // the number of selected particles that pass the
-                          // above check for each rank
-  MPI_Allgather(&SelNNewPar, 1, MPI_INT, GatherNSelPar, 1, MPI_INT,
-                MPI_COMM_WORLD);
-
-  int NParPreRank =
-      0; // the totol number of selected particle before MPI_Rank (this rank)
-  for (int r = 0; r < MPI_Rank; r++)
-    NParPreRank += GatherNSelPar[r];
-
   for (int p = 0; p < SelNNewPar; p++) {
     int pi = SelNewParID[p];
-    NewParAttInt[pi][Idx_ParID] =
-        NParAllRank + NParPreRank + p; // reassign the ID
 
     // add particles to the particle repository
-    NewParRepo[p] =
-        amr->Par->AddOneParticle(NewParAttFlt[pi], NewParAttInt[pi]);
+    NewParRepo[p] = amr->Par->AddOneParticle(NewParAttFlt[pi], NewParAttInt[pi]);
   }
 
   delete[] SelNewParID;
-  delete[] GatherNSelPar;
 
   // Add the selected particles
   // ===========================================================================================================
@@ -953,5 +874,4 @@ void SF_CreateStar_SinkParticle(const int lv, const real TimeNew,
 
 } // FUNCTION : SF_CreateStar_SinkParticle
 
-#endif // #if ( defined PARTICLE  &&  defined STAR_FORMATION  &&  MODEL == HYDRO
-       // )
+#endif // #if ( defined PARTICLE  &&  defined STAR_FORMATION  &&  MODEL == HYDRO )

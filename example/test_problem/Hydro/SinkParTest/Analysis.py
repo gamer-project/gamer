@@ -135,7 +135,7 @@ for index_id in index_list:
     
     # Information for sink particle
     Par_M  = ad['all', 'ParMass'].to('Msun').value
-    Par_ID = ad['all', 'PAR_ID'].value
+    Par_ID = ad['all', 'ParPUID'].value
     Par_x  = (ad['all', 'ParPosX'].to('pc') - c[0].to('pc')).value
     Par_y  = (ad['all', 'ParPosY'].to('pc') - c[1].to('pc')).value
     Par_z  = (ad['all', 'ParPosZ'].to('pc') - c[2].to('pc')).value
@@ -149,8 +149,8 @@ for index_id in index_list:
         M_tot = np.sum(Gas_M) + np.sum(Par_M)
         print("Total mass = %.13e M_sun"%M_tot)
 
-        Par1MArr.append(Par_M[Par_ID==0][0])
-        Par2MArr.append(Par_M[Par_ID==1][0])
+        Par1MArr.append(Par_M[Par_ID==1][0])
+        Par2MArr.append(Par_M[Par_ID==2][0])
     
     else:
         print("Total mass = %.13e M_sun"%np.sum(Gas_M))
@@ -182,7 +182,8 @@ for index_id in index_list:
 
     cbar = fig.colorbar(im, ax=ax, shrink=0.8, aspect=30)
     cbar.set_label(r'Column number density (cm$^{-2}$)', fontsize=13)
-jPlane == 'xy':
+    
+    if ProjPlane == 'xy':
         ax.set_xlabel(r'x (pc)')
         ax.set_ylabel(r'y (pc)')
     elif ProjPlane == 'xz':
