@@ -9,7 +9,7 @@
 // Function    :  Par_Flag_TargetParticle
 // Description :  Flag patches containing particles marked for refinement
 //
-// Note        :  1. Invoked by Flag_Real()
+// Note        :  1. Invoked by Flag_Real() and Flag_Precheck()
 //                2. Support two modes controlled by FlagMode:
 //                     FLAG_PAR_MUST: patches containing particles with PAR_FLAG > 0 *must* be refined to level +PAR_FLAG
 //                                    --> similar to other refinement criteria (e.g., OPT__FLAG_RHO)

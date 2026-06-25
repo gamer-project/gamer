@@ -2,8 +2,8 @@
 
 #ifdef PARTICLE
 
-extern int ParFlag_MinLv;
-extern int ParFlag_MaxLv;
+extern int ParFlag_LvPar0;
+extern int ParFlag_LvPar1;
 
 
 
@@ -25,6 +25,8 @@ extern int ParFlag_MaxLv;
 //                   --> They will later be redistributed when calling Par_FindHomePatch_UniformGrid()
 //                       and LB_Init_LoadBalance()
 //                   --> Therefore, there is no constraint on which particles should be set by this function
+//                4. The initialization of the PUID routine has been separated into amr->Par->InitRepo()
+//                   --> If needed, you can still modify PUID through the AllAttributeInt array
 //
 // Parameter   :  NPar_ThisRank   : Number of particles to be set by this MPI rank
 //                NPar_AllRank    : Total Number of particles in all MPI ranks
@@ -86,12 +88,12 @@ void Par_Init_ByFunction_ParFlag( const long NPar_ThisRank, const long NPar_AllR
 
 //    set particle flags
 //    particle 0: refine to the minimum level
-      ParIntData_AllRank[PAR_FLAG][0] = ( OPT__FLAG_PAR_TARGET == FLAG_PAR_CAN ) ? -ParFlag_MinLv
-                                                                                 : +ParFlag_MinLv;
+      ParIntData_AllRank[PAR_FLAG][0] = ( OPT__FLAG_PAR_TARGET == FLAG_PAR_CAN ) ? -ParFlag_LvPar0
+                                                                                 : +ParFlag_LvPar0;
 
 //    particle 1: refine to the maximum level
-      ParIntData_AllRank[PAR_FLAG][1] = ( OPT__FLAG_PAR_TARGET == FLAG_PAR_CAN ) ? -ParFlag_MaxLv
-                                                                                 : +ParFlag_MaxLv;
+      ParIntData_AllRank[PAR_FLAG][1] = ( OPT__FLAG_PAR_TARGET == FLAG_PAR_CAN ) ? -ParFlag_LvPar1
+                                                                                 : +ParFlag_LvPar1;
 
 //    particle 2: no refinement
       ParIntData_AllRank[PAR_FLAG][2] = PFLAG_NO;
@@ -103,8 +105,8 @@ void Par_Init_ByFunction_ParFlag( const long NPar_ThisRank, const long NPar_AllR
       ParFltData_AllRank[PAR_POSY][3] = ParFltData_AllRank[PAR_POSY][1];
       ParFltData_AllRank[PAR_POSY][4] = ParFltData_AllRank[PAR_POSY][1];
 
-      ParIntData_AllRank[PAR_FLAG][3] = -ParFlag_MaxLv;
-      ParIntData_AllRank[PAR_FLAG][4] = -ParFlag_MaxLv;
+      ParIntData_AllRank[PAR_FLAG][3] = -ParFlag_LvPar1;
+      ParIntData_AllRank[PAR_FLAG][4] = -ParFlag_LvPar1;
       }
    } // if ( MPI_Rank == 0 )
 

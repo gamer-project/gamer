@@ -31,17 +31,17 @@ Note:
       - Enable OPT__FLAG_RHO.
 
    OPT__FLAG_PAR_TARGET = 1: Illustrate grid refinement determined by must-refine particles (i.e., PAR_FLAG > 0 ).
-      - From bottom to top, particles 0, 1, and 2 have PAR_FLAG = +ParFlag_MinLv, +ParFlag_MaxLv, and 0, respectively.
+      - From bottom to top, particles 0, 1, and 2 have PAR_FLAG = +ParFlag_LvPar0, +ParFlag_LvPar1, and 0, respectively.
       - Disable OPT__FLAG_RHO.
 
    OPT__FLAG_PAR_TARGET = 2: Illustrate grid refinement determined by can-refine particles (i.e., PAR_FLAG < 0 ) and gas density.
-      - From bottom to top, particles 0, 1, and 2 have PAR_FLAG = -ParFlag_MinLv, -ParFlag_MaxLv, and 0, respectively.
+      - From bottom to top, particles 0, 1, and 2 have PAR_FLAG = -ParFlag_LvPar0, -ParFlag_LvPar1, and 0, respectively.
       - Enable OPT__FLAG_RHO.
 
    OPT__FLAG_PAR_TARGET = 3: Illustrate grid refinement determined by both must-refine and can-refine particles.
-      - Similar to OPT__FLAG_PAR_TARGET = 1, except that two additional particles with PAR_FLAG = -ParFlag_MaxLv are placed around
+      - Similar to OPT__FLAG_PAR_TARGET = 1, except that two additional particles with PAR_FLAG = -ParFlag_LvPar1 are placed around
         particle 1 to allow refinement.
-      - By contrast, particle 0, even with PAR_FLAG = +ParFlag_MinLv, will not trigger refinement since there are no nearby
+      - By contrast, particle 0, even with PAR_FLAG = +ParFlag_LvPar0, will not trigger refinement since there are no nearby
         *can-refine* particles with PAR_FLAG < 0.
       - Disable OPT__FLAG_RHO.
 

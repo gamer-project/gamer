@@ -4,8 +4,8 @@
 
 // problem-specific global variables
 // =======================================================================================
-       int    ParFlag_MinLv;
-       int    ParFlag_MaxLv;
+       int    ParFlag_LvPar0;
+       int    ParFlag_LvPar1;
 static double ParFlag_DensL;
 static double ParFlag_DensR;
 // =======================================================================================
@@ -112,8 +112,8 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
 // ***************************************************************************************************************************
 // LOAD_PARA( load_mode, "KEY_IN_THE_FILE",      &VARIABLE,              DEFAULT,       MIN,              MAX               );
 // ***************************************************************************************************************************
-   LOAD_PARA( load_mode, "ParFlag_MinLv",        &ParFlag_MinLv,         1,             0,                NoMax_int         );
-   LOAD_PARA( load_mode, "ParFlag_MaxLv",        &ParFlag_MaxLv,         2,             0,                NoMax_int         );
+   LOAD_PARA( load_mode, "ParFlag_LvPar0",       &ParFlag_LvPar0,        1,             0,                NoMax_int         );
+   LOAD_PARA( load_mode, "ParFlag_LvPar1",       &ParFlag_LvPar1,        2,             0,                NoMax_int         );
    LOAD_PARA( load_mode, "ParFlag_DensL",        &ParFlag_DensL,         1.0e0,         Eps_double,       NoMax_double      );
    LOAD_PARA( load_mode, "ParFlag_DensR",        &ParFlag_DensR,         1.0e2,         Eps_double,       NoMax_double      );
 
@@ -196,11 +196,11 @@ void SetParameter()
    if ( MPI_Rank == 0 )
    {
       Aux_Message( stdout, "=============================================================================\n" );
-      Aux_Message( stdout, "  test problem ID = %d\n",     TESTPROB_ID   );
-      Aux_Message( stdout, "  MinLv           = %d\n",     ParFlag_MinLv );
-      Aux_Message( stdout, "  MaxLv           = %d\n",     ParFlag_MaxLv );
-      Aux_Message( stdout, "  DensL           = %13.7e\n", ParFlag_DensL );
-      Aux_Message( stdout, "  DensR           = %13.7e\n", ParFlag_DensR );
+      Aux_Message( stdout, "  test problem ID = %d\n",     TESTPROB_ID    );
+      Aux_Message( stdout, "  MinLv           = %d\n",     ParFlag_LvPar0 );
+      Aux_Message( stdout, "  MaxLv           = %d\n",     ParFlag_LvPar1 );
+      Aux_Message( stdout, "  DensL           = %13.7e\n", ParFlag_DensL  );
+      Aux_Message( stdout, "  DensR           = %13.7e\n", ParFlag_DensR  );
       Aux_Message( stdout, "=============================================================================\n" );
    } // if ( MPI_Rank == 0 )
 
