@@ -1,7 +1,7 @@
 Parameters described on this page:
 [PAR_NPAR](#PAR_NPAR), &nbsp;
 [PAR_INIT](#PAR_INIT), &nbsp;
-[PAR_FLAG_INIT](#PAR_INIT), &nbsp;
+[PAR_FLAG_INIT](#PAR_FLAG_INIT), &nbsp;
 [PAR_IC_FORMAT](#PAR_IC_FORMAT), &nbsp;
 [PAR_IC_FLOAT8](#PAR_IC_FLOAT8), &nbsp;
 [PAR_IC_INT8](#PAR_IC_INT8), &nbsp;
