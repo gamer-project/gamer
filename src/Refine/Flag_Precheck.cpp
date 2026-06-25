@@ -16,7 +16,7 @@ bool Check_Angular_Max( const int i, const int j, const int k, const int lv, con
 //                2. Currently implemented pre-checks: proper-nesting condition, target particles, OPT__FLAG_REGION, OPT__FLAG_ANGULAR
 //                3. Even if a patch passes all pre-checks, it must still satisfy at least one real refinement criterion
 //                   (e.g., OPT__FLAG_RHO or FLAG_PAR_MUST) to trigger refinement
-//                4. A patch is allowed to be refined only if it passes all pre-checks *simultanesouly*
+//                4. A patch is allowed to be refined only if it passes all pre-checks *simultaneously*
 //
 // Parameter   :  lv          : Target refinement level for flagging
 //                PID         : Target patch ID
@@ -44,7 +44,7 @@ bool Flag_Precheck( const int lv, const int PID, const int NoRefineBnd )
    }
 
 // check further if refinement around boundaries is forbidden
-   if ( OPT__NO_FLAG_NEAR_BOUNDARY && ProperNesting )
+   if ( OPT__NO_FLAG_NEAR_BOUNDARY  &&  ProperNesting )
    {
       for (int d=0; d<3; d++)
       {

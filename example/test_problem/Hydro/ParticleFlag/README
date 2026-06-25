@@ -38,7 +38,7 @@ Note:
       - From bottom to top, particles 0, 1, and 2 have PAR_FLAG = -ParFlag_MinLv, -ParFlag_MaxLv, and 0, respectively.
       - Enable OPT__FLAG_RHO.
 
-   OPT__FLAG_PAR_TARGET = 3: Illustrate grid refinement determined by both must-refined and can-refine particles.
+   OPT__FLAG_PAR_TARGET = 3: Illustrate grid refinement determined by both must-refine and can-refine particles.
       - Similar to OPT__FLAG_PAR_TARGET = 1, except that two additional particles with PAR_FLAG = -ParFlag_MaxLv are placed around
         particle 1 to allow refinement.
       - By contrast, particle 0, even with PAR_FLAG = +ParFlag_MinLv, will not trigger refinement since there are no nearby

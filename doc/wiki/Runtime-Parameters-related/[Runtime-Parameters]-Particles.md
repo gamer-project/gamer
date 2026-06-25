@@ -53,8 +53,8 @@ It will be automatically reset to `PAR_INIT=2` when adopting
 Automatically assign the refinement flags of all particles to `PAR_FLAG_INIT` when `PAR_INIT=1/3`.
 Refer to [[OPT__FLAG_PAR_TARGET | [Runtime-Parameters]-Refinement#OPT__FLAG_PAR_TARGET]] for the definitions of must-refine
 and can-refine particles. Set `PAR_FLAG_INIT=9999` to assign refinement flags manually, either by editing a
-[particle IC function](https://github.com/hyschive/gamer-fork/wiki/Initial-Conditions#IC-Func-Particles) or by loading them from a
-[particle IC file](https://github.com/hyschive/gamer-fork/wiki/Initial-Conditions#IC-File-Particles).
+[[particle IC function | Initial Conditions#IC-Func-Particles]] or by loading them from a
+[[particle IC file | Initial Conditions#IC-File-Particles]].
     * **Restriction:**
 
 <a name="PAR_IC_FORMAT"></a>
