@@ -303,7 +303,7 @@ bool Flag_Region_LSS( const int i, const int j, const int k, const int lv, const
 //
 // Note        :  1. Invoked by Init_ByFile_AssignData() using the function pointer Init_ByFile_User_Ptr()
 //                   --> The function pointer may be reset by various test problem initializers, in which case
-//                       this funtion will become useless
+//                       this function will become useless
 //                2. One can use LSS_InitMode to support different data formats
 //                3. For ELBDM_SCHEME == ELBDM_WAVE this function expects:
 //                       LSS_InitMode == 1: Density

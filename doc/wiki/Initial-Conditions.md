@@ -217,7 +217,7 @@ The following example shows `Par_Init_ByFunction()` in
 //
 // Note        :  1. Invoked by Init_GAMER() using the function pointer "Par_Init_ByFunction_Ptr"
 //                   --> This function pointer may be reset by various test problem initializers, in which case
-//                       this funtion will become useless
+//                       this function will become useless
 //                2. Periodicity should be taken care of in this function
 //                   --> No particles should lie outside the simulation box when the periodic BC is adopted
 //                   --> However, if the non-periodic BC is adopted, particles are allowed to lie outside the box
