@@ -23,11 +23,10 @@ int CheIdx_DI           = Idx_Undefined;
 int CheIdx_DII          = Idx_Undefined;
 int CheIdx_HDI          = Idx_Undefined;
 int CheIdx_Metal        = Idx_Undefined;
+int CheIdx_Dust         = Idx_Undefined;
 int CheIdx_vHeatingRate = Idx_Undefined;
 int CheIdx_sHeatingRate = Idx_Undefined;
 int CheIdx_tempFloor    = Idx_Undefined;
-
-
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -78,6 +77,9 @@ void Init_MemAllocate_Grackle( const int Che_NPG )
 
    if ( GRACKLE_METAL )
    CheIdx_Metal = Che_NField ++;
+
+   if ( GRACKLE_DUST )
+   CheIdx_Dust = Che_NField ++;
 
    if ( GRACKLE_USE_V_HEATING_RATE )
    CheIdx_vHeatingRate = Che_NField ++;

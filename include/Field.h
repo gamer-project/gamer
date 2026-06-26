@@ -44,7 +44,7 @@ SET_GLOBAL( FieldIdx_t Idx_DI,            Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_DII,           Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_HDI,           Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_Metal,         Idx_Undefined );
-
+SET_GLOBAL( FieldIdx_t Idx_Dust,          Idx_Undefined );
 
 #elif ( MODEL == ELBDM )
 
