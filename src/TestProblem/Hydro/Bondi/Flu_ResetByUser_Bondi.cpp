@@ -165,13 +165,6 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const int MagSg, 
             fluid[ENGY] = Hydro_CheckMinEintInEngy( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
                                                     (real)MIN_EINT, PassiveFloorMask, Emag );
 
-//          calculate the dual-energy variable
-#           ifdef DUAL_ENERGY
-            fluid[DUAL] = Hydro_Con2Dual( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Emag,
-                                          EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
-                                          PassiveFloorMask );
-#           endif
-
 //          floor and normalize passive scalars
 #           if ( NCOMP_PASSIVE > 0 )
             for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
@@ -179,6 +172,13 @@ void Flu_ResetByUser_API_Bondi( const int lv, const int FluSg, const int MagSg, 
 
             if ( OPT__NORMALIZE_PASSIVE )
                Hydro_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
+#           endif
+
+//          calculate the dual-energy variable
+#           ifdef DUAL_ENERGY
+            fluid[DUAL] = Hydro_Con2Dual( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], fluid+NCOMP_FLUID, Emag,
+                                          EoS_DensEint2Pres_CPUPtr, EoS_CREint2CRPres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                          PassiveFloorMask );
 #           endif
 #           endif // if ( MODEL == HYDRO )
 

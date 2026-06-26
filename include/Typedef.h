@@ -615,8 +615,15 @@ typedef real (*EoS_DE2S_t)     ( const real Dens, const real Eint, const real Pa
 typedef void (*EoS_GENE_t)     ( const int Mode, real Out[], const real In_Flt[], const int In_Int[],
                                  const double AuxArray_Flt[], const int AuxArray_Int[],
                                  const real *const Table[EOS_NTABLE_MAX] );
-#ifdef COSMIC_RAY
+// declare for Hydro_Con2Dual() even when COSMIC_RAY is disabled
 typedef real (*EoS_CRE2CRP_t)  ( const real E_CR,
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
+#ifdef COSMIC_RAY
+typedef real (*EoS_GP2GE_t)    ( const real Pres_Gas,
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_GE2GP_t)    ( const real Eint_Gas,
                                  const double AuxArray_Flt[], const int AuxArray_Int[],
                                  const real *const Table[EOS_NTABLE_MAX] );
 #endif

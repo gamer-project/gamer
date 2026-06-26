@@ -34,8 +34,8 @@ long  LB_Corner2Index( const int lv, const int Corner[], const Check_t Check );
 //                                          (not from exchanging potential between sibling patches)
 //                                      --> Currently it is used for Par->ImproveAcc and SF_CreateStar_AGORA() only
 //                                      --> Currently it's useless for buffer patches
-//                de_status           : Assigned to (DE_UPDATED_BY_ETOT / DE_UPDATED_BY_DUAL / DE_UPDATED_BY_MIN_PRES /
-//                                                   DE_UPDATED_BY_ETOT_GRA)
+//                de_status           : Assigned to (DE_UPDATED_BY_NONE / DE_UPDATED_BY_ETOT / DE_UPDATED_BY_DUAL /
+//                                                   DE_UPDATED_BY_MIN_PRES / DE_UPDATED_BY_ETOT_GRA / DE_UPDATED_BY_REFINE)
 //                                      to indicate whether each cell is updated by the total energy, dual energy variable,
 //                                      or minimum allowed pressure
 //                                      --> DE_UPDATED_BY_XXX are defined in Macro.h
@@ -812,6 +812,15 @@ struct patch_t
       if ( de_status == NULL )
       {
          de_status = new char [PS1][PS1][PS1];
+
+//       without this initialization, data output by OPT__OUTPUT_DUAL_STATUS may remain uninitialized for cells
+//       that have not been updated by the fluid/gravity solvers
+//       --> however, it does not affect the simulations, since this variable is always used after being
+//           updated by the fluid/gravity solvers
+         for (int k=0; k<PS1; k++)
+         for (int j=0; j<PS1; j++)
+         for (int i=0; i<PS1; i++)
+            de_status[k][j][i] = DE_UPDATED_BY_NONE;
       }
 
    } // METHOD : snew

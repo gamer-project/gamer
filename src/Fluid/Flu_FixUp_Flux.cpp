@@ -163,7 +163,7 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
 
 //             calculate the internal energy density and pressure
 #              if ( MODEL == HYDRO  &&  !defined BAROTROPIC_EOS  &&  !defined SRHD )
-               real Eint, Pres;
+               real Eint, Pres;  // both should exclude cosmic-ray contributions to better identify unphysical gas properties
                real *ForEint = CorrVal;
 
 //###EXPERIMENTAL: (does not work well and thus has been disabled for now)
@@ -198,11 +198,13 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
                const real Emag = NULL_REAL;
 #              endif
 
-//             when adopting the dual-energy formalism, we must determine to use Hydro_Con2Eint() or Hydro_DensDual2Pres()
+//             when adopting the dual-energy formalism, we must determine whether to use Hydro_Con2Eint() or Hydro_DensDual2Pres()
 //             since the fluid variables stored in CorrVal[] may not be fully consistent
 //             --> because they have not been corrected by Hydro_DualEnergyFix()
 //             --> also note that currently we adopt Hydro_DensDual2Pres() for DE_UPDATED_BY_MIN_PRES
 //             --> consistency among all dual-energy related variables will be ensured after determining Eint
+
+//             note that Pres and Eint should both exclude cosmic-ray contributions
 #              if ( DUAL_ENERGY == DE_ENPY )
                if ( *DE_StatusPtr1D == DE_UPDATED_BY_ETOT  ||  *DE_StatusPtr1D == DE_UPDATED_BY_ETOT_GRA )
 #              endif
@@ -212,14 +214,26 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
                                          EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
                                          &Eint );
+//                exclude cosmic-ray contributions
+#                 ifdef COSMIC_RAY
+                  Eint -= ForEint[CRAY];
+                  Pres -= EoS_CREint2CRPres_CPUPtr( ForEint[CRAY], EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#                 endif
                }
 
 #              if ( DUAL_ENERGY == DE_ENPY )
                else
                {
+//                Hydro_DensDual2Pres() returns gas pressure without cosmic rays
                   Pres = Hydro_DensDual2Pres( ForEint[DENS], ForEint[DUAL], EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
-//                DE_ENPY only supports EOS_GAMMA, which does not involve passive scalars
+#                 if   ( EOS == EOS_GAMMA )
+//                EOS_GAMMA does not involve passive scalars
                   Eint = EoS_DensPres2Eint_CPUPtr( ForEint[DENS], Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#                 elif ( EOS == EOS_COSMIC_RAY )
+                  Eint = EoS_GasPres2GasEint_CPUPtr( Pres, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#                 else
+#                 error : ERROR : unsupported EoS !!
+#                 endif
                }
 #              endif
 
@@ -227,7 +241,7 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
 #              error : DE_EINT is NOT supported yet !!
 #              endif
 
-#              endif // #if ( MODEL == HYDRO  &&  !defined BAROTROPIC_EOS )
+#              endif // #if ( MODEL == HYDRO  &&  !defined BAROTROPIC_EOS  &&  !defined SRHD )
 
 
 //###EXPERIMENTAL: (does not work well and thus has been disabled for now)
@@ -304,16 +318,20 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
 
 //                for barotropic EoS, do not apply flux correction at all
 #                 ifdef BAROTROPIC_EOS
+
                   CorrVal[ENGY] = *FluidPtr1D[ENGY];  // just set to the input value
 
 #                 else
+
+//                add cosmic-ray energy back for Hydro_ConEint2Etot()
+#                 ifdef COSMIC_RAY
+                  Eint += CorrVal[CRAY];
+#                 endif
                   CorrVal[ENGY] = Hydro_ConEint2Etot( CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], Eint, Emag );
 #                 if   ( DUAL_ENERGY == DE_ENPY )
-//                DE_ENPY only supports EOS_GAMMA, which does not involve passive scalars
-                  CorrVal[DUAL] = Hydro_DensPres2Dual( CorrVal[DENS],
-                                                       EoS_DensEint2Pres_CPUPtr(CorrVal[DENS],Eint,NULL,
-                                                       EoS_AuxArray_Flt,EoS_AuxArray_Int,h_EoS_Table),
-                                                       EoS_AuxArray_Flt[1] );
+//                assuming the variables "Eint" and "Pres" remain consistent with each other
+//                --> note that Pres has excluded cosmic-ray pressure
+                  CorrVal[DUAL] = Hydro_DensPres2Dual( CorrVal[DENS], Pres, EoS_AuxArray_Flt[1] );
 #                 elif ( DUAL_ENERGY == DE_EINT )
 #                 error : DE_EINT is NOT supported yet !!
 #                 endif // DUAL_ENERGY

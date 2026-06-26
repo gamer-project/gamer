@@ -24,6 +24,7 @@ Parameters described on this page:
 [OPT__OUTPUT_GRACKLE_TEMP](#OPT__OUTPUT_GRACKLE_TEMP), &nbsp;
 [OPT__OUTPUT_GRACKLE_MU](#OPT__OUTPUT_GRACKLE_MU), &nbsp;
 [OPT__OUTPUT_GRACKLE_TCOOL](#OPT__OUTPUT_GRACKLE_TCOOL), &nbsp;
+[OPT__OUTPUT_DUAL_STATUS](#OPT__OUTPUT_DUAL_STATUS), &nbsp;
 [OPT__OUTPUT_USER_FIELD](#OPT__OUTPUT_USER_FIELD), &nbsp;
 [OPT__OUTPUT_MODE](#OPT__OUTPUT_MODE), &nbsp;
 [OPT__OUTPUT_RESTART](#OPT__OUTPUT_RESTART), &nbsp;
@@ -234,6 +235,21 @@ For [[--grackle | [Installation]-Option-List#--grackle]] only.
 Output the cooling time calculated by Grackle.
     * **Restriction:**
 For [[--grackle | [Installation]-Option-List#--grackle]] only.
+
+<a name="OPT__OUTPUT_DUAL_STATUS"></a>
+* #### `OPT__OUTPUT_DUAL_STATUS` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Output dual-energy status (see `DE_UPDATED_BY_*` in `Macro.h`).
+    * **Restriction:**
+For [[--dual | [Installation]-Option-List#--dual]] only.
+
+<a name="OPT__OUTPUT_USER_FIELD"></a>
+* #### `OPT__OUTPUT_USER_FIELD` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Output user-defined derived fields. Edit `src/Fluid/Flu_DerivedField_User.cpp`
+or a problem-specific function (for the latter, see
+[[Add Problem Specific Functionalities | Adding-New-Simulations#vi-add-problem-specific-functionalities]]).
+    * **Restriction:**
 
 <a name="OPT__OUTPUT_MODE"></a>
 * #### `OPT__OUTPUT_MODE` &ensp; (1=const step, 2=const dt, 3=dump table) &ensp; [none]

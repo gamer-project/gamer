@@ -346,7 +346,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
          char dummy;    // we do not record the dual-energy status here
 
          if ( !FData_is_Prim )
-            Hydro_DualEnergyFix( Temp[DENS], Temp[MOMX], Temp[MOMY], Temp[MOMZ], Temp[ENGY], Temp[DUAL],
+            Hydro_DualEnergyFix( Temp[DENS], Temp[MOMX], Temp[MOMY], Temp[MOMZ], Temp[ENGY], Temp[DUAL], Temp+NCOMP_FLUID,
                                  dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2],
                                  CheckMinPres_No, NULL_REAL, PassiveFloorMask, UseDual2FixEngy, Emag );
 #        endif
@@ -363,7 +363,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 //       5-3. additional check
          real Eint=NULL_REAL;
 //       check the Eint --> Pres conversion for general EoS
-#        if ( EOS != EOS_GAMMA  &&  EOS != EOS_COSMIC_RAY  &&  !defined BAROTROPIC_EOS )
+#        if ( EOS != EOS_GAMMA  &&  !defined BAROTROPIC_EOS )
 #           define CHECK_E2P
 #        endif
 #        ifdef CHECK_E2P

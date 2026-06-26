@@ -6,17 +6,16 @@ time = np.loadtxt("Record__Dump", skiprows=1)
 
 N_dump = len(time)
 
-print("WARNING : Assuming Passive00 to be cosmic ray energy density.")
 for i in range(N_dump):
     end_sign = "\r" if i != N_dump-1 else "\n"
     print("Plotting: %06d/%06d"%(i+1, N_dump), end=end_sign)
 
-    dens = np.loadtxt("CosmicRay_Acousticwave_Dens_%06d"%i)
-    momx = np.loadtxt("CosmicRay_Acousticwave_MomX_%06d"%i)
-    momy = np.loadtxt("CosmicRay_Acousticwave_MomY_%06d"%i)
-    momz = np.loadtxt("CosmicRay_Acousticwave_MomZ_%06d"%i)
-    pres = np.loadtxt("CosmicRay_Acousticwave_Pres_%06d"%i)
-    cray = np.loadtxt("CosmicRay_Acousticwave_Passive00_%06d"%i)
+    dens = np.loadtxt("CR_SoundWave_Dens_%06d"%i)
+    momx = np.loadtxt("CR_SoundWave_MomX_%06d"%i)
+    momy = np.loadtxt("CR_SoundWave_MomY_%06d"%i)
+    momz = np.loadtxt("CR_SoundWave_MomZ_%06d"%i)
+    pres = np.loadtxt("CR_SoundWave_Pres_%06d"%i)
+    cray = np.loadtxt("CR_SoundWave_CRay_%06d"%i)
 
     fig, ax = plt.subplots(3, 2, figsize=(15, 10))
     plt.subplots_adjust(hspace=0, wspace=0)
@@ -63,5 +62,5 @@ for i in range(N_dump):
 
 
     plt.suptitle("t = %.2f"%time[i, 1])
-    plt.savefig("CosmicRay_Acousticwave_%06d.png"%i)
+    plt.savefig("CR_SoundWave_%06d.png"%i)
     plt.close()

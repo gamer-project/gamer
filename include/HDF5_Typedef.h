@@ -325,6 +325,7 @@ struct SymConst_t
    int    EulerY;
 #  endif
    int    MHM_CheckPredict;
+   int    DualEnergyPredict;
    int    EoSNAuxMax;
    int    EoSNTableMax;
 
@@ -854,6 +855,9 @@ struct InputPara_t
    int    Opt__Output_GrackleTemp;
    int    Opt__Output_GrackleMu;
    int    Opt__Output_GrackleTCool;
+#  endif
+#  ifdef DUAL_ENERGY
+   int    Opt__Output_Dual_Status;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
    int    Opt__Output_UserField;

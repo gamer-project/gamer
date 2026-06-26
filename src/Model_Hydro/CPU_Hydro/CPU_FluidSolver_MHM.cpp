@@ -51,6 +51,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh,
                                const real MinDens, const real MinPres, const real MinEint,
+                               const real DualEnergySwitch,
                                const long PassiveFloor, const bool FracPassive, const int NFrac, const int FracIdx[],
                                const bool JeansMinPres, const real JeansMinPres_Coeff,
                                const EoS_t *EoS );
@@ -66,6 +67,8 @@ void Hydro_StoreIntFlux( const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC
                          const int NFlux );
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                           const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
+                           const real g_FC_Var[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                            const real dt, const real dh, const real MinDens, const real MinEint, const real DualEnergySwitch,
                            const long PassiveFloor, const bool NormPassive, const int NNorm, const int NormIdx[],
                            const EoS_t *EoS, int *s_FullStepFailure, const int Iteration, const int MinMod_MaxIter );
@@ -135,11 +138,6 @@ void CR_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PLUS_MAG],
                                        const int idx_fc, const int didx_fc[3],
                                        const int idx_flux, const int didx_flux[3],
                                        const real dt_dh2, const EoS_t *EoS );
-void CR_AdiabaticWork_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
-                                      real g_Output[][ CUBE(PS2) ],
-                                const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                                const real g_FC_Var[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
-                                const real dt, const real dh, const EoS_t *EoS );
 #ifdef CR_DIFFUSION
 void CR_AddDiffuseFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
                                        real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
@@ -172,6 +170,7 @@ static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
                                         real g_PriVar_Half[][ CUBE(FLU_NXT) ],
                                   const real dt, const real dh,
                                   const real MinDens, const real MinPres, const real MinEint,
+                                  const real DualEnergySwitch,
                                   const long PassiveFloor, const bool FracPassive, const int NFrac, const int FracIdx[],
                                   const bool JeansMinPres, const real JeansMinPres_Coeff,
                                   const EoS_t *EoS );
@@ -460,7 +459,8 @@ void CPU_FluidSolver_MHM(
 
 //       1-a-4. evaluate the half-step solutions
          Hydro_RiemannPredict( g_Flu_Array_In[P], g_FC_Mag_Half_1PG, g_Flux_Half_1PG, g_PriVar_Half_1PG,
-                               dt, dh, MinDens, MinPres, MinEint, PassiveFloor, FracPassive, NFrac, c_FracIdx,
+                               dt, dh, MinDens, MinPres, MinEint, DualEnergySwitch,
+                               PassiveFloor, FracPassive, NFrac, c_FracIdx,
                                JeansMinPres, JeansMinPres_Coeff, &EoS );
 
 
@@ -486,7 +486,7 @@ void CPU_FluidSolver_MHM(
 //                 --> note that g_PriVar_Half_1PG[] returned by Hydro_RiemannPredict() stores the primitive variables
             Hydro_DataReconstruction( NULL, g_FC_Mag_Half_1PG, g_PriVar_Half_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
                                       NULL, Con2Pri_No, LR_Limiter, AdaptiveMinModCoeff, dt, dh,
-                                      MinDens, MinPres, MinEint, PassiveFloor, FracPassive, NFrac, c_FracIdx,
+                                      MinDens, MinPres, MinEint, DualEnergySwitch, PassiveFloor, FracPassive, NFrac, c_FracIdx,
                                       JeansMinPres, JeansMinPres_Coeff, &EoS );
 
 
@@ -514,7 +514,7 @@ void CPU_FluidSolver_MHM(
 //          evaluate the face-centered values by data reconstruction
             Hydro_DataReconstruction( g_Flu_Array_In[P], g_Mag_Array_In[P], g_PriVar_Half_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
                                       g_EC_Ele_1PG, Con2Pri_Yes, LR_Limiter, AdaptiveMinModCoeff, dt, dh,
-                                      MinDens, MinPres, MinEint, PassiveFloor, FracPassive, NFrac, c_FracIdx,
+                                      MinDens, MinPres, MinEint, DualEnergySwitch, PassiveFloor, FracPassive, NFrac, c_FracIdx,
                                       JeansMinPres, JeansMinPres_Coeff, &EoS );
 
 #        endif // #if ( FLU_SCHEME == MHM_RP ) ... else ...
@@ -567,15 +567,10 @@ void CPU_FluidSolver_MHM(
 
 //          4. full-step evolution
             Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P], g_Mag_Array_Out[P],
-                                  g_FC_Flux_1PG, dt, dh, MinDens, MinEint, DualEnergySwitch,
+                                  g_FC_Flux_1PG, g_PriVar_Half_1PG, g_FC_Var_1PG,
+                                  dt, dh, MinDens, MinEint, DualEnergySwitch,
                                   PassiveFloor, NormPassive, NNorm, c_NormIdx, &EoS, &s_FullStepFailure,
                                   Iteration, MinMod_MaxIter );
-
-//          add the cosmic-ray source term of adiabatic work
-#           ifdef COSMIC_RAY
-            CR_AdiabaticWork_FullStep( g_PriVar_Half_1PG, g_Flu_Array_Out[P], g_FC_Flux_1PG, g_FC_Var_1PG,
-                                       dt, dh, &EoS );
-#           endif
 
 
 //          5. counter increment
@@ -819,6 +814,7 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //                dt                 : Time interval to advance solution
 //                dh                 : Cell size
 //                MinDens/Pres/Eint  : Density, pressure, and internal energy floors
+//                DualEnergySwitch   : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
 //                PassiveFloor       : Bitwise flag to specify the passive scalars to be floored
 //                FracPassive        : true --> convert passive scalars to mass fraction during data reconstruction
 //                NFrac              : Number of passive scalars for the option "FracPassive"
@@ -834,6 +830,7 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
                                  real g_PriVar_Half[][ CUBE(FLU_NXT) ],
                            const real dt, const real dh,
                            const real MinDens, const real MinPres, const real MinEint,
+                           const real DualEnergySwitch,
                            const long PassiveFloor, const bool FracPassive, const int NFrac, const int FracIdx[],
                            const bool JeansMinPres, const real JeansMinPres_Coeff,
                            const EoS_t *EoS )
@@ -922,6 +919,16 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
       if ( PassiveFloor & BIDX(v) )
       out_con[v] = FMAX( out_con[v], TINY_NUMBER );
+#     endif
+
+//    apply dual-energy check
+#     ifdef DUAL_ENERGY_PREDICT
+      const bool CheckMinPres_No = false;
+      char dummy;
+      Hydro_DualEnergyFix( out_con[DENS], out_con[MOMX], out_con[MOMY], out_con[MOMZ],
+                           out_con[ENGY], out_con[DUAL], out_con+NCOMP_FLUID, dummy,
+                           EoS->AuxArrayDevPtr_Flt[1], EoS->AuxArrayDevPtr_Flt[2], CheckMinPres_No, NULL_REAL,
+                           PassiveFloor, DualEnergySwitch, Emag );
 #     endif
 
 //    conserved --> primitive variables

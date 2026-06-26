@@ -298,7 +298,11 @@ void Aux_Check_Parameter()
 #  ifdef SUPPORT_FFTW
    if ( OPT__FFTW_STARTUP != FFTW_STARTUP_ESTIMATE )
       Aux_Error( ERROR_INFO, "must set OPT__FFTW_STARTUP=0 (FFTW_STARTUP_ESTIMATE) for BITWISE_REPRODUCIBILITY !!\n" );
+
+#  if ( SUPPORT_FFTW == FFTW3  &&  defined SERIAL )
+      Aux_Message( stderr, "WARNING : SUPPORT_FFTW=FFTW3 + SERIAL may break BITWISE_REPRODUCIBILITY !!\n" );
 #  endif
+#  endif // #ifdef SUPPORT_FFTW
 #  endif // #ifdef BITWISE_REPRODUCIBILITY
 
 #  if ( !defined SERIAL  &&  !defined LOAD_BALANCE )
@@ -758,12 +762,16 @@ void Aux_Check_Parameter()
 #     error : RTVD does NOT support DUAL_ENERGY !!
 #   endif
 
+#   if (  defined DUAL_ENERGY_PREDICT  &&  ( FLU_SCHEME != MHM && FLU_SCHEME != MHM_RP )  )
+#     error : DUAL_ENERGY_PREDICT only supports FLU_SCHEME = MHM/MHM_RP !!
+#   endif
+
 #   if ( DUAL_ENERGY != DE_ENPY )
 #     error : ERROR : unsupported dual-energy formalism (DE_ENPY only, DE_EINT is not supported yet) !!
 #   endif
 
-#   if ( DUAL_ENERGY == DE_ENPY  &&  EOS != EOS_GAMMA )
-#     error : ERROR : DUAL_ENERGY=DE_ENPY only supports EOS_GAMMA !!
+#   if (  DUAL_ENERGY == DE_ENPY  &&  ( EOS != EOS_GAMMA && EOS != EOS_COSMIC_RAY )  )
+#     error : ERROR : DUAL_ENERGY=DE_ENPY only supports EOS_GAMMA/EOS_COSMIC_RAY !!
 #   endif
 #  endif // #ifdef DUAL_ENERGY
 
@@ -835,10 +843,6 @@ void Aux_Check_Parameter()
 
 #   if ( EOS != EOS_COSMIC_RAY )
 #     error : ERROR : COSMIC_RAY must use EOS_COSMIC_RAY !!
-#   endif
-
-#   ifdef DUAL_ENERGY
-#     error : ERROR : DUAL_ENERGY is not supported for COSMIC_RAY !!
 #   endif
 
 #   ifdef COMOVING

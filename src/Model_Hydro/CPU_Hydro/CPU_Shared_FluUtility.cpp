@@ -271,6 +271,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres, const long 
 
 // pressure floor required to resolve the Jeans length
 // --> note that currently we do not modify the dual-energy variable (e.g., entropy) accordingly
+//###REVISE: support general EoS (e.g., cosmic rays) and magnetic field
    if ( JeansMinPres )
    {
       const real Pres0 = Out[4];
@@ -773,6 +774,8 @@ real Hydro_CheckMinEntr( const real InEntr, const real MinEntr )
 // Note        :  1. Invoke Hydro_CheckMinEint()
 //                2. Input conserved instead of primitive variables
 //                3. For MHD, one must provide the magnetic energy density Emag (i.e., 0.5*B^2)
+//                4. When COSMIC_RAY is enabled, the energy floor currently applies to the *total internal energy (gas + cosmic rays)*
+//                   --> Consider excluding cosmic-ray energy for a more stringent check
 //
 // Parameter   :  Dens         : Mass density
 //                MomX/Y/Z     : Momentum density
@@ -823,6 +826,8 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 //                   For UNPHY_MODE_PRIM:
 //                   - Mass density must be positive
 //                   - Pressure cannot be negative
+//                4. When COSMIC_RAY is enabled, it currently checks *total energy/pressure (gas + cosmic rays)*
+//                   --> Consider excluding cosmic-ray energy/pressure for a more stringent check
 //
 // Parameter   :  Mode              : UNPHY_MODE_CONS, UNPHY_MODE_PRIM, UNPHY_MODE_PASSIVE_ONLY
 //                                    --> See "Note" for details
@@ -1311,6 +1316,7 @@ real Hydro_Con2Eint( const real Dens, const real MomX, const real MomY, const re
 // Parameter   :  Dens     : Mass density
 //                MomX/Y/Z : Momentum density
 //                Eint     : Internal energy density
+//                           --> Must include cosmic-ray energy when enabling COSMIC_RAY
 //                Emag     : Magnetic energy density (0.5*B^2) --> For MHD only
 //
 // Return      :  Total energy density (including the magnetic energy density for MHD)

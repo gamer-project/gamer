@@ -125,6 +125,7 @@ extern int              MINMOD_MAX_ITER;
 extern double           MIN_DENS, MIN_PRES, MIN_EINT, MIN_TEMP, MIN_ENTR;
 #ifdef DUAL_ENERGY
 extern double           DUAL_ENERGY_SWITCH;
+extern bool             OPT__OUTPUT_DUAL_STATUS;
 #endif
 #ifdef MHD
 extern double           FlagTable_Current[NLEVEL-1], INT_MONO_COEFF_B;
@@ -328,8 +329,10 @@ extern EoS_DE2T_t    EoS_DensEint2Temp_CPUPtr;
 extern EoS_DT2P_t    EoS_DensTemp2Pres_CPUPtr;
 extern EoS_DE2S_t    EoS_DensEint2Entr_CPUPtr;
 extern EoS_GENE_t    EoS_General_CPUPtr;
-#ifdef COSMIC_RAY
 extern EoS_CRE2CRP_t EoS_CREint2CRPres_CPUPtr;
+#ifdef COSMIC_RAY
+extern EoS_GP2GE_t   EoS_GasPres2GasEint_CPUPtr;
+extern EoS_GE2GP_t   EoS_GasEint2GasPres_CPUPtr;
 #endif
 #ifdef GPU
 extern EoS_GUESS_t   EoS_GuessHTilde_GPUPtr;
@@ -342,8 +345,10 @@ extern EoS_DE2T_t    EoS_DensEint2Temp_GPUPtr;
 extern EoS_DT2P_t    EoS_DensTemp2Pres_GPUPtr;
 extern EoS_DE2S_t    EoS_DensEint2Entr_GPUPtr;
 extern EoS_GENE_t    EoS_General_GPUPtr;
-#ifdef COSMIC_RAY
 extern EoS_CRE2CRP_t EoS_CREint2CRPres_GPUPtr;
+#ifdef COSMIC_RAY
+extern EoS_GP2GE_t   EoS_GasPres2GasEint_GPUPtr;
+extern EoS_GE2GP_t   EoS_GasEint2GasPres_GPUPtr;
 #endif
 #endif
 extern EoS_t EoS;

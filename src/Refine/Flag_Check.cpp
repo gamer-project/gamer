@@ -32,7 +32,7 @@ static bool Check_Radial( const int i, const int j, const int k, const int lv, c
 //                Pot           : Input potential array
 //                MagCC         : Input cell-centered B field array
 //                Vel           : Input velocity array
-//                Pres          : Input pressure array
+//                Pres          : Input pressure array (including cosmic rays)
 //                Lrtz          : Input Lorentz factor array
 //                LCool         : Input cooling length array
 //                Lohner_Ave    : Input array storing the averages for the Lohner error estimator
@@ -161,7 +161,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 #  endif
 
 
-// check pressure gradient
+// check pressure gradient (including cosmic rays)
 // ===========================================================================================
 #  if ( MODEL == HYDRO )
    if ( OPT__FLAG_PRES_GRADIENT )
@@ -232,6 +232,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 
 
 // check Jeans length
+//###REVISE: support general EoS (e.g., cosmic rays) and magnetic field
 // ===========================================================================================
 #  if ( MODEL == HYDRO  &&  defined GRAVITY )
    if ( OPT__FLAG_JEANS )

@@ -609,6 +609,12 @@ void Aux_TakeNote()
       fprintf( Note, "MHM_CHECK_PREDICT               OFF\n" );
 #     endif
 
+#     ifdef DUAL_ENERGY_PREDICT
+      fprintf( Note, "DUAL_ENERGY_PREDICT             ON\n" );
+#     else
+      fprintf( Note, "DUAL_ENERGY_PREDICT             OFF\n" );
+#     endif
+
 #     elif ( MODEL == ELBDM )
 
 #     if ( WAVE_SCHEME == WAVE_GRAMFE )
@@ -692,7 +698,17 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "#define VERSION                 %s\n",      VERSION               );
       fprintf( Note, "#define NCOMP_FLUID            % d\n",      NCOMP_FLUID           );
+      {
+      fprintf( Note, "   Field names                 "                                  );
+      for (int v=0; v<NCOMP_FLUID; v++)
+      fprintf( Note, " %s",                                       FieldLabel[v]         );
+      fprintf( Note, "\n" ); }
       fprintf( Note, "#define NCOMP_PASSIVE          % d\n",      NCOMP_PASSIVE         );
+      {
+      fprintf( Note, "   Field names                 "                                  );
+      for (int v=NCOMP_FLUID; v<NCOMP_FLUID+NCOMP_PASSIVE; v++)
+      fprintf( Note, " %s",                                       FieldLabel[v]         );
+      fprintf( Note, "\n" ); }
       fprintf( Note, "#define FLU_NIN                % d\n",      FLU_NIN               );
       fprintf( Note, "#define FLU_NOUT               % d\n",      FLU_NOUT              );
       fprintf( Note, "#define FLU_NIN_T              % d\n",      FLU_NIN_T             );
@@ -1652,6 +1668,9 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_GRACKLE_TEMP       % d\n",      OPT__OUTPUT_GRACKLE_TEMP    );
       fprintf( Note, "OPT__OUTPUT_GRACKLE_MU         % d\n",      OPT__OUTPUT_GRACKLE_MU      );
       fprintf( Note, "OPT__OUTPUT_GRACKLE_TCOOL      % d\n",      OPT__OUTPUT_GRACKLE_TCOOL   );
+#     endif
+#     ifdef DUAL_ENERGY
+      fprintf( Note, "OPT__OUTPUT_DUAL_STATUS        % d\n",      OPT__OUTPUT_DUAL_STATUS     );
 #     endif
 #     endif // #if ( MODEL == HYDRO )
 
