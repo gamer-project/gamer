@@ -124,9 +124,20 @@ OPT__MINIMIZE_MPI_BARRIER     0           # minimize MPI barriers to improve loa
                                           # (STORE_POT_GHOST, PAR_IMPROVE_ACC=1, OPT__TIMING_BARRIER=0 only; recommend AUTO_REDUCE_DT=0)
 
 
+# source terms
+SRC_DELEPTONIZATION           0           # deleptonization (for simulations of stellar core collapse) [0] ##HYDRO ONLY##
+SRC_EXACTCOOLING              0           # exact cooling scheme from Gaspari (2009) [0] ##HYDRO ONLY## -> NOT supported yet!
+SRC_EC_TEF_N                  6001        # number of points for lambda(T) sampling in LOG [1501]
+SRC_EC_SUBCYCLING             1           # perform subcycling when the cooling time step is small (0=off, 1=on) [0]
+SRC_EC_DTCOEF                 0.5         # the coefficient of the cooling time step [0.5]
+SRC_USER                      0           # user-defined source terms -> edit "Src_User.cpp" [0]
+SRC_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU source-term solver (<=0=auto) [-1]
+
+
 # fluid solver in HYDRO (MODEL==HYDRO only)
 GAMMA                         1.666666666667       # ratio of specific heats (i.e., adiabatic index) [5.0/3.0]
 MOLECULAR_WEIGHT              0.59242761692650336  # mean molecular weight -> currently only for post-processing [0.6]
+MU_NORM                       1.6737352238051868e-24   # m_H value, fully consistent with yt
 MINMOD_COEFF                  2.0         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
 MINMOD_MAX_ITER               0           # maximum number of iterations to reduce MINMOD_COEFF when data reconstruction fails (0=off) [0]
 OPT__LR_LIMITER               1           # slope limiter of data reconstruction in the MHM/MHM_RP/CTU schemes:
@@ -146,10 +157,13 @@ OPT__FIXUP_RESTRICT           1           # correct coarse grids by averaging th
 OPT__CORR_AFTER_ALL_SYNC     -1           # apply various corrections after all levels are synchronized (see "Flu_CorrAfterAllSync"):
                                           # (-1=auto, 0=off, 1=every step, 2=before dump) [-1]
 OPT__NORMALIZE_PASSIVE        1           # ensure "sum(passive_scalar_density) == gas_density" [1]
-MIN_DENS                      1.0e-07     # minimum mass density (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##
-MIN_PRES                      1.0e-09     # minimum pressure     (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
-MIN_EINT                      1.0e-09     # minimum internal energy (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
-MIN_ENTR                      0.0         # minimum entropy         (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
+OPT__RESET_FLUID              0           # reset fluid variables after each update -> edit "Flu_ResetByUser.cpp" [0]
+OPT__RESET_FLUID_INIT         0           # reset fluid variables during initialization (<0=auto -> OPT__RESET_FLUID, 0=off, 1=on) [-1]
+MIN_DENS                      0.0         # minimum mass density     (must >= 0.0) [0.0] ##HYDRO, MHD, and ELBDM ONLY##
+MIN_PRES                      0.0         # minimum pressure         (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
+MIN_EINT                      0.0         # minimum internal energy  (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
+MIN_TEMP                      1.0e4       # minimum temperature in K (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
+MIN_ENTR                      0.0         # minimum entropy          (must >= 0.0) [0.0] ##HYDRO and MHD ONLY##
 
 
 # gravity solvers in all models
@@ -231,6 +245,7 @@ OPT__MANUAL_CONTROL           1           # support manually dump data or stop r
                                           # (by generating the file DUMP_GAMER_DUMP or STOP_GAMER_STOP) [1]
 OPT__RECORD_USER              0           # record the user-specified info -> edit "Aux_Record_User.cpp" [0]
 OPT__OPTIMIZE_AGGRESSIVE      0           # apply aggressive optimizations (experimental) [0]
+OPT__SORT_PATCH_BY_LBIDX      1           # sort patches to improve bitwise reproducibility [SERIAL:0, LOAD_BALACNE:1]
 
 
 # checks

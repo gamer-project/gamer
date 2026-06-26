@@ -661,6 +661,12 @@ def load_arguments( sys_setting : SystemSetting ):
                          help="Feedback from particles to grids and vice versa.\n"
                        )
 
+    parser.add_argument( "--exact_cooling", type=str2bool, metavar="BOOLEAN", gamer_name="EXACT_COOLING",
+                         default=False,
+                         depend={"model":"HYDRO"},
+                         help="Enable exact cooling.\n"
+                       )
+
     parser.add_argument( "--par_attribute_flt", type=int, metavar="INTEGER", gamer_name="PAR_NATT_FLT_USER",
                          default=0,
                          depend={"particle":True},

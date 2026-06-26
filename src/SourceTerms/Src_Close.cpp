@@ -36,7 +36,22 @@ void Src_Close( const int lv, const int SaveSg_Flu, const real h_Flu_Array_S_Out
 //       update all fluid variables for now
          memcpy( amr->patch[SaveSg_Flu][lv][PID]->fluid[0][0][0], h_Flu_Array_S_Out[N][0],
                  FLU_NOUT_S*CUBE(PS1)*sizeof(real) );
-      }
+
+#        if ( defined GAMER_DEBUG  &&  defined EXACT_COOLING )
+         if ( SrcTerms.ExactCooling )
+         {
+            for (int k=0; k<PS1; k++)
+            for (int j=0; j<PS1; j++)
+            for (int i=0; i<PS1; i++)
+            {
+               const real TCool = amr->patch[SaveSg_Flu][lv][PID]->fluid[TCOOL][k][j][i];
+
+               if ( !Aux_IsFinite( TCool )  ||  TCool <= (real)0.0 )
+                  Aux_Error( ERROR_INFO, "Unphysical cooling time %14.7e (lv=%d, PID=%d, (i,j,k)=(%d,%d,%d)) !!\n", TCool, lv, PID, i, j, k );
+            }
+         } // if ( SrcTerms.ExactCooling )
+#        endif
+      } // for (int LocalID=0; LocalID<8; LocalID++)
    } // for (int TID=0; TID<NPG; TID++)
 
 } // FUNCTION : Src_Close
