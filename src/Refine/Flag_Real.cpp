@@ -166,7 +166,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    Lohner_Stride = Lohner_NVar*Lohner_NCell*Lohner_NCell*Lohner_NCell;  // stride of array for one Lohner patch
 
 
-// collect particles to **real** patches at lv
+// 0. collect particles to **real** patches at lv
 #  ifdef PARTICLE
    long ColParFltAtt=_NONE, ColParIntAtt=_NONE;
 
@@ -215,7 +215,6 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       real *Grackle_TCool                = NULL;   // array storing a patch group of grackle cooling time
 
       int  i_start, i_end, j_start, j_end, k_start, k_end, SibID, SibPID, PID;
-      bool ProperNesting, NextPatch;
 
 #     if ( MODEL == HYDRO )
       bool NeedPres = false;
@@ -277,13 +276,15 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #     pragma omp for schedule( runtime )
       for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
       {
-//       prepare the ghost-zone data for Lohner
+//       1. precompute various per-patch-group quantities required by the selected refinement flag checks
+//       1-1. prepare the ghost-zone data for Lohner
          if ( Lohner_NVar > 0 )
             Prepare_PatchData( lv, Time[lv], Lohner_Var, NULL, Lohner_NGhost, NPG, &PID0, Lohner_TVar, _NONE,
                                Lohner_IntScheme, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
                                MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
 
-//       prepare the ghost-zone data for interference criterion
+
+//       1-2. prepare the ghost-zone data for interference criterion
 #        if ( MODEL == ELBDM )
          if ( Spectral_NVar > 0 )
          {
@@ -303,6 +304,8 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
 #        endif
 
+
+//       1-3. cooling length
 #        ifdef SUPPORT_GRACKLE
          if ( OPT__FLAG_COOLING_LEN )
          {
@@ -313,26 +316,26 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
          }
 #        endif
 
+
 //       loop over all local patches within the same patch group
          for (int LocalID=0; LocalID<8; LocalID++)
          {
             PID = PID0 + LocalID;
 
-//          skip this patch if any refinement pre-check fails
+//          2. skip this patch if any refinement pre-check fails
             if (  ! Flag_Precheck( lv, PID, NoRefineBoundaryRegion )  )    continue;
 
 
-//          precompute various quantities for the selected flag checks
-            NextPatch = false;
-            Fluid     = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid;
+            Fluid = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid;
 #           ifdef GRAVITY
-            Pot       = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot;
+            Pot   = amr->patch[ amr->PotSg[lv] ][lv][PID]->pot;
 #           endif
 
 
+//          3. precompute various per-patch quantities required by the selected refinement flag checks
 #           if ( MODEL == HYDRO )
 #           ifdef MHD
-//          evaluate cell-centered B field
+//          3-1. evaluate cell-centered B field
             if ( OPT__FLAG_CURRENT || NeedPres )
             {
                real MagCC_1Cell[NCOMP_MAG];
@@ -349,7 +352,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #           endif // #ifdef MHD
 
 
-//          evaluate velocity
+//          3-2. evaluate velocity
             if ( OPT__FLAG_VORTICITY )
             {
                for (int k=0; k<PS1; k++)
@@ -365,7 +368,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
             } // if ( OPT__FLAG_VORTICITY )
 
 
-//          evaluate pressure
+//          3-3. evaluate pressure
             if ( NeedPres )
             {
                const bool CheckMinPres_Yes = true;
@@ -411,7 +414,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
             } // if ( NeedPres )
 
 
-//          evaluate sound speed squared
+//          3-4. evaluate sound speed squared
             if ( NeedCs2 )
             {
                for (int k=0; k<PS1; k++)
@@ -432,7 +435,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 #           ifdef SRHD
-//          evaluate Lorentz factor
+//          3-5. evaluate Lorentz factor
             if ( OPT__FLAG_LRTZ_GRADIENT )
             {
                for (int k=0; k<PS1; k++)
@@ -464,7 +467,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 #           ifdef SUPPORT_GRACKLE
-//          evaluate cooling length
+//          3-6. evaluate cooling length
             if ( OPT__FLAG_COOLING_LEN )
             {
                for (int k=0; k<PS1; k++)
@@ -481,13 +484,13 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #           endif // #if ( MODEL == HYDRO )
 
 
-//          evaluate the averages and slopes along x/y/z for Lohner
+//          3-7. evaluate the averages and slopes along x/y/z for Lohner
             if ( Lohner_NVar > 0 )
                Prepare_for_Lohner( OPT__FLAG_LOHNER_FORM, Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope,
                                    Lohner_NVar );
 
 
-//          count the number of particles and/or particle mass density on each cell
+//          3-8. count the number of particles and/or particle mass density on each cell
 #           ifdef PARTICLE
             if ( OPT__FLAG_NPAR_CELL  ||  OPT__FLAG_PAR_MASS_CELL )
             {
@@ -579,18 +582,106 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #           endif // #ifdef PARTICLE
 
 
+//          4. flag patches for refinement
+//          --> check patch-based criteria before cell-based criteria for better performance
+
+            bool NextPatch = false;
+#           ifdef PARTICLE
+//          4-1. flag based on the number particles per patch (which doesn't need to go through all cells one-by-one)
+            if ( lv < MAX_LEVEL  &&  OPT__FLAG_NPAR_PATCH != 0  &&  !NextPatch )
+            {
+               const int NParFlag = FlagTable_NParPatch[lv];
+               int NParThisPatch;
+
+               if ( amr->patch[0][lv][PID]->son == -1 )  NParThisPatch = amr->patch[0][lv][PID]->NPar;
+               else                                      NParThisPatch = amr->patch[0][lv][PID]->NPar_Copy;
+
+#              ifdef DEBUG_PARTICLE
+               if ( NParThisPatch < 0 )
+                  Aux_Error( ERROR_INFO, "NPar (%d) has not been calculated (lv %d, PID %d) !!\n",
+                             NParThisPatch, lv, PID );
+#              endif
+
+               if ( NParThisPatch > NParFlag )
+               {
+//                flag itself
+                  amr->patch[0][lv][PID]->flag = true;
+
+//                flag all siblings for OPT__FLAG_NPAR_PATCH == 2
+                  if ( OPT__FLAG_NPAR_PATCH == 2 )
+                  {
+                     for (int s=0; s<26; s++)
+                     {
+                        SibPID = amr->patch[0][lv][PID]->sibling[s];
+
+#                       ifdef DEBUG_PARTICLE
+                        if ( SibPID == -1 )
+                           Aux_Error( ERROR_INFO, "SibPID == -1 --> proper-nesting check failed !!\n" );
+
+                        if ( SibPID <= SIB_OFFSET_NONPERIODIC  &&  OPT__NO_FLAG_NEAR_BOUNDARY )
+                           Aux_Error( ERROR_INFO, "SibPID (%d) <= %d when OPT__NO_FLAG_NEAR_BOUNDARY is on !!\n",
+                                      SibPID, SIB_OFFSET_NONPERIODIC );
+#                       endif
+
+//                      note that we can have SibPID <= SIB_OFFSET_NONPERIODIC when OPT__NO_FLAG_NEAR_BOUNDARY == false
+                        if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
+                     }
+
+//                   skip the remaining refinement flag checks for better performance
+//                   --> this is safe because all sibling patches have already been flagged,
+//                       and the FLAG_BUFFER_SIZE* checks are therefore no longer needed
+                     NextPatch = true;
+                  } // if ( OPT__FLAG_NPAR_PATCH == 2 )
+               } // if ( NParThisPatch > NParFlag )
+            } // if ( OPT__FLAG_NPAR_PATCH != 0 )
+
+
+//          4-2. check if this patch contains any particles flagged for refinement
+            if (  ( OPT__FLAG_PAR_TARGET == FLAG_PAR_MUST || OPT__FLAG_PAR_TARGET == FLAG_PAR_BOTH )  &&
+                  ( ! amr->patch[0][lv][PID]->flag || OPT__FLAG_PAR_TARGET_SIB )  &&
+                  lv < MAX_LEVEL  &&  !NextPatch )
+            {
+               if (  Par_Flag_TargetParticle( lv, PID, FLAG_PAR_MUST )  )
+               {
+                  amr->patch[0][lv][PID]->flag = true;
+
+//                flag all siblings for OPT__FLAG_PAR_TARGET_SIB
+                  if ( OPT__FLAG_PAR_TARGET_SIB )
+                  {
+                     for (int s=0; s<26; s++)
+                     {
+                        SibPID = amr->patch[0][lv][PID]->sibling[s];
+
+#                       ifdef DEBUG_PARTICLE
+                        if ( SibPID == -1 )
+                           Aux_Error( ERROR_INFO, "SibPID == -1 --> proper-nesting check failed !!\n" );
+
+                        if ( SibPID <= SIB_OFFSET_NONPERIODIC  &&  OPT__NO_FLAG_NEAR_BOUNDARY )
+                           Aux_Error( ERROR_INFO, "SibPID (%d) <= %d when OPT__NO_FLAG_NEAR_BOUNDARY is on !!\n",
+                                      SibPID, SIB_OFFSET_NONPERIODIC );
+#                       endif
+
+//                      note that we can have SibPID <= SIB_OFFSET_NONPERIODIC when OPT__NO_FLAG_NEAR_BOUNDARY == false
+                        if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
+                     }
+
+//                   skip the remaining refinement flag checks for better performance
+//                   --> this is safe because all sibling patches have already been flagged,
+//                       and the FLAG_BUFFER_SIZE* checks are therefore no longer needed
+                     NextPatch = true;
+                  } // if ( OPT__FLAG_PAR_TARGET_SIB )
+               } // if (  Par_Flag_TargetParticle( lv, PID, FLAG_PAR_MUST )  )
+            } // if (  ( ! amr->patch[0][lv][PID]->flag || OPT__FLAG_PAR_TARGET_SIB )  && ... )
+#           endif // #ifdef PARTICLE
+
+
 //          loop over all cells within the target patch
-            for (int k=0; k<PS1; k++)  {  if ( NextPatch )  break;
-                                          k_start = ( k - FlagBuf < 0    ) ? 0 : 1;
-                                          k_end   = ( k + FlagBuf >= PS1 ) ? 2 : 1;
-
-            for (int j=0; j<PS1; j++)  {  if ( NextPatch )  break;
-                                          j_start = ( j - FlagBuf < 0    ) ? 0 : 1;
-                                          j_end   = ( j + FlagBuf >= PS1 ) ? 2 : 1;
-
-            for (int i=0; i<PS1; i++)  {  if ( NextPatch )  break;
-                                          i_start = ( i - FlagBuf < 0    ) ? 0 : 1;
-                                          i_end   = ( i + FlagBuf >= PS1 ) ? 2 : 1;
+            for (int k=0; k<PS1 && !NextPatch; k++)  {   k_start = ( k - FlagBuf < 0    ) ? 0 : 1;
+                                                         k_end   = ( k + FlagBuf >= PS1 ) ? 2 : 1;
+            for (int j=0; j<PS1 && !NextPatch; j++)  {   j_start = ( j - FlagBuf < 0    ) ? 0 : 1;
+                                                         j_end   = ( j + FlagBuf >= PS1 ) ? 2 : 1;
+            for (int i=0; i<PS1 && !NextPatch; i++)  {   i_start = ( i - FlagBuf < 0    ) ? 0 : 1;
+                                                         i_end   = ( i + FlagBuf >= PS1 ) ? 2 : 1;
 
 //             retrieve the adiabatic index for Jeans length refinement criterion
 #              if ( MODEL == HYDRO  &&  defined GRAVITY )
@@ -601,7 +692,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                const real JeansCoeff = NULL_REAL;
 #              endif
 
-//             check if the target cell satisfies the refinement criteria (useless pointers are always == NULL)
+//             4-3. check if the target cell satisfies any cell-based refinement criterion (useless pointers are always == NULL)
                if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, MagCC, Vel, Pres, Lrtz, LCool,
                                                      Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope, Lohner_NVar,
                                                      ParCount, ParDens, JeansCoeff, Interf_Var+LocalID*Interf_Stride, Spectral_Cond )  )
@@ -647,86 +738,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
             }}} // k, j, i
 
 
-#           ifdef PARTICLE
-//          flag based on the number particles per patch (which doesn't need to go through all cells one-by-one)
-            if ( lv < MAX_LEVEL  &&  OPT__FLAG_NPAR_PATCH != 0 )
-            {
-               const int NParFlag = FlagTable_NParPatch[lv];
-               int NParThisPatch;
-
-               if ( amr->patch[0][lv][PID]->son == -1 )  NParThisPatch = amr->patch[0][lv][PID]->NPar;
-               else                                      NParThisPatch = amr->patch[0][lv][PID]->NPar_Copy;
-
-#              ifdef DEBUG_PARTICLE
-               if ( NParThisPatch < 0 )
-                  Aux_Error( ERROR_INFO, "NPar (%d) has not been calculated (lv %d, PID %d) !!\n",
-                             NParThisPatch, lv, PID );
-#              endif
-
-               if ( NParThisPatch > NParFlag )
-               {
-//                flag itself
-                  amr->patch[0][lv][PID]->flag = true;
-
-//                flag all siblings for OPT__FLAG_NPAR_PATCH == 2
-                  if ( OPT__FLAG_NPAR_PATCH == 2 )
-                  {
-                     for (int s=0; s<26; s++)
-                     {
-                        SibPID = amr->patch[0][lv][PID]->sibling[s];
-
-#                       ifdef DEBUG_PARTICLE
-                        if ( SibPID == -1 )
-                           Aux_Error( ERROR_INFO, "SibPID == -1 --> proper-nesting check failed !!\n" );
-
-                        if ( SibPID <= SIB_OFFSET_NONPERIODIC  &&  OPT__NO_FLAG_NEAR_BOUNDARY )
-                           Aux_Error( ERROR_INFO, "SibPID (%d) <= %d when OPT__NO_FLAG_NEAR_BOUNDARY is on !!\n",
-                                      SibPID, SIB_OFFSET_NONPERIODIC );
-#                       endif
-
-//                      note that we can have SibPID <= SIB_OFFSET_NONPERIODIC when OPT__NO_FLAG_NEAR_BOUNDARY == false
-                        if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
-                     }
-                  }
-               } // if ( NParThisPatch > NParFlag )
-            } // if ( OPT__FLAG_NPAR_PATCH != 0 )
-
-
-//          check if this patch contains any particles flagged for refinement
-            if (  ( OPT__FLAG_PAR_TARGET == FLAG_PAR_MUST || OPT__FLAG_PAR_TARGET == FLAG_PAR_BOTH )  &&
-                  ( ! amr->patch[0][lv][PID]->flag || OPT__FLAG_PAR_TARGET_SIB )  &&
-                  lv < MAX_LEVEL  )
-            {
-               if (  Par_Flag_TargetParticle( lv, PID, FLAG_PAR_MUST )  )
-               {
-                  amr->patch[0][lv][PID]->flag = true;
-
-//                flag all siblings for OPT__FLAG_PAR_TARGET_SIB
-                  if ( OPT__FLAG_PAR_TARGET_SIB )
-                  {
-                     for (int s=0; s<26; s++)
-                     {
-                        SibPID = amr->patch[0][lv][PID]->sibling[s];
-
-#                       ifdef DEBUG_PARTICLE
-                        if ( SibPID == -1 )
-                           Aux_Error( ERROR_INFO, "SibPID == -1 --> proper-nesting check failed !!\n" );
-
-                        if ( SibPID <= SIB_OFFSET_NONPERIODIC  &&  OPT__NO_FLAG_NEAR_BOUNDARY )
-                           Aux_Error( ERROR_INFO, "SibPID (%d) <= %d when OPT__NO_FLAG_NEAR_BOUNDARY is on !!\n",
-                                      SibPID, SIB_OFFSET_NONPERIODIC );
-#                       endif
-
-//                      note that we can have SibPID <= SIB_OFFSET_NONPERIODIC when OPT__NO_FLAG_NEAR_BOUNDARY == false
-                        if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
-                     }
-                  }
-               } // if (  Par_Flag_TargetParticle( lv, PID, FLAG_PAR_MUST )  )
-            } // if (  ( ! amr->patch[0][lv][PID]->flag || OPT__FLAG_PAR_TARGET_SIB )  && ... )
-#           endif // #ifdef PARTICLE
-
-
-//          check the derefinement criterion of Lohner if required
+//          5. check the derefinement criterion of Lohner if required
 //          --> do it separately from all other refinement criteria since it
 //              (a) does not flag sibling patches and
 //              (b) only applies to patches with sons but have been marked for derefinement
@@ -778,13 +790,13 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    } // OpenMP parallel region
 
 
-// free memory allocated by Par_CollectParticle2OneLevel()
+// 6. free memory allocated by Par_CollectParticle2OneLevel()
 #  ifdef PARTICLE
    Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch_No, FaSibBufPatch_No );
 #  endif
 
 
-// apply the proper-nesting constraint again (should also apply to the buffer patches)
+// 7. apply the proper-nesting constraint again (should also apply to the buffer patches)
 // --> necessary because of the flag buffers
 #  pragma omp parallel for schedule( runtime )
    for (int PID=0; PID<amr->num[lv]; PID++)
@@ -829,7 +841,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    } // for (int PID=0; PID<amr->num[lv]; PID++)
 
 
-// invoke the load-balance functions
+// 8. invoke the load-balance functions
 #  ifdef LOAD_BALANCE
    if ( UseLBFunc == USELB_YES )
    {
@@ -844,9 +856,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #  endif
 
 
+// 9. grandson check
    int SonPID;
 
-// grandson check
    if ( lv < NLEVEL-2 )
    {
 //###ISSUE: use atomic ??
@@ -873,7 +885,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
    }  // if ( lv < NLEVEL-2 )
 
 
-// set up the BounFlag_NList and BounFlag_PosList
+// 10. set up the BounFlag_NList and BounFlag_PosList
    Buf_RecordBoundaryFlag( lv );
 
 } // FUNCTION : Flag_Real
