@@ -431,6 +431,9 @@ For variables with `Default/Min/Max` labeled as `Depend`, click the parameter na
 
 | Name                                                                                                 |         Default |             Min |             Max | Short description |
 | :---                                                                                                 |            :--- |            :--- |            :--- | :--- |
+| SF_CREATE_SINK_ACC_RADIUS                                                                            |         0.5*PS1 |             0.0 |         0.5*PS1 | accretion radius in cells at highest refinement level [0.5*PATCH_SIZE] |
+| SF_CREATE_SINK_MAX_NPAR_MPI                                                                          |            1000 |              10 |            None | maximum number of particle per MPI rank [100] |
+| SF_CREATE_SINK_MIN_GAS_DENS                                                                          |          1.0e10 |             0.0 |            None | minimum gas density allowed to form sink particles (count/cm^3) [1.0e10] |
 | [SF_CREATE_STAR_DET_RANDOM](%5BRuntime-Parameters%5D-Star-Formation#SF_CREATE_STAR_DET_RANDOM)       |              -1 |            None |            None | make random numbers deterministic (i.e., independent of OpenMP and MPI, <0=auto) [-1] |
 | [SF_CREATE_STAR_MASS_EFF](%5BRuntime-Parameters%5D-Star-Formation#SF_CREATE_STAR_MASS_EFF)           |          1.0e-2 | 2.22507386e-308 |             1.0 | Gas-to-star mass conversion efficiency [1.0e-2] |
 | [SF_CREATE_STAR_MAX_STAR_MFRAC](%5BRuntime-Parameters%5D-Star-Formation#SF_CREATE_STAR_MAX_STAR_MFRAC) |             0.5 | 2.22507386e-308 |             1.0 | maximum gas mass fraction allowed to convert to stars per substep [0.5] |
@@ -438,7 +441,7 @@ For variables with `Default/Min/Max` labeled as `Depend`, click the parameter na
 | [SF_CREATE_STAR_MIN_LEVEL](%5BRuntime-Parameters%5D-Star-Formation#SF_CREATE_STAR_MIN_LEVEL)         |               0 |            None |       TOP_LEVEL | minimum AMR level allowed to form stars (<0=auto -> MAX_LEVEL) [0] |
 | [SF_CREATE_STAR_MIN_STAR_MASS](%5BRuntime-Parameters%5D-Star-Formation#SF_CREATE_STAR_MIN_STAR_MASS) |             0.0 |             0.0 |            None | minimum star particle mass for the stochastical star formation (in Msun) [0.0] |
 | [SF_CREATE_STAR_RSEED](%5BRuntime-Parameters%5D-Star-Formation#SF_CREATE_STAR_RSEED)                 |             123 |               0 |            None | random seed [123] |
-| [SF_CREATE_STAR_SCHEME](%5BRuntime-Parameters%5D-Star-Formation#SF_CREATE_STAR_SCHEME)               |               0 |               0 |               1 | star formation schemes (0=off, 1=AGORA) [0] |
+| [SF_CREATE_STAR_SCHEME](%5BRuntime-Parameters%5D-Star-Formation#SF_CREATE_STAR_SCHEME)               |               0 |               0 |               2 | star formation schemes (0=off, 1=AGORA) [0] |
 | [SOR_MAX_ITER](%5BRuntime-Parameters%5D-Gravity#SOR_MAX_ITER)                                        |              -1 |            None |            None | maximum number of iterations in SOR: (<0=auto) [-1] |
 | [SOR_MIN_ITER](%5BRuntime-Parameters%5D-Gravity#SOR_MIN_ITER)                                        |              -1 |            None |            None | minimum number of iterations in SOR: (<0=auto) [-1] |
 | [SOR_OMEGA](%5BRuntime-Parameters%5D-Gravity#SOR_OMEGA)                                              |            -1.0 |            None |            None | over-relaxation parameter in SOR: (<0=auto) [-1.0] |

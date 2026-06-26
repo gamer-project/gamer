@@ -99,6 +99,7 @@ const TestProbID_t
    TESTPROB_HYDRO_CDM_LSS                      =  100,
    TESTPROB_HYDRO_ZELDOVICH                    =  101,
    TESTPROB_HYDRO_GRACKLE_COMOVING             =  102,
+   TESTPROB_HYDRO_SINK_PAR_TEST                =  150,
    TESTPROB_ELBDM_EXTPOT                       = 1000,
    TESTPROB_ELBDM_JEANS_INSTABILITY_COMOVING   = 1001,
    TESTPROB_ELBDM_JEANS_INSTABILITY_PHYSICAL   = 1002,
@@ -114,6 +115,7 @@ const TestProbID_t
    TESTPROB_ELBDM_HALO_MERGER                  = 1012,
    TESTPROB_ELBDM_DISK_HEATING                 = 1013,
    TESTPROB_ELBDM_UNIFORM_GRANULE              = 1014;
+
 
 
 // program initialization options
@@ -541,7 +543,8 @@ const GrackleFieldBIdx_t
 typedef int SF_CreateStarScheme_t;
 const SF_CreateStarScheme_t
    SF_CREATE_STAR_SCHEME_NONE  = 0,
-   SF_CREATE_STAR_SCHEME_AGORA = 1;
+   SF_CREATE_STAR_SCHEME_AGORA = 1,
+   SF_CREATE_STAR_SCHEME_SINKPARTICLE = 2;
 #endif
 
 
