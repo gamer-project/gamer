@@ -153,6 +153,452 @@ void Hydro_TGradientCorrection(       real g_FC_Var   [][NCOMP_TOTAL_PLUS_MAG][ 
 //                EoS                : EoS object
 //-------------------------------------------------------------------------------------------------------
 #ifdef __CUDACC__
+#if !defined MHD  &&  !defined FLOAT8
+// scalar slope limiter (component-wise; no CHAR_RECONSTRUCTION needed)
+GPU_DEVICE
+real Hydro_LimitSlope_Scalar( const real vL, const real vC, const real vR,
+                               const LR_Limiter_t LR_Limiter, const real MinMod_Coeff )
+{
+   const real SL = vC - vL;
+   const real SR = vR - vC;
+   if ( SL * SR <= (real)0.0 ) return (real)0.0;
+   const real SC = (real)0.5 * ( SL + SR );
+   switch ( LR_Limiter )
+   {
+      case LR_LIMITER_CENTRAL:
+         return SC;
+      case LR_LIMITER_VANLEER:
+         return (real)2.0 * SL * SR / ( SL + SR );
+      case LR_LIMITER_GMINMOD:
+         return SIGN(SC) * FMIN( MinMod_Coeff*FABS(SL), FMIN( MinMod_Coeff*FABS(SR), FABS(SC) ) );
+      case LR_LIMITER_ALBADA:
+         return SL * SR * ( SL + SR ) / ( SL*SL + SR*SR );
+      case LR_LIMITER_VL_GMINMOD: {
+         const real SA = (real)2.0 * SL * SR / ( SL + SR );
+         return SIGN(SC) * FMIN( MinMod_Coeff*FABS(SL),
+                           FMIN( MinMod_Coeff*FABS(SR),
+                           FMIN( FABS(SC), FABS(SA) ) ) );
+      }
+      default: return (real)0.0;
+   }
+}
+
+// fused kernel: Con2Pri + PPM slope + face-centered data reconstruction
+// eliminates g_PriVar and g_Slope_PPM global roundtrip by computing Con2Pri inline during slab loading
+// and computing PPM limited slopes on-the-fly from the 5-slab shared-memory window
+__global__
+__launch_bounds__( FLU_BLOCK_SIZE_X )
+void CUFLU_DR_FCVar(
+   const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+   const real   g_Mag_Array_In [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
+         real   g_FC_Var       [][6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ],
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+   const real dt, const real dh,
+   const real MinDens, const real MinPres, const real MinEint,
+   const long PassiveFloor, const bool FracPassive, const int NFrac,
+   const bool JeansMinPres, const real JeansMinPres_Coeff,
+   const EoS_t EoS )
+{
+   const int P = blockIdx.x;
+   const real (*const g_Flu_Array_In_1PG)[CUBE(FLU_NXT)] = g_Flu_Array_In[P];
+         real (*const g_FC_Var_1PG   )[NCOMP_TOTAL_PLUS_MAG][CUBE(N_FC_VAR)] = g_FC_Var[P];
+
+// 5 z-slabs of PriVar: covers (k_cc-2..k_cc+2) for each k_fc plane
+// Con2Pri computed inline from g_Flu_Array_In; eliminates g_PriVar + g_Slope_PPM global roundtrip
+   __shared__ real s_PriVar[5][NCOMP_LR][ SQR(FLU_NXT) ];
+
+   const int NIn           = FLU_NXT;
+   const int NGhost        = LR_GHOST_SIZE;
+   const int N_FC_VAR2     = SQR( N_FC_VAR );
+   const int NIn2          = SQR( NIn );
+   const real dt_dh2       = (real)0.5*dt/dh;
+   const int idx_wave[NWAVE] = { 0, 1, 2, 3, 4 };
+
+#  if (  ( RSOLVER == HLLE || RSOLVER == HLLC || RSOLVER == HLLD )  &&  defined HLL_NO_REF_STATE  )
+#  ifdef HLL_INCLUDE_ALL_WAVES
+   const bool HLL_Include_All_Waves = true;
+#  else
+   const bool HLL_Include_All_Waves = false;
+#  endif
+#  endif
+
+   real EigenVal[3][NWAVE];
+   real LEigenVec[NWAVE][NWAVE] = { { 0.0, NULL_REAL, 0.0, 0.0, NULL_REAL },
+                                    { 1.0,       0.0, 0.0, 0.0, NULL_REAL },
+                                    { 0.0,       0.0, 1.0, 0.0,       0.0 },
+                                    { 0.0,       0.0, 0.0, 1.0,       0.0 },
+                                    { 0.0, NULL_REAL, 0.0, 0.0, NULL_REAL } };
+   real REigenVec[NWAVE][NWAVE] = { { 1.0, NULL_REAL, 0.0, 0.0, NULL_REAL },
+                                    { 1.0,       0.0, 0.0, 0.0,       0.0 },
+                                    { 0.0,       0.0, 1.0, 0.0,       0.0 },
+                                    { 0.0,       0.0, 0.0, 1.0,       0.0 },
+                                    { 1.0, NULL_REAL, 0.0, 0.0, NULL_REAL } };
+
+// sliding-window prologue: load all 5 slabs for k_fc=0 before entering the loop
+   {
+      const int k_cc_0 = NGhost;
+      for (int slab = 0; slab < 5; slab++)
+      {
+         const int k_slab = k_cc_0 - 2 + slab;
+         CGPU_LOOP( idx_xy, NIn2 )
+         {
+            real ConVar[NCOMP_TOTAL], PriVar_tmp[NCOMP_LR];
+            for (int v = 0; v < NCOMP_TOTAL; v++)
+               ConVar[v] = g_Flu_Array_In_1PG[v][ k_slab*NIn2 + idx_xy ];
+            Hydro_Con2Pri( ConVar, PriVar_tmp, MinPres, PassiveFloor, FracPassive, NFrac, c_FracIdx,
+                           JeansMinPres, JeansMinPres_Coeff,
+                           EoS.DensEint2Pres_FuncPtr, EoS.DensPres2Eint_FuncPtr,
+                           EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr,
+                           EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL, NULL );
+            for (int v = 0; v < NCOMP_LR; v++)
+               s_PriVar[slab][v][idx_xy] = PriVar_tmp[v];
+         }
+      }
+   }
+   __syncthreads();
+
+// ring-buffer base: physical slot for logical slab 0 (k_cc-2)
+   int base = 0;
+
+   for (int k_fc = 0; k_fc < N_FC_VAR; k_fc++)
+   {
+//    map logical slab indices 0-4 to physical ring slots
+      const int rs0 = base;
+      const int rs1 = (base + 1 < 5) ? base + 1 : base - 4;
+      const int rs2 = (base + 2 < 5) ? base + 2 : base - 3;
+      const int rs3 = (base + 3 < 5) ? base + 3 : base - 2;
+      const int rs4 = (base + 4 < 5) ? base + 4 : base - 1;
+
+//    process all (i_fc, j_fc) in this k-plane
+      CGPU_LOOP( idx_ij, N_FC_VAR2 )
+      {
+         const int i_fc      = idx_ij % N_FC_VAR;
+         const int j_fc      = idx_ij / N_FC_VAR;
+         const int i_cc      = i_fc + NGhost;
+         const int j_cc      = j_fc + NGhost;
+         const int idx_fc_out = k_fc*N_FC_VAR2 + idx_ij;
+         const int xy_C      = j_cc*NIn + i_cc;
+
+         real cc_C_ncomp[NCOMP_LR], fcCon[6][NCOMP_LR], fcPri[6][NCOMP_LR], dfc[NCOMP_LR], dfc6[NCOMP_LR];
+
+         for (int v = 0; v < NCOMP_LR; v++)   cc_C_ncomp[v] = s_PriVar[rs2][v][xy_C];
+
+         Hydro_GetEigenSystem( cc_C_ncomp, EigenVal, LEigenVec, REigenVec, &EoS );
+
+         for (int d = 0; d < 3; d++)
+         {
+            const int faceL      = 2*d;
+            const int faceR      = faceL + 1;
+
+//          slab/xy indices for +-1 neighbors; z-dir uses ring slots rs1/rs3, x/y uses rs2
+            const int slab_L = (d == 2) ? rs1 : rs2;
+            const int slab_R = (d == 2) ? rs3 : rs2;
+            const int  xy_L  = (d == 0) ? xy_C - 1     : (d == 1) ? xy_C - NIn   : xy_C;
+            const int  xy_R  = (d == 0) ? xy_C + 1     : (d == 1) ? xy_C + NIn   : xy_C;
+            const int  xy_LL = (d == 0) ? xy_C - 2     : (d == 1) ? xy_C - 2*NIn : -1;
+            const int  xy_RR = (d == 0) ? xy_C + 2     : (d == 1) ? xy_C + 2*NIn : -1;
+
+#           ifdef FLOAT8
+            const real round_err = 1.e-12;
+#           else
+            const real round_err = 1.e-6;
+#           endif
+            const real C_factor  = 1.25;
+
+            for (int v = 0; v < NCOMP_LR; v++)
+            {
+               real fc_L, fc_R;
+
+               if ( LR_Limiter == LR_LIMITER_ATHENA )
+               {
+//                all +-1 and +-2 neighbors from shmem (5-slab window covers k_cc-2..k_cc+2)
+                  const real cc_LL = (d < 2) ? s_PriVar[rs2][v][xy_LL]
+                                             : s_PriVar[rs0][v][xy_C  ];
+                  const real cc_L  = s_PriVar[slab_L][v][xy_L];
+                  const real cc_C  = cc_C_ncomp[v];
+                  const real cc_R  = s_PriVar[slab_R][v][xy_R];
+                  const real cc_RR = (d < 2) ? s_PriVar[rs2][v][xy_RR]
+                                             : s_PriVar[rs4][v][xy_C  ];
+
+                  real tmp, rho, cc_abs_max;
+                  real d_L, d_R, dd_L, dd_C, dd_R;
+                  real dh_LL, dh_L, dh_R, dh_RR, ddh_L, ddh_C, ddh_R;
+
+                  d_L  = cc_C  - cc_L;
+                  d_R  = cc_R  - cc_C;
+                  dd_L = cc_LL - (real)2.*cc_L + cc_C;
+                  dd_C = cc_L  - (real)2.*cc_C + cc_R;
+                  dd_R = cc_C  - (real)2.*cc_R + cc_RR;
+
+                  cc_abs_max = FMAX( FABS(cc_LL), FMAX( FABS(cc_L), FMAX( FABS(cc_C), FMAX( FABS(cc_R), FABS(cc_RR) ) ) ) );
+
+                  fc_L = ( -cc_LL + (real)7.*cc_L + (real)7.*cc_C - cc_R  ) / (real)12.0;
+                  fc_R = ( -cc_L  + (real)7.*cc_C + (real)7.*cc_R - cc_RR ) / (real)12.0;
+
+                  dh_LL = fc_L - cc_L;
+                  dh_L  = cc_C - fc_L;
+                  dh_R  = fc_R - cc_C;
+                  dh_RR = cc_R - fc_R;
+                  ddh_L = cc_L - (real)2.*fc_L + cc_C;
+                  ddh_C = fc_L - (real)2.*cc_C + fc_R;
+                  ddh_R = cc_C - (real)2.*fc_R + cc_R;
+
+                  if ( dh_LL*dh_L < (real)0.0 ) {
+                     if ( SIGN(dd_L) == SIGN(ddh_L)  &&  SIGN(ddh_L) == SIGN(dd_C) )
+                        tmp = SIGN(dd_C)*FMIN( C_factor*FABS(dd_L), FMIN( (real)3.*FABS(ddh_L), C_factor*FABS(dd_C) ) );
+                     else
+                        tmp = (real)0.0;
+                     fc_L  = (real)0.5*(cc_L+cc_C) - tmp/(real)6.0;
+                     dh_L  = cc_C - fc_L;
+                     ddh_C = fc_L - (real)2.*cc_C + fc_R;
+                  }
+
+                  if ( dh_R*dh_RR < (real)0.0 ) {
+                     if ( SIGN(dd_C) == SIGN(ddh_R)  &&  SIGN(ddh_R) == SIGN(dd_R) )
+                        tmp = SIGN(dd_C)*FMIN( C_factor*FABS(dd_C), FMIN( (real)3.*FABS(ddh_R), C_factor*FABS(dd_R) ) );
+                     else
+                        tmp = (real)0.0;
+                     fc_R  = (real)0.5*(cc_C+cc_R) - tmp/(real)6.0;
+                     dh_R  = fc_R - cc_C;
+                     ddh_C = fc_L - (real)2.*cc_C + fc_R;
+                  }
+
+                  if ( SIGN(dd_L) == SIGN(dd_C)  &&  SIGN(dd_C) == SIGN(dd_R)  &&  SIGN(dd_R) == SIGN(ddh_C) )
+                     tmp = SIGN(dd_C)*FMIN( C_factor*FABS(dd_L), FMIN( C_factor*FABS(dd_C), FMIN( C_factor*FABS(dd_R), (real)6.0*FABS(ddh_C) ) ) );
+                  else
+                     tmp = (real)0.0;
+
+                  rho = ( (real)6.*FABS(ddh_C) > round_err*cc_abs_max ) ? tmp/ddh_C/(real)6. : (real)0.0;
+
+                  if ( dh_L*dh_R < (real)0.0  ||  d_L*d_R < (real)0.0 ) {
+                     if ( rho < (real)1.-round_err ) { fc_L = cc_C - rho*dh_L;  fc_R = cc_C + rho*dh_R; }
+                  } else {
+                     if ( FABS(dh_L) >= (real)2.*FABS(dh_R) )   fc_L = cc_C - (real)2.*dh_R;
+                     if ( FABS(dh_R) >= (real)2.*FABS(dh_L) )   fc_R = cc_C + (real)2.*dh_L;
+                  }
+
+               } else { // non-ATHENA: all reads from shmem; slopes computed inline
+                  const real cc_L_val = s_PriVar[slab_L][v][xy_L];
+                  const real cc_R_val = s_PriVar[slab_R][v][xy_R];
+                  const real cc_C_val = cc_C_ncomp[v];
+//                +-2 cell values for slope stencil at C-1 and C+1
+                  const real cc_LL_val = (d == 0) ? s_PriVar[rs2][v][xy_C - 2    ]
+                                       : (d == 1) ? s_PriVar[rs2][v][xy_C - 2*NIn]
+                                       :            s_PriVar[rs0][v][xy_C        ];
+                  const real cc_RR_val = (d == 0) ? s_PriVar[rs2][v][xy_C + 2    ]
+                                       : (d == 1) ? s_PriVar[rs2][v][xy_C + 2*NIn]
+                                       :            s_PriVar[rs4][v][xy_C        ];
+                  const real dcc_L = Hydro_LimitSlope_Scalar( cc_LL_val, cc_L_val, cc_C_val, LR_Limiter, MinMod_Coeff );
+                  const real dcc_C = Hydro_LimitSlope_Scalar( cc_L_val,  cc_C_val, cc_R_val, LR_Limiter, MinMod_Coeff );
+                  const real dcc_R = Hydro_LimitSlope_Scalar( cc_C_val,  cc_R_val, cc_RR_val, LR_Limiter, MinMod_Coeff );
+
+                  fc_L = (real)0.5*( cc_C_val + cc_L_val ) - (real)1.0/(real)6.0*( dcc_C - dcc_L );
+                  fc_R = (real)0.5*( cc_C_val + cc_R_val ) - (real)1.0/(real)6.0*( dcc_R - dcc_C );
+
+                  if ( LR_Limiter == LR_LIMITER_CENTRAL )
+                  {
+                     if ( (cc_C_val-fc_L)*(fc_L-cc_L_val) < (real)0.0 )   fc_L = (real)0.5*(cc_C_val+cc_L_val);
+                     if ( (cc_R_val-fc_R)*(fc_R-cc_C_val) < (real)0.0 )   fc_R = (real)0.5*(cc_C_val+cc_R_val);
+                  }
+
+                  dfc [v] = fc_R - fc_L;
+                  dfc6[v] = (real)6.0*(  cc_C_val - (real)0.5*( fc_L + fc_R )  );
+
+                  if (  ( fc_R - cc_C_val )*( cc_C_val - fc_L ) <= (real)0.0  )
+                  {
+                     fc_L = cc_C_val;
+                     fc_R = cc_C_val;
+                  }
+                  else if ( dfc[v]*dfc6[v] > +dfc[v]*dfc[v] )
+                     fc_L = (real)3.0*cc_C_val - (real)2.0*fc_R;
+                  else if ( dfc[v]*dfc6[v] < -dfc[v]*dfc[v] )
+                     fc_R = (real)3.0*cc_C_val - (real)2.0*fc_L;
+
+                  real Min, Max;
+                  Min  = ( cc_C_val < cc_L_val ) ? cc_C_val : cc_L_val;
+                  Max  = ( cc_C_val > cc_L_val ) ? cc_C_val : cc_L_val;
+                  fc_L = ( fc_L > Min ) ? fc_L : Min;
+                  fc_L = ( fc_L < Max ) ? fc_L : Max;
+
+                  Min  = ( cc_C_val < cc_R_val ) ? cc_C_val : cc_R_val;
+                  Max  = ( cc_C_val > cc_R_val ) ? cc_C_val : cc_R_val;
+                  fc_R = ( fc_R > Min ) ? fc_R : Min;
+                  fc_R = ( fc_R < Max ) ? fc_R : Max;
+               } // if ( LR_Limiter == LR_LIMITER_ATHENA ) ... else ...
+
+               fcPri[faceL][v] = fc_L;
+               fcPri[faceR][v] = fc_R;
+
+            } // for (int v=0; v<NCOMP_LR; v++)
+
+
+//          4. advance by half time-step (CTU)
+            real Coeff_L, Coeff_R;
+            real Correct_L[NCOMP_LR], Correct_R[NCOMP_LR];
+
+            for (int v = 0; v < NCOMP_LR; v++)
+            {
+               dfc [v] = fcPri[faceR][v] - fcPri[faceL][v];
+               dfc6[v] = (real)6.0*(  cc_C_ncomp[v] - (real)0.5*( fcPri[faceL][v] + fcPri[faceR][v] )  );
+            }
+
+            Hydro_Rotate3D( dfc,  d, true, MAG_OFFSET );
+            Hydro_Rotate3D( dfc6, d, true, MAG_OFFSET );
+
+#           if (  ( RSOLVER == HLLE || RSOLVER == HLLC || RSOLVER == HLLD )  &&  defined HLL_NO_REF_STATE  )
+            for (int v = 0; v < NWAVE; v++)
+            {
+               Correct_L[ idx_wave[v] ] = (real)0.0;
+               Correct_R[ idx_wave[v] ] = (real)0.0;
+            }
+
+            for (int Mode = 0; Mode < NWAVE; Mode++)
+            {
+               Coeff_L = (real)0.0;
+               Coeff_R = (real)0.0;
+
+               if ( HLL_Include_All_Waves  ||  EigenVal[d][Mode] <= (real)0.0 )
+               {
+                  const real Coeff_C = -dt_dh2*EigenVal[d][Mode];
+                  const real Coeff_D = real(-4.0/3.0)*SQR(Coeff_C);
+
+                  for (int v = 0; v < NWAVE; v++)
+                     Coeff_L += LEigenVec[Mode][v]*(  Coeff_C*( dfc[ idx_wave[v] ] + dfc6[ idx_wave[v] ] ) +
+                                                      Coeff_D*( dfc6[ idx_wave[v] ]                      )  );
+                  for (int v = 0; v < NWAVE; v++)
+                     Correct_L[ idx_wave[v] ] += Coeff_L*REigenVec[Mode][v];
+               }
+
+               if ( HLL_Include_All_Waves  ||  EigenVal[d][Mode] >= (real)0.0 )
+               {
+                  const real Coeff_A = -dt_dh2*EigenVal[d][Mode];
+                  const real Coeff_B = real(-4.0/3.0)*SQR(Coeff_A);
+
+                  for (int v = 0; v < NWAVE; v++)
+                     Coeff_R += LEigenVec[Mode][v]*(  Coeff_A*( dfc[ idx_wave[v] ] - dfc6[ idx_wave[v] ] ) +
+                                                      Coeff_B*( dfc6[ idx_wave[v] ]                      )  );
+                  for (int v = 0; v < NWAVE; v++)
+                     Correct_R[ idx_wave[v] ] += Coeff_R*REigenVec[Mode][v];
+               }
+            } // for (int Mode=0; Mode<NWAVE; Mode++)
+
+#           else // Roe / exact solver
+            Coeff_L = -dt_dh2*FMIN( EigenVal[d][       0 ], (real)0.0 );
+            Coeff_R = -dt_dh2*FMAX( EigenVal[d][ NWAVE-1 ], (real)0.0 );
+
+            for (int v = 0; v < NWAVE; v++)
+            {
+               Correct_L[ idx_wave[v] ] = Coeff_L*(  dfc[ idx_wave[v] ] + ( (real)1.0 - real(4.0/3.0)*Coeff_L )*dfc6[ idx_wave[v] ]  );
+               Correct_R[ idx_wave[v] ] = Coeff_R*(  dfc[ idx_wave[v] ] - ( (real)1.0 + real(4.0/3.0)*Coeff_R )*dfc6[ idx_wave[v] ]  );
+            }
+
+            for (int Mode = 0; Mode < NWAVE; Mode++)
+            {
+               Coeff_L = (real)0.0;
+               Coeff_R = (real)0.0;
+
+               if ( EigenVal[d][Mode] <= (real)0.0 )
+               {
+                  const real Coeff_C = dt_dh2*( EigenVal[d][0] - EigenVal[d][Mode] );
+                  const real Coeff_D = real(4.0/3.0)*dt_dh2*Coeff_C*( EigenVal[d][0] + EigenVal[d][Mode] );
+
+                  for (int v = 0; v < NWAVE; v++)
+                     Coeff_L += LEigenVec[Mode][v]*(  Coeff_C*( dfc[ idx_wave[v] ] + dfc6[ idx_wave[v] ] ) +
+                                                      Coeff_D*( dfc6[ idx_wave[v] ]                      )  );
+                  for (int v = 0; v < NWAVE; v++)
+                     Correct_L[ idx_wave[v] ] += Coeff_L*REigenVec[Mode][v];
+               }
+
+               if ( EigenVal[d][Mode] >= (real)0.0 )
+               {
+                  const real Coeff_A = dt_dh2*( EigenVal[d][ NWAVE-1 ] - EigenVal[d][Mode] );
+                  const real Coeff_B = real(4.0/3.0)*dt_dh2*Coeff_A*( EigenVal[d][ NWAVE-1 ] + EigenVal[d][Mode] );
+
+                  for (int v = 0; v < NWAVE; v++)
+                     Coeff_R += LEigenVec[Mode][v]*(  Coeff_A*( dfc[ idx_wave[v] ] - dfc6[ idx_wave[v] ] ) +
+                                                      Coeff_B*( dfc6[ idx_wave[v] ]                      )  );
+                  for (int v = 0; v < NWAVE; v++)
+                     Correct_R[ idx_wave[v] ] += Coeff_R*REigenVec[Mode][v];
+               }
+            } // for (int Mode=0; Mode<NWAVE; Mode++)
+
+#           endif // if (  ( RSOLVER == HLLE || RSOLVER == HLLC || RSOLVER == HLLD )  &&  defined HLL_NO_REF_STATE  ) ... else ...
+
+#           if ( NCOMP_PASSIVE > 0 )
+            Coeff_L = -dt_dh2*FMIN( EigenVal[d][1], (real)0.0 );
+            Coeff_R = -dt_dh2*FMAX( EigenVal[d][1], (real)0.0 );
+            for (int v = NCOMP_FLUID; v < NCOMP_TOTAL; v++)
+            {
+               Correct_L[v] = Coeff_L*(  dfc[v] + ( (real)1.0 - real(4.0/3.0)*Coeff_L )*dfc6[v]  );
+               Correct_R[v] = Coeff_R*(  dfc[v] - ( (real)1.0 + real(4.0/3.0)*Coeff_R )*dfc6[v]  );
+            }
+#           endif
+
+            Hydro_Rotate3D( Correct_L, d, false, MAG_OFFSET );
+            Hydro_Rotate3D( Correct_R, d, false, MAG_OFFSET );
+
+            for (int v = 0; v < NCOMP_LR; v++)
+            {
+               fcPri[faceL][v] += Correct_L[v];
+               fcPri[faceR][v] += Correct_R[v];
+            }
+
+            fcPri[faceL][0] = FMAX( fcPri[faceL][0], MinDens );
+            fcPri[faceR][0] = FMAX( fcPri[faceR][0], MinDens );
+            fcPri[faceL][4] = Hydro_CheckMinPres( fcPri[faceL][4], MinPres );
+            fcPri[faceR][4] = Hydro_CheckMinPres( fcPri[faceR][4], MinPres );
+
+#           if ( NCOMP_PASSIVE > 0 )
+            for (int v = NCOMP_FLUID; v < NCOMP_TOTAL; v++)
+               if ( PassiveFloor & BIDX(v) ) {
+               fcPri[faceL][v] = FMAX( fcPri[faceL][v], TINY_NUMBER );
+               fcPri[faceR][v] = FMAX( fcPri[faceR][v], TINY_NUMBER ); }
+#           endif
+
+            Hydro_Pri2Con( fcPri[faceL], fcCon[faceL], FracPassive, NFrac, c_FracIdx,
+                           EoS.DensPres2Eint_FuncPtr, EoS.Temp2HTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr,
+                           EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL );
+            Hydro_Pri2Con( fcPri[faceR], fcCon[faceR], FracPassive, NFrac, c_FracIdx,
+                           EoS.DensPres2Eint_FuncPtr, EoS.Temp2HTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr,
+                           EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL );
+
+         } // for (int d=0; d<3; d++)
+
+         for (int f = 0; f < 6; f++)
+         for (int v = 0; v < NCOMP_TOTAL_PLUS_MAG; v++)
+            g_FC_Var_1PG[f][v][idx_fc_out] = fcCon[f][v];
+
+      } // CGPU_LOOP( idx_ij, N_FC_VAR2 )
+
+      __syncthreads(); // ensure all reads of s_PriVar[rs0] (cc_LL, d=2) finish before overwriting it
+
+//    sliding window: load the next "+2" slab into the slot being evicted (rs0),
+//    then advance base so rs0 becomes rs4 for the next iteration
+      if ( k_fc < N_FC_VAR - 1 )
+      {
+         const int k_new = k_fc + NGhost + 3;  // = (k_fc+1) + NGhost + 2
+         CGPU_LOOP( idx_xy, NIn2 )
+         {
+            real ConVar[NCOMP_TOTAL], PriVar_tmp[NCOMP_LR];
+            for (int v = 0; v < NCOMP_TOTAL; v++)
+               ConVar[v] = g_Flu_Array_In_1PG[v][ k_new*NIn2 + idx_xy ];
+            Hydro_Con2Pri( ConVar, PriVar_tmp, MinPres, PassiveFloor, FracPassive, NFrac, c_FracIdx,
+                           JeansMinPres, JeansMinPres_Coeff,
+                           EoS.DensEint2Pres_FuncPtr, EoS.DensPres2Eint_FuncPtr,
+                           EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr,
+                           EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table, NULL, NULL );
+            for (int v = 0; v < NCOMP_LR; v++)
+               s_PriVar[base][v][idx_xy] = PriVar_tmp[v];
+         }
+         base = (base + 1 < 5) ? base + 1 : 0;
+      }
+      __syncthreads();
+   } // for (int k_fc=0; k_fc<N_FC_VAR; k_fc++)
+}
+#endif // #if !defined MHD  &&  !defined FLOAT8
+#endif // __CUDACC__
+
+#ifdef __CUDACC__
 __global__
 void CUFLU_FluidSolver_CTU(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
@@ -219,8 +665,12 @@ void CPU_FluidSolver_CTU(
 #  else
    const bool CorrHalfVel          = false;
 #  endif
+#  if !( defined __CUDACC__  &&  !defined MHD  &&  !defined FLOAT8 )
    const bool CorrHalfVel_No       = false;
+#  endif
+#  if !( defined __CUDACC__  &&  !defined MHD  &&  !defined FLOAT8 )
    const bool Con2Pri_Yes          = true;
+#  endif
 #  ifdef MHD
    const bool StoreElectric_No     = false;
 #  endif
@@ -248,25 +698,270 @@ void CPU_FluidSolver_CTU(
 //          --> necessary because different patch groups are computed by different OpenMP threads or CUDA blocks in parallel
          real (*const g_FC_Var_1PG   )[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ] = g_FC_Var   [P];
          real (*const g_FC_Flux_1PG  )[NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX)   ] = g_FC_Flux  [P];
+#        if !( defined __CUDACC__  &&  !defined MHD  &&  !defined FLOAT8 )
          real (*const g_PriVar_1PG   )                      [ CUBE(FLU_NXT)     ] = g_PriVar   [P];
+#        endif
+#        if !( defined __CUDACC__  &&  !defined MHD  &&  !defined FLOAT8 )
          real (*const g_Slope_PPM_1PG)[NCOMP_LR            ][ CUBE(N_SLOPE_PPM) ] = g_Slope_PPM[P];
+#        endif
 
 #        ifdef MHD
          real (*const g_FC_Mag_Half_1PG)[ FLU_NXT_P1*SQR(FLU_NXT) ] = g_FC_Mag_Half[P];
          real (*const g_EC_Ele_1PG     )[ CUBE(N_EC_ELE)          ] = g_EC_Ele     [P];
          real (*const g_PriVar_Half_1PG)[ CUBE(FLU_NXT) ]           = g_PriVar_1PG;
-#        else
+#        elif !( defined __CUDACC__  &&  !defined FLOAT8 )
          real (*const g_FC_Mag_Half_1PG)[ FLU_NXT_P1*SQR(FLU_NXT) ] = NULL;
          real (*const g_EC_Ele_1PG     )[ CUBE(N_EC_ELE)          ] = NULL;
 #        endif
 
 
 //       1. evaluate the face-centered values at the half time-step
+//          GPU non-MHD: CUFLU_DR_FCVar has already filled g_FC_Var; skip here
+//          CPU or GPU+MHD or GPU+FLOAT8: full inline
+#        if !( defined __CUDACC__  &&  !defined MHD  &&  !defined FLOAT8 )
          Hydro_DataReconstruction( g_Flu_Array_In[P], g_Mag_Array_In[P], g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
                                    NULL, Con2Pri_Yes, LR_Limiter, MinMod_Coeff, dt, dh,
                                    MinDens, MinPres, MinEint, PassiveFloor, FracPassive, NFrac, c_FracIdx,
                                    JeansMinPres, JeansMinPres_Coeff, &EoS );
+#        endif
 
+
+//       2-4. GPU non-MHD non-FLOAT8: k-slab pipeline — half-step Riemanns into shmem ping-pong buffers,
+//            inline TGrad from shmem; eliminates ~50 MB DRAM roundtrip of g_FC_Flux_1PG[half-step]
+#        if ( defined __CUDACC__  &&  !defined MHD  &&  !defined FLOAT8 )
+         {
+            const int  N_FC_VAR2  = SQR(N_FC_VAR);
+            const real dt_dh2     = (real)0.5*dt/dh;
+            const int  didx_FC[3] = { 1, N_FC_VAR, N_FC_VAR2 };
+
+//          ping-pong shmem for half-step fluxes; pp = current k-plane, pq = previous
+            __shared__ real s_FluxX[2][NCOMP_TOTAL][SQR(N_FC_VAR)];
+            __shared__ real s_FluxY[2][NCOMP_TOTAL][SQR(N_FC_VAR)];
+            __shared__ real s_FluxZ[2][NCOMP_TOTAL][SQR(N_FC_VAR)];
+
+            for (int k_fc = 0; k_fc < N_FC_VAR; k_fc++)
+            {
+               const int pp = k_fc & 1;
+               const int pq = 1 - pp;
+
+//             step 1: half-step Riemann for d=0 (x), d=1 (y), d=2 (z, skipped at k_fc=0)
+               for (int d_r = 0; d_r < 3; d_r++)
+               {
+                  if ( d_r == 2  &&  k_fc == 0 )   continue;
+
+                  const int faceR    = 2*d_r + 1;    // right face of L cell
+                  const int faceL    = 2*d_r;         // left  face of R cell
+                  const int n_flux_i = (d_r == 0) ? N_FC_VAR-1 : N_FC_VAR;
+                  const int n_flux_j = (d_r == 1) ? N_FC_VAR-1 : N_FC_VAR;
+
+                  CGPU_LOOP( idx, n_flux_i*n_flux_j )
+                  {
+                     const int i_flux = idx % n_flux_i;
+                     const int j_flux = idx / n_flux_i;
+
+                     int idx_Lfc, idx_Rfc;
+                     if ( d_r < 2 ) {
+                        idx_Lfc = IDX321( i_flux, j_flux, k_fc,   N_FC_VAR, N_FC_VAR );
+                        idx_Rfc = idx_Lfc + didx_FC[d_r];
+                     } else {
+                        idx_Lfc = IDX321( i_flux, j_flux, k_fc-1, N_FC_VAR, N_FC_VAR );
+                        idx_Rfc = IDX321( i_flux, j_flux, k_fc,   N_FC_VAR, N_FC_VAR );
+                     }
+
+                     real ConVar_L[NCOMP_TOTAL_PLUS_MAG], ConVar_R[NCOMP_TOTAL_PLUS_MAG], Flux_1F[NCOMP_TOTAL_PLUS_MAG];
+                     for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++) {
+                        ConVar_L[v] = g_FC_Var_1PG[faceR][v][idx_Lfc];
+                        ConVar_R[v] = g_FC_Var_1PG[faceL][v][idx_Rfc];
+                     }
+
+#                    if   ( RSOLVER == EXACT )
+                     Hydro_RiemannSolver_Exact( d_r, Flux_1F, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
+                                                EoS.DensEint2Pres_FuncPtr, EoS.DensPres2CSqr_FuncPtr,
+                                                EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table );
+#                    elif ( RSOLVER == ROE )
+                     Hydro_RiemannSolver_Roe( d_r, Flux_1F, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
+                                              EoS.DensEint2Pres_FuncPtr, EoS.DensPres2CSqr_FuncPtr,
+                                              EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table );
+#                    elif ( RSOLVER == HLLE )
+                     Hydro_RiemannSolver_HLLE( d_r, Flux_1F, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
+                                               EoS.DensEint2Pres_FuncPtr, EoS.DensPres2CSqr_FuncPtr,
+                                               EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr,
+                                               EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table );
+#                    elif ( RSOLVER == HLLC )
+                     Hydro_RiemannSolver_HLLC( d_r, Flux_1F, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
+                                               EoS.DensEint2Pres_FuncPtr, EoS.DensPres2CSqr_FuncPtr,
+                                               EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr,
+                                               EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table );
+#                    else
+#                    error : unsupported Riemann solver in k-slab path
+#                    endif
+
+#                    if ( RSOLVER_RESCUE != OPTION_NONE )
+                     for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++) {
+                        if ( Flux_1F[v] != Flux_1F[v] ) {
+#                          if   ( RSOLVER_RESCUE == EXACT )
+                           Hydro_RiemannSolver_Exact( d_r, Flux_1F, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
+                                                      EoS.DensEint2Pres_FuncPtr, EoS.DensPres2CSqr_FuncPtr,
+                                                      EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table );
+#                          elif ( RSOLVER_RESCUE == ROE )
+                           Hydro_RiemannSolver_Roe( d_r, Flux_1F, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
+                                                    EoS.DensEint2Pres_FuncPtr, EoS.DensPres2CSqr_FuncPtr,
+                                                    EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table );
+#                          elif ( RSOLVER_RESCUE == HLLE )
+                           Hydro_RiemannSolver_HLLE( d_r, Flux_1F, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
+                                                     EoS.DensEint2Pres_FuncPtr, EoS.DensPres2CSqr_FuncPtr,
+                                                     EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr,
+                                                     EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table );
+#                          elif ( RSOLVER_RESCUE == HLLC )
+                           Hydro_RiemannSolver_HLLC( d_r, Flux_1F, ConVar_L, ConVar_R, MinDens, MinPres, PassiveFloor,
+                                                     EoS.DensEint2Pres_FuncPtr, EoS.DensPres2CSqr_FuncPtr,
+                                                     EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr,
+                                                     EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table );
+#                          endif
+                           break;
+                        }
+                     }
+#                    endif // RSOLVER_RESCUE
+
+                     const int ij = j_flux*N_FC_VAR + i_flux;
+                     for (int v=0; v<NCOMP_TOTAL; v++) {
+                        if      ( d_r == 0 ) s_FluxX[pp][v][ij] = Flux_1F[v];
+                        else if ( d_r == 1 ) s_FluxY[pp][v][ij] = Flux_1F[v];
+                        else                 s_FluxZ[pp][v][ij] = Flux_1F[v];
+                     }
+                  } // CGPU_LOOP Riemann d_r
+               } // for d_r = 0..2
+
+               __syncthreads();
+
+//             step 2: TGrad at k_out = k_fc-1 (deferred by 1 to allow z-flux at k_fc-1/k_fc boundary)
+//             convention: s_FluxX/Y[pq] = x/y-fluxes at k_out; s_FluxZ[pp]/[pq] = z-fluxes at interfaces k_out/k_out+1 and k_out-1/k_out
+               if ( k_fc >= 1 )
+               {
+                  const int k_out = k_fc - 1;
+
+                  for (int d=0; d<3; d++)
+                  {
+                     const int faceL = 2*d;
+                     const int faceR = faceL + 1;
+
+                     int nskip_i, nskip_j, nskip_k;
+                     switch (d) {
+                        case 0:  nskip_i=0; nskip_j=1; nskip_k=1;  break;
+                        case 1:  nskip_i=1; nskip_j=0; nskip_k=1;  break;
+                        default: nskip_i=1; nskip_j=1; nskip_k=0;  break;
+                     }
+
+                     if ( k_out < nskip_k  ||  k_out >= N_FC_VAR - nskip_k )   continue;
+
+                     const int size_i = N_FC_VAR - 2*nskip_i;
+                     const int size_j = N_FC_VAR - 2*nskip_j;
+
+                     CGPU_LOOP( idx_ij, size_i*size_j )
+                     {
+                        const int i_fc   = idx_ij % size_i + nskip_i;
+                        const int j_fc   = idx_ij / size_i + nskip_j;
+                        const int idx_fc = IDX321( i_fc, j_fc, k_out, N_FC_VAR, N_FC_VAR );
+                        const int ij     = j_fc*N_FC_VAR + i_fc;
+
+                        real fc[2][NCOMP_TOTAL_PLUS_MAG];
+                        for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++) {
+                           fc[0][v] = g_FC_Var_1PG[faceL][v][idx_fc];
+                           fc[1][v] = g_FC_Var_1PG[faceR][v][idx_fc];
+                        }
+
+                        for (int v=0; v<NCOMP_TOTAL; v++) {
+                           real TGrad1, TGrad2;
+                           switch (d) {
+                           case 0:   // TDir1=y, TDir2=z
+                              TGrad1 = s_FluxY[pq][v][ij]                         - s_FluxY[pq][v][(j_fc-1)*N_FC_VAR+i_fc];
+                              TGrad2 = s_FluxZ[pp][v][ij]                         - s_FluxZ[pq][v][ij];
+                              break;
+                           case 1:   // TDir1=z, TDir2=x
+                              TGrad1 = s_FluxZ[pp][v][ij]                         - s_FluxZ[pq][v][ij];
+                              TGrad2 = s_FluxX[pq][v][ij]                         - s_FluxX[pq][v][j_fc*N_FC_VAR+(i_fc-1)];
+                              break;
+                           default:  // TDir1=x, TDir2=y
+                              TGrad1 = s_FluxX[pq][v][ij]                         - s_FluxX[pq][v][j_fc*N_FC_VAR+(i_fc-1)];
+                              TGrad2 = s_FluxY[pq][v][ij]                         - s_FluxY[pq][v][(j_fc-1)*N_FC_VAR+i_fc];
+                              break;
+                           }
+                           const real Correct = -dt_dh2 * ( TGrad1 + TGrad2 );
+                           fc[0][v] += Correct;
+                           fc[1][v] += Correct;
+                        }
+
+                        for (int f=0; f<2; f++) {
+                           fc[f][0] = FMAX( fc[f][0], MinDens );
+                           fc[f][4] = Hydro_CheckMinEintInEngy( fc[f][0], fc[f][1], fc[f][2], fc[f][3],
+                                                                 fc[f][4], MinEint, PassiveFloor, NULL_REAL );
+#                          if ( NCOMP_PASSIVE > 0 )
+                           for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+                              if ( PassiveFloor & BIDX(v) )
+                                 fc[f][v] = FMAX( fc[f][v], TINY_NUMBER );
+#                          endif
+                        }
+
+                        for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++) {
+                           g_FC_Var_1PG[faceL][v][idx_fc] = fc[0][v];
+                           g_FC_Var_1PG[faceR][v][idx_fc] = fc[1][v];
+                        }
+                     } // CGPU_LOOP TGrad
+                  } // for d = 0..2
+               } // if k_fc >= 1
+
+               __syncthreads();
+
+            } // for k_fc = 0..N_FC_VAR-1
+
+//          post-loop: TGrad d=2 at k_out = N_FC_VAR-1 (d=0,1 skip due to nskip_k=1)
+            {
+               const int pp_last = (N_FC_VAR-1) & 1;   // = 1 for N_FC_VAR=18
+               const int k_out   = N_FC_VAR - 1;
+
+               CGPU_LOOP( idx_ij, SQR(N_FC_VAR-2) )
+               {
+                  const int i_fc   = idx_ij % (N_FC_VAR-2) + 1;
+                  const int j_fc   = idx_ij / (N_FC_VAR-2) + 1;
+                  const int idx_fc = IDX321( i_fc, j_fc, k_out, N_FC_VAR, N_FC_VAR );
+                  const int ij     = j_fc*N_FC_VAR + i_fc;
+
+                  real fc[2][NCOMP_TOTAL_PLUS_MAG];
+                  for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++) {
+                     fc[0][v] = g_FC_Var_1PG[4][v][idx_fc];
+                     fc[1][v] = g_FC_Var_1PG[5][v][idx_fc];
+                  }
+
+                  for (int v=0; v<NCOMP_TOTAL; v++) {
+                     const real TGrad1 = s_FluxX[pp_last][v][ij] - s_FluxX[pp_last][v][j_fc*N_FC_VAR+(i_fc-1)];
+                     const real TGrad2 = s_FluxY[pp_last][v][ij] - s_FluxY[pp_last][v][(j_fc-1)*N_FC_VAR+i_fc];
+                     const real Correct = -dt_dh2 * ( TGrad1 + TGrad2 );
+                     fc[0][v] += Correct;
+                     fc[1][v] += Correct;
+                  }
+
+                  for (int f=0; f<2; f++) {
+                     fc[f][0] = FMAX( fc[f][0], MinDens );
+                     fc[f][4] = Hydro_CheckMinEintInEngy( fc[f][0], fc[f][1], fc[f][2], fc[f][3],
+                                                           fc[f][4], MinEint, PassiveFloor, NULL_REAL );
+#                    if ( NCOMP_PASSIVE > 0 )
+                     for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
+                        if ( PassiveFloor & BIDX(v) )
+                           fc[f][v] = FMAX( fc[f][v], TINY_NUMBER );
+#                    endif
+                  }
+
+                  for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++) {
+                     g_FC_Var_1PG[4][v][idx_fc] = fc[0][v];
+                     g_FC_Var_1PG[5][v][idx_fc] = fc[1][v];
+                  }
+               }
+               __syncthreads();
+            } // post-loop TGrad d=2
+
+         } // k-slab block
+
+#        else // !( defined __CUDACC__  &&  !defined MHD  &&  !defined FLOAT8 ): CPU, MHD, or FLOAT8 — standard path
 
 //       2. evaluate the face-centered half-step fluxes by solving the Riemann problem
          Hydro_ComputeFlux( g_FC_Var_1PG, g_FC_Flux_1PG, N_HF_FLUX, 0, 0, CorrHalfVel_No,
@@ -290,6 +985,8 @@ void CPU_FluidSolver_CTU(
 //       4. correct the face-centered variables by the transverse flux gradients
          Hydro_TGradientCorrection( g_FC_Var_1PG, g_FC_Flux_1PG, g_Mag_Array_In[P], g_FC_Mag_Half_1PG, g_EC_Ele_1PG, g_PriVar_1PG,
                                     dt, dh, MinDens, MinEint, PassiveFloor );
+
+#        endif // #if ( defined __CUDACC__  &&  !defined MHD  &&  !defined FLOAT8 )
 
 
 //       5. evaluate the cell-centered primitive variables at the half time-step

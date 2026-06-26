@@ -44,6 +44,19 @@ void CUFLU_FluidSolver_MHM(
    const bool JeansMinPres, const real JeansMinPres_Coeff,
    const EoS_t EoS, const MicroPhy_t MicroPhy );
 #elif ( FLU_SCHEME == CTU )
+#if !defined MHD  &&  !defined FLOAT8
+__global__
+void CUFLU_DR_FCVar(
+   const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+   const real   g_Mag_Array_In [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
+         real   g_FC_Var       [][6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ],
+   const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
+   const real dt, const real dh,
+   const real MinDens, const real MinPres, const real MinEint,
+   const long PassiveFloor, const bool FracPassive, const int NFrac,
+   const bool JeansMinPres, const real JeansMinPres_Coeff,
+   const EoS_t EoS );
+#endif // #if !defined MHD  &&  !defined FLOAT8
 __global__
 void CUFLU_FluidSolver_CTU(
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
@@ -576,6 +589,17 @@ void CUAPI_Asyn_FluidSolver( real h_Flu_Array_In[][FLU_NIN ][ CUBE(FLU_NXT) ],
               JeansMinPres, JeansMinPres_Coeff, EoS, MicroPhy );
 
 #        elif ( FLU_SCHEME == CTU )
+
+#        if !defined MHD  &&  !defined FLOAT8
+         CUFLU_DR_FCVar <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
+            ( d_Flu_Array_F_In  + UsedPatch[s],
+              d_Mag_Array_F_In  + UsedPatch[s],
+              d_FC_Var          + UsedPatch[s],
+              LR_Limiter, MinMod_Coeff, dt, dh,
+              MinDens, MinPres, MinEint,
+              PassiveFloor, FracPassive, NFrac,
+              JeansMinPres, JeansMinPres_Coeff, EoS );
+#        endif // #if !defined MHD  &&  !defined FLOAT8
 
          CUFLU_FluidSolver_CTU <<< NPatch_per_Stream[s], BlockDim_FluidSolver, 0, Stream[s] >>>
             ( d_Flu_Array_F_In  + UsedPatch[s],
