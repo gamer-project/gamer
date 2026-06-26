@@ -39,6 +39,8 @@ extern double    *DumpTable;                          // dump table recording th
 extern int        DumpTable_NDump;                    // number of data dumps in the dump table
 extern int        DumpID;                             // index of the current output file
 extern double     DumpTime;                           // time of the next dump (for OPT__OUTPUT_MODE=1)
+extern int        SubDumpID;                          // index of the current sub-dump (OPT__OUTPUT_SUBDIV>=1)
+extern double     SubDumpTime;                        // time of the next intermediate sub-dump (OPT__OUTPUT_SUBDIV>=2, modes 2/3)
 extern int       *UM_IC_RefineRegion;                 // refinement region for OPT__UM_IC_NLEVEL>1
 
 extern int        MPI_Rank;                           // MPI rank ID in the MPI_COMM_WORLD
@@ -60,6 +62,7 @@ extern char       BlankPlusFormat_Flt[MAX_STRING+1];
 extern double     BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, OUTPUT_WALLTIME, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
 extern long int   END_STEP;
 extern int        NX0_TOT[3], OUTPUT_STEP, OUTPUT_WALLTIME_UNIT, REGRID_COUNT, REFINE_NLEVEL, FLU_GPU_NPGROUP, SRC_GPU_NPGROUP, OMP_NTHREAD;
+extern int        OPT__OUTPUT_SUBDIV;                 // subdivide main dump interval for user sub-dumps (<0=off; >=1=on)
 extern int        MPI_NRank, MPI_NRank_X[3];
 extern int        GPU_NSTREAM, FLAG_BUFFER_SIZE, FLAG_BUFFER_SIZE_MAXM1_LV, FLAG_BUFFER_SIZE_MAXM2_LV, MAX_LEVEL;
 

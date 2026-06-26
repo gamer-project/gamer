@@ -26,6 +26,8 @@ long                 NCorrUnphy[NLEVEL]     = { 0 };
 long                 Step                   = 0;
 int                  DumpID                 = 0;
 double               DumpTime               = 0.0;
+int                  SubDumpID              = 0;
+double               SubDumpTime            = 0.0;
 
 double               dTime_Base;
 double               Time_Prev            [NLEVEL];
@@ -51,6 +53,7 @@ int                  Flu_ParaBuf;
 double               BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, OUTPUT_WALLTIME, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
 long                 END_STEP;
 int                  NX0_TOT[3], OUTPUT_STEP, OUTPUT_WALLTIME_UNIT, REGRID_COUNT, REFINE_NLEVEL, FLU_GPU_NPGROUP, SRC_GPU_NPGROUP, OMP_NTHREAD;
+int                  OPT__OUTPUT_SUBDIV             = -1;
 int                  MPI_NRank, MPI_NRank_X[3];
 int                  GPU_NSTREAM, FLAG_BUFFER_SIZE, FLAG_BUFFER_SIZE_MAXM1_LV, FLAG_BUFFER_SIZE_MAXM2_LV, MAX_LEVEL;
 

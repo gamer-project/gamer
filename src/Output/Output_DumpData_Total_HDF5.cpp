@@ -1760,6 +1760,8 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
    KeyInfo.NCompPassive         = NCOMP_PASSIVE;
    KeyInfo.PatchSize            = PS1;
    KeyInfo.DumpID               = DumpID;
+   KeyInfo.SubDumpID            = SubDumpID;
+   KeyInfo.SubDumpTime          = SubDumpTime;
    KeyInfo.Step                 = Step;
 #  ifdef GRAVITY
    KeyInfo.AveDens_Init         = AveDensity_Init;
@@ -2959,6 +2961,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Output_PartY                = OUTPUT_PART_Y;
    InputPara.Output_PartZ                = OUTPUT_PART_Z;
    InputPara.InitDumpID                  = INIT_DUMPID;
+   InputPara.Opt__Output_Subdiv          = OPT__OUTPUT_SUBDIV;
 
 // libyt jupyter
 #  if ( defined(SUPPORT_LIBYT) && defined(LIBYT_JUPYTER) )
@@ -3127,6 +3130,7 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "NCompPassive",         HOFFSET(KeyInfo_t,NCompPassive        ), H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "PatchSize",            HOFFSET(KeyInfo_t,PatchSize           ), H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "DumpID",               HOFFSET(KeyInfo_t,DumpID              ), H5T_NATIVE_INT          );
+   H5Tinsert( H5_TypeID, "SubDumpID",            HOFFSET(KeyInfo_t,SubDumpID           ), H5T_NATIVE_INT          );
    H5Tinsert( H5_TypeID, "NX0",                  HOFFSET(KeyInfo_t,NX0                 ), H5_TypeID_Arr_3Int      );
    H5Tinsert( H5_TypeID, "BoxScale",             HOFFSET(KeyInfo_t,BoxScale            ), H5_TypeID_Arr_3Int      );
    H5Tinsert( H5_TypeID, "NPatch",               HOFFSET(KeyInfo_t,NPatch              ), H5_TypeID_Arr_NLvInt    );
@@ -3158,6 +3162,7 @@ void GetCompound_KeyInfo( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "Time",                 HOFFSET(KeyInfo_t,Time                ), H5_TypeID_Arr_NLvDouble );
    H5Tinsert( H5_TypeID, "CellSize",             HOFFSET(KeyInfo_t,CellSize            ), H5_TypeID_Arr_NLvDouble );
    H5Tinsert( H5_TypeID, "dTime_AllLv",          HOFFSET(KeyInfo_t,dTime_AllLv         ), H5_TypeID_Arr_NLvDouble );
+   H5Tinsert( H5_TypeID, "SubDumpTime",          HOFFSET(KeyInfo_t,SubDumpTime         ), H5T_NATIVE_DOUBLE       );
 #  ifdef GRAVITY
    H5Tinsert( H5_TypeID, "AveDens_Init",         HOFFSET(KeyInfo_t,AveDens_Init        ), H5T_NATIVE_DOUBLE       );
 #  endif
@@ -4036,6 +4041,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Output_PartY",                HOFFSET(InputPara_t,Output_PartY               ), H5T_NATIVE_DOUBLE           );
    H5Tinsert( H5_TypeID, "Output_PartZ",                HOFFSET(InputPara_t,Output_PartZ               ), H5T_NATIVE_DOUBLE           );
    H5Tinsert( H5_TypeID, "InitDumpID",                  HOFFSET(InputPara_t,InitDumpID                 ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Subdiv",          HOFFSET(InputPara_t,Opt__Output_Subdiv         ), H5T_NATIVE_INT              );
 
 // libyt jupyter
 #  if ( defined(SUPPORT_LIBYT) && defined(LIBYT_JUPYTER) )

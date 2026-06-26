@@ -201,6 +201,8 @@ void Init_ByRestart_HDF5( const char *FileName )
    MPI_Barrier( MPI_COMM_WORLD );
 
    LoadField( "DumpID",               &KeyInfo.DumpID,               H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "SubDumpID",           &KeyInfo.SubDumpID,           H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal,  NullPtr,              -1, NonFatal );
+   LoadField( "SubDumpTime",          &KeyInfo.SubDumpTime,          H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal,  NullPtr,              -1, NonFatal );
    LoadField( "NX0",                   KeyInfo.NX0,                  H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NX0_TOT,               3,    Fatal );
    LoadField( "BoxScale",              KeyInfo.BoxScale,             H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
    LoadField( "NPatch",                KeyInfo.NPatch,               H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
@@ -352,6 +354,13 @@ void Init_ByRestart_HDF5( const char *FileName )
       DumpID = ( OPT__RESTART_RESET ) ? 0 : KeyInfo.DumpID + 1;
    else
       DumpID = INIT_DUMPID;
+
+// 1-8b. recover user sub-dump state
+   if ( ! OPT__RESTART_RESET )
+   {
+      SubDumpID  = KeyInfo.SubDumpID;
+      SubDumpTime = KeyInfo.SubDumpTime;
+   }
 
 
 // 1-9. reset parameters from the restart file

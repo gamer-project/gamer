@@ -64,6 +64,7 @@ struct KeyInfo_t
    int    NCompPassive;             // NCOMP_PASSIVE
    int    PatchSize;
    int    DumpID;
+   int    SubDumpID;
    int    NX0     [3];
    int    BoxScale[3];
    int    NPatch   [NLEVEL];
@@ -94,6 +95,7 @@ struct KeyInfo_t
    double Time       [NLEVEL];
    double CellSize   [NLEVEL];      // amr->dh[lv]
    double dTime_AllLv[NLEVEL];
+   double SubDumpTime;
 #  ifdef GRAVITY
    double AveDens_Init;             // AveDensity_Init
 #  endif
@@ -867,6 +869,7 @@ struct InputPara_t
    double Output_PartY;
    double Output_PartZ;
    int    InitDumpID;
+   int    Opt__Output_Subdiv;
 
 // libyt jupyter interface
 #  if ( defined(SUPPORT_LIBYT) && defined(LIBYT_JUPYTER) )

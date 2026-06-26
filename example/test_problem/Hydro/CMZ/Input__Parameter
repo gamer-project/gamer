@@ -268,6 +268,9 @@ OPT__OUTPUT_LORENTZ           0           # output Lorentz factor [0] ##SRHD ONL
 OPT__OUTPUT_3VELOCITY         0           # output 3-velocities [0] ##SRHD ONLY##
 OPT__OUTPUT_USER_FIELD        0           # output user-defined derived fields [0] -> edit "Flu_DerivedField_User.cpp"
 OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
+OPT__OUTPUT_SUBDIV           -1           # output the user-specified data at finer substeps (<0=off; positive integer N>=1) [-1] ##OPT__OUTPUT_USER==1 ONLY##
+                                          # for OPT__OUTPUT_MODE == 1, sub-dump every N steps after each main dump (e.g., N=3, const_step=7: sub-dumps at steps 0, 3, 6, 7, 10, 13, 14,...)
+                                          # for OPT__OUTPUT_MODE == 2/3, sub-dump over evenly spaced N-1 intermediate substeps
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
 OUTPUT_DT                     1.0         # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
 OUTPUT_PART_X                -1.0         # x coordinate for OPT__OUTPUT_PART [-1.0]
