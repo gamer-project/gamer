@@ -1200,9 +1200,10 @@ bool Flag_IterateCells( const int Mode, const int lv, const int PID, const real 
             } // if ( SibID != 999 )
          } // ii,jj,kk
 
-//       for FlagBuf == PS1, once a cell is flagged, all 26 siblings will be flagged
-         if ( FlagBuf == PS1 )   return true;
-
+//       to improve performance, return true immediately if all 26 siblings have been flagged by the target patch's flag buffers
+         if ( k_end - k_start == 2  &&
+              j_end - j_start == 2  &&
+              i_end - i_start == 2   )    return true;
       } // if ( Flag )
    }}} // k, j, i
 
