@@ -7,6 +7,15 @@ void Prepare_for_Lohner( const OptLohnerForm_t Form, const real *Var1D, real *Av
 void Prepare_for_Spectral_Criterion( const real *Var1D, real& Cond1D );
 #endif
 
+static bool Flag_IterateCells( const int Mode, const int lv, const int PID, const real dv,
+                               const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real MagCC[][PS1][PS1][PS1],
+                               const real Vel[][PS1][PS1][PS1], const real Pres[][PS1][PS1], const real Lrtz[][PS1][PS1],
+                               const real LCool[][PS1][PS1], const real (*Cs2)[PS1][PS1],
+                               const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
+                               const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1],
+                               const real *Interf_Var, const real Spectral_Cond,
+                               const int SibID_Array[][3][3], const int FlagBuf, const real JeansCoeff_Factor );
+
 
 
 
@@ -81,7 +90,9 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #  else
    const real JeansCoeff_Factor       = M_PI/( SQR(FlagTable_Jeans[lv])*NEWTON_G          );
 #  endif
-#  endif
+#  else
+   const real JeansCoeff_Factor       = NULL_REAL;
+#  endif // #if ( MODEL == HYDRO  &&  defined GRAVITY ) ... else ...
 #  ifndef GRAVITY
    const OptPotBC_t OPT__BC_POT       = BC_POT_NONE;
 #  endif
@@ -214,7 +225,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       real  Spectral_Cond                = 0.0;    // variable storing the magnitude of the largest coefficient for the spectral criterion
       real *Grackle_TCool                = NULL;   // array storing a patch group of grackle cooling time
 
-      int  i_start, i_end, j_start, j_end, k_start, k_end, SibID, SibPID, PID;
+      int  SibPID, PID;
 
 #     if ( MODEL == HYDRO )
       bool NeedPres = false;
@@ -583,12 +594,23 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 //          4. flag patches for refinement
-//          --> check patch-based criteria before cell-based criteria for better performance
+//          --> check patch-based criteria before cell-based criteria for better performance (except for OPT__FLAG_INTERFERENCE)
 
             bool NextPatch = false;
+
+//          4-1. ELBDM interference check
+#           if ( ELBDM_SCHEME == ELBDM_HYBRID )
+            if ( OPT__FLAG_INTERFERENCE  &&  !amr->use_wave_flag[lv]  &&  lv < MAX_LEVEL  &&  !NextPatch )
+               NextPatch = Flag_IterateCells( 1, lv, PID, dv, Fluid, Pot, MagCC, Vel, Pres, Lrtz, LCool, Cs2,
+                                              Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope, Lohner_NVar,
+                                              ParCount, ParDens, Interf_Var+LocalID*Interf_Stride, Spectral_Cond,
+                                              SibID_Array, FlagBuf, JeansCoeff_Factor );
+#           endif
+
+
 #           ifdef PARTICLE
-//          4-1. flag based on the number particles per patch (which doesn't need to go through all cells one-by-one)
-            if ( lv < MAX_LEVEL  &&  OPT__FLAG_NPAR_PATCH != 0  &&  !NextPatch )
+//          4-2. flag based on the number particles per patch (which doesn't need to go through all cells one-by-one)
+            if ( OPT__FLAG_NPAR_PATCH != 0  &&  lv < MAX_LEVEL  &&  !NextPatch )
             {
                const int NParFlag = FlagTable_NParPatch[lv];
                int NParThisPatch;
@@ -636,7 +658,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
             } // if ( OPT__FLAG_NPAR_PATCH != 0 )
 
 
-//          4-2. check if this patch contains any particles flagged for refinement
+//          4-3. check if this patch contains any particles flagged for refinement
             if (  ( OPT__FLAG_PAR_TARGET == FLAG_PAR_MUST || OPT__FLAG_PAR_TARGET == FLAG_PAR_BOTH )  &&
                   ( ! amr->patch[0][lv][PID]->flag || OPT__FLAG_PAR_TARGET_SIB )  &&
                   lv < MAX_LEVEL  &&  !NextPatch )
@@ -675,67 +697,12 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 #           endif // #ifdef PARTICLE
 
 
-//          loop over all cells within the target patch
-            for (int k=0; k<PS1 && !NextPatch; k++)  {   k_start = ( k - FlagBuf < 0    ) ? 0 : 1;
-                                                         k_end   = ( k + FlagBuf >= PS1 ) ? 2 : 1;
-            for (int j=0; j<PS1 && !NextPatch; j++)  {   j_start = ( j - FlagBuf < 0    ) ? 0 : 1;
-                                                         j_end   = ( j + FlagBuf >= PS1 ) ? 2 : 1;
-            for (int i=0; i<PS1 && !NextPatch; i++)  {   i_start = ( i - FlagBuf < 0    ) ? 0 : 1;
-                                                         i_end   = ( i + FlagBuf >= PS1 ) ? 2 : 1;
-
-//             retrieve the adiabatic index for Jeans length refinement criterion
-#              if ( MODEL == HYDRO  &&  defined GRAVITY )
-               const real JeansCoeff = ( OPT__FLAG_JEANS )
-                                     ? JeansCoeff_Factor * Cs2[k][j][i] * Fluid[DENS][k][j][i] / Pres[k][j][i]
-                                     : NULL_REAL;
-#              else
-               const real JeansCoeff = NULL_REAL;
-#              endif
-
-//             4-3. check if the target cell satisfies any cell-based refinement criterion (useless pointers are always == NULL)
-               if (  lv < MAX_LEVEL  &&  Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, MagCC, Vel, Pres, Lrtz, LCool,
-                                                     Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope, Lohner_NVar,
-                                                     ParCount, ParDens, JeansCoeff, Interf_Var+LocalID*Interf_Stride, Spectral_Cond )  )
-               {
-//                flag itself
-                  amr->patch[0][lv][PID]->flag = true;
-
-//                flag sibling patches according to the size of FlagBuf
-                  for (int kk=k_start; kk<=k_end; kk++)
-                  for (int jj=j_start; jj<=j_end; jj++)
-                  for (int ii=i_start; ii<=i_end; ii++)
-                  {
-                     SibID = SibID_Array[kk][jj][ii];
-
-                     if ( SibID != 999 )
-                     {
-                        SibPID = amr->patch[0][lv][PID]->sibling[SibID];
-
-#                       ifdef GAMER_DEBUG
-                        if ( SibPID == -1 )
-                           Aux_Error( ERROR_INFO, "SibPID == -1 --> proper-nesting check failed !!\n" );
-
-                        if ( SibPID <= SIB_OFFSET_NONPERIODIC  &&  OPT__NO_FLAG_NEAR_BOUNDARY )
-                           Aux_Error( ERROR_INFO, "SibPID (%d) <= %d when OPT__NO_FLAG_NEAR_BOUNDARY is on !!\n",
-                                      SibPID, SIB_OFFSET_NONPERIODIC );
-#                       endif
-
-//                      note that we can have SibPID <= SIB_OFFSET_NONPERIODIC when OPT__NO_FLAG_NEAR_BOUNDARY == false
-                        if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
-
-//                      switch_to_wave_flag should be consistent with the flag buffer
-#                       if ( ELBDM_SCHEME == ELBDM_HYBRID )
-                        if ( amr->patch[0][lv][PID]->switch_to_wave_flag  &&  SibPID >= 0 )
-                           amr->patch[0][lv][SibPID]->switch_to_wave_flag = true;
-#                       endif
-                     } // if ( SibID != 999 )
-                  } // ii,jj,kk
-
-//                for FlagBuf == PS1, once a cell is flagged, all 26 siblings will be flagged
-                  if ( FlagBuf == PS1 )   NextPatch = true;
-
-               } // check flag
-            }}} // k, j, i
+//          4-4. cell-based refinement criteria
+            if ( lv < MAX_LEVEL  &&  !NextPatch )
+               NextPatch = Flag_IterateCells( 2, lv, PID, dv, Fluid, Pot, MagCC, Vel, Pres, Lrtz, LCool, Cs2,
+                                              Lohner_Var+LocalID*Lohner_Stride, Lohner_Ave, Lohner_Slope, Lohner_NVar,
+                                              ParCount, ParDens, Interf_Var+LocalID*Interf_Stride, Spectral_Cond,
+                                              SibID_Array, FlagBuf, JeansCoeff_Factor );
 
 
 //          5. check the derefinement criterion of Lohner if required
@@ -1088,3 +1055,157 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID )
    } // switch ( LocalID )
 
 } // FUNCTION : Flag_Grandson
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Flag_IterateCells
+// Description :  Check whether any cell within the target patch satisfies the cell-based refinement criteria
+//
+// Note        :  1. Invoke either ELBDM_Flag_Interference() or Flag_Check(), depending on the "Mode" parameter
+//                   --> ELBDM_Flag_Interference() is separated from Flag_Check() for the following reasons:
+//                       (1) The ELBDM interference check must be performed before all other refinement checks
+//                           in order to set switch_to_wave_flag correctly
+//                       (2) Patch-based flag checks are performed before the remaining cell-based checks in Flag_Check()
+//                           to improve performance
+//                           --> Specifically, flag checks are performed in the following order:
+//                           a. Cell-based check of ELBDM_Flag_Interference()
+//                           b. Patch-based flag checks (e.g., OPT__FLAG_NPAR_PATCH and OPT__FLAG_PAR_TARGET)
+//                           c. Cell-based flags checks in Flag_Check()
+//                2. Invoked by Flag_Real()
+//
+// Parameter   :  Mode              : 1 --> Call ELBDM_Flag_Interference()
+//                                    2 --> Call Flag_Check()
+//                lv                : Target refinement level
+//                PID               : Target patch ID
+//                dv                : Cell volume at the target level
+//                Fluid             : Input fluid array (with NCOMP_TOTAL components)
+//                Pot               : Input potential array
+//                MagCC             : Input cell-centered B field array
+//                Vel               : Input velocity array
+//                Pres              : Input pressure array
+//                Lrtz              : Input Lorentz factor array
+//                LCool             : Input cooling length array
+//                Cs2               : Input sound speed squared array
+//                Lohner_Var        : Input array storing the variables for the Lohner error estimator
+//                Lohner_Ave        : Input array storing the averages for the Lohner error estimator
+//                Lohner_Slope      : Input array storing the slopes for the Lohner error estimator
+//                Lohner_NVar       : Number of variables stored in Lohner_Ave and Lohner_Slope
+//                ParCount          : Input array storing the number of particles on each cell
+//                                    (note that it has the **real** type)
+//                ParDens           : Input array storing the particle mass density on each cell
+//                Interf_Var        : Input array storing the density and phase for the interference condition
+//                Spectral_Cond     : Input variable storing the spectral refinement condition
+//                SibID_Array       : sibling indices for flag buffers
+//                FlagBuf           : Flag buffer size
+//                JeansCoeff_Factor : Factor for OPT__FLAG_JEANS
+//
+// Return      :  true  : The flag buffers of the target patch have flagged all 26 sibling patches
+//                false : Otherwise
+//-------------------------------------------------------------------------------------------------------
+bool Flag_IterateCells( const int Mode, const int lv, const int PID, const real dv,
+                        const real Fluid[][PS1][PS1][PS1], const real Pot[][PS1][PS1], const real MagCC[][PS1][PS1][PS1],
+                        const real Vel[][PS1][PS1][PS1], const real Pres[][PS1][PS1], const real Lrtz[][PS1][PS1],
+                        const real LCool[][PS1][PS1], const real (*Cs2)[PS1][PS1],
+                        const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
+                        const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1],
+                        const real *Interf_Var, const real Spectral_Cond,
+                        const int SibID_Array[][3][3], const int FlagBuf, const real JeansCoeff_Factor )
+{
+
+   if ( Mode != 1  &&  Mode != 2 )  Aux_Error( ERROR_INFO, "unsupported Mode = %d !!\n", Mode );
+
+
+// do not flag patches at or above MAX_LEVEL
+   if ( lv >= MAX_LEVEL )  return false;
+
+
+// loop over all cells within the target patch
+   for (int k=0; k<PS1; k++)  {  const int k_start = ( k - FlagBuf < 0    ) ? 0 : 1;
+                                 const int k_end   = ( k + FlagBuf >= PS1 ) ? 2 : 1;
+   for (int j=0; j<PS1; j++)  {  const int j_start = ( j - FlagBuf < 0    ) ? 0 : 1;
+                                 const int j_end   = ( j + FlagBuf >= PS1 ) ? 2 : 1;
+   for (int i=0; i<PS1; i++)  {  const int i_start = ( i - FlagBuf < 0    ) ? 0 : 1;
+                                 const int i_end   = ( i + FlagBuf >= PS1 ) ? 2 : 1;
+
+//    retrieve the adiabatic index for Jeans length refinement criterion
+#     if ( MODEL == HYDRO  &&  defined GRAVITY )
+      const real JeansCoeff = ( OPT__FLAG_JEANS )
+                            ? JeansCoeff_Factor * Cs2[k][j][i] * Fluid[DENS][k][j][i] / Pres[k][j][i]
+                            : NULL_REAL;
+#     else
+      const real JeansCoeff = NULL_REAL;
+#     endif
+
+
+//    check if the target cell satisfies any cell-based refinement criterion (useless pointers are always == NULL)
+      bool Flag = false;
+
+//    ELBDM interference check
+      if ( Mode == 1 )
+      {
+#        if ( ELBDM_SCHEME == ELBDM_HYBRID )
+         Flag = ELBDM_Flag_Interference( i, j, k, Interf_Var,
+                                         FlagTable_Interference[lv][0], FlagTable_Interference[lv][1],
+                                         FlagTable_Interference[lv][2], FlagTable_Interference[lv][3]>0.5 );
+
+//       switch to wave solver when refining to ELBDM_FIRST_WAVE_LEVEL
+         if ( Flag  &&  lv+1 >= ELBDM_FIRST_WAVE_LEVEL )    amr->patch[0][lv][PID]->switch_to_wave_flag = true;
+#        endif
+      }
+
+//    other criteria
+      else
+      {
+         Flag = Flag_Check( lv, PID, i, j, k, dv, Fluid, Pot, MagCC, Vel, Pres, Lrtz, LCool,
+                            Lohner_Var, Lohner_Ave, Lohner_Slope, Lohner_NVar,
+                            ParCount, ParDens, JeansCoeff, Spectral_Cond );
+      }
+
+
+//    flag patches
+      if ( Flag )
+      {
+//       flag itself
+         amr->patch[0][lv][PID]->flag = true;
+
+//       flag sibling patches according to the size of FlagBuf
+         for (int kk=k_start; kk<=k_end; kk++)
+         for (int jj=j_start; jj<=j_end; jj++)
+         for (int ii=i_start; ii<=i_end; ii++)
+         {
+            const int SibID = SibID_Array[kk][jj][ii];
+
+            if ( SibID != 999 )
+            {
+               const int SibPID = amr->patch[0][lv][PID]->sibling[SibID];
+
+#              ifdef GAMER_DEBUG
+               if ( SibPID == -1 )
+                  Aux_Error( ERROR_INFO, "SibPID == -1 --> proper-nesting check failed !!\n" );
+
+               if ( SibPID <= SIB_OFFSET_NONPERIODIC  &&  OPT__NO_FLAG_NEAR_BOUNDARY )
+                  Aux_Error( ERROR_INFO, "SibPID (%d) <= %d when OPT__NO_FLAG_NEAR_BOUNDARY is on !!\n",
+                             SibPID, SIB_OFFSET_NONPERIODIC );
+#              endif
+
+//             note that we can have SibPID <= SIB_OFFSET_NONPERIODIC when OPT__NO_FLAG_NEAR_BOUNDARY == false
+               if ( SibPID >= 0 )   amr->patch[0][lv][SibPID]->flag = true;
+
+//             switch_to_wave_flag should be consistent with the flag buffer
+#              if ( ELBDM_SCHEME == ELBDM_HYBRID )
+               if ( Mode == 1  &&  amr->patch[0][lv][PID]->switch_to_wave_flag  &&  SibPID >= 0 )
+                  amr->patch[0][lv][SibPID]->switch_to_wave_flag = true;
+#              endif
+            } // if ( SibID != 999 )
+         } // ii,jj,kk
+
+//       for FlagBuf == PS1, once a cell is flagged, all 26 siblings will be flagged
+         if ( FlagBuf == PS1 )   return true;
+
+      } // if ( Flag )
+   }}} // k, j, i
+
+   return false;
+
+} // FUNCTION : Flag_IterateCells

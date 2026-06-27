@@ -35,6 +35,7 @@ static bool Check_Radial( const int i, const int j, const int k, const int lv, c
 //                Pres          : Input pressure array
 //                Lrtz          : Input Lorentz factor array
 //                LCool         : Input cooling length array
+//                Lohner_Var    : Input array storing the variables for the Lohner error estimator
 //                Lohner_Ave    : Input array storing the averages for the Lohner error estimator
 //                Lohner_Slope  : Input array storing the slopes for the Lohner error estimator
 //                Lohner_NVar   : Number of variables stored in Lohner_Ave and Lohner_Slope
@@ -44,7 +45,6 @@ static bool Check_Radial( const int i, const int j, const int k, const int lv, c
 //                JeansCoeff    : Pi*GAMMA/(SafetyFactor^2*G), where SafetyFactor = FlagTable_Jeans[lv]
 //                                --> Flag if dh^2 > JeansCoeff*Pres/Dens^2
 //                                --> When COMOVING is on, G has been replaced by a*G, where a is the scale factor
-//                Interf_Var    : Input array storing the density and phase for the interference condition
 //                Spectral_Cond : Input variable storing the spectral refinement condition
 //
 // Return      :  "true"  if any  of the refinement criteria is satisfied
@@ -56,7 +56,7 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
                  const real LCool[][PS1][PS1],
                  const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
                  const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff,
-                 const real *Interf_Var, const real Spectral_Cond )
+                 const real Spectral_Cond )
 {
 
    bool Flag = false;
@@ -65,10 +65,10 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 // *******************************************************************************************
 // refinement flags must be checked in the following order
 // 1. no-refinement criteria --> exclude patches not allowed for refinement
-// 2. OPT__FLAG_INTERFERENCE --> ensure amr->patch[0][lv][PID]->switch_to_wave_flag is set correctly
+// 2. OPT__FLAG_INTERFERENCE --> must be performed before all other refinement checks in order to set
+//                               amr->patch[0][lv][PID]->switch_to_wave_flag correctly
 // 3. refinement criteria
 // *******************************************************************************************
-
 
 // *****************************
 // 1. no-refinement criteria
@@ -82,26 +82,15 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
 // 2. OPT__FLAG_INTERFERENCE
 // *****************************
 
-// ELBDM interference check must be performed before any other refinement checks in order to set switch_to_wave_flag correctly
-// ===========================================================================================
-#  if ( ELBDM_SCHEME == ELBDM_HYBRID )
-   if ( OPT__FLAG_INTERFERENCE  &&  !amr->use_wave_flag[lv] )
-   {
-      Flag |= ELBDM_Flag_Interference( i, j, k, Interf_Var, FlagTable_Interference[lv][0], FlagTable_Interference[lv][1],
-                                       FlagTable_Interference[lv][2], FlagTable_Interference[lv][3]>0.5 );
-
-//    switch to wave solver when refining to ELBDM_FIRST_WAVE_LEVEL
-      if ( Flag  &&  lv+1 >= ELBDM_FIRST_WAVE_LEVEL )    amr->patch[0][lv][PID]->switch_to_wave_flag = true;
-
-      if ( Flag )    return Flag;
-   }
-#  endif
+// move to Flag_IterateCells() and called in Flag_Real()
 
 
 
 // *****************************
 // 3. refinement criteria
 // *****************************
+
+// patch-based criteria, such as OPT__FLAG_NPAR_PATCH and OPT__FLAG_PAR_TARGET, are checked in Flag_Real() directly
 
 #  ifdef PARTICLE
 // check the number of particles on each cell
