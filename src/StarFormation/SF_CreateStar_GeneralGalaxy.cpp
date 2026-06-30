@@ -18,8 +18,6 @@
 // Parameter   :  lv       : Target refinement level
 //                TimeNew  : Current physical time (after advancing solution by dt)
 //                dt       : Time interval to advance solution
-//                           --> Currently this function does not distinguish dt and the physical time interval (dTime)
-//                           --> Does NOT support COMOVING yet
 //                RNG      : Random number generator
 //                UseMetal : Store the metal mass fraction in star particles
 //
@@ -36,10 +34,6 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
 
 #  ifndef GRAVITY
    Aux_Error( ERROR_INFO, "Must turn on GRAVITY for %s() !!\n", __FUNCTION__ );
-#  endif
-
-#  ifdef COMOVING
-   Aux_Error( ERROR_INFO, "%s() does not support COMOVING yet !!\n", __FUNCTION__ );
 #  endif
 
 #  ifdef GAMER_DEBUG
@@ -61,6 +55,12 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
    const int    PotSg          = amr->PotSg[lv];
 // const real   GraConst       = ( OPT__GRA_P5_GRADIENT ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh);
    const real   GraConst       = ( false                ) ? -1.0/(12.0*dh) : -1.0/(2.0*dh); // P5 is NOT supported yet
+
+#  ifdef COMOVING
+   const real CosmoScaleFactor = TimeNew;
+#  else
+   const real CosmoScaleFactor = 1.0;
+#  endif
 
 
 // start of OpenMP parallel region
@@ -233,10 +233,10 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
 //       ===========================================================================================================
 
 //       1-1. check star formation criteria
-         if ( !SF_CreateStar_Check( lv, PID, i, j, k, dh, fluid, Pres, Cs2 ) )   continue;
+         if ( !SF_CreateStar_Check( lv, PID, i, j, k, dh, CosmoScaleFactor, fluid, Pres, Cs2 ) )   continue;
 
 //       1-2. get the star mass
-         StarMass = SF_CreateStar_GetStarMass( GasDens, dv, dt, RNG, TID );
+         StarMass = SF_CreateStar_GetStarMass( GasDens, CosmoScaleFactor, dv, dt, RNG, TID );
          if ( StarMass <= 0.0 )   continue;
 
 //       check the maximum gas mass fraction allowed to convert to stars

@@ -25,7 +25,8 @@ static double StarFormationThreshold_FreeFallTime_Max;   // Maximum free-fall ti
 void Par_Init_ByFunction_StarFormationThreshold( const long NPar_ThisRank, const long NPar_AllRank,
                                                  real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                                  real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                                 long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                                 long_par *ParType,
+                                                 real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
                                                  long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] );
 #endif
 
@@ -65,24 +66,11 @@ void Validate()
    Aux_Error( ERROR_INFO, "STAR_FORMATION must be enabled !!\n" );
 #  endif
 
-#  ifdef COMOVING
-   Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
-#  endif
-
    if ( !OPT__UNIT )
       Aux_Error( ERROR_INFO, "OPT__UNIT must be enabled !!\n" );
 
    if ( !OPT__FREEZE_FLUID )
       Aux_Error( ERROR_INFO, "OPT__FREEZE_FLUID must be enabled !!\n" );
-
-   for (int f=0; f<6; f++)
-   if ( OPT__BC_FLU[f] == BC_FLU_PERIODIC )
-      Aux_Error( ERROR_INFO, "do not use periodic BC (OPT__BC_FLU* = 1) for this test !!\n" );
-
-#  ifdef GRAVITY
-   if ( OPT__BC_POT == BC_POT_PERIODIC )
-      Aux_Error( ERROR_INFO, "do not use periodic BC (OPT__BC_POT = 1) for this test !!\n" );
-#  endif
 
 #  ifdef PARTICLE
    if ( OPT__INIT == INIT_BY_FUNCTION  &&  amr->Par->Init != PAR_INIT_BY_FUNCTION )
@@ -219,7 +207,11 @@ void SetParameter()
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
    const long   End_Step_Default = __INT_MAX__;
+#  ifdef COMOVING
+   const double End_T_Default    = 0.25; // z = 3
+#  else
    const double End_T_Default    = 1.0*sqrt( StarFormationThreshold_FreeFallTime_Max * StarFormationThreshold_FreeFallTime_Min );
+#  endif
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
@@ -292,15 +284,21 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Aux_Error( ERROR_INFO, "EoS_DensTemp2Pres_CPUPtr == NULL !!\n" );
 #  endif
 
+#  ifdef COMOVING
+   const double CosmoScaleFactor = Time;
+#  else
+   const double CosmoScaleFactor = 1.0;
+#  endif
+
 // compute the gas log density     by linear interpolation in x-direction
    const double logDens = StarFormationThreshold_logDens_Min +
                           StarFormationThreshold_logDens_Range*( x / amr->BoxSize[0] );
-   const double Dens    = pow( 10, logDens );
+   const double Dens    = pow( 10, logDens ) * CUBE(CosmoScaleFactor);   // multiplied by a^3 to convert from physical to comoving
 
 // compute the gas log temperature by linear interpolation in y-direction
    const double logTemp = StarFormationThreshold_logTemp_Min +
                           StarFormationThreshold_logTemp_Range*( y / amr->BoxSize[1] );
-   const double Temp    = pow( 10, logTemp );
+   const double Temp    = pow( 10, logTemp ) * SQR(CosmoScaleFactor);   // multiplied by a^2 to convert from physical to comoving
 
 // compute the gas pressure
    const double Pres = EoS_DensTemp2Pres_CPUPtr( Dens, Temp, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,

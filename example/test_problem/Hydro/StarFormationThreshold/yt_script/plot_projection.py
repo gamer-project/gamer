@@ -30,7 +30,11 @@ prefix      = '../'
 
 yt.enable_parallelism()
 
-ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
+if yt.load( prefix+'/Data_%06d'%idx_start ).parameters['Comoving']:
+    import ComovingGAMER_RevisedDataset
+    ts = yt.DatasetSeries(ComovingGAMER_RevisedDataset.RevisedDatasets([ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ]))
+else:
+    ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
 
 
 # target fields and their units and limits
@@ -118,7 +122,7 @@ for ds in ts.piter():
       pz.annotate_particles( width=ds.domain_width[2], p_size=10.0, col='m', marker='*' )
 
       # annotate the line indicated the star formation threshold for the projected star particle density
-      if field == 'particle_density_on_grid':
+      if field == 'particle_density_on_grid' and ds.parameters['Comoving'] == 0:
 
          if ds.parameters['SF_CreateStar_Scheme'] == 1:   # with minimum density threshold
 
