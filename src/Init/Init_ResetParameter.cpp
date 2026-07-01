@@ -1263,7 +1263,7 @@ void Init_ResetParameter()
 
 // convert to code units
 #  ifdef STAR_FORMATION
-// SF_CREATE_STAR_MIN_GAS_DENS: HI count/cm^3 --> mass density in code units
+// SF_CREATE_STAR_MIN_GAS_DENS: m_H/cm^3 --> mass density in code units
    SF_CREATE_STAR_MIN_GAS_DENS *= Const_mH / UNIT_D;
 
    PRINT_RESET_PARA( SF_CREATE_STAR_MIN_GAS_DENS, FORMAT_REAL, "to be consistent with the code units" );
