@@ -4,12 +4,8 @@
 
 static bool SF_CreateStar_Check_CellMassDepletion( const real GasMass );
 static bool SF_CreateStar_Check_GasDensity( const real GasDensity, const real CosmoScaleFactor, const real Threshold );
-# ifdef COMOVING
 static bool SF_CreateStar_Check_GasOverDensity( const real GasDensity );
-# endif
-# ifdef GRAVITY
 static bool SF_CreateStar_Check_GasJeansLength( const real GasDensity, const real GasCs2, const real CosmoScaleFactor, const real Threshold );
-# endif
 
 
 
@@ -18,7 +14,10 @@ static bool SF_CreateStar_Check_GasJeansLength( const real GasDensity, const rea
 // Function    :  SF_CreateStar_Check
 // Description :  Check if the target cell (i,j,k) satisfies the star formation criteria
 //
-// Note        :  1. Useless input arrays are set to NULL (e.g., Pot[] if GRAVITY is off)
+// Note        :  1. Useless input arrays are set to NULL
+//                2. Each scheme can have a combination of multiple star formation criteria
+//                   --> A star can only form when all of the criteria are met
+//                   --> Different combinations of choices are represented by different schemes
 //
 // Parameter   :  lv               : Target refinement level
 //                PID              : Target patch ID
@@ -50,10 +49,8 @@ bool SF_CreateStar_Check( const int lv, const int PID, const int i, const int j,
          break;
 
       case SF_CREATE_STAR_SCHEME_DWARFGALAXY:
-#        ifdef GRAVITY
 //       create star particles only if the gas Jeans length is less than the given threshold
          AllowSF &= SF_CreateStar_Check_GasJeansLength( fluid[DENS][k][j][i], Cs2[k][j][i], CosmoScaleFactor, dh*SF_CREATE_STAR_MAX_GAS_JEANSL );
-#        endif
          if ( !AllowSF )    return AllowSF;
          break;
 
@@ -133,7 +130,6 @@ bool SF_CreateStar_Check_GasDensity( const real GasDensity, const real CosmoScal
 
 
 
-#ifdef COMOVING
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SF_CreateStar_Check_GasOverDensity
 // Description :  Check if the gas overdensity exceeds the given threshold
@@ -149,22 +145,27 @@ bool SF_CreateStar_Check_GasDensity( const real GasDensity, const real CosmoScal
 //-------------------------------------------------------------------------------------------------------
 bool SF_CreateStar_Check_GasOverDensity( const real GasDensity )
 {
+
+#  ifndef COMOVING
+   Aux_Error( ERROR_INFO, "COMOVING must be enabled !!\n" );
+#  endif
+
    bool AllowSF = false;
 
+#  ifdef COMOVING
    const real CritOverDensity = 57.7;    // overdensity at R200 of an NFW halo
    const real BaryonRatio     = 0.167;   // Omega_Baryon / Omega_Matter
    const real OverDensThres   = CritOverDensity * BaryonRatio;
 
    if ( GasDensity >= OverDensThres )    AllowSF = true;
+#  endif // #ifdef COMOVING
 
    return AllowSF;
 
 } // FUNCTION : SF_CreateStar_Check_GasOverDensity
-#endif
 
 
 
-#ifdef GRAVITY
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SF_CreateStar_Check_GasJeansLength
 // Description :  Check if the gas Jeans length is below the given threshold
@@ -182,16 +183,22 @@ bool SF_CreateStar_Check_GasOverDensity( const real GasDensity )
 //-------------------------------------------------------------------------------------------------------
 bool SF_CreateStar_Check_GasJeansLength( const real GasDensity, const real GasCs2, const real CosmoScaleFactor, const real Threshold )
 {
+
+#  ifndef GRAVITY
+   Aux_Error( ERROR_INFO, "GRAVITY must be enabled !!\n" );
+#  endif
+
    bool AllowSF = false;
 
+#  ifdef GRAVITY
    const real GasJeansL2 = ( M_PI * GasCs2 ) / ( NEWTON_G * CosmoScaleFactor * GasDensity );
 
    if ( GasJeansL2 <= SQR(Threshold) )    AllowSF = true;
+#  endif // #ifdef GRAVITY
 
    return AllowSF;
 
-} // FUNCTION : SF_CreateStar_Check_GasDensity
-#endif // #ifdef GRAVITY
+} // FUNCTION : SF_CreateStar_Check_GasJeansLength
 
 
 

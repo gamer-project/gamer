@@ -42,6 +42,10 @@ real SF_CreateStar_GetStarMass( const real GasDens, const real CosmoScaleFactor,
          Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "SF_CREATE_STAR_SCHEME", SF_CREATE_STAR_SCHEME );
    } // switch ( SF_CREATE_STAR_SCHEME )
 
+// check the maximum gas mass allowed to convert to stars
+   const real MaxStarMass = SF_CreateStar_GetStarMass_MaxStarM( GasDens, dv, SF_CREATE_STAR_MAX_STAR_MFRAC );
+   StarMass = FMIN( StarMass, MaxStarMass );
+
 
    return StarMass;
 
@@ -120,7 +124,7 @@ real SF_CreateStar_GetStarMass_StochasticLoaclSchmidtLaw( const real GasDens, co
 // Function    :  SF_CreateStar_GetStarMass_MaxStarM
 // Description :  Maximum gas mass allowed to be converted to star
 //
-// Note        :  1. This function is not used by the current models
+// Note        :  1. This function is used to check the star mass by all the models
 //
 // Parameter   :  GasDens      : Gas density
 //                dv           : Cell volume
@@ -133,6 +137,9 @@ real SF_CreateStar_GetStarMass_MaxStarM( const real GasDens, const real dv, cons
 
    real StarMass = -1.0;
 
+// star mass should not be larger than this maximum
+// otherwise, the remaining gas density in the cell after spawning
+// may become too low or even negative
    StarMass = GasDens * dv * MaxStarMFrac;
 
    return StarMass;

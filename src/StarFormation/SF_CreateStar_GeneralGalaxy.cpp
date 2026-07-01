@@ -77,9 +77,6 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
    double x0, y0, z0, x, y, z;
    real   GasDens, _GasDens, GasMass, StarMFrac, StarMass, GasMFracLeft;
    real   (*fluid)[PS1][PS1][PS1]      = NULL;
-#  ifdef MHD
-   real   (*MagCC)[PS1][PS1][PS1]      = NULL;
-#  endif
    real   (*Pres)[PS1][PS1]            = NULL;
    real   (*Cs2)[PS1][PS1]             = NULL;
 #  ifdef STORE_POT_GHOST
@@ -92,11 +89,8 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
    if ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_DWARFGALAXY )   NeedCs2 = true;
    if ( NeedCs2 )   NeedPres = true;
 
-#  ifdef MHD
-   if ( NeedPres )   MagCC = new real [NCOMP_MAG][PS1][PS1][PS1];
-#  endif
-   if ( NeedPres )   Pres  = new real            [PS1][PS1][PS1];
-   if ( NeedCs2  )   Cs2   = new real            [PS1][PS1][PS1];
+   if ( NeedPres )   Pres = new real [PS1][PS1][PS1];
+   if ( NeedCs2  )   Cs2  = new real [PS1][PS1][PS1];
 
    const int    MaxNewParPerPatch = CUBE(PS1);
    real_par   (*NewParAttFlt)[PAR_NATT_FLT_TOTAL] = new real_par [MaxNewParPerPatch][PAR_NATT_FLT_TOTAL];
@@ -134,23 +128,6 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
       pot_ext = amr->patch[PotSg][lv][PID]->pot_ext;
 #     endif
 
-#     ifdef MHD
-//    evaluate cell-centered B field
-      if ( NeedPres )
-      {
-         real MagCC_1Cell[NCOMP_MAG];
-
-         for (int k=0; k<PS1; k++)
-         for (int j=0; j<PS1; j++)
-         for (int i=0; i<PS1; i++)
-         {
-            MHD_GetCellCenteredBFieldInPatch( MagCC_1Cell, lv, PID, i, j, k, amr->MagSg[lv] );
-
-            for (int v=0; v<NCOMP_MAG; v++)  MagCC[v][k][j][i] = MagCC_1Cell[v];
-         }
-      } // if ( NeedPres )
-#     endif // #ifdef MHD
-
 //    evaluate pressure
       if ( NeedPres )
       {
@@ -173,9 +150,7 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
 #           else // #ifdef DUAL_ENERGY
 
 #           ifdef MHD
-            const real Emag = (real)0.5*(  SQR( MagCC[MAGX][k][j][i] )
-                                         + SQR( MagCC[MAGY][k][j][i] )
-                                         + SQR( MagCC[MAGZ][k][j][i] )  );
+            const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
 #           else
             const real Emag = NULL_REAL;
 #           endif
@@ -239,9 +214,8 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
          StarMass = SF_CreateStar_GetStarMass( GasDens, CosmoScaleFactor, dv, dt, RNG, TID );
          if ( StarMass <= 0.0 )   continue;
 
-//       check the maximum gas mass fraction allowed to convert to stars
-         StarMFrac = FMIN( StarMass/GasMass, SF_CREATE_STAR_MAX_STAR_MFRAC );
-         StarMass  = GasMass*StarMFrac;
+//       gas mass fraction to be converted to the star
+         StarMFrac = StarMass/GasMass;
 
 
 
@@ -321,6 +295,7 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
 //       ===========================================================================================================
          GasMFracLeft = (real)1.0 - StarMFrac;
 
+//###REVISE: skip non-density fields (e.g., temperature, cooling time, potential)
          for (int v=0; v<NCOMP_TOTAL; v++)   fluid[v][k][j][i] *= GasMFracLeft;
       } // i,j,k
 
@@ -360,9 +335,6 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
 // free memory
-#  ifdef MHD
-   delete [] MagCC;
-#  endif
    delete [] Pres;
    delete [] Cs2;
    delete [] NewParAttFlt;
