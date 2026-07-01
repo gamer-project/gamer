@@ -225,8 +225,6 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
       real  Spectral_Cond                = 0.0;    // variable storing the magnitude of the largest coefficient for the spectral criterion
       real *Grackle_TCool                = NULL;   // array storing a patch group of grackle cooling time
 
-      int  SibPID, PID;
-
 #     if ( MODEL == HYDRO )
       bool NeedPres = false;
       bool NeedCs2  = false;
@@ -331,7 +329,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 //       loop over all local patches within the same patch group
          for (int LocalID=0; LocalID<8; LocalID++)
          {
-            PID = PID0 + LocalID;
+            const int PID = PID0 + LocalID;
 
 //          2. skip this patch if any refinement pre-check fails
             if (  ! Flag_Precheck( lv, PID, NoRefineBoundaryRegion )  )    continue;
@@ -609,7 +607,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 
 
 #           ifdef PARTICLE
-//          4-2. flag based on the number particles per patch (which doesn't need to go through all cells one-by-one)
+//          4-2. flag based on the number of particles per patch (which doesn't need to go through all cells one-by-one)
             if ( OPT__FLAG_NPAR_PATCH != 0  &&  lv < MAX_LEVEL  &&  !NextPatch )
             {
                const int NParFlag = FlagTable_NParPatch[lv];
@@ -634,7 +632,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                   {
                      for (int s=0; s<26; s++)
                      {
-                        SibPID = amr->patch[0][lv][PID]->sibling[s];
+                        const int SibPID = amr->patch[0][lv][PID]->sibling[s];
 
 #                       ifdef DEBUG_PARTICLE
                         if ( SibPID == -1 )
@@ -672,7 +670,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                   {
                      for (int s=0; s<26; s++)
                      {
-                        SibPID = amr->patch[0][lv][PID]->sibling[s];
+                        const int SibPID = amr->patch[0][lv][PID]->sibling[s];
 
 #                       ifdef DEBUG_PARTICLE
                         if ( SibPID == -1 )
@@ -1071,7 +1069,7 @@ void Flag_Grandson( const int lv, const int PID, const int LocalID )
 //                           --> Specifically, flag checks are performed in the following order:
 //                           a. Cell-based check of ELBDM_Flag_Interference()
 //                           b. Patch-based flag checks (e.g., OPT__FLAG_NPAR_PATCH and OPT__FLAG_PAR_TARGET)
-//                           c. Cell-based flags checks in Flag_Check()
+//                           c. Cell-based flag checks in Flag_Check()
 //                2. Invoked by Flag_Real()
 //
 // Parameter   :  Mode              : 1 --> Call ELBDM_Flag_Interference()
