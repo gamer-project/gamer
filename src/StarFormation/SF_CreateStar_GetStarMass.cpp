@@ -1,0 +1,151 @@
+#include "GAMER.h"
+
+#if ( defined PARTICLE  &&  defined STAR_FORMATION  &&  MODEL == HYDRO )
+
+static real SF_CreateStar_GetStarMass_StochasticLoaclSchmidtLaw( const real GasDens, const real CosmoScaleFactor, const real dv, const real dt, RandomNumber_t *RNG,
+                                                                 const real Efficiency, const real MinStarMass, const int TID );
+static real SF_CreateStar_GetStarMass_MaxStarM( const real GasDens, const real dv, const real MaxStarMFrac );
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SF_CreateStar_GetStarMass
+// Description :  Determine the star particle mass according to the adopted star formation model
+//
+// Note        :  1. Return StarMass = -1.0 if no star forms (e.g., in the stochastic model)
+//
+// Parameter   :  GasDens          : Gas density
+//                CosmoScaleFactor : Scale factor "a" in cosmology
+//                dv               : Cell volume
+//                dt               : Time interval to advance solution
+//                RNG              : Random number generator
+//                TID              : OpenMP thread ID
+//
+// Return      :  StarMass
+//-------------------------------------------------------------------------------------------------------
+real SF_CreateStar_GetStarMass( const real GasDens, const real CosmoScaleFactor, const real dv, const real dt, RandomNumber_t *RNG, const int TID )
+{
+
+   real StarMass = -1.0;
+
+   switch ( SF_CREATE_STAR_SCHEME )
+   {
+      case SF_CREATE_STAR_SCHEME_AGORA:
+      case SF_CREATE_STAR_SCHEME_DWARFGALAXY:
+         StarMass = SF_CreateStar_GetStarMass_StochasticLoaclSchmidtLaw( GasDens, CosmoScaleFactor, dv, dt, RNG, SF_CREATE_STAR_MASS_EFF, SF_CREATE_STAR_MIN_STAR_MASS, TID );
+         break;
+
+      case SF_CREATE_STAR_SCHEME_NONE:
+         break;
+
+      default :
+         Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "SF_CREATE_STAR_SCHEME", SF_CREATE_STAR_SCHEME );
+   } // switch ( SF_CREATE_STAR_SCHEME )
+
+// check the maximum gas mass allowed to convert to stars
+   const real MaxStarMass = SF_CreateStar_GetStarMass_MaxStarM( GasDens, dv, SF_CREATE_STAR_MAX_STAR_MFRAC );
+   StarMass = FMIN( StarMass, MaxStarMass );
+
+
+   return StarMass;
+
+} // FUNCTION : SF_CreateStar_GetStarMass
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SF_CreateStar_GetStarMass_StochasticLoaclSchmidtLaw
+// Description :  Determine the star particle mass stochastically following the AGORA project prescription
+//
+// Note        :  1. Ref: (1) Nathan Goldbaum, et al., 2015, ApJ, 814, 131 (arXiv: 1510.08458), sec. 2.4
+//                        (2) Ji-hoon Kim, et al., 2016, ApJ, 833, 202 (arXiv: 1610.03066), sec. 3.2
+//                2. The calculation is done in physical frame even for cosmological simulations
+//                   --> the input comoving gas density will be converted into physical density internally
+//                   --> the input dt should be the physical time interval
+//
+// Parameter   :  GasDens          : Gas density
+//                CosmoScaleFactor : Scale factor "a" in cosmology
+//                dv               : Cell volume
+//                dt               : Time interval to advance solution
+//                RNG              : Random number generator
+//                Efficiency       : Gas-to-star mass efficiency                                    (--> "SF_CREATE_STAR_MASS_EFF"      )
+//                MinStarMass      : Minimum star particle mass for the stochastical star formation (--> "SF_CREATE_STAR_MIN_STAR_MASS" )
+//                TID              : OpenMP thread ID
+//
+// Return      :  StarMass
+//-------------------------------------------------------------------------------------------------------
+real SF_CreateStar_GetStarMass_StochasticLoaclSchmidtLaw( const real GasDens, const real CosmoScaleFactor, const real dv, const real dt, RandomNumber_t *RNG,
+                                                          const real Efficiency, const real MinStarMass, const int TID )
+{
+
+   real StarMass = -1.0;
+
+   const real  Coeff_FreeFall = SQRT( (32.0*NEWTON_G)/(3.0*M_PI) );
+   const real _MinStarMass    = (real)1.0 / MinStarMass;
+   const real  Eff_times_dt   = Efficiency*dt;
+
+   const real  a3inv          = 1.0 / CUBE( CosmoScaleFactor );
+
+
+// 1. estimate the gas free-fall time
+// --> consider only the gas density under the assumption that the dark matter doesn't collapse
+   real _Time_FreeFall = Coeff_FreeFall * SQRT( GasDens * a3inv );
+
+
+// 2. estimate the gas mass fraction to convert to stars
+   real StarMFrac = Eff_times_dt*_Time_FreeFall;
+   real GasMass   = GasDens*dv;
+   StarMass       = GasMass*StarMFrac;
+
+
+// 3. stochastic star formation
+// --> if the star particle mass (StarMass) is below the minimum mass (MinStarMass), we create a
+//     new star particle with a mass of MinStarMass and a probability of StarMass/MinStarMass
+// --> Eq. [5] in Goldbaum et al. (2015)
+   if ( StarMass < MinStarMass )
+   {
+      const double Min = 0.0;
+      const double Max = 1.0;
+
+      double Random = RNG->GetValue( TID, Min, Max );
+
+      if ( (real)Random < StarMass*_MinStarMass )  StarMass = MinStarMass;
+      else                                         StarMass = -1.0;
+   }
+
+
+   return StarMass;
+
+} // FUNCTION : SF_CreateStar_GetStarMass_StochasticLoaclSchmidtLaw
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SF_CreateStar_GetStarMass_MaxStarM
+// Description :  Maximum gas mass allowed to be converted to star
+//
+// Note        :  1. This function is used to check the star mass by all the models
+//
+// Parameter   :  GasDens      : Gas density
+//                dv           : Cell volume
+//                MaxStarMFrac : Maximum gas mass fraction allowed to convert to stars (--> "SF_CREATE_STAR_MAX_STAR_MFRAC" )
+//
+// Return      :  StarMass
+//-------------------------------------------------------------------------------------------------------
+real SF_CreateStar_GetStarMass_MaxStarM( const real GasDens, const real dv, const real MaxStarMFrac )
+{
+
+   real StarMass = -1.0;
+
+// star mass should not be larger than this maximum
+// otherwise, the remaining gas density in the cell after spawning
+// may become too low or even negative
+   StarMass = GasDens * dv * MaxStarMFrac;
+
+   return StarMass;
+
+} // FUNCTION : SF_CreateStar_GetStarMass_MaxStarM
+
+
+
+#endif // #if ( defined PARTICLE  &&  defined STAR_FORMATION  &&  MODEL == HYDRO )

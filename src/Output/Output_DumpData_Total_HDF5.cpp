@@ -79,7 +79,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2508)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2509)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -287,6 +287,7 @@ Procedure for outputting new variables:
 //                                             OPT__OUTPUT_GRACKLE_TEMP, OPT__OUTPUT_GRACKLE_MU, OPT__OUTPUT_GRACKLE_TCOOL,
 //                                             DT__GRACKLE_COOLING, OPT__FLAG_COOLING_LEN, FlagTable_CoolingLen
 //                2508 : 2026/03/26 --> output particle unique id
+//                2509 : 2026/06/07 --> output SF_CREATE_STAR_MAX_GAS_JEANSL
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1753,7 +1754,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2508;
+   KeyInfo.FormatVersion        = 2509;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2803,6 +2804,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.SF_CreateStar_DetRandom    = SF_CREATE_STAR_DET_RANDOM;
    InputPara.SF_CreateStar_MinLevel     = SF_CREATE_STAR_MIN_LEVEL;
    InputPara.SF_CreateStar_MinGasDens   = SF_CREATE_STAR_MIN_GAS_DENS;
+   InputPara.SF_CreateStar_MaxGasJeansL = SF_CREATE_STAR_MAX_GAS_JEANSL;
    InputPara.SF_CreateStar_MassEff      = SF_CREATE_STAR_MASS_EFF;
    InputPara.SF_CreateStar_MinStarMass  = SF_CREATE_STAR_MIN_STAR_MASS;
    InputPara.SF_CreateStar_MaxStarMFrac = SF_CREATE_STAR_MAX_STAR_MFRAC;
@@ -3897,6 +3899,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "SF_CreateStar_DetRandom",    HOFFSET(InputPara_t,SF_CreateStar_DetRandom    ), H5T_NATIVE_INT       );
    H5Tinsert( H5_TypeID, "SF_CreateStar_MinLevel",     HOFFSET(InputPara_t,SF_CreateStar_MinLevel     ), H5T_NATIVE_INT       );
    H5Tinsert( H5_TypeID, "SF_CreateStar_MinGasDens",   HOFFSET(InputPara_t,SF_CreateStar_MinGasDens   ), H5T_NATIVE_DOUBLE    );
+   H5Tinsert( H5_TypeID, "SF_CreateStar_MaxGasJeansL", HOFFSET(InputPara_t,SF_CreateStar_MaxGasJeansL ), H5T_NATIVE_DOUBLE    );
    H5Tinsert( H5_TypeID, "SF_CreateStar_MassEff",      HOFFSET(InputPara_t,SF_CreateStar_MassEff      ), H5T_NATIVE_DOUBLE    );
    H5Tinsert( H5_TypeID, "SF_CreateStar_MinStarMass",  HOFFSET(InputPara_t,SF_CreateStar_MinStarMass  ), H5T_NATIVE_DOUBLE    );
    H5Tinsert( H5_TypeID, "SF_CreateStar_MaxStarMFrac", HOFFSET(InputPara_t,SF_CreateStar_MaxStarMFrac ), H5T_NATIVE_DOUBLE    );
