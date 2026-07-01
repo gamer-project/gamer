@@ -381,6 +381,10 @@ void Aux_Record_Gravity()
 // start from lv=0 even when enabling Gra_PerfExcRoot to provide correct boundary conditions for higher levels
    for (int lv=0; lv<NLEVEL; lv++)
    {
+      bool FullRefinedLv = false;
+      const int CellFactor = (int)(1L<<lv);
+      if ( (long)NPatchTotal[lv] == NX0_TOT[0]*NX0_TOT[1]*NX0_TOT[2]/512*CUBE(CellFactor) )   FullRefinedLv = true;
+
       Buf_GetBufferData( lv, amr->FluSg[lv], NULL_INT, NULL_INT, DATA_GENERAL, _DENS, _NONE,
                          Rho_ParaBuf, USELB_YES );
 
@@ -388,8 +392,12 @@ void Aux_Record_Gravity()
       if ( lv >= MinLv )   Timer_PoiPerf.Start();
       for (int t=0; t<Gra_NIterPerf; t++)
       {
-         if ( lv == 0 )
-            CPU_PoissonSolver_FFT( Poi_Coeff, amr->PotSg[lv], Time[lv] );
+         if ( FullRefinedLv )
+         {
+            if ( ! FFTW_Inited[lv] )   Init_FFTW( lv );
+
+            CPU_PoissonSolver_FFT( Poi_Coeff, amr->PotSg[lv], Time[lv], lv );
+         }
 
          else
             InvokeSolver( POISSON_SOLVER, lv, Time[lv], NULL_REAL, NULL_REAL, Poi_Coeff,
