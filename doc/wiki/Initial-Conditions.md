@@ -202,6 +202,11 @@ The built-in particle types (defined in `include/Macro.h`) include
 For `PTYPE_TRACER`, one must also enable the compilation option
 [[--tracer | [Installation]-Option-List#--tracer]].
 
+When [[PAR_FLAG_INIT | [Runtime-Parameters]-Particles#PAR_FLAG_INIT]]=9999,
+particle refinement flags must be assigned manually by setting `AllAttributeInt[PAR_FLAG]`.
+For a concrete example, see
+`src/TestProblem/Hydro/ParticleFlag/Par_Init_ByFunction_ParFlag.cpp`.
+
 The following example shows `Par_Init_ByFunction()` in
 `src/Particle/Par_Init_ByFunction.cpp`:
 
@@ -212,7 +217,7 @@ The following example shows `Par_Init_ByFunction()` in
 //
 // Note        :  1. Invoked by Init_GAMER() using the function pointer "Par_Init_ByFunction_Ptr"
 //                   --> This function pointer may be reset by various test problem initializers, in which case
-//                       this funtion will become useless
+//                       this function will become useless
 //                2. Periodicity should be taken care of in this function
 //                   --> No particles should lie outside the simulation box when the periodic BC is adopted
 //                   --> However, if the non-periodic BC is adopted, particles are allowed to lie outside the box
@@ -675,10 +680,13 @@ and `NUM_PARTICLE` is the total number of particles
 By default, `NUM_ATTRIBUTE` is equal to
 `7` + [[--par_attribute_flt | [Installation]-Option-List#--par_attribute_flt]] + [[--par_attribute_int | [Installation]-Option-List#--par_attribute_int]],
 corresponding to particle mass, position x/y/z, velocity x/y/z,
-user-specified floating-point attributes, type, UID, and user-specified integer attributes (and in exactly this order).
-One can also use [[PAR_IC_MASS | [Runtime-Parameters]-Particles#PAR_IC_MASS]] / [[PAR_IC_TYPE | [Runtime-Parameters]-Particles#PAR_IC_TYPE]]
-to assign the same particle mass / type to all particles,
-in which case the file `PAR_IC` should not store particle mass / type.
+user-specified floating-point attributes, type, UID, refinement flag,
+and user-specified integer attributes (and in exactly this order).
+One can also use [[PAR_IC_MASS | [Runtime-Parameters]-Particles#PAR_IC_MASS]]
+ / [[PAR_IC_TYPE | [Runtime-Parameters]-Particles#PAR_IC_TYPE]]
+ / [[PAR_FLAG_INIT | [Runtime-Parameters]-Particles#PAR_FLAG_INIT]] $\ne 9999$
+to assign the same particle mass / type / refinement flag to all particles,
+in which case the file `PAR_IC` should not store particle mass / type / refinement flag.
 One should turn off [[PAR_IC_PUID | Runtime-Parameters:-Particles#PAR_IC_PUID]]
 to automatically assign new particle UIDs to all particles when the `PAR_IC` file does not contain UID information.
 

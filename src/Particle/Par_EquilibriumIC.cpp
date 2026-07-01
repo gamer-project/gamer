@@ -54,7 +54,7 @@ Par_EquilibriumIC::Par_EquilibriumIC( const char* Cloud_Type )
    else if ( strcmp( Cloud_Type, "Jaffe"     ) == 0 )   Cloud_Model = CLOUD_MODEL_JAFFE;
    else if ( strcmp( Cloud_Type, "Hernquist" ) == 0 )   Cloud_Model = CLOUD_MODEL_HERNQUIST;
    else if ( strcmp( Cloud_Type, "Einasto"   ) == 0 )   Cloud_Model = CLOUD_MODEL_EINASTO;
-   else   Aux_Error( ERROR_INFO, "Unsupported Cloud_Type \"%s\" for Par_EquilibriumIC !!\n", Cloud_Type );
+   else   Aux_Error( ERROR_INFO, "unsupported Cloud_Type \"%s\" for Par_EquilibriumIC !!\n", Cloud_Type );
 
 } // FUNCTION : Par_EquilibriumIC
 
@@ -760,7 +760,7 @@ double Par_EquilibriumIC::getDensity( const double r )
    else if ( Cloud_Model == CLOUD_MODEL_JAFFE     )   dens = AnalyticalDensProf_Jaffe    ( r, Cloud_R0, Cloud_Rho0 );
    else if ( Cloud_Model == CLOUD_MODEL_HERNQUIST )   dens = AnalyticalDensProf_Hernquist( r, Cloud_R0, Cloud_Rho0 );
    else if ( Cloud_Model == CLOUD_MODEL_EINASTO   )   dens = AnalyticalDensProf_Einasto  ( r, Cloud_R0, Cloud_Rho0, Cloud_Einasto_Power_Factor );
-   else   Aux_Error( ERROR_INFO, "Unsupported Cloud_Model = %d !!\n", Cloud_Model );
+   else   Aux_Error( ERROR_INFO, "unsupported Cloud_Model = %d !!\n", Cloud_Model );
 
    return dens;
 
@@ -825,7 +825,7 @@ double Par_EquilibriumIC::getAnalEnclosedMass( const double r )
          F.params   = &integrand_params_Table;
       }
       else
-         Aux_Error( ERROR_INFO, "Unsupported Cloud_Model = %d !!\n", Cloud_Model );
+         Aux_Error( ERROR_INFO, "unsupported Cloud_Model = %d !!\n", Cloud_Model );
 
 //    integration
       gsl_integration_qag( &F, lower_limit, upper_limit, abs_err_lim, rel_err_lim, integ_size, integ_rule, w, &enclosed_mass, &abs_error );

@@ -98,7 +98,7 @@ int Flu_ResetByUser_Func_Template( real fluid[], const double Emag, const double
 // Note        :  1. Enabled by the runtime option "OPT__RESET_FLUID"
 //                2. Invoked by EvolveLevel() using the function pointer "Flu_ResetByUser_API_Ptr"
 //                   --> This function pointer may be reset by a test problem initializer, in which case
-//                       this funtion will become useless
+//                       this function will become useless
 //                3. Currently NOT applied to the input uniform array
 //                   --> Init_ByFile() does NOT call this function
 //                4. Currently does not work with "OPT__OVERLAP_MPI"

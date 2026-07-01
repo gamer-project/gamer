@@ -249,7 +249,7 @@ void SetParameter()
 // Description :  Check if the element (i,j,k) of the input patch is within
 //                the regions allowed to be refined
 //
-// Note        :  1. Invoked by Flag_Check() using the function pointer "Flag_Region_Ptr",
+// Note        :  1. Invoked by Flag_Precheck() using the function pointer "Flag_Region_Ptr",
 //                   which must be set by a test problem initializer
 //                2. Enabled by the runtime option "OPT__FLAG_REGION"
 //
@@ -303,7 +303,7 @@ bool Flag_Region_LSS( const int i, const int j, const int k, const int lv, const
 //
 // Note        :  1. Invoked by Init_ByFile_AssignData() using the function pointer Init_ByFile_User_Ptr()
 //                   --> The function pointer may be reset by various test problem initializers, in which case
-//                       this funtion will become useless
+//                       this function will become useless
 //                2. One can use LSS_InitMode to support different data formats
 //                3. For ELBDM_SCHEME == ELBDM_WAVE this function expects:
 //                       LSS_InitMode == 1: Density

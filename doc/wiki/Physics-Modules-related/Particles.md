@@ -20,6 +20,8 @@ Other related parameters:
 [[OPT__FLAG_NPAR_PATCH | [Runtime-Parameters]-Refinement#OPT__FLAG_NPAR_PATCH]], &nbsp;
 [[OPT__FLAG_NPAR_CELL | [Runtime-Parameters]-Refinement#OPT__FLAG_NPAR_CELL]], &nbsp;
 [[OPT__FLAG_PAR_MASS_CELL | [Runtime-Parameters]-Refinement#OPT__FLAG_PAR_MASS_CELL]], &nbsp;
+[[OPT__FLAG_PAR_TARGET | [Runtime-Parameters]-Refinement#OPT__FLAG_PAR_TARGET]], &nbsp;
+[[OPT__FLAG_PAR_TARGET_SIB | [Runtime-Parameters]-Refinement#OPT__FLAG_PAR_TARGET_SIB]], &nbsp;
 [[OPT__PARTICLE_COUNT | [Runtime-Parameters]-Refinement#OPT__PARTICLE_COUNT]], &nbsp;
 [[LB_INPUT__PAR_WEIGHT | [Runtime-Parameters]-MPI-and-OpenMP#LB_INPUT__PAR_WEIGHT]], &nbsp;
 [[OPT__CK_PARTICLE | [Runtime-Parameters]-Miscellaneous#OPT__CK_PARTICLE]] &nbsp;
