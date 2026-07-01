@@ -401,7 +401,7 @@ For variables with `Default/Min/Max` labeled as `Depend`, click the parameter na
 
 | Name                                                                                                 |         Default |             Min |             Max | Short description |
 | :---                                                                                                 |            :--- |            :--- |            :--- | :--- |
-| PAR_FLAG_INIT                                                                                        |   (int)PFLAG_NO |            None |            None | refinement flag of all particles for PAR_INIT==1/3 (9999 -> set by a particle initializer or PAR_IC) [0] |
+| [PAR_FLAG_INIT](%5BRuntime-Parameters%5D-Particles#PAR_FLAG_INIT)                                    |   (int)PFLAG_NO |            None |            None | refinement flag of all particles for PAR_INIT==1/3 (9999 -> set by a particle initializer or PAR_IC) [0] |
 | [PAR_IC_FLOAT8](%5BRuntime-Parameters%5D-Particles#PAR_IC_FLOAT8)                                    |              -1 |            None |               1 | floating-point precision for PAR_IC (<0: default, 0: single, 1: double) [default: same as FLOAT8_PAR] |
 | [PAR_IC_FORMAT](%5BRuntime-Parameters%5D-Particles#PAR_IC_FORMAT)                                    | PAR_IC_FORMAT_ATT_ID |               1 |               2 | data format of PAR_IC: (1=[attribute][id], 2=[id][attribute]; row-major) [1] |
 | [PAR_IC_INT8](%5BRuntime-Parameters%5D-Particles#PAR_IC_INT8)                                        |              -1 |            None |               1 | integer width for PAR_IC (<0: default, 0: 32-bit, 1: 64-bit) [default: same as INT8_PAR] |
