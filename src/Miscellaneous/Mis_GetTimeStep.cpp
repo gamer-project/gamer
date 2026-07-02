@@ -155,6 +155,27 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
       sprintf( dTime_Name[NdTime++], "%s", "Data_Dump" );
    }
 
+// 1.4.5 CRITERION : match the time of the next sub-dump (only needed for intermediate sub-dumps, i.e., OPT__OUTPUT_SUBDIV>=2)
+   const bool SubDumpByTime = ( OPT__OUTPUT_SUBDIV >= 2  &&  OPT__OUTPUT_USER  &&  DumpByTime );
+
+   if ( SubDumpByTime )
+   {
+      dTime[NdTime] = SubDumpTime - Time[lv];
+
+      if ( dTime[NdTime] <= 0.0 )
+      {
+         Aux_Message( stderr, "********************************************************************************\n" );
+         Aux_Message( stderr, "ERROR : dTime (%20.14e) <= 0.0, something is wrong !!\n", dTime[NdTime] );
+         Aux_Message( stderr, "        (SubDumpTime %20.14e, Time %20.14e, lv %d)\n", SubDumpTime, Time[lv], lv );
+         Aux_Message( stderr, "        Rank <%d>, file <%s>, line <%d>, function <%s>\n",
+                      MPI_Rank, __FILE__, __LINE__, __FUNCTION__ );
+         Aux_Message( stderr, "********************************************************************************\n" );
+         MPI_Exit();
+      }
+
+      sprintf( dTime_Name[NdTime++], "%s", "Sub_Dump" );
+   }
+
 
 // 1.5 CRITERION FIVE : match the program end time
 // =============================================================================================================

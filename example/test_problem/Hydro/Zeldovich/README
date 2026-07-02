@@ -65,7 +65,11 @@ Note:
    for the particle-only setup. Freezing the fluid component "OPT__FREEZE_FLUID = 1" is necessary for the
    particle-only setup. For the particle-only setup, "NPar_X = 64" is the minimum spatial resolution such
    that the collapsed structure can be properly resolved.
-6. The analysis script ./plots/analysis_plot_Zeldovich.py works for both gas-/particle-only setups. Note
+6. The parameter "OPT__OUTPUT_SUBDIV" (requires OPT__OUTPUT_USER=1) enables sub-cadence calls to
+   Output_User_Ptr() between main HDF5 dumps. Sub-dump outputs are indexed by "SubDumpID" (distinct
+   from "DumpID") and recorded in "Record__TimeSubDump". The analysis script handles the
+   DumpID->SubDumpID remapping automatically via Record__Dump and Record__TimeSubDump.
+7. The analysis script ./plots/plot_analysis_Zeldovich.py works for both gas-/particle-only setups. Note
    that the parameters under "# user-specified parameters" in the script NEED to match those adopted in
    "Input__TestProb," especially the value of "Gas_Par_Setup".
-7. For references, see Sec. 9.2 of Springel, MNRAS 401 791 (2010) and Sec. 3 of Heitmann et al., ApJS 160 28 (2005)
+8. For references, see Sec. 9.2 of Springel, MNRAS 401 791 (2010) and Sec. 3 of Heitmann et al., ApJS 160 28 (2005)

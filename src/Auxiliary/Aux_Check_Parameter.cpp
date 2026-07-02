@@ -393,6 +393,18 @@ void Aux_Check_Parameter()
 #  endif
       Aux_Message( stderr, "WARNING : all output options are turned off --> no data will be output !!\n" );
 
+   if ( OPT__OUTPUT_SUBDIV == 0 )
+      Aux_Error( ERROR_INFO, "OPT__OUTPUT_SUBDIV = 0 is not allowed; use <0 to disable or a positive integer (>=1) to enable !!\n" );
+
+   if ( OPT__OUTPUT_SUBDIV >= 1  &&  !OPT__OUTPUT_USER )
+      Aux_Error( ERROR_INFO, "OPT__OUTPUT_SUBDIV >= 1 requires OPT__OUTPUT_USER = 1 !!\n" );
+
+   if ( OPT__OUTPUT_SUBDIV >= 2  &&  OPT__OUTPUT_USER )
+   {
+      if ( OPT__OUTPUT_MODE == OUTPUT_CONST_DT  &&  OUTPUT_DT <= 0.0 )
+         Aux_Error( ERROR_INFO, "OPT__OUTPUT_SUBDIV >= 2 with OPT__OUTPUT_MODE=2 requires OUTPUT_DT > 0 !!\n" );
+   }
+
 #  ifdef PARTICLE
    if ( OPT__OUTPUT_PAR_MESH  &&  OPT__OUTPUT_TOTAL != OUTPUT_FORMAT_HDF5 )
       Aux_Message( stderr, "WARNING : OPT__OUTPUT_PAR_MESH currently only supports OPT__OUTPUT_TOTAL=%d !!\n", OUTPUT_FORMAT_HDF5 );

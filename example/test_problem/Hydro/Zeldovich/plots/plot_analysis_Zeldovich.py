@@ -45,6 +45,24 @@ didx      = args.didx
 prefix    = args.prefix
 
 # -------------------------------------------------------------------------------------------------------------------------
+# build DumpID -> SubDumpID lookup via shared Step column
+# needed when OPT__OUTPUT_SUBDIV >= 1 (Zeldovich_* files are indexed by SubDumpID, not DumpID)
+# falls back to identity (SubDumpID = DumpID) when Record__TimeSubDump is absent
+_record_dump_path    = prefix + 'Record__Dump'
+_record_subdump_path = prefix + 'Record__TimeSubDump'
+if os.path.exists(_record_subdump_path) and os.path.exists(_record_dump_path):
+    _dump_data           = np.loadtxt( _record_dump_path,    skiprows=1, dtype=int, usecols=(0,2) )  # DumpID, Step
+    _subdump_data        = np.loadtxt( _record_subdump_path, skiprows=1, dtype=int, usecols=(0,2) )  # SubDumpID, Step
+    _dumpid_to_step      = { int(r[0]): int(r[1]) for r in np.atleast_2d(_dump_data)    }
+    _step_to_subdumpid   = { int(r[1]): int(r[0]) for r in np.atleast_2d(_subdump_data) }
+    def get_file_id( dump_id ):
+        step = _dumpid_to_step.get( dump_id )
+        return _step_to_subdumpid.get( step, dump_id ) if step is not None else dump_id
+else:
+    def get_file_id( dump_id ):
+        return dump_id
+
+# -------------------------------------------------------------------------------------------------------------------------
 # set up basic parameters
 colormap_dens    = 'algae'
 center_mode      = 'c'
@@ -118,6 +136,7 @@ elif (Gas_Par_Setup == 2): # particle-only setup
 for ds in ts.piter():
     # load data frame cosmological parameters
     DumpID_now       = ds.parameters["DumpID"]
+    FileID_now       = get_file_id( DumpID_now )               # SubDumpID for Zeldovich_* files (= DumpID when OPT__OUTPUT_SUBDIV < 0)
     current_time_a   = ds.scale_factor                          # scale factor
     current_time_z   = (1.0/float(current_time_a)) - 1.0        # redshift
 
@@ -126,10 +145,10 @@ for ds in ts.piter():
     if (Gas_Par_Setup == 1): # gas-only setup
         if current_time_z > zc_Collapse:
             # load numerical errors in perturbed density/x-momentum/pressure profiles
-            [x_line_Coordinates,Dens_Numerical,Dens_Analytical,Dens_Relative_Error] = Output_L1Error_Read_In("../Zeldovich_Dens_%06d"%DumpID_now)
-            [x_line_Coordinates,MomX_Numerical,MomX_Analytical,MomX_Relative_Error] = Output_L1Error_Read_In("../Zeldovich_MomX_%06d"%DumpID_now)
-            [x_line_Coordinates,Pres_Numerical,Pres_Analytical,Pres_Relative_Error] = Output_L1Error_Read_In("../Zeldovich_Pres_%06d"%DumpID_now)
-            [x_line_Coordinates,Temp_Numerical,Temp_Analytical,Temp_Relative_Error] = Output_L1Error_Read_In("../Zeldovich_Temp_%06d"%DumpID_now)
+            [x_line_Coordinates,Dens_Numerical,Dens_Analytical,Dens_Relative_Error] = Output_L1Error_Read_In("../Zeldovich_Dens_%06d"%FileID_now)
+            [x_line_Coordinates,MomX_Numerical,MomX_Analytical,MomX_Relative_Error] = Output_L1Error_Read_In("../Zeldovich_MomX_%06d"%FileID_now)
+            [x_line_Coordinates,Pres_Numerical,Pres_Analytical,Pres_Relative_Error] = Output_L1Error_Read_In("../Zeldovich_Pres_%06d"%FileID_now)
+            [x_line_Coordinates,Temp_Numerical,Temp_Analytical,Temp_Relative_Error] = Output_L1Error_Read_In("../Zeldovich_Temp_%06d"%FileID_now)
             Temp_Numerical = Temp_Numerical/(float(current_time_a)**2)              # [Kelvin]
             # Zeldovich pancake collapse temperature profile analytical solution at current_time_z
             def Zeldovich_Temp_Analytical(density_profile):

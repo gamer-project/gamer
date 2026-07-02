@@ -1680,6 +1680,7 @@ void Aux_TakeNote()
       fprintf( Note, "OUTPUT_PART_X                  % 21.14e\n", OUTPUT_PART_X               );
       fprintf( Note, "OUTPUT_PART_Y                  % 21.14e\n", OUTPUT_PART_Y               );
       fprintf( Note, "OUTPUT_PART_Z                  % 21.14e\n", OUTPUT_PART_Z               );
+      fprintf( Note, "OPT__OUTPUT_SUBDIV             % d\n",      OPT__OUTPUT_SUBDIV          );
       fprintf( Note, "INIT_DUMPID                    % d\n",      INIT_DUMPID                 );
       fprintf( Note, "OUTPUT_DIR                      %s\n",      OUTPUT_DIR                  );
       fprintf( Note, "***********************************************************************************\n" );
