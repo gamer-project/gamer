@@ -1,0 +1,3 @@
+[submodule "example/test_problem/ELBDM/LSS_SHR/plot_script/shr"]
+	path = example/test_problem/ELBDM/LSS_SHR/plot_script/shr
+	url = git@github.com:calab-ntu/fdm-soliton-halo-relation.git
