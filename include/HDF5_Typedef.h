@@ -405,6 +405,7 @@ struct InputPara_t
    int    MPI_NRank;
    int    MPI_NRank_X[3];
    int    OMP_NThread;
+   double InitTime;
    double EndT;
    long   EndStep;
 

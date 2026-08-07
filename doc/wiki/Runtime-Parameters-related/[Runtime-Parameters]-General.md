@@ -4,6 +4,7 @@ Parameters described on this page:
 [NX0_TOT_X](#NX0_TOT_X), &nbsp;
 [NX0_TOT_Y](#NX0_TOT_Y), &nbsp;
 [NX0_TOT_Z](#NX0_TOT_Z), &nbsp;
+[INIT_TIME](#INIT_TIME), &nbsp;
 [END_T](#END_T), &nbsp;
 [END_STEP](#END_STEP), &nbsp;
 [TESTPROB_ID](#TESTPROB_ID) &nbsp;
@@ -42,6 +43,13 @@ Number of root-level cells along z.
 
     * **Restriction:**
 Must be a multiple of 16 (i.e., two patches).
+
+<a name="INIT_TIME"></a>
+* #### `INIT_TIME` &ensp; (&#8805;0.0) &ensp; [0.0]
+    * **Description:**
+Simulation initial time.
+It will be overwritten by [[A_INIT | [Runtime-Parameters]-Cosmology#A_INIT]] when [[--comoving | [Installation]-Option-List#--comoving]] is enabled.
+    * **Restriction:**
 
 <a name="END_T"></a>
 * #### `END_T` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [depend]

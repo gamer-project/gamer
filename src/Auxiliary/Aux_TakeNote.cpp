@@ -843,6 +843,7 @@ void Aux_TakeNote()
       fprintf( Note, "MPI_NRank_X[1]                 % d\n",      MPI_NRank_X[1]   );
       fprintf( Note, "MPI_NRank_X[2]                 % d\n",      MPI_NRank_X[2]   );
       fprintf( Note, "OMP_NTHREAD                    % d\n",      OMP_NTHREAD      );
+      fprintf( Note, "INIT_TIME                      % 21.14e\n", INIT_TIME        );
       fprintf( Note, "END_T                          % 21.14e\n", END_T            );
       fprintf( Note, "END_STEP                       % ld\n",     END_STEP         );
       fprintf( Note, "***********************************************************************************\n" );

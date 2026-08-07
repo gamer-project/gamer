@@ -87,8 +87,8 @@ void Aux_Check_Parameter()
    if ( END_STEP < 0  &&  OPT__INIT != INIT_BY_RESTART )
       Aux_Error( ERROR_INFO, "incorrect parameter \"%s = %d\" [>=0] !!\n", "END_STEP", END_STEP );
 
-   if ( END_T < 0.0  &&  OPT__INIT != INIT_BY_RESTART )
-      Aux_Error( ERROR_INFO, "incorrect parameter \"%s = %14.7e\" [>=0] !!\n", "END_T", END_T );
+   if ( END_T < INIT_TIME  &&  OPT__INIT != INIT_BY_RESTART )
+      Aux_Error( ERROR_INFO, "incorrect parameter \"%s = %14.7e\" [>= INIT_TIME = %14.7e] !!\n", "END_T", END_T, INIT_TIME );
 
 #  ifndef LOAD_BALANCE
    if ( NX0_TOT[0]%(PS2*MPI_NRank_X[0]) != 0  ||  NX0_TOT[1]%(PS2*MPI_NRank_X[1]) != 0  ||
