@@ -825,6 +825,12 @@ void Init_ByRestart_HDF5( const char *FileName )
                   H5_SetID_ParIntData[v] = H5I_INVALID_HID;
                   continue;
                }
+//             skip particle flags if not stored
+               if ( v == PAR_FLAG  &&  !isPFlagStored )
+               {
+                  H5_SetID_ParIntData[v] = H5I_INVALID_HID;
+                  continue;
+               }
 
                H5_SetID_ParIntData[v] = H5Dopen( H5_GroupID_Particle, ParAttIntName[v], H5P_DEFAULT );
                if ( H5_SetID_ParIntData[v] < 0 )   Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", ParAttIntName[v] );
@@ -1518,6 +1524,12 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
                continue;
             }
             if ( v == PAR_FLAG  &&  ! isPFlagStored )
+            {
+               for (int p=0; p<NParThisPatch; p++)    ParIntBuf[PAR_FLAG][p] = PFLAG_NO;
+               continue;
+            }
+//          if particle flags are not stored, initialize to PFLAG_NO instead of loading
+            if ( v == PAR_FLAG  &&  !isPFlagStored )
             {
                for (int p=0; p<NParThisPatch; p++)    ParIntBuf[PAR_FLAG][p] = PFLAG_NO;
                continue;
@@ -2312,14 +2324,17 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 
 // star formation
 #  ifdef STAR_FORMATION
-   LoadField( "SF_CreateStar_Scheme",       &RS.SF_CreateStar_Scheme,       SID, TID, NonFatal, &RT.SF_CreateStar_Scheme,       1, NonFatal );
-   LoadField( "SF_CreateStar_RSeed",        &RS.SF_CreateStar_RSeed,        SID, TID, NonFatal, &RT.SF_CreateStar_RSeed,        1, NonFatal );
-   LoadField( "SF_CreateStar_DetRandom",    &RS.SF_CreateStar_DetRandom,    SID, TID, NonFatal, &RT.SF_CreateStar_DetRandom,    1, NonFatal );
-   LoadField( "SF_CreateStar_MinLevel",     &RS.SF_CreateStar_MinLevel,     SID, TID, NonFatal, &RT.SF_CreateStar_MinLevel,     1, NonFatal );
-   LoadField( "SF_CreateStar_MinGasDens",   &RS.SF_CreateStar_MinGasDens,   SID, TID, NonFatal, &RT.SF_CreateStar_MinGasDens,   1, NonFatal );
-   LoadField( "SF_CreateStar_MassEff",      &RS.SF_CreateStar_MassEff,      SID, TID, NonFatal, &RT.SF_CreateStar_MassEff,      1, NonFatal );
-   LoadField( "SF_CreateStar_MinStarMass",  &RS.SF_CreateStar_MinStarMass,  SID, TID, NonFatal, &RT.SF_CreateStar_MinStarMass,  1, NonFatal );
-   LoadField( "SF_CreateStar_MaxStarMFrac", &RS.SF_CreateStar_MaxStarMFrac, SID, TID, NonFatal, &RT.SF_CreateStar_MaxStarMFrac, 1, NonFatal );
+   LoadField( "SF_CreateStar_Scheme",         &RS.SF_CreateStar_Scheme,         SID, TID, NonFatal, &RT.SF_CreateStar_Scheme,         1, NonFatal );
+   LoadField( "SF_CreateStar_RSeed",          &RS.SF_CreateStar_RSeed,          SID, TID, NonFatal, &RT.SF_CreateStar_RSeed,          1, NonFatal );
+   LoadField( "SF_CreateStar_DetRandom",      &RS.SF_CreateStar_DetRandom,      SID, TID, NonFatal, &RT.SF_CreateStar_DetRandom,      1, NonFatal );
+   LoadField( "SF_CreateStar_MinLevel",       &RS.SF_CreateStar_MinLevel,       SID, TID, NonFatal, &RT.SF_CreateStar_MinLevel,       1, NonFatal );
+   LoadField( "SF_CreateStar_MinGasDens",     &RS.SF_CreateStar_MinGasDens,     SID, TID, NonFatal, &RT.SF_CreateStar_MinGasDens,     1, NonFatal );
+   LoadField( "SF_CreateStar_MassEff",        &RS.SF_CreateStar_MassEff,        SID, TID, NonFatal, &RT.SF_CreateStar_MassEff,        1, NonFatal );
+   LoadField( "SF_CreateStar_MinStarMass",    &RS.SF_CreateStar_MinStarMass,    SID, TID, NonFatal, &RT.SF_CreateStar_MinStarMass,    1, NonFatal );
+   LoadField( "SF_CreateStar_MaxStarMFrac",   &RS.SF_CreateStar_MaxStarMFrac,   SID, TID, NonFatal, &RT.SF_CreateStar_MaxStarMFrac,   1, NonFatal );
+   LoadField( "SF_CreateStar_SinkMinGasDens", &RS.SF_CreateStar_SinkMinGasDens, SID, TID, NonFatal, &RT.SF_CreateStar_SinkMinGasDens, 1, NonFatal );
+   LoadField( "SF_CreateStar_SinkAccRadius",  &RS.SF_CreateStar_SinkAccRadius,  SID, TID, NonFatal, &RT.SF_CreateStar_SinkAccRadius,  1, NonFatal );
+   LoadField( "SF_CreateStar_SinkMaxNParMPI", &RS.SF_CreateStar_SinkMaxNParMPI, SID, TID, NonFatal, &RT.SF_CreateStar_SinkMaxNParMPI, 1, NonFatal );
 #  endif
 
 // feedback
@@ -2327,6 +2342,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "FB_Level",                &RS.FB_Level,                SID, TID, NonFatal, &RT.FB_Level,                 1, NonFatal );
    LoadField( "FB_RSeed",                &RS.FB_RSeed,                SID, TID, NonFatal, &RT.FB_RSeed,                 1, NonFatal );
    LoadField( "FB_SNe",                  &RS.FB_SNe,                  SID, TID, NonFatal, &RT.FB_SNe,                   1, NonFatal );
+   LoadField( "FB_Acc",                  &RS.FB_Acc,                  SID, TID, NonFatal, &RT.FB_Acc,                   1, NonFatal );
    LoadField( "FB_User",                 &RS.FB_User,                 SID, TID, NonFatal, &RT.FB_User,                  1, NonFatal );
 #  endif
 

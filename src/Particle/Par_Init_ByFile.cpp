@@ -265,8 +265,6 @@ void Par_Init_ByFile_Default()
    }
    else
       amr->Par->NextPUID = 1L;
-
-
 // free memory
    delete [] ParFltData_ThisRank;
    delete [] ParIntData_ThisRank;

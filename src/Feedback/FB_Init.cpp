@@ -38,14 +38,16 @@ void FB_Init()
 
 
 // check if at least one feedback is activated
-   FB_Any = ( FB_SNE || FB_USER );
+   FB_Any = ( FB_SNE || FB_ACC || FB_USER );
 
    if ( ! FB_Any  &&  MPI_Rank == 0 )
-      Aux_Message( stderr, "WARNING : all feedback options (e.g., FB_SNE) are inactivated for FEEDBACK !!\n" );
+      Aux_Message( stderr, "WARNING : all feedback options (e.g., FB_SNE, FB_Acc) are inactivated for FEEDBACK !!\n" );
 
 
 // call the initialization routines of different feedbacks
    if ( FB_SNE )  FB_Init_SNe();
+
+   if ( FB_ACC ) FB_Init_Accretion();
 
    if ( FB_USER )
    {

@@ -39,6 +39,8 @@ void FB_End()
 // call the ending routines of different feedbacks
    if ( FB_SNE )                                FB_End_SNe();
 
+   if ( FB_ACC ) FB_End_Accretion();
+
    if ( FB_USER  &&  FB_End_User_Ptr != NULL )  FB_End_User_Ptr();
 
 
