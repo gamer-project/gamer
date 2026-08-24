@@ -59,9 +59,11 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 
 // use SubDumpID for file naming only when user outputs fire at sub-cadence (OPT__OUTPUT_SUBDIV_USER)
 // so sub-dump files don't collide with main dumps
-   const int FileID = ( OPT__OUTPUT_SUBDIV_USER  &&  OPT__OUTPUT_SUBDIV >= 1 ) ? SubDumpID : DumpID;
+   const bool UseSubDumpID = ( OPT__OUTPUT_SUBDIV_USER  &&  OPT__OUTPUT_SUBDIV >= 1 );
+   const int  FileID       = ( UseSubDumpID ) ? SubDumpID : DumpID;
+   const char *IDLabel     = ( UseSubDumpID ) ? "SubDumpID" : "DumpID";
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d, SubDumpID = %d) ...\n", __FUNCTION__, DumpID, SubDumpID );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (%s = %d) ...\n", __FUNCTION__, IDLabel, FileID );
 
 
 // check
@@ -344,7 +346,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
    } // if ( MPI_Rank == 0 )
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d, SubDumpID = %d) ... done\n", __FUNCTION__, DumpID, SubDumpID );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (%s = %d) ... done\n", __FUNCTION__, IDLabel, FileID );
 
 } // FUNCTION : Output_L1Error
 
