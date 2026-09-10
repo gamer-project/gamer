@@ -587,6 +587,7 @@ struct InputPara_t
 // load balance
 #  ifdef LOAD_BALANCE
    double LB_WLI_Max;
+   int    LB_N_Regrid;
 #  ifdef PARTICLE
    double LB_Par_Weight;
 #  endif

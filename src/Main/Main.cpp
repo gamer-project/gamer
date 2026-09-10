@@ -213,6 +213,7 @@ double               A_INIT, OMEGA_M0, DT__MAX_DELTA_A, HUBBLE0;
 // (2-4) load balance
 #ifdef LOAD_BALANCE
 double               LB_INPUT__WLI_MAX;
+int                  LB_N_REGRID;
 #ifdef PARTICLE
 double               LB_INPUT__PAR_WEIGHT;
 #endif

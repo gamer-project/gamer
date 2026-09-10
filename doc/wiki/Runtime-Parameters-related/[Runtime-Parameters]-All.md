@@ -193,6 +193,7 @@ For variables with `Default/Min/Max` labeled as `Depend`, click the parameter na
 | :---                                                                                                 |            :--- |            :--- |            :--- | :--- |
 | [LB_INPUT__PAR_WEIGHT](%5BRuntime-Parameters%5D-MPI-and-OpenMP#LB_INPUT__PAR_WEIGHT)                 |             0.0 |             0.0 |            None | load-balance weighting of one particle over one cell [0.0] |
 | [LB_INPUT__WLI_MAX](%5BRuntime-Parameters%5D-MPI-and-OpenMP#LB_INPUT__WLI_MAX)                       |             0.1 |             0.0 |            None | weighted-load-imbalance (WLI) threshold for redistributing all patches [0.1] |
+| [LB_N_REGRID](%5BRuntime-Parameters%5D-MPI-and-OpenMP#LB_N_REGRID)                                   |               0 |               0 |            None | redistribute patches on the refined level every LB_N_REGRID refinement (0=off, >0=on) [0] |
 
 <a name="M"></a>
 # M

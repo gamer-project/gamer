@@ -59,7 +59,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, cons
                           const bool SortRealPatch, const int TLv )
 {
 
-   if ( MPI_Rank == 0 )
+   if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
    {
       char lv_str[MAX_STRING];
       if ( TLv < 0 )    sprintf( lv_str, "%s", "all levels" );
@@ -304,7 +304,7 @@ void LB_Init_LoadBalance( const bool Redistribute, const bool SendGridData, cons
 #  endif
 
 
-   if ( MPI_Rank == 0 )
+   if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
    {
       char lv_str[MAX_STRING];
       if ( TLv < 0 )    sprintf( lv_str, "%s", "all levels" );

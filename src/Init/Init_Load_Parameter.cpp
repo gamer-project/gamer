@@ -227,6 +227,7 @@ void Init_Load_Parameter()
 // load balance
 #  ifdef LOAD_BALANCE
    ReadPara->Add( "LB_INPUT__WLI_MAX",          &LB_INPUT__WLI_MAX,               0.1,             0.0,           NoMax_double   );
+   ReadPara->Add( "LB_N_REGRID",                &LB_N_REGRID,                     0,               0,             NoMax_int      );
 #  ifdef PARTICLE
    ReadPara->Add( "LB_INPUT__PAR_WEIGHT",       &LB_INPUT__PAR_WEIGHT,            0.0,             0.0,           NoMax_double   );
 #  endif

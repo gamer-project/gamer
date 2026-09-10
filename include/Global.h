@@ -224,6 +224,7 @@ extern double     A_INIT, OMEGA_M0, DT__MAX_DELTA_A, HUBBLE0;
 // ============================================================================================================
 #ifdef LOAD_BALANCE
 extern double     LB_INPUT__WLI_MAX;                  // LB->WLI_Max loaded from "Input__Parameter"
+extern int        LB_N_REGRID;
 #ifdef PARTICLE
 extern double     LB_INPUT__PAR_WEIGHT;               // LB->Par_Weight loaded from "Input__Parameter"
 #endif

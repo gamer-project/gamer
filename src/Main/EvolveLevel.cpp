@@ -961,6 +961,27 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
             if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
+#           ifdef LOAD_BALANCE
+            if ( LB_N_REGRID > 0  &&  NPatchTotal[lv_refine+1] > 0  &&  AdvanceCounter[lv] % (LB_N_REGRID*REGRID_COUNT) == 0 )
+            {
+               const bool   Redistribute_Yes = true;
+               const bool   SendGridData_Yes = true;
+               const bool   ResetLB_Yes      = true;
+               const bool   SortRealPatch_No = false;
+#              ifdef PARTICLE
+               const double Par_Weight       = amr->LB->Par_Weight;
+#              else
+               const double Par_Weight       = 0.0;
+#              endif
+
+               if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d: LoadBalance after refinement      ...\n", lv );
+
+               LB_Init_LoadBalance( Redistribute_Yes, SendGridData_Yes, Par_Weight, ResetLB_Yes, SortRealPatch_No, lv_refine+1 );
+
+               if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d: LoadBalance after refinement      ... done\n", lv );
+            }
+#           endif
+
             if ( OPT__PATCH_COUNT == 2 )     Aux_Record_PatchCount();
 #           ifdef PARTICLE
             if ( OPT__PARTICLE_COUNT == 2 )  Par_Aux_Record_ParticleCount();

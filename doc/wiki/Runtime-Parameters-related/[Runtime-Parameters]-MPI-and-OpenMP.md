@@ -3,6 +3,7 @@ Parameters described on this page:
 [OPT__INIT_GRID_WITH_OMP](#OPT__INIT_GRID_WITH_OMP), &nbsp;
 [LB_INPUT__WLI_MAX](#LB_INPUT__WLI_MAX), &nbsp;
 [LB_INPUT__PAR_WEIGHT](#LB_INPUT__PAR_WEIGHT), &nbsp;
+[LB_N_REGRID](#LB_N_REGRID), &nbsp;
 [OPT__RECORD_LOAD_BALANCE](#OPT__RECORD_LOAD_BALANCE), &nbsp;
 [OPT__MINIMIZE_MPI_BARRIER](#OPT__MINIMIZE_MPI_BARRIER) &nbsp;
 
@@ -57,6 +58,14 @@ for details. The typical values are 1.0 ~ 2.0.
 Only applicable when enabling the compilation options
 [[--mpi | [Installation]-Option-List#--mpi]] and
 [[--particle | [Installation]-Option-List#--particle]].
+
+<a name="LB_N_REGRID"></a>
+* #### `LB_N_REGRID` &ensp; (0=off, >0=on) &ensp; [0]
+    * **Description:**
+Redistribute patches on the refined level every LB_N_REGRID refinement.
+    * **Restriction:**
+Only applicable when enabling the compilation option
+[[--mpi | Installation:-Option-List#--mpi]].
 
 <a name="OPT__RECORD_LOAD_BALANCE"></a>
 * #### `OPT__RECORD_LOAD_BALANCE` &ensp; (0=off, 1=on) &ensp; [1]

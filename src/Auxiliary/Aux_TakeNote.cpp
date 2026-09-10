@@ -1128,6 +1128,7 @@ void Aux_TakeNote()
 #     endif
 #     ifdef LOAD_BALANCE
       fprintf( Note, "LB_WLI_MAX                     % 14.7e\n",  amr->LB->WLI_Max          );
+      fprintf( Note, "LB_N_REGRID                    % d\n",      LB_N_REGRID               );
 #     ifdef PARTICLE
       fprintf( Note, "LB_PAR_WEIGHT                  % 14.7e\n",  amr->LB->Par_Weight       );
 #     endif

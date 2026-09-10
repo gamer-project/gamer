@@ -79,7 +79,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2512)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2513)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -291,6 +291,7 @@ Procedure for outputting new variables:
 //                2510 : 2026/06/07 --> output EXTRA_EOS_CHECK, CHECK_UNPHY_ROUNDING, CHECK_UNPHY_ROUNDING_FACTOR
 //                2511 : 2026/07/02 --> output exact-cooling parameters
 //                2512 : 2026/08/14 --> remove Src_EC_subcycling
+//                2513 : 2026/08/21 --> output LB_N_REGRID
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1757,7 +1758,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2512;
+   KeyInfo.FormatVersion        = 2513;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2666,6 +2667,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 // load balance
 #  ifdef LOAD_BALANCE
    InputPara.LB_WLI_Max              = amr->LB->WLI_Max;
+   InputPara.LB_N_Regrid             = LB_N_REGRID;
 #  ifdef PARTICLE
    InputPara.LB_Par_Weight           = amr->LB->Par_Weight;
 #  endif
@@ -3766,6 +3768,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 // load balance
 #  ifdef LOAD_BALANCE
    H5Tinsert( H5_TypeID, "LB_WLI_Max",              HOFFSET(InputPara_t,LB_WLI_Max             ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "LB_N_Regrid",             HOFFSET(InputPara_t,LB_N_Regrid            ), H5T_NATIVE_INT     );
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "LB_Par_Weight",           HOFFSET(InputPara_t,LB_Par_Weight          ), H5T_NATIVE_DOUBLE  );
 #  endif
