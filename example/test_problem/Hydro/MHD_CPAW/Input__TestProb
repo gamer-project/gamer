@@ -1,0 +1,5 @@
+# problem-specific runtime parameters
+MHD_CPAW_Rho0        1.0            # background density
+MHD_CPAW_A	     0.001          # perturbation amplitude
+MHD_CPAW_P0          0.1           # background pressure
+MHD_CPAW_B0          1.0            # background magnetic field amplitude

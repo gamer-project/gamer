@@ -72,6 +72,8 @@ struct KeyInfo_t
    int    Magnetohydrodynamics;
    int    SRHydrodynamics;
    int    CosmicRay;
+   int    Viscosity;
+   int    Conduction;
 #  endif
 
    long   Step;
@@ -177,6 +179,8 @@ struct Makefile_t
    int EoS;
    int BarotropicEoS;
    int ExactCooling;
+   int Viscosity;
+   int Conduction;
 
 #  elif ( MODEL == ELBDM )
    int ELBDMScheme;
@@ -489,6 +493,12 @@ struct InputPara_t
 #  ifdef CR_DIFFUSION
    double Dt__CR_Diffusion;
 #  endif
+#  ifdef VISCOSITY
+   double Dt__Viscosity;
+#  endif
+#  ifdef CONDUCTION
+   double Dt__Conduction;
+#  endif
 #  ifdef SUPPORT_GRACKLE
    double Dt__GrackleCooling;
 #  endif
@@ -658,6 +668,7 @@ struct InputPara_t
    int    Opt__ResetFluid;
    int    Opt__ResetFluidInit;
    int    Opt__FreezeFluid;
+   int    Opt__FreezeHydro;
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    double MinDens;
 #  endif
@@ -768,6 +779,31 @@ struct InputPara_t
    double CR_Diffusion_MinB;
 #  endif
 
+#  ifdef CONDUCTION
+   int    Cond_Type;
+   int    Cond_FluxType;
+   int    Cond_Saturation;
+   int    Cond_SatWhistler;
+   double Cond_ConstCoeff;
+   double Cond_MaxDiffusivity;
+   double Cond_SpitzerFraction;
+   double Cond_CoulombLog;
+   double Cond_Mue;
+#  endif // #ifdef CONDUCTION
+
+#  ifdef VISCOSITY
+   int    Visc_Type;
+   int    Visc_FluxType;
+   int    Visc_Saturation;
+   int    Visc_CoeffType;
+   int    Visc_Bounds;
+   double Visc_ConstCoeff;
+   double Visc_MaxDiffusivity;
+   double Visc_SpitzerFraction;
+   double Visc_CoulombLog;
+   double Visc_Mui;
+#  endif // #ifdef VISCOSITY
+
 // initialization
    int    Opt__Init;
    int    RestartLoadNRank;
@@ -859,6 +895,13 @@ struct InputPara_t
    int    Opt__Output_Mach;
 #  ifdef MHD
    int    Opt__Output_DivMag;
+#  endif
+#  ifdef VISCOSITY
+   int    Opt__Output_Mu;
+   int    Opt__Output_DeltaP;
+#  endif
+#  ifdef CONDUCTION
+   int    Opt__Output_Kappa;
 #  endif
 #  ifdef SRHD
    int    Opt__Output_Lorentz;
