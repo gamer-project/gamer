@@ -324,7 +324,11 @@ void Init_TestProb_Template()
    BC_User_Ptr                       = NULL; // option: OPT__BC_FLU_*=4;              example: TestProblem/ELBDM/ExtPot/Init_TestProb_ELBDM_ExtPot.cpp --> BC()
 #  ifdef MHD
    BC_BField_User_Ptr                = NULL; // option: OPT__BC_FLU_*=4;
+   MHD_ResetByUser_BField_Ptr        = NULL; // option: OPT__RESET_FLUID;             example: Model_Hydro/MHD_ResetByUser.cpp
+   MHD_ResetByUser_VecPot_Ptr        = NULL; // option: OPT__RESET_FLUID;             example: Model_Hydro/MHD_ResetByUser.cpp
 #  endif
+// comment out Flu_ResetByUser_API_Ptr to use the default
+// Flu_ResetByUser_API_Ptr           = NULL; // option: OPT__RESET_FLUID;             example: Fluid/Flu_ResetByUser.cpp
    Flu_ResetByUser_Func_Ptr          = NULL; // option: OPT__RESET_FLUID;             example: Fluid/Flu_ResetByUser.cpp
    Init_DerivedField_User_Ptr        = NULL; // option: OPT__OUTPUT_USER_FIELD;       example: Fluid/Flu_DerivedField_User.cpp
    Output_User_Ptr                   = NULL; // option: OPT__OUTPUT_USER;             example: TestProblem/Hydro/AcousticWave/Init_TestProb_Hydro_AcousticWave.cpp --> OutputError()
@@ -349,6 +353,11 @@ void Init_TestProb_Template()
 #  if ( EOS == EOS_USER )
    EoS_Init_Ptr                      = NULL; // option: EOS in the Makefile;          example: EoS/User_Template/CPU_EoS_User_Template.cpp
    EoS_End_Ptr                       = NULL;
+#  endif
+#  ifdef SUPPORT_GRACKLE
+   Grackle_vHeatingRate_User_Ptr     = NULL; // option: GRACKLE_USE_V_HEATING_RATE;   example: Grackle/Grackle_Prepare.cpp
+   Grackle_sHeatingRate_User_Ptr     = NULL; // option: GRACKLE_USE_S_HEATING_RATE;   example: Grackle/Grackle_Prepare.cpp
+   Grackle_tempFloor_User_Ptr        = NULL; // option: GRACKLE_USE_TEMP_FLOOR=2;     example: Grackle/Grackle_Prepare.cpp
 #  endif
 #  endif // #if ( MODEL == HYDRO )
    Src_Init_User_Ptr                 = NULL; // option: SRC_USER;                     example: SourceTerms/User_Template/CPU_Src_User_Template.cpp

@@ -30,13 +30,13 @@ extern int CheIdx_tempFloor;
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
 static real_che Grackle_vHeatingRate_User_Template( const double x, const double y, const double z, const double Time, const double n_H );
 static real_che Grackle_sHeatingRate_User_Template( const double x, const double y, const double z, const double Time );
-static real_che Grackle_tempFloor_Default( const double x, const double y, const double z, const double Time, const real_che Dens_Gas, const real_che sEint_Gas );
+static real_che Grackle_tempFloor_User_Template( const double x, const double y, const double z, const double Time, const real_che Dens_Gas, const real_che sEint_Gas );
 
 
 // these function pointers must be set by a test problem initializer
 real_che (*Grackle_vHeatingRate_User_Ptr)( const double x, const double y, const double z, const double Time, const double n_H ) = NULL;
 real_che (*Grackle_sHeatingRate_User_Ptr)( const double x, const double y, const double z, const double Time )                   = NULL;
-real_che (*Grackle_tempFloor_User_Ptr)( const double x, const double y, const double z, const double Time, const real_che Dens_Gas, const real_che sEint_Gas ) = Grackle_tempFloor_Default;
+real_che (*Grackle_tempFloor_User_Ptr)( const double x, const double y, const double z, const double Time, const real_che Dens_Gas, const real_che sEint_Gas ) = NULL;
 
 
 
@@ -470,8 +470,8 @@ static real_che Grackle_sHeatingRate_User_Template( const double x, const double
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Grackle_tempFloor_Default
-// Description :  Default function to set Grackle's temperature floor
+// Function    :  Grackle_tempFloor_User_Template
+// Description :  Function template to set Grackle's temperature floor
 //
 // Note        :  1. Invoked by Grackle_Prepare() using the function pointer
 //                   "Grackle_tempFloor_User_Ptr", which can be reset by a test problem initializer
@@ -486,13 +486,13 @@ static real_che Grackle_sHeatingRate_User_Template( const double x, const double
 //
 // Return      :  temperature_floor
 //-------------------------------------------------------------------------------------------------------
-static real_che Grackle_tempFloor_Default( const double x, const double y, const double z, const double Time, const real_che Dens_Gas, const real_che sEint_Gas )
+static real_che Grackle_tempFloor_User_Template( const double x, const double y, const double z, const double Time, const real_che Dens_Gas, const real_che sEint_Gas )
 {
    const real_che temperature_floor = 0.0;
 
    return temperature_floor;
 
-} // FUNCTION : Grackle_tempFloor_Default
+} // FUNCTION : Grackle_tempFloor_User_Template
 
 
 
