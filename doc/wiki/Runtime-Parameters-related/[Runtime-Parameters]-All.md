@@ -114,7 +114,11 @@ For variables with `Default/Min/Max` labeled as `Depend`, click the parameter na
 
 | Name                                                                                                 |         Default |             Min |             Max | Short description |
 | :---                                                                                                 |            :--- |            :--- |            :--- | :--- |
-| [FB_LEVEL](%5BRuntime-Parameters%5D-Feedback#FB_LEVEL)                                               |              -1 |            None |       TOP_LEVEL | AMR level to apply feedback (must be MAX_LEVEL for now; <0=auto -> MAX_LEVEL) [-1] |
+| [FB_MIN_LEVEL](%5BRuntime-Parameters%5D-Feedback#FB_MIN_LEVEL)                                       |               0 |            None |       TOP_LEVEL | minimum AMR level allowed to apply feedback (<0=auto -> MAX_LEVEL) [0] |
+| [FB_RESOLVED_SNEII](%5BRuntime-Parameters%5D-Feedback#FB_RESOLVED_SNEII)                             |               0 |            None |            None | Type II supernovae feedback for high enough grid and particle resolution (must add one extra PAR_NATT_FLT_USER) |
+| [FB_RESOLVED_SNEII_MIN_M_GAS](%5BRuntime-Parameters%5D-Feedback#FB_RESOLVED_SNEII_MIN_M_GAS)         |             0.0 |             0.0 |            None | minimum mass of gas in the environment of SNeII to apply feedback (in Msun) (for FB_RESOLVED_SNEII only) [0.0] |
+| [FB_RESOLVED_SNEII_N_PER_MASS](%5BRuntime-Parameters%5D-Feedback#FB_RESOLVED_SNEII_N_PER_MASS)       |          1.0e-2 |             0.0 |            None | number of SNeII per stellar mass (in 1/Msun) (for FB_RESOLVED_SNEII only) [0.01] |
+| [FB_RESOLVED_SNEII_RECORD](%5BRuntime-Parameters%5D-Feedback#FB_RESOLVED_SNEII_RECORD)               |               0 |            None |            None | record the SNeII explosion info (for FB_RESOLVED_SNEII only) [0] |
 | [FB_RSEED](%5BRuntime-Parameters%5D-Feedback#FB_RSEED)                                               |             456 |               0 |            None | random seed [456] |
 | [FB_SNE](%5BRuntime-Parameters%5D-Feedback#FB_SNE)                                                   |               0 |            None |            None | supernova explosion feedback [0] |
 | [FB_USER](%5BRuntime-Parameters%5D-Feedback#FB_USER)                                                 |               0 |            None |            None | user-defined feedback [0] |
