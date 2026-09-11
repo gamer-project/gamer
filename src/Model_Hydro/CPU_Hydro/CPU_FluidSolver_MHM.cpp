@@ -11,6 +11,7 @@
 #include "CUFLU_Shared_DataReconstruction.cu"
 #include "CUFLU_Shared_ComputeFlux.cu"
 #include "CUFLU_Shared_FullStepUpdate.cu"
+#include "CUFLU_Shared_AddSourceTerm.cu"
 #ifdef MHD
 #include "CUFLU_Shared_ConstrainedTransport.cu"
 #endif
@@ -64,9 +65,10 @@ void Hydro_ComputeFlux( const real g_FC_Var [][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_
 void Hydro_StoreIntFlux( const real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                real g_IntFlux[][NCOMP_TOTAL][ SQR(PS2) ],
                          const int NFlux );
-void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
-                           const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
-                           const real dt, const real dh, const real MinDens, const real MinEint, const real DualEnergySwitch,
+void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], const real g_Half_Pri[][ CUBE(FLU_NXT) ],
+                           real g_Output[][ CUBE(PS2) ], char g_DE_Status[], const real g_FC_B[][ PS2P1*SQR(PS2) ],
+                           const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ], const real dt,
+                           const real dh, const real MinDens, const real MinEint, const real DualEnergySwitch,
                            const long PassiveFloor, const bool NormPassive, const int NNorm, const int NormIdx[],
                            const EoS_t *EoS, int *s_FullStepFailure, const int Iteration, const int MinMod_MaxIter );
 #if ( RSOLVER == EXACT  ||  RSOLVER_RESCUE == EXACT )
@@ -111,6 +113,17 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres, const long 
                     const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                     const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                     const real *const EoS_Table[EOS_NTABLE_MAX], real* const EintOut, real* LorentzFactorPtr );
+void Hydro_AddSourceTerm_CCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
+                                                const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                                      real OneCell[NCOMP_TOTAL_PLUS_MAG],
+                                                const int idx_in, const int didx_in[3],
+                                                const real dt_dh2, const EoS_t *EoS );
+#ifdef MHD
+void Hydro_AddSourceTerm_FCVar_HalfStep_MHM_RP( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
+                                                const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                                      real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                                const real dt, const real dh, const EoS_t *EoS );
+#endif
 #endif // #if ( FLU_SCHEME == MHM_RP )
 #ifdef MHD
 void MHD_ComputeElectric(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
@@ -126,6 +139,9 @@ void MHD_UpdateMagnetic( real *g_FC_Bx_Out, real *g_FC_By_Out, real *g_FC_Bz_Out
                          const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                          const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                          const real dt, const real dh, const int NOut, const int NEle, const int Offset_B_In );
+void Hydro_AddSourceTerm_FCVar_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
+                                               real g_FC_B_Out[][ PS2P1*SQR(PS2) ],
+                                         const real dt, const real dh, const EoS_t *EoS );
 #endif // #ifdef MHD
 
 #ifdef COSMIC_RAY
@@ -167,6 +183,7 @@ static void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                                        const EoS_t *EoS );
 GPU_DEVICE
 static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
+                                  const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                   const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                   const real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                         real g_PriVar_Half[][ CUBE(FLU_NXT) ],
@@ -455,13 +472,16 @@ void CPU_FluidSolver_MHM(
 
          MHD_UpdateMagnetic( g_FC_Mag_Half_1PG[0], g_FC_Mag_Half_1PG[1], g_FC_Mag_Half_1PG[2],
                              g_Mag_Array_In[P], g_EC_Ele_1PG, (real)0.5*dt, dh, N_HF_VAR, N_HF_ELE, 1 );
+
+         Hydro_AddSourceTerm_FCVar_HalfStep_MHM_RP( g_Flu_Array_In[P], g_Mag_Array_In[P], g_FC_Mag_Half_1PG,
+                                                    dt, dh, &EoS );
 #        endif
 
 
 //       1-a-4. evaluate the half-step solutions
-         Hydro_RiemannPredict( g_Flu_Array_In[P], g_FC_Mag_Half_1PG, g_Flux_Half_1PG, g_PriVar_Half_1PG,
-                               dt, dh, MinDens, MinPres, MinEint, PassiveFloor, FracPassive, NFrac, c_FracIdx,
-                               JeansMinPres, JeansMinPres_Coeff, &EoS );
+         Hydro_RiemannPredict( g_Flu_Array_In[P], g_Mag_Array_In[P], g_FC_Mag_Half_1PG, g_Flux_Half_1PG,
+                               g_PriVar_Half_1PG, dt, dh, MinDens, MinPres, MinEint, PassiveFloor,
+                               FracPassive, NFrac, c_FracIdx, JeansMinPres, JeansMinPres_Coeff, &EoS );
 
 
          do {
@@ -562,12 +582,14 @@ void CPU_FluidSolver_MHM(
 
             MHD_UpdateMagnetic( g_Mag_Array_Out[P][0], g_Mag_Array_Out[P][1], g_Mag_Array_Out[P][2],
                                 g_Mag_Array_In[P], g_EC_Ele_1PG, dt, dh, PS2, N_FL_ELE, FLU_GHOST_SIZE );
+
+            Hydro_AddSourceTerm_FCVar_FullStep( g_PriVar_Half_1PG, g_Mag_Array_Out[P], dt, dh, &EoS );
 #           endif // #ifdef MHD
 
 
 //          4. full-step evolution
-            Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P], g_Mag_Array_Out[P],
-                                  g_FC_Flux_1PG, dt, dh, MinDens, MinEint, DualEnergySwitch,
+            Hydro_FullStepUpdate( g_Flu_Array_In[P], g_PriVar_Half_1PG, g_Flu_Array_Out[P], g_DE_Array_Out[P],
+                                  g_Mag_Array_Out[P], g_FC_Flux_1PG, dt, dh, MinDens, MinEint, DualEnergySwitch,
                                   PassiveFloor, NormPassive, NNorm, c_NormIdx, &EoS, &s_FullStepFailure,
                                   Iteration, MinMod_MaxIter );
 
@@ -810,6 +832,7 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //                3. Cell-centered B field is simply obtained by averaging the half-step face-centered B field
 //
 // Parameter   :  g_ConVar_In        : Array storing the input conserved variables
+//                g_FC_B_In          : Array storing the input B field (for MHD only)
 //                g_FC_B_Half        : Array storing the input half-step face-centered B field
 //                g_Flux_Half        : Array storing the input face-centered fluxes
 //                                     --> Accessed with the stride N_HF_FLUX
@@ -829,6 +852,7 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
+                           const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                            const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                            const real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                  real g_PriVar_Half[][ CUBE(FLU_NXT) ],
@@ -840,9 +864,7 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 {
 
    const int  didx_flux[3] = { 1, N_HF_FLUX, SQR(N_HF_FLUX) };
-#  ifdef COSMIC_RAY
-   const int  didx_in[3]   = { 1, FLU_NXT, SQR(FLU_NXT) };
-#  endif
+   const int  didx_in  [3] = { 1, FLU_NXT, SQR(FLU_NXT) };
    const real dt_dh2       = (real)0.5*dt/dh;
 
    const int N_HF_VAR2 = SQR(N_HF_VAR);
@@ -892,6 +914,7 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
       for (int v=0; v<NCOMP_TOTAL; v++)
          out_con[v] = g_ConVar_In[v][idx_in] - dt_dh2*( dflux[0][v] + dflux[1][v] + dflux[2][v] );
 
+      Hydro_AddSourceTerm_CCVar_HalfStep_MHM_RP( g_ConVar_In, g_FC_B_In, out_con, idx_in, didx_in, dt_dh2, EoS );
 
 //    add the cosmic-ray source term of adiabatic work
 #     ifdef COSMIC_RAY

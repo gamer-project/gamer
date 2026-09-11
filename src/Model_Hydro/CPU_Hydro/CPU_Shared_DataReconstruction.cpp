@@ -13,6 +13,7 @@
 #ifdef __CUDACC__
 
 #include "CUFLU_Shared_FluUtility.cu"
+#include "CUFLU_Shared_AddSourceTerm.cu"
 
 #if ( FLU_SCHEME == MHM  &&  defined MHD )
 #include "CUFLU_Shared_ConstrainedTransport.cu"
@@ -36,6 +37,10 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive, const i
 void Hydro_Con2Flux( const int XYZ, real Flux[], const real In[], const real MinPres, const long PassiveFloor,
                      const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                      const real *const EoS_Table[EOS_NTABLE_MAX], const real* const PresIn );
+void Hydro_AddSourceTerm_HalfStep_MHM( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
+                                       const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
+                                             real fcCon[][NCOMP_LR],
+                                       const int idx_in, const real dt_dh2, const EoS_t *EoS );
 #ifdef MHD
 void MHD_ComputeElectric_Half(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                                const real g_ConVar[][ CUBE(FLU_NXT) ],
@@ -2098,6 +2103,7 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
    MHD_UpdateMagnetic_Half( fcCon, g_EC_Ele, dt, dh, cc_i-NGhost, cc_j-NGhost, cc_k-NGhost, NEle );
 #  endif
 
+   Hydro_AddSourceTerm_HalfStep_MHM( g_cc_array, g_FC_B, fcCon, cc_idx, dt_dh2, EoS );
 
 // check negative, inf, and nan in density, energy, and pressure
 #  ifdef MHM_CHECK_PREDICT
