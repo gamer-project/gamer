@@ -193,6 +193,7 @@ struct Makefile_t
    int MassiveParticles;
    int Tracer;
    int StoreParAcc;
+   int StoreParPot;
    int StarFormation;
    int Feedback;
    int Par_NAttFltUser;
@@ -448,6 +449,7 @@ struct InputPara_t
    int    Par_IntegTracer;
    int    Par_ImproveAcc;
    int    Par_PredictPos;
+   int    Par_StorePot;
    double Par_RemoveCell;
    int    Opt__FreezePar;
    int    Par_GhostSize;

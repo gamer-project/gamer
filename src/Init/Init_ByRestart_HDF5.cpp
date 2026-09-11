@@ -1705,6 +1705,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "MassiveParticles",       &RS.MassiveParticles,       SID, TID, NonFatal, &RT.MassiveParticles,       1, NonFatal );
    LoadField( "Tracer",                 &RS.Tracer,                 SID, TID, NonFatal, &RT.Tracer,                 1, NonFatal );
    LoadField( "StoreParAcc",            &RS.StoreParAcc,            SID, TID, NonFatal, &RT.StoreParAcc,            1, NonFatal );
+   LoadField( "StoreParPot",            &RS.StoreParPot,            SID, TID, NonFatal, &RT.StoreParPot,            1, NonFatal );
    LoadField( "StarFormation",          &RS.StarFormation,          SID, TID, NonFatal, &RT.StarFormation,          1, NonFatal );
    LoadField( "Feedback",               &RS.Feedback,               SID, TID, NonFatal, &RT.Feedback,               1, NonFatal );
    if ( FormatVersion >= 2300 )
@@ -2040,6 +2041,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Par_IntegTracer",         &RS.Par_IntegTracer,         SID, TID, NonFatal, &RT.Par_IntegTracer,          1, NonFatal );
    LoadField( "Par_ImproveAcc",          &RS.Par_ImproveAcc,          SID, TID, NonFatal, &RT.Par_ImproveAcc,           1, NonFatal );
    LoadField( "Par_PredictPos",          &RS.Par_PredictPos,          SID, TID, NonFatal, &RT.Par_PredictPos,           1, NonFatal );
+   LoadField( "Par_StorePot",            &RS.Par_StorePot,            SID, TID, NonFatal, &RT.Par_StorePot,             1, NonFatal );
    LoadField( "Par_RemoveCell",          &RS.Par_RemoveCell,          SID, TID, NonFatal, &RT.Par_RemoveCell,           1, NonFatal );
    LoadField( "Opt__FreezePar",          &RS.Opt__FreezePar,          SID, TID, NonFatal, &RT.Opt__FreezePar,           1, NonFatal );
    LoadField( "Par_GhostSize",           &RS.Par_GhostSize,           SID, TID, NonFatal, &RT.Par_GhostSize,            1, NonFatal );
