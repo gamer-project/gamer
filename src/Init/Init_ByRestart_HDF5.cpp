@@ -2041,7 +2041,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Par_IntegTracer",         &RS.Par_IntegTracer,         SID, TID, NonFatal, &RT.Par_IntegTracer,          1, NonFatal );
    LoadField( "Par_ImproveAcc",          &RS.Par_ImproveAcc,          SID, TID, NonFatal, &RT.Par_ImproveAcc,           1, NonFatal );
    LoadField( "Par_PredictPos",          &RS.Par_PredictPos,          SID, TID, NonFatal, &RT.Par_PredictPos,           1, NonFatal );
-   LoadField( "Par_StorePot",            &RS.Par_StorePot,            SID, TID, NonFatal, &RT.Par_StorePot,             1, NonFatal );
+   LoadField( "Opt__Output_Par_Pot",     &RS.Opt__Output_Par_Pot,     SID, TID, NonFatal, &RT.Opt__Output_Par_Pot,      1, NonFatal );
    LoadField( "Par_RemoveCell",          &RS.Par_RemoveCell,          SID, TID, NonFatal, &RT.Par_RemoveCell,           1, NonFatal );
    LoadField( "Opt__FreezePar",          &RS.Opt__FreezePar,          SID, TID, NonFatal, &RT.Opt__FreezePar,           1, NonFatal );
    LoadField( "Par_GhostSize",           &RS.Par_GhostSize,           SID, TID, NonFatal, &RT.Par_GhostSize,            1, NonFatal );

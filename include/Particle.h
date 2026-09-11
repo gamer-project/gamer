@@ -54,8 +54,6 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                                          (by using potential in the patch ghost zone instead of nearby patch
 //                                          or interpolation)
 //                PredictPos              : Predict particle position during mass assignment
-//                StorePot                : Interpolate the gravitational potential onto each massive particle
-//                                          every step and store it in Pot[] (requires STORE_PAR_POT)
 //                TracerVelCorr           : Apply velocity correction term for tracer particles in regions where
 //                                          the velocity gradient is large
 //                RemoveCell              : remove particles RemoveCell-base-level-cells away from the boundary
@@ -148,7 +146,6 @@ struct Particle_t
    ParInterp_t   InterpTracer;
    bool          ImproveAcc;
    bool          PredictPos;
-   bool          StorePot;
    bool          TracerVelCorr;
    double        RemoveCell;
    int           GhostSize;
@@ -231,7 +228,6 @@ struct Particle_t
       IntegTracer         = TRACER_INTEG_NONE;
       ImproveAcc          = true;
       PredictPos          = true;
-      StorePot            = false;
       TracerVelCorr       = false;
       RemoveCell          = -999.9;
       GhostSize           = -1;

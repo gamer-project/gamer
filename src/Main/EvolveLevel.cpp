@@ -345,7 +345,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
 #     ifdef STORE_PAR_POT
 //    the potential has not yet been updated to TimeNew at the predictor stage (c.f. PrepPotTime in Par_UpdateParticle.cpp)
-      if ( amr->Par->StorePot )
+      if ( OPT__OUTPUT_PAR_POT )
       TIMING_FUNC(   Par_UpdateParticlePotential( lv, TimeOld ),
                      Timer_Par_Update[lv][0],   TIMER_ON   );
 #     endif
@@ -473,7 +473,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #        endif
 
 #        ifdef STORE_PAR_POT
-         if ( amr->Par->StorePot )
+         if ( OPT__OUTPUT_PAR_POT )
          TIMING_FUNC(   Par_UpdateParticlePotential( lv, TimeNew ),
                         Timer_Par_Update[lv][1],   TIMER_ON   );
 #        endif
@@ -495,7 +495,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #           endif
 
 #           ifdef STORE_PAR_POT
-            if ( amr->Par->StorePot )
+            if ( OPT__OUTPUT_PAR_POT )
             TIMING_FUNC(   Par_UpdateParticlePotential( lv-1, TimeNew ),
                            Timer_Par_Update[lv][2],   TIMER_ON   );
 #           endif

@@ -324,7 +324,7 @@ void Init_GAMER( int *argc, char ***argv )
 
 // initialize particle potential
 #  if ( defined MASSIVE_PARTICLES  &&  defined STORE_PAR_POT )
-   if ( amr->Par->StorePot )
+   if ( OPT__OUTPUT_PAR_POT )
    {
       if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Calculating particle potential" );
 

@@ -10,8 +10,8 @@
 // Description :  Interpolate the gravitational potential onto all massive particles at the target level
 //                and store the result in Par->Pot[]
 //
-// Note        :  1. Enabled by the runtime option PAR_STORE_POT (in addition to compiling with STORE_PAR_POT)
-//                   --> Returns immediately if amr->Par->StorePot is false
+// Note        :  1. Enabled by the runtime option OPT__OUTPUT_PAR_POT (in addition to compiling with STORE_PAR_POT)
+//                   --> Returns immediately if OPT__OUTPUT_PAR_POT is false
 //                2. Reuses the generic mesh-to-particle interpolation routine Par_MapMesh2Particles(),
 //                   called here with UseTracers=false so that only massive particles are mapped
 //                   --> The interpolation order follows amr->Par->InterpTracer, which
@@ -28,7 +28,7 @@
 void Par_UpdateParticlePotential( const int lv, const double PrepTime )
 {
 
-   if ( !amr->Par->StorePot )   return;
+   if ( !OPT__OUTPUT_PAR_POT )   return;
 
    const bool     IntPhase_No        = false;
    const bool     DE_Consistency_No  = false;

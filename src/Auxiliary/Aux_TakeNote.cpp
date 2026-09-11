@@ -957,7 +957,6 @@ void Aux_TakeNote()
       fprintf( Note, "Par->GhostSize                 % d\n",      amr->Par->GhostSize           );
       fprintf( Note, "Par->ImproveAcc                % d\n",      amr->Par->ImproveAcc          );
       fprintf( Note, "Par->PredictPos                % d\n",      amr->Par->PredictPos          );
-      fprintf( Note, "Par->StorePot                  % d\n",      amr->Par->StorePot            );
       fprintf( Note, "Par->RemoveCell                % 14.7e\n",  amr->Par->RemoveCell          );
       fprintf( Note, "Par->InterpTracer              % d\n",      amr->Par->InterpTracer        );
       fprintf( Note, "Par->IntegTracer               % d\n",      amr->Par->IntegTracer         );
@@ -1664,6 +1663,9 @@ void Aux_TakeNote()
 #     endif
 #     ifdef PARTICLE
       fprintf( Note, "OPT__OUTPUT_PAR_DENS           % d\n",      OPT__OUTPUT_PAR_DENS        );
+#     ifdef GRAVITY
+      fprintf( Note, "OPT__OUTPUT_PAR_POT            % d\n",      OPT__OUTPUT_PAR_POT         );
+#     endif
 #     endif
 #     ifdef MHD
       fprintf( Note, "OPT__OUTPUT_CC_MAG             % d\n",      OPT__OUTPUT_CC_MAG          );

@@ -1731,8 +1731,8 @@ void Aux_Check_Parameter()
 #  endif
 
 #  ifndef STORE_PAR_POT
-   if ( amr->Par->StorePot )
-      Aux_Error( ERROR_INFO, "PAR_STORE_POT is enabled but STORE_PAR_POT is off !!\n"
+   if ( OPT__OUTPUT_PAR_POT )
+      Aux_Error( ERROR_INFO, "OPT__OUTPUT_PAR_POT is enabled but STORE_PAR_POT is off !!\n"
                  "        --> Recompile with \"--store_par_pot=true\" to use this option\n" );
 #  endif
 

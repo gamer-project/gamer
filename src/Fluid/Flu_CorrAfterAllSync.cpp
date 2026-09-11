@@ -145,7 +145,7 @@ void Flu_CorrAfterAllSync()
 
 // 5. recalculate particle potential
 #  if ( defined MASSIVE_PARTICLES  &&  defined STORE_PAR_POT )
-   if ( amr->Par->StorePot )
+   if ( OPT__OUTPUT_PAR_POT )
    {
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "      recalculate particle potential        ... " );
 

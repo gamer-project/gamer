@@ -652,7 +652,7 @@ def load_arguments( sys_setting : SystemSetting ):
                          default=False,
                          depend={"particle":True},
                          help="Store the gravitational potential interpolated onto each particle. "
-                              "Must additionally enable PAR_STORE_POT in Input__Parameter at runtime.\n"
+                              "Must additionally enable OPT__OUTPUT_PAR_POT in Input__Parameter at runtime.\n"
                        )
 
     parser.add_argument( "--star_formation", type=str2bool, metavar="BOOLEAN", gamer_name="STAR_FORMATION",
