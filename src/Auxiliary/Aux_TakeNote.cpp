@@ -300,6 +300,12 @@ void Aux_TakeNote()
       fprintf( Note, "STORE_PAR_ACC                   OFF\n" );
 #     endif
 
+#     ifdef STORE_PAR_POT
+      fprintf( Note, "STORE_PAR_POT                   ON\n" );
+#     else
+      fprintf( Note, "STORE_PAR_POT                   OFF\n" );
+#     endif
+
 #     ifdef STAR_FORMATION
       fprintf( Note, "STAR_FORMATION                  ON\n" );
 #     else
@@ -951,6 +957,7 @@ void Aux_TakeNote()
       fprintf( Note, "Par->GhostSize                 % d\n",      amr->Par->GhostSize           );
       fprintf( Note, "Par->ImproveAcc                % d\n",      amr->Par->ImproveAcc          );
       fprintf( Note, "Par->PredictPos                % d\n",      amr->Par->PredictPos          );
+      fprintf( Note, "Par->StorePot                  % d\n",      amr->Par->StorePot            );
       fprintf( Note, "Par->RemoveCell                % 14.7e\n",  amr->Par->RemoveCell          );
       fprintf( Note, "Par->InterpTracer              % d\n",      amr->Par->InterpTracer        );
       fprintf( Note, "Par->IntegTracer               % d\n",      amr->Par->IntegTracer         );

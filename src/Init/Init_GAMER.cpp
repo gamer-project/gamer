@@ -322,6 +322,19 @@ void Init_GAMER( int *argc, char ***argv )
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Calculating particle acceleration" );
 #  endif // #if ( defined MASSIVE_PARTICLES  &&  defined STORE_PAR_ACC )
 
+// initialize particle potential
+#  if ( defined MASSIVE_PARTICLES  &&  defined STORE_PAR_POT )
+   if ( amr->Par->StorePot )
+   {
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Calculating particle potential" );
+
+      for (int lv=0; lv<NLEVEL; lv++)
+         Par_UpdateParticlePotential( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ] );
+
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Calculating particle potential" );
+   }
+#  endif // #if ( defined MASSIVE_PARTICLES  &&  defined STORE_PAR_POT )
+
 #  ifdef TRACER
 // initialize tracer particles
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Initializing tracer particles" );
