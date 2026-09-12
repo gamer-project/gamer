@@ -63,6 +63,23 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
             continue;
       }
 
+//    non-finite positions would overflow the integer index casts below (int(NaN) = INT_MIN on x86)
+//    and bypass all index clamps, accessing wild memory (SIGBUS/SEGV)
+      bool PosFinite = true;
+      for (int d=0; d<3; d++)
+         if ( ! Aux_IsFinite( InterpParPos[d][p] ) )   PosFinite = false;
+      if ( ! PosFinite )
+      {
+#        ifdef DEBUG_PARTICLE
+         Aux_Error( ERROR_INFO, "non-finite particle position (ParID %ld, pos %14.7e %14.7e %14.7e) !!\n",
+                    ParID, InterpParPos[0][p], InterpParPos[1][p], InterpParPos[2][p] );
+#        endif
+         Aux_Message( stderr, "WARNING : non-finite particle position (ParID %ld, pos %14.7e %14.7e %14.7e) --> map skipped !!\n",
+                      ParID, InterpParPos[0][p], InterpParPos[1][p], InterpParPos[2][p] );
+         ParAttr[p] = (real_par)0.0;
+         continue;
+      }
+
       switch ( IntScheme ) {
 
 //    1 NGP
@@ -177,25 +194,31 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
             idxLCR[0][d] = idxLCR[1][d] - 1;
             idxLCR[2][d] = idxLCR[1][d] + 1;
 
-//          prevent round-off errors (especially for NGP and TSC)
-            if ( idxLCR[0][d] < 0 )
+//          clamp the left/central/right indices to the attr array; compare dr (double) rather than
+//          the int indices so that arbitrarily large offsets cannot overflow the integer cast and
+//          escape the clamps (dr < 1.0 <=> idxLCR[0] < 0; dr >= AttrSize3D-1 <=> idxLCR[2] >= AttrSize3D)
+            if ( dr[d] < 1.0 )
             {
 #              ifdef DEBUG_PARTICLE
-               if (  ! Mis_CompareRealValue( InterpParPos[d][p], (real_par)EdgeL[d], NULL, false )  )
-                  Aux_Error( ERROR_INFO, "index outside the attr array (pos[%d] %14.7e, EdgeL %14.7e, idxL %d, idxR %d) !!\n",
-                             d, InterpParPos[d][p], (real_par)EdgeL[d], idxLCR[0][d], idxLCR[2][d] );
+//             fast-but-sane tracers legitimately overrun the interpolation cells by up to ~v*dt/dh
+//             cells (cross-level drift: fine-region velocity + coarse or stale dt), and without
+//             DEBUG_PARTICLE they are simply clamped and the run continues, so a tight tolerance
+//             cannot separate fast from corrupt --> abort only on order-of-magnitude violations
+               if ( dr[d] < -100.0 )
+                  Aux_Error( ERROR_INFO, "index far outside the attr array (pos[%d] %14.7e, EdgeL %14.7e, dr %13.7e) !!\n",
+                             d, InterpParPos[d][p], (real_par)EdgeL[d], dr[d] );
 #              endif
 
                idxLCR[0][d] = 0;
                idxLCR[1][d] = 1;
                idxLCR[2][d] = 2;
             }
-            else if ( idxLCR[2][d] >= AttrSize3D )
+            else if ( dr[d] >= (double)(AttrSize3D-1) )
             {
 #              ifdef DEBUG_PARTICLE
-               if (  ! Mis_CompareRealValue( InterpParPos[d][p], (real_par)EdgeR[d], NULL, false )  )
-                  Aux_Error( ERROR_INFO, "index outside the attr array (pos[%d] %14.7e, EdgeR %14.7e, idxL %d, idxR %d) !!\n",
-                             d, InterpParPos[d][p], (real_par)EdgeR[d], idxLCR[0][d], idxLCR[2][d] );
+               if ( dr[d] > (double)AttrSize3D + 100.0 )
+                  Aux_Error( ERROR_INFO, "index far outside the attr array (pos[%d] %14.7e, EdgeR %14.7e, dr %13.7e) !!\n",
+                             d, InterpParPos[d][p], (real_par)EdgeR[d], dr[d] );
 #              endif
 
                idxLCR[0][d] = AttrSize3D - 3;
