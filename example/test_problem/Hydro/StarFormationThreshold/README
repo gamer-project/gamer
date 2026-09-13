@@ -1,0 +1,81 @@
+Compilation flags:
+========================================
+Enable  : MODEL=HYDRO, PARTICLE, GRAVITY, STAR_FORMATION
+Optional: COMOVING
+
+
+Default setup:
+========================================
+1. Units:
+   (1) External (for Input__TestProb only):
+       See the comment of each runtime variable
+
+   (2) Internal (for all other input files and internal usage):
+
+       If COMOVING is disabled:
+          [L] = kpc
+          [M] = 1.0e9 Msun
+          [T] = Myr
+       -->[V] = [L]/[T] ~ 9.8e2 km/s
+       -->[D] = [M]/[L]^3 ~ 6.8e-23 g/cm^3
+
+       If COMOVING is enabled:
+          [L] = Mpc/h
+          [V] = 100 km/s
+          [D] = rho_bg
+
+
+Note:
+========================================
+1. The initial conditions consist of a distribution of varying gas mass density and temperature
+   - Linearly varying log( mass density ) in the x direction
+   - Linearly varying log( temperature ) in the y direction
+   - No variation in the z direction
+
+2. Both the fluid and particles are frozen, and
+   the fluid is reset to the initial conditions at every step by default to keep a constant environment
+   - One can also set OPT__RESET_FLUID = 0 to observe how the gas is depleted and converted into stars
+
+3. This test is designed to verify that star formation occurs only in the allowed regions:
+   - SF_CREATE_STAR_SCHEME = 1 -> the minimum gas density (SF_CREATE_STAR_MIN_GAS_DENS)
+   - SF_CREATE_STAR_SCHEME = 2 -> the maximum gas Jeans length (SF_CREATE_STAR_MAX_GAS_JEANSL)
+
+4. The default time step is set to 0.1x the free-fall time of the max density
+
+5. In the default setup, the maximum gas cell mass is about 3356870 Msun
+   - With SF_CREATE_STAR_MASS_EFF = 1.0e-2 and dt~0.1 free-fall time,
+     the maximum star mass is about 3357 Msun,
+     which is larger than SF_CREATE_STAR_MIN_STAR_MASS = 1000 Msun
+   - The formed star mass in a fixed time step is proportional to (gas density)^(3/2)
+     according to the local Schmidt star formation law
+   - When the expected star mass is less than SF_CREATE_STAR_MIN_STAR_MASS, the star forms stochastically
+
+6. For cosmological tests (COMOVING is enabled):
+   - Set `--comoving=true` in generate_make.sh
+   - Set the following parameters in Input__Parameter
+      - BOX_SIZE  = 8.0e-3
+      - OUTPUT_DT = 1.0e-3
+   - The parameters in Input__TestProb are in the physical frame (not comoving frame); Set them as following
+      - StarFormationThreshold_MassDensity_Min =    1.0e-22 (g/cm^3)
+      - StarFormationThreshold_MassDensity_Max =    1.0e-22 (g/cm^3)
+      - StarFormationThreshold_Temperature_Min = 3.5307e+01 (K)
+      - StarFormationThreshold_Temperature_Max = 3.5307e+01 (K)
+   - The default setup is an environment with fixed physical density and temperature
+     --> The comoving density and temperature will change during the evolution
+     --> The physical Jeans length is 20.0 pc
+     --> The physical free-fall time is 6.66 Myr
+     --> The physical star formation rate still rises because of the increasing physical box volume
+   - The evolution is from z=4 to z=3 in the default setup
+     |              |           | Box size = 0.008 cMpc/h | Cell size = 89.29 cpc | Cell volume = 7.118e5 cpc^3 |    Cell mass |    Box mass |          SFR |
+     |--------------|-----------|-------------------------|-----------------------|-----------------------------|--------------|-------------|--------------|
+     | z = 4        | a = 0.20  |               2285.7 pc |              17.86 pc |                 5694.2 pc^3 | 8.414e3 Msun | 4.41e9 Msun | 6.62 Msun/yr |
+     | z = 3.464285 | a = 0.224 |               2560.0 pc |              20.00 pc |                 8000.0 pc^3 | 1.182e4 Msun | 6.20e9 Msun | 9.31 Msun/yr |
+     | z = 3        | a = 0.25  |               2857.1 pc |              22.32 pc |                11121.6 pc^3 | 1.643e4 Msun | 8.62e9 Msun | 12.9 Msun/yr |
+     --> The physical timespan is 597 Myr from a=0.20 to a=0.25, and 381 Myr from a=0.224 to a=0.25
+   - The total formed stars can be compared to the cosmological integration of the expected star formation rate
+      - For SF_CREATE_STAR_MIN_GAS_DENS = 5.0, all the cells satisfy the criterion and keep forming stars during the whole evolution
+      - For SF_CREATE_STAR_MIN_GAS_DENS = 60, the cells never satisfy the criterion and no star will form
+      - For SF_CREATE_STAR_MAX_GAS_JEANSL = 1.0, the cells satisfy the criterion only after a=0.224
+      - For SF_CREATE_STAR_MAX_GAS_JEANSL = 0.8, the cells never satisfy the criterion and no star will form
+
+7. Some handy yt analysis scripts are put at "yt_script"

@@ -20,10 +20,11 @@ static RandomNumber_t *RNG = NULL;
 //
 // Parameter   :  lv      : Target refinement level
 //                TimeNew : Current physical time (after advancing solution by dt)
-//                dt      : Time interval to advance solution
-//                          --> Currently this function does not distinguish dt and the physical time interval (dTime)
+//                TimeOld : Physical time before update
+//                          --> This function updates physical time from TimeOld to TimeNew
+//                dt      : Time interval to advance solution (can be different from TimeNew-TimeOld in COMOVING)
 //-------------------------------------------------------------------------------------------------------
-void SF_CreateStar( const int lv, const real TimeNew, const real dt )
+void SF_CreateStar( const int lv, const real TimeNew, const real TimeOld, const real dt )
 {
 
 // only form stars on levels above the given minimum level
@@ -65,15 +66,24 @@ void SF_CreateStar( const int lv, const real TimeNew, const real dt )
    const bool UseMetal = ( Idx_Metal != Idx_Undefined );
 
 
+#  ifdef COMOVING
+// convert dt from the comoving time interval to the physical time interval (2nd order)
+// --> see Equation (15) of Schive, Tsai, & Chiueh (2010)
+// --> it could be improved further by mimicking Miscellaneous/Mis_dTime2dt.cpp for the given TimeOld and TimeNew.
+   const real dt_sf = (real)2.0*dt*SQR(TimeOld*TimeNew)/( SQR(TimeOld) + SQR(TimeNew) );
+#  else
+   const real dt_sf = dt;
+#  endif
+
+
 // invoke the target star-formation method
    switch ( SF_CREATE_STAR_SCHEME )
    {
 #     if ( MODEL == HYDRO )
-      case SF_CREATE_STAR_SCHEME_AGORA:   SF_CreateStar_AGORA( lv, TimeNew, dt, RNG, SF_CREATE_STAR_MIN_GAS_DENS,
-                                                               SF_CREATE_STAR_MASS_EFF, SF_CREATE_STAR_MIN_STAR_MASS,
-                                                               SF_CREATE_STAR_MAX_STAR_MFRAC, SF_CREATE_STAR_DET_RANDOM,
-                                                               UseMetal );
-      break;
+      case SF_CREATE_STAR_SCHEME_AGORA:
+      case SF_CREATE_STAR_SCHEME_DWARFGALAXY:
+         SF_CreateStar_GeneralGalaxy( lv, TimeNew, dt_sf, RNG, UseMetal );
+         break;
 #     endif
 
       case SF_CREATE_STAR_SCHEME_NONE:    return;
