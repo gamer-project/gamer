@@ -182,6 +182,28 @@ real (*Der_Out)               [ CUBE(PS1)                ] = new real         [D
             if ( OPT__OUTPUT_GRACKLE_TCOOL )
                                        fprintf( File, " %*s", StrLen_Flt, "Grackle cooling time" );
 #           endif
+#           if ( MODEL == ELBDM )
+            if (OPT__OUTPUT_ELBDM_VEL)
+            {
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Bulk Velocity X" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Bulk Velocity Y" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Bulk Velocity Z" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Thermal Velocity X" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Thermal Velocity Y" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Thermal Velocity Z" );
+            }
+            if (OPT__OUTPUT_ELBDM_Q_POT)
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Potential" );
+            if (OPT__OUTPUT_ELBDM_Q_STRESS)
+            {
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Stress XX" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Stress YY" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Stress ZZ" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Stress XY" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Stress YZ" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Stress XZ" );
+            }
+#           endif
             if ( OPT__OUTPUT_USER_FIELD ) {
                for (int v=0; v<UserDerField_Num; v++)
                                        fprintf( File, " %*s", StrLen_Flt, UserDerField_Label[v] );
@@ -441,6 +463,20 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 
 #  endif
 
+#  if ( MODEL == ELBDM )
+   if ( OPT__OUTPUT_ELBDM_VEL ) {
+      for (int v=0; v<6; v++)
+      fprintf( File, BlankPlusFormat_Flt, DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
+   }
+   if ( OPT__OUTPUT_ELBDM_Q_POT ) {
+      fprintf( File, BlankPlusFormat_Flt, DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
+   }
+   if ( OPT__OUTPUT_ELBDM_Q_STRESS ) {
+      for (int v=0; v<6; v++)
+      fprintf( File, BlankPlusFormat_Flt, DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
+   }
+#  endif
+
    if ( OPT__OUTPUT_USER_FIELD ) {
       for (int v=0; v<UserDerField_Num; v++)
       fprintf( File, BlankPlusFormat_Flt, DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
@@ -618,6 +654,48 @@ void GetDerivedField( real (*FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
    }
 #  endif // #ifdef SUPPORT_GRACKLE
 #  endif // #if ( MODEL == HYDRO )
+
+#  if ( MODEL == ELBDM )
+   if ( OPT__OUTPUT_ELBDM_VEL )
+   {
+      const int NFieldOut = 6;
+      if ( OutFieldIdx + NFieldOut > DER_NOUT_MAX )
+         Aux_Error( ERROR_INFO, "OutFieldIdx (%d) + NFieldOut (%d) > DER_NOUT_MAX (%d) !!\n",
+                    OutFieldIdx, NFieldOut, DER_NOUT_MAX );
+      for (int v = 0; v<6; v++)
+      {
+         const int fv = v/3;
+         const int vv = v%3;
+         ELBDM_DerivedField( Out[OutFieldIdx], FluIn[LocalID][0],
+                             fv, vv, DER_GHOST_SIZE, dh );
+         OutFieldIdx += 1;
+      }
+   }
+   if ( OPT__OUTPUT_ELBDM_Q_POT )
+   {
+      const int NFieldOut = 1;
+      if ( OutFieldIdx + NFieldOut > DER_NOUT_MAX )
+         Aux_Error( ERROR_INFO, "OutFieldIdx (%d) + NFieldOut (%d) > DER_NOUT_MAX (%d) !!\n",
+                    OutFieldIdx, NFieldOut, DER_NOUT_MAX );
+      ELBDM_DerivedField( Out[OutFieldIdx], FluIn[LocalID][0],
+                          2, 0, DER_GHOST_SIZE, dh );
+      OutFieldIdx += NFieldOut;
+   }
+   if ( OPT__OUTPUT_ELBDM_Q_STRESS )
+   {
+      const int NFieldOut = 6;
+      if ( OutFieldIdx + NFieldOut > DER_NOUT_MAX )
+         Aux_Error( ERROR_INFO, "OutFieldIdx (%d) + NFieldOut (%d) > DER_NOUT_MAX (%d) !!\n",
+                    OutFieldIdx, NFieldOut, DER_NOUT_MAX );
+      for (int v = 0; v<6; v++)
+      {
+         const int vv = v;;
+         ELBDM_DerivedField( Out[OutFieldIdx], FluIn[LocalID][0],
+                             3, vv, DER_GHOST_SIZE, dh );
+         OutFieldIdx += 1;
+      }
+   }
+#  endif // #if ( MODEL == ELBDM )
 
    if ( OPT__OUTPUT_USER_FIELD )
    {

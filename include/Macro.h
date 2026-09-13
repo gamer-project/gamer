@@ -282,7 +282,7 @@
 
 
 // maximum number of output derived fields
-#  define DER_NOUT_MAX        10
+#  define DER_NOUT_MAX        30
 
 
 // maximum number of fields to be stored in HDF5 snapshots
@@ -877,8 +877,11 @@
 
 
 // number of ghost zones for computing derived fields
+#if (MODEL == ELBDM)
+#        define DER_GHOST_SIZE      2
+#else
 #        define DER_GHOST_SIZE      1
-
+#endif
 
 // number of ghost zones for feedback
 // --> can be changed manually

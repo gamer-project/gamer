@@ -139,6 +139,7 @@ bool                 OPT__OUTPUT_ENTHALPY;
 #elif ( MODEL == ELBDM )
 double               DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
 bool                 OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE, OPT__RES_PHASE;
+bool                 OPT__OUTPUT_ELBDM_VEL, OPT__OUTPUT_ELBDM_Q_POT, OPT__OUTPUT_ELBDM_Q_STRESS;
 bool                 ELBDM_TAYLOR3_AUTO;
 double               ELBDM_TAYLOR3_COEFF;
 double               ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
