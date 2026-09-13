@@ -4356,7 +4356,7 @@ herr_t H5_write_compound( const hid_t H5_SetID, const hid_t H5_TypeID, const HDF
 // Function    :  Output_HDF5_UserPara_Template
 // Description :  Template for storing user-specified parameters in an HDF5 snapshot at User/UserPara
 //
-// Note         : 1. This function is only called by the root MPI rank
+// Note        :  1. This function is only called by the root MPI rank
 //                2. Support int, uint, long, ulong, bool, float, double, and string datatypes
 //                3. HDF5_UserPara MUST store at least one parameter
 //                4. The data pointer (i.e., the second argument passed to HDF5_UserPara->Add()) MUST persist outside this function (e.g., global variables)

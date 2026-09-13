@@ -656,6 +656,20 @@ None
 * **Example:**
    * `Output/Output_DumData_Total_HDF5.cpp` --> `Output_HDF5_UserPara_Template()`
 
+### HDF5 Input
+* **Description:**
+Load user-specified variables in HDF5 snapshots.
+* **Prototype:**
+   * `void Input_HDF5_UserPara_NewProblem( const hid_t SID, const hid_t TID );`
+* **Function Pointer:**
+   * `Input_HDF5_UserPara_Ptr`
+* **Compilation Option:**
+[[--hdf5 | [Installation]-Option-List#--hdf5]]
+* **Runtime Option:**
+None
+* **Example:**
+   * `Input/Init_ByRestart_HDF5.cpp --> Input_HDF5_UserPara_Template()`
+
 
 ## VII. Add Problem-specific Validators
 

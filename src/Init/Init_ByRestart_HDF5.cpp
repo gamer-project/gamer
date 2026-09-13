@@ -8,10 +8,6 @@ void FillIn_Makefile (  Makefile_t &Makefile  );
 void FillIn_SymConst (  SymConst_t &SymConst  );
 void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char FieldLabelOut[][MAX_STRING] );
 
-template <typename T>
-static herr_t LoadField( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Target,
-                         const hid_t H5_TypeID_Target, const bool Fatal_Nonexist,
-                         const T *ComprPtr, const int NCompr, const bool Fatal_Compr );
 static void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const bool Recursive,
                           const int *SonList, const int (*CrList)[3],
                           const hid_t *H5_SetID_Field, const hid_t H5_SpaceID_Field, const hid_t H5_MemID_Field,
@@ -24,11 +20,14 @@ static void Check_Makefile ( const char *FileName, const int FormatVersion );
 static void Check_SymConst ( const char *FileName, const int FormatVersion );
 static void Check_InputPara( const char *FileName, const int FormatVersion );
 static void ResetParameter( const char *FileName, double *EndT, long *EndStep );
+static void Input_HDF5_UserPara_Template( const hid_t SID, const hid_t TID );
 
 #ifdef PARTICLE
 static bool isPUIDStored;
 static bool isPFlagStored;
 #endif
+
+void (*Input_HDF5_UserPara_Ptr)( const hid_t SID, const hid_t TID ) = NULL;
 
 
 
@@ -112,7 +111,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 
    KeyInfo_t KeyInfo;
 
-   hid_t  H5_FileID, H5_SetID_KeyInfo, H5_TypeID_KeyInfo, H5_SetID_Cr;
+   hid_t  H5_FileID, H5_SetID_KeyInfo, H5_TypeID_KeyInfo, H5_SetID_Cr, H5_TypeID_UserPara, H5_SetID_UserPara;
 #  ifdef LOAD_BALANCE
    hid_t  H5_SetID_LBIdx;
 #  else
@@ -286,14 +285,32 @@ void Init_ByRestart_HDF5( const char *FileName )
    }
 
 
-// 1-4. close all objects
+// 1-4. load all target fields in UserPara one-by-one (by all ranks)
+   if ( Input_HDF5_UserPara_Ptr != NULL )
+   {
+      H5_SetID_UserPara = H5Dopen( H5_FileID, "User/UserPara", H5P_DEFAULT );
+      if ( H5_SetID_UserPara < 0 )
+         Aux_Error( ERROR_INFO, "failed to open the dataset \"%s\" !!\n", "User/UserPara" );
+
+      H5_TypeID_UserPara = H5Dget_type( H5_SetID_UserPara );
+      if ( H5_TypeID_UserPara < 0 )
+         Aux_Error( ERROR_INFO, "failed to open the datatype of \"%s\" !!\n", "User/UserPara" );
+
+      Input_HDF5_UserPara_Ptr( H5_SetID_UserPara, H5_TypeID_UserPara );
+
+      H5_Status = H5Tclose( H5_TypeID_UserPara );
+      H5_Status = H5Dclose( H5_SetID_UserPara );
+   }
+
+
+// 1-5. close all objects
    H5_Status = H5Tclose( H5_TypeID_KeyInfo );
    H5_Status = H5Dclose( H5_SetID_KeyInfo );
    H5_Status = H5Fclose( H5_FileID );
 
 
-// 1-5. set internal parameters
-// 1-5-1. parameters must be reset
+// 1-6. set internal parameters
+// 1-6-1. parameters must be reset
    for (int lv=0; lv<KeyInfo.NLevel; lv++)
    {
       NPatchTotal       [lv] = KeyInfo.NPatch       [lv];
@@ -307,7 +324,7 @@ void Init_ByRestart_HDF5( const char *FileName )
    amr->Par->NextPUID            = KeyInfo.Par_NextPUID;
 #  endif
 
-// 1-5-2. parameters reset only when OPT__RESTART_RESET is disabled
+// 1-6-2. parameters reset only when OPT__RESTART_RESET is disabled
    if ( ! OPT__RESTART_RESET )
    {
       for (int lv=0; lv<KeyInfo.NLevel; lv++)
@@ -326,7 +343,7 @@ void Init_ByRestart_HDF5( const char *FileName )
    }
 
 
-// 1-6. set parameters in levels that do not exist in the input file
+// 1-7. set parameters in levels that do not exist in the input file
 // --> assuming dTime_AllLv[] has been initialized as 0.0 properly
    for (int lv=KeyInfo.NLevel; lv<NLEVEL; lv++)
    {
@@ -339,7 +356,7 @@ void Init_ByRestart_HDF5( const char *FileName )
    }
 
 
-// 1-7. set SgTime
+// 1-8. set SgTime
    for (int lv=0; lv<NLEVEL; lv++)
    {
       amr->FluSgTime[lv][ amr->FluSg[lv] ] = Time[lv];
@@ -352,18 +369,18 @@ void Init_ByRestart_HDF5( const char *FileName )
    }
 
 
-// 1-8. set the next dump ID
+// 1-9. set the next dump ID
    if ( INIT_DUMPID < 0 )
       DumpID = ( OPT__RESTART_RESET ) ? 0 : KeyInfo.DumpID + 1;
    else
       DumpID = INIT_DUMPID;
 
 
-// 1-9. reset parameters from the restart file
+// 1-10. reset parameters from the restart file
    if ( ! OPT__RESTART_RESET )   ResetParameter( FileName, &END_T, &END_STEP );
 
 
-// 1-10. check all other simulation information (by rank 0 only)
+// 1-11. check all other simulation information (by rank 0 only)
    if ( MPI_Rank == 0 )
    {
       Check_Makefile ( FileName, KeyInfo.FormatVersion );
@@ -372,7 +389,7 @@ void Init_ByRestart_HDF5( const char *FileName )
    }
 
 
-// 1-11. set the GID offset at different levels
+// 1-12. set the GID offset at different levels
    NPatchAllLv = 0;
    for (int lv=0; lv<NLEVEL; lv++)
    {
@@ -2799,6 +2816,37 @@ void ResetParameter( const char *FileName, double *EndT, long *EndStep )
    Status = H5Fclose( FID );
 
 } // FUNCTION : ResetParameter
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Input_HDF5_UserPara_Template
+// Description :  Template for loading user-specified parameters in an HDF5 snapshot at User/UserPara
+//
+// Note        :  1. Invoke LoadField() to load a single field from the input compound dataset
+//                2. Linked to the function pointer Input_HDF5_UserPara_Ptr
+//
+// Parameter   :  SID : HDF5 dataset  ID of the target compound variable
+//             :  TID : HDF5 datatype ID of the target compound variable
+//
+// Return      :  None
+//-------------------------------------------------------------------------------------------------------
+void Input_HDF5_UserPara_Template( const hid_t SID, const hid_t TID )
+{
+
+   const bool NonFatal = false;
+   const int *NullPtr  = NULL;
+
+// LoadField( FieldName, FieldPtr, SID, TID, NonFatal, NullPtr, -1, NonFatal );
+
+} // FUNCTION : Input_HDF5_UserPara_Template
+
+
+
+// explicit template instantiation
+template herr_t LoadField <int> ( const char *FieldName, void *FieldPtr, const hid_t H5_SetID_Target,
+                                  const hid_t H5_TypeID_Target, const bool Fatal_Nonexist,
+                                  const int *ComprPtr, const int NCompr, const bool Fatal_Compr );
 
 
 
