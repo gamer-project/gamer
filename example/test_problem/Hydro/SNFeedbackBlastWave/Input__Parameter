@@ -144,7 +144,7 @@ CHE_GPU_NPGROUP              -1           # number of patch groups sent into the
 FB_MIN_LEVEL                  3           # minimum AMR level allowed to apply feedback (<0=auto -> MAX_LEVEL) [0]
 FB_RSEED                      456         # random seed [456]
 FB_SNE                        0           # supernova explosion feedback [0]
-FB_RESOLVED_SNEII             1           # Type II supernovae feedback for high enough grid and particle resolution (must add one extra PAR_NATT_FLT_USER)
+FB_RESOLVED_SNEII             1           # Type II supernovae feedback for high enough grid and particle resolution (must add one extra PAR_NATT_INT_USER)
 FB_USER                       0           # user-defined feedback [0]
 FB_RESOLVED_SNEII_N_PER_MASS  0.01        # number of SNeII per stellar mass (in 1/Msun) (for FB_RESOLVED_SNEII only) [0.01]
 FB_RESOLVED_SNEII_MIN_M_GAS   10.0        # minimum mass of gas in the environment of SNeII to apply feedback (in Msun) (for FB_RESOLVED_SNEII only) [0.0]

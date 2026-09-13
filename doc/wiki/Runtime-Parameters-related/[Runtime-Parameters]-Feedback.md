@@ -55,7 +55,7 @@ minimum gas mass ([[FB_RESOLVED_SNEII_MIN_M_GAS | Runtime Parameters:-Feedback#F
 the diameter equals `FB_GHOST_SIZE+1`, or the region crosses the coarse-fine boundary.
 See sec. 2.6 in [Chia-Yu Hu et al. 2023](https://doi.org/10.3847/1538-4357/accf9e) for reference.
     * **Restriction:**
-Must set one extra particle attribute with [[ --par_attribute_flt | Installation:-Option-List#--par_attribute_flt ]].
+Must set one extra particle attribute with [[ --par_attribute_int | Installation:-Option-List#--par_attribute_int ]].
 The star particle mass resolution must be high enough to have at most one supernova explosion per particle.
 The grid resolution must be high enough to resolve the Sedov phase of supernova explosion blast wave,
 so the kinetic (outward momentum) feedback is not needed.
