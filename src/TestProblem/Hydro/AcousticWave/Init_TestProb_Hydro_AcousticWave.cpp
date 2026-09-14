@@ -341,32 +341,6 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 
-#ifdef MHD
-//-------------------------------------------------------------------------------------------------------
-// Function    :  SetBFieldIC
-// Description :  Set a zero magnetic field so this hydrodynamic acoustic-wave solution can also test
-//                the MHD solver data layout
-//-------------------------------------------------------------------------------------------------------
-void SetBFieldIC( real magnetic[], const double x, const double y, const double z, const double Time,
-                  const int lv, double AuxArray[] )
-{
-
-   (void)x;
-   (void)y;
-   (void)z;
-   (void)Time;
-   (void)lv;
-   (void)AuxArray;
-
-   magnetic[MAGX] = (real)0.0;
-   magnetic[MAGY] = (real)0.0;
-   magnetic[MAGZ] = (real)0.0;
-
-} // FUNCTION : SetBFieldIC
-#endif
-
-
-
 //-------------------------------------------------------------------------------------------------------
 // Function    :  OutputError
 // Description :  Output the L1 error
@@ -384,11 +358,7 @@ void OutputError()
    const char Prefix[100]     = "AcousticWave";
    const OptOutputPart_t Part = OUTPUT_X + Acoustic_Dir;
 
-#  ifdef MHD
-   Output_L1Error( SetGridIC, SetBFieldIC, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
-#  else
-   Output_L1Error( SetGridIC, NULL,        Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
-#  endif
+   Output_L1Error( SetGridIC, NULL, Prefix, Part, OUTPUT_PART_X, OUTPUT_PART_Y, OUTPUT_PART_Z );
 
 } // FUNCTION : OutputError
 #endif // #if ( MODEL == HYDRO )
@@ -422,9 +392,6 @@ void Init_TestProb_Hydro_AcousticWave()
 
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr    = SetGridIC;
-#  ifdef MHD
-   Init_Function_BField_User_Ptr = SetBFieldIC;
-#  endif
    Output_User_Ptr           = OutputError;
 #  ifdef SUPPORT_HDF5
    Output_HDF5_InputTest_Ptr = LoadInputTestProb;
