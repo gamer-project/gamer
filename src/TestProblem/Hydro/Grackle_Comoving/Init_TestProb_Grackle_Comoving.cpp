@@ -324,10 +324,13 @@ void Aux_Record_GrackleComoving()
 #     if ( DUAL_ENERGY == DE_ENPY )
       double Dual  = amr->patch[FluSg][0][0]->fluid[DUAL][0][0][0];
       const bool CheckMinPres_No = false;
-      double Pres  = Hydro_DensDual2Pres( Dens, Dual, EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
+      real Passive[NCOMP_PASSIVE];
+      for (int v=0; v<NCOMP_PASSIVE; v++)   Passive[v] = amr->patch[FluSg][0][0]->fluid[NCOMP_FLUID+v][0][0][0];
 
-//    EOS_GAMMA does not involve passive scalars
-      Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+      double Pres  = Hydro_DensDual2Pres( Dens, Dual, Passive, CheckMinPres_No, NULL_REAL,
+                                          EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+
+      Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
 #     elif ( DUAL_ENERGY == DE_EINT )
       Eint  = amr->patch[FluSg][0][0]->fluid[DUAL][0][0][0];
@@ -581,10 +584,14 @@ double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
 #     if   ( DUAL_ENERGY == DE_ENPY )
       double Dual = amr->patch[FluSg][lv][0]->fluid[DUAL][0][0][0];
       const bool CheckMinPres_No  = false;
-      double     Pres             = Hydro_DensDual2Pres( Dens, Dual, EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
+      real Passive[NCOMP_PASSIVE];
+      for (int v=0; v<NCOMP_PASSIVE; v++)   Passive[v] = amr->patch[FluSg][lv][0]->fluid[NCOMP_FLUID+v][0][0][0];
 
-//    EOS_GAMMA does not involve passive scalars
-      Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+      double     Pres             = Hydro_DensDual2Pres( Dens, Dual, Passive, CheckMinPres_No, NULL_REAL,
+                                                          EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt,
+                                                          EoS_AuxArray_Int, h_EoS_Table );
+
+      Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
 #     elif ( DUAL_ENERGY == DE_EINT )
       Eint  = amr->patch[FluSg][lv][0]->fluid[DUAL][0][0][0];

@@ -62,7 +62,8 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
             for (int v=0; v<NCOMP_TOTAL; v++)   Fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
 #           ifdef DUAL_ENERGY
-            Pres = Hydro_DensDual2Pres( Fluid[DENS], Fluid[DUAL], EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
+            Pres = Hydro_DensDual2Pres( Fluid[DENS], Fluid[DUAL], Fluid+NCOMP_FLUID, CheckMinPres_No, NULL_REAL,
+                                        EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #           else
 #           ifdef MHD
             const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );

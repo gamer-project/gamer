@@ -217,9 +217,10 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
 #              ifdef DUAL_ENERGY
                else
                {
-                  Pres = Hydro_DensDual2Pres( ForEint[DENS], ForEint[DUAL], EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
+                  Pres = Hydro_DensDual2Pres( ForEint[DENS], ForEint[DUAL], ForEint+NCOMP_FLUID, CheckMinPres_No, NULL_REAL,
+                                              EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #                 if   ( DUAL_ENERGY == DE_ENPY )
-                  Eint = EoS_DensPres2Eint_CPUPtr( ForEint[DENS], Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                  Eint = EoS_DensPres2Eint_CPUPtr( ForEint[DENS], Pres, ForEint+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #                 elif ( DUAL_ENERGY == DE_EINT )
                   Eint = ForEint[DUAL];
 #                 endif
@@ -304,11 +305,9 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
 #                 else
                   CorrVal[ENGY] = Hydro_ConEint2Etot( CorrVal[DENS], CorrVal[MOMX], CorrVal[MOMY], CorrVal[MOMZ], Eint, Emag );
 #                 if   ( DUAL_ENERGY == DE_ENPY )
-//                DE_ENPY only supports EOS_GAMMA, which does not involve passive scalars
-                  CorrVal[DUAL] = Hydro_DensPres2Dual( CorrVal[DENS],
-                                                       EoS_DensEint2Pres_CPUPtr(CorrVal[DENS],Eint,NULL,
-                                                       EoS_AuxArray_Flt,EoS_AuxArray_Int,h_EoS_Table),
-                                                       EoS_AuxArray_Flt[1] );
+                  CorrVal[DUAL] = Hydro_DensEint2Dual( CorrVal[DENS], Eint, CorrVal+NCOMP_FLUID,
+                                                       EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt,
+                                                       EoS_AuxArray_Int, h_EoS_Table );
 #                 elif ( DUAL_ENERGY == DE_EINT )
                   CorrVal[DUAL] = Eint;
 #                 endif // DUAL_ENERGY

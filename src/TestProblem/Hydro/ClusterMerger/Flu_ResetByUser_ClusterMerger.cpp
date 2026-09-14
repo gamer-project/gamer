@@ -458,15 +458,16 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                   gas_mass[c] += fluid_acc[0]*dv;
 
 #                 ifdef DUAL_ENERGY
-                  const real Pres = Hydro_DensDual2Pres( fluid_acc[DENS], fluid_acc[DUAL], EoS_AuxArray_Flt[1],
-                                                         false, NULL_REAL );
+                  const real Pres = Hydro_DensDual2Pres( fluid_acc[DENS], fluid_acc[DUAL], fluid_acc+NCOMP_FLUID,
+                                                         false, NULL_REAL, EoS_DensEint2Pres_CPUPtr,
+                                                         EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #                 if   ( DUAL_ENERGY == DE_ENPY )
-                  const real Eint = EoS_DensPres2Eint_CPUPtr( fluid_acc[DENS], Pres, NULL, EoS_AuxArray_Flt,
+                  const real Eint = EoS_DensPres2Eint_CPUPtr( fluid_acc[DENS], Pres, fluid_acc+NCOMP_FLUID, EoS_AuxArray_Flt,
                                                               EoS_AuxArray_Int, h_EoS_Table );
 #                 elif ( DUAL_ENERGY == DE_EINT )
                   const real Eint = fluid_acc[DUAL];
 #                 endif
-                  const real Temp = EoS_DensEint2Temp_CPUPtr( fluid_acc[DENS], Eint, NULL, EoS_AuxArray_Flt,
+                  const real Temp = EoS_DensEint2Temp_CPUPtr( fluid_acc[DENS], Eint, fluid_acc+NCOMP_FLUID, EoS_AuxArray_Flt,
                                                               EoS_AuxArray_Int, h_EoS_Table );
 #                 else
                   const real Pres = Hydro_Con2Pres( fluid_acc[DENS], fluid_acc[MOMX], fluid_acc[MOMY], fluid_acc[MOMZ],
@@ -676,7 +677,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
 //             calculate the dual-energy variable
 #              ifdef DUAL_ENERGY
                fluid[DUAL] = Hydro_Con2Dual( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Emag,
-                                             EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                             fluid+NCOMP_FLUID, EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
                                              PassiveFloorMask );
 #              endif
 

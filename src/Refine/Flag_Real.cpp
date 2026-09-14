@@ -388,8 +388,13 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                {
 //                if applicable, compute pressure from the dual-energy variable to reduce the round-off errors
 #                 ifdef DUAL_ENERGY
+                  real Passive[NCOMP_PASSIVE];
+                  for (int v=0; v<NCOMP_PASSIVE; v++)   Passive[v] = Fluid[NCOMP_FLUID+v][k][j][i];
+
                   Pres[k][j][i] = Hydro_DensDual2Pres( Fluid[DENS][k][j][i], Fluid[DUAL][k][j][i],
-                                                       EoS_AuxArray_Flt[1], CheckMinPres_Yes, MIN_PRES );
+                                                       Passive, CheckMinPres_Yes, MIN_PRES,
+                                                       EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt,
+                                                       EoS_AuxArray_Int, h_EoS_Table );
 
 #                 else // #ifdef DUAL_ENERGY
 

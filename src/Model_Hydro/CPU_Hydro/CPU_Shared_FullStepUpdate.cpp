@@ -20,6 +20,10 @@
 # include "CUFLU_Shared_DualEnergy.cu"
 #endif
 
+#if ( DUAL_ENERGY == DE_EINT )
+# include "CUFLU_DualEnergy_AdiabaticWork.cu"
+#endif
+
 #else // #ifdef __CUDACC__
 
 #if ( DUAL_ENERGY == DE_EINT )
@@ -55,7 +59,8 @@ void Hydro_DualEnergy_AdiabaticWork_FullStep( real &Edual,
 //                                    --> Accessed with the array stride N_FL_FLUX even thought its actually
 //                                        allocated size is N_FC_FLUX^3
 //                g_PriVar_Half     : Array storing the input cell-centered primitive variables (for DUAL_ENERGY=DE_EINT only)
-//                                    --> Accessed with the stride N_HF_VAR
+//                                    --> MHM without MHD: original-time data with stride FLU_NXT
+//                                    --> MHM with MHD and MHM_RP: half-step data with stride N_HF_VAR
 //                                    --> Although its actually allocated size is FLU_NXT^3 since it points to g_PriVar_1PG[]
 //                g_FC_Var          : Array storing the input face-centered conserved variables (for COSMIC_RAY/DUAL_ENERGY=DE_EINT only)
 //                                    --> Accessed with the array stride N_FC_VAR^3
@@ -74,7 +79,6 @@ void Hydro_DualEnergy_AdiabaticWork_FullStep( real &Edual,
 //                NFrac             : Number of passive scalars for the option "FracPassive"
 //                FracIdx           : Target variable indices for the option "FracPassive"
 //                EoS               : EoS object
-//                                    --> Only for obtaining Gamma used by the dual-energy formalism
 //                s_FullStepFailure : (1/0) --> (Fail to update fluid patch group/otherwise)
 //                                    --> s_FullStepFailure can be NULL, for which both Iteration and MinMod_MaxIter become useless
 //                Iteration         : Current iteration number (should be <= MinMod_MaxIter)
@@ -230,8 +234,10 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
       if ( Output_1Cell[DENS] > (real)0.0  &&  Output_1Cell[ENGY]*maxKinOverTot > Ekin )
          Hydro_DualEnergyFix( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
                               Output_1Cell[ENGY], Output_1Cell[DUAL], g_DE_Status[idx_out],
-                              EoS->AuxArrayDevPtr_Flt[1], EoS->AuxArrayDevPtr_Flt[2], CheckMinPres_No, NULL_REAL,
-                              PassiveFloor, DualEnergySwitch, Emag );
+                              Output_1Cell+NCOMP_FLUID, CheckMinPres_No, NULL_REAL,
+                              PassiveFloor, DualEnergySwitch, Emag, EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr,
+                              EoS->DensEint2Entr_FuncPtr,
+                              EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
 #     endif // #ifdef DUAL_ENERGY
 
 

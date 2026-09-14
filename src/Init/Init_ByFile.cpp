@@ -704,7 +704,7 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
 
 #  ifdef DUAL_ENERGY
    fluid_out[DUAL] = Hydro_Con2Dual( fluid_in[DENS], fluid_in[MOMX], fluid_in[MOMY], fluid_in[MOMZ], fluid_in[ENGY], Emag,
-                                     EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                     fluid_in+NCOMP_FLUID, EoS_DensEint2Entr_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
                                      PassiveFloorMask );
 #  endif
 

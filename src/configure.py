@@ -500,8 +500,9 @@ def load_arguments( sys_setting : SystemSetting ):
                          default=NONE_STR, choices=[NONE_STR, "ENPY", "EINT"],
                          depend={"model":"HYDRO"},
                          constraint={ "ENPY":{"eos":"GAMMA"},
-                                      "EINT":{"eos":"GAMMA"} },
+                                      "EINT":{"flu_scheme":["MHM", "MHM_RP"]} },
                          help="The dual-energy formalism (ENPY: entropy, EINT: internal energy). "\
+                              "ENPY only supports GAMMA, EINT only supports MHM/MHM_RP. "\
                               "Useless for RTVD.\n"
                        )
 

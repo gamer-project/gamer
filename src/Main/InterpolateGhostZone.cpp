@@ -1976,9 +1976,13 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 //       here we ALWAYS use the dual-energy variable to correct the total energy density
 //       --> we achieve that by setting the dual-energy switch to an extremely larger number and ignore
 //           the runtime parameter DUAL_ENERGY_SWITCH here
+         real Passive[NCOMP_PASSIVE];
+         for (int v=0; v<NCOMP_PASSIVE; v++)   Passive[v] = IntData_CC[ (NCOMP_FLUID+v)*FSize3D_CC + t ];
+
          Hydro_DualEnergyFix( FData_Dens[t], FData_MomX[t], FData_MomY[t], FData_MomZ[t], FData_Engy[t], FData_Dual[t],
-                              dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], (MinPres>=(real)0.0), MinPres,
-                              PassiveFloorMask, UseDual2FixEngy, Emag );
+                              dummy, Passive, (MinPres>=(real)0.0), MinPres, PassiveFloorMask, UseDual2FixEngy, Emag,
+                              EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr, EoS_DensEint2Entr_CPUPtr,
+                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       }
    } // if (  DE_Consistency  &&  ( TVarCC & _TOTAL ) == _TOTAL  &&  TVarFC == _MAG )
 #  endif // if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )

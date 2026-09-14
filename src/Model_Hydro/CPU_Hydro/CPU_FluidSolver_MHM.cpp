@@ -34,7 +34,7 @@
 #include "CUDA_ConstMemory.h"
 
 #if ( DUAL_ENERGY == DE_EINT )
-# include "CUFLU_Shared_DualEnergy.cu"
+# include "CUFLU_DualEnergy_AdiabaticWork.cu"
 #endif
 #ifdef COSMIC_RAY
 # include "CUFLU_CosmicRay.cu"

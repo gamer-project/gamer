@@ -758,9 +758,11 @@ void Aux_Check_Parameter()
 #   if ( FLU_SCHEME == RTVD )
 #     error : RTVD does NOT support DUAL_ENERGY !!
 #   endif
-
-#   if ( EOS != EOS_GAMMA )
-#     error : ERROR : DUAL_ENERGY only supports EOS_GAMMA !!
+#   if ( DUAL_ENERGY == DE_ENPY  &&  EOS != EOS_GAMMA )
+#     error : ERROR : DE_ENPY only supports EOS_GAMMA !!
+#   endif  // #ifdef DUAL_ENERGY
+#   if ( DUAL_ENERGY == DE_EINT  &&  FLU_SCHEME != MHM  &&  FLU_SCHEME != MHM_RP )
+#     error : ERROR : DE_EINT only supports MHM and MHM_RP !!
 #   endif
 #  endif // #ifdef DUAL_ENERGY
 

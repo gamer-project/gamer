@@ -74,9 +74,6 @@ void Grackle_Close( const int lv, const int SaveSg, const real_che h_Che_Array[]
    int  idx_p, idx_pg, PID, PID0, offset;    // idx_p/idx_pg: array indices within a patch/patch group
    real Dens, Eint;
    real DensRatio_FluChe;                    // density ratio between the fluid array and the Che array, which could have been pre-floored
-#  ifdef DUAL_ENERGY
-   real Pres;
-#  endif
    real (*fluid)[PS1][PS1][PS1]=NULL;
 
    const real_che *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ent=NULL, *Ptr_e=NULL, *Ptr_HI=NULL, *Ptr_HII=NULL;
@@ -132,17 +129,6 @@ void Grackle_Close( const int lv, const int SaveSg, const real_che h_Che_Array[]
 //          update the total energy density
             *( fluid[ENGY     ][0][0] + idx_p ) = Eint + Ptr_Ent[idx_pg]*DensRatio_FluChe;
 
-//          update the dual-energy variable to be consistent with the updated pressure
-#           ifdef DUAL_ENERGY
-//          DUAL_ENERGY only works with EOS_GAMMA, which does not involve passive scalars
-#           if   ( DUAL_ENERGY == DE_ENPY )
-            Pres = EoS_DensEint2Pres_CPUPtr( Dens, Eint, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-            *( fluid[DUAL     ][0][0] + idx_p ) = Hydro_DensPres2Dual( Dens, Pres, EoS_AuxArray_Flt[1] );
-#           elif ( DUAL_ENERGY == DE_EINT )
-            *( fluid[DUAL     ][0][0] + idx_p ) = Eint;
-#           endif
-#           endif // #ifdef DUAL_ENERGY
-
 //          update all chemical species
             if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
             *( fluid[Idx_e    ][0][0] + idx_p ) = Ptr_e    [idx_pg] * DensRatio_FluChe * MassRatio_ep;
@@ -166,6 +152,20 @@ void Grackle_Close( const int lv, const int SaveSg, const real_che h_Che_Array[]
             *( fluid[Idx_DII  ][0][0] + idx_p ) = Ptr_DII  [idx_pg] * DensRatio_FluChe;
             *( fluid[Idx_HDI  ][0][0] + idx_p ) = Ptr_HDI  [idx_pg] * DensRatio_FluChe;
             }
+
+//          update the dual-energy variable to be consistent with the updated internal energy density
+#           ifdef DUAL_ENERGY
+            real Passive[NCOMP_PASSIVE];
+            for (int v=0; v<NCOMP_PASSIVE; v++)
+               Passive[v] = *( fluid[NCOMP_FLUID+v][0][0] + idx_p );
+
+#           if   ( DUAL_ENERGY == DE_ENPY )
+            *( fluid[DUAL     ][0][0] + idx_p ) = Hydro_DensEint2Dual( Dens, Eint, Passive, EoS_DensEint2Entr_CPUPtr,
+                                                                       EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#           elif ( DUAL_ENERGY == DE_EINT )
+            *( fluid[DUAL     ][0][0] + idx_p ) = Eint;
+#           endif
+#           endif // #ifdef DUAL_ENERGY
 
             idx_p  ++;
             idx_pg ++;

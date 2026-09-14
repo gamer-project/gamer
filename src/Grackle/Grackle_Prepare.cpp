@@ -255,9 +255,12 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
 //          use the dual-energy variable to calculate the internal energy if applicable
 #           ifdef DUAL_ENERGY
 #           if   ( DUAL_ENERGY == DE_ENPY )
-            Pres  = Hydro_DensDual2Pres( Dens, *(fluid[DUAL][0][0]+idx_p), EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
-//          EOS_GAMMA does not involve passive scalars
-            Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+            real Passive[NCOMP_PASSIVE];
+            for (int v=0; v<NCOMP_PASSIVE; v++)   Passive[v] = *( fluid[NCOMP_FLUID+v][0][0] + idx_p );
+
+            Pres  = Hydro_DensDual2Pres( Dens, *(fluid[DUAL][0][0]+idx_p), Passive, CheckMinPres_No, NULL_REAL,
+                                         EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+            Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #           elif ( DUAL_ENERGY == DE_EINT )
             Eint  = *( fluid[DUAL][0][0] + idx_p );
 #           endif
