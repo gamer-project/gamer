@@ -1,0 +1,22 @@
+# List of field labels for the GridData group of the SubData_* sub-dumps
+# (OPT__OUTPUT_SUBDIV_GRID = 1).  One label per non-comment line.  The input label is
+# case-sensitive.  This file is REQUIRED when OPT__OUTPUT_SUBDIV_GRID is enabled.
+#
+# Supported labels:
+#   HYDRO      : Dens, MomX, MomY, MomZ, Engy
+#   ELBDM      : Dens, Real, Imag (ELBDM_WAVE) / Dens, Phase, Stub (ELBDM_HYBRID)
+#   Passive    : any user-defined passive scalar (check Init_Field.cpp for labels)
+#   Derived    : Pote, ParDens/TotalDens, CCMagX/Y/Z, Pres, Temp, Entr, Cs, DivVel, Mach,
+#                DivMag, Lrtz, VelX/Y/Z, Enth, GrackleTemp, GrackleMu, GrackleTCool,
+#                and any user-defined derived field (OPT__OUTPUT_USER_FIELD)
+#
+# Note:
+# --> Sub-dump derived fields are controlled SOLELY by this list; the OPT__OUTPUT_* flags in
+#     Input__Parameter apply to main dumps only.
+#     Listing ParDens/TotalDens without OPT__OUTPUT_PAR_DENS (the flag selects the deposition
+#     mode) or a user-defined derived field without OPT__OUTPUT_USER_FIELD is a fatal error.
+# --> Selecting any of CCMagX/Y/Z (or VelX/Y/Z) keeps all three components.
+# --> A missing Input__Sub_Grid is a fatal error when OPT__OUTPUT_SUBDIV_GRID is enabled.
+# --> The output field label in the HDF5 sub-dumps matches the label exactly (no prefix added).
+#
+Dens

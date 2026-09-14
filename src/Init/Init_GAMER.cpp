@@ -193,6 +193,9 @@ void Init_GAMER( int *argc, char ***argv )
    if ( OPT__OUTPUT_PAR_MESH )   Par_Init_Attribute_Mesh();
 #  endif
 
+// initialize native fluid field list for grid sub-dumps
+   if ( OPT__OUTPUT_SUBDIV_GRID )   Init_SubGrid_Fields();
+
 
 // initialize particles
 #  ifdef PARTICLE

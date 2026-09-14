@@ -205,7 +205,11 @@ void Init_ByRestart_HDF5( const char *FileName )
 
    MPI_Barrier( MPI_COMM_WORLD );
 
+// SubDumpID does not exist in snapshots predating OPT__OUTPUT_SUBDIV --> default to -1 (restored as 0 in 1-8b)
+   KeyInfo.SubDumpID = -1;
+
    LoadField( "DumpID",               &KeyInfo.DumpID,               H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
+   LoadField( "SubDumpID",            &KeyInfo.SubDumpID,            H5_SetID_KeyInfo, H5_TypeID_KeyInfo, NonFatal,  NullPtr,              -1, NonFatal );
    LoadField( "NX0",                   KeyInfo.NX0,                  H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NX0_TOT,               3,    Fatal );
    LoadField( "BoxScale",              KeyInfo.BoxScale,             H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
    LoadField( "NPatch",                KeyInfo.NPatch,               H5_SetID_KeyInfo, H5_TypeID_KeyInfo,    Fatal,  NullPtr,              -1, NonFatal );
@@ -357,6 +361,14 @@ void Init_ByRestart_HDF5( const char *FileName )
       DumpID = ( OPT__RESTART_RESET ) ? 0 : KeyInfo.DumpID + 1;
    else
       DumpID = INIT_DUMPID;
+
+// 1-8b. recover the sub-dump state
+//    --> the stored SubDumpID has already been incremented past the co-dump written with this snapshot
+//        (see Output_DumpData.cpp), so restore it directly; -1 --> pre-feature snapshot
+   if ( ! OPT__RESTART_RESET )
+   {
+      SubDumpID = ( KeyInfo.SubDumpID >= 0 ) ? KeyInfo.SubDumpID : 0;
+   }
 
 
 // 1-9. reset parameters from the restart file
@@ -2468,6 +2480,13 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Output_PartZ",                &RS.Output_PartZ,                SID, TID, NonFatal, &RT.Output_PartZ,                1, NonFatal );
    }
    LoadField( "InitDumpID",                  &RS.InitDumpID,                  SID, TID, NonFatal, &RT.InitDumpID,                  1, NonFatal );
+   LoadField( "Opt__Output_Subdiv",          &RS.Opt__Output_Subdiv,          SID, TID, NonFatal, &RT.Opt__Output_Subdiv,          1, NonFatal );
+   LoadField( "Opt__Output_Subdiv_Grid",     &RS.Opt__Output_Subdiv_Grid,     SID, TID, NonFatal, &RT.Opt__Output_Subdiv_Grid,     1, NonFatal );
+   LoadField( "Opt__Output_Subdiv_Par",      &RS.Opt__Output_Subdiv_Par,      SID, TID, NonFatal, &RT.Opt__Output_Subdiv_Par,      1, NonFatal );
+   LoadField( "Opt__Output_Subdiv_Tracer",   &RS.Opt__Output_Subdiv_Tracer,   SID, TID, NonFatal, &RT.Opt__Output_Subdiv_Tracer,   1, NonFatal );
+   LoadField( "Opt__Output_Subdiv_User",     &RS.Opt__Output_Subdiv_User,     SID, TID, NonFatal, &RT.Opt__Output_Subdiv_User,     1, NonFatal );
+   LoadField( "Opt__Output_Subdiv_Tree",     &RS.Opt__Output_Subdiv_Tree,     SID, TID, NonFatal, &RT.Opt__Output_Subdiv_Tree,     1, NonFatal );
+   LoadField( "Opt__Output_Subdiv_Float32",  &RS.Opt__Output_Subdiv_Float32,  SID, TID, NonFatal, &RT.Opt__Output_Subdiv_Float32,  1, NonFatal );
 
 // libyt jupyter
 #  if ( defined(SUPPORT_LIBYT) && defined(LIBYT_JUPYTER) )

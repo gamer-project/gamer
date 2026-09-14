@@ -57,7 +57,13 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
                      const char *Prefix, const OptOutputPart_t Part, const double x, const double y, const double z )
 {
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d) ...\n", __FUNCTION__, DumpID );
+// use SubDumpID for file naming only when user outputs fire at sub-cadence (OPT__OUTPUT_SUBDIV_USER)
+// so sub-dump files don't collide with main dumps
+   const bool UseSubDumpID = ( OPT__OUTPUT_SUBDIV_USER  &&  OPT__OUTPUT_SUBDIV >= 1 );
+   const int  FileID       = ( UseSubDumpID ) ? SubDumpID : DumpID;
+   const char *IDLabel     = ( UseSubDumpID ) ? "SubDumpID" : "DumpID";
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (%s = %d) ...\n", __FUNCTION__, IDLabel, FileID );
 
 
 // check
@@ -78,38 +84,38 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
    char FileName[NERR][2*MAX_STRING];
 
 #  if   ( MODEL == HYDRO )
-   sprintf( FileName[            0], "%s/%s_Dens_%06d", OUTPUT_DIR, Prefix, DumpID );
-   sprintf( FileName[            1], "%s/%s_MomX_%06d", OUTPUT_DIR, Prefix, DumpID );
-   sprintf( FileName[            2], "%s/%s_MomY_%06d", OUTPUT_DIR, Prefix, DumpID );
-   sprintf( FileName[            3], "%s/%s_MomZ_%06d", OUTPUT_DIR, Prefix, DumpID );
-   sprintf( FileName[            4], "%s/%s_Pres_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            0], "%s/%s_Dens_%06d", OUTPUT_DIR, Prefix, FileID );
+   sprintf( FileName[            1], "%s/%s_MomX_%06d", OUTPUT_DIR, Prefix, FileID );
+   sprintf( FileName[            2], "%s/%s_MomY_%06d", OUTPUT_DIR, Prefix, FileID );
+   sprintf( FileName[            3], "%s/%s_MomZ_%06d", OUTPUT_DIR, Prefix, FileID );
+   sprintf( FileName[            4], "%s/%s_Pres_%06d", OUTPUT_DIR, Prefix, FileID );
 
    for (int v=0; v<NCOMP_PASSIVE; v++)
-   sprintf( FileName[NCOMP_FLUID+v], "%s/%s_Passive%02d_%06d", OUTPUT_DIR, Prefix, v, DumpID );
+   sprintf( FileName[NCOMP_FLUID+v], "%s/%s_Passive%02d_%06d", OUTPUT_DIR, Prefix, v, FileID );
 
 #  ifdef MHD
-   sprintf( FileName[NCOMP_TOTAL+0], "%s/%s_MagX_%06d", OUTPUT_DIR, Prefix, DumpID );
-   sprintf( FileName[NCOMP_TOTAL+1], "%s/%s_MagY_%06d", OUTPUT_DIR, Prefix, DumpID );
-   sprintf( FileName[NCOMP_TOTAL+2], "%s/%s_MagZ_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[NCOMP_TOTAL+0], "%s/%s_MagX_%06d", OUTPUT_DIR, Prefix, FileID );
+   sprintf( FileName[NCOMP_TOTAL+1], "%s/%s_MagY_%06d", OUTPUT_DIR, Prefix, FileID );
+   sprintf( FileName[NCOMP_TOTAL+2], "%s/%s_MagZ_%06d", OUTPUT_DIR, Prefix, FileID );
 #  endif
 
-   sprintf( FileName[     NBASIC+0], "%s/%s_Temp_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[     NBASIC+0], "%s/%s_Temp_%06d", OUTPUT_DIR, Prefix, FileID );
 
 #  elif ( MODEL == ELBDM )
 #  if   ( ELBDM_SCHEME == ELBDM_WAVE )
-   sprintf( FileName[            0], "%s/%s_Dens_%06d", OUTPUT_DIR, Prefix, DumpID );
-   sprintf( FileName[            1], "%s/%s_Real_%06d", OUTPUT_DIR, Prefix, DumpID );
-   sprintf( FileName[            2], "%s/%s_Imag_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            0], "%s/%s_Dens_%06d", OUTPUT_DIR, Prefix, FileID );
+   sprintf( FileName[            1], "%s/%s_Real_%06d", OUTPUT_DIR, Prefix, FileID );
+   sprintf( FileName[            2], "%s/%s_Imag_%06d", OUTPUT_DIR, Prefix, FileID );
 #  elif ( ELBDM_SCHEME == ELBDM_HYBRID )
-   sprintf( FileName[            0], "%s/%s_Dens_%06d", OUTPUT_DIR, Prefix, DumpID );
-   sprintf( FileName[            1], "%s/%s_Phas_%06d", OUTPUT_DIR, Prefix, DumpID );
-   sprintf( FileName[            2], "%s/%s_Stub_%06d", OUTPUT_DIR, Prefix, DumpID );
+   sprintf( FileName[            0], "%s/%s_Dens_%06d", OUTPUT_DIR, Prefix, FileID );
+   sprintf( FileName[            1], "%s/%s_Phas_%06d", OUTPUT_DIR, Prefix, FileID );
+   sprintf( FileName[            2], "%s/%s_Stub_%06d", OUTPUT_DIR, Prefix, FileID );
 #  else
 #  error : ERROR : unsupported ELBDM_SCHEME !!
 #  endif // ELBDM_SCHEME
 
    for (int v=0; v<NCOMP_PASSIVE; v++)
-   sprintf( FileName[NCOMP_FLUID+v], "%s/%s_Passive%02d_%06d", OUTPUT_DIR, Prefix, v, DumpID );
+   sprintf( FileName[NCOMP_FLUID+v], "%s/%s_Passive%02d_%06d", OUTPUT_DIR, Prefix, v, FileID );
 
 #  else
 #  error : ERROR : unsupported MODEL !!
@@ -340,7 +346,7 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
    } // if ( MPI_Rank == 0 )
 
 
-   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (DumpID = %d) ... done\n", __FUNCTION__, DumpID );
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s (%s = %d) ... done\n", __FUNCTION__, IDLabel, FileID );
 
 } // FUNCTION : Output_L1Error
 

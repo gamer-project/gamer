@@ -1,0 +1,8 @@
+# Field list for the GridData group of the SubData_* sub-dumps (OPT__OUTPUT_SUBDIV_GRID = 1).
+# One label per non-comment line; see example/input/Input__Sub_Grid for the annotated template.
+Dens
+MomX
+MomY
+MomZ
+Engy
+Pote

@@ -180,6 +180,20 @@ OPT__OUTPUT_POT               1           # output gravitational potential [1] #
 OPT__OUTPUT_PAR_DENS          0           # output the particle or total mass density on grids:
                                           # (0=off, 1=particle mass density, 2=total mass density) [1] ##OPT__OUTPUT_TOTAL ONLY##
 OPT__OUTPUT_MODE              3           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
+OPT__OUTPUT_SUBDIV           -1           # sub-cadence gate: <0=off; N>=1: sub-dumps between/at main dumps [-1]
+                                          # for OPT__OUTPUT_MODE == 1, sub-dump every N steps after each main dump
+                                          # (e.g., N=3, const_step=7: sub-dumps at steps 0, 3, 6, 7, 10, 13, 14,...)
+                                          # for OPT__OUTPUT_MODE == 2/3, sub-dump over evenly spaced N-1 intermediate substeps
+OPT__OUTPUT_SUBDIV_GRID       0           # include the GridData group in SubData_* (field list REQUIRED via Input__Sub_Grid; requires _TREE=1) [0]
+OPT__OUTPUT_SUBDIV_PAR        0           # include massive particles in the SubData_* Particle group [0]
+OPT__OUTPUT_SUBDIV_TRACER     0           # include tracer particles in the SubData_* Particle group [0]
+OPT__OUTPUT_SUBDIV_USER       0           # fire Output_User_Ptr() at sub-cadence (requires OPT__OUTPUT_USER=1) [0]
+                                          # when enabled, Output_User_Ptr() fires exclusively via the sub-cadence path
+                                          # (indexed by SubDumpID) at both sub-cadence and major dumps; the regular
+                                          # OPT__OUTPUT_USER call at major dumps is suppressed for consistent indexing
+OPT__OUTPUT_SUBDIV_TREE       1           # include the Tree group in SubData_* (required for loading SubData_* with yt and by _GRID) [1]
+                                          # --> disable only to minimize file size for direct non-yt-based analysis
+OPT__OUTPUT_SUBDIV_FLOAT32    0           # downcast SubData_* Particle-group data to float32 [0]
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
 OUTPUT_DT                     1.0         # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
 OUTPUT_PART_X                -1.0         # x coordinate for OPT__OUTPUT_PART [-1.0]

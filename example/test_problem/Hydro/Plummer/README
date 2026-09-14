@@ -24,3 +24,8 @@ Note:
    (1) Set Plummer_FB_ExpMMax = 0.0 (no mass loss in explosion feedback)
    (2) Set OPT__BC_FLU_* = 1 (periodic BC)
    (3) Use the gnuplot script "plot_script/plot_mass.gpt"
+6. To test the sub-cadence output SubData_*:
+   (1) Set OPT__OUTPUT_SUBDIV >= 1
+       --> This test presets OPT__OUTPUT_SUBDIV_GRID/PAR = 1 with the field list in "Input__Sub_Grid"
+   (2) Use the yt script "plot_script/plot_subdata.py" to plot the gas density and particles
+       from the SubData_* sub-dumps

@@ -64,6 +64,7 @@ struct KeyInfo_t
    int    NCompPassive;             // NCOMP_PASSIVE
    int    PatchSize;
    int    DumpID;
+   int    SubDumpID;
    int    NX0     [3];
    int    BoxScale[3];
    int    NPatch   [NLEVEL];
@@ -882,6 +883,13 @@ struct InputPara_t
    double Output_PartY;
    double Output_PartZ;
    int    InitDumpID;
+   int    Opt__Output_Subdiv;
+   int    Opt__Output_Subdiv_Grid;
+   int    Opt__Output_Subdiv_Par;
+   int    Opt__Output_Subdiv_Tracer;
+   int    Opt__Output_Subdiv_User;
+   int    Opt__Output_Subdiv_Tree;
+   int    Opt__Output_Subdiv_Float32;
 
 // libyt jupyter interface
 #  if ( defined(SUPPORT_LIBYT) && defined(LIBYT_JUPYTER) )

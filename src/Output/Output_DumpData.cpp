@@ -3,6 +3,7 @@
 extern Timer_t Timer_OutputWalltime;
 
 static void Write_DumpRecord();
+static void Write_SubDumpRecord();
 
 
 
@@ -35,6 +36,10 @@ void Output_DumpData( const int Stage )
 #  endif
       return;
 
+
+// static tracking state for OPT__OUTPUT_SUBDIV
+   static int    LastMainDumpStep = 0;  // step of last main dump (mode 1)
+   static double SubInterval      = 0.0; // time between consecutive sub-dumps (modes 2/3)
 
 // set the first dump time
    static int DumpTableID;
@@ -95,6 +100,20 @@ void Output_DumpData( const int Stage )
          break;
 
       } // switch ( OPT__OUTPUT_MODE )
+
+//    initialize sub-dump cadence (also covers the restart case where Stage==0 exits early
+//    below before the main-dump block can set SubInterval/SubDumpTime)
+      if ( OPT__OUTPUT_SUBDIV >= 2 )
+      {
+         LastMainDumpStep = Step;
+
+         if ( OPT__OUTPUT_MODE == OUTPUT_CONST_DT  ||  OPT__OUTPUT_MODE == OUTPUT_USE_TABLE )
+         {
+            SubInterval = ( DumpTime - Time[0] ) / OPT__OUTPUT_SUBDIV;
+            SubDumpTime = Time[0] + SubInterval;
+         }
+      }
+
    } // if ( Stage == 0 )
 
 
@@ -276,11 +295,37 @@ void Output_DumpData( const int Stage )
 //    perform user-specified work before dumping data
       if ( Output_UserWorkBeforeOutput_Ptr != NULL )  Output_UserWorkBeforeOutput_Ptr();
 
+//    fire sub-cadence outputs at N=1 (or at every main dump when SUBDIV >= 1) BEFORE writing
+//    the main HDF5 snapshot so that SubDumpID is already incremented when the snapshot is written;
+//    without this, restarting from a main-dump snapshot restores the pre-increment SubDumpID and
+//    the first sub-dump after restart collides (same filename) with the co-dump at the main dump
+      const bool AnySubDiv = OPT__OUTPUT_SUBDIV_GRID    ||  OPT__OUTPUT_SUBDIV_PAR  ||
+                             OPT__OUTPUT_SUBDIV_TRACER  ||  OPT__OUTPUT_SUBDIV_USER;
+      if ( AnySubDiv  &&  OPT__OUTPUT_SUBDIV >= 1 )
+      {
+         char SubFileName[2*MAX_STRING];
+#        ifdef SUPPORT_HDF5
+         if ( OPT__OUTPUT_SUBDIV_GRID  ||  OPT__OUTPUT_SUBDIV_PAR  ||  OPT__OUTPUT_SUBDIV_TRACER )
+         {
+            sprintf( SubFileName, "%s/SubData_%06d", OUTPUT_DIR, SubDumpID );
+            Output_DumpData_Total_HDF5( SubFileName, true );
+         }
+#        endif
+         if ( OPT__OUTPUT_SUBDIV_USER )
+         {
+            if ( Output_User_Ptr != NULL )   Output_User_Ptr();
+            else
+               Aux_Error( ERROR_INFO, "Output_User_Ptr == NULL for OPT__OUTPUT_SUBDIV_USER !!\n" );
+         }
+         Write_SubDumpRecord();
+         SubDumpID++;
+      }
+
 //    start dumping data
       if ( OPT__OUTPUT_TOTAL )            Output_DumpData_Total( FileName_Total );
       if ( OPT__OUTPUT_PART  )            Output_DumpData_Part( OPT__OUTPUT_PART, OPT__OUTPUT_BASE, OUTPUT_PART_X,
                                                                 OUTPUT_PART_Y, OUTPUT_PART_Z, FileName_Part );
-      if ( OPT__OUTPUT_USER )
+      if ( OPT__OUTPUT_USER  &&  !OPT__OUTPUT_SUBDIV_USER )
       {
          if ( Output_User_Ptr != NULL )   Output_User_Ptr();
          else
@@ -302,10 +347,76 @@ void Output_DumpData( const int Stage )
       {
          if ( OPT__OUTPUT_MODE == OUTPUT_CONST_DT  )  DumpTime = round( Time[0]/OUTPUT_DT + 1.0 )*OUTPUT_DT;
          if ( OPT__OUTPUT_MODE == OUTPUT_USE_TABLE )  DumpTime = DumpTable[ ++DumpTableID ];
+
+//       set up the sub-dump cadence for the next main-dump interval
+         if ( OPT__OUTPUT_SUBDIV >= 2 )
+         {
+            LastMainDumpStep = Step;
+
+            if ( OPT__OUTPUT_MODE == OUTPUT_CONST_DT  ||  OPT__OUTPUT_MODE == OUTPUT_USE_TABLE )
+            {
+               SubInterval = ( DumpTime - Time[0] ) / OPT__OUTPUT_SUBDIV;
+               SubDumpTime = Time[0] + SubInterval;
+            }
+         }
       }
 
       PreviousDumpStep = Step;
    } // if ( OutputData || OutputData_RunTime )
+
+
+// sub-dump gate: fire individual sub-cadence outputs between main dumps
+   {
+      const bool AnySubDiv2 = OPT__OUTPUT_SUBDIV_GRID    ||  OPT__OUTPUT_SUBDIV_PAR  ||
+                              OPT__OUTPUT_SUBDIV_TRACER  ||  OPT__OUTPUT_SUBDIV_USER;
+      if ( OPT__OUTPUT_SUBDIV >= 2  &&  AnySubDiv2  &&  !OutputData  &&  !OutputData_RunTime  &&  !OutputData_Walltime )
+      {
+         bool SubDump = false;
+
+         switch ( OPT__OUTPUT_MODE )
+         {
+            case OUTPUT_CONST_STEP :
+               if ( Step > LastMainDumpStep  &&  (Step - LastMainDumpStep) % OPT__OUTPUT_SUBDIV == 0 )
+                  SubDump = true;
+               break;
+
+            case OUTPUT_CONST_DT :
+            case OUTPUT_USE_TABLE :
+               if (   ( Time[0] != 0.0  &&  fabs( (Time[0] - SubDumpTime) / Time[0] ) < 1.0e-8  )
+                   || ( Time[0] == 0.0  &&  fabs(  Time[0] - SubDumpTime            ) < 1.0e-12 )   )
+                  SubDump = true;
+               break;
+
+            default :
+               Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "OPT__OUTPUT_MODE", OPT__OUTPUT_MODE );
+         } // switch ( OPT__OUTPUT_MODE )
+
+         if ( SubDump )
+         {
+            char SubFileName[2*MAX_STRING];
+#           ifdef SUPPORT_HDF5
+            if ( OPT__OUTPUT_SUBDIV_GRID  ||  OPT__OUTPUT_SUBDIV_PAR  ||  OPT__OUTPUT_SUBDIV_TRACER )
+            {
+               sprintf( SubFileName, "%s/SubData_%06d", OUTPUT_DIR, SubDumpID );
+               Output_DumpData_Total_HDF5( SubFileName, true );
+            }
+#           endif
+            if ( OPT__OUTPUT_SUBDIV_USER )
+            {
+               if ( Output_User_Ptr != NULL )   Output_User_Ptr();
+               else
+                  Aux_Error( ERROR_INFO, "Output_User_Ptr == NULL for OPT__OUTPUT_SUBDIV_USER !!\n" );
+            }
+
+            Write_SubDumpRecord();
+            SubDumpID++;
+
+//          advance SubDumpTime to the next sub-dump for time-based modes
+            if ( OPT__OUTPUT_MODE == OUTPUT_CONST_DT || OPT__OUTPUT_MODE == OUTPUT_USE_TABLE )
+               SubDumpTime += SubInterval;
+         }
+      }
+   } // sub-dump gate
 
 } // FUNCTION : Output_DumpData
 
@@ -350,3 +461,44 @@ void Write_DumpRecord()
    }
 
 } // FUNCTION : Write_DumpRecord
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Write_SubDumpRecord
+// Description :  Record the information of each user sub-dump in "Record__TimeSubDump"
+//-------------------------------------------------------------------------------------------------------
+void Write_SubDumpRecord()
+{
+
+   char FileName[2*MAX_STRING];
+   sprintf( FileName, "%s/Record__TimeSubDump", OUTPUT_DIR );
+
+
+// create the header on first call; append on restart (file already exists)
+   static bool FirstTime = true;
+
+   if ( MPI_Rank == 0  &&  FirstTime )
+   {
+      if ( Aux_CheckFileExist(FileName) )
+         Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
+
+      else
+      {
+         FILE *File = fopen( FileName, "w" );
+         fprintf( File, "%9s\t\t%20s\t\t%9s\n", "SubDumpID", "Time", "Step" );
+         fclose( File );
+      }
+
+      FirstTime = false;
+   }
+
+
+   if ( MPI_Rank == 0 )
+   {
+      FILE *File = fopen( FileName, "a" );
+      fprintf( File, "%9d\t\t%20.14e\t\t%9ld\n", SubDumpID, Time[0], Step );
+      fclose( File );
+   }
+
+} // FUNCTION : Write_SubDumpRecord
