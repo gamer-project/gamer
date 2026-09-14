@@ -14,7 +14,7 @@ static void StoreFlux( const int lv, const real Flux_Array[][9][NFLUX_TOTAL][ SQ
 static void CorrectFlux( const int SonLv, const real Flux_Array[][9][NFLUX_TOTAL][ SQR(PS2) ],
                          const int NPG, const int *PID0_List, const real dt );
 #if ( MODEL == HYDRO )
-static bool Unphysical( const real Fluid[], const int CheckMode, const real Emag );
+static bool Unphysical( const real Fluid[], const bool CheckMinEint, const real Emag );
 #ifndef SRHD
 static void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                const real h_Flu_Array_F_In[][FLU_NIN][ CUBE(FLU_NXT) ],
@@ -400,20 +400,18 @@ void CorrectFlux( const int SonLv, const real h_Flux_Array[][9][NFLUX_TOTAL][ SQ
 //                   --> It provides a stricter check than Hydro_IsUnphysical(), which is found to be necessary in some
 //                       extreme cases. For example, Hydro_IsUnphysical() allows the internal energy to be slightly negative
 //                       if it's within machine precision.
-//                3. When enabling the dual-energy formalism (with DE_ENPY), CheckMode=1 checks pressure
+//                3. When enabling the dual-energy formalism (with DE_ENPY), it checks pressure
 //                   instead of internal energy
 //
-// Parameter   :  Fluid     : Input fluid variable array with size FLU_NOUT
-//                CheckMode : (0/1) --> check (total energy/internal energy)
-//                Emag      : Magnetic energy (for MHD only)
+// Parameter   :  Fluid        : Input fluid variable array with size FLU_NOUT
+//                CheckMinEint : Whether to check internal energy against MIN_EINT
+//                Emag         : Magnetic energy (for MHD only)
 //
 // Return      :  true/false <--> input Fluid[] is unphysical/physical
 //-------------------------------------------------------------------------------------------------------
-bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
+bool Unphysical( const real Fluid[], const bool CheckMinEint, const real Emag )
 {
 
-   const int  CheckMinEtot    = 0;
-   const int  CheckMinEint    = 1;
    const bool CheckMinPres_No = false;
    const bool NoFloor         = false;
 
@@ -434,31 +432,44 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
 #  endif
 
 #  ifndef BAROTROPIC_EOS
-   if ( CheckMode == CheckMinEtot  &&  ( Fluid[ENGY] < (real)MIN_EINT || Fluid[ENGY] != Fluid[ENGY] )  )
+   if ( Fluid[ENGY] < (real)MIN_EINT || Fluid[ENGY] != Fluid[ENGY] )
       return true;
 
-   if ( CheckMode == CheckMinEint )
-   {
-//    when adopting the dual-energy formalism, do NOT calculate pressure from "Etot-Ekin" since it would suffer
-//    from large round-off errors
-//    --> currently we use TINY_NUMBER as the dual-energy floor and hence here we use 2.0*TINY_NUMBER to
-//        validate the dual-energy variable
-//    --> in general, MIN_PRES > 0.0 should be sufficient for detecting unphysical dual-energy variable
-//    --> however, the additional check "Fluid[DUAL] < (real)2.0*TINY_NUMBER" is necessary when MIN_PRES == 0.0
-#     ifdef DUAL_ENERGY
-      const real Pres = Hydro_DensDual2Pres( Fluid[DENS], Fluid[DUAL], EoS_AuxArray_Flt[1], NoFloor, NULL_REAL );
-      if ( Pres < (real)MIN_PRES  ||  !Aux_IsFinite(Pres)  ||
-           Fluid[DUAL] < (real)2.0*TINY_NUMBER  ||  !Aux_IsFinite(Fluid[DUAL]) )
-         return true;
+// when adopting the dual-energy formalism, do NOT calculate pressure from "Etot-Ekin" since it would suffer
+// from large round-off errors
+// --> currently we use TINY_NUMBER as the dual-energy floor and hence here we use 2.0*TINY_NUMBER to
+//     validate the dual-energy variable
+// --> in general, MIN_PRES > 0.0 should be sufficient for detecting unphysical dual-energy variable
+// --> however, the additional check "Fluid[DUAL] < (real)2.0*TINY_NUMBER" is necessary when MIN_PRES == 0.0
+#  ifdef DUAL_ENERGY
+   const real Pres = Hydro_DensDual2Pres( Fluid[DENS], Fluid[DUAL], EoS_AuxArray_Flt[1], NoFloor, NULL_REAL );
+   if ( Pres < (real)MIN_PRES  ||  !Aux_IsFinite(Pres)  ||
+        Fluid[DUAL] < (real)2.0*TINY_NUMBER  ||  !Aux_IsFinite(Fluid[DUAL]) )
+      return true;
+#  endif // DUAL_ENERGY
 
-#     else // without DUAL_ENERGY
-      const real Eint = Hydro_Con2Eint( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
-                                        NoFloor, NULL_REAL, PassiveFloorMask, Emag, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                        EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+   const real Eint = Hydro_Con2Eint( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
+                                     NoFloor, NULL_REAL, PassiveFloorMask, Emag, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#  ifndef DUAL_ENERGY
+   if ( CheckMinEint )
+   {
       if ( Eint < (real)MIN_EINT  ||  !Aux_IsFinite(Eint) )
          return true;
-#     endif // DUAL_ENERGY
-   } // if ( CheckMode == CheckMinEint )
+   }
+   else
+#  endif // #ifndef DUAL_ENERGY
+   {
+//    1. when the dual-energy formalism is disabled and CheckMinEint is false,
+//       we still check whether Eint is negative beyond rounding error
+//    2. when the dual-energy formalism is enabled,
+//       the dual-energy fix may be skipped in Hydro_FullStepUpdate() if Eint is largely negative, which leaves Eint unphysical
+//       --> specifically, we may see "Eint <= -Etot" here
+//       --> on the other hand, even after the dual-energy fix,
+//           it is still possible and acceptable for Eint to be negative to the rounding-error scale of Etot
+      if ( Eint < -Fluid[ENGY]*CHECK_UNPHY_ROUNDING_FACTOR*MACHINE_EPSILON  ||  !Aux_IsFinite(Eint) )
+         return true;
+   } // if ( CheckMinEint ) ... else ...
 
    if ( OPT__CHECK_PRES_AFTER_FLU )
    {
@@ -557,8 +568,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
    const real dh               = (real)amr->dh[lv];
    const real dt_dh            = dt/dh;
    const int  didx[3]          = { 1, FLU_NXT, FLU_NXT*FLU_NXT };
-   const int  CheckMinEtot     = 0;
-   const int  CheckMinEint     = 1;
+   const bool CheckMinEint_Yes = true;
    const int  LocalID[2][2][2] = { 0, 1, 2, 4, 3, 6, 5, 7 };
 
 // variables shared by all OpenMP threads
@@ -625,7 +635,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
          const real Emag_Out = NULL_REAL;
 #        endif
 
-         if ( Unphysical(Out, CheckMinEint, Emag_Out) )
+         if ( Unphysical(Out, CheckMinEint_Yes, Emag_Out) )
          {
             const int idx_in_i = ijk_out[0] + FLU_GHOST_SIZE;
             const int idx_in_j = ijk_out[1] + FLU_GHOST_SIZE;
@@ -819,7 +829,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                     CorrPres_No, NULL_REAL, PassiveFloorMask, DUAL_ENERGY_SWITCH, Emag_Out );
 #              endif
 
-               if ( Unphysical(Update, CheckMinEint, Emag_Out) )
+               if ( Unphysical(Update, CheckMinEint_Yes, Emag_Out) )
                {
 //                collect nearby input conserved variables
                   for (int k=0; k<Corr1D_NCell; k++)  { Corr1D_didx2[2] = (k-Corr1D_NBuf)*didx[2];
@@ -927,7 +937,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   for (int v=0; v<NCOMP_TOTAL; v++)
                      Update[v] = Corr1D_InOut[Corr1D_NBuf][Corr1D_NBuf][Corr1D_NBuf][v];
 
-               } // if ( Unphysical(Update, CheckMinEint, Emag_Out) )
+               } // if ( Unphysical(Update, CheckMinEint_Yes, Emag_Out) )
             } // if ( OPT__1ST_FLUX_CORR == FIRST_FLUX_CORR_3D1D )
 
 
@@ -986,11 +996,11 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
 
 //          check if the newly updated values are still unphysical
-//          --> note that, when AutoReduceDt_Continue is false, we check Etot instead of Eint since even after calling
+//          --> note that, when AutoReduceDt_Continue is false, we only check non-negligibly negative Eint since even after calling
 //              Hydro_CheckMinEintInEngy() we may still have Eint < MIN_EINT due to round-off errors (especially when Eint << Ekin)
 //              --> it will not crash the code since we always apply MIN_EINT/MIN_PRES when calculating Eint/pressure
-//          --> when AutoReduceDt_Continue is true, we still check Eint instead of Etot
-            if ( Unphysical(Update, (AutoReduceDt_Continue)?CheckMinEint:CheckMinEtot, Emag_Out) )
+//          --> when AutoReduceDt_Continue is true, we check Eint against MIN_EINT
+            if ( Unphysical(Update, AutoReduceDt_Continue, Emag_Out) )
             {
 //             set CorrectUnphy = GAMER_FAILED if any cells fail
 //             --> use critical directive to avoid thread racing (may not be necessary here?)
@@ -1220,7 +1230,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #                 endif
                   Output_Patch( lv, PID_Failed, amr->FluSg[lv], MagSg, PotSg, "Unphy" );
                } // if ( ! AutoReduceDt_Continue )
-            } // if ( Unphysical(Update, (AutoReduceDt_Continue)?CheckMinEint:CheckMinEtot, Emag_Out) )
+            } // if ( Unphysical(Update, AutoReduceDt_Continue, Emag_Out) )
 
             else
             {
@@ -1269,7 +1279,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //             record the number of corrected cells
                NCorrThisTime ++;
 
-            } // if ( Unphysical(Update, (AutoReduceDt_Continue)?CheckMinEint:CheckMinEtot, Emag_Out) ) ... else ...
+            } // if ( Unphysical(Update, AutoReduceDt_Continue, Emag_Out) ) ... else ...
          } // if need correction
       } // i,j,k
    } // for (int TID=0; TID<NPG; TID++)
