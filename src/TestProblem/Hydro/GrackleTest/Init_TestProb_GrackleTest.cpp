@@ -409,7 +409,7 @@ void SetParameter()
       if ( END_STEP < 0 )
       {
          END_STEP = __INT_MAX__;
-         PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "auto-set to a large value so that END_T controls the simulation end time for GrackleTest_DefaultTestMode == 5" );
+         PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "so that END_T controls the simulation end time for GrackleTest_DefaultTestMode == 5" );
       }
 
       if ( END_T < 0.0 )
@@ -421,10 +421,12 @@ void SetParameter()
          const double gas_rho_cgs = GrackleTest_MassDensity_Min;
          const double k_per_sec   = GrackleTest_ExpCoolCoeff / Const_Myr;
 
+//       The saturation time is the point at which the dust density stops changing appreciabl. Using it as the default END_T  
+//       ensures the simulation runs long enough to capture the full dust-density decay without running unnecessarily longer.
          const double t_sat_sec = DustSat_ComputeSaturationTime( T0_K, gas_rho_cgs, k_per_sec );
 
          END_T = t_sat_sec / UNIT_T;
-         PRINT_RESET_PARA( END_T, FORMAT_REAL, "auto-computed dust-sputtering saturation time for GrackleTest_DefaultTestMode == 5" );
+         PRINT_RESET_PARA( END_T, FORMAT_REAL, "to the auto-computed dust-sputtering saturation time for GrackleTest_DefaultTestMode == 5" );
       }
       
    }
@@ -690,18 +692,23 @@ void AddNewField_GrackleTest()
 //                4. The input arguments "lv" and "dTime_dt" are currently unused.
 //                5. The cooling time fraction ("cool_frac") is chosen to mimic the internal
 //                   time-step limit applied by Grackle for dust sputtering: 2% of the absolute
-//                   cooling time above 3.0e5 K, and 10% at lower temperatures (see README Note 12).
+//                   cooling time above 3.0e5 K, and 10% at lower temperatures (see README Note 5).
 //
 // Parameter   :  lv          : Refinement level (unused here)
-//                dTime_dt    : Default timestep (unused here)
+//                dTime_dt    : dTime/dt
 //
 // Return      :  User-defined timestep based on the cooling time
 //-------------------------------------------------------------------------------------------------------
 static double Mis_GetTimeStep_Dust( const int lv, const double dTime_dt )
 {
+// This additional timestep constraint is only relevant for dust sputtering
+// and is only applied when GrackleTest_DefaultTestMode == 5
    if ( GrackleTest_DefaultTestMode != 5 )
       return HUGE_NUMBER;
 
+// If no energy-decay coefficient is set, there is no physical driver for the
+// temperature to change, so the cooling-time-based timestep below is undefined.
+// Fall back to a fixed, reasonably small timestep in this case.
    if ( GrackleTest_ExpCoolCoeff == 0 )
       return 0.1*Const_Myr/UNIT_T;
 
@@ -712,8 +719,7 @@ static double Mis_GetTimeStep_Dust( const int lv, const double dTime_dt )
 
    // Estimate gas temperature.
    const double sEint_cgs = Eint/Dens * SQR( UNIT_V );
-   const double MuEff = 0.6;
-   const double Tgas = ( GAMMA - 1.0 ) * MuEff * Const_mH / Const_kB * sEint_cgs;
+   const double Tgas = ( GAMMA - 1.0 ) * MOLECULAR_WEIGHT * Const_mH / Const_kB * sEint_cgs;
 
    const double cool_frac = ( Tgas > 3.0e5 ) ? 0.02 : 0.1;
    const double cooling_time = Grackle_GetTimeStep_CoolingTime( 0 ) / DT__GRACKLE_COOLING;
@@ -816,11 +822,6 @@ real_che Grackle_tempFloor_GrackleTest( const double x, const double y, const do
 // dust-sputtering saturation-time estimator (GrackleTest_DefaultTestMode == 5 only)
 // ============================================================
 #ifdef SUPPORT_GSL
-static const double DustSat_GrainRadius_um = 0.1;     // grain radius (um)
-static const double DustSat_Omega          = 2.5;     // exponent in the sputtering-time formula
-static const double DustSat_Tol            = 1.0e-3;  // saturation tolerance
-static const double DustSat_NCoolingTime   = 5.0;     // safety cap (in units of t_cool) if no saturation is found
-
 
 static double DustSat_InternalEnergy( const double e0, const double k, const double t )
 {
@@ -834,7 +835,10 @@ static double DustSat_InternalEnergy( const double e0, const double k, const dou
 //-------------------------------------------------------------------------------------------------------
 static double DustSat_SputteringTime( const double energy_cgs, const double gas_rho_cgs )
 {
-   const double Coeff1 = 0.17*( DustSat_GrainRadius_um/0.1 )*( 1.0e-27/gas_rho_cgs )*( 1.0e3*Const_Myr );
+   static const double DustSat_GrainRadius_um = 0.1;     // grain radius (um)
+   static const double DustSat_Omega          = 2.5;     // exponent in the sputtering-time formula
+
+   const double Coeff1 = ( 0.17*1.0e3*Const_Myr )*( DustSat_GrainRadius_um/0.1 )*( 1.0e-27/gas_rho_cgs );
    const double Coeff2 = pow( ( pow(10.0, 6.3)*Const_kB )/( (GAMMA-1.0)*MOLECULAR_WEIGHT*Const_mH * energy_cgs ), DustSat_Omega );
 return Coeff1*( Coeff2 + 1.0 );
 } // FUNCTION : DustSat_SputteringTime
@@ -850,8 +854,9 @@ struct DustSat_ODEParams
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  DustSat_ODE_RHS
-// Description :  Dust sputtering timescale formula, as given in Eq. (3) of
-//                Richie et al. 2024, ApJ, 974, 81 ("Dust Survival in Galactic Winds")
+// Description :  Right-hand side of the dust-density ODE d(rho_d)/dt = -3/tsp * rho_d, used by
+//                DustSat_ComputeSaturationTime() to integrate the dust density over time, as given in  
+//                Eq. (3) of Richie et al. 2024, ApJ, 974, 81 ("Dust Survival in Galactic Winds")
 //-------------------------------------------------------------------------------------------------------
 static int DustSat_ODE_RHS( double t, const double y[], double dydt[], void *params )
 {
@@ -884,6 +889,8 @@ static int DustSat_ODE_RHS( double t, const double y[], double dydt[], void *par
 //-------------------------------------------------------------------------------------------------------
 static double DustSat_ComputeSaturationTime( const double T0_K, const double gas_rho_cgs, const double k_per_sec )
 {
+   static const double DustSat_Tol            = 1.0e-3;  // saturation tolerance
+   static const double DustSat_NCoolingTime   = 5.0;     // safety cap (in units of t_cool) if no saturation is found
 
    const double e0          = Const_kB*T0_K / ( (GAMMA-1.0)*MOLECULAR_WEIGHT*Const_mH );  // specific internal energy (erg/g)
    const double t_cool_sec  = 1.0/k_per_sec;
