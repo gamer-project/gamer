@@ -428,7 +428,7 @@ void SetParameter()
          END_T = t_sat_sec / UNIT_T;
          PRINT_RESET_PARA( END_T, FORMAT_REAL, "to the auto-computed dust-sputtering saturation time for GrackleTest_DefaultTestMode == 5" );
       }
-      
+
    }
    else
    {
@@ -632,6 +632,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 // metallicity for metal cooling
    fluid[Idx_Metal] = Dens * (real)GrackleTest_MFrac_Metal;
 
+// dust
    fluid[Idx_Dust ] = Dens * (real)GrackleTest_DustToGasRatio;
 
 } // FUNCTION : SetGridIC
@@ -840,7 +841,7 @@ static double DustSat_SputteringTime( const double energy_cgs, const double gas_
 
    const double Coeff1 = ( 0.17*1.0e3*Const_Myr )*( DustSat_GrainRadius_um/0.1 )*( 1.0e-27/gas_rho_cgs );
    const double Coeff2 = pow( ( pow(10.0, 6.3)*Const_kB )/( (GAMMA-1.0)*MOLECULAR_WEIGHT*Const_mH * energy_cgs ), DustSat_Omega );
-return Coeff1*( Coeff2 + 1.0 );
+   return Coeff1*( Coeff2 + 1.0 );
 } // FUNCTION : DustSat_SputteringTime
 
 
@@ -863,7 +864,7 @@ static int DustSat_ODE_RHS( double t, const double y[], double dydt[], void *par
    const DustSat_ODEParams *p = (const DustSat_ODEParams*) params;
 
    const double energy = DustSat_InternalEnergy( p->e0, p->k, t );
-   const double tsp     = DustSat_SputteringTime( energy, p->gas_rho_cgs );
+   const double tsp    = DustSat_SputteringTime( energy, p->gas_rho_cgs );
 
    dydt[0] = -3.0/tsp * y[0];
 
