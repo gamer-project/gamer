@@ -1734,6 +1734,9 @@ void Aux_Check_Parameter()
    if ( OPT__OUTPUT_PAR_POT )
       Aux_Error( ERROR_INFO, "OPT__OUTPUT_PAR_POT is enabled but STORE_PAR_POT is off !!\n"
                  "        --> Recompile with \"--store_par_pot=true\" to use this option\n" );
+#  else
+   if ( OPT__OUTPUT_PAR_POT && !OPT__SELF_GRAVITY && !OPT__EXT_POT )
+      Aux_Error( ERROR_INFO, "OPT__OUTPUT_PAR_POT requires OPT__SELF_GRAVITY or OPT__EXT_POT !!\n" );
 #  endif
 
    for (int d=0; d<3; d++)
