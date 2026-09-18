@@ -361,6 +361,9 @@ void Init_GAMER( int *argc, char ***argv )
 // --> necessary for, for example, estimating the source-term time-step at the first step
 // --> must ensure each source term does not modify any fluid field (e.g., gas internal energy) when dt=0.0
 //     --> source terms violating this criterion (e.g., deleptonization) must be temporarily disabled before calling Src_AdvanceDt()
+#  ifdef TURBULENCE
+   if ( SrcTerms.Turbulence ) Turb_Init_Field();
+#  endif
    if ( OPT__INIT != INIT_BY_RESTART )
    {
       const bool OverlapMPI_No   = false;

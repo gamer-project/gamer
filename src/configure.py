@@ -668,6 +668,13 @@ def load_arguments( sys_setting : SystemSetting ):
                          help="Enable exact cooling.\n"
                        )
 
+    parser.add_argument( "--turbulence", type=str2bool, metavar="BOOLEAN", gamer_name="TURBULENCE",
+                         default=False,
+                         depend={"model":"HYDRO"},
+                         constraint={ True:{"comoving":False} },
+                         help="Enable turbulence.\n"
+                       )
+
     parser.add_argument( "--par_attribute_flt", type=int, metavar="INTEGER", gamer_name="PAR_NATT_FLT_USER",
                          default=0,
                          depend={"particle":True},

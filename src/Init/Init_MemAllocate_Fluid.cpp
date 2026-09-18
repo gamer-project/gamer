@@ -86,6 +86,13 @@ void Init_MemAllocate_Fluid( const int Flu_NPatchGroup, const int Pot_NPatchGrou
 #     endif
    } // for (int t=0; t<2; t++)
 
+#  ifdef TURBULENCE
+   if ( SrcTerms.Turbulence )
+   for (int t=0; t<2; t++) {
+      h_SrcTurb_AccTable   [t] = new real [ 3*CUBE( SRC_TURB_TABLE_SIZE + 1 ) ];
+      SrcTerms.Turb_AccTableDevPtr[t] = h_SrcTurb_AccTable[t];
+   }
+#  endif
 
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
    h_FC_Var         = new real [Flu_NPatchGroup][6][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR)    ];

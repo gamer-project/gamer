@@ -37,6 +37,9 @@ extern real (*d_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
 extern real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #endif
 #endif // FLU_SCHEME
+#ifdef TURBULENCE
+extern real *d_SrcTurb_AccTable[2];
+#endif
 
 #if ( MODEL == ELBDM )
 extern bool (*d_IsCompletelyRefined);
@@ -102,6 +105,12 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
 #  endif
 #  endif // FLU_SCHEME
 
+#  ifdef TURBULENCE
+   for (int t=0; t<2; t++) {
+   if ( d_SrcTurb_AccTable[t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFree( d_SrcTurb_AccTable[t] )  );  d_SrcTurb_AccTable[t] = NULL; }
+   }
+#  endif
+
 #  if ( MODEL == ELBDM )
    if ( d_IsCompletelyRefined != NULL ) {  CUDA_CHECK_ERROR (  cudaFree( d_IsCompletelyRefined)  );  d_IsCompletelyRefined = NULL; }
 #  endif
@@ -153,6 +162,12 @@ void CUAPI_MemFree_Fluid( const int GPU_NStream )
       if ( h_HasWaveCounterpart [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_HasWaveCounterpart [t] )  ); h_HasWaveCounterpart  [t] = NULL; }
 #     endif
    } // for (int t=0; t<2; t++)
+
+#  ifdef TURBULENCE
+   for (int t=0; t<2; t++) {
+      if ( h_SrcTurb_AccTable   [t] != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost( h_SrcTurb_AccTable   [t] )  );  h_SrcTurb_AccTable   [t] = NULL; }
+   }
+#  endif
 
 #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
    if ( h_GramFE_TimeEvo != NULL ) {  CUDA_CHECK_ERROR(  cudaFreeHost ( h_GramFE_TimeEvo )  );  h_GramFE_TimeEvo = NULL; }

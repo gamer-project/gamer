@@ -1,0 +1,5 @@
+# problem-specific runtime parameters
+Turb_Rho0               1.0                      # density
+Turb_P0                 1.0                      # pressure
+Turb_B0                 1.0e-4                   # magnetic field along the z direction, MagZ=Turb_B0/UNIT_B -> initial magnetic energy density is 0.5*Turb_B0^2/(4*pi)
+

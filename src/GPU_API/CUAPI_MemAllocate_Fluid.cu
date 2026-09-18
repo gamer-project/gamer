@@ -43,6 +43,9 @@ extern real (*d_FC_Mag_Half)[NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ];
 extern real (*d_EC_Ele     )[NCOMP_MAG][ CUBE(N_EC_ELE)          ];
 #endif
 #endif // FLU_SCHEME
+#ifdef TURBULENCE
+extern real *d_SrcTurb_AccTable[2];
+#endif
 
 #if ( MODEL == ELBDM )
 extern bool (*d_IsCompletelyRefined);
@@ -114,6 +117,9 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
    const long EC_TEF_lambda_MemSize = sizeof(double)*SrcTerms.EC_TEF_N;
    const long EC_TEF_alpha_MemSize  = sizeof(double)*SrcTerms.EC_TEF_N;
    const long EC_TEFc_MemSize       = sizeof(double)*SrcTerms.EC_TEF_N;
+#  endif
+#  ifdef TURBULENCE
+   const long Turb_MemSize          = sizeof(real  )*3*CUBE( SRC_TURB_TABLE_SIZE + 1 );
 #  endif
 
 // the size of the global memory arrays in different models
@@ -213,6 +219,11 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
       TotalSize += EC_TEF_lambda_MemSize + EC_TEF_alpha_MemSize + EC_TEFc_MemSize;
 #  endif
 
+#  ifdef TURBULENCE
+   if ( SrcTerms.Turbulence )
+      TotalSize += Turb_MemSize*2;
+#  endif
+
    if ( MPI_Rank == 0 )
       Aux_Message( stdout, "NOTE : total memory requirement in GPU fluid solver = %ld MB\n", TotalSize/(1<<20) );
 
@@ -272,6 +283,14 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
 #  endif
    CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_Corner_Array_S,       Corner_MemSize_S     )  );
    }
+
+#  ifdef TURBULENCE
+   if ( SrcTerms.Turbulence )
+   for (int t=0; t<2; t++) {
+   CUDA_CHECK_MALLOC(  cudaMalloc( (void**) &d_SrcTurb_AccTable[t],  Turb_MemSize         )  );
+   SrcTerms.Turb_AccTableDevPtr[t] = d_SrcTurb_AccTable[t];
+   }
+#  endif
 
 
 #  if ( MODEL == ELBDM )
@@ -342,6 +361,13 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
       CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_HasWaveCounterpart [t],  Flu_MemSize_HasWaveCounterpart   )  );
 #     endif
    } // for (int t=0; t<2; t++)
+
+#  ifdef TURBULENCE
+   if ( SrcTerms.Turbulence )
+   for (int t=0; t<2; t++) {
+      CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_SrcTurb_AccTable   [t],  Turb_MemSize         )  );
+   }
+#  endif
 
 #  if ( GRAMFE_SCHEME == GRAMFE_MATMUL )
    CUDA_CHECK_MALLOC(  cudaMallocHost( (void**) &h_GramFE_TimeEvo,  GramFE_TimeEvo_MemSize )  );

@@ -34,6 +34,7 @@ void Init_TestProb_Hydro_CR_ShockTube();
 void Init_TestProb_Hydro_CR_Diffusion();
 void Init_TestProb_Hydro_GrackleTest();
 void Init_TestProb_Hydro_ParFlag();
+void Init_TestProb_Hydro_Turbulence();
 
 void Init_TestProb_ELBDM_ExtPot();
 void Init_TestProb_ELBDM_JeansInstabilityComoving();
@@ -105,6 +106,7 @@ void Init_TestProb()
       case TESTPROB_HYDRO_CR_DIFFUSION :                 Init_TestProb_Hydro_CR_Diffusion();                break;
       case TESTPROB_HYDRO_GRACKLE_TEST :                 Init_TestProb_Hydro_GrackleTest();                 break;
       case TESTPROB_HYDRO_PARTICLE_FLAG :                Init_TestProb_Hydro_ParFlag();                     break;
+      case TESTPROB_HYDRO_TURBULENCE :                   Init_TestProb_Hydro_Turbulence();                  break;
 
       case TESTPROB_ELBDM_EXTPOT :                       Init_TestProb_ELBDM_ExtPot();                      break;
       case TESTPROB_ELBDM_JEANS_INSTABILITY_COMOVING :   Init_TestProb_ELBDM_JeansInstabilityComoving();    break;

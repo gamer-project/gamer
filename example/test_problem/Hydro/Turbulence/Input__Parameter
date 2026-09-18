@@ -24,47 +24,8 @@ END_STEP                     -1           # end step (<0=auto -> must be set by 
 
 
 # test problems
-TESTPROB_ID                   0           # test problem ID [0]
-                                          #    0: none
-                                          #    1: HYDRO blast wave [+MHD]
-                                          #    2: HYDRO acoustic wave
-                                          #    3: HYDRO Bondi accretion (+GRAVITY)
-                                          #    4: HYDRO cluster merger vs. Flash (+GRAVITY & PARTICLE)
-                                          #    5: HYDRO AGORA isolated galaxy (+GRAVITY & PARTICLE & STAR_FORMATION & GRACKLE)
-                                          #    6: HYDRO caustic wave
-                                          #    7: HYDRO spherical collapse (+GRAVITY & COMOVING)
-                                          #    8: HYDRO Kelvin Helmholtz instability
-                                          #    9: HYDRO Riemann problems [+MHD]
-                                          #   10: HYDRO jet(s)
-                                          #   11: HYDRO Plummer cloud(s) (+GRAVITY & PARTICLE)
-                                          #   12: HYDRO gravity (+GRAVITY)
-                                          #   13: HYDRO MHD Arnold-Beltrami-Childress (ABC) flow (+MHD)
-                                          #   14: HYDRO MHD Orszag-Tang vortex (+MHD)
-                                          #   15: HYDRO MHD linear wave (+MHD)
-                                          #   16: HYDRO Jeans instability (+GRAVITY) [+MHD]
-                                          #   17: HYDRO particle in equilibrium (+GRAVITY & PARTICLE)
-                                          #   18: HYDRO particle general test (+TRACER & PARTICLE)
-                                          #   19: HYDRO energy power spectrum
-                                          #   20: HYDRO MHD Cosmic Ray Soundwave
-                                          #   21: HYDRO MHD Cosmic Ray Shocktube
-                                          #   23: HYDRO MHD Cosmic Ray Diffusion
-                                          #   24: HYDRO Grackle Test (+SUPPORT_GRACKLE)
-                                          #   25: HYDRO particle flag (+GRAVITY & PARTICLE)
-                                          #  100: HYDRO CDM cosmological simulation (+GRAVITY & COMOVING & PARTICLE)
-                                          #  101: HYDRO Zeldovich pancake collapse (+GRAVITY & COMOVING & PARTICLE)
-                                          #  102: HYDRO Grackle comoving (+GRAVITY & COMOVING & GRACKLE )
-                                          # 1000: ELBDM external potential (+GRAVITY)
-                                          # 1001: ELBDM Jeans instability in the comoving frame (+GRAVITY, +COMOVING)
-                                          # 1002: ELBDM Jeans instability in the physical frame (+GRAVITY)
-                                          # 1003: ELBDM soliton merger (+GRAVITY)
-                                          # 1004: ELBDM self-similar halo (+GRAVITY, +COMOVING)
-                                          # 1005: ELBDM rotating vortex pair
-                                          # 1006: ELBDM vortex pair in linear motion
-                                          # 1007: ELBDM halo extracted from a large-scale structure simulation (+GRAVITY)
-                                          # 1008: ELBDM 1D Gaussian wave packet
-                                          # 1009: ELBDM large-scale structure simulation (+GRAVITY, +COMOVING)
-                                          # 1010: ELBDM plane wave
-                                          # 1011: ELBDM small wave perturbations on homogeneous background
+TESTPROB_ID                   26          # test problem ID [0]
+                                          #   26: HYDRO turbulence
 
 
 # code units (in cgs)
@@ -117,8 +78,8 @@ HUBBLE0                       0.70        # dimensionless Hubble parameter (curr
 
 # time-step
 DT__MAX                      -1.0         # dt criterion: maximum allowed dt (<0=off) [-1.0]
-DT__FLUID                    -1.0         # dt criterion: fluid solver CFL factor (<0=auto) [-1.0]
-DT__FLUID_INIT               -1.0         # dt criterion: DT__FLUID at the first step (<0=auto) [-1.0]
+DT__FLUID                     0.3         # dt criterion: fluid solver CFL factor (<0=auto) [-1.0]
+DT__FLUID_INIT                0.3         # dt criterion: DT__FLUID at the first step (<0=auto) [-1.0]
 DT__SPEED_OF_LIGHT            0           # dt criterion: speed of light [0] ##SRHD ONLY##
 DT__GRAVITY                  -1.0         # dt criterion: gravity solver safety factor (<0=auto) [-1.0]
 DT__PHASE                     0.0         # dt criterion: phase rotation safety factor (0=off) [0.0] ##ELBDM ONLY##
@@ -159,7 +120,7 @@ OPT__FLAG_RHO                 0           # flag: density (Input__Flag_Rho) [0]
 OPT__FLAG_RHO_GRADIENT        0           # flag: density gradient (Input__Flag_RhoGradient) [0]
 OPT__FLAG_PRES_GRADIENT       0           # flag: pressure gradient (Input__Flag_PresGradient) [0] ##HYDRO ONLY##
 OPT__FLAG_LRTZ_GRADIENT       0           # flag: Lorentz factor gradient (Input__Flag_LrtzGradient) [0] ##SRHD ONLY##
-OPT__FLAG_VORTICITY           0           # flag: vorticity (Input__Flag_Vorticity) [0] ##HYDRO ONLY##
+OPT__FLAG_VORTICITY           1           # flag: vorticity (Input__Flag_Vorticity) [0] ##HYDRO ONLY##
 OPT__FLAG_JEANS               0           # flag: Jeans length (Input__Flag_Jeans) [0] ##HYDRO ONLY##
 OPT__FLAG_COOLING_LEN         0           # flag: cooling length (Input__Flag_CoolingLen) [0] ##HYDRO+SUPPORT_GRACKLE ONLY##
 OPT__FLAG_CURRENT             0           # flag: current density in MHD (Input__Flag_Current) [0] ##MHD ONLY##
@@ -209,10 +170,10 @@ OPT__LB_EXCHANGE_FATHER       1           # exchange all cells of all father pat
 
 # source terms
 SRC_DELEPTONIZATION           0           # deleptonization (for simulations of stellar core collapse) [0] ##HYDRO ONLY##
-SRC_EXACTCOOLING              0           # exact cooling scheme from Townsend (2009) [0] ##HYDRO and EXACT_COOLING ONLY##
+SRC_EXACTCOOLING              0           # exact cooling scheme from Gaspari (2009) [0] ##HYDRO ONLY##
 SRC_EC_TEF_N                  1501        # exact-cooling: number of points for lambda(T) sampling in LOG [1501]
 SRC_EC_DTCOEF                -1.0         # exact-cooling: safety factor of the cooling time-step (<0=off) [-1.0]
-SRC_TURBULENCE                0           # turbulence [0] ##HYDRO ONLY##
+SRC_TURBULENCE                1           # turbulence [0] ##HYDRO ONLY##
 SRC_TURB_VEL                  0.2         # turbulence: target turbulence velocity dispersion (in code unit) [0.2]
 SRC_TURB_AMPL_FACTOR          1.0         # turbulence: adjust this factor if dispersion measured is different from target velocity [1.0]
 SRC_TURB_KDRIV                2.0         # turbulence: driving wave number in units of 2*pi/BOX_SIZE, determine the correlation time=BOX_SIZE/(SRC_TURB_KDRIV*SRC_TURB_VEL) [2.0]
@@ -279,8 +240,8 @@ CR_DIFF_MIN_B                 0.0         # disable diffusion locally when B fie
 
 
 # fluid solver in HYDRO (MODEL==HYDRO only)
-GAMMA                         1.666666667 # ratio of specific heats (i.e., adiabatic index) [5.0/3.0] ##EOS_GAMMA ONLY##
-MOLECULAR_WEIGHT              0.6         # mean molecular weight [0.6]
+GAMMA                         1.01        # ratio of specific heats (i.e., adiabatic index) [5.0/3.0] ##EOS_GAMMA ONLY##
+MOLECULAR_WEIGHT              1.0e4       # mean molecular weight [0.6]
 MU_NORM                      -1.0         # normalization of MOLECULAR_WEIGHT (<0=m_H, 0=amu, >0=input manually) [-1.0]
 ISO_TEMP                      1.0e4       # isothermal temperature in kelvin ##EOS_ISOTHERMAL ONLY##
 MINMOD_COEFF                  1.5         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
@@ -432,9 +393,9 @@ OPT__OUTPUT_CC_MAG            1           # output **cell-centered** magnetic fi
 OPT__OUTPUT_PRES              0           # output gas pressure [0] ##HYDRO ONLY##
 OPT__OUTPUT_TEMP              0           # output gas temperature [0 (HD) or 1 (SRHD)] ##HYDRO ONLY##
 OPT__OUTPUT_ENTR              0           # output gas entropy [0] ##HYDRO ONLY##
-OPT__OUTPUT_CS                0           # output sound speed [0] ##HYDRO ONLY##
+OPT__OUTPUT_CS                1           # output sound speed [0] ##HYDRO ONLY##
 OPT__OUTPUT_DIVVEL            0           # output divergence(velocity) [0] ##HYDRO ONLY##
-OPT__OUTPUT_MACH              0           # output mach number [0] ##HYDRO ONLY##
+OPT__OUTPUT_MACH              1           # output mach number [0] ##HYDRO ONLY##
 OPT__OUTPUT_DIVMAG            0           # output |divergence(B)*dh/|B|| [0] ##MHD ONLY##
 OPT__OUTPUT_LORENTZ           0           # output Lorentz factor [0] ##SRHD ONLY##
 OPT__OUTPUT_3VELOCITY         0           # output 3-velocities [0] ##SRHD ONLY##
@@ -443,10 +404,10 @@ OPT__OUTPUT_GRACKLE_TEMP      0           # output the temperature calculated by
 OPT__OUTPUT_GRACKLE_MU        0           # output the mean molecular weight calculated by Grackle [0] ##SUPPORT_GRACKLE only##
 OPT__OUTPUT_GRACKLE_TCOOL     0           # output the cooling time calculated by Grackle [0] ##SUPPORT_GRACKLE only##
 OPT__OUTPUT_USER_FIELD        0           # output user-defined derived fields [0] -> edit "Flu_DerivedField_User.cpp"
-OPT__OUTPUT_MODE              1           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
+OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
 OPT__OUTPUT_RESTART           0           # output data immediately after restart [0]
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
-OUTPUT_DT                     1.0         # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
+OUTPUT_DT                     2.5         # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
 OUTPUT_WALLTIME              -1.0         # output data every OUTPUT_WALLTIME walltime (<=0.0=off) [-1.0]
 OUTPUT_WALLTIME_UNIT          0           # unit of OUTPUT_WALLTIME (0=second, 1=minute, 2=hour, 3=day) [0]
 OUTPUT_PART_X                -1.0         # x coordinate for OPT__OUTPUT_PART [-1.0]
@@ -490,7 +451,7 @@ OPT__SORT_PATCH_BY_LBIDX      1           # sort patches to improve bitwise repr
 # checks
 OPT__CK_REFINE                0           # check the grid refinement [0]
 OPT__CK_PROPER_NESTING        0           # check the proper-nesting condition [0]
-OPT__CK_CONSERVATION          0           # check the conservation law [0]
+OPT__CK_CONSERVATION          1           # check the conservation law [0]
 ANGMOM_ORIGIN_X              -1.0         # x coordinate of the origin for angular momentum (<0=auto -> BoxCenter) [-1.0]
 ANGMOM_ORIGIN_Y              -1.0         # y coordinate of the origin for angular momentum (<0=auto -> BoxCenter) [-1.0]
 ANGMOM_ORIGIN_Z              -1.0         # z coordinate of the origin for angular momentum (<0=auto -> BoxCenter) [-1.0]
@@ -503,5 +464,5 @@ OPT__CK_NEGATIVE              0           # check the negative values: (0=off, 1
 OPT__CK_MEMFREE               1.0         # check the free memory in GB (0=off, >0=threshold) [1.0]
 OPT__CK_PARTICLE              0           # check the particle allocation [0]
 OPT__CK_INTERFACE_B           0           # check the consistency of patch interface B field [0] ##MHD ONLY##
-OPT__CK_DIVERGENCE_B          0           # check the divergence-free constraint on B field (0=off, 1=on, 2=on+verbose) [0] ##MHD ONLY##
+OPT__CK_DIVERGENCE_B          1           # check the divergence-free constraint on B field (0=off, 1=on, 2=on+verbose) [0] ##MHD ONLY##
 OPT__CK_INPUT_FLUID           0           # check the input data of the fluid solver [0]

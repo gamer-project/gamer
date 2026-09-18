@@ -9,7 +9,9 @@
 #include <libyt.h>
 #endif
 #include "GatherTree.h"
-
+#ifdef TURBULENCE
+#include "Turbulence.h"
+#endif
 
 // **********************************************************************************************************
 // ** Variables in CAPITAL letters are loaded from the parameter file "Input__Parameter". Please refer to  **
@@ -363,6 +365,23 @@ extern int        Src_EC_AuxArray_Int[SRC_NAUX_EC];
 #endif
 extern double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
 extern int        Src_User_AuxArray_Int[SRC_NAUX_USER];
+#ifdef TURBULENCE
+extern double     Src_Turb_AuxArray_Flt[SRC_NAUX_TURB];
+extern int        Src_Turb_AuxArray_Int[SRC_NAUX_TURB];
+extern double     SRC_TURB_VEL;
+extern double     SRC_TURB_AMPL_FACTOR;
+extern double     SRC_TURB_KDRIV;
+extern double     SRC_TURB_KMIN;
+extern double     SRC_TURB_KMAX;
+extern double     SRC_TURB_ZETA;
+extern int        SRC_TURB_SPEC_FORM;
+extern double     SRC_TURB_POW;
+extern int        SRC_TURB_RSEED_INIT;
+extern int        SRC_TURB_UPDATE_STEP;
+extern int        SRC_TURB_TABLE_SIZE;
+extern bool       SRC_TURB_RESET;
+extern Turbulence_t *Turb;
+#endif
 
 
 // (2-11) user-defined derived fields
@@ -504,7 +523,9 @@ extern double      *h_SrcEC_TEF_alpha;
 extern double      *h_SrcEC_TEFc;
 #endif
 
-
+#ifdef TURBULENCE
+extern real        *h_SrcTurb_AccTable[2];
+#endif
 
 // 4/5. GPU (device) global memory arrays and timers
 // ============================================================================================================

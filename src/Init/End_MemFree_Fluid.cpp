@@ -59,6 +59,12 @@ void End_MemFree_Fluid()
 #     endif
    } // for (int t=0; t<2; t++)
 
+#  ifdef TURBULENCE
+   for (int t=0; t<2; t++) {
+      delete [] h_SrcTurb_AccTable[t];  h_SrcTurb_AccTable[t] = NULL;
+   }
+#  endif
+
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
    delete [] h_FC_Var;          h_FC_Var         = NULL;
    delete [] h_FC_Flux;         h_FC_Flux        = NULL;

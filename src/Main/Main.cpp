@@ -346,6 +346,23 @@ int        Src_EC_AuxArray_Int[SRC_NAUX_EC];
 #endif
 double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
 int        Src_User_AuxArray_Int[SRC_NAUX_USER];
+#ifdef TURBULENCE
+double     Src_Turb_AuxArray_Flt[SRC_NAUX_TURB];
+int        Src_Turb_AuxArray_Int[SRC_NAUX_TURB];
+double     SRC_TURB_VEL;
+double     SRC_TURB_AMPL_FACTOR;
+double     SRC_TURB_KDRIV;
+double     SRC_TURB_KMIN;
+double     SRC_TURB_KMAX;
+double     SRC_TURB_ZETA;
+int        SRC_TURB_SPEC_FORM;
+double     SRC_TURB_POW;
+int        SRC_TURB_RSEED_INIT;
+int        SRC_TURB_UPDATE_STEP;
+int        SRC_TURB_TABLE_SIZE;
+bool       SRC_TURB_RESET;
+Turbulence_t *Turb = NULL;
+#endif
 
 // (2-11) user-defined derived fields
 bool OPT__OUTPUT_USER_FIELD;
@@ -489,7 +506,9 @@ double  *h_SrcEC_TEF_lambda                                          = NULL;
 double  *h_SrcEC_TEF_alpha                                           = NULL;
 double  *h_SrcEC_TEFc                                                = NULL;
 #endif
-
+#ifdef TURBULENCE
+real    *h_SrcTurb_AccTable[2]                                       = { NULL, NULL };
+#endif
 
 
 // 4. GPU (device) global memory arrays
@@ -584,6 +603,9 @@ real    *d_SrcDlepProf_Radius                                        = NULL;
 double  *d_SrcEC_TEF_lambda                                          = NULL;
 double  *d_SrcEC_TEF_alpha                                           = NULL;
 double  *d_SrcEC_TEFc                                                = NULL;
+#endif
+#ifdef TURBULENCE
+real    *d_SrcTurb_AccTable[2]                                       = { NULL, NULL };
 #endif
 
 #endif // #ifdef GPU
@@ -786,6 +808,12 @@ int main( int argc, char *argv[] )
       if ( ELBDM_RESCALE_MASS_ERROR  &&  Step % ELBDM_RESCALE_MASS_STEPS == 0 )
       TIMING_FUNC(   ELBDM_RescaleMassError(),        Timer_Main[4],   TIMER_ON   );
 #     endif // #if ( MODEL == ELBDM )
+
+#     ifdef TURBULENCE
+//    record time in source term lv 0
+      if ( SrcTerms.Turbulence )
+      TIMING_FUNC(   Turb_CheckUpdate(),       Timer_Src_Advance[0],   TIMER_ON   );
+#     endif
 //    ---------------------------------------------------------------------------------------------------
 
 

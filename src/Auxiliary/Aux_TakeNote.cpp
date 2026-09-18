@@ -320,6 +320,11 @@ void Aux_TakeNote()
 #     else
       fprintf( Note, "EXACT_COOLING                   OFF\n" );
 #     endif
+#     ifdef TURBULENCE
+      fprintf( Note, "TURBULENCE                      ON\n" );
+#     else
+      fprintf( Note, "TURBULENCE                      OFF\n" );
+#     endif
 
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
@@ -792,6 +797,10 @@ void Aux_TakeNote()
       fprintf( Note, "#define SRC_NAUX_DLEP          % d\n",      SRC_NAUX_DLEP         );
       fprintf( Note, "#define SRC_DLEP_PROF_NVAR     % d\n",      SRC_DLEP_PROF_NVAR    );
       fprintf( Note, "#define SRC_DLEP_PROF_NBINMAX  % d\n",      SRC_DLEP_PROF_NBINMAX );
+      fprintf( Note, "#define SRC_NAUX_TURB          % d\n",      SRC_NAUX_TURB         );
+#     endif
+#     ifdef TURBULENCE
+      fprintf( Note, "#define SRC_TURB_MAX_NMODE     % d\n",      SRC_TURB_MAX_NMODE    );
 #     endif
       fprintf( Note, "#define SRC_NAUX_USER          % d\n",      SRC_NAUX_USER         );
 #     ifdef GPU
@@ -1146,10 +1155,26 @@ void Aux_TakeNote()
       fprintf( Note, "SRC_ANY                        % d\n",      SrcTerms.Any              );
       fprintf( Note, "SRC_DELEPTONIZATION            % d\n",      SrcTerms.Deleptonization  );
       fprintf( Note, "SRC_EXACTCOOLING               % d\n",      SrcTerms.ExactCooling     );
+      fprintf( Note, "SRC_TURBULENCE                 % d\n",      SrcTerms.Turbulence       );
 #     ifdef EXACT_COOLING
       if ( SrcTerms.ExactCooling ) {
       fprintf( Note, "SRC_EC_TEF_N                   % d\n",      SrcTerms.EC_TEF_N         );
       fprintf( Note, "SRC_EC_DTCOEF                  % 14.7e\n",  SrcTerms.EC_dtCoef        ); }
+#     endif
+#     ifdef TURBULENCE
+      if ( SrcTerms.Turbulence ) {
+      fprintf( Note, "SRC_TURB_VEL                   % 14.7e\n",  SRC_TURB_VEL              );
+      fprintf( Note, "SRC_TURB_AMPL_FACTOR           % 14.7e\n",  SRC_TURB_AMPL_FACTOR      );
+      fprintf( Note, "SRC_TURB_KDRIV                 % 14.7e\n",  SRC_TURB_KDRIV            );
+      fprintf( Note, "SRC_TURB_KMIN                  % 14.7e\n",  SRC_TURB_KMIN             );
+      fprintf( Note, "SRC_TURB_KMAX                  % 14.7e\n",  SRC_TURB_KMAX             );
+      fprintf( Note, "SRC_TURB_ZETA                  % 14.7e\n",  SRC_TURB_ZETA             );
+      fprintf( Note, "SRC_TURB_SPEC_FORM             % d\n",      SRC_TURB_SPEC_FORM        );
+      fprintf( Note, "SRC_TURB_POW                   % 14.7e\n",  SRC_TURB_POW              );
+      fprintf( Note, "SRC_TURB_RSEED_INIT            % d\n",      SRC_TURB_RSEED_INIT       );
+      fprintf( Note, "SRC_TURB_UPDATE_STEP           % d\n",      SRC_TURB_UPDATE_STEP      );
+      fprintf( Note, "SRC_TURB_TABLE_SIZE            % d\n",      SRC_TURB_TABLE_SIZE       );
+      fprintf( Note, "SRC_TURB_RESET                 % d\n",      SRC_TURB_RESET            ); }
 #     endif
       fprintf( Note, "SRC_USER                       % d\n",      SrcTerms.User             );
       fprintf( Note, "SRC_GPU_NPGROUP                % d\n",      SRC_GPU_NPGROUP           );

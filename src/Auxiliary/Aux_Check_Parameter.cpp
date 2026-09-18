@@ -1889,6 +1889,36 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "SRC_EXACTCOOLING is only supported when EXACT_COOLING is enabled !!\n" );
 #  endif // #ifdef EXACT_COOLING ... else ...
 
+#  ifdef TURBULENCE
+#  if ( MODEL != HYDRO )
+#     error : ERROR : TURBULENCE must enable MODEL=HYDRO !!
+#  endif
+
+#  ifdef COMOVING
+#     error : ERROR : TURBULENCE currently does not support COMOVING !!
+#  endif
+
+   if ( SrcTerms.Turbulence )
+   {
+      if ( SRC_TURB_TABLE_SIZE <= 0 || (SRC_TURB_TABLE_SIZE & (SRC_TURB_TABLE_SIZE - 1)) != 0 )
+         Aux_Error( ERROR_INFO, "SRC_TURB_TABLE_SIZE must be a power of 2 !!\n" );
+
+      if ( SRC_TURB_KMAX <= SRC_TURB_KMIN )
+         Aux_Error( ERROR_INFO, "SRC_TURB_KMAX must be greater than SRC_TURB_KMIN !!\n" );
+
+//    block non-cubic box for now, as SRC_TURB_VEL will become inaccurate and require further tuning for current implementation
+      if ( amr->BoxSize[0] != amr->BoxSize[1]  ||  amr->BoxSize[0] != amr->BoxSize[2] )
+         Aux_Error( ERROR_INFO, "simulation domain must be cubic !!\n" );
+
+      for (int f=0; f<6; f++)
+         if ( OPT__BC_FLU[f] != BC_FLU_PERIODIC && MPI_Rank == 0 )
+            Aux_Message( stderr , "REMINDER : turbulence field will be periodic even for non-periodic BCs !!\n" );
+   }
+#  else // #ifdef TURBULENCE
+   if ( SrcTerms.Turbulence )
+      Aux_Error( ERROR_INFO, "SRC_TURBULENCE is only supported when TURBULENCE is enabled !!\n" );
+#  endif // #ifdef TURBULENCE ... else ...
+
 // warning
 // ------------------------------
    if ( MPI_Rank == 0 ) {

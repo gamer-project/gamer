@@ -177,6 +177,7 @@ struct Makefile_t
    int EoS;
    int BarotropicEoS;
    int ExactCooling;
+   int Turbulence;
 
 #  elif ( MODEL == ELBDM )
    int ELBDMScheme;
@@ -370,6 +371,10 @@ struct SymConst_t
    int    Src_NAuxDlep;
    int    Src_DlepProfNVar;
    int    Src_DlepProfNBinMax;
+#  endif
+#  ifdef TURBULENCE
+   int    Src_NAuxTurb;
+   int    Src_TurbMaxNMode;
 #  endif
    int    Src_NAuxUser;
 
@@ -704,9 +709,24 @@ struct InputPara_t
    int    Src_User;
    int    Src_GPU_NPGroup;
    int    Src_ExactCooling;
+   int    Src_Turbulence;
 #  ifdef EXACT_COOLING
    int    Src_EC_TEF_N;
    double Src_EC_dtCoef;
+#  endif
+#  ifdef TURBULENCE
+   double Src_Turb_Vel;
+   double Src_Turb_AmplFactor;
+   double Src_Turb_Kdriv;
+   double Src_Turb_Kmin;
+   double Src_Turb_Kmax;
+   double Src_Turb_Zeta;
+   int    Src_Turb_SpecForm;
+   double Src_Turb_Pow;
+   int    Src_Turb_RSeedInit;
+   int    Src_Turb_UpdateStep;
+   int    Src_Turb_TableSize;
+   int    Src_Turb_Reset;
 #  endif
 
 // Grackle

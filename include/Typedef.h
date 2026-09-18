@@ -95,6 +95,8 @@ const TestProbID_t
    TESTPROB_HYDRO_CR_DIFFUSION                 =   23,
    TESTPROB_HYDRO_GRACKLE_TEST                 =   24,
    TESTPROB_HYDRO_PARTICLE_FLAG                =   25,
+   TESTPROB_HYDRO_TURBULENCE                   =   26,
+
    TESTPROB_HYDRO_BARRED_POT                   =   51,
    TESTPROB_HYDRO_JET_ICM_WALL                 =   52,
    TESTPROB_HYDRO_CDM_LSS                      =  100,

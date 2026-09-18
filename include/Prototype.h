@@ -837,7 +837,12 @@ void CPU_SrcSolver( const real h_Flu_Array_In [][FLU_NIN_S ][ CUBE(SRC_NXT)     
                     const SrcTerms_t SrcTerms, const int NPatchGroup, const real dt, const real dh,
                     const double TimeNew, const double TimeOld,
                     const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor );
-
+#ifdef TURBULENCE
+void Turb_Init_Modes();
+void Turb_Init_Field();
+void Turb_CheckUpdate();
+void Turb_FillinTable( int IdxTable );
+#endif
 
 // Grackle
 #ifdef SUPPORT_GRACKLE

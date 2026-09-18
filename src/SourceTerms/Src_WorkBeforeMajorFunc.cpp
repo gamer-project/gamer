@@ -11,6 +11,10 @@ void Src_WorkBeforeMajorFunc_Deleptonization( const int lv, const double TimeNew
 void Src_WorkBeforeMajorFunc_ExactCooling( const int lv, const double TimeNew, const double TimeOld, const double dt,
                                            double AuxArray_Flt[], int AuxArray_Int[] );
 #endif
+#ifdef TURBULENCE
+void Src_WorkBeforeMajorFunc_Turbulence     ( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                                              double AuxArray_Flt[], int AuxArray_Int[] );
+#endif
 
 // this function pointer can be set by a test problem initializer for a user-specified source term
 void (*Src_WorkBeforeMajorFunc_User_Ptr)    ( const int lv, const double TimeNew, const double TimeOld, const double dt,
@@ -54,7 +58,14 @@ void Src_WorkBeforeMajorFunc( const int lv, const double TimeNew, const double T
                                                Src_EC_AuxArray_Flt, Src_EC_AuxArray_Int );
 #  endif
 
-// (3) user-specified source term
+#  ifdef TURBULENCE
+// (3) turbulence
+   if ( SrcTerms.Turbulence && lv == 0 )
+      Src_WorkBeforeMajorFunc_Turbulence     ( lv, TimeNew, TimeOld, dt,
+                                               Src_Turb_AuxArray_Flt, Src_Turb_AuxArray_Int );
+#  endif
+
+// (4) user-specified source term
 // --> users may not define Src_WorkBeforeMajorFunc_User_Ptr
    if ( SrcTerms.User  &&  Src_WorkBeforeMajorFunc_User_Ptr != NULL )
       Src_WorkBeforeMajorFunc_User_Ptr       ( lv, TimeNew, TimeOld, dt,

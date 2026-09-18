@@ -1689,6 +1689,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "EoS",                    &RS.EoS,                    SID, TID, NonFatal, &RT.EoS,                    1, NonFatal );
    LoadField( "BarotropicEoS",          &RS.BarotropicEoS,          SID, TID, NonFatal, &RT.BarotropicEoS,          1, NonFatal );
    LoadField( "ExactCooling",           &RS.ExactCooling,           SID, TID, NonFatal, &RT.ExactCooling,           1, NonFatal );
+   LoadField( "Turbulence",             &RS.Turbulence,             SID, TID, NonFatal, &RT.Turbulence,             1, NonFatal );
 
 #  elif ( MODEL == ELBDM )
    LoadField( "ELBDMScheme",            &RS.ELBDMScheme,            SID, TID, NonFatal, &RT.ELBDMScheme,            1, NonFatal );
@@ -1921,6 +1922,10 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "Src_NAuxDlep",         &RS.Src_NAuxDlep,         SID, TID, NonFatal, &RT.Src_NAuxDlep,          1, NonFatal );
    LoadField( "Src_DlepProfNVar",     &RS.Src_DlepProfNVar,     SID, TID, NonFatal, &RT.Src_DlepProfNVar,      1, NonFatal );
    LoadField( "Src_DlepProfNBinMax",  &RS.Src_DlepProfNBinMax,  SID, TID, NonFatal, &RT.Src_DlepProfNBinMax,   1, NonFatal );
+#  endif
+#  ifdef TURBULENCE
+   LoadField( "Src_NAuxTurb",         &RS.Src_NAuxTurb,         SID, TID, NonFatal, &RT.Src_NAuxTurb,          1, NonFatal );
+   LoadField( "Src_TurbMaxNMode",     &RS.Src_TurbMaxNMode,     SID, TID, NonFatal, &RT.Src_TurbMaxNMode,      1, NonFatal );
 #  endif
    LoadField( "Src_NAuxUser",         &RS.Src_NAuxUser,         SID, TID, NonFatal, &RT.Src_NAuxUser,          1, NonFatal );
 
@@ -2284,9 +2289,25 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Src_User",                &RS.Src_User,                SID, TID, NonFatal, &RT.Src_User,                 1, NonFatal );
    LoadField( "Src_GPU_NPGroup",         &RS.Src_GPU_NPGroup,         SID, TID, NonFatal, &RT.Src_GPU_NPGroup,          1, NonFatal );
    LoadField( "Src_ExactCooling",        &RS.Src_ExactCooling,        SID, TID, NonFatal, &RT.Src_ExactCooling,         1, NonFatal );
+   LoadField( "Src_Turbulence",          &RS.Src_Turbulence,          SID, TID, NonFatal, &RT.Src_Turbulence,           1, NonFatal );
 #  ifdef EXACT_COOLING
    LoadField( "Src_EC_TEF_N",            &RS.Src_EC_TEF_N,            SID, TID, NonFatal, &RT.Src_EC_TEF_N,             1, NonFatal );
    LoadField( "Src_EC_dtCoef",           &RS.Src_EC_dtCoef,           SID, TID, NonFatal, &RT.Src_EC_dtCoef,            1, NonFatal );
+#  endif
+#  ifdef TURBULENCE
+   const bool TurbFatal = ( !OPT__RESTART_RESET && !SRC_TURB_RESET )? Fatal : NonFatal;
+   LoadField( "Src_Turb_Vel",            &RS.Src_Turb_Vel,            SID, TID, TurbFatal, &RT.Src_Turb_Vel,            1, TurbFatal );
+   LoadField( "Src_Turb_AmplFactor",     &RS.Src_Turb_AmplFactor,     SID, TID, TurbFatal, &RT.Src_Turb_AmplFactor,     1, TurbFatal );
+   LoadField( "Src_Turb_Kdriv",          &RS.Src_Turb_Kdriv,          SID, TID, TurbFatal, &RT.Src_Turb_Kdriv,          1, TurbFatal );
+   LoadField( "Src_Turb_Kmin",           &RS.Src_Turb_Kmin,           SID, TID, TurbFatal, &RT.Src_Turb_Kmin,           1, TurbFatal );
+   LoadField( "Src_Turb_Kmax",           &RS.Src_Turb_Kmax,           SID, TID, TurbFatal, &RT.Src_Turb_Kmax,           1, TurbFatal );
+   LoadField( "Src_Turb_Zeta",           &RS.Src_Turb_Zeta,           SID, TID, TurbFatal, &RT.Src_Turb_Zeta,           1, TurbFatal );
+   LoadField( "Src_Turb_SpecForm",       &RS.Src_Turb_SpecForm,       SID, TID, TurbFatal, &RT.Src_Turb_SpecForm,       1, TurbFatal );
+   LoadField( "Src_Turb_Pow",            &RS.Src_Turb_Pow,            SID, TID, TurbFatal, &RT.Src_Turb_Pow,            1, TurbFatal );
+   LoadField( "Src_Turb_RSeedInit",      &RS.Src_Turb_RSeedInit,      SID, TID,  NonFatal, &RT.Src_Turb_RSeedInit,      1,  NonFatal );
+   LoadField( "Src_Turb_UpdateStep",     &RS.Src_Turb_UpdateStep,     SID, TID, TurbFatal, &RT.Src_Turb_UpdateStep,     1, TurbFatal );
+   LoadField( "Src_Turb_TableSize",      &RS.Src_Turb_TableSize,      SID, TID,  NonFatal, &RT.Src_Turb_TableSize,      1,  NonFatal );
+   LoadField( "Src_Turb_Reset",          &RS.Src_Turb_Reset,          SID, TID,  NonFatal, &RT.Src_Turb_Reset,          1,  NonFatal );
 #  endif
 
 // Grackle
