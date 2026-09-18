@@ -22,7 +22,13 @@ PREFIX     = '../'
 MARKERSIZE = 5.0
 LINE_WIDTH = 1
 DPI        = 150
-K_MYR_INV  = 1.0
+MYR_IN_SEC = 3.15576e13   # 1 Myr in seconds
+
+# Load K_MYR_INV from the simulation's HDF5 output to ensure consistency
+first_file = os.path.join(PREFIX, 'Data_%06d' % args.s)
+with h5py.File(first_file, "r") as f:
+    K_MYR_INV = f["Info"]["InputTest"]["GrackleTest_ExpCoolCoeff"][()]
+
 print("k [Myr^-1] =", K_MYR_INV)
 if K_MYR_INV != 0:
     T_COOL_MYR = 1.0 / K_MYR_INV
@@ -32,6 +38,7 @@ if K_MYR_INV != 0:
 # Load data
 temp_all = []
 time_all = []
+unit_t   = None
 for idx in range(args.s, args.e + 1, args.d):
     file_path = os.path.join(PREFIX, 'Data_%06d'%idx)
     if not os.path.isfile(file_path):
@@ -39,10 +46,13 @@ for idx in range(args.s, args.e + 1, args.d):
     with h5py.File(file_path, "r") as f:
         temp = f["GridData"]["Temp"][0][0][0][0]
         time = f["Info"]["KeyInfo"]["Time"][0]
+        if unit_t is None:
+            unit_t = float(f["Info"]["InputPara"]["Unit_T"])  # code unit -> seconds
         temp_all.append(temp)
         time_all.append(time)
 
-time_all = np.array(time_all)
+# Convert time from code units to Myr, since K_MYR_INV is defined in Myr^-1
+time_all = np.array(time_all) * unit_t / MYR_IN_SEC
 if K_MYR_INV == 0:
     time_cool = time_all
 else:
@@ -66,8 +76,6 @@ else:
     ax.plot(time_cool, T_ref, 'b--', label="Reference")
 
 # Axis settings
-ax.set_yscale('log')
-ax.set_ylim(1.0e5, 2.0e6)
 ax.set_xlim(0, time_cool[-1]*1.05)
 ax.set_yscale('log')
 ax.set_ylim(1.0e4, 2.0e6)

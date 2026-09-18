@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 import os
-from scipy.interpolate import interp1d
 
 # load the command-line parameters
 parser = argparse.ArgumentParser(description="Dust dust_dens evolution plotter")
@@ -19,82 +18,67 @@ AMU_IN_G  = CONST_AMU
 MYR_IN_S  = 3.15569252e13
 GYR_IN_S  = MYR_IN_S * 1.0e3
 
+PREFIX     = '../'
+
 # Constants
 A_UM  = 0.1
 OMEGA = 2.5
 MU    = 0.6
 
+# Load all simulation-wide constant parameters from the first output file,
+# to ensure consistency with the actual simulation setup
+first_file = os.path.join(PREFIX, 'Data_000000')
+with h5py.File(first_file, "r") as f:
+    DUST_TO_GAS    = float(f["Info"]["InputTest"]["GrackleTest_DustToGasRatio"])
+    K_MYR          = float(f["Info"]["InputTest"]["GrackleTest_ExpCoolCoeff"])
+    UNIT_L         = float(f['Info']['InputPara']['Unit_L'])
+    UNIT_T         = float(f['Info']['InputPara']['Unit_T'])
+    UNIT_D         = float(f['Info']['InputPara']['Unit_D'])
+    GAMMA          = float(f['Info']['InputPara']['Gamma'])
+    T_over_mmw_min = float(f["Info"]["InputTest"]["GrackleTest_TempOverMMW_Min"])
+
+print("Dust-to-gas ratio =", DUST_TO_GAS)
+print("k [Myr^-1] =", K_MYR)
+if K_MYR != 0:
+    t_cool_myr = 1.0 / K_MYR
+    print("t_cool [Myr] =", t_cool_myr)
+else:
+    t_cool_myr = 1.0
+
+k = K_MYR / MYR_IN_S
+
 # initial conditions
-DUST_TO_GAS = 0.01
-
 # Choose ONE density setting:
-
 # Case A: amu case
 gas_rho0_amu = 1.0
 gas_rho0_cgs = gas_rho0_amu * AMU_IN_G
 dust_rho0    = DUST_TO_GAS * gas_rho0_amu
-
 # Case B: g/cm^3 case
 # gas_rho0_cgs = 1.0e-28
 # gas_rho0_amu = gas_rho0_cgs / AMU_IN_G
 # dust_rho0    = DUST_TO_GAS * gas_rho0_amu
 
+T0 = T_over_mmw_min * MU
 
 # Load data
-f = h5py.File('../Data_%06d'%(0), 'r')
-
-UNIT_L    = float(f['Info']['InputPara']['Unit_L'])
-UNIT_T    = float(f['Info']['InputPara']['Unit_T'])
-UNIT_D    = float(f['Info']['InputPara']['Unit_D'])
-BOXSIZE   = float(f['Info']['InputPara']['BoxSize'])
-GAMMA     = float(f['Info']['InputPara']['Gamma'])
-
-table     = np.loadtxt("../Record__Conservation")
+table     = np.loadtxt(os.path.join(PREFIX, "Record__Conservation"))
 time      = table[:, 0]
-dust_dens = table[:,47] * UNIT_D / (CONST_AMU / CONST_CM**3) / BOXSIZE**2
-
-T_grackle = float(np.asarray(f["GridData/GrackleTemp"]).ravel()[0])
-mu_gra    = float(np.asarray(f["GridData/GrackleMu"]).ravel()[0])
-
-T0         = T_grackle * MU / mu_gra
-K_MYR      = 1.0
-k          = K_MYR / MYR_IN_S
-print("k [Myr^-1] =", K_MYR)
-if K_MYR != 0:
-    t_cool_myr = 1.0 / K_MYR
-    print("t_cool [Myr] =", t_cool_myr)
-
-
-def ecode_to_T(e_code):
-    UNIT_V = UNIT_L / UNIT_T
-    UNIT_E = UNIT_V ** 2
-    e_phys = e_code * UNIT_E
-    T = e_phys * (GAMMA-1) * MU * M_H / K_B
-    return T
-
-def T_to_ecode(T):
-    UNIT_V = UNIT_L / UNIT_T
-    UNIT_E = UNIT_V ** 2
-    factor = (GAMMA-1) * MU * M_H / K_B
-    e_code = T / (UNIT_E * factor)
-    return e_code
+dust_dens = table[:,47] * UNIT_D / (CONST_AMU / CONST_CM**3)
 
 
 # units
 UNIT_V = UNIT_L / UNIT_T
 UNIT_E = UNIT_V ** 2
-e_code = T_to_ecode(T0)
+e_code = T0 / (UNIT_E * ((GAMMA-1) * MU * M_H / K_B))
 e_phys = e_code * UNIT_E
-
 
 # Configuration: output filenames
 fileout  = "fig__DustDensity_plot"
 fig_name = "Dust Density v.s Time"
-prefix   = '../'
 
 # Functions
-def internal_energy(e_0, k, t):
-    return e_0 * np.exp(-k*t)
+def internal_energy(t):
+    return e_phys * np.exp(-k*t)
 
 def tsp_e(e_t):
     gas_rho_cgs = gas_rho0_cgs
@@ -103,47 +87,28 @@ def tsp_e(e_t):
     tsp = const_1 * (const_2 / e_t**OMEGA + 1.0)
     return tsp
 
-
 def drho_dt(t, dust_rho):
-    e_t = internal_energy(e_phys, k, t)
+    e_t = internal_energy(t)
     tsp = tsp_e(e_t)
     return -3.0 / tsp * dust_rho
 
-
-# sorting
-sort_idx = np.argsort(time)
-time = time[sort_idx]
-dust_dens = dust_dens[sort_idx]
-
-# remove duplicates
-time, uniq_idx = np.unique(time, return_index=True)
-dust_dens = dust_dens[uniq_idx]
 
 # normalized
 dust_dens_norm = dust_dens / dust_dens[0]
 
 # time normalized by cooling time
-if K_MYR == 0:
-    time_cool = time
-else:
-    time_cool = time / t_cool_myr
-
+time_cool = time / t_cool_myr
 
 # Plot
 f, ax = plt.subplots(1, 1)
 f.subplots_adjust(wspace=0.4)
-
 ax.set_xlabel(r"Number of cooling times $(t/t_{\rm cool})$", fontsize="large")
 ax.set_title(fig_name)
 ax.plot(time_cool, dust_dens_norm, 'ro', lw=1, mec='none', ms=5.0, label='Numerical')
 
-# Refenence solution
-rho_ref = None
+# Reference solution
 if K_MYR == 0:
-    gas_rho_cgs = gas_rho0_cgs
-    const_1 = 0.17 * (A_UM / 0.1) * (1.0e-27 / gas_rho_cgs) * GYR_IN_S
-    const_2 = (10**6.3 / T0)**OMEGA
-    tsp     = const_1 * (const_2 + 1.0)
+    tsp     = tsp_e(e_phys)
     tsp_myr = tsp / MYR_IN_S
     rho_ref = dust_rho0 * np.exp((-3/tsp_myr) * time)
     rho_ref_norm = rho_ref / rho_ref[0]
@@ -156,17 +121,12 @@ else:
     rho_ref_norm = rho_ref / rho_ref[0]
     ax.plot((sol.t / MYR_IN_S) / t_cool_myr, rho_ref_norm, 'b-', label="Reference")
 
-
-
 # Final point comparison
 t_num_final = time[-1]
 rho_num_final = dust_dens_norm[-1]
 rho_ref_final = rho_ref_norm[-1]
-
 rho_abs_err = abs(rho_num_final - rho_ref_final)
 rho_rel_err = rho_abs_err / abs(rho_ref_final)
-rho_fraction_diff_percent = rho_abs_err * 100.0
-
 print("====================================")
 print("Final point comparison")
 print("t_final =", t_num_final, "Myr")
@@ -197,6 +157,5 @@ ax.set_yscale('linear')
 ax.set_xlim(0, time_cool[-1]*1.05)
 ax.set_ylabel(r'$\rho_{\rm dust}/\rho_{\rm dust,0}$', fontsize='large')
 ax.legend()
-
 plt.savefig(fileout + ".png", bbox_inches='tight', pad_inches=0.05, dpi=150)
 # plt.show()

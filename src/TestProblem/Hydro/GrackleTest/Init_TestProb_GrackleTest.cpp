@@ -421,7 +421,7 @@ void SetParameter()
          const double gas_rho_cgs = GrackleTest_MassDensity_Min;
          const double k_per_sec   = GrackleTest_ExpCoolCoeff / Const_Myr;
 
-//       The saturation time is the point at which the dust density stops changing appreciabl. Using it as the default END_T  
+//       The saturation time is the point at which the dust density stops changing appreciably. Using it as the default END_T
 //       ensures the simulation runs long enough to capture the full dust-density decay without running unnecessarily longer.
          const double t_sat_sec = DustSat_ComputeSaturationTime( T0_K, gas_rho_cgs, k_per_sec );
 
@@ -718,7 +718,7 @@ static double Mis_GetTimeStep_Dust( const int lv, const double dTime_dt )
    double Dens = amr->patch[FluSg][0][0]->fluid[DENS][0][0][0];
    double Eint = amr->patch[FluSg][0][0]->fluid[ENGY][0][0][0];
 
-   // Estimate gas temperature.
+// Estimate gas temperature
    const double sEint_cgs = Eint/Dens * SQR( UNIT_V );
    const double Tgas = ( GAMMA - 1.0 ) * MOLECULAR_WEIGHT * Const_mH / Const_kB * sEint_cgs;
 
@@ -824,25 +824,50 @@ real_che Grackle_tempFloor_GrackleTest( const double x, const double y, const do
 // ============================================================
 #ifdef SUPPORT_GSL
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  DustSat_InternalEnergy
+// Description :  Evaluate the gas specific internal energy at time t under exponential decay
+//
+// Note        :  1. Follows e(t) = e0*exp(-k*t), consistent with the user-defined exponential
+//                   cooling term applied in Grackle_vHeatingRate_GrackleTest()
+//                2. Used by DustSat_ODE_RHS() to drive the dust-sputtering-time ODE
+//
+// Parameter   :  e0 : initial specific internal energy (erg/g)
+//                k  : energy decay rate (s^-1)
+//                t  : elapsed time (s)
+//
+// Return      :  specific internal energy at time t (erg/g)
+//-------------------------------------------------------------------------------------------------------
 static double DustSat_InternalEnergy( const double e0, const double k, const double t )
 {
    return e0*exp( -k*t );
 } // FUNCTION : DustSat_InternalEnergy
 
+
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  DustSat_SputteringTime
 // Description :  Dust sputtering timescale formula, as given in Eq. (6) of
 //                Richie et al. 2024, ApJ, 974, 81 ("Dust Survival in Galactic Winds")
+//
+// Note        :  1. t_sp = 0.17 Gyr * (a/0.1 um) * (1e-27 g/cm^3 / rho) * [(1e6.3 K / T)^omega + 1]
+//                2. Grain radius and omega are fixed to the values adopted by Richie et al. 2024
+//
+// Parameter   :  energy_cgs  : gas specific internal energy (erg/g)
+//                gas_rho_cgs : gas mass density (g/cm^3)
+//
+// Return      :  dust sputtering timescale (s)
 //-------------------------------------------------------------------------------------------------------
 static double DustSat_SputteringTime( const double energy_cgs, const double gas_rho_cgs )
 {
-   static const double DustSat_GrainRadius_um = 0.1;     // grain radius (um)
-   static const double DustSat_Omega          = 2.5;     // exponent in the sputtering-time formula
+   const double DustSat_GrainRadius_um = 0.1;     // grain radius (um)
+   const double DustSat_Omega          = 2.5;     // exponent in the sputtering-time formula
 
    const double Coeff1 = ( 0.17*1.0e3*Const_Myr )*( DustSat_GrainRadius_um/0.1 )*( 1.0e-27/gas_rho_cgs );
    const double Coeff2 = pow( ( pow(10.0, 6.3)*Const_kB )/( (GAMMA-1.0)*MOLECULAR_WEIGHT*Const_mH * energy_cgs ), DustSat_Omega );
    return Coeff1*( Coeff2 + 1.0 );
 } // FUNCTION : DustSat_SputteringTime
+
 
 
 struct DustSat_ODEParams
@@ -853,11 +878,21 @@ struct DustSat_ODEParams
 };
 
 
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  DustSat_ODE_RHS
 // Description :  Right-hand side of the dust-density ODE d(rho_d)/dt = -3/tsp * rho_d, used by
-//                DustSat_ComputeSaturationTime() to integrate the dust density over time, as given in  
+//                DustSat_ComputeSaturationTime() to integrate the dust density over time, as given in
 //                Eq. (3) of Richie et al. 2024, ApJ, 974, 81 ("Dust Survival in Galactic Winds")
+//
+// Note        :  1. GSL ODE right-hand-side callback; conforms to the gsl_odeiv2_system interface
+//
+// Parameter   :  t      : current time (s)
+//                y      : current state, y[0] = normalized dust density
+//                dydt   : output array for dy/dt
+//                params : pointer to a DustSat_ODEParams struct
+//
+// Return      :  GSL_SUCCESS
 //-------------------------------------------------------------------------------------------------------
 static int DustSat_ODE_RHS( double t, const double y[], double dydt[], void *params )
 {
@@ -872,15 +907,17 @@ static int DustSat_ODE_RHS( double t, const double y[], double dydt[], void *par
 } // FUNCTION : DustSat_ODE_RHS
 
 
+
 //-------------------------------------------------------------------------------------------------------
 // Function    :  DustSat_ComputeSaturationTime
 // Description :  Integrate the normalized dust-density ODE with GSL's rkf45 stepper and locate the
 //                saturation time defined by |rho(t) - rho(t-dt_step)| / rho(t-dt_step) < DustSat_Tol
 //
-//                The step size dt_step mimics the timestep criterion used by Mis_GetTimeStep_Dust()
-//                in the actual simulation: 2% of the cooling time above 3.0e5 K and 10% at lower
-//                temperatures. This ensures the estimated saturation time reflects the timestep
-//                granularity that Grackle will actually use during the real run.
+// Note        :  1. The step size dt_step mimics the timestep criterion used by Mis_GetTimeStep_Dust()
+//                   in the actual simulation: 2% of the cooling time above 3.0e5 K and 10% at lower
+//                   temperatures.
+//                2. The saturation check compares the current step against the previous step
+//                   (backward-looking), not an extrapolated future value
 //
 // Parameter   :  T0_K        : initial gas temperature (K)
 //                gas_rho_cgs : gas mass density (g/cm^3)
@@ -890,8 +927,8 @@ static int DustSat_ODE_RHS( double t, const double y[], double dydt[], void *par
 //-------------------------------------------------------------------------------------------------------
 static double DustSat_ComputeSaturationTime( const double T0_K, const double gas_rho_cgs, const double k_per_sec )
 {
-   static const double DustSat_Tol            = 1.0e-3;  // saturation tolerance
-   static const double DustSat_NCoolingTime   = 5.0;     // safety cap (in units of t_cool) if no saturation is found
+   const double DustSat_Tol            = 1.0e-3;  // saturation tolerance
+   const double DustSat_NCoolingTime   = 5.0;     // safety cap (in units of t_cool) if no saturation is found
 
    const double e0          = Const_kB*T0_K / ( (GAMMA-1.0)*MOLECULAR_WEIGHT*Const_mH );  // specific internal energy (erg/g)
    const double t_cool_sec  = 1.0/k_per_sec;
