@@ -52,6 +52,9 @@ void Validate()
    if ( amr->BoxSize[0] != amr->BoxSize[1]  ||  amr->BoxSize[0] != amr->BoxSize[2] )
       Aux_Error( ERROR_INFO, "simulation domain must be cubic !!\n" );
 
+   if ( ! SrcTerms.Turbulence )
+      Aux_Error( ERROR_INFO, "SRC_TURBULENCE must be enabled !!\n" );
+
 // warnings
 #  if ( FLU_SCHEME == MHM )
    if ( DT__FLUID > ( 0.3 + __DBL_EPSILON__ ) || DT__FLUID_INIT > ( 0.3 + __DBL_EPSILON__ ) )
