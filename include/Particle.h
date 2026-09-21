@@ -459,6 +459,14 @@ struct Particle_t
          Flag[p] = PFLAG_TBA;
       }
 
+//    initialize the particle potential to a defined value
+//    --> it is a derived diagnostic quantity, always recomputed by Par_UpdateParticlePotential()
+//        for massive particles when OPT__OUTPUT_PAR_POT is on, and otherwise (or for tracers) left
+//        untouched, so it must never be left as uninitialized memory
+#     ifdef STORE_PAR_POT
+      for (long p=0; p<NPar_Input; p++)   Pot[p] = (real_par)0.0;
+#     endif
+
    } // METHOD : InitRepo
 
 
@@ -573,6 +581,13 @@ struct Particle_t
 //    2. record the data of new particles
       for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   AttributeFlt[v][ParID] = NewAttFlt[v];
       for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   AttributeInt[v][ParID] = NewAttInt[v];
+
+//    the potential is a derived diagnostic quantity recomputed by Par_UpdateParticlePotential();
+//    force it to a defined value here so that callers of AddOneParticle() (e.g., star formation)
+//    need not supply NewAttFlt[PAR_POT] themselves
+#     ifdef STORE_PAR_POT
+      Pot[ParID] = (real_par)0.0;
+#     endif
 
 
 //    3. update the total number of active particles (assuming all new particles are active)

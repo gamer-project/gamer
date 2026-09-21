@@ -14,11 +14,13 @@
 //                   --> Returns immediately if OPT__OUTPUT_PAR_POT is false
 //                2. Reuses the generic mesh-to-particle interpolation routine Par_MapMesh2Particles(),
 //                   called here with UseTracers=false so that only massive particles are mapped
-//                   --> The interpolation order follows amr->Par->InterpTracer, which
-//                       Par_MapMesh2Particles() always uses regardless of caller
+//                   --> The interpolation order follows amr->Par->Interp (the massive-particle scheme),
+//                       and the ghost zones are sized by amr->Par->GhostSize accordingly
 //                3. Purely a diagnostic snapshot of the potential at each particle's current position
 //                   --> Unlike Par_UpdateParticle(), it does not feed back into the particle integration
 //                4. Skips patches/particle groups with no massive particles
+//                5. Tracer particles are skipped and keep whatever value Par->Pot[] already holds
+//                   (initialized to 0 for every particle; see Particle::InitRepo/AddOneParticle)
 //
 // Parameter   :  lv       : Target refinement level
 //                PrepTime : Target physical time for preparing the potential data

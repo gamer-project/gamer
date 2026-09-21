@@ -10,6 +10,7 @@ Parameters described on this page:
 [OPT__OUTPUT_BASE](#OPT__OUTPUT_BASE), &nbsp;
 [OPT__OUTPUT_POT](#OPT__OUTPUT_POT), &nbsp;
 [OPT__OUTPUT_PAR_DENS](#OPT__OUTPUT_PAR_DENS), &nbsp;
+[OPT__OUTPUT_PAR_POT](#OPT__OUTPUT_PAR_POT), &nbsp;
 [OPT__OUTPUT_CC_MAG](#OPT__OUTPUT_CC_MAG), &nbsp;
 [OPT__OUTPUT_PRES](#OPT__OUTPUT_PRES), &nbsp;
 [OPT__OUTPUT_TEMP](#OPT__OUTPUT_TEMP), &nbsp;
@@ -138,6 +139,20 @@ the simulation snapshots. The particle interpolation scheme is set by
 [[PAR_INTERP | [Runtime-Parameters]-Particles#PAR_INTERP ]].
     * **Restriction:**
 Only applicable when enabling [OPT__OUTPUT_TOTAL](#OPT__OUTPUT_TOTAL).
+
+<a name="OPT__OUTPUT_PAR_POT"></a>
+* #### `OPT__OUTPUT_PAR_POT` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Store the gravitational potential interpolated onto each massive particle's
+current position (attribute `ParPot`), sampled with the
+[[PAR_INTERP | [Runtime-Parameters]-Particles#PAR_INTERP ]] scheme. Purely a
+diagnostic snapshot; it does not feed back into the particle integration.
+Left at 0 for tracer particles.
+    * **Restriction:**
+Requires compiling with [[--store_par_pot | [Installation]-Option-List#--store_par_pot]]
+(which in turn requires [[--gravity | [Installation]-Option-List#--gravity]]), and
+either [[OPT__SELF_GRAVITY | [Runtime-Parameters]-Gravity#OPT__SELF_GRAVITY]] or
+[[OPT__EXT_POT | [Runtime-Parameters]-Gravity#OPT__EXT_POT]] enabled.
 
 <a name="OPT__OUTPUT_CC_MAG"></a>
 * #### `OPT__OUTPUT_CC_MAG` &ensp; (0=off, 1=on) &ensp; [1]

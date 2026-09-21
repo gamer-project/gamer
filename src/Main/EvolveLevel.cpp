@@ -502,6 +502,19 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
             if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
          }
+      } // if ( amr->Par->Integ == PAR_INTEG_KDK )
+
+//    for PAR_INTEG_EULER, Par_UpdateParticle() at the predictor stage above has already advanced
+//    particles all the way to TimeNew and there is no later correction step
+//    --> resample the potential now that it has also been updated to TimeNew (c.f. step 4 above),
+//        otherwise the diagnostic Pot would be stuck at the TimeOld value sampled at TimeNew positions
+      else if ( amr->Par->Integ == PAR_INTEG_EULER )
+      {
+#        ifdef STORE_PAR_POT
+         if ( OPT__OUTPUT_PAR_POT )
+         TIMING_FUNC(   Par_UpdateParticlePotential( lv, TimeNew ),
+                        Timer_Par_Update[lv][1],   TIMER_ON   );
+#        endif
       }
 
 //    pass particles to the children patches

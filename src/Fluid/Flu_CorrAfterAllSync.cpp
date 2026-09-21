@@ -157,7 +157,7 @@ void Flu_CorrAfterAllSync()
 #  endif
 
 
-// 5. Update tracer particle attributes
+// 6. Update tracer particle attributes
 #  ifdef TRACER
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "      update tracer particle attributes     ... " );
 
