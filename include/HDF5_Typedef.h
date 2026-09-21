@@ -176,6 +176,7 @@ struct Makefile_t
    int CosmicRay;
    int EoS;
    int BarotropicEoS;
+   int ExactCooling;
 
 #  elif ( MODEL == ELBDM )
    int ELBDMScheme;
@@ -299,6 +300,12 @@ struct SymConst_t
    int    InterpMask;
    int    FB_SepFluOut;
 
+#  if ( MODEL == HYDRO )
+   int    ExtraEoSCheck;
+#  endif
+   int    CheckUnphyRnd;
+   double CheckUnphyRndFactor;
+
 
 #  if   ( MODEL == HYDRO )
    int    Flu_BlockSize_x;
@@ -329,7 +336,7 @@ struct SymConst_t
    int    EoSNAuxMax;
    int    EoSNTableMax;
 
-#  elif  ( MODEL == ELBDM )
+#  elif ( MODEL == ELBDM )
    int    Flu_BlockSize_x;
    int    Flu_BlockSize_y;
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
@@ -429,6 +436,7 @@ struct InputPara_t
 // particle
 #  ifdef PARTICLE
    int    Par_Init;
+   int    Par_FlagInit;
    int    Par_ICFormat;
    double Par_ICMass;
    int    Par_ICType;
@@ -566,6 +574,8 @@ struct InputPara_t
    int    Opt__Flag_NParPatch;
    int    Opt__Flag_NParCell;
    int    Opt__Flag_ParMassCell;
+   int    Opt__Flag_ParTarget;
+   int    Opt__Flag_ParTargetSib;
 #  endif
    int    Opt__NoFlagNearBoundary;
    int    Opt__PatchCount;
@@ -694,6 +704,11 @@ struct InputPara_t
    int    Src_Deleptonization;
    int    Src_User;
    int    Src_GPU_NPGroup;
+   int    Src_ExactCooling;
+#  ifdef EXACT_COOLING
+   int    Src_EC_TEF_N;
+   double Src_EC_dtCoef;
+#  endif
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE

@@ -79,7 +79,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2511)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2514)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -89,7 +89,7 @@ Procedure for outputting new variables:
 //                   and different levels, GID is unique among all patches at all ranks and all levels
 //                   --> Each patch has an unique GID
 //                3. Both "Father, Son, and Sibling[26]" are GID instead of PID
-//                4. Currently we always use HDF5 NATVIE datatypes for both memory and dataset
+//                4. Currently we always use HDF5 NATIVE datatypes for both memory and dataset
 //                5. All arrays in the "Tree" group (e.g., Corner, LBIdx, ...) and the "GridData" group (e.g., Dens, MomX, ...)
 //                   have been sorted according to GID
 //                   --> Moreover, currently we store all patches at the same level together
@@ -165,7 +165,7 @@ Procedure for outputting new variables:
 //                2300 : 2018/07/15 --> replace PAR_NVAR and PAR_NPASSIVE by PAR_NATT_STORED and PAR_NATT_USER;
 //                                      use the new infrastructure for adding user-defined grid fields and
 //                                      particle attributes
-//                                      --> imcompatible with version 2266 for the data with user-defined grid fields
+//                                      --> incompatible with version 2266 for the data with user-defined grid fields
 //                                          and particle attributes as their labels may have changed
 //                2301 : 2018/07/24 --> add OPT__UM_IC_FORMAT, PAR_IC_FORMAT, and PAR_IC_MASS
 //                2302 : 2018/07/24 --> replace GRACKLE_MODE by GRACKLE_ACTIVATE
@@ -287,8 +287,12 @@ Procedure for outputting new variables:
 //                                             OPT__OUTPUT_GRACKLE_TEMP, OPT__OUTPUT_GRACKLE_MU, OPT__OUTPUT_GRACKLE_TCOOL,
 //                                             DT__GRACKLE_COOLING, OPT__FLAG_COOLING_LEN, FlagTable_CoolingLen
 //                2508 : 2026/03/26 --> output particle unique id
-//                2510 : 2026/05/14 --> support OPT__OUTPUT_DUAL_STATUS
-//                2511 : 2026/05/25 --> output DUAL_ENERGY_PREDICT 
+//                2509 : 2026/04/18 --> output OPT__FLAG_PAR_TARGET, OPT__FLAG_PAR_TARGET_SIB, Par->FlagInit, particle integer attribute PAR_FLAG
+//                2510 : 2026/06/07 --> output EXTRA_EOS_CHECK, CHECK_UNPHY_ROUNDING, CHECK_UNPHY_ROUNDING_FACTOR
+//                2511 : 2026/07/02 --> output exact-cooling parameters
+//                2512 : 2026/08/14 --> remove Src_EC_subcycling
+//                2513 : 2026/05/14 --> support OPT__OUTPUT_DUAL_STATUS
+//                2514 : 2026/05/25 --> output DUAL_ENERGY_PREDICT 
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1780,7 +1784,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2511;
+   KeyInfo.FormatVersion        = 2514;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2121,6 +2125,12 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.BarotropicEoS          = 0;
 #  endif
 
+#  ifdef EXACT_COOLING
+   Makefile.ExactCooling           = 1;
+#  else
+   Makefile.ExactCooling           = 0;
+#  endif
+
 
 #  elif ( MODEL == ELBDM )
 
@@ -2337,14 +2347,30 @@ void FillIn_SymConst( SymConst_t &SymConst )
    SymConst.FB_SepFluOut         = 0;
 #  endif
 
+#  if ( MODEL == HYDRO )
+#  ifdef EXTRA_EOS_CHECK
+   SymConst.ExtraEoSCheck        = 1;
+#  else
+   SymConst.ExtraEoSCheck        = 0;
+#  endif
+#  endif // HYDRO
+
+#  ifdef CHECK_UNPHY_ROUNDING
+   SymConst.CheckUnphyRnd        = 1;
+#  else
+   SymConst.CheckUnphyRnd        = 0;
+#  endif
+
+   SymConst.CheckUnphyRndFactor  = CHECK_UNPHY_ROUNDING_FACTOR;
+
 
 #  if   ( MODEL == HYDRO )
    SymConst.Flu_BlockSize_x      = FLU_BLOCK_SIZE_X;
    SymConst.Flu_BlockSize_y      = FLU_BLOCK_SIZE_Y;
 #  ifdef CHECK_UNPHYSICAL_IN_FLUID
-   SymConst.CheckUnphyInFluid = 1;
+   SymConst.CheckUnphyInFluid    = 1;
 #  else
-   SymConst.CheckUnphyInFluid = 0;
+   SymConst.CheckUnphyInFluid    = 0;
 #  endif
 #  ifdef CHAR_RECONSTRUCTION
    SymConst.CharReconstruction   = 1;
@@ -2520,6 +2546,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 // particle
 #  ifdef PARTICLE
    InputPara.Par_Init                = amr->Par->Init;
+   InputPara.Par_FlagInit            = amr->Par->FlagInit;
    InputPara.Par_ICFormat            = amr->Par->ParICFormat;
    InputPara.Par_ICMass              = amr->Par->ParICMass;
    InputPara.Par_ICType              = amr->Par->ParICType;
@@ -2657,6 +2684,8 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Flag_NParPatch     = OPT__FLAG_NPAR_PATCH;
    InputPara.Opt__Flag_NParCell      = OPT__FLAG_NPAR_CELL;
    InputPara.Opt__Flag_ParMassCell   = OPT__FLAG_PAR_MASS_CELL;
+   InputPara.Opt__Flag_ParTarget     = OPT__FLAG_PAR_TARGET;
+   InputPara.Opt__Flag_ParTargetSib  = OPT__FLAG_PAR_TARGET_SIB;
 #  endif
    InputPara.Opt__NoFlagNearBoundary = OPT__NO_FLAG_NEAR_BOUNDARY;
    InputPara.Opt__PatchCount         = OPT__PATCH_COUNT;
@@ -2799,6 +2828,11 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 // source terms
    InputPara.Src_Deleptonization     = SrcTerms.Deleptonization;
    InputPara.Src_User                = SrcTerms.User;
+   InputPara.Src_ExactCooling        = SrcTerms.ExactCooling;
+#  ifdef EXACT_COOLING
+   InputPara.Src_EC_TEF_N            = SrcTerms.EC_TEF_N;
+   InputPara.Src_EC_dtCoef           = SrcTerms.EC_dtCoef;
+#  endif
    InputPara.Src_GPU_NPGroup         = SRC_GPU_NPGROUP;
 
 // Grackle
@@ -3290,6 +3324,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "CosmicRay",              HOFFSET(Makefile_t,CosmicRay              ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "EoS",                    HOFFSET(Makefile_t,EoS                    ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "BarotropicEoS",          HOFFSET(Makefile_t,BarotropicEoS          ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "ExactCooling",           HOFFSET(Makefile_t,ExactCooling           ), H5T_NATIVE_INT );
 
 #  elif ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "ELBDMScheme",            HOFFSET(Makefile_t,ELBDMScheme            ), H5T_NATIVE_INT );
@@ -3407,6 +3442,11 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
 #  endif
    H5Tinsert( H5_TypeID, "InterpMask",           HOFFSET(SymConst_t,InterpMask          ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "FB_SepFluOut",         HOFFSET(SymConst_t,FB_SepFluOut        ), H5T_NATIVE_INT    );
+#  if ( MODEL == HYDRO )
+   H5Tinsert( H5_TypeID, "ExtraEoSCheck",        HOFFSET(SymConst_t,ExtraEoSCheck       ), H5T_NATIVE_INT    );
+#  endif
+   H5Tinsert( H5_TypeID, "CheckUnphyRnd",        HOFFSET(SymConst_t,CheckUnphyRnd       ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "CheckUnphyRndFactor",  HOFFSET(SymConst_t,CheckUnphyRndFactor ), H5T_NATIVE_DOUBLE );
 
 #  if   ( MODEL == HYDRO )
    H5Tinsert( H5_TypeID, "Flu_BlockSize_x",      HOFFSET(SymConst_t,Flu_BlockSize_x     ), H5T_NATIVE_INT    );
@@ -3592,6 +3632,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 // particle
 #  ifdef PARTICLE
    H5Tinsert( H5_TypeID, "Par_Init",                HOFFSET(InputPara_t,Par_Init               ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Par_FlagInit",            HOFFSET(InputPara_t,Par_FlagInit           ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ICFormat",            HOFFSET(InputPara_t,Par_ICFormat           ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Par_ICMass",              HOFFSET(InputPara_t,Par_ICMass             ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Par_ICType",              HOFFSET(InputPara_t,Par_ICType             ), H5T_NATIVE_INT     );
@@ -3747,6 +3788,8 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Flag_NParPatch",     HOFFSET(InputPara_t,Opt__Flag_NParPatch    ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_NParCell",      HOFFSET(InputPara_t,Opt__Flag_NParCell     ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__Flag_ParMassCell",   HOFFSET(InputPara_t,Opt__Flag_ParMassCell  ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__Flag_ParTarget",     HOFFSET(InputPara_t,Opt__Flag_ParTarget    ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "Opt__Flag_ParTargetSib",  HOFFSET(InputPara_t,Opt__Flag_ParTargetSib ), H5T_NATIVE_INT     );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__NoFlagNearBoundary", HOFFSET(InputPara_t,Opt__NoFlagNearBoundary), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__PatchCount",         HOFFSET(InputPara_t,Opt__PatchCount        ), H5T_NATIVE_INT     );
@@ -3898,6 +3941,11 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Src_Deleptonization",     HOFFSET(InputPara_t,Src_Deleptonization    ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Src_User",                HOFFSET(InputPara_t,Src_User               ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Src_GPU_NPGroup",         HOFFSET(InputPara_t,Src_GPU_NPGroup        ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Src_ExactCooling",        HOFFSET(InputPara_t,Src_ExactCooling       ), H5T_NATIVE_INT              );
+#  ifdef EXACT_COOLING
+   H5Tinsert( H5_TypeID, "Src_EC_TEF_N",            HOFFSET(InputPara_t,Src_EC_TEF_N           ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Src_EC_dtCoef",           HOFFSET(InputPara_t,Src_EC_dtCoef          ), H5T_NATIVE_DOUBLE           );
+#  endif
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE

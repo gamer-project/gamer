@@ -314,6 +314,13 @@ void Aux_TakeNote()
 
 #     endif // #ifdef PARTICLE
 
+//    e. option in source term
+#     ifdef EXACT_COOLING
+      fprintf( Note, "EXACT_COOLING                   ON\n" );
+#     else
+      fprintf( Note, "EXACT_COOLING                   OFF\n" );
+#     endif
+
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
 
@@ -529,6 +536,19 @@ void Aux_TakeNote()
 #     else
       fprintf( Note, "FB_SEP_FLUOUT                   OFF\n" );
 #     endif
+
+#     ifdef EXTRA_EOS_CHECK
+      fprintf( Note, "EXTRA_EOS_CHECK                 ON\n" );
+#     else
+      fprintf( Note, "EXTRA_EOS_CHECK                 OFF\n" );
+#     endif
+
+#     ifdef CHECK_UNPHY_ROUNDING
+      fprintf( Note, "CHECK_UNPHY_ROUNDING            ON\n" );
+#     else
+      fprintf( Note, "CHECK_UNPHY_ROUNDING            OFF\n" );
+#     endif
+      fprintf( Note, "CHECK_UNPHY_ROUNDING_FACTOR    % 21.14e\n", CHECK_UNPHY_ROUNDING_FACTOR );
 
 #     if   ( MODEL == HYDRO )
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
@@ -935,6 +955,7 @@ void Aux_TakeNote()
 #     endif
       fprintf( Note, "Par->NPar_Active_AllRank       % ld\n",     amr->Par->NPar_Active_AllRank );
       fprintf( Note, "Par->Init                      % d\n",      amr->Par->Init                );
+      fprintf( Note, "Par->FlagInit                  % d\n",      amr->Par->FlagInit            );
       fprintf( Note, "Par->ParICFormat               % d\n",      amr->Par->ParICFormat         );
       fprintf( Note, "PAR_IC_FLOAT8                  % d\n",      PAR_IC_FLOAT8                 );
       fprintf( Note, "PAR_IC_INT8                    % d\n",      PAR_IC_INT8                   );
@@ -1092,6 +1113,8 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_NPAR_PATCH           % d\n",      OPT__FLAG_NPAR_PATCH      );
       fprintf( Note, "OPT__FLAG_NPAR_CELL            % d\n",      OPT__FLAG_NPAR_CELL       );
       fprintf( Note, "OPT__FLAG_PAR_MASS_CELL        % d\n",      OPT__FLAG_PAR_MASS_CELL   );
+      fprintf( Note, "OPT__FLAG_PAR_TARGET           % d\n",      OPT__FLAG_PAR_TARGET      );
+      fprintf( Note, "OPT__FLAG_PAR_TARGET_SIB       % d\n",      OPT__FLAG_PAR_TARGET_SIB  );
 #     endif
 #     ifdef COSMIC_RAY
       fprintf( Note, "OPT__FLAG_CRAY                 % d\n",      OPT__FLAG_CRAY            );
@@ -1138,6 +1161,12 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "SRC_ANY                        % d\n",      SrcTerms.Any              );
       fprintf( Note, "SRC_DELEPTONIZATION            % d\n",      SrcTerms.Deleptonization  );
+      fprintf( Note, "SRC_EXACTCOOLING               % d\n",      SrcTerms.ExactCooling     );
+#     ifdef EXACT_COOLING
+      if ( SrcTerms.ExactCooling ) {
+      fprintf( Note, "SRC_EC_TEF_N                   % d\n",      SrcTerms.EC_TEF_N         );
+      fprintf( Note, "SRC_EC_DTCOEF                  % 14.7e\n",  SrcTerms.EC_dtCoef        ); }
+#     endif
       fprintf( Note, "SRC_USER                       % d\n",      SrcTerms.User             );
       fprintf( Note, "SRC_GPU_NPGROUP                % d\n",      SRC_GPU_NPGROUP           );
       fprintf( Note, "***********************************************************************************\n" );

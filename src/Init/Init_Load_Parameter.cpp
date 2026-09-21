@@ -75,6 +75,7 @@ void Init_Load_Parameter()
 // do no check PAR_NPAR since it may be reset by restart
    ReadPara->Add( "PAR_NPAR",                   &amr->Par->NPar_Active_AllRank,  -1L,               NoMin_long,    NoMax_long     );
    ReadPara->Add( "PAR_INIT",                   &amr->Par->Init,                 -1,                1,             3              );
+   ReadPara->Add( "PAR_FLAG_INIT",              &amr->Par->FlagInit,         (int)PFLAG_NO,         NoMin_int,     NoMax_int      );
    ReadPara->Add( "PAR_IC_FORMAT",              &amr->Par->ParICFormat,      PAR_IC_FORMAT_ATT_ID,  1,             2              );
    ReadPara->Add( "PAR_IC_FLOAT8",              &PAR_IC_FLOAT8,                  -1,                NoMin_int,     1              );
    ReadPara->Add( "PAR_IC_INT8",                &PAR_IC_INT8,                    -1,                NoMin_int,     1              );
@@ -211,6 +212,8 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__FLAG_NPAR_PATCH",       &OPT__FLAG_NPAR_PATCH,            0,               0,             2              );
    ReadPara->Add( "OPT__FLAG_NPAR_CELL",        &OPT__FLAG_NPAR_CELL,             false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__FLAG_PAR_MASS_CELL",    &OPT__FLAG_PAR_MASS_CELL,         false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__FLAG_PAR_TARGET",       &OPT__FLAG_PAR_TARGET,            FLAG_PAR_NONE,   0,             3              );
+   ReadPara->Add( "OPT__FLAG_PAR_TARGET_SIB",   &OPT__FLAG_PAR_TARGET_SIB,        true,            Useless_bool,  Useless_bool   );
 #  endif
    ReadPara->Add( "OPT__NO_FLAG_NEAR_BOUNDARY", &OPT__NO_FLAG_NEAR_BOUNDARY,      false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__PATCH_COUNT",           &OPT__PATCH_COUNT,                1,               0,             2              );
@@ -240,6 +243,11 @@ void Init_Load_Parameter()
 
 // source terms
    ReadPara->Add( "SRC_DELEPTONIZATION",        &SrcTerms.Deleptonization,        false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "SRC_EXACTCOOLING",           &SrcTerms.ExactCooling,           false,           Useless_bool,  Useless_bool   );
+#  ifdef EXACT_COOLING
+   ReadPara->Add( "SRC_EC_TEF_N",               &SrcTerms.EC_TEF_N,               1501,            1,             NoMax_int      );
+   ReadPara->Add( "SRC_EC_DTCOEF",              &SrcTerms.EC_dtCoef,             -1.0,             NoMin_double,  NoMax_double   );
+#  endif
    ReadPara->Add( "SRC_USER",                   &SrcTerms.User,                   false,           Useless_bool,  Useless_bool   );
 // do not check SRC_GPU_NPGROUP since it may be reset by either Init_ResetParameter() or CUAPI_SetMemSize()
    ReadPara->Add( "SRC_GPU_NPGROUP",            &SRC_GPU_NPGROUP,                -1,               NoMin_int,     NoMax_int      );
@@ -468,7 +476,7 @@ void Init_Load_Parameter()
 #  elif ( SUPPORT_FFTW == FFTW3 ) // #  if ( SUPPORT_FFTW == FFTW2 )
    ReadPara->Add( "OPT__FFTW_STARTUP",     &OPT__FFTW_STARTUP, FFTW_STARTUP_DEFAULT, FFTW_STARTUP_DEFAULT, FFTW_STARTUP_PATIENT );
 #  else  // # if ( SUPPORT_FFTW == FFTW2 ) ... # else
-#  error : ERROR : Unsupported FFTW version for OPT__FFTW_STARTUP
+#  error : ERROR : unsupported FFTW version for OPT__FFTW_STARTUP
 #  endif // #  if ( SUPPORT_FFTW == FFTW2 ) ... # else
 #  endif // # ifdef SUPPORT_FFTW
 

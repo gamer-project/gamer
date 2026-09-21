@@ -246,11 +246,12 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 
 //       6-1. check
 //       --> allow pressure to be zero to tolerate round-off errors
+//       --> check for unphysical results caused by floating-point rounding errors to facilitate the MINMOD_MAX_ITER fix
          if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, Output_1Cell, Emag,
                                    EoS->DensEint2Pres_FuncPtr,
                                    EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table,
-                                   PassiveFloor, ERROR_INFO, UNPHY_SILENCE )  )
+                                   PassiveFloor, ERROR_INFO, UNPHY_SILENCE, CK_UNPHY_RND_YES )  )
          {
 #           ifdef __CUDACC__  // GPU
 //          use atomicExch_block() on Pascal (or later) GPUs to avoid inter-block synchronization for better performance

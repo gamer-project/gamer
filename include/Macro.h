@@ -206,8 +206,15 @@
 #  define NCOMP_PASSIVE_BUILTIN1    0
 # endif
 
+// exact cooling source term
+# ifdef EXACT_COOLING
+#  define NCOMP_PASSIVE_BUILTIN2    1
+# else
+#  define NCOMP_PASSIVE_BUILTIN2    0
+# endif
+
 // total number of built-in scalars
-#  define NCOMP_PASSIVE_BUILTIN     ( NCOMP_PASSIVE_BUILTIN0 + NCOMP_PASSIVE_BUILTIN1 )
+#  define NCOMP_PASSIVE_BUILTIN     ( NCOMP_PASSIVE_BUILTIN0 + NCOMP_PASSIVE_BUILTIN1 + NCOMP_PASSIVE_BUILTIN2 )
 
 #endif // #if ( MODEL == HYDRO )
 
@@ -317,6 +324,13 @@
 #  define PASSIVE_NEXT_IDX2   ( PASSIVE_NEXT_IDX1 )
 # endif
 
+# ifdef EXACT_COOLING
+#  define TCOOL               ( PASSIVE_NEXT_IDX2 )
+#  define PASSIVE_NEXT_IDX3   ( TCOOL - 1         )
+# else
+#  define PASSIVE_NEXT_IDX3   ( PASSIVE_NEXT_IDX2 )
+# endif
+
 #endif // #if ( NCOMP_PASSIVE > 0 )
 
 // field indices of magnetic --> element of [0 ... NCOMP_MAG-1]
@@ -353,6 +367,13 @@
 #  define FLUX_NEXT_IDX2   ( FLUX_NEXT_IDX1  )
 # endif
 
+# ifdef EXACT_COOLING
+#  define FLUX_TCOOL       ( FLUX_NEXT_IDX2  )
+#  define FLUX_NEXT_IDX3   ( FLUX_TCOOL - 1  )
+# else
+#  define FLUX_NEXT_IDX3   ( FLUX_NEXT_IDX2  )
+# endif
+
 #endif // #if ( NCOMP_PASSIVE > 0 )
 
 // bitwise field indices
@@ -373,6 +394,10 @@
 
 # ifdef COSMIC_RAY
 #  define _CRAY               ( 1L << CRAY )
+# endif
+
+# ifdef EXACT_COOLING
+#  define _TCOOL              ( 1L << TCOOL )
 # endif
 
 #endif // #if ( NCOMP_PASSIVE > 0 )
@@ -402,6 +427,10 @@
 
 # ifdef COSMIC_RAY
 #  define _FLUX_CRAY          ( 1L << FLUX_CRAY )
+# endif
+
+# ifdef EXACT_COOLING
+#  define _FLUX_TCOOL         ( 1L << FLUX_TCOOL )
 # endif
 
 #endif // #if ( NFLUX_PASSIVE > 0 )
@@ -501,9 +530,9 @@
 
 // number of built-in particle attributes
 // floating-point: mass, position*3, velocity*3, and time
-// integer: type and uid
+// integer: type, uid, and flag
 #  define PAR_NATT_FLT_BUILTIN0   8
-#  define PAR_NATT_INT_BUILTIN0   2
+#  define PAR_NATT_INT_BUILTIN0   3
 
 // acceleration*3 when STORE_PAR_ACC is adopted
 # if ( defined STORE_PAR_ACC  &&  defined GRAVITY )
@@ -559,6 +588,7 @@
 // --> must NOT modify their values
 #  define  PAR_TYPE           0
 #  define  PAR_PUID           1
+#  define  PAR_FLAG           2
 
 // always put acceleration and time at the END of the particle attribute list
 // --> make it easier to discard them when storing data on disk (see Output_DumpData_Total(_HDF5).cpp)
@@ -594,6 +624,7 @@
 
 #  define _PAR_TYPE           ( 1L << PAR_TYPE )
 #  define _PAR_PUID           ( 1L << PAR_PUID )
+#  define _PAR_FLAG           ( 1L << PAR_FLAG )
 #  define _PAR_INT_TOTAL      (  ( 1L << PAR_NATT_INT_TOTAL ) - 1L )
 
 // grid fields related to particles
@@ -608,17 +639,24 @@
 
 // particle type macros
 
-// number of particle types (default: 4)
-#  define  PAR_NTYPE                4
+// number of particle types (default: 5)
+#  define  PAR_NTYPE                5
 
-// particle type indices (must be in the range 0<=index<PAR_NTYPE)
+// particle type indices (must be in the range 0<=index<PAR_NTYPE except for PTYPE_TBA)
+#  define  PTYPE_TBA                (long_par)-1
 #  define  PTYPE_TRACER             (long_par)0
 #  define  PTYPE_GENERIC_MASSIVE    (long_par)1
 #  define  PTYPE_DARK_MATTER        (long_par)2
 #  define  PTYPE_STAR               (long_par)3
+#  define  PTYPE_BLACK_HOLE         (long_par)4
 
 // particle uid to be assigned
 #  define  PUID_TBA                 (long_par)-1
+
+// particle refinement flags
+#  define  PFLAG_NO                 (long_par)0
+#  define  PFLAG_MANUAL             (long_par)9999
+#  define  PFLAG_TBA                (long_par)1234
 
 # ifdef GRAVITY
 #  define MASSIVE_PARTICLES
@@ -918,6 +956,11 @@
 #else
 #  define SRC_NAUX_DLEP          0
 #endif
+#ifdef EXACT_COOLING
+#  define SRC_NAUX_EC            10    // SrcTerms.EC_AuxArray_Flt/Int[]
+#else
+#  define SRC_NAUX_EC            0
+#endif
 #  define SRC_NAUX_USER          10    // SrcTerms.User_AuxArray_Flt/Int[]
 
 
@@ -959,6 +1002,32 @@
 
 #if ( ( GRAMFE_SCHEME == GRAMFE_MATMUL ) && defined( FLOAT8 ) )
 #   define GRAMFE_MATMUL_FLOAT8
+#endif
+
+
+// apply additional checks on equation-of-state calculations
+#if ( MODEL == HYDRO  &&  !defined BAROTROPIC_EOS  &&  EOS != EOS_GAMMA )
+#  define EXTRA_EOS_CHECK
+#endif
+
+
+// extend the unphysical-state check to account for floating-point rounding errors
+#ifdef EXTRA_EOS_CHECK
+#  define CHECK_UNPHY_ROUNDING
+#endif
+
+// maximum rounding-error factor to test
+// --> check the offsets: i*CHECK_UNPHY_ROUNDING_FACTOR*MACHINE_EPSILON,
+//     where i = CHECK_UNPHY_ROUNDING_IMIN, 0, CHECK_UNPHY_ROUNDING_IMAX
+// --> define it even when CHECK_UNPHY_ROUNDING is disabled so that it can be reused elsewhere
+#  define CHECK_UNPHY_ROUNDING_FACTOR  (real)3.0
+
+#ifdef CHECK_UNPHY_ROUNDING
+#  define CHECK_UNPHY_ROUNDING_IMIN   -1
+#  define CHECK_UNPHY_ROUNDING_IMAX   +1
+#else
+#  define CHECK_UNPHY_ROUNDING_IMIN    0
+#  define CHECK_UNPHY_ROUNDING_IMAX    0
 #endif
 
 
@@ -1230,6 +1299,14 @@
 // macro converting an array index (e.g., DENS) to bitwise index (e.g., _DENS=(1L<<DENS))
 #define BIDX( idx )     ( 1L << (idx) )
 
+
+// distance in 3D space
+#define DIST_SQR_3D( pos1, pos2 )   ( SQR(pos1[0] - pos2[0]) + \
+                                      SQR(pos1[1] - pos2[1]) + \
+                                      SQR(pos1[2] - pos2[2]) )
+#define DIST_3D_FLT( pos1, pos2 )   sqrtf( DIST_SQR_3D( pos1, pos2 ) )
+#define DIST_3D_DBL( pos1, pos2 )   sqrt( DIST_SQR_3D( pos1, pos2 ) )
+#define DIST_3D( pos1, pos2 )       SQRT( DIST_SQR_3D( pos1, pos2 ) )
 
 // helper macro for printing warning messages when resetting parameters
 #  define FORMAT_INT       %- 21d

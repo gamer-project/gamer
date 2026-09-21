@@ -629,7 +629,7 @@ void Init_ByFile_AssignData( const char UM_Filename[], const int UM_lv, const in
 //
 // Note        :  1. Invoked by Init_ByFile_AssignData() using the function pointer Init_ByFile_User_Ptr()
 //                   --> The function pointer may be reset by various test problem initializers, in which case
-//                       this funtion will become useless
+//                       this function will become useless
 //                2. Does not floor and normalize passive scalars
 //                3. Calculate the dual-energy variable automatically instead of load it from the disk
 //                   --> When adopting DUAL_ENERGY, the input uniform-mesh array must NOT include the dual-energy

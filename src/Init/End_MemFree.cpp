@@ -93,6 +93,12 @@ void End_MemFree()
    delete GlobalTree;   GlobalTree = NULL;
 
 
+// 11. EintBk[] declared in Hydro_RestoreEint.cpp
+#  if ( MODEL == HYDRO )
+   Hydro_RestoreEint_MemFree();
+#  endif
+
+
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
 } // FUNCTION : End_MemFree

@@ -462,6 +462,7 @@ void Init_NewDiskRestart()
    real_par *Vel_AllRank[3] = { NewParAttFlt[PAR_VELX], NewParAttFlt[PAR_VELY], NewParAttFlt[PAR_VELZ] };
    long_par *Type_AllRank   =   NewParAttInt[PAR_TYPE];
    long_par *PUID_AllRank   =   NewParAttInt[PAR_PUID];
+   long_par *Flag_AllRank   =   NewParAttInt[PAR_FLAG];
 
    if ( AddParWhenRestartByFile ) // add new disk via DiskHeatingParticleIC
    {
@@ -519,6 +520,8 @@ void Init_NewDiskRestart()
             Type_AllRank[p] = (long_par)ParData1[7]; // 1=CDM halo, 2=disk
 //          particle uid
             PUID_AllRank[p] = PUID_TBA;
+//          refinement flag
+            Flag_AllRank[p] = PFLAG_NO;
 
 //          position
             Pos_AllRank[0][p] = ParData1[1];
@@ -582,6 +585,8 @@ void Init_NewDiskRestart()
             Type_AllRank[p] = (long_par)3;      // use 3 to represent thin disk particles
 //          particle uid
             PUID_AllRank[p] = PUID_TBA;
+//          refinement flag
+            Flag_AllRank[p] = PFLAG_NO;
 
 //          position: statisfying surface density Sigma=Disk_Mass/(2*pi*Disk_R**2)*exp(-R/Disk_R)
             Ran  = RNG->GetValue( 0, 0.0, 1.0 );

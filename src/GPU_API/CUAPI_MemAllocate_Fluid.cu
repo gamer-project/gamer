@@ -79,49 +79,54 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
 {
 
 // size of the global memory arrays in all models
-   const int  Flu_NP              = 8*Flu_NPG;
+   const int  Flu_NP                = 8*Flu_NPG;
 #  ifdef GRAVITY
-   const int  Pot_NP              = 8*Pot_NPG;
+   const int  Pot_NP                = 8*Pot_NPG;
 #  endif
-   const int  Src_NP              = 8*Src_NPG;
-   const long Flu_MemSize_F_In    = sizeof(real  )*Flu_NPG*FLU_NIN *CUBE(FLU_NXT);
-   const long Flu_MemSize_F_Out   = sizeof(real  )*Flu_NPG*FLU_NOUT*CUBE(PS2);
-   const long Flux_MemSize        = sizeof(real  )*Flu_NPG*9*NFLUX_TOTAL*SQR(PS2);
+   const int  Src_NP                = 8*Src_NPG;
+   const long Flu_MemSize_F_In      = sizeof(real  )*Flu_NPG*FLU_NIN *CUBE(FLU_NXT);
+   const long Flu_MemSize_F_Out     = sizeof(real  )*Flu_NPG*FLU_NOUT*CUBE(PS2);
+   const long Flux_MemSize          = sizeof(real  )*Flu_NPG*9*NFLUX_TOTAL*SQR(PS2);
 #  ifdef UNSPLIT_GRAVITY
-   const long Pot_MemSize_USG_F   = sizeof(real  )*Flu_NPG*CUBE(USG_NXT_F);
-   const long Corner_MemSize_F    = sizeof(double)*Flu_NPG*3;
+   const long Pot_MemSize_USG_F     = sizeof(real  )*Flu_NPG*CUBE(USG_NXT_F);
+   const long Corner_MemSize_F      = sizeof(double)*Flu_NPG*3;
 #  endif
 #  ifdef DUAL_ENERGY
-   const long DE_MemSize_F_Out    = sizeof(char  )*Flu_NPG*CUBE(PS2);
+   const long DE_MemSize_F_Out      = sizeof(char  )*Flu_NPG*CUBE(PS2);
 #  endif
 #  ifdef MHD
-   const long Mag_MemSize_F_In    = sizeof(real  )*Flu_NPG*NCOMP_MAG*FLU_NXT_P1*SQR(FLU_NXT);
-   const long Mag_MemSize_F_Out   = sizeof(real  )*Flu_NPG*NCOMP_MAG*PS2P1*SQR(PS2);
-   const long Ele_MemSize         = sizeof(real  )*Flu_NPG*9*NCOMP_ELE*PS2P1*PS2;
-   const long Mag_MemSize_T       = sizeof(real  )*Flu_NP*NCOMP_MAG*PS1P1*SQR(PS1);
-   const long Mag_MemSize_S_In    = sizeof(real  )*Src_NP*NCOMP_MAG*SRC_NXT_P1*SQR(SRC_NXT);
+   const long Mag_MemSize_F_In      = sizeof(real  )*Flu_NPG*NCOMP_MAG*FLU_NXT_P1*SQR(FLU_NXT);
+   const long Mag_MemSize_F_Out     = sizeof(real  )*Flu_NPG*NCOMP_MAG*PS2P1*SQR(PS2);
+   const long Ele_MemSize           = sizeof(real  )*Flu_NPG*9*NCOMP_ELE*PS2P1*PS2;
+   const long Mag_MemSize_T         = sizeof(real  )*Flu_NP*NCOMP_MAG*PS1P1*SQR(PS1);
+   const long Mag_MemSize_S_In      = sizeof(real  )*Src_NP*NCOMP_MAG*SRC_NXT_P1*SQR(SRC_NXT);
 #  endif
 #  ifdef GRAVITY
-   const long dt_MemSize_T        = sizeof(real  )*MAX( Flu_NP, Pot_NP ); // dt_Array_T is used for both DT_FLU_SOLVER and DT_GRA_SOLVER
+   const long dt_MemSize_T          = sizeof(real  )*MAX( Flu_NP, Pot_NP ); // dt_Array_T is used for both DT_FLU_SOLVER and DT_GRA_SOLVER
 #  else
-   const long dt_MemSize_T        = sizeof(real  )*Flu_NP;
+   const long dt_MemSize_T          = sizeof(real  )*Flu_NP;
 #  endif
-   const long Flu_MemSize_T       = sizeof(real  )*Flu_NP*FLU_NIN_T *CUBE(PS1);
-   const long Flu_MemSize_S_In    = sizeof(real  )*Src_NP*FLU_NIN_S *CUBE(SRC_NXT);
-   const long Flu_MemSize_S_Out   = sizeof(real  )*Src_NP*FLU_NOUT_S*CUBE(PS1);
-   const long Corner_MemSize_S    = sizeof(double)*Src_NP*3;
+   const long Flu_MemSize_T         = sizeof(real  )*Flu_NP*FLU_NIN_T *CUBE(PS1);
+   const long Flu_MemSize_S_In      = sizeof(real  )*Src_NP*FLU_NIN_S *CUBE(SRC_NXT);
+   const long Flu_MemSize_S_Out     = sizeof(real  )*Src_NP*FLU_NOUT_S*CUBE(PS1);
+   const long Corner_MemSize_S      = sizeof(double)*Src_NP*3;
+#  ifdef EXACT_COOLING
+   const long EC_TEF_lambda_MemSize = sizeof(double)*SrcTerms.EC_TEF_N;
+   const long EC_TEF_alpha_MemSize  = sizeof(double)*SrcTerms.EC_TEF_N;
+   const long EC_TEFc_MemSize       = sizeof(double)*SrcTerms.EC_TEF_N;
+#  endif
 
 // the size of the global memory arrays in different models
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
-   const long PriVar_MemSize      = sizeof(real  )*Flu_NPG  *NCOMP_LR            *CUBE(FLU_NXT);
-   const long FC_Var_MemSize      = sizeof(real  )*Flu_NPG*6*NCOMP_TOTAL_PLUS_MAG*CUBE(N_FC_VAR);
-   const long FC_Flux_MemSize     = sizeof(real  )*Flu_NPG*3*NCOMP_TOTAL_PLUS_MAG*CUBE(N_FC_FLUX);
+   const long PriVar_MemSize        = sizeof(real  )*Flu_NPG  *NCOMP_LR            *CUBE(FLU_NXT);
+   const long FC_Var_MemSize        = sizeof(real  )*Flu_NPG*6*NCOMP_TOTAL_PLUS_MAG*CUBE(N_FC_VAR);
+   const long FC_Flux_MemSize       = sizeof(real  )*Flu_NPG*3*NCOMP_TOTAL_PLUS_MAG*CUBE(N_FC_FLUX);
 #  if ( LR_SCHEME == PPM )
-   const long Slope_PPM_MemSize   = sizeof(real  )*Flu_NPG*3*NCOMP_LR            *CUBE(N_SLOPE_PPM);
+   const long Slope_PPM_MemSize     = sizeof(real  )*Flu_NPG*3*NCOMP_LR            *CUBE(N_SLOPE_PPM);
 #  endif
 #  ifdef MHD
-   const long FC_Mag_Half_MemSize = sizeof(real  )*Flu_NPG  *NCOMP_MAG*FLU_NXT_P1*SQR(FLU_NXT);
-   const long EC_Ele_MemSize      = sizeof(real  )*Flu_NPG  *NCOMP_MAG*CUBE(N_EC_ELE);
+   const long FC_Mag_Half_MemSize   = sizeof(real  )*Flu_NPG  *NCOMP_MAG*FLU_NXT_P1*SQR(FLU_NXT);
+   const long EC_Ele_MemSize        = sizeof(real  )*Flu_NPG  *NCOMP_MAG*CUBE(N_EC_ELE);
 #  endif
 #  endif // FLU_SCHEME
 
@@ -202,6 +207,11 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
 #     endif
       TotalSize += Corner_MemSize_S;
    }
+
+#  ifdef EXACT_COOLING
+   if ( SrcTerms.ExactCooling )
+      TotalSize += EC_TEF_lambda_MemSize + EC_TEF_alpha_MemSize + EC_TEFc_MemSize;
+#  endif
 
    if ( MPI_Rank == 0 )
       Aux_Message( stdout, "NOTE : total memory requirement in GPU fluid solver = %ld MB\n", TotalSize/(1<<20) );

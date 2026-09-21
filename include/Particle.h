@@ -3,6 +3,8 @@
 
 
 
+#include "Macro.h"
+
 #ifndef PARTICLE
 #  error : ERROR : PARTICLE is not defined !!
 #endif
@@ -36,6 +38,10 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                NPar_Inactive           : Total number of inactive particles in this MPI rank
 //                NPar_Lv                 : Total number of active particles at each level in this MPI rank
 //                Init                    : Initialization methods (1/2/3 --> call function/restart/load from file)
+//                FlagInit                : Assign this refinement flag to all particles for Init=1/3
+//                                          --> Set to PFLAG_MANUAL (defined in Macro.h) to disable this behavior, in which case
+//                                              the refinement flag must be set manually by a particle initializer (for Init=1)
+//                                              or loaded from the PAR_IC file (for Init=3)
 //                ParICFormat             : Data format of the particle initialization file (1=[att][id], 2=[id][att])
 //                ParICMass               : Assign this mass to all particles for Init=3
 //                ParICType               : Assign this type to all particles for Init=3
@@ -59,7 +65,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                                              If a user forgets to assign `PUID` to `PUID_TBA`, we can easily detect incorrect behavior by checking if `PUID < 1`.
 //                                              Although we do have `Check_UniquePUID()` to verify uniqueness, it is not as efficient as this simple check.
 //                AttributeFlt            : Pointer arrays to different particle floating-point attributes (Mass, Pos, Vel, ...)
-//                AttributeInt            : Pointer arrays to different particle integer        attributes (Type, PUID)
+//                AttributeInt            : Pointer arrays to different particle integer        attributes (Type, PUID, Flag)
 //                InactiveParList         : List of inactive particle IDs
 //                Mesh_Attr               : Pointer arrays to different mesh quantities mapped onto tracer particles
 //                Mesh_Attr_Num           : Number of mesh quantities mapped onto tracer particles
@@ -108,6 +114,7 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                Acc                     : Particle acceleration (only when STORE_PAR_ACC is on)
 //                Type                    : Particle type (e.g., tracer, generic, dark matter, star)
 //                PUID                    : Particle UID
+//                Flag                    : Particle refinement flag
 //
 // Method      :  Particle_t        : Constructor
 //               ~Particle_t        : Destructor
@@ -128,6 +135,7 @@ struct Particle_t
    long          NPar_Inactive;
    long          NPar_Lv[NLEVEL];
    ParInit_t     Init;
+   int           FlagInit;
    ParICFormat_t ParICFormat;
    double        ParICMass;
    int           ParICType;
@@ -189,6 +197,7 @@ struct Particle_t
 #  endif
    long_par     *Type;
    long_par     *PUID;
+   long_par     *Flag;
 
 
    //===================================================================================
@@ -205,6 +214,7 @@ struct Particle_t
       NPar_Active_AllRank = -1;
       NPar_AcPlusInac     = -1;
       Init                = PAR_INIT_NONE;
+      FlagInit            = PFLAG_NO;
       ParICFormat         = PAR_IC_FORMAT_NONE;
       ParICMass           = -1.0;
       ParICType           = -1;
@@ -276,6 +286,7 @@ struct Particle_t
 #     endif
       Type = NULL;
       PUID = NULL;
+      Flag = NULL;
 
    } // METHOD : Particle_t
 
@@ -343,7 +354,7 @@ struct Particle_t
    //                   --> Assuming no inactive particles (i.e., NPar_Inactive = 0)
    //                2. For LOAD_BALANCE, some lists recording the information for exchanging
    //                   particles between different ranks are also allocated here
-   //                3. Initialize PUID to be PUID_TBA
+   //                3. Initialize built-in integer attributes (e.g., Type, PUID, Flag)
    //
    // Parameter   :  NPar_Input : Total number of active particles
    //                NRank      : Total number of MPI ranks
@@ -429,11 +440,14 @@ struct Particle_t
 #     endif
       Type = AttributeInt[PAR_TYPE];
       PUID = AttributeInt[PAR_PUID];
+      Flag = AttributeInt[PAR_FLAG];
 
-//    initialize some arrays
+//    initialize built-in integer attributes
       for (long p=0; p<NPar_Input; p++)
       {
+         Type[p] = PTYPE_TBA;
          PUID[p] = PUID_TBA;
+         Flag[p] = PFLAG_TBA;
       }
 
    } // METHOD : InitRepo
@@ -536,6 +550,7 @@ struct Particle_t
 #           endif
             Type = AttributeInt[PAR_TYPE];
             PUID = AttributeInt[PAR_PUID];
+            Flag = AttributeInt[PAR_FLAG];
          }
 
          ParID = NPar_AcPlusInac;

@@ -41,7 +41,8 @@ static bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[],
                                 const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                                 const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                                 const real *const EoS_Table[EOS_NTABLE_MAX], const long PassiveFloor,
-                                const char File[], const int Line, const char Function[], const IsUnphVerb_t Verbose );
+                                const char File[], const int Line, const char Function[], const IsUnphVerb_t Verbose,
+                                const CkUnphyRnd_t CkUnphyRnd );
 GPU_DEVICE
 static bool Hydro_IsUnphysical_Single( const real Field, const char SingleFieldName[], const real Min, const real Max,
                                        const char File[], const int Line, const char Function[], const IsUnphVerb_t Verbose );
@@ -223,7 +224,7 @@ void Hydro_Con2Pri( const real In[], real Out[], const real MinPres, const long 
    Hydro_IsUnphysical( UNPHY_MODE_CONS, In, NULL_REAL,
                        EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table,
-                       PassiveFloor, ERROR_INFO, UNPHY_VERBOSE );
+                       PassiveFloor, ERROR_INFO, UNPHY_VERBOSE, CK_UNPHY_RND_NA );
 #  endif
 
    HTilde = Hydro_Con2HTilde( In, EoS_GuessHTilde, EoS_HTilde2Temp, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
@@ -840,6 +841,17 @@ real Hydro_CheckMinEintInEngy( const real Dens, const real MomX, const real MomY
 //                Function          : __FUNCTION__
 //                Verbose           : UNPHY_VERBOSE --> Show error messages
 //                                    UNPHY_SILENCE --> Show nothing
+//                CkUnphyRnd        : Check for unphysical results caused by floating-point rounding errors
+//                                    --> Supported modes:
+//                                        CK_UNPHY_RND_YES: enable the check
+//                                        --> Intended mainly for correcting unphysical results arising from machine-precision-level errors
+//                                            (currently applicable only when Mode == UNPHY_MODE_CONS)
+//                                        CK_UNPHY_RND_NO: disable the check
+//                                        --> Useful in situations where we intentionally do *not* want to
+//                                            check for rounding errors (e.g., OPT__CK_INPUT_FLUID and when debugging)
+//                                        CK_UNPHY_RND_NA: not applicable
+//                                        --> Currently used for SRHD, UNPHY_MODE_PRIM, and UNPHY_MODE_PASSIVE_ONLY
+//                                    --> Ignored when CHECK_UNPHY_ROUNDING is disabled in Macro.h
 //
 // Return      :  true  --> Input field is unphysical
 //                false --> Otherwise
@@ -850,7 +862,8 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[],
                          const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                          const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                          const real *const EoS_Table[EOS_NTABLE_MAX], const long PassiveFloor,
-                         const char File[], const int Line, const char Function[], const IsUnphVerb_t Verbose )
+                         const char File[], const int Line, const char Function[], const IsUnphVerb_t Verbose,
+                         const CkUnphyRnd_t CkUnphyRnd )
 {
 
 // check
@@ -914,24 +927,36 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[],
 
 #        ifndef BAROTROPIC_EOS
 //       check internal energy (which can be zero or slightly negative if it's within machine precision)
-         const real CheckMinEint_No = false;
+         const bool CheckMinEint_No = false;
          const real Eint = Hydro_Con2Eint( Fields[DENS], Fields[MOMX], Fields[MOMY], Fields[MOMZ], Fields[ENGY],
                                            CheckMinEint_No, NULL_REAL, PassiveFloor, Emag,
                                            NULL, NULL, NULL, NULL, NULL );
 
-         if ( Eint < (real)-3.0*Fields[ENGY]*MACHINE_EPSILON  ||  Eint > HUGE_NUMBER  ||  Eint != Eint )
+         if ( Eint < -CHECK_UNPHY_ROUNDING_FACTOR*Fields[ENGY]*MACHINE_EPSILON  ||  Eint > HUGE_NUMBER  ||  Eint != Eint )
             UnphyCell = true;
 
 //       check pressure for non-trivial EoS (which cannot be negative)
 //       --> for trivial EoS like EOS_GAMMA, checking internal energy is sufficient and pressure can be
 //           slightly negative if it's within machine precision
-#        if ( EOS != EOS_GAMMA )
-         const real Pres = EoS_DensEint2Pres( Fields[DENS], Eint, Fields+NCOMP_FLUID,
-                                              EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+#        ifdef EXTRA_EOS_CHECK
+         real Pres;
+//       must parenthesize i<=() since ?: has lower precedence than <=
+         for (int i =((CkUnphyRnd==CK_UNPHY_RND_YES)?CHECK_UNPHY_ROUNDING_IMIN:0);
+                  i<=((CkUnphyRnd==CK_UNPHY_RND_YES)?CHECK_UNPHY_ROUNDING_IMAX:0);
+                  i++)
+         {
+//          add machine-precision-level perturbations to the internal energy relative to the total energy
+            const real Eint_Check = Eint + Fields[ENGY]*(real)i*CHECK_UNPHY_ROUNDING_FACTOR*MACHINE_EPSILON;
+            Pres = EoS_DensEint2Pres( Fields[DENS], Eint_Check, Fields+NCOMP_FLUID,
+                                      EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
-         if ( Pres < (real)0.0  ||  Pres > HUGE_NUMBER  ||  Pres != Pres )
-            UnphyCell = true;
-#        endif // #if ( EOS != EOS_GAMMA )
+            if ( Pres < (real)0.0  ||  Pres > HUGE_NUMBER  ||  Pres != Pres )
+            {
+               UnphyCell = true;
+               break;
+            }
+         }
+#        endif // #ifdef EXTRA_EOS_CHECK
 #        endif // #ifndef BAROTROPIC_EOS
 
 #        endif // #ifdef SRHD ... else ...
@@ -954,7 +979,7 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[],
 #           else
 #           ifndef BAROTROPIC_EOS
             printf( " Eint=%14.7e", Eint );
-#           if ( EOS != EOS_GAMMA )
+#           ifdef EXTRA_EOS_CHECK
             printf( " Pres=%14.7e", Pres );
 #           endif
 #           endif // #ifndef BAROTROPIC_EOS
@@ -1627,7 +1652,7 @@ void NewtonRaphsonSolver( void (*FuncPtr)( real Unknown, void *Params, real *Fun
 #     endif
 
       Delta     = Func/DiffFunc;
-      Tolerance =  EpsRel*FABS(*Root) + EpsAbs;
+      Tolerance = EpsRel*FABS(*Root) + EpsAbs;
       *Root     = *Root - Delta;
 
    } while ( FABS(Delta) >= Tolerance  &&  Iter < MaxIter );

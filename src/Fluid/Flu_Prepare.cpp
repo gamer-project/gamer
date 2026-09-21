@@ -208,10 +208,18 @@ void Flu_Prepare( const int lv, const double PrepTime,
                                                FLU_NXT, FLU_NXT, FLU_NXT, i, j, k );
 #           endif
 
+//          adopt CK_UNPHY_RND_NO to avoid false alarms
+//          --> CK_UNPHY_RND_YES is intended mainly for correcting unphysical results arising from machine-precision-level errors,
+//              whereas OPT__CK_INPUT_FLUID is primarily for debugging and does not *correct* any data
+//          --> it is assumed that CK_UNPHY_RND_YES (or, more generally, CHECK_UNPHY_ROUNDING) applied elsewhere has already ensured
+//              that rounding errors \lesssim CHECK_UNPHY_ROUNDING_FACTOR*MACHINE_EPSILON do not cause unphysical results;
+//              however, adopting CK_UNPHY_RND_YES here would introduce perturbations of \sim CHECK_UNPHY_ROUNDING_FACTOR*MACHINE_EPSILON,
+//              which may still trigger unphysical results due to different rounding errors in different parts of the code
+//              (e.g., CPU and GPU codes may exhibit different rounding errors even when calling the same Hydro_IsUnphysical() routine)
             if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, fluid, Emag,
                                       EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                       EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
-                                      PassiveFloorMask, ERROR_INFO, UNPHY_VERBOSE )  )
+                                      PassiveFloorMask, ERROR_INFO, UNPHY_VERBOSE, CK_UNPHY_RND_NO )  )
                CheckFailed = true;
 
 //          generic

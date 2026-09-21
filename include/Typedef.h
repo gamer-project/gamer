@@ -94,11 +94,13 @@ const TestProbID_t
    TESTPROB_HYDRO_CR_SHOCKTUBE                 =   21,
    TESTPROB_HYDRO_CR_DIFFUSION                 =   23,
    TESTPROB_HYDRO_GRACKLE_TEST                 =   24,
+   TESTPROB_HYDRO_PARTICLE_FLAG                =   25,
    TESTPROB_HYDRO_BARRED_POT                   =   51,
    TESTPROB_HYDRO_JET_ICM_WALL                 =   52,
    TESTPROB_HYDRO_CDM_LSS                      =  100,
    TESTPROB_HYDRO_ZELDOVICH                    =  101,
    TESTPROB_HYDRO_GRACKLE_COMOVING             =  102,
+   TESTPROB_HYDRO_EXACTCOOLING                 =  123,
    TESTPROB_ELBDM_EXTPOT                       = 1000,
    TESTPROB_ELBDM_JEANS_INSTABILITY_COMOVING   = 1001,
    TESTPROB_ELBDM_JEANS_INSTABILITY_PHYSICAL   = 1002,
@@ -266,6 +268,14 @@ const IsUnphyMode_t
    UNPHY_MODE_PASSIVE_ONLY = 2;  // only check passive scalars
 
 
+// whether to check rounding errors in Hydro_IsUnphysical()
+typedef int CkUnphyRnd_t;
+const CkUnphyRnd_t
+   CK_UNPHY_RND_NA  = 0,   // not applicable
+   CK_UNPHY_RND_YES = 1,   // enable the check
+   CK_UNPHY_RND_NO  = 2;   // disable the check
+
+
 // verbosity levels of Hydro_IsUnphysical()
 typedef int IsUnphVerb_t;
 const IsUnphVerb_t
@@ -404,6 +414,13 @@ const ParOutputDens_t
    PAR_OUTPUT_DENS_NONE     = 0,
    PAR_OUTPUT_DENS_PAR_ONLY = 1,
    PAR_OUTPUT_DENS_TOTAL    = 2;
+
+typedef int FlagParTarget_t;
+const FlagParTarget_t
+   FLAG_PAR_NONE = 0,
+   FLAG_PAR_MUST = 1,
+   FLAG_PAR_CAN  = 2,
+   FLAG_PAR_BOTH = 3;
 
 typedef int ParPass2Son_t;
 const ParPass2Son_t
