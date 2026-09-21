@@ -143,16 +143,20 @@ Only applicable when enabling [OPT__OUTPUT_TOTAL](#OPT__OUTPUT_TOTAL).
 <a name="OPT__OUTPUT_PAR_POT"></a>
 * #### `OPT__OUTPUT_PAR_POT` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
-Store the gravitational potential interpolated onto each massive particle's
-current position (attribute `ParPot`), sampled with the
-[[PAR_INTERP | [Runtime-Parameters]-Particles#PAR_INTERP ]] scheme. Purely a
-diagnostic snapshot; it does not feed back into the particle integration.
-Left at 0 for tracer particles.
+Write the particle attribute `ParPot` -- the gravitational potential
+interpolated onto each massive particle's current position, sampled with the
+[[PAR_INTERP | [Runtime-Parameters]-Particles#PAR_INTERP ]] scheme -- to the
+particle text/C-binary dump files. This is purely an output switch: whenever
+compiled with `STORE_PAR_POT`, `ParPot` is always kept up to date internally
+(and available to other code, e.g. feedback modules) regardless of this
+option, and is left at 0 for tracer particles or when neither
+[[OPT__SELF_GRAVITY | [Runtime-Parameters]-Gravity#OPT__SELF_GRAVITY]] nor
+[[OPT__EXT_POT | [Runtime-Parameters]-Gravity#OPT__EXT_POT]] is active. It is
+purely a diagnostic snapshot; it does not feed back into the particle
+integration.
     * **Restriction:**
 Requires compiling with [[--store_par_pot | [Installation]-Option-List#--store_par_pot]]
-(which in turn requires [[--gravity | [Installation]-Option-List#--gravity]]), and
-either [[OPT__SELF_GRAVITY | [Runtime-Parameters]-Gravity#OPT__SELF_GRAVITY]] or
-[[OPT__EXT_POT | [Runtime-Parameters]-Gravity#OPT__EXT_POT]] enabled.
+(which in turn requires [[--gravity | [Installation]-Option-List#--gravity]]).
 
 <a name="OPT__OUTPUT_CC_MAG"></a>
 * #### `OPT__OUTPUT_CC_MAG` &ensp; (0=off, 1=on) &ensp; [1]

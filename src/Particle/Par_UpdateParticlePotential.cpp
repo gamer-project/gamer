@@ -10,16 +10,22 @@
 // Description :  Interpolate the gravitational potential onto all massive particles at the target level
 //                and store the result in Par->Pot[]
 //
-// Note        :  1. Enabled by the runtime option OPT__OUTPUT_PAR_POT (in addition to compiling with STORE_PAR_POT)
-//                   --> Returns immediately if OPT__OUTPUT_PAR_POT is false
-//                2. Reuses the generic mesh-to-particle interpolation routine Par_MapMesh2Particles(),
+// Note        :  1. Always kept up to date whenever compiled with STORE_PAR_POT, independent of the
+//                   runtime option OPT__OUTPUT_PAR_POT, which only controls whether Par->Pot[] gets
+//                   written to the particle text/binary dump files (see Par_Output_TextFile/BinaryFile)
+//                   --> Other code (feedback, diagnostics, ...) can rely on Par->Pot[] being current
+//                       without needing to enable that output
+//                2. Returns immediately if neither OPT__SELF_GRAVITY nor OPT__EXT_POT is active, since
+//                   the grid potential is not prepared in that case; Par->Pot[] is left at its
+//                   zero-initialized default (see Particle::InitRepo/AddOneParticle)
+//                3. Reuses the generic mesh-to-particle interpolation routine Par_MapMesh2Particles(),
 //                   called here with UseTracers=false so that only massive particles are mapped
 //                   --> The interpolation order follows amr->Par->Interp (the massive-particle scheme),
 //                       and the ghost zones are sized by amr->Par->GhostSize accordingly
-//                3. Purely a diagnostic snapshot of the potential at each particle's current position
+//                4. Purely a diagnostic snapshot of the potential at each particle's current position
 //                   --> Unlike Par_UpdateParticle(), it does not feed back into the particle integration
-//                4. Skips patches/particle groups with no massive particles
-//                5. Tracer particles are skipped and keep whatever value Par->Pot[] already holds
+//                5. Skips patches/particle groups with no massive particles
+//                6. Tracer particles are skipped and keep whatever value Par->Pot[] already holds
 //                   (initialized to 0 for every particle; see Particle::InitRepo/AddOneParticle)
 //
 // Parameter   :  lv       : Target refinement level
@@ -30,7 +36,7 @@
 void Par_UpdateParticlePotential( const int lv, const double PrepTime )
 {
 
-   if ( !OPT__OUTPUT_PAR_POT )   return;
+   if ( !OPT__SELF_GRAVITY  &&  !OPT__EXT_POT )   return;
 
    const bool     IntPhase_No        = false;
    const bool     DE_Consistency_No  = false;

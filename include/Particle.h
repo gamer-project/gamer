@@ -460,9 +460,10 @@ struct Particle_t
       }
 
 //    initialize the particle potential to a defined value
-//    --> it is a derived diagnostic quantity, always recomputed by Par_UpdateParticlePotential()
-//        for massive particles when OPT__OUTPUT_PAR_POT is on, and otherwise (or for tracers) left
-//        untouched, so it must never be left as uninitialized memory
+//    --> it is a derived diagnostic quantity, always kept up to date for massive particles by
+//        Par_UpdateParticlePotential() whenever self-gravity or an external potential is active
+//        (independent of OPT__OUTPUT_PAR_POT, which only controls whether it gets written to disk),
+//        and otherwise (or for tracers) left untouched, so it must never be left as uninitialized memory
 #     ifdef STORE_PAR_POT
       for (long p=0; p<NPar_Input; p++)   Pot[p] = (real_par)0.0;
 #     endif
