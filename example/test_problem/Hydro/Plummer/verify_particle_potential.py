@@ -57,11 +57,27 @@ def main():
                               "excluded from the residual statistics [0.375]")
     args = parser.parse_args()
 
-    data = np.loadtxt(args.particle_file, skiprows=2)
+    # Load data and locate the ParPot column from the header so we don't
+    # silently read the wrong column when ParPot isn't present.
+    with open(args.particle_file, "r") as f:
+        header_cols = None
+        for line in f:
+            if line.startswith("#") and "ParMass" in line:
+                header_cols = line[1:].split()
+                break
+
+    if not header_cols or "ParPot" not in header_cols:
+        raise SystemExit(
+            "ParPot column not found in particle dump. "
+            "Make sure OPT__OUTPUT_PAR_POT=1 and the code was compiled with STORE_PAR_POT."
+        )
+
+    pot_col = header_cols.index("ParPot")
+
+    data = np.loadtxt(args.particle_file, comments="#")
     mass = data[:, 0]
     pos = data[:, 1:4]
-    pot = data[:, 10]
-
+    pot = data[:, pot_col]
     box_center = np.full(3, 0.5 * args.box_size)
     r = np.linalg.norm(pos - box_center, axis=1)
 
