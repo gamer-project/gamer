@@ -316,24 +316,38 @@ void Aux_Record_GrackleComoving()
 
    if ( amr->NPatchComma[0][1] > 0 )
    {
-      int    FluSg = amr->FluSg[0];
-      double Dens  = amr->patch[FluSg][0][0]->fluid[DENS][0][0][0];
-      double Eint  = amr->patch[FluSg][0][0]->fluid[ENGY][0][0][0];  // assume no magnetic and kinetic energy
+      const int    FluSg = amr->FluSg[0];
+      const double Dens  = amr->patch[FluSg][0][0]->fluid[DENS][0][0][0];
+      double Eint;   // must exclude cosmic-ray energy for Grackle
 
 //    use the dual-energy variable to calculate the internal energy if applicable
 #     ifdef DUAL_ENERGY
-      double Dual  = amr->patch[FluSg][0][0]->fluid[DUAL][0][0][0];
+      const double Dual = amr->patch[FluSg][0][0]->fluid[DUAL][0][0][0];
 
 #     if   ( DUAL_ENERGY == DE_ENPY )
       const bool CheckMinPres_No = false;
-      double Pres  = Hydro_DensDual2Pres( Dens, Dual, EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
+//    Hydro_DensDual2Pres() returns gas pressure without cosmic rays
+      const double Pres = Hydro_DensDual2Pres( Dens, Dual, EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
+#     if   ( EOS == EOS_GAMMA )
 //    EOS_GAMMA does not involve passive scalars
-      Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+      Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#     elif ( EOS == EOS_COSMIC_RAY )
+      Eint = EoS_GasPres2GasEint_CPUPtr( Pres, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#     else
+#     error : ERROR : unsupported EoS !!
+#     endif // EOS
+
 #     elif ( DUAL_ENERGY == DE_EINT )
 #     error : DE_EINT is NOT supported yet !!
 #     endif
 
-#     endif // #ifdef DUAL_ENERGY
+#     else // #ifdef DUAL_ENERGY
+
+      Eint  = amr->patch[FluSg][0][0]->fluid[ENGY][0][0][0];   // assume no magnetic and kinetic energies
+#     ifdef COSMIC_RAY
+      Eint -= amr->patch[FluSg][0][0]->fluid[CRAY][0][0][0];   // exclude cosmic-ray energy
+#     endif
+#     endif // #ifdef DUAL_ENERGY ... else ...
 
       const double MassRatio_pe = Const_mp / Const_me;
 
@@ -575,24 +589,38 @@ double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
 
    if ( amr->NPatchComma[lv][1] > 0 )
    {
-      int    FluSg = amr->FluSg[lv];
-      double Dens  = amr->patch[FluSg][lv][0]->fluid[DENS][0][0][0];
-      double Eint  = amr->patch[FluSg][lv][0]->fluid[ENGY][0][0][0]; // assume no magnetic and kinetic energy
+      const int    FluSg = amr->FluSg[lv];
+      const double Dens  = amr->patch[FluSg][lv][0]->fluid[DENS][0][0][0];
+      double Eint;   // must exclude cosmic-ray energy for Grackle
 
 //    use the dual-energy variable to calculate the internal energy if applicable
 #     ifdef DUAL_ENERGY
-      double Dual = amr->patch[FluSg][lv][0]->fluid[DUAL][0][0][0];
+      const double Dual = amr->patch[FluSg][lv][0]->fluid[DUAL][0][0][0];
 
 #     if   ( DUAL_ENERGY == DE_ENPY )
-      const bool CheckMinPres_No  = false;
-      double     Pres             = Hydro_DensDual2Pres( Dens, Dual, EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
+      const bool CheckMinPres_No = false;
+//    Hydro_DensDual2Pres() returns gas pressure without cosmic rays
+      const double Pres = Hydro_DensDual2Pres( Dens, Dual, EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
+#     if   ( EOS == EOS_GAMMA )
 //    EOS_GAMMA does not involve passive scalars
-      Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+      Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#     elif ( EOS == EOS_COSMIC_RAY )
+      Eint = EoS_GasPres2GasEint_CPUPtr( Pres, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#     else
+#     error : ERROR : unsupported EoS !!
+#     endif // EOS
+
 #     elif ( DUAL_ENERGY == DE_EINT )
 #     error : DE_EINT is NOT supported yet !!
 #     endif
 
-#     endif // #ifdef DUAL_ENERGY
+#     else // #ifdef DUAL_ENERGY
+
+      Eint  = amr->patch[FluSg][lv][0]->fluid[ENGY][0][0][0];   // assume no magnetic and kinetic energies
+#     ifdef COSMIC_RAY
+      Eint -= amr->patch[FluSg][lv][0]->fluid[CRAY][0][0][0];   // exclude cosmic-ray energy
+#     endif
+#     endif // #ifdef DUAL_ENERGY ... else ...
 
       const double MassRatio_pe = Const_mp / Const_me;
 

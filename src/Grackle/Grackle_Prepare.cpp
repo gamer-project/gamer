@@ -252,16 +252,26 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
             Dens  = *( fluid[DENS][0][0] + idx_p );
             Etot  = *( fluid[ENGY][0][0] + idx_p );
 
-//          use the dual-energy variable to calculate the internal energy if applicable
+//          compute gas internal energy density
+//          --> must exclude cosmic-ray energy to be consistent with Grackle (e.g., Grackle may use gas internal energy to infer temperature)
+//          --> use the dual-energy variable if applicable
 #           ifdef DUAL_ENERGY
 
 #           if   ( DUAL_ENERGY == DE_ENPY )
+//          Hydro_DensDual2Pres() returns gas pressure without cosmic rays
             Pres  = Hydro_DensDual2Pres( Dens, *(fluid[DUAL][0][0]+idx_p), EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
+#           if   ( EOS == EOS_GAMMA )
 //          EOS_GAMMA does not involve passive scalars
             Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#           elif ( EOS == EOS_COSMIC_RAY )
+            Eint  = EoS_GasPres2GasEint_CPUPtr( Pres, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#           else
+#           error : ERROR : unsupported EoS !!
+#           endif // EOS
+
 #           elif ( DUAL_ENERGY == DE_EINT )
 #           error : DE_EINT is NOT supported yet !!
-#           endif
+#           endif // DUAL_ENERGY == DE_ENPY/DE_EINT
 
 #           else // #ifdef DUAL_ENERGY
 
@@ -273,12 +283,12 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
 #           endif
             Eint  = Hydro_Con2Eint( Dens, Px, Py, Pz, Etot, CheckMinEint_Yes, MIN_EINT, PassiveFloorMask, Emag,
                                     NULL, NULL, NULL, NULL, NULL );
-#           endif // #ifdef DUAL_ENERGY ... else
-
-//          Grackle doesn't know cosmic rays so we must exclude the cosmic-ray energy from the input gas internal energy
+//          exclude cosmic-ray energy since Hydro_Con2Eint() returns gas+cosmic-ray energies
 #           ifdef COSMIC_RAY
             Eint -= *( fluid[CRAY][0][0] + idx_p );
 #           endif
+
+#           endif // #ifdef DUAL_ENERGY ... else ...
 
 //          set the ratio to the density floor
             if ( Dens < Che_MinDens )
@@ -292,6 +302,7 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
                Aux_Message( stderr, "\nWARNING : density = %16.8e is too low and will be scaled to %16.8e as the input to the Grackle solver !!\n",
                                     Dens, Che_MinDens );
             }
+
             else
             {
 //             when the density is higher than or equal to Che_MinDens,
@@ -456,12 +467,12 @@ static real_che Grackle_vHeatingRate_User_Template( const double x, const double
 static real_che Grackle_sHeatingRate_User_Template( const double x, const double y, const double z, const double Time )
 {
 
-   const double   Center[3]                 = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
-   const double   radius_to_center          = sqrt( SQR(x-Center[0]) + SQR(y-Center[1]) );
-   const double   ScaleLength               = 0.125*amr->BoxSize[0];
-   const double   R_core                    = 0.125*amr->BoxSize[0];
-   const double   specific_heating_rate_0   = GRACKLE_PE_HEATING_RATE * GRACKLE_HYDROGEN_MFRAC / Const_mH; // GRACKLE_PE_HEATING_RATE is in units of erg cm^-3 s^-1 n_H^-1
-   const real_che specific_heating_rate     = specific_heating_rate_0 * exp( (R_core - MAX(radius_to_center, R_core)) / ScaleLength );
+   const double   Center[3]               = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
+   const double   radius_to_center        = sqrt( SQR(x-Center[0]) + SQR(y-Center[1]) );
+   const double   ScaleLength             = 0.125*amr->BoxSize[0];
+   const double   R_core                  = 0.125*amr->BoxSize[0];
+   const double   specific_heating_rate_0 = GRACKLE_PE_HEATING_RATE * GRACKLE_HYDROGEN_MFRAC / Const_mH; // GRACKLE_PE_HEATING_RATE is in units of erg cm^-3 s^-1 n_H^-1
+   const real_che specific_heating_rate   = specific_heating_rate_0 * exp( (R_core - MAX(radius_to_center, R_core)) / ScaleLength );
 
    return specific_heating_rate;
 
@@ -486,8 +497,10 @@ static real_che Grackle_sHeatingRate_User_Template( const double x, const double
 //
 // Return      :  temperature_floor
 //-------------------------------------------------------------------------------------------------------
-static real_che Grackle_tempFloor_Default( const double x, const double y, const double z, const double Time, const real_che Dens_Gas, const real_che sEint_Gas )
+static real_che Grackle_tempFloor_Default( const double x, const double y, const double z, const double Time,
+                                           const real_che Dens_Gas, const real_che sEint_Gas )
 {
+
    const real_che temperature_floor = 0.0;
 
    return temperature_floor;
