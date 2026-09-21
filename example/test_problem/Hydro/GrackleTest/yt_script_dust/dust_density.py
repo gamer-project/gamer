@@ -5,10 +5,6 @@ import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 import os
 
-# load the command-line parameters
-parser = argparse.ArgumentParser(description="Dust dust_dens evolution plotter")
-args = parser.parse_args()
-
 # physical constants
 CONST_CM  = 1.0
 CONST_AMU = 1.660539040e-24
@@ -62,8 +58,8 @@ T0 = T_over_mmw_min * MU
 
 # Load data
 table     = np.loadtxt(os.path.join(PREFIX, "Record__Conservation"))
-time      = table[:, 0]
-dust_dens = table[:,47] * UNIT_D / (CONST_AMU / CONST_CM**3)
+time      = table[:, 0] * UNIT_T / MYR_IN_S
+dust_dens = table[:,47]
 
 
 # units
