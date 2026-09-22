@@ -538,6 +538,7 @@ int  LB_Index2Rank( const int lv, const long LB_Idx, const Check_t Check );
 
 // Hydro model
 #if    ( MODEL == HYDRO )
+double Hydro_GetTimeStep_CFL( const int lv );
 void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment );
 void Hydro_GetTimeStep_Gravity( double &dt, double &dTime, int &MinDtLv, real &MinDtVar, const double dt_dTime );
 void Hydro_GetMaxAcc( real MaxAcc[] );
@@ -561,6 +562,13 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive, const i
                     const EoS_DP2E_t EoS_DensPres2Eint, const EoS_TEM2H_t EoS_Temp2HTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                     const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                     const real *const EoS_Table[EOS_NTABLE_MAX], const real* const EintIn );
+real Hydro_GetCFL( const real fluid[], const real B[], const real MinPres, const long PassiveFloor,
+                   const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint, const EoS_DP2C_t EoS_DensPres2CSqr,
+                   const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+                   const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[], const real *const EoS_Table[EOS_NTABLE_MAX] );
+#ifdef CR_DIFFUSION
+real Hydro_GetCFL_CRDiffusion( const MicroPhy_t MicroPhy );
+#endif // #ifdef CR_DIFFUSION
 void Hydro_RestoreEint_Backup( const int lv, const int FluSg, const int MagSg );
 void Hydro_RestoreEint_Check( const int lv, const int FluSg, const int MagSg );
 void Hydro_RestoreEint_MemFree();

@@ -140,6 +140,7 @@ void Init_Load_Parameter()
 #  endif
    ReadPara->Add( "DT__SYNC_PARENT_LV",         &DT__SYNC_PARENT_LV,              0.1,             0.0,           NoMax_double   );
    ReadPara->Add( "DT__SYNC_CHILDREN_LV",       &DT__SYNC_CHILDREN_LV,            0.1,             0.0,           1.0            );
+   ReadPara->Add( "OPT__DT_FLUID_LEAF",         &OPT__DT_FLUID_LEAF,              false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__DT_USER",               &OPT__DT_USER,                    false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__DT_LEVEL",              &OPT__DT_LEVEL,                   3,               1,             3              );
    ReadPara->Add( "OPT__RECORD_DT",             &OPT__RECORD_DT,                  true,            Useless_bool,  Useless_bool   );

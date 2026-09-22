@@ -2610,6 +2610,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 #  endif
    InputPara.Dt__SyncParentLv        = DT__SYNC_PARENT_LV;
    InputPara.Dt__SyncChildrenLv      = DT__SYNC_CHILDREN_LV;
+   InputPara.Opt__DtFluidLeaf        = OPT__DT_FLUID_LEAF;
    InputPara.Opt__DtUser             = OPT__DT_USER;
    InputPara.Opt__DtLevel            = OPT__DT_LEVEL;
    InputPara.Opt__RecordDt           = OPT__RECORD_DT;
@@ -3714,6 +3715,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 #  endif
    H5Tinsert( H5_TypeID, "Dt__SyncParentLv",        HOFFSET(InputPara_t,Dt__SyncParentLv       ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "Dt__SyncChildrenLv",      HOFFSET(InputPara_t,Dt__SyncChildrenLv     ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "Opt__DtFluidLeaf",        HOFFSET(InputPara_t,Opt__DtFluidLeaf       ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__DtUser",             HOFFSET(InputPara_t,Opt__DtUser            ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__DtLevel",            HOFFSET(InputPara_t,Opt__DtLevel           ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "Opt__RecordDt",           HOFFSET(InputPara_t,Opt__RecordDt          ), H5T_NATIVE_INT     );

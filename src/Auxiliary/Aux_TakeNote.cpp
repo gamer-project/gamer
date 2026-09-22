@@ -1028,6 +1028,7 @@ void Aux_TakeNote()
 #     endif
       fprintf( Note, "DT__SYNC_PARENT_LV             % 14.7e\n",  DT__SYNC_PARENT_LV          );
       fprintf( Note, "DT__SYNC_CHILDREN_LV           % 14.7e\n",  DT__SYNC_CHILDREN_LV        );
+      fprintf( Note, "OPT__DT_FLUID_LEAF             % d\n",      OPT__DT_FLUID_LEAF          );
       fprintf( Note, "OPT__DT_USER                   % d\n",      OPT__DT_USER                );
       fprintf( Note, "OPT__DT_LEVEL                  % d\n",      OPT__DT_LEVEL               );
       fprintf( Note, "AUTO_REDUCE_DT                 % d\n",      AUTO_REDUCE_DT              );

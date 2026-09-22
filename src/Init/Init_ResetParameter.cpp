@@ -131,6 +131,13 @@ void Init_ResetParameter()
       PRINT_RESET_PARA( DT__FLUID_INIT, FORMAT_REAL, "" );
    }
 
+   if ( !OPT__FIXUP_RESTRICT  &&  OPT__DT_FLUID_LEAF )
+   {
+      OPT__DT_FLUID_LEAF = false;
+
+      PRINT_RESET_PARA( OPT__DT_FLUID_LEAF, FORMAT_INT, "since OPT__FIXUP_RESTRICT is disabled" );
+   }
+
 
 // hybrid dt (empirically determined CFL condition)
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )

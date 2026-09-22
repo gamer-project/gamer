@@ -12,6 +12,7 @@ Parameters described on this page:
 [DT__MAX_DELTA_A](#DT__MAX_DELTA_A), &nbsp;
 [DT__SYNC_PARENT_LV](#DT__SYNC_PARENT_LV), &nbsp;
 [DT__SYNC_CHILDREN_LV](#DT__SYNC_CHILDREN_LV), &nbsp;
+[OPT__DT_FLUID_LEAF](#OPT__DT_FLUID_LEAF), &nbsp;
 [OPT__DT_USER](#OPT__DT_USER), &nbsp;
 [OPT__DT_LEVEL](#OPT__DT_LEVEL), &nbsp;
 [OPT__RECORD_DT](#OPT__RECORD_DT), &nbsp;
@@ -138,6 +139,13 @@ with the children level. See also Section 2.1 in the
 [GAMER-2 code paper](https://arxiv.org/abs/1712.07070) for more details
     * **Restriction:**
 For [OPT__DT_LEVEL](#OPT__DT_LEVEL)=3 only.
+
+<a name="OPT__DT_FLUID_LEAF"></a>
+* #### `OPT__DT_FLUID_LEAF` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Take only leaf patches into account when computing the fluid CFL timestep. Non-leaf patches are skipped.
+    * **Restriction:**
+Must enable [[OPT__FIXUP_RESTRICT | Runtime-Parameters:-Hydro#OPT__FIXUP_RESTRICT]].
 
 <a name="OPT__DT_USER"></a>
 * #### `OPT__DT_USER` &ensp; (0=off, 1=on) &ensp; [0]

@@ -1733,6 +1733,162 @@ real MHD_GetCellCenteredBEnergy( const real Bx_FC[], const real By_FC[], const r
 
 
 
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_GetCFL
+// Description :  Calculate the CFL from the input fluid array
+//
+// Note        :  1. This will be used to decide the time-step from the CFL condition
+//                2. Invoked by CUFLU_dtSolver_HydroCFL()/CPU_dtSolver_HydroCFL()
+//                   or GetMaxCFL() in Hydro_GetTimeStep_CFL()
+//
+// Parameter   :  fluid             : Input fluid array
+//                B                 : Input cell-centered B field array
+//                MinPres           : Minimum allowed pressure
+//                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
+//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
+//                EoS_DensPres2Eint : EoS routine to compute the gas internal energy
+//                EoS_DensPres2CSqr : EoS routine to compute the gas sound speed squared
+//                EoS_GuessHTilde   : EoS routine to compute guessed reduced enthalpy
+//                EoS_HTilde2Temp   : EoS routine to compute temperature
+//                EoS_AuxArray_*    : Auxiliary arrays for EoS routine
+//                EoS_Table         : EoS tables for EoS routine
+//
+// Return      :  CFL
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+real Hydro_GetCFL( const real fluid[], const real B[], const real MinPres, const long PassiveFloor,
+                   const EoS_DE2P_t EoS_DensEint2Pres, const EoS_DP2E_t EoS_DensPres2Eint, const EoS_DP2C_t EoS_DensPres2CSqr,
+                   const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
+                   const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[], const real *const EoS_Table[EOS_NTABLE_MAX] )
+{
+
+   real CFL=(real)0.0;
+
+   real Pres, a2;
+
+#  ifdef SRHD
+   real Pri[FLU_NIN_T], LorentzFactor, U_Max, Us_Max, LorentzFactor_Max, LorentzFactor_s_Max, Us, Rho;
+
+   Hydro_Con2Pri( fluid, Pri, MinPres, PassiveFloor, NULL_BOOL, NULL_INT, NULL, NULL_BOOL,
+                  (real)NULL_REAL, EoS_DensEint2Pres, EoS_DensPres2Eint,
+                  EoS_GuessHTilde, EoS_HTilde2Temp,
+                  EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL, &LorentzFactor );
+   Rho   = Pri[0];
+   Pres  = Pri[4];
+   a2    = EoS_DensPres2CSqr( Rho, Pres, fluid+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table ); // sound speed squared
+
+#  else // #ifdef SRHD
+
+   const bool CheckMinPres_Yes = true;
+   real _Rho, CFLx, CFLy, CFLz, Vx, Vy, Vz, Emag;
+#  ifdef MHD
+   real Bx2, By2, Bz2, B2, Ca2_plus_a2, Ca2_min_a2, Ca2_min_a2_sqr, four_a2_over_Rho;
+
+   Bx2  = SQR( B[MAGX] );
+   By2  = SQR( B[MAGY] );
+   Bz2  = SQR( B[MAGZ] );
+   B2   = Bx2 + By2 + Bz2;
+   Emag = (real)0.5*B2;
+#  else
+   Emag = NULL_REAL;
+#  endif // #ifdef MHD
+
+  _Rho  = (real)1.0 / fluid[DENS];
+   Vx   = FABS( fluid[MOMX] )*_Rho;
+   Vy   = FABS( fluid[MOMY] )*_Rho;
+   Vz   = FABS( fluid[MOMZ] )*_Rho;
+   Pres = Hydro_Con2Pres( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], fluid+NCOMP_FLUID,
+                          CheckMinPres_Yes, MinPres, PassiveFloor, Emag,
+                          EoS_DensEint2Pres, EoS_GuessHTilde, EoS_HTilde2Temp,
+                          EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table, NULL );
+   a2   = EoS_DensPres2CSqr( fluid[DENS], Pres, fluid+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                             EoS_Table ); // sound speed squared
+#  endif // #ifdef SRHD ... else ...
+
+// compute the maximum information propagating speed
+// --> hydro: bulk velocity + sound wave
+//     MHD  : bulk velocity +  fast wave
+#  ifdef MHD
+   Ca2_plus_a2         = B2*_Rho + a2;
+   Ca2_min_a2          = B2*_Rho - a2;
+   Ca2_min_a2_sqr      = SQR( Ca2_min_a2 );
+   four_a2_over_Rho    = (real)4.0*a2*_Rho;
+   CFLx                = (real)0.5*(  Ca2_plus_a2 + SQRT( Ca2_min_a2_sqr + four_a2_over_Rho*(By2+Bz2) )  );
+   CFLy                = (real)0.5*(  Ca2_plus_a2 + SQRT( Ca2_min_a2_sqr + four_a2_over_Rho*(Bx2+Bz2) )  );
+   CFLz                = (real)0.5*(  Ca2_plus_a2 + SQRT( Ca2_min_a2_sqr + four_a2_over_Rho*(Bx2+By2) )  );
+   CFLx                = SQRT( CFLx );
+   CFLy                = SQRT( CFLy );
+   CFLz                = SQRT( CFLz );
+
+#  elif ( defined SRHD )
+
+   U_Max               = FABS( Pri[1] ) + FABS( Pri[2] ) + FABS( Pri[3] );
+   Us                  = SQRT( a2 ) / SQRT( (real)1.0 - a2 );
+   Us_Max              = (real)3.0*Us;
+   LorentzFactor_Max   = SQRT( (real)1.0 +  U_Max *  U_Max );
+   LorentzFactor_s_Max = SQRT( (real)1.0 + Us_Max * Us_Max );
+
+#  else
+
+   CFLx                = SQRT( a2 );
+   CFLy                = CFLx;
+   CFLz                = CFLx;
+#  endif // #ifdef MHD ... elif SRHD ...  else ...
+
+#  ifdef SRHD
+   CFL = Us_Max * LorentzFactor_Max + LorentzFactor_s_Max * U_Max;
+
+#  else // #ifdef SRHD
+
+   CFLx += Vx;
+   CFLy += Vy;
+   CFLz += Vz;
+
+#  if   ( FLU_SCHEME == RTVD  ||  FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
+   CFL = FMAX( CFLx, CFL );
+   CFL = FMAX( CFLy, CFL );
+   CFL = FMAX( CFLz, CFL );
+#  else
+#  error : ERROR : unsupported FLU_SCHEME !!
+   /*
+// no longer used
+   CFL = CFLx+CFLy+CFLz;
+   */
+#  endif // FLU_SCHEME
+#  endif // #ifdef SRHD ... else ...
+
+   return CFL;
+
+} // FUNCTION : Hydro_GetCFL
+
+
+
+#ifdef CR_DIFFUSION
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_GetCFL_CRDiffusion
+// Description :  Calculate the CFL for the CR diffusion
+//
+// Note        :  1. This will be used to decide the time-step from the CFL condition
+//                2. Invoked by CUFLU_dtSolver_HydroCFL()/CPU_dtSolver_HydroCFL()
+//                   or GetMaxCFL() in Hydro_GetTimeStep_CFL()
+//
+// Parameter   :  MicroPhy : Microphysics object
+//
+// Return      :  CFL_CRDiffusion
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+real Hydro_GetCFL_CRDiffusion( const MicroPhy_t MicroPhy )
+{
+
+   real CFL_CRDiffusion = FMAX( MicroPhy.CR_diff_coeff_para, MicroPhy.CR_diff_coeff_perp );
+
+   return CFL_CRDiffusion;
+
+} // FUNCTION : Hydro_GetCFL_CRDiffusion
+#endif // #ifdef CR_DIFFUSION
+
+
+
 #endif // #if ( MODEL == HYDRO )
 
 
