@@ -79,7 +79,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2514)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2515)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -290,9 +290,10 @@ Procedure for outputting new variables:
 //                2509 : 2026/04/18 --> output OPT__FLAG_PAR_TARGET, OPT__FLAG_PAR_TARGET_SIB, Par->FlagInit, particle integer attribute PAR_FLAG
 //                2510 : 2026/06/07 --> output EXTRA_EOS_CHECK, CHECK_UNPHY_ROUNDING, CHECK_UNPHY_ROUNDING_FACTOR
 //                2511 : 2026/07/02 --> output exact-cooling parameters
-//                2512 : 2026/08/14 --> remove Src_EC_subcycling
-//                2513 : 2026/05/14 --> support OPT__OUTPUT_DUAL_STATUS
-//                2514 : 2026/05/25 --> output DUAL_ENERGY_PREDICT 
+//                2512 : 2026/07/25 --> output GRACKLE_DUST and the dust field
+//                2513 : 2026/08/14 --> remove Src_EC_subcycling
+//                2514 : 2026/05/14 --> support OPT__OUTPUT_DUAL_STATUS
+//                2515 : 2026/05/25 --> output DUAL_ENERGY_PREDICT 
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -2845,6 +2846,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Grackle_Cooling         = GRACKLE_COOLING;
    InputPara.Grackle_Primordial      = GRACKLE_PRIMORDIAL;
    InputPara.Grackle_Metal           = GRACKLE_METAL;
+   InputPara.Grackle_Dust            = GRACKLE_DUST;
    InputPara.Grackle_UV              = GRACKLE_UV;
    InputPara.Grackle_CMB_Floor       = GRACKLE_CMB_FLOOR;
    InputPara.Grackle_PE_Heating      = GRACKLE_PE_HEATING;
@@ -3957,6 +3959,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Grackle_Cooling",         HOFFSET(InputPara_t,Grackle_Cooling        ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Grackle_Primordial",      HOFFSET(InputPara_t,Grackle_Primordial     ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Grackle_Metal",           HOFFSET(InputPara_t,Grackle_Metal          ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Grackle_Dust",            HOFFSET(InputPara_t,Grackle_Dust           ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Grackle_UV",              HOFFSET(InputPara_t,Grackle_UV             ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Grackle_CMB_Floor",       HOFFSET(InputPara_t,Grackle_CMB_Floor      ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Grackle_PE_Heating",      HOFFSET(InputPara_t,Grackle_PE_Heating     ), H5T_NATIVE_INT              );

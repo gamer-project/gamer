@@ -59,7 +59,7 @@ DT__SYNC_PARENT_LV            0.05        # dt criterion: allow dt to adjust by 
                                           #               with the parent level (for OPT__DT_LEVEL==3 only) [0.1]
 DT__SYNC_CHILDREN_LV          0.1         # dt criterion: allow dt to adjust by (1.0-DT__SYNC_CHILDREN) in order to synchronize
                                           #               with the children level (for OPT__DT_LEVEL==3 only; 0=off) [0.1]
-OPT__DT_USER                  0           # dt criterion: user-defined -> edit "Mis_GetTimeStep_UserCriteria.cpp" [0]
+OPT__DT_USER                  1           # dt criterion: user-defined -> edit "Mis_GetTimeStep_UserCriteria.cpp" [0]
 OPT__DT_LEVEL                 3           # dt at different AMR levels (1=shared, 2=differ by two, 3=flexible) [3]
 OPT__RECORD_DT                1           # record info of the dt determination [1]
 AUTO_REDUCE_DT                1           # reduce dt automatically when the program fails (for OPT__DT_LEVEL==3 only) [1]
@@ -116,6 +116,7 @@ GRACKLE_REDSHIFT              0.0         # redshift to set "a_value" for the re
 GRACKLE_COOLING               1           # map to "with_radiative_cooling" [1]
 GRACKLE_PRIMORDIAL            3           # map to "primordial_chemistry" (0=Cloudy, 1/2/3=6-/9-/12-species) (must increase NCOMP_PASSIVE_USER by 6/9/12, respectively) [0]
 GRACKLE_METAL                 1           # map to "metal_cooling" (must increase NCOMP_PASSIVE_USER by 1) [0]
+GRACKLE_DUST                  1           # map to "use_dust_density_field" (must increase NCOMP_PASSIVE_USER by 1) [0]
 GRACKLE_UV                    1           # map to "UVbackground" [0]
 GRACKLE_CMB_FLOOR             1           # map to "cmb_temperature_floor" [1]
 GRACKLE_PE_HEATING            1           # map to "photoelectric_heating" [0]
