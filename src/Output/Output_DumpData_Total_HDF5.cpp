@@ -79,11 +79,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-<<<<<<< HEAD
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2510)
-=======
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2514)
->>>>>>> upstream/main
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2515)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
