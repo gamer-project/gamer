@@ -8,8 +8,8 @@ Parameters described on this page:
 
 Other related parameters:
 [[NEWTON_G| [Runtime-Parameters]-Gravity#NEWTON_G]], &nbsp;
-[[ELBDM_MASS | Wave-Dark-Matter#ELBDM_MASS]], &nbsp;
-[[ELBDM_PLANCK_CONST | Wave-Dark-Matter#ELBDM_PLANCK_CONST]] &nbsp;
+[[ELBDM_MASS | [Runtime-Parameters]-ELBDM#ELBDM_MASS]], &nbsp;
+[[ELBDM_PLANCK_CONST | [Runtime-Parameters]-ELBDM#ELBDM_PLANCK_CONST]] &nbsp;
 
 Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**
 

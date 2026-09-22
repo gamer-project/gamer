@@ -126,6 +126,21 @@ follow the steps [2-5] in [Using Analytical Function](#using-analytical-function
 
 **Caution: external acceleration does not support this functionality yet.**
 
+### Extra Mass
+
+To add extra mass (e.g., a static background density field):
+
+1. Enable [[OPT__GRAVITY_EXTRA_MASS | [Runtime-Parameters]-Gravity#OPT__GRAVITY_EXTRA_MASS]].
+2. Go to your new test problem folder and copy the built-in extra mass
+routine as a template:
+   ```
+   cp src/SelfGravity/Poi_AddExtraMassForGravity.cpp Poi_AddExtraMassForGravity_NewProblem.cpp
+   ```
+3. Edit `Poi_AddExtraMassForGravity_NewProblem.cpp` to
+   * Replace the keyword `NewProblem` by whatever appropriate.
+   * Edit the routine `Poi_AddExtraMassForGravity_NewProblem()`, which should return the extra mass density at `(x, y, z, Time)`.
+4. Set `Poi_AddExtraMassForGravity_Ptr` to point to `Poi_AddExtraMassForGravity_NewProblem()` in your problem initialization function.
+
 
 <br>
 
