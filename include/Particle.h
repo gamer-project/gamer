@@ -195,6 +195,9 @@ struct Particle_t
    real_par     *AccY;
    real_par     *AccZ;
 #  endif
+#  ifdef STORE_PAR_POT
+   real_par     *Pot;
+#  endif
    long_par     *Type;
    long_par     *PUID;
    long_par     *Flag;
@@ -283,6 +286,9 @@ struct Particle_t
       AccX = NULL;
       AccY = NULL;
       AccZ = NULL;
+#     endif
+#     ifdef STORE_PAR_POT
+      Pot  = NULL;
 #     endif
       Type = NULL;
       PUID = NULL;
@@ -438,6 +444,9 @@ struct Particle_t
       AccY = AttributeFlt[PAR_ACCY];
       AccZ = AttributeFlt[PAR_ACCZ];
 #     endif
+#     ifdef STORE_PAR_POT
+      Pot  = AttributeFlt[PAR_POT];
+#     endif
       Type = AttributeInt[PAR_TYPE];
       PUID = AttributeInt[PAR_PUID];
       Flag = AttributeInt[PAR_FLAG];
@@ -449,6 +458,15 @@ struct Particle_t
          PUID[p] = PUID_TBA;
          Flag[p] = PFLAG_TBA;
       }
+
+//    initialize the particle potential to a defined value
+//    --> it is a derived diagnostic quantity, always kept up to date for massive particles by
+//        Par_UpdateParticlePotential() whenever self-gravity or an external potential is active
+//        (independent of OPT__OUTPUT_PAR_POT, which only controls whether it gets written to disk),
+//        and otherwise (or for tracers) left untouched, so it must never be left as uninitialized memory
+#     ifdef STORE_PAR_POT
+      for (long p=0; p<NPar_Input; p++)   Pot[p] = (real_par)0.0;
+#     endif
 
    } // METHOD : InitRepo
 
@@ -548,6 +566,9 @@ struct Particle_t
             AccY = AttributeFlt[PAR_ACCY];
             AccZ = AttributeFlt[PAR_ACCZ];
 #           endif
+#           ifdef STORE_PAR_POT
+            Pot  = AttributeFlt[PAR_POT];
+#           endif
             Type = AttributeInt[PAR_TYPE];
             PUID = AttributeInt[PAR_PUID];
             Flag = AttributeInt[PAR_FLAG];
@@ -561,6 +582,13 @@ struct Particle_t
 //    2. record the data of new particles
       for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   AttributeFlt[v][ParID] = NewAttFlt[v];
       for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   AttributeInt[v][ParID] = NewAttInt[v];
+
+//    the potential is a derived diagnostic quantity recomputed by Par_UpdateParticlePotential();
+//    force it to a defined value here so that callers of AddOneParticle() (e.g., star formation)
+//    need not supply NewAttFlt[PAR_POT] themselves
+#     ifdef STORE_PAR_POT
+      Pot[ParID] = (real_par)0.0;
+#     endif
 
 
 //    3. update the total number of active particles (assuming all new particles are active)

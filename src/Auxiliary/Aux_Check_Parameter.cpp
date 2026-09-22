@@ -1734,6 +1734,12 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "DT__PARACC (%14.7e) is NOT supported when STORE_PAR_ACC is off !!\n", DT__PARACC );
 #  endif
 
+#  ifndef STORE_PAR_POT
+   if ( OPT__OUTPUT_PAR_POT )
+      Aux_Error( ERROR_INFO, "OPT__OUTPUT_PAR_POT is enabled but STORE_PAR_POT is off !!\n"
+                 "        --> Recompile with \"--store_par_pot=true\" to use this option\n" );
+#  endif
+
    for (int d=0; d<3; d++)
    {
 //    we have assumed that OPT__BC_FLU[2*d] == OPT__BC_FLU[2*d+1] when adopting the periodic BC

@@ -12,6 +12,9 @@
 // Note        :  1. Number of data elements: N_attribute*N_activate_particle
 //                2. Data of all active particles with a selected attribute will be dumped consecutively,
 //                   followed by the next attribute, so on and so forth
+//                3. The potential attribute (ParPot) is skipped entirely, both here and in the text-file
+//                   header/data, when OPT__OUTPUT_PAR_POT is off -- it is still kept up to date
+//                   internally (see Par_UpdateParticlePotential()), just not written to disk
 //
 // Parameter   :  FileName : Output file name
 //
@@ -40,6 +43,10 @@ void Par_Output_BinaryFile( const char *FileName )
 
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
    {
+#     if ( defined GRAVITY  &&  defined STORE_PAR_POT )
+      if ( v == PAR_POT  &&  !OPT__OUTPUT_PAR_POT )   continue;
+#     endif
+
       for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
       {
          if ( MPI_Rank == TargetMPIRank )
