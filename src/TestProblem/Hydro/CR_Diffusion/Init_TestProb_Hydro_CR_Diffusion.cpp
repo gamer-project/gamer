@@ -392,15 +392,15 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
               D2 = y - CR_Diffusion_CenterY - CR_Diffusion_Vy*Time;
               D3 = z - CR_Diffusion_CenterZ - CR_Diffusion_Vz*Time;
               break;
-      case 5: magD1 = CR_Diffusion_MagY; magD2 = CR_Diffusion_MagZ; magD3 = CR_Diffusion_MagX;
-              D1 = y - CR_Diffusion_CenterY - CR_Diffusion_Vy*Time;
-              D2 = z - CR_Diffusion_CenterZ - CR_Diffusion_Vz*Time;
-              D3 = x - CR_Diffusion_CenterX - CR_Diffusion_Vx*Time;
-              break;
-      case 6: magD1 = CR_Diffusion_MagZ; magD2 = CR_Diffusion_MagX; magD3 = CR_Diffusion_MagY;
+      case 5: magD1 = CR_Diffusion_MagZ; magD2 = CR_Diffusion_MagX; magD3 = CR_Diffusion_MagY;
               D1 = z - CR_Diffusion_CenterZ - CR_Diffusion_Vz*Time;
               D2 = x - CR_Diffusion_CenterX - CR_Diffusion_Vx*Time;
               D3 = y - CR_Diffusion_CenterY - CR_Diffusion_Vy*Time;
+              break;
+      case 6: magD1 = CR_Diffusion_MagY; magD2 = CR_Diffusion_MagZ; magD3 = CR_Diffusion_MagX;
+              D1 = y - CR_Diffusion_CenterY - CR_Diffusion_Vy*Time;
+              D2 = z - CR_Diffusion_CenterZ - CR_Diffusion_Vz*Time;
+              D3 = x - CR_Diffusion_CenterX - CR_Diffusion_Vx*Time;
               break;
 
 //    3D simulation

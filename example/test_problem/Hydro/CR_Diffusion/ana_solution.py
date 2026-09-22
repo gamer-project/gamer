@@ -110,7 +110,7 @@ def ana_step_ring( x, y, z, t, **kwargs ):
         else:
             t1[i] = math.erfc( (phi[i] - np.pi/12.) * r[i] / D )
             t2[i] = math.erfc( (phi[i] + np.pi/12.) * r[i] / D )
-    return CR_BR + t1 - t2
+    return CR_BG + t1 - t2
 
 
 def ana_gaussian_ring( x, y, t ):
