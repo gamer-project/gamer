@@ -473,11 +473,6 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                         Timer_Par_Update[lv][1],   TIMER_ON   );
 #        endif
 
-#        ifdef STORE_PAR_POT
-         TIMING_FUNC(   Par_UpdateParticlePotential( lv, TimeNew ),
-                        Timer_Par_Update[lv][1],   TIMER_ON   );
-#        endif
-
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
          if ( lv > 0 )
@@ -502,18 +497,6 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
             if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
          }
       } // if ( amr->Par->Integ == PAR_INTEG_KDK )
-
-//    for PAR_INTEG_EULER, Par_UpdateParticle() at the predictor stage above has already advanced
-//    particles all the way to TimeNew and there is no later correction step
-//    --> resample the potential now that it has also been updated to TimeNew (c.f. step 4 above),
-//        otherwise the diagnostic Pot would be stuck at the TimeOld value sampled at TimeNew positions
-      else if ( amr->Par->Integ == PAR_INTEG_EULER )
-      {
-#        ifdef STORE_PAR_POT
-         TIMING_FUNC(   Par_UpdateParticlePotential( lv, TimeNew ),
-                        Timer_Par_Update[lv][1],   TIMER_ON   );
-#        endif
-      }
 
 //    pass particles to the children patches
 //    --> we will do this later (just before the star-formation routines) if OPT__MINIMIZE_MPI_BARRIER is adopted
@@ -666,6 +649,17 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, SaveSg_Pot, POT_FOR_POISSON,
                                         _POTE, _NONE, Pot_ParaBuf, USELB_YES ),
                      Timer_GetBuf[lv][1],   TIMER_ON   );
+#     endif
+
+//    update the particle potential now that both the fluid/particle state and the potential buffer
+//    patches are finalized at TimeNew (for every integrator -- Euler has already advanced particles
+//    to TimeNew at the predictor stage, and KDK corrects them above)
+//    --> placed after the buffer exchange above rather than in step 5 so that Prepare_PatchData()
+//        never reads a stale (pre-exchange) potential buffer patch when OPT__MINIMIZE_MPI_BARRIER
+//        defers that exchange; nothing between step 5 and here reads Par->Pot[]
+#     if ( defined MASSIVE_PARTICLES  &&  defined STORE_PAR_POT )
+      TIMING_FUNC(   Par_UpdateParticlePotential( lv, TimeNew ),
+                     Timer_Par_Update[lv][1],   TIMER_ON   );
 #     endif
 
 
