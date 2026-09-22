@@ -343,14 +343,6 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                      Timer_Par_Update[lv][0],   TIMER_ON   );
 #     endif
 
-#     ifdef STORE_PAR_POT
-//    the potential has not yet been updated to TimeNew at the predictor stage (c.f. PrepPotTime in Par_UpdateParticle.cpp)
-//    --> kept up to date regardless of OPT__OUTPUT_PAR_POT, which only controls whether it gets
-//        written to the particle text/binary dump files
-      TIMING_FUNC(   Par_UpdateParticlePotential( lv, TimeOld ),
-                     Timer_Par_Update[lv][0],   TIMER_ON   );
-#     endif
-
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 
       if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
