@@ -73,11 +73,11 @@ for ds in ts.piter():
 
 
 #  density projection -- edge-on
-   pz_dens = yt.ProjectionPlot( ds, 'x', 'density', center=center_mode, width=(width_kpc,'kpc'), method='integrate', weight_field=None )
-   pz_dens.set_zlim( 'density', 1.0e-5, 1.0e-1 )
-   pz_dens.set_cmap( 'density', colormap )
-   pz_dens.annotate_timestamp( time_unit='Myr', corner='upper_right' )
-   pz_dens.save( mpl_kwargs={"dpi":dpi} )
+   px_dens = yt.ProjectionPlot( ds, 'x', 'density', center=center_mode, width=(width_kpc,'kpc'), method='integrate', weight_field=None )
+   px_dens.set_zlim( 'density', 1.0e-5, 1.0e-1 )
+   px_dens.set_cmap( 'density', colormap )
+   px_dens.annotate_timestamp( time_unit='Myr', corner='upper_right' )
+   px_dens.save( mpl_kwargs={"dpi":dpi} )
 
 
 #  temperature slice -- face-on
@@ -128,11 +128,11 @@ for ds in ts.piter():
 
 
 #  velocity magnitude slice -- edge-on
-   sz_vabs = yt.SlicePlot( ds, 'x', 'velocity_magnitude', center=center_mode, width=(width_kpc,'kpc') )
-   sz_vabs.set_unit( 'velocity_magnitude', 'km/s' )
-   sz_vabs.set_log ( 'velocity_magnitude', False )
-   sz_vabs.set_zlim( 'velocity_magnitude', 5.0e1, 2.3e2 )
-   sz_vabs.set_cmap( 'velocity_magnitude', colormap )
-   sz_vabs.annotate_timestamp( time_unit='Myr', corner='upper_right' )
-   sz_vabs.save( mpl_kwargs={"dpi":dpi} )
+   sx_vabs = yt.SlicePlot( ds, 'x', 'velocity_magnitude', center=center_mode, width=(width_kpc,'kpc') )
+   sx_vabs.set_unit( 'velocity_magnitude', 'km/s' )
+   sx_vabs.set_log ( 'velocity_magnitude', False )
+   sx_vabs.set_zlim( 'velocity_magnitude', 5.0e1, 2.3e2 )
+   sx_vabs.set_cmap( 'velocity_magnitude', colormap )
+   sx_vabs.annotate_timestamp( time_unit='Myr', corner='upper_right' )
+   sx_vabs.save( mpl_kwargs={"dpi":dpi} )
 

@@ -1490,4 +1490,4 @@ double MassIntegrand_Table( const double r, void* parameters )
 
 
 
-#endif // #ifdef MASSIVE_PARTICLE
+#endif // #ifdef MASSIVE_PARTICLES

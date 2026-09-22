@@ -243,6 +243,11 @@ void Init_Load_Parameter()
 
 // source terms
    ReadPara->Add( "SRC_DELEPTONIZATION",        &SrcTerms.Deleptonization,        false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "SRC_EXACTCOOLING",           &SrcTerms.ExactCooling,           false,           Useless_bool,  Useless_bool   );
+#  ifdef EXACT_COOLING
+   ReadPara->Add( "SRC_EC_TEF_N",               &SrcTerms.EC_TEF_N,               1501,            1,             NoMax_int      );
+   ReadPara->Add( "SRC_EC_DTCOEF",              &SrcTerms.EC_dtCoef,             -1.0,             NoMin_double,  NoMax_double   );
+#  endif
    ReadPara->Add( "SRC_USER",                   &SrcTerms.User,                   false,           Useless_bool,  Useless_bool   );
 // do not check SRC_GPU_NPGROUP since it may be reset by either Init_ResetParameter() or CUAPI_SetMemSize()
    ReadPara->Add( "SRC_GPU_NPGROUP",            &SRC_GPU_NPGROUP,                -1,               NoMin_int,     NoMax_int      );
@@ -566,6 +571,9 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__OUTPUT_GRACKLE_TEMP",   &OPT__OUTPUT_GRACKLE_TEMP,        false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_GRACKLE_MU",     &OPT__OUTPUT_GRACKLE_MU,          false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_GRACKLE_TCOOL",  &OPT__OUTPUT_GRACKLE_TCOOL,       false,           Useless_bool,  Useless_bool   );
+#  endif
+#  ifdef DUAL_ENERGY
+   ReadPara->Add( "OPT__OUTPUT_DUAL_STATUS",    &OPT__OUTPUT_DUAL_STATUS,         false,           Useless_bool,  Useless_bool   );
 #  endif
 #  endif // #if ( MODEL == HYDRO )
    ReadPara->Add( "OPT__OUTPUT_USER_FIELD",     &OPT__OUTPUT_USER_FIELD,          false,           Useless_bool,  Useless_bool   );

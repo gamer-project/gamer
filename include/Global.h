@@ -125,6 +125,7 @@ extern int              MINMOD_MAX_ITER;
 extern double           MIN_DENS, MIN_PRES, MIN_EINT, MIN_TEMP, MIN_ENTR;
 #ifdef DUAL_ENERGY
 extern double           DUAL_ENERGY_SWITCH;
+extern bool             OPT__OUTPUT_DUAL_STATUS;
 #endif
 #ifdef MHD
 extern double           FlagTable_Current[NLEVEL-1], INT_MONO_COEFF_B;
@@ -331,8 +332,10 @@ extern EoS_DE2T_t    EoS_DensEint2Temp_CPUPtr;
 extern EoS_DT2P_t    EoS_DensTemp2Pres_CPUPtr;
 extern EoS_DE2S_t    EoS_DensEint2Entr_CPUPtr;
 extern EoS_GENE_t    EoS_General_CPUPtr;
-#ifdef COSMIC_RAY
 extern EoS_CRE2CRP_t EoS_CREint2CRPres_CPUPtr;
+#ifdef COSMIC_RAY
+extern EoS_GP2GE_t   EoS_GasPres2GasEint_CPUPtr;
+extern EoS_GE2GP_t   EoS_GasEint2GasPres_CPUPtr;
 #endif
 #ifdef GPU
 extern EoS_GUESS_t   EoS_GuessHTilde_GPUPtr;
@@ -345,8 +348,10 @@ extern EoS_DE2T_t    EoS_DensEint2Temp_GPUPtr;
 extern EoS_DT2P_t    EoS_DensTemp2Pres_GPUPtr;
 extern EoS_DE2S_t    EoS_DensEint2Entr_GPUPtr;
 extern EoS_GENE_t    EoS_General_GPUPtr;
-#ifdef COSMIC_RAY
 extern EoS_CRE2CRP_t EoS_CREint2CRPres_GPUPtr;
+#ifdef COSMIC_RAY
+extern EoS_GP2GE_t   EoS_GasPres2GasEint_GPUPtr;
+extern EoS_GE2GP_t   EoS_GasEint2GasPres_GPUPtr;
 #endif
 #endif
 extern EoS_t EoS;
@@ -359,6 +364,8 @@ extern SrcTerms_t SrcTerms;
 #if ( MODEL == HYDRO )
 extern double     Src_Dlep_AuxArray_Flt[SRC_NAUX_DLEP];
 extern int        Src_Dlep_AuxArray_Int[SRC_NAUX_DLEP];
+extern double     Src_EC_AuxArray_Flt[SRC_NAUX_EC];
+extern int        Src_EC_AuxArray_Int[SRC_NAUX_EC];
 #endif
 extern double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
 extern int        Src_User_AuxArray_Int[SRC_NAUX_USER];
@@ -416,7 +423,6 @@ extern double CR_DIFF_PERP;
 extern double DT__CR_DIFFUSION;
 extern double CR_DIFF_MIN_B;
 #endif
-
 
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
@@ -496,6 +502,12 @@ extern double     (*h_Corner_Array_S[2])[3];
 #if ( MODEL == HYDRO )
 extern real       (*h_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX];
 extern real        *h_SrcDlepProf_Radius;
+#endif
+
+#ifdef EXACT_COOLING
+extern double      *h_SrcEC_TEF_lambda;
+extern double      *h_SrcEC_TEF_alpha;
+extern double      *h_SrcEC_TEFc;
 #endif
 
 

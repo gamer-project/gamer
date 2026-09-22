@@ -558,6 +558,7 @@ void Solver( const Solver_t TSolver, const int lv, const double TimeNew, const d
 #  endif
 
 #  if ( MODEL == HYDRO  &&  defined GRAVITY )
+//###REVISE: support general EoS (e.g., cosmic rays) and magnetic field
 #  ifdef COMOVING
    const real JeansMinPres_Coeff = ( JEANS_MIN_PRES ) ?
                                    TimeOld*NEWTON_G*SQR(JEANS_MIN_PRES_NCELL*amr->dh[JEANS_MIN_PRES_LEVEL])/(GAMMA*M_PI) : NULL_REAL;

@@ -1959,6 +1959,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       real *FData_Dual = IntData_CC + DUAL*FSize3D_CC;
 
       char dummy;    // we do not record the dual-energy status here
+      real Passive[NCOMP_PASSIVE];
 
       for (int t=0; t<FSize3D_CC; t++)
       {
@@ -1973,10 +1974,12 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          const real Emag = NULL_REAL;
 #        endif
 
+         for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = (IntData_CC + (NCOMP_FLUID+v)*FSize3D_CC)[t];
+
 //       here we ALWAYS use the dual-energy variable to correct the total energy density
 //       --> we achieve that by setting the dual-energy switch to an extremely larger number and ignore
 //           the runtime parameter DUAL_ENERGY_SWITCH here
-         Hydro_DualEnergyFix( FData_Dens[t], FData_MomX[t], FData_MomY[t], FData_MomZ[t], FData_Engy[t], FData_Dual[t],
+         Hydro_DualEnergyFix( FData_Dens[t], FData_MomX[t], FData_MomY[t], FData_MomZ[t], FData_Engy[t], FData_Dual[t], Passive,
                               dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], (MinPres>=(real)0.0), MinPres,
                               PassiveFloorMask, UseDual2FixEngy, Emag );
       }

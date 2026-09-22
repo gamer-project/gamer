@@ -305,6 +305,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    PriReal[2] = 0.0;
    PriReal[3] = 0.0;
    PriReal[4] = (real)Amb_Pressure;
+   for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)  PriReal[v] = 0.0; // will be overwritten later
 
    Hydro_Pri2Con( PriReal, fluid, false, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
                   EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
@@ -397,7 +398,7 @@ void JetBC( real Array[], const int ArraySize[], real BVal[], const int NVar_Flu
       PriReal[LobeFieldIdx] = (real)0.0;
       PriReal[IntFieldIdx ] = (real)0.0;
 
-      Hydro_Pri2Con( PriReal, BVal, false, PassiveNorm_NVar, PassiveNorm_VarIdx,
+      Hydro_Pri2Con( PriReal, BVal, false, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
                      EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                      EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
    } // if ( Jet_Fire  &&  x <= 1.0 )

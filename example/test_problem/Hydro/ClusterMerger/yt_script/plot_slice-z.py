@@ -35,10 +35,23 @@ colormap_cdm  = 'arbre'
 center_mode   = 'c'
 dpi           = 150
 
+
+# define the particle filter for SMBH particles
+def smbh( pfilter, data ):
+   filter = data[ "all", "ParType" ] == 4
+   return filter
+
+yt.add_particle_filter( "smbh", function=smbh, filtered_type="all", requires=["ParType"] )
+
+
 yt.enable_parallelism()
 ts = yt.DatasetSeries( [ prefix+'/Data_%06d'%idx for idx in range(idx_start, idx_end+1, didx) ] )
 
 for ds in ts.piter():
+
+#  apply the particle filters to the dataset
+   ds.add_particle_filter( 'smbh' )
+
 
 #  density
    field   = 'density'
@@ -72,8 +85,9 @@ for ds in ts.piter():
    cdm_mass.set_unit( field, 'Msun' )
    cdm_mass.set_zlim( field, 1.0e9, 1.0e12 )
    cdm_mass.set_cmap( field, colormap_cdm )
-   cdm_mass.set_colorbar_label( field, 'Dark matter mass [$M_{\odot}$]' )
+   cdm_mass.set_colorbar_label( field, r'Dark matter mass [$M_{\odot}$]' )
    cdm_mass.annotate_timestamp( time_unit='Myr', corner='upper_right' )
+   cdm_mass.annotate_particles( width=(10.0*Mpc), p_size=10.0, col='b', ptype='smbh' )
 
    cdm_mass.save( mpl_kwargs={"dpi":dpi} )
 

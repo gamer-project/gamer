@@ -1688,6 +1688,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "CosmicRay",              &RS.CosmicRay,              SID, TID, NonFatal, &RT.CosmicRay,              1,    Fatal );
    LoadField( "EoS",                    &RS.EoS,                    SID, TID, NonFatal, &RT.EoS,                    1, NonFatal );
    LoadField( "BarotropicEoS",          &RS.BarotropicEoS,          SID, TID, NonFatal, &RT.BarotropicEoS,          1, NonFatal );
+   LoadField( "ExactCooling",           &RS.ExactCooling,           SID, TID, NonFatal, &RT.ExactCooling,           1, NonFatal );
 
 #  elif ( MODEL == ELBDM )
    LoadField( "ELBDMScheme",            &RS.ELBDMScheme,            SID, TID, NonFatal, &RT.ELBDMScheme,            1, NonFatal );
@@ -1852,6 +1853,11 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
 #  endif
    LoadField( "InterpMask",           &RS.InterpMask,           SID, TID, NonFatal, &RT.InterpMask,            1, NonFatal );
    LoadField( "FB_SepFluOut",         &RS.FB_SepFluOut,         SID, TID, NonFatal, &RT.FB_SepFluOut,          1, NonFatal );
+#  if ( MODEL == HYDRO )
+   LoadField( "ExtraEoSCheck",        &RS.ExtraEoSCheck,        SID, TID, NonFatal, &RT.ExtraEoSCheck,         1, NonFatal );
+#  endif
+   LoadField( "CheckUnphyRnd",        &RS.CheckUnphyRnd,        SID, TID, NonFatal, &RT.CheckUnphyRnd,         1, NonFatal );
+   LoadField( "CheckUnphyRndFactor",  &RS.CheckUnphyRndFactor,  SID, TID, NonFatal, &RT.CheckUnphyRndFactor,   1, NonFatal );
 
 #  if   ( MODEL == HYDRO )
    LoadField( "Flu_BlockSize_x",      &RS.Flu_BlockSize_x,      SID, TID, NonFatal, &RT.Flu_BlockSize_x,       1, NonFatal );
@@ -1878,6 +1884,7 @@ void Check_SymConst( const char *FileName, const int FormatVersion )
    LoadField( "EulerY",               &RS.EulerY,               SID, TID, NonFatal, &RT.EulerY,                1, NonFatal );
 #  endif
    LoadField( "MHM_CheckPredict",     &RS.MHM_CheckPredict,     SID, TID, NonFatal, &RT.MHM_CheckPredict,      1, NonFatal );
+   LoadField( "DualEnergyPredict",    &RS.DualEnergyPredict,    SID, TID, NonFatal, &RT.DualEnergyPredict,     1, NonFatal );
    LoadField( "EoSNAuxMax",           &RS.EoSNAuxMax,           SID, TID, NonFatal, &RT.EoSNAuxMax,            1, NonFatal );
    LoadField( "EoSNTableMax",         &RS.EoSNTableMax,         SID, TID, NonFatal, &RT.EoSNTableMax,          1, NonFatal );
 
@@ -2277,6 +2284,11 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Src_Deleptonization",     &RS.Src_Deleptonization,     SID, TID, NonFatal, &RT.Src_Deleptonization,      1, NonFatal );
    LoadField( "Src_User",                &RS.Src_User,                SID, TID, NonFatal, &RT.Src_User,                 1, NonFatal );
    LoadField( "Src_GPU_NPGroup",         &RS.Src_GPU_NPGroup,         SID, TID, NonFatal, &RT.Src_GPU_NPGroup,          1, NonFatal );
+   LoadField( "Src_ExactCooling",        &RS.Src_ExactCooling,        SID, TID, NonFatal, &RT.Src_ExactCooling,         1, NonFatal );
+#  ifdef EXACT_COOLING
+   LoadField( "Src_EC_TEF_N",            &RS.Src_EC_TEF_N,            SID, TID, NonFatal, &RT.Src_EC_TEF_N,             1, NonFatal );
+   LoadField( "Src_EC_dtCoef",           &RS.Src_EC_dtCoef,           SID, TID, NonFatal, &RT.Src_EC_dtCoef,            1, NonFatal );
+#  endif
 
 // Grackle
 #  ifdef SUPPORT_GRACKLE
@@ -2437,6 +2449,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Output_GrackleTemp",     &RS.Opt__Output_GrackleTemp,     SID, TID, NonFatal, &RT.Opt__Output_GrackleTemp,     1, NonFatal );
    LoadField( "Opt__Output_GrackleMu",       &RS.Opt__Output_GrackleMu,       SID, TID, NonFatal, &RT.Opt__Output_GrackleMu,       1, NonFatal );
    LoadField( "Opt__Output_GrackleTCool",    &RS.Opt__Output_GrackleTCool,    SID, TID, NonFatal, &RT.Opt__Output_GrackleTCool,    1, NonFatal );
+#  endif
+#  ifdef DUAL_ENERGY
+   LoadField( "Opt__Output_Dual_Status",     &RS.Opt__Output_Dual_Status,     SID, TID, NonFatal, &RT.Opt__Output_Dual_Status,     1, NonFatal );
 #  endif
 #  endif // #if ( MODEL == HYDRO )
    LoadField( "Opt__Output_UserField",       &RS.Opt__Output_UserField,       SID, TID, NonFatal, &RT.Opt__Output_UserField,       1, NonFatal );

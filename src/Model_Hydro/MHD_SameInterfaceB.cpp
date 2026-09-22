@@ -12,16 +12,20 @@
 //                --> Even round-off errors are the same
 //
 // Note        :  1. Applied to both real and buffer patches
-//                2. Invoked by Init_GAMER() and Main()
+//                2. Invoked by Init_GAMER(), EvolveLevel() and Main()
 //                3. Controlled by the runtime option OPT__SAME_INTERFACE_B
 //                4. Always use the B field on the -x/-y/-z sides to overwrite that on the +x/+y/+z sides
 //                5. Mainly for debugging purposes since this consistency should already be guaranteed
 //                   even when disabling OPT__SAME_INTERFACE_B
+//                   --> Potential causes of B-field consistency:
+//                       (1) MINMOD_MAX_ITER > 0
 //                6. The following two approaches are equivalent. We currently adopt approach (1).
 //                   --> (1) Iterate over both real and buffer patches. In this case, there is no need to call
-//                           Buf_GetBufferData() afterward to exchange buffer-patch data.
+//                           Buf_GetBufferData() *afterward* to exchange buffer-patch data. However, we must call
+//                           Buf_GetBufferData() *prior to* MHD_SameInterfaceB() to exchange Flu_ParaBuf
+//                           buffer-patch data for the magnetic field and total energy.
 //                       (2) Iterate over real patches only. In this case, we must call Buf_GetBufferData()
-//                           afterward to exchange Flu_ParaBuf buffer-patch data for both the magnetic field and energy
+//                           *afterward* to exchange Flu_ParaBuf buffer-patch data for the magnetic field and total energy.
 //                7. Possible optimizations:
 //                   --> (1) When calling MHD_SameInterfaceB() in EvolveLevel(), iterate over real patches only,
 //                           since Buf_GetBufferData() is always called in EvolveLevel() anyway.

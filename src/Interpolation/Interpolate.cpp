@@ -304,6 +304,9 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 
 //       ensure IntMonoCoeff is non-negative
          IntMonoCoeff = FMAX( IntMonoCoeff, (real)0.0 );
+
+//       force IntMonoCoeff=0.0 at the last iteration to eliminate residual rounding errors
+         if ( Iteration == MaxIter )   IntMonoCoeff = (real)0.0;
       }
 
 
@@ -311,6 +314,12 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
       IntSchemeFunc( CData, CSize, CStart, CRange, FData_tmp, FSize, FStart, NComp,
                      UnwrapPhase, Monotonic, IntMonoCoeff, OppSign0thOrder );
 
+
+//    do not check for floating-point rounding errors at the last iteration to avoid false alarms
+//    --> otherwise, the run may be terminated at step "6-1. skip failed cells" even though the
+//        interpolation results are physically valid before applying the additional machine-precision-level
+//        perturbations (CHECK_UNPHY_ROUNDING_FACTOR*MACHINE_EPSILON)
+      const CkUnphyRnd_t CkUnphyRnd = ( Iteration == MaxIter ) ? CK_UNPHY_RND_NO : CK_UNPHY_RND_YES;
 
       Fail_AnyCell = false;
 
@@ -346,7 +355,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
          char dummy;    // we do not record the dual-energy status here
 
          if ( !FData_is_Prim )
-            Hydro_DualEnergyFix( Temp[DENS], Temp[MOMX], Temp[MOMY], Temp[MOMZ], Temp[ENGY], Temp[DUAL],
+            Hydro_DualEnergyFix( Temp[DENS], Temp[MOMX], Temp[MOMY], Temp[MOMZ], Temp[ENGY], Temp[DUAL], Temp+NCOMP_FLUID,
                                  dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2],
                                  CheckMinPres_No, NULL_REAL, PassiveFloorMask, UseDual2FixEngy, Emag );
 #        endif
@@ -357,13 +366,13 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
             = Hydro_IsUnphysical( (FData_is_Prim)?UNPHY_MODE_PRIM:UNPHY_MODE_CONS, Temp, Emag,
                                   EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
-                                  PassiveFloorMask, ERROR_INFO, UNPHY_SILENCE );
+                                  PassiveFloorMask, ERROR_INFO, UNPHY_SILENCE, CkUnphyRnd );
 
 
 //       5-3. additional check
          real Eint=NULL_REAL;
 //       check the Eint --> Pres conversion for general EoS
-#        if ( EOS != EOS_GAMMA  &&  EOS != EOS_COSMIC_RAY  &&  !defined BAROTROPIC_EOS )
+#        ifdef EXTRA_EOS_CHECK
 #           define CHECK_E2P
 #        endif
 #        ifdef CHECK_E2P
@@ -406,6 +415,20 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                                                    ERROR_INFO, UNPHY_SILENCE )  )
                      Fail_ThisCell = true;
 #                 endif
+
+//                check whether floating-point rounding errors introduced when recovering the internal energy from
+//                the total energy would lead to unphysical results
+#                 ifdef CHECK_UNPHY_ROUNDING
+                  Hydro_Pri2Con( Temp, Cons, OPT__INT_FRAC_PASSIVE_LR, PassiveIntFrac_NVar, PassiveIntFrac_VarIdx,
+                                 EoS_DensPres2Eint_CPUPtr, EoS_Temp2HTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                 EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
+
+                  if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, Cons, Emag,
+                                            EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                            PassiveFloorMask, ERROR_INFO, UNPHY_SILENCE, CkUnphyRnd )  )
+                     Fail_ThisCell = true;
+#                 endif
                } // if ( EoS_DensPres2Eint_CPUPtr != NULL )
             } // if ( FData_is_Prim )
 
@@ -446,7 +469,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                }
 
                else {
-                  const real CheckMinPres_No = false;
+                  const bool CheckMinPres_No = false;
                   const real Pres = Hydro_Con2Pres( Temp[DENS], Temp[MOMX], Temp[MOMY], Temp[MOMZ], Temp[ENGY], Temp+NCOMP_FLUID,
                                                     CheckMinPres_No, NULL_REAL, PassiveFloorMask, Emag,
                                                     EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
@@ -474,10 +497,11 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 
 #              ifdef GAMER_DEBUG
+//             adopt CK_UNPHY_RND_NO since the following check is for debugging rather than correcting unphysical results
                if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, Cons, Emag,
                                          EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                          EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
-                                         PassiveFloorMask, ERROR_INFO, UNPHY_VERBOSE )  )
+                                         PassiveFloorMask, ERROR_INFO, UNPHY_VERBOSE, CK_UNPHY_RND_NO )  )
                   Aux_Error( ERROR_INFO, "unphysical interpolated energy in %s() !!\n", __FUNCTION__ );
 #              endif
             }
