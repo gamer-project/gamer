@@ -2,7 +2,7 @@
 
 #if ( defined GRAVITY  &&  defined SUPPORT_FFTW )
 
-extern root_fftw::real_plan_nd FFTW_Plan_Poi;
+extern root_fftw::real_plan_nd FFTW_Plan_Poi[NLEVEL];
 
 
 
@@ -15,9 +15,9 @@ extern root_fftw::real_plan_nd FFTW_Plan_Poi;
 //                2. The zero-padding method is implemented
 //                3. Slab decomposition is assumed in FFTW
 //
-// Parameter   :  None
+// Parameter   :  lv : Target level
 //-------------------------------------------------------------------------------------------------------
-void Init_GreenFuncK()
+void Init_GreenFuncK( const int lv )
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -27,9 +27,12 @@ void Init_GreenFuncK()
    if ( OPT__BC_POT != BC_POT_ISOLATED )
       Aux_Message( stderr, "OPT__BC_POT != BC_POT_ISOLATED, why do you need to calculate the Green's function !?\n" );
 
+   if ( ! FFTW_Inited[lv] )   Aux_Error( ERROR_INFO, "FFTW not initialized lv = %02d !!\n", lv );
+   if ( GreenFuncK_Inited[lv] )   return;
 
 // 1. get the array indices used by FFTW
-   const int FFT_Size[3] = { 2*NX0_TOT[0], 2*NX0_TOT[1], 2*NX0_TOT[2] };
+   const int CellFactor = (int)(1L<<lv);
+   const int FFT_Size[3] = { 2*NX0_TOT[0]*CellFactor, 2*NX0_TOT[1]*CellFactor, 2*NX0_TOT[2]*CellFactor };
    mpi_index_int local_nx, local_ny, local_nz, local_z_start, local_ny_after_transpose, local_y_start_after_transpose, total_local_size;
 
 // note: total_local_size is NOT necessarily equal to local_nx*local_ny*local_nz
@@ -48,7 +51,7 @@ void Init_GreenFuncK()
                                                          &local_nz, &local_z_start, &local_ny_after_transpose,
                                                          &local_y_start_after_transpose );
 #  else
-   rfftwnd_mpi_local_sizes( FFTW_Plan_Poi, &local_nz, &local_z_start, &local_ny_after_transpose,
+   rfftwnd_mpi_local_sizes( FFTW_Plan_Poi[lv], &local_nz, &local_z_start, &local_ny_after_transpose,
                             &local_y_start_after_transpose, &total_local_size );
 #  endif
 #  endif // #ifdef SERIAL ... else ...
@@ -67,34 +70,36 @@ void Init_GreenFuncK()
 
 
 // 2. calculate the Green's function in the real space
-   const double dh0   = amr->dh[0];
-   const double Coeff = -NEWTON_G*CUBE(dh0)/( (double)FFT_Size[0]*FFT_Size[1]*FFT_Size[2] );
+   const double dh    = amr->dh[lv];
+   const double Coeff = -NEWTON_G*CUBE(dh)/( (double)FFT_Size[0]*FFT_Size[1]*FFT_Size[2] );
    double x, y, z, r;
    int    kk;
    long   idx;
 
-   GreenFuncK = (real*) root_fftw::fft_malloc(sizeof(real) * total_local_size);
+   GreenFuncK[lv] = (real*) root_fftw::fft_malloc(sizeof(real) * total_local_size);
 
    for (int k=0; k<local_nz; k++)   {  kk = k + local_z_start;
-                                       z  = ( kk <= NX0_TOT[2] ) ? kk*dh0 : (FFT_Size[2]-kk)*dh0;
-   for (int j=0; j<local_ny; j++)   {  y  = ( j  <= NX0_TOT[1] ) ? j *dh0 : (FFT_Size[1]-j )*dh0;
-   for (int i=0; i<local_nx; i++)   {  x  = ( i  <= NX0_TOT[0] ) ? i *dh0 : (FFT_Size[0]-i )*dh0;
+                                       z  = ( kk <= NX0_TOT[2]*CellFactor ) ? kk*dh : (FFT_Size[2]-kk)*dh;
+   for (int j=0; j<local_ny; j++)   {  y  = ( j  <= NX0_TOT[1]*CellFactor ) ? j *dh : (FFT_Size[1]-j )*dh;
+   for (int i=0; i<local_nx; i++)   {  x  = ( i  <= NX0_TOT[0]*CellFactor ) ? i *dh : (FFT_Size[0]-i )*dh;
 
       r   = sqrt( x*x + y*y + z*z );
       idx = ( (long)k*local_ny + j )*local_nx + i;
 
-      GreenFuncK[idx] = real( Coeff / r );
+      GreenFuncK[lv][idx] = real( Coeff / r );
 
    }}}
 
 
 // 3. reset the Green's function at the origin
 // ***by setting it equal to zero, we ignore the contribution from the mass within the same cell***
-   if ( MPI_Rank == 0 )    GreenFuncK[0] = GFUNC_COEFF0*Coeff/dh0;
+   if ( MPI_Rank == 0 )    GreenFuncK[lv][0] = GFUNC_COEFF0*Coeff/dh;
 
 
 // 4. convert the Green's function to the k space
-   root_fftw_r2c( FFTW_Plan_Poi, GreenFuncK );
+   root_fftw_r2c( FFTW_Plan_Poi[lv], GreenFuncK[lv] );
+
+   GreenFuncK_Inited[lv] = true;
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
