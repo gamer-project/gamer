@@ -959,7 +959,7 @@
 #else
 #  define SRC_NAUX_EC            0
 #endif
-#  define SRC_NAUX_USER          10    // SrcTerms.User_AuxArray_Flt/Int[]
+#  define SRC_NAUX_USER          20    // SrcTerms.User_AuxArray_Flt/Int[]
 
 
 // bitwise reproducibility in flux and electric field fix-up operations

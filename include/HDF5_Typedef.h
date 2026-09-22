@@ -500,6 +500,7 @@ struct InputPara_t
 #  endif
    double Dt__SyncParentLv;
    double Dt__SyncChildrenLv;
+   double Dt__ExactCooling;
    int    Opt__DtUser;
    int    Opt__DtLevel;
    int    Opt__RecordDt;

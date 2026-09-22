@@ -2087,6 +2087,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  endif
    LoadField( "Dt__SyncParentLv",        &RS.Dt__SyncParentLv,        SID, TID, NonFatal, &RT.Dt__SyncParentLv,         1, NonFatal );
    LoadField( "Dt__SyncChildrenLv",      &RS.Dt__SyncChildrenLv,      SID, TID, NonFatal, &RT.Dt__SyncChildrenLv,       1, NonFatal );
+   LoadField( "Dt__ExactCooling",        &RS.Dt__ExactCooling,        SID, TID, NonFatal, &RT.Dt__ExactCooling,         1, NonFatal );
    LoadField( "Opt__DtUser",             &RS.Opt__DtUser,             SID, TID, NonFatal, &RT.Opt__DtUser,              1, NonFatal );
    LoadField( "Opt__DtLevel",            &RS.Opt__DtLevel,            SID, TID, NonFatal, &RT.Opt__DtLevel,             1, NonFatal );
    LoadField( "Opt__RecordDt",           &RS.Opt__RecordDt,           SID, TID, NonFatal, &RT.Opt__RecordDt,            1, NonFatal );

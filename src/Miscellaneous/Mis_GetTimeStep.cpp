@@ -1,7 +1,7 @@
 #include "GAMER.h"
 
 extern double Mis_GetTimeStep_ExactCooling( const int lv, const double dTime_dt );
-
+extern double Mis_GetTimeStep_ExactCooling_User( const int lv, const double dTime_dt );
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -260,6 +260,14 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
    }
 #  endif
 
+
+// 1.12 CRITERION TWELVE : user's exact-cooling source term
+// =============================================================================================================
+   if ( DT__EXACT_COOLING >= 0.1)
+   {
+      dTime[NdTime] = dTime_dt * Mis_GetTimeStep_ExactCooling_User(lv,dTime_dt);
+      sprintf( dTime_Name[NdTime++], "%s", "ExactCooling_User" );
+   }
 
 
 // 2. get the minimum time-step from all criteria
