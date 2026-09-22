@@ -83,6 +83,10 @@ void Validate()
    Aux_Error( ERROR_INFO, "COMOVING must be disabled !!\n" );
 #  endif
 
+#  ifndef SUPPORT_GSL
+   Aux_Error( ERROR_INFO, "SUPPORT_GSL must be enabled !!\n" );
+#  endif
+
 #  if ( NCOMP_PASSIVE != 14 )
    Aux_Error( ERROR_INFO, "NCOMP_PASSIVE must be 14 !!\n" );
 #  endif
