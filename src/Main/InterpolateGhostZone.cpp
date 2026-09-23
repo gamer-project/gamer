@@ -1959,6 +1959,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
       real *FData_Dual = IntData_CC + DUAL*FSize3D_CC;
 
       char dummy;    // we do not record the dual-energy status here
+      real Passive[NCOMP_PASSIVE];
 
       for (int t=0; t<FSize3D_CC; t++)
       {
@@ -1973,15 +1974,14 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
          const real Emag = NULL_REAL;
 #        endif
 
+         for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = (IntData_CC + (NCOMP_FLUID+v)*FSize3D_CC)[t];
+
 //       here we ALWAYS use the dual-energy variable to correct the total energy density
 //       --> we achieve that by setting the dual-energy switch to an extremely larger number and ignore
 //           the runtime parameter DUAL_ENERGY_SWITCH here
-         real Passive[NCOMP_PASSIVE];
-         for (int v=0; v<NCOMP_PASSIVE; v++)   Passive[v] = IntData_CC[ (NCOMP_FLUID+v)*FSize3D_CC + t ];
-
-         Hydro_DualEnergyFix( FData_Dens[t], FData_MomX[t], FData_MomY[t], FData_MomZ[t], FData_Engy[t], FData_Dual[t],
-                              dummy, Passive, (MinPres>=(real)0.0), MinPres, PassiveFloorMask, UseDual2FixEngy, Emag,
-                              EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr, EoS_DensEint2Entr_CPUPtr,
+         Hydro_DualEnergyFix( FData_Dens[t], FData_MomX[t], FData_MomY[t], FData_MomZ[t], FData_Engy[t], FData_Dual[t], Passive,
+                              dummy, (MinPres>=(real)0.0), MinPres, PassiveFloorMask, UseDual2FixEngy, Emag,
+                              EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
                               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       }
    } // if (  DE_Consistency  &&  ( TVarCC & _TOTAL ) == _TOTAL  &&  TVarFC == _MAG )

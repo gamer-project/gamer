@@ -499,11 +499,10 @@ def load_arguments( sys_setting : SystemSetting ):
     parser.add_argument( "--dual", type=str, metavar="TYPE", gamer_name="DUAL_ENERGY", prefix="DE_",
                          default=NONE_STR, choices=[NONE_STR, "ENPY", "EINT"],
                          depend={"model":"HYDRO"},
-                         constraint={ "ENPY":{"eos":"GAMMA"},
+                         constraint={ "ENPY":{"eos":["GAMMA", "COSMIC_RAY"]},
                                       "EINT":{"flu_scheme":["MHM", "MHM_RP"]} },
                          help="The dual-energy formalism (ENPY: entropy, EINT: internal energy). "\
-                              "ENPY only supports GAMMA, EINT only supports MHM/MHM_RP. "\
-                              "Useless for RTVD.\n"
+                              "EINT only supports MHM/MHM_RP. Useless for RTVD.\n"
                        )
 
     parser.add_argument( "--mhd", type=str2bool, metavar="BOOLEAN", gamer_name="MHD",
@@ -525,7 +524,7 @@ def load_arguments( sys_setting : SystemSetting ):
     parser.add_argument( "--cosmic_ray", type=str2bool, metavar="BOOLEAN", gamer_name="COSMIC_RAY",
                          default=False,
                          depend={"model":"HYDRO"},
-                         constraint={ True:{"dual":[NONE_STR], "eos":"COSMIC_RAY", "comoving":False} },
+                         constraint={ True:{"eos":"COSMIC_RAY", "comoving":False} },
                          help="Enable cosmic rays. Must use <--eos=COSMIC_RAY>.\n"
                        )
 

@@ -421,8 +421,7 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
          char dummy;    // we do not record the dual-energy status here
 
          real Passive[NCOMP_PASSIVE];
-         for (int v=0; v<NCOMP_PASSIVE; v++)
-            Passive[v] = amr->patch[FaFluSg][FaLv][FaPID]->fluid[NCOMP_FLUID+v][k][j][i];
+         for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = amr->patch[FaFluSg][FaLv][FaPID]->fluid[ NCOMP_FLUID + v ][k][j][i];
 
          Hydro_DualEnergyFix( amr->patch[FaFluSg][FaLv][FaPID]->fluid[DENS][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMX][k][j][i],
@@ -430,8 +429,8 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[DUAL][k][j][i],
-                              dummy, Passive, CheckMinPres_Yes, MIN_PRES, PassiveFloorMask, UseDual2FixEngy, Emag,
-                              EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr, EoS_DensEint2Entr_CPUPtr,
+                              Passive, dummy, CheckMinPres_Yes, MIN_PRES, PassiveFloorMask, UseDual2FixEngy, Emag,
+                              EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
                               EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
 #        else // #ifdef DUAL_ENERGY

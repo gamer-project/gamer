@@ -264,6 +264,15 @@
 #endif
 
 
+// apply dual-energy check to the half-step prediction
+// --> does not support CTU
+#ifdef DUAL_ENERGY
+#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
+//#  define DUAL_ENERGY_PREDICT
+#endif
+#endif // #ifdef DUAL_ENERGY
+
+
 
 // 2. ELBDM macro
 //=========================================================================================

@@ -316,25 +316,39 @@ void Aux_Record_GrackleComoving()
 
    if ( amr->NPatchComma[0][1] > 0 )
    {
-      int    FluSg = amr->FluSg[0];
-      double Dens  = amr->patch[FluSg][0][0]->fluid[DENS][0][0][0];
-      double Eint  = amr->patch[FluSg][0][0]->fluid[ENGY][0][0][0];  // assume no magnetic and kinetic energy
+      const int    FluSg = amr->FluSg[0];
+      const double Dens  = amr->patch[FluSg][0][0]->fluid[DENS][0][0][0];
+      double Eint;   // must exclude cosmic-ray energy for Grackle
 
 //    use the dual-energy variable to calculate the internal energy if applicable
-#     if ( DUAL_ENERGY == DE_ENPY )
-      double Dual  = amr->patch[FluSg][0][0]->fluid[DUAL][0][0][0];
+#     ifdef DUAL_ENERGY
+      const double Dual = amr->patch[FluSg][0][0]->fluid[DUAL][0][0][0];
+
+#     if   ( DUAL_ENERGY == DE_ENPY )
       const bool CheckMinPres_No = false;
-      real Passive[NCOMP_PASSIVE];
-      for (int v=0; v<NCOMP_PASSIVE; v++)   Passive[v] = amr->patch[FluSg][0][0]->fluid[NCOMP_FLUID+v][0][0][0];
-
-      double Pres  = Hydro_DensDual2Pres( Dens, Dual, Passive, CheckMinPres_No, NULL_REAL,
-                                          EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-
-      Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+//    Hydro_DensDual2Pres() returns gas pressure without cosmic rays
+      const double Pres = Hydro_DensDual2Pres( Dens, Dual, NULL, CheckMinPres_No, NULL_REAL,
+                                               NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#     if   ( EOS == EOS_GAMMA )
+//    EOS_GAMMA does not involve passive scalars
+      Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#     elif ( EOS == EOS_COSMIC_RAY )
+      Eint = EoS_GasPres2GasEint_CPUPtr( Pres, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#     else
+#     error : ERROR : unsupported EoS !!
+#     endif // EOS
 
 #     elif ( DUAL_ENERGY == DE_EINT )
-      Eint  = amr->patch[FluSg][0][0]->fluid[DUAL][0][0][0];
-#     endif // DUAL_ENERGY
+      Eint = Dual;
+#     endif
+
+#     else // #ifdef DUAL_ENERGY
+
+      Eint  = amr->patch[FluSg][0][0]->fluid[ENGY][0][0][0];   // assume no magnetic and kinetic energies
+#     ifdef COSMIC_RAY
+      Eint -= amr->patch[FluSg][0][0]->fluid[CRAY][0][0][0];   // exclude cosmic-ray energy
+#     endif
+#     endif // #ifdef DUAL_ENERGY ... else ...
 
       const double MassRatio_pe = Const_mp / Const_me;
 
@@ -576,26 +590,39 @@ double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
 
    if ( amr->NPatchComma[lv][1] > 0 )
    {
-      int    FluSg = amr->FluSg[lv];
-      double Dens  = amr->patch[FluSg][lv][0]->fluid[DENS][0][0][0];
-      double Eint  = amr->patch[FluSg][lv][0]->fluid[ENGY][0][0][0]; // assume no magnetic and kinetic energy
+      const int    FluSg = amr->FluSg[lv];
+      const double Dens  = amr->patch[FluSg][lv][0]->fluid[DENS][0][0][0];
+      double Eint;   // must exclude cosmic-ray energy for Grackle
 
 //    use the dual-energy variable to calculate the internal energy if applicable
+#     ifdef DUAL_ENERGY
+      const double Dual = amr->patch[FluSg][lv][0]->fluid[DUAL][0][0][0];
+
 #     if   ( DUAL_ENERGY == DE_ENPY )
-      double Dual = amr->patch[FluSg][lv][0]->fluid[DUAL][0][0][0];
-      const bool CheckMinPres_No  = false;
-      real Passive[NCOMP_PASSIVE];
-      for (int v=0; v<NCOMP_PASSIVE; v++)   Passive[v] = amr->patch[FluSg][lv][0]->fluid[NCOMP_FLUID+v][0][0][0];
-
-      double     Pres             = Hydro_DensDual2Pres( Dens, Dual, Passive, CheckMinPres_No, NULL_REAL,
-                                                          EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt,
-                                                          EoS_AuxArray_Int, h_EoS_Table );
-
-      Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+      const bool CheckMinPres_No = false;
+//    Hydro_DensDual2Pres() returns gas pressure without cosmic rays
+      const double Pres = Hydro_DensDual2Pres( Dens, Dual, NULL, CheckMinPres_No, NULL_REAL,
+                                               NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#     if   ( EOS == EOS_GAMMA )
+//    EOS_GAMMA does not involve passive scalars
+      Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#     elif ( EOS == EOS_COSMIC_RAY )
+      Eint = EoS_GasPres2GasEint_CPUPtr( Pres, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#     else
+#     error : ERROR : unsupported EoS !!
+#     endif // EOS
 
 #     elif ( DUAL_ENERGY == DE_EINT )
-      Eint  = amr->patch[FluSg][lv][0]->fluid[DUAL][0][0][0];
-#     endif // DUAL_ENERGY
+      Eint = Dual;
+#     endif
+
+#     else // #ifdef DUAL_ENERGY
+
+      Eint  = amr->patch[FluSg][lv][0]->fluid[ENGY][0][0][0];   // assume no magnetic and kinetic energies
+#     ifdef COSMIC_RAY
+      Eint -= amr->patch[FluSg][lv][0]->fluid[CRAY][0][0][0];   // exclude cosmic-ray energy
+#     endif
+#     endif // #ifdef DUAL_ENERGY ... else ...
 
       const double MassRatio_pe = Const_mp / Const_me;
 

@@ -21,7 +21,11 @@
 #endif
 
 #if ( DUAL_ENERGY == DE_EINT )
-# include "CUFLU_DualEnergy_AdiabaticWork.cu"
+# include "CUFLU_Shared_DualEnergy_AdiabaticWork.cu"
+#endif
+
+#ifdef COSMIC_RAY
+# include "CUFLU_CosmicRay.cu"
 #endif
 
 #else // #ifdef __CUDACC__
@@ -34,6 +38,14 @@ void Hydro_DualEnergy_AdiabaticWork_FullStep( real &Edual,
                                               const bool FracPassive, const int NFrac, const int FracIdx[],
                                               const real dt, const real dh, const EoS_t *EoS, const int idx_out );
 #endif
+
+#ifdef COSMIC_RAY
+void CR_AdiabaticWork_FullStep( real &Ecr,
+                                const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
+                                const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                const real g_FC_Var[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
+                                const real dt, const real dh, const EoS_t *EoS, const int idx_out );
+#endif // #ifdef COSMIC_RAY
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -49,6 +61,7 @@ void Hydro_DualEnergy_AdiabaticWork_FullStep( real &Edual,
 //                3. If any unphysical fluid cell is found in a patch group, Hydro_FullStepUpdate() will
 //                   return instantly unless Iteration==MinMod_MaxIter
 //                4. Update dual energy (only for DUAL_ENERGY==DE_EINT)
+//                5. Update cosmic rays as well
 //
 // Parameter   :  g_Input           : Array storing the input fluid data
 //                g_Output          : Array to store the updated fluid data
@@ -58,11 +71,13 @@ void Hydro_DualEnergy_AdiabaticWork_FullStep( real &Edual,
 //                g_Flux            : Array storing the input face-centered fluxes
 //                                    --> Accessed with the array stride N_FL_FLUX even thought its actually
 //                                        allocated size is N_FC_FLUX^3
-//                g_PriVar_Half     : Array storing the input cell-centered primitive variables (for DUAL_ENERGY=DE_EINT only)
+//                g_PriVar_Half     : Array storing the input cell-centered primitive variables
+//                                    (for COSMIC_RAY/DUAL_ENERGY=DE_EINT only)
 //                                    --> MHM without MHD: original-time data with stride FLU_NXT
 //                                    --> MHM with MHD and MHM_RP: half-step data with stride N_HF_VAR
 //                                    --> Although its actually allocated size is FLU_NXT^3 since it points to g_PriVar_1PG[]
-//                g_FC_Var          : Array storing the input face-centered conserved variables (for COSMIC_RAY/DUAL_ENERGY=DE_EINT only)
+//                g_FC_Var          : Array storing the input face-centered conserved variables
+//                                    (for COSMIC_RAY/DUAL_ENERGY=DE_EINT only)
 //                                    --> Accessed with the array stride N_FC_VAR^3
 //                dt                : Time interval to advance solution
 //                dh                : Cell size
@@ -168,12 +183,19 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 #     endif // #ifdef BAROTROPIC_EOS
 
 
-//    2. add the source term of adiabatic work for the dual-energy formalism (DUAL_ENERGY==DE_EINT)
+//    2.1. add the source term of adiabatic work for the dual-energy formalism (DUAL_ENERGY==DE_EINT)
 //       --> perform it before Hydro_DualEnergyFix() to ensure consistency between
 //           gas internal energy and the dual-energy variable
 #     if ( DUAL_ENERGY == DE_EINT )
       Hydro_DualEnergy_AdiabaticWork_FullStep( Output_1Cell[DUAL], g_PriVar_Half, g_Flux, g_FC_Var,
                                                FracPassive, NFrac, FracIdx, dt, dh, EoS, idx_out );
+#     endif
+
+//    2.2. add the cosmic-ray source term of adiabatic work
+//       --> perform it before Hydro_DualEnergyFix() to ensure consistency between
+//           gas internal energy and the dual-energy variable
+#     ifdef COSMIC_RAY
+      CR_AdiabaticWork_FullStep( Output_1Cell[CRAY], g_PriVar_Half, g_Flux, g_FC_Var, dt, dh, EoS, idx_out );
 #     endif
 
 
@@ -233,10 +255,9 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 
       if ( Output_1Cell[DENS] > (real)0.0  &&  Output_1Cell[ENGY]*maxKinOverTot > Ekin )
          Hydro_DualEnergyFix( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
-                              Output_1Cell[ENGY], Output_1Cell[DUAL], g_DE_Status[idx_out],
-                              Output_1Cell+NCOMP_FLUID, CheckMinPres_No, NULL_REAL,
-                              PassiveFloor, DualEnergySwitch, Emag, EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr,
-                              EoS->DensEint2Entr_FuncPtr,
+                              Output_1Cell[ENGY], Output_1Cell[DUAL], Output_1Cell+NCOMP_FLUID, g_DE_Status[idx_out],
+                              CheckMinPres_No, NULL_REAL, PassiveFloor, DualEnergySwitch, Emag,
+                              EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr,
                               EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
 #     endif // #ifdef DUAL_ENERGY
 

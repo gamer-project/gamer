@@ -1,39 +1,46 @@
-#ifndef __CUFLU_DUALENERGY_ADIABATICWORK__
-#define __CUFLU_DUALENERGY_ADIABATICWORK__
+#ifndef __CUFLU_SHARED_DUALENERGY_ADIABATICWORK__
+#define __CUFLU_SHARED_DUALENERGY_ADIABATICWORK__
 
 
 
 #include "CUFLU.h"
 
+#ifdef __CUDACC__
+#include "CUFLU_Shared_FluUtility.cu"
+#include "CUFLU_Shared_DualEnergy.cu"
+#endif
+
+
 #if ( MODEL == HYDRO  &&  DUAL_ENERGY == DE_EINT  &&  !defined SRHD )
 
 
 
-# if ( FLU_SCHEME == MHM_RP  &&  DUAL_ENERGY == DE_EINT )
+
+#if ( FLU_SCHEME == MHM_RP )
 //-------------------------------------------------------------------------------------------------------
-// Function    : Hydro_DualEnergy_AdiabaticWork_HalfStep_MHM_RP
+// Function    :  Hydro_DualEnergy_AdiabaticWork_HalfStep_MHM_RP
 //
-// Description : Add the adiabatic work term to update the dual energy for the half-step solution of MHM_RP
+// Description :  Add the adiabatic work term to update the dual energy for the half-step solution of MHM_RP
 //
-// Note        : 1. MHM should not use this function
-//               2. Work w/ and w/o MHD
-//               3. Invoked by Hydro_RiemannPredict()
+// Note        :  1. MHM should not use this function
+//                2. Work w/ and w/o MHD
+//                3. Invoked by Hydro_RiemannPredict()
 //
-// Reference   : [1] Bryan et al., ApJS 211, 19 (2012); doi:10.1088/0067-0049/211/2/19
-//               [2] A simple dual implementation to track pressure accurately, S. Li, Astronum Proceeding, 385, 273 (2007)
+// Reference   :  [1] Bryan et al., ApJS 211, 19 (2012); doi:10.1088/0067-0049/211/2/19
+//                [2] A simple dual implementation to track pressure accurately, S. Li, Astronum Proceeding, 385, 273 (2007)
 //
-// Parameter   : OneCell     : Single-cell fluid array to store the updated cell-centered dual energy
-//               g_ConVar_In : Array storing the input conserved variables
-//               g_Flux_Half : Array storing the input face-centered fluxes
-//                             --> Accessed with the stride didx_flux
-//               idx_in      : Index of accessing g_ConVar_In[]
-//               didx_in     : Index increment of g_ConVar_In[]
-//               idx_flux    : Index of accessing g_flux_Half[]
-//               didx_flux   : Index increment of g_Flux_Half[]
-//               dt_dh2      : 0.5 * dt / dh
-//               EoS         : EoS object
+// Parameter   :  OneCell     : Single-cell fluid array to store the updated cell-centered dual energy
+//                g_ConVar_In : Array storing the input conserved variables
+//                g_Flux_Half : Array storing the input face-centered fluxes
+//                              --> Accessed with the stride didx_flux
+//                idx_in      : Index of accessing g_ConVar_In[]
+//                didx_in     : Index increment of g_ConVar_In[]
+//                idx_flux    : Index of accessing g_flux_Half[]
+//                didx_flux   : Index increment of g_Flux_Half[]
+//                dt_dh2      : 0.5 * dt / dh
+//                EoS         : EoS object
 //
-// Return      : OneCell[DUAL]
+// Return      :  OneCell[DUAL]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_DualEnergy_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PLUS_MAG],
@@ -48,8 +55,10 @@ void Hydro_DualEnergy_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PL
    real Passive[NCOMP_PASSIVE];
    for (int v=0; v<NCOMP_PASSIVE; v++)   Passive[v] = g_ConVar_In[NCOMP_FLUID+v][idx_in];
 
-   const real pDual_old = EoS->DensEint2Pres_FuncPtr( g_ConVar_In[DENS][idx_in], g_ConVar_In[DUAL][idx_in], Passive,
-                                                      EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+   const bool CheckMinPres_No = false;
+   const real pDual_old = Hydro_DensDual2Pres( g_ConVar_In[DENS][idx_in], g_ConVar_In[DUAL][idx_in], Passive,
+                                               CheckMinPres_No, NULL_REAL, EoS->DensEint2Pres_FuncPtr,
+                                               EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
 
 
 // 2. compute \div V using the upwind data; reference: [2]
@@ -75,15 +84,15 @@ void Hydro_DualEnergy_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PL
    } // for (int d=0; d<3; d++)
 
 
-// 3. unconditionally update the dual energy
+// 3. update the dual energy
    OneCell[DUAL] -= pDual_old*dt_dh2*( div_V[0] + div_V[1] + div_V[2] );
 
 } // FUNCTION : Hydro_DualEnergy_AdiabaticWork_HalfStep_MHM_RP
-#endif // #if (  FLU_SCHEME == MHM_RP  &&  DUAL_ENERGY == DE_EINT  )
+#endif // #if ( FLU_SCHEME == MHM_RP )
 
 
 
-#if (  ( FLU_SCHEME == MHM || FLU_SCHEME == MHM_RP )  &&  DUAL_ENERGY == DE_EINT  )
+#if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Hydro_DualEnergy_AdiabaticWork_FullStep
 //
@@ -96,24 +105,24 @@ void Hydro_DualEnergy_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PL
 // Reference   :  [1] Bryan et al., ApJS 211, 19 (2012); doi:10.1088/0067-0049/211/2/19
 //                [2] A simple dual implementation to track pressure accurately, S. Li, Astronum Proceeding, 385, 273 (2007)
 //
-// Parameter   :  Edual          : Dual energy to be updated
-//                g_PriVar       : Array storing the input cell-centered primitive variables
-//                                 --> MHM without MHD: original-time data, stride FLU_NXT, offset FLU_GHOST_SIZE
-//                                 --> MHM with MHD: half-step data, stride N_HF_VAR=N_FC_VAR, offset 1
-//                                 --> MHM_RP: half-step data, stride N_HF_VAR=FLU_NXT-2, offset FLU_GHOST_SIZE-1
-//                                 --> Although its actually allocated size is FLU_NXT^3 since it points to g_PriVar_1PG[]
-//                g_Flux         : Array storing the input face-centered fluxes
-//                                 --> Accessed with the array stride N_FL_FLUX even though its actually
-//                                     allocated size is N_FC_FLUX^3
-//                g_FC_Var       : Array storing the input face-centered conserved variables
-//                                 --> Accessed with the array stride N_FC_VAR^3
-//                FracPassive    : true --> input passive scalars are mass fraction instead of density
-//                NFrac          : Number of passive scalars for the option "FracPassive"
-//                FracIdx        : Target variable indices for the option "FracPassive"
-//                dt             : Time interval to advance solution
-//                dh             : Cell size
-//                EoS            : EoS object
-//                idx_out        : Array index associated with Edual
+// Parameter   :  Edual       : Dual energy to be updated
+//                g_PriVar    : Array storing the input cell-centered primitive variables
+//                              --> MHM without MHD: original-time data, stride FLU_NXT, offset FLU_GHOST_SIZE
+//                              --> MHM with MHD: half-step data, stride N_HF_VAR=N_FC_VAR, offset 1
+//                              --> MHM_RP: half-step data, stride N_HF_VAR=FLU_NXT-2, offset FLU_GHOST_SIZE-1
+//                              --> Although its actual allocated size is FLU_NXT^3 since it points to g_PriVar_1PG[]
+//                g_Flux      : Array storing the input face-centered fluxes
+//                              --> Accessed with the array stride N_FL_FLUX even though its actually
+//                                  allocated size is N_FC_FLUX^3
+//                g_FC_Var    : Array storing the input face-centered conserved variables
+//                              --> Accessed with the array stride N_FC_VAR^3
+//                FracPassive : true --> input passive scalars are mass fraction instead of density
+//                NFrac       : Number of passive scalars for the option "FracPassive"
+//                FracIdx     : Target variable indices for the option "FracPassive"
+//                dt          : Time interval to advance solution
+//                dh          : Cell size
+//                EoS         : EoS object
+//                idx_out     : Array index associated with Edual
 //
 // Return      :  Edual
 //-------------------------------------------------------------------------------------------------------
@@ -152,7 +161,7 @@ void Hydro_DualEnergy_AdiabaticWork_FullStep( real &Edual,
 // index of the g_PriVar array
 // --> both PLM and PPM retain the original layout for MHM without MHD
 // --> MHM+MHD repacks all fields in Hydro_ConFC2PriCC_MHM(); MHM_RP uses Hydro_RiemannPredict()
-#  if ( FLU_SCHEME == MHM && !defined MHD )
+#  if ( FLU_SCHEME == MHM  &&  !defined MHD )
    const int i_hf     = i_out + FLU_GHOST_SIZE;
    const int j_hf     = j_out + FLU_GHOST_SIZE;
    const int k_hf     = k_out + FLU_GHOST_SIZE;
@@ -170,14 +179,17 @@ void Hydro_DualEnergy_AdiabaticWork_FullStep( real &Edual,
    const int k_fc     = k_out + 1;
    const int idx_fc   = IDX321( i_fc, j_fc, k_fc, N_FC_VAR, N_FC_VAR );
 
+
 // 1. calculate the pressure
    real Passive[NCOMP_PASSIVE];
    for (int v=0; v<NCOMP_PASSIVE; v++)   Passive[v] = g_PriVar[NCOMP_FLUID+v][idx_hf];
    if ( FracPassive )
       for (int v=0; v<NFrac; v++)   Passive[ FracIdx[v] ] *= g_PriVar[DENS][idx_hf];
 
-   const real pDual_half = EoS->DensEint2Pres_FuncPtr( g_PriVar[DENS][idx_hf], g_PriVar[DUAL][idx_hf], Passive,
-                                                       EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
+   const bool CheckMinPres_No = false;
+   const real pDual_half = Hydro_DensDual2Pres( g_PriVar[DENS][idx_hf], g_PriVar[DUAL][idx_hf], Passive,
+                                                CheckMinPres_No, NULL_REAL, EoS->DensEint2Pres_FuncPtr,
+                                                EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
 
 
 // 2. compute \div V using the upwind data; reference: [2]
@@ -206,15 +218,16 @@ void Hydro_DualEnergy_AdiabaticWork_FullStep( real &Edual,
    } // for (int d=0; d<3; d++)
 
 
-// 3. calculate the adiabatic work
+// 3. update the dual energy
    Edual -= pDual_half*dt_dh*( div_V[0] + div_V[1] + div_V[2] );
 
 } // FUNCTION : Hydro_DualEnergy_AdiabaticWork_FullStep
-#endif // #if (  ( FLU_SCHEME == MHM_RP || FLU_SCHEME == MHM )  &&  DUAL_ENERGY == DE_EINT  )
-
-
-#endif // ( MODEL == HYDRO  &&  DUAL_ENERGY == DE_EINT  &&  !defined SRHD )
+#endif // #if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 
 
 
-#endif // #ifndef __CUFLU_DUALENERGY_ADIABATICWORK__
+#endif // #if ( MODEL == HYDRO  &&  DUAL_ENERGY == DE_EINT  &&  !defined SRHD )
+
+
+
+#endif // #ifndef __CUFLU_SHARED_DUALENERGY_ADIABATICWORK__

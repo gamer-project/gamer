@@ -377,7 +377,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
             } // if ( OPT__FLAG_VORTICITY )
 
 
-//          3-3. evaluate pressure
+//          3-3. evaluate pressure (including cosmic-ray pressure as required by EoS_DensPres2CSqr_CPUPtr() for NeedCs)
             if ( NeedPres )
             {
                const bool CheckMinPres_Yes = true;
@@ -388,13 +388,20 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                {
 //                if applicable, compute pressure from the dual-energy variable to reduce the round-off errors
 #                 ifdef DUAL_ENERGY
-                  real Passive[NCOMP_PASSIVE];
-                  for (int v=0; v<NCOMP_PASSIVE; v++)   Passive[v] = Fluid[NCOMP_FLUID+v][k][j][i];
 
-                  Pres[k][j][i] = Hydro_DensDual2Pres( Fluid[DENS][k][j][i], Fluid[DUAL][k][j][i],
-                                                       Passive, CheckMinPres_Yes, MIN_PRES,
-                                                       EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt,
-                                                       EoS_AuxArray_Int, h_EoS_Table );
+#                 if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  NCOMP_PASSIVE > 0 )
+                  real Passive[NCOMP_PASSIVE];
+                  for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Fluid[ NCOMP_FLUID + v ][k][j][i];
+#                 else
+                  const real *Passive = NULL;
+#                 endif
+                  Pres[k][j][i] = Hydro_DensDual2Pres( Fluid[DENS][k][j][i], Fluid[DUAL][k][j][i], Passive,
+                                                       CheckMinPres_Yes, MIN_PRES, EoS_DensEint2Pres_CPUPtr,
+                                                       EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+//                add cosmic-ray pressure
+#                 ifdef COSMIC_RAY
+                  Pres[k][j][i] += EoS_CREint2CRPres_CPUPtr( Fluid[CRAY][k][j][i], EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#                 endif // COSMIC_RAY
 
 #                 else // #ifdef DUAL_ENERGY
 
@@ -418,6 +425,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                                   EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
                                                   NULL );
+
 #                 endif // #ifdef DUAL_ENERGY ... else ...
                } // k,j,i
             } // if ( NeedPres )
@@ -1127,6 +1135,7 @@ bool Flag_IterateCells( const int Mode, const int lv, const int PID, const real 
                                  const int i_end   = ( i + FlagBuf >= PS1 ) ? 2 : 1;
 
 //    retrieve the adiabatic index for Jeans length refinement criterion
+//###REVISE: support general EoS (e.g., cosmic rays) and magnetic field
 #     if ( MODEL == HYDRO  &&  defined GRAVITY )
       const real JeansCoeff = ( OPT__FLAG_JEANS )
                             ? JeansCoeff_Factor * Cs2[k][j][i] * Fluid[DENS][k][j][i] / Pres[k][j][i]

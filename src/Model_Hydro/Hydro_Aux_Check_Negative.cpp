@@ -7,7 +7,7 @@
 // 2: check values close to the floor
 #define CHECK_MODE         1
 
-// check if density/pressure/entropy is smaller than CLOSE_FACTOR*floor
+// check if density/pressure/dual energy is smaller than CLOSE_FACTOR*floor
 #if   ( CHECK_MODE == 1 )
 #  define CLOSE_FACTOR     NULL_REAL
 #elif ( CHECK_MODE == 2 )
@@ -20,11 +20,11 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  HydroAux_Check_Negative
-// Description :  Check if there is any cell with negative density or pressure
+// Description :  Check if there is any cell with negative density, pressure, or dual-energy variable
 //
 // Parameter   :  lv      : Target refinement level
 //                Mode    : 1 : Check negative density
-//                          2 : Check negative pressure (and entropy when DUAL_ENERGY == DE_ENPY)
+//                          2 : Check negative pressure and dual-energy variable (DE_ENPY/DE_EINT)
 //                          3 : Both
 //                comment : You can put the location where this function is invoked in this string
 //-------------------------------------------------------------------------------------------------------
@@ -42,7 +42,7 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
    real Pres, Fluid[NCOMP_TOTAL];
 
 // set the minimum thresholds for this check
-// --> currently we use TINY_NUMBER as the floor value of entropy
+// --> currently we use TINY_NUMBER as the floor value of the dual-energy variable
    const real DensCheck = ( CHECK_MODE == 1 ) ? 0.0 : CLOSE_FACTOR*MIN_DENS;
    const real PresCheck = ( CHECK_MODE == 1 ) ? 0.0 : CLOSE_FACTOR*MIN_PRES;
 #  ifdef DUAL_ENERGY
@@ -61,10 +61,14 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
          {
             for (int v=0; v<NCOMP_TOTAL; v++)   Fluid[v] = amr->patch[ amr->FluSg[lv] ][lv][PID]->fluid[v][k][j][i];
 
+//          compute pressure (excluding cosmic-ray pressure for a more stringent check)
 #           ifdef DUAL_ENERGY
+
             Pres = Hydro_DensDual2Pres( Fluid[DENS], Fluid[DUAL], Fluid+NCOMP_FLUID, CheckMinPres_No, NULL_REAL,
                                         EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-#           else
+
+#           else // #ifdef DUAL_ENERGY
+
 #           ifdef MHD
             const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
 #           else
@@ -74,7 +78,11 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
                                    CheckMinPres_No, NULL_REAL, PassiveFloorMask, Emag,
                                    EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
-#           endif // DUAL_ENERGY
+//          exclude cosmic-ray pressure
+#           ifdef COSMIC_RAY
+            Pres -= EoS_CREint2CRPres_CPUPtr( Fluid[CRAY], EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#           endif
+#           endif // #ifdef DUAL_ENERGY ... else ...
 
             if ( Mode == 1  ||  Mode == 3 )
             {

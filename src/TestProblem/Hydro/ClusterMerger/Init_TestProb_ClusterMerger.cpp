@@ -12,6 +12,8 @@ static char   (*Merger_File_Prof)[ MAX_STRING ] = NULL; // profile table of clus
 static bool    *Merger_Coll_IsGas = NULL;               // (true/false) --> does cluster have gas
        double (*Merger_Coll_Pos)[3] = NULL;             // initial position of clusters
        double (*Merger_Coll_Vel)[3] = NULL;             // initial velocity of clusters
+       double   Merger_Coll_BkgDensity;                 // background gas density in g/cm**3
+       double   Merger_Coll_BkgTemperature;             // background gas temperature in K
        double  *CM_BH_Mass = NULL;                      // initial black hole mass of clusters
        double  *Jet_HalfHeight = NULL;                  // half height of the cylinder-shape jet source of clusters
        double  *Jet_Radius = NULL;                      // radius of the cylinder-shape jet source of clusters
@@ -284,8 +286,10 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
       char Merger_Coll_IsGas_name[MAX_STRING];
       char Merger_Coll_PosX_name [MAX_STRING];
       char Merger_Coll_PosY_name [MAX_STRING];
+      char Merger_Coll_PosZ_name [MAX_STRING];
       char Merger_Coll_VelX_name [MAX_STRING];
       char Merger_Coll_VelY_name [MAX_STRING];
+      char Merger_Coll_VelZ_name [MAX_STRING];
       char CM_BH_Mass_name       [MAX_STRING];
       char Jet_HalfHeight_name   [MAX_STRING];
       char Jet_Radius_name       [MAX_STRING];
@@ -295,8 +299,10 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
       sprintf( Merger_Coll_IsGas_name, "Merger_Coll_IsGas%d", c+1 );
       sprintf( Merger_Coll_PosX_name,  "Merger_Coll_PosX%d",  c+1 );
       sprintf( Merger_Coll_PosY_name,  "Merger_Coll_PosY%d",  c+1 );
+      sprintf( Merger_Coll_PosZ_name,  "Merger_Coll_PosZ%d",  c+1 );
       sprintf( Merger_Coll_VelX_name,  "Merger_Coll_VelX%d",  c+1 );
       sprintf( Merger_Coll_VelY_name,  "Merger_Coll_VelY%d",  c+1 );
+      sprintf( Merger_Coll_VelZ_name,  "Merger_Coll_VelZ%d",  c+1 );
       if ( AGN_feedback ) {
       sprintf( CM_BH_Mass_name,        "Bondi_MassBH%d",      c+1 );
       sprintf( Jet_HalfHeight_name,    "Jet_HalfHeight%d",    c+1 );
@@ -306,19 +312,21 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
       LOAD_PARA( load_mode, Merger_File_Prof_name,      Merger_File_Prof[c],      NoDef_str,          Useless_str,   Useless_str    );
       LOAD_PARA( load_mode, Merger_File_Par_name,       Merger_File_Par[c],       NoDef_str,          Useless_str,   Useless_str    );
       LOAD_PARA( load_mode, Merger_Coll_IsGas_name,    &Merger_Coll_IsGas[c],     true,               Useless_bool,  Useless_bool   );
-      LOAD_PARA( load_mode, Merger_Coll_PosX_name,     &Merger_Coll_Pos[c][0],   -1.0,                NoMin_double,  NoMax_double   );
-      LOAD_PARA( load_mode, Merger_Coll_PosY_name,     &Merger_Coll_Pos[c][1],   -1.0,                NoMin_double,  NoMax_double   );
-      LOAD_PARA( load_mode, Merger_Coll_VelX_name,     &Merger_Coll_Vel[c][0],   -1.0,                NoMin_double,  NoMax_double   );
-      LOAD_PARA( load_mode, Merger_Coll_VelY_name,     &Merger_Coll_Vel[c][1],   -1.0,                NoMin_double,  NoMax_double   );
+      LOAD_PARA( load_mode, Merger_Coll_PosX_name,     &Merger_Coll_Pos[c][0],    2.0*NoMax_double,   NoMin_double,  NoMax_double   );
+      LOAD_PARA( load_mode, Merger_Coll_PosY_name,     &Merger_Coll_Pos[c][1],    2.0*NoMax_double,   NoMin_double,  NoMax_double   );
+      LOAD_PARA( load_mode, Merger_Coll_PosZ_name,     &Merger_Coll_Pos[c][2],   -1.0,                NoMin_double,  NoMax_double   );
+      LOAD_PARA( load_mode, Merger_Coll_VelX_name,     &Merger_Coll_Vel[c][0],    2.0*NoMax_double,   NoMin_double,  NoMax_double   );
+      LOAD_PARA( load_mode, Merger_Coll_VelY_name,     &Merger_Coll_Vel[c][1],    2.0*NoMax_double,   NoMin_double,  NoMax_double   );
+      LOAD_PARA( load_mode, Merger_Coll_VelZ_name,     &Merger_Coll_Vel[c][2],    0.0,                NoMin_double,  NoMax_double   );
       if ( AGN_feedback ) {
       LOAD_PARA( load_mode, CM_BH_Mass_name,           &CM_BH_Mass[c],           -1.0,                Eps_double,    NoMax_double   );
       LOAD_PARA( load_mode, Jet_HalfHeight_name,       &Jet_HalfHeight[c],       -1.0,                Eps_double,    NoMax_double   );
       LOAD_PARA( load_mode, Jet_Radius_name,           &Jet_Radius[c],           -1.0,                Eps_double,    NoMax_double   );
       }
-   } // for (int c=0; c<Merger_Coll_NumHalos; c++)
-
-      LOAD_PARA( load_mode, "Merger_Coll_UseMetals",   &Merger_Coll_UseMetals,    true,               Useless_bool,  Useless_bool   );
-
+   } // for ( int c=0; c<Merger_Coll_NumHalos; c++ )
+   LOAD_PARA( load_mode, "Merger_Coll_UseMetals",       &Merger_Coll_UseMetals,      true,       Useless_bool,     Useless_bool   );
+   LOAD_PARA( load_mode, "Merger_Coll_BkgDensity",      &Merger_Coll_BkgDensity,     5.0e-30,             0.0,     NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_BkgTemperature",  &Merger_Coll_BkgTemperature,   1.0e6,             0.0,     NoMax_double   );
    if ( AGN_feedback )
    {
       LOAD_PARA( load_mode, "Merger_Coll_LabelCenter", &Merger_Coll_LabelCenter,  true,               Useless_bool,  Useless_bool   );
@@ -404,11 +412,22 @@ void SetParameter()
 // convert to code units
    for ( int c=0; c<Merger_Coll_NumHalos; c++ )
    {
-      Merger_Coll_Pos[c][0] *= Const_kpc / UNIT_L;
-      Merger_Coll_Pos[c][1] *= Const_kpc / UNIT_L;
-      Merger_Coll_Vel[c][0] *= (Const_km/Const_s) / UNIT_V;
-      Merger_Coll_Vel[c][1] *= (Const_km/Const_s) / UNIT_V;
+
+      for ( int i = 0; i < 3; i++ )
+      {
+         Merger_Coll_Pos[c][i] *= Const_kpc / UNIT_L;
+         Merger_Coll_Vel[c][i] *= (Const_km/Const_s) / UNIT_V;
+      }
+      // A negative value for the z-axis position (the default)
+      // indicate a merger in x-y plane
+      if ( Merger_Coll_Pos[c][2] < 0.0 )
+      {
+         Merger_Coll_Pos[c][2] = amr->BoxCenter[2];
+         Merger_Coll_Vel[c][2] = 0.0;
+      }
+
    }
+   Merger_Coll_BkgDensity /= UNIT_D;
 
 // setup color fields
    ColorFieldsIdx = new FieldIdx_t [ Merger_Coll_NumHalos ];
@@ -512,13 +531,10 @@ void SetParameter()
       {
          Merger_Coll_Pos[0][0] = amr->BoxCenter[0];
          Merger_Coll_Pos[0][1] = amr->BoxCenter[1];
+         Merger_Coll_Pos[0][2] = amr->BoxCenter[2];
          Merger_Coll_Vel[0][0] = 0.0;
          Merger_Coll_Vel[0][1] = 0.0;
-      }
-      for (int c=0; c<Merger_Coll_NumHalos; c++)
-      {
-         Merger_Coll_Pos[c][2] = amr->BoxCenter[2];
-         Merger_Coll_Vel[c][2] = 0.0;
+         Merger_Coll_Vel[0][2] = 0.0;
       }
 
       if ( AGN_feedback )
@@ -637,15 +653,18 @@ void SetParameter()
       Aux_Message( stdout, "  cluster %d w/ gas          = %s\n",         c+1, (Merger_Coll_IsGas[c])? "yes":"no" );
       Aux_Message( stdout, "  cluster %d x-position      = %g\n",         c+1,  Merger_Coll_Pos[c][0] );
       Aux_Message( stdout, "  cluster %d y-position      = %g\n",         c+1,  Merger_Coll_Pos[c][1] );
+      Aux_Message( stdout, "  cluster %d z-position      = %g\n",         c+1,  Merger_Coll_Pos[c][2] );
       Aux_Message( stdout, "  cluster %d x-velocity      = %g\n",         c+1,  Merger_Coll_Vel[c][0] );
       Aux_Message( stdout, "  cluster %d y-velocity      = %g\n",         c+1,  Merger_Coll_Vel[c][1] );
+      Aux_Message( stdout, "  cluster %d z-velocity      = %g\n",         c+1,  Merger_Coll_Vel[c][2] );
       if ( AGN_feedback ) {
       Aux_Message( stdout, "  cluster %d BH mass         = %g\n",         c+1,  CM_BH_Mass[c] );
       Aux_Message( stdout, "  cluster %d jet half-height = %g\n",         c+1,  Jet_HalfHeight[c] );
       Aux_Message( stdout, "  cluster %d jet radius      = %g\n",         c+1,  Jet_Radius[c] ); }
       } // for (int c=0; c<Merger_Coll_NumHalos; c++)
-
-      Aux_Message( stdout, "  use metals                = %s\n",          (Merger_Coll_UseMetals)? "yes":"no" );
+      Aux_Message( stdout, "  use metals                 = %s\n",          (Merger_Coll_UseMetals)? "yes":"no" );
+      Aux_Message( stdout, "  background gas density     = %g\n",           Merger_Coll_BkgDensity );
+      Aux_Message( stdout, "  background gas temperature = %g\n",           Merger_Coll_BkgTemperature );
       if ( AGN_feedback ) {
       Aux_Message( stdout, "  label cluster centers     = %s\n",          (Merger_Coll_LabelCenter)? "yes":"no" );
       Aux_Message( stdout, "  BH fixed                  = %s\n",          (fixBH)? "yes":"no" );
@@ -663,7 +682,6 @@ void SetParameter()
       Aux_Message( stdout, "  adjust BH velocity        = %s\n",          (AdjustBHVel)? "yes":"no" );
       Aux_Message( stdout, "  adjust period             = %g\n",          AdjustPeriod );
       } // if ( AGN_feedback )
-
       Aux_Message( stdout, "=============================================================================\n" );
 
 //    check if the accretion region is larger than the jet cylinder
@@ -716,6 +734,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    const double pos_in[3] = { x, y, z };
 
    real Dens = 0.0, MomX = 0.0, MomY = 0.0, MomZ = 0.0, Pres = 0.0, Eint = 0.0, Etot = 0.0, Metl = 0.0;
+   real BkgPres;
 
    for (int c=0; c<Merger_Coll_NumHalos; c++)
    {
@@ -747,11 +766,9 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       Dens += dens;
       Pres += pres;
 
-      if ( r <= rmax )
-      {
-         MomX += Merger_Coll_Vel[c][0]*dens;
-         MomY += Merger_Coll_Vel[c][1]*dens;
-      }
+      MomX += Merger_Coll_Vel[c][0]*dens;
+      MomY += Merger_Coll_Vel[c][1]*dens;
+      MomZ += Merger_Coll_Vel[c][2]*dens;
 
       Metl += metl*dens;
 
@@ -762,6 +779,11 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
       }
    } // for (int c=0; c<Merger_Coll_NumHalos; c++)
 
+   Dens = MAX( Dens, Merger_Coll_BkgDensity );
+   BkgPres = EoS_DensTemp2Pres_CPUPtr( Dens, Merger_Coll_BkgTemperature, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                       h_EoS_Table );
+   Pres = MAX( Pres, BkgPres );
+
 // compute the total gas energy
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table ); // assuming EoS requires no passive scalars
    Etot = Hydro_ConEint2Etot( Dens, MomX, MomY, MomZ, Eint, 0.0 ); // do NOT include magnetic energy here
@@ -771,8 +793,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    fluid[MOMY     ] = MomY;
    fluid[MOMZ     ] = MomZ;
    fluid[ENGY     ] = Etot;
-   if ( Merger_Coll_UseMetals )
-   fluid[Idx_Metal] = Metl;
+
+   real Z_sol = 0.0165; // approximate value of solar metallicity as mass fraction
+   if ( Merger_Coll_UseMetals ) // Clusters have a floor of ~0.3 solar metallicity at large radius
+   fluid[Idx_Metal] = MAX( Metl, 0.3*Z_sol*Dens );
 
 } // FUNCTION : SetGridIC
 #endif // #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )

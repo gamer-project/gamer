@@ -29,6 +29,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh,
                                const real MinDens, const real MinPres, const real MinEint,
+                               const real DualEnergySwitch,
                                const long PassiveFloor, const bool FracPassive, const int NFrac, const int FracIdx[],
                                const bool JeansMinPres, const real JeansMinPres_Coeff,
                                const EoS_t *EoS );
@@ -267,7 +268,7 @@ void CPU_FluidSolver_CTU(
 //       1. evaluate the face-centered values at the half time-step
          Hydro_DataReconstruction( g_Flu_Array_In[P], g_Mag_Array_In[P], g_PriVar_1PG, g_FC_Var_1PG, g_Slope_PPM_1PG,
                                    NULL, Con2Pri_Yes, LR_Limiter, MinMod_Coeff, dt, dh,
-                                   MinDens, MinPres, MinEint, PassiveFloor, FracPassive, NFrac, c_FracIdx,
+                                   MinDens, MinPres, MinEint, DualEnergySwitch, PassiveFloor, FracPassive, NFrac, c_FracIdx,
                                    JeansMinPres, JeansMinPres_Coeff, &EoS );
 
 
@@ -335,9 +336,9 @@ void CPU_FluidSolver_CTU(
 
 //       8. full-step evolution of the fluid data
 //          --> CTU does not support reducing the min-mod coefficient
-         Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P],
-                               g_Mag_Array_Out[P], g_FC_Flux_1PG, g_PriVar_1PG, g_FC_Var_1PG,
-                               dt, dh, MinDens, MinEint, DualEnergySwitch,
+//          --> CTU does not support cosmic rays
+         Hydro_FullStepUpdate( g_Flu_Array_In[P], g_Flu_Array_Out[P], g_DE_Array_Out[P], g_Mag_Array_Out[P],
+                               g_FC_Flux_1PG, NULL, NULL, dt, dh, MinDens, MinEint, DualEnergySwitch,
                                PassiveFloor, NormPassive, NNorm, c_NormIdx, FracPassive, NFrac, c_FracIdx,
                                &EoS, NULL, NULL_INT, NULL_INT );
 
