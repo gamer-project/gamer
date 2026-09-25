@@ -404,6 +404,8 @@ void CorrectFlux( const int SonLv, const real h_Flux_Array[][9][NFLUX_TOTAL][ SQ
 // Parameter   :  Fluid            : Input fluid variable array with size FLU_NOUT
 //                CheckStrictFloor : Whether to check the internal energy and pressure against their floor values strictly
 //                                   --> if not, it still check them against the floors with tolerance for rounding errors
+//                                   --> when DUAL_ENERGY is enabled, it does not check the internal energy strictly;
+//                                       it checks the pressure computed from the dual-energy variable instead
 //                Emag             : Magnetic energy (for MHD only)
 //
 // Return      :  true/false <--> input Fluid[] is unphysical/physical
