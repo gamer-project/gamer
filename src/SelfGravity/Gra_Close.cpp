@@ -72,7 +72,6 @@ void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_N
                real Passive[NCOMP_PASSIVE];
                for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = amr->patch[SaveSg][lv][PID]->fluid[ NCOMP_FLUID + v ][k][j][i];
 
-#              ifdef DUAL_ENERGY
                amr->patch[SaveSg][lv][PID]->fluid[DUAL][k][j][i]
                   = Hydro_Con2Dual( amr->patch[SaveSg][lv][PID]->fluid[DENS][k][j][i],
                                     amr->patch[SaveSg][lv][PID]->fluid[MOMX][k][j][i],
@@ -82,7 +81,6 @@ void Gra_Close( const int lv, const int SaveSg, const real h_Flu_Array_G[][GRA_N
                                     Passive, Emag, EoS_DensEint2Pres_CPUPtr, EoS_CREint2CRPres_CPUPtr,
                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
                                     PassiveFloorMask );
-#              endif
             }
 #           endif // #ifdef UNSPLIT_GRAVITY
          } // i,j,k

@@ -59,11 +59,6 @@ static real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Pa
 //                DE_Status         : Assigned to (DE_UPDATED_BY_ETOT / DE_UPDATED_BY_DUAL / DE_UPDATED_BY_MIN_PRES)
 //                                    to indicate whether this cell is updated by the total energy, dual-energy variable,
 //                                    or pressure floor (MinPres)
-//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
-//                EoS_DensPres2Eint : EoS routine to compute the gas internal energy
-//                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
-//                EoS_Table         : EoS tables
-//                                    --> EoS_AuxArray_Flt[1/2] store Gamma-1 and 1/(Gamma-1) for EOS_GAMMA
 //                CheckMinPres      : Return Hydro_CheckMinPres()
 //                                    --> In some cases we actually want to check if pressure becomes unphysical,
 //                                        for which we don't want to enable this option
@@ -74,6 +69,11 @@ static real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Pa
 //                DualEnergySwitch  : if ( Eint/(Ekin+Emag) < DualEnergySwitch ) ==> correct Eint and Etot
 //                                    else                                       ==> correct Dual
 //                Emag              : Magnetic energy density (0.5*B^2) --> for MHD only
+//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
+//                EoS_DensPres2Eint : EoS routine to compute the gas internal energy
+//                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
+//                                    --> EoS_AuxArray_Flt[1/2] store Gamma-1 and 1/(Gamma-1) for EOS_GAMMA
+//                EoS_Table         : EoS tables
 //
 // Return      :  Etot, Dual, DE_Status
 //-------------------------------------------------------------------------------------------------------
@@ -95,6 +95,10 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 #  endif // GAMER_DEBUG
 
 
+#  if ( DUAL_ENERGY == DE_ENPY )
+   const real  Gamma_m1 = EoS_AuxArray_Flt[1];
+   const real _Gamma_m1 = EoS_AuxArray_Flt[2];
+#  endif
    const bool CheckMinPres_No = false;
    const bool CheckMinEint_No = false;
 
@@ -122,14 +126,12 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 //    correct total energy
 //    --> we will apply pressure floor later
 #     if   ( DUAL_ENERGY == DE_ENPY )
-      Pres      = Hydro_DensDual2Pres( Dens, Dual, Passive, CheckMinPres_No, NULL_REAL,
-                                       EoS_DensEint2Pres, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
-      Eint      = Pres*EoS_AuxArray_Flt[2];
+      Eint      = Pres*_Gamma_m1;
 #     elif ( DUAL_ENERGY == DE_EINT )
       Eint      = Dual;
+#     endif
       Pres      = Hydro_DensDual2Pres( Dens, Dual, Passive, CheckMinPres_No, NULL_REAL,
                                        EoS_DensEint2Pres, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
-#     endif
       Etot      = Enth + Eint;
       DE_Status = DE_UPDATED_BY_DUAL;
    }
@@ -138,7 +140,7 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
    {
 //    correct dual-energy variable
 #     if   ( DUAL_ENERGY == DE_ENPY )
-      Pres      = Eint*EoS_AuxArray_Flt[1];
+      Pres      = Eint*Gamma_m1;
       Dual      = Hydro_DensPres2Dual( Dens, Pres, Passive, EoS_DensPres2Eint,
                                        EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 #     elif ( DUAL_ENERGY == DE_EINT )
@@ -157,14 +159,12 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 
 //    ensure that both energy and dual-energy variable are consistent with the pressure floor
 #     if   ( DUAL_ENERGY == DE_ENPY )
-      Eint      = Pres*EoS_AuxArray_Flt[2];
-      Dual      = Hydro_DensPres2Dual( Dens, Pres, Passive, EoS_DensPres2Eint,
-                                       EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+      Eint      = Pres*_Gamma_m1;
 #     elif ( DUAL_ENERGY == DE_EINT )
-      Dual      = Hydro_DensPres2Dual( Dens, Pres, Passive, EoS_DensPres2Eint,
-                                       EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
       Eint      = Dual;
 #     endif
+      Dual      = Hydro_DensPres2Dual( Dens, Pres, Passive, EoS_DensPres2Eint,
+                                       EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 
       Etot      = Enth + Eint;
       DE_Status = DE_UPDATED_BY_MIN_PRES;
@@ -193,7 +193,8 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 //                Emag              : Magnetic energy density (0.5*B^2) --> for MHD only
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                EoS_CREint2CRPres : EoS routine to compute the cosmic-ray pressure
-//                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Pres()
+//                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
+//                                    --> EoS_AuxArray_Flt[1/2] store Gamma-1 and 1/(Gamma-1) for EOS_GAMMA
 //                EoS_Table         : EoS tables
 //                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //                                    --> It's actually useless here since it's only relevant for SRHD,
@@ -259,15 +260,15 @@ real Hydro_Con2Dual( const real Dens, const real MomX, const real MomY, const re
 //                2. Invoked by Hydro_Con2Dual() and Hydro_DualEnergyFix()
 //                   --> This function is invoked by both CPU and GPU codes
 //                3. A floor value (TINY_NUMBER) is applied to the returned value
-//                4. Both the input pressure and returned internal energy exclude cosmic rays
+//                4. Both the input pressure and returned entropy/internal energy exclude cosmic rays
 //                   --> Convert to/from the total quantities required by EOS_COSMIC_RAY internally
 //
 // Parameter   :  Dens              : Mass density
 //                Pres              : Pressure
 //                Passive           : Passive scalars
 //                EoS_DensPres2Eint : EoS routine to compute the gas internal energy
-//                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensPres2Eint()
-//                                    --> EoS_AuxArray_Flt[1] stores Gamma-1 for EOS_GAMMA
+//                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
+//                                    --> EoS_AuxArray_Flt[1/2] store Gamma-1 and 1/(Gamma-1) for EOS_GAMMA
 //                EoS_Table         : EoS tables
 //
 // Return      :  Dual
@@ -294,7 +295,7 @@ real Hydro_DensPres2Dual( const real Dens, const real Pres, const real Passive[]
 
    Dual = EoS_DensPres2Eint( Dens, Pres+Pres_CR, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table ) - E_CR;
 #  else
-   Dual = EoS_DensPres2Eint( Dens, Pres,        Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+   Dual = EoS_DensPres2Eint( Dens, Pres,         Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 #  endif
 #  endif
 
@@ -315,19 +316,19 @@ real Hydro_DensPres2Dual( const real Dens, const real Pres, const real Passive[]
 //                2. Invoked by Hydro_DualEnergyFix(), Flu_Close(), Hydro_Aux_Check_Negative(), and Flu_FixUp()
 //                   --> This function is invoked by both CPU and GPU codes
 //                3. A floor value "MinPres" is applied to the returned pressure if CheckMinPres is on
-//                4. Both the input internal energy and returned pressure exclude cosmic rays
+//                4. Both the input entropy/internal energy and returned pressure exclude cosmic rays
 //                   --> Convert to/from the total quantities required by EOS_COSMIC_RAY internally
 //
 // Parameter   :  Dens              : Mass density
 //                Dual              : Dual-energy variable
 //                Passive           : Passive scalars
-//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
 //                CheckMinPres      : Return Hydro_CheckMinPres()
 //                                    --> In some cases we actually want to check if pressure becomes unphysical,
 //                                        for which we don't want to enable this option
 //                MinPres           : Minimum allowed pressure
-//                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Pres()
-//                                    --> EoS_AuxArray_Flt[1] stores Gamma-1 for EOS_GAMMA
+//                EoS_DensEint2Pres : EoS routine to compute the gas pressure
+//                EoS_AuxArray_*    : Auxiliary arrays for the EoS routines
+//                                    --> EoS_AuxArray_Flt[1/2] store Gamma-1 and 1/(Gamma-1) for EOS_GAMMA
 //                EoS_Table         : EoS tables
 //
 // Return      :  Pres
@@ -353,7 +354,7 @@ real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Passive[]
 
    Pres = EoS_DensEint2Pres( Dens, Dual+E_CR, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table ) - Pres_CR;
 #  else
-   Pres = EoS_DensEint2Pres( Dens, Dual,        Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+   Pres = EoS_DensEint2Pres( Dens, Dual,      Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 #  endif
 #  endif
 
@@ -366,7 +367,7 @@ real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Passive[]
 
 
 
-#endif // #if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )
+#endif // #if ( MODEL == HYDRO  &&  defined DUAL_ENERGY  &&  !defined SRHD )
 
 
 

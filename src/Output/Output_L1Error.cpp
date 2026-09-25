@@ -407,11 +407,7 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 #  ifdef COSMIC_RAY
    Pgas_Anal     -= EoS_CREint2CRPres_CPUPtr( Anal[CRAY], EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #  endif
-#  if   ( DUAL_ENERGY == DE_ENPY )
-   Anal[DUAL    ] = Hydro_DensPres2Dual( Anal[DENS], Pgas_Anal, Anal+NCOMP_FLUID,
-                                         EoS_DensPres2Eint_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
-#  elif ( DUAL_ENERGY == DE_EINT )
-   Anal[DUAL    ] = Hydro_DensPres2Dual( Anal[DENS], Pgas_Anal, Anal+NCOMP_FLUID,
+   Anal[DUAL]     = Hydro_DensPres2Dual( Anal[DENS], Pgas_Anal, Anal+NCOMP_FLUID,
                                          EoS_DensPres2Eint_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #  endif // DUAL_ENERGY
 #  endif // #ifdef DUAL_ENERGY

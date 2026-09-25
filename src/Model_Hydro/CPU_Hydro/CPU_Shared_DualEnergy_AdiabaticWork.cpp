@@ -5,6 +5,7 @@
 
 #include "CUFLU.h"
 
+// external functions
 #ifdef __CUDACC__
 #include "CUFLU_Shared_FluUtility.cu"
 #include "CUFLU_Shared_DualEnergy.cu"
@@ -53,7 +54,7 @@ void Hydro_DualEnergy_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PL
 
 // 1. calculate the pressure from the dual-energy variable
    real Passive[NCOMP_PASSIVE];
-   for (int v=0; v<NCOMP_PASSIVE; v++)   Passive[v] = g_ConVar_In[NCOMP_FLUID+v][idx_in];
+   for (int v=0; v<NCOMP_PASSIVE; v++)   Passive[v] = g_ConVar_In[ NCOMP_FLUID+v ][idx_in];
 
    const bool CheckMinPres_No = false;
    const real pDual_old = Hydro_DensDual2Pres( g_ConVar_In[DENS][idx_in], g_ConVar_In[DUAL][idx_in], Passive,
@@ -108,8 +109,8 @@ void Hydro_DualEnergy_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PL
 // Parameter   :  Edual       : Dual energy to be updated
 //                g_PriVar    : Array storing the input cell-centered primitive variables
 //                              --> MHM without MHD: original-time data, stride FLU_NXT, offset FLU_GHOST_SIZE
-//                              --> MHM with MHD: half-step data, stride N_HF_VAR=N_FC_VAR, offset 1
-//                              --> MHM_RP: half-step data, stride N_HF_VAR=FLU_NXT-2, offset FLU_GHOST_SIZE-1
+//                              --> MHM with MHD   : half-step data, stride N_HF_VAR=N_FC_VAR, offset 1
+//                              --> MHM_RP         : half-step data, stride N_HF_VAR=FLU_NXT-2, offset FLU_GHOST_SIZE-1
 //                              --> Although its actual allocated size is FLU_NXT^3 since it points to g_PriVar_1PG[]
 //                g_Flux      : Array storing the input face-centered fluxes
 //                              --> Accessed with the array stride N_FL_FLUX even though its actually
@@ -182,7 +183,7 @@ void Hydro_DualEnergy_AdiabaticWork_FullStep( real &Edual,
 
 // 1. calculate the pressure
    real Passive[NCOMP_PASSIVE];
-   for (int v=0; v<NCOMP_PASSIVE; v++)   Passive[v] = g_PriVar[NCOMP_FLUID+v][idx_hf];
+   for (int v=0; v<NCOMP_PASSIVE; v++)   Passive[v] = g_PriVar[ NCOMP_FLUID+v ][idx_hf];
    if ( FracPassive )
       for (int v=0; v<NFrac; v++)   Passive[ FracIdx[v] ] *= g_PriVar[DENS][idx_hf];
 

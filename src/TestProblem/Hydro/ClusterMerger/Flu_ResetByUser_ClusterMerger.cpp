@@ -457,13 +457,20 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                {
                   gas_mass[c] += fluid_acc[0]*dv;
 
+                  const real *Passive = fluid_acc + NCOMP_FLUID;
+
 #                 ifdef DUAL_ENERGY
-                  const real Pres = Hydro_DensDual2Pres( fluid_acc[DENS], fluid_acc[DUAL], NULL, false, NULL_REAL,
-                                                         NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                                         h_EoS_Table );
-                  const real Eint = EoS_DensPres2Eint_CPUPtr( fluid_acc[DENS], Pres, NULL, EoS_AuxArray_Flt,
+                  real Pres = Hydro_DensDual2Pres( fluid_acc[DENS], fluid_acc[DUAL], Passive, false, NULL_REAL,
+                                                   EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                   h_EoS_Table );
+//                add cosmic-ray pressure
+#                 ifdef COSMIC_RAY
+                  Pres += EoS_CREint2CRPres_CPUPtr( fluid_acc[CRAY], EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                                                    h_EoS_Table );
+#                 endif
+                  const real Eint = EoS_DensPres2Eint_CPUPtr( fluid_acc[DENS], Pres, Passive, EoS_AuxArray_Flt,
                                                               EoS_AuxArray_Int, h_EoS_Table );
-                  const real Temp = EoS_DensEint2Temp_CPUPtr( fluid_acc[DENS], Eint, NULL, EoS_AuxArray_Flt,
+                  const real Temp = EoS_DensEint2Temp_CPUPtr( fluid_acc[DENS], Eint, Passive, EoS_AuxArray_Flt,
                                                               EoS_AuxArray_Int, h_EoS_Table );
 #                 else
                   const real Pres = Hydro_Con2Pres( fluid_acc[DENS], fluid_acc[MOMX], fluid_acc[MOMY], fluid_acc[MOMZ],
@@ -484,7 +491,7 @@ void Flu_ResetByUser_API_ClusterMerger( const int lv, const int FluSg, const int
                   {
                      rho_hot[c] += fluid_acc[DENS]*dv;
 //                   NOTE: currently, the average sound speed is computed without applying any weighting.
-                     Cs_hot[c] += sqrt( EoS_DensPres2CSqr_CPUPtr( fluid_acc[DENS], Pres, NULL, EoS_AuxArray_Flt,
+                     Cs_hot[c] += sqrt( EoS_DensPres2CSqr_CPUPtr( fluid_acc[DENS], Pres, Passive, EoS_AuxArray_Flt,
                                         EoS_AuxArray_Int, h_EoS_Table ) );
                      for (int d=0; d<3; d++)   gas_mom_hot[c][d] += fluid_acc[d+MOMX]*dv;
                      num_hot[c] += 1;

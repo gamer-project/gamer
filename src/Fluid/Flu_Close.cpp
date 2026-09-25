@@ -1051,7 +1051,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   fprintf( File, "%14s, ", FieldLabel[v] );
 
                   fprintf( File, "%14s, %14s", "Eint", "Pres" );
-#                 if ( DUAL_ENERGY == DE_ENPY )
+#                 ifdef DUAL_ENERGY
                   fprintf( File, ", %14s", FieldLabel[DUAL] );
 #                 endif
 #                 ifdef MHD
