@@ -221,27 +221,27 @@ real Hydro_Con2Dual( const real Dens, const real MomX, const real MomY, const re
 // currently this function does NOT apply pressure floor when calling Hydro_Con2Pres()
    const bool CheckMinPres_No = false;
 
-   real Pres, Dual;
+   real Dual;
 
+#  if   ( DUAL_ENERGY == DE_ENPY )
 // calculate pressure and convert it to the dual-energy variable
-   Pres = Hydro_Con2Pres( Dens, MomX, MomY, MomZ, Engy, Passive, CheckMinPres_No, NULL_REAL, PassiveFloor, Emag,
-                          EoS_DensEint2Pres, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                          EoS_Table, NULL );
+   real Pres = Hydro_Con2Pres( Dens, MomX, MomY, MomZ, Engy, Passive, CheckMinPres_No, NULL_REAL, PassiveFloor, Emag,
+                               EoS_DensEint2Pres, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                               EoS_Table, NULL );
 // exclude cosmic-ray pressure
 #  ifdef COSMIC_RAY
    const real E_CR = Passive[ CRAY-NCOMP_FLUID ];
    Pres -= EoS_CREint2CRPres( E_CR, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 #  endif
-
-#  if   ( DUAL_ENERGY == DE_ENPY )
    Dual = Hydro_DensPres2Dual( Dens, Pres, NULL, NULL,
                                EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+
 #  elif ( DUAL_ENERGY == DE_EINT )
-   Dual = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinPres_No, NULL_REAL, PassiveFloor, Emag,
+   Dual = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Engy, CheckMinEint_No, NULL_REAL, PassiveFloor, Emag,
                           NULL, NULL, NULL, NULL, NULL );
 // exclude cosmic-ray energy
 #  ifdef COSMIC_RAY
-   Dual -= E_CR;
+   Dual -= Passive[ CRAY-NCOMP_FLUID ];
 #  endif
 #  endif
 
