@@ -183,7 +183,9 @@ void Hydro_DualEnergy_AdiabaticWork_FullStep( real &Edual,
 
 
 // 1. calculate the pressure
+   const bool CheckMinPres_No = false;
    real Passive[NCOMP_PASSIVE];
+
    for (int v=0; v<NCOMP_PASSIVE; v++)   Passive[v] = g_PriVar[ NCOMP_FLUID + v ][idx_hf];
 
 // convert the mass fraction of target passive scalars to mass density
