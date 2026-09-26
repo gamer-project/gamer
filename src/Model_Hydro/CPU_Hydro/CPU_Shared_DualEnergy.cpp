@@ -125,13 +125,13 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
    {
 //    correct total energy
 //    --> we will apply pressure floor later
+      Pres      = Hydro_DensDual2Pres( Dens, Dual, Passive, CheckMinPres_No, NULL_REAL,
+                                       EoS_DensEint2Pres, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
 #     if   ( DUAL_ENERGY == DE_ENPY )
       Eint      = Pres*_Gamma_m1;
 #     elif ( DUAL_ENERGY == DE_EINT )
       Eint      = Dual;
 #     endif
-      Pres      = Hydro_DensDual2Pres( Dens, Dual, Passive, CheckMinPres_No, NULL_REAL,
-                                       EoS_DensEint2Pres, EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
       Etot      = Enth + Eint;
       DE_Status = DE_UPDATED_BY_DUAL;
    }
