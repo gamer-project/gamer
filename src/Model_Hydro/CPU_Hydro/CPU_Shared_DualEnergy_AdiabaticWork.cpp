@@ -5,14 +5,15 @@
 
 #include "CUFLU.h"
 
+#if ( MODEL == HYDRO  &&  DUAL_ENERGY == DE_EINT  &&  !defined SRHD )
+
+
+
 // external functions
 #ifdef __CUDACC__
 #include "CUFLU_Shared_FluUtility.cu"
 #include "CUFLU_Shared_DualEnergy.cu"
 #endif
-
-
-#if ( MODEL == HYDRO  &&  DUAL_ENERGY == DE_EINT  &&  !defined SRHD )
 
 
 
@@ -54,7 +55,7 @@ void Hydro_DualEnergy_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PL
 
 // 1. calculate the pressure from the dual-energy variable
    real Passive[NCOMP_PASSIVE];
-   for (int v=0; v<NCOMP_PASSIVE; v++)   Passive[v] = g_ConVar_In[ NCOMP_FLUID+v ][idx_in];
+   for (int v=0; v<NCOMP_PASSIVE; v++)   Passive[v] = g_ConVar_In[ NCOMP_FLUID + v ][idx_in];
 
    const bool CheckMinPres_No = false;
    const real pDual_old = Hydro_DensDual2Pres( g_ConVar_In[DENS][idx_in], g_ConVar_In[DUAL][idx_in], Passive,
@@ -183,11 +184,12 @@ void Hydro_DualEnergy_AdiabaticWork_FullStep( real &Edual,
 
 // 1. calculate the pressure
    real Passive[NCOMP_PASSIVE];
-   for (int v=0; v<NCOMP_PASSIVE; v++)   Passive[v] = g_PriVar[ NCOMP_FLUID+v ][idx_hf];
+   for (int v=0; v<NCOMP_PASSIVE; v++)   Passive[v] = g_PriVar[ NCOMP_FLUID + v ][idx_hf];
+
+// convert the mass fraction of target passive scalars to mass density
    if ( FracPassive )
       for (int v=0; v<NFrac; v++)   Passive[ FracIdx[v] ] *= g_PriVar[DENS][idx_hf];
 
-   const bool CheckMinPres_No = false;
    const real pDual_half = Hydro_DensDual2Pres( g_PriVar[DENS][idx_hf], g_PriVar[DUAL][idx_hf], Passive,
                                                 CheckMinPres_No, NULL_REAL, EoS->DensEint2Pres_FuncPtr,
                                                 EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );

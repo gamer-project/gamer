@@ -1072,7 +1072,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                            CheckMinPres_No, NULL_REAL, PassiveFloorMask, Emag_In,
                                            EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL ) );
-#                 if ( DUAL_ENERGY == DE_ENPY )
+#                 ifdef DUAL_ENERGY
                   fprintf( File, ", %14.7e", In[DUAL] );
 #                 endif
 #                 ifdef MHD
@@ -1099,7 +1099,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                            CheckMinPres_No, NULL_REAL, PassiveFloorMask, Emag_Out,
                                            EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL ) );
-#                 if ( DUAL_ENERGY == DE_ENPY )
+#                 ifdef DUAL_ENERGY
                   fprintf( File, ", %14.7e", Out[DUAL] );
 #                 endif
 #                 ifdef MHD
@@ -1126,7 +1126,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                            CheckMinPres_No, NULL_REAL, PassiveFloorMask, Emag_Update,
                                            EoS_DensEint2Pres_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL ) );
-#                 if ( DUAL_ENERGY == DE_ENPY )
+#                 ifdef DUAL_ENERGY
                   fprintf( File, ", %14.7e", Update[DUAL] );
 #                 endif
 #                 ifdef MHD
