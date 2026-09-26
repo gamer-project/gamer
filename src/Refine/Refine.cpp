@@ -941,8 +941,9 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
 
             Hydro_DualEnergyFix( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
                                  Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i], Flu_FData[DUAL][k][j][i],
-                                 Passive, dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], CheckMinPres_Yes, MIN_PRES,
-                                 PassiveFloorMask, UseDual2FixEngy, Emag );
+                                 Passive, dummy, CheckMinPres_Yes, MIN_PRES, PassiveFloorMask, UseDual2FixEngy, Emag,
+                                 EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
+                                 EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
 #           else // #ifdef DUAL_ENERGY
 

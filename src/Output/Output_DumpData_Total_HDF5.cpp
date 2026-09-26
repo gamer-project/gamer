@@ -292,7 +292,7 @@ Procedure for outputting new variables:
 //                2511 : 2026/07/02 --> output exact-cooling parameters
 //                2512 : 2026/08/14 --> remove Src_EC_subcycling
 //                2513 : 2026/05/14 --> support OPT__OUTPUT_DUAL_STATUS
-//                2514 : 2026/05/25 --> output DUAL_ENERGY_PREDICT 
+//                2514 : 2026/05/25 --> output DUAL_ENERGY_PREDICT
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {

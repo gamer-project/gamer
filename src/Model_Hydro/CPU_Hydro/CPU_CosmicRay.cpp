@@ -75,7 +75,7 @@ void CR_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PLUS_MAG],
 // 3. update the cosmic-ray energy
    OneCell[CRAY] -= pCR_old*dt_dh2*( div_V[0] + div_V[1] + div_V[2] );
 
-} // FUMCTION : CR_AdiabaticWork_HalfStep_MHM_RP
+} // FUNCTION : CR_AdiabaticWork_HalfStep_MHM_RP
 
 
 
@@ -97,7 +97,7 @@ void CR_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PLUS_MAG],
 //                                --> Accessed with the stride N_HF_VAR
 //                                --> Although its actually allocated size is FLU_NXT^3 since it points to g_PriVar_1PG[]
 //                g_Flux        : Array storing the input face-centered fluxes
-//                                --> Accessed with the array stride N_FL_FLUX even thought its actually
+//                                --> Accessed with the array stride N_FL_FLUX even though its actual
 //                                    allocated size is N_FC_FLUX^3
 //                g_FC_Var      : Array storing the input face-centered conserved variables
 //                                --> Accessed with the array stride N_FC_VAR^3

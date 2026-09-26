@@ -767,12 +767,12 @@ void Aux_Check_Parameter()
 #     error : DUAL_ENERGY_PREDICT only supports FLU_SCHEME = MHM/MHM_RP !!
 #   endif
 
-#   if ( DUAL_ENERGY != DE_ENPY )
-#     error : ERROR : unsupported dual-energy formalism (DE_ENPY only, DE_EINT is not supported yet) !!
-#   endif
-
 #   if (  DUAL_ENERGY == DE_ENPY  &&  ( EOS != EOS_GAMMA && EOS != EOS_COSMIC_RAY )  )
 #     error : ERROR : DUAL_ENERGY=DE_ENPY only supports EOS_GAMMA/EOS_COSMIC_RAY !!
+#   endif
+
+#   if (  DUAL_ENERGY == DE_EINT  &&  ( FLU_SCHEME != MHM && FLU_SCHEME != MHM_RP )  )
+#     error : ERROR : DUAL_ENERGY=DE_EINT only supports FLU_SCHEME = MHM/MHM_RP !!
 #   endif
 #  endif // #ifdef DUAL_ENERGY
 

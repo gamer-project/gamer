@@ -350,6 +350,15 @@ vpath %.cpp    Feedback  Feedback/User_Template  Feedback/SNe
 endif # FEEDBACK
 
 
+# dual-energy source files (included only if "DUAL_ENERGY=DE_EINT")
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DDUAL_ENERGY=DE_EINT, $(SIMU_OPTION))" "-DDUAL_ENERGY=DE_EINT"
+CPU_FILE    += CPU_Shared_DualEnergy_AdiabaticWork.cpp
+
+GPU_FILE    += CUFLU_Shared_DualEnergy_AdiabaticWork.cu
+endif # DUAL_ENERGY == DE_EINT
+
+
 # cosmic-ray source files (included only if "COSMIC_RAY" is turned on)
 # ------------------------------------------------------------------------------------
 ifeq "$(filter -DCOSMIC_RAY, $(SIMU_OPTION))" "-DCOSMIC_RAY"

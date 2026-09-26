@@ -2182,8 +2182,9 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
 #     endif // MHD
       Hydro_DualEnergyFix( fcCon[f][DENS], fcCon[f][MOMX], fcCon[f][MOMY], fcCon[f][MOMZ],
                            fcCon[f][ENGY], fcCon[f][DUAL], fcCon[f]+NCOMP_FLUID, dummy,
-                           EoS->AuxArrayDevPtr_Flt[1], EoS->AuxArrayDevPtr_Flt[2], CheckMinPres_No, NULL_REAL,
-                           PassiveFloor, DualEnergySwitch, Emag );
+                           CheckMinPres_No, NULL_REAL, PassiveFloor, DualEnergySwitch, Emag,
+                           EoS->DensEint2Pres_FuncPtr, EoS->DensPres2Eint_FuncPtr,
+                           EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table );
    }
 #  endif
 

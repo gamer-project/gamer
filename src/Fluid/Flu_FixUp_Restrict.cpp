@@ -429,8 +429,9 @@ void Flu_FixUp_Restrict( const int FaLv, const int SonFluSg, const int FaFluSg, 
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[MOMZ][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[ENGY][k][j][i],
                               amr->patch[FaFluSg][FaLv][FaPID]->fluid[DUAL][k][j][i],
-                              Passive, dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], CheckMinPres_Yes, MIN_PRES,
-                              PassiveFloorMask, UseDual2FixEngy, Emag );
+                              Passive, dummy, CheckMinPres_Yes, MIN_PRES, PassiveFloorMask, UseDual2FixEngy, Emag,
+                              EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
+                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
 #        else // #ifdef DUAL_ENERGY
 
