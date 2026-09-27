@@ -14,7 +14,7 @@ bool (*Flag_Region_Ptr)( const int i, const int j, const int k, const int lv, co
 // Description :  Template for checking if the element (i,j,k) of the input patch is within
 //                the regions allowed to be refined
 //
-// Note        :  1. Invoked by Flag_Check() using the function pointer "Flag_Region_Ptr",
+// Note        :  1. Invoked by Flag_Precheck() using the function pointer "Flag_Region_Ptr",
 //                   which must be set by a test problem initializer
 //                2. Enabled by the runtime option "OPT__FLAG_REGION"
 //

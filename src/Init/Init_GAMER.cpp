@@ -220,6 +220,17 @@ void Init_GAMER( int *argc, char ***argv )
                     "PAR_INIT", (int)amr->Par->Init );
    }
 
+// set the particle refinement flag
+   if ( amr->Par->Init != PAR_INIT_BY_RESTART  &&  amr->Par->FlagInit != PFLAG_MANUAL )
+   {
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Par_SetFlag" );
+
+      Par_SetFlag( amr->Par->FlagInit );
+
+      if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Par_SetFlag" );
+   }
+
+// check the initial condition of particles
    if ( amr->Par->Init != PAR_INIT_BY_RESTART  &&  OPT__PAR_INIT_CHECK )    Par_Aux_InitCheck();
 #  endif // #ifdef PARTICLE
 
@@ -245,7 +256,7 @@ void Init_GAMER( int *argc, char ***argv )
 
 
 // ensure B field consistency on the shared interfaces between sibling patches
-#  if ( MODEL == HYDRO  &&  defined MHD )
+#  ifdef MHD
    if ( OPT__SAME_INTERFACE_B == SAME_INTERFACE_B_YES )
    for (int lv=0; lv<NLEVEL; lv++)  MHD_SameInterfaceB( lv, amr->FluSg[lv], amr->MagSg[lv] );
 #  endif

@@ -110,7 +110,7 @@ CPU_FILE    += Output_DumpData_Total.cpp  Output_DumpData.cpp  Output_DumpManual
 
 CPU_FILE    += Flag_Real.cpp  Refine.cpp   SiblingSearch.cpp  SiblingSearch_Base.cpp  FindFather.cpp \
                Flag_User.cpp  Flag_Check.cpp  Flag_Lohner.cpp  Flag_Region.cpp  Sync_UseWaveFlag.cpp \
-               Flag_UserWorkBeforeFlag.cpp
+               Flag_UserWorkBeforeFlag.cpp  Flag_Precheck.cpp
 
 CPU_FILE    += Table_01.cpp  Table_02.cpp  Table_03.cpp  Table_04.cpp  Table_05.cpp  Table_06.cpp \
                Table_07.cpp  Table_SiblingSharingSameEdge.cpp  Table_SiblingPatch.cpp
@@ -134,7 +134,7 @@ CPU_FILE    += CPU_FluidSolver_RTVD.cpp  CPU_FluidSolver_MHM.cpp  CPU_FluidSolve
 
 CPU_FILE    += Hydro_Init_ByFunction_AssignData.cpp  Hydro_Aux_Check_Negative.cpp \
                Hydro_BoundaryCondition_Reflecting.cpp  Hydro_BoundaryCondition_Outflow.cpp \
-               Hydro_BoundaryCondition_Diode.cpp  EoS_Init.cpp  EoS_End.cpp
+               Hydro_BoundaryCondition_Diode.cpp  Hydro_RestoreEint.cpp  EoS_Init.cpp  EoS_End.cpp
 
 vpath %.cu     Model_Hydro/GPU_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal  EoS/GammaCR  EoS/TaubMathews
 vpath %.cpp    Model_Hydro/CPU_Hydro  Model_Hydro  EoS  EoS/Gamma  EoS/User_Template  EoS/Isothermal  EoS/GammaCR  EoS/TaubMathews
@@ -232,7 +232,8 @@ CPU_FILE    += Par_Init_ByFunction.cpp  Par_Output_TextFile.cpp  Par_Output_Bina
                Par_Synchronize.cpp  Par_PredictPos.cpp  Par_Init_ByFile.cpp  Par_Init_Attribute.cpp \
                Par_AddParticleAfterInit.cpp  Par_PassParticle2Son_SinglePatch.cpp  Par_EquilibriumIC.cpp \
                Par_ScatterParticleData.cpp  Par_UpdateTracerParticle.cpp  Par_MapMesh2Particles.cpp \
-               Par_Init_Attribute_Mesh.cpp  Par_Output_TracerParticle_Mesh.cpp  Par_SetParUID.cpp
+               Par_Init_Attribute_Mesh.cpp  Par_Output_TracerParticle_Mesh.cpp  Par_SetParUID.cpp \
+               Par_SetFlag.cpp  Par_Flag_TargetParticle.cpp
 
 vpath %.cu     Particle/GPU
 vpath %.cpp    Particle/CPU  Particle
@@ -306,16 +307,16 @@ endif # SUPPORT_LIBYT
 # local source terms source files
 # ------------------------------------------------------------------------------------
 GPU_FILE    += CUAPI_Asyn_SrcSolver.cu  CUSRC_SrcSolver_IterateAllCells.cu  CUSRC_Src_Deleptonization.cu \
-               CUSRC_Src_User_Template.cu
+               CUSRC_Src_User_Template.cu  CUSRC_Src_ExactCooling.cu
 
 CPU_FILE    += CPU_SrcSolver.cpp  CPU_SrcSolver_IterateAllCells.cpp  CPU_Src_Deleptonization.cpp \
-               CPU_Src_User_Template.cpp
+               CPU_Src_User_Template.cpp  CPU_Src_ExactCooling.cpp  dtSolver_ExactCooling.cpp
 
 CPU_FILE    += Src_AdvanceDt.cpp  Src_Prepare.cpp  Src_Close.cpp  Src_Init.cpp  Src_End.cpp \
                Src_WorkBeforeMajorFunc.cpp
 
-vpath %.cu     SourceTerms  SourceTerms/User_Template  SourceTerms/Deleptonization
-vpath %.cpp    SourceTerms  SourceTerms/User_Template  SourceTerms/Deleptonization
+vpath %.cu     SourceTerms  SourceTerms/User_Template  SourceTerms/Deleptonization  SourceTerms/ExactCooling
+vpath %.cpp    SourceTerms  SourceTerms/User_Template  SourceTerms/Deleptonization  SourceTerms/ExactCooling
 
 
 # Grackle source files (included only if "SUPPORT_GRACKLE" is turned on)

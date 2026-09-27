@@ -141,17 +141,20 @@ bool Hydro_IsUnphysical( const IsUnphyMode_t Mode, const real Fields[],
                          const EoS_GUESS_t EoS_GuessHTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                          const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                          const real *const EoS_Table[EOS_NTABLE_MAX], const long PassiveFloor,
-                         const char File[], const int Line, const char Function[], const IsUnphVerb_t Verbose );
+                         const char File[], const int Line, const char Function[], const IsUnphVerb_t Verbose,
+                         const CkUnphyRnd_t CkUnphyRnd );
 bool Hydro_IsUnphysical_Single( const real Field, const char SingleFieldName[], const real Min, const real Max,
                                 const char File[], const int Line, const char Function[], const IsUnphVerb_t Verbose );
 #ifdef DUAL_ENERGY
 void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,
-                          real &Etot, real &Dual, char &DE_Status, const real Gamma_m1, const real _Gamma_m1,
+                          real &Etot, real &Dual, const real Passive[], char &DE_Status, const real Gamma_m1, const real _Gamma_m1,
                           const bool CheckMinPres, const real MinPres, const long PassiveFloor, const real DualEnergySwitch,
                           const real Emag );
 real Hydro_Con2Dual( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                     const real Emag, const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[],
-                     const int EoS_AuxArray_Int[], const real *const EoS_Table[EOS_NTABLE_MAX], const long PassiveFloor );
+                     const real Passive[], const real Emag,
+                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_CRE2CRP_t EoS_CREint2CRPres,
+                     const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const real *const EoS_Table[EOS_NTABLE_MAX], const long PassiveFloor );
 real Hydro_DensPres2Dual( const real Dens, const real Pres, const real Gamma_m1 );
 real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Gamma_m1,
                           const bool CheckMinPres, const real MinPres );
@@ -389,7 +392,8 @@ bool Flag_Check( const int lv, const int PID, const int i, const int j, const in
                  const real LCool[][PS1][PS1],
                  const real *Lohner_Var, const real *Lohner_Ave, const real *Lohner_Slope, const int Lohner_NVar,
                  const real ParCount[][PS1][PS1], const real ParDens[][PS1][PS1], const real JeansCoeff,
-                 const real *Interf_Var, const real Spectral_Cond );
+                 const real Spectral_Cond );
+bool Flag_Precheck( const int lv, const int PID, const int NoRefineBnd );
 bool Flag_Lohner( const int i, const int j, const int k, const OptLohnerForm_t Form, const real *Var1D, const real *Ave1D,
                   const real *Slope1D, const int NVar, const double Threshold, const double Filter, const double Soften );
 void Refine( const int lv, const UseLBFunc_t UseLBFunc );
@@ -557,6 +561,9 @@ void Hydro_Pri2Con( const real In[], real Out[], const bool FracPassive, const i
                     const EoS_DP2E_t EoS_DensPres2Eint, const EoS_TEM2H_t EoS_Temp2HTilde, const EoS_H2TEM_t EoS_HTilde2Temp,
                     const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
                     const real *const EoS_Table[EOS_NTABLE_MAX], const real* const EintIn );
+void Hydro_RestoreEint_Backup( const int lv, const int FluSg, const int MagSg );
+void Hydro_RestoreEint_Check( const int lv, const int FluSg, const int MagSg );
+void Hydro_RestoreEint_MemFree();
 #ifdef MHD
 void MHD_GetCellCenteredBField( real B_CC[], const real Bx_FC[], const real By_FC[], const real Bz_FC[],
                                 const int Nx, const int Ny, const int Nz, const int i, const int j, const int k );
@@ -770,6 +777,8 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
 void Par_SetParUID();
 void Par_Init_Attribute_Mesh();
 void Par_Output_TracerParticle_Mesh();
+void Par_SetFlag( const int Flag );
+bool Par_Flag_TargetParticle( const int lv, const int PID, const FlagParTarget_t FlagMode );
 FieldIdx_t AddParticleAttributeFlt( const char *InputLabel );
 FieldIdx_t AddParticleAttributeInt( const char *InputLabel );
 FieldIdx_t GetParticleAttributeFltIndex( const char *InputLabel, const Check_t Check );

@@ -1140,23 +1140,18 @@ void Init_ResetParameter()
 #  if ( MODEL == HYDRO )
    if ( OPT__CHECK_PRES_AFTER_FLU < 0 )
    {
-      if ( EOS == EOS_NUCLEAR  ||  EOS == EOS_TABULAR )
-      {
-         OPT__CHECK_PRES_AFTER_FLU = 1;
+#     ifdef EXTRA_EOS_CHECK
+      OPT__CHECK_PRES_AFTER_FLU = 1;
+#     else
+      OPT__CHECK_PRES_AFTER_FLU = 0;
+#     endif
 
-         PRINT_RESET_PARA( OPT__CHECK_PRES_AFTER_FLU, FORMAT_INT, "" );
-      }
-
-      else
-      {
-         OPT__CHECK_PRES_AFTER_FLU = 0;
-
-         PRINT_RESET_PARA( OPT__CHECK_PRES_AFTER_FLU, FORMAT_INT, "" );
-      }
+      PRINT_RESET_PARA( OPT__CHECK_PRES_AFTER_FLU, FORMAT_INT, "" );
    }
 #  endif
 
 
+// normalization of mean molecular weight
 #  if ( MODEL == HYDRO )
    if      ( MU_NORM < 0.0 )
    {

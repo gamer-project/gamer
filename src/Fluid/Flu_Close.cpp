@@ -452,27 +452,33 @@ bool Unphysical( const real Fluid[], const int CheckMode, const real Emag )
          return true;
 
 #     else // without DUAL_ENERGY
+//###NOTE: Eint currently includes cosmic-ray energy; consider excluding it for a more stringent check
       const real Eint = Hydro_Con2Eint( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ], Fluid[ENGY],
                                         NoFloor, NULL_REAL, PassiveFloorMask, Emag, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                         EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       if ( Eint < (real)MIN_EINT  ||  !Aux_IsFinite(Eint) )
          return true;
 #     endif // DUAL_ENERGY
-   } // f ( CheckMode == CheckMinEint )
+   } // if ( CheckMode == CheckMinEint )
 
    if ( OPT__CHECK_PRES_AFTER_FLU )
    {
-      const real Pres = Hydro_Con2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ],
-                                        Fluid[ENGY], Fluid+NCOMP_FLUID,
-                                        CheckMinPres_No, NULL_REAL, PassiveFloorMask, Emag,
-                                        EoS_DensEint2Pres_CPUPtr,
-                                        EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
-                                        EoS_AuxArray_Flt,
-                                        EoS_AuxArray_Int, h_EoS_Table, NULL );
+      for (int i=CHECK_UNPHY_ROUNDING_IMIN; i<=CHECK_UNPHY_ROUNDING_IMAX; i++)
+      {
+//       only perturb the total energy since the internal energy is subtracted from it
+         const real Etot_Check = Fluid[ENGY]*( (real)1.0 + (real)i*CHECK_UNPHY_ROUNDING_FACTOR*MACHINE_EPSILON );
+         const real Pres       = Hydro_Con2Pres( Fluid[DENS], Fluid[MOMX], Fluid[MOMY], Fluid[MOMZ],
+                                                 Etot_Check, Fluid+NCOMP_FLUID,
+                                                 CheckMinPres_No, NULL_REAL, PassiveFloorMask, Emag,
+                                                 EoS_DensEint2Pres_CPUPtr,
+                                                 EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                                 EoS_AuxArray_Flt,
+                                                 EoS_AuxArray_Int, h_EoS_Table, NULL );
 
-      if ( Pres < (real)MIN_PRES  ||  !Aux_IsFinite(Pres) )
-         return true;
-   }
+         if ( Pres < (real)MIN_PRES  ||  !Aux_IsFinite(Pres) )
+            return true;
+      }
+   } // if ( OPT__CHECK_PRES_AFTER_FLU )
 #  endif // #ifndef BAROTROPIC_EOS
 
 #  ifndef SRHD
@@ -809,7 +815,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //             --> we do NOT apply the minimum pressure check in Hydro_DualEnergyFix() here
 //                 --> otherwise the pressure floor might disable the 1st-order-flux correction
 #              ifdef DUAL_ENERGY
-               Hydro_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[DUAL],
+               Hydro_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[DUAL], Update+NCOMP_FLUID,
                                     h_DE_Array_F_Out[TID][idx_out], EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2],
                                     CorrPres_No, NULL_REAL, PassiveFloorMask, DUAL_ENERGY_SWITCH, Emag_Out );
 #              endif
@@ -965,7 +971,7 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //          --> we apply the minimum pressure check in Hydro_DualEnergyFix() here only when AutoReduceDt_Continue is false
 //              --> otherwise AUTO_REDUCE_DT may not be triggered due to this pressure floor
 #           ifdef DUAL_ENERGY
-            Hydro_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[DUAL],
+            Hydro_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[DUAL], Update+NCOMP_FLUID,
                                  h_DE_Array_F_Out[TID][idx_out], EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2],
                                  (!AutoReduceDt_Continue && OPT__LAST_RESORT_FLOOR) ? CorrPres_Yes : CorrPres_No,
                                  MIN_PRES, PassiveFloorMask, DUAL_ENERGY_SWITCH, Emag_Out );
