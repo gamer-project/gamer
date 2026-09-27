@@ -9,17 +9,17 @@
 // Function    :  MPI_Alltoallv_GAMER
 // Description :  Wrapper for replacing official MPI_Alltoallv() when the numbers of elements in Send_NDisp/Recv_NDisp exceed __INT_MAX__
 //
-// Parameter   :  SendBuf:       Data to be sent by this rank to other ranks via MPI_Alltoallv
-//                Send_NCount:   Number of elements to be sent by each rank to other ranks in SendBuf; length equals MPI_NRank
-//                Send_NDisp:    Displacement indicating the stride where the sent data (to other ranks) starts in SendBuf for each rank;
-//                               length equals MPI_NRank
-//                Send_Datatype: Sent data type for MPI
-//                RecvBuf:       Data to be received by this rank from other ranks via MPI_Alltoallv
-//                Recv_NCount:   Number of elements to be received by each rank from other ranks in RecvBuf; length equals MPI_NRank
-//                Recv_NDisp:    Displacement indicating the stride where the received data (from other ranks) starts in RecvdBuf for each rank;
-//                               length equals MPI_NRank
-//                Recv_Datatype: Received data type for MPI (MPI_GAMER_REAL/MPI_GAMER_REAL_PAR/MPI_GAMER_LONG_PAR)
-//                comm:          MPI communicator
+// Parameter   :  SendBuf       : Data to be sent by this rank to other ranks via MPI_Alltoallv
+//                Send_NCount   : Number of elements to be sent by each rank to other ranks in SendBuf; length equals MPI_NRank
+//                Send_NDisp    : Displacement indicating the stride where the sent data (to other ranks) starts in SendBuf for each rank;
+//                                length equals MPI_NRank
+//                Send_Datatype : Sent data type for MPI
+//                RecvBuf       : Data to be received by this rank from other ranks via MPI_Alltoallv
+//                Recv_NCount   : Number of elements to be received by each rank from other ranks in RecvBuf; length equals MPI_NRank
+//                Recv_NDisp    : Displacement indicating the stride where the received data (from other ranks) starts in RecvdBuf for each rank;
+//                                length equals MPI_NRank
+//                Recv_Datatype : Received data type for MPI (MPI_GAMER_REAL/MPI_GAMER_REAL_PAR/MPI_GAMER_LONG_PAR)
+//                comm          : MPI communicator
 //
 // Return      :  RecvBuf
 //-------------------------------------------------------------------------------------------------------
@@ -36,14 +36,14 @@ void MPI_Alltoallv_GAMER( T *SendBuf, long *Send_NCount, long *Send_NDisp, MPI_D
    }
 
    bool use_mpi_gamer_flag = false;
-   if (  ( Send_NDisp[MPI_NRank-1] > __INT_MAX__ ) || ( Recv_NDisp[MPI_NRank-1] > __INT_MAX__ )  )    use_mpi_gamer_flag = true;
-   MPI_Allreduce( MPI_IN_PLACE, &use_mpi_gamer_flag , 1, MPI_CXX_BOOL, MPI_LOR, MPI_COMM_WORLD );
+   if (  ( Send_NDisp[MPI_NRank-1] > __INT_MAX__ )  ||  ( Recv_NDisp[MPI_NRank-1] > __INT_MAX__ )  )  use_mpi_gamer_flag = true;
+   MPI_Allreduce( MPI_IN_PLACE, &use_mpi_gamer_flag, 1, MPI_CXX_BOOL, MPI_LOR, MPI_COMM_WORLD );
 
    if ( use_mpi_gamer_flag )
    {
       MPI_Request *req_send_and_recv = new MPI_Request[2*MPI_NRank];
 
-// for numbering the MPI_Isend/Irecv tags: since there are total MPI_NRank*MPI_NRank data-transferring tasks, we tag the data-transferring task between rank r_1(send) <--> rank r_2(recv) by number: r_1*MPI_NRank+r_2
+//    for numbering the MPI_Isend/Irecv tags: since there are total MPI_NRank*MPI_NRank data-transferring tasks, we tag the data-transferring task between rank r_1(send) <--> rank r_2(recv) by number: r_1*MPI_NRank+r_2
       for (int r=0; r<MPI_NRank; r++)
       {
           MPI_Isend( SendBuf+Send_NDisp[r], (int)Send_NCount[r], Send_Datatype, r, MPI_Rank*MPI_NRank + r       , comm, &req_send_and_recv[2*r  ] );
@@ -53,6 +53,7 @@ void MPI_Alltoallv_GAMER( T *SendBuf, long *Send_NCount, long *Send_NDisp, MPI_D
 
       delete [] req_send_and_recv;
    }
+
    else
    {
       int *Send_NCount_int = new int [MPI_NRank];
@@ -86,6 +87,7 @@ template void MPI_Alltoallv_GAMER <float>  ( float  *SendBuf, long *Send_NCount,
 template void MPI_Alltoallv_GAMER <double> ( double *SendBuf, long *Send_NCount, long *Send_NDisp, MPI_Datatype Send_Datatype, double *RecvBuf, long *Recv_NCount, long *Recv_NDisp, MPI_Datatype Recv_Datatype, MPI_Comm comm );
 template void MPI_Alltoallv_GAMER <int>    ( int    *SendBuf, long *Send_NCount, long *Send_NDisp, MPI_Datatype Send_Datatype, int    *RecvBuf, long *Recv_NCount, long *Recv_NDisp, MPI_Datatype Recv_Datatype, MPI_Comm comm );
 template void MPI_Alltoallv_GAMER <long>   ( long   *SendBuf, long *Send_NCount, long *Send_NDisp, MPI_Datatype Send_Datatype, long   *RecvBuf, long *Recv_NCount, long *Recv_NDisp, MPI_Datatype Recv_Datatype, MPI_Comm comm );
+template void MPI_Alltoallv_GAMER <char>   ( char   *SendBuf, long *Send_NCount, long *Send_NDisp, MPI_Datatype Send_Datatype, char   *RecvBuf, long *Recv_NCount, long *Recv_NDisp, MPI_Datatype Recv_Datatype, MPI_Comm comm );
 
 
 
