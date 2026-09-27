@@ -75,45 +75,34 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 
 
 // output filename
-   char FileName[NERR][2*MAX_STRING];
+   char FileName[NERR][2*MAX_STRING], ErrLabel[NERR][MAX_STRING];
 
+   for (int v=0; v<NCOMP_TOTAL; v++)
+   sprintf( ErrLabel[            v], "%s", FieldLabel[v] );
+
+// tailor for different models
 #  if   ( MODEL == HYDRO )
-   sprintf( FileName[            0], "%s/%s_Dens_%06d", OUTPUT_DIR, Prefix, DumpID );
-   sprintf( FileName[            1], "%s/%s_MomX_%06d", OUTPUT_DIR, Prefix, DumpID );
-   sprintf( FileName[            2], "%s/%s_MomY_%06d", OUTPUT_DIR, Prefix, DumpID );
-   sprintf( FileName[            3], "%s/%s_MomZ_%06d", OUTPUT_DIR, Prefix, DumpID );
-   sprintf( FileName[            4], "%s/%s_Pres_%06d", OUTPUT_DIR, Prefix, DumpID );
-
-   for (int v=0; v<NCOMP_PASSIVE; v++)
-   sprintf( FileName[NCOMP_FLUID+v], "%s/%s_Passive%02d_%06d", OUTPUT_DIR, Prefix, v, DumpID );
-
+// output pressure instead of total energy
+   sprintf( ErrLabel[         ENGY], "%s", "Pres" );
 #  ifdef MHD
-   sprintf( FileName[NCOMP_TOTAL+0], "%s/%s_MagX_%06d", OUTPUT_DIR, Prefix, DumpID );
-   sprintf( FileName[NCOMP_TOTAL+1], "%s/%s_MagY_%06d", OUTPUT_DIR, Prefix, DumpID );
-   sprintf( FileName[NCOMP_TOTAL+2], "%s/%s_MagZ_%06d", OUTPUT_DIR, Prefix, DumpID );
+   for (int v=0; v<NCOMP_MAG; v++)
+   sprintf( ErrLabel[NCOMP_TOTAL+v], "%s", MagLabel[v] );
 #  endif
-
-   sprintf( FileName[     NBASIC+0], "%s/%s_Temp_%06d", OUTPUT_DIR, Prefix, DumpID );
+// temperature
+   sprintf( ErrLabel[     NBASIC+0], "%s", "Temp" );
 
 #  elif ( MODEL == ELBDM )
 #  if   ( ELBDM_SCHEME == ELBDM_WAVE )
-   sprintf( FileName[            0], "%s/%s_Dens_%06d", OUTPUT_DIR, Prefix, DumpID );
-   sprintf( FileName[            1], "%s/%s_Real_%06d", OUTPUT_DIR, Prefix, DumpID );
-   sprintf( FileName[            2], "%s/%s_Imag_%06d", OUTPUT_DIR, Prefix, DumpID );
 #  elif ( ELBDM_SCHEME == ELBDM_HYBRID )
-   sprintf( FileName[            0], "%s/%s_Dens_%06d", OUTPUT_DIR, Prefix, DumpID );
-   sprintf( FileName[            1], "%s/%s_Phas_%06d", OUTPUT_DIR, Prefix, DumpID );
-   sprintf( FileName[            2], "%s/%s_Stub_%06d", OUTPUT_DIR, Prefix, DumpID );
 #  else
 #  error : ERROR : unsupported ELBDM_SCHEME !!
 #  endif // ELBDM_SCHEME
 
-   for (int v=0; v<NCOMP_PASSIVE; v++)
-   sprintf( FileName[NCOMP_FLUID+v], "%s/%s_Passive%02d_%06d", OUTPUT_DIR, Prefix, v, DumpID );
-
 #  else
 #  error : ERROR : unsupported MODEL !!
 #  endif // MODEL
+
+   for (int v=0; v<NERR; v++)    sprintf( FileName[v], "%s/%s_%s_%06d", OUTPUT_DIR, Prefix, ErrLabel[v], DumpID );
 
 
 // check if the output files already exist
@@ -283,48 +272,15 @@ void Output_L1Error( void (*AnalFunc_Flu)( real fluid[], const double x, const d
 //    output header
       if ( FirstTime )
       {
-#        if   ( MODEL == HYDRO )
-         fprintf( File_L1, "#%11s %13s %*s %*s %*s %*s %*s", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
-                  StrLen_Flt, "Error(MomX)", StrLen_Flt, "Error(MomY)", StrLen_Flt, "Error(MomZ)", StrLen_Flt, "Error(Pres)" );
+         fprintf( File_L1, "#%11s %13s", "NGrid", "Time" );
 
-         for (int v=0; v<NCOMP_PASSIVE; v++) {
-            char tmp_str[MAX_STRING];
-            sprintf( tmp_str, "Error(Passive%02d)", v );
-            fprintf( File_L1, " %*s", StrLen_Flt, tmp_str );
-         }
-
-#        ifdef MHD
-         fprintf( File_L1, " %*s %*s %*s",
-                  StrLen_Flt, "Error(MagX)", StrLen_Flt, "Error(MagY)", StrLen_Flt, "Error(MagZ)" );
-#        endif
-
-         fprintf( File_L1, " %*s", StrLen_Flt, "Error(Temp)" );
-
-         fprintf( File_L1, "\n" );
-
-#        elif ( MODEL == ELBDM )
-#        if   ( ELBDM_SCHEME == ELBDM_WAVE )
-
-         fprintf( File_L1, "#%11s %13s %*s %*s %*s", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
-                  StrLen_Flt, "Error(Real)", StrLen_Flt, "Error(Imag)" );
-#        elif ( ELBDM_SCHEME == ELBDM_HYBRID )
-         fprintf( File_L1, "#%11s %13s %*s %*s %*s", "NGrid", "Time", StrLen_Flt, "Error(Dens)",
-                  StrLen_Flt, "Error(Phas)", StrLen_Flt, "Stub" );
-#        else
-#        error : ERROR : unsupported ELBDM_SCHEME !!
-#        endif // ELBDM_SCHEME
-
-         for (int v=0; v<NCOMP_PASSIVE; v++) {
-            char tmp_str[MAX_STRING];
-            sprintf( tmp_str, "Error(Passive%02d)", v );
-            fprintf( File_L1, " %*s", StrLen_Flt, tmp_str );
+         for (int v=0; v<NERR; v++) {
+            char ErrHeader[MAX_STRING];
+            sprintf( ErrHeader, "Error(%s)", ErrLabel[v] );
+            fprintf( File_L1, " %*s", StrLen_Flt, ErrHeader );
          }
 
          fprintf( File_L1, "\n" );
-
-#        else
-#        error : ERROR : unsupported MODEL !!
-#        endif // MODEL
 
          FirstTime = false;
       } // if ( FirstTime )
@@ -430,7 +386,7 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
    AnalFunc_Mag( Anal+NCOMP_TOTAL, x, y, z, Time[0], lv, NULL );
 #  endif
 
-// get pressure and temperature
+// get pressure, temperature, and dual energy
 #  if ( MODEL == HYDRO )
    const real Emag_Zero = 0.0;   // Anal[ENGY] set by AnalFunc_Flu() does NOT include magnetic energy
    const real Pres_Anal = Hydro_Con2Pres( Anal[DENS], Anal[MOMX], Anal[MOMY], Anal[MOMZ], Anal[ENGY],
@@ -445,7 +401,15 @@ void WriteFile( void (*AnalFunc_Flu)( real fluid[], const double x, const double
 
    Anal[ENGY    ] = Pres_Anal;
    Anal[NBASIC+0] = Temp_Anal;
+
+#  ifdef DUAL_ENERGY
+   real Pgas_Anal = Pres_Anal;
+#  ifdef COSMIC_RAY
+   Pgas_Anal     -= EoS_CREint2CRPres_CPUPtr( Anal[CRAY], EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #  endif
+   Anal[DUAL    ] = Hydro_DensPres2Dual( Anal[DENS], Pgas_Anal, EoS_AuxArray_Flt[1] );
+#  endif // #ifdef DUAL_ENERGY
+#  endif // #if ( MODEL == HYDRO )
 
 // convert real and imaginary part to phase for wave patches in hybrid scheme
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )

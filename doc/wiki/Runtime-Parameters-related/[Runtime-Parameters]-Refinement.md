@@ -21,6 +21,10 @@ Parameters described on this page:
 [OPT__FLAG_LOHNER_ENTR](#OPT__FLAG_LOHNER_ENTR), &nbsp;
 [OPT__FLAG_LOHNER_CRAY](#OPT__FLAG_LOHNER_CRAY), &nbsp;
 [OPT__FLAG_LOHNER_FORM](#OPT__FLAG_LOHNER_FORM), &nbsp;
+[OPT__FLAG_ENGY_DENSITY](#OPT__FLAG_ENGY_DENSITY), &nbsp;
+[OPT__FLAG_INTERFERENCE](#OPT__FLAG_INTERFERENCE), &nbsp;
+[OPT__FLAG_SPECTRAL](#OPT__FLAG_SPECTRAL), &nbsp;
+[OPT__FLAG_SPECTRAL_N](#OPT__FLAG_SPECTRAL_N), &nbsp;
 [OPT__FLAG_USER](#OPT__FLAG_USER), &nbsp;
 [OPT__FLAG_USER_NUM](#OPT__FLAG_USER_NUM), &nbsp;
 [OPT__FLAG_REGION](#OPT__FLAG_REGION), &nbsp;
@@ -35,6 +39,8 @@ Parameters described on this page:
 [OPT__FLAG_NPAR_PATCH](#OPT__FLAG_NPAR_PATCH), &nbsp;
 [OPT__FLAG_NPAR_CELL](#OPT__FLAG_NPAR_CELL), &nbsp;
 [OPT__FLAG_PAR_MASS_CELL](#OPT__FLAG_PAR_MASS_CELL), &nbsp;
+[OPT__FLAG_PAR_TARGET](#OPT__FLAG_PAR_TARGET), &nbsp;
+[OPT__FLAG_PAR_TARGET_SIB](#OPT__FLAG_PAR_TARGET_SIB), &nbsp;
 [OPT__NO_FLAG_NEAR_BOUNDARY](#OPT__NO_FLAG_NEAR_BOUNDARY), &nbsp;
 [OPT__PATCH_COUNT](#OPT__PATCH_COUNT), &nbsp;
 [OPT__PARTICLE_COUNT](#OPT__PARTICLE_COUNT), &nbsp;
@@ -338,6 +344,75 @@ for cells with gas density lower than this threshold.
 input file `Input__Flag_Lohner`.*
     * **Restriction:**
 
+<a name="OPT__FLAG_ENGY_DENSITY"></a>
+* #### `OPT__FLAG_ENGY_DENSITY` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Refinement criterion: energy density.
+Specify the refinement thresholds on different levels in the input
+file `Input__Flag_EngyDensity` with the
+[[specific format | [Runtime-Parameters]-Input__Flag_{}]].
+Additional column `Soften` is added to the denominator when evaluating energy density
+to prevent flagging in the extremely low density region.
+An example file can be found at `example/input/Input__Flag_EngyDensity`.
+    * **Restriction:**
+Must compile with [[--model | [Installation]-Option-List#--model]]=ELBDM.
+
+<a name="OPT__FLAG_INTERFERENCE"></a>
+* #### `OPT__FLAG_INTERFERENCE` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Refinement criterion: interference.
+Flag a cell if either of the following dimensionless criteria is satisfied:
+      * minimum density (`Density`) & quantum pressure (`QP`) & local extremum in density (`OnlyAtExtrema`)
+      * second derivative of phase (`PhaseLap`) & local extremum in phase (`OnlyAtExtrema`)
+
+      See Eqs. [29, 30] in [Kunkel et al. 2025, ApJS, 279, 39](https://iopscience.iop.org/article/10.3847/1538-4365/addc59).
+
+      An example file can be found at `example/input/Input__Flag_Interference`.
+      ```
+      # Level          QP   Density   PhaseLap   OnlyAtExtrema
+            0        0.03         0        1.0               0
+            1        0.03         0        1.0               0
+            2        0.03         0        1.0               0
+      ```
+      * QP: A threshold <= 0.03 avoids spurious halos
+      and yields good agreement with wave-only simulations.
+      * Density: Defaults to 0.0.
+      Non-zero values can prevent refinement in low-density regions with
+      minor oscillations, but should be used cautiously as they may cause instability.
+      * PhaseLap: Second derivative of the phase field.
+      * OnlyAtExtrema: Refine only at extrema in the density and phase fields (default: False).
+      This can prevent refinement in regions with high quantum pressure and phase curvature
+      without destructive interference, but should be used cautiously as it may cause instability.
+
+      *Caution: If `OPT__FLAG_INTERFERENCE` is disabled for `ELBDM_HYBRID`,
+      the simulation will never switch to the wave scheme.*
+    * **Restriction:**
+Must compile with [[--model | [Installation]-Option-List#--model]]=ELBDM and [[--elbdm_scheme | [Installation]-Option-List#--elbdm_scheme]]=HYBRID.
+
+<a name="OPT__FLAG_SPECTRAL"></a>
+* #### `OPT__FLAG_SPECTRAL` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Refinement criterion: spectral refinement on wave levels per patch group.
+The method checks polynomial expansion coefficients of the wave function.
+Higher-order coefficients should decay exponentially for well-resolved regions;
+large coefficients indicate under-resolution, triggering refinement.
+An example file can be found at `example/input/Input__Flag_Spectral`.
+Default values are 1 for all levels.
+Derefinement currently not functional.
+This function checks the polynomial coefficients of order
+(13 - [OPT__FLAG_SPECTRAL_N](#OPT__FLAG_SPECTRAL_N) + 1) to order 13.
+    * **Restriction:**
+Must compile with [[--model | [Installation]-Option-List#--model]]=ELBDM.
+
+<a name="OPT__FLAG_SPECTRAL_N"></a>
+* #### `OPT__FLAG_SPECTRAL_N` &ensp; (1 &#8804; input &#8804; 14) &ensp; [2]
+    * **Description:**
+The number of polynomial coefficients to use for spectral refinement.
+(See [OPT__FLAG_SPECTRAL](#OPT__FLAG_SPECTRAL) for details.)
+    * **Restriction:**
+Must compile with [[--model | [Installation]-Option-List#--model]]=ELBDM
+and enabled [OPT__FLAG_SPECTRAL](#OPT__FLAG_SPECTRAL).
+
 <a name="OPT__FLAG_USER"></a>
 * #### `OPT__FLAG_USER` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
@@ -469,6 +544,25 @@ Specify the refinement thresholds on different levels in the input file
 `Input__Flag_ParMassCell` with the [[specific format | [Runtime-Parameters]-Input__Flag_{}]].
 An example file can be found at `example/input/Input__Flag_ParMassCell`.
     * **Restriction:**
+
+<a name="OPT__FLAG_PAR_TARGET"></a>
+* #### `OPT__FLAG_PAR_TARGET` &ensp; (0=off, 1=must refine, 2=can refine, 3=must+can refine) &ensp; [0]
+    * **Description:**
+Refinement criterion: target particles. \
+`OPT__FLAG_PAR_TARGET = 0`: Disable this criterion. \
+`OPT__FLAG_PAR_TARGET = 1`: Patches containing particles with the integer attribute `PAR_FLAG > 0` _must_ be refined to level `PAR_FLAG`. This behaves similarly to other refinement criteria such as [OPT__FLAG_RHO](#OPT__FLAG_RHO). \
+`OPT__FLAG_PAR_TARGET = 2`: Patches containing particles with the integer attribute `PAR_FLAG < 0` _can_ be refined to level `|PAR_FLAG|`. In other words, such patches will be refined if they satisfy at least one refinement criterion. This behaves similarly to other refinement pre-checks such as [OPT__FLAG_REGION](#OPT__FLAG_REGION). \
+`OPT__FLAG_PAR_TARGET = 3`: Enable both `OPT__FLAG_PAR_TARGET = 1` and `OPT__FLAG_PAR_TARGET = 2`.
+
+      For a demonstration, see the `ParticleFlag` test problem.
+    * **Restriction:**
+
+<a name="OPT__FLAG_PAR_TARGET_SIB"></a>
+* #### `OPT__FLAG_PAR_TARGET_SIB` &ensp; (0=off, 1=on) &ensp; [1]
+    * **Description:**
+Also refine all sibling patches of patches containing must-refine particles.
+    * **Restriction:**
+Only applicable when [OPT__FLAG_PAR_TARGET](#OPT__FLAG_PAR_TARGET) is set to `1` or `3`.
 
 <a name="OPT__NO_FLAG_NEAR_BOUNDARY"></a>
 * #### `OPT__NO_FLAG_NEAR_BOUNDARY` &ensp; (0=off, 1=on) &ensp; [0]

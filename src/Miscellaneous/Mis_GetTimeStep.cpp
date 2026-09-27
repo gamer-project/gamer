@@ -1,5 +1,6 @@
 #include "GAMER.h"
 
+extern double Mis_GetTimeStep_ExactCooling( const int lv, const double dTime_dt );
 
 
 
@@ -239,13 +240,23 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 // 1.10 CRITERION TEN : Grackle cooling time
 // =============================================================================================================
 #  ifdef SUPPORT_GRACKLE
-   if ( DT__GRACKLE_COOLING >= 0.0 )
-   {
+   if ( DT__GRACKLE_COOLING >= 0.0 ) {
       dTime[NdTime] = dTime_dt * Grackle_GetTimeStep_CoolingTime( lv );
       sprintf( dTime_Name[NdTime++], "%s", "Grackle_TCool" );
 
-//    when fluid is freezed, disable this criterion by resetting it to a huge value
+//    when fluid is frozen, disable this criterion by resetting it to a huge value
       if ( OPT__FREEZE_FLUID  &&  ! OPT__UNFREEZE_GRACKLE )   dTime[NdTime-1] = HUGE_NUMBER;
+   }
+#  endif
+
+
+// 1.11 CRITERION ELEVEN : exact-cooling source term
+// =============================================================================================================
+#  ifdef EXACT_COOLING
+   if ( SrcTerms.ExactCooling  &&  SrcTerms.EC_dtCoef >= 0.0 )
+   {
+      dTime[NdTime] = dTime_dt * Mis_GetTimeStep_ExactCooling( lv, dTime_dt );
+      sprintf( dTime_Name[NdTime++], "%s", "ExactCooling" );
    }
 #  endif
 

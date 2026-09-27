@@ -136,7 +136,7 @@ Version 1.3     9/2/2008
    --> take absolute value for velocity
    --> do NOT modify the original value
 
-3. fix the bug in the timing inside the "Integration" funtion
+3. fix the bug in the timing inside the "Integration" function
 
 4. record the present time for each level
    --> store in the "Time" array
@@ -321,7 +321,7 @@ Version 4.1       3/23/2009
 
 5. fix one bug in the functions "Integration_IndividualTimeStep" and "Integration_SharedTimeStep"
    --> add one more criterion "if ( NLEVEL == 1 )" to determine whether to call the function "GetBufferData"
-       after the funtion "FixUp"
+       after the function "FixUp"
    --> otherwise the program will NOT get the correct buffer data if NLEVEL == 1
 
 6. add the option "OPT__FIXUP_FLUX" to suspend the flux fix up operation

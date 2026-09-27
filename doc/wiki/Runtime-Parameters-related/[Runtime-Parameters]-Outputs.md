@@ -27,6 +27,7 @@ Parameters described on this page:
 [OPT__OUTPUT_ELBDM_VEL](#OPT__OUTPUT_ELBDM_VEL), &nbsp;
 [OPT__OUTPUT_ELBDM_Q_POT](#OPT__OUTPUT_ELBDM_Q_POT), &nbsp;
 [OPT__OUTPUT_ELBDM_Q_STRESS](#OPT__OUTPUT_ELBDM_Q_STRESS), &nbsp;
+[OPT__OUTPUT_DUAL_STATUS](#OPT__OUTPUT_DUAL_STATUS), &nbsp;
 [OPT__OUTPUT_USER_FIELD](#OPT__OUTPUT_USER_FIELD), &nbsp;
 [OPT__OUTPUT_MODE](#OPT__OUTPUT_MODE), &nbsp;
 [OPT__OUTPUT_RESTART](#OPT__OUTPUT_RESTART), &nbsp;
@@ -258,6 +259,21 @@ For [[--model | [Installation]-Option-List#--model]]=ELBDM only.
 Output ELBDM quantum stress tensor.
     * **Restriction:**
 For [[--model | [Installation]-Option-List#--model]]=ELBDM only.
+
+<a name="OPT__OUTPUT_DUAL_STATUS"></a>
+* #### `OPT__OUTPUT_DUAL_STATUS` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Output dual-energy status (see `DE_UPDATED_BY_*` in `Macro.h`).
+    * **Restriction:**
+For [[--dual | [Installation]-Option-List#--dual]] only.
+
+<a name="OPT__OUTPUT_USER_FIELD"></a>
+* #### `OPT__OUTPUT_USER_FIELD` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Output user-defined derived fields. Edit `src/Fluid/Flu_DerivedField_User.cpp`
+or a problem-specific function (for the latter, see
+[[Add Problem Specific Functionalities | Adding-New-Simulations#vi-add-problem-specific-functionalities]]).
+    * **Restriction:**
 
 <a name="OPT__OUTPUT_MODE"></a>
 * #### `OPT__OUTPUT_MODE` &ensp; (1=const step, 2=const dt, 3=dump table) &ensp; [none]

@@ -203,6 +203,9 @@ real (*Der_Out)               [ CUBE(PS1)                ] = new real         [D
                                        fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Stress YZ" );
                                        fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Stress XZ" );
             }
+#           ifdef DUAL_ENERGY
+            if ( OPT__OUTPUT_DUAL_STATUS )
+                                       fprintf( File, " %*s", StrLen_Flt, "Dual-energy status" );
 #           endif
             if ( OPT__OUTPUT_USER_FIELD ) {
                for (int v=0; v<UserDerField_Num; v++)
@@ -460,7 +463,15 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 
    if ( OPT__OUTPUT_GRACKLE_TCOOL )
       fprintf( File, BlankPlusFormat_Flt, DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
+#  endif
 
+#  ifdef DUAL_ENERGY
+   if ( OPT__OUTPUT_DUAL_STATUS ) {
+//    convert the single character to real for simplicity
+      const char de_status_char = amr->patch[0][lv][PID]->de_status[k][j][i];
+      const real de_status_real = (real)( de_status_char - '0' );
+      fprintf( File, BlankPlusFormat_Flt, de_status_real );
+   }
 #  endif
 
 #  if ( MODEL == ELBDM )

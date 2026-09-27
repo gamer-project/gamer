@@ -1728,7 +1728,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   Data1PG_FC_Ptr += PGSize3D_FC;
                } // for (int v=0; v<NVarFC_Tot; v++)
 
-            } // else if ( SibPID0 == -1 )
+            } // if ( SibPID0 == -1 )
 
 
 //          (b3) if the target sibling patch lies outside the simulation domain --> apply the specified B.C.

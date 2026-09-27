@@ -1,6 +1,7 @@
 Parameters described on this page:
-[PAR_INIT](#PAR_INIT), &nbsp;
 [PAR_NPAR](#PAR_NPAR), &nbsp;
+[PAR_INIT](#PAR_INIT), &nbsp;
+[PAR_FLAG_INIT](#PAR_FLAG_INIT), &nbsp;
 [PAR_IC_FORMAT](#PAR_IC_FORMAT), &nbsp;
 [PAR_IC_FLOAT8](#PAR_IC_FLOAT8), &nbsp;
 [PAR_IC_INT8](#PAR_IC_INT8), &nbsp;
@@ -11,6 +12,7 @@ Parameters described on this page:
 [PAR_INTEG](#PAR_INTEG), &nbsp;
 [PAR_TR_INTERP](#PAR_TR_INTERP), &nbsp;
 [PAR_TR_INTEG](#PAR_TR_INTEG), &nbsp;
+[PAR_TR_VEL_CORR](#PAR_TR_VEL_CORR), &nbsp;
 [PAR_IMPROVE_ACC](#PAR_IMPROVE_ACC), &nbsp;
 [PAR_PREDICT_POS](#PAR_PREDICT_POS), &nbsp;
 [PAR_REMOVE_CELL](#PAR_REMOVE_CELL), &nbsp;
@@ -19,6 +21,18 @@ Parameters described on this page:
 
 
 Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**
+
+<a name="PAR_NPAR"></a>
+* #### `PAR_NPAR` &ensp; (&#8805;0) &ensp; [none]
+    * **Description:**
+Total number of particles.
+    * **Restriction:**
+Must be set when [PAR_INIT](#PAR_INIT)=1/3;
+must be consistent with the number of particles loaded from an initial
+condition file (e.g., for [PAR_INIT](#PAR_INIT)=3 and test problems
+with their own particle initializers);
+useless when restarting from a snapshot (i.e., [PAR_INIT](#PAR_INIT)=2);
+**must be an integer**.
 
 <a name="PAR_INIT"></a>
 * #### `PAR_INIT` &ensp; (1=function, 2=restart, 3=`PAR_IC` file) &ensp; [none]
@@ -34,17 +48,15 @@ Initialization methods for particles.
 It will be automatically reset to `PAR_INIT=2` when adopting
 [[OPT__INIT | [Runtime-Parameters]-Initial-Conditions#OPT__INIT]]=2.
 
-<a name="PAR_NPAR"></a>
-* #### `PAR_NPAR` &ensp; (&#8805;0) &ensp; [none]
+<a name="PAR_FLAG_INIT"></a>
+* #### `PAR_FLAG_INIT` &ensp; (0=off, >0: must-refine particles, <0: can-refine particles, 9999: set manually) &ensp; [0]
     * **Description:**
-Total number of particles.
+Automatically assign the refinement flags of all particles to `PAR_FLAG_INIT` when `PAR_INIT=1/3`.
+Refer to [[OPT__FLAG_PAR_TARGET | [Runtime-Parameters]-Refinement#OPT__FLAG_PAR_TARGET]] for the definitions of must-refine
+and can-refine particles. Set `PAR_FLAG_INIT=9999` to assign refinement flags manually, either by editing a
+[[particle IC function | Initial Conditions#IC-Func-Particles]] or by loading them from a
+[[particle IC file | Initial Conditions#IC-File-Particles]].
     * **Restriction:**
-Must be set when [PAR_INIT](#PAR_INIT)=1/3;
-must be consistent with the number of particles loaded from an initial
-condition file (e.g., for [PAR_INIT](#PAR_INIT)=3 and test problems
-with their own particle initializers);
-useless when restarting from a snapshot (i.e., [PAR_INIT](#PAR_INIT)=2);
-**must be an integer**.
 
 <a name="PAR_IC_FORMAT"></a>
 * #### `PAR_IC_FORMAT` &ensp; (1=[attribute][id], 2=[id][attribute]; row-major) &ensp; [1]
@@ -124,6 +136,15 @@ Tracer particle interpolation schemes. See [PAR_INTERP](#PAR_INTERP) for details
 Tracer particle integration scheme. Euler integration is only first-order accurate
 and is generally not recommended.
     * **Restriction:**
+
+<a name="PAR_TR_VEL_CORR"></a>
+* #### `PAR_TR_VEL_CORR` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Correct tracer particle velocities in regions of discontinuous flow.
+See Section 2.2 and Equation 1 of 
+[Wittor et al. (2016) MNRAS, 464, 4](https://ui.adsabs.harvard.edu/abs/2017MNRAS.464.4448W).
+    * **Restriction:**
+Only applicable when adopting [PAR_INTERP](#PAR_INTERP)=2/3.
 
 <a name="PAR_IMPROVE_ACC"></a>
 * #### `PAR_IMPROVE_ACC` &ensp; (0=off, 1=on) &ensp; [1]
