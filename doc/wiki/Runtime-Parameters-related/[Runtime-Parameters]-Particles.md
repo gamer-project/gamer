@@ -140,12 +140,11 @@ and is generally not recommended.
 <a name="PAR_TR_VEL_CORR"></a>
 * #### `PAR_TR_VEL_CORR` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
-Tracer particle velocities will be corrected in regions of discontinuous flow.
-It may be used only for mapping velocity, used to correct tracer particle 
-trajectories in discontinuous flows. See Section 2.2 and Equation 1 of 
-[Wittor et al. (2016) MNRAS, 464, 4](https://ui.adsabs.harvard.edu/abs/2017MNRAS.464.4448W)
+Correct tracer particle velocities in regions of discontinuous flow.
+See Section 2.2 and Equation 1 of 
+[Wittor et al. (2016) MNRAS, 464, 4](https://ui.adsabs.harvard.edu/abs/2017MNRAS.464.4448W).
     * **Restriction:**
-Only applicable when adopting [PAR_INTERP](#PAR_INTERP)=2/3
+Only applicable when adopting [PAR_INTERP](#PAR_INTERP)=2/3.
 
 <a name="PAR_IMPROVE_ACC"></a>
 * #### `PAR_IMPROVE_ACC` &ensp; (0=off, 1=on) &ensp; [1]

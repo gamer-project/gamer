@@ -39,13 +39,14 @@ Only applicable when enabling the compilation option
 <a name="OPT__OVERLAP_MPI"></a>
 * #### `OPT__OVERLAP_MPI` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
-Whether or not to enable the overlapping MPI communication
-of CPU/GPU computation. **NOT SUPPORTED YET!!**
+Whether to enable overlapping MPI communication
+with CPU/GPU computation.
     * **Restriction:**
-Only applicable when enabling the compilation option
+Only applicable when enabling the compilation options
 [[--overlap_mpi | [Installation]-Option-List#--overlap_mpi]], 
-[[--mpi | [Installation]-Option-List#--mpi]],
+[[--mpi | [Installation]-Option-List#--mpi]], and
 [[--openmp | [Installation]-Option-List#--openmp]].
+ **NOT SUPPORTED YET!!**
 
 <a name="LB_INPUT__WLI_MAX"></a>
 * #### `LB_INPUT__WLI_MAX` &ensp; (&#8805;0.0) &ensp; [0.1]

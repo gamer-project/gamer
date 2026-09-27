@@ -361,10 +361,11 @@ Must compile with [[--model | [Installation]-Option-List#--model]]=ELBDM.
 * #### `OPT__FLAG_INTERFERENCE` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
 Refinement criterion: interference.
-When this option is enabled, the code will flag if one of the following criteria's value
-is larger than the threshold (dimensionless):
-      * minimum density & quantum pressure (QP) & local extremum in density field
-      * second derivative in phase & local extremum in phase field
+Flag a cell if either of the following dimensionless criteria is satisfied:
+      * minimum density (`Density`) & quantum pressure (`QP`) & local extremum in density (`OnlyAtExtrema`)
+      * second derivative of phase (`PhaseLap`) & local extremum in phase (`OnlyAtExtrema`)
+
+      See Eqs. [29, 30] in [Kunkel et al. 2025, ApJS, 279, 39](https://iopscience.iop.org/article/10.3847/1538-4365/addc59).
 
       An example file can be found at `example/input/Input__Flag_Interference`.
       ```
@@ -373,18 +374,18 @@ is larger than the threshold (dimensionless):
             1        0.03         0        1.0               0
             2        0.03         0        1.0               0
       ```
-      * QP: Threshold <= 0.03 avoids spurious halos
-      and yields good agreement with wave-only simulations
-      * Density: Threshold is defaulted to 0.0.
+      * QP: A threshold <= 0.03 avoids spurious halos
+      and yields good agreement with wave-only simulations.
+      * Density: Defaults to 0.0.
       Non-zero values can prevent refinement in low-density regions with
-      minor oscillations but use with caution as they may cause instability.
-      * PhaseLap: Second derivative of phase field.
-      * OnlyAtExtrema: Refine only at density and phase field extrema (default: False).
-      Can prevent refinement in regions with high quantum pressure and phase curvature
-      without destructive interference, but use cautiously as it may cause instability.
+      minor oscillations, but should be used cautiously as they may cause instability.
+      * PhaseLap: Second derivative of the phase field.
+      * OnlyAtExtrema: Refine only at extrema in the density and phase fields (default: False).
+      This can prevent refinement in regions with high quantum pressure and phase curvature
+      without destructive interference, but should be used cautiously as it may cause instability.
 
-      *Caution: If `OPT__FLAG_INTERFERENCE` is off for `ELBDM_HYBRID`,
-      the simulations will never switch to the wave scheme.*
+      *Caution: If `OPT__FLAG_INTERFERENCE` is disabled for `ELBDM_HYBRID`,
+      the simulation will never switch to the wave scheme.*
     * **Restriction:**
 Must compile with [[--model | [Installation]-Option-List#--model]]=ELBDM and [[--elbdm_scheme | [Installation]-Option-List#--elbdm_scheme]]=HYBRID.
 

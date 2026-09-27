@@ -27,7 +27,7 @@ This page includes the following topics:
 -- Hydro solvers, physical constants, boundary conditions
 
 * [[ELBDM | [Runtime-Parameters]-ELBDM]]
--- ELBDM solvers, physical constants, boundary conditions
+-- ELBDM solvers, physical constants
 
 * [[Gravity | [Runtime-Parameters]-Gravity]]
 -- Gravity solvers, physical constants, boundary conditions
