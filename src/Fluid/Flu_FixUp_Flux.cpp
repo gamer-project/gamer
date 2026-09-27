@@ -330,8 +330,7 @@ void Flu_FixUp_Flux( const int lv, const long TVar )
 //                assuming the variables "Eint" and "Pres" remain consistent with each other
 //                --> note that Pres has excluded cosmic-ray pressure
                   CorrVal[DUAL] = Hydro_DensPres2Dual( CorrVal[DENS], Pres, CorrVal+NCOMP_FLUID,
-                                                       EoS_DensPres2Eint_CPUPtr,
-                                                       EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+                                                       EoS_DensPres2Eint_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #                 endif
 
 #                 endif // #ifdef BAROTROPIC_EOS ... else ...
