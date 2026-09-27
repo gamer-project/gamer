@@ -386,7 +386,7 @@ is larger than the threshold (dimensionless):
       *Caution: If `OPT__FLAG_INTERFERENCE` is off for `ELBDM_HYBRID`,
       the simulations will never switch to the wave scheme.*
     * **Restriction:**
-Must compile with [[--model | [Installation]-Option-List#--model]]=ELBDM and [[--ELBDM_SCHEME | [Installation]-Option-List#--elbdm_scheme]]=HYBRID.
+Must compile with [[--model | [Installation]-Option-List#--model]]=ELBDM and [[--elbdm_scheme | [Installation]-Option-List#--elbdm_scheme]]=HYBRID.
 
 <a name="OPT__FLAG_SPECTRAL"></a>
 * #### `OPT__FLAG_SPECTRAL` &ensp; (0=off, 1=on) &ensp; [0]

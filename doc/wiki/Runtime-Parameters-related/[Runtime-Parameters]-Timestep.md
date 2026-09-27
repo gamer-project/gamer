@@ -185,7 +185,7 @@ Only applicable when adopting the compilation option
 [[--model | [Installation]-Option-List#--model]]=ELBDM and [[--elbdm_scheme | [Installation]-Option-List#--elbdm_scheme]]=HYBRID.
 
 <a name="DT__HYBRID_VELOCITY_INIT"></a>
-* #### `DT__HYBRID_VELOCITY_INIT` &ensp; (0 &#8804; input &#8804; 3.5;; <0.0 &#8594; set to default) &ensp; [[DT__HYBRID_VELOCITY](#DT__HYBRID_VELOCITY)]
+* #### `DT__HYBRID_VELOCITY_INIT` &ensp; (0 &#8804; input &#8804; 3.5; <0.0 &#8594; set to default) &ensp; [[DT__HYBRID_VELOCITY](#DT__HYBRID_VELOCITY)]
     * **Description:**
 CFL safety factor for the Hamilton-Jacobi equation _at the first step_. This could be
 useful when the first step requires a much smaller timestep.

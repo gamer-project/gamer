@@ -95,13 +95,13 @@ must be disabled. In addition, it is currently recommended to disable
 [[AUTO_REDUCE_DT | [Runtime-Parameters]-Timestep#AUTO_REDUCE_DT]].
 
 <a name="OPT__LB_EXCHANGE_FATHER"></a>
-* #### `OPT__LB_EXCHANGE_FATHER` &ensp; (0=off, 1=on) &ensp; [0 usually, 1 for [[--ELBDM_SCHEME=HYBRID | [Installation]-Option-List#--elbdm_scheme]]]
+* #### `OPT__LB_EXCHANGE_FATHER` &ensp; (0=off, 1=on) &ensp; [0 usually, 1 for [[--elbdm_scheme=HYBRID | [Installation]-Option-List#--elbdm_scheme]]]
     * **Description:**
 Enables the exchange of all cells from all father patches during load balancing.
     * **Restriction:**
 Only applicable when enabling the compilation option
 [[--mpi | [Installation]-Option-List#--mpi]].
-This option is mandatory for [[--ELBDM_SCHEME=HYBRID | [Installation]-Option-List#--elbdm_scheme]] 
+This option is mandatory for [[--elbdm_scheme=HYBRID | [Installation]-Option-List#--elbdm_scheme]] 
 to ensure proper phase field matching.
 
 

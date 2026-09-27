@@ -47,7 +47,7 @@ is on; no default when [[OPT__UNIT | [Runtime-Parameters]-Units#OPT__UNIT]] and
     * **Description:**
 Quartic self-interaction coefficient in ELBDM.
     * **Restriction:**
-[[--self_interaction | [Installation]-Option-List#--self_interaction ]] must be enabled during compilation.
+[[--self_interaction | [Installation]-Option-List#--self_interaction]] must be enabled during compilation.
 
 <a name="ELBDM_TAYLOR3_COEFF"></a>
 * #### `ELBDM_TAYLOR3_COEFF` &ensp; (&#8805;0.125) &ensp; [1.0/6.0]
@@ -59,8 +59,8 @@ Values &#8804; 1/6 become unstable if
 $\sqrt{3}\pi/8$ or $\sqrt{27}\pi/32$ (when [[--laplacian_four | [Installation]-Option-List#--laplacian_four]] is enabled).
     * **Restriction:**
 Only applicable when the compilation option
-[[ --wave_scheme | [Installation]-Option-List#--wave_scheme ]]=`FD`.
-Ignored if [ELBDM_TAYLOR3_AUTO](#ELBDM_TAYLOR3_AUTO) is enable.
+[[--wave_scheme | [Installation]-Option-List#--wave_scheme]]=`FD`.
+Ignored if [ELBDM_TAYLOR3_AUTO](#ELBDM_TAYLOR3_AUTO) is enabled.
 
 <a name="ELBDM_TAYLOR3_AUTO"></a>
 * #### `ELBDM_TAYLOR3_AUTO` &ensp; (none) &ensp; [0]
@@ -133,13 +133,13 @@ Restriction on phase. (i.e., the averages of fine-grid data equal the coarse-gri
 * #### `SPEC_INT_TABLE_PATH` &ensp; (none) &ensp; [none]
     * **Description:**
 Path to the table of the spectral interpolation.
-See [[ ELBDM Spectral Interpolation | [ELBDM]-Spectral-Interpolation]] for details.
+See [[ELBDM Spectral Interpolation | [ELBDM]-Spectral-Interpolation]] for details.
 Table download script is available at
 `example/test_problem/ELBDM/LSS_Hybrid/download_spectral_interpolation_tables.sh`.
     * **Restriction:**
-Only applicable when the enabling compilation option
-[[ --spectral_interpolation | [Installation]-Option-List#--spectral_interpolation]]
-and [[ Interpolation schemes | [Runtime-Parameters]-Interpolation##INT_TABLE]]=8.
+Only applicable when enabling the compilation option
+[[--spectral_interpolation | [Installation]-Option-List#--spectral_interpolation]]
+and adopting [[Interpolation Scheme | [Runtime-Parameters]-Interpolation]]=8.
 
 <a name="SPEC_INT_XY_INSTEAD_DEPHA"></a>
 * #### `SPEC_INT_XY_INSTEAD_DEPHA` &ensp; (0=off, 1=on) &ensp; [1]
@@ -148,9 +148,9 @@ Interpolate x and y (real and imaginary parts in current implementation) around 
 instead of density and phase for the spectral interpolation,
 which has the advantage of being well-defined across vortices
     * **Restriction:**
-Only applicable when the enabling compilation option
-[[ --spectral_interpolation | [Installation]-Option-List#--spectral_interpolation]]
-and [[ Interpolation schemes | [Runtime-Parameters]-Interpolation##INT_TABLE]]=8.
+Only applicable when enabling the compilation option
+[[--spectral_interpolation | [Installation]-Option-List#--spectral_interpolation]]
+and adopting [[Interpolation Scheme | [Runtime-Parameters]-Interpolation]]=8.
 
 <a name="SPEC_INT_VORTEX_THRESHOLD"></a>
 * #### `SPEC_INT_VORTEX_THRESHOLD` &ensp; (&#8805;0) &ensp; [0.1]
@@ -158,18 +158,18 @@ and [[ Interpolation schemes | [Runtime-Parameters]-Interpolation##INT_TABLE]]=8
 Vortex detection threshold for [SPEC_INT_XY_INSTEAD_DEPHA](#SPEC_INT_XY_INSTEAD_DEPHA),
 triggered when Lap(S) * dx**2 > threshold, indicating a significant phase jump.
     * **Restriction:**
-Only applicable when the enabling compilation option
-[[ --spectral_interpolation | [Installation]-Option-List#--spectral_interpolation]]
-and [[ Interpolation schemes | [Runtime-Parameters]-Interpolation##INT_TABLE]]=8.
+Only applicable when enabling the compilation option
+[[--spectral_interpolation | [Installation]-Option-List#--spectral_interpolation]]
+and adopting [[Interpolation Scheme | [Runtime-Parameters]-Interpolation]]=8.
 
 <a name="SPEC_INT_GHOST_BOUNDARY"></a>
 * #### `SPEC_INT_GHOST_BOUNDARY` &ensp; (&#8805;1) &ensp; [4]
     * **Description:**
 Ghost boundary size for spectral interpolation.
     * **Restriction:**
-Only applicable when the enabling compilation option
-[[ --spectral_interpolation | [Installation]-Option-List#--spectral_interpolation]]
-and [[ Interpolation schemes | [Runtime-Parameters]-Interpolation##INT_TABLE]]=8.
+Only applicable when enabling the compilation option
+[[--spectral_interpolation | [Installation]-Option-List#--spectral_interpolation]]
+and adopting [[Interpolation Scheme | [Runtime-Parameters]-Interpolation]]=8.
 
 ## Remarks
 
