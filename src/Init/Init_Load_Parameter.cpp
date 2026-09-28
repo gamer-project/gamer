@@ -549,6 +549,9 @@ void Init_Load_Parameter()
 #  endif
 #  ifdef PARTICLE
    ReadPara->Add( "OPT__OUTPUT_PAR_DENS",       &OPT__OUTPUT_PAR_DENS,            PAR_OUTPUT_DENS_PAR_ONLY, 0,    2              );
+#  ifdef GRAVITY
+   ReadPara->Add( "OPT__OUTPUT_PAR_POT",        &OPT__OUTPUT_PAR_POT,             false,           Useless_bool,  Useless_bool   );
+#  endif
 #  endif
 #  if ( MODEL == HYDRO )
    ReadPara->Add( "OPT__OUTPUT_PRES",           &OPT__OUTPUT_PRES,                false,           Useless_bool,  Useless_bool   );

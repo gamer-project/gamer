@@ -300,6 +300,12 @@ void Aux_TakeNote()
       fprintf( Note, "STORE_PAR_ACC                   OFF\n" );
 #     endif
 
+#     ifdef STORE_PAR_POT
+      fprintf( Note, "STORE_PAR_POT                   ON\n" );
+#     else
+      fprintf( Note, "STORE_PAR_POT                   OFF\n" );
+#     endif
+
 #     ifdef STAR_FORMATION
       fprintf( Note, "STAR_FORMATION                  ON\n" );
 #     else
@@ -1673,6 +1679,9 @@ void Aux_TakeNote()
 #     endif
 #     ifdef PARTICLE
       fprintf( Note, "OPT__OUTPUT_PAR_DENS           % d\n",      OPT__OUTPUT_PAR_DENS        );
+#     ifdef GRAVITY
+      fprintf( Note, "OPT__OUTPUT_PAR_POT            % d\n",      OPT__OUTPUT_PAR_POT         );
+#     endif
 #     endif
 #     ifdef MHD
       fprintf( Note, "OPT__OUTPUT_CC_MAG             % d\n",      OPT__OUTPUT_CC_MAG          );

@@ -99,6 +99,9 @@ void Par_Init_ByFile_Default()
 #  ifdef STORE_PAR_ACC
    NParAttFlt -= 3;                       // exclude acceleration
 #  endif
+#  ifdef STORE_PAR_POT
+   NParAttFlt -= 1;                       // exclude potential (always derived from the grid, never read from file)
+#  endif
    if ( SingleParMass )    NParAttFlt --; // exclude mass
    if ( SingleParType )    NParAttInt --; // exclude type
    if ( AbsentParPUID )    NParAttInt --; // exclude particle UID
