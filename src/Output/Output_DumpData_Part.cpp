@@ -203,6 +203,7 @@ real (*Der_Out)               [ CUBE(PS1)                ] = new real         [D
                                        fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Stress YZ" );
                                        fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Stress XZ" );
             }
+#           endif // #if ( MODEL == ELBDM )
 #           ifdef DUAL_ENERGY
             if ( OPT__OUTPUT_DUAL_STATUS )
                                        fprintf( File, " %*s", StrLen_Flt, "Dual-energy status" );
@@ -682,6 +683,7 @@ void GetDerivedField( real (*FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
          OutFieldIdx += 1;
       }
    }
+
    if ( OPT__OUTPUT_ELBDM_Q_POT )
    {
       const int NFieldOut = 1;
@@ -692,6 +694,7 @@ void GetDerivedField( real (*FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
                           2, 0, DER_GHOST_SIZE, dh );
       OutFieldIdx += NFieldOut;
    }
+
    if ( OPT__OUTPUT_ELBDM_Q_STRESS )
    {
       const int NFieldOut = 6;
