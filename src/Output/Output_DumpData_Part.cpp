@@ -159,7 +159,6 @@ real (*Der_Out)               [ CUBE(PS1)                ] = new real         [D
             if ( OPT__OUTPUT_CS )      fprintf( File, " %*s", StrLen_Flt, "Sound speed" );
             if ( OPT__OUTPUT_DIVVEL )  fprintf( File, " %*s", StrLen_Flt, "Div(Vel)" );
             if ( OPT__OUTPUT_MACH   )  fprintf( File, " %*s", StrLen_Flt, "Mach" );
-#           endif
 #           ifdef MHD
             if ( OPT__OUTPUT_DIVMAG )  fprintf( File, " %*s", StrLen_Flt, "Div(Mag)" );
 #           endif
@@ -182,32 +181,33 @@ real (*Der_Out)               [ CUBE(PS1)                ] = new real         [D
             if ( OPT__OUTPUT_GRACKLE_TCOOL )
                                        fprintf( File, " %*s", StrLen_Flt, "Grackle cooling time" );
 #           endif
-#           if ( MODEL == ELBDM )
-            if (OPT__OUTPUT_ELBDM_VEL)
-            {
-                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Bulk Velocity X" );
-                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Bulk Velocity Y" );
-                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Bulk Velocity Z" );
-                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Thermal Velocity X" );
-                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Thermal Velocity Y" );
-                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Thermal Velocity Z" );
-            }
-            if (OPT__OUTPUT_ELBDM_Q_POT)
-                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Potential" );
-            if (OPT__OUTPUT_ELBDM_Q_STRESS)
-            {
-                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Stress XX" );
-                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Stress YY" );
-                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Stress ZZ" );
-                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Stress XY" );
-                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Stress YZ" );
-                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM Quantum Stress XZ" );
-            }
-#           endif // #if ( MODEL == ELBDM )
 #           ifdef DUAL_ENERGY
             if ( OPT__OUTPUT_DUAL_STATUS )
                                        fprintf( File, " %*s", StrLen_Flt, "Dual-energy status" );
 #           endif
+#           endif // #if ( MODEL == HYDRO )
+#           if ( MODEL == ELBDM )
+            if ( OPT__OUTPUT_ELBDM_VEL )
+            {
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM bulk velocity X" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM bulk velocity Y" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM bulk velocity Z" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM thermal velocity X" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM thermal velocity Y" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM thermal velocity Z" );
+            }
+            if ( OPT__OUTPUT_ELBDM_Q_POT )
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM quantum potential" );
+            if ( OPT__OUTPUT_ELBDM_Q_STRESS )
+            {
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM quantum stress XX" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM quantum stress YY" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM quantum stress ZZ" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM quantum stress XY" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM quantum stress YZ" );
+                                       fprintf( File, " %*s", StrLen_Flt, "ELBDM quantum stress XZ" );
+            }
+#           endif // #if ( MODEL == ELBDM )
             if ( OPT__OUTPUT_USER_FIELD ) {
                for (int v=0; v<UserDerField_Num; v++)
                                        fprintf( File, " %*s", StrLen_Flt, UserDerField_Label[v] );
@@ -427,7 +427,6 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
 
    if ( OPT__OUTPUT_MACH )
       fprintf( File, BlankPlusFormat_Flt, DerField[ Der_FieldIdx ++ ][Der_CellIdx] );
-#  endif // #if ( MODEL == HYDRO )
 
 #  ifdef MHD
    if ( OPT__OUTPUT_DIVMAG ) {
@@ -474,6 +473,7 @@ void WriteFile( FILE *File, const int lv, const int PID, const int i, const int 
       fprintf( File, BlankPlusFormat_Flt, de_status_real );
    }
 #  endif
+#  endif // #if ( MODEL == HYDRO )
 
 #  if ( MODEL == ELBDM )
    if ( OPT__OUTPUT_ELBDM_VEL ) {
@@ -671,15 +671,18 @@ void GetDerivedField( real (*FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
    if ( OPT__OUTPUT_ELBDM_VEL )
    {
       const int NFieldOut = 6;
+
       if ( OutFieldIdx + NFieldOut > DER_NOUT_MAX )
          Aux_Error( ERROR_INFO, "OutFieldIdx (%d) + NFieldOut (%d) > DER_NOUT_MAX (%d) !!\n",
                     OutFieldIdx, NFieldOut, DER_NOUT_MAX );
-      for (int v = 0; v<6; v++)
+
+      for (int v=0; v<6; v++)
       {
          const int fv = v/3;
          const int vv = v%3;
          ELBDM_DerivedField( Out[OutFieldIdx], FluIn[LocalID][0],
                              fv, vv, DER_GHOST_SIZE, dh );
+
          OutFieldIdx += 1;
       }
    }
@@ -687,25 +690,30 @@ void GetDerivedField( real (*FluIn)[NCOMP_TOTAL][ CUBE(DER_NXT)            ],
    if ( OPT__OUTPUT_ELBDM_Q_POT )
    {
       const int NFieldOut = 1;
+
       if ( OutFieldIdx + NFieldOut > DER_NOUT_MAX )
          Aux_Error( ERROR_INFO, "OutFieldIdx (%d) + NFieldOut (%d) > DER_NOUT_MAX (%d) !!\n",
                     OutFieldIdx, NFieldOut, DER_NOUT_MAX );
+
       ELBDM_DerivedField( Out[OutFieldIdx], FluIn[LocalID][0],
                           2, 0, DER_GHOST_SIZE, dh );
+
       OutFieldIdx += NFieldOut;
    }
 
    if ( OPT__OUTPUT_ELBDM_Q_STRESS )
    {
       const int NFieldOut = 6;
+
       if ( OutFieldIdx + NFieldOut > DER_NOUT_MAX )
          Aux_Error( ERROR_INFO, "OutFieldIdx (%d) + NFieldOut (%d) > DER_NOUT_MAX (%d) !!\n",
                     OutFieldIdx, NFieldOut, DER_NOUT_MAX );
-      for (int v = 0; v<6; v++)
+
+      for (int v=0; v<6; v++)
       {
-         const int vv = v;;
          ELBDM_DerivedField( Out[OutFieldIdx], FluIn[LocalID][0],
-                             3, vv, DER_GHOST_SIZE, dh );
+                             3, v, DER_GHOST_SIZE, dh );
+
          OutFieldIdx += 1;
       }
    }
