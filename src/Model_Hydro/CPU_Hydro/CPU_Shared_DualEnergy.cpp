@@ -360,7 +360,7 @@ real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Passive[]
 
 #  elif ( DUAL_ENERGY == DE_EINT )
 #  ifdef COSMIC_RAY
-   const real GammaCR_m1 = (real)EoS_AuxArray_Flt[5];
+   const real GammaCR_m1 = EoS_AuxArray_Flt[5];
    const real E_CR       = Passive[ CRAY-NCOMP_FLUID ];
    const real Pres_CR    = GammaCR_m1*E_CR;
 
