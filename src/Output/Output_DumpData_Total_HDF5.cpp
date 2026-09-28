@@ -292,7 +292,7 @@ Procedure for outputting new variables:
 //                2511 : 2026/07/02 --> output exact-cooling parameters
 //                2512 : 2026/08/14 --> remove Src_EC_subcycling
 //                2513 : 2026/05/14 --> support OPT__OUTPUT_DUAL_STATUS
-//                2514 : 2026/05/25 --> output DUAL_ENERGY_PREDICT 
+//                2514 : 2026/05/25 --> output DUAL_ENERGY_PREDICT
 //                2515 : 2026/09/28 --> output OPT__OUTPUT_ELBDM_VEL/Q_POT/Q_STRESS
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
@@ -450,9 +450,9 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
    if ( OPT__OUTPUT_DUAL_STATUS )   sprintf( FieldLabelOut[DualStatusDumpIdx], "%s", "DualStatus" );
 #  endif
-#  endif // if ( MODEL == HYDRO )
+#  endif // #if ( MODEL == HYDRO )
 
-#  if (MODEL == ELBDM)
+#  if ( MODEL == ELBDM )
    const int ELBDM_VelDumpIdx0 = ( OPT__OUTPUT_ELBDM_VEL ) ? NFieldStored : NoDump;
    if ( ELBDM_VelDumpIdx0+5 >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
@@ -485,7 +485,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       sprintf( FieldLabelOut[ ELBDM_Q_StressDumpIdx0 + 4 ], "%s", "ELBDMQStressYZ" );
       sprintf( FieldLabelOut[ ELBDM_Q_StressDumpIdx0 + 5 ], "%s", "ELBDMQStressXZ" );
    }
-#  endif // #if (MODEL == ELBDM)
+#  endif // #if ( MODEL == ELBDM )
 
    const int UserDumpIdx0 = ( OPT__OUTPUT_USER_FIELD ) ? NFieldStored : NoDump;
    if ( UserDumpIdx0+UserDerField_Num-1 >= NFIELD_STORED_MAX )
@@ -1291,23 +1291,23 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //             d-15. ELBDM velocity
                else if ( v >= ELBDM_VelDumpIdx0  &&  v < ELBDM_VelDumpIdx0+6 )
                {
-                  const int fv = (v - ELBDM_VelDumpIdx0)/3;
-                  const int vv = (v - ELBDM_VelDumpIdx0)%3;
+                  const int fv = ( v - ELBDM_VelDumpIdx0 )/3;
+                  const int vv = ( v - ELBDM_VelDumpIdx0 )%3;
                   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                   {
                      Prepare_PatchData( lv, Time[lv], Der_FluIn[0][0], NULL, DER_GHOST_SIZE, 1, &PID0,
-                                    _TOTAL, _NONE, OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26,
-                                    IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
-                                    DE_Consistency_No );
+                                        _TOTAL, _NONE, OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26,
+                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
+                                        DE_Consistency_No );
+
                      for (int LocalID=0; LocalID<8; LocalID++)
                      {
 //                      compute and store the target derived field
-                        const int PID  = PID0 + LocalID;
-                        ELBDM_DerivedField( FieldData[PID][0][0], Der_FluIn[LocalID][0], fv, vv, DER_GHOST_SIZE , amr->dh[lv] );
+                        const int PID = PID0 + LocalID;
+                        ELBDM_DerivedField( FieldData[PID][0][0], Der_FluIn[LocalID][0], fv, vv, DER_GHOST_SIZE, amr->dh[lv] );
                      } // for (int LocalID=0; LocalID<8; LocalID++)
-
-                  } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-               } // if ( v >= ELBDM_VelDumpIdx0  &&  v < ELBDM_VelDumpIdx0+3 )
+                  } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+               } // if ( v >= ELBDM_VelDumpIdx0  &&  v < ELBDM_VelDumpIdx0+6 )
 
 //             d-16. ELBDM quantum potential
                else if ( v == ELBDM_Q_PotDumpIdx )
@@ -1315,37 +1315,36 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                   {
                      Prepare_PatchData( lv, Time[lv], Der_FluIn[0][0], NULL, DER_GHOST_SIZE, 1, &PID0,
-                                    _TOTAL, _NONE, OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26,
-                                    IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
-                                    DE_Consistency_No );
+                                        _TOTAL, _NONE, OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26,
+                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
+                                        DE_Consistency_No );
                      for (int LocalID=0; LocalID<8; LocalID++)
                      {
 //                      compute and store the target derived field
-                        const int PID  = PID0 + LocalID;
-                        ELBDM_DerivedField( FieldData[PID][0][0], Der_FluIn[LocalID][0], 2, 0, DER_GHOST_SIZE , amr->dh[lv] );
+                        const int PID = PID0 + LocalID;
+                        ELBDM_DerivedField( FieldData[PID][0][0], Der_FluIn[LocalID][0], 2, 0, DER_GHOST_SIZE, amr->dh[lv] );
                      } // for (int LocalID=0; LocalID<8; LocalID++)
-                  } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                  } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                } // if ( v == ELBDM_Q_PotDumpIdx )
 
 //             d-17. ELBDM quantum stress tensor
                else if ( v >= ELBDM_Q_StressDumpIdx0  &&  v < ELBDM_Q_StressDumpIdx0+6 )
                {
                   const int vv = v - ELBDM_Q_StressDumpIdx0;
-
                   for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                   {
                      Prepare_PatchData( lv, Time[lv], Der_FluIn[0][0], NULL, DER_GHOST_SIZE, 1, &PID0,
-                                    _TOTAL, _NONE, OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26,
-                                    IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
-                                    DE_Consistency_No );
+                                        _TOTAL, _NONE, OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26,
+                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
+                                        DE_Consistency_No );
                      for (int LocalID=0; LocalID<8; LocalID++)
                      {
 //                      compute and store the target derived field
-                        const int PID  = PID0 + LocalID;
-                        ELBDM_DerivedField( FieldData[PID][0][0], Der_FluIn[LocalID][0], 3, vv, DER_GHOST_SIZE , amr->dh[lv] );
+                        const int PID = PID0 + LocalID;
+                        ELBDM_DerivedField( FieldData[PID][0][0], Der_FluIn[LocalID][0], 3, vv, DER_GHOST_SIZE, amr->dh[lv] );
                      } // for (int LocalID=0; LocalID<8; LocalID++)
-                  } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
-               } // if ( v >= ELBDM_Q_StressDumpIdx0 && v < ELBDM_Q_StressDumpIdx0+6 )
+                  } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+               } // if ( v >= ELBDM_Q_StressDumpIdx0  &&  v < ELBDM_Q_StressDumpIdx0+6 )
 #              endif // #if ( MODEL == ELBDM )
 
 //             d-18. user-defined derived fields
