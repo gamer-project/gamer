@@ -15,7 +15,8 @@ Parameters described on this page:
 [INT_OPP_SIGN_0TH_ORDER](#INT_OPP_SIGN_0TH_ORDER) &nbsp;
 
 Other related parameters:
-[[AUTO_REDUCE_INT_MONO_FACTOR | [Runtime-Parameters]-Timestep#AUTO_REDUCE_INT_MONO_FACTOR]] &nbsp;
+[[AUTO_REDUCE_INT_MONO_FACTOR | [Runtime-Parameters]-Timestep#AUTO_REDUCE_INT_MONO_FACTOR]], &nbsp;
+[[ OPT__INT_PHASE | [Runtime-Parameters]-ELBDM#OPT__INT_PHASE]] &nbsp;
 
 <a name="INT_TABLE"></a>
 Supported interpolation schemes:
@@ -30,6 +31,7 @@ Supported interpolation schemes:
 |5 | Non-conservative quadratic|
 |6 | Conservative quartic|
 |7 | Non-conservative quartic|
+|8 | Spectral |
 
 
 Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**
