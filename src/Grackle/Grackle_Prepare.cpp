@@ -22,19 +22,20 @@ extern int CheIdx_DI;
 extern int CheIdx_DII;
 extern int CheIdx_HDI;
 extern int CheIdx_Metal;
+extern int CheIdx_Dust;
 extern int CheIdx_vHeatingRate;
 extern int CheIdx_sHeatingRate;
 extern int CheIdx_tempFloor;
 
 
 // declare as static so that other functions cannot invoke it directly and must use the function pointer
-static real_che Grackle_vHeatingRate_User_Template( const double x, const double y, const double z, const double Time, const double n_H );
+static real_che Grackle_vHeatingRate_User_Template( const double x, const double y, const double z, const double Time, const double n_H, const real_che sEint_Gas  );
 static real_che Grackle_sHeatingRate_User_Template( const double x, const double y, const double z, const double Time );
 static real_che Grackle_tempFloor_Default( const double x, const double y, const double z, const double Time, const real_che Dens_Gas, const real_che sEint_Gas );
 
 
 // these function pointers must be set by a test problem initializer
-real_che (*Grackle_vHeatingRate_User_Ptr)( const double x, const double y, const double z, const double Time, const double n_H ) = NULL;
+real_che (*Grackle_vHeatingRate_User_Ptr)( const double x, const double y, const double z, const double Time, const double n_H, const real_che sEint_Gas ) = NULL;
 real_che (*Grackle_sHeatingRate_User_Ptr)( const double x, const double y, const double z, const double Time )                   = NULL;
 real_che (*Grackle_tempFloor_User_Ptr)( const double x, const double y, const double z, const double Time, const real_che Dens_Gas, const real_che sEint_Gas ) = Grackle_tempFloor_Default;
 
@@ -103,6 +104,11 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    if ( GRACKLE_METAL ) {
       if (  Idx_Metal == Idx_Undefined  ||  CheIdx_Metal == Idx_Undefined  )
          Aux_Error( ERROR_INFO, "[Che]Idx_Metal is undefined for \"GRACKLE_METAL\" !!\n" );
+   }
+
+   if ( GRACKLE_DUST ) {
+      if (  Idx_Dust == Idx_Undefined  ||  CheIdx_Dust == Idx_Undefined  )
+         Aux_Error( ERROR_INFO, "[Che]Idx_Dust is undefined for \"GRACKLE_DUST\" !!\n" );
    }
 
    if ( GRACKLE_USE_V_HEATING_RATE ) {
@@ -184,6 +190,7 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    real_che *Ptr_DII0          = h_Che_Array + CheIdx_DII         *Size1v;
    real_che *Ptr_HDI0          = h_Che_Array + CheIdx_HDI         *Size1v;
    real_che *Ptr_Metal0        = h_Che_Array + CheIdx_Metal       *Size1v;
+   real_che *Ptr_Dust0         = h_Che_Array + CheIdx_Dust        *Size1v;
    real_che *Ptr_vHeatingRate0 = h_Che_Array + CheIdx_vHeatingRate*Size1v;
    real_che *Ptr_sHeatingRate0 = h_Che_Array + CheIdx_sHeatingRate*Size1v;
    real_che *Ptr_tempFloor0    = h_Che_Array + CheIdx_tempFloor   *Size1v;
@@ -204,7 +211,7 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
 
    real_che *Ptr_Dens=NULL, *Ptr_sEint=NULL, *Ptr_Ent=NULL, *Ptr_e=NULL, *Ptr_HI=NULL, *Ptr_HII=NULL;
    real_che *Ptr_HeI=NULL, *Ptr_HeII=NULL, *Ptr_HeIII=NULL, *Ptr_HM=NULL, *Ptr_H2I=NULL, *Ptr_H2II=NULL;
-   real_che *Ptr_DI=NULL, *Ptr_DII=NULL, *Ptr_HDI=NULL, *Ptr_Metal=NULL;
+   real_che *Ptr_DI=NULL, *Ptr_DII=NULL, *Ptr_HDI=NULL, *Ptr_Metal=NULL, *Ptr_Dust=NULL;
    real_che *Ptr_vHeatingRate=NULL, *Ptr_sHeatingRate=NULL, *Ptr_tempFloor=NULL;
    real_che  Ratio_FloorDens;
 
@@ -231,6 +238,7 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
       Ptr_DII          = Ptr_DII0          + offset;
       Ptr_HDI          = Ptr_HDI0          + offset;
       Ptr_Metal        = Ptr_Metal0        + offset;
+      Ptr_Dust         = Ptr_Dust0         + offset;
       Ptr_vHeatingRate = Ptr_vHeatingRate0 + offset;
       Ptr_sHeatingRate = Ptr_sHeatingRate0 + offset;
       Ptr_tempFloor    = Ptr_tempFloor0    + offset;
@@ -350,10 +358,14 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
             if ( GRACKLE_METAL )
             Ptr_Metal[idx_pg] = *( fluid[Idx_Metal][0][0] + idx_p ) * Ratio_FloorDens;
 
+//          use dust density field
+            if ( GRACKLE_DUST )
+            Ptr_Dust[idx_pg] = *( fluid[Idx_Dust][0][0] + idx_p ) * Ratio_FloorDens;
+
 //          user-provided array of volumetric heating rates
             if ( GRACKLE_USE_V_HEATING_RATE ) {
             const double n_H = Ptr_Dens[idx_pg] * UNIT_D * GRACKLE_HYDROGEN_MFRAC / Const_mH; // hydrogen number density in units of cm^-3
-            Ptr_vHeatingRate[idx_pg] = Grackle_vHeatingRate_User_Ptr( x0+i*dh, y0+j*dh, z0+k*dh, Time[lv], n_H );
+            Ptr_vHeatingRate[idx_pg] = Grackle_vHeatingRate_User_Ptr( x0+i*dh, y0+j*dh, z0+k*dh, Time[lv], n_H, Ptr_sEint[idx_pg] );
             }
 
 //          user-provided array of specific heating rates
@@ -404,6 +416,9 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    if ( GRACKLE_METAL )
    Che_FieldData->metal_density   = Ptr_Metal0;
 
+   if ( GRACKLE_DUST )
+   Che_FieldData->dust_density    = Ptr_Dust0;
+
    if ( GRACKLE_USE_V_HEATING_RATE )
    Che_FieldData->volumetric_heating_rate = Ptr_vHeatingRate0;
 
@@ -427,13 +442,14 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
 //                   --> Please ensure that everything here is thread-safe
 //                3. Returned rate should be in unit of erg s^-1 cm^-3
 //
-// Parameter   :  x/y/z : Target physical coordinates
-//                Time  : Target physical time
-//                n_H   : Hydrogen number density in units of cm^-3
+// Parameter   :  x/y/z     : Target physical coordinates
+//                Time      : Target physical time
+//                n_H       : Hydrogen number density in units of cm^-3
+//                sEint_Gas : Gas specific internal energy
 //
 // Return      :  volumetric_heating_rate
 //-------------------------------------------------------------------------------------------------------
-static real_che Grackle_vHeatingRate_User_Template( const double x, const double y, const double z, const double Time, const double n_H )
+static real_che Grackle_vHeatingRate_User_Template( const double x, const double y, const double z, const double Time, const double n_H, const real_che sEint_Gas )
 {
 
    const double   Center[3]                 = { amr->BoxCenter[0], amr->BoxCenter[1], amr->BoxCenter[2] };
