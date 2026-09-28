@@ -327,7 +327,8 @@ void Aux_Record_GrackleComoving()
 #     if   ( DUAL_ENERGY == DE_ENPY )
       const bool CheckMinPres_No = false;
 //    Hydro_DensDual2Pres() returns gas pressure without cosmic rays
-      const double Pres = Hydro_DensDual2Pres( Dens, Dual, EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
+      const double Pres = Hydro_DensDual2Pres( Dens, Dual, NULL, CheckMinPres_No, NULL_REAL,
+                                               NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #     if   ( EOS == EOS_GAMMA )
 //    EOS_GAMMA does not involve passive scalars
       Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
@@ -338,7 +339,7 @@ void Aux_Record_GrackleComoving()
 #     endif // EOS
 
 #     elif ( DUAL_ENERGY == DE_EINT )
-#     error : DE_EINT is NOT supported yet !!
+      Eint = Dual;
 #     endif
 
 #     else // #ifdef DUAL_ENERGY
@@ -600,7 +601,8 @@ double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
 #     if   ( DUAL_ENERGY == DE_ENPY )
       const bool CheckMinPres_No = false;
 //    Hydro_DensDual2Pres() returns gas pressure without cosmic rays
-      const double Pres = Hydro_DensDual2Pres( Dens, Dual, EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
+      const double Pres = Hydro_DensDual2Pres( Dens, Dual, NULL, CheckMinPres_No, NULL_REAL,
+                                               NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #     if   ( EOS == EOS_GAMMA )
 //    EOS_GAMMA does not involve passive scalars
       Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
@@ -611,7 +613,7 @@ double Mis_GetTimeStep_GrackleComoving( const int lv, const double dTime_dt )
 #     endif // EOS
 
 #     elif ( DUAL_ENERGY == DE_EINT )
-#     error : DE_EINT is NOT supported yet !!
+      Eint = Dual;
 #     endif
 
 #     else // #ifdef DUAL_ENERGY

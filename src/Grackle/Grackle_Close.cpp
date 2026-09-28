@@ -146,10 +146,11 @@ void Grackle_Close( const int lv, const int SaveSg, const real_che h_Che_Array[]
 #           error : ERROR : unsupported EoS !!
 #           endif // EOS
 
-            *( fluid[DUAL     ][0][0] + idx_p ) = Hydro_DensPres2Dual( Dens, Pres, EoS_AuxArray_Flt[1] );
+            *( fluid[DUAL     ][0][0] + idx_p ) = Hydro_DensPres2Dual( Dens, Pres, NULL, NULL,
+                                                                       EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
 #           elif ( DUAL_ENERGY == DE_EINT )
-#           error : DE_EINT is NOT supported yet !!
+            *( fluid[DUAL     ][0][0] + idx_p ) = Eint;
 #           endif
 
 #           endif // #ifdef DUAL_ENERGY

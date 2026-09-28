@@ -259,7 +259,8 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
 
 #           if   ( DUAL_ENERGY == DE_ENPY )
 //          Hydro_DensDual2Pres() returns gas pressure without cosmic rays
-            Pres  = Hydro_DensDual2Pres( Dens, *(fluid[DUAL][0][0]+idx_p), EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
+            Pres  = Hydro_DensDual2Pres( Dens, *(fluid[DUAL][0][0]+idx_p), NULL, CheckMinPres_No, NULL_REAL,
+                                         NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #           if   ( EOS == EOS_GAMMA )
 //          EOS_GAMMA does not involve passive scalars
             Eint  = EoS_DensPres2Eint_CPUPtr( Dens, Pres, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
@@ -270,7 +271,7 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
 #           endif // EOS
 
 #           elif ( DUAL_ENERGY == DE_EINT )
-#           error : DE_EINT is NOT supported yet !!
+            Eint  = *( fluid[DUAL][0][0] + idx_p );
 #           endif // DUAL_ENERGY == DE_ENPY/DE_EINT
 
 #           else // #ifdef DUAL_ENERGY

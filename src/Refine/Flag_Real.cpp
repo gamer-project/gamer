@@ -389,16 +389,19 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
 //                if applicable, compute pressure from the dual-energy variable to reduce the round-off errors
 #                 ifdef DUAL_ENERGY
 
-#                 if   ( DUAL_ENERGY == DE_ENPY )
-                  Pres[k][j][i] = Hydro_DensDual2Pres( Fluid[DENS][k][j][i], Fluid[DUAL][k][j][i],
-                                                       EoS_AuxArray_Flt[1], CheckMinPres_Yes, MIN_PRES );
+#                 if    ( DUAL_ENERGY == DE_ENPY )
+                  const real *Passive = NULL;
+#                 elif  ( DUAL_ENERGY == DE_EINT )
+                  real Passive[NCOMP_PASSIVE];
+                  for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Fluid[ NCOMP_FLUID + v ][k][j][i];
+#                 endif
+                  Pres[k][j][i] = Hydro_DensDual2Pres( Fluid[DENS][k][j][i], Fluid[DUAL][k][j][i], Passive,
+                                                       CheckMinPres_Yes, MIN_PRES, EoS_DensEint2Pres_CPUPtr,
+                                                       EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 //                add cosmic-ray pressure
 #                 ifdef COSMIC_RAY
                   Pres[k][j][i] += EoS_CREint2CRPres_CPUPtr( Fluid[CRAY][k][j][i], EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #                 endif // COSMIC_RAY
-#                 elif ( DUAL_ENERGY == DE_EINT )
-#                 error : DE_EINT is NOT supported yet !!
-#                 endif // DUAL_ENERGY == DE_ENPY/DE_EINT
 
 #                 else // #ifdef DUAL_ENERGY
 

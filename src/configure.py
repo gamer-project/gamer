@@ -499,9 +499,10 @@ def load_arguments( sys_setting : SystemSetting ):
     parser.add_argument( "--dual", type=str, metavar="TYPE", gamer_name="DUAL_ENERGY", prefix="DE_",
                          default=NONE_STR, choices=[NONE_STR, "ENPY", "EINT"],
                          depend={"model":"HYDRO"},
-                         constraint={ "ENPY":{"eos":["GAMMA", "COSMIC_RAY"]} },
+                         constraint={ "ENPY":{"eos":["GAMMA", "COSMIC_RAY"]},
+                                      "EINT":{"flu_scheme":["MHM", "MHM_RP"]} },
                          help="The dual-energy formalism (ENPY: entropy, EINT: internal energy). "\
-                              "EINT is not supported yet. Useless for RTVD.\n"
+                              "EINT only supports MHM/MHM_RP. Useless for RTVD.\n"
                        )
 
     parser.add_argument( "--mhd", type=str2bool, metavar="BOOLEAN", gamer_name="MHD",
@@ -1051,7 +1052,7 @@ def validation( paths, depends, constraints, **kwargs ):
         if kwargs["passive"] < 0:
             LOGGER.error("Passive scalar should not be negative. Current: %d"%kwargs["passive"])
             success = False
-        if kwargs["dual"] not in [NONE_STR, "ENPY"]:
+        if kwargs["dual"] not in [NONE_STR, "ENPY", "EINT"]:
             LOGGER.error("This dual energy form is not supported yet. Current: %s"%kwargs["dual"])
             success = False
 

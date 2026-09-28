@@ -1111,8 +1111,9 @@ int AllocateSonPatch( const int FaLv, const int *Cr, const int PScale, const int
 
       Hydro_DualEnergyFix( FData_Flu[DENS][k][j][i], FData_Flu[MOMX][k][j][i], FData_Flu[MOMY][k][j][i],
                            FData_Flu[MOMZ][k][j][i], FData_Flu[ENGY][k][j][i], FData_Flu[DUAL][k][j][i],
-                           Passive, dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], CheckMinPres_Yes, MIN_PRES,
-                           PassiveFloorMask, UseDual2FixEngy, Emag );
+                           Passive, dummy, CheckMinPres_Yes, MIN_PRES, PassiveFloorMask, UseDual2FixEngy, Emag,
+                           EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
+                           EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
 #     else // #ifdef DUAL_ENERGY
 

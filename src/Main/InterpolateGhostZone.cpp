@@ -1980,8 +1980,9 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
 //       --> we achieve that by setting the dual-energy switch to an extremely larger number and ignore
 //           the runtime parameter DUAL_ENERGY_SWITCH here
          Hydro_DualEnergyFix( FData_Dens[t], FData_MomX[t], FData_MomY[t], FData_MomZ[t], FData_Engy[t], FData_Dual[t], Passive,
-                              dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], (MinPres>=(real)0.0), MinPres,
-                              PassiveFloorMask, UseDual2FixEngy, Emag );
+                              dummy, (MinPres>=(real)0.0), MinPres, PassiveFloorMask, UseDual2FixEngy, Emag,
+                              EoS_DensEint2Pres_CPUPtr, EoS_DensPres2Eint_CPUPtr,
+                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
       }
    } // if (  DE_Consistency  &&  ( TVarCC & _TOTAL ) == _TOTAL  &&  TVarFC == _MAG )
 #  endif // if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )

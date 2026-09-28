@@ -7,7 +7,7 @@
 // 2: check values close to the floor
 #define CHECK_MODE         1
 
-// check if density/pressure/entropy is smaller than CLOSE_FACTOR*floor
+// check if density/pressure/dual energy is smaller than CLOSE_FACTOR*floor
 #if   ( CHECK_MODE == 1 )
 #  define CLOSE_FACTOR     NULL_REAL
 #elif ( CHECK_MODE == 2 )
@@ -20,11 +20,11 @@
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  HydroAux_Check_Negative
-// Description :  Check if there is any cell with negative density or pressure
+// Description :  Check if there is any cell with negative density, pressure, or dual-energy variable
 //
 // Parameter   :  lv      : Target refinement level
 //                Mode    : 1 : Check negative density
-//                          2 : Check negative pressure (and entropy when DUAL_ENERGY == DE_ENPY)
+//                          2 : Check negative pressure and dual-energy variable (DE_ENPY/DE_EINT)
 //                          3 : Both
 //                comment : You can put the location where this function is invoked in this string
 //-------------------------------------------------------------------------------------------------------
@@ -35,10 +35,6 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
    if ( lv < 0  ||  lv >= NLEVEL )  Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "lv", lv );
    if ( Mode < 1  ||  Mode > 3 )    Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "Mode", Mode );
 
-#  if ( DUAL_ENERGY == DE_EINT )
-#  error : DE_EINT is NOT supported yet !!
-#  endif
-
 
    const bool CheckMinPres_No = false;
 
@@ -46,11 +42,11 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
    real Pres, Fluid[NCOMP_TOTAL];
 
 // set the minimum thresholds for this check
-// --> currently we use TINY_NUMBER as the floor value of entropy
+// --> currently we use TINY_NUMBER as the floor value of the dual-energy variable
    const real DensCheck = ( CHECK_MODE == 1 ) ? 0.0 : CLOSE_FACTOR*MIN_DENS;
    const real PresCheck = ( CHECK_MODE == 1 ) ? 0.0 : CLOSE_FACTOR*MIN_PRES;
-#  if ( DUAL_ENERGY == DE_ENPY )
-   const real EnpyCheck = ( CHECK_MODE == 1 ) ? 0.0 : CLOSE_FACTOR*TINY_NUMBER;
+#  ifdef DUAL_ENERGY
+   const real DualCheck = ( CHECK_MODE == 1 ) ? 0.0 : CLOSE_FACTOR*TINY_NUMBER;
 #  endif
 
 
@@ -68,11 +64,8 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
 //          compute pressure (excluding cosmic-ray pressure for a more stringent check)
 #           ifdef DUAL_ENERGY
 
-#           if   ( DUAL_ENERGY == DE_ENPY )
-            Pres = Hydro_DensDual2Pres( Fluid[DENS], Fluid[DUAL], EoS_AuxArray_Flt[1], CheckMinPres_No, NULL_REAL );
-#           elif ( DUAL_ENERGY == DE_EINT )
-#           error : DE_EINT is NOT supported yet !!
-#           endif // DUAL_ENERGY == DE_ENPY/DE_EINT
+            Pres = Hydro_DensDual2Pres( Fluid[DENS], Fluid[DUAL], Fluid+NCOMP_FLUID, CheckMinPres_No, NULL_REAL,
+                                        EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
 #           else // #ifdef DUAL_ENERGY
 
@@ -87,7 +80,7 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
                                    EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
 //          exclude cosmic-ray pressure
 #           ifdef COSMIC_RAY
-            Pres -= EoS_CREint2CRPres_CPUPtr( Fluid[CRAY], EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );;
+            Pres -= EoS_CREint2CRPres_CPUPtr( Fluid[CRAY], EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 #           endif
 #           endif // #ifdef DUAL_ENERGY ... else ...
 
@@ -118,8 +111,8 @@ void Hydro_Aux_Check_Negative( const int lv, const int Mode, const char *comment
 
             if ( Mode == 2  ||  Mode == 3 )
             {
-#              if ( DUAL_ENERGY == DE_ENPY )
-               if ( Pres <= PresCheck  ||  Fluid[DUAL] < EnpyCheck )
+#              ifdef DUAL_ENERGY
+               if ( Pres <= PresCheck  ||  Fluid[DUAL] < DualCheck )
 #              else
                if ( Pres <= PresCheck )
 #              endif
