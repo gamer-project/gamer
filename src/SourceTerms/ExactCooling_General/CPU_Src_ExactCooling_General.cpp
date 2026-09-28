@@ -1,10 +1,11 @@
 #include "CUFLU.h"
 
-
+#ifdef EXACT_COOLING_GENERAL
 
 // external functions and GPU-related set-up
 #ifdef __CUDACC__
 
+#include "Global.h"
 #include "CUDA_CheckError.h"
 #include "CUDA_ConstMemory.h"
 #if ( MODEL == HYDRO )
@@ -17,18 +18,18 @@
 // local function prototypes
 #ifndef __CUDACC__
 
-void Src_SetAuxArray_ExactCooling_User( double [], int [] );
-void Src_SetConstMemory_ExactCooling_User( const double AuxArray_Flt[], const int AuxArray_Int[],
-                                        double *&DevPtr_Flt, int *&DevPtr_Int );
-void Src_SetCPUFunc_ExactCooling_User( SrcFunc_t & );
+void Src_SetAuxArray_ExactCooling_General( double [], int [] );
+void Src_SetConstMemory_ExactCooling_General( const double AuxArray_Flt[], const int AuxArray_Int[],
+                                              double *&DevPtr_Flt, int *&DevPtr_Int );
+void Src_SetCPUFunc_ExactCooling_General( SrcFunc_t & );
 #ifdef GPU
-void Src_SetGPUFunc_ExactCooling_User( SrcFunc_t & );
+void Src_SetGPUFunc_ExactCooling_General( SrcFunc_t & );
 #endif
-void Src_WorkBeforeMajorFunc_ExactCooling_User( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                                             double AuxArray_Flt[], int AuxArray_Int[] );
-void Src_End_ExactCooling_User();
-double Mis_GetTimeStep_ExactCooling_User( const int lv, const double dTime_dt );
-#endif
+void Src_WorkBeforeMajorFunc_ExactCooling_General( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                                                    double AuxArray_Flt[], int AuxArray_Int[] );
+void Src_End_ExactCooling_General();
+double Mis_GetTimeStep_ExactCooling_General( const int lv, const double dTime_dt );
+#endif // #ifdef __CUDACC__
 
 GPU_DEVICE static
 double ExactCooling_GetLambda( const double Temp, const int k, const double Tks[], const double Lks[], const double aks[] );
@@ -40,10 +41,14 @@ GPU_DEVICE static
 double TEF_inverse_PiecewisePowerLaw( const double Y, const int N, const double Yks[], const double Lks[], const double aks[], const double Tks[] );
 
 /********************************************************
-1. Template of a user-defined source term
-   --> Enabled by the runtime option "SRC_USER"
+1. General exact-cooling source term
+   --> Enabled by the compilation option "EXACT_COOLING_GENERAL" and the runtime option "SRC_EXACTCOOLING_GENERAL"
 
-2. Four steps are required to implement a source term
+2. This file is shared by both CPU and GPU
+   
+   CUSRC_Src_ExactCooling_General.cu -> CPU_Src_ExactCooling_General.cpp
+
+3. Four steps are required to implement a source term
 
    I.   Set auxiliary arrays
    II.  Implement the source-term function
@@ -51,7 +56,7 @@ double TEF_inverse_PiecewisePowerLaw( const double Y, const int N, const double 
         before calling the major source-term function
    IV.  Set initialization functions
 
-3. The source-term function must be thread-safe and
+4. The source-term function must be thread-safe and
    not use any global variable
 ********************************************************/
 
@@ -62,11 +67,11 @@ double TEF_inverse_PiecewisePowerLaw( const double Y, const int N, const double 
 // =======================
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Src_SetAuxArray_ExactCooling_User
+// Function    :  Src_SetAuxArray_ExactCooling_General
 // Description :  Set the auxiliary arrays AuxArray_Flt/Int[]
 //
-// Note        :  1. Invoked by Src_Init_ExactCooling_User()
-//                2. AuxArray_Flt/Int[] have the size of SRC_NAUX_USER defined in Macro.h (default = 20)
+// Note        :  1. Invoked by Src_Init_ExactCooling_General()
+//                2. AuxArray_Flt/Int[] have the size of SRC_NAUX_EXACTCOOLING_GENERAL defined in Macro.h (default = 20)
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //                4. Change the values in AuxArray_Flt/Int[] to implement your piecewise power law cooling funciton
 //
@@ -75,7 +80,7 @@ double TEF_inverse_PiecewisePowerLaw( const double Y, const int N, const double 
 // Return      :  AuxArray_Flt/Int[]
 //-------------------------------------------------------------------------------------------------------
 #ifndef __CUDACC__
-void Src_SetAuxArray_ExactCooling_User( double AuxArray_Flt[], int AuxArray_Int[] )
+void Src_SetAuxArray_ExactCooling_General( double AuxArray_Flt[], int AuxArray_Int[] )
 {
    // ==========================
    // Gas settings
@@ -111,7 +116,7 @@ void Src_SetAuxArray_ExactCooling_User( double AuxArray_Flt[], int AuxArray_Int[
    AuxArray_Flt[13] = 5.51e-22;         // Normalization2 (L2)
    AuxArray_Flt[14] = 1.15e-23;         // Normalization3 (L3)
 
-} // FUNCTION : Src_SetAuxArray_ExactCooling_User
+} // FUNCTION : Src_SetAuxArray_ExactCooling_General
 #endif // #ifndef __CUDACC__
 
 
@@ -121,12 +126,13 @@ void Src_SetAuxArray_ExactCooling_User( double AuxArray_Flt[], int AuxArray_Int[
 // ======================================
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Src_ExactCooling_User
+// Function    :  Src_ExactCooling_General
 // Description :  Major source-term function
 //
 // Note        :  1. Invoked by CPU/GPU_SrcSolver_IterateAllCells()
-//                2. See Src_SetAuxArray_ExactCooling_User() for the values stored in AuxArray_Flt/Int[]
+//                2. See Src_SetAuxArray_ExactCooling_General() for the values stored in AuxArray_Flt/Int[]
 //                3. Follow Townsend (2009, ApJS, 181, 391) to implement the exact integration of the piecewise power law cooling function
+//                4. Shared by both CPU and GPU
 //
 // Parameter   :  fluid             : Fluid array storing both the input and updated values
 //                                    --> Including both active and passive variables
@@ -146,12 +152,12 @@ void Src_SetAuxArray_ExactCooling_User( double AuxArray_Flt[], int AuxArray_Int[
 // Return      :  fluid[]
 //-----------------------------------------------------------------------------------------
 GPU_DEVICE_NOINLINE
-static void Src_ExactCooling_User( real fluid[], const real B[],
-                                   const SrcTerms_t *SrcTerms, const real dt, const real dh,
-                                   const double x, const double y, const double z,
-                                   const double TimeNew, const double TimeOld,
-                                   const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor,
-                                   const EoS_t *EoS, const double AuxArray_Flt[], const int AuxArray_Int[] )
+static void Src_ExactCooling_General( real fluid[], const real B[],
+                                      const SrcTerms_t *SrcTerms, const real dt, const real dh,
+                                      const double x, const double y, const double z,
+                                      const double TimeNew, const double TimeOld,
+                                      const real MinDens, const real MinPres, const real MinEint, const long PassiveFloor,
+                                      const EoS_t *EoS, const double AuxArray_Flt[], const int AuxArray_Int[] )
 {
 
 // check
@@ -202,10 +208,10 @@ static void Src_ExactCooling_User( real fluid[], const real B[],
    // (3) calculate the current temperature and internal energy
    // ===========================================================
    // current internal energy
-   double Eint  = (real) Hydro_Con2Eint( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                         true, MinEint, PassiveFloor, 0.0, EoS->GuessHTilde_FuncPtr,
-                                         EoS->HTilde2Temp_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
-                                         EoS->Table );
+   double Eint  = Hydro_Con2Eint( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                                  true, MinEint, PassiveFloor, 0.0, EoS->GuessHTilde_FuncPtr,
+                                  EoS->HTilde2Temp_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
+                                  EoS->Table );
    // current temperature
    const double T_now = EoS->DensEint2Temp_FuncPtr(fluid[DENS], Eint, (const real*)NULL, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table);
 
@@ -261,7 +267,7 @@ static void Src_ExactCooling_User( real fluid[], const real B[],
    fluid[ENGY] = Hydro_ConEint2Etot(fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Eint, 0.0);
 
 
-} // FUNCTION : Src_ExactCooling_User
+} // FUNCTION : Src_ExactCooling_General
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -316,15 +322,15 @@ double ExactCooling_GetTcool( const double Temp, const double n, const double n_
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Mis_GetTimeStep_ExactCooling_User
+// Function    :  Mis_GetTimeStep_ExactCooling_General
 // Description :  Estimate the evolution time-step constrained by the user's exact-cooling source term
 //
 // Note        :  1. Scan all cells at the target refinement level and find the minimum cooling time.
 //                2. The cooling time is calculated using exactly the same gas settings and
-//                   piecewise power-law cooling function as Src_MYExact_Cooling().
+//                   piecewise power-law cooling function as Src_ExactCooling_General().
 //                3. The returned timestep is
 //
-//                      dt = DT__EXACT_COOLING * min(tcool) / UNIT_T
+//                      dt = SRC_EXACTCOOLING_GENERAL_DT * min(tcool) / UNIT_T
 //
 //                   where tcool is in physical seconds and dt is in GAMER code time units.
 //                4. The minimum is first found over OpenMP threads and then over MPI processes.
@@ -335,8 +341,9 @@ double ExactCooling_GetTcool( const double Temp, const double n, const double n_
 //
 // Return      :  dt in GAMER code time units
 //-------------------------------------------------------------------------------------------------------
+
 #ifndef __CUDACC__
-double Mis_GetTimeStep_ExactCooling_User( const int lv, const double dTime_dt )
+double Mis_GetTimeStep_ExactCooling_General( const int lv, const double dTime_dt )
 {
    (void) dTime_dt;   // 1.0 for non-comoving
 
@@ -344,15 +351,15 @@ double Mis_GetTimeStep_ExactCooling_User( const int lv, const double dTime_dt )
    // (1) read parameters
    // ==========================
 
-   const double mu_e = Src_User_AuxArray_Flt[2];    // mean electron molecular weight
-   const double mu_H = Src_User_AuxArray_Flt[3];    // mean proton molecular weight
-   const double mu   = Src_User_AuxArray_Flt[4];    // mean total molecular weight
+   const double mu_e = Src_ExactCooling_General_AuxArray_Flt[2];    // mean electron molecular weight
+   const double mu_H = Src_ExactCooling_General_AuxArray_Flt[3];    // mean proton molecular weight
+   const double mu   = Src_ExactCooling_General_AuxArray_Flt[4];    // mean total molecular weight
    
-   const int    N    = Src_User_AuxArray_Int[0];    // number of temperature points
+   const int    N    = Src_ExactCooling_General_AuxArray_Int[0];    // number of temperature points
    
-   const double *Tks = &Src_User_AuxArray_Flt[5];         // Temperature points (K)
-   const double *aks = &Src_User_AuxArray_Flt[5+N];       // Power law slopes
-   const double *Lks = &Src_User_AuxArray_Flt[5+2*N-1];   // Normalizations (erg cm^3 s^-1)
+   const double *Tks = &Src_ExactCooling_General_AuxArray_Flt[5];         // Temperature points (K)
+   const double *aks = &Src_ExactCooling_General_AuxArray_Flt[5+N];       // Power law slopes
+   const double *Lks = &Src_ExactCooling_General_AuxArray_Flt[5+2*N-1];   // Normalizations (erg cm^3 s^-1)
 
    // ==========================
    // (2) OpenMP
@@ -470,7 +477,7 @@ double Mis_GetTimeStep_ExactCooling_User( const int lv, const double dTime_dt )
             // UNIT_T: seconds per GAMER time unit
             // =================================================
 
-            const double dt_cell = DT__EXACT_COOLING * tcool / UNIT_T;
+            const double dt_cell = SrcTerms.ExactCooling_General_dt * tcool / UNIT_T;
 
             // =================================================
             // (3.10) Store the minimum timestep
@@ -515,7 +522,7 @@ double Mis_GetTimeStep_ExactCooling_User( const int lv, const double dTime_dt )
 
    return dt_Cool;
 
-} // FUNCTION : Mis_GetTimeStep_ExactCooling_User
+} // FUNCTION : Mis_GetTimeStep_ExactCooling_General
 #endif // #ifndef __CUDACC__
 
 
@@ -648,11 +655,11 @@ double TEF_inverse_PiecewisePowerLaw( const double Y, const int N, const double 
 // ==================================================
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Src_WorkBeforeMajorFunc_ExactCooling_User
+// Function    :  Src_WorkBeforeMajorFunc_ExactCooling_General
 // Description :  Specify work to be done every time before calling the major source-term function
 //
 // Note        :  1. Invoked by Src_WorkBeforeMajorFunc()
-//                   --> By linking to "Src_WorkBeforeMajorFunc_User_Ptr" in Src_Init_User_Template()
+//                   --> By linking to "Src_WorkBeforeMajorFunc_User_Ptr" in Src_Init_ExactCooling_General()
 //                2. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  lv               : Target refinement level
@@ -664,23 +671,19 @@ double TEF_inverse_PiecewisePowerLaw( const double Y, const int N, const double 
 //                                       Comoving coordinates : TimeNew - TimeOld == delta(scale factor) != dt
 //                AuxArray_Flt/Int : Auxiliary arrays
 //                                   --> Can be used and/or modified here
-//                                   --> Must call Src_SetConstMemory_User_Template() after modification
+//                                   --> Must call Src_SetConstMemory_ExactCooling_General() after modification
 //
 // Return      :  AuxArray_Flt/Int[]
 //-------------------------------------------------------------------------------------------------------
 #ifndef __CUDACC__
-void Src_WorkBeforeMajorFunc_ExactCooling_User( const int lv, const double TimeNew, const double TimeOld, const double dt,
-                                                double AuxArray_Flt[], int AuxArray_Int[] )
+void Src_WorkBeforeMajorFunc_ExactCooling_General( const int lv, const double TimeNew, const double TimeOld, const double dt,
+                                                   double AuxArray_Flt[], int AuxArray_Int[] )
 {
 
-// uncomment the following lines if the auxiliary arrays have been modified
-//#  ifdef GPU
-//   Src_SetConstMemory_MYExact_Cooling( AuxArray_Flt, AuxArray_Int,
-//                                     SrcTerms.User_AuxArrayDevPtr_Flt, SrcTerms.User_AuxArrayDevPtr_Int );
-//#  endif
+// nothing to do here
 
-} // FUNCTION : Src_WorkBeforeMajorFunc_ExactCooling_User
-#endif
+} // FUNCTION : Src_WorkBeforeMajorFunc_ExactCooling_General
+#endif // #ifndef __CUDACC__
 
 
 
@@ -694,13 +697,13 @@ void Src_WorkBeforeMajorFunc_ExactCooling_User( const int lv, const double TimeN
 #  define FUNC_SPACE            static
 #endif
 
-FUNC_SPACE SrcFunc_t SrcFunc_Ptr = Src_ExactCooling_User;
+FUNC_SPACE SrcFunc_t SrcFunc_Ptr = Src_ExactCooling_General;
 
 //-----------------------------------------------------------------------------------------
-// Function    :  Src_SetCPU/GPUFunc_ExactCooling_User
+// Function    :  Src_SetCPU/GPUFunc_ExactCooling_General
 // Description :  Return the function pointer of the CPU/GPU source-term function
 //
-// Note        :  1. Invoked by Src_Init_ExactCooling_User()
+// Note        :  1. Invoked by Src_Init_ExactCooling_General()
 //                2. Call-by-reference
 //
 // Parameter   :  SrcFunc_CPU/GPUPtr : CPU/GPU function pointer to be set
@@ -709,17 +712,17 @@ FUNC_SPACE SrcFunc_t SrcFunc_Ptr = Src_ExactCooling_User;
 //-----------------------------------------------------------------------------------------
 #ifdef __CUDACC__
 __host__
-void Src_SetGPUFunc_ExactCooling_User( SrcFunc_t &SrcFunc_GPUPtr )
+void Src_SetGPUFunc_ExactCooling_General( SrcFunc_t &SrcFunc_GPUPtr )
 {
    CUDA_CHECK_ERROR(  cudaMemcpyFromSymbol( &SrcFunc_GPUPtr, SrcFunc_Ptr, sizeof(SrcFunc_t) )  );
-}
+} // FUNCTION : Src_SetGPUFunc_ExactCooling_General
 
 #else
 
-void Src_SetCPUFunc_ExactCooling_User( SrcFunc_t &SrcFunc_CPUPtr )
+void Src_SetCPUFunc_ExactCooling_General( SrcFunc_t &SrcFunc_CPUPtr )
 {
    SrcFunc_CPUPtr = SrcFunc_Ptr;
-}
+} // FUNCTION : Src_SetCPUFunc_ExactCooling_General
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -727,31 +730,31 @@ void Src_SetCPUFunc_ExactCooling_User( SrcFunc_t &SrcFunc_CPUPtr )
 
 #ifdef __CUDACC__
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Src_SetConstMemory_ExactCooling_User
+// Function    :  Src_SetConstMemory_ExactCooling_General
 // Description :  Set the constant memory variables on GPU
 //
 // Note        :  1. Adopt the suggested approach for CUDA version >= 5.0
-//                2. Invoked by Src_Init_ExactCooling_User() and, if necessary, Src_WorkBeforeMajorFunc_ExactCooling_User()
-//                3. SRC_NAUX_USER is defined in Macro.h
+//                2. Invoked by Src_Init_ExactCooling_General() and, if necessary, Src_WorkBeforeMajorFunc_ExactCooling_General()
+//                3. SRC_NAUX_EXACTCOOLING_GENERAL is defined in Macro.h
 //
 // Parameter   :  AuxArray_Flt/Int : Auxiliary arrays to be copied to the constant memory
 //                DevPtr_Flt/Int   : Pointers to store the addresses of constant memory arrays
 //
-// Return      :  c_Src_ExactCooling_User_AuxArray_Flt[], c_Src_ExactCooling_User_AuxArray_Int[], DevPtr_Flt, DevPtr_Int
+// Return      :  c_Src_ExactCooling_General_AuxArray_Flt[], c_Src_ExactCooling_General_AuxArray_Int[], DevPtr_Flt, DevPtr_Int
 //---------------------------------------------------------------------------------------------------
-void Src_SetConstMemory_ExactCooling_User( const double AuxArray_Flt[], const int AuxArray_Int[],
-                                           double *&DevPtr_Flt, int *&DevPtr_Int )
+void Src_SetConstMemory_ExactCooling_General( const double AuxArray_Flt[], const int AuxArray_Int[],
+                                              double *&DevPtr_Flt, int *&DevPtr_Int )
 {
 
 // copy data to constant memory
-   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_Src_ExactCooling_User_AuxArray_Flt, AuxArray_Flt, SRC_NAUX_USER*sizeof(double) )  );
-   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_Src_ExactCooling_User_AuxArray_Int, AuxArray_Int, SRC_NAUX_USER*sizeof(int   ) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_Src_ExactCooling_General_AuxArray_Flt, AuxArray_Flt, SRC_NAUX_EXACTCOOLING_GENERAL*sizeof(double) )  );
+   CUDA_CHECK_ERROR(  cudaMemcpyToSymbol( c_Src_ExactCooling_General_AuxArray_Int, AuxArray_Int, SRC_NAUX_EXACTCOOLING_GENERAL*sizeof(int   ) )  );
 
 // obtain the constant-memory pointers
-   CUDA_CHECK_ERROR(  cudaGetSymbolAddress( (void **)&DevPtr_Flt, c_Src_ExactCooling_User_AuxArray_Flt) );
-   CUDA_CHECK_ERROR(  cudaGetSymbolAddress( (void **)&DevPtr_Int, c_Src_ExactCooling_User_AuxArray_Int) );
+   CUDA_CHECK_ERROR(  cudaGetSymbolAddress( (void **)&DevPtr_Flt, c_Src_ExactCooling_General_AuxArray_Flt) );
+   CUDA_CHECK_ERROR(  cudaGetSymbolAddress( (void **)&DevPtr_Int, c_Src_ExactCooling_General_AuxArray_Int) );
 
-} // FUNCTION : Src_SetConstMemory_ExactCooling_User
+} // FUNCTION : Src_SetConstMemory_ExactCooling_General
 #endif // #ifdef __CUDACC__
 
 
@@ -759,56 +762,80 @@ void Src_SetConstMemory_ExactCooling_User( const double AuxArray_Flt[], const in
 #ifndef __CUDACC__
 
 //-----------------------------------------------------------------------------------------
-// Function    :  Src_Init_ExactCooling_User
+// Function    :  Src_Init_ExactCooling_General
 // Description :  Initialize a user-specified source term
 //
 // Note        :  1. Set auxiliary arrays by invoking Src_SetAuxArray_*()
 //                   --> Copy to the GPU constant memory and store the associated addresses
 //                2. Set the source-term function by invoking Src_SetCPU/GPUFunc_*()
-//                3. Set the function pointers "Src_WorkBeforeMajorFunc_User_Ptr" and "Src_End_User_Ptr"
+//                3. Set the function pointers "Src_WorkBeforeMajorFunc_ExactCooling_General_Ptr" and "Src_End_ExactCooling_General_Ptr"
 //                4. Invoked by Src_Init()
-//                   --> Enable it by linking to the function pointer "Src_Init_User_Ptr"
+//                   --> Enable it by linking to the function pointer "Src_Init_ExactCooling_General_Ptr"
 //                5. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
 //
 // Parameter   :  None
 //
 // Return      :  None
 //-----------------------------------------------------------------------------------------
-void Src_Init_ExactCooling_User()
+void Src_Init_ExactCooling_General()
 {
 
 // set the auxiliary arrays
-   Src_SetAuxArray_ExactCooling_User( Src_User_AuxArray_Flt, Src_User_AuxArray_Int );
+   Src_SetAuxArray_ExactCooling_General( Src_ExactCooling_General_AuxArray_Flt, Src_ExactCooling_General_AuxArray_Int );
 
 // copy the auxiliary arrays to the GPU constant memory and store the associated addresses
 #  ifdef GPU
-   Src_SetConstMemory_ExactCooling_User( Src_User_AuxArray_Flt, Src_User_AuxArray_Int,
-                                         SrcTerms.User_AuxArrayDevPtr_Flt, SrcTerms.User_AuxArrayDevPtr_Int );
+   Src_SetConstMemory_ExactCooling_General( Src_ExactCooling_General_AuxArray_Flt, Src_ExactCooling_General_AuxArray_Int,
+                                            SrcTerms.ExactCooling_General_AuxArrayDevPtr_Flt, SrcTerms.ExactCooling_General_AuxArrayDevPtr_Int );
 #  else
-   SrcTerms.User_AuxArrayDevPtr_Flt = Src_User_AuxArray_Flt;
-   SrcTerms.User_AuxArrayDevPtr_Int = Src_User_AuxArray_Int;
+   SrcTerms.ExactCooling_General_AuxArrayDevPtr_Flt = Src_ExactCooling_General_AuxArray_Flt;
+   SrcTerms.ExactCooling_General_AuxArrayDevPtr_Int = Src_ExactCooling_General_AuxArray_Int;
 #  endif
 
 // set the major source-term function
-   Src_SetCPUFunc_ExactCooling_User( SrcTerms.User_CPUPtr );
+   Src_SetCPUFunc_ExactCooling_General( SrcTerms.ExactCooling_General_CPUPtr );
 
 #  ifdef GPU
-   Src_SetGPUFunc_ExactCooling_User( SrcTerms.User_GPUPtr );
-   SrcTerms.User_FuncPtr = SrcTerms.User_GPUPtr;
+   Src_SetGPUFunc_ExactCooling_General( SrcTerms.ExactCooling_General_GPUPtr );
+   SrcTerms.ExactCooling_General_FuncPtr = SrcTerms.ExactCooling_General_GPUPtr;
 #  else
-   SrcTerms.User_FuncPtr = SrcTerms.User_CPUPtr;
+   SrcTerms.ExactCooling_General_FuncPtr = SrcTerms.ExactCooling_General_CPUPtr;
 #  endif
 
-// set the auxiliary functions
-   Src_WorkBeforeMajorFunc_User_Ptr = Src_WorkBeforeMajorFunc_ExactCooling_User;
-   Src_End_User_Ptr                 = Src_End_ExactCooling_User;
+   if ( OPT__INIT == INIT_BY_RESTART )
+      for (int i=0; i<NLEVEL; i++)   SrcTerms.ExactCooling_General_TCoolInit[i] = true;
+   else
+      for (int i=0; i<NLEVEL; i++)   SrcTerms.ExactCooling_General_TCoolInit[i] = false;
 
-} // FUNCTION : Src_Init_ExactCooling_User
+// initialize the cooling function
+   const int      N  = Src_ExactCooling_General_AuxArray_Int[0];   // number of temperature points
+   
+   const double X_H  = Src_ExactCooling_General_AuxArray_Flt[0];   // hydrogen mass fraction
+   const double Z    = Src_ExactCooling_General_AuxArray_Flt[1];   // metal mass fraction
+   const double mu_e = Src_ExactCooling_General_AuxArray_Flt[2];   // mean electron molecular weight
+   const double mu_H = Src_ExactCooling_General_AuxArray_Flt[3];   // mean proton molecular weight
+   const double mu   = Src_ExactCooling_General_AuxArray_Flt[4];   // mean total molecular weight
+
+   // please add T5, a4, L4,... if your cooling function have more than 3 power law
+   const double T1   = Src_ExactCooling_General_AuxArray_Flt[5];   // temperature point 1
+   const double T2   = Src_ExactCooling_General_AuxArray_Flt[6];   // temperature point 2
+   const double T3   = Src_ExactCooling_General_AuxArray_Flt[7];   // temperature point 3
+   const double T4   = Src_ExactCooling_General_AuxArray_Flt[8];   // temperature point 4
+   
+   const double a1   = Src_ExactCooling_General_AuxArray_Flt[9];   // slope 1
+   const double a2   = Src_ExactCooling_General_AuxArray_Flt[10];  // slope 2
+   const double a3   = Src_ExactCooling_General_AuxArray_Flt[11];  // slope 3
+
+   const double L1   = Src_ExactCooling_General_AuxArray_Flt[12];  // normalization 1
+   const double L2   = Src_ExactCooling_General_AuxArray_Flt[13];  // normalization 2
+   const double L3   = Src_ExactCooling_General_AuxArray_Flt[14];  // normalization 3
+
+} // FUNCTION : Src_Init_ExactCooling_General
 
 
 
 //-----------------------------------------------------------------------------------------
-// Function    :  Src_End_ExactCooling_User
+// Function    :  Src_End_ExactCooling_General
 // Description :  Free the resources used by a user-specified source term
 //
 // Note        :  1. Invoked by Src_End()
@@ -819,10 +846,12 @@ void Src_Init_ExactCooling_User()
 //
 // Return      :  None
 //-----------------------------------------------------------------------------------------
-void Src_End_ExactCooling_User()
+void Src_End_ExactCooling_General()
 {
 
 
-} // FUNCTION : Src_End_ExactCooling_User
+} // FUNCTION : Src_End_ExactCooling_General
 
 #endif // #ifndef __CUDACC__
+
+#endif // #ifdef EXACT_COOLING_GENERAL

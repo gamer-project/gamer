@@ -140,7 +140,6 @@ void Init_Load_Parameter()
 #  endif
    ReadPara->Add( "DT__SYNC_PARENT_LV",         &DT__SYNC_PARENT_LV,              0.1,             0.0,           NoMax_double   );
    ReadPara->Add( "DT__SYNC_CHILDREN_LV",       &DT__SYNC_CHILDREN_LV,            0.1,             0.0,           1.0            );
-   ReadPara->Add( "DT__EXACT_COOLING",          &DT__EXACT_COOLING,               0.3,             0.1,           1.0            );
    ReadPara->Add( "OPT__DT_USER",               &OPT__DT_USER,                    false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__DT_LEVEL",              &OPT__DT_LEVEL,                   3,               1,             3              );
    ReadPara->Add( "OPT__RECORD_DT",             &OPT__RECORD_DT,                  true,            Useless_bool,  Useless_bool   );
@@ -245,9 +244,13 @@ void Init_Load_Parameter()
 // source terms
    ReadPara->Add( "SRC_DELEPTONIZATION",        &SrcTerms.Deleptonization,        false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "SRC_EXACTCOOLING",           &SrcTerms.ExactCooling,           false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "SRC_EXACTCOOLING_GENERAL",   &SrcTerms.ExactCooling_General,   false,           Useless_bool,  Useless_bool   );
 #  ifdef EXACT_COOLING
    ReadPara->Add( "SRC_EC_TEF_N",               &SrcTerms.EC_TEF_N,               1501,            1,             NoMax_int      );
    ReadPara->Add( "SRC_EC_DTCOEF",              &SrcTerms.EC_dtCoef,             -1.0,             NoMin_double,  NoMax_double   );
+#  endif
+#  ifdef EXACT_COOLING_GENERAL
+   ReadPara->Add( "SRC_EXACTCOOLING_GENERAL_DT",&SrcTerms.ExactCooling_General_dt,-1.0,            NoMin_double,  NoMax_double   );
 #  endif
    ReadPara->Add( "SRC_USER",                   &SrcTerms.User,                   false,           Useless_bool,  Useless_bool   );
 // do not check SRC_GPU_NPGROUP since it may be reset by either Init_ResetParameter() or CUAPI_SetMemSize()

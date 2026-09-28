@@ -1689,6 +1689,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "EoS",                    &RS.EoS,                    SID, TID, NonFatal, &RT.EoS,                    1, NonFatal );
    LoadField( "BarotropicEoS",          &RS.BarotropicEoS,          SID, TID, NonFatal, &RT.BarotropicEoS,          1, NonFatal );
    LoadField( "ExactCooling",           &RS.ExactCooling,           SID, TID, NonFatal, &RT.ExactCooling,           1, NonFatal );
+   LoadField( "ExactCooling_General",   &RS.ExactCooling_General,   SID, TID, NonFatal, &RT.ExactCooling_General,   1, NonFatal );
 
 #  elif ( MODEL == ELBDM )
    LoadField( "ELBDMScheme",            &RS.ELBDMScheme,            SID, TID, NonFatal, &RT.ELBDMScheme,            1, NonFatal );
@@ -2087,7 +2088,6 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  endif
    LoadField( "Dt__SyncParentLv",        &RS.Dt__SyncParentLv,        SID, TID, NonFatal, &RT.Dt__SyncParentLv,         1, NonFatal );
    LoadField( "Dt__SyncChildrenLv",      &RS.Dt__SyncChildrenLv,      SID, TID, NonFatal, &RT.Dt__SyncChildrenLv,       1, NonFatal );
-   LoadField( "Dt__ExactCooling",        &RS.Dt__ExactCooling,        SID, TID, NonFatal, &RT.Dt__ExactCooling,         1, NonFatal );
    LoadField( "Opt__DtUser",             &RS.Opt__DtUser,             SID, TID, NonFatal, &RT.Opt__DtUser,              1, NonFatal );
    LoadField( "Opt__DtLevel",            &RS.Opt__DtLevel,            SID, TID, NonFatal, &RT.Opt__DtLevel,             1, NonFatal );
    LoadField( "Opt__RecordDt",           &RS.Opt__RecordDt,           SID, TID, NonFatal, &RT.Opt__RecordDt,            1, NonFatal );
@@ -2288,6 +2288,9 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 #  ifdef EXACT_COOLING
    LoadField( "Src_EC_TEF_N",            &RS.Src_EC_TEF_N,            SID, TID, NonFatal, &RT.Src_EC_TEF_N,             1, NonFatal );
    LoadField( "Src_EC_dtCoef",           &RS.Src_EC_dtCoef,           SID, TID, NonFatal, &RT.Src_EC_dtCoef,            1, NonFatal );
+#  endif
+#  ifdef EXACT_COOLING_GENERAL
+   LoadField( "Src_ExactCooling_General_dt",&RS.Src_ExactCooling_General_dt,        SID, TID, NonFatal, &RT.Src_ExactCooling_General_dt,            1, NonFatal );
 #  endif
 
 // Grackle

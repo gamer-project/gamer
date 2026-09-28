@@ -321,6 +321,12 @@ void Aux_TakeNote()
       fprintf( Note, "EXACT_COOLING                   OFF\n" );
 #     endif
 
+#     ifdef EXACT_COOLING_GENERAL
+      fprintf( Note, "EXACT_COOLING_GENERAL           ON\n" );
+#     else
+      fprintf( Note, "EXACT_COOLING_GENERAL           OFF\n" );
+#     endif
+
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
 
@@ -1012,7 +1018,6 @@ void Aux_TakeNote()
 #     endif
       fprintf( Note, "DT__SYNC_PARENT_LV             % 14.7e\n",  DT__SYNC_PARENT_LV          );
       fprintf( Note, "DT__SYNC_CHILDREN_LV           % 14.7e\n",  DT__SYNC_CHILDREN_LV        );
-      fprintf( Note, "DT__EXACT_COOLING              % 14.7e\n",  DT__EXACT_COOLING           );
       fprintf( Note, "OPT__DT_USER                   % d\n",      OPT__DT_USER                );
       fprintf( Note, "OPT__DT_LEVEL                  % d\n",      OPT__DT_LEVEL               );
       fprintf( Note, "AUTO_REDUCE_DT                 % d\n",      AUTO_REDUCE_DT              );
@@ -1147,10 +1152,15 @@ void Aux_TakeNote()
       fprintf( Note, "SRC_ANY                        % d\n",      SrcTerms.Any              );
       fprintf( Note, "SRC_DELEPTONIZATION            % d\n",      SrcTerms.Deleptonization  );
       fprintf( Note, "SRC_EXACTCOOLING               % d\n",      SrcTerms.ExactCooling     );
+      fprintf( Note, "SRC_EXACTCOOLING_GENERAL       % d\n",      SrcTerms.ExactCooling_General );
 #     ifdef EXACT_COOLING
       if ( SrcTerms.ExactCooling ) {
       fprintf( Note, "SRC_EC_TEF_N                   % d\n",      SrcTerms.EC_TEF_N         );
       fprintf( Note, "SRC_EC_DTCOEF                  % 14.7e\n",  SrcTerms.EC_dtCoef        ); }
+#     endif
+#     ifdef EXACT_COOLING_GENERAL
+      if ( SrcTerms.ExactCooling_General ) {
+      fprintf( Note, "SRC_EXACTCOOLING_GENERAL_DT    % 14.7e\n",  SrcTerms.ExactCooling_General_dt ); }
 #     endif
       fprintf( Note, "SRC_USER                       % d\n",      SrcTerms.User             );
       fprintf( Note, "SRC_GPU_NPGROUP                % d\n",      SRC_GPU_NPGROUP           );

@@ -2,4 +2,4 @@
 
 PYTHON=python3
 
-${PYTHON} configure.py --model=HYDRO "$@"
+${PYTHON} configure.py --model=HYDRO --exact_cooling_general=true "$@"

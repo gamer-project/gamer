@@ -7,10 +7,9 @@ Disable: PARTICLE, GRAVITY, MHD
 Default setup:
 ========================================
 1. BOX_SIZE = 1 kpc
-2. simulation time = 8 Myr
+2. simulation time = 100 Myr
 3. Units: in cgs
-4. Enable SRC_USER
-5. Enable OPT__DT_USER
+4. Enable SRC_EXACTCOOLING_GENERAL
 
 
 Note:
@@ -19,3 +18,4 @@ Note:
 2. The analytical solution and simulation error will be recorded in the Record__CoolingErr file when OPT__OUTPUT_USER is enabled.
 3. plot_ExactCooling.py is for plotting the evolution of temperature.
 4. Run the test problem first then modify "END_T" in Input__Parameter to about "t1" in Record__CoolingErr.
+5. Modify the source term ExactCooling_General to your piecewise power law cooling function

@@ -212,6 +212,8 @@ SRC_DELEPTONIZATION           0           # deleptonization (for simulations of 
 SRC_EXACTCOOLING              0           # exact cooling scheme from Townsend (2009) [0] ##HYDRO and EXACT_COOLING ONLY##
 SRC_EC_TEF_N                  1501        # exact-cooling: number of points for lambda(T) sampling in LOG [1501]
 SRC_EC_DTCOEF                -1.0         # exact-cooling: safety factor of the cooling time-step (<0=off) [-1.0]
+SRC_EXACTCOOLING_GENERAL      0           # general exact-cooling: scheme from Townsend (2009) for user-defined power law cooling function [0] ##HYDRO and EXACT_COOLING_GENERAL ONLY##
+SRC_EXACTCOOLING_GENERAL_DT   0.3         # general exact-cooling: factor of the cooling time-step [0.3]
 SRC_USER                      0           # user-defined source terms -> edit "Src_User.cpp" [0]
 SRC_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU source-term solver (<=0=auto) [-1]
 

@@ -1,7 +1,7 @@
 #include "GAMER.h"
 
 
-static void Output_ExactCooling_User();
+static void Output_ExactCooling_General();
 
 // problem-specific global variables
 // =======================================================================================
@@ -34,6 +34,10 @@ void Validate()
 
 #  ifdef GRAVITY
    Aux_Error( ERROR_INFO, "GRAVITY must be disabled !!\n" );
+#  endif
+
+#  ifndef EXACT_COOLING_GENERAL
+   Aux_Error( ERROR_INFO, "EXACT_COOLING_GENERAL must be enabled !!\n" );
 #  endif
 
 #  ifdef COMOVING
@@ -235,8 +239,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  OutputExactCooling_User
-// Description :  Output the temperature relative error in the exact cooling problem
+// Function    :  OutputExactCooling_General
+// Description :  Output the temperature relative error in the general exact cooling problem
 //
 // Note        :  1. Enabled by the runtime option "OPT__OUTPUT_USER"
 //                2. Construct the analytical solution corresponding to the cooling function
@@ -245,7 +249,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Output_ExactCooling_User()
+void Output_ExactCooling_General()
 {
 
    const char FileName[] = "Record__CoolingErr";
@@ -455,15 +459,12 @@ void Output_ExactCooling_User()
       fclose( File_User );
    }
 
-} // FUNCTION : Output_ExactCooling_User
+} // FUNCTION : Output_ExactCooling_General
 #endif // #if ( MODEL == HYDRO )
-
-void Src_Init_ExactCooling_User();
-double Mis_GetTimeStep_ExactCooling_User( const int lv, const double dTime_dt );
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_TestProb_Hydro_ExactCooling_User
+// Function    :  Init_TestProb_Hydro_ExactCooling_General
 // Description :  Test problem initializer
 //
 // Note        :  None
@@ -472,7 +473,7 @@ double Mis_GetTimeStep_ExactCooling_User( const int lv, const double dTime_dt );
 //
 // Return      :  None
 //-------------------------------------------------------------------------------------------------------
-void Init_TestProb_Hydro_ExactCooling_User()
+void Init_TestProb_Hydro_ExactCooling_General()
 {
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
@@ -488,16 +489,13 @@ void Init_TestProb_Hydro_ExactCooling_User()
 
 
    Init_Function_User_Ptr    = SetGridIC;
-   Output_User_Ptr           = Output_ExactCooling_User;
+   Output_User_Ptr           = Output_ExactCooling_General;
 #  ifdef SUPPORT_HDF5
    Output_HDF5_InputTest_Ptr = LoadInputTestProb;
 #  endif
 #  endif
 
 
-   Src_Init_User_Ptr                 = Src_Init_ExactCooling_User;
-   Mis_GetTimeStep_User_Ptr          = Mis_GetTimeStep_ExactCooling_User;
-
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );
 
-} // FUNCTION : Init_TestProb_Hydro_ExactCooling_User
+} // FUNCTION : Init_TestProb_Hydro_ExactCooling_General

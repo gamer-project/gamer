@@ -177,6 +177,7 @@ struct Makefile_t
    int EoS;
    int BarotropicEoS;
    int ExactCooling;
+   int ExactCooling_General;
 
 #  elif ( MODEL == ELBDM )
    int ELBDMScheme;
@@ -500,7 +501,6 @@ struct InputPara_t
 #  endif
    double Dt__SyncParentLv;
    double Dt__SyncChildrenLv;
-   double Dt__ExactCooling;
    int    Opt__DtUser;
    int    Opt__DtLevel;
    int    Opt__RecordDt;
@@ -708,6 +708,11 @@ struct InputPara_t
 #  ifdef EXACT_COOLING
    int    Src_EC_TEF_N;
    double Src_EC_dtCoef;
+#  endif
+
+   int    Src_ExactCooling_General;
+#  ifdef EXACT_COOLING_GENERAL
+   double Src_ExactCooling_General_dt;
 #  endif
 
 // Grackle

@@ -105,8 +105,7 @@ DT__SYNC_PARENT_LV            0.1         # dt criterion: allow dt to adjust by 
                                           #               with the parent level (for OPT__DT_LEVEL==3 only) [0.1]
 DT__SYNC_CHILDREN_LV          0.1         # dt criterion: allow dt to adjust by (1.0-DT__SYNC_CHILDREN) in order to synchronize
                                           #               with the children level (for OPT__DT_LEVEL==3 only; 0=off) [0.1]
-DT__EXACT_COOLING             0.3         # the coefficient of the cooling time step                                         
-OPT__DT_USER                  1           # dt criterion: user-defined -> edit "Mis_GetTimeStep_UserCriteria.cpp" [0]
+OPT__DT_USER                  0           # dt criterion: user-defined -> edit "Mis_GetTimeStep_UserCriteria.cpp" [0]
 OPT__DT_LEVEL                 3           # dt at different AMR levels (1=shared, 2=differ by two, 3=flexible) [3]
 OPT__RECORD_DT                1           # record info of the dt determination [1]
 AUTO_REDUCE_DT                1           # reduce dt automatically when the program fails (for OPT__DT_LEVEL==3 only) [1]
@@ -161,7 +160,9 @@ OPT__MINIMIZE_MPI_BARRIER     1           # minimize MPI barriers to improve loa
 
 # source terms
 SRC_DELEPTONIZATION           0           # deleptonization (for simulations of stellar core collapse) [0] ##HYDRO ONLY##
-SRC_USER                      1           # user-defined source terms -> edit "Src_User.cpp" [0]
+SRC_EXACTCOOLING_GENERAL      1           # general exact-cooling: scheme from Townsend (2009) for user-defined power law cooling function [0] ##HYDRO and EXACT_COOLING_GENERAL ONLY##
+SRC_EXACTCOOLING_GENERAL_DT   0.3         # general exact-cooling: factor of the cooling time-step [0.3]
+SRC_USER                      0           # user-defined source terms -> edit "Src_User.cpp" [0]
 SRC_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU source-term solver (<=0=auto) [-1]
 
 
