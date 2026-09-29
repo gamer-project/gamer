@@ -999,10 +999,20 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 //          --> we apply the minimum pressure check in Hydro_DualEnergyFix() here only when AutoReduceDt_Continue is false
 //              --> otherwise AUTO_REDUCE_DT may not be triggered due to this pressure floor
 #           ifdef DUAL_ENERGY
+            real MinPresForDEFix = (real)MIN_PRES;
+            if ( !AutoReduceDt_Continue  &&  OPT__LAST_RESORT_FLOOR )
+            {
+//             when the last-resort pressure floor is applied,
+//             ensure that the corresponding internal energy also meets the floor MIN_EINT
+               const real PresFromMinEint = EoS_DensEint2Pres_CPUPtr( Update[DENS], (real)MIN_EINT, Update+NCOMP_FLUID,
+                                                                      EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+               MinPresForDEFix = FMAX( MinPresForDEFix, PresFromMinEint );
+            }
+
             Hydro_DualEnergyFix( Update[DENS], Update[MOMX], Update[MOMY], Update[MOMZ], Update[ENGY], Update[DUAL], Update+NCOMP_FLUID,
                                  h_DE_Array_F_Out[TID][idx_out], EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2],
                                  (!AutoReduceDt_Continue && OPT__LAST_RESORT_FLOOR) ? CorrPres_Yes : CorrPres_No,
-                                 MIN_PRES, PassiveFloorMask, DUAL_ENERGY_SWITCH, Emag_Out );
+                                 MinPresForDEFix, PassiveFloorMask, DUAL_ENERGY_SWITCH, Emag_Out );
 
 //          apply internal energy floor if dual-energy formalism is not adopted
 //          --> apply it only when AutoReduceDt_Continue is false
