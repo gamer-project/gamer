@@ -1,16 +1,14 @@
 #include "CUFLU.h"
+#include "Global.h"
 
 #ifdef EXACT_COOLING_GENERAL
 
 // external functions and GPU-related set-up
 #ifdef __CUDACC__
 
-#include "Global.h"
 #include "CUDA_CheckError.h"
 #include "CUDA_ConstMemory.h"
-#if ( MODEL == HYDRO )
 #include "CUFLU_Shared_FluUtility.cu"
-#endif
 
 #endif // #ifdef __CUDACC__
 
@@ -34,7 +32,7 @@ double Mis_GetTimeStep_ExactCooling_General( const int lv, const double dTime_dt
 GPU_DEVICE static
 double ExactCooling_GetLambda( const double Temp, const int k, const double Tks[], const double Lks[], const double aks[] );
 GPU_DEVICE static
-double ExactCooling_GetTcool( const double Temp, const double n, const double n_e, const double n_H, const double Lambda );
+double ExactCooling_GetTcool( const double Temp, const double n, const double n_e, const double n_H, const double Lambda, const double kb, const double gamma );
 GPU_DEVICE static
 double TEF_PiecewisePowerLaw( const double Temp, const int k, const int N, const double Tks[], const double Lks[], const double aks[], double Yks[] );
 GPU_DEVICE static
@@ -73,7 +71,7 @@ double TEF_inverse_PiecewisePowerLaw( const double Y, const int N, const double 
 // Note        :  1. Invoked by Src_Init_ExactCooling_General()
 //                2. AuxArray_Flt/Int[] have the size of SRC_NAUX_EXACTCOOLING_GENERAL defined in Macro.h (default = 20)
 //                3. Add "#ifndef __CUDACC__" since this routine is only useful on CPU
-//                4. Change the values in AuxArray_Flt/Int[] to implement your piecewise power law cooling funciton
+//                4. Change the values to implement your piecewise power law cooling funciton
 //
 // Parameter   :  AuxArray_Flt/Int : Floating-point/Integer arrays to be filled up
 //
@@ -85,36 +83,72 @@ void Src_SetAuxArray_ExactCooling_General( double AuxArray_Flt[], int AuxArray_I
    // ==========================
    // Gas settings
    // ==========================
-   AuxArray_Flt[0] = 0.7;     // X_H : Hydrogen mass fraction
-   AuxArray_Flt[1] = 0.018;   // Z   : Metal mass fraction
-   
-   // mean molecular weights : mu_e, mu_H, mu (for full ionization regime, calculated automatically)
-   AuxArray_Flt[2] = 2.0 / (1.0 + AuxArray_Flt[0]);   // mu_e : mean electron molecular weight
-   AuxArray_Flt[3] = 1.0 / AuxArray_Flt[0];           // mu_H : mean proton molecular weight
-   AuxArray_Flt[4] = 1.0 / (2.0 * AuxArray_Flt[0] + 0.75 * (1.0 - AuxArray_Flt[0] - AuxArray_Flt[1]) + 0.5 * AuxArray_Flt[1]);   // mu : mean total molecular weight
+   const double X_H   = 0.7;                                                         // hydrogen mass fraction
+   const double Z     = 0.018;                                                       // metal mass fraction
 
+   // mean molecular weights (for full ionization regime)
+   const double mu_e  = 2.0 / ( 1.0 + X_H );                                        // mean electron molecular weight
+   const double mu_H  = 1.0 / X_H;                                                  // mean proton molecular weight
+   const double mu    = 1.0 / ( 2.0 * X_H + 0.75 * ( 1.0 - X_H - Z ) + 0.5 * Z );   // mean total molecularweight
+   
    // ===========================================================
    // Piecewise power law cooling function
    // Power law :  Lambda(T) = Lk * (T/Tk)^ak for Tk <= T < Tk+1
    // ===========================================================
    // example : 4 temperature points (N = 4) with 3 power laws
-   AuxArray_Int[0] = 4;                 // number of temperature points (N)
-
+   const int    N     = 4;                                                          // number of temperature points
+   
    // Temperature points (K)
-   AuxArray_Flt[5] = 1.0e4;             // T1
-   AuxArray_Flt[6] = 1.0e5;             // T2
-   AuxArray_Flt[7] = pow(10.0, 7.4);    // T3
-   AuxArray_Flt[8] = 1.0e9;             // T4
+   const double T1    = 1.0e4;
+   const double T2    = 1.0e5;
+   const double T3    = pow(10.0, 7.4);
+   const double T4    = 1.0e9;
+
+#  ifdef GAMER_DEBUG
+   if ( T1 <= 0.0 )
+      Aux_Error( ERROR_INFO, "T1 (%24.16e) <= 0.0 !!\n", T1 );
+#  endif   
 
    // Power law slopes
-   AuxArray_Flt[9]  =  0.74;            // alpha1
-   AuxArray_Flt[10] = -0.7;             // alpha2
-   AuxArray_Flt[11] =  0.5;             // alpha3
+   const double a1    =  0.74;
+   const double a2    = -0.70;
+   const double a3    =  0.50;
 
    // Normalizations (erg cm^3 s^-1)
-   AuxArray_Flt[12] = 9.93e-23;         // Normalization1 (L1)
-   AuxArray_Flt[13] = 5.51e-22;         // Normalization2 (L2)
-   AuxArray_Flt[14] = 1.15e-23;         // Normalization3 (L3)
+   const double L1    =  9.93e-23;
+   const double L2    =  5.51e-22;
+   const double L3    =  1.15e-23;
+
+
+   // store in the aux arrays
+   AuxArray_Flt[0] = X_H;                                                                                                  
+   AuxArray_Flt[1] = Z;       
+
+   AuxArray_Flt[2] = mu_e;                                                                    
+   AuxArray_Flt[3] = mu_H;                                                                                     
+   AuxArray_Flt[4] = mu;   
+
+   AuxArray_Flt[5] = Const_mp / UNIT_M;           // proton mass (g)
+   AuxArray_Flt[6] = Const_kB / UNIT_E;           // Boltzmann constant (erg/K)
+   AuxArray_Flt[7] = GAMMA;                       // ratio of specific heats
+
+   AuxArray_Int[0] = N;            
+
+   // Temperature points (K)
+   AuxArray_Flt[8]  = T1;             
+   AuxArray_Flt[9]  = T2;             
+   AuxArray_Flt[10] = T3;   
+   AuxArray_Flt[11] = T4;             
+
+   // Power law slopes
+   AuxArray_Flt[12] = a1;         
+   AuxArray_Flt[13] = a2;              
+   AuxArray_Flt[14] = a3;             
+
+   // Normalizations (erg cm^3 s^-1)
+   AuxArray_Flt[15] = L1 / ( UNIT_E * UNIT_L * UNIT_L * UNIT_L / UNIT_T );         
+   AuxArray_Flt[16] = L2 / ( UNIT_E * UNIT_L * UNIT_L * UNIT_L / UNIT_T );       
+   AuxArray_Flt[17] = L3 / ( UNIT_E * UNIT_L * UNIT_L * UNIT_L / UNIT_T );         
 
 } // FUNCTION : Src_SetAuxArray_ExactCooling_General
 #endif // #ifndef __CUDACC__
@@ -133,6 +167,7 @@ void Src_SetAuxArray_ExactCooling_General( double AuxArray_Flt[], int AuxArray_I
 //                2. See Src_SetAuxArray_ExactCooling_General() for the values stored in AuxArray_Flt/Int[]
 //                3. Follow Townsend (2009, ApJS, 181, 391) to implement the exact integration of the piecewise power law cooling function
 //                4. Shared by both CPU and GPU
+//                5. Please change the length of Yks to your N value (line 242)
 //
 // Parameter   :  fluid             : Fluid array storing both the input and updated values
 //                                    --> Including both active and passive variables
@@ -169,61 +204,76 @@ static void Src_ExactCooling_General( real fluid[], const real B[],
    // ==========================
    // (1) read parameters
    // ==========================
-  
-   // Gas settings
-   const double X_H  = AuxArray_Flt[0];    // Hydrogen mass fraction
-   const double Z    = AuxArray_Flt[1];    // Metal mass fraction
+   // mean molecular weights (for full ionization regime)
+   const double mu_e  = AuxArray_Flt[2];                             // mean electron molecular weight
+   const double mu_H  = AuxArray_Flt[3];                             // mean proton molecular weight
+   const double mu    = AuxArray_Flt[4];                             // mean total molecular weight
 
-   // mean molecular weights : mu_e, mu_H, mu (for full ionization regime, calculated automatically)
-   const double mu_e = AuxArray_Flt[2];    // mean electron molecular weight
-   const double mu_H = AuxArray_Flt[3];    // mean proton molecular weight
-   const double mu   = AuxArray_Flt[4];    // mean total molecular weight
+   // Constants
+   const double mp    = AuxArray_Flt[5];                             // proton mass (g)
+   const double kB    = AuxArray_Flt[6];                             // Boltzmann constant (erg/K)
+   const double gamma = AuxArray_Flt[7];                             // ratio of specific heats
 
    // ===========================================================
    
    // Piecewise power law cooling function
-   const int    N    = AuxArray_Int[0];          // number of temperature points
+   const int    N     = AuxArray_Int[0];                             // number of temperature points
    
-   const double *Tks = &AuxArray_Flt[5];         // Temperature points (K)
-   const double *aks = &AuxArray_Flt[5+N];       // Power law slopes
-   const double *Lks = &AuxArray_Flt[5+2*N-1];   // Normalizations (erg cm^3 s^-1)
+   const double *Tks  = &AuxArray_Flt[8];                            // Temperature points (K)
+   const double *aks  = &AuxArray_Flt[8+N];                          // Power law slopes
+   const double *Lks  = &AuxArray_Flt[8+2*N-1];                      // Normalizations 
 
-   const double TN   = Tks[N-1];                                    // maximum temperature (K)
-   const double LN   = Lks[N-2] * pow( TN / Tks[N-2], aks[N-2] );   // (erg cm^3 s^-1)
+   const double TN    = Tks[N-1];                                    // maximum temperature (K)
+   const double LN    = Lks[N-2] * pow( TN / Tks[N-2], aks[N-2] );   
 
 
    // ==========================
    // (2) calculate parameters
    // ==========================
    // mass density
-   const double rho = fluid[DENS] * UNIT_D;     // g cm^-3
+   const double rho  = fluid[DENS];           // g cm^-3                  
 
    // number densities
-   const double n_H = rho / (mu_H * Const_mp);   // cm^-3
-   const double n_e = rho / (mu_e * Const_mp);   // cm^-3
-   const double n   = rho / (mu   * Const_mp);   // cm^-3
+   const double n_H  = rho / (mu_H * mp);     // cm^-3       
+   const double n_e  = rho / (mu_e * mp);     // cm^-3                   
+   const double n    = rho / (mu   * mp);     // cm^-3                  
 
+// please change the length of Yks to your N value
+   double T_now, T_new, Eint, Eintf, Emag, Pres, Lambda_T, Y_T, t_cool, Y, Yks[4];
+   int    k = -1;
 
    // ===========================================================
    // (3) calculate the current temperature and internal energy
    // ===========================================================
    // current internal energy
-   double Eint  = Hydro_Con2Eint( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                  true, MinEint, PassiveFloor, 0.0, EoS->GuessHTilde_FuncPtr,
-                                  EoS->HTilde2Temp_FuncPtr, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
-                                  EoS->Table );
-   // current temperature
-   const double T_now = EoS->DensEint2Temp_FuncPtr(fluid[DENS], Eint, (const real*)NULL, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table);
+   const bool CheckMinEint_No = false;
+   Emag  = 0.0;
+#  ifdef __CUDACC__
+   Eint  = Hydro_Con2Eint( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                           CheckMinEint_No, NULL_REAL, PassiveFloor, Emag, 
+                           EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr, 
+                           EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int,
+                           EoS->Table );
+#  else
+   Eint  = Hydro_Con2Eint( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                           CheckMinEint_No, NULL_REAL, PassiveFloor, Emag,
+                           EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                           EoS_AuxArray_Flt, EoS_AuxArray_Int,
+                           h_EoS_Table );
+#  endif
 
+   // current temperature
+#  ifdef __CUDACC__
+   T_now = EoS->DensEint2Temp_FuncPtr( fluid[DENS], Eint, NULL, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table  );
+#  else
+   T_now = EoS_DensEint2Temp_CPUPtr  ( fluid[DENS], Eint, NULL, EoS_AuxArray_Flt,        EoS_AuxArray_Int,        h_EoS_Table );
+#  endif
 
    // =====================================================================
    // (4) calculate the new temperature and internal energy after cooling
    // =====================================================================
    // new temperature
-   double T_new;
-   int    k = -1;
-
-   if ( T_now >= Tks[0] )   // temperature floor
+   if ( T_now >= Tks[0] && T_now <= Tks[N-1] )
    {
       // k : the index of the temperature interval where T_now falls into
       for (int i = N-2; i >= 0; i--)
@@ -236,17 +286,16 @@ static void Src_ExactCooling_General( real fluid[], const real B[],
       }
 
       // cooling efficiency
-      const double Lambda_T = ExactCooling_GetLambda(T_now, k, Tks, Lks, aks);   // erg cm^3/s
+      Lambda_T = ExactCooling_GetLambda( T_now, k, Tks, Lks, aks );          // erg cm^3 s^-1
 
       // Y(T)
-      double Yks[N];
-      const double Y_T      = TEF_PiecewisePowerLaw(T_now, k, N, Tks, Lks, aks, Yks);
+      Y_T      = TEF_PiecewisePowerLaw( T_now, k, N, Tks, Lks, aks, Yks );
 
       // new temperature
-      const double t_cool   = ExactCooling_GetTcool(T_now, n, n_e, n_H, Lambda_T);   // s
-      const double Y        = Y_T + T_now / TN * LN / Lambda_T * dt * UNIT_T / t_cool;
+      t_cool   = ExactCooling_GetTcool( T_now, n, n_e, n_H, Lambda_T, kB, gamma );  // s
+      Y        = Y_T + T_now / TN * LN / Lambda_T * dt / t_cool;
       
-      T_new                 = TEF_inverse_PiecewisePowerLaw(Y, N, Yks, Lks, aks, Tks);
+      T_new    = TEF_inverse_PiecewisePowerLaw( Y, N, Yks, Lks, aks, Tks );
       
       if (T_new < Tks[0])
          T_new = Tks[0];
@@ -254,17 +303,26 @@ static void Src_ExactCooling_General( real fluid[], const real B[],
    }
    else
    {
-      T_new = Tks[0];
+#     ifdef GAMER_DEBUG
+      printf( "ERROR : T_now = %24.16e is out of range (min: %24.16e, max: %24.16e) at TimeNew = %24.16e !!\n",
+              T_now, Tks[0], TN, TimeNew );
+#     endif
+      
+      fluid[ENGY] = NAN;
+      return;
    }
 
    // new internal energy
-   Eint = EoS->DensTemp2Pres_FuncPtr(fluid[DENS], T_new, (const real*)NULL, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table) / (GAMMA - 1.0);
-
-   // enforce floor
-   Eint = FMAX(Eint, MinEint);
+#  ifdef __CUDACC__
+   Pres  = EoS->DensTemp2Pres_FuncPtr( fluid[DENS], T_new, NULL, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table  );
+   Eintf = EoS->DensPres2Eint_FuncPtr( fluid[DENS], Pres , NULL, EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table  );
+#  else
+   Pres  = EoS_DensTemp2Pres_CPUPtr  ( fluid[DENS], T_new, NULL, EoS_AuxArray_Flt,        EoS_AuxArray_Int,        h_EoS_Table );
+   Eintf = EoS_DensPres2Eint_CPUPtr  ( fluid[DENS], Pres , NULL, EoS_AuxArray_Flt,        EoS_AuxArray_Int,        h_EoS_Table );
+#  endif
 
    // convert back
-   fluid[ENGY] = Hydro_ConEint2Etot(fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Eint, 0.0);
+   fluid[ENGY] = Hydro_ConEint2Etot  ( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], Eintf, Emag );
 
 
 } // FUNCTION : Src_ExactCooling_General
@@ -287,16 +345,7 @@ static void Src_ExactCooling_General( real fluid[], const real B[],
 GPU_DEVICE static
 double ExactCooling_GetLambda( const double Temp, const int k, const double Tks[], const double Lks[], const double aks[] )
 {
-
-   if ( Temp >= Tks[0] )   // temperature floor
-   {
-      return Lks[k-1] * pow( Temp / Tks[k-1], aks[k-1]);   // erg cm^3/s
-   }
-   else
-   {
-      return Lks[0] * pow( Temp / Tks[0], aks[0]);   // erg cm^3/s
-   }
-
+   return Lks[k-1] * pow( Temp / Tks[k-1], aks[k-1]);   // erg cm^3 s^-1
 } // FUNCTION : ExactCooling_GetLambda
 
 
@@ -304,20 +353,20 @@ double ExactCooling_GetLambda( const double Temp, const int k, const double Tks[
 // Function    :  ExactCooling_GetTcool
 // Description :  Calculate the single point cooling time for the piecewise power law cooling function
 //
-// Note        :  t_cool = n * k_B * T / ( (gamma - 1) * n_e * n_H * Lambda(T) ) 
+// Note        :  t_cool = n * kB * T / ( (gamma - 1) * n_e * n_H * Lambda(T) ) 
 //
 // Parameter   :  Temp : Temperature in Kelvin
 //                n    : Number density in cm^-3
 //                n_e  : Electron number density in cm^-3
 //                n_H  : Proton number density in cm^-3
-//                Lambda : Cooling efficiency in erg cm^3/s
+//                Lambda : Cooling efficiency in erg cm^3 s^-1
 //
 // Return      :  t_cool
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE static
-double ExactCooling_GetTcool( const double Temp, const double n, const double n_e, const double n_H, const double Lambda )
+double ExactCooling_GetTcool( const double Temp, const double n, const double n_e, const double n_H, const double Lambda, const double kB, const double gamma )
 {
-   return n * Const_kB * Temp / ( (GAMMA - 1.0) * n_e * n_H * Lambda );   // s
+   return n * kB * Temp / ( (gamma - 1.0) * n_e * n_H * Lambda );  // s 
 } // FUNCTION : ExactCooling_GetTcool
 
 
@@ -330,18 +379,17 @@ double ExactCooling_GetTcool( const double Temp, const double n, const double n_
 //                   piecewise power-law cooling function as Src_ExactCooling_General().
 //                3. The returned timestep is
 //
-//                      dt = SRC_EXACTCOOLING_GENERAL_DT * min(tcool) / UNIT_T
+//                      dt = SRC_EXACTCOOLING_GENERAL_DT * min(tcool)
 //
-//                   where tcool is in physical seconds and dt is in GAMER code time units.
+//                   where tcool and dt is in GAMER code time units (s).
 //                4. The minimum is first found over OpenMP threads and then over MPI processes.
 //                5. Cells already below the cooling temperature floor are ignored.
 //
 // Parameter   :  lv       : Target refinement level
 //                dTime_dt : dTime/dt (== 1.0 if COMOVING is off)
 //
-// Return      :  dt in GAMER code time units
+// Return      :  dt in GAMER code time units (s)
 //-------------------------------------------------------------------------------------------------------
-
 #ifndef __CUDACC__
 double Mis_GetTimeStep_ExactCooling_General( const int lv, const double dTime_dt )
 {
@@ -351,15 +399,19 @@ double Mis_GetTimeStep_ExactCooling_General( const int lv, const double dTime_dt
    // (1) read parameters
    // ==========================
 
-   const double mu_e = Src_ExactCooling_General_AuxArray_Flt[2];    // mean electron molecular weight
-   const double mu_H = Src_ExactCooling_General_AuxArray_Flt[3];    // mean proton molecular weight
-   const double mu   = Src_ExactCooling_General_AuxArray_Flt[4];    // mean total molecular weight
+   const double mu_e  = Src_ExactCooling_General_AuxArray_Flt[2];          // mean electron molecular weight
+   const double mu_H  = Src_ExactCooling_General_AuxArray_Flt[3];          // mean proton molecular weight
+   const double mu    = Src_ExactCooling_General_AuxArray_Flt[4];          // mean total molecular weight
+
+   const double mp    = Src_ExactCooling_General_AuxArray_Flt[5];          // proton mass (g)
+   const double kB    = Src_ExactCooling_General_AuxArray_Flt[6];          // Boltzmann constant (erg/K)
+   const double gamma = Src_ExactCooling_General_AuxArray_Flt[7];          // ratio of specific heats
    
-   const int    N    = Src_ExactCooling_General_AuxArray_Int[0];    // number of temperature points
+   const int    N     = Src_ExactCooling_General_AuxArray_Int[0];          // number of temperature points
    
-   const double *Tks = &Src_ExactCooling_General_AuxArray_Flt[5];         // Temperature points (K)
-   const double *aks = &Src_ExactCooling_General_AuxArray_Flt[5+N];       // Power law slopes
-   const double *Lks = &Src_ExactCooling_General_AuxArray_Flt[5+2*N-1];   // Normalizations (erg cm^3 s^-1)
+   const double *Tks  = &Src_ExactCooling_General_AuxArray_Flt[8];         // Temperature points (K)
+   const double *aks  = &Src_ExactCooling_General_AuxArray_Flt[8+N];       // Power law slopes
+   const double *Lks  = &Src_ExactCooling_General_AuxArray_Flt[8+2*N-1];   // Normalizations (erg cm^3 s^-1)
 
    // ==========================
    // (2) OpenMP
@@ -411,22 +463,26 @@ double Mis_GetTimeStep_ExactCooling_General( const int lv, const double dTime_dt
             // (3.2) Calculate internal energy
             // =================================================
 
-            const double Eint = Hydro_Con2Eint( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
-                                                true, MIN_EINT, PassiveFloorMask, 0.0, EoS.GuessHTilde_FuncPtr,
-                                                EoS.HTilde2Temp_FuncPtr, EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int,
-                                                EoS.Table );
+            double     Eint, Emag;
+            const bool CheckMinEint_No = false;
+            Emag  = 0.0;
+            Eint  = Hydro_Con2Eint( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY],
+                                    CheckMinEint_No, NULL_REAL, NULL, Emag, 
+                                    EoS.GuessHTilde_FuncPtr, EoS.HTilde2Temp_FuncPtr, 
+                                    EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int,
+                                    EoS.Table );
             
             //=================================================
             // (3.3) Calculate current temperature
             // =================================================
-
-            const double T_now = EoS.DensEint2Temp_FuncPtr(fluid[DENS], Eint, (const real*)NULL, EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table);
+            
+            double T_now = EoS.DensEint2Temp_FuncPtr( fluid[DENS], Eint, NULL, EoS.AuxArrayDevPtr_Flt, EoS.AuxArrayDevPtr_Int, EoS.Table   );
 
             // =================================================
-            // (3.4) Skip cells already at the temperature floor
+            // (3.4) Skip cells out of temperature range
             // =================================================
 
-            if ( T_now < Tks[0] )
+            if ( T_now < Tks[0] || T_now > Tks[N-1] )
                continue;
 
             // =================================================
@@ -444,8 +500,8 @@ double Mis_GetTimeStep_ExactCooling_General( const int lv, const double dTime_dt
                }
             }
 
-            // This should never happen because T_now >= Tks[0].
-            if ( k_interval < 1 )
+            // This should never happen because Tks[0] <= T_now <= Tks[N-1].
+            if ( k_interval < 1 || k_interval > N-1 )
                continue;
 
 
@@ -459,25 +515,22 @@ double Mis_GetTimeStep_ExactCooling_General( const int lv, const double dTime_dt
             // (3.7) Calculate number densities
             // =================================================
 
-            const double rho = fluid[DENS] * UNIT_D;
-            const double n_H = rho / (mu_H * Const_mp);
-            const double n_e = rho / (mu_e * Const_mp);
-            const double n   = rho / (mu   * Const_mp);
+            const double rho = fluid[DENS];
+            const double n_H = rho / (mu_H * mp);
+            const double n_e = rho / (mu_e * mp);
+            const double n   = rho / (mu   * mp);
 
             // =================================================
             // (3.8) Calculate cooling time
             // =================================================
 
-            const double tcool = ExactCooling_GetTcool( T_now, n, n_e, n_H, Lambda );
+            const double tcool = ExactCooling_GetTcool( T_now, n, n_e, n_H, Lambda, kB, gamma );
 
             // =================================================
-            // (3.9) Convert tcool to GAMER code time
-            //
-            // tcool : physical seconds
-            // UNIT_T: seconds per GAMER time unit
+            // (3.9) Cooling timestep 
             // =================================================
 
-            const double dt_cell = SrcTerms.ExactCooling_General_dt * tcool / UNIT_T;
+            const double dt_cell = SrcTerms.ExactCooling_General_dt * tcool;
 
             // =================================================
             // (3.10) Store the minimum timestep
@@ -523,8 +576,7 @@ double Mis_GetTimeStep_ExactCooling_General( const int lv, const double dTime_dt
    return dt_Cool;
 
 } // FUNCTION : Mis_GetTimeStep_ExactCooling_General
-#endif // #ifndef __CUDACC__
-
+# endif
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -615,7 +667,7 @@ double TEF_inverse_PiecewisePowerLaw( const double Y, const int N, const double 
    if ( Y >= Yks[0] )
        return Tks[0];
    
-   int k;
+   int k = -1;
    for ( int i = 1; i < N; i++ )
    {
       if ( Yks[i] <= Y && Y < Yks[i-1] )
@@ -623,6 +675,13 @@ double TEF_inverse_PiecewisePowerLaw( const double Y, const int N, const double 
          k = i;
          break;
       }
+   }
+   if ( k < 1 )
+   {
+   #  ifdef GAMER_DEBUG   
+      printf( "ERROR : Invalid Y = %e in %s !!\n", Y, __FUNCTION__ );
+   #  endif
+      return Tks[0];
    }
 
    const double Tk = Tks[k-1];
@@ -808,27 +867,31 @@ void Src_Init_ExactCooling_General()
       for (int i=0; i<NLEVEL; i++)   SrcTerms.ExactCooling_General_TCoolInit[i] = false;
 
 // initialize the cooling function
-   const int      N  = Src_ExactCooling_General_AuxArray_Int[0];   // number of temperature points
+   const int      N   = Src_ExactCooling_General_AuxArray_Int[0];   // number of temperature points
    
-   const double X_H  = Src_ExactCooling_General_AuxArray_Flt[0];   // hydrogen mass fraction
-   const double Z    = Src_ExactCooling_General_AuxArray_Flt[1];   // metal mass fraction
-   const double mu_e = Src_ExactCooling_General_AuxArray_Flt[2];   // mean electron molecular weight
-   const double mu_H = Src_ExactCooling_General_AuxArray_Flt[3];   // mean proton molecular weight
-   const double mu   = Src_ExactCooling_General_AuxArray_Flt[4];   // mean total molecular weight
+   const double X_H   = Src_ExactCooling_General_AuxArray_Flt[0];   // hydrogen mass fraction
+   const double Z     = Src_ExactCooling_General_AuxArray_Flt[1];   // metal mass fraction
+   const double mu_e  = Src_ExactCooling_General_AuxArray_Flt[2];   // mean electron molecular weight
+   const double mu_H  = Src_ExactCooling_General_AuxArray_Flt[3];   // mean proton molecular weight
+   const double mu    = Src_ExactCooling_General_AuxArray_Flt[4];   // mean total molecular weight
+
+   const double mp    = Src_ExactCooling_General_AuxArray_Flt[5];   // proton mass (g)
+   const double kB    = Src_ExactCooling_General_AuxArray_Flt[6];   // Boltzmann constant (erg/K)
+   const double gamma = Src_ExactCooling_General_AuxArray_Flt[7];   // ratio of specific heats
 
    // please add T5, a4, L4,... if your cooling function have more than 3 power law
-   const double T1   = Src_ExactCooling_General_AuxArray_Flt[5];   // temperature point 1
-   const double T2   = Src_ExactCooling_General_AuxArray_Flt[6];   // temperature point 2
-   const double T3   = Src_ExactCooling_General_AuxArray_Flt[7];   // temperature point 3
-   const double T4   = Src_ExactCooling_General_AuxArray_Flt[8];   // temperature point 4
+   const double T1    = Src_ExactCooling_General_AuxArray_Flt[8];   // temperature point 1 (K)
+   const double T2    = Src_ExactCooling_General_AuxArray_Flt[9];   // temperature point 2 (K)
+   const double T3    = Src_ExactCooling_General_AuxArray_Flt[10];  // temperature point 3 (K)
+   const double T4    = Src_ExactCooling_General_AuxArray_Flt[11];  // temperature point 4 (K)
    
-   const double a1   = Src_ExactCooling_General_AuxArray_Flt[9];   // slope 1
-   const double a2   = Src_ExactCooling_General_AuxArray_Flt[10];  // slope 2
-   const double a3   = Src_ExactCooling_General_AuxArray_Flt[11];  // slope 3
+   const double a1    = Src_ExactCooling_General_AuxArray_Flt[12];  // slope 1
+   const double a2    = Src_ExactCooling_General_AuxArray_Flt[13];  // slope 2
+   const double a3    = Src_ExactCooling_General_AuxArray_Flt[14];  // slope 3
 
-   const double L1   = Src_ExactCooling_General_AuxArray_Flt[12];  // normalization 1
-   const double L2   = Src_ExactCooling_General_AuxArray_Flt[13];  // normalization 2
-   const double L3   = Src_ExactCooling_General_AuxArray_Flt[14];  // normalization 3
+   const double L1    = Src_ExactCooling_General_AuxArray_Flt[15];  // normalization 1 (erg cm^3 s^-1)
+   const double L2    = Src_ExactCooling_General_AuxArray_Flt[16];  // normalization 2 (erg cm^3 s^-1)
+   const double L3    = Src_ExactCooling_General_AuxArray_Flt[17];  // normalization 3 (erg cm^3 s^-1)
 
 } // FUNCTION : Src_Init_ExactCooling_General
 
