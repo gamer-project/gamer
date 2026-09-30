@@ -879,11 +879,12 @@
 
 
 // number of ghost zones for computing derived fields
-#if (MODEL == ELBDM)
+#if ( MODEL == ELBDM )
 #        define DER_GHOST_SIZE      2
 #else
 #        define DER_GHOST_SIZE      1
 #endif
+
 
 // number of ghost zones for feedback
 // --> can be changed manually
@@ -891,7 +892,6 @@
 #ifdef FEEDBACK
 #        define FB_GHOST_SIZE       3
 #endif
-
 
 
 // patch size (number of cells of a single patch in the x/y/z directions)

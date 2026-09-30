@@ -858,11 +858,6 @@ struct InputPara_t
    int    Opt__Output_Cs;
    int    Opt__Output_DivVel;
    int    Opt__Output_Mach;
-#  if ( MODEL == ELBDM )
-   int    Opt__Output_ELBDM_Vel;
-   int    Opt__Output_ELBDM_Q_Pot;
-   int    Opt__Output_ELBDM_Q_Stress;
-#  endif
 #  ifdef MHD
    int    Opt__Output_DivMag;
 #  endif
@@ -880,6 +875,11 @@ struct InputPara_t
    int    Opt__Output_Dual_Status;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
+#  if ( MODEL == ELBDM )
+   int    Opt__Output_ELBDM_Vel;
+   int    Opt__Output_ELBDM_Q_Pot;
+   int    Opt__Output_ELBDM_Q_Stress;
+#  endif
    int    Opt__Output_UserField;
    int    Opt__Output_Mode;
    int    Opt__Output_Restart;

@@ -1687,11 +1687,6 @@ void Aux_TakeNote()
 #     ifdef MHD
       fprintf( Note, "OPT__OUTPUT_DIVMAG             % d\n",      OPT__OUTPUT_DIVMAG          );
 #     endif
-#     if ( MODEL == ELBDM )
-      fprintf( Note, "OPT__OUTPUT_ELBDM_VEL          % d\n",      OPT__OUTPUT_ELBDM_VEL       );
-      fprintf( Note, "OPT__OUTPUT_ELBDM_Q_POT        % d\n",      OPT__OUTPUT_ELBDM_Q_POT     );
-      fprintf( Note, "OPT__OUTPUT_ELBDM_Q_STRESS     % d\n",      OPT__OUTPUT_ELBDM_Q_STRESS  );
-#     endif
       fprintf( Note, "OPT__OUTPUT_USER_FIELD         % d\n",      OPT__OUTPUT_USER_FIELD      );
 #     ifdef SRHD
       fprintf( Note, "OPT__OUTPUT_3VELOCITY          % d\n",      OPT__OUTPUT_3VELOCITY       );
@@ -1707,6 +1702,11 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_DUAL_STATUS        % d\n",      OPT__OUTPUT_DUAL_STATUS     );
 #     endif
 #     endif // #if ( MODEL == HYDRO )
+#     if ( MODEL == ELBDM )
+      fprintf( Note, "OPT__OUTPUT_ELBDM_VEL          % d\n",      OPT__OUTPUT_ELBDM_VEL       );
+      fprintf( Note, "OPT__OUTPUT_ELBDM_Q_POT        % d\n",      OPT__OUTPUT_ELBDM_Q_POT     );
+      fprintf( Note, "OPT__OUTPUT_ELBDM_Q_STRESS     % d\n",      OPT__OUTPUT_ELBDM_Q_STRESS  );
+#     endif
 
 //    user-defined derived fields
       if ( OPT__OUTPUT_USER_FIELD ) {
