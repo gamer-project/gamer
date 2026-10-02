@@ -50,7 +50,7 @@ Must be a multiple of 16 (i.e., two patches).
 Simulation initial time.
 It will be overwritten by [[A_INIT | [Runtime-Parameters]-Cosmology#A_INIT]] when [[--comoving | [Installation]-Option-List#--comoving]] is enabled.
     * **Restriction:**
-
+Must satisfy `END_T >= INIT_TIME` for non-restart runs.
 <a name="END_T"></a>
 * #### `END_T` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [depend]
     * **Description:**
