@@ -314,6 +314,13 @@ void Aux_TakeNote()
 
 #     endif // #ifdef PARTICLE
 
+//    e. option in source term
+#     ifdef EXACT_COOLING
+      fprintf( Note, "EXACT_COOLING                   ON\n" );
+#     else
+      fprintf( Note, "EXACT_COOLING                   OFF\n" );
+#     endif
+
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
 
@@ -622,6 +629,12 @@ void Aux_TakeNote()
       fprintf( Note, "MHM_CHECK_PREDICT               OFF\n" );
 #     endif
 
+#     ifdef DUAL_ENERGY_PREDICT
+      fprintf( Note, "DUAL_ENERGY_PREDICT             ON\n" );
+#     else
+      fprintf( Note, "DUAL_ENERGY_PREDICT             OFF\n" );
+#     endif
+
 #     elif ( MODEL == ELBDM )
 
 #     if ( WAVE_SCHEME == WAVE_GRAMFE )
@@ -705,7 +718,17 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "#define VERSION                 %s\n",      VERSION               );
       fprintf( Note, "#define NCOMP_FLUID            % d\n",      NCOMP_FLUID           );
+      {
+      fprintf( Note, "   Field names                 "                                  );
+      for (int v=0; v<NCOMP_FLUID; v++)
+      fprintf( Note, " %s",                                       FieldLabel[v]         );
+      fprintf( Note, "\n" ); }
       fprintf( Note, "#define NCOMP_PASSIVE          % d\n",      NCOMP_PASSIVE         );
+      {
+      fprintf( Note, "   Field names                 "                                  );
+      for (int v=NCOMP_FLUID; v<NCOMP_FLUID+NCOMP_PASSIVE; v++)
+      fprintf( Note, " %s",                                       FieldLabel[v]         );
+      fprintf( Note, "\n" ); }
       fprintf( Note, "#define FLU_NIN                % d\n",      FLU_NIN               );
       fprintf( Note, "#define FLU_NOUT               % d\n",      FLU_NOUT              );
       fprintf( Note, "#define FLU_NIN_T              % d\n",      FLU_NIN_T             );
@@ -1139,6 +1162,12 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "SRC_ANY                        % d\n",      SrcTerms.Any              );
       fprintf( Note, "SRC_DELEPTONIZATION            % d\n",      SrcTerms.Deleptonization  );
+      fprintf( Note, "SRC_EXACTCOOLING               % d\n",      SrcTerms.ExactCooling     );
+#     ifdef EXACT_COOLING
+      if ( SrcTerms.ExactCooling ) {
+      fprintf( Note, "SRC_EC_TEF_N                   % d\n",      SrcTerms.EC_TEF_N         );
+      fprintf( Note, "SRC_EC_DTCOEF                  % 14.7e\n",  SrcTerms.EC_dtCoef        ); }
+#     endif
       fprintf( Note, "SRC_USER                       % d\n",      SrcTerms.User             );
       fprintf( Note, "SRC_GPU_NPGROUP                % d\n",      SRC_GPU_NPGROUP           );
       fprintf( Note, "***********************************************************************************\n" );
@@ -1670,7 +1699,15 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_GRACKLE_MU         % d\n",      OPT__OUTPUT_GRACKLE_MU      );
       fprintf( Note, "OPT__OUTPUT_GRACKLE_TCOOL      % d\n",      OPT__OUTPUT_GRACKLE_TCOOL   );
 #     endif
+#     ifdef DUAL_ENERGY
+      fprintf( Note, "OPT__OUTPUT_DUAL_STATUS        % d\n",      OPT__OUTPUT_DUAL_STATUS     );
+#     endif
 #     endif // #if ( MODEL == HYDRO )
+#     if ( MODEL == ELBDM )
+      fprintf( Note, "OPT__OUTPUT_ELBDM_VEL          % d\n",      OPT__OUTPUT_ELBDM_VEL       );
+      fprintf( Note, "OPT__OUTPUT_ELBDM_Q_POT        % d\n",      OPT__OUTPUT_ELBDM_Q_POT     );
+      fprintf( Note, "OPT__OUTPUT_ELBDM_Q_STRESS     % d\n",      OPT__OUTPUT_ELBDM_Q_STRESS  );
+#     endif
 
 //    user-defined derived fields
       if ( OPT__OUTPUT_USER_FIELD ) {

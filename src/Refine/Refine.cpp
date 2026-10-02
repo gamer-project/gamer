@@ -936,9 +936,12 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             const real UseDual2FixEngy  = HUGE_NUMBER;
             char dummy;    // we do not record the dual-energy status here
 
+            real Passive[NCOMP_PASSIVE];
+            for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Flu_FData[ NCOMP_FLUID + v ][k][j][i];
+
             Hydro_DualEnergyFix( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
                                  Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i], Flu_FData[DUAL][k][j][i],
-                                 dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], CheckMinPres_Yes, MIN_PRES,
+                                 Passive, dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], CheckMinPres_Yes, MIN_PRES,
                                  PassiveFloorMask, UseDual2FixEngy, Emag );
 
 #           else // #ifdef DUAL_ENERGY
@@ -1013,6 +1016,18 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
                amr->patch[FMagSg][lv+1][SonPID]->magnetic[v][ idx_B_out ++ ] = Mag_FData[v][ idx_B_in ++ ];
 
             }}}}
+#           endif
+
+//          dual-energy status
+//          --> set to DE_UPDATED_BY_REFINE rather than inheriting from parent patches for simplicity
+#           ifdef DUAL_ENERGY
+            for (int k=0; k<PS1; k++)  {  k_in = k + offset_in[2];
+            for (int j=0; j<PS1; j++)  {  j_in = j + offset_in[1];
+            for (int i=0; i<PS1; i++)  {  i_in = i + offset_in[0];
+
+               amr->patch[0][lv+1][SonPID]->de_status[k][j][i] = DE_UPDATED_BY_REFINE;
+
+            }}}
 #           endif
 
 //          rescale real and imaginary parts to get the correct density in ELBDM if OPT__INT_PHASE is off

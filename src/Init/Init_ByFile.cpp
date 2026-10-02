@@ -692,7 +692,6 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
       fluid_out[v_out] = fluid_in[v_in];
    }
 
-// calculate the dual-energy field for HYDRO
 #  if   ( MODEL == HYDRO )
 
 #  ifdef MHD
@@ -703,8 +702,11 @@ void Init_ByFile_Default( real fluid_out[], const real fluid_in[], const int nva
 #  endif
 
 #  ifdef DUAL_ENERGY
-   fluid_out[DUAL] = Hydro_Con2Dual( fluid_in[DENS], fluid_in[MOMX], fluid_in[MOMY], fluid_in[MOMZ], fluid_in[ENGY], Emag,
-                                     EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+// calculate the dual-energy field for HYDRO
+// --> use fluid_out+NCOMP_FLUID rather than fluid_in+NCOMP_FLUID to access passive scalars, since fluid_out is guaranteed
+//     to match the data layout of amr->patch->fluid, whereas fluid_in doesn't include the dual-energy variable
+   fluid_out[DUAL] = Hydro_Con2Dual( fluid_in[DENS], fluid_in[MOMX], fluid_in[MOMY], fluid_in[MOMZ], fluid_in[ENGY], fluid_out+NCOMP_FLUID, Emag,
+                                     EoS_DensEint2Pres_CPUPtr, EoS_CREint2CRPres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
                                      PassiveFloorMask );
 #  endif
 

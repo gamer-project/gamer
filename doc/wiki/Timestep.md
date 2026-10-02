@@ -1,5 +1,5 @@
 This page describes various timestep constraints. See also Sections 2.1 and 2.6 in the
-[GAMER-2 code paper](https://arxiv.org/abs/1712.07070).
+[GAMER-2 code paper](https://academic.oup.com/mnras/article/481/4/4815/5106358).
 
 
 ## Compilation Options

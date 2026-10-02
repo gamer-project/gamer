@@ -499,7 +499,7 @@ def load_arguments( sys_setting : SystemSetting ):
     parser.add_argument( "--dual", type=str, metavar="TYPE", gamer_name="DUAL_ENERGY", prefix="DE_",
                          default=NONE_STR, choices=[NONE_STR, "ENPY", "EINT"],
                          depend={"model":"HYDRO"},
-                         constraint={ "ENPY":{"eos":"GAMMA"} },
+                         constraint={ "ENPY":{"eos":["GAMMA", "COSMIC_RAY"]} },
                          help="The dual-energy formalism (ENPY: entropy, EINT: internal energy). "\
                               "EINT is not supported yet. Useless for RTVD.\n"
                        )
@@ -523,7 +523,7 @@ def load_arguments( sys_setting : SystemSetting ):
     parser.add_argument( "--cosmic_ray", type=str2bool, metavar="BOOLEAN", gamer_name="COSMIC_RAY",
                          default=False,
                          depend={"model":"HYDRO"},
-                         constraint={ True:{"dual":[NONE_STR], "eos":"COSMIC_RAY", "comoving":False} },
+                         constraint={ True:{"eos":"COSMIC_RAY", "comoving":False} },
                          help="Enable cosmic rays. Must use <--eos=COSMIC_RAY>.\n"
                        )
 
@@ -659,6 +659,13 @@ def load_arguments( sys_setting : SystemSetting ):
                          default=False,
                          depend={"particle":True},
                          help="Feedback from particles to grids and vice versa.\n"
+                       )
+
+    parser.add_argument( "--exact_cooling", type=str2bool, metavar="BOOLEAN", gamer_name="EXACT_COOLING",
+                         default=False,
+                         depend={"model":"HYDRO"},
+                         constraint={ True:{"comoving":False} },
+                         help="Enable exact cooling.\n"
                        )
 
     parser.add_argument( "--par_attribute_flt", type=int, metavar="INTEGER", gamer_name="PAR_NATT_FLT_USER",

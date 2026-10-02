@@ -26,6 +26,7 @@ typedef void (*SrcFunc_t)( real fluid[], const real B[],
 //
 // Data Member :  Any                       : True if at least one of the source terms is activated
 //                Deleptonization           : SRC_DELEPTONIZATION
+//                ExactCooling              : SRC_EXACTCOOLING
 //                User                      : SRC_USER
 //                BoxCenter                 : Simulation box center
 //                Unit_*                    : Code units
@@ -39,6 +40,8 @@ typedef void (*SrcFunc_t)( real fluid[], const real B[],
 //                                            --> For GPU, Dlep_Profile_DataDevPtr[]/RadiusDevPtr[] store the
 //                                                addresses of global memory arrays, which should NOT be used by host
 //                Dlep_Profile_NBin         : Number of radial bins in Dlep_Profile_*
+//                EC_dtCoef                 : Safety factor of the cooling time-step
+//                EC_TCoolInit              : Flag for checking whether the fluid[TCOOL] field has been initialized
 //
 // Method      :  None --> It seems that CUDA does not support functions in a struct
 //-------------------------------------------------------------------------------------------------------
@@ -47,6 +50,7 @@ struct SrcTerms_t
 
    bool   Any;
    bool   Deleptonization;
+   bool   ExactCooling;
    bool   User;
 
    double BoxCenter[3];
@@ -74,6 +78,23 @@ struct SrcTerms_t
    real    (*Dlep_Profile_DataDevPtr)[SRC_DLEP_PROF_NBINMAX];
    real     *Dlep_Profile_RadiusDevPtr;
    int       Dlep_Profile_NBin;
+#  endif
+
+// exact cooling
+#  ifdef EXACT_COOLING
+   SrcFunc_t EC_FuncPtr;
+   SrcFunc_t EC_CPUPtr;
+#  ifdef GPU
+   SrcFunc_t EC_GPUPtr;
+#  endif
+   double   *EC_AuxArrayDevPtr_Flt;
+   int      *EC_AuxArrayDevPtr_Int;
+   int       EC_TEF_N;
+   double   *EC_TEF_lambda_DevPtr;
+   double   *EC_TEF_alpha_DevPtr;
+   double   *EC_TEFc_DevPtr;
+   double    EC_dtCoef;
+   bool      EC_TCoolInit[NLEVEL];
 #  endif
 
 // user-specified source term
