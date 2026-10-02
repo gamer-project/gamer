@@ -81,7 +81,7 @@ void SF_CreateStar( const int lv, const real TimeNew, const real TimeOld, const 
    {
 #     if ( MODEL == HYDRO )
       case SF_CREATE_STAR_SCHEME_AGORA:
-      case SF_CREATE_STAR_SCHEME_DWARFGALAXY:
+      case SF_CREATE_STAR_SCHEME_CUSTOMIZED:
          SF_CreateStar_GeneralGalaxy( lv, TimeNew, dt_sf, RNG, UseMetal );
          break;
 #     endif

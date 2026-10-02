@@ -124,26 +124,37 @@ for ds in ts.piter():
       # annotate the line indicated the star formation threshold for the projected star particle density
       if field == 'particle_density_on_grid' and ds.parameters['Comoving'] == 0:
 
-         if ds.parameters['SF_CreateStar_Scheme'] == 1:   # with minimum density threshold
+         def plot_threshold_line( pz, x_0, y_0, x_1, y_1 ):
+            pz.annotate_line( [ x_0, y_0,  ds.domain_right_edge[2] ],
+                              [ x_1, y_1,  ds.domain_right_edge[2] ],
+                              coord_system="data", color='red', linewidth=3, linestyle='--' )
+
+         if ds.parameters['SF_CreateStar_Criteria'] & 1:   # with minimum density threshold
 
             x_0 = np.log10( ds.arr( ds.parameters['SF_CreateStar_MinGasDens'], 'code_density' ).in_units('g/cm**3').d / zlim_min['density'] ) / np.log10( zlim_max['density'] / zlim_min['density'] ) * ds.domain_width[0]
             y_0 = ds.domain_left_edge[1]
             x_1 = x_0
             y_1 = ds.domain_right_edge[1]
 
-         elif ds.parameters['SF_CreateStar_Scheme'] == 2: # with maximum Jeans length thredshold
+            plot_threshold_line( pz, x_0, y_0, x_1, y_1 )
+
+         if ds.parameters['SF_CreateStar_Criteria'] & 2: # with maximum temperature thredshold
+
+            x_0 = ds.domain_left_edge[0]
+            y_0 = np.log10( ds.arr( ds.parameters['SF_CreateStar_MaxGasTemp'], 'K' ).d / zlim_min['temperature'] ) / np.log10( zlim_max['temperature'] / zlim_min['temperature'] ) * ds.domain_width[1]
+            x_1 = ds.domain_right_edge[0]
+            y_1 = y_0
+
+            plot_threshold_line( pz, x_0, y_0, x_1, y_1 )
+
+         if ds.parameters['SF_CreateStar_Criteria'] & 4: # with maximum Jeans length thredshold
 
             x_0 = ds.domain_left_edge[0]
             y_0 = np.log10( get_T_for_MaxJeansLength( ds.quan( zlim_min['density'], 'g/cm**3' ) ) )
             x_1 = ds.domain_right_edge[0]
             y_1 = np.log10( get_T_for_MaxJeansLength( ds.quan( zlim_max['density'], 'g/cm**3' ) ) )
 
-         else:
-            raise RuntimeError('Unsupported SF_CreateStar_Scheme = %d !!'%(ds.parameters['SF_CreateStar_Scheme']))
-
-         pz.annotate_line( [ x_0, y_0,  ds.domain_right_edge[2] ],
-                           [ x_1, y_1,  ds.domain_right_edge[2] ],
-                           coord_system="data", color='red', linewidth=3, linestyle='--' )
+            plot_threshold_line( pz, x_0, y_0, x_1, y_1 )
 
       # save the image
       pz.save( mpl_kwargs={'dpi':150} )

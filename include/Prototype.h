@@ -864,7 +864,7 @@ void SF_CreateStar( const int lv, const real TimeNew, const real TimeOld, const 
 void SF_FreeRNG();
 void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real dt, RandomNumber_t *RNG, const bool UseMetal );
 bool SF_CreateStar_Check( const int lv, const int PID, const int i, const int j, const int k, const double dh, const real CosmoScaleFactor,
-                          const real fluid[][PS1][PS1][PS1], const real Pres[][PS1][PS1], const real Cs2[][PS1][PS1] );
+                          const real fluid[][PS1][PS1][PS1], const real Temp[][PS1][PS1], const real Pres[][PS1][PS1], const real Cs2[][PS1][PS1] );
 real SF_CreateStar_GetStarMass( const real GasDens, const real CosmoScaleFactor, const real dv, const real dt, RandomNumber_t *RNG, const int TID );
 #endif
 

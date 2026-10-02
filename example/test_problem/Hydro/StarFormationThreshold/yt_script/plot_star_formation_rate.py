@@ -11,6 +11,7 @@ filein  = "../Data_%06d"%np.genfromtxt("../Record__Dump")[-1][0]
 nbin    = int(np.genfromtxt("../Record__Dump")[-1][0]) -2
 dpi     = 150
 
+assert nbin >= 1, "nbin is too small"
 
 # load data
 ds = yt.load( filein )
@@ -29,6 +30,12 @@ def _density_code_density( field, data ):
    return data["density"] / data.ds.units.code_density
 
 ds.add_field( ("gas", "density_code_density"), function=_density_code_density, sampling_type="cell", units="dimensionless" )
+
+# gas temperature divided by code_temperature
+def _temperature_code_temperature( field, data ):
+   return data["temperature"] / data.ds.units.code_temperature
+
+ds.add_field( ("gas", "temperature_code_temperature"), function=_temperature_code_temperature, sampling_type="cell", units="dimensionless" )
 
 # jeans length divided by cell size
 def _jeans_length_dh( field, data ):
@@ -75,7 +82,7 @@ if ds.parameters['Comoving']:
     t_bin     = np.array( [ co.t_from_z(z).in_units( "Myr" ).value for z in z_bin ] )
 else:
     t_start   = 0.0
-    t_end     = ds.current_time.in_units( "Myr" )
+    t_end     = ds.current_time.in_units( "Myr" ).d
     t_bin     = np.linspace( start=t_start, stop=t_end, num=nbin+1 )
 
 upper_idx = np.digitize( creation_time, bins=t_bin, right=True )
@@ -97,16 +104,20 @@ starmass[starmass == 0] = np.nan
 
 
 # calculate the analytical star formation rate
-if   ds.parameters['SF_CreateStar_Scheme'] == 1:   # with minimum density threshold
-   a_now = ds.scale_factor if ds.parameters['Comoving'] else 1.0
-   star_formation_region = ds.cut_region( ds.all_data(), ["obj['gas', 'density_code_density'] >= %.2e"%(ds.parameters['SF_CreateStar_MinGasDens']*a_now**3)] )
+assert ds.parameters['SF_CreateStar_Criteria'] > 0, "unsupported SF_CREATE_STAR_CRITERIA !!"
 
-elif ds.parameters['SF_CreateStar_Scheme'] == 2:   # with maximum Jeans length thredshold
-   star_formation_region = ds.cut_region( ds.all_data(), ["obj['gas', 'jeans_length_dh'] <= %.2e"%ds.parameters['SF_CreateStar_MaxGasJeansL']] )
+a_now = ds.scale_factor if ds.parameters['Comoving'] else 1.0
+star_formation_region = ds.all_data()
+if ds.parameters['SF_CreateStar_Criteria'] & 1:   # with the minimum density threshold
+   star_formation_region = ds.cut_region( ds.all_data(), ["obj['gas', 'density_code_density'] >= %.2e"%(ds.parameters['SF_CreateStar_MinGasDens']*a_now**3)] ) & star_formation_region
 
-else:
-   raise RuntimeError('Unsupported SF_CreateStar_Scheme = %d !!'%(ds.parameters['SF_CreateStar_Scheme']))
+if ds.parameters['SF_CreateStar_Criteria'] & 2:   # with the maximum temperature threshold
+   star_formation_region = ds.cut_region( ds.all_data(), ["obj['gas', 'temperature_code_temperature'] <= %.2e"%(ds.parameters['SF_CreateStar_MaxGasTemp']*a_now**2)] ) & star_formation_region
 
+if ds.parameters['SF_CreateStar_Criteria'] & 4:   # with the  maximum Jeans length thredshold
+   star_formation_region = ds.cut_region( ds.all_data(), ["obj['gas', 'jeans_length_dh'] <= %.2e"%ds.parameters['SF_CreateStar_MaxGasJeansL']] ) & star_formation_region
+
+assert ds.parameters['SF_CreateStar_MassRate'] == 1, "unsupported SF_CREATE_STAR_MASS_RATE !!"
 sfr_analytical = star_formation_region.quantities.total_quantity('SchmidtLaw_star_formation_rate').in_units('Msun/yr').d
 
 
@@ -147,18 +158,18 @@ if ds.parameters['Comoving']:
         return 1.0/(3.0 * H0 * Omega_Lambda0**1.5) * ( np.sqrt( Omega_Lambda0 * a**3 * (Omega_M0 + Omega_Lambda0 * a**3) ) - Omega_M0 * np.arcsinh( np.sqrt( Omega_Lambda0 * a**3 / Omega_M0 ) ) )
 
     # in the default setup, the cell size exceeds the Jeans length after a=0.224
-    a_start  = 0.224 if ds.parameters['SF_CreateStar_Scheme'] == 2 else ds.parameters['A_Init']
+    a_start  = 0.224 if ds.parameters['SF_CreateStar_Criteria'] == 4 else ds.parameters['A_Init']
     a_end    = ds.scale_factor
     Integral = IndefIntegral(a_end) - IndefIntegral(a_start)
 
     # assume the SFR scales as a^3; calculate \int_{a_start}^{a_end} SFR(a) dt
-    plt.axhline( sfr_analytical*(1+ds.current_redshift)**3*Integral, color='r', linestyle='--', label='Expected Final' )
+    plt.axhline( sfr_analytical*(1+ds.current_redshift)**3*Integral, color='grey', linestyle=':', label='Expected Final (at z = %.2f)'%ds.current_redshift )
     plt.plot( redshift, starmass, label='Simulation' )
     plt.xlabel( "$z$", fontsize="large" )
     plt.xlim( z_end, z_start )
 else:
     # assume the SFR is a constant
-    plt.axhline( sfr_analytical*ds.current_time.in_units("yr").v, color='r', linestyle='--', label='Expected Final' )
+    plt.axhline( sfr_analytical*ds.current_time.in_units("yr").v, color='grey', linestyle=':', label='Expected Final (at t = %.2f)'%(ds.current_time.in_units("yr").v/Myr2yr) )
     plt.plot( time, starmass, label='Simulation' )
     plt.xlabel( "$\mathrm{t\ [Myr]}$", fontsize="large" )
 

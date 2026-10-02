@@ -285,15 +285,19 @@ int                  CHE_GPU_NPGROUP;
 
 // (2-8) star formation
 #ifdef STAR_FORMATION
-SF_CreateStarScheme_t SF_CREATE_STAR_SCHEME;
-int                   SF_CREATE_STAR_RSEED;
-int                   SF_CREATE_STAR_DET_RANDOM;
-int                   SF_CREATE_STAR_MIN_LEVEL;
-double                SF_CREATE_STAR_MIN_GAS_DENS;
-double                SF_CREATE_STAR_MAX_GAS_JEANSL;
-double                SF_CREATE_STAR_MASS_EFF;
-double                SF_CREATE_STAR_MIN_STAR_MASS;
-double                SF_CREATE_STAR_MAX_STAR_MFRAC;
+SF_CreateStarScheme_t   SF_CREATE_STAR_SCHEME;
+SF_CreateStarCriteria_t SF_CREATE_STAR_CRITERIA;
+SF_CreateStarMassRate_t SF_CREATE_STAR_MASS_RATE;
+SF_CreateStarParSpawn_t SF_CREATE_STAR_PAR_SPAWN;
+int                     SF_CREATE_STAR_RSEED;
+int                     SF_CREATE_STAR_DET_RANDOM;
+int                     SF_CREATE_STAR_MIN_LEVEL;
+double                  SF_CREATE_STAR_MIN_GAS_DENS;
+double                  SF_CREATE_STAR_MAX_GAS_TEMP;
+double                  SF_CREATE_STAR_MAX_GAS_JEANSL;
+double                  SF_CREATE_STAR_MASS_EFF;
+double                  SF_CREATE_STAR_MIN_STAR_MASS;
+double                  SF_CREATE_STAR_MAX_STAR_MFRAC;
 #endif
 
 // (2-9) equation of state

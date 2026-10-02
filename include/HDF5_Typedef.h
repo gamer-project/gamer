@@ -740,10 +740,14 @@ struct InputPara_t
 // star formation
 #  ifdef STAR_FORMATION
    int    SF_CreateStar_Scheme;
+   long   SF_CreateStar_Criteria;
+   int    SF_CreateStar_MassRate;
+   int    SF_CreateStar_ParSpawn;
    int    SF_CreateStar_RSeed;
    int    SF_CreateStar_DetRandom;
    int    SF_CreateStar_MinLevel;
    double SF_CreateStar_MinGasDens;
+   double SF_CreateStar_MaxGasTemp;
    double SF_CreateStar_MaxGasJeansL;
    double SF_CreateStar_MassEff;
    double SF_CreateStar_MinStarMass;

@@ -28,19 +28,16 @@ real SF_CreateStar_GetStarMass( const real GasDens, const real CosmoScaleFactor,
 
    real StarMass = -1.0;
 
-   switch ( SF_CREATE_STAR_SCHEME )
+   if ( SF_CREATE_STAR_MASS_RATE == SF_CREATE_STAR_MASS_RATE_CONST_EFF_PER_TFF  &&
+        SF_CREATE_STAR_PAR_SPAWN == SF_CREATE_STAR_PAR_SPAWN_STOCHASTIC_MIN_MASS )
    {
-      case SF_CREATE_STAR_SCHEME_AGORA:
-      case SF_CREATE_STAR_SCHEME_DWARFGALAXY:
-         StarMass = SF_CreateStar_GetStarMass_StochasticLocalSchmidtLaw( GasDens, CosmoScaleFactor, dv, dt, RNG, SF_CREATE_STAR_MASS_EFF, SF_CREATE_STAR_MIN_STAR_MASS, TID );
-         break;
-
-      case SF_CREATE_STAR_SCHEME_NONE:
-         break;
-
-      default :
-         Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "SF_CREATE_STAR_SCHEME", SF_CREATE_STAR_SCHEME );
-   } // switch ( SF_CREATE_STAR_SCHEME )
+      StarMass = SF_CreateStar_GetStarMass_StochasticLocalSchmidtLaw( GasDens, CosmoScaleFactor, dv, dt, RNG, SF_CREATE_STAR_MASS_EFF, SF_CREATE_STAR_MIN_STAR_MASS, TID );
+   }
+   else
+   {
+      Aux_Error( ERROR_INFO, "unsupported SF_CREATE_STAR_MASS_RATE (%d) and SF_CREATE_STAR_PAR_SPAWN (%d) !!\n",
+                 SF_CREATE_STAR_MASS_RATE, SF_CREATE_STAR_PAR_SPAWN );
+   }
 
 // check the maximum gas mass allowed to convert to stars
    const real MaxStarMass = SF_CreateStar_GetStarMass_MaxStarM( GasDens, dv, SF_CREATE_STAR_MAX_STAR_MFRAC );

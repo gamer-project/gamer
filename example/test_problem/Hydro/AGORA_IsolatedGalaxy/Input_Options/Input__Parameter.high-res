@@ -147,14 +147,18 @@ CHE_GPU_NPGROUP              -1           # number of patch groups sent into the
 
 
 # star formation (STAR_FORMATION only)
-SF_CREATE_STAR_SCHEME         1           # star formation schemes (0=off, 1=AGORA, 2=DwarfGalaxy) [0]
+SF_CREATE_STAR_SCHEME         1           # star formation schemes (-1=customized, 0=off, 1=AGORA) [0]
+SF_CREATE_STAR_CRITERIA      -1           # star formation criteria (<0=auto, 0=none, +1=high gas density, +2=low gas temperature, +4=unresolved Jeans length) [-1]
+SF_CREATE_STAR_MASS_RATE     -1           # star formation rate models (<0=auto, 0=off, 1=constant efficiency per free-fall time) [-1]
+SF_CREATE_STAR_PAR_SPAWN     -1           # star particle spawning methods (<0=auto, 0=off, 1=stochastic with a minimum mass) [-1]
 SF_CREATE_STAR_RSEED          123         # random seed [123]
 SF_CREATE_STAR_DET_RANDOM    -1           # make random numbers deterministic (i.e., independent of OpenMP and MPI, <0=auto) [-1]
 SF_CREATE_STAR_MIN_LEVEL     -1           # minimum AMR level allowed to form stars (<0=auto -> MAX_LEVEL) [0]
-SF_CREATE_STAR_MIN_GAS_DENS   2.0e1       # minimum gas density allowed to form stars (in m_H/cm^3) (for SF_CREATE_STAR_SCHEME=1 only) [1.0e1]
-SF_CREATE_STAR_MAX_GAS_JEANSL 1.0         # maximum gas Jeans length allowed to form stars (in dh of each level) (for SF_CREATE_STAR_SCHEME=2 only) [1.0]
-SF_CREATE_STAR_MASS_EFF       1.0e-2      # Gas-to-star mass conversion efficiency [1.0e-2]
-SF_CREATE_STAR_MIN_STAR_MASS  2.0e3       # minimum star particle mass for the stochastical star formation (in Msun) [0.0]
+SF_CREATE_STAR_MIN_GAS_DENS   2.0e1       # minimum gas density allowed to form stars (in m_H/cm^3) (for SF_CREATE_STAR_CRITERIA&1 only) [1.0e1]
+SF_CREATE_STAR_MAX_GAS_TEMP   1.0e4       # maximum gas temperature allowed to form stars (in K) (for SF_CREATE_STAR_CRITERIA&2 only) [1.0e4]
+SF_CREATE_STAR_MAX_GAS_JEANSL 1.0         # maximum gas Jeans length allowed to form stars (in dh of each level) (for SF_CREATE_STAR_CRITERIA&4 only) [1.0]
+SF_CREATE_STAR_MASS_EFF       1.0e-2      # Gas-to-star mass conversion efficiency (for SF_CREATE_STAR_MASS_RATE==1 only) [1.0e-2]
+SF_CREATE_STAR_MIN_STAR_MASS  2.0e3       # minimum star particle mass for the stochastical star formation (in Msun) (for SF_CREATE_STAR_PAR_SPAWN==1 only) [0.0]
 SF_CREATE_STAR_MAX_STAR_MFRAC 0.5         # maximum gas mass fraction allowed to convert to stars per substep [0.5]
 
 

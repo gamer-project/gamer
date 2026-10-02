@@ -77,18 +77,22 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
    double x0, y0, z0, x, y, z;
    real   GasDens, _GasDens, GasMass, StarMFrac, StarMass, GasMFracLeft;
    real   (*fluid)[PS1][PS1][PS1]      = NULL;
+   real   (*Temp)[PS1][PS1]            = NULL;
    real   (*Pres)[PS1][PS1]            = NULL;
    real   (*Cs2)[PS1][PS1]             = NULL;
 #  ifdef STORE_POT_GHOST
    real   (*pot_ext)[GRA_NXT][GRA_NXT] = NULL;
 #  endif
 
+   bool NeedTemp = false;
    bool NeedPres = false;
    bool NeedCs2  = false;
 
-   if ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_DWARFGALAXY )   NeedCs2 = true;
+   if ( SF_CREATE_STAR_CRITERIA & SF_CREATE_STAR_CRITERIA_LOW_GAS_TEMPERATURE     )   NeedTemp = true;
+   if ( SF_CREATE_STAR_CRITERIA & SF_CREATE_STAR_CRITERIA_UNRESOLVED_JEANS_LENGTH )   NeedCs2  = true;
    if ( NeedCs2 )   NeedPres = true;
 
+   if ( NeedTemp )   Temp = new real [PS1][PS1][PS1];
    if ( NeedPres )   Pres = new real [PS1][PS1][PS1];
    if ( NeedCs2  )   Cs2  = new real [PS1][PS1][PS1];
 
@@ -127,6 +131,37 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
 #     ifdef STORE_POT_GHOST
       pot_ext = amr->patch[PotSg][lv][PID]->pot_ext;
 #     endif
+
+//    evaluate temperature
+      if ( NeedTemp )
+      {
+         const bool CheckMinTemp_No = false;
+
+         for (int k=0; k<PS1; k++)
+         for (int j=0; j<PS1; j++)
+         for (int i=0; i<PS1; i++)
+         {
+
+#           ifdef MHD
+            const real Emag = MHD_GetCellCenteredBEnergyInPatch( lv, PID, i, j, k, amr->MagSg[lv] );
+#           else
+            const real Emag = NULL_REAL;
+#           endif
+
+#           if ( EOS != EOS_GAMMA  &&  EOS != EOS_ISOTHERMAL  &&  NCOMP_PASSIVE > 0 )
+            real Passive[NCOMP_PASSIVE];
+            for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = fluid[ NCOMP_FLUID + v ][k][j][i];
+#           else
+            const real *Passive = NULL;
+#           endif
+
+            Temp[k][j][i] = Hydro_Con2Temp( fluid[DENS][k][j][i], fluid[MOMX][k][j][i], fluid[MOMY][k][j][i],
+                                            fluid[MOMZ][k][j][i], fluid[ENGY][k][j][i], Passive,
+                                            CheckMinTemp_No, NULL_REAL, PassiveFloorMask, Emag,
+                                            EoS_DensEint2Temp_CPUPtr, EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
+                                            EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+         } // k,j,i
+      } // if ( NeedTemp )
 
 //    evaluate pressure
       if ( NeedPres )
@@ -208,7 +243,7 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
 //       ===========================================================================================================
 
 //       1-1. check star formation criteria
-         if ( !SF_CreateStar_Check( lv, PID, i, j, k, dh, CosmoScaleFactor, fluid, Pres, Cs2 ) )   continue;
+         if ( !SF_CreateStar_Check( lv, PID, i, j, k, dh, CosmoScaleFactor, fluid, Temp, Pres, Cs2 ) )   continue;
 
 //       1-2. get the star mass
          StarMass = SF_CreateStar_GetStarMass( GasDens, CosmoScaleFactor, dv, dt, RNG, TID );
@@ -336,6 +371,7 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
    } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
 
 // free memory
+   delete [] Temp;
    delete [] Pres;
    delete [] Cs2;
    delete [] NewParAttFlt;

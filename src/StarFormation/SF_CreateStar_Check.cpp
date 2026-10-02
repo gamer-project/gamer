@@ -5,6 +5,7 @@
 static bool SF_CreateStar_Check_CellMassDepletion( const real GasMass );
 static bool SF_CreateStar_Check_GasDensity( const real GasDensity, const real CosmoScaleFactor, const real Threshold );
 static bool SF_CreateStar_Check_GasOverDensity( const real GasDensity );
+static bool SF_CreateStar_Check_GasTemperature( const real GasTemperature, const real CosmoScaleFactor, const real Threshold );
 static bool SF_CreateStar_Check_GasJeansLength( const real GasDensity, const real GasCs2, const real CosmoScaleFactor, const real Threshold );
 
 
@@ -25,6 +26,7 @@ static bool SF_CreateStar_Check_GasJeansLength( const real GasDensity, const rea
 //                dh               : Cell size at the target level
 //                CosmoScaleFactor : Scale factor "a" in cosmology
 //                fluid            : Input fluid array (with NCOMP_TOTAL components)
+//                Temp             : Input temperature array
 //                Pres             : Input pressure array
 //                Cs2              : Input squared sound speed array
 //
@@ -32,36 +34,42 @@ static bool SF_CreateStar_Check_GasJeansLength( const real GasDensity, const rea
 //                "false" otherwise
 //-------------------------------------------------------------------------------------------------------
 bool SF_CreateStar_Check( const int lv, const int PID, const int i, const int j, const int k, const double dh, const real CosmoScaleFactor,
-                          const real fluid[][PS1][PS1][PS1], const real Pres[][PS1][PS1], const real Cs2[][PS1][PS1] )
+                          const real fluid[][PS1][PS1][PS1], const real Temp[][PS1][PS1], const real Pres[][PS1][PS1], const real Cs2[][PS1][PS1] )
 {
+#  ifdef GAMER_DEBUG
+   const long SupportedCriteria = ( SF_CREATE_STAR_CRITERIA_HIGH_GAS_DENSITY | SF_CREATE_STAR_CRITERIA_LOW_GAS_TEMPERATURE | SF_CREATE_STAR_CRITERIA_UNRESOLVED_JEANS_LENGTH );
+   if ( SF_CREATE_STAR_CRITERIA & ~SupportedCriteria )
+      Aux_Error( ERROR_INFO, "unsupported SF_CREATE_STAR_CRITERIA = %d !!\n", SF_CREATE_STAR_CRITERIA );
+#  endif
+
    bool AllowSF = true;
 
-   switch ( SF_CREATE_STAR_SCHEME )
+   if ( SF_CREATE_STAR_CRITERIA == SF_CREATE_STAR_CRITERIA_NONE )
    {
-      case SF_CREATE_STAR_SCHEME_AGORA:
-//       create star particles only if the gas density exceeds the given threshold
-//       Ref: (1) Nathan Goldbaum, et al., 2015, ApJ, 814, 131 (arXiv: 1510.08458), sec. 2.4
-//            (2) Ji-hoon Kim, et al., 2016, ApJ, 833, 202 (arXiv: 1610.03066), sec. 3.2
-//       Currently this function does not check whether the cell mass exceeds the Jeans mass
-//       --> Ref: "jeanmass" in star_maker_ssn.F of Enzo
-         AllowSF &= SF_CreateStar_Check_GasDensity( fluid[DENS][k][j][i], CosmoScaleFactor, SF_CREATE_STAR_MIN_GAS_DENS );
-         if ( !AllowSF )    return AllowSF;
-         break;
+      AllowSF &= false;
+      if ( !AllowSF )    return AllowSF;
+   }
 
-      case SF_CREATE_STAR_SCHEME_DWARFGALAXY:
-//       create star particles only if the gas Jeans length is less than the given threshold
-         AllowSF &= SF_CreateStar_Check_GasJeansLength( fluid[DENS][k][j][i], Cs2[k][j][i], CosmoScaleFactor, dh*SF_CREATE_STAR_MAX_GAS_JEANSL );
-         if ( !AllowSF )    return AllowSF;
-         break;
+   if ( SF_CREATE_STAR_CRITERIA & SF_CREATE_STAR_CRITERIA_HIGH_GAS_DENSITY )
+   {
+//    create star particles only if the gas density is higher than the given threshold
+      AllowSF &= SF_CreateStar_Check_GasDensity( fluid[DENS][k][j][i], CosmoScaleFactor, SF_CREATE_STAR_MIN_GAS_DENS );
+      if ( !AllowSF )    return AllowSF;
+   }
 
-      case SF_CREATE_STAR_SCHEME_NONE:
-         AllowSF &= false;
-         if ( !AllowSF )    return AllowSF;
-         break;
+   if ( SF_CREATE_STAR_CRITERIA & SF_CREATE_STAR_CRITERIA_LOW_GAS_TEMPERATURE )
+   {
+//    create star particles only if the gas temperature is lower than the given threshold
+      AllowSF &= SF_CreateStar_Check_GasTemperature( Temp[k][j][i], CosmoScaleFactor, SF_CREATE_STAR_MAX_GAS_TEMP );
+      if ( !AllowSF )    return AllowSF;
+   }
 
-      default :
-         Aux_Error( ERROR_INFO, "incorrect parameter %s = %d !!\n", "SF_CREATE_STAR_SCHEME", SF_CREATE_STAR_SCHEME );
-   } // switch ( SF_CREATE_STAR_SCHEME )
+   if ( SF_CREATE_STAR_CRITERIA & SF_CREATE_STAR_CRITERIA_UNRESOLVED_JEANS_LENGTH )
+   {
+//    create star particles only if the gas Jeans length is less than the given threshold
+      AllowSF &= SF_CreateStar_Check_GasJeansLength( fluid[DENS][k][j][i], Cs2[k][j][i], CosmoScaleFactor, dh*SF_CREATE_STAR_MAX_GAS_JEANSL );
+      if ( !AllowSF )    return AllowSF;
+   }
 
 
    return AllowSF;
@@ -163,6 +171,33 @@ bool SF_CreateStar_Check_GasOverDensity( const real GasDensity )
    return AllowSF;
 
 } // FUNCTION : SF_CreateStar_Check_GasOverDensity
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  SF_CreateStar_Check_GasTemperature
+// Description :  Check if the gas temperature falls below the given threshold
+//
+// Note        :  1. The temperature threshold is in physical frame
+//
+// Parameter   :  GasTemperature   : Gas temperature
+//                CosmoScaleFactor : Scale factor "a" in cosmology
+//                Threshold        : Threshold for the star formation
+//
+// Return      :  "true"  if the gas temperature is lower than or equal to the given threshold
+//                "false" otherwise
+//-------------------------------------------------------------------------------------------------------
+bool SF_CreateStar_Check_GasTemperature( const real GasTemperature, const real CosmoScaleFactor, const real Threshold )
+{
+   const real a2inv = (real)1.0 / SQR( CosmoScaleFactor );  // a^-2
+
+   bool AllowSF = false;
+
+   if ( GasTemperature * a2inv <= Threshold )    AllowSF = true;
+
+   return AllowSF;
+
+} // FUNCTION : SF_CreateStar_Check_GasTemperature
 
 
 
