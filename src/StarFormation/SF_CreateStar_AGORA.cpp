@@ -5,6 +5,8 @@
 
 #ifdef FEEDBACK
 extern RandomNumber_t *FB_RNG;
+extern double          FB_ResolvedSNeII_PDCapToMean;
+extern int             maxNumSNeIIPerSPar;
 #endif
 
 
@@ -283,11 +285,15 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 #           endif
 
 //          maximum allowed number of SNeII per particle
-//          --> set to twice the mean; sampled number higher than this value should be rare
-            const int MaxNum_SNeII     = (int)ceil(2.0*MeanNum_SNeII);
+            const int MaxNum_SNeII     = (int)ceil(FB_ResolvedSNeII_PDCapToMean*MeanNum_SNeII);
 
 //          number of SNeII for this star particle, sampled from the capped Poisson distribution
             const int SampledNum_SNeII = MIN( PoissonRandom, MaxNum_SNeII );
+
+//          check the number of SNeII is supported
+            if ( SampledNum_SNeII > maxNumSNeIIPerSPar )
+               Aux_Error( ERROR_INFO, "The sampled number of SNe (%d) exceeds the maximum (%d) !!\n",
+                          SampledNum_SNeII, maxNumSNeIIPerSPar );
 
 //          next SNeII explosion event index for the feedback routine
             const long_par SNII_NxtE = SampledNum_SNeII * FB_SNII_NXTE_SEPDIGIT;

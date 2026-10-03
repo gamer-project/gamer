@@ -47,7 +47,7 @@ The explosion delay time of SNeII after star formation, the ejected internal ene
 the ejected total mass of each SNeII explosion, and the ejected metal mass of each SNeII explosion should be set in
 `FeedbackYieldTable_Resolved_SNeII_*`.
 Note that the input value should always be in units of Myr for explosion time,
-in units of erg for energy, and in nits of Msun for mass.
+in units of erg for energy, and in units of Msun for mass.
 The actual amount of the ejected metal will not be greater than the ejected total mass.
 The actual amount of the ejected mass will not be greater than the mass of the particle.
 The number of cells to apply feedback will increase from one until the enclosed mass exceeds the given
@@ -55,7 +55,8 @@ minimum gas mass ([[FB_RESOLVED_SNEII_MIN_M_GAS | Runtime Parameters:-Feedback#F
 the diameter equals `FB_GHOST_SIZE+1`, or the region crosses the coarse-fine boundary.
 See sec. 2.6 in [Chia-Yu Hu et al. 2023](https://doi.org/10.3847/1538-4357/accf9e) for reference.
     * **Restriction:**
-Must set one extra particle attribute with [[ --par_attribute_int | Installation:-Option-List#--par_attribute_int ]].
+Must set one extra particle attribute with [[ --par_attribute_int | Installation:-Option-List#--par_attribute_int ]],
+and the attribute value should also be provided for each particle during the initialization.
 The grid resolution must be high enough to resolve the Sedov phase of supernova explosion blast wave,
 so the kinetic (outward momentum) feedback is not needed.
 
@@ -73,7 +74,6 @@ Number of SNeII per stellar mass.
 Note that the input value should always be in units of 1/Msun.
     * **Restriction:**
 Only for [[FB_RESOLVED_SNEII | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII ]].
-Its value times the maximum star particle mass cannot be greater than one.
 
 <a name="FB_RESOLVED_SNEII_MIN_M_GAS"></a>
 * #### `FB_RESOLVED_SNEII_MIN_M_GAS` &ensp; (&#8805;0.0) &ensp; [0.0]
@@ -83,7 +83,7 @@ If the mass of the cell where the particle is in is sufficient, then the feedbac
 Otherwise, the diameter of the feedback region will increase from `1` to `FB_GHOST_SIZE+1`
 until the enclosed mass is higher than this given threshold.
 When the particle is too close to the AMR coarse-fine boundary,
-the feedback region will be limited such that no feedback will be applied in the coarse level.
+the feedback region will be limited such that no feedback will be applied in the different level.
 Note that the input value should always be in units of Msun.
     * **Restriction:**
 Only for [[FB_RESOLVED_SNEII | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII ]].

@@ -11,8 +11,15 @@ static const int      maxNumRecSNeII = 100;                  // maximum number o
 static       int     *numRecSNeII    = NULL;                 // number of recorded SNeII in each OpenMP thread
 static       double **recordSNeII    = NULL;                 // array of stored variables to record the SNeII info
 
+#ifdef STAR_FORMATION
+             double   FB_ResolvedSNeII_PDCapToMean =  2.0;   // cap-to-mean ratio of the capped Poisson distribution used to sample the number of SNeII
+                                                             // --> note that the capped Poisson distribution has a lower mean than the original,
+                                                             //     the obtained accumulated number of SNeII can be lower than expected
+                                                             // --> the probability of sampling a number higher than this cap should be low
+#endif
+
 static       int      minNumSNeIIPerSPar;                    // minimum number of SNeII per stellar particle
-static       int      maxNumSNeIIPerSPar;                    // maximum number of SNeII per stellar particle
+             int      maxNumSNeIIPerSPar;                    // maximum number of SNeII per stellar particle
 static       double **Table_SNII_Lifetime    = NULL;         // table of the stellar lifetime of each SNII progenitor
 static       double **Table_SNII_EjectEnergy = NULL;         // table of the energy ejected by each SNII event
 static       double **Table_SNII_EjectMass   = NULL;         // table of the mass ejected by each SNII event
@@ -87,8 +94,8 @@ static       double **Table_SNII_EjectMetal  = NULL;         // table of the met
 //                12. This feedback method assumes the grid resolution is sufficiently high
 //                    to resolve the Sedov phase blast wave caused by the supernova explosion
 //                    --> Thermal energy (along with the mass and metal from SN explosion) is
-//                        only injected into one cell where the particle is located
-//                        and thre is no kinetic (outward momentum) feedback
+//                        only injected into one cell (unless the enclosed mass is too low) where the particle is located
+//                        and there is no kinetic (outward momentum) feedback
 //                13. Ref: Sec. 2.6 of Chia-Yu Hu, et al., 2023, ApJ, 950, 132 (https://doi.org/10.3847/1538-4357/accf9e)
 //
 // Parameter   :  lv         : Target refinement level
@@ -378,38 +385,86 @@ int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld,
          if ( recordSNeII[TID] == NULL )   Aux_Error( ERROR_INFO, "recordSNeII[TID] == NULL !!\n" );
 #        endif // #ifdef GAMER_DEBUG
 
-         if ( numRecSNeII[TID] >= maxNumRecSNeII )   Aux_Error( ERROR_INFO, "Number of SNeII to record is larger than maximum (%d)!!\n", maxNumRecSNeII );
+         if ( numRecSNeII[TID] >= maxNumRecSNeII )
+         {
+//          maxNumRecSNeII should be large enough to avoid this from happening
 
-         int nVar = 0;
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = TimeOld;
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = TimeNew;
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_SNIITime_first;
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_SNIITime_last;
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = SNII_AccumulatedNumber;
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = SNII_DepositedEnergy;
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = SNII_DepositedMass;
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = SNII_DepositedMetal;
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = fbDiameter*dh;
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = fbFluidMass;
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_puid;
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_SNIINxtE;
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_mass;
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_pos[0];
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_pos[1];
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_pos[2];
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_vel[0];
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_vel[1];
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_vel[2];
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_metalMass;
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = Fluid_In[DENS][cell_idx[2]][cell_idx[1]][cell_idx[0]];
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = Fluid_In[MOMX][cell_idx[2]][cell_idx[1]][cell_idx[0]];
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = Fluid_In[MOMY][cell_idx[2]][cell_idx[1]][cell_idx[0]];
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = Fluid_In[MOMZ][cell_idx[2]][cell_idx[1]][cell_idx[0]];
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = Fluid_In[ENGY][cell_idx[2]][cell_idx[1]][cell_idx[0]];
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = ( UseMetal ) ? Fluid_In[Idx_Metal][cell_idx[2]][cell_idx[1]][cell_idx[0]] : 0.0;
-         numRecSNeII[TID] += 1;
+//          set the filename; one file for each thread on each rank to avoid racing
+            char FileName[2*MAX_STRING];
+            sprintf( FileName, "%s/Record__FB_Resolved_SNeII_Rank%03d_TID%03d", OUTPUT_DIR, MPI_Rank, TID );
 
-         if ( nVar != nVarRecSNeII )   Aux_Error( ERROR_INFO, "Number of variables to record (%d) is not expected (%d)!!\n", nVar, nVarRecSNeII );
+//          print the warning messages as this is not the recommended way of recording
+            Aux_Message( stderr, "WARNING : Number of SNeII to be recorded (%d) on Rank = %d, TID = %d reaches the maximum (%d) !!\n",
+                                 numRecSNeII[TID], MPI_Rank, TID, maxNumRecSNeII );
+            Aux_Message( stderr, "          --> maxNumRecSNeII should be increased\n" );
+            Aux_Message( stderr, "          --> exceeding parts will be output to \"%S\" separately\n", FileName );
+
+//          output to the file
+            FILE *File = fopen( FileName, "a" );
+            fprintf( File, "%6d%6d%6d", MPI_Rank, TID, lv );
+            fprintf( File, "%16.8e", (double)TimeOld );
+            fprintf( File, "%16.8e", (double)TimeNew );
+            fprintf( File, "%16.8e", (double)par_SNIITime_first );
+            fprintf( File, "%16.8e", (double)par_SNIITime_last );
+            fprintf( File, "%16.8e", (double)SNII_AccumulatedNumber );
+            fprintf( File, "%16.8e", (double)SNII_DepositedEnergy );
+            fprintf( File, "%16.8e", (double)SNII_DepositedMass );
+            fprintf( File, "%16.8e", (double)SNII_DepositedMetal );
+            fprintf( File, "%16.8e", (double)fbDiameter*dh );
+            fprintf( File, "%16.8e", (double)fbFluidMass );
+            fprintf( File, "%16.8e", (double)par_puid );
+            fprintf( File, "%16.8e", (double)par_SNIINxtE );
+            fprintf( File, "%16.8e", (double)par_mass );
+            fprintf( File, "%16.8e", (double)par_pos[0] );
+            fprintf( File, "%16.8e", (double)par_pos[1] );
+            fprintf( File, "%16.8e", (double)par_pos[2] );
+            fprintf( File, "%16.8e", (double)par_vel[0] );
+            fprintf( File, "%16.8e", (double)par_vel[1] );
+            fprintf( File, "%16.8e", (double)par_vel[2] );
+            fprintf( File, "%16.8e", (double)par_metalMass );
+            fprintf( File, "%16.8e", (double)Fluid_In[DENS][cell_idx[2]][cell_idx[1]][cell_idx[0]] );
+            fprintf( File, "%16.8e", (double)Fluid_In[MOMX][cell_idx[2]][cell_idx[1]][cell_idx[0]] );
+            fprintf( File, "%16.8e", (double)Fluid_In[MOMY][cell_idx[2]][cell_idx[1]][cell_idx[0]] );
+            fprintf( File, "%16.8e", (double)Fluid_In[MOMZ][cell_idx[2]][cell_idx[1]][cell_idx[0]] );
+            fprintf( File, "%16.8e", (double)Fluid_In[ENGY][cell_idx[2]][cell_idx[1]][cell_idx[0]] );
+            fprintf( File, "%16.8e", (double)( ( UseMetal ) ? Fluid_In[Idx_Metal][cell_idx[2]][cell_idx[1]][cell_idx[0]] : 0.0 ) );
+            fprintf( File, "\n" );
+            fclose( File );
+         }
+         else // if ( numRecSNeII[TID] >= maxNumRecSNeII )
+         {
+            int nVar = 0;
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = TimeOld;
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = TimeNew;
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_SNIITime_first;
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_SNIITime_last;
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = SNII_AccumulatedNumber;
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = SNII_DepositedEnergy;
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = SNII_DepositedMass;
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = SNII_DepositedMetal;
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = fbDiameter*dh;
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = fbFluidMass;
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_puid;
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_SNIINxtE;
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_mass;
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_pos[0];
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_pos[1];
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_pos[2];
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_vel[0];
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_vel[1];
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_vel[2];
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_metalMass;
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = Fluid_In[DENS][cell_idx[2]][cell_idx[1]][cell_idx[0]];
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = Fluid_In[MOMX][cell_idx[2]][cell_idx[1]][cell_idx[0]];
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = Fluid_In[MOMY][cell_idx[2]][cell_idx[1]][cell_idx[0]];
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = Fluid_In[MOMZ][cell_idx[2]][cell_idx[1]][cell_idx[0]];
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = Fluid_In[ENGY][cell_idx[2]][cell_idx[1]][cell_idx[0]];
+            recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = ( UseMetal ) ? Fluid_In[Idx_Metal][cell_idx[2]][cell_idx[1]][cell_idx[0]] : 0.0;
+            numRecSNeII[TID] += 1;
+
+            if ( nVar != nVarRecSNeII )   Aux_Error( ERROR_INFO, "Number of variables to record (%d) is not expected (%d)!!\n", nVar, nVarRecSNeII );
+
+         } // if ( numRecSNeII[TID] >= maxNumRecSNeII ) ... else ...
 
       } // if ( FB_RESOLVED_SNEII_RECORD  &&  FB_Aux_CellPatchRelPos( cell_idx ) == -1 )
 
@@ -423,6 +478,14 @@ int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld,
       ParAttFlt[Idx_ParMetalFrac][par_idx]  = ( ParAttFlt[PAR_MASS][par_idx] > 0.0 )
                                               ? (par_metalMass - MIN(par_metalMass, (real_par)SNII_DepositedMetal)) / ParAttFlt[PAR_MASS][par_idx]
                                               : 0.0;   // to avoid 0/0 when all the stellar mass is deposited
+
+      if ( ParAttFlt[PAR_MASS][par_idx] <= 0.0 )
+      {
+         const long_par remaining_nSNII = (ParAttInt[Idx_ParSNIINxtE][par_idx]/FB_SNII_NXTE_SEPDIGIT) - (ParAttInt[Idx_ParSNIINxtE][par_idx]%FB_SNII_NXTE_SEPDIGIT);
+         if ( remaining_nSNII > 0 )
+            Aux_Message( stderr, "WARNING : There are still %ld SNe unexploded, but the hosting particle has lost all mass and become inactive !!\n",
+                                  (long)remaining_nSNII );
+      }
 
 //    5.2 update the fluid
       const int fbDiameterMinus1 = fbDiameter-1;
@@ -568,7 +631,15 @@ void FB_Init_Resolved_SNeII()
 // number of SNeII is sampled from a capped Poisson distribution in the star formation routine
 // --> set the maximum as 2x the average number of SNeII per minimum-mass star particle
 // --> it should not exceed FB_SNII_NXTE_SEPDIGIT so the digits separation can work
-   maxNumSNeIIPerSPar = MIN( (int)ceil(2.0*SF_CREATE_STAR_MIN_STAR_MASS*FB_RESOLVED_SNEII_N_PER_MASS), FB_SNII_NXTE_SEPDIGIT );
+   if ( SF_CREATE_STAR_MIN_STAR_MASS <= 0.0 )
+      Aux_Error( ERROR_INFO, "Unsupported SF_CREATE_STAR_MIN_STAR_MASS = %14.8e !!\n", SF_CREATE_STAR_MIN_STAR_MASS );
+
+   const double maxStarMass = SF_CREATE_STAR_MIN_STAR_MASS;   // maximum mass of a stellar particle allowed to form
+   maxNumSNeIIPerSPar = (int)ceil(FB_ResolvedSNeII_PDCapToMean*maxStarMass*FB_RESOLVED_SNEII_N_PER_MASS);
+
+   if ( maxNumSNeIIPerSPar >= FB_SNII_NXTE_SEPDIGIT )
+      Aux_Error( ERROR_INFO, "maxNumSNeIIPerSPar = %d >= FB_SNII_NXTE_SEPDIGIT = %d !!\n",
+                 maxNumSNeIIPerSPar, FB_SNII_NXTE_SEPDIGIT );
 #  else
    maxNumSNeIIPerSPar = 1;
 #  endif
@@ -619,7 +690,7 @@ void FB_Init_Resolved_SNeII()
             Aux_Error( ERROR_INFO, "Ejected masses in table \"%s\" have negative value !!\n", FeedbackYieldTable_FileName );
 
          if ( Table_SNII_EjectMetal[TableIdx][i] < 0.0 )
-            Aux_Error( ERROR_INFO, "Ejected matals in table \"%s\" have negative value !!\n", FeedbackYieldTable_FileName );
+            Aux_Error( ERROR_INFO, "Ejected metals in table \"%s\" have negative value !!\n", FeedbackYieldTable_FileName );
 
          if ( Table_SNII_EjectEnergy[TableIdx][i] < 0.0 )
             Aux_Error( ERROR_INFO, "Ejected energy in table \"%s\" have negative value !!\n", FeedbackYieldTable_FileName );
@@ -710,50 +781,60 @@ void Record_FB_Resolved_SNeII( const int lv )
    char FileName[2*MAX_STRING];
    sprintf( FileName, "%s/Record__FB_Resolved_SNeII", OUTPUT_DIR );
 
+// output header
+   static bool FirstTime = true;
+   if ( MPI_Rank == 0  &&  FirstTime )
+   {
+      FILE *File = fopen( FileName, "a" );
+
+      fprintf( File, "#%5s%6s%6s%16s%16s",
+               "Rank", "TID", "lv", "TimeOld", "TimeNew" );
+      fprintf( File, "%16s%16s%16s%16s%16s%16s%16s%16s",
+               "SNII_Time_first", "SNII_Time_last", "SNII_AccumNum", "SNII_Energy", "SNII_Mass", "SNII_Metal", "FB_Diameter", "FB_Flu_Mass" );
+      fprintf( File, "%16s%16s%16s%16s%16s%16s",
+               "Par_PUID", "Par_NxtE", "Par_Mass", "Par_PosX", "Par_PosY", "Par_PosZ" );
+      fprintf( File, "%16s%16s%16s%16s",
+               "Par_VelX", "Par_VelY", "Par_VelZ", "Par_MetalMass" );
+      fprintf( File, "%16s%16s%16s%16s%16s%16s\n",
+               "Flu_Dens", "Flu_MomX", "Flu_MomY", "Flu_MomZ", "Flu_Engy", "Flu_Metal" );
+
+      fclose( File );
+
+      FirstTime = false;
+
+   } // if ( MPI_Rank == 0  &&  FirstTime )
+
 // write to the file rank by rank
    for (int TargetMPIRank=0; TargetMPIRank<MPI_NRank; TargetMPIRank++)
    {
       if ( MPI_Rank == TargetMPIRank )
       {
-//       open file
-         FILE *File = fopen( FileName, "a" );
+         bool hasRecSNeII = false;
+         for (int tid=0; tid<OMP_NTHREAD; tid++)   hasRecSNeII |= ( numRecSNeII[tid] > 0 );
 
-//       output header
-         static bool FirstTime = true;
-         if ( TargetMPIRank == 0  &&  FirstTime )
+         if ( hasRecSNeII )
          {
-            fprintf( File, "#%5s%6s%6s%16s%16s",
-                     "Rank", "TID", "lv", "TimeOld", "TimeNew" );
-            fprintf( File, "%16s%16s%16s%16s%16s%16s%16s%16s",
-                     "SNII_Time_first", "SNII_Time_last", "SNII_AccumNum", "SNII_Energy", "SNII_Mass", "SNII_Metal", "FB_Diameter", "FB_Flu_Mass" );
-            fprintf( File, "%16s%16s%16s%16s%16s%16s",
-                     "Par_PUID", "Par_NxtE", "Par_Mass", "Par_PosX", "Par_PosY", "Par_PosZ" );
-            fprintf( File, "%16s%16s%16s%16s",
-                     "Par_VelX", "Par_VelY", "Par_VelZ", "Par_MetalMass" );
-            fprintf( File, "%16s%16s%16s%16s%16s%16s\n",
-                     "Flu_Dens", "Flu_MomX", "Flu_MomY", "Flu_MomZ", "Flu_Engy", "Flu_Metal" );
+//          open file
+            FILE *File = fopen( FileName, "a" );
 
-            FirstTime = false;
-
-         } // if ( TargetMPIRank == 0  &&  FirstTime )
-
-//       output content
-         for (int tid=0; tid<OMP_NTHREAD; tid++)
-         {
-            for (int iSNII=0; iSNII<numRecSNeII[tid]; iSNII++)
+//          output content
+            for (int tid=0; tid<OMP_NTHREAD; tid++)
             {
-               fprintf( File, "%6d%6d%6d", MPI_Rank, tid, lv );
+               for (int iSNII=0; iSNII<numRecSNeII[tid]; iSNII++)
+               {
+                  fprintf( File, "%6d%6d%6d", MPI_Rank, tid, lv );
 
-               for (int iVar=0; iVar<nVarRecSNeII; iVar++)
-                  fprintf( File, "%16.8e", recordSNeII[tid][ nVarRecSNeII*iSNII + iVar ] );
+                  for (int iVar=0; iVar<nVarRecSNeII; iVar++)
+                     fprintf( File, "%16.8e", recordSNeII[tid][ nVarRecSNeII*iSNII + iVar ] );
 
-               fprintf( File, "\n" );
+                  fprintf( File, "\n" );
 
-            } // for (int iSNII=0; iSNII<numRecSNeII[tid]; iSNII++)
-         } // for (int tid=0; tid<OMP_NTHREAD; tid++)
+               } // for (int iSNII=0; iSNII<numRecSNeII[tid]; iSNII++)
+            } // for (int tid=0; tid<OMP_NTHREAD; tid++)
 
-//       close file
-         fclose( File );
+//          close file
+            fclose( File );
+         } // if ( hasRecSNeII )
 
       } // if ( MPI_Rank == TargetMPIRank )
 

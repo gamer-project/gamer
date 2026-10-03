@@ -21,7 +21,7 @@ Default setup:
 2. Default maximum resolution ~ 3.5 pc (root grid 32^3; MAX_LEVEL = 3)
 
 3. Refinement criteria
-   (1) Numer of particles in each cell
+   (1) Number of particles in each cell
        --> Refinement threshold = 0
        --> Refine the cell with the particle to level >= FB_MIN_LEVEL to have feedback
    (2) Lohner's error estimator on pressure
@@ -41,7 +41,7 @@ Note:
 2. The results are similar to the `Hydro/BlastWave` test problem
    - To compare the default results, use the input files provided in `ForBlastWave/` to run `Hydro/BlastWave` test problem
    - Set `ejected_mass` = 0.0 to only deposit energy
-3. The self-gravity is off (`OPT__SELF_GRAVITY=0`); The compilatin option GRAVITY is enabled only to have a star particle
+3. The self-gravity is off (`OPT__SELF_GRAVITY=0`); The compilation option GRAVITY is enabled only to have a star particle
 4. To include the radiative cooling effect of gas, one can enable the compilation option SUPPORT_GRACKLE (`--grackle=true`)
    and turn on `GRACKLE_COOLING` in `Input__Parameter`
 5. With `FB_RESOLVED_SNEII_MIN_M_GAS` > 0.0, the feedback may be applied to more than one surrounding cells

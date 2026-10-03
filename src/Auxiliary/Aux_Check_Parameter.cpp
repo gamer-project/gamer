@@ -1957,6 +1957,11 @@ void Aux_Check_Parameter()
    if ( FB_ParaBuf > PATCH_SIZE )
       Aux_Error( ERROR_INFO, "FB_ParaBuf (%d) > PATCH_SIZE (%d) !!\n", FB_ParaBuf, PATCH_SIZE );
 
+#  if ( defined STAR_FORMATION  &&  RANDOM_NUMBER != RNG_CPP11 )
+   if ( FB_RESOLVED_SNEII )
+      Aux_Error( ERROR_INFO, "FB_RESOLVED_SNEII needs RANDOM_NUMBER = RNG_CPP11 for the Poisson random numbers in star formation !!\n" );
+#  endif
+
    if ( FB_RESOLVED_SNEII  &&  PAR_NATT_INT_USER < 1 )
       Aux_Error( ERROR_INFO, "FB_RESOLVED_SNEII needs one user-defined particle attribute, but PAR_NATT_INT_USER = %d !!\n",
                  PAR_NATT_INT_USER );

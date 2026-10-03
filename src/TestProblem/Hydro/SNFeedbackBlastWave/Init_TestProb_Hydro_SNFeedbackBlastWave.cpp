@@ -247,7 +247,7 @@ void SetParameter()
       Aux_Message( stdout, "  SN initial velocity       = (%13.7e, %13.7e, %13.7e)\n",  SNBlast_ParVelocity[0],
                                                                                         SNBlast_ParVelocity[1],
                                                                                         SNBlast_ParVelocity[2]   );
-      Aux_Message( stdout, "  SN initial metal fracion  = %13.7e\n",                    SNBlast_ParMetalMassFrac );
+      Aux_Message( stdout, "  SN initial metal fraction = %13.7e\n",                    SNBlast_ParMetalMassFrac );
       Aux_Message( stdout, "=============================================================================\n" );
    }
 

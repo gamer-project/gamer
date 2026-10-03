@@ -163,7 +163,7 @@ FB_RSEED                      456         # random seed [456]
 FB_SNE                        0           # supernova explosion feedback [0]
 FB_RESOLVED_SNEII             0           # Type II supernovae feedback for high enough grid and particle resolution (must add one extra PAR_NATT_INT_USER)
 FB_USER                       0           # user-defined feedback [0]
-FB_RESOLVED_SNEII_N_PER_MASS  1.0e-5      # number of SNeII per stellar mass (in 1/Msun) (for FB_RESOLVED_SNEII only) [0.01]
+FB_RESOLVED_SNEII_N_PER_MASS  3.0e-6      # number of SNeII per stellar mass (in 1/Msun) (for FB_RESOLVED_SNEII only) [0.01]
 FB_RESOLVED_SNEII_MIN_M_GAS   0.0         # minimum mass of gas in the environment of SNeII to apply feedback (in Msun) (for FB_RESOLVED_SNEII only) [0.0]
 FB_RESOLVED_SNEII_RECORD      0           # record the SNeII explosion info (for FB_RESOLVED_SNEII only) [0]
 

@@ -27,23 +27,17 @@ add_particle_filter( "new_star", function=new_star, filtered_type="all", require
 ds.add_particle_filter( "new_star" )
 
 
-# define the particle filter for the exploded SNe
-def exploded_SNe( pfilter, data ):
-   filter = data[ "all", "ParSNIITime" ] <= 0 # ParSNIITime is set as negative value of explosion time for exploded particle
-   return filter
-
-add_particle_filter( "exploded_SNe", function=exploded_SNe, filtered_type="all", requires=["ParSNIITime"] )
-ds.add_particle_filter( "exploded_SNe" )
-
-
 # get the creation time of the new stars and explosion time of teh SNe
 ad            = ds.all_data()
 
-star_mass     = ad[ "new_star", "ParMass" ].in_units( "Msun" )
-creation_time = ad[ "new_star", "ParCreTime" ].in_units( "Myr" )
+assert ad[ "all", "ParSNIINxtE" ].d.astype('int').max() == 10001
+feedback_table  = np.genfromtxt( '../FeedbackYieldTable_Resolved_SNeII_N000001', delimiter=None, comments='#', names=['explosion_time', 'progenitor_mass', 'ejected_mass', 'ejected_metals', 'ejected_energy'], dtype=None, encoding=None )
+feedback_record = np.genfromtxt( '../Record__FB_Resolved_SNeII', delimiter=None, comments='#', names=['Rank', 'TID', 'lv', 'TimeOld', 'TimeNew', 'SNII_Time_first', 'SNII_Time_last', 'SNII_AccumNum', 'SNII_Energy', 'SNII_Mass', 'SNII_Metal', 'FB_Diameter', 'FB_Flu_Mass', 'Par_PUID', 'Par_NxtE', 'Par_Mass', 'Par_PosX', 'Par_PosY', 'Par_PosZ', 'Par_VelX', 'Par_VelY', 'Par_VelZ', 'Par_MetalMass', 'Flu_Dens', 'Flu_MomX', 'Flu_MomY', 'Flu_MomZ', 'Flu_Engy', 'Flu_Metal'], dtype=None, encoding=None )
 
-SNe_mass      = ad[ "exploded_SNe", "ParMass" ].in_units( "Msun" )
-SNe_expl_time = -1.0*( ad[ "exploded_SNe", "ParSNIITime" ]*ds.units.code_time ).in_units( "Myr" ) # ParSNIITime is set as negative value of explosion time for exploded particle
+star_mass     = ad[ "new_star", "ParMass" ].in_units( "Msun" ) + ds.quan( feedback_table['ejected_mass'], 'Msun' )
+creation_time = ad[ "new_star", "ParCreTime" ].in_units( "Myr" )
+SNe_mass      = ds.arr( feedback_record['Par_Mass'], 'code_mass' ).in_units( "Msun" )
+SNe_expl_time = ds.arr( feedback_record['SNII_Time_last'], 'code_time' ).in_units( "Myr" )
 
 print( 'Total number of stars = %d'%len(creation_time) )
 print( 'Total number of SNe   = %d'%len(SNe_expl_time) )
@@ -51,11 +45,11 @@ print( 'Total number of SNe   = %d'%len(SNe_expl_time) )
 
 # bin the data
 t_start        = 0.0
-t_end          = ds.current_time.in_units( "Myr" )
+t_end          = ds.current_time.in_units( "Myr" ).d
 t_bin          = np.linspace( start=t_start, stop=t_end, num=nbin+1 )
 time           = 0.5*( t_bin[:-1] + t_bin[1:] )
-star_upper_idx = np.digitize( creation_time, bins=t_bin, right=True )
-SNe_upper_idx  = np.digitize( SNe_expl_time, bins=t_bin, right=True )
+star_upper_idx = np.digitize( creation_time.in_units( "Myr" ).d, bins=t_bin, right=True )
+SNe_upper_idx  = np.digitize( SNe_expl_time.in_units( "Myr" ).d, bins=t_bin, right=True )
 
 
 assert np.all( star_upper_idx > 0 ) and np.all( star_upper_idx < len(t_bin) ), "incorrect star_upper_idx !!"
@@ -73,14 +67,14 @@ SNr[SNr == 0] = np.nan
 
 # calulate the conversion factor
 StarsPerSN  = 1.0/(ds.parameters['FB_ResolvedSNeII_NPerMass']*ds.parameters['SF_CreateStar_MinStarMass'])
-SNDelayTime = ds.quan( ds.parameters['FB_ResolvedSNeII_DelayTime'], 'code_time' ).in_units('Myr').d
+SNDelayTime = ds.quan( feedback_table['explosion_time'], 'Myr' ).d
 
 
 # plot
-plt.plot( time,               sfr,                  label='Stars' )
-plt.plot( time,               SNr,                  label='SNe'   )
-plt.plot( time,               SNr*StarsPerSN, '--', label=r'SNe, $\times$ %.2f'%(StarsPerSN) )
-plt.plot( time.d-SNDelayTime, SNr*StarsPerSN, '--', label=r'SNe, $\times$ %.2f, shifted %.1f Myr'%(StarsPerSN, SNDelayTime) )
+plt.plot( time,             sfr,                  label='Stars' )
+plt.plot( time,             SNr,                  label='SNe'   )
+plt.plot( time,             SNr*StarsPerSN, '--', label=r'SNe, $\times$ %.2f'%(StarsPerSN) )
+plt.plot( time-SNDelayTime, SNr*StarsPerSN, '--', label=r'SNe, $\times$ %.2f, shifted %.1f Myr'%(StarsPerSN, SNDelayTime) )
 plt.ylim( 0.0, 1.0e1 )
 plt.legend()
 plt.xlabel( "$\mathrm{t\ [Myr]}$",        fontsize="large" )
