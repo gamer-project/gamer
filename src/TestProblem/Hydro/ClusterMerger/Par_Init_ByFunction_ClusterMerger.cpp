@@ -240,6 +240,7 @@ void Par_Init_ByFunction_ClusterMerger( const long NPar_ThisRank, const long NPa
          {
             ParVelX[p] += Merger_Coll_Vel[c][0];
             ParVelY[p] += Merger_Coll_Vel[c][1];
+            ParVelZ[p] += Merger_Coll_Vel[c][2];
          }
          for (int d=0; d<3; d++)   ParPos[d][p] += Merger_Coll_Pos[c][d];
       }

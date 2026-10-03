@@ -332,6 +332,7 @@ struct SymConst_t
    int    EulerY;
 #  endif
    int    MHM_CheckPredict;
+   int    DualEnergyPredict;
    int    EoSNAuxMax;
    int    EoSNTableMax;
 
@@ -874,7 +875,15 @@ struct InputPara_t
    int    Opt__Output_GrackleMu;
    int    Opt__Output_GrackleTCool;
 #  endif
+#  ifdef DUAL_ENERGY
+   int    Opt__Output_Dual_Status;
+#  endif
 #  endif // #if ( MODEL == HYDRO )
+#  if ( MODEL == ELBDM )
+   int    Opt__Output_ELBDM_Vel;
+   int    Opt__Output_ELBDM_Q_Pot;
+   int    Opt__Output_ELBDM_Q_Stress;
+#  endif
    int    Opt__Output_UserField;
    int    Opt__Output_Mode;
    int    Opt__Output_Restart;

@@ -79,7 +79,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2513)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2516)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -291,7 +291,10 @@ Procedure for outputting new variables:
 //                2510 : 2026/06/07 --> output EXTRA_EOS_CHECK, CHECK_UNPHY_ROUNDING, CHECK_UNPHY_ROUNDING_FACTOR
 //                2511 : 2026/07/02 --> output exact-cooling parameters
 //                2512 : 2026/08/14 --> remove Src_EC_subcycling
-//                2513 : 2026/08/28 --> output FB_RESOLVED_SNEII, FB_RESOLVED_SNEII_N_PER_MASS,
+//                2513 : 2026/05/14 --> support OPT__OUTPUT_DUAL_STATUS
+//                2514 : 2026/05/25 --> output DUAL_ENERGY_PREDICT
+//                2515 : 2026/09/28 --> output OPT__OUTPUT_ELBDM_VEL/Q_POT/Q_STRESS
+//                2513 : 2026/10/03 --> output FB_RESOLVED_SNEII, FB_RESOLVED_SNEII_N_PER_MASS,
 //                                             FB_RESOLVED_SNEII_MIN_M_GAS, FB_RESOLVED_SNEII_RECORD
 //                                      replace FB_LEVEL by FB_MIN_LEVEL
 //-------------------------------------------------------------------------------------------------------
@@ -336,7 +339,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
          Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
       sprintf( FieldLabelOut[ FluDumpIdx ], "%s", FieldLabel[v] );
    }
-   const int NCompStore  = NCOMP_TOTAL - NCompFluSkip;
+   const int NCompStore = NCOMP_TOTAL - NCompFluSkip;
 
 #  ifdef GRAVITY
    const int PotDumpIdx = ( OPT__OUTPUT_POT ) ? NFieldStored++ : NoDump;
@@ -367,35 +370,35 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #  endif
 
 #  if ( MODEL == HYDRO )
-   const int PresDumpIdx   = ( OPT__OUTPUT_PRES ) ? NFieldStored++ : NoDump;
+   const int PresDumpIdx = ( OPT__OUTPUT_PRES ) ? NFieldStored++ : NoDump;
    if ( PresDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_PRES   )  sprintf( FieldLabelOut[PresDumpIdx  ], "%s", "Pres"   );
+   if ( OPT__OUTPUT_PRES )    sprintf( FieldLabelOut[PresDumpIdx  ], "%s", "Pres" );
 
-   const int TempDumpIdx   = ( OPT__OUTPUT_TEMP ) ? NFieldStored++ : NoDump;
+   const int TempDumpIdx = ( OPT__OUTPUT_TEMP ) ? NFieldStored++ : NoDump;
    if ( TempDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_TEMP   )  sprintf( FieldLabelOut[TempDumpIdx  ], "%s", "Temp"   );
+   if ( OPT__OUTPUT_TEMP )    sprintf( FieldLabelOut[TempDumpIdx], "%s", "Temp" );
 
-   const int EntrDumpIdx   = ( OPT__OUTPUT_ENTR ) ? NFieldStored++ : NoDump;
+   const int EntrDumpIdx = ( OPT__OUTPUT_ENTR ) ? NFieldStored++ : NoDump;
    if ( EntrDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_ENTR   )  sprintf( FieldLabelOut[EntrDumpIdx  ], "%s", "Entr"   );
+   if ( OPT__OUTPUT_ENTR )    sprintf( FieldLabelOut[EntrDumpIdx], "%s", "Entr" );
 
-   const int CsDumpIdx     = ( OPT__OUTPUT_CS ) ? NFieldStored++ : NoDump;
+   const int CsDumpIdx = ( OPT__OUTPUT_CS ) ? NFieldStored++ : NoDump;
    if ( CsDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_CS     )  sprintf( FieldLabelOut[CsDumpIdx    ], "%s", "Cs"     );
+   if ( OPT__OUTPUT_CS )   sprintf( FieldLabelOut[CsDumpIdx], "%s", "Cs" );
 
    const int DivVelDumpIdx = ( OPT__OUTPUT_DIVVEL ) ? NFieldStored++ : NoDump;
    if ( DivVelDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
    if ( OPT__OUTPUT_DIVVEL )  sprintf( FieldLabelOut[DivVelDumpIdx], "%s", "DivVel" );
 
-   const int MachDumpIdx   = ( OPT__OUTPUT_MACH ) ? NFieldStored++ : NoDump;
+   const int MachDumpIdx = ( OPT__OUTPUT_MACH ) ? NFieldStored++ : NoDump;
    if ( MachDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_MACH   )  sprintf( FieldLabelOut[MachDumpIdx  ], "%s", "Mach"   );
+   if ( OPT__OUTPUT_MACH )    sprintf( FieldLabelOut[MachDumpIdx], "%s", "Mach" );
 
 #  ifdef MHD
    const int DivMagDumpIdx = ( OPT__OUTPUT_DIVMAG ) ? NFieldStored++ : NoDump;
@@ -408,7 +411,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    const int LorentzDumpIdx = ( OPT__OUTPUT_LORENTZ ) ? NFieldStored++ : NoDump;
    if ( LorentzDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_LORENTZ )  sprintf( FieldLabelOut[LorentzDumpIdx], "%s", "Lrtz" );
+   if ( OPT__OUTPUT_LORENTZ )    sprintf( FieldLabelOut[LorentzDumpIdx], "%s", "Lrtz" );
 
    const int VelDumpIdx0 = ( OPT__OUTPUT_3VELOCITY ) ? NFieldStored : NoDump;
    if ( VelDumpIdx0+2 >= NFIELD_STORED_MAX )
@@ -424,7 +427,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    const int EnthalpyDumpIdx = ( OPT__OUTPUT_ENTHALPY ) ? NFieldStored++ : NoDump;
    if ( EnthalpyDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_ENTHALPY )  sprintf( FieldLabelOut[EnthalpyDumpIdx], "%s", "Enth" );
+   if ( OPT__OUTPUT_ENTHALPY )   sprintf( FieldLabelOut[EnthalpyDumpIdx], "%s", "Enth" );
 #  endif // #ifdef SRHD
 
 #  ifdef SUPPORT_GRACKLE
@@ -436,14 +439,56 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    const int GrackleMuDumpIdx = ( OPT__OUTPUT_GRACKLE_MU ) ? NFieldStored++ : NoDump;
    if ( GrackleMuDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_GRACKLE_MU )  sprintf( FieldLabelOut[GrackleMuDumpIdx], "%s", "GrackleMu" );
+   if ( OPT__OUTPUT_GRACKLE_MU )    sprintf( FieldLabelOut[GrackleMuDumpIdx], "%s", "GrackleMu" );
 
    const int GrackleTCoolDumpIdx = ( OPT__OUTPUT_GRACKLE_TCOOL ) ? NFieldStored++ : NoDump;
    if ( GrackleTCoolDumpIdx >= NFIELD_STORED_MAX )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
-   if ( OPT__OUTPUT_GRACKLE_TCOOL )  sprintf( FieldLabelOut[GrackleTCoolDumpIdx], "%s", "GrackleTCool" );
-#  endif // ifdef SUPPORT_GRACKLE
-#  endif // if ( MODEL == HYDRO )
+   if ( OPT__OUTPUT_GRACKLE_TCOOL )    sprintf( FieldLabelOut[GrackleTCoolDumpIdx], "%s", "GrackleTCool" );
+#  endif // #ifdef SUPPORT_GRACKLE
+
+#  ifdef DUAL_ENERGY
+   const int DualStatusDumpIdx = ( OPT__OUTPUT_DUAL_STATUS ) ? NFieldStored++ : NoDump;
+   if ( DualStatusDumpIdx >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_DUAL_STATUS )   sprintf( FieldLabelOut[DualStatusDumpIdx], "%s", "DualStatus" );
+#  endif
+#  endif // #if ( MODEL == HYDRO )
+
+#  if ( MODEL == ELBDM )
+   const int ELBDM_VelDumpIdx0 = ( OPT__OUTPUT_ELBDM_VEL ) ? NFieldStored : NoDump;
+   if ( ELBDM_VelDumpIdx0+5 >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_ELBDM_VEL )
+   {
+      NFieldStored += 6;
+      sprintf( FieldLabelOut[ ELBDM_VelDumpIdx0     ], "%s", "ELBDMBulkVelX" );
+      sprintf( FieldLabelOut[ ELBDM_VelDumpIdx0 + 1 ], "%s", "ELBDMBulkVelY" );
+      sprintf( FieldLabelOut[ ELBDM_VelDumpIdx0 + 2 ], "%s", "ELBDMBulkVelZ" );
+      sprintf( FieldLabelOut[ ELBDM_VelDumpIdx0 + 3 ], "%s", "ELBDMThermalVelX" );
+      sprintf( FieldLabelOut[ ELBDM_VelDumpIdx0 + 4 ], "%s", "ELBDMThermalVelY" );
+      sprintf( FieldLabelOut[ ELBDM_VelDumpIdx0 + 5 ], "%s", "ELBDMThermalVelZ" );
+   }
+
+   const int ELBDM_Q_PotDumpIdx = ( OPT__OUTPUT_ELBDM_Q_POT ) ? NFieldStored++ : NoDump;
+   if ( ELBDM_Q_PotDumpIdx >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_ELBDM_Q_POT )  sprintf( FieldLabelOut[ELBDM_Q_PotDumpIdx], "%s", "ELBDMQPot" );
+
+   const int ELBDM_Q_StressDumpIdx0 = ( OPT__OUTPUT_ELBDM_Q_STRESS ) ? NFieldStored : NoDump;
+   if ( ELBDM_Q_StressDumpIdx0+5 >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_ELBDM_Q_STRESS )
+   {
+      NFieldStored += 6;
+      sprintf( FieldLabelOut[ ELBDM_Q_StressDumpIdx0     ], "%s", "ELBDMQStressXX" );
+      sprintf( FieldLabelOut[ ELBDM_Q_StressDumpIdx0 + 1 ], "%s", "ELBDMQStressYY" );
+      sprintf( FieldLabelOut[ ELBDM_Q_StressDumpIdx0 + 2 ], "%s", "ELBDMQStressZZ" );
+      sprintf( FieldLabelOut[ ELBDM_Q_StressDumpIdx0 + 3 ], "%s", "ELBDMQStressXY" );
+      sprintf( FieldLabelOut[ ELBDM_Q_StressDumpIdx0 + 4 ], "%s", "ELBDMQStressYZ" );
+      sprintf( FieldLabelOut[ ELBDM_Q_StressDumpIdx0 + 5 ], "%s", "ELBDMQStressXZ" );
+   }
+#  endif // #if ( MODEL == ELBDM )
 
    const int UserDumpIdx0 = ( OPT__OUTPUT_USER_FIELD ) ? NFieldStored : NoDump;
    if ( UserDumpIdx0+UserDerField_Num-1 >= NFIELD_STORED_MAX )
@@ -1225,9 +1270,87 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
                } // if ( v == GrackleTCoolDumpIdx )
 #              endif // #ifdef SUPPORT_GRACKLE
+
+//             d-14. dual-energy status
+#              ifdef DUAL_ENERGY
+               else if ( v == DualStatusDumpIdx )
+               {
+                  for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
+                  for (int k=0; k<PS1; k++)
+                  for (int j=0; j<PS1; j++)
+                  for (int i=0; i<PS1; i++)
+                  {
+//                   convert the single character to real for simplicity
+                     const char de_status_char = amr->patch[0][lv][PID]->de_status[k][j][i];
+                     const real de_status_real = (real)( de_status_char - '0' );
+
+                     FieldData[PID][k][j][i] = de_status_real;
+                  }
+               } // if ( v == DualStatusDumpIdx )
+#              endif // #ifdef DUAL_ENERGY
 #              endif // #if ( MODEL == HYDRO )
 
-//             d-14. user-defined derived fields
+#              if ( MODEL == ELBDM )
+//             d-15. ELBDM velocity
+               else if ( v >= ELBDM_VelDumpIdx0  &&  v < ELBDM_VelDumpIdx0+6 )
+               {
+                  const int fv = ( v - ELBDM_VelDumpIdx0 )/3;
+                  const int vv = ( v - ELBDM_VelDumpIdx0 )%3;
+                  for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+                  {
+                     Prepare_PatchData( lv, Time[lv], Der_FluIn[0][0], NULL, DER_GHOST_SIZE, 1, &PID0,
+                                        _TOTAL, _NONE, OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26,
+                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
+                                        DE_Consistency_No );
+
+                     for (int LocalID=0; LocalID<8; LocalID++)
+                     {
+//                      compute and store the target derived field
+                        const int PID = PID0 + LocalID;
+                        ELBDM_DerivedField( FieldData[PID][0][0], Der_FluIn[LocalID][0], fv, vv, DER_GHOST_SIZE, amr->dh[lv] );
+                     } // for (int LocalID=0; LocalID<8; LocalID++)
+                  } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+               } // if ( v >= ELBDM_VelDumpIdx0  &&  v < ELBDM_VelDumpIdx0+6 )
+
+//             d-16. ELBDM quantum potential
+               else if ( v == ELBDM_Q_PotDumpIdx )
+               {
+                  for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+                  {
+                     Prepare_PatchData( lv, Time[lv], Der_FluIn[0][0], NULL, DER_GHOST_SIZE, 1, &PID0,
+                                        _TOTAL, _NONE, OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26,
+                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
+                                        DE_Consistency_No );
+                     for (int LocalID=0; LocalID<8; LocalID++)
+                     {
+//                      compute and store the target derived field
+                        const int PID = PID0 + LocalID;
+                        ELBDM_DerivedField( FieldData[PID][0][0], Der_FluIn[LocalID][0], 2, 0, DER_GHOST_SIZE, amr->dh[lv] );
+                     } // for (int LocalID=0; LocalID<8; LocalID++)
+                  } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+               } // if ( v == ELBDM_Q_PotDumpIdx )
+
+//             d-17. ELBDM quantum stress tensor
+               else if ( v >= ELBDM_Q_StressDumpIdx0  &&  v < ELBDM_Q_StressDumpIdx0+6 )
+               {
+                  const int vv = v - ELBDM_Q_StressDumpIdx0;
+                  for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+                  {
+                     Prepare_PatchData( lv, Time[lv], Der_FluIn[0][0], NULL, DER_GHOST_SIZE, 1, &PID0,
+                                        _TOTAL, _NONE, OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26,
+                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
+                                        DE_Consistency_No );
+                     for (int LocalID=0; LocalID<8; LocalID++)
+                     {
+//                      compute and store the target derived field
+                        const int PID = PID0 + LocalID;
+                        ELBDM_DerivedField( FieldData[PID][0][0], Der_FluIn[LocalID][0], 3, vv, DER_GHOST_SIZE, amr->dh[lv] );
+                     } // for (int LocalID=0; LocalID<8; LocalID++)
+                  } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+               } // if ( v >= ELBDM_Q_StressDumpIdx0  &&  v < ELBDM_Q_StressDumpIdx0+6 )
+#              endif // #if ( MODEL == ELBDM )
+
+//             d-18. user-defined derived fields
 //             the following check also works for OPT__OUTPUT_USER_FIELD==false since UserDerField_Num is initialized as 0
                else if ( v >= UserDumpIdx0  &&  v < UserDumpIdx0 + UserDerField_Num )
                {
@@ -1760,7 +1883,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2513;
+   KeyInfo.FormatVersion        = 2516;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2401,6 +2524,11 @@ void FillIn_SymConst( SymConst_t &SymConst )
 #  else
    SymConst.MHM_CheckPredict     = 0;
 #  endif
+#  ifdef DUAL_ENERGY_PREDICT
+   SymConst.DualEnergyPredict    = 1;
+#  else
+   SymConst.DualEnergyPredict    = 0;
+#  endif
    SymConst.EoSNAuxMax           = EOS_NAUX_MAX;
    SymConst.EoSNTableMax         = EOS_NTABLE_MAX;
 
@@ -2988,7 +3116,15 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Output_GrackleMu       = OPT__OUTPUT_GRACKLE_MU;
    InputPara.Opt__Output_GrackleTCool    = OPT__OUTPUT_GRACKLE_TCOOL;
 #  endif
+#  ifdef DUAL_ENERGY
+   InputPara.Opt__Output_Dual_Status     = OPT__OUTPUT_DUAL_STATUS;
+#  endif
 #  endif // #if ( MODEL == HYDRO )
+#  if ( MODEL == ELBDM )
+   InputPara.Opt__Output_ELBDM_Vel       = OPT__OUTPUT_ELBDM_VEL;
+   InputPara.Opt__Output_ELBDM_Q_Pot     = OPT__OUTPUT_ELBDM_Q_POT;
+   InputPara.Opt__Output_ELBDM_Q_Stress  = OPT__OUTPUT_ELBDM_Q_STRESS;
+#  endif
    InputPara.Opt__Output_UserField       = OPT__OUTPUT_USER_FIELD;
    InputPara.Opt__Output_Mode            = OPT__OUTPUT_MODE;
    InputPara.Opt__Output_Restart         = OPT__OUTPUT_RESTART;
@@ -3445,6 +3581,7 @@ void GetCompound_SymConst( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "EulerY",               HOFFSET(SymConst_t,EulerY              ), H5T_NATIVE_INT    );
 #  endif
    H5Tinsert( H5_TypeID, "MHM_CheckPredict",     HOFFSET(SymConst_t,MHM_CheckPredict    ), H5T_NATIVE_INT    );
+   H5Tinsert( H5_TypeID, "DualEnergyPredict",    HOFFSET(SymConst_t,DualEnergyPredict   ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "EoSNAuxMax",           HOFFSET(SymConst_t,EoSNAuxMax          ), H5T_NATIVE_INT    );
    H5Tinsert( H5_TypeID, "EoSNTableMax",         HOFFSET(SymConst_t,EoSNTableMax        ), H5T_NATIVE_INT    );
 
@@ -4083,7 +4220,15 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Output_GrackleMu",       HOFFSET(InputPara_t,Opt__Output_GrackleMu      ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_GrackleTCool",    HOFFSET(InputPara_t,Opt__Output_GrackleTCool   ), H5T_NATIVE_INT              );
 #  endif
+#  ifdef DUAL_ENERGY
+   H5Tinsert( H5_TypeID, "Opt__Output_Dual_Status",     HOFFSET(InputPara_t,Opt__Output_Dual_Status    ), H5T_NATIVE_INT              );
+#  endif
 #  endif // #if ( MODEL == HYDRO )
+#  if ( MODEL == ELBDM )
+   H5Tinsert( H5_TypeID, "Opt__Output_ELBDM_Vel",       HOFFSET(InputPara_t,Opt__Output_ELBDM_Vel      ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_ELBDM_Q_Pot",     HOFFSET(InputPara_t,Opt__Output_ELBDM_Q_Pot    ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_ELBDM_Q_Stress",  HOFFSET(InputPara_t,Opt__Output_ELBDM_Q_Stress ), H5T_NATIVE_INT              );
+#  endif
    H5Tinsert( H5_TypeID, "Opt__Output_UserField",       HOFFSET(InputPara_t,Opt__Output_UserField      ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Mode",            HOFFSET(InputPara_t,Opt__Output_Mode           ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Restart",         HOFFSET(InputPara_t,Opt__Output_Restart        ), H5T_NATIVE_INT              );

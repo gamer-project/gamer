@@ -94,10 +94,12 @@
 #define DE_EINT      2
 
 #ifdef DUAL_ENERGY
-#define DE_UPDATED_BY_ETOT       ('0')
-#define DE_UPDATED_BY_DUAL       ('1')
-#define DE_UPDATED_BY_MIN_PRES   ('2')
-#define DE_UPDATED_BY_ETOT_GRA   ('3')
+#define DE_UPDATED_BY_NONE       ('0')
+#define DE_UPDATED_BY_ETOT       ('1')
+#define DE_UPDATED_BY_DUAL       ('2')
+#define DE_UPDATED_BY_MIN_PRES   ('3')
+#define DE_UPDATED_BY_ETOT_GRA   ('4')
+#define DE_UPDATED_BY_REFINE     ('5')
 #endif
 
 
@@ -282,7 +284,7 @@
 
 
 // maximum number of output derived fields
-#  define DER_NOUT_MAX        10
+#  define DER_NOUT_MAX        30
 
 
 // maximum number of fields to be stored in HDF5 snapshots
@@ -877,7 +879,11 @@
 
 
 // number of ghost zones for computing derived fields
+#if ( MODEL == ELBDM )
+#        define DER_GHOST_SIZE      2
+#else
 #        define DER_GHOST_SIZE      1
+#endif
 
 
 // number of ghost zones for feedback
@@ -886,7 +892,6 @@
 #ifdef FEEDBACK
 #        define FB_GHOST_SIZE       3
 #endif
-
 
 
 // patch size (number of cells of a single patch in the x/y/z directions)
