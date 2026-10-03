@@ -3,6 +3,11 @@
 #if ( defined PARTICLE  &&  defined STAR_FORMATION  &&  MODEL == HYDRO )
 
 
+#ifdef FEEDBACK
+extern RandomNumber_t *FB_RNG;
+extern double          FB_ResolvedSNeII_PDCapToMean;
+extern int             maxNumSNeIIPerSPar;
+#endif
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -62,6 +67,11 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 
    if ( Idx_ParCreTime == Idx_Undefined )
       Aux_Error( ERROR_INFO, "Idx_ParCreTime is undefined !!\n" );
+
+#  ifdef FEEDBACK
+   if ( FB_RESOLVED_SNEII  &&  Idx_ParSNIINxtE == Idx_Undefined )
+      Aux_Error( ERROR_INFO, "Idx_ParSNIINxtE is undefined for FB_RESOLVED_SNEII !!\n" );
+#  endif // #ifdef FEEDBACK
 #  endif // #ifdef GAMER_DEBUG
 
 
@@ -124,6 +134,11 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          const long RSeed = SF_CREATE_STAR_RSEED + amr->patch[0][lv][PID]->LB_Idx + long(TimeNew*UNIT_T/Const_yr*1.0e6);
          RNG->SetSeed( TID, RSeed );
       }
+
+#     ifdef FEEDBACK
+      const long FB_RSeed = FB_RSEED + amr->patch[0][lv][PID]->LB_Idx + long(TimeNew*UNIT_T/Const_yr*1.0e6);
+      FB_RNG->SetSeed( TID, FB_RSeed );
+#     endif // #ifdef FEEDBACK
 
 
       fluid   = amr->patch[FluSg][lv][PID]->fluid;
@@ -249,6 +264,43 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
          NewParAttFlt[NNewPar][Idx_ParMetalFrac] = fluid[Idx_Metal][k][j][i] * _GasDens;
 
          NewParAttFlt[NNewPar][Idx_ParCreTime  ] = TimeNew;
+
+#        ifdef FEEDBACK
+         if ( FB_RESOLVED_SNEII )
+         {
+//          This feedback method supports multiple feedback events per stellar particle,
+//          --> Each star particle has the number SN progenitor
+//              sampled stochastically with a mean number = StarMass*FB_RESOLVED_SNEII_N_PER_MASS
+//          --> The explosion will occur when the age of the star = the lifetime of the SN progenitor
+
+//          expected average number of SNeII in a star particle of the given mass
+            const double MeanNum_SNeII = StarMass*FB_RESOLVED_SNEII_N_PER_MASS;
+
+#           if ( RANDOM_NUMBER == RNG_CPP11 )
+//          randomly sampled number from a Poisson distribution of the given mean
+            const int PoissonRandom = FB_RNG->GetValue_Poisson( TID, MeanNum_SNeII );
+#           else
+            Aux_Error( ERROR_INFO, "Must use RNG_CPP11 for the Poisson random numbers!!\n" );
+            const int PoissonRandom = 0;
+#           endif
+
+//          maximum allowed number of SNeII per particle
+            const int MaxNum_SNeII     = (int)ceil(FB_ResolvedSNeII_PDCapToMean*MeanNum_SNeII);
+
+//          number of SNeII for this star particle, sampled from the capped Poisson distribution
+            const int SampledNum_SNeII = MIN( PoissonRandom, MaxNum_SNeII );
+
+//          check the number of SNeII is supported
+            if ( SampledNum_SNeII > maxNumSNeIIPerSPar )
+               Aux_Error( ERROR_INFO, "The sampled number of SNe (%d) exceeds the maximum (%d) !!\n",
+                          SampledNum_SNeII, maxNumSNeIIPerSPar );
+
+//          next SNeII explosion event index for the feedback routine
+            const long_par SNII_NxtE = SampledNum_SNeII * FB_SNII_NXTE_SEPDIGIT;
+
+            NewParAttInt[NNewPar][Idx_ParSNIINxtE] = SNII_NxtE;
+         }
+#        endif // #ifdef FEEDBACK
 
          NNewPar ++;
 
