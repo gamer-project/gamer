@@ -57,6 +57,7 @@ extern void (*Output_User_Ptr)();
 #ifdef SUPPORT_HDF5
 extern void (*Output_HDF5_InputTest_Ptr)( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HDF5_Output_t *HDF5_InputTest );
 extern void (*Output_HDF5_UserPara_Ptr)( HDF5_Output_t *HDF5_UserPara );
+extern void (*Input_HDF5_UserPara_Ptr)( const hid_t SID, const hid_t TID );
 #endif
 extern void (*Output_UserWorkBeforeOutput_Ptr)();
 extern bool (*Flag_Region_Ptr)( const int i, const int j, const int k, const int lv, const int PID );
