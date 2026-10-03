@@ -80,9 +80,7 @@ static       double **Table_SNII_EjectMetal  = NULL;         // table of the met
 //                10. In general, it is recommended to have the maximum feedback radius no larger than half of the patch size
 //                    (i.e., PATCH_SIZE/2=4 cells for PATCH_SIZE=8)
 //                    --> Increase PATCH_SIZE if necessary
-//                11. This feedback method assumes that the particle mass resolution is sufficiently high,
-//                    so there will be at most one SNII per particle
-//                    Whether a star particle has a SNII progenitor and when will it explode
+//                11. Whether a star particle has a SNII progenitor and when will it explode
 //                    are already determined when the star formed
 //                    --> Please add the attribute ParSNIINxtE in the star formation scheme accordingly
 //                        (e.g. in StarFormation/SF_CreateStar_AGORA.cpp)
@@ -181,6 +179,7 @@ int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld,
                                        ParAttFlt[        PAR_VELY][par_idx],
                                        ParAttFlt[        PAR_VELZ][par_idx] };              // velocity of particle
       const long_par par_type      =   ParAttInt[        PAR_TYPE][par_idx];                // type of particle
+      const long_par par_puid      =   ParAttInt[        PAR_PUID][par_idx];                // unique id of particle
 #     ifdef STAR_FORMATION
       const real_par par_creTime   =   ParAttFlt[  Idx_ParCreTime][par_idx];                // creation time of particle
 #     else
@@ -392,7 +391,7 @@ int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld,
          recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = SNII_DepositedMetal;
          recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = fbDiameter*dh;
          recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = fbFluidMass;
-         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_idx;
+         recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_puid;
          recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_SNIINxtE;
          recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_mass;
          recordSNeII[TID][ nVarRecSNeII*numRecSNeII[TID] + (nVar++) ] = par_pos[0];
@@ -421,7 +420,9 @@ int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld,
       ParAttInt[Idx_ParSNIINxtE ][par_idx] += (long_par)SNII_AccumulatedNumber;
       ParAttFlt[PAR_MASS        ][par_idx] -= (real_par)SNII_DepositedMass;
       if ( UseMetal )
-      ParAttFlt[Idx_ParMetalFrac][par_idx]  = (par_metalMass - MIN(par_metalMass, (real_par)SNII_DepositedMetal))/ParAttFlt[PAR_MASS][par_idx];
+      ParAttFlt[Idx_ParMetalFrac][par_idx]  = ( ParAttFlt[PAR_MASS][par_idx] > 0.0 )
+                                              ? (par_metalMass - MIN(par_metalMass, (real_par)SNII_DepositedMetal)) / ParAttFlt[PAR_MASS][par_idx]
+                                              : 0.0;   // to avoid 0/0 when all the stellar mass is deposited
 
 //    5.2 update the fluid
       const int fbDiameterMinus1 = fbDiameter-1;
@@ -432,6 +433,12 @@ int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld,
       for (int dk=-fbOffsets[2][0]; dk<=fbOffsets[2][1]; dk++) { const int k = cell_idx[2] + dk;   const int k_w = fbOffsets[2][0] + dk;
       for (int dj=-fbOffsets[1][0]; dj<=fbOffsets[1][1]; dj++) { const int j = cell_idx[1] + dj;   const int j_w = fbOffsets[1][0] + dj;
       for (int di=-fbOffsets[0][0]; di<=fbOffsets[0][1]; di++) { const int i = cell_idx[0] + di;   const int i_w = fbOffsets[0][0] + di;
+
+//       get the fluid states before update
+         const real flu_Mass = Fluid_Out[DENS][k][j][i] * dv;
+         const real flu_VelX = Fluid_Out[MOMX][k][j][i] / Fluid_Out[DENS][k][j][i];
+         const real flu_VelY = Fluid_Out[MOMY][k][j][i] / Fluid_Out[DENS][k][j][i];
+         const real flu_VelZ = Fluid_Out[MOMZ][k][j][i] / Fluid_Out[DENS][k][j][i];
 #        ifdef DUAL_ENERGY
 #        if   ( DUAL_ENERGY == DE_ENPY )
          const real flu_Dens = Fluid_Out[DENS][k][j][i];
@@ -443,17 +450,40 @@ int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld,
 #        endif
 #        endif // #ifdef DUAL_ENERGY ... else ...
 
-         Fluid_Out[DENS     ][k][j][i] += SNII_DepositedMass                    * fbDepositWeighting[fbDiameterMinus1][k_w][j_w][i_w] / dv;
-         Fluid_Out[MOMX     ][k][j][i] += SNII_DepositedMass * (real)par_vel[0] * fbDepositWeighting[fbDiameterMinus1][k_w][j_w][i_w] / dv;
-         Fluid_Out[MOMY     ][k][j][i] += SNII_DepositedMass * (real)par_vel[1] * fbDepositWeighting[fbDiameterMinus1][k_w][j_w][i_w] / dv;
-         Fluid_Out[MOMZ     ][k][j][i] += SNII_DepositedMass * (real)par_vel[2] * fbDepositWeighting[fbDiameterMinus1][k_w][j_w][i_w] / dv;
-         Fluid_Out[ENGY     ][k][j][i] += SNII_DepositedEnergy                  * fbDepositWeighting[fbDiameterMinus1][k_w][j_w][i_w] / dv;
+//       compute the feedback quantities in this cell
+         const real dMass                    = SNII_DepositedMass   * fbDepositWeighting[fbDiameterMinus1][k_w][j_w][i_w];
+         const real dInternalEnergy          = SNII_DepositedEnergy * fbDepositWeighting[fbDiameterMinus1][k_w][j_w][i_w];
+         const real dMetalMass               = SNII_DepositedMetal  * fbDepositWeighting[fbDiameterMinus1][k_w][j_w][i_w];
+//       --> the change of the kinetic energy in the star's rest frame: the inelastic collision between the fluid and the ejecta mass
+         const real dKineticEnergy_restFrame = -(real)0.5*( SQR(flu_VelX-(real)par_vel[0]) +
+                                                            SQR(flu_VelY-(real)par_vel[1]) +
+                                                            SQR(flu_VelZ-(real)par_vel[2]) )*( flu_Mass*dMass/(flu_Mass+dMass) );
+//       --> the change of the kinetic energy in the lab frame: with the center-of-mass motion of the ejecta mass
+         const real dKineticEnergy_labFrame  = dKineticEnergy_restFrame + (real)0.5*dMass*(real)( SQR(par_vel[0]) + SQR(par_vel[1]) + SQR(par_vel[2]) );
+//       --> the change of the total energy in the lab frame
+         const real dTotalEnergy             = dKineticEnergy_labFrame + dInternalEnergy;
+
+//       convert the change of the fluid to densities
+         const real dDens  = dMass                    / dv;
+         const real dMomX  = dMass * (real)par_vel[0] / dv;
+         const real dMomY  = dMass * (real)par_vel[1] / dv;
+         const real dMomZ  = dMass * (real)par_vel[2] / dv;
+         const real dEint  = dInternalEnergy          / dv;
+         const real dEngy  = dTotalEnergy             / dv;
+         const real dMetal = dMetalMass               / dv;
+
+//       update the fluid
+         Fluid_Out[DENS     ][k][j][i] += dDens;
+         Fluid_Out[MOMX     ][k][j][i] += dMomX;
+         Fluid_Out[MOMY     ][k][j][i] += dMomY;
+         Fluid_Out[MOMZ     ][k][j][i] += dMomZ;
+         Fluid_Out[ENGY     ][k][j][i] += dEngy;
          if ( UseMetal )
-         Fluid_Out[Idx_Metal][k][j][i] += SNII_DepositedMetal                   * fbDepositWeighting[fbDiameterMinus1][k_w][j_w][i_w] / dv;
+         Fluid_Out[Idx_Metal][k][j][i] += dMetal;
 
 #        ifdef DUAL_ENERGY
 #        if   ( DUAL_ENERGY == DE_ENPY )
-         const real Eint                = flu_Eint + SNII_DepositedEnergy       * fbDepositWeighting[fbDiameterMinus1][k_w][j_w][i_w] / dv;
+         const real Eint                = flu_Eint + dEint;
          const real Pres                = EoS_DensEint2Pres_CPUPtr( Fluid_Out[DENS][k][j][i], Eint, NULL,
                                                                     EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
          Fluid_Out[DUAL     ][k][j][i]  = Hydro_DensPres2Dual( Fluid_Out[DENS][k][j][i], Pres, EoS_AuxArray_Flt[1] );
@@ -697,7 +727,7 @@ void Record_FB_Resolved_SNeII( const int lv )
             fprintf( File, "%16s%16s%16s%16s%16s%16s%16s%16s",
                      "SNII_Time_first", "SNII_Time_last", "SNII_AccumNum", "SNII_Energy", "SNII_Mass", "SNII_Metal", "FB_Diameter", "FB_Flu_Mass" );
             fprintf( File, "%16s%16s%16s%16s%16s%16s",
-                     "Par_ID", "Par_NxtE", "Par_Mass", "Par_PosX", "Par_PosY", "Par_PosZ" );
+                     "Par_PUID", "Par_NxtE", "Par_Mass", "Par_PosX", "Par_PosY", "Par_PosZ" );
             fprintf( File, "%16s%16s%16s%16s",
                      "Par_VelX", "Par_VelY", "Par_VelZ", "Par_MetalMass" );
             fprintf( File, "%16s%16s%16s%16s%16s%16s\n",

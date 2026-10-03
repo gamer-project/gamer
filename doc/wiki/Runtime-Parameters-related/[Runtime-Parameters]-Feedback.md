@@ -35,11 +35,11 @@ Not supported yet.
 * #### `FB_RESOLVED_SNEII` &ensp; (0=off, 1=on) &ensp; [0]
     * **Description:**
 Resolved Type II supernovae feedback.
-When a star particle forms, it would be sampled to contain a SNII progenitor stochastically
-with a probability of star particle mass times
-number of SNII per stellar masses ([[FB_RESOLVED_SNEII_N_PER_MASS | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII_N_PER_MASS ]]).
-The selected particle for supernova will then explode when the age of the star particle reaches
-the given explosion time.
+When a star particle forms, it would contain a stochastically sampled number of SNII progenitors
+with the mean as the star particle mass times
+the number of SNII per stellar masses ([[FB_RESOLVED_SNEII_N_PER_MASS | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII_N_PER_MASS ]]).
+The stellar particle will then explode whenever the age reaches
+the progenitor lifetimes given in the table.
 When the supernova explodes, it will uniformly inject
 the given amount of thermal energy, mass, and metal
 into fluid of the surrounding cells where the particle is located.
@@ -56,7 +56,6 @@ the diameter equals `FB_GHOST_SIZE+1`, or the region crosses the coarse-fine bou
 See sec. 2.6 in [Chia-Yu Hu et al. 2023](https://doi.org/10.3847/1538-4357/accf9e) for reference.
     * **Restriction:**
 Must set one extra particle attribute with [[ --par_attribute_int | Installation:-Option-List#--par_attribute_int ]].
-The star particle mass resolution must be high enough to have at most one supernova explosion per particle.
 The grid resolution must be high enough to resolve the Sedov phase of supernova explosion blast wave,
 so the kinetic (outward momentum) feedback is not needed.
 

@@ -266,13 +266,10 @@ void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, Rando
 #        ifdef FEEDBACK
          if ( FB_RESOLVED_SNEII )
          {
-//          This feedback method assumes that the particle mass resolution is sufficiently high,
-//          so each star particle has a mass less than 1/FB_RESOLVED_SNEII_N_PER_MASS (e.g., 1/0.01=100 Msun)
-//          --> There will be at most one SNII per particle
-//          --> Each star particle has either one SN progenitor (only one explosion) or no SN progenitor (never explodes),
-//              sampled stochastically with a probability P = StarMass*FB_RESOLVED_SNEII_N_PER_MASS
-//          --> The explosion will occur when the age of the star = the lifetime of SN progenitor
-//          Ref: Sec. 2.6 of Chia-Yu Hu, et al., 2023, ApJ, 950, 132 (https://doi.org/10.3847/1538-4357/accf9e)
+//          This feedback method supports multiple feedback events per stellar particle,
+//          --> Each star particle has the number SN progenitor
+//              sampled stochastically with a mean number = StarMass*FB_RESOLVED_SNEII_N_PER_MASS
+//          --> The explosion will occur when the age of the star = the lifetime of the SN progenitor
 
 //          expected average number of SNeII in a star particle of the given mass
             const double MeanNum_SNeII = StarMass*FB_RESOLVED_SNEII_N_PER_MASS;
