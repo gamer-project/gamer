@@ -75,7 +75,7 @@ void CR_AdiabaticWork_HalfStep_MHM_RP( real OneCell[NCOMP_TOTAL_PLUS_MAG],
 // 3. update the cosmic-ray energy
    OneCell[CRAY] -= pCR_old*dt_dh2*( div_V[0] + div_V[1] + div_V[2] );
 
-} // FUMCTION : CR_AdiabaticWork_HalfStep_MHM_RP
+} // FUNCTION : CR_AdiabaticWork_HalfStep_MHM_RP
 
 
 
