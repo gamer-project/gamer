@@ -27,6 +27,7 @@ typedef void (*SrcFunc_t)( real fluid[], const real B[],
 // Data Member :  Any                       : True if at least one of the source terms is activated
 //                Deleptonization           : SRC_DELEPTONIZATION
 //                ExactCooling              : SRC_EXACTCOOLING
+//                ExactCooling              : SRC_EXACTCOOLING_GENERAL
 //                User                      : SRC_USER
 //                BoxCenter                 : Simulation box center
 //                Unit_*                    : Code units
@@ -51,6 +52,7 @@ struct SrcTerms_t
    bool   Any;
    bool   Deleptonization;
    bool   ExactCooling;
+   bool   ExactCooling_General;
    bool   User;
 
    double BoxCenter[3];
@@ -95,6 +97,19 @@ struct SrcTerms_t
    double   *EC_TEFc_DevPtr;
    double    EC_dtCoef;
    bool      EC_TCoolInit[NLEVEL];
+#  endif
+
+// general exact cooling
+#  ifdef EXACT_COOLING_GENERAL
+   SrcFunc_t ExactCooling_General_FuncPtr;
+   SrcFunc_t ExactCooling_General_CPUPtr;
+#  ifdef GPU
+   SrcFunc_t ExactCooling_General_GPUPtr;
+#  endif
+   double   *ExactCooling_General_AuxArrayDevPtr_Flt;
+   int      *ExactCooling_General_AuxArrayDevPtr_Int;
+   double    ExactCooling_General_dt;
+   bool      ExactCooling_General_TCoolInit[NLEVEL];
 #  endif
 
 // user-specified source term

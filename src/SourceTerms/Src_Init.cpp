@@ -9,6 +9,9 @@ void Src_Init_Deleptonization();
 #ifdef EXACT_COOLING
 void Src_Init_ExactCooling();
 #endif
+#ifdef EXACT_COOLING_GENERAL
+void Src_Init_ExactCooling_General();
+#endif
 
 // this function pointer can be set by a test problem initializer for a user-specified source term
 void (*Src_Init_User_Ptr)() = NULL;
@@ -39,6 +42,7 @@ void Src_Init()
 #  if ( MODEL == HYDRO )
    SrcTerms.Any |= SrcTerms.Deleptonization;
    SrcTerms.Any |= SrcTerms.ExactCooling;
+   SrcTerms.Any |= SrcTerms.ExactCooling_General;
 #  endif
    SrcTerms.Any |= SrcTerms.User;
 
@@ -83,6 +87,16 @@ void Src_Init()
    SrcTerms.EC_TEFc_DevPtr            = NULL;
 #  endif // #ifdef EXACT_COOLING
 
+#  ifdef EXACT_COOLING_GENERAL
+   SrcTerms.ExactCooling_General_FuncPtr                = NULL;
+   SrcTerms.ExactCooling_General_CPUPtr                 = NULL;
+#  ifdef GPU
+   SrcTerms.ExactCooling_General_GPUPtr                 = NULL;
+#  endif
+   SrcTerms.ExactCooling_General_AuxArrayDevPtr_Flt     = NULL;
+   SrcTerms.ExactCooling_General_AuxArrayDevPtr_Int     = NULL;
+#  endif // #ifdef EXACT_COOLING
+
    SrcTerms.User_FuncPtr              = NULL;
    SrcTerms.User_CPUPtr               = NULL;
 #  ifdef GPU
@@ -123,7 +137,22 @@ void Src_Init()
    }
 #  endif // #ifdef EXACT_COOLING
 
-// (3) user-specified source term
+// (3) general exact cooling
+#  ifdef EXACT_COOLING_GENERAL
+   if ( SrcTerms.ExactCooling_General )
+   {
+      Src_Init_ExactCooling_General();
+
+//    check if the source-term function is set properly
+      if ( SrcTerms.ExactCooling_General_FuncPtr == NULL )   Aux_Error( ERROR_INFO, "SrcTerms.ExactCooling_General_FuncPtr == NULL !!\n" );
+      if ( SrcTerms.ExactCooling_General_CPUPtr  == NULL )   Aux_Error( ERROR_INFO, "SrcTerms.ExactCooling_General_CPUPtr  == NULL !!\n" );
+#     ifdef GPU
+      if ( SrcTerms.ExactCooling_General_GPUPtr  == NULL )   Aux_Error( ERROR_INFO, "SrcTerms.ExactCooling_General_GPUPtr  == NULL !!\n" );
+#     endif
+   }
+#  endif // #ifdef EXACT_COOLING_GENERAL
+
+// (4) user-specified source term
    if ( SrcTerms.User )
    {
       if ( Src_Init_User_Ptr == NULL )       Aux_Error( ERROR_INFO, "Src_Init_User_Ptr == NULL !!\n" );
