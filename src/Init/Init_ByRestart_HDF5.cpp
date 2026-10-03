@@ -330,7 +330,7 @@ void Init_ByRestart_HDF5( const char *FileName )
 // --> assuming dTime_AllLv[] has been initialized as 0.0 properly
    for (int lv=KeyInfo.NLevel; lv<NLEVEL; lv++)
    {
-      Time              [lv] = 0.0;
+      Time              [lv] = ( OPT__RESTART_RESET ) ? INIT_TIME : Time[0];
       NPatchTotal       [lv] = 0;
       AdvanceCounter    [lv] = 0;
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
@@ -2000,6 +2000,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "MPI_NRank",               &RS.MPI_NRank,               SID, TID, NonFatal, &RT.MPI_NRank,                1, NonFatal );
    LoadField( "MPI_NRank_X",              RS.MPI_NRank_X,             SID, TID, NonFatal,  RT.MPI_NRank_X,              3, NonFatal );
    LoadField( "OMP_NThread",             &RS.OMP_NThread,             SID, TID, NonFatal, &RT.OMP_NThread,              1, NonFatal );
+   LoadField( "InitTime",                &RS.InitTime,                SID, TID, NonFatal, &RT.InitTime,                 1, NonFatal );
    LoadField( "EndT",                    &RS.EndT,                    SID, TID, NonFatal, &RT.EndT,                     1, NonFatal );
    LoadField( "EndStep",                 &RS.EndStep,                 SID, TID, NonFatal, &RT.EndStep,                  1, NonFatal );
 
