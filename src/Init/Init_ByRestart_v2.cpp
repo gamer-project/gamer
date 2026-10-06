@@ -266,7 +266,7 @@ void Init_ByRestart()
 #        ifdef COMOVING
          Time          [lv] = A_INIT;
 #        else
-         Time          [lv] = 0.0;
+         Time          [lv] = INIT_TIME;
 #        endif
          AdvanceCounter[lv] = 0;
          dTime_AllLv   [lv] = 0.0;
