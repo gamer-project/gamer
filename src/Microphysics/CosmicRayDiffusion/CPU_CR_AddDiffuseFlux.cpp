@@ -444,7 +444,7 @@ static real minmod( const real a, const real b )
 
 } // FUNCTION : minmod
 
-#ifndef __CUDACC__
+
 
 //-----------------------------------------------------------------------------------------
 // Function    : CR_AddDiffuseFlux_1Face
@@ -469,6 +469,7 @@ static real minmod( const real a, const real b )
 //
 // Return      : FluxR[]
 //-----------------------------------------------------------------------------------------
+#ifndef __CUDACC__
 void CR_AddDiffuseFlux_1Face( const real Flu_In[][ CUBE(FLU_NXT) ],
                                     real Flux_Out[NCOMP_TOTAL_PLUS_MAG],
                               const real FC_B, const real L_In[], const real R_In[],
@@ -571,6 +572,10 @@ void CR_AddDiffuseFlux_1Face( const real Flu_In[][ CUBE(FLU_NXT) ],
 } // FUNCTION : CR_AddDiffuseFlux_1Face
 #endif // #ifndef __CUDACC__
 
+
+
 #endif // #ifdef CR_DIFFUSION
+
+
 
 #endif // #ifndef __CUFLU_CR_ADDDIFFUSEFLUX__
