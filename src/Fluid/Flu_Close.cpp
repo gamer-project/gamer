@@ -55,11 +55,11 @@ extern void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real
                                       const int EoS_AuxArray_Int[], const real* const EoS_Table[EOS_NTABLE_MAX] );
 #endif
 #ifdef CR_DIFFUSION
-extern void CR_AddDiffuseFlux_OneFace( const real g_ConVar[][ CUBE(FLU_NXT) ],
-                                             real FluxR[NCOMP_TOTAL_PLUS_MAG],
-                                       const real FC_B, const real VarC[], const real VarR[],
-                                       const int idx, const int didx[3], const int d, const real dh,
-                                       const MicroPhy_t *MicroPhy );
+extern void CR_AddDiffuseFlux_1Face( const real g_ConVar[][ CUBE(FLU_NXT) ],
+                                           real FluxR[NCOMP_TOTAL_PLUS_MAG],
+                                     const real FC_B, const real VarC[], const real VarR[],
+                                     const int idx, const int didx[3], const int d, const real dh,
+                                     const MicroPhy_t *MicroPhy );
 #endif
 
 #endif // #if ( MODEL == HYDRO )
@@ -812,8 +812,8 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 #              ifdef CR_DIFFUSION
                for (int d=0; d<3; d++)
                {
-                  CR_AddDiffuseFlux_OneFace( h_Flu_Array_F_In[TID], FluxL[d], FC_B[d][0], VarL[d], VarC,    idx_in-didx[d], didx, d, dh, &MicroPhy );
-                  CR_AddDiffuseFlux_OneFace( h_Flu_Array_F_In[TID], FluxR[d], FC_B[d][1], VarC,    VarR[d], idx_in,         didx, d, dh, &MicroPhy );
+                  CR_AddDiffuseFlux_1Face( h_Flu_Array_F_In[TID], FluxL[d], FC_B[d][0], VarL[d], VarC,    idx_in-didx[d], didx, d, dh, &MicroPhy );
+                  CR_AddDiffuseFlux_1Face( h_Flu_Array_F_In[TID], FluxR[d], FC_B[d][1], VarC,    VarR[d], idx_in,         didx, d, dh, &MicroPhy );
                }
 #              endif
 

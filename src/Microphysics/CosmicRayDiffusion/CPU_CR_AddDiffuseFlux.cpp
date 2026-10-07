@@ -447,7 +447,7 @@ static real minmod( const real a, const real b )
 #ifndef __CUDACC__
 
 //-----------------------------------------------------------------------------------------
-// Function    : CR_AddDiffuseFlux_OneFace
+// Function    : CR_AddDiffuseFlux_1Face
 // Description : Compute the cosmic-ray diffusive flux of one face, used for 1st order flux correction
 //
 // Note        : 1. Must enable MHD, COSMIC_RAY, and CR_DIFFUSION
@@ -469,11 +469,11 @@ static real minmod( const real a, const real b )
 //
 // Return      : FluxR[]
 //-----------------------------------------------------------------------------------------
-void CR_AddDiffuseFlux_OneFace( const real Flu_In[][ CUBE(FLU_NXT) ],
-                                      real Flux_Out[NCOMP_TOTAL_PLUS_MAG],
-                                const real FC_B, const real L_In[], const real R_In[],
-                                const int idxL, const int didx[3], const int d, const real dh,
-                                const MicroPhy_t *MicroPhy )
+void CR_AddDiffuseFlux_1Face( const real Flu_In[][ CUBE(FLU_NXT) ],
+                                    real Flux_Out[NCOMP_TOTAL_PLUS_MAG],
+                              const real FC_B, const real L_In[], const real R_In[],
+                              const int idxL, const int didx[3], const int d, const real dh,
+                              const MicroPhy_t *MicroPhy )
 {
    const real _dh = (real)1.0 / dh;
 
@@ -568,7 +568,7 @@ void CR_AddDiffuseFlux_OneFace( const real Flu_In[][ CUBE(FLU_NXT) ],
    Flux_Out[CRAY] += Flux_Total;
    Flux_Out[ENGY] += Flux_Total;
 
-} // FUNCTION : CR_AddDiffuseFlux_OneFace
+} // FUNCTION : CR_AddDiffuseFlux_1Face
 #endif // #ifndef __CUDACC__
 
 #endif // #ifdef CR_DIFFUSION
