@@ -8,7 +8,7 @@ reset
 
 # target files
 # -----------------------------------------------------------
-FILE_IN_PREFIX  = 'Diag'
+FILE_IN_PREFIX  = '../Diag'
 FILE_IN_SUFFIX  = ''
 FILE_OUT_PREFIX = 'Fig__SC_DENS'
 START_ID        = 0
@@ -37,12 +37,25 @@ PAUSE           = -1.0  # <= 0.0 --> mouse
  set size square
 #set xrange [3.0e-2:1e2]
 
+# density
 #v=7
 #set yrange [5.0e-1:2.0e4]
 
-v=12
-set yrange [1.0e-9:2.0e2]
+# entropy
+#v=12
+#set yrange [1.0e-9:2.0e-1]
 
+# pressure
+#v=14
+#set yrange [1.0e-9:1.0e2]
+
+# temperature
+v=15
+set yrange [1.0e-3:1.0e4]
+
+# Mach number
+#v=16
+#set yrange [5.0e-4:1.0e3]
 
 
 # set the output file extension automatically
@@ -71,7 +84,7 @@ do for [ID=START_ID:END_ID:DELTA_ID] {
 
 
 #  load the physical time
-   DUMP_TABLE   = './Record__Dump'
+   DUMP_TABLE   = '../Record__Dump'
    NHEADER      = 1
    LOAD_TIME    = sprintf( "awk '{if(NR==%d+%d) {print $2}}' %s", NHEADER, ID+1, DUMP_TABLE  )
    TIME         = system( LOAD_TIME )*1.0    # *1.0 --> convert string to number
@@ -83,7 +96,8 @@ do for [ID=START_ID:END_ID:DELTA_ID] {
 
 
 #  plot
-   plot FILE_IN  u (abs($4-0.5)):(column(v)) w p pt 6 lc 7 notit
+   plot FILE_IN u (abs($4-0.5)):(column(v)) w p pt 6 lc 7 tit 'Target gas field' \
+       ,FILE_IN u (abs($4-0.5)):17          w p pt 5 lc 6 tit 'Dual-energy status'
 
 
    if ( GPVAL_TERM eq 'x11' ) { if ( PAUSE <= 0.0 ) { pause mouse }   else { pause PAUSE } };

@@ -299,7 +299,7 @@ void OutputError()
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Init_TestProb_ELBDM_Soliton
+// Function    :  Init_TestProb_ELBDM_Perturbation
 // Description :  Test problem initializer
 //
 // Note        :  None

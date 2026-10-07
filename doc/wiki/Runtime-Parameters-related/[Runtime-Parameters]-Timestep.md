@@ -12,6 +12,11 @@ Parameters described on this page:
 [DT__MAX_DELTA_A](#DT__MAX_DELTA_A), &nbsp;
 [DT__SYNC_PARENT_LV](#DT__SYNC_PARENT_LV), &nbsp;
 [DT__SYNC_CHILDREN_LV](#DT__SYNC_CHILDREN_LV), &nbsp;
+[DT__PHASE](#DT__PHASE), &nbsp;
+[DT__HYBRID_CFL](#DT__HYBRID_CFL), &nbsp;
+[DT__HYBRID_CFL_INIT](#DT__HYBRID_CFL_INIT), &nbsp;
+[DT__HYBRID_VELOCITY](#DT__HYBRID_VELOCITY), &nbsp;
+[DT__HYBRID_VELOCITY_INIT](#DT__HYBRID_VELOCITY_INIT), &nbsp;
 [OPT__DT_USER](#OPT__DT_USER), &nbsp;
 [OPT__DT_LEVEL](#OPT__DT_LEVEL), &nbsp;
 [OPT__RECORD_DT](#OPT__RECORD_DT), &nbsp;
@@ -41,14 +46,14 @@ too large time-steps on lower levels.
 Courant–Friedrichs–Lewy (CFL) safety factor for the hydrodynamic solver.
 The default value and stable regime depend on the adopted
 [[fluid scheme | [Installation]-Option-List#--flu_scheme]].
-See Section 2.6, Eqs. [1-2] in the [GAMER-2 code paper](https://arxiv.org/abs/1712.07070)
+See Section 2.6, Eqs. [1-2] in the [GAMER-2 code paper](https://academic.oup.com/mnras/article/481/4/4815/5106358)
 for the exact formulae.
     * **Restriction:**
 
 <a name="DT__FLUID_INIT"></a>
 * #### `DT__FLUID_INIT` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [[DT__FLUID](#DT__FLUID)]
     * **Description:**
-CFL safety factor for the hydrodynamic solver _at the first step_. This could be
+CFL safety factor for the hydrodynamic solver _at the first step_. This can be
 useful when the first step requires a much smaller timestep.
     * **Restriction:**
 Useless for restart.
@@ -66,7 +71,7 @@ Only applicable when adopting the compilation option
 * #### `DT__GRAVITY` &ensp; (&#8805;0.0; <0.0 &#8594; set to default) &ensp; [-1.0]
     * **Description:**
 Safety factor when determining timestep from the gravitational acceleration of fluid.
-See Section 2.6, Eq. [3] in the [GAMER-2 code paper](https://arxiv.org/abs/1712.07070)
+See Section 2.6, Eq. [3] in the [GAMER-2 code paper](https://academic.oup.com/mnras/article/481/4/4815/5106358)
 for the exact formula.
     * **Restriction:**
 
@@ -74,7 +79,7 @@ for the exact formula.
 * #### `DT__PARVEL` &ensp; (&#8805;0.0) &ensp; [0.5]
     * **Description:**
 Safety factor when determining timestep from the particle velocity.
-See Section 2.6, Eq. [4] in the [GAMER-2 code paper](https://arxiv.org/abs/1712.07070)
+See Section 2.6, Eq. [4] in the [GAMER-2 code paper](https://academic.oup.com/mnras/article/481/4/4815/5106358)
 for the exact formula.
     * **Restriction:**
 
@@ -90,7 +95,7 @@ for which the timestep determined from the particle velocity is infinity.
 * #### `DT__PARACC` &ensp; (>0.0; &#8804;0.0 &#8594; off) &ensp; [0.5]
     * **Description:**
 Safety factor when determining timestep from the particle acceleration.
-See Section 2.6, Eq. [3] in the [GAMER-2 code paper](https://arxiv.org/abs/1712.07070)
+See Section 2.6, Eq. [3] in the [GAMER-2 code paper](https://academic.oup.com/mnras/article/481/4/4815/5106358)
 for the exact formula.
     * **Restriction:**
 Only applicable when adopting the compilation option
@@ -126,7 +131,7 @@ Only applicable when adopting the compilation option
     * **Description:**
 Allow timestep to _increase_ by `1.0+DT__SYNC_PARENT` to help synchronize
 with the parent level. See also Section 2.1 in the
-[GAMER-2 code paper](https://arxiv.org/abs/1712.07070) for more details
+[GAMER-2 code paper](https://academic.oup.com/mnras/article/481/4/4815/5106358) for more details
     * **Restriction:**
 For [OPT__DT_LEVEL](#OPT__DT_LEVEL)=3 only.
 
@@ -135,9 +140,59 @@ For [OPT__DT_LEVEL](#OPT__DT_LEVEL)=3 only.
     * **Description:**
 Allow timestep to _decrease_ by `1.0+DT__SYNC_CHILDREN_LV` to help synchronize
 with the children level. See also Section 2.1 in the
-[GAMER-2 code paper](https://arxiv.org/abs/1712.07070) for more details
+[GAMER-2 code paper](https://academic.oup.com/mnras/article/481/4/4815/5106358) for more details
     * **Restriction:**
 For [OPT__DT_LEVEL](#OPT__DT_LEVEL)=3 only.
+
+<a name="DT__PHASE"></a>
+* #### `DT__PHASE` &ensp; (>0.0; 0=off) &ensp; [0]
+    * **Description:**
+Restrict the maximum phase rotation to be less than `DT__PHASE` * 2&pi; within a timestep.
+Typically ranges from 0 to 1.
+    * **Restriction:**
+Only applicable when adopting the compilation option
+[[--model | [Installation]-Option-List#--model]]=ELBDM.
+
+<a name="DT__HYBRID_CFL"></a>
+* #### `DT__HYBRID_CFL` &ensp; (0 &#8804; input &#8804; 0.49; <0.0 &#8594; set to default) &ensp; [-1.0]
+    * **Description:**
+CFL safety factor for the quantum-pressure term in the Hamilton-Jacobi equation.
+See Eq. [23] in [Kunkel et al. 2025, ApJS, 279, 39](https://iopscience.iop.org/article/10.3847/1538-4365/addc59).
+The default value is 0.2 when [[--gravity | [Installation]-Option-List#--gravity]] is enabled
+and 0.4 when it is disabled.
+    * **Restriction:**
+Only applicable when adopting the compilation options
+[[--model | [Installation]-Option-List#--model]]=ELBDM and [[--elbdm_scheme | [Installation]-Option-List#--elbdm_scheme]]=HYBRID.
+`DT__HYBRID_CFL` > 0.49 is unstable.
+
+<a name="DT__HYBRID_CFL_INIT"></a>
+* #### `DT__HYBRID_CFL_INIT` &ensp; (0 &#8804; input &#8804; 0.49; <0.0 &#8594; set to default) &ensp; [[DT__HYBRID_CFL](#DT__HYBRID_CFL)]
+    * **Description:**
+The value of [DT__HYBRID_CFL](#DT__HYBRID_CFL) used for the first step. This can be
+useful when the first step requires a much smaller timestep.
+    * **Restriction:**
+See [DT__HYBRID_CFL](#DT__HYBRID_CFL).
+Useless for restart.
+
+<a name="DT__HYBRID_VELOCITY"></a>
+* #### `DT__HYBRID_VELOCITY` &ensp; (0 &#8804; input &#8804; 3.5; <0.0 &#8594; set to default) &ensp; [-1.0]
+    * **Description:**
+CFL safety factor for the velocity term in the Hamilton-Jacobi equation.
+See Eq. [23] in [Kunkel et al. 2025, ApJS, 279, 39](https://iopscience.iop.org/article/10.3847/1538-4365/addc59).
+The default value is 1.0.
+    * **Restriction:**
+Only applicable when adopting the compilation options
+[[--model | [Installation]-Option-List#--model]]=ELBDM and [[--elbdm_scheme | [Installation]-Option-List#--elbdm_scheme]]=HYBRID.
+`DT__HYBRID_VELOCITY` > 3.5 is unstable.
+
+<a name="DT__HYBRID_VELOCITY_INIT"></a>
+* #### `DT__HYBRID_VELOCITY_INIT` &ensp; (0 &#8804; input &#8804; 3.5; <0.0 &#8594; set to default) &ensp; [[DT__HYBRID_VELOCITY](#DT__HYBRID_VELOCITY)]
+    * **Description:**
+The value of [DT__HYBRID_VELOCITY](#DT__HYBRID_VELOCITY) used for the first step. This can be
+useful when the first step requires a much smaller timestep.
+    * **Restriction:**
+See [DT__HYBRID_VELOCITY](#DT__HYBRID_VELOCITY).
+Useless for restart.
 
 <a name="OPT__DT_USER"></a>
 * #### `OPT__DT_USER` &ensp; (0=off, 1=on) &ensp; [0]
