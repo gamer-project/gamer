@@ -12,7 +12,8 @@ static       int     *numRecSNeII    = NULL;                 // number of record
 static       double **recordSNeII    = NULL;                 // array of stored variables to record the SNeII info
 
 #ifdef STAR_FORMATION
-             double   FB_ResolvedSNeII_PDCapToMean =  2.0;   // cap-to-mean ratio of the capped Poisson distribution used to sample the number of SNeII
+             double   FB_ResolvedSNeII_PDCapNStdDev = 5.0;   // factor N to cap at N stdandard deviations above the mean (\mu + N \sigma)
+                                                             // for the capped Poisson distribution used to sample the number of SNeII
                                                              // --> note that the capped Poisson distribution has a lower mean than the original,
                                                              //     the obtained accumulated number of SNeII can be lower than expected
                                                              // --> the probability of sampling a number higher than this cap should be low
@@ -634,8 +635,9 @@ void FB_Init_Resolved_SNeII()
    if ( SF_CREATE_STAR_MIN_STAR_MASS <= 0.0 )
       Aux_Error( ERROR_INFO, "Unsupported SF_CREATE_STAR_MIN_STAR_MASS = %14.8e !!\n", SF_CREATE_STAR_MIN_STAR_MASS );
 
-   const double maxStarMass = SF_CREATE_STAR_MIN_STAR_MASS;   // maximum mass of a stellar particle allowed to form
-   maxNumSNeIIPerSPar = (int)ceil(FB_ResolvedSNeII_PDCapToMean*maxStarMass*FB_RESOLVED_SNEII_N_PER_MASS);
+   const double maxStarMass         = SF_CREATE_STAR_MIN_STAR_MASS;                 // maximum mass of a stellar particle allowed to form
+   const double maxMeanSNeIIPerSPar = maxStarMass * FB_RESOLVED_SNEII_N_PER_MASS;   // mean number of SNe for the maximum-mass stellar particles
+   maxNumSNeIIPerSPar = MAX( (int)ceil( maxMeanSNeIIPerSPar + FB_ResolvedSNeII_PDCapNStdDev * sqrt(maxMeanSNeIIPerSPar) ), 2 );
 
    if ( maxNumSNeIIPerSPar >= FB_SNII_NXTE_SEPDIGIT )
       Aux_Error( ERROR_INFO, "maxNumSNeIIPerSPar = %d >= FB_SNII_NXTE_SEPDIGIT = %d !!\n",
