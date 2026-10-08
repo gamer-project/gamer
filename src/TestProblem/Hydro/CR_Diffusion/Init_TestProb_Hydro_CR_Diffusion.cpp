@@ -672,9 +672,9 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
    else if ( CR_Diffusion_Mag_Type == 1 )
    {
       const double r = SQRT( SQR(D1) + SQR(D2) + SQR(D3) );
-      magnetic[MAGX] = (CR_Diffusion_Space != 6) ? CR_Diffusion_MagX * (D2+D3)/r : 0.0;
-      magnetic[MAGY] = (CR_Diffusion_Space != 5) ? CR_Diffusion_MagX * (D1+D3)/r : 0.0;
-      magnetic[MAGZ] = (CR_Diffusion_Space != 3) ? CR_Diffusion_MagX * (D1+D2)/r : 0.0;
+      magnetic[MAGX] = (r > 0.0 && CR_Diffusion_Space != 6) ? CR_Diffusion_MagX * (D2+D3)/r : 0.0;
+      magnetic[MAGY] = (r > 0.0 && CR_Diffusion_Space != 5) ? CR_Diffusion_MagX * (D1+D3)/r : 0.0;
+      magnetic[MAGZ] = (r > 0.0 && CR_Diffusion_Space != 3) ? CR_Diffusion_MagX * (D1+D2)/r : 0.0;
    }
 
    else if ( CR_Diffusion_Mag_Type == 2 )

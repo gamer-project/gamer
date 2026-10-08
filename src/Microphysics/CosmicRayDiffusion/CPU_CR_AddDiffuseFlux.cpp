@@ -458,7 +458,7 @@ static real minmod( const real a, const real b )
 //
 // Parameter   : Flu_In   : Array storing the input cell-centered conserved fluid variables
 //               Flux_Out : Flux to be updated
-//               FC_B     : Face-centered magnetic filed between left and right cell
+//               FC_B     : Face-centered magnetic field between left and right cell
 //               L_In     : One-cell data of the left cell
 //               R_In     : One-cell data of the right cell
 //               idxL     : Left cell idx

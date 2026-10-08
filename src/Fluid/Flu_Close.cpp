@@ -849,6 +849,10 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                Aux_Error( ERROR_INFO, "FIRST_FLUX_CORR_3D1D is NOT supported in MHD yet !!\n" );
 #              endif
 
+#              ifdef COSMIC_RAY
+               Aux_Error( ERROR_INFO, "FIRST_FLUX_CORR_3D1D is NOT supported in COSMIC_RAY yet !!\n" );
+#              endif
+
 //             apply the dual-energy formalism to correct the internal energy
 //             --> gravity solver may update the internal energy and dual-energy variable again when
 //                 UNSPLIT_GRAVITY is adopted
