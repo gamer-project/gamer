@@ -397,7 +397,7 @@ int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld,
             Aux_Message( stderr, "WARNING : Number of SNeII to be recorded (%d) on Rank = %d, TID = %d reaches the maximum (%d) !!\n",
                                  numRecSNeII[TID], MPI_Rank, TID, maxNumRecSNeII );
             Aux_Message( stderr, "          --> maxNumRecSNeII should be increased\n" );
-            Aux_Message( stderr, "          --> exceeding parts will be output to \"%S\" separately\n", FileName );
+            Aux_Message( stderr, "          --> exceeding parts will be output to \"%s\" separately\n", FileName );
 
 //          output to the file
             FILE *File = fopen( FileName, "a" );
