@@ -112,7 +112,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "GrackleComoving_InitialTemperature", &GrackleComoving_InitialTemperature,  -1.0,         Eps_double,   NoMax_double );
    LOAD_PARA( load_mode, "GrackleComoving_InitialMetallicity", &GrackleComoving_InitialMetallicity,   0.0,         0.0,          1.0          );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

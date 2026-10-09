@@ -79,7 +79,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2515)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2516)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -293,7 +293,8 @@ Procedure for outputting new variables:
 //                2512 : 2026/08/14 --> remove Src_EC_subcycling
 //                2513 : 2026/05/14 --> support OPT__OUTPUT_DUAL_STATUS
 //                2514 : 2026/05/25 --> output DUAL_ENERGY_PREDICT
-//                2515 : 2026/10/01 --> output SF_CREATE_STAR_CRITERIA, SF_CREATE_STAR_MASS_RATE, SF_CREATE_STAR_PAR_SPAWN,
+//                2516 : 2026/09/28 --> output OPT__OUTPUT_ELBDM_VEL/Q_POT/Q_STRESS
+//                2516 : 2026/10/09 --> output SF_CREATE_STAR_CRITERIA, SF_CREATE_STAR_MASS_RATE, SF_CREATE_STAR_PAR_SPAWN,
 //                                             SF_CREATE_STAR_MAX_GAS_TEMP, SF_CREATE_STAR_MAX_GAS_JEANSL
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
@@ -451,7 +452,42 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
    if ( OPT__OUTPUT_DUAL_STATUS )   sprintf( FieldLabelOut[DualStatusDumpIdx], "%s", "DualStatus" );
 #  endif
-#  endif // if ( MODEL == HYDRO )
+#  endif // #if ( MODEL == HYDRO )
+
+#  if ( MODEL == ELBDM )
+   const int ELBDM_VelDumpIdx0 = ( OPT__OUTPUT_ELBDM_VEL ) ? NFieldStored : NoDump;
+   if ( ELBDM_VelDumpIdx0+5 >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_ELBDM_VEL )
+   {
+      NFieldStored += 6;
+      sprintf( FieldLabelOut[ ELBDM_VelDumpIdx0     ], "%s", "ELBDMBulkVelX" );
+      sprintf( FieldLabelOut[ ELBDM_VelDumpIdx0 + 1 ], "%s", "ELBDMBulkVelY" );
+      sprintf( FieldLabelOut[ ELBDM_VelDumpIdx0 + 2 ], "%s", "ELBDMBulkVelZ" );
+      sprintf( FieldLabelOut[ ELBDM_VelDumpIdx0 + 3 ], "%s", "ELBDMThermalVelX" );
+      sprintf( FieldLabelOut[ ELBDM_VelDumpIdx0 + 4 ], "%s", "ELBDMThermalVelY" );
+      sprintf( FieldLabelOut[ ELBDM_VelDumpIdx0 + 5 ], "%s", "ELBDMThermalVelZ" );
+   }
+
+   const int ELBDM_Q_PotDumpIdx = ( OPT__OUTPUT_ELBDM_Q_POT ) ? NFieldStored++ : NoDump;
+   if ( ELBDM_Q_PotDumpIdx >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_ELBDM_Q_POT )  sprintf( FieldLabelOut[ELBDM_Q_PotDumpIdx], "%s", "ELBDMQPot" );
+
+   const int ELBDM_Q_StressDumpIdx0 = ( OPT__OUTPUT_ELBDM_Q_STRESS ) ? NFieldStored : NoDump;
+   if ( ELBDM_Q_StressDumpIdx0+5 >= NFIELD_STORED_MAX )
+      Aux_Error( ERROR_INFO, "exceed NFIELD_STORED_MAX (%d) !!\n", NFIELD_STORED_MAX );
+   if ( OPT__OUTPUT_ELBDM_Q_STRESS )
+   {
+      NFieldStored += 6;
+      sprintf( FieldLabelOut[ ELBDM_Q_StressDumpIdx0     ], "%s", "ELBDMQStressXX" );
+      sprintf( FieldLabelOut[ ELBDM_Q_StressDumpIdx0 + 1 ], "%s", "ELBDMQStressYY" );
+      sprintf( FieldLabelOut[ ELBDM_Q_StressDumpIdx0 + 2 ], "%s", "ELBDMQStressZZ" );
+      sprintf( FieldLabelOut[ ELBDM_Q_StressDumpIdx0 + 3 ], "%s", "ELBDMQStressXY" );
+      sprintf( FieldLabelOut[ ELBDM_Q_StressDumpIdx0 + 4 ], "%s", "ELBDMQStressYZ" );
+      sprintf( FieldLabelOut[ ELBDM_Q_StressDumpIdx0 + 5 ], "%s", "ELBDMQStressXZ" );
+   }
+#  endif // #if ( MODEL == ELBDM )
 
    const int UserDumpIdx0 = ( OPT__OUTPUT_USER_FIELD ) ? NFieldStored : NoDump;
    if ( UserDumpIdx0+UserDerField_Num-1 >= NFIELD_STORED_MAX )
@@ -1253,7 +1289,67 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 #              endif // #ifdef DUAL_ENERGY
 #              endif // #if ( MODEL == HYDRO )
 
-//             d-15. user-defined derived fields
+#              if ( MODEL == ELBDM )
+//             d-15. ELBDM velocity
+               else if ( v >= ELBDM_VelDumpIdx0  &&  v < ELBDM_VelDumpIdx0+6 )
+               {
+                  const int fv = ( v - ELBDM_VelDumpIdx0 )/3;
+                  const int vv = ( v - ELBDM_VelDumpIdx0 )%3;
+                  for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+                  {
+                     Prepare_PatchData( lv, Time[lv], Der_FluIn[0][0], NULL, DER_GHOST_SIZE, 1, &PID0,
+                                        _TOTAL, _NONE, OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26,
+                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
+                                        DE_Consistency_No );
+
+                     for (int LocalID=0; LocalID<8; LocalID++)
+                     {
+//                      compute and store the target derived field
+                        const int PID = PID0 + LocalID;
+                        ELBDM_DerivedField( FieldData[PID][0][0], Der_FluIn[LocalID][0], fv, vv, DER_GHOST_SIZE, amr->dh[lv] );
+                     } // for (int LocalID=0; LocalID<8; LocalID++)
+                  } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+               } // if ( v >= ELBDM_VelDumpIdx0  &&  v < ELBDM_VelDumpIdx0+6 )
+
+//             d-16. ELBDM quantum potential
+               else if ( v == ELBDM_Q_PotDumpIdx )
+               {
+                  for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+                  {
+                     Prepare_PatchData( lv, Time[lv], Der_FluIn[0][0], NULL, DER_GHOST_SIZE, 1, &PID0,
+                                        _TOTAL, _NONE, OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26,
+                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
+                                        DE_Consistency_No );
+                     for (int LocalID=0; LocalID<8; LocalID++)
+                     {
+//                      compute and store the target derived field
+                        const int PID = PID0 + LocalID;
+                        ELBDM_DerivedField( FieldData[PID][0][0], Der_FluIn[LocalID][0], 2, 0, DER_GHOST_SIZE, amr->dh[lv] );
+                     } // for (int LocalID=0; LocalID<8; LocalID++)
+                  } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+               } // if ( v == ELBDM_Q_PotDumpIdx )
+
+//             d-17. ELBDM quantum stress tensor
+               else if ( v >= ELBDM_Q_StressDumpIdx0  &&  v < ELBDM_Q_StressDumpIdx0+6 )
+               {
+                  const int vv = v - ELBDM_Q_StressDumpIdx0;
+                  for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+                  {
+                     Prepare_PatchData( lv, Time[lv], Der_FluIn[0][0], NULL, DER_GHOST_SIZE, 1, &PID0,
+                                        _TOTAL, _NONE, OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26,
+                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
+                                        DE_Consistency_No );
+                     for (int LocalID=0; LocalID<8; LocalID++)
+                     {
+//                      compute and store the target derived field
+                        const int PID = PID0 + LocalID;
+                        ELBDM_DerivedField( FieldData[PID][0][0], Der_FluIn[LocalID][0], 3, vv, DER_GHOST_SIZE, amr->dh[lv] );
+                     } // for (int LocalID=0; LocalID<8; LocalID++)
+                  } // for (int PID0=0; PID0<amr->NPatchComma[lv][1]; PID0+=8)
+               } // if ( v >= ELBDM_Q_StressDumpIdx0  &&  v < ELBDM_Q_StressDumpIdx0+6 )
+#              endif // #if ( MODEL == ELBDM )
+
+//             d-18. user-defined derived fields
 //             the following check also works for OPT__OUTPUT_USER_FIELD==false since UserDerField_Num is initialized as 0
                else if ( v >= UserDumpIdx0  &&  v < UserDumpIdx0 + UserDerField_Num )
                {
@@ -1786,7 +1882,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2515;
+   KeyInfo.FormatVersion        = 2516;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -3024,6 +3120,11 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Output_Dual_Status     = OPT__OUTPUT_DUAL_STATUS;
 #  endif
 #  endif // #if ( MODEL == HYDRO )
+#  if ( MODEL == ELBDM )
+   InputPara.Opt__Output_ELBDM_Vel       = OPT__OUTPUT_ELBDM_VEL;
+   InputPara.Opt__Output_ELBDM_Q_Pot     = OPT__OUTPUT_ELBDM_Q_POT;
+   InputPara.Opt__Output_ELBDM_Q_Stress  = OPT__OUTPUT_ELBDM_Q_STRESS;
+#  endif
    InputPara.Opt__Output_UserField       = OPT__OUTPUT_USER_FIELD;
    InputPara.Opt__Output_Mode            = OPT__OUTPUT_MODE;
    InputPara.Opt__Output_Restart         = OPT__OUTPUT_RESTART;
@@ -4124,6 +4225,11 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Output_Dual_Status",     HOFFSET(InputPara_t,Opt__Output_Dual_Status    ), H5T_NATIVE_INT              );
 #  endif
 #  endif // #if ( MODEL == HYDRO )
+#  if ( MODEL == ELBDM )
+   H5Tinsert( H5_TypeID, "Opt__Output_ELBDM_Vel",       HOFFSET(InputPara_t,Opt__Output_ELBDM_Vel      ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_ELBDM_Q_Pot",     HOFFSET(InputPara_t,Opt__Output_ELBDM_Q_Pot    ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_ELBDM_Q_Stress",  HOFFSET(InputPara_t,Opt__Output_ELBDM_Q_Stress ), H5T_NATIVE_INT              );
+#  endif
    H5Tinsert( H5_TypeID, "Opt__Output_UserField",       HOFFSET(InputPara_t,Opt__Output_UserField      ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Mode",            HOFFSET(InputPara_t,Opt__Output_Mode           ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Restart",         HOFFSET(InputPara_t,Opt__Output_Restart        ), H5T_NATIVE_INT              );

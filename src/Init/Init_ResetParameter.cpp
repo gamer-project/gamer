@@ -639,7 +639,7 @@ void Init_ResetParameter()
    }
 
 
-// turn off "OPT__OVERLAP_MPI" if (1) OVERLAP_MPI=ff, (2) SERIAL=on, (3) LOAD_BALANCE=off,
+// turn off "OPT__OVERLAP_MPI" if (1) OVERLAP_MPI=off, (2) SERIAL=on, (3) LOAD_BALANCE=off,
 //                                (4) OPENMP=off, (5) MPI thread support=MPI_THREAD_SINGLE
 #  ifndef OVERLAP_MPI
    if ( OPT__OVERLAP_MPI )
@@ -1120,19 +1120,21 @@ void Init_ResetParameter()
 
 // MIN_PRES and MIN_EINT
 #  if ( MODEL == HYDRO )
-   if      ( MIN_PRES > 0.0  &&  MIN_EINT == 0.0 )
+#  if ( EOS == EOS_GAMMA )
+   if      ( MIN_PRES > 0.0  &&  MIN_EINT == 0.0  &&  GAMMA != 1.0 )
    {
-      MIN_EINT = MIN_PRES*1.5;
+      MIN_EINT = MIN_PRES / ( GAMMA - 1.0 );
 
       PRINT_RESET_PARA( MIN_EINT, FORMAT_REAL, "" );
    }
 
-   else if ( MIN_EINT > 0.0  &&  MIN_PRES == 0.0 )
+   else if ( MIN_EINT > 0.0  &&  MIN_PRES == 0.0  &&  GAMMA != 1.0 )
    {
-      MIN_PRES = MIN_EINT/1.5;
+      MIN_PRES = MIN_EINT * ( GAMMA - 1.0 );
 
       PRINT_RESET_PARA( MIN_PRES, FORMAT_REAL, "" );
    }
+#  endif
 #  endif
 
 

@@ -24,6 +24,9 @@ Parameters described on this page:
 [OPT__OUTPUT_GRACKLE_TEMP](#OPT__OUTPUT_GRACKLE_TEMP), &nbsp;
 [OPT__OUTPUT_GRACKLE_MU](#OPT__OUTPUT_GRACKLE_MU), &nbsp;
 [OPT__OUTPUT_GRACKLE_TCOOL](#OPT__OUTPUT_GRACKLE_TCOOL), &nbsp;
+[OPT__OUTPUT_ELBDM_VEL](#OPT__OUTPUT_ELBDM_VEL), &nbsp;
+[OPT__OUTPUT_ELBDM_Q_POT](#OPT__OUTPUT_ELBDM_Q_POT), &nbsp;
+[OPT__OUTPUT_ELBDM_Q_STRESS](#OPT__OUTPUT_ELBDM_Q_STRESS), &nbsp;
 [OPT__OUTPUT_DUAL_STATUS](#OPT__OUTPUT_DUAL_STATUS), &nbsp;
 [OPT__OUTPUT_USER_FIELD](#OPT__OUTPUT_USER_FIELD), &nbsp;
 [OPT__OUTPUT_MODE](#OPT__OUTPUT_MODE), &nbsp;
@@ -235,6 +238,27 @@ For [[--grackle | [Installation]-Option-List#--grackle]] only.
 Output the cooling time calculated by Grackle.
     * **Restriction:**
 For [[--grackle | [Installation]-Option-List#--grackle]] only.
+
+<a name="OPT__OUTPUT_ELBDM_VEL"></a>
+* #### `OPT__OUTPUT_ELBDM_VEL` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Output ELBDM bulk velocity and thermal velocity.
+    * **Restriction:**
+For [[--model | [Installation]-Option-List#--model]]=ELBDM only.
+
+<a name="OPT__OUTPUT_ELBDM_Q_POT"></a>
+* #### `OPT__OUTPUT_ELBDM_Q_POT` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Output ELBDM quantum potential.
+    * **Restriction:**
+For [[--model | [Installation]-Option-List#--model]]=ELBDM only.
+
+<a name="OPT__OUTPUT_ELBDM_Q_STRESS"></a>
+* #### `OPT__OUTPUT_ELBDM_Q_STRESS` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Output ELBDM quantum stress tensor.
+    * **Restriction:**
+For [[--model | [Installation]-Option-List#--model]]=ELBDM only.
 
 <a name="OPT__OUTPUT_DUAL_STATUS"></a>
 * #### `OPT__OUTPUT_DUAL_STATUS` &ensp; (0=off, 1=on) &ensp; [0]

@@ -2458,6 +2458,11 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Output_Dual_Status",     &RS.Opt__Output_Dual_Status,     SID, TID, NonFatal, &RT.Opt__Output_Dual_Status,     1, NonFatal );
 #  endif
 #  endif // #if ( MODEL == HYDRO )
+#  if ( MODEL == ELBDM )
+   LoadField( "Opt__Output_ELBDM_Vel",       &RS.Opt__Output_ELBDM_Vel,       SID, TID, NonFatal, &RT.Opt__Output_ELBDM_Vel,       1, NonFatal );
+   LoadField( "Opt__Output_ELBDM_Q_Pot",     &RS.Opt__Output_ELBDM_Q_Pot,     SID, TID, NonFatal, &RT.Opt__Output_ELBDM_Q_Pot,     1, NonFatal );
+   LoadField( "Opt__Output_ELBDM_Q_Stress",  &RS.Opt__Output_ELBDM_Q_Stress,  SID, TID, NonFatal, &RT.Opt__Output_ELBDM_Q_Stress,  1, NonFatal );
+#  endif
    LoadField( "Opt__Output_UserField",       &RS.Opt__Output_UserField,       SID, TID, NonFatal, &RT.Opt__Output_UserField,       1, NonFatal );
 #  ifdef PARTICLE
    if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PAR_MODE ) {

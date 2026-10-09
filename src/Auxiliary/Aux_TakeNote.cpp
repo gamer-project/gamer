@@ -1717,6 +1717,11 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_DUAL_STATUS        % d\n",      OPT__OUTPUT_DUAL_STATUS     );
 #     endif
 #     endif // #if ( MODEL == HYDRO )
+#     if ( MODEL == ELBDM )
+      fprintf( Note, "OPT__OUTPUT_ELBDM_VEL          % d\n",      OPT__OUTPUT_ELBDM_VEL       );
+      fprintf( Note, "OPT__OUTPUT_ELBDM_Q_POT        % d\n",      OPT__OUTPUT_ELBDM_Q_POT     );
+      fprintf( Note, "OPT__OUTPUT_ELBDM_Q_STRESS     % d\n",      OPT__OUTPUT_ELBDM_Q_STRESS  );
+#     endif
 
 //    user-defined derived fields
       if ( OPT__OUTPUT_USER_FIELD ) {
