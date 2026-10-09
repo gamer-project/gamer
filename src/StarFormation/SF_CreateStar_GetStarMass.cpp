@@ -16,6 +16,7 @@ static real SF_CreateStar_GetStarMass_MaxStarM( const real GasDens, const real d
 //
 // Parameter   :  GasDens          : Gas density
 //                CosmoScaleFactor : Scale factor "a" in cosmology
+//                                   --> Must be set to unity when COMOVING is disabled
 //                dv               : Cell volume
 //                dt               : Time interval to advance solution
 //                RNG              : Random number generator
@@ -62,6 +63,7 @@ real SF_CreateStar_GetStarMass( const real GasDens, const real CosmoScaleFactor,
 //
 // Parameter   :  GasDens          : Gas density
 //                CosmoScaleFactor : Scale factor "a" in cosmology
+//                                   --> Must be set to unity when COMOVING is disabled
 //                dv               : Cell volume
 //                dt               : Time interval to advance solution
 //                RNG              : Random number generator

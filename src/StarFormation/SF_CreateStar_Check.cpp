@@ -4,7 +4,7 @@
 
 static bool SF_CreateStar_Check_CellMassDepletion( const real GasMass );
 static bool SF_CreateStar_Check_GasDensity( const real GasDensity, const real CosmoScaleFactor, const real Threshold );
-static bool SF_CreateStar_Check_GasOverDensity( const real GasDensity );
+static bool SF_CreateStar_Check_GasOverdensity( const real GasDensity );
 static bool SF_CreateStar_Check_GasTemperature( const real GasTemperature, const real CosmoScaleFactor, const real Threshold );
 static bool SF_CreateStar_Check_GasJeansLength( const real GasDensity, const real GasCs2, const real CosmoScaleFactor, const real Threshold );
 
@@ -25,6 +25,7 @@ static bool SF_CreateStar_Check_GasJeansLength( const real GasDensity, const rea
 //                i,j,k            : Indices of the target cell
 //                dh               : Cell size at the target level
 //                CosmoScaleFactor : Scale factor "a" in cosmology
+//                                   --> Must be set to unity when COMOVING is disabled
 //                fluid            : Input fluid array (with NCOMP_TOTAL components)
 //                Temp             : Input temperature array
 //                Pres             : Input pressure array
@@ -117,9 +118,12 @@ bool SF_CreateStar_Check_CellMassDepletion( const real GasMass )
 // Description :  Check if the gas density exceeds the given threshold
 //
 // Note        :  1. The density threshold is defined in the physical frame even when COMOVING is enabled
+//                2. When COMOVING is enabled, "GasDensity" should be the comoving density, a^3*\rho,
+//                   where \rho is the density in the physical frame
 //
 // Parameter   :  GasDensity       : Gas density
 //                CosmoScaleFactor : Scale factor "a" in cosmology
+//                                   --> Must be set to unity when COMOVING is disabled
 //                Threshold        : Threshold for the star formation
 //
 // Return      :  "true"  if the gas density is larger than or equal to the given threshold
@@ -132,6 +136,7 @@ bool SF_CreateStar_Check_GasDensity( const real GasDensity, const real CosmoScal
 
    bool AllowSF = false;
 
+// converted into the density in the physical frame
    if ( GasDensity * a3inv >= Threshold )    AllowSF = true;
 
    return AllowSF;
@@ -141,19 +146,34 @@ bool SF_CreateStar_Check_GasDensity( const real GasDensity, const real CosmoScal
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  SF_CreateStar_Check_GasOverDensity
+// Function    :  SF_CreateStar_Check_GasOverdensity
 // Description :  Check if the gas overdensity exceeds the given threshold
 //
-// Note        :  1. The threshold value is hard-coded for now
-//                2. This function is not used currently
+// Note        :  1. COMOVING must be enabled, so the input "GasDensity" is
+//                   the comoving density in units of the background matter density,
+//                   whose value equals a^3*\rho_{gas} / (\Omega_{m,0}*\rho_{crit,0}),
+//                   where \rho_{gas} is the local gas density in the physical frame,
+//                         \Omega_{m,0} is the current density parameter of matter, and
+//                         \rho_{crit,0} is the current critical density
+//                2. The overdensity is defined as a dimensionless quantity:
+//                   \delta_{gas} = \rho_{gas} / (\langle \rho_{gas} \rangle)
+//                                = \rho_{gas} / (\Omega_b * \rho_{crit})
+//                                = \rho_{gas} / (\Omega_b/\Omega_m * \Omega_m*\rho_{crit})
+//                                = \rho_{gas} / (\Omega_b/\Omega_m * a^{-3}*\Omega_{m,0}*\rho_{crit,0})
+//                                = "GasDensity" / (\Omega_b/\Omega_m),
+//                   where \langle \rho_{gas} \rangle is the background gas density,
+//                         \rho_{crit} is the critical density,
+//                         \Omega_b is the density parameter of baryons, and
+//                         \Omega_m is the density parameter of matter
+//                3. This function is not used currently
 //                   --> It will be used in cosmological simulations in the future
 //
-// Parameter   :  GasDensity : Gas overdensity
+// Parameter   :  GasDensity : Gas density
 //
 // Return      :  "true"  if the gas overdensity is larger than or equal to the given threshold
 //                "false" otherwise
 //-------------------------------------------------------------------------------------------------------
-bool SF_CreateStar_Check_GasOverDensity( const real GasDensity )
+bool SF_CreateStar_Check_GasOverdensity( const real GasDensity )
 {
 
 #  ifndef COMOVING
@@ -163,16 +183,26 @@ bool SF_CreateStar_Check_GasOverDensity( const real GasDensity )
    bool AllowSF = false;
 
 #  ifdef COMOVING
-   const real CritOverDensity = 57.7;    // overdensity at R200 of an NFW halo
-   const real BaryonRatio     = 0.167;   // Omega_Baryon / Omega_Matter
-   const real OverDensThres   = CritOverDensity * BaryonRatio;
+   const double Omega_B0          = 0.04;                  // Omega_baryon at the present time
+   const real   BaryonMatterRatio = Omega_B0 / OMEGA_M0;   // Omega_baryon / Omega_matter
+   const real   GasOverdensity    = GasDensity / BaryonMatterRatio;
 
-   if ( GasDensity >= OverDensThres )    AllowSF = true;
+// The threshold value is hard-coded for now
+// --> It should be a runtime parameter in the future
+// --> The value is taken from GADGET-4's default; see the references
+//     1. The parameter "CritOverDensity" in the documentation
+//        https://wwwmpa.mpa-garching.mpg.de/gadget4/#documentation
+//     2. The variables "All.OverDensThresh" and "All.CritOverDensity"
+//        in GADGET-4's src/cooling_sfr/sfr_eos.cc
+   const real CritOverDensity = 57.7;    // overdensity at R200 of an NFW halo
+   const real Threshold       = CritOverDensity;
+
+   if ( GasOverdensity >= Threshold )    AllowSF = true;
 #  endif // #ifdef COMOVING
 
    return AllowSF;
 
-} // FUNCTION : SF_CreateStar_Check_GasOverDensity
+} // FUNCTION : SF_CreateStar_Check_GasOverdensity
 
 
 
@@ -181,9 +211,12 @@ bool SF_CreateStar_Check_GasOverDensity( const real GasDensity )
 // Description :  Check if the gas temperature falls below the given threshold
 //
 // Note        :  1. The temperature threshold is defined in the physical frame even when COMOVING is enabled.
+//                2. When COMOVING is enabled, "GasTemperature" should be the comoving temperature, a^2*T,
+//                   where T is the density in the physical frame
 //
 // Parameter   :  GasTemperature   : Gas temperature
 //                CosmoScaleFactor : Scale factor "a" in cosmology
+//                                   --> Must be set to unity when COMOVING is disabled
 //                Threshold        : Threshold for the star formation
 //
 // Return      :  "true"  if the gas temperature is lower than or equal to the given threshold
@@ -196,6 +229,7 @@ bool SF_CreateStar_Check_GasTemperature( const real GasTemperature, const real C
 
    bool AllowSF = false;
 
+// converted into the temperature in the physical frame
    if ( GasTemperature * a2inv <= Threshold )    AllowSF = true;
 
    return AllowSF;
@@ -209,11 +243,19 @@ bool SF_CreateStar_Check_GasTemperature( const real GasTemperature, const real C
 // Description :  Check if the gas Jeans length is below the given threshold
 //
 // Note        :  1. Gas Jeans length = \sqrt{ \frac{ \pi Cs^2 }{ G \rho } }
-//                2. In comoving coordinates, Newton G in the formula should be replaced by G*a
+//                2. When COMOVING is enabled,
+//                   (1) Newton G in the above formula should be replaced by G*a
+//                   (2) The Jeans length threshold is defined in the comoving frame, a^{-1}*\lambda_J,
+//                       where \lambda_J is the Jeans length in the physical frame
+//                   (3) "GasDensity" should be the comoving density, a^3*\rho,
+//                       where \rho is the density in the physical frame
+//                   (4) "GasCs2" should be the comoving sound speed squared, a^2*Cs^2,
+//                       where Cs is the sound speed in the physical frame
 //
 // Parameter   :  GasDensity       : Gas density
 //                GasCs2           : Gas squared sound speed
 //                CosmoScaleFactor : Scale factor "a" in cosmology
+//                                   --> Must be set to unity when COMOVING is disabled
 //                Threshold        : Threshold for the star formation
 //
 // Return      :  "true"  if the gas Jeans length is smaller than or equal to the given threshold
@@ -231,6 +273,7 @@ bool SF_CreateStar_Check_GasJeansLength( const real GasDensity, const real GasCs
 #  ifdef GRAVITY
    const real GasJeansL2 = ( M_PI * GasCs2 ) / ( NEWTON_G * CosmoScaleFactor * GasDensity );
 
+// the threshold is defined in the comoving frame when COMOVING is enabled
    if ( GasJeansL2 <= SQR(Threshold) )    AllowSF = true;
 #  endif // #ifdef GRAVITY
 
