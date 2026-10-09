@@ -306,14 +306,19 @@ extern int             CHE_GPU_NPGROUP;
 // (2-8) star formation
 // ============================================================================================================
 #ifdef STAR_FORMATION
-extern SF_CreateStarScheme_t SF_CREATE_STAR_SCHEME;
-extern int                   SF_CREATE_STAR_RSEED;
-extern int                   SF_CREATE_STAR_DET_RANDOM;
-extern int                   SF_CREATE_STAR_MIN_LEVEL;
-extern double                SF_CREATE_STAR_MIN_GAS_DENS;
-extern double                SF_CREATE_STAR_MASS_EFF;
-extern double                SF_CREATE_STAR_MIN_STAR_MASS;
-extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
+extern SF_CreateStarScheme_t   SF_CREATE_STAR_SCHEME;
+extern SF_CreateStarCriteria_t SF_CREATE_STAR_CRITERIA;
+extern SF_CreateStarMassRate_t SF_CREATE_STAR_MASS_RATE;
+extern SF_CreateStarParSpawn_t SF_CREATE_STAR_PAR_SPAWN;
+extern int                     SF_CREATE_STAR_RSEED;
+extern int                     SF_CREATE_STAR_DET_RANDOM;
+extern int                     SF_CREATE_STAR_MIN_LEVEL;
+extern double                  SF_CREATE_STAR_MIN_GAS_DENS;
+extern double                  SF_CREATE_STAR_MAX_GAS_TEMP;
+extern double                  SF_CREATE_STAR_MAX_GAS_JEANSL;
+extern double                  SF_CREATE_STAR_MASS_EFF;
+extern double                  SF_CREATE_STAR_MIN_STAR_MASS;
+extern double                  SF_CREATE_STAR_MAX_STAR_MFRAC;
 #endif
 
 

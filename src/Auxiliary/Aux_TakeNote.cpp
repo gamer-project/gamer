@@ -1210,17 +1210,32 @@ void Aux_TakeNote()
 #     ifdef STAR_FORMATION
       fprintf( Note, "Parameters of Star Formation\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "SF_CREATE_STAR_SCHEME          % d\n",           SF_CREATE_STAR_SCHEME                          );
+      fprintf( Note, "SF_CREATE_STAR_SCHEME          % d\n",               SF_CREATE_STAR_SCHEME                          );
       if ( SF_CREATE_STAR_SCHEME != SF_CREATE_STAR_SCHEME_NONE ) {
-      fprintf( Note, "SF_CREATE_STAR_RSEED           % d\n",           SF_CREATE_STAR_RSEED                           );
-      fprintf( Note, "SF_CREATE_STAR_DET_RANDOM      % d\n",           SF_CREATE_STAR_DET_RANDOM                      );
-      fprintf( Note, "SF_CREATE_STAR_MIN_LEVEL       % d\n",           SF_CREATE_STAR_MIN_LEVEL                       );
-      fprintf( Note, "SF_CREATE_STAR_MIN_GAS_DENS    % 14.7e\n",       SF_CREATE_STAR_MIN_GAS_DENS                    );
-      fprintf( Note, "                              =% 14.7e cm^-3\n", SF_CREATE_STAR_MIN_GAS_DENS*UNIT_D/Const_mH    );
-      fprintf( Note, "SF_CREATE_STAR_MASS_EFF        % 14.7e\n",       SF_CREATE_STAR_MASS_EFF                        );
-      fprintf( Note, "SF_CREATE_STAR_MIN_STAR_MASS   % 14.7e\n",       SF_CREATE_STAR_MIN_STAR_MASS                   );
-      fprintf( Note, "                              =% 14.7e Msun\n",  SF_CREATE_STAR_MIN_STAR_MASS*UNIT_M/Const_Msun );
-      fprintf( Note, "SF_CREATE_STAR_MAX_STAR_MFRAC  % 14.7e\n",       SF_CREATE_STAR_MAX_STAR_MFRAC                  ); }
+      fprintf( Note, "SF_CREATE_STAR_CRITERIA        % ld\n",              SF_CREATE_STAR_CRITERIA                        );
+      fprintf( Note, "SF_CREATE_STAR_MASS_RATE       % d\n",               SF_CREATE_STAR_MASS_RATE                       );
+      fprintf( Note, "SF_CREATE_STAR_PAR_SPAWN       % d\n",               SF_CREATE_STAR_PAR_SPAWN                       );
+      fprintf( Note, "SF_CREATE_STAR_RSEED           % d\n",               SF_CREATE_STAR_RSEED                           );
+      fprintf( Note, "SF_CREATE_STAR_DET_RANDOM      % d\n",               SF_CREATE_STAR_DET_RANDOM                      );
+      fprintf( Note, "SF_CREATE_STAR_MIN_LEVEL       % d\n",               SF_CREATE_STAR_MIN_LEVEL                       );
+      if ( SF_CREATE_STAR_CRITERIA & SF_CREATE_STAR_CRITERIA_HIGH_GAS_DENSITY ) {
+      fprintf( Note, "SF_CREATE_STAR_MIN_GAS_DENS    % 14.7e\n",           SF_CREATE_STAR_MIN_GAS_DENS                    );
+      fprintf( Note, "                              =% 14.7e m_H cm^-3\n", SF_CREATE_STAR_MIN_GAS_DENS*UNIT_D/Const_mH    );
+      }
+      if ( SF_CREATE_STAR_CRITERIA & SF_CREATE_STAR_CRITERIA_LOW_GAS_TEMPERATURE ) {
+      fprintf( Note, "SF_CREATE_STAR_MAX_GAS_TEMP    % 14.7e\n",           SF_CREATE_STAR_MAX_GAS_TEMP                    );
+      }
+      if ( SF_CREATE_STAR_CRITERIA & SF_CREATE_STAR_CRITERIA_UNRESOLVED_JEANS_LENGTH ) {
+      fprintf( Note, "SF_CREATE_STAR_MAX_GAS_JEANSL  % 14.7e\n",           SF_CREATE_STAR_MAX_GAS_JEANSL                  );
+      }
+      if ( SF_CREATE_STAR_MASS_RATE == SF_CREATE_STAR_MASS_RATE_CONST_EFF_PER_TFF ) {
+      fprintf( Note, "SF_CREATE_STAR_MASS_EFF        % 14.7e\n",           SF_CREATE_STAR_MASS_EFF                        );
+      }
+      if ( SF_CREATE_STAR_PAR_SPAWN == SF_CREATE_STAR_PAR_SPAWN_STOCHASTIC_MIN_MASS ) {
+      fprintf( Note, "SF_CREATE_STAR_MIN_STAR_MASS   % 14.7e\n",           SF_CREATE_STAR_MIN_STAR_MASS                   );
+      fprintf( Note, "                              =% 14.7e Msun\n",      SF_CREATE_STAR_MIN_STAR_MASS*UNIT_M/Const_Msun );
+      }
+      fprintf( Note, "SF_CREATE_STAR_MAX_STAR_MFRAC  % 14.7e\n",           SF_CREATE_STAR_MAX_STAR_MFRAC                  ); }
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
 #     endif // #ifdef STAR_FORMATION
