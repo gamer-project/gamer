@@ -249,7 +249,7 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
          StarMass = SF_CreateStar_GetStarMass( GasDens, CosmoScaleFactor, dv, dt, RNG, TID );
          if ( StarMass <= 0.0 )   continue;
 
-//       gas mass fraction to be converted to the star
+//       gas mass fraction to be converted to stars
          StarMFrac = StarMass/GasMass;
 
 

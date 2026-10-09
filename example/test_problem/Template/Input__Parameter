@@ -45,12 +45,12 @@ TESTPROB_ID                   0           # test problem ID [0]
                                           #   17: HYDRO particle in equilibrium (+GRAVITY & PARTICLE)
                                           #   18: HYDRO particle general test (+TRACER & PARTICLE)
                                           #   19: HYDRO energy power spectrum
-                                          #   20: HYDRO MHD Cosmic Ray Soundwave
-                                          #   21: HYDRO MHD Cosmic Ray Shocktube
-                                          #   23: HYDRO MHD Cosmic Ray Diffusion
-                                          #   24: HYDRO Grackle Test (+SUPPORT_GRACKLE)
+                                          #   20: HYDRO cosmic-ray sound wave
+                                          #   21: HYDRO cosmic-ray shock tube
+                                          #   23: HYDRO cosmic-ray diffusion
+                                          #   24: HYDRO Grackle test (+SUPPORT_GRACKLE)
                                           #   25: HYDRO particle flag (+GRAVITY & PARTICLE)
-                                          #   26: HYDRO Star Formation Threshold (+GRAVITY & PARTICLE & STAR_FORMATION)
+                                          #   26: HYDRO star formation threshold (+GRAVITY & PARTICLE & STAR_FORMATION)
                                           #  100: HYDRO CDM cosmological simulation (+GRAVITY & COMOVING & PARTICLE)
                                           #  101: HYDRO Zeldovich pancake collapse (+GRAVITY & COMOVING & PARTICLE)
                                           #  102: HYDRO Grackle comoving (+GRAVITY & COMOVING & GRACKLE )

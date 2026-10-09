@@ -1936,7 +1936,7 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : SF_CREATE_STAR_MIN_LEVEL (%d) > MAX_LEVEL (%d) --> no star particles will form !!\n",
                    SF_CREATE_STAR_MIN_LEVEL, MAX_LEVEL );
 
-   if ( ( SF_CREATE_STAR_CRITERIA & SF_CREATE_STAR_CRITERIA_UNRESOLVED_JEANS_LENGTH )  &&  JEANS_MIN_PRES )
+   if (  ( SF_CREATE_STAR_CRITERIA & SF_CREATE_STAR_CRITERIA_UNRESOLVED_JEANS_LENGTH )  &&  JEANS_MIN_PRES  )
    {
       Aux_Message( stderr, "WARNING : SF_CREATE_STAR_CRITERIA == %ld is incompatible with JEANS_MIN_PRES !!\n",
                    SF_CREATE_STAR_CRITERIA );

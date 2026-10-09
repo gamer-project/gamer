@@ -1231,7 +1231,7 @@ void Aux_TakeNote()
       if ( SF_CREATE_STAR_MASS_RATE == SF_CREATE_STAR_MASS_RATE_CONST_EFF_PER_TFF ) {
       fprintf( Note, "SF_CREATE_STAR_MASS_EFF        % 14.7e\n",           SF_CREATE_STAR_MASS_EFF                        );
       }
-      if ( SF_CREATE_STAR_PAR_SPAWN_STOCHASTIC_MIN_MASS == SF_CREATE_STAR_PAR_SPAWN_STOCHASTIC_MIN_MASS ) {
+      if ( SF_CREATE_STAR_PAR_SPAWN == SF_CREATE_STAR_PAR_SPAWN_STOCHASTIC_MIN_MASS ) {
       fprintf( Note, "SF_CREATE_STAR_MIN_STAR_MASS   % 14.7e\n",           SF_CREATE_STAR_MIN_STAR_MASS                   );
       fprintf( Note, "                              =% 14.7e Msun\n",      SF_CREATE_STAR_MIN_STAR_MASS*UNIT_M/Const_Msun );
       }

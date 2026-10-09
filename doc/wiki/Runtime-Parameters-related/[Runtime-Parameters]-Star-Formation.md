@@ -55,7 +55,7 @@ and [SF_CREATE_STAR_MAX_GAS_JEANSL](#SF_CREATE_STAR_MAX_GAS_JEANSL).
 Only applicable when enabling the compilation option
 [[--star_formation | [Installation]-Option-List#--star_formation]].
 
-<a name="SF_CREATE_MASS_RATE"></a>
+<a name="SF_CREATE_STAR_MASS_RATE"></a>
 * #### `SF_CREATE_STAR_MASS_RATE` &ensp; (<0=auto, 0=off, 1=constant efficiency per free-fall time) &ensp; [-1]
     * **Description:**
 Methods to compute the stellar mass formation rate.
@@ -67,7 +67,7 @@ By default, this parameter is determined by [SF_CREATE_STAR_SCHEME](#SF_CREATE_S
 Only applicable when enabling the compilation option
 [[--star_formation | [Installation]-Option-List#--star_formation]].
 
-<a name="SF_CREATE_PAR_SPAWN"></a>
+<a name="SF_CREATE_STAR_PAR_SPAWN"></a>
 * #### `SF_CREATE_STAR_PAR_SPAWN` &ensp; (<0=auto, 0=off, 1=stochastic with a minimum mass) &ensp; [-1]
     * **Description:**
 Methods for spawning the stellar particles.

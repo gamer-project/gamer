@@ -57,8 +57,8 @@ real SF_CreateStar_GetStarMass( const real GasDens, const real CosmoScaleFactor,
 // Note        :  1. Ref: (1) Nathan Goldbaum, et al., 2015, ApJ, 814, 131 (arXiv: 1510.08458), sec. 2.4
 //                        (2) Ji-hoon Kim, et al., 2016, ApJ, 833, 202 (arXiv: 1610.03066), sec. 3.2
 //                2. The calculation is done in physical frame even for cosmological simulations
-//                   --> the input comoving gas density will be converted into physical density internally
-//                   --> the input dt should be the physical time interval
+//                   --> The input comoving gas density will be converted into physical density internally
+//                   --> The input dt should be the physical time interval
 //
 // Parameter   :  GasDens          : Gas density
 //                CosmoScaleFactor : Scale factor "a" in cosmology
@@ -81,7 +81,7 @@ real SF_CreateStar_GetStarMass_StochasticLocalSchmidtLaw( const real GasDens, co
    const real _MinStarMass    = (real)1.0 / MinStarMass;
    const real  Eff_times_dt   = Efficiency*dt;
 
-   const real  a3inv          = 1.0 / CUBE( CosmoScaleFactor );
+   const real  a3inv          = (real)1.0 / CUBE( CosmoScaleFactor );
 
 
 // 1. estimate the gas free-fall time

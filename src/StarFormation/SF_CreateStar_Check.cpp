@@ -39,7 +39,7 @@ bool SF_CreateStar_Check( const int lv, const int PID, const int i, const int j,
 #  ifdef GAMER_DEBUG
    const long SupportedCriteria = ( SF_CREATE_STAR_CRITERIA_HIGH_GAS_DENSITY | SF_CREATE_STAR_CRITERIA_LOW_GAS_TEMPERATURE | SF_CREATE_STAR_CRITERIA_UNRESOLVED_JEANS_LENGTH );
    if ( SF_CREATE_STAR_CRITERIA & ~SupportedCriteria )
-      Aux_Error( ERROR_INFO, "unsupported SF_CREATE_STAR_CRITERIA = %d !!\n", SF_CREATE_STAR_CRITERIA );
+      Aux_Error( ERROR_INFO, "unsupported SF_CREATE_STAR_CRITERIA = %ld !!\n", SF_CREATE_STAR_CRITERIA );
 #  endif
 
    bool AllowSF = true;
@@ -87,10 +87,10 @@ bool SF_CreateStar_Check( const int lv, const int PID, const int i, const int j,
 //                   even in the stochastic star formation model,
 //                   to avoid spawning a stellar particle of a capped mass
 //                2. It can be seen as an effective physical density threshold of
-//                   MinStarMass / MaxStarMFrac / dh^3 * a^-3,
+//                   MinStarMass / ( MaxStarMFrac * dh^3 * a^3 ),
 //                   where dh is the comoving cell size
 //                3. This function is not used currently
-//                   --> It will be used in the cosmological simulations in the future
+//                   --> It will be used in cosmological simulations in the future
 //
 // Parameter   :  GasMass : Gas mass in the cell
 //
@@ -99,6 +99,7 @@ bool SF_CreateStar_Check( const int lv, const int PID, const int i, const int j,
 //-------------------------------------------------------------------------------------------------------
 bool SF_CreateStar_Check_CellMassDepletion( const real GasMass )
 {
+
    bool AllowSF = false;
 
    const real MinStarFormationCellMass = SF_CREATE_STAR_MIN_STAR_MASS / SF_CREATE_STAR_MAX_STAR_MFRAC;
@@ -115,7 +116,7 @@ bool SF_CreateStar_Check_CellMassDepletion( const real GasMass )
 // Function    :  SF_CreateStar_Check_GasDensity
 // Description :  Check if the gas density exceeds the given threshold
 //
-// Note        :  1. The density threshold is in physical frame
+// Note        :  1. The density threshold is defined in the physical frame even when COMOVING is enabled
 //
 // Parameter   :  GasDensity       : Gas density
 //                CosmoScaleFactor : Scale factor "a" in cosmology
@@ -126,6 +127,7 @@ bool SF_CreateStar_Check_CellMassDepletion( const real GasMass )
 //-------------------------------------------------------------------------------------------------------
 bool SF_CreateStar_Check_GasDensity( const real GasDensity, const real CosmoScaleFactor, const real Threshold )
 {
+
    const real a3inv = (real)1.0 / CUBE( CosmoScaleFactor );  // a^-3
 
    bool AllowSF = false;
@@ -144,9 +146,9 @@ bool SF_CreateStar_Check_GasDensity( const real GasDensity, const real CosmoScal
 //
 // Note        :  1. The threshold value is hard-coded for now
 //                2. This function is not used currently
-//                   --> It will be used in the cosmological simulations in the future
+//                   --> It will be used in cosmological simulations in the future
 //
-// Parameter   :  GasDensity : Gas density
+// Parameter   :  GasDensity : Gas overdensity
 //
 // Return      :  "true"  if the gas overdensity is larger than or equal to the given threshold
 //                "false" otherwise
@@ -178,7 +180,7 @@ bool SF_CreateStar_Check_GasOverDensity( const real GasDensity )
 // Function    :  SF_CreateStar_Check_GasTemperature
 // Description :  Check if the gas temperature falls below the given threshold
 //
-// Note        :  1. The temperature threshold is in physical frame
+// Note        :  1. The temperature threshold is defined in the physical frame even when COMOVING is enabled.
 //
 // Parameter   :  GasTemperature   : Gas temperature
 //                CosmoScaleFactor : Scale factor "a" in cosmology
@@ -189,6 +191,7 @@ bool SF_CreateStar_Check_GasOverDensity( const real GasDensity )
 //-------------------------------------------------------------------------------------------------------
 bool SF_CreateStar_Check_GasTemperature( const real GasTemperature, const real CosmoScaleFactor, const real Threshold )
 {
+
    const real a2inv = (real)1.0 / SQR( CosmoScaleFactor );  // a^-2
 
    bool AllowSF = false;
