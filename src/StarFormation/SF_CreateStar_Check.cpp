@@ -212,7 +212,7 @@ bool SF_CreateStar_Check_GasOverdensity( const real GasDensity )
 //
 // Note        :  1. The temperature threshold is defined in the physical frame even when COMOVING is enabled.
 //                2. When COMOVING is enabled, "GasTemperature" should be the comoving temperature, a^2*T,
-//                   where T is the density in the physical frame
+//                   where T is the temperature in the physical frame
 //
 // Parameter   :  GasTemperature   : Gas temperature
 //                CosmoScaleFactor : Scale factor "a" in cosmology

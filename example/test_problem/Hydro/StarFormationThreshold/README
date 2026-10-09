@@ -65,7 +65,7 @@ Note:
      --> The comoving density and temperature will change during the evolution
      --> The physical Jeans length is 20.0 pc
      --> The physical free-fall time is 6.66 Myr
-The physical star formation rate of the entire simulation box still rises because of the increasing physical volume of the simulation box
+     --> The physical star formation rate of the entire simulation box still rises because of the increasing physical volume of the simulation box
    - The evolution is from z=4 to z=3 in the default setup
      |              |           | Box size = 0.008 cMpc/h | Cell size = 89.29 cpc | Cell volume = 7.118e5 cpc^3 |    Cell mass |    Box mass |          SFR |
      |--------------|-----------|-------------------------|-----------------------|-----------------------------|--------------|-------------|--------------|
