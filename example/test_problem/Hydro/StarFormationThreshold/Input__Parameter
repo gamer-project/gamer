@@ -24,7 +24,7 @@ END_STEP                     -1           # end step (<0=auto -> must be set by 
 
 # test problems
 TESTPROB_ID                   26          # test problem ID [0]
-                                          #   26: HYDRO Star Formation Threshold (+GRAVITY & PARTICLE & STAR_FORMATION)
+                                          #   26: HYDRO star formation threshold (+GRAVITY & PARTICLE & STAR_FORMATION)
 
 
 # code units (in cgs)

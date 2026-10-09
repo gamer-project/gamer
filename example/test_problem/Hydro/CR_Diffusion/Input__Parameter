@@ -42,9 +42,9 @@ TESTPROB_ID                   23          # test problem ID [0]
                                           #   14: HYDRO MHD Orszag-Tang vortex (+MHD)
                                           #   15: HYDRO MHD linear wave (+MHD)
                                           #   16: HYDRO Jeans instability (+GRAVITY) [+MHD]
-                                          #   20: HYDRO MHD Cosmic Ray
-                                          #   21: HYDRO MHD Cosmic Ray Shocktube
-                                          #   23: HYDRO MHD Cosmic Ray Diffusion
+                                          #   20: HYDRO cosmic-ray sound wave
+                                          #   21: HYDRO cosmic-ray shock tube
+                                          #   23: HYDRO cosmic-ray diffusion
                                           # 1000: ELBDM external potential (+GRAVITY)
 
 
