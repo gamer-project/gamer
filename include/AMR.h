@@ -105,6 +105,7 @@ struct AMR_t
    int    NPatchComma [NLEVEL][28];
    double dh          [NLEVEL];
    int    ResPower2   [NLEVEL];
+   double PosUndef    [3] = { NAN, NAN, NAN };
    double BoxEdgeL    [3];
    double BoxEdgeR    [3];
    double BoxCenter   [3];
@@ -273,7 +274,7 @@ struct AMR_t
          patch[0][lv][NewPID] = new patch_t( scale_x, scale_y, scale_z, FaPID, FluData, MagData, PotData, FluData, lv,
                                              BoxScale, BoxEdgeL, dh[TOP_LEVEL] );
          patch[1][lv][NewPID] = new patch_t(       0,       0,       0,    -1, FluData, MagData, PotData,   false, lv,
-                                             BoxScale, BoxEdgeL, dh[TOP_LEVEL] );
+                                             BoxScale, PosUndef, dh[TOP_LEVEL] );   // the patch edge of patch[1] should not be used
       }
 
 //    reactivate inactive patches
@@ -296,7 +297,7 @@ struct AMR_t
          patch[0][lv][NewPID]->Activate( scale_x, scale_y, scale_z, FaPID, FluData, MagData, PotData, FluData, lv,
                                          BoxScale, BoxEdgeL, dh[TOP_LEVEL], InitPtrAsNull_No );
          patch[1][lv][NewPID]->Activate(       0,       0,       0,    -1, FluData, MagData, PotData,   false, lv,
-                                         BoxScale, BoxEdgeL, dh[TOP_LEVEL], InitPtrAsNull_No );
+                                         BoxScale, PosUndef, dh[TOP_LEVEL], InitPtrAsNull_No );   // the patch edge of patch[1] should not be used
       } // if ( patch[0][lv][NewPID] == NULL ) ... else ...
 
       num[lv] ++;
