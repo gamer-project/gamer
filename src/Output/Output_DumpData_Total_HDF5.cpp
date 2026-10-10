@@ -2229,6 +2229,12 @@ void FillIn_Makefile( Makefile_t &Makefile )
    Makefile.ExactCooling           = 0;
 #  endif
 
+#  ifdef EXACT_COOLING_GENERAL
+   Makefile.ExactCooling_General   = 1;
+#  else
+   Makefile.ExactCooling_General   = 0;
+#  endif
+
 
 #  elif ( MODEL == ELBDM )
 
@@ -2927,9 +2933,13 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Src_Deleptonization     = SrcTerms.Deleptonization;
    InputPara.Src_User                = SrcTerms.User;
    InputPara.Src_ExactCooling        = SrcTerms.ExactCooling;
+   InputPara.Src_ExactCooling_General= SrcTerms.ExactCooling_General;
 #  ifdef EXACT_COOLING
    InputPara.Src_EC_TEF_N            = SrcTerms.EC_TEF_N;
    InputPara.Src_EC_dtCoef           = SrcTerms.EC_dtCoef;
+#  endif
+#  ifdef EXACT_COOLING_GENERAL
+   InputPara.Src_ExactCooling_General_dt = SrcTerms.ExactCooling_General_dt;
 #  endif
    InputPara.Src_GPU_NPGroup         = SRC_GPU_NPGROUP;
 
@@ -3433,6 +3443,7 @@ void GetCompound_Makefile( hid_t &H5_TypeID )
    H5Tinsert( H5_TypeID, "EoS",                    HOFFSET(Makefile_t,EoS                    ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "BarotropicEoS",          HOFFSET(Makefile_t,BarotropicEoS          ), H5T_NATIVE_INT );
    H5Tinsert( H5_TypeID, "ExactCooling",           HOFFSET(Makefile_t,ExactCooling           ), H5T_NATIVE_INT );
+   H5Tinsert( H5_TypeID, "ExactCooling_General",   HOFFSET(Makefile_t,ExactCooling_General   ), H5T_NATIVE_INT );
 
 #  elif ( MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "ELBDMScheme",            HOFFSET(Makefile_t,ELBDMScheme            ), H5T_NATIVE_INT );
@@ -4050,9 +4061,13 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Src_User",                HOFFSET(InputPara_t,Src_User               ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Src_GPU_NPGroup",         HOFFSET(InputPara_t,Src_GPU_NPGroup        ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Src_ExactCooling",        HOFFSET(InputPara_t,Src_ExactCooling       ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Src_ExactCooling_General",HOFFSET(InputPara_t,Src_ExactCooling_General), H5T_NATIVE_INT              );
 #  ifdef EXACT_COOLING
    H5Tinsert( H5_TypeID, "Src_EC_TEF_N",            HOFFSET(InputPara_t,Src_EC_TEF_N           ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Src_EC_dtCoef",           HOFFSET(InputPara_t,Src_EC_dtCoef          ), H5T_NATIVE_DOUBLE           );
+#  endif
+#  ifdef EXACT_COOLING_GENERAL
+   H5Tinsert( H5_TypeID, "Src_ExactCooling_General_dt", HOFFSET(InputPara_t,Src_ExactCooling_General_dt ), H5T_NATIVE_DOUBLE  );
 #  endif
 
 // Grackle

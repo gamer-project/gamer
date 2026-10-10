@@ -355,6 +355,10 @@ int        Src_Dlep_AuxArray_Int[SRC_NAUX_DLEP];
 double     Src_EC_AuxArray_Flt[SRC_NAUX_EC];
 int        Src_EC_AuxArray_Int[SRC_NAUX_EC];
 #endif
+#ifdef EXACT_COOLING_GENERAL
+double     Src_ExactCooling_General_AuxArray_Flt[SRC_NAUX_EXACTCOOLING_GENERAL];
+int        Src_ExactCooling_General_AuxArray_Int[SRC_NAUX_EXACTCOOLING_GENERAL];
+#endif
 double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
 int        Src_User_AuxArray_Int[SRC_NAUX_USER];
 

@@ -964,6 +964,11 @@
 #else
 #  define SRC_NAUX_EC            0
 #endif
+#ifdef EXACT_COOLING_GENERAL
+#  define SRC_NAUX_EXACTCOOLING_GENERAL            20    // SrcTerms.ExactCooling_General_AuxArray_Flt/Int[]
+#else
+#  define SRC_NAUX_EXACTCOOLING_GENERAL            0
+#endif
 #  define SRC_NAUX_USER          10    // SrcTerms.User_AuxArray_Flt/Int[]
 
 
