@@ -547,10 +547,10 @@ void Init_ResetParameter()
 
       PRINT_RESET_PARA( OPT__1ST_FLUX_CORR, FORMAT_INT, "for SRHD" );
 
-#     elif ( defined MHD )
+#     elif ( defined MHD || defined COSMIC_RAY )
       OPT__1ST_FLUX_CORR = FIRST_FLUX_CORR_3D;
 
-      PRINT_RESET_PARA( OPT__1ST_FLUX_CORR, FORMAT_INT, "for MHD" );
+      PRINT_RESET_PARA( OPT__1ST_FLUX_CORR, FORMAT_INT, "for MHD or COSMIC_RAY" );
 
 #     else
 

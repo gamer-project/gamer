@@ -446,6 +446,134 @@ static real minmod( const real a, const real b )
 
 
 
+//-----------------------------------------------------------------------------------------
+// Function    : CR_AddDiffuseFlux_1Face
+// Description : Compute the cosmic-ray diffusive flux of one face, used for 1st order flux correction
+//
+// Note        : 1. Must enable MHD, COSMIC_RAY, and CR_DIFFUSION
+//               2. Invoked by Fluid_Close()
+//               3. This function is CPU only
+//
+// Reference   : Yang et al., ApJ 761, 185 (2012); doi:10.1088/0004-637X/761/2/185
+//
+// Parameter   : Flu_In   : Array storing the input cell-centered conserved fluid variables
+//               Flux_Out : Flux to be updated
+//               FC_B     : Face-centered magnetic field between left and right cell
+//               L_In     : One-cell data of the left cell
+//               R_In     : One-cell data of the right cell
+//               idxL     : Left cell idx
+//               didx     : Array storing the index increments
+//               d        : Direction of the flux
+//               dh       : Cell size
+//               MicroPhy : Microphysics object
+//
+// Return      : FluxR[]
+//-----------------------------------------------------------------------------------------
+#ifndef __CUDACC__
+void CR_AddDiffuseFlux_1Face( const real Flu_In[][ CUBE(FLU_NXT) ],
+                                    real Flux_Out[NCOMP_TOTAL_PLUS_MAG],
+                              const real FC_B, const real L_In[], const real R_In[],
+                              const int idxL, const int didx[3], const int d, const real dh,
+                              const MicroPhy_t *MicroPhy )
+{
+   const real _dh = (real)1.0 / dh;
+
+   const int TDir1 = (d+1)%3;    // transverse direction 1
+   const int TDir2 = (d+2)%3;    // transverse direction 2
+
+// 1. get the diffusivity
+//###REVISE: diffusion coefficients are assumed to be constant for now
+//     --> for non-constant diffusion coefficients, we should take the spatial average along the normal direction
+//         to get the face-centered coefficients (cf. Eq. [A9] in Yang et al. 2012)
+   real diff_cr_eff_para, diff_cr_eff_perp;
+   CR_ComputeDiffusivity( diff_cr_eff_para, diff_cr_eff_perp, MicroPhy );
+
+
+// 2. compute the mean magnetic field
+// ---------------------
+// |         |         |
+// |    ^    |    ^    |
+// -----1---------2-----
+// |    |    |    |    |
+// |         |         |
+// |  i j k -->        |
+// |         |         |
+// |    ^    |    ^    |
+// -----3---------4-----
+// |    |    |    |    |
+// |         |         |
+// ---------------------
+   real B_N_mean, B_T1_mean, B_T2_mean, B_amp;
+   B_N_mean  = FC_B;
+   B_T1_mean = (real)0.5*( L_In[MAG_OFFSET + TDir1] + R_In[MAG_OFFSET + TDir1] );
+   B_T2_mean = (real)0.5*( L_In[MAG_OFFSET + TDir2] + R_In[MAG_OFFSET + TDir2] );
+   B_amp     = SQRT( SQR(B_N_mean) + SQR(B_T1_mean) + SQR(B_T2_mean) );
+
+// disable diffusion locally when B field amplitude is smaller than the given minimum threshold
+   if ( B_amp < MicroPhy->CR_diff_min_b || B_amp < TINY_NUMBER )
+      return;
+
+// normalize magnetic field
+   B_N_mean  /= B_amp;
+   B_T1_mean /= B_amp;
+   B_T2_mean /= B_amp;
+
+
+// 3. compute cosmic-ray slope
+// ---------------------
+// |         |         |
+// ----bl--------br-----
+// |         |         |
+// |      N_slope      |
+// |         |         |
+// ----al--------ar-----
+// |         |         |
+// ---------------------
+   real N_slope, T1_slope, T2_slope;
+   real al, bl, ar, br;
+
+// normal direction
+   N_slope = ( Flu_In[CRAY][ idxL + didx[d] ] - Flu_In[CRAY][ idxL ] ) * _dh;
+
+// transverse direction 1
+   al = Flu_In[CRAY][ idxL                         ] -
+        Flu_In[CRAY][ idxL           - didx[TDir1] ];
+   bl = Flu_In[CRAY][ idxL           + didx[TDir1] ] -
+        Flu_In[CRAY][ idxL                         ];
+   ar = Flu_In[CRAY][ idxL + didx[d]               ] -
+        Flu_In[CRAY][ idxL + didx[d] - didx[TDir1] ];
+   br = Flu_In[CRAY][ idxL + didx[d] + didx[TDir1] ] -
+        Flu_In[CRAY][ idxL + didx[d]               ];
+   T1_slope = (  MC_limiter( MC_limiter(al,bl), MC_limiter(ar,br) )  ) * _dh;
+
+// transverse direction 2
+   al = Flu_In[CRAY][ idxL                         ] -
+        Flu_In[CRAY][ idxL           - didx[TDir2] ];
+   bl = Flu_In[CRAY][ idxL           + didx[TDir2] ] -
+        Flu_In[CRAY][ idxL                         ];
+   ar = Flu_In[CRAY][ idxL + didx[d]               ] -
+        Flu_In[CRAY][ idxL + didx[d] - didx[TDir2] ];
+   br = Flu_In[CRAY][ idxL + didx[d] + didx[TDir2] ] -
+        Flu_In[CRAY][ idxL + didx[d]               ];
+   T2_slope = (  MC_limiter( MC_limiter(al,bl), MC_limiter(ar,br) )  ) * _dh;
+
+// 4. compute CR diffusive flux
+   real Flux_Total, Flux_Para, Flux_Perp, common;
+
+   common     = -B_N_mean*( B_N_mean*N_slope + B_T1_mean*T1_slope + B_T2_mean*T2_slope );
+   Flux_Para  =  diff_cr_eff_para*( common );
+   Flux_Perp  = -diff_cr_eff_perp*( common + N_slope );
+   Flux_Total = Flux_Para + Flux_Perp;
+
+// 5. flux add-up
+   Flux_Out[CRAY] += Flux_Total;
+   Flux_Out[ENGY] += Flux_Total;
+
+} // FUNCTION : CR_AddDiffuseFlux_1Face
+#endif // #ifndef __CUDACC__
+
+
+
 #endif // #ifdef CR_DIFFUSION
 
 
