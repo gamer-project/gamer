@@ -12,7 +12,7 @@ Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) 
 * #### `A_INIT` &ensp; (>0.0) &ensp; [none]
     * **Description:**
 Initial cosmic scale factor.
-It will overwrite [[INIT_TIME | [Runtime-Parameters]-General#INIT_TIME]].
+It will overwrite [[INIT_T | [Runtime-Parameters]-General#INIT_T]].
     * **Restriction:**
 
 <a name="OMEGA_M0"></a>

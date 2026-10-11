@@ -28,9 +28,9 @@ void Init_ResetParameter()
 
 // initial time
 #  ifdef COMOVING
-   INIT_TIME = A_INIT;    // reset the initial time as the given initial scale factor
+   INIT_T = A_INIT;    // reset the initial time as the given initial scale factor
 
-   PRINT_RESET_PARA( INIT_TIME, FORMAT_REAL, "to match A_INIT when COMOVING is enabled" );
+   PRINT_RESET_PARA( INIT_T, FORMAT_REAL, "to match A_INIT when COMOVING is enabled" );
 #  endif
 
 
@@ -613,7 +613,7 @@ void Init_ResetParameter()
 // physical time
    for (int lv=0; lv<NLEVEL; lv++)
    {
-      Time     [lv] = INIT_TIME;       // will be overwritten during restart
+      Time     [lv] = INIT_T;          // will be overwritten during restart
       Time_Prev[lv] = -__FLT_MAX__;    // initialize as negative to indicate that it has not been set yet
 
       amr->FluSgTime[lv][   amr->FluSg[lv] ] = Time[lv];

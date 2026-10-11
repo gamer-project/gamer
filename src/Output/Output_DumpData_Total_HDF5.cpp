@@ -294,7 +294,7 @@ Procedure for outputting new variables:
 //                2513 : 2026/05/14 --> support OPT__OUTPUT_DUAL_STATUS
 //                2514 : 2026/05/25 --> output DUAL_ENERGY_PREDICT
 //                2515 : 2026/09/28 --> output OPT__OUTPUT_ELBDM_VEL/Q_POT/Q_STRESS
-//                2516 : 2026/10/02 --> output INIT_TIME
+//                2516 : 2026/10/02 --> output INIT_T
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -2613,7 +2613,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    for (int d=0; d<3; d++)
    InputPara.MPI_NRank_X[d]          = MPI_NRank_X[d];
    InputPara.OMP_NThread             = OMP_NTHREAD;
-   InputPara.InitTime                = INIT_TIME;
+   InputPara.InitT                   = INIT_T;
    InputPara.EndT                    = END_T;
    InputPara.EndStep                 = END_STEP;
 
@@ -3706,7 +3706,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "MPI_NRank",               HOFFSET(InputPara_t,MPI_NRank              ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "MPI_NRank_X",             HOFFSET(InputPara_t,MPI_NRank_X            ), H5_TypeID_Arr_3Int );
    H5Tinsert( H5_TypeID, "OMP_NThread",             HOFFSET(InputPara_t,OMP_NThread            ), H5T_NATIVE_INT     );
-   H5Tinsert( H5_TypeID, "InitTime",                HOFFSET(InputPara_t,InitTime               ), H5T_NATIVE_DOUBLE  );
+   H5Tinsert( H5_TypeID, "InitT",                   HOFFSET(InputPara_t,InitT                  ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "EndT",                    HOFFSET(InputPara_t,EndT                   ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "EndStep",                 HOFFSET(InputPara_t,EndStep                ), H5T_NATIVE_LONG    );
 
