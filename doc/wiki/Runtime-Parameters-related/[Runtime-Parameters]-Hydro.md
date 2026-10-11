@@ -307,12 +307,16 @@ Gas mass density floor.
 * #### `MIN_PRES` &ensp; (&#8805;0.0) &ensp; [0.0]
     * **Description:**
 Gas pressure floor.
+When [[--eos | [Installation]-Option-List#--eos]]=`GAMMA` and [MIN_EINT](#MIN_EINT) is nonzero,
+the floor value must be nonzero; if not set manually, it will be computed from [MIN_EINT](#MIN_EINT) and the equation of state.
     * **Restriction:**
 
 <a name="MIN_EINT"></a>
 * #### `MIN_EINT` &ensp; (&#8805;0.0) &ensp; [0.0]
     * **Description:**
 Gas internal energy density floor.
+When [[--eos | [Installation]-Option-List#--eos]]=`GAMMA` and [MIN_PRES](#MIN_PRES) is nonzero,
+the floor value must be nonzero; if not set manually, it will be computed from [MIN_PRES](#MIN_PRES) and the equation of state.
     * **Restriction:**
 
 <a name="MIN_TEMP"></a>
