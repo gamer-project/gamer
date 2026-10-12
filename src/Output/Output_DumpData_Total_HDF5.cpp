@@ -79,7 +79,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2516)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2517)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -296,6 +296,7 @@ Procedure for outputting new variables:
 //                2515 : 2026/09/28 --> output OPT__OUTPUT_ELBDM_VEL/Q_POT/Q_STRESS
 //                2516 : 2026/10/09 --> output SF_CREATE_STAR_CRITERIA, SF_CREATE_STAR_MASS_RATE, SF_CREATE_STAR_PAR_SPAWN,
 //                                             SF_CREATE_STAR_MAX_GAS_TEMP, SF_CREATE_STAR_MAX_GAS_JEANSL
+//                2517 : 2026/10/11 --> output INIT_T
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1882,7 +1883,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2516;
+   KeyInfo.FormatVersion        = 2517;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2614,6 +2615,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    for (int d=0; d<3; d++)
    InputPara.MPI_NRank_X[d]          = MPI_NRank_X[d];
    InputPara.OMP_NThread             = OMP_NTHREAD;
+   InputPara.InitT                   = INIT_T;
    InputPara.EndT                    = END_T;
    InputPara.EndStep                 = END_STEP;
 
@@ -3711,6 +3713,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "MPI_NRank",               HOFFSET(InputPara_t,MPI_NRank              ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "MPI_NRank_X",             HOFFSET(InputPara_t,MPI_NRank_X            ), H5_TypeID_Arr_3Int );
    H5Tinsert( H5_TypeID, "OMP_NThread",             HOFFSET(InputPara_t,OMP_NThread            ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "InitT",                   HOFFSET(InputPara_t,InitT                  ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "EndT",                    HOFFSET(InputPara_t,EndT                   ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "EndStep",                 HOFFSET(InputPara_t,EndStep                ), H5T_NATIVE_LONG    );
 
