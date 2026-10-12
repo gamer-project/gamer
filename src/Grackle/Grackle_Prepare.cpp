@@ -214,6 +214,8 @@ void Grackle_Prepare( const int lv, real_che h_Che_Array[], const int NPG, const
    real_che *Ptr_DI=NULL, *Ptr_DII=NULL, *Ptr_HDI=NULL, *Ptr_Metal=NULL, *Ptr_Dust=NULL;
    real_che *Ptr_vHeatingRate=NULL, *Ptr_sHeatingRate=NULL, *Ptr_tempFloor=NULL;
    real_che  Ratio_FloorDens;
+   real_che *Ptr_vHeatingRate=NULL, *Ptr_sHeatingRate=NULL, *Ptr_tempFloor=NULL;
+   real_che  Ratio_FloorDens;
 
 #  pragma omp for schedule( static )
    for (int TID=0; TID<NPG; TID++)
