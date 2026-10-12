@@ -79,7 +79,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2520)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2517)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -290,16 +290,13 @@ Procedure for outputting new variables:
 //                2509 : 2026/04/18 --> output OPT__FLAG_PAR_TARGET, OPT__FLAG_PAR_TARGET_SIB, Par->FlagInit, particle integer attribute PAR_FLAG
 //                2510 : 2026/06/07 --> output EXTRA_EOS_CHECK, CHECK_UNPHY_ROUNDING, CHECK_UNPHY_ROUNDING_FACTOR
 //                2511 : 2026/07/02 --> output exact-cooling parameters
-//                2512 : 2026/07/25 --> output GRACKLE_DUST and the dust field
-//                2513 : 2026/08/14 --> remove Src_EC_subcycling
-//                2514 : 2026/05/14 --> support OPT__OUTPUT_DUAL_STATUS
-//                2515 : 2026/05/25 --> output DUAL_ENERGY_PREDICT 
-//                2516 : 2026/08/14 --> remove Src_EC_subcycling
-//                2517 : 2026/05/14 --> support OPT__OUTPUT_DUAL_STATUS
-//                2518 : 2026/05/25 --> output DUAL_ENERGY_PREDICT
-//                2519 : 2026/09/28 --> output OPT__OUTPUT_ELBDM_VEL/Q_POT/Q_STRESS
-//                2520 : 2026/10/09 --> output SF_CREATE_STAR_CRITERIA, SF_CREATE_STAR_MASS_RATE, SF_CREATE_STAR_PAR_SPAWN,
+//                2512 : 2026/08/14 --> remove Src_EC_subcycling
+//                2513 : 2026/05/14 --> support OPT__OUTPUT_DUAL_STATUS
+//                2514 : 2026/05/25 --> output DUAL_ENERGY_PREDICT
+//                2515 : 2026/09/28 --> output OPT__OUTPUT_ELBDM_VEL/Q_POT/Q_STRESS
+//                2516 : 2026/10/09 --> output SF_CREATE_STAR_CRITERIA, SF_CREATE_STAR_MASS_RATE, SF_CREATE_STAR_PAR_SPAWN,
 //                                             SF_CREATE_STAR_MAX_GAS_TEMP, SF_CREATE_STAR_MAX_GAS_JEANSL
+//                2517 : 2026/10/12 --> output GRACKLE_DUST and the dust field
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
