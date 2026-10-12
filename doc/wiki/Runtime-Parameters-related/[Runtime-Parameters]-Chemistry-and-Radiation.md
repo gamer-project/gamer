@@ -5,6 +5,7 @@ Parameters described on this page:
 [GRACKLE_COOLING](#GRACKLE_COOLING), &nbsp;
 [GRACKLE_PRIMORDIAL](#GRACKLE_PRIMORDIAL), &nbsp;
 [GRACKLE_METAL](#GRACKLE_METAL), &nbsp;
+[GRACKLE_DUST](#GRACKLE_DUST), &nbsp;
 [GRACKLE_UV](#GRACKLE_UV), &nbsp;
 [GRACKLE_CMB_FLOOR](#GRACKLE_CMB_FLOOR), &nbsp;
 [GRACKLE_PE_HEATING](#GRACKLE_PE_HEATING), &nbsp;
@@ -67,6 +68,15 @@ by 6, 9, or 12 for GRACKLE_PRIMORDIAL=1, 2, or 3, respectively.
 Map to the ["metal_cooling" runtime parameter in GRACKLE](https://grackle.readthedocs.io/en/latest/Parameters.html#c.metal_cooling). One must increase
 [[--passive | [Installation]-Option-List#--passive]]
 by 1 and initialize the field `Metal` using the field index `Idx_Metal` properly.
+    * **Restriction:**
+
+<a name="GRACKLE_DUST"></a>
+* #### `GRACKLE_DUST` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Map to the ["use_dust_density_field" runtime parameter in GRACKLE](https://grackle.readthedocs.io/en/latest/Parameters.html#c.use_dust_density_field).
+One must increase
+[[--passive | [Installation]-Option-List#--passive]]
+by 1 and initialize the field `Dust` using the field index `Idx_Dust` properly.
     * **Restriction:**
 
 <a name="GRACKLE_UV"></a>

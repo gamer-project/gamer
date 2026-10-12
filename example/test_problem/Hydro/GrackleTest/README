@@ -105,6 +105,27 @@ Note:
       - The script `plot_grackle_analytical_cooling_rate.py` computes the expected cooling rates across the gas phase
         diagram for the given Grackle parameters, which can be compared with the simulation results
       --> To test the redshift-dependent UV background in non-comoving grids
+   - 5:
+      - This dust sputtering support requires the Grackle repo/branch below:
+        --> https://github.com/calab-ntu/grackle/tree/dust-sputtering
+      - `GRACKLE_PRIMORDIAL`, `GRACKLE_UV`, `GRACKLE_CMB_FLOOR`, `GRACKLE_PE_HEATING` should all be 0
+      - `GRACKLE_DUST`, `GRACKLE_USE_V_HEATING_RATE` should both be 1
+      - `GRACKLE_CLOUDY_TABLE` should be `CloudyData_NoCooling_mu06.h5`
+        --> Use `make_no_cooling_table.py` to generate this table, which fixes the mean
+            molecular weight to 0.6 and disables native Grackle cooling, allowing
+            independent energy evolution through volumetric heating
+      - `GrackleTest_ExpCoolCoeff` in `Input__TestProb` specifies the internal energy
+        decay coefficient `k_cool` (in Myr^-1), used only when `GrackleTest_DefaultTestMode = 5`
+        --> The imposed volumetric energy-change rate is
+            `edot(i) = -k_cool * d(i,j,k) * e(i,j,k)`,
+            where `d(i,j,k)` and `e(i,j,k)` are the local mass density and specific internal energy
+      - Set `OPT__OUTPUT_MODE`, `OUTPUT_STEP`, and `OPT__DT_USER` to 1
+      - The global time step is determined by `Mis_GetTimeStep_Dust()`
+        --> It is limited to 2% of the absolute cooling time above 3.0e5 K and 10%
+            at lower temperatures
+        --> Grackle applies the same temperature-dependent limit to its internal subcycles
+      - The folder `yt_script_dust/` contains dust sputtering analysis scripts:
+        `dust_density.py`, `gas_temp.py`
 
 6. The evolution of fluid
    - The fluid is not evolved by hydrodynamics (`OPT__FREEZE_FLUID`)

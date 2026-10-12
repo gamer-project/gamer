@@ -79,7 +79,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2516)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2517)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -296,6 +296,7 @@ Procedure for outputting new variables:
 //                2515 : 2026/09/28 --> output OPT__OUTPUT_ELBDM_VEL/Q_POT/Q_STRESS
 //                2516 : 2026/10/09 --> output SF_CREATE_STAR_CRITERIA, SF_CREATE_STAR_MASS_RATE, SF_CREATE_STAR_PAR_SPAWN,
 //                                             SF_CREATE_STAR_MAX_GAS_TEMP, SF_CREATE_STAR_MAX_GAS_JEANSL
+//                2517 : 2026/10/12 --> output GRACKLE_DUST and the dust field
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -2943,6 +2944,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Grackle_Cooling         = GRACKLE_COOLING;
    InputPara.Grackle_Primordial      = GRACKLE_PRIMORDIAL;
    InputPara.Grackle_Metal           = GRACKLE_METAL;
+   InputPara.Grackle_Dust            = GRACKLE_DUST;
    InputPara.Grackle_UV              = GRACKLE_UV;
    InputPara.Grackle_CMB_Floor       = GRACKLE_CMB_FLOOR;
    InputPara.Grackle_PE_Heating      = GRACKLE_PE_HEATING;
@@ -4065,6 +4067,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Grackle_Cooling",         HOFFSET(InputPara_t,Grackle_Cooling        ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Grackle_Primordial",      HOFFSET(InputPara_t,Grackle_Primordial     ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Grackle_Metal",           HOFFSET(InputPara_t,Grackle_Metal          ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Grackle_Dust",            HOFFSET(InputPara_t,Grackle_Dust           ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Grackle_UV",              HOFFSET(InputPara_t,Grackle_UV             ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Grackle_CMB_Floor",       HOFFSET(InputPara_t,Grackle_CMB_Floor      ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Grackle_PE_Heating",      HOFFSET(InputPara_t,Grackle_PE_Heating     ), H5T_NATIVE_INT              );
