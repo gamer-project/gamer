@@ -719,8 +719,15 @@ static double Mis_GetTimeStep_Dust( const int lv, const double dTime_dt )
 
 
    int FluSg = amr->FluSg[0];
-   double Dens = amr->patch[FluSg][0][0]->fluid[DENS][0][0][0];
-   double Eint = amr->patch[FluSg][0][0]->fluid[ENGY][0][0][0];
+   const double Dens = amr->patch[FluSg][0][0]->fluid[DENS][0][0][0];
+   const double Px   = amr->patch[FluSg][0][0]->fluid[MOMX][0][0][0];
+   const double Py   = amr->patch[FluSg][0][0]->fluid[MOMY][0][0][0];
+   const double Pz   = amr->patch[FluSg][0][0]->fluid[MOMZ][0][0][0];
+   const double Etot = amr->patch[FluSg][0][0]->fluid[ENGY][0][0][0];
+
+   const bool CheckMinEint_No = false;
+   const double Eint = Hydro_Con2Eint( Dens, Px, Py, Pz, Etot, CheckMinEint_No, NULL_REAL, NULL,
+                                    NULL_REAL, NULL, NULL, NULL, NULL, NULL );
 
 // Estimate gas temperature
    const double sEint_cgs = Eint/Dens * SQR( UNIT_V );
