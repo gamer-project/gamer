@@ -1379,7 +1379,7 @@ void AllocateBHVarArray()
       M_inj_exp            [c] = 0.0;
    }
 
-} // FUNCITON : AllocateBHVarArray
+} // FUNCTION : AllocateBHVarArray
 #endif // #ifdef MASSIVE_PARTICLES
 
 

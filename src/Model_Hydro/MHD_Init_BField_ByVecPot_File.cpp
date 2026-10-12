@@ -376,8 +376,8 @@ double TSC_Weight( const double x )
 
 #ifdef SUPPORT_HDF5
 //-------------------------------------------------------------------------------------------------------
-// Function    :  VecPot_ReadField 
-// Description :  Read vector potential from a file 
+// Function    :  VecPot_ReadField
+// Description :  Read vector potential from a file
 //
 // Parameter   :
 //

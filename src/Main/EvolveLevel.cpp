@@ -569,7 +569,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
             Aux_Message( stdout, "   Lv %2d: SF_CreateStar, counter = %8ld ... ", lv, AdvanceCounter[lv] );
 
 //###REVISE: we have assumed that SF_CreateStar() requires no ghost zones
-         TIMING_FUNC(   SF_CreateStar( lv, TimeNew, dt_SubStep ),
+         TIMING_FUNC(   SF_CreateStar( lv, TimeNew, TimeOld, dt_SubStep ),
                         Timer_SF[lv],   TIMER_ON   );
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );

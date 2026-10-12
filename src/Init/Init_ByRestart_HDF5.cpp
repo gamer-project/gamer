@@ -2321,10 +2321,15 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
 // star formation
 #  ifdef STAR_FORMATION
    LoadField( "SF_CreateStar_Scheme",       &RS.SF_CreateStar_Scheme,       SID, TID, NonFatal, &RT.SF_CreateStar_Scheme,       1, NonFatal );
+   LoadField( "SF_CreateStar_Criteria",     &RS.SF_CreateStar_Criteria,     SID, TID, NonFatal, &RT.SF_CreateStar_Criteria,     1, NonFatal );
+   LoadField( "SF_CreateStar_MassRate",     &RS.SF_CreateStar_MassRate,     SID, TID, NonFatal, &RT.SF_CreateStar_MassRate,     1, NonFatal );
+   LoadField( "SF_CreateStar_ParSpawn",     &RS.SF_CreateStar_ParSpawn,     SID, TID, NonFatal, &RT.SF_CreateStar_ParSpawn,     1, NonFatal );
    LoadField( "SF_CreateStar_RSeed",        &RS.SF_CreateStar_RSeed,        SID, TID, NonFatal, &RT.SF_CreateStar_RSeed,        1, NonFatal );
    LoadField( "SF_CreateStar_DetRandom",    &RS.SF_CreateStar_DetRandom,    SID, TID, NonFatal, &RT.SF_CreateStar_DetRandom,    1, NonFatal );
    LoadField( "SF_CreateStar_MinLevel",     &RS.SF_CreateStar_MinLevel,     SID, TID, NonFatal, &RT.SF_CreateStar_MinLevel,     1, NonFatal );
    LoadField( "SF_CreateStar_MinGasDens",   &RS.SF_CreateStar_MinGasDens,   SID, TID, NonFatal, &RT.SF_CreateStar_MinGasDens,   1, NonFatal );
+   LoadField( "SF_CreateStar_MaxGasTemp",   &RS.SF_CreateStar_MaxGasTemp,   SID, TID, NonFatal, &RT.SF_CreateStar_MaxGasTemp,   1, NonFatal );
+   LoadField( "SF_CreateStar_MaxGasJeansL", &RS.SF_CreateStar_MaxGasJeansL, SID, TID, NonFatal, &RT.SF_CreateStar_MaxGasJeansL, 1, NonFatal );
    LoadField( "SF_CreateStar_MassEff",      &RS.SF_CreateStar_MassEff,      SID, TID, NonFatal, &RT.SF_CreateStar_MassEff,      1, NonFatal );
    LoadField( "SF_CreateStar_MinStarMass",  &RS.SF_CreateStar_MinStarMass,  SID, TID, NonFatal, &RT.SF_CreateStar_MinStarMass,  1, NonFatal );
    LoadField( "SF_CreateStar_MaxStarMFrac", &RS.SF_CreateStar_MaxStarMFrac, SID, TID, NonFatal, &RT.SF_CreateStar_MaxStarMFrac, 1, NonFatal );
@@ -2454,6 +2459,11 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Opt__Output_Dual_Status",     &RS.Opt__Output_Dual_Status,     SID, TID, NonFatal, &RT.Opt__Output_Dual_Status,     1, NonFatal );
 #  endif
 #  endif // #if ( MODEL == HYDRO )
+#  if ( MODEL == ELBDM )
+   LoadField( "Opt__Output_ELBDM_Vel",       &RS.Opt__Output_ELBDM_Vel,       SID, TID, NonFatal, &RT.Opt__Output_ELBDM_Vel,       1, NonFatal );
+   LoadField( "Opt__Output_ELBDM_Q_Pot",     &RS.Opt__Output_ELBDM_Q_Pot,     SID, TID, NonFatal, &RT.Opt__Output_ELBDM_Q_Pot,     1, NonFatal );
+   LoadField( "Opt__Output_ELBDM_Q_Stress",  &RS.Opt__Output_ELBDM_Q_Stress,  SID, TID, NonFatal, &RT.Opt__Output_ELBDM_Q_Stress,  1, NonFatal );
+#  endif
    LoadField( "Opt__Output_UserField",       &RS.Opt__Output_UserField,       SID, TID, NonFatal, &RT.Opt__Output_UserField,       1, NonFatal );
 #  ifdef PARTICLE
    if ( OPT__OUTPUT_TOTAL || OPT__OUTPUT_PART || OPT__OUTPUT_USER || OPT__OUTPUT_BASEPS || OPT__OUTPUT_PAR_MODE ) {

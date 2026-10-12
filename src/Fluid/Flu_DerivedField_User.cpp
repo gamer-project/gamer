@@ -65,7 +65,7 @@ void Flu_DerivedField_User_Template( real Out[], const real FluIn[], const real 
 
 
 // 1D arrays -> 3D arrays
-   typedef real (*vla_in)[NCellInZ ][NCellInY ][NCellInX ];
+   typedef real (*vla_in)[NCellInZ][NCellInY][NCellInX];
    vla_in FluIn3D = ( vla_in )FluIn;
 #  ifdef MHD
    vla_in MagIn3D = ( vla_in )MagIn;
