@@ -34,7 +34,13 @@ void End_MemFree_PoissonGravity()
       delete [] h_Pot_Array_T     [t];  h_Pot_Array_T     [t] = NULL;
    }
 
-   root_fftw::fft_free(GreenFuncK); GreenFuncK      = NULL;
+   for (int lv=0; lv<NLEVEL; lv++)
+   {
+      if ( ! GreenFuncK_Inited[lv] )   continue;
+
+      root_fftw::fft_free( GreenFuncK[lv] ); GreenFuncK[lv] = NULL;
+   }
+
    delete [] h_ExtPotTable;    h_ExtPotTable   = NULL;
    delete [] h_ExtPotGenePtr;  h_ExtPotGenePtr = NULL;
 

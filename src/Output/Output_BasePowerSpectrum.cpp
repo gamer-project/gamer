@@ -32,6 +32,7 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
    if ( NX0_TOT[0] != NX0_TOT[1]  ||  NX0_TOT[0] != NX0_TOT[2] )
       Aux_Error( ERROR_INFO, "%s only works with CUBIC domain !!\n", __FUNCTION__ );
 
+   const int lv = 0;
 
 // 1. determine the FFT size
    const int Nx_Padded   = NX0_TOT[0]/2+1;
@@ -93,9 +94,9 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
 
    double *PS_total     = NULL;
    real   *VarK         = (real*)root_fftw::fft_malloc( sizeof(real)*total_local_size );  // array storing data
-   real   *SendBuf      = new real [ (long)amr->NPatchComma[0][1]*CUBE(PS1) ];            // MPI send buffer for data
+   real   *SendBuf      = new real [ (long)amr->NPatchComma[lv][1]*CUBE(PS1) ];           // MPI send buffer for data
    real   *RecvBuf      = new real [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice ];            // MPI recv buffer for data
-   long   *SendBuf_SIdx = new long [ (long)amr->NPatchComma[0][1]*PS1 ];                  // MPI send buffer for 1D coordinate in slab
+   long   *SendBuf_SIdx = new long [ (long)amr->NPatchComma[lv][1]*PS1 ];                 // MPI send buffer for 1D coordinate in slab
    long   *RecvBuf_SIdx = new long [ (long)NX0_TOT[0]*NX0_TOT[1]*NRecvSlice/SQR(PS1) ];   // MPI recv buffer for 1D coordinate in slab
 
    int  *List_PID    [MPI_NRank];   // PID of each patch slice sent to each rank
@@ -123,17 +124,17 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
 #  endif
 
    if ( TVar == _TOTAL_DENS ) {
-      Par_CollectParticle2OneLevel( 0, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, _PAR_TYPE, PredictPos, Time[0],
+      Par_CollectParticle2OneLevel( lv, _PAR_MASS|_PAR_POSX|_PAR_POSY|_PAR_POSZ, _PAR_TYPE, PredictPos, Time[lv],
                                     SibBufPatch, FaSibBufPatch, JustCountNPar_No, TimingSendPar_No );
 
-      Prepare_PatchData_InitParticleDensityArray( 0, Time[0] );
+      Prepare_PatchData_InitParticleDensityArray( lv, Time[lv] );
    } // if ( TVar == _TOTAL_DENS )
 #  endif // #ifdef MASSIVE_PARTICLES
 
 
 // 4. rearrange data from patch to slab
    Patch2Slab( VarK, SendBuf, RecvBuf, SendBuf_SIdx, RecvBuf_SIdx, List_PID, List_k, List_NSend, List_NRecv, List_z_start,
-               local_nz, FFT_Size, NRecvSlice, Time[0], TVar, InPlacePad, ForPoisson, false );
+               local_nz, FFT_Size, NRecvSlice, Time[lv], TVar, InPlacePad, ForPoisson, false, lv );
 
 
 // 5. evaluate the base-level power spectrum by FFT
@@ -185,9 +186,9 @@ void Output_BasePowerSpectrum( const char *FileName, const long TVar )
 // free memory for collecting particles from other ranks and levels, and free density arrays with ghost zones (rho_ext)
 #  ifdef MASSIVE_PARTICLES
    if ( TVar == _TOTAL_DENS ) {
-      Par_CollectParticle2OneLevel_FreeMemory( 0, SibBufPatch, FaSibBufPatch );
+      Par_CollectParticle2OneLevel_FreeMemory( lv, SibBufPatch, FaSibBufPatch );
 
-      Prepare_PatchData_FreeParticleDensityArray( 0 );
+      Prepare_PatchData_FreeParticleDensityArray( lv );
    }
 #  endif
 
