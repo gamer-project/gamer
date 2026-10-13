@@ -2137,7 +2137,7 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
 
 // check unphysical results in the prediction, repredict if needed, and apply floors
 #  ifdef MHM_CHECK_PREDICT
-   real depl_frac_max = MAX_ERROR;   // maximum depletion fraction to be determined; initialized with a small positive value for safety
+   real depl_frac_max = MAX_ERROR;   // maximum depletion fraction to be determined; initialized arbitrarily
 
 #  ifdef SRHD
 // currently, SRHD does not support the reprediction except for the zero-slope one
@@ -2339,11 +2339,11 @@ real Hydro_HancockPredict_GetDeplFracMax( const real fcCon[][NCOMP_LR],
 //    density depletion fraction
       depl_frac_max = FMAX( (real)1.0-fcCon[f][DENS]/fcCon_init[f][DENS], depl_frac_max );
 
+#     ifndef BAROTROPIC_EOS
 //    energy depletion fraction
       depl_frac_max = FMAX( (real)1.0-fcCon[f][ENGY]/fcCon_init[f][ENGY], depl_frac_max );
 
 //    internal energy depletion fraction
-#     ifndef BAROTROPIC_EOS
 //    compute the magnetic energy
 #     ifdef MHD
       const real Emag     = (real)0.5*( SQR(     fcCon[f][MAG_OFFSET+0]) + SQR(     fcCon[f][MAG_OFFSET+1]) + SQR(     fcCon[f][MAG_OFFSET+2]) );
@@ -2359,9 +2359,13 @@ real Hydro_HancockPredict_GetDeplFracMax( const real fcCon[][NCOMP_LR],
                                             CheckMinEint_Yes, MinEint, PassiveFloor, initEmag,
                                             NULL, NULL, NULL, NULL, NULL );
 
-// estimate the decrease in internal energy by linearizing the initial change rate
+//    estimate the decrease in internal energy by linearizing the initial change rate
 //    -->  Eint =  Engy - 0.5*(Mom_i**2)/Dens
 //    --> dEint = dEngy - Vel_i*dMom_i + 0.5*(Vel_i**2)*dDens
+//    --> the change in internal energy is not estimated from the initial and updated states,
+//        since that may be incorrect if the updated density or energy is already wrong;
+//        the updated internal energy comes from the other updated variables
+//        rather than directly from a flux
       const real depldEint = (  (fcCon_init[f][ENGY] - fcCon[f][ENGY])
 #                             ifdef MHD
                               - (          initEmag  -          Emag )
@@ -2479,7 +2483,7 @@ void Hydro_HancockPredict_RescueBySubSteps( real fcCon[][NCOMP_LR],
 // dt_sub is the sub-step time-step; evolution destination is 0.5*dt
    const real dt_sub_dh  = dt_dh2/NumSubSteps;    // for full sub-step update
    const real dt_sub_dh2 = (real)0.5*dt_sub_dh;   // for half sub-step update
-   
+
    for (int substep=0; substep<NumSubSteps; substep++)
    {
       real Flux[6][NCOMP_TOTAL_PLUS_MAG];
@@ -2553,6 +2557,47 @@ void Hydro_HancockPredict_RescueByLowerSlopes( real fcCon[][NCOMP_LR],
 {
 
 // reconstruct the face-centered variables with the reduced slope
+// --> Apply a common reduction factor to the differences between the
+//     six face values and the cell-centered value. This reduces all
+//     center-to-face slopes while preserving their relative ratios.
+//
+// --> In PPM, the interpolated profile within a cell is a parabola
+//     (Colella & Sekora 2008, Eq. 7):
+//
+//        a_I(x) = a_minus + xi * [delta_a + a6 * (1 - xi)]
+//               = a_avg + (xi - 1/2) * delta_a
+//                       + a6 * [xi * (1 - xi) - 1/6]
+//
+//     where
+//        a_avg   = cell-averaged value
+//        a_minus = left-face value
+//        a_plus  = right-face value
+//        xi      = x / dh, with 0 <= x <= dh and 0 <= xi <= 1
+//        delta_a = a_plus - a_minus
+//        a6      = 6 * [a_avg - 1/2 * (a_minus + a_plus)]
+//
+//     By multiplying the face-to-center differences by a common
+//     factor R (0 <= R <= 1):
+//
+//        a_face_new = a_avg + R * (a_face - a_avg)
+//
+//     we obtain
+//
+//        delta_a_new = R * delta_a
+//        a6_new      = R * a6
+//
+//     The resulting PPM profile is
+//
+//        a_I_new(x) = a_avg + (xi - 1/2) * delta_a_new
+//                           + a6_new * [xi * (1 - xi) - 1/6]
+//
+//     Thus, the cell average remains unchanged, while both the slope
+//     and curvature are reduced by the same factor. The reconstructed
+//     parabola becomes flatter.
+//
+// --> Note that this correction is not equivalent to repeating the
+//     full data reconstruction, since it operates on conserved variables
+//     without access to neighboring-cell information.
    for (int f=0; f<6; f++)
    for (int v=0; v<NCOMP_TOTAL; v++)
       fcCon[f][v] = g_cc_array[v][cc_idx] + ReducedSlopeRatio * ( fcCon_init[f][v] - g_cc_array[v][cc_idx] );
