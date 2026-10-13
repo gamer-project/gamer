@@ -266,10 +266,10 @@
 // maximum number of reprediction iterations to correct the unphysical results
 // (must >= 1; default = 2)
 #  define MHM_REPREDICT_ITER_NUM                2
-// safe factor for the maximum depletion fraction to estimate the number of sub-steps
+// safety factor for the maximum depletion fraction to estimate the number of sub-steps
 // (must > 0.0; typcial value is below 1.0; a lower value will lead to more sub-steps)
 #  define MHM_REPREDICT_STEPS_SAFE_FAC  (real)0.4
-// safe factor for the maximum depletion fraction to estimate the reduced slope
+// safety factor for the maximum depletion fraction to estimate the reduced slope
 // (must > 0.0 and < 1.0; a lower value will lead to a flatter reconstructed distribution)
 #  define MHM_REPREDICT_SLOPE_SAFE_FAC  (real)0.9
 // maximum number of sub-steps to repredict the half-step solution

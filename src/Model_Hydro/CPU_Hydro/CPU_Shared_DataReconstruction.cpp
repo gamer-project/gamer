@@ -2359,7 +2359,7 @@ real Hydro_HancockPredict_GetDeplFracMax( const real fcCon[][NCOMP_LR],
                                             CheckMinEint_Yes, MinEint, PassiveFloor, initEmag,
                                             NULL, NULL, NULL, NULL, NULL );
 
-//    estimate the decreased amount of internal energy from the initial change rate with linearization
+// estimate the decrease in internal energy by linearizing the initial change rate
 //    -->  Eint =  Engy - 0.5*(Mom_i**2)/Dens
 //    --> dEint = dEngy - Vel_i*dMom_i + 0.5*(Vel_i**2)*dDens
       const real depldEint = (  (fcCon_init[f][ENGY] - fcCon[f][ENGY])
