@@ -2164,7 +2164,7 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
 //    repredict with more accurate or safer methods to avoid overshoot
       if ( repredict_iter != repredict_iter_num-1 )
       {
-//       determine the maxium depletion fraction of density, energy, and internal energy
+//       determine the maxmium depletion fraction of density, energy, and internal energy
 //       from the initial states and the original updates
          if ( repredict_iter == 0 )
             depl_frac_max = Hydro_HancockPredict_GetDeplFracMax( fcCon, fcCon_init, fcPri, MinEint, PassiveFloor );
@@ -2420,7 +2420,7 @@ void Hydro_HancockPredict_IterateReprediction( real fcCon[][NCOMP_LR],
 // for the first half, try higher-order integration method and smaller time-step
    if ( Iter < IterHalf )
    {
-//    estimate the required nubmer of sub-steps according to the maximum depletion fraction
+//    estimate the required number of sub-steps according to the maximum depletion fraction
       const real safety_factor    = MHM_REPREDICT_STEPS_SAFE_FAC/(1<<Iter); // e.g., 0.4 -> 0.2 -> 0.1
       const int  num_substeps_est = (int)CEIL( DeplFracMax/safety_factor );
 //    or at least increase by iterations

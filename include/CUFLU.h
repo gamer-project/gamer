@@ -267,7 +267,7 @@
 // (must >= 1; default = 2)
 #  define MHM_REPREDICT_ITER_NUM                2
 // safety factor for the maximum depletion fraction to estimate the number of sub-steps
-// (must > 0.0; typcial value is below 1.0; a lower value will lead to more sub-steps)
+// (must > 0.0; typical value is below 1.0; a lower value will lead to more sub-steps)
 #  define MHM_REPREDICT_STEPS_SAFE_FAC  (real)0.4
 // safety factor for the maximum depletion fraction to estimate the reduced slope
 // (must > 0.0 and < 1.0; a lower value will lead to a flatter reconstructed distribution)
@@ -275,9 +275,9 @@
 // maximum number of sub-steps to repredict the half-step solution
 // (must >= 1; a higher value is more costly)
 #  define MHM_REPREDICT_SUBSTEPS_MAX            4
-#endif
-#endif
-#endif
+#endif // #ifndef SRHD
+#endif // #ifdef MHM_CHECK_PREDICT
+#endif // #if ( FLU_SCHEME == MHM )
 
 
 
