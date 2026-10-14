@@ -19,6 +19,12 @@ static real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Ga
 #endif
 
 
+// ****************************************************************
+// Unless otherwise specified, the internal energy and pressure
+// in all dual-energy routines EXCLUDE cosmic rays
+// --> This is different from the cosmic-ray EoS driver, where the
+//     internal energy and pressure always include cosmic rays
+// ****************************************************************
 
 
 //-------------------------------------------------------------------------------------------------------
@@ -35,15 +41,17 @@ static real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Ga
 //                       DE_EINT: internal_energy = pressure / (Gamma-1)
 //                   --> Note that the entropy here is a monotonic function of entropy per volume
 //                       instead of the real thermodynamic entropy (see Eqs. 48 and 49 in the Arepo code paper)
+//                   --> DE_EINT is not supported yet
 //                6. Fluid variables returned by this function are guaranteed to be consistent with each other
 //                   --> It doesn't matter we use the dual-energy variable to correct Eint or vice versa,
 //                       and it also holds even when the floor value is applied to pressure
-//                7. Only support the Gamma-law EoS for now
+//                7. Only support the gamma-law EoS, optionally including cosmic rays
 //
 // Parameter   :  Dens             : Mass density
 //                MomX/Y/Z         : Momentum density
 //                Etot             : Total energy density
 //                Dual             : Dual-energy variable
+//                Passive          : Passive scalars
 //                DE_Status        : Assigned to (DE_UPDATED_BY_ETOT / DE_UPDATED_BY_DUAL / DE_UPDATED_BY_MIN_PRES)
 //                                   to indicate whether this cell is updated by the total energy, dual-energy variable,
 //                                   or pressure floor (MinPres)
@@ -54,6 +62,8 @@ static real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Ga
 //                                       for which we don't want to enable this option
 //                MinPres          : Minimum allowed pressure
 //                PassiveFloor     : Bitwise flag to specify the passive scalars to be floored
+//                                   --> It's actually useless here since it's only relevant for SRHD,
+//                                       which does not support dual energy
 //                DualEnergySwitch : if ( Eint/(Ekin+Emag) < DualEnergySwitch ) ==> correct Eint and Etot
 //                                   else                                       ==> correct Dual
 //                Emag             : Magnetic energy density (0.5*B^2) --> for MHD only
@@ -62,10 +72,19 @@ static real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Ga
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,
-                          real &Etot, real &Dual, char &DE_Status, const real Gamma_m1, const real _Gamma_m1,
+                          real &Etot, real &Dual, const real Passive[], char &DE_Status, const real Gamma_m1, const real _Gamma_m1,
                           const bool CheckMinPres, const real MinPres, const long PassiveFloor, const real DualEnergySwitch,
                           const real Emag )
 {
+
+// check
+#  ifdef GAMER_DEBUG
+#  ifdef COSMIC_RAY
+   if ( Passive == NULL )
+      printf( "ERROR : Passive == NULL for COSMIC_RAY at file <%s>, line <%d>, function <%s> !!\n", ERROR_INFO );
+#  endif
+#  endif // GAMER_DEBUG
+
 
    const bool CheckMinPres_No = false;
    const bool CheckMinEint_No = false;
@@ -76,11 +95,15 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 
 // calculate energies
 // --> note that here Eint can even be negative due to numerical errors
-// --> Enth (i.e., non-thermal energy) includes both kinetic and magnetic energies
+// --> Enth (i.e., non-thermal energy) includes kinetic, magnetic, and cosmic-ray energies
    real Enth, Eint, Pres;
 
    Eint = Hydro_Con2Eint( Dens, MomX, MomY, MomZ, Etot, CheckMinEint_No, NULL_REAL, PassiveFloor, Emag,
                           NULL, NULL, NULL, NULL, NULL );
+// exclude cosmic-ray energy
+#  ifdef COSMIC_RAY
+   Eint -= Passive[ CRAY-NCOMP_FLUID ];
+#  endif
    Enth = Etot - Eint;
 
 
@@ -135,19 +158,33 @@ void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, con
 // Parameter   :  Dens              : Mass density
 //                MomX/Y/Z          : Momentum density
 //                Engy              : Total energy density
+//                Passive           : Passive scalars
 //                Emag              : Magnetic energy density (0.5*B^2) --> for MHD only
 //                EoS_DensEint2Pres : EoS routine to compute the gas pressure
+//                EoS_CREint2CRPres : EoS routine to compute the cosmic-ray pressure
 //                EoS_AuxArray_*    : Auxiliary arrays for EoS_DensEint2Pres()
 //                EoS_Table         : EoS tables
 //                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
+//                                    --> It's actually useless here since it's only relevant for SRHD,
+//                                        which does not support dual energy
 //
 // Return      :  Dual
 //-------------------------------------------------------------------------------------------------------
 real Hydro_Con2Dual( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                     const real Emag, const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[],
-                     const int EoS_AuxArray_Int[], const real *const EoS_Table[EOS_NTABLE_MAX],
-                     const long PassiveFloor )
+                     const real Passive[], const real Emag,
+                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_CRE2CRP_t EoS_CREint2CRPres,
+                     const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const real *const EoS_Table[EOS_NTABLE_MAX], const long PassiveFloor )
 {
+
+// check
+#  ifdef GAMER_DEBUG
+#  ifdef COSMIC_RAY
+   if ( Passive == NULL )
+      printf( "ERROR : Passive == NULL for COSMIC_RAY at file <%s>, line <%d>, function <%s> !!\n", ERROR_INFO );
+#  endif
+#  endif // GAMER_DEBUG
+
 
 // currently this function does NOT apply pressure floor when calling Hydro_Con2Pres()
    const bool CheckMinPres_No = false;
@@ -155,10 +192,13 @@ real Hydro_Con2Dual( const real Dens, const real MomX, const real MomY, const re
    real Pres, Dual;
 
 // calculate pressure and convert it to the dual-energy variable
-// --> note that DE_ENPY only works with EOS_GAMMA, which does not involve passive scalars
-   Pres = Hydro_Con2Pres( Dens, MomX, MomY, MomZ, Engy, NULL, CheckMinPres_No, NULL_REAL, PassiveFloor, Emag,
+   Pres = Hydro_Con2Pres( Dens, MomX, MomY, MomZ, Engy, Passive, CheckMinPres_No, NULL_REAL, PassiveFloor, Emag,
                           EoS_DensEint2Pres, NULL, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int,
                           EoS_Table, NULL );
+// exclude cosmic-ray pressure
+#  ifdef COSMIC_RAY
+   Pres -= EoS_CREint2CRPres( Passive[CRAY-NCOMP_FLUID], EoS_AuxArray_Flt, EoS_AuxArray_Int, EoS_Table );
+#  endif
    Dual = Hydro_DensPres2Dual( Dens, Pres, EoS_AuxArray_Flt[1] );
 
    return Dual;

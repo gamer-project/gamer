@@ -104,7 +104,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "OrszagTang_Vy0",    &OrszagTang_Vy0,        +1.0,                NoMin_double,     NoMax_double      );
    LOAD_PARA( load_mode, "OrszagTang_B0",     &OrszagTang_B0,          0.5/sqrt(M_PI),     Eps_double,       NoMax_double      );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

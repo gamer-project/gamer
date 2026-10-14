@@ -73,6 +73,7 @@ void Grackle_Close( const int lv, const int SaveSg, const real_che h_Che_Array[]
 // thread-private variables
    int  idx_p, idx_pg, PID, PID0, offset;    // idx_p/idx_pg: array indices within a patch/patch group
    real Dens, Eint;
+   real DensRatio_FluChe;                    // density ratio between the fluid array and the Che array, which could have been pre-floored
 #  ifdef DUAL_ENERGY
    real Pres;
 #  endif
@@ -115,48 +116,66 @@ void Grackle_Close( const int lv, const int SaveSg, const real_che h_Che_Array[]
          for (int j=0; j<PS1; j++)
          for (int i=0; i<PS1; i++)
          {
+//          scale the density of Grackle output to the original fluid
+            DensRatio_FluChe = *( fluid[DENS][0][0] + idx_p ) / Ptr_Dens[idx_pg];
+
 //          apply internal energy floor
-            Dens = Ptr_Dens [idx_pg];
-            Eint = Ptr_sEint[idx_pg]*Dens;
+            Dens = Ptr_Dens [idx_pg]*DensRatio_FluChe;
+#           ifdef COMOVING
+//          convert from the proper frame specific internal energy to the comoving internal energy density
+            Eint = Ptr_sEint[idx_pg] * Dens * SQR(Time[lv]);
+#           else
+            Eint = Ptr_sEint[idx_pg] * Dens;
+#           endif
             Eint = Hydro_CheckMinEint( Eint, MIN_EINT );
 
 //          update the total energy density
-            *( fluid[ENGY     ][0][0] + idx_p ) = Eint + Ptr_Ent[idx_pg];
+            *( fluid[ENGY     ][0][0] + idx_p ) = Eint + Ptr_Ent[idx_pg]*DensRatio_FluChe;
 
-//          update the dual-energy variable to be consistent with the updated pressure
+//          update the dual-energy variable to be consistent with the updated gas pressure
+//          --> must exclude cosmic-ray pressure
 #           ifdef DUAL_ENERGY
+
 #           if   ( DUAL_ENERGY == DE_ENPY )
-//          DE_ENPY only works with EOS_GAMMA, which does not involve passive scalars
+#           if   ( EOS == EOS_GAMMA )
+//          EOS_GAMMA does not involve passive scalars
             Pres = EoS_DensEint2Pres_CPUPtr( Dens, Eint, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#           elif ( EOS == EOS_COSMIC_RAY )
+            Pres = EoS_GasEint2GasPres_CPUPtr( Eint, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#           else
+#           error : ERROR : unsupported EoS !!
+#           endif // EOS
+
             *( fluid[DUAL     ][0][0] + idx_p ) = Hydro_DensPres2Dual( Dens, Pres, EoS_AuxArray_Flt[1] );
 
 #           elif ( DUAL_ENERGY == DE_EINT )
 #           error : DE_EINT is NOT supported yet !!
 #           endif
+
 #           endif // #ifdef DUAL_ENERGY
 
 //          update all chemical species
             if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE6 ) {
-            *( fluid[Idx_e    ][0][0] + idx_p ) = Ptr_e    [idx_pg] * MassRatio_ep;
-            *( fluid[Idx_HI   ][0][0] + idx_p ) = Ptr_HI   [idx_pg];
-            *( fluid[Idx_HII  ][0][0] + idx_p ) = Ptr_HII  [idx_pg];
-            *( fluid[Idx_HeI  ][0][0] + idx_p ) = Ptr_HeI  [idx_pg];
-            *( fluid[Idx_HeII ][0][0] + idx_p ) = Ptr_HeII [idx_pg];
-            *( fluid[Idx_HeIII][0][0] + idx_p ) = Ptr_HeIII[idx_pg];
+            *( fluid[Idx_e    ][0][0] + idx_p ) = Ptr_e    [idx_pg] * DensRatio_FluChe * MassRatio_ep;
+            *( fluid[Idx_HI   ][0][0] + idx_p ) = Ptr_HI   [idx_pg] * DensRatio_FluChe;
+            *( fluid[Idx_HII  ][0][0] + idx_p ) = Ptr_HII  [idx_pg] * DensRatio_FluChe;
+            *( fluid[Idx_HeI  ][0][0] + idx_p ) = Ptr_HeI  [idx_pg] * DensRatio_FluChe;
+            *( fluid[Idx_HeII ][0][0] + idx_p ) = Ptr_HeII [idx_pg] * DensRatio_FluChe;
+            *( fluid[Idx_HeIII][0][0] + idx_p ) = Ptr_HeIII[idx_pg] * DensRatio_FluChe;
             }
 
 //          9-species network
             if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE9 ) {
-            *( fluid[Idx_HM   ][0][0] + idx_p ) = Ptr_HM   [idx_pg];
-            *( fluid[Idx_H2I  ][0][0] + idx_p ) = Ptr_H2I  [idx_pg];
-            *( fluid[Idx_H2II ][0][0] + idx_p ) = Ptr_H2II [idx_pg];
+            *( fluid[Idx_HM   ][0][0] + idx_p ) = Ptr_HM   [idx_pg] * DensRatio_FluChe;
+            *( fluid[Idx_H2I  ][0][0] + idx_p ) = Ptr_H2I  [idx_pg] * DensRatio_FluChe;
+            *( fluid[Idx_H2II ][0][0] + idx_p ) = Ptr_H2II [idx_pg] * DensRatio_FluChe;
             }
 
 //          12-species network
             if ( GRACKLE_PRIMORDIAL >= GRACKLE_PRI_CHE_NSPE12 ) {
-            *( fluid[Idx_DI   ][0][0] + idx_p ) = Ptr_DI   [idx_pg];
-            *( fluid[Idx_DII  ][0][0] + idx_p ) = Ptr_DII  [idx_pg];
-            *( fluid[Idx_HDI  ][0][0] + idx_p ) = Ptr_HDI  [idx_pg];
+            *( fluid[Idx_DI   ][0][0] + idx_p ) = Ptr_DI   [idx_pg] * DensRatio_FluChe;
+            *( fluid[Idx_DII  ][0][0] + idx_p ) = Ptr_DII  [idx_pg] * DensRatio_FluChe;
+            *( fluid[Idx_HDI  ][0][0] + idx_p ) = Ptr_HDI  [idx_pg] * DensRatio_FluChe;
             }
 
             idx_p  ++;

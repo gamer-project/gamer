@@ -1,16 +1,16 @@
 This page describes feedback from particles to grids and vice versa.
-Please enable the compilation option [[--feedback | Installation:-Option-List#--feedback]].
+Please enable the compilation option [[--feedback | [Installation]-Option-List#--feedback]].
 
 
 ## Compilation Options
 
 Related options:
-[[--particle | Installation:-Option-List#--particle]], &nbsp;
-[[--feedback | Installation:-Option-List#--feedback]] &nbsp;
+[[--particle | [Installation]-Option-List#--particle]], &nbsp;
+[[--feedback | [Installation]-Option-List#--feedback]] &nbsp;
 
 
 ## Runtime Parameters
-[[Runtime parameters: Feedback | Runtime-Parameters:-Feedback]]
+[[ [Runtime parameters] Feedback | [Runtime-Parameters]-Feedback ]]
 
 Other related parameters:
 
@@ -52,7 +52,7 @@ Follow the steps below to define your feedback when
     #  endif
     ```
 
-4. Make sure to enable [[--feedback | Installation:-Option-List#--feedback]] when generating `Makefile` and `FB_USER` in `Input__Parameter`.
+4. Make sure to enable [[--feedback | [Installation]-Option-List#--feedback]] when generating `Makefile` and `FB_USER` in `Input__Parameter`.
 
 
 <br>

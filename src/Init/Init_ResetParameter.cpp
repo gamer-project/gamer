@@ -26,31 +26,37 @@ void Init_ResetParameter()
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", __FUNCTION__ );
 
 
+// initial time
+#  ifdef COMOVING
+   INIT_T = A_INIT;    // reset the initial time as the given initial scale factor
+
+   PRINT_RESET_PARA( INIT_T, FORMAT_REAL, "to match A_INIT when COMOVING is enabled" );
+#  endif
+
+
 // number of OpenMP threads
 #  ifdef OPENMP
    if ( OMP_NTHREAD <= 0 )
    {
-      int  NCPU_Node, NNode_PBS, NNode_SLURM;
+      int  NCPU_PBS, NNode_SLURM;
       FILE *fp;
 
 //    determine if the PBS/SLURM software is used
-      fp = popen( "echo ${PBS_NUM_NODES:-0}", "r" );
-      fscanf( fp, "%d", &NNode_PBS );
+      fp = popen( "echo ${PBS_NP:-0}", "r" );
+      fscanf( fp, "%d", &NCPU_PBS );
 
       fp = popen( "echo ${SLURM_JOB_NUM_NODES:-0}", "r" );
       fscanf( fp, "%d", &NNode_SLURM );
 
 //    set up the number of OpenMP threads
-      if ( NNode_PBS ) // PBS system
+      if ( NCPU_PBS ) // PBS system
       {
-         fp = popen( "echo $PBS_NUM_PPN", "r" );
-         fscanf( fp, "%d", &NCPU_Node );
-
-         OMP_NTHREAD = NCPU_Node * NNode_PBS / MPI_NRank;
+         OMP_NTHREAD = NCPU_PBS / MPI_NRank;
       }
 
       else if ( NNode_SLURM ) // SLURM system
       {
+         int NCPU_Node;
          fp = popen( "echo $SLURM_CPUS_ON_NODE", "r" );
          fscanf( fp, "%d", &NCPU_Node );
 
@@ -323,6 +329,15 @@ void Init_ResetParameter()
    if ( OPT__FIXUP_ELECTRIC )    amr->WithElectric = true;
 #  endif
 
+
+#  ifdef MHD
+   if ( OPT__SAME_INTERFACE_B == SAME_INTERFACE_B_DEFAULT )
+   {
+      OPT__SAME_INTERFACE_B = ( MINMOD_MAX_ITER > 0 ) ? SAME_INTERFACE_B_YES : SAME_INTERFACE_B_NO;
+
+      PRINT_RESET_PARA( OPT__SAME_INTERFACE_B, FORMAT_INT, "" );
+   }
+#  endif
 
 // text format parameters
 // --> The current strategy is to read the integer in between % and . to determine the string length.
@@ -598,11 +613,7 @@ void Init_ResetParameter()
 // physical time
    for (int lv=0; lv<NLEVEL; lv++)
    {
-#     ifdef COMOVING
-      Time     [lv] = A_INIT;          // will be overwritten during restart
-#     else
-      Time     [lv] = 0.0;             // will be overwritten during restart
-#     endif
+      Time     [lv] = INIT_T;          // will be overwritten during restart
       Time_Prev[lv] = -__FLT_MAX__;    // initialize as negative to indicate that it has not been set yet
 
       amr->FluSgTime[lv][   amr->FluSg[lv] ] = Time[lv];
@@ -632,7 +643,7 @@ void Init_ResetParameter()
    }
 
 
-// turn off "OPT__OVERLAP_MPI" if (1) OVERLAP_MPI=ff, (2) SERIAL=on, (3) LOAD_BALANCE=off,
+// turn off "OPT__OVERLAP_MPI" if (1) OVERLAP_MPI=off, (2) SERIAL=on, (3) LOAD_BALANCE=off,
 //                                (4) OPENMP=off, (5) MPI thread support=MPI_THREAD_SINGLE
 #  ifndef OVERLAP_MPI
    if ( OPT__OVERLAP_MPI )
@@ -1113,19 +1124,21 @@ void Init_ResetParameter()
 
 // MIN_PRES and MIN_EINT
 #  if ( MODEL == HYDRO )
-   if      ( MIN_PRES > 0.0  &&  MIN_EINT == 0.0 )
+#  if ( EOS == EOS_GAMMA )
+   if      ( MIN_PRES > 0.0  &&  MIN_EINT == 0.0  &&  GAMMA != 1.0 )
    {
-      MIN_EINT = MIN_PRES*1.5;
+      MIN_EINT = MIN_PRES / ( GAMMA - 1.0 );
 
       PRINT_RESET_PARA( MIN_EINT, FORMAT_REAL, "" );
    }
 
-   else if ( MIN_EINT > 0.0  &&  MIN_PRES == 0.0 )
+   else if ( MIN_EINT > 0.0  &&  MIN_PRES == 0.0  &&  GAMMA != 1.0 )
    {
-      MIN_PRES = MIN_EINT/1.5;
+      MIN_PRES = MIN_EINT * ( GAMMA - 1.0 );
 
       PRINT_RESET_PARA( MIN_PRES, FORMAT_REAL, "" );
    }
+#  endif
 #  endif
 
 
@@ -1133,23 +1146,18 @@ void Init_ResetParameter()
 #  if ( MODEL == HYDRO )
    if ( OPT__CHECK_PRES_AFTER_FLU < 0 )
    {
-      if ( EOS == EOS_NUCLEAR  ||  EOS == EOS_TABULAR )
-      {
-         OPT__CHECK_PRES_AFTER_FLU = 1;
+#     ifdef EXTRA_EOS_CHECK
+      OPT__CHECK_PRES_AFTER_FLU = 1;
+#     else
+      OPT__CHECK_PRES_AFTER_FLU = 0;
+#     endif
 
-         PRINT_RESET_PARA( OPT__CHECK_PRES_AFTER_FLU, FORMAT_INT, "" );
-      }
-
-      else
-      {
-         OPT__CHECK_PRES_AFTER_FLU = 0;
-
-         PRINT_RESET_PARA( OPT__CHECK_PRES_AFTER_FLU, FORMAT_INT, "" );
-      }
+      PRINT_RESET_PARA( OPT__CHECK_PRES_AFTER_FLU, FORMAT_INT, "" );
    }
 #  endif
 
 
+// normalization of mean molecular weight
 #  if ( MODEL == HYDRO )
    if      ( MU_NORM < 0.0 )
    {
@@ -1203,8 +1211,93 @@ void Init_ResetParameter()
    }
 
 
+// Grackle options
+#  ifdef SUPPORT_GRACKLE
+   if ( GRACKLE_USE_TEMP_FLOOR != 1 )
+   {
+      GRACKLE_TEMP_FLOOR_SCALAR = 0.0;
+
+      PRINT_RESET_PARA( GRACKLE_TEMP_FLOOR_SCALAR, FORMAT_REAL, "since GRACKLE_USE_TEMP_FLOOR != 1" );
+   }
+#  endif // #ifdef SUPPORT_GRACKLE
+
+
 // star-formation options
 #  ifdef STAR_FORMATION
+   if ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_NONE )
+   {
+      SF_CREATE_STAR_CRITERIA  = SF_CREATE_STAR_CRITERIA_NONE;
+      SF_CREATE_STAR_MASS_RATE = SF_CREATE_STAR_MASS_RATE_NONE;
+      SF_CREATE_STAR_PAR_SPAWN = SF_CREATE_STAR_PAR_SPAWN_NONE;
+
+      PRINT_RESET_PARA( SF_CREATE_STAR_CRITERIA,  FORMAT_LONG, "for SF_CREATE_STAR_SCHEME_NONE" );
+      PRINT_RESET_PARA( SF_CREATE_STAR_MASS_RATE, FORMAT_INT, "for SF_CREATE_STAR_SCHEME_NONE" );
+      PRINT_RESET_PARA( SF_CREATE_STAR_PAR_SPAWN, FORMAT_INT, "for SF_CREATE_STAR_SCHEME_NONE" );
+   }
+   else if ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_AGORA )
+   {
+      if ( SF_CREATE_STAR_CRITERIA < 0 )
+      {
+//       create star particles only if the gas density exceeds the given threshold
+//       Ref: (1) Nathan Goldbaum, et al., 2015, ApJ, 814, 131 (arXiv: 1510.08458), sec. 2.4
+//            (2) Ji-hoon Kim, et al., 2016, ApJ, 833, 202 (arXiv: 1610.03066), sec. 3.2
+//       Currently this scheme does not check whether the cell mass exceeds the Jeans mass
+//       --> Ref: "jeanmass" in star_maker_ssn.F of Enzo
+         SF_CREATE_STAR_CRITERIA  = SF_CREATE_STAR_CRITERIA_HIGH_GAS_DENSITY;
+
+         PRINT_RESET_PARA( SF_CREATE_STAR_CRITERIA, FORMAT_LONG, "for SF_CREATE_STAR_SCHEME_AGORA" );
+      }
+
+      if ( SF_CREATE_STAR_MASS_RATE < 0 )
+      {
+         SF_CREATE_STAR_MASS_RATE = SF_CREATE_STAR_MASS_RATE_CONST_EFF_PER_TFF;
+
+         PRINT_RESET_PARA( SF_CREATE_STAR_MASS_RATE, FORMAT_INT, "for SF_CREATE_STAR_SCHEME_AGORA" );
+      }
+
+      if ( SF_CREATE_STAR_PAR_SPAWN < 0 )
+      {
+         SF_CREATE_STAR_PAR_SPAWN = SF_CREATE_STAR_PAR_SPAWN_STOCHASTIC_MIN_MASS;
+
+         PRINT_RESET_PARA( SF_CREATE_STAR_PAR_SPAWN, FORMAT_INT, "for SF_CREATE_STAR_SCHEME_AGORA" );
+      }
+   } // if ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_NONE ) ... else if ...
+
+   if ( !( SF_CREATE_STAR_CRITERIA & SF_CREATE_STAR_CRITERIA_HIGH_GAS_DENSITY ) )
+   {
+      SF_CREATE_STAR_MIN_GAS_DENS = 0.0;
+
+      PRINT_RESET_PARA( SF_CREATE_STAR_MIN_GAS_DENS, FORMAT_REAL, "since SF_CREATE_STAR_CRITERIA_HIGH_GAS_DENSITY is disabled" );
+   }
+
+   if ( !( SF_CREATE_STAR_CRITERIA & SF_CREATE_STAR_CRITERIA_LOW_GAS_TEMPERATURE ) )
+   {
+      SF_CREATE_STAR_MAX_GAS_TEMP = HUGE_NUMBER;
+
+      PRINT_RESET_PARA( SF_CREATE_STAR_MAX_GAS_TEMP, FORMAT_REAL, "since SF_CREATE_STAR_CRITERIA_LOW_GAS_TEMPERATURE is disabled" );
+   }
+
+   if ( !( SF_CREATE_STAR_CRITERIA & SF_CREATE_STAR_CRITERIA_UNRESOLVED_JEANS_LENGTH ) )
+   {
+      SF_CREATE_STAR_MAX_GAS_JEANSL = HUGE_NUMBER;
+
+      PRINT_RESET_PARA( SF_CREATE_STAR_MAX_GAS_JEANSL, FORMAT_REAL, "since SF_CREATE_STAR_CRITERIA_UNRESOLVED_JEANS_LENGTH is disabled" );
+   }
+
+   if ( SF_CREATE_STAR_MASS_RATE != SF_CREATE_STAR_MASS_RATE_CONST_EFF_PER_TFF )
+   {
+      SF_CREATE_STAR_MASS_EFF = 0.0;
+
+      PRINT_RESET_PARA( SF_CREATE_STAR_MASS_EFF, FORMAT_REAL, "since SF_CREATE_STAR_MASS_RATE_CONST_EFF_PER_TFF is disabled" );
+   }
+
+   if ( SF_CREATE_STAR_PAR_SPAWN != SF_CREATE_STAR_PAR_SPAWN_STOCHASTIC_MIN_MASS )
+   {
+      SF_CREATE_STAR_MIN_STAR_MASS = 0.0;
+
+      PRINT_RESET_PARA( SF_CREATE_STAR_MIN_STAR_MASS, FORMAT_REAL, "since SF_CREATE_STAR_PAR_SPAWN_STOCHASTIC_MIN_MASS is disabled" );
+   }
+
    if ( SF_CREATE_STAR_MIN_LEVEL < 0 )
    {
       SF_CREATE_STAR_MIN_LEVEL = MAX_LEVEL;
@@ -1245,7 +1338,7 @@ void Init_ResetParameter()
 
 // convert to code units
 #  ifdef STAR_FORMATION
-// SF_CREATE_STAR_MIN_GAS_DENS: HI count/cm^3 --> mass density in code units
+// SF_CREATE_STAR_MIN_GAS_DENS: m_H/cm^3 --> mass density in code units
    SF_CREATE_STAR_MIN_GAS_DENS *= Const_mH / UNIT_D;
 
    PRINT_RESET_PARA( SF_CREATE_STAR_MIN_GAS_DENS, FORMAT_REAL, "to be consistent with the code units" );

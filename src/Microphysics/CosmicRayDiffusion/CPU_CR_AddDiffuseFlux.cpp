@@ -21,7 +21,7 @@ void CR_ComputeDiffusivity( real &diff_cr_para, real &diff_cr_perp, const MicroP
 #endif // #ifdef __CUDACC__ ... else ...
 
 
-// internal funcitons
+// internal functions
 GPU_DEVICE
 static real MC_limiter( const real a, const real b );
 GPU_DEVICE

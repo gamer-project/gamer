@@ -3,10 +3,10 @@
 ### MPI-only
 To enable MPI support, follow the steps below:
 1. Generate the `Makefile` and recompile the code (see [[Installation]] for details)
-    1. Set `CXX_MPI` to an MPI compiler (e.g., `mpicxx`) in the [[configuration file | Installation:-Machine-Configuration-File]]
-    2. Set `MPI_PATH` to you MPI installation path in the [[configuration file | Installation:-Machine-Configuration-File]]
+    1. Set `CXX_MPI` to an MPI compiler (e.g., `mpicxx`) in the [[configuration file | [Installation]-Machine-Configuration-File]]
+    2. Set `MPI_PATH` to you MPI installation path in the [[configuration file | [Installation]-Machine-Configuration-File]]
     3. Generate `Makefile` with the following options:
-       * [[--mpi | Installation:-Option-List#--mpi]]=`true`
+       * [[--mpi | [Installation]-Option-List#--mpi]]=`true`
     4. Recompile the code by `make clean; make`
 
 2. Launch the code with MPI (consult your system documentation),
@@ -20,11 +20,11 @@ for instance,
 To enable hybrid MPI/OpenMP, follow the MPI-only prescriptions
 given above with the following additional steps:
 1. Also turn on the compilation option
-[[--openmp | Installation:-Option-List#--openmp]]
+[[--openmp | [Installation]-Option-List#--openmp]]
 and set the OpenMP flag `OPENMPFLAG` properly in the `Makefile`
 
 2. Set the number of threads through the runtime parameter
-[[OMP_NTHREAD | Runtime-Parameters:-MPI-and-OpenMP#OMP_NTHREAD]]
+[[OMP_NTHREAD | [Runtime-Parameters]-MPI-and-OpenMP#OMP_NTHREAD]]
 
 3. The recommended way for launching hybrid MPI/OpenMP jobs can vary from
 system to system. So please consult your system documentation. Also, check
@@ -34,12 +34,12 @@ out the [Remarks](#remarks) below.
 ## Compilation Options
 
 Related options:
-[[--mpi | Installation:-Option-List#--mpi]] &nbsp;
-[[--openmp | Installation:-Option-List#--openmp]] &nbsp;
+[[--mpi | [Installation]-Option-List#--mpi]] &nbsp;
+[[--openmp | [Installation]-Option-List#--openmp]] &nbsp;
 
 
 ## Runtime Parameters
-[[Runtime parameters: MPI and OpenMP | Runtime-Parameters:-MPI-and-OpenMP]]
+[[ [Runtime parameters] MPI and OpenMP | [Runtime-Parameters]-MPI-and-OpenMP ]]
 
 Other related parameters: none
 
@@ -53,7 +53,7 @@ of MPI processes per node and the number of OpenMP threads associated
 with each MPI process. When using GPUs, the most straightforward way is
 to set the total number of MPI processes equal
 to the total number of GPUs you want to use, and then set the number of
-OpenMP threads per process ([[OMP_NTHREAD | Runtime-Parameters:-MPI-and-OpenMP#OMP_NTHREAD]]) equal to the
+OpenMP threads per process ([[OMP_NTHREAD | [Runtime-Parameters]-MPI-and-OpenMP#OMP_NTHREAD]]) equal to the
 ratio between the number of CPU cores per node and the number of GPUs per
 node.
 
@@ -143,7 +143,7 @@ in the same NUMA domain.
 
 
 ### OpenMP Support in GRACKLE
-See [[Library Configurations -- GRACKLE | Installation:-External-Libraries#GRACKLE]]
+See [[Library Configurations -- GRACKLE | [Installation]-External-Libraries#GRACKLE]]
 for how to enable OpenMP in GRACKLE.
 
 
@@ -151,5 +151,5 @@ for how to enable OpenMP in GRACKLE.
 
 ## Links
 * [[How to run the code | Running the code]]
-* [[How to install GRACKLE | Installation:-External-Libraries#GRACKLE]]
+* [[How to install GRACKLE | [Installation]-External-Libraries#GRACKLE]]
 * [[Main page of Runtime Parameters | Runtime Parameters]]

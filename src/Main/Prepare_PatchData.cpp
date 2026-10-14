@@ -1728,7 +1728,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                   Data1PG_FC_Ptr += PGSize3D_FC;
                } // for (int v=0; v<NVarFC_Tot; v++)
 
-            } // else if ( SibPID0 == -1 )
+            } // if ( SibPID0 == -1 )
 
 
 //          (b3) if the target sibling patch lies outside the simulation domain --> apply the specified B.C.
@@ -3176,7 +3176,7 @@ extern bool Particle_Collected;
 //                   --> So rho_ext[] should only be used within Prepare_PatchData()
 //                8. Note that computing the particle density of a given patch requires computing rho_ext[] in
 //                   nearby patches too. As a result, computing rho_ext[] in Prepare_PatchData(), as in the previous
-//                   approach, would prevent from applying OpenMP parallelization *outside* Prepare_PatchData().
+//                   approach, would prevent applying OpenMP parallelization *outside* Prepare_PatchData().
 //                   This is the major reason why we switch to pre-compute rho_ext[] of all patches here instead of in
 //                   Prepare_PatchData().
 //                9. Only the master thread in OpenMP is allowed to call this routine

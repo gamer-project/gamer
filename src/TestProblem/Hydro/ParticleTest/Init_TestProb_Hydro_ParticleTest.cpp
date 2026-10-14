@@ -20,7 +20,8 @@ static double ParTest_Ang_Freq;       // gas angular frequency
 void Par_Init_ByFunction_ParticleTest( const long NPar_ThisRank, const long NPar_AllRank,
                                        real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
                                        real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
-                                       long_par *ParType, real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
+                                       long_par *ParType,
+                                       real_par *AllAttributeFlt[PAR_NATT_FLT_TOTAL],
                                        long_par *AllAttributeInt[PAR_NATT_INT_TOTAL] );
 #endif
 
@@ -116,7 +117,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "ParTest_Use_Tracers", &ParTest_Use_Tracers,    true,         Useless_bool,     Useless_bool      );
    LOAD_PARA( load_mode, "ParTest_Use_Massive", &ParTest_Use_Massive,    true,         Useless_bool,     Useless_bool      );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

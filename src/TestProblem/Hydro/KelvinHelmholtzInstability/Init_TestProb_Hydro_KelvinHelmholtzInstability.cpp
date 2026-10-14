@@ -122,7 +122,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "KH_RefineShearMaxLv", &KH_RefineShearMaxLv,   2,             0,                TOP_LEVEL         );
    LOAD_PARA( load_mode, "KH_PeriodicZFactor",  &KH_PeriodicZFactor,    1,             1,                NoMax_int         );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

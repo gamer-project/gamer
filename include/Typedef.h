@@ -35,7 +35,7 @@ typedef int  long_par;
 #endif
 
 #ifdef SUPPORT_GRACKLE
-#include <grackle_float.h>
+#include <grackle.h>
 #if   defined GRACKLE_FLOAT_8
 typedef double real_che;
 #elif defined GRACKLE_FLOAT_4
@@ -93,10 +93,15 @@ const TestProbID_t
    TESTPROB_HYDRO_CR_SOUNDWAVE                 =   20,
    TESTPROB_HYDRO_CR_SHOCKTUBE                 =   21,
    TESTPROB_HYDRO_CR_DIFFUSION                 =   23,
+   TESTPROB_HYDRO_GRACKLE_TEST                 =   24,
+   TESTPROB_HYDRO_PARTICLE_FLAG                =   25,
+   TESTPROB_HYDRO_STAR_FORMATION_THRESHOLD     =   26,
    TESTPROB_HYDRO_BARRED_POT                   =   51,
    TESTPROB_HYDRO_JET_ICM_WALL                 =   52,
    TESTPROB_HYDRO_CDM_LSS                      =  100,
    TESTPROB_HYDRO_ZELDOVICH                    =  101,
+   TESTPROB_HYDRO_GRACKLE_COMOVING             =  102,
+   TESTPROB_HYDRO_EXACTCOOLING                 =  123,
    TESTPROB_ELBDM_EXTPOT                       = 1000,
    TESTPROB_ELBDM_JEANS_INSTABILITY_COMOVING   = 1001,
    TESTPROB_ELBDM_JEANS_INSTABILITY_PHYSICAL   = 1002,
@@ -110,7 +115,9 @@ const TestProbID_t
    TESTPROB_ELBDM_PLANE_WAVE                   = 1010,
    TESTPROB_ELBDM_PERTURBATION                 = 1011,
    TESTPROB_ELBDM_HALO_MERGER                  = 1012,
-   TESTPROB_ELBDM_DISK_HEATING                 = 1013;
+   TESTPROB_ELBDM_DISK_HEATING                 = 1013,
+   TESTPROB_ELBDM_UNIFORM_GRANULE              = 1014;
+
 
 // program initialization options
 typedef int OptInit_t;
@@ -262,6 +269,14 @@ const IsUnphyMode_t
    UNPHY_MODE_PASSIVE_ONLY = 2;  // only check passive scalars
 
 
+// whether to check rounding errors in Hydro_IsUnphysical()
+typedef int CkUnphyRnd_t;
+const CkUnphyRnd_t
+   CK_UNPHY_RND_NA  = 0,   // not applicable
+   CK_UNPHY_RND_YES = 1,   // enable the check
+   CK_UNPHY_RND_NO  = 2;   // disable the check
+
+
 // verbosity levels of Hydro_IsUnphysical()
 typedef int IsUnphVerb_t;
 const IsUnphVerb_t
@@ -401,6 +416,13 @@ const ParOutputDens_t
    PAR_OUTPUT_DENS_PAR_ONLY = 1,
    PAR_OUTPUT_DENS_TOTAL    = 2;
 
+typedef int FlagParTarget_t;
+const FlagParTarget_t
+   FLAG_PAR_NONE = 0,
+   FLAG_PAR_MUST = 1,
+   FLAG_PAR_CAN  = 2,
+   FLAG_PAR_BOTH = 3;
+
 typedef int ParPass2Son_t;
 const ParPass2Son_t
    PAR_PASS2SON_GENERAL = 1,
@@ -521,6 +543,13 @@ const GracklePriChe_t
    GRACKLE_PRI_CHE_NSPE6  = 1,
    GRACKLE_PRI_CHE_NSPE9  = 2,
    GRACKLE_PRI_CHE_NSPE12 = 3;
+
+// bitwise field indices used by Grackle
+typedef long GrackleFieldBIdx_t;
+const GrackleFieldBIdx_t
+   _GRACKLE_TEMP  = ( 1L << 0 ),
+   _GRACKLE_MU    = ( 1L << 1 ),
+   _GRACKLE_TCOOL = ( 1L << 2 );
 #endif
 
 
@@ -529,8 +558,34 @@ const GracklePriChe_t
 // schemes of creating new star particles
 typedef int SF_CreateStarScheme_t;
 const SF_CreateStarScheme_t
-   SF_CREATE_STAR_SCHEME_NONE  = 0,
-   SF_CREATE_STAR_SCHEME_AGORA = 1;
+   SF_CREATE_STAR_SCHEME_NONE       =  0,
+   SF_CREATE_STAR_SCHEME_AGORA      =  1,
+   SF_CREATE_STAR_SCHEME_CUSTOMIZED = -1;
+
+// criteria for creating new star particles
+typedef long SF_CreateStarCriteria_t;
+const SF_CreateStarCriteria_t
+   SF_CREATE_STAR_CRITERIA_NONE                    =   0L,
+   SF_CREATE_STAR_CRITERIA_HIGH_GAS_DENSITY        = ( 1L << 0 ),
+   SF_CREATE_STAR_CRITERIA_LOW_GAS_TEMPERATURE     = ( 1L << 1 ),
+   SF_CREATE_STAR_CRITERIA_UNRESOLVED_JEANS_LENGTH = ( 1L << 2 ),
+   SF_CREATE_STAR_CRITERIA_CONVERGING_GAS_VELOCITY = ( 1L << 3 );   // not implemented yet
+
+// star mass formation rates for creating new star particles
+typedef int SF_CreateStarMassRate_t;
+const SF_CreateStarMassRate_t
+   SF_CREATE_STAR_MASS_RATE_NONE                = 0,
+   SF_CREATE_STAR_MASS_RATE_CONST_EFF_PER_TFF   = 1,
+   SF_CREATE_STAR_MASS_RATE_CONST_DEPLETION_T   = 2,   // not implemented yet
+   SF_CREATE_STAR_MASS_RATE_CONST_RATE          = 3,   // not implemented yet
+   SF_CREATE_STAR_MASS_RATE_MASS_GT_DENS_THRESH = 4;   // not implemented yet
+
+// particle spawning methods for creating new star particles
+typedef int SF_CreateStarParSpawn_t;
+const SF_CreateStarParSpawn_t
+   SF_CREATE_STAR_PAR_SPAWN_NONE                = 0,
+   SF_CREATE_STAR_PAR_SPAWN_STOCHASTIC_MIN_MASS = 1,
+   SF_CREATE_STAR_PAR_SPAWN_DETERMINISTIC       = 2;   // not implemented yet
 #endif
 
 
@@ -567,6 +622,14 @@ const LoadParaMode_t
    LOAD_HDF5_OUTPUT = 2;
 
 
+// whether to enforce consistency of magnetic field at the patch interface
+typedef int SameInterfaceB_t;
+const SameInterfaceB_t
+   SAME_INTERFACE_B_DEFAULT = -1,
+   SAME_INTERFACE_B_NO      = 0,
+   SAME_INTERFACE_B_YES     = 1;
+
+
 // function pointers
 typedef real (*EoS_GUESS_t)    ( const real Con[], real* const Constant, const double AuxArray_Flt[],
                                  const int AuxArray_Int[], const real *const Table[EOS_NTABLE_MAX] );
@@ -596,8 +659,15 @@ typedef real (*EoS_DE2S_t)     ( const real Dens, const real Eint, const real Pa
 typedef void (*EoS_GENE_t)     ( const int Mode, real Out[], const real In_Flt[], const int In_Int[],
                                  const double AuxArray_Flt[], const int AuxArray_Int[],
                                  const real *const Table[EOS_NTABLE_MAX] );
-#ifdef COSMIC_RAY
+// declare for Hydro_Con2Dual() even when COSMIC_RAY is disabled
 typedef real (*EoS_CRE2CRP_t)  ( const real E_CR,
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
+#ifdef COSMIC_RAY
+typedef real (*EoS_GP2GE_t)    ( const real Pres_Gas,
+                                 const double AuxArray_Flt[], const int AuxArray_Int[],
+                                 const real *const Table[EOS_NTABLE_MAX] );
+typedef real (*EoS_GE2GP_t)    ( const real Eint_Gas,
                                  const double AuxArray_Flt[], const int AuxArray_Int[],
                                  const real *const Table[EOS_NTABLE_MAX] );
 #endif

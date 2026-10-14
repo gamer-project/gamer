@@ -6,6 +6,9 @@
 #if ( MODEL == HYDRO )
 void Src_Init_Deleptonization();
 #endif
+#ifdef EXACT_COOLING
+void Src_Init_ExactCooling();
+#endif
 
 // this function pointer can be set by a test problem initializer for a user-specified source term
 void (*Src_Init_User_Ptr)() = NULL;
@@ -32,16 +35,12 @@ void Src_Init()
 
 
 // check if at least one source term is activated
-   if (
-#       if ( MODEL == HYDRO )
-        SrcTerms.Deleptonization  ||
-#       endif
-        SrcTerms.User
-      )
-      SrcTerms.Any = true;
-   else
-      SrcTerms.Any = false;
-
+   SrcTerms.Any = false;
+#  if ( MODEL == HYDRO )
+   SrcTerms.Any |= SrcTerms.Deleptonization;
+   SrcTerms.Any |= SrcTerms.ExactCooling;
+#  endif
+   SrcTerms.Any |= SrcTerms.User;
 
 // set auxiliary parameters
    for (int d=0; d<3; d++)    SrcTerms.BoxCenter[d] = amr->BoxCenter[d];
@@ -71,6 +70,19 @@ void Src_Init()
    SrcTerms.Dlep_Profile_RadiusDevPtr = NULL;
 #  endif
 
+#  ifdef EXACT_COOLING
+   SrcTerms.EC_FuncPtr                = NULL;
+   SrcTerms.EC_CPUPtr                 = NULL;
+#  ifdef GPU
+   SrcTerms.EC_GPUPtr                 = NULL;
+#  endif
+   SrcTerms.EC_AuxArrayDevPtr_Flt     = NULL;
+   SrcTerms.EC_AuxArrayDevPtr_Int     = NULL;
+   SrcTerms.EC_TEF_lambda_DevPtr      = NULL;
+   SrcTerms.EC_TEF_alpha_DevPtr       = NULL;
+   SrcTerms.EC_TEFc_DevPtr            = NULL;
+#  endif // #ifdef EXACT_COOLING
+
    SrcTerms.User_FuncPtr              = NULL;
    SrcTerms.User_CPUPtr               = NULL;
 #  ifdef GPU
@@ -96,7 +108,22 @@ void Src_Init()
    }
 #  endif
 
-// (2) user-specified source term
+// (2) exact cooling
+#  ifdef EXACT_COOLING
+   if ( SrcTerms.ExactCooling )
+   {
+      Src_Init_ExactCooling();
+
+//    check if the source-term function is set properly
+      if ( SrcTerms.EC_FuncPtr == NULL )   Aux_Error( ERROR_INFO, "SrcTerms.EC_FuncPtr == NULL !!\n" );
+      if ( SrcTerms.EC_CPUPtr  == NULL )   Aux_Error( ERROR_INFO, "SrcTerms.EC_CPUPtr  == NULL !!\n" );
+#     ifdef GPU
+      if ( SrcTerms.EC_GPUPtr  == NULL )   Aux_Error( ERROR_INFO, "SrcTerms.EC_GPUPtr  == NULL !!\n" );
+#     endif
+   }
+#  endif // #ifdef EXACT_COOLING
+
+// (3) user-specified source term
    if ( SrcTerms.User )
    {
       if ( Src_Init_User_Ptr == NULL )       Aux_Error( ERROR_INFO, "Src_Init_User_Ptr == NULL !!\n" );

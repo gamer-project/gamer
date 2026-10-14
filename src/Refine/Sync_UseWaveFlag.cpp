@@ -22,7 +22,7 @@ void Sync_UseWaveFlag( const int lv )
     bool recv;
     bool send = amr->use_wave_flag[lv];
 
-    MPI_Allreduce( &send, &recv, 1, MPI_C_BOOL, MPI_LOR, MPI_COMM_WORLD );
+    MPI_Allreduce( &send, &recv, 1, MPI_CXX_BOOL, MPI_LOR, MPI_COMM_WORLD );
 
     amr->use_wave_flag[lv] = recv;
 

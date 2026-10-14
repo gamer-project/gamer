@@ -98,7 +98,7 @@ int Flu_ResetByUser_Func_Template( real fluid[], const double Emag, const double
 // Note        :  1. Enabled by the runtime option "OPT__RESET_FLUID"
 //                2. Invoked by EvolveLevel() using the function pointer "Flu_ResetByUser_API_Ptr"
 //                   --> This function pointer may be reset by a test problem initializer, in which case
-//                       this funtion will become useless
+//                       this function will become useless
 //                3. Currently NOT applied to the input uniform array
 //                   --> Init_ByFile() does NOT call this function
 //                4. Currently does not work with "OPT__OVERLAP_MPI"
@@ -290,13 +290,6 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
                                                     MIN_EINT, PassiveFloorMask, Emag );
 #           endif
 
-//          calculate the dual-energy variable (entropy or internal energy)
-#           ifdef DUAL_ENERGY
-            fluid[DUAL] = Hydro_Con2Dual( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], Emag,
-                                          EoS_DensEint2Pres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
-                                          PassiveFloorMask );
-#           endif
-
 //          floor and normalize passive scalars
 #           if ( NCOMP_PASSIVE > 0 )
             for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
@@ -304,6 +297,13 @@ void Flu_ResetByUser_API_Default( const int lv, const int FluSg, const int MagSg
 
             if ( OPT__NORMALIZE_PASSIVE )
                Hydro_NormalizePassive( fluid[DENS], fluid+NCOMP_FLUID, PassiveNorm_NVar, PassiveNorm_VarIdx );
+#           endif
+
+//          calculate the dual-energy variable (entropy or internal energy)
+#           ifdef DUAL_ENERGY
+            fluid[DUAL] = Hydro_Con2Dual( fluid[DENS], fluid[MOMX], fluid[MOMY], fluid[MOMZ], fluid[ENGY], fluid+NCOMP_FLUID, Emag,
+                                          EoS_DensEint2Pres_CPUPtr, EoS_CREint2CRPres_CPUPtr, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table,
+                                          PassiveFloorMask );
 #           endif
 #           endif // if ( MODEL == HYDRO )
 

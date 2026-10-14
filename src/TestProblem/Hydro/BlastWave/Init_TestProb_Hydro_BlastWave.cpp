@@ -128,7 +128,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "Blast_ResetB_VecPot",  &Blast_ResetB_VecPot,    true,         Useless_bool,     Useless_bool      );
 #  endif
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

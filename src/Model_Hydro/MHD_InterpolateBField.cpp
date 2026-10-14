@@ -592,7 +592,7 @@ inline real GetCellBz( const real CellCoeff[], const real x, const real y )
 
    return CellBz;
 
-} // FUNCTION : GetCellBx
+} // FUNCTION : GetCellBz
 
 
 

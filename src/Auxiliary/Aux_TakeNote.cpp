@@ -73,8 +73,8 @@ void Aux_TakeNote()
       fprintf( Note, "POT_SCHEME                      SOR\n" );
 #     elif ( POT_SCHEME == MG )
       fprintf( Note, "POT_SCHEME                      MG\n" );
-#     elif ( POT_SCHEME == NONE )
-      fprintf( Note, "POT_SCHEME                      NONE\n" );
+#     elif ( POT_SCHEME == OPTION_NONE )
+      fprintf( Note, "POT_SCHEME                      OPTION_NONE\n" );
 #     else
       fprintf( Note, "POT_SCHEME                      UNKNOWN\n" );
 #     endif
@@ -121,8 +121,8 @@ void Aux_TakeNote()
       fprintf( Note, "FLU_SCHEME                      MHM with Riemann prediction\n" );
 #     elif ( FLU_SCHEME == CTU )
       fprintf( Note, "FLU_SCHEME                      CTU\n" );
-#     elif ( FLU_SCHEME == NONE )
-      fprintf( Note, "FLU_SCHEME                      NONE\n" );
+#     elif ( FLU_SCHEME == OPTION_NONE )
+      fprintf( Note, "FLU_SCHEME                      OPTION_NONE\n" );
 #     else
       fprintf( Note, "FLU_SCHEME                      UNKNOWN\n" );
 #     endif
@@ -131,8 +131,8 @@ void Aux_TakeNote()
       fprintf( Note, "LR_SCHEME                       PLM\n" );
 #     elif ( LR_SCHEME == PPM )
       fprintf( Note, "LR_SCHEME                       PPM\n" );
-#     elif ( LR_SCHEME == NONE )
-      fprintf( Note, "LR_SCHEME                       NONE\n" );
+#     elif ( LR_SCHEME == OPTION_NONE )
+      fprintf( Note, "LR_SCHEME                       OPTION_NONE\n" );
 #     else
       fprintf( Note, "LR_SCHEME                       UNKNOWN\n" );
 #     endif
@@ -147,8 +147,8 @@ void Aux_TakeNote()
       fprintf( Note, "RSOLVER                         HLLC\n" );
 #     elif ( RSOLVER == HLLD )
       fprintf( Note, "RSOLVER                         HLLD\n" );
-#     elif ( RSOLVER == NONE )
-      fprintf( Note, "RSOLVER                         NONE\n" );
+#     elif ( RSOLVER == OPTION_NONE )
+      fprintf( Note, "RSOLVER                         OPTION_NONE\n" );
 #     else
       fprintf( Note, "RSOLVER                         UNKNOWN\n" );
 #     endif
@@ -157,8 +157,8 @@ void Aux_TakeNote()
       fprintf( Note, "DUAL_ENERGY                     DE_ENPY\n" );
 #     elif ( DUAL_ENERGY == DE_EINT )
       fprintf( Note, "DUAL_ENERGY                     DE_EINT\n" );
-#     elif ( DUAL_ENERGY == NONE )
-      fprintf( Note, "DUAL_ENERGY                     NONE\n" );
+#     elif ( DUAL_ENERGY == OPTION_NONE )
+      fprintf( Note, "DUAL_ENERGY                     OPTION_NONE\n" );
 #     else
       fprintf( Note, "DUAL_ENERGY                     UNKNOWN\n" );
 #     endif
@@ -314,6 +314,13 @@ void Aux_TakeNote()
 
 #     endif // #ifdef PARTICLE
 
+//    e. option in source term
+#     ifdef EXACT_COOLING
+      fprintf( Note, "EXACT_COOLING                   ON\n" );
+#     else
+      fprintf( Note, "EXACT_COOLING                   OFF\n" );
+#     endif
+
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
 
@@ -417,6 +424,8 @@ void Aux_TakeNote()
       fprintf( Note, "GPU_ARCH                        ADA_LOVELACE\n" );
 #     elif ( GPU_ARCH == HOPPER )
       fprintf( Note, "GPU_ARCH                        HOPPER\n" );
+#     elif ( GPU_ARCH == BLACKWELL )
+      fprintf( Note, "GPU_ARCH                        BLACKWELL\n" );
 #     else
       fprintf( Note, "GPU_ARCH                        UNKNOWN\n" );
 #     endif
@@ -528,6 +537,19 @@ void Aux_TakeNote()
       fprintf( Note, "FB_SEP_FLUOUT                   OFF\n" );
 #     endif
 
+#     ifdef EXTRA_EOS_CHECK
+      fprintf( Note, "EXTRA_EOS_CHECK                 ON\n" );
+#     else
+      fprintf( Note, "EXTRA_EOS_CHECK                 OFF\n" );
+#     endif
+
+#     ifdef CHECK_UNPHY_ROUNDING
+      fprintf( Note, "CHECK_UNPHY_ROUNDING            ON\n" );
+#     else
+      fprintf( Note, "CHECK_UNPHY_ROUNDING            OFF\n" );
+#     endif
+      fprintf( Note, "CHECK_UNPHY_ROUNDING_FACTOR    % 21.14e\n", CHECK_UNPHY_ROUNDING_FACTOR );
+
 #     if   ( MODEL == HYDRO )
 #     ifdef CHECK_UNPHYSICAL_IN_FLUID
       fprintf( Note, "CHECK_UNPHYSICAL_IN_FLUID       ON\n" );
@@ -555,7 +577,7 @@ void Aux_TakeNote()
       fprintf( Note, "CHECK_INTERMEDIATE              HLLC\n" );
 #     elif ( CHECK_INTERMEDIATE == HLLD )
       fprintf( Note, "CHECK_INTERMEDIATE              HLLD\n" );
-#     elif ( CHECK_INTERMEDIATE == NONE )
+#     elif ( CHECK_INTERMEDIATE == OPTION_NONE )
       fprintf( Note, "CHECK_INTERMEDIATE              OFF\n" );
 #     else
       fprintf( Note, "CHECK_INTERMEDIATE              UNKNOWN\n" );
@@ -569,7 +591,7 @@ void Aux_TakeNote()
       fprintf( Note, "RSOLVER_RESCUE                  HLLC\n" );
 #     elif ( RSOLVER_RESCUE == HLLD )
       fprintf( Note, "RSOLVER_RESCUE                  HLLD\n" );
-#     elif ( RSOLVER_RESCUE == NONE )
+#     elif ( RSOLVER_RESCUE == OPTION_NONE )
       fprintf( Note, "RSOLVER_RESCUE                  OFF\n" );
 #     else
       fprintf( Note, "RSOLVER_RESCUE                  UNKNOWN\n" );
@@ -611,6 +633,12 @@ void Aux_TakeNote()
 #     endif // #ifndef SRHD
 #     else
       fprintf( Note, "MHM_CHECK_PREDICT               OFF\n" );
+#     endif
+
+#     ifdef DUAL_ENERGY_PREDICT
+      fprintf( Note, "DUAL_ENERGY_PREDICT             ON\n" );
+#     else
+      fprintf( Note, "DUAL_ENERGY_PREDICT             OFF\n" );
 #     endif
 
 #     elif ( MODEL == ELBDM )
@@ -696,7 +724,17 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "#define VERSION                 %s\n",      VERSION               );
       fprintf( Note, "#define NCOMP_FLUID            % d\n",      NCOMP_FLUID           );
+      {
+      fprintf( Note, "   Field names                 "                                  );
+      for (int v=0; v<NCOMP_FLUID; v++)
+      fprintf( Note, " %s",                                       FieldLabel[v]         );
+      fprintf( Note, "\n" ); }
       fprintf( Note, "#define NCOMP_PASSIVE          % d\n",      NCOMP_PASSIVE         );
+      {
+      fprintf( Note, "   Field names                 "                                  );
+      for (int v=NCOMP_FLUID; v<NCOMP_FLUID+NCOMP_PASSIVE; v++)
+      fprintf( Note, " %s",                                       FieldLabel[v]         );
+      fprintf( Note, "\n" ); }
       fprintf( Note, "#define FLU_NIN                % d\n",      FLU_NIN               );
       fprintf( Note, "#define FLU_NOUT               % d\n",      FLU_NOUT              );
       fprintf( Note, "#define FLU_NIN_T              % d\n",      FLU_NIN_T             );
@@ -834,6 +872,7 @@ void Aux_TakeNote()
       fprintf( Note, "MPI_NRank_X[1]                 % d\n",      MPI_NRank_X[1]   );
       fprintf( Note, "MPI_NRank_X[2]                 % d\n",      MPI_NRank_X[2]   );
       fprintf( Note, "OMP_NTHREAD                    % d\n",      OMP_NTHREAD      );
+      fprintf( Note, "INIT_T                         % 21.14e\n", INIT_T           );
       fprintf( Note, "END_T                          % 21.14e\n", END_T            );
       fprintf( Note, "END_STEP                       % ld\n",     END_STEP         );
       fprintf( Note, "***********************************************************************************\n" );
@@ -923,11 +962,13 @@ void Aux_TakeNote()
 #     endif
       fprintf( Note, "Par->NPar_Active_AllRank       % ld\n",     amr->Par->NPar_Active_AllRank );
       fprintf( Note, "Par->Init                      % d\n",      amr->Par->Init                );
+      fprintf( Note, "Par->FlagInit                  % d\n",      amr->Par->FlagInit            );
       fprintf( Note, "Par->ParICFormat               % d\n",      amr->Par->ParICFormat         );
       fprintf( Note, "PAR_IC_FLOAT8                  % d\n",      PAR_IC_FLOAT8                 );
       fprintf( Note, "PAR_IC_INT8                    % d\n",      PAR_IC_INT8                   );
       fprintf( Note, "Par->ParICMass                 % 14.7e\n",  amr->Par->ParICMass           );
       fprintf( Note, "Par->ParICType                 % d\n",      amr->Par->ParICType           );
+      fprintf( Note, "Par->ParICPUID                 % d\n",      amr->Par->ParICPUID           );
       fprintf( Note, "Par->Interp                    % d\n",      amr->Par->Interp              );
       fprintf( Note, "Par->Integ                     % d\n",      amr->Par->Integ               );
       fprintf( Note, "Par->GhostSize                 % d\n",      amr->Par->GhostSize           );
@@ -986,6 +1027,9 @@ void Aux_TakeNote()
 #     ifdef CR_DIFFUSION
       fprintf( Note, "DT__CR_DIFFUSION               % 14.7e\n",  DT__CR_DIFFUSION            );
 #     endif
+#     ifdef SUPPORT_GRACKLE
+      fprintf( Note, "DT__GRACKLE_COOLING            % 14.7e\n",  DT__GRACKLE_COOLING         );
+#     endif
 #     ifdef COMOVING
       fprintf( Note, "DT__MAX_DELTA_A                % 14.7e\n",  DT__MAX_DELTA_A             );
 #     endif
@@ -1027,6 +1071,9 @@ void Aux_TakeNote()
 #     endif
 #     ifdef SRHD
       fprintf( Note, "OPT__FLAG_LRTZ_GRADIENT        % d\n",      OPT__FLAG_LRTZ_GRADIENT   );
+#     endif
+#     ifdef SUPPORT_GRACKLE
+      fprintf( Note, "OPT__FLAG_COOLING_LEN          % d\n",      OPT__FLAG_COOLING_LEN     );
 #     endif
 #     endif
 #     if ( MODEL == ELBDM )
@@ -1073,6 +1120,8 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__FLAG_NPAR_PATCH           % d\n",      OPT__FLAG_NPAR_PATCH      );
       fprintf( Note, "OPT__FLAG_NPAR_CELL            % d\n",      OPT__FLAG_NPAR_CELL       );
       fprintf( Note, "OPT__FLAG_PAR_MASS_CELL        % d\n",      OPT__FLAG_PAR_MASS_CELL   );
+      fprintf( Note, "OPT__FLAG_PAR_TARGET           % d\n",      OPT__FLAG_PAR_TARGET      );
+      fprintf( Note, "OPT__FLAG_PAR_TARGET_SIB       % d\n",      OPT__FLAG_PAR_TARGET_SIB  );
 #     endif
 #     ifdef COSMIC_RAY
       fprintf( Note, "OPT__FLAG_CRAY                 % d\n",      OPT__FLAG_CRAY            );
@@ -1119,6 +1168,12 @@ void Aux_TakeNote()
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "SRC_ANY                        % d\n",      SrcTerms.Any              );
       fprintf( Note, "SRC_DELEPTONIZATION            % d\n",      SrcTerms.Deleptonization  );
+      fprintf( Note, "SRC_EXACTCOOLING               % d\n",      SrcTerms.ExactCooling     );
+#     ifdef EXACT_COOLING
+      if ( SrcTerms.ExactCooling ) {
+      fprintf( Note, "SRC_EC_TEF_N                   % d\n",      SrcTerms.EC_TEF_N         );
+      fprintf( Note, "SRC_EC_DTCOEF                  % 14.7e\n",  SrcTerms.EC_dtCoef        ); }
+#     endif
       fprintf( Note, "SRC_USER                       % d\n",      SrcTerms.User             );
       fprintf( Note, "SRC_GPU_NPGROUP                % d\n",      SRC_GPU_NPGROUP           );
       fprintf( Note, "***********************************************************************************\n" );
@@ -1129,21 +1184,30 @@ void Aux_TakeNote()
 #     ifdef SUPPORT_GRACKLE
       fprintf( Note, "Parameters of Grackle\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "GRACKLE_ACTIVATE               % d\n",      GRACKLE_ACTIVATE        );
+      fprintf( Note, "GRACKLE_ACTIVATE               % d\n",      GRACKLE_ACTIVATE           );
       if ( GRACKLE_ACTIVATE ) {
-      fprintf( Note, "GRACKLE_VERBOSE                % d\n",      GRACKLE_VERBOSE         );
-      fprintf( Note, "GRACKLE_COOLING                % d\n",      GRACKLE_COOLING         );
-      fprintf( Note, "GRACKLE_PRIMORDIAL             % d\n",      GRACKLE_PRIMORDIAL      );
-      fprintf( Note, "GRACKLE_METAL                  % d\n",      GRACKLE_METAL           );
-      fprintf( Note, "GRACKLE_UV                     % d\n",      GRACKLE_UV              );
-      fprintf( Note, "GRACKLE_CMB_FLOOR              % d\n",      GRACKLE_CMB_FLOOR       );
-      fprintf( Note, "GRACKLE_PE_HEATING             % d\n",      GRACKLE_PE_HEATING      );
-      fprintf( Note, "GRACKLE_PE_HEATING_RATE        % 14.7e\n",  GRACKLE_PE_HEATING_RATE );
-      fprintf( Note, "GRACKLE_CLOUDY_TABLE            %s\n",      GRACKLE_CLOUDY_TABLE    );
-      fprintf( Note, "GRACKLE_THREE_BODY_RATE        % d\n",      GRACKLE_THREE_BODY_RATE );
-      fprintf( Note, "GRACKLE_CIE_COOLING            % d\n",      GRACKLE_CIE_COOLING     );
-      fprintf( Note, "GRACKLE_H2_OPA_APPROX          % d\n",      GRACKLE_H2_OPA_APPROX   );
-      fprintf( Note, "CHE_GPU_NPGROUP                % d\n",      CHE_GPU_NPGROUP         ); }
+      fprintf( Note, "GRACKLE_VERBOSE                % d\n",      GRACKLE_VERBOSE            );
+#     ifndef COMOVING
+      fprintf( Note, "GRACKLE_REDSHIFT               % 14.7e\n",  GRACKLE_REDSHIFT           );
+#     endif
+      fprintf( Note, "GRACKLE_COOLING                % d\n",      GRACKLE_COOLING            );
+      fprintf( Note, "GRACKLE_PRIMORDIAL             % d\n",      GRACKLE_PRIMORDIAL         );
+      fprintf( Note, "GRACKLE_METAL                  % d\n",      GRACKLE_METAL              );
+      fprintf( Note, "GRACKLE_UV                     % d\n",      GRACKLE_UV                 );
+      fprintf( Note, "GRACKLE_CMB_FLOOR              % d\n",      GRACKLE_CMB_FLOOR          );
+      fprintf( Note, "GRACKLE_PE_HEATING             % d\n",      GRACKLE_PE_HEATING         );
+      fprintf( Note, "GRACKLE_PE_HEATING_RATE        % 14.7e\n",  GRACKLE_PE_HEATING_RATE    );
+      fprintf( Note, "GRACKLE_CLOUDY_TABLE            %s\n",      GRACKLE_CLOUDY_TABLE       );
+      fprintf( Note, "GRACKLE_THREE_BODY_RATE        % d\n",      GRACKLE_THREE_BODY_RATE    );
+      fprintf( Note, "GRACKLE_CIE_COOLING            % d\n",      GRACKLE_CIE_COOLING        );
+      fprintf( Note, "GRACKLE_H2_OPA_APPROX          % d\n",      GRACKLE_H2_OPA_APPROX      );
+      fprintf( Note, "GRACKLE_USE_V_HEATING_RATE     % d\n",      GRACKLE_USE_V_HEATING_RATE );
+      fprintf( Note, "GRACKLE_USE_S_HEATING_RATE     % d\n",      GRACKLE_USE_S_HEATING_RATE );
+      fprintf( Note, "GRACKLE_USE_TEMP_FLOOR         % d\n",      GRACKLE_USE_TEMP_FLOOR     );
+      fprintf( Note, "GRACKLE_TEMP_FLOOR_SCALAR      % 14.7e\n",  GRACKLE_TEMP_FLOOR_SCALAR  );
+      fprintf( Note, "GRACKLE_HYDROGEN_MFRAC         % 14.7e\n",  GRACKLE_HYDROGEN_MFRAC     );
+      fprintf( Note, "OPT__UNFREEZE_GRACKLE          % d\n",      OPT__UNFREEZE_GRACKLE      );
+      fprintf( Note, "CHE_GPU_NPGROUP                % d\n",      CHE_GPU_NPGROUP            ); }
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
 #     endif // #ifdef SUPPORT_GRACKLE
@@ -1153,17 +1217,32 @@ void Aux_TakeNote()
 #     ifdef STAR_FORMATION
       fprintf( Note, "Parameters of Star Formation\n" );
       fprintf( Note, "***********************************************************************************\n" );
-      fprintf( Note, "SF_CREATE_STAR_SCHEME          % d\n",           SF_CREATE_STAR_SCHEME                          );
+      fprintf( Note, "SF_CREATE_STAR_SCHEME          % d\n",               SF_CREATE_STAR_SCHEME                          );
       if ( SF_CREATE_STAR_SCHEME != SF_CREATE_STAR_SCHEME_NONE ) {
-      fprintf( Note, "SF_CREATE_STAR_RSEED           % d\n",           SF_CREATE_STAR_RSEED                           );
-      fprintf( Note, "SF_CREATE_STAR_DET_RANDOM      % d\n",           SF_CREATE_STAR_DET_RANDOM                      );
-      fprintf( Note, "SF_CREATE_STAR_MIN_LEVEL       % d\n",           SF_CREATE_STAR_MIN_LEVEL                       );
-      fprintf( Note, "SF_CREATE_STAR_MIN_GAS_DENS    % 14.7e\n",       SF_CREATE_STAR_MIN_GAS_DENS                    );
-      fprintf( Note, "                              =% 14.7e cm^-3\n", SF_CREATE_STAR_MIN_GAS_DENS*UNIT_D/Const_mH    );
-      fprintf( Note, "SF_CREATE_STAR_MASS_EFF        % 14.7e\n",       SF_CREATE_STAR_MASS_EFF                        );
-      fprintf( Note, "SF_CREATE_STAR_MIN_STAR_MASS   % 14.7e\n",       SF_CREATE_STAR_MIN_STAR_MASS                   );
-      fprintf( Note, "                              =% 14.7e Msun\n",  SF_CREATE_STAR_MIN_STAR_MASS*UNIT_M/Const_Msun );
-      fprintf( Note, "SF_CREATE_STAR_MAX_STAR_MFRAC  % 14.7e\n",       SF_CREATE_STAR_MAX_STAR_MFRAC                  ); }
+      fprintf( Note, "SF_CREATE_STAR_CRITERIA        % ld\n",              SF_CREATE_STAR_CRITERIA                        );
+      fprintf( Note, "SF_CREATE_STAR_MASS_RATE       % d\n",               SF_CREATE_STAR_MASS_RATE                       );
+      fprintf( Note, "SF_CREATE_STAR_PAR_SPAWN       % d\n",               SF_CREATE_STAR_PAR_SPAWN                       );
+      fprintf( Note, "SF_CREATE_STAR_RSEED           % d\n",               SF_CREATE_STAR_RSEED                           );
+      fprintf( Note, "SF_CREATE_STAR_DET_RANDOM      % d\n",               SF_CREATE_STAR_DET_RANDOM                      );
+      fprintf( Note, "SF_CREATE_STAR_MIN_LEVEL       % d\n",               SF_CREATE_STAR_MIN_LEVEL                       );
+      if ( SF_CREATE_STAR_CRITERIA & SF_CREATE_STAR_CRITERIA_HIGH_GAS_DENSITY ) {
+      fprintf( Note, "SF_CREATE_STAR_MIN_GAS_DENS    % 14.7e\n",           SF_CREATE_STAR_MIN_GAS_DENS                    );
+      fprintf( Note, "                              =% 14.7e m_H cm^-3\n", SF_CREATE_STAR_MIN_GAS_DENS*UNIT_D/Const_mH    );
+      }
+      if ( SF_CREATE_STAR_CRITERIA & SF_CREATE_STAR_CRITERIA_LOW_GAS_TEMPERATURE ) {
+      fprintf( Note, "SF_CREATE_STAR_MAX_GAS_TEMP    % 14.7e\n",           SF_CREATE_STAR_MAX_GAS_TEMP                    );
+      }
+      if ( SF_CREATE_STAR_CRITERIA & SF_CREATE_STAR_CRITERIA_UNRESOLVED_JEANS_LENGTH ) {
+      fprintf( Note, "SF_CREATE_STAR_MAX_GAS_JEANSL  % 14.7e\n",           SF_CREATE_STAR_MAX_GAS_JEANSL                  );
+      }
+      if ( SF_CREATE_STAR_MASS_RATE == SF_CREATE_STAR_MASS_RATE_CONST_EFF_PER_TFF ) {
+      fprintf( Note, "SF_CREATE_STAR_MASS_EFF        % 14.7e\n",           SF_CREATE_STAR_MASS_EFF                        );
+      }
+      if ( SF_CREATE_STAR_PAR_SPAWN == SF_CREATE_STAR_PAR_SPAWN_STOCHASTIC_MIN_MASS ) {
+      fprintf( Note, "SF_CREATE_STAR_MIN_STAR_MASS   % 14.7e\n",           SF_CREATE_STAR_MIN_STAR_MASS                   );
+      fprintf( Note, "                              =% 14.7e Msun\n",      SF_CREATE_STAR_MIN_STAR_MASS*UNIT_M/Const_Msun );
+      }
+      fprintf( Note, "SF_CREATE_STAR_MAX_STAR_MFRAC  % 14.7e\n",           SF_CREATE_STAR_MAX_STAR_MFRAC                  ); }
       fprintf( Note, "***********************************************************************************\n" );
       fprintf( Note, "\n\n" );
 #     endif // #ifdef STAR_FORMATION
@@ -1253,20 +1332,22 @@ void Aux_TakeNote()
 #     endif
       }
       else {
-      fprintf( Note, "ELBDM_MASS                     % 14.7e\n",     ELBDM_MASS             );
+      fprintf( Note, "ELBDM_MASS                     % 14.7e\n",     ELBDM_MASS              );
       }
-      fprintf( Note, "ELBDM_PLANCK_CONST             % 14.7e\n",     ELBDM_PLANCK_CONST     );
-      fprintf( Note, "ELBDM_ETA                      % 14.7e\n",     ELBDM_ETA              );
+      fprintf( Note, "ELBDM_PLANCK_CONST             % 14.7e\n",     ELBDM_PLANCK_CONST      );
+      fprintf( Note, "ELBDM_ETA                      % 14.7e\n",     ELBDM_ETA               );
 #     ifdef QUARTIC_SELF_INTERACTION
-      fprintf( Note, "ELBDM_LAMBDA                   % 14.7e\n",     ELBDM_LAMBDA           );
+      fprintf( Note, "ELBDM_LAMBDA                   % 14.7e\n",     ELBDM_LAMBDA            );
 #     endif
-      fprintf( Note, "ELBDM_TAYLOR3_COEFF            % 14.7e\n",     ELBDM_TAYLOR3_COEFF    );
-      fprintf( Note, "ELBDM_TAYLOR3_AUTO             % d\n",         ELBDM_TAYLOR3_AUTO     );
-      fprintf( Note, "ELBDM_REMOVE_MOTION_CM         % d\n",         ELBDM_REMOVE_MOTION_CM );
-      fprintf( Note, "ELBDM_BASE_SPECTRAL            % d\n",         ELBDM_BASE_SPECTRAL    );
+      fprintf( Note, "ELBDM_TAYLOR3_COEFF            % 14.7e\n",     ELBDM_TAYLOR3_COEFF     );
+      fprintf( Note, "ELBDM_TAYLOR3_AUTO             % d\n",         ELBDM_TAYLOR3_AUTO      );
+      fprintf( Note, "ELBDM_REMOVE_MOTION_CM         % d\n",         ELBDM_REMOVE_MOTION_CM  );
+      fprintf( Note, "ELBDM_RESCALE_MASS_ERROR       % d\n",         ELBDM_RESCALE_MASS_ERROR);
+      fprintf( Note, "ELBDM_RESCALE_MASS_STEPS       % d\n",         ELBDM_RESCALE_MASS_STEPS);
+      fprintf( Note, "ELBDM_BASE_SPECTRAL            % d\n",         ELBDM_BASE_SPECTRAL     );
 #     if ( ELBDM_SCHEME == ELBDM_HYBRID )
-      fprintf( Note, "ELBDM_MATCH_PHASE              % d\n",         ELBDM_MATCH_PHASE      );
-      fprintf( Note, "ELBDM_FIRST_WAVE_LEVEL         % d\n",         ELBDM_FIRST_WAVE_LEVEL );
+      fprintf( Note, "ELBDM_MATCH_PHASE              % d\n",         ELBDM_MATCH_PHASE       );
+      fprintf( Note, "ELBDM_FIRST_WAVE_LEVEL         % d\n",         ELBDM_FIRST_WAVE_LEVEL  );
 #     endif
 
 #     else
@@ -1625,7 +1706,6 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_CS                 % d\n",      OPT__OUTPUT_CS              );
       fprintf( Note, "OPT__OUTPUT_DIVVEL             % d\n",      OPT__OUTPUT_DIVVEL          );
       fprintf( Note, "OPT__OUTPUT_MACH               % d\n",      OPT__OUTPUT_MACH            );
-#     endif
 #     ifdef MHD
       fprintf( Note, "OPT__OUTPUT_DIVMAG             % d\n",      OPT__OUTPUT_DIVMAG          );
 #     endif
@@ -1634,6 +1714,20 @@ void Aux_TakeNote()
       fprintf( Note, "OPT__OUTPUT_3VELOCITY          % d\n",      OPT__OUTPUT_3VELOCITY       );
       fprintf( Note, "OPT__OUTPUT_LORENTZ            % d\n",      OPT__OUTPUT_LORENTZ         );
       fprintf( Note, "OPT__OUTPUT_ENTHALPY           % d\n",      OPT__OUTPUT_ENTHALPY        );
+#     endif
+#     ifdef SUPPORT_GRACKLE
+      fprintf( Note, "OPT__OUTPUT_GRACKLE_TEMP       % d\n",      OPT__OUTPUT_GRACKLE_TEMP    );
+      fprintf( Note, "OPT__OUTPUT_GRACKLE_MU         % d\n",      OPT__OUTPUT_GRACKLE_MU      );
+      fprintf( Note, "OPT__OUTPUT_GRACKLE_TCOOL      % d\n",      OPT__OUTPUT_GRACKLE_TCOOL   );
+#     endif
+#     ifdef DUAL_ENERGY
+      fprintf( Note, "OPT__OUTPUT_DUAL_STATUS        % d\n",      OPT__OUTPUT_DUAL_STATUS     );
+#     endif
+#     endif // #if ( MODEL == HYDRO )
+#     if ( MODEL == ELBDM )
+      fprintf( Note, "OPT__OUTPUT_ELBDM_VEL          % d\n",      OPT__OUTPUT_ELBDM_VEL       );
+      fprintf( Note, "OPT__OUTPUT_ELBDM_Q_POT        % d\n",      OPT__OUTPUT_ELBDM_Q_POT     );
+      fprintf( Note, "OPT__OUTPUT_ELBDM_Q_STRESS     % d\n",      OPT__OUTPUT_ELBDM_Q_STRESS  );
 #     endif
 
 //    user-defined derived fields
@@ -1833,6 +1927,18 @@ void Aux_TakeNote()
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "  Level   Lorentz Factor Gradient\n" );
          for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%26.7e\n", lv, FlagTable_LrtzGradient[lv] );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "\n\n");
+      }
+#     endif
+
+#     ifdef SUPPORT_GRACKLE
+      if ( OPT__FLAG_COOLING_LEN )
+      {
+         fprintf( Note, "Flag Criterion (Cooling Length over Cell Size in HYDRO+GRACKLE)\n" );
+         fprintf( Note, "***********************************************************************************\n" );
+         fprintf( Note, "  Level         l_cool / dh\n" );
+         for (int lv=0; lv<MAX_LEVEL; lv++)  fprintf( Note, "%7d%20.7e\n", lv, FlagTable_CoolingLen[lv] );
          fprintf( Note, "***********************************************************************************\n" );
          fprintf( Note, "\n\n");
       }

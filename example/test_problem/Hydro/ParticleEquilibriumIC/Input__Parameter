@@ -14,7 +14,7 @@
 
 
 # simulation scale
-BOX_SIZE                      3         # box size along the longest side (in Mpc/h if COMOVING is adopted)
+BOX_SIZE                      3           # box size along the longest side (in Mpc/h if COMOVING is adopted)
 NX0_TOT_X                     64          # number of base-level cells along x
 NX0_TOT_Y                     64          # number of base-level cells along y
 NX0_TOT_Z                     64          # number of base-level cells along z
@@ -49,7 +49,7 @@ GFUNC_COEFF0                 -1.0         # Green's function coefficient at the 
 
 
 # particle (PARTICLE only)
-PAR_NPAR                      20000      # total number of particles (must be set for PAR_INIT==1/3; must be an integer)
+PAR_NPAR                      20000       # total number of particles (must be set for PAR_INIT==1/3; must be an integer)
 PAR_INIT                      1           # initialization option for particles: (1=FUNCTION, 2=RESTART, 3=FILE->"PAR_IC")
 PAR_INTERP                    3           # particle interpolation scheme: (1=NGP, 2=CIC, 3=TSC) [2]
 PAR_INTEG                     2           # particle integration scheme: (1=Euler, 2=KDK) [2]

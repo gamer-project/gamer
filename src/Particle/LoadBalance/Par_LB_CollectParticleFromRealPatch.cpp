@@ -32,7 +32,7 @@
 //                Real_NPatchTotal    : Total number of real patches in Real_PIDList
 //                Real_PIDList        : Target real patch indices
 //                Real_NPatchEachRank : Number of real patches to send particles to each rank
-//                PredictPos          : Predict particle position, which is useful for particle mass assignement
+//                PredictPos          : Predict particle position, which is useful for particle mass assignment
 //                                      --> We send particle position **after** prediction so that we don't have to
 //                                          send particle velocity
 //                TargetTime          : Target time for predicting the particle position

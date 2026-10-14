@@ -30,3 +30,6 @@ Note:
    --> Can only marginally resolve a central soliton
 
 4. Some yt visualization scripts are put in "plot_script"
+
+5. To conduct the zoom-in simulations of Chan et al., 2025, MNRAS 540, 2653 (https://academic.oup.com/mnras/article/540/3/2653/8140060),
+   see "example/test_problem/ELBDM/LSS_Hybrid_Zoomin" and enable "OPT__FLAG_REGION".

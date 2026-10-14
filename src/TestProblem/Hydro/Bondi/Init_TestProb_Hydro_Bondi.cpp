@@ -268,7 +268,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "Bondi_Soliton_MassHalo", &Bondi_Soliton_MassHalo,   -1.0,          NoMin_double,     NoMax_double      );
    LOAD_PARA( load_mode, "Bondi_Soliton_Redshift", &Bondi_Soliton_Redshift,   -1.0,          NoMin_double,     NoMax_double      );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

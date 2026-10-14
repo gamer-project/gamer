@@ -138,7 +138,7 @@ real GetMaxPot( const int lv )
    bool AnyCell_AllRank;
 
    MPI_Allreduce( &MaxPot, &MaxPot_AllRank, 1, MPI_GAMER_REAL, MPI_MAX, MPI_COMM_WORLD );
-   MPI_Reduce( &AnyCell, &AnyCell_AllRank, 1, MPI_C_BOOL, MPI_LOR, 0, MPI_COMM_WORLD );
+   MPI_Reduce( &AnyCell, &AnyCell_AllRank, 1, MPI_CXX_BOOL, MPI_LOR, 0, MPI_COMM_WORLD );
 
 
 // check

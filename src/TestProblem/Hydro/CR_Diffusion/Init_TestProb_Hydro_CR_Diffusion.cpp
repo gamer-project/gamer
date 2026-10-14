@@ -174,7 +174,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "CR_Diffusion_GY",           &CR_Diffusion_GY,                0,             0,                1                 );
    LOAD_PARA( load_mode, "CR_Diffusion_GZ",           &CR_Diffusion_GZ,                0,             0,                1                 );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 
@@ -342,6 +342,15 @@ void SetParameter()
 //                   --> It will be calculated automatically
 //                4. For MHD, do NOT add magnetic energy (i.e., 0.5*B^2) to fluid[ENGY] here
 //                   --> It will be added automatically later
+//                5. When cosmic rays are enabled:
+//                   --> Store the cosmic-ray energy in fluid[CRAY]
+//                   --> Include the cosmic-ray energy fluid[CRAY] in the total energy fluid[ENGY] as well
+//                   --> Be aware that EoS routines, such as EoS_DensPres2Eint_CPUPtr() and Hydro_ConEint2Etot(),
+//                       always operate on the *total (gas + cosmic rays)* pressure/internal energy
+//                6. Be aware that EoS routines generally require passive scalars
+//                   --> For example, the passive-scalar array Passive[] must be properly filled when calling
+//                       EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table )
+//                       for more general EoS models such as EOS_COSMIC_RAY
 //
 // Parameter   :  fluid    : Fluid field to be initialized
 //                x/y/z    : Physical coordinates
@@ -446,8 +455,8 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //          E(x, y) = E_0 * EXP[ -R_0**2 * x**2 / f(k_x, t) ] / SQRT[ f(k_x, t) ]
 //                        * EXP[ -R_0**2 * y**2 / f(k_y, t) ] / SQRT[ f(k_y, t) ]
 //
-//          We bascially apply a rotation matrix to rotate the magnetic field to (1, 0, 0) direction, so the simulation will be matched the solution above.
-//          C = A \cross B, where A and B are the unit vector.
+//          We basically apply a rotation matrix to rotate the magnetic field to (1, 0, 0) direction, so the simulation will match the solution above.
+//          C = A \cross B, where A and B are the unit vectors.
 //          sin = C, cos = A \dot B
 //          R = [  cos | sin ]
 //              [ -sin | cos ]
@@ -482,10 +491,10 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 //                        * EXP[ -R_0**2 * y**2 / f(k_y, t) ] / SQRT[ f(k_y, t) ]
 //                        * EXP[ -R_0**2 * z**2 / f(k_z, t) ] / SQRT[ f(k_z, t) ]
 //
-//       We bascially apply a rotation matrix to rotate the magnetic field to (1, 0, 0) direction, so the simulation will be matched the solution above.
-//       C = A \cross B, where A and B are the unit vector.
+//       We basically apply a rotation matrix to rotate the magnetic field to (1, 0, 0) direction, so the simulation will match the solution above.
+//       C = A \cross B, where A and B are the unit vectors.
 //       sin = abs(C), cos = A \dot B
-//       R = I + v + v**2 / (1+cos), **NOTICE**: this would be invaliad when cos = -1.
+//       R = I + v + v**2 / (1+cos), **NOTICE**: this would be invalid when cos = -1.
 //           [    1 - (C_2**2 + C_3**2) / (1+cos) | -C_3 +         (C_1*C_2) / (1+cos) |  C_2 +         (C_1*C_3) / (1+cos) ]
 //       R = [  C_3 +         (C_1*C_2) / (1+cos) | 1    - (C_3**2 + C_1**2) / (1+cos) | -C_1 +         (C_2*C_3) / (1+cos) ]
 //           [ -C_2 +         (C_1*C_3) / (1+cos) |  C_1 +         (C_2*C_3) / (1+cos) |    1 - (C_1**2 + C_2**2) / (1+cos) ]
@@ -596,7 +605,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    P_cr = EoS_CREint2CRPres_CPUPtr( CRay, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    Pres = Pres + P_cr;
 
-// set the output array of passive scaler
+// set the output array of passive scalars before calling EoS_DensPres2Eint_CPUPtr()
    fluid[CRAY] = CRay;
 
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, fluid+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );

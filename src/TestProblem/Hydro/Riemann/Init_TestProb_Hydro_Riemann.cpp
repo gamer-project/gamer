@@ -155,7 +155,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "Riemann_MagR_T2",   &Riemann_MagR_T2,        __DBL_MAX__, -__DBL_MAX__,      __DBL_MAX__       );
 #  endif
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

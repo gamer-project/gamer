@@ -79,7 +79,7 @@ void Get_ParticleAttribute( const int list_len, const long *list_gid, const char
 #     endif // #ifdef LIBYT_USE_PATCH_GROUP
    } // for(int lid=0; lid<list_len; lid++)
 
-} // FUNCITON : Get_ParticleAttribute
+} // FUNCTION : Get_ParticleAttribute
 
 #endif // #ifdef PARTICLE
 

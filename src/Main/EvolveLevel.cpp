@@ -303,6 +303,18 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
       } // if ( OPT__OVERLAP_MPI ) ... else ...
 
+#     ifdef MHD
+      if ( OPT__SAME_INTERFACE_B == SAME_INTERFACE_B_YES )
+      {
+         TIMING_FUNC(   Buf_GetBufferData( lv, SaveSg_Flu, SaveSg_Mag, NULL_INT, DATA_GENERAL,
+                                           _ENGY, _MAG, Flu_ParaBuf, USELB_YES  ),
+                        Timer_GetBuf[lv][0],   TIMER_ON   );
+
+         TIMING_FUNC(   MHD_SameInterfaceB( lv, SaveSg_Flu, SaveSg_Mag ),
+                        Timer_Flu_Advance[lv],   TIMER_ON   );
+      }
+#     endif
+
       amr->FluSg    [lv]             = SaveSg_Flu;
       amr->FluSgTime[lv][SaveSg_Flu] = TimeNew;
 #     ifdef MHD
@@ -557,7 +569,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
             Aux_Message( stdout, "   Lv %2d: SF_CreateStar, counter = %8ld ... ", lv, AdvanceCounter[lv] );
 
 //###REVISE: we have assumed that SF_CreateStar() requires no ghost zones
-         TIMING_FUNC(   SF_CreateStar( lv, TimeNew, dt_SubStep ),
+         TIMING_FUNC(   SF_CreateStar( lv, TimeNew, TimeOld, dt_SubStep ),
                         Timer_SF[lv],   TIMER_ON   );
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
@@ -722,6 +734,11 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 // ===============================================================================================
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "   Lv %2d: Flu_FixUp %24s... ", lv, "" );
 
+//       backup the original internal energy in case fix-up operations produce unphysical values
+#        ifdef EXTRA_EOS_CHECK
+         Hydro_RestoreEint_Backup( lv, amr->FluSg[lv], amr->MagSg[lv] );
+#        endif
+
 //       12-1. use the average data on fine grids to correct the coarse-grid data
          if ( OPT__FIXUP_RESTRICT )
          {
@@ -778,10 +795,10 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
 #        if ( MODEL == ELBDM )
 //       disable fixup for base level spectral solver on base-level
-         DisableFixupFlux |= (ELBDM_BASE_SPECTRAL  &&  lv == 0);
+         DisableFixupFlux |= ( ELBDM_BASE_SPECTRAL  &&  lv == 0 );
 
 #        if ( ELBDM_SCHEME == ELBDM_HYBRID )
-         if ( amr->use_wave_flag[lv + 1] ) {
+         if ( amr->use_wave_flag[lv+1] ) {
 #        endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #        if ( WAVE_SCHEME == WAVE_GRAMFE )
 //       disable fixup for local spectral method on wave levels
@@ -792,7 +809,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 #        endif // # if ( ELBDM_SCHEME == ELBDM_HYBRID )
 #        endif // # if ( MODEL == ELBDM )
 
-         if ( OPT__FIXUP_FLUX  &&  !(DisableFixupFlux) )
+         if ( OPT__FIXUP_FLUX  &&  ! DisableFixupFlux )
          {
 #           ifdef LOAD_BALANCE
             TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, NULL_INT, COARSE_FINE_FLUX,
@@ -815,6 +832,22 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
                                            (Flu_ParaBuf<PS1)?DATA_AFTER_FIXUP:DATA_GENERAL,
                                            FixUpVar_Flux | FixUpVar_Restrict, _MAG, Flu_ParaBuf, USELB_YES ),
                         Timer_GetBuf[lv][3],   TIMER_ON   );
+
+//       12-5. ensure B-field consistency, which may be broken by the fix-up operations
+//             --> for example, even though MHD_SameInterfaceB() has already been called after the fluid solver,
+//                 inconsistent EMF may still lead to inconsistent B field in MHD_FixUp_Electric()
+#        ifdef MHD
+         if ( OPT__SAME_INTERFACE_B == SAME_INTERFACE_B_YES )
+         {
+            TIMING_FUNC(   MHD_SameInterfaceB( lv, amr->FluSg[lv], amr->MagSg[lv] ),
+                           Timer_FixUp[lv],   TIMER_ON   );
+         }
+#        endif
+
+//       restore the original internal energy if fix-up operations produce unphysical values
+#        ifdef EXTRA_EOS_CHECK
+         Hydro_RestoreEint_Check( lv, amr->FluSg[lv], amr->MagSg[lv] );
+#        endif
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 // ===============================================================================================

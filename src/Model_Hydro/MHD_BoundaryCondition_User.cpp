@@ -88,7 +88,7 @@ void BC_BField_User_Template( real magnetic[], const double x, const double y, c
 //                TVarIdxList    : List recording the target magnetic field indices ( = [0 ... NCOMP_MAG-1] )
 //                Time           : Current physical time
 //                dh             : Cell size
-//                Corner         : Cell-centered physcial coordinates of the cell (0,0,0)
+//                Corner         : Cell-centered physical coordinates of the cell (0,0,0)
 //                lv             : Refinement level
 //
 // Return      :  Array

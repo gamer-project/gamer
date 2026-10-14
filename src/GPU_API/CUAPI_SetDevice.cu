@@ -53,6 +53,7 @@ void CUAPI_SetDevice( const int Mode )
 // set the device ID
    void **d_TempPtr = NULL;
    int SetDeviceID, GetDeviceID = 999;
+   int computeMode;
    cudaDeviceProp DeviceProp;
 
    switch ( Mode )
@@ -77,9 +78,9 @@ void CUAPI_SetDevice( const int Mode )
 
 //       make sure that the "exclusive" compute mode is adopted
          CUDA_CHECK_ERROR(  cudaGetDevice( &GetDeviceID )  );
-         CUDA_CHECK_ERROR(  cudaGetDeviceProperties( &DeviceProp, GetDeviceID )  );
+         CUDA_CHECK_ERROR(  cudaDeviceGetAttribute(&computeMode, cudaDevAttrComputeMode, GetDeviceID)  );
 
-         if ( DeviceProp.computeMode != cudaComputeModeExclusive )
+         if ( computeMode != cudaComputeModeExclusive )
          {
             Aux_Message( stderr, "WARNING : \"exclusive\" compute mode is NOT enabled for \"%s\" at Rank %2d",
                          "OPT__GPUID_SELECT == -2", MPI_Rank );

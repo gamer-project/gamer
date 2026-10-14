@@ -23,7 +23,7 @@
 //                           in advance when invoking either Flu_FixUp_Restrict() (if father patches are
 //                           also real patches) or LB_GetBufferData(DATA_RESTRICT) (if father patches are
 //                           buffer patches)
-//                   --> Note that we must still correct leaf buffer patches even if the fathers of their
+//                   --> Note that we must still correct leaf buffer patches even if the sons of their
 //                       sibling non-leaf patches are **real** patches
 //                       --> Although the consistency in this case had been ensured in Flu_FixUp_Restrict() when
 //                           copying data from father patches to father-sibling patches, it is broken again when

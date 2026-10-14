@@ -57,7 +57,7 @@ extern int        PassiveIntFrac_NVar, PassiveIntFrac_VarIdx[NCOMP_PASSIVE];
 extern int        StrLen_Flt;
 extern char       BlankPlusFormat_Flt[MAX_STRING+1];
 
-extern double     BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, OUTPUT_WALLTIME, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
+extern double     BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, INIT_T, END_T, OUTPUT_DT, OUTPUT_WALLTIME, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
 extern long int   END_STEP;
 extern int        NX0_TOT[3], OUTPUT_STEP, OUTPUT_WALLTIME_UNIT, REGRID_COUNT, REFINE_NLEVEL, FLU_GPU_NPGROUP, SRC_GPU_NPGROUP, OMP_NTHREAD;
 extern int        MPI_NRank, MPI_NRank_X[3];
@@ -125,6 +125,7 @@ extern int              MINMOD_MAX_ITER;
 extern double           MIN_DENS, MIN_PRES, MIN_EINT, MIN_TEMP, MIN_ENTR;
 #ifdef DUAL_ENERGY
 extern double           DUAL_ENERGY_SWITCH;
+extern bool             OPT__OUTPUT_DUAL_STATUS;
 #endif
 #ifdef MHD
 extern double           FlagTable_Current[NLEVEL-1], INT_MONO_COEFF_B;
@@ -133,7 +134,7 @@ extern bool             OPT__FIXUP_ELECTRIC, OPT__CK_INTERFACE_B, OPT__OUTPUT_CC
 extern bool             OPT__OUTPUT_DIVMAG;
 extern int              OPT__CK_DIVERGENCE_B;
 extern double           UNIT_B;
-extern bool             OPT__SAME_INTERFACE_B;
+extern SameInterfaceB_t OPT__SAME_INTERFACE_B;
 
 extern OptInitMagByVecPot_t OPT__INIT_BFIELD_BYVECPOT;
 #endif
@@ -150,6 +151,7 @@ extern bool             OPT__OUTPUT_ENTHALPY;
 #elif ( MODEL == ELBDM )
 extern double           DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
 extern bool             OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE, OPT__RES_PHASE, ELBDM_TAYLOR3_AUTO;
+extern bool             OPT__OUTPUT_ELBDM_VEL, OPT__OUTPUT_ELBDM_Q_POT, OPT__OUTPUT_ELBDM_Q_STRESS;
 extern double           ELBDM_TAYLOR3_COEFF, ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
 #ifdef QUARTIC_SELF_INTERACTION
 extern double           ELBDM_LAMBDA;
@@ -167,6 +169,8 @@ extern int              OPT__FLAG_SPECTRAL_N;
 extern double           FlagTable_Spectral[NLEVEL-1][2];
 
 extern ELBDMRemoveMotionCM_t ELBDM_REMOVE_MOTION_CM;
+extern bool             ELBDM_RESCALE_MASS_ERROR;
+extern int              ELBDM_RESCALE_MASS_STEPS;
 extern bool             ELBDM_BASE_SPECTRAL;
 
 #else
@@ -241,9 +245,11 @@ extern bool       FFTW3_Double_OMP_Enabled, FFTW3_Single_OMP_Enabled;
 #ifdef PARTICLE
 extern double          DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
 extern bool            OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL, OPT__FREEZE_PAR, OPT__OUTPUT_PAR_MESH, OPT__PAR_INIT_CHECK;
+extern bool            OPT__FLAG_PAR_TARGET_SIB;
 extern int             OPT__OUTPUT_PAR_MODE, OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
 extern double          FlagTable_ParMassCell[NLEVEL-1];
 extern ParOutputDens_t OPT__OUTPUT_PAR_DENS;
+extern FlagParTarget_t OPT__FLAG_PAR_TARGET;
 extern int             PAR_IC_FLOAT8;
 extern int             PAR_IC_INT8;
 #endif
@@ -267,6 +273,9 @@ extern bool            YT_JUPYTER_USE_CONNECTION_FILE;
 #ifdef SUPPORT_GRACKLE
 extern bool            GRACKLE_ACTIVATE;
 extern bool            GRACKLE_VERBOSE;
+#ifndef COMOVING
+extern double          GRACKLE_REDSHIFT;
+#endif
 extern bool            GRACKLE_COOLING;
 extern GracklePriChe_t GRACKLE_PRIMORDIAL;
 extern bool            GRACKLE_METAL;
@@ -278,6 +287,18 @@ extern char            GRACKLE_CLOUDY_TABLE[MAX_STRING];
 extern int             GRACKLE_THREE_BODY_RATE;
 extern bool            GRACKLE_CIE_COOLING;
 extern int             GRACKLE_H2_OPA_APPROX;
+extern bool            GRACKLE_USE_V_HEATING_RATE;
+extern bool            GRACKLE_USE_S_HEATING_RATE;
+extern int             GRACKLE_USE_TEMP_FLOOR;
+extern double          GRACKLE_TEMP_FLOOR_SCALAR;
+extern double          GRACKLE_HYDROGEN_MFRAC;
+extern bool            OPT__UNFREEZE_GRACKLE;
+extern bool            OPT__OUTPUT_GRACKLE_TEMP;
+extern bool            OPT__OUTPUT_GRACKLE_MU;
+extern bool            OPT__OUTPUT_GRACKLE_TCOOL;
+extern bool            OPT__FLAG_COOLING_LEN;
+extern double          FlagTable_CoolingLen[NLEVEL-1];
+extern double          DT__GRACKLE_COOLING;
 extern int             CHE_GPU_NPGROUP;
 #endif
 
@@ -285,14 +306,19 @@ extern int             CHE_GPU_NPGROUP;
 // (2-8) star formation
 // ============================================================================================================
 #ifdef STAR_FORMATION
-extern SF_CreateStarScheme_t SF_CREATE_STAR_SCHEME;
-extern int                   SF_CREATE_STAR_RSEED;
-extern int                   SF_CREATE_STAR_DET_RANDOM;
-extern int                   SF_CREATE_STAR_MIN_LEVEL;
-extern double                SF_CREATE_STAR_MIN_GAS_DENS;
-extern double                SF_CREATE_STAR_MASS_EFF;
-extern double                SF_CREATE_STAR_MIN_STAR_MASS;
-extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
+extern SF_CreateStarScheme_t   SF_CREATE_STAR_SCHEME;
+extern SF_CreateStarCriteria_t SF_CREATE_STAR_CRITERIA;
+extern SF_CreateStarMassRate_t SF_CREATE_STAR_MASS_RATE;
+extern SF_CreateStarParSpawn_t SF_CREATE_STAR_PAR_SPAWN;
+extern int                     SF_CREATE_STAR_RSEED;
+extern int                     SF_CREATE_STAR_DET_RANDOM;
+extern int                     SF_CREATE_STAR_MIN_LEVEL;
+extern double                  SF_CREATE_STAR_MIN_GAS_DENS;
+extern double                  SF_CREATE_STAR_MAX_GAS_TEMP;
+extern double                  SF_CREATE_STAR_MAX_GAS_JEANSL;
+extern double                  SF_CREATE_STAR_MASS_EFF;
+extern double                  SF_CREATE_STAR_MIN_STAR_MASS;
+extern double                  SF_CREATE_STAR_MAX_STAR_MFRAC;
 #endif
 
 
@@ -311,8 +337,10 @@ extern EoS_DE2T_t    EoS_DensEint2Temp_CPUPtr;
 extern EoS_DT2P_t    EoS_DensTemp2Pres_CPUPtr;
 extern EoS_DE2S_t    EoS_DensEint2Entr_CPUPtr;
 extern EoS_GENE_t    EoS_General_CPUPtr;
-#ifdef COSMIC_RAY
 extern EoS_CRE2CRP_t EoS_CREint2CRPres_CPUPtr;
+#ifdef COSMIC_RAY
+extern EoS_GP2GE_t   EoS_GasPres2GasEint_CPUPtr;
+extern EoS_GE2GP_t   EoS_GasEint2GasPres_CPUPtr;
 #endif
 #ifdef GPU
 extern EoS_GUESS_t   EoS_GuessHTilde_GPUPtr;
@@ -325,8 +353,10 @@ extern EoS_DE2T_t    EoS_DensEint2Temp_GPUPtr;
 extern EoS_DT2P_t    EoS_DensTemp2Pres_GPUPtr;
 extern EoS_DE2S_t    EoS_DensEint2Entr_GPUPtr;
 extern EoS_GENE_t    EoS_General_GPUPtr;
-#ifdef COSMIC_RAY
 extern EoS_CRE2CRP_t EoS_CREint2CRPres_GPUPtr;
+#ifdef COSMIC_RAY
+extern EoS_GP2GE_t   EoS_GasPres2GasEint_GPUPtr;
+extern EoS_GE2GP_t   EoS_GasEint2GasPres_GPUPtr;
 #endif
 #endif
 extern EoS_t EoS;
@@ -339,6 +369,8 @@ extern SrcTerms_t SrcTerms;
 #if ( MODEL == HYDRO )
 extern double     Src_Dlep_AuxArray_Flt[SRC_NAUX_DLEP];
 extern int        Src_Dlep_AuxArray_Int[SRC_NAUX_DLEP];
+extern double     Src_EC_AuxArray_Flt[SRC_NAUX_EC];
+extern int        Src_EC_AuxArray_Int[SRC_NAUX_EC];
 #endif
 extern double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
 extern int        Src_User_AuxArray_Int[SRC_NAUX_USER];
@@ -396,7 +428,6 @@ extern double CR_DIFF_PERP;
 extern double DT__CR_DIFFUSION;
 extern double CR_DIFF_MIN_B;
 #endif
-
 
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
@@ -476,6 +507,12 @@ extern double     (*h_Corner_Array_S[2])[3];
 #if ( MODEL == HYDRO )
 extern real       (*h_SrcDlepProf_Data)[SRC_DLEP_PROF_NBINMAX];
 extern real        *h_SrcDlepProf_Radius;
+#endif
+
+#ifdef EXACT_COOLING
+extern double      *h_SrcEC_TEF_lambda;
+extern double      *h_SrcEC_TEF_alpha;
+extern double      *h_SrcEC_TEFc;
 #endif
 
 

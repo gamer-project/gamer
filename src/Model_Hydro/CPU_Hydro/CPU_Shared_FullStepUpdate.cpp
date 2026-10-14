@@ -20,7 +20,21 @@
 # include "CUFLU_Shared_DualEnergy.cu"
 #endif
 
-#endif // #ifdef __CUDACC__
+#ifdef COSMIC_RAY
+# include "CUFLU_CosmicRay.cu"
+#endif
+
+#else // #ifdef __CUDACC__
+
+#ifdef COSMIC_RAY
+void CR_AdiabaticWork_FullStep( real &Ecr,
+                                const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
+                                const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                const real g_FC_Var[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
+                                const real dt, const real dh, const EoS_t *EoS, const int idx_out );
+#endif // #ifdef COSMIC_RAY
+
+#endif // #ifdef __CUDACC__ ... else ...
 
 
 
@@ -33,6 +47,7 @@
 //                2. Invoke dual-energy check if DualEnergySwitch is on
 //                3. If any unphysical fluid cell is found in a patch group, Hydro_FullStepUpdate() will
 //                   return instantly unless Iteration==MinMod_MaxIter
+//                4. Update cosmic rays as well
 //
 // Parameter   :  g_Input           : Array storing the input fluid data
 //                g_Output          : Array to store the updated fluid data
@@ -42,6 +57,11 @@
 //                g_Flux            : Array storing the input face-centered fluxes
 //                                    --> Accessed with the array stride N_FL_FLUX even thought its actually
 //                                        allocated size is N_FC_FLUX^3
+//                g_PriVar_Half     : Array storing the input cell-centered primitive variables (for COSMIC_RAY only)
+//                                    --> Accessed with the stride N_HF_VAR
+//                                    --> Although its actually allocated size is FLU_NXT^3 since it points to g_PriVar_1PG[]
+//                g_FC_Var          : Array storing the input face-centered conserved variables (for COSMIC_RAY only)
+//                                    --> Accessed with the array stride N_FC_VAR^3
 //                dt                : Time interval to advance solution
 //                dh                : Cell size
 //                MinDens/Eint      : Density and internal energy floors
@@ -63,6 +83,8 @@
 GPU_DEVICE
 void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[][ CUBE(PS2) ], char g_DE_Status[],
                            const real g_FC_B[][ PS2P1*SQR(PS2) ], const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                           const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
+                           const real g_FC_Var[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
                            const real dt, const real dh, const real MinDens, const real MinEint, const real DualEnergySwitch,
                            const long PassiveFloor, const bool NormPassive, const int NNorm, const int NormIdx[],
                            const EoS_t *EoS, int *s_FullStepFailure, const int Iteration, const int MinMod_MaxIter )
@@ -141,7 +163,15 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 #     endif // #ifdef BAROTROPIC_EOS
 
 
-//    2. floor and normalize passive scalars
+//    2. add the cosmic-ray source term of adiabatic work
+//       --> perform it before Hydro_DualEnergyFix() to ensure consistency between
+//           gas internal energy and the dual-energy variable
+#     ifdef COSMIC_RAY
+      CR_AdiabaticWork_FullStep( Output_1Cell[CRAY], g_PriVar_Half, g_Flux, g_FC_Var, dt, dh, EoS, idx_out );
+#     endif
+
+
+//    3. floor and normalize passive scalars
 #     if ( NCOMP_PASSIVE > 0 )
       for (int v=NCOMP_FLUID; v<NCOMP_TOTAL; v++)
          if ( PassiveFloor & BIDX(v) )  Output_1Cell[v] = FMAX( Output_1Cell[v], TINY_NUMBER );
@@ -151,7 +181,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 #     endif
 
 
-//    3. apply the dual-energy formalism to correct the internal energy
+//    4. apply the dual-energy formalism to correct the internal energy
 //    --> currently, even when UNSPLIT_GRAVITY is on (which would update the internal energy), we still invoke
 //        Hydro_DualEnergyFix() here and will fix the internal energy in the gravity solver for cells updated
 //        by the dual-energy formalism (i.e., for cells with their dual-energy status marked as DE_UPDATED_BY_DUAL)
@@ -160,31 +190,68 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 //    we no longer apply density and pressure floors here since we want to enable 1st-order-flux correction for that
 //    Output_1Cell[DENS] = FMAX( Output_1Cell[DENS], MinDens );
 
-      Hydro_DualEnergyFix( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
-                           Output_1Cell[ENGY], Output_1Cell[DUAL], g_DE_Status[idx_out],
-                           EoS->AuxArrayDevPtr_Flt[1], EoS->AuxArrayDevPtr_Flt[2], CheckMinPres_No, NULL_REAL,
-                           PassiveFloor, DualEnergySwitch, Emag );
+//    we do not apply the dual-energy fix to the energy
+//    when the density is negative or Ekin >= 2*Etot (could be caused by an extremely low density)
+//    --> such that the unphysical energy can be caught by the checks in Flu_Close()->CorrectUnphysical()
+//
+//    note that ( i) Passing "Etot*2 > Ekin" for the dual-energy fix implies "Etot > 0"
+//              (ii) "Ekin >= 2*Etot" means "Eint <= -Etot" and "Eint <= -1/2*Ekin",
+//                    in other words, Eint has a large negative value compared to Etot and Ekin
+//
+//    for example, assume the typical input fluid before the hydro solver has
+//          (Dens = 1.00, MomX = 1.00, MomY = 1.00, MomZ = 1.00, Etot = 2.00) --> (Ekin = 1.50, Eint = 0.50):
+//
+//    (a) it is okay to apply the dual-energy fix when the output fluid has
+//          (Dens = 0.10, MomX = 0.10, MomY = 0.10, MomZ = 0.10, Etot = 0.16) --> (Ekin = 0.15, Eint = 0.01),
+//        where Eint/Ekin = 1./15. is assumed to be lower than DualEnergySwitch
+//
+//    (b) it is also okay to apply the dual-energy fix when the output fluid has a slightly negative Eint, such as
+//          (Dens = 0.10, MomX = 0.10, MomY = 0.10, MomZ = 0.10, Etot = 0.12) --> (Ekin = 0.15, Eint = -0.03)
+//
+//    in these cases, Etot will be fixed to physically correct Etot' = Ekin + (internal energy from DUAL)
+//
+//    however,
+//    (c) if the output density is very low,
+//        the total energy updated by the dual-energy fix may increase significantly, for example,
+//          (Dens = 0.05, MomX = 0.10, MomY = 0.10, MomZ = 0.10, Etot = 0.15) --> (Ekin = 0.30, Eint = -0.15).
+//        in this case, the dual-energy-fixed Etot' = Ekin + (internal energy from DUAL) will become at least 2x
+//
+//    (d) it is worse if the output fluid has an even lower density while momentum remains finite,
+//          (Dens = 1e-3, MomX = 0.10, MomY = 0.10, MomZ = 0.10, Etot = 0.15) --> (Ekin = 15.0, Eint = -14.85),
+//        the dual-energy-fixed Etot' will be unphysically large due to the large kinetic energy
+//        in this case, Etot' and Eint' are all positive and may pass the unphysical check
+//
+//    in these cases, we should leave the negative Eint to be handled by Flu_Close()
+      const real Ekin          = (real)0.5*( SQR(Output_1Cell[MOMX]) + SQR(Output_1Cell[MOMY]) + SQR(Output_1Cell[MOMZ]) )/Output_1Cell[DENS];
+      const real maxKinOverTot = (real)2.0;
+
+      if ( Output_1Cell[DENS] > (real)0.0  &&  Output_1Cell[ENGY]*maxKinOverTot > Ekin )
+         Hydro_DualEnergyFix( Output_1Cell[DENS], Output_1Cell[MOMX], Output_1Cell[MOMY], Output_1Cell[MOMZ],
+                              Output_1Cell[ENGY], Output_1Cell[DUAL], Output_1Cell+NCOMP_FLUID, g_DE_Status[idx_out],
+                              EoS->AuxArrayDevPtr_Flt[1], EoS->AuxArrayDevPtr_Flt[2], CheckMinPres_No, NULL_REAL,
+                              PassiveFloor, DualEnergySwitch, Emag );
 #     endif // #ifdef DUAL_ENERGY
 
 
-//    4. store results to the output array
+//    5. store results to the output array
       for (int v=0; v<NCOMP_TOTAL; v++)   g_Output[v][idx_out] = Output_1Cell[v];
 
 
-//    5. check unphysical cells within a patch group
+//    6. check unphysical cells within a patch group
       if ( s_FullStepFailure != NULL )
       {
 #        ifdef CHECK_UNPHYSICAL_IN_FLUID
          bool FullStepFailure = false; // per-thread status
 #        endif
 
-//       5-1. check
+//       6-1. check
 //       --> allow pressure to be zero to tolerate round-off errors
+//       --> check for unphysical results caused by floating-point rounding errors to facilitate the MINMOD_MAX_ITER fix
          if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, Output_1Cell, Emag,
                                    EoS->DensEint2Pres_FuncPtr,
                                    EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
                                    EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table,
-                                   PassiveFloor, ERROR_INFO, UNPHY_SILENCE )  )
+                                   PassiveFloor, ERROR_INFO, UNPHY_SILENCE, CK_UNPHY_RND_YES )  )
          {
 #           ifdef __CUDACC__  // GPU
 //          use atomicExch_block() on Pascal (or later) GPUs to avoid inter-block synchronization for better performance
@@ -203,7 +270,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
 #           endif
          }
 
-//       5-2. print out unphysical results after iterations for debugging
+//       6-2. print out unphysical results after iterations for debugging
 #        ifdef CHECK_UNPHYSICAL_IN_FLUID
          if ( FullStepFailure  &&  Iteration == MinMod_MaxIter )
          {
@@ -228,7 +295,7 @@ void Hydro_FullStepUpdate( const real g_Input[][ CUBE(FLU_NXT) ], real g_Output[
    } // CGPU_LOOP( idx_out, CUBE(PS2) )
 
 
-// 6. synchronize s_FullStepFailure for all threads within a GPU thread block
+// 7. synchronize s_FullStepFailure for all threads within a GPU thread block
 #  ifdef __CUDACC__
    __syncthreads();
 #  endif

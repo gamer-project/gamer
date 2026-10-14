@@ -115,7 +115,7 @@ void BC_User_Template( real Array[], const int ArraySize[], real fluid[], const 
 //                TFluVarIdxList : List recording the target fluid variable indices ( = [0 ... NCOMP_TOTAL-1] )
 //                Time           : Current physical time
 //                dh             : Cell size
-//                Corner         : Physcial coordinates at the center of the cell (0,0,0) --> Array[0]
+//                Corner         : Physical coordinates at the center of the cell (0,0,0) --> Array[0]
 //                TVar           : Target variables to be prepared --> only used for preparing the derived variables
 //                lv             : Refinement level
 //

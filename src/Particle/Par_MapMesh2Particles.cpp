@@ -75,7 +75,7 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
          {
             idx[d] = int( ( InterpParPos[d][p] - EdgeL[d] )*_dh );
 
-//          prevent from round-off errors (especially for NGP and TSC)
+//          prevent round-off errors (especially for NGP and TSC)
             if ( idx[d] < 0 )
             {
 #              ifdef DEBUG_PARTICLE
@@ -118,7 +118,7 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
             idxLR[0][d] = int( dr[d] );
             idxLR[1][d] = idxLR[0][d] + 1;
 
-//          prevent from round-off errors
+//          prevent round-off errors
 //          (CIC should be clear of this issue unless round-off errors are comparable to dh)
             if ( idxLR[0][d] < 0 )
             {
@@ -177,7 +177,7 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
             idxLCR[0][d] = idxLCR[1][d] - 1;
             idxLCR[2][d] = idxLCR[1][d] + 1;
 
-//          prevent from round-off errors (especially for NGP and TSC)
+//          prevent round-off errors (especially for NGP and TSC)
             if ( idxLCR[0][d] < 0 )
             {
 #              ifdef DEBUG_PARTICLE
@@ -237,7 +237,7 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
          {
             idx[d] = int( (double)( InterpParPos[d][p] - (real_par)EdgeL[d] )*_dh );
 
-//          prevent from round-off errors (especially for NGP and TSC)
+//          prevent round-off errors (especially for NGP and TSC)
             if ( idx[d] < 1 )
             {
 #              ifdef DEBUG_PARTICLE

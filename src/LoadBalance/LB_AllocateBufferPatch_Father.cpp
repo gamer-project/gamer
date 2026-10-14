@@ -21,9 +21,9 @@
 //                4. This function will reconstruct the list LB_PaddedCr1DList[SonLv-1][]
 //                5. SearchAllSon == true  --> search over all real patches at SonLv
 //                                == false --> search over patches recorded in TargetSonPID0
-//                6. RecordFaPID  == ture  --> record the indices of all newly-allocated father-buffer patches
+//                6. RecordFaPID  == true  --> record the indices of all newly-allocated father-buffer patches
 //                                             (with LocalID==0)
-//                                         --> the pointer "*NewFaBufPID0" will be allocated with memory
+//                                         --> memory will be allocated for the pointer "*NewFaBufPID0"
 //                                         --> **this array must be deallocated manually**
 //                                == false --> do nothing
 //
@@ -251,7 +251,7 @@ void LB_AllocateBufferPatch_Father( const int SonLv, const bool SearchAllSon, co
 
          if ( RecordFaPID )   (*NewFaBufPID0)[ NNew0 ++ ] = amr->num[FaLv];
 
-//       father patch is still unkown, data array is not allocated yet
+//       father patch is still unknown, data array is not allocated yet
          amr->pnew( FaLv, FaCr3D[0],          FaCr3D[1],          FaCr3D[2],          -1, false, false, false );
          amr->pnew( FaLv, FaCr3D[0]+FaPScale, FaCr3D[1],          FaCr3D[2],          -1, false, false, false );
          amr->pnew( FaLv, FaCr3D[0],          FaCr3D[1]+FaPScale, FaCr3D[2],          -1, false, false, false );

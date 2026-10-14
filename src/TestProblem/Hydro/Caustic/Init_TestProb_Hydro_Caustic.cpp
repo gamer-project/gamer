@@ -98,7 +98,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "Caustic_Pres",      &Caustic_Pres,          -1.0,          Eps_double,       NoMax_double      );
    LOAD_PARA( load_mode, "Caustic_Dir",       &Caustic_Dir,            0,            0,                1                 );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

@@ -3,12 +3,12 @@ TBF.
 ## Compilation Options
 
 Related options:
-[[--particle | Installation:-Option-List#--particle]] &nbsp;
-[[--star_formation | Installation:-Option-List#--star_formation]] &nbsp;
+[[--particle | [Installation]-Option-List#--particle]] &nbsp;
+[[--star_formation | [Installation]-Option-List#--star_formation]] &nbsp;
 
 
 ## Runtime Parameters
-[[Runtime parameters: Star Formation | Runtime-Parameters:-Star-Formation]]
+[[ [Runtime parameters] Star Formation | [Runtime-Parameters]-Star-Formation ]]
 
 Other related parameters:
 
