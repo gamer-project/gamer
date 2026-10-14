@@ -48,7 +48,7 @@ int                  MPI_Rank, MPI_Rank_X[3], MPI_SibRank[26], NX0[3], NPatchTot
 int                 *BaseP = NULL;
 int                  Flu_ParaBuf;
 
-double               BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, OUTPUT_WALLTIME, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
+double               BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, INIT_T, END_T, OUTPUT_DT, OUTPUT_WALLTIME, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
 long                 END_STEP;
 int                  NX0_TOT[3], OUTPUT_STEP, OUTPUT_WALLTIME_UNIT, REGRID_COUNT, REFINE_NLEVEL, FLU_GPU_NPGROUP, SRC_GPU_NPGROUP, OMP_NTHREAD;
 int                  MPI_NRank, MPI_NRank_X[3];
@@ -140,6 +140,7 @@ bool                 OPT__OUTPUT_ENTHALPY;
 #elif ( MODEL == ELBDM )
 double               DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
 bool                 OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE, OPT__RES_PHASE;
+bool                 OPT__OUTPUT_ELBDM_VEL, OPT__OUTPUT_ELBDM_Q_POT, OPT__OUTPUT_ELBDM_Q_STRESS;
 bool                 ELBDM_TAYLOR3_AUTO;
 double               ELBDM_TAYLOR3_COEFF;
 double               ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
@@ -286,14 +287,19 @@ int                  CHE_GPU_NPGROUP;
 
 // (2-8) star formation
 #ifdef STAR_FORMATION
-SF_CreateStarScheme_t SF_CREATE_STAR_SCHEME;
-int                   SF_CREATE_STAR_RSEED;
-int                   SF_CREATE_STAR_DET_RANDOM;
-int                   SF_CREATE_STAR_MIN_LEVEL;
-double                SF_CREATE_STAR_MIN_GAS_DENS;
-double                SF_CREATE_STAR_MASS_EFF;
-double                SF_CREATE_STAR_MIN_STAR_MASS;
-double                SF_CREATE_STAR_MAX_STAR_MFRAC;
+SF_CreateStarScheme_t   SF_CREATE_STAR_SCHEME;
+SF_CreateStarCriteria_t SF_CREATE_STAR_CRITERIA;
+SF_CreateStarMassRate_t SF_CREATE_STAR_MASS_RATE;
+SF_CreateStarParSpawn_t SF_CREATE_STAR_PAR_SPAWN;
+int                     SF_CREATE_STAR_RSEED;
+int                     SF_CREATE_STAR_DET_RANDOM;
+int                     SF_CREATE_STAR_MIN_LEVEL;
+double                  SF_CREATE_STAR_MIN_GAS_DENS;
+double                  SF_CREATE_STAR_MAX_GAS_TEMP;
+double                  SF_CREATE_STAR_MAX_GAS_JEANSL;
+double                  SF_CREATE_STAR_MASS_EFF;
+double                  SF_CREATE_STAR_MIN_STAR_MASS;
+double                  SF_CREATE_STAR_MAX_STAR_MFRAC;
 #endif
 
 // (2-9) equation of state
