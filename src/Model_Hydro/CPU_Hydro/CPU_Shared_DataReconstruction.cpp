@@ -2181,11 +2181,13 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_TOTAL_PLUS_MAG], const real fcPri[
 #     endif // #ifndef SRHD
       {
 //       fall back to the zero-slope cell-centered values as the last resort
+//       --> the magnetic field is not reset here
          for (int f=0; f<6; f++)
          for (int v=0; v<NCOMP_TOTAL; v++)
             fcCon[f][v] = g_cc_array[v][cc_idx];
 
-         return;  // no need to apply the floors since the input values should already satisfy these constraints
+//       do not return here; still need to apply the floors for MHD
+//       --> the magnetic field remains updated; thus, Emag and Eint may change
       } // if ( repredict_iter != repredict_iter_num-1 ) ... else ...
    } // for (int repredict_iter=0; repredict_iter<repredict_iter_num; repredict_iter++)
 
@@ -2409,6 +2411,8 @@ real Hydro_HancockPredict_GetDeplFracMax( const real fcCon[][NCOMP_TOTAL_PLUS_MA
 //                Iter         : Current iteration
 //                IterNum      : Total number of iterations
 //                DeplFracMax  : Maximum depletion fraction based on the initial prediction
+//
+// Return      :  fcCon[][NCOMP_TOTAL_PLUS_MAG]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_HancockPredict_IterateReprediction( real fcCon[][NCOMP_TOTAL_PLUS_MAG],
@@ -2467,6 +2471,11 @@ void Hydro_HancockPredict_IterateReprediction( real fcCon[][NCOMP_TOTAL_PLUS_MAG
 //                2. Invoked by Hydro_HancockPredict_IterateReprediction() when unphysical result is found in Hydro_HancockPredict()
 //                3. Input variables must be conserved variables
 //                4. Warning: This is often ineffective for rescue and may waste time
+//                5. To revise: There are inconsistencies for MHD
+//                   (1) This routine does not change the B field in fcCon,
+//                       which was previously updated by the original computation
+//                   (2) During the sub-steps, the B field is not updated consistently with the fluid;
+//                       it always uses the B field stored in fcCon_init
 //
 // Parameter   :  fcCon        : Face-centered conserved variables to be updated
 //                fcCon_init   : Input face-centered conserved variables before update
@@ -2475,6 +2484,8 @@ void Hydro_HancockPredict_IterateReprediction( real fcCon[][NCOMP_TOTAL_PLUS_MAG
 //                EoS          : EoS object
 //                PassiveFloor : Bitwise flag to specify the passive scalars to be floored
 //                NumSubSteps  : Number of sub-steps to evolve
+//
+// Return      :  fcCon[][NCOMP_TOTAL_PLUS_MAG]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_HancockPredict_RescueBySubSteps( real fcCon[][NCOMP_TOTAL_PLUS_MAG],
@@ -2483,10 +2494,11 @@ void Hydro_HancockPredict_RescueBySubSteps( real fcCon[][NCOMP_TOTAL_PLUS_MAG],
                                             const int NumSubSteps )
 {
 
-// restore the initial face-centered variables
+// restore the initial face-centered variables, including the magnetic field
+   real fcCon_resc[6][NCOMP_TOTAL_PLUS_MAG];
    for (int f=0; f<6; f++)
-   for (int v=0; v<NCOMP_TOTAL; v++)
-      fcCon[f][v] = fcCon_init[f][v];
+   for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
+      fcCon_resc[f][v] = fcCon_init[f][v];
 
 // adopt the midpoint method for each sub-step of integration
 // dt_sub is the sub-step time-step; evolution destination is 0.5*dt
@@ -2500,7 +2512,7 @@ void Hydro_HancockPredict_RescueBySubSteps( real fcCon[][NCOMP_TOTAL_PLUS_MAG],
 //    sub-1-1. calculate the flux at the start of the sub-step
       for (int f=0; f<6; f++)
       {
-         Hydro_Con2Flux( f/2, Flux[f], fcCon[f], MinPres, PassiveFloor, EoS->DensEint2Pres_FuncPtr,
+         Hydro_Con2Flux( f/2, Flux[f], fcCon_resc[f], MinPres, PassiveFloor, EoS->DensEint2Pres_FuncPtr,
                          EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
       } // for (int f=0; f<6; f++)
 
@@ -2508,7 +2520,7 @@ void Hydro_HancockPredict_RescueBySubSteps( real fcCon[][NCOMP_TOTAL_PLUS_MAG],
       real fcCon_sub_half[6][NCOMP_TOTAL_PLUS_MAG];
       for (int f=0; f<6; f++)
       for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
-         fcCon_sub_half[f][v] = fcCon[f][v];
+         fcCon_sub_half[f][v] = fcCon_resc[f][v];
 
       for (int v=0; v<NCOMP_TOTAL; v++)
       {
@@ -2529,9 +2541,15 @@ void Hydro_HancockPredict_RescueBySubSteps( real fcCon[][NCOMP_TOTAL_PLUS_MAG],
       {
          const real dFlux = dt_sub_dh*( Flux[1][v] - Flux[0][v] + Flux[3][v] - Flux[2][v] + Flux[5][v] - Flux[4][v] );
 
-         for (int f=0; f<6; f++)  fcCon[f][v] -= dFlux;
+         for (int f=0; f<6; f++)  fcCon_resc[f][v] -= dFlux;
       } // for (int v=0; v<NCOMP_TOTAL; v++)
    } // for (int substep=0; substep<NumSubSteps; substep++)
+
+// update fcCon with the results of the rescue
+// --> the magnetic field is not reset here
+   for (int f=0; f<6; f++)
+   for (int v=0; v<NCOMP_TOTAL; v++)
+      fcCon[f][v] = fcCon_resc[f][v];
 
 } // FUNCTION : Hydro_HancockPredict_RescueBySubSteps
 
@@ -2544,6 +2562,12 @@ void Hydro_HancockPredict_RescueBySubSteps( real fcCon[][NCOMP_TOTAL_PLUS_MAG],
 // Note        :  1. Work for the MHM scheme
 //                2. Invoked by Hydro_HancockPredict_IterateReprediction() when unphysical result is found in Hydro_HancockPredict()
 //                3. Input variables must be conserved variables
+//                4. To revise: There are inconsistencies for MHD
+//                   (1) This routine does not change the B field in fcCon,
+//                       which was previously updated by the original computation
+//                   (2) During the slope reduction, the B field is not reconstructed consistently with the fluid;
+//                       it still uses the B field stored in fcCon_init,
+//                       which is computed using the original data reconstruction scheme
 //
 // Parameter   :  fcCon             : Face-centered conserved variables to be updated
 //                fcCon_init        : Input face-centered conserved variables before update
@@ -2556,6 +2580,8 @@ void Hydro_HancockPredict_RescueBySubSteps( real fcCon[][NCOMP_TOTAL_PLUS_MAG],
 //                EoS               : EoS object
 //                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //                ReducedSlopeRatio : Reduced slope / original slope
+//
+// Return      :  fcCon[][NCOMP_TOTAL_PLUS_MAG]
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_HancockPredict_RescueByLowerSlopes( real fcCon[][NCOMP_TOTAL_PLUS_MAG],
@@ -2607,15 +2633,21 @@ void Hydro_HancockPredict_RescueByLowerSlopes( real fcCon[][NCOMP_TOTAL_PLUS_MAG
 // --> Note that this correction is not equivalent to repeating the
 //     full data reconstruction, since it operates on conserved variables
 //     without access to neighboring-cell information.
+   real fcCon_resc[6][NCOMP_TOTAL_PLUS_MAG];
    for (int f=0; f<6; f++)
    for (int v=0; v<NCOMP_TOTAL; v++)
-      fcCon[f][v] = g_cc_array[v][cc_idx] + ReducedSlopeRatio * ( fcCon_init[f][v] - g_cc_array[v][cc_idx] );
+      fcCon_resc[f][v] = g_cc_array[v][cc_idx] + ReducedSlopeRatio * ( fcCon_init[f][v] - g_cc_array[v][cc_idx] );
+
+// use the initial magnetic field with the original data reconstruction
+   for (int f=0; f<6; f++)
+   for (int v=NCOMP_TOTAL; v<NCOMP_TOTAL_PLUS_MAG; v++)
+      fcCon_resc[f][v] = fcCon_init[f][v];
 
 // calculate flux
    real Flux[6][NCOMP_TOTAL_PLUS_MAG];
    for (int f=0; f<6; f++)
    {
-      Hydro_Con2Flux( f/2, Flux[f], fcCon[f], MinPres, PassiveFloor, EoS->DensEint2Pres_FuncPtr,
+      Hydro_Con2Flux( f/2, Flux[f], fcCon_resc[f], MinPres, PassiveFloor, EoS->DensEint2Pres_FuncPtr,
                       EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
    } // for (int f=0; f<6; f++)
 
@@ -2624,8 +2656,14 @@ void Hydro_HancockPredict_RescueByLowerSlopes( real fcCon[][NCOMP_TOTAL_PLUS_MAG
    {
       const real dFlux = dt_dh2*( Flux[1][v] - Flux[0][v] + Flux[3][v] - Flux[2][v] + Flux[5][v] - Flux[4][v] );
 
-      for (int f=0; f<6; f++)  fcCon[f][v] -= dFlux;
+      for (int f=0; f<6; f++)  fcCon_resc[f][v] -= dFlux;
    } // for (int v=0; v<NCOMP_TOTAL; v++)
+
+// update fcCon with the results of the rescue
+// --> the magnetic field is not reset here
+   for (int f=0; f<6; f++)
+   for (int v=0; v<NCOMP_TOTAL; v++)
+      fcCon[f][v] = fcCon_resc[f][v];
 
 } // FUNCTION : Hydro_HancockPredict_RescueByLowerSlopes
 #endif // #ifndef SRHD
