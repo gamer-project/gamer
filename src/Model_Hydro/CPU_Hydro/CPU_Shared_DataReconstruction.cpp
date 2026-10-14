@@ -2150,7 +2150,9 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
 //           repredict_iter_num = 3: more steps  -> lower slope     -> zero slope
 //           repredict_iter_num = 4: more steps  -> lower slope     -> even lower slope -> zero slope
 //           repredict_iter_num = 5: more steps  -> even more steps -> lower slope      -> even lower slope -> zero slope
-   const int repredict_iter_num = MHM_REPREDICT_ITER_NUM; // maximum number of iterations of reprediction
+   const int repredict_iter_num_max = 32;   // maximum number of repredict_iter_num
+                                            // --> due to the limitation in Hydro_HancockPredict_IterateReprediction()
+   const int repredict_iter_num = MIN( MHM_REPREDICT_ITER_NUM, repredict_iter_num_max ); // maximum number of iterations of reprediction
 #  endif // #ifdef SRHD ... else ...
    for (int repredict_iter=0; repredict_iter<repredict_iter_num; repredict_iter++)
    {
@@ -2416,6 +2418,13 @@ void Hydro_HancockPredict_IterateReprediction( real fcCon[][NCOMP_LR],
                                                const int Iter, const int IterNum, const real DeplFracMax )
 {
 
+// checks
+// this routine asserts a non-negative Iter
+   if ( Iter <  0 )   return;
+// Iter>30 is not supported by this routine since (1<<Iter) will overflow for integers
+// --> long integers may help, but in practice we won't need such a large number
+   if ( Iter > 30 )   return;
+
 // select rescue methods based on the iteration count
 // Iter = [       0,          1, ..., IterHalf-1] -> more accurate method
 // Iter = [IterHalf, IterHalf+1, ..., IterNum -2] -> more diffusive method
@@ -2426,7 +2435,7 @@ void Hydro_HancockPredict_IterateReprediction( real fcCon[][NCOMP_LR],
    {
 //    estimate the required number of sub-steps according to the maximum depletion fraction
       const real safety_factor    = MHM_REPREDICT_STEPS_SAFE_FAC/(1<<Iter); // e.g., 0.4 -> 0.2 -> 0.1
-      const int  num_substeps_est = (int)CEIL( DeplFracMax/safety_factor );
+      const int  num_substeps_est = (int)FMIN( CEIL( DeplFracMax/safety_factor ), (real)__INT_MAX__ );
 //    or at least increase by iterations
       const int  num_substeps_min = 1<<Iter;                                // 1 -> 2 -> 4
       const int  num_substeps_max = MHM_REPREDICT_SUBSTEPS_MAX;             // to avoid too many sub-steps for performance considerations
@@ -2446,7 +2455,7 @@ void Hydro_HancockPredict_IterateReprediction( real fcCon[][NCOMP_LR],
                                                 MinPres, EoS, PassiveFloor, reduced_slope_ratio );
    } // if ( Iter < IterHalf ) ... else ...
 
-} // FUNCTION :  Hydro_HancockPredict_IterateReprediction
+} // FUNCTION : Hydro_HancockPredict_IterateReprediction
 
 
 
