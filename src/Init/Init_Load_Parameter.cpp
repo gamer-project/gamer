@@ -37,6 +37,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "MPI_NRANK_Z",                &MPI_NRank_X[2],                 -1,               NoMin_int,     NoMax_int      );
 // do not check OMP_NTHREAD since it may be reset by Init_ResetParameter()
    ReadPara->Add( "OMP_NTHREAD",                &OMP_NTHREAD,                    -1,               NoMin_int,     NoMax_int      );
+   ReadPara->Add( "INIT_T",                     &INIT_T,                          0.0,             0.0,           NoMax_double   );
 // do not check END_T and END_STEP since they may be reset by test problems or restart
    ReadPara->Add( "END_T",                      &END_T,                          -1.0,             NoMin_double,  NoMax_double   );
    ReadPara->Add( "END_STEP",                   &END_STEP,                       -1L,              NoMin_long,    NoMax_long     );
@@ -284,13 +285,18 @@ void Init_Load_Parameter()
 
 // star formation
 #  ifdef STAR_FORMATION
-   ReadPara->Add( "SF_CREATE_STAR_SCHEME",         &SF_CREATE_STAR_SCHEME,         0,              0,             1              );
+   ReadPara->Add( "SF_CREATE_STAR_SCHEME",         &SF_CREATE_STAR_SCHEME,         0,             -1,             1              );
+   ReadPara->Add( "SF_CREATE_STAR_CRITERIA",       &SF_CREATE_STAR_CRITERIA,      -1L,             NoMin_long,    NoMax_long     );
+   ReadPara->Add( "SF_CREATE_STAR_MASS_RATE",      &SF_CREATE_STAR_MASS_RATE,     -1,              NoMin_int,     1              );
+   ReadPara->Add( "SF_CREATE_STAR_PAR_SPAWN",      &SF_CREATE_STAR_PAR_SPAWN,     -1,              NoMin_int,     1              );
    ReadPara->Add( "SF_CREATE_STAR_RSEED",          &SF_CREATE_STAR_RSEED,          123,            0,             NoMax_int      );
 // do not check SF_CREATE_STAR_DET_RANDOM since its default depends on the makefile option BITWISE_REPRODUCIBILITY
    ReadPara->Add( "SF_CREATE_STAR_DET_RANDOM",     &SF_CREATE_STAR_DET_RANDOM,    -1,              NoMin_int,     NoMax_int      );
    ReadPara->Add( "SF_CREATE_STAR_MIN_LEVEL",      &SF_CREATE_STAR_MIN_LEVEL,      0,              NoMin_int,     TOP_LEVEL      );
    ReadPara->Add( "SF_CREATE_STAR_MIN_GAS_DENS",   &SF_CREATE_STAR_MIN_GAS_DENS,   1.0e1,          0.0,           NoMax_double   );
-   ReadPara->Add( "SF_CREATE_STAR_MASS_EFF",       &SF_CREATE_STAR_MASS_EFF,       1.0e-2,         Eps_double,    1.0            );
+   ReadPara->Add( "SF_CREATE_STAR_MAX_GAS_TEMP",   &SF_CREATE_STAR_MAX_GAS_TEMP,   1.0e4,          0.0,           NoMax_double   );
+   ReadPara->Add( "SF_CREATE_STAR_MAX_GAS_JEANSL", &SF_CREATE_STAR_MAX_GAS_JEANSL, 1.0,            0.0,           NoMax_double   );
+   ReadPara->Add( "SF_CREATE_STAR_MASS_EFF",       &SF_CREATE_STAR_MASS_EFF,       1.0e-2,         Eps_double,    NoMax_double   );
    ReadPara->Add( "SF_CREATE_STAR_MIN_STAR_MASS",  &SF_CREATE_STAR_MIN_STAR_MASS,  0.0,            0.0,           NoMax_double   );
    ReadPara->Add( "SF_CREATE_STAR_MAX_STAR_MFRAC", &SF_CREATE_STAR_MAX_STAR_MFRAC, 0.5,            Eps_double,    1.0            );
 #  endif
@@ -578,6 +584,11 @@ void Init_Load_Parameter()
    ReadPara->Add( "OPT__OUTPUT_DUAL_STATUS",    &OPT__OUTPUT_DUAL_STATUS,         false,           Useless_bool,  Useless_bool   );
 #  endif
 #  endif // #if ( MODEL == HYDRO )
+#  if ( MODEL == ELBDM )
+   ReadPara->Add( "OPT__OUTPUT_ELBDM_VEL",      &OPT__OUTPUT_ELBDM_VEL,           false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__OUTPUT_ELBDM_Q_POT",    &OPT__OUTPUT_ELBDM_Q_POT,         false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "OPT__OUTPUT_ELBDM_Q_STRESS", &OPT__OUTPUT_ELBDM_Q_STRESS,      false,           Useless_bool,  Useless_bool   );
+#  endif
    ReadPara->Add( "OPT__OUTPUT_USER_FIELD",     &OPT__OUTPUT_USER_FIELD,          false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "OPT__OUTPUT_MODE",           &OPT__OUTPUT_MODE,               -1,               1,             3              );
    ReadPara->Add( "OPT__OUTPUT_RESTART",        &OPT__OUTPUT_RESTART,             false,           Useless_bool,  Useless_bool   );

@@ -24,7 +24,7 @@ END_STEP                     -1           # end step (<0=auto -> must be set by 
 
 # test problems
 TESTPROB_ID                   24          # test problem ID [0]
-                                          #   24: HYDRO Grackle Test (+SUPPORT_GRACKLE)
+                                          #   24: HYDRO Grackle test (+SUPPORT_GRACKLE)
 
 
 # code units (in cgs)

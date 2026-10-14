@@ -1296,5 +1296,5 @@ void ELBDM_GetPhase_DebugOnly( real *CData, const int CSize )
 
    for (int t=0; t<CSize_1v; t++)   CData_Real[t] = SATAN2( CData_Imag[t], CData_Real[t] );
 
-} // FUNCTION :
+} // FUNCTION : ELBDM_GetPhase_DebugOnly
 #endif // #if ( MODEL == ELBDM  &&  defined GAMER_DEBUG )

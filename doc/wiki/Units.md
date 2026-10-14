@@ -19,8 +19,8 @@ When enabling units (i.e., [[OPT__UNIT | [Runtime-Parameters]-Units#OPT__UNIT]]=
 must be set consistently with the adopted unit system unless otherwise
 specified. All input physical constants (e.g.,
 [[NEWTON_G | [Runtime-Parameters]-Gravity#NEWTON_G]],
-[[ELBDM_MASS | Wave-Dark-Matter#ELBDM_MASS]], and
-[[ELBDM_PLANCK_CONST | Wave-Dark-Matter#ELBDM_PLANCK_CONST]])
+[[ELBDM_MASS | [Runtime-Parameters]-ELBDM#ELBDM_MASS]], and
+[[ELBDM_PLANCK_CONST | [Runtime-Parameters]-ELBDM#ELBDM_PLANCK_CONST]])
 will be reset automatically to conform to the adopted unit system.
 
 The code does not distinguish external and internal units;

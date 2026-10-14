@@ -107,7 +107,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
    LOAD_PARA( load_mode, "EC_Temp",           &EC_Temp,               1000000.0,     Eps_double,       NoMax_double      );
    LOAD_PARA( load_mode, "EC_Dens",           &EC_Dens,               1.0,           Eps_double,       NoMax_double      );
 
-} // FUNCITON : LoadInputTestProb
+} // FUNCTION : LoadInputTestProb
 
 
 

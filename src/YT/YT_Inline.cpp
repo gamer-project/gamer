@@ -209,11 +209,11 @@ void YT_Inline()
 // set field's data type
    for (int v=0; v<NField; v++)
    {
-#  ifdef FLOAT8
-       FieldList[v].field_dtype = YT_DOUBLE;
-#  else
-       FieldList[v].field_dtype = YT_FLOAT;
-#  endif
+#     ifdef FLOAT8
+      FieldList[v].field_dtype = YT_DOUBLE;
+#     else
+      FieldList[v].field_dtype = YT_FLOAT;
+#     endif
    }
 
 // 3-2 get the ParticleList
