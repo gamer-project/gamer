@@ -41,7 +41,7 @@ void MHD_ComputeElectric_Half(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                                const real g_ConVar[][ CUBE(FLU_NXT) ],
                                const real g_FC_B  [][SQR(FLU_NXT)*FLU_NXT_P1],
                                const int NEle, const int NCon, const int OffsetCon );
-void MHD_UpdateMagnetic_Half(       real fc[][NCOMP_LR],
+void MHD_UpdateMagnetic_Half(       real fc[][NCOMP_TOTAL_PLUS_MAG],
                               const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                               const real dt, const real dh,
                               const int idx_i, const int idx_j, const int idx_k,
@@ -73,7 +73,7 @@ static void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
 #endif // #if (  FLU_SCHEME == CTU  ||  ( defined MHD && defined CHAR_RECONSTRUCTION )  )
 #if ( FLU_SCHEME == MHM )
 GPU_DEVICE
-static void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR], const real dt,
+static void Hydro_HancockPredict( real fcCon[][NCOMP_TOTAL_PLUS_MAG], const real fcPri[][NCOMP_LR], const real dt,
                                   const real dh, const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
                                   const int cc_i, const int cc_j, const int cc_k,
                                   const real g_FC_B[][ FLU_NXT_P1*SQR(FLU_NXT) ],
@@ -83,27 +83,27 @@ static void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCO
                                   const EoS_t *EoS, const long PassiveFloor );
 #ifdef MHM_CHECK_PREDICT
 GPU_DEVICE
-static bool Hydro_HancockPredict_CheckUnphysical( const real fcCon[][NCOMP_LR], const real dt_dh,
+static bool Hydro_HancockPredict_CheckUnphysical( const real fcCon[][NCOMP_TOTAL_PLUS_MAG], const real dt_dh,
                                                   const EoS_t *EoS, const long PassiveFloor );
 #ifndef SRHD
 GPU_DEVICE
-static real Hydro_HancockPredict_GetDeplFracMax( const real fcCon[][NCOMP_LR],
-                                                 const real fcCon_init[][NCOMP_LR], const real fcPri_init[][NCOMP_LR],
+static real Hydro_HancockPredict_GetDeplFracMax( const real fcCon[][NCOMP_TOTAL_PLUS_MAG],
+                                                 const real fcCon_init[][NCOMP_TOTAL_PLUS_MAG], const real fcPri_init[][NCOMP_LR],
                                                  const real MinEint, const long PassiveFloor );
 GPU_DEVICE
-static void Hydro_HancockPredict_IterateReprediction( real fcCon[][NCOMP_LR],
-                                                      const real fcCon_init[][NCOMP_LR], const real dt_dh2,
+static void Hydro_HancockPredict_IterateReprediction( real fcCon[][NCOMP_TOTAL_PLUS_MAG],
+                                                      const real fcCon_init[][NCOMP_TOTAL_PLUS_MAG], const real dt_dh2,
                                                       const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
                                                       const real MinPres, const EoS_t *EoS, const long PassiveFloor,
                                                       const int Iter, const int IterNum, const real DeplFracMax );
 GPU_DEVICE
-static void Hydro_HancockPredict_RescueBySubSteps( real fcCon[][NCOMP_LR],
-                                                   const real fcCon_init[][NCOMP_LR], const real dt_dh2,
+static void Hydro_HancockPredict_RescueBySubSteps( real fcCon[][NCOMP_TOTAL_PLUS_MAG],
+                                                   const real fcCon_init[][NCOMP_TOTAL_PLUS_MAG], const real dt_dh2,
                                                    const real MinPres, const EoS_t *EoS, const long PassiveFloor,
                                                    const int NumSubSteps );
 GPU_DEVICE
-static void Hydro_HancockPredict_RescueByLowerSlopes( real fcCon[][NCOMP_LR],
-                                                      const real fcCon_init[][NCOMP_LR], const real dt_dh2,
+static void Hydro_HancockPredict_RescueByLowerSlopes( real fcCon[][NCOMP_TOTAL_PLUS_MAG],
+                                                      const real fcCon_init[][NCOMP_TOTAL_PLUS_MAG], const real dt_dh2,
                                                       const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
                                                       const real MinPres, const EoS_t *EoS, const long PassiveFloor,
                                                       const real ReducedSlopeRatio );
@@ -396,7 +396,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 //    cc_C/L/R: cell-centered variables of the Central/Left/Right cells
 //    fcCon/fcPri: face-centered conserved/primitive variables of the central cell
       real cc_C[NCOMP_LR], cc_L[NCOMP_LR], cc_R[NCOMP_LR];
-      real fcCon[6][NCOMP_LR], fcPri[6][NCOMP_LR], Slope_Limiter[NCOMP_LR];
+      real fcCon[6][NCOMP_TOTAL_PLUS_MAG], fcPri[6][NCOMP_LR], Slope_Limiter[NCOMP_LR];
 
       for (int v=0; v<NCOMP_LR; v++)   cc_C[v] = g_PriVar[v][idx_cc];
 
@@ -980,7 +980,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #     endif
 
  //   cc/fc: cell/face-centered variables; _C_ncomp: central cell with all NCOMP_LR variables
-      real cc_C_ncomp[NCOMP_LR], fcCon[6][NCOMP_LR], fcPri[6][NCOMP_LR], dfc[NCOMP_LR], dfc6[NCOMP_LR];
+      real cc_C_ncomp[NCOMP_LR], fcCon[6][NCOMP_TOTAL_PLUS_MAG], fcPri[6][NCOMP_LR], dfc[NCOMP_LR], dfc6[NCOMP_LR];
 
       for (int v=0; v<NCOMP_LR; v++)   cc_C_ncomp[v] = g_PriVar[v][idx_cc];
 
@@ -2089,7 +2089,7 @@ void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_
 //                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR], const real dt,
+void Hydro_HancockPredict( real fcCon[][NCOMP_TOTAL_PLUS_MAG], const real fcPri[][NCOMP_LR], const real dt,
                            const real dh, const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
                            const int cc_i, const int cc_j, const int cc_k,
                            const real g_FC_B[][ FLU_NXT_P1*SQR(FLU_NXT) ],
@@ -2101,9 +2101,9 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
 
 #  ifdef MHM_CHECK_PREDICT
 // back up the input values in case they need to be recalculated
-   real fcCon_init[6][NCOMP_LR];
+   real fcCon_init[6][NCOMP_TOTAL_PLUS_MAG];
    for (int f=0; f<6; f++)
-   for (int v=0; v<NCOMP_LR; v++)
+   for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
       fcCon_init[f][v] = fcCon[f][v];
 #  endif // #ifdef MHM_CHECK_PREDICT
 
@@ -2233,7 +2233,7 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
 // Return      : isUnphysical
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-bool Hydro_HancockPredict_CheckUnphysical( const real fcCon[][NCOMP_LR], const real dt_dh,
+bool Hydro_HancockPredict_CheckUnphysical( const real fcCon[][NCOMP_TOTAL_PLUS_MAG], const real dt_dh,
                                            const EoS_t *EoS, const long PassiveFloor )
 {
 
@@ -2322,8 +2322,8 @@ bool Hydro_HancockPredict_CheckUnphysical( const real fcCon[][NCOMP_LR], const r
 // Return      :  depl_frac_max : Maximum depletion fraction
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-real Hydro_HancockPredict_GetDeplFracMax( const real fcCon[][NCOMP_LR],
-                                          const real fcCon_init[][NCOMP_LR], const real fcPri_init[][NCOMP_LR],
+real Hydro_HancockPredict_GetDeplFracMax( const real fcCon[][NCOMP_TOTAL_PLUS_MAG],
+                                          const real fcCon_init[][NCOMP_TOTAL_PLUS_MAG], const real fcPri_init[][NCOMP_LR],
                                           const real MinEint, const long PassiveFloor )
 {
 
@@ -2411,8 +2411,8 @@ real Hydro_HancockPredict_GetDeplFracMax( const real fcCon[][NCOMP_LR],
 //                DeplFracMax  : Maximum depletion fraction based on the initial prediction
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_HancockPredict_IterateReprediction( real fcCon[][NCOMP_LR],
-                                               const real fcCon_init[][NCOMP_LR], const real dt_dh2,
+void Hydro_HancockPredict_IterateReprediction( real fcCon[][NCOMP_TOTAL_PLUS_MAG],
+                                               const real fcCon_init[][NCOMP_TOTAL_PLUS_MAG], const real dt_dh2,
                                                const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
                                                const real MinPres, const EoS_t *EoS, const long PassiveFloor,
                                                const int Iter, const int IterNum, const real DeplFracMax )
@@ -2477,8 +2477,8 @@ void Hydro_HancockPredict_IterateReprediction( real fcCon[][NCOMP_LR],
 //                NumSubSteps  : Number of sub-steps to evolve
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_HancockPredict_RescueBySubSteps( real fcCon[][NCOMP_LR],
-                                            const real fcCon_init[][NCOMP_LR], const real dt_dh2,
+void Hydro_HancockPredict_RescueBySubSteps( real fcCon[][NCOMP_TOTAL_PLUS_MAG],
+                                            const real fcCon_init[][NCOMP_TOTAL_PLUS_MAG], const real dt_dh2,
                                             const real MinPres, const EoS_t *EoS, const long PassiveFloor,
                                             const int NumSubSteps )
 {
@@ -2505,9 +2505,9 @@ void Hydro_HancockPredict_RescueBySubSteps( real fcCon[][NCOMP_LR],
       } // for (int f=0; f<6; f++)
 
 //    sub-1-2. update the face-centered variables for half sub-step by the initial flux
-      real fcCon_sub_half[6][NCOMP_LR];
+      real fcCon_sub_half[6][NCOMP_TOTAL_PLUS_MAG];
       for (int f=0; f<6; f++)
-      for (int v=0; v<NCOMP_LR; v++)
+      for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
          fcCon_sub_half[f][v] = fcCon[f][v];
 
       for (int v=0; v<NCOMP_TOTAL; v++)
@@ -2558,8 +2558,8 @@ void Hydro_HancockPredict_RescueBySubSteps( real fcCon[][NCOMP_LR],
 //                ReducedSlopeRatio : Reduced slope / original slope
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_HancockPredict_RescueByLowerSlopes( real fcCon[][NCOMP_LR],
-                                               const real fcCon_init[][NCOMP_LR], const real dt_dh2,
+void Hydro_HancockPredict_RescueByLowerSlopes( real fcCon[][NCOMP_TOTAL_PLUS_MAG],
+                                               const real fcCon_init[][NCOMP_TOTAL_PLUS_MAG], const real dt_dh2,
                                                const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
                                                const real MinPres, const EoS_t *EoS, const long PassiveFloor,
                                                const real ReducedSlopeRatio )
