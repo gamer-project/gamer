@@ -45,7 +45,7 @@ void MHD_ComputeElectric_Half(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                                const real g_ConVar[][ CUBE(FLU_NXT) ],
                                const real g_FC_B  [][SQR(FLU_NXT)*FLU_NXT_P1],
                                const int NEle, const int NCon, const int OffsetCon );
-void MHD_UpdateMagnetic_Half(       real fc[][NCOMP_LR],
+void MHD_UpdateMagnetic_Half(       real fc[][NCOMP_TOTAL_PLUS_MAG],
                               const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                               const real dt, const real dh,
                               const int idx_i, const int idx_j, const int idx_k,
@@ -77,7 +77,7 @@ static void Hydro_GetEigenSystem( const real CC_Var[], real EigenVal[][NWAVE],
 #endif // #if (  FLU_SCHEME == CTU  ||  ( defined MHD && defined CHAR_RECONSTRUCTION )  )
 #if ( FLU_SCHEME == MHM )
 GPU_DEVICE
-static void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR], const real dt,
+static void Hydro_HancockPredict( real fcCon[][NCOMP_TOTAL_PLUS_MAG], const real fcPri[][NCOMP_LR], const real dt,
                                   const real dh, const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
                                   const int cc_i, const int cc_j, const int cc_k,
                                   const real g_FC_B[][ FLU_NXT_P1*SQR(FLU_NXT) ],
@@ -86,6 +86,34 @@ static void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCO
                                   const real MinDens, const real MinPres, const real MinEint,
                                   const real DualEnergySwitch,
                                   const EoS_t *EoS, const long PassiveFloor );
+#ifdef MHM_CHECK_PREDICT
+GPU_DEVICE
+static bool Hydro_HancockPredict_CheckUnphysical( const real fcCon[][NCOMP_TOTAL_PLUS_MAG], const real dt_dh,
+                                                  const EoS_t *EoS, const long PassiveFloor );
+#ifndef SRHD
+GPU_DEVICE
+static real Hydro_HancockPredict_GetDeplFracMax( const real fcCon[][NCOMP_TOTAL_PLUS_MAG],
+                                                 const real fcCon_init[][NCOMP_TOTAL_PLUS_MAG], const real fcPri_init[][NCOMP_LR],
+                                                 const real MinEint, const long PassiveFloor );
+GPU_DEVICE
+static void Hydro_HancockPredict_IterateReprediction( real fcCon[][NCOMP_TOTAL_PLUS_MAG],
+                                                      const real fcCon_init[][NCOMP_TOTAL_PLUS_MAG], const real dt_dh2,
+                                                      const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
+                                                      const real MinPres, const EoS_t *EoS, const long PassiveFloor,
+                                                      const int Iter, const int IterNum, const real DeplFracMax );
+GPU_DEVICE
+static void Hydro_HancockPredict_RescueBySubSteps( real fcCon[][NCOMP_TOTAL_PLUS_MAG],
+                                                   const real fcCon_init[][NCOMP_TOTAL_PLUS_MAG], const real dt_dh2,
+                                                   const real MinPres, const EoS_t *EoS, const long PassiveFloor,
+                                                   const int NumSubSteps );
+GPU_DEVICE
+static void Hydro_HancockPredict_RescueByLowerSlopes( real fcCon[][NCOMP_TOTAL_PLUS_MAG],
+                                                      const real fcCon_init[][NCOMP_TOTAL_PLUS_MAG], const real dt_dh2,
+                                                      const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
+                                                      const real MinPres, const EoS_t *EoS, const long PassiveFloor,
+                                                      const real ReducedSlopeRatio );
+#endif // #ifndef SRHD
+#endif // #ifdef MHM_CHECK_PREDICT
 #ifdef MHD
 GPU_DEVICE
 void Hydro_ConFC2PriCC_MHM(       real g_PriVar[][ CUBE(FLU_NXT) ],
@@ -375,7 +403,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 //    cc_C/L/R: cell-centered variables of the Central/Left/Right cells
 //    fcCon/fcPri: face-centered conserved/primitive variables of the central cell
       real cc_C[NCOMP_LR], cc_L[NCOMP_LR], cc_R[NCOMP_LR];
-      real fcCon[6][NCOMP_LR], fcPri[6][NCOMP_LR], Slope_Limiter[NCOMP_LR];
+      real fcCon[6][NCOMP_TOTAL_PLUS_MAG], fcPri[6][NCOMP_LR], Slope_Limiter[NCOMP_LR];
 
       for (int v=0; v<NCOMP_LR; v++)   cc_C[v] = g_PriVar[v][idx_cc];
 
@@ -960,7 +988,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #     endif
 
  //   cc/fc: cell/face-centered variables; _C_ncomp: central cell with all NCOMP_LR variables
-      real cc_C_ncomp[NCOMP_LR], fcCon[6][NCOMP_LR], fcPri[6][NCOMP_LR], dfc[NCOMP_LR], dfc6[NCOMP_LR];
+      real cc_C_ncomp[NCOMP_LR], fcCon[6][NCOMP_TOTAL_PLUS_MAG], fcPri[6][NCOMP_LR], dfc[NCOMP_LR], dfc6[NCOMP_LR];
 
       for (int v=0; v<NCOMP_LR; v++)   cc_C_ncomp[v] = g_PriVar[v][idx_cc];
 
@@ -2070,7 +2098,7 @@ void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_
 //                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR], const real dt,
+void Hydro_HancockPredict( real fcCon[][NCOMP_TOTAL_PLUS_MAG], const real fcPri[][NCOMP_LR], const real dt,
                            const real dh, const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
                            const int cc_i, const int cc_j, const int cc_k,
                            const real g_FC_B[][ FLU_NXT_P1*SQR(FLU_NXT) ],
@@ -2080,6 +2108,14 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
                            const real DualEnergySwitch,
                            const EoS_t *EoS, const long PassiveFloor )
 {
+
+#  ifdef MHM_CHECK_PREDICT
+// back up the input values in case they need to be recalculated
+   real fcCon_init[6][NCOMP_TOTAL_PLUS_MAG];
+   for (int f=0; f<6; f++)
+   for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
+      fcCon_init[f][v] = fcCon[f][v];
+#  endif // #ifdef MHM_CHECK_PREDICT
 
    const real dt_dh2 = (real)0.5*dt/dh;
 
@@ -2109,45 +2145,65 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
 #  endif
 
 
-// check negative, inf, and nan in density, energy, and pressure
+// check unphysical results in the prediction, repredict if needed, and apply floors
 #  ifdef MHM_CHECK_PREDICT
-   bool reset_cell = false;
+   real depl_frac_max = MAX_ERROR;   // maximum depletion fraction to be determined; initialized arbitrarily
 
+#  ifdef SRHD
+// currently, SRHD does not support the reprediction except for the zero-slope one
+// because we don't have the necessary parameters to re-compute primitive variables and therefore the fluxes
+   const int repredict_iter_num = 1;
+#  else
+// repredict with multiple stages to correct the unphysical results
+//           repredict_iter_num = 1: zero slope
+//           repredict_iter_num = 2: lower slope -> zero slope
+//           repredict_iter_num = 3: more steps  -> lower slope     -> zero slope
+//           repredict_iter_num = 4: more steps  -> lower slope     -> even lower slope -> zero slope
+//           repredict_iter_num = 5: more steps  -> even more steps -> lower slope      -> even lower slope -> zero slope
+   const int repredict_iter_num_max = 32;   // maximum number of repredict_iter_num
+                                            // --> due to the limitation in Hydro_HancockPredict_IterateReprediction()
+   const int repredict_iter_num = MIN( MHM_REPREDICT_ITER_NUM, repredict_iter_num_max ); // maximum number of iterations of reprediction
+#  endif // #ifdef SRHD ... else ...
+   for (int repredict_iter=0; repredict_iter<repredict_iter_num; repredict_iter++)
+   {
+//    check whether there are unphysical results after the update
+      const bool repredict = Hydro_HancockPredict_CheckUnphysical( fcCon, dt_dh2*(real)2.0, EoS, PassiveFloor );
+
+//    break immediately when there is no need to repredict
+      if ( !repredict )   break;
+
+#     ifndef SRHD
+//    repredict with more accurate or safer methods to avoid overshoot
+      if ( repredict_iter != repredict_iter_num-1 )
+      {
+//       determine the maxmium depletion fraction of density, energy, and internal energy
+//       from the initial states and the original updates
+         if ( repredict_iter == 0 )
+            depl_frac_max = Hydro_HancockPredict_GetDeplFracMax( fcCon, fcCon_init, fcPri, MinEint, PassiveFloor );
+
+//       invoke the rescue methods to repredict
+         Hydro_HancockPredict_IterateReprediction( fcCon, fcCon_init, dt_dh2,
+                                                   g_cc_array, cc_idx, MinPres, EoS, PassiveFloor,
+                                                   repredict_iter, repredict_iter_num, depl_frac_max );
+      }
+//    repredict for the last time
+      else // if ( repredict_iter != repredict_iter_num-1 )
+#     endif // #ifndef SRHD
+      {
+//       fall back to the zero-slope cell-centered values as the last resort
+//       --> the magnetic field is not reset here
+         for (int f=0; f<6; f++)
+         for (int v=0; v<NCOMP_TOTAL; v++)
+            fcCon[f][v] = g_cc_array[v][cc_idx];
+
+//       do not return here; still need to apply the floors for MHD
+//       --> the magnetic field remains updated; thus, Emag and Eint may change
+      } // if ( repredict_iter != repredict_iter_num-1 ) ... else ...
+   } // for (int repredict_iter=0; repredict_iter<repredict_iter_num; repredict_iter++)
+
+// apply density, internal energy, and passive scalar floors
    for (int f=0; f<6; f++)
    {
-#     ifdef SRHD
-      if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, fcCon[f], NULL_REAL,
-                                EoS->DensEint2Pres_FuncPtr,
-                                EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
-                                EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table,
-                                PassiveFloor, ERROR_INFO, UNPHY_SILENCE, CK_UNPHY_RND_NA )  )
-         reset_cell = true;
-
-#     else
-
-      if (  Hydro_IsUnphysical_Single( fcCon[f][DENS], "density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_SILENCE )  )
-         reset_cell = true;
-
-#     ifndef BAROTROPIC_EOS
-      if (  Hydro_IsUnphysical_Single( fcCon[f][4],    "energy",   TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_SILENCE )  )
-         reset_cell = true;
-
-      if (  Hydro_IsUnphysical_Single( fcPri[f][4],    "pressure", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_SILENCE )  )
-         reset_cell = true;
-#     endif // #ifndef BAROTROPIC_EOS
-#     endif // #ifdef SRHD ... else ...
-
-//    set to the cell-centered values before update
-      if ( reset_cell )
-      {
-         for (int face=0; face<6; face++)
-         for (int v=0; v<NCOMP_TOTAL; v++)
-            fcCon[face][v] = g_cc_array[v][cc_idx];
-
-         break;  // no need to apply the floors since the input values should already satisfy these constraints
-      }
-
-//    apply density and internal energy floors
       fcCon[f][0] = FMAX( fcCon[f][0], MinDens );
 #     ifndef SRHD
 #     ifndef BAROTROPIC_EOS
@@ -2188,6 +2244,460 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
 #  endif
 
 } // FUNCTION : Hydro_HancockPredict
+
+
+
+# ifdef MHM_CHECK_PREDICT
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_HancockPredict_CheckUnphysical
+// Description :  Check the unphysical results after the half time-step update in Hydro_HancockPredict()
+//
+// Note        :  1. Work for the MHM scheme
+//                2. Invoked by Hydro_HancockPredict() only
+//                3. Input variables must be conserved variables
+//                4. Check negative, inf, and nan in density, energy, and pressure, as well as excessively high velocity
+//                5. It stops checking and returns once any unphysical result is found
+//
+// Parameter   :  fcCon        : Face-centered conserved variables to be checked
+//                dt_dh        : Time interval to advance solution / cell size
+//                EoS          : EoS object
+//                PassiveFloor : Bitwise flag to specify the passive scalars to be floored
+// Return      : isUnphysical
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+bool Hydro_HancockPredict_CheckUnphysical( const real fcCon[][NCOMP_TOTAL_PLUS_MAG], const real dt_dh,
+                                           const EoS_t *EoS, const long PassiveFloor )
+{
+
+   bool isUnphysical = false;
+
+// check whether there are unphysical results in all faces after the update
+   for (int f=0; f<6; f++)
+   {
+#     ifdef SRHD
+      if (  Hydro_IsUnphysical( UNPHY_MODE_CONS, fcCon[f], NULL_REAL,
+                                EoS->DensEint2Pres_FuncPtr,
+                                EoS->GuessHTilde_FuncPtr, EoS->HTilde2Temp_FuncPtr,
+                                EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table,
+                                PassiveFloor, ERROR_INFO, UNPHY_SILENCE, CK_UNPHY_RND_NA )  )
+      {
+         isUnphysical = true;
+         break;
+      }
+
+#     else
+//    1. check the value of density
+      if (  Hydro_IsUnphysical_Single( fcCon[f][DENS], "density",  TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_SILENCE )  )
+      {
+         isUnphysical = true;
+         break;
+      }
+
+//    2. check the value of velocity: require max(v)*dt < dh
+      if ( FMAX( FABS(fcCon[f][MOMX]), FMAX( FABS(fcCon[f][MOMY]), FABS(fcCon[f][MOMZ]) ) )*dt_dh > FABS(fcCon[f][DENS]) )
+      {
+         isUnphysical = true;
+         break;
+      }
+
+#     ifndef BAROTROPIC_EOS
+//    3. check the value of total energy
+      if (  Hydro_IsUnphysical_Single( fcCon[f][4],    "energy",   TINY_NUMBER, HUGE_NUMBER, ERROR_INFO, UNPHY_SILENCE )  )
+      {
+         isUnphysical = true;
+         break;
+      }
+
+//    4. check the value of pressure
+#     ifdef MHD
+      const real Emag = (real)0.5*( SQR(fcCon[f][MAG_OFFSET+0]) + SQR(fcCon[f][MAG_OFFSET+1]) + SQR(fcCon[f][MAG_OFFSET+2]) );
+#     else
+      const real Emag = NULL_REAL;
+#     endif // MHD
+      const bool CheckMinPres_No = false;
+      const real Pres = Hydro_Con2Pres( fcCon[f][DENS], fcCon[f][MOMX], fcCon[f][MOMY], fcCon[f][MOMZ], fcCon[f][ENGY],
+                                        fcCon[f]+NCOMP_FLUID, CheckMinPres_No, NULL_REAL, PassiveFloor, Emag,
+                                        EoS->DensEint2Pres_FuncPtr, NULL, NULL,
+                                        EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
+
+      if (  Hydro_IsUnphysical_Single( Pres,           "pressure", (real)0.0,   HUGE_NUMBER, ERROR_INFO, UNPHY_SILENCE )  )
+      {
+         isUnphysical = true;
+         break;
+      }
+#     endif // #ifndef BAROTROPIC_EOS
+#     endif // #ifdef SRHD ... else ...
+   } // for (int f=0; f<6; f++)
+
+   return isUnphysical;
+
+} // FUNCTION : Hydro_HancockPredict_CheckUnphysical
+
+
+
+# ifndef SRHD
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_HancockPredict_GetDeplFracMax
+// Description :  Get the maximum depletion fraction of the face-centered variables after the update over all faces
+//
+// Note        :  1. Work for the MHM scheme
+//                2. Invoked by Hydro_HancockPredict() only when unphysical result is found
+//                3. The value will be used to estimate the required number of steps and the reduced slope
+//                   to rescue the unphysical results
+//
+// Parameter   :  fcCon         : Updated face-centered conserved variables
+//                fcCon_init    : Input face-centered conserved variables before update
+//                fcPri_init    : Input face-centered primitive variables before update
+//                MinEint       : Internal energy floor
+//                PassiveFloor  : Bitwise flag to specify the passive scalars to be floored
+//
+// Return      :  depl_frac_max : Maximum depletion fraction
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+real Hydro_HancockPredict_GetDeplFracMax( const real fcCon[][NCOMP_TOTAL_PLUS_MAG],
+                                          const real fcCon_init[][NCOMP_TOTAL_PLUS_MAG], const real fcPri_init[][NCOMP_LR],
+                                          const real MinEint, const long PassiveFloor )
+{
+
+// initialize it with a small but non-zero value
+   real depl_frac_max = MAX_ERROR;
+
+// depletion fraction is defined as (var_initial - var_updated)/var_initial
+// positive (>0) when the variable decreases after update
+//           =1 leads to vacuum, >1 is unphysical, and larger values are more dangerous
+// negative (<0) when the variable increases after update, which is safe
+
+// loop through all the faces to find the maximum
+   for (int f=0; f<6; f++)
+   {
+//    density depletion fraction
+      depl_frac_max = FMAX( (real)1.0-fcCon[f][DENS]/fcCon_init[f][DENS], depl_frac_max );
+
+#     ifndef BAROTROPIC_EOS
+//    energy depletion fraction
+      depl_frac_max = FMAX( (real)1.0-fcCon[f][ENGY]/fcCon_init[f][ENGY], depl_frac_max );
+
+//    internal energy depletion fraction
+//    compute the magnetic energy
+#     ifdef MHD
+      const real Emag     = (real)0.5*( SQR(     fcCon[f][MAG_OFFSET+0]) + SQR(     fcCon[f][MAG_OFFSET+1]) + SQR(     fcCon[f][MAG_OFFSET+2]) );
+      const real initEmag = (real)0.5*( SQR(fcCon_init[f][MAG_OFFSET+0]) + SQR(fcCon_init[f][MAG_OFFSET+1]) + SQR(fcCon_init[f][MAG_OFFSET+2]) );
+#     else
+      const real initEmag = NULL_REAL;
+#     endif // MHD
+
+//    compute the initial internal energy; check minimum in case it is negative in the input
+      const bool CheckMinEint_Yes = true;
+      const real initEint = Hydro_Con2Eint( fcCon_init[f][DENS], fcCon_init[f][MOMX],
+                                            fcCon_init[f][MOMY], fcCon_init[f][MOMZ], fcCon_init[f][ENGY],
+                                            CheckMinEint_Yes, MinEint, PassiveFloor, initEmag,
+                                            NULL, NULL, NULL, NULL, NULL );
+
+//    estimate the decrease in internal energy by linearizing the initial change rate
+//    -->  Eint =  Engy - 0.5*(Mom_i**2)/Dens
+//    --> dEint = dEngy - Vel_i*dMom_i + 0.5*(Vel_i**2)*dDens
+//    --> the change in internal energy is not estimated from the initial and updated states,
+//        since that may be incorrect if the updated density or energy is already wrong;
+//        the updated internal energy comes from the other updated variables
+//        rather than directly from a flux
+      const real depldEint = (  (fcCon_init[f][ENGY] - fcCon[f][ENGY])
+#                             ifdef MHD
+                              - (          initEmag  -          Emag )
+#                             endif // MHD
+                              - (fcCon_init[f][MOMX] - fcCon[f][MOMX])*fcPri_init[f][1]
+                              - (fcCon_init[f][MOMY] - fcCon[f][MOMY])*fcPri_init[f][2]
+                              - (fcCon_init[f][MOMZ] - fcCon[f][MOMZ])*fcPri_init[f][3]
+                              + (fcCon_init[f][DENS] - fcCon[f][DENS])*(real)0.5*( SQR(fcPri_init[f][1])+SQR(fcPri_init[f][2])+SQR(fcPri_init[f][3]) ) );
+
+      depl_frac_max = MAX( depldEint/initEint, depl_frac_max );
+#     endif // #ifndef BAROTROPIC_EOS
+   } // for (int f=0; f<6; f++)
+
+   return depl_frac_max;
+
+} // FUNCTION : Hydro_HancockPredict_GetDeplFracMax
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_HancockPredict_IterateReprediction
+// Description :  Recompute the Hancock prediction through iterative trials
+//
+// Note        :  1. Work for the MHM scheme
+//                2. Invoked by Hydro_HancockPredict() only when unphysical result is found
+//                3. Invoke different rescue methods depending on the iteration count
+//                4. Input variables must be conserved variables
+//
+// Parameter   :  fcCon        : Face-centered conserved variables to be updated
+//                fcCon_init   : Input face-centered conserved variables before update
+//                dt_dh2       : 0.5 * time interval to advance solution / cell size
+//                g_cc_array   : Array storing the cell-centered conserved variables for checking
+//                               negative density and pressure
+//                               --> It is just the input array Flu_Array_In[]
+//                cc_idx       : Index for accessing g_cc_array[]
+//                MinPres      : Pressure floor
+//                EoS          : EoS object
+//                PassiveFloor : Bitwise flag to specify the passive scalars to be floored
+//                Iter         : Current iteration
+//                IterNum      : Total number of iterations
+//                DeplFracMax  : Maximum depletion fraction based on the initial prediction
+//
+// Return      :  fcCon[][NCOMP_TOTAL_PLUS_MAG]
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+void Hydro_HancockPredict_IterateReprediction( real fcCon[][NCOMP_TOTAL_PLUS_MAG],
+                                               const real fcCon_init[][NCOMP_TOTAL_PLUS_MAG], const real dt_dh2,
+                                               const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
+                                               const real MinPres, const EoS_t *EoS, const long PassiveFloor,
+                                               const int Iter, const int IterNum, const real DeplFracMax )
+{
+
+// checks
+// this routine asserts a non-negative Iter
+   if ( Iter <  0 )   return;
+// Iter>30 is not supported by this routine since (1<<Iter) will overflow for integers
+// --> long integers may help, but in practice we won't need such a large number
+   if ( Iter > 30 )   return;
+
+// select rescue methods based on the iteration count
+// Iter = [       0,          1, ..., IterHalf-1] -> more accurate method
+// Iter = [IterHalf, IterHalf+1, ..., IterNum -2] -> more diffusive method
+   const int IterHalf = (IterNum-1)/2;
+
+// for the first half, try higher-order integration method and smaller time-step
+   if ( Iter < IterHalf )
+   {
+//    estimate the required number of sub-steps according to the maximum depletion fraction
+      const real safety_factor    = MHM_REPREDICT_STEPS_SAFE_FAC/(1<<Iter); // e.g., 0.4 -> 0.2 -> 0.1
+      const int  num_substeps_est = (int)FMIN( CEIL( DeplFracMax/safety_factor ), (real)__INT_MAX__ );
+//    or at least increase by iterations
+      const int  num_substeps_min = 1<<Iter;                                // 1 -> 2 -> 4
+      const int  num_substeps_max = MHM_REPREDICT_SUBSTEPS_MAX;             // to avoid too many sub-steps for performance considerations
+      const int  num_substeps     = MIN( MAX( num_substeps_est, num_substeps_min ), num_substeps_max );
+
+      Hydro_HancockPredict_RescueBySubSteps( fcCon, fcCon_init, dt_dh2,
+                                             MinPres, EoS, PassiveFloor, num_substeps );
+   }
+// for the second half, try reducing the slope for data reconstruction
+   else // if ( Iter < IterHalf )
+   {
+//    reduce the slope according to the maximum depletion fraction
+      const real safety_factor       = MHM_REPREDICT_SLOPE_SAFE_FAC/(1<<(Iter-IterHalf)); // e.g., 0.9 -> 0.45 -> 0.225
+      const real reduced_slope_ratio = FMIN( safety_factor/DeplFracMax, safety_factor );
+
+      Hydro_HancockPredict_RescueByLowerSlopes( fcCon, fcCon_init, dt_dh2, g_cc_array, cc_idx,
+                                                MinPres, EoS, PassiveFloor, reduced_slope_ratio );
+   } // if ( Iter < IterHalf ) ... else ...
+
+} // FUNCTION : Hydro_HancockPredict_IterateReprediction
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_HancockPredict_RescueBySubSteps
+// Description :  Evolve the face-centered variables using both half-step prediction and subcycling
+//
+// Note        :  1. Work for the MHM scheme
+//                2. Invoked by Hydro_HancockPredict_IterateReprediction() when unphysical result is found in Hydro_HancockPredict()
+//                3. Input variables must be conserved variables
+//                4. Warning: This is often ineffective for rescue and may waste time
+//                5. To revise: There are inconsistencies for MHD
+//                   (1) This routine does not change the B field in fcCon,
+//                       which was previously updated by the original computation
+//                   (2) During the sub-steps, the B field is not updated consistently with the fluid;
+//                       it always uses the B field stored in fcCon_init
+//
+// Parameter   :  fcCon        : Face-centered conserved variables to be updated
+//                fcCon_init   : Input face-centered conserved variables before update
+//                dt_dh2       : 0.5 * time interval to advance solution / cell size
+//                MinPres      : Pressure floor
+//                EoS          : EoS object
+//                PassiveFloor : Bitwise flag to specify the passive scalars to be floored
+//                NumSubSteps  : Number of sub-steps to evolve
+//
+// Return      :  fcCon[][NCOMP_TOTAL_PLUS_MAG]
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+void Hydro_HancockPredict_RescueBySubSteps( real fcCon[][NCOMP_TOTAL_PLUS_MAG],
+                                            const real fcCon_init[][NCOMP_TOTAL_PLUS_MAG], const real dt_dh2,
+                                            const real MinPres, const EoS_t *EoS, const long PassiveFloor,
+                                            const int NumSubSteps )
+{
+
+// restore the initial face-centered variables, including the magnetic field
+   real fcCon_resc[6][NCOMP_TOTAL_PLUS_MAG];
+   for (int f=0; f<6; f++)
+   for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
+      fcCon_resc[f][v] = fcCon_init[f][v];
+
+// adopt the midpoint method for each sub-step of integration
+// dt_sub is the sub-step time-step; evolution destination is 0.5*dt
+   const real dt_sub_dh  = dt_dh2/NumSubSteps;    // for full sub-step update
+   const real dt_sub_dh2 = (real)0.5*dt_sub_dh;   // for half sub-step update
+
+   for (int substep=0; substep<NumSubSteps; substep++)
+   {
+      real Flux[6][NCOMP_TOTAL_PLUS_MAG];
+
+//    sub-1-1. calculate the flux at the start of the sub-step
+      for (int f=0; f<6; f++)
+      {
+         Hydro_Con2Flux( f/2, Flux[f], fcCon_resc[f], MinPres, PassiveFloor, EoS->DensEint2Pres_FuncPtr,
+                         EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
+      } // for (int f=0; f<6; f++)
+
+//    sub-1-2. update the face-centered variables for half sub-step by the initial flux
+      real fcCon_sub_half[6][NCOMP_TOTAL_PLUS_MAG];
+      for (int f=0; f<6; f++)
+      for (int v=0; v<NCOMP_TOTAL_PLUS_MAG; v++)
+         fcCon_sub_half[f][v] = fcCon_resc[f][v];
+
+      for (int v=0; v<NCOMP_TOTAL; v++)
+      {
+         const real dFlux = dt_sub_dh2*( Flux[1][v] - Flux[0][v] + Flux[3][v] - Flux[2][v] + Flux[5][v] - Flux[4][v] );
+
+         for (int f=0; f<6; f++)  fcCon_sub_half[f][v] -= dFlux;
+      } // for (int v=0; v<NCOMP_TOTAL; v++)
+
+//    sub-2-1. calculate the flux at the half sub-step
+      for (int f=0; f<6; f++)
+      {
+         Hydro_Con2Flux( f/2, Flux[f], fcCon_sub_half[f], MinPres, PassiveFloor, EoS->DensEint2Pres_FuncPtr,
+                         EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
+      } // for (int f=0; f<6; f++)
+
+//    sub-2-2. update the face-centered variables for full sub-step by the half sub-step flux
+      for (int v=0; v<NCOMP_TOTAL; v++)
+      {
+         const real dFlux = dt_sub_dh*( Flux[1][v] - Flux[0][v] + Flux[3][v] - Flux[2][v] + Flux[5][v] - Flux[4][v] );
+
+         for (int f=0; f<6; f++)  fcCon_resc[f][v] -= dFlux;
+      } // for (int v=0; v<NCOMP_TOTAL; v++)
+   } // for (int substep=0; substep<NumSubSteps; substep++)
+
+// update fcCon with the results of the rescue
+// --> the magnetic field is not reset here
+   for (int f=0; f<6; f++)
+   for (int v=0; v<NCOMP_TOTAL; v++)
+      fcCon[f][v] = fcCon_resc[f][v];
+
+} // FUNCTION : Hydro_HancockPredict_RescueBySubSteps
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Hydro_HancockPredict_RescueByLowerSlopes
+// Description :  Evolve the face-centered variables by half time-step with a reduced slope
+//
+// Note        :  1. Work for the MHM scheme
+//                2. Invoked by Hydro_HancockPredict_IterateReprediction() when unphysical result is found in Hydro_HancockPredict()
+//                3. Input variables must be conserved variables
+//                4. To revise: There are inconsistencies for MHD
+//                   (1) This routine does not change the B field in fcCon,
+//                       which was previously updated by the original computation
+//                   (2) During the slope reduction, the B field is not reconstructed consistently with the fluid;
+//                       it still uses the B field stored in fcCon_init,
+//                       which is computed using the original data reconstruction scheme
+//
+// Parameter   :  fcCon             : Face-centered conserved variables to be updated
+//                fcCon_init        : Input face-centered conserved variables before update
+//                dt_dh2            : 0.5 * time interval to advance solution / cell size
+//                g_cc_array        : Array storing the cell-centered conserved variables for checking
+//                                    negative density and pressure
+//                                    --> It is just the input array Flu_Array_In[]
+//                cc_idx            : Index for accessing g_cc_array[]
+//                MinPres           : Pressure floor
+//                EoS               : EoS object
+//                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
+//                ReducedSlopeRatio : Reduced slope / original slope
+//
+// Return      :  fcCon[][NCOMP_TOTAL_PLUS_MAG]
+//-------------------------------------------------------------------------------------------------------
+GPU_DEVICE
+void Hydro_HancockPredict_RescueByLowerSlopes( real fcCon[][NCOMP_TOTAL_PLUS_MAG],
+                                               const real fcCon_init[][NCOMP_TOTAL_PLUS_MAG], const real dt_dh2,
+                                               const real g_cc_array[][ CUBE(FLU_NXT) ], const int cc_idx,
+                                               const real MinPres, const EoS_t *EoS, const long PassiveFloor,
+                                               const real ReducedSlopeRatio )
+{
+
+// reconstruct the face-centered variables with the reduced slope
+// --> Apply a common reduction factor to the differences between the
+//     six face values and the cell-centered value. This reduces all
+//     center-to-face slopes while preserving their relative ratios.
+//
+// --> In PPM, the interpolated profile within a cell is a parabola
+//     (Colella & Sekora 2008, Eq. 7):
+//
+//        a_I(x) = a_minus + xi * [delta_a + a6 * (1 - xi)]
+//               = a_avg + (xi - 1/2) * delta_a
+//                       + a6 * [xi * (1 - xi) - 1/6]
+//
+//     where
+//        a_avg   = cell-averaged value
+//        a_minus = left-face value
+//        a_plus  = right-face value
+//        xi      = x / dh, with 0 <= x <= dh and 0 <= xi <= 1
+//        delta_a = a_plus - a_minus
+//        a6      = 6 * [a_avg - 1/2 * (a_minus + a_plus)]
+//
+//     By multiplying the face-to-center differences by a common
+//     factor R (0 <= R <= 1):
+//
+//        a_face_new = a_avg + R * (a_face - a_avg)
+//
+//     we obtain
+//
+//        delta_a_new = R * delta_a
+//        a6_new      = R * a6
+//
+//     The resulting PPM profile is
+//
+//        a_I_new(x) = a_avg + (xi - 1/2) * delta_a_new
+//                           + a6_new * [xi * (1 - xi) - 1/6]
+//
+//     Thus, the cell average remains unchanged, while both the slope
+//     and curvature are reduced by the same factor. The reconstructed
+//     parabola becomes flatter.
+//
+// --> Note that this correction is not equivalent to repeating the
+//     full data reconstruction, since it operates on conserved variables
+//     without access to neighboring-cell information.
+   real fcCon_resc[6][NCOMP_TOTAL_PLUS_MAG];
+   for (int f=0; f<6; f++)
+   for (int v=0; v<NCOMP_TOTAL; v++)
+      fcCon_resc[f][v] = g_cc_array[v][cc_idx] + ReducedSlopeRatio * ( fcCon_init[f][v] - g_cc_array[v][cc_idx] );
+
+// use the initial magnetic field with the original data reconstruction
+   for (int f=0; f<6; f++)
+   for (int v=NCOMP_TOTAL; v<NCOMP_TOTAL_PLUS_MAG; v++)
+      fcCon_resc[f][v] = fcCon_init[f][v];
+
+// calculate flux
+   real Flux[6][NCOMP_TOTAL_PLUS_MAG];
+   for (int f=0; f<6; f++)
+   {
+      Hydro_Con2Flux( f/2, Flux[f], fcCon_resc[f], MinPres, PassiveFloor, EoS->DensEint2Pres_FuncPtr,
+                      EoS->AuxArrayDevPtr_Flt, EoS->AuxArrayDevPtr_Int, EoS->Table, NULL );
+   } // for (int f=0; f<6; f++)
+
+// update the face-centered variables
+   for (int v=0; v<NCOMP_TOTAL; v++)
+   {
+      const real dFlux = dt_dh2*( Flux[1][v] - Flux[0][v] + Flux[3][v] - Flux[2][v] + Flux[5][v] - Flux[4][v] );
+
+      for (int f=0; f<6; f++)  fcCon_resc[f][v] -= dFlux;
+   } // for (int v=0; v<NCOMP_TOTAL; v++)
+
+// update fcCon with the results of the rescue
+// --> the magnetic field is not reset here
+   for (int f=0; f<6; f++)
+   for (int v=0; v<NCOMP_TOTAL; v++)
+      fcCon[f][v] = fcCon_resc[f][v];
+
+} // FUNCTION : Hydro_HancockPredict_RescueByLowerSlopes
+#endif // #ifndef SRHD
+#endif // #ifdef MHM_CHECK_PREDICT
 
 
 
