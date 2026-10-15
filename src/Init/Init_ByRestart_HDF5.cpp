@@ -1534,7 +1534,7 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
 //    store particles to the particle repository (one particle at a time)
       NewParAttFlt[PAR_TIME] = Time[0];   // all particles are assumed to be synchronized with the base level
 
-//    the potential is a derived diagnostic quantity never stored on disk; recomputed by
+//    the potential is a derived diagnostic quantity and never read from restart; recomputed by
 //    Par_UpdateParticlePotential() after restart (see Init_GAMER()/Flu_CorrAfterAllSync())
 #     ifdef STORE_PAR_POT
       NewParAttFlt[PAR_POT] = (real_par)0.0;
