@@ -580,15 +580,14 @@ struct Particle_t
 
 
 //    2. record the data of new particles
+//    --> NOTE: this is also how LB_RedistributeRealPatch()/LB_Init_LoadBalance() re-store EXISTING
+//        particles after a redistribution (not just genuinely new ones), so every attribute --
+//        including the derived/diagnostic PAR_POT -- must come through NewAttFlt[] here rather than
+//        being forced to a fixed value; callers that create genuinely new particles (star formation,
+//        restart) are responsible for setting NewAttFlt[PAR_POT] themselves (see Particle::InitRepo()
+//        for the one-time allocation-time default)
       for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   AttributeFlt[v][ParID] = NewAttFlt[v];
       for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   AttributeInt[v][ParID] = NewAttInt[v];
-
-//    the potential is a derived diagnostic quantity recomputed by Par_UpdateParticlePotential();
-//    force it to a defined value here so that callers of AddOneParticle() (e.g., star formation)
-//    need not supply NewAttFlt[PAR_POT] themselves
-#     ifdef STORE_PAR_POT
-      Pot[ParID] = (real_par)0.0;
-#     endif
 
 
 //    3. update the total number of active particles (assuming all new particles are active)

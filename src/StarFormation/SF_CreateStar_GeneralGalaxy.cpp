@@ -315,6 +315,11 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
          NewParAttFlt[NNewPar][PAR_ACCZ] = GasAcc[2];
 #        endif // ifdef STORE_PAR_ACC
 
+//       particle potential (a diagnostic quantity recomputed by Par_UpdateParticlePotential())
+#        ifdef STORE_PAR_POT
+         NewParAttFlt[NNewPar][PAR_POT] = (real_par)0.0;
+#        endif
+
 
 //       2-2. extrinsic attributes
 //       note that we store the metal mass **fraction** instead of density in particles

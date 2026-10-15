@@ -16,8 +16,9 @@
 //                   --> Other code (feedback, diagnostics, ...) can rely on Par->Pot[] being current
 //                       without needing to enable that output
 //                2. Returns immediately if neither OPT__SELF_GRAVITY nor OPT__EXT_POT is active, since
-//                   the grid potential is not prepared in that case; Par->Pot[] is left at its
-//                   zero-initialized default (see Particle::InitRepo/AddOneParticle)
+//                   the grid potential is not prepared in that case; Par->Pot[] is left at whatever
+//                   default new particles are given (0; see Particle::InitRepo() and the various
+//                   NewAttFlt[PAR_POT] initializations at particle-creation call sites)
 //                3. Reuses the generic mesh-to-particle interpolation routine Par_MapMesh2Particles(),
 //                   called here with UseTracers=false so that only massive particles are mapped
 //                   --> The interpolation order follows amr->Par->Interp (the massive-particle scheme),
@@ -26,7 +27,8 @@
 //                   --> Unlike Par_UpdateParticle(), it does not feed back into the particle integration
 //                5. Skips patches/particle groups with no massive particles
 //                6. Tracer particles are skipped and keep whatever value Par->Pot[] already holds
-//                   (initialized to 0 for every particle; see Particle::InitRepo/AddOneParticle)
+//                   (0 by default for new particles; see Particle::InitRepo() and the various
+//                   NewAttFlt[PAR_POT] initializations at particle-creation call sites)
 //
 // Parameter   :  lv       : Target refinement level
 //                PrepTime : Target physical time for preparing the potential data
