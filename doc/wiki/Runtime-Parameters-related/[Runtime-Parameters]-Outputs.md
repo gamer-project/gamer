@@ -158,6 +158,13 @@ option, and is left at 0 for tracer particles or when neither
 [[OPT__EXT_POT | [Runtime-Parameters]-Gravity#OPT__EXT_POT]] is active. It is
 purely a diagnostic snapshot; it does not feed back into the particle
 integration.
+
+   Within one sub-step of `EvolveLevel()`, `ParPot` is only refreshed once
+   the TimeNew potential buffer patches are finalized, which happens after
+   star formation and feedback run. Code consuming `Par->Pot[]` from within
+   that same sub-step (e.g. a feedback module) therefore sees the *previous*
+   sub-step's value for existing particles, and 0 for particles created
+   earlier in the same sub-step (e.g. by `SF_CreateStar()`).
     * **Restriction:**
 Requires compiling with [[--store_par_pot | [Installation]-Option-List#--store_par_pot]]
 (which in turn requires [[--gravity | [Installation]-Option-List#--gravity]]).
