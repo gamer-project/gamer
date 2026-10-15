@@ -24,6 +24,10 @@ module load intel/oneapi-2023.1.0 fftw3/3.3.10-intel-2023.1.0-openmpi-4.1.5-ucx_
 module list 1>>$LOG_FILE 2>&1
 
 
+## libyt requires MPI one-sided communication for particle plots
+## note that open MPI with version > 5 removes pt2pt component and use rdma instead
+export OMPI_MCA_osc=sm,pt2pt
+
 mpirun -map-by ppr:4:socket:pe=8 --report-bindings ./gamer 1>>$LOG_FILE 2>&1
 
 

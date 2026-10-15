@@ -16,6 +16,10 @@ if [ "$PBS_ENVIRONMENT" == "PBS_BATCH" ]; then
    cd $PBS_O_WORKDIR
 fi
 
+## libyt requires MPI one-sided communication for particle plots
+## note that open MPI with version > 5 removes pt2pt component and use rdma instead
+export OMPI_MCA_osc=sm,pt2pt
+
 mpirun -map-by ppr:2:socket:pe=8 --report-bindings ./gamer 1>>log 2>&1
 
 ## script to restart a simulation automatically if the run failed
