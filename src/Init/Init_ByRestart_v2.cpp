@@ -613,6 +613,12 @@ void Init_ByRestart()
 // all particles are assumed to be synchronized with the base level
    NewParAttFlt[PAR_TIME] = Time[0];
 
+// the potential is a derived diagnostic quantity never stored on disk; recomputed by
+// Par_UpdateParticlePotential() after restart (see Init_GAMER()/Flu_CorrAfterAllSync())
+#  ifdef STORE_PAR_POT
+   NewParAttFlt[PAR_POT] = (real_par)0.0;
+#  endif
+
 
 // allocate particle repository
    amr->Par->InitRepo( NParThisRank, MPI_NRank );

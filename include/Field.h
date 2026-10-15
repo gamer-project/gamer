@@ -95,6 +95,9 @@ SET_GLOBAL( FieldIdx_t Idx_ParAccX,       Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_ParAccY,       Idx_Undefined );
 SET_GLOBAL( FieldIdx_t Idx_ParAccZ,       Idx_Undefined );
 #endif
+#ifdef STORE_PAR_POT
+SET_GLOBAL( FieldIdx_t Idx_ParPot,        Idx_Undefined );
+#endif
 #ifdef STAR_FORMATION
 SET_GLOBAL( FieldIdx_t Idx_ParCreTime,    Idx_Undefined );
 #endif

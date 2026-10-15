@@ -1534,6 +1534,12 @@ void LoadOnePatch( const hid_t H5_FileID, const int lv, const int GID, const boo
 //    store particles to the particle repository (one particle at a time)
       NewParAttFlt[PAR_TIME] = Time[0];   // all particles are assumed to be synchronized with the base level
 
+//    the potential is a derived diagnostic quantity and never read from restart; recomputed by
+//    Par_UpdateParticlePotential() after restart (see Init_GAMER()/Flu_CorrAfterAllSync())
+#     ifdef STORE_PAR_POT
+      NewParAttFlt[PAR_POT] = (real_par)0.0;
+#     endif
+
       for (int p=0; p<NParThisPatch; p++)
       {
 //       skip the last PAR_NATT_FLT/INT_UNSTORED attributes since we do not store them on disk
@@ -1705,6 +1711,7 @@ void Check_Makefile( const char *FileName, const int FormatVersion )
    LoadField( "MassiveParticles",       &RS.MassiveParticles,       SID, TID, NonFatal, &RT.MassiveParticles,       1, NonFatal );
    LoadField( "Tracer",                 &RS.Tracer,                 SID, TID, NonFatal, &RT.Tracer,                 1, NonFatal );
    LoadField( "StoreParAcc",            &RS.StoreParAcc,            SID, TID, NonFatal, &RT.StoreParAcc,            1, NonFatal );
+   LoadField( "StoreParPot",            &RS.StoreParPot,            SID, TID, NonFatal, &RT.StoreParPot,            1, NonFatal );
    LoadField( "StarFormation",          &RS.StarFormation,          SID, TID, NonFatal, &RT.StarFormation,          1, NonFatal );
    LoadField( "Feedback",               &RS.Feedback,               SID, TID, NonFatal, &RT.Feedback,               1, NonFatal );
    if ( FormatVersion >= 2300 )
@@ -2042,6 +2049,7 @@ void Check_InputPara( const char *FileName, const int FormatVersion )
    LoadField( "Par_IntegTracer",         &RS.Par_IntegTracer,         SID, TID, NonFatal, &RT.Par_IntegTracer,          1, NonFatal );
    LoadField( "Par_ImproveAcc",          &RS.Par_ImproveAcc,          SID, TID, NonFatal, &RT.Par_ImproveAcc,           1, NonFatal );
    LoadField( "Par_PredictPos",          &RS.Par_PredictPos,          SID, TID, NonFatal, &RT.Par_PredictPos,           1, NonFatal );
+   LoadField( "Opt__Output_Par_Pot",     &RS.Opt__Output_Par_Pot,     SID, TID, NonFatal, &RT.Opt__Output_Par_Pot,      1, NonFatal );
    LoadField( "Par_RemoveCell",          &RS.Par_RemoveCell,          SID, TID, NonFatal, &RT.Par_RemoveCell,           1, NonFatal );
    LoadField( "Opt__FreezePar",          &RS.Opt__FreezePar,          SID, TID, NonFatal, &RT.Opt__FreezePar,           1, NonFatal );
    LoadField( "Par_GhostSize",           &RS.Par_GhostSize,           SID, TID, NonFatal, &RT.Par_GhostSize,            1, NonFatal );

@@ -67,13 +67,16 @@ void Par_Init_Attribute()
 
 // 4. must put built-in attributes not to be stored on disk at the END of the attribute list
 //    --> make it easier to discard them when storing data on disk (see Output_DumpData_Total(_HDF5).cpp)
-//    --> must also be consistent with the symbolic constant (e.g., PAR_TIME and PAR_ACC*) defined in Macro.h
+//    --> must also be consistent with the symbolic constant (e.g., PAR_TIME, PAR_ACC*, and PAR_POT) defined in Macro.h
 //    --> total number of attributes not to be stored on disk is set by PAR_NATT_FLT/INT_UNSTORED
-//        --> currently including time and acceleration*3
+//        --> currently including time, acceleration*3, and potential
 #  ifdef STORE_PAR_ACC
    Idx_ParAccX = AddParticleAttributeFlt( "ParAccX" );
    Idx_ParAccY = AddParticleAttributeFlt( "ParAccY" );
    Idx_ParAccZ = AddParticleAttributeFlt( "ParAccZ" );
+#  endif
+#  ifdef STORE_PAR_POT
+   Idx_ParPot  = AddParticleAttributeFlt( "ParPot" );
 #  endif
    Idx_ParTime = AddParticleAttributeFlt( "ParTime" );
 

@@ -342,6 +342,20 @@ void Init_GAMER( int *argc, char ***argv )
 
 
 #  ifdef PARTICLE
+// initialize particle potential AFTER all routines that may add particles,
+// including Par_Init_ByFunction_Ptr(), Par_Init_ByFile(), AddParticle() in Init_ByRestart(), and
+//           Par_AddParticleAfterInit() in Init_User_Ptr() and Init_User_AfterPoisson_Ptr()
+// --> kept up to date regardless of OPT__OUTPUT_PAR_POT, which only controls whether it gets
+//     written to the particle text/binary dump files
+#  if ( defined MASSIVE_PARTICLES  &&  defined STORE_PAR_POT )
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Calculating particle potential" );
+
+   for (int lv=0; lv<NLEVEL; lv++)
+      Par_UpdateParticlePotential( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ] );
+
+   if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Calculating particle potential" );
+#  endif // #if ( defined MASSIVE_PARTICLES  &&  defined STORE_PAR_POT )
+
 // assign initial particle UIDs AFTER all routines that may add particles,
 // including Par_Init_ByFunction_Ptr(), Par_Init_ByFile(), AddParticle() in Init_ByRestart(), and
 //           Par_AddParticleAfterInit() in Init_User_Ptr() and Init_User_AfterPoisson_Ptr()

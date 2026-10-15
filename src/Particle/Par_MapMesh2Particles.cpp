@@ -44,7 +44,9 @@ void Par_MapMesh2Particles( const double EdgeL[3], const double EdgeR[3],
    typedef real (*vla)[AttrSize3D][AttrSize3D];
    vla Attr3D = ( vla )Attr;
 
-   const ParInterp_t IntScheme = amr->Par->InterpTracer;
+// tracer particles use PAR_TR_INTERP (and are prepared with GhostSizeTracer ghost zones);
+// massive particles use PAR_INTERP (and are prepared with GhostSize ghost zones)
+   const ParInterp_t IntScheme = ( UseTracers ) ? amr->Par->InterpTracer : amr->Par->Interp;
 
    for (int p=0; p<NPar; p++)
    {

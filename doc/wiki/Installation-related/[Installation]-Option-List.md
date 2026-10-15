@@ -83,6 +83,7 @@ disabled). See the "Restriction" of each option carefully.
 |:---:|:---:|:---:|---|---|---|
 | `--tracer`            | `true`, `false` | `false` | Enable tracer particles | - | <a name="--tracer"></a> `TRACER` |
 | `--store_par_acc`     | `true`, `false` | `true`  | Store particle acceleration (recommended) | - | <a name="--store_par_acc"></a> `STORE_PAR_ACC` |
+| `--store_par_pot`     | `true`, `false` | `false` | Store the gravitational potential interpolated onto each particle | Must enable `--gravity=true`; must additionally enable `OPT__OUTPUT_PAR_POT` at runtime for the potential to be written to disk | <a name="--store_par_pot"></a> `STORE_PAR_POT` |
 | `--star_formation`    | `true`, `false` | `false` | Enable star formation | Must enable `--store_pot_ghost` when using `--store_par_acc` | <a name="--star_formation"></a> `STAR_FORMATION` |
 | `--feedback`          | `true`, `false` | `false` | Enable feedback from particles to grids (and vice versa) | See [[here \| Feedback]] for details | <a name="--feedback"></a> `FEEDBACK` |
 | `--par_attribute_flt` | &#8805; 0       | `0`     | Number of user-defined particle floating-point attributes | See [[here \| Adding-New-Simulations#particle-attributes]] for details | <a name="--par_attribute_flt"></a> `PAR_NATT_FLT_USER` |

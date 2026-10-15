@@ -408,6 +408,9 @@ void SendParticle2HomeRank( const int lv, const bool OldParOnly, const long NNew
    amr->Par->AccY = amr->Par->AttributeFlt[PAR_ACCY];
    amr->Par->AccZ = amr->Par->AttributeFlt[PAR_ACCZ];
 #  endif
+#  ifdef STORE_PAR_POT
+   amr->Par->Pot  = amr->Par->AttributeFlt[PAR_POT];
+#  endif
 
    amr->Par->Type = amr->Par->AttributeInt[PAR_TYPE];
    amr->Par->PUID = amr->Par->AttributeInt[PAR_PUID];
