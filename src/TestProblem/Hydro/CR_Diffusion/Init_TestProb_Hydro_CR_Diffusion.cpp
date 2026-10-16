@@ -262,8 +262,8 @@ void SetParameter()
       Aux_Message( stderr, "WARNING : CR_Diffusion_MagY and CR_Diffusion_MagZ is useless in this type of magnetic field.\n" );
 
       if ( OPT__INIT_BFIELD_BYVECPOT == 0 )
-         Aux_Message( stderr, "REMINDER : CR_Diffusion_Mag_Type = %d will not have divergence free magnetic field when initialized directly.\n"
-                              "           --> set OPT__INIT_BFIELD_BYVECPOT = 2 to initialize by vector potential.\n", CR_Diffusion_Mag_Type );
+         Aux_Message( stderr, "REMINDER : This type of magnetic field will not be divergence free if initialized directly.\n"
+                              "           --> set OPT__INIT_BFIELD_BYVECPOT = 2 to initialize by vector potential.\n" );
    }
 
    if ( CR_Diffusion_Mag_Type == 2 )
@@ -291,8 +291,8 @@ void SetParameter()
       Aux_Message( stderr, "WARNING : CR_Diffusion_MagY and CR_Diffusion_MagZ is useless in this type of magnetic field.\n" );
 
       if ( OPT__INIT_BFIELD_BYVECPOT == 0 )
-         Aux_Message( stderr, "REMINDER : CR_Diffusion_Mag_Type = %d will not have divergence free magnetic field when initialized directly.\n"
-                              "           --> set OPT__INIT_BFIELD_BYVECPOT = 2 to initialize by vector potential.\n", CR_Diffusion_Mag_Type );
+         Aux_Message( stderr, "REMINDER : This type of magnetic field will not be divergence free if initialized directly.\n"
+                              "           --> set OPT__INIT_BFIELD_BYVECPOT = 2 to initialize by vector potential.\n" );
    }
 
 // (2) set the problem-specific derived parameters
