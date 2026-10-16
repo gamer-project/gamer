@@ -58,7 +58,7 @@ extern void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real
 extern void CR_AddDiffuseFlux_1Face( const real g_ConVar[][ CUBE(FLU_NXT) ],
                                            real FluxR[NCOMP_TOTAL_PLUS_MAG],
                                      const real FC_B, const real VarC[], const real VarR[],
-                                     const int idx, const int didx[3], const int d, const real dh,
+                                     const int idx, const int d, const real dh,
                                      const MicroPhy_t *MicroPhy );
 #endif
 
@@ -720,10 +720,10 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                                   EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr,
                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
-//                      restore the cell-centered B field and energy of the central cell
 #                       ifdef MHD
-                        VarC[ MAG_OFFSET + d ] = CC_B[d];
-                        VarC[ ENGY           ] = CC_Engy;
+//                      restore the cell-centered B field and energy of the central cell
+                        VarC   [ MAG_OFFSET + d ] = CC_B[d];
+                        VarC   [ ENGY           ] = CC_Engy;
 //                      restore the cell-centered longitudinal B field
                         VarL[d][ MAG_OFFSET + d ] = BL;
                         VarR[d][ MAG_OFFSET + d ] = BR;
@@ -764,10 +764,10 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                                   EoS_GuessHTilde_CPUPtr, EoS_HTilde2Temp_CPUPtr,
                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
-//                      restore the cell-centered B field and energy of the central cell
 #                       ifdef MHD
-                        VarC[ MAG_OFFSET + d ] = CC_B[d];
-                        VarC[ ENGY           ] = CC_Engy;
+//                      restore the cell-centered B field and energy of the central cell
+                        VarC   [ MAG_OFFSET + d ] = CC_B[d];
+                        VarC   [ ENGY           ] = CC_Engy;
 //                      restore the cell-centered longitudinal B field
                         VarL[d][ MAG_OFFSET + d ] = BL;
                         VarR[d][ MAG_OFFSET + d ] = BR;
@@ -792,10 +792,10 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                                                   EoS_DensEint2Pres_CPUPtr, EoS_DensPres2CSqr_CPUPtr,
                                                   EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
 
-//                      restore the cell-centered B field and energy of the central cell
 #                       ifdef MHD
-                        VarC[ MAG_OFFSET + d ] = CC_B[d];
-                        VarC[ ENGY           ] = CC_Engy;
+//                      restore the cell-centered B field and energy of the central cell
+                        VarC   [ MAG_OFFSET + d ] = CC_B[d];
+                        VarC   [ ENGY           ] = CC_Engy;
 //                      restore the cell-centered longitudinal B field
                         VarL[d][ MAG_OFFSET + d ] = BL;
                         VarR[d][ MAG_OFFSET + d ] = BR;
@@ -808,12 +808,12 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
                   } // switch ( OPT__1ST_FLUX_CORR_SCHEME )
                } // for (int d=0; d<3; d++)
 
-//             add cosmic-ray fluxes
+//             add cosmic-ray diffusive fluxes
 #              ifdef CR_DIFFUSION
                for (int d=0; d<3; d++)
                {
-                  CR_AddDiffuseFlux_1Face( h_Flu_Array_F_In[TID], FluxL[d], FC_B[d][0], VarL[d], VarC,    idx_in-didx[d], didx, d, dh, &MicroPhy );
-                  CR_AddDiffuseFlux_1Face( h_Flu_Array_F_In[TID], FluxR[d], FC_B[d][1], VarC,    VarR[d], idx_in,         didx, d, dh, &MicroPhy );
+                  CR_AddDiffuseFlux_1Face( h_Flu_Array_F_In[TID], FluxL[d], FC_B[d][0], VarL[d], VarC,    idx_in-didx[d], d, dh, &MicroPhy );
+                  CR_AddDiffuseFlux_1Face( h_Flu_Array_F_In[TID], FluxR[d], FC_B[d][1], VarC,    VarR[d], idx_in,         d, dh, &MicroPhy );
                }
 #              endif
 
@@ -826,15 +826,15 @@ void CorrectUnphysical( const int lv, const int NPG, const int *PID0_List,
 
 //             add the cosmic-ray source term of adiabatic work
 #              ifdef COSMIC_RAY
-               real p_cr = EoS_CREint2CRPres_CPUPtr( VarC[CRAY], EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+               real pCR = EoS_CREint2CRPres_CPUPtr( VarC[CRAY], EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                real div_V[3];
                for (int d=0; d<3; d++)
                {
-                  div_V[d]  = ( FluxR[d][DENS] > (real)0.0 )? FluxR[d][DENS]/VarC   [DENS] : FluxR[d][DENS]/VarR[d][DENS];
-                  div_V[d] -= ( FluxL[d][DENS] > (real)0.0 )? FluxL[d][DENS]/VarL[d][DENS] : FluxL[d][DENS]/VarC   [DENS];
+                  div_V[d]  = ( FluxR[d][DENS] > (real)0.0 ) ? FluxR[d][DENS]/VarC   [DENS] : FluxR[d][DENS]/VarR[d][DENS];
+                  div_V[d] -= ( FluxL[d][DENS] > (real)0.0 ) ? FluxL[d][DENS]/VarL[d][DENS] : FluxL[d][DENS]/VarC   [DENS];
                } // for (int d=0; d<3; d++)
 
-               Update[CRAY] -= p_cr*dt_dh*( div_V[0] + div_V[1] + div_V[2] );
+               Update[CRAY] -= pCR*dt_dh*( div_V[0] + div_V[1] + div_V[2] );
 #              endif
 
             } // if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )

@@ -446,6 +446,7 @@ static real minmod( const real a, const real b )
 
 
 
+#ifndef __CUDACC__
 //-----------------------------------------------------------------------------------------
 // Function    : CR_AddDiffuseFlux_1Face
 // Description : Compute the cosmic-ray diffusive flux of one face, used for 1st order flux correction
@@ -461,25 +462,24 @@ static real minmod( const real a, const real b )
 //               FC_B     : Face-centered magnetic field between left and right cell
 //               L_In     : One-cell data of the left cell
 //               R_In     : One-cell data of the right cell
-//               idxL     : Left cell idx
-//               didx     : Array storing the index increments
+//               idxL     : Left cell index
 //               d        : Direction of the flux
 //               dh       : Cell size
 //               MicroPhy : Microphysics object
 //
-// Return      : FluxR[]
+// Return      : FluxOut[]
 //-----------------------------------------------------------------------------------------
-#ifndef __CUDACC__
 void CR_AddDiffuseFlux_1Face( const real Flu_In[][ CUBE(FLU_NXT) ],
                                     real Flux_Out[NCOMP_TOTAL_PLUS_MAG],
                               const real FC_B, const real L_In[], const real R_In[],
-                              const int idxL, const int didx[3], const int d, const real dh,
+                              const int idxL, const int d, const real dh,
                               const MicroPhy_t *MicroPhy )
 {
-   const real _dh = (real)1.0 / dh;
 
-   const int TDir1 = (d+1)%3;    // transverse direction 1
-   const int TDir2 = (d+2)%3;    // transverse direction 2
+   const real _dh     = 1.0 / dh;
+   const int  didx[3] = { 1, FLU_NXT, FLU_NXT*FLU_NXT };
+   const int  TDir1   = (d+1)%3;    // transverse direction 1
+   const int  TDir2   = (d+2)%3;    // transverse direction 2
 
 // 1. get the diffusivity
 //###REVISE: diffusion coefficients are assumed to be constant for now
@@ -505,12 +505,12 @@ void CR_AddDiffuseFlux_1Face( const real Flu_In[][ CUBE(FLU_NXT) ],
 // ---------------------
    real B_N_mean, B_T1_mean, B_T2_mean, B_amp;
    B_N_mean  = FC_B;
-   B_T1_mean = (real)0.5*( L_In[MAG_OFFSET + TDir1] + R_In[MAG_OFFSET + TDir1] );
-   B_T2_mean = (real)0.5*( L_In[MAG_OFFSET + TDir2] + R_In[MAG_OFFSET + TDir2] );
+   B_T1_mean = 0.5*( L_In[MAG_OFFSET + TDir1] + R_In[MAG_OFFSET + TDir1] );
+   B_T2_mean = 0.5*( L_In[MAG_OFFSET + TDir2] + R_In[MAG_OFFSET + TDir2] );
    B_amp     = SQRT( SQR(B_N_mean) + SQR(B_T1_mean) + SQR(B_T2_mean) );
 
 // disable diffusion locally when B field amplitude is smaller than the given minimum threshold
-   if ( B_amp < MicroPhy->CR_diff_min_b || B_amp < TINY_NUMBER )
+   if ( B_amp < MicroPhy->CR_diff_min_b  ||  B_amp < TINY_NUMBER )
       return;
 
 // normalize magnetic field
