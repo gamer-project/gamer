@@ -11,17 +11,17 @@ CR_Diffusion_E0_CR       1.0e+2         # Cosmic ray energy amplitude
 CR_Diffusion_BG_CR       1.0e-1         # Cosmic ray background energy
 
 CR_Diffusion_Type        4              # Initial condition of cosmic ray
-                                        # 0: Gaussian distribution ball (only supported CR_Diffusion_Mag_Type==0)
+                                        # 0: Gaussian distribution ball (only support CR_Diffusion_Mag_Type==0)
                                         # 1: Step function ring (2D only)
                                         # 2: Gaussian distribution ring (2D only)
-                                        # 3: Gaussian distribution plane
+                                        # 3: Gaussian distribution plane (only support CR_Diffusion_Mag_Type==0)
                                         # 4: CR blast wave
 
 CR_Diffusion_Mag_Type    4              # Magnetic field type
                                         # 0: Uniform
-                                        # 1: Circular
+                                        # 1: Circular (2D only)
                                         # 2: Random (-1.0 < B_i < +1.0) (NOT divergence free)
-                                        # 3: Radial (NOT divergence free)
+                                        # 3: Radial (2D and 3D only, NOT divergence free)
                                         # 4: Suwa+ 2007
 
 # simulation dimension

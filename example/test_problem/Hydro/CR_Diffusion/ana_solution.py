@@ -12,7 +12,7 @@ def ana_ball( x, y, z, t, **kwargs ):
     K_PERP = kwargs["K_PERP"]   # perpendicular diffusion coefficient
     MAG    = kwargs["MAG"]      # magnetic field
     CR_BG  = kwargs["CR_BG"]    # cosmic ray energy density background value
-    CR_E0  = kwargs["CR_E0"]    # cosmic ray energy dendity amplitude
+    CR_E0  = kwargs["CR_E0"]    # cosmic ray energy density amplitude
     CR_R2  = kwargs["CR_R2"]    # inverse of variance of Gaussian distribution
 
     mag     = np.copy(MAG) / np.linalg.norm(MAG) # normalization
@@ -47,10 +47,10 @@ def ana_ball( x, y, z, t, **kwargs ):
 
 
 def ana_plane( x, y, z, t, **kwargs ):
-    print("NOTE: Assuming uniform magnetic field and the direction is same as the gaussiain direction.")
+    print("NOTE: Assuming uniform magnetic field and the direction is same as the gaussian direction.")
     K_PARA = kwargs["K_PARA"]   # parallel diffusion coefficient
     CR_BG  = kwargs["CR_BG"]    # cosmic ray energy density background value
-    CR_E0  = kwargs["CR_E0"]    # cosmic ray energy dendity amplitude
+    CR_E0  = kwargs["CR_E0"]    # cosmic ray energy density amplitude
     CR_R2  = kwargs["CR_R2"]    # inverse of variance of Gaussian distribution
     DIR    = kwargs["DIR"]      # the direction of gaussian and magnetic field.
 
@@ -77,10 +77,10 @@ def ana_plane( x, y, z, t, **kwargs ):
 
 
 def ana_step_ring( x, y, z, t, **kwargs ):
-    print("NOTE: Assuming cicular magnetic field, and only parallel diffusion")
+    print("NOTE: Assuming circular magnetic field, and only parallel diffusion")
     K_PARA = kwargs["K_PARA"]   # parallel diffusion coefficient
     CR_BG  = kwargs["CR_BG"]    # cosmic ray energy density background value
-    CR_E0  = kwargs["CR_E0"]    # cosmic ray energy dendity amplitude
+    CR_E0  = kwargs["CR_E0"]    # cosmic ray energy density amplitude
     R_IN   = kwargs["R_IN"]     # inner radius of the ring
     R_OUT  = kwargs["R_OUT"]    # outer radius of the ring
     PLANE  = kwargs["PLANE"]    # the plane where the ring exist
@@ -110,14 +110,14 @@ def ana_step_ring( x, y, z, t, **kwargs ):
         else:
             t1[i] = math.erfc( (phi[i] - np.pi/12.) * r[i] / D )
             t2[i] = math.erfc( (phi[i] + np.pi/12.) * r[i] / D )
-    return CR_BR + t1 - t2
+    return CR_BG + t1 - t2
 
 
 def ana_gaussian_ring( x, y, t ):
-    print("NOTE: Assuming cicular magnetic field, and only parallel diffusion")
+    print("NOTE: Assuming circular magnetic field, and only parallel diffusion")
     K_PARA  = kwargs["K_PARA"]  # parallel diffusion coefficient
     CR_BG   = kwargs["CR_BG"]   # cosmic ray energy density background value
-    CR_E0   = kwargs["CR_E0"]   # cosmic ray energy dendity amplitude
+    CR_E0   = kwargs["CR_E0"]   # cosmic ray energy density amplitude
     R       = kwargs["R"]       # center radius of the ring
     DEL_R   = kwargs["DEL_R"]   # the standard deviation on r direction
     DEL_PHI = kwargs["DEL_PHI"] # the standard deviation on phi direction
