@@ -87,8 +87,8 @@ void Aux_Check_Parameter()
    if ( END_STEP < 0  &&  OPT__INIT != INIT_BY_RESTART )
       Aux_Error( ERROR_INFO, "incorrect parameter \"%s = %d\" [>=0] !!\n", "END_STEP", END_STEP );
 
-   if ( END_T < 0.0  &&  OPT__INIT != INIT_BY_RESTART )
-      Aux_Error( ERROR_INFO, "incorrect parameter \"%s = %14.7e\" [>=0] !!\n", "END_T", END_T );
+   if ( END_T < INIT_T  &&  OPT__INIT != INIT_BY_RESTART )
+      Aux_Error( ERROR_INFO, "incorrect parameter \"%s = %14.7e\" [>= INIT_T = %14.7e] !!\n", "END_T", END_T, INIT_T );
 
 #  ifndef LOAD_BALANCE
    if ( NX0_TOT[0]%(PS2*MPI_NRank_X[0]) != 0  ||  NX0_TOT[1]%(PS2*MPI_NRank_X[1]) != 0  ||
@@ -1919,6 +1919,19 @@ void Aux_Check_Parameter()
 #     error : STAR_FORMATION + STORE_PAR_ACC must work with STORE_POT_GHOST !!
 #  endif
 
+   if ( SF_CREATE_STAR_SCHEME != SF_CREATE_STAR_SCHEME_NONE )
+   {
+      const long SupportedCriteria = ( SF_CREATE_STAR_CRITERIA_HIGH_GAS_DENSITY | SF_CREATE_STAR_CRITERIA_LOW_GAS_TEMPERATURE | SF_CREATE_STAR_CRITERIA_UNRESOLVED_JEANS_LENGTH );
+      if ( SF_CREATE_STAR_CRITERIA <= SF_CREATE_STAR_CRITERIA_NONE  ||  ( SF_CREATE_STAR_CRITERIA & ~SupportedCriteria ) )
+         Aux_Error( ERROR_INFO, "unsupported SF_CREATE_STAR_CRITERIA (%d) !!\n", SF_CREATE_STAR_CRITERIA );
+
+      if ( SF_CREATE_STAR_MASS_RATE <= SF_CREATE_STAR_MASS_RATE_NONE )
+         Aux_Error( ERROR_INFO, "unsupported SF_CREATE_STAR_MASS_RATE (%d) !!\n", SF_CREATE_STAR_MASS_RATE );
+
+      if ( SF_CREATE_STAR_PAR_SPAWN <= SF_CREATE_STAR_PAR_SPAWN_NONE )
+         Aux_Error( ERROR_INFO, "unsupported SF_CREATE_STAR_PAR_SPAWN (%d) !!\n", SF_CREATE_STAR_PAR_SPAWN );
+   }
+
 // warning
 // ------------------------------
    if ( MPI_Rank == 0 ) {
@@ -1927,9 +1940,18 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : SF_CREATE_STAR_MIN_LEVEL (%d) > MAX_LEVEL (%d) --> no star particles will form !!\n",
                    SF_CREATE_STAR_MIN_LEVEL, MAX_LEVEL );
 
-   if ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_AGORA  &&  !SF_CREATE_STAR_DET_RANDOM )
+   if (  ( SF_CREATE_STAR_CRITERIA & SF_CREATE_STAR_CRITERIA_UNRESOLVED_JEANS_LENGTH )  &&  JEANS_MIN_PRES  )
    {
-      Aux_Message( stderr, "WARNING : SF_CREATE_STAR_SCHEME == 1 will break bitwise reproducibility due to the \n" );
+      Aux_Message( stderr, "WARNING : SF_CREATE_STAR_CRITERIA == %ld is incompatible with JEANS_MIN_PRES !!\n",
+                   SF_CREATE_STAR_CRITERIA );
+      Aux_Message( stderr, "          --> SF_CREATE_STAR_MAX_GAS_JEANSL = %14.8e, but JEANS_MIN_PRES_NCELL = %d and JEANS_MIN_PRES_LEVEL = %d\n",
+                   SF_CREATE_STAR_MAX_GAS_JEANSL, JEANS_MIN_PRES_NCELL, JEANS_MIN_PRES_LEVEL );
+   }
+
+   if ( SF_CREATE_STAR_PAR_SPAWN == SF_CREATE_STAR_PAR_SPAWN_STOCHASTIC_MIN_MASS
+        &&  !SF_CREATE_STAR_DET_RANDOM )
+   {
+      Aux_Message( stderr, "WARNING : SF_CREATE_STAR_PAR_SPAWN == %d will break bitwise reproducibility due to the\n", SF_CREATE_STAR_PAR_SPAWN_STOCHASTIC_MIN_MASS );
       Aux_Message( stderr, "          random values used for the stochastic star formation !!\n" );
       Aux_Message( stderr, "          --> Enable \"SF_CREATE_STAR_DET_RANDOM\" if reproducibility is of great concern\n" );
    }
