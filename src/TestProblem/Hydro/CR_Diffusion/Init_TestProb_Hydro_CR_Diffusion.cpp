@@ -774,12 +774,11 @@ double Init_BField_ByVecPot_CR_Diffusion( const double x, const double y, const 
 
    else if ( CR_Diffusion_Mag_Type == 1 )
    {
-      const double r = SQRT( SQR(pos[0]) + SQR(pos[1]) + SQR(pos[2]) );
       switch ( Component )
       {
-         case 'x' : mag_vecpot = (CR_Diffusion_GX == 0) ? -CR_Diffusion_MagX * r : 0.0;  break;
-         case 'y' : mag_vecpot = (CR_Diffusion_GY == 0) ? -CR_Diffusion_MagX * r : 0.0;  break;
-         case 'z' : mag_vecpot = (CR_Diffusion_GZ == 0) ? -CR_Diffusion_MagX * r : 0.0;  break;
+         case 'x' : mag_vecpot = (CR_Diffusion_GX == 0) ? -CR_Diffusion_MagX * SQRT( SQR(pos[1]) + SQR(pos[2]) ) : 0.0;  break;
+         case 'y' : mag_vecpot = (CR_Diffusion_GY == 0) ? -CR_Diffusion_MagX * SQRT( SQR(pos[0]) + SQR(pos[2]) ) : 0.0;  break;
+         case 'z' : mag_vecpot = (CR_Diffusion_GZ == 0) ? -CR_Diffusion_MagX * SQRT( SQR(pos[0]) + SQR(pos[1]) ) : 0.0;  break;
          default  : Aux_Error( ERROR_INFO, "unsupported component (%c) !!\n", Component );
       }
    }
