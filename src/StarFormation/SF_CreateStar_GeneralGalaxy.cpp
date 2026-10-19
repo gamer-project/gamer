@@ -5,7 +5,6 @@
 
 #ifdef FEEDBACK
 extern RandomNumber_t *FB_RNG;
-extern double          FB_ResolvedSNeII_PDCapToMean;
 extern int             maxNumSNeIIPerSPar;
 #endif
 
