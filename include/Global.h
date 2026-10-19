@@ -57,7 +57,7 @@ extern int        PassiveIntFrac_NVar, PassiveIntFrac_VarIdx[NCOMP_PASSIVE];
 extern int        StrLen_Flt;
 extern char       BlankPlusFormat_Flt[MAX_STRING+1];
 
-extern double     BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, OUTPUT_WALLTIME, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
+extern double     BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, INIT_T, END_T, OUTPUT_DT, OUTPUT_WALLTIME, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
 extern long int   END_STEP;
 extern int        NX0_TOT[3], OUTPUT_STEP, OUTPUT_WALLTIME_UNIT, REGRID_COUNT, REFINE_NLEVEL, FLU_GPU_NPGROUP, SRC_GPU_NPGROUP, OMP_NTHREAD;
 extern int        MPI_NRank, MPI_NRank_X[3];
@@ -306,14 +306,19 @@ extern int             CHE_GPU_NPGROUP;
 // (2-8) star formation
 // ============================================================================================================
 #ifdef STAR_FORMATION
-extern SF_CreateStarScheme_t SF_CREATE_STAR_SCHEME;
-extern int                   SF_CREATE_STAR_RSEED;
-extern int                   SF_CREATE_STAR_DET_RANDOM;
-extern int                   SF_CREATE_STAR_MIN_LEVEL;
-extern double                SF_CREATE_STAR_MIN_GAS_DENS;
-extern double                SF_CREATE_STAR_MASS_EFF;
-extern double                SF_CREATE_STAR_MIN_STAR_MASS;
-extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
+extern SF_CreateStarScheme_t   SF_CREATE_STAR_SCHEME;
+extern SF_CreateStarCriteria_t SF_CREATE_STAR_CRITERIA;
+extern SF_CreateStarMassRate_t SF_CREATE_STAR_MASS_RATE;
+extern SF_CreateStarParSpawn_t SF_CREATE_STAR_PAR_SPAWN;
+extern int                     SF_CREATE_STAR_RSEED;
+extern int                     SF_CREATE_STAR_DET_RANDOM;
+extern int                     SF_CREATE_STAR_MIN_LEVEL;
+extern double                  SF_CREATE_STAR_MIN_GAS_DENS;
+extern double                  SF_CREATE_STAR_MAX_GAS_TEMP;
+extern double                  SF_CREATE_STAR_MAX_GAS_JEANSL;
+extern double                  SF_CREATE_STAR_MASS_EFF;
+extern double                  SF_CREATE_STAR_MIN_STAR_MASS;
+extern double                  SF_CREATE_STAR_MAX_STAR_MFRAC;
 #endif
 
 

@@ -79,7 +79,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2516)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2518)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -294,7 +294,10 @@ Procedure for outputting new variables:
 //                2513 : 2026/05/14 --> support OPT__OUTPUT_DUAL_STATUS
 //                2514 : 2026/05/25 --> output DUAL_ENERGY_PREDICT
 //                2515 : 2026/09/28 --> output OPT__OUTPUT_ELBDM_VEL/Q_POT/Q_STRESS
-//                2513 : 2026/10/03 --> output FB_RESOLVED_SNEII, FB_RESOLVED_SNEII_N_PER_MASS,
+//                2516 : 2026/10/09 --> output SF_CREATE_STAR_CRITERIA, SF_CREATE_STAR_MASS_RATE, SF_CREATE_STAR_PAR_SPAWN,
+//                                             SF_CREATE_STAR_MAX_GAS_TEMP, SF_CREATE_STAR_MAX_GAS_JEANSL
+//                2517 : 2026/10/11 --> output INIT_T
+//                2518 : 2026/10/19 --> output FB_RESOLVED_SNEII, FB_RESOLVED_SNEII_N_PER_MASS,
 //                                             FB_RESOLVED_SNEII_MIN_M_GAS, FB_RESOLVED_SNEII_RECORD
 //                                      replace FB_LEVEL by FB_MIN_LEVEL
 //-------------------------------------------------------------------------------------------------------
@@ -1883,7 +1886,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2516;
+   KeyInfo.FormatVersion        = 2518;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2615,6 +2618,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    for (int d=0; d<3; d++)
    InputPara.MPI_NRank_X[d]          = MPI_NRank_X[d];
    InputPara.OMP_NThread             = OMP_NTHREAD;
+   InputPara.InitT                   = INIT_T;
    InputPara.EndT                    = END_T;
    InputPara.EndStep                 = END_STEP;
 
@@ -2964,10 +2968,15 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 // star formation
 #  ifdef STAR_FORMATION
    InputPara.SF_CreateStar_Scheme       = SF_CREATE_STAR_SCHEME;
+   InputPara.SF_CreateStar_Criteria     = SF_CREATE_STAR_CRITERIA;
+   InputPara.SF_CreateStar_MassRate     = SF_CREATE_STAR_MASS_RATE;
+   InputPara.SF_CreateStar_ParSpawn     = SF_CREATE_STAR_PAR_SPAWN;
    InputPara.SF_CreateStar_RSeed        = SF_CREATE_STAR_RSEED;
    InputPara.SF_CreateStar_DetRandom    = SF_CREATE_STAR_DET_RANDOM;
    InputPara.SF_CreateStar_MinLevel     = SF_CREATE_STAR_MIN_LEVEL;
    InputPara.SF_CreateStar_MinGasDens   = SF_CREATE_STAR_MIN_GAS_DENS;
+   InputPara.SF_CreateStar_MaxGasTemp   = SF_CREATE_STAR_MAX_GAS_TEMP;
+   InputPara.SF_CreateStar_MaxGasJeansL = SF_CREATE_STAR_MAX_GAS_JEANSL;
    InputPara.SF_CreateStar_MassEff      = SF_CREATE_STAR_MASS_EFF;
    InputPara.SF_CreateStar_MinStarMass  = SF_CREATE_STAR_MIN_STAR_MASS;
    InputPara.SF_CreateStar_MaxStarMFrac = SF_CREATE_STAR_MAX_STAR_MFRAC;
@@ -3711,6 +3720,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "MPI_NRank",               HOFFSET(InputPara_t,MPI_NRank              ), H5T_NATIVE_INT     );
    H5Tinsert( H5_TypeID, "MPI_NRank_X",             HOFFSET(InputPara_t,MPI_NRank_X            ), H5_TypeID_Arr_3Int );
    H5Tinsert( H5_TypeID, "OMP_NThread",             HOFFSET(InputPara_t,OMP_NThread            ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "InitT",                   HOFFSET(InputPara_t,InitT                  ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "EndT",                    HOFFSET(InputPara_t,EndT                   ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "EndStep",                 HOFFSET(InputPara_t,EndStep                ), H5T_NATIVE_LONG    );
 
@@ -4085,10 +4095,15 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 // star formation
 #  ifdef STAR_FORMATION
    H5Tinsert( H5_TypeID, "SF_CreateStar_Scheme",       HOFFSET(InputPara_t,SF_CreateStar_Scheme       ), H5T_NATIVE_INT       );
+   H5Tinsert( H5_TypeID, "SF_CreateStar_Criteria",     HOFFSET(InputPara_t,SF_CreateStar_Criteria     ), H5T_NATIVE_LONG      );
+   H5Tinsert( H5_TypeID, "SF_CreateStar_MassRate",     HOFFSET(InputPara_t,SF_CreateStar_MassRate     ), H5T_NATIVE_INT       );
+   H5Tinsert( H5_TypeID, "SF_CreateStar_ParSpawn",     HOFFSET(InputPara_t,SF_CreateStar_ParSpawn     ), H5T_NATIVE_INT       );
    H5Tinsert( H5_TypeID, "SF_CreateStar_RSeed",        HOFFSET(InputPara_t,SF_CreateStar_RSeed        ), H5T_NATIVE_INT       );
    H5Tinsert( H5_TypeID, "SF_CreateStar_DetRandom",    HOFFSET(InputPara_t,SF_CreateStar_DetRandom    ), H5T_NATIVE_INT       );
    H5Tinsert( H5_TypeID, "SF_CreateStar_MinLevel",     HOFFSET(InputPara_t,SF_CreateStar_MinLevel     ), H5T_NATIVE_INT       );
    H5Tinsert( H5_TypeID, "SF_CreateStar_MinGasDens",   HOFFSET(InputPara_t,SF_CreateStar_MinGasDens   ), H5T_NATIVE_DOUBLE    );
+   H5Tinsert( H5_TypeID, "SF_CreateStar_MaxGasTemp",   HOFFSET(InputPara_t,SF_CreateStar_MaxGasTemp   ), H5T_NATIVE_DOUBLE    );
+   H5Tinsert( H5_TypeID, "SF_CreateStar_MaxGasJeansL", HOFFSET(InputPara_t,SF_CreateStar_MaxGasJeansL ), H5T_NATIVE_DOUBLE    );
    H5Tinsert( H5_TypeID, "SF_CreateStar_MassEff",      HOFFSET(InputPara_t,SF_CreateStar_MassEff      ), H5T_NATIVE_DOUBLE    );
    H5Tinsert( H5_TypeID, "SF_CreateStar_MinStarMass",  HOFFSET(InputPara_t,SF_CreateStar_MinStarMass  ), H5T_NATIVE_DOUBLE    );
    H5Tinsert( H5_TypeID, "SF_CreateStar_MaxStarMFrac", HOFFSET(InputPara_t,SF_CreateStar_MaxStarMFrac ), H5T_NATIVE_DOUBLE    );
