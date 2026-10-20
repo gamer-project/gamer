@@ -2,15 +2,156 @@
 
 
 static void Output_ExactCooling_General();
+void Cooling_efficiency_table( const double Z, double TEF_Temp[], double TEF_lambda[] );
 
 // problem-specific global variables
-// =======================================================================================
 static double EC_Temp;
 static double EC_Dens;
-// =======================================================================================
 
+static double CoolingTimeToTmin_ExactCooling_General()
+{
+   const int TEF_N = SrcTerms.ECG_TEF_N;
 
+   if ( TEF_N != 201 )
+      Aux_Error( ERROR_INFO, "SRC_ECG_TEF_N must be 201 for this cooling table !!\n" );
 
+   double *TEF_Temp   = new double [TEF_N];
+   double *TEF_lambda = new double [TEF_N];
+
+   Cooling_efficiency_table( SrcTerms.ECG_Z, TEF_Temp, TEF_lambda );
+
+   const double Tmin = TEF_Temp[0];
+   const double Tmax = TEF_Temp[TEF_N-1];
+
+   if ( EC_Temp < Tmin || EC_Temp > Tmax )
+      Aux_Error( ERROR_INFO, "EC_Temp = %13.7e K is outside the cooling-table range [%13.7e, %13.7e] K !!\n",
+                 EC_Temp, Tmin, Tmax );
+
+   if ( EC_Temp == Tmin )
+   {
+      delete [] TEF_Temp;
+      delete [] TEF_lambda;
+      return 0.0;
+   }
+
+   const double X_H  = 0.7;
+   const double X_Z  = 0.018 * SrcTerms.ECG_Z;
+   const double mu_e = 2.0 / (1.0 + X_H);
+   const double mu_H = 1.0 / X_H;
+   const double mu   = 1.0 / ( 2.0*X_H + 0.75*(1.0-X_H-X_Z) + 0.5*X_Z );
+   const double rho  = EC_Dens * Const_mp * mu;
+   const double n    = EC_Dens;
+   const double n_e  = rho / (mu_e * Const_mp);
+   const double n_H  = rho / (mu_H * Const_mp);
+   const double CoolingCoeff = (GAMMA - 1.0) * n_e * n_H / (n * Const_kB);
+
+   double t_Tmin = 0.0;
+   for (int i=0; i<TEF_N-1 && EC_Temp>TEF_Temp[i]; i++)
+   {
+      const double Tk = TEF_Temp[i];
+      const double Tupper = fmin( EC_Temp, TEF_Temp[i+1] );
+      const double Lk = TEF_lambda[i];
+      const double alpha = log10( TEF_lambda[i+1] / Lk ) / log10( TEF_Temp[i+1] / Tk );
+
+      if ( alpha == 1.0 )
+         t_Tmin += Tk / Lk * log( Tupper / Tk ) / CoolingCoeff;
+      else
+         t_Tmin += Tk / Lk * ( pow( Tupper / Tk, 1.0-alpha ) - 1.0 ) / (1.0-alpha) / CoolingCoeff;
+
+      if ( EC_Temp <= TEF_Temp[i+1] )
+         break;
+   }
+
+   delete [] TEF_Temp;
+   delete [] TEF_lambda;
+
+   return t_Tmin;
+}
+
+static double CoolingEfficiency_ExactCooling_General( const double Temp )
+{
+   const int TEF_N = SrcTerms.ECG_TEF_N;
+
+   if ( Temp <= h_SrcECG_TEF_Temp[0] )
+      return h_SrcECG_TEF_lambda[0];
+
+   if ( Temp >= h_SrcECG_TEF_Temp[TEF_N-1] )
+      return h_SrcECG_TEF_lambda[TEF_N-1];
+
+   for (int i=TEF_N-2; i>=0; i--)
+   {
+      if ( Temp >= h_SrcECG_TEF_Temp[i] )
+         return h_SrcECG_TEF_lambda[i] * pow( Temp / h_SrcECG_TEF_Temp[i], h_SrcECG_TEF_alpha[i] );
+   }
+
+   Aux_Error( ERROR_INFO, "failed to find the cooling-efficiency interval for Temp = %13.7e K !!\n", Temp );
+   return NULL_REAL;
+}
+
+static double CoolingTEF_ExactCooling_General( const double Temp )
+{
+   const int    TEF_N  = SrcTerms.ECG_TEF_N;
+   const double TEF_TN = h_SrcECG_TEF_Temp[TEF_N-1];
+   const double TEF_LN = h_SrcECG_TEF_lambda[TEF_N-1];
+
+   if ( Temp <= h_SrcECG_TEF_Temp[0] )
+      return h_SrcECG_TEF_Y[0];
+
+   if ( Temp >= TEF_TN )
+      return h_SrcECG_TEF_Y[TEF_N-1];
+
+   for (int i=TEF_N-2; i>=0; i--)
+   {
+      if ( Temp >= h_SrcECG_TEF_Temp[i] )
+      {
+         const double Tk = h_SrcECG_TEF_Temp[i];
+         const double Lk = h_SrcECG_TEF_lambda[i];
+         const double ak = h_SrcECG_TEF_alpha[i];
+
+         if ( ak == 1.0 )
+            return h_SrcECG_TEF_Y[i] + TEF_LN / Lk * Tk / TEF_TN * log( Tk / Temp );
+         else
+            return h_SrcECG_TEF_Y[i] + 1.0 / (1.0-ak) * TEF_LN / Lk * Tk / TEF_TN *
+                   ( 1.0 - pow( Tk / Temp, ak-1.0 ) );
+      }
+   }
+
+   Aux_Error( ERROR_INFO, "failed to find the TEF interval for Temp = %13.7e K !!\n", Temp );
+   return NULL_REAL;
+}
+
+static double CoolingTEFInverse_ExactCooling_General( const double Y )
+{
+   const int    TEF_N  = SrcTerms.ECG_TEF_N;
+   const double TEF_TN = h_SrcECG_TEF_Temp[TEF_N-1];
+   const double TEF_LN = h_SrcECG_TEF_lambda[TEF_N-1];
+
+   if ( Y >= h_SrcECG_TEF_Y[0] )
+      return h_SrcECG_TEF_Temp[0];
+
+   if ( Y <= h_SrcECG_TEF_Y[TEF_N-1] )
+      return TEF_TN;
+
+   for (int i=1; i<TEF_N; i++)
+   {
+      if ( h_SrcECG_TEF_Y[i] <= Y && Y < h_SrcECG_TEF_Y[i-1] )
+      {
+         const int    k  = i - 1;
+         const double Tk = h_SrcECG_TEF_Temp[k];
+         const double Lk = h_SrcECG_TEF_lambda[k];
+         const double ak = h_SrcECG_TEF_alpha[k];
+         const double Yk = h_SrcECG_TEF_Y[k];
+
+         if ( ak == 1.0 )
+            return Tk * exp( -Lk / TEF_LN * TEF_TN / Tk * (Y-Yk) );
+         else
+            return Tk * pow( 1.0 - (1.0-ak) * Lk / TEF_LN * TEF_TN / Tk * (Y-Yk), 1.0/(1.0-ak) );
+      }
+   }
+
+   Aux_Error( ERROR_INFO, "failed to find the inverse TEF interval for Y = %13.7e !!\n", Y );
+   return NULL_REAL;
+}
 
 //-------------------------------------------------------------------------------------------------------
 // Function    :  Validate
@@ -120,7 +261,7 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
 //                   (3) reset other general-purpose parameters if necessary
 //                   (4) make a note of the problem-specific parameters
 //                3. Must call EoS_Init() before calling any other EoS routine
-//                4. Please run the simulation first then change END_T in Input__Parameter to about "t1" in Record__CoolingErr and modify data dump dt
+//                4. For a new run, END_T is set automatically to the exact cooling time from EC_Temp to Tmin
 //
 // Parameter   :  None
 //
@@ -154,14 +295,19 @@ void SetParameter()
 // (3) reset other general-purpose parameters
 //     --> a helper macro PRINT_WARNING is defined in TestProb.h
    const long   End_Step_Default = __INT_MAX__;
-   const double End_T_Default    = 8.0*Const_Myr/UNIT_T;
+   const double End_T_Default   = 8.0*Const_Myr/UNIT_T;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
       PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
    }
 
-   if ( END_T < 0.0 ) {
+   if ( OPT__INIT != INIT_BY_RESTART )
+   {
+      END_T = CoolingTimeToTmin_ExactCooling_General() / UNIT_T;
+      PRINT_RESET_PARA( END_T, FORMAT_REAL, " (automatically set to t_Tmin)" );
+   }
+   else if ( END_T < 0.0 ) {
       END_T = End_T_Default;
       PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
    }
@@ -212,7 +358,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
 
    // gas settings
    const double cl_X   = 0.7;                                      // mass-fraction of hydrogen
-   const double cl_Z   = 0.018;                                    // mass-fraction of metal
+   const double cl_Z   = 0.018 * SrcTerms.ECG_Z;                   // mass-fraction of metal
    const double cl_mol = 1.0/(2*cl_X+0.75*(1-cl_X-cl_Z)+cl_Z*0.5); // mean (total) molecular weights
 
    double Dens, MomX, MomY, MomZ, Pres, Eint, Etot;
@@ -264,19 +410,18 @@ void Output_ExactCooling_General()
             Aux_Message( stderr, "WARNING : file \"%s\" already exists !!\n", FileName );
 
          FILE *File_User = fopen( FileName, "a" );
-         fprintf( File_User, "# t3        : time to cool down from initial temperature to 10^7.4K [Myr]\n");
-         fprintf( File_User, "# t2        : time to cool down from initial temperature to 10^5K [Myr]\n");
-         fprintf( File_User, "# t3        : time to cool down from initial temperature to 10^4K [Myr]\n");
-         fprintf( File_User, "# Temp_nume : temperature updated by the exact-cooling solver [K]\n" );
-         fprintf( File_User, "# Temp_anal : temperature obtained from the analytical integration [K]\n" );
-         fprintf( File_User, "# Err       : relative error defined as (Temp_nume-Temp_anal)/Temp_anal\n" );
-         fprintf( File_User, "# Tcool_nume: cooling time computed from the output density and output temperature Temp_nume [Myr]\n" );
-         fprintf( File_User, "# Tcool_anal: cooling time computed from the input density and analytical temperature Temp_anal [Myr]\n" );
-         fprintf( File_User, "# Lambda    : cooling efficiency at the current temperature [erg cm^3/s]\n");
+         fprintf( File_User, "# t_Tmin     : time to cool from the initial temperature to Tmin [Myr]\n" );
+         fprintf( File_User, "# Temp_nume  : temperature updated by the exact-cooling solver [K]\n" );
+         fprintf( File_User, "# Temp_anal  : temperature obtained from the analytical integration [K]\n" );
+         fprintf( File_User, "# Err        : relative error defined as (Temp_nume-Temp_anal)/Temp_anal\n" );
+         fprintf( File_User, "# Tcool_nume : cooling time computed from the output density and output temperature Temp_nume [Myr]\n" );
+         fprintf( File_User, "# Tcool_anal : cooling time computed from the input density and analytical temperature Temp_anal [Myr]\n" );
+         fprintf( File_User, "# Lambda_nume: cooling efficiency at Temp_nume [erg cm^3/s]\n");
+         fprintf( File_User, "# Lambda_anal: cooling efficiency at Temp_anal [erg cm^3/s]\n");
          fprintf( File_User, "# ================================================================================================\n" );
-         fprintf( File_User, "#%14s %14s %14s ", "t3", "t2", "t1" );
+         fprintf( File_User, "#%14s ", "t_Tmin" );
          fprintf( File_User, "#%13s%10s ",  "Time", "DumpID" );
-         fprintf( File_User, "%14s %14s %14s %14s %14s %14s", "Temp_nume", "Temp_anal", "Err", "Tcool_nume", "Tcool_anal", "Lambda" );
+         fprintf( File_User, "%14s %14s %14s %14s %14s %14s %14s", "Temp_nume", "Temp_anal", "Err", "Tcool_nume", "Tcool_anal", "Lambda_nume", "Lambda_anal" );
          fprintf( File_User, "\n" );
          fclose( File_User );
       }
@@ -286,11 +431,10 @@ void Output_ExactCooling_General()
 
    // gas settings
    const double cl_X         = 0.7;                                      // mass-fraction of hydrogen
-   const double cl_Z         = 0.018;                                    // metallicity (in Zsun)
+   const double cl_Z         = 0.018 * SrcTerms.ECG_Z;                   // mass-fraction of metal
    const double cl_mol       = 1.0/(2*cl_X+0.75*(1-cl_X-cl_Z)+cl_Z*0.5); // mean (total) molecular weights
    const double cl_mole      = 2.0/(1+cl_X);                             // mean electron molecular weights
    const double cl_moli      = 1.0/cl_X;                                 // mean proton molecular weights
-   const double cl_moli_mole = cl_moli*cl_mole;                          // Assume the molecular weights are constant, mu_e*mu_i = 1.464
    const int    lv           = 0;
 
    // get the numerical result
@@ -300,23 +444,7 @@ void Output_ExactCooling_General()
    double Tcool_nume    = 0.0;
    double Lambda_nume   = 0.0;
    double Lambda_cell   = 0.0;
-   double Etot          = 0.0;
    int    count         = 0;
-
-   // cooling function constant (3 power law cooling function)
-   const double T1   = 1.0e4;             // K
-   const double T2   = 1.0e5;             // K
-   const double T3   = pow(10.0, 7.4);    // K
-   const double TN   = 1.0e9;             // K
-
-   const double a1   =  0.74;
-   const double a2   = -0.70;
-   const double a3   =  0.50;
-
-   const double L1   = 9.93e-23;               // erg cm^3 s^-1
-   const double L2   = 5.51e-22;               // erg cm^3 s^-1
-   const double L3   = 1.15e-23;               // erg cm^3 s^-1
-   const double LN   = L3 * pow( TN / T3, a3); // erg cm^3 s^-1
 
    for (int k=1; k<PS1; k++) {
    for (int j=1; j<PS1; j++) {
@@ -328,133 +456,45 @@ void Output_ExactCooling_General()
                                              EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
                                      
       
-      if (Temp_nume_tmp >= T1 && Temp_nume_tmp < T2)
-      {
-         Lambda_cell = L1 * pow( Temp_nume_tmp / T1, a1); // erg cm^3/s
-         Tcool_nume += Const_kB * (fluid[0] * UNIT_D / Const_mp / cl_mol) * Temp_nume_tmp/ ((fluid[0] * UNIT_D / Const_mp / cl_mole) * (fluid[0] * UNIT_D / Const_mp / cl_moli) * (GAMMA - 1.0) * Lambda_cell)/ Const_Myr;
-      }
-      else if (Temp_nume_tmp >= T2 && Temp_nume_tmp < T3)
-      {
-         Lambda_cell = L2 * pow( Temp_nume_tmp / T2, a2); // erg cm^3/s
-         Tcool_nume += Const_kB * (fluid[0] * UNIT_D / Const_mp / cl_mol) * Temp_nume_tmp/ ((fluid[0] * UNIT_D / Const_mp / cl_mole) * (fluid[0] * UNIT_D / Const_mp / cl_moli) * (GAMMA - 1.0) * Lambda_cell)/ Const_Myr;
-      }
-      else if (Temp_nume_tmp >= T3)
-      {
-         Lambda_cell = L3 * pow( Temp_nume_tmp / T3, a3); // erg cm^3/s
-         Tcool_nume += Const_kB * (fluid[0] * UNIT_D / Const_mp / cl_mol) * Temp_nume_tmp/ ((fluid[0] * UNIT_D / Const_mp / cl_mole) * (fluid[0] * UNIT_D / Const_mp / cl_moli) * (GAMMA - 1.0) * Lambda_cell)/ Const_Myr;
-      }
+      Lambda_cell = CoolingEfficiency_ExactCooling_General( Temp_nume_tmp );
+      Tcool_nume += Const_kB * (fluid[0] * UNIT_D / Const_mp / cl_mol) * Temp_nume_tmp /
+                    ( (fluid[0] * UNIT_D / Const_mp / cl_mole) * (fluid[0] * UNIT_D / Const_mp / cl_moli) *
+                      (GAMMA - 1.0) * Lambda_cell ) / Const_Myr;
 
       Temp_nume   += Temp_nume_tmp;
       Lambda_nume += Lambda_cell;
-      Etot        += fluid[ENGY];
       count       += 1;
    }}} // i, j, k
    Temp_nume  /= count;
    Tcool_nume /= count;
    Lambda_nume/= count;
-   Etot       /= count;
 
-// compute the analytical solution for cooling function
-// please change to your analytical solution if you change the number of power law cooling function
+// compute the analytical solution using all 200 power-law intervals
    const double rho = EC_Dens * Const_mp * cl_mol;   // g cm^-3
    const double n   = EC_Dens;                       // cm^-3
    const double n_e = rho / (cl_mole * Const_mp);    // cm^-3
    const double n_H = rho / (cl_moli * Const_mp);    // cm^-3
 
-   double Temp_anal, Tcool_anal;
-
-   const double A1 = (GAMMA - 1.0) * n_e * n_H * L1 * pow( T1, -a1 ) / (n * Const_kB);
-   const double A2 = (GAMMA - 1.0) * n_e * n_H * L2 * pow( T2, -a2 ) / (n * Const_kB);
-   const double A3 = (GAMMA - 1.0) * n_e * n_H * L3 * pow( T3, -a3 ) / (n * Const_kB);   
-
-   // physical time
-   const double t_phys = Time[0] * UNIT_T;
-   
-   // time to cool down from initial temperature to T3, T2, T1
-   double t3 = 0.0;
-   double t2 = 0.0;
-   double t1 = 0.0;
-
-   // (1) T3 <= T0 < TN
-   if ( EC_Temp >= T3 && EC_Temp < TN )
-   {
-      t3 = 1.0 / ((1.0 - a3) * A3) * ( pow( EC_Temp, 1.0 - a3 ) - pow( T3, 1.0 - a3 ) );
-      t2 = t3 + 1.0 / ((1.0 - a2) * A2) * ( pow( T3, 1.0 - a2 ) - pow( T2, 1.0 - a2 ) );
-      t1 = t2 + 1.0 / ((1.0 - a1) * A1) * ( pow( T2, 1.0 - a1 ) - pow( T1, 1.0 - a1 ) );
-
-      if ( t_phys <= t3 )
-      {
-         Temp_anal  = pow( pow( EC_Temp, 1.0 - a3 ) - (1.0 - a3) * A3 * t_phys, 1.0 / (1.0 - a3) );
-         Tcool_anal = Const_kB * n * Temp_anal / (n_e * n_H * (GAMMA - 1.0) * L3 * pow( Temp_anal / T3, a3 ) ) / Const_Myr;
-      }
-      else if ( t_phys <= t2 && t_phys > t3 )
-      {
-         Temp_anal  = pow( pow( T3, 1.0 - a2 ) - (1.0 - a2) * A2 * (t_phys - t3), 1.0 / (1.0 - a2) );
-         Tcool_anal = Const_kB * n * Temp_anal / (n_e * n_H * (GAMMA - 1.0) * L2 * pow( Temp_anal / T2, a2 ) ) / Const_Myr;
-      }
-      else if ( t_phys <= t1 && t_phys > t2 )
-      {
-         Temp_anal  = pow( pow( T2, 1.0 - a1 ) - (1.0 - a1) * A1 * (t_phys - t2), 1.0 / (1.0 - a1) );
-         Tcool_anal = Const_kB * n * Temp_anal / (n_e * n_H * (GAMMA - 1.0) * L1 * pow( Temp_anal / T1, a1 ) ) / Const_Myr;
-      }
-      else
-      {
-         Temp_anal  = T1;
-         Tcool_anal = Const_kB * n * Temp_anal / (n_e * n_H * (GAMMA - 1.0) * L1 * pow( Temp_anal / T1, a1 ) ) / Const_Myr;
-      }
-
-   }
-
-   // (2) T2 <= T0 < T3
-   else if ( EC_Temp >= T2 && EC_Temp < T3 )
-   {
-      t2 = 1.0 / ((1.0 - a2) * A2) * ( pow( EC_Temp, 1.0 - a2 ) - pow( T2, 1.0 - a2 ) );
-      t1 = t2 + 1.0 / ((1.0 - a1) * A1) * ( pow( T2, 1.0 - a1 ) - pow( T1, 1.0 - a1 ) );
-
-      if ( t_phys <= t2 )
-      {
-         Temp_anal  = pow( pow( EC_Temp, 1.0 - a2 ) - (1.0 - a2) * A2 * t_phys, 1.0 / (1.0 - a2) );
-         Tcool_anal = Const_kB * n * Temp_anal / (n_e * n_H * (GAMMA - 1.0) * L2 * pow( Temp_anal / T2, a2 ) ) / Const_Myr;
-      }
-      else if ( t_phys <= t1 && t_phys > t2 )
-      {
-         Temp_anal  = pow( pow( T2, 1.0 - a1 ) - (1.0 - a1) * A1 * (t_phys - t2), 1.0 / (1.0 - a1) );
-         Tcool_anal = Const_kB * n * Temp_anal / (n_e * n_H * (GAMMA - 1.0) * L1 * pow( Temp_anal / T1, a1 ) ) / Const_Myr;
-      }
-      else
-      {
-         Temp_anal  = T1;
-         Tcool_anal = Const_kB * n * Temp_anal / (n_e * n_H * (GAMMA - 1.0) * L1 * pow( Temp_anal / T1, a1 ) ) / Const_Myr;
-      }
-
-   }
-
-   // (3) T1 <= T0 < T2
-   else if ( EC_Temp >= T1 && EC_Temp < T2 )
-   {
-      t1 = 1.0 / ((1.0 - a1) * A1) * ( pow( EC_Temp, 1.0 - a1 ) - pow( T1, 1.0 - a1 ) );
-
-      if ( t_phys <= t1 )
-      {
-         Temp_anal  = pow( pow( EC_Temp, 1.0 - a1 ) - (1.0 - a1) * A1 * t_phys, 1.0 / (1.0 - a1) );
-         Tcool_anal = Const_kB * n * Temp_anal / (n_e * n_H * (GAMMA - 1.0) * L1 * pow( Temp_anal / T1, a1 ) ) / Const_Myr;
-      }
-      else
-      {
-         Temp_anal  = T1;
-         Tcool_anal = Const_kB * n * Temp_anal / (n_e * n_H * (GAMMA - 1.0) * L1 * pow( Temp_anal / T1, a1 ) ) / Const_Myr;
-      }
-
-   }
-   
+   const int    TEF_N        = SrcTerms.ECG_TEF_N;
+   const double TEF_TN       = h_SrcECG_TEF_Temp[TEF_N-1];
+   const double TEF_LN       = h_SrcECG_TEF_lambda[TEF_N-1];
+   const double CoolingRate  = (GAMMA - 1.0) * n_e * n_H * TEF_LN / ( n * Const_kB * TEF_TN );
+   const double Y_initial    = CoolingTEF_ExactCooling_General( EC_Temp );
+   const double Y_Tmin       = h_SrcECG_TEF_Y[0];
+   const double t_Tmin       = (Y_Tmin - Y_initial) / CoolingRate;
+   const double t_phys       = Time[0] * UNIT_T;
+   const double Y_anal       = Y_initial + CoolingRate * t_phys;
+   const double Temp_anal    = CoolingTEFInverse_ExactCooling_General( Y_anal );
+   const double Lambda_anal  = CoolingEfficiency_ExactCooling_General( Temp_anal );
+   const double Tcool_anal   = Const_kB * n * Temp_anal / ( n_e * n_H * (GAMMA - 1.0) * Lambda_anal ) / Const_Myr;
 
 // record
    if ( MPI_Rank == 0 )
    {
       FILE *File_User = fopen( FileName, "a" );
-      fprintf( File_User, "%14.7e%14.7e%14.7e ", t3 / Const_Myr, t2 / Const_Myr, t1 / Const_Myr );
+      fprintf( File_User, "%14.7e ", t_Tmin / Const_Myr );
       fprintf( File_User, "%14.7e%10d ", Time[0]*UNIT_T/Const_Myr, DumpID );
-      fprintf( File_User, "%14.7e %14.7e %14.7e %14.7e %14.7e %14.7e", Temp_nume, Temp_anal, (Temp_nume-Temp_anal)/Temp_anal, Tcool_nume, Tcool_anal, Lambda_nume );
+      fprintf( File_User, "%14.7e %14.7e %14.7e %14.7e %14.7e %14.7e %14.7e", Temp_nume, Temp_anal, (Temp_nume-Temp_anal)/Temp_anal, Tcool_nume, Tcool_anal, Lambda_nume, Lambda_anal );
       fprintf( File_User, "\n" );
       fclose( File_User );
    }

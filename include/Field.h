@@ -32,6 +32,9 @@ SET_GLOBAL( FieldIdx_t Idx_Dual,          Idx_Undefined );
 #ifdef EXACT_COOLING
 SET_GLOBAL( FieldIdx_t Idx_TCool,         Idx_Undefined );
 #endif
+#ifdef EXACT_COOLING_GENERAL
+SET_GLOBAL( FieldIdx_t Idx_TCoolG,        Idx_Undefined );
+#endif
 
 // Grackle fields
 SET_GLOBAL( FieldIdx_t Idx_e,             Idx_Undefined );

@@ -3,10 +3,10 @@ import numpy as np
 
 data       = np.loadtxt('Record__CoolingErr', skiprows=1)
 
-time       = data[:, 3]
-temp_nume  = data[:, 5]
-temp_anal  = data[:, 6]
-tcool_anal = data[:, 9]
+time       = data[:, 1]
+temp_nume  = data[:, 3]
+temp_anal  = data[:, 4]
+tcool_anal = data[:, 7]
 
 time      /= tcool_anal[0]
 

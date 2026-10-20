@@ -160,8 +160,10 @@ OPT__MINIMIZE_MPI_BARRIER     1           # minimize MPI barriers to improve loa
 
 # source terms
 SRC_DELEPTONIZATION           0           # deleptonization (for simulations of stellar core collapse) [0] ##HYDRO ONLY##
-SRC_EXACTCOOLING_GENERAL      1           # general exact-cooling: scheme from Townsend (2009) for user-defined power law cooling function [0] ##HYDRO and EXACT_COOLING_GENERAL ONLY##
-SRC_EXACTCOOLING_GENERAL_DT   0.3         # general exact-cooling: factor of the cooling time-step [0.3]
+SRC_EXACTCOOLING_GENERAL      1           # general exact-cooling: scheme from Townsend (2009) for Gnat & Sternberg cooling function [0] ##HYDRO and EXACT_COOLING_GENERAL ONLY##
+SRC_ECG_TEF_N                 201         # general exact-cooling: number of temperature points [201]
+SRC_ECG_DTCOEF                0.3         # general exact-cooling: safety factor of the cooling time-step (<0=off) [0.3]
+SRC_ECG_Z                     1.0         # general exact-cooling: metallicity (1.0 means solar metallicity) [1.0]
 SRC_USER                      0           # user-defined source terms -> edit "Src_User.cpp" [0]
 SRC_GPU_NPGROUP              -1           # number of patch groups sent into the CPU/GPU source-term solver (<=0=auto) [-1]
 
@@ -197,7 +199,7 @@ SF_CREATE_STAR_MAX_STAR_MFRAC 0.5         # maximum gas mass fraction allowed to
 
 # fluid solver in HYDRO (MODEL==HYDRO only)
 GAMMA                         1.666666667 # ratio of specific heats (i.e., adiabatic index) [5.0/3.0] ##EOS_GAMMA ONLY##
-MOLECULAR_WEIGHT              0.6         # mean molecular weight [0.6]
+MOLECULAR_WEIGHT              0.6173      # mean molecular weight [0.6]
 MU_NORM                       1.6737352238051868e-24   # m_H value,  fully consistent with yt
 ISO_TEMP                      1.0e4       # isothermal temperature in kelvin ##EOS_ISOTHERMAL ONLY##
 MINMOD_COEFF                  1.5         # coefficient of the generalized MinMod limiter (1.0~2.0) [1.5]
@@ -338,7 +340,7 @@ OPT__OUTPUT_USER_FIELD        0           # output user-defined derived fields [
 OPT__OUTPUT_MODE              2           # (1=const step, 2=const dt, 3=dump table) -> edit "Input__DumpTable" for 3
 OPT__OUTPUT_RESTART           0           # output data immediately after restart [0]
 OUTPUT_STEP                   5           # output data every OUTPUT_STEP step ##OPT__OUTPUT_MODE==1 ONLY##
-OUTPUT_DT                     3.15576e12      # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
+OUTPUT_DT                     3.15576e13      # output data every OUTPUT_DT time interval ##OPT__OUTPUT_MODE==2 ONLY##
 OUTPUT_WALLTIME              -1.0         # output data every OUTPUT_WALLTIME walltime (<=0.0=off) [-1.0]
 OUTPUT_WALLTIME_UNIT          0           # unit of OUTPUT_WALLTIME (0=second, 1=minute, 2=hour, 3=day) [0]
 OUTPUT_PART_X                -1.0         # x coordinate for OPT__OUTPUT_PART [-1.0]

@@ -1,0 +1,13 @@
+# problem-specific runtime parameters
+KHC_RSeed               123         # random seed
+KHC_RAmp                2.0e4      # random number amplitude in both vx, vy, and vz
+KHC_Vx1                -1.0e6         # background velocity x in the upper region [cm/s]
+KHC_Vx2                +1.0e6         # background velocity x in the lower region [cm/s]
+KHC_Vz1                -0.0         # background velocity z in the upper region [cm/s]
+KHC_Vz2                +0.0         # background velocity z in the lower region [cm/s]
+KHC_Temp1               3.74e4         # temperature in the upper region [K]
+KHC_Temp2               7.48e4       # temperature in the lower region [K]
+KHC_n1                  2.0e-2      # total number density in the upper region [cm^-3]
+KHC_n2                  1.0e-2      # total number density in the lower region [cm^-3]
+KHC_RefineShearMaxLv    2           # refine the regions around the shear plane to this level
+KHC_PeriodicYFactor     1           # decompose the simulation domain further into N periodic subdomains along the y axis

@@ -211,8 +211,15 @@
 #  define NCOMP_PASSIVE_BUILTIN2    0
 # endif
 
+// general exact cooling source term
+# ifdef EXACT_COOLING_GENERAL
+#  define NCOMP_PASSIVE_BUILTIN3    1
+# else
+#  define NCOMP_PASSIVE_BUILTIN3    0
+# endif
+
 // total number of built-in scalars
-#  define NCOMP_PASSIVE_BUILTIN     ( NCOMP_PASSIVE_BUILTIN0 + NCOMP_PASSIVE_BUILTIN1 + NCOMP_PASSIVE_BUILTIN2 )
+#  define NCOMP_PASSIVE_BUILTIN     ( NCOMP_PASSIVE_BUILTIN0 + NCOMP_PASSIVE_BUILTIN1 + NCOMP_PASSIVE_BUILTIN2 + NCOMP_PASSIVE_BUILTIN3 )
 
 #endif // #if ( MODEL == HYDRO )
 
@@ -329,6 +336,13 @@
 #  define PASSIVE_NEXT_IDX3   ( PASSIVE_NEXT_IDX2 )
 # endif
 
+# ifdef EXACT_COOLING_GENERAL
+#  define TCOOLG              ( PASSIVE_NEXT_IDX3 )
+#  define PASSIVE_NEXT_IDX4   ( TCOOLG - 1         )
+# else
+#  define PASSIVE_NEXT_IDX4   ( PASSIVE_NEXT_IDX3 )
+# endif
+
 #endif // #if ( NCOMP_PASSIVE > 0 )
 
 // field indices of magnetic --> element of [0 ... NCOMP_MAG-1]
@@ -372,6 +386,13 @@
 #  define FLUX_NEXT_IDX3   ( FLUX_NEXT_IDX2  )
 # endif
 
+# ifdef EXACT_COOLING_GENERAL
+#  define FLUX_TCOOLG      ( FLUX_NEXT_IDX3  )
+#  define FLUX_NEXT_IDX4   ( FLUX_TCOOLG - 1 )
+# else
+#  define FLUX_NEXT_IDX4   ( FLUX_NEXT_IDX3  )
+# endif
+
 #endif // #if ( NCOMP_PASSIVE > 0 )
 
 // bitwise field indices
@@ -396,6 +417,10 @@
 
 # ifdef EXACT_COOLING
 #  define _TCOOL              ( 1L << TCOOL )
+# endif
+
+# ifdef EXACT_COOLING_GENERAL
+#  define _TCOOLG             ( 1L << TCOOLG )
 # endif
 
 #endif // #if ( NCOMP_PASSIVE > 0 )
@@ -429,6 +454,10 @@
 
 # ifdef EXACT_COOLING
 #  define _FLUX_TCOOL         ( 1L << FLUX_TCOOL )
+# endif
+
+# ifdef EXACT_COOLING_GENERAL
+#  define _FLUX_TCOOLG        ( 1L << FLUX_TCOOLG )
 # endif
 
 #endif // #if ( NFLUX_PASSIVE > 0 )
@@ -960,9 +989,14 @@
 #  define SRC_NAUX_EC            0
 #endif
 #ifdef EXACT_COOLING_GENERAL
-#  define SRC_NAUX_EXACTCOOLING_GENERAL            20    // SrcTerms.ExactCooling_General_AuxArray_Flt/Int[]
+#  define SRC_NAUX_ECG           20    // SrcTerms.ECG_AuxArray_Flt/Int[]
 #else
-#  define SRC_NAUX_EXACTCOOLING_GENERAL            0
+#  define SRC_NAUX_ECG           0
+#endif
+#ifdef EXACT_COOLING_TEST
+#  define SRC_NAUX_ECT           20    // SrcTerms.ECT_AuxArray_Flt/Int[]
+#else
+#  define SRC_NAUX_ECT           0
 #endif
 #  define SRC_NAUX_USER          10    // SrcTerms.User_AuxArray_Flt/Int[]
 

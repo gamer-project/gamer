@@ -245,12 +245,18 @@ void Init_Load_Parameter()
    ReadPara->Add( "SRC_DELEPTONIZATION",        &SrcTerms.Deleptonization,        false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "SRC_EXACTCOOLING",           &SrcTerms.ExactCooling,           false,           Useless_bool,  Useless_bool   );
    ReadPara->Add( "SRC_EXACTCOOLING_GENERAL",   &SrcTerms.ExactCooling_General,   false,           Useless_bool,  Useless_bool   );
+   ReadPara->Add( "SRC_EXACTCOOLING_TEST",      &SrcTerms.ExactCooling_Test,      false,           Useless_bool,  Useless_bool   );
 #  ifdef EXACT_COOLING
    ReadPara->Add( "SRC_EC_TEF_N",               &SrcTerms.EC_TEF_N,               1501,            1,             NoMax_int      );
    ReadPara->Add( "SRC_EC_DTCOEF",              &SrcTerms.EC_dtCoef,             -1.0,             NoMin_double,  NoMax_double   );
 #  endif
 #  ifdef EXACT_COOLING_GENERAL
-   ReadPara->Add( "SRC_EXACTCOOLING_GENERAL_DT",&SrcTerms.ExactCooling_General_dt,-1.0,            NoMin_double,  NoMax_double   );
+   ReadPara->Add( "SRC_ECG_TEF_N",              &SrcTerms.ECG_TEF_N,              201,             1,             NoMax_int      );
+   ReadPara->Add( "SRC_ECG_DTCOEF",             &SrcTerms.ECG_dtCoef,            -1.0,             NoMin_double,  NoMax_double   );
+   ReadPara->Add( "SRC_ECG_Z",                  &SrcTerms.ECG_Z,                  1.0,             1e-3,          2.0            );
+#  endif
+#  ifdef EXACT_COOLING_TEST
+   ReadPara->Add( "SRC_ECT_DTCOEF",             &SrcTerms.ECT_dtCoef,            -1.0,             NoMin_double,  NoMax_double   );
 #  endif
    ReadPara->Add( "SRC_USER",                   &SrcTerms.User,                   false,           Useless_bool,  Useless_bool   );
 // do not check SRC_GPU_NPGROUP since it may be reset by either Init_ResetParameter() or CUAPI_SetMemSize()

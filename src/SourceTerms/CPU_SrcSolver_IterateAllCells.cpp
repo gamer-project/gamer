@@ -124,11 +124,18 @@ void CPU_SrcSolver_IterateAllCells(
 #        ifdef EXACT_COOLING_GENERAL
 //       (3) general exact cooling
          if ( SrcTerms.ExactCooling_General )
-            SrcTerms.ExactCooling_General_FuncPtr( fluid, B, &SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint, PassiveFloor, &EoS,
-                                                   SrcTerms.ExactCooling_General_AuxArrayDevPtr_Flt, SrcTerms.ExactCooling_General_AuxArrayDevPtr_Int );
+            SrcTerms.ECG_FuncPtr( fluid, B, &SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint, PassiveFloor, &EoS,
+                                  SrcTerms.ECG_AuxArrayDevPtr_Flt, SrcTerms.ECG_AuxArrayDevPtr_Int );
 #        endif
 
-//       (4) user-defined
+#        ifdef EXACT_COOLING_TEST
+//       (4) exact cooling test
+         if ( SrcTerms.ExactCooling_Test )
+            SrcTerms.ECT_FuncPtr( fluid, B, &SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint, PassiveFloor, &EoS,
+                                  SrcTerms.ECT_AuxArrayDevPtr_Flt, SrcTerms.ECT_AuxArrayDevPtr_Int );
+#        endif
+
+//       (5) user-defined
          if ( SrcTerms.User )
             SrcTerms.User_FuncPtr( fluid, B, &SrcTerms, dt, dh, x, y, z, TimeNew, TimeOld, MinDens, MinPres, MinEint, PassiveFloor, &EoS,
                                    SrcTerms.User_AuxArrayDevPtr_Flt, SrcTerms.User_AuxArrayDevPtr_Int );

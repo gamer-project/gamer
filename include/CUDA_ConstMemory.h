@@ -40,8 +40,12 @@ SET_GLOBAL( __constant__ double c_Src_EC_AuxArray_Flt[SRC_NAUX_EC]     );
 SET_GLOBAL( __constant__ int    c_Src_EC_AuxArray_Int[SRC_NAUX_EC]     );
 #endif
 #ifdef EXACT_COOLING_GENERAL
-SET_GLOBAL( __constant__ double c_Src_ExactCooling_General_AuxArray_Flt[SRC_NAUX_EXACTCOOLING_GENERAL]     );
-SET_GLOBAL( __constant__ int    c_Src_ExactCooling_General_AuxArray_Int[SRC_NAUX_EXACTCOOLING_GENERAL]     );
+SET_GLOBAL( __constant__ double c_Src_ECG_AuxArray_Flt[SRC_NAUX_ECG]   );
+SET_GLOBAL( __constant__ int    c_Src_ECG_AuxArray_Int[SRC_NAUX_ECG]   );
+#endif
+#ifdef EXACT_COOLING_TEST
+SET_GLOBAL( __constant__ double c_Src_ECT_AuxArray_Flt[SRC_NAUX_ECT]   );
+SET_GLOBAL( __constant__ int    c_Src_ECT_AuxArray_Int[SRC_NAUX_ECT]   );
 #endif
 SET_GLOBAL( __constant__ double c_Src_User_AuxArray_Flt[SRC_NAUX_USER] );
 SET_GLOBAL( __constant__ int    c_Src_User_AuxArray_Int[SRC_NAUX_USER] );

@@ -345,8 +345,12 @@ double     Src_EC_AuxArray_Flt[SRC_NAUX_EC];
 int        Src_EC_AuxArray_Int[SRC_NAUX_EC];
 #endif
 #ifdef EXACT_COOLING_GENERAL
-double     Src_ExactCooling_General_AuxArray_Flt[SRC_NAUX_EXACTCOOLING_GENERAL];
-int        Src_ExactCooling_General_AuxArray_Int[SRC_NAUX_EXACTCOOLING_GENERAL];
+double     Src_ECG_AuxArray_Flt[SRC_NAUX_ECG];
+int        Src_ECG_AuxArray_Int[SRC_NAUX_ECG];
+#endif
+#ifdef EXACT_COOLING_TEST
+double     Src_ECT_AuxArray_Flt[SRC_NAUX_ECT];
+int        Src_ECT_AuxArray_Int[SRC_NAUX_ECT];
 #endif
 double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
 int        Src_User_AuxArray_Int[SRC_NAUX_USER];
@@ -493,6 +497,12 @@ double  *h_SrcEC_TEF_lambda                                          = NULL;
 double  *h_SrcEC_TEF_alpha                                           = NULL;
 double  *h_SrcEC_TEFc                                                = NULL;
 #endif
+#ifdef EXACT_COOLING_GENERAL
+double  *h_SrcECG_TEF_Temp                                           = NULL;
+double  *h_SrcECG_TEF_lambda                                         = NULL;
+double  *h_SrcECG_TEF_alpha                                          = NULL;
+double  *h_SrcECG_TEF_Y                                              = NULL;
+#endif
 
 
 
@@ -588,6 +598,12 @@ real    *d_SrcDlepProf_Radius                                        = NULL;
 double  *d_SrcEC_TEF_lambda                                          = NULL;
 double  *d_SrcEC_TEF_alpha                                           = NULL;
 double  *d_SrcEC_TEFc                                                = NULL;
+#endif
+#ifdef EXACT_COOLING_GENERAL
+double  *d_SrcECG_TEF_Temp                                           = NULL;
+double  *d_SrcECG_TEF_lambda                                         = NULL;
+double  *d_SrcECG_TEF_alpha                                          = NULL;
+double  *d_SrcECG_TEF_Y                                              = NULL;
 #endif
 
 #endif // #ifdef GPU

@@ -1889,6 +1889,21 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "SRC_EXACTCOOLING is only supported when EXACT_COOLING is enabled !!\n" );
 #  endif // #ifdef EXACT_COOLING ... else ...
 
+#  ifdef EXACT_COOLING_TEST
+#  if ( MODEL != HYDRO )
+#     error : ERROR : EXACT_COOLING_TEST must enable MODEL=HYDRO !!
+#  endif
+
+#  ifdef COMOVING
+#     error : ERROR : EXACT_COOLING_TEST does not support COMOVING !!
+#  endif
+
+#  else // #ifdef EXACT_COOLING_TEST
+   if ( SrcTerms.ExactCooling_Test )
+      Aux_Error( ERROR_INFO, "SRC_EXACTCOOLING_TEST is only supported when EXACT_COOLING_TEST is enabled !!\n" );
+#  endif // #ifdef EXACT_COOLING_TEST ... else ...
+
+
 #  ifdef EXACT_COOLING_GENERAL
 #  if ( MODEL != HYDRO )
 #     error : ERROR : EXACT_COOLING_GENERAL must enable MODEL=HYDRO !!

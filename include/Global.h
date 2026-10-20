@@ -360,8 +360,10 @@ extern double     Src_Dlep_AuxArray_Flt[SRC_NAUX_DLEP];
 extern int        Src_Dlep_AuxArray_Int[SRC_NAUX_DLEP];
 extern double     Src_EC_AuxArray_Flt[SRC_NAUX_EC];
 extern int        Src_EC_AuxArray_Int[SRC_NAUX_EC];
-extern double     Src_ExactCooling_General_AuxArray_Flt[SRC_NAUX_EXACTCOOLING_GENERAL];
-extern int        Src_ExactCooling_General_AuxArray_Int[SRC_NAUX_EXACTCOOLING_GENERAL];
+extern double     Src_ECG_AuxArray_Flt[SRC_NAUX_ECG];
+extern int        Src_ECG_AuxArray_Int[SRC_NAUX_ECG];
+extern double     Src_ECT_AuxArray_Flt[SRC_NAUX_ECT];
+extern int        Src_ECT_AuxArray_Int[SRC_NAUX_ECT];
 #endif
 extern double     Src_User_AuxArray_Flt[SRC_NAUX_USER];
 extern int        Src_User_AuxArray_Int[SRC_NAUX_USER];
@@ -504,6 +506,13 @@ extern real        *h_SrcDlepProf_Radius;
 extern double      *h_SrcEC_TEF_lambda;
 extern double      *h_SrcEC_TEF_alpha;
 extern double      *h_SrcEC_TEFc;
+#endif
+
+#ifdef EXACT_COOLING_GENERAL
+extern double      *h_SrcECG_TEF_Temp;
+extern double      *h_SrcECG_TEF_lambda;
+extern double      *h_SrcECG_TEF_alpha;
+extern double      *h_SrcECG_TEF_Y;
 #endif
 
 
