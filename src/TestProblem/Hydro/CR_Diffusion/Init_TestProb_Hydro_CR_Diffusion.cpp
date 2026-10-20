@@ -228,14 +228,14 @@ void SetParameter()
       RNG->SetSeed(t, CR_Diffusion_Seed+MPI_Rank*1000+t);
    }
 
-// set test problem dimensions
-   CR_Diffusion_Dim   = CR_Diffusion_GX + CR_Diffusion_GY + CR_Diffusion_GZ;
-   CR_Diffusion_Space = CR_Diffusion_GX + 2 * CR_Diffusion_GY + 4 * CR_Diffusion_GZ;
-
 // (1-2) set the default values
    if ( CR_Diffusion_CenterX < 0.0 )  CR_Diffusion_CenterX = 0.5*amr->BoxSize[0];
    if ( CR_Diffusion_CenterY < 0.0 )  CR_Diffusion_CenterY = 0.5*amr->BoxSize[1];
    if ( CR_Diffusion_CenterZ < 0.0 )  CR_Diffusion_CenterZ = 0.5*amr->BoxSize[2];
+
+// set test problem dimensions
+   CR_Diffusion_Dim   = CR_Diffusion_GX + CR_Diffusion_GY + CR_Diffusion_GZ;
+   CR_Diffusion_Space = CR_Diffusion_GX + 2 * CR_Diffusion_GY + 4 * CR_Diffusion_GZ;
 
 // (1-3) check the runtime parameters
    if ( CR_Diffusion_Type == 0  ||  CR_Diffusion_Type == 1  ||  CR_Diffusion_Type == 2  ||  CR_Diffusion_Type == 3 )
@@ -253,6 +253,13 @@ void SetParameter()
 
    if ( CR_Diffusion_Type == 1 )
       Aux_Message( stderr, "WARNING : The analytical solution only works for short time evolution.\n" );
+
+   if ( CR_Diffusion_Mag_Type == 0 )
+   {
+      if ( OPT__INIT_BFIELD_BYVECPOT == 0 )
+         Aux_Message( stderr, "REMINDER : Uniform magnetic field can be initialized by vector potential.\n"
+                              "           --> set OPT__INIT_BFIELD_BYVECPOT = 2 to initialize by vector potential.\n" );
+   }
 
    if ( CR_Diffusion_Mag_Type == 1 )
    {
@@ -294,6 +301,7 @@ void SetParameter()
          Aux_Message( stderr, "REMINDER : This type of magnetic field will not be divergence free if initialized directly.\n"
                               "           --> set OPT__INIT_BFIELD_BYVECPOT = 2 to initialize by vector potential.\n" );
    }
+
 
 // (2) set the problem-specific derived parameters
 

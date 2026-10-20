@@ -56,7 +56,7 @@ extern void Hydro_RiemannSolver_HLLD( const int XYZ, real Flux_Out[], const real
 #endif
 #ifdef CR_DIFFUSION
 extern void CR_AddDiffuseFlux_1Face( const real g_ConVar[][ CUBE(FLU_NXT) ],
-                                           real FluxR[NCOMP_TOTAL_PLUS_MAG],
+                                           real Flux_Out[],
                                      const real FC_B, const real VarC[], const real VarR[],
                                      const int idx, const int d, const real dh,
                                      const MicroPhy_t *MicroPhy );

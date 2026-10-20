@@ -467,17 +467,17 @@ static real minmod( const real a, const real b )
 //               dh       : Cell size
 //               MicroPhy : Microphysics object
 //
-// Return      : FluxOut[]
+// Return      : Flux_Out[]
 //-----------------------------------------------------------------------------------------
 void CR_AddDiffuseFlux_1Face( const real Flu_In[][ CUBE(FLU_NXT) ],
-                                    real Flux_Out[NCOMP_TOTAL_PLUS_MAG],
+                                    real Flux_Out[],
                               const real FC_B, const real L_In[], const real R_In[],
                               const int idxL, const int d, const real dh,
                               const MicroPhy_t *MicroPhy )
 {
 
    const real _dh     = 1.0 / dh;
-   const int  didx[3] = { 1, FLU_NXT, FLU_NXT*FLU_NXT };
+   const int  didx[3] = { 1, FLU_NXT, SQR(FLU_NXT) };
    const int  TDir1   = (d+1)%3;    // transverse direction 1
    const int  TDir2   = (d+2)%3;    // transverse direction 2
 
