@@ -9,6 +9,12 @@ void Src_End_Deleptonization();
 #ifdef EXACT_COOLING
 void Src_End_ExactCooling();
 #endif
+#ifdef EXACT_COOLING_GENERAL
+void Src_End_ExactCooling_General();
+#endif
+#ifdef EXACT_COOLING_TEST
+void Src_End_ExactCooling_Test();
+#endif
 
 // this function pointer can be set by a test problem initializer for a non-built-in source term
 void (*Src_End_User_Ptr)() = NULL;
@@ -41,6 +47,14 @@ void Src_End()
 #  ifdef EXACT_COOLING
    if ( SrcTerms.ExactCooling )
       Src_End_ExactCooling();
+#  endif
+#  ifdef EXACT_COOLING_GENERAL
+   if ( SrcTerms.ExactCooling_General )
+      Src_End_ExactCooling_General();
+#  endif
+#  ifdef EXACT_COOLING_TEST
+   if ( SrcTerms.ExactCooling_Test )
+      Src_End_ExactCooling_Test();
 #  endif
 
 // users may not define Src_End_User_Ptr

@@ -144,6 +144,11 @@ void Init_Field()
    if ( Idx_TCool != TCOOL )    Aux_Error( ERROR_INFO, "inconsistent Idx_TCool (%d != %d) !!\n", Idx_TCool, TCOOL );
 #  endif
 
+#  ifdef EXACT_COOLING_GENERAL
+   Idx_TCoolG = AddField( "TCoolG", FIXUP_FLUX_NO, FIXUP_REST_NO, FLOOR_YES, NORMALIZE_NO, INTERP_FRAC_NO );
+   if ( Idx_TCoolG != TCOOLG )    Aux_Error( ERROR_INFO, "inconsistent Idx_TCoolG (%d != %d) !!\n", Idx_TCoolG, TCOOLG );
+#  endif
+
 #  ifdef COSMIC_RAY
    Idx_CRay = AddField( "CRay", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_NO, INTERP_FRAC_NO );
    if ( Idx_CRay != CRAY )    Aux_Error( ERROR_INFO, "inconsistent Idx_CRay (%d != %d) !!\n", Idx_CRay, CRAY );

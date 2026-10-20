@@ -9,6 +9,12 @@ void Src_Init_Deleptonization();
 #ifdef EXACT_COOLING
 void Src_Init_ExactCooling();
 #endif
+#ifdef EXACT_COOLING_GENERAL
+void Src_Init_ExactCooling_General();
+#endif
+#ifdef EXACT_COOLING_TEST
+void Src_Init_ExactCooling_Test();
+#endif
 
 // this function pointer can be set by a test problem initializer for a user-specified source term
 void (*Src_Init_User_Ptr)() = NULL;
@@ -39,6 +45,8 @@ void Src_Init()
 #  if ( MODEL == HYDRO )
    SrcTerms.Any |= SrcTerms.Deleptonization;
    SrcTerms.Any |= SrcTerms.ExactCooling;
+   SrcTerms.Any |= SrcTerms.ExactCooling_General;
+   SrcTerms.Any |= SrcTerms.ExactCooling_Test;
 #  endif
    SrcTerms.Any |= SrcTerms.User;
 
@@ -83,6 +91,30 @@ void Src_Init()
    SrcTerms.EC_TEFc_DevPtr            = NULL;
 #  endif // #ifdef EXACT_COOLING
 
+#  ifdef EXACT_COOLING_GENERAL
+   SrcTerms.ECG_FuncPtr               = NULL;
+   SrcTerms.ECG_CPUPtr                = NULL;
+#  ifdef GPU
+   SrcTerms.ECG_GPUPtr                = NULL;
+#  endif
+   SrcTerms.ECG_AuxArrayDevPtr_Flt    = NULL;
+   SrcTerms.ECG_AuxArrayDevPtr_Int    = NULL;
+   SrcTerms.ECG_TEF_Temp_DevPtr       = NULL;
+   SrcTerms.ECG_TEF_lambda_DevPtr     = NULL;
+   SrcTerms.ECG_TEF_alpha_DevPtr      = NULL;
+   SrcTerms.ECG_TEF_Y_DevPtr          = NULL;
+#  endif // #ifdef EXACT_COOLING_GENERAL
+
+#  ifdef EXACT_COOLING_TEST
+   SrcTerms.ECT_FuncPtr                = NULL;
+   SrcTerms.ECT_CPUPtr                 = NULL;
+#  ifdef GPU
+   SrcTerms.ECT_GPUPtr                 = NULL;
+#  endif
+   SrcTerms.ECT_AuxArrayDevPtr_Flt     = NULL;
+   SrcTerms.ECT_AuxArrayDevPtr_Int     = NULL;
+#  endif // #ifdef EXACT_COOLING_TEST
+
    SrcTerms.User_FuncPtr              = NULL;
    SrcTerms.User_CPUPtr               = NULL;
 #  ifdef GPU
@@ -123,7 +155,37 @@ void Src_Init()
    }
 #  endif // #ifdef EXACT_COOLING
 
-// (3) user-specified source term
+// (3) general exact cooling
+#  ifdef EXACT_COOLING_GENERAL
+   if ( SrcTerms.ExactCooling_General )
+   {
+      Src_Init_ExactCooling_General();
+
+//    check if the source-term function is set properly
+      if ( SrcTerms.ECG_FuncPtr == NULL )   Aux_Error( ERROR_INFO, "SrcTerms.ECG_FuncPtr == NULL !!\n" );
+      if ( SrcTerms.ECG_CPUPtr  == NULL )   Aux_Error( ERROR_INFO, "SrcTerms.ECG_CPUPtr  == NULL !!\n" );
+#     ifdef GPU
+      if ( SrcTerms.ECG_GPUPtr  == NULL )   Aux_Error( ERROR_INFO, "SrcTerms.ECG_GPUPtr  == NULL !!\n" );
+#     endif
+   }
+#  endif // #ifdef EXACT_COOLING_GENERAL
+
+// (4) test exact cooling
+#  ifdef EXACT_COOLING_TEST
+   if ( SrcTerms.ExactCooling_Test )
+   {
+      Src_Init_ExactCooling_Test();
+
+//    check if the source-term function is set properly
+      if ( SrcTerms.ECT_FuncPtr == NULL )   Aux_Error( ERROR_INFO, "SrcTerms.ECT_FuncPtr == NULL !!\n" );
+      if ( SrcTerms.ECT_CPUPtr  == NULL )   Aux_Error( ERROR_INFO, "SrcTerms.ECT_CPUPtr  == NULL !!\n" );
+#     ifdef GPU
+      if ( SrcTerms.ECT_GPUPtr  == NULL )   Aux_Error( ERROR_INFO, "SrcTerms.ECT_GPUPtr  == NULL !!\n" );
+#     endif
+   }
+#  endif // #ifdef EXACT_COOLING_TEST
+
+// (5) user-specified source term
    if ( SrcTerms.User )
    {
       if ( Src_Init_User_Ptr == NULL )       Aux_Error( ERROR_INFO, "Src_Init_User_Ptr == NULL !!\n" );
