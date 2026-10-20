@@ -114,7 +114,6 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
    const real   MinPres_No        = -1.0;
    const real   MinTemp_No        = -1.0;
    const real   MinEntr_No        = -1.0;
-   const bool   DE_Consistency_No = false;
 #  ifdef MASSIVE_PARTICLES
    const bool   TimingSendPar_No  = false;
    const bool   JustCountNPar_No  = false;
@@ -207,7 +206,7 @@ void Aux_FindWeightedAverageCenter( double WeightedAverageCenter[], const double
             {
                Prepare_PatchData( lv, amr->FluSgTime[lv][ amr->FluSg[lv] ], WeightingDensity[0][0][0], NULL, 0, NPG, PID0_List+Disp, WeightingDensityField, _NONE,
                                   INT_NONE, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                                  MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+                                  MinDens_No, MinPres_No, MinTemp_No, MinEntr_No );
             }
 
 //          use the "static" schedule for reproducibility

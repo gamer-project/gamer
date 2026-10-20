@@ -219,7 +219,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                         const int GhostSize, const int NPG, const int *PID0_List, long TVarCC, long TVarFC,
                         const IntScheme_t IntScheme_CC, const IntScheme_t IntScheme_FC, const PrepUnit_t PrepUnit,
                         const NSide_t NSide, const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
-                        const real MinDens, const real MinPres, const real MinTemp, const real MinEntr, const bool DE_Consistency );
+                        const real MinDens, const real MinPres, const real MinTemp, const real MinEntr );
 
 #if ( ELBDM_SCHEME == ELBDM_HYBRID )
 void Prepare_PatchData_HasWaveCounterpart( const int lv, bool h_HasWaveCounterpart[][ CUBE(HYB_NXT) ],

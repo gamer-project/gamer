@@ -57,7 +57,6 @@ real GetMaxPhaseDerivative( const int lv )
 
    const real Eps               = 1.0e-2;          // soften in the denominator for calculating dS_dt
    const bool IntPhase_No       = false;
-   const bool DE_Consistency_No = false;
    const real MinDens_No        = -1.0;
    const real MinPres_No        = -1.0;
    const real MinTemp_No        = -1.0;
@@ -107,18 +106,18 @@ real GetMaxPhaseDerivative( const int lv )
 //       prepare real part with NGhost ghost zone on each side (any interpolation scheme can be used)
          Prepare_PatchData( lv, Time[lv], &Flu_Array[0][REAL][0][0][0], NULL, NGhost, NPG, &PID0, _REAL, _NONE,
                             INT_MINMOD1D, INT_NONE, UNIT_PATCHGROUP, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                            MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+                            MinDens_No, MinPres_No, MinTemp_No, MinEntr_No );
 
 //       prepare imag part with NGhost ghost zone on each side (any interpolation scheme can be used)
          Prepare_PatchData( lv, Time[lv], &Flu_Array[0][IMAG][0][0][0], NULL, NGhost, NPG, &PID0, _IMAG, _NONE,
                             INT_MINMOD1D, INT_NONE, UNIT_PATCHGROUP, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                            MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+                            MinDens_No, MinPres_No, MinTemp_No, MinEntr_No );
 
 //       prepare potential with no ghost zone
 #        ifdef GRAVITY
          Prepare_PatchData( lv, Time[lv], &Pot_Array[0][0][0][0],       NULL,      0, NPG, &PID0, _POTE, _NONE,
                             INT_NONE,     INT_NONE, UNIT_PATCHGROUP, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                            MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+                            MinDens_No, MinPres_No, MinTemp_No, MinEntr_No );
 #        endif
 
 //       evaluate amplitude with soften

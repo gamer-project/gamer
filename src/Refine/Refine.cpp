@@ -918,7 +918,7 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             }
 
 
-#           if ( MODEL == HYDRO  &&  !defined SRHD )
+#           if ( MODEL == HYDRO  &&  !defined SRHD  &&  !defined DUAL_ENERGY )
 //          compute magnetic energy
 #           ifdef MHD
             const real Emag = MHD_GetCellCenteredBEnergy( Mag_FData[MAGX], Mag_FData[MAGY], Mag_FData[MAGZ],
@@ -927,30 +927,10 @@ void Refine( const int lv, const UseLBFunc_t UseLBFunc )
             const real Emag = NULL_REAL;
 #           endif
 
-//          ensure consistency between pressure, total energy density, and the dual-energy variable
-//          --> here we ALWAYS use the dual-energy variable to correct the total energy density
-//          --> we achieve that by setting the dual-energy switch to an extremely larger number and ignore
-//              the runtime parameter DUAL_ENERGY_SWITCH here
-#           ifdef DUAL_ENERGY
-            const bool CheckMinPres_Yes = true;
-            const real UseDual2FixEngy  = HUGE_NUMBER;
-            char dummy;    // we do not record the dual-energy status here
-
-            real Passive[NCOMP_PASSIVE];
-            for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = Flu_FData[ NCOMP_FLUID + v ][k][j][i];
-
-            Hydro_DualEnergyFix( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
-                                 Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i], Flu_FData[DUAL][k][j][i],
-                                 Passive, dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], CheckMinPres_Yes, MIN_PRES,
-                                 PassiveFloorMask, UseDual2FixEngy, Emag );
-
-#           else // #ifdef DUAL_ENERGY
-
 //          apply internal energy floor
             Flu_FData[ENGY][k][j][i]
                = Hydro_CheckMinEintInEngy( Flu_FData[DENS][k][j][i], Flu_FData[MOMX][k][j][i], Flu_FData[MOMY][k][j][i],
                                            Flu_FData[MOMZ][k][j][i], Flu_FData[ENGY][k][j][i], MIN_EINT, PassiveFloorMask, Emag );
-#           endif // #ifdef DUAL_ENERGY ... else ...
 #           endif // #if ( MODEL == HYDRO )
 
 

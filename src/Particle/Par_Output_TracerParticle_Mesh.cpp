@@ -21,7 +21,6 @@ void Par_Output_TracerParticle_Mesh()
 {
 
    const bool       IntPhase_No       = false;
-   const bool       DE_Consistency_No = false;
    const real       MinDens_No        = -1.0;
    const real       MinPres_No        = -1.0;
    const real       MinTemp_No        = -1.0;
@@ -125,7 +124,7 @@ void Par_Output_TracerParticle_Mesh()
             if ( TVar & AllVar_PreparePatch )
                Prepare_PatchData( lv, TimeNew, Var, NULL, ParGhost, 1, &PID0, TVar, _NONE,
                                   OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No,
-                                  OPT__BC_FLU, BC_Pot, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+                                  OPT__BC_FLU, BC_Pot, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No );
 
             else
             {

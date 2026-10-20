@@ -9,7 +9,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                            const long TVarFC, const int NVarFC_Tot, const int TVarFCIdxList[],
                            const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
                            const int BC_Face[], const real MinPres, const real MinTemp, const real MinEntr,
-                           const bool DE_Consistency, const real *FInterface[6] );
+                           const real *FInterface[6] );
 static void SetTargetSibling( int NTSib[], int *TSib[] );
 static int  Table_01( const int SibID, const char dim, const int Count, const int GhostSize );
 static int  Table_02( const int lv, const int PID, const int Side );
@@ -156,18 +156,13 @@ static void MHD_CheckDivB( const real *Data1PG_FC, const int GhostSize, const re
 //                                     --> The Guideline is to apply MinPres check whenever _PRES or _TEMP is required
 //                                         (because pressure field is NOT stored explicitly in each patch and thus existing data
 //                                         may still have pressure < MinPres due to round-off errors)
-//                DE_Consistency : Ensure the consistency between pressure, total energy density, and the dual-energy variable
-//                                 when DUAL_ENERGY is on
-//                                 --> Only apply to the ghost-zone interpolation on the assumption that the data stored
-//                                     in all patches already satisfy this consistency check
-//
 // Return      :  OutputCC, OutputFC
 //-------------------------------------------------------------------------------------------------------
 void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, real *OutputFC,
                         const int GhostSize, const int NPG, const int *PID0_List, long TVarCC, long TVarFC,
                         const IntScheme_t IntScheme_CC, const IntScheme_t IntScheme_FC, const PrepUnit_t PrepUnit,
                         const NSide_t NSide, const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
-                        const real MinDens, const real MinPres, const real MinTemp, const real MinEntr, const bool DE_Consistency )
+                        const real MinDens, const real MinPres, const real MinTemp, const real MinEntr )
 {
 
 // nothing to do if there is no target patch group
@@ -1610,7 +1605,7 @@ void Prepare_PatchData( const int lv, const double PrepTime, real *OutputCC, rea
                InterpolateGhostZone( lv-1, FaSibPID, IntData_CC, IntData_FC, IntData_CC_IntTime, Side, PrepTime, GhostSize,
                                      IntScheme_CC, IntScheme_FC, NTSib, TSib, TVarCCBuffer, NVarCC_Tot, NVarCC_FluBuffer,
                                      TVarCCIdxList_FluBuffer, NVarCC_Der, TVarCCList_Der, TVarFC, NVarFC_Tot, TVarFCIdxList,
-                                     IntPhase, FluBC, PotBC, BC_Face, MinPres, MinTemp, MinEntr, DE_Consistency,
+                                     IntPhase, FluBC, PotBC, BC_Face, MinPres, MinTemp, MinEntr,
                                      (const real **)FInterface_Ptr );
 
 

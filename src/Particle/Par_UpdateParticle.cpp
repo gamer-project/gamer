@@ -60,7 +60,6 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
    const ParInterp_t IntScheme    = amr->Par->Interp;
    const bool   UsePot            = ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT );
    const bool   IntPhase_No       = false;
-   const bool   DE_Consistency_No = false;
    const real   MinDens_No        = -1.0;
    const real   MinPres_No        = -1.0;
    const real   MinTemp_No        = -1.0;
@@ -259,7 +258,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
 #        endif // #ifdef STORE_POT_GHOST
             Prepare_PatchData( lv, PrepPotTime, Pot, NULL, PotGhost, 1, &PID0, _POTE, _NONE,
                                OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No,
-                               OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+                               OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No );
       } // if ( !UseStoredAcc  &&  UsePot )
 
 

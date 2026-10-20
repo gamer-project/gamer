@@ -348,7 +348,7 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
 #        endif
 
 
-//       use dual-energy fix before the general check
+//       enforce dual-energy consistency before the general check
 #        ifdef DUAL_ENERGY
          const bool CheckMinPres_No = false;
          const real UseDual2FixEngy = HUGE_NUMBER;
@@ -358,6 +358,10 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
             Hydro_DualEnergyFix( Temp[DENS], Temp[MOMX], Temp[MOMY], Temp[MOMZ], Temp[ENGY], Temp[DUAL], Temp+NCOMP_FLUID,
                                  dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2],
                                  CheckMinPres_No, NULL_REAL, PassiveFloorMask, UseDual2FixEngy, Emag );
+
+         else
+            Temp[ENGY] = Hydro_DensDual2Pres( Temp[DENS], Temp[DUAL], EoS_AuxArray_Flt[1],
+                                              CheckMinPres_No, NULL_REAL );
 #        endif
 
 
