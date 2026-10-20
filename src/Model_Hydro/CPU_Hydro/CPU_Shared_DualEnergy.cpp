@@ -253,6 +253,7 @@ real Hydro_DensPres2Dual( const real Dens, const real Pres, const real Gamma_m1 
 //                2. Invoked by Hydro_DualEnergyFix(), Flu_Close(), Hydro_Aux_Check_Negative(), and Flu_FixUp()
 //                   --> This function is invoked by both CPU and GPU codes
 //                3. A floor value "MinPres" is applied to the returned pressure if CheckMinPres is on
+//                4. With EXTRA_EOS_CHECK, validate the raw pressure before applying an optional floor
 //
 // Parameter   :  Dens         : Mass density
 //                Dual         : Dual-energy variable
@@ -276,6 +277,12 @@ real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Gamma_m1,
    Pres = Dual*POW( Dens, Gamma_m1 );
 #  elif ( DUAL_ENERGY == DE_EINT )
 #  error : DE_EINT is NOT supported yet !!
+#  endif
+
+// check the raw dual-derived pressure before applying an optional pressure floor
+#  ifdef EXTRA_EOS_CHECK
+   Hydro_IsUnphysical_Single( Pres, "pressure converted from dual energy", (real)0.0, HUGE_NUMBER,
+                              ERROR_INFO, UNPHY_VERBOSE );
 #  endif
 
 // apply a floor value

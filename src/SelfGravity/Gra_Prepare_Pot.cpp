@@ -22,7 +22,6 @@ void Gra_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_Ou
 {
 
    const bool IntPhase_No       = false;
-   const bool DE_Consistency_No = false;
    const real MinDens_No        = -1.0;
    const real MinPres_No        = -1.0;
    const real MinTemp_No        = -1.0;
@@ -30,7 +29,7 @@ void Gra_Prepare_Pot( const int lv, const double PrepTime, real h_Pot_Array_P_Ou
 
    Prepare_PatchData( lv, PrepTime, &h_Pot_Array_P_Out[0][0][0][0], NULL, GRA_GHOST_SIZE, NPG, PID0_List, _POTE, _NONE,
                       OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCH, (GRA_GHOST_SIZE==0)?NSIDE_00:NSIDE_06, IntPhase_No,
-                      OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+                      OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No );
 
 } // FUNCTION : Gra_Prepare_Pot
 

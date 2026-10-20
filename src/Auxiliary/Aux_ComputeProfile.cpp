@@ -469,12 +469,10 @@ void Aux_ComputeProfile( Profile_t *Prof[], const double Center[], const double 
                      const real MinPres_No         = -1.0;
                      const real MinTemp_No         = -1.0;
                      const real MinEntr_No         = -1.0;
-                     const bool DE_Consistency_Yes = true;
 
                      Prepare_PatchData( lv, PrepTime, &Patch_Data[TID][0][0][0][0], NULL, NGhost, NPG, &PID0,
                                         TVarBitIdx[p], _NONE, INT_NONE, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No,
-                                        OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
-                                        DE_Consistency_Yes );
+                                        OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No );
                   break; // default
                } // switch ( TVarBitIdx[p] )
 

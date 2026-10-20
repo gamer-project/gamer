@@ -51,9 +51,6 @@ void Flu_Prepare( const int lv, const double PrepTime,
    const real MinPres_No          = -1.0;
    const real MinTemp_No          = -1.0;
    const real MinEntr_No          = -1.0;
-   const bool DE_Consistency_Yes  = true;
-   const bool DE_Consistency_No   = false;
-   const bool DE_Consistency      = ( OPT__OPTIMIZE_AGGRESSIVE ) ? DE_Consistency_No : DE_Consistency_Yes;
    const real MinDens             = ( OPT__OPTIMIZE_AGGRESSIVE ) ? MinDens_No : MIN_DENS;
 
 
@@ -69,7 +66,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
 //                      FLU_GHOST_SIZE, NPG, PID0_List, _REAL|_IMAG|_PASSIVE, _NONE,
                         FLU_GHOST_SIZE, NPG, PID0_List, _REAL|_IMAG, _NONE,
                         OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, OPT__INT_PHASE,
-                        OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+                        OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No );
 
 #  if ( ELBDM_SCHEME == ELBDM_HYBRID )
    } else {
@@ -77,7 +74,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
 //                      HYB_GHOST_SIZE, NPG, PID0_List, _DENS|_PHAS|_PASSIVE, _NONE,
                         HYB_GHOST_SIZE, NPG, PID0_List, _DENS|_PHAS, _NONE,
                         OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, OPT__INT_PHASE,
-                        OPT__BC_FLU, BC_POT_NONE, MinDens,    MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+                        OPT__BC_FLU, BC_POT_NONE, MinDens,    MinPres_No, MinTemp_No, MinEntr_No );
    }
 #  endif
 
@@ -91,7 +88,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
    Prepare_PatchData( lv, PrepTime, h_Flu_Array_F_In[0][0], Mag_Array,
                       FLU_GHOST_SIZE, NPG, PID0_List, _TOTAL, _MAG,
                       OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
-                      OPT__BC_FLU, BC_POT_NONE, MinDens, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency );
+                      OPT__BC_FLU, BC_POT_NONE, MinDens, MinPres_No, MinTemp_No, MinEntr_No );
 
 #  endif // #if ( MODEL == ELBDM ) ... else ...
 
@@ -101,7 +98,7 @@ void Flu_Prepare( const int lv, const double PrepTime,
    Prepare_PatchData( lv, PrepTime, h_Pot_Array_USG_F[0], NULL,
                       USG_GHOST_SIZE_F, NPG, PID0_List, _POTE, _NONE,
                       OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No,
-                      OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+                      OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No );
 
 
 // prepare the corner array
