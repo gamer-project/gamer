@@ -233,6 +233,10 @@ void SetParameter()
    if ( CR_Diffusion_CenterY < 0.0 )  CR_Diffusion_CenterY = 0.5*amr->BoxSize[1];
    if ( CR_Diffusion_CenterZ < 0.0 )  CR_Diffusion_CenterZ = 0.5*amr->BoxSize[2];
 
+// set test problem dimensions
+   CR_Diffusion_Dim   = CR_Diffusion_GX + CR_Diffusion_GY + CR_Diffusion_GZ;
+   CR_Diffusion_Space = CR_Diffusion_GX + 2 * CR_Diffusion_GY + 4 * CR_Diffusion_GZ;
+
 // (1-3) check the runtime parameters
    if ( CR_Diffusion_Type == 0  ||  CR_Diffusion_Type == 1  ||  CR_Diffusion_Type == 2  ||  CR_Diffusion_Type == 3 )
       Aux_Error( ERROR_INFO, "CR_Diffusion_Type (%d) is not supported yet !! (Unless you have fixed the all the fluid except cosmic ray.)\n", CR_Diffusion_Type );
@@ -245,30 +249,61 @@ void SetParameter()
 
 
    if ( CR_Diffusion_Type == 0  ||  CR_Diffusion_Type == 1  ||  CR_Diffusion_Type == 2  ||  CR_Diffusion_Type == 3 )
-      Aux_Message( stderr, "WARNING : All the fluid except cosmic ray should be fixed to follow the analytical solution. The adiabatic work done term should be disable also.\n" );
+      Aux_Message( stderr, "WARNING : All the fluid except cosmic ray should be fixed to follow the analytical solution. The adiabatic work done term should also be disabled.\n" );
 
    if ( CR_Diffusion_Type == 1 )
-      Aux_Message( stderr, "WARNING : The analytical solution is only worked for the short time evolution." );
+      Aux_Message( stderr, "WARNING : The analytical solution only works for short time evolution.\n" );
+
+   if ( CR_Diffusion_Mag_Type == 0 )
+   {
+      if ( OPT__INIT_BFIELD_BYVECPOT == 0 )
+         Aux_Message( stderr, "REMINDER : Uniform magnetic field can be initialized by vector potential.\n"
+                              "           --> set OPT__INIT_BFIELD_BYVECPOT = 2 to initialize by vector potential.\n" );
+   }
 
    if ( CR_Diffusion_Mag_Type == 1 )
+   {
+      if ( CR_Diffusion_Dim != 2 )
+         Aux_Error( ERROR_INFO, "CR_Diffusion_Mag_Type = 1 is 2D only !!\n" );
+
       Aux_Message( stderr, "WARNING : CR_Diffusion_MagY and CR_Diffusion_MagZ is useless in this type of magnetic field.\n" );
 
+      if ( OPT__INIT_BFIELD_BYVECPOT == 0 )
+         Aux_Message( stderr, "REMINDER : This type of magnetic field will not be divergence free if initialized directly.\n"
+                              "           --> set OPT__INIT_BFIELD_BYVECPOT = 2 to initialize by vector potential.\n" );
+   }
+
    if ( CR_Diffusion_Mag_Type == 2 )
+   {
+      if ( OPT__INIT_BFIELD_BYVECPOT == 2 )
+         Aux_Error( ERROR_INFO, "OPT__INIT_BFIELD_BYVECPOT = 2 (by function) is not supported when CR_Diffusion_Mag_Type = 2 !!\n" );
+
       Aux_Message( stderr, "WARNING : This type of magnetic field is not divergence free.\n" );
+   }
 
    if ( CR_Diffusion_Mag_Type == 3 )
    {
+      if ( OPT__INIT_BFIELD_BYVECPOT == 2 )
+         Aux_Error( ERROR_INFO, "OPT__INIT_BFIELD_BYVECPOT = 2 (by function) is not supported when CR_Diffusion_Mag_Type = 3 !!\n" );
+
+      if ( CR_Diffusion_Dim == 1 )
+         Aux_Error( ERROR_INFO, "CR_Diffusion_Mag_Type = 3 does not support 1D !!\n" );
+
       Aux_Message( stderr, "WARNING : CR_Diffusion_MagY and CR_Diffusion_MagZ is useless in this type of magnetic field.\n" );
       Aux_Message( stderr, "WARNING : This type of magnetic field is not divergence free.\n" );
    }
 
    if ( CR_Diffusion_Mag_Type == 4 )
+   {
       Aux_Message( stderr, "WARNING : CR_Diffusion_MagY and CR_Diffusion_MagZ is useless in this type of magnetic field.\n" );
+
+      if ( OPT__INIT_BFIELD_BYVECPOT == 0 )
+         Aux_Message( stderr, "REMINDER : This type of magnetic field will not be divergence free if initialized directly.\n"
+                              "           --> set OPT__INIT_BFIELD_BYVECPOT = 2 to initialize by vector potential.\n" );
+   }
 
 
 // (2) set the problem-specific derived parameters
-   CR_Diffusion_Dim   = CR_Diffusion_GX + CR_Diffusion_GY + CR_Diffusion_GZ;
-   CR_Diffusion_Space = CR_Diffusion_GX + 2 * CR_Diffusion_GY + 4 * CR_Diffusion_GZ;
 
 
 // (3) reset other general-purpose parameters
@@ -401,15 +436,15 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
               D2 = y - CR_Diffusion_CenterY - CR_Diffusion_Vy*Time;
               D3 = z - CR_Diffusion_CenterZ - CR_Diffusion_Vz*Time;
               break;
-      case 5: magD1 = CR_Diffusion_MagY; magD2 = CR_Diffusion_MagZ; magD3 = CR_Diffusion_MagX;
-              D1 = y - CR_Diffusion_CenterY - CR_Diffusion_Vy*Time;
-              D2 = z - CR_Diffusion_CenterZ - CR_Diffusion_Vz*Time;
-              D3 = x - CR_Diffusion_CenterX - CR_Diffusion_Vx*Time;
-              break;
-      case 6: magD1 = CR_Diffusion_MagZ; magD2 = CR_Diffusion_MagX; magD3 = CR_Diffusion_MagY;
+      case 5: magD1 = CR_Diffusion_MagZ; magD2 = CR_Diffusion_MagX; magD3 = CR_Diffusion_MagY;
               D1 = z - CR_Diffusion_CenterZ - CR_Diffusion_Vz*Time;
               D2 = x - CR_Diffusion_CenterX - CR_Diffusion_Vx*Time;
               D3 = y - CR_Diffusion_CenterY - CR_Diffusion_Vy*Time;
+              break;
+      case 6: magD1 = CR_Diffusion_MagY; magD2 = CR_Diffusion_MagZ; magD3 = CR_Diffusion_MagX;
+              D1 = y - CR_Diffusion_CenterY - CR_Diffusion_Vy*Time;
+              D2 = z - CR_Diffusion_CenterZ - CR_Diffusion_Vz*Time;
+              D3 = x - CR_Diffusion_CenterX - CR_Diffusion_Vx*Time;
               break;
 
 //    3D simulation
@@ -649,9 +684,11 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
 
    switch ( CR_Diffusion_Space )
    {
-      case 3: D1 = pos[0];        D2 = pos[1] * _one; D3 = 0.0;           break;
-      case 5: D1 = pos[0] * _one; D2 = 0.0;           D3 = pos[2];        break;
-      case 6: D1 = 0.0;           D2 = pos[1];        D3 = pos[2] * _one; break;
+      case 3 : D1 = pos[0];        D2 = pos[1] * _one; D3 = 0.0;           break;
+      case 5 : D1 = pos[0] * _one; D2 = 0.0;           D3 = pos[2];        break;
+      case 6 : D1 = 0.0;           D2 = pos[1];        D3 = pos[2] * _one; break;
+      case 7 : D1 = pos[0];        D2 = pos[1];        D3 = pos[2];        break;
+      default: D1 = 0.0;           D2 = 0.0;           D3 = 0.0;           break;
    } // switch ( CR_Diffusion_Space )
 
    if      ( CR_Diffusion_Mag_Type == 0 )
@@ -664,9 +701,9 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
    else if ( CR_Diffusion_Mag_Type == 1 )
    {
       const double r = SQRT( SQR(D1) + SQR(D2) + SQR(D3) );
-      magnetic[MAGX] = (D1 != 0.0) ? CR_Diffusion_MagX * (D2+D3)/r : 0.0;
-      magnetic[MAGY] = (D2 != 0.0) ? CR_Diffusion_MagX * (D1+D3)/r : 0.0;
-      magnetic[MAGZ] = (D3 != 0.0) ? CR_Diffusion_MagX * (D1+D2)/r : 0.0;
+      magnetic[MAGX] = (r > 0.0 && CR_Diffusion_GX != 0) ? CR_Diffusion_MagX * (D2+D3)/r : 0.0;
+      magnetic[MAGY] = (r > 0.0 && CR_Diffusion_GY != 0) ? CR_Diffusion_MagX * (D1+D3)/r : 0.0;
+      magnetic[MAGZ] = (r > 0.0 && CR_Diffusion_GZ != 0) ? CR_Diffusion_MagX * (D1+D2)/r : 0.0;
    }
 
    else if ( CR_Diffusion_Mag_Type == 2 )
@@ -679,9 +716,9 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
    else if ( CR_Diffusion_Mag_Type == 3 )
    {
       const double r = SQRT( SQR(D1) + SQR(D2) + SQR(D3) );
-      magnetic[MAGX] = CR_Diffusion_MagX * D1 / r;
-      magnetic[MAGY] = CR_Diffusion_MagX * D2 / r;
-      magnetic[MAGZ] = CR_Diffusion_MagX * D3 / r;
+      magnetic[MAGX] = (r > 0.0) ? CR_Diffusion_MagX * D1 / r : 0.0;
+      magnetic[MAGY] = (r > 0.0) ? CR_Diffusion_MagX * D2 / r : 0.0;
+      magnetic[MAGZ] = (r > 0.0) ? CR_Diffusion_MagX * D3 / r : 0.0;
    }
 
    else if ( CR_Diffusion_Mag_Type == 4 )
@@ -693,7 +730,7 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
       const double _factor = 1. / SQR( 1. + CUBE(r) * _r0_cub );
       magnetic[MAGX] =  1.5 * CR_Diffusion_MagX * pos[0] * pos[2] * r * _r0_cub * _factor;
       magnetic[MAGY] =  1.5 * CR_Diffusion_MagX * pos[1] * pos[2] * r * _r0_cub * _factor;
-      magnetic[MAGZ] =  SQRT(_factor)
+      magnetic[MAGZ] =  SQRT(_factor) * CR_Diffusion_MagX
                        -1.5 * CR_Diffusion_MagX * (pos[0]*pos[0] + pos[1]*pos[1]) * r * _r0_cub * _factor;
    }
 
@@ -701,6 +738,86 @@ void SetBFieldIC( real magnetic[], const double x, const double y, const double 
       Aux_Error( ERROR_INFO, "CR_Diffusion_Mag_Type = %d is NOT supported [0/1/2/3/4] !!\n", CR_Diffusion_Mag_Type );
 
 } // FUNCTION : SetBFieldIC
+
+
+
+//-------------------------------------------------------------------------------------------------------
+// Function    :  Init_BField_ByVecPot_CR_Diffusion
+// Description :  Function template to initialize the magnetic vector potential
+//
+// Note        :  1. Invoked by MHD_Init_BField_ByVecPot_Function() using the function pointer
+//                   "Init_BField_ByVecPot_User_Ptr", which must be set by a test problem initializer
+//                2. This function will be invoked by multiple OpenMP threads when OPENMP is enabled
+//                   (unless OPT__INIT_GRID_WITH_OMP is disabled)
+//                   --> Please ensure that everything here is thread-safe
+//
+// Parameter   :  x/y/z     : Target physical coordinates
+//                Time      : Target physical time
+//                lv        : Target refinement level
+//                Component : Component of the output magnetic vector potential
+//                            --> Supported components: 'x', 'y', 'z'
+//                AuxArray  : Auxiliary array
+//                            --> Useless since it is currently fixed to NULL
+//
+// Return      :  "Component"-component of the magnetic vector potential at (x, y, z, Time)
+//-------------------------------------------------------------------------------------------------------
+double Init_BField_ByVecPot_CR_Diffusion( const double x, const double y, const double z, const double Time,
+                                          const int lv, const char Component, double AuxArray[] )
+{
+
+   double mag_vecpot;
+
+   const double pos[3] = {x - CR_Diffusion_CenterX, y - CR_Diffusion_CenterY, z - CR_Diffusion_CenterZ};
+
+   if      ( CR_Diffusion_Mag_Type == 0 )
+   {
+      switch ( Component )
+      {
+         case 'x' : mag_vecpot = 0.5*(CR_Diffusion_MagY*pos[2] - CR_Diffusion_MagZ*pos[1]);  break;
+         case 'y' : mag_vecpot = 0.5*(CR_Diffusion_MagZ*pos[0] - CR_Diffusion_MagX*pos[2]);  break;
+         case 'z' : mag_vecpot = 0.5*(CR_Diffusion_MagX*pos[1] - CR_Diffusion_MagY*pos[0]);  break;
+         default  : Aux_Error( ERROR_INFO, "unsupported component (%c) !!\n", Component );
+      }
+   }
+
+   else if ( CR_Diffusion_Mag_Type == 1 )
+   {
+      switch ( Component )
+      {
+         case 'x' : mag_vecpot = (CR_Diffusion_GX == 0) ? -CR_Diffusion_MagX * SQRT( SQR(pos[1]) + SQR(pos[2]) ) : 0.0;  break;
+         case 'y' : mag_vecpot = (CR_Diffusion_GY == 0) ? -CR_Diffusion_MagX * SQRT( SQR(pos[0]) + SQR(pos[2]) ) : 0.0;  break;
+         case 'z' : mag_vecpot = (CR_Diffusion_GZ == 0) ? -CR_Diffusion_MagX * SQRT( SQR(pos[0]) + SQR(pos[1]) ) : 0.0;  break;
+         default  : Aux_Error( ERROR_INFO, "unsupported component (%c) !!\n", Component );
+      }
+   }
+
+   else if ( CR_Diffusion_Mag_Type == 2  ||  CR_Diffusion_Mag_Type == 3 )
+   {
+      Aux_Error( ERROR_INFO, "OPT__INIT_BFIELD_BYVECPOT = 2 (by function) is not supported when CR_Diffusion_Mag_Type = %d !!\n", CR_Diffusion_Mag_Type );
+   }
+
+   else if ( CR_Diffusion_Mag_Type == 4 )
+   {
+//    Reference: Suwa+ 2007, PASJ, 59, 771
+//    A_phi = 0.5 * B0 * ( R0^3 / (r^3 + R0^3) ) * r * sin(theta), A_r = A_theta = 0
+      const double r = SQRT( SQR(pos[0]) + SQR(pos[1]) + SQR(pos[2]) );
+      const double _r0_cub = 1. / CUBE(CR_Diffusion_R0_B);
+      const double _factor = 1. / ( 1. + CUBE(r) * _r0_cub );
+      switch ( Component )
+      {
+         case 'x' : mag_vecpot = -0.5 * CR_Diffusion_MagX * pos[1] * _factor;  break;
+         case 'y' : mag_vecpot =  0.5 * CR_Diffusion_MagX * pos[0] * _factor;  break;
+         case 'z' : mag_vecpot =  0.0;                                         break;
+         default  : Aux_Error( ERROR_INFO, "unsupported component (%c) !!\n", Component );
+      }
+   }
+
+   else
+      Aux_Error( ERROR_INFO, "CR_Diffusion_Mag_Type = %d is NOT supported [0/1/2/3/4] !!\n", CR_Diffusion_Mag_Type );
+
+   return mag_vecpot;
+
+} // FUNCTION : Init_BField_ByVecPot_CR_Diffusion
 
 
 
@@ -793,6 +910,7 @@ void Init_TestProb_Hydro_CR_Diffusion()
    Init_Function_User_Ptr        = SetGridIC;
 #  ifdef MHD
    Init_Function_BField_User_Ptr = SetBFieldIC;
+   Init_BField_ByVecPot_User_Ptr = Init_BField_ByVecPot_CR_Diffusion;
 #  endif
    Output_User_Ptr               = OutputError;
 #  ifdef SUPPORT_HDF5
