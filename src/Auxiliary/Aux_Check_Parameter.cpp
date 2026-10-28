@@ -1137,9 +1137,16 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
                  "FLU_GHOST_SIZE = 3", "MHM_RP scheme + PLM reconstruction + non-EXTPRE limiter" );
 
+#  ifdef CR_TWOMOMENT // CR_TWOMOMENT widens FLU_GHOST_SIZE by one (see Macro.h)
+   if ( OPT__LR_LIMITER != LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE > 4  &&  MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
+                   "FLU_GHOST_SIZE = 4", "MHM_RP scheme + PLM reconstruction + CR_TWOMOMENT + non-EXTPRE limiter" );
+#  else // #ifdef CR_TWOMOMENT
    if ( OPT__LR_LIMITER != LR_LIMITER_EXTPRE  &&  FLU_GHOST_SIZE > 3  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
                    "FLU_GHOST_SIZE = 3", "MHM_RP scheme + PLM reconstruction + non-EXTPRE limiter" );
+#  endif // #ifdef CR_TWOMOMENT ... else ...
+
 #  endif // #if ( LR_SCHEME == PLM )
 
 #  if ( LR_SCHEME == PPM )
@@ -1147,9 +1154,16 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "please set \"%s\" for \"%s\" !!\n",
                  "FLU_GHOST_SIZE = 4", "MHM_RP scheme + PPM reconstruction + non-EXTPRE limiter" );
 
+#  ifdef CR_TWOMOMENT // CR_TWOMOMENT widens FLU_GHOST_SIZE by one (see Macro.h)
+   if ( FLU_GHOST_SIZE > 5  &&  MPI_Rank == 0 )
+      Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
+                   "FLU_GHOST_SIZE = 5", "MHM_RP scheme + PPM reconstruction + CR_TWOMOMENT + non-EXTPRE limiter" );
+#  else // #ifdef CR_TWOMOMENT
    if ( FLU_GHOST_SIZE > 4  &&  MPI_Rank == 0 )
       Aux_Message( stderr, "WARNING : please set \"%s\" in \"%s\" for higher performance !!\n",
                    "FLU_GHOST_SIZE = 4", "MHM_RP scheme + PPM reconstruction + non-EXTPRE limiter" );
+#  endif // #ifdef CR_TWOMOMENT  ... else ...
+
 #  endif // #if ( LR_SCHEME == PPM )
 
 #  endif // #if ( FLU_SCHEME == MHM_RP )
@@ -2012,6 +2026,56 @@ void Aux_Check_Parameter()
    } // if ( MPI_Rank == 0 )
 
 #endif // ifdef CR_DIFFUSION
+
+
+// cosmic-ray two-moment method
+// =======================================================================================
+#ifdef CR_TWOMOMENT
+
+// errors
+// ------------------------------
+#  ifndef MHD
+#     error : ERROR : must enable MHD for CR_TWOMOMENT (CR transport is field-aligned) !!
+#  endif
+
+#  if ( FLU_SCHEME != MHM_RP )
+#     error : ERROR : CR_TWOMOMENT currently only supports the MHM_RP fluid scheme !!
+#  endif
+
+#  if ( EOS != EOS_GAMMA )
+#     error : ERROR : CR_TWOMOMENT must use EOS_GAMMA !! CR pressure is handled by the two-moment source term
+#  endif
+
+#  ifdef DUAL_ENERGY
+#     error : ERROR : DUAL_ENERGY is not supported for CR_TWOMOMENT !!
+#  endif
+
+// one extra ghost layer for the outermost ADV_* in CR_UpdateOpacity()
+#  if ( FLU_GHOST_SIZE != 3 + LR_GHOST_SIZE )
+#     error : ERROR : CR_TWOMOMENT requires FLU_GHOST_SIZE == 3 + LR_GHOST_SIZE !!
+#  endif
+
+   if ( OPT__LR_LIMITER == LR_LIMITER_EXTPRE )
+      Aux_Error( ERROR_INFO, "OPT__LR_LIMITER == LR_LIMITER_EXTPRE is not supported for CR_TWOMOMENT !!\n" );
+
+   if ( OPT__1ST_FLUX_CORR != FIRST_FLUX_CORR_NONE )
+      Aux_Error( ERROR_INFO, "The 1st-order flux correction re-updates CR fields with hydro-only 1st-order fluxes "
+                             "(no two-moment fluxes) !!\n" );
+
+// warning
+// ------------------------------
+   if ( MPI_Rank == 0 ) {
+      if ( CR_CFL < 0.0  ||  CR_CFL > 1.0 )
+         Aux_Message( stderr, "WARNING : CR_CFL (%14.7e) is not within the normal range [0...1] !!\n", CR_CFL );
+
+//    see CPU_dtSolver_HydroCFL() in CPU_dtSolver_HydroCFL.cpp
+      if ( CR_CFL > DT__FLUID )
+         Aux_Message( stderr, "WARNING : CR_CFL (%14.7e) > DT__FLUID (%14.7e) will not be "
+                              "good when gas speeds exceed CR_VMAX !!\n", CR_CFL, DT__FLUID );
+
+   } // if ( MPI_Rank == 0 )
+
+#endif // ifdef CR_TWOMOMENT
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "Aux_Check_Parameter ... done\n" );

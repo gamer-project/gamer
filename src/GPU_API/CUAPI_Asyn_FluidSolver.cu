@@ -17,7 +17,11 @@ __global__ void CUFLU_FluidSolver_RTVD(
 #elif ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP )
 __global__
 void CUFLU_FluidSolver_MHM(
+#ifdef CR_TWOMOMENT
+         real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+#else
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+#endif
          real   g_Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
    const real   g_Mag_Array_In [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
          real   g_Mag_Array_Out[][NCOMP_MAG][ PS2P1*SQR(PS2) ],

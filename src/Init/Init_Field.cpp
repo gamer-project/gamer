@@ -139,6 +139,27 @@ void Init_Field()
 // 4. must put all built-in scalars at the END of the field list and with the same order as their
 //    corresponding symbolic constants (e.g., DUAL/CRAY) defined in Macro.h
 //    --> as we still rely on these constants (e.g., DENS, DUAL) in the fluid solvers
+#  ifdef CR_TWOMOMENT
+// CR streaming advection fields (could be optimized for CR streaming only. Ref: gamer-project/gamer/#548)
+   Idx_ADV_VZ    = AddField( "ADV_VZ",    FIXUP_FLUX_NO, FIXUP_REST_YES, FLOOR_NO, NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_ADV_VY    = AddField( "ADV_VY",    FIXUP_FLUX_NO, FIXUP_REST_YES, FLOOR_NO, NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_ADV_VX    = AddField( "ADV_VX",    FIXUP_FLUX_NO, FIXUP_REST_YES, FLOOR_NO, NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_ADV_SIGMA = AddField( "ADV_SIGMA", FIXUP_FLUX_NO, FIXUP_REST_YES, FLOOR_NO, NORMALIZE_NO, INTERP_FRAC_NO );
+   if ( Idx_ADV_VZ    != ADV_VZ    )    Aux_Error( ERROR_INFO, "inconsistent Idx_ADV_VZ    (%d != %d) !!\n", Idx_ADV_VZ,    ADV_VZ    );
+   if ( Idx_ADV_VY    != ADV_VY    )    Aux_Error( ERROR_INFO, "inconsistent Idx_ADV_VY    (%d != %d) !!\n", Idx_ADV_VY,    ADV_VY    );
+   if ( Idx_ADV_VX    != ADV_VX    )    Aux_Error( ERROR_INFO, "inconsistent Idx_ADV_VX    (%d != %d) !!\n", Idx_ADV_VX,    ADV_VX    );
+   if ( Idx_ADV_SIGMA != ADV_SIGMA )    Aux_Error( ERROR_INFO, "inconsistent Idx_ADV_SIGMA (%d != %d) !!\n", Idx_ADV_SIGMA, ADV_SIGMA );
+// CR fields
+   Idx_CR_F3 = AddField( "CR_F3", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_NO, NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_CR_F2 = AddField( "CR_F2", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_NO, NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_CR_F1 = AddField( "CR_F1", FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_NO, NORMALIZE_NO, INTERP_FRAC_NO );
+   Idx_CR_E  = AddField( "CR_E" , FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_NO, INTERP_FRAC_NO );
+   if ( Idx_CR_F3 != CR_F3 )    Aux_Error( ERROR_INFO, "inconsistent Idx_CR_F3 (%d != %d) !!\n", Idx_CR_F3, CR_F3 );
+   if ( Idx_CR_F2 != CR_F2 )    Aux_Error( ERROR_INFO, "inconsistent Idx_CR_F2 (%d != %d) !!\n", Idx_CR_F2, CR_F2 );
+   if ( Idx_CR_F1 != CR_F1 )    Aux_Error( ERROR_INFO, "inconsistent Idx_CR_F1 (%d != %d) !!\n", Idx_CR_F1, CR_F1 );
+   if ( Idx_CR_E  != CR_E  )    Aux_Error( ERROR_INFO, "inconsistent Idx_CR_E  (%d != %d) !!\n", Idx_CR_E,  CR_E  );
+#  endif
+
 #  ifdef EXACT_COOLING
    Idx_TCool = AddField( "TCool", FIXUP_FLUX_NO, FIXUP_REST_NO, FLOOR_YES, NORMALIZE_NO, INTERP_FRAC_NO );
    if ( Idx_TCool != TCOOL )    Aux_Error( ERROR_INFO, "inconsistent Idx_TCool (%d != %d) !!\n", Idx_TCool, TCOOL );

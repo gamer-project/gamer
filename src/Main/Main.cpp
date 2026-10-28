@@ -402,6 +402,21 @@ double DT__CR_DIFFUSION;
 double CR_DIFF_MIN_B;
 #endif
 
+// c. cosmic-ray two-moment
+#ifdef CR_TWOMOMENT
+bool CR_SOURCE;
+bool CR_STREAM;
+bool CR_EC_SOURCE;
+double CR_VMAX;
+double CR_SIGMA;
+double CR_SIGMA_PERP;
+double CR_MAX_OPACITY;
+double CR_TAU_ASYM_LIM;
+double CR_TAUFACT;
+bool   CR_VEL_FLX_FLAG;
+double CR_CFL;
+#endif
+
 
 // 3. CPU (host) arrays for transferring data between CPU and GPU
 // =======================================================================================================

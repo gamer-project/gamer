@@ -261,6 +261,16 @@ double Mis_GetTimeStep( const int lv, const double dTime_SyncFaLv, const double 
 #  endif
 
 
+// 1.12 CRITERION TWELVE : cosmic ray streaming reduced speed of light (MIGHT BE REDUNDANT WITH CRITERION ONE??)
+// =============================================================================================================
+// --> always >= the CR criterion CR_CFL*dh/max(|v|+c_fast, CR_VMAX) in CRITERION ONE (see CPU_dtSolver_HydroCFL.cpp)
+// --> not required for OPT__FREEZE_FLUID either since it also freezes CRs (dt = 0 in InvokeSolver.cpp)
+#  ifdef CR_TWOMOMENT
+   dTime[NdTime] = dTime_dt * MicroPhy.CR_cfl * amr->dh[lv] / MicroPhy.CR_vmax;
+   sprintf( dTime_Name[NdTime++], "%s", "CR_Stream" );
+#  endif
+
+
 
 // 2. get the minimum time-step from all criteria
 // =============================================================================================================

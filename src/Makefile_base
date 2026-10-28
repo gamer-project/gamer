@@ -379,6 +379,18 @@ vpath %.cu     Microphysics/CosmicRayDiffusion
 endif # CR_DIFFUSION
 
 
+# cosmic-ray two-moment source files (included only if "CR_TWOMOMENT" is turned on)
+# ------------------------------------------------------------------------------------
+ifeq "$(filter -DCR_TWOMOMENT, $(SIMU_OPTION))" "-DCR_TWOMOMENT"
+CPU_FILE    += CPU_CR_TwoMoment.cpp
+
+GPU_FILE    += CUFLU_CR_TwoMoment.cu
+
+vpath %.cpp    Model_Hydro/CPU_Hydro
+vpath %.cu     Model_Hydro/GPU_Hydro
+endif # CR_TWOMOMENT
+
+
 # test problem source files
 # --> just compile all .cpp and .cu files under TestProblem/*/*/
 # ------------------------------------------------------------------------------------

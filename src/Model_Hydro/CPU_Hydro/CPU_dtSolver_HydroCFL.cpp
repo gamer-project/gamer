@@ -203,6 +203,10 @@ void CPU_dtSolver_HydroCFL  ( real g_dt_Array[], const real g_Flu_Array[][FLU_NI
 
 #     ifdef SRHD
       g_dt_Array[p] = dhSafety / ( MaxCFL / SQRT( (real)1.0 + MaxCFL*MaxCFL ) );
+#     elif ( defined CR_TWOMOMENT )
+//    CR signal speed = max( |v|+c_fast, CR_VMAX )
+//    --> CR_VMAX is uniform, so FMAX() can be applied after the reduction of MaxCFL
+      g_dt_Array[p] = FMIN( dhSafety/MaxCFL, MicroPhy.CR_cfl*dh / FMAX(MicroPhy.CR_vmax, MaxCFL) );
 #     else
       g_dt_Array[p] = dhSafety/MaxCFL;
 #     endif
