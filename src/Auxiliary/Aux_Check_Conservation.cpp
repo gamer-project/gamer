@@ -80,7 +80,6 @@ void Aux_Check_Conservation( const char *comment )
    const int    NVar_NoPassive    = 11;   // 11: mass, momentum (x/y/z), angular momentum (x/y/z), kinetic/gravitational/self-interaction/total energies
    const int    idx_etot_flu      = NVar_NoPassive - 1;
    const bool   IntPhase_No       = false;
-   const bool   DE_Consistency_No = false;
    const int    NGhost            = 1;    // number of ghost zones for calculating the gradient of wave function
    const int    Size_Flu          = PS1 + 2*NGhost;
    const int    NPG               = 1;
@@ -164,7 +163,7 @@ void Aux_Check_Conservation( const char *comment )
 
          Prepare_PatchData( lv, Time[lv], Flu_ELBDM[0][0][0][0], NULL, NGhost, NPG, &PID0, TVar, _NONE,
                             IntScheme, INT_NONE, UNIT_PATCH, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                            MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+                            MinDens_No, MinPres_No, MinTemp_No, MinEntr_No );
 #        endif // #if ( MODEL == ELBDM )
 
          for (int PID=PID0; PID<PID0+8; PID++)

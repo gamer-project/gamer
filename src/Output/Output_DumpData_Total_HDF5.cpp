@@ -828,7 +828,6 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 // 5-2. start to dump data (serial instead of parallel)
    const bool IntPhase_No         = false;
-   const bool DE_Consistency_No   = false;
    const real MinDens_No          = -1.0;
    const real MinPres_No          = -1.0;
    const real MinTemp_No          = -1.0;
@@ -950,7 +949,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   Prepare_PatchData( lv, Time[lv], FieldData[0][0][0], NULL, 0, amr->NPatchComma[lv][1]/8, PID0List,
                                      ( OPT__OUTPUT_PAR_DENS == PAR_OUTPUT_DENS_PAR_ONLY ) ? _PAR_DENS : _TOTAL_DENS, _NONE,
                                      OPT__RHO_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                                     MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+                                     MinDens_No, MinPres_No, MinTemp_No, MinEntr_No );
                }
 #              endif
 
@@ -982,8 +981,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //                we do not check minimum pressure here
                   Prepare_PatchData( lv, Time[lv], FieldData[0][0][0], NULL, 0, amr->NPatchComma[lv][1]/8, PID0List,
                                      _PRES, _NONE, OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_00,
-                                     IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
-                                     DE_Consistency_No );
+                                     IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No );
                }
 
 //             d-2. gas temperature
@@ -1086,8 +1084,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //                       is fixed to "[Der_NP][NCOMP_TOTAL][CUBE(DER_NXT)]" even though some fields may be useless
                      Prepare_PatchData( lv, Time[lv], Der_FluInTmp, NULL, DER_GHOST_SIZE, 1, &PID0,
                                         _DENS|_MOMX|_MOMY|_MOMZ, _NONE, OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26,
-                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
-                                        DE_Consistency_No );
+                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No );
 
 //                   type casting for convenience
                      real (*Der_FluInTmp3D)[4][ CUBE(DER_NXT) ] = ( real (*)[4][ CUBE(DER_NXT) ] )Der_FluInTmp;
@@ -1119,8 +1116,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //                   --> must prepare all NCOMP_TOTAL and NCOMP_MAG fields
                      Prepare_PatchData( lv, Time[lv], Der_FluIn[0][0], Der_MagFC[0][0], DER_GHOST_SIZE, 1, &PID0,
                                         _TOTAL, _MAG, OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCH, NSIDE_26,
-                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
-                                        DE_Consistency_No );
+                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No );
 
                      for (int LocalID=0; LocalID<8; LocalID++)
                      {
@@ -1300,8 +1296,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   {
                      Prepare_PatchData( lv, Time[lv], Der_FluIn[0][0], NULL, DER_GHOST_SIZE, 1, &PID0,
                                         _TOTAL, _NONE, OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26,
-                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
-                                        DE_Consistency_No );
+                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No );
 
                      for (int LocalID=0; LocalID<8; LocalID++)
                      {
@@ -1319,8 +1314,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   {
                      Prepare_PatchData( lv, Time[lv], Der_FluIn[0][0], NULL, DER_GHOST_SIZE, 1, &PID0,
                                         _TOTAL, _NONE, OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26,
-                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
-                                        DE_Consistency_No );
+                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No );
                      for (int LocalID=0; LocalID<8; LocalID++)
                      {
 //                      compute and store the target derived field
@@ -1338,8 +1332,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   {
                      Prepare_PatchData( lv, Time[lv], Der_FluIn[0][0], NULL, DER_GHOST_SIZE, 1, &PID0,
                                         _TOTAL, _NONE, OPT__FLU_INT_SCHEME, INT_NONE, UNIT_PATCH, NSIDE_26,
-                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
-                                        DE_Consistency_No );
+                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No );
                      for (int LocalID=0; LocalID<8; LocalID++)
                      {
 //                      compute and store the target derived field
@@ -1360,8 +1353,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 //                   --> must prepare all NCOMP_TOTAL and NCOMP_MAG fields
                      Prepare_PatchData( lv, Time[lv], Der_FluIn[0][0], Der_MagFC[0][0], DER_GHOST_SIZE, 1, &PID0,
                                         _TOTAL, _MAG, OPT__FLU_INT_SCHEME, OPT__MAG_INT_SCHEME, UNIT_PATCH, NSIDE_26,
-                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No,
-                                        DE_Consistency_No );
+                                        IntPhase_No, OPT__BC_FLU, BC_POT_NONE, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No );
 
                      for (int LocalID=0; LocalID<8; LocalID++)
                      {

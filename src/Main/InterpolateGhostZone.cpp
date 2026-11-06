@@ -80,8 +80,6 @@ void SetTempIntPara( const int lv, const int Sg0, const double PrepTime, const d
 //                PotBC              : Gravity boundary condition (not used currently)
 //                BC_Face            : Priority of the B.C. along different boundary faces (z>y>x)
 //                MinPres/Temp/Entr  : Minimum allowed pressure/temperature/entropy (<0.0 ==> off)
-//                DE_Consistency     : Ensure the consistency between pressure, total energy density, and the
-//                                     dual-energy variable when DUAL_ENERGY is on
 //                FInterface         : B field on the coarse-fine interfaces for the divergence-preserving interpolation
 //-------------------------------------------------------------------------------------------------------
 void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real IntData_FC[], real IntData_CC_IntTime[],
@@ -93,7 +91,7 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
                            const long TVarFC, const int NVarFC_Tot, const int TVarFCIdxList[],
                            const bool IntPhase, const OptFluBC_t FluBC[], const OptPotBC_t PotBC,
                            const int BC_Face[], const real MinPres, const real MinTemp, const real MinEntr,
-                           const bool DE_Consistency, const real *FInterface[6] )
+                           const real *FInterface[6] )
 {
 
 // check
@@ -1928,63 +1926,6 @@ void InterpolateGhostZone( const int lv, const int PID, real IntData_CC[], real 
    delete [] CData_FC;
 
 
-
-// d. ensure the consistency between pressure, total energy density, and the dual-energy variable
-//    when DUAL_ENERGY is on
-//    --> we don't have to check the minimum pressure here when DUAL_ENERGY is off
-//        --> it's checked in Prepare_PatchData()
-// ------------------------------------------------------------------------------------------------------------
-#  if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )
-// apply this correction only when preparing all fluid variables (and magnetic field)
-#  ifdef MHD
-   if (  DE_Consistency  &&  ( TVarCC & _TOTAL ) == _TOTAL  &&  TVarFC == _MAG )
-#  else
-   if (  DE_Consistency  &&  ( TVarCC & _TOTAL ) == _TOTAL )
-#  endif
-   {
-#     ifdef MHD
-      const real *FData_FC[3]    = { IntData_FC,
-                                     IntData_FC + FSize3D_FC[0],
-                                     IntData_FC + FSize3D_FC[0] + FSize3D_FC[1] };
-      const int  size_ij         = FSize_CC[0]*FSize_CC[1];
-#     endif
-      const real UseDual2FixEngy = HUGE_NUMBER;
-
-//    assuming that the order of variables stored in IntData_CC[] is the same as patch->fluid[]
-      real *FData_Dens = IntData_CC + DENS*FSize3D_CC;
-      real *FData_MomX = IntData_CC + MOMX*FSize3D_CC;
-      real *FData_MomY = IntData_CC + MOMY*FSize3D_CC;
-      real *FData_MomZ = IntData_CC + MOMZ*FSize3D_CC;
-      real *FData_Engy = IntData_CC + ENGY*FSize3D_CC;
-      real *FData_Dual = IntData_CC + DUAL*FSize3D_CC;
-
-      char dummy;    // we do not record the dual-energy status here
-      real Passive[NCOMP_PASSIVE];
-
-      for (int t=0; t<FSize3D_CC; t++)
-      {
-//       compute the cell-centered magnetic energy
-#        ifdef MHD
-         const int  i     = t % FSize_CC[0];
-         const int  j     = t % size_ij / FSize_CC[0];
-         const int  k     = t / size_ij;
-         const real Emag = MHD_GetCellCenteredBEnergy( FData_FC[MAGX], FData_FC[MAGY], FData_FC[MAGZ],
-                                                       FSize_CC[0], FSize_CC[1], FSize_CC[2], i, j, k );
-#        else
-         const real Emag = NULL_REAL;
-#        endif
-
-         for (int v=0; v<NCOMP_PASSIVE; v++)    Passive[v] = (IntData_CC + (NCOMP_FLUID+v)*FSize3D_CC)[t];
-
-//       here we ALWAYS use the dual-energy variable to correct the total energy density
-//       --> we achieve that by setting the dual-energy switch to an extremely larger number and ignore
-//           the runtime parameter DUAL_ENERGY_SWITCH here
-         Hydro_DualEnergyFix( FData_Dens[t], FData_MomX[t], FData_MomY[t], FData_MomZ[t], FData_Engy[t], FData_Dual[t], Passive,
-                              dummy, EoS_AuxArray_Flt[1], EoS_AuxArray_Flt[2], (MinPres>=(real)0.0), MinPres,
-                              PassiveFloorMask, UseDual2FixEngy, Emag );
-      }
-   } // if (  DE_Consistency  &&  ( TVarCC & _TOTAL ) == _TOTAL  &&  TVarFC == _MAG )
-#  endif // if ( MODEL == HYDRO  &&  defined DUAL_ENERGY )
 
 } // FUNCTION : InterpolateGhostZone
 

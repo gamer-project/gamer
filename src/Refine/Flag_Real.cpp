@@ -60,7 +60,6 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
                                                                   FLAG_BUFFER_SIZE;
    const real dv                        = CUBE( amr->dh[lv] );
    const bool IntPhase_No               = false;                     // for invoking Prepare_PatchData()
-   const bool DE_Consistency_No         = false;                     // for invoking Prepare_PatchData()
    const int  NPG                       = 1;                         // for invoking Prepare_PatchData()
 
 // Lohner criterion
@@ -290,7 +289,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
          if ( Lohner_NVar > 0 )
             Prepare_PatchData( lv, Time[lv], Lohner_Var, NULL, Lohner_NGhost, NPG, &PID0, Lohner_TVar, _NONE,
                                Lohner_IntScheme, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
-                               MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
+                               MinDens, MinPres, MinTemp, MinEntr );
 
 
 //       1-2. prepare the ghost-zone data for interference criterion
@@ -299,7 +298,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
          {
             Prepare_PatchData( lv, Time[lv], Spectral_Var, NULL, Spectral_NGhost, NPG, &PID0, _REAL|_IMAG, _NONE,
                                Spectral_IntScheme, INT_NONE, UNIT_PATCHGROUP, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
-                               MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
+                               MinDens, MinPres, MinTemp, MinEntr );
 
 //          evaluate the spectral refinement criterion
             Prepare_for_Spectral_Criterion( Spectral_Var, Spectral_Cond );
@@ -310,7 +309,7 @@ void Flag_Real( const int lv, const UseLBFunc_t UseLBFunc )
          if ( Interf_NVar > 0 )
             Prepare_PatchData( lv, Time[lv], Interf_Var, NULL, Interf_NGhost, NPG, &PID0, _DENS|_PHAS, _NONE,
                                Interf_IntScheme, INT_NONE, UNIT_PATCH, NSIDE_26, IntPhase_No, OPT__BC_FLU, OPT__BC_POT,
-                               MinDens, MinPres, MinTemp, MinEntr, DE_Consistency_No );
+                               MinDens, MinPres, MinTemp, MinEntr );
 #        endif
 
 

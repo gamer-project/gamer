@@ -406,7 +406,6 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
    const IntScheme_t IntScheme         = INT_NONE;
    const NSide_t     NSide_None        = NSIDE_00;
    const bool        IntPhase_No       = false;
-   const bool        DE_Consistency_No = false;
    const real        MinDens_No        = -1.0;
    const real        MinPres_No        = -1.0;
    const real        MinTemp_No        = -1.0;
@@ -423,7 +422,7 @@ void Patch2Slab( real *VarS, real *SendBuf_Var, real *RecvBuf_Var, long *SendBuf
 //    also note that we do not check minimum density here since no ghost zones are required
       Prepare_PatchData( 0, PrepTime, VarPatch[0][0][0], NULL, GhostSize, NPG, &PID0, TVar, _NONE,
                          IntScheme, INT_NONE, UNIT_PATCH, NSide_None, IntPhase_No, OPT__BC_FLU, PotBC_None,
-                         MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+                         MinDens_No, MinPres_No, MinTemp_No, MinEntr_No );
 
 
 #     ifdef GRAVITY

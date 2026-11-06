@@ -109,7 +109,6 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &CoMX_Total, doubl
    const ParInterp_t IntScheme      = amr->Par->Interp;
    const bool UsePot                = ( OPT__SELF_GRAVITY  ||  OPT__EXT_POT );
    const bool IntPhase_No           = false;
-   const bool DE_Consistency_No     = false;
    const real MinDens_No            = -1.0;
    const real MinPres_No            = -1.0;
    const real MinTemp_No            = -1.0;
@@ -232,7 +231,7 @@ void Par_Aux_GetConservedQuantity( double &Mass_Total, double &CoMX_Total, doubl
 #        endif
             Prepare_PatchData( lv, PrepPotTime, Pot, NULL, PotGhost, 1, &PID0, _POTE, _NONE,
                                OPT__GRA_INT_SCHEME, INT_NONE, UNIT_PATCH, (PotGhost==0)?NSIDE_00:NSIDE_26, IntPhase_No,
-                               OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+                               OPT__BC_FLU, OPT__BC_POT, MinDens_No, MinPres_No, MinTemp_No, MinEntr_No );
 
 
 //       2-3. calculate potential energy

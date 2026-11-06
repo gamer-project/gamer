@@ -63,7 +63,6 @@ real GetMaxVelocity( const int lv, const bool ExcludeWaveCells )
 
 
    const bool IntPhase_No       = false;
-   const bool DE_Consistency_No = false;
    const real MinDens_No        = -1.0;
    const real MinPres_No        = -1.0;
    const real MinTemp_No        = -1.0;
@@ -92,7 +91,7 @@ real GetMaxVelocity( const int lv, const bool ExcludeWaveCells )
 //       prepare phase with NGhost ghost zone on each side (any interpolation scheme can be used)
          Prepare_PatchData( lv, Time[lv], &Flu_Array[0][0][0][0][0], NULL, NGhost, NPG, &PID0, _PHAS, _NONE,
                             INT_CQUAD, INT_NONE, UNIT_PATCHGROUP, NSIDE_06, IntPhase_No, OPT__BC_FLU, BC_POT_NONE,
-                            MinDens_No, MinPres_No, MinTemp_No, MinEntr_No, DE_Consistency_No );
+                            MinDens_No, MinPres_No, MinTemp_No, MinEntr_No );
 
 //       evaluate dS_dt
          for (int k=NGhost; k<Size_Flu-NGhost; k++)    {  km = k - 1;    kp = k + 1;   K = k - NGhost;
