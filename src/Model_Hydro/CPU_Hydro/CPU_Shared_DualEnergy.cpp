@@ -282,7 +282,7 @@ real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Gamma_m1,
 // check the raw dual-derived pressure before applying an optional pressure floor
 #  ifdef EXTRA_EOS_CHECK
    Hydro_IsUnphysical_Single( Pres, "pressure converted from dual energy", (real)0.0, HUGE_NUMBER,
-                              ERROR_INFO, UNPHY_VERBOSE );
+                              ERROR_INFO, UNPHY_SILENCE );
 #  endif
 
 // apply a floor value
