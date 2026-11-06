@@ -360,8 +360,13 @@ void Interpolate_Iterate( real CData[], const int CSize[3], const int CStart[3],
                                  CheckMinPres_No, NULL_REAL, PassiveFloorMask, UseDual2FixEngy, Emag );
 
          else
+         {
             Temp[ENGY] = Hydro_DensDual2Pres( Temp[DENS], Temp[DUAL], EoS_AuxArray_Flt[1],
                                               CheckMinPres_No, NULL_REAL );
+ #          ifdef COSMIC_RAY
+            Temp[ENGY] += EoS_CREint2CRPres_CPUPtr( Temp[CRAY], EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+ #          endif
+         }
 #        endif
 
 
