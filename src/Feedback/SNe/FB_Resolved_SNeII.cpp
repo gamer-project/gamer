@@ -7,7 +7,7 @@ static const int      maxfbDiameter  =   FB_GHOST_SIZE + 1;  // maximum diameter
 static       real  ***fbDepositWeighting[FB_GHOST_SIZE + 1]; // array of weighting for each feedback diameter
 
 static const int      nVarRecSNeII   = 26;                   // number of variables to be record for each SNII
-static const int      maxNumRecSNeII = 100;                  // maximum number of recorded SNeII in each OpenMP thread
+static const int      maxNumRecSNeII = 1000;                 // maximum number of recorded SNeII in each OpenMP thread
 static       int     *numRecSNeII    = NULL;                 // number of recorded SNeII in each OpenMP thread
 static       double **recordSNeII    = NULL;                 // array of stored variables to record the SNeII info
 
