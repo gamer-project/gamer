@@ -35,7 +35,7 @@ Note:
 ========================================
 1. To test the effect of the Type II supernova feedback when the star particle explodes in a typical ISM environment
    - SN locally deposits thermal energy, mass, metal into the surrounding gas at a given explosion time
-   - The parameters for the feedback can be set in `FeedbackYieldTable_Resolved_SNeII_N000001`
+   - The parameters for the feedback can be set in `FeedbackTables/FeedbackTable_Resolved_SNeII_N000001`
    - There is only one particle and its initial mass, metal fraction, position, and velocity can be set in `Input__TestProb`
    - The density, temperature, and metal fraction for the background ISM gas can be set in `Input__TestProb`
 2. The results are similar to the `Hydro/BlastWave` test problem

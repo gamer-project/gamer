@@ -45,7 +45,7 @@ the given amount of thermal energy, mass, and metal
 into fluid of the surrounding cells where the particle is located.
 The explosion delay time of SNeII after star formation, the ejected internal energy of each SNeII explosion,
 the ejected total mass of each SNeII explosion, and the ejected metal mass of each SNeII explosion should be set in
-`FeedbackYieldTable_Resolved_SNeII_*`.
+`FeedbackTables/FeedbackTable_Resolved_SNeII_*`.
 Note that the input value should always be in units of Myr for explosion time,
 in units of erg for energy, and in units of Msun for mass.
 The actual amount of the ejected metal will not be greater than the ejected total mass.

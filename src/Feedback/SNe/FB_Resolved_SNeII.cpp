@@ -657,45 +657,45 @@ void FB_Init_Resolved_SNeII()
       const int TableIdx = N_SNeII - minNumSNeIIPerSPar;
 
 //    set the filename
-      char FeedbackYieldTable_FileName[MAX_STRING];
-      sprintf( FeedbackYieldTable_FileName, "FeedbackYieldTable_Resolved_SNeII_N%06d", N_SNeII );
-      if ( !Aux_CheckFileExist(FeedbackYieldTable_FileName) )
-         Aux_Error( ERROR_INFO, "Table File \"%s\" does not exist !!\n", FeedbackYieldTable_FileName );
+      char FeedbackTable_FileName[MAX_STRING];
+      sprintf( FeedbackTable_FileName, "FeedbackTables/FeedbackTable_Resolved_SNeII_N%06d", N_SNeII );
+      if ( !Aux_CheckFileExist(FeedbackTable_FileName) )
+         Aux_Error( ERROR_INFO, "Table File \"%s\" does not exist !!\n", FeedbackTable_FileName );
 
-      if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading Feedback Yield Table: \"%s\" ...\n", FeedbackYieldTable_FileName );
+      if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading Feedback Table: \"%s\" ...\n", FeedbackTable_FileName );
 
-      const int Col_Lifetime   [1] = {0};   // target column: lifetime
-      const int Col_EjectMass  [1] = {2};   // target column: eject mass
-      const int Col_EjectMetal [1] = {3};   // target column: eject metal
-      const int Col_EjectEnergy[1] = {4};   // target column: eject energy
+      const int Col_Lifetime   [1] = {0};   // target column: explosion_time_in_Myr
+      const int Col_EjectMass  [1] = {2};   // target column: ejected_gas_mass_in_Msun
+      const int Col_EjectMetal [1] = {3};   // target column: ejected_metal_mass_in_Msun
+      const int Col_EjectEnergy[1] = {4};   // target column: ejected_energy_in_erg
 
-      const int NRowLifetime    = Aux_LoadTable( Table_SNII_Lifetime   [TableIdx], FeedbackYieldTable_FileName, 1, Col_Lifetime,    true, true );
-      const int NRowEjectMass   = Aux_LoadTable( Table_SNII_EjectMass  [TableIdx], FeedbackYieldTable_FileName, 1, Col_EjectMass,   true, true );
-      const int NRowEjectMetal  = Aux_LoadTable( Table_SNII_EjectMetal [TableIdx], FeedbackYieldTable_FileName, 1, Col_EjectMetal,  true, true );
-      const int NRowEjectEnergy = Aux_LoadTable( Table_SNII_EjectEnergy[TableIdx], FeedbackYieldTable_FileName, 1, Col_EjectEnergy, true, true );
+      const int NRowLifetime    = Aux_LoadTable( Table_SNII_Lifetime   [TableIdx], FeedbackTable_FileName, 1, Col_Lifetime,    true, true );
+      const int NRowEjectMass   = Aux_LoadTable( Table_SNII_EjectMass  [TableIdx], FeedbackTable_FileName, 1, Col_EjectMass,   true, true );
+      const int NRowEjectMetal  = Aux_LoadTable( Table_SNII_EjectMetal [TableIdx], FeedbackTable_FileName, 1, Col_EjectMetal,  true, true );
+      const int NRowEjectEnergy = Aux_LoadTable( Table_SNII_EjectEnergy[TableIdx], FeedbackTable_FileName, 1, Col_EjectEnergy, true, true );
 
 //    check the number of rows are consistent
       if ( NRowLifetime != N_SNeII  ||  NRowEjectMass != N_SNeII  ||  NRowEjectMetal != N_SNeII  ||  NRowEjectEnergy != N_SNeII )
          Aux_Error( ERROR_INFO, "The number of rows (%d, %d, %d, %d) of the table \"%s\" is not equal to the expected number of SNeII (%d) !!\n",
-                                NRowLifetime, NRowEjectMass, NRowEjectMetal, NRowEjectEnergy, FeedbackYieldTable_FileName, N_SNeII );
+                                NRowLifetime, NRowEjectMass, NRowEjectMetal, NRowEjectEnergy, FeedbackTable_FileName, N_SNeII );
 
       for (int i=0; i<N_SNeII; i++)
       {
 //       check the properties of values in the table
          if ( i >= 1  &&  Table_SNII_Lifetime[TableIdx][i] < Table_SNII_Lifetime[TableIdx][i-1] )
-            Aux_Error( ERROR_INFO, "Lifetimes in table \"%s\" are not monotonically increasing !!\n", FeedbackYieldTable_FileName );
+            Aux_Error( ERROR_INFO, "Lifetimes in table \"%s\" are not monotonically increasing !!\n", FeedbackTable_FileName );
 
          if ( Table_SNII_Lifetime[TableIdx][i] < 0.0 )
-            Aux_Error( ERROR_INFO, "Lifetimes in table \"%s\" have negative value !!\n", FeedbackYieldTable_FileName );
+            Aux_Error( ERROR_INFO, "Lifetimes in table \"%s\" have negative value !!\n", FeedbackTable_FileName );
 
          if ( Table_SNII_EjectMass[TableIdx][i] < 0.0 )
-            Aux_Error( ERROR_INFO, "Ejected masses in table \"%s\" have negative value !!\n", FeedbackYieldTable_FileName );
+            Aux_Error( ERROR_INFO, "Ejected masses in table \"%s\" have negative value !!\n", FeedbackTable_FileName );
 
          if ( Table_SNII_EjectMetal[TableIdx][i] < 0.0 )
-            Aux_Error( ERROR_INFO, "Ejected metals in table \"%s\" have negative value !!\n", FeedbackYieldTable_FileName );
+            Aux_Error( ERROR_INFO, "Ejected metals in table \"%s\" have negative value !!\n", FeedbackTable_FileName );
 
          if ( Table_SNII_EjectEnergy[TableIdx][i] < 0.0 )
-            Aux_Error( ERROR_INFO, "Ejected energy in table \"%s\" have negative value !!\n", FeedbackYieldTable_FileName );
+            Aux_Error( ERROR_INFO, "Ejected energy in table \"%s\" have negative value !!\n", FeedbackTable_FileName );
 
 //       convert to the code units
          Table_SNII_Lifetime   [TableIdx][i] *= Const_Myr  / UNIT_T; // Myr  --> code units
@@ -704,7 +704,7 @@ void FB_Init_Resolved_SNeII()
          Table_SNII_EjectEnergy[TableIdx][i] /= UNIT_E;              // erg  --> code units
       }
 
-      if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading Feedback Yield Table: \"%s\" ... done\n", FeedbackYieldTable_FileName );
+      if ( MPI_Rank == 0 )   Aux_Message( stdout, "   Loading Feedback Table: \"%s\" ... done\n", FeedbackTable_FileName );
    } // for (int N_SNeII=minNumSNeIIPerSPar; N_SNeII<maxNumSNeIIPerSPar+1; N_SNeII++)
 
 
