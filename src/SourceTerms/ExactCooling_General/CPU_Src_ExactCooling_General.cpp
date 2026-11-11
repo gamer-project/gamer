@@ -215,9 +215,8 @@ static void Src_ExactCooling_General( real fluid[], const real B[],
    const double n_e  = rho / (mu_e * mp);                        
    const double n    = rho / (mu   * mp);                     
 
-// please change the length of Yks to your N value
    double Tnow, Tnew, Tk, Eint, Eintf, Emag, Pres, lambdaTnow, Y_T, Y, tcool;
-   int    k;
+   int    k = 1;
 
    // ===========================================================
    // (3) calculate the current temperature and internal energy
@@ -249,52 +248,58 @@ static void Src_ExactCooling_General( real fluid[], const real B[],
    // =====================================================================
    // (4) calculate the new temperature and internal energy after cooling
    // =====================================================================
-   // new temperature
-   if ( Tnow >= TEF_Tmin && Tnow <= TEF_TN )
+   // reject invalid temperatures and temperatures above the cooling table
+   if ( Tnow != Tnow || Tnow < 0.0 || Tnow > TEF_TN )
    {
-      // k : the index of the temperature interval where Tnow falls into
-      for (int i = TEF_N-2; i >= 0; i--)
+#     ifdef GAMER_DEBUG
+      printf( "ERROR : Tnow = %24.16e is out of range (min: %24.16e, max: %24.16e) at TimeNew = %24.16e !!\n",
+              Tnow, TEF_Tmin, TEF_TN, TimeNew );
+#     endif
+
+      fluid[ENGY]   = NAN;
+      fluid[TCOOL]  = NAN;
+      return;
+   }
+
+   // enforce the cooling floor before looking up the cooling table
+   const bool TnowBelowFloor = ( Tnow < TEF_Tmin );
+   if ( TnowBelowFloor )   Tnow = TEF_Tmin;
+
+   // k : the index of the temperature interval where Tnow falls into
+   for (int i = TEF_N-2; i >= 0; i--)
+   {
+      if ( Tnow >= TEF_Temp[i] )
       {
-         if ( Tnow >= TEF_Temp[i] )
-         {
-            k = i+1;
-            break;
-         }
+         k = i+1;
+         break;
       }
-      
-      // power law cooling function: lambdak * ( Tnow / Tk ) ^ ( alphak )
-      Tk            = TEF_Temp[k-1];                                                // K
-      lambdaTnow    = TEF_lambda[k-1] * pow( Tnow / Tk, TEF_alpha[k-1] );        
+   }
 
-      // compute the current cooling time and store it to the field TCOOL
-      tcool         = n * kB * Tnow / ( (gamma - 1.0) * n_e * n_H * lambdaTnow );
-      fluid[TCOOL]  = tcool;
+   // power law cooling function: lambdak * ( Tnow / Tk ) ^ ( alphak )
+   Tk            = TEF_Temp[k-1];                                                // K
+   lambdaTnow    = TEF_lambda[k-1] * pow( Tnow / Tk, TEF_alpha[k-1] );
 
-      // do NOT update the internal energy if dt = 0
-      if ( dt == 0.0 )   return;
+   // compute the current cooling time and store it to the field TCOOL
+   tcool         = n * kB * Tnow / ( (gamma - 1.0) * n_e * n_H * lambdaTnow );
+   fluid[TCOOL]  = tcool;
 
+   // do NOT update the internal energy if dt = 0
+   if ( dt == 0.0 )   return;
+
+   // if the input temperature was below the floor, set the output to the floor
+   if ( TnowBelowFloor )
+      Tnew = TEF_Tmin;
+   else
+   {
       // Y(T)
       Y_T      = TEF_PiecewisePowerLaw( Tnow, k, TEF_Temp, TEF_lambda, TEF_alpha, TEF_Y, AuxArray_Flt, AuxArray_Int );
 
       Y        = Y_T + Tnow / TEF_TN * TEF_lambda[TEF_N-1] / lambdaTnow * dt / tcool;
       
       Tnew     = TEF_inverse_PiecewisePowerLaw( Y, TEF_Temp, TEF_lambda, TEF_alpha, TEF_Y, AuxArray_Flt, AuxArray_Int );
-      
-      if (Tnew < TEF_Tmin)
-         Tnew = TEF_Tmin;
+   }
 
-   }
-   else
-   {
-#     ifdef GAMER_DEBUG
-      printf( "ERROR : Tnow = %24.16e is out of range (min: %24.16e, max: %24.16e) at TimeNew = %24.16e !!\n",
-              Tnow, TEF_Tmin, TEF_TN, TimeNew );
-#     endif
-      
-      fluid[ENGY]   = NAN;
-      fluid[TCOOL]  = NAN;
-      return;
-   }
+   if ( Tnew < TEF_Tmin )   Tnew = TEF_Tmin;
 
    // new internal energy
 #  ifdef __CUDACC__
