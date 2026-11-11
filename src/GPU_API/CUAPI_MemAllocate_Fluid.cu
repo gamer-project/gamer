@@ -115,6 +115,12 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
    const long EC_TEF_alpha_MemSize  = sizeof(double)*SrcTerms.EC_TEF_N;
    const long EC_TEFc_MemSize       = sizeof(double)*SrcTerms.EC_TEF_N;
 #  endif
+#  ifdef EXACT_COOLING_GENERAL
+   const long ECG_TEF_Temp_MemSize   = sizeof(double)*SrcTerms.ECG_TEF_N;
+   const long ECG_TEF_lambda_MemSize = sizeof(double)*SrcTerms.ECG_TEF_N;
+   const long ECG_TEF_alpha_MemSize  = sizeof(double)*SrcTerms.ECG_TEF_N;
+   const long ECG_TEF_Y_MemSize      = sizeof(double)*SrcTerms.ECG_TEF_N;
+#  endif
 
 // the size of the global memory arrays in different models
 #  if ( FLU_SCHEME == MHM  ||  FLU_SCHEME == MHM_RP  ||  FLU_SCHEME == CTU )
@@ -211,6 +217,11 @@ int CUAPI_MemAllocate_Fluid( const int Flu_NPG, const int Pot_NPG, const int Src
 #  ifdef EXACT_COOLING
    if ( SrcTerms.ExactCooling )
       TotalSize += EC_TEF_lambda_MemSize + EC_TEF_alpha_MemSize + EC_TEFc_MemSize;
+#  endif
+
+#  ifdef EXACT_COOLING_GENERAL
+   if ( SrcTerms.ExactCooling_General )
+      TotalSize += ECG_TEF_Temp_MemSize + ECG_TEF_lambda_MemSize + ECG_TEF_alpha_MemSize + ECG_TEF_Y_MemSize;
 #  endif
 
    if ( MPI_Rank == 0 )

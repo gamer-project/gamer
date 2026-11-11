@@ -207,7 +207,7 @@
 # endif
 
 // exact cooling source term
-# ifdef EXACT_COOLING
+#if defined(EXACT_COOLING) || defined(EXACT_COOLING_GENERAL)
 #  define NCOMP_PASSIVE_BUILTIN2    1
 # else
 #  define NCOMP_PASSIVE_BUILTIN2    0
@@ -324,7 +324,7 @@
 #  define PASSIVE_NEXT_IDX2   ( PASSIVE_NEXT_IDX1 )
 # endif
 
-# ifdef EXACT_COOLING
+#if defined(EXACT_COOLING) || defined(EXACT_COOLING_GENERAL)
 #  define TCOOL               ( PASSIVE_NEXT_IDX2 )
 #  define PASSIVE_NEXT_IDX3   ( TCOOL - 1         )
 # else
@@ -367,7 +367,7 @@
 #  define FLUX_NEXT_IDX2   ( FLUX_NEXT_IDX1  )
 # endif
 
-# ifdef EXACT_COOLING
+#if defined(EXACT_COOLING) || defined(EXACT_COOLING_GENERAL)
 #  define FLUX_TCOOL       ( FLUX_NEXT_IDX2  )
 #  define FLUX_NEXT_IDX3   ( FLUX_TCOOL - 1  )
 # else
@@ -396,7 +396,7 @@
 #  define _CRAY               ( 1L << CRAY )
 # endif
 
-# ifdef EXACT_COOLING
+#if defined(EXACT_COOLING) || defined(EXACT_COOLING_GENERAL)
 #  define _TCOOL              ( 1L << TCOOL )
 # endif
 
@@ -429,7 +429,7 @@
 #  define _FLUX_CRAY          ( 1L << FLUX_CRAY )
 # endif
 
-# ifdef EXACT_COOLING
+#if defined(EXACT_COOLING) || defined(EXACT_COOLING_GENERAL)
 #  define _FLUX_TCOOL         ( 1L << FLUX_TCOOL )
 # endif
 
@@ -963,6 +963,11 @@
 #  define SRC_NAUX_EC            10    // SrcTerms.EC_AuxArray_Flt/Int[]
 #else
 #  define SRC_NAUX_EC            0
+#endif
+#ifdef EXACT_COOLING_GENERAL
+#  define SRC_NAUX_ECG           20    // SrcTerms.ECG_AuxArray_Flt/Int[]
+#else
+#  define SRC_NAUX_ECG           0
 #endif
 #  define SRC_NAUX_USER          10    // SrcTerms.User_AuxArray_Flt/Int[]
 

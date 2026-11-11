@@ -27,6 +27,7 @@ typedef void (*SrcFunc_t)( real fluid[], const real B[],
 // Data Member :  Any                       : True if at least one of the source terms is activated
 //                Deleptonization           : SRC_DELEPTONIZATION
 //                ExactCooling              : SRC_EXACTCOOLING
+//                ExactCooling_General      : SRC_EXACTCOOLING_GENERAL
 //                User                      : SRC_USER
 //                BoxCenter                 : Simulation box center
 //                Unit_*                    : Code units
@@ -42,6 +43,8 @@ typedef void (*SrcFunc_t)( real fluid[], const real B[],
 //                Dlep_Profile_NBin         : Number of radial bins in Dlep_Profile_*
 //                EC_dtCoef                 : Safety factor of the cooling time-step
 //                EC_TCoolInit              : Flag for checking whether the fluid[TCOOL] field has been initialized
+//                ECG_dtCoef                : Safety factor of the cooling time-step
+//                ECG_TCoolInit             : Flag for checking whether the fluid[TCOOL] field has been initialized
 //
 // Method      :  None --> It seems that CUDA does not support functions in a struct
 //-------------------------------------------------------------------------------------------------------
@@ -51,6 +54,7 @@ struct SrcTerms_t
    bool   Any;
    bool   Deleptonization;
    bool   ExactCooling;
+   bool   ExactCooling_General;
    bool   User;
 
    double BoxCenter[3];
@@ -95,6 +99,25 @@ struct SrcTerms_t
    double   *EC_TEFc_DevPtr;
    double    EC_dtCoef;
    bool      EC_TCoolInit[NLEVEL];
+#  endif
+
+// general exact cooling
+#  ifdef EXACT_COOLING_GENERAL
+   SrcFunc_t ECG_FuncPtr;
+   SrcFunc_t ECG_CPUPtr;
+#  ifdef GPU
+   SrcFunc_t ECG_GPUPtr;
+#  endif
+   double   *ECG_AuxArrayDevPtr_Flt;
+   int      *ECG_AuxArrayDevPtr_Int;
+   int       ECG_TEF_N;
+   double    ECG_Z;
+   double   *ECG_TEF_Temp_DevPtr;
+   double   *ECG_TEF_lambda_DevPtr;
+   double   *ECG_TEF_alpha_DevPtr;
+   double   *ECG_TEF_Y_DevPtr;
+   double    ECG_dtCoef;
+   bool      ECG_TCoolInit[NLEVEL];
 #  endif
 
 // user-specified source term

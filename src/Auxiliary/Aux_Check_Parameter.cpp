@@ -1893,6 +1893,20 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "SRC_EXACTCOOLING is only supported when EXACT_COOLING is enabled !!\n" );
 #  endif // #ifdef EXACT_COOLING ... else ...
 
+#  ifdef EXACT_COOLING_GENERAL
+#  if ( MODEL != HYDRO )
+#     error : ERROR : EXACT_COOLING_GENERAL must enable MODEL=HYDRO !!
+#  endif
+
+#  ifdef COMOVING
+#     error : ERROR : EXACT_COOLING_GENERAL does not support COMOVING !!
+#  endif
+
+#  else // #ifdef EXACT_COOLING_GENERAL
+   if ( SrcTerms.ExactCooling_General )
+      Aux_Error( ERROR_INFO, "SRC_EXACTCOOLING_GENERAL is only supported when EXACT_COOLING_GENERAL is enabled !!\n" );
+#  endif // #ifdef EXACT_COOLING_GENERAL ... else ...
+
 // warning
 // ------------------------------
    if ( MPI_Rank == 0 ) {

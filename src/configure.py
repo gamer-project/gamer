@@ -667,6 +667,13 @@ def load_arguments( sys_setting : SystemSetting ):
                          constraint={ True:{"comoving":False} },
                          help="Enable exact cooling.\n"
                        )
+    
+    parser.add_argument( "--exact_cooling_general", type=str2bool, metavar="BOOLEAN", gamer_name="EXACT_COOLING_GENERAL",
+                         default=False,
+                         depend={"model":"HYDRO"},
+                         constraint={ True:{"comoving":False} },
+                         help="Enable exact cooling general.\n"
+                       )
 
     parser.add_argument( "--par_attribute_flt", type=int, metavar="INTEGER", gamer_name="PAR_NATT_FLT_USER",
                          default=0,
