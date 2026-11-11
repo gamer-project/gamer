@@ -590,6 +590,17 @@ const SF_CreateStarParSpawn_t
 #endif
 
 
+// feedback
+#ifdef FEEDBACK
+// methods of sampling the number of SNeII in a star particle
+typedef int FB_ResolvedSNeII_Sampling_t;
+const FB_ResolvedSNeII_Sampling_t
+   FB_RESOLVED_SNEII_SAMPLING_NONE              = 0,
+   FB_RESOLVED_SNEII_SAMPLING_CAPPED_POISSON    = 1,
+   FB_RESOLVED_SNEII_SAMPLING_SHIFTED_BERNOULLI = 2;
+#endif
+
+
 // ELBDM_REMOVE_MOTION_CM options
 #if ( MODEL == ELBDM )
 typedef int ELBDMRemoveMotionCM_t;

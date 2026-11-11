@@ -171,6 +171,7 @@ FB_USER                       0           # user-defined feedback [0]
 FB_RESOLVED_SNEII_N_PER_MASS  1.0912e-2   # number of SNeII per stellar mass (in 1/Msun) (for FB_RESOLVED_SNEII only) [0.01]
 FB_RESOLVED_SNEII_MIN_M_GAS   0.0         # minimum mass of gas in the environment of SNeII to apply feedback (in Msun) (for FB_RESOLVED_SNEII only) [0.0]
 FB_RESOLVED_SNEII_RECORD      1           # record the SNeII explosion info (for FB_RESOLVED_SNEII only) [0]
+FB_RESOLVED_SNEII_SAMPLING    1           # method of sampling the number of SNeII in a star particle (0=off, 1=capped Poisson, 2=shifted Bernoulli) [1]
 
 
 # fluid solver in HYDRO (MODEL==HYDRO only)

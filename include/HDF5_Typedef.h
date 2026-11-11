@@ -765,6 +765,7 @@ struct InputPara_t
    double FB_ResolvedSNeII_NPerMass;
    double FB_ResolvedSNeII_MinMGas;
    int    FB_ResolvedSNeII_Record;
+   int    FB_ResolvedSNeII_Sampling;
 #  endif
 
 // cosmic ray

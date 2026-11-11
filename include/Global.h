@@ -398,6 +398,7 @@ extern int    FB_ParaBuf;
 extern double FB_RESOLVED_SNEII_N_PER_MASS;
 extern double FB_RESOLVED_SNEII_MIN_M_GAS;
 extern bool   FB_RESOLVED_SNEII_RECORD;
+extern FB_ResolvedSNeII_Sampling_t FB_RESOLVED_SNEII_SAMPLING;
 #endif
 
 // (2-13) spectral interpolation

@@ -297,8 +297,9 @@ Procedure for outputting new variables:
 //                2516 : 2026/10/09 --> output SF_CREATE_STAR_CRITERIA, SF_CREATE_STAR_MASS_RATE, SF_CREATE_STAR_PAR_SPAWN,
 //                                             SF_CREATE_STAR_MAX_GAS_TEMP, SF_CREATE_STAR_MAX_GAS_JEANSL
 //                2517 : 2026/10/11 --> output INIT_T
-//                2518 : 2026/10/19 --> output FB_RESOLVED_SNEII, FB_RESOLVED_SNEII_N_PER_MASS,
+//                2518 : 2026/11/11 --> output FB_RESOLVED_SNEII, FB_RESOLVED_SNEII_N_PER_MASS,
 //                                             FB_RESOLVED_SNEII_MIN_M_GAS, FB_RESOLVED_SNEII_RECORD
+//                                             FB_RESOLVED_SNEII_SAMPLING
 //                                      replace FB_LEVEL by FB_MIN_LEVEL
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
@@ -2992,6 +2993,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.FB_ResolvedSNeII_NPerMass   = FB_RESOLVED_SNEII_N_PER_MASS;
    InputPara.FB_ResolvedSNeII_MinMGas    = FB_RESOLVED_SNEII_MIN_M_GAS;
    InputPara.FB_ResolvedSNeII_Record     = FB_RESOLVED_SNEII_RECORD;
+   InputPara.FB_ResolvedSNeII_Sampling   = FB_RESOLVED_SNEII_SAMPLING;
 #  endif
 
 // cosmic ray
@@ -4119,6 +4121,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "FB_ResolvedSNeII_NPerMass",   HOFFSET(InputPara_t,FB_ResolvedSNeII_NPerMass   ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "FB_ResolvedSNeII_MinMGas",    HOFFSET(InputPara_t,FB_ResolvedSNeII_MinMGas    ), H5T_NATIVE_DOUBLE  );
    H5Tinsert( H5_TypeID, "FB_ResolvedSNeII_Record",     HOFFSET(InputPara_t,FB_ResolvedSNeII_Record     ), H5T_NATIVE_INT     );
+   H5Tinsert( H5_TypeID, "FB_ResolvedSNeII_Sampling",   HOFFSET(InputPara_t,FB_ResolvedSNeII_Sampling   ), H5T_NATIVE_INT     );
 #  endif
 
 // cosmic ray

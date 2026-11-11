@@ -3,10 +3,11 @@ Parameters described on this page:
 [FB_RSEED](#FB_RSEED), &nbsp;
 [FB_SNE](#FB_SNE), &nbsp;
 [FB_RESOLVED_SNEII](#FB_RESOLVED_SNEII), &nbsp;
-[FB_USER](#FB_USER) &nbsp;
+[FB_USER](#FB_USER), &nbsp;
 [FB_RESOLVED_SNEII_N_PER_MASS](#FB_RESOLVED_SNEII_N_PER_MASS), &nbsp;
 [FB_RESOLVED_SNEII_MIN_M_GAS](#FB_RESOLVED_SNEII_MIN_M_GAS), &nbsp;
 [FB_RESOLVED_SNEII_RECORD](#FB_RESOLVED_SNEII_RECORD), &nbsp;
+[FB_RESOLVED_SNEII_SAMPLING](#FB_RESOLVED_SNEII_SAMPLING) &nbsp;
 
 
 Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**
@@ -94,6 +95,20 @@ Only for [[FB_RESOLVED_SNEII | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII ]]
 Record the information of the resolved Type II supernovae feedback.
     * **Restriction:**
 Only for [[FB_RESOLVED_SNEII | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII ]].
+
+<a name="FB_RESOLVED_SNEII_SAMPLING"></a>
+* #### `FB_RESOLVED_SNEII_SAMPLING` &ensp; (0=off, 1=capped Poisson, 2=shifted Bernoulli) &ensp; [1]
+    * **Description:**
+Method of sampling the number of SNeII in a star particle.
+For a given expected mean number of SNeII, the capped Poisson option samples the numbers
+following a Poisson probability distribution capped at 5 standard deviations above the mean,
+while the shifted Bernoulli option samples either `floor(mean)` or `ceil(mean)`
+with a Bernoulli probability distribution.
+The latter has a lower variance.
+    * **Restriction:**
+Only for [[FB_RESOLVED_SNEII | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII ]].
+Only applicable when enabling the compilation option
+[[--star_formation | [Installation]-Option-List#--star_formation]].
 
 
 ## Remarks

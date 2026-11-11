@@ -312,6 +312,7 @@ void Init_Load_Parameter()
    ReadPara->Add( "FB_RESOLVED_SNEII_N_PER_MASS",  &FB_RESOLVED_SNEII_N_PER_MASS,  1.0e-2,         0.0,           NoMax_double   );
    ReadPara->Add( "FB_RESOLVED_SNEII_MIN_M_GAS",   &FB_RESOLVED_SNEII_MIN_M_GAS,   0.0,            0.0,           NoMax_double   );
    ReadPara->Add( "FB_RESOLVED_SNEII_RECORD",      &FB_RESOLVED_SNEII_RECORD,      false,          Useless_bool,  Useless_bool   );
+   ReadPara->Add( "FB_RESOLVED_SNEII_SAMPLING",    &FB_RESOLVED_SNEII_SAMPLING,        1,          0,             2              );
 #  endif
 
 // cosmic ray

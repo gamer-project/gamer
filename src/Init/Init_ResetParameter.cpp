@@ -1375,6 +1375,16 @@ void Init_ResetParameter()
          PRINT_RESET_PARA( FB_RESOLVED_SNEII_RECORD, FORMAT_INT, "since GAMER_DEBUG is enabled" );
       }
 #     endif
+
+
+#     ifndef STAR_FORMATION
+      if ( FB_RESOLVED_SNEII_SAMPLING != FB_RESOLVED_SNEII_SAMPLING_NONE )
+      {
+         FB_RESOLVED_SNEII_SAMPLING = FB_RESOLVED_SNEII_SAMPLING_NONE;
+
+         PRINT_RESET_PARA( FB_RESOLVED_SNEII_SAMPLING, FORMAT_INT, "since STAR_FORMATION is disabled" );
+      }
+#     endif
    }
    else
    {
@@ -1383,6 +1393,14 @@ void Init_ResetParameter()
          FB_RESOLVED_SNEII_RECORD = false;
 
          PRINT_RESET_PARA( FB_RESOLVED_SNEII_RECORD, FORMAT_INT, "since FB_RESOLVED_SNEII is off" );
+      }
+
+
+      if ( FB_RESOLVED_SNEII_SAMPLING != FB_RESOLVED_SNEII_SAMPLING_NONE )
+      {
+         FB_RESOLVED_SNEII_SAMPLING = FB_RESOLVED_SNEII_SAMPLING_NONE;
+
+         PRINT_RESET_PARA( FB_RESOLVED_SNEII_SAMPLING, FORMAT_INT, "since FB_RESOLVED_SNEII is off" );
       }
    }
 #  endif // #ifdef FEEDBACK

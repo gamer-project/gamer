@@ -1983,9 +1983,14 @@ void Aux_Check_Parameter()
    if ( FB_ParaBuf > PATCH_SIZE )
       Aux_Error( ERROR_INFO, "FB_ParaBuf (%d) > PATCH_SIZE (%d) !!\n", FB_ParaBuf, PATCH_SIZE );
 
+#  ifdef STAR_FORMATION
+   if ( FB_RESOLVED_SNEII  &&  FB_RESOLVED_SNEII_SAMPLING == FB_RESOLVED_SNEII_SAMPLING_NONE )
+      Aux_Error( ERROR_INFO, "FB_RESOLVED_SNEII_SAMPLING must be enabled for STAR_FORMATION !!\n" );
+#  endif
+
 #  if ( defined STAR_FORMATION  &&  RANDOM_NUMBER != RNG_CPP11 )
-   if ( FB_RESOLVED_SNEII )
-      Aux_Error( ERROR_INFO, "FB_RESOLVED_SNEII needs RANDOM_NUMBER = RNG_CPP11 for the Poisson random numbers in star formation !!\n" );
+   if ( FB_RESOLVED_SNEII  &&  FB_RESOLVED_SNEII_SAMPLING == FB_RESOLVED_SNEII_SAMPLING_CAPPED_POISSON )
+      Aux_Error( ERROR_INFO, "FB_RESOLVED_SNEII_CAPPED_POISSON needs RANDOM_NUMBER = RNG_CPP11 for the Poisson random numbers in star formation !!\n" );
 #  endif
 
    if ( FB_RESOLVED_SNEII  &&  PAR_NATT_INT_USER < 1 )
