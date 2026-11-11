@@ -476,10 +476,14 @@ int FB_Resolved_SNeII( const int lv, const double TimeNew, const double TimeOld,
 //    5.1 update the particle
       ParAttInt[Idx_ParSNIINxtE ][par_idx] += (long_par)SNII_AccumulatedNumber;
       ParAttFlt[PAR_MASS        ][par_idx] -= (real_par)SNII_DepositedMass;
-      if ( UseMetal )
-      ParAttFlt[Idx_ParMetalFrac][par_idx]  = ( ParAttFlt[PAR_MASS][par_idx] > 0.0 )
-                                              ? (par_metalMass - MIN(par_metalMass, (real_par)SNII_DepositedMetal)) / ParAttFlt[PAR_MASS][par_idx]
-                                              : 0.0;   // to avoid 0/0 when all the stellar mass is deposited
+
+//    do not update the stellar metallicity inherited from gas during star formation
+//    --> metal production (nucleosynthesis) is not tracked
+//    --> and this attribute is supposed to record a star's birth metallicity
+//    if ( UseMetal )
+//    ParAttFlt[Idx_ParMetalFrac][par_idx]  = ( ParAttFlt[PAR_MASS][par_idx] > 0.0 )
+//                                            ? (par_metalMass - MIN(par_metalMass, (real_par)SNII_DepositedMetal)) / ParAttFlt[PAR_MASS][par_idx]
+//                                            : 0.0;   // to avoid 0/0 when all the stellar mass is deposited
 
       if ( ParAttFlt[PAR_MASS][par_idx] <= 0.0 )
       {
