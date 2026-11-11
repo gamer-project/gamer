@@ -17,7 +17,7 @@ feedback_record_file_path  = '../Record__FB_Resolved_SNeII'
 # define functions to get the feedback quantities
 def get_particle_feedback_amount(ds, obj, ptype, table_file_prefix, quantity_name):
 
-    SNIINxtE = obj[ptype, 'ParSNIINxtE'].d.astype('int')
+    SNIINxtE = obj[ptype, 'ParSNIINxtE'].d.astype(np.int64)
     number_of_total_SNe    = SNIINxtE // 10000
     number_of_exploded_SNe = SNIINxtE %  10000
 
@@ -82,17 +82,27 @@ ad = ds.all_data()
 star_expected_SN_time = get_mean_SN_time(ds, ad, 'new_star', feedback_table_file_prefix).in_units('Myr').d
 star_masses = get_reconstructed_stellar_mass(ds, ad, 'new_star', feedback_table_file_prefix).in_units('Msun').d
 star_count = len(star_expected_SN_time)
+star_total_mass = np.sum(star_masses)
 
 feedback_record = np.genfromtxt(feedback_record_file_path,
                                 delimiter=None, comments='#',
                                 names=['Rank', 'TID', 'lv', 'TimeOld', 'TimeNew', 'SNII_Time_first', 'SNII_Time_last', 'SNII_AccumNum', 'SNII_Energy', 'SNII_Mass', 'SNII_Metal', 'FB_Diameter', 'FB_Flu_Mass', 'Par_PUID', 'Par_NxtE', 'Par_Mass', 'Par_PosX', 'Par_PosY', 'Par_PosZ', 'Par_VelX', 'Par_VelY', 'Par_VelZ', 'Par_MetalMass', 'Flu_Dens', 'Flu_MomX', 'Flu_MomY', 'Flu_MomZ', 'Flu_Engy', 'Flu_Metal'],
                                 dtype=None, encoding=None)
-SN_explosion_time = ds.arr( feedback_record['SNII_Time_last'], 'code_time' ).in_units('Myr').d
+SN_explosion_time = ds.arr( np.repeat(0.5*(feedback_record['SNII_Time_first']+feedback_record['SNII_Time_last']), feedback_record['SNII_AccumNum'].astype(np.int64)), 'code_time' ).in_units('Myr').d
 SN_ones = np.ones_like( SN_explosion_time )
 SN_count = len(SN_explosion_time)
 
+# check the SNe statistics
+print('Total mass of stars   = %.8e Msun'%star_total_mass)
 print('Total number of stars = %d'%star_count)
 print('Total number of SNe   = %d'%SN_count)
+
+average_ejected_energy_per_SN = ds.quan( np.sum( feedback_record['SNII_Energy'] ) / SN_count, 'code_mass*code_velocity**2').in_units('erg')
+average_ejected_mass_per_SN   = ds.quan( np.sum( feedback_record['SNII_Mass'] ) / SN_count, 'code_mass').in_units('Msun')
+average_ejected_metal_per_SN  = ds.quan( np.sum( feedback_record['SNII_Metal'] ) / SN_count, 'code_mass').in_units('Msun')
+print(f"{average_ejected_energy_per_SN = }")
+print(f"{average_ejected_mass_per_SN   = }")
+print(f"{average_ejected_metal_per_SN  = }")
 
 # bin the data
 t_buffer = 40.0  # in Myr

@@ -41,7 +41,7 @@ plt.axvline(expected_num_SNe_per_par,
 
 # formatting
 plt.legend()
-plt.xlabel('Number of Completed SN Events Each Particle')
+plt.xlabel('Number of SN Events Each Particle')
 plt.ylabel('Probability')
 plt.yscale('log')
 plt.ylim(bottom=0.5/len(num_of_completed_SNe), top=2.0*np.max(prob))
