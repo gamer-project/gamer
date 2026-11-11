@@ -1968,7 +1968,9 @@ void Aux_Check_Parameter()
 #     error : FEEDBACK must work with PARTICLE !!
 #  endif
 
-   if ( FB_LEVEL != MAX_LEVEL )  Aux_Error( ERROR_INFO, "FB_LEVEL (%d) != MAX_LEVEL (%d) !!\n", FB_LEVEL, MAX_LEVEL );
+   if ( FB_MIN_LEVEL > MAX_LEVEL )
+      Aux_Message( stderr, "WARNING : FB_MIN_LEVEL (%d) > MAX_LEVEL (%d) --> no feedback will be applied !!\n",
+                   FB_MIN_LEVEL, MAX_LEVEL );
 
    for (int d=0; d<3; d++)
    {
@@ -1980,6 +1982,20 @@ void Aux_Check_Parameter()
 
    if ( FB_ParaBuf > PATCH_SIZE )
       Aux_Error( ERROR_INFO, "FB_ParaBuf (%d) > PATCH_SIZE (%d) !!\n", FB_ParaBuf, PATCH_SIZE );
+
+#  ifdef STAR_FORMATION
+   if ( FB_RESOLVED_SNEII  &&  FB_RESOLVED_SNEII_SAMPLING == FB_RESOLVED_SNEII_SAMPLING_NONE )
+      Aux_Error( ERROR_INFO, "FB_RESOLVED_SNEII_SAMPLING must be enabled for STAR_FORMATION !!\n" );
+#  endif
+
+#  if ( defined STAR_FORMATION  &&  RANDOM_NUMBER != RNG_CPP11 )
+   if ( FB_RESOLVED_SNEII  &&  FB_RESOLVED_SNEII_SAMPLING == FB_RESOLVED_SNEII_SAMPLING_CAPPED_POISSON )
+      Aux_Error( ERROR_INFO, "FB_RESOLVED_SNEII_CAPPED_POISSON needs RANDOM_NUMBER = RNG_CPP11 for the Poisson random numbers in star formation !!\n" );
+#  endif
+
+   if ( FB_RESOLVED_SNEII  &&  PAR_NATT_INT_USER < 1 )
+      Aux_Error( ERROR_INFO, "FB_RESOLVED_SNEII needs one user-defined particle attribute, but PAR_NATT_INT_USER = %d !!\n",
+                 PAR_NATT_INT_USER );
 
 // warning
 // ------------------------------

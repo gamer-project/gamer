@@ -143,6 +143,42 @@ struct RandomNumber_t
 
 
 
+#  if ( RANDOM_NUMBER == RNG_CPP11 )
+   //===================================================================================
+   // Constructor :  GetValue_Poisson
+   // Description :  Return a random number from the Poisson distribution with the specified mean
+   //
+   // Note        :  1. Only return a single random number
+   //                   --> Must specify the ID of the target RNG
+   //
+   // Parameter   :  ID  : Target RNG (0 <= ID < N_RNG)
+   //                Mean: Mean of the random number
+   //
+   // Return      :  Random number
+   //===================================================================================
+   int GetValue_Poisson( const int ID, const double Mean )
+   {
+
+//    check
+#     ifdef GAMER_DEBUG
+      if ( ID < 0  ||  ID >= N_RNG )
+         Aux_Error( ERROR_INFO, "incorrect RNG ID = %d (total number of RNG = %d) !!\n", ID, N_RNG );
+#     endif
+
+//    create the Poisson distribution with the specified mean
+      std::poisson_distribution <int> PoissonDistribution( Mean );
+
+//    get a random number from the Poisson distribution
+      const int PoissonRandom = PoissonDistribution( RNG[ID] );
+
+
+      return PoissonRandom;
+
+   } // METHOD : GetValue_Poisson
+#  endif
+
+
+
    //===================================================================================
    // Constructor :  SetSeed
    // Description :  Set random seed for the target RNG
