@@ -1738,6 +1738,16 @@ void Aux_Check_Parameter()
    if ( OPT__OUTPUT_PAR_POT )
       Aux_Error( ERROR_INFO, "OPT__OUTPUT_PAR_POT is enabled but STORE_PAR_POT is off !!\n"
                  "        --> Recompile with \"--store_par_pot=true\" to use this option\n" );
+#  else
+// Par_UpdateParticlePotential() is called in EvolveLevel() assuming the TimeNew potential buffer
+// patches are already exchanged (not guaranteed under OPT__MINIMIZE_MPI_BARRIER) and relies on the
+// KDK predictor/corrector negative-time convention (not available for PAR_INTEG_EULER) to correctly
+// synchronize particles crossing refinement-level boundaries
+   if ( OPT__OUTPUT_PAR_POT  &&  OPT__MINIMIZE_MPI_BARRIER )
+      Aux_Error( ERROR_INFO, "OPT__OUTPUT_PAR_POT does NOT work with OPT__MINIMIZE_MPI_BARRIER !!\n" );
+
+   if ( OPT__OUTPUT_PAR_POT  &&  amr->Par->Integ == PAR_INTEG_EULER )
+      Aux_Error( ERROR_INFO, "OPT__OUTPUT_PAR_POT does NOT work with PAR_INTEG_EULER !!\n" );
 #  endif
 
    for (int d=0; d<3; d++)

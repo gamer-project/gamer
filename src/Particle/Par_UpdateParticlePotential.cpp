@@ -10,11 +10,15 @@
 // Description :  Interpolate the gravitational potential onto all massive particles at the target level
 //                and store the result in Par->Pot[]
 //
-// Note        :  1. Always kept up to date whenever compiled with STORE_PAR_POT, independent of the
-//                   runtime option OPT__OUTPUT_PAR_POT, which only controls whether Par->Pot[] gets
-//                   written to the particle text/binary dump files (see Par_Output_TextFile/BinaryFile)
+// Note        :  1. Kept up to date every sub-step for PAR_INTEG_KDK, independent of the runtime option
+//                   OPT__OUTPUT_PAR_POT, which only controls whether Par->Pot[] gets written to the
+//                   particle text/binary dump files (see Par_Output_TextFile/BinaryFile)
 //                   --> Other code (feedback, diagnostics, ...) can rely on Par->Pot[] being current
-//                       without needing to enable that output
+//                       under PAR_INTEG_KDK without needing to enable that output
+//                   --> For PAR_INTEG_EULER, only updated at initialization/restart and whenever
+//                       Flu_CorrAfterAllSync() runs; OPT__OUTPUT_PAR_POT is rejected with
+//                       PAR_INTEG_EULER (see Aux_Check_Parameter()) since per-sub-step updates are not
+//                       supported for it (no KDK-style negative-time correction window to rely on)
 //                2. Returns immediately if neither OPT__SELF_GRAVITY nor OPT__EXT_POT is active, since
 //                   the grid potential is not prepared in that case; Par->Pot[] is left at whatever
 //                   default new particles are given (0; see Particle::InitRepo() and the various
@@ -29,13 +33,23 @@
 //                6. Tracer particles are skipped and keep whatever value Par->Pot[] already holds
 //                   (0 by default for new particles; see Particle::InitRepo() and the various
 //                   NewAttFlt[PAR_POT] initializations at particle-creation call sites)
+//                7. OnlyVelCorr: for PAR_INTEG_KDK, particles awaiting the velocity-correction half-kick
+//                   have their time temporarily stored as a negative value (see Par_UpdateParticle());
+//                   particles not awaiting correction (either already corrected at this level, or just
+//                   arrived from a different level where they were already corrected) have Time >= 0
+//                   --> If true, skip particles with Time >= 0, so that calling this at level lv (or
+//                       lv-1) only touches the specific set of particles about to be corrected there,
+//                       without touching -- and incorrectly mixing with -- particles already resident
+//                       and synchronized at that level (see EvolveLevel())
+//                   --> If false (e.g. Init_GAMER(), Flu_CorrAfterAllSync()), update every particle
 //
-// Parameter   :  lv       : Target refinement level
-//                PrepTime : Target physical time for preparing the potential data
+// Parameter   :  lv           : Target refinement level
+//                PrepTime     : Target physical time for preparing the potential data
+//                OnlyVelCorr  : Only update particles awaiting velocity correction (see Note-7)
 //
 // Return      :  amr->Par->Pot[]
 //-------------------------------------------------------------------------------------------------------
-void Par_UpdateParticlePotential( const int lv, const double PrepTime )
+void Par_UpdateParticlePotential( const int lv, const double PrepTime, const bool OnlyVelCorr )
 {
 
    if ( !OPT__SELF_GRAVITY  &&  !OPT__EXT_POT )   return;
@@ -56,6 +70,7 @@ void Par_UpdateParticlePotential( const int lv, const double PrepTime )
    const real_par *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
          real_par *ParPot    = amr->Par->Pot;
    const long_par *ParType   = amr->Par->Type;
+   const real_par *ParTime   = amr->Par->Time;
 
 
 // get the maximum number of particles in a single patch
@@ -139,6 +154,9 @@ void Par_UpdateParticlePotential( const int lv, const double PrepTime )
 
 //          skip tracer particles (Par_MapMesh2Particles() did not fill their ParPotTemp[0][p] slot)
             if ( ParType[ParID] == PTYPE_TRACER )    continue;
+
+//          skip particles not awaiting velocity correction (see Note-7 above)
+            if ( OnlyVelCorr  &&  ParTime[ParID] >= (real_par)0.0 )   continue;
 
             ParPot[ParID] = ParPotTemp[0][p];
          } // for (int p=0; p<amr->patch[0][lv][PID]->NPar; p++)

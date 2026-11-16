@@ -153,7 +153,7 @@ void Flu_CorrAfterAllSync()
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "      recalculate particle potential        ... " );
 
    for (int lv=0; lv<NLEVEL; lv++)
-      Par_UpdateParticlePotential( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ] );
+      Par_UpdateParticlePotential( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ], false );
 
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
 #  endif

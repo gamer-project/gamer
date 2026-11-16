@@ -50,6 +50,8 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
    const bool   UseStoredAcc_Yes  = true;
    const bool   UseStoredAcc_No   = false;
    const bool   TimingSendPar_Yes = true;
+   const bool   OnlyVelCorr_Yes   = true;
+   const bool   OnlyVelCorr_No    = false;
 #  endif
 #  if ( MODEL == HYDRO )
    const double MinModCoeff_Ori   = MINMOD_COEFF;     // back up the original MINMOD_COEFF/INT_MONO_COEFF(_B)
@@ -457,6 +459,15 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
             Aux_Message( stdout, "   Lv %2d: Par_UpdateParticle (correct Lv %2d)... ", lv, lv );
 
+//       update the potential of particles awaiting velocity correction at lv *before* correcting them,
+//       while their time is still negative (see Note-7 of Par_UpdateParticlePotential())
+//       --> requires the TimeNew potential buffer patches to be ready already, which holds here as long
+//           as OPT__MINIMIZE_MPI_BARRIER is off (see Aux_Check_Parameter())
+#        ifdef STORE_PAR_POT
+         TIMING_FUNC(   Par_UpdateParticlePotential( lv, TimeNew, OnlyVelCorr_Yes ),
+                        Timer_Par_Update[lv][1],   TIMER_ON   );
+#        endif
+
 #        ifdef STORE_PAR_ACC
          TIMING_FUNC(   Par_UpdateParticle( lv, TimeNew, TimeOld, PAR_UPSTEP_CORR, StoreAcc_Yes, UseStoredAcc_No ),
                         Timer_Par_Update[lv][1],   TIMER_ON   );
@@ -472,17 +483,18 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
             if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
                Aux_Message( stdout, "   Lv %2d: Par_UpdateParticle (correct Lv %2d)... ", lv, lv-1 );
 
+//          same as above, but for particles just travelling from lv to lv-1 and awaiting correction there
+#           ifdef STORE_PAR_POT
+            TIMING_FUNC(   Par_UpdateParticlePotential( lv-1, TimeNew, OnlyVelCorr_Yes ),
+                           Timer_Par_Update[lv][2],   TIMER_ON   );
+#           endif
+
 //          apply velocity correction for particles just travelling from lv to lv-1
 #           ifdef STORE_PAR_ACC
             TIMING_FUNC(   Par_UpdateParticle( lv-1, TimeNew, TimeOld, PAR_UPSTEP_CORR, StoreAcc_Yes, UseStoredAcc_No ),
                            Timer_Par_Update[lv][2],   TIMER_ON   );
 #           else
             TIMING_FUNC(   Par_UpdateParticle( lv-1, TimeNew, TimeOld, PAR_UPSTEP_CORR, StoreAcc_No,  UseStoredAcc_No ),
-                           Timer_Par_Update[lv][2],   TIMER_ON   );
-#           endif
-
-#           ifdef STORE_PAR_POT
-            TIMING_FUNC(   Par_UpdateParticlePotential( lv-1, TimeNew ),
                            Timer_Par_Update[lv][2],   TIMER_ON   );
 #           endif
 
@@ -641,17 +653,6 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
       TIMING_FUNC(   Buf_GetBufferData( lv, NULL_INT, NULL_INT, SaveSg_Pot, POT_FOR_POISSON,
                                         _POTE, _NONE, Pot_ParaBuf, USELB_YES ),
                      Timer_GetBuf[lv][1],   TIMER_ON   );
-#     endif
-
-//    update the particle potential now that both the fluid/particle state and the potential buffer
-//    patches are finalized at TimeNew (for every integrator -- Euler has already advanced particles
-//    to TimeNew at the predictor stage, and KDK corrects them above)
-//    --> placed after the buffer exchange above rather than in step 5 so that Prepare_PatchData()
-//        never reads a stale (pre-exchange) potential buffer patch when OPT__MINIMIZE_MPI_BARRIER
-//        defers that exchange; nothing between step 5 and here reads Par->Pot[]
-#     if ( defined MASSIVE_PARTICLES  &&  defined STORE_PAR_POT )
-      TIMING_FUNC(   Par_UpdateParticlePotential( lv, TimeNew ),
-                     Timer_Par_Update[lv][1],   TIMER_ON   );
 #     endif
 
 

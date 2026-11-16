@@ -351,7 +351,7 @@ void Init_GAMER( int *argc, char ***argv )
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ...\n", "Calculating particle potential" );
 
    for (int lv=0; lv<NLEVEL; lv++)
-      Par_UpdateParticlePotential( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ] );
+      Par_UpdateParticlePotential( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ], false );
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", "Calculating particle potential" );
 #  endif // #if ( defined MASSIVE_PARTICLES  &&  defined STORE_PAR_POT )

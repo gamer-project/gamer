@@ -150,24 +150,29 @@ Only applicable when enabling [OPT__OUTPUT_TOTAL](#OPT__OUTPUT_TOTAL).
 Write the particle attribute `ParPot` -- the gravitational potential
 interpolated onto each massive particle's current position, sampled with the
 [[PAR_INTERP | [Runtime-Parameters]-Particles#PAR_INTERP ]] scheme -- to the
-particle text/C-binary dump files. This is purely an output switch: whenever
-compiled with `STORE_PAR_POT`, `ParPot` is always kept up to date internally
-(and available to other code, e.g. feedback modules) regardless of this
-option, and is left at 0 for tracer particles or when neither
-[[OPT__SELF_GRAVITY | [Runtime-Parameters]-Gravity#OPT__SELF_GRAVITY]] nor
-[[OPT__EXT_POT | [Runtime-Parameters]-Gravity#OPT__EXT_POT]] is active. It is
-purely a diagnostic snapshot; it does not feed back into the particle
+particle text/C-binary dump files and (as an extra dataset in the `Particle`
+HDF5 group) to total snapshots. This is purely an output switch: whenever
+compiled with `STORE_PAR_POT`, `ParPot` is kept up to date every sub-step
+under `PAR_INTEG_KDK` (and available to other code, e.g. feedback modules)
+regardless of this option, and is left at 0 for tracer particles or when
+neither [[OPT__SELF_GRAVITY | [Runtime-Parameters]-Gravity#OPT__SELF_GRAVITY]]
+nor [[OPT__EXT_POT | [Runtime-Parameters]-Gravity#OPT__EXT_POT]] is active.
+It is purely a diagnostic snapshot; it does not feed back into the particle
 integration.
 
-   Within one sub-step of `EvolveLevel()`, `ParPot` is only refreshed once
-   the TimeNew potential buffer patches are finalized, which happens after
-   star formation and feedback run. Code consuming `Par->Pot[]` from within
-   that same sub-step (e.g. a feedback module) therefore sees the *previous*
-   sub-step's value for existing particles, and 0 for particles created
-   earlier in the same sub-step (e.g. by `SF_CreateStar()`).
+   Particles that just crossed a refinement-level boundary this sub-step
+   have their potential refreshed (at that new level) before the usual
+   velocity correction, so by the time star formation/feedback run,
+   `Par->Pot[]` already reflects the current sub-step for every pre-existing
+   particle. The one gap is particles created earlier in the same sub-step
+   (e.g. by `SF_CreateStar()`): they start from the host cell's potential at
+   creation time, not yet the particle-interpolated value.
     * **Restriction:**
 Requires compiling with [[--store_par_pot | [Installation]-Option-List#--store_par_pot]]
 (which in turn requires [[--gravity | [Installation]-Option-List#--gravity]]).
+Not supported with [[OPT__MINIMIZE_MPI_BARRIER | [Runtime-Parameters]-MPI-and-OpenMP#OPT__MINIMIZE_MPI_BARRIER]]
+or [[PAR_INTEG | [Runtime-Parameters]-Particles#PAR_INTEG ]]`=PAR_INTEG_EULER`
+(see `Aux_Check_Parameter()`).
 
 <a name="OPT__OUTPUT_CC_MAG"></a>
 * #### `OPT__OUTPUT_CC_MAG` &ensp; (0=off, 1=on) &ensp; [1]
