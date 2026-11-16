@@ -1558,6 +1558,10 @@ void Output_DumpData_Total_HDF5( const char *FileName )
    real_par (*ParFltBuf1v1Lv)          = NULL;   // buffer storing the data of one particle floating-point attribute at one level
    long_par (*ParIntBuf1v1Lv)          = NULL;   // buffer storing the data of one particle integer        attribute at one level
    int        Par_NAtt_Mesh            = amr->Par->Mesh_Attr_Num;
+   int        Par_NAtt_Pot             = 0;   // whether to append the extra ParPot dataset (see below)
+#  if ( defined GRAVITY  &&  defined STORE_PAR_POT )
+   if ( OPT__OUTPUT_PAR_POT )   Par_NAtt_Pot = 1;
+#  endif
 
    long  GParID_Offset[NLEVEL];  // GParID = global particle index (==> unique for each particle)
    long  NParLv_AllRank[NLEVEL];
@@ -1608,9 +1612,18 @@ void Output_DumpData_Total_HDF5( const char *FileName )
       if ( H5_GroupID_Particle < 0 )   Aux_Error( ERROR_INFO, "failed to create the group \"%s\" !!\n", "Particle" );
 
 //    create the datasets of all particle attributes
-      for (int v=0; v<PAR_NATT_FLT_STORED+Par_NAtt_Mesh; v++)
+//    --> order: PAR_NATT_FLT_STORED built-in/user attributes, then Par_NAtt_Mesh mesh-mapped tracer
+//        attributes (if OPT__OUTPUT_PAR_MESH), then the extra ParPot attribute (if OPT__OUTPUT_PAR_POT)
+      for (int v=0; v<PAR_NATT_FLT_STORED+Par_NAtt_Mesh+Par_NAtt_Pot; v++)
       {
-         char *ParLabel = ( v < PAR_NATT_FLT_STORED ) ? ParAttFltLabel[v] : amr->Par->Mesh_Attr_Label[v - PAR_NATT_FLT_STORED];
+         char *ParLabel;
+         if      ( v < PAR_NATT_FLT_STORED )                 ParLabel = ParAttFltLabel[v];
+         else if ( v < PAR_NATT_FLT_STORED+Par_NAtt_Mesh )    ParLabel = amr->Par->Mesh_Attr_Label[v - PAR_NATT_FLT_STORED];
+#        if ( defined GRAVITY  &&  defined STORE_PAR_POT )
+         else                                                ParLabel = ParAttFltLabel[PAR_POT];
+#        else
+         else            Aux_Error( ERROR_INFO, "unreachable branch (v %d) !!\n", v );
+#        endif
 
          H5_SetID_ParFltData = H5Dcreate( H5_GroupID_Particle, ParLabel, H5T_GAMER_REAL_PAR, H5_SpaceID_ParData,
                                           H5P_DEFAULT, H5_DataCreatePropList, H5P_DEFAULT );
@@ -1666,7 +1679,8 @@ void Output_DumpData_Total_HDF5( const char *FileName )
 
 //       output one particle floating-point attribute at one level in one rank at a time
 //       --> skip the last PAR_NATT_FLT_UNSTORED floating-point attributes since we do not want to store them on disk
-         for (int v=0; v<PAR_NATT_FLT_STORED+Par_NAtt_Mesh; v++)
+//           (except the extra ParPot attribute appended after the mesh-mapped ones, when OPT__OUTPUT_PAR_POT)
+         for (int v=0; v<PAR_NATT_FLT_STORED+Par_NAtt_Mesh+Par_NAtt_Pot; v++)
          {
 //          6-3-3. collect particle data from all patches at the current target level
             NParInBuf = 0;
@@ -1681,14 +1695,28 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                   Aux_Error( ERROR_INFO, "lv %d, NParInBuf (%ld) >= NPar_Lv (%ld) !!\n", lv, NParInBuf, amr->Par->NPar_Lv[lv] );
 #              endif
 
-               ParFltBuf1v1Lv[ NParInBuf ++ ] = ( v < PAR_NATT_FLT_STORED )
-                                              ? amr->Par->AttributeFlt[v]                      [ParID]
-                                              : amr->Par->Mesh_Attr   [v - PAR_NATT_FLT_STORED][ParID];
+               real_par ParFltVal;
+               if      ( v < PAR_NATT_FLT_STORED )                 ParFltVal = amr->Par->AttributeFlt[v][ParID];
+               else if ( v < PAR_NATT_FLT_STORED+Par_NAtt_Mesh )    ParFltVal = amr->Par->Mesh_Attr[v - PAR_NATT_FLT_STORED][ParID];
+#              if ( defined GRAVITY  &&  defined STORE_PAR_POT )
+               else                                                ParFltVal = amr->Par->Pot[ParID];
+#              else
+               else            Aux_Error( ERROR_INFO, "unreachable branch (v %d) !!\n", v );
+#              endif
+
+               ParFltBuf1v1Lv[ NParInBuf ++ ] = ParFltVal;
             }
 
 
 //          6-3-4. write data to disk
-            char *ParLabel = ( v < PAR_NATT_FLT_STORED ) ? ParAttFltLabel[v] : amr->Par->Mesh_Attr_Label[v - PAR_NATT_FLT_STORED];
+            char *ParLabel;
+            if      ( v < PAR_NATT_FLT_STORED )                 ParLabel = ParAttFltLabel[v];
+            else if ( v < PAR_NATT_FLT_STORED+Par_NAtt_Mesh )    ParLabel = amr->Par->Mesh_Attr_Label[v - PAR_NATT_FLT_STORED];
+#           if ( defined GRAVITY  &&  defined STORE_PAR_POT )
+            else                                                ParLabel = ParAttFltLabel[PAR_POT];
+#           else
+            else            Aux_Error( ERROR_INFO, "unreachable branch (v %d) !!\n", v );
+#           endif
 
             H5_SetID_ParFltData = H5Dopen( H5_GroupID_Particle, ParLabel, H5P_DEFAULT );
 
@@ -1697,7 +1725,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                Aux_Error( ERROR_INFO, "failed to write a particle floating-point attribute (lv %d, v %d) !!\n", lv, v );
 
             H5_Status = H5Dclose( H5_SetID_ParFltData );
-         } // for (int v=0; v<PAR_NATT_FLT_STORED+Par_NAtt_Mesh; v++)
+         } // for (int v=0; v<PAR_NATT_FLT_STORED+Par_NAtt_Mesh+Par_NAtt_Pot; v++)
 
 //       output one particle integer attribute at one level in one rank at a time
 //       --> skip the last PAR_NATT_INT_UNSTORED integer attributes since we do not want to store them on disk
@@ -2665,7 +2693,9 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Par_IntegTracer         = amr->Par->IntegTracer;
    InputPara.Par_ImproveAcc          = amr->Par->ImproveAcc;
    InputPara.Par_PredictPos          = amr->Par->PredictPos;
+#  ifdef GRAVITY
    InputPara.Opt__Output_Par_Pot     = OPT__OUTPUT_PAR_POT;
+#  endif
    InputPara.Par_RemoveCell          = amr->Par->RemoveCell;
    InputPara.Opt__FreezePar          = OPT__FREEZE_PAR;
    InputPara.Par_GhostSize           = amr->Par->GhostSize;

@@ -112,6 +112,8 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                Vel                     : Particle velocity
 //                Time                    : Particle physical time
 //                Acc                     : Particle acceleration (only when STORE_PAR_ACC is on)
+//                Pot                     : Gravitational potential interpolated onto the particle position
+//                                          (only when STORE_PAR_POT is on)
 //                Type                    : Particle type (e.g., tracer, generic, dark matter, star)
 //                PUID                    : Particle UID
 //                Flag                    : Particle refinement flag

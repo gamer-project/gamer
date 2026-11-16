@@ -315,9 +315,15 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
          NewParAttFlt[NNewPar][PAR_ACCZ] = GasAcc[2];
 #        endif // ifdef STORE_PAR_ACC
 
-//       particle potential (a diagnostic quantity recomputed by Par_UpdateParticlePotential())
+//       particle potential
+//       --> just use the potential at the host cell as the initial guess; it will be refined by
+//           Par_UpdateParticlePotential() once the new particle's own position is accounted for
+//       --> patch->pot[] is only meaningful when self-gravity or an external potential is active;
+//           otherwise leave it at the same zero default used for every other new particle
 #        ifdef STORE_PAR_POT
-         NewParAttFlt[NNewPar][PAR_POT] = (real_par)0.0;
+         NewParAttFlt[NNewPar][PAR_POT] = ( OPT__SELF_GRAVITY || OPT__EXT_POT )
+                                        ? amr->patch[PotSg][lv][PID]->pot[k][j][i]
+                                        : (real_par)0.0;
 #        endif
 
 

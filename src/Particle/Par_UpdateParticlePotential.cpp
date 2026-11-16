@@ -53,7 +53,7 @@ void Par_UpdateParticlePotential( const int lv, const double PrepTime )
    const bool     UseTracers_No      = false;
    const bool     CorrectVelocity_No = false;
 
-         real_par *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
+   const real_par *ParPos[3] = { amr->Par->PosX, amr->Par->PosY, amr->Par->PosZ };
          real_par *ParPot    = amr->Par->Pot;
    const long_par *ParType   = amr->Par->Type;
 
@@ -74,7 +74,7 @@ void Par_UpdateParticlePotential( const int lv, const double PrepTime )
 // per-thread variables
    real *Pot = new real [ 8*CUBE(PotSize) ];   // 8: number of patches per patch group
 
-   real_par **ParPotTemp  = NULL;
+   real_par **ParPotTemp   = NULL;
    real_par **InterpParPos = NULL;
    Aux_AllocateArray2D( ParPotTemp,   1, NParMax );
    Aux_AllocateArray2D( InterpParPos, 3, NParMax );

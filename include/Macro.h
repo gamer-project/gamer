@@ -625,6 +625,9 @@
 #  define _PAR_ACCY           ( 1L << PAR_ACCY )
 #  define _PAR_ACCZ           ( 1L << PAR_ACCZ )
 # endif
+# if ( defined STORE_PAR_POT  &&  defined GRAVITY )
+#  define _PAR_POT            ( 1L << PAR_POT )
+# endif
 #  define _PAR_TIME           ( 1L << PAR_TIME )
 #  define _PAR_POS            ( _PAR_POSX | _PAR_POSY | _PAR_POSZ )
 #  define _PAR_VEL            ( _PAR_VELX | _PAR_VELY | _PAR_VELZ )
@@ -1364,6 +1367,12 @@
 // --> if we ever want to enable STORE_PAR_ACC without GRAVITY, remember to check all STORE_PAR_ACC in this header
 #ifndef GRAVITY
 #  undef STORE_PAR_ACC
+#endif
+
+// the particle potential is always interpolated from the gravitational potential
+// --> if we ever want to enable STORE_PAR_POT without GRAVITY, remember to check all STORE_PAR_POT in this header
+#ifndef GRAVITY
+#  undef STORE_PAR_POT
 #endif
 
 
