@@ -451,7 +451,9 @@ struct InputPara_t
    int    Par_IntegTracer;
    int    Par_ImproveAcc;
    int    Par_PredictPos;
+#  ifdef GRAVITY
    int    Opt__Output_Par_Pot;
+#  endif
    double Par_RemoveCell;
    int    Opt__FreezePar;
    int    Par_GhostSize;

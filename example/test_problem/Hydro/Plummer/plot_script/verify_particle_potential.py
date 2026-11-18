@@ -37,7 +37,7 @@ import matplotlib.pyplot as plt
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("particle_file", nargs="?", default="Particle_000000.txt",
+    parser.add_argument("particle_file", nargs="?", default="../Particle_000000.txt",
                          help="text-format particle dump [Particle_000000.txt]")
     parser.add_argument("-o", "--output", default="pot_verification.png",
                          help="output plot filename [pot_verification.png]")
