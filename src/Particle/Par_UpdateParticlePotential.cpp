@@ -15,10 +15,9 @@
 //                   particle text/binary dump files (see Par_Output_TextFile/BinaryFile)
 //                   --> Other code (feedback, diagnostics, ...) can rely on Par->Pot[] being current
 //                       under PAR_INTEG_KDK without needing to enable that output
-//                   --> For PAR_INTEG_EULER, only updated at initialization/restart and whenever
-//                       Flu_CorrAfterAllSync() runs; OPT__OUTPUT_PAR_POT is rejected with
-//                       PAR_INTEG_EULER (see Aux_Check_Parameter()) since per-sub-step updates are not
-//                       supported for it (no KDK-style negative-time correction window to rely on)
+//                   --> STORE_PAR_POT is rejected with PAR_INTEG_EULER (see Aux_Check_Parameter()) since
+//                       per-sub-step updates rely on the KDK negative-time correction window; only
+//                       updated at initialization/restart and whenever Flu_CorrAfterAllSync() runs
 //                2. Returns immediately if neither OPT__SELF_GRAVITY nor OPT__EXT_POT is active, since
 //                   the grid potential is not prepared in that case; Par->Pot[] is left at whatever
 //                   default new particles are given (0; see Particle::InitRepo() and the various

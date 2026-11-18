@@ -51,7 +51,6 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
    const bool   UseStoredAcc_No   = false;
    const bool   TimingSendPar_Yes = true;
    const bool   OnlyVelCorr_Yes   = true;
-   const bool   OnlyVelCorr_No    = false;
 #  endif
 #  if ( MODEL == HYDRO )
    const double MinModCoeff_Ori   = MINMOD_COEFF;     // back up the original MINMOD_COEFF/INT_MONO_COEFF(_B)

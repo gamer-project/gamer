@@ -169,10 +169,10 @@ integration.
    creation time, not yet the particle-interpolated value.
     * **Restriction:**
 Requires compiling with [[--store_par_pot | [Installation]-Option-List#--store_par_pot]]
-(which in turn requires [[--gravity | [Installation]-Option-List#--gravity]]).
-Not supported with [[OPT__MINIMIZE_MPI_BARRIER | [Runtime-Parameters]-MPI-and-OpenMP#OPT__MINIMIZE_MPI_BARRIER]]
-or [[PAR_INTEG | [Runtime-Parameters]-Particles#PAR_INTEG ]]`=PAR_INTEG_EULER`
-(see `Aux_Check_Parameter()`).
+(which in turn requires [[--gravity | [Installation]-Option-List#--gravity]]). See the
+restrictions on `--store_par_pot` described in
+[[OPT__MINIMIZE_MPI_BARRIER | [Runtime-Parameters]-MPI-and-OpenMP#OPT__MINIMIZE_MPI_BARRIER]]
+and [[PAR_INTEG | [Runtime-Parameters]-Particles#PAR_INTEG ]].
 
 <a name="OPT__OUTPUT_CC_MAG"></a>
 * #### `OPT__OUTPUT_CC_MAG` &ensp; (0=off, 1=on) &ensp; [1]
