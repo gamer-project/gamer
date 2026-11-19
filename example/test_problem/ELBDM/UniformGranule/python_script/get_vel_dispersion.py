@@ -14,7 +14,7 @@ parser.add_argument( '-e', action='store', required=True,  type=int, dest='idx_e
 parser.add_argument( '-d', action='store', required=False, type=int, dest='didx',
                      help='delta data index [%(default)d]', default=1 )
 parser.add_argument( '-m', action='store', required=False, type=str, dest='method',
-                     help='gradient method (yt, numpy, fft)', default='yt' )
+                     help='gradient method (gamer, yt, numpy, fft)', default='gamer' )
 
 args=parser.parse_args()
 
@@ -23,7 +23,7 @@ idx_end     = args.idx_end
 didx        = args.didx
 method      = args.method
 
-if not (method == 'yt' or method == 'numpy' or method == 'fft'):
+if not (method == 'gamer' or method == 'yt' or method == 'numpy' or method == 'fft'):
    print('Unknown method (-m %s)!!'%method)
    sys.exit(1)
 
@@ -60,7 +60,7 @@ for ds in ts.piter():
       print('Data_%06d file size not matched!'%idx)
       sys.exit(1)
 
-   if method == 'yt':
+   if method == 'gamer' or method == 'yt':
       dens = np.array(dd["Dens"])
       real = np.array(dd["Real"])
       imag = np.array(dd["Imag"])
@@ -99,22 +99,27 @@ for ds in ts.piter():
    sigma_square_qp = [0., 0., 0.]
 
    for i in range(3):
-      if method == 'yt':
-         field_r = "Real_gradient_%s"%(chr(ord('x') + i))
-         field_i = "Imag_gradient_%s"%(chr(ord('x') + i))
-         grad_real = np.array(dd[field_r])*UNIT_L
-         grad_imag = np.array(dd[field_i])*UNIT_L
+      if method != 'gamer':
+         if method == 'yt':
+            field_r = "Real_gradient_%s"%(chr(ord('x') + i))
+            field_i = "Imag_gradient_%s"%(chr(ord('x') + i))
+            grad_real = np.array(dd[field_r])*UNIT_L
+            grad_imag = np.array(dd[field_i])*UNIT_L
 
-      elif method == 'numpy':
-         grad_real = (np.roll(real, -1, axis=i) - np.roll(real, 1, axis=i)) / (2*dh[i])
-         grad_imag = (np.roll(imag, -1, axis=i) - np.roll(imag, 1, axis=i)) / (2*dh[i])
+         elif method == 'numpy':
+            grad_real = (np.roll(real, -1, axis=i) - np.roll(real, 1, axis=i)) / (2*dh[i])
+            grad_imag = (np.roll(imag, -1, axis=i) - np.roll(imag, 1, axis=i)) / (2*dh[i])
 
-      elif method == 'fft':
-         grad_real = grad_psi[i].real
-         grad_imag = grad_psi[i].imag
+         elif method == 'fft':
+            grad_real = grad_psi[i].real
+            grad_imag = grad_psi[i].imag
 
-      v_bk = fac*(imag*grad_real - real*grad_imag)/dens
-      v_qp = fac*(imag*grad_imag + real*grad_real)/dens
+         v_bk = fac*(imag*grad_real - real*grad_imag)/dens
+         v_qp = fac*(imag*grad_imag + real*grad_real)/dens
+
+      else:
+         v_bk = dd["ELBDMBulkVel%s"   %(chr(ord('X') + i))].d
+         v_qp = dd["ELBDMThermalVel%s"%(chr(ord('X') + i))].d
 
       sigma_square_bk[i] = np.average(v_bk**2, weights=dens) - np.average(v_bk, weights=dens)**2
       sigma_square_qp[i] = np.average(v_qp**2, weights=dens) - np.average(v_qp, weights=dens)**2

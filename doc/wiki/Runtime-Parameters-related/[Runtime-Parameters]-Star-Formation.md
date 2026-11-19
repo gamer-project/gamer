@@ -1,23 +1,79 @@
 Parameters described on this page:
 [SF_CREATE_STAR_SCHEME](#SF_CREATE_STAR_SCHEME), &nbsp;
+[SF_CREATE_STAR_CRITERIA](#SF_CREATE_STAR_CRITERIA), &nbsp;
+[SF_CREATE_STAR_MASS_RATE](#SF_CREATE_STAR_MASS_RATE), &nbsp;
+[SF_CREATE_STAR_PAR_SPAWN](#SF_CREATE_STAR_PAR_SPAWN), &nbsp;
 [SF_CREATE_STAR_RSEED](#SF_CREATE_STAR_RSEED), &nbsp;
 [SF_CREATE_STAR_DET_RANDOM](#SF_CREATE_STAR_DET_RANDOM), &nbsp;
 [SF_CREATE_STAR_MIN_LEVEL](#SF_CREATE_STAR_MIN_LEVEL), &nbsp;
 [SF_CREATE_STAR_MIN_GAS_DENS](#SF_CREATE_STAR_MIN_GAS_DENS), &nbsp;
+[SF_CREATE_STAR_MAX_GAS_TEMP](#SF_CREATE_STAR_MAX_GAS_TEMP), &nbsp;
+[SF_CREATE_STAR_MAX_GAS_JEANSL](#SF_CREATE_STAR_MAX_GAS_JEANSL), &nbsp;
 [SF_CREATE_STAR_MASS_EFF](#SF_CREATE_STAR_MASS_EFF), &nbsp;
 [SF_CREATE_STAR_MIN_STAR_MASS](#SF_CREATE_STAR_MIN_STAR_MASS), &nbsp;
-[SF_CREATE_STAR_MAX_STAR_MFRAC](#SF_CREATE_STAR_MAX_STAR_MFRAC), &nbsp;
+[SF_CREATE_STAR_MAX_STAR_MFRAC](#SF_CREATE_STAR_MAX_STAR_MFRAC)
 
 
 Parameters below are shown in the format: &ensp; **`Name` &ensp; (Valid Values) &ensp; [Default Value]**
 
 <a name="SF_CREATE_STAR_SCHEME"></a>
-* #### `SF_CREATE_STAR_SCHEME` &ensp; (0=off, 1=AGORA) &ensp; [0]
+* #### `SF_CREATE_STAR_SCHEME` &ensp; (-1=customized, 0=off, 1=AGORA) &ensp; [0]
     * **Description:**
 Star formation schemes.
+Each scheme will set the parameters
+[SF_CREATE_STAR_CRITERIA](#SF_CREATE_STAR_CRITERIA),
+[SF_CREATE_STAR_MASS_RATE](#SF_CREATE_STAR_MASS_RATE),
+and [SF_CREATE_STAR_PAR_SPAWN](#SF_CREATE_STAR_PAR_SPAWN)
+to their default values in the scheme if they are not specified manually (i.e., <0).
+The scheme defaults can be overwritten by user-provided parameters.
+For the customized scheme, there is no default, and users must set these parameters directly.
+The AGORA star formation scheme corresponds to
+[SF_CREATE_STAR_CRITERIA](#SF_CREATE_STAR_CRITERIA)=1,
+[SF_CREATE_STAR_MASS_RATE](#SF_CREATE_STAR_MASS_RATE)=1,
+and [SF_CREATE_STAR_PAR_SPAWN](#SF_CREATE_STAR_PAR_SPAWN)=1.
 See Sec.3.2 in [Kim et al. 2016](https://iopscience.iop.org/article/10.3847/1538-4357/833/2/202)
 and Sec.2.4 in [Goldbaum et al. 2015](https://iopscience.iop.org/article/10.1088/0004-637X/814/2/131)
 for the AGORA star formation scheme.
+    * **Restriction:**
+Only applicable when enabling the compilation option
+[[--star_formation | [Installation]-Option-List#--star_formation]].
+
+<a name="SF_CREATE_STAR_CRITERIA"></a>
+* #### `SF_CREATE_STAR_CRITERIA` &ensp; (<0=auto, 0=none, +1=high gas density, +2=low gas temperature, +4=unresolved Jeans length) &ensp; [-1]
+    * **Description:**
+Criteria for star formation.
+A cell must meet all criteria simultaneously to form a star.
+One can select multiple criteria by adding the corresponding numbers.
+For example, setting this parameter to 3 means a star can form only when
+the gas density is above a threshold (+1)
+and the temperature is below a threshold (+2).
+By default, this parameter is determined by [SF_CREATE_STAR_SCHEME](#SF_CREATE_STAR_SCHEME).
+The corresponding threshold values should be set by [SF_CREATE_STAR_MIN_GAS_DENS](#SF_CREATE_STAR_MIN_GAS_DENS),
+[SF_CREATE_STAR_MAX_GAS_TEMP](#SF_CREATE_STAR_MAX_GAS_TEMP),
+and [SF_CREATE_STAR_MAX_GAS_JEANSL](#SF_CREATE_STAR_MAX_GAS_JEANSL).
+    * **Restriction:**
+Only applicable when enabling the compilation option
+[[--star_formation | [Installation]-Option-List#--star_formation]].
+
+<a name="SF_CREATE_STAR_MASS_RATE"></a>
+* #### `SF_CREATE_STAR_MASS_RATE` &ensp; (<0=auto, 0=off, 1=constant efficiency per free-fall time) &ensp; [-1]
+    * **Description:**
+Methods to compute the stellar mass formation rate.
+For "constant efficiency per free-fall time", one can set the efficiency via [SF_CREATE_STAR_MASS_EFF](#SF_CREATE_STAR_MASS_EFF).
+See Equation (4) in [Kim et al. 2016](https://iopscience.iop.org/article/10.3847/1538-4357/833/2/202)
+for the local volumetric Schmidt law model assuming a constant efficiency per free-fall time.
+By default, this parameter is determined by [SF_CREATE_STAR_SCHEME](#SF_CREATE_STAR_SCHEME).
+    * **Restriction:**
+Only applicable when enabling the compilation option
+[[--star_formation | [Installation]-Option-List#--star_formation]].
+
+<a name="SF_CREATE_STAR_PAR_SPAWN"></a>
+* #### `SF_CREATE_STAR_PAR_SPAWN` &ensp; (<0=auto, 0=off, 1=stochastic with a minimum mass) &ensp; [-1]
+    * **Description:**
+Methods for spawning the stellar particles.
+For "stochastic with a minimum mass", one can set the minimum star particle mass via [SF_CREATE_STAR_MIN_STAR_MASS](#SF_CREATE_STAR_MIN_STAR_MASS).
+See Equation (5) in [Goldbaum et al. 2015](https://iopscience.iop.org/article/10.1088/0004-637X/814/2/131) for the stochastic spawning method.
+By default, this parameter is determined by [SF_CREATE_STAR_SCHEME](#SF_CREATE_STAR_SCHEME).
     * **Restriction:**
 Only applicable when enabling the compilation option
 [[--star_formation | [Installation]-Option-List#--star_formation]].
@@ -52,21 +108,53 @@ Only applicable when enabling the compilation option
     * **Description:**
 Minimum gas density allowed to form stars.
 See $\rho_{\rm gas,\ thres}$ in Eq.(4) in [Kim et al. 2016](https://iopscience.iop.org/article/10.3847/1538-4357/833/2/202).
-Note that the input value should always be in units of HI count/cm^3,
-and it will be converted internally to the gas mass density
-as $m_H\times$ HI count/cm^3 (i.e., assuming the gas is composed of only HI and the mean molecular weight $\mu=1$).
+Note that the input value should always be in units of $m_{\rm H}/{\rm cm}^3$,
+where $m_{\rm H}$ is the mass of a hydrogen atom,
+and it will be converted internally to the code units.
+Its value can be related to the conventional number density thresholds as
+$\frac{ \rho_{\rm gas,\ thres} }{ m_{\rm H}\, {\rm cm}^{-3} } = \frac{ \mu \times n_{\rm thres} }{ {\rm cm}^{-3} } = \frac{ n_{\rm H, thres} / X_{\rm H} }{ {\rm cm}^{-3} }$,
+where $\mu$ is the mean molecular weight, $n$ is the gas number density,
+$n_{\rm H} = n_{\rm HI} + n_{\rm HII} + 2n_{\rm H_2}$ is the number density of hydrogen atoms,
+and $X_{\rm H}$ is the hydrogen mass fraction.
     * **Restriction:**
 Only applicable when enabling the compilation option
 [[--star_formation | [Installation]-Option-List#--star_formation]].
+This is for [SF_CREATE_STAR_CRITERIA](#SF_CREATE_STAR_CRITERIA)&1 only.
+
+<a name="SF_CREATE_STAR_MAX_GAS_TEMP"></a>
+* #### `SF_CREATE_STAR_MAX_GAS_TEMP` &ensp; (&#8805;0.0) &ensp; [1.0e4]
+    * **Description:**
+Maximum gas temperature allowed to form stars.
+The star formation occurs only when the gas temperature is lower than this threshold.
+Note that the input value should always be in units of Kelvin.
+    * **Restriction:**
+Only applicable when enabling the compilation option
+[[--star_formation | [Installation]-Option-List#--star_formation]].
+This is for [SF_CREATE_STAR_CRITERIA](#SF_CREATE_STAR_CRITERIA)&2 only.
+
+<a name="SF_CREATE_STAR_MAX_GAS_JEANSL"></a>
+* #### `SF_CREATE_STAR_MAX_GAS_JEANSL` &ensp; (&#8805;0.0) &ensp; [1.0]
+    * **Description:**
+Maximum gas Jeans length allowed to form stars.
+The star formation occurs only when the local Jeans length is unresolved.
+See $L_{\rm J,0}$ in Sec.2.5 in [Hu et al. 2023](https://iopscience.iop.org/article/10.3847/1538-4357/accf9e).
+Note that the input value should always be in units of the cell size of each level.
+    * **Restriction:**
+Only applicable when enabling the compilation option
+[[--star_formation | [Installation]-Option-List#--star_formation]].
+This threshold is incompatible with [[JEANS_MIN_PRES | [Runtime-Parameters]-Hydro#JEANS_MIN_PRES]]
+This is for [SF_CREATE_STAR_CRITERIA](#SF_CREATE_STAR_CRITERIA)&4 only.
 
 <a name="SF_CREATE_STAR_MASS_EFF"></a>
-* #### `SF_CREATE_STAR_MASS_EFF` &ensp; (0.0 < input &#8804; 1.0) &ensp; [1.0e-2]
+* #### `SF_CREATE_STAR_MASS_EFF` &ensp; (>0.0) &ensp; [1.0e-2]
     * **Description:**
 Gas-to-star mass conversion efficiency.
 See $\epsilon_*$ in Eq.(4) in [Kim et al. 2016](https://iopscience.iop.org/article/10.3847/1538-4357/833/2/202).
+An efficiency of greater than 1.0 implies all of the gas is converted into a star in less than one free-fall time.
     * **Restriction:**
 Only applicable when enabling the compilation option
 [[--star_formation | [Installation]-Option-List#--star_formation]].
+This is for [SF_CREATE_STAR_MASS_RATE](#SF_CREATE_STAR_MASS_RATE)==1 only.
 
 <a name="SF_CREATE_STAR_MIN_STAR_MASS"></a>
 * #### `SF_CREATE_STAR_MIN_STAR_MASS` &ensp; (&#8805;0.0) &ensp; [0.0]
@@ -77,6 +165,7 @@ Note that the input value should always be in units of Msun.
     * **Restriction:**
 Only applicable when enabling the compilation option
 [[--star_formation | [Installation]-Option-List#--star_formation]].
+This is for [SF_CREATE_STAR_PAR_SPAWN](#SF_CREATE_STAR_PAR_SPAWN)==1 only.
 
 <a name="SF_CREATE_STAR_MAX_STAR_MFRAC"></a>
 * #### `SF_CREATE_STAR_MAX_STAR_MFRAC` &ensp; (0.0 < input &#8804; 1.0) &ensp; [0.5]

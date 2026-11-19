@@ -12,6 +12,7 @@ Parameters described on this page:
 [PAR_INTEG](#PAR_INTEG), &nbsp;
 [PAR_TR_INTERP](#PAR_TR_INTERP), &nbsp;
 [PAR_TR_INTEG](#PAR_TR_INTEG), &nbsp;
+[PAR_TR_VEL_CORR](#PAR_TR_VEL_CORR), &nbsp;
 [PAR_IMPROVE_ACC](#PAR_IMPROVE_ACC), &nbsp;
 [PAR_PREDICT_POS](#PAR_PREDICT_POS), &nbsp;
 [PAR_REMOVE_CELL](#PAR_REMOVE_CELL), &nbsp;
@@ -122,6 +123,9 @@ NGP is not recommended.
 Massive particle integration scheme. Euler integration is only first-order accurate
 and is generally not recommended.
     * **Restriction:**
+`PAR_INTEG_EULER` is not supported with the compilation option
+[[--store_par_pot | [Installation]-Option-List#--store_par_pot]]
+(see `Aux_Check_Parameter()`).
 
 <a name="PAR_TR_INTERP"></a>
 * #### `PAR_TR_INTERP` &ensp; (1=NGP, 2=CIC, 3=TSC) &ensp; [3]
@@ -135,6 +139,15 @@ Tracer particle interpolation schemes. See [PAR_INTERP](#PAR_INTERP) for details
 Tracer particle integration scheme. Euler integration is only first-order accurate
 and is generally not recommended.
     * **Restriction:**
+
+<a name="PAR_TR_VEL_CORR"></a>
+* #### `PAR_TR_VEL_CORR` &ensp; (0=off, 1=on) &ensp; [0]
+    * **Description:**
+Correct tracer particle velocities in regions of discontinuous flow.
+See Section 2.2 and Equation 1 of 
+[Wittor et al. (2016) MNRAS, 464, 4](https://ui.adsabs.harvard.edu/abs/2017MNRAS.464.4448W).
+    * **Restriction:**
+Only applicable when adopting [PAR_INTERP](#PAR_INTERP)=2/3.
 
 <a name="PAR_IMPROVE_ACC"></a>
 * #### `PAR_IMPROVE_ACC` &ensp; (0=off, 1=on) &ensp; [1]

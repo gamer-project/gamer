@@ -342,6 +342,15 @@ void SetParameter()
 //                   --> It will be calculated automatically
 //                4. For MHD, do NOT add magnetic energy (i.e., 0.5*B^2) to fluid[ENGY] here
 //                   --> It will be added automatically later
+//                5. When cosmic rays are enabled:
+//                   --> Store the cosmic-ray energy in fluid[CRAY]
+//                   --> Include the cosmic-ray energy fluid[CRAY] in the total energy fluid[ENGY] as well
+//                   --> Be aware that EoS routines, such as EoS_DensPres2Eint_CPUPtr() and Hydro_ConEint2Etot(),
+//                       always operate on the *total (gas + cosmic rays)* pressure/internal energy
+//                6. Be aware that EoS routines generally require passive scalars
+//                   --> For example, the passive-scalar array Passive[] must be properly filled when calling
+//                       EoS_DensPres2Eint_CPUPtr( Dens, Pres, Passive, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table )
+//                       for more general EoS models such as EOS_COSMIC_RAY
 //
 // Parameter   :  fluid    : Fluid field to be initialized
 //                x/y/z    : Physical coordinates
@@ -596,7 +605,7 @@ void SetGridIC( real fluid[], const double x, const double y, const double z, co
    P_cr = EoS_CREint2CRPres_CPUPtr( CRay, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
    Pres = Pres + P_cr;
 
-// set the output array of passive scaler
+// set the output array of passive scalars before calling EoS_DensPres2Eint_CPUPtr()
    fluid[CRAY] = CRay;
 
    Eint = EoS_DensPres2Eint_CPUPtr( Dens, Pres, fluid+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );

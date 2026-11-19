@@ -831,7 +831,7 @@ size_t QuarticInterpolationContext::GetWorkspaceSize() const
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  QuadraticInterpolationContext::InterpolateReal
+// Function    :  QuarticInterpolationContext::InterpolateReal
 // Description :  Interpolate input array of size nInput and store interpolation results of size 2*(nInput - nGhostBoundary) in output array
 //
 // Parameter   :  input     : Real input  array of size nInput
@@ -890,7 +890,7 @@ size_t CQuarticInterpolationContext::GetWorkspaceSize() const
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  QuadraticInterpolationContext::InterpolateReal
+// Function    :  CQuarticInterpolationContext::InterpolateReal
 // Description :  Interpolate input array of size nInput and store interpolation results of size 2*(nInput - nGhostBoundary) in output array
 //
 // Parameter   :  input     : Real input  array of size nInput

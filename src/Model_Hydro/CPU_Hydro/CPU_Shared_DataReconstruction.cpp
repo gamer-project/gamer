@@ -18,14 +18,16 @@
 #include "CUFLU_Shared_ConstrainedTransport.cu"
 #endif
 
+#ifdef DUAL_ENERGY_PREDICT
+# include "CUFLU_Shared_DualEnergy.cu"
+#endif
+
 #ifdef CONDUCTION
 # include "../../Microphysics/Conduction/CUFLU_AddConductiveFlux.cu"
 #endif
 
 #ifdef VISCOSITY
 # include "../../Microphysics/Viscosity/CUFLU_AddViscousFlux.cu"
-#endif
-
 #else
 
 void Hydro_Rotate3D( real InOut[], const int XYZ, const bool Forward, const int Mag_Offset );
@@ -89,6 +91,7 @@ static void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCO
                                   const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                                   const int NGhost, const int NEle,
                                   const real MinDens, const real MinPres, const real MinEint,
+                                  const real DualEnergySwitch,
                                   const EoS_t *EoS, const long PassiveFloor );
 #ifdef CONDUCTION
 GPU_DEVICE
@@ -209,6 +212,7 @@ static void Hydro_Char2Pri( real InOut[], const real Dens, const real Pres, cons
 //                dh                 : Cell size
 //                MinDens/Pres       : Density, pressure floors
 //                MinEint/Temp       : Internal energy, temperature floors
+//                DualEnergySwitch   : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
 //                PassiveFloor       : Bitwise flag to specify the passive scalars to be floored
 //                FracPassive        : true --> convert passive scalars to mass fraction during data reconstruction
 //                NFrac              : Number of passive scalars for the option "FracPassive"
@@ -229,6 +233,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh,
                                const real MinDens, const real MinPres, const real MinEint, const real MinTemp,
+                               const real DualEnergySwitch,
                                const long PassiveFloor, const bool FracPassive, const int NFrac, const int FracIdx[],
                                const bool JeansMinPres, const real JeansMinPres_Coeff,
                                const EoS_t *EoS, const MicroPhy_t *MicroPhy )
@@ -722,7 +727,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 
 //    7. advance the face-centered variables by half time-step for the MHM integrator
       Hydro_HancockPredict( fcCon, fcPri, dt, dh, g_ConVar, idx_cc, i_cc, j_cc, k_cc, g_Flux, g_FC_B, g_EC_Ele, NGhost, N_HF_ELE,
-                            MinDens, MinPres, MinEint, EoS, PassiveFloor );
+                            MinDens, MinPres, MinEint, DualEnergySwitch, EoS, PassiveFloor );
 #     endif // # if ( FLU_SCHEME == MHM )
 
 
@@ -773,6 +778,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
                                const bool Con2Pri, const LR_Limiter_t LR_Limiter, const real MinMod_Coeff,
                                const real dt, const real dh,
                                const real MinDens, const real MinPres, const real MinEint, const real MinTemp,
+                               const real DualEnergySwitch,
                                const long PassiveFloor, const bool FracPassive, const int NFrac, const int FracIdx[],
                                const bool JeansMinPres, const real JeansMinPres_Coeff,
                                const EoS_t *EoS, const MicroPhy_t *MicroPhy )
@@ -1457,7 +1463,7 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #     if ( FLU_SCHEME == MHM )
 //    7. advance the face-centered variables by half time-step for the MHM integrator
       Hydro_HancockPredict( fcCon, fcPri, dt, dh, g_ConVar, idx_cc, i_cc, j_cc, k_cc, g_Flux, g_FC_B, g_EC_Ele, NGhost, N_HF_ELE,
-                            MinDens, MinPres, MinEint, EoS, PassiveFloor );
+                            MinDens, MinPres, MinEint, DualEnergySwitch, EoS, PassiveFloor );
 #     endif // # if ( FLU_SCHEME == MHM )
 
 
@@ -2147,6 +2153,7 @@ void Hydro_LimitSlope( const real L[], const real C[], const real R[], const LR_
 //                NGhost            : Ghost zone size of data reconstruction
 //                NEle              : Stride for accessing g_EC_Ele[]
 //                MinDens/Pres/Eint : Density, pressure, and internal energy floors
+//                DualEnergySwitch  : Use the dual-energy formalism if E_int/E_kin < DualEnergySwitch
 //                EoS               : EoS object
 //                PassiveFloor      : Bitwise flag to specify the passive scalars to be floored
 //-------------------------------------------------------------------------------------------------------
@@ -2159,6 +2166,7 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
                            const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                            const int NGhost, const int NEle,
                            const real MinDens, const real MinPres, const real MinEint,
+                           const real DualEnergySwitch,
                            const EoS_t *EoS, const long PassiveFloor )
 {
 
@@ -2268,6 +2276,26 @@ void Hydro_HancockPredict( real fcCon[][NCOMP_LR], const real fcPri[][NCOMP_LR],
 #     endif
    } // for (int f=0; f<6; f++)
 #  endif // #ifdef MHM_CHECK_PREDICT
+
+// apply dual-energy check
+//###NOTE: for simplicity, perform it after MHM_CHECK_PREDICT for now
+#  ifdef DUAL_ENERGY_PREDICT
+   const bool CheckMinPres_No = false;
+   char dummy;
+
+   for (int f=0; f<6; f++)
+   {
+#     ifdef MHD
+      const real Emag = (real)0.5*( SQR(fcCon[f][MAG_OFFSET+0]) + SQR(fcCon[f][MAG_OFFSET+1]) + SQR(fcCon[f][MAG_OFFSET+2]) );
+#     else
+      const real Emag = NULL_REAL;
+#     endif // MHD
+      Hydro_DualEnergyFix( fcCon[f][DENS], fcCon[f][MOMX], fcCon[f][MOMY], fcCon[f][MOMZ],
+                           fcCon[f][ENGY], fcCon[f][DUAL], fcCon[f]+NCOMP_FLUID, dummy,
+                           EoS->AuxArrayDevPtr_Flt[1], EoS->AuxArrayDevPtr_Flt[2], CheckMinPres_No, NULL_REAL,
+                           PassiveFloor, DualEnergySwitch, Emag );
+   }
+#  endif
 
 } // FUNCTION : Hydro_HancockPredict
 

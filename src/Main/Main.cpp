@@ -48,7 +48,7 @@ int                  MPI_Rank, MPI_Rank_X[3], MPI_SibRank[26], NX0[3], NPatchTot
 int                 *BaseP = NULL;
 int                  Flu_ParaBuf;
 
-double               BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, OUTPUT_WALLTIME, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
+double               BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, INIT_T, END_T, OUTPUT_DT, OUTPUT_WALLTIME, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
 long                 END_STEP;
 int                  NX0_TOT[3], OUTPUT_STEP, OUTPUT_WALLTIME_UNIT, REGRID_COUNT, REFINE_NLEVEL, FLU_GPU_NPGROUP, SRC_GPU_NPGROUP, OMP_NTHREAD;
 int                  MPI_NRank, MPI_NRank_X[3];
@@ -115,6 +115,7 @@ int                  MINMOD_MAX_ITER;
 double               MIN_DENS, MIN_PRES, MIN_EINT, MIN_TEMP, MIN_ENTR;
 #ifdef DUAL_ENERGY
 double               DUAL_ENERGY_SWITCH;
+bool                 OPT__OUTPUT_DUAL_STATUS;
 #endif
 #ifdef MHD
 double               FlagTable_Current[NLEVEL-1], INT_MONO_COEFF_B;
@@ -139,6 +140,7 @@ bool                 OPT__OUTPUT_ENTHALPY;
 #elif ( MODEL == ELBDM )
 double               DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
 bool                 OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE, OPT__RES_PHASE;
+bool                 OPT__OUTPUT_ELBDM_VEL, OPT__OUTPUT_ELBDM_Q_POT, OPT__OUTPUT_ELBDM_Q_STRESS;
 bool                 ELBDM_TAYLOR3_AUTO;
 double               ELBDM_TAYLOR3_COEFF;
 double               ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
@@ -231,6 +233,9 @@ bool                 FFTW3_Double_OMP_Enabled, FFTW3_Single_OMP_Enabled;
 #ifdef PARTICLE
 double               DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
 bool                 OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL, OPT__FREEZE_PAR, OPT__OUTPUT_PAR_MESH, OPT__PAR_INIT_CHECK;
+#ifdef GRAVITY
+bool                 OPT__OUTPUT_PAR_POT;
+#endif
 bool                 OPT__FLAG_PAR_TARGET_SIB;
 int                  OPT__OUTPUT_PAR_MODE, OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, PAR_IC_FLOAT8, PAR_IC_INT8, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
 double               FlagTable_ParMassCell[NLEVEL-1];
@@ -284,14 +289,19 @@ int                  CHE_GPU_NPGROUP;
 
 // (2-8) star formation
 #ifdef STAR_FORMATION
-SF_CreateStarScheme_t SF_CREATE_STAR_SCHEME;
-int                   SF_CREATE_STAR_RSEED;
-int                   SF_CREATE_STAR_DET_RANDOM;
-int                   SF_CREATE_STAR_MIN_LEVEL;
-double                SF_CREATE_STAR_MIN_GAS_DENS;
-double                SF_CREATE_STAR_MASS_EFF;
-double                SF_CREATE_STAR_MIN_STAR_MASS;
-double                SF_CREATE_STAR_MAX_STAR_MFRAC;
+SF_CreateStarScheme_t   SF_CREATE_STAR_SCHEME;
+SF_CreateStarCriteria_t SF_CREATE_STAR_CRITERIA;
+SF_CreateStarMassRate_t SF_CREATE_STAR_MASS_RATE;
+SF_CreateStarParSpawn_t SF_CREATE_STAR_PAR_SPAWN;
+int                     SF_CREATE_STAR_RSEED;
+int                     SF_CREATE_STAR_DET_RANDOM;
+int                     SF_CREATE_STAR_MIN_LEVEL;
+double                  SF_CREATE_STAR_MIN_GAS_DENS;
+double                  SF_CREATE_STAR_MAX_GAS_TEMP;
+double                  SF_CREATE_STAR_MAX_GAS_JEANSL;
+double                  SF_CREATE_STAR_MASS_EFF;
+double                  SF_CREATE_STAR_MIN_STAR_MASS;
+double                  SF_CREATE_STAR_MAX_STAR_MFRAC;
 #endif
 
 // (2-9) equation of state
@@ -301,32 +311,36 @@ double EoS_AuxArray_Flt[EOS_NAUX_MAX];
 int    EoS_AuxArray_Int[EOS_NAUX_MAX];
 
 // b. function pointers
-EoS_GUESS_t   EoS_GuessHTilde_CPUPtr   = NULL;
-EoS_H2TEM_t   EoS_HTilde2Temp_CPUPtr   = NULL;
-EoS_TEM2H_t   EoS_Temp2HTilde_CPUPtr   = NULL;
-EoS_DE2P_t    EoS_DensEint2Pres_CPUPtr = NULL;
-EoS_DP2E_t    EoS_DensPres2Eint_CPUPtr = NULL;
-EoS_DP2C_t    EoS_DensPres2CSqr_CPUPtr = NULL;
-EoS_DE2T_t    EoS_DensEint2Temp_CPUPtr = NULL;
-EoS_DT2P_t    EoS_DensTemp2Pres_CPUPtr = NULL;
-EoS_DE2S_t    EoS_DensEint2Entr_CPUPtr = NULL;
-EoS_GENE_t    EoS_General_CPUPtr       = NULL;
+EoS_GUESS_t   EoS_GuessHTilde_CPUPtr     = NULL;
+EoS_H2TEM_t   EoS_HTilde2Temp_CPUPtr     = NULL;
+EoS_TEM2H_t   EoS_Temp2HTilde_CPUPtr     = NULL;
+EoS_DE2P_t    EoS_DensEint2Pres_CPUPtr   = NULL;
+EoS_DP2E_t    EoS_DensPres2Eint_CPUPtr   = NULL;
+EoS_DP2C_t    EoS_DensPres2CSqr_CPUPtr   = NULL;
+EoS_DE2T_t    EoS_DensEint2Temp_CPUPtr   = NULL;
+EoS_DT2P_t    EoS_DensTemp2Pres_CPUPtr   = NULL;
+EoS_DE2S_t    EoS_DensEint2Entr_CPUPtr   = NULL;
+EoS_GENE_t    EoS_General_CPUPtr         = NULL;
+EoS_CRE2CRP_t EoS_CREint2CRPres_CPUPtr   = NULL;   // declare for Hydro_Con2Dual() even when COSMIC_RAY is disabled
 #ifdef COSMIC_RAY
-EoS_CRE2CRP_t EoS_CREint2CRPres_CPUPtr = NULL;
+EoS_GP2GE_t   EoS_GasPres2GasEint_CPUPtr = NULL;
+EoS_GE2GP_t   EoS_GasEint2GasPres_CPUPtr = NULL;
 #endif
 #ifdef GPU
-EoS_GUESS_t   EoS_GuessHTilde_GPUPtr   = NULL;
-EoS_H2TEM_t   EoS_HTilde2Temp_GPUPtr   = NULL;
-EoS_TEM2H_t   EoS_Temp2HTilde_GPUPtr   = NULL;
-EoS_DE2P_t    EoS_DensEint2Pres_GPUPtr = NULL;
-EoS_DP2E_t    EoS_DensPres2Eint_GPUPtr = NULL;
-EoS_DP2C_t    EoS_DensPres2CSqr_GPUPtr = NULL;
-EoS_DE2T_t    EoS_DensEint2Temp_GPUPtr = NULL;
-EoS_DT2P_t    EoS_DensTemp2Pres_GPUPtr = NULL;
-EoS_DE2S_t    EoS_DensEint2Entr_GPUPtr = NULL;
-EoS_GENE_t    EoS_General_GPUPtr       = NULL;
+EoS_GUESS_t   EoS_GuessHTilde_GPUPtr     = NULL;
+EoS_H2TEM_t   EoS_HTilde2Temp_GPUPtr     = NULL;
+EoS_TEM2H_t   EoS_Temp2HTilde_GPUPtr     = NULL;
+EoS_DE2P_t    EoS_DensEint2Pres_GPUPtr   = NULL;
+EoS_DP2E_t    EoS_DensPres2Eint_GPUPtr   = NULL;
+EoS_DP2C_t    EoS_DensPres2CSqr_GPUPtr   = NULL;
+EoS_DE2T_t    EoS_DensEint2Temp_GPUPtr   = NULL;
+EoS_DT2P_t    EoS_DensTemp2Pres_GPUPtr   = NULL;
+EoS_DE2S_t    EoS_DensEint2Entr_GPUPtr   = NULL;
+EoS_GENE_t    EoS_General_GPUPtr         = NULL;
+EoS_CRE2CRP_t EoS_CREint2CRPres_GPUPtr   = NULL;   // declare for Hydro_Con2Dual() even when COSMIC_RAY is disable
 #ifdef COSMIC_RAY
-EoS_CRE2CRP_t EoS_CREint2CRPres_GPUPtr = NULL;
+EoS_GP2GE_t   EoS_GasPres2GasEint_GPUPtr = NULL;
+EoS_GE2GP_t   EoS_GasEint2GasPres_GPUPtr = NULL;
 #endif
 #endif
 

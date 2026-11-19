@@ -147,12 +147,14 @@ bool Hydro_IsUnphysical_Single( const real Field, const char SingleFieldName[], 
                                 const char File[], const int Line, const char Function[], const IsUnphVerb_t Verbose );
 #ifdef DUAL_ENERGY
 void Hydro_DualEnergyFix( const real Dens, const real MomX, const real MomY, const real MomZ,
-                          real &Etot, real &Dual, char &DE_Status, const real Gamma_m1, const real _Gamma_m1,
+                          real &Etot, real &Dual, const real Passive[], char &DE_Status, const real Gamma_m1, const real _Gamma_m1,
                           const bool CheckMinPres, const real MinPres, const long PassiveFloor, const real DualEnergySwitch,
                           const real Emag );
 real Hydro_Con2Dual( const real Dens, const real MomX, const real MomY, const real MomZ, const real Engy,
-                     const real Emag, const EoS_DE2P_t EoS_DensEint2Pres, const double EoS_AuxArray_Flt[],
-                     const int EoS_AuxArray_Int[], const real *const EoS_Table[EOS_NTABLE_MAX], const long PassiveFloor );
+                     const real Passive[], const real Emag,
+                     const EoS_DE2P_t EoS_DensEint2Pres, const EoS_CRE2CRP_t EoS_CREint2CRPres,
+                     const double EoS_AuxArray_Flt[], const int EoS_AuxArray_Int[],
+                     const real *const EoS_Table[EOS_NTABLE_MAX], const long PassiveFloor );
 real Hydro_DensPres2Dual( const real Dens, const real Pres, const real Gamma_m1 );
 real Hydro_DensDual2Pres( const real Dens, const real Dual, const real Gamma_m1,
                           const bool CheckMinPres, const real MinPres );
@@ -652,6 +654,7 @@ bool   ELBDM_Flag_Interference( const int i, const int j, const int k, const rea
 real   ELBDM_UnwrapPhase( const real Phase_Ref, const real Phase_Wrapped );
 real   ELBDM_SetTaylor3Coeff( const real dt, const real dh, const real Eta );
 void   ELBDM_RemoveMotionCM();
+void   ELBDM_DerivedField( real Out[], const real In[], const int FieldID, const int Dir, const int NGhost, const real dh );
 void   ELBDM_RescaleMassError();
 #ifdef SUPPORT_FFTW
 void   CPU_ELBDMSolver_FFT( const real dt, const double PrepTime, const int SaveSg );
@@ -764,6 +767,7 @@ void Par_UpdateParticle( const int lv, const double TimeNew, const double TimeOl
                          const bool StoreAcc, const bool UseStoredAcc );
 void Par_UpdateTracerParticle( const int lv, const double TimeNew, const double TimeOld,
                                const bool MapOnly );
+void Par_UpdateParticlePotential( const int lv, const double PrepTime, const bool OnlyVelCorr );
 void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv );
 void Par_PassParticle2Sibling( const int lv, const bool TimingSendPar );
 bool Par_WithinActiveRegion( const real_par x, const real_par y, const real_par z );
@@ -879,11 +883,12 @@ double Grackle_GetTimeStep_CoolingTime( const int lv );
 
 // star formation
 #ifdef STAR_FORMATION
-void SF_CreateStar( const int lv, const real TimeNew, const real dt );
+void SF_CreateStar( const int lv, const real TimeNew, const real TimeOld, const real dt );
 void SF_FreeRNG();
-void SF_CreateStar_AGORA( const int lv, const real TimeNew, const real dt, RandomNumber_t *RNG,
-                          const real GasDensThres, const real Efficiency, const real MinStarMass, const real MaxStarMFrac,
-                          const bool DetRandom, const bool UseMetal );
+void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real dt, RandomNumber_t *RNG, const bool UseMetal );
+bool SF_CreateStar_Check( const int lv, const int PID, const int i, const int j, const int k, const double dh, const real CosmoScaleFactor,
+                          const real fluid[][PS1][PS1][PS1], const real Temp[][PS1][PS1], const real Pres[][PS1][PS1], const real Cs2[][PS1][PS1] );
+real SF_CreateStar_GetStarMass( const real GasDens, const real CosmoScaleFactor, const real dv, const real dt, RandomNumber_t *RNG, const int TID );
 #endif
 
 

@@ -34,6 +34,7 @@ void Init_TestProb_Hydro_CR_ShockTube();
 void Init_TestProb_Hydro_CR_Diffusion();
 void Init_TestProb_Hydro_GrackleTest();
 void Init_TestProb_Hydro_ParFlag();
+void Init_TestProb_Hydro_StarFormationThreshold();
 void Init_TestProb_Hydro_ConductionStepFunction();
 void Init_TestProb_Hydro_ConductionRing();
 void Init_TestProb_Hydro_MHD_MTI();
@@ -111,6 +112,7 @@ void Init_TestProb()
       case TESTPROB_HYDRO_CR_DIFFUSION :                 Init_TestProb_Hydro_CR_Diffusion();                break;
       case TESTPROB_HYDRO_GRACKLE_TEST :                 Init_TestProb_Hydro_GrackleTest();                 break;
       case TESTPROB_HYDRO_PARTICLE_FLAG :                Init_TestProb_Hydro_ParFlag();                     break;
+      case TESTPROB_HYDRO_STAR_FORMATION_THRESHOLD :     Init_TestProb_Hydro_StarFormationThreshold();      break;
       case TESTPROB_HYDRO_CONDUCTION_STEP_FUNCTION :     Init_TestProb_Hydro_ConductionStepFunction();      break;
       case TESTPROB_HYDRO_CONDUCTION_RING :              Init_TestProb_Hydro_ConductionRing();              break;
       case TESTPROB_HYDRO_MHD_MTI:                       Init_TestProb_Hydro_MHD_MTI();                     break;

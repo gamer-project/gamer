@@ -132,16 +132,26 @@ void Grackle_Close( const int lv, const int SaveSg, const real_che h_Che_Array[]
 //          update the total energy density
             *( fluid[ENGY     ][0][0] + idx_p ) = Eint + Ptr_Ent[idx_pg]*DensRatio_FluChe;
 
-//          update the dual-energy variable to be consistent with the updated pressure
+//          update the dual-energy variable to be consistent with the updated gas pressure
+//          --> must exclude cosmic-ray pressure
 #           ifdef DUAL_ENERGY
+
 #           if   ( DUAL_ENERGY == DE_ENPY )
-//          DE_ENPY only works with EOS_GAMMA, which does not involve passive scalars
+#           if   ( EOS == EOS_GAMMA )
+//          EOS_GAMMA does not involve passive scalars
             Pres = EoS_DensEint2Pres_CPUPtr( Dens, Eint, NULL, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#           elif ( EOS == EOS_COSMIC_RAY )
+            Pres = EoS_GasEint2GasPres_CPUPtr( Eint, EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table );
+#           else
+#           error : ERROR : unsupported EoS !!
+#           endif // EOS
+
             *( fluid[DUAL     ][0][0] + idx_p ) = Hydro_DensPres2Dual( Dens, Pres, EoS_AuxArray_Flt[1] );
 
 #           elif ( DUAL_ENERGY == DE_EINT )
 #           error : DE_EINT is NOT supported yet !!
 #           endif
+
 #           endif // #ifdef DUAL_ENERGY
 
 //          update all chemical species

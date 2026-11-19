@@ -87,8 +87,8 @@ void Aux_Check_Parameter()
    if ( END_STEP < 0  &&  OPT__INIT != INIT_BY_RESTART )
       Aux_Error( ERROR_INFO, "incorrect parameter \"%s = %d\" [>=0] !!\n", "END_STEP", END_STEP );
 
-   if ( END_T < 0.0  &&  OPT__INIT != INIT_BY_RESTART )
-      Aux_Error( ERROR_INFO, "incorrect parameter \"%s = %14.7e\" [>=0] !!\n", "END_T", END_T );
+   if ( END_T < INIT_T  &&  OPT__INIT != INIT_BY_RESTART )
+      Aux_Error( ERROR_INFO, "incorrect parameter \"%s = %14.7e\" [>= INIT_T = %14.7e] !!\n", "END_T", END_T, INIT_T );
 
 #  ifndef LOAD_BALANCE
    if ( NX0_TOT[0]%(PS2*MPI_NRank_X[0]) != 0  ||  NX0_TOT[1]%(PS2*MPI_NRank_X[1]) != 0  ||
@@ -298,7 +298,11 @@ void Aux_Check_Parameter()
 #  ifdef SUPPORT_FFTW
    if ( OPT__FFTW_STARTUP != FFTW_STARTUP_ESTIMATE )
       Aux_Error( ERROR_INFO, "must set OPT__FFTW_STARTUP=0 (FFTW_STARTUP_ESTIMATE) for BITWISE_REPRODUCIBILITY !!\n" );
+
+#  if ( SUPPORT_FFTW == FFTW3  &&  defined SERIAL )
+      Aux_Message( stderr, "WARNING : SUPPORT_FFTW=FFTW3 + SERIAL may break BITWISE_REPRODUCIBILITY !!\n" );
 #  endif
+#  endif // #ifdef SUPPORT_FFTW
 #  endif // #ifdef BITWISE_REPRODUCIBILITY
 
 #  if ( !defined SERIAL  &&  !defined LOAD_BALANCE )
@@ -762,12 +766,16 @@ void Aux_Check_Parameter()
 #     error : RTVD does NOT support DUAL_ENERGY !!
 #   endif
 
+#   if (  defined DUAL_ENERGY_PREDICT  &&  ( FLU_SCHEME != MHM && FLU_SCHEME != MHM_RP )  )
+#     error : DUAL_ENERGY_PREDICT only supports FLU_SCHEME = MHM/MHM_RP !!
+#   endif
+
 #   if ( DUAL_ENERGY != DE_ENPY )
 #     error : ERROR : unsupported dual-energy formalism (DE_ENPY only, DE_EINT is not supported yet) !!
 #   endif
 
-#   if ( DUAL_ENERGY == DE_ENPY  &&  EOS != EOS_GAMMA )
-#     error : ERROR : DUAL_ENERGY=DE_ENPY only supports EOS_GAMMA !!
+#   if (  DUAL_ENERGY == DE_ENPY  &&  ( EOS != EOS_GAMMA && EOS != EOS_COSMIC_RAY )  )
+#     error : ERROR : DUAL_ENERGY=DE_ENPY only supports EOS_GAMMA/EOS_COSMIC_RAY !!
 #   endif
 #  endif // #ifdef DUAL_ENERGY
 
@@ -839,10 +847,6 @@ void Aux_Check_Parameter()
 
 #   if ( EOS != EOS_COSMIC_RAY )
 #     error : ERROR : COSMIC_RAY must use EOS_COSMIC_RAY !!
-#   endif
-
-#   ifdef DUAL_ENERGY
-#     error : ERROR : DUAL_ENERGY is not supported for COSMIC_RAY !!
 #   endif
 
 #   ifdef COMOVING
@@ -1733,6 +1737,25 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "DT__PARACC (%14.7e) is NOT supported when STORE_PAR_ACC is off !!\n", DT__PARACC );
 #  endif
 
+#  ifndef STORE_PAR_POT
+   if ( OPT__OUTPUT_PAR_POT )
+      Aux_Error( ERROR_INFO, "OPT__OUTPUT_PAR_POT is enabled but STORE_PAR_POT is off !!\n"
+                 "        --> Recompile with \"--store_par_pot=true\" to use this option\n" );
+#  else
+// Par_UpdateParticlePotential() is called in EvolveLevel() assuming the TimeNew potential buffer
+// patches are already exchanged (not guaranteed under OPT__MINIMIZE_MPI_BARRIER) and relies on the
+// KDK predictor/corrector negative-time convention (not available for PAR_INTEG_EULER) to correctly
+// synchronize particles crossing refinement-level boundaries
+// --> check against the compile-time option STORE_PAR_POT instead of the runtime output option
+//     OPT__OUTPUT_PAR_POT, since Par->Pot[] may be relied on by other code (e.g. feedback modules)
+//     even when OPT__OUTPUT_PAR_POT is disabled
+   if ( OPT__MINIMIZE_MPI_BARRIER )
+      Aux_Error( ERROR_INFO, "STORE_PAR_POT does NOT work with OPT__MINIMIZE_MPI_BARRIER !!\n" );
+
+   if ( amr->Par->Integ == PAR_INTEG_EULER )
+      Aux_Error( ERROR_INFO, "STORE_PAR_POT does NOT work with PAR_INTEG_EULER !!\n" );
+#  endif
+
    for (int d=0; d<3; d++)
    {
 //    we have assumed that OPT__BC_FLU[2*d] == OPT__BC_FLU[2*d+1] when adopting the periodic BC
@@ -1914,6 +1937,19 @@ void Aux_Check_Parameter()
 #     error : STAR_FORMATION + STORE_PAR_ACC must work with STORE_POT_GHOST !!
 #  endif
 
+   if ( SF_CREATE_STAR_SCHEME != SF_CREATE_STAR_SCHEME_NONE )
+   {
+      const long SupportedCriteria = ( SF_CREATE_STAR_CRITERIA_HIGH_GAS_DENSITY | SF_CREATE_STAR_CRITERIA_LOW_GAS_TEMPERATURE | SF_CREATE_STAR_CRITERIA_UNRESOLVED_JEANS_LENGTH );
+      if ( SF_CREATE_STAR_CRITERIA <= SF_CREATE_STAR_CRITERIA_NONE  ||  ( SF_CREATE_STAR_CRITERIA & ~SupportedCriteria ) )
+         Aux_Error( ERROR_INFO, "unsupported SF_CREATE_STAR_CRITERIA (%d) !!\n", SF_CREATE_STAR_CRITERIA );
+
+      if ( SF_CREATE_STAR_MASS_RATE <= SF_CREATE_STAR_MASS_RATE_NONE )
+         Aux_Error( ERROR_INFO, "unsupported SF_CREATE_STAR_MASS_RATE (%d) !!\n", SF_CREATE_STAR_MASS_RATE );
+
+      if ( SF_CREATE_STAR_PAR_SPAWN <= SF_CREATE_STAR_PAR_SPAWN_NONE )
+         Aux_Error( ERROR_INFO, "unsupported SF_CREATE_STAR_PAR_SPAWN (%d) !!\n", SF_CREATE_STAR_PAR_SPAWN );
+   }
+
 // warning
 // ------------------------------
    if ( MPI_Rank == 0 ) {
@@ -1922,9 +1958,18 @@ void Aux_Check_Parameter()
       Aux_Message( stderr, "WARNING : SF_CREATE_STAR_MIN_LEVEL (%d) > MAX_LEVEL (%d) --> no star particles will form !!\n",
                    SF_CREATE_STAR_MIN_LEVEL, MAX_LEVEL );
 
-   if ( SF_CREATE_STAR_SCHEME == SF_CREATE_STAR_SCHEME_AGORA  &&  !SF_CREATE_STAR_DET_RANDOM )
+   if (  ( SF_CREATE_STAR_CRITERIA & SF_CREATE_STAR_CRITERIA_UNRESOLVED_JEANS_LENGTH )  &&  JEANS_MIN_PRES  )
    {
-      Aux_Message( stderr, "WARNING : SF_CREATE_STAR_SCHEME == 1 will break bitwise reproducibility due to the \n" );
+      Aux_Message( stderr, "WARNING : SF_CREATE_STAR_CRITERIA == %ld is incompatible with JEANS_MIN_PRES !!\n",
+                   SF_CREATE_STAR_CRITERIA );
+      Aux_Message( stderr, "          --> SF_CREATE_STAR_MAX_GAS_JEANSL = %14.8e, but JEANS_MIN_PRES_NCELL = %d and JEANS_MIN_PRES_LEVEL = %d\n",
+                   SF_CREATE_STAR_MAX_GAS_JEANSL, JEANS_MIN_PRES_NCELL, JEANS_MIN_PRES_LEVEL );
+   }
+
+   if ( SF_CREATE_STAR_PAR_SPAWN == SF_CREATE_STAR_PAR_SPAWN_STOCHASTIC_MIN_MASS
+        &&  !SF_CREATE_STAR_DET_RANDOM )
+   {
+      Aux_Message( stderr, "WARNING : SF_CREATE_STAR_PAR_SPAWN == %d will break bitwise reproducibility due to the\n", SF_CREATE_STAR_PAR_SPAWN_STOCHASTIC_MIN_MASS );
       Aux_Message( stderr, "          random values used for the stochastic star formation !!\n" );
       Aux_Message( stderr, "          --> Enable \"SF_CREATE_STAR_DET_RANDOM\" if reproducibility is of great concern\n" );
    }

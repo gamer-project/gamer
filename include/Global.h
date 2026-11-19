@@ -57,7 +57,7 @@ extern int        PassiveIntFrac_NVar, PassiveIntFrac_VarIdx[NCOMP_PASSIVE];
 extern int        StrLen_Flt;
 extern char       BlankPlusFormat_Flt[MAX_STRING+1];
 
-extern double     BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, END_T, OUTPUT_DT, OUTPUT_WALLTIME, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
+extern double     BOX_SIZE, DT__MAX, DT__FLUID, DT__FLUID_INIT, INIT_T, END_T, OUTPUT_DT, OUTPUT_WALLTIME, DT__SYNC_PARENT_LV, DT__SYNC_CHILDREN_LV;
 extern long int   END_STEP;
 extern int        NX0_TOT[3], OUTPUT_STEP, OUTPUT_WALLTIME_UNIT, REGRID_COUNT, REFINE_NLEVEL, FLU_GPU_NPGROUP, SRC_GPU_NPGROUP, OMP_NTHREAD;
 extern int        MPI_NRank, MPI_NRank_X[3];
@@ -125,6 +125,7 @@ extern int              MINMOD_MAX_ITER;
 extern double           MIN_DENS, MIN_PRES, MIN_EINT, MIN_TEMP, MIN_ENTR;
 #ifdef DUAL_ENERGY
 extern double           DUAL_ENERGY_SWITCH;
+extern bool             OPT__OUTPUT_DUAL_STATUS;
 #endif
 #ifdef MHD
 extern double           FlagTable_Current[NLEVEL-1], INT_MONO_COEFF_B;
@@ -150,6 +151,7 @@ extern bool             OPT__OUTPUT_ENTHALPY;
 #elif ( MODEL == ELBDM )
 extern double           DT__PHASE, FlagTable_EngyDensity[NLEVEL-1][2];
 extern bool             OPT__FLAG_ENGY_DENSITY, OPT__INT_PHASE, OPT__RES_PHASE, ELBDM_TAYLOR3_AUTO;
+extern bool             OPT__OUTPUT_ELBDM_VEL, OPT__OUTPUT_ELBDM_Q_POT, OPT__OUTPUT_ELBDM_Q_STRESS;
 extern double           ELBDM_TAYLOR3_COEFF, ELBDM_MASS, ELBDM_PLANCK_CONST, ELBDM_ETA, MIN_DENS;
 #ifdef QUARTIC_SELF_INTERACTION
 extern double           ELBDM_LAMBDA;
@@ -243,6 +245,9 @@ extern bool       FFTW3_Double_OMP_Enabled, FFTW3_Single_OMP_Enabled;
 #ifdef PARTICLE
 extern double          DT__PARVEL, DT__PARVEL_MAX, DT__PARACC;
 extern bool            OPT__CK_PARTICLE, OPT__FLAG_NPAR_CELL, OPT__FLAG_PAR_MASS_CELL, OPT__FREEZE_PAR, OPT__OUTPUT_PAR_MESH, OPT__PAR_INIT_CHECK;
+#ifdef GRAVITY
+extern bool            OPT__OUTPUT_PAR_POT;
+#endif
 extern bool            OPT__FLAG_PAR_TARGET_SIB;
 extern int             OPT__OUTPUT_PAR_MODE, OPT__PARTICLE_COUNT, OPT__FLAG_NPAR_PATCH, FlagTable_NParPatch[NLEVEL-1], FlagTable_NParCell[NLEVEL-1];
 extern double          FlagTable_ParMassCell[NLEVEL-1];
@@ -304,14 +309,19 @@ extern int             CHE_GPU_NPGROUP;
 // (2-8) star formation
 // ============================================================================================================
 #ifdef STAR_FORMATION
-extern SF_CreateStarScheme_t SF_CREATE_STAR_SCHEME;
-extern int                   SF_CREATE_STAR_RSEED;
-extern int                   SF_CREATE_STAR_DET_RANDOM;
-extern int                   SF_CREATE_STAR_MIN_LEVEL;
-extern double                SF_CREATE_STAR_MIN_GAS_DENS;
-extern double                SF_CREATE_STAR_MASS_EFF;
-extern double                SF_CREATE_STAR_MIN_STAR_MASS;
-extern double                SF_CREATE_STAR_MAX_STAR_MFRAC;
+extern SF_CreateStarScheme_t   SF_CREATE_STAR_SCHEME;
+extern SF_CreateStarCriteria_t SF_CREATE_STAR_CRITERIA;
+extern SF_CreateStarMassRate_t SF_CREATE_STAR_MASS_RATE;
+extern SF_CreateStarParSpawn_t SF_CREATE_STAR_PAR_SPAWN;
+extern int                     SF_CREATE_STAR_RSEED;
+extern int                     SF_CREATE_STAR_DET_RANDOM;
+extern int                     SF_CREATE_STAR_MIN_LEVEL;
+extern double                  SF_CREATE_STAR_MIN_GAS_DENS;
+extern double                  SF_CREATE_STAR_MAX_GAS_TEMP;
+extern double                  SF_CREATE_STAR_MAX_GAS_JEANSL;
+extern double                  SF_CREATE_STAR_MASS_EFF;
+extern double                  SF_CREATE_STAR_MIN_STAR_MASS;
+extern double                  SF_CREATE_STAR_MAX_STAR_MFRAC;
 #endif
 
 // (2-9) equation of state
@@ -329,8 +339,10 @@ extern EoS_DE2T_t    EoS_DensEint2Temp_CPUPtr;
 extern EoS_DT2P_t    EoS_DensTemp2Pres_CPUPtr;
 extern EoS_DE2S_t    EoS_DensEint2Entr_CPUPtr;
 extern EoS_GENE_t    EoS_General_CPUPtr;
-#ifdef COSMIC_RAY
 extern EoS_CRE2CRP_t EoS_CREint2CRPres_CPUPtr;
+#ifdef COSMIC_RAY
+extern EoS_GP2GE_t   EoS_GasPres2GasEint_CPUPtr;
+extern EoS_GE2GP_t   EoS_GasEint2GasPres_CPUPtr;
 #endif
 #ifdef GPU
 extern EoS_GUESS_t   EoS_GuessHTilde_GPUPtr;
@@ -343,8 +355,10 @@ extern EoS_DE2T_t    EoS_DensEint2Temp_GPUPtr;
 extern EoS_DT2P_t    EoS_DensTemp2Pres_GPUPtr;
 extern EoS_DE2S_t    EoS_DensEint2Entr_GPUPtr;
 extern EoS_GENE_t    EoS_General_GPUPtr;
-#ifdef COSMIC_RAY
 extern EoS_CRE2CRP_t EoS_CREint2CRPres_GPUPtr;
+#ifdef COSMIC_RAY
+extern EoS_GP2GE_t   EoS_GasPres2GasEint_GPUPtr;
+extern EoS_GE2GP_t   EoS_GasEint2GasPres_GPUPtr;
 #endif
 #endif
 extern EoS_t EoS;

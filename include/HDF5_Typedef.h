@@ -197,6 +197,7 @@ struct Makefile_t
    int MassiveParticles;
    int Tracer;
    int StoreParAcc;
+   int StoreParPot;
    int StarFormation;
    int Feedback;
    int Par_NAttFltUser;
@@ -336,6 +337,7 @@ struct SymConst_t
    int    EulerY;
 #  endif
    int    MHM_CheckPredict;
+   int    DualEnergyPredict;
    int    EoSNAuxMax;
    int    EoSNTableMax;
 
@@ -410,6 +412,7 @@ struct InputPara_t
    int    MPI_NRank;
    int    MPI_NRank_X[3];
    int    OMP_NThread;
+   double InitT;
    double EndT;
    long   EndStep;
 
@@ -452,6 +455,9 @@ struct InputPara_t
    int    Par_IntegTracer;
    int    Par_ImproveAcc;
    int    Par_PredictPos;
+#  ifdef GRAVITY
+   int    Opt__Output_Par_Pot;
+#  endif
    double Par_RemoveCell;
    int    Opt__FreezePar;
    int    Par_GhostSize;
@@ -750,10 +756,15 @@ struct InputPara_t
 // star formation
 #  ifdef STAR_FORMATION
    int    SF_CreateStar_Scheme;
+   long   SF_CreateStar_Criteria;
+   int    SF_CreateStar_MassRate;
+   int    SF_CreateStar_ParSpawn;
    int    SF_CreateStar_RSeed;
    int    SF_CreateStar_DetRandom;
    int    SF_CreateStar_MinLevel;
    double SF_CreateStar_MinGasDens;
+   double SF_CreateStar_MaxGasTemp;
+   double SF_CreateStar_MaxGasJeansL;
    double SF_CreateStar_MassEff;
    double SF_CreateStar_MinStarMass;
    double SF_CreateStar_MaxStarMFrac;
@@ -913,7 +924,15 @@ struct InputPara_t
    int    Opt__Output_GrackleMu;
    int    Opt__Output_GrackleTCool;
 #  endif
+#  ifdef DUAL_ENERGY
+   int    Opt__Output_Dual_Status;
+#  endif
 #  endif // #if ( MODEL == HYDRO )
+#  if ( MODEL == ELBDM )
+   int    Opt__Output_ELBDM_Vel;
+   int    Opt__Output_ELBDM_Q_Pot;
+   int    Opt__Output_ELBDM_Q_Stress;
+#  endif
    int    Opt__Output_UserField;
    int    Opt__Output_Mode;
    int    Opt__Output_Restart;

@@ -50,6 +50,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
    const bool   UseStoredAcc_Yes  = true;
    const bool   UseStoredAcc_No   = false;
    const bool   TimingSendPar_Yes = true;
+   const bool   OnlyVelCorr_Yes   = true;
 #  endif
 #  if ( MODEL == HYDRO )
    const double MinModCoeff_Ori   = MINMOD_COEFF;     // back up the original MINMOD_COEFF/INT_MONO_COEFF(_B)
@@ -457,6 +458,15 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
             Aux_Message( stdout, "   Lv %2d: Par_UpdateParticle (correct Lv %2d)... ", lv, lv );
 
+//       update the potential of particles awaiting velocity correction at lv *before* correcting them,
+//       while their time is still negative (see Note-7 of Par_UpdateParticlePotential())
+//       --> requires the TimeNew potential buffer patches to be ready already, which holds here as long
+//           as OPT__MINIMIZE_MPI_BARRIER is off (see Aux_Check_Parameter())
+#        ifdef STORE_PAR_POT
+         TIMING_FUNC(   Par_UpdateParticlePotential( lv, TimeNew, OnlyVelCorr_Yes ),
+                        Timer_Par_Update[lv][1],   TIMER_ON   );
+#        endif
+
 #        ifdef STORE_PAR_ACC
          TIMING_FUNC(   Par_UpdateParticle( lv, TimeNew, TimeOld, PAR_UPSTEP_CORR, StoreAcc_Yes, UseStoredAcc_No ),
                         Timer_Par_Update[lv][1],   TIMER_ON   );
@@ -472,6 +482,12 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
             if ( OPT__VERBOSE  &&  MPI_Rank == 0 )
                Aux_Message( stdout, "   Lv %2d: Par_UpdateParticle (correct Lv %2d)... ", lv, lv-1 );
 
+//          same as above, but for particles just travelling from lv to lv-1 and awaiting correction there
+#           ifdef STORE_PAR_POT
+            TIMING_FUNC(   Par_UpdateParticlePotential( lv-1, TimeNew, OnlyVelCorr_Yes ),
+                           Timer_Par_Update[lv][2],   TIMER_ON   );
+#           endif
+
 //          apply velocity correction for particles just travelling from lv to lv-1
 #           ifdef STORE_PAR_ACC
             TIMING_FUNC(   Par_UpdateParticle( lv-1, TimeNew, TimeOld, PAR_UPSTEP_CORR, StoreAcc_Yes, UseStoredAcc_No ),
@@ -483,7 +499,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
 
             if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
          }
-      }
+      } // if ( amr->Par->Integ == PAR_INTEG_KDK )
 
 //    pass particles to the children patches
 //    --> we will do this later (just before the star-formation routines) if OPT__MINIMIZE_MPI_BARRIER is adopted
@@ -569,7 +585,7 @@ void EvolveLevel( const int lv, const double dTime_FaLv )
             Aux_Message( stdout, "   Lv %2d: SF_CreateStar, counter = %8ld ... ", lv, AdvanceCounter[lv] );
 
 //###REVISE: we have assumed that SF_CreateStar() requires no ghost zones
-         TIMING_FUNC(   SF_CreateStar( lv, TimeNew, dt_SubStep ),
+         TIMING_FUNC(   SF_CreateStar( lv, TimeNew, TimeOld, dt_SubStep ),
                         Timer_SF[lv],   TIMER_ON   );
 
          if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
