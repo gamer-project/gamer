@@ -2,6 +2,7 @@ import cluster_generator as cg
 import unyt as u
 from numpy.random import RandomState
 import numpy as np
+from kspace.power_spectra import PowerLawBetaModel
 
 # Note that cluster_generator does not use unyt units for speed and simplicity,
 # so mass units are Msun, length units are kpc, and time units are Myr
@@ -112,10 +113,12 @@ center1, center2 = cg.compute_centers_for_binary(center, d, b)
 left_edge = center-0.5*w
 right_edge = center+0.5*w
 dims = (256,)*3
-bfield = cg.RadialRandomMagneticVectorPotential(left_edge, right_edge, dims,
-                                                10.0, 500.0, center1,
-                                                "profile1.h5", ctr2=center2,
-                                                profile2="profile2.h5", r_max=5000.0)
+pspec = PowerLawBetaModel(l_min=10.0, l_max=500.0, alpha=-11.0/3.0, ndim=3)
+bfield = cg.MagneticPotentialRandomClusterField(left_edge, right_edge, dims,
+                                                power_spec=pspec, ctr1=center1, profile1="profile1.h5",
+                                                ctr2=center2, profile2="profile2.h5",
+                                                r_max=5000.0, prng=prng)
+bfield.generate_field()
 
 # Write the 3D vector potential to the B_IC file
 bfield.write_file("B_IC", overwrite=True, length_unit="Mpc",
