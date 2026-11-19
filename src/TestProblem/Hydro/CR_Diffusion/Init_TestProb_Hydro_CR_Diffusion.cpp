@@ -234,7 +234,12 @@ void SetParameter()
    if ( CR_Diffusion_CenterZ < 0.0 )  CR_Diffusion_CenterZ = 0.5*amr->BoxSize[2];
 
 // (1-3) check the runtime parameters
-   if ( CR_Diffusion_Type == 0  ||  CR_Diffusion_Type == 1  ||  CR_Diffusion_Type == 2  ||  CR_Diffusion_Type == 3 )
+// --> Type 1 requires a large CR_Diffusion_Rho0 to keep the gas quasi-static under the hoop stress of the circular B field
+   if ( (CR_Diffusion_Type == 0  ||  CR_Diffusion_Type == 1  ||  CR_Diffusion_Type == 3)  &&  CR_Diffusion_Rho0 < 1.0e6 )
+      Aux_Error( ERROR_INFO, "CR_Diffusion_Type = 1 (ring) requires a quasi-static gas: set CR_Diffusion_Rho0 >= 1e6 "
+                             "to suppress the circular-B hoop-stress implosion (got %13.7e) !!\n", CR_Diffusion_Rho0 );
+
+   if ( CR_Diffusion_Type == 2 )
       Aux_Error( ERROR_INFO, "CR_Diffusion_Type (%d) is not supported yet !! (Unless you have fixed the all the fluid except cosmic ray.)\n", CR_Diffusion_Type );
 
    if ( (CR_Diffusion_Type == 0  ||  CR_Diffusion_Type == 3)  &&  CR_Diffusion_Mag_Type != 0 )

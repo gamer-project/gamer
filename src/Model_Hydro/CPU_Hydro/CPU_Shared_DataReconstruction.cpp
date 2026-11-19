@@ -217,7 +217,8 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #  else
 #  error : ERROR : unsupported FLU_SCHEME !!
 #  endif
-   const int NGhost = LR_GHOST_SIZE;
+// NGhost = LR_GHOST_SIZE, or LR_GHOST_SIZE+1 for CR_TWOMOMENT (see FLU_GHOST_SIZE in Macro.h)
+   const int NGhost = ( NIn - N_FC_VAR ) / 2;
 
 
 // check
@@ -733,7 +734,8 @@ void Hydro_DataReconstruction( const real g_ConVar   [][ CUBE(FLU_NXT) ],
 #  else
 #  error : ERROR : unsupported FLU_SCHEME !!
 #  endif
-   const int NGhost = LR_GHOST_SIZE;
+// NGhost = LR_GHOST_SIZE, or LR_GHOST_SIZE+1 for CR_TWOMOMENT (see FLU_GHOST_SIZE in Macro.h)
+   const int NGhost = ( NIn - N_FC_VAR ) / 2;
 
 
 // check

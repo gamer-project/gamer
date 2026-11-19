@@ -33,6 +33,22 @@ void Microphysics_Init()
    MicroPhy.CR_diff_min_b      = CR_DIFF_MIN_B;
 #  endif // #ifdef CR_DIFFUSION
 
+#  ifdef CR_TWOMOMENT
+   MicroPhy.CR_source          = CR_SOURCE;
+   MicroPhy.CR_stream          = CR_STREAM;
+   MicroPhy.CR_Ec_source       = CR_EC_SOURCE;
+   MicroPhy.CR_vmax            = CR_VMAX;
+// input CR_SIGMA/CR_SIGMA_PERP are the physical inverse-diffusion coefficients sigma' of Jiang & Oh (2018)
+// with the diffusivity D = 1/(3*sigma'), while the two-moment solver uses the code-unit opacity Vm*sigma'
+   MicroPhy.CR_sigma           = CR_SIGMA      * CR_VMAX;
+   MicroPhy.CR_sigma_perp      = CR_SIGMA_PERP * CR_VMAX;
+   MicroPhy.CR_max_opacity     = CR_MAX_OPACITY;
+   MicroPhy.CR_tau_asym_lim    = CR_TAU_ASYM_LIM;
+   MicroPhy.CR_taufact         = CR_TAUFACT;
+   MicroPhy.CR_vel_flx_flag    = CR_VEL_FLX_FLAG;
+   MicroPhy.CR_cfl             = CR_CFL;
+#  endif // #ifdef CR_TWOMOMENT
+
    MicroPhy_Initialized = true;
 
 

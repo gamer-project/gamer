@@ -186,6 +186,12 @@ void Aux_TakeNote()
       fprintf( Note, "COSMIC_RAY                      OFF\n" );
 #     endif // #ifdef COSMIC_RAY ... else ...
 
+#     ifdef CR_TWOMOMENT
+      fprintf( Note, "CR_TWOMOMENT                    ON\n" );
+#     else
+      fprintf( Note, "CR_TWOMOMENT                    OFF\n" );
+#     endif
+
 #     if   ( EOS == EOS_GAMMA )
       fprintf( Note, "EOS                             EOS_GAMMA\n" );
 #     elif ( EOS == EOS_ISOTHERMAL )

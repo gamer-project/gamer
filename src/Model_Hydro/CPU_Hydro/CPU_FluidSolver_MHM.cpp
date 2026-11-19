@@ -39,6 +39,9 @@
 # include "../../Microphysics/CosmicRayDiffusion/CUFLU_CR_AddDiffuseFlux.cu"
 #endif
 #endif // #ifdef COSMIC_RAY
+#ifdef CR_TWOMOMENT
+# include "CUFLU_CR_TwoMoment.cu"
+#endif
 
 #else // #ifdef __CUDACC__
 
@@ -150,6 +153,39 @@ void CR_AddDiffuseFlux_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
                                  const int NFlux, const real dh, const MicroPhy_t *MicroPhy );
 #endif // #ifdef CR_DIFFUSION
 #endif // #ifdef COSMIC_RAY
+#ifdef CR_TWOMOMENT
+void CR_TwoMomentFlux_HalfStep( const real g_ConVar[][ CUBE(FLU_NXT) ],
+                                  real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                            const real g_CC_B[][ CUBE(FLU_NXT) ],
+                            const real dh, const MicroPhy_t *MicroPhy );
+void CR_TwoMomentFlux_FullStep( const real g_FC_Var[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_VAR) ],
+                                 const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
+                                       real g_FC_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                 const int NFlux, const int NSkip_N, const int NSkip_T,
+                                 const real dh, const MicroPhy_t *MicroPhy );
+void CR_TwoMomentSource_HalfStep( real OneCell[NCOMP_TOTAL_PLUS_MAG],
+                            const real g_ConVar_In[][ CUBE(FLU_NXT) ],
+                            const real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                            const real B_n[],
+                            const int idx_in, const int idx_flux, const int didx_flux[3],
+                            const real dt, const real dh, const MicroPhy_t *MicroPhy );
+void CR_TwoMomentSource_FullStep( const real g_PriVar_Half[][ CUBE(FLU_NXT) ],
+                                      real g_Output[][ CUBE(PS2) ],
+                                const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                                const real dt, const real dh, const MicroPhy_t *MicroPhy );
+void CR_UpdateStreaming( real g_Output[][ CUBE(FLU_NXT) ],
+                       const real g_CellVar[][ CUBE(FLU_NXT) ],
+                       const real g_CC_B[][ CUBE(FLU_NXT) ],
+                       const real g_Flux[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
+                       const int NFlux, const int NVar_Out, const int NVar_In, const int NVar_B,
+                       const int out_offset, const int in_offset,
+                       const real dh, const MicroPhy_t *MicroPhy );
+void CR_UpdateOpacity( real g_Output[][ CUBE(FLU_NXT) ],
+                       const real g_CC_B[][ CUBE(FLU_NXT) ],
+                       const int NVar_Out, const int NVar_In, const int NVar_B,
+                       const int out_offset, const int in_offset, const int NSize,
+                       const real dh, const MicroPhy_t *MicroPhy );
+#endif // #ifdef CR_TWOMOMENT
 
 #endif // #ifdef __CUDACC__ ... else ...
 
@@ -165,6 +201,7 @@ static void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
                                        const EoS_t *EoS );
 GPU_DEVICE
 static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
+                                  const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                   const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                                   const real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                         real g_PriVar_Half[][ CUBE(FLU_NXT) ],
@@ -173,7 +210,7 @@ static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
                                   const real DualEnergySwitch,
                                   const long PassiveFloor, const bool FracPassive, const int NFrac, const int FracIdx[],
                                   const bool JeansMinPres, const real JeansMinPres_Coeff,
-                                  const EoS_t *EoS );
+                                  const EoS_t *EoS, const MicroPhy_t *MicroPhy );
 #endif
 
 
@@ -201,6 +238,7 @@ static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 //
 //
 // Parameter   :  g_Flu_Array_In     : Array storing the input fluid variables
+//                                     --> Non-const for CR_TWOMOMENT since ADV_* are updated in place
 //                g_Flu_Array_Out    : Array to store the output fluid variables
 //                g_Mag_Array_In     : Array storing the input B field (for MHD only)
 //                g_Mag_Array_Out    : Array to store the output B field (for MHD only)
@@ -262,7 +300,11 @@ static void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 #ifdef __CUDACC__
 __global__
 void CUFLU_FluidSolver_MHM(
+#ifdef CR_TWOMOMENT
+         real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+#else
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+#endif
          real   g_Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
    const real   g_Mag_Array_In [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
          real   g_Mag_Array_Out[][NCOMP_MAG][ PS2P1*SQR(PS2) ],
@@ -290,7 +332,11 @@ void CUFLU_FluidSolver_MHM(
    const EoS_t EoS, const MicroPhy_t MicroPhy )
 #else
 void CPU_FluidSolver_MHM(
+#ifdef CR_TWOMOMENT
+         real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+#else
    const real   g_Flu_Array_In [][NCOMP_TOTAL][ CUBE(FLU_NXT) ],
+#endif
          real   g_Flu_Array_Out[][NCOMP_TOTAL][ CUBE(PS2) ],
    const real   g_Mag_Array_In [][NCOMP_MAG][ FLU_NXT_P1*SQR(FLU_NXT) ],
          real   g_Mag_Array_Out[][NCOMP_MAG][ PS2P1*SQR(PS2) ],
@@ -433,6 +479,16 @@ void CPU_FluidSolver_MHM(
 #        endif
 #        endif // #ifdef MHD
 
+#        ifdef CR_TWOMOMENT
+//       update ADV_* for the half-step CR fluxes
+//       --> g_Flu_Array_In[P] is updated in place
+         CR_UpdateOpacity( g_Flu_Array_In[P],
+                           g_PriVar_1PG+MAG_OFFSET,
+                           FLU_NXT, FLU_NXT, FLU_NXT, 1, 1, FLU_NXT-2, dh, &MicroPhy );
+#        ifdef __CUDACC__
+         __syncthreads();
+#        endif
+#        endif // #ifdef CR_TWOMOMENT
 
 //       1-a-2. evaluate the half-step first-order fluxes by Riemann solver
 //       hydrodynamic fluxes
@@ -442,6 +498,21 @@ void CPU_FluidSolver_MHM(
 //       add cosmic-ray fluxes
 #        ifdef CR_DIFFUSION
          CR_AddDiffuseFlux_HalfStep( g_Flu_Array_In[P], g_Flux_Half_1PG, g_Mag_Array_In[P], g_PriVar_1PG+MAG_OFFSET, dh, &MicroPhy );
+#        endif
+
+
+#        ifdef CR_TWOMOMENT
+         CR_TwoMomentFlux_HalfStep( g_Flu_Array_In[P], g_Flux_Half_1PG, g_PriVar_1PG+MAG_OFFSET, dh, &MicroPhy );
+
+//       update ADV_* for the half-step CR source term
+#        ifdef __CUDACC__
+         __syncthreads();
+#        endif
+         CR_UpdateStreaming( g_Flu_Array_In[P], g_Flu_Array_In[P], g_PriVar_1PG+MAG_OFFSET,
+                             g_Flux_Half_1PG, N_HF_FLUX, FLU_NXT, FLU_NXT, FLU_NXT, 0, 0, dh, &MicroPhy );
+#        ifdef __CUDACC__
+         __syncthreads();
+#        endif
 #        endif
 
 
@@ -458,10 +529,10 @@ void CPU_FluidSolver_MHM(
 
 
 //       1-a-4. evaluate the half-step solutions
-         Hydro_RiemannPredict( g_Flu_Array_In[P], g_FC_Mag_Half_1PG, g_Flux_Half_1PG, g_PriVar_Half_1PG,
+         Hydro_RiemannPredict( g_Flu_Array_In[P], g_Mag_Array_In[P], g_FC_Mag_Half_1PG, g_Flux_Half_1PG, g_PriVar_Half_1PG,
                                dt, dh, MinDens, MinPres, MinEint, DualEnergySwitch,
                                PassiveFloor, FracPassive, NFrac, c_FracIdx,
-                               JeansMinPres, JeansMinPres_Coeff, &EoS );
+                               JeansMinPres, JeansMinPres_Coeff, &EoS, &MicroPhy );
 
 
          do {
@@ -480,6 +551,21 @@ void CPU_FluidSolver_MHM(
 
 //          ensure adaptive MinMod_Coeff is non-negative
             AdaptiveMinModCoeff = FMAX( AdaptiveMinModCoeff, (real)0.0 );
+
+
+#           ifdef CR_TWOMOMENT
+//          restore ADV_* overwritten by CR_UpdateStreaming() in the previous iteration
+//          --> same call as at the end of Hydro_RiemannPredict(); its inputs are not modified in this loop
+            if ( Iteration > 0 )
+            {
+               CR_UpdateOpacity( g_PriVar_Half_1PG,
+                                 g_PriVar_Half_1PG+MAG_OFFSET,
+                                 N_HF_VAR, N_HF_VAR, N_HF_VAR, 1, 1, N_HF_VAR-2, dh, &MicroPhy );
+#              ifdef __CUDACC__
+               __syncthreads();
+#              endif
+            }
+#           endif // #ifdef CR_TWOMOMENT
 
 
 //          1-a-5. evaluate the face-centered values by data reconstruction
@@ -540,6 +626,24 @@ void CPU_FluidSolver_MHM(
             CR_AddDiffuseFlux_FullStep( g_PriVar_Half_1PG, g_FC_Flux_1PG, g_FC_Mag_Half_1PG, N_FL_FLUX, dh, &MicroPhy );
 #           endif
 
+#           ifdef CR_TWOMOMENT
+            CR_TwoMomentFlux_FullStep( g_FC_Var_1PG, g_PriVar_Half_1PG, g_FC_Flux_1PG,
+                                       N_FL_FLUX, NSkip_N, NSkip_T, dh, &MicroPhy );
+
+//          update ADV_* for the full-step CR source term
+#           ifdef __CUDACC__
+            __syncthreads();
+#           endif
+            {
+            const int half_offset = ( N_HF_VAR - N_FL_FLUX ) / 2;
+            CR_UpdateStreaming( g_PriVar_Half_1PG, g_PriVar_Half_1PG, g_PriVar_Half_1PG+MAG_OFFSET,
+                                g_FC_Flux_1PG, N_FL_FLUX, N_HF_VAR, N_HF_VAR, N_HF_VAR, half_offset, half_offset, dh, &MicroPhy );
+            }
+#           ifdef __CUDACC__
+            __syncthreads();
+#           endif
+#           endif
+
 
             if ( StoreFlux )
                Hydro_StoreIntFlux( g_FC_Flux_1PG, g_Flux_Array[P], N_FL_FLUX );
@@ -552,7 +656,8 @@ void CPU_FluidSolver_MHM(
 #           if ( FLU_SCHEME == MHM )
             const int OffsetPri = 0;
 #           else
-            const int OffsetPri = LR_GHOST_SIZE;
+//          OffsetPri = LR_GHOST_SIZE, or LR_GHOST_SIZE+1 for CR_TWOMOMENT (see FLU_GHOST_SIZE in Macro.h)
+            const int OffsetPri = ( N_HF_VAR - N_FC_VAR ) / 2;
 #           endif
 
             MHD_ComputeElectric( g_EC_Ele_1PG, g_FC_Flux_1PG, g_PriVar_Half_1PG, N_FL_ELE, N_FL_FLUX,
@@ -571,6 +676,13 @@ void CPU_FluidSolver_MHM(
                                   dt, dh, MinDens, MinEint, DualEnergySwitch,
                                   PassiveFloor, NormPassive, NNorm, c_NormIdx, &EoS, &s_FullStepFailure,
                                   Iteration, MinMod_MaxIter );
+
+//          add the two-moment cosmic-ray source term
+//          --> no CR_UpdateOpacity() afterward since it is invoked at the beginning of the next step
+#           ifdef CR_TWOMOMENT
+            CR_TwoMomentSource_FullStep( g_PriVar_Half_1PG, g_Flu_Array_Out[P], g_FC_Flux_1PG,
+                                         dt, dh, &MicroPhy );
+#           endif
 
 
 //          5. counter increment
@@ -805,6 +917,7 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //                3. Cell-centered B field is simply obtained by averaging the half-step face-centered B field
 //
 // Parameter   :  g_ConVar_In        : Array storing the input conserved variables
+//                g_FC_B_In          : Array storing the input face-centered B field (for CR_TWOMOMENT only)
 //                g_FC_B_Half        : Array storing the input half-step face-centered B field
 //                g_Flux_Half        : Array storing the input face-centered fluxes
 //                                     --> Accessed with the stride N_HF_FLUX
@@ -822,9 +935,11 @@ void Hydro_RiemannPredict_Flux( const real g_ConVar[][ CUBE(FLU_NXT) ],
 //                JeansMinPres       : Apply minimum pressure estimated from the Jeans length
 //                JeansMinPres_Coeff : Coefficient used by JeansMinPres = G*(Jeans_NCell*Jeans_dh)^2/(Gamma*pi);
 //                EoS                : EoS object
+//                MicroPhy           : Microphysics object
 //-------------------------------------------------------------------------------------------------------
 GPU_DEVICE
 void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
+                           const real g_FC_B_In[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                            const real g_FC_B_Half[][ FLU_NXT_P1*SQR(FLU_NXT) ],
                            const real g_Flux_Half[][NCOMP_TOTAL_PLUS_MAG][ CUBE(N_FC_FLUX) ],
                                  real g_PriVar_Half[][ CUBE(FLU_NXT) ],
@@ -833,7 +948,7 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
                            const real DualEnergySwitch,
                            const long PassiveFloor, const bool FracPassive, const int NFrac, const int FracIdx[],
                            const bool JeansMinPres, const real JeansMinPres_Coeff,
-                           const EoS_t *EoS )
+                           const EoS_t *EoS, const MicroPhy_t *MicroPhy )
 {
 
    const int  didx_flux[3] = { 1, N_HF_FLUX, SQR(N_HF_FLUX) };
@@ -890,17 +1005,27 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
          out_con[v] = g_ConVar_In[v][idx_in] - dt_dh2*( dflux[0][v] + dflux[1][v] + dflux[2][v] );
 
 
+//    compute the cell-centered half-step B field
+#     ifdef MHD
+      MHD_GetCellCenteredBField( out_con+MAG_OFFSET, g_FC_B_Half[0], g_FC_B_Half[1], g_FC_B_Half[2],
+                                 N_HF_VAR, N_HF_VAR, N_HF_VAR, i_out, j_out, k_out );
+#     endif
+
 //    add the cosmic-ray source term of adiabatic work
 #     ifdef COSMIC_RAY
       CR_AdiabaticWork_HalfStep_MHM_RP( out_con, g_ConVar_In, g_Flux_Half, idx_in, didx_in,
                                         idx_flux, didx_flux, dt_dh2, EoS );
 #     endif
 
+#     ifdef CR_TWOMOMENT
+//    add the two-moment cosmic-ray source term with the t^n cell-centered B field
+//    --> recompute B_n[] since g_PriVar[MAG_OFFSET+*] of step 1-a-1 aliases g_PriVar_Half[], which this loop overwrites
+      real B_n[NCOMP_MAG];
+      MHD_GetCellCenteredBField( B_n, g_FC_B_In[0], g_FC_B_In[1], g_FC_B_In[2],
+                                 FLU_NXT, FLU_NXT, FLU_NXT, i_in, j_in, k_in );
 
-//    compute the cell-centered half-step B field
-#     ifdef MHD
-      MHD_GetCellCenteredBField( out_con+MAG_OFFSET, g_FC_B_Half[0], g_FC_B_Half[1], g_FC_B_Half[2],
-                                 N_HF_VAR, N_HF_VAR, N_HF_VAR, i_out, j_out, k_out );
+      CR_TwoMomentSource_HalfStep( out_con, g_ConVar_In, g_Flux_Half, B_n, idx_in,
+                                   idx_flux, didx_flux, dt, dh, MicroPhy );
 #     endif
 
 //    apply density and internal energy floors
@@ -948,6 +1073,16 @@ void Hydro_RiemannPredict( const real g_ConVar_In[][ CUBE(FLU_NXT) ],
 #     endif
    } // i,j,k
 
+
+// update ADV_* of the half-step solution for the full-step CR fluxes
+#  ifdef CR_TWOMOMENT
+#  ifdef __CUDACC__
+   __syncthreads();
+#  endif
+   CR_UpdateOpacity( g_PriVar_Half,
+                     g_PriVar_Half+MAG_OFFSET,
+                     N_HF_VAR, N_HF_VAR, N_HF_VAR, 1, 1, N_HF_VAR-2, dh, MicroPhy );
+#  endif
 
 #  ifdef __CUDACC__
    __syncthreads();
