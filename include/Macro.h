@@ -548,13 +548,20 @@
 #  define PAR_NATT_FLT_BUILTIN2   0
 # endif
 
+// interpolated gravitational potential when STORE_PAR_POT is adopted
+# if ( defined STORE_PAR_POT  &&  defined GRAVITY )
+#  define PAR_NATT_FLT_BUILTIN3   1
+# else
+#  define PAR_NATT_FLT_BUILTIN3   0
+# endif
+
 // **total** number of built-in particle attributes
-#  define PAR_NATT_FLT_BUILTIN    ( PAR_NATT_FLT_BUILTIN0 + PAR_NATT_FLT_BUILTIN1 + PAR_NATT_FLT_BUILTIN2 )
+#  define PAR_NATT_FLT_BUILTIN    ( PAR_NATT_FLT_BUILTIN0 + PAR_NATT_FLT_BUILTIN1 + PAR_NATT_FLT_BUILTIN2 + PAR_NATT_FLT_BUILTIN3 )
 #  define PAR_NATT_INT_BUILTIN    ( PAR_NATT_INT_BUILTIN0 )
 
 
-// number of particle attributes that we do not want to store on disk (currently time + acceleration*3)
-#  define PAR_NATT_FLT_UNSTORED   ( 1 + PAR_NATT_FLT_BUILTIN1 )
+// number of particle attributes that we do not want to store on disk (currently time + acceleration*3 + potential)
+#  define PAR_NATT_FLT_UNSTORED   ( 1 + PAR_NATT_FLT_BUILTIN1 + PAR_NATT_FLT_BUILTIN3 )
 #  define PAR_NATT_FLT_STORED     ( PAR_NATT_FLT_TOTAL - PAR_NATT_FLT_UNSTORED )
 #  define PAR_NATT_INT_UNSTORED   ( 0 )
 #  define PAR_NATT_INT_STORED     ( PAR_NATT_INT_TOTAL - PAR_NATT_INT_UNSTORED )
@@ -590,12 +597,16 @@
 #  define  PAR_PUID           1
 #  define  PAR_FLAG           2
 
-// always put acceleration and time at the END of the particle attribute list
+// always put acceleration, potential, and time at the END of the particle attribute list
 // --> make it easier to discard them when storing data on disk (see Output_DumpData_Total(_HDF5).cpp)
+// --> order is [..., AccX, AccY, AccZ, Pot, Time]
 # if ( defined STORE_PAR_ACC  &&  defined GRAVITY )
-#  define  PAR_ACCX           ( PAR_NATT_FLT_TOTAL - 4 )
-#  define  PAR_ACCY           ( PAR_NATT_FLT_TOTAL - 3 )
-#  define  PAR_ACCZ           ( PAR_NATT_FLT_TOTAL - 2 )
+#  define  PAR_ACCX           ( PAR_NATT_FLT_TOTAL - 4 - PAR_NATT_FLT_BUILTIN3 )
+#  define  PAR_ACCY           ( PAR_NATT_FLT_TOTAL - 3 - PAR_NATT_FLT_BUILTIN3 )
+#  define  PAR_ACCZ           ( PAR_NATT_FLT_TOTAL - 2 - PAR_NATT_FLT_BUILTIN3 )
+# endif
+# if ( defined STORE_PAR_POT  &&  defined GRAVITY )
+#  define  PAR_POT            ( PAR_NATT_FLT_TOTAL - 2 )
 # endif
 #  define  PAR_TIME           ( PAR_NATT_FLT_TOTAL - 1 )
 
@@ -613,6 +624,9 @@
 #  define _PAR_ACCX           ( 1L << PAR_ACCX )
 #  define _PAR_ACCY           ( 1L << PAR_ACCY )
 #  define _PAR_ACCZ           ( 1L << PAR_ACCZ )
+# endif
+# if ( defined STORE_PAR_POT  &&  defined GRAVITY )
+#  define _PAR_POT            ( 1L << PAR_POT )
 # endif
 #  define _PAR_TIME           ( 1L << PAR_TIME )
 #  define _PAR_POS            ( _PAR_POSX | _PAR_POSY | _PAR_POSZ )
@@ -1353,6 +1367,12 @@
 // --> if we ever want to enable STORE_PAR_ACC without GRAVITY, remember to check all STORE_PAR_ACC in this header
 #ifndef GRAVITY
 #  undef STORE_PAR_ACC
+#endif
+
+// the particle potential is always interpolated from the gravitational potential
+// --> if we ever want to enable STORE_PAR_POT without GRAVITY, remember to check all STORE_PAR_POT in this header
+#ifndef GRAVITY
+#  undef STORE_PAR_POT
 #endif
 
 

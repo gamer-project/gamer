@@ -97,6 +97,9 @@ void FB_AdvanceDt( const int lv, const double TimeNew, const double TimeOld, con
 #  ifdef STORE_PAR_ACC
    ParAttFltBitIdx_Out &= ~( _PAR_ACCX | _PAR_ACCY | _PAR_ACCZ );
 #  endif
+#  ifdef STORE_PAR_POT
+   ParAttFltBitIdx_Out &= ~( _PAR_POT );
+#  endif
 
    for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)
    {

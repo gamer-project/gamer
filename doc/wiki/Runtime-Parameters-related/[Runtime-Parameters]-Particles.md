@@ -123,6 +123,9 @@ NGP is not recommended.
 Massive particle integration scheme. Euler integration is only first-order accurate
 and is generally not recommended.
     * **Restriction:**
+`PAR_INTEG_EULER` is not supported with the compilation option
+[[--store_par_pot | [Installation]-Option-List#--store_par_pot]]
+(see `Aux_Check_Parameter()`).
 
 <a name="PAR_TR_INTERP"></a>
 * #### `PAR_TR_INTERP` &ensp; (1=NGP, 2=CIC, 3=TSC) &ensp; [3]

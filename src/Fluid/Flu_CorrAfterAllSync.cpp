@@ -29,6 +29,9 @@
 //                   1-4. Recalculate particle acceleration
 //                        --> Because particles have been synchronized and potential has been recalculated
 //                        --> Must work with STORE_PAR_ACC
+//                   1-5. Recalculate particle potential
+//                        --> Because particles have been synchronized and potential has been recalculated
+//                        --> Must work with STORE_PAR_POT
 //                2. Invoked by main() and Output_DumpData()
 //                3. Do nothing if there are only base-level patches
 //                4. Strictly speaking, this function belongs to both Fluid, SelfGravity, and Particle categories
@@ -143,7 +146,20 @@ void Flu_CorrAfterAllSync()
 #  endif
 
 
-// 5. Update tracer particle attributes
+// 5. recalculate particle potential
+// --> kept up to date regardless of OPT__OUTPUT_PAR_POT, which only controls whether it gets
+//     written to the particle text/binary dump files
+#  if ( defined MASSIVE_PARTICLES  &&  defined STORE_PAR_POT )
+   if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "      recalculate particle potential        ... " );
+
+   for (int lv=0; lv<NLEVEL; lv++)
+      Par_UpdateParticlePotential( lv, amr->PotSgTime[lv][ amr->PotSg[lv] ], false );
+
+   if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "done\n" );
+#  endif
+
+
+// 6. Update tracer particle attributes
 #  ifdef TRACER
    if ( OPT__VERBOSE  &&  MPI_Rank == 0 )    Aux_Message( stdout, "      update tracer particle attributes     ... " );
 
