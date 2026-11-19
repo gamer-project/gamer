@@ -139,7 +139,7 @@ void Init_Field()
 // 4. must put all built-in scalars at the END of the field list and with the same order as their
 //    corresponding symbolic constants (e.g., DUAL/CRAY) defined in Macro.h
 //    --> as we still rely on these constants (e.g., DENS, DUAL) in the fluid solvers
-#  ifdef EXACT_COOLING
+#if defined(EXACT_COOLING) || defined(EXACT_COOLING_GENERAL)
    Idx_TCool = AddField( "TCool", FIXUP_FLUX_NO, FIXUP_REST_NO, FLOOR_YES, NORMALIZE_NO, INTERP_FRAC_NO );
    if ( Idx_TCool != TCOOL )    Aux_Error( ERROR_INFO, "inconsistent Idx_TCool (%d != %d) !!\n", Idx_TCool, TCOOL );
 #  endif
