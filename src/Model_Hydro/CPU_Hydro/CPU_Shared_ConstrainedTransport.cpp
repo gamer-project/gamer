@@ -852,10 +852,10 @@ void MHD_ComputeElectric_Half(       real g_EC_Ele[][ CUBE(N_EC_ELE) ],
 //                idx_{i,j,k} : Indices for accessing g_EC_Ele[]
 //                NEle        : Stride for accessing g_EC_Ele[]
 //
-// Return      :  fc[][NCOMP_LR]
+// Return      :  fc[][NCOMP_TOTAL_PLUS_MAG]
 //------------------------------------------------------------------------------------------------------
 GPU_DEVICE
-void MHD_UpdateMagnetic_Half(       real fc[][NCOMP_LR],
+void MHD_UpdateMagnetic_Half(       real fc[][NCOMP_TOTAL_PLUS_MAG],
                               const real g_EC_Ele[][ CUBE(N_EC_ELE) ],
                               const real dt, const real dh,
                               const int idx_i, const int idx_j, const int idx_k,
