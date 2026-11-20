@@ -1734,6 +1734,25 @@ void Aux_Check_Parameter()
       Aux_Error( ERROR_INFO, "DT__PARACC (%14.7e) is NOT supported when STORE_PAR_ACC is off !!\n", DT__PARACC );
 #  endif
 
+#  ifndef STORE_PAR_POT
+   if ( OPT__OUTPUT_PAR_POT )
+      Aux_Error( ERROR_INFO, "OPT__OUTPUT_PAR_POT is enabled but STORE_PAR_POT is off !!\n"
+                 "        --> Recompile with \"--store_par_pot=true\" to use this option\n" );
+#  else
+// Par_UpdateParticlePotential() is called in EvolveLevel() assuming the TimeNew potential buffer
+// patches are already exchanged (not guaranteed under OPT__MINIMIZE_MPI_BARRIER) and relies on the
+// KDK predictor/corrector negative-time convention (not available for PAR_INTEG_EULER) to correctly
+// synchronize particles crossing refinement-level boundaries
+// --> check against the compile-time option STORE_PAR_POT instead of the runtime output option
+//     OPT__OUTPUT_PAR_POT, since Par->Pot[] may be relied on by other code (e.g. feedback modules)
+//     even when OPT__OUTPUT_PAR_POT is disabled
+   if ( OPT__MINIMIZE_MPI_BARRIER )
+      Aux_Error( ERROR_INFO, "STORE_PAR_POT does NOT work with OPT__MINIMIZE_MPI_BARRIER !!\n" );
+
+   if ( amr->Par->Integ == PAR_INTEG_EULER )
+      Aux_Error( ERROR_INFO, "STORE_PAR_POT does NOT work with PAR_INTEG_EULER !!\n" );
+#  endif
+
    for (int d=0; d<3; d++)
    {
 //    we have assumed that OPT__BC_FLU[2*d] == OPT__BC_FLU[2*d+1] when adopting the periodic BC

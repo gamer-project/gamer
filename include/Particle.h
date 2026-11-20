@@ -112,6 +112,8 @@ void Aux_Error( const char *File, const int Line, const char *Func, const char *
 //                Vel                     : Particle velocity
 //                Time                    : Particle physical time
 //                Acc                     : Particle acceleration (only when STORE_PAR_ACC is on)
+//                Pot                     : Gravitational potential interpolated onto the particle position
+//                                          (only when STORE_PAR_POT is on)
 //                Type                    : Particle type (e.g., tracer, generic, dark matter, star)
 //                PUID                    : Particle UID
 //                Flag                    : Particle refinement flag
@@ -194,6 +196,9 @@ struct Particle_t
    real_par     *AccX;
    real_par     *AccY;
    real_par     *AccZ;
+#  endif
+#  ifdef STORE_PAR_POT
+   real_par     *Pot;
 #  endif
    long_par     *Type;
    long_par     *PUID;
@@ -283,6 +288,9 @@ struct Particle_t
       AccX = NULL;
       AccY = NULL;
       AccZ = NULL;
+#     endif
+#     ifdef STORE_PAR_POT
+      Pot  = NULL;
 #     endif
       Type = NULL;
       PUID = NULL;
@@ -438,6 +446,9 @@ struct Particle_t
       AccY = AttributeFlt[PAR_ACCY];
       AccZ = AttributeFlt[PAR_ACCZ];
 #     endif
+#     ifdef STORE_PAR_POT
+      Pot  = AttributeFlt[PAR_POT];
+#     endif
       Type = AttributeInt[PAR_TYPE];
       PUID = AttributeInt[PAR_PUID];
       Flag = AttributeInt[PAR_FLAG];
@@ -449,6 +460,15 @@ struct Particle_t
          PUID[p] = PUID_TBA;
          Flag[p] = PFLAG_TBA;
       }
+
+//    initialize the particle potential to a defined value
+//    --> it is a derived diagnostic quantity, always kept up to date for massive particles by
+//        Par_UpdateParticlePotential() whenever self-gravity or an external potential is active
+//        (independent of OPT__OUTPUT_PAR_POT, which only controls whether it gets written to disk),
+//        and otherwise (or for tracers) left untouched, so it must never be left as uninitialized memory
+#     ifdef STORE_PAR_POT
+      for (long p=0; p<NPar_Input; p++)   Pot[p] = (real_par)0.0;
+#     endif
 
    } // METHOD : InitRepo
 
@@ -548,6 +568,9 @@ struct Particle_t
             AccY = AttributeFlt[PAR_ACCY];
             AccZ = AttributeFlt[PAR_ACCZ];
 #           endif
+#           ifdef STORE_PAR_POT
+            Pot  = AttributeFlt[PAR_POT];
+#           endif
             Type = AttributeInt[PAR_TYPE];
             PUID = AttributeInt[PAR_PUID];
             Flag = AttributeInt[PAR_FLAG];
@@ -559,6 +582,12 @@ struct Particle_t
 
 
 //    2. record the data of new particles
+//    --> NOTE: this is also how LB_RedistributeRealPatch()/LB_Init_LoadBalance() re-store EXISTING
+//        particles after a redistribution (not just genuinely new ones), so every attribute --
+//        including the derived/diagnostic PAR_POT -- must come through NewAttFlt[] here rather than
+//        being forced to a fixed value; callers that create genuinely new particles (star formation,
+//        restart) are responsible for setting NewAttFlt[PAR_POT] themselves (see Particle::InitRepo()
+//        for the one-time allocation-time default)
       for (int v=0; v<PAR_NATT_FLT_TOTAL; v++)   AttributeFlt[v][ParID] = NewAttFlt[v];
       for (int v=0; v<PAR_NATT_INT_TOTAL; v++)   AttributeInt[v][ParID] = NewAttInt[v];
 

@@ -94,6 +94,9 @@ set [[PAR_IMPROVE_ACC | [Runtime-Parameters]-Particles#PAR_IMPROVE_ACC]]=1.
 [[OPT__TIMING_BALANCE | [Runtime-Parameters]-Miscellaneous#OPT__TIMING_BALANCE]]
 must be disabled. In addition, it is currently recommended to disable
 [[AUTO_REDUCE_DT | [Runtime-Parameters]-Timestep#AUTO_REDUCE_DT]].
+Not supported with the compilation option
+[[--store_par_pot | [Installation]-Option-List#--store_par_pot]]
+(see `Aux_Check_Parameter()`).
 
 <a name="OPT__LB_EXCHANGE_FATHER"></a>
 * #### `OPT__LB_EXCHANGE_FATHER` &ensp; (0=off, 1=on) &ensp; [0 usually, 1 for [[--elbdm_scheme=HYBRID | [Installation]-Option-List#--elbdm_scheme]]]
