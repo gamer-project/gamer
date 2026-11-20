@@ -114,7 +114,7 @@ OPT__MINIMIZE_MPI_BARRIER     0           # minimize MPI barriers to improve loa
 
 
 # feedback (FEEDBACK only)
-FB_LEVEL                     -1           # AMR level to apply feedback (must be MAX_LEVEL for now; <0=auto -> MAX_LEVEL) [-1]
+FB_MIN_LEVEL                 -1           # minimum AMR level allowed to apply feedback (<0=auto -> MAX_LEVEL) [0]
 FB_RSEED                      456         # random seed [456]
 FB_USER                       0           # user-defined feedback [0]
 

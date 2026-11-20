@@ -1,0 +1,12 @@
+# problem-specific runtime parameters
+SNBlast_Dens_Bg           1.0e-22     # background mass density (in g/cm^3) [1.0e-22]
+SNBlast_Temp_Bg           1.0e+01     # background temperature  (in K) [1.0e+01]
+SNBlast_MetalMassFrac_Bg  1.295e-09   # background metal mass fraction (metal_mass / gas_mass) [0.0]
+SNBlast_ParMass           1.0e+02     # supernova progenitor particle mass (in Msun) [1.0e+02]
+SNBlast_ParCenter_X       0.348       # supernova progenitor initial center x (<0=default) [box center]
+SNBlast_ParCenter_Y       0.348       # supernova progenitor initial center y (<0=default) [box center]
+SNBlast_ParCenter_Z       0.348       # supernova progenitor initial center z (<0=default) [box center]
+SNBlast_ParVelocity_X     0.01        # supernova progenitor initial velocity x [0.0]
+SNBlast_ParVelocity_Y     0.01        # supernova progenitor initial velocity y [0.0]
+SNBlast_ParVelocity_Z     0.01        # supernova progenitor initial velocity z [0.0]
+SNBlast_ParMetalMassFrac  1.295e-1    # supernova progenitor initial metal mass fraction (metal_mass / particle_mass) [0.0]

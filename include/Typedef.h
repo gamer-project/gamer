@@ -96,6 +96,7 @@ const TestProbID_t
    TESTPROB_HYDRO_GRACKLE_TEST                 =   24,
    TESTPROB_HYDRO_PARTICLE_FLAG                =   25,
    TESTPROB_HYDRO_STAR_FORMATION_THRESHOLD     =   26,
+   TESTPROB_HYDRO_SN_FEEDBACK_BLAST_WAVE       =   27,
    TESTPROB_HYDRO_BARRED_POT                   =   51,
    TESTPROB_HYDRO_JET_ICM_WALL                 =   52,
    TESTPROB_HYDRO_CDM_LSS                      =  100,
@@ -586,6 +587,17 @@ const SF_CreateStarParSpawn_t
    SF_CREATE_STAR_PAR_SPAWN_NONE                = 0,
    SF_CREATE_STAR_PAR_SPAWN_STOCHASTIC_MIN_MASS = 1,
    SF_CREATE_STAR_PAR_SPAWN_DETERMINISTIC       = 2;   // not implemented yet
+#endif
+
+
+// feedback
+#ifdef FEEDBACK
+// methods of sampling the number of SNeII in a star particle
+typedef int FB_ResolvedSNeII_Sampling_t;
+const FB_ResolvedSNeII_Sampling_t
+   FB_RESOLVED_SNEII_SAMPLING_NONE              = 0,
+   FB_RESOLVED_SNEII_SAMPLING_CAPPED_POISSON    = 1,
+   FB_RESOLVED_SNEII_SAMPLING_SHIFTED_BERNOULLI = 2;
 #endif
 
 
