@@ -16,10 +16,12 @@ extern bool        UseTree;
 extern bool        NeedGhost;
 extern bool        GetAvePot;
 extern double      NewtonG;
+extern bool        OutputSphVel;
 
 #if ( MODEL == ELBDM )
 extern bool        ELBDM_GetVir;
 extern double      ELBDM_ETA;
+extern int         ELBDM_Scheme;
 #endif
 
 
