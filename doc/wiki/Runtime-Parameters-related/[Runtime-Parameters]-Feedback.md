@@ -54,6 +54,12 @@ The actual amount of the ejected mass will not be greater than the mass of the p
 The number of cells to apply feedback will increase from one until the enclosed mass exceeds the given
 minimum gas mass ([[FB_RESOLVED_SNEII_MIN_M_GAS | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII_MIN_M_GAS ]]), or
 the diameter equals `FB_GHOST_SIZE+1`, or the region crosses the coarse-fine boundary.
+If `FB_Flu_Mass` is smaller than `FB_RESOLVED_SNEII_MIN_M_GAS` in
+`Record__FB_Resolved_SNeII` when
+[[FB_RESOLVED_SNEII_RECORD | Runtime Parameters:-Feedback#FB_RESOLVED_SNEII_RECORD ]]
+is enabled, check the `FB_Diameter` column: if it equals `(FB_GHOST_SIZE+1)` times the
+cell size, the region is limited by the ghost zone; if it is smaller, the region is
+limited by the coarse-fine boundary.
 See sec. 2.6 in [Chia-Yu Hu et al. 2023](https://doi.org/10.3847/1538-4357/accf9e) for reference.
     * **Restriction:**
 Must set one extra particle attribute with [[ --par_attribute_int | Installation:-Option-List#--par_attribute_int ]],

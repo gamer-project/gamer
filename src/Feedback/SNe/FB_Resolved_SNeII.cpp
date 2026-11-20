@@ -636,20 +636,31 @@ void FB_Init_Resolved_SNeII()
    if ( SF_CREATE_STAR_MIN_STAR_MASS <= 0.0 )
       Aux_Error( ERROR_INFO, "Unsupported SF_CREATE_STAR_MIN_STAR_MASS = %14.8e !!\n", SF_CREATE_STAR_MIN_STAR_MASS );
 
-   const double maxStarMass         = SF_CREATE_STAR_MIN_STAR_MASS;                 // maximum mass of a stellar particle allowed to form
-   const double maxMeanSNeIIPerSPar = maxStarMass * FB_RESOLVED_SNEII_N_PER_MASS;   // mean number of SNe for the maximum-mass stellar particles
+// anticipated mass of a star particle
+// --> in rare situations, the current star formation routine can create a star particle
+//     whose mass is larger or smaller than SF_CREATE_STAR_MIN_STAR_MASS.
+//     Nevertheless, this feedback model anticipates a uniform star particle mass of
+//     SF_CREATE_STAR_MIN_STAR_MASS and sets the range of possible SN counts accordingly.
+// --> a star particle lighter than SF_CREATE_STAR_MIN_STAR_MASS is still handled correctly,
+//     but one heavier than SF_CREATE_STAR_MIN_STAR_MASS may have its number of SNe capped
+//     at a lower value than designed
+   const double anticipatedUniStarMass = SF_CREATE_STAR_MIN_STAR_MASS;
+// mean number of SNe for the anticipated uni-mass stellar particles
+   const double anticipatedUniMeanSNeIIPerSPar = anticipatedUniStarMass * FB_RESOLVED_SNEII_N_PER_MASS;
 
    if ( FB_RESOLVED_SNEII_SAMPLING == FB_RESOLVED_SNEII_SAMPLING_CAPPED_POISSON )
    {
 //    number of SNeII is sampled from a capped Poisson distribution in the star formation routine
-      maxNumSNeIIPerSPar = MAX( (int)ceil( maxMeanSNeIIPerSPar + FB_ResolvedSNeII_PDCapNStdDev * sqrt(maxMeanSNeIIPerSPar) ), 2 );
+      maxNumSNeIIPerSPar = MAX( (int)ceil( anticipatedUniMeanSNeIIPerSPar + FB_ResolvedSNeII_PDCapNStdDev * sqrt(anticipatedUniMeanSNeIIPerSPar) ), 2 );
       minNumSNeIIPerSPar = 1;
    } // if ( FB_RESOLVED_SNEII_SAMPLING == FB_RESOLVED_SNEII_SAMPLING_CAPPED_POISSON )
    else if ( FB_RESOLVED_SNEII_SAMPLING == FB_RESOLVED_SNEII_SAMPLING_SHIFTED_BERNOULLI )
    {
 //    number of SNeII is sampled from a shifted Bernoulli distribution in the star formation routine
-      maxNumSNeIIPerSPar = (int)ceil( maxMeanSNeIIPerSPar );
-      minNumSNeIIPerSPar = MAX( maxNumSNeIIPerSPar-1, 1 );
+      maxNumSNeIIPerSPar = (int)ceil( anticipatedUniMeanSNeIIPerSPar );
+      minNumSNeIIPerSPar = 1;   // anticipate (int)ceil( anticipatedUniMeanSNeIIPerSPar ) - 1,
+                                // but use a minimum of 1 as a safeguard in case a star
+                                // particle's mass is less than anticipatedUniStarMass
    } // else if ( FB_RESOLVED_SNEII_SAMPLING == FB_RESOLVED_SNEII_SAMPLING_SHIFTED_BERNOULLI )
    else
    {

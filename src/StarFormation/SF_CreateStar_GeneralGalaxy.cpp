@@ -348,7 +348,7 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
 //          expected average number of SNeII in a star particle of the given mass
             const double MeanNum_SNeII = StarMass*FB_RESOLVED_SNEII_N_PER_MASS;
 
-            int SampledNum_SNeII;
+            int UncappedSampledNum_SNeII;
             if ( FB_RESOLVED_SNEII_SAMPLING == FB_RESOLVED_SNEII_SAMPLING_CAPPED_POISSON )
             {
 #              if ( RANDOM_NUMBER == RNG_CPP11 )
@@ -359,14 +359,8 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
                const int PoissonRandom = 0;
 #              endif
 
-//             number of SNeII for this star particle, sampled from the capped Poisson distribution
-//             --> the maximum allowed number of SNeII per particle is determined in FB_Init_Resolved_SNeII()
-               SampledNum_SNeII = MIN( PoissonRandom, maxNumSNeIIPerSPar );
-
-//             check if the number is capped
-               if ( SampledNum_SNeII < PoissonRandom )
-                  Aux_Message( stderr, "WARNING : The sampled number of SNe (%d) is capped from the original Poisson draw (%d, mean = %d) for a particle with mass = %14.8e !!\n",
-                               SampledNum_SNeII, PoissonRandom, MeanNum_SNeII, StarMass );
+//             number of SNeII for this star particle, sampled from the Poisson distribution
+               UncappedSampledNum_SNeII = PoissonRandom;
             } // if ( FB_RESOLVED_SNEII_SAMPLING == FB_RESOLVED_SNEII_SAMPLING_CAPPED_POISSON )
             else if ( FB_RESOLVED_SNEII_SAMPLING == FB_RESOLVED_SNEII_SAMPLING_SHIFTED_BERNOULLI )
             {
@@ -380,13 +374,22 @@ void SF_CreateStar_GeneralGalaxy( const int lv, const real TimeNew, const real d
 //             number of SNeII for this star particle, sampled from the shifted Bernoulli distribution
 //             --> Prob( N = flooredN   ) = 1 - fractnlN
 //                 Prob( N = flooredN+1 ) = fractnlN
-               SampledNum_SNeII = flooredN + (1 -(int)( Random >= fractnlN ));
+               UncappedSampledNum_SNeII = flooredN + (1 -(int)( Random >= fractnlN ));
             } // else if ( FB_RESOLVED_SNEII_SAMPLING == FB_RESOLVED_SNEII_SAMPLING_SHIFTED_BERNOULLI )
             else
             {
                Aux_Error( ERROR_INFO, "unsupported FB_RESOLVED_SNEII_SAMPLING (%d) !!\n",
                           FB_RESOLVED_SNEII_SAMPLING );
             } // if ( FB_RESOLVED_SNEII_SAMPLING == ... ) ... else ...
+
+//          cap the number of SNeII for this star particle
+//          --> the maximum allowed number of SNeII per particle is determined in FB_Init_Resolved_SNeII()
+            const int SampledNum_SNeII = MIN( UncappedSampledNum_SNeII, maxNumSNeIIPerSPar );
+
+//          check if the number is capped
+            if ( SampledNum_SNeII < UncappedSampledNum_SNeII )
+               Aux_Message( stderr, "WARNING : The sampled number of SNe (%d) is capped from the original draw (%d, mean = %14.8e) for a particle with mass = %14.8e !!\n",
+                            SampledNum_SNeII, UncappedSampledNum_SNeII, MeanNum_SNeII, StarMass );
 
 //          next SNeII explosion event index for the feedback routine
             const long_par SNII_NxtE = SampledNum_SNeII * FB_SNII_NXTE_SEPDIGIT;
