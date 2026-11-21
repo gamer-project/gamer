@@ -34,6 +34,7 @@ static bool    *Merger_Coll_IsGas = NULL;               // (true/false) --> does
 static char     JetDirection_file[ MAX_STRING ];  // jet direction file
 
        bool     Merger_Coll_UseMetals;    // (true/false) --> do the clusters have a metal field
+       int      Merger_Coll_RefineScalar; // Which passive scalar field to refine on
        bool     Merger_Coll_LabelCenter;  // (true/false) --> label the particle closest to the center of each cluster
        bool     AdjustBHPos;              // (true/false) --> Adjust the BH position
        bool     AdjustBHVel;              // (true/false) --> Adjust the BH velocity
@@ -49,6 +50,11 @@ static double **Table_M = NULL;           // metallicity of clusters
 
        long    *NPar_EachCluster = NULL;  // number of particles in each cluster
        long     NPar_AllCluster = 0L;     // number of particles in all  clusters
+
+static FieldIdx_t ColorField1Idx = Idx_Undefined;
+static FieldIdx_t ColorField2Idx = Idx_Undefined;
+static FieldIdx_t ColorField3Idx = Idx_Undefined;
+       FieldIdx_t RefineFieldIdx = Idx_Undefined;
 
        int      JetDirection_NBin;         // number of bins of the jet direction table
 static double  *JetDirection = NULL;       // jet direction[time/theta_1/phi_1/theta_2/phi_2/theta_3/phi_3]
@@ -133,8 +139,8 @@ void Par_Init_ByFunction_ClusterMerger(const long NPar_ThisRank,
 #endif
 
 void Aux_Record_ClusterMerger();
-bool Flag_ClusterMerger( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 void AddNewField_ClusterMerger();
+bool Flag_ClusterMerger( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 void Init_User_ClusterMerger();
 int  Flu_ResetByUser_Func_ClusterMerger( real fluid[], const double Emag, const double x, const double y, const double z,
                                          const double Time, const double dt, const int lv, double AuxArray[] );
@@ -324,9 +330,10 @@ void LoadInputTestProb( const LoadParaMode_t load_mode, ReadPara_t *ReadPara, HD
       LOAD_PARA( load_mode, Jet_Radius_name,           &Jet_Radius[c],           -1.0,                Eps_double,    NoMax_double   );
       }
    } // for ( int c=0; c<Merger_Coll_NumHalos; c++ )
-   LOAD_PARA( load_mode, "Merger_Coll_UseMetals",       &Merger_Coll_UseMetals,      true,       Useless_bool,     Useless_bool   );
-   LOAD_PARA( load_mode, "Merger_Coll_BkgDensity",      &Merger_Coll_BkgDensity,     5.0e-30,             0.0,     NoMax_double   );
-   LOAD_PARA( load_mode, "Merger_Coll_BkgTemperature",  &Merger_Coll_BkgTemperature,   1.0e6,             0.0,     NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_RefineScalar",    &Merger_Coll_RefineScalar,         2,                  1,               3   );
+   LOAD_PARA( load_mode, "Merger_Coll_UseMetals",       &Merger_Coll_UseMetals,         true,       Useless_bool,    Useless_bool   );
+   LOAD_PARA( load_mode, "Merger_Coll_BkgDensity",      &Merger_Coll_BkgDensity,     5.0e-30,                0.0,    NoMax_double   );
+   LOAD_PARA( load_mode, "Merger_Coll_BkgTemperature",  &Merger_Coll_BkgTemperature,   1.0e6,                0.0,    NoMax_double   );
    if ( AGN_feedback )
    {
       LOAD_PARA( load_mode, "Merger_Coll_LabelCenter", &Merger_Coll_LabelCenter,  true,               Useless_bool,  Useless_bool   );
@@ -1005,12 +1012,12 @@ void Init_TestProb_Hydro_ClusterMerger()
 
 // set the function pointers of various problem-specific routines
    Init_Function_User_Ptr        = SetGridIC;
-   Flag_User_Ptr                 = Flag_ClusterMerger;
    End_User_Ptr                  = End_ClusterMerger;
-   Aux_Record_User_Ptr           = Aux_Record_ClusterMerger;
    Par_Init_ByFunction_Ptr       = Par_Init_ByFunction_ClusterMerger;
    Init_Field_User_Ptr           = AddNewField_ClusterMerger;
    Par_Init_Attribute_User_Ptr   = AddNewParticleAttribute_ClusterMerger;
+   Flag_User_Ptr                 = Flag_ClusterMerger;
+   Aux_Record_User_Ptr           = Aux_Record_ClusterMerger;
    Flu_ResetByUser_Func_Ptr      = Flu_ResetByUser_Func_ClusterMerger;
    Flu_ResetByUser_API_Ptr       = Flu_ResetByUser_API_ClusterMerger;
    Init_User_Ptr                 = Init_User_ClusterMerger;
@@ -1161,6 +1168,19 @@ void AddNewField_ClusterMerger()
          sprintf( ColorField_name, "ColorField%d", c );
          ColorFieldsIdx[c] = AddField( ColorField_name, FIXUP_FLUX_YES, FIXUP_REST_YES, FLOOR_YES, NORMALIZE_NO, INTERP_FRAC_NO );
       }
+   }
+
+   switch ( Merger_Coll_RefineScalar )
+   {
+      case 1:
+         RefineFieldIdx = ColorField1Idx;
+		 break;
+	  case 2:
+		 RefineFieldIdx = ColorField2Idx;
+		 break;
+	  case 3:
+		 RefineFieldIdx = ColorField3Idx;
+		 break;
    }
 
 } // FUNCTION : AddNewField_ClusterMerger

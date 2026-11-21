@@ -46,6 +46,7 @@
 //                TimeNew           : Physical time at the current  step (for the external gravity solver)
 //                TimeOld           : Physical time at the previous step (for the external gravity solver in UNSPLIT_GRAVITY)
 //                MinEint           : Internal energy floor
+//                FreezeHydro       : Freeze hydrodynamic fluxes
 //
 // Return      :  g_Flu_Array_New, g_DE_Array
 //-----------------------------------------------------------------------------------------
@@ -61,7 +62,7 @@ void CUPOT_HydroGravitySolver(
    const real   g_Emag_Array   [][ CUBE(PS1) ],
    const real dt, const real dh, const bool P5_Gradient,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
-   const double TimeNew, const double TimeOld, const real MinEint )
+   const double TimeNew, const double TimeOld, const real MinEint, const bool FreezeHydro )
 #else
 void CPU_HydroGravitySolver(
          real   g_Flu_Array_New[][GRA_NIN][ CUBE(PS1) ],
@@ -75,7 +76,7 @@ void CPU_HydroGravitySolver(
    const real dt, const real dh, const bool P5_Gradient,
    const bool UsePot, const OptExtAcc_t ExtAcc, const ExtAcc_t ExtAcc_Func,
    const double c_ExtAcc_AuxArray[],
-   const double TimeNew, const double TimeOld, const real MinEint )
+   const double TimeNew, const double TimeOld, const real MinEint, const bool FreezeHydro )
 #endif
 {
 
@@ -189,7 +190,7 @@ void CPU_HydroGravitySolver(
 
 
 //       external acceleration
-         if ( ExtAcc )
+         if ( ExtAcc && !FreezeHydro )
          {
             double x, y, z;
 
@@ -208,7 +209,7 @@ void CPU_HydroGravitySolver(
 
 
 //       self-gravity and external potential
-         if ( UsePot )
+         if ( UsePot && !FreezeHydro )
          {
             const int ip1_new = idx_new + didx_new[0];
             const int jp1_new = idx_new + didx_new[1];
